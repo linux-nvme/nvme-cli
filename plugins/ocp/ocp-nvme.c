@@ -122,18 +122,6 @@ struct __attribute__((__packed__)) ssd_latency_monitor_log {
         __u8    log_page_guid[0x10];                    /* 0x1F0 */
 };
 
-static long double int128_to_double(__u8 *data)
-{
-        int i;
-        long double result = 0;
-
-        for (i = 0; i < 16; i++) {
-                result *= 256;
-                result += data[15 - i];
-        }
-        return result;
-}
-
 static int convert_ts(time_t time, char *ts_buf)
 {
         struct tm  gmTimeInfo;
@@ -208,10 +196,10 @@ static void ocp_print_C0_log_normal(void *data)
                         (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
         printf("  NUSE - Namespace utilization			%"PRIu64"\n",
                         (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
-        printf("  PLP start count				%.0Lf\n",
-                        int128_to_double(&log_data[SCAO_PSC]));
-        printf("  Endurance estimate				%.0Lf\n",
-                        int128_to_double(&log_data[SCAO_EEST]));
+        printf("  PLP start count				");
+        print_uint128_t(le128_to_cpu(&log_data[SCAO_PSC]));
+        printf("  Endurance estimate				");
+        print_uint128_t(le128_to_cpu(&log_data[SCAO_EEST]));
         smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
         printf("  Log page version				%"PRIu16"\n",smart_log_ver);
         printf("  Log page GUID					0x");
@@ -300,10 +288,10 @@ static void ocp_print_C0_log_json(void *data)
                         (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
         json_object_add_value_uint64(root, "NUSE - Namespace utilization",
                         (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
-        json_object_add_value_uint(root, "PLP start count",
-                        int128_to_double(&log_data[SCAO_PSC]));
-        json_object_add_value_uint64(root, "Endurance estimate",
-                        int128_to_double(&log_data[SCAO_EEST]));
+        json_object_add_value_uint128(root, "PLP start count",
+                        le128_to_cpu(&log_data[SCAO_PSC]));
+        json_object_add_value_uint128(root, "Endurance estimate",
+                        le128_to_cpu(&log_data[SCAO_EEST]));
         smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
         json_object_add_value_uint(root, "Log page version", smart_log_ver);
         char guid[40];

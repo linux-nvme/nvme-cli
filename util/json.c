@@ -43,3 +43,22 @@ struct json_object *util_json_object_new_uint64(uint64_t i)
 	return obj;
 
 }
+
+struct json_object *util_json_object_new_uint128(__uint128_t  val)
+{
+	struct json_object *obj;
+	char str[40], str_rev[40]; /* __uint128_t  maximum string length is 39 */
+	int i, j;
+
+	for (i = 0; val > 0; i++) {
+		str_rev[i] = (val % 10) + 48;
+		val /= 10;
+	}
+
+	for (j = 0; i >= 0;) {
+		str[j++] = str_rev[--i];
+	}
+	str[j] = '\0';
+	obj = json_object_new_string(str);
+	return obj;
+}

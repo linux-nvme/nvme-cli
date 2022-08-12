@@ -16,6 +16,8 @@ typedef struct nvme_effects_log_node {
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 uint64_t int48_to_long(__u8 *data);
+__uint128_t le128_to_cpu(__u8 *data);
+void print_uint128_t(__uint128_t data);
 
 void nvme_show_status(__u16 status);
 void nvme_show_lba_status_info(__u32 result);

@@ -35,18 +35,6 @@ struct nvme_bar_cap {
 	__u8	rsvd_crms_nsss_cmbs_pmrs;
 };
 
-static long double int128_to_double(__u8 *data)
-{
-	int i;
-	long double result = 0;
-
-	for (i = 0; i < 16; i++) {
-		result *= 256;
-		result += data[15 - i];
-	}
-	return result;
-}
-
 static const char *nvme_ana_state_to_string(enum nvme_ana_state state)
 {
 	switch (state) {
@@ -158,7 +146,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, bool cap_only)
 	struct json_object *lbafs;
 	int i;
 
-	long double nvmcap = int128_to_double(ns->nvmcap);
+	__uint128_t nvmcap = le128_to_cpu(ns->nvmcap);
 
 	root = json_create_object();
 
@@ -186,7 +174,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, bool cap_only)
 		json_object_add_value_int(root, "nabo", le16_to_cpu(ns->nabo));
 		json_object_add_value_int(root, "nabspf", le16_to_cpu(ns->nabspf));
 		json_object_add_value_int(root, "noiob", le16_to_cpu(ns->noiob));
-		json_object_add_value_double(root, "nvmcap", nvmcap);
+		json_object_add_value_uint128(root, "nvmcap", nvmcap);
 		json_object_add_value_int(root, "nsattr", ns->nsattr);
 		json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 
@@ -245,10 +233,10 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	struct json_object *root;
 	struct json_object *psds;
 
-	long double tnvmcap = int128_to_double(ctrl->tnvmcap);
-	long double unvmcap = int128_to_double(ctrl->unvmcap);
-	long double megcap = int128_to_double(ctrl->megcap);
-	long double maxdna = int128_to_double(ctrl->maxdna);
+	__uint128_t tnvmcap = le128_to_cpu(ctrl->tnvmcap);
+	__uint128_t unvmcap = le128_to_cpu(ctrl->unvmcap);
+	__uint128_t megcap = le128_to_cpu(ctrl->megcap);
+	__uint128_t maxdna = le128_to_cpu(ctrl->maxdna);
 
 	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1],
 		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1];
@@ -299,8 +287,8 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "mtfa", le16_to_cpu(ctrl->mtfa));
 	json_object_add_value_uint(root, "hmpre", le32_to_cpu(ctrl->hmpre));
 	json_object_add_value_uint(root, "hmmin", le32_to_cpu(ctrl->hmmin));
-	json_object_add_value_double(root, "tnvmcap", tnvmcap);
-	json_object_add_value_double(root, "unvmcap", unvmcap);
+	json_object_add_value_uint128(root, "tnvmcap", tnvmcap);
+	json_object_add_value_uint128(root, "unvmcap", unvmcap);
 	json_object_add_value_uint(root, "rpmbs", le32_to_cpu(ctrl->rpmbs));
 	json_object_add_value_int(root, "edstt", le16_to_cpu(ctrl->edstt));
 	json_object_add_value_int(root, "dsto", ctrl->dsto);
@@ -322,7 +310,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "nanagrpid",
 		le32_to_cpu(ctrl->nanagrpid));
 	json_object_add_value_int(root, "domainid", le16_to_cpu(ctrl->domainid));
-	json_object_add_value_double(root, "megcap", megcap);
+	json_object_add_value_uint128(root, "megcap", megcap);
 	json_object_add_value_int(root, "sqes", ctrl->sqes);
 	json_object_add_value_int(root, "cqes", ctrl->cqes);
 	json_object_add_value_int(root, "maxcmd", le16_to_cpu(ctrl->maxcmd));
@@ -338,7 +326,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
-	json_object_add_value_double(root, "maxdna", maxdna);
+	json_object_add_value_uint128(root, "maxdna", maxdna);
 	json_object_add_value_int(root, "maxcna", le32_to_cpu(ctrl->maxcna));
 
 	if (strlen(subnqn))
@@ -585,22 +573,22 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 {
 	struct json_object *root;
 
-	long double endurance_estimate =
-		int128_to_double(endurance_group->endurance_estimate);
-	long double data_units_read =
-		int128_to_double(endurance_group->data_units_read);
-	long double data_units_written =
-		int128_to_double(endurance_group->data_units_written);
-	long double media_units_written =
-		int128_to_double(endurance_group->media_units_written);
-	long double host_read_cmds =
-		int128_to_double(endurance_group->host_read_cmds);
-	long double host_write_cmds =
-		int128_to_double(endurance_group->host_write_cmds);
-	long double media_data_integrity_err =
-		int128_to_double(endurance_group->media_data_integrity_err);
-	long double num_err_info_log_entries =
-		int128_to_double(endurance_group->num_err_info_log_entries);
+	__uint128_t endurance_estimate =
+		le128_to_cpu(endurance_group->endurance_estimate);
+	__uint128_t data_units_read =
+		le128_to_cpu(endurance_group->data_units_read);
+	__uint128_t data_units_written =
+		le128_to_cpu(endurance_group->data_units_written);
+	__uint128_t media_units_written =
+		le128_to_cpu(endurance_group->media_units_written);
+	__uint128_t host_read_cmds =
+		le128_to_cpu(endurance_group->host_read_cmds);
+	__uint128_t host_write_cmds =
+		le128_to_cpu(endurance_group->host_write_cmds);
+	__uint128_t media_data_integrity_err =
+		le128_to_cpu(endurance_group->media_data_integrity_err);
+	__uint128_t num_err_info_log_entries =
+		le128_to_cpu(endurance_group->num_err_info_log_entries);
 
 	root = json_create_object();
 
@@ -612,18 +600,18 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 		endurance_group->avl_spare_threshold);
 	json_object_add_value_int(root, "percent_used",
 		endurance_group->percent_used);
-	json_object_add_value_double(root, "endurance_estimate",
+	json_object_add_value_uint128(root, "endurance_estimate",
 		endurance_estimate);
-	json_object_add_value_double(root, "data_units_read", data_units_read);
-	json_object_add_value_double(root, "data_units_written",
+	json_object_add_value_uint128(root, "data_units_read", data_units_read);
+	json_object_add_value_uint128(root, "data_units_written",
 		data_units_written);
 	json_object_add_value_double(root, "media_units_written",
 		media_units_written);
-	json_object_add_value_double(root, "host_read_cmds", host_read_cmds);
-	json_object_add_value_double(root, "host_write_cmds", host_write_cmds);
-	json_object_add_value_double(root, "media_data_integrity_err",
+	json_object_add_value_uint128(root, "host_read_cmds", host_read_cmds);
+	json_object_add_value_uint128(root, "host_write_cmds", host_write_cmds);
+	json_object_add_value_uint128(root, "media_data_integrity_err",
 		media_data_integrity_err);
-	json_object_add_value_double(root, "num_err_info_log_entries",
+	json_object_add_value_uint128(root, "num_err_info_log_entries",
 		num_err_info_log_entries);
 
 	json_print_object(root, NULL);
@@ -641,16 +629,16 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	unsigned int temperature = ((smart->temperature[1] << 8) |
 		smart->temperature[0]);
 
-	long double data_units_read = int128_to_double(smart->data_units_read);
-	long double data_units_written = int128_to_double(smart->data_units_written);
-	long double host_read_commands = int128_to_double(smart->host_reads);
-	long double host_write_commands = int128_to_double(smart->host_writes);
-	long double controller_busy_time = int128_to_double(smart->ctrl_busy_time);
-	long double power_cycles = int128_to_double(smart->power_cycles);
-	long double power_on_hours = int128_to_double(smart->power_on_hours);
-	long double unsafe_shutdowns = int128_to_double(smart->unsafe_shutdowns);
-	long double media_errors = int128_to_double(smart->media_errors);
-	long double num_err_log_entries = int128_to_double(smart->num_err_log_entries);
+	__uint128_t data_units_read = le128_to_cpu(smart->data_units_read);
+	__uint128_t data_units_written = le128_to_cpu(smart->data_units_written);
+	__uint128_t host_read_commands = le128_to_cpu(smart->host_reads);
+	__uint128_t host_write_commands = le128_to_cpu(smart->host_writes);
+	__uint128_t controller_busy_time = le128_to_cpu(smart->ctrl_busy_time);
+	__uint128_t power_cycles = le128_to_cpu(smart->power_cycles);
+	__uint128_t power_on_hours = le128_to_cpu(smart->power_on_hours);
+	__uint128_t unsafe_shutdowns = le128_to_cpu(smart->unsafe_shutdowns);
+	__uint128_t media_errors = le128_to_cpu(smart->media_errors);
+	__uint128_t num_err_log_entries = le128_to_cpu(smart->num_err_log_entries);
 
 	root = json_create_object();
 
@@ -676,20 +664,20 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	json_object_add_value_int(root, "percent_used", smart->percent_used);
 	json_object_add_value_int(root, "endurance_grp_critical_warning_summary",
 		smart->endu_grp_crit_warn_sumry);
-	json_object_add_value_double(root, "data_units_read", data_units_read);
-	json_object_add_value_double(root, "data_units_written",
+	json_object_add_value_uint128(root, "data_units_read", data_units_read);
+	json_object_add_value_uint128(root, "data_units_written",
 		data_units_written);
-	json_object_add_value_double(root, "host_read_commands",
+	json_object_add_value_uint128(root, "host_read_commands",
 		host_read_commands);
-	json_object_add_value_double(root, "host_write_commands",
+	json_object_add_value_uint128(root, "host_write_commands",
 		host_write_commands);
-	json_object_add_value_double(root, "controller_busy_time",
+	json_object_add_value_uint128(root, "controller_busy_time",
 		controller_busy_time);
-	json_object_add_value_double(root, "power_cycles", power_cycles);
-	json_object_add_value_double(root, "power_on_hours", power_on_hours);
-	json_object_add_value_double(root, "unsafe_shutdowns", unsafe_shutdowns);
-	json_object_add_value_double(root, "media_errors", media_errors);
-	json_object_add_value_double(root, "num_err_log_entries",
+	json_object_add_value_uint128(root, "power_cycles", power_cycles);
+	json_object_add_value_uint128(root, "power_on_hours", power_on_hours);
+	json_object_add_value_uint128(root, "unsafe_shutdowns", unsafe_shutdowns);
+	json_object_add_value_uint128(root, "media_errors", media_errors);
+	json_object_add_value_uint128(root, "num_err_log_entries",
 		num_err_log_entries);
 	json_object_add_value_uint(root, "warning_temp_time",
 			le32_to_cpu(smart->warning_temp_time));
@@ -1193,8 +1181,8 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			le16_to_cpu(pevent_log_head->lhl));
 		json_object_add_value_uint64(root, "timestamp",
 			le64_to_cpu(pevent_log_head->ts));
-		json_object_add_value_double(root, "power_on_hours",
-			int128_to_double(pevent_log_head->poh));
+		json_object_add_value_uint128(root, "power_on_hours",
+			le128_to_cpu(pevent_log_head->poh));
 		json_object_add_value_uint64(root, "power_cycle_count",
 			le64_to_cpu(pevent_log_head->pcc));
 		json_object_add_value_uint(root, "pci_vid",
@@ -1258,16 +1246,16 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			unsigned int temperature = ((smart_event->temperature[1] << 8) |
 				smart_event->temperature[0]);
 
-			long double data_units_read = int128_to_double(smart_event->data_units_read);
-			long double data_units_written = int128_to_double(smart_event->data_units_written);
-			long double host_read_commands = int128_to_double(smart_event->host_reads);
-			long double host_write_commands = int128_to_double(smart_event->host_writes);
-			long double controller_busy_time = int128_to_double(smart_event->ctrl_busy_time);
-			long double power_cycles = int128_to_double(smart_event->power_cycles);
-			long double power_on_hours = int128_to_double(smart_event->power_on_hours);
-			long double unsafe_shutdowns = int128_to_double(smart_event->unsafe_shutdowns);
-			long double media_errors = int128_to_double(smart_event->media_errors);
-			long double num_err_log_entries = int128_to_double(smart_event->num_err_log_entries);
+			__uint128_t data_units_read = le128_to_cpu(smart_event->data_units_read);
+			__uint128_t data_units_written = le128_to_cpu(smart_event->data_units_written);
+			__uint128_t host_read_commands = le128_to_cpu(smart_event->host_reads);
+			__uint128_t host_write_commands = le128_to_cpu(smart_event->host_writes);
+			__uint128_t controller_busy_time = le128_to_cpu(smart_event->ctrl_busy_time);
+			__uint128_t power_cycles = le128_to_cpu(smart_event->power_cycles);
+			__uint128_t power_on_hours = le128_to_cpu(smart_event->power_on_hours);
+			__uint128_t unsafe_shutdowns = le128_to_cpu(smart_event->unsafe_shutdowns);
+			__uint128_t media_errors = le128_to_cpu(smart_event->media_errors);
+			__uint128_t num_err_log_entries = le128_to_cpu(smart_event->num_err_log_entries);
 			json_object_add_value_int(valid_attrs, "critical_warning",
 				smart_event->critical_warning);
 
@@ -1282,25 +1270,25 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			json_object_add_value_int(valid_attrs,
 				"endurance_grp_critical_warning_summary",
 				smart_event->endu_grp_crit_warn_sumry);
-			json_object_add_value_double(valid_attrs, "data_units_read",
+			json_object_add_value_uint128(valid_attrs, "data_units_read",
 				data_units_read);
-			json_object_add_value_double(valid_attrs, "data_units_written",
+			json_object_add_value_uint128(valid_attrs, "data_units_written",
 				data_units_written);
-			json_object_add_value_double(valid_attrs, "host_read_commands",
+			json_object_add_value_uint128(valid_attrs, "host_read_commands",
 				host_read_commands);
-			json_object_add_value_double(valid_attrs, "host_write_commands",
+			json_object_add_value_uint128(valid_attrs, "host_write_commands",
 				host_write_commands);
-			json_object_add_value_double(valid_attrs, "controller_busy_time",
+			json_object_add_value_uint128(valid_attrs, "controller_busy_time",
 				controller_busy_time);
-			json_object_add_value_double(valid_attrs, "power_cycles",
+			json_object_add_value_uint128(valid_attrs, "power_cycles",
 				power_cycles);
-			json_object_add_value_double(valid_attrs, "power_on_hours",
+			json_object_add_value_uint128(valid_attrs, "power_on_hours",
 				power_on_hours);
-			json_object_add_value_double(valid_attrs, "unsafe_shutdowns",
+			json_object_add_value_uint128(valid_attrs, "unsafe_shutdowns",
 				unsafe_shutdowns);
-			json_object_add_value_double(valid_attrs, "media_errors",
+			json_object_add_value_uint128(valid_attrs, "media_errors",
 				media_errors);
-			json_object_add_value_double(valid_attrs, "num_err_log_entries",
+			json_object_add_value_uint128(valid_attrs, "num_err_log_entries",
 				num_err_log_entries);
 			json_object_add_value_uint(valid_attrs, "warning_temp_time",
 					le32_to_cpu(smart_event->warning_temp_time));
@@ -1543,8 +1531,8 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		printf("Log Header Length: %u\n", pevent_log_head->lhl);
 		printf("Timestamp: %"PRIu64"\n",
 			le64_to_cpu(pevent_log_head->ts));
-		printf("Power On Hours (POH): %'.0Lf\n",
-			int128_to_double(pevent_log_head->poh));
+		printf("Power On Hours (POH): ");
+		print_uint128_t(le128_to_cpu(pevent_log_head->poh));
 		printf("Power Cycle Count: %"PRIu64"\n",
 			le64_to_cpu(pevent_log_head->pcc));
 		printf("PCI Vendor ID (VID): %u\n",
@@ -2265,10 +2253,10 @@ static void json_supported_cap_config_log(
 				le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].endgid));
 			json_object_add_value_uint(endurance, "cap_adj_factor",
 				le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].cap_adj_factor));
-			json_object_add_value_double(endurance, "tegcap",
-				int128_to_double(cap_log->cap_config_desc[i].egcd[j].tegcap));
-			json_object_add_value_double(endurance, "segcap",
-				int128_to_double(cap_log->cap_config_desc[i].egcd[j].segcap));
+			json_object_add_value_uint128(endurance, "tegcap",
+				le128_to_cpu(cap_log->cap_config_desc[i].egcd[j].tegcap));
+			json_object_add_value_uint128(endurance, "segcap",
+				le128_to_cpu(cap_log->cap_config_desc[i].egcd[j].segcap));
 			json_object_add_value_uint(endurance, "egsets",
 				le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].egsets));
 			egsets = le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].egsets);
@@ -2345,12 +2333,12 @@ void nvme_show_supported_cap_config_log(
 				le16_to_cpu(cap->cap_config_desc[i].egcd[j].endgid));
 			printf("Capacity Adjustment Factor: %u\n",
 				le16_to_cpu(cap->cap_config_desc[i].egcd[j].cap_adj_factor));
-			printf("Total Endurance Group Capacity: %'.0Lf\n",
-				int128_to_double(cap->cap_config_desc[i].egcd[j].tegcap));
-			printf("Spare Endurance Group Capacity: %'.0Lf\n",
-				int128_to_double(cap->cap_config_desc[i].egcd[j].segcap));
-			printf("Endurance Estimate: %'.0Lf\n",
-				int128_to_double(cap->cap_config_desc[i].egcd[j].end_est));
+			printf("Total Endurance Group Capacity: ");
+			print_uint128_t(le128_to_cpu(cap->cap_config_desc[i].egcd[j].tegcap));
+			printf("Spare Endurance Group Capacity: ");
+			print_uint128_t(le128_to_cpu(cap->cap_config_desc[i].egcd[j].segcap));
+			printf("Endurance Estimate: ");
+			print_uint128_t(le128_to_cpu(cap->cap_config_desc[i].egcd[j].end_est));
 			egsets = le16_to_cpu(cap->cap_config_desc[i].egcd[j].egsets);
 			printf("Number of NVM Sets: %u\n", egsets);
 			for(k = 0; k < egsets; k++) {
@@ -3620,16 +3608,16 @@ static void nvme_show_id_ctrl_cctemp(__le16 cctemp)
 
 static void nvme_show_id_ctrl_tnvmcap(__u8 *tnvmcap)
 {
-	printf("[127:0] : %.0Lf\tTotal NVM Capacity (TNVMCAP)\n",
-	       int128_to_double(tnvmcap));
-	printf("\n");
+	printf("[127:0] : ");
+	print_uint128_t(le128_to_cpu(tnvmcap));
+	printf("\tTotal NVM Capacity (TNVMCAP)\n\n");
 }
 
 static void nvme_show_id_ctrl_unvmcap(__u8 *unvmcap)
 {
-	printf("[127:0] : %.0Lf\tUnallocated NVM Capacity (UNVMCAP)\n",
-	       int128_to_double(unvmcap));
-	printf("\n");
+	printf("[127:0] : ");
+	print_uint128_t(le128_to_cpu(unvmcap));
+	printf("\tUnallocated NVM Capacity (UNVMCAP)\n\n");
 }
 
 void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
@@ -4210,7 +4198,8 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		printf("nabo    : %d\n", le16_to_cpu(ns->nabo));
 		printf("nabspf  : %d\n", le16_to_cpu(ns->nabspf));
 		printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
-		printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
+		printf("nvmcap  : ");
+		print_uint128_t(le128_to_cpu(ns->nvmcap));
 		if (ns->nsfeat & 0x10) {
 			printf("npwg    : %u\n", le16_to_cpu(ns->npwg));
 			printf("npwa    : %u\n", le16_to_cpu(ns->npwa));
@@ -4670,10 +4659,12 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("mtfa      : %d\n", le16_to_cpu(ctrl->mtfa));
 	printf("hmpre     : %d\n", le32_to_cpu(ctrl->hmpre));
 	printf("hmmin     : %d\n", le32_to_cpu(ctrl->hmmin));
-	printf("tnvmcap   : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
+	printf("tnvmcap   : ");
+	print_uint128_t(le128_to_cpu(ctrl->tnvmcap));
 	if (human)
 		nvme_show_id_ctrl_tnvmcap(ctrl->tnvmcap);
-	printf("unvmcap   : %.0Lf\n", int128_to_double(ctrl->unvmcap));
+	printf("unvmcap   : ");
+	print_uint128_t(le128_to_cpu(ctrl->unvmcap));
 	if (human)
 		nvme_show_id_ctrl_unvmcap(ctrl->unvmcap);
 	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
@@ -4707,7 +4698,8 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("nanagrpid : %d\n", le32_to_cpu(ctrl->nanagrpid));
 	printf("pels      : %d\n", le32_to_cpu(ctrl->pels));
 	printf("domainid  : %d\n", le16_to_cpu(ctrl->domainid));
-	printf("megcap    : %.0Lf\n", int128_to_double(ctrl->megcap));
+	printf("megcap    : ");
+	print_uint128_t(le128_to_cpu(ctrl->megcap));
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		nvme_show_id_ctrl_sqes(ctrl->sqes);
@@ -4744,7 +4736,8 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_sgls(ctrl->sgls);
 	printf("mnan      : %d\n", le32_to_cpu(ctrl->mnan));
-	printf("maxdna    : %.0Lf\n", int128_to_double(ctrl->maxdna));
+	printf("maxdna    : ");
+	print_uint128_t(le128_to_cpu(ctrl->maxdna));
 	printf("maxcna    : %d\n", le32_to_cpu(ctrl->maxcna));
 	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
 	printf("ioccsz    : %d\n", le32_to_cpu(ctrl->ioccsz));
@@ -5368,10 +5361,10 @@ static void json_nvme_id_nvmset(struct nvme_id_nvmset_list *nvmset)
 			  le32_to_cpu(nvmset->ent[i].rr4kt));
 		json_object_add_value_int(entry, "optimal_write_size",
 			  le32_to_cpu(nvmset->ent[i].ows));
-		json_object_add_value_double(entry, "total_nvmset_cap",
-			    int128_to_double(nvmset->ent[i].tnvmsetcap));
-		json_object_add_value_double(entry, "unalloc_nvmset_cap",
-			    int128_to_double(nvmset->ent[i].unvmsetcap));
+		json_object_add_value_uint128(entry, "total_nvmset_cap",
+			    le128_to_cpu(nvmset->ent[i].tnvmsetcap));
+		json_object_add_value_uint128(entry, "unalloc_nvmset_cap",
+			    le128_to_cpu(nvmset->ent[i].unvmsetcap));
 		json_array_add_value_object(entries, entry);
 	}
 
@@ -5405,10 +5398,10 @@ void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
 			le32_to_cpu(nvmset->ent[i].rr4kt));
 		printf("optimal_write_size      : %u\n",
 			le32_to_cpu(nvmset->ent[i].ows));
-		printf("total_nvmset_cap        : %.0Lf\n",
-			int128_to_double(nvmset->ent[i].tnvmsetcap));
-		printf("unalloc_nvmset_cap      : %.0Lf\n",
-			int128_to_double(nvmset->ent[i].unvmsetcap));
+		printf("total_nvmset_cap        : ");
+		print_uint128_t(le128_to_cpu(nvmset->ent[i].tnvmsetcap));
+		printf("unalloc_nvmset_cap      : ");
+		print_uint128_t(le128_to_cpu(nvmset->ent[i].unvmsetcap));
 		printf(".................\n");
 	}
 }
@@ -5704,7 +5697,7 @@ static void json_id_domain_list(struct nvme_id_domain_list *id_dom)
 	struct json_object *entries;
 	struct json_object *entry;
 	int i;
-	long double dom_cap, unalloc_dom_cap, max_egrp_dom_cap;
+	__uint128_t dom_cap, unalloc_dom_cap, max_egrp_dom_cap;
 
 	root = json_create_object();
 	entries = json_create_array();
@@ -5713,14 +5706,14 @@ static void json_id_domain_list(struct nvme_id_domain_list *id_dom)
 
 	for (i = 0; i < id_dom->num; i++) {
 		entry = json_create_object();
-		dom_cap = int128_to_double(id_dom->domain_attr[i].dom_cap);
-		unalloc_dom_cap = int128_to_double(id_dom->domain_attr[i].unalloc_dom_cap);
-		max_egrp_dom_cap = int128_to_double(id_dom->domain_attr[i].max_egrp_dom_cap);
+		dom_cap = le128_to_cpu(id_dom->domain_attr[i].dom_cap);
+		unalloc_dom_cap = le128_to_cpu(id_dom->domain_attr[i].unalloc_dom_cap);
+		max_egrp_dom_cap = le128_to_cpu(id_dom->domain_attr[i].max_egrp_dom_cap);
 
 		json_object_add_value_uint(entry, "dom_id", le16_to_cpu(id_dom->domain_attr[i].dom_id));
-		json_object_add_value_double(entry, "dom_cap", dom_cap);
-		json_object_add_value_double(entry, "unalloc_dom_cap", unalloc_dom_cap);
-		json_object_add_value_double(entry, "max_egrp_dom_cap", max_egrp_dom_cap);
+		json_object_add_value_uint128(entry, "dom_cap", dom_cap);
+		json_object_add_value_uint128(entry, "unalloc_dom_cap", unalloc_dom_cap);
+		json_object_add_value_uint128(entry, "max_egrp_dom_cap", max_egrp_dom_cap);
 
 		json_array_add_value_object(entries, entry);
 	}
@@ -5744,12 +5737,12 @@ void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
 	for (i = 0; i < id_dom->num; i++) {
 		printf("Domain Id for Attr Entry[%u]: %u\n", i,
 			le16_to_cpu(id_dom->domain_attr[i].dom_id));
-		printf("Domain Capacity for Attr Entry[%u]: %.0Lf\\n", i,
-			int128_to_double(id_dom->domain_attr[i].dom_cap));
-		printf("Unallocated Domain Capacity for Attr Entry[%u]: %.0Lf\n", i,
-			int128_to_double(id_dom->domain_attr[i].unalloc_dom_cap));
-		printf("Max Endurance Group Domain Capacity for Attr Entry[%u]: %.0Lf\n", i,
-			int128_to_double(id_dom->domain_attr[i].max_egrp_dom_cap));
+		printf("Domain Capacity for Attr Entry[%u]: ", i);
+		print_uint128_t(le128_to_cpu(id_dom->domain_attr[i].dom_cap));
+		printf("Unallocated Domain Capacity for Attr Entry[%u]: ", i);
+		print_uint128_t(le128_to_cpu(id_dom->domain_attr[i].unalloc_dom_cap));
+		printf("Max Endurance Group Domain Capacity for Attr Entry[%u]: ", i);
+		print_uint128_t(le128_to_cpu(id_dom->domain_attr[i].max_egrp_dom_cap));
 	}
 }
 
@@ -6189,6 +6182,35 @@ uint64_t int48_to_long(__u8 *data)
 	return result;
 }
 
+__uint128_t le128_to_cpu(__u8 *data)
+{
+	int i;
+	__uint128_t result = 0;
+
+	for (i = 0; i < 16; i++) {
+		result *= 256;
+		result += data[15 - i];
+	}
+	return result;
+}
+
+void print_uint128_t(__uint128_t data)
+{
+	const uint64_t MAX_POSITION_UINT64 = 10000000000000000000ULL;
+	uint64_t high, middle, low;
+	low = data % MAX_POSITION_UINT64;
+	data /= MAX_POSITION_UINT64;
+	middle = data % MAX_POSITION_UINT64;
+	high = data / MAX_POSITION_UINT64;
+	if (high)
+		printf("%"PRIu64"%.19"PRIu64"%.19"PRIu64, high, middle, low);
+	else if (middle)
+		printf("%"PRIu64"%.19"PRIu64, middle, low);
+	else
+		printf("%"PRIu64, low);
+	printf("\n");
+}
+
 void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 			     __u16 group_id, const char *devname,
 			     enum nvme_print_flags flags)
@@ -6207,22 +6229,22 @@ void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	printf("avl_spare_threshold	: %u\n",
 		endurance_log->avl_spare_threshold);
 	printf("percent_used		: %u%%\n", endurance_log->percent_used);
-	printf("endurance_estimate	: %'.0Lf\n",
-		int128_to_double(endurance_log->endurance_estimate));
-	printf("data_units_read		: %'.0Lf\n",
-		int128_to_double(endurance_log->data_units_read));
-	printf("data_units_written	: %'.0Lf\n",
-		int128_to_double(endurance_log->data_units_written));
-	printf("media_units_written	: %'.0Lf\n",
-		int128_to_double(endurance_log->media_units_written));
-	printf("host_read_cmds		: %'.0Lf\n",
-		int128_to_double(endurance_log->host_read_cmds));
-	printf("host_write_cmds		: %'.0Lf\n",
-		int128_to_double(endurance_log->host_write_cmds));
-	printf("media_data_integrity_err: %'.0Lf\n",
-		int128_to_double(endurance_log->media_data_integrity_err));
-	printf("num_err_info_log_entries: %'.0Lf\n",
-		int128_to_double(endurance_log->num_err_info_log_entries));
+	printf("endurance_estimate	: ");
+	print_uint128_t(le128_to_cpu(endurance_log->endurance_estimate));
+	printf("data_units_read		: ");
+	print_uint128_t(le128_to_cpu(endurance_log->data_units_read));
+	printf("data_units_written	: ");
+	print_uint128_t(le128_to_cpu(endurance_log->data_units_written));
+	printf("media_units_written	: ");
+	print_uint128_t(le128_to_cpu(endurance_log->media_units_written));
+	printf("host_read_cmds		: ");
+	print_uint128_t(le128_to_cpu(endurance_log->host_read_cmds));
+	printf("host_write_cmds		: ");
+	print_uint128_t(le128_to_cpu(endurance_log->host_write_cmds));
+	printf("media_data_integrity_err: ");
+	print_uint128_t(le128_to_cpu(endurance_log->media_data_integrity_err));
+	printf("num_err_info_log_entries: ");
+	print_uint128_t(le128_to_cpu(endurance_log->num_err_info_log_entries));
 }
 
 void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
@@ -6260,26 +6282,26 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		smart->percent_used);
 	printf("endurance group critical warning summary: %#x\n",
 		smart->endu_grp_crit_warn_sumry);
-	printf("data_units_read				: %'.0Lf\n",
-		int128_to_double(smart->data_units_read));
-	printf("data_units_written			: %'.0Lf\n",
-		int128_to_double(smart->data_units_written));
-	printf("host_read_commands			: %'.0Lf\n",
-		int128_to_double(smart->host_reads));
-	printf("host_write_commands			: %'.0Lf\n",
-		int128_to_double(smart->host_writes));
-	printf("controller_busy_time			: %'.0Lf\n",
-		int128_to_double(smart->ctrl_busy_time));
-	printf("power_cycles				: %'.0Lf\n",
-		int128_to_double(smart->power_cycles));
-	printf("power_on_hours				: %'.0Lf\n",
-		int128_to_double(smart->power_on_hours));
-	printf("unsafe_shutdowns			: %'.0Lf\n",
-		int128_to_double(smart->unsafe_shutdowns));
-	printf("media_errors				: %'.0Lf\n",
-		int128_to_double(smart->media_errors));
-	printf("num_err_log_entries			: %'.0Lf\n",
-		int128_to_double(smart->num_err_log_entries));
+	printf("data_units_read				: ");
+	print_uint128_t(le128_to_cpu(smart->data_units_read));
+	printf("data_units_written			: ");
+	print_uint128_t(le128_to_cpu(smart->data_units_written));
+	printf("host_read_commands			: ");
+	print_uint128_t(le128_to_cpu(smart->host_reads));
+	printf("host_write_commands			: ");
+	print_uint128_t(le128_to_cpu(smart->host_writes));
+	printf("controller_busy_time			: ");
+	print_uint128_t(le128_to_cpu(smart->ctrl_busy_time));
+	printf("power_cycles				: ");
+	print_uint128_t(le128_to_cpu(smart->power_cycles));
+	printf("power_on_hours				: ");
+	print_uint128_t(le128_to_cpu(smart->power_on_hours));
+	printf("unsafe_shutdowns			: ");
+	print_uint128_t(le128_to_cpu(smart->unsafe_shutdowns));
+	printf("media_errors				: ");
+	print_uint128_t(le128_to_cpu(smart->media_errors));
+	printf("num_err_log_entries			: ");
+	print_uint128_t(le128_to_cpu(smart->num_err_log_entries));
 	printf("Warning Temperature Time		: %u\n",
 		le32_to_cpu(smart->warning_temp_time));
 	printf("Critical Composite Temperature Time	: %u\n",
