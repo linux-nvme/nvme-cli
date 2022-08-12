@@ -179,13 +179,15 @@ struct nvme_mi_msg_resp_mpr {
  * populate the worst-case expected processing time, given in milliseconds.
  */
 static bool nvme_mi_mctp_resp_is_mpr(struct nvme_mi_resp *resp, size_t len,
-				     unsigned int *mpr_time)
+				     __le32 mic, unsigned int *mpr_time)
 {
+	struct nvme_mi_admin_resp_hdr *admin_msg;
 	struct nvme_mi_msg_resp_mpr *msg;
-	__le32 mic;
+	size_t clen;
 	__u32 crc;
 
-	if (len != sizeof(*msg) + sizeof(mic))
+	/* We need at least the minimal header plus checksum */
+	if (len < sizeof(*msg) + sizeof(mic))
 		return false;
 
 	msg = (struct nvme_mi_msg_resp_mpr *)resp->hdr;
@@ -193,22 +195,42 @@ static bool nvme_mi_mctp_resp_is_mpr(struct nvme_mi_resp *resp, size_t len,
 	if (msg->status != NVME_MI_RESP_MPR)
 		return false;
 
-	/* We can't use verify_resp_mic here, as the response structure has
-	 * not been laid-out properly in resp yet (this is deferred until
-	 * we have the actual response).
+	/* Find and verify the MIC from the response, which may not be laid out
+	 * in resp as we expect. We have to preserve resp->hdr_len and
+	 * resp->data_len, as we will need them for the eventual reply message.
+	 * Because of that, we can't use verify_resp_mic here.
 	 *
-	 * We know the data is a fixed size, and linear in the hdr buf, so
-	 * calculation is fairly simple. We do need to find the MIC data
-	 * though, which could either be in the header buf (if the original
-	 * header was larger than the minimal header message), or the start of
-	 * the data buf (otherwise).
+	 * If the packet was at the expected response size, then mic will
+	 * be set already; if not, find it within the header/data buffers.
 	 */
-	if (resp->hdr_len > sizeof(*msg))
-		mic = *(__le32 *)(msg + 1);
-	else
-		mic = *(__le32 *)(resp->data);
 
-	crc = ~nvme_mi_crc32_update(0xffffffff, msg, sizeof(*msg));
+	/* Devices may send a MPR response as a full-sized Admin response,
+	 * rather than the minimal MI-only header. Allow this, but only if the
+	 * type indicates admin, and the allocated response header is the
+	 * correct size for an Admin response.
+	 */
+	if (((msg->hdr.nmp >> 3) & 0xf) == NVME_MI_MT_ADMIN &&
+	    len == sizeof(*admin_msg) + sizeof(mic) &&
+	    resp->hdr_len == sizeof(*admin_msg)) {
+		if (resp->data_len)
+			mic = *(__le32 *)resp->data;
+	} else if (len == sizeof(*msg) + sizeof(mic)) {
+		if (resp->hdr_len > sizeof(*msg))
+			mic = *(__le32 *)(msg + 1);
+		else if (resp->data_len)
+			mic = *(__le32 *)(resp->data);
+	} else {
+		return false;
+	}
+
+	/* Since our response is just a header, we're guaranteed to have
+	 * all data in resp->hdr. The response may be shorter than the expected
+	 * header though, so clamp to len.
+	 */
+	len -= sizeof(mic);
+	clen = len < resp->hdr_len ? len : resp->hdr_len;
+
+	crc = ~nvme_mi_crc32_update(0xffffffff, resp->hdr, clen);
 	if (le32_to_cpu(mic) != crc)
 		return false;
 
@@ -369,7 +391,7 @@ retry:
 	 * header fields. However, we need to do this in the transport in order
 	 * to keep the tag allocated and retry the recvmsg
 	 */
-	if (nvme_mi_mctp_resp_is_mpr(resp, len, &mpr_time)) {
+	if (nvme_mi_mctp_resp_is_mpr(resp, len, mic, &mpr_time)) {
 		nvme_msg(ep->root, LOG_DEBUG,
 			 "Received More Processing Required, waiting for response\n");
 
