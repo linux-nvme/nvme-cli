@@ -126,6 +126,8 @@ int argconfig_parse_subopt_string(char *string, char **options,
 				  size_t max_options);
 int argconfig_parse_comma_sep_array(char *string, int *ret,
 					 unsigned max_length);
+int argconfig_parse_comma_sep_array_short(char *string, unsigned short *ret,
+					  unsigned max_length);
 int argconfig_parse_comma_sep_array_long(char *string,
 					      unsigned long long *ret,
 					      unsigned max_length);

@@ -5795,7 +5795,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		goto ret;
 	}
 
-	nb = argconfig_parse_comma_sep_array(cfg.nlbs, (int *)nlbs, ARRAY_SIZE(nlbs));
+	nb = argconfig_parse_comma_sep_array_short(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
 	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, ARRAY_SIZE(slbas));
 	
 	if (cfg.format == 0)
