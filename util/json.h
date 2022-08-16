@@ -19,11 +19,7 @@
 	json_object_object_add(o, k, json_object_new_uint64(v))
 #else
 #define json_object_add_value_uint64(o, k, v) \
-	if ((v) > UINT_MAX) {						\
-		fprintf(stderr, "Value overflow in %s", k);		\
-		json_object_object_add(o, k, json_object_new_int(-1));	\
-	} else								\
-		json_object_object_add(o, k, json_object_new_int(v))
+	json_object_object_add(o, k, util_json_object_new_uint64(v))
 #endif
 #define json_object_add_value_double(o, k, v) \
 	json_object_object_add(o, k, util_json_object_new_double(v))
@@ -45,5 +41,6 @@
 		JSON_C_TO_STRING_NOSLASHESCAPE))
 
 struct json_object *util_json_object_new_double(long double d);
+struct json_object *util_json_object_new_uint64(uint64_t i);
 
 #endif
