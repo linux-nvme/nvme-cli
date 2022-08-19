@@ -1110,6 +1110,8 @@ static const char *nvme_show_nss_hw_error(__u16 error_code)
 		return "Controller Fatal Status";
 	case 0xA:
 		return "Media and Data Integrity Status";
+	case 0xB:
+		return "Controller Ready Timeout Exceeded";
 	default:
 		return "Reserved";
 	}
