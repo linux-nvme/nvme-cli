@@ -13,7 +13,6 @@ NVMe Copy Testcase:-
 
 """
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -28,18 +27,18 @@ class TestNVMeCopy(TestNVMe):
               - test_log_dir :  directory for logs, temp files.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeCopy """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.start_block = 0
         self.range = 1
         self.slbs = 1
         self.namespace = 1
         self.setup_log_dir(self.__class__.__name__)
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeCopy """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def copy(self):
         """ Wrapper for nvme copy
@@ -57,4 +56,4 @@ class TestNVMeCopy(TestNVMe):
 
     def test_copy(self):
         """ Testcase main """
-        assert_equal(self.copy(), 0)
+        self.assertEqual(self.copy(), 0)

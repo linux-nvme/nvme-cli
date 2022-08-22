@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -28,7 +30,6 @@ NVMe Read/Write Testcae:-
 
 import filecmp
 
-from nose.tools import assert_equal
 from nvme_test_io import TestNVMeIO
 
 
@@ -43,9 +44,9 @@ class TestNVMeReadWriteTest(TestNVMeIO):
               - test_log_dir : directory for logs, temp files.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeReadWriteTest """
-        TestNVMeIO.__init__(self)
+        super().setUp()
         self.start_block = 1023
         self.test_log_dir = self.log_dir + "/" + self.__class__.__name__
         self.setup_log_dir(self.__class__.__name__)
@@ -54,9 +55,9 @@ class TestNVMeReadWriteTest(TestNVMeIO):
         self.create_data_file(self.write_file, self.data_size, "15")
         open(self.read_file, 'a').close()
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeReadWriteTest """
-        TestNVMeIO.__del__(self)
+        super().tearDown()
 
     def read_validate(self):
         """ Validate the data file read
@@ -69,6 +70,6 @@ class TestNVMeReadWriteTest(TestNVMeIO):
 
     def test_nvme_write(self):
         """ Testcaes main  """
-        assert_equal(self.nvme_write(), 0)
-        assert_equal(self.nvme_read(), 0)
-        assert_equal(self.read_validate(), 0)
+        self.assertEqual(self.nvme_write(), 0)
+        self.assertEqual(self.nvme_read(), 0)
+        self.assertEqual(self.read_validate(), 0)

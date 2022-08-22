@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -29,7 +31,6 @@ NVMe Namespace Management Testcase:-
 
 import time
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -46,9 +47,9 @@ class TestNVMeCreateMaxNS(TestNVMe):
               - ctrl_id : controller id.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeAttachDetachNSCmd """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.dps = 0
         self.flbas = 0
         self.nsze = int(self.get_ncap() /
@@ -60,7 +61,7 @@ class TestNVMeCreateMaxNS(TestNVMe):
         self.delete_all_ns()
         time.sleep(1)
 
-    def __del__(self):
+    def tearDown(self):
         """
         Post Section for TestNVMeAttachDetachNSCmd
 
@@ -68,13 +69,13 @@ class TestNVMeCreateMaxNS(TestNVMe):
             - Atttach it to controller.
             - Call super class's destructor.
         """
-        assert_equal(self.create_and_validate_ns(self.default_nsid,
-                                                 self.nsze,
-                                                 self.ncap,
-                                                 self.flbas,
-                                                 self.dps), 0)
+        self.assertEqual(self.create_and_validate_ns(self.default_nsid,
+                                                     self.nsze,
+                                                     self.ncap,
+                                                     self.flbas,
+                                                     self.dps), 0)
         self.attach_ns(self.ctrl_id, self.default_nsid)
-        TestNVMe.__del__(self)
+        super.tearDown()
 
     def test_attach_detach_ns(self):
         """ Testcase main """
@@ -85,15 +86,15 @@ class TestNVMeCreateMaxNS(TestNVMe):
                                               self.ncap,
                                               self.flbas,
                                               self.dps)
-            assert_equal(err, 0)
+            self.assertEqual(err, 0)
             print("##### Attaching " + str(nsid))
-            assert_equal(self.attach_ns(self.ctrl_id, nsid), 0)
+            self.assertEqual(self.attach_ns(self.ctrl_id, nsid), 0)
             print("##### Running IOs in " + str(nsid))
             self.run_ns_io(nsid, 0)
 
         for nsid in range(1, self.max_ns):
             print("##### Detaching " + str(nsid))
-            assert_equal(self.detach_ns(self.ctrl_id, nsid), 0)
+            self.assertEqual(self.detach_ns(self.ctrl_id, nsid), 0)
             print("#### Deleting " + str(nsid))
-            assert_equal(self.delete_and_validate_ns(nsid), 0)
+            self.assertEqual(self.delete_and_validate_ns(nsid), 0)
         self.nvme_reset_ctrl()

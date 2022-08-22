@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #undef CMD_INC_FILE
 #define CMD_INC_FILE plugins/intel/intel-nvme
 

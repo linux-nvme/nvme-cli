@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 adoc_sources = [
   'nvme',
   'nvme-admin-passthru',
@@ -147,6 +149,7 @@ adoc_sources = [
   'nvme-wdc-purge',
   'nvme-wdc-purge-monitor',
   'nvme-wdc-vs-cloud-log',
+  'nvme-wdc-vs-device-waf',
   'nvme-wdc-vs-drive-info',
   'nvme-wdc-vs-error-reason-identifier',
   'nvme-wdc-vs-fw-activate-history',
@@ -185,7 +188,7 @@ if want_docs != 'false'
   mandir = join_paths(get_option('mandir'), 'man1')
   htmldir = join_paths(get_option('htmldir'), 'nvme')
 
-  asciidoctor = find_program('asciidoc', required : false)
+  asciidoctor = find_program('asciidoc', required: get_option('docs-build'))
   if want_docs_build and asciidoctor.found()
     # Build documentation before installing
 

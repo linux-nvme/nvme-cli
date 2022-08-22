@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -21,7 +23,6 @@
 
 import os
 
-from nose import tools
 from nvme_test import TestNVMe
 
 
@@ -38,9 +39,9 @@ class TestNVMeIO(TestNVMe):
               - read_file : data file to use in nvme read command.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeIO """
-        TestNVMe.__init__(self)
+        super().setUp()
         # common code used in various testcases.
         self.data_size = 512
         self.start_block = 0
@@ -48,11 +49,10 @@ class TestNVMeIO(TestNVMe):
         self.write_file = "write_file.txt"
         self.read_file = "read_file.txt"
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeIO """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
-    @tools.nottest
     def create_data_file(self, pathname, data_size, pattern):
         """ Creates data file with specific pattern
             - Args:
@@ -70,7 +70,6 @@ class TestNVMeIO(TestNVMe):
         os.fsync(data_file.fileno())
         data_file.close()
 
-    @tools.nottest
     def nvme_write(self):
         """ Wrapper for nvme write operation
             - Args:
@@ -84,7 +83,6 @@ class TestNVMeIO(TestNVMe):
                     str(self.data_size) + " --data=" + self.write_file
         return self.exec_cmd(write_cmd)
 
-    @tools.nottest
     def nvme_read(self):
         """ Wrapper for nvme read operation
             - Args:

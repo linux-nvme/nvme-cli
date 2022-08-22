@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -24,7 +26,7 @@ Logger for NVMe Test Framwwork:-
 import sys
 
 
-class TestNVMeLogger(object):
+class TestNVMeLogger():
     """ Represents Logger for NVMe Testframework.  """
 
     def __init__(self, log_file_path):

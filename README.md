@@ -256,3 +256,10 @@ normal git operations or the command:
 
     $ meson subprojects update
 
+## Dependency
+
+libnvme depends on the /sys/class/nvme-subsystem interface which was
+introduced in the Linux kernel release v4.15. Hence nvme-cli 2.x is
+only working on kernels >= v4.15. For older kernels nvme-cli 1.x is
+recommended to be used.
+

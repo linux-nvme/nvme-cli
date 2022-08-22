@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #ifndef __CLEANUP_H
 #define __CLEANUP_H
 

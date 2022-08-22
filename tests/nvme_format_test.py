@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -38,7 +40,6 @@ Namespace Format testcase :-
 import subprocess
 import time
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -59,9 +60,9 @@ class TestNVMeFormatCmd(TestNVMe):
               - test_log_dir : directory for logs, temp files.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeFormatCmd """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.dps = 0                 # ns data protection settings
         self.flbas = 0               # ns formattes logical block settings
         self.nsze = 0x1400000        # ns size
@@ -75,7 +76,7 @@ class TestNVMeFormatCmd(TestNVMe):
         self.delete_all_ns()
         time.sleep(1)
 
-    def __del__(self):
+    def tearDown(self):
         """
         Post Section for TestNVMeFormatCmd
 
@@ -83,22 +84,22 @@ class TestNVMeFormatCmd(TestNVMe):
             - Atttach it to controller.
             - Call super class's destructor.
         """
-        assert_equal(self.create_and_validate_ns(self.default_nsid,
-                                                 self.nsze,
-                                                 self.ncap,
-                                                 self.flbas,
-                                                 self.dps), 0)
+        self.assertEqual(self.create_and_validate_ns(self.default_nsid,
+                                                     self.nsze,
+                                                     self.ncap,
+                                                     self.flbas,
+                                                     self.dps), 0)
         self.attach_ns(self.ctrl_id, self.default_nsid)
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def attach_detach_primary_ns(self):
         """ Extract supported format information using default namespace """
-        assert_equal(self.create_and_validate_ns(self.default_nsid,
-                                                 self.nsze,
-                                                 self.ncap,
-                                                 self.flbas,
-                                                 self.dps), 0)
-        assert_equal(self.attach_ns(self.ctrl_id, self.default_nsid), 0)
+        self.assertEqual(self.create_and_validate_ns(self.default_nsid,
+                                                     self.nsze,
+                                                     self.ncap,
+                                                     self.flbas,
+                                                     self.dps), 0)
+        self.assertEqual(self.attach_ns(self.ctrl_id, self.default_nsid), 0)
         # read lbaf information
         id_ns = "nvme id-ns " + self.ctrl + \
                 " -n1 | grep ^lbaf | awk '{print $2}' | tr -s \"\\n\" \" \""
@@ -120,8 +121,8 @@ class TestNVMeFormatCmd(TestNVMe):
             proc = subprocess.Popen(id_ns, shell=True, stdout=subprocess.PIPE,
                                     encoding='utf-8')
             self.ms_list = proc.stdout.read().strip().split(" ")
-            assert_equal(self.detach_ns(self.ctrl_id, self.default_nsid), 0)
-            assert_equal(self.delete_and_validate_ns(self.default_nsid), 0)
+            self.assertEqual(self.detach_ns(self.ctrl_id, self.default_nsid), 0)
+            self.assertEqual(self.delete_and_validate_ns(self.default_nsid), 0)
             self.nvme_reset_ctrl()
 
     def test_format_ns(self):
@@ -140,10 +141,10 @@ class TestNVMeFormatCmd(TestNVMe):
                                               self.ncap,
                                               self.lba_format_list[i],
                                               metadata_size)
-            assert_equal(err, 0)
-            assert_equal(self.attach_ns(self.ctrl_id, self.default_nsid), 0)
+            self.assertEqual(err, 0)
+            self.assertEqual(self.attach_ns(self.ctrl_id, self.default_nsid), 0)
             self.run_ns_io(self.default_nsid, self.lbads_list[i])
             time.sleep(5)
-            assert_equal(self.detach_ns(self.ctrl_id, self.default_nsid), 0)
-            assert_equal(self.delete_and_validate_ns(self.default_nsid), 0)
+            self.assertEqual(self.detach_ns(self.ctrl_id, self.default_nsid), 0)
+            self.assertEqual(self.delete_and_validate_ns(self.default_nsid), 0)
             self.nvme_reset_ctrl()

@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 #undef CMD_INC_FILE
 #define CMD_INC_FILE plugins/wdc/wdc-nvme
 
 #if !defined(WDC_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define WDC_NVME
 
-#define WDC_PLUGIN_VERSION   "1.16.5"
+#define WDC_PLUGIN_VERSION   "2.0.2"
 #include "cmd.h"
 
 PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERSION),
@@ -43,6 +44,7 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERS
 		ENTRY("cloud-boot-SSD-version", "WDC Get the Cloud Boot SSD Version", wdc_cloud_boot_SSD_version)
 		ENTRY("vs-cloud-log", "WDC Get the Cloud Log Page", wdc_vs_cloud_log)
 		ENTRY("vs-hw-rev-log", "WDC Get the Hardware Revision Log Page", wdc_vs_hw_rev_log)
+		ENTRY("vs-device-waf", "WDC Calculate Device Write Amplication Factor", wdc_vs_device_waf)
 	)
 );
 

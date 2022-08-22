@@ -67,10 +67,10 @@ nvmetests
        test_*.
     3. Based on the requirement one can inherit TestNVMe or TestNVMeIO
        class.
-    4. Write test precondition code into __init__. Make sure you are calling
-       super class __init__.
-    5. Write test post condition code into __del__. Make sure you are calling
-       super class __del__.
+    4. Write test precondition code into setUp. Make sure you are calling
+       super class setUp.
+    5. Write test post condition code into tearDown. Make sure you are calling
+       super class tearDown.
     6. Before writing a new function have a look into TestNVMe to see if it
        can be reused.
     7. Once testcase is ready make sure :-
@@ -83,9 +83,9 @@ nvmetests
 
 4. Running testcases with framework
 -----------------------------------
-    1. Running single testcase with nose2 :-
-       $ nose2 --verbose nvme_writezeros_test
-       $ nose2 --verbose nvme_read_write_test
+    1. Running single testcase (in the source tree) with nose2 :-
+       $ nose2 --verbose --start-dir tests nvme_writezeros_test
+       $ nose2 --verbose --start-dir tests nvme_read_write_test
 
-    2. Running all the testcases with ninja :-
+    2. Running all the testcases (in the build root directory) with ninja :-
        $ ninja test -C .build

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -34,7 +36,6 @@ Test the Mandatory features with get features command:-
 
 import subprocess
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -49,9 +50,9 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
               - vector_list_len : numer of the interrupt vectors.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeGetMandatoryFeatures """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.setup_log_dir(self.__class__.__name__)
         self.feature_id_list = ["0x01", "0x02", "0x04", "0x05", "0x07",
                                 "0x08", "0x09", "0x0A", "0x0B"]
@@ -64,12 +65,12 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                                 encoding='utf-8')
         self.vector_list_len = len(proc.stdout.read().strip().split(" "))
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeGetMandatoryFeatures
 
             Call super class's destructor.
         """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def get_mandatory_features(self, feature_id):
         """ Wrapper for NVMe get features command
@@ -89,7 +90,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                                         encoding='utf-8')
                 feature_output = proc.communicate()[0]
                 print(feature_output)
-                assert_equal(proc.wait(), 0)
+                self.assertEqual(proc.wait(), 0)
         else:
             get_feat_cmd = "nvme get-feature " + self.ctrl + \
                            " --feature-id=" + str(feature_id) + " -H"
@@ -99,7 +100,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                                     encoding='utf-8')
             feature_output = proc.communicate()[0]
             print(feature_output)
-            assert_equal(proc.wait(), 0)
+            self.assertEqual(proc.wait(), 0)
 
     def test_get_mandatory_features(self):
         """ Testcase main """

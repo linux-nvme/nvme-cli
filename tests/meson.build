@@ -1,36 +1,49 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+infra = [
+  'config.json',
+  'nvme_test.py',
+  'nvme_test_io.py',
+  'nvme_test_logger.py',
+  'nvme_simple_template_test.py',
+]
+
 tests = [
-  'nvme_attach_detach_ns_test',
-  'nvme_compare_test',
-  'nvme_create_max_ns_test',
-  'nvme_error_log_test',
-  'nvme_flush_test',
-  'nvme_format_test',
-  'nvme_fw_log_test',
-  'nvme_get_features_test',
-  'nvme_id_ctrl_test',
-  'nvme_id_ns_test',
-  'nvme_read_write_test',
-  'nvme_simple_template_test',
-  'nvme_smart_log_test',
-  'nvme_test_io',
-  'nvme_test_logger',
-  'nvme_test',
-  'nvme_writeuncor_test',
-  'nvme_writezeros_test',
-  'nvme_copy_test',
-  'nvme_dsm_test',
-  'nvme_verify_test',
-  'nvme_lba_status_log_test',
-  'nvme_get_lba_status_test',
+  'nvme_attach_detach_ns_test.py',
+  'nvme_compare_test.py',
+  'nvme_create_max_ns_test.py',
+  'nvme_error_log_test.py',
+  'nvme_flush_test.py',
+  'nvme_format_test.py',
+  'nvme_fw_log_test.py',
+  'nvme_get_features_test.py',
+  'nvme_id_ctrl_test.py',
+  'nvme_id_ns_test.py',
+  'nvme_read_write_test.py',
+  'nvme_smart_log_test.py',
+  'nvme_writeuncor_test.py',
+  'nvme_writezeros_test.py',
+  'nvme_copy_test.py',
+  'nvme_dsm_test.py',
+  'nvme_verify_test.py',
+  'nvme_lba_status_log_test.py',
+  'nvme_get_lba_status_test.py',
 ]
 
 runtests = find_program('nose2', required : false)
 
 if runtests.found()
+  foreach file : infra + tests
+    configure_file(
+      input: file,
+      output: file,
+      copy: true)
+  endforeach
+
   foreach t : tests
-    test(t, runtests,
-         args: ['--verbose', '--start-dir', meson.current_source_dir(), t],
-         workdir: meson.current_source_dir(),
+    t_name = t.split('.')[0]
+    test(t_name, runtests,
+         args: ['--verbose', '--start-dir', meson.build_root() + '/tests', t_name],
          env: ['PATH=' + meson.build_root() + ':/usr/bin:/usr/sbin'],
          timeout: 500)
   endforeach

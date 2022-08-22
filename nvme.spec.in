@@ -2,7 +2,7 @@ Name: 		nvme
 Version: 	@VERSION@
 Release: 	1%{?dist}
 Summary:  	Core nvme tools
-License: 	GPL
+License: 	GPL-2.0-only
 Group: 		Development/Tools
 URL: 		https://github.com/linux-nvme/nvme-cli/
 Provides:	nvme

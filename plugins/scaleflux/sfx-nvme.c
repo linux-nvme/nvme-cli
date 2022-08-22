@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
@@ -29,6 +30,12 @@
 #define IDEMA_CAP(exp_GB)			(((__u64)exp_GB - 50ULL) * 1953504ULL + 97696368ULL)
 #define IDEMA_CAP2GB(exp_sector)		(((__u64)exp_sector - 97696368ULL) / 1953504ULL + 50ULL)
 
+#define VANDA_MAJOR_IDX		0
+#define VANDA_MINOR_IDX		0
+
+#define MYRTLE_MAJOR_IDX        4
+#define MYRTLE_MINOR_IDX        1
+
 enum {
 	SFX_LOG_LATENCY_READ_STATS	= 0xc1,
 	SFX_LOG_SMART			= 0xc2,
@@ -58,6 +65,7 @@ struct sfx_freespace_ctx
 	__u64 user_space;	/* user required space, in unit of sector*/
 	__u64 hw_used;		/* hw space used in 4K */
 	__u64 app_written;	/* app data written in 4K */
+	__u64 out_of_space;
 };
 
 struct nvme_capacity_info {
@@ -66,25 +74,26 @@ struct nvme_capacity_info {
 	__u64 used_space;
 	__u64 free_space;
 };
-struct	__attribute__((packed)) nvme_additional_smart_log_item {
-	uint8_t			   key;
-	uint8_t			   _kp[2];
-	uint8_t			   norm;
-	uint8_t			   _np;
-	union {
-		uint8_t		   raw[6];
-		struct wear_level {
-			uint16_t	min;
-			uint16_t	max;
-			uint16_t	avg;
-		} wear_level ;
-		struct thermal_throttle {
-			uint8_t    pct;
-			uint32_t	count;
+
+struct  __attribute__((packed)) nvme_additional_smart_log_item {
+	__u8			key;
+	__u8			_kp[2];
+	__u8			norm;
+	__u8			_np;
+	union __attribute__((packed)) {
+		__u8		raw[6];
+		struct __attribute__((packed))  wear_level {
+			__le16	min;
+			__le16	max;
+			__le16	avg;
+		} wear_level;
+		struct __attribute__((packed)) thermal_throttle {
+			__u8	pct;
+			__u32	count;
 		} thermal_throttle;
-	};
-	uint8_t			   _rp;
-};
+	} ;
+	__u8			_rp;
+} ;
 
 struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	 program_fail_cnt;
@@ -105,8 +114,26 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	 erase_timeout_cnt;
 	struct nvme_additional_smart_log_item	 read_timeout_cnt;
 	struct nvme_additional_smart_log_item	 read_ecc_cnt;//retry cnt
+	struct nvme_additional_smart_log_item    non_media_crc_err_cnt;
+	struct nvme_additional_smart_log_item    compression_path_err_cnt;
+	struct nvme_additional_smart_log_item    out_of_space_flag;
+	struct nvme_additional_smart_log_item    physical_usage_ratio;
+	struct nvme_additional_smart_log_item    grown_bb; //grown bad block
 };
 
+int nvme_query_cap(int fd, __u32 nsid, __u32 data_len, void *data)
+{
+	 int rc = 0;
+	 struct nvme_passthru_cmd cmd = {
+        .opcode          = nvme_admin_query_cap_info,
+        .nsid            = nsid,
+        .addr            = (__u64)(uintptr_t) data,
+        .data_len        = data_len,
+        };
+
+	 rc = ioctl(fd, SFX_GET_FREESPACE, data);
+	 return rc == 0 ? 0 : nvme_submit_admin_passthru(fd, &cmd, NULL);
+}
 int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 {
 	struct nvme_passthru_cmd cmd = {
@@ -255,6 +282,31 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->read_ecc_cnt.raw));
 	json_object_add_value_object(dev_stats, "read_ecc_cnt", entry_stats);
 
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->non_media_crc_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->non_media_crc_err_cnt.raw));
+	json_object_add_value_object(dev_stats, "non_media_crc_err_cnt", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->compression_path_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->compression_path_err_cnt.raw));
+	json_object_add_value_object(dev_stats, "compression_path_err_cnt", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->out_of_space_flag.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->out_of_space_flag.raw));
+	json_object_add_value_object(dev_stats, "out_of_space_flag", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->physical_usage_ratio.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->physical_usage_ratio.raw));
+	json_object_add_value_object(dev_stats, "physical_usage_ratio", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->grown_bb.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->grown_bb.raw));
+	json_object_add_value_object(dev_stats, "grown_bb", entry_stats);
+
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
@@ -325,6 +377,22 @@ static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 	printf("read_timeout_cnt                : %3d%%       %"PRIu64"\n",
 			smart->read_timeout_cnt.norm,
 			int48_to_long(smart->read_timeout_cnt.raw));
+	printf("non_media_crc_err_cnt           : %3d%%       %" PRIu64 "\n",
+	       smart->non_media_crc_err_cnt.norm,
+	       int48_to_long(smart->non_media_crc_err_cnt.raw));
+	printf("compression_path_err_cnt        : %3d%%       %" PRIu64 "\n",
+	       smart->compression_path_err_cnt.norm,
+	       int48_to_long(smart->compression_path_err_cnt.raw));
+	printf("out_of_space_flag               : %3d%%       %" PRIu64 "\n",
+	       smart->out_of_space_flag.norm,
+	       int48_to_long(smart->out_of_space_flag.raw));
+	printf("phy_capacity_used_ratio         : %3d%%       %" PRIu64 "\n",
+	       smart->physical_usage_ratio.norm,
+	       int48_to_long(smart->physical_usage_ratio.raw));
+	printf("grown_bb_count                  : %3d%%       %" PRIu64 "\n",
+	       smart->grown_bb.norm, int48_to_long(smart->grown_bb.raw));
+
+
 }
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -375,9 +443,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	return err;
 }
 
-struct sfx_lat_stats {
-	__u16	 maj;
-	__u16	 min;
+struct __attribute__((__packed__)) sfx_lat_stats_vanda {
+	__u16    maj;
+	__u16    min;
 	__u32	 bucket_1[32];	/* 0~1ms, step 32us */
 	__u32	 bucket_2[31];	/* 1~32ms, step 1ms */
 	__u32	 bucket_3[31];	/* 32ms~1s, step 32ms */
@@ -386,11 +454,50 @@ struct sfx_lat_stats {
 	__u32	 bucket_6[1];	/* 4s+, specifically 4096ms+ */
 };
 
-static void show_lat_stats(struct sfx_lat_stats *stats, int write)
+struct __attribute__((__packed__)) sfx_lat_stats_myrtle {
+	__u16    maj;
+	__u16    min;
+	__u32	 bucket_1[64];	/* 0us~63us, step 1us */
+	__u32	 bucket_2[64];	/* 63us~127us, step 1us */
+	__u32	 bucket_3[64];	/* 127us~255us, step 2us */
+	__u32	 bucket_4[64];	/* 255us~510us, step 4us */
+	__u32	 bucket_5[64];	/* 510us~1.02ms step 8us */
+	__u32	 bucket_6[64];	/* 1.02ms~2.04ms step 16us */
+	__u32    bucket_7[64];  /* 2.04ms~4.08ms step 32us */
+	__u32    bucket_8[64];  /* 4.08ms~8.16ms step 64us */
+	__u32    bucket_9[64];  /* 8.16ms~16.32ms step 128us */
+	__u32    bucket_10[64]; /* 16.32ms~32.64ms step 256us */
+	__u32    bucket_11[64]; /* 32.64ms~65.28ms step 512us */
+	__u32    bucket_12[64]; /* 65.28ms~130.56ms step 1.024ms */
+	__u32    bucket_13[64]; /* 130.56ms~261.12ms step 2.048ms */
+	__u32    bucket_14[64]; /* 261.12ms~522.24ms step 4.096ms */
+	__u32    bucket_15[64]; /* 522.24ms~1.04s step 8.192ms */
+	__u32    bucket_16[64]; /* 1.04s~2.09s step 16.384ms */
+	__u32    bucket_17[64]; /* 2.09s~4.18s step 32.768ms */
+	__u32    bucket_18[64]; /* 4.18s~8.36s step 65.536ms */
+	__u32    bucket_19[64]; /* 8.36s~ step 131.072ms */
+	__u64    average; /* average latency statistics */
+};
+
+
+struct __attribute__((__packed__)) sfx_lat_status_ver {
+	__u16 maj;
+	__u16 min;
+};
+
+struct sfx_lat_stats {
+	union {
+		struct sfx_lat_status_ver   ver;
+		struct sfx_lat_stats_vanda  vanda;
+		struct sfx_lat_stats_myrtle myrtle;
+	};
+};
+
+static void show_lat_stats_vanda(struct sfx_lat_stats_vanda *stats, int write)
 {
 	int i;
 
-	printf(" ScaleFlux IO %s Command Latency Statistics\n", write ? "Write" : "Read");
+	printf("ScaleFlux IO %s Command Latency Statistics\n", write ? "Write" : "Read");
 	printf("-------------------------------------\n");
 	printf("Major Revision : %u\n", stats->maj);
 	printf("Minor Revision : %u\n", stats->min);
@@ -416,6 +523,95 @@ static void show_lat_stats(struct sfx_lat_stats *stats, int write)
 	printf("\nGroup 6: Range is 4s+:\n");
 	printf("Bucket %2d: %u\n", 0, stats->bucket_6[0]);
 }
+
+static void show_lat_stats_myrtle(struct sfx_lat_stats_myrtle *stats, int write)
+{
+	int i;
+
+	printf("ScaleFlux IO %s Command Latency Statistics\n", write ? "Write" : "Read");
+	printf("-------------------------------------\n");
+	printf("Major Revision : %u\n", stats->maj);
+	printf("Minor Revision : %u\n", stats->min);
+
+	printf("\nGroup 1: Range is 0us~63us, step 1us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+
+	printf("\nGroup 2: Range is 63us~127us, step 1us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_2[i]);
+
+	printf("\nGroup 3: Range is 127us~255us, step 2us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_3[i]);
+
+	printf("\nGroup 4: Range is 255us~510us, step 4us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_4[i]);
+
+	printf("\nGroup 5: Range is 510us~1.02ms step\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_5[i]);
+
+	printf("\nGroup 6: Range is 1.02ms~2.04ms step 16us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_6[i]);
+
+	printf("\nGroup 7: Range is 2.04ms~4.08ms step 32us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_7[i]);
+
+	printf("\nGroup 8: Range is 4.08ms~8.16ms step 64us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_8[i]);
+
+	printf("\nGroup 9: Range is 8.16ms~16.32ms step 128us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_9[i]);
+
+	printf("\nGroup 10: Range is 16.32ms~32.64ms step 256us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_10[i]);
+
+	printf("\nGroup 11: Range is 32.64ms~65.28ms step 512us\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_11[i]);
+
+	printf("\nGroup 12: Range is 65.28ms~130.56ms step 1.024ms\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_12[i]);
+
+	printf("\nGroup 13: Range is 130.56ms~261.12ms step 2.048ms\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_13[i]);
+
+	printf("\nGroup 14: Range is 261.12ms~522.24ms step 4.096ms\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_14[i]);
+
+	printf("\nGroup 15: Range is 522.24ms~1.04s step 8.192ms\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_15[i]);
+
+	printf("\nGroup 16: Range is 1.04s~2.09s step 16.384ms\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_16[i]);
+
+	printf("\nGroup 17: Range is 2.09s~4.18s step 32.768ms\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_17[i]);
+
+	printf("\nGroup 18: Range is 4.18s~8.36s step 65.536ms\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_18[i]);
+
+	printf("\nGroup 19: Range is 8.36s~ step 131.072ms\n");
+	for (i = 0; i < 64; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_19[i]);
+
+	printf("\nAverage latency statistics %lld\n", stats->average);
+}
+
 
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
@@ -446,10 +642,22 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 	err = nvme_get_log_simple(fd, cfg.write ? 0xc3 : 0xc1, sizeof(stats), (void *)&stats);
 	if (!err) {
-		if (!cfg.raw_binary)
-			show_lat_stats(&stats, cfg.write);
-		else
-			d_raw((unsigned char *)&stats, sizeof(stats));
+		if ((stats.ver.maj == VANDA_MAJOR_IDX) && (stats.ver.min == VANDA_MINOR_IDX)) {
+			if (!cfg.raw_binary) {
+				show_lat_stats_vanda(&stats.vanda, cfg.write);
+			} else {
+				d_raw((unsigned char *)&stats.vanda, sizeof(struct sfx_lat_stats_vanda));
+			}
+		} else if ((stats.ver.maj == MYRTLE_MAJOR_IDX) && (stats.ver.min == MYRTLE_MINOR_IDX)) {
+			if (!cfg.raw_binary) {
+				show_lat_stats_myrtle(&stats.myrtle, cfg.write);
+			} else {
+				d_raw((unsigned char *)&stats.myrtle, sizeof(struct sfx_lat_stats_myrtle));
+			}
+		} else {
+			printf("ScaleFlux IO %s Command Latency Statistics Invalid Version Maj %d Min %d\n",
+				    write ? "Write" : "Read", stats.ver.maj, stats.ver.min);
+		}
 	} else if (err > 0)
 		nvme_show_status(err);
 	close(fd);
@@ -612,18 +820,15 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 {
 	struct sfx_freespace_ctx ctx = { 0 };
 	int err = 0, fd;
-	char *desc = "query current capacity info of vanda";
+	char *desc = "query current capacity info";
 	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
 	struct config {
 		bool  raw_binary;
-		bool  json;
 	};
 	struct config cfg;
 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_FLAG("json",	   'j', &cfg.json,		 json),
 		OPT_END()
 	};
 
@@ -632,13 +837,18 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 		return fd;
 	}
 
-	if (ioctl(fd, SFX_GET_FREESPACE, &ctx)) {
-		fprintf(stderr, "vu ioctl fail, errno %d\r\n", errno);
-		close(fd);
-		return -1;
+	if (nvme_query_cap(fd, 0xffffffff, sizeof(ctx), &ctx)) {
+		perror("sfx-query-cap");
+		err = -1;
 	}
 
-	show_cap_info(&ctx);
+	if (!err) {
+		if (!cfg.raw_binary) {
+			show_cap_info(&ctx);
+		} else {
+			d_raw((unsigned char *)&ctx, sizeof(ctx));
+		}
+	}
 	close(fd);
 	return err;
 }
@@ -650,14 +860,10 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	__u64 mem_need = 0;
 	__u64 cur_in_4k = 0;
 	__u64 provisoned_cap_4k = 0;
-	__u32 cnt_ms = 0;
 	int extend = 0;
 
-	while (ioctl(fd, SFX_GET_FREESPACE, &freespace_ctx)) {
-		if (cnt_ms++ > 600) {//1min
-			return -1;
-		}
-		usleep(100000);
+	if (nvme_query_cap(fd, 0xffffffff, sizeof(freespace_ctx), &freespace_ctx)) {
+	    return -1;
 	}
 
 	/*
@@ -734,9 +940,7 @@ static int sfx_confirm_change(const char *str)
 static int change_cap(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err = -1, fd;
-	char *desc = "query current capacity info of vanda";
-	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
+	char *desc = "dynamic change capacity";
 	const char *cap_gb = "cap size in GB";
 	const char *cap_byte = "cap size in byte";
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
@@ -747,8 +951,6 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	struct config {
 		__u64 cap_in_byte;
 		__u32 capacity_in_gb;
-		bool  raw_binary;
-		bool  json;
 		bool  force;
 	};
 
@@ -762,8 +964,6 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_UINT("cap",			'c',	&cfg.capacity_in_gb,	cap_gb),
 		OPT_SUFFIX("cap-byte",	'z',	&cfg.cap_in_byte,		cap_byte),
 		OPT_FLAG("force",		'f',	&cfg.force,				force),
-		OPT_FLAG("raw-binary",	'b',	&cfg.raw_binary,		raw),
-		OPT_FLAG("json",		'j',	&cfg.json,				json),
 		OPT_END()
 	};
 

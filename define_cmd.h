@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #ifdef CREATE_CMD
 #undef CREATE_CMD
 

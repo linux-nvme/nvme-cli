@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #ifndef PLUGIN_H
 #define PLUGIN_H
 

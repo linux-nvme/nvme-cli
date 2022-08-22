@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
@@ -1017,9 +1018,9 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	const char *fua = "force unit access";
 	const char *prinfo = "protection information action and checks field";
 	const char *piremap = "protection information remap (for type 1 PI)";
-	const char *ref_tag = "reference tag (for end to end PI)";
-	const char *lbat = "logical block application tag (for end to end PI)";
-	const char *lbatm = "logical block application tag mask (for end to end PI)";
+	const char *ref_tag = "reference tag for end-to-end PI";
+	const char *lbat = "logical block application tag for end-to-end PI";
+	const char *lbatm = "logical block application tag mask for end-to-end PI";
 	const char *metadata_size = "size of metadata in bytes";
 	const char *data_size = "size of data in bytes";
 	const char *latency = "output latency statistics";
@@ -1043,7 +1044,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		bool   limited_retry;
 		bool   fua;
 		__u32  namespace_id;
-		__u32  ref_tag;
+		__u64  ref_tag;
 		__u16  lbat;
 		__u16  lbatm;
 		__u8   prinfo;
@@ -1062,7 +1063,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_FILE("metadata",          'M', &cfg.metadata,      metadata),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry, limited_retry),
 		OPT_FLAG("force-unit-access", 'f', &cfg.fua,           fua),
-		OPT_UINT("ref-tag",           'r', &cfg.ref_tag,       ref_tag),
+		OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,       ref_tag),
 		OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,         lbatm),
 		OPT_SHRT("app-tag",           'a', &cfg.lbat,          lbat),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,        prinfo),
@@ -1183,7 +1184,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		.zslba		= cfg.zslba,
 		.nlb		= nblocks,
 		.control	= control,
-		.ilbrt		= cfg.ref_tag,
+		.ilbrt_u64	= cfg.ref_tag,
 		.lbat		= cfg.lbat,
 		.lbatm		= cfg.lbatm,
 		.data_len	= cfg.data_size,

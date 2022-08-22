@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -27,19 +29,19 @@ class TestNVMeSimpleTestTemplate(TestNVMe):
 
     """ Represents Simple NVMe test """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeSimpleTestTemplate. """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.setup_log_dir(self.__class__.__name__)
         # Add this test specific variables here
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeSimpleTestTemplate
 
             Call super class's destructor.
         """
         # Add this test specific cleanup code here
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def simple_template_test(self):
         """ Wrapper for this test specific functions

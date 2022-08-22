@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * Copyright (c) 2015-2018 Western Digital Corporation or its affiliates.
  *
@@ -79,6 +80,8 @@
 #define WDC_NVME_SN560_DEV_ID_1             0x2712
 #define WDC_NVME_SN560_DEV_ID_2             0x2713
 #define WDC_NVME_SN560_DEV_ID_3             0x2714
+#define WDC_NVME_SN860_DEV_ID               0x2730
+#define WDC_NVME_SN550_DEV_ID               0x2708
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
@@ -96,7 +99,7 @@
 #define WDC_NVME_ZN350_DEV_ID				0x5010
 #define WDC_NVME_ZN350_DEV_ID_1 			0x5018
 #define WDC_NVME_SN810_DEV_ID				0x5011
-#define WDC_NVME_SN810_DEV_ID_2		        0x5037
+#define WDC_NVME_SN820CL_DEV_ID		        0x5037
 
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
 #define WDC_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
@@ -139,6 +142,7 @@
 #define WDC_DRIVE_CAP_OCP_C1_LOG_PAGE		0x0000002000000000
 #define WDC_DRIVE_CAP_OCP_C4_LOG_PAGE		0x0000004000000000
 #define WDC_DRIVE_CAP_OCP_C5_LOG_PAGE		0x0000008000000000
+#define WDC_DRIVE_CAP_DEVICE_WAF            0x0000010000000000
 #define WDC_DRIVE_CAP_SMART_LOG_MASK	(WDC_DRIVE_CAP_C0_LOG_PAGE | WDC_DRIVE_CAP_C1_LOG_PAGE | \
                                          WDC_DRIVE_CAP_CA_LOG_PAGE | WDC_DRIVE_CAP_D0_LOG_PAGE)
 #define WDC_DRIVE_CAP_CLEAR_PCIE_MASK       (WDC_DRIVE_CAP_CLEAR_PCIE | \
@@ -353,6 +357,7 @@ static __u8 wdc_lat_mon_guid[WDC_C3_GUID_LENGTH]    = { 0x92, 0x7a, 0xc0, 0x8c, 
 #define WDC_LOG_ID_C0                           0xC0
 #define WDC_LOG_ID_C1                           0xC1
 #define WDC_LOG_ID_C2                           WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE
+#define WDC_LOG_ID_C3                           0xC3
 #define WDC_LOG_ID_C4                           0xC4
 #define WDC_LOG_ID_C5                           0xC5
 #define WDC_LOG_ID_C6                           0xC6
@@ -547,8 +552,63 @@ typedef enum
 	SCAO_V1_LPG                = 496,	/* Log page GUID */
 } SMART_CLOUD_ATTRIBUTE_OFFSETS_V1;
 
-static __u8 scao_guid_v1[WDC_C2_GUID_LENGTH]    = { 0x65, 0x43, 0x88, 0x78, 0xAC, 0xD8, 0x78, 0xA1,
+static __u8 ext_smart_guid[WDC_C0_GUID_LENGTH]    = { 0x65, 0x43, 0x88, 0x78, 0xAC, 0xD8, 0x78, 0xA1,
 		0x66, 0x42, 0x1E, 0x0F, 0x92, 0xD7, 0x6D, 0xC4 };
+
+typedef struct __attribute__((__packed__)) wdc_nvme_ext_smart_log
+{
+	__u8  ext_smart_pmuwt[16];			/* 000 Physical media units written TLC */
+	__u8  ext_smart_pmuws[16];			/* 016 Physical media units written SLC */
+	__u8  ext_smart_bunbc[8];			/* 032 Bad user nand block count */
+	__u64 ext_smart_xrc;				/* 040 XOR recovery count */
+	__u64 ext_smart_urec;				/* 048 Uncorrectable read error count */
+	__u64 ext_smart_eece;				/* 056 End to end corrected errors */
+	__u64 ext_smart_eede;				/* 064 End to end detected errors */
+	__u64 ext_smart_eeue;				/* 072 End to end uncorrected errors */
+	__u8  ext_smart_sdpu;				/* 080 System data percent used */
+	__u8  ext_smart_rsvd1[3];			/* 081 reserved */
+	__u64 ext_smart_mnudec;				/* 084 Min User data erase counts (TLC) */
+	__u64 ext_smart_mxudec;				/* 092 Max User data erase counts (TLC) */
+	__u64 ext_smart_avudec;				/* 100 Average User data erase counts (TLC) */
+	__u64 ext_smart_mnec;				/* 108 Min Erase counts (SLC) */
+	__u64 ext_smart_mxec;				/* 116 Max Erase counts (SLC) */
+	__u64 ext_smart_avec;				/* 124 Average Erase counts (SLC) */
+	__u8  ext_smart_pfc[8];				/* 132 Program fail count  */
+	__u8  ext_smart_efc[8];				/* 140 Erase fail count  */
+	__u64 ext_smart_pcec;				/* 148 PCIe correctable error count */
+	__u8  ext_smart_pfbu;				/* 156 Percent free blocks (User) */
+	__u8  ext_smart_rsvd2[3];			/* 157 reserved */
+	__u64 ext_smart_svn;				/* 160 Security Version Number */
+	__u8  ext_smart_pfbs;				/* 168 Percent free blocks (System) */
+	__u8  ext_smart_rsvd3[3];			/* 169 reserved */
+	__u8  ext_smart_dcc[16];			/* 172 Deallocate Commands Completed */
+	__u64 ext_smart_tnu; 				/* 188 Total Namespace Utilization   */
+	__u16 ext_smart_fcc; 				/* 196 Format NVM Commands Completed */
+	__u8  ext_smart_bbpg;				/* 198 Background Back-Pressure Gauge */
+	__u8  ext_smart_rsvd4[3];			/* 199 reserved */
+	__u64 ext_smart_seec;				/* 202 Soft ECC error count */
+	__u64 ext_smart_rfsc;				/* 210 Refresh count */
+	__u8  ext_smart_bsnbc[8];			/* 218 Bad system nand block count */
+	__u8  ext_smart_eest[16];			/* 226 Endurance estimate */
+	__u16 ext_smart_ttc; 				/* 242 Thermal throttling count */
+	__u64 ext_smart_uio;				/* 244 Unaligned I/O */
+	__u8  ext_smart_pmur[16]; 			/* 252 Physical media units read */
+	__u32 ext_smart_rtoc;				/* 268 Read command timeout count */
+	__u32 ext_smart_wtoc;				/* 272 Write command timeout count */
+	__u32 ext_smart_ttoc;				/* 276 Trim command timeout count */
+	__u8  ext_smart_rsvd5[4];			/* 280 reserved */
+	__u64 ext_smart_plrc;				/* 284 PCIe Link Retraining Count */
+	__u64 ext_smart_pscc;				/* 292 Power State Change Count */
+	__u16 ext_smart_maj;				/* 300 Boot SSD major version field */
+	__u16 ext_smart_min;				/* 302 Boot SSD minor version field */
+	__u16 ext_smart_pt; 				/* 304 Boot SSD point version field */
+	__u16 ext_smart_err;				/* 306 Boot SSD errata version field */
+	__u32 ext_smart_ftlus;				/* 308 FTL Unit Size  */
+	__u32 ext_smart_tcgos;				/* 312 TCG Ownership Status */
+	__u8  ext_smart_rsvd6[178];			/* 316 reserved */
+	__u16 ext_smart_lpv;				/* 494 Log page version - 0x0001 */
+	__u8  ext_smart_lpg[16];			/* 496 Log page GUID */
+} wdc_nvme_ext_smart_log;
 
 typedef enum
 {
@@ -644,8 +704,8 @@ typedef struct __attribute__((__packed__)) wdc_nvme_hw_rev_log
 	__u8  hw_rev_c8_di[16];     /* 288 Component 8 Detailed Info      */
 	__u8  hw_rev_c9_di[16];     /* 304 Component 9 Detailed Info      */
 	__u8  hw_rev_sn[32];        /* 320 Serial Number                  */
-	__u8  hw_rev_rsrvd2[143];   /* 352 Reserved 143 bytes             */
-	__u8  hw_rev_version;       /* 495 Log Page Version               */
+	__u8  hw_rev_rsrvd2[142];   /* 352 Reserved 143 bytes             */
+	__u16 hw_rev_version;       /* 494 Log Page Version               */
 	__u8  hw_rev_guid[16];      /* 496 Log Page GUID                  */
 } wdc_nvme_hw_rev_log;
 
@@ -1458,6 +1518,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN640_DEV_ID_2:
 		/* FALLTHRU */
         case WDC_NVME_SN640_DEV_ID_3:
+        /* FALLTHRU */
+        case WDC_NVME_SN560_DEV_ID_1:
+        /* FALLTHRU */
+        case WDC_NVME_SN560_DEV_ID_2:
+        /* FALLTHRU */
+        case WDC_NVME_SN560_DEV_ID_3:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
@@ -1510,6 +1576,8 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN840_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID_1:
+		/* FALLTHRU */
+		case WDC_NVME_SN860_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
@@ -1540,9 +1608,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN650_DEV_ID_3:
 		case WDC_NVME_SN650_DEV_ID_4:
 		case WDC_NVME_SN655_DEV_ID:
-		case WDC_NVME_SN560_DEV_ID_1:
-		case WDC_NVME_SN560_DEV_ID_2:
-		case WDC_NVME_SN560_DEV_ID_3:
+		case WDC_NVME_SN550_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
@@ -1580,11 +1646,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN810_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA;
 			break;
-		case WDC_NVME_SN810_DEV_ID_2:
+		case WDC_NVME_SN820CL_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION |
 				WDC_DRIVE_CAP_CLOUD_LOG_PAGE | WDC_DRIVE_CAP_C0_LOG_PAGE |
 				WDC_DRIVE_CAP_HW_REV_LOG_PAGE | WDC_DRIVE_CAP_INFO |
-				WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_NAND_STATS;
+				WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_NAND_STATS |
+					WDC_DRIVE_CAP_DEVICE_WAF | WDC_DRIVE_CAP_TEMP_STATS;
 			break;
 		case WDC_NVME_SN720_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_NS_RESIZE;
@@ -5134,7 +5201,7 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32
 	json_free_object(root);
 }
 
-static int nvme_get_smart_cloud_v1_log(int fd, __u8 **data, int uuid_index, __u32 namespace_id)
+static int nvme_get_ext_smart_cloud_log(int fd, __u8 **data, int uuid_index, __u32 namespace_id)
 {
 	int ret, i;
 	__u8 *log_ptr = NULL;
@@ -5167,16 +5234,16 @@ static int nvme_get_smart_cloud_v1_log(int fd, __u8 **data, int uuid_index, __u3
 	if (ret == 0) {
 
 		/* Verify GUID matches */
-		for (i = 0; i < WDC_C2_GUID_LENGTH; i++) {
-			if (scao_guid_v1[i] != *&log_ptr[SCAO_V1_LPG + i])	{
+		for (i = 0; i < WDC_C0_GUID_LENGTH; i++) {
+			if (ext_smart_guid[i] != *&log_ptr[SCAO_V1_LPG + i])	{
 				fprintf(stderr, "ERROR : WDC : Unknown GUID in C0 Log Page V1 data\n");
 				int j;
 				fprintf(stderr, "ERROR : WDC : Expected GUID:  0x");
-				for (j = 0; j < WDC_C2_GUID_LENGTH; j++) {
-					fprintf(stderr, "%x", scao_guid_v1[j]);
+				for (j = 0; j < WDC_C0_GUID_LENGTH; j++) {
+					fprintf(stderr, "%x", ext_smart_guid[j]);
 				}
 				fprintf(stderr, "\nERROR : WDC : Actual GUID:    0x");
-				for (j = 0; j < WDC_C2_GUID_LENGTH; j++) {
+				for (j = 0; j < WDC_C0_GUID_LENGTH; j++) {
 					fprintf(stderr, "%x", *&log_ptr[SCAO_V1_LPG + j]);
 				}
 				fprintf(stderr, "\n");
@@ -5232,7 +5299,7 @@ static int nvme_get_hw_rev_log(int fd, __u8 **data, int uuid_index, __u32 namesp
 				int j;
 				fprintf(stderr, "ERROR : WDC : Expected GUID:  0x");
 				for (j = 0; j < WDC_NVME_C6_GUID_LENGTH; j++) {
-					fprintf(stderr, "%x", scao_guid_v1[j]);
+					fprintf(stderr, "%x", hw_rev_log_guid[j]);
 				}
 				fprintf(stderr, "\nERROR : WDC : Actual GUID:    0x");
 				for (j = 0; j < WDC_NVME_C6_GUID_LENGTH; j++) {
@@ -5547,7 +5614,7 @@ static void wdc_print_hw_rev_log_json(void *data)
 	json_object_add_value_string(root, "Serial Number", json_data);
 
 	json_object_add_value_uint(root, "Log Page Version",
-			log_data->hw_rev_version);
+			le16_to_cpu(log_data->hw_rev_version));
 
 	memset((void*)json_data, 0, 40);
 	sprintf((char*)json_data, "0x%"PRIx64"%"PRIx64"", le64_to_cpu(*(uint64_t *)&log_data->hw_rev_guid[8]),
@@ -5559,263 +5626,250 @@ static void wdc_print_hw_rev_log_json(void *data)
 	json_free_object(root);
 }
 
-static void wdc_print_smart_cloud_attr_C0_V1_normal(void *data, int mask)
+static void wdc_print_ext_smart_cloud_log_normal(void *data, int mask)
 {
-	__u8 *log_data = (__u8*)data;
+	int i;
+	wdc_nvme_ext_smart_log *ext_smart_log_ptr = (wdc_nvme_ext_smart_log *)data;
 
 	if (mask == WDC_SCA_V1_NAND_STATS)
 		printf("  NAND Statistics :- \n");
 	else
-		printf("  SMART Cloud Attributes Version 1:- \n");
+		printf("  SMART Cloud Attributes :- \n");
 
-	printf("  Physical Media Units Written TLC    	      	: %"PRIu64" %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUWT+8] & 0xFFFFFFFFFFFFFFFF),
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUWT] & 0xFFFFFFFFFFFFFFFF));
-	printf("  Physical Media Units Written SLC    	      	: %"PRIu64" %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUWS+8] & 0xFFFFFFFFFFFFFFFF),
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUWS] & 0xFFFFFFFFFFFFFFFF));
-	printf("  Bad User NAND Blocks Normalized		: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_BUNBN]));
-	printf("  Bad User NAND Blocks Raw			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_BUNBR] & 0x0000FFFFFFFFFFFF));
-	printf("  XOR Recovery Count			  	: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_XRC]));
-	printf("  Uncorrectable Read Error Count		: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_UREC]));
+	printf("  Physical Media Units Written TLC (Bytes) : %'.0Lf\n",
+		int128_to_double(ext_smart_log_ptr->ext_smart_pmuwt));
+	printf("  Physical Media Units Written SLC (Bytes) : %'.0Lf\n",
+		int128_to_double(ext_smart_log_ptr->ext_smart_pmuws));
+	printf("  Bad User NAND Block Count (Normalized) (Int) : %d\n",
+			le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_bunbc));
+	printf("  Bad User NAND Block Count (Raw) (Int)	: %"PRIu64"\n",
+			le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_bunbc & 0xFFFFFFFFFFFF0000));
+	printf("  XOR Recovery Count (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_xrc));
+	printf("  Uncorrectable Read Error Count (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_urec));
 	if (mask == WDC_SCA_V1_ALL) {
-		printf("  End to End Corrected Errors			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EECE]));
-		printf("  End to End Detected Errors			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EEDE]));
-		printf("  End to End Uncorrected Errors			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EEUE]));
-		printf("  System Data Percent Used			: %d\n",
-			(*(uint8_t *)&log_data[SCAO_V1_SDPU]));
+		printf("  SSD End to End correction counts (Corrected Errors) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_eece));
+		printf("  SSD End to End correction counts (Detected Errors) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_eede));
+		printf("  SSD End to End correction counts (Uncorrected E2E Errors) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_eeue));
+		printf("  System Data %% life-used : %d %%\n",
+			ext_smart_log_ptr->ext_smart_sdpu);
 	}
-	printf("  Min User Data Erase Count (TLC)		: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_MNUDEC]));
-	printf("  Max User Data Erase Count (TLC)		: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_MXUDEC]));
-	printf("  Average User Data Erase Count (TLC)		: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_AVUDEC]));
-	printf("  Min Erase Count (SLC)				: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_MNEC]));
-	printf("  Max Erase Count (SLC)				: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_MXEC]));
-	printf("  Average Erase Count (SLC)			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_AVEC]));
-	printf("  Program Fail Count Normalized			: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_PFCN]));
-	printf("  Program Fail Count Raw			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PFCR] & 0x0000FFFFFFFFFFFF));
-	printf("  Erase Fail Count Normalized			: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_EFCN]));
-	printf("  Erase Fail Count Raw				: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EFCR] & 0x0000FFFFFFFFFFFF));
+	printf("  User data erase counts (Minimum TLC) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_mnudec));
+	printf("  User data erase counts (Maximum TLC) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_mxudec));
+	printf("  User data erase counts (Minimum SLC) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_mnec));
+	printf("  User data erase counts (Maximum SLC) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_mxec));
+	printf("  User data erase counts (Average SLC) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_avec));
+	printf("  User data erase counts (Average TLC) (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_avudec));
+	printf("  Program Fail Count (Normalized) (Int) : %d\n",
+			le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_pfc));
+	printf("  Program Fail Count (Raw) (Int) : %"PRIu64"\n",
+			le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_pfc & 0xFFFFFFFFFFFF0000));
+	printf("  Erase Fail Count (Normalized) (Int) : %d\n",
+			le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_efc));
+	printf("  Erase Fail Count (Raw) (Int) : %"PRIu64"\n",
+			le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_efc & 0xFFFFFFFFFFFF0000));
 	if (mask == WDC_SCA_V1_ALL) {
-		printf("  PCIe Correctable Error Count			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PCEC]));
-		printf("  Percent Free Blocks (User)			: %d\n",
-			(*(uint8_t *)&log_data[SCAO_V1_PFBU]));
-		printf("  Security Version Number			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_SVN]));
-		printf("  Percent Free Blocks (System)			: %d\n",
-			(*(uint8_t *)&log_data[SCAO_V1_PFBS]));
-		printf("  Deallocate Commands Completed    		: %"PRIu64" %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_DCC+8] & 0xFFFFFFFFFFFFFFFF),
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_DCC] & 0xFFFFFFFFFFFFFFFF));
-		printf("  Total Namespace Utilization			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_TNU]));
-
-		printf("  Format NVM Commands Completed			: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_FCC]));
-		printf("  Background Back-Pressure Gauge		: %d\n",
-			(*(uint8_t *)&log_data[SCAO_V1_BBPG]));
+		printf("  PCIe Correctable Error Count (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_pcec));
+		printf("  %% Free Blocks (User) (Int) : %d %%\n",
+			ext_smart_log_ptr->ext_smart_pfbu);
+		printf("  Security Version Number (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_svn));
+		printf("  %% Free Blocks (System) (Int)	: %d %%\n",
+			ext_smart_log_ptr->ext_smart_pfbs);
+		printf("  NVMe Stats (# Data Set Management/TRIM Commands Completed) (Int) : %'.0Lf\n",
+				int128_to_double(ext_smart_log_ptr->ext_smart_dcc));
+		printf("  Total Namespace Utilization (nvme0n1 NUSE) (Bytes) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_tnu));
+		printf("  NVMe Stats (# NVMe Format Commands Completed) (Int) : %d\n",
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_fcc));
+		printf("  Background Back-Pressure Gauge(%%) (Int) : %d\n",
+			ext_smart_log_ptr->ext_smart_bbpg);
 	}
-	printf("  Soft ECC Error Count				: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_SEEC]));
+	printf("  Total # of Soft ECC Error Count (Int)	: %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_seec));
 	if (mask == WDC_SCA_V1_ALL) {
-		printf("  Refresh Count					: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_RFSC]));
+		printf("  Total # of Read Refresh Count (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_rfsc));
 	}
-	printf("  Bad System NAND Block Count Normalized	: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_BSNBN]));
-	printf("  Bad System NAND Block Count Raw		: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_BSNBR] & 0x0000FFFFFFFFFFFF));
-	printf("  Endurance estimate			    	: %"PRIu64" %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EEST+8] & 0xFFFFFFFFFFFFFFFF),
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EEST] & 0xFFFFFFFFFFFFFFFF));
+	printf("  Bad System NAND Block Count (Normalized) (Int) : %d\n",
+			le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_bsnbc));
+	printf("  Bad System NAND Block Count (Raw) (Int) : %"PRIu64"\n",
+			le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_bsnbc & 0xFFFFFFFFFFFF0000));
+	printf("  Endurance Estimate (Total Writable Lifetime Bytes) (Bytes) :  %'.0Lf\n",
+			int128_to_double(ext_smart_log_ptr->ext_smart_eest));
 	if (mask == WDC_SCA_V1_ALL) {
-		printf("  Thermal Throttling Count			: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_TTC]));
-		printf("  Unaligned I/O					: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_UIO]));
+		printf("  Thermal Throttling Status & Count (Number of thermal throttling events) (Int)	: %d\n",
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_ttc));
+		printf("  Total # Unaligned I/O (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_uio));
 	}
-	printf("  Physical Media Units Read			: %"PRIu64" %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUR+8] & 0xFFFFFFFFFFFFFFFF),
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUR] & 0xFFFFFFFFFFFFFFFF));
+	printf("  Total Physical Media Units Read (Bytes) (Int)	:  %'.0Lf\n",
+			int128_to_double(ext_smart_log_ptr->ext_smart_pmur));
 	if (mask == WDC_SCA_V1_ALL) {
-		printf("  Read Command Timeout Count    		: %"PRIu32"\n",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_RTOC]));
-		printf("  Write Command Timeout Count    		: %"PRIu32"\n",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_WTOC]));
-		printf("  Trim Command Timeout Count    		: %"PRIu32"\n",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_TTOC]));
-		printf("  PCIe Link Retraining Count			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PLRC]));
-		printf("  Power State Change Count 			: %"PRIu64"\n",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PSCC]));
+		printf("  Command Timeout (# of READ Commands > 5 Seconds) (Int) : %"PRIu32"\n",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_rtoc));
+		printf("  Command Timeout (# of WRITE Commands > 5 Seconds) (Int) : %"PRIu32"\n",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_wtoc));
+		printf("  Command Timeout (# of TRIM Commands > 5 Seconds) (Int) : %"PRIu32"\n",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_ttoc));
+		printf("  Total PCIe Link Retraining Count (Int) : %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_plrc));
+		printf("  Active Power State Change Count (Int)	: %"PRIu64"\n",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_pscc));
 	}
-	printf("  Boot SSD Major Version			: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_MAVF]));
-	printf("  Boot SSD Minor Version			: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_MIVF]));
-	printf("  Boot SSD Point Version			: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_PVF]));
-	printf("  Boot SSD Errata Version			: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_EVF]));
+	printf("  Cloud Boot SSD Spec Version (Int) : %d.%d.%d.%d\n",
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_maj),
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_min),
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_pt),
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_err));
+	printf("  Cloud Boot SSD HW Revision (Int) : %d.%d.%d.%d\n",
+			0, 0, 0, 0);
 	if (mask == WDC_SCA_V1_ALL) {
-		printf("  FTL Unit Size				    	: %"PRIu32"\n",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_FTLUS]));
-		printf("  TCG Ownership Status			    	: %"PRIu32"\n",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_TCGOS]));
-		printf("  Log Page Version				: %d\n",
-			le16_to_cpu(*(uint16_t *)&log_data[SCAO_V1_LPV]));
-		printf("  Log page GUID					: 0x");
-		printf("%"PRIx64"%"PRIx64"\n",le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_LPG + 8]),
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_LPG]));
+		printf("  FTL Unit Size	: %"PRIu32"\n",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_ftlus));
+		printf("  TCG Ownership Status : %"PRIu32"\n",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_tcgos));
+		printf("  Log Page Version (Int) : %d\n",
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_lpv));
+		printf("  Log page GUID	(Hex) : 0x");
+		for (i = WDC_C0_GUID_LENGTH; i > 0; i--)
+			printf("%02x", ext_smart_log_ptr->ext_smart_lpg[i-1]);
+		printf("\n");
 	}
 	printf("\n");
 }
 
-static void wdc_print_smart_cloud_attr_C0_V1_json(void *data, int mask)
+static void wdc_print_ext_smart_cloud_log_json(void *data, int mask)
 {
-	__u8 *log_data = (__u8*)data;
+	wdc_nvme_ext_smart_log *ext_smart_log_ptr = (wdc_nvme_ext_smart_log *)data;
 	struct json_object *root;
 
 	root = json_create_object();
-	json_object_add_value_uint64(root, "Physical Media Units Written TLC hi",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUWT+8] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Physical Media Units Written TLC lo",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUWT] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Physical Media Units Written SLC hi",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUWS+8] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Physical Media Units Written SLC lo",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUWS] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint(root, "Bad User NAND Blocks - Normalized",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_BUNBN]));
-	json_object_add_value_uint64(root, "Bad User NAND Blocks - Raw",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_BUNBR] & 0x0000FFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "XOR Recovery Count",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_XRC]));
-	json_object_add_value_uint64(root, "Uncorrectable Read Error Count",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_UREC]));
+	json_object_add_value_float(root, "physical_media_units_bytes_tlc",
+		int128_to_double(ext_smart_log_ptr->ext_smart_pmuwt));
+	json_object_add_value_float(root, "physical_media_units_bytes_slc",
+		int128_to_double(ext_smart_log_ptr->ext_smart_pmuws));
+	json_object_add_value_uint(root, "bad_user_blocks_normalized",
+		le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_bunbc));
+	json_object_add_value_uint64(root, "bad_user_blocks_raw",
+		le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_bunbc & 0xFFFFFFFFFFFF0000));
+	json_object_add_value_uint64(root, "xor_recovery_count",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_xrc));
+	json_object_add_value_uint64(root, "uncorrectable_read_errors",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_urec));
 	if (mask == WDC_SCA_V1_ALL) {
-		json_object_add_value_uint64(root, "End to End Corrected Errors",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EECE]));
-		json_object_add_value_uint64(root, "End to End Detected Errors",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EEDE]));
-		json_object_add_value_uint64(root, "End to End Uncorrected Errors",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EEUE]));
-		json_object_add_value_uint(root, "System Data Percent Used",
-			(__u8)log_data[SCAO_V1_SDPU]);
+		json_object_add_value_uint64(root, "corrected_e2e_errors",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_eece));
+		json_object_add_value_uint64(root, "detected_e2e_errors",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_eede));
+		json_object_add_value_uint64(root, "uncorrected_e2e_errors",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_eeue));
+		json_object_add_value_uint(root, "system_data_life_used_pct",
+			(__u8)ext_smart_log_ptr->ext_smart_sdpu);
 	}
-	json_object_add_value_uint64(root, "Min User Data Erase Count (TLC)",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_MNUDEC]));
-	json_object_add_value_uint64(root, "Max User Data Erase Count (TLC)",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_MXUDEC]));
-	json_object_add_value_uint64(root, "Average User Data Erase Count (TLC)",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_AVUDEC]));
-	json_object_add_value_uint64(root, "Min Erase Count (SLC)",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_MNEC]));
-	json_object_add_value_uint64(root, "Max Erase Count (SLC)",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_MXEC]));
-	json_object_add_value_uint64(root, "Average Erase Count (SLC)",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_AVEC]));
-	json_object_add_value_uint(root, "Program Fail Count - Normalized",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_PFCN]));
-	json_object_add_value_uint64(root, "Program Fail Count - Raw",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PFCR] & 0x0000FFFFFFFFFFFF));
-	json_object_add_value_uint(root, "Erase Fail Count - Normalized",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_EFCN]));
-	json_object_add_value_uint64(root, "Erase Fail Count - Raw",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EFCR] & 0x0000FFFFFFFFFFFF));
+	json_object_add_value_uint64(root, "min_slc_user_data_erase_count",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_mnec));
+	json_object_add_value_uint64(root, "min_tlc_user_data_erase_count",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_mnudec));
+	json_object_add_value_uint64(root, "max_slc_user_data_erase_count",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_mxec));
+	json_object_add_value_uint64(root, "max_tlc_user_data_erase_count",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_mxudec));
+	json_object_add_value_uint64(root, "avg_slc_user_data_erase_count",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_avec));
+	json_object_add_value_uint64(root, "avg_tlc_user_data_erase_count",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_avudec));
+	json_object_add_value_uint(root, "program_fail_count_normalized",
+		le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_pfc));
+	json_object_add_value_uint64(root, "program_fail_count_raw",
+		le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_pfc & 0xFFFFFFFFFFFF0000));
+	json_object_add_value_uint(root, "erase_fail_count_normalized",
+		le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_efc));
+	json_object_add_value_uint64(root, "erase_fail_count_raw",
+		le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_efc & 0xFFFFFFFFFFFF0000));
 	if (mask == WDC_SCA_V1_ALL) {
-		json_object_add_value_uint64(root, "PCIe Correctable Error Count",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PCEC]));
-		json_object_add_value_uint(root, "Percent Free Blocks (User)",
-			(__u8)log_data[SCAO_V1_PFBU]);
-		json_object_add_value_uint64(root, "Security Version Number",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_SVN]));
-		json_object_add_value_uint(root, "Percent Free Blocks (System)",
-			(__u8)log_data[SCAO_V1_PFBS]);
-		json_object_add_value_uint64(root, "Deallocate Commands Completed hi",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_DCC+8] & 0xFFFFFFFFFFFFFFFF));
-		json_object_add_value_uint64(root, "Deallocate Commands Completed lo",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_DCC] & 0xFFFFFFFFFFFFFFFF));
-		json_object_add_value_uint64(root, "Total Namespace Utilization",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_TNU]));
-		json_object_add_value_uint(root, "Format NVM Commands Completed",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_FCC]));
-		json_object_add_value_uint(root, "Background Back-Pressure Gauge",
-			(__u8)log_data[SCAO_V1_BBPG]);
+		json_object_add_value_uint64(root, "pcie_correctable_errors",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_pcec));
+		json_object_add_value_uint(root, "pct_free_blocks_user",
+			(__u8)ext_smart_log_ptr->ext_smart_pfbu);
+		json_object_add_value_uint64(root, "security_version",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_svn));
+		json_object_add_value_uint(root, "pct_free_blocks_system",
+			(__u8)ext_smart_log_ptr->ext_smart_pfbs);
+		json_object_add_value_float(root, "num_of_trim_commands",
+			int128_to_double(ext_smart_log_ptr->ext_smart_dcc));
+		json_object_add_value_uint64(root, "total_nuse_bytes",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_tnu));
+		json_object_add_value_uint(root, "num_of_format_commands",
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_fcc));
+		json_object_add_value_uint(root, "background_pressure_gauge",
+			(__u8)ext_smart_log_ptr->ext_smart_bbpg);
 	}
-	json_object_add_value_uint64(root, "Soft ECC Error Count",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_SEEC]));
+	json_object_add_value_uint64(root, "soft_ecc_error_count",
+		le64_to_cpu(ext_smart_log_ptr->ext_smart_seec));
 	if (mask == WDC_SCA_V1_ALL) {
-		json_object_add_value_uint64(root, "Refresh Count",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_RFSC]));
+		json_object_add_value_uint64(root, "read_refresh_count",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_rfsc));
 	}
-	json_object_add_value_uint(root, "Bad System NAND Blocks - Normalized",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_BSNBN]));
-	json_object_add_value_uint64(root, "Bad System NAND Blocks - Raw",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_BSNBR] & 0x0000FFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Endurance Estimate hi",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EEST+8] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Endurance Estimate lo",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_EEST] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_uint(root, "bad_system_block_normalized",
+		le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_bsnbc));
+	json_object_add_value_uint64(root, "bad_system_block_raw",
+		le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_bsnbc & 0xFFFFFFFFFFFF0000));
+	json_object_add_value_float(root, "endurance_est_bytes",
+		int128_to_double(ext_smart_log_ptr->ext_smart_eest));
 	if (mask == WDC_SCA_V1_ALL) {
-		json_object_add_value_uint(root, "Thermal Throttling Count",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_TTC]));
-		json_object_add_value_uint64(root, "Unaligned I/O",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_UIO]));
+		json_object_add_value_uint(root, "num_throttling_events",
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_ttc));
+		json_object_add_value_uint64(root, "total_unaligned_io",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_uio));
 	}
-	json_object_add_value_uint64(root, "Physical Media Units Read hi",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUR+8] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Physical Media Units Read lo",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PMUR] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_float(root, "physical_media_units_read_bytes",
+			int128_to_double(ext_smart_log_ptr->ext_smart_pmur));
 	if (mask == WDC_SCA_V1_ALL) {
-		json_object_add_value_uint(root, "Read Command Timeout Count",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_RTOC]));
-		json_object_add_value_uint(root, "Write Command Timeout Count",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_WTOC]));
-		json_object_add_value_uint(root, "Trim Command Timeout Count",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_TTOC]));
-		json_object_add_value_uint64(root, "PCIe Link Retraining Count",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PLRC]));
-		json_object_add_value_uint64(root, "Power State Change Count",
-			le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_PSCC]));
+		json_object_add_value_uint(root, "num_read_timeouts",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_rtoc));
+		json_object_add_value_uint(root, "num_write_timeouts",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_wtoc));
+		json_object_add_value_uint(root, "num_trim_timeouts",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_ttoc));
+		json_object_add_value_uint64(root, "pcie_link_retrain_count",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_plrc));
+		json_object_add_value_uint64(root, "active_power_state_change_count",
+			le64_to_cpu(ext_smart_log_ptr->ext_smart_pscc));
 	}
-	json_object_add_value_uint(root, " Boot SSD Major Version",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_MAVF]));
-	json_object_add_value_uint(root, " Boot SSD Minor Version",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_MIVF]));
-	json_object_add_value_uint(root, " Boot SSD Point Version",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_PVF]));
-	json_object_add_value_uint(root, " Boot SSD Errata Version",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_EVF]));
+	char vers_str[40];
+	memset((void*)vers_str, 0, 40);
+	sprintf((char*)vers_str, "%d.%d.%d.%d",
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_maj), le16_to_cpu(ext_smart_log_ptr->ext_smart_min),
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_pt), le16_to_cpu(ext_smart_log_ptr->ext_smart_err));
+	json_object_add_value_string(root, "cloud_boot_ssd_spec_ver", vers_str);
+	memset((void*)vers_str, 0, 40);
+	sprintf((char*)vers_str, "%d.%d.%d.%d", 0, 0, 0, 0);
+	json_object_add_value_string(root, "cloud_boot_ssd_hw_ver", vers_str);
+
 	if (mask == WDC_SCA_V1_ALL) {
-		json_object_add_value_uint(root, "FTL Unit Size",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_FTLUS]));
-		json_object_add_value_uint(root, "TCG Ownership Status",
-			le32_to_cpu(*(uint32_t *)&log_data[SCAO_V1_TCGOS]));
-		json_object_add_value_uint(root, "Log Page Version",
-			le16_to_cpu(*(uint16_t * )&log_data[SCAO_V1_LPV]));
+		json_object_add_value_uint(root, "ftl_unit_size",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_ftlus));
+		json_object_add_value_uint(root, "tcg_ownership_status",
+			le32_to_cpu(ext_smart_log_ptr->ext_smart_tcgos));
+		json_object_add_value_uint(root, "log_page_ver",
+			le16_to_cpu(ext_smart_log_ptr->ext_smart_lpv));
 		char guid[40];
 		memset((void*)guid, 0, 40);
-		sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_LPG + 8]),
-				le64_to_cpu(*(uint64_t *)&log_data[SCAO_V1_LPG]));
-		json_object_add_value_string(root, "Log page GUID", guid);
+		sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",le64_to_cpu(*(uint64_t *)&ext_smart_log_ptr->ext_smart_lpg[8]),
+				le64_to_cpu(*(uint64_t *)&ext_smart_log_ptr->ext_smart_lpg[0]));
+		json_object_add_value_string(root, "log_page_guid", guid);
 	}
 
 	json_print_object(root, NULL);
@@ -5830,12 +5884,8 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 
 	printf("  SMART Cloud Attributes :- \n");
 
-	printf("  Physical media units written     	      	: %"PRIu64" %"PRIu64"\n",
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW+8] & 0xFFFFFFFFFFFFFFFF),
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
-	printf("  Physical media units read      	      	: %"PRIu64" %"PRIu64"\n",
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR+8] & 0xFFFFFFFFFFFFFFFF),
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
+	printf("  Physical media units written     	      	: %'.0Lf\n", int128_to_double(&log_data[SCAO_PMUW]));
+	printf("  Physical media units read      	      	: %'.0Lf\n", int128_to_double(&log_data[SCAO_PMUR]));
 	printf("  Bad user nand blocks Raw			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	printf("  Bad user nand blocks Normalized		: %d\n",
@@ -5876,8 +5926,8 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
 	printf("  NUSE Namespace utilization			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
-	printf("  PLP start count				: %.0Lf\n", int128_to_double(&log_data[SCAO_PSC]));
-	printf("  Endurance estimate				: %.0Lf\n", int128_to_double(&log_data[SCAO_EEST]));
+	printf("  PLP start count				: %'.0Lf\n", int128_to_double(&log_data[SCAO_PSC]));
+	printf("  Endurance estimate				: %'.0Lf\n", int128_to_double(&log_data[SCAO_EEST]));
 	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
 	printf("  Log page version				: %"PRIu16"\n",smart_log_ver);
 	printf("  Log page GUID					: 0x");
@@ -5911,14 +5961,10 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 	uint16_t smart_log_ver = 0;
 
 	root = json_create_object();
-	json_object_add_value_uint64(root, "Physical media units written hi",
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW+8] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Physical media units written lo",
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Physical media units read hi",
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR+8] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint64(root, "Physical media units read lo",
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_float(root, "Physical media units written",
+			int128_to_double(&log_data[SCAO_PMUW]));
+	json_object_add_value_float(root, "Physical media units read",
+			int128_to_double(&log_data[SCAO_PMUR]));
 	json_object_add_value_uint64(root, "Bad user nand blocks - Raw",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	json_object_add_value_uint(root, "Bad user nand blocks - Normalized",
@@ -5963,9 +6009,9 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
 	json_object_add_value_uint64(root, "NUSE - Namespace utilization",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
-	json_object_add_value_uint(root, "PLP start count",
+	json_object_add_value_float(root, "PLP start count",
 			int128_to_double(&log_data[SCAO_PSC]));
-	json_object_add_value_uint(root, "Endurance estimate",
+	json_object_add_value_float(root, "Endurance estimate",
 			int128_to_double(&log_data[SCAO_EEST]));
 	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
 	json_object_add_value_uint(root, "Log page version", smart_log_ver);
@@ -6048,7 +6094,7 @@ static void wdc_print_eol_c0_json(void *data)
 	json_free_object(root);
 }
 
-static int wdc_print_c0_v1_cloud_attr_log(void *data, int fmt)
+static int wdc_print_ext_smart_cloud_log(void *data, int fmt)
 {
 	if (!data) {
 		fprintf(stderr, "ERROR : WDC : Invalid buffer to read 0xC0 V1 log\n");
@@ -6056,10 +6102,10 @@ static int wdc_print_c0_v1_cloud_attr_log(void *data, int fmt)
 	}
 	switch (fmt) {
 	case NORMAL:
-		wdc_print_smart_cloud_attr_C0_V1_normal(data, WDC_SCA_V1_ALL);
+		wdc_print_ext_smart_cloud_log_normal(data, WDC_SCA_V1_ALL);
 		break;
 	case JSON:
-		wdc_print_smart_cloud_attr_C0_V1_json(data, WDC_SCA_V1_ALL);
+		wdc_print_ext_smart_cloud_log_json(data, WDC_SCA_V1_ALL);
 		break;
 	}
 	return 0;
@@ -6127,12 +6173,16 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 	case WDC_NVME_SN640_DEV_ID_3:
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
+	case WDC_NVME_SN860_DEV_ID:
 	case WDC_NVME_SN650_DEV_ID:
 	case WDC_NVME_SN650_DEV_ID_1:
 	case WDC_NVME_SN650_DEV_ID_2:
 	case WDC_NVME_SN650_DEV_ID_3:
 	case WDC_NVME_SN650_DEV_ID_4:
 	case WDC_NVME_SN655_DEV_ID:
+	case WDC_NVME_SN560_DEV_ID_1:
+	case WDC_NVME_SN560_DEV_ID_2:
+	case WDC_NVME_SN560_DEV_ID_3:
 		cust_id = wdc_get_fw_cust_id(r, fd);
 		if (cust_id == WDC_INVALID_CUSTOMER_ID) {
 			fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
@@ -6305,17 +6355,17 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 		free(data);
 		break;
 
-	case WDC_NVME_SN810_DEV_ID_2:
-		/* Get the 0xC0 Smart Cloud Attribute V1 log data */
+	case WDC_NVME_SN820CL_DEV_ID:
+		/* Get the 0xC0 Extended Smart Cloud Attribute log data */
 		data = NULL;
-		ret = nvme_get_smart_cloud_v1_log(fd, &data, uuid_index, namespace_id);
+		ret = nvme_get_ext_smart_cloud_log(fd, &data, uuid_index, namespace_id);
 
 		if (strcmp(format, "json"))
 			nvme_show_status(ret);
 
 		if (ret == 0) {
 			/* parse the data */
-			wdc_print_c0_v1_cloud_attr_log(data, fmt);
+			wdc_print_ext_smart_cloud_log(data, fmt);
 		} else {
 			fprintf(stderr, "ERROR : WDC : Unable to read C0 Log Page V1 data\n");
 			ret = -1;
@@ -6546,7 +6596,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 	case WDC_NVME_SN640_DEV_ID_3:
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
-
+	case WDC_NVME_SN860_DEV_ID:
 		if (cust_id == WDC_CUSTOMER_ID_0x1005) {
 
 			if ((data = (__u8*) malloc(sizeof (__u8) * WDC_FB_CA_LOG_BUF_LEN)) == NULL) {
@@ -7167,7 +7217,7 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
 	}
 
 	data = NULL;
-	ret = nvme_get_smart_cloud_v1_log(fd, &data, 0, cfg.namespace_id);
+	ret = nvme_get_ext_smart_cloud_log(fd, &data, 0, cfg.namespace_id);
 
 	if (strcmp(cfg.output_format, "json"))
 		nvme_show_status(ret);
@@ -7180,7 +7230,7 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
 		}
 
 		/* parse the data */
-		wdc_print_c0_v1_cloud_attr_log(data, fmt);
+		wdc_print_ext_smart_cloud_log(data, fmt);
 	} else {
 		fprintf(stderr, "ERROR : WDC : Unable to read C0 Log Page V1 data\n");
 		ret = -1;
@@ -7271,6 +7321,130 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
 free_buf:
 	if (data)
 		free(data);
+
+out:
+	nvme_free_tree(r);
+	close(fd);
+	return ret;
+}
+
+static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve Device Write Amplication Factor";
+	const char *namespace_id = "desired namespace id";
+	struct nvme_smart_log smart_log;
+	__u8 *data;
+	int fd;
+	nvme_root_t r;
+	int ret = 0;
+	int fmt = -1;
+	__u64 capabilities = 0;
+	wdc_nvme_ext_smart_log *ext_smart_log_ptr;
+	long double  data_units_written = 0,
+			phys_media_units_written_tlc = 0,
+			phys_media_units_written_slc = 0;
+	struct json_object *root = NULL;
+	char tlc_waf_str[32] = { 0 },
+			slc_waf_str[32] = { 0 };
+
+	struct config {
+		char *output_format;
+		__u32 namespace_id;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+		.namespace_id = NVME_NSID_ALL,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
+		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	r = nvme_scan(NULL);
+
+	capabilities = wdc_get_drive_capabilities(r, fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_DEVICE_WAF) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	/* get data units written from the smart log page */
+	ret = nvme_get_log_smart(fd, cfg.namespace_id, true, &smart_log);
+	if (!ret) {
+		data_units_written = int128_to_double(smart_log.data_units_written);
+	}
+	else if (ret > 0) {
+		nvme_show_status(ret);
+		ret = -1;
+		goto out;
+	} else {
+		fprintf(stderr, "smart log: %s\n", nvme_strerror(errno));
+		ret = -1;
+		goto out;
+	}
+
+	/* get Physical Media Units Written from extended smart/C0 log page */
+	data = NULL;
+	ret = nvme_get_ext_smart_cloud_log(fd, &data, 0, cfg.namespace_id);
+
+	if (ret == 0) {
+		ext_smart_log_ptr = (wdc_nvme_ext_smart_log *)data;
+		phys_media_units_written_tlc = int128_to_double(ext_smart_log_ptr->ext_smart_pmuwt);
+		phys_media_units_written_slc = int128_to_double(ext_smart_log_ptr->ext_smart_pmuws);
+
+		if (data)
+			free(data);
+	} else {
+		fprintf(stderr, "ERROR : WDC %s: get smart cloud log failure\n", __func__);
+		ret = -1;
+		goto out;
+	}
+
+	if (strcmp(cfg.output_format, "json"))
+		nvme_show_status(ret);
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC %s: invalid output format\n", __func__);
+		ret = fmt;
+		goto out;
+	}
+
+	if (data_units_written == 0) {
+		fprintf(stderr, "ERROR : WDC %s: 0 data units written\n", __func__);
+		ret = -1;
+		goto out;
+	}
+
+	if (fmt == NORMAL) {
+		printf("Device Write Amplification Factor TLC : %4.2Lf\n",
+				(phys_media_units_written_tlc/data_units_written));
+		printf("Device Write Amplification Factor SLC : %4.2Lf\n",
+				(phys_media_units_written_slc/data_units_written));
+	}
+	else if (fmt == JSON) {
+   		root = json_create_object();
+   		sprintf(tlc_waf_str, "%4.2Lf", (phys_media_units_written_tlc/data_units_written));
+   		sprintf(slc_waf_str, "%4.2Lf", (phys_media_units_written_slc/data_units_written));
+
+		json_object_add_value_string(root, "Device Write Amplification Factor TLC", tlc_waf_str);
+		json_object_add_value_string(root, "Device Write Amplification Factor SLC", slc_waf_str);
+
+		json_print_object(root, NULL);
+		printf("\n");
+
+		json_free_object(root);
+	}
 
 out:
 	nvme_free_tree(r);
@@ -9139,6 +9313,7 @@ static const char *nvme_log_id_to_string(__u8 log_id)
 		case WDC_LOG_ID_C0:             return "WDC Vendor Unique Log ID C0";
 		case WDC_LOG_ID_C1:             return "WDC Vendor Unique Log ID C1";
 		case WDC_LOG_ID_C2:             return "WDC Vendor Unique Log ID C2";
+		case WDC_LOG_ID_C3:             return "WDC Vendor Unique Log ID C3";
 		case WDC_LOG_ID_C4:             return "WDC Vendor Unique Log ID C4";
 		case WDC_LOG_ID_C5:             return "WDC Vendor Unique Log ID C5";
 		case WDC_LOG_ID_C6:             return "WDC Vendor Unique Log ID C6";
@@ -9769,7 +9944,7 @@ static int wdc_do_vs_nand_stats_sn810_2(int fd, char *format)
 	uint8_t *data = NULL;
 
 	data = NULL;
-	ret = nvme_get_smart_cloud_v1_log(fd, &data, 0, NVME_NSID_ALL);
+	ret = nvme_get_ext_smart_cloud_log(fd, &data, 0, NVME_NSID_ALL);
 
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : %s : Failed to retreive NAND stats\n", __func__);
@@ -9785,10 +9960,10 @@ static int wdc_do_vs_nand_stats_sn810_2(int fd, char *format)
 		/* parse the data */
 		switch (fmt) {
 		case NORMAL:
-			wdc_print_smart_cloud_attr_C0_V1_normal(data, WDC_SCA_V1_NAND_STATS);
+			wdc_print_ext_smart_cloud_log_normal(data, WDC_SCA_V1_NAND_STATS);
 			break;
 		case JSON:
-			wdc_print_smart_cloud_attr_C0_V1_json(data, WDC_SCA_V1_NAND_STATS);
+			wdc_print_ext_smart_cloud_log_json(data, WDC_SCA_V1_NAND_STATS);
 			break;
 		}
 	}
@@ -9886,7 +10061,7 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 		}
 
 		switch (read_device_id) {
-		case WDC_NVME_SN810_DEV_ID_2:
+		case WDC_NVME_SN820CL_DEV_ID:
 			ret = wdc_do_vs_nand_stats_sn810_2(fd, cfg.output_format);
 			break;
 		default:
@@ -10020,6 +10195,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	char formatter[41] = { 0 };
 	char rev_str[16] = { 0 };
 	uint32_t read_device_id = -1, read_vendor_id = -1;
+	wdc_nvme_ext_smart_log *ext_smart_log_ptr = NULL;
 
 	struct config {
 		char *output_format;
@@ -10079,6 +10255,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 		case WDC_NVME_SN560_DEV_ID_1:
 		case WDC_NVME_SN560_DEV_ID_2:
 		case WDC_NVME_SN560_DEV_ID_3:
+		case WDC_NVME_SN550_DEV_ID:
 		case WDC_NVME_ZN350_DEV_ID:
 		case WDC_NVME_ZN350_DEV_ID_1:
 			ret = wdc_do_drive_info(fd, &result);
@@ -10131,7 +10308,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 				json_free_object(root);
 			}
 			break;
-		case WDC_NVME_SN810_DEV_ID_2:
+		case WDC_NVME_SN820CL_DEV_ID:
 			/* Get the Drive HW Rev from the C6 Log page */
 			ret = nvme_get_hw_rev_log(fd, &data, 0, NVME_NSID_ALL);
 			if (ret == 0) {
@@ -10153,21 +10330,23 @@ static int wdc_vs_drive_info(int argc, char **argv,
 				goto out;
 			}
 
-			ret = nvme_get_smart_cloud_v1_log(fd, &data, 0, NVME_NSID_ALL);
+			ret = nvme_get_ext_smart_cloud_log(fd, &data, 0, NVME_NSID_ALL);
 
 			if (ret == 0) {
+				ext_smart_log_ptr = (wdc_nvme_ext_smart_log *)data;
+
 				/* Set the FTL Unit size */
-				ftl_unit_size = le32_to_cpu(*(uint32_t *)&data[SCAO_V1_FTLUS]);
+				ftl_unit_size = le32_to_cpu(ext_smart_log_ptr->ext_smart_ftlus);
 
 				/* Set the Boot Spec Version */
-				boot_spec_major = le16_to_cpu(*(uint16_t *)&data[SCAO_V1_MAVF]);
-				boot_spec_minor = le16_to_cpu(*(uint16_t *)&data[SCAO_V1_MIVF]);
+				boot_spec_major = le16_to_cpu(ext_smart_log_ptr->ext_smart_maj);
+				boot_spec_minor = le16_to_cpu(ext_smart_log_ptr->ext_smart_min);
 
 				/* Set the Drive Ownership Status */
-				tcg_dev_ownership = le32_to_cpu(*(uint32_t *)&data[SCAO_V1_TCGOS]);
+				tcg_dev_ownership = le32_to_cpu(ext_smart_log_ptr->ext_smart_tcgos);
 				free(data);
 			} else {
-				fprintf(stderr, "ERROR : WDC: %s: failure to get smart cloud v1 log\n", __func__);
+				fprintf(stderr, "ERROR : WDC: %s: failure to get extended smart cloud log\n", __func__);
 				ret = -1;
 				goto out;
 			}
@@ -10426,6 +10605,8 @@ static int wdc_capabilities(int argc, char **argv,
             capabilities & WDC_DRIVE_CAP_CLOUD_LOG_PAGE ? "Supported" : "Not Supported");
     printf("vs-hw-rev-log                 : %s\n",
             capabilities & WDC_DRIVE_CAP_HW_REV_LOG_PAGE ? "Supported" : "Not Supported");
+    printf("vs-device_waf                 : %s\n",
+			capabilities & WDC_DRIVE_CAP_DEVICE_WAF ? "Supported" : "Not Supported");
    printf("capabilities                  : Supported\n");
     nvme_free_tree(r);
     close(fd);
@@ -10475,6 +10656,7 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv,
 	int fd, ret = -1;
 	int major = 0, minor = 0;
 	__u8 *data = NULL;
+	wdc_nvme_ext_smart_log *ext_smart_log_ptr = NULL;
 
 	struct config {
 		__u32 namespace_id;
@@ -10500,16 +10682,18 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv,
 
 	if ((capabilities & WDC_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION) == WDC_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION) {
 		/* Get the 0xC0 Smart Cloud Attribute V1 log data */
-		ret = nvme_get_smart_cloud_v1_log(fd, &data, 0, cfg.namespace_id);
+		ret = nvme_get_ext_smart_cloud_log(fd, &data, 0, cfg.namespace_id);
 
+		ext_smart_log_ptr = (wdc_nvme_ext_smart_log *)data;
 		if (ret == 0) {
-			major = le16_to_cpu(*(uint16_t *)&data[SCAO_V1_MAVF]);
-			minor = le16_to_cpu(*(uint16_t *)&data[SCAO_V1_MIVF]);
+			major = le16_to_cpu(ext_smart_log_ptr->ext_smart_maj);
+			minor = le16_to_cpu(ext_smart_log_ptr->ext_smart_min);
+
 		    /* print the version returned from the log page */
 		    printf("HyperScale Boot Version: %d.%d\n", major, minor);
 
 		} else {
-			fprintf(stderr, "ERROR : WDC : Unable to read C0 Log Page V1 data\n");
+			fprintf(stderr, "ERROR : WDC : Unable to read Extended Smart/C0 Log Page data\n");
 			ret = -1;
 		}
 

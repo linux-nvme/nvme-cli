@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -26,7 +28,6 @@ NVMe Firmware Log Testcase :-
 
 import subprocess
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -36,18 +37,18 @@ class TestNVMeFwLogCmd(TestNVMe):
     Represents NVMe Firmware Log test.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeFwLogCmd. """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.setup_log_dir(self.__class__.__name__)
 
-    def __del__(self):
+    def tearDown(self):
         """
         Post Section for TestNVMeSimpleTestTemplate.
 
             - Call super class's destructor.
         """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def get_fw_log(self):
         """ Wrapper for executing nvme fw-log.
@@ -69,4 +70,4 @@ class TestNVMeFwLogCmd(TestNVMe):
 
     def test_fw_log(self):
         """ Testcase main """
-        assert_equal(self.get_fw_log(), 0)
+        self.assertEqual(self.get_fw_log(), 0)

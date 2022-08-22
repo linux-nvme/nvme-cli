@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * nvme.c -- NVM-Express command line utility.
  *
@@ -2437,7 +2438,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			}
 			goto close_fd;
 		}
-		for (i = 0; i < 16; ++i) {
+		for (i = 0; i <= ns.nlbaf; ++i) {
 			if ((1 << ns.lbaf[i].ds) == cfg.bs && ns.lbaf[i].ms == 0) {
 				cfg.flbas = i;
 				break;
@@ -2525,6 +2526,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	const char *verbose = "Increase output verbosity";
 	nvme_scan_filter_t filter = NULL;
 	int err;
+	int nsid = NVME_NSID_ALL;
 
 	struct config {
 		char	*output_format;
@@ -2573,7 +2575,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	}
 
 	if (devicename) {
-		int subsys_num, nsid;
+		int subsys_num;
 
 		if (sscanf(devicename,"nvme%dn%d",
 			   &subsys_num, &nsid) != 2) {
@@ -2591,7 +2593,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		goto ret;
 	}
 
-	nvme_show_subsystem_list(r, flags);
+	nvme_show_subsystem_list(r, nsid != NVME_NSID_ALL, flags);
 
 ret:
 	if (r)
@@ -4741,7 +4743,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &prev_lbaf);
 
 		if (cfg.bs) {
-			for (i = 0; i < 16; ++i) {
+			for (i = 0; i < ns.nlbaf; ++i) {
 				if ((1ULL << ns.lbaf[i].ds) == cfg.bs &&
 				    ns.lbaf[i].ms == 0) {
 					cfg.lbaf = i;
@@ -4769,7 +4771,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		err = -EINVAL;
 		goto close_fd;
 	}
-	if (cfg.lbaf > 15) {
+	if (cfg.lbaf > 63) {
 		fprintf(stderr, "invalid lbaf:%d\n", cfg.lbaf);
 		err = -EINVAL;
 		goto close_fd;
@@ -4806,7 +4808,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.args_size	= sizeof(args),
 		.fd		= fd,
 		.nsid		= cfg.namespace_id,
-		.lbaf		= cfg.lbaf,
+		.lbafu		= (cfg.lbaf & NVME_NS_FLBAS_HIGHER_MASK) >> 4,
+		.lbaf		= cfg.lbaf & NVME_NS_FLBAS_LOWER_MASK,
 		.mset		= cfg.ms,
 		.pi		= cfg.pi,
 		.pil		= cfg.pil,
@@ -5397,10 +5400,47 @@ ret:
 	return err;
 }
 
+static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
+{
+	int result = 0;
+
+	if (sts < 64 && storage_tag >= (1LL << sts)) {
+		fprintf(stderr, "Storage tag larger than storage tag size\n");
+		return 1;
+	}
+
+	switch (pif) {
+	case 0:
+		if (ref_tag >= (1LL << (32 - sts)))
+			result = 1;
+		break;
+	case 1:
+		if (sts > 16 && ref_tag >= (1LL << (80 - sts)))
+			result = 1;
+		break;
+	case 2:
+		if (sts > 0 && ref_tag >= (1LL << (64 - sts)))
+			result = 1;
+		break;
+	default:
+		fprintf(stderr, "Invalid PIF\n");
+		result = 1;
+	}
+
+	if (result)
+		fprintf(stderr, "Reference tag larger than allowed by PIF\n");
+	
+	return result;
+}
+
 static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err, fd;
 	__u16 control = 0;
+	__u8 lba_index, sts = 0, pif = 0;
+	struct nvme_id_ns ns;
+	struct nvme_nvm_id_ns nvm_ns;
+
 	const char *desc = "The Write Zeroes command is used to set a "\
 			"range of logical blocks to zero.";
 	const char *namespace_id = "desired namespace";
@@ -5409,11 +5449,10 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	const char *limited_retry = "limit media access attempts";
 	const char *force_unit_access = "force device to commit data before command completes";
 	const char *prinfo = "PI and check field";
-	const char *ref_tag = "reference tag (for end to end PI)";
-	const char *app_tag_mask = "app tag mask (for end to end PI)";
-	const char *app_tag = "app tag (for end to end PI)";
-	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
-		"(for end to end PI)";
+	const char *ref_tag = "reference tag for end-to-end PI";
+	const char *app_tag_mask = "app tag mask for end-to-end PI";
+	const char *app_tag = "app tag for end-to-end PI";
+	const char *storage_tag = "storage tag for end-to-end PI";
 	const char *deac = "Set DEAC bit, requesting controller to deallocate specified logical blocks";
 	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be checked as "\
 		"part of end-to-end data protection processing";
@@ -5426,7 +5465,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		bool	limited_retry;
 		bool	force_unit_access;
 		__u8	prinfo;
-		__u32	ref_tag;
+		__u64	ref_tag;
 		__u16	app_tag_mask;
 		__u16	app_tag;
 		__u64	storage_tag;
@@ -5456,7 +5495,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
 		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		OPT_UINT("ref-tag",           'r', &cfg.ref_tag,           ref_tag),
+		OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
 		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
@@ -5481,13 +5520,34 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	if (cfg.deac)
 		control |= NVME_IO_DEAC;
 	if (cfg.storage_tag_check)
-		control |= NVME_SC_STORAGE_TAG_CHECK;
+		control |= NVME_IO_STC;
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
 			goto close_fd;
 		}
+	}
+
+	err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
+	if (err) {
+		nvme_show_status(err);
+		goto close_fd;
+	} else if (err < 0) {
+		fprintf(stderr, "identify namespace: %s\n", nvme_strerror(errno));
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns_csi(fd, cfg.namespace_id, 0, NVME_CSI_NVM, &nvm_ns);
+	if (!err) {
+		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
+		sts = nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_STS_MASK;
+		pif = (nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_PIF_MASK) >> 7; 
+	}
+
+	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif)) {
+		err = -EINVAL;
+		goto close_fd;
 	}
 
 	struct nvme_io_args args = {
@@ -5497,9 +5557,11 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		.slba		= cfg.start_block,
 		.nlb		= cfg.block_count,
 		.control	= control,
-		.reftag		= cfg.ref_tag,
+		.reftag_u64	= cfg.ref_tag,
 		.apptag		= cfg.app_tag,
 		.appmask	= cfg.app_tag_mask,
+		.sts		= sts,
+		.pif		= pif,
 		.storage_tag	= cfg.storage_tag,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
@@ -5652,10 +5714,19 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	uint16_t nr, nb, ns, nrts, natms, nats;
 	__u16 nlbs[128] = { 0 };
 	unsigned long long slbas[128] = {0,};
-	__u32 eilbrts[128] = { 0 };
+
+	union {
+		__u32 f0[128];
+		__u64 f1[101];
+	} eilbrts;
+
 	__u32 elbatms[128] = { 0 };
 	__u32 elbats[128] = { 0 };
-	struct nvme_copy_range copy[128];
+
+	union {
+		struct nvme_copy_range f0[128];
+		struct nvme_copy_range_f1 f1[101];
+	} copy;
 
 	struct config {
 		__u32	namespace_id;
@@ -5666,12 +5737,12 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		bool	fua;
 		__u8	prinfow;
 		__u8	prinfor;
-		__u32	ilbrt;
+		__u64	ilbrt;
 		char	*eilbrts;
 		__u16	lbat;
-		char	*elbatms;
-		__u16	lbatm;
 		char	*elbats;
+		__u16	lbatm;
+		char	*elbatms;
 		__u8	dtype;
 		__u16	dspec;
 		__u8	format;
@@ -5706,7 +5777,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		OPT_FLAG("force-unit-access",      'f', &cfg.fua,		d_fua),
 		OPT_BYTE("prinfow",                'p', &cfg.prinfow,		d_prinfow),
 		OPT_BYTE("prinfor",                'P', &cfg.prinfor,		d_prinfor),
-		OPT_UINT("ref-tag",                'r', &cfg.ilbrt,		d_ilbrt),
+		OPT_SUFFIX("ref-tag",              'r', &cfg.ilbrt,		d_ilbrt),
 		OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts,		d_eilbrts),
 		OPT_SHRT("app-tag",                'a', &cfg.lbat,		d_lbat),
 		OPT_LIST("expected-app-tags",      'A', &cfg.elbats,		d_elbats),
@@ -5726,12 +5797,22 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 
 	nb = argconfig_parse_comma_sep_array(cfg.nlbs, (int *)nlbs, ARRAY_SIZE(nlbs));
 	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, ARRAY_SIZE(slbas));
-	nrts = argconfig_parse_comma_sep_array(cfg.eilbrts, (int *)eilbrts, ARRAY_SIZE(eilbrts));
+	
+	if (cfg.format == 0)
+		nrts = argconfig_parse_comma_sep_array(cfg.eilbrts, (int *)eilbrts.f0, ARRAY_SIZE(eilbrts.f0));
+	else if (cfg.format == 1)
+		nrts = argconfig_parse_comma_sep_array_long(cfg.eilbrts, (__u64 *)eilbrts.f1, ARRAY_SIZE(eilbrts.f1));
+	else {
+		fprintf(stderr, "invalid format\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
 	natms = argconfig_parse_comma_sep_array(cfg.elbatms, (int *)elbatms, ARRAY_SIZE(elbatms));
 	nats = argconfig_parse_comma_sep_array(cfg.elbats, (int *)elbats, ARRAY_SIZE(elbats));
 
 	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
-	if (!nr || nr > 128) {
+	if (!nr || nr > 128 || (cfg.format == 1 && nr > 101)) {
 		fprintf(stderr, "invalid range\n");
 		err = -EINVAL;
 		goto close_fd;
@@ -5745,13 +5826,18 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		}
 	}
 
-	nvme_init_copy_range(copy, nlbs, (__u64 *)slbas, eilbrts, elbatms, elbats, nr);
+	if (cfg.format == 0)
+		nvme_init_copy_range(copy.f0, nlbs, (__u64 *)slbas,
+		  eilbrts.f0, elbatms, elbats, nr);
+	else if (cfg.format == 1)
+		nvme_init_copy_range_f1(copy.f1, nlbs, (__u64 *)slbas,
+		  eilbrts.f1, elbatms, elbats, nr);
 
 	struct nvme_copy_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
 		.nsid		= cfg.namespace_id,
-		.copy		= copy,
+		.copy		= copy.f0,
 		.sdlba		= cfg.sdlba,
 		.nr		= nr,
 		.prinfor	= cfg.prinfor,
@@ -5761,7 +5847,8 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		.format		= cfg.format,
 		.lr		= cfg.lr,
 		.fua		= cfg.fua,
-		.ilbrt		= cfg.ilbrt,
+		.prinfow	= cfg.prinfow,
+		.ilbrt_u64	= cfg.ilbrt,
 		.lbatm		= cfg.lbatm,
 		.lbat		= cfg.lbat,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -6209,14 +6296,15 @@ static int submit_io(int opcode, char *command, const char *desc,
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	bool huge;
 	struct nvme_id_ns ns;
-	__u8 lba_index, ms = 0;
+	struct nvme_nvm_id_ns nvm_ns;
+	__u8 lba_index, ms = 0, sts = 0, pif = 0;
 
 	const char *namespace_id = "Identifier of desired namespace";
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
 	const char *data_size = "size of data in bytes";
 	const char *metadata_size = "size of metadata in bytes";
-	const char *ref_tag = "reference tag (for end to end PI)";
+	const char *ref_tag = "reference tag for end-to-end PI";
 	const char *data = "data file";
 	const char *metadata = "metadata file";
 	const char *prinfo = "PI and check field";
@@ -6232,8 +6320,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *dsm = "dataset management attributes (lower 8 bits)";
 	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be " \
 		"checked as part of end-to-end data protection processing";
-	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
-		"(for end to end PI)";
+	const char *storage_tag = "storage tag for end-to-end PI";
 	const char *force = "The \"I know what I'm doing\" flag, do not enforce exclusive access for write";
 
 	struct config {
@@ -6242,7 +6329,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		__u16	block_count;
 		__u64	data_size;
 		__u64	metadata_size;
-		__u32	ref_tag;
+		__u64	ref_tag;
 		char	*data;
 		char	*metadata;
 		__u8	prinfo;
@@ -6292,7 +6379,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		OPT_SUFFIX("data-size",       'z', &cfg.data_size,         data_size),
 		OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size,     metadata_size),
-		OPT_UINT("ref-tag",           'r', &cfg.ref_tag,           ref_tag),
+		OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
 		OPT_FILE("data",              'd', &cfg.data,              data),
 		OPT_FILE("metadata",          'M', &cfg.metadata,          metadata),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
@@ -6358,7 +6445,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (cfg.force_unit_access)
 		control |= NVME_IO_FUA;
 	if (cfg.storage_tag_check)
-		control |= NVME_SC_STORAGE_TAG_CHECK;
+		control |= NVME_IO_STC;
 	if (cfg.dtype) {
 		if (cfg.dtype > 0xf) {
 			fprintf(stderr, "Invalid directive type, %x\n",
@@ -6421,8 +6508,16 @@ static int submit_io(int opcode, char *command, const char *desc,
 			fprintf(stderr, "identify namespace: %s\n", nvme_strerror(errno));
 			goto free_buffer;
 		}
+
 		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
 		ms = ns.lbaf[lba_index].ms;
+
+		err = nvme_identify_ns_csi(fd, 1, 0, NVME_CSI_NVM, &nvm_ns);
+		if (!err) {
+			sts = nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_STS_MASK;
+			pif = (nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_PIF_MASK) >> 7; 
+		}
+
 		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;
 		if (ms && cfg.metadata_size < mbuffer_size) {
 			fprintf(stderr, "Rounding metadata size to fit block count (%lld bytes)\n",
@@ -6436,6 +6531,11 @@ static int submit_io(int opcode, char *command, const char *desc,
 			goto free_buffer;
 		}
 		memset(mbuffer, 0, mbuffer_size);
+	}
+
+	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif)) {
+		err = -EINVAL;
+		goto free_buffer;
 	}
 
 	if ((opcode & 1)) {
@@ -6468,11 +6568,13 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
 		printf("slba         : %"PRIx64"\n", (uint64_t)cfg.start_block);
 		printf("dsmgmt       : %08x\n", dsmgmt);
-		printf("reftag       : %08x\n", cfg.ref_tag);
+		printf("reftag       : %"PRIx64"\n", (uint64_t)cfg.ref_tag);
 		printf("apptag       : %04x\n", cfg.app_tag);
 		printf("appmask      : %04x\n", cfg.app_tag_mask);
 		printf("storagetagcheck : %04x\n", cfg.storage_tag_check);
 		printf("storagetag      : %"PRIx64"\n", (uint64_t)cfg.storage_tag);
+		printf("pif             : %02x\n", pif);
+		printf("sts             : %02x\n", sts);
 	}
 	if (cfg.dry_run)
 		goto free_mbuffer;
@@ -6485,8 +6587,10 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.nlb		= cfg.block_count,
 		.control	= control,
 		.dsm		= cfg.dsmgmt,
+		.sts		= sts,
+		.pif		= pif,
 		.dspec		= cfg.dspec,
-		.reftag		= cfg.ref_tag,
+		.reftag_u64	= cfg.ref_tag,
 		.apptag		= cfg.app_tag,
 		.appmask	= cfg.app_tag_mask,
 		.storage_tag	= cfg.storage_tag,
@@ -6498,7 +6602,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.result		= NULL,
 	};
 	gettimeofday(&start_time, NULL);
-	if (opcode & 1)
+	if (opcode == nvme_cmd_compare)
+		err = nvme_compare(&args);
+	else if (opcode & 1)
 		err = nvme_write(&args);
 	else
 		err = nvme_read(&args);
@@ -6566,6 +6672,10 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 {
 	int err, fd;
 	__u16 control = 0;
+	__u8 lba_index, sts = 0, pif = 0;
+	struct nvme_id_ns ns;
+	struct nvme_nvm_id_ns nvm_ns;
+
 	const char *desc = "Verify specified logical blocks on the given device.";
 	const char *namespace_id = "desired namespace";
 	const char *start_block = "64-bit LBA of first block to access";
@@ -6573,11 +6683,10 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *limited_retry = "limit media access attempts";
 	const char *force_unit_access = "force device to commit cached data before performing the verify operation";
 	const char *prinfo = "PI and check field";
-	const char *ref_tag = "reference tag (for end to end PI)";
-	const char *app_tag_mask = "app tag mask (for end to end PI)";
-	const char *app_tag = "app tag (for end to end PI)";
-	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
-		"(for end to end PI)";
+	const char *ref_tag = "reference tag for end-to-end PI";
+	const char *app_tag_mask = "app tag mask for end-to-end PI";
+	const char *app_tag = "app tag for end-to-end PI";
+	const char *storage_tag = "storage tag for end-to-end PI";
 	const char *storage_tag_check = "This bit specifies the Storage Tag field shall "\
 		"be checked as part of Verify operation";
 
@@ -6616,7 +6725,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
 		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		OPT_UINT("ref-tag",           'r', &cfg.ref_tag,           ref_tag),
+		OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
 		OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
@@ -6639,7 +6748,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	if (cfg.force_unit_access)
 		control |= NVME_IO_FUA;
 	if (cfg.storage_tag_check)
-		control |= NVME_SC_STORAGE_TAG_CHECK;
+		control |= NVME_IO_STC;
 
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(fd, &cfg.namespace_id);
@@ -6649,6 +6758,27 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 
+	err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
+	if (err) {
+		nvme_show_status(err);
+		goto close_fd;
+	} else if (err < 0) {
+		fprintf(stderr, "identify namespace: %s\n", nvme_strerror(errno));
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns_csi(fd, cfg.namespace_id, 0, NVME_CSI_NVM, &nvm_ns);
+	if (!err) {
+		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
+		sts = nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_STS_MASK;
+		pif = (nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_PIF_MASK) >> 7;
+	}
+
+	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif)) {
+		err = -EINVAL;
+		goto close_fd;
+	}
+
 	struct nvme_io_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
@@ -6656,9 +6786,11 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.slba		= cfg.start_block,
 		.nlb		= cfg.block_count,
 		.control	= control,
-		.reftag		= cfg.ref_tag,
+		.reftag_u64	= cfg.ref_tag,
 		.apptag		= cfg.app_tag,
 		.appmask	= cfg.app_tag_mask,
+		.sts		= sts,
+		.pif		= pif,
 		.storage_tag	= cfg.storage_tag,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
@@ -7317,8 +7449,22 @@ static int passthru(int argc, char **argv, bool admin,
 	if (fd < 0)
 		goto ret;
 
-	flags = cfg.opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
-	dfd = mfd = cfg.opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
+	if (cfg.opcode & 0x01)
+		cfg.write = true;
+
+	if (cfg.opcode & 0x02)
+		cfg.read = true;
+
+	if (cfg.write) {
+		flags = O_RDONLY;
+		dfd = mfd = STDIN_FILENO;
+	}
+
+	if (cfg.read) {
+		flags = O_WRONLY | O_CREAT;
+		dfd = mfd = STDOUT_FILENO;
+	}
+
 	if (strlen(cfg.input_file)) {
 		dfd = open(cfg.input_file, flags, mode);
 		if (dfd < 0) {
@@ -7359,14 +7505,6 @@ static int passthru(int argc, char **argv, bool admin,
 		if (!data) {
 			err = -ENOMEM;
 			goto free_metadata;
-		}
-
-		if (cfg.write && !(cfg.opcode & 0x01)) {
-			fprintf(stderr, "warning: write flag set but write direction bit is not set in the opcode\n");
-		}
-
-		if (cfg.read && !(cfg.opcode & 0x02)) {
-			fprintf(stderr, "warning: read flag set but read direction bit is not set in the opcode\n");
 		}
 
 		memset(data, cfg.prefill, cfg.data_len);

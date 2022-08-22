@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #ifndef NVME_PRINT_H
 #define NVME_PRINT_H
 
@@ -87,7 +88,8 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	enum nvme_print_flags flags);
 void nvme_show_list_items(nvme_root_t t, enum nvme_print_flags flags);
-void nvme_show_subsystem_list(nvme_root_t t, enum nvme_print_flags flags);
+void nvme_show_subsystem_list(nvme_root_t t, bool show_ana,
+			      enum nvme_print_flags flags);
 void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
 	enum nvme_print_flags flags);
 void nvme_show_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *cap,

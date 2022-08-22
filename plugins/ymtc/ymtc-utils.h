@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #ifndef __YMTC_UTILS_H__
 #define __YMTC_UTILS_H__
 
