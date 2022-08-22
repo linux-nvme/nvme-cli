@@ -1070,7 +1070,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	if (strcmp(cfg.output_format,"json"))
 		printf("Seagate Extended SMART Information :\n");
 
-<<<<<<< HEAD
+
     /**
      * Here we should identify if the drive is a Panthor or Jaguar. 
      * Here we need to extract the model no from ctrl-id abd use it 
@@ -1645,13 +1645,13 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 {
 	const char *desc = "Clear Seagate PCIe Correctable counters for the given device ";
 	const char *save = "specifies that the controller shall save the attribute";
-<<<<<<< HEAD
+
 	int err, fd;
     struct nvme_id_ctrl ctrl;
     char modelNo[40];
-=======
+
 	struct nvme_dev *dev;
->>>>>>> origin/master
+
 	__u32 result;
 	int err;
 
@@ -1674,7 +1674,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 		return -1;
 	}
 
-<<<<<<< HEAD
+
     err = nvme_identify_ctrl(fd, &ctrl);
 	if (!err){
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
