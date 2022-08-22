@@ -3,7 +3,7 @@ nvme-self-test-log(1)
 
 NAME
 ----
-nvme-self-test-log - Retrieve the log information initited by device-self-test and display it
+nvme-self-test-log - Retrieve the log information initiated by device-self-test and display it
 
 SYNOPSIS
 --------

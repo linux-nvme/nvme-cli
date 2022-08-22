@@ -18,7 +18,7 @@ DESCRIPTION
 -----------
 The Lockdown command is used to control the Command and Feature Lockdown
 capability which configures the prohibition or allowance of execution of the
-specified commandor Set Features command targeting a specific Feature
+specified command or Set Features command targeting a specific Feature
 Identifier.
 
 OPTIONS
@@ -34,17 +34,17 @@ OPTIONS
 
 --prhbt=<prhbt>::
 -p <prhbt>::
-	Prohibit(PRHBT) bit specifies whether to prohibit or allow the command
+	Prohibit (PRHBT) bit specifies whether to prohibit or allow the command
 	opcode or Set Features Feature Identifier specified by this command.
 
 --scp=<scp>::
 -s <scp>::
-	Scope(SCP) field specifies the contents of the Opcode or Feature Identifier field.
+	Scope (SCP) field specifies the contents of the Opcode or Feature Identifier field.
 
 --uuid=<UUID_Index>::
 -U <UUID_Index>::
-	UUID Index - If this field is set to a non-zerovalue, then the value of
-	this field is the index of a UUID in the UUIDList that is used by the command.
+	UUID Index - If this field is set to a non-zero value, then the value of
+	this field is the index of a UUID in the UUID List that is used by the command.
 	If this field is cleared to 0h,then no UUID index is specified.
 
 EXAMPLES

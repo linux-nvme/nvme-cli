@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-lockdown(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -763,7 +763,7 @@ nvme-lockdown(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>The Lockdown command is used to control the Command and Feature Lockdown
 capability which configures the prohibition or allowance of execution of the
-specified commandor Set Features command targeting a specific Feature
+specified command or Set Features command targeting a specific Feature
 Identifier.</p></div>
 </div>
 </div>
@@ -802,7 +802,7 @@ Identifier.</p></div>
 </dt>
 <dd>
 <p>
-        Prohibit(PRHBT) bit specifies whether to prohibit or allow the command
+        Prohibit (PRHBT) bit specifies whether to prohibit or allow the command
         opcode or Set Features Feature Identifier specified by this command.
 </p>
 </dd>
@@ -814,7 +814,7 @@ Identifier.</p></div>
 </dt>
 <dd>
 <p>
-        Scope(SCP) field specifies the contents of the Opcode or Feature Identifier field.
+        Scope (SCP) field specifies the contents of the Opcode or Feature Identifier field.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -825,8 +825,8 @@ Identifier.</p></div>
 </dt>
 <dd>
 <p>
-        UUID Index - If this field is set to a non-zerovalue, then the value of
-        this field is the index of a UUID in the UUIDList that is used by the command.
+        UUID Index - If this field is set to a non-zero value, then the value of
+        this field is the index of a UUID in the UUID List that is used by the command.
         If this field is cleared to 0h,then no UUID index is specified.
 </p>
 </dd>
@@ -850,7 +850,7 @@ Identifier.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-04-08 18:46:59 CEST
+ 2022-08-01 14:48:50 CEST
 </div>
 </div>
 </body>

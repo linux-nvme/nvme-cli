@@ -8,7 +8,7 @@ nvme-write-uncor - Send an NVMe write uncorrectable command, return results
 SYNOPSIS
 --------
 [verse]
-'nvme-write-uncorr' <device> [--start-block=<slba> | -s <slba>]
+'nvme-write-uncor' <device> [--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>]
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--force]
@@ -33,7 +33,7 @@ OPTIONS
 	Namespace ID use in the command.
 
 --force::
-    Ignore namespace is currently busy and perfome the operation
+    Ignore namespace is currently busy and performed the operation
     even though.
 
 EXAMPLES

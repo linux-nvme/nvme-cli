@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-discover(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -789,7 +789,7 @@ find a /etc/nvme/discovery.conf file to use to supply a list of
 Discovery commands to run.  If no /etc/nvme/discovery.conf file
 exists, the command will quit with an error.</p></div>
 <div class="paragraph"><p>Otherwise, a specific Discovery Controller should be specified using the
---transport, --traddr, and if necessary the --trsvcid flags. A Diѕcovery
+--transport, --traddr, and if necessary the --trsvcid flags. A Discovery
 request will then be sent to the specified Discovery Controller.</p></div>
 </div>
 </div>
@@ -1001,7 +1001,7 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Overrides the default dealy (in seconds) for keep alive.
+        Overrides the default timeout (in seconds) for keep alive.
         This option will be ignored for the discovery, and it is only
         implemented for completeness.
 </p>
@@ -1150,7 +1150,7 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Disable the built-in persitent discover connection rules.
+        Disable the built-in persistent discover connection rules.
         Combined with --persistent flag, always create new
         persistent discovery connection.
 </p>
@@ -1218,7 +1218,7 @@ nvme-connect-all(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-04-08 18:46:59 CEST
+ 2022-08-01 14:48:50 CEST
 </div>
 </div>
 </body>

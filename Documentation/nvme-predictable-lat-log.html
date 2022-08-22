@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-predictable-lat-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -740,7 +740,7 @@ nvme-predictable-lat-log(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-predictable-lat-log -
-   Send Predectible latency per NVM set log page request, returns result and log
+   Send Predictable latency per NVM set log page request, returns result and log
 </p>
 </div>
 </div>
@@ -759,12 +759,12 @@ nvme-predictable-lat-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves the NVMe Predectible latency per NVM set log page from an NVMe device
+<div class="paragraph"><p>Retrieves the NVMe Predictable latency per NVM set log page from an NVMe device
 and provides the returned structure.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned Predectible latency per NVM set log structure
-may be returned in one ofseveral ways depending on the option flags; the
+<div class="paragraph"><p>On success, the returned Predictable latency per NVM set log structure
+may be returned in one of several ways depending on the option flags; the
 structure may parsed by the program and printed in a readable format or
 the raw buffer may be printed to stdout for another program to parse.</p></div>
 </div>
@@ -781,7 +781,7 @@ the raw buffer may be printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-    Retrieve the Predectible latency per NVM set log for the given nvmset id.
+    Retrieve the Predictable latency per NVM set log for the given nvmset id.
     This argument is mandatory and its success may depend on the device&#8217;s
     statistics to provide this log For More details see NVM Express 1.4 Spec.
     Section 5.14.1.10. The default nvmset id to use is 1 for the device.
@@ -795,7 +795,7 @@ the raw buffer may be printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-        Print the raw Predectible latency per NVM set log buffer to stdout.
+        Print the raw Predictable latency per NVM set log buffer to stdout.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -819,7 +819,7 @@ the raw buffer may be printed to stdout for another program to parse.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Print the Predectible latency per NVM set log page in a human readable format:
+Print the Predictable latency per NVM set log page in a human readable format:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -828,7 +828,7 @@ Print the Predectible latency per NVM set log page in a human readable format:
 </li>
 <li>
 <p>
-Print the raw Predectible latency per NVM set log to a file:
+Print the raw Predictable latency per NVM set log to a file:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -850,7 +850,7 @@ Print the raw Predectible latency per NVM set log to a file:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-04-08 18:46:59 CEST
+ 2022-08-01 14:48:50 CEST
 </div>
 </div>
 </body>

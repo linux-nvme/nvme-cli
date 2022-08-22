@@ -39,7 +39,7 @@ Output Explanation
 |The 2 possible states are :  Present or Not Present.
 
 |*Thermal Throttling Status*
-|The 3 possible states are :  Off, On, or Unavaiable.
+|The 3 possible states are :  Off, On, or Unavailable.
 
 |*Format Corrupt Reason*
 |The 3 possible states are :  Not Corrupted, Corrupt due to FW Assert, or Corrupt for Unknown Reason.

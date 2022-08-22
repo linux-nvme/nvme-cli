@@ -26,11 +26,11 @@ OPTIONS
 -c <ctrl-list,>::
 -controllers=<ctrl-list,>::
 	The comma separated list of controller identifiers to attach
-	the namesapce too.
+	the namespace too.
 
 EXAMPLES
 --------
-	Attach namspace to the controller:
+	Attach namespace to the controller:
 
 		# nvme attach-ns /dev/nvme1  -n 0x2 -c 0x21
 

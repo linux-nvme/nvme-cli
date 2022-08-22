@@ -46,7 +46,7 @@ Discovery commands to run.  If no @SYSCONFDIR@/nvme/discovery.conf file
 exists, the command will quit with an error.
 
 Otherwise, a specific Discovery Controller should be specified using the
---transport, --traddr, and if necessary the --trsvcid flags. A Diѕcovery
+--transport, --traddr, and if necessary the --trsvcid flags. A Discovery
 request will then be sent to the specified Discovery Controller.
 
 BACKGROUND
@@ -150,7 +150,7 @@ OPTIONS
 
 -k <#>::
 --keep-alive-tmo=<#>::
-	Overrides the default dealy (in seconds) for keep alive.
+	Overrides the default timeout (in seconds) for keep alive.
 	This option will be ignored for the discovery, and it is only
 	implemented for completeness.
 
@@ -210,7 +210,7 @@ OPTIONS
               'binary'. Only one output format can be used at a time.
 
 --force::
-	Disable the built-in persitent discover connection rules.
+	Disable the built-in persistent discover connection rules.
 	Combined with --persistent flag, always create new
 	persistent discovery connection.
 

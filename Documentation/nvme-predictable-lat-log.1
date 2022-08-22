@@ -2,12 +2,12 @@
 .\"     Title: nvme-predictable-lat-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-PREDICTABLE\-L" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-PREDICTABLE\-L" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-predictable-lat-log \- Send Predectible latency per NVM set log page request, returns result and log
+nvme-predictable-lat-log \- Send Predictable latency per NVM set log page request, returns result and log
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -38,21 +38,21 @@ nvme-predictable-lat-log \- Send Predectible latency per NVM set log page reques
 .fi
 .SH "DESCRIPTION"
 .sp
-Retrieves the NVMe Predectible latency per NVM set log page from an NVMe device and provides the returned structure\&.
+Retrieves the NVMe Predictable latency per NVM set log page from an NVMe device and provides the returned structure\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
-On success, the returned Predectible latency per NVM set log structure may be returned in one ofseveral ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
+On success, the returned Predictable latency per NVM set log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
 .PP
 \-i <nvmset_id>, \-\-nvmset\-id=<nvmset_id>
 .RS 4
-Retrieve the Predectible latency per NVM set log for the given nvmset id\&. This argument is mandatory and its success may depend on the device\(cqs statistics to provide this log For More details see NVM Express 1\&.4 Spec\&. Section 5\&.14\&.1\&.10\&. The default nvmset id to use is 1 for the device\&.
+Retrieve the Predictable latency per NVM set log for the given nvmset id\&. This argument is mandatory and its success may depend on the device\(cqs statistics to provide this log For More details see NVM Express 1\&.4 Spec\&. Section 5\&.14\&.1\&.10\&. The default nvmset id to use is 1 for the device\&.
 .RE
 .PP
 \-b, \-\-raw\-binary
 .RS 4
-Print the raw Predectible latency per NVM set log buffer to stdout\&.
+Print the raw Predictable latency per NVM set log buffer to stdout\&.
 .RE
 .PP
 \-o <format>, \-\-output\-format=<format>
@@ -72,7 +72,7 @@ Set the reporting format to
 .sp -1
 .IP \(bu 2.3
 .\}
-Print the Predectible latency per NVM set log page in a human readable format:
+Print the Predictable latency per NVM set log page in a human readable format:
 .sp
 .if n \{\
 .RS 4
@@ -93,7 +93,7 @@ Print the Predectible latency per NVM set log page in a human readable format:
 .sp -1
 .IP \(bu 2.3
 .\}
-Print the raw Predectible latency per NVM set log to a file:
+Print the raw Predictable latency per NVM set log to a file:
 .sp
 .if n \{\
 .RS 4

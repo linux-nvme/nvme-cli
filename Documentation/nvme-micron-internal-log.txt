@@ -13,8 +13,8 @@ SYNOPSIS
 DESCRIPTION
 -----------
 For the given NVMe device, sends the Micron vendor specific device commands to retrieve
-various logs (in binary format) and compresses them and saves into speficied zip file.
-These vendor unique logs can be analysed with Micron Technical support team for any device
+various logs (in binary format) and compresses them and saves into specified zip file.
+These vendor unique logs can be analyzed with Micron Technical support team for any device
 specific issues
 
 The <device> parameter is mandatory and may be either the NVMe

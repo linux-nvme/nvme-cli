@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-rpmb(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -800,7 +800,7 @@ along with controller register values related RPMB.</p></div>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>read-couter   - Read 'write counter' of specified RPMB target. The
+<pre><code>read-counter  - Read 'write counter' of specified RPMB target. The
                 counter value read is printed onto STDOUT</code></pre>
 </div></div>
 <div class="literalblock">
@@ -824,7 +824,7 @@ write-config  - Write 512 byes of device configuration block data
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>write-data    - Supports authenticated data writting to specified RPMB
+<pre><code>write-data    - Supports authenticated data writing to specified RPMB
                 target (--target or -t option) at given offset
                 specified with --address or -o option, using key
                 specified using --keyfile or -k options. --blocks or
@@ -906,7 +906,7 @@ default address if no -address or -o option is specified,</code></pre>
 <dd>
 <p>
         The address (in 512 byte sector offset from 0) to be used for data
-        trasnfer commands (read or write) for a specified RPMB target.
+        transfer commands (read or write) for a specified RPMB target.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -917,7 +917,7 @@ default address if no -address or -o option is specified,</code></pre>
 </dt>
 <dd>
 <p>
-        The size in 512 byte sectors to be used for data trasnfer commands
+        The size in 512 byte sectors to be used for data transfer commands
         (read or write) for a specified RPMB target.
 </p>
 </dd>
@@ -939,7 +939,7 @@ Print RPMB support information of an NVMe device
 </li>
 <li>
 <p>
-Program <em>SecreteKey</em> as authentication key for target 1
+Program <em>SecretKey</em> as authentication key for target 1
 </p>
 <div class="listingblock">
 <div class="content">
@@ -970,7 +970,7 @@ Write 200 blocks of (512 bytes) from input.bin onto target 0
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme rpmb /dev/nvme0 -c write-data -t 0 -f input.bin -b 200 -k 'SecreteKey'</code></pre>
+<pre><code># nvme rpmb /dev/nvme0 -c write-data -t 0 -f input.bin -b 200 -k 'SecretKey'</code></pre>
 </div></div>
 </li>
 <li>
@@ -1001,7 +1001,7 @@ data onto output.bin
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-04-08 18:46:59 CEST
+ 2022-08-01 14:48:50 CEST
 </div>
 </div>
 </body>

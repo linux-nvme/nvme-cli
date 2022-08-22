@@ -2,12 +2,12 @@
 .\"     Title: nvme-lockdown
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LOCKDOWN" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-LOCKDOWN" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,7 +40,7 @@ nvme-lockdown \- Send an NVMe Lockdown command to prohibit or allow the executio
 .fi
 .SH "DESCRIPTION"
 .sp
-The Lockdown command is used to control the Command and Feature Lockdown capability which configures the prohibition or allowance of execution of the specified commandor Set Features command targeting a specific Feature Identifier\&.
+The Lockdown command is used to control the Command and Feature Lockdown capability which configures the prohibition or allowance of execution of the specified command or Set Features command targeting a specific Feature Identifier\&.
 .SH "OPTIONS"
 .PP
 \-\-ofi=<ofi>, \-o <ofi>
@@ -55,17 +55,17 @@ Interface (INF) field identifies the interfaces affected by this command\&.
 .PP
 \-\-prhbt=<prhbt>, \-p <prhbt>
 .RS 4
-Prohibit(PRHBT) bit specifies whether to prohibit or allow the command opcode or Set Features Feature Identifier specified by this command\&.
+Prohibit (PRHBT) bit specifies whether to prohibit or allow the command opcode or Set Features Feature Identifier specified by this command\&.
 .RE
 .PP
 \-\-scp=<scp>, \-s <scp>
 .RS 4
-Scope(SCP) field specifies the contents of the Opcode or Feature Identifier field\&.
+Scope (SCP) field specifies the contents of the Opcode or Feature Identifier field\&.
 .RE
 .PP
 \-\-uuid=<UUID_Index>, \-U <UUID_Index>
 .RS 4
-UUID Index \- If this field is set to a non\-zerovalue, then the value of this field is the index of a UUID in the UUIDList that is used by the command\&. If this field is cleared to 0h,then no UUID index is specified\&.
+UUID Index \- If this field is set to a non\-zero value, then the value of this field is the index of a UUID in the UUID List that is used by the command\&. If this field is cleared to 0h,then no UUID index is specified\&.
 .RE
 .SH "EXAMPLES"
 .sp

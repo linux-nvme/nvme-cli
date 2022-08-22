@@ -8,7 +8,7 @@ nvme-zns-set-zone-desc - Set extended descriptor data for a zone
 SYNOPSIS
 --------
 [verse]
-'nvme zns setzone-desc' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme zns set-zone-desc' <device> [--namespace-id=<NUM> | -n <NUM>]
 				 [--start-lba=<IONUM>, -s <IONUM>]
 				 [--zrwaa | -r]
 				 [-data=<FILE>, -d <FILE>]
@@ -17,9 +17,9 @@ SYNOPSIS
 DESCRIPTION
 -----------
 For the NVMe device given, issues the Zone Management Send command with the
-Set Zone Descriptor Extenions action. The input will default to stdin.
+Set Zone Descriptor Extensions action. The input will default to stdin.
 Alternatively, the data may come from a file that can be specified. The data
-length will automatically be calculated from the zns identify namesapce.
+length will automatically be calculated from the zns identify namespace.
 
 OPTIONS
 -------

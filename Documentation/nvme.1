@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -130,7 +130,7 @@ Retrieve Smart Log
 .PP
 \fBnvme-ana-log\fR(1)
 .RS 4
-Retreive ANA(Asymmetric Namespace Access) Log
+Retrieve ANA(Asymmetric Namespace Access) Log
 .RE
 .PP
 \fBnvme-endurance-log\fR(1)
@@ -450,7 +450,7 @@ NVMe Identify Namespace NVM Command Set for the specified LBA Format index
 .PP
 \fBnvme-persistent-event-log\fR(1)
 .RS 4
-Retrieve Presistent Event Log
+Retrieve Persistent Event Log
 .RE
 .PP
 \fBnvme-predictable-lat-log\fR(1)
@@ -621,7 +621,7 @@ Retrieve Transcend NVMe device\(cqs bad blocks
 .PP
 \fBnvme-transcend-healthvalue\fR(1)
 .RS 4
-Use NVMe SMART table to analyse the health value of Transcend device
+Use NVMe SMART table to analyze the health value of Transcend device
 .RE
 .PP
 \fBnvme-virtium-show-identify\fR(1)
@@ -843,6 +843,9 @@ Zone Management Send command
 .RS 4
 Flush LBAs associated with a ZRWA to a zone
 .RE
+.SH "RETURNS"
+.sp
+All commands will behave the same, they will return 0 on success and 1 on failure\&.
 .SH "FURTHER DOCUMENTATION"
 .sp
 See the freely available references on the \m[blue]\fBOfficial NVM\-Express Site\fR\m[]\&\s-2\u[1]\d\s+2\&.

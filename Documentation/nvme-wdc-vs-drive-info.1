@@ -2,12 +2,12 @@
 .\"     Title: nvme-wdc-vs-drive-info
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WDC\-VS\-DRIVE" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-WDC\-VS\-DRIVE" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,11 +45,17 @@ This will only work on WDC devices supporting this feature\&. Results for any ot
 On success it returns 0, error code otherwise\&.
 .SH "OUTPUT EXPLANATION"
 .sp
-There are 2 fields returned from this command:
+There are several different fields returned from this command depending on the drive:
 .sp
 Drive HW Revision
 .sp
 FTL Unit Size
+.sp
+Customer Serial Number
+.sp
+HyperScale Boot Version
+.sp
+TCG Device Ownership
 .SH "EXAMPLE"
 .sp
 # nvme wdc vs\-drive\-info /dev/nvme0

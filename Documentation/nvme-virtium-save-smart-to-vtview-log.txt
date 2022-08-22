@@ -38,7 +38,7 @@ of the log file name.
 OPTIONS
 -------
 -r <NUM>::
---run-tim=<NUM>::
+--run-time=<NUM>::
 	(optional) Number of hours to log data (default = 20 hours)
 
 -f <NUM>::

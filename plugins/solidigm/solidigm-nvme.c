@@ -12,6 +12,7 @@
 
 #include "solidigm-smart.h"
 #include "solidigm-garbage-collection.h"
+#include "solidigm-latency-tracking.h"
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
@@ -21,4 +22,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 static int get_garbage_collection_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	return solidigm_get_garbage_collection_log(argc, argv, cmd, plugin);
+}
+
+static int get_latency_tracking_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return solidigm_get_latency_tracking_log(argc, argv, cmd, plugin);
 }

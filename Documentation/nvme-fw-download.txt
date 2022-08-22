@@ -37,7 +37,7 @@ the Firmware Commit command (nvme fw-commit <args>).
 OPTIONS
 -------
 -f <firmware-file>::
---fw=<firmeware-file>::
+--fw=<firmware-file>::
 	Required argument. This specifies the path to the device's
 	firmware file on your system that will be read by the program
 	and sent to the device.

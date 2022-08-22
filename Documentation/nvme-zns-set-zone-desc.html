@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-zns-set-zone-desc(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -749,7 +749,7 @@ nvme-zns-set-zone-desc(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme zns setzone-desc</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
+<pre class="content"><em>nvme zns set-zone-desc</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
                                  [--start-lba=&lt;IONUM&gt;, -s &lt;IONUM&gt;]
                                  [--zrwaa | -r]
                                  [-data=&lt;FILE&gt;, -d &lt;FILE&gt;]
@@ -762,9 +762,9 @@ nvme-zns-set-zone-desc(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>For the NVMe device given, issues the Zone Management Send command with the
-Set Zone Descriptor Extenions action. The input will default to stdin.
+Set Zone Descriptor Extensions action. The input will default to stdin.
 Alternatively, the data may come from a file that can be specified. The data
-length will automatically be calculated from the zns identify namesapce.</p></div>
+length will automatically be calculated from the zns identify namespace.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -859,7 +859,7 @@ Write "hello world" into the zone descriptor for namespace 1&#8217;s first zone
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-04-08 18:46:59 CEST
+ 2022-08-01 14:48:50 CEST
 </div>
 </div>
 </body>

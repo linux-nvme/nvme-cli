@@ -201,56 +201,53 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	const int solidigm_vu_smart_log_id = 0xCA;
 	vu_smart_log_t smart_log_payload;
 	enum nvme_print_flags flags;
-	int fd, err;
+	struct nvme_dev *dev;
+	int err;
 
 	struct config {
 		__u32	namespace_id;
 		char	*output_format;
-		int	raw_binary;
 	};
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
 		.output_format	= "normal",
-		.raw_binary	= 0
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   "(optional) desired namespace"),
 		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     "Dump output in binary format"),
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	flags = validate_output_format(cfg.output_format);
 	if (flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
-		close(fd);
-		return fd;
-	}
-	if (cfg.raw_binary)	{
-		flags = BINARY;
+		dev_close(dev);
+		return flags;
 	}
 
-	err = nvme_get_log_simple(fd, solidigm_vu_smart_log_id, sizeof(smart_log_payload), &smart_log_payload);
+	err = nvme_get_log_simple(dev_fd(dev), solidigm_vu_smart_log_id,
+				  sizeof(smart_log_payload), &smart_log_payload);
 	if (!err) {
 		if (flags & JSON) {
-			vu_smart_log_show_json(&smart_log_payload, cfg.namespace_id, devicename);
+			vu_smart_log_show_json(&smart_log_payload,
+					       cfg.namespace_id, dev->name);
 		} else if (flags & BINARY) {
 			d_raw((unsigned char *)&smart_log_payload, sizeof(smart_log_payload));
 		} else {
-			vu_smart_log_show(&smart_log_payload, cfg.namespace_id, devicename);
+			vu_smart_log_show(&smart_log_payload, cfg.namespace_id,
+					  dev->name);
 		}
 	} else if (err > 0) {
 		nvme_show_status(err);
 	}
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 

@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-set-zone-desc
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-SET\-ZONE" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-SET\-ZONE" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-zns-set-zone-desc \- Set extended descriptor data for a zone
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme zns setzone\-desc\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+\fInvme zns set\-zone\-desc\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
                                  [\-\-start\-lba=<IONUM>, \-s <IONUM>]
                                  [\-\-zrwaa | \-r]
                                  [\-data=<FILE>, \-d <FILE>]
@@ -40,7 +40,7 @@ nvme-zns-set-zone-desc \- Set extended descriptor data for a zone
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, issues the Zone Management Send command with the Set Zone Descriptor Extenions action\&. The input will default to stdin\&. Alternatively, the data may come from a file that can be specified\&. The data length will automatically be calculated from the zns identify namesapce\&.
+For the NVMe device given, issues the Zone Management Send command with the Set Zone Descriptor Extensions action\&. The input will default to stdin\&. Alternatively, the data may come from a file that can be specified\&. The data length will automatically be calculated from the zns identify namespace\&.
 .SH "OPTIONS"
 .PP
 \-n <NUM>, \-\-namespace\-id=<NUM>

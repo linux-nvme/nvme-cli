@@ -174,11 +174,11 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 			  struct plugin *plugin)
 {
 	int err = 0;
-	int fd = 0;
 	__u32 i = 0;
 	log_page_map logPageMap;
 	const char *desc = "Retrieve Seagate Supported Log-Page information for the given device ";
 	const char *output_format = "output in binary format";
+	struct nvme_dev *dev;
 	int fmt;
 
 	struct config {
@@ -194,10 +194,11 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
-	err = nvme_get_log_simple(fd, 0xc5, sizeof(logPageMap), &logPageMap);
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
+	err = nvme_get_log_simple(dev_fd(dev), 0xc5,
+				  sizeof(logPageMap), &logPageMap);
 	if (!err) {
 		if (strcmp(cfg.output_format,"json")) {
 			printf ("Seagate Supported Log-pages count :%d\n",
@@ -222,7 +223,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 
 	if (err > 0)
 		nvme_show_status(err);
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
@@ -1039,13 +1040,13 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
     STX_EXT_SMART_LOG_PAGE_C0   ehExtSmart;
 	EXTENDED_SMART_INFO_T   ExtdSMARTInfo;
 	vendor_log_page_CF      logPageCF;
-	int fd;
 	struct json_object *root = json_create_object();
 	struct json_object *lbafs = json_create_array();
 	struct json_object *lbafs_ExtSmart, *lbafs_DramSmart;
 
 	const char *desc = "Retrieve the Firmware Activation History for Seagate NVMe drives";
 	const char *output_format = "output in binary format";
+	struct nvme_dev *dev;
 	int err, index=0;
 	struct config {
 		char *output_format;
@@ -1060,8 +1061,8 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		printf ("\nDevice not found \n");
 		return -1;
 	}
@@ -1069,6 +1070,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	if (strcmp(cfg.output_format,"json"))
 		printf("Seagate Extended SMART Information :\n");
 
+<<<<<<< HEAD
     /**
      * Here we should identify if the drive is a Panthor or Jaguar. 
      * Here we need to extract the model no from ctrl-id abd use it 
@@ -1151,6 +1153,50 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
     		nvme_show_status(err);
     }
 
+=======
+	err = nvme_get_log_simple(dev_fd(dev), 0xC4,
+				  sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+	if (!err) {
+		if (strcmp(cfg.output_format,"json")) {
+			printf("%-39s %-15s %-19s \n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
+			for(index=0; index<80; index++)
+				printf("-");
+			printf("\n");
+			for(index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++)
+				print_smart_log(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index], index == (NUMBER_EXTENDED_SMART_ATTRIBUTES - 1));
+
+		} else {
+			lbafs_ExtSmart = json_create_object();
+			json_print_smart_log(lbafs_ExtSmart, &ExtdSMARTInfo);
+
+			json_object_add_value_array(root, "SMART-Attributes", lbafs);
+			json_array_add_value_object(lbafs, lbafs_ExtSmart);
+		}
+
+		/**
+		 * Next get Log Page 0xCF
+		 */
+
+		err = nvme_get_log_simple(dev_fd(dev), 0xCF,
+					  sizeof(logPageCF), &logPageCF);
+		if (!err) {
+			if(strcmp(cfg.output_format,"json")) {
+				/*printf("Seagate DRAM Supercap SMART Attributes :\n");*/
+
+				print_smart_log_CF(&logPageCF);
+			} else {
+				lbafs_DramSmart = json_create_object();
+				json_print_smart_log_CF(lbafs_DramSmart, &logPageCF);
+				json_array_add_value_object(lbafs, lbafs_DramSmart);
+				json_print_object(root, NULL);
+			}
+		} else if (!strcmp(cfg.output_format, "json"))
+			json_print_object(root, NULL);
+	} else if (err > 0)
+		nvme_show_status(err);
+
+	dev_close(dev);
+>>>>>>> origin/master
 	return err;
 }
 
@@ -1185,13 +1231,13 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	EXTENDED_SMART_INFO_T ExtdSMARTInfo;
 	vendor_log_page_CF    logPageCF;
 
-	int fd;
 	int err, cf_err;
 	int index;
 	const char *desc = "Retrieve Seagate Temperature Stats information for the given device ";
 	const char *output_format = "output in binary format";
 	unsigned int temperature = 0, PcbTemp = 0, SocTemp = 0, scCurrentTemp = 0, scMaxTemp = 0;
 	unsigned long long maxTemperature = 0, MaxSocTemp = 0;
+	struct nvme_dev *dev;
 	struct config {
 		char *output_format;
 	};
@@ -1205,8 +1251,8 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		printf ("\nDevice not found \n");;
 		return -1;
 	}
@@ -1214,7 +1260,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate Temperature Stats Information :\n");
 	/*STEP-1 : Get Current Temperature from SMART */
-	err = nvme_get_log_smart(fd, 0xffffffff, true, &smart_log);
+	err = nvme_get_log_smart(dev_fd(dev), 0xffffffff, false, &smart_log);
 	if (!err) {
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
 		temperature = temperature ? temperature - 273 : 0;
@@ -1230,7 +1276,8 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	}
 
 	/* STEP-2 : Get Max temperature form Ext SMART-id 194 */
-	err = nvme_get_log_simple(fd, 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+	err = nvme_get_log_simple(dev_fd(dev), 0xC4,
+				  sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 	if (!err) {
 		for(index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++) {
 			if (ExtdSMARTInfo.vendorData[index].AttributeNumber == VS_ATTR_ID_MAX_LIFE_TEMPERATURE) {
@@ -1251,7 +1298,8 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	else if (err > 0)
 		nvme_show_status(err);
 
-	cf_err = nvme_get_log_simple(fd, 0xCF, sizeof(ExtdSMARTInfo), &logPageCF);
+	cf_err = nvme_get_log_simple(dev_fd(dev), 0xCF,
+				     sizeof(ExtdSMARTInfo), &logPageCF);
 
 	if(!cf_err) {
 		scCurrentTemp = logPageCF.AttrCF.SuperCapCurrentTemperature;
@@ -1266,7 +1314,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	if(!strcmp(cfg.output_format,"json"))
 		json_temp_stats(temperature, PcbTemp, SocTemp, maxTemperature, MaxSocTemp, cf_err, scCurrentTemp, scMaxTemp);
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 /* EOF Temperature Stats information */
@@ -1359,7 +1407,7 @@ static void json_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	pcie_error_log_page pcieErrorLog;
-	int fd;
+	struct nvme_dev *dev;
 
 	const char *desc = "Retrieve Seagate PCIe error counters for the given device ";
 	const char *output_format = "output in binary format";
@@ -1377,8 +1425,8 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		printf ("\nDevice not found \n");;
 		return -1;
 	}
@@ -1386,7 +1434,8 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate PCIe error counters Information :\n");
 
-	err = nvme_get_log_simple(fd, 0xCB, sizeof(pcieErrorLog), &pcieErrorLog);
+	err = nvme_get_log_simple(dev_fd(dev), 0xCB,
+				  sizeof(pcieErrorLog), &pcieErrorLog);
 	if (!err) {
 		if(strcmp(cfg.output_format,"json")) {
 			print_vs_pcie_error_log(pcieErrorLog);
@@ -1396,7 +1445,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	} else if (err > 0)
 		nvme_show_status(err);
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 /* EOF PCIE error-log information */
@@ -1596,10 +1645,15 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 {
 	const char *desc = "Clear Seagate PCIe Correctable counters for the given device ";
 	const char *save = "specifies that the controller shall save the attribute";
+<<<<<<< HEAD
 	int err, fd;
     struct nvme_id_ctrl ctrl;
     char modelNo[40];
+=======
+	struct nvme_dev *dev;
+>>>>>>> origin/master
 	__u32 result;
+	int err;
 
 	struct config {
 		bool   save;
@@ -1614,12 +1668,13 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		printf ("\nDevice not found \n");;
 		return -1;
 	}
 
+<<<<<<< HEAD
     err = nvme_identify_ctrl(fd, &ctrl);
 	if (!err){
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
@@ -1653,13 +1708,17 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 			__func__);
         
     }
+=======
+	err = nvme_set_features_simple(dev_fd(dev), 0xE1, 0, 0xCB, cfg.save,
+				       &result);
+>>>>>>> origin/master
 
 	if (err < 0) {
 		perror("set-feature");
 		return errno;
 	}
 
-	close(fd);
+	dev_close(dev);
 	return err;
 
 }
@@ -1673,11 +1732,12 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		"state of the controller at the time the command is processed. " \
 		"0 - controller shall not update the Telemetry Host Initiated Data.";
 	const char *raw = "output in raw format";
-	int err, fd, dump_fd;
 	struct nvme_temetry_log_hdr tele_log;
-	__le64  offset = 0;
 	int blkCnt, maxBlk = 0, blksToGet;
+	struct nvme_dev *dev;
 	unsigned char  *log;
+	__le64  offset = 0;
+	int err, dump_fd;
 
 	struct config {
 		__u32 namespace_id;
@@ -1697,21 +1757,22 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	dump_fd = STDOUT_FILENO;
 	cfg.log_id = (cfg.log_id << 8) | 0x07;
-	err = nvme_get_nsid_log(fd, false, cfg.log_id, cfg.namespace_id,
-			     sizeof(tele_log), (void *)(&tele_log));
+	err = nvme_get_nsid_log(dev_fd(dev), false, cfg.log_id,
+				cfg.namespace_id,
+				sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
 
 		if (!cfg.raw_binary) {
 			printf("Device:%s log-id:%d namespace-id:%#x\n",
-			       devicename, cfg.log_id,
+			       dev->name, cfg.log_id,
 			       cfg.namespace_id);
 			printf("Data Block 1 Last Block:%d Data Block 2 Last Block:%d Data Block 3 Last Block:%d\n",
 			       tele_log.tele_data_area1, tele_log.tele_data_area2, tele_log.tele_data_area3);
@@ -1732,7 +1793,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		blksToGet = ((maxBlk - blkCnt) >= TELEMETRY_BLOCKS_TO_READ) ? TELEMETRY_BLOCKS_TO_READ : (maxBlk - blkCnt);
 
 		if(blksToGet == 0) {
-			close(fd);
+			dev_close(dev);
 			return err;
 		}
 
@@ -1741,7 +1802,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log\n");
-			close(fd);
+			dev_close(dev);
 			return EINVAL;
 		}
 
@@ -1749,7 +1810,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
-			.fd		= fd,
+			.fd		= dev_fd(dev),
 			.lid		= cfg.log_id,
 			.nsid		= cfg.namespace_id,
 			.lpo		= offset,
@@ -1784,7 +1845,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		free(log);
 	}
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
@@ -1794,7 +1855,8 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		"hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
 	const char *raw = "output in raw format";
-	int err, fd, dump_fd;
+	struct nvme_dev *dev;
+	int err, dump_fd;
 	struct nvme_temetry_log_hdr tele_log;
 	__le64  offset = 0;
 	__u16 log_id;
@@ -1816,22 +1878,22 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	dump_fd = STDOUT_FILENO;
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(fd, false, log_id, cfg.namespace_id,
-			     sizeof(tele_log), (void *)(&tele_log));
+	err = nvme_get_nsid_log(dev_fd(dev), false, log_id, cfg.namespace_id,
+				sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
 
 		if (!cfg.raw_binary) {
 			printf("Device:%s namespace-id:%#x\n",
-			       devicename, cfg.namespace_id);
+			       dev->name, cfg.namespace_id);
 			printf("Data Block 1 Last Block:%d Data Block 2 Last Block:%d Data Block 3 Last Block:%d\n",
 			       tele_log.tele_data_area1, tele_log.tele_data_area2, tele_log.tele_data_area3);
 
@@ -1865,7 +1927,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
-			.fd		= fd,
+			.fd		= dev_fd(dev),
 			.lid		= log_id,
 			.nsid		= cfg.namespace_id,
 			.lpo		= offset,
@@ -1900,7 +1962,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		free(log);
 	}
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
@@ -1925,7 +1987,8 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 	const char *namespace_id = "desired namespace";
 
 	const char *file = "dump file";
-	int err, fd, dump_fd;
+	struct nvme_dev *dev;
+	int err, dump_fd;
 	int flags = O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	struct nvme_temetry_log_hdr tele_log;
@@ -1950,23 +2013,23 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	dump_fd = STDOUT_FILENO;
 	if(strlen(cfg.file)) {
 		dump_fd = open(cfg.file, flags, mode);
 		if (dump_fd < 0) {
 			perror(cfg.file);
-			close(fd);
+			dev_close(dev);
 			return EINVAL;
 		}
 	}
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(fd, false, log_id, cfg.namespace_id,
-			     sizeof(tele_log), (void *)(&tele_log));
+	err = nvme_get_nsid_log(dev_fd(dev), false, log_id, cfg.namespace_id,
+				sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
@@ -2005,7 +2068,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
-			.fd		= fd,
+			.fd		= dev_fd(dev),
 			.lid		= log_id,
 			.nsid		= cfg.namespace_id,
 			.lpo		= offset,
@@ -2039,7 +2102,7 @@ out:
 	if(strlen(cfg.file))
 		close(dump_fd);
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 

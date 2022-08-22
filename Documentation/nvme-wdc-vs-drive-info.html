@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-wdc-vs-drive-info(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -769,9 +769,13 @@ Results for any other device are undefined.</p></div>
 <div class="sect1">
 <h2 id="_output_explanation">Output Explanation</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>There are 2 fields returned from this command:</p></div>
+<div class="paragraph"><p>There are several different fields returned from this command depending
+on the drive:</p></div>
 <div class="paragraph"><p>Drive HW Revision</p></div>
 <div class="paragraph"><p>FTL Unit Size</p></div>
+<div class="paragraph"><p>Customer Serial Number</p></div>
+<div class="paragraph"><p>HyperScale Boot Version</p></div>
+<div class="paragraph"><p>TCG Device Ownership</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -791,7 +795,7 @@ Results for any other device are undefined.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-04-08 18:46:59 CEST
+ 2022-08-01 14:48:50 CEST
 </div>
 </div>
 </body>

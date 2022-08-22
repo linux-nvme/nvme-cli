@@ -53,7 +53,7 @@ OPTIONS
 
 -a::
 --anagrp-id::
-	ANA Gorup Identifier. If this value is 0h specifies
+	ANA Group Identifier. If this value is 0h specifies
 	that the controller determines the value to use
 
 -i <nvmsetid>::

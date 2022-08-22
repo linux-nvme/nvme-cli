@@ -401,7 +401,7 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
                 struct plugin *plugin)
 {
         const char *desc = "Retrieve latency monitor log data.";
-        int fd;
+	struct nvme_dev *dev;
         int ret = 0;
 
         struct config {
@@ -417,22 +417,23 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
                 OPT_END()
         };
 
-        fd = parse_and_open(argc, argv, desc, opts);
-        if (fd < 0)
-                return fd;
+        ret = parse_and_open(&dev, argc, argv, desc, opts);
+        if (ret < 0)
+                return ret;
 
-        ret = get_c0_log_page(fd, cfg.output_format);
+        ret = get_c0_log_page(dev_fd(dev), cfg.output_format);
         if (ret)
                 fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
                         ret);
-        close(fd);
+        dev_close(dev);
         return ret;
 }
 
-static int ocp_print_C3_log_normal(int fd, struct ssd_latency_monitor_log *log_data)
+static int ocp_print_C3_log_normal(struct nvme_dev *dev,
+				   struct ssd_latency_monitor_log *log_data)
 {
         printf("-Latency Monitor/C3 Log Page Data- \n");
-        printf("  Controller   :  %s\n", devicename);
+        printf("  Controller   :  %s\n", dev->name);
         int i, j;
         int pos = 0;
         char       ts_buf[128];
@@ -662,7 +663,7 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
         json_free_object(root);
 }
 
-static int get_c3_log_page(int fd, char *format)
+static int get_c3_log_page(struct nvme_dev *dev, char *format)
 {
         int ret = 0;
         int fmt = -1;
@@ -682,8 +683,8 @@ static int get_c3_log_page(int fd, char *format)
         }
         memset(data, 0, sizeof (__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 
-        ret = nvme_get_log_simple(fd, C3_LATENCY_MON_OPCODE,
-                        C3_LATENCY_MON_LOG_BUF_LEN, data);
+        ret = nvme_get_log_simple(dev_fd(dev), C3_LATENCY_MON_OPCODE,
+                                  C3_LATENCY_MON_LOG_BUF_LEN, data);
 
         if (strcmp(format, "json"))
                 fprintf(stderr,
@@ -725,7 +726,7 @@ static int get_c3_log_page(int fd, char *format)
 
                 switch (fmt) {
                 case NORMAL:
-                        ocp_print_C3_log_normal(fd, log_data);
+                        ocp_print_C3_log_normal(dev, log_data);
                         break;
                 case JSON:
                         ocp_print_C3_log_json(log_data);
@@ -745,7 +746,7 @@ static int ocp_latency_monitor_log(int argc, char **argv, struct command *comman
                 struct plugin *plugin)
 {
         const char *desc = "Retrieve latency monitor log data.";
-        int fd;
+	struct nvme_dev *dev;
         int ret = 0;
 
         struct config {
@@ -762,15 +763,15 @@ static int ocp_latency_monitor_log(int argc, char **argv, struct command *comman
                 OPT_END()
         };
 
-        fd = parse_and_open(argc, argv, desc, opts);
-        if (fd < 0)
-                return fd;
+        ret = parse_and_open(&dev, argc, argv, desc, opts);
+        if (ret < 0)
+                return ret;
 
-        ret = get_c3_log_page(fd, cfg.output_format);
+        ret = get_c3_log_page(dev, cfg.output_format);
         if (ret)
                 fprintf(stderr,
                         "ERROR : OCP : Failure reading the C3 Log Page, ret = %d\n",
                         ret);
-        close(fd);
+        dev_close(dev);
         return ret;
 }

@@ -2,6 +2,7 @@
 
 sources += [
   'plugins/amzn/amzn-nvme.c',
+  'plugins/dell/dell-nvme.c',
   'plugins/dera/dera-nvme.c',
   'plugins/huawei/huawei-nvme.c',
   'plugins/intel/intel-nvme.c',

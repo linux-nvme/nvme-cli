@@ -2,12 +2,12 @@
 .\"     Title: nvme-rpmb
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RPMB" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-RPMB" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -80,7 +80,7 @@ program\-key   \- program \*(Aqkey\*(Aq specified with \-k option or key read fr
 .RS 4
 .\}
 .nf
-read\-couter   \- Read \*(Aqwrite counter\*(Aq of specified RPMB target\&. The
+read\-counter  \- Read \*(Aqwrite counter\*(Aq of specified RPMB target\&. The
                 counter value read is printed onto STDOUT
 .fi
 .if n \{\
@@ -122,7 +122,7 @@ read\-data     \- Supports authenticated data reading from specified
 .RS 4
 .\}
 .nf
-write\-data    \- Supports authenticated data writting to specified RPMB
+write\-data    \- Supports authenticated data writing to specified RPMB
                 target (\-\-target or \-t option) at given offset
                 specified with \-\-address or \-o option, using key
                 specified using \-\-keyfile or \-k options\&. \-\-blocks or
@@ -174,12 +174,12 @@ These options provide the data on the command line itself\&.
 .PP
 \-o <offset>, \-\-address=<offset>
 .RS 4
-The address (in 512 byte sector offset from 0) to be used for data trasnfer commands (read or write) for a specified RPMB target\&.
+The address (in 512 byte sector offset from 0) to be used for data transfer commands (read or write) for a specified RPMB target\&.
 .RE
 .PP
 \-b, \-\-blocks=<sectors>
 .RS 4
-The size in 512 byte sectors to be used for data trasnfer commands (read or write) for a specified RPMB target\&.
+The size in 512 byte sectors to be used for data transfer commands (read or write) for a specified RPMB target\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -213,7 +213,7 @@ Print RPMB support information of an NVMe device
 .IP \(bu 2.3
 .\}
 Program
-\fISecreteKey\fR
+\fISecretKey\fR
 as authentication key for target 1
 .sp
 .if n \{\
@@ -283,7 +283,7 @@ Write 200 blocks of (512 bytes) from input\&.bin onto target 0
 .RS 4
 .\}
 .nf
-# nvme rpmb /dev/nvme0 \-c write\-data \-t 0 \-f input\&.bin \-b 200 \-k \*(AqSecreteKey\*(Aq
+# nvme rpmb /dev/nvme0 \-c write\-data \-t 0 \-f input\&.bin \-b 200 \-k \*(AqSecretKey\*(Aq
 .fi
 .if n \{\
 .RE

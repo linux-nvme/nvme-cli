@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 ################################################################################
 project(
-    'nvme-cli', ['c', 'cpp'],
+    'nvme-cli', ['c'],
     meson_version: '>= 0.47.0',
     license: 'GPL-2.0-only',
-    version: '2.0',
+    version: '2.1.2',
     default_options: [
       'c_std=gnu99',
       'buildtype=release',
@@ -43,25 +43,32 @@ endif
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
-libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
+# Check for libnvme availability
+libnvme_dep = dependency('libnvme', version: '>=1.1', required: true,
+                         fallback : ['libnvme', 'libnvme_dep'])
+libnvme_mi_dep = dependency('libnvme-mi', required: true,
+                         fallback : ['libnvme', 'libnvme_mi_dep'])
 
 # Check for libuuid availability
-libuuid_dep = dependency('uuid', required: true, fallback : ['uuid', 'uuid_dep'])
+libuuid_dep = dependency('uuid', required: true,
+                         fallback : ['uuid', 'uuid_dep'])
 conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid available?')
 
 # Check for libjson-c availability
-json_c_dep = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
-if json_c_dep.found()
-  conf.set('CONFIG_JSONC', true, description: 'Is json-c available?')
-  if json_c_dep.version().version_compare('>=0.14')
-    conf.set('CONFIG_JSONC_14', true, description: 'Is json-c at least 0.14?')
-    requires = 'Requires: json-c >= 0.14'
-  else
-    requires = 'Requires: json-c >= 0.13'
-  endif
+json_c_dep = dependency('json-c', required: true, version: '>=0.13',
+                        fallback : ['json-c', 'json_c_dep'])
+if json_c_dep.version().version_compare('>=0.14')
+  conf.set('CONFIG_JSONC_14', true, description: 'Is json-c at least 0.14?')
+  requires = 'Requires: json-c >= 0.14'
+else
+  requires = 'Requires: json-c >= 0.13'
 endif
 
-# Check for libhugetlbfs availability
+# Check for zlib availability
+libz_dep = dependency('zlib', required: true,
+                      fallback : ['zlib', 'zlib_dep'])
+
+# Check for libhugetlbfs availability (optional)
 if cc.has_header('hugetlbfs.h')
   libhugetlbfs_dep = cc.find_library('hugetlbfs',
                                      required : false)
@@ -71,9 +78,6 @@ else
   have_libhugetlbfs = false
 endif
 conf.set('CONFIG_LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs available?')
-
-# Check for zlib availability
-libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
@@ -243,6 +247,7 @@ sources = [
   'nvme-models.c',
   'nvme-print.c',
   'nvme-rpmb.c',
+  'nvme-wrap.c',
   'plugin.c',
   'wrapper.c',
 ]
@@ -256,7 +261,7 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libuuid_dep, json_c_dep, libz_dep,
+  dependencies: [ libnvme_dep, libnvme_mi_dep, libuuid_dep, json_c_dep, libz_dep,
                   libhugetlbfs_dep ],
   link_args: '-ldl',
   include_directories: incdir,

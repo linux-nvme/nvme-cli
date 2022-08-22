@@ -27,7 +27,7 @@ The zone append command writes the logical blocks specified by the command to
 the medium from the data data buffer provided. Will use stdin by default
 if you don't provide a file.
 
-On sucess, the program will report the LBA that was assigned to the data for
+On success, the program will report the LBA that was assigned to the data for
 the append operation.
 
 OPTIONS

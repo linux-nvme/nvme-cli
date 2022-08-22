@@ -4,7 +4,7 @@ nvme-set-property(1)
 NAME
 ----
 nvme-set-property - Writes and shows the defined NVMe controller property 
-for NVMe ove Fabric
+for NVMe over Fabric
 
 SYNOPSIS
 --------
@@ -15,7 +15,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Writes and shows the defined NVMe controller property for NVMe ove Fabric.
+Writes and shows the defined NVMe controller property for NVMe over Fabric.
 
 OPTIONS
 -------

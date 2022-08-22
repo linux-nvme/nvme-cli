@@ -4,8 +4,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
-<title>nvme-zeroes(1)</title>
+<meta name="generator" content="AsciiDoc 10.2.0" />
+<title>nvme-write-zeroes(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,7 +735,7 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-zeroes(1) Manual Page
+nvme-write-zeroes(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
@@ -927,12 +927,11 @@ metadata is passes.</p></td>
 --storage-tag=&lt;storage-tag&gt;
 </dt>
 <dt class="hdlist1">
--n &lt;storage-tag&gt;
+-S &lt;storage-tag&gt;
 </dt>
 <dd>
 <p>
-        Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
-        Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+        Variable Sized Logical Block Storage Tag(LBST).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -952,7 +951,7 @@ metadata is passes.</p></td>
 </dt>
 <dd>
 <p>
-    Ignore namespace is currently busy and perfome the operation
+    Ignore namespace is currently busy and performed the operation
     even though.
 </p>
 </dd>
@@ -976,7 +975,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-04-08 18:46:59 CEST
+ 2022-08-01 14:48:50 CEST
 </div>
 </div>
 </body>

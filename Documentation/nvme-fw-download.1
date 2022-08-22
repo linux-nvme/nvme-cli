@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-download
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-DOWNLOAD" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-DOWNLOAD" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,7 +45,7 @@ The firmware image may be constructed of multiple pieces that are individually d
 The new firmware image is not applied as part of the Firmware Image Download command\&. It is applied following a reset, where the image to apply and the firmware slot it should be committed to is specified with the Firmware Commit command (nvme fw\-commit <args>)\&.
 .SH "OPTIONS"
 .PP
-\-f <firmware\-file>, \-\-fw=<firmeware\-file>
+\-f <firmware\-file>, \-\-fw=<firmware\-file>
 .RS 4
 Required argument\&. This specifies the path to the device\(cqs firmware file on your system that will be read by the program and sent to the device\&.
 .RE

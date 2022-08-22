@@ -15,7 +15,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-For the NVMe device given, sends the zoned command set's identify namepsace
+For the NVMe device given, sends the zoned command set's identify namespace
 command and provides the result and returned structure.
 
 The <device> parameter is mandatory and may be either the NVMe character

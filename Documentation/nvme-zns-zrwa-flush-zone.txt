@@ -39,7 +39,7 @@ OPTIONS
 
 EXAMPLES
 --------
-* flush the first zwra of first zone for zrwacg(15) on namespace 1:
+* flush the first zrwa of first zone for zrwacg(15) on namespace 1:
 +
 ------------
 # nvme zns zrwa-flush-zone /dev/nvme0 -n 1 -l 15

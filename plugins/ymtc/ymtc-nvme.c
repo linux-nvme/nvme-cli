@@ -21,8 +21,8 @@ static void get_ymtc_smart_info(struct nvme_ymtc_smart_log *smart, int index, u8
     memcpy(raw_val, smart->itemArr[index].rawVal, RAW_SIZE);
 }
 
-static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
-    struct nvme_ymtc_smart_log *smart)
+static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
+			       struct nvme_ymtc_smart_log *smart)
 {
     struct nvme_id_ctrl ctrl;
     char fw_ver[10];
@@ -40,7 +40,7 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
         free(nm);
         return -1;
     }
-    err = nvme_identify_ctrl(fd, &ctrl);
+    err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
     if (err) {
         free(nm);
         free(raw);
@@ -52,7 +52,8 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
         ctrl.fr[4], ctrl.fr[5], ctrl.fr[6]);
 
     /* Table Title */
-    printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
+    printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
+	   dev->name, nsid);
     /* Clumn Name*/
     printf("key                               normalized raw\n");
     /* 00 SI_VD_PROGRAM_FAIL */
@@ -64,17 +65,17 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
     /* 02 SI_VD_WEARLEVELING_COUNT */
     get_ymtc_smart_info(smart, SI_VD_WEARLEVELING_COUNT, nm, raw);
     printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n", *nm,
-        *raw, *(raw+2), *(raw+4));
+        *(uint16_t *)raw, *(uint16_t *)(raw+2), *(uint16_t *)(raw+4));
     /* 03 SI_VD_E2E_DECTECTION_COUNT */
     get_ymtc_smart_info(smart, SI_VD_E2E_DECTECTION_COUNT, nm, raw);
     printf("end_to_end_error_detection_count: %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
     /* 04 SI_VD_PCIE_CRC_ERR_COUNT */
     get_ymtc_smart_info(smart, SI_VD_PCIE_CRC_ERR_COUNT, nm, raw);
-    printf("crc_error_count                 : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
+    printf("crc_error_count                 : %3d%%       %"PRIu32"\n", *nm, *(uint32_t *)raw);
     /* 08 SI_VD_THERMAL_THROTTLE_STATUS */
     get_ymtc_smart_info(smart, SI_VD_THERMAL_THROTTLE_STATUS, nm, raw);
-    printf("thermal_throttle_status         : %3d%%       %"PRIu64"%%, cnt: %"PRIu64"\n", *nm,
-        int48_to_long(raw), int48_to_long(raw+1));
+    printf("thermal_throttle_status         : %3d%%       %d%%, cnt: %"PRIu32"\n", *nm,
+        *raw, *(uint32_t *)(raw+1));
     /* 11 SI_VD_TOTAL_WRITE */
     get_ymtc_smart_info(smart, SI_VD_TOTAL_WRITE, nm, raw);
     printf("nand_bytes_written              : %3d%%       sectors: %"PRIu64"\n", *nm, int48_to_long(raw));
@@ -87,15 +88,15 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
     /* 15 SI_VD_TEMPT_SINCE_BORN */
     get_ymtc_smart_info(smart, SI_VD_TEMPT_SINCE_BORN, nm, raw);
     printf("tempt_since_born                : %3d%%       max: %u, min: %u, curr: %u\n",  *nm,
-        *raw, *(raw+2), *(raw+4));
+        *(uint16_t *)raw-273, *(uint16_t *)(raw+2)-273, *(int16_t *)(raw+4)-273);
     /* 16 SI_VD_POWER_CONSUMPTION */
     get_ymtc_smart_info(smart, SI_VD_POWER_CONSUMPTION, nm, raw);
     printf("power_consumption               : %3d%%       max: %u, min: %u, curr: %u\n",  *nm,
-        *raw, *(raw+2), *(raw+4));
+        *(uint16_t *)raw, *(uint16_t *)(raw+2), *(uint16_t *)(raw+4));
     /* 17 SI_VD_TEMPT_SINCE_BOOTUP */
     get_ymtc_smart_info(smart, SI_VD_TEMPT_SINCE_BOOTUP, nm, raw);
-    printf("tempt_since_bootup              : %3d%%       max: %u, min: %u, curr: %u\n",  *nm, *raw,
-        *(raw+2), *(raw+4));
+    printf("tempt_since_bootup              : %3d%%       max: %u, min: %u, curr: %u\n",  *nm,
+        *(uint16_t *)raw-273, *(uint16_t *)(raw+2)-273, *(uint16_t *)(raw+4)-273);
     /* 18 SI_VD_POWER_LOSS_PROTECTION */
     get_ymtc_smart_info(smart, SI_VD_POWER_LOSS_PROTECTION, nm, raw);
     printf("power_loss_protection           : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
@@ -104,7 +105,8 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
     printf("read_fail                       : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
     /* 20 SI_VD_THERMAL_THROTTLE_TIME */
     get_ymtc_smart_info(smart, SI_VD_THERMAL_THROTTLE_TIME, nm, raw);
-    printf("thermal_throttle_time           : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
+    printf("thermal_throttle_time           : %3d%%       %u, time: %"PRIu32"\n", *nm,
+		*raw, *(uint32_t *)(raw+1));
     /* 21 SI_VD_FLASH_MEDIA_ERROR */
     get_ymtc_smart_info(smart, SI_VD_FLASH_MEDIA_ERROR, nm, raw);
     printf("flash_error_media_count         : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
@@ -118,15 +120,16 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
     struct nvme_ymtc_smart_log smart_log;
-    int err, fd;
     char *desc = "Get Ymtc vendor specific additional smart log (optionally, "\
               "for the specified namespace), and show it.";
     const char *namespace = "(optional) desired namespace";
     const char *raw = "dump output in binary format";
+    struct nvme_dev *dev;
     struct config {
         __u32 namespace_id;
         bool  raw_binary;
     };
+    int err;
 
     struct config cfg = {
         .namespace_id = NVME_NSID_ALL,
@@ -138,21 +141,21 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
         OPT_END()
     };
 
-    fd = parse_and_open(argc, argv, desc, opts);
-    if (fd < 0)
-        return fd;
+    err = parse_and_open(&dev, argc, argv, desc, opts);
+    if (err < 0)
+        return err;
 
-    err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
+    err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
 			    sizeof(smart_log), &smart_log);
     if (!err) {
         if (!cfg.raw_binary)
-            err = show_ymtc_smart_log(fd, cfg.namespace_id, devicename, &smart_log);
+            err = show_ymtc_smart_log(dev, cfg.namespace_id, &smart_log);
         else
             d_raw((unsigned char *)&smart_log, sizeof(smart_log));
     }
     if (err > 0)
         nvme_show_status(err);
 
-    close(fd);
+    dev_close(dev);
     return err;
 }

@@ -2,12 +2,12 @@
 .\"     Title: nvme-sanitize
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SANITIZE" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-SANITIZE" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -49,7 +49,7 @@ The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
 On success it returns 0, error code otherwise\&.
 .SH "OPTIONS"
 .PP
-\-d, \-\-no\-delloc
+\-d, \-\-no\-dealloc
 .RS 4
 No Deallocate After Sanitize: If set, then the controller shall not deallocate any logical blocks as a result of successfully completing the sanitize operation\&. If cleared, then the controller should deallocate logical blocks as a result of successfully completing the sanitize operation\&. This bit shall be ignored if the Sanitize Action field is set to 001b (i\&.e\&., Exit Failure Mode)\&.
 .RE
@@ -81,7 +81,7 @@ Overwrite Pattern: This field is ignored unless the Sanitize Action field in Com
 .PP
 \-\-force
 .RS 4
-Ignore namespace is currently busy and perfome the operation even though\&.
+Ignore namespace is currently busy and performed the operation even though\&.
 .RE
 .SH "EXAMPLES"
 .sp

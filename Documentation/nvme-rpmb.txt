@@ -41,7 +41,7 @@ OPTIONS
 			RPMB target given with --target or -t options. As per 
 			spec, this is one time action which can't be undone.
 
-	read-couter   - Read 'write counter' of specified RPMB target. The
+	read-counter  - Read 'write counter' of specified RPMB target. The
 			counter value read is printed onto STDOUT
 
 	read-config   - Read 512 bytes of device configuration block data of
@@ -59,7 +59,7 @@ OPTIONS
 			-o option should be given to read the amount of data
 			to be read in 512 byte blocks.
 
-	write-data    - Supports authenticated data writting to specified RPMB
+	write-data    - Supports authenticated data writing to specified RPMB
 			target (--target or -t option) at given offset
 			specified with --address or -o option, using key
 			specified using --keyfile or -k options. --blocks or
@@ -99,10 +99,10 @@ OPTIONS
 -o <offset>::
 --address=<offset>::
 	The address (in 512 byte sector offset from 0) to be used for data 
-	trasnfer commands (read or write) for a specified RPMB target.
+	transfer commands (read or write) for a specified RPMB target.
 -b::
 --blocks=<sectors>::
-	The size in 512 byte sectors to be used for data trasnfer commands
+	The size in 512 byte sectors to be used for data transfer commands
 	(read or write) for a specified RPMB target.
 
 EXAMPLES
@@ -113,7 +113,7 @@ EXAMPLES
 # nvme rpmb /dev/nvme0 --cmd=info
 -----------
 +
-* Program 'SecreteKey' as authentication key for target 1
+* Program 'SecretKey' as authentication key for target 1
 +
 ------------
 # nvme rpmb /dev/nvme0 --cmd=program-key -key='SecretKey' --target=1
@@ -134,7 +134,7 @@ EXAMPLES
 * Write 200 blocks of (512 bytes) from input.bin onto target 0
 +
 ------------
-# nvme rpmb /dev/nvme0 -c write-data -t 0 -f input.bin -b 200 -k 'SecreteKey'
+# nvme rpmb /dev/nvme0 -c write-data -t 0 -f input.bin -b 200 -k 'SecretKey'
 ------------
 +
 * Read 200 blocks of (512 bytes) from target 2, at offset 0x100 and save the

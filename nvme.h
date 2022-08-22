@@ -19,51 +19,15 @@
 #include <dirent.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <endian.h>
 #include <sys/time.h>
+#include <sys/stat.h>
+
+#include <libnvme-mi.h>
 
 #include "plugin.h"
-#ifdef CONFIG_JSONC
-#include <json.h>
-
-#define json_create_object(o) json_object_new_object(o)
-#define json_create_array(a) json_object_new_array(a)
-#define json_free_object(o) json_object_put(o)
-#define json_free_array(a) json_object_put(a)
-#define json_object_add_value_uint(o, k, v) \
-	json_object_object_add(o, k, json_object_new_int(v))
-#define json_object_add_value_int(o, k, v) \
-	json_object_object_add(o, k, json_object_new_int(v))
-#ifdef CONFIG_JSONC_14
-#define json_object_add_value_uint64(o, k, v) \
-	json_object_object_add(o, k, json_object_new_uint64(v))
-#else
-#define json_object_add_value_uint64(o, k, v) \
-	if ((v) > UINT_MAX) {						\
-		fprintf(stderr, "Value overflow in %s", k);		\
-		json_object_object_add(o, k, json_object_new_int(-1));	\
-	} else								\
-		json_object_object_add(o, k, json_object_new_int(v))
-#endif
-#define json_object_add_value_float(o, k, v) \
-	json_object_object_add(o, k, json_object_new_double(v))
-#define json_object_add_value_string(o, k, v) \
-	json_object_object_add(o, k, json_object_new_string(v))
-#define json_object_add_value_array(o, k, v) \
-	json_object_object_add(o, k, v)
-#define json_object_add_value_object(o, k, v) \
-	json_object_object_add(o, k, v)
-#define json_array_add_value_object(o, k) \
-	json_object_array_add(o, k)
-#define json_array_add_value_string(o, v) \
-	json_object_array_add(o, json_object_new_string(v))
-#define json_print_object(o, u)						\
-	printf("%s", json_object_to_json_string_ext(o,			\
-		JSON_C_TO_STRING_PRETTY |				\
-		JSON_C_TO_STRING_NOSLASHESCAPE))
-#else
 #include "util/json.h"
-#endif
 #include "util/argconfig.h"
 
 enum nvme_print_flags {
@@ -76,11 +40,61 @@ enum nvme_print_flags {
 
 #define SYS_NVME "/sys/class/nvme"
 
+enum nvme_dev_type {
+	NVME_DEV_DIRECT,
+	NVME_DEV_MI,
+};
+
+struct nvme_dev {
+	enum nvme_dev_type type;
+	union {
+		struct {
+			int fd;
+			struct stat stat;
+		} direct;
+		struct {
+			nvme_root_t root;
+			nvme_mi_ep_t ep;
+			nvme_mi_ctrl_t ctrl;
+		} mi;
+	};
+
+	const char *name;
+};
+
+#define dev_fd(d) __dev_fd(d, __func__, __LINE__)
+
+static inline int __dev_fd(struct nvme_dev *dev, const char *func, int line)
+{
+	if (dev->type != NVME_DEV_DIRECT) {
+		fprintf(stderr,
+			"warning: %s:%d not a direct transport!\n",
+			func, line);
+		return -1;
+	}
+	return dev->direct.fd;
+}
+
+static inline nvme_mi_ep_t dev_mi_ep(struct nvme_dev *dev)
+{
+	if (dev->type != NVME_DEV_MI) {
+		fprintf(stderr,
+			"warning: not a MI transport!\n");
+		return NULL;
+	}
+	return dev->mi.ep;
+}
+
 void register_extension(struct plugin *plugin);
-int parse_and_open(int argc, char **argv, const char *desc,
+
+/*
+ * parse_and_open - parses arguments and opens the NVMe device, populating @dev
+ */
+int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *desc,
 	const struct argconfig_commandline_options *clo);
 
-extern const char *devicename;
+void dev_close(struct nvme_dev *dev);
+
 extern const char *output_format;
 
 enum nvme_print_flags validate_output_format(const char *format);

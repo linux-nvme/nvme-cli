@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -65,7 +65,7 @@ Send one or more Get Log Page requests to a NVMe\-over\-Fabrics Discovery Contro
 .sp
 If no parameters are given, then \fInvme discover\fR will attempt to find a /etc/nvme/discovery\&.conf file to use to supply a list of Discovery commands to run\&. If no /etc/nvme/discovery\&.conf file exists, the command will quit with an error\&.
 .sp
-Otherwise, a specific Discovery Controller should be specified using the \-\-transport, \-\-traddr, and if necessary the \-\-trsvcid flags\&. A Diѕcovery request will then be sent to the specified Discovery Controller\&.
+Otherwise, a specific Discovery Controller should be specified using the \-\-transport, \-\-traddr, and if necessary the \-\-trsvcid flags\&. A Discovery request will then be sent to the specified Discovery Controller\&.
 .SH "BACKGROUND"
 .sp
 The NVMe\-over\-Fabrics specification defines the concept of a Discovery Controller that an NVMe Host can query on a fabric network to discover NVMe subsystems contained in NVMe Targets which it can connect to on the network\&. The Discovery Controller will return Discovery Log Pages that provide the NVMe Host with specific information (such as network address and unique subsystem NQN) the NVMe Host can use to issue an NVMe connect command to connect itself to a storage resource contained in that NVMe subsystem on the NVMe Target\&.
@@ -174,7 +174,7 @@ to not read in an existing configuration file\&. The JSON configuration file for
 .PP
 \-k <#>, \-\-keep\-alive\-tmo=<#>
 .RS 4
-Overrides the default dealy (in seconds) for keep alive\&. This option will be ignored for the discovery, and it is only implemented for completeness\&.
+Overrides the default timeout (in seconds) for keep alive\&. This option will be ignored for the discovery, and it is only implemented for completeness\&.
 .RE
 .PP
 \-c <#>, \-\-reconnect\-delay=<#>
@@ -242,7 +242,7 @@ Set the reporting format to
 .PP
 \-\-force
 .RS 4
-Disable the built\-in persitent discover connection rules\&. Combined with \-\-persistent flag, always create new persistent discovery connection\&.
+Disable the built\-in persistent discover connection rules\&. Combined with \-\-persistent flag, always create new persistent discovery connection\&.
 .RE
 .SH "EXAMPLES"
 .sp

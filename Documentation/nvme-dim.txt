@@ -21,7 +21,7 @@ deregister.
 
 The DIM command is used to explicitly register with Discovery Controllers (DC),
 especially with Central Discovery Controllers (CDC). CDCs maintain a database (DB)
-of all the Hosts and Storage Susbsystems in a network. The register task is used
+of all the Hosts and Storage Subsystems in a network. The register task is used
 to add a host to the CDC's DB. The deregister task is used to remove a host from
 the CDC's DB.
 

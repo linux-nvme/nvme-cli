@@ -1,4 +1,4 @@
-nvme-micron-temperarature-stats(1)
+nvme-micron-temperature-stats(1)
 ==================================
 
 NAME

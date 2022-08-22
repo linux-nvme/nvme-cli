@@ -55,10 +55,10 @@ OPTIONS
 
 -y <metasize>::
 --metadata-size=<metasize>::
-	Size of metadata to be trasnferred in bytes.
+	Size of metadata to be transferred in bytes.
 
 -r <reftag>::
---ref-tag=<regtag>::
+--ref-tag=<reftag>::
 	Reference Tag for Protection Information
 
 -d <data-file>::
@@ -106,8 +106,8 @@ metadata is passes.
 --dir-type=<type>::
 	Optional directive type. The nvme-cli only enforces the value
 	be in the defined range for the directive type, though the NVMe
-	specifcation (1.3a) defines only one directive, 01h, for write
-	stream idenfiers.
+	specification (1.3a) defines only one directive, 01h, for write
+	stream identifiers.
 
 -S <spec>::
 --dir-spec=<spec>::
@@ -146,7 +146,7 @@ metadata is passes.
 	data protection processing.
 
 --force::
-    Ignore namespace is currently busy and perfome the operation
+    Ignore namespace is currently busy and performed the operation
     even though.
 
 EXAMPLES

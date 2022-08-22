@@ -2,12 +2,12 @@
 .\"     Title: nvme-ana-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2022
+.\"      Date: 08/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ANA\-LOG" "1" "04/08/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-ANA\-LOG" "1" "08/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,6 +42,11 @@ The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
 .sp
 On success, the returned ANA log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
+.PP
+\-g, \-\-groups
+.RS 4
+Return the list of ANA groups without the namespace listing\&.
+.RE
 .PP
 \-o <format>, \-\-output\-format=<format>
 .RS 4

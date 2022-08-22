@@ -13,13 +13,13 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the NVMe supportd log pages details from an NVMe device and provides
+Retrieves the NVMe supported log pages details from an NVMe device and provides
 the returned structure.
 
 The <device> parameter is mandatory and should be the NVMe character
 device (ex: /dev/nvme0).
 
-On success, the returned supportd log pages log structure will be printed
+On success, the returned supported log pages log structure will be printed
 for each command that is supported.
 
 OPTIONS

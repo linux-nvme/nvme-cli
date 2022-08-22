@@ -90,7 +90,7 @@ metadata is passes.
 	data protection processing.
 
 --force::
-    Ignore namespace is currently busy and perfome the operation
+    Ignore namespace is currently busy and performed the operation
     even though.
 
 EXAMPLES
