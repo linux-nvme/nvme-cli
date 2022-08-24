@@ -221,7 +221,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	flags = validate_output_format(cfg.output_format);

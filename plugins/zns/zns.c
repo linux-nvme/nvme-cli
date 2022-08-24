@@ -137,7 +137,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -190,7 +190,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	flags = validate_output_format(cfg.output_format);
@@ -256,7 +256,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = asprintf(&command, "%s-%s", plugin->name, cmd->name);
@@ -376,7 +376,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	if (!cfg.namespace_id) {
@@ -515,7 +515,7 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	if (!cfg.namespace_id) {
@@ -597,7 +597,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	if (!cfg.namespace_id) {
@@ -696,7 +696,7 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	if (!cfg.namespace_id) {
@@ -771,7 +771,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	flags = validate_output_format(cfg.output_format);
@@ -887,7 +887,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	flags = validate_output_format(cfg.output_format);
@@ -1082,7 +1082,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	if (!cfg.data_size) {
@@ -1261,7 +1261,7 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return errno;
 
 	flags = validate_output_format(cfg.output_format);

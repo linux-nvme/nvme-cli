@@ -30,7 +30,7 @@ static int getHealthValue(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	result = parse_and_open(&dev, argc, argv, desc, opts);
-	if (result < 0) {
+	if (result) {
 		printf("\nDevice not found \n");;
 		return -1;
 	}
@@ -68,7 +68,7 @@ static int getBadblock(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	result = parse_and_open(&dev, argc, argv, desc, opts);
-	if (result < 0) {
+	if (result) {
 		printf("\nDevice not found \n");;
 		return -1;
 	}

@@ -418,7 +418,7 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
         };
 
         ret = parse_and_open(&dev, argc, argv, desc, opts);
-        if (ret < 0)
+        if (ret)
                 return ret;
 
         ret = get_c0_log_page(dev_fd(dev), cfg.output_format);
@@ -764,7 +764,7 @@ static int ocp_latency_monitor_log(int argc, char **argv, struct command *comman
         };
 
         ret = parse_and_open(&dev, argc, argv, desc, opts);
-        if (ret < 0)
+        if (ret)
                 return ret;
 
         ret = get_c3_log_page(dev, cfg.output_format);

@@ -424,7 +424,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
@@ -638,7 +638,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = nvme_get_log_simple(dev_fd(dev), cfg.write ? 0xc3 : 0xc1,
@@ -778,7 +778,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	data_buf = malloc(buf_size);
@@ -835,7 +835,7 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (nvme_query_cap(dev_fd(dev), 0xffffffff, sizeof(ctx), &ctx)) {
@@ -970,7 +970,7 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	cap_in_sec = IDEMA_CAP(cfg.capacity_in_gb);
@@ -1086,7 +1086,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (!cfg.feature_id) {
@@ -1185,7 +1185,7 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (!cfg.feature_id) {

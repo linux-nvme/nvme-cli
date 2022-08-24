@@ -142,7 +142,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
         return err;
 
     err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,

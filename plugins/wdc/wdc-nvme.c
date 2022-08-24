@@ -3022,7 +3022,7 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -3341,7 +3341,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -3637,7 +3637,7 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -3691,7 +3691,7 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -3742,7 +3742,7 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -3832,7 +3832,7 @@ static int wdc_purge(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -3894,7 +3894,7 @@ static int wdc_purge_monitor(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7170,7 +7170,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7291,7 +7291,7 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7362,7 +7362,7 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7453,7 +7453,7 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7565,7 +7565,7 @@ static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *co
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7610,7 +7610,7 @@ static int wdc_get_error_recovery_log(int argc, char **argv, struct command *com
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7655,7 +7655,7 @@ static int wdc_get_dev_capabilities_log(int argc, char **argv, struct command *c
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7700,7 +7700,7 @@ static int wdc_get_unsupported_reqs_log(int argc, char **argv, struct command *c
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7777,7 +7777,7 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7829,7 +7829,7 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -7944,7 +7944,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -8145,7 +8145,7 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -8268,7 +8268,7 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -8324,7 +8324,7 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -9128,7 +9128,7 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -9224,7 +9224,7 @@ static int wdc_drive_resize(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -9274,7 +9274,7 @@ static int wdc_namespace_resize(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	if ((cfg.op_option != 0x1) &&
@@ -9340,7 +9340,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
 
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -9475,7 +9475,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	ret = validate_output_format(cfg.output_format);
@@ -10157,7 +10157,7 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -10237,7 +10237,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 
@@ -10326,7 +10326,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	fmt = validate_output_format(cfg.output_format);
@@ -10535,7 +10535,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	r = nvme_scan(NULL);
@@ -10641,7 +10641,7 @@ static int wdc_capabilities(int argc, char **argv,
     };
 
     ret = parse_and_open(&dev, argc, argv, desc, opts);
-    if (ret < 0)
+    if (ret)
         return ret;
 
     /* get capabilities */
@@ -10746,7 +10746,7 @@ static int wdc_cloud_ssd_plugin_version(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	/* get capabilities */
@@ -10793,7 +10793,7 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	/* get capabilities */
@@ -10863,7 +10863,7 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *command,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!wdc_enc_check_model(dev)) {

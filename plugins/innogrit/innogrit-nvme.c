@@ -40,7 +40,7 @@ static int innogrit_smart_log_additional(int argc, char **argv,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	nvme_get_log_smart(dev_fd(dev), cfg.namespace_id, false, &smart_log);
@@ -183,7 +183,7 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 
@@ -312,7 +312,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 	};
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	if (getcwd(currentdir, 128) == NULL)

@@ -176,7 +176,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 	err = nvme_get_log_simple(dev_fd(dev), 0xc5,
 				  sizeof(logPageMap), &logPageMap);
@@ -738,7 +738,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		printf ("\nDevice not found \n");
 		return -1;
 	}
@@ -843,7 +843,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		printf ("\nDevice not found \n");;
 		return -1;
 	}
@@ -1017,7 +1017,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		printf ("\nDevice not found \n");;
 		return -1;
 	}
@@ -1063,7 +1063,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		printf ("\nDevice not found \n");;
 		return -1;
 	}
@@ -1115,7 +1115,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	dump_fd = STDOUT_FILENO;
@@ -1236,7 +1236,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	dump_fd = STDOUT_FILENO;
@@ -1371,7 +1371,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	dump_fd = STDOUT_FILENO;

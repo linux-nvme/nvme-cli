@@ -475,7 +475,7 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
@@ -518,7 +518,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
 	    return err;
 
     struct nvme_get_features_args args = {
@@ -576,7 +576,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
 	    return err;
 
     struct nvme_set_features_args args = {
@@ -641,7 +641,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
 	    return err;
 
     if (parse_params(cfg.param, 2, &param1, &param2)) {
@@ -793,7 +793,7 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
 	    return err;
 
     fdi = fopen(FID_C3_LOG_FILENAME, "w+");
@@ -864,7 +864,7 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (strlen(cfg.select) != 3) {
@@ -1086,7 +1086,7 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
 	    return err;
 
     err = nvme_get_log_simple(dev_fd(dev), cfg.write ? 0xc2 : 0xc1,
@@ -1130,7 +1130,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
         return err;
 
     struct nvme_set_features_args args = {
@@ -1254,7 +1254,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 		.result		= &result,
 	};
 
-	if (err < 0)
+	if (err)
 		return err;
 	switch (option) {
 	case None:
