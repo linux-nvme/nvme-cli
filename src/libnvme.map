@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+LIBNVME_1_2 {
+	global:
+		nvme_ctrl_get_dhchap_host_key;
+		nvme_ctrl_set_dhchap_host_key;
+};
+
 LIBNVME_1_1 {
 	global:
 		nvme_get_version;
