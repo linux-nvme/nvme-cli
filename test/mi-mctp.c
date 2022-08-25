@@ -407,6 +407,7 @@ static void test_poll_timeout(nvme_mi_ep_t ep, struct test_peer *peer)
 /* test: send a More Processing Required response, then the actual response */
 struct mpr_tx_info {
 	int msg_no;
+	bool admin_quirk;
 	size_t final_len;
 };
 
@@ -422,6 +423,9 @@ static int tx_mpr(struct test_peer *peer, void *buf, size_t len)
 	case 1:
 		peer->tx_buf[4] = NVME_MI_RESP_MPR;
 		peer->tx_buf_len = 8;
+		if (tx_info->admin_quirk) {
+			peer->tx_buf_len = 20;
+		}
 		break;
 	case 2:
 		peer->tx_buf[4] = NVME_MI_RESP_SUCCESS;
@@ -446,6 +450,7 @@ static void test_mpr_mi(nvme_mi_ep_t ep, struct test_peer *peer)
 
 	tx_info.msg_no = 1;
 	tx_info.final_len = sizeof(struct nvme_mi_mi_resp_hdr) + sizeof(ss_info);
+	tx_info.admin_quirk = false;
 
 	peer->tx_fn = tx_mpr;
 	peer->tx_data = &tx_info;
@@ -463,6 +468,32 @@ static void test_mpr_admin(nvme_mi_ep_t ep, struct test_peer *peer)
 
 	tx_info.msg_no = 1;
 	tx_info.final_len = sizeof(struct nvme_mi_admin_resp_hdr) + sizeof(id);
+	tx_info.admin_quirk = false;
+
+	peer->tx_fn = tx_mpr;
+	peer->tx_data = &tx_info;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+
+	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	assert(rc == 0);
+
+	nvme_mi_close_ctrl(ctrl);
+}
+
+/* We have seen drives that send a MPR response as a full Admin message,
+ * rather than a MI message; these have a larger message body
+ */
+static void test_mpr_admin_quirked(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct mpr_tx_info tx_info;
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	tx_info.msg_no = 1;
+	tx_info.final_len = sizeof(struct nvme_mi_admin_resp_hdr) + sizeof(id);
+	tx_info.admin_quirk = true;
 
 	peer->tx_fn = tx_mpr;
 	peer->tx_data = &tx_info;
@@ -638,6 +669,7 @@ struct test {
 	DEFINE_TEST(poll_timeout),
 	DEFINE_TEST(mpr_mi),
 	DEFINE_TEST(mpr_admin),
+	DEFINE_TEST(mpr_admin_quirked),
 	DEFINE_TEST(mpr_timeouts),
 	DEFINE_TEST(mpr_timeout_clamp),
 	DEFINE_TEST(mpr_mprt_zero),
