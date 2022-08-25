@@ -95,6 +95,9 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 	if (!c)
 		return;
 	json_update_attributes(c, port_obj);
+	attr_obj = json_object_object_get(port_obj, "dhchap_key");
+	if (attr_obj)
+		nvme_ctrl_set_dhchap_host_key(c, json_object_get_string(attr_obj));
 	attr_obj = json_object_object_get(port_obj, "dhchap_ctrl_key");
 	if (attr_obj)
 		nvme_ctrl_set_dhchap_key(c, json_object_get_string(attr_obj));
@@ -221,6 +224,10 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	value = nvme_ctrl_get_trsvcid(c);
 	if (value)
 		json_object_object_add(port_obj, "trsvcid",
+				       json_object_new_string(value));
+	value = nvme_ctrl_get_dhchap_host_key(c);
+	if (value)
+		json_object_object_add(port_obj, "dhchap_key",
 				       json_object_new_string(value));
 	value = nvme_ctrl_get_dhchap_key(c);
 	if (value)
@@ -364,6 +371,10 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 	value = nvme_ctrl_get_trsvcid(c);
 	if (value)
 		json_object_object_add(ctrl_obj, "trsvcid",
+				       json_object_new_string(value));
+	value = nvme_ctrl_get_dhchap_host_key(c);
+	if (value)
+		json_object_object_add(ctrl_obj, "dhchap_key",
 				       json_object_new_string(value));
 	value = nvme_ctrl_get_dhchap_key(c);
 	if (value)

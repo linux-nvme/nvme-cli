@@ -810,6 +810,21 @@ struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 	return &c->cfg;
 }
 
+const char *nvme_ctrl_get_dhchap_host_key(nvme_ctrl_t c)
+{
+	return c->dhchap_key;
+}
+
+void nvme_ctrl_set_dhchap_host_key(nvme_ctrl_t c, const char *key)
+{
+	if (c->dhchap_key) {
+		free(c->dhchap_key);
+		c->dhchap_key = NULL;
+	}
+	if (key)
+		c->dhchap_key = strdup(key);
+}
+
 const char *nvme_ctrl_get_dhchap_key(nvme_ctrl_t c)
 {
 	return c->dhchap_ctrl_key;
@@ -897,6 +912,7 @@ void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->queue_count);
 	FREE_CTRL_ATTR(c->serial);
 	FREE_CTRL_ATTR(c->sqsize);
+	FREE_CTRL_ATTR(c->dhchap_key);
 	FREE_CTRL_ATTR(c->dhchap_ctrl_key);
 	FREE_CTRL_ATTR(c->address);
 	FREE_CTRL_ATTR(c->dctype);
@@ -1146,6 +1162,7 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 			       const char *name)
 {
 	DIR *d;
+	char *host_key;
 
 	d = opendir(path);
 	if (!d) {
@@ -1166,6 +1183,14 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 	c->queue_count = nvme_get_ctrl_attr(c, "queue_count");
 	c->serial = nvme_get_ctrl_attr(c, "serial");
 	c->sqsize = nvme_get_ctrl_attr(c, "sqsize");
+	host_key = nvme_get_ctrl_attr(c, "dhchap_secret");
+	if (host_key && (!strcmp(c->s->h->dhchap_key, host_key) ||
+			 !strcmp("none", host_key))) {
+		free(host_key);
+		host_key = NULL;
+	}
+	if (host_key)
+		c->dhchap_key = host_key;
 	c->dhchap_ctrl_key = nvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
 	if (c->dhchap_ctrl_key && !strcmp(c->dhchap_ctrl_key, "none")) {
 		free(c->dhchap_ctrl_key);

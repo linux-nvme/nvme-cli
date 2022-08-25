@@ -82,6 +82,7 @@ struct nvme_ctrl {
 	char *subsysnqn;
 	char *traddr;
 	char *trsvcid;
+	char *dhchap_key;
 	char *dhchap_ctrl_key;
 	char *cntrltype;
 	char *dctype;

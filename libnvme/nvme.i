@@ -316,6 +316,7 @@ struct nvme_ctrl {
   %immutable subsysnqn;
   %immutable traddr;
   %immutable trsvcid;
+  %immutable dhchap_host_key;
   %immutable dhchap_key;
   %immutable cntrltype;
   %immutable dctype;
@@ -335,6 +336,7 @@ struct nvme_ctrl {
   char *traddr;
   char *trsvcid;
   %extend {
+    char *dhchap_host_key:
     char *dhchap_key;
   }
   char *cntrltype;
@@ -671,6 +673,9 @@ struct nvme_ns {
   }
   const char *nvme_ctrl_dhchap_key_get(struct nvme_ctrl *c) {
     return nvme_ctrl_get_dhchap_key(c);
+  }
+  const char *nvme_ctrl_dhchap_host_key_get(struct nvme_ctrl *c) {
+    return nvme_ctrl_get_dhchap_host_key(c);
   }
 %};
 

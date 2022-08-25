@@ -465,6 +465,8 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	hostnqn = nvme_host_get_hostnqn(h);
 	hostid = nvme_host_get_hostid(h);
 	hostkey = nvme_host_get_dhchap_key(h);
+	if (!hostkey)
+		hostkey = nvme_ctrl_get_dhchap_host_key(c);
 	ctrlkey = nvme_ctrl_get_dhchap_key(c);
 	if (add_argument(argstr, "transport", transport) ||
 	    add_argument(argstr, "traddr",
@@ -613,14 +615,20 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 					nvme_ctrl_get_trsvcid(c),
 					NULL);
 		if (fc) {
+			const char *key;
+
 			cfg = merge_config(c, nvme_ctrl_get_config(fc));
 			/*
 			 * An authentication key might already been set
 			 * in @cfg, so ensure to update @c with the correct
 			 * controller key.
 			 */
-			if (fc->dhchap_ctrl_key)
-				nvme_ctrl_set_dhchap_key(c, fc->dhchap_ctrl_key);
+			key = nvme_ctrl_get_dhchap_host_key(fc);
+			if (key)
+				nvme_ctrl_set_dhchap_host_key(c, key);
+			key = nvme_ctrl_get_dhchap_key(fc);
+			if (key)
+				nvme_ctrl_set_dhchap_key(c, key);
 		}
 
 	}
