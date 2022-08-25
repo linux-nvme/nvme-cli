@@ -461,7 +461,7 @@ static int micron_parse_options(struct nvme_dev **dev, int argc, char **argv,
     int idx = 0;
     int err = parse_and_open(dev, argc, argv, desc, opts);
 
-    if (err < 0) {
+    if (err) {
         perror("open");
         return -1;
     }
@@ -519,7 +519,7 @@ static int micron_selective_download(int argc, char **argv,
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
         return err;
 
     if (strlen(cfg.select) != 3) {
@@ -741,7 +741,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd,
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0) {
+    if (err) {
         printf("\nDevice not found \n");;
         return -1;
     }
@@ -883,7 +883,7 @@ static int micron_pcie_stats(int argc, char **argv,
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0) {
+    if (err) {
         printf("\nDevice not found \n");;
         return -1;
     }
@@ -1518,7 +1518,7 @@ static int micron_nand_stats(int argc, char **argv,
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0) {
+    if (err) {
         printf("\nDevice not found \n");;
         return -1;
     }
@@ -1620,7 +1620,7 @@ static int micron_smart_ext_log(int argc, char **argv,
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0) {
+    if (err) {
         printf("\nDevice not found \n");;
         return -1;
     }
@@ -3123,7 +3123,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
     };
 
     err = parse_and_open(&dev, argc, argv, desc, opts);
-    if (err < 0)
+    if (err)
         return err;
 
     /* if telemetry type is specified, check for data area */

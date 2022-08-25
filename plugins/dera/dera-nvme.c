@@ -128,7 +128,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 	
 	err = nvme_get_log_simple(dev_fd(dev), 0xc0, sizeof(log), &log);

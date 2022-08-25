@@ -441,7 +441,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -498,7 +498,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -577,7 +577,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.file_name) {
@@ -675,7 +675,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -756,7 +756,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -843,7 +843,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -901,7 +901,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -975,7 +975,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1025,7 +1025,7 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1083,7 +1083,7 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1150,7 +1150,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1241,7 +1241,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1374,7 +1374,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1456,7 +1456,7 @@ static int get_lba_status_log(int argc, char **argv,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1524,7 +1524,7 @@ static int get_resv_notif_log(int argc, char **argv,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1582,7 +1582,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1688,7 +1688,7 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1744,7 +1744,7 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1837,7 +1837,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.aen) {
@@ -1940,7 +1940,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -1992,7 +1992,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -2044,7 +2044,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -2100,7 +2100,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -2168,7 +2168,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -2252,7 +2252,7 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -2305,7 +2305,7 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -2369,7 +2369,7 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -2423,7 +2423,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -2559,7 +2559,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.flbas != 0xff && cfg.bs != 0x00) {
@@ -2847,7 +2847,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -2903,7 +2903,7 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -2961,7 +2961,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3039,7 +3039,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3102,7 +3102,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3184,7 +3184,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3261,7 +3261,7 @@ static int cmd_set_independent_id_ns(int argc, char **argv,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3320,7 +3320,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3377,7 +3377,7 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3431,7 +3431,7 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3479,7 +3479,7 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = nvme_identify_iocs(dev_fd(dev), cfg.cntid, &iocs);
@@ -3523,7 +3523,7 @@ static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3558,7 +3558,7 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = nvme_get_nsid(dev_fd(dev), &nsid);
@@ -3620,7 +3620,7 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	struct nvme_virtual_mgmt_args args = {
@@ -3679,7 +3679,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3737,7 +3737,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -3804,7 +3804,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	struct nvme_dev_self_test_args args = {
@@ -3867,7 +3867,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -4061,7 +4061,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -4136,7 +4136,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	fw_fd = open(cfg.fw, O_RDONLY);
@@ -4262,7 +4262,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.slot > 7) {
@@ -4343,7 +4343,7 @@ static int subsystem_reset(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = nvme_subsystem_reset(dev_fd(dev));
@@ -4371,7 +4371,7 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = nvme_ctrl_reset(dev_fd(dev));
@@ -4394,7 +4394,7 @@ static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = nvme_ns_rescan(dev_fd(dev));
@@ -4447,7 +4447,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	switch (cfg.sanact) {
@@ -4620,7 +4620,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	r = nvme_scan(NULL);
@@ -4681,7 +4681,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.offset == -1) {
@@ -4738,7 +4738,7 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.offset == -1) {
@@ -4844,7 +4844,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		goto ret;
 
 	err = open_exclusive(&dev, argc, argv, cfg.force);
-	if (err < 0) {
+	if (err) {
 		if (errno == EBUSY) {
 			fprintf(stderr, "Failed to open %s.\n",
 		                basename(argv[optind]));
@@ -5102,7 +5102,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -5268,7 +5268,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.tl == 0) {
@@ -5410,7 +5410,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	switch (cfg.dtype) {
@@ -5545,7 +5545,7 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -5684,7 +5684,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.prinfo > 0xf) {
@@ -5819,7 +5819,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, (int *)ctx_attrs, ARRAY_SIZE(ctx_attrs));
@@ -5973,7 +5973,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	nb = argconfig_parse_comma_sep_array_short(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
@@ -6073,7 +6073,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -6143,7 +6143,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -6227,7 +6227,7 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -6319,7 +6319,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (!cfg.namespace_id) {
@@ -6403,7 +6403,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -6587,14 +6587,14 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	if (opcode != nvme_cmd_write) {
 		err = parse_and_open(&dev, argc, argv, desc, opts);
-		if (err < 0)
+		if (err)
 			goto ret;
 	} else {
 		err = argconfig_parse(argc, argv, desc, opts);
 		if (err)
 			goto ret;
 		err = open_exclusive(&dev, argc, argv, cfg.force);
-		if (err < 0) {
+		if (err) {
 			if (errno == EBUSY) {
 				fprintf(stderr, "Failed to open %s.\n",
 					basename(argv[optind]));
@@ -6917,7 +6917,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.prinfo > 0xf) {
@@ -7044,7 +7044,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.size) {
@@ -7145,7 +7145,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto err;
 
 	err = flags = validate_output_format(cfg.output_format);
@@ -7231,7 +7231,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.operation > 0xf) {
@@ -7324,7 +7324,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.human_readable)
@@ -7465,7 +7465,7 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	/* check for input argument limit */
@@ -7636,7 +7636,7 @@ static int passthru(int argc, char **argv, bool admin,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		goto ret;
 
 	if (cfg.opcode & 0x01)

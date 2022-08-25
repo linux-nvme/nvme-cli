@@ -976,7 +976,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 	}
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		printf("Error parse and open (err = %d)\n", err);
 		return err;
 	}
@@ -1039,7 +1039,7 @@ static int vt_show_identify(int argc, char **argv, struct command *cmd, struct p
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		printf("Error parse and open (err = %d)\n", err);
 		return err;
 	}

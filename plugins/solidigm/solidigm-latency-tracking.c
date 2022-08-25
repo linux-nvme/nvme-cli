@@ -409,7 +409,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	lt.fd = dev_fd(dev);

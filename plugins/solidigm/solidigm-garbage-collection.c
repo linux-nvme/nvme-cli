@@ -80,7 +80,7 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	enum nvme_print_flags flags = validate_output_format(cfg.output_format);
