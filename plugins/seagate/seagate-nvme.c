@@ -40,6 +40,7 @@
 #include "plugin.h"
 #include "linux/types.h"
 #include "nvme-print.h"
+#include <time.h>
 
 #define CREATE_CMD
 
@@ -1077,7 +1078,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
      * to deternine drive family.  
      */
 
-    err = nvme_identify_ctrl(fd, &ctrl);
+    err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
 	if (!err){
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
     } else{
@@ -1087,7 +1088,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 
     if (stx_is_jag_pan(modelNo) == 0) {
 
-    	err = nvme_get_log_simple(fd, 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+    	err = nvme_get_log_simple(dev_fd(dev), 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
     	if (!err) {
     		if (strcmp(cfg.output_format,"json")) {
     			printf("%-39s %-15s %-19s \n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
@@ -1109,7 +1110,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
     		 * Next get Log Page 0xCF
     		 */
 
-    		err = nvme_get_log_simple(fd, 0xCF, sizeof(logPageCF), &logPageCF);
+    		err = nvme_get_log_simple(dev_fd(dev), 0xCF, sizeof(logPageCF), &logPageCF);
     		if (!err) {
     			if(strcmp(cfg.output_format,"json")) {
     				/*printf("Seagate DRAM Supercap SMART Attributes :\n");*/
@@ -1130,7 +1131,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
     	} else if (err > 0)
     		nvme_show_status(err);
     } else {
-        err = nvme_get_log_simple(fd, 0xC0, sizeof(ehExtSmart), &ehExtSmart);
+        err = nvme_get_log_simple(dev_fd(dev), 0xC0, sizeof(ehExtSmart), &ehExtSmart);
 
         if (!err) {
     		if (strcmp(cfg.output_format,"json")) {
@@ -1153,7 +1154,6 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
     		nvme_show_status(err);
     }
 
-=======
 	err = nvme_get_log_simple(dev_fd(dev), 0xC4,
 				  sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 	if (!err) {
@@ -1196,7 +1196,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		nvme_show_status(err);
 
 	dev_close(dev);
->>>>>>> origin/master
+
 	return err;
 }
 
@@ -1457,17 +1457,36 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 static void print_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActivHis)
 {
     __u32 i;
+    char prev_fw[9] = {0};
+    char new_fw[9] = {0};
+    char buf[80];
+
     if (fwActivHis.numValidFwActHisEnt > 0) {
         printf("\n\nSeagate FW Activation Histry :\n");
-        printf("%-9s %-19s %-7s %-13s %-9s %-5s %-15s %-9s\n", "Counter ", "Timestamp    ", "PCC ", "Previous FW ", "New FW ", "Slot", "Commit Action", "Result");
+        printf("%-9s %-21s %-7s %-13s %-9s %-5s %-15s %-9s\n", "Counter ", "      Timestamp ", " PCC ", "Previous FW ", "New FW ", "Slot", "Commit Action", "Result");
 
         for (i = 0; i < fwActivHis.numValidFwActHisEnt; i++) {
-            printf("%-7d   ", fwActivHis.fwActHisEnt[i].fwActivCnt);
-            printf("%-17lld   ", fwActivHis.fwActHisEnt[i].timeStamp);
+
+            printf("   %-4d   ", fwActivHis.fwActHisEnt[i].fwActivCnt);
+
+            time_t t = fwActivHis.fwActHisEnt[i].timeStamp / 1000;
+            struct tm  ts;
+            ts = *localtime(&t);
+            strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
+            printf(" %-20s   ", buf);
+            //printf(" %-20lld   ", fwActivHis.fwActHisEnt[i].timeStamp);
+
             printf("%-5lld   ", fwActivHis.fwActHisEnt[i].powCycleCnt);
-            printf("%-11s   ", fwActivHis.fwActHisEnt[i].previousFW);
-            printf("%-8s  ", fwActivHis.fwActHisEnt[i].newFW);
-            printf("%-4d  ", fwActivHis.fwActHisEnt[i].slotNum);
+
+            memset(prev_fw, 0, sizeof(prev_fw));
+            memcpy(prev_fw, fwActivHis.fwActHisEnt[i].previousFW, sizeof(fwActivHis.fwActHisEnt[i].previousFW));
+            printf("%-8s   ", prev_fw);
+
+            memset(new_fw, 0, sizeof(new_fw));
+            memcpy(new_fw, fwActivHis.fwActHisEnt[i].newFW, sizeof(fwActivHis.fwActHisEnt[i].newFW));
+            printf("%-8s  ", new_fw);
+
+            printf("  %-2d  ", fwActivHis.fwActHisEnt[i].slotNum);
             printf("      0x%02x      ", fwActivHis.fwActHisEnt[i].commitActionType);
             printf("  0x%02x   ", fwActivHis.fwActHisEnt[i].result);
             printf("\n");
@@ -1483,7 +1502,8 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 	struct json_object *root;
 	root = json_create_object();
     __u32 i;
-    //char buf[40];
+
+    char buf[80];
 
 	struct json_object *historyLogPage;
 	
@@ -1497,14 +1517,28 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
         
         for (i = 0; i < fwActivHis.numValidFwActHisEnt; i++) {
             struct json_object *lbaf = json_create_object();
+            char prev_fw[8] = { 0 };
+            char new_fw[8] = { 0 };
 
             json_object_add_value_int(lbaf, "Counter", fwActivHis.fwActHisEnt[i].fwActivCnt);
-            json_object_add_value_int(lbaf, "Timestamp", fwActivHis.fwActHisEnt[i].timeStamp);
+
+            time_t t = fwActivHis.fwActHisEnt[i].timeStamp / 1000;
+            struct tm  ts;
+            ts = *localtime(&t);
+            strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
+            printf(" %-20s   ", buf);
+            json_object_add_value_string(lbaf, "Timestamp", buf);
+
             json_object_add_value_int(lbaf, "PCC", fwActivHis.fwActHisEnt[i].powCycleCnt);
             //memset(buf, 0, sizeof(buf));
             //memcpy()
-            json_object_add_value_string(lbaf, "Previous_FW", fwActivHis.fwActHisEnt[i].previousFW);
-            json_object_add_value_string(lbaf, "New_FW", fwActivHis.fwActHisEnt[i].newFW);
+
+            sprintf(prev_fw, "%s", fwActivHis.fwActHisEnt[i].previousFW);
+            json_object_add_value_string(lbaf, "Previous_FW", prev_fw);
+
+            sprintf(new_fw, "%s", fwActivHis.fwActHisEnt[i].newFW);
+            json_object_add_value_string(lbaf, "New_FW", new_fw);
+
             json_object_add_value_int(lbaf, "Slot", fwActivHis.fwActHisEnt[i].slotNum);
             json_object_add_value_int(lbaf, "Commit_Action", fwActivHis.fwActHisEnt[i].commitActionType);
             json_object_add_value_int(lbaf, "Result", fwActivHis.fwActHisEnt[i].result);
@@ -1525,7 +1559,7 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	stx_fw_activ_history_log_page fwActivHis;
-	int fd;
+    struct nvme_dev *dev;
 
 	const char *desc = "Retrieve FW Activate History for Seagate device ";
 	const char *output_format = "output in binary format";
@@ -1543,8 +1577,8 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		printf ("\nDevice not found \n");;
 		return -1;
 	}
@@ -1552,7 +1586,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 	if(strcmp(cfg.output_format,"json"))
         printf("Seagate FW Activation Histry Information :\n");
 
-	err = nvme_get_log_simple(fd, 0xC2, sizeof(fwActivHis), &fwActivHis);
+	err = nvme_get_log_simple(dev_fd(dev), 0xC2, sizeof(fwActivHis), &fwActivHis);
 	if (!err) {
 		if(strcmp(cfg.output_format,"json")) {
 			print_stx_vs_fw_activate_history(fwActivHis);
@@ -1562,7 +1596,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 	} else if (err > 0)
 		nvme_show_status(err);
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 /* EOF FW Activation History log information */
@@ -1572,7 +1606,8 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 {
     const char *desc = "Clear FW Activation History for the given Seagate device ";
 	const char *save = "specifies that the controller shall save the attribute";
-	int err, fd;
+	int err;
+    struct nvme_dev *dev;
     struct nvme_id_ctrl ctrl;
     char modelNo[40];
 	__u32 result;
@@ -1590,13 +1625,13 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		printf ("\nDevice not found \n");
 		return -1;
 	}
 
-    err = nvme_identify_ctrl(fd, &ctrl);
+    err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
 	if (!err){
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
     } else{
@@ -1610,7 +1645,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 
         struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
-		.fd		    = fd,
+		.fd		    = dev_fd(dev),
 		.fid		= 0xC1,
 		.nsid		= 0,
 		.cdw11		= 0x80000000,
@@ -1635,7 +1670,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 		return errno;
 	}
 
-	close(fd);
+	dev_close(dev);
 	return err;
 
 }
@@ -1646,7 +1681,6 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	const char *desc = "Clear Seagate PCIe Correctable counters for the given device ";
 	const char *save = "specifies that the controller shall save the attribute";
 
-	int err, fd;
     struct nvme_id_ctrl ctrl;
     char modelNo[40];
 
@@ -1675,7 +1709,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	}
 
 
-    err = nvme_identify_ctrl(fd, &ctrl);
+    err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
 	if (!err){
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
     } else{
@@ -1684,12 +1718,12 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
     }
 
     if (stx_is_jag_pan(modelNo) == 0) {
-        err = nvme_set_features_simple(fd, 0xE1, 0, 0xCB, cfg.save, &result);
+        err = nvme_set_features_simple(dev_fd(dev), 0xE1, 0, 0xCB, cfg.save, &result);
     } else{
 
         struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
-		.fd		    = fd,
+		.fd		    = dev_fd(dev),
 		.fid		= 0xC3,
 		.nsid		= 0,
 		.cdw11		= 0x80000000,
@@ -1708,10 +1742,10 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 			__func__);
         
     }
-=======
+
 	err = nvme_set_features_simple(dev_fd(dev), 0xE1, 0, 0xCB, cfg.save,
 				       &result);
->>>>>>> origin/master
+
 
 	if (err < 0) {
 		perror("set-feature");
