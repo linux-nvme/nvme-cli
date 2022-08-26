@@ -4624,7 +4624,7 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("cntrltype : %d\n", ctrl->cntrltype);
 	if (human)
 		nvme_show_id_ctrl_cntrltype(ctrl->cntrltype);
-	printf("fguid     : %-.*s\n", (int)sizeof(ctrl->fguid), ctrl->fguid);
+    printf("fguid     : %.0Lf\n", int128_to_double(ctrl->fguid));
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
