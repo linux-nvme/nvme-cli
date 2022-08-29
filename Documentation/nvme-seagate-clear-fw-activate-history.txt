@@ -1,0 +1,37 @@
+nvme-seagate-clear-fw-activate-history (1)
+============================================
+
+NAME
+----
+nvme-seagate-clear-fw-activate-history - Clear the firmware activation history for a given Seagate device.
+
+SYNOPSIS
+--------
+[verse]
+'nvme seagate clear-fw-activate-history <device> [OPTIONS]'
+
+DESCRIPTION
+-----------
+This command will only work on Seagate devices supporting this feature.  Not
+all commands work across all product families.
+
+The '<device>' may be either an NVMe character device (ex: /dev/nvme0) or an
+nvme block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-s
+--save::
+        specifies that the controller shall save the attribute.
+
+EXAMPLES
+--------
+Clear the FW Activation History for the given Seagate device.
+
+------------
+# nvme seagate clear-fw-activate-history /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

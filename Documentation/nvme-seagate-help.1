@@ -1,0 +1,92 @@
+'\" t
+.\"     Title: nvme-seagate-help
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 06/30/2022
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SEAGATE\-HELP" "1" "06/30/2022" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-seagate-help \- Shows the Seagate plugin\*(Aqs help information
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme seagate help\fR
+.fi
+.SH "DESCRIPTION"
+.sp
+Provides the help information for the Seagate plugin\&.
+.SH "OPTIONS"
+.sp
+No Options
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Get the help information for specific Seagate sub-commands.
+.PP
+The following are all implemented Seagate vendor specific sub\-commands:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+vs\-temperature\-stats            Retrieve Seagate temperature statistics
+vs\-log\-page\-sup                 Retrieve Seagate Supported Log\-pages Information
+vs\-smart\-add\-log                Retrieve Seagate extended\-SMART Information
+vs\-pcie\-stats                   Retrieve Seagate PCIe error statistics
+clear\-pcie\-correctable\-errors   Clear Seagate PCIe error statistics
+get\-host\-tele                   Retrieve Seagate Host\-Initiated Telemetry
+get\-ctrl\-tele                   Retrieve Seagate Controller\-Initiated Telemetry
+vs\-internal\-log                 Retrieve Seagate Controller\-Initiated Telemetry in binary format
+plugin\-version                  Shows Seagate plugin\*(Aqs version information
+version                         Shows the program version
+help                            Display this help
+.fi
+Usage: nvme seagate help
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+See \fInvme seagate help <command>\fR for more information on a specific command
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme seagate help
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

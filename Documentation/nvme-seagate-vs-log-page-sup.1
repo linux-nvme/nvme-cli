@@ -1,0 +1,84 @@
+'\" t
+.\"     Title: nvme-seagate-vs-log-page-sup
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 06/30/2022
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SEAGATE\-VS\-L" "1" "06/30/2022" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-seagate-vs-log-page-sup \- Retrieve Seagate vendor specific Supported Log\-pages Information
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme seagate vs\-log\-page\-sup <device> [OPTIONS]\fR
+.fi
+.SH "DESCRIPTION"
+.sp
+This command will only work on Seagate devices supporting this feature\&. Not all commands work across all product families\&.i
+.sp
+The <device> parameter is mandatory and may be either an NVMe character device(ex: /dev/nvme0) or an NVMe block device\&.
+.SH "OPTIONS"
+.PP
+\-o <FMT>, \-\-output\-format=<FMT>
+.RS 4
+Output in binary format
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Get the vendor specific log page information.
+Output:
+Seagate Supported Log\-pages count :8
+LogPage\-Id      LogPage\-Name
+
+0x1              ERROR_INFORMATION
+0x2              SMART_INFORMATION
+0x3              FW_SLOT_INFORMATION
+0x5              COMMANDS_SUPPORTED_AND_EFFECTS
+0xC8             VS_RECENT_DRIVE_HISTORY
+0xC4             VS_EXTENDED_SMART_INFO
+0xC5             VS_LIST_SUPPORTED_LOG_PAGE
+0xCB             VS_PCIE_ERROR_LOG_PAGE
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

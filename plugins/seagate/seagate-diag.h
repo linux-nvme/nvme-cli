@@ -18,6 +18,8 @@
  *
  * \file seagate-diag.h
  * \brief This file defines the functions and macros to make building a nvme-cli seagate plug-in.
+ * 
+ *   Author: Debabrata Bardhan <debabrata.bardhan@seagate.com>
  */
 
 
@@ -25,12 +27,59 @@
 #define SEAGATE_NVME_H
 
 #define SEAGATE_PLUGIN_VERSION_MAJOR 1
-#define SEAGATE_PLUGIN_VERSION_MINOR 1 
+#define SEAGATE_PLUGIN_VERSION_MINOR 2 
+
+#define SEAGATE_OCP_PLUGIN_VERSION_MAJOR 1
+#define SEAGATE_OCP_PLUGIN_VERSION_MINOR 0 
 
 #define PERSIST_FILE_SIZE    (2764800)
 #define ONE_MB               (1048576)  /* (1024 * 1024) */
 #define PERSIST_CHUNK        (65536)    /* (1024 * 64) */
 #define FOUR_KB               (4096)
+#define STX_NUM_LEGACY_DRV   (123)
+
+
+const char* stx_jag_pan_mn[STX_NUM_LEGACY_DRV] = {"ST1000KN0002", "ST1000KN0012", "ST2000KN0002", 
+                                                  "ST2000KN0012", "ST4000KN0002", "XP1600HE10002", 
+                                                  "XP1600HE10012", "XP1600HE30002", "XP1600HE30012", 
+                                                  "XP1920LE10002", "XP1920LE10012", "XP1920LE30002", 
+                                                  "XP1920LE30012", "XP3200HE10002", "XP3200HE10012", 
+                                                  "XP3840LE10002", "XP3840LE10012", "XP400HE30002", 
+                                                  "XP400HE30012", "XP400HE30022", "XP400HE30032", 
+                                                  "XP480LE30002", "XP480LE30012", "XP480LE30022", 
+                                                  "XP480LE30032", "XP800HE10002", "XP800HE10012", 
+                                                  "XP800HE30002", "XP800HE30012", "XP800HE30022", 
+                                                  "XP800HE30032", "XP960LE10002", "XP960LE10012", 
+                                                  "XP960LE30002", "XP960LE30012", "XP960LE30022", 
+                                                  "XP960LE30032", "XP256LE30011", "XP256LE30021", 
+                                                  "XP7680LE80002", "XP7680LE80003", "XP15360LE80003", 
+                                                  "XP30720LE80003", "XP7200-1A2048", "XP7200-1A4096", 
+                                                  "XP7201-2A2048", "XP7201-2A4096", "XP7200-1A8192", 
+                                                  "ST1000HM0021", "ST1000HM0031", "ST1000HM0061", 
+                                                  "ST1000HM0071", "ST1000HM0081", "ST1200HM0001", 
+                                                  "ST1600HM0031", "ST1800HM0001", "ST1800HM0011", 
+                                                  "ST2000HM0011", "ST2000HM0031", "ST400HM0061", 
+                                                  "ST400HM0071", "ST500HM0021", "ST500HM0031", 
+                                                  "ST500HM0061", "ST500HM0071", "ST500HM0081", 
+                                                  "ST800HM0061", "ST800HM0071", "ST1600HM0011", 
+                                                  "ST1600KN0001", "ST1600KN0011", "ST1920HM0001",
+                                                  "ST1920KN0001", "ST1920KN0011", "ST400HM0021", 
+                                                  "ST400KN0001", "ST400KN0011", "ST480HM0001",
+                                                  "ST480KN0001", "ST480KN0011", "ST800HM0021", 
+                                                  "ST800KN0001", "ST800KN0011", "ST960HM0001", 
+                                                  "ST960KN0001", "ST960KN0011", "XF1441-1AA251024", 
+                                                  "XF1441-1AA252048", "XF1441-1AA25512", "XF1441-1AB251024", 
+                                                  "XF1441-1AB252048", "XF1441-1AB25512", "XF1441-1BA251024", 
+                                                  "XF1441-1BA252048", "XF1441-1BA25512", "XF1441-1BB251024", 
+                                                  "XF1441-1BB252048", "XF1441-1BB25512", "ST400HM0031", 
+                                                  "ST400KN0021", "ST400KN0031", "ST480HM0011", 
+                                                  "ST480KN0021", "ST480KN0031", "ST800HM0031", 
+                                                  "ST800KN0021", "ST800KN0031", "ST960HM0011", 
+                                                  "ST960KN0021", "ST960KN0031", "XM1441-1AA111024", 
+                                                  "XM1441-1AA112048", "XM1441-1AA11512", "XM1441-1AA801024", 
+                                                  "XM1441-1AA80512", "XM1441-1AB111024", "XM1441-1AB112048", 
+                                                  "XM1441-1BA111024", "XM1441-1BA112048", "XM1441-1BA11512", 
+                                                  "XM1441-1BA801024", "XM1441-1BA80512", "XM1441-1BB112048"};
  
 
 /***************************
@@ -128,6 +177,44 @@ typedef struct _vendor_log_page_CF
    __u8                         Vendor_Specific_Reserved[ 456 ];     /* 56-511 */
 }vendor_log_page_CF;
 
+typedef struct _STX_EXT_SMART_LOG_PAGE_C0
+{
+    U128            phyMediaUnitsWrt;           /* 000-015 */
+    U128            phyMediaUnitsRd;            /* 016-031 */
+    __u64           badUsrNandBlocks;           /* 032-039 */
+    __u64           badSysNandBlocks;           /* 040-047 */
+    __u64           xorRecoveryCnt;             /* 048-055 */
+    __u64           ucRdEc;                     /* 056-063 */
+    __u64           softEccEc;                  /* 064-071 */
+    __u64           etoeCrrCnt;                 /* 072-079 */
+    __u64           sysDataUsed  :  8;          /* 080 */
+    __u64           refreshCount : 56;          /* 081-087 */
+    __u64           usrDataEraseCnt;            /* 088-095 */
+    __u16           thermalThrottling;          /* 096-097 */
+    __u8            dssdSpecVerErrata;          /* 098 */
+    __u16           dssdSpecVerPoint;           /* 099-100 */
+    __u16           dssdSpecVerMinor;           /* 101-102 */
+    __u8            dssdSpecVerMajor;           /* 103 */
+    __u64           pcieCorrEc;                 /* 104-111 */
+    __u32           incompleteShutdowns;        /* 112-115 */
+    __u32           rsvd_116_119;               /* 116-119 */
+    __u8            freeBlocks;                 /* 120 */
+    __u8            rsvd_121_127[7];            /* 121-127 */
+    __u16           capHealth;                  /* 128-129 */
+    __u8            nvmeErrataVer;              /* 130 */
+    __u8            rsvd_131_135[5];            /* 131-135 */
+    __u64           unalignedIO;                /* 136-143 */
+    __u64           secVerNum;                  /* 144-151 */
+    __u64           totalNUSE;                  /* 152-159 */
+    U128            plpStartCnt;                /* 160-175 */
+    U128            enduranceEstimate;          /* 176-191 */
+    __u64           pcieLinkRetCnt;             /* 192-199 */
+    __u64           powStateChangeCnt;          /* 200-207 */
+    __u8            rsvd_208_493[286];          /* 208-493 */
+    __u16           logPageVer;                 /* 494-495 */
+    U128            logPageGUID;                /* 496-511 */
+} STX_EXT_SMART_LOG_PAGE_C0;
+
 #pragma pack()
 /* EOF Extended-SMART Information*/
 
@@ -158,6 +245,43 @@ typedef struct pcie_error_log_page
    __u32   MemRdTlpPoisonedErrCnt;
 } pcie_error_log_page;
 /*EOF PCIE ERROR INFORMATION */
+
+/**************************************
+* FW Activation History Log INFORMATION
+***************************************/
+#pragma pack(1)
+
+typedef struct _stx_fw_activ_his_ele
+{
+    __u8    entryVerNum;
+    __u8    entryLen;
+    __u16   rev02_03;
+    __u16   fwActivCnt;
+    __u64   timeStamp;
+    __u64   rev14_21;
+    __u64   powCycleCnt;
+    __u8    previousFW[8];
+    __u8    newFW[8];
+    __u8    slotNum;
+    __u8    commitActionType;
+    __u16   result;
+    __u8    rev50_63[14];
+}stx_fw_activ_his_ele;
+
+typedef struct _stx_fw_activ_history_log_page
+{
+   __u8                     logID;
+   __u8                     rev01_03[3];
+   __u32                    numValidFwActHisEnt;
+   stx_fw_activ_his_ele     fwActHisEnt[20];
+   __u8                     rev1288_4077[2790];
+   __u16                    logPageVer;
+   __u8                     logPageGUID[16];
+} stx_fw_activ_history_log_page;
+
+#pragma pack()
+/* FW Activation History Log INFORMATION */
+
 
 typedef enum
 {
