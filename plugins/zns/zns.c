@@ -842,9 +842,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	int zdes = 0, err = -1;
 	struct nvme_dev *dev;
 	__u32 report_size;
-	void *report;
 	bool huge = false;
-	struct nvme_zone_report *buff;
+	struct nvme_zone_report *report, *buff;
 
 	unsigned int nr_zones_chunks = 1024,   /* 1024 entries * 64 bytes per entry = 64k byte transfer */
 			nr_zones_retrieved = 0,
@@ -999,7 +998,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 					zdes, log_len, flags, zone_list);
 
 		nr_zones_retrieved += nr_zones_chunks;
-		offset = (nr_zones_retrieved * zsze);
+		offset = le64_to_cpu(report->entries[nr_zones_chunks-1].zslba) + zsze;
     }
 
 	if (flags & JSON)
