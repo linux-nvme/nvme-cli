@@ -87,7 +87,7 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 	if (flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
 		dev_close(dev);
-		return flags;
+		return EINVAL;
 	}
 
 	garbage_control_collection_log_t gc_log;

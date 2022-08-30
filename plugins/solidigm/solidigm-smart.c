@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <inttypes.h>
-#include <endian.h>
 
 #include "common.h"
 #include "nvme.h"
