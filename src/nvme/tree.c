@@ -1184,7 +1184,8 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 	c->serial = nvme_get_ctrl_attr(c, "serial");
 	c->sqsize = nvme_get_ctrl_attr(c, "sqsize");
 	host_key = nvme_get_ctrl_attr(c, "dhchap_secret");
-	if (host_key && (!strcmp(c->s->h->dhchap_key, host_key) ||
+	if (host_key && c->s && c->s->h && c->s->h->dhchap_key &&
+			(!strcmp(c->s->h->dhchap_key, host_key) ||
 			 !strcmp("none", host_key))) {
 		free(host_key);
 		host_key = NULL;
