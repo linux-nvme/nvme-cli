@@ -887,7 +887,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 		unsigned int rpmbs;
 	} regs;
 	
-	if ((err = parse_and_open(&dev, argc, argv, desc, opts)) < 0)
+	if ((err = parse_and_open(&dev, argc, argv, desc, opts)))
 		return err;
 	
 	/* before parsing  commands, check if controller supports any RPMB targets */

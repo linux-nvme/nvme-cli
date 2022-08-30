@@ -80,14 +80,14 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	enum nvme_print_flags flags = validate_output_format(cfg.output_format);
 	if (flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
 		dev_close(dev);
-		return flags;
+		return EINVAL;
 	}
 
 	garbage_control_collection_log_t gc_log;

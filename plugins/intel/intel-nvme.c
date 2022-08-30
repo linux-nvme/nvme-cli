@@ -365,7 +365,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = nvme_get_log_simple(dev_fd(dev), 0xca, sizeof(smart_log),
@@ -407,7 +407,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = nvme_get_log_simple(dev_fd(dev), 0xdd, sizeof(log), log);
@@ -469,7 +469,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = nvme_get_log_simple(dev_fd(dev), 0xc5, sizeof(stats), &stats);
@@ -1055,7 +1055,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	/* For optate, latency stats are deleted every time their LID is pulled.
@@ -1387,7 +1387,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		free(intel);
 		return err;
 	}
@@ -1579,7 +1579,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	else if (cfg.enable || cfg.disable)
 		option = cfg.enable;
 
-	if (err < 0)
+	if (err)
 		return err;
 
 	struct nvme_get_features_args args_get = {
@@ -1680,7 +1680,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 
-	if (err < 0)
+	if (err)
 		return err;
 
 	/* Query maj and minor version first to figure out the amount of

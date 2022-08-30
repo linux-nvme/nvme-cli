@@ -617,7 +617,7 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 	json_object_add_value_double(root, "data_units_read", data_units_read);
 	json_object_add_value_double(root, "data_units_written",
 		data_units_written);
-	json_object_add_value_double(root, "mediate_write_commands",
+	json_object_add_value_double(root, "media_units_written",
 		media_units_written);
 	json_object_add_value_double(root, "host_read_cmds", host_read_cmds);
 	json_object_add_value_double(root, "host_write_cmds", host_write_cmds);
@@ -1110,6 +1110,8 @@ static const char *nvme_show_nss_hw_error(__u16 error_code)
 		return "Controller Fatal Status";
 	case 0xA:
 		return "Media and Data Integrity Status";
+	case 0xB:
+		return "Controller Ready Timeout Exceeded";
 	default:
 		return "Reserved";
 	}
@@ -6500,7 +6502,7 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		printf("\n");
 
 	printf("Sanitize Status                        (SSTAT) :  %#x\n",
-		le16_to_cpu(sanitize->sstat));
+		le16_to_cpu(sanitize->sstat) & NVME_SANITIZE_SSTAT_STATUS_MASK);
 	if (human)
 		nvme_show_sanitize_log_sstat(le16_to_cpu(sanitize->sstat));
 

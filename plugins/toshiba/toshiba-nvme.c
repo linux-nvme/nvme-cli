@@ -460,7 +460,7 @@ static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		fprintf(stderr,"%s: failed to parse arguments\n", __func__);
 		return EINVAL;
 	}
@@ -507,7 +507,7 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		fprintf(stderr,"%s: failed to parse arguments\n", __func__);
 		return EINVAL;
 	}
@@ -546,7 +546,7 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-	if (err < 0) {
+	if (err) {
 		fprintf(stderr,"%s: failed to parse arguments\n", __func__);
 		return EINVAL;
 	}
