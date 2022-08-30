@@ -85,7 +85,10 @@ if want_docs != 'false'
       endforeach
     else
       if want_docs == 'all' or want_docs == 'man'
-        install_subdir('man', install_dir: mandir)
+        list_pre_compiled = find_program('list-pre-compiled.sh')
+        m = run_command(list_pre_compiled, check: true)
+        man_pages = m.stdout().strip().split('\n')
+        install_data(man_pages, install_dir: mandir)
       endif
     endif
   endif
