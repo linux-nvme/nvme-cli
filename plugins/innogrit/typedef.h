@@ -56,7 +56,12 @@ struct vsc_smart_log {
 	unsigned int weight_ec;
 	unsigned int slc_cap_mb;
 	unsigned long long nand_page_write_cnt;
-	unsigned int reserved2[49];
+	unsigned int program_error_cnt;
+	unsigned int erase_error_cnt;
+	u_char flash_type;
+	u_char reserved2[3];
+	unsigned int hs_crc_err_cnt;
+	unsigned int reserved3[45];
 };
 #pragma pack(pop)
 

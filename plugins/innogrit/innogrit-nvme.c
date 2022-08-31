@@ -70,11 +70,15 @@ static int innogrit_smart_log_additional(int argc, char **argv,
 	printf("DW17      weight_ec                     : %u\n", pvsc_smart->weight_ec);
 	printf("DW18      slc_cap_mb                    : %u\n", pvsc_smart->slc_cap_mb);
 	printf("DW19-20   nand_page_write_cnt           : %llu\n", pvsc_smart->nand_page_write_cnt);
+	printf("DW21      program_error_cnt             : %u\n", pvsc_smart->program_error_cnt);
+	printf("DW22      erase_error_cnt               : %u\n", pvsc_smart->erase_error_cnt);
+	printf("DW23[0]   flash_type                    : %u\n", pvsc_smart->flash_type);
+	printf("DW24      hs_crc_err_cnt                : %u\n", pvsc_smart->hs_crc_err_cnt);
 
-	iindex = 21;
-	for (i = 0; i < (sizeof(pvsc_smart->reserved2)/4); i++) {
-		if (pvsc_smart->reserved2[i] != 0)
-			printf("DW%-37d : %u\n", iindex, pvsc_smart->reserved2[i]);
+	iindex = 25;
+	for (i = 0; i < (sizeof(pvsc_smart->reserved3)/4); i++) {
+		if (pvsc_smart->reserved3[i] != 0)
+			printf("DW%-37d : %u\n", iindex, pvsc_smart->reserved3[i]);
 		iindex++;
 	}
 
