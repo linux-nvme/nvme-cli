@@ -263,3 +263,49 @@ introduced in the Linux kernel release v4.15. Hence nvme-cli 2.x is
 only working on kernels >= v4.15. For older kernels nvme-cli 1.x is
 recommended to be used.
 
+## How to contribute
+
+There are two ways to send code changes to the project. The first one
+is by sending the changes to linux-nvme@lists.infradead.org. The
+second one is by posting a pull request on github. In both cases
+please follow the Linux contributions guidelines as documented in
+
+https://docs.kernel.org/process/submitting-patches.html#
+
+That means the changes should be a clean series (no merges should be
+present in a github PR for example) and every commit should build.
+
+See also https://opensource.com/article/19/7/create-pull-request-github
+
+### How to cleanup your series before creating PR
+
+This example here assumes, the changes are in a branch called
+fix-something, which branched away from master in the past. In the
+meantime the upstream project has changed, hence the fix-something
+branch is not based on the current HEAD. Before posting the PR, the
+branch should be rebased on the current HEAD and retest everything.
+
+For example rebasing can be done by following steps
+
+```shell
+# Update master branch
+#   upstream == https://github.com/linux-nvme/nvme-cli.git
+$ git switch master
+$ git fetch --all
+$ git reset --hard upstream/master
+
+# Make sure all dependencies are up to date and make a sanity build
+$ meson subprojects update
+$ ninja -C .build
+
+# Go back to the fix-something branch
+$ git switch fix-something
+
+# Rebase it to the current HEAD
+$ git rebase master
+[fixup all merge conflicts]
+[retest]
+
+# Push your changes to github and trigger a PR
+$ git push -u origin fix-something
+```
