@@ -251,7 +251,8 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	long double maxdna = int128_to_double(ctrl->maxdna);
 
 	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1],
-		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1];
+		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1],
+		fguid[sizeof(ctrl->fguid) + 1];
 	__u32 ieee = ctrl->ieee[2] << 16 | ctrl->ieee[1] << 8 | ctrl->ieee[0];
 
 	int i;
@@ -260,6 +261,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
 	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
 	snprintf(subnqn, sizeof(subnqn), "%-.*s", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+	snprintf(fguid, sizeof(fguid), "%-.*s", (int)sizeof(ctrl->fguid), ctrl->fguid);
 
 	root = json_create_object();
 
@@ -279,6 +281,10 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
 	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
 	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
+
+	if (strlen(fguid))
+		json_object_add_value_string(root, "fguid", fguid);
+
 	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
 	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
 	json_object_add_value_int(root, "crdt3", le16_to_cpu(ctrl->crdt3));
@@ -1229,7 +1235,7 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			le16_to_cpu(pevent_entry_head->el)) >= size)
 			break;
 		valid_attrs = json_create_object();
-		
+
 		json_object_add_value_uint(valid_attrs, "event_number", i);
 		json_object_add_value_string(valid_attrs, "event_type",
 			nvme_pel_event_to_string(pevent_entry_head->etype));
@@ -2297,7 +2303,7 @@ static void json_supported_cap_config_log(
 					media = json_create_object();
 					json_object_add_value_uint(media, "chanid",
 						le16_to_cpu(chan_desc->chan_config_desc[l].mu_config_desc[m].muid));
-					json_object_add_value_uint(media, "chmus", 
+					json_object_add_value_uint(media, "chmus",
 						le16_to_cpu(chan_desc->chan_config_desc[l].mu_config_desc[m].mudl));
 					json_array_add_value_object(media_list, media);
 				}
@@ -5185,7 +5191,7 @@ static char *zone_state_to_string(__u8 state)
 	}
 }
 
-void json_nvme_finish_zone_list(__u64 nr_zones, 
+void json_nvme_finish_zone_list(__u64 nr_zones,
 	struct json_object *zone_list)
 {
 	struct json_object *root = json_create_object();
@@ -5197,7 +5203,7 @@ void json_nvme_finish_zone_list(__u64 nr_zones,
 }
 
 static void json_nvme_zns_report_zones(void *report, __u32 descs,
-	__u8 ext_size, __u32 report_size, 
+	__u8 ext_size, __u32 report_size,
 	struct json_object *zone_list)
 {
 	struct json_object *zone;
@@ -5243,7 +5249,7 @@ static void json_nvme_zns_report_zones(void *report, __u32 descs,
 static void nvme_show_zns_report_zone_attributes(__u8 za, __u8 zai)
 {
 	const char *const recommended_limit[4] = {"","1","2","3"};
-	printf("Attrs: Zone Descriptor Extension is %sVaild\n", 
+	printf("Attrs: Zone Descriptor Extension is %sVaild\n",
 		(za & NVME_ZNS_ZA_ZDEV)? "" : "Not ");
 	if(za & NVME_ZNS_ZA_RZR) {
 		printf("       Reset Zone Recommended with Reset Recommended Limit%s\n",
