@@ -131,6 +131,16 @@ static const char *fw_to_string(char *c)
 	return ret;
 }
 
+static const char *nvme_uuid_to_string(uuid_t uuid)
+{
+	/* large enough to hold uuid str (37) + null-termination byte */
+	static char uuid_str[40];
+
+	uuid_unparse_lower(uuid, uuid_str);
+
+	return uuid_str;
+}
+
 static const char *get_sanitize_log_sstat_status_str(__u16 status)
 {
 	switch (status & NVME_SANITIZE_SSTAT_STATUS_MASK) {
@@ -251,8 +261,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	long double maxdna = int128_to_double(ctrl->maxdna);
 
 	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1],
-		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1],
-		fguid[sizeof(ctrl->fguid) + 1];
+		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1], fguid[37];
 	__u32 ieee = ctrl->ieee[2] << 16 | ctrl->ieee[1] << 8 | ctrl->ieee[0];
 
 	int i;
@@ -261,7 +270,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
 	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
 	snprintf(subnqn, sizeof(subnqn), "%-.*s", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
-	snprintf(fguid, sizeof(fguid), "%-.*s", (int)sizeof(ctrl->fguid), ctrl->fguid);
+	snprintf(fguid, sizeof(fguid), "%s", nvme_uuid_to_string(ctrl->fguid));
 
 	root = json_create_object();
 
@@ -281,10 +290,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
 	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
 	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
-
-	if (strlen(fguid))
-		json_object_add_value_string(root, "fguid", fguid);
-
+	json_object_add_value_string(root, "fguid", fguid);
 	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
 	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
 	json_object_add_value_int(root, "crdt3", le16_to_cpu(ctrl->crdt3));
@@ -3286,16 +3292,6 @@ void nvme_show_status(__u16 status)
 {
 	fprintf(stderr, "NVMe status: %s(%#x)\n",
 		nvme_status_to_string(status, false), status);
-}
-
-static const char *nvme_uuid_to_string(uuid_t uuid)
-{
-	/* large enough to hold uuid str (37) + null-termination byte */
-	static char uuid_str[40];
-
-	uuid_unparse_lower(uuid, uuid_str);
-
-	return uuid_str;
 }
 
 static void nvme_show_id_ctrl_cmic(__u8 cmic)
