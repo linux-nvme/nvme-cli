@@ -45,5 +45,6 @@
 struct json_object *util_json_object_new_double(long double d);
 struct json_object *util_json_object_new_uint64(uint64_t i);
 struct json_object *util_json_object_new_uint128(__uint128_t val);
+char *uint128_t_to_string(__uint128_t val);
 
 #endif

@@ -12,6 +12,7 @@
 
 #include "common.h"
 #include "nvme.h"
+#include "nvme-print.h"
 #include "libnvme.h"
 #include "plugin.h"
 
@@ -50,18 +51,6 @@ struct vtview_save_log_settings {
 	const char*	output_file;
 	const char*	test_name;
 };
-
-static long double int128_to_double(__u8 *data)
-{
-	int i;
-	long double result = 0;
-
-	for (i = 0; i < 16; i++) {
-		result *= 256;
-		result += data[15 - i];
-	}
-	return result;
-}
 
 static void vt_initialize_header_buffer(struct vtview_log_header *pbuff)
 {
@@ -151,25 +140,25 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 	strcat(text, tempbuff);
 	snprintf(tempbuff, sizeof(tempbuff), "Percentage_Used;%u;", smart->raw_smart.percent_used);
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Read;%0.Lf;", int128_to_double(smart->raw_smart.data_units_read));
+	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Read;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.data_units_read)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Written;%0.Lf;", int128_to_double(smart->raw_smart.data_units_written));
+	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Written;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.data_units_written)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Host_Read_Commands;%0.Lf;", int128_to_double(smart->raw_smart.host_reads));
+	snprintf(tempbuff, sizeof(tempbuff), "Host_Read_Commands;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.host_reads)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Host_Write_Commands;%0.Lf;", int128_to_double(smart->raw_smart.host_writes));
+	snprintf(tempbuff, sizeof(tempbuff), "Host_Write_Commands;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.host_writes)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Controller_Busy_Time;%0.Lf;", int128_to_double(smart->raw_smart.ctrl_busy_time));
+	snprintf(tempbuff, sizeof(tempbuff), "Controller_Busy_Time;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.ctrl_busy_time)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Power_Cycles;%0.Lf;", int128_to_double(smart->raw_smart.power_cycles));
+	snprintf(tempbuff, sizeof(tempbuff), "Power_Cycles;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.power_cycles)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Power_On_Hours;%0.Lf;", int128_to_double(smart->raw_smart.power_on_hours));
+	snprintf(tempbuff, sizeof(tempbuff), "Power_On_Hours;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.power_on_hours)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Unsafe_Shutdowns;%0.Lf;", int128_to_double(smart->raw_smart.unsafe_shutdowns));
+	snprintf(tempbuff, sizeof(tempbuff), "Unsafe_Shutdowns;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.unsafe_shutdowns)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Media_Errors;%0.Lf;", int128_to_double(smart->raw_smart.media_errors));
+	snprintf(tempbuff, sizeof(tempbuff), "Media_Errors;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.media_errors)));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Num_Err_Log_Entries;%0.Lf;", int128_to_double(smart->raw_smart.num_err_log_entries));
+	snprintf(tempbuff, sizeof(tempbuff), "Num_Err_Log_Entries;%s;", uint128_t_to_string(le128_to_cpu(smart->raw_smart.num_err_log_entries)));
 	strcat(text, tempbuff);
 	snprintf(tempbuff, sizeof(tempbuff), "Warning_Temperature_Time;%u;", le32_to_cpu(smart->raw_smart.warning_temp_time));
 	strcat(text, tempbuff);

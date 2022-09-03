@@ -47,7 +47,14 @@ struct json_object *util_json_object_new_uint64(uint64_t i)
 struct json_object *util_json_object_new_uint128(__uint128_t  val)
 {
 	struct json_object *obj;
-	char str[40], str_rev[40]; /* __uint128_t  maximum string length is 39 */
+	obj = json_object_new_string(uint128_t_to_string(val));
+	return obj;
+}
+
+char str_uint128[40];
+char *uint128_t_to_string(__uint128_t val)
+{
+	char str_rev[40]; /* __uint128_t  maximum string length is 39 */
 	int i, j;
 
 	for (i = 0; val > 0; i++) {
@@ -56,9 +63,9 @@ struct json_object *util_json_object_new_uint128(__uint128_t  val)
 	}
 
 	for (j = 0; i >= 0;) {
-		str[j++] = str_rev[--i];
+		str_uint128[j++] = str_rev[--i];
 	}
-	str[j] = '\0';
-	obj = json_object_new_string(str);
-	return obj;
+	str_uint128[j] = '\0';
+
+	return str_uint128;
 }
