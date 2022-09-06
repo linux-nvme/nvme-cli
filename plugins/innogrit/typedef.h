@@ -61,7 +61,8 @@ struct vsc_smart_log {
 	u_char flash_type;
 	u_char reserved2[3];
 	unsigned int hs_crc_err_cnt;
-	unsigned int reserved3[45];
+	unsigned int ddr_ecc_err_cnt;
+	unsigned int reserved3[44];
 };
 #pragma pack(pop)
 
