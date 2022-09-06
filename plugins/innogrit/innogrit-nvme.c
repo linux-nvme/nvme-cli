@@ -74,8 +74,8 @@ static int innogrit_smart_log_additional(int argc, char **argv,
 	printf("DW22      erase_error_cnt               : %u\n", pvsc_smart->erase_error_cnt);
 	printf("DW23[0]   flash_type                    : %u\n", pvsc_smart->flash_type);
 	printf("DW24      hs_crc_err_cnt                : %u\n", pvsc_smart->hs_crc_err_cnt);
-
-	iindex = 25;
+	printf("DW25      ddr_ecc_err_cnt               : %u\n", pvsc_smart->ddr_ecc_err_cnt);
+	iindex = 26;
 	for (i = 0; i < (sizeof(pvsc_smart->reserved3)/4); i++) {
 		if (pvsc_smart->reserved3[i] != 0)
 			printf("DW%-37d : %u\n", iindex, pvsc_smart->reserved3[i]);
