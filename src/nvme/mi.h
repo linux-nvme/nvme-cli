@@ -787,7 +787,7 @@ static inline int nvme_mi_mi_config_get_smbus_freq(nvme_mi_ep_t ep, __u8 port,
 
 	rc = nvme_mi_mi_config_get(ep, dw0, 0, &tmp);
 	if (!rc)
-		*freq = tmp & 0x3;
+		*freq = (enum nvme_mi_config_smbus_freq)(tmp & 0x3);
 	return rc;
 }
 
@@ -2218,12 +2218,12 @@ static inline int nvme_mi_admin_ns_mgmt_create(nvme_mi_ctrl_t ctrl,
 					       __u8 csi, __u32 *nsid)
 {
 	struct nvme_ns_mgmt_args args = {
+		.result = nsid,
+		.ns = ns,
 		.args_size = sizeof(args),
-		.csi = csi,
 		.nsid = NVME_NSID_NONE,
 		.sel = NVME_NS_MGMT_SEL_CREATE,
-		.ns = ns,
-		.result = nsid,
+		.csi = csi,
 	};
 
 	return nvme_mi_admin_ns_mgmt(ctrl, &args);
