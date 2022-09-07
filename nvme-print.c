@@ -289,6 +289,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
 	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
 	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
+	json_object_add_value_int(root, "cntrltype", ctrl->cntrltype);
 	json_object_add_value_string(root, "fguid", nvme_uuid_to_string(ctrl->fguid));
 	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
 	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
@@ -325,13 +326,14 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "hmmaxd", le16_to_cpu(ctrl->hmmaxd));
 	json_object_add_value_int(root, "nsetidmax",
 		le16_to_cpu(ctrl->nsetidmax));
-
+	json_object_add_value_int(root, "endgidmax", le16_to_cpu(ctrl->endgidmax));
 	json_object_add_value_int(root, "anatt",ctrl->anatt);
 	json_object_add_value_int(root, "anacap", ctrl->anacap);
 	json_object_add_value_int(root, "anagrpmax",
 		le32_to_cpu(ctrl->anagrpmax));
 	json_object_add_value_int(root, "nanagrpid",
 		le32_to_cpu(ctrl->nanagrpid));
+	json_object_add_value_int(root, "pels", le32_to_cpu(ctrl->pels));
 	json_object_add_value_int(root, "domainid", le16_to_cpu(ctrl->domainid));
 	json_object_add_value_double(root, "megcap", megcap);
 	json_object_add_value_int(root, "sqes", ctrl->sqes);
@@ -349,6 +351,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
+	json_object_add_value_int(root, "mnan", le32_to_cpu(ctrl->mnan));
 	json_object_add_value_double(root, "maxdna", maxdna);
 	json_object_add_value_int(root, "maxcna", le32_to_cpu(ctrl->maxcna));
 
