@@ -21,6 +21,8 @@
 #define json_object_add_value_uint64(o, k, v) \
 	json_object_object_add(o, k, util_json_object_new_uint64(v))
 #endif
+#define json_object_add_value_uint128(o, k, v) \
+	json_object_object_add(o, k, util_json_object_new_uint128(v))
 #define json_object_add_value_double(o, k, v) \
 	json_object_object_add(o, k, util_json_object_new_double(v))
 #define json_object_add_value_float(o, k, v) \
@@ -42,5 +44,6 @@
 
 struct json_object *util_json_object_new_double(long double d);
 struct json_object *util_json_object_new_uint64(uint64_t i);
+struct json_object *util_json_object_new_uint128(__uint128_t val);
 
 #endif

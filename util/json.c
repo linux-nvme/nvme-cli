@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "json.h"
+#include "types.h"
 
 struct json_object *util_json_object_new_double(long double d)
 {
@@ -31,4 +32,11 @@ struct json_object *util_json_object_new_uint64(uint64_t i)
 	free(str);
 	return obj;
 
+}
+
+struct json_object *util_json_object_new_uint128(__uint128_t  val)
+{
+	struct json_object *obj;
+	obj = json_object_new_string(uint128_t_to_string(val));
+	return obj;
 }
