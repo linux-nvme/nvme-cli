@@ -29,6 +29,10 @@
 		    "description": "NVMe host symbolic name",
 		    "type": "string"
 		},
+		"dhchap_key": {
+		    "description": "Host DH-HMAC-CHAP key",
+		    "type": "string"
+		},
 		"required": [ "hostnqn" ],
 		"subsystems": {
 		    "description": "Array of NVMe subsystem properties",
