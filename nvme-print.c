@@ -13,14 +13,8 @@
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "util/suffix.h"
+#include "util/types.h"
 #include "common.h"
-
-#define ABSOLUTE_ZERO_CELSIUS -273
-
-static inline long kelvin_to_celsius(long t)
-{
-	return t + ABSOLUTE_ZERO_CELSIUS;
-}
 
 static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
@@ -34,28 +28,6 @@ struct nvme_bar_cap {
 	__u8	mpsmax_mpsmin;
 	__u8	rsvd_crms_nsss_cmbs_pmrs;
 };
-
-static long double int128_to_double(__u8 *data)
-{
-	int i;
-	long double result = 0;
-
-	for (i = 0; i < 16; i++) {
-		result *= 256;
-		result += data[15 - i];
-	}
-	return result;
-}
-
-static const char *nvme_uuid_to_string(uuid_t uuid)
-{
-	/* large enough to hold uuid str (37) + null-termination byte */
-	static char uuid_str[40];
-
-	uuid_unparse_lower(uuid, uuid_str);
-
-	return uuid_str;
-}
 
 static const char *nvme_ana_state_to_string(enum nvme_ana_state state)
 {
@@ -128,17 +100,6 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 	}
 
 	return "Unknown";
-}
-
-static const char *fw_to_string(char *c)
-{
-	static char ret[9];
-	int i;
-
-	for (i = 0; i < 8; i++)
-		ret[i] = c[i] >= '!' && c[i] <= '~' ? c[i] : '.';
-	ret[i] = '\0';
-	return ret;
 }
 
 static const char *get_sanitize_log_sstat_status_str(__u16 status)
@@ -290,7 +251,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
 	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
 	json_object_add_value_int(root, "cntrltype", ctrl->cntrltype);
-	json_object_add_value_string(root, "fguid", nvme_uuid_to_string(ctrl->fguid));
+	json_object_add_value_string(root, "fguid", util_uuid_to_string(ctrl->fguid));
 	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
 	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
 	json_object_add_value_int(root, "crdt3", le16_to_cpu(ctrl->crdt3));
@@ -546,7 +507,7 @@ static void json_fw_log(struct nvme_firmware_slot *fw_log, const char *devname)
 			frs = (__le64 *)&fw_log->frs[i];
 			snprintf(str, sizeof(str), "%"PRIu64" (%s)",
 				le64_to_cpu(*frs),
-			fw_to_string(fw_log->frs[i]));
+			util_fw_to_string(fw_log->frs[i]));
 			json_object_add_value_string(fwsi, fmt, str);
 		}
 	}
@@ -1342,11 +1303,11 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			fw_commit_event = pevent_log_info + offset;
 			snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)",
 				le64_to_cpu(fw_commit_event->old_fw_rev),
-				fw_to_string((char *)&fw_commit_event->old_fw_rev));
+				util_fw_to_string((char *)&fw_commit_event->old_fw_rev));
 			json_object_add_value_string(valid_attrs, "old_fw_rev", fw_str);
 			snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)",
 				le64_to_cpu(fw_commit_event->new_fw_rev),
-				fw_to_string((char *)&fw_commit_event->new_fw_rev));
+				util_fw_to_string((char *)&fw_commit_event->new_fw_rev));
 			json_object_add_value_string(valid_attrs, "new_fw_rev", fw_str);
 			json_object_add_value_uint(valid_attrs, "fw_commit_action",
 				fw_commit_event->fw_commit_action);
@@ -1377,7 +1338,7 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			fw_rev = pevent_log_info + offset;
 			snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)",
 				le64_to_cpu(*fw_rev),
-				fw_to_string((char *)fw_rev));
+				util_fw_to_string((char *)fw_rev));
 			json_object_add_value_string(valid_attrs, "fw_rev", fw_str);
 			for (int i = 0; i < por_info_list; i++) {
 				por_event = pevent_log_info + offset +
@@ -1631,10 +1592,10 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("FW Commit Event Entry: \n");
 			printf("Old Firmware Revision: %"PRIu64" (%s)\n",
 				le64_to_cpu(fw_commit_event->old_fw_rev),
-				fw_to_string((char *)&fw_commit_event->old_fw_rev));
+				util_fw_to_string((char *)&fw_commit_event->old_fw_rev));
 			printf("New Firmware Revision: %"PRIu64" (%s)\n",
 				le64_to_cpu(fw_commit_event->new_fw_rev),
-				fw_to_string((char *)&fw_commit_event->new_fw_rev));
+				util_fw_to_string((char *)&fw_commit_event->new_fw_rev));
 			printf("FW Commit Action: %u\n",
 				fw_commit_event->fw_commit_action);
 			printf("FW Slot: %u\n", fw_commit_event->fw_slot);
@@ -1662,7 +1623,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("Power On Reset Event Entry: \n");
 			fw_rev = pevent_log_info + offset;
 			printf("Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(*fw_rev),
-				fw_to_string((char *)fw_rev));
+				util_fw_to_string((char *)fw_rev));
 			printf("Reset Information List: \n");
 
 			for (int i = 0; i < por_info_list; i++) {
@@ -4628,7 +4589,7 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("cntrltype : %d\n", ctrl->cntrltype);
 	if (human)
 		nvme_show_id_ctrl_cntrltype(ctrl->cntrltype);
-	printf("fguid     : %s\n", nvme_uuid_to_string(ctrl->fguid));
+	printf("fguid     : %s\n", util_uuid_to_string(ctrl->fguid));
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
@@ -5646,7 +5607,7 @@ static void json_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 		json_object_add_value_int(entry, "association",
 			uuid_list->entry[i].header & 0x3);
 		json_object_add_value_string(entry, "uuid",
-			nvme_uuid_to_string(uuid));
+			util_uuid_to_string(uuid));
 		json_array_add_value_object(entries, entry);
 	}
 	json_object_add_value_array(root, "UUID-list", entries);
@@ -5694,7 +5655,7 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 		printf(" Entry[%3d]\n", i+1);
 		printf(".................\n");
 		printf("association  : 0x%x %s\n", identifier_association, association);
-		printf("UUID         : %s", nvme_uuid_to_string(uuid));
+		printf("UUID         : %s", util_uuid_to_string(uuid));
 		if (memcmp(uuid_list->entry[i].uuid, invalid_uuid,
 			   sizeof(zero_uuid)) == 0)
 			printf(" (Invalid UUID)");
@@ -5944,7 +5905,7 @@ void nvme_show_fw_log(struct nvme_firmware_slot *fw_log,
 			frs = (__le64 *)&fw_log->frs[i];
 			printf("frs%d : %#016"PRIx64" (%s)\n", i + 1,
 				le64_to_cpu(*frs),
-				fw_to_string(fw_log->frs[i]));
+				util_fw_to_string(fw_log->frs[i]));
 		}
 	}
 }
@@ -6179,18 +6140,6 @@ void nvme_show_supported_log(struct nvme_supported_log_pages *support_log,
 				printf("\n");
 		}
 	}
-}
-
-uint64_t int48_to_long(__u8 *data)
-{
-	int i;
-	uint64_t result = 0;
-
-	for (i = 0; i < 6; i++) {
-		result *= 256;
-		result += data[5 - i];
-	}
-	return result;
 }
 
 void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
