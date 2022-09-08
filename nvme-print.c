@@ -47,6 +47,16 @@ static long double int128_to_double(__u8 *data)
 	return result;
 }
 
+static const char *nvme_uuid_to_string(uuid_t uuid)
+{
+	/* large enough to hold uuid str (37) + null-termination byte */
+	static char uuid_str[40];
+
+	uuid_unparse_lower(uuid, uuid_str);
+
+	return uuid_str;
+}
+
 static const char *nvme_ana_state_to_string(enum nvme_ana_state state)
 {
 	switch (state) {
@@ -279,6 +289,8 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
 	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
 	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
+	json_object_add_value_int(root, "cntrltype", ctrl->cntrltype);
+	json_object_add_value_string(root, "fguid", nvme_uuid_to_string(ctrl->fguid));
 	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
 	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
 	json_object_add_value_int(root, "crdt3", le16_to_cpu(ctrl->crdt3));
@@ -314,13 +326,14 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "hmmaxd", le16_to_cpu(ctrl->hmmaxd));
 	json_object_add_value_int(root, "nsetidmax",
 		le16_to_cpu(ctrl->nsetidmax));
-
+	json_object_add_value_int(root, "endgidmax", le16_to_cpu(ctrl->endgidmax));
 	json_object_add_value_int(root, "anatt",ctrl->anatt);
 	json_object_add_value_int(root, "anacap", ctrl->anacap);
 	json_object_add_value_int(root, "anagrpmax",
 		le32_to_cpu(ctrl->anagrpmax));
 	json_object_add_value_int(root, "nanagrpid",
 		le32_to_cpu(ctrl->nanagrpid));
+	json_object_add_value_int(root, "pels", le32_to_cpu(ctrl->pels));
 	json_object_add_value_int(root, "domainid", le16_to_cpu(ctrl->domainid));
 	json_object_add_value_double(root, "megcap", megcap);
 	json_object_add_value_int(root, "sqes", ctrl->sqes);
@@ -338,6 +351,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
+	json_object_add_value_int(root, "mnan", le32_to_cpu(ctrl->mnan));
 	json_object_add_value_double(root, "maxdna", maxdna);
 	json_object_add_value_int(root, "maxcna", le32_to_cpu(ctrl->maxcna));
 
@@ -3282,16 +3296,6 @@ void nvme_show_status(__u16 status)
 		nvme_status_to_string(status, false), status);
 }
 
-static const char *nvme_uuid_to_string(uuid_t uuid)
-{
-	/* large enough to hold uuid str (37) + null-termination byte */
-	static char uuid_str[40];
-
-	uuid_unparse_lower(uuid, uuid_str);
-
-	return uuid_str;
-}
-
 static void nvme_show_id_ctrl_cmic(__u8 cmic)
 {
 	__u8 rsvd = (cmic & 0xF0) >> 4;
@@ -4624,7 +4628,7 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("cntrltype : %d\n", ctrl->cntrltype);
 	if (human)
 		nvme_show_id_ctrl_cntrltype(ctrl->cntrltype);
-	printf("fguid     : %-.*s\n", (int)sizeof(ctrl->fguid), ctrl->fguid);
+	printf("fguid     : %s\n", nvme_uuid_to_string(ctrl->fguid));
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));

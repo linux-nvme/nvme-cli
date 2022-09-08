@@ -65,11 +65,16 @@ OPTIONS
 -a <action>::
 --sanact=<action>::
     Sanitize Action:
-    000b - Reserved
-    001b - Exit Failure Mode
-    010b - Start a Block Erase sanitize operation
-    011b - Start an Overwrite sanitize operation
-    100b - Start a Crypto Erase sanitize operation
++
+[]
+|=================
+|Value|Definition
+|0x00| Reserved
+|0x01| Exit Failure Mode
+|0x02| Start a Block Erase sanitize operation
+|0x03| Start an Overwrite sanitize operation
+|0x04| Start a Crypto Erase sanitize operation
+|=================
 
 -p <overwrite-pattern>::
 --ovrpat=<overwrite-pattern>::
