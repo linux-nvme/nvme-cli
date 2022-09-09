@@ -661,6 +661,12 @@ static int do_action_endpoint(enum action action, nvme_mi_ep_t ep, int argc, cha
 	case ACTION_CONFIG_SET:
 		rc = do_config_set(ep, argc, argv);
 		break;
+	default:
+		/* This shouldn't be possible, as we should be covering all
+		 * of the enum action options above. Hoever, keep the compilers
+		 * happy and fail gracefully. */
+		fprintf(stderr, "invalid action %d?\n", action);
+		rc = -1;
 	}
 	return rc;
 }
