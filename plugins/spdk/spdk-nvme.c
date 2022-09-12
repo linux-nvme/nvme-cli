@@ -50,6 +50,44 @@ static bool is_blkdev(void)
 	return S_ISBLK(nvme_stat.st_mode);
 }
 
+static bool nvme_match_device_filter(nvme_subsystem_t s,
+		nvme_ctrl_t c, nvme_ns_t ns, void *f_args)
+{
+	int ret, instance, nsid, s_num;
+	char *devname = f_args;
+
+	if (!devname || !strlen(devname))
+		return true;
+
+	/* Check number of input items successfully matched */
+	ret = sscanf(devname, "nvme%dn%d", &instance, &nsid);
+	if (ret != 2)
+		return true;
+
+	if (s) {
+		ret = sscanf(nvme_subsystem_get_name(s), "nvme%d",
+			     &s_num);
+		if (ret == 1 && s_num == instance)
+			return true;
+	}
+
+	if (c) {
+		s = nvme_ctrl_get_subsystem(c);
+
+		ret = sscanf(nvme_subsystem_get_name(s), "nvme%d",
+			     &s_num);
+		if (ret == 1 && s_num == instance)
+			return true;
+	}
+
+	if (ns) {
+		if (!strcmp(devname, nvme_ns_get_name(ns)))
+			return true;
+	}
+
+	return false;
+}
+
 static int spdk_open_dev(char *dev, int flags)
 {
 	int err, fd;
@@ -306,5 +344,73 @@ static int spdk_list(int argc, char **argv, struct command *cmd, struct plugin *
 	nvme_show_list_items(r, flags);
 	nvme_free_tree(r);
 
+	return err;
+}
+
+static int spdk_list_subsys(int argc, char **argv, struct command *cmd,
+		struct plugin *plugin)
+{
+	nvme_root_t r = NULL;
+	enum nvme_print_flags flags;
+	const char *desc = "Retrieve information for subsystems";
+	const char *verbose = "Increase output verbosity";
+	nvme_scan_filter_t filter = NULL;
+	char *devname;
+	int err;
+	int nsid = NVME_NSID_ALL;
+
+	NVME_ARGS(opts, cfg);
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err < 0)
+		goto ret;
+
+	devname = NULL;
+	if (optind < argc)
+		devname = basename(argv[optind++]);
+
+	err = validate_output_format(output_format_val, &flags);
+	if (err < 0 || (flags != JSON && flags != NORMAL)) {
+		nvme_show_error("Invalid output format");
+		return -EINVAL;
+	}
+
+	if (argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
+	r = nvme_create_root(stderr, map_log_level(!!(flags & VERBOSE), false));
+	if (!r) {
+		if (devname)
+			nvme_show_error("Failed to scan nvme subsystem for %s", devname);
+		else
+			nvme_show_error("Failed to scan nvme subsystem");
+		err = -errno;
+		goto ret;
+	}
+
+	if (devname) {
+		int subsys_num;
+
+		if (sscanf(devname, "nvme%dn%d", &subsys_num, &nsid) != 2) {
+			nvme_show_error("Invalid device name %s", devname);
+			err = -EINVAL;
+			goto ret;
+		}
+		filter = nvme_match_device_filter;
+	}
+
+	err = nvme_scan_topology(r, filter, (void *)devname);
+	if (err) {
+		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
+		goto ret;
+	}
+
+	spdk_identify(r);
+
+	nvme_show_subsystem_list(r, nsid != NVME_NSID_ALL, flags);
+
+ret:
+	if (r)
+		nvme_free_tree(r);
 	return err;
 }
