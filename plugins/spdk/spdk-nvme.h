@@ -11,6 +11,8 @@
 PLUGIN(NAME("spdk", "SPDK specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("list", "List all SPDK NVMe devices and namespaces on machine", spdk_list)
+		ENTRY("list-subsys", "Retrieve all information for SPDK subsystems",
+		      spdk_list_subsys)
 	)
 );
 
