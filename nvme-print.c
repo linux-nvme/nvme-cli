@@ -2483,12 +2483,14 @@ static void json_print_nvme_subsystem_list(nvme_root_t r, bool show_ana)
 
 	nvme_for_each_host(r, h) {
 		nvme_subsystem_t s;
+		const char *hostid;
 
 		host_attrs = json_create_object();
 		json_object_add_value_string(host_attrs, "HostNQN",
 					     nvme_host_get_hostnqn(h));
-		json_object_add_value_string(host_attrs, "HostID",
-					     nvme_host_get_hostid(h));
+		hostid = nvme_host_get_hostid(h);
+		if (hostid)
+			json_object_add_value_string(host_attrs, "HostID", hostid);
 		subsystems = json_create_array();
 		nvme_for_each_subsystem(h, s) {
 			subsystem_attrs = json_create_object();
@@ -7359,9 +7361,12 @@ static void json_detail_list(nvme_root_t r)
 	nvme_for_each_host(r, h) {
 		struct json_object *hss = json_create_object();
 		struct json_object *jsslist = json_create_array();
+		const char *hostid;
 
 		json_object_add_value_string(hss, "HostNQN", nvme_host_get_hostnqn(h));
-		json_object_add_value_string(hss, "HostID", nvme_host_get_hostid(h));
+		hostid = nvme_host_get_hostid(h);
+		if (hostid)
+			json_object_add_value_string(hss, "HostID", hostid);
 
 		nvme_for_each_subsystem(h , s) {
 			struct json_object *jss = json_create_object();
