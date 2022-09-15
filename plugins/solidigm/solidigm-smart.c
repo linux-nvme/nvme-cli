@@ -245,6 +245,8 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		nvme_show_status(err);
 	}
 
+	/* Redundant close() to make static code analysis happy */
+	close(dev->direct.fd);
 	dev_close(dev);
 	return err;
 }

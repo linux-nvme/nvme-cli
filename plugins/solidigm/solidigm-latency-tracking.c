@@ -468,6 +468,8 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 	} else {
 		fprintf(stderr, "Could not read feature id 0xE2.\n");
 	}
+	/* Redundant close() to make static code analysis happy */
+	close(dev->direct.fd);
 	dev_close(dev);
 	return err;
 }

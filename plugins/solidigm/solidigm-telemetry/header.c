@@ -6,7 +6,7 @@
  */
 
 #include "common.h"
-#include "reason-id.h"
+#include "header.h"
 
 #pragma pack(push, reason_indentifier, 1)
 struct reason_indentifier_1_0
@@ -20,6 +20,7 @@ struct reason_indentifier_1_0
 	char SerialNumber[20];      //! Device serial number	
 	uint8_t Reserved[56];       //! Reserved for future usage
 };
+static_assert(sizeof(const struct reason_indentifier_1_0) == MEMBER_SIZE(struct nvme_telemetry_log, rsnident), "Size mismatch for reason_indentifier_1_0");
 
 struct reason_indentifier_1_1
 {
@@ -35,6 +36,7 @@ struct reason_indentifier_1_1
 	uint8_t TelemetryMinorVersion; //! Shadow of version in TOC
 	uint8_t Reserved[46];       //! Reserved for future usage
 };
+static_assert(sizeof(const struct reason_indentifier_1_1) == MEMBER_SIZE(struct nvme_telemetry_log, rsnident), "Size mismatch for reason_indentifier_1_1");
 
 struct reason_indentifier_1_2
 {
@@ -51,9 +53,10 @@ struct reason_indentifier_1_2
 	uint8_t Reserved2[5];       //! Reserved for future usage
 	uint8_t DualPortReserved[40];  //! Reserved for dual port
 };
+static_assert(sizeof(const struct reason_indentifier_1_2) == MEMBER_SIZE(struct nvme_telemetry_log, rsnident), "Size mismatch for reason_indentifier_1_2");
 #pragma pack(pop, reason_indentifier)
 
-static void telemetry_log_reason_id_parse1_0_ext(struct telemetry_log *tl, json_object *reason_id)
+static void telemetry_log_reason_id_parse1_0_ext(const struct telemetry_log *tl, json_object *reason_id)
 {
 	const struct reason_indentifier_1_0 *ri = (struct reason_indentifier_1_0 *) tl->log->rsnident;
 	json_object_object_add(reason_id, "FirmwareVersion", json_object_new_string_len(ri->FirmwareVersion, sizeof(ri->FirmwareVersion)));
@@ -67,7 +70,7 @@ static void telemetry_log_reason_id_parse1_0_ext(struct telemetry_log *tl, json_
 	}
 }
 
-static void telemetry_log_reason_id_parse1_1_ext(struct telemetry_log *tl, json_object *reason_id)
+static void telemetry_log_reason_id_parse1_1_ext(const struct telemetry_log *tl, json_object *reason_id)
 {
 	const struct reason_indentifier_1_1 *ri = (struct reason_indentifier_1_1 *) tl->log->rsnident;
 	json_object_object_add(reason_id, "FirmwareVersion", json_object_new_string_len(ri->FirmwareVersion, sizeof(ri->FirmwareVersion)));
@@ -84,7 +87,7 @@ static void telemetry_log_reason_id_parse1_1_ext(struct telemetry_log *tl, json_
 	}
 }
 
-static void telemetry_log_reason_id_parse1_2_ext(struct telemetry_log *tl, json_object *reason_id)
+static void telemetry_log_reason_id_parse1_2_ext(const struct telemetry_log *tl, json_object *reason_id)
 {
 	const struct reason_indentifier_1_2 *ri = (struct reason_indentifier_1_2 *) tl->log->rsnident;
 	json_object_object_add(reason_id, "SerialNumber", json_object_new_string_len(ri->SerialNumber, sizeof(ri->SerialNumber)));
@@ -106,19 +109,18 @@ static void telemetry_log_reason_id_parse1_2_ext(struct telemetry_log *tl, json_
 	}
 }
 
-void solidigm_telemetry_log_reason_id_parse(struct telemetry_log *tl)
+static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *tl, json_object *reason_id)
 {
-	json_object *reason_id = json_create_object();
-	struct reason_indentifier_1_0 * ri1_0 = (struct reason_indentifier_1_0 *) tl->log->rsnident;
+	const struct reason_indentifier_1_0 *ri1_0 = (struct reason_indentifier_1_0 *) tl->log->rsnident;
 	__u16 version_major = le16_to_cpu(ri1_0->versionMajor);
 	__u16 version_minor = le16_to_cpu(ri1_0->versionMinor);
-	json_object_add_value_object(tl->root, "reason_identifier", reason_id);
+
 	json_object_add_value_uint(reason_id, "versionMajor", version_major);
 	json_object_add_value_uint(reason_id, "versionMinor", version_minor);
 	json_object_add_value_uint(reason_id, "reasonCode", le32_to_cpu(ri1_0->reasonCode));
-	json_object_object_add(reason_id, "DriveStatus", json_object_new_string_len(ri1_0->DriveStatus, sizeof(ri1_0->DriveStatus)));
+	json_object_add_value_object(reason_id, "DriveStatus", json_object_new_string_len(ri1_0->DriveStatus, sizeof(ri1_0->DriveStatus)));
 	if (version_major == 1) {
-		switch (version_minor){
+		switch (version_minor) {
 			case 0:
 				telemetry_log_reason_id_parse1_0_ext(tl, reason_id);
 				break;
@@ -129,4 +131,38 @@ void solidigm_telemetry_log_reason_id_parse(struct telemetry_log *tl)
 				telemetry_log_reason_id_parse1_2_ext(tl, reason_id);
 		}
 	}
+}
+
+bool solidigm_telemetry_log_header_parse(const struct telemetry_log *tl)
+{
+	if (tl->log_size < sizeof(const struct nvme_telemetry_log)) {
+		SOLIDIGM_LOG_WARNING("Telemetry log too short.");
+		return false;
+	}
+
+	json_object *header =  json_create_object();
+
+	json_object_object_add(tl->root, "telemetryHeader", header);
+	const struct nvme_telemetry_log *log = tl->log;
+
+	json_object_add_value_uint(header, "logIdentifier", log->lpi);
+	json_object *ieee_oui_id =  json_create_array();
+
+	json_object_object_add(header, "ieeeOuiIdentifier", ieee_oui_id);
+	for (int i = 0; i < sizeof(log->ieee); i++) {
+		json_object *val = json_object_new_int(log->ieee[i]);
+
+		json_object_array_add(ieee_oui_id, val);
+	}
+	json_object_add_value_uint(header, "dataArea1LastBlock", log->dalb1);
+	json_object_add_value_uint(header, "dataArea2LastBlock", log->dalb2);
+	json_object_add_value_uint(header, "dataArea3LastBlock", log->dalb3);
+	json_object_add_value_uint(header, "hostInitiatedDataGeneration", log->hostdgn);
+	json_object_add_value_uint(header, "controllerInitiatedDataAvailable", log->ctrlavail);
+	json_object_add_value_uint(header, "controllerInitiatedDataGeneration", log->ctrldgn);
+	json_object *reason_id = json_create_object();
+
+	json_object_add_value_object(header, "reasonIdentifier", reason_id);
+	solidigm_telemetry_log_reason_id_parse(tl, reason_id);
+	return true;
 }
