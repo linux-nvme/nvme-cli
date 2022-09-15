@@ -793,6 +793,50 @@ struct nvme_resv_report_args {
 };
 
 /**
+ * struct nvme_io_mgmt_recv_args - Arguments for the NVMe I/O Management Receive command
+ * @data:	Userspace address of the data
+ * @args_size:	Size of &struct nvme_io_mgmt_recv_args
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace identifier
+ * @data_len:	Length of @data
+ * @timeout:	Timeout in ms
+ * @mos		Management Operation Specific
+ * @mo		Management Operation
+ */
+struct nvme_io_mgmt_recv_args {
+	void *data;
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u32 data_len;
+	__u32 timeout;
+	__u16 mos;
+	__u8 mo;
+};
+
+/**
+ * struct nvme_io_mgmt_send_args - Arguments for the NVMe I/O Management Send command
+ * @data:	Userspace address of the data
+ * @args_size:	Size of &struct nvme_io_mgmt_send_args
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace identifier
+ * @data_len:	Length of @data
+ * @timeout:	Timeout in ms
+ * @mos		Management Operation Specific
+ * @mo		Management Operation
+ */
+struct nvme_io_mgmt_send_args {
+	void *data;
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u32 data_len;
+	__u32 timeout;
+	__u16 mos;
+	__u8 mo;
+};
+
+/**
  * struct nvme_zns_mgmt_send_args - Arguments for the NVMe ZNS Management Send command
  * @slba:	Starting logical block address
  * @result:	The command completion result from CQE dword0
