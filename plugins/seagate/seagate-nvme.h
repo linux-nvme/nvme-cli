@@ -18,6 +18,8 @@
  *
  * \file seagate-nvme.h
  * \brief This file defines the functions and macros to make building a nvme-cli seagate plug-in.
+ * 
+ *   Author: Debabrata Bardhan <debabrata.bardhan@seagate.com>
  */
 
 #undef CMD_INC_FILE
@@ -30,15 +32,18 @@
 
 PLUGIN(NAME("seagate", "Seagate vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
-		ENTRY("vs-temperature-stats", "Retrieve Seagate temperature statistics ",          temp_stats)
-		ENTRY("vs-log-page-sup",      "Retrieve Seagate Supported Log-pages Information ", log_pages_supp)
-		ENTRY("vs-smart-add-log",     "Retrieve Seagate extended-SMART Information ",      vs_smart_log)
-		ENTRY("vs-pcie-stats",        "Retrieve Seagate PCIe error statistics ",           vs_pcie_error_log)
-		ENTRY("clear-pcie-correctable-errors", "Clear Seagate PCIe error statistics  ",    vs_clr_pcie_correctable_errs)
-		ENTRY("get-host-tele",       "Retrieve Seagate Host-Initiated Telemetry ",         get_host_tele)
-		ENTRY("get-ctrl-tele",       "Retrieve Seagate Controller-Initiated Telemetry ",   get_ctrl_tele)
-		ENTRY("vs-internal-log",     "Retrieve Seagate Controller-Initiated Telemetry in binary format",  vs_internal_log)
-		ENTRY("plugin-version",      "Shows Seagate plugin's version information ",        seagate_plugin_version)
+		ENTRY("vs-temperature-stats",           "Retrieve Seagate temperature statistics ",             temp_stats)
+		ENTRY("vs-log-page-sup",                "Retrieve Seagate Supported Log-pages Information ",    log_pages_supp)
+		ENTRY("vs-smart-add-log",               "Retrieve Seagate extended-SMART Information ",         vs_smart_log)
+		ENTRY("vs-pcie-stats",                  "Retrieve Seagate PCIe error statistics ",              vs_pcie_error_log)
+		ENTRY("clear-pcie-correctable-errors",  "Clear Seagate PCIe error statistics  ",                vs_clr_pcie_correctable_errs)
+		ENTRY("get-host-tele",                  "Retrieve Seagate Host-Initiated Telemetry ",           get_host_tele)
+		ENTRY("get-ctrl-tele",                  "Retrieve Seagate Controller-Initiated Telemetry ",     get_ctrl_tele)
+		ENTRY("vs-internal-log",                "Retrieve Seagate Controller-Initiated Telemetry in binary format",  vs_internal_log)
+        ENTRY("vs-fw-activate-history",         "Retrieve the Firmware Activation History",             stx_vs_fw_activate_history)
+        ENTRY("clear-fw-activate-history",      "Clear Firmware Activation History",                    clear_fw_activate_history)
+		ENTRY("plugin-version",                 "Shows Seagate plugin's version information ",          seagate_plugin_version)
+        ENTRY("cloud-SSD-plugin-version",       "Shows OCP Seagate plugin's version information ",      stx_ocp_plugin_version)
 	)
 );
 
