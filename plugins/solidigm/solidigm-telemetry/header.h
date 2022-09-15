@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT-0
+/* SPDX-License-Identifier: MIT-0 */
 /*
  * Copyright (c) 2022 Solidigm.
  *
@@ -6,4 +6,4 @@
  */
 
 #include "telemetry-log.h"
-void solidigm_telemetry_log_reason_id_parse(struct telemetry_log *tl);
+bool solidigm_telemetry_log_header_parse(const struct telemetry_log *tl);

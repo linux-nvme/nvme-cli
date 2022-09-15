@@ -110,14 +110,16 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 
 		UNKNOWN = 0xFF,
 	};
+	json_object *telemetry_header = NULL;
 	json_object *COD_offset = NULL;
 	json_object *reason_id = NULL;
-	if (!json_object_object_get_ex(tl->root, "reason_identifier", &reason_id)) {
-			return;
-	}
-	if  (!json_object_object_get_ex(reason_id, "OemDataMapOffset", &COD_offset)) {
-			return;
-	}
+
+	if (!json_object_object_get_ex(tl->root, "telemetryHeader", &telemetry_header))
+		return;
+	if (!json_object_object_get_ex(telemetry_header, "reasonIdentifier", &reason_id))
+		return;
+	if  (!json_object_object_get_ex(reason_id, "OemDataMapOffset", &COD_offset))
+		return;
 
 	__u64 offset = json_object_get_int(COD_offset);
 
@@ -126,7 +128,7 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 	}
 
 	if ((offset + sizeof(struct cod_header)) > tl->log_size) {
-		fprintf(stderr, "COD map header out of bounds.\n");
+		SOLIDIGM_LOG_WARNING("Warning: COD map header out of bounds.");
 		return;
 	}
 
@@ -134,11 +136,11 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 
 	uint32_t signature = be32_to_cpu(data->header.Signature);
 	if ( signature != OEMSIGNATURE){
-		fprintf(stderr, "Unsupported COD data signature %x!\n", signature);
+		SOLIDIGM_LOG_WARNING("Warning: Unsupported COD data signature %x!", signature);
 		return;
 	}
 	if ((offset + data->header.MapSizeInBytes) > tl->log_size){
-		fprintf(stderr, "COD map data out of bounds.\n");
+		SOLIDIGM_LOG_WARNING("Warning: COD map data out of bounds.");
 		return;
 	}
 
@@ -148,7 +150,7 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 	for (int i =0 ; i < data->header.EntryCount; i++) {
 		if ((offset + sizeof(struct cod_header) + (i + 1) * sizeof(struct cod_item)) >
 		tl->log_size){
-			fprintf(stderr, "COD data out of bounds at item %d!\n", i);
+			SOLIDIGM_LOG_WARNING("Warning: COD data out of bounds at item %d!", i);
 			return;
 		}
 		struct cod_item item = data->items[i];
@@ -163,7 +165,7 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 		switch(item.dataFieldType){
 			case(INTEGER):
 				if (item.issigned) {
-					json_object_object_add(cod, key, 
+					json_object_object_add(cod, key,
 						json_object_new_int64(le64_to_cpu(*(uint64_t *)val)));
 				} else {
 					json_object_add_value_uint64(cod, key, le64_to_cpu(*(uint64_t *)val));
@@ -173,19 +175,19 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 				json_object_add_value_float(cod, key, *(float *) val);
 				break;
 			case(STRING):
-				json_object_object_add(cod, key, 
+				json_object_object_add(cod, key,
 					json_object_new_string_len((const char *)val, item.DataFieldSizeInBytes));
 				break;
 			case(TWO_BYTE_ASCII):
-				json_object_object_add(cod, key, 
+				json_object_object_add(cod, key,
 					json_object_new_string_len((const char *)val,2));
 				break;
 			case(FOUR_BYTE_ASCII):
-				json_object_object_add(cod, key, 
+				json_object_object_add(cod, key,
 					json_object_new_string_len((const char *)val, 4));
 				break;
 			default:
-				fprintf(stderr,"Unknown COD field type (%d)\n", item.DataFieldMapUid);
+				SOLIDIGM_LOG_WARNING("Warning: Unknown COD field type (%d)", item.DataFieldMapUid);
 				
 		}
 	}

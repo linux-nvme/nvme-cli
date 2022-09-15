@@ -108,6 +108,8 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		nvme_show_status(err);
 	}
 
+	/* Redundant close() to make static code analysis happy */
+	close(dev->direct.fd);
 	dev_close(dev);
 	return err;
 }
