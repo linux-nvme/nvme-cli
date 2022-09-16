@@ -3756,8 +3756,8 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		goto close_err;
 	}
 
-	err = nvme_identify_secondary_ctrl_list(dev_fd(dev), cfg.namespace_id,
-						cfg.cntid, sc_list);
+	err = nvme_cli_identify_secondary_ctrl_list(dev, cfg.namespace_id,
+												cfg.cntid, sc_list);
 	if (!err)
 		nvme_show_list_secondary_ctrl(sc_list, cfg.num_entries, flags);
 	else if (err > 0)

@@ -95,6 +95,39 @@ int nvme_cli_identify_allocated_ns_list(struct nvme_dev *dev, __u32 nsid,
 	return do_admin_op(identify_allocated_ns_list, dev, nsid, list);
 }
 
+int nvme_cli_identify_secondary_ctrl_list(struct nvme_dev *dev, __u32 nsid, __u16 ctrl_id,
+										  struct nvme_secondary_ctrl_list *list)
+{
+
+	int rc;
+	if (dev->type == NVME_DEV_DIRECT)
+	{
+		rc = nvme_identify_secondary_ctrl_list(dev->direct.fd, nsid, ctrl_id, list);
+	}
+	else if (dev->type == NVME_DEV_MI)
+	{
+		struct nvme_identify_args args = {
+			.result = NULL,
+			.data = list,
+			.args_size = sizeof(args),
+			.cns = NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
+			.csi = NVME_CSI_NVM,
+			.nsid = nsid,
+			.cntid = ctrl_id,
+			.cns_specific_id = NVME_CNSSPECID_NONE,
+			.uuidx = NVME_UUID_NONE,
+		};
+		rc = nvme_mi_admin_identify_partial(dev->mi.ctrl, &args, 0,
+											sizeof(struct nvme_secondary_ctrl_list));
+	}
+	else
+	{
+		rc = -ENODEV;
+	}
+
+	return rc;
+}
+
 int nvme_cli_get_features(struct nvme_dev *dev,
 			  struct nvme_get_features_args *args)
 {
