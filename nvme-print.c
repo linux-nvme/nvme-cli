@@ -2701,7 +2701,7 @@ void nvme_show_relatives(const char *name)
 		char *subsysnqn;
 		int err;
 
-		subsysnqn = get_nvme_subsnqn(path);
+		subsysnqn = nvme_get_subsys_attr(path, "subsysnqn");
 		if (!subsysnqn) {
 			free(path);
 			return;

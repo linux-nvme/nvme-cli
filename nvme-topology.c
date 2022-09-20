@@ -18,44 +18,11 @@ static const char *dev = "/dev/";
 static const char *subsys_dir = "/sys/class/nvme-subsystem/";
 static void free_ctrl(struct nvme_ctrl *c);
 
-char *get_nvme_subsnqn(char *path)
-{
-	char sspath[320], *subsysnqn;
-	int fd, ret;
-
-	snprintf(sspath, sizeof(sspath), "%s/subsysnqn", path);
-
-	fd = open(sspath, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-				sspath, strerror(errno));
-		return NULL;
-	}
-
-	subsysnqn = calloc(1, 256);
-	if (!subsysnqn)
-		goto close_fd;
-
-	ret = read(fd, subsysnqn, 256);
-	if (ret < 0) {
-		fprintf(stderr, "Failed to read %s: %s\n", sspath,
-				strerror(errno));
-		free(subsysnqn);
-		subsysnqn = NULL;
-	} else if (subsysnqn[strlen(subsysnqn) - 1] == '\n') {
-		subsysnqn[strlen(subsysnqn) - 1] = '\0';
-	}
-
-close_fd:
-	close(fd);
-	return subsysnqn;
-}
-
-char *nvme_get_ctrl_attr(const char *path, const char *attr)
+static char *nvme_get_attr(const char *path, const char *attr)
 {
 	char *attrpath, *value;
 	ssize_t ret;
-	int fd, i;
+	int fd;
 
 	ret = asprintf(&attrpath, "%s/%s", path, attr);
 	if (ret < 0)
@@ -78,11 +45,6 @@ char *nvme_get_ctrl_attr(const char *path, const char *attr)
 	if (value[strlen(value) - 1] == '\n')
 		value[strlen(value) - 1] = '\0';
 
-	for (i = 0; i < strlen(value); i++) {
-		if (value[i] == ',' )
-			value[i] = ' ';
-	}
-
 	close(fd);
 	free(attrpath);
 	return value;
@@ -93,6 +55,26 @@ err_free_value:
 err_free_path:
 	free(attrpath);
 	return NULL;
+}
+
+char *nvme_get_subsys_attr(const char *path, const char *attr)
+{
+	return nvme_get_attr(path, attr);
+}
+
+char *nvme_get_ctrl_attr(const char *path, const char *attr)
+{
+	char *value;
+	int i;
+
+	value = nvme_get_attr(path, attr);
+	if (!value)
+		return NULL;
+	for (i = 0; i < strlen(value); i++) {
+		if (value[i] == ',' )
+			value[i] = ' ';
+	}
+	return value;
 }
 
 static char *path_trim_last(char *path, char needle)
@@ -344,7 +326,7 @@ static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance, int nsid)
 	if (ret < 0)
 		return ret;
 
-	s->subsysnqn = get_nvme_subsnqn(path);
+	s->subsysnqn = nvme_get_subsys_attr(path, "subsysnqn");
 	ret = scandir(path, &ctrls, scan_ctrls_filter, alphasort);
 	if (ret == -1) {
 		fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));

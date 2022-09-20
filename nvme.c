@@ -2212,7 +2212,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 			goto ret;
 		}
 		sprintf(path, "/sys/block/%s/device", devicename);
-		subsysnqn = get_nvme_subsnqn(path);
+		subsysnqn = nvme_get_subsys_attr(path, "subsysnqn");
 		if (!subsysnqn) {
 			fprintf(stderr, "Cannot read subsys NQN from %s\n",
 				devicename);
