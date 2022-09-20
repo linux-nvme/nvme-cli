@@ -1384,11 +1384,14 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
 {
 	struct connect_args cargs __cleanup__(destruct_connect_args) = { NULL, };
 	struct connect_args *c = tracked_ctrls;
+	int len;
 
-	cargs.traddr = strdup(entry->traddr);
+	len = space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
+	cargs.traddr = strndup(entry->traddr, len);
 	cargs.transport = strdup(trtype_str(entry->trtype));
 	cargs.subsysnqn = strdup(entry->subnqn);
-	cargs.trsvcid = strdup(entry->trsvcid);
+	len = space_strip_len(NVMF_TRSVCID_SIZE, entry->trsvcid);
+	cargs.trsvcid = strndup(entry->trsvcid, len);
 	cargs.host_traddr = strdup(fabrics_cfg.host_traddr ?: "\0");
 	cargs.host_iface = strdup(fabrics_cfg.host_iface ?: "\0");
 
