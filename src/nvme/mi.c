@@ -33,6 +33,7 @@ nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
 	}
 	r->log_level = log_level;
 	r->fp = stderr;
+	r->mi_probe_enabled = true;
 	if (fp)
 		r->fp = fp;
 	list_head_init(&r->hosts);
@@ -48,6 +49,20 @@ void nvme_mi_free_root(nvme_root_t root)
 		nvme_mi_close(ep);
 
 	free(root);
+}
+
+void nvme_mi_set_probe_enabled(nvme_root_t root, bool enabled)
+{
+	root->mi_probe_enabled = enabled;
+}
+
+void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
+{
+	if (!ep->root->mi_probe_enabled)
+		return;
+
+	/* no quirks defined yet, nothing to probe! */
+	ep->quirks = 0;
 }
 
 struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
@@ -91,6 +106,11 @@ void nvme_mi_ep_set_mprt_max(nvme_mi_ep_t ep, unsigned int mprt_max_ms)
 unsigned int nvme_mi_ep_get_timeout(nvme_mi_ep_t ep)
 {
 	return ep->timeout;
+}
+
+static bool nvme_mi_ep_has_quirk(nvme_mi_ep_t ep, unsigned long quirk)
+{
+	return ep->quirks & quirk;
 }
 
 struct nvme_mi_ctrl *nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id)
