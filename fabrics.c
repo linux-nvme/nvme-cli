@@ -345,7 +345,8 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	}
 
 	if (persistent &&
-	    !strcmp(cargs.subsysnqn, args->subsysnqn) &&
+	    (!strcmp(cargs.subsysnqn, args->subsysnqn) ||
+	     !strcmp(cargs.subsystype, "discovery")) &&
 	    !strcmp(cargs.transport, args->transport) &&
 	    (!strcmp(cargs.traddr, args->traddr) ||
 	     !strcmp(args->traddr, "none")) &&
