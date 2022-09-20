@@ -1368,6 +1368,11 @@ retry:
 		flags = validate_output_format(fabrics_cfg.output_format);
 		if (flags < 0)
 			flags = NORMAL;
+		/*
+		 * Do not try to discover same controller again (see
+		 * cargs_match_found)
+		 */
+		track_ctrl(argstr);
 		ret = do_discover(argstr, true, flags);
 	} else
 		ret = add_ctrl(argstr);
