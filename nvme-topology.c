@@ -77,6 +77,42 @@ char *nvme_get_ctrl_attr(const char *path, const char *attr)
 	return value;
 }
 
+char *nvme_get_subsys_path(const char *dev)
+{
+	struct dirent **subsys;
+	char *path = NULL;
+	int nr, i;
+	struct stat buffer;
+
+	nr = scandir(subsys_dir, &subsys, scan_subsys_filter, alphasort);
+	if (nr < 0)
+		return NULL;
+
+	for (i = 0; i < nr; i++) {
+		if (!asprintf(&path, "%s/%s/%s",
+			      subsys_dir, subsys[i]->d_name, dev))
+			goto out;
+
+		if (!stat(path, &buffer))
+			break;
+
+		free(path);
+		path = NULL;
+	}
+
+	if (i < nr) {
+		free(path);
+		asprintf(&path, "%s/%s", subsys_dir, subsys[i]->d_name);
+	}
+
+out:
+	while (nr--)
+		free(subsys[nr]);
+	free(subsys);
+
+	return path;
+}
+
 static char *path_trim_last(char *path, char needle)
 {
 	int i;

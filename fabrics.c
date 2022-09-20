@@ -287,7 +287,7 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 {
 	struct connect_args cargs;
 	bool found = false;
-	char *path = NULL, *addr;
+	char *path = NULL, *subsys_path = NULL, *addr;
 	int ret;
 	bool persistent = true;
 
@@ -295,10 +295,16 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	if (ret < 0)
 		return found;
 
+	subsys_path = nvme_get_subsys_path(name);
+	if (!subsys_path) {
+		free(path);
+		return found;
+	}
+
 	addr = nvme_get_ctrl_attr(path, "address");
 	cargs.subsysnqn = nvme_get_ctrl_attr(path, "subsysnqn");
 	cargs.transport = nvme_get_ctrl_attr(path, "transport");
-	cargs.subsystype = nvme_get_ctrl_attr(path, "subsystype");
+	cargs.subsystype = nvme_get_subsys_attr(subsys_path, "subsystype");
 	if (!cargs.subsystype) {
 		if (!strcmp(cargs.subsysnqn, NVME_DISC_SUBSYS_NAME))
 			cargs.subsystype = strdup("discovery");
@@ -360,6 +366,7 @@ out:
 	free(cargs.transport);
 	free(addr);
 	free(path);
+	free(subsys_path);
 
 	return found;
 }
