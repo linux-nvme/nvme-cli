@@ -1400,7 +1400,8 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
 		if (!strcmp(cargs.subsysnqn, c->subsysnqn) &&
 		    !strcmp(cargs.transport, c->transport) &&
 		    !strcmp(cargs.traddr, c->traddr) &&
-		    !strcmp(cargs.trsvcid, c->trsvcid) &&
+                    (!strcmp(cargs.trsvcid, c->trsvcid) ||
+                     (!strcmp(cargs.trsvcid, "none") && !strcmp(c->trsvcid, ""))) &&
 		    !strcmp(cargs.host_traddr, c->host_traddr) &&
 		    !strcmp(cargs.host_iface, c->host_iface))
 			return true;
