@@ -71,13 +71,86 @@ void nvme_mi_set_probe_enabled(nvme_root_t root, bool enabled)
 	root->mi_probe_enabled = enabled;
 }
 
+static void nvme_mi_record_resp_time(struct nvme_mi_ep *ep)
+{
+	int rc;
+
+	rc = clock_gettime(CLOCK_MONOTONIC, &ep->last_resp_time);
+	ep->last_resp_time_valid = !rc;
+}
+
+static bool nvme_mi_compare_vid_mn(struct nvme_mi_ep *ep,
+				   struct nvme_id_ctrl *id,
+				   __u16 vid, const char *mn)
+
+{
+	int len;
+
+	len = strlen(mn);
+	if (len >= sizeof(id->mn)) {
+		nvme_msg(ep->root, LOG_ERR,
+			 "Internal error: invalid model number for %s\n",
+			 __func__);
+		return false;
+	}
+
+	return le16_to_cpu(id->vid) == vid && !strncmp(id->mn, mn, len);
+}
+
 void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 {
+	struct nvme_identify_args id_args = { 0 };
+	struct nvme_id_ctrl id = { 0 };
+	struct nvme_mi_ctrl *ctrl;
+	int rc;
+
 	if (!ep->root->mi_probe_enabled)
 		return;
 
-	/* no quirks defined yet, nothing to probe! */
+	/* start with no quirks, detect as we go */
 	ep->quirks = 0;
+
+	ctrl = nvme_mi_init_ctrl(ep, 0);
+	if (!ctrl)
+		return;
+
+	/* Do enough of an identify (assuming controller 0) to retrieve
+	 * device and firmware identification information. This gives us the
+	 * following fields in id:
+	 *
+	 *  - vid (PCI vendor ID)
+	 *  - ssvid (PCI subsystem vendor ID)
+	 *  - sn (Serial number)
+	 *  - mn (Model number)
+	 *  - fr (Firmware revision)
+	 *
+	 * all other fields - rab and onwards - will be zero!
+	 */
+	id_args.args_size = sizeof(id_args);
+	id_args.data = &id;
+	id_args.cns = NVME_IDENTIFY_CNS_CTRL;
+	id_args.nsid = NVME_NSID_NONE;
+	id_args.cntid = 0;
+	id_args.csi = NVME_CSI_NVM;
+
+	rc = nvme_mi_admin_identify_partial(ctrl, &id_args, 0,
+				    offsetof(struct nvme_id_ctrl, rab));
+	if (rc) {
+		nvme_msg(ep->root, LOG_WARNING,
+			 "Identify Controller failed, no quirks applied\n");
+		goto out_close;
+	}
+
+	/* no quirks defined yet... */
+
+	/* If we're quirking for the inter-command time, record the last
+	 * command time now, so we don't conflict with the just-sent identify.
+	 */
+	if (ep->quirks & NVME_QUIRK_MIN_INTER_COMMAND_TIME)
+		nvme_mi_record_resp_time(ep);
+
+out_close:
+	nvme_mi_close_ctrl(ctrl);
 }
 
 static const int nsec_per_sec = 1000 * 1000 * 1000;
@@ -126,15 +199,6 @@ static void nvme_mi_insert_delay(struct nvme_mi_ep *ep)
 
 	nanosleep(&delay, NULL);
 }
-
-static void nvme_mi_record_resp_time(struct nvme_mi_ep *ep)
-{
-	int rc;
-
-	rc = clock_gettime(CLOCK_MONOTONIC, &ep->last_resp_time);
-	ep->last_resp_time_valid = !rc;
-}
-
 
 struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 {
