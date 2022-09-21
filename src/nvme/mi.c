@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
@@ -78,6 +79,62 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 	/* no quirks defined yet, nothing to probe! */
 	ep->quirks = 0;
 }
+
+static const int nsec_per_sec = 1000 * 1000 * 1000;
+/* timercmp and timersub, but for struct timespec */
+#define timespec_cmp(a, b, CMP)						\
+	(((a)->tv_sec == (b)->tv_sec)					\
+		? ((a)->tv_nsec CMP (b)->tv_nsec)			\
+		: ((a)->tv_sec CMP (b)->tv_sec))
+
+#define timespec_sub(a, b, result)					\
+	do {								\
+		(result)->tv_sec = (a)->tv_sec - (b)->tv_sec;		\
+		(result)->tv_nsec = (a)->tv_nsec - (b)->tv_nsec;	\
+		if ((result)->tv_nsec < 0) {				\
+			--(result)->tv_sec;				\
+			(result)->tv_nsec += nsec_per_sec;		\
+		}							\
+	} while (0)
+
+static void nvme_mi_insert_delay(struct nvme_mi_ep *ep)
+{
+	struct timespec now, next, delay;
+	int rc;
+
+	if (!ep->last_resp_time_valid)
+		return;
+
+	/* calculate earliest next command time */
+	next.tv_nsec = ep->last_resp_time.tv_nsec + ep->inter_command_us * 1000;
+	next.tv_sec = ep->last_resp_time.tv_sec;
+	if (next.tv_nsec > nsec_per_sec) {
+		next.tv_nsec -= nsec_per_sec;
+		next.tv_sec += 1;
+	}
+
+	rc = clock_gettime(CLOCK_MONOTONIC, &now);
+	if (rc) {
+		/* not much we can do; continue immediately */
+		return;
+	}
+
+	if (timespec_cmp(&now, &next, >=))
+		return;
+
+	timespec_sub(&next, &now, &delay);
+
+	nanosleep(&delay, NULL);
+}
+
+static void nvme_mi_record_resp_time(struct nvme_mi_ep *ep)
+{
+	int rc;
+
+	rc = clock_gettime(CLOCK_MONOTONIC, &ep->last_resp_time);
+	ep->last_resp_time_valid = !rc;
+}
+
 
 struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 {
@@ -257,7 +314,14 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 	if (ep->transport->mic_enabled)
 		nvme_mi_calc_req_mic(req);
 
+	if (nvme_mi_ep_has_quirk(ep, NVME_QUIRK_MIN_INTER_COMMAND_TIME))
+		nvme_mi_insert_delay(ep);
+
 	rc = ep->transport->submit(ep, req, resp);
+
+	if (nvme_mi_ep_has_quirk(ep, NVME_QUIRK_MIN_INTER_COMMAND_TIME))
+		nvme_mi_record_resp_time(ep);
+
 	if (rc) {
 		nvme_msg(ep->root, LOG_INFO, "transport failure\n");
 		return rc;
