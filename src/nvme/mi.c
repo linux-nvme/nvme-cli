@@ -165,7 +165,14 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 		goto out_close;
 	}
 
-	/* no quirks defined yet... */
+	/* Samsung MZUL2512: cannot receive commands sent within ~1ms of
+	 * the previous response. Set an inter-command delay of 1.2ms for
+	 * a little extra tolerance.
+	 */
+	if (nvme_mi_compare_vid_mn(ep, &id, 0x144d, "MZUL2512HCJQ")) {
+		ep->quirks |= NVME_QUIRK_MIN_INTER_COMMAND_TIME;
+		ep->inter_command_us = 1200;
+	}
 
 	/* If we're quirking for the inter-command time, record the last
 	 * command time now, so we don't conflict with the just-sent identify.
