@@ -4857,6 +4857,34 @@ enum nvmf_tcp_sectype {
 };
 
 /**
+ * enum nvmf_log_discovery_lid_support - Discovery log specific support
+ * @NVMF_LOG_DISC_LID_NONE:	None
+ * @NVMF_LOG_DISC_LID_EXTDLPES:	Extended Discovery Log Page Entries Supported
+ * @NVMF_LOG_DISC_LID_PLEOS:	Port Local Entries Only Supported
+ * @NVMF_LOG_DISC_LID_ALLSUBES:	All NVM Subsystem Entries Supported
+ */
+enum nvmf_log_discovery_lid_support {
+	NVMF_LOG_DISC_LID_NONE		= 0,
+	NVMF_LOG_DISC_LID_EXTDLPES	= (1 << 0),
+	NVMF_LOG_DISC_LID_PLEOS		= (1 << 1),
+	NVMF_LOG_DISC_LID_ALLSUBES	= (1 << 2),
+};
+
+/**
+ * enum nvmf_log_discovery_lsp - Discovery log specific field
+ * @NVMF_LOG_DISC_LSP_NONE:	None
+ * @NVMF_LOG_DISC_LSP_EXTDLPE:	Extended Discovery Log Page Entries
+ * @NVMF_LOG_DISC_LSP_PLEO:	Port Local Entries Only
+ * @NVMF_LOG_DISC_LSP_ALLSUBE:	All NVM Subsystem Entries
+ */
+enum nvmf_log_discovery_lsp {
+	NVMF_LOG_DISC_LSP_NONE		= 0,
+	NVMF_LOG_DISC_LSP_EXTDLPE	= (1 << 0),
+	NVMF_LOG_DISC_LSP_PLEO		= (1 << 1),
+	NVMF_LOG_DISC_LSP_ALLSUBE	= (1 << 2),
+};
+
+/**
  * struct nvmf_discovery_log - Discovery Log Page (Log Identifier 70h)
  * @genctr:  Generation Counter (GENCTR): Indicates the version of the discovery
  *	     information, starting at a value of 0h. For each change in the
