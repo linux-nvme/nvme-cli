@@ -1,0 +1,42 @@
+nvme-seagate-vs-fw-activate-history (1)
+=======================================
+
+NAME
+----
+nvme-seagate-vs-fw-activate-history - Retrieve Seagate vendor specific
+Controller-Initiated Telemetry in binary
+
+SYNOPSIS
+--------
+[verse]
+'nvme seagate vs-fw-activate-history <device> [OPTIONS]'
+
+DESCRIPTION
+-----------
+This command will only work on Seagate devices supporting this feature.  Not
+all commands work across all product families.
+
+The '<device>' may be either an NVMe character device (ex: /dev/nvme0) or an
+nvme block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+        Desired namespace
+
+-f <FILE>::
+--dump-file=<FILE>::
+        Dump file
+
+EXAMPLES
+--------
+Get the Seagate vendor specific Controller-Initiated telemetry log for the specified device.
+
+------------
+# nvme seagate vs-fw-activate-history /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite
