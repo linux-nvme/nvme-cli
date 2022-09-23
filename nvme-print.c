@@ -592,7 +592,7 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 	json_object_add_value_uint128(root, "data_units_read", data_units_read);
 	json_object_add_value_uint128(root, "data_units_written",
 		data_units_written);
-	json_object_add_value_double(root, "media_units_written",
+	json_object_add_value_uint128(root, "media_units_written",
 		media_units_written);
 	json_object_add_value_uint128(root, "host_read_cmds", host_read_cmds);
 	json_object_add_value_uint128(root, "host_write_cmds", host_write_cmds);
