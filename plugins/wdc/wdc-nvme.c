@@ -8997,7 +8997,7 @@ static int wdc_do_drive_essentials(nvme_root_t r, struct nvme_dev *dev,
 		if (deFeatureIdList[listIdx].featureId == FID_LBA_RANGE_TYPE)
 			continue;
 		ret = nvme_get_features_data(dev_fd(dev),
-					     deFeatureIdList[listIdx].featureId,
+					     (enum nvme_features_id)deFeatureIdList[listIdx].featureId,
 					     WDC_DE_GLOBAL_NSID,
 					     sizeof(featureIdBuff),
 					     &featureIdBuff, &result);
