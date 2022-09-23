@@ -26,7 +26,7 @@ RPM build support via Makefile that uses meson
 
     $ make rpm
 
-If not sure how to use, find the top-level documentation with:
+If not sure how to use, find thon with:
 
     $ man nvme
 
