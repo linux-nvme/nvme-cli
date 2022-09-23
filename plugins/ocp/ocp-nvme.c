@@ -198,9 +198,9 @@ static void ocp_print_C0_log_normal(void *data)
         printf("  NUSE - Namespace utilization			%"PRIu64"\n",
                         (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
         printf("  PLP start count				%s\n",
-                uint128_t_to_string(le128_to_cpu(&log_data[SCAO_PSC])));
+                uint128_to_string(le128_to_cpu(&log_data[SCAO_PSC])));
         printf("  Endurance estimate				%s\n",
-                uint128_t_to_string(le128_to_cpu(&log_data[SCAO_EEST])));
+                uint128_to_string(le128_to_cpu(&log_data[SCAO_EEST])));
         smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
         printf("  Log page version				%"PRIu16"\n",smart_log_ver);
         printf("  Log page GUID					0x");

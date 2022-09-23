@@ -4,6 +4,8 @@
 
 #include <json.h>
 
+#include "types.h"
+
 /* Wrappers around json-c's API */
 
 #define json_create_object(o) json_object_new_object(o)
@@ -44,6 +46,6 @@
 
 struct json_object *util_json_object_new_double(long double d);
 struct json_object *util_json_object_new_uint64(uint64_t i);
-struct json_object *util_json_object_new_uint128(__uint128_t val);
+struct json_object *util_json_object_new_uint128(nvme_uint128_t val);
 
 #endif

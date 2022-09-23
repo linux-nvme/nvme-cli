@@ -5700,10 +5700,10 @@ static void wdc_print_ext_smart_cloud_log_normal(void *data, int mask)
 		printf("  SMART Cloud Attributes :- \n");
 
 	printf("  Physical Media Units Written TLC (Bytes) : %s\n",
-		uint128_t_to_string(le128_to_cpu(
+		uint128_to_string(le128_to_cpu(
 					ext_smart_log_ptr->ext_smart_pmuwt)));
 	printf("  Physical Media Units Written SLC (Bytes) : %s\n",
-		uint128_t_to_string(le128_to_cpu(
+		uint128_to_string(le128_to_cpu(
 					ext_smart_log_ptr->ext_smart_pmuws)));
 	printf("  Bad User NAND Block Count (Normalized) (Int) : %d\n",
 			le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_bunbc));
@@ -5753,7 +5753,7 @@ static void wdc_print_ext_smart_cloud_log_normal(void *data, int mask)
 		printf("  %% Free Blocks (System) (Int)	: %d %%\n",
 			ext_smart_log_ptr->ext_smart_pfbs);
 		printf("  NVMe Stats (# Data Set Management/TRIM Commands Completed) (Int) : %s\n",
-			uint128_t_to_string(le128_to_cpu(
+			uint128_to_string(le128_to_cpu(
 						ext_smart_log_ptr->ext_smart_dcc)));
 		printf("  Total Namespace Utilization (nvme0n1 NUSE) (Bytes) : %"PRIu64"\n",
 			le64_to_cpu(ext_smart_log_ptr->ext_smart_tnu));
@@ -5773,7 +5773,7 @@ static void wdc_print_ext_smart_cloud_log_normal(void *data, int mask)
 	printf("  Bad System NAND Block Count (Raw) (Int) : %"PRIu64"\n",
 			le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_bsnbc & 0xFFFFFFFFFFFF0000));
 	printf("  Endurance Estimate (Total Writable Lifetime Bytes) (Bytes) :  %s\n",
-		uint128_t_to_string(
+		uint128_to_string(
 			le128_to_cpu(ext_smart_log_ptr->ext_smart_eest)));
 	if (mask == WDC_SCA_V1_ALL) {
 		printf("  Thermal Throttling Status & Count (Number of thermal throttling events) (Int)	: %d\n",
@@ -5782,7 +5782,7 @@ static void wdc_print_ext_smart_cloud_log_normal(void *data, int mask)
 			le64_to_cpu(ext_smart_log_ptr->ext_smart_uio));
 	}
 	printf("  Total Physical Media Units Read (Bytes) (Int)	:  %s\n",
-		uint128_t_to_string(
+		uint128_to_string(
 			le128_to_cpu(ext_smart_log_ptr->ext_smart_pmur)));
 	if (mask == WDC_SCA_V1_ALL) {
 		printf("  Command Timeout (# of READ Commands > 5 Seconds) (Int) : %"PRIu32"\n",
@@ -5953,9 +5953,9 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 	printf("  SMART Cloud Attributes :- \n");
 
 	printf("  Physical media units written			: %s\n",
-		uint128_t_to_string(le128_to_cpu(&log_data[SCAO_PMUW])));
+		uint128_to_string(le128_to_cpu(&log_data[SCAO_PMUW])));
 	printf("  Physical media units read			: %s\n",
-		uint128_t_to_string(le128_to_cpu(&log_data[SCAO_PMUR])));
+		uint128_to_string(le128_to_cpu(&log_data[SCAO_PMUR])));
 	printf("  Bad user nand blocks Raw			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	printf("  Bad user nand blocks Normalized		: %d\n",
@@ -5997,9 +5997,9 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 	printf("  NUSE Namespace utilization			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
 	printf("  PLP start count				: %s\n",
-		uint128_t_to_string(le128_to_cpu(&log_data[SCAO_PSC])));
+		uint128_to_string(le128_to_cpu(&log_data[SCAO_PSC])));
 	printf("  Endurance estimate				: %s\n",
-		uint128_t_to_string(le128_to_cpu(&log_data[SCAO_EEST])));
+		uint128_to_string(le128_to_cpu(&log_data[SCAO_EEST])));
 	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
 	printf("  Log page version				: %"PRIu16"\n",smart_log_ver);
 	printf("  Log page GUID					: 0x");
@@ -9716,10 +9716,10 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 	case 0:
 		printf("  NAND Statistics :- \n");
 		printf("  NAND Writes TLC (Bytes)		         %s\n",
-			uint128_t_to_string(
+			uint128_to_string(
 				le128_to_cpu(nand_stats->nand_write_tlc)));
 		printf("  NAND Writes SLC (Bytes)			 %s\n",
-			uint128_t_to_string(
+			uint128_to_string(
 				le128_to_cpu(nand_stats->nand_write_slc)));
 		printf("  NAND Program Failures			  	 %"PRIu32"\n",
 				(uint32_t)le32_to_cpu(nand_stats->nand_prog_failure));
@@ -9739,10 +9739,10 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 	case 3:
 		printf("  NAND Statistics V3:- \n");
 		printf("  TLC Units Written				 %s\n",
-			uint128_t_to_string(
+			uint128_to_string(
 				le128_to_cpu(nand_stats_v3->nand_write_tlc)));
 		printf("  SLC Units Written 				 %s\n",
-			uint128_t_to_string(
+			uint128_to_string(
 				le128_to_cpu(nand_stats_v3->nand_write_slc)));
 		temp_ptr = (__u64 *)nand_stats_v3->bad_nand_block_count;
 		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
@@ -9794,7 +9794,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 		printf("  %% Free Blocks (System)			 %u\n",
 				nand_stats_v3->percent_free_blocks_system);
 		printf("  Data Set Management Commands			 %s\n",
-			uint128_t_to_string(
+			uint128_to_string(
 				le128_to_cpu(nand_stats_v3->trim_completions)));
 		printf("  Estimate of Incomplete Trim Data		 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->trim_completions[16]));
@@ -9814,7 +9814,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 		printf("  Bad System Nand Block Count - Raw	         %"PRIu64"\n",
 				le64_to_cpu(temp_raw));
 		printf("  Endurance Estimate				 %s\n",
-			uint128_t_to_string(
+			uint128_to_string(
 				le128_to_cpu(nand_stats_v3->endurance_estimate)));
 		printf("  Thermal Throttling Count			 %u\n",
 				nand_stats_v3->thermal_throttling_st_ct[0]);
@@ -9823,7 +9823,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 		printf("  Unaligned I/O					 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->unaligned_IO));
 		printf("  Physical Media Units Read			 %s\n",
-			uint128_t_to_string(
+			uint128_to_string(
 				le128_to_cpu(nand_stats_v3->physical_media_units)));
 		printf("  log page version				 %"PRIu16"\n",
 				le16_to_cpu(nand_stats_v3->log_page_version));
