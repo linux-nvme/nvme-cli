@@ -295,6 +295,53 @@ static void nvme_mi_admin_init_resp(struct nvme_mi_resp *resp,
 	resp->hdr_len = sizeof(*hdr);
 }
 
+static int nvme_mi_admin_parse_status(struct nvme_mi_resp *resp, __u32 *result)
+{
+	struct nvme_mi_admin_resp_hdr *admin_hdr;
+	struct nvme_mi_msg_resp *resp_hdr;
+	__u32 nvme_status;
+	__u32 nvme_result;
+
+	/* we have a few different sources of "result" here: the status header
+	 * in the MI response, the cdw3 status field, and (command specific)
+	 * return values in cdw0. The latter is returned in the result pointer,
+	 * the former two generate return values here
+	 */
+
+	if (resp->hdr_len < sizeof(*resp_hdr)) {
+		errno = -EPROTO;
+		return -1;
+	}
+	resp_hdr = (struct nvme_mi_msg_resp *)resp->hdr;
+
+	/* If we have a MI error, we can't be sure there's an admin header
+	 * following; return just the MI status
+	 *
+	 * TODO: this may alias the cdw3 result values, see
+	 * https://github.com/linux-nvme/libnvme/issues/456
+	 */
+	if (resp_hdr->status)
+		return resp_hdr->status;
+
+	/* We shouldn't hit this, as we'd have an error reported earlier.
+	 * However, for pointer safety, ensure we have a full admin header
+	 */
+	if (resp->hdr_len < sizeof(*admin_hdr)) {
+		errno = EPROTO;
+		return -1;
+	}
+
+	admin_hdr = (struct nvme_mi_admin_resp_hdr *)resp->hdr;
+	nvme_result = le32_to_cpu(admin_hdr->cdw0);
+	nvme_status = le32_to_cpu(admin_hdr->cdw3) >> 16;
+
+	/* the result pointer, optionally stored if the caller needs it */
+	if (result)
+		*result = nvme_result;
+
+	return nvme_status;
+}
+
 int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 		       struct nvme_mi_admin_req_hdr *admin_req,
 		       size_t req_data_size,
@@ -414,11 +461,9 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
-
-	if (args->result)
-		*args->result = le32_to_cpu(resp_hdr.cdw0);
+	rc = nvme_mi_admin_parse_status(&resp, args->result);
+	if (rc)
+		return rc;
 
 	/* callers will expect a full response; if the data buffer isn't
 	 * fully valid, return an error */
@@ -489,12 +534,11 @@ static int __nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
+	rc = nvme_mi_admin_parse_status(&resp, args->result);
+	if (!rc)
+		*lenp = resp.data_len;
 
-	*lenp = resp.data_len;
-
-	return 0;
+	return rc;
 }
 
 int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
@@ -580,13 +624,7 @@ int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
-
-	if (args->result)
-		*args->result = le32_to_cpu(resp_hdr.cdw0);
-
-	return 0;
+	return nvme_mi_admin_parse_status(&resp, args->result);
 }
 
 int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
@@ -632,11 +670,9 @@ int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
-
-	if (args->result)
-		*args->result = resp_hdr.cdw0;
+	rc = nvme_mi_admin_parse_status(&resp, args->result);
+	if (rc)
+		return rc;
 
 	args->data_len = resp.data_len;
 
@@ -673,11 +709,9 @@ int nvme_mi_admin_get_features(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
-
-	if (args->result)
-		*args->result = le32_to_cpu(resp_hdr.cdw0);
+	rc = nvme_mi_admin_parse_status(&resp, args->result);
+	if (rc)
+		return rc;
 
 	args->data_len = resp.data_len;
 
@@ -719,11 +753,10 @@ int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
+	rc = nvme_mi_admin_parse_status(&resp, args->result);
+	if (rc)
+		return rc;
 
-	if (args->result)
-		*args->result = le32_to_cpu(resp_hdr.cdw0);
 	args->data_len = resp.data_len;
 
 	return 0;
@@ -762,13 +795,7 @@ int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
-
-	if (args->result)
-		*args->result = le32_to_cpu(resp_hdr.cdw0);
-
-	return 0;
+	return nvme_mi_admin_parse_status(&resp, args->result);
 }
 
 int nvme_mi_admin_ns_attach(nvme_mi_ctrl_t ctrl,
@@ -801,13 +828,7 @@ int nvme_mi_admin_ns_attach(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
-
-	if (args->result)
-		*args->result = le32_to_cpu(resp_hdr.cdw0);
-
-	return 0;
+	return nvme_mi_admin_parse_status(&resp, args->result);
 }
 
 int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
@@ -841,13 +862,7 @@ int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
-
-	if (args->result)
-		*args->result = le32_to_cpu(resp_hdr.cdw0);
-
-	return 0;
+	return nvme_mi_admin_parse_status(&resp, args->result);
 }
 
 int nvme_mi_admin_sanitize_nvm(nvme_mi_ctrl_t ctrl,
@@ -880,13 +895,7 @@ int nvme_mi_admin_sanitize_nvm(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
-	if (resp_hdr.status)
-		return resp_hdr.status;
-
-	if (args->result)
-		*args->result = le32_to_cpu(resp_hdr.cdw0);
-
-	return 0;
+	return nvme_mi_admin_parse_status(&resp, args->result);
 }
 
 static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
