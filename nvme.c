@@ -4186,14 +4186,13 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 		struct nvme_fw_download_args args = {
 			.args_size	= sizeof(args),
-			.fd		= dev_fd(dev),
 			.offset		= cfg.offset,
 			.data_len	= cfg.xfer,
 			.data		= fw_buf,
 			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 			.result		= NULL,
 		};
-		err = nvme_fw_download(&args);
+		err = nvme_cli_fw_download(dev, &args);
 		if (err < 0) {
 			fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
 			break;
@@ -4283,14 +4282,13 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 
 	struct nvme_fw_commit_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.slot		= cfg.slot,
 		.action		= cfg.action,
 		.bpid		= cfg.bpid,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= &result,
 	};
-	err = nvme_fw_commit(&args);
+	err = nvme_cli_fw_commit(dev, &args);
 	if (err < 0)
 		fprintf(stderr, "fw-commit: %s\n", nvme_strerror(errno));
 	else if (err != 0)

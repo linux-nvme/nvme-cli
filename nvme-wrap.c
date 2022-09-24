@@ -323,6 +323,18 @@ int nvme_cli_get_log_persistent_event(struct nvme_dev *dev,
 			   pevent_log);
 }
 
+int nvme_cli_fw_download(struct nvme_dev *dev,
+			 struct nvme_fw_download_args *args)
+{
+	return do_admin_args_op(fw_download, dev, args);
+}
+
+int nvme_cli_fw_commit(struct nvme_dev *dev,
+			 struct nvme_fw_commit_args *args)
+{
+	return do_admin_args_op(fw_commit, dev, args);
+}
+
 /* The MI & direct interfaces don't have an exactly-matching API for
  * ns_mgmt_create, as we don't support a timeout for MI.
  */
