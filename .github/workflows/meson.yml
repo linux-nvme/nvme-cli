@@ -30,6 +30,36 @@ jobs:
           name: Linux_Meson_Testlog
           path: build/meson-logs/testlog.txt
 
+  build-cross-armhf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: set up arm architecture
+        run: |
+          export release=$(lsb_release -c -s)
+          sudo dpkg --add-architecture armhf
+          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
+          sudo dd of=/etc/apt/sources.list.d/armhf.list <<EOF
+          deb [arch=armhf] http://ports.ubuntu.com/ $release main universe restricted"
+          deb [arch=armhf] http://ports.ubuntu.com/ $release-updates main universe restricted"
+          EOF
+          sudo apt update
+      - name: install armhf compiler
+        run: sudo apt install gcc-arm-linux-gnueabihf pkg-config
+      - name: install libraries
+        run: sudo apt install uuid-dev:armhf libjson-c-dev:armhf
+      - uses: actions/checkout@v3
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          # suppress python for now; the python headers currently assume native
+          setup-options: --werror --cross-file=.github/cross/ubuntu-armhf.txt --wrap-mode=nofallback -Dpython=false
+          options: --verbose
+          action: build
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: Linux_Meson_Testlog
+          path: build/meson-logs/testlog.txt
+
   build-fallback:
     runs-on: ubuntu-latest
     steps:
