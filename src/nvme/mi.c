@@ -831,6 +831,78 @@ int nvme_mi_admin_ns_attach(nvme_mi_ctrl_t ctrl,
 	return nvme_mi_admin_parse_status(&resp, args->result);
 }
 
+int nvme_mi_admin_fw_download(nvme_mi_ctrl_t ctrl,
+			      struct nvme_fw_download_args *args)
+{
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	if (args->data_len & 0x3)
+		return -EINVAL;
+
+	if (args->offset & 0x3)
+		return -EINVAL;
+
+	if (!args->data_len)
+		return -EINVAL;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
+			       nvme_admin_fw_download);
+
+	req_hdr.cdw10 = cpu_to_le32((args->data_len >> 2) - 1);
+	req_hdr.cdw11 = cpu_to_le32(args->offset >> 2);
+	req.data = args->data;
+	req.data_len = args->data_len;
+	req_hdr.dlen = cpu_to_le32(args->data_len);
+	req_hdr.flags = 0x1;
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	return nvme_mi_admin_parse_status(&resp, NULL);
+}
+
+int nvme_mi_admin_fw_commit(nvme_mi_ctrl_t ctrl,
+			    struct nvme_fw_commit_args *args)
+{
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
+			       nvme_admin_fw_commit);
+
+	req_hdr.cdw10 = cpu_to_le32(((args->bpid & 0x1) << 31) |
+				    ((args->action & 0x7) << 3) |
+				    ((args->slot & 0x7) << 0));
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	return nvme_mi_admin_parse_status(&resp, NULL);
+}
+
 int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
 			     struct nvme_format_nvm_args *args)
 {
