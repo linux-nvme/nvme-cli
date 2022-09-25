@@ -129,7 +129,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, bool cap_only)
 	struct json_object *lbafs;
 	int i;
 
-	__uint128_t nvmcap = le128_to_cpu(ns->nvmcap);
+	nvme_uint128_t nvmcap = le128_to_cpu(ns->nvmcap);
 
 	root = json_create_object();
 
@@ -216,10 +216,10 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	struct json_object *root;
 	struct json_object *psds;
 
-	__uint128_t tnvmcap = le128_to_cpu(ctrl->tnvmcap);
-	__uint128_t unvmcap = le128_to_cpu(ctrl->unvmcap);
-	__uint128_t megcap = le128_to_cpu(ctrl->megcap);
-	__uint128_t maxdna = le128_to_cpu(ctrl->maxdna);
+	nvme_uint128_t tnvmcap = le128_to_cpu(ctrl->tnvmcap);
+	nvme_uint128_t unvmcap = le128_to_cpu(ctrl->unvmcap);
+	nvme_uint128_t megcap = le128_to_cpu(ctrl->megcap);
+	nvme_uint128_t maxdna = le128_to_cpu(ctrl->maxdna);
 
 	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1],
 		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1];
@@ -560,21 +560,21 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 {
 	struct json_object *root;
 
-	__uint128_t endurance_estimate =
+	nvme_uint128_t endurance_estimate =
 		le128_to_cpu(endurance_group->endurance_estimate);
-	__uint128_t data_units_read =
+	nvme_uint128_t data_units_read =
 		le128_to_cpu(endurance_group->data_units_read);
-	__uint128_t data_units_written =
+	nvme_uint128_t data_units_written =
 		le128_to_cpu(endurance_group->data_units_written);
-	__uint128_t media_units_written =
+	nvme_uint128_t media_units_written =
 		le128_to_cpu(endurance_group->media_units_written);
-	__uint128_t host_read_cmds =
+	nvme_uint128_t host_read_cmds =
 		le128_to_cpu(endurance_group->host_read_cmds);
-	__uint128_t host_write_cmds =
+	nvme_uint128_t host_write_cmds =
 		le128_to_cpu(endurance_group->host_write_cmds);
-	__uint128_t media_data_integrity_err =
+	nvme_uint128_t media_data_integrity_err =
 		le128_to_cpu(endurance_group->media_data_integrity_err);
-	__uint128_t num_err_info_log_entries =
+	nvme_uint128_t num_err_info_log_entries =
 		le128_to_cpu(endurance_group->num_err_info_log_entries);
 
 	root = json_create_object();
@@ -592,7 +592,7 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 	json_object_add_value_uint128(root, "data_units_read", data_units_read);
 	json_object_add_value_uint128(root, "data_units_written",
 		data_units_written);
-	json_object_add_value_double(root, "media_units_written",
+	json_object_add_value_uint128(root, "media_units_written",
 		media_units_written);
 	json_object_add_value_uint128(root, "host_read_cmds", host_read_cmds);
 	json_object_add_value_uint128(root, "host_write_cmds", host_write_cmds);
@@ -616,16 +616,16 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	unsigned int temperature = ((smart->temperature[1] << 8) |
 		smart->temperature[0]);
 
-	__uint128_t data_units_read = le128_to_cpu(smart->data_units_read);
-	__uint128_t data_units_written = le128_to_cpu(smart->data_units_written);
-	__uint128_t host_read_commands = le128_to_cpu(smart->host_reads);
-	__uint128_t host_write_commands = le128_to_cpu(smart->host_writes);
-	__uint128_t controller_busy_time = le128_to_cpu(smart->ctrl_busy_time);
-	__uint128_t power_cycles = le128_to_cpu(smart->power_cycles);
-	__uint128_t power_on_hours = le128_to_cpu(smart->power_on_hours);
-	__uint128_t unsafe_shutdowns = le128_to_cpu(smart->unsafe_shutdowns);
-	__uint128_t media_errors = le128_to_cpu(smart->media_errors);
-	__uint128_t num_err_log_entries = le128_to_cpu(smart->num_err_log_entries);
+	nvme_uint128_t data_units_read = le128_to_cpu(smart->data_units_read);
+	nvme_uint128_t data_units_written = le128_to_cpu(smart->data_units_written);
+	nvme_uint128_t host_read_commands = le128_to_cpu(smart->host_reads);
+	nvme_uint128_t host_write_commands = le128_to_cpu(smart->host_writes);
+	nvme_uint128_t controller_busy_time = le128_to_cpu(smart->ctrl_busy_time);
+	nvme_uint128_t power_cycles = le128_to_cpu(smart->power_cycles);
+	nvme_uint128_t power_on_hours = le128_to_cpu(smart->power_on_hours);
+	nvme_uint128_t unsafe_shutdowns = le128_to_cpu(smart->unsafe_shutdowns);
+	nvme_uint128_t media_errors = le128_to_cpu(smart->media_errors);
+	nvme_uint128_t num_err_log_entries = le128_to_cpu(smart->num_err_log_entries);
 
 	root = json_create_object();
 
@@ -1233,16 +1233,16 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			unsigned int temperature = ((smart_event->temperature[1] << 8) |
 				smart_event->temperature[0]);
 
-			__uint128_t data_units_read = le128_to_cpu(smart_event->data_units_read);
-			__uint128_t data_units_written = le128_to_cpu(smart_event->data_units_written);
-			__uint128_t host_read_commands = le128_to_cpu(smart_event->host_reads);
-			__uint128_t host_write_commands = le128_to_cpu(smart_event->host_writes);
-			__uint128_t controller_busy_time = le128_to_cpu(smart_event->ctrl_busy_time);
-			__uint128_t power_cycles = le128_to_cpu(smart_event->power_cycles);
-			__uint128_t power_on_hours = le128_to_cpu(smart_event->power_on_hours);
-			__uint128_t unsafe_shutdowns = le128_to_cpu(smart_event->unsafe_shutdowns);
-			__uint128_t media_errors = le128_to_cpu(smart_event->media_errors);
-			__uint128_t num_err_log_entries = le128_to_cpu(smart_event->num_err_log_entries);
+			nvme_uint128_t data_units_read = le128_to_cpu(smart_event->data_units_read);
+			nvme_uint128_t data_units_written = le128_to_cpu(smart_event->data_units_written);
+			nvme_uint128_t host_read_commands = le128_to_cpu(smart_event->host_reads);
+			nvme_uint128_t host_write_commands = le128_to_cpu(smart_event->host_writes);
+			nvme_uint128_t controller_busy_time = le128_to_cpu(smart_event->ctrl_busy_time);
+			nvme_uint128_t power_cycles = le128_to_cpu(smart_event->power_cycles);
+			nvme_uint128_t power_on_hours = le128_to_cpu(smart_event->power_on_hours);
+			nvme_uint128_t unsafe_shutdowns = le128_to_cpu(smart_event->unsafe_shutdowns);
+			nvme_uint128_t media_errors = le128_to_cpu(smart_event->media_errors);
+			nvme_uint128_t num_err_log_entries = le128_to_cpu(smart_event->num_err_log_entries);
 			json_object_add_value_int(valid_attrs, "critical_warning",
 				smart_event->critical_warning);
 
@@ -5679,7 +5679,7 @@ static void json_id_domain_list(struct nvme_id_domain_list *id_dom)
 	struct json_object *entries;
 	struct json_object *entry;
 	int i;
-	__uint128_t dom_cap, unalloc_dom_cap, max_egrp_dom_cap;
+	nvme_uint128_t dom_cap, unalloc_dom_cap, max_egrp_dom_cap;
 
 	root = json_create_object();
 	entries = json_create_array();

@@ -3,6 +3,7 @@
 #define __JSON__H
 
 #include <json.h>
+#include "util/types.h"
 
 /* Wrappers around json-c's API */
 
@@ -44,6 +45,6 @@
 
 struct json_object *util_json_object_new_double(long double d);
 struct json_object *util_json_object_new_uint64(uint64_t i);
-struct json_object *util_json_object_new_uint128(__uint128_t val);
+struct json_object *util_json_object_new_uint128(nvme_uint128_t val);
 
 #endif
