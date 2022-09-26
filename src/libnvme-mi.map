@@ -1,3 +1,13 @@
+LIBNVME_MI_1_2 {
+	global:
+		nvme_mi_admin_get_features;
+		nvme_mi_admin_set_features;
+		nvme_mi_admin_ns_mgmt;
+		nvme_mi_admin_ns_attach;
+		nvme_mi_admin_format_nvm;
+		nvme_mi_admin_sanitize_nvm;
+};
+
 LIBNVME_MI_1_1 {
 	global:
 		nvme_mi_create_root;
@@ -14,12 +24,6 @@ LIBNVME_MI_1_1 {
 		nvme_mi_mi_subsystem_health_status_poll;
 		nvme_mi_admin_identify_partial;
 		nvme_mi_admin_get_log;
-		nvme_mi_admin_get_features;
-		nvme_mi_admin_set_features;
-		nvme_mi_admin_ns_mgmt;
-		nvme_mi_admin_ns_attach;
-		nvme_mi_admin_format_nvm;
-		nvme_mi_admin_sanitize_nvm;
 		nvme_mi_admin_xfer;
 		nvme_mi_admin_security_send;
 		nvme_mi_admin_security_recv;
