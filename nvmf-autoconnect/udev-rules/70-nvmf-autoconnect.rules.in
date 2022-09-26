@@ -4,16 +4,22 @@
 #   controller and connect to elements in the discovery log.
 #
 #
+ACTION!="change", GOTO="autoconnect_end"
+
+# For backwards compatibility. Make sure HOST_IFACE is not an empty string.
+ENV{NVME_HOST_IFACE}=="", ENV{NVME_HOST_IFACE}="none"
 
 # Events from persistent discovery controllers or nvme-fc transport events
 # NVME_AEN:
 #   type 0x2 (NOTICE) info 0xf0 (DISCOVERY_LOG_CHANGE) log-page-id 0x70 (DISCOVERY_LOG_PAGE)
 ACTION=="change", SUBSYSTEM=="nvme", ENV{NVME_AEN}=="0x70f002",\
   ENV{NVME_TRTYPE}=="*", ENV{NVME_TRADDR}=="*", \
-  ENV{NVME_TRSVCID}=="*", ENV{NVME_HOST_TRADDR}=="*", \
-  RUN+="@SYSTEMCTL@ --no-block start nvmf-connect@--device=$kernel\t--transport=$env{NVME_TRTYPE}\t--traddr=$env{NVME_TRADDR}\t--trsvcid=$env{NVME_TRSVCID}\t--host-traddr=$env{NVME_HOST_TRADDR}.service"
+  ENV{NVME_TRSVCID}=="*", ENV{NVME_HOST_TRADDR}=="*", ENV{NVME_HOST_IFACE}=="*", \
+  RUN+="@SYSTEMCTL@ --no-block start nvmf-connect@--device=$kernel\t--transport=$env{NVME_TRTYPE}\t--traddr=$env{NVME_TRADDR}\t--trsvcid=$env{NVME_TRSVCID}\t--host-traddr=$env{NVME_HOST_TRADDR}\t--host-iface=$env{NVME_HOST_IFACE}.service"
 
 # nvme-fc transport generated events (old-style for compatibility)
 ACTION=="change", SUBSYSTEM=="fc", ENV{FC_EVENT}=="nvmediscovery", \
   ENV{NVMEFC_HOST_TRADDR}=="*",  ENV{NVMEFC_TRADDR}=="*", \
   RUN+="@SYSTEMCTL@ --no-block start nvmf-connect@--device=none\t--transport=fc\t--traddr=$env{NVMEFC_TRADDR}\t--trsvcid=none\t--host-traddr=$env{NVMEFC_HOST_TRADDR}.service"
+
+LABEL="autoconnect_end"
