@@ -52,6 +52,7 @@ endif
 test_uint128 = executable(
     'test-uint128',
     ['test-uint128.c', '../util/types.c'],
+    include_directories: [incdir, '..'],
     dependencies: [libuuid_dep],
 )
 

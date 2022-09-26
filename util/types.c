@@ -4,20 +4,25 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <ccan/endian/endian.h>
+
 #include "types.h"
 
 nvme_uint128_t le128_to_cpu(__u8 *data)
 {
 	nvme_uint128_t u;
 
-	memcpy(u.bytes, data, 16);
+	if (HAVE_BIG_ENDIAN) {
+		nvme_uint128_t tmp;
+		memcpy(tmp.bytes, data, 16);
+		u.words[0] = le32_to_cpu(tmp.words[3]);
+		u.words[1] = le32_to_cpu(tmp.words[2]);
+		u.words[2] = le32_to_cpu(tmp.words[1]);
+		u.words[3] = le32_to_cpu(tmp.words[0]);
+	} else {
+		memcpy(u.bytes, data, 16);
+	}
 
-#if HAVE_BIG_ENDIAN
-	u.words[0] = le32_to_cpu(u.words[3]);
-	u.words[1] = le32_to_cpu(u.words[2]);
-	u.words[2] = le32_to_cpu(u.words[1]);
-	u.words[3] = le32_to_cpu(u.words[0]);
-#endif
 	return u;
 }
 
