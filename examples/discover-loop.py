@@ -17,20 +17,44 @@ License for the specific language governing permissions and limitations
 under the License.
 '''
 
+import sys
+import pprint
 from libnvme import nvme
+
+def disc_supp_str(disc_log_page_support):
+    d = {
+        nvme.NVMF_LOG_DISC_LID_EXTDLPES: "Extended Discovery Log Page Entry Supported (EXTDLPES)",
+        nvme.NVMF_LOG_DISC_LID_PLEOS:    "Port Local Entries Only Supported (PLEOS)",
+        nvme.NVMF_LOG_DISC_LID_ALLSUBES: "All NVM Subsystem Entries Supported (ALLSUBES)",
+    }
+    return [txt for msk, txt in d.items() if disc_log_page_support & msk]
+
 r = nvme.root()
 h = nvme.host(r)
-c = nvme.ctrl(nvme.NVME_DISC_SUBSYS_NAME, 'loop')
+c = nvme.ctrl(r, nvme.NVME_DISC_SUBSYS_NAME, 'loop')
 try:
     c.connect(h)
-except:
-    sys.exit("Failed to connect!")
+except Exception as e:
+    sys.exit(f'Failed to connect: {e}')
 
 print("connected to %s subsys %s" % (c.name, c.subsystem.name))
+
+slp = c.supported_log_pages()
+disc_log_page_support = slp[nvme.NVME_LOG_LID_DISCOVER] if slp is not None else 0
+print(f"LID {nvme.NVME_LOG_LID_DISCOVER}h (Discovery), supports: {disc_supp_str(disc_log_page_support)}")
+
 try:
-    d = c.discover()
-    print (d)
-except:
-    print("Failed to discover!")
-    pass
+    lsp = nvme.NVMF_LOG_DISC_LSP_PLEO if disc_log_page_support & nvme.NVMF_LOG_DISC_LID_PLEOS else 0
+    d = c.discover(lsp=lsp)
+    print(pprint.pformat(d))
+except Exception as e:
+    sys.exit(f'Failed to discover: {e}')
+
+try:
 c.disconnect()
+except Exception as e:
+    sys.exit(f'Failed to disconnect: {e}')
+
+c = None
+h = None
+r = None

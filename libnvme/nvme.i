@@ -21,10 +21,13 @@
 
 %{
 #include <ccan/list/list.h>
+#include <ccan/endian/endian.h>
 #include "nvme/tree.h"
 #include "nvme/fabrics.h"
 #include "nvme/private.h"
 #include "nvme/log.h"
+#include "nvme/ioctl.h"
+#include "nvme/types.h"
 
 static int host_iter_err = 0;
 static int subsys_iter_err = 0;
@@ -625,25 +628,46 @@ struct nvme_ns {
   }
 
   %newobject discover;
-  struct nvmf_discovery_log *discover(int max_retries = 6) {
-    struct nvmf_discovery_log *logp = NULL;
-    int ret = 0;
-    ret = nvmf_get_discovery_log($self, &logp, max_retries);
-    if (ret < 0) {
+  struct nvmf_discovery_log *discover(int lsp = 0, int max_retries = 6) {
+    struct nvme_get_discovery_args args = {
+      .c = $self,
+      .args_size = sizeof(args),
+      .max_retries = max_retries,
+      .result = NULL,
+      .timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+      .lsp = lsp,
+    };
+    struct nvmf_discovery_log *logp = nvmf_get_discovery_wargs(&args);
+    if (logp == NULL)
       discover_err = 1;
-      return NULL;
-    }
     return logp;
   }
-  char *__str__() {
-    static char tmp[1024];
 
-    if ($self->address)
-      sprintf(tmp, "nvme_ctrl(transport=%s,%s)", $self->transport,
-	      $self->address);
-    else
-      sprintf(tmp, "nvme_ctrl(transport=%s)", $self->transport);
-    return tmp;
+  %feature("autodoc", "@return: List of supported log pages") supported_log_pages;
+  PyObject * supported_log_pages(bool rae=true) {
+    struct nvme_supported_log_pages log;
+    PyObject *obj = NULL;
+    int ret = 0;
+
+    ret = nvme_get_log_supported_log_pages(nvme_ctrl_get_fd($self), rae, &log);
+    if (ret < 0) {
+      Py_RETURN_NONE;
+    }
+
+    obj = PyList_New(NVME_LOG_SUPPORTED_LOG_PAGES_MAX);
+    if (!obj)
+      Py_RETURN_NONE;
+
+    for (int i = 0; i < NVME_LOG_SUPPORTED_LOG_PAGES_MAX; i++)
+      PyList_SetItem(obj, i, PyLong_FromLong(le32_to_cpu(log.lid_support[i]))); /* steals ref. */
+
+    return obj;
+  }
+
+  PyObject *__str__() {
+    return $self->address ?
+      PyUnicode_FromFormat("nvme_ctrl(transport=%s,%s)", $self->transport, $self->address) :
+      PyUnicode_FromFormat("nvme_ctrl(transport=%s)", $self->transport);
   }
   struct ctrl_iter __iter__() {
     struct ctrl_iter ret = { .subsystem = nvme_ctrl_get_subsystem($self),
@@ -710,9 +734,6 @@ struct nvme_ns {
 
 
 // We want to swig all the #define and enum from types.h, but none of the structs.
-%{
-#include "nvme/types.h"
-%}
 #define __attribute__(x)
 %rename($ignore, %$isclass) "";     // ignore all classes/structs
 %rename($ignore, %$isfunction) "";  // ignore all functions
