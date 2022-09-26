@@ -1396,6 +1396,167 @@ static void test_admin_ns_detach(struct nvme_mi_ep *ep)
 	assert(!rc);
 }
 
+struct fw_download_info {
+	uint32_t offset;
+	uint32_t len;
+	void *data;
+};
+
+static int test_admin_fw_download_cb(struct nvme_mi_ep *ep,
+				     struct nvme_mi_req *req,
+				     struct nvme_mi_resp *resp,
+				     void *data)
+{
+	struct fw_download_info *info = data;
+	__u32 len, off;
+	__u8 *rq_hdr;
+
+	rq_hdr = (__u8 *)req->hdr;
+	assert(rq_hdr[4] == nvme_admin_fw_download);
+
+	len = rq_hdr[47] << 24 | rq_hdr[46] << 16 | rq_hdr[45] << 8 | rq_hdr[44];
+	off = rq_hdr[51] << 24 | rq_hdr[50] << 16 | rq_hdr[49] << 8 | rq_hdr[48];
+
+	assert(off << 2 == info->offset);
+	assert(((len+1) << 2) == info->len);
+
+	/* ensure that the request len matches too */
+	assert(req->data_len == info->len);
+
+	assert(!memcmp(req->data, info->data, len));
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_fw_download(struct nvme_mi_ep *ep)
+{
+	struct nvme_fw_download_args args;
+	struct fw_download_info info;
+	unsigned char fw[4096];
+	nvme_mi_ctrl_t ctrl;
+	int rc, i;
+
+	for (i = 0; i < sizeof(fw); i++)
+		fw[i] = i % 0xff;
+
+	info.offset = 0;
+	info.len = 0;
+	info.data = fw;
+	args.data = fw;
+	args.args_size = sizeof(args);
+
+	test_set_transport_callback(ep, test_admin_fw_download_cb, &info);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	/* invalid (zero) len */
+	args.data_len = info.len = 1;
+	args.offset = info.offset = 0;
+	rc = nvme_mi_admin_fw_download(ctrl, &args);
+	assert(rc);
+
+	/* invalid (unaligned) len */
+	args.data_len = info.len = 1;
+	args.offset = info.offset = 0;
+	rc = nvme_mi_admin_fw_download(ctrl, &args);
+	assert(rc);
+
+	/* invalid offset */
+	args.data_len = info.len = 4;
+	args.offset = info.offset = 1;
+	rc = nvme_mi_admin_fw_download(ctrl, &args);
+	assert(rc);
+
+	/* smallest len */
+	args.data_len = info.len = 4;
+	args.offset = info.offset = 0;
+	rc = nvme_mi_admin_fw_download(ctrl, &args);
+	assert(!rc);
+
+	/* largest len */
+	args.data_len = info.len = 4096;
+	args.offset = info.offset = 0;
+	rc = nvme_mi_admin_fw_download(ctrl, &args);
+	assert(!rc);
+
+	/* offset value */
+	args.data_len = info.len = 4096;
+	args.offset = info.offset = 4096;
+	rc = nvme_mi_admin_fw_download(ctrl, &args);
+	assert(!rc);
+}
+
+struct fw_commit_info {
+	__u8 bpid;
+	__u8 action;
+	__u8 slot;
+};
+
+static int test_admin_fw_commit_cb(struct nvme_mi_ep *ep,
+				   struct nvme_mi_req *req,
+				   struct nvme_mi_resp *resp,
+				   void *data)
+{
+	struct fw_commit_info *info = data;
+	__u8 bpid, action, slot;
+	__u8 *rq_hdr;
+
+	rq_hdr = (__u8 *)req->hdr;
+	assert(rq_hdr[4] == nvme_admin_fw_commit);
+
+	bpid = (rq_hdr[47] >> 7) & 0x1;
+	slot = rq_hdr[44] & 0x7;
+	action = (rq_hdr[44] >> 3) & 0x7;
+
+	assert(!!bpid == !!info->bpid);
+	assert(slot == info->slot);
+	assert(action == info->action);
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_fw_commit(struct nvme_mi_ep *ep)
+{
+	struct nvme_fw_commit_args args;
+	struct fw_commit_info info;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	args.args_size = sizeof(args);
+	info.bpid = args.bpid = 0;
+
+	test_set_transport_callback(ep, test_admin_fw_commit_cb, &info);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	/* all zeros */
+	info.bpid = args.bpid = 0;
+	info.slot = args.slot = 0;
+	info.action = args.action = 0;
+	rc = nvme_mi_admin_fw_commit(ctrl, &args);
+	assert(!rc);
+
+	/* all ones */
+	info.bpid = args.bpid = 1;
+	info.slot = args.slot = 0x7;
+	info.action = args.action = 0x7;
+	rc = nvme_mi_admin_fw_commit(ctrl, &args);
+	assert(!rc);
+
+	/* correct fields */
+	info.bpid = args.bpid = 1;
+	info.slot = args.slot = 2;
+	info.action = args.action = 3;
+	rc = nvme_mi_admin_fw_commit(ctrl, &args);
+	assert(!rc);
+}
+
 struct format_data {
 	__u32 nsid;
 	__u8 lbafu;
@@ -1573,6 +1734,8 @@ struct test {
 	DEFINE_TEST(admin_ns_mgmt_delete),
 	DEFINE_TEST(admin_ns_attach),
 	DEFINE_TEST(admin_ns_detach),
+	DEFINE_TEST(admin_fw_download),
+	DEFINE_TEST(admin_fw_commit),
 	DEFINE_TEST(admin_format_nvm),
 	DEFINE_TEST(admin_sanitize_nvm),
 };

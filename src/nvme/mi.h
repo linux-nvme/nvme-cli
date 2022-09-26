@@ -2345,6 +2345,42 @@ static inline int nvme_mi_admin_ns_detach_ctrls(nvme_mi_ctrl_t ctrl, __u32 nsid,
 }
 
 /**
+ * nvme_mi_admin_fw_download() - Download part or all of a firmware image to
+ * the controller
+ * @ctrl: Controller to send firmware data to
+ * @args: &struct nvme_fw_download_args argument structure
+ *
+ * The Firmware Image Download command downloads all or a portion of an image
+ * for a future update to the controller. The Firmware Image Download command
+ * downloads a new image (in whole or in part) to the controller.
+ *
+ * The image may be constructed of multiple pieces that are individually
+ * downloaded with separate Firmware Image Download commands. Each Firmware
+ * Image Download command includes a Dword Offset and Number of Dwords that
+ * specify a dword range.
+ *
+ * The new firmware image is not activated as part of the Firmware Image
+ * Download command. Use the nvme_mi_admin_fw_commit() to activate a newly
+ * downloaded image.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+int nvme_mi_admin_fw_download(nvme_mi_ctrl_t ctrl,
+			      struct nvme_fw_download_args *args);
+
+/**
+ * nvme_mi_admin_fw_commit() - Commit firmware using the specified action
+ * @ctrl: Controller to send firmware data to
+ * @args: &struct nvme_fw_download_args argument structure
+ *
+ * The Firmware Commit command modifies the firmware image or Boot Partitions.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+int nvme_mi_admin_fw_commit(nvme_mi_ctrl_t ctrl,
+			    struct nvme_fw_commit_args *args);
+
+/**
  * nvme_mi_admin_format_nvm() - Format NVMe namespace
  * @ctrl: Controller to send command to
  * @args: Format NVM command arguments
