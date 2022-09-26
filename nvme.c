@@ -8210,14 +8210,14 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	switch (hmac) {
 	case 1:
 		if (strlen(cfg.key) != 65) {
-			fprintf(stderr, "Invalid key length %lu for SHA(256)\n",
+			fprintf(stderr, "Invalid key length %zu for SHA(256)\n",
 				strlen(cfg.key));
 			return -EINVAL;
 		}
 		break;
 	case 2:
 		if (strlen(cfg.key) != 89) {
-			fprintf(stderr, "Invalid key length %lu for SHA(384)\n",
+			fprintf(stderr, "Invalid key length %zu for SHA(384)\n",
 				strlen(cfg.key));
 			return -EINVAL;
 		}

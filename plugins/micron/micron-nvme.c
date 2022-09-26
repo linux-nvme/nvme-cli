@@ -2963,7 +2963,7 @@ static int get_common_log(int fd, uint8_t id, uint8_t **buf, int *size)
     if (hdr.log_size == sizeof(hdr)) {
         buffer = (uint8_t *)malloc(sizeof(hdr));
 	if (buffer == NULL) {
-            fprintf(stderr, "malloc of %lu bytes failed for log: 0x%X\n",
+            fprintf(stderr, "malloc of %zu bytes failed for log: 0x%X\n",
 			    sizeof(hdr), id);
 	    return -ENOMEM;
 	}
@@ -2971,7 +2971,7 @@ static int get_common_log(int fd, uint8_t id, uint8_t **buf, int *size)
     } else if (hdr.log_size < hdr.max_size) {
 	buffer = (uint8_t *)malloc(sizeof(hdr) + hdr.log_size);
 	if (buffer == NULL) {
-            fprintf(stderr, "malloc of %lu bytes failed for log: 0x%X\n",
+            fprintf(stderr, "malloc of %zu bytes failed for log: 0x%X\n",
 			    hdr.log_size + sizeof(hdr), id);
 	    return -ENOMEM;
 	}
@@ -2989,7 +2989,7 @@ static int get_common_log(int fd, uint8_t id, uint8_t **buf, int *size)
 	 */
 	buffer = (uint8_t *)malloc(hdr.max_size + sizeof(hdr));
 	if (buffer == NULL) {
-            fprintf(stderr, "malloc of %lu bytes failed for log: 0x%X\n",
+            fprintf(stderr, "malloc of %zu bytes failed for log: 0x%X\n",
 			    hdr.max_size + sizeof(hdr), id);
 	    return -ENOMEM;
 	}

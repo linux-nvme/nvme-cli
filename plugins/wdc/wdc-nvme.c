@@ -4230,7 +4230,7 @@ static void wdc_print_error_rec_log_normal(struct wdc_ocp_c1_error_recovery_log 
 	printf("  Panic Reset Wait Time             : 0x%x \n", le16_to_cpu(log_data->panic_reset_wait_time));
 	printf("  Panic Reset Action                : 0x%x \n", log_data->panic_reset_action);
 	printf("  Device Recovery Action 1          : 0x%x \n", log_data->dev_recovery_action1);
-	printf("  Panic ID                          : 0x%lx \n", le64_to_cpu(log_data->panic_id));
+	printf("  Panic ID                          : 0x%" PRIu64 "\n", le64_to_cpu(log_data->panic_id));
 	printf("  Device Capabilities               : 0x%x \n", le32_to_cpu(log_data->dev_capabilities));
 	printf("  Vendor Specific Recovery Opcode   : 0x%x \n", log_data->vs_recovery_opc);
 	printf("  Vendor Specific Command CDW12     : 0x%x \n", le32_to_cpu(log_data->vs_cmd_cdw12));

@@ -216,7 +216,7 @@ static void latency_tracker_pre_parse(struct latency_tracker *lt)
 		printf("Major Revision: %u\nMinor Revision: %u\n",
 			le16_to_cpu(lt->stats.version_major), le16_to_cpu(lt->stats.version_minor));
 		if (lt->has_average_latency_field) {
-			printf("Average Latency: %lu\n", le64_to_cpu(lt->stats.average_latency));
+			printf("Average Latency: %" PRIu64 "\n", le64_to_cpu(lt->stats.average_latency));
 		}
 		print_dash_separator();
 		printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");

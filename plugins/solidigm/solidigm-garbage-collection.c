@@ -56,7 +56,7 @@ static void vu_gc_log_show(garbage_control_collection_log_t *payload, const char
 
 	for (int i = 0; i < VU_GC_MAX_ITEMS; i++) {
 		gc_item_t item = payload->item[i];
-		printf("%-13lu %d\n",le64_to_cpu(item.timestamp), le32_to_cpu(item.timer_type));
+		printf("%-13" PRIu64 " %d\n", le64_to_cpu(item.timestamp), le32_to_cpu(item.timer_type));
 	}
 }
 
