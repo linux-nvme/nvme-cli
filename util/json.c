@@ -34,7 +34,7 @@ struct json_object *util_json_object_new_uint64(uint64_t i)
 
 }
 
-struct json_object *util_json_object_new_uint128(__uint128_t  val)
+struct json_object *util_json_object_new_uint128(nvme_uint128_t  val)
 {
 	struct json_object *obj;
 	obj = json_object_new_string(uint128_t_to_string(val));

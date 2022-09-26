@@ -2,19 +2,23 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "types.h"
 
-__uint128_t le128_to_cpu(__u8 *data)
+nvme_uint128_t le128_to_cpu(__u8 *data)
 {
-	int i;
-	__uint128_t result = 0;
+	nvme_uint128_t u;
 
-	for (i = 0; i < 16; i++) {
-		result *= 256;
-		result += data[15 - i];
-	}
-	return result;
+	memcpy(u.bytes, data, 16);
+
+#if HAVE_BIG_ENDIAN
+	u.words[0] = le32_to_cpu(u.words[3]);
+	u.words[1] = le32_to_cpu(u.words[2]);
+	u.words[2] = le32_to_cpu(u.words[1]);
+	u.words[3] = le32_to_cpu(u.words[0]);
+#endif
+	return u;
 }
 
 long double int128_to_double(__u8 *data)
@@ -41,23 +45,38 @@ uint64_t int48_to_long(__u8 *data)
 	return result;
 }
 
-char str_uint128[40];
-char *uint128_t_to_string(__uint128_t val)
+char *uint128_t_to_string(nvme_uint128_t val)
 {
-	char str_rev[40]; /* __uint128_t  maximum string length is 39 */
-	int i, j;
+	static char str[40];
+	int idx = 40;
+	__u64 div, rem;
 
-	for (i = 0; val > 0; i++) {
-		str_rev[i] = (val % 10) + 48;
-		val /= 10;
-	}
+	/* terminate at the end, and build up from the ones */
+	str[--idx] = '\0';
 
-	for (j = 0; i >= 0;) {
-		str_uint128[j++] = str_rev[--i];
-	}
-	str_uint128[j] = '\0';
+	do {
+		rem = val.words[0];
 
-	return str_uint128;
+		div = rem / 10;
+		rem = ((rem - div * 10) << 32) + val.words[1];
+		val.words[0] = div;
+
+		div = rem / 10;
+		rem = ((rem - div * 10) << 32) + val.words[2];
+		val.words[1] = div;
+
+		div = rem / 10;
+		rem = ((rem - div * 10) << 32) + val.words[3];
+		val.words[2] = div;
+
+		div = rem / 10;
+		rem = rem - div * 10;
+		val.words[3] = div;
+
+		str[--idx] = '0' + rem;
+	} while (val.words[0] || val.words[1] || val.words[2] || val.words[3]);
+
+	return str + idx;
 }
 
 const char *util_uuid_to_string(uuid_t uuid)

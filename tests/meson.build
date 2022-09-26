@@ -49,6 +49,14 @@ if runtests.found()
   endforeach
 endif
 
+test_uint128 = executable(
+    'test-uint128',
+    ['test-uint128.c', '../util/types.c'],
+    dependencies: [libuuid_dep],
+)
+
+test('uint128', test_uint128)
+
 python_module = import('python')
 
 python = python_module.find_installation('python3')
