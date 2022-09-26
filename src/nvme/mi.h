@@ -1231,6 +1231,46 @@ static inline int nvme_mi_admin_identify_active_ns_list(nvme_mi_ctrl_t ctrl,
 }
 
 /**
+ * nvme_mi_admin_identify_secondary_ctrl_list() - Perform an Admin identify for
+ * a secondary controller list.
+ * @ctrl: Controller to process identify command
+ * @nsid: Namespace ID to specify list start
+ * @cntid: Controller ID to specify list start
+ * @list: List data to populate
+ *
+ * Perform an Identify command, for the secondary controllers associated with
+ * the current primary controller. Only entries with IDs greater than or
+ * equal to @cntid are returned.
+ *
+ * Will return an error if the length of the response data (from the
+ * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @list will be
+ * be fully populated on success.
+ *
+ * Return: 0 on success, non-zero on failure
+ *
+ * See: &struct nvme_secondary_ctrl_list
+ */
+static inline int nvme_mi_admin_identify_secondary_ctrl_list(nvme_mi_ctrl_t ctrl,
+							     __u32 nsid,
+							     __u16 cntid,
+							     struct nvme_secondary_ctrl_list *list)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = list,
+		.args_size = sizeof(args),
+		.cns = NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
+		.csi = NVME_CSI_NVM,
+		.nsid = nsid,
+		.cntid = cntid,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_mi_admin_identify(ctrl, &args);
+}
+
+/**
  * nvme_mi_admin_get_log() - Retrieve log page data from controller
  * @ctrl: Controller to query
  * @args: Get Log Page command arguments

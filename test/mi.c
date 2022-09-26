@@ -1170,6 +1170,52 @@ static void test_admin_id_nsid_ctrl_list(struct nvme_mi_ep *ep)
 	assert(!rc);
 }
 
+static int test_admin_id_secondary_ctrl_list_cb(struct nvme_mi_ep *ep,
+						struct nvme_mi_req *req,
+						struct nvme_mi_resp *resp,
+						void *data)
+{
+	__u16 cns, ctrlid;
+	__u32 nsid;
+	__u8 *hdr;
+
+	hdr = (__u8 *)req->hdr;
+	assert(hdr[4] == nvme_admin_identify);
+
+	assert(req->data_len == 0);
+
+	cns = hdr[45] << 8 | hdr[44];
+	assert(cns == NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST);
+
+	nsid = hdr[11] << 24 | hdr[10] << 16 | hdr[9] << 8 | hdr[8];
+	assert(nsid == 0x01020304);
+
+	ctrlid = hdr[47] << 8 | hdr[46];
+	assert(ctrlid == 5);
+
+	resp->data_len = sizeof(struct nvme_secondary_ctrl_list);
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_id_secondary_ctrl_list(struct nvme_mi_ep *ep)
+{
+	struct nvme_secondary_ctrl_list list;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	test_set_transport_callback(ep, test_admin_id_secondary_ctrl_list_cb,
+				    NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_identify_secondary_ctrl_list(ctrl, 0x01020304,
+							5, &list);
+	assert(!rc);
+}
+
 static int test_admin_ns_mgmt_cb(struct nvme_mi_ep *ep,
 				 struct nvme_mi_req *req,
 				 struct nvme_mi_resp *resp,
@@ -1522,6 +1568,7 @@ struct test {
 	DEFINE_TEST(admin_id_alloc_ns),
 	DEFINE_TEST(admin_id_active_ns),
 	DEFINE_TEST(admin_id_nsid_ctrl_list),
+	DEFINE_TEST(admin_id_secondary_ctrl_list),
 	DEFINE_TEST(admin_ns_mgmt_create),
 	DEFINE_TEST(admin_ns_mgmt_delete),
 	DEFINE_TEST(admin_ns_attach),
