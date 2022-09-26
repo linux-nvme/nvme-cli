@@ -5982,7 +5982,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (cfg.format == 0)
 		nrts = argconfig_parse_comma_sep_array(cfg.eilbrts, (int *)eilbrts.f0, ARRAY_SIZE(eilbrts.f0));
 	else if (cfg.format == 1)
-		nrts = argconfig_parse_comma_sep_array_long(cfg.eilbrts, (__u64 *)eilbrts.f1, ARRAY_SIZE(eilbrts.f1));
+		nrts = argconfig_parse_comma_sep_array_long(cfg.eilbrts, (unsigned long long *)eilbrts.f1, ARRAY_SIZE(eilbrts.f1));
 	else {
 		fprintf(stderr, "invalid format\n");
 		err = -EINVAL;

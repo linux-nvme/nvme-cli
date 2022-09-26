@@ -611,7 +611,8 @@ static void show_lat_stats_myrtle(struct sfx_lat_stats_myrtle *stats, int write)
 	for (i = 0; i < 64; i++)
 		printf("Bucket %2d: %u\n", i, stats->bucket_19[i]);
 
-	printf("\nAverage latency statistics %lld\n", stats->average);
+	printf("\nAverage latency statistics %" PRIu64 "\n",
+	       (uint64_t)stats->average);
 }
 
 

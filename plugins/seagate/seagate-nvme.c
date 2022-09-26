@@ -1388,7 +1388,8 @@ static void print_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwAct
 			ts = *localtime(&t);
 			strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
 			printf(" %-20s   ", buf);
-			printf("%-5lld   ", fwActivHis.fwActHisEnt[i].powCycleCnt);
+			printf("%-5" PRId64 "   ",
+			       (uint64_t)fwActivHis.fwActHisEnt[i].powCycleCnt);
 
 			memset(prev_fw, 0, sizeof(prev_fw));
 			memcpy(prev_fw, fwActivHis.fwActHisEnt[i].previousFW, sizeof(fwActivHis.fwActHisEnt[i].previousFW));
