@@ -107,6 +107,8 @@ void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_
 	enum nvme_print_flags flags);
 void nvme_show_list_ns(struct nvme_ns_list *ns_list,
 	enum nvme_print_flags flags);
+void nvme_show_topology(nvme_root_t t, enum nvme_print_flags flags,
+			enum nvme_cli_topo_ranking ranking);
 
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,

@@ -7519,3 +7519,247 @@ void nvme_show_list_items(nvme_root_t r, enum nvme_print_flags flags)
 	else
 		nvme_show_simple_list(r);
 }
+
+static unsigned int json_subsystem_topology_multipath(nvme_subsystem_t s,
+						      json_object *namespaces)
+{
+	nvme_ns_t n;
+	nvme_path_t p;
+	unsigned int i = 0;
+
+	nvme_subsystem_for_each_ns(s, n) {
+		struct json_object *ns_attrs;
+		struct json_object *paths;
+
+		ns_attrs = json_create_object();
+	        json_object_add_value_int(ns_attrs, "NSID",
+					  nvme_ns_get_nsid(n));
+
+		paths = json_create_array();
+		nvme_namespace_for_each_path(n, p) {
+			struct json_object *path_attrs;
+
+			nvme_ctrl_t c = nvme_path_get_ctrl(p);
+
+			path_attrs = json_create_object();
+			json_object_add_value_string(path_attrs, "Name",
+						     nvme_ctrl_get_name(c));
+			json_object_add_value_string(path_attrs, "Transport",
+						     nvme_ctrl_get_transport(c));
+			json_object_add_value_string(path_attrs, "Address",
+						     nvme_ctrl_get_address(c));
+			json_object_add_value_string(path_attrs, "State",
+						     nvme_ctrl_get_state(c));
+			json_object_add_value_string(path_attrs, "ANAState",
+						     nvme_path_get_ana_state(p));
+			json_array_add_value_object(paths, path_attrs);
+		}
+		json_object_add_value_array(ns_attrs, "Paths", paths);
+		json_array_add_value_object(namespaces, ns_attrs);
+		i++;
+	}
+
+	return i;
+}
+
+static void json_print_nvme_subsystem_topology(nvme_subsystem_t s,
+					       json_object *namespaces)
+{
+	nvme_ctrl_t c;
+	nvme_ns_t n;
+
+	nvme_subsystem_for_each_ctrl(s, c) {
+		nvme_ctrl_for_each_ns(c, n) {
+			struct json_object *ctrl_attrs;
+			struct json_object *ns_attrs;
+			struct json_object *ctrl;
+
+			ns_attrs = json_create_object();
+		        json_object_add_value_int(ns_attrs, "NSID",
+						  nvme_ns_get_nsid(n));
+
+		        ctrl = json_create_array();
+			ctrl_attrs = json_create_object();
+			json_object_add_value_string(ctrl_attrs, "Name",
+						     nvme_ctrl_get_name(c));
+			json_object_add_value_string(ctrl_attrs, "Transport",
+						     nvme_ctrl_get_transport(c));
+			json_object_add_value_string(ctrl_attrs, "Address",
+						     nvme_ctrl_get_address(c));
+			json_object_add_value_string(ctrl_attrs, "State",
+						     nvme_ctrl_get_state(c));
+
+			json_array_add_value_object(ctrl, ctrl_attrs);
+			json_object_add_value_array(ns_attrs, "Controller", ctrl);
+			json_array_add_value_object(namespaces, ns_attrs);
+		}
+	}
+}
+
+static void json_simple_topology(nvme_root_t r)
+{
+	struct json_object *host_attrs, *subsystem_attrs;
+	struct json_object *subsystems, *namespaces;
+	struct json_object *root;
+	nvme_host_t h;
+
+	root = json_create_array();
+
+	nvme_for_each_host(r, h) {
+		nvme_subsystem_t s;
+		const char *hostid;
+
+		host_attrs = json_create_object();
+		json_object_add_value_string(host_attrs, "HostNQN",
+					     nvme_host_get_hostnqn(h));
+		hostid = nvme_host_get_hostid(h);
+		if (hostid)
+			json_object_add_value_string(host_attrs, "HostID", hostid);
+		subsystems = json_create_array();
+		nvme_for_each_subsystem(h, s) {
+			subsystem_attrs = json_create_object();
+			json_object_add_value_string(subsystem_attrs, "Name",
+						     nvme_subsystem_get_name(s));
+			json_object_add_value_string(subsystem_attrs, "NQN",
+						     nvme_subsystem_get_nqn(s));
+
+			json_array_add_value_object(subsystems, subsystem_attrs);
+			namespaces = json_create_array();
+
+			if (!json_subsystem_topology_multipath(s, namespaces))
+				json_print_nvme_subsystem_topology(s, namespaces);
+
+			json_object_add_value_array(subsystem_attrs, "Namespaces",
+						    namespaces);
+		}
+		json_object_add_value_array(host_attrs, "Subsystems", subsystems);
+		json_array_add_value_object(root, host_attrs);
+	}
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+static bool nvme_is_multipath(nvme_subsystem_t s)
+{
+	nvme_ns_t n;
+	nvme_path_t p;
+
+	nvme_subsystem_for_each_ns(s, n)
+		nvme_namespace_for_each_path(n, p)
+			return true;
+
+	return false;
+}
+
+static void nvme_show_subsystem_topology_multipath(nvme_subsystem_t s,
+					  enum nvme_cli_topo_ranking ranking)
+{
+	nvme_ns_t n;
+	nvme_path_t p;
+	nvme_ctrl_t c;
+
+	if (ranking == NVME_CLI_TOPO_NAMESPACE) {
+		nvme_subsystem_for_each_ns(s, n) {
+			printf(" +- ns %d\n", nvme_ns_get_nsid(n));
+			printf(" \\\n");
+
+			nvme_namespace_for_each_path(n, p) {
+				c = nvme_path_get_ctrl(p);
+
+				printf("  +- %s %s %s %s %s\n",
+				       nvme_ctrl_get_name(c),
+				       nvme_ctrl_get_transport(c),
+				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_state(c),
+				       nvme_path_get_ana_state(p));
+			}
+		}
+	} else {
+		/* NVME_CLI_TOPO_CTRL */
+		nvme_subsystem_for_each_ctrl(s, c) {
+			printf(" +- %s %s %s\n",
+			       nvme_ctrl_get_name(c),
+			       nvme_ctrl_get_transport(c),
+			       nvme_ctrl_get_address(c));
+			printf(" \\\n");
+
+			nvme_subsystem_for_each_ns(s, n) {
+				nvme_namespace_for_each_path(n, p) {
+					if (nvme_path_get_ctrl(p) != c)
+						continue;
+
+					printf("  +- ns %d %s %s\n",
+					       nvme_ns_get_nsid(n),
+					       nvme_ctrl_get_state(c),
+					       nvme_path_get_ana_state(p));
+				}
+			}
+		}
+	}
+}
+
+static void nvme_show_subsystem_topology(nvme_subsystem_t s,
+				      enum nvme_cli_topo_ranking ranking)
+{
+	nvme_ctrl_t c;
+	nvme_ns_t n;
+
+	if (ranking == NVME_CLI_TOPO_NAMESPACE) {
+		nvme_subsystem_for_each_ctrl(s, c) {
+			nvme_ctrl_for_each_ns(c, n) {
+				printf(" +- ns %d\n", nvme_ns_get_nsid(n));
+				printf(" \\\n");
+				printf("  +- %s %s %s %s\n",
+				       nvme_ctrl_get_name(c),
+				       nvme_ctrl_get_transport(c),
+				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_state(c));
+			}
+		}
+	} else {
+		/* NVME_CLI_TOPO_CTRL */
+		nvme_subsystem_for_each_ctrl(s, c) {
+			printf(" +- %s %s %s\n",
+			       nvme_ctrl_get_name(c),
+			       nvme_ctrl_get_transport(c),
+			       nvme_ctrl_get_address(c));
+			printf(" \\\n");
+			nvme_ctrl_for_each_ns(c, n) {
+				printf("  +- ns %d %s\n",
+				       nvme_ns_get_nsid(n),
+				       nvme_ctrl_get_state(c));
+			}
+		}
+	}
+}
+
+static void nvme_show_simple_topology(nvme_root_t r,
+				      enum nvme_cli_topo_ranking ranking)
+{
+	nvme_host_t h;
+	nvme_subsystem_t s;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+
+			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
+			       nvme_subsystem_get_nqn(s));
+			printf("\\\n");
+
+			if (nvme_is_multipath(s))
+				nvme_show_subsystem_topology_multipath(s, ranking);
+			else
+				nvme_show_subsystem_topology(s, ranking);
+		}
+	}
+}
+
+void nvme_show_topology(nvme_root_t r, enum nvme_print_flags flags,
+			enum nvme_cli_topo_ranking ranking)
+{
+	if (flags & JSON)
+		json_simple_topology(r);
+	else
+		nvme_show_simple_topology(r, ranking);
+}
