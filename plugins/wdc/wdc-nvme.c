@@ -78,11 +78,15 @@
 #define WDC_NVME_SN650_DEV_ID_3             0x2720
 #define WDC_NVME_SN650_DEV_ID_4             0x2721
 #define WDC_NVME_SN655_DEV_ID               0x2722
+#define WDC_NVME_SN860_DEV_ID               0x2730
+#define WDC_NVME_SN660_DEV_ID               0x2704
+
+/* This id's are no longer supported, delete ?? */
+#define WDC_NVME_SN550_DEV_ID               0x2708
 #define WDC_NVME_SN560_DEV_ID_1             0x2712
 #define WDC_NVME_SN560_DEV_ID_2             0x2713
 #define WDC_NVME_SN560_DEV_ID_3             0x2714
-#define WDC_NVME_SN860_DEV_ID               0x2730
-#define WDC_NVME_SN550_DEV_ID               0x2708
+
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
@@ -90,8 +94,6 @@
 #define WDC_NVME_SN530_DEV_ID				0x5009
 #define WDC_NVME_SN720_DEV_ID				0x5002
 #define WDC_NVME_SN730A_DEV_ID				0x5006
-#define WDC_NVME_SN730B_DEV_ID				0x3714
-#define WDC_NVME_SN730B_DEV_ID_1			0x3734
 #define WDC_NVME_SN740_DEV_ID				0x5015
 #define WDC_NVME_SN740_DEV_ID_1 			0x5016
 #define WDC_NVME_SN740_DEV_ID_2 			0x5017
@@ -1526,6 +1528,8 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
         case WDC_NVME_SN560_DEV_ID_2:
         /* FALLTHRU */
         case WDC_NVME_SN560_DEV_ID_3:
+        /* FALLTHRU */
+        case WDC_NVME_SN660_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
 							      WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID)
@@ -1661,11 +1665,6 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 			else
 				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
 
-			break;
-		case WDC_NVME_SN730B_DEV_ID:
-		/* FALLTHRU */
-		case WDC_NVME_SN730B_DEV_ID_1:
-			capabilities = WDC_SN730B_CAP_VUC_LOG;
 			break;
 		default:
 			capabilities = 0;
