@@ -295,7 +295,7 @@ static int add_argument(char **argstr, const char *tok, const char *arg)
 {
 	char *nstr;
 
-	if (!(arg && strcmp(arg, "none")))
+	if (!arg || arg[0] == '\0' || !strcmp(arg, "none"))
 		return 0;
 	if (asprintf(&nstr, "%s,%s=%s", *argstr, tok, arg) < 0) {
 		errno = ENOMEM;
