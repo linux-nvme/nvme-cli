@@ -112,4 +112,10 @@ int nvme_cli_get_log_zns_changed_zones(struct nvme_dev *dev, __u32 nsid,
 int nvme_cli_get_log_persistent_event(struct nvme_dev *dev,
 				      enum nvme_pevent_log_action action,
 				      __u32 size, void *pevent_log);
+
+int nvme_cli_fw_download(struct nvme_dev *dev,
+			 struct nvme_fw_download_args *args);
+
+int nvme_cli_fw_commit(struct nvme_dev *dev,
+			 struct nvme_fw_commit_args *args);
 #endif /* _NVME_WRAP_H */
