@@ -1699,6 +1699,86 @@ static void test_admin_sanitize_nvm(struct nvme_mi_ep *ep)
 	assert(!rc);
 }
 
+/* test that we set the correct offset and size on get_log() calls that
+ * are split into multiple requests */
+struct log_data {
+	int n;
+};
+
+static int test_admin_get_log_split_cb(struct nvme_mi_ep *ep,
+				       struct nvme_mi_req *req,
+				       struct nvme_mi_resp *resp,
+				       void *data)
+{
+	struct log_data *ldata = data;
+	uint32_t len, off;
+	__u8 *rq_hdr;
+
+	assert(req->data_len == 0);
+
+	rq_hdr = (__u8 *)req->hdr;
+
+	assert(rq_hdr[4] == nvme_admin_get_log_page);
+
+	/* from the MI message's DOFST/DLEN fields */
+	off = rq_hdr[31] << 24 | rq_hdr[30] << 16 | rq_hdr[29] << 8 | rq_hdr[28];
+	len = rq_hdr[35] << 24 | rq_hdr[34] << 16 | rq_hdr[33] << 8 | rq_hdr[32];
+
+	/* we should have a full-sized start and middle, and a short end */
+	switch (ldata->n) {
+	case 0:
+		assert(len == 4096);
+		assert(off == 0);
+		break;
+	case 1:
+		assert(len == 4096);
+		assert(off == 4096);
+		break;
+	case 2:
+		assert(len == 4);
+		assert(off == 4096 * 2);
+		break;
+	default:
+		assert(0);
+	}
+
+	/* ensure we've sized the expected response correctly */
+	assert(resp->data_len == len);
+	memset(resp->data, ldata->n & 0xff, len);
+
+	test_transport_resp_calc_mic(resp);
+
+	ldata->n++;
+
+	return 0;
+}
+
+static void test_admin_get_log_split(struct nvme_mi_ep *ep)
+{
+	unsigned char buf[4096 * 2 + 4];
+	struct nvme_get_log_args args;
+	struct log_data ldata;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	ldata.n = 0;
+	test_set_transport_callback(ep, test_admin_get_log_split_cb, &ldata);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+
+	args.args_size = sizeof(args);
+	args.lid = 1;
+	args.log = buf;
+	args.len = sizeof(buf);
+
+	rc = nvme_mi_admin_get_log(ctrl, &args);
+
+	assert(!rc);
+
+	/* we should have sent three commands */
+	assert(ldata.n == 3);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -1738,6 +1818,7 @@ struct test {
 	DEFINE_TEST(admin_fw_commit),
 	DEFINE_TEST(admin_format_nvm),
 	DEFINE_TEST(admin_sanitize_nvm),
+	DEFINE_TEST(admin_get_log_split),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
