@@ -601,7 +601,8 @@ nvme_root_t nvme_mi_scan_mctp(void);
  * so, all existing controller objects will be freed - the caller must not
  * hold a reference to those across this call.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &nvme_mi_for_each_ctrl
  */
@@ -652,7 +653,8 @@ char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep);
  * Retrieves the Subsystem information - number of external ports and
  * NVMe version information. See &struct nvme_mi_read_nvm_ss_info.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 int nvme_mi_mi_read_mi_data_subsys(nvme_mi_ep_t ep,
 				   struct nvme_mi_read_nvm_ss_info *s);
@@ -670,7 +672,8 @@ int nvme_mi_mi_read_mi_data_subsys(nvme_mi_ep_t ep,
  *
  * See &struct nvme_mi_read_port_info.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 int nvme_mi_mi_read_mi_data_port(nvme_mi_ep_t ep, __u8 portid,
 				 struct nvme_mi_read_port_info *p);
@@ -687,7 +690,8 @@ int nvme_mi_mi_read_mi_data_port(nvme_mi_ep_t ep, __u8 portid,
  *
  * See &struct nvme_ctrl_list.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 int nvme_mi_mi_read_mi_data_ctrl_list(nvme_mi_ep_t ep, __u8 start_ctrlid,
 				      struct nvme_ctrl_list *list);
@@ -704,7 +708,8 @@ int nvme_mi_mi_read_mi_data_ctrl_list(nvme_mi_ep_t ep, __u8 start_ctrlid,
  *
  * See &struct nvme_mi_read_ctrl_info.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
 				 struct nvme_mi_read_ctrl_info *ctrl);
@@ -722,7 +727,8 @@ int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
  *
  * See &struct nvme_mi_nvm_ss_health_status.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *nshds);
@@ -744,7 +750,8 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
  *
  * See &enum nvme_mi_config_id for identifiers.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 int nvme_mi_mi_config_get(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1,
 			  __u32 *nmresp);
@@ -761,7 +768,8 @@ int nvme_mi_mi_config_get(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1,
  *
  * See &enum nvme_mi_config_id for identifiers.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 int nvme_mi_mi_config_set(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1);
 
@@ -775,7 +783,8 @@ int nvme_mi_mi_config_set(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1);
  * the port specified in @port. On success, populates @freq with the port
  * frequency
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 static inline int nvme_mi_mi_config_get_smbus_freq(nvme_mi_ep_t ep, __u8 port,
 						   enum nvme_mi_config_smbus_freq *freq)
@@ -803,7 +812,8 @@ static inline int nvme_mi_mi_config_get_smbus_freq(nvme_mi_ep_t ep, __u8 port,
  * See &struct nvme_mi_read_port_info for the maximum supported SMBus frequency
  * for the port.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 static inline int nvme_mi_mi_config_set_smbus_freq(nvme_mi_ep_t ep, __u8 port,
 						   enum nvme_mi_config_smbus_freq freq)
@@ -828,7 +838,8 @@ static inline int nvme_mi_mi_config_set_smbus_freq(nvme_mi_ep_t ep, __u8 port,
  * See &nvme_mi_mi_subsystem_health_status_poll(), &enum nvme_mi_ccs for
  * values in @mask.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 static inline int nvme_mi_mi_config_set_health_status_change(nvme_mi_ep_t ep,
 							     __u32 mask)
@@ -852,7 +863,8 @@ static inline int nvme_mi_mi_config_set_health_status_change(nvme_mi_ep_t ep,
  * Some controllers may also use this as the maximum receive unit size, and
  * may not accept MCTP messages larger than the configured MTU.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 static inline int nvme_mi_mi_config_get_mctp_mtu(nvme_mi_ep_t ep, __u8 port,
 						 __u16 *mtu)
@@ -882,7 +894,8 @@ static inline int nvme_mi_mi_config_get_mctp_mtu(nvme_mi_ep_t ep, __u8 port,
  * this value, you will likely need to change the MTU of the local MCTP
  * interface(s) to match.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 static inline int nvme_mi_mi_config_set_mctp_mtu(nvme_mi_ep_t ep, __u8 port,
 						 __u16 mtu)
@@ -918,7 +931,8 @@ static inline int nvme_mi_mi_config_set_mctp_mtu(nvme_mi_ep_t ep, __u8 port,
  *
  * See: &struct nvme_mi_admin_req_hdr and &struct nvme_mi_admin_resp_hdr.
  *
- * Return: 0 on success, non-zero on failure.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
  */
 int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 		       struct nvme_mi_admin_req_hdr *admin_req,
@@ -949,7 +963,8 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
  * of this. If the type of your identify command is standardized but not
  * yet supported by libnvme-mi, please contact the maintainers.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_identify_args
  */
@@ -969,7 +984,8 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
  * Will return an error if the length of the response data (from the
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_identify_args
  */
@@ -997,7 +1013,8 @@ static inline int nvme_mi_admin_identify(nvme_mi_ctrl_t ctrl,
  * Will return an error if the length of the response data (from the
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_identify_cns_nsid(nvme_mi_ctrl_t ctrl,
 						  enum nvme_identify_cns cns,
@@ -1028,7 +1045,8 @@ static inline int nvme_mi_admin_identify_cns_nsid(nvme_mi_ctrl_t ctrl,
  * Perform an Identify (namespace) command, setting the namespace id data
  * in @ns. The namespace is expected to active and allocated.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_identify_ns(nvme_mi_ctrl_t ctrl, __u32 nsid,
 					    struct nvme_id_ns *ns)
@@ -1047,7 +1065,8 @@ static inline int nvme_mi_admin_identify_ns(nvme_mi_ctrl_t ctrl, __u32 nsid,
  * Perform an Identify (namespace) command, setting the namespace id data
  * in @ns.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_identify_allocated_ns(nvme_mi_ctrl_t ctrl,
 						      __u32 nsid,
@@ -1070,7 +1089,8 @@ static inline int nvme_mi_admin_identify_allocated_ns(nvme_mi_ctrl_t ctrl,
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @id will be
  * fully populated on success.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_id_ctrl
  */
@@ -1095,7 +1115,8 @@ static inline int nvme_mi_admin_identify_ctrl(nvme_mi_ctrl_t ctrl,
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @id will be
  * fully populated on success.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_ctrl_list
  */
@@ -1133,7 +1154,8 @@ static inline int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @id will be
  * fully populated on success.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_ctrl_list
  */
@@ -1171,7 +1193,8 @@ static inline int nvme_mi_admin_identify_nsid_ctrl_list(nvme_mi_ctrl_t ctrl,
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @list will be
  * be fully populated on success.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_ns_list
  */
@@ -1208,7 +1231,8 @@ static inline int nvme_mi_admin_identify_allocated_ns_list(nvme_mi_ctrl_t ctrl,
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @list will be
  * be fully populated on success.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_ns_list
  */
@@ -1283,7 +1307,8 @@ static inline int nvme_mi_admin_identify_secondary_ctrl_list(nvme_mi_ctrl_t ctrl
  * This request may be implemented as multiple log page commands, in order
  * to fit within MI message-size limits.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_get_log_args
  */
@@ -1303,7 +1328,8 @@ int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args);
  * in @log on success. The @rae flag is passed as-is to the Get Log Page
  * command, and is specific to the Log Page requested.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_nsid_log(nvme_mi_ctrl_t ctrl, bool rae,
 					     enum nvme_cmd_get_log_lid lid,
@@ -1339,7 +1365,8 @@ static inline int nvme_mi_admin_get_nsid_log(nvme_mi_ctrl_t ctrl, bool rae,
  * Performs a Get Log Page Admin command for a specific log ID @lid, using
  * NVME_NSID_ALL for the namespace identifier, and rae set to false.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_simple(nvme_mi_ctrl_t ctrl,
 					       enum nvme_cmd_get_log_lid lid,
@@ -1356,7 +1383,8 @@ static inline int nvme_mi_admin_get_log_simple(nvme_mi_ctrl_t ctrl,
  * @rae: Retain asynchronous events
  * @log: Array of LID supported and Effects data structures
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_supported_log_pages(nvme_mi_ctrl_t ctrl,
 							    bool rae,
@@ -1378,7 +1406,8 @@ static inline int nvme_mi_admin_get_log_supported_log_pages(nvme_mi_ctrl_t ctrl,
  * completed with error, or may report an error that is not specific to a
  * particular command.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_error(nvme_mi_ctrl_t ctrl,
 					      unsigned int nr_entries, bool rae,
@@ -1403,7 +1432,8 @@ static inline int nvme_mi_admin_get_log_error(nvme_mi_ctrl_t ctrl,
  * page on a per namespace basis, as indicated by bit 0 of the LPA field in the
  * Identify Controller data structure.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_smart(nvme_mi_ctrl_t ctrl, __u32 nsid,
 					      bool rae,
@@ -1423,7 +1453,8 @@ static inline int nvme_mi_admin_get_log_smart(nvme_mi_ctrl_t ctrl, __u32 nsid,
  * supported. The firmware revision is indicated as an ASCII string. The log
  * page also indicates the active slot number.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_fw_slot(nvme_mi_ctrl_t ctrl, bool rae,
 			struct nvme_firmware_slot *fw_log)
@@ -1442,7 +1473,8 @@ static inline int nvme_mi_admin_get_log_fw_slot(nvme_mi_ctrl_t ctrl, bool rae,
  * changed since the last time the namespace was identified, been added, or
  * deleted.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_changed_ns_list(nvme_mi_ctrl_t ctrl,
 							bool rae,
@@ -1461,7 +1493,8 @@ static inline int nvme_mi_admin_get_log_changed_ns_list(nvme_mi_ctrl_t ctrl,
  * This log page describes the commands that the controller supports and the
  * effects of those commands on the state of the NVM subsystem.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_cmd_effects(nvme_mi_ctrl_t ctrl,
 						    enum nvme_csi csi,
@@ -1494,7 +1527,8 @@ static inline int nvme_mi_admin_get_log_cmd_effects(nvme_mi_ctrl_t ctrl,
  * percent complete of that operation, and the results of the previous 20
  * self-test operations.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_device_self_test(nvme_mi_ctrl_t ctrl,
 							 struct nvme_self_test_log *log)
@@ -1509,7 +1543,8 @@ static inline int nvme_mi_admin_get_log_device_self_test(nvme_mi_ctrl_t ctrl,
  * @ctrl: Controller to query
  * @log: Userspace address of the log payload
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_create_telemetry_host(nvme_mi_ctrl_t ctrl,
 							      struct nvme_telemetry_log *log)
@@ -1543,7 +1578,8 @@ static inline int nvme_mi_admin_get_log_create_telemetry_host(nvme_mi_ctrl_t ctr
  * Retrieves the Telemetry Host-Initiated log page at the requested offset
  * using the previously existing capture.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_telemetry_host(nvme_mi_ctrl_t ctrl,
 						       __u64 offset, __u32 len,
@@ -1579,7 +1615,8 @@ static inline int nvme_mi_admin_get_log_telemetry_host(nvme_mi_ctrl_t ctrl,
  * Retrieves the Telemetry Controller-Initiated log page at the requested offset
  * using the previously existing capture.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_telemetry_ctrl(nvme_mi_ctrl_t ctrl,
 						       bool rae,
@@ -1617,7 +1654,8 @@ static inline int nvme_mi_admin_get_log_telemetry_ctrl(nvme_mi_ctrl_t ctrl,
  * generated when an entry for an Endurance Group is newly added to this log
  * page.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_endurance_group(nvme_mi_ctrl_t ctrl,
 							__u16 endgid,
@@ -1648,7 +1686,8 @@ static inline int nvme_mi_admin_get_log_endurance_group(nvme_mi_ctrl_t ctrl,
  * @nvmsetid: NVM set id
  * @log: User address to store the predictable latency log
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_predictable_lat_nvmset(nvme_mi_ctrl_t ctrl,
 							       __u16 nvmsetid,
@@ -1681,7 +1720,8 @@ static inline int nvme_mi_admin_get_log_predictable_lat_nvmset(nvme_mi_ctrl_t ct
  * @len: Length of provided user buffer to hold the log data in bytes
  * @log: User address for log page data
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_predictable_lat_event(nvme_mi_ctrl_t ctrl,
 							      bool rae,
@@ -1722,7 +1762,8 @@ static inline int nvme_mi_admin_get_log_predictable_lat_event(nvme_mi_ctrl_t ctr
  *
  * See &struct nvme_ana_rsp_hdr for the definition of the returned structure.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_ana(nvme_mi_ctrl_t ctrl,
 					    enum nvme_log_ana_lsp lsp, bool rae,
@@ -1756,7 +1797,8 @@ static inline int nvme_mi_admin_get_log_ana(nvme_mi_ctrl_t ctrl,
  *
  * See &struct nvme_ana_group_desc for the definition of the returned structure.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_ana_groups(nvme_mi_ctrl_t ctrl,
 						   bool rae, __u32 len,
@@ -1774,7 +1816,8 @@ static inline int nvme_mi_admin_get_log_ana_groups(nvme_mi_ctrl_t ctrl,
  * @len: The allocated length of the log page
  * @log: User address to store the log page
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_lba_status(nvme_mi_ctrl_t ctrl, bool rae,
 						   __u64 offset, __u32 len,
@@ -1807,7 +1850,8 @@ static inline int nvme_mi_admin_get_log_lba_status(nvme_mi_ctrl_t ctrl, bool rae
  * @len: The allocated length of the log page
  * @log: User address to store the log page
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_endurance_grp_evt(nvme_mi_ctrl_t ctrl,
 							  bool rae,
@@ -1840,7 +1884,8 @@ static inline int nvme_mi_admin_get_log_endurance_grp_evt(nvme_mi_ctrl_t ctrl,
  * @rae: Retain asynchronous events
  * @log: FID Supported and Effects data structure
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_fid_supported_effects(nvme_mi_ctrl_t ctrl,
 							      bool rae,
@@ -1858,7 +1903,8 @@ static inline int nvme_mi_admin_get_log_fid_supported_effects(nvme_mi_ctrl_t ctr
  * @rae: Retain asynchronous events
  * @log: MI Command Supported and Effects data structure
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_mi_cmd_supported_effects(nvme_mi_ctrl_t ctrl,
 								 bool rae,
@@ -1877,7 +1923,8 @@ static inline int nvme_mi_admin_get_log_mi_cmd_supported_effects(nvme_mi_ctrl_t 
  *		struct nvme_boot_partition
  * @part: User address to store the log page
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_boot_partition(nvme_mi_ctrl_t ctrl,
 						       bool rae, __u8 lsp,
@@ -1913,7 +1960,8 @@ static inline int nvme_mi_admin_get_log_boot_partition(nvme_mi_ctrl_t ctrl,
  * Supported only by fabrics discovery controllers, returning discovery
  * records.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_discovery(nvme_mi_ctrl_t ctrl, bool rae,
 						  __u32 offset, __u32 len,
@@ -1943,7 +1991,8 @@ static inline int nvme_mi_admin_get_log_discovery(nvme_mi_ctrl_t ctrl, bool rae,
  * @domid: Domain Identifier selection, if supported
  * @mus: User address to store the Media Unit statistics log
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_media_unit_stat(nvme_mi_ctrl_t ctrl,
 							__u16 domid,
@@ -1974,7 +2023,8 @@ static inline int nvme_mi_admin_get_log_media_unit_stat(nvme_mi_ctrl_t ctrl,
  * @domid: Domain Identifier selection, if supported
  * @cap: User address to store supported capabilities config list
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_support_cap_config_list(nvme_mi_ctrl_t ctrl,
 								__u16 domid,
@@ -2004,7 +2054,8 @@ static inline int nvme_mi_admin_get_log_support_cap_config_list(nvme_mi_ctrl_t c
  * @rae: Retain asynchronous events
  * @log: User address to store the reservation log
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_reservation(nvme_mi_ctrl_t ctrl,
 						    bool rae,
@@ -2023,7 +2074,8 @@ static inline int nvme_mi_admin_get_log_reservation(nvme_mi_ctrl_t ctrl,
  * The Sanitize Status log page reports sanitize operation time estimates and
  * information about the most recent sanitize operation.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_sanitize(nvme_mi_ctrl_t ctrl, bool rae,
 			struct nvme_sanitize_log_page *log)
@@ -2042,7 +2094,8 @@ static inline int nvme_mi_admin_get_log_sanitize(nvme_mi_ctrl_t ctrl, bool rae,
  *
  * The list of zones that have changed state due to an exceptional event.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_zns_changed_zones(nvme_mi_ctrl_t ctrl,
 							  __u32 nsid, bool rae,
@@ -2073,7 +2126,8 @@ static inline int nvme_mi_admin_get_log_zns_changed_zones(nvme_mi_ctrl_t ctrl,
  * @size: Size of @pevent_log
  * @pevent_log: User address to store the persistent event log
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_persistent_event(nvme_mi_ctrl_t ctrl,
 							 enum nvme_pevent_log_action action,
@@ -2111,7 +2165,8 @@ static inline int nvme_mi_admin_get_log_persistent_event(nvme_mi_ctrl_t ctrl,
  * Security Send data length should not be greater than 4096 bytes to
  * comply with specification limits.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_get_log_args
  */
@@ -2132,7 +2187,8 @@ int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
  * Security Receive data length should not be greater than 4096 bytes to
  * comply with specification limits.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  *
  * See: &struct nvme_get_log_args
  */
@@ -2153,7 +2209,8 @@ int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
  * On success, @args->data_len will be updated with the actual data length
  * received.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_mi_admin_get_features(nvme_mi_ctrl_t ctrl,
 			       struct nvme_get_features_args *args);
@@ -2170,7 +2227,8 @@ int nvme_mi_admin_get_features(nvme_mi_ctrl_t ctrl,
  * Helper for optionally features that optionally return data, using the
  * SEL_CURRENT selector value.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_features_data(nvme_mi_ctrl_t ctrl,
 						  enum nvme_features_id fid,
@@ -2222,7 +2280,8 @@ static inline int nvme_mi_admin_get_features_simple(nvme_mi_ctrl_t ctrl,
  * On success, @args->data_len will be updated with the actual data length
  * received.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
 			       struct nvme_set_features_args *args);
@@ -2235,7 +2294,8 @@ int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
  * Issues a Namespace Management command to @ctrl, with arguments specified
  * from @args.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
 			  struct nvme_ns_mgmt_args *args);
@@ -2251,7 +2311,8 @@ int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
  * new namespace specified by @ns, using command set @csi. On success,
  * the new namespace ID will be written to @nsid.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_ns_mgmt_create(nvme_mi_ctrl_t ctrl,
 					       struct nvme_id_ns *ns,
@@ -2277,7 +2338,8 @@ static inline int nvme_mi_admin_ns_mgmt_create(nvme_mi_ctrl_t ctrl,
  * Issues a Namespace Management (Delete) command to @ctrl, to delete the
  * namespace with id @nsid.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_ns_mgmt_delete(nvme_mi_ctrl_t ctrl, __u32 nsid)
 {
@@ -2295,7 +2357,8 @@ static inline int nvme_mi_admin_ns_mgmt_delete(nvme_mi_ctrl_t ctrl, __u32 nsid)
  * @ctrl: Controller to send command to
  * @args: Namespace Attach command arguments
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_mi_admin_ns_attach(nvme_mi_ctrl_t ctrl,
 			    struct nvme_ns_attach_args *args);
@@ -2306,7 +2369,8 @@ int nvme_mi_admin_ns_attach(nvme_mi_ctrl_t ctrl,
  * @nsid: Namespace ID to attach
  * @ctrlist: Controller list to modify attachment state of nsid
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_ns_attach_ctrls(nvme_mi_ctrl_t ctrl, __u32 nsid,
 						struct nvme_ctrl_list *ctrlist)
@@ -2328,7 +2392,8 @@ static inline int nvme_mi_admin_ns_attach_ctrls(nvme_mi_ctrl_t ctrl, __u32 nsid,
  * @nsid: Namespace ID to detach
  * @ctrlist: Controller list to modify attachment state of nsid
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_ns_detach_ctrls(nvme_mi_ctrl_t ctrl, __u32 nsid,
 						struct nvme_ctrl_list *ctrlist)
@@ -2388,7 +2453,8 @@ int nvme_mi_admin_fw_commit(nvme_mi_ctrl_t ctrl,
  * Perform a low-level format to set the LBA data & metadata size. May destroy
  * data & metadata on the specified namespaces
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
 			     struct nvme_format_nvm_args *args);
@@ -2408,7 +2474,8 @@ int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
  * operations are processed in the background, i.e., completion of the sanitize
  * command does not indicate completion of the sanitize operation.
  *
- * Return: 0 on success, non-zero on failure
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_mi_admin_sanitize_nvm(nvme_mi_ctrl_t ctrl,
 			       struct nvme_sanitize_nvm_args *args);
