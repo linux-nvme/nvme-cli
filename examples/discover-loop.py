@@ -21,13 +21,13 @@ import sys
 import pprint
 from libnvme import nvme
 
-def disc_supp_str(disc_log_page_support):
+def disc_supp_str(dlp_supp_opts):
     d = {
         nvme.NVMF_LOG_DISC_LID_EXTDLPES: "Extended Discovery Log Page Entry Supported (EXTDLPES)",
         nvme.NVMF_LOG_DISC_LID_PLEOS:    "Port Local Entries Only Supported (PLEOS)",
         nvme.NVMF_LOG_DISC_LID_ALLSUBES: "All NVM Subsystem Entries Supported (ALLSUBES)",
     }
-    return [txt for msk, txt in d.items() if disc_log_page_support & msk]
+    return [txt for msk, txt in d.items() if dlp_supp_opts & msk]
 
 r = nvme.root()
 h = nvme.host(r)
@@ -40,11 +40,16 @@ except Exception as e:
 print("connected to %s subsys %s" % (c.name, c.subsystem.name))
 
 slp = c.supported_log_pages()
-disc_log_page_support = slp[nvme.NVME_LOG_LID_DISCOVER] if slp is not None else 0
-print(f"LID {nvme.NVME_LOG_LID_DISCOVER}h (Discovery), supports: {disc_supp_str(disc_log_page_support)}")
 
 try:
-    lsp = nvme.NVMF_LOG_DISC_LSP_PLEO if disc_log_page_support & nvme.NVMF_LOG_DISC_LID_PLEOS else 0
+    dlp_supp_opts = slp[nvme.NVME_LOG_LID_DISCOVER] >> 16
+except (TypeError, IndexError):
+    dlp_supp_opts = 0
+
+print(f"LID {nvme.NVME_LOG_LID_DISCOVER}h (Discovery), supports: {disc_supp_str(dlp_supp_opts)}")
+
+try:
+    lsp = nvme.NVMF_LOG_DISC_LSP_PLEO if dlp_supp_opts & nvme.NVMF_LOG_DISC_LID_PLEOS else 0
     d = c.discover(lsp=lsp)
     print(pprint.pformat(d))
 except Exception as e:

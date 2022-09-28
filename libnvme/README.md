@@ -10,13 +10,13 @@ import sys
 import pprint
 from libnvme import nvme
 
-def disc_supp_str(disc_log_page_support):
-    d = {
-        nvme.NVMF_LOG_DISC_LID_EXTDLPES: "Extended Discovery Log Page Entry Supported (EXTDLPES)",
-        nvme.NVMF_LOG_DISC_LID_PLEOS:    "Port Local Entries Only Supported (PLEOS)",
-        nvme.NVMF_LOG_DISC_LID_ALLSUBES: "All NVM Subsystem Entries Supported (ALLSUBES)",
+def disc_supp_str(dlp_supp_opts):
+    bitmap = {
+        nvme.NVMF_LOG_DISC_LID_EXTDLPES: "EXTDLPES",
+        nvme.NVMF_LOG_DISC_LID_PLEOS:    "PLEOS",
+        nvme.NVMF_LOG_DISC_LID_ALLSUBES: "ALLSUBES",
     }
-    return [txt for msk, txt in d.items() if disc_log_page_support & msk]
+    return [txt for msk, txt in bitmap.items() if dlp_supp_opts & msk]
 
 root = nvme.root()      # This is a singleton
 root.log_level('debug') # Optional: extra debug info
@@ -40,15 +40,15 @@ except Exception as e:
     sys.exit(f'Failed to connect: {e}')
 
 supported_log_pages = ctrl.supported_log_pages()
-if supported_log_pages is not None:
-    disc_log_page_support = supported_log_pages[nvme.NVME_LOG_LID_DISCOVER]
-    print(f"LID {nvme.NVME_LOG_LID_DISCOVER:02x}h (Discovery), supports: {disc_supp_str(disc_log_page_support)}")
-
 try:
-    if disc_log_page_support and (disc_log_page_support & nvme.NVMF_LOG_DISC_LID_PLEOS):
-        lsp = nvme.NVMF_LOG_DISC_LSP_PLEO
-    else:
-        lsp = 0
+    # Get the supported options for the Get Discovery Log Page command
+    dlp_supp_opts = supported_log_pages[nvme.NVME_LOG_LID_DISCOVER] >> 16
+except (TypeError, IndexError):
+    dlp_supp_opts = 0
+
+print(f"LID {nvme.NVME_LOG_LID_DISCOVER:02x}h (Discovery), supports: {disc_supp_str(dlp_supp_opts)}")
+try:
+    lsp = nvme.NVMF_LOG_DISC_LSP_PLEO if dlp_supp_opts & nvme.NVMF_LOG_DISC_LID_PLEOS else 0
     log_pages = ctrl.discover(lsp=lsp)
     print(pprint.pformat(log_pages))
 except Exception as e:
