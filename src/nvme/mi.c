@@ -390,6 +390,7 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 	admin_req->hdr.type = NVME_MI_MSGTYPE_NVME;
 	admin_req->hdr.nmp = (NVME_MI_ROR_REQ << 7) |
 				(NVME_MI_MT_ADMIN << 3);
+	admin_req->ctrl_id = cpu_to_le16(ctrl->id);
 	memset(&req, 0, sizeof(req));
 	req.hdr = &admin_req->hdr;
 	req.hdr_len = sizeof(*admin_req);
