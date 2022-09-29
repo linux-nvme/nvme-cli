@@ -1134,6 +1134,18 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		nvme_subsystem_t s;
 		nvme_ctrl_t c;
 
+		if (!subsysnqn) {
+			fprintf(stderr,
+				"required argument [--nqn | -n] needed with --modify\n");
+			return -EINVAL;
+		}
+
+		if (!transport) {
+			fprintf(stderr,
+				"required argument [--transport | -t] needed with --modify\n");
+			return EINVAL;
+		}
+
 		if (!hostnqn)
 			hostnqn = hnqn = nvmf_hostnqn_from_file();
 		if (!hostid && hnqn)
