@@ -158,6 +158,43 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 	}
 }
 
+static struct json_object *parse_json(nvme_root_t r, int fd)
+{
+	char buf[JSON_FILE_BUF_SIZE];
+	struct json_object *obj = NULL;
+	struct printbuf *pb;
+	json_tokener *tok = NULL;
+	int ret;
+
+	pb = printbuf_new();
+	if (!pb)
+		return NULL;
+
+	while ((ret = read(fd, buf, JSON_FILE_BUF_SIZE)) > 0)
+		printbuf_memappend(pb, buf, ret);
+
+	if (ret < 0)
+		goto out;
+
+	tok = json_tokener_new_ex(JSON_TOKENER_DEFAULT_DEPTH);
+	if (!tok)
+		goto out;
+
+	/* Enforce correctly formatted JSON */
+	tok->flags = JSON_TOKENER_STRICT;
+
+	obj = json_tokener_parse_ex(tok, pb->buf, printbuf_length(pb));
+	if (!obj)
+		nvme_msg(r, LOG_DEBUG, "JSON parsing failed: %s\n",
+			 json_util_get_last_err());
+out:
+	if (tok)
+		json_tokener_free(tok);
+	printbuf_free(pb);
+
+	return obj;
+}
+
 int json_read_config(nvme_root_t r, const char *config_file)
 {
 	struct json_object *json_root, *host_obj;
@@ -169,10 +206,8 @@ int json_read_config(nvme_root_t r, const char *config_file)
 			 config_file, strerror(errno));
 		return fd;
 	}
-	json_root = json_object_from_fd(fd);
+	json_root = parse_json(r, fd);
 	if (!json_root) {
-		nvme_msg(r, LOG_DEBUG, "Failed to read %s, %s\n",
-			config_file, json_util_get_last_err());
 		errno = EPROTO;
 		close(fd);
 		return -1;
