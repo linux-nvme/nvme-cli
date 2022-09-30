@@ -207,9 +207,15 @@ int json_read_config(nvme_root_t r, const char *config_file)
 		return fd;
 	}
 	json_root = parse_json(r, fd);
+	close(fd);
 	if (!json_root) {
 		errno = EPROTO;
-		close(fd);
+		return -1;
+	}
+	if (!json_object_is_type(json_root, json_type_array)) {
+		nvme_msg(r, LOG_DEBUG, "Wrong format, expected array\n");
+		json_object_put(json_root);
+		errno = EPROTO;
 		return -1;
 	}
 	for (h = 0; h < json_object_array_length(json_root); h++) {
@@ -218,7 +224,6 @@ int json_read_config(nvme_root_t r, const char *config_file)
 			json_parse_host(r, host_obj);
 	}
 	json_object_put(json_root);
-	close(fd);
 	return 0;
 }
 
