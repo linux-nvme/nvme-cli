@@ -1056,6 +1056,27 @@ static inline int nvme_mi_admin_identify_ns(nvme_mi_ctrl_t ctrl, __u32 nsid,
 }
 
 /**
+ * nvme_mi_admin_identify_ns_descs() - Perform an Admin identify Namespace
+ * Identification Descriptor list command for a namespace
+ * @ctrl: Controller to process identify command
+ * @nsid: Namespace ID
+ * @descs: Namespace Identification Descriptor list to populate
+ *
+ * Perform an Identify namespace identification description list command,
+ * setting the namespace identification description list in @descs
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_mi_admin_identify_ns_descs(nvme_mi_ctrl_t ctrl,
+						  __u32 nsid,
+						  struct nvme_ns_id_desc *descs)
+{
+	return nvme_mi_admin_identify_cns_nsid(ctrl, NVME_IDENTIFY_CNS_NS_DESC_LIST,
+					       nsid, descs);
+}
+
+/**
  * nvme_mi_admin_identify_allocated_ns() - Perform an Admin identify command
  * for an allocated namespace
  * @ctrl: Controller to process identify command
@@ -1247,6 +1268,43 @@ static inline int nvme_mi_admin_identify_active_ns_list(nvme_mi_ctrl_t ctrl,
 		.cns = NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_mi_admin_identify(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_identify_primary_ctrl() - Perform an Admin identify for
+ * primary controller capabilities data structure.
+ * @ctrl: Controller to process identify command
+ * @cntid: Controller ID to specify
+ * @cap: Primary Controller Capabilities data structure to populate
+ *
+ * Perform an Identify command to get the Primary Controller Capabilities data
+ * for the controller specified by @cntid
+ *
+ * Will return an error if the length of the response data (from the
+ * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @cap will be
+ * be fully populated on success.
+ *
+ * Return: 0 on success, non-zero on failure
+ *
+ * See: &struct nvme_primary_ctrl_cap
+ */
+static inline int nvme_mi_admin_identify_primary_ctrl(nvme_mi_ctrl_t ctrl,
+						      __u16 cntid,
+						      struct nvme_primary_ctrl_cap *cap)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = cap,
+		.args_size = sizeof(args),
+		.cns = NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
+		.csi = NVME_CSI_NVM,
+		.nsid = NVME_NSID_NONE,
+		.cntid = cntid,
 		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
