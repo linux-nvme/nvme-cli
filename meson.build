@@ -49,11 +49,6 @@ libnvme_dep = dependency('libnvme', version: '>=1.1', required: true,
 libnvme_mi_dep = dependency('libnvme-mi', required: true,
                          fallback : ['libnvme', 'libnvme_mi_dep'])
 
-# Check for libuuid availability
-libuuid_dep = dependency('uuid', required: true,
-                         fallback : ['uuid', 'uuid_dep'])
-conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid available?')
-
 # Check for libjson-c availability
 json_c_dep = dependency('json-c', required: true, version: '>=0.13',
                         fallback : ['json-c', 'json_c_dep'])
@@ -261,7 +256,7 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libnvme_mi_dep, libuuid_dep, json_c_dep, libz_dep,
+  dependencies: [ libnvme_dep, libnvme_mi_dep, json_c_dep, libz_dep,
                   libhugetlbfs_dep ],
   link_args: '-ldl',
   include_directories: incdir,

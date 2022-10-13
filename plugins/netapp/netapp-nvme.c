@@ -22,7 +22,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <uuid/uuid.h>
 
 #include "common.h"
 #include "nvme.h"
@@ -68,7 +67,7 @@ struct ontapdevice_info {
 	unsigned		nsid;
 	struct nvme_id_ctrl	ctrl;
 	struct nvme_id_ns	ns;
-	uuid_t			uuid;
+	unsigned char		uuid[NVME_UUID_LEN];
 	unsigned char		log_data[ONTAP_C2_LOG_SIZE];
 	char			dev[265];
 };
@@ -334,7 +333,7 @@ static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
 	for (i = 0; i < count; i++) {
 
 		netapp_get_ns_size(size, &lba, &devices[i].ns);
-		uuid_unparse_lower(devices[i].uuid, uuid_str);
+		nvme_uuid_to_string(devices[i].uuid, uuid_str);
 		netapp_get_ontap_labels(vsname, nspath, devices[i].log_data);
 
 		if (format == NJSON) {

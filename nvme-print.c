@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/stat.h>
-#include <uuid/uuid.h>
 
 #include "nvme.h"
 #include "libnvme.h"
@@ -4326,7 +4325,7 @@ static void json_nvme_id_ns_descs(void *data)
 	union {
 		__u8 eui64[NVME_NIDT_EUI64_LEN];
 		__u8 nguid[NVME_NIDT_NGUID_LEN];
-		uuid_t uuid;
+		__u8 uuid[NVME_UUID_LEN];
 		__u8 csi;
 	} desc;
 
@@ -4367,7 +4366,7 @@ static void json_nvme_id_ns_descs(void *data)
 
 		case NVME_NIDT_UUID:
 			memcpy(desc.uuid, data + off, sizeof(desc.uuid));
-			uuid_unparse_lower(desc.uuid, json_str);
+			nvme_uuid_to_string(desc.uuid, json_str);
 			len = sizeof(desc.uuid);
 			nidt_name = "uuid";
 			break;
@@ -4417,8 +4416,8 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 {
 	int pos, len = 0;
 	int i;
-	uuid_t uuid;
-	char uuid_str[37];
+	__u8 uuid[NVME_UUID_LEN];
+	char uuid_str[NVME_UUID_LEN_STRING];
 	__u8 eui64[8];
 	__u8 nguid[16];
 	__u8 csi;
@@ -4454,7 +4453,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			break;
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
-			uuid_unparse_lower(uuid, uuid_str);
+			nvme_uuid_to_string(uuid, uuid_str);
 			printf("uuid    : %s\n", uuid_str);
 			len = sizeof(uuid);
 			break;
@@ -5607,7 +5606,7 @@ static void json_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 	entries = json_create_array();
 	/* The 0th entry is reserved */
 	for (i = 1; i < NVME_ID_UUID_LIST_MAX; i++) {
-		uuid_t uuid;
+		__u8 uuid[NVME_UUID_LEN];
 		struct json_object *entry = json_create_object();
 
 		/* The list is terminated by a zero UUID value */
@@ -5639,13 +5638,13 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	/* The 0th entry is reserved */
 	printf("NVME Identify UUID:\n");
 	for (i = 0; i < NVME_ID_UUID_LIST_MAX; i++) {
-		uuid_t uuid;
+		__u8 uuid[NVME_UUID_LEN];
 		char *association = "";
 		uint8_t identifier_association = uuid_list->entry[i].header & 0x3;
 		/* The list is terminated by a zero UUID value */
-		if (memcmp(uuid_list->entry[i].uuid, zero_uuid, sizeof(zero_uuid)) == 0)
+		if (memcmp(uuid_list->entry[i].uuid, zero_uuid, NVME_UUID_LEN) == 0)
 			break;
-		memcpy(&uuid, uuid_list->entry[i].uuid, sizeof(uuid));
+		memcpy(&uuid, uuid_list->entry[i].uuid, NVME_UUID_LEN);
 		if (human) {
 			switch (identifier_association) {
 			case 0x0:
