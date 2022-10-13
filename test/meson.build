@@ -12,7 +12,7 @@
 main = executable(
     'main-test',
     ['test.c'],
-    dependencies: [libnvme_dep, libuuid_dep],
+    dependencies: [libnvme_dep],
     include_directories: [incdir, internal_incdir]
 )
 
@@ -56,3 +56,12 @@ mi_mctp = executable(
 )
 
 test('mi-mctp', mi_mctp)
+
+uuid = executable(
+    'test-uuid',
+    ['uuid.c'],
+    dependencies: libnvme_dep,
+    include_directories: [incdir, internal_incdir]
+)
+
+test('uuid', uuid)

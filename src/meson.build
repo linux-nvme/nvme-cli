@@ -28,13 +28,11 @@ if conf.get('CONFIG_JSONC')
 endif
 
 deps = [
-    libuuid_dep,
     json_c_dep,
     openssl_dep,
 ]
 
 mi_deps = [
-    libuuid_dep,
     libsystemd_dep,
 ]
 
@@ -68,7 +66,6 @@ pkg.generate(libnvme,
 libnvme_dep = declare_dependency(
     include_directories: ['.'],
     dependencies: [
-      libuuid_dep.partial_dependency(compile_args: true, includes: true),
       json_c_dep.partial_dependency(compile_args: true, includes: true),
     ],
     link_with: libnvme,
@@ -88,9 +85,6 @@ libnvme_mi = library(
 
 libnvme_mi_dep = declare_dependency(
     include_directories: ['.'],
-    dependencies: [
-      libuuid_dep.partial_dependency(compile_args: true, includes: true),
-    ],
     link_with: libnvme_mi,
 )
 
@@ -107,9 +101,6 @@ libnvme_mi_test = library(
 
 libnvme_mi_test_dep = declare_dependency(
     include_directories: ['.'],
-    dependencies: [
-      libuuid_dep.partial_dependency(compile_args: true, includes: true),
-    ],
     link_with: libnvme_mi_test,
 )
 

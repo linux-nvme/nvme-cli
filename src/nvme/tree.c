@@ -1551,9 +1551,9 @@ const uint8_t *nvme_ns_get_nguid(nvme_ns_t n)
 	return n->nguid;
 }
 
-void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out)
+void nvme_ns_get_uuid(nvme_ns_t n, unsigned char out[NVME_UUID_LEN])
 {
-	uuid_copy(out, n->uuid);
+	memcpy(out, n->uuid, NVME_UUID_LEN);
 }
 
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)

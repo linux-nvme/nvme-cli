@@ -16,8 +16,6 @@
 #include "fabrics.h"
 #include "mi.h"
 
-#include <uuid.h>
-
 
 extern const char *nvme_ctrl_sysfs_dir;
 extern const char *nvme_subsys_sysfs_dir;
@@ -57,7 +55,7 @@ struct nvme_ns {
 
 	uint8_t eui64[8];
 	uint8_t nguid[16];
-	uuid_t  uuid;
+	unsigned char uuid[NVME_UUID_LEN];
 	enum nvme_csi csi;
 };
 
