@@ -6,6 +6,7 @@
  */
 
 #include <dlfcn.h>
+#include <errno.h>
 
 #include <libnvme.h>
 
@@ -40,3 +41,10 @@ VOID_FN(nvme_init_copy_range_f1,
 	      __u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
 	      __u32 *elbats, __u16 nr),
 	ARGS(copy, nlbs, slbas, eilbrts, elbatms, elbats, nr))
+
+FN(nvme_get_feature_length2,
+	int,
+	PROTO(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+	      __u32 *len),
+	ARGS(fid, cdw11, dir, len),
+	-EEXIST)

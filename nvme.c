@@ -5128,8 +5128,9 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	if (!cfg.data_len)
-		nvme_get_feature_length(cfg.feature_id, cfg.value,
-					&cfg.data_len);
+		nvme_cli_get_feature_length2(cfg.feature_id, cfg.value,
+					     NVME_DATA_TFR_HOST_TO_CTRL,
+					     &cfg.data_len);
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {

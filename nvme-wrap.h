@@ -118,4 +118,8 @@ int nvme_cli_fw_download(struct nvme_dev *dev,
 
 int nvme_cli_fw_commit(struct nvme_dev *dev,
 			 struct nvme_fw_commit_args *args);
+
+int nvme_cli_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+				__u32 *len);
+
 #endif /* _NVME_WRAP_H */
