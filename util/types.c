@@ -11,18 +11,12 @@
 nvme_uint128_t le128_to_cpu(__u8 *data)
 {
 	nvme_uint128_t u;
-
-	if (HAVE_BIG_ENDIAN) {
-		nvme_uint128_t tmp;
-		memcpy(tmp.bytes, data, 16);
-		u.words[0] = le32_to_cpu(tmp.words[3]);
-		u.words[1] = le32_to_cpu(tmp.words[2]);
-		u.words[2] = le32_to_cpu(tmp.words[1]);
-		u.words[3] = le32_to_cpu(tmp.words[0]);
-	} else {
-		memcpy(u.bytes, data, 16);
-	}
-
+	nvme_uint128_t tmp;
+	memcpy(tmp.bytes, data, 16);
+	u.words[0] = le32_to_cpu(tmp.words[3]);
+	u.words[1] = le32_to_cpu(tmp.words[2]);
+	u.words[2] = le32_to_cpu(tmp.words[1]);
+	u.words[3] = le32_to_cpu(tmp.words[0]);
 	return u;
 }
 
