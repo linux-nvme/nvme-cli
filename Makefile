@@ -45,3 +45,8 @@ rpm:
 		-Dsystemddir=$(shell rpm --eval '%{_unitdir}') \
 		-Ddocs=man -Ddocs-build=true
 	rpmbuild -ba ${BUILD-DIR}/nvme.spec --define "_builddir ${BUILD-DIR}" -v
+
+.PHONY: debug
+debug:
+	meson ${BUILD-DIR} --buildtype=debug
+	ninja -C ${BUILD-DIR}
