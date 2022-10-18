@@ -7792,7 +7792,7 @@ close_dfd:
 	if (strlen(cfg.input_file))
 		close(dfd);
 close_mfd:
-	if (strlen(cfg.metadata))
+	if (cfg.metadata && strlen(cfg.metadata))
 		close(mfd);
 close_dev:
 	dev_close(dev);
