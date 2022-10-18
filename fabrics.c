@@ -104,12 +104,12 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest)	\
 
 struct tr_config {
-	char *subsysnqn;
-	char *transport;
-	char *traddr;
-	char *host_traddr;
-	char *host_iface;
-	char *trsvcid;
+	const char *subsysnqn;
+	const char *transport;
+	const char *traddr;
+	const char *host_traddr;
+	const char *host_iface;
+	const char *trsvcid;
 };
 
 static void space_strip_len(int max, char *str)
@@ -607,6 +607,75 @@ out:
 	return ret;
 }
 
+static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
+					  const char *desc, bool connect,
+					  const struct nvme_fabrics_config *defcfg,
+					  enum nvme_print_flags flags,
+					  bool force)
+{
+	const char *transport, *traddr, *trsvcid, *subsysnqn;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c, cn;
+	struct nvme_fabrics_config cfg;
+	int ret = 0;
+
+	nvme_for_each_subsystem(h, s) {
+		nvme_subsystem_for_each_ctrl(s, c) {
+			transport = nvme_ctrl_get_transport(c);
+			traddr = nvme_ctrl_get_traddr(c);
+
+			if (!transport && !traddr)
+				continue;
+
+			/* ignore none fabric transports */
+			if (strcmp(transport, "tcp") &&
+			    strcmp(transport, "rdma") &&
+			    strcmp(transport, "fc"))
+				continue;
+
+			trsvcid = nvme_ctrl_get_trsvcid(c);
+			if (!trsvcid || !strcmp(trsvcid, ""))
+				trsvcid = get_default_trsvcid(transport, true);
+
+			if (force)
+				subsysnqn = nvme_ctrl_get_subsysnqn(c);
+			else
+				subsysnqn = NVME_DISC_SUBSYS_NAME;
+
+			memcpy(&cfg, defcfg, sizeof(cfg));
+
+			struct tr_config trcfg = {
+				.subsysnqn	= subsysnqn,
+				.transport	= transport,
+				.traddr		= traddr,
+				.host_traddr	= cfg.host_traddr,
+				.host_iface	= cfg.host_iface,
+				.trsvcid	= trsvcid,
+			};
+
+			if (!force) {
+				cn = lookup_discover_ctrl(r, &trcfg);
+				if (cn) {
+					__discover(c, &cfg, raw, connect,
+						   true, flags);
+					continue;
+				}
+			}
+
+			cn = create_discover_ctrl(r, h, &cfg, &trcfg);
+			if (!cn)
+				continue;
+
+			__discover(cn, &cfg, raw, connect, persistent, flags);
+			if (!persistent)
+				ret = nvme_disconnect_ctrl(cn);
+			nvme_free_ctrl(cn);
+		}
+	}
+
+	return ret;
+}
+
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
@@ -624,6 +693,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	struct nvme_fabrics_config cfg;
 	char *device = NULL;
 	bool force = false;
+	bool json_config = false;
 
 	OPT_ARGS(opts) = {
 		OPT_STRING("device",   'd', "DEV", &device, "use existing discovery controller device"),
@@ -665,7 +735,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		nvme_free_tree(r);
 		return ret;
 	}
-	nvme_read_config(r, config_file);
+	if (!nvme_read_config(r, config_file))
+		json_config = true;
 
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
@@ -688,6 +759,13 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		nvme_host_set_dhchap_key(h, hostkey);
 
 	if (!device && !transport && !traddr) {
+		if (json_config)
+			ret = discover_from_json_config_file(r, h, desc,
+							     connect, &cfg,
+							     flags, force);
+		if (ret || access(PATH_NVMF_DISC, F_OK))
+			goto out_free;
+
 		ret = discover_from_conf_file(r, h, desc, connect, &cfg);
 		goto out_free;
 	}
@@ -1133,6 +1211,18 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		nvme_host_t h;
 		nvme_subsystem_t s;
 		nvme_ctrl_t c;
+
+		if (!subsysnqn) {
+			fprintf(stderr,
+				"required argument [--nqn | -n] needed with --modify\n");
+			return -EINVAL;
+		}
+
+		if (!transport) {
+			fprintf(stderr,
+				"required argument [--transport | -t] needed with --modify\n");
+			return EINVAL;
+		}
 
 		if (!hostnqn)
 			hostnqn = hnqn = nvmf_hostnqn_from_file();
