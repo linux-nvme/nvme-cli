@@ -498,7 +498,7 @@ static int __nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl,
 		return -1;
 	}
 
-	if (offset < 0 || offset >= len) {
+	if (offset < 0 || offset >= args->len || offset + len > args->len) {
 		errno = EINVAL;
 		return -1;
 	}
