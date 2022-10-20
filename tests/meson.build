@@ -32,6 +32,12 @@ tests = [
 
 runtests = find_program('nose2', required : false)
 
+if meson.version().version_compare('>= 0.56')
+    nvmecli_path = meson.project_build_root()
+else
+    nvmecli_path = meson.build_root()
+endif
+
 if runtests.found()
   foreach file : infra + tests
     configure_file(
@@ -43,8 +49,8 @@ if runtests.found()
   foreach t : tests
     t_name = t.split('.')[0]
     test(t_name, runtests,
-         args: ['--verbose', '--start-dir', meson.build_root() + '/tests', t_name],
-         env: ['PATH=' + meson.build_root() + ':/usr/bin:/usr/sbin'],
+         args: ['--verbose', '--start-dir', meson.current_build_dir(), t_name],
+         env: ['PATH=' + nvmecli_path + ':/usr/bin:/usr/sbin'],
          timeout: 500)
   endforeach
 endif
