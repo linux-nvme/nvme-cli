@@ -315,13 +315,12 @@ static int nvme_mi_admin_parse_status(struct nvme_mi_resp *resp, __u32 *result)
 	resp_hdr = (struct nvme_mi_msg_resp *)resp->hdr;
 
 	/* If we have a MI error, we can't be sure there's an admin header
-	 * following; return just the MI status
-	 *
-	 * TODO: this may alias the cdw3 result values, see
-	 * https://github.com/linux-nvme/libnvme/issues/456
+	 * following; return just the MI status, with the status type
+	 * indicator of MI.
 	 */
 	if (resp_hdr->status)
-		return resp_hdr->status;
+		return resp_hdr->status |
+			(NVME_STATUS_TYPE_MI << NVME_STATUS_TYPE_SHIFT);
 
 	/* We shouldn't hit this, as we'd have an error reported earlier.
 	 * However, for pointer safety, ensure we have a full admin header
