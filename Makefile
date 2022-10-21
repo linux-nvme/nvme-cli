@@ -34,6 +34,10 @@ endif
 install dist: ${BUILD-DIR}
 	cd ${BUILD-DIR} && meson $@
 
+.PHONY: uninstall
+uninstall:
+	cd ${BUILD-DIR} && meson --internal uninstall
+
 .PHONY: test
 test: ${BUILD-DIR}
 	ninja -C ${BUILD-DIR} $@
