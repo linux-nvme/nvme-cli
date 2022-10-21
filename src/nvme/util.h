@@ -17,6 +17,12 @@
  * libnvme utility functions
  */
 
+#if __has_attribute(__fallthrough__)
+# define fallthrough __attribute__((__fallthrough__))
+#else
+# define fallthrough do {} while (0) /* fallthrough */
+#endif
+
 /**
  * enum nvme_connect_err - nvme connect error codes
  * @ENVME_CONNECT_RESOLVE:	failed to resolve host
@@ -154,6 +160,37 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
  * recognize &fid.
  */
 int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len);
+
+/**
+ * enum nvme_data_tfr - Data transfer direction of the command
+ * @NVME_DATA_TFR_NO_DATA_TFR:		No data transfer
+ * @NVME_DATA_TFR_HOST_TO_CTRL:		Host to controller
+ * @NVME_DATA_TFR_CTRL_TO_HOST:		Controller to host
+ * @NVME_DATA_TFR_BIDIRECTIONAL:	Bidirectional
+ */
+enum nvme_data_tfr {
+	NVME_DATA_TFR_NO_DATA_TFR,
+	NVME_DATA_TFR_HOST_TO_CTRL,
+	NVME_DATA_TFR_CTRL_TO_HOST,
+	NVME_DATA_TFR_BIDIRECTIONAL
+};
+
+/**
+ * nvme_get_feature_length2() - Retreive the command payload length for a
+ *			       specific feature identifier
+ * @fid:   Feature identifier, see &enum nvme_features_id.
+ * @cdw11: The cdw11 value may affect the transfer (only known fid is
+ *	   %NVME_FEAT_FID_HOST_ID)
+ * @dir:   Data transfer direction: false - host to controller, true -
+ *	   controller to host may affect the transfer (only known fid is
+ *	   %NVME_FEAT_FID_HOST_MEM_BUF).
+ * @len:   On success, set to this features payload length in bytes.
+ *
+ * Return: 0 on success, -1 with errno set to EINVAL if the function did not
+ * recognize &fid.
+ */
+int nvme_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+			     __u32 *len);
 
 /**
  * nvme_get_directive_receive_length() - Get directive receive length

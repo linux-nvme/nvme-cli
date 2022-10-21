@@ -742,7 +742,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	default:
 		nvme_msg(h->r, LOG_ERR, "unsupported subtype %d\n",
 			 e->subtype);
-		/* fallthrough */
+		fallthrough;
 	case NVME_NQN_NVME:
 		nvme_ctrl_set_discovery_ctrl(c, false);
 		break;

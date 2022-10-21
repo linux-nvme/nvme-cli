@@ -494,6 +494,22 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 	return 0;
 }
 
+int nvme_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+			     __u32 *len)
+{
+	switch (fid) {
+	case NVME_FEAT_FID_HOST_MEM_BUF:
+		if (dir == NVME_DATA_TFR_HOST_TO_CTRL) {
+			*len = 0;
+			break;
+		}
+		fallthrough;
+	default:
+		return nvme_get_feature_length(fid, cdw11, len);
+	}
+	return 0;
+}
+
 int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
 		enum nvme_directive_receive_doper doper, __u32 *len)
 {
