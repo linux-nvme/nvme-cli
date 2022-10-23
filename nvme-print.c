@@ -3273,6 +3273,10 @@ void nvme_show_status(int status)
                 fprintf(stderr, "NVMe status: %s(%#x)\n",
                         nvme_status_to_string(val, false), val);
                 break;
+        case NVME_STATUS_TYPE_MI:
+                fprintf(stderr, "NVMe-MI status: %s(%#x)\n",
+                        nvme_mi_status_to_string(val), val);
+                break;
         default:
                 fprintf(stderr, "Unknown status type %d, value %#x\n",
                         type, val);
