@@ -8,6 +8,7 @@ LIBNVME_MI_1_2 {
 		nvme_mi_admin_sanitize_nvm;
 		nvme_mi_admin_fw_download;
 		nvme_mi_admin_fw_commit;
+		nvme_mi_status_to_string;
 };
 
 LIBNVME_MI_1_1 {
