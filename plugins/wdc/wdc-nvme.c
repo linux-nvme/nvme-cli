@@ -10984,7 +10984,7 @@ static int wdc_enc_submit_move_data(struct nvme_dev *dev, char *cmd, int len,
 #endif
 	nvme_cmd.result = 0;
 	err = nvme_submit_admin_passthru(dev_fd(dev), &nvme_cmd, NULL);
-	if (err == NVME_SC_INTERNAL) {
+	if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INTERNAL)) {
 		fprintf(stderr, "%s: WARNING : WDC : No log ID:x%x available\n",
 			__func__, log_id);
 	}

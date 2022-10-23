@@ -3947,7 +3947,8 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 			d_raw(buf, cfg.data_len);
 		}
 	} else if (err > 0) {
-		if (err != NVME_SC_INVALID_FIELD)
+		if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+					NVME_SC_INVALID_FIELD))
 			nvme_show_status(err);
 	} else {
 		fprintf(stderr, "get-feature: %s\n", nvme_strerror(errno));
@@ -4004,11 +4005,13 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 	for (i = cfg.feature_id; i < feat_max; i++, feat_num++) {
 		cfg.feature_id = i;
 		err = get_feature_id_changed(dev, cfg, changed);
-		if (err && err != NVME_SC_INVALID_FIELD)
+		if (err && !nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+					       NVME_SC_INVALID_FIELD))
 			break;
 	}
 
-	if (err == NVME_SC_INVALID_FIELD && feat_num == 1)
+	if (feat_num == 1 && nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+						NVME_SC_INVALID_FIELD))
 		nvme_show_status(err);
 
 	return err;
@@ -4289,24 +4292,33 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		.result		= &result,
 	};
 	err = nvme_cli_fw_commit(dev, &args);
+
 	if (err < 0)
 		fprintf(stderr, "fw-commit: %s\n", nvme_strerror(errno));
-	else if (err != 0)
-		switch (err & 0x7ff) {
-		case NVME_SC_FW_NEEDS_CONV_RESET:
-		case NVME_SC_FW_NEEDS_SUBSYS_RESET:
-		case NVME_SC_FW_NEEDS_RESET:
-			printf("Success activating firmware action:%d slot:%d",
-			       cfg.action, cfg.slot);
-			if (cfg.action == 6 || cfg.action == 7)
-				printf(" bpid:%d", cfg.bpid);
-			printf(", but firmware requires %s reset\n", nvme_fw_status_reset_type(err));
-			break;
-		default:
+	else if (err != 0) {
+		__u32 val = nvme_status_get_value(err);
+		int type = nvme_status_get_type(err);
+
+		if (type == NVME_STATUS_TYPE_NVME) {
+			switch (val & 0x7ff) {
+			case NVME_SC_FW_NEEDS_CONV_RESET:
+			case NVME_SC_FW_NEEDS_SUBSYS_RESET:
+			case NVME_SC_FW_NEEDS_RESET:
+				printf("Success activating firmware action:%d slot:%d",
+				       cfg.action, cfg.slot);
+				if (cfg.action == 6 || cfg.action == 7)
+					printf(" bpid:%d", cfg.bpid);
+				printf(", but firmware requires %s reset\n",
+				       nvme_fw_status_reset_type(val));
+				break;
+			default:
+				nvme_show_status(err);
+				break;
+			}
+		} else {
 			nvme_show_status(err);
-			break;
 		}
-	else {
+	} else {
 		printf("Success committing firmware action:%d slot:%d",
 		       cfg.action, cfg.slot);
 		if (cfg.action == 6 || cfg.action == 7)
@@ -4524,8 +4536,10 @@ static int nvme_get_properties(int fd, void **pbar)
 			.value		= &value,
 			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		};
+
 		err = nvme_get_property(&args);
-		if (err > 0 && (err & 0xff) == NVME_SC_INVALID_FIELD) {
+		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+				       NVME_SC_INVALID_FIELD)) {
 			err = 0;
 			value = -1;
 		} else if (err) {
