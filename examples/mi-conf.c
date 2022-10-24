@@ -81,8 +81,8 @@ int find_port(nvme_mi_ep_t ep, uint8_t *portp, uint16_t *mtup)
 
 int set_local_mtu(sd_bus *bus, unsigned int net, uint8_t eid, uint32_t mtu)
 {
+	sd_bus_error err = SD_BUS_ERROR_NULL;
 	sd_bus_message *resp;
-	sd_bus_error err;
 	char *ep_path;
 	int rc;
 
