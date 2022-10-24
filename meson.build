@@ -249,7 +249,7 @@ sources = [
   'nvme-rpmb.c',
   'nvme-wrap.c',
   'plugin.c',
-  'wrapper.c',
+  'libnvme-wrap.c',
 ]
 
 subdir('ccan')
