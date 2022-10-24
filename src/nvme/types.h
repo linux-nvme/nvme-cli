@@ -6142,6 +6142,75 @@ static inline __u16 nvme_status_code(__u16 status_field)
 }
 
 /**
+ * enum nvme_status_type - type encoding for NVMe return values, when
+ * represented as an int.
+ *
+ * The nvme_* api returns an int, with negative values indicating an internal
+ * or syscall error, zero signifying success, positive values representing
+ * the NVMe status.
+ *
+ * That latter case (the NVMe status) may represent status values from
+ * different parts of the transport/controller/etc, and are at most 16 bits of
+ * data. So, we use the most-significant 3 bits of the signed int to indicate
+ * which type of status this is.
+ *
+ * @NVME_STATUS_TYPE_SHIFT: shift value for status bits
+ * @NVME_STATUS_TYPE_MASK:  mask value for status bits
+ *
+ * @NVME_STATUS_TYPE_NVME:  NVMe command status value, typically from CDW3
+ * @NVME_STATUS_TYPE_MI:    NVMe-MI header status
+ */
+enum nvme_status_type {
+	NVME_STATUS_TYPE_SHIFT		= 27,
+	NVME_STATUS_TYPE_MASK		= 0x7,
+
+	NVME_STATUS_TYPE_NVME		= 0,
+	NVME_STATUS_TYPE_MI		= 1,
+};
+
+/**
+ * nvme_status_get_type() - extract the type from a nvme_* return value
+ * @status: the (non-negative) return value from the NVMe API
+ *
+ * Returns: the type component of the status.
+ */
+static inline __u32 nvme_status_get_type(int status)
+{
+	return NVME_GET(status, STATUS_TYPE);
+}
+
+/**
+ * nvme_status_get_value() - extract the status value from a nvme_* return
+ * value
+ * @status: the (non-negative) return value from the NVMe API
+ *
+ * Returns: the value component of the status; the set of values will depend
+ * on the status type.
+ */
+static inline __u32 nvme_status_get_value(int status)
+{
+	return status & ~(NVME_STATUS_TYPE_MASK << NVME_STATUS_TYPE_SHIFT);
+}
+
+/**
+ * nvme_status_equals() - helper to check a status against a type and value
+ * @status: the (non-negative) return value from the NVMe API
+ * @type: the status type
+ * @value: the status value
+ *
+ * Returns: true if @status is of the specified type and value
+ */
+static inline __u32 nvme_status_equals(int status, enum nvme_status_type type,
+				       unsigned int value)
+{
+	if (status < 0)
+		return false;
+
+	return nvme_status_get_type(status) == type &&
+		nvme_status_get_value(status) == value;
+}
+
+/**
  * enum nvme_admin_opcode - Known NVMe admin opcodes
  * @nvme_admin_delete_sq:		Delete I/O Submission Queue
  * @nvme_admin_create_sq:		Create I/O Submission Queue

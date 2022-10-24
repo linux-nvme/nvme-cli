@@ -308,7 +308,8 @@ static void test_admin_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
 	peer->tx_buf_len = 8;
 
 	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
-	assert(rc == 0x2);
+	assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_MI);
+	assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
 }
 
 /* test: all 4-byte aligned response sizes - should be decoded into the
@@ -332,7 +333,8 @@ static void test_admin_resp_sizes(nvme_mi_ep_t ep, struct test_peer *peer)
 	for (i = 8; i <= 4096 + 8; i+=4) {
 		peer->tx_buf_len = i;
 		rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
-		assert(rc == 2);
+		assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_MI);
+		assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
 	}
 
 	nvme_mi_close_ctrl(ctrl);

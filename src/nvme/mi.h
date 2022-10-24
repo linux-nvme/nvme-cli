@@ -367,6 +367,20 @@ struct nvme_mi_admin_resp_hdr {
 	__le32	cdw0, cdw1, cdw3;
 } __attribute__((packed));
 
+/**
+ * nvme_mi_status_to_string() - return a string representation of the MI
+ * status.
+ * @status: MI response status
+ *
+ * Gives a string description of @status, as per section 4.1.2 of the NVMe-MI
+ * spec. The status value should be of type NVME_STATUS_MI, and extracted
+ * from the return value using nvme_status_get_value().
+ *
+ * Returned string is const, and should not be free()ed.
+ *
+ * Returns: A string representing the status value
+ */
+const char *nvme_mi_status_to_string(int status);
 
 /**
  * nvme_mi_create_root() - Create top-level MI (root) handle.
