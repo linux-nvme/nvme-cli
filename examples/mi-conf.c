@@ -92,6 +92,13 @@ int set_local_mtu(sd_bus *bus, unsigned int net, uint8_t eid, uint32_t mtu)
 		return -1;
 	}
 
+	/* The NVMe-MI interfaces refer to their MTU as *not* including the
+	 * 4-byte MCTP header, whereas the MCTP specs *do* include it. When
+	 * we're setting the route MTU, we're using to the MCTP-style MTU,
+	 * which needs the extra four bytes included
+	 */
+	mtu += 4;
+
 	rc = sd_bus_call_method(bus, MCTP_DBUS_NAME, ep_path,
 				MCTP_DBUS_EP_IFACE, "SetMTU", &err, &resp,
 				"u", mtu);
