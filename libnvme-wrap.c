@@ -21,14 +21,14 @@ void __attribute__((weak)) name(proto)				\
 		fn(args);					\
 }
 
-#define FN(name, rtype, proto, args, fallback)			\
+#define FN(name, rtype, proto, args, defret)			\
 rtype __attribute__((weak)) name(proto)				\
 {								\
 	rtype (*fn)(proto);					\
 	fn = dlsym(RTLD_NEXT, #name);				\
 	if (fn)							\
 		return fn(args);				\
-	return fallback;					\
+	return defret;						\
 }
 
 FN(nvme_get_version,
