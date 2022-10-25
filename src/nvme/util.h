@@ -17,12 +17,6 @@
  * libnvme utility functions
  */
 
-#if __has_attribute(__fallthrough__)
-# define fallthrough __attribute__((__fallthrough__))
-#else
-# define fallthrough do {} while (0) /* fallthrough */
-#endif
-
 /**
  * enum nvme_connect_err - nvme connect error codes
  * @ENVME_CONNECT_RESOLVE:	failed to resolve host

@@ -186,6 +186,29 @@ conf.set10(
     description: 'Is linux/mctp.h include-able?'
 )
 
+if meson.version().version_compare('>= 0.48')
+  has_fallthrough = cc.has_function_attribute('fallthrough')
+else
+  has_fallthrough = cc.compiles(
+    '''int main(int argc, char **argv) {
+           switch(argc) {
+               case 0:
+                   __attribute__((__fallthrough__));
+               case 1:
+                   return 1;
+           }
+           return 0;
+       }
+    ''',
+    name: 'has fallthrough')
+endif
+
+if has_fallthrough
+  conf.set('fallthrough', '__attribute__((__fallthrough__))')
+else
+  conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
+endif
+
 ################################################################################
 substs = configuration_data()
 substs.set('NAME',    meson.project_name())
