@@ -3,10 +3,10 @@ directory = json-c-0.16
 source_url = https://s3.amazonaws.com/json-c_releases/releases/json-c-0.16.tar.gz
 source_filename = json-c-0.16.tar.gz
 source_hash = 8e45ac8f96ec7791eaf3bb7ee50e9c2100bbbc87b8d0f1d030c5ba8a0288d96b
-patch_filename = json-c_0.16-2_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/json-c_0.16-2/get_patch
-patch_hash = 1b66ae3bd93e723160001f1ce95b5838ebc056d3b83d628fd398536356590834
-wrapdb_version = 0.16-2
+patch_filename = json-c_0.16-3_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/json-c_0.16-3/get_patch
+patch_hash = 6e712826ba1e6e1b6d21c6157a764984fedc6b594c9f92443498b972b6377a94
+wrapdb_version = 0.16-3
 
 [provide]
 json-c = json_c_dep

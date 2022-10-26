@@ -350,3 +350,13 @@ int nvme_cli_ns_mgmt_create(struct nvme_dev *dev, struct nvme_id_ns *ns,
 	return -ENODEV;
 }
 
+int nvme_cli_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+			         __u32 *len)
+{
+	int err;
+
+	err = nvme_get_feature_length2(fid, cdw11, dir, len);
+	if (err != -EEXIST)
+		return err;
+	return nvme_get_feature_length(fid, cdw11, len);
+}
