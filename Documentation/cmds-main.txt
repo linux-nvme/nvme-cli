@@ -270,3 +270,6 @@ linknvme:nvme-supported-log-pages[1]::
 
 linknvme:nvme-verify[1]::
 	verify command
+
+linknvme:nvme-show-topology[1]::
+	Show NVMe topology

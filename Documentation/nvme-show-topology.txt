@@ -1,0 +1,42 @@
+nvme-show-topology(1)
+=====================
+
+NAME
+----
+nvme-show-topology - Show topology of all NVMe subsystems
+
+SYNOPSIS
+--------
+[verse]
+'nvme show-topology'
+
+DESCRIPTION
+-----------
+Show the topology of all NVMe subsystems.
+
+OPTIONS
+-------
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal' or 'json'. Only one output
+	format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information in the output, showing nvme subsystems,
+	controllers and namespaces separately and how they're related to each
+	other.
+
+-r <order>::
+--ranking=<order>::
+	Set the ranking orer to 'namespace' (default) or 'ctrl'. This option
+	has only an effect for output format 'normal'. The JSON output is
+	always 'namespace' ordered.
+
+EXAMPLES
+--------
+nvme show-topology
+
+NVME
+----
+Part of the nvme-user suite
