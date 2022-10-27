@@ -1658,7 +1658,7 @@ static inline int nvme_mi_admin_get_log_telemetry_host(nvme_mi_ctrl_t ctrl,
 						       void *log)
 {
 	struct nvme_get_log_args args = {
-		.lpo = 0,
+		.lpo = offset,
 		.result = NULL,
 		.log = log,
 		.args_size = sizeof(args),
