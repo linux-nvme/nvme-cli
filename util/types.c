@@ -78,12 +78,11 @@ char *uint128_t_to_string(nvme_uint128_t val)
 	return str + idx;
 }
 
-const char *util_uuid_to_string(uuid_t uuid)
+const char *util_uuid_to_string(unsigned char uuid[NVME_UUID_LEN])
 {
-	/* large enough to hold uuid str (37) + null-termination byte */
-	static char uuid_str[40];
+	static char uuid_str[NVME_UUID_LEN_STRING];
 
-	uuid_unparse_lower(uuid, uuid_str);
+	nvme_uuid_to_string(uuid, uuid_str);
 
 	return uuid_str;
 }
