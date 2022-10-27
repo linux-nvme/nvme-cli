@@ -39,7 +39,6 @@
 #include "private.h"
 
 #define NVMF_HOSTID_SIZE	37
-#define UUID_SIZE		37  /* 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
 
 #define NVMF_HOSTNQN_FILE	SYSCONFDIR "/nvme/hostnqn"
 #define NVMF_HOSTID_FILE	SYSCONFDIR "/nvme/hostid"
@@ -929,8 +928,8 @@ static int uuid_from_device_tree(char *system_uuid)
 	if (f < 0)
 		return -ENXIO;
 
-	memset(system_uuid, 0, UUID_SIZE);
-	len = read(f, system_uuid, UUID_SIZE - 1);
+	memset(system_uuid, 0, NVME_UUID_LEN_STRING);
+	len = read(f, system_uuid, NVME_UUID_LEN_STRING - 1);
 	close(f);
 	if (len < 0)
 		return -ENXIO;
@@ -1018,7 +1017,7 @@ static int uuid_from_product_uuid(char *system_uuid)
 	system_uuid[0] = '\0';
 
 	nread = getline(&line, &len, stream);
-	if (nread != UUID_SIZE) {
+	if (nread != NVME_UUID_LEN_STRING) {
 		ret = -ENXIO;
 		goto out;
 	}
@@ -1026,8 +1025,8 @@ static int uuid_from_product_uuid(char *system_uuid)
 	/* The kernel is handling the byte swapping according DMTF
 	 * SMBIOS 3.0 Section 7.2.1 System UUID */
 
-	memcpy(system_uuid, line, UUID_SIZE - 1);
-	system_uuid[UUID_SIZE - 1] = '\0';
+	memcpy(system_uuid, line, NVME_UUID_LEN_STRING - 1);
+	system_uuid[NVME_UUID_LEN_STRING - 1] = '\0';
 
 	ret = 0;
 
@@ -1063,16 +1062,17 @@ char *nvmf_hostnqn_generate()
 {
 	char *hostnqn;
 	int ret;
-	char uuid_str[UUID_SIZE];
-	uuid_t uuid;
+	char uuid_str[NVME_UUID_LEN_STRING];
+	unsigned char uuid[NVME_UUID_LEN];
 
 	ret = uuid_from_dmi(uuid_str);
 	if (ret < 0) {
 		ret = uuid_from_device_tree(uuid_str);
 	}
 	if (ret < 0) {
-		uuid_generate_random(uuid);
-		uuid_unparse_lower(uuid, uuid_str);
+		if (nvme_uuid_random(uuid) < 0)
+			memset(uuid, 0, NVME_UUID_LEN);
+		nvme_uuid_to_string(uuid, uuid_str);
 	}
 
 	if (asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", uuid_str) < 0)
@@ -1125,7 +1125,7 @@ static __u32 nvmf_get_tel(const char *hostsymname)
 	__u16 len;
 
 	/* Host ID is mandatory */
-	tel += nvmf_exat_size(sizeof(uuid_t));
+	tel += nvmf_exat_size(NVME_UUID_LEN_STRING);
 
 	/* Symbolic name is optional */
 	len = hostsymname ? strlen(hostsymname) : 0;
@@ -1169,8 +1169,8 @@ static void nvmf_fill_die(struct nvmf_ext_die *die, struct nvme_host *h,
 	numexat++;
 	exat = die->exat;
 	exat->exattype = cpu_to_le16(NVMF_EXATTYPE_HOSTID);
-	exat->exatlen  = cpu_to_le16(nvmf_exat_len(sizeof(uuid_t)));
-	uuid_parse(h->hostid, exat->exatval);
+	exat->exatlen  = cpu_to_le16(nvmf_exat_len(NVME_UUID_LEN));
+	nvme_uuid_from_string(h->hostid, exat->exatval);
 
 	/* Extended Attribute for the Symbolic Name (optional) */
 	symname_len = h->hostsymname ? strlen(h->hostsymname) : 0;

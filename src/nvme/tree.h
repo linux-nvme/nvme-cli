@@ -15,7 +15,6 @@
 #include <stddef.h>
 
 #include <sys/types.h>
-#include <uuid.h>
 
 #include "ioctl.h"
 #include "util.h"
@@ -521,7 +520,7 @@ const uint8_t *nvme_ns_get_nguid(nvme_ns_t n);
  *
  * Copies the namespace's uuid into @out
  */
-void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out);
+void nvme_ns_get_uuid(nvme_ns_t n, unsigned char out[NVME_UUID_LEN]);
 
 /**
  * nvme_ns_get_sysfs_dir() - sysfs directory of a namespace

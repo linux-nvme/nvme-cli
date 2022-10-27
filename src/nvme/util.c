@@ -11,6 +11,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -832,4 +834,58 @@ const char *nvme_get_version(enum nvme_version type)
 	default:
 		return "n/a";
 	}
+}
+
+int nvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str)
+{
+	int n;
+	n = snprintf(str, NVME_UUID_LEN_STRING,
+		     "%02x%02x%02x%02x-%02x%02x-%02x%02x-"
+		     "%02x%02x-%02x%02x%02x%02x%02x%02x",
+		     uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5],
+		     uuid[6], uuid[7], uuid[8], uuid[9], uuid[10], uuid[11],
+		     uuid[12], uuid[13], uuid[14], uuid[15]);
+	return n != NVME_UUID_LEN_STRING - 1 ? -EINVAL : 0;
+}
+
+int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
+{
+	int n;
+
+	n = sscanf(str,
+		   "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-"
+		   "%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
+		   &uuid[0], &uuid[1], &uuid[2], &uuid[3], &uuid[4], &uuid[5],
+		   &uuid[6], &uuid[7], &uuid[8], &uuid[9], &uuid[10], &uuid[11],
+		   &uuid[12], &uuid[13], &uuid[14], &uuid[15]);
+	return n != NVME_UUID_LEN ? -EINVAL : 0;
+
+}
+
+int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
+{
+	int f;
+	ssize_t n;
+
+	f = open("/dev/urandom", O_RDONLY);
+	if (f < 0)
+		return -errno;
+	n = read(f, uuid, NVME_UUID_LEN);
+	if (n < 0) {
+		close(f);
+		return -errno;
+	} else if (n != NVME_UUID_LEN) {
+		close(f);
+		return -EIO;
+	}
+
+	/*
+	 * See https://www.rfc-editor.org/rfc/rfc4122#section-4.4
+	 * Algorithms for Creating a UUID from Truly Random
+	 * or Pseudo-Random Numbers
+	 */
+	uuid[6] = (uuid[6] & 0x0f) | 0x40;
+	uuid[8] = (uuid[8] & 0x3f) | 0x80;
+
+	return 0;
 }
