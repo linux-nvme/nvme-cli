@@ -103,7 +103,7 @@ _cmds="list list-subsys id-ctrl id-ns \
 	show-hostnqn dir-receive dir-send virt-mgmt \
 	rpmb boot-part-log fid-support-effects-log \
 	supported-log-pages lockdown media-unit-stat-log \
-	supported-cap-config-log dim"
+	supported-cap-config-log dim show-topology"
 
 # Add plugins:
 for plugin in "${!_plugin_subcmds[@]}"; do
@@ -523,6 +523,9 @@ nvme_list_opts () {
 		opts+=" --cmd= -c --msgfile= -f --keyfile= -g \
 			--key= -k --msg= -d --address= -o --blocks= -b \
 			--target= -t"
+			;;
+		"show-topology")
+		opts+=" --output-format= -o --verbose -v --ranking= -r"
 			;;
 		"version")
 		opts+=$NO_OPTS

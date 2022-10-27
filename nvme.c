@@ -8255,6 +8255,76 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	return 0;
 }
 
+static int show_topology_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Show the topolog\n";
+	const char *verbose = "Increase output verbosity";
+	const char *ranking = "Ranking order: namespace|ctrl";
+	enum nvme_print_flags flags;
+	nvme_root_t r;
+	enum nvme_cli_topo_ranking rank;
+	int err;
+
+	struct config {
+		char	*output_format;
+		int	verbose;
+		char	*ranking;
+	};
+
+	struct config cfg = {
+		.output_format	= "normal",
+		.verbose	= 0,
+		.ranking	= "namespace",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_INCR("verbose",      'v', &cfg.verbose,       verbose),
+		OPT_FMT("ranking",       'r', &cfg.ranking,       ranking),
+		OPT_END()
+	};
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		return err;
+	if (cfg.verbose)
+		flags |= VERBOSE;
+
+	if (!strcmp(cfg.ranking, "namespace"))
+		rank = NVME_CLI_TOPO_NAMESPACE;
+	else if (!strcmp(cfg.ranking, "ctrl"))
+		rank = NVME_CLI_TOPO_CTRL;
+	else {
+		fprintf(stderr, "Invalid ranking argument: %s\n",
+			cfg.ranking);
+		return -EINVAL;
+	}
+
+	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	if (!r) {
+		fprintf(stderr, "Failed to create topology root: %s\n",
+			nvme_strerror(errno));
+		return -errno;
+	}
+
+	err = nvme_scan_topology(r, NULL, NULL);
+	if (err < 0) {
+		fprintf(stderr, "Failed to scan topology: %s\n",
+			 nvme_strerror(errno));
+		nvme_free_tree(r);
+		return err;
+	}
+
+	nvme_show_topology(r, flags, rank);
+	nvme_free_tree(r);
+
+	return err;
+}
+
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";

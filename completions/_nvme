@@ -63,6 +63,7 @@ _nvme () {
 	'lockdown:submit a lockdown command'
 	'media-unit-stat-log: retrieve media unit status log pages details'
 	'supported-cap-config-log: retrieve support log pages details'
+	'show-topology: show subystem topology'
 	'help:print brief descriptions of all nvme commands'
 	)
 
@@ -971,6 +972,19 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme fid-support-effects-log options" _fidsupporteffectslog
 			;;
+		(show-topology)
+			local _showtopology
+			_showtopology=(
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			--ranking=':Ranking order: namespace|ctrl'
+			-r':alias for --ranking'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme show-topology options" _showtopology
+			;;
 		(help)
 			local _h
 			_h=( id-ctrl id-ns list-ns id-iocs create-ns delete-ns attach-ns detach-ns
@@ -981,7 +995,7 @@ _nvme () {
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
 				 resv-notif-log capacity-mgmt id-domain boot-part-log fid-support-effects-log
 				 supported-log-pages lockdown media-unit-stat-log id-ns-lba-format nvm-id-ns
-				 nvm-id-ns-lba-format supported-cap-config-log
+				 nvm-id-ns-lba-format supported-cap-config-log show-topology
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
