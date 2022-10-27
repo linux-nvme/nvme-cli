@@ -6,6 +6,7 @@ LIBNVME_1_2 {
 		nvme_ctrl_set_dhchap_host_key;
 		nvmf_get_discovery_wargs;
 		nvme_get_feature_length2;
+		nvme_ctrl_is_persistent;
 };
 
 LIBNVME_1_1 {
