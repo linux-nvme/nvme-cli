@@ -15,13 +15,11 @@
 	json_object_object_add(o, k, json_object_new_int(v))
 #define json_object_add_value_int(o, k, v) \
 	json_object_object_add(o, k, json_object_new_int(v))
-#ifdef CONFIG_JSONC_14
+#ifndef CONFIG_JSONC_14
+#define json_object_new_uint64(v) util_json_object_new_uint64(v)
+#endif
 #define json_object_add_value_uint64(o, k, v) \
 	json_object_object_add(o, k, json_object_new_uint64(v))
-#else
-#define json_object_add_value_uint64(o, k, v) \
-	json_object_object_add(o, k, util_json_object_new_uint64(v))
-#endif
 #define json_object_add_value_uint128(o, k, v) \
 	json_object_object_add(o, k, util_json_object_new_uint128(v))
 #define json_object_add_value_double(o, k, v) \
