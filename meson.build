@@ -124,12 +124,12 @@ conf.set10(
 )
 conf.set10(
     'HAVE_LITTLE_ENDIAN',
-    build_machine.endian() == 'little',
+    host_machine.endian() == 'little',
     description: 'Building for little-endian'
 )
 conf.set10(
     'HAVE_BIG_ENDIAN',
-    build_machine.endian() == 'big',
+    host_machine.endian() == 'big',
     description: 'Building for big-endian'
 )
 conf.set10(
