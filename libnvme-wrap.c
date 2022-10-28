@@ -48,3 +48,9 @@ FN(nvme_get_feature_length2,
 	      __u32 *len),
 	ARGS(fid, cdw11, dir, len),
 	-EEXIST)
+
+FN(nvme_ctrl_is_persistent,
+	bool,
+	PROTO(nvme_ctrl_t c),
+	ARGS(c),
+	false)
