@@ -7047,6 +7047,20 @@ enum nvme_fctype {
 };
 
 /**
+ * enum nvme_data_tfr - Data transfer direction of the command
+ * @NVME_DATA_TFR_NO_DATA_TFR:		No data transfer
+ * @NVME_DATA_TFR_HOST_TO_CTRL:		Host to controller
+ * @NVME_DATA_TFR_CTRL_TO_HOST:		Controller to host
+ * @NVME_DATA_TFR_BIDIRECTIONAL:	Bidirectional
+ */
+enum nvme_data_tfr {
+	NVME_DATA_TFR_NO_DATA_TFR	= 0x0,
+	NVME_DATA_TFR_HOST_TO_CTRL	= 0x1,
+	NVME_DATA_TFR_CTRL_TO_HOST	= 0x2,
+	NVME_DATA_TFR_BIDIRECTIONAL	= 0x3,
+};
+
+/**
  * enum nvme_io_opcode - Opcodes for I/O Commands
  * @nvme_cmd_flush:		Flush
  * @nvme_cmd_write:		Write

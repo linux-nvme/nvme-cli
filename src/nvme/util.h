@@ -156,20 +156,6 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len);
 
 /**
- * enum nvme_data_tfr - Data transfer direction of the command
- * @NVME_DATA_TFR_NO_DATA_TFR:		No data transfer
- * @NVME_DATA_TFR_HOST_TO_CTRL:		Host to controller
- * @NVME_DATA_TFR_CTRL_TO_HOST:		Controller to host
- * @NVME_DATA_TFR_BIDIRECTIONAL:	Bidirectional
- */
-enum nvme_data_tfr {
-	NVME_DATA_TFR_NO_DATA_TFR,
-	NVME_DATA_TFR_HOST_TO_CTRL,
-	NVME_DATA_TFR_CTRL_TO_HOST,
-	NVME_DATA_TFR_BIDIRECTIONAL
-};
-
-/**
  * nvme_get_feature_length2() - Retreive the command payload length for a
  *			       specific feature identifier
  * @fid:   Feature identifier, see &enum nvme_features_id.
