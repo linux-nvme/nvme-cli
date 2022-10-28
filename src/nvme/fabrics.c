@@ -191,13 +191,15 @@ void nvmf_default_config(struct nvme_fabrics_config *cfg)
 
 #define MERGE_CFG_OPTION(c, n, o, d)			\
 	if ((c)->o == d) (c)->o = (n)->o
+#define MERGE_CFG_OPTION_STR(c, n, o, d)		\
+	if ((c)->o == d && (n)->o) (c)->o = strdup((n)->o)
 static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 		const struct nvme_fabrics_config *cfg)
 {
 	struct nvme_fabrics_config *ctrl_cfg = nvme_ctrl_get_config(c);
 
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, host_traddr, NULL);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, host_iface, NULL);
+	MERGE_CFG_OPTION_STR(ctrl_cfg, cfg, host_traddr, NULL);
+	MERGE_CFG_OPTION_STR(ctrl_cfg, cfg, host_iface, NULL);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_poll_queues, 0);
