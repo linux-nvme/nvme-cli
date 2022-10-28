@@ -17,6 +17,7 @@
 	json_object_object_add(o, k, json_object_new_int(v))
 #ifndef CONFIG_JSONC_14
 #define json_object_new_uint64(v) util_json_object_new_uint64(v)
+#define json_object_get_uint64(v) util_json_object_get_uint64(v)
 #endif
 #define json_object_add_value_uint64(o, k, v) \
 	json_object_object_add(o, k, json_object_new_uint64(v))
@@ -44,5 +45,7 @@
 struct json_object *util_json_object_new_double(long double d);
 struct json_object *util_json_object_new_uint64(uint64_t i);
 struct json_object *util_json_object_new_uint128(nvme_uint128_t val);
+struct json_object *util_json_object_new_uint128(nvme_uint128_t val);
 
+uint64_t util_json_object_get_uint64(struct json_object *obj);
 #endif

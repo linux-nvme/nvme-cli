@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <stdio.h>
+#include <errno.h>
 
 #include "json.h"
 #include "types.h"
@@ -39,4 +40,21 @@ struct json_object *util_json_object_new_uint128(nvme_uint128_t  val)
 	struct json_object *obj;
 	obj = json_object_new_string(uint128_t_to_string(val));
 	return obj;
+}
+
+uint64_t util_json_object_get_uint64(struct json_object *obj)
+{
+	uint64_t val = 0;
+
+	if (json_object_is_type(obj, json_type_string)) {
+		char *end = NULL;
+		const char *buf;
+
+		buf = json_object_get_string(obj);
+		val = strtoull(buf, &end, 10);
+		if ((val == 0 && errno != 0) || (end == buf))
+			return 0;
+	}
+
+	return val;
 }
