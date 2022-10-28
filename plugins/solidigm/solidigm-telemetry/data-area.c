@@ -40,7 +40,7 @@ static bool telemetry_log_get_value(const struct telemetry_log *tl,
 		char err_msg[MAX_WARNING_SIZE];
 
 		snprintf(err_msg, MAX_WARNING_SIZE,
-			"Value offset greater than binary size (%u > %lu).",
+			"Value offset greater than binary size (%u > %zu).",
 			 offset_byte, tl->log_size);
 		*val_obj = json_object_new_string(err_msg);
 
