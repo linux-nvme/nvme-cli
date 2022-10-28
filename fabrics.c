@@ -642,6 +642,9 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 			else
 				subsysnqn = NVME_DISC_SUBSYS_NAME;
 
+			if (nvme_ctrl_is_persistent(c))
+				persistent = true;
+
 			memcpy(&cfg, defcfg, sizeof(cfg));
 
 			struct tr_config trcfg = {
