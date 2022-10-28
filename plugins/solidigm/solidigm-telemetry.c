@@ -113,7 +113,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 
 	if (cfg.cfg_file) {
 		char *conf_str = 0;
-		size_t length;
+		size_t length = 0;
 
 		err = read_file2buffer(cfg.cfg_file, &conf_str, &length);
 		if (err) {
