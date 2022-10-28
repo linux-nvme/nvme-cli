@@ -97,6 +97,30 @@ static bool nvme_mi_compare_vid_mn(struct nvme_mi_ep *ep,
 	return le16_to_cpu(id->vid) == vid && !strncmp(id->mn, mn, len);
 }
 
+static void __nvme_mi_format_mn(struct nvme_id_ctrl *id,
+				char *mn, size_t mn_len)
+{
+	const size_t id_mn_size = sizeof(id->mn);
+	int i;
+
+	/* A BUILD_ASSERT() would be nice here, but we're not const enough for
+	 * that
+	 */
+	if (mn_len <= id_mn_size)
+		abort();
+
+	memcpy(mn, id->mn, id_mn_size);
+	mn[id_mn_size] = '\0';
+
+	for (i = id_mn_size - 1; i >= 0; i--) {
+		if (mn[i] != '\0' && mn[i] != ' ')
+			break;
+		mn[i] = '\0';
+	}
+}
+
+#define nvme_mi_format_mn(id, m) __nvme_mi_format_mn(id, m, sizeof(m))
+
 void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 {
 	struct nvme_identify_args id_args = { 0 };
@@ -148,6 +172,15 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 	 */
 	if (ep->quirks & NVME_QUIRK_MIN_INTER_COMMAND_TIME)
 		nvme_mi_record_resp_time(ep);
+
+	if (ep->quirks) {
+		char tmp[sizeof(id.mn) + 1];
+
+		nvme_mi_format_mn(&id, tmp);
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "device %02x:%s: applying quirks 0x%08lx\n",
+			 id.vid, tmp, ep->quirks);
+	}
 
 out_close:
 	nvme_mi_close_ctrl(ctrl);
