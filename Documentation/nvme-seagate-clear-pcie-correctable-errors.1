@@ -1,0 +1,63 @@
+'\" t
+.\"     Title: nvme-seagate-clear-pcie-correctable-errors
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/28/2022
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SEAGATE\-CLEAR" "1" "10/28/2022" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-seagate-clear-pcie-correctable-errors \- Clear Seagate PCIe error statistics
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme seagate clear\-pcie\-correctable\-errors [<device>]  [OPTIONS]\fR
+.fi
+.SH "DESCRIPTION"
+.sp
+This command will only work on Seagate devices supporting this feature\&. Not all commands work across all product families\&.
+.sp
+The \fI<device>\fR parameter is mandatory and may be either an NVMe character device (ex: /dev/nvme0), or an nvme block device (ex: /dev/nvme0n1)\&.
+.SH "OPTIONS"
+.PP
+\-s, \-\-save
+.RS 4
+Specifies that the controller shall save the attribute
+.RE
+.SH "EXAMPLES"
+.sp
+Clears the PCIe error statistics from the device\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme seagate clear\-pcie\-correctable\-errors /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

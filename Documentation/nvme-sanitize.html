@@ -845,12 +845,42 @@ provides the result.</p></div>
 <dd>
 <p>
     Sanitize Action:
-    000b - Reserved
-    001b - Exit Failure Mode
-    010b - Start a Block Erase sanitize operation
-    011b - Start an Overwrite sanitize operation
-    100b - Start a Crypto Erase sanitize operation
 </p>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Value</p></td>
+<td align="left" valign="top"><p class="table">Definition</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x00</p></td>
+<td align="left" valign="top"><p class="table">Reserved</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x01</p></td>
+<td align="left" valign="top"><p class="table">Exit Failure Mode</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x02</p></td>
+<td align="left" valign="top"><p class="table">Start a Block Erase sanitize operation</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x03</p></td>
+<td align="left" valign="top"><p class="table">Start an Overwrite sanitize operation</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x04</p></td>
+<td align="left" valign="top"><p class="table">Start a Crypto Erase sanitize operation</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </dd>
 <dt class="hdlist1">
 -p &lt;overwrite-pattern&gt;
@@ -907,7 +937,7 @@ Has the program issue Sanitize Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-08-01 14:48:50 CEST
+ 2022-10-28 19:29:51 CEST
 </div>
 </div>
 </body>

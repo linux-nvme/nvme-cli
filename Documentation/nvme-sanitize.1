@@ -2,12 +2,12 @@
 .\"     Title: nvme-sanitize
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/01/2022
+.\"      Date: 10/28/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SANITIZE" "1" "08/01/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-SANITIZE" "1" "10/28/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -71,7 +71,47 @@ Allow Unrestricted Sanitize Exit: If set, then the sanitize operation is perform
 .PP
 \-a <action>, \-\-sanact=<action>
 .RS 4
-Sanitize Action: 000b \- Reserved 001b \- Exit Failure Mode 010b \- Start a Block Erase sanitize operation 011b \- Start an Overwrite sanitize operation 100b \- Start a Crypto Erase sanitize operation
+Sanitize Action:
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0x00
+T}:T{
+Reserved
+T}
+T{
+0x01
+T}:T{
+Exit Failure Mode
+T}
+T{
+0x02
+T}:T{
+Start a Block Erase sanitize operation
+T}
+T{
+0x03
+T}:T{
+Start an Overwrite sanitize operation
+T}
+T{
+0x04
+T}:T{
+Start a Crypto Erase sanitize operation
+T}
+.TE
+.sp 1
 .RE
 .PP
 \-p <overwrite\-pattern>, \-\-ovrpat=<overwrite\-pattern>
