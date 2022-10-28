@@ -11,7 +11,7 @@ run following commands
 	$ meson .build
 	$ ninja -C .build
 
-nvme-cli depends on zlib, json-c and libuuid.
+nvme-cli depends on zlib and json-c
 
 To install, run:
 
