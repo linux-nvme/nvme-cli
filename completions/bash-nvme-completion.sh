@@ -54,6 +54,7 @@ typeset -Ar _plugin_subcmds=(
 		set-zone-desc zone-append changed-zone-list"
 	[nvidia]="id-ctrl"
 	[ymtc]="smart-log-add"
+	[inspur]="nvme-vendor-log"
 )
 readonly _plugin_subcmds
 
@@ -75,6 +76,7 @@ typeset -Ar _plugin_funcs=(
 	[zns]="plugin_zns_opts"
 	[nvidia]="plugin_nvidia_opts"
 	[ymtc]="plugin_ymtc_opts"
+	[inspur]="plugin_inspur_opts"
 )
 readonly _plugin_funcs
 
@@ -1334,6 +1336,37 @@ plugin_ymtc_opts () {
 			;;
 		"help")
 		opts+=NO_OPTS
+			;;
+	esac
+
+	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+
+	return 0
+}
+
+plugin_inspur_opts () {
+    local opts=""
+	local compargs=""
+
+	local nonopt_args=0
+	for (( i=0; i < ${#words[@]}-1; i++ )); do
+		if [[ ${words[i]} != -* ]]; then
+			let nonopt_args+=1
+		fi
+	done
+
+	if [ $nonopt_args -eq 3 ]; then
+		opts="/dev/nvme* "
+	fi
+
+	opts+=" "
+
+	case "$1" in
+		"nvme-vendor-log")
+		opts+=$NO_OPTS
+			;;
+		"help")
+		opts+=$NO_OPTS
 			;;
 	esac
 
