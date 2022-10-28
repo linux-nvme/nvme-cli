@@ -624,6 +624,93 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 	return 0;
 }
 
+int nvme_mi_admin_admin_passthru(nvme_mi_ctrl_t ctrl, __u8 opcode, __u8 flags,
+				 __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3,
+				 __u32 cdw10, __u32 cdw11, __u32 cdw12,
+				 __u32 cdw13, __u32 cdw14, __u32 cdw15,
+				 __u32 data_len, void *data, __u32 metadata_len,
+				 void *metadata, __u32 timeout_ms, __u32 *result)
+{
+	/* Input parameters flags, rsvd, metadata, metadata_len are not used */
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+	int direction = opcode & 0x3;
+	bool has_write_data = false;
+	bool has_read_data = false;
+
+	if (direction == NVME_DATA_TFR_BIDIRECTIONAL) {
+		nvme_msg(ctrl->ep->root, LOG_ERR,
+			"nvme_mi_admin_admin_passthru doesn't support bidirectional commands\n");
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (data_len > 4096) {
+		nvme_msg(ctrl->ep->root, LOG_ERR,
+			"nvme_mi_admin_admin_passthru doesn't support data_len over 4096 bytes.\n");
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (data != NULL && data_len != 0) {
+		if (direction == NVME_DATA_TFR_HOST_TO_CTRL)
+			has_write_data = true;
+		if (direction == NVME_DATA_TFR_CTRL_TO_HOST)
+			has_read_data = true;
+	}
+
+	if (timeout_ms > nvme_mi_ep_get_timeout(ctrl->ep)) {
+		/* Set timeout if user needs a bigger timeout */
+		nvme_mi_ep_set_timeout(ctrl->ep, timeout_ms);
+	}
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id, opcode);
+	req_hdr.cdw1 = cpu_to_le32(nsid);
+	req_hdr.cdw2 = cpu_to_le32(cdw2);
+	req_hdr.cdw3 = cpu_to_le32(cdw3);
+	req_hdr.cdw10 = cpu_to_le32(cdw10);
+	req_hdr.cdw11 = cpu_to_le32(cdw11);
+	req_hdr.cdw12 = cpu_to_le32(cdw12);
+	req_hdr.cdw13 = cpu_to_le32(cdw13);
+	req_hdr.cdw14 = cpu_to_le32(cdw14);
+	req_hdr.cdw15 = cpu_to_le32(cdw15);
+	req_hdr.doff = 0;
+	if (data_len != 0) {
+		req_hdr.dlen = cpu_to_le32(data_len);
+		/* Bit 0 set to 1 means DLEN contains a value */
+		req_hdr.flags = 0x1;
+	}
+
+	if (has_write_data) {
+		req.data = data;
+		req.data_len = data_len;
+	}
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+
+	if (has_read_data) {
+		resp.data = data;
+		resp.data_len = data_len;
+	}
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	rc = nvme_mi_admin_parse_status(&resp, result);
+	if (has_read_data && (resp.data_len != data_len)) {
+		errno = EPROTO;
+		return -1;
+	}
+
+	return 0;
+}
+
 int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 				   struct nvme_identify_args *args,
 				   off_t offset, size_t size)
