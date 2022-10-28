@@ -1,0 +1,40 @@
+.TH "libnvme" 9 "enum nvme_status_type" "October 2022" "API Manual" LINUX
+.SH NAME
+enum nvme_status_type \- type encoding for NVMe return values, when represented as an int.
+.SH SYNOPSIS
+enum nvme_status_type {
+.br
+.BI "    NVME_STATUS_TYPE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_STATUS_TYPE_MASK"
+, 
+.br
+.br
+.BI "    NVME_STATUS_TYPE_NVME"
+, 
+.br
+.br
+.BI "    NVME_STATUS_TYPE_MI"
+
+};
+.SH Constants
+.IP "NVME_STATUS_TYPE_SHIFT" 12
+shift value for status bits
+.IP "NVME_STATUS_TYPE_MASK" 12
+mask value for status bits
+.IP "NVME_STATUS_TYPE_NVME" 12
+NVMe command status value, typically from CDW3
+.IP "NVME_STATUS_TYPE_MI" 12
+NVMe-MI header status
+.SH "Description"
+
+The nvme_* api returns an int, with negative values indicating an internal
+or syscall error, zero signifying success, positive values representing
+the NVMe status.
+
+That latter case (the NVMe status) may represent status values from
+different parts of the transport/controller/etc, and are at most 16 bits of
+data. So, we use the most-significant 3 bits of the signed int to indicate
+which type of status this is.

@@ -1,0 +1,24 @@
+.TH "nvme_get_feature_length2" 9 "nvme_get_feature_length2" "October 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_feature_length2 \- Retreive the command payload length for a specific feature identifier
+.SH SYNOPSIS
+.B "int" nvme_get_feature_length2
+.BI "(int fid "  ","
+.BI "__u32 cdw11 "  ","
+.BI "enum nvme_data_tfr dir "  ","
+.BI "__u32 *len "  ");"
+.SH ARGUMENTS
+.IP "fid" 12
+Feature identifier, see \fIenum nvme_features_id\fP.
+.IP "cdw11" 12
+The cdw11 value may affect the transfer (only known fid is
+NVME_FEAT_FID_HOST_ID)
+.IP "dir" 12
+Data transfer direction: false - host to controller, true -
+controller to host may affect the transfer (only known fid is
+NVME_FEAT_FID_HOST_MEM_BUF).
+.IP "len" 12
+On success, set to this features payload length in bytes.
+.SH "RETURN"
+0 on success, -1 with errno set to EINVAL if the function did not
+recognize \fIfid\fP.

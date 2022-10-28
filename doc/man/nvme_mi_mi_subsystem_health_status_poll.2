@@ -1,4 +1,4 @@
-.TH "nvme_mi_mi_subsystem_health_status_poll" 9 "nvme_mi_mi_subsystem_health_status_poll" "August 2022" "libnvme API manual" LINUX
+.TH "nvme_mi_mi_subsystem_health_status_poll" 9 "nvme_mi_mi_subsystem_health_status_poll" "October 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_mi_mi_subsystem_health_status_poll \- Read the Subsystem Health Data Structure from the NVM subsystem
 .SH SYNOPSIS
@@ -20,4 +20,5 @@ the read. See NVMe-MI section 5.6 for details on the CCS bits.
 
 See \fIstruct nvme_mi_nvm_ss_health_status\fP.
 .SH "RETURN"
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

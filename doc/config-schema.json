@@ -25,12 +25,12 @@
 		    "description": "NVMe host ID",
 		    "type": "string"
 		},
-		"hostsymname": {
-		    "description": "NVMe host symbolic name",
-		    "type": "string"
-		},
 		"dhchap_key": {
 		    "description": "Host DH-HMAC-CHAP key",
+		    "type": "string"
+		},
+		"hostsymname": {
+		    "description": "NVMe host symbolic name",
 		    "type": "string"
 		},
 		"required": [ "hostnqn" ],

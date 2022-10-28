@@ -824,7 +824,7 @@ A pointer to the 64-bit eui
 A pointer to the 128-bit nguid
 
 
-.. c:function:: void nvme_ns_get_uuid (nvme_ns_t n, uuid_t out)
+.. c:function:: void nvme_ns_get_uuid (nvme_ns_t n, unsigned char out[NVME_UUID_LEN])
 
    UUID of a namespace
 
@@ -833,7 +833,7 @@ A pointer to the 128-bit nguid
 ``nvme_ns_t n``
   Namespace instance
 
-``uuid_t out``
+``unsigned char out[NVME_UUID_LEN]``
   buffer for the UUID
 
 **Description**
@@ -1475,6 +1475,33 @@ Host transport address of **c** (if present)
 **Return**
 
 Host interface name of **c** (if present)
+
+
+.. c:function:: const char * nvme_ctrl_get_dhchap_host_key (nvme_ctrl_t c)
+
+   Return host key
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller to be checked
+
+**Return**
+
+DH-HMAC-CHAP host key or NULL if not set
+
+
+.. c:function:: void nvme_ctrl_set_dhchap_host_key (nvme_ctrl_t c, const char *key)
+
+   Set host key
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Host for which the key should be set
+
+``const char *key``
+  DH-HMAC-CHAP Key to set or NULL to clear existing key
 
 
 .. c:function:: const char * nvme_ctrl_get_dhchap_key (nvme_ctrl_t c)

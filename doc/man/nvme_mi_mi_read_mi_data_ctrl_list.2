@@ -1,4 +1,4 @@
-.TH "nvme_mi_mi_read_mi_data_ctrl_list" 9 "nvme_mi_mi_read_mi_data_ctrl_list" "August 2022" "libnvme API manual" LINUX
+.TH "nvme_mi_mi_read_mi_data_ctrl_list" 9 "nvme_mi_mi_read_mi_data_ctrl_list" "October 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_mi_mi_read_mi_data_ctrl_list \- Perform a Read MI Data Structure command, retrieving the list of attached controllers.
 .SH SYNOPSIS
@@ -19,4 +19,5 @@ equal to \fIstart_ctrlid\fP.
 
 See \fIstruct nvme_ctrl_list\fP.
 .SH "RETURN"
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

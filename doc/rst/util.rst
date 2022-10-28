@@ -246,6 +246,33 @@ otherwise.
 recognize :c:type:`fid`.
 
 
+.. c:function:: int nvme_get_feature_length2 (int fid, __u32 cdw11, enum nvme_data_tfr dir, __u32 *len)
+
+   Retreive the command payload length for a specific feature identifier
+
+**Parameters**
+
+``int fid``
+  Feature identifier, see :c:type:`enum nvme_features_id <nvme_features_id>`.
+
+``__u32 cdw11``
+  The cdw11 value may affect the transfer (only known fid is
+  ``NVME_FEAT_FID_HOST_ID``)
+
+``enum nvme_data_tfr dir``
+  Data transfer direction: false - host to controller, true -
+  controller to host may affect the transfer (only known fid is
+  ``NVME_FEAT_FID_HOST_MEM_BUF``).
+
+``__u32 *len``
+  On success, set to this features payload length in bytes.
+
+**Return**
+
+0 on success, -1 with errno set to EINVAL if the function did not
+recognize :c:type:`fid`.
+
+
 .. c:function:: int nvme_get_directive_receive_length (enum nvme_directive_dtype dtype, enum nvme_directive_receive_doper doper, __u32 *len)
 
    Get directive receive length
@@ -490,5 +517,58 @@ Pointer to the next element in the array.
 **Return**
 
 Returns version string for known types or else "n/a"
+
+
+.. c:function:: int nvme_uuid_to_string (unsigned char uuid[NVME_UUID_LEN], char *str)
+
+   Return string represenation of encoded UUID
+
+**Parameters**
+
+``unsigned char uuid[NVME_UUID_LEN]``
+  Binary encoded input UUID
+
+``char *str``
+  Output string represenation of UUID
+
+**Return**
+
+Returns error code if type conversion fails.
+
+
+.. c:function:: int nvme_uuid_from_string (const char *str, unsigned char uuid[NVME_UUID_LEN])
+
+   Return encoded UUID represenation of string UUID
+
+**Parameters**
+
+``const char *str``
+  Output string represenation of UUID
+
+``unsigned char uuid[NVME_UUID_LEN]``
+  Binary encoded input UUID
+
+**Return**
+
+Returns error code if type conversion fails.
+
+
+.. c:function:: int nvme_uuid_random (unsigned char uuid[NVME_UUID_LEN])
+
+   Generate random UUID
+
+**Parameters**
+
+``unsigned char uuid[NVME_UUID_LEN]``
+  Generated random UUID
+
+**Description**
+
+Generate random number according
+https://www.rfc-editor.org/rfc/rfc4122#section-4.4
+
+**Return**
+
+Returns error code if generating of random number fails.
 
 

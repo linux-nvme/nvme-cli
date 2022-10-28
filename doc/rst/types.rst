@@ -7551,6 +7551,48 @@ bytes, in size. This log captures the controller’s internal state.
 
 
 
+.. c:enum:: nvmf_log_discovery_lid_support
+
+   Discovery log specific support
+
+**Constants**
+
+``NVMF_LOG_DISC_LID_NONE``
+  None
+
+``NVMF_LOG_DISC_LID_EXTDLPES``
+  Extended Discovery Log Page Entries Supported
+
+``NVMF_LOG_DISC_LID_PLEOS``
+  Port Local Entries Only Supported
+
+``NVMF_LOG_DISC_LID_ALLSUBES``
+  All NVM Subsystem Entries Supported
+
+
+
+
+.. c:enum:: nvmf_log_discovery_lsp
+
+   Discovery log specific field
+
+**Constants**
+
+``NVMF_LOG_DISC_LSP_NONE``
+  None
+
+``NVMF_LOG_DISC_LSP_EXTDLPE``
+  Extended Discovery Log Page Entries
+
+``NVMF_LOG_DISC_LSP_PLEO``
+  Port Local Entries Only
+
+``NVMF_LOG_DISC_LSP_ALLSUBE``
+  All NVM Subsystem Entries
+
+
+
+
 .. c:struct:: nvmf_discovery_log
 
    Discovery Log Page (Log Identifier 70h)
@@ -9483,6 +9525,88 @@ status code
 
 
 
+.. c:enum:: nvme_status_type
+
+   type encoding for NVMe return values, when represented as an int.
+
+**Constants**
+
+``NVME_STATUS_TYPE_SHIFT``
+  shift value for status bits
+
+``NVME_STATUS_TYPE_MASK``
+  mask value for status bits
+
+``NVME_STATUS_TYPE_NVME``
+  NVMe command status value, typically from CDW3
+
+``NVME_STATUS_TYPE_MI``
+  NVMe-MI header status
+
+**Description**
+
+
+The nvme_* api returns an int, with negative values indicating an internal
+or syscall error, zero signifying success, positive values representing
+the NVMe status.
+
+That latter case (the NVMe status) may represent status values from
+different parts of the transport/controller/etc, and are at most 16 bits of
+data. So, we use the most-significant 3 bits of the signed int to indicate
+which type of status this is.
+
+
+.. c:function:: __u32 nvme_status_get_type (int status)
+
+   extract the type from a nvme_* return value
+
+**Parameters**
+
+``int status``
+  the (non-negative) return value from the NVMe API
+
+**Return**
+
+the type component of the status.
+
+
+.. c:function:: __u32 nvme_status_get_value (int status)
+
+   extract the status value from a nvme_* return value
+
+**Parameters**
+
+``int status``
+  the (non-negative) return value from the NVMe API
+
+**Return**
+
+the value component of the status; the set of values will depend
+on the status type.
+
+
+.. c:function:: __u32 nvme_status_equals (int status, enum nvme_status_type type, unsigned int value)
+
+   helper to check a status against a type and value
+
+**Parameters**
+
+``int status``
+  the (non-negative) return value from the NVMe API
+
+``enum nvme_status_type type``
+  the status type
+
+``unsigned int value``
+  the status value
+
+**Return**
+
+true if **status** is of the specified type and value
+
+
+
+
 .. c:enum:: nvme_admin_opcode
 
    Known NVMe admin opcodes
@@ -10588,6 +10712,27 @@ status code
 
 ``nvme_fabrics_type_disconnect``
   Disconnect
+
+
+
+
+.. c:enum:: nvme_data_tfr
+
+   Data transfer direction of the command
+
+**Constants**
+
+``NVME_DATA_TFR_NO_DATA_TFR``
+  No data transfer
+
+``NVME_DATA_TFR_HOST_TO_CTRL``
+  Host to controller
+
+``NVME_DATA_TFR_CTRL_TO_HOST``
+  Controller to host
+
+``NVME_DATA_TFR_BIDIRECTIONAL``
+  Bidirectional
 
 
 

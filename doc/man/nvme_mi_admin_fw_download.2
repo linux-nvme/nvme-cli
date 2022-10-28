@@ -1,0 +1,27 @@
+.TH "nvme_mi_admin_fw_download" 9 "nvme_mi_admin_fw_download" "October 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_fw_download \- Download part or all of a firmware image to the controller
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_fw_download
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "struct nvme_fw_download_args *args "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to send firmware data to
+.IP "args" 12
+\fIstruct nvme_fw_download_args\fP argument structure
+.SH "DESCRIPTION"
+The Firmware Image Download command downloads all or a portion of an image
+for a future update to the controller. The Firmware Image Download command
+downloads a new image (in whole or in part) to the controller.
+
+The image may be constructed of multiple pieces that are individually
+downloaded with separate Firmware Image Download commands. Each Firmware
+Image Download command includes a Dword Offset and Number of Dwords that
+specify a dword range.
+
+The new firmware image is not activated as part of the Firmware Image
+Download command. Use the \fBnvme_mi_admin_fw_commit\fP to activate a newly
+downloaded image.
+.SH "RETURN"
+0 on success, non-zero on failure

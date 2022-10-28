@@ -1,10 +1,10 @@
-.TH "nvme_ns_get_uuid" 9 "nvme_ns_get_uuid" "August 2022" "libnvme API manual" LINUX
+.TH "nvme_ns_get_uuid" 9 "nvme_ns_get_uuid" "October 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_ns_get_uuid \- UUID of a namespace
 .SH SYNOPSIS
 .B "void" nvme_ns_get_uuid
 .BI "(nvme_ns_t n "  ","
-.BI "uuid_t out "  ");"
+.BI "unsigned char out[NVME_UUID_LEN] "  ");"
 .SH ARGUMENTS
 .IP "n" 12
 Namespace instance

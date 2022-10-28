@@ -1,4 +1,4 @@
-.TH "nvme_mi_mi_read_mi_data_port" 9 "nvme_mi_mi_read_mi_data_port" "August 2022" "libnvme API manual" LINUX
+.TH "nvme_mi_mi_read_mi_data_port" 9 "nvme_mi_mi_read_mi_data_port" "October 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_mi_mi_read_mi_data_port \- Perform a Read MI Data Structure command, retrieving port data.
 .SH SYNOPSIS
@@ -20,4 +20,5 @@ range of port IDs.
 
 See \fIstruct nvme_mi_read_port_info\fP.
 .SH "RETURN"
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

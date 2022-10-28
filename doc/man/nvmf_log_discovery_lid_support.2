@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvmf_log_discovery_lid_support" "October 2022" "API Manual" LINUX
+.SH NAME
+enum nvmf_log_discovery_lid_support \- Discovery log specific support
+.SH SYNOPSIS
+enum nvmf_log_discovery_lid_support {
+.br
+.BI "    NVMF_LOG_DISC_LID_NONE"
+, 
+.br
+.br
+.BI "    NVMF_LOG_DISC_LID_EXTDLPES"
+, 
+.br
+.br
+.BI "    NVMF_LOG_DISC_LID_PLEOS"
+, 
+.br
+.br
+.BI "    NVMF_LOG_DISC_LID_ALLSUBES"
+
+};
+.SH Constants
+.IP "NVMF_LOG_DISC_LID_NONE" 12
+None
+.IP "NVMF_LOG_DISC_LID_EXTDLPES" 12
+Extended Discovery Log Page Entries Supported
+.IP "NVMF_LOG_DISC_LID_PLEOS" 12
+Port Local Entries Only Supported
+.IP "NVMF_LOG_DISC_LID_ALLSUBES" 12
+All NVM Subsystem Entries Supported

@@ -1,4 +1,4 @@
-.TH "nvme_mi_admin_identify_cns_nsid" 9 "nvme_mi_admin_identify_cns_nsid" "August 2022" "libnvme API manual" LINUX
+.TH "nvme_mi_admin_identify_cns_nsid" 9 "nvme_mi_admin_identify_cns_nsid" "October 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_mi_admin_identify_cns_nsid \- Perform an Admin identify command using specific CNS/NSID parameters.
 .SH SYNOPSIS
@@ -26,4 +26,5 @@ Stores the identify data in \fIdata\fP, which is expected to be a buffer of
 Will return an error if the length of the response data (from the
 controller) is not a full \fINVME_IDENTIFY_DATA_SIZE\fP.
 .SH "RETURN"
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

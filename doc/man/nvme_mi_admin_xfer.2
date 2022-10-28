@@ -1,4 +1,4 @@
-.TH "nvme_mi_admin_xfer" 9 "nvme_mi_admin_xfer" "August 2022" "libnvme API manual" LINUX
+.TH "nvme_mi_admin_xfer" 9 "nvme_mi_admin_xfer" "October 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_mi_admin_xfer \- Raw admin transfer interface.
 .SH SYNOPSIS
@@ -38,4 +38,5 @@ Response payload, offset by \fIresp_data_offset\fP.
 
 See: \fIstruct nvme_mi_admin_req_hdr\fP and \fIstruct nvme_mi_admin_resp_hdr\fP.
 .SH "RETURN"
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

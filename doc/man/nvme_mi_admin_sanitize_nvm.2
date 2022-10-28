@@ -1,0 +1,25 @@
+.TH "nvme_mi_admin_sanitize_nvm" 9 "nvme_mi_admin_sanitize_nvm" "October 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_sanitize_nvm \- Start a subsystem Sanitize operation
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_sanitize_nvm
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "struct nvme_sanitize_nvm_args *args "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to send command to
+.IP "args" 12
+Sanitize command arguments
+.SH "DESCRIPTION"
+A sanitize operation alters all user data in the NVM subsystem such that
+recovery of any previous user data from any cache, the non-volatile media,
+or any Controller Memory Buffer is not possible.
+
+The Sanitize command starts a sanitize operation or to recover from a
+previously failed sanitize operation. The sanitize operation types that may
+be supported are Block Erase, Crypto Erase, and Overwrite. All sanitize
+operations are processed in the background, i.e., completion of the sanitize
+command does not indicate completion of the sanitize operation.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

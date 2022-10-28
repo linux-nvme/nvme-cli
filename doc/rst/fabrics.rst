@@ -322,17 +322,92 @@ into the topology using **h** as parent.
 **Parameters**
 
 ``nvme_ctrl_t c``
-  Discover controller to use
+  Discovery controller to use
 
 ``struct nvmf_discovery_log **logp``
   Pointer to the log page to be returned
 
 ``int max_retries``
-  maximum number of log page entries to be returned
+  Number of retries in case of failure
+
+**Description**
+
+The memory allocated for the log page and returned in **logp**
+must be freed by the caller using free().
+
+**Note**
+
+Consider using nvmf_get_discovery_wargs() instead.
 
 **Return**
 
 0 on success; on failure -1 is returned and errno is set
+
+
+
+
+.. c:struct:: nvme_get_discovery_args
+
+   Arguments for nvmf_get_discovery_wargs()
+
+**Definition**
+
+::
+
+  struct nvme_get_discovery_args {
+    nvme_ctrl_t c;
+    int args_size;
+    int max_retries;
+    __u32 *result;
+    __u32 timeout;
+    __u8 lsp;
+  };
+
+**Members**
+
+``c``
+  Discovery controller
+
+``args_size``
+  Length of the structure
+
+``max_retries``
+  Number of retries in case of failure
+
+``result``
+  The command completion result from CQE dword0
+
+``timeout``
+  Timeout in ms (default: NVME_DEFAULT_IOCTL_TIMEOUT)
+
+``lsp``
+  Log specific field (See enum nvmf_log_discovery_lsp)
+
+
+
+.. c:function:: struct nvmf_discovery_log * nvmf_get_discovery_wargs (struct nvme_get_discovery_args *args)
+
+   Get the discovery log page with args
+
+**Parameters**
+
+``struct nvme_get_discovery_args *args``
+  Argument structure
+
+**Description**
+
+This function is similar to nvmf_get_discovery_log(), but
+takes an extensible **args** parameter. **args** provides more
+options than nvmf_get_discovery_log().
+
+This function performs a get discovery log page (DLP) command
+and returns the DLP. The memory allocated for the returned
+DLP must be freed by the caller using free().
+
+**Return**
+
+Pointer to the discovery log page (to be freed). NULL
+on failure and errno is set.
 
 
 .. c:function:: char * nvmf_hostnqn_generate ()

@@ -1,0 +1,18 @@
+.TH "nvme_mi_admin_get_log_supported_log_pages" 9 "nvme_mi_admin_get_log_supported_log_pages" "October 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_log_supported_log_pages \- Retrieve nmve supported log pages
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_log_supported_log_pages
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "bool rae "  ","
+.BI "struct nvme_supported_log_pages *log "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "rae" 12
+Retain asynchronous events
+.IP "log" 12
+Array of LID supported and Effects data structures
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

@@ -1,4 +1,4 @@
-.TH "nvme_mi_admin_identify_partial" 9 "nvme_mi_admin_identify_partial" "August 2022" "libnvme API manual" LINUX
+.TH "nvme_mi_admin_identify_partial" 9 "nvme_mi_admin_identify_partial" "October 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_mi_admin_identify_partial \- Perform an Admin identify command, and retrieve partial response data.
 .SH SYNOPSIS
@@ -33,4 +33,5 @@ yet supported by libnvme-mi, please contact the maintainers.
 
 See: \fIstruct nvme_identify_args\fP
 .SH "RETURN"
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

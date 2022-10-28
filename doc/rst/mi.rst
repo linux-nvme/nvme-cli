@@ -578,6 +578,28 @@ This is the generic response format with the three doublewords of completion
 queue data, plus optional response data.
 
 
+.. c:function:: const char * nvme_mi_status_to_string (int status)
+
+   return a string representation of the MI status.
+
+**Parameters**
+
+``int status``
+  MI response status
+
+**Description**
+
+Gives a string description of **status**, as per section 4.1.2 of the NVMe-MI
+spec. The status value should be of type NVME_STATUS_MI, and extracted
+from the return value using nvme_status_get_value().
+
+Returned string is const, and should not be free()ed.
+
+**Return**
+
+A string representing the status value
+
+
 .. c:function:: nvme_root_t nvme_mi_create_root (FILE *fp, int log_level)
 
    Create top-level MI (root) handle.
@@ -949,7 +971,8 @@ See: :c:type:`nvme_mi_for_each_ctrl`
 
 **Return**
 
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: nvme_mi_ctrl_t nvme_mi_init_ctrl (nvme_mi_ep_t ep, __u16 ctrl_id)
@@ -1027,7 +1050,8 @@ NVMe version information. See :c:type:`struct nvme_mi_read_nvm_ss_info <nvme_mi_
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_read_mi_data_port (nvme_mi_ep_t ep, __u8 portid, struct nvme_mi_read_port_info *p)
@@ -1055,7 +1079,8 @@ See :c:type:`struct nvme_mi_read_port_info <nvme_mi_read_port_info>`.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_read_mi_data_ctrl_list (nvme_mi_ep_t ep, __u8 start_ctrlid, struct nvme_ctrl_list *list)
@@ -1082,7 +1107,8 @@ See :c:type:`struct nvme_ctrl_list <nvme_ctrl_list>`.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_read_mi_data_ctrl (nvme_mi_ep_t ep, __u16 ctrl_id, struct nvme_mi_read_ctrl_info *ctrl)
@@ -1109,7 +1135,8 @@ See :c:type:`struct nvme_mi_read_ctrl_info <nvme_mi_read_ctrl_info>`.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_subsystem_health_status_poll (nvme_mi_ep_t ep, bool clear, struct nvme_mi_nvm_ss_health_status *nshds)
@@ -1137,7 +1164,8 @@ See :c:type:`struct nvme_mi_nvm_ss_health_status <nvme_mi_nvm_ss_health_status>`
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_config_get (nvme_mi_ep_t ep, __u32 dw0, __u32 dw1, __u32 *nmresp)
@@ -1172,7 +1200,8 @@ See :c:type:`enum nvme_mi_config_id <nvme_mi_config_id>` for identifiers.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_config_set (nvme_mi_ep_t ep, __u32 dw0, __u32 dw1)
@@ -1200,7 +1229,8 @@ See :c:type:`enum nvme_mi_config_id <nvme_mi_config_id>` for identifiers.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_config_get_smbus_freq (nvme_mi_ep_t ep, __u8 port, enum nvme_mi_config_smbus_freq *freq)
@@ -1226,7 +1256,8 @@ frequency
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_config_set_smbus_freq (nvme_mi_ep_t ep, __u8 port, enum nvme_mi_config_smbus_freq freq)
@@ -1254,7 +1285,8 @@ for the port.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_config_set_health_status_change (nvme_mi_ep_t ep, __u32 mask)
@@ -1281,7 +1313,8 @@ values in **mask**.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_config_get_mctp_mtu (nvme_mi_ep_t ep, __u8 port, __u16 *mtu)
@@ -1312,7 +1345,8 @@ may not accept MCTP messages larger than the configured MTU.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_config_set_mctp_mtu (nvme_mi_ep_t ep, __u8 port, __u16 mtu)
@@ -1342,7 +1376,8 @@ interface(s) to match.
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_admin_xfer (nvme_mi_ctrl_t ctrl, struct nvme_mi_admin_req_hdr *admin_req, size_t req_data_size, struct nvme_mi_admin_resp_hdr *admin_resp, off_t resp_data_offset, size_t *resp_data_size)
@@ -1388,7 +1423,8 @@ See: :c:type:`struct nvme_mi_admin_req_hdr <nvme_mi_admin_req_hdr>` and :c:type:
 
 **Return**
 
-0 on success, non-zero on failure.
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_admin_identify_partial (nvme_mi_ctrl_t ctrl, struct nvme_identify_args *args, off_t offset, size_t size)
@@ -1429,7 +1465,8 @@ See: :c:type:`struct nvme_identify_args <nvme_identify_args>`
 
 **Return**
 
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_mi_admin_identify (nvme_mi_ctrl_t ctrl, struct nvme_identify_args *args)
@@ -1457,7 +1494,8 @@ See: :c:type:`struct nvme_identify_args <nvme_identify_args>`
 
 **Return**
 
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_mi_admin_identify_cns_nsid (nvme_mi_ctrl_t ctrl, enum nvme_identify_cns cns, __u32 nsid, void *data)
@@ -1491,7 +1529,86 @@ controller) is not a full :c:type:`NVME_IDENTIFY_DATA_SIZE`.
 
 **Return**
 
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_identify_ns (nvme_mi_ctrl_t ctrl, __u32 nsid, struct nvme_id_ns *ns)
+
+   Perform an Admin identify command for a namespace
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to process identify command
+
+``__u32 nsid``
+  namespace ID
+
+``struct nvme_id_ns *ns``
+  Namespace identification to populate
+
+**Description**
+
+Perform an Identify (namespace) command, setting the namespace id data
+in **ns**. The namespace is expected to active and allocated.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_identify_ns_descs (nvme_mi_ctrl_t ctrl, __u32 nsid, struct nvme_ns_id_desc *descs)
+
+   Perform an Admin identify Namespace Identification Descriptor list command for a namespace
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to process identify command
+
+``__u32 nsid``
+  Namespace ID
+
+``struct nvme_ns_id_desc *descs``
+  Namespace Identification Descriptor list to populate
+
+**Description**
+
+Perform an Identify namespace identification description list command,
+setting the namespace identification description list in **descs**
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_identify_allocated_ns (nvme_mi_ctrl_t ctrl, __u32 nsid, struct nvme_id_ns *ns)
+
+   Perform an Admin identify command for an allocated namespace
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to process identify command
+
+``__u32 nsid``
+  namespace ID
+
+``struct nvme_id_ns *ns``
+  Namespace identification to populate
+
+**Description**
+
+Perform an Identify (namespace) command, setting the namespace id data
+in **ns**.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_mi_admin_identify_ctrl (nvme_mi_ctrl_t ctrl, struct nvme_id_ctrl *id)
@@ -1519,7 +1636,8 @@ See: :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`
 
 **Return**
 
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_mi_admin_identify_ctrl_list (nvme_mi_ctrl_t ctrl, __u16 cntid, struct nvme_ctrl_list *list)
@@ -1547,6 +1665,174 @@ controller) is not a full :c:type:`NVME_IDENTIFY_DATA_SIZE`, so **id** will be
 fully populated on success.
 
 See: :c:type:`struct nvme_ctrl_list <nvme_ctrl_list>`
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_identify_nsid_ctrl_list (nvme_mi_ctrl_t ctrl, __u32 nsid, __u16 cntid, struct nvme_ctrl_list *list)
+
+   Perform an Admin identify for a controller list with specific namespace ID
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to process identify command
+
+``__u32 nsid``
+  Namespace identifier
+
+``__u16 cntid``
+  Controller ID to specify list start
+
+``struct nvme_ctrl_list *list``
+  List data to populate
+
+**Description**
+
+Perform an Identify command, for the controller list for **nsid**, starting
+with IDs greater than or equal to **cntid**.
+
+Will return an error if the length of the response data (from the
+controller) is not a full :c:type:`NVME_IDENTIFY_DATA_SIZE`, so **id** will be
+fully populated on success.
+
+See: :c:type:`struct nvme_ctrl_list <nvme_ctrl_list>`
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_identify_allocated_ns_list (nvme_mi_ctrl_t ctrl, __u32 nsid, struct nvme_ns_list *list)
+
+   Perform an Admin identify for an allocated namespace list
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to process identify command
+
+``__u32 nsid``
+  Namespace ID to specify list start
+
+``struct nvme_ns_list *list``
+  List data to populate
+
+**Description**
+
+Perform an Identify command, for the allocated namespace list starting with
+IDs greater than or equal to **nsid**. Specify :c:type:`NVME_NSID_NONE` for the start
+of the list.
+
+Will return an error if the length of the response data (from the
+controller) is not a full :c:type:`NVME_IDENTIFY_DATA_SIZE`, so **list** will be
+be fully populated on success.
+
+See: :c:type:`struct nvme_ns_list <nvme_ns_list>`
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_identify_active_ns_list (nvme_mi_ctrl_t ctrl, __u32 nsid, struct nvme_ns_list *list)
+
+   Perform an Admin identify for an active namespace list
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to process identify command
+
+``__u32 nsid``
+  Namespace ID to specify list start
+
+``struct nvme_ns_list *list``
+  List data to populate
+
+**Description**
+
+Perform an Identify command, for the active namespace list starting with
+IDs greater than or equal to **nsid**. Specify :c:type:`NVME_NSID_NONE` for the start
+of the list.
+
+Will return an error if the length of the response data (from the
+controller) is not a full :c:type:`NVME_IDENTIFY_DATA_SIZE`, so **list** will be
+be fully populated on success.
+
+See: :c:type:`struct nvme_ns_list <nvme_ns_list>`
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_identify_primary_ctrl (nvme_mi_ctrl_t ctrl, __u16 cntid, struct nvme_primary_ctrl_cap *cap)
+
+   Perform an Admin identify for primary controller capabilities data structure.
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to process identify command
+
+``__u16 cntid``
+  Controller ID to specify
+
+``struct nvme_primary_ctrl_cap *cap``
+  Primary Controller Capabilities data structure to populate
+
+**Description**
+
+Perform an Identify command to get the Primary Controller Capabilities data
+for the controller specified by **cntid**
+
+Will return an error if the length of the response data (from the
+controller) is not a full :c:type:`NVME_IDENTIFY_DATA_SIZE`, so **cap** will be
+be fully populated on success.
+
+See: :c:type:`struct nvme_primary_ctrl_cap <nvme_primary_ctrl_cap>`
+
+**Return**
+
+0 on success, non-zero on failure
+
+
+.. c:function:: int nvme_mi_admin_identify_secondary_ctrl_list (nvme_mi_ctrl_t ctrl, __u32 nsid, __u16 cntid, struct nvme_secondary_ctrl_list *list)
+
+   Perform an Admin identify for a secondary controller list.
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to process identify command
+
+``__u32 nsid``
+  Namespace ID to specify list start
+
+``__u16 cntid``
+  Controller ID to specify list start
+
+``struct nvme_secondary_ctrl_list *list``
+  List data to populate
+
+**Description**
+
+Perform an Identify command, for the secondary controllers associated with
+the current primary controller. Only entries with IDs greater than or
+equal to **cntid** are returned.
+
+Will return an error if the length of the response data (from the
+controller) is not a full :c:type:`NVME_IDENTIFY_DATA_SIZE`, so **list** will be
+be fully populated on success.
+
+See: :c:type:`struct nvme_secondary_ctrl_list <nvme_secondary_ctrl_list>`
 
 **Return**
 
@@ -1579,7 +1865,782 @@ See: :c:type:`struct nvme_get_log_args <nvme_get_log_args>`
 
 **Return**
 
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_nsid_log (nvme_mi_ctrl_t ctrl, bool rae, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u32 len, void *log)
+
+   Helper for Get Log Page functions
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain Asynchronous Events
+
+``enum nvme_cmd_get_log_lid lid``
+  Log identifier
+
+``__u32 nsid``
+  Namespace ID
+
+``__u32 len``
+  length of log buffer
+
+``void *log``
+  pointer for resulting log data
+
+**Description**
+
+Performs a Get Log Page Admin command for a specific log ID **lid** and
+namespace ID **nsid**. Log data is expected to be **len** bytes, and is stored
+in **log** on success. The **rae** flag is passed as-is to the Get Log Page
+command, and is specific to the Log Page requested.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_simple (nvme_mi_ctrl_t ctrl, enum nvme_cmd_get_log_lid lid, __u32 len, void *log)
+
+   Helper for Get Log Page functions with no NSID or RAE requirements
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``enum nvme_cmd_get_log_lid lid``
+  Log identifier
+
+``__u32 len``
+  length of log buffer
+
+``void *log``
+  pointer for resulting log data
+
+**Description**
+
+Performs a Get Log Page Admin command for a specific log ID **lid**, using
+NVME_NSID_ALL for the namespace identifier, and rae set to false.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_supported_log_pages (nvme_mi_ctrl_t ctrl, bool rae, struct nvme_supported_log_pages *log)
+
+   Retrieve nmve supported log pages
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_supported_log_pages *log``
+  Array of LID supported and Effects data structures
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_error (nvme_mi_ctrl_t ctrl, unsigned int nr_entries, bool rae, struct nvme_error_log_page *err_log)
+
+   Retrieve nvme error log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``unsigned int nr_entries``
+  Number of error log entries allocated
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_error_log_page *err_log``
+  Array of error logs of size 'entries'
+
+**Description**
+
+This log page describes extended error information for a command that
+completed with error, or may report an error that is not specific to a
+particular command.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_smart (nvme_mi_ctrl_t ctrl, __u32 nsid, bool rae, struct nvme_smart_log *smart_log)
+
+   Retrieve nvme smart log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u32 nsid``
+  Optional namespace identifier
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_smart_log *smart_log``
+  User address to store the smart log
+
+**Description**
+
+This log page provides SMART and general health information. The information
+provided is over the life of the controller and is retained across power
+cycles. To request the controller log page, the namespace identifier
+specified is FFFFFFFFh. The controller may also support requesting the log
+page on a per namespace basis, as indicated by bit 0 of the LPA field in the
+Identify Controller data structure.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_fw_slot (nvme_mi_ctrl_t ctrl, bool rae, struct nvme_firmware_slot *fw_log)
+
+   Retrieves the controller firmware log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_firmware_slot *fw_log``
+  User address to store the log page
+
+**Description**
+
+This log page describes the firmware revision stored in each firmware slot
+supported. The firmware revision is indicated as an ASCII string. The log
+page also indicates the active slot number.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_changed_ns_list (nvme_mi_ctrl_t ctrl, bool rae, struct nvme_ns_list *ns_log)
+
+   Retrieve namespace changed list
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_ns_list *ns_log``
+  User address to store the log page
+
+**Description**
+
+This log page describes namespaces attached to this controller that have
+changed since the last time the namespace was identified, been added, or
+deleted.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_cmd_effects (nvme_mi_ctrl_t ctrl, enum nvme_csi csi, struct nvme_cmd_effects_log *effects_log)
+
+   Retrieve nvme command effects log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``enum nvme_csi csi``
+  Command Set Identifier
+
+``struct nvme_cmd_effects_log *effects_log``
+  User address to store the effects log
+
+**Description**
+
+This log page describes the commands that the controller supports and the
+effects of those commands on the state of the NVM subsystem.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_device_self_test (nvme_mi_ctrl_t ctrl, struct nvme_self_test_log *log)
+
+   Retrieve the device self test log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``struct nvme_self_test_log *log``
+  Userspace address of the log payload
+
+**Description**
+
+The log page indicates the status of an in progress self test and the
+percent complete of that operation, and the results of the previous 20
+self-test operations.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_create_telemetry_host (nvme_mi_ctrl_t ctrl, struct nvme_telemetry_log *log)
+
+   Create host telemetry log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``struct nvme_telemetry_log *log``
+  Userspace address of the log payload
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_telemetry_host (nvme_mi_ctrl_t ctrl, __u64 offset, __u32 len, void *log)
+
+   Get Telemetry Host-Initiated log page
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u64 offset``
+  Offset into the telemetry data
+
+``__u32 len``
+  Length of provided user buffer to hold the log data in bytes
+
+``void *log``
+  User address for log page data
+
+**Description**
+
+Retrieves the Telemetry Host-Initiated log page at the requested offset
+using the previously existing capture.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_telemetry_ctrl (nvme_mi_ctrl_t ctrl, bool rae, __u64 offset, __u32 len, void *log)
+
+   Get Telemetry Controller-Initiated log page
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u64 offset``
+  Offset into the telemetry data
+
+``__u32 len``
+  Length of provided user buffer to hold the log data in bytes
+
+``void *log``
+  User address for log page data
+
+**Description**
+
+Retrieves the Telemetry Controller-Initiated log page at the requested offset
+using the previously existing capture.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_endurance_group (nvme_mi_ctrl_t ctrl, __u16 endgid, struct nvme_endurance_group_log *log)
+
+   Get Endurance Group log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u16 endgid``
+  Starting group identifier to return in the list
+
+``struct nvme_endurance_group_log *log``
+  User address to store the endurance log
+
+**Description**
+
+This log page indicates if an Endurance Group Event has occurred for a
+particular Endurance Group. If an Endurance Group Event has occurred, the
+details of the particular event are included in the Endurance Group
+Information log page for that Endurance Group. An asynchronous event is
+generated when an entry for an Endurance Group is newly added to this log
+page.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_predictable_lat_nvmset (nvme_mi_ctrl_t ctrl, __u16 nvmsetid, struct nvme_nvmset_predictable_lat_log *log)
+
+   Predictable Latency Per NVM Set
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u16 nvmsetid``
+  NVM set id
+
+``struct nvme_nvmset_predictable_lat_log *log``
+  User address to store the predictable latency log
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_predictable_lat_event (nvme_mi_ctrl_t ctrl, bool rae, __u32 offset, __u32 len, void *log)
+
+   Retrieve Predictable Latency Event Aggregate Log Page
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 offset``
+  Offset into the predictable latency event
+
+``__u32 len``
+  Length of provided user buffer to hold the log data in bytes
+
+``void *log``
+  User address for log page data
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_ana (nvme_mi_ctrl_t ctrl, enum nvme_log_ana_lsp lsp, bool rae, __u64 offset, __u32 len, void *log)
+
+   Retrieve Asymmetric Namespace Access log page
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``enum nvme_log_ana_lsp lsp``
+  Log specific, see :c:type:`enum nvme_get_log_ana_lsp <nvme_get_log_ana_lsp>`
+
+``bool rae``
+  Retain asynchronous events
+
+``__u64 offset``
+  Offset to the start of the log page
+
+``__u32 len``
+  The allocated length of the log page
+
+``void *log``
+  User address to store the ana log
+
+**Description**
+
+This log consists of a header describing the log and descriptors containing
+the asymmetric namespace access information for ANA Groups that contain
+namespaces that are attached to the controller processing the command.
+
+See :c:type:`struct nvme_ana_rsp_hdr <nvme_ana_rsp_hdr>` for the definition of the returned structure.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_ana_groups (nvme_mi_ctrl_t ctrl, bool rae, __u32 len, struct nvme_ana_group_desc *log)
+
+   Retrieve Asymmetric Namespace Access groups only log page
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_ana_group_desc *log``
+  User address to store the ana group log
+
+**Description**
+
+See :c:type:`struct nvme_ana_group_desc <nvme_ana_group_desc>` for the definition of the returned structure.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_lba_status (nvme_mi_ctrl_t ctrl, bool rae, __u64 offset, __u32 len, void *log)
+
+   Retrieve LBA Status
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u64 offset``
+  Offset to the start of the log page
+
+``__u32 len``
+  The allocated length of the log page
+
+``void *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_endurance_grp_evt (nvme_mi_ctrl_t ctrl, bool rae, __u32 offset, __u32 len, void *log)
+
+   Retrieve Rotational Media Information
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 offset``
+  Offset to the start of the log page
+
+``__u32 len``
+  The allocated length of the log page
+
+``void *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_fid_supported_effects (nvme_mi_ctrl_t ctrl, bool rae, struct nvme_fid_supported_effects_log *log)
+
+   Retrieve Feature Identifiers Supported and Effects
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_fid_supported_effects_log *log``
+  FID Supported and Effects data structure
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_mi_cmd_supported_effects (nvme_mi_ctrl_t ctrl, bool rae, struct nvme_mi_cmd_supported_effects_log *log)
+
+   displays the MI Commands Supported by the controller
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_mi_cmd_supported_effects_log *log``
+  MI Command Supported and Effects data structure
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_boot_partition (nvme_mi_ctrl_t ctrl, bool rae, __u8 lsp, __u32 len, struct nvme_boot_partition *part)
+
+   Retrieve Boot Partition
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u8 lsp``
+  The log specified field of LID
+
+``__u32 len``
+  The allocated size, minimum
+  struct nvme_boot_partition
+
+``struct nvme_boot_partition *part``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_discovery (nvme_mi_ctrl_t ctrl, bool rae, __u32 offset, __u32 len, void *log)
+
+   Retrieve Discovery log page
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 offset``
+  Offset of this log to retrieve
+
+``__u32 len``
+  The allocated size for this portion of the log
+
+``void *log``
+  User address to store the discovery log
+
+**Description**
+
+Supported only by fabrics discovery controllers, returning discovery
+records.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_media_unit_stat (nvme_mi_ctrl_t ctrl, __u16 domid, struct nvme_media_unit_stat_log *mus)
+
+   Retrieve Media Unit Status
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u16 domid``
+  Domain Identifier selection, if supported
+
+``struct nvme_media_unit_stat_log *mus``
+  User address to store the Media Unit statistics log
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_support_cap_config_list (nvme_mi_ctrl_t ctrl, __u16 domid, struct nvme_supported_cap_config_list_log *cap)
+
+   Retrieve Supported Capacity Configuration List
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u16 domid``
+  Domain Identifier selection, if supported
+
+``struct nvme_supported_cap_config_list_log *cap``
+  User address to store supported capabilities config list
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_reservation (nvme_mi_ctrl_t ctrl, bool rae, struct nvme_resv_notification_log *log)
+
+   Retrieve Reservation Notification
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_resv_notification_log *log``
+  User address to store the reservation log
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_sanitize (nvme_mi_ctrl_t ctrl, bool rae, struct nvme_sanitize_log_page *log)
+
+   Retrieve Sanitize Status
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_sanitize_log_page *log``
+  User address to store the sanitize log
+
+**Description**
+
+The Sanitize Status log page reports sanitize operation time estimates and
+information about the most recent sanitize operation.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_zns_changed_zones (nvme_mi_ctrl_t ctrl, __u32 nsid, bool rae, struct nvme_zns_changed_zone_log *log)
+
+   Retrieve list of zones that have changed
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u32 nsid``
+  Namespace ID
+
+``bool rae``
+  Retain asynchronous events
+
+``struct nvme_zns_changed_zone_log *log``
+  User address to store the changed zone log
+
+**Description**
+
+The list of zones that have changed state due to an exceptional event.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_persistent_event (nvme_mi_ctrl_t ctrl, enum nvme_pevent_log_action action, __u32 size, void *pevent_log)
+
+   Retrieve Persistent Event Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``enum nvme_pevent_log_action action``
+  Action the controller should take during processing this command
+
+``__u32 size``
+  Size of **pevent_log**
+
+``void *pevent_log``
+  User address to store the persistent event log
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_mi_admin_security_send (nvme_mi_ctrl_t ctrl, struct nvme_security_send_args *args)
@@ -1608,7 +2669,8 @@ See: :c:type:`struct nvme_get_log_args <nvme_get_log_args>`
 
 **Return**
 
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_mi_admin_security_recv (nvme_mi_ctrl_t ctrl, struct nvme_security_receive_args *args)
@@ -1637,6 +2699,361 @@ See: :c:type:`struct nvme_get_log_args <nvme_get_log_args>`
 
 **Return**
 
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_features (nvme_mi_ctrl_t ctrl, struct nvme_get_features_args *args)
+
+   Perform a Get Feature command on a controller
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``struct nvme_get_features_args *args``
+  Get Features command arguments
+
+**Description**
+
+Performs a Get Features Admin command as specified by **args**. Returned
+feature data will be stored in **args->result** and **args->data**, depending
+on the specification of the feature itself; most features do not return
+additional data. See section 5.27.1 of the NVMe spec (v2.0b) for
+feature-specific information.
+
+On success, **args->data_len** will be updated with the actual data length
+received.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_features_data (nvme_mi_ctrl_t ctrl, enum nvme_features_id fid, __u32 nsid, __u32 data_len, void *data, __u32 *result)
+
+   Helper function for :c:type:`nvme_mi_admin_get_features`()
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``enum nvme_features_id fid``
+  Feature identifier
+
+``__u32 nsid``
+  Namespace ID, if applicable for **fid**
+
+``__u32 data_len``
+  Length of feature data, if applicable for **fid**, in bytes
+
+``void *data``
+  User address of feature data, if applicable
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
+**Description**
+
+Helper for optionally features that optionally return data, using the
+SEL_CURRENT selector value.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_features_simple (nvme_mi_ctrl_t ctrl, enum nvme_features_id fid, __u32 nsid, __u32 *result)
+
+   Get a simple feature value with no data
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``enum nvme_features_id fid``
+  Feature identifier
+
+``__u32 nsid``
+  Namespace id, if required by **fid**
+
+``__u32 *result``
+  output feature data
+
+
+.. c:function:: int nvme_mi_admin_set_features (nvme_mi_ctrl_t ctrl, struct nvme_set_features_args *args)
+
+   Perform a Set Features command on a controller
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``struct nvme_set_features_args *args``
+  Set Features command arguments
+
+**Description**
+
+Performs a Set Features Admin command as specified by **args**. Result
+data will be stored in **args->result**.
+on the specification of the feature itself; most features do not return
+additional data. See section 5.27.1 of the NVMe spec (v2.0b) for
+feature-specific information.
+
+On success, **args->data_len** will be updated with the actual data length
+received.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_ns_mgmt (nvme_mi_ctrl_t ctrl, struct nvme_ns_mgmt_args *args)
+
+   Issue a Namespace Management command
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``struct nvme_ns_mgmt_args *args``
+  Namespace management command arguments
+
+**Description**
+
+Issues a Namespace Management command to **ctrl**, with arguments specified
+from **args**.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_ns_mgmt_create (nvme_mi_ctrl_t ctrl, struct nvme_id_ns *ns, __u8 csi, __u32 *nsid)
+
+   Helper for Namespace Management Create command
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``struct nvme_id_ns *ns``
+  New namespace parameters
+
+``__u8 csi``
+  Command Set Identifier for new NS
+
+``__u32 *nsid``
+  Set to new namespace ID on create
+
+**Description**
+
+Issues a Namespace Management (Create) command to **ctrl**, to create a
+new namespace specified by **ns**, using command set **csi**. On success,
+the new namespace ID will be written to **nsid**.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_ns_mgmt_delete (nvme_mi_ctrl_t ctrl, __u32 nsid)
+
+   Helper for Namespace Management Delete command
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``__u32 nsid``
+  Namespace ID to delete
+
+**Description**
+
+Issues a Namespace Management (Delete) command to **ctrl**, to delete the
+namespace with id **nsid**.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_ns_attach (nvme_mi_ctrl_t ctrl, struct nvme_ns_attach_args *args)
+
+   Attach or detach namespace to controller(s)
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``struct nvme_ns_attach_args *args``
+  Namespace Attach command arguments
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_ns_attach_ctrls (nvme_mi_ctrl_t ctrl, __u32 nsid, struct nvme_ctrl_list *ctrlist)
+
+   Attach namespace to controllers
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``__u32 nsid``
+  Namespace ID to attach
+
+``struct nvme_ctrl_list *ctrlist``
+  Controller list to modify attachment state of nsid
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_ns_detach_ctrls (nvme_mi_ctrl_t ctrl, __u32 nsid, struct nvme_ctrl_list *ctrlist)
+
+   Detach namespace from controllers
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``__u32 nsid``
+  Namespace ID to detach
+
+``struct nvme_ctrl_list *ctrlist``
+  Controller list to modify attachment state of nsid
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_fw_download (nvme_mi_ctrl_t ctrl, struct nvme_fw_download_args *args)
+
+   Download part or all of a firmware image to the controller
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send firmware data to
+
+``struct nvme_fw_download_args *args``
+  :c:type:`struct nvme_fw_download_args <nvme_fw_download_args>` argument structure
+
+**Description**
+
+The Firmware Image Download command downloads all or a portion of an image
+for a future update to the controller. The Firmware Image Download command
+downloads a new image (in whole or in part) to the controller.
+
+The image may be constructed of multiple pieces that are individually
+downloaded with separate Firmware Image Download commands. Each Firmware
+Image Download command includes a Dword Offset and Number of Dwords that
+specify a dword range.
+
+The new firmware image is not activated as part of the Firmware Image
+Download command. Use the nvme_mi_admin_fw_commit() to activate a newly
+downloaded image.
+
+**Return**
+
 0 on success, non-zero on failure
+
+
+.. c:function:: int nvme_mi_admin_fw_commit (nvme_mi_ctrl_t ctrl, struct nvme_fw_commit_args *args)
+
+   Commit firmware using the specified action
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send firmware data to
+
+``struct nvme_fw_commit_args *args``
+  :c:type:`struct nvme_fw_download_args <nvme_fw_download_args>` argument structure
+
+**Description**
+
+The Firmware Commit command modifies the firmware image or Boot Partitions.
+
+**Return**
+
+0 on success, non-zero on failure
+
+
+.. c:function:: int nvme_mi_admin_format_nvm (nvme_mi_ctrl_t ctrl, struct nvme_format_nvm_args *args)
+
+   Format NVMe namespace
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``struct nvme_format_nvm_args *args``
+  Format NVM command arguments
+
+**Description**
+
+Perform a low-level format to set the LBA data & metadata size. May destroy
+data & metadata on the specified namespaces
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_sanitize_nvm (nvme_mi_ctrl_t ctrl, struct nvme_sanitize_nvm_args *args)
+
+   Start a subsystem Sanitize operation
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``struct nvme_sanitize_nvm_args *args``
+  Sanitize command arguments
+
+**Description**
+
+A sanitize operation alters all user data in the NVM subsystem such that
+recovery of any previous user data from any cache, the non-volatile media,
+or any Controller Memory Buffer is not possible.
+
+The Sanitize command starts a sanitize operation or to recover from a
+previously failed sanitize operation. The sanitize operation types that may
+be supported are Block Erase, Crypto Erase, and Overwrite. All sanitize
+operations are processed in the background, i.e., completion of the sanitize
+command does not indicate completion of the sanitize operation.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 

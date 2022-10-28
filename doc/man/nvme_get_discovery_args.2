@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_get_discovery_args" "October 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_get_discovery_args \- Arguments for nvmf_get_discovery_wargs()
+.SH SYNOPSIS
+struct nvme_get_discovery_args {
+.br
+.BI "    nvme_ctrl_t c;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int max_retries;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u8 lsp;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "c" 12
+Discovery controller
+.IP "args_size" 12
+Length of the structure
+.IP "max_retries" 12
+Number of retries in case of failure
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "timeout" 12
+Timeout in ms (default: NVME_DEFAULT_IOCTL_TIMEOUT)
+.IP "lsp" 12
+Log specific field (See enum nvmf_log_discovery_lsp)

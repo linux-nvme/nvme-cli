@@ -1,4 +1,4 @@
-.TH "nvme_mi_admin_identify_ctrl_list" 9 "nvme_mi_admin_identify_ctrl_list" "August 2022" "libnvme API manual" LINUX
+.TH "nvme_mi_admin_identify_ctrl_list" 9 "nvme_mi_admin_identify_ctrl_list" "October 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_mi_admin_identify_ctrl_list \- Perform an Admin identify for a controller list.
 .SH SYNOPSIS
@@ -23,4 +23,5 @@ fully populated on success.
 
 See: \fIstruct nvme_ctrl_list\fP
 .SH "RETURN"
-0 on success, non-zero on failure
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.
