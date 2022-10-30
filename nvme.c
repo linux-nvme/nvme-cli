@@ -3124,7 +3124,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		goto close_dev;
 	}
 
-	err = nvme_identify_ns_descs(dev_fd(dev), cfg.namespace_id, nsdescs);
+	err = nvme_cli_identify_ns_descs(dev, cfg.namespace_id, nsdescs);
 	if (!err)
 		nvme_show_id_ns_descs(nsdescs, cfg.namespace_id, flags);
 	else if (err > 0)
@@ -3688,7 +3688,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	err = nvme_identify_primary_ctrl(dev_fd(dev), cfg.cntlid, &caps);
+	err = nvme_cli_identify_primary_ctrl(dev, cfg.cntlid, &caps);
 	if (!err)
 		nvme_show_primary_ctrl_cap(&caps, flags);
 	else if (err > 0)
@@ -3756,8 +3756,8 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		goto close_err;
 	}
 
-	err = nvme_identify_secondary_ctrl_list(dev_fd(dev), cfg.namespace_id,
-						cfg.cntid, sc_list);
+	err = nvme_cli_identify_secondary_ctrl_list(dev, cfg.namespace_id,
+						    cfg.cntid, sc_list);
 	if (!err)
 		nvme_show_list_secondary_ctrl(sc_list, cfg.num_entries, flags);
 	else if (err > 0)
@@ -5621,7 +5621,7 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 
 	if (result)
 		fprintf(stderr, "Reference tag larger than allowed by PIF\n");
-	
+
 	return result;
 }
 
@@ -5736,7 +5736,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	if (!err) {
 		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
 		sts = nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_STS_MASK;
-		pif = (nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_PIF_MASK) >> 7; 
+		pif = (nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_PIF_MASK) >> 7;
 	}
 
 	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif)) {
@@ -5991,7 +5991,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 
 	nb = argconfig_parse_comma_sep_array_short(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
 	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, ARRAY_SIZE(slbas));
-	
+
 	if (cfg.format == 0)
 		nrts = argconfig_parse_comma_sep_array(cfg.eilbrts, (int *)eilbrts.f0, ARRAY_SIZE(eilbrts.f0));
 	else if (cfg.format == 1)
@@ -6715,7 +6715,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 					   &nvm_ns);
 		if (!err) {
 			sts = nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_STS_MASK;
-			pif = (nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_PIF_MASK) >> 7; 
+			pif = (nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_PIF_MASK) >> 7;
 		}
 
 		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;

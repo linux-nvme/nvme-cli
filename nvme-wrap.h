@@ -18,13 +18,19 @@ int nvme_cli_identify_nsid_ctrl_list(struct nvme_dev *dev, __u32 nsid,
 				     struct nvme_ctrl_list *list);
 int nvme_cli_identify_ns(struct nvme_dev *dev, __u32 nsid,
 			 struct nvme_id_ns *ns);
+int nvme_cli_identify_ns_descs(struct nvme_dev *dev, __u32 nsid,
+			       struct nvme_ns_id_desc *descs);
 int nvme_cli_identify_allocated_ns(struct nvme_dev *dev, __u32 nsid,
 				   struct nvme_id_ns *ns);
 int nvme_cli_identify_active_ns_list(struct nvme_dev *dev, __u32 nsid,
 				     struct nvme_ns_list *list);
 int nvme_cli_identify_allocated_ns_list(struct nvme_dev *dev, __u32 nsid,
 					struct nvme_ns_list *list);
-
+int nvme_cli_identify_primary_ctrl(struct nvme_dev *dev, __u32 nsid,
+				   struct nvme_primary_ctrl_cap *cap);
+int nvme_cli_identify_secondary_ctrl_list(struct nvme_dev *dev, __u32 nsid,
+					  __u16 ctrl_id,
+					  struct nvme_secondary_ctrl_list *sc_list);
 int nvme_cli_ns_mgmt_delete(struct nvme_dev *dev, __u32 nsid);
 int nvme_cli_ns_mgmt_create(struct nvme_dev *dev, struct nvme_id_ns *ns,
 			__u32 *nsid, __u32 timeout, __u8 csi);
