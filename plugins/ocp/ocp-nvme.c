@@ -13,6 +13,7 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "common.h"
 #include "nvme.h"
