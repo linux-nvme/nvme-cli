@@ -5,7 +5,6 @@
 /* type conversion helpers */
 
 #include <stdint.h>
-#include <uuid/uuid.h>
 #include <linux/types.h>
 
 #include <libnvme.h>
