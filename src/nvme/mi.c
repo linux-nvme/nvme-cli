@@ -21,6 +21,20 @@
 static const int default_timeout = 1000; /* milliseconds; endpoints may
 					    override */
 
+static bool nvme_mi_probe_enabled_default(void)
+{
+	char *val;
+
+	val = getenv("LIBNVME_MI_PROBE_ENABLED");
+	if (!val)
+		return true;
+
+	return strcmp(val, "0") &&
+		strcasecmp(val, "false") &&
+		strncasecmp(val, "disable", 7);
+
+}
+
 /* MI-equivalent of nvme_create_root, but avoids clashing symbol names
  * when linking against both libnvme and libnvme-mi.
  */
@@ -33,7 +47,7 @@ nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
 	}
 	r->log_level = log_level;
 	r->fp = stderr;
-	r->mi_probe_enabled = true;
+	r->mi_probe_enabled = nvme_mi_probe_enabled_default();
 	if (fp)
 		r->fp = fp;
 	list_head_init(&r->hosts);
