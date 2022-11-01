@@ -1141,7 +1141,7 @@ static int test_admin_id_nsid_ctrl_list_cb(struct nvme_mi_ep *ep,
 	assert(req->data_len == 0);
 
 	cns = hdr[45] << 8 | hdr[44];
-	assert(cns == NVME_IDENTIFY_CNS_CTRL_LIST);
+	assert(cns == NVME_IDENTIFY_CNS_NS_CTRL_LIST);
 
 	nsid = hdr[11] << 24 | hdr[10] << 16 | hdr[9] << 8 | hdr[8];
 	assert(nsid == 0x01020304);
