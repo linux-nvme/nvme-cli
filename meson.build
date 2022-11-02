@@ -33,8 +33,6 @@ mandir     = join_paths(prefixdir, get_option('mandir'))
 bindir     = join_paths(prefixdir, get_option('bindir'))
 sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
 
-pkgconfiglibdir = get_option('pkgconfiglibdir') == '' ? join_paths(libdir, 'pkgconfig') : get_option('pkgconfiglibdir')
-
 ################################################################################
 conf = configuration_data()
 
