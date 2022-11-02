@@ -44,7 +44,7 @@ endif
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
 # Check for libnvme availability
-libnvme_dep = dependency('libnvme', version: '>=1.1', required: true,
+libnvme_dep = dependency('libnvme', version: '>=1.2', required: true,
                          fallback : ['libnvme', 'libnvme_dep'])
 libnvme_mi_dep = dependency('libnvme-mi', required: true,
                          fallback : ['libnvme', 'libnvme_mi_dep'])
