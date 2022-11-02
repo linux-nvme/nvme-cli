@@ -140,8 +140,6 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
 		__u16 id;
 
 		id = le32_to_cpu(list.identifier[i]);
-		if (!id)
-			continue;
 
 		ctrl = nvme_mi_init_ctrl(ep, id);
 		if (!ctrl)
