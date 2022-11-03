@@ -4543,6 +4543,8 @@ static int nvme_get_properties(int fd, void **pbar)
 			err = 0;
 			value = -1;
 		} else if (err) {
+			fprintf(stderr, "get-property: %s\n",
+				nvme_strerror(errno));
 			free(*pbar);
 			break;
 		}
@@ -4585,7 +4587,9 @@ static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev)
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		fprintf(stderr, "%s did not find a pci resource, open failed %s\n",
+		if (map_log_level(0, false) >= LOG_DEBUG)
+			fprintf(stderr,
+				"%s did not find a pci resource, open failed %s\n",
 				dev->name, strerror(errno));
 		return NULL;
 	}
@@ -4610,7 +4614,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	enum nvme_print_flags flags;
 	struct nvme_dev *dev;
-	bool fabrics = true;
+	bool fabrics = false;
 	nvme_root_t r;
 	void *bar;
 	int err;
@@ -4641,16 +4645,13 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 		goto close_dev;
 	if (cfg.human_readable)
 		flags |= VERBOSE;
-
-	err = nvme_get_properties(dev_fd(dev), &bar);
-	if (err) {
-		bar = mmap_registers(r, dev);
-		fabrics = false;
-		if (bar)
-			err = 0;
+	bar = mmap_registers(r, dev);
+	if (!bar) {
+		err = nvme_get_properties(dev_fd(dev), &bar);
+		if (!bar)
+			goto close_dev;
+		fabrics = true;
 	}
-	if (!bar)
-		goto close_dev;
 
 	nvme_show_ctrl_registers(bar, fabrics, flags);
 	if (fabrics)
