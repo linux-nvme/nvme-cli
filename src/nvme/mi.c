@@ -333,7 +333,12 @@ static int nvme_mi_admin_parse_status(struct nvme_mi_resp *resp, __u32 *result)
 
 	admin_hdr = (struct nvme_mi_admin_resp_hdr *)resp->hdr;
 	nvme_result = le32_to_cpu(admin_hdr->cdw0);
-	nvme_status = le32_to_cpu(admin_hdr->cdw3) >> 16;
+
+	/* Shift down 17 here: the SC starts at bit 17, and the NVME_SC_*
+	 * definitions align to this bit (and up). The CRD, MORE and DNR
+	 * bits are defined accordingly (eg., DNR is 0x4000).
+	 */
+	nvme_status = le32_to_cpu(admin_hdr->cdw3) >> 17;
 
 	/* the result pointer, optionally stored if the caller needs it */
 	if (result)
