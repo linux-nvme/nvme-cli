@@ -1,6 +1,5 @@
-# SPDX-License-Identifier: GPL-2.0-or-later
-
 #compdef _nvme nvme
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 # zsh completions for the nvme command-line interface,
 # very loosely based on git and adb command completion
