@@ -403,6 +403,17 @@ nvme_root_t nvme_mi_create_root(FILE *fp, int log_level);
  */
 void nvme_mi_free_root(nvme_root_t root);
 
+/**
+ * nvme_mi_set_probe_enabled() - enable/disable the probe for new endpoints
+ * @root: &nvme_root_t object
+ * @enabled: whether to probe new endpoints
+ *
+ * Controls whether newly-created endpoints are probed for quirks on creation.
+ * Defaults to enabled, which results in some initial messaging with the
+ * endpoint to determine model-specific details.
+ */
+void nvme_mi_set_probe_enabled(nvme_root_t root, bool enabled);
+
 /* Top level management object: NVMe-MI Management Endpoint */
 struct nvme_mi_ep;
 

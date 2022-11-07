@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
@@ -20,6 +21,20 @@
 
 static const int default_timeout = 1000; /* milliseconds; endpoints may
 					    override */
+
+static bool nvme_mi_probe_enabled_default(void)
+{
+	char *val;
+
+	val = getenv("LIBNVME_MI_PROBE_ENABLED");
+	if (!val)
+		return true;
+
+	return strcmp(val, "0") &&
+		strcasecmp(val, "false") &&
+		strncasecmp(val, "disable", 7);
+
+}
 
 /* MI-equivalent of nvme_create_root, but avoids clashing symbol names
  * when linking against both libnvme and libnvme-mi.
@@ -33,6 +48,7 @@ nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
 	}
 	r->log_level = log_level;
 	r->fp = stderr;
+	r->mi_probe_enabled = nvme_mi_probe_enabled_default();
 	if (fp)
 		r->fp = fp;
 	list_head_init(&r->hosts);
@@ -48,6 +64,180 @@ void nvme_mi_free_root(nvme_root_t root)
 		nvme_mi_close(ep);
 
 	free(root);
+}
+
+void nvme_mi_set_probe_enabled(nvme_root_t root, bool enabled)
+{
+	root->mi_probe_enabled = enabled;
+}
+
+static void nvme_mi_record_resp_time(struct nvme_mi_ep *ep)
+{
+	int rc;
+
+	rc = clock_gettime(CLOCK_MONOTONIC, &ep->last_resp_time);
+	ep->last_resp_time_valid = !rc;
+}
+
+static bool nvme_mi_compare_vid_mn(struct nvme_mi_ep *ep,
+				   struct nvme_id_ctrl *id,
+				   __u16 vid, const char *mn)
+
+{
+	int len;
+
+	len = strlen(mn);
+	if (len >= sizeof(id->mn)) {
+		nvme_msg(ep->root, LOG_ERR,
+			 "Internal error: invalid model number for %s\n",
+			 __func__);
+		return false;
+	}
+
+	return le16_to_cpu(id->vid) == vid && !strncmp(id->mn, mn, len);
+}
+
+static void __nvme_mi_format_mn(struct nvme_id_ctrl *id,
+				char *mn, size_t mn_len)
+{
+	const size_t id_mn_size = sizeof(id->mn);
+	int i;
+
+	/* A BUILD_ASSERT() would be nice here, but we're not const enough for
+	 * that
+	 */
+	if (mn_len <= id_mn_size)
+		abort();
+
+	memcpy(mn, id->mn, id_mn_size);
+	mn[id_mn_size] = '\0';
+
+	for (i = id_mn_size - 1; i >= 0; i--) {
+		if (mn[i] != '\0' && mn[i] != ' ')
+			break;
+		mn[i] = '\0';
+	}
+}
+
+#define nvme_mi_format_mn(id, m) __nvme_mi_format_mn(id, m, sizeof(m))
+
+void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
+{
+	struct nvme_identify_args id_args = { 0 };
+	struct nvme_id_ctrl id = { 0 };
+	struct nvme_mi_ctrl *ctrl;
+	int rc;
+
+	if (!ep->root->mi_probe_enabled)
+		return;
+
+	/* start with no quirks, detect as we go */
+	ep->quirks = 0;
+
+	ctrl = nvme_mi_init_ctrl(ep, 0);
+	if (!ctrl)
+		return;
+
+	/* Do enough of an identify (assuming controller 0) to retrieve
+	 * device and firmware identification information. This gives us the
+	 * following fields in id:
+	 *
+	 *  - vid (PCI vendor ID)
+	 *  - ssvid (PCI subsystem vendor ID)
+	 *  - sn (Serial number)
+	 *  - mn (Model number)
+	 *  - fr (Firmware revision)
+	 *
+	 * all other fields - rab and onwards - will be zero!
+	 */
+	id_args.args_size = sizeof(id_args);
+	id_args.data = &id;
+	id_args.cns = NVME_IDENTIFY_CNS_CTRL;
+	id_args.nsid = NVME_NSID_NONE;
+	id_args.cntid = 0;
+	id_args.csi = NVME_CSI_NVM;
+
+	rc = nvme_mi_admin_identify_partial(ctrl, &id_args, 0,
+				    offsetof(struct nvme_id_ctrl, rab));
+	if (rc) {
+		nvme_msg(ep->root, LOG_WARNING,
+			 "Identify Controller failed, no quirks applied\n");
+		goto out_close;
+	}
+
+	/* Samsung MZUL2512: cannot receive commands sent within ~1ms of
+	 * the previous response. Set an inter-command delay of 1.2ms for
+	 * a little extra tolerance.
+	 */
+	if (nvme_mi_compare_vid_mn(ep, &id, 0x144d, "MZUL2512HCJQ")) {
+		ep->quirks |= NVME_QUIRK_MIN_INTER_COMMAND_TIME;
+		ep->inter_command_us = 1200;
+	}
+
+	/* If we're quirking for the inter-command time, record the last
+	 * command time now, so we don't conflict with the just-sent identify.
+	 */
+	if (ep->quirks & NVME_QUIRK_MIN_INTER_COMMAND_TIME)
+		nvme_mi_record_resp_time(ep);
+
+	if (ep->quirks) {
+		char tmp[sizeof(id.mn) + 1];
+
+		nvme_mi_format_mn(&id, tmp);
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "device %02x:%s: applying quirks 0x%08lx\n",
+			 id.vid, tmp, ep->quirks);
+	}
+
+out_close:
+	nvme_mi_close_ctrl(ctrl);
+}
+
+static const int nsec_per_sec = 1000 * 1000 * 1000;
+/* timercmp and timersub, but for struct timespec */
+#define timespec_cmp(a, b, CMP)						\
+	(((a)->tv_sec == (b)->tv_sec)					\
+		? ((a)->tv_nsec CMP (b)->tv_nsec)			\
+		: ((a)->tv_sec CMP (b)->tv_sec))
+
+#define timespec_sub(a, b, result)					\
+	do {								\
+		(result)->tv_sec = (a)->tv_sec - (b)->tv_sec;		\
+		(result)->tv_nsec = (a)->tv_nsec - (b)->tv_nsec;	\
+		if ((result)->tv_nsec < 0) {				\
+			--(result)->tv_sec;				\
+			(result)->tv_nsec += nsec_per_sec;		\
+		}							\
+	} while (0)
+
+static void nvme_mi_insert_delay(struct nvme_mi_ep *ep)
+{
+	struct timespec now, next, delay;
+	int rc;
+
+	if (!ep->last_resp_time_valid)
+		return;
+
+	/* calculate earliest next command time */
+	next.tv_nsec = ep->last_resp_time.tv_nsec + ep->inter_command_us * 1000;
+	next.tv_sec = ep->last_resp_time.tv_sec;
+	if (next.tv_nsec > nsec_per_sec) {
+		next.tv_nsec -= nsec_per_sec;
+		next.tv_sec += 1;
+	}
+
+	rc = clock_gettime(CLOCK_MONOTONIC, &now);
+	if (rc) {
+		/* not much we can do; continue immediately */
+		return;
+	}
+
+	if (timespec_cmp(&now, &next, >=))
+		return;
+
+	timespec_sub(&next, &now, &delay);
+
+	nanosleep(&delay, NULL);
 }
 
 struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
@@ -91,6 +281,11 @@ void nvme_mi_ep_set_mprt_max(nvme_mi_ep_t ep, unsigned int mprt_max_ms)
 unsigned int nvme_mi_ep_get_timeout(nvme_mi_ep_t ep)
 {
 	return ep->timeout;
+}
+
+static bool nvme_mi_ep_has_quirk(nvme_mi_ep_t ep, unsigned long quirk)
+{
+	return ep->quirks & quirk;
 }
 
 struct nvme_mi_ctrl *nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id)
@@ -221,7 +416,14 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 	if (ep->transport->mic_enabled)
 		nvme_mi_calc_req_mic(req);
 
+	if (nvme_mi_ep_has_quirk(ep, NVME_QUIRK_MIN_INTER_COMMAND_TIME))
+		nvme_mi_insert_delay(ep);
+
 	rc = ep->transport->submit(ep, req, resp);
+
+	if (nvme_mi_ep_has_quirk(ep, NVME_QUIRK_MIN_INTER_COMMAND_TIME))
+		nvme_mi_record_resp_time(ep);
+
 	if (rc) {
 		nvme_msg(ep->root, LOG_INFO, "transport failure\n");
 		return rc;

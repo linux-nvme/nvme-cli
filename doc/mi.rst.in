@@ -13,6 +13,17 @@ Most of the MI API is transport-agnostic, except for the endpoint constructor
 functions. Once an endpoint object (``nvme_mi_ep_t``) is created, the generic
 functions can be used to manage it.
 
+When endpoints are created (through one of the transport-specific functions,
+like ``nvme_mi_open_mctp()``), the endpoint hardware will be probed to
+see if any device-specific workarounds ("quirks") are required. This is
+implemented as an Identify Controller command, requesting a small amount of
+data on controller ID 0.
+
+To suppress this probe, the ``LIBNVME_MI_PROBE_ENABLED`` environment var can be
+set. Values of ``0``, ``false`` and ``disabled`` will disable the probe, and no
+quirks will be applied. Other values, or an unset environment variable, will
+enable the probe.
+
 MCTP Transport
 --------------
 

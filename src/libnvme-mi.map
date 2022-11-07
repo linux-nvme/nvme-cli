@@ -1,3 +1,8 @@
+LIBNVME_MI_1_3 {
+	global:
+		nvme_mi_set_probe_enabled;
+};
+
 LIBNVME_MI_1_2 {
 	global:
 		nvme_mi_admin_get_features;

@@ -125,6 +125,7 @@ struct nvme_root {
 	bool log_pid;
 	bool log_timestamp;
 	bool modified;
+	bool mi_probe_enabled;
 };
 
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
@@ -186,6 +187,14 @@ struct nvme_mi_transport {
 	int (*check_timeout)(struct nvme_mi_ep *ep, unsigned int timeout);
 };
 
+/* quirks */
+
+/* Set a minimum time between receiving a response from one command and
+ * sending the next request. Some devices may ignore new commands sent too soon
+ * after the previous request, so manually insert a delay
+ */
+#define NVME_QUIRK_MIN_INTER_COMMAND_TIME	(1 << 0)
+
 struct nvme_mi_ep {
 	struct nvme_root *root;
 	const struct nvme_mi_transport *transport;
@@ -195,6 +204,12 @@ struct nvme_mi_ep {
 	bool controllers_scanned;
 	unsigned int timeout;
 	unsigned int mprt_max;
+	unsigned long quirks;
+
+	/* inter-command delay, for NVME_QUIRK_MIN_INTER_COMMAND_TIME */
+	unsigned int inter_command_us;
+	struct timespec last_resp_time;
+	bool last_resp_time_valid;
 };
 
 struct nvme_mi_ctrl {
@@ -204,6 +219,7 @@ struct nvme_mi_ctrl {
 };
 
 struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_root *root);
+void nvme_mi_ep_probe(struct nvme_mi_ep *ep);
 
 /* for tests, we need to calculate the correct MICs */
 __u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len);

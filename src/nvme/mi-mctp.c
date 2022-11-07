@@ -510,6 +510,8 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)
 	 */
 	ep->timeout = 5000;
 
+	nvme_mi_ep_probe(ep);
+
 	return ep;
 
 err_free_ep:
