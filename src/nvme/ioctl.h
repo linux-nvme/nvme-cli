@@ -1226,6 +1226,17 @@ static inline int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
  */
 int nvme_get_log(struct nvme_get_log_args *args);
 
+/**
+ * nvme_get_log_page() - Get log page data
+ * @fd:		File descriptor of nvme device
+ * @xfer_len:	Max log transfer size per request to split the total.
+ * @args:	&struct nvme_get_log_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args);
+
 static inline int nvme_get_nsid_log(int fd, bool rae,
 			enum nvme_cmd_get_log_lid lid,
 			__u32 nsid, __u32 len, void *log)
