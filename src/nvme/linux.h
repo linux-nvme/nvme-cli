@@ -98,17 +98,6 @@ int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
 
 /**
- * nvme_get_log_page() - Get log page data
- * @fd:		File descriptor of nvme device
- * @xfer_len:	Max log transfer size per request to split the total.
- * @args:	&struct nvme_get_log_args argument structure
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
- */
-int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args);
-
-/**
  * nvme_get_ana_log_len() - Retrieve size of the current ANA log
  * @fd:		File descriptor of nvme device
  * @analen:	Pointer to where the length will be set on success

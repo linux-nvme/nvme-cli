@@ -117,45 +117,6 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 	return err;
 }
 
-int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
-{
-	__u64 offset = 0, xfer, data_len = args->len;
-	bool retain = true;
-	void *ptr = args->log;
-	int ret;
-
-	/*
-	 * 4k is the smallest possible transfer unit, so restricting to 4k
-	 * avoids having to check the MDTS value of the controller.
-	 */
-	do {
-		xfer = data_len - offset;
-		if (xfer > xfer_len)
-			xfer  = xfer_len;
-
-		/*
-		 * Always retain regardless of the RAE parameter until the very
-		 * last portion of this log page so the data remains latched
-		 * during the fetch sequence.
-		 */
-		if (offset + xfer == data_len)
-			retain = args->rae;
-
-		args->lpo = offset;
-		args->len = xfer;
-		args->log = ptr;
-		args->rae = retain;
-		ret = nvme_get_log(args);
-		if (ret)
-			return ret;
-
-		offset += xfer;
-		ptr += xfer;
-	} while (offset < data_len);
-
-	return 0;
-}
-
 static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 				  struct nvme_telemetry_log **buf, enum nvme_telemetry_da da,
 				  size_t *size)

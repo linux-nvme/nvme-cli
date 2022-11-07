@@ -34,6 +34,12 @@
 /* '0' is interpreted by the kernel to mean 'apply the default timeout' */
 #define NVME_DEFAULT_IOCTL_TIMEOUT 0
 
+/*
+ * 4k is the smallest possible transfer unit, so restricting to 4k
+ * avoids having to check the MDTS value of the controller.
+ */
+#define NVME_LOG_PAGE_PDU_SIZE 4096
+
 /**
  * struct nvme_passthru_cmd - nvme passthrough command structure
  * @opcode:	Operation code, see &enum nvme_io_opcodes and &enum nvme_admin_opcodes
@@ -1226,6 +1232,17 @@ static inline int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
  */
 int nvme_get_log(struct nvme_get_log_args *args);
 
+/**
+ * nvme_get_log_page() - Get log page data
+ * @fd:		File descriptor of nvme device
+ * @xfer_len:	Max log transfer size per request to split the total.
+ * @args:	&struct nvme_get_log_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args);
+
 static inline int nvme_get_nsid_log(int fd, bool rae,
 			enum nvme_cmd_get_log_lid lid,
 			__u32 nsid, __u32 len, void *log)
@@ -1248,7 +1265,7 @@ static inline int nvme_get_nsid_log(int fd, bool rae,
 		.ot = false,
 	};
 
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
@@ -1391,7 +1408,7 @@ static inline int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1441,7 +1458,7 @@ static inline int nvme_get_log_create_telemetry_host(int fd,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1477,7 +1494,7 @@ static inline int nvme_get_log_telemetry_host(int fd, __u64 offset,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1514,7 +1531,7 @@ static inline int nvme_get_log_telemetry_ctrl(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1553,7 +1570,7 @@ static inline int nvme_get_log_endurance_group(int fd, __u16 endgid,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1585,7 +1602,7 @@ static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1619,7 +1636,7 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1660,7 +1677,7 @@ static inline int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1713,7 +1730,7 @@ static inline int nvme_get_log_lba_status(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1747,7 +1764,7 @@ static inline int nvme_get_log_endurance_grp_evt(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1814,7 +1831,7 @@ static inline int nvme_get_log_boot_partition(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1851,7 +1868,7 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1883,7 +1900,7 @@ static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1915,7 +1932,7 @@ static inline int nvme_get_log_support_cap_config_list(int fd, __u16 domid,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -1985,7 +2002,7 @@ static inline int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
@@ -2019,7 +2036,7 @@ static inline int nvme_get_log_persistent_event(int fd,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log(&args);
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
 /**
