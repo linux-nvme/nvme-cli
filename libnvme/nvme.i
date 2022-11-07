@@ -585,7 +585,11 @@ struct nvme_ns {
       connect_err = 1;
       return;
     }
+
+    Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
     ret = nvmf_add_ctrl(h, $self, cfg);
+    Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
+
     if (ret < 0) {
       connect_err = 2;
       return;
@@ -601,7 +605,9 @@ struct nvme_ns {
     nvme_rescan_ctrl($self);
   }
   void disconnect() {
+    Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
     nvme_disconnect_ctrl($self);
+    Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
   }
 
   %feature("autodoc", "@return: True if controller supports explicit registration. False otherwise.") is_registration_supported;
@@ -614,7 +620,10 @@ struct nvme_ns {
     __u32 result;
     int   status;
 
+    Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
     status = nvmf_register_ctrl($self, NVMF_DIM_TAS_REGISTER, &result);
+    Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
+
     if (status != NVME_SC_SUCCESS) {
       /* On error, return an error message */
       if (status < 0)
@@ -629,6 +638,7 @@ struct nvme_ns {
 
   %newobject discover;
   struct nvmf_discovery_log *discover(int lsp = 0, int max_retries = 6) {
+    struct nvmf_discovery_log *logp;
     struct nvme_get_discovery_args args = {
       .c = $self,
       .args_size = sizeof(args),
@@ -637,7 +647,11 @@ struct nvme_ns {
       .timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
       .lsp = lsp,
     };
-    struct nvmf_discovery_log *logp = nvmf_get_discovery_wargs(&args);
+
+    Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
+    logp = nvmf_get_discovery_wargs(&args);
+    Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
+
     if (logp == NULL)
       discover_err = 1;
     return logp;
@@ -649,7 +663,10 @@ struct nvme_ns {
     PyObject *obj = NULL;
     int ret = 0;
 
+    Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
     ret = nvme_get_log_supported_log_pages(nvme_ctrl_get_fd($self), rae, &log);
+    Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
+
     if (ret < 0) {
       Py_RETURN_NONE;
     }
