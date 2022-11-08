@@ -347,14 +347,14 @@ int do_admin_raw(nvme_mi_ep_t ep, int argc, char **argv)
 	}
 
 	tmp = atoi(argv[1]);
-	if (tmp < 0 || tmp > 0xffff) {
+	if (tmp > 0xffff) {
 		fprintf(stderr, "invalid controller ID\n");
 		return -1;
 	}
 	ctrl_id = tmp & 0xffff;
 
 	tmp = atoi(argv[2]);
-	if (tmp < 0 || tmp > 0xff) {
+	if (tmp > 0xff) {
 		fprintf(stderr, "invalid opcode\n");
 		return -1;
 	}
@@ -461,7 +461,7 @@ int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 	}
 
 	tmp = atoi(argv[1]);
-	if (tmp < 0 || tmp > 0xffff) {
+	if (tmp > 0xffff) {
 		fprintf(stderr, "invalid controller ID\n");
 		return -1;
 	}
