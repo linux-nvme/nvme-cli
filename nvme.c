@@ -4205,7 +4205,9 @@ static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
 			      unsigned int fw_len, uint32_t offset,
 			      uint32_t len, bool progress)
 {
-	int err;
+	const unsigned int max_retries = 3;
+	bool retryable;
+	int err, try;
 
 	if (progress) {
 		printf("Firmware download: transferring 0x%08x/0x%08x bytes: %03d%%\r",
@@ -4221,26 +4223,43 @@ static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
 		.result		= NULL,
 	};
 
-	err = nvme_cli_fw_download(dev, &args);
-	if (!err)
-		return 0;
+	for (try = 0; try < max_retries; try++) {
 
-	/* if we're printing progress, we'll need a newline to separate
-	 * error output from the progress data (which doesn't have a \n),
-	 * and flush before we write to stderr.
-	 */
-	if (progress) {
-		printf("\n");
-		fflush(stdout);
+		if (try > 0) {
+			fprintf(stderr, "retrying offset %x (%u/%u)\n",
+				offset, try, max_retries);
+		}
+
+		err = nvme_cli_fw_download(dev, &args);
+		if (!err)
+			return 0;
+
+		/* don't retry if the NVMe-type error indicates Do Not Resend.
+		 */
+		retryable = !((err > 0) &&
+			(nvme_status_get_type(err) == NVME_STATUS_TYPE_NVME) &&
+			(nvme_status_get_value(err) & NVME_SC_DNR));
+
+		/* if we're printing progress, we'll need a newline to separate
+		 * error output from the progress data (which doesn't have a
+		 * \n), and flush before we write to stderr.
+		 */
+		if (progress) {
+			printf("\n");
+			fflush(stdout);
+		}
+
+		fprintf(stderr, "fw-download: error on offset 0x%08x/0x%08x\n",
+			offset, fw_len);
+
+		if (err < 0)
+			fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
+		else
+			nvme_show_status(err);
+
+		if (!retryable)
+			break;
 	}
-
-	fprintf(stderr, "fw-download: failed on offset 0x%08x/0x%08x\n",
-		offset, fw_len);
-
-	if (err < 0)
-		fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
-	else
-		nvme_show_status(err);
 
 	return -1;
 }
