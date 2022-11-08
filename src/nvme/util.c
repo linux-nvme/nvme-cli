@@ -871,13 +871,11 @@ int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
 	if (f < 0)
 		return -errno;
 	n = read(f, uuid, NVME_UUID_LEN);
-	if (n < 0) {
-		close(f);
+	close(f);
+	if (n < 0)
 		return -errno;
-	} else if (n != NVME_UUID_LEN) {
-		close(f);
+	else if (n != NVME_UUID_LEN)
 		return -EIO;
-	}
 
 	/*
 	 * See https://www.rfc-editor.org/rfc/rfc4122#section-4.4
