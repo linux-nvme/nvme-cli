@@ -659,7 +659,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 			}
 		} else {
 			printf("ScaleFlux IO %s Command Latency Statistics Invalid Version Maj %d Min %d\n",
-				    write ? "Write" : "Read", stats.ver.maj, stats.ver.min);
+				    cfg.write ? "Write" : "Read", stats.ver.maj, stats.ver.min);
 		}
 	} else if (err > 0)
 		nvme_show_status(err);
