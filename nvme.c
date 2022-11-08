@@ -5723,11 +5723,11 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
-	if (err) {
-		nvme_show_status(err);
-		goto close_dev;
-	} else if (err < 0) {
+	if (err < 0) {
 		fprintf(stderr, "identify namespace: %s\n", nvme_strerror(errno));
+		goto close_dev;
+	} else if (err) {
+		nvme_show_status(err);
 		goto close_dev;
 	}
 
@@ -6955,11 +6955,11 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	}
 
 	err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
-	if (err) {
-		nvme_show_status(err);
-		goto close_dev;
-	} else if (err < 0) {
+	if (err < 0) {
 		fprintf(stderr, "identify namespace: %s\n", nvme_strerror(errno));
+		goto close_dev;
+	} else if (err) {
+		nvme_show_status(err);
 		goto close_dev;
 	}
 
