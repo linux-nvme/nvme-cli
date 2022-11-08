@@ -3168,7 +3168,6 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
     if (telemetry_option) {
         if ((ctrl.lpa & 0x8) != 0x8) {
            printf("telemetry option is not supported for specified drive\n");
-           dev_close(dev);
            goto out;
         }
         int logSize = 0; __u8 *buffer = NULL; const char *dir = ".";
