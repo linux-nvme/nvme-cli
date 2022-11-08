@@ -7750,7 +7750,7 @@ static int passthru(int argc, char **argv, bool admin,
 	gettimeofday(&start_time, NULL);
 
 	if (admin)
-		err = nvme_admin_passthru(dev_fd(dev), cfg.opcode, cfg.flags,
+		err = nvme_cli_admin_passthru(dev, cfg.opcode, cfg.flags,
 					  cfg.rsvd,
 					  cfg.namespace_id, cfg.cdw2,
 					  cfg.cdw3, cfg.cdw10,

@@ -125,6 +125,13 @@ int nvme_cli_fw_download(struct nvme_dev *dev,
 int nvme_cli_fw_commit(struct nvme_dev *dev,
 			 struct nvme_fw_commit_args *args);
 
+int nvme_cli_admin_passthru(struct nvme_dev *dev, __u8 opcode, __u8 flags,
+			    __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3,
+			    __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13,
+			    __u32 cdw14, __u32 cdw15, __u32 data_len,
+			    void *data, __u32 metadata_len, void *metadata,
+			    __u32 timeout_ms, __u32 *result);
+
 int nvme_cli_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
 				__u32 *len);
 

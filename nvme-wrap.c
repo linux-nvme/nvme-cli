@@ -355,6 +355,19 @@ int nvme_cli_fw_commit(struct nvme_dev *dev,
 	return do_admin_args_op(fw_commit, dev, args);
 }
 
+int nvme_cli_admin_passthru(struct nvme_dev *dev, __u8 opcode, __u8 flags,
+			    __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3,
+			    __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13,
+			    __u32 cdw14, __u32 cdw15, __u32 data_len,
+			    void *data, __u32 metadata_len, void *metadata,
+			    __u32 timeout_ms, __u32 *result)
+{
+	return do_admin_op(admin_passthru, dev, opcode, flags, rsvd, nsid,
+			   cdw2, cdw3, cdw10, cdw11, cdw12, cdw13, cdw14, cdw15,
+			   data_len, data, metadata_len, metadata, timeout_ms,
+			   result);
+}
+
 /* The MI & direct interfaces don't have an exactly-matching API for
  * ns_mgmt_create, as we don't support a timeout for MI.
  */
