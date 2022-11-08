@@ -894,7 +894,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		.ot = false,
 	};
 	*logp = nvme_discovery_log(c, &args, max_retries);
-	return logp ? 0 : -1;
+	return *logp ? 0 : -1;
 }
 
 struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args)
