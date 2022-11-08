@@ -4234,6 +4234,9 @@ static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
 		fflush(stdout);
 	}
 
+	fprintf(stderr, "fw-download: failed on offset 0x%08x/0x%08x\n",
+		offset, fw_len);
+
 	if (err < 0)
 		fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
 	else
