@@ -703,6 +703,9 @@ int nvme_mi_admin_admin_passthru(nvme_mi_ctrl_t ctrl, __u8 opcode, __u8 flags,
 		return rc;
 
 	rc = nvme_mi_admin_parse_status(&resp, result);
+	if (rc)
+		return rc;
+
 	if (has_read_data && (resp.data_len != data_len)) {
 		errno = EPROTO;
 		return -1;
