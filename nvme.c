@@ -540,6 +540,100 @@ ret:
 	return err;
 }
 
+static int get_telemetry_log_helper(struct nvme_dev *dev, bool create,
+				    bool ctrl, struct nvme_telemetry_log **buf,
+				    enum nvme_telemetry_da da,
+				    size_t *size)
+{
+	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
+	struct nvme_telemetry_log *telem;
+	struct nvme_id_ctrl id_ctrl;
+	void *log, *tmp;
+	int err;
+	*size = 0;
+
+	log = calloc(1, xfer);
+	if (!log)
+		return -ENOMEM;
+
+	if (ctrl) {
+		/* set rae = true so it won't clear the current telemetry log in controller */
+		err = nvme_cli_get_log_telemetry_ctrl(dev, true, 0, xfer, log);
+	} else {
+		if (create)
+			err = nvme_cli_get_log_create_telemetry_host(dev, log);
+		else
+			err = nvme_cli_get_log_telemetry_host(dev, 0, xfer, log);
+	}
+
+	if (err)
+		goto free;
+
+	telem = log;
+	if (ctrl && !telem->ctrlavail) {
+		*buf = log;
+		*size = xfer;
+		printf("Warning: Telemetry Controller-Initiated Data Not Available.\n");
+		return 0;
+	}
+
+	switch (da) {
+	case NVME_TELEMETRY_DA_1:
+	case NVME_TELEMETRY_DA_2:
+	case NVME_TELEMETRY_DA_3:
+		/* dalb3 >= dalb2 >= dalb1 */
+		*size = (le16_to_cpu(telem->dalb3) + 1) * xfer;
+		break;
+	case NVME_TELEMETRY_DA_4:
+		err = nvme_cli_identify_ctrl(dev, &id_ctrl);
+		if (err) {
+			perror("identify-ctrl");
+			goto free;
+		}
+
+		if (id_ctrl.lpa & 0x40) {
+			*size = (le32_to_cpu(telem->dalb4) + 1) * xfer;
+		} else {
+			fprintf(stderr, "Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
+			err = -EINVAL;
+			goto free;
+		}
+		break;
+	default:
+		fprintf(stderr, "Invalid data area parameter - %d\n", da);
+		err = -EINVAL;
+		goto free;
+	}
+
+	if (xfer == *size) {
+		fprintf(stderr, "ERRO: No telemetry data block\n");
+		err = -ENOENT;
+		goto free;
+	}
+
+	tmp = realloc(log, *size);
+	if (!tmp) {
+		err = -ENOMEM;
+		goto free;
+	}
+	log = tmp;
+
+	if (ctrl) {
+		err = nvme_cli_get_log_telemetry_ctrl(dev, true, 0, *size, log);
+	} else {
+		err = nvme_cli_get_log_telemetry_host(dev, 0, *size, log);
+	}
+
+	if (!err) {
+		*buf = log;
+		return 0;
+	}
+free:
+	free(log);
+	return err;
+}
+
+
 static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 			     struct plugin *plugin)
 {
@@ -596,18 +690,22 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	}
 
 	if (cfg.ctrl_init)
-		err = nvme_get_ctrl_telemetry(dev_fd(dev), true, &log,
-					      cfg.data_area, &total_size);
+		/* Create Telemetry Host-Initiated Data = false, Controller-Initiated = true */
+		err = get_telemetry_log_helper(dev, false, true, &log,
+					       cfg.data_area, &total_size);
 	else if (cfg.host_gen)
-		err = nvme_get_new_host_telemetry(dev_fd(dev), &log,
-						  cfg.data_area, &total_size);
+		/* Create Telemetry Host-Initiated Data = true, Controller-Initiated = false */
+		err = get_telemetry_log_helper(dev, true, false, &log,
+					       cfg.data_area, &total_size);
 	else
-		err = nvme_get_host_telemetry(dev_fd(dev), &log,
-					      cfg.data_area, &total_size);
+		/* Create Telemetry Host-Initiated Data = false, Controller-Initiated = false */
+		err = get_telemetry_log_helper(dev, false, false, &log,
+					       cfg.data_area, &total_size);
 
 	if (err < 0) {
 		fprintf(stderr, "get-telemetry-log: %s\n",
 			nvme_strerror(errno));
+		goto close_output;
 	} else if (err > 0) {
 		nvme_show_status(err);
 		fprintf(stderr, "Failed to acquire telemetry log %d!\n", err);
