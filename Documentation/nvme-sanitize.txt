@@ -93,8 +93,8 @@ EXAMPLES
 * Has the program issue Sanitize Command :
 +
 ------------
-# nvme sanitize /dev/nvme0n1 -a 0x02
-# nvme sanitize /dev/nvme0n1 --sanact=0x01
+# nvme sanitize /dev/nvme0 -a 0x02
+# nvme sanitize /dev/nvme0 --sanact=0x01
 
 ------------
 
