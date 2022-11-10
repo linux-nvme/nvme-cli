@@ -226,7 +226,7 @@ otherwise.
 
 .. c:function:: int nvme_get_feature_length (int fid, __u32 cdw11, __u32 *len)
 
-   Retreive the command payload length for a specific feature identifier
+   Retrieve the command payload length for a specific feature identifier
 
 **Parameters**
 
@@ -248,7 +248,7 @@ recognize :c:type:`fid`.
 
 .. c:function:: int nvme_get_feature_length2 (int fid, __u32 cdw11, enum nvme_data_tfr dir, __u32 *len)
 
-   Retreive the command payload length for a specific feature identifier
+   Retrieve the command payload length for a specific feature identifier
 
 **Parameters**
 
@@ -433,7 +433,7 @@ usage: int x = round_up(13, sizeof(__u32)); // 13 -> 16
 **Parameters**
 
 ``size_t val_len``
-  Value lenght
+  Value length
 
 **Description**
 
@@ -443,7 +443,7 @@ __u32), of the buffer needed to hold the exat value of size
 
 **Return**
 
-Lenght rounded up by 4
+Length rounded up by 4
 
 
 .. c:function:: __u16 nvmf_exat_size (size_t val_len)

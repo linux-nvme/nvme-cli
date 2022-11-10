@@ -529,13 +529,13 @@ char *startswith(const char *s, const char *prefix);
 
 /**
  * nvmf_exat_len() - Return length rounded up by 4
- * @val_len: Value lenght
+ * @val_len: Value length
  *
  * Return the size in bytes, rounded to a multiple of 4 (e.g., size of
  * __u32), of the buffer needed to hold the exat value of size
  * @val_len.
  *
- * Return: Lenght rounded up by 4
+ * Return: Length rounded up by 4
  */
 static inline __u16 nvmf_exat_len(size_t val_len)
 {

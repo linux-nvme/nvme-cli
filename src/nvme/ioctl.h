@@ -2409,7 +2409,7 @@ int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 				  __u32 *result);
 
 /**
- * nvme_set_features_host_id() - Set enable extended host identifers feature
+ * nvme_set_features_host_id() - Set enable extended host identifiers feature
  * @fd:		File descriptor of nvme device
  * @exhid:	Enable Extended Host Identifier
  * @save:	Save value across power states
@@ -3389,7 +3389,7 @@ int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args);
  * The controller may return a response to this command immediately while
  * running the self-test in the background.
  *
- * Set the 'nsid' field to 0 to not include namepsaces in the test. Set to
+ * Set the 'nsid' field to 0 to not include namespaces in the test. Set to
  * 0xffffffff to test all namespaces. All other values tests a specific
  * namespace, if present.
  *

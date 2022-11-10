@@ -2911,7 +2911,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_host_id (int fd, bool exhid, bool save, __u8 *hostid)
 
-   Set enable extended host identifers feature
+   Set enable extended host identifiers feature
 
 **Parameters**
 
@@ -4307,7 +4307,7 @@ controller and may include testing of the media associated with namespaces.
 The controller may return a response to this command immediately while
 running the self-test in the background.
 
-Set the 'nsid' field to 0 to not include namepsaces in the test. Set to
+Set the 'nsid' field to 0 to not include namespaces in the test. Set to
 0xffffffff to test all namespaces. All other values tests a specific
 namespace, if present.
 

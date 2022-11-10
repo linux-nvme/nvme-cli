@@ -325,7 +325,7 @@ static const char * const media_status[] = {
 };
 
 static const char * const path_status[] = {
-	[NVME_SC_ANA_INTERNAL_PATH_ERROR] = "Internal Path Error: An internal error specific to the controller processing the commmand prevented completion",
+	[NVME_SC_ANA_INTERNAL_PATH_ERROR] = "Internal Path Error: An internal error specific to the controller processing the command prevented completion",
 	[NVME_SC_ANA_PERSISTENT_LOSS]	  = "Asymmetric Access Persistent Loss: The controller is in a persistent loss state with the requested namespace",
 	[NVME_SC_ANA_INACCESSIBLE]	  = "Asymmetric Access Inaccessible: The controller is in an inaccessible state with the requested namespace",
 	[NVME_SC_ANA_TRANSITION]	  = "Asymmetric Access Transition: The controller is currently transitioning states with the requested namespace",
@@ -559,7 +559,7 @@ static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_INVAL_TR] = "invalid transport type",
 	[ENVME_CONNECT_LOOKUP_SUBSYS_NAME] = "failed to lookup subsystem name",
 	[ENVME_CONNECT_LOOKUP_SUBSYS] = "failed to lookup subsystem",
-	[ENVME_CONNECT_ALREADY] = "already connnected",
+	[ENVME_CONNECT_ALREADY] = "already connected",
 	[ENVME_CONNECT_INVAL] = "invalid arguments/configuration",
 	[ENVME_CONNECT_ADDRINUSE] = "hostnqn already in use",
 	[ENVME_CONNECT_NODEV] = "invalid interface",
