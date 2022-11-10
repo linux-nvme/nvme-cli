@@ -1353,7 +1353,7 @@ static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
 	assert(!rc);
 	assert(ns == 0x01020304);
 
-	nsid.nsze = 42;
+	nsid.nsze = cpu_to_le64(42);
 	rc = nvme_mi_admin_ns_mgmt_create(ctrl, &nsid, 0, &ns);
 	assert(rc);
 }

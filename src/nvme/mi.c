@@ -334,7 +334,7 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
 		struct nvme_mi_ctrl *ctrl;
 		__u16 id;
 
-		id = le32_to_cpu(list.identifier[i]);
+		id = le16_to_cpu(list.identifier[i]);
 
 		ctrl = nvme_mi_init_ctrl(ep, id);
 		if (!ctrl)
@@ -1280,7 +1280,7 @@ static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 	req_hdr.hdr.nmp = (NVME_MI_ROR_REQ << 7) |
 		(NVME_MI_MT_MI << 3); /* we always use command slot 0 */
 	req_hdr.opcode = nvme_mi_mi_opcode_mi_data_read;
-	req_hdr.cdw0 = cdw0;
+	req_hdr.cdw0 = cpu_to_le32(cdw0);
 
 	memset(&req, 0, sizeof(req));
 	req.hdr = &req_hdr.hdr;
