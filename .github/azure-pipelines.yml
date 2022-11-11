@@ -6,8 +6,7 @@
 #   - nvme/012
 #   - nvme/013
 
-trigger:
-  - master
+trigger: none # Disable CI triggers.
 
 jobs:
   - job: blktests
