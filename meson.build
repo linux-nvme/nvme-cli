@@ -2,7 +2,7 @@
 ################################################################################
 project(
     'nvme-cli', ['c'],
-    meson_version: '>= 0.48.0',
+    meson_version: '>= 0.50.0',
     license: 'GPL-2.0-only',
     version: '2.2.1',
     default_options: [
