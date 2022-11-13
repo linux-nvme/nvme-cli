@@ -452,7 +452,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	err = nvme_cli_get_log_smart(dev, cfg.namespace_id, true,
+	err = nvme_cli_get_log_smart(dev, cfg.namespace_id, false,
 				 &smart_log);
 	if (!err)
 		nvme_show_smart_log(&smart_log, cfg.namespace_id,
