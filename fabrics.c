@@ -82,7 +82,6 @@ struct connect_args {
 	char *trsvcid;
 	char *host_traddr;
 	char *host_iface;
-	char *subsystype;
 	struct connect_args *next;
 	struct connect_args *tail;
 };
@@ -297,13 +296,6 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	addr = nvme_get_ctrl_attr(path, "address");
 	cargs.subsysnqn = nvme_get_ctrl_attr(path, "subsysnqn");
 	cargs.transport = nvme_get_ctrl_attr(path, "transport");
-	cargs.subsystype = nvme_get_ctrl_attr(path, "subsystype");
-	if (!cargs.subsystype) {
-		if (!strcmp(cargs.subsysnqn, NVME_DISC_SUBSYS_NAME))
-			cargs.subsystype = strdup("discovery");
-		else
-			cargs.subsystype = strdup("nvm");
-	}
 
 	if (!addr || !cargs.subsysnqn || !cargs.transport) {
 		fprintf(stderr, "nvme_get_ctrl_attr failed\n");
@@ -315,7 +307,7 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	cargs.host_traddr = parse_conn_arg(addr, ' ', conarg_host_traddr);
 	cargs.host_iface = parse_conn_arg(addr, ' ', conarg_host_iface);
 
-	if (!strcmp(cargs.subsystype, "discovery")) {
+	if (!strcmp(cargs.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		char *kato_str = nvme_get_ctrl_attr(path, "kato"), *p;
 		unsigned int kato = 0;
 
@@ -424,7 +416,6 @@ static void destruct_connect_args(struct connect_args *cargs)
 	free(cargs->trsvcid);
 	free(cargs->host_traddr);
 	free(cargs->host_iface);
-	free(cargs->subsystype);
 }
 
 static void free_connect_args(struct connect_args *cargs)
