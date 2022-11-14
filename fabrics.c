@@ -143,9 +143,8 @@ static inline const char *adrfam_str(__u8 adrfam)
 }
 
 static const char * const subtypes[] = {
-	[NVME_NQN_DISC]		= "discovery subsystem referral",
+	[NVME_NQN_DISC]		= "discovery subsystem",
 	[NVME_NQN_NVME]		= "nvme subsystem",
-	[NVME_NQN_CURR]		= "current subsystem",
 };
 
 static inline const char *subtype_str(__u8 subtype)
@@ -1173,7 +1172,6 @@ retry:
 
 	switch (e->subtype) {
 	case NVME_NQN_DISC:
-	case NVME_NQN_CURR:
 		discover = true;
 	case NVME_NQN_NVME:
 		break;

@@ -75,9 +75,8 @@ static inline uint64_t le64_to_cpu(__le64 x)
 #define NVME_NSID_ALL		0xffffffff
 
 enum nvme_subsys_type {
-	NVME_NQN_DISC	= 1,		/* Referral Discovery type target subsystem */
+	NVME_NQN_DISC	= 1,		/* Discovery type target subsystem */
 	NVME_NQN_NVME	= 2,		/* NVME type target subsystem */
-	NVME_NQN_CURR	= 3,		/* Current Discovery type target subsystem */
 };
 
 /* Address Family codes for Discovery Log Page entry ADRFAM field */
