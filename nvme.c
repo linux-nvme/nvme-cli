@@ -4197,6 +4197,36 @@ ret:
 	return err;
 }
 
+/* Transfers one chunk of firmware to the device, and decodes & reports any
+ * errors. Returns -1 on (fatal) error; signifying that the transfer should
+ * be aborted.
+ */
+static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
+			      uint32_t offset, uint32_t len)
+{
+	int err;
+
+	struct nvme_fw_download_args args = {
+		.args_size	= sizeof(args),
+		.offset		= offset,
+		.data_len	= len,
+		.data		= fw_buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+
+	err = nvme_cli_fw_download(dev, &args);
+	if (!err)
+		return 0;
+
+	if (err < 0)
+		fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
+	else
+		nvme_show_status(err);
+
+	return -1;
+}
+
 static int fw_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Copy all or part of a firmware image to "\
@@ -4212,9 +4242,9 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	const char *offset = "starting dword offset, default 0";
 	unsigned int fw_size;
 	struct nvme_dev *dev;
-	void *fw_buf, *buf;
 	int err, fw_fd = -1;
 	struct stat sb;
+	void *fw_buf;
 	bool huge;
 
 	struct config {
@@ -4275,41 +4305,27 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fw_fd;
 	}
 
-	buf = fw_buf;
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
 		err = -errno;
 		fprintf(stderr, "read :%s :%s\n", cfg.fw, strerror(errno));
 		goto free;
 	}
 
-	while (fw_size > 0) {
+	while (cfg.offset < fw_size) {
 		cfg.xfer = min(cfg.xfer, fw_size);
 
-		struct nvme_fw_download_args args = {
-			.args_size	= sizeof(args),
-			.offset		= cfg.offset,
-			.data_len	= cfg.xfer,
-			.data		= fw_buf,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
-		};
-		err = nvme_cli_fw_download(dev, &args);
-		if (err < 0) {
-			fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
+		err = fw_download_single(dev, fw_buf + cfg.offset,
+					 cfg.offset, cfg.xfer);
+		if (err)
 			break;
-		} else if (err != 0) {
-			nvme_show_status(err);
-			break;
-		}
-		fw_buf     += cfg.xfer;
-		fw_size    -= cfg.xfer;
+
 		cfg.offset += cfg.xfer;
 	}
 	if (!err)
 		printf("Firmware download success\n");
 
 free:
-	nvme_free(buf, huge);
+	nvme_free(fw_buf, huge);
 close_fw_fd:
 	close(fw_fd);
 close_dev:
