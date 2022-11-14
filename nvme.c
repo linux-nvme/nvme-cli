@@ -4202,9 +4202,15 @@ ret:
  * be aborted.
  */
 static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
-			      uint32_t offset, uint32_t len)
+			      unsigned int fw_len, uint32_t offset,
+			      uint32_t len, bool progress)
 {
 	int err;
+
+	if (progress) {
+		printf("Firmware download: transferring 0x%08x/0x%08x bytes: %03d%%\r",
+		       offset, fw_len, (int)(100 * offset / fw_len));
+	}
 
 	struct nvme_fw_download_args args = {
 		.args_size	= sizeof(args),
@@ -4218,6 +4224,15 @@ static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
 	err = nvme_cli_fw_download(dev, &args);
 	if (!err)
 		return 0;
+
+	/* if we're printing progress, we'll need a newline to separate
+	 * error output from the progress data (which doesn't have a \n),
+	 * and flush before we write to stderr.
+	 */
+	if (progress) {
+		printf("\n");
+		fflush(stdout);
+	}
 
 	if (err < 0)
 		fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
@@ -4240,6 +4255,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	const char *fw = "firmware file (required)";
 	const char *xfer = "transfer chunksize limit";
 	const char *offset = "starting dword offset, default 0";
+	const char *progress = "display firmware transfer progress";
 	unsigned int fw_size;
 	struct nvme_dev *dev;
 	int err, fw_fd = -1;
@@ -4251,18 +4267,21 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		char	*fw;
 		__u32	xfer;
 		__u32	offset;
+		bool	progress;
 	};
 
 	struct config cfg = {
-		.fw	= "",
-		.xfer	= 4096,
-		.offset	= 0,
+		.fw       = "",
+		.xfer     = 4096,
+		.offset   = 0,
+		.progress = false,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FILE("fw",     'f', &cfg.fw,     fw),
-		OPT_UINT("xfer",   'x', &cfg.xfer,   xfer),
-		OPT_UINT("offset", 'o', &cfg.offset, offset),
+		OPT_FILE("fw",       'f', &cfg.fw,       fw),
+		OPT_UINT("xfer",     'x', &cfg.xfer,     xfer),
+		OPT_UINT("offset",   'o', &cfg.offset,   offset),
+		OPT_FLAG("progress", 'p', &cfg.progress, progress),
 		OPT_END()
 	};
 
@@ -4314,15 +4333,20 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	while (cfg.offset < fw_size) {
 		cfg.xfer = min(cfg.xfer, fw_size);
 
-		err = fw_download_single(dev, fw_buf + cfg.offset,
-					 cfg.offset, cfg.xfer);
+		err = fw_download_single(dev, fw_buf + cfg.offset, fw_size,
+					 cfg.offset, cfg.xfer, cfg.progress);
 		if (err)
 			break;
 
 		cfg.offset += cfg.xfer;
 	}
-	if (!err)
+
+	if (!err) {
+		/* end the progress output */
+		if (cfg.progress)
+			printf("\n");
 		printf("Firmware download success\n");
+	}
 
 free:
 	nvme_free(fw_buf, huge);
