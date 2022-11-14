@@ -4203,10 +4203,10 @@ ret:
  */
 static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
 			      unsigned int fw_len, uint32_t offset,
-			      uint32_t len, bool progress)
+			      uint32_t len, bool progress, bool ignore_ovr)
 {
 	const unsigned int max_retries = 3;
-	bool retryable;
+	bool retryable, ovr;
 	int err, try;
 
 	if (progress) {
@@ -4240,6 +4240,16 @@ static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
 			(nvme_status_get_type(err) == NVME_STATUS_TYPE_NVME) &&
 			(nvme_status_get_value(err) & NVME_SC_DNR));
 
+		/* detect overwrite errors, which are handled differently
+		 * depending on ignore_ovr */
+		ovr = (err > 0) &&
+			(nvme_status_get_type(err) == NVME_STATUS_TYPE_NVME) &&
+			(NVME_GET(err, SCT) == NVME_SCT_CMD_SPECIFIC) &&
+			(NVME_GET(err, SC) == NVME_SC_OVERLAPPING_RANGE);
+
+		if (ovr && ignore_ovr)
+			return 0;
+
 		/* if we're printing progress, we'll need a newline to separate
 		 * error output from the progress data (which doesn't have a
 		 * \n), and flush before we write to stderr.
@@ -4252,10 +4262,22 @@ static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
 		fprintf(stderr, "fw-download: error on offset 0x%08x/0x%08x\n",
 			offset, fw_len);
 
-		if (err < 0)
+		if (err < 0) {
 			fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
-		else
+		} else {
 			nvme_show_status(err);
+			if (ovr) {
+				/* non-ignored ovr error: print a little extra info
+				 * about recovering */
+				fprintf(stderr,
+					"Use --ignore-ovr to ignore overwrite errors\n");
+
+				/* We'll just be attempting more overwrites if
+				 * we retry. DNR will likely be set, but force
+				 * an exit anyway. */
+				retryable = false;
+			}
+		}
 
 		if (!retryable)
 			break;
@@ -4278,6 +4300,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	const char *xfer = "transfer chunksize limit";
 	const char *offset = "starting dword offset, default 0";
 	const char *progress = "display firmware transfer progress";
+	const char *ignore_ovr = "ignore overwrite errors";
 	unsigned int fw_size;
 	struct nvme_dev *dev;
 	int err, fw_fd = -1;
@@ -4290,20 +4313,23 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		__u32	xfer;
 		__u32	offset;
 		bool	progress;
+		bool	ignore_ovr;
 	};
 
 	struct config cfg = {
-		.fw       = "",
-		.xfer     = 4096,
-		.offset   = 0,
-		.progress = false,
+		.fw         = "",
+		.xfer       = 4096,
+		.offset     = 0,
+		.progress   = false,
+		.ignore_ovr = false,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FILE("fw",       'f', &cfg.fw,       fw),
-		OPT_UINT("xfer",     'x', &cfg.xfer,     xfer),
-		OPT_UINT("offset",   'o', &cfg.offset,   offset),
-		OPT_FLAG("progress", 'p', &cfg.progress, progress),
+		OPT_FILE("fw",         'f', &cfg.fw,         fw),
+		OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
+		OPT_UINT("offset",     'o', &cfg.offset,     offset),
+		OPT_FLAG("progress",   'p', &cfg.progress,   progress),
+		OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr),
 		OPT_END()
 	};
 
@@ -4356,7 +4382,8 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		cfg.xfer = min(cfg.xfer, fw_size);
 
 		err = fw_download_single(dev, fw_buf + cfg.offset, fw_size,
-					 cfg.offset, cfg.xfer, cfg.progress);
+					 cfg.offset, cfg.xfer, cfg.progress,
+					 cfg.ignore_ovr);
 		if (err)
 			break;
 
