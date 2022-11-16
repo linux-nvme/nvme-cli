@@ -4,6 +4,7 @@ ar = '/usr/arm-linux-gnueabihf/bin/ar'
 strip = '/usr/arm-linux-gnueabihf/bin/strip'
 pkgconfig = '/usr/bin/arm-linux-gnueabihf-pkg-config'
 ld = '/usr/bin/arm-linux/gnueabihf-ld'
+exe_wrapper = '/usr/bin/qemu-arm-static'
 
 [properties]
 root = '/usr/arm-linux-gnueabihf'
