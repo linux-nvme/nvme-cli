@@ -29,8 +29,6 @@ if want_docs != 'false'
       endforeach
     endif
   else
-    if want_docs == 'all' or want_docs == 'rst'
-      install_subdir('rst', install_dir: rstdir)
-    endif
+    # no prebuild docs
   endif
 endif

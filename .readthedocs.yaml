@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+
+version: 2
+
+python:
+  system_packages: true
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3"
+  apt_packages:
+    - meson
+    - python3-lxml
+    - docbook-xsl
+    - xsltproc
+    - pandoc
+  jobs:
+    post_install:
+      - pip3 install lxml
+    pre_build:
+      - meson .build -Ddocs=rst -Ddocs-build=true || cat .build/meson-logs/meson-log.txt
+      - ninja -C .build
+
+sphinx:
+  configuration: .build/doc/conf.py
