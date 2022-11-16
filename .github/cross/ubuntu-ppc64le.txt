@@ -4,6 +4,7 @@ ar = '/usr/powerpc64le-linux-gnu/bin/ar'
 strip = '/usr/powerpc64le-linux-gnu/bin/strip'
 pkgconfig = '/usr/bin/powerpc64le-linux-gnu-pkg-config'
 ld = '/usr/bin/powerpc64le-linux-gnu-ld'
+exe_wrapper = '/usr/bin/qemu-ppc64le-static'
 
 [properties]
 root = '/usr/powerpc64le-linux-gnu'
