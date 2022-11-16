@@ -90,6 +90,36 @@ jobs:
           name: Linux_Meson_Testlog
           path: build/meson-logs/testlog.txt
 
+  build-cross-s390x:
+    runs-on: ubuntu-latest
+    steps:
+      - name: set up s390x architecture
+        run: |
+          export release=$(lsb_release -c -s)
+          sudo dpkg --add-architecture s390x
+          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
+          sudo dd of=/etc/apt/sources.list.d/s390x.list <<EOF
+          deb [arch=s390x] http://ports.ubuntu.com/ $release main universe restricted"
+          deb [arch=s390x] http://ports.ubuntu.com/ $release-updates main universe restricted"
+          EOF
+          sudo apt update
+      - name: install s390x compiler
+        run: sudo apt install gcc-s390x-linux-gnu pkg-config qemu-user-static
+      - name: install libraries
+        run: sudo apt install libjson-c-dev:s390x
+      - uses: actions/checkout@v3
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          # suppress python for now; the python headers currently assume native
+          setup-options: --werror --cross-file=.github/cross/ubuntu-s390x.txt --wrap-mode=nofallback -Dpython=false
+          options: --verbose
+          action: test
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: Linux_Meson_Testlog
+          path: build/meson-logs/testlog.txt
+
   build-fallback:
     runs-on: ubuntu-latest
     steps:
