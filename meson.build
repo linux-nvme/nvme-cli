@@ -91,7 +91,20 @@ endif
 
 # Check for libsystemd availability. Optional, only required for MCTP dbus scan
 libsystemd_dep = dependency('libsystemd', version: '>219', required: false)
-conf.set('CONFIG_LIBSYSTEMD', libsystemd_dep.found(), description: 'Is libsystemd(>219) available?')
+if libsystemd_dep.found()
+  if cc.links('''#include <systemd/sd-bus.h>
+                 int main(void) {
+                     struct sd_bus *ret;
+                     return sd_bus_default(&ret);
+                 }
+               ''',
+              dependencies: libsystemd_dep,
+              name: 'Link check')
+       conf.set('CONFIG_LIBSYSTEMD', libsystemd_dep.found(), description: 'Is libsystemd(>219) available?')
+  else
+    libsystemd_dep = dependency('', required: false)
+  endif
+endif
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
@@ -180,24 +193,20 @@ conf.set10(
     description: 'Is linux/mctp.h include-able?'
 )
 
-if meson.version().version_compare('>= 0.48')
-  has_fallthrough = cc.has_function_attribute('fallthrough')
-else
-  has_fallthrough = cc.compiles(
-    '''int main(int argc, char **argv) {
-           switch(argc) {
-               case 0:
-                   __attribute__((__fallthrough__));
-               case 1:
-                   return 1;
-           }
-           return 0;
-       }
-    ''',
-    name: 'has fallthrough')
-endif
+conf.set(
+    'HAVE_LIBNSS',
+    cc.links(
+      '''int main(int argc, char **argv) {
+             struct addrinfo hints, *result;
+             return getaddrinfo(argv[1], argv[2], &hints, &result);
+      }
+      ''',
+      name: 'havelibnss',
+    ),
+    description: 'Is network address and service translation available'
+)
 
-if has_fallthrough
+if cc.has_function_attribute('fallthrough')
   conf.set('fallthrough', '__attribute__((__fallthrough__))')
 else
   conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
