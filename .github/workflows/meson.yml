@@ -46,7 +46,7 @@ jobs:
       - name: install armhf compiler
         run: sudo apt install gcc-arm-linux-gnueabihf pkg-config qemu-user-static
       - name: install libraries
-        run: sudo apt install uuid-dev:armhf libjson-c-dev:armhf
+        run: sudo apt install libjson-c-dev:armhf
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
@@ -76,7 +76,7 @@ jobs:
       - name: install powerpc64le compiler
         run: sudo apt install gcc-powerpc64le-linux-gnu pkg-config qemu-user-static
       - name: install libraries
-        run: sudo apt install uuid-dev:ppc64el libjson-c-dev:ppc64el
+        run: sudo apt install libjson-c-dev:ppc64el
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
