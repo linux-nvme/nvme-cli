@@ -91,7 +91,20 @@ endif
 
 # Check for libsystemd availability. Optional, only required for MCTP dbus scan
 libsystemd_dep = dependency('libsystemd', version: '>219', required: false)
-conf.set('CONFIG_LIBSYSTEMD', libsystemd_dep.found(), description: 'Is libsystemd(>219) available?')
+if libsystemd_dep.found()
+  if cc.links('''#include <systemd/sd-bus.h>
+                 int main(void) {
+                     struct sd_bus *ret;
+                     return sd_bus_default(&ret);
+                 }
+               ''',
+              dependencies: libsystemd_dep,
+              name: 'Link check')
+       conf.set('CONFIG_LIBSYSTEMD', libsystemd_dep.found(), description: 'Is libsystemd(>219) available?')
+  else
+    libsystemd_dep = dependency('', required: false)
+  endif
+endif
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
@@ -178,6 +191,19 @@ conf.set10(
         name: 'linux/mctp.h'
     ),
     description: 'Is linux/mctp.h include-able?'
+)
+
+conf.set(
+    'HAVE_LIBNSS',
+    cc.links(
+      '''int main(int argc, char **argv) {
+             struct addrinfo hints, *result;
+             return getaddrinfo(argv[1], argv[2], &hints, &result);
+      }
+      ''',
+      name: 'havelibnss',
+    ),
+    description: 'Is network address and service translation available'
 )
 
 if cc.has_function_attribute('fallthrough')

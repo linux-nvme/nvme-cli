@@ -112,7 +112,7 @@ jobs:
           name: Linux_Meson_log
           path: build/meson-logs/meson-log.txt
 
-  build-static:
+  build-with-libray-static:
     runs-on: ubuntu-latest
     steps:
       - name: install libraries
@@ -124,6 +124,28 @@ jobs:
       - uses: BSFishy/meson-build@v1.0.3
         with:
           setup-options: --werror --wrap-mode=forcefallback --default-library=static
+          options: --verbose
+          action: test
+          meson-version: 0.61.2
+      # Preserve meson's log file on failure
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: Linux_Meson_log
+          path: build/meson-logs/meson-log.txt
+
+  build-static:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install libraries
+        run: sudo apt-get install -y libpam-dev libcap-ng-dev
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          setup-options: --werror --wrap-mode=forcefallback --cross-file=.github/cross/ubuntu-static.txt --default-library=static
           options: --verbose
           action: test
           meson-version: 0.61.2

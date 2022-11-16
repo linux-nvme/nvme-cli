@@ -1,0 +1,6 @@
+[properties]
+c_args = '-static'
+cpp_args = c_args
+
+[binaries]
+c = '/usr/bin/gcc'
