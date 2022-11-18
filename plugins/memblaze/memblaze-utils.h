@@ -9,9 +9,6 @@
 #define NM_SIZE                 2
 #define RAW_SIZE                7
 
-typedef unsigned char           u8;
-typedef unsigned short          u16;
-
 // Intel Format & new format
 /* Raisin Additional smart external ID */
 #define RAISIN_SI_VD_PROGRAM_FAIL_ID                        0xAB
@@ -136,18 +133,18 @@ struct nvme_memblaze_smart_log_item {
 
 struct nvme_memblaze_smart_log {
     struct nvme_memblaze_smart_log_item items[NR_SMART_ITEMS];
-    u8 resv[SMART_INFO_OLD_SIZE - sizeof(struct nvme_memblaze_smart_log_item) * NR_SMART_ITEMS];
+    __u8 resv[SMART_INFO_OLD_SIZE - sizeof(struct nvme_memblaze_smart_log_item) * NR_SMART_ITEMS];
 };
 
 // Intel Format & new format
 struct nvme_p4_smart_log_item
 {
     /* Item identifier */
-    u8 id[ID_SIZE];
+    __u8 id[ID_SIZE];
     /* Normalized value or percentage. In the range from 0 to 100. */
-    u8 nmVal[NM_SIZE];
+    __u8 nmVal[NM_SIZE];
     /* raw value */
-    u8 rawVal[RAW_SIZE];
+    __u8 rawVal[RAW_SIZE];
 };
 
 struct nvme_p4_smart_log
@@ -159,7 +156,7 @@ struct nvme_p4_smart_log
      * because micron's getlogpage request,the size of many commands have changed to 4k.
      * request size > user malloc size,casuing parameters that are closed in momery are dirty.
      */
-    u8 resv[SMART_INFO_NEW_SIZE - sizeof(struct nvme_p4_smart_log_item) * NR_SMART_ITEMS];
+    __u8 resv[SMART_INFO_NEW_SIZE - sizeof(struct nvme_p4_smart_log_item) * NR_SMART_ITEMS];
 };
 
 // base
@@ -222,4 +219,3 @@ struct nvme_p4_smart_log
     }
 
 #endif // __MEMBLAZE_UTILS_H__
-

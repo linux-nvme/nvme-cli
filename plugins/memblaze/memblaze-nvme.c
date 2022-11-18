@@ -107,7 +107,7 @@ static __u64 raw_2_u64(const __u8 *buf, size_t len)
     return le64_to_cpu(val);
 }
 
-static void get_memblaze_new_smart_info(struct nvme_p4_smart_log *smart, int index, u8 *nm_val, u8 *raw_val)
+static void get_memblaze_new_smart_info(struct nvme_p4_smart_log *smart, int index, __u8 *nm_val, __u8 *raw_val)
 {
     memcpy(nm_val, smart->itemArr[index].nmVal, NM_SIZE);
     memcpy(raw_val, smart->itemArr[index].rawVal, RAW_SIZE);
@@ -117,8 +117,8 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
     unsigned int nsid, const char *devname)
 {
     struct nvme_p4_smart_log *smart = (struct nvme_p4_smart_log *)s;
-    u8 *nm = malloc(NM_SIZE * sizeof(u8));
-    u8 *raw = malloc(RAW_SIZE * sizeof(u8));
+    __u8 *nm = malloc(NM_SIZE * sizeof(__u8));
+    __u8 *raw = malloc(RAW_SIZE * sizeof(__u8));
 
     if (!nm) {
         if (raw)
@@ -141,7 +141,7 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
 
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_WEARLEVELING_COUNT, nm, raw);
     printf("%-31s : %3d%%       %s%u%s%u%s%u\n", "wear_leveling", *nm,
-        "min: ", *(u16 *)raw, ", max: ", *(u16 *)(raw+2), ", avg: ", *(u16 *)(raw+4));
+        "min: ", *(__u16 *)raw, ", max: ", *(__u16 *)(raw+2), ", avg: ", *(__u16 *)(raw+4));
 
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_E2E_DECTECTION_COUNT, nm, raw);
     printf("%-31s: %3d%%       %"PRIu64"\n", "end_to_end_error_detection_count", *nm, int48_to_long(raw));
@@ -182,15 +182,15 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
 
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TEMPT_SINCE_BORN, nm, raw);
     printf("%-32s: %3d%%       %s%u%s%u%s%u\n", "tempt_since_born",  *nm,
-        "max: ", *(u16 *)raw, ", min: ", *(u16 *)(raw+2), ", curr: ", *(u16 *)(raw+4));
+        "max: ", *(__u16 *)raw, ", min: ", *(__u16 *)(raw+2), ", curr: ", *(__u16 *)(raw+4));
 
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_POWER_CONSUMPTION, nm, raw);
     printf("%-32s: %3d%%       %s%u%s%u%s%u\n", "power_consumption",  *nm,
-        "max: ", *(u16 *)raw, ", min: ", *(u16 *)(raw+2), ", curr: ", *(u16 *)(raw+4));
+        "max: ", *(__u16 *)raw, ", min: ", *(__u16 *)(raw+2), ", curr: ", *(__u16 *)(raw+4));
 
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TEMPT_SINCE_BOOTUP, nm, raw);
-    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", "tempt_since_bootup",  *nm, "max: ", *(u16 *)raw,
-        ", min: ", *(u16 *)(raw+2), ", curr: ", *(u16 *)(raw+4));
+    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", "tempt_since_bootup",  *nm, "max: ", *(__u16 *)raw,
+        ", min: ", *(__u16 *)(raw+2), ", curr: ", *(__u16 *)(raw+4));
 
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_READ_FAIL, nm, raw);
     printf("%-32s: %3d%%       %"PRIu64"\n", "read_fail_count", *nm, int48_to_long(raw));
@@ -305,8 +305,8 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
 
      if ( IS_PAPAYA(fw_ver_local) ) {
         struct nvme_p4_smart_log *s = (struct nvme_p4_smart_log *)smart;
-        u8 *nm = malloc(NM_SIZE * sizeof(u8));
-        u8 *raw = malloc(RAW_SIZE * sizeof(u8));
+        __u8 *nm = malloc(NM_SIZE * sizeof(__u8));
+        __u8 *raw = malloc(RAW_SIZE * sizeof(__u8));
 
 	if (!nm) {
             if (raw)
@@ -327,7 +327,7 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
 
         get_memblaze_new_smart_info(s, WEARLEVELING_COUNT, nm, raw);
         printf("%-31s                                 : %3d%%       %s%u%s%u%s%u\n",
-			"wear_leveling", *nm, "min: ", *(u16 *)raw, ", max: ", *(u16 *)(raw+2), ", avg: ", *(u16 *)(raw+4));
+			"wear_leveling", *nm, "min: ", *(__u16 *)raw, ", max: ", *(__u16 *)(raw+2), ", avg: ", *(__u16 *)(raw+4));
 
         get_memblaze_new_smart_info(s, TOTAL_WRITE, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
