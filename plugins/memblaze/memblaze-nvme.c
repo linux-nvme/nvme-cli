@@ -3,10 +3,12 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
 
 #include "nvme.h"
+#include "common.h"
 #include "libnvme.h"
 #include "plugin.h"
 #include "linux/types.h"
@@ -105,50 +107,6 @@ static __u64 raw_2_u64(const __u8 *buf, size_t len)
     return le64_to_cpu(val);
 }
 
-#define STRN2_01    "Additional Smart Log for NVME device"
-#define STRN2_02    "namespace-id"
-#define STRN1_01    "key"
-#define STRN1_02    "normalized"
-#define STRN1_03    "raw"
-#define STR00_01    "program_fail_count"
-#define STR01_01    "erase_fail_count"
-#define STR02_01    "wear_leveling"
-#define STR02_03    "min: "
-#define STR02_04    ", max: "
-#define STR02_05    ", avg: "
-#define STR03_01    "end_to_end_error_detection_count"
-#define STR04_01    "crc_error_count"
-#define STR05_01    "timed_workload_media_wear"
-#define STR06_01    "timed_workload_host_reads"
-#define STR07_01    "timed_workload_timer"
-#define STR07_02    " min"
-#define STR08_01    "thermal_throttle_status"
-#define STR08_02    ", cnt: "
-#define STR09_01    "retry_buffer_overflow_count"
-#define STR10_01    "pll_lock_loss_count"
-#define STR11_01    "nand_bytes_written"
-#define STR11_03    "sectors: "
-#define STR12_01    "host_bytes_written"
-#define STR12_03    "sectors: "
-#define STR13_01    "system_area_life_left"
-#define STR14_01    "total_read"
-#define STR15_01    "tempt_since_born"
-#define STR15_03    "max: "
-#define STR15_04    ", min: "
-#define STR15_05    ", curr: "
-#define STR16_01    "power_consumption"
-#define STR16_03    "max: "
-#define STR16_04    ", min: "
-#define STR16_05    ", curr: "
-#define STR17_01    "tempt_since_bootup"
-#define STR17_03    "max: "
-#define STR17_04    ", min: "
-#define STR17_05    ", curr: "
-#define STR18_01    "power_loss_protection"
-#define STR19_01    "read_fail_count"
-#define STR20_01    "thermal_throttle_time"
-#define STR21_01    "flash_media_error"
-
 static void get_memblaze_new_smart_info(struct nvme_p4_smart_log *smart, int index, u8 *nm_val, u8 *raw_val)
 {
     memcpy(nm_val, smart->itemArr[index].nmVal, NM_SIZE);
@@ -171,79 +129,77 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
         free(nm);
         return;
     }
-    /* Table Title */
-    printf("%s:%s %s:%x\n", STRN2_01, devname, STRN2_02, nsid);
-    /* Clumn Name*/
-    printf("%-34s%-11s%s\n", STRN1_01, STRN1_02, STRN1_03);
-    /* 00 RAISIN_SI_VD_PROGRAM_FAIL */
+
+    printf("%s:%s %s:%x\n", "Additional Smart Log for NVME device", devname, "namespace-id", nsid);
+    printf("%-34s%-11s%s\n", "key", "normalized", "raw");
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_PROGRAM_FAIL, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR00_01, *nm, int48_to_long(raw));
-    /* 01 RAISIN_SI_VD_ERASE_FAIL */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "program_fail_count", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_ERASE_FAIL, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR01_01, *nm, int48_to_long(raw));
-    /* 02 RAISIN_SI_VD_WEARLEVELING_COUNT */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "erase_fail_count", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_WEARLEVELING_COUNT, nm, raw);
-    printf("%-31s : %3d%%       %s%u%s%u%s%u\n", STR02_01, *nm,
-        STR02_03, *(u16 *)raw, STR02_04, *(u16 *)(raw+2), STR02_05, *(u16 *)(raw+4));
-    /* 03 RAISIN_SI_VD_E2E_DECTECTION_COUNT */
+    printf("%-31s : %3d%%       %s%u%s%u%s%u\n", "wear_leveling", *nm,
+        "min: ", *(u16 *)raw, ", max: ", *(u16 *)(raw+2), ", avg: ", *(u16 *)(raw+4));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_E2E_DECTECTION_COUNT, nm, raw);
-    printf("%-31s: %3d%%       %"PRIu64"\n", STR03_01, *nm, int48_to_long(raw));
-    /* 04 RAISIN_SI_VD_PCIE_CRC_ERR_COUNT */
+    printf("%-31s: %3d%%       %"PRIu64"\n", "end_to_end_error_detection_count", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_PCIE_CRC_ERR_COUNT, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR04_01, *nm, int48_to_long(raw));
-    /* 05 RAISIN_SI_VD_TIMED_WORKLOAD_MEDIA_WEAR */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "crc_error_count", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TIMED_WORKLOAD_MEDIA_WEAR, nm, raw);
-    printf("%-32s: %3d%%       %.3f%%\n", STR05_01, *nm, ((float)int48_to_long(raw))/1000);
-    /* 06 RAISIN_SI_VD_TIMED_WORKLOAD_HOST_READ */
+    printf("%-32s: %3d%%       %.3f%%\n", "timed_workload_media_wear", *nm, ((float)int48_to_long(raw))/1000);
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TIMED_WORKLOAD_HOST_READ, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"%%\n", STR06_01, *nm, int48_to_long(raw));
-    /* 07 RAISIN_SI_VD_TIMED_WORKLOAD_TIMER */
+    printf("%-32s: %3d%%       %"PRIu64"%%\n", "timed_workload_host_reads", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TIMED_WORKLOAD_TIMER, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"%s\n", STR07_01, *nm, int48_to_long(raw), STR07_02);
-    /* 08 RAISIN_SI_VD_THERMAL_THROTTLE_STATUS */
+    printf("%-32s: %3d%%       %"PRIu64"%s\n", "timed_workload_timer", *nm, int48_to_long(raw), " min");
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_THERMAL_THROTTLE_STATUS, nm, raw);
-    printf("%-32s: %3d%%       %u%%%s%"PRIu64"\n", STR08_01, *nm,
-        *raw, STR08_02, int48_to_long(raw+1));
-    /* 09 RAISIN_SI_VD_RETRY_BUFF_OVERFLOW_COUNT */
+    printf("%-32s: %3d%%       %u%%%s%"PRIu64"\n", "thermal_throttle_status", *nm,
+        *raw, ", cnt: ", int48_to_long(raw+1));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_RETRY_BUFF_OVERFLOW_COUNT, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR09_01, *nm, int48_to_long(raw));
-    /* 10 RAISIN_SI_VD_PLL_LOCK_LOSS_COUNT */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "retry_buffer_overflow_count", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_PLL_LOCK_LOSS_COUNT, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR10_01, *nm, int48_to_long(raw));
-    /* 11 RAISIN_SI_VD_TOTAL_WRITE */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "pll_lock_loss_count", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TOTAL_WRITE, nm, raw);
-    printf("%-32s: %3d%%       %s%"PRIu64"\n", STR11_01, *nm, STR11_03, int48_to_long(raw));
-    /* 12 RAISIN_SI_VD_HOST_WRITE */
+    printf("%-32s: %3d%%       %s%"PRIu64"\n", "nand_bytes_written", *nm, "sectors: ", int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_HOST_WRITE, nm, raw);
-    printf("%-32s: %3d%%       %s%"PRIu64"\n", STR12_01, *nm, STR12_03, int48_to_long(raw));
-    /* 13 RAISIN_SI_VD_SYSTEM_AREA_LIFE_LEFT */
+    printf("%-32s: %3d%%       %s%"PRIu64"\n", "host_bytes_written", *nm, "sectors: ", int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_SYSTEM_AREA_LIFE_LEFT, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR13_01, *nm, int48_to_long(raw));
-    /* 14 RAISIN_SI_VD_TOTAL_READ */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "system_area_life_left", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TOTAL_READ, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR14_01, *nm, int48_to_long(raw));
-    /* 15 RAISIN_SI_VD_TEMPT_SINCE_BORN */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "total_read", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TEMPT_SINCE_BORN, nm, raw);
-    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", STR15_01,  *nm,
-        STR15_03, *(u16 *)raw, STR15_04, *(u16 *)(raw+2), STR15_05, *(u16 *)(raw+4));
-    /* 16 RAISIN_SI_VD_POWER_CONSUMPTION */
+    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", "tempt_since_born",  *nm,
+        "max: ", *(u16 *)raw, ", min: ", *(u16 *)(raw+2), ", curr: ", *(u16 *)(raw+4));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_POWER_CONSUMPTION, nm, raw);
-    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", STR16_01,  *nm,
-        STR16_03, *(u16 *)raw, STR16_04, *(u16 *)(raw+2), STR16_05, *(u16 *)(raw+4));
-    /* 17 RAISIN_SI_VD_TEMPT_SINCE_BOOTUP */
+    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", "power_consumption",  *nm,
+        "max: ", *(u16 *)raw, ", min: ", *(u16 *)(raw+2), ", curr: ", *(u16 *)(raw+4));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TEMPT_SINCE_BOOTUP, nm, raw);
-    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", STR17_01,  *nm, STR17_03, *(u16 *)raw,
-        STR17_04, *(u16 *)(raw+2), STR17_05, *(u16 *)(raw+4));
-    /* 18 RAISIN_SI_VD_POWER_LOSS_PROTECTION */
-    /* 19 RAISIN_SI_VD_READ_FAIL */
+    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", "tempt_since_bootup",  *nm, "max: ", *(u16 *)raw,
+        ", min: ", *(u16 *)(raw+2), ", curr: ", *(u16 *)(raw+4));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_READ_FAIL, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR19_01, *nm, int48_to_long(raw));
-    /* 20 RAISIN_SI_VD_THERMAL_THROTTLE_TIME */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "read_fail_count", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_THERMAL_THROTTLE_TIME, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR20_01, *nm, int48_to_long(raw));
-    /* 21 RAISIN_SI_VD_FLASH_MEDIA_ERROR */
+    printf("%-32s: %3d%%       %"PRIu64"\n", "thermal_throttle_time", *nm, int48_to_long(raw));
+
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_FLASH_MEDIA_ERROR, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR21_01, *nm, int48_to_long(raw));
+    printf("%-32s: %3d%%       %"PRIu64"\n", "flash_media_error", *nm, int48_to_long(raw));
 
     free(nm);
     free(raw);
@@ -361,26 +317,25 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
             free(nm);
             return;
 	}
-        /* 00 RAISIN_SI_VD_PROGRAM_FAIL */
         get_memblaze_new_smart_info(s, PROGRAM_FAIL, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
-			STR00_01, *nm, int48_to_long(raw));
-        /* 01 RAISIN_SI_VD_ERASE_FAIL */
+			"program_fail_count", *nm, int48_to_long(raw));
+
         get_memblaze_new_smart_info(s, ERASE_FAIL, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
-			STR01_01, *nm, int48_to_long(raw));
-        /* 02 RAISIN_SI_VD_WEARLEVELING_COUNT */
+			"erase_fail_count", *nm, int48_to_long(raw));
+
         get_memblaze_new_smart_info(s, WEARLEVELING_COUNT, nm, raw);
         printf("%-31s                                 : %3d%%       %s%u%s%u%s%u\n",
-			STR02_01, *nm, STR02_03, *(u16 *)raw, STR02_04, *(u16 *)(raw+2), STR02_05, *(u16 *)(raw+4));
-        /* 11 RAISIN_SI_VD_TOTAL_WRITE */
+			"wear_leveling", *nm, "min: ", *(u16 *)raw, ", max: ", *(u16 *)(raw+2), ", avg: ", *(u16 *)(raw+4));
+
         get_memblaze_new_smart_info(s, TOTAL_WRITE, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
-			STR11_01, *nm, 32*int48_to_long(raw));
-        /* 12 RAISIN_SI_VD_HOST_WRITE */
+			"nand_bytes_written", *nm, 32*int48_to_long(raw));
+
         get_memblaze_new_smart_info(s, HOST_WRITE, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
-			STR12_01, *nm, 32*int48_to_long(raw));
+			"host_bytes_written", *nm, 32*int48_to_long(raw));
 
         free(nm);
         free(raw);
@@ -602,7 +557,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
         printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
             mb_feature_to_string(cfg.feature_id), cfg.value);
     } else if (err > 0)
-	nvme_show_status(err);
+	    nvme_show_status(err);
 
     dev_close(dev);
     return err;
@@ -679,7 +634,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
         printf("set-feature:0x%02X (%s), value:%#08x\n", cfg.feature_id,
             mb_feature_to_string(cfg.feature_id), cfg.value);
     } else if (err > 0)
-	nvme_show_status(err);
+	    nvme_show_status(err);
 
     dev_close(dev);
     return err;
@@ -816,7 +771,6 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
     dev_close(dev);
     return err;
 }
-
 
 static int memblaze_fw_commit(int fd, int select)
 {
@@ -1095,22 +1049,18 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
         io_latency_histogram(cfg.write ? f2 : f1, stats, DO_PRINT_FLAG,
          cfg.write ? GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM : GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM);
     else
-	nvme_show_status(err);
+	    nvme_show_status(err);
 
     dev_close(dev);
     return err;
 }
 
-#define OP         0xFC
-#define FID        0x68
 static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
     char *desc = "Clear Memblaze devices error log.";
     struct nvme_dev *dev;
     int err;
 
-    //const char *value = "new value of feature (required)";
-    //const char *save = "specifies that the controller shall save the attribute";
     __u32 result;
 
     struct config {
@@ -1157,20 +1107,6 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
     } else if (err > 0)
         nvme_show_status(err);
 
-/*
-	struct nvme_admin_cmd admin_cmd = {
-		.opcode		= OP,
-		.cdw10		= FID,
-	};
-
-	err = nvme_submit_admin_passthru(fd, &admin_cmd);
-
-	if (!err) {
-		printf("OP(0x%2X) FID(0x%2X) Clear error log success.\n", OP, FID);
-	} else {
-		printf("NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
-	};
-*/
     dev_close(dev);
     return err;
 }
@@ -1289,4 +1225,3 @@ static int mb_set_lat_stats(int argc, char **argv,
 	dev_close(dev);
 	return err;
 }
-
