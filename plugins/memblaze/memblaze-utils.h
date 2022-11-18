@@ -10,6 +10,7 @@
 #define RAW_SIZE                7
 
 typedef unsigned char           u8;
+typedef unsigned short          u16;
 
 // Intel Format & new format
 /* Raisin Additional smart external ID */
