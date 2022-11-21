@@ -23,10 +23,8 @@
 
 #include <ccan/endian/endian.h>
 
-#ifdef CONFIG_LIBSYSTEMD
-#include <systemd/sd-event.h>
-#include <systemd/sd-bus.h>
-#include <systemd/sd-id128.h>
+#ifdef CONFIG_DBUS
+#include <dbus/dbus.h>
 
 #define MCTP_DBUS_PATH "/xyz/openbmc_project/mctp"
 #define MCTP_DBUS_IFACE "xyz.openbmc_project.MCTP"
@@ -522,19 +520,7 @@ err_free_ep:
 	return NULL;
 }
 
-#ifdef CONFIG_LIBSYSTEMD
-
-/* helper for handling dbus errors: D-Bus API returns a negtive errno on
- * failure; set errno and log.
- */
-static void _dbus_err(nvme_root_t root, int rc, int line)
-{
-	nvme_msg(root, LOG_ERR, "MCTP D-Bus failed line %d: %s %d\n",
-		line, strerror(-rc), rc);
-	errno = -rc;
-}
-
-#define dbus_err(r, rc) _dbus_err(r, rc, __LINE__)
+#ifdef CONFIG_DBUS
 
 static int nvme_mi_mctp_add(nvme_root_t root, unsigned int netid, __u8 eid)
 {
@@ -558,84 +544,99 @@ static int nvme_mi_mctp_add(nvme_root_t root, unsigned int netid, __u8 eid)
 	return 0;
 }
 
-/* We can't rely on sd_bus_message_enter_container() == 0 at the end of
-   a dictionary (it returns -ENXIO) so we test separately */
-static bool container_end(sd_bus_message *m)
+static bool dbus_object_is_type(DBusMessageIter *obj, int type)
 {
-	return sd_bus_message_peek_type(m, NULL, NULL) == 0;
+	return dbus_message_iter_get_arg_type(obj) == type;
+}
+
+static bool dbus_object_is_dict(DBusMessageIter *obj)
+{
+	return dbus_object_is_type(obj, DBUS_TYPE_ARRAY) &&
+		dbus_message_iter_get_element_type(obj) == DBUS_TYPE_DICT_ENTRY;
+}
+
+static int read_variant_basic(DBusMessageIter *var, int type, void *val)
+{
+	if (!dbus_object_is_type(var, type))
+		return -1;
+
+	dbus_message_iter_get_basic(var, val);
+
+	return 0;
+}
+
+static bool has_message_type(DBusMessageIter *prop, uint8_t type)
+{
+	DBusMessageIter inner;
+	uint8_t *types;
+	int i, n;
+
+	if (!dbus_object_is_type(prop, DBUS_TYPE_ARRAY) ||
+	    dbus_message_iter_get_element_type(prop) != DBUS_TYPE_BYTE)
+		return false;
+
+	dbus_message_iter_recurse(prop, &inner);
+
+	dbus_message_iter_get_fixed_array(&inner, &types, &n);
+
+	for (i = 0; i < n; i++) {
+		if (types[i] == type)
+			return true;
+	}
+
+	return false;
 }
 
 static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
-	sd_bus_message *m)
+	DBusMessageIter *props)
 {
 	bool have_eid = false, have_net = false, have_nvmemi = false;
 	mctp_eid_t eid;
 	int net;
 	int rc;
 
-	/* Iterate properties on this interface */
-	while (!container_end(m)) {
-		/* Enter property dict */
-		rc = sd_bus_message_enter_container(m, 'a', "{sv}");
-		if (rc < 0) {
-			dbus_err(root, rc);
+	/* for each property */
+	for (;;) {
+		DBusMessageIter prop, val;
+		const char *propname;
+
+		dbus_message_iter_recurse(props, &prop);
+
+		if (!dbus_object_is_type(&prop, DBUS_TYPE_STRING)) {
+			nvme_msg(root, LOG_ERR,
+				 "error unmashalling object (propname)\n");
 			return -1;
 		}
 
-		while (!container_end(m)) {
-			char *propname = NULL;
-			size_t sz;
-			const uint8_t *types = NULL;
-			/* Enter property item */
-			rc = sd_bus_message_enter_container(m, 'e', "sv");
-			if (rc < 0) {
-				dbus_err(root, rc);
-				return -1;
-			}
+		dbus_message_iter_get_basic(&prop, &propname);
 
-			rc = sd_bus_message_read(m, "s", &propname);
-			if (rc < 0) {
-				dbus_err(root, rc);
-				return -1;
-			}
+		dbus_message_iter_next(&prop);
 
-			if (strcmp(propname, "EID") == 0) {
-				rc = sd_bus_message_read(m, "v", "y", &eid);
-				have_eid = true;
-			} else if (strcmp(propname, "NetworkId") == 0) {
-				rc = sd_bus_message_read(m, "v", "i", &net);
-				have_net = true;
-			} else if (strcmp(propname, "SupportedMessageTypes") == 0) {
-				sd_bus_message_enter_container(m, 'v', "ay");
-				rc = sd_bus_message_read_array(m, 'y', (const void**)&types, &sz);
-				if (rc >= 0)
-					for (size_t s = 0; s < sz; s++)
-						if (types[s] == MCTP_TYPE_NVME)
-							have_nvmemi = true;
-				sd_bus_message_exit_container(m);
-			} else {
-				rc = sd_bus_message_skip(m, "v");
-			}
-
-			if (rc < 0) {
-				dbus_err(root, rc);
-				return -1;
-			}
-
-			/* Exit prop item */
-			rc = sd_bus_message_exit_container(m);
-			if (rc < 0) {
-				dbus_err(root, rc);
-				return -1;
-			}
-		}
-
-		/* Exit property dict */
-		rc = sd_bus_message_exit_container(m);
-		if (rc < 0) {
-			dbus_err(root, rc);
+		if (!dbus_object_is_type(&prop, DBUS_TYPE_VARIANT)) {
+			nvme_msg(root, LOG_ERR,
+				 "error unmashalling object (propval)\n");
 			return -1;
 		}
+
+		dbus_message_iter_recurse(&prop, &val);
+
+		if (!strcmp(propname, "EID")) {
+			rc = read_variant_basic(&val, DBUS_TYPE_BYTE, &eid);
+			have_eid = true;
+
+		} else if (!strcmp(propname, "NetworkId")) {
+			rc = read_variant_basic(&val, DBUS_TYPE_INT32, &net);
+			have_net = true;
+
+		} else if (!strcmp(propname, "SupportedMessageTypes")) {
+			have_nvmemi = has_message_type(&val, MCTP_TYPE_NVME);
+		}
+
+		if (rc)
+			return rc;
+
+		if (!dbus_message_iter_next(props))
+			break;
 	}
 
 	if (have_nvmemi) {
@@ -659,70 +660,61 @@ static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
 	return rc;
 }
 
-static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
+/* obj is an array of (object path, interfaces) dict entries - ie., dbus type
+ *   a{oa{sa{sv}}}
+ */
+static int handle_mctp_obj(nvme_root_t root, DBusMessageIter *obj)
 {
-	char *objpath = NULL;
-	char *ifname = NULL;
-	int rc;
+	const char *objpath = NULL;
+	DBusMessageIter intfs;
 
-	rc = sd_bus_message_read(m, "o", &objpath);
-	if (rc < 0) {
-		dbus_err(root, rc);
+	if (!dbus_object_is_type(obj, DBUS_TYPE_OBJECT_PATH)) {
+		nvme_msg(root, LOG_ERR, "error unmashalling object (path)\n");
 		return -1;
 	}
 
-	/* Enter response object: our array of (string, property dict)
-	 * values */
-	rc = sd_bus_message_enter_container(m, 'a', "{sa{sv}}");
-	if (rc < 0) {
-		dbus_err(root, rc);
+	dbus_message_iter_get_basic(obj, &objpath);
+
+	dbus_message_iter_next(obj);
+
+	if (!dbus_object_is_dict(obj)) {
+		nvme_msg(root, LOG_ERR, "error unmashalling object (intfs)\n");
 		return -1;
 	}
 
+	dbus_message_iter_recurse(obj, &intfs);
 
 	/* for each interface */
-	while (!container_end(m)) {
-		/* Enter interface item */
-		rc = sd_bus_message_enter_container(m, 'e', "sa{sv}");
-		if (rc < 0) {
-			dbus_err(root, rc);
+	for (;;) {
+		DBusMessageIter props, intf;
+		const char *intfname;
+
+		dbus_message_iter_recurse(&intfs, &intf);
+
+		if (!dbus_object_is_type(&intf, DBUS_TYPE_STRING)) {
+			nvme_msg(root, LOG_ERR,
+				 "error unmashalling object (intf)\n");
 			return -1;
 		}
 
-		rc = sd_bus_message_read(m, "s", &ifname);
-		if (rc < 0) {
-			dbus_err(root, rc);
+		dbus_message_iter_get_basic(&intf, &intfname);
+
+		if (strcmp(intfname, MCTP_DBUS_IFACE_ENDPOINT)) {
+			if (!dbus_message_iter_next(&intfs))
+				break;
+			continue;
+		}
+
+		dbus_message_iter_next(&intf);
+
+		if (!dbus_object_is_dict(&intf)) {
+			nvme_msg(root, LOG_ERR,
+				 "error unmarshalling object (props)\n");
 			return -1;
 		}
 
-		if (!strcmp(ifname, MCTP_DBUS_IFACE_ENDPOINT)) {
-
-			rc = handle_mctp_endpoint(root, objpath, m);
-			if (rc < 0) {
-				/* continue to next object */
-			}
-		} else {
-			/* skip the interfaces we don't care about */
-			rc = sd_bus_message_skip(m, "a{sv}");
-			if (rc < 0) {
-				dbus_err(root, rc);
-				return -1;
-			}
-		}
-
-		/* Exit interface item */
-		rc = sd_bus_message_exit_container(m);
-		if (rc < 0) {
-			dbus_err(root, rc);
-			return -1;
-		}
-	}
-
-	/* Exit response object */
-	rc = sd_bus_message_exit_container(m);
-	if (rc < 0) {
-		dbus_err(root, rc);
-		return -1;
+		dbus_message_iter_recurse(&intf, &props);
+		return handle_mctp_endpoint(root, objpath, &props);
 	}
 
 	return 0;
@@ -730,85 +722,85 @@ static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
 
 nvme_root_t nvme_mi_scan_mctp(void)
 {
-	sd_bus *bus = NULL;
-	sd_bus_message *resp = NULL;
-	sd_bus_error berr = SD_BUS_ERROR_NULL;
-	int rc, errno_save;
+	DBusMessage *msg, *resp = NULL;
+	DBusConnection *bus = NULL;
+	DBusMessageIter args, objs;
+	int errno_save, rc = -1;
 	nvme_root_t root;
+	dbus_bool_t drc;
+	DBusError berr;
 
 	root = nvme_mi_create_root(NULL, DEFAULT_LOGLEVEL);
 	if (!root) {
 		errno = ENOMEM;
-		rc = -1;
+		return NULL;
+	}
+
+	dbus_error_init(&berr);
+
+	bus = dbus_bus_get(DBUS_BUS_SYSTEM, &berr);
+	if (!bus) {
+		nvme_msg(root, LOG_ERR, "Failed connecting to D-Bus: %s (%s)\n",
+			 berr.message, berr.name);
 		goto out;
 	}
 
-	rc = sd_bus_default_system(&bus);
-	if (rc < 0) {
-		nvme_msg(root, LOG_ERR, "Failed opening D-Bus: %s\n",
-			 strerror(-rc));
-		errno = -rc;
-		rc = -1;
+	msg = dbus_message_new_method_call(MCTP_DBUS_IFACE,
+					   MCTP_DBUS_PATH,
+					   "org.freedesktop.DBus.ObjectManager",
+					   "GetManagedObjects");
+	if (!msg) {
+		nvme_msg(root, LOG_ERR, "Failed creating call message\n");
 		goto out;
 	}
 
-	rc = sd_bus_call_method(bus,
-			       MCTP_DBUS_IFACE,
-			       MCTP_DBUS_PATH,
-			       "org.freedesktop.DBus.ObjectManager",
-			       "GetManagedObjects",
-			       &berr,
-			       &resp,
-			       "");
-	if (rc < 0) {
+	resp = dbus_connection_send_with_reply_and_block(bus, msg,
+							 DBUS_TIMEOUT_USE_DEFAULT,
+							 &berr);
+	dbus_message_unref(msg);
+	if (!resp) {
 		nvme_msg(root, LOG_ERR, "Failed querying MCTP D-Bus: %s (%s)\n",
 			 berr.message, berr.name);
-		errno = -rc;
-		rc = -1;
 		goto out;
 	}
 
-	rc = sd_bus_message_enter_container(resp, 'a', "{oa{sa{sv}}}");
-	if (rc != 1) {
-		dbus_err(root, rc);
-		if (rc == 0)
-			errno = EPROTO;
-		rc = -1;
+	/* argument container */
+	drc = dbus_message_iter_init(resp, &args);
+	if (!drc) {
+		nvme_msg(root, LOG_ERR, "can't read dbus reply args\n");
 		goto out;
 	}
 
-	/* Iterate over all managed objects */
-	while (!container_end(resp)) {
-		rc = sd_bus_message_enter_container(resp, 'e', "oa{sa{sv}}");
-		if (rc < 0) {
-			dbus_err(root, rc);
-			rc = -1;
-			goto out;
-		}
-
-		handle_mctp_obj(root, resp);
-
-		rc = sd_bus_message_exit_container(resp);
-		if (rc < 0) {
-			dbus_err(root, rc);
-			rc = -1;
-			goto out;
-		}
-	}
-
-	rc = sd_bus_message_exit_container(resp);
-	if (rc < 0) {
-		dbus_err(root, rc);
-		rc = -1;
+	if (!dbus_object_is_dict(&args)) {
+		nvme_msg(root, LOG_ERR, "error unmashalling args\n");
 		goto out;
 	}
+
+	/* objects container */
+	dbus_message_iter_recurse(&args, &objs);
+
 	rc = 0;
+
+	for (;;) {
+		DBusMessageIter ent;
+
+		dbus_message_iter_recurse(&objs, &ent);
+
+		rc = handle_mctp_obj(root, &ent);
+		if (rc)
+			break;
+
+		if (!dbus_message_iter_next(&objs))
+			break;
+	}
 
 out:
 	errno_save = errno;
-	sd_bus_error_free(&berr);
-	sd_bus_message_unref(resp);
-	sd_bus_unref(bus);
+	if (resp)
+		dbus_message_unref(resp);
+	if (bus)
+		dbus_connection_unref(bus);
+	dbus_error_free(&berr);
 
 	if (rc < 0) {
 		if (root) {
@@ -820,11 +812,11 @@ out:
 	return root;
 }
 
-#else /* CONFIG_LIBSYSTEMD */
+#else /* CONFIG_DBUS */
 
 nvme_root_t nvme_mi_scan_mctp(void)
 {
 	return NULL;
 }
 
-#endif /* CONFIG_LIBSYSTEMD */
+#endif /* CONFIG_DBUS */

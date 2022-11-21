@@ -89,24 +89,9 @@ if openssl_dep.found()
            description: 'OpenSSL/LibreSSL API version @0@'.format(api_version))
 endif
 
-# Check for libsystemd availability. Optional, only required for MCTP dbus scan
-libsystemd_dep = dependency('libsystemd', version: '>219', required: false)
-if libsystemd_dep.found()
-  # When the user has CFLAGS=-static environment variable set
-  # dependency() will find the shared library libsystemd Thus double
-  # check if we are able to link
-  if not cc.links('''#include <systemd/sd-bus.h>
-                     int main(void) {
-                         struct sd_bus *ret;
-                         return sd_bus_default(&ret);
-                   }
-                   ''',
-                   dependencies: libsystemd_dep,
-                   name: 'libsystemd')
-       libsystemd_dep = declare_dependency()
-  endif
-  conf.set('CONFIG_LIBSYSTEMD', libsystemd_dep.found(), description: 'Is libsystemd(>219) available?')
-endif
+# Check for libdus availability. Optional, only required for MCTP dbus scan
+libdbus_dep = dependency('dbus-1', required: false)
+conf.set('CONFIG_DBUS', libdbus_dep.found(), description: 'Enable dbus support?')
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
