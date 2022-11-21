@@ -516,7 +516,7 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)
 
 err_free_ep:
 	errno_save = errno;
-	free(ep);
+	nvme_mi_close(ep);
 	free(mctp);
 	errno = errno_save;
 	return NULL;

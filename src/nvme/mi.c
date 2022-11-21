@@ -1517,7 +1517,7 @@ void nvme_mi_close(nvme_mi_ep_t ep)
 	nvme_mi_for_each_ctrl_safe(ep, ctrl, tmp)
 		nvme_mi_close_ctrl(ctrl);
 
-	if (ep->transport->close)
+	if (ep->transport && ep->transport->close)
 		ep->transport->close(ep);
 	list_del(&ep->root_entry);
 	free(ep);
