@@ -6,12 +6,6 @@
 #define MEMBLAZE_NVME
 
 #include "cmd.h"
-#include "common.h"
-
-#include <ctype.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 PLUGIN(NAME("memblaze", "Memblaze vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
@@ -30,4 +24,3 @@ PLUGIN(NAME("memblaze", "Memblaze vendor specific extensions", NVME_VERSION),
 #endif
 
 #include "define_cmd.h"
-
