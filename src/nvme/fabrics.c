@@ -1127,7 +1127,7 @@ static __u32 nvmf_get_tel(const char *hostsymname)
 	__u16 len;
 
 	/* Host ID is mandatory */
-	tel += nvmf_exat_size(NVME_UUID_LEN_STRING);
+	tel += nvmf_exat_size(NVME_UUID_LEN);
 
 	/* Symbolic name is optional */
 	len = hostsymname ? strlen(hostsymname) : 0;
