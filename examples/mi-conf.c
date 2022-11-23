@@ -23,7 +23,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
-#include <systemd/sd-bus.h>
+#include <dbus/dbus.h>
 
 #define MCTP_DBUS_NAME "xyz.openbmc_project.MCTP"
 #define MCTP_DBUS_PATH "/xyz/openbmc_project/mctp"
@@ -79,10 +79,11 @@ int find_port(nvme_mi_ep_t ep, uint8_t *portp, uint16_t *mtup)
 	return found ? 0 : 1;
 }
 
-int set_local_mtu(sd_bus *bus, unsigned int net, uint8_t eid, uint32_t mtu)
+int set_local_mtu(DBusConnection *bus, unsigned int net, uint8_t eid,
+		  uint32_t mtu)
 {
-	sd_bus_error err = SD_BUS_ERROR_NULL;
-	sd_bus_message *resp;
+	DBusMessage *msg, *resp;
+	DBusError berr;
 	char *ep_path;
 	int rc;
 
@@ -99,26 +100,50 @@ int set_local_mtu(sd_bus *bus, unsigned int net, uint8_t eid, uint32_t mtu)
 	 */
 	mtu += 4;
 
-	rc = sd_bus_call_method(bus, MCTP_DBUS_NAME, ep_path,
-				MCTP_DBUS_EP_IFACE, "SetMTU", &err, &resp,
-				"u", mtu);
-	if (rc < 0) {
-		warnx("Failed to set local MTU: %s", strerror(-rc));
-		return -1;
+	rc = -1;
+	dbus_error_init(&berr);
+	msg = dbus_message_new_method_call(MCTP_DBUS_NAME, ep_path,
+					   MCTP_DBUS_EP_IFACE, "SetMTU");
+	if (!msg) {
+		warnx("Can't create D-Bus message");
+		goto out;
 	}
 
-	return 0;
+	rc = dbus_message_append_args(msg,
+				      DBUS_TYPE_UINT32, &mtu,
+				      DBUS_TYPE_INVALID);
+	if (!rc) {
+		warnx("Can't construct D-Bus message arguments");
+		goto out_free_msg;
+	}
+
+	resp = dbus_connection_send_with_reply_and_block(bus, msg,
+							 2000, &berr);
+	if (!resp) {
+		warnx("Failed to set local MTU: %s (%s)", berr.message,
+		      berr.name);
+	} else {
+		dbus_message_unref(resp);
+		rc = 0;
+	}
+
+out_free_msg:
+	dbus_message_unref(msg);
+out:
+	dbus_error_free(&berr);
+	return rc;
 }
 
 int main(int argc, char **argv)
 {
 	uint16_t cur_mtu, mtu;
+	DBusConnection *bus;
 	const char *devstr;
 	uint8_t eid, port;
 	nvme_root_t root;
 	unsigned int net;
 	nvme_mi_ep_t ep;
-	sd_bus *bus;
+	DBusError berr;
 	int rc;
 
 	if (argc != 2) {
@@ -141,10 +166,13 @@ int main(int argc, char **argv)
 		goto out_free_root;
 	}
 
-	rc = sd_bus_default_system(&bus);
-	if (rc < 0) {
+	dbus_error_init(&berr);
+	bus = dbus_bus_get(DBUS_BUS_SYSTEM, &berr);
+	if (!bus) {
+		warnx("Failed opening D-Bus: %s (%s)\n",
+		      berr.message, berr.name);
+		rc = -1;
 		goto out_close_ep;
-		warnx("Failed opening D-Bus: %s\n", strerror(-rc));
 	}
 
 	rc = find_port(ep, &port, &mtu);
@@ -185,8 +213,9 @@ int main(int argc, char **argv)
 	}
 
 out_close_bus:
-	sd_bus_close(bus);
+	dbus_connection_unref(bus);
 out_close_ep:
+	dbus_error_free(&berr);
 	nvme_mi_close(ep);
 out_free_root:
 	nvme_mi_free_root(root);

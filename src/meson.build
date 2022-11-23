@@ -33,7 +33,7 @@ deps = [
 ]
 
 mi_deps = [
-    libsystemd_dep,
+    libdbus_dep,
 ]
 
 source_dir = meson.current_source_dir()

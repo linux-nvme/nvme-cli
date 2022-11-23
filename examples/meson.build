@@ -40,11 +40,11 @@ executable(
     include_directories: [incdir, internal_incdir]
 )
 
-if libsystemd_dep.found()
+if libdbus_dep.found()
     executable(
         'mi-conf',
         ['mi-conf.c'],
-        dependencies: [libnvme_mi_dep, libsystemd_dep],
+        dependencies: [libnvme_mi_dep, libdbus_dep],
         include_directories: [incdir, internal_incdir]
     )
 endif
