@@ -99,7 +99,7 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --werror -Duuid:werror=false --wrap-mode=forcefallback
+          setup-options: --werror -Dopenssl:werror=false --wrap-mode=forcefallback
           options: --verbose
           action: build
           meson-version: 0.61.2
@@ -115,7 +115,7 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --werror -Duuid:werror=false --wrap-mode=forcefallback --default-library=static
+          setup-options: --werror -Dopenssl:werror=false --wrap-mode=forcefallback --default-library=static
           options: --verbose
           action: build
           meson-version: 0.61.2
