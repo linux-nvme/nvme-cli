@@ -839,7 +839,7 @@ static int __nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl,
 
 int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
 {
-	const size_t xfer_size = 4096;
+	const size_t max_xfer_size = 4096;
 	off_t xfer_offset;
 	int rc = 0;
 
@@ -849,25 +849,26 @@ int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
 	}
 
 	for (xfer_offset = 0; xfer_offset < args->len;) {
-		size_t tmp, cur_xfer_size = xfer_size;
+		size_t xfered_size, cur_xfer_size = max_xfer_size;
 		bool final;
 
 		if (xfer_offset + cur_xfer_size > args->len)
 			cur_xfer_size = args->len - xfer_offset;
 
-		tmp = cur_xfer_size;
+		xfered_size = cur_xfer_size;
 
 		final = xfer_offset + cur_xfer_size >= args->len;
 
+		/* xfered_size is used as both input and output parameter */
 		rc = __nvme_mi_admin_get_log(ctrl, args, xfer_offset,
-					     &tmp, final);
+					     &xfered_size, final);
 		if (rc)
 			break;
 
-		xfer_offset += tmp;
+		xfer_offset += xfered_size;
 		/* if we returned less data than expected, consider that
 		 * the end of the log page */
-		if (tmp != cur_xfer_size)
+		if (xfered_size != cur_xfer_size)
 			break;
 	}
 
