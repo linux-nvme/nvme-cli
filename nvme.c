@@ -4197,6 +4197,95 @@ ret:
 	return err;
 }
 
+/* Transfers one chunk of firmware to the device, and decodes & reports any
+ * errors. Returns -1 on (fatal) error; signifying that the transfer should
+ * be aborted.
+ */
+static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
+			      unsigned int fw_len, uint32_t offset,
+			      uint32_t len, bool progress, bool ignore_ovr)
+{
+	const unsigned int max_retries = 3;
+	bool retryable, ovr;
+	int err, try;
+
+	if (progress) {
+		printf("Firmware download: transferring 0x%08x/0x%08x bytes: %03d%%\r",
+		       offset, fw_len, (int)(100 * offset / fw_len));
+	}
+
+	struct nvme_fw_download_args args = {
+		.args_size	= sizeof(args),
+		.offset		= offset,
+		.data_len	= len,
+		.data		= fw_buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+
+	for (try = 0; try < max_retries; try++) {
+
+		if (try > 0) {
+			fprintf(stderr, "retrying offset %x (%u/%u)\n",
+				offset, try, max_retries);
+		}
+
+		err = nvme_cli_fw_download(dev, &args);
+		if (!err)
+			return 0;
+
+		/* don't retry if the NVMe-type error indicates Do Not Resend.
+		 */
+		retryable = !((err > 0) &&
+			(nvme_status_get_type(err) == NVME_STATUS_TYPE_NVME) &&
+			(nvme_status_get_value(err) & NVME_SC_DNR));
+
+		/* detect overwrite errors, which are handled differently
+		 * depending on ignore_ovr */
+		ovr = (err > 0) &&
+			(nvme_status_get_type(err) == NVME_STATUS_TYPE_NVME) &&
+			(NVME_GET(err, SCT) == NVME_SCT_CMD_SPECIFIC) &&
+			(NVME_GET(err, SC) == NVME_SC_OVERLAPPING_RANGE);
+
+		if (ovr && ignore_ovr)
+			return 0;
+
+		/* if we're printing progress, we'll need a newline to separate
+		 * error output from the progress data (which doesn't have a
+		 * \n), and flush before we write to stderr.
+		 */
+		if (progress) {
+			printf("\n");
+			fflush(stdout);
+		}
+
+		fprintf(stderr, "fw-download: error on offset 0x%08x/0x%08x\n",
+			offset, fw_len);
+
+		if (err < 0) {
+			fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
+		} else {
+			nvme_show_status(err);
+			if (ovr) {
+				/* non-ignored ovr error: print a little extra info
+				 * about recovering */
+				fprintf(stderr,
+					"Use --ignore-ovr to ignore overwrite errors\n");
+
+				/* We'll just be attempting more overwrites if
+				 * we retry. DNR will likely be set, but force
+				 * an exit anyway. */
+				retryable = false;
+			}
+		}
+
+		if (!retryable)
+			break;
+	}
+
+	return -1;
+}
+
 static int fw_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Copy all or part of a firmware image to "\
@@ -4210,29 +4299,37 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	const char *fw = "firmware file (required)";
 	const char *xfer = "transfer chunksize limit";
 	const char *offset = "starting dword offset, default 0";
+	const char *progress = "display firmware transfer progress";
+	const char *ignore_ovr = "ignore overwrite errors";
 	unsigned int fw_size;
 	struct nvme_dev *dev;
-	void *fw_buf, *buf;
 	int err, fw_fd = -1;
 	struct stat sb;
+	void *fw_buf;
 	bool huge;
 
 	struct config {
 		char	*fw;
 		__u32	xfer;
 		__u32	offset;
+		bool	progress;
+		bool	ignore_ovr;
 	};
 
 	struct config cfg = {
-		.fw	= "",
-		.xfer	= 4096,
-		.offset	= 0,
+		.fw         = "",
+		.xfer       = 4096,
+		.offset     = 0,
+		.progress   = false,
+		.ignore_ovr = false,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FILE("fw",     'f', &cfg.fw,     fw),
-		OPT_UINT("xfer",   'x', &cfg.xfer,   xfer),
-		OPT_UINT("offset", 'o', &cfg.offset, offset),
+		OPT_FILE("fw",         'f', &cfg.fw,         fw),
+		OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
+		OPT_UINT("offset",     'o', &cfg.offset,     offset),
+		OPT_FLAG("progress",   'p', &cfg.progress,   progress),
+		OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr),
 		OPT_END()
 	};
 
@@ -4275,41 +4372,33 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fw_fd;
 	}
 
-	buf = fw_buf;
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
 		err = -errno;
 		fprintf(stderr, "read :%s :%s\n", cfg.fw, strerror(errno));
 		goto free;
 	}
 
-	while (fw_size > 0) {
+	while (cfg.offset < fw_size) {
 		cfg.xfer = min(cfg.xfer, fw_size);
 
-		struct nvme_fw_download_args args = {
-			.args_size	= sizeof(args),
-			.offset		= cfg.offset,
-			.data_len	= cfg.xfer,
-			.data		= fw_buf,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
-		};
-		err = nvme_cli_fw_download(dev, &args);
-		if (err < 0) {
-			fprintf(stderr, "fw-download: %s\n", nvme_strerror(errno));
+		err = fw_download_single(dev, fw_buf + cfg.offset, fw_size,
+					 cfg.offset, cfg.xfer, cfg.progress,
+					 cfg.ignore_ovr);
+		if (err)
 			break;
-		} else if (err != 0) {
-			nvme_show_status(err);
-			break;
-		}
-		fw_buf     += cfg.xfer;
-		fw_size    -= cfg.xfer;
+
 		cfg.offset += cfg.xfer;
 	}
-	if (!err)
+
+	if (!err) {
+		/* end the progress output */
+		if (cfg.progress)
+			printf("\n");
 		printf("Firmware download success\n");
+	}
 
 free:
-	nvme_free(buf, huge);
+	nvme_free(fw_buf, huge);
 close_fw_fd:
 	close(fw_fd);
 close_dev:
