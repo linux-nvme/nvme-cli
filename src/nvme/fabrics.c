@@ -946,7 +946,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
 	int f;
 	DIR *d;
 	struct dirent *de;
-	char buf[512];
+	char buf[512] = {0};
 
 	system_uuid[0] = '\0';
 	d = opendir(PATH_DMI_ENTRIES);
@@ -964,7 +964,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
 			continue;
 		len = read(f, buf, 512);
 		close(f);
-		if (len < 0)
+		if (len <= 0)
 			continue;
 		if (sscanf(buf, "%d", &type) != 1)
 			continue;
@@ -976,7 +976,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
 			continue;
 		len = read(f, buf, 512);
 		close(f);
-		if (len < 0)
+		if (len <= 0)
 			continue;
 		/* Sigh. https://en.wikipedia.org/wiki/Overengineering */
 		/* DMTF SMBIOS 3.0 Section 7.2.1 System UUID */
