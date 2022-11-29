@@ -433,6 +433,7 @@ int nvme_get_log(struct nvme_get_log_args *args)
 int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 {
 	__u64 offset = 0, xfer, data_len = args->len;
+	__u64 start = args->lpo;
 	bool retain = true;
 	void *ptr = args->log;
 	int ret;
@@ -454,7 +455,7 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 		if (offset + xfer == data_len)
 			retain = args->rae;
 
-		args->lpo = offset;
+		args->lpo = start + offset;
 		args->len = xfer;
 		args->log = ptr;
 		args->rae = retain;
