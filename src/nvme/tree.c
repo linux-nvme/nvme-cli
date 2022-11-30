@@ -1833,6 +1833,7 @@ static nvme_ns_t nvme_ns_open(const char *name)
 close_fd:
 	close(n->fd);
 free_ns:
+	free(n->generic_name);
 	free(n->name);
 	free(n);
 	return NULL;
