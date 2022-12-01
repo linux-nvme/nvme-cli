@@ -1776,6 +1776,7 @@ static int test_admin_get_log_split_cb(struct nvme_mi_ep *ep,
 				       struct nvme_mi_resp *resp,
 				       void *data)
 {
+	uint32_t log_page_offset_lower;
 	struct log_data *ldata = data;
 	uint32_t len, off;
 	__u8 *rq_hdr;
@@ -1790,19 +1791,25 @@ static int test_admin_get_log_split_cb(struct nvme_mi_ep *ep,
 	off = rq_hdr[31] << 24 | rq_hdr[30] << 16 | rq_hdr[29] << 8 | rq_hdr[28];
 	len = rq_hdr[35] << 24 | rq_hdr[34] << 16 | rq_hdr[33] << 8 | rq_hdr[32];
 
+	/* From the MI message's Command Dword 12 */
+	log_page_offset_lower = rq_hdr[55] << 24 | rq_hdr[54] << 16 | rq_hdr[53] << 8 | rq_hdr[52];
+
 	/* we should have a full-sized start and middle, and a short end */
 	switch (ldata->n) {
 	case 0:
+		assert(log_page_offset_lower == 0);
 		assert(len == 4096);
 		assert(off == 0);
 		break;
 	case 1:
+		assert(log_page_offset_lower == 4096);
 		assert(len == 4096);
-		assert(off == 4096);
+		assert(off == 0);
 		break;
 	case 2:
+		assert(log_page_offset_lower == 8192);
 		assert(len == 4);
-		assert(off == 4096 * 2);
+		assert(off == 0);
 		break;
 	default:
 		assert(0);
@@ -1836,6 +1843,8 @@ static void test_admin_get_log_split(struct nvme_mi_ep *ep)
 	args.lid = 1;
 	args.log = buf;
 	args.len = sizeof(buf);
+	args.lpo = 0;
+	args.ot = false;
 
 	rc = nvme_mi_admin_get_log(ctrl, &args);
 
