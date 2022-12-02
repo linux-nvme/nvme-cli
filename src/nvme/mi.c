@@ -772,11 +772,19 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 }
 
 /* retrieves a MCTP-messsage-sized chunk of log page data. offset and len are
- * specified within the args->data area */
+ * specified within the args->data area. The `offset` parameter is a relative
+ * offset to the args->lpo !
+ *
+ * What's more, we change the LPO of original command to chunk the request
+ * message into proper size which is allowed by MI interface. One reason is that
+ * this option seems to be supported better by devices.  For more information
+ * about this option, please check https://github.com/linux-nvme/libnvme/pull/539
+ * */
 static int __nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl,
 				   const struct nvme_get_log_args *args,
 				   off_t offset, size_t *lenp, bool final)
 {
+	__u64 log_page_offset = args->lpo + offset;
 	struct nvme_mi_admin_resp_hdr resp_hdr;
 	struct nvme_mi_admin_req_hdr req_hdr;
 	struct nvme_mi_resp resp;
@@ -808,17 +816,13 @@ static int __nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl,
 				    (args->lid & 0xff));
 	req_hdr.cdw11 = cpu_to_le32(args->lsi << 16 |
 				    ndw >> 16);
-	req_hdr.cdw12 = cpu_to_le32(args->lpo & 0xffffffff);
-	req_hdr.cdw13 = cpu_to_le32(args->lpo >> 32);
+	req_hdr.cdw12 = cpu_to_le32(log_page_offset & 0xffffffff);
+	req_hdr.cdw13 = cpu_to_le32(log_page_offset >> 32);
 	req_hdr.cdw14 = cpu_to_le32(args->csi << 24 |
 				    (args->ot ? 1 : 0) << 23 |
 				    args->uuidx);
 	req_hdr.flags = 0x1;
 	req_hdr.dlen = cpu_to_le32(len & 0xffffffff);
-	if (offset) {
-		req_hdr.flags |= 0x2;
-		req_hdr.doff = cpu_to_le32(offset);
-	}
 
 	nvme_mi_calc_req_mic(&req);
 
@@ -844,6 +848,11 @@ int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
 	int rc = 0;
 
 	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (args->ot && (args->len > max_xfer_size)) {
 		errno = EINVAL;
 		return -1;
 	}
