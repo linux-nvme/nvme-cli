@@ -327,7 +327,7 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
 
 	rc = nvme_mi_mi_read_mi_data_ctrl_list(ep, 0, &list);
 	if (rc)
-		return -1;
+		return rc;
 
 	n_ctrl = le16_to_cpu(list.num);
 	if (n_ctrl > NVME_ID_CTRL_LIST_MAX) {
