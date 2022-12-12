@@ -8461,7 +8461,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 
 static int show_topology_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
-	const char *desc = "Show the topolog\n";
+	const char *desc = "Show the topology\n";
 	const char *verbose = "Increase output verbosity";
 	const char *ranking = "Ranking order: namespace|ctrl";
 	enum nvme_print_flags flags;
