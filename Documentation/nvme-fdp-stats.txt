@@ -1,0 +1,37 @@
+nvme-fdp-stats(1)
+=================
+
+NAME
+----
+nvme-fdp-stats - Get Flexible Data Placement Statistics
+
+SYNOPSIS
+--------
+[verse]
+'nvme fdp stats' <device> [--endgrp-id=<NUM> | -e <NUM>]
+			  [--raw-binary | -b]
+			  [--output-format=<FMT> | -o <FMT>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, provide information about the FDP configuration over
+the life of the FDP configuration in an Endurance Group.
+
+OPTIONS
+-------
+-e <NUM>::
+--endgrp-id=<NUM>::
+	The endurance group identifier to use when requesting the log page.
+
+-b::
+--raw-binary::
+	Print the raw buffer to the standard output stream.
+
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal', 'json', or 'binary'. Only one
+	output format can be used at a time.
+
+NVME
+----
+Part of nvme-cli

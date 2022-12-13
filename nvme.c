@@ -75,6 +75,7 @@ struct feat_cfg {
 	__u32 namespace_id;
 	enum nvme_get_features_sel sel;
 	__u32 cdw11;
+	__u32 cdw12;
 	__u8  uuid_index;
 	__u32 data_len;
 	bool  raw_binary;
@@ -4282,6 +4283,11 @@ static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
 	if (cfg->feature_id == NVME_FEAT_FID_HOST_ID && (cfg->cdw11 & 0x1))
 		cfg->data_len = 16;
 
+	if (cfg->feature_id == NVME_FEAT_FID_FDP_EVENTS) {
+		cfg->data_len = 0xff * sizeof(__u16);
+		cfg->cdw11 |= 0xff << 16;
+	}
+
 	if (cfg->sel == 3)
 		cfg->data_len = 0;
 
@@ -4413,7 +4419,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	const char *raw = "show feature in binary format";
 	const char *feature_id = "feature identifier";
 	const char *sel = "[0-3,8]: current/default/saved/supported/changed";
-	const char *cdw11 = "dword 11 for interrupt vector config";
+	const char *cdw11 = "feature specific dword 11";
 	const char *human_readable = "show feature in readable format";
 	struct nvme_dev *dev;
 	int err;
