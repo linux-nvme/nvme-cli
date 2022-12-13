@@ -107,6 +107,8 @@ COMMAND_LIST(
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
 	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd) \
 	ENTRY("show-topology", "Show the topology", show_topology_cmd) \
+	ENTRY("io-mgmt-recv", "I/O Management Receive", io_mgmt_recv)
+	ENTRY("io-mgmt-send", "I/O Management Send", io_mgmt_send)
 );
 
 #endif

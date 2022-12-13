@@ -56,6 +56,8 @@ adoc_sources = [
   'nvme-intel-market-name',
   'nvme-intel-smart-log-add',
   'nvme-intel-temp-stats',
+  'nvme-io-mgmt-recv',
+  'nvme-io-mgmt-send',
   'nvme-io-passthru',
   'nvme-lba-status-log',
   'nvme-list',
