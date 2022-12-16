@@ -169,13 +169,13 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, bool cap_only)
 		}
 
 		json_object_add_value_int(root, "mssrl", le16_to_cpu(ns->mssrl));
-		json_object_add_value_int(root, "mcl", le32_to_cpu(ns->mcl));
+		json_object_add_value_uint(root, "mcl", le32_to_cpu(ns->mcl));
 		json_object_add_value_int(root, "msrc", ns->msrc);
 	}
 	json_object_add_value_int(root, "nulbaf", ns->nulbaf);
 
 	if (!cap_only) {
-		json_object_add_value_int(root, "anagrpid", le32_to_cpu(ns->anagrpid));
+		json_object_add_value_uint(root, "anagrpid", le32_to_cpu(ns->anagrpid));
 		json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
 
 		memset(eui64, 0, sizeof(eui64_buf));
@@ -247,7 +247,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_uint(root, "rtd3r", le32_to_cpu(ctrl->rtd3r));
 	json_object_add_value_uint(root, "rtd3e", le32_to_cpu(ctrl->rtd3e));
 	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
-	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
+	json_object_add_value_uint(root, "ctratt", le32_to_cpu(ctrl->ctratt));
 	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
 	json_object_add_value_int(root, "cntrltype", ctrl->cntrltype);
 	json_object_add_value_string(root, "fguid", util_uuid_to_string(ctrl->fguid));
@@ -281,19 +281,19 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "hctma", le16_to_cpu(ctrl->hctma));
 	json_object_add_value_int(root, "mntmt", le16_to_cpu(ctrl->mntmt));
 	json_object_add_value_int(root, "mxtmt", le16_to_cpu(ctrl->mxtmt));
-	json_object_add_value_int(root, "sanicap", le32_to_cpu(ctrl->sanicap));
-	json_object_add_value_int(root, "hmminds", le32_to_cpu(ctrl->hmminds));
+	json_object_add_value_uint(root, "sanicap", le32_to_cpu(ctrl->sanicap));
+	json_object_add_value_uint(root, "hmminds", le32_to_cpu(ctrl->hmminds));
 	json_object_add_value_int(root, "hmmaxd", le16_to_cpu(ctrl->hmmaxd));
 	json_object_add_value_int(root, "nsetidmax",
 		le16_to_cpu(ctrl->nsetidmax));
 	json_object_add_value_int(root, "endgidmax", le16_to_cpu(ctrl->endgidmax));
 	json_object_add_value_int(root, "anatt",ctrl->anatt);
 	json_object_add_value_int(root, "anacap", ctrl->anacap);
-	json_object_add_value_int(root, "anagrpmax",
+	json_object_add_value_uint(root, "anagrpmax",
 		le32_to_cpu(ctrl->anagrpmax));
-	json_object_add_value_int(root, "nanagrpid",
+	json_object_add_value_uint(root, "nanagrpid",
 		le32_to_cpu(ctrl->nanagrpid));
-	json_object_add_value_int(root, "pels", le32_to_cpu(ctrl->pels));
+	json_object_add_value_uint(root, "pels", le32_to_cpu(ctrl->pels));
 	json_object_add_value_int(root, "domainid", le16_to_cpu(ctrl->domainid));
 	json_object_add_value_uint128(root, "megcap", megcap);
 	json_object_add_value_int(root, "sqes", ctrl->sqes);
@@ -310,16 +310,16 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
-	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
-	json_object_add_value_int(root, "mnan", le32_to_cpu(ctrl->mnan));
+	json_object_add_value_uint(root, "sgls", le32_to_cpu(ctrl->sgls));
+	json_object_add_value_uint(root, "mnan", le32_to_cpu(ctrl->mnan));
 	json_object_add_value_uint128(root, "maxdna", maxdna);
-	json_object_add_value_int(root, "maxcna", le32_to_cpu(ctrl->maxcna));
+	json_object_add_value_uint(root, "maxcna", le32_to_cpu(ctrl->maxcna));
 
 	if (strlen(subnqn))
 		json_object_add_value_string(root, "subnqn", subnqn);
 
-	json_object_add_value_int(root, "ioccsz", le32_to_cpu(ctrl->ioccsz));
-	json_object_add_value_int(root, "iorcsz", le32_to_cpu(ctrl->iorcsz));
+	json_object_add_value_uint(root, "ioccsz", le32_to_cpu(ctrl->ioccsz));
+	json_object_add_value_uint(root, "iorcsz", le32_to_cpu(ctrl->iorcsz));
 	json_object_add_value_int(root, "icdoff", le16_to_cpu(ctrl->icdoff));
 	json_object_add_value_int(root, "fcatt", ctrl->fcatt);
 	json_object_add_value_int(root, "msdbd", ctrl->msdbd);
@@ -422,7 +422,7 @@ static void json_nvme_resv_report(struct nvme_resv_status *status,
 
 	root = json_create_object();
 
-	json_object_add_value_int(root, "gen", le32_to_cpu(status->gen));
+	json_object_add_value_uint(root, "gen", le32_to_cpu(status->gen));
 	json_object_add_value_int(root, "rtype", status->rtype);
 	json_object_add_value_int(root, "regctl", regctl);
 	json_object_add_value_int(root, "ptpls", status->ptpls);
@@ -782,7 +782,7 @@ static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_en
 		json_object_add_value_uint64(valid_attrs, "Power on hours",
 			le64_to_cpu(self_test->result[i].poh));
 		if (self_test->result[i].vdi & NVME_ST_VALID_DIAG_INFO_NSID)
-			json_object_add_value_int(valid_attrs, "Namespace Identifier",
+			json_object_add_value_uint(valid_attrs, "Namespace Identifier",
 				le32_to_cpu(self_test->result[i].nsid));
 		if (self_test->result[i].vdi & NVME_ST_VALID_DIAG_INFO_FLBA) {
 			json_object_add_value_uint64(valid_attrs, "Failing LBA",
@@ -4209,7 +4209,7 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 			printf("nows    : %u\n", le16_to_cpu(ns->nows));
 		}
 		printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
-		printf("mcl     : %d\n", le32_to_cpu(ns->mcl));
+		printf("mcl     : %u\n", le32_to_cpu(ns->mcl));
 		printf("msrc    : %u\n", ns->msrc);
 	}
 	printf("nulbaf  : %u\n", ns->nulbaf);
@@ -4291,7 +4291,7 @@ static void json_nvme_cmd_set_independent_id_ns(
 	json_object_add_value_int(root, "nmic", ns->nmic);
 	json_object_add_value_int(root, "rescap", ns->rescap);
 	json_object_add_value_int(root, "fpi", ns->fpi);
-	json_object_add_value_int(root, "anagrpid", le32_to_cpu(ns->anagrpid));
+	json_object_add_value_uint(root, "anagrpid", le32_to_cpu(ns->anagrpid));
 	json_object_add_value_int(root, "nsattr", ns->nsattr);
 	json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 	json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
@@ -4687,7 +4687,7 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("sanicap   : %#x\n", le32_to_cpu(ctrl->sanicap));
 	if (human)
 		nvme_show_id_ctrl_sanicap(ctrl->sanicap);
-	printf("hmminds   : %d\n", le32_to_cpu(ctrl->hmminds));
+	printf("hmminds   : %u\n", le32_to_cpu(ctrl->hmminds));
 	printf("hmmaxd    : %d\n", le16_to_cpu(ctrl->hmmaxd));
 	printf("nsetidmax : %d\n", le16_to_cpu(ctrl->nsetidmax));
 	printf("endgidmax : %d\n", le16_to_cpu(ctrl->endgidmax));
@@ -4695,9 +4695,9 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("anacap    : %d\n", ctrl->anacap);
 	if (human)
 		nvme_show_id_ctrl_anacap(ctrl->anacap);
-	printf("anagrpmax : %d\n", ctrl->anagrpmax);
-	printf("nanagrpid : %d\n", le32_to_cpu(ctrl->nanagrpid));
-	printf("pels      : %d\n", le32_to_cpu(ctrl->pels));
+	printf("anagrpmax : %u\n", ctrl->anagrpmax);
+	printf("nanagrpid : %u\n", le32_to_cpu(ctrl->nanagrpid));
+	printf("pels      : %u\n", le32_to_cpu(ctrl->pels));
 	printf("domainid  : %d\n", le16_to_cpu(ctrl->domainid));
 	printf("megcap    : %s\n",
 		uint128_t_to_string(le128_to_cpu(ctrl->megcap)));
@@ -4736,13 +4736,13 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
 	if (human)
 		nvme_show_id_ctrl_sgls(ctrl->sgls);
-	printf("mnan      : %d\n", le32_to_cpu(ctrl->mnan));
+	printf("mnan      : %u\n", le32_to_cpu(ctrl->mnan));
 	printf("maxdna    : %s\n",
 		uint128_t_to_string(le128_to_cpu(ctrl->maxdna)));
-	printf("maxcna    : %d\n", le32_to_cpu(ctrl->maxcna));
+	printf("maxcna    : %u\n", le32_to_cpu(ctrl->maxcna));
 	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
-	printf("ioccsz    : %d\n", le32_to_cpu(ctrl->ioccsz));
-	printf("iorcsz    : %d\n", le32_to_cpu(ctrl->iorcsz));
+	printf("ioccsz    : %u\n", le32_to_cpu(ctrl->ioccsz));
+	printf("iorcsz    : %u\n", le32_to_cpu(ctrl->iorcsz));
 	printf("icdoff    : %d\n", le16_to_cpu(ctrl->icdoff));
 	printf("fcatt     : %#x\n", ctrl->fcatt);
 	if (human)
@@ -4816,8 +4816,8 @@ static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
 		struct json_object *elbaf = json_create_object();
 		unsigned int elbaf_val = le32_to_cpu(nvm_ns->elbaf[i]);
 
-		json_object_add_value_int(elbaf, "sts", elbaf_val & 0x7F);
-		json_object_add_value_int(elbaf, "pif", (elbaf_val >> 7) & 0x3);
+		json_object_add_value_uint(elbaf, "sts", elbaf_val & 0x7F);
+		json_object_add_value_uint(elbaf, "pif", (elbaf_val >> 7) & 0x3);
 
 		json_array_add_value_object(elbafs, elbaf);
 	}
@@ -4919,17 +4919,17 @@ static void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	root = json_create_object();
 	json_object_add_value_int(root, "zoc", le16_to_cpu(ns->zoc));
 	json_object_add_value_int(root, "ozcs", le16_to_cpu(ns->ozcs));
-	json_object_add_value_int(root, "mar", le32_to_cpu(ns->mar));
-	json_object_add_value_int(root, "mor", le32_to_cpu(ns->mor));
-	json_object_add_value_int(root, "rrl", le32_to_cpu(ns->rrl));
-	json_object_add_value_int(root, "frl", le32_to_cpu(ns->frl));
-	json_object_add_value_int(root, "rrl1", le32_to_cpu(ns->rrl1));
-	json_object_add_value_int(root, "rrl2", le32_to_cpu(ns->rrl2));
-	json_object_add_value_int(root, "rrl3", le32_to_cpu(ns->rrl3));
-	json_object_add_value_int(root, "frl1", le32_to_cpu(ns->frl1));
-	json_object_add_value_int(root, "frl2", le32_to_cpu(ns->frl2));
-	json_object_add_value_int(root, "frl3", le32_to_cpu(ns->frl3));
-	json_object_add_value_int(root, "numzrwa", le32_to_cpu(ns->numzrwa));
+	json_object_add_value_uint(root, "mar", le32_to_cpu(ns->mar));
+	json_object_add_value_uint(root, "mor", le32_to_cpu(ns->mor));
+	json_object_add_value_uint(root, "rrl", le32_to_cpu(ns->rrl));
+	json_object_add_value_uint(root, "frl", le32_to_cpu(ns->frl));
+	json_object_add_value_uint(root, "rrl1", le32_to_cpu(ns->rrl1));
+	json_object_add_value_uint(root, "rrl2", le32_to_cpu(ns->rrl2));
+	json_object_add_value_uint(root, "rrl3", le32_to_cpu(ns->rrl3));
+	json_object_add_value_uint(root, "frl1", le32_to_cpu(ns->frl1));
+	json_object_add_value_uint(root, "frl2", le32_to_cpu(ns->frl2));
+	json_object_add_value_uint(root, "frl3", le32_to_cpu(ns->frl3));
+	json_object_add_value_uint(root, "numzrwa", le32_to_cpu(ns->numzrwa));
 	json_object_add_value_int(root, "zrwafg", le16_to_cpu(ns->zrwafg));
 	json_object_add_value_int(root, "zrwasz", le16_to_cpu(ns->zrwasz));
 	json_object_add_value_int(root, "zrwacap", ns->zrwacap);
@@ -5358,9 +5358,9 @@ static void json_nvme_id_nvmset(struct nvme_id_nvmset_list *nvmset)
 			  le16_to_cpu(nvmset->ent[i].nvmsetid));
 		json_object_add_value_int(entry, "endurance_group_id",
 			  le16_to_cpu(nvmset->ent[i].endgid));
-		json_object_add_value_int(entry, "random_4k_read_typical",
+		json_object_add_value_uint(entry, "random_4k_read_typical",
 			  le32_to_cpu(nvmset->ent[i].rr4kt));
-		json_object_add_value_int(entry, "optimal_write_size",
+		json_object_add_value_uint(entry, "optimal_write_size",
 			  le32_to_cpu(nvmset->ent[i].ows));
 		json_object_add_value_uint128(entry, "total_nvmset_cap",
 			    le128_to_cpu(nvmset->ent[i].tnvmsetcap));
@@ -5419,15 +5419,15 @@ static void json_nvme_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps)
 	json_object_add_value_uint(root, "portid", le16_to_cpu(caps->portid));
 	json_object_add_value_uint(root, "crt",    caps->crt);
 
-	json_object_add_value_int(root, "vqfrt",  le32_to_cpu(caps->vqfrt));
-	json_object_add_value_int(root, "vqrfa",  le32_to_cpu(caps->vqrfa));
+	json_object_add_value_uint(root, "vqfrt",  le32_to_cpu(caps->vqfrt));
+	json_object_add_value_uint(root, "vqrfa",  le32_to_cpu(caps->vqrfa));
 	json_object_add_value_int(root, "vqrfap", le16_to_cpu(caps->vqrfap));
 	json_object_add_value_int(root, "vqprt",  le16_to_cpu(caps->vqprt));
 	json_object_add_value_int(root, "vqfrsm", le16_to_cpu(caps->vqfrsm));
 	json_object_add_value_int(root, "vqgran", le16_to_cpu(caps->vqgran));
 
-	json_object_add_value_int(root, "vifrt",  le32_to_cpu(caps->vifrt));
-	json_object_add_value_int(root, "virfa",  le32_to_cpu(caps->virfa));
+	json_object_add_value_uint(root, "vifrt",  le32_to_cpu(caps->vifrt));
+	json_object_add_value_uint(root, "virfa",  le32_to_cpu(caps->virfa));
 	json_object_add_value_int(root, "virfap", le16_to_cpu(caps->virfap));
 	json_object_add_value_int(root, "viprt",  le16_to_cpu(caps->viprt));
 	json_object_add_value_int(root, "vifrsm", le16_to_cpu(caps->vifrsm));
@@ -5466,14 +5466,14 @@ void nvme_show_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps,
 	printf("crt       : %#x\n", caps->crt);
 	if (human)
 		nvme_show_primary_ctrl_caps_crt(caps->crt);
-	printf("vqfrt     : %d\n", le32_to_cpu(caps->vqfrt));
-	printf("vqrfa     : %d\n", le32_to_cpu(caps->vqrfa));
+	printf("vqfrt     : %u\n", le32_to_cpu(caps->vqfrt));
+	printf("vqrfa     : %u\n", le32_to_cpu(caps->vqrfa));
 	printf("vqrfap    : %d\n", le16_to_cpu(caps->vqrfap));
 	printf("vqprt     : %d\n", le16_to_cpu(caps->vqprt));
 	printf("vqfrsm    : %d\n", le16_to_cpu(caps->vqfrsm));
 	printf("vqgran    : %d\n", le16_to_cpu(caps->vqgran));
-	printf("vifrt     : %d\n", le32_to_cpu(caps->vifrt));
-	printf("virfa     : %d\n", le32_to_cpu(caps->virfa));
+	printf("vifrt     : %u\n", le32_to_cpu(caps->vifrt));
+	printf("virfa     : %u\n", le32_to_cpu(caps->virfa));
 	printf("virfap    : %d\n", le16_to_cpu(caps->virfap));
 	printf("viprt     : %d\n", le16_to_cpu(caps->viprt));
 	printf("vifrsm    : %d\n", le16_to_cpu(caps->vifrsm));
@@ -5871,7 +5871,7 @@ void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
 	regctl = status->regctl[0] | (status->regctl[1] << 8);
 
 	printf("\nNVME Reservation status:\n\n");
-	printf("gen       : %d\n", le32_to_cpu(status->gen));
+	printf("gen       : %u\n", le32_to_cpu(status->gen));
 	printf("rtype     : %d\n", status->rtype);
 	printf("regctl    : %d\n", regctl);
 	printf("ptpls     : %d\n", status->ptpls);
@@ -7411,15 +7411,15 @@ static void json_detail_list(nvme_root_t r)
 
 				nvme_ctrl_for_each_ns(c, n) {
 					struct json_object *jns = json_create_object();
-					long long lba = nvme_ns_get_lba_size(n);
-					double nsze = nvme_ns_get_lba_count(n) * lba;
-					double nuse = nvme_ns_get_lba_util(n) * lba;
+					int lba = nvme_ns_get_lba_size(n);
+					uint64_t nsze = nvme_ns_get_lba_count(n) * lba;
+					uint64_t nuse = nvme_ns_get_lba_util(n) * lba;
 
 					json_object_add_value_string(jns, "NameSpace", nvme_ns_get_name(n));
 					json_object_add_value_int(jns, "NSID", nvme_ns_get_nsid(n));
-					json_object_add_value_int(jns, "UsedBytes", nuse);
-					json_object_add_value_int(jns, "MaximumLBA", nvme_ns_get_lba_count(n));
-					json_object_add_value_int(jns, "PhysicalSize", nsze);
+					json_object_add_value_uint64(jns, "UsedBytes", nuse);
+					json_object_add_value_uint64(jns, "MaximumLBA", nvme_ns_get_lba_count(n));
+					json_object_add_value_uint64(jns, "PhysicalSize", nsze);
 					json_object_add_value_int(jns, "SectorSize", lba);
 
 					json_array_add_value_object(jnss, jns);
@@ -7443,15 +7443,15 @@ static void json_detail_list(nvme_root_t r)
 			nvme_subsystem_for_each_ns(s, n) {
 				struct json_object *jns = json_create_object();
 
-				long long lba = nvme_ns_get_lba_size(n);
-				double nsze = nvme_ns_get_lba_count(n) * lba;
-				double nuse = nvme_ns_get_lba_util(n) * lba;
+				int lba = nvme_ns_get_lba_size(n);
+				uint64_t nsze = nvme_ns_get_lba_count(n) * lba;
+				uint64_t nuse = nvme_ns_get_lba_util(n) * lba;
 
 				json_object_add_value_string(jns, "NameSpace", nvme_ns_get_name(n));
 				json_object_add_value_int(jns, "NSID", nvme_ns_get_nsid(n));
-				json_object_add_value_int(jns, "UsedBytes", nuse);
-				json_object_add_value_int(jns, "MaximumLBA", nvme_ns_get_lba_count(n));
-				json_object_add_value_int(jns, "PhysicalSize", nsze);
+				json_object_add_value_uint64(jns, "UsedBytes", nuse);
+				json_object_add_value_uint64(jns, "MaximumLBA", nvme_ns_get_lba_count(n));
+				json_object_add_value_uint64(jns, "PhysicalSize", nsze);
 				json_object_add_value_int(jns, "SectorSize", lba);
 
 				json_array_add_value_object(jnss, jns);
@@ -7475,9 +7475,9 @@ static struct json_object *json_list_item(nvme_ns_t n)
 	struct json_object *jdevice = json_create_object();
 	char devname[128] = { 0 };
 
-	long long lba = nvme_ns_get_lba_size(n);
-	double nsze = nvme_ns_get_lba_count(n) * lba;
-	double nuse = nvme_ns_get_lba_util(n) * lba;
+	int lba = nvme_ns_get_lba_size(n);
+	uint64_t nsze = nvme_ns_get_lba_count(n) * lba;
+	uint64_t nuse = nvme_ns_get_lba_util(n) * lba;
 
 	nvme_dev_full_path(n, devname, sizeof(devname));
 
@@ -7486,9 +7486,9 @@ static struct json_object *json_list_item(nvme_ns_t n)
 	json_object_add_value_string(jdevice, "Firmware", nvme_ns_get_firmware(n));
 	json_object_add_value_string(jdevice, "ModelNumber", nvme_ns_get_model(n));
 	json_object_add_value_string(jdevice, "SerialNumber", nvme_ns_get_serial(n));
-	json_object_add_value_int(jdevice, "UsedBytes", nuse);
-	json_object_add_value_int(jdevice, "MaximumLBA", nvme_ns_get_lba_count(n));
-	json_object_add_value_int(jdevice, "PhysicalSize", nsze);
+	json_object_add_value_uint64(jdevice, "UsedBytes", nuse);
+	json_object_add_value_uint64(jdevice, "MaximumLBA", nvme_ns_get_lba_count(n));
+	json_object_add_value_uint64(jdevice, "PhysicalSize", nsze);
 	json_object_add_value_int(jdevice, "SectorSize", lba);
 
 	return jdevice;
