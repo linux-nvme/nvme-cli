@@ -911,8 +911,8 @@ int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
 			       nvme_admin_security_send);
 
 	req_hdr.cdw10 = cpu_to_le32(args->secp << 24 |
-				    args->spsp0 << 16 |
-				    args->spsp1 << 8 |
+				    args->spsp1 << 16 |
+				    args->spsp0 << 8 |
 				    args->nssf);
 
 	req_hdr.cdw11 = cpu_to_le32(args->data_len & 0xffffffff);
@@ -957,8 +957,8 @@ int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
 			       nvme_admin_security_recv);
 
 	req_hdr.cdw10 = cpu_to_le32(args->secp << 24 |
-				    args->spsp0 << 16 |
-				    args->spsp1 << 8 |
+				    args->spsp1 << 16 |
+				    args->spsp0 << 8 |
 				    args->nssf);
 
 	req_hdr.cdw11 = cpu_to_le32(args->data_len & 0xffffffff);
