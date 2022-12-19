@@ -5497,7 +5497,6 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	struct nvme_security_send_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.nssf		= cfg.nssf,
 		.spsp0		= cfg.spsp & 0xff,
@@ -5509,7 +5508,9 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
 	};
-	err = nvme_security_send(&args);
+
+	err = nvme_cli_security_send(dev, &args);
+
 	if (err < 0)
 		fprintf(stderr, "security-send: %s\n", nvme_strerror(errno));
 	else if (err != 0)
@@ -7177,7 +7178,6 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	struct nvme_security_receive_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.nssf		= cfg.nssf,
 		.spsp0		= cfg.spsp & 0xff,
@@ -7189,7 +7189,9 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
 	};
-	err = nvme_security_receive(&args);
+
+	err = nvme_cli_security_receive(dev, &args);
+
 	if (err < 0)
 		fprintf(stderr, "security receive: %s\n", nvme_strerror(errno));
 	else if (err != 0)

@@ -393,3 +393,26 @@ int nvme_cli_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
 		return err;
 	return nvme_get_feature_length(fid, cdw11, len);
 }
+
+int nvme_cli_security_send(struct nvme_dev *dev,
+			   struct nvme_security_send_args* args)
+{
+	return do_admin_args_op(security_send, dev, args);
+}
+
+int nvme_cli_security_receive(struct nvme_dev *dev,
+			      struct nvme_security_receive_args* args)
+{
+	/* Cannot use do_admin_args_op here because the API have different suffix*/
+	if (dev->type == NVME_DEV_DIRECT) {
+		args->fd = dev->direct.fd;
+		args->timeout = NVME_DEFAULT_IOCTL_TIMEOUT;
+		return nvme_security_receive(args);
+	}
+
+	if (dev->type == NVME_DEV_MI)
+		return nvme_mi_admin_security_recv(dev->mi.ctrl, args);
+
+	return -ENODEV;
+}
+
