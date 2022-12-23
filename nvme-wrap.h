@@ -135,4 +135,10 @@ int nvme_cli_admin_passthru(struct nvme_dev *dev, __u8 opcode, __u8 flags,
 int nvme_cli_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
 				__u32 *len);
 
+int nvme_cli_security_send(struct nvme_dev *dev,
+			   struct nvme_security_send_args* args);
+
+int nvme_cli_security_receive(struct nvme_dev *dev,
+			      struct nvme_security_receive_args* args);
+
 #endif /* _NVME_WRAP_H */
