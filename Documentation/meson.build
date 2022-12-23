@@ -78,6 +78,7 @@ adoc_sources = [
   'nvme-nvm-id-ctrl',
   'nvme-ocp-latency-monitor-log',
   'nvme-ocp-smart-add-log',
+  'nvme-ocp-clear-fw-activate-history',
   'nvme-persistent-event-log',
   'nvme-pred-lat-event-agg-log',
   'nvme-predictable-lat-log',

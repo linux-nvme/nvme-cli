@@ -22,6 +22,7 @@
 #include "linux/types.h"
 #include "util/types.h"
 #include "nvme-print.h"
+#include "ocp-clear-fw-update-history.h"
 
 #define CREATE_CMD
 #include "ocp-nvme.h"
@@ -764,4 +765,10 @@ static int ocp_latency_monitor_log(int argc, char **argv, struct command *comman
                         ret);
         dev_close(dev);
         return ret;
+}
+
+static int clear_fw_update_history(int argc, char **argv, struct command *cmd,
+				   struct plugin *plugin)
+{
+	return ocp_clear_fw_update_history(argc, argv, cmd, plugin);
 }
