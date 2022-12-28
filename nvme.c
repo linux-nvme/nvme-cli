@@ -4595,7 +4595,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *oipbp_desc = "Overwrite invert pattern between passes.";
 	const char *owpass_desc = "Overwrite pass count.";
 	const char *ause_desc = "Allow unrestricted sanitize exit.";
-	const char *sanact_desc = "Sanitize action.";
+	const char *sanact_desc = "Sanitize action: 1 = Exit failure mode, 2 = Start block erase, 3 = Start overwrite, 4 = Start crypto erase";
 	const char *ovrpat_desc = "Overwrite pattern.";
 	struct nvme_dev *dev;
 	int err;
