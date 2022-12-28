@@ -38,35 +38,31 @@
 #include <math.h>
 
 static struct si_suffix {
-	double magnitude;
+	long double magnitude;
 	const char *suffix;
 } si_suffixes[] = {
+	{1e30, "Q"},
+	{1e27, "R"},
+	{1e24, "Y"},
+	{1e21, "Z"},
+	{1e18, "E"},
 	{1e15, "P"},
 	{1e12, "T"},
 	{1e9, "G"},
 	{1e6, "M"},
 	{1e3, "k"},
 	{1e0, ""},
-	{1e-3, "m"},
-	{1e-6, "u"},
-	{1e-9, "n"},
-	{1e-12, "p"},
-	{1e-15, "f"},
 	{0}
 };
 
 const char *suffix_si_get(double *value)
 {
-	struct si_suffix *s;
+	long double value_ld = *value;
+	const char *suffix = suffix_si_get_ld(&value_ld);
 
-	for (s = si_suffixes; s->magnitude != 0; s++) {
-		if (*value >= s->magnitude) {
-			*value /= s->magnitude;
-			return s->suffix;
-		}
-	}
+	*value = value_ld;
 
-	return "";
+	return suffix;
 }
 
 uint64_t suffix_si_parse(const char *value, bool *suffixed)
@@ -92,6 +88,20 @@ uint64_t suffix_si_parse(const char *value, bool *suffixed)
 		errno = EINVAL;
 
 	return (uint64_t)ret;
+}
+
+const char *suffix_si_get_ld(long double *value)
+{
+	struct si_suffix *s;
+
+	for (s = si_suffixes; s->magnitude != 0; s++) {
+		if (*value >= s->magnitude) {
+			*value /= s->magnitude;
+			return s->suffix;
+		}
+	}
+
+	return "";
 }
 
 static struct binary_suffix {

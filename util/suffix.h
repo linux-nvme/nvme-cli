@@ -37,6 +37,7 @@
 
 const char *suffix_si_get(double *value);
 uint64_t suffix_si_parse(const char *value, bool *suffixed);
+const char *suffix_si_get_ld(long double *value);
 const char *suffix_binary_get(long long *value);
 const char *suffix_dbinary_get(double *value);
 uint64_t suffix_binary_parse(const char *value);

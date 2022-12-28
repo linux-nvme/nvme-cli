@@ -6255,10 +6255,14 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		smart->percent_used);
 	printf("endurance group critical warning summary: %#x\n",
 		smart->endu_grp_crit_warn_sumry);
-	printf("data_units_read				: %s\n",
-		uint128_t_to_string(le128_to_cpu(smart->data_units_read)));
-	printf("data_units_written			: %s\n",
-		uint128_t_to_string(le128_to_cpu(smart->data_units_written)));
+	printf("Data Units Read				: %s (%s)\n",
+		uint128_t_to_string(le128_to_cpu(smart->data_units_read)),
+		uint128_t_to_si_string(le128_to_cpu(smart->data_units_read),
+				       1000 * 512));
+	printf("Data Units Written			: %s (%s)\n",
+		uint128_t_to_string(le128_to_cpu(smart->data_units_written)),
+		uint128_t_to_si_string(le128_to_cpu(smart->data_units_written),
+				       1000 * 512));
 	printf("host_read_commands			: %s\n",
 		uint128_t_to_string(le128_to_cpu(smart->host_reads)));
 	printf("host_write_commands			: %s\n",

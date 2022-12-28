@@ -2,7 +2,7 @@
 
 test_uint128 = executable(
     'test-uint128',
-    ['test-uint128.c', '../util/types.c'],
+    ['test-uint128.c', '../util/types.c', '../util/suffix.c'],
     include_directories: [incdir, '..'],
     dependencies: [libnvme_dep],
 )
@@ -17,3 +17,12 @@ test_suffix_si_parse = executable(
 )
 
 test('suffix_si_parse', test_suffix_si_parse)
+
+test_uint128_si = executable(
+    'test-uint128-si',
+    ['test-uint128-si.c', '../util/types.c', '../util/suffix.c'],
+    include_directories: [incdir, '..'],
+    dependencies: [libnvme_dep],
+)
+
+test('uint128-si', test_uint128_si)
