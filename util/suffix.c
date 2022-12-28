@@ -69,6 +69,31 @@ const char *suffix_si_get(double *value)
 	return "";
 }
 
+uint64_t suffix_si_parse(const char *value, bool *suffixed)
+{
+	char *suffix;
+	double ret;
+	struct si_suffix *s;
+
+	errno = 0;
+	ret = strtod(value, &suffix);
+	if (errno)
+		return 0;
+
+	for (s = si_suffixes; s->magnitude != 0; s++) {
+		if (suffix[0] == s->suffix[0]) {
+			if (suffixed && suffix[0] != '\0')
+				*suffixed = true;
+			return ret *= s->magnitude;
+		}
+	}
+
+	if (suffix[0] != '\0')
+		errno = EINVAL;
+
+	return (uint64_t)ret;
+}
+
 static struct binary_suffix {
 	int shift;
 	const char *suffix;
