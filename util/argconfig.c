@@ -140,6 +140,23 @@ void argconfig_print_help(const char *program_desc,
 		show_option(s);
 }
 
+int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val)
+{
+	char *endptr;
+	unsigned long tmp = strtoul(str, &endptr, 0);
+
+	if (errno || tmp >= 1 << 8  || str == endptr) {
+		fprintf(stderr,
+			"Expected byte argument for '%s' but got '%s'!\n", opt,
+			str);
+		return -EINVAL;
+	}
+
+	*val = tmp;
+
+	return 0;
+}
+
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    const struct argconfig_commandline_options *options)
 {
@@ -244,14 +261,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			*((int *)value_addr) = tmp;
 		} else if (s->config_type == CFG_BYTE) {
-			unsigned long tmp = strtoul(optarg, &endptr, 0);
-			if (errno || tmp >= (1 << 8)  || optarg == endptr) {
-				fprintf(stderr,
-					"Expected byte argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
+			if (argconfig_parse_byte(long_opts[option_index].name,
+						 optarg, (uint8_t *)value_addr))
 				goto out;
-			}
-			*((uint8_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_SHORT) {
 			unsigned long tmp = strtoul(optarg, &endptr, 0);
 			if (errno || tmp >= (1 << 16) || optarg == endptr) {

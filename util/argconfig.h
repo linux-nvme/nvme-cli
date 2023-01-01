@@ -131,6 +131,7 @@ int argconfig_parse_comma_sep_array_short(char *string, unsigned short *ret,
 int argconfig_parse_comma_sep_array_long(char *string,
 					      unsigned long long *ret,
 					      unsigned max_length);
+int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val);
 void argconfig_register_help_func(argconfig_help_func * f);
 
 void print_word_wrapped(const char *s, int indent, int start);
