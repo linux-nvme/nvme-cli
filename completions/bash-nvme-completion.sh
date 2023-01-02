@@ -4,116 +4,6 @@
 # (unfortunately, bash won't let me add descriptions to cmds)
 # Kelly Kaoudis kelly.n.kaoudis at intel.com, Aug. 2015
 
-# Constant to indicate command has no options
-NO_OPTS=""
-readonly NO_OPTS
-
-# Associative array of plugins and associated subcommands
-# Order here is same as PLUGIN_OBJS in Makefile
-typeset -Ar _plugin_subcmds=(
-	[intel]="id-ctrl internal-log lat-stats \
-		set-bucket-thresholds lat-stats-tracking \
-		market-name smart-log-add temp-stats"
-	[amzn]="id-ctrl"
-	[memblaze]="smart-log-add get-pm-status set-pm-status \
-		select-download lat-stats lat-stats-print lat-log \
-		lat-log-print clear-error-log"
-	[wdc]="cap-diag drive-log get-crash-dump get-pfail-dump \
-		id-ctrl purge purge-monitor vs-internal-log \
-		vs-nand-stats vs-smart-add-log clear-pcie-correctable-errors \
-		drive-essentials get-drive-status clear-assert-dump \
-		drive-resize vs-fw-activate-history clear-fw-activate-history \
-		enc-get-log vs-telemetry-controller-option \
-		vs-error-reason-identifier log-page-directory \
-		namespace-resize vs-drive-info vs-temperature-stats \
-		capabilities cloud-SSD-plugin-version vs-pcie-stats"
-	[huawei]="list id-ctrl"
-	[netapp]="smdevices ontapdevices"
-	[toshiba]="vs-smart-add-log vs-internal-log \
-		clear-pcie-correctable-errors"
-	[micron]="select-download vs-temperature-stats vs-pcie-stats \
-		clear-pcie-correctable-errors vs-internal-log \
-		vs-telemetry-controller-option vs-nand-stats \
-		vs-drive-info plugin-version cloud-SSD-plugin-version \
-		log-page-directory vs-fw-activate-history \
-		vs-error-reason-identifier vs-smart-add-log \
-		clear-fw-activate-history vs-smbus-option"
-	[seagate]="vs-temperature-stats vs-log-page-sup \
-		vs-smart-add-log vs-pcie-stats clear-pcie-correctable-errors \
-		get-host-tele get-ctrl-tele vs-internal-log \
-		plugin-version"
-	[virtium]="save-smart-to-vtview-log show-identify"
-	[shannon]="smart-log-add get-feature-add set-feature-add id-ctrl"
-	[dera]="smart-log-add"
-	[sfx]="smart-log-add lat-stats get-bad-block query-cap \
-		change-cap set-feature get-feature"
-	[transcend]="healthvalue badblock"
-	[zns]="id-ctrl id-ns zone-mgmt-recv \
-		zone-mgmt-send report-zones close-zone \
-		finish-zone open-zone reset-zone offline-zone \
-		set-zone-desc zone-append changed-zone-list"
-	[nvidia]="id-ctrl"
-	[ymtc]="smart-log-add"
-	[inspur]="nvme-vendor-log"
-)
-readonly _plugin_subcmds
-
-# Associative array mapping plugins to coresponding option completions
-typeset -Ar _plugin_funcs=(
-	[intel]="plugin_intel_opts"
-	[amzn]="plugin_amzn_opts"
-	[memblaze]="plugin_memblaze_opts"
-	[wdc]="plugin_wdc_opts"
-	[huawei]="plugin_huawei_opts"
-	[toshiba]="plugin_toshiba_opts"
-	[micron]="plugin_micron_opts"
-	[seagate]="plugin_seagate_opts"
-	[virtium]="plugin_virtium_opts"
-	[shannon]="plugin_shannon_opts"
-	[dera]="plugin_dera_opts"
-	[sfx]="pluginx_sfx_opts"
-	[transcend]="plugin_transcend_opts"
-	[zns]="plugin_zns_opts"
-	[nvidia]="plugin_nvidia_opts"
-	[ymtc]="plugin_ymtc_opts"
-	[inspur]="plugin_inspur_opts"
-)
-readonly _plugin_funcs
-
-# Top level commands
-_cmds="list list-subsys id-ctrl id-ns \
-	id-ns-granularity list-ns list-ctrl \
-	id-ns-lba-format nvm-id-ns nvm-id-ns-lba-format \
-	nvm-id-ctrl primary-ctrl-caps list-secondary \
-	ns-descs id-nvmset id-uuid id-iocs create-ns \
-	delete-ns get-ns-id get-log telemetry-log \
-	fw-log changed-ns-list-log smart-log ana-log \
-	error-log effects-log endurance-log \
-	predictable-lat-log pred-lat-event-agg-log \
-	persistent-event-log endurance-agg-log \
-	lba-status-log resv-notif-log get-feature \
-	device-self-test self-test-log set-feature \
-	set-property get-property format fw-commit \
-	fw-download admin-passthru io-passthru \
-	security-send security-recv get-lba-status \
-	resv-acquire resv-register resv-release \
-	resv-report dsm copy flush compare read \
-	write write-zeros write-uncor verify \
-	sanitize sanitize-log reset subsystem-reset \
-	ns-rescan show-regs discover connect-all \
-	connect disconnect disconnect-all gen-hostnqn \
-	show-hostnqn dir-receive dir-send virt-mgmt \
-	rpmb boot-part-log fid-support-effects-log \
-	supported-log-pages lockdown media-unit-stat-log \
-	supported-cap-config-log dim show-topology"
-
-# Add plugins:
-for plugin in "${!_plugin_subcmds[@]}"; do
-	_cmds+=" $plugin"
-done
-
-cmds+=" version help"
-
 nvme_list_opts () {
     local opts=""
 	local compargs=""
@@ -1335,7 +1225,7 @@ plugin_ymtc_opts () {
 		opts+=" --namespace-id= -n --raw-binary -b"
 			;;
 		"help")
-		opts+=NO_OPTS
+		opts+=$NO_OPTS
 			;;
 	esac
 
@@ -1378,6 +1268,113 @@ plugin_inspur_opts () {
 _nvme_subcmds () {
 	local cur prev words cword
 	_init_completion || return
+
+	# Constant to indicate command has no options
+	NO_OPTS=""
+
+	# Associative array of plugins and associated subcommands
+	# Order here is same as PLUGIN_OBJS in Makefile
+	typeset -Ar _plugin_subcmds=(
+		[intel]="id-ctrl internal-log lat-stats \
+			set-bucket-thresholds lat-stats-tracking \
+			market-name smart-log-add temp-stats"
+		[amzn]="id-ctrl"
+		[memblaze]="smart-log-add get-pm-status set-pm-status \
+			select-download lat-stats lat-stats-print lat-log \
+			lat-log-print clear-error-log"
+		[wdc]="cap-diag drive-log get-crash-dump get-pfail-dump \
+			id-ctrl purge purge-monitor vs-internal-log \
+			vs-nand-stats vs-smart-add-log clear-pcie-correctable-errors \
+			drive-essentials get-drive-status clear-assert-dump \
+			drive-resize vs-fw-activate-history clear-fw-activate-history \
+			enc-get-log vs-telemetry-controller-option \
+			vs-error-reason-identifier log-page-directory \
+			namespace-resize vs-drive-info vs-temperature-stats \
+			capabilities cloud-SSD-plugin-version vs-pcie-stats"
+		[huawei]="list id-ctrl"
+		[netapp]="smdevices ontapdevices"
+		[toshiba]="vs-smart-add-log vs-internal-log \
+			clear-pcie-correctable-errors"
+		[micron]="select-download vs-temperature-stats vs-pcie-stats \
+			clear-pcie-correctable-errors vs-internal-log \
+			vs-telemetry-controller-option vs-nand-stats \
+			vs-drive-info plugin-version cloud-SSD-plugin-version \
+			log-page-directory vs-fw-activate-history \
+			vs-error-reason-identifier vs-smart-add-log \
+			clear-fw-activate-history vs-smbus-option"
+		[seagate]="vs-temperature-stats vs-log-page-sup \
+			vs-smart-add-log vs-pcie-stats clear-pcie-correctable-errors \
+			get-host-tele get-ctrl-tele vs-internal-log \
+			plugin-version"
+		[virtium]="save-smart-to-vtview-log show-identify"
+		[shannon]="smart-log-add get-feature-add set-feature-add id-ctrl"
+		[dera]="smart-log-add"
+		[sfx]="smart-log-add lat-stats get-bad-block query-cap \
+			change-cap set-feature get-feature"
+		[transcend]="healthvalue badblock"
+		[zns]="id-ctrl id-ns zone-mgmt-recv \
+			zone-mgmt-send report-zones close-zone \
+			finish-zone open-zone reset-zone offline-zone \
+			set-zone-desc zone-append changed-zone-list"
+		[nvidia]="id-ctrl"
+		[ymtc]="smart-log-add"
+		[inspur]="nvme-vendor-log"
+	)
+
+	# Associative array mapping plugins to coresponding option completions
+	typeset -Ar _plugin_funcs=(
+		[intel]="plugin_intel_opts"
+		[amzn]="plugin_amzn_opts"
+		[memblaze]="plugin_memblaze_opts"
+		[wdc]="plugin_wdc_opts"
+		[huawei]="plugin_huawei_opts"
+		[toshiba]="plugin_toshiba_opts"
+		[micron]="plugin_micron_opts"
+		[seagate]="plugin_seagate_opts"
+		[virtium]="plugin_virtium_opts"
+		[shannon]="plugin_shannon_opts"
+		[dera]="plugin_dera_opts"
+		[sfx]="plugin_sfx_opts"
+		[transcend]="plugin_transcend_opts"
+		[zns]="plugin_zns_opts"
+		[nvidia]="plugin_nvidia_opts"
+		[ymtc]="plugin_ymtc_opts"
+		[inspur]="plugin_inspur_opts"
+	)
+
+	# Top level commands
+	_cmds="list list-subsys id-ctrl id-ns \
+		id-ns-granularity list-ns list-ctrl \
+		id-ns-lba-format nvm-id-ns nvm-id-ns-lba-format \
+		nvm-id-ctrl primary-ctrl-caps list-secondary \
+		ns-descs id-nvmset id-uuid id-iocs create-ns \
+		delete-ns get-ns-id get-log telemetry-log \
+		fw-log changed-ns-list-log smart-log ana-log \
+		error-log effects-log endurance-log \
+		predictable-lat-log pred-lat-event-agg-log \
+		persistent-event-log endurance-agg-log \
+		lba-status-log resv-notif-log get-feature \
+		device-self-test self-test-log set-feature \
+		set-property get-property format fw-commit \
+		fw-download admin-passthru io-passthru \
+		security-send security-recv get-lba-status \
+		resv-acquire resv-register resv-release \
+		resv-report dsm copy flush compare read \
+		write write-zeros write-uncor verify \
+		sanitize sanitize-log reset subsystem-reset \
+		ns-rescan show-regs discover connect-all \
+		connect disconnect disconnect-all gen-hostnqn \
+		show-hostnqn dir-receive dir-send virt-mgmt \
+		rpmb boot-part-log fid-support-effects-log \
+		supported-log-pages lockdown media-unit-stat-log \
+		supported-cap-config-log dim show-topology list-endgrp"
+
+	# Add plugins:
+	for plugin in "${!_plugin_subcmds[@]}"; do
+		_cmds+=" $plugin"
+	done
+
+	cmds+=" version help"
 
 	if [[ ${#words[*]} -lt 3 ]]; then
 		COMPREPLY+=( $(compgen -W "$_cmds" -- $cur ) )
