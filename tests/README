@@ -1,12 +1,19 @@
 nvmetests
 =========
 
-    This contains NVMe unit tests framework. The purpose of this framework
+    This contains a NVMe tests framework. The purpose of this framework
     to use nvme cli and test various supported commands and scenarios for
     NVMe device.
 
-    In current implementation this framework uses nvme cli to
+    In current implementation this framework uses nvme-cli to
     interact with underlying controller/namespace.
+
+    Note these tests expect to run against real hardware and will
+    read and write data to /dev/nvme0!
+
+    DO NOT RUN THEM IF YOU DO NOT KNOW WHAT YOU ARE DOING!
+
+    You have been warned.
 
 1. Common Package Dependencies
 ------------------------------
