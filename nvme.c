@@ -64,6 +64,7 @@
 #include "nvme-wrap.h"
 
 #include "util/argconfig.h"
+#include "util/suffix.h"
 #include "fabrics.h"
 
 #define CREATE_CMD
@@ -2597,6 +2598,86 @@ static int detach_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	return nvme_attach_ns(argc, argv, 0, desc, cmd);
 }
 
+static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
+			    const char *val, __u8 flbas, __u64 *num)
+{
+	bool suffixed = false;
+	struct nvme_id_ctrl ctrl;
+	__u32 nsid = 1;
+	struct nvme_id_ns ns;
+	int err = -EINVAL;
+	int i;
+	int lbas;
+	struct nvme_ns_list ns_list;
+	struct nvme_identify_args args = {
+		.args_size	= sizeof(args),
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.data		= &ns_list,
+		.cns		= NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
+		.nsid		= nsid - 1.
+	};
+
+	if (!val)
+		return 0;
+
+	if (*num) {
+		fprintf(stderr,
+			"Invalid specification of both %s and its SI argument, please specify only one\n",
+			opt);
+		return err;
+	}
+
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
+	if (err) {
+		if (err < 0)
+			fprintf(stderr, "identify controller: %s\n",
+				nvme_strerror(errno));
+		else
+			nvme_show_status(err);
+		return err;
+	}
+
+	if ((ctrl.oacs & 0x8) >> 3)
+		nsid = NVME_NSID_ALL;
+	else {
+		err = nvme_cli_identify(dev, &args);
+		if (err) {
+			if (err < 0)
+				fprintf(stderr, "identify namespace list: %s",
+					nvme_strerror(errno));
+			else
+				nvme_show_status(err);
+			return err;
+		}
+		nsid = le32_to_cpu(ns_list.ns[0]);
+	}
+
+	err = nvme_cli_identify_ns(dev, nsid, &ns);
+	if (err) {
+		if (err < 0)
+			fprintf(stderr, "identify namespace: %s",
+				nvme_strerror(errno));
+		else
+			nvme_show_status(err);
+		return err;
+	}
+
+	i = flbas & NVME_NS_FLBAS_LOWER_MASK;
+	lbas = (1 << ns.lbaf[i].ds) + ns.lbaf[i].ms;
+
+	*num = suffix_si_parse(val, &suffixed);
+
+	if (errno)
+		fprintf(stderr,
+			"Expected long suffixed integer argument for '%s-si' but got '%s'!\n",
+			opt, val);
+
+	if (suffixed)
+		*num /= lbas;
+
+	return errno;
+}
+
 static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send a namespace management command "\
@@ -2616,6 +2697,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *lbstm = "logical block storage tag mask (LBSTM)";
 	const char *bs = "target block size, specify only if \'FLBAS\' "\
 		"value not entered";
+	const char *nsze_si = "size of ns (NSZE) in standard SI units";
+	const char *ncap_si = "capacity of ns (NCAP) in standard SI units";
 
 	struct nvme_id_ns ns;
 	struct nvme_dev *dev;
@@ -2634,6 +2717,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u32	timeout;
 		__u8	csi;
 		__u64	lbstm;
+		char	*nsze_si;
+		char	*ncap_si;
 	};
 
 	struct config cfg = {
@@ -2648,6 +2733,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.timeout	= 120000,
 		.csi		= 0,
 		.lbstm		= 0,
+		.nsze_si	= NULL,
+		.ncap_si	= NULL,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2662,6 +2749,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
 		OPT_BYTE("csi",          'y', &cfg.csi,      csi),
 		OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
+		OPT_STR("nsze-si",       'S', &cfg.nsze_si,  nsze_si),
+		OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
 		OPT_END()
 	};
 
@@ -2712,6 +2801,14 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		err = -EINVAL;
 		goto close_dev;
 	}
+
+	err = parse_lba_num_si(dev, "nsze", cfg.nsze_si, cfg.flbas, &cfg.nsze);
+	if (err)
+		goto close_dev;
+
+	err = parse_lba_num_si(dev, "ncap", cfg.ncap_si, cfg.flbas, &cfg.ncap);
+	if (err)
+		goto close_dev;
 
 	struct nvme_id_ns ns2 = {
 		.nsze = cpu_to_le64(cfg.nsze),

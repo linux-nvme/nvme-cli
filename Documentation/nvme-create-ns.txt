@@ -19,6 +19,9 @@ SYNOPSIS
 			[--lbstm=<lbstm> | -l <lbstm>]
 			[--block-size=<block-size> | -b <block-size>]
 			[--timeout=<timeout> | -t <timeout>]
+			[--nsze-si=<nsze-si> | -S <nsze-si>]
+			[--ncap-si=<ncap-si> | -C <ncap-si>]
+
 DESCRIPTION
 -----------
 For the NVMe device given, sends a namespace management command to create
@@ -75,10 +78,26 @@ OPTIONS
   values will be values will be scanned and the lowest numbered will be
   selected for the create-ns operation. Conflicts with --flbas argument.
 
+-S::
+--nsze-si::
+	The namespace size (NSZE) in standard SI units.
+	The value SI suffixed is divided by the namespace LBA size to set as NSZE.
+	If the value not suffixed it is set as same with the nsze option.
+
+-C::
+--ncap-si::
+	The namespace capacity (NCAP) in standard SI units.
+	The value SI suffixed is divided by the namespace LBA size to set as NCAP.
+	If the value not suffixed it is set as same with the ncap option.
 
 EXAMPLES
 --------
-No examples provided yet.
+* Create a namespace:
++
+------------
+# nvme create-ns /dev/nvme0 --nsze 11995709440 --ncap 1199570940 --flbas 0 --dps 0 --nmic 0
+# nvme create-ns /dev/nvme0 --nsze-si 6.14T --ncap 1199570940 --flbas 0 --dps 0 --nmic 0
+------------
 
 NVME
 ----
