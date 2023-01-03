@@ -19,14 +19,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      # - name: install python dependencies
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     pip install nose nose2
       - uses: BSFishy/meson-build@v1.0.3
         with:
           setup-options: --werror
-          action: build
+          action: test
 
   build-cross-armhf:
     runs-on: ubuntu-latest
@@ -101,7 +97,7 @@ jobs:
         with:
           setup-options: --werror -Dopenssl:werror=false --wrap-mode=forcefallback
           options: --verbose
-          action: build
+          action: test
           meson-version: 0.61.2
 
   build-static:
@@ -117,5 +113,5 @@ jobs:
         with:
           setup-options: --werror -Dopenssl:werror=false --wrap-mode=forcefallback --default-library=static
           options: --verbose
-          action: build
+          action: test
           meson-version: 0.61.2

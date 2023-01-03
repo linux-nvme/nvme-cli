@@ -249,7 +249,10 @@ sources = [
 
 subdir('ccan')
 subdir('plugins')
-subdir('tests')
+subdir('unit')
+if get_option('nvme-tests')
+    subdir('tests')
+endif
 subdir('util')
 subdir('Documentation')
 
