@@ -1127,6 +1127,7 @@ enum nvme_id_ctrl_oaes {
  * @NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS: Delete Endurance Groups supported
  * @NVME_CTRL_CTRATT_DEL_NVM_SETS: Delete NVM Sets supported
  * @NVME_CTRL_CTRATT_ELBAS: Extended LBA Formats supported
+ * @NVME_CTRL_CTRATT_FDPS: Flexible Data Placement supported
  */
 enum nvme_id_ctrl_ctratt {
 	NVME_CTRL_CTRATT_128_ID			= 1 << 0,
@@ -1145,6 +1146,7 @@ enum nvme_id_ctrl_ctratt {
 	NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS	= 1 << 13,
 	NVME_CTRL_CTRATT_DEL_NVM_SETS		= 1 << 14,
 	NVME_CTRL_CTRATT_ELBAS			= 1 << 15,
+	NVME_CTRL_CTRATT_FDPS			= 1 << 19,
 };
 
 /**
@@ -4079,6 +4081,295 @@ struct nvme_zone_report {
 };
 
 /**
+ * enum nvme_fdp_ruh_type - Reclaim Unit Handle Type
+ * @NVME_FDP_RUHT_INITIALLY_ISOLATED:		Initially Isolated
+ * @NVME_FDP_RUHT_PERSISTENTLY_ISOLATED:	Persistently Isolated
+ */
+enum nvme_fdp_ruh_type {
+	NVME_FDP_RUHT_INITIALLY_ISOLATED = 1,
+	NVME_FDP_RUHT_PERSISTENTLY_ISOLATED = 2,
+};
+
+/**
+ * struct nvme_fdp_ruh_desc - Reclaim Unit Handle Descriptor
+ * @ruht:	Reclaim Unit Handle Type
+ * @rsvd1:	Reserved
+ */
+struct nvme_fdp_ruh_desc {
+	__u8 ruht;
+	__u8 rsvd1[3];
+};
+
+/**
+ * enum nvme_fdp_config_fdpa - FDP Attributes
+ * @NVME_FDP_CONFIG_FDPA_RGIF_SHIFT:	Reclaim Group Identifier Format Shift
+ * @NVME_FDP_CONFIG_FDPA_RGIF_MASK:	Reclaim Group Identifier Format Mask
+ * @NVME_FDP_CONFIG_FDPA_FDPVWC_SHIFT:	FDP Volatile Write Cache Shift
+ * @NVME_FDP_CONFIG_FDPA_FDPVWC_MASK:	FDP Volatile Write Cache Mask
+ * @NVME_FDP_CONFIG_FDPA_VALID_SHIFT:	FDP Configuration Valid Shift
+ * @NVME_FDP_CONFIG_FDPA_VALID_MASK:	FDP Configuration Valid Mask
+ */
+enum nvme_fdp_config_fdpa {
+	NVME_FDP_CONFIG_FDPA_RGIF_SHIFT = 0,
+	NVME_FDP_CONFIG_FDPA_RGIF_MASK = 0xf,
+	NVME_FDP_CONFIG_FDPA_FDPVWC_SHIFT = 4,
+	NVME_FDP_CONFIG_FDPA_FDPVWC_MASK = 0x1,
+	NVME_FDP_CONFIG_FDPA_VALID_SHIFT = 7,
+	NVME_FDP_CONFIG_FDPA_VALID_MASK = 0x1,
+};
+
+/**
+ * struct nvme_fdp_config_desc - FDP Configuration Descriptor
+ * @size:	Descriptor size
+ * @fdpa:	FDP Attributes (&enum nvme_fdp_config_fdpa)
+ * @vss:	Vendor Specific Size
+ * @nrg:	Number of Reclaim Groups
+ * @nruh:	Number of Reclaim Unit Handles
+ * @maxpids:	Max Placement Identifiers
+ * @nnss:	Number of Namespaces Supported
+ * @runs:	Reclaim Unit Nominal Size
+ * @erutl:	Estimated Reclaim Unit Time Limit
+ * @rsvd28:	Reserved
+ * @ruhs:	Reclaim Unit Handle descriptors (&struct nvme_fdp_ruh_desc)
+ */
+struct nvme_fdp_config_desc {
+	__u16 size;
+	__u8  fdpa;
+	__u8  vss;
+	__u32 nrg;
+	__u16 nruh;
+	__u16 maxpids;
+	__u32 nnss;
+	__u64 runs;
+	__u32 erutl;
+	__u8  rsvd28[36];
+	struct nvme_fdp_ruh_desc ruhs[];
+};
+
+/**
+ * struct nvme_fdp_config_log - FDP Configurations Log Page
+ * @n:		Number of FDP Configurations
+ * @version:	Log page version
+ * @rsvd3:	Reserved
+ * @size:	Log page size in bytes
+ * @rsvd8:	Reserved
+ * @configs:	FDP Configuration descriptors (&struct nvme_fdp_config_desc)
+ */
+struct nvme_fdp_config_log {
+	__u16 n;
+	__u8  version;
+	__u8  rsvd3;
+	__u32 size;
+	__u8  rsvd8[8];
+	struct nvme_fdp_config_desc configs[];
+};
+
+/**
+ * enum nvme_fdp_ruha - Reclaim Unit Handle Attributes
+ * @NVME_FDP_RUHA_HOST_SHIFT:	Host Specified Reclaim Unit Handle Shift
+ * @NVME_FDP_RUHA_HOST_MASK:	Host Specified Reclaim Unit Handle Mask
+ * @NVME_FDP_RUHA_CTRL_SHIFT:	Controller Specified Reclaim Unit Handle Shift
+ * @NVME_FDP_RUHA_CTRL_MASK:	Controller Specified Reclaim Unit Handle Mask
+ */
+enum nvme_fdp_ruha {
+	NVME_FDP_RUHA_HOST_SHIFT	= 0,
+	NVME_FDP_RUHA_HOST_MASK		= 0x1,
+	NVME_FDP_RUHA_CTRL_SHIFT	= 1,
+	NVME_FDP_RUHA_CTRL_MASK		= 0x1,
+};
+
+/**
+ * struct nvme_fdp_ruhu_desc - Reclaim Unit Handle Usage Descriptor
+ * @ruha:	Reclaim Unit Handle Attributes (&enum nvme_fdp_ruha)
+ * @rsvd1:	Reserved
+ */
+struct nvme_fdp_ruhu_desc {
+	__u8 ruha;
+	__u8 rsvd1[7];
+};
+
+/**
+ * struct nvme_fdp_ruhu_log - Reclaim Unit Handle Usage Log Page
+ * @nruh:	Number of Reclaim Unit Handles
+ * @rsvd2:	Reserved
+ * @ruhus:	Reclaim Unit Handle Usage descriptors
+ */
+struct nvme_fdp_ruhu_log {
+	__u16 nruh;
+	__u8  rsvd2[6];
+	struct nvme_fdp_ruhu_desc ruhus[];
+};
+
+/**
+ * struct nvme_fdp_stats_log - FDP Statistics Log Page
+ * @hbmw:	Host Bytes with Metadata Written
+ * @mbmw:	Media Bytes with Metadata Written
+ * @mbe:	Media Bytes Erased
+ * @rsvd48:	Reserved
+ */
+struct nvme_fdp_stats_log {
+	__u8 hbmw[16];
+	__u8 mbmw[16];
+	__u8 mbe[16];
+	__u8 rsvd48[16];
+};
+
+/**
+ * enum nvme_fdp_event_type - FDP Event Types
+ * @NVME_FDP_EVENT_RUNFW:	Reclaim Unit Not Fully Written
+ * @NVME_FDP_EVENT_RUTLE:	Reclaim Unit Time Limit Exceeded
+ * @NVME_FDP_EVENT_RESET:	Controller Level Reset Modified Reclaim Unit Handles
+ * @NVME_FDP_EVENT_PID:		Invalid Placement Identifier
+ * @NVME_FDP_EVENT_REALLOC:	Media Reallocated
+ * @NVME_FDP_EVENT_MODIFY:	Implicitly Modified Reclaim Unit Handle
+ */
+enum nvme_fdp_event_type {
+	/* Host Events */
+	NVME_FDP_EVENT_RUNFW	= 0x0,
+	NVME_FDP_EVENT_RUTLE	= 0x1,
+	NVME_FDP_EVENT_RESET	= 0x2,
+	NVME_FDP_EVENT_PID	= 0x3,
+
+	/* Controller Events */
+	NVME_FDP_EVENT_REALLOC	= 0x80,
+	NVME_FDP_EVENT_MODIFY	= 0x81,
+};
+
+/**
+ * enum nvme_fdp_event_realloc_flags - Media Reallocated Event Type Specific Flags
+ * @NVME_FDP_EVENT_REALLOC_F_LBAV:	LBA Valid
+ */
+enum nvme_fdp_event_realloc_flags {
+	NVME_FDP_EVENT_REALLOC_F_LBAV = 1 << 0,
+};
+
+/**
+ * struct nvme_fdp_event_realloc - Media Reallocated Event Type Specific Information
+ * @flags:	Event Type Specific flags (&enum nvme_fdp_event_realloc_flags)
+ * @rsvd1:	Reserved
+ * @nlbam:	Number of LBAs Moved
+ * @lba:	Logical Block Address
+ * @rsvd12:	Reserved
+ */
+struct nvme_fdp_event_realloc {
+	__u8  flags;
+	__u8  rsvd1;
+	__u16 nlbam;
+	__u64 lba;
+	__u8  rsvd12[4];
+};
+
+/**
+ * enum nvme_fdp_event_flags - FDP Event Flags
+ * @NVME_FDP_EVENT_F_PIV:	Placement Identifier Valid
+ * @NVME_FDP_EVENT_F_NSIDV:	Namespace Identifier Valid
+ * @NVME_FDP_EVENT_F_LV:	Location Valid
+ */
+enum nvme_fdp_event_flags {
+	NVME_FDP_EVENT_F_PIV	= 1 << 0,
+	NVME_FDP_EVENT_F_NSIDV	= 1 << 1,
+	NVME_FDP_EVENT_F_LV	= 1 << 2,
+};
+
+/**
+ * struct nvme_fdp_event - FDP Event
+ * @type:		Event Type (&enum nvme_fdp_event_type)
+ * @flags:		Event Flags (&enum nvme_fdp_event_flags)
+ * @pid:		Placement Identifier
+ * @timestamp:		Timestamp
+ * @nsid:		Namespace Identifier
+ * @type_specific:	Event Type Specific Information
+ * @rgid:		Reclaim Group Identifier
+ * @ruhid:		Reclaim Unit Handle Identifier
+ * @rsvd35:		Reserved
+ * @vs:			Vendor Specific
+ */
+struct nvme_fdp_event {
+	__u8  type;
+	__u8  flags;
+	__u16 pid;
+	__u64 timestamp;
+	__u32 nsid;
+	__u8  type_specific[16];
+	__u16 rgid;
+	__u8  ruhid;
+	__u8  rsvd35[5];
+	__u8  vs[24];
+};
+
+/**
+ * struct nvme_fdp_events_log - FDP Events Log Page
+ * @n:		Number of FDP Events
+ * @rsvd4:	Reserved
+ * @events:	FDP Events (&struct nvme_fdp_event)
+ */
+struct nvme_fdp_events_log {
+	__u32 n;
+	__u8  rsvd4[60];
+	struct nvme_fdp_event events[63];
+};
+
+/**
+ * struct nvme_feat_fdp_events_cdw11 - FDP Events Feature Command Dword 11
+ * @phndl:	Placement Handle
+ * @noet:	Number of FDP Event Types
+ * @rsvd24:	Reserved
+ */
+struct nvme_feat_fdp_events_cdw11 {
+	__u16 phndl;
+	__u8  noet;
+	__u8  rsvd24;
+};
+
+/**
+ * enum nvme_fdp_supported_event_attributes - Supported FDP Event Attributes
+ * @NVME_FDP_SUPP_EVENT_ENABLED_SHIFT:	FDP Event Enable Shift
+ * @NVME_FDP_SUPP_EVENT_ENABLED_MASK:	FDP Event Enable Mask
+ */
+enum nvme_fdp_supported_event_attributes {
+	NVME_FDP_SUPP_EVENT_ENABLED_SHIFT = 0,
+	NVME_FDP_SUPP_EVENT_ENABLED_MASK  = 0x1,
+};
+
+/**
+ * struct nvme_fdp_supported_event_desc - Supported FDP Event Descriptor
+ * @evt:	FDP Event Type
+ * @evta:	FDP Event Type Attributes (&enum nvme_fdp_supported_event_attributes)
+ */
+struct nvme_fdp_supported_event_desc {
+	__u8 evt;
+	__u8 evta;
+};
+
+/**
+ * struct nvme_fdp_ruh_status_desc - Reclaim Unit Handle Status Descriptor
+ * @pid:	Placement Identifier
+ * @ruhid:	Reclaim Unit Handle Identifier
+ * @earutr:	Estimated Active Reclaim Unit Time Remaining
+ * @ruamw:	Reclaim Unit Available Media Writes
+ * @rsvd16:	Reserved
+ */
+struct nvme_fdp_ruh_status_desc {
+	__u16 pid;
+	__u16 ruhid;
+	__u32 earutr;
+	__u64 ruamw;
+	__u8  rsvd16[16];
+};
+
+/**
+ * struct nvme_fdp_ruh_status - Reclaim Unit Handle Status
+ * @rsvd0:	Reserved
+ * @nruhsd:	Number of Reclaim Unit Handle Status Descriptors
+ * @ruhss:	Reclaim Unit Handle Status descriptors
+ */
+struct nvme_fdp_ruh_status {
+	__u8  rsvd0[14];
+	__u16 nruhsd;
+	struct nvme_fdp_ruh_status_desc ruhss[];
+};
+
+/**
  * struct nvme_lba_status_desc - LBA Status Descriptor Entry
  * @dslba:	Descriptor Starting LBA
  * @nlb:	Number of Logical Blocks
@@ -6376,6 +6667,10 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_FID_SUPPORTED_EFFECTS:		Feature Identifiers Supported and Effects
  * @NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS:	NVMe-MI Commands Supported and Effects
  * @NVME_LOG_LID_BOOT_PARTITION:		Boot Partition
+ * @NVME_LOG_LID_FDP_CONFIGS:			FDP Configurations
+ * @NVME_LOG_LID_FDP_RUH_USAGE:			Reclaim Unit Handle Usage
+ * @NVME_LOG_LID_FDP_STATS:			FDP Statistics
+ * @NVME_LOG_LID_FDP_EVENTS:			FDP Events
  * @NVME_LOG_LID_DISCOVER:			Discovery
  * @NVME_LOG_LID_RESERVATION:			Reservation Notification
  * @NVME_LOG_LID_SANITIZE:			Sanitize Status
@@ -6403,6 +6698,10 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_FID_SUPPORTED_EFFECTS			= 0x12,
 	NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS			= 0x13,
 	NVME_LOG_LID_BOOT_PARTITION				= 0x15,
+	NVME_LOG_LID_FDP_CONFIGS				= 0x20,
+	NVME_LOG_LID_FDP_RUH_USAGE				= 0x21,
+	NVME_LOG_LID_FDP_STATS					= 0x22,
+	NVME_LOG_LID_FDP_EVENTS					= 0x23,
 	NVME_LOG_LID_DISCOVER					= 0x70,
 	NVME_LOG_LID_RESERVATION				= 0x80,
 	NVME_LOG_LID_SANITIZE					= 0x81,
@@ -6437,6 +6736,8 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_ENDURANCE_EVT_CFG:	Endurance Group Event Configuration
  * @NVME_FEAT_FID_IOCS_PROFILE:		I/O Command Set Profile
  * @NVME_FEAT_FID_SPINUP_CONTROL:	Spinup Control
+ * @NVME_FEAT_FID_FDP:			Flexible Data Placement
+ * @NVME_FEAT_FID_FDP_EVENTS:		FDP Events
  * @NVME_FEAT_FID_ENH_CTRL_METADATA:	Enhanced Controller Metadata
  * @NVME_FEAT_FID_CTRL_METADATA:	Controller Metadata
  * @NVME_FEAT_FID_NS_METADATA:		Namespace Metadata
@@ -6473,6 +6774,8 @@ enum nvme_features_id {
 	NVME_FEAT_FID_ENDURANCE_EVT_CFG				= 0x18,
 	NVME_FEAT_FID_IOCS_PROFILE				= 0x19, /* XXX: Placeholder until assigned */
 	NVME_FEAT_FID_SPINUP_CONTROL				= 0x1a,
+	NVME_FEAT_FID_FDP					= 0x1d,
+	NVME_FEAT_FID_FDP_EVENTS				= 0x1e,
 	NVME_FEAT_FID_ENH_CTRL_METADATA				= 0x7d,
 	NVME_FEAT_FID_CTRL_METADATA				= 0x7e,
 	NVME_FEAT_FID_NS_METADATA				= 0x7f,
@@ -6583,6 +6886,12 @@ enum nvme_features_id {
  * @NVME_FEAT_WP_WPS_MASK:
  * @NVME_FEAT_IOCSP_IOCSCI_SHIFT:
  * @NVME_FEAT_IOCSP_IOCSCI_MASK:
+ * @NVME_FEAT_FDP_ENABLED_SHIFT:
+ * @NVME_FEAT_FDP_ENABLED_MASK:
+ * @NVME_FEAT_FDP_INDEX_SHIFT:
+ * @NVME_FEAT_FDP_INDEX_MASK:
+ * @NVME_FEAT_FDP_EVENTS_ENABLE_SHIFT:
+ * @NVME_FEAT_FDP_EVENTS_ENABLE_MASK:
  */
 enum nvme_feat {
 	NVME_FEAT_ARBITRATION_BURST_SHIFT	= 0,
@@ -6683,6 +6992,12 @@ enum nvme_feat {
 	NVME_FEAT_WP_WPS_MASK		= 0x7,
 	NVME_FEAT_IOCSP_IOCSCI_SHIFT	= 0,
 	NVME_FEAT_IOCSP_IOCSCI_MASK	= 0xff,
+	NVME_FEAT_FDP_ENABLED_SHIFT	= 0,
+	NVME_FEAT_FDP_ENABLED_MASK	= 0x1,
+	NVME_FEAT_FDP_INDEX_SHIFT	= 8,
+	NVME_FEAT_FDP_INDEX_MASK	= 0xf,
+	NVME_FEAT_FDP_EVENTS_ENABLE_SHIFT = 0,
+	NVME_FEAT_FDP_EVENTS_ENABLE_MASK  = 0x1,
 };
 
 /**
@@ -7073,8 +7388,10 @@ enum nvme_data_tfr {
  * @nvme_cmd_resv_register:	Reservation Register
  * @nvme_cmd_resv_report:	Reservation Report
  * @nvme_cmd_resv_acquire:	Reservation Acquire
+ * @nvme_cmd_io_mgmt_recv:	I/O Management Receive
  * @nvme_cmd_resv_release:	Reservation Release
  * @nvme_cmd_copy:		Copy
+ * @nvme_cmd_io_mgmt_send:	I/O Management Send
  * @nvme_zns_cmd_mgmt_send:	Zone Management Send
  * @nvme_zns_cmd_mgmt_recv:	Zone Management Receive
  * @nvme_zns_cmd_append:	Zone Append
@@ -7091,8 +7408,10 @@ enum nvme_io_opcode {
 	nvme_cmd_resv_register	= 0x0d,
 	nvme_cmd_resv_report	= 0x0e,
 	nvme_cmd_resv_acquire	= 0x11,
+	nvme_cmd_io_mgmt_recv	= 0x12,
 	nvme_cmd_resv_release	= 0x15,
 	nvme_cmd_copy		= 0x19,
+	nvme_cmd_io_mgmt_send	= 0x1d,
 	nvme_zns_cmd_mgmt_send	= 0x79,
 	nvme_zns_cmd_mgmt_recv	= 0x7a,
 	nvme_zns_cmd_append	= 0x7d,
@@ -7293,6 +7612,22 @@ enum nvme_zns_report_options {
 	NVME_ZNS_ZRAS_REPORT_FULL		= 0x5,
 	NVME_ZNS_ZRAS_REPORT_READ_ONLY		= 0x6,
 	NVME_ZNS_ZRAS_REPORT_OFFLINE		= 0x7,
+};
+
+/**
+ * enum nvme_io_mgmt_recv_mo - I/O Management Receive - Management Operation
+ * @NVME_IO_MGMT_RECV_RUH_STATUS:	Reclaim Unit Handle Status
+ */
+enum nvme_io_mgmt_recv_mo {
+	NVME_IO_MGMT_RECV_RUH_STATUS = 0x1,
+};
+
+/**
+ * enum nvme_io_mgmt_send_mo - I/O Management Send - Management Operation
+ * @NVME_IO_MGMT_SEND_RUH_UPDATE:	Reclaim Unit Handle Update
+ */
+enum nvme_io_mgmt_send_mo {
+	NVME_IO_MGMT_SEND_RUH_UPDATE = 0x1,
 };
 
 #endif /* _LIBNVME_TYPES_H */

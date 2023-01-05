@@ -1640,6 +1640,127 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
 }
 
 /**
+ * nvme_get_log_fdp_configurations() - Get list of Flexible Data Placement configurations
+ * @fd:		File descriptor of nvme device
+ * @egid:	Endurance group identifier
+ * @offset:	Offset into log page
+ * @len:	Length (in bytes) of provided user buffer to hold the log data
+ * @log:	Log page data buffer
+ */
+static inline int nvme_get_log_fdp_configurations(int fd, __u16 egid,
+			__u32 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_FDP_CONFIGS,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = egid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_get_log(&args);
+}
+
+/**
+ * nvme_get_log_reclaim_unit_handle_usage() - Get reclaim unit handle usage
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace identifier
+ * @egid:	Endurance group identifier
+ * @offset:	Offset into log page
+ * @len:	Length (in bytes) of provided user buffer to hold the log data
+ * @log:	Log page data buffer
+ */
+static inline int nvme_get_log_reclaim_unit_handle_usage(int fd, __u32 nsid, __u16 egid,
+			__u32 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_FDP_RUH_USAGE,
+		.len = len,
+		.nsid = nsid,
+		.csi = NVME_CSI_NVM,
+		.lsi = egid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_get_log(&args);
+}
+
+/**
+ * nvme_get_log_fdp_stats() - Get Flexible Data Placement statistics
+ * @fd:		File descriptor of nvme device
+ * @egid:	Endurance group identifier
+ * @offset:	Offset into log page
+ * @len:	Length (in bytes) of provided user buffer to hold the log data
+ * @log:	Log page data buffer
+ */
+static inline int nvme_get_log_fdp_stats(int fd, __u16 egid, __u32 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_FDP_STATS,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = egid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_get_log(&args);
+}
+
+/**
+ * nvme_get_log_fdp_events() - Get Flexible Data Placement events
+ * @fd:			File descriptor of nvme device
+ * @egid:		Endurance group identifier
+ * @host_events:	Whether to report host or controller events
+ * @offset:		Offset into log page
+ * @len:		Length (in bytes) of provided user buffer to hold the log data
+ * @log:		Log page data buffer
+ */
+static inline int nvme_get_log_fdp_events(int fd, __u16 egid, bool host_events, __u32 offset,
+		__u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_FDP_EVENTS,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = egid,
+		.lsp = (__u8)(host_events ? 0x1 : 0x0),
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_get_log(&args);
+}
+
+/**
  * nvme_get_log_ana() - Retrieve Asymmetric Namespace Access log page
  * @fd:		File descriptor of nvme device
  * @lsp:	Log specific, see &enum nvme_get_log_ana_lsp
@@ -3603,6 +3724,77 @@ int nvme_resv_release(struct nvme_resv_release_args *args);
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_resv_report(struct nvme_resv_report_args *args);
+
+/**
+ * nvme_io_mgmt_recv() - I/O Management Receive command
+ * @args:	&struct nvme_io_mgmt_recv_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_io_mgmt_recv(struct nvme_io_mgmt_recv_args *args);
+
+/**
+ * nvme_fdp_reclaim_unit_handle_status() - Get reclaim unit handle status
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace identifier
+ * @data_len:	Length of response buffer
+ * @data:	Response buffer
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_fdp_reclaim_unit_handle_status(int fd, __u32 nsid,
+			__u32 data_len, void *data)
+{
+	struct nvme_io_mgmt_recv_args args = {
+		.data = data,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.data_len = data_len,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.mo = NVME_IO_MGMT_RECV_RUH_STATUS,
+	};
+
+	return nvme_io_mgmt_recv(&args);
+}
+
+/**
+ * nvme_io_mgmt_send() - I/O Management Send command
+ * @args:	&struct nvme_io_mgmt_send_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_io_mgmt_send(struct nvme_io_mgmt_send_args *args);
+
+/**
+ * nvme_fdp_reclaim_unit_handle_update() - Update a list of reclaim unit handles
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace identifier
+ * @npids:	Number of placement identifiers
+ * @pids:	List of placement identifiers
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_fdp_reclaim_unit_handle_update(int fd, __u32 nsid,
+			unsigned int npids, __u16 *pids)
+{
+	struct nvme_io_mgmt_send_args args = {
+		.data = (void *)pids,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.data_len = (__u32)(npids * sizeof(__u16)),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.mos = (__u16)(npids - 1),
+		.mo = NVME_IO_MGMT_SEND_RUH_UPDATE,
+	};
+
+	return nvme_io_mgmt_send(&args);
+}
 
 /**
  * nvme_zns_mgmt_send() - ZNS management send command
