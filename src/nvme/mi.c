@@ -639,6 +639,7 @@ int nvme_mi_admin_admin_passthru(nvme_mi_ctrl_t ctrl, __u8 opcode, __u8 flags,
 	struct nvme_mi_admin_req_hdr req_hdr;
 	struct nvme_mi_resp resp;
 	struct nvme_mi_req req;
+	unsigned int timeout_save;
 	int rc;
 	int direction = opcode & 0x3;
 	bool has_write_data = false;
@@ -663,11 +664,6 @@ int nvme_mi_admin_admin_passthru(nvme_mi_ctrl_t ctrl, __u8 opcode, __u8 flags,
 			has_write_data = true;
 		if (direction == NVME_DATA_TFR_CTRL_TO_HOST)
 			has_read_data = true;
-	}
-
-	if (timeout_ms > nvme_mi_ep_get_timeout(ctrl->ep)) {
-		/* Set timeout if user needs a bigger timeout */
-		nvme_mi_ep_set_timeout(ctrl->ep, timeout_ms);
 	}
 
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id, opcode);
@@ -701,7 +697,17 @@ int nvme_mi_admin_admin_passthru(nvme_mi_ctrl_t ctrl, __u8 opcode, __u8 flags,
 		resp.data_len = data_len;
 	}
 
+	/* if the user has specified a custom timeout, save the current
+	 * timeout and override
+	 */
+	if (timeout_ms != 0) {
+		timeout_save = nvme_mi_ep_get_timeout(ctrl->ep);
+		nvme_mi_ep_set_timeout(ctrl->ep, timeout_ms);
+	}
 	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (timeout_ms != 0)
+		nvme_mi_ep_set_timeout(ctrl->ep, timeout_save);
+
 	if (rc)
 		return rc;
 
