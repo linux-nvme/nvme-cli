@@ -5913,7 +5913,7 @@ void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
 				le64_to_cpu(status->regctl_eds[i].rkey));
 			printf("  hostid     : ");
 			for (j = 0; j < 16; j++)
-				printf("%x",
+				printf("%02x",
 					status->regctl_eds[i].hostid[j]);
 			printf("\n");
 		}
