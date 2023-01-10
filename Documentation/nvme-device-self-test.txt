@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme device-self-test' <device> [--namespace-id=<NUM> | -n <NUM>]
-			[--self-test-code=<NUM> | -s <NUM>] 
+			[--self-test-code=<NUM> | -s <NUM>]  [--wait | -w]
 
 DESCRIPTION
 -----------
@@ -33,6 +33,10 @@ OPTIONS
          2h: Start a extended device self-test operation
          eh: Start a vendor specific device self-test operation
          fh: abort the device self-test operation
+
+-w::
+--wait::
+	Wait for the device self test to complete before exiting
 
 
 EXAMPLES

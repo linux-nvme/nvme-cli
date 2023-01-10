@@ -3957,6 +3957,47 @@ ret:
 	return err;
 }
 
+static const char dash[50] = {[0 ... 49] = '='};
+static const char space[50] = {[0 ... 49] = ' '};
+
+static void wait_self_test(struct nvme_dev *dev)
+{
+	static const char spin[] = {'-', '\\', '|', '/' };
+	struct nvme_self_test_log log;
+	int err, i = 0, p = 0;
+
+	printf("Waiting for self test completion...\n");
+	while (true) {
+		if (p == 100) {
+			printf("[%.*s] %2d%%\n", 50, dash, p);
+			break;
+		}
+
+		printf("\r[%.*s%c%.*s] %3d%%", p / 2, dash, spin[i % 4], 49 - p / 2, space, p);
+		fflush(stdout);
+		sleep(1);
+
+		err = nvme_cli_get_log_device_self_test(dev, &log);
+		if (err) {
+			printf("\n");
+			if (err < 0)
+				perror("self test log\n");
+			else
+				nvme_show_status(err);
+			break;
+		}
+
+		if (log.completion < p) {
+			printf("\n");
+			fprintf(stderr, "progress broken\n");
+			break;
+		}
+
+		p = log.completion;
+		i++;
+	}
+}
+
 static int device_self_test(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc  = "Implementing the device self-test feature"\
@@ -3968,22 +4009,26 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		"2h Start a extended device self-test operation\n"\
 		"eh Start a vendor specific device self-test operation\n"\
 		"fh abort the device self-test operation\n";
+	const char *wait = "wait for the test to finish\n";
 	struct nvme_dev *dev;
 	int err;
 
 	struct config {
 		__u32	namespace_id;
 		__u8	stc;
+		bool	wait;
 	};
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
 		.stc		= 0,
+		.wait		= false,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
 		OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
+		OPT_FLAG("wait",           'w', &cfg.wait,         wait),
 		OPT_END()
 	};
 
@@ -4007,6 +4052,9 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 			printf("Extended Device self-test started\n");
 		else if (cfg.stc == 0x1)
 			printf("Short Device self-test started\n");
+
+		if (wait)
+			wait_self_test(dev);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else
