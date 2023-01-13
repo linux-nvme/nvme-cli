@@ -89,8 +89,24 @@ if openssl_dep.found()
            description: 'OpenSSL/LibreSSL API version @0@'.format(api_version))
 endif
 
-# Check for libdus availability. Optional, only required for MCTP dbus scan
-libdbus_dep = dependency('dbus-1', required: false)
+if get_option('libdbus').disabled()
+    libdbus_dep = dependency('', required: false)
+else
+    # Check for libdus availability. Optional, only required for MCTP dbus scan
+    libdbus_dep = dependency(
+        'dbus-1',
+        required: true,
+        fallback: ['dbus', 'libdbus_dep'],
+        default_options: [
+            'default_library=static',
+            'embedded_tests=false',
+            'message_bus=false',
+            'modular_tests=disabled',
+            'tools=false',
+        ],
+    )
+endif
+
 conf.set('CONFIG_DBUS', libdbus_dep.found(), description: 'Enable dbus support?')
 
 # local (cross-compilable) implementations of ccan configure steps
