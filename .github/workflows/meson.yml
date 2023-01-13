@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: install libraries
-        run: sudo apt-get install libjson-c-dev
+        run: sudo apt-get install libjson-c-dev libdbus-1-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
@@ -190,7 +190,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: install libraries
-        run: sudo apt-get install libjson-c-dev lcov
+        run: sudo apt-get install libjson-c-dev libdbus-1-dev lcov
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
