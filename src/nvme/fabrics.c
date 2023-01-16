@@ -561,6 +561,9 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 		case EOPNOTSUPP:
 			ret = -ENVME_CONNECT_OPNOTSUPP;
 			break;
+		case ECONNREFUSED :
+			ret = -ENVME_CONNECT_CONNREFUSED;
+			break;
 		default:
 			ret = -ENVME_CONNECT_WRITE;
 			break;
