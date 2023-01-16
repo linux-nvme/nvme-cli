@@ -159,7 +159,6 @@ static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 
 	cfg->keep_alive_tmo = tmo;
 	if (ret) {
-		errno = ret;
 		nvme_free_ctrl(c);
 		return NULL;
 	}
