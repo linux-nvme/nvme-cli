@@ -85,6 +85,7 @@ struct nvme_ctrl {
 	char *cntrltype;
 	char *dctype;
 	bool discovery_ctrl;
+	bool unique_discovery_ctrl;
 	bool discovered;
 	bool persistent;
 	struct nvme_fabrics_config cfg;

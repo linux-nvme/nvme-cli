@@ -2,10 +2,12 @@
 
 LIBNVME_1_3 {
 	global:
-		nvme_io_mgmt_recv;
-		nvme_io_mgmt_send;
 		nvme_fdp_reclaim_unit_handle_status;
 		nvme_fdp_reclaim_unit_handle_update;
+		nvme_io_mgmt_recv;
+		nvme_io_mgmt_send;
+		nvme_ctrl_is_unique_discovery_ctrl;
+		nvme_ctrl_set_unique_discovery_ctrl;
 };
 
 LIBNVME_1_2 {

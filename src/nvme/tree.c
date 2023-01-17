@@ -870,6 +870,16 @@ bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c)
 	return c->discovery_ctrl;
 }
 
+void nvme_ctrl_set_unique_discovery_ctrl(nvme_ctrl_t c, bool unique)
+{
+	c->unique_discovery_ctrl = unique;
+}
+
+bool nvme_ctrl_is_unique_discovery_ctrl(nvme_ctrl_t c)
+{
+	return c->unique_discovery_ctrl;
+}
+
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	return nvme_identify_ctrl(nvme_ctrl_get_fd(c), id);

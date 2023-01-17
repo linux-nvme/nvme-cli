@@ -969,6 +969,25 @@ void nvme_ctrl_set_discovery_ctrl(nvme_ctrl_t c, bool discovery);
 bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c);
 
 /**
+ * nvme_ctrl_set_unique_discovery_ctrl() - Set the 'unique_discovery_ctrl' flag
+ * @c:		Controller to be modified
+ * @unique:	value of the unique_disc_ctrl flag
+ *
+ * Sets the 'unique_discovery_ctrl' flag in @c to specify wheter
+ * @c is a unique discovery controller
+ *
+ */
+void nvme_ctrl_set_unique_discovery_ctrl(nvme_ctrl_t c, bool unique);
+
+/**
+ * nvme_ctrl_is_unique_discovery_ctrl() - Check the 'unique_discovery_ctrl' flag
+ * @c:		Controller to be checked
+ *
+ * Return: Value of the 'unique_discovery_ctrl' flag
+ */
+bool nvme_ctrl_is_unique_discovery_ctrl(nvme_ctrl_t c);
+
+/**
  * nvme_ctrl_identify() - Issues an 'identify controller' command
  * @c:	Controller instance
  * @id:	Identify controller data structure
