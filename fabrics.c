@@ -520,6 +520,8 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 					 */
 					if (!(eflags & NVMF_DISC_EFLAGS_EPCSD))
 						disconnect = true;
+					else
+						disconnect = false;
 				}
 
 				set_discovery_kato(defcfg);
@@ -538,6 +540,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 				if (discover)
 					__discover(child, defcfg, raw,
 						   true, persistent, flags);
+
 				if (disconnect) {
 					nvme_disconnect_ctrl(child);
 					nvme_free_ctrl(child);
@@ -672,7 +675,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			goto next;
 
 		__discover(c, &cfg, raw, connect, persistent, flags);
-		if (!persistent)
+		if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(c)))
 			ret = nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 
@@ -748,7 +751,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 				continue;
 
 			__discover(cn, &cfg, raw, connect, persistent, flags);
-			if (!persistent)
+			if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(cn)))
 				ret = nvme_disconnect_ctrl(cn);
 			nvme_free_ctrl(cn);
 		}
@@ -919,9 +922,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 
-	ret = __discover(c, &cfg, raw, connect,
-			 persistent, flags);
-	if (!persistent)
+	ret = __discover(c, &cfg, raw, connect, persistent, flags);
+	if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(c)))
 		nvme_disconnect_ctrl(c);
 	nvme_free_ctrl(c);
 
