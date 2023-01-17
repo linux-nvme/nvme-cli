@@ -227,6 +227,8 @@ static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 		return NULL;
 
 	nvme_ctrl_set_discovery_ctrl(c, true);
+	nvme_ctrl_set_unique_discovery_ctrl(c,
+		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
 	tmo = set_discovery_kato(cfg);
 
 	errno = 0;
@@ -251,7 +253,7 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	if (!c)
 		return NULL;
 
-	if (!persistent)
+	if (nvme_ctrl_is_unique_discovery_ctrl(c))
 		return c;
 
 	/* Find out the name of discovery controller */
