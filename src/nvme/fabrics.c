@@ -661,7 +661,8 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		return -1;
 	}
 
-	nvme_msg(h->r, LOG_INFO, "nvme%d: ctrl connected\n", ret);
+	nvme_msg(h->r, LOG_INFO, "nvme%d: %s connected\n", ret,
+		 nvme_ctrl_get_subsysnqn(c));
 	return nvme_init_ctrl(h, c, ret);
 }
 

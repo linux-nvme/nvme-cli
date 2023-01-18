@@ -931,7 +931,7 @@ int nvme_disconnect_ctrl(nvme_ctrl_t c)
 			 c->name, errno);
 		return ret;
 	}
-	nvme_msg(r, LOG_INFO, "%s: disconnected\n", c->name);
+	nvme_msg(r, LOG_INFO, "%s: %s disconnected\n", c->name, c->subsysnqn);
 	nvme_deconfigure_ctrl(c);
 	return 0;
 }
