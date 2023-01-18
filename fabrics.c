@@ -124,6 +124,81 @@ static void space_strip_len(int max, char *str)
 	}
 }
 
+/*
+ * Compare two C strings and handle NULL pointers gracefully.
+ * If either of the two strings is NULL, return 0
+ * to let caller ignore the compare.
+ */
+static inline int strcmp0(const char *s1, const char *s2)
+{
+	if (!s1 || !s2)
+		return 0;
+	return strcmp(s1, s2);
+}
+
+/*
+ * Compare two C strings and handle NULL pointers gracefully.
+ * If either of the two strings is NULL, return 0
+ * to let caller ignore the compare.
+ */
+static inline int strcasecmp0(const char *s1, const char *s2)
+{
+	if (!s1 || !s2)
+		return 0;
+	return strcasecmp(s1, s2);
+}
+
+static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
+{
+	if (!strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
+	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
+	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
+	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
+	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
+		return true;
+
+	return false;
+}
+
+static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
+{
+	if (!strcmp0(nvme_ctrl_get_subsysnqn(c), trcfg->subsysnqn) &&
+	    disc_ctrl_config_match(c, trcfg))
+		return true;
+
+	return false;
+}
+
+static nvme_ctrl_t __lookup_ctrl(nvme_root_t r, struct tr_config *trcfg,
+			     bool (*filter)(nvme_ctrl_t, struct tr_config *))
+{
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				if (!(filter(c, trcfg)))
+					continue;
+				return c;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+static nvme_ctrl_t lookup_discovery_ctrl(nvme_root_t r, struct tr_config *trcfg)
+{
+	return __lookup_ctrl(r, trcfg, disc_ctrl_config_match);
+}
+
+static nvme_ctrl_t lookup_ctrl(nvme_root_t r, struct tr_config *trcfg)
+{
+	return __lookup_ctrl(r, trcfg, ctrl_config_match);
+}
+
 static int set_discovery_kato(struct nvme_fabrics_config *cfg)
 {
 	int tmo = cfg->keep_alive_tmo;
@@ -356,6 +431,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 	struct nvmf_discovery_log *log = NULL;
 	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
 	nvme_host_t h = nvme_subsystem_get_host(s);
+	nvme_root_t r = nvme_host_get_root(h);
 	uint64_t numrec;
 
 	struct nvme_get_discovery_args args = {
@@ -402,6 +478,19 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			nvme_ctrl_t child;
 			int tmo = defcfg->keep_alive_tmo;
 
+			struct tr_config trcfg = {
+				.subsysnqn	= e->subnqn,
+				.transport	= nvmf_trtype_str(e->trtype),
+				.traddr		= e->traddr,
+				.host_traddr	= defcfg->host_traddr,
+				.host_iface	= defcfg->host_iface,
+				.trsvcid	= e->trsvcid,
+			};
+
+			/* Already connected ? */
+			if (lookup_ctrl(r, &trcfg))
+				continue;
+
 			/* Skip connect if the transport types don't match */
 			if (strcmp(nvme_ctrl_get_transport(c), nvmf_trtype_str(e->trtype)))
 				continue;
@@ -438,62 +527,6 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 
 	free(log);
 	return 0;
-}
-
-/*
- * Compare two C strings and handle NULL pointers gracefully.
- * If either of the two strings is NULL, return 0
- * to let caller ignore the compare.
- */
-static inline int strcmp0(const char *s1, const char *s2)
-{
-	if (!s1 || !s2)
-		return 0;
-	return strcmp(s1, s2);
-}
-
-/*
- * Compare two C strings and handle NULL pointers gracefully.
- * If either of the two strings is NULL, return 0
- * to let caller ignore the compare.
- */
-static inline int strcasecmp0(const char *s1, const char *s2)
-{
-	if (!s1 || !s2)
-		return 0;
-	return strcasecmp(s1, s2);
-}
-
-static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
-{
-	if (!strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
-	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
-	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
-	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
-	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
-		return true;
-
-	return false;
-}
-
-static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, struct tr_config *trcfg)
-{
-	nvme_host_t h;
-	nvme_subsystem_t s;
-	nvme_ctrl_t c;
-
-	nvme_for_each_host(r, h) {
-		nvme_for_each_subsystem(h, s) {
-			nvme_subsystem_for_each_ctrl(s, c) {
-				if (!nvme_ctrl_is_discovery_ctrl(c))
-					continue;
-				if (ctrl_config_match(c, trcfg))
-					return c;
-			}
-		}
-	}
-
-	return NULL;
 }
 
 static char *get_default_trsvcid(const char *transport,
@@ -598,7 +631,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		};
 
 		if (!force) {
-			c = lookup_discover_ctrl(r, &trcfg);
+			c = lookup_discovery_ctrl(r, &trcfg);
 			if (c) {
 				__discover(c, &cfg, raw, connect,
 					   true, flags);
@@ -674,7 +707,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 			};
 
 			if (!force) {
-				cn = lookup_discover_ctrl(r, &trcfg);
+				cn = lookup_discovery_ctrl(r, &trcfg);
 				if (cn) {
 					__discover(c, &cfg, raw, connect,
 						   true, flags);
@@ -842,7 +875,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 	if (!c && !force) {
-		c = lookup_discover_ctrl(r, &trcfg);
+		c = lookup_discovery_ctrl(r, &trcfg);
 		if (c)
 			persistent = true;
 	}
@@ -970,6 +1003,22 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		nvme_host_set_dhchap_key(h, hostkey);
 	if (!trsvcid)
 		trsvcid = get_default_trsvcid(transport, false);
+
+	struct tr_config trcfg = {
+		.subsysnqn	= subsysnqn,
+		.transport	= transport,
+		.traddr		= traddr,
+		.host_traddr	= cfg.host_traddr,
+		.host_iface	= cfg.host_iface,
+		.trsvcid	= trsvcid,
+	};
+
+	if (lookup_ctrl(r, &trcfg)) {
+		fprintf(stderr, "already connected\n");
+		errno = EALREADY;
+		goto out_free;
+	}
+
 	c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 			     cfg.host_traddr, cfg.host_iface, trsvcid);
 	if (!c) {
