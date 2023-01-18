@@ -224,11 +224,12 @@ static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 			nvmf_adrfam_str(e->adrfam): "");
 		printf("subtype: %s\n", nvmf_subtype_str(e->subtype));
 		printf("treq:    %s\n", nvmf_treq_str(e->treq));
-		printf("portid:  %d\n", e->portid);
+		printf("portid:  %d\n", le16_to_cpu(e->portid));
 		printf("trsvcid: %s\n", e->trsvcid);
 		printf("subnqn:  %s\n", e->subnqn);
 		printf("traddr:  %s\n", e->traddr);
-		printf("eflags:  %s\n", nvmf_eflags_str(e->eflags));
+		printf("eflags:  %s\n",
+		       nvmf_eflags_str(le16_to_cpu(e->eflags)));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
@@ -281,7 +282,8 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		json_object_add_value_string(entry, "trsvcid", e->trsvcid);
 		json_object_add_value_string(entry, "subnqn", e->subnqn);
 		json_object_add_value_string(entry, "traddr", e->traddr);
-		json_object_add_value_uint(entry, "eflags", e->eflags);
+		json_object_add_value_string(entry, "eflags",
+					     nvmf_eflags_str(le16_to_cpu(e->eflags)));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
