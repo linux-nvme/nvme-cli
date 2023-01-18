@@ -114,7 +114,7 @@ const char *nvmf_treq_str(__u8 treq)
 }
 
 static const char * const eflags_strings[] = {
-	[NVMF_DISC_EFLAGS_NONE]		= "not specified",
+	[NVMF_DISC_EFLAGS_NONE]		= "none",
 	[NVMF_DISC_EFLAGS_EPCSD]	= "explicit discovery connections",
 	[NVMF_DISC_EFLAGS_DUPRETINFO]	= "duplicate discovery information",
 	[NVMF_DISC_EFLAGS_EPCSD |
