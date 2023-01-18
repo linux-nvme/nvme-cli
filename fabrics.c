@@ -357,27 +357,42 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
 	nvme_host_t h = nvme_subsystem_get_host(s);
 	uint64_t numrec;
-	int err;
 
-	err = nvmf_get_discovery_log(c, &log, MAX_DISC_RETRIES);
-	if (err) {
-		if (err > 0)
-			nvme_show_status(err);
-		else
-			fprintf(stderr, "failed to get discovery log: %s\n",
-				nvme_strerror(errno));
-		return err;
+	struct nvme_get_discovery_args args = {
+		.c = c,
+		.args_size = sizeof(args),
+		.max_retries = MAX_DISC_RETRIES,
+		.result = 0,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lsp = 0,
+	};
+
+	log = nvmf_get_discovery_wargs(&args);
+	if (!log) {
+		fprintf(stderr, "failed to get discovery log: %s\n",
+			nvme_strerror(errno));
+		return errno;
 	}
-
 
 	numrec = le64_to_cpu(log->numrec);
 	if (raw)
 		save_discovery_log(raw, log);
 	else if (!connect) {
-		if (flags == JSON)
-			json_discovery_log(log, numrec);
-		else
+		switch (flags) {
+		case NORMAL:
 			print_discovery_log(log, numrec);
+			break;
+		case JSON:
+			json_discovery_log(log, numrec);
+			break;
+		case BINARY:
+			d_raw((unsigned char *)log,
+			      sizeof(struct nvmf_discovery_log) +
+			      numrec * sizeof(struct nvmf_disc_log_entry));
+			break;
+		default:
+			break;
+		}
 	} else if (connect) {
 		int i;
 
