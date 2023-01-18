@@ -981,7 +981,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	errno = 0;
 	ret = nvmf_add_ctrl(h, c, &cfg);
 	if (ret)
-		fprintf(stderr, "no controller found: %s\n",
+		fprintf(stderr, "could not add new controller: %s\n",
 			nvme_strerror(errno));
 	else {
 		errno = 0;
