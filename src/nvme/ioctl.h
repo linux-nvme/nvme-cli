@@ -1672,13 +1672,12 @@ static inline int nvme_get_log_fdp_configurations(int fd, __u16 egid,
 /**
  * nvme_get_log_reclaim_unit_handle_usage() - Get reclaim unit handle usage
  * @fd:		File descriptor of nvme device
- * @nsid:	Namespace identifier
  * @egid:	Endurance group identifier
  * @offset:	Offset into log page
  * @len:	Length (in bytes) of provided user buffer to hold the log data
  * @log:	Log page data buffer
  */
-static inline int nvme_get_log_reclaim_unit_handle_usage(int fd, __u32 nsid, __u16 egid,
+static inline int nvme_get_log_reclaim_unit_handle_usage(int fd, __u16 egid,
 			__u32 offset, __u32 len, void *log)
 {
 	struct nvme_get_log_args args = {
@@ -1690,7 +1689,6 @@ static inline int nvme_get_log_reclaim_unit_handle_usage(int fd, __u32 nsid, __u
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = NVME_LOG_LID_FDP_RUH_USAGE,
 		.len = len,
-		.nsid = nsid,
 		.csi = NVME_CSI_NVM,
 		.lsi = egid,
 		.lsp = NVME_LOG_LSP_NONE,
