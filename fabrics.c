@@ -406,7 +406,8 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			if (strcmp(nvme_ctrl_get_transport(c), nvmf_trtype_str(e->trtype)))
 				continue;
 
-			if (e->subtype == NVME_NQN_DISC)
+			if (e->subtype == NVME_NQN_DISC ||
+			    e->subtype == NVME_NQN_CURR)
 				set_discovery_kato(defcfg);
 
 			errno = 0;
