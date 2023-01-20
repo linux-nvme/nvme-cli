@@ -10,9 +10,11 @@ subprojects/*
 !subprojects/*.wrap
 
 cscope.*
+compile_commands.json
 
 tests/__pycache__
 tests/nvmetests
 tests/*.pyc
 
 .build
+.cache
