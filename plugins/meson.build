@@ -23,6 +23,7 @@ sources += [
   'plugins/ymtc/ymtc-nvme.c',
   'plugins/zns/zns.c',
   'plugins/inspur/inspur-nvme.c',
+  'plugins/fdp/fdp.c',
 ]
 subdir('solidigm')
 subdir('ocp')

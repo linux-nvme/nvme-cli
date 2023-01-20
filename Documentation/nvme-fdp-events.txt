@@ -1,0 +1,42 @@
+nvme-fdp-events(1)
+==================
+
+NAME
+----
+nvme-fdp-events - Get Flexible Data Placement Events
+
+SYNOPSIS
+--------
+[verse]
+'nvme fdp events' <device> [--endgrp-id=<NUM> | -e <NUM>]
+			   [--host-events | -E]
+			   [--raw-binary | -b]
+			   [--output-format=<FMT> | -o <FMT>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, provide information about events affecting Reclaim
+Units and media usage in an Endurance Group.
+
+OPTIONS
+-------
+-e <NUM>::
+--endgrp-id=<NUM>::
+	The endurance group identifier to use when requesting the log page.
+
+-E::
+--host-events::
+	Request the controller to report host events.
+
+-b::
+--raw-binary::
+	Print the raw buffer to the standard output stream.
+
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal', 'json', or 'binary'. Only one
+	output format can be used at a time.
+
+NVME
+----
+Part of nvme-cli

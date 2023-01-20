@@ -132,6 +132,17 @@ void json_nvme_finish_zone_list(__u64 nr_zones,
 	struct json_object *zone_list);
 void nvme_show_list_item(nvme_ns_t n);
 
+void nvme_show_fdp_configs(struct nvme_fdp_config_log *configs, size_t len,
+		enum nvme_print_flags flags);
+void nvme_show_fdp_stats(struct nvme_fdp_stats_log *log,
+		enum nvme_print_flags flags);
+void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
+		enum nvme_print_flags flags);
+void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
+		enum nvme_print_flags flags);
+void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
+		enum nvme_print_flags flags);
+
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
 const char *nvme_select_to_string(int sel);
 const char *nvme_feature_to_string(enum nvme_features_id feature);

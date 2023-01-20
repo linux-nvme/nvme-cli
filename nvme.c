@@ -75,6 +75,7 @@ struct feat_cfg {
 	__u32 namespace_id;
 	enum nvme_get_features_sel sel;
 	__u32 cdw11;
+	__u32 cdw12;
 	__u8  uuid_index;
 	__u32 data_len;
 	bool  raw_binary;
@@ -109,7 +110,7 @@ static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
 static const char *block_count = "number of blocks (zeroes based) on device to access";
 static const char *crkey = "current reservation key";
-static const char *buf_len = "buffer len (if) data is returned";
+static const char *buf_len = "buffer len (if) data is sent or received";
 static const char *domainid = "Domain Identifier";
 static const char *doper = "directive operation";
 static const char *dry = "show command instead of sending";
@@ -126,6 +127,8 @@ static const char *lba_format_index = "The index into the LBA Format list "\
 	"identifying the LBA Format capabilities that are to be returned";
 static const char *limited_retry = "limit media access attempts";
 static const char *lsp = "log specific field";
+static const char *mos = "management operation specific";
+static const char *mo = "management operation";
 static const char *namespace_desired = "desired namespace";
 static const char *namespace_id_desired = "identifier of desired namespace";
 static const char *namespace_id_optional = "optional namespace attached to controller";
@@ -1890,6 +1893,202 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 close_dev:
 	dev_close(dev);
 ret:
+	return err;
+}
+
+static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "I/O Management Send";
+	const char *data = "optional file for data (default stdin)";
+
+	struct nvme_dev *dev;
+	void *buf = NULL;
+	int err = -1;
+	int dfd = STDIN_FILENO;
+
+	struct config {
+		__u16 mos;
+		__u8  mo;
+		__u32 namespace_id;
+		char  *file;
+		__u32 data_len;
+	};
+
+	struct config cfg = {
+		.mos = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
+		OPT_UINT("mos",           's', &cfg.mos,            mos),
+		OPT_BYTE("mo",            'm', &cfg.mo,             mo),
+		OPT_FILE("data",          'd', &cfg.file,           data),
+		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return errno;
+
+	if (!cfg.namespace_id) {
+		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_dev;
+		}
+	}
+
+	if (cfg.data_len) {
+		buf = calloc(1, cfg.data_len);
+		if (!buf) {
+			perror("could not alloc memory for io mgmt receive data");
+			err = -ENOMEM;
+			goto close_dev;
+		}
+	}
+
+	if (cfg.file) {
+		dfd = open(cfg.file, O_RDONLY);
+		if (dfd < 0) {
+			perror(cfg.file);
+			goto free;
+		}
+	}
+
+	err = read(dfd, buf, cfg.data_len);
+	if (err < 0) {
+		perror("read");
+		goto close_fd;
+	}
+
+	struct nvme_io_mgmt_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= dev_fd(dev),
+		.nsid		= cfg.namespace_id,
+		.mos		= cfg.mos,
+		.mo		= cfg.mo,
+		.data_len	= cfg.data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+	};
+
+	err = nvme_io_mgmt_send(&args);
+	if (!err)
+		printf("io-mgmt-send: Success, mos:%u mo:%u nsid:%d\n",
+			cfg.mos, cfg.mo, cfg.namespace_id);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("io-mgmt-send");
+
+close_fd:
+	if (cfg.file)
+		close(dfd);
+free:
+	free(buf);
+close_dev:
+	dev_close(dev);
+	return err;
+}
+
+static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "I/O Management Receive";
+	const char *data = "optional file for data (default stdout)";
+
+	struct nvme_dev *dev;
+	void *buf = NULL;
+	int err = -1;
+	int dfd = STDOUT_FILENO;
+
+	struct config {
+		__u16 mos;
+		__u8  mo;
+		__u32 namespace_id;
+		char  *file;
+		__u32 data_len;
+	};
+
+	struct config cfg = {
+		.mos = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
+		OPT_UINT("mos",           's', &cfg.mos,            mos),
+		OPT_BYTE("mo",            'm', &cfg.mo,             mo),
+		OPT_FILE("data",          'd', &cfg.file,           data),
+		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return errno;
+
+	if (!cfg.namespace_id) {
+		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_dev;
+		}
+	}
+
+	if (cfg.data_len) {
+		buf = calloc(1, cfg.data_len);
+		if (!buf) {
+			perror("could not alloc memory for io mgmt receive data");
+			err = -ENOMEM;
+			goto close_dev;
+		}
+	}
+
+	struct nvme_io_mgmt_recv_args args = {
+		.args_size	= sizeof(args),
+		.fd		= dev_fd(dev),
+		.nsid		= cfg.namespace_id,
+		.mos		= cfg.mos,
+		.mo		= cfg.mo,
+		.data_len	= cfg.data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+	};
+
+	err = nvme_io_mgmt_recv(&args);
+	if (!err) {
+		printf("io-mgmt-recv: Success, mos:%u mo:%u nsid:%d\n",
+			cfg.mos, cfg.mo, cfg.namespace_id);
+
+		if (cfg.file) {
+			dfd = open(cfg.file, O_WRONLY | O_CREAT, 0644);
+			if (dfd < 0) {
+				perror(cfg.file);
+				goto free;
+			}
+
+			err = write(dfd, buf, cfg.data_len);
+			if (err < 0) {
+				perror("write");
+				goto close_fd;
+			}
+		} else {
+			d((unsigned char *)buf, cfg.data_len, 16, 1);
+		}
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else {
+		perror("io-mgmt-recv");
+	}
+
+close_fd:
+	if (cfg.file)
+		close(dfd);
+free:
+	free(buf);
+close_dev:
+	dev_close(dev);
+
 	return err;
 }
 
@@ -4084,6 +4283,11 @@ static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
 	if (cfg->feature_id == NVME_FEAT_FID_HOST_ID && (cfg->cdw11 & 0x1))
 		cfg->data_len = 16;
 
+	if (cfg->feature_id == NVME_FEAT_FID_FDP_EVENTS) {
+		cfg->data_len = 0xff * sizeof(__u16);
+		cfg->cdw11 |= 0xff << 16;
+	}
+
 	if (cfg->sel == 3)
 		cfg->data_len = 0;
 
@@ -4215,7 +4419,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	const char *raw = "show feature in binary format";
 	const char *feature_id = "feature identifier";
 	const char *sel = "[0-3,8]: current/default/saved/supported/changed";
-	const char *cdw11 = "dword 11 for interrupt vector config";
+	const char *cdw11 = "feature specific dword 11";
 	const char *human_readable = "show feature in readable format";
 	struct nvme_dev *dev;
 	int err;
