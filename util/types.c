@@ -3,10 +3,12 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <locale.h>
 
 #include <ccan/endian/endian.h>
 
 #include "types.h"
+#include "util/suffix.h"
 
 nvme_uint128_t le128_to_cpu(__u8 *data)
 {
@@ -46,14 +48,22 @@ uint64_t int48_to_long(__u8 *data)
 
 char *uint128_t_to_string(nvme_uint128_t val)
 {
-	static char str[40];
-	int idx = 40;
+	static char str[60];
+	int idx = 60;
 	__u64 div, rem;
+	char *sep = localeconv()->thousands_sep;
+	int len = sep ? strlen(sep) : 0;
+	int i;
 
 	/* terminate at the end, and build up from the ones */
 	str[--idx] = '\0';
 
 	do {
+		if (len && !((sizeof(str) - idx) % (3 + len))) {
+			for (i = 0; i < len; i++)
+				str[--idx] = sep[i];
+		}
+
 		rem = val.words[0];
 
 		div = rem / 10;
@@ -76,6 +86,35 @@ char *uint128_t_to_string(nvme_uint128_t val)
 	} while (val.words[0] || val.words[1] || val.words[2] || val.words[3]);
 
 	return str + idx;
+}
+
+static long double uint128_t_to_double(nvme_uint128_t data)
+{
+	int i;
+	long double result = 0;
+
+	for (i = 0; i < sizeof(data.words) / sizeof(*data.words); i++) {
+		result *= 4294967296;
+		result += data.words[i];
+	}
+
+	return result;
+}
+
+char *uint128_t_to_si_string(nvme_uint128_t val, __u32 bytes_per_unit)
+{
+	static char str[40];
+	long double bytes = uint128_t_to_double(val) * bytes_per_unit;
+	const char *suffix = suffix_si_get_ld(&bytes);
+	int n = snprintf(str, sizeof(str), "%.2Lf %sB", bytes, suffix);
+
+	if (n <= 0)
+		return "";
+
+	if (n >= sizeof(str))
+		str[sizeof(str) - 1] = '\0';
+
+	return str;
 }
 
 const char *util_uuid_to_string(unsigned char uuid[NVME_UUID_LEN])
