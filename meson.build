@@ -7,8 +7,8 @@ project(
     version: '2.2.1',
     default_options: [
       'c_std=gnu99',
-      'buildtype=release',
-      'prefix=/usr',
+      'buildtype=debug',
+      'prefix=/usr/local',
       'warning_level=1',
     ]
 )

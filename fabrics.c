@@ -124,6 +124,81 @@ static void space_strip_len(int max, char *str)
 	}
 }
 
+/*
+ * Compare two C strings and handle NULL pointers gracefully.
+ * If either of the two strings is NULL, return 0
+ * to let caller ignore the compare.
+ */
+static inline int strcmp0(const char *s1, const char *s2)
+{
+	if (!s1 || !s2)
+		return 0;
+	return strcmp(s1, s2);
+}
+
+/*
+ * Compare two C strings and handle NULL pointers gracefully.
+ * If either of the two strings is NULL, return 0
+ * to let caller ignore the compare.
+ */
+static inline int strcasecmp0(const char *s1, const char *s2)
+{
+	if (!s1 || !s2)
+		return 0;
+	return strcasecmp(s1, s2);
+}
+
+static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
+{
+	if (!strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
+	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
+	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
+	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
+	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
+		return true;
+
+	return false;
+}
+
+static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
+{
+	if (!strcmp0(nvme_ctrl_get_subsysnqn(c), trcfg->subsysnqn) &&
+	    disc_ctrl_config_match(c, trcfg))
+		return true;
+
+	return false;
+}
+
+static nvme_ctrl_t __lookup_ctrl(nvme_root_t r, struct tr_config *trcfg,
+			     bool (*filter)(nvme_ctrl_t, struct tr_config *))
+{
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				if (!(filter(c, trcfg)))
+					continue;
+				return c;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+static nvme_ctrl_t lookup_discovery_ctrl(nvme_root_t r, struct tr_config *trcfg)
+{
+	return __lookup_ctrl(r, trcfg, disc_ctrl_config_match);
+}
+
+static nvme_ctrl_t lookup_ctrl(nvme_root_t r, struct tr_config *trcfg)
+{
+	return __lookup_ctrl(r, trcfg, ctrl_config_match);
+}
+
 static int set_discovery_kato(struct nvme_fabrics_config *cfg)
 {
 	int tmo = cfg->keep_alive_tmo;
@@ -159,7 +234,6 @@ static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 
 	cfg->keep_alive_tmo = tmo;
 	if (ret) {
-		errno = ret;
 		nvme_free_ctrl(c);
 		return NULL;
 	}
@@ -225,11 +299,12 @@ static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 			nvmf_adrfam_str(e->adrfam): "");
 		printf("subtype: %s\n", nvmf_subtype_str(e->subtype));
 		printf("treq:    %s\n", nvmf_treq_str(e->treq));
-		printf("portid:  %d\n", e->portid);
+		printf("portid:  %d\n", le16_to_cpu(e->portid));
 		printf("trsvcid: %s\n", e->trsvcid);
 		printf("subnqn:  %s\n", e->subnqn);
 		printf("traddr:  %s\n", e->traddr);
-		printf("eflags:  %s\n", nvmf_eflags_str(e->eflags));
+		printf("eflags:  %s\n",
+		       nvmf_eflags_str(le16_to_cpu(e->eflags)));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
@@ -282,7 +357,8 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		json_object_add_value_string(entry, "trsvcid", e->trsvcid);
 		json_object_add_value_string(entry, "subnqn", e->subnqn);
 		json_object_add_value_string(entry, "traddr", e->traddr);
-		json_object_add_value_uint(entry, "eflags", e->eflags);
+		json_object_add_value_string(entry, "eflags",
+					     nvmf_eflags_str(le16_to_cpu(e->eflags)));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
@@ -355,28 +431,44 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 	struct nvmf_discovery_log *log = NULL;
 	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
 	nvme_host_t h = nvme_subsystem_get_host(s);
+	nvme_root_t r = nvme_host_get_root(h);
 	uint64_t numrec;
-	int err;
 
-	err = nvmf_get_discovery_log(c, &log, MAX_DISC_RETRIES);
-	if (err) {
-		if (err > 0)
-			nvme_show_status(err);
-		else
-			fprintf(stderr, "failed to get discovery log: %s\n",
-				nvme_strerror(errno));
-		return err;
+	struct nvme_get_discovery_args args = {
+		.c = c,
+		.args_size = sizeof(args),
+		.max_retries = MAX_DISC_RETRIES,
+		.result = 0,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lsp = 0,
+	};
+
+	log = nvmf_get_discovery_wargs(&args);
+	if (!log) {
+		fprintf(stderr, "failed to get discovery log: %s\n",
+			nvme_strerror(errno));
+		return errno;
 	}
-
 
 	numrec = le64_to_cpu(log->numrec);
 	if (raw)
 		save_discovery_log(raw, log);
 	else if (!connect) {
-		if (flags == JSON)
-			json_discovery_log(log, numrec);
-		else
+		switch (flags) {
+		case NORMAL:
 			print_discovery_log(log, numrec);
+			break;
+		case JSON:
+			json_discovery_log(log, numrec);
+			break;
+		case BINARY:
+			d_raw((unsigned char *)log,
+			      sizeof(struct nvmf_discovery_log) +
+			      numrec * sizeof(struct nvmf_disc_log_entry));
+			break;
+		default:
+			break;
+		}
 	} else if (connect) {
 		int i;
 
@@ -386,11 +478,25 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			nvme_ctrl_t child;
 			int tmo = defcfg->keep_alive_tmo;
 
+			struct tr_config trcfg = {
+				.subsysnqn	= e->subnqn,
+				.transport	= nvmf_trtype_str(e->trtype),
+				.traddr		= e->traddr,
+				.host_traddr	= defcfg->host_traddr,
+				.host_iface	= defcfg->host_iface,
+				.trsvcid	= e->trsvcid,
+			};
+
+			/* Already connected ? */
+			if (lookup_ctrl(r, &trcfg))
+				continue;
+
 			/* Skip connect if the transport types don't match */
 			if (strcmp(nvme_ctrl_get_transport(c), nvmf_trtype_str(e->trtype)))
 				continue;
 
-			if (e->subtype == NVME_NQN_DISC)
+			if (e->subtype == NVME_NQN_DISC ||
+			    e->subtype == NVME_NQN_CURR)
 				set_discovery_kato(defcfg);
 
 			errno = 0;
@@ -421,62 +527,6 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 
 	free(log);
 	return 0;
-}
-
-/*
- * Compare two C strings and handle NULL pointers gracefully.
- * If either of the two strings is NULL, return 0
- * to let caller ignore the compare.
- */
-static inline int strcmp0(const char *s1, const char *s2)
-{
-	if (!s1 || !s2)
-		return 0;
-	return strcmp(s1, s2);
-}
-
-/*
- * Compare two C strings and handle NULL pointers gracefully.
- * If either of the two strings is NULL, return 0
- * to let caller ignore the compare.
- */
-static inline int strcasecmp0(const char *s1, const char *s2)
-{
-	if (!s1 || !s2)
-		return 0;
-	return strcasecmp(s1, s2);
-}
-
-static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
-{
-	if (!strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
-	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
-	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
-	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
-	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
-		return true;
-
-	return false;
-}
-
-static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, struct tr_config *trcfg)
-{
-	nvme_host_t h;
-	nvme_subsystem_t s;
-	nvme_ctrl_t c;
-
-	nvme_for_each_host(r, h) {
-		nvme_for_each_subsystem(h, s) {
-			nvme_subsystem_for_each_ctrl(s, c) {
-				if (!nvme_ctrl_is_discovery_ctrl(c))
-					continue;
-				if (ctrl_config_match(c, trcfg))
-					return c;
-			}
-		}
-	}
-
-	return NULL;
 }
 
 static char *get_default_trsvcid(const char *transport,
@@ -581,7 +631,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		};
 
 		if (!force) {
-			c = lookup_discover_ctrl(r, &trcfg);
+			c = lookup_discovery_ctrl(r, &trcfg);
 			if (c) {
 				__discover(c, &cfg, raw, connect,
 					   true, flags);
@@ -657,7 +707,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 			};
 
 			if (!force) {
-				cn = lookup_discover_ctrl(r, &trcfg);
+				cn = lookup_discovery_ctrl(r, &trcfg);
 				if (cn) {
 					__discover(c, &cfg, raw, connect,
 						   true, flags);
@@ -825,7 +875,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 	if (!c && !force) {
-		c = lookup_discover_ctrl(r, &trcfg);
+		c = lookup_discovery_ctrl(r, &trcfg);
 		if (c)
 			persistent = true;
 	}
@@ -953,6 +1003,22 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		nvme_host_set_dhchap_key(h, hostkey);
 	if (!trsvcid)
 		trsvcid = get_default_trsvcid(transport, false);
+
+	struct tr_config trcfg = {
+		.subsysnqn	= subsysnqn,
+		.transport	= transport,
+		.traddr		= traddr,
+		.host_traddr	= cfg.host_traddr,
+		.host_iface	= cfg.host_iface,
+		.trsvcid	= trsvcid,
+	};
+
+	if (lookup_ctrl(r, &trcfg)) {
+		fprintf(stderr, "already connected\n");
+		errno = EALREADY;
+		goto out_free;
+	}
+
 	c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 			     cfg.host_traddr, cfg.host_iface, trsvcid);
 	if (!c) {
@@ -965,7 +1031,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	errno = 0;
 	ret = nvmf_add_ctrl(h, c, &cfg);
 	if (ret)
-		fprintf(stderr, "no controller found: %s\n",
+		fprintf(stderr, "could not add new controller: %s\n",
 			nvme_strerror(errno));
 	else {
 		errno = 0;

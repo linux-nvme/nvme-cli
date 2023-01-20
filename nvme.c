@@ -215,6 +215,12 @@ int map_log_level(int verbose, bool quiet)
 {
 	int log_level;
 
+	/*
+	 * LOG_NOTICE is unsued thus the user has to provide two 'v' for getting
+	 * any feedback at all. Thus skip this level
+	 */
+	verbose++;
+
 	switch (verbose) {
 	case 0:
 		log_level = LOG_WARNING;
