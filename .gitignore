@@ -8,8 +8,10 @@ a.out
 *.so.*
 *.tar.gz
 cscope.*
+compile_commands.json
 
 .build
+.cache
 
 subprojects/*
 !subprojects/*.wrap
