@@ -3752,6 +3752,7 @@ static inline int nvme_fdp_reclaim_unit_handle_status(int fd, __u32 nsid,
 		.nsid = nsid,
 		.data_len = data_len,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.mos = 0,
 		.mo = NVME_IO_MGMT_RECV_RUH_STATUS,
 	};
 

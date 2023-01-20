@@ -564,6 +564,7 @@ static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_ADDRINUSE] = "hostnqn already in use",
 	[ENVME_CONNECT_NODEV] = "invalid interface",
 	[ENVME_CONNECT_OPNOTSUPP] ="not supported",
+	[ENVME_CONNECT_CONNREFUSED] = "connection refused",
 };
 
 const char *nvme_errno_to_string(int status)

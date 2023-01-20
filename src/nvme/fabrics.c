@@ -114,7 +114,7 @@ const char *nvmf_treq_str(__u8 treq)
 }
 
 static const char * const eflags_strings[] = {
-	[NVMF_DISC_EFLAGS_NONE]		= "not specified",
+	[NVMF_DISC_EFLAGS_NONE]		= "none",
 	[NVMF_DISC_EFLAGS_EPCSD]	= "explicit discovery connections",
 	[NVMF_DISC_EFLAGS_DUPRETINFO]	= "duplicate discovery information",
 	[NVMF_DISC_EFLAGS_EPCSD |
@@ -561,6 +561,9 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 		case EOPNOTSUPP:
 			ret = -ENVME_CONNECT_OPNOTSUPP;
 			break;
+		case ECONNREFUSED :
+			ret = -ENVME_CONNECT_CONNREFUSED;
+			break;
 		default:
 			ret = -ENVME_CONNECT_WRITE;
 			break;
@@ -658,7 +661,8 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		return -1;
 	}
 
-	nvme_msg(h->r, LOG_INFO, "nvme%d: ctrl connected\n", ret);
+	nvme_msg(h->r, LOG_INFO, "nvme%d: %s connected\n", ret,
+		 nvme_ctrl_get_subsysnqn(c));
 	return nvme_init_ctrl(h, c, ret);
 }
 

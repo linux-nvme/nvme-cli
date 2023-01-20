@@ -36,6 +36,7 @@
  * @ENVME_CONNECT_ADDRINUSE:	hostnqn already in use
  * @ENVME_CONNECT_NODEV:	invalid interface
  * @ENVME_CONNECT_OPNOTSUPP:	not supported
+ * @ENVME_CONNECT_CONNREFUSED:      connection refused
  */
 enum nvme_connect_err {
 	ENVME_CONNECT_RESOLVE	= 1000,
@@ -55,6 +56,7 @@ enum nvme_connect_err {
 	ENVME_CONNECT_ADDRINUSE,
 	ENVME_CONNECT_NODEV,
 	ENVME_CONNECT_OPNOTSUPP,
+	ENVME_CONNECT_CONNREFUSED,
 };
 
 /**

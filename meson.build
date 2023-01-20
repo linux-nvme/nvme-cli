@@ -13,8 +13,8 @@ project(
     default_options: [
         'c_std=gnu99',
         'warning_level=1',
-        'buildtype=release',
-        'prefix=/usr',
+        'buildtype=debug',
+        'prefix=/usr/local',
     ]
 )
 
