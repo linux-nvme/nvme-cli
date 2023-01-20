@@ -19,6 +19,7 @@
 #include "nvme-print.h"
 
 #include "solidigm-smart.h"
+#include "solidigm-util.h"
 
 struct  __attribute__((packed)) nvme_additional_smart_log_item {
 	__u8			id;
@@ -179,12 +180,13 @@ static void vu_smart_log_show_json(vu_smart_log_t *payload, unsigned int nsid, c
 	json_free_object(root);
 }
 
-static void vu_smart_log_show(vu_smart_log_t *payload, unsigned int nsid, const char *devname)
+static void vu_smart_log_show(vu_smart_log_t *payload, unsigned int nsid, const char *devname,
+			      __u8 uuid_index)
 {
 	smart_log_item_t *item = payload->item;
 
-	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
-		devname, nsid);
+	printf("Additional Smart Log for NVMe device:%s namespace-id:%x UUID-idx:%d\n",
+		devname, nsid, uuid_index);
 	printf("ID             KEY                                 Normalized     Raw\n");
 
 	for (int i = 0; i < VU_SMART_MAX_ITEMS; i++) {
@@ -201,6 +203,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	enum nvme_print_flags flags;
 	struct nvme_dev *dev;
 	int err;
+	__u8 uuid_index;
 
 	struct config {
 		__u32	namespace_id;
@@ -229,8 +232,27 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		return flags;
 	}
 
-	err = nvme_get_log_simple(dev_fd(dev), solidigm_vu_smart_log_id,
-				  sizeof(smart_log_payload), &smart_log_payload);
+	uuid_index = solidigm_get_vu_uuid_index(dev);
+
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = &smart_log_payload,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = solidigm_vu_smart_log_id,
+		.len = sizeof(smart_log_payload),
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = uuid_index,
+		.rae = false,
+		.ot = false,
+	};
+
+	err =  nvme_get_log(&args);
 	if (!err) {
 		if (flags & JSON) {
 			vu_smart_log_show_json(&smart_log_payload,
@@ -239,7 +261,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 			d_raw((unsigned char *)&smart_log_payload, sizeof(smart_log_payload));
 		} else {
 			vu_smart_log_show(&smart_log_payload, cfg.namespace_id,
-					  dev->name);
+					  dev->name, uuid_index);
 		}
 	} else if (err > 0) {
 		nvme_show_status(err);

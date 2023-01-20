@@ -17,6 +17,7 @@
 #include "plugin.h"
 #include "linux/types.h"
 #include "nvme-print.h"
+#include "solidigm-util.h"
 
 #define BUCKET_LIST_SIZE_4_0 152
 #define BUCKET_LIST_SIZE_4_1 1216
@@ -42,6 +43,7 @@ struct config {
 
 struct latency_tracker {
 	int fd;
+	__u8 uuid_index;
 	struct config cfg;
 	enum nvme_print_flags print_flags;
 	struct latency_statistics stats;
@@ -213,6 +215,7 @@ static void latency_tracker_pre_parse(struct latency_tracker *lt)
 	if (lt->print_flags == NORMAL) {
 		printf("Solidigm IO %s Command Latency Tracking Statistics type %d\n",
 			lt->cfg.write ? "Write" : "Read", lt->cfg.type);
+		printf("UUID-idx: %d\n", lt->uuid_index);
 		printf("Major Revision: %u\nMinor Revision: %u\n",
 			le16_to_cpu(lt->stats.version_major), le16_to_cpu(lt->stats.version_minor));
 		if (lt->has_average_latency_field) {
@@ -276,7 +279,8 @@ static int latency_tracking_is_enable(struct latency_tracker *lt, __u32 * enable
 {
 	struct nvme_get_features_args args_get = {
 		.args_size	= sizeof(args_get),
-		.fd			= lt->fd,
+		.fd		= lt->fd,
+		.uuidx		= lt->uuid_index,
 		.fid		= LATENCY_TRACKING_FID,
 		.nsid		= 0,
 		.sel		= 0,
@@ -307,6 +311,7 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 	struct nvme_set_features_args args_set = {
 		.args_size	= sizeof(args_set),
 		.fd		= lt->fd,
+		.uuidx		= lt->uuid_index,
 		.fid		= LATENCY_TRACKING_FID,
 		.nsid		= 0,
 		.cdw11		= lt->cfg.enable,
@@ -328,8 +333,8 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 		fprintf(stderr, "Command failed while parsing.\n");
 	} else {
 		if (lt->print_flags == NORMAL) {
-			printf("Successfully set enable bit for FID (0x%X) to %i.\n",
-				LATENCY_TRACKING_FID, lt->cfg.enable);
+			printf("Successfully set enable bit for UUID-idx:%d FID:0x%X, to %i.\n",
+				lt->uuid_index, LATENCY_TRACKING_FID, lt->cfg.enable);
 		}
 	}
 	return err;
@@ -356,6 +361,7 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 		.log	= &lt->stats,
 		.args_size = sizeof(args),
 		.fd	= lt->fd,
+		.uuidx	= lt->uuid_index,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid	= lt->cfg.write ? WRITE_LOG_ID : READ_LOG_ID,
 		.len	= sizeof(lt->stats),
@@ -390,6 +396,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 	int err;
 
 	struct latency_tracker lt = {
+		.uuid_index = 0,
 		.cfg = {
 			.output_format	= "normal",
 		},
@@ -433,6 +440,8 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 		return EINVAL;
 	}
 
+	lt.uuid_index = solidigm_get_vu_uuid_index(dev);
+
 	err = latency_tracking_enable(&lt);
 	if (err){
 		dev_close(dev);
@@ -462,8 +471,8 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 			putchar(enabled);
 		} else {
 		printf(
-			"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
-			LATENCY_TRACKING_FID, enabled);
+			"Latency Statistics Tracking (UUID-idx:%d, FID:0x%X) is currently %i.\n",
+			lt.uuid_index, LATENCY_TRACKING_FID, enabled);
 		}
 	} else {
 		fprintf(stderr, "Could not read feature id 0xE2.\n");

@@ -19,6 +19,7 @@
 #include "linux/types.h"
 #include "nvme-print.h"
 #include "solidigm-garbage-collection.h"
+#include "solidigm-util.h"
 
 typedef struct __attribute__((packed)) gc_item {
 	__le32 timer_type;
@@ -49,9 +50,11 @@ static void vu_gc_log_show_json(garbage_control_collection_log_t *payload, const
 	json_free_object(gc_entries);
 }
 
-static void vu_gc_log_show(garbage_control_collection_log_t *payload, const char *devname)
+static void vu_gc_log_show(garbage_control_collection_log_t *payload, const char *devname,
+			   __u8 uuid_index)
 {
-	printf("Solidigm Garbage Collection Log for NVME device: %s\n", devname);
+	printf("Solidigm Garbage Collection Log for NVME device:%s UUID-idx:%d\n", devname,
+	       uuid_index);
 	printf("Timestamp     Timer Type\n");
 
 	for (int i = 0; i < VU_GC_MAX_ITEMS; i++) {
@@ -65,6 +68,7 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 	const char *desc = "Get and parse Solidigm vendor specific garbage collection event log.";
 	struct nvme_dev *dev;
 	int err;
+	__u8 uuid_index;
 
 	struct config {
 		char	*output_format;
@@ -90,18 +94,36 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		return EINVAL;
 	}
 
+	uuid_index = solidigm_get_vu_uuid_index(dev);
+
 	garbage_control_collection_log_t gc_log;
 	const int solidigm_vu_gc_log_id = 0xfd;
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = &gc_log,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = solidigm_vu_gc_log_id,
+		.len = sizeof(gc_log),
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = uuid_index,
+		.rae = false,
+		.ot = false,
+	};
 
-	err = nvme_get_log_simple(dev_fd(dev), solidigm_vu_gc_log_id,
-				  sizeof(gc_log), &gc_log);
+	err =  nvme_get_log(&args);
 	if (!err) {
 		if (flags & BINARY)	{
 			d_raw((unsigned char *)&gc_log, sizeof(gc_log));
 		} else if (flags & JSON) {
 			vu_gc_log_show_json(&gc_log, dev->name);
 		} else {
-			vu_gc_log_show(&gc_log, dev->name);
+			vu_gc_log_show(&gc_log, dev->name, uuid_index);
 		}
 	}
 	else if (err > 0) {
