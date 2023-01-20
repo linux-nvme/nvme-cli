@@ -1,0 +1,60 @@
+# appimage-builder recipe see https://appimage-builder.readthedocs.io for details
+version: 1
+script:
+  # Ensure that the mksquashfs tool is installed (workaround for the AppImageCrafters/build-appimage GHA)
+  - which mksquashfs || apt install squashfs-tools
+  # fake icons
+  - mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps
+  - touch  AppDir/usr/share/icons/hicolor/64x64/apps/nvme-cli.png
+
+AppDir:
+  path: AppDir
+  app_info:
+    id: linux-nvme.nvme-cli
+    name: nvme-cli
+    version: latest
+    icon: nvme-cli
+    exec: usr/sbin/nvme
+    exec_args: $@
+  apt:
+    arch: amd64
+    allow_unauthenticated: true
+    sources:
+      - sourceline: deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse
+        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C'
+      - sourceline: deb http://archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse
+      - sourceline: deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse
+      - sourceline: deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+    include:
+      - libjson-c5
+      - libhugetlbfs0
+  files:
+    include:
+    - /lib64/libcrypto.so.3
+    - /lib64/libdbus-1.so.3
+    - /lib64/libjson-c.so.5
+    exclude:
+    - usr/share/man
+    - usr/share/doc/*/README.*
+    - usr/share/doc/*/changelog.*
+    - usr/share/doc/*/NEWS.*
+    - usr/share/doc/*/TODO.*
+  test:
+    fedora-30:
+      image: appimagecrafters/tests-env:fedora-30
+      command: ./AppRun
+    debian-stable:
+      image: appimagecrafters/tests-env:debian-stable
+      command: ./AppRun
+    archlinux-latest:
+      image: appimagecrafters/tests-env:archlinux-latest
+      command: ./AppRun
+    centos-7:
+      image: appimagecrafters/tests-env:centos-7
+      command: ./AppRun
+    ubuntu-xenial:
+      image: appimagecrafters/tests-env:ubuntu-xenial
+      command: ./AppRun
+AppImage:
+  update-information: 'gh-releases-zsync|linux-nvme|nvme-cli|latest|*x86_64.AppImage.zsync'
+  arch: x86_64

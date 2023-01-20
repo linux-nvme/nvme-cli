@@ -1,0 +1,33 @@
+---
+name: AppImage
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+env:
+  DESTDIR: ../AppDir
+
+jobs:
+  build-appimage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install dependencies
+        run: sudo apt-get install libjson-c-dev libdbus-1-dev libhugetlbfs-dev
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          setup-options: --werror --buildtype=release --prefix=/usr
+          action: install
+      - name: build AppImage
+        uses: AppImageCrafters/build-appimage@v1.3
+        with:
+          recipe: .github/AppImageBuilder.yml
+      - uses: actions/upload-artifact@v2
+        with:
+          name: AppImage
+          path: '*.AppImage*'
