@@ -4162,6 +4162,66 @@ ret:
 	return err;
 }
 
+static const char dash[51] = {[0 ... 49] = '=', '\0'};
+static const char space[51] = {[0 ... 49] = ' ', '\0'};
+
+static int wait_self_test(struct nvme_dev *dev)
+{
+	static const char spin[] = {'-', '\\', '|', '/' };
+	struct nvme_self_test_log log;
+	struct nvme_id_ctrl ctrl;
+	int err, i = 0, p = 0, cnt = 0;
+	int wthr;
+
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
+	if (err) {
+		fprintf(stderr, "identify-ctrl: %s\n", nvme_strerror(errno));
+		return err;
+	}
+
+	wthr = le16_to_cpu(ctrl.edstt) * 60 / 100 + 60;
+
+	printf("Waiting for self test completion...\n");
+	while (true) {
+		printf("\r[%.*s%c%.*s] %3d%%", p / 2, dash, spin[i % 4], 49 - p / 2, space, p);
+		fflush(stdout);
+		sleep(1);
+
+		err = nvme_cli_get_log_device_self_test(dev, &log);
+		if (err) {
+			printf("\n");
+			if (err < 0)
+				perror("self test log\n");
+			else
+				nvme_show_status(err);
+			return err;
+		}
+
+		if (++cnt > wthr) {
+			fprintf(stderr, "no progress for %d seconds, stop waiting\n", wthr);
+			return -EIO;
+		}
+
+		if (log.completion == 0 && p > 0) {
+			printf("\r[%.*s] %3d%%\n", 50, dash, 100);
+			break;
+		}
+
+		if (log.completion < p) {
+			printf("\n");
+			fprintf(stderr, "progress broken\n");
+			return -EIO;
+		} else if (log.completion != p) {
+			p = log.completion;
+			cnt = 0;
+		}
+
+		i++;
+	}
+
+	return 0;
+}
+
 static int device_self_test(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc  = "Implementing the device self-test feature"\
@@ -4169,32 +4229,59 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	const char *namespace_id = "Indicate the namespace in which the device self-test"\
 		" has to be carried out";
 	const char * self_test_code = "This field specifies the action taken by the device self-test command : "\
+		"\n0h Show current state of device self-test operation\n"\
 		"\n1h Start a short device self-test operation\n"\
 		"2h Start a extended device self-test operation\n"\
 		"eh Start a vendor specific device self-test operation\n"\
-		"fh abort the device self-test operation\n";
+		"fh abort the device self-test operation";
+	const char *wait = "wait for the test to finish";
 	struct nvme_dev *dev;
 	int err;
 
 	struct config {
 		__u32	namespace_id;
 		__u8	stc;
+		bool	wait;
 	};
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
 		.stc		= 0,
+		.wait		= false,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
 		OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
+		OPT_FLAG("wait",           'w', &cfg.wait,         wait),
 		OPT_END()
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		goto ret;
+
+	if (cfg.stc == 0) {
+		struct nvme_self_test_log log;
+		err = nvme_cli_get_log_device_self_test(dev, &log);
+		if (err) {
+			printf("\n");
+			if (err < 0)
+				perror("self test log\n");
+			else
+				nvme_show_status(err);
+		}
+
+		if (log.completion == 0) {
+			printf("no self test running\n");
+		} else {
+			if (cfg.wait)
+				err = wait_self_test(dev);
+			else
+				printf("progress %d%%\n", log.completion);
+		}
+		goto close_dev;
+	}
 
 	struct nvme_dev_self_test_args args = {
 		.args_size	= sizeof(args),
@@ -4212,11 +4299,15 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 			printf("Extended Device self-test started\n");
 		else if (cfg.stc == 0x1)
 			printf("Short Device self-test started\n");
+
+		if (cfg.wait)
+			err = wait_self_test(dev);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else
 		fprintf(stderr, "Device self-test: %s\n", nvme_strerror(errno));
 
+close_dev:
 	dev_close(dev);
 ret:
 	return err;
