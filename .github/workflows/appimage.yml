@@ -31,3 +31,7 @@ jobs:
         with:
           name: AppImage
           path: '*.AppImage*'
+      - uses: pyTooling/Actions/releaser@r0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: '*.AppImage'
