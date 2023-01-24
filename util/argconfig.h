@@ -72,9 +72,6 @@ enum argconfig_types {
 #define OPT_SUFFIX(l, s, v, d) \
 	{l, s, "IONUM", CFG_LONG_SUFFIX, v, required_argument, d}
 
-#define OPT_LONG(l, s, v, d) \
-	{l, s, "NUM", CFG_LONG, v, required_argument, d}
-
 #define OPT_UINT(l, s, v, d) \
 	{l, s, "NUM", CFG_POSITIVE, v, required_argument, d}
 
