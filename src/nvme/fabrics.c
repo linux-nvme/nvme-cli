@@ -683,8 +683,6 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_IP4:
 		case NVMF_ADDR_FAMILY_IP6:
-			strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
-			strchomp(e->trsvcid, NVMF_TRSVCID_SIZE - 1);
 			traddr = e->traddr;
 			trsvcid = e->trsvcid;
 			break;
@@ -699,7 +697,6 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
         case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
-			strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
 			traddr = e->traddr;
 			break;
 		default:
@@ -711,7 +708,6 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		}
 		break;
 	case NVMF_TRTYPE_LOOP:
-		strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
 		traddr = strlen(e->traddr) ? e->traddr : NULL;
 		break;
 	default:
@@ -884,9 +880,37 @@ out_free_log:
 	return NULL;
 }
 
+static void sanitize_discovery_log_entry(struct nvmf_disc_log_entry  *e)
+{
+	switch (e->trtype) {
+	case NVMF_TRTYPE_RDMA:
+	case NVMF_TRTYPE_TCP:
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_IP4:
+		case NVMF_ADDR_FAMILY_IP6:
+			strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
+			strchomp(e->trsvcid, NVMF_TRSVCID_SIZE - 1);
+			break;
+		}
+		break;
+        case NVMF_TRTYPE_FC:
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_FC:
+			strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
+			break;
+		}
+		break;
+	case NVMF_TRTYPE_LOOP:
+		strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
+		break;
+	}
+}
+
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 			   int max_retries)
 {
+	struct nvmf_discovery_log *log;
+
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = nvme_ctrl_get_fd(c),
@@ -903,12 +927,22 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		.rae = false,
 		.ot = false,
 	};
-	*logp = nvme_discovery_log(c, &args, max_retries);
-	return *logp ? 0 : -1;
+
+	log = nvme_discovery_log(c, &args, max_retries);
+	if (!log)
+		return -1;
+
+	for (int i = 0; i < le64_to_cpu(log->numrec); i++)
+		sanitize_discovery_log_entry(&log->entries[i]);
+
+	*logp = log;
+	return 0;
 }
 
 struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args)
 {
+	struct nvmf_discovery_log *log;
+
 	struct nvme_get_log_args _args = {
 		.args_size = sizeof(_args),
 		.fd = nvme_ctrl_get_fd(args->c),
@@ -926,7 +960,14 @@ struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_ar
 		.ot = false,
 	};
 
-	return nvme_discovery_log(args->c, &_args, args->max_retries);
+	log = nvme_discovery_log(args->c, &_args, args->max_retries);
+	if (!log)
+		return NULL;
+
+	for (int i = 0; i < le64_to_cpu(log->numrec); i++)
+		sanitize_discovery_log_entry(&log->entries[i]);
+
+	return log;
 }
 
 #define PATH_UUID_IBM	"/proc/device-tree/ibm,partition-uuid"
