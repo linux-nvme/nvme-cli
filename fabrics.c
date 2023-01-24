@@ -227,6 +227,8 @@ static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 		return NULL;
 
 	nvme_ctrl_set_discovery_ctrl(c, true);
+	nvme_ctrl_set_unique_discovery_ctrl(c,
+		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
 	tmo = set_discovery_kato(cfg);
 
 	errno = 0;
@@ -251,7 +253,7 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	if (!c)
 		return NULL;
 
-	if (!persistent)
+	if (nvme_ctrl_is_unique_discovery_ctrl(c))
 		return c;
 
 	/* Find out the name of discovery controller */
@@ -475,6 +477,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 		for (i = 0; i < numrec; i++) {
 			struct nvmf_disc_log_entry *e = &log->entries[i];
 			bool discover = false;
+			bool disconnect;
 			nvme_ctrl_t child;
 			int tmo = defcfg->keep_alive_tmo;
 
@@ -492,12 +495,40 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 				continue;
 
 			/* Skip connect if the transport types don't match */
-			if (strcmp(nvme_ctrl_get_transport(c), nvmf_trtype_str(e->trtype)))
+			if (strcmp(nvme_ctrl_get_transport(c),
+				   nvmf_trtype_str(e->trtype)))
 				continue;
 
 			if (e->subtype == NVME_NQN_DISC ||
-			    e->subtype == NVME_NQN_CURR)
+			    e->subtype == NVME_NQN_CURR) {
+				__u16 eflags = le16_to_cpu(e->eflags);
+				/*
+				 * Does this discovery controller return the
+				 * same information?
+				 */
+				if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
+					continue;
+
+				/* Are we supposed to keep the discovery
+				 * controller around? */
+				disconnect = !persistent;
+
+				if (strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
+					/*
+					 * Does this discovery controller doesn't
+					 * support explicit persistent connection?
+					 */
+					if (!(eflags & NVMF_DISC_EFLAGS_EPCSD))
+						disconnect = true;
+					else
+						disconnect = false;
+				}
+
 				set_discovery_kato(defcfg);
+			} else {
+				/* NVME_NQN_NVME */
+				disconnect = false;
+			}
 
 			errno = 0;
 			child = nvmf_connect_disc_entry(h, e, defcfg,
@@ -509,8 +540,8 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 				if (discover)
 					__discover(child, defcfg, raw,
 						   true, persistent, flags);
-				if (e->subtype != NVME_NQN_NVME &&
-				    !persistent) {
+
+				if (disconnect) {
 					nvme_disconnect_ctrl(child);
 					nvme_free_ctrl(child);
 				}
@@ -644,7 +675,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			goto next;
 
 		__discover(c, &cfg, raw, connect, persistent, flags);
-		if (!persistent)
+		if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(c)))
 			ret = nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 
@@ -720,7 +751,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 				continue;
 
 			__discover(cn, &cfg, raw, connect, persistent, flags);
-			if (!persistent)
+			if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(cn)))
 				ret = nvme_disconnect_ctrl(cn);
 			nvme_free_ctrl(cn);
 		}
@@ -891,9 +922,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 
-	ret = __discover(c, &cfg, raw, connect,
-			 persistent, flags);
-	if (!persistent)
+	ret = __discover(c, &cfg, raw, connect, persistent, flags);
+	if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(c)))
 		nvme_disconnect_ctrl(c);
 	nvme_free_ctrl(c);
 
