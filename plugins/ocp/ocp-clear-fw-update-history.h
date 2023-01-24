@@ -6,4 +6,12 @@
  *          leonardo.da.cunha@solidigm.com
  */
 
+#ifndef OCP_CLEAR_FW_HISTORY_H
+#define OCP_CLEAR_FW_HISTORY_H
+
+struct command;
+struct plugin;
+
 int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+
+#endif

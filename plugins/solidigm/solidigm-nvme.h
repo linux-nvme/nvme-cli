@@ -22,8 +22,11 @@ PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_V
 		ENTRY("latency-tracking-log", "Enable/Retrieve Latency tracking Log", get_latency_tracking_log)
 		ENTRY("parse-telemetry-log", "Parse Telemetry Log binary", get_telemetry_log)
 		ENTRY("clear-fw-activate-history",
-		      "Clear firmware update history log (redirects to ocp plug-in)",
-		      clear_fw_update_history)
+			"Clear firmware update history log (redirects to ocp plug-in)",
+			clear_fw_update_history)
+		ENTRY("vs-smart-add-log",
+			"Get SMART / health extended log (redirects to ocp plug-in)",
+			smart_cloud)
 	)
 );
 

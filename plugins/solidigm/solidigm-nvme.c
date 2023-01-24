@@ -14,6 +14,8 @@
 #include "solidigm-garbage-collection.h"
 #include "solidigm-latency-tracking.h"
 #include "solidigm-telemetry.h"
+
+#include "plugins/ocp/ocp-smart-extended-log.h"
 #include "plugins/ocp/ocp-clear-fw-update-history.h"
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -37,7 +39,13 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 }
 
 static int clear_fw_update_history(int argc, char **argv, struct command *cmd,
-								   struct plugin *plugin)
+	struct plugin *plugin)
 {
 	return ocp_clear_fw_update_history(argc, argv, cmd, plugin);
+}
+
+static int smart_cloud(int argc, char **argv, struct command *cmd,
+	struct plugin *plugin)
+{
+	return ocp_smart_add_log(argc, argv, cmd, plugin);
 }
