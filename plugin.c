@@ -77,12 +77,12 @@ void general_help(struct plugin *plugin)
 	usage(plugin);
 
 	printf("\n");
-	print_word_wrapped(prog->desc, 0, 0);
+	print_word_wrapped(prog->desc, 0, 0, stdout);
 	printf("\n");
 
 	if (plugin->desc) {
 		printf("\n");
-		print_word_wrapped(plugin->desc, 0, 0);
+		print_word_wrapped(plugin->desc, 0, 0, stdout);
 		printf("\n");
 	}
 

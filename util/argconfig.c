@@ -53,7 +53,7 @@ void argconfig_append_usage(const char *str)
 	append_usage_str = str;
 }
 
-void print_word_wrapped(const char *s, int indent, int start)
+void print_word_wrapped(const char *s, int indent, int start, FILE *stream)
 {
 	const int width = 76;
 	const char *c, *t;
@@ -61,7 +61,7 @@ void print_word_wrapped(const char *s, int indent, int start)
 	int last_line = indent;
 
 	while (start < indent) {
-		putc(' ', stderr);
+		putc(' ', stream);
 		start++;
 	}
 
@@ -78,14 +78,14 @@ void print_word_wrapped(const char *s, int indent, int start)
 				int i;
 new_line:
 				last_line = (int) (c-s) + start;
-				putc('\n', stderr);
+				putc('\n', stream);
 				for (i = 0; i < indent; i++)
-					putc(' ', stderr);
+					putc(' ', stream);
 				start = indent;
 				continue;
 			}
 		}
-		putc(*c, stderr);
+		putc(*c, stream);
 	}
 }
 
@@ -115,8 +115,8 @@ static void show_option(const struct argconfig_commandline_options *option)
 
 	fprintf(stderr, "%s", buffer);
 	if (option->help) {
-		print_word_wrapped("--- ", 40, b - buffer);
-		print_word_wrapped(option->help, 44, 44);
+		print_word_wrapped("--- ", 40, b - buffer, stderr);
+		print_word_wrapped(option->help, 44, 44, stderr);
 	}
 	fprintf(stderr, "\n");
 }
@@ -126,16 +126,16 @@ void argconfig_print_help(const char *program_desc,
 {
 	const struct argconfig_commandline_options *s;
 
-	printf("\033[1mUsage: %s\033[0m\n\n",
-	       append_usage_str);
+	fprintf(stderr, "\033[1mUsage: %s\033[0m\n\n",
+		append_usage_str);
 
-	print_word_wrapped(program_desc, 0, 0);
-	printf("\n");
+	print_word_wrapped(program_desc, 0, 0, stderr);
+	fprintf(stderr, "\n");
 
 	if (!options || !options->option)
 		return;
 
-	printf("\n\033[1mOptions:\033[0m\n");
+	fprintf(stderr, "\n\033[1mOptions:\033[0m\n");
 	for (s = options; (s != NULL) && (s->option != NULL); s++)
 		show_option(s);
 }
