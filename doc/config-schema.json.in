@@ -33,6 +33,10 @@
 		    "description": "NVMe host symbolic name",
 		    "type": "string"
 		},
+		"persistent_discovery_ctrl": {
+			"description": "Enable/disable Persistent Discovery Controller",
+			"type": "boolean"
+		},
 		"required": [ "hostnqn" ],
 		"subsystems": {
 		    "description": "Array of NVMe subsystem properties",

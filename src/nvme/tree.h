@@ -107,6 +107,28 @@ const char *nvme_host_get_dhchap_key(nvme_host_t h);
 void nvme_host_set_dhchap_key(nvme_host_t h, const char *key);
 
 /**
+ * nvme_host_set_pdc_enabled() - Set Persistent Discovery Controller flag
+ * @h:		Host for which the falg should be set
+ * @enabled:	The bool to set the enabled flag
+ *
+ * When nvme_host_set_pdc_enabled() is not used to set the PDC flag,
+ * nvme_host_is_pdc_enabled() will return the default value which was
+ * passed into the function and not the undefined flag value.
+ */
+void nvme_host_set_pdc_enabled(nvme_host_t h, bool enabled);
+
+/**
+ * nvme_host_is_pdc_enabled() - Is Persistenct Discovery Controller enabled
+ * @h: 		Host which to check if PDC is enabled
+ * @fallback:	The fallback default value of the flag when
+ * 		@nvme_host_set_pdc_enabled has not be used
+ * 		to set the flag.
+ *
+ * Return: true if PDC is enabled for @h, else false
+ */
+bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback);
+
+/**
  * nvme_default_host() - Initializes the default host
  * @r:	&nvme_root_t object
  *

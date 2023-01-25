@@ -148,6 +148,9 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 	attr_obj = json_object_object_get(host_obj, "hostsymname");
 	if (attr_obj)
 		nvme_host_set_hostsymname(h, json_object_get_string(attr_obj));
+	attr_obj = json_object_object_get(host_obj, "persistent_discovery_ctrl");
+	if (attr_obj)
+		nvme_host_set_pdc_enabled(h, json_object_get_boolean(attr_obj));
 	subsys_array = json_object_object_get(host_obj, "subsystems");
 	if (!subsys_array)
 		return;
@@ -354,6 +357,9 @@ int json_update_config(nvme_root_t r, const char *config_file)
 		if (hostsymname)
 			json_object_object_add(host_obj, "hostsymname",
 					       json_object_new_string(hostsymname));
+		if (h->pdc_enabled_valid)
+			json_object_object_add(host_obj, "persistent_discovery_ctrl",
+					       json_object_new_boolean(h->pdc_enabled));
 		subsys_array = json_object_new_array();
 		nvme_for_each_subsystem(h, s) {
 			json_update_subsys(subsys_array, s);
@@ -492,6 +498,9 @@ int json_dump_tree(nvme_root_t r)
 		if (dhchap_key)
 			json_object_object_add(host_obj, "dhchap_key",
 					       json_object_new_string(dhchap_key));
+		if (h->pdc_enabled_valid)
+			json_object_object_add(host_obj, "persistent_discovery_ctrl",
+					       json_object_new_boolean(h->pdc_enabled));
 		subsys_array = json_object_new_array();
 		nvme_for_each_subsystem(h, s) {
 			json_dump_subsys(subsys_array, s);
