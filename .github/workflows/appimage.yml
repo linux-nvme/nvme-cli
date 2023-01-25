@@ -27,7 +27,7 @@ jobs:
         uses: AppImageCrafters/build-appimage@v1.3
         with:
           recipe: .github/AppImageBuilder.yml
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: AppImage
           path: '*.AppImage*'
