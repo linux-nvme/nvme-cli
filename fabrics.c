@@ -148,6 +148,14 @@ static inline int strcasecmp0(const char *s1, const char *s2)
 	return strcasecmp(s1, s2);
 }
 
+static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
+{
+	if (nvme_host_is_pdc_enabled(h, DEFAULT_PDC_ENABLED))
+		return nvme_ctrl_is_unique_discovery_ctrl(c);
+
+	return false;
+}
+
 static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
 {
 	if (!strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
@@ -675,7 +683,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			goto next;
 
 		__discover(c, &cfg, raw, connect, persistent, flags);
-		if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(c)))
+		if (!(persistent || is_persistent_discovery_ctrl(h, c)))
 			ret = nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 
@@ -751,7 +759,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 				continue;
 
 			__discover(cn, &cfg, raw, connect, persistent, flags);
-			if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(cn)))
+			if (!(persistent || is_persistent_discovery_ctrl(h, cn)))
 				ret = nvme_disconnect_ctrl(cn);
 			nvme_free_ctrl(cn);
 		}
@@ -923,7 +931,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 
 	ret = __discover(c, &cfg, raw, connect, persistent, flags);
-	if (!(persistent || nvme_ctrl_is_unique_discovery_ctrl(c)))
+	if (!(persistent || is_persistent_discovery_ctrl(h, c)))
 		nvme_disconnect_ctrl(c);
 	nvme_free_ctrl(c);
 

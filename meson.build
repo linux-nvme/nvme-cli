@@ -77,6 +77,8 @@ conf.set('CONFIG_LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
 
+conf.set10('DEFAULT_PDC_ENABLED', get_option('pdc-enabled'))
+
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
     'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
