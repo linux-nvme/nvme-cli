@@ -115,6 +115,9 @@ struct nvme_host {
 	char *hostid;
 	char *dhchap_key;
 	char *hostsymname;
+	bool pdc_enabled;
+	bool pdc_enabled_valid; /* set if pdc_enabled doesn't have an undefined
+				 * value */
 };
 
 struct nvme_root {

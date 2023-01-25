@@ -252,6 +252,19 @@ void nvme_host_set_dhchap_key(nvme_host_t h, const char *key)
 		h->dhchap_key = strdup(key);
 }
 
+void nvme_host_set_pdc_enabled(nvme_host_t h, bool enabled)
+{
+	h->pdc_enabled_valid = true;
+	h->pdc_enabled = enabled;
+}
+
+bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback)
+{
+	if (h->pdc_enabled_valid)
+		return h->pdc_enabled;
+	return fallback;
+}
+
 nvme_subsystem_t nvme_first_subsystem(nvme_host_t h)
 {
 	return list_top(&h->subsystems, struct nvme_subsystem, entry);
