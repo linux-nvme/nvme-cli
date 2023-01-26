@@ -2317,7 +2317,7 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 		json_object_add_value_uint(obj_config, "nrg", le32_to_cpu(config->nrg));
 		json_object_add_value_uint(obj_config, "nruh", le16_to_cpu(config->nruh));
 		json_object_add_value_uint(obj_config, "nnss", le32_to_cpu(config->nnss));
-		json_object_add_value_uint(obj_config, "runs", le64_to_cpu(config->runs));
+		json_object_add_value_uint64(obj_config, "runs", le64_to_cpu(config->runs));
 		json_object_add_value_uint(obj_config, "erutl", le32_to_cpu(config->erutl));
 
 		for (int j = 0; j < le16_to_cpu(config->nruh); j++) {
@@ -2442,9 +2442,9 @@ void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
 		struct nvme_fdp_ruhu_desc *ruhu = &log->ruhus[i];
 
 		printf("Reclaim Unit Handle %d Attributes: 0x%"PRIx8" (%s)\n", i, ruhu->ruha,
+				ruhu->ruha == 0x0 ? "Unused" : (
 				ruhu->ruha == 0x1 ? "Host Specified" : (
-					ruhu->ruha == 0x2 ? "Controller Specified" :
-					"Unknown"));
+				ruhu->ruha == 0x2 ? "Controller Specified" : "Unknown")));
 	}
 }
 
@@ -2498,7 +2498,7 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 		json_object_add_value_uint(obj_event, "type", event->type);
 		json_object_add_value_uint(obj_event, "fdpef", event->flags);
 		json_object_add_value_uint(obj_event, "pid", le16_to_cpu(event->pid));
-		json_object_add_value_uint(obj_event, "timestamp", le64_to_cpu(event->timestamp));
+		json_object_add_value_uint64(obj_event, "timestamp", le64_to_cpu(*(uint64_t *)&event->ts));
 		json_object_add_value_uint(obj_event, "nsid", le32_to_cpu(event->nsid));
 
 		if (event->type == NVME_FDP_EVENT_REALLOC) {
@@ -2508,7 +2508,7 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 			json_object_add_value_uint(obj_event, "nlbam", le16_to_cpu(mr->nlbam));
 
 			if (mr->flags & NVME_FDP_EVENT_REALLOC_F_LBAV)
-				json_object_add_value_uint(obj_event, "lba", le64_to_cpu(mr->lba));
+				json_object_add_value_uint64(obj_event, "lba", le64_to_cpu(mr->lba));
 		}
 
 		json_array_add_value_object(obj_events, obj_event);
@@ -2522,9 +2522,27 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 	json_free_object(root);
 }
 
+static const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
+{
+	switch (event) {
+	case NVME_FDP_EVENT_RUNFW:	return "Reclaim Unit Not Fully Written";
+	case NVME_FDP_EVENT_RUTLE:	return "Reclaim Unit Active Time Limit Exceeded";
+	case NVME_FDP_EVENT_RESET:	return "Controller Level Reset Modified Reclaim Unit Handles";
+	case NVME_FDP_EVENT_PID:	return "Invalid Placement Identifier";
+	case NVME_FDP_EVENT_REALLOC:	return "Media Reallocated";
+	case NVME_FDP_EVENT_MODIFY:	return "Implicitly Modified Reclaim Unit Handle";
+	}
+
+	return "Unknown";
+}
+
 void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 		enum nvme_print_flags flags)
 {
+	struct tm *tm;
+	char buffer[320];
+	time_t ts;
+
 	if (flags & BINARY)
 		return d_raw((unsigned char*)log, sizeof(*log));
 	if (flags & JSON)
@@ -2535,12 +2553,19 @@ void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 	for (unsigned int i = 0; i < n; i++) {
 		struct nvme_fdp_event *event = &log->events[i];
 
+		ts = int48_to_long(event->ts.timestamp) / 1000;
+		tm = localtime(&ts);
+
 		printf("Event[%u]\n", i);
-		printf("  Event Type: 0x%"PRIx8"\n", event->type);
-		printf("  FDP Event Flags (FDPEF): 0x%"PRIx8"\n", event->flags);
-		printf("  Placement Identifier (PID): 0x%"PRIx16"\n", le16_to_cpu(event->pid));
-		printf("  Event Timestamp: %"PRIu64"\n", le64_to_cpu(event->timestamp));
-		printf("  Namespace Identifier (NSID): %"PRIu32"\n", le32_to_cpu(event->nsid));
+		printf("  Event Type: 0x%"PRIx8" (%s)\n", event->type, nvme_fdp_event_to_string(event->type));
+		printf("  Event Timestamp: %"PRIu64" (%s)\n", int48_to_long(event->ts.timestamp),
+			strftime(buffer, sizeof(buffer), "%c %Z", tm) ? buffer : "-");
+
+		if (event->flags & NVME_FDP_EVENT_F_PIV)
+			printf("  Placement Identifier (PID): 0x%"PRIx16"\n", le16_to_cpu(event->pid));
+
+		if (event->flags & NVME_FDP_EVENT_F_NSIDV)
+			printf("  Namespace Identifier (NSID): %"PRIu32"\n", le32_to_cpu(event->nsid));
 
 		if (event->type == NVME_FDP_EVENT_REALLOC) {
 			struct nvme_fdp_event_realloc *mr;
@@ -2553,8 +2578,10 @@ void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 			}
 		}
 
-		printf("  Reclaim Group Identifier: %"PRIu16"\n", le16_to_cpu(event->rgid));
-		printf("  Reclaim Unit Handle Identifier %"PRIu8"\n", event->ruhid);
+		if (event->flags & NVME_FDP_EVENT_F_LV) {
+			printf("  Reclaim Group Identifier: %"PRIu16"\n", le16_to_cpu(event->rgid));
+			printf("  Reclaim Unit Handle Identifier %"PRIu8"\n", event->ruhid);
+		}
 
 		printf("\n");
 	}
@@ -2580,7 +2607,7 @@ static void json_nvme_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t 
 		json_object_add_value_uint(obj_ruhs, "pid", le16_to_cpu(ruhs->pid));
 		json_object_add_value_uint(obj_ruhs, "ruhid", le16_to_cpu(ruhs->ruhid));
 		json_object_add_value_uint(obj_ruhs, "earutr", le32_to_cpu(ruhs->earutr));
-		json_object_add_value_uint(obj_ruhs, "ruamw", le64_to_cpu(ruhs->ruamw));
+		json_object_add_value_uint64(obj_ruhs, "ruamw", le64_to_cpu(ruhs->ruamw));
 
 		json_array_add_value_object(obj_ruhss, obj_ruhs);
 	}
@@ -6850,20 +6877,6 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		le32_to_cpu(sanitize->etbend));
 	nvme_show_estimate_sanitize_time("Estimated Time For Crypto Erase (No-Deallocate)",
 		le32_to_cpu(sanitize->etcend));
-}
-
-static const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
-{
-	switch (event) {
-	case NVME_FDP_EVENT_RUNFW:	return "Reclaim Unit Not Fully Written";
-	case NVME_FDP_EVENT_RUTLE:	return "Reclaim Unit Active Time Limit Exceeded";
-	case NVME_FDP_EVENT_RESET:	return "Controller Level Reset Modified Reclaim Unit Handles";
-	case NVME_FDP_EVENT_PID:	return "Invalid Placement Identifier";
-	case NVME_FDP_EVENT_REALLOC:	return "Media Reallocated";
-	case NVME_FDP_EVENT_MODIFY:	return "Implicitly Modified Reclaim Unit Handle";
-	}
-
-	return "Unknown";
 }
 
 const char *nvme_feature_to_string(enum nvme_features_id feature)

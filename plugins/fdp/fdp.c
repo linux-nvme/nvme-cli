@@ -259,7 +259,7 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("endgrp-id",    'e', &cfg.egid,          egid),
-		OPT_FLAG("host-events",  'H', &cfg.host_events,   host_events),
+		OPT_FLAG("host-events",  'E', &cfg.host_events,   host_events),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
 		OPT_END()
