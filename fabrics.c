@@ -489,6 +489,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 
 		for (i = 0; i < numrec; i++) {
 			struct nvmf_disc_log_entry *e = &log->entries[i];
+			nvme_ctrl_t cl;
 			bool discover = false;
 			bool disconnect;
 			nvme_ctrl_t child;
@@ -504,7 +505,8 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			};
 
 			/* Already connected ? */
-			if (lookup_ctrl(r, &trcfg))
+			cl = lookup_ctrl(r, &trcfg);
+			if (cl && nvme_ctrl_get_name(cl))
 				continue;
 
 			/* Skip connect if the transport types don't match */
@@ -1056,7 +1058,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		.trsvcid	= trsvcid,
 	};
 
-	if (lookup_ctrl(r, &trcfg)) {
+	c = lookup_ctrl(r, &trcfg);
+	if (c && nvme_ctrl_get_name(c)) {
 		fprintf(stderr, "already connected\n");
 		errno = EALREADY;
 		goto out_free;
