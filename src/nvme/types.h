@@ -3369,6 +3369,18 @@ struct nvme_fw_commit_event {
 } __attribute__((packed));
 
 /**
+ * struct nvme_timestamp - Timestamp - Data Structure for Get Features
+ * @timestamp:	Timestamp value based on origin and synch field
+ * @attr:	Attribute
+ * @rsvd:	Reserved
+ */
+struct nvme_timestamp {
+	__u8 timestamp[6];
+	__u8 attr;
+	__u8 rsvd;
+};
+
+/**
  * struct nvme_time_stamp_change_event - Timestamp Change Event
  * @previous_timestamp:		Previous Timestamp
  * @ml_secs_since_reset:	Milliseconds Since Reset
@@ -4276,7 +4288,7 @@ enum nvme_fdp_event_flags {
  * @type:		Event Type (&enum nvme_fdp_event_type)
  * @flags:		Event Flags (&enum nvme_fdp_event_flags)
  * @pid:		Placement Identifier
- * @timestamp:		Timestamp
+ * @ts:			Timestamp
  * @nsid:		Namespace Identifier
  * @type_specific:	Event Type Specific Information
  * @rgid:		Reclaim Group Identifier
@@ -4288,7 +4300,7 @@ struct nvme_fdp_event {
 	__u8  type;
 	__u8  flags;
 	__u16 pid;
-	__u64 timestamp;
+	struct nvme_timestamp ts;
 	__u32 nsid;
 	__u8  type_specific[16];
 	__u16 rgid;
@@ -4511,18 +4523,6 @@ enum nvme_ns_metadata_type {
 	NVME_NS_METADATA_PRE_BOOT_NS_NAME	= 0x02,
 	NVME_NS_METADATA_OS_NS_QUAL_1		= 0x03,
 	NVME_NS_METADATA_OS_NS_QUAL_2		= 0x04,
-};
-
-/**
- * struct nvme_timestamp - Timestamp - Data Structure for Get Features
- * @timestamp:	Timestamp value based on origin and synch field
- * @attr:	Attribute
- * @rsvd:	Reserved
- */
-struct nvme_timestamp {
-	__u8 timestamp[6];
-	__u8 attr;
-	__u8 rsvd;
 };
 
 /**
