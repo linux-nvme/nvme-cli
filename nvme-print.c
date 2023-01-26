@@ -2442,9 +2442,9 @@ void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
 		struct nvme_fdp_ruhu_desc *ruhu = &log->ruhus[i];
 
 		printf("Reclaim Unit Handle %d Attributes: 0x%"PRIx8" (%s)\n", i, ruhu->ruha,
+				ruhu->ruha == 0x0 ? "Unused" : (
 				ruhu->ruha == 0x1 ? "Host Specified" : (
-					ruhu->ruha == 0x2 ? "Controller Specified" :
-					"Unknown"));
+				ruhu->ruha == 0x2 ? "Controller Specified" : "Unknown")));
 	}
 }
 
