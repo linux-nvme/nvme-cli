@@ -996,7 +996,7 @@ static int test_admin_set_features_cb(struct nvme_mi_ep *ep,
 static void test_set_features(nvme_mi_ep_t ep)
 {
 	struct nvme_set_features_args args = { 0 };
-	struct nvme_timestamp tstamp;
+	struct nvme_timestamp tstamp = { 0 };
 	nvme_mi_ctrl_t ctrl;
 	uint32_t res;
 	int rc, i;
@@ -1339,7 +1339,7 @@ static int test_admin_ns_mgmt_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
 {
-	struct nvme_id_ns nsid;
+	struct nvme_id_ns nsid = { 0 };
 	nvme_mi_ctrl_t ctrl;
 	__u32 ns;
 	int rc;
@@ -1828,8 +1828,8 @@ static int test_admin_get_log_split_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_get_log_split(struct nvme_mi_ep *ep)
 {
+	struct nvme_get_log_args args = { 0 };
 	unsigned char buf[4096 * 2 + 4];
-	struct nvme_get_log_args args;
 	struct log_data ldata;
 	nvme_mi_ctrl_t ctrl;
 	int rc;
