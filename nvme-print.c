@@ -2522,6 +2522,20 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 	json_free_object(root);
 }
 
+static const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
+{
+	switch (event) {
+	case NVME_FDP_EVENT_RUNFW:	return "Reclaim Unit Not Fully Written";
+	case NVME_FDP_EVENT_RUTLE:	return "Reclaim Unit Active Time Limit Exceeded";
+	case NVME_FDP_EVENT_RESET:	return "Controller Level Reset Modified Reclaim Unit Handles";
+	case NVME_FDP_EVENT_PID:	return "Invalid Placement Identifier";
+	case NVME_FDP_EVENT_REALLOC:	return "Media Reallocated";
+	case NVME_FDP_EVENT_MODIFY:	return "Implicitly Modified Reclaim Unit Handle";
+	}
+
+	return "Unknown";
+}
+
 void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 		enum nvme_print_flags flags)
 {
@@ -2536,11 +2550,14 @@ void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 		struct nvme_fdp_event *event = &log->events[i];
 
 		printf("Event[%u]\n", i);
-		printf("  Event Type: 0x%"PRIx8"\n", event->type);
-		printf("  FDP Event Flags (FDPEF): 0x%"PRIx8"\n", event->flags);
-		printf("  Placement Identifier (PID): 0x%"PRIx16"\n", le16_to_cpu(event->pid));
+		printf("  Event Type: 0x%"PRIx8" (%s)\n", event->type, nvme_fdp_event_to_string(event->type));
 		printf("  Event Timestamp: %"PRIu64"\n", le64_to_cpu(event->timestamp));
-		printf("  Namespace Identifier (NSID): %"PRIu32"\n", le32_to_cpu(event->nsid));
+
+		if (event->flags & NVME_FDP_EVENT_F_PIV)
+			printf("  Placement Identifier (PID): 0x%"PRIx16"\n", le16_to_cpu(event->pid));
+
+		if (event->flags & NVME_FDP_EVENT_F_NSIDV)
+			printf("  Namespace Identifier (NSID): %"PRIu32"\n", le32_to_cpu(event->nsid));
 
 		if (event->type == NVME_FDP_EVENT_REALLOC) {
 			struct nvme_fdp_event_realloc *mr;
@@ -2553,8 +2570,10 @@ void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 			}
 		}
 
-		printf("  Reclaim Group Identifier: %"PRIu16"\n", le16_to_cpu(event->rgid));
-		printf("  Reclaim Unit Handle Identifier %"PRIu8"\n", event->ruhid);
+		if (event->flags & NVME_FDP_EVENT_F_LV) {
+			printf("  Reclaim Group Identifier: %"PRIu16"\n", le16_to_cpu(event->rgid));
+			printf("  Reclaim Unit Handle Identifier %"PRIu8"\n", event->ruhid);
+		}
 
 		printf("\n");
 	}
@@ -6850,20 +6869,6 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		le32_to_cpu(sanitize->etbend));
 	nvme_show_estimate_sanitize_time("Estimated Time For Crypto Erase (No-Deallocate)",
 		le32_to_cpu(sanitize->etcend));
-}
-
-static const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
-{
-	switch (event) {
-	case NVME_FDP_EVENT_RUNFW:	return "Reclaim Unit Not Fully Written";
-	case NVME_FDP_EVENT_RUTLE:	return "Reclaim Unit Active Time Limit Exceeded";
-	case NVME_FDP_EVENT_RESET:	return "Controller Level Reset Modified Reclaim Unit Handles";
-	case NVME_FDP_EVENT_PID:	return "Invalid Placement Identifier";
-	case NVME_FDP_EVENT_REALLOC:	return "Media Reallocated";
-	case NVME_FDP_EVENT_MODIFY:	return "Implicitly Modified Reclaim Unit Handle";
-	}
-
-	return "Unknown";
 }
 
 const char *nvme_feature_to_string(enum nvme_features_id feature)
