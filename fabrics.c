@@ -755,7 +755,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 			if (!force) {
 				cn = lookup_discovery_ctrl(r, &trcfg);
 				if (cn) {
-					__discover(c, &cfg, raw, connect,
+					__discover(cn, &cfg, raw, connect,
 						   true, flags);
 					continue;
 				}
