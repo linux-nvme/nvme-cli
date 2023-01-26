@@ -575,8 +575,11 @@ static int test_admin_invalid_formats_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_invalid_formats(nvme_mi_ep_t ep)
 {
+	struct {
+		struct nvme_mi_admin_req_hdr hdr;
+		uint8_t data[4];
+	} req = { 0 };
 	struct nvme_mi_admin_resp_hdr resp = { 0 };
-	struct nvme_mi_admin_req_hdr req = { 0 };
 	nvme_mi_ctrl_t ctrl;
 	size_t len;
 	int rc;
@@ -588,37 +591,37 @@ static void test_admin_invalid_formats(nvme_mi_ep_t ep)
 
 	/* unaligned req size */
 	len = 0;
-	rc = nvme_mi_admin_xfer(ctrl, &req, 1, &resp, 0, &len);
+	rc = nvme_mi_admin_xfer(ctrl, &req.hdr, 1, &resp, 0, &len);
 	assert(rc != 0);
 
 	/* unaligned resp size */
 	len = 1;
-	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, 0, &len);
+	rc = nvme_mi_admin_xfer(ctrl, &req.hdr, 0, &resp, 0, &len);
 	assert(rc != 0);
 
 	/* unaligned resp offset */
 	len = 4;
-	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, 1, &len);
+	rc = nvme_mi_admin_xfer(ctrl, &req.hdr, 0, &resp, 1, &len);
 	assert(rc != 0);
 
 	/* resp too large */
 	len = 4096 + 4;
-	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, 0, &len);
+	rc = nvme_mi_admin_xfer(ctrl, &req.hdr, 0, &resp, 0, &len);
 	assert(rc != 0);
 
 	/* resp offset too large */
 	len = 4;
-	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, (off_t)1 << 32, &len);
+	rc = nvme_mi_admin_xfer(ctrl, &req.hdr, 0, &resp, (off_t)1 << 32, &len);
 	assert(rc != 0);
 
 	/* resp offset with no len */
 	len = 0;
-	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, 4, &len);
+	rc = nvme_mi_admin_xfer(ctrl, &req.hdr, 0, &resp, 4, &len);
 	assert(rc != 0);
 
 	/* req and resp payloads */
 	len = 4;
-	rc = nvme_mi_admin_xfer(ctrl, &req, 4, &resp, 0, &len);
+	rc = nvme_mi_admin_xfer(ctrl, &req.hdr, 4, &resp, 0, &len);
 	assert(rc != 0);
 }
 
@@ -996,7 +999,7 @@ static int test_admin_set_features_cb(struct nvme_mi_ep *ep,
 static void test_set_features(nvme_mi_ep_t ep)
 {
 	struct nvme_set_features_args args = { 0 };
-	struct nvme_timestamp tstamp;
+	struct nvme_timestamp tstamp = { 0 };
 	nvme_mi_ctrl_t ctrl;
 	uint32_t res;
 	int rc, i;
@@ -1339,7 +1342,7 @@ static int test_admin_ns_mgmt_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
 {
-	struct nvme_id_ns nsid;
+	struct nvme_id_ns nsid = { 0 };
 	nvme_mi_ctrl_t ctrl;
 	__u32 ns;
 	int rc;
@@ -1828,8 +1831,8 @@ static int test_admin_get_log_split_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_get_log_split(struct nvme_mi_ep *ep)
 {
+	struct nvme_get_log_args args = { 0 };
 	unsigned char buf[4096 * 2 + 4];
-	struct nvme_get_log_args args;
 	struct log_data ldata;
 	nvme_mi_ctrl_t ctrl;
 	int rc;
