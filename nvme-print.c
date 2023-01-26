@@ -2498,7 +2498,7 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 		json_object_add_value_uint(obj_event, "type", event->type);
 		json_object_add_value_uint(obj_event, "fdpef", event->flags);
 		json_object_add_value_uint(obj_event, "pid", le16_to_cpu(event->pid));
-		json_object_add_value_uint64(obj_event, "timestamp", le64_to_cpu(event->timestamp));
+		json_object_add_value_uint64(obj_event, "timestamp", le64_to_cpu(*(uint64_t *)&event->ts));
 		json_object_add_value_uint(obj_event, "nsid", le32_to_cpu(event->nsid));
 
 		if (event->type == NVME_FDP_EVENT_REALLOC) {
@@ -2539,6 +2539,10 @@ static const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
 void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 		enum nvme_print_flags flags)
 {
+	struct tm *tm;
+	char buffer[320];
+	time_t ts;
+
 	if (flags & BINARY)
 		return d_raw((unsigned char*)log, sizeof(*log));
 	if (flags & JSON)
@@ -2549,9 +2553,13 @@ void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 	for (unsigned int i = 0; i < n; i++) {
 		struct nvme_fdp_event *event = &log->events[i];
 
+		ts = int48_to_long(event->ts.timestamp) / 1000;
+		tm = localtime(&ts);
+
 		printf("Event[%u]\n", i);
 		printf("  Event Type: 0x%"PRIx8" (%s)\n", event->type, nvme_fdp_event_to_string(event->type));
-		printf("  Event Timestamp: %"PRIu64"\n", le64_to_cpu(event->timestamp));
+		printf("  Event Timestamp: %"PRIu64" (%s)\n", int48_to_long(event->ts.timestamp),
+			strftime(buffer, sizeof(buffer), "%c %Z", tm) ? buffer : "-");
 
 		if (event->flags & NVME_FDP_EVENT_F_PIV)
 			printf("  Placement Identifier (PID): 0x%"PRIx16"\n", le16_to_cpu(event->pid));
