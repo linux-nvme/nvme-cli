@@ -149,7 +149,7 @@ uint64_t suffix_binary_parse(const char *value)
 {
 	char *suffix;
 	errno = 0;
-	uint64_t ret = strtoll(value, &suffix, 0);
+	uint64_t ret = strtoull(value, &suffix, 0);
 	if (errno)
 		return 0;
 
