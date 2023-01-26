@@ -2317,7 +2317,7 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 		json_object_add_value_uint(obj_config, "nrg", le32_to_cpu(config->nrg));
 		json_object_add_value_uint(obj_config, "nruh", le16_to_cpu(config->nruh));
 		json_object_add_value_uint(obj_config, "nnss", le32_to_cpu(config->nnss));
-		json_object_add_value_uint(obj_config, "runs", le64_to_cpu(config->runs));
+		json_object_add_value_uint64(obj_config, "runs", le64_to_cpu(config->runs));
 		json_object_add_value_uint(obj_config, "erutl", le32_to_cpu(config->erutl));
 
 		for (int j = 0; j < le16_to_cpu(config->nruh); j++) {
@@ -2498,7 +2498,7 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 		json_object_add_value_uint(obj_event, "type", event->type);
 		json_object_add_value_uint(obj_event, "fdpef", event->flags);
 		json_object_add_value_uint(obj_event, "pid", le16_to_cpu(event->pid));
-		json_object_add_value_uint(obj_event, "timestamp", le64_to_cpu(event->timestamp));
+		json_object_add_value_uint64(obj_event, "timestamp", le64_to_cpu(event->timestamp));
 		json_object_add_value_uint(obj_event, "nsid", le32_to_cpu(event->nsid));
 
 		if (event->type == NVME_FDP_EVENT_REALLOC) {
@@ -2508,7 +2508,7 @@ static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 			json_object_add_value_uint(obj_event, "nlbam", le16_to_cpu(mr->nlbam));
 
 			if (mr->flags & NVME_FDP_EVENT_REALLOC_F_LBAV)
-				json_object_add_value_uint(obj_event, "lba", le64_to_cpu(mr->lba));
+				json_object_add_value_uint64(obj_event, "lba", le64_to_cpu(mr->lba));
 		}
 
 		json_array_add_value_object(obj_events, obj_event);
@@ -2599,7 +2599,7 @@ static void json_nvme_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t 
 		json_object_add_value_uint(obj_ruhs, "pid", le16_to_cpu(ruhs->pid));
 		json_object_add_value_uint(obj_ruhs, "ruhid", le16_to_cpu(ruhs->ruhid));
 		json_object_add_value_uint(obj_ruhs, "earutr", le32_to_cpu(ruhs->earutr));
-		json_object_add_value_uint(obj_ruhs, "ruamw", le64_to_cpu(ruhs->ruamw));
+		json_object_add_value_uint64(obj_ruhs, "ruamw", le64_to_cpu(ruhs->ruamw));
 
 		json_array_add_value_object(obj_ruhss, obj_ruhs);
 	}
