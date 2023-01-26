@@ -26,6 +26,7 @@ SYNOPSIS
 			[--show-command | -v]
 			[--dry-run | -w]
 			[--latency | -t]
+			[--storage-tag<storage-tag> | -g <storage-tag>]
 			[--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
 			[--force]
 
@@ -139,6 +140,10 @@ metadata is passes.
 -t::
 --latency::
 	Print out the latency the IOCTL took (in us).
+
+--storage-tag=<storage-tag>::
+-g <storage-tag>::
+	Variable Sized Expected Logical Block Storage Tag(ELBST).
 
 --storage-tag-check=<storage-tag-check>::
 -C <storage-tag-check>::
