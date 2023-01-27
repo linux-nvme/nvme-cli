@@ -4300,7 +4300,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		else if (cfg.stc == NVME_ST_CODE_SHORT)
 			printf("Short Device self-test started\n");
 
-		if (cfg.wait)
+		if (cfg.wait && cfg.stc != 0xf)
 			err = wait_self_test(dev);
 	} else if (err > 0) {
 		nvme_show_status(err);
