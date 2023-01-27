@@ -4265,13 +4265,13 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		" which provides the necessary log to determine the state of the device";
 	const char *namespace_id = "Indicate the namespace in which the device self-test"\
 		" has to be carried out";
-	const char * self_test_code = "This field specifies the action taken by the device self-test command : "\
-		"\n0h Show current state of device self-test operation\n"\
-		"\n1h Start a short device self-test operation\n"\
+	const char * self_test_code = "This field specifies the action taken by the device self-test command :\n"\
+		"0h Show current state of device self-test operation\n"\
+		"1h Start a short device self-test operation\n"\
 		"2h Start a extended device self-test operation\n"\
 		"eh Start a vendor specific device self-test operation\n"\
-		"fh abort the device self-test operation";
-	const char *wait = "wait for the test to finish";
+		"fh Abort the device self-test operation";
+	const char *wait = "Wait for the test to finish";
 	struct nvme_dev *dev;
 	int err;
 
