@@ -4246,7 +4246,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
-		.stc		= 0,
+		.stc		= NVME_ST_CODE_RESERVED,
 		.wait		= false,
 	};
 
@@ -4261,7 +4261,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	if (err)
 		goto ret;
 
-	if (cfg.stc == 0) {
+	if (cfg.stc == NVME_ST_CODE_RESERVED) {
 		struct nvme_self_test_log log;
 		err = nvme_cli_get_log_device_self_test(dev, &log);
 		if (err) {
@@ -4295,9 +4295,9 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	if (!err) {
 		if (cfg.stc == 0xf)
 			printf("Aborting device self-test operation\n");
-		else if (cfg.stc == 0x2)
+		else if (cfg.stc == NVME_ST_CODE_EXTENDED)
 			printf("Extended Device self-test started\n");
-		else if (cfg.stc == 0x1)
+		else if (cfg.stc == NVME_ST_CODE_SHORT)
 			printf("Short Device self-test started\n");
 
 		if (cfg.wait)
