@@ -152,6 +152,8 @@ static const char *timeout = "timeout value, in milliseconds";
 static const char *uuid_index = "UUID index";
 static const char *uuid_index_specify = "specify uuid index";
 static const char *verbose = "Increase output verbosity";
+static const char dash[51] = {[0 ... 49] = '=', '\0'};
+static const char space[51] = {[0 ... 49] = ' ', '\0'};
 
 static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
 
@@ -4180,9 +4182,6 @@ static int sleep_self_test(unsigned int seconds)
 
 	return 0;
 }
-
-static const char dash[51] = {[0 ... 49] = '=', '\0'};
-static const char space[51] = {[0 ... 49] = ' ', '\0'};
 
 static int wait_self_test(struct nvme_dev *dev)
 {
