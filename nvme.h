@@ -114,12 +114,6 @@ const char *nvme_strerror(int errnum);
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
 
-static inline void nvme_strip_spaces(char *s, int l)
-{
-        while (l && (s[l] == '\0' || s[l] == ' '))
-                s[l--] = '\0';
-}
-
 /* nvme-print.c */
 const char *nvme_select_to_string(int sel);
 

@@ -350,9 +350,9 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 		struct json_object *entry = json_create_object();
 
-		nvme_strip_spaces(e->trsvcid, NVMF_TRSVCID_SIZE);
-		nvme_strip_spaces(e->subnqn, NVMF_NQN_SIZE);
-		nvme_strip_spaces(e->traddr, NVMF_TRADDR_SIZE);
+		space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid);
+		space_strip_len(NVMF_NQN_SIZE, e->subnqn);
+		space_strip_len(NVMF_TRADDR_SIZE, e->traddr);
 
 		json_object_add_value_string(entry, "trtype",
 					     nvmf_trtype_str(e->trtype));
