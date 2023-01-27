@@ -2915,6 +2915,7 @@ enum nvme_status_result {
  * @NVME_ST_CODE_SHORT:	   Short device self-test operation.
  * @NVME_ST_CODE_EXTENDED: Extended device self-test operation.
  * @NVME_ST_CODE_VS:	   Vendor specific.
+ * @NVME_ST_CODE_ABORT:	   Abort device self-test operation.
  * @NVME_ST_CODE_SHIFT:	   Shift amount to get the code value from the
  *			   &struct nvme_st_result.dsts field.
  */
@@ -2923,6 +2924,7 @@ enum nvme_st_code {
 	NVME_ST_CODE_SHORT		= 0x1,
 	NVME_ST_CODE_EXTENDED		= 0x2,
 	NVME_ST_CODE_VS			= 0xe,
+	NVME_ST_CODE_ABORT		= 0xf,
 	NVME_ST_CODE_SHIFT		= 4,
 };
 
