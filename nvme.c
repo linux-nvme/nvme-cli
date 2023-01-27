@@ -40,6 +40,7 @@
 #include <dirent.h>
 #include <libgen.h>
 #include <zlib.h>
+#include <signal.h>
 
 #ifdef CONFIG_LIBHUGETLBFS
 #include <hugetlbfs.h>
@@ -4162,6 +4163,24 @@ ret:
 	return err;
 }
 
+static void intr_self_test(int signum)
+{
+	printf("\nInterrupted device self-test operation by %s\n", strsignal(signum));
+	errno = EINTR;
+}
+
+static int sleep_self_test(unsigned int seconds)
+{
+	errno = 0;
+
+	sleep(seconds);
+
+	if (errno)
+		return -errno;
+
+	return 0;
+}
+
 static const char dash[51] = {[0 ... 49] = '=', '\0'};
 static const char space[51] = {[0 ... 49] = ' ', '\0'};
 
@@ -4172,6 +4191,8 @@ static int wait_self_test(struct nvme_dev *dev)
 	struct nvme_id_ctrl ctrl;
 	int err, i = 0, p = 0, cnt = 0;
 	int wthr;
+
+	signal(SIGINT, intr_self_test);
 
 	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err) {
@@ -4185,7 +4206,9 @@ static int wait_self_test(struct nvme_dev *dev)
 	while (true) {
 		printf("\r[%.*s%c%.*s] %3d%%", p / 2, dash, spin[i % 4], 49 - p / 2, space, p);
 		fflush(stdout);
-		sleep(1);
+		err = sleep_self_test(1);
+		if (err)
+			return err;
 
 		err = nvme_cli_get_log_device_self_test(dev, &log);
 		if (err) {
@@ -4220,6 +4243,21 @@ static int wait_self_test(struct nvme_dev *dev)
 	}
 
 	return 0;
+}
+
+static void abort_self_test(struct nvme_dev_self_test_args *args)
+{
+	int err;
+
+	args->stc = 0xf,
+
+	err = nvme_dev_self_test(args);
+	if (!err) {
+		printf("Aborting device self-test operation\n");
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else
+		fprintf(stderr, "Device self-test: %s\n", nvme_strerror(errno));
 }
 
 static int device_self_test(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -4308,6 +4346,9 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		fprintf(stderr, "Device self-test: %s\n", nvme_strerror(errno));
 
 close_dev:
+	if (err == -EINTR)
+		abort_self_test(&args);
+
 	dev_close(dev);
 ret:
 	return err;
