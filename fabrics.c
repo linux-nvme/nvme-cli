@@ -158,7 +158,8 @@ static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
 
 static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
 {
-	if (!strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
+	if (nvme_ctrl_is_discovery_ctrl(c) &&
+	    !strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
 	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
 	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
 	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
@@ -171,7 +172,11 @@ static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
 static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
 {
 	if (!strcmp0(nvme_ctrl_get_subsysnqn(c), trcfg->subsysnqn) &&
-	    disc_ctrl_config_match(c, trcfg))
+	    !strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
+	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
+	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
+	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
+	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
 		return true;
 
 	return false;
@@ -484,6 +489,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 
 		for (i = 0; i < numrec; i++) {
 			struct nvmf_disc_log_entry *e = &log->entries[i];
+			nvme_ctrl_t cl;
 			bool discover = false;
 			bool disconnect;
 			nvme_ctrl_t child;
@@ -499,7 +505,8 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			};
 
 			/* Already connected ? */
-			if (lookup_ctrl(r, &trcfg))
+			cl = lookup_ctrl(r, &trcfg);
+			if (cl && nvme_ctrl_get_name(cl))
 				continue;
 
 			/* Skip connect if the transport types don't match */
@@ -748,7 +755,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 			if (!force) {
 				cn = lookup_discovery_ctrl(r, &trcfg);
 				if (cn) {
-					__discover(c, &cfg, raw, connect,
+					__discover(cn, &cfg, raw, connect,
 						   true, flags);
 					continue;
 				}
@@ -1051,7 +1058,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		.trsvcid	= trsvcid,
 	};
 
-	if (lookup_ctrl(r, &trcfg)) {
+	c = lookup_ctrl(r, &trcfg);
+	if (c && nvme_ctrl_get_name(c)) {
 		fprintf(stderr, "already connected\n");
 		errno = EALREADY;
 		goto out_free;
