@@ -4248,7 +4248,7 @@ static void abort_self_test(struct nvme_dev_self_test_args *args)
 {
 	int err;
 
-	args->stc = 0xf,
+	args->stc = NVME_ST_CODE_ABORT,
 
 	err = nvme_dev_self_test(args);
 	if (!err) {
@@ -4330,14 +4330,14 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	};
 	err = nvme_dev_self_test(&args);
 	if (!err) {
-		if (cfg.stc == 0xf)
+		if (cfg.stc == NVME_ST_CODE_ABORT)
 			printf("Aborting device self-test operation\n");
 		else if (cfg.stc == NVME_ST_CODE_EXTENDED)
 			printf("Extended Device self-test started\n");
 		else if (cfg.stc == NVME_ST_CODE_SHORT)
 			printf("Short Device self-test started\n");
 
-		if (cfg.wait && cfg.stc != 0xf)
+		if (cfg.wait && cfg.stc != NVME_ST_CODE_ABORT)
 			err = wait_self_test(dev);
 	} else if (err > 0) {
 		nvme_show_status(err);
