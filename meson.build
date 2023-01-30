@@ -4,7 +4,7 @@ project(
     'nvme-cli', ['c'],
     meson_version: '>= 0.50.0',
     license: 'GPL-2.0-only',
-    version: '2.2.1',
+    version: '2.3',
     default_options: [
       'c_std=gnu99',
       'buildtype=debug',
@@ -44,7 +44,7 @@ endif
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
 # Check for libnvme availability
-libnvme_dep = dependency('libnvme', version: '>=1.2', required: true,
+libnvme_dep = dependency('libnvme', version: '>=1.3', required: true,
                          fallback : ['libnvme', 'libnvme_dep'])
 libnvme_mi_dep = dependency('libnvme-mi', required: true,
                          fallback : ['libnvme', 'libnvme_mi_dep'])
