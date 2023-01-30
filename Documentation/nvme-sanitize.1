@@ -2,12 +2,12 @@
 .\"     Title: nvme-sanitize
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/02/2022
+.\"      Date: 01/30/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SANITIZE" "1" "11/02/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-SANITIZE" "1" "01/30/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -91,22 +91,26 @@ T}:T{
 Reserved
 T}
 T{
-0x01
+0x01 |
+\fIexit\-failure\fR
 T}:T{
 Exit Failure Mode
 T}
 T{
-0x02
+0x02 |
+\fIstart\-block\-erase\fR
 T}:T{
 Start a Block Erase sanitize operation
 T}
 T{
-0x03
+0x03 |
+\fIstart\-overwrite\fR
 T}:T{
 Start an Overwrite sanitize operation
 T}
 T{
-0x04
+0x04 |
+\fIstart\-crypto\-erase\fR
 T}:T{
 Start a Crypto Erase sanitize operation
 T}
@@ -139,8 +143,9 @@ Has the program issue Sanitize Command :
 .RS 4
 .\}
 .nf
-# nvme sanitize /dev/nvme0n1 \-a 0x02
-# nvme sanitize /dev/nvme0n1 \-\-sanact=0x01
+# nvme sanitize /dev/nvme0 \-a 0x02
+# nvme sanitize /dev/nvme0 \-\-sanact=0x01
+# nvme sanitize /dev/nvme0 \-\-sanact=start\-overwrite
 .fi
 .if n \{\
 .RE

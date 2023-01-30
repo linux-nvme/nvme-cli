@@ -1,0 +1,63 @@
+'\" t
+.\"     Title: nvme-fdp-stats
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 01/30/2023
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-FDP\-STATS" "1" "01/30/2023" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-fdp-stats \- Get Flexible Data Placement Statistics
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme fdp stats\fR <device> [\-\-endgrp\-id=<NUM> | \-e <NUM>]
+                          [\-\-raw\-binary | \-b]
+                          [\-\-output\-format=<FMT> | \-o <FMT>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, provide information about the FDP configuration over the life of the FDP configuration in an Endurance Group\&.
+.SH "OPTIONS"
+.PP
+\-e <NUM>, \-\-endgrp\-id=<NUM>
+.RS 4
+The endurance group identifier to use when requesting the log page\&.
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+Print the raw buffer to the standard output stream\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.SH "NVME"
+.sp
+Part of nvme\-cli

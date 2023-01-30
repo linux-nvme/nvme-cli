@@ -863,19 +863,19 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Reserved</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">0x01</p></td>
+<td align="left" valign="top"><p class="table">0x01 | <em>exit-failure</em></p></td>
 <td align="left" valign="top"><p class="table">Exit Failure Mode</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">0x02</p></td>
+<td align="left" valign="top"><p class="table">0x02 | <em>start-block-erase</em></p></td>
 <td align="left" valign="top"><p class="table">Start a Block Erase sanitize operation</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">0x03</p></td>
+<td align="left" valign="top"><p class="table">0x03 | <em>start-overwrite</em></p></td>
 <td align="left" valign="top"><p class="table">Start an Overwrite sanitize operation</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">0x04</p></td>
+<td align="left" valign="top"><p class="table">0x04 | <em>start-crypto-erase</em></p></td>
 <td align="left" valign="top"><p class="table">Start a Crypto Erase sanitize operation</p></td>
 </tr>
 </tbody>
@@ -919,8 +919,9 @@ Has the program issue Sanitize Command :
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sanitize /dev/nvme0n1 -a 0x02
-# nvme sanitize /dev/nvme0n1 --sanact=0x01</code></pre>
+<pre><code># nvme sanitize /dev/nvme0 -a 0x02
+# nvme sanitize /dev/nvme0 --sanact=0x01
+# nvme sanitize /dev/nvme0 --sanact=start-overwrite</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -937,7 +938,7 @@ Has the program issue Sanitize Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-11-02 16:43:53 CET
+ 2023-01-30 14:14:16 CET
 </div>
 </div>
 </body>

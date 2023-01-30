@@ -2,12 +2,12 @@
 .\"     Title: nvme-device-self-test
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/02/2022
+.\"      Date: 01/30/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DEVICE\-SELF\-" "1" "11/02/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-DEVICE\-SELF\-" "1" "01/30/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ nvme-device-self-test \- Perform the necessary tests to observe the performance 
 .sp
 .nf
 \fInvme device\-self\-test\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                        [\-\-self\-test\-code=<NUM> | \-s <NUM>]
+                        [\-\-self\-test\-code=<NUM> | \-s <NUM>]  [\-\-wait | \-w]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -51,7 +51,12 @@ Indicate the namespace in which the device self\-test has to be carried out
 .PP
 \-s <NUM>, \-\-self\-test\-code=<NUM>
 .RS 4
-This field specifies the action taken by the device self\-test command : 1h: Start a short device self\-test operation 2h: Start a extended device self\-test operation eh: Start a vendor specific device self\-test operation fh: abort the device self\-test operation
+This field specifies the action taken by the device self\-test command : 0h: Show current state of device self\-test operation 1h: Start a short device self\-test operation 2h: Start a extended device self\-test operation eh: Start a vendor specific device self\-test operation fh: Abort the device self\-test operation Default is 0h\&.
+.RE
+.PP
+\-w, \-\-wait
+.RS 4
+Wait for the device self test to complete before exiting The device self\-test is aborted by SIGINT signal interrupt for the wait The option is ignored if the abort self\-test code option specified\&.
 .RE
 .SH "EXAMPLES"
 .sp

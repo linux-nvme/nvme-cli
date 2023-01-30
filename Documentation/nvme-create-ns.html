@@ -760,20 +760,25 @@ nvme-create-ns(1) Manual Page
                         [--lbstm=&lt;lbstm&gt; | -l &lt;lbstm&gt;]
                         [--block-size=&lt;block-size&gt; | -b &lt;block-size&gt;]
                         [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]
-DESCRIPTION</pre>
+                        [--nsze-si=&lt;nsze-si&gt; | -S &lt;nsze-si&gt;]
+                        [--ncap-si=&lt;ncap-si&gt; | -C &lt;ncap-si&gt;]</pre>
 <div class="attribution">
 </div></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>For the NVMe device given, sends a namespace management command to create
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>For the NVMe device given, sends a namespace management command to create
 the namespace with the requested settings. On success, the namespace
-identifier assigned by the controller is returned.
-
-The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-
-OPTIONS</code></pre>
-</div></div>
+identifier assigned by the controller is returned.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
 -s
@@ -890,13 +895,50 @@ OPTIONS</code></pre>
   selected for the create-ns operation. Conflicts with --flbas argument.
 </p>
 </dd>
+<dt class="hdlist1">
+-S
+</dt>
+<dt class="hdlist1">
+--nsze-si
+</dt>
+<dd>
+<p>
+        The namespace size (NSZE) in standard SI units.
+        The value SI suffixed is divided by the namespace LBA size to set as NSZE.
+        If the value not suffixed it is set as same with the nsze option.
+</p>
+</dd>
+<dt class="hdlist1">
+-C
+</dt>
+<dt class="hdlist1">
+--ncap-si
+</dt>
+<dd>
+<p>
+        The namespace capacity (NCAP) in standard SI units.
+        The value SI suffixed is divided by the namespace LBA size to set as NCAP.
+        If the value not suffixed it is set as same with the ncap option.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples provided yet.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Create a namespace:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme create-ns /dev/nvme0 --nsze 11995709440 --ncap 1199570940 --flbas 0 --dps 0 --nmic 0
+# nvme create-ns /dev/nvme0 --nsze-si 6.14T --ncap 1199570940 --flbas 0 --dps 0 --nmic 0</code></pre>
+</div></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -910,7 +952,7 @@ OPTIONS</code></pre>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-11-02 16:43:53 CET
+ 2023-01-30 14:14:16 CET
 </div>
 </div>
 </body>

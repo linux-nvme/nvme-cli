@@ -2,12 +2,12 @@
 .\"     Title: nvme-read
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/02/2022
+.\"      Date: 01/30/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-READ" "1" "11/02/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-READ" "1" "01/30/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,6 +50,7 @@ nvme-read \- Send an NVMe Read command, provide results
                         [\-\-show\-command | \-v]
                         [\-\-dry\-run | \-w]
                         [\-\-latency | \-t]
+                        [\-\-storage\-tag<storage\-tag> | \-g <storage\-tag>]
                         [\-\-storage\-tag\-check<storage\-tag\-check> | \-C <storage\-tag\-check>]
                         [\-\-force]
 .fi
@@ -179,6 +180,11 @@ be set\&. Otherwise \-\-dry\-run option will be
 \-t, \-\-latency
 .RS 4
 Print out the latency the IOCTL took (in us)\&.
+.RE
+.PP
+\-\-storage\-tag=<storage\-tag>, \-g <storage\-tag>
+.RS 4
+Variable Sized Expected Logical Block Storage Tag(ELBST)\&.
 .RE
 .PP
 \-\-storage\-tag\-check=<storage\-tag\-check>, \-C <storage\-tag\-check>

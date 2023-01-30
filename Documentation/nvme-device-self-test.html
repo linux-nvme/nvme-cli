@@ -750,7 +750,7 @@ nvme-device-self-test(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme device-self-test</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
-                        [--self-test-code=&lt;NUM&gt; | -s &lt;NUM&gt;]</pre>
+                        [--self-test-code=&lt;NUM&gt; | -s &lt;NUM&gt;]  [--wait | -w]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -788,10 +788,25 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <dd>
 <p>
         This field specifies the action taken by the device self-test command :
+         0h: Show current state of device self-test operation
          1h: Start a short device self-test operation
          2h: Start a extended device self-test operation
          eh: Start a vendor specific device self-test operation
-         fh: abort the device self-test operation
+         fh: Abort the device self-test operation
+        Default is 0h.
+</p>
+</dd>
+<dt class="hdlist1">
+-w
+</dt>
+<dt class="hdlist1">
+--wait
+</dt>
+<dd>
+<p>
+        Wait for the device self test to complete before exiting
+        The device self-test is aborted by SIGINT signal interrupt for the wait
+        The option is ignored if the abort self-test code option specified.
 </p>
 </dd>
 </dl></div>
@@ -833,7 +848,7 @@ Abort the device self-test operation in the namespace-id 1:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-11-02 16:43:53 CET
+ 2023-01-30 14:14:16 CET
 </div>
 </div>
 </body>
