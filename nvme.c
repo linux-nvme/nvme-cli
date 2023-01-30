@@ -40,6 +40,7 @@
 #include <dirent.h>
 #include <libgen.h>
 #include <zlib.h>
+#include <signal.h>
 
 #ifdef CONFIG_LIBHUGETLBFS
 #include <hugetlbfs.h>
@@ -151,6 +152,8 @@ static const char *timeout = "timeout value, in milliseconds";
 static const char *uuid_index = "UUID index";
 static const char *uuid_index_specify = "specify uuid index";
 static const char *verbose = "Increase output verbosity";
+static const char dash[51] = {[0 ... 49] = '=', '\0'};
+static const char space[51] = {[0 ... 49] = ' ', '\0'};
 
 static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
 
@@ -4162,8 +4165,23 @@ ret:
 	return err;
 }
 
-static const char dash[51] = {[0 ... 49] = '=', '\0'};
-static const char space[51] = {[0 ... 49] = ' ', '\0'};
+static void intr_self_test(int signum)
+{
+	printf("\nInterrupted device self-test operation by %s\n", strsignal(signum));
+	errno = EINTR;
+}
+
+static int sleep_self_test(unsigned int seconds)
+{
+	errno = 0;
+
+	sleep(seconds);
+
+	if (errno)
+		return -errno;
+
+	return 0;
+}
 
 static int wait_self_test(struct nvme_dev *dev)
 {
@@ -4172,6 +4190,8 @@ static int wait_self_test(struct nvme_dev *dev)
 	struct nvme_id_ctrl ctrl;
 	int err, i = 0, p = 0, cnt = 0;
 	int wthr;
+
+	signal(SIGINT, intr_self_test);
 
 	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err) {
@@ -4185,7 +4205,9 @@ static int wait_self_test(struct nvme_dev *dev)
 	while (true) {
 		printf("\r[%.*s%c%.*s] %3d%%", p / 2, dash, spin[i % 4], 49 - p / 2, space, p);
 		fflush(stdout);
-		sleep(1);
+		err = sleep_self_test(1);
+		if (err)
+			return err;
 
 		err = nvme_cli_get_log_device_self_test(dev, &log);
 		if (err) {
@@ -4222,19 +4244,34 @@ static int wait_self_test(struct nvme_dev *dev)
 	return 0;
 }
 
+static void abort_self_test(struct nvme_dev_self_test_args *args)
+{
+	int err;
+
+	args->stc = NVME_ST_CODE_ABORT,
+
+	err = nvme_dev_self_test(args);
+	if (!err) {
+		printf("Aborting device self-test operation\n");
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else
+		fprintf(stderr, "Device self-test: %s\n", nvme_strerror(errno));
+}
+
 static int device_self_test(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc  = "Implementing the device self-test feature"\
 		" which provides the necessary log to determine the state of the device";
 	const char *namespace_id = "Indicate the namespace in which the device self-test"\
 		" has to be carried out";
-	const char * self_test_code = "This field specifies the action taken by the device self-test command : "\
-		"\n0h Show current state of device self-test operation\n"\
-		"\n1h Start a short device self-test operation\n"\
+	const char * self_test_code = "This field specifies the action taken by the device self-test command :\n"\
+		"0h Show current state of device self-test operation\n"\
+		"1h Start a short device self-test operation\n"\
 		"2h Start a extended device self-test operation\n"\
 		"eh Start a vendor specific device self-test operation\n"\
-		"fh abort the device self-test operation";
-	const char *wait = "wait for the test to finish";
+		"fh Abort the device self-test operation";
+	const char *wait = "Wait for the test to finish";
 	struct nvme_dev *dev;
 	int err;
 
@@ -4246,7 +4283,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
-		.stc		= 0,
+		.stc		= NVME_ST_CODE_RESERVED,
 		.wait		= false,
 	};
 
@@ -4261,7 +4298,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	if (err)
 		goto ret;
 
-	if (cfg.stc == 0) {
+	if (cfg.stc == NVME_ST_CODE_RESERVED) {
 		struct nvme_self_test_log log;
 		err = nvme_cli_get_log_device_self_test(dev, &log);
 		if (err) {
@@ -4293,14 +4330,14 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	};
 	err = nvme_dev_self_test(&args);
 	if (!err) {
-		if (cfg.stc == 0xf)
+		if (cfg.stc == NVME_ST_CODE_ABORT)
 			printf("Aborting device self-test operation\n");
-		else if (cfg.stc == 0x2)
+		else if (cfg.stc == NVME_ST_CODE_EXTENDED)
 			printf("Extended Device self-test started\n");
-		else if (cfg.stc == 0x1)
+		else if (cfg.stc == NVME_ST_CODE_SHORT)
 			printf("Short Device self-test started\n");
 
-		if (cfg.wait)
+		if (cfg.wait && cfg.stc != NVME_ST_CODE_ABORT)
 			err = wait_self_test(dev);
 	} else if (err > 0) {
 		nvme_show_status(err);
@@ -4308,6 +4345,9 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		fprintf(stderr, "Device self-test: %s\n", nvme_strerror(errno));
 
 close_dev:
+	if (err == -EINTR)
+		abort_self_test(&args);
+
 	dev_close(dev);
 ret:
 	return err;
