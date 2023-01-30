@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_fdp_ruh_status_desc" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_ruh_status_desc \- Reclaim Unit Handle Status Descriptor
+.SH SYNOPSIS
+struct nvme_fdp_ruh_status_desc {
+.br
+.BI "    __u16 pid;"
+.br
+.BI "    __u16 ruhid;"
+.br
+.BI "    __u32 earutr;"
+.br
+.BI "    __u64 ruamw;"
+.br
+.BI "    __u8 rsvd16[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "pid" 12
+Placement Identifier
+.IP "ruhid" 12
+Reclaim Unit Handle Identifier
+.IP "earutr" 12
+Estimated Active Reclaim Unit Time Remaining
+.IP "ruamw" 12
+Reclaim Unit Available Media Writes
+.IP "rsvd16" 12
+Reserved

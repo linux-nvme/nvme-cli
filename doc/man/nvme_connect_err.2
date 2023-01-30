@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_connect_err" "October 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_connect_err" "January 2023" "API Manual" LINUX
 .SH NAME
 enum nvme_connect_err \- nvme connect error codes
 .SH SYNOPSIS
@@ -69,6 +69,10 @@ enum nvme_connect_err {
 .br
 .br
 .BI "    ENVME_CONNECT_OPNOTSUPP"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_CONNREFUSED"
 
 };
 .SH Constants
@@ -106,3 +110,5 @@ hostnqn already in use
 invalid interface
 .IP "ENVME_CONNECT_OPNOTSUPP" 12
 not supported
+.IP "ENVME_CONNECT_CONNREFUSED" 12
+connection refused

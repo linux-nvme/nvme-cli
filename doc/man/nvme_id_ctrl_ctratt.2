@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_ctratt" "October 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_ctratt" "January 2023" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_ctratt \- Controller attributes
 .SH SYNOPSIS
@@ -65,6 +65,10 @@ enum nvme_id_ctrl_ctratt {
 .br
 .br
 .BI "    NVME_CTRL_CTRATT_ELBAS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FDPS"
 
 };
 .SH Constants
@@ -102,3 +106,5 @@ Delete Endurance Groups supported
 Delete NVM Sets supported
 .IP "NVME_CTRL_CTRATT_ELBAS" 12
 Extended LBA Formats supported
+.IP "NVME_CTRL_CTRATT_FDPS" 12
+Flexible Data Placement supported

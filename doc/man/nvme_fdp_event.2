@@ -1,0 +1,51 @@
+.TH "libnvme" 9 "struct nvme_fdp_event" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_event \- FDP Event
+.SH SYNOPSIS
+struct nvme_fdp_event {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u16 pid;"
+.br
+.BI "    struct nvme_timestamp ts;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u8 type_specific[16];"
+.br
+.BI "    __u16 rgid;"
+.br
+.BI "    __u8 ruhid;"
+.br
+.BI "    __u8 rsvd35[5];"
+.br
+.BI "    __u8 vs[24];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "type" 12
+Event Type (\fIenum nvme_fdp_event_type\fP)
+.IP "flags" 12
+Event Flags (\fIenum nvme_fdp_event_flags\fP)
+.IP "pid" 12
+Placement Identifier
+.IP "ts" 12
+Timestamp
+.IP "nsid" 12
+Namespace Identifier
+.IP "type_specific" 12
+Event Type Specific Information
+.IP "rgid" 12
+Reclaim Group Identifier
+.IP "ruhid" 12
+Reclaim Unit Handle Identifier
+.IP "rsvd35" 12
+Reserved
+.IP "vs" 12
+Vendor Specific

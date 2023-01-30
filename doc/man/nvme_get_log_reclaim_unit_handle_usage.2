@@ -1,0 +1,21 @@
+.TH "nvme_get_log_reclaim_unit_handle_usage" 9 "nvme_get_log_reclaim_unit_handle_usage" "January 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_log_reclaim_unit_handle_usage \- Get reclaim unit handle usage
+.SH SYNOPSIS
+.B "int" nvme_get_log_reclaim_unit_handle_usage
+.BI "(int fd "  ","
+.BI "__u16 egid "  ","
+.BI "__u32 offset "  ","
+.BI "__u32 len "  ","
+.BI "void *log "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "egid" 12
+Endurance group identifier
+.IP "offset" 12
+Offset into log page
+.IP "len" 12
+Length (in bytes) of provided user buffer to hold the log data
+.IP "log" 12
+Log page data buffer

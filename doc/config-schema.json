@@ -1,0 +1,172 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/linux-nvme/libnvme/doc/config-schema.json",
+    "title": "config.json",
+    "description": "libnvme JSON configuration",
+    "type": "object",
+    "properties": {
+	"hosts": {
+	    "description": "Array of NVMe Host properties",
+	    "type": "array",
+	    "items": { "$ref": "#/$defs/host" }
+	}
+    },
+    "$defs": {
+	"host": {
+	    "description": "NVMe Host properties",
+	    "type": "object",
+	    "properties": {
+		"hostnqn": {
+		    "description": "NVMe host NQN",
+		    "type": "string",
+		    "maxLength": 223
+		},
+		"hostid": {
+		    "description": "NVMe host ID",
+		    "type": "string"
+		},
+		"dhchap_key": {
+		    "description": "Host DH-HMAC-CHAP key",
+		    "type": "string"
+		},
+		"hostsymname": {
+		    "description": "NVMe host symbolic name",
+		    "type": "string"
+		},
+		"persistent_discovery_ctrl": {
+			"description": "Enable/disable Persistent Discovery Controller",
+			"type": "boolean"
+		},
+		"required": [ "hostnqn" ],
+		"subsystems": {
+		    "description": "Array of NVMe subsystem properties",
+		    "type": "array",
+		    "items": { "$ref": "#/$defs/subsystem" }
+		}
+	    }
+	},
+	"subsystem": {
+	    "description": "NVMe subsystem properties",
+	    "type": "object",
+	    "properties": {
+		"nqn": {
+		    "description": "Subsystem NQN",
+		    "type": "string",
+		    "maxLength": 223
+		},
+		"ports": {
+		    "description": "Array of NVMe subsystem ports",
+		    "type": "array",
+		    "items": { "$ref": "#/$defs/port" }
+		},
+		"required": [ "nqn" ]
+	    }
+	},
+	"port": {
+	    "description": "NVMe subsystem port",
+	    "type": "object",
+	    "properties": {
+		"transport": {
+		    "description": "Transport type",
+		    "type": "string"
+		},
+		"traddr": {
+		    "description": "Transport address",
+		    "type": "string"
+		},
+		"host_traddr": {
+		    "description": "Host transport address",
+		    "type": "string"
+		},
+		"host_iface": {
+		    "description": "Host interface name",
+		    "type": "string"
+		},
+		"trsvcid": {
+		    "description": "Transport service identifier",
+		    "type": "string"
+		},
+		"dhchap_key": {
+		    "description": "Host DH-HMAC-CHAP key",
+		    "type": "string"
+		},
+		"dhchap_ctrl_key": {
+		    "description": "Controller DH-HMAC-CHAP key",
+		    "type": "string"
+		},
+		"nr_io_queues": {
+		    "description": "Number of I/O queues",
+		    "type": "integer"
+		},
+		"nr_write_queues": {
+		    "description": "Number of write queues",
+		    "type": "integer"
+		},
+		"nr_poll_queues": {
+		    "description": "Number of poll queues",
+		    "type": "integer"
+		},
+		"queue_size": {
+		    "description": "Queue size",
+		    "type": "integer"
+		},
+		"keep_alive_tmo": {
+		    "description": "Keep-Alive timeout (in seconds)",
+		    "type": "integer"
+		},
+		"reconnect_delay": {
+		    "description": "Reconnect delay (in seconds)",
+		    "type": "integer"
+		},
+		"ctrl_loss_tmo": {
+		    "description": "Controller loss timeout (in seconds)",
+		    "type": "integer"
+		},
+		"fast_io_fail_tmo": {
+		    "description": "Fast I/O Fail timeout (in seconds)",
+		    "type": "integer",
+		    "default": 600
+		},
+		"tos": {
+		    "description": "Type of service",
+		    "type": "integer",
+		    "default": -1
+		},
+		"duplicate_connect": {
+		    "description": "Allow duplicate connections",
+		    "type": "boolean",
+		    "default": false
+		},
+		"disable_sqflow": {
+		    "description": "Explicitly disable SQ flow control",
+		    "type": "boolean",
+		    "default": false
+		},
+		"hdr_digest": {
+		    "description": "Enable header digest",
+		    "type": "boolean",
+		    "default": false
+		},
+		"data_digest": {
+		    "description": "Enable data digest",
+		    "type": "boolean",
+		    "default": false
+		},
+		"tls": {
+		    "description": "Enable TLS encryption",
+		    "type": "boolean",
+		    "default": false
+		},
+		"persistent": {
+		    "description": "Create persistent discovery connection",
+		    "type": "boolean"
+		},
+		"discovery": {
+		    "description": "Connect to a discovery controller",
+		    "type": "boolean"
+		}
+	    },
+	    "required": [ "transport" ]
+	}
+    }
+}

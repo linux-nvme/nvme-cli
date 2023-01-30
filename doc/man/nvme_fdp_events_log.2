@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_fdp_events_log" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_events_log \- FDP Events Log Page
+.SH SYNOPSIS
+struct nvme_fdp_events_log {
+.br
+.BI "    __u32 n;"
+.br
+.BI "    __u8 rsvd4[60];"
+.br
+.BI "    struct nvme_fdp_event events[63];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "n" 12
+Number of FDP Events
+.IP "rsvd4" 12
+Reserved
+.IP "events" 12
+FDP Events (\fIstruct nvme_fdp_event\fP)

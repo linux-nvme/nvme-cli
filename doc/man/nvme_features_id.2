@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_features_id" "October 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_features_id" "January 2023" "API Manual" LINUX
 .SH NAME
 enum nvme_features_id \- Features - Feature Identifiers
 .SH SYNOPSIS
@@ -108,6 +108,14 @@ enum nvme_features_id {
 , 
 .br
 .br
+.BI "    NVME_FEAT_FID_FDP"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_FDP_EVENTS"
+, 
+.br
+.br
 .BI "    NVME_FEAT_FID_ENH_CTRL_METADATA"
 , 
 .br
@@ -192,6 +200,10 @@ Endurance Group Event Configuration
 I/O Command Set Profile
 .IP "NVME_FEAT_FID_SPINUP_CONTROL" 12
 Spinup Control
+.IP "NVME_FEAT_FID_FDP" 12
+Flexible Data Placement
+.IP "NVME_FEAT_FID_FDP_EVENTS" 12
+FDP Events
 .IP "NVME_FEAT_FID_ENH_CTRL_METADATA" 12
 Enhanced Controller Metadata
 .IP "NVME_FEAT_FID_CTRL_METADATA" 12

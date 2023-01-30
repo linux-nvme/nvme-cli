@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_fdp_event_flags" "January 2023" "API Manual" LINUX
+.SH NAME
+enum nvme_fdp_event_flags \- FDP Event Flags
+.SH SYNOPSIS
+enum nvme_fdp_event_flags {
+.br
+.BI "    NVME_FDP_EVENT_F_PIV"
+, 
+.br
+.br
+.BI "    NVME_FDP_EVENT_F_NSIDV"
+, 
+.br
+.br
+.BI "    NVME_FDP_EVENT_F_LV"
+
+};
+.SH Constants
+.IP "NVME_FDP_EVENT_F_PIV" 12
+Placement Identifier Valid
+.IP "NVME_FDP_EVENT_F_NSIDV" 12
+Namespace Identifier Valid
+.IP "NVME_FDP_EVENT_F_LV" 12
+Location Valid

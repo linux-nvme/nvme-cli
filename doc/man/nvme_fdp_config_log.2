@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_fdp_config_log" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_config_log \- FDP Configurations Log Page
+.SH SYNOPSIS
+struct nvme_fdp_config_log {
+.br
+.BI "    __u16 n;"
+.br
+.BI "    __u8 version;"
+.br
+.BI "    __u8 rsvd3;"
+.br
+.BI "    __u32 size;"
+.br
+.BI "    __u8 rsvd8[8];"
+.br
+.BI "    struct nvme_fdp_config_desc configs[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "n" 12
+Number of FDP Configurations
+.IP "version" 12
+Log page version
+.IP "rsvd3" 12
+Reserved
+.IP "size" 12
+Log page size in bytes
+.IP "rsvd8" 12
+Reserved
+.IP "configs" 12
+FDP Configuration descriptors (\fIstruct nvme_fdp_config_desc\fP)

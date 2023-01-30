@@ -1,0 +1,15 @@
+.TH "nvme_ctrl_set_unique_discovery_ctrl" 9 "nvme_ctrl_set_unique_discovery_ctrl" "January 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_set_unique_discovery_ctrl \- Set the 'unique_discovery_ctrl' flag
+.SH SYNOPSIS
+.B "void" nvme_ctrl_set_unique_discovery_ctrl
+.BI "(nvme_ctrl_t c "  ","
+.BI "bool unique "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to be modified
+.IP "unique" 12
+value of the unique_disc_ctrl flag
+.SH "DESCRIPTION"
+Sets the 'unique_discovery_ctrl' flag in \fIc\fP to specify wheter
+\fIc\fP is a unique discovery controller

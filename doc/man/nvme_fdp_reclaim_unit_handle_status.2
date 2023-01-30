@@ -1,0 +1,21 @@
+.TH "nvme_fdp_reclaim_unit_handle_status" 9 "nvme_fdp_reclaim_unit_handle_status" "January 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_fdp_reclaim_unit_handle_status \- Get reclaim unit handle status
+.SH SYNOPSIS
+.B "int" nvme_fdp_reclaim_unit_handle_status
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u32 data_len "  ","
+.BI "void *data "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "data_len" 12
+Length of response buffer
+.IP "data" 12
+Response buffer
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

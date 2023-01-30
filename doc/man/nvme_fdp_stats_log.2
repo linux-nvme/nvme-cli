@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_fdp_stats_log" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_stats_log \- FDP Statistics Log Page
+.SH SYNOPSIS
+struct nvme_fdp_stats_log {
+.br
+.BI "    __u8 hbmw[16];"
+.br
+.BI "    __u8 mbmw[16];"
+.br
+.BI "    __u8 mbe[16];"
+.br
+.BI "    __u8 rsvd48[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hbmw" 12
+Host Bytes with Metadata Written
+.IP "mbmw" 12
+Media Bytes with Metadata Written
+.IP "mbe" 12
+Media Bytes Erased
+.IP "rsvd48" 12
+Reserved

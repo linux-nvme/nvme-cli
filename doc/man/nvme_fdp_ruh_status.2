@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_fdp_ruh_status" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_ruh_status \- Reclaim Unit Handle Status
+.SH SYNOPSIS
+struct nvme_fdp_ruh_status {
+.br
+.BI "    __u8 rsvd0[14];"
+.br
+.BI "    __u16 nruhsd;"
+.br
+.BI "    struct nvme_fdp_ruh_status_desc ruhss[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "nruhsd" 12
+Number of Reclaim Unit Handle Status Descriptors
+.IP "ruhss" 12
+Reclaim Unit Handle Status descriptors

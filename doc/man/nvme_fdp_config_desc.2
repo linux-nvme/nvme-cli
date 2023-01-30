@@ -1,0 +1,55 @@
+.TH "libnvme" 9 "struct nvme_fdp_config_desc" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_config_desc \- FDP Configuration Descriptor
+.SH SYNOPSIS
+struct nvme_fdp_config_desc {
+.br
+.BI "    __u16 size;"
+.br
+.BI "    __u8 fdpa;"
+.br
+.BI "    __u8 vss;"
+.br
+.BI "    __u32 nrg;"
+.br
+.BI "    __u16 nruh;"
+.br
+.BI "    __u16 maxpids;"
+.br
+.BI "    __u32 nnss;"
+.br
+.BI "    __u64 runs;"
+.br
+.BI "    __u32 erutl;"
+.br
+.BI "    __u8 rsvd28[36];"
+.br
+.BI "    struct nvme_fdp_ruh_desc ruhs[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "size" 12
+Descriptor size
+.IP "fdpa" 12
+FDP Attributes (\fIenum nvme_fdp_config_fdpa\fP)
+.IP "vss" 12
+Vendor Specific Size
+.IP "nrg" 12
+Number of Reclaim Groups
+.IP "nruh" 12
+Number of Reclaim Unit Handles
+.IP "maxpids" 12
+Max Placement Identifiers
+.IP "nnss" 12
+Number of Namespaces Supported
+.IP "runs" 12
+Reclaim Unit Nominal Size
+.IP "erutl" 12
+Estimated Reclaim Unit Time Limit
+.IP "rsvd28" 12
+Reserved
+.IP "ruhs" 12
+Reclaim Unit Handle descriptors (\fIstruct nvme_fdp_ruh_desc\fP)

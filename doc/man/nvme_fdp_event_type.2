@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum nvme_fdp_event_type" "January 2023" "API Manual" LINUX
+.SH NAME
+enum nvme_fdp_event_type \- FDP Event Types
+.SH SYNOPSIS
+enum nvme_fdp_event_type {
+.br
+.BI "    NVME_FDP_EVENT_RUNFW"
+, 
+.br
+.br
+.BI "    NVME_FDP_EVENT_RUTLE"
+, 
+.br
+.br
+.BI "    NVME_FDP_EVENT_RESET"
+, 
+.br
+.br
+.BI "    NVME_FDP_EVENT_PID"
+, 
+.br
+.br
+.BI "    NVME_FDP_EVENT_REALLOC"
+, 
+.br
+.br
+.BI "    NVME_FDP_EVENT_MODIFY"
+
+};
+.SH Constants
+.IP "NVME_FDP_EVENT_RUNFW" 12
+Reclaim Unit Not Fully Written
+.IP "NVME_FDP_EVENT_RUTLE" 12
+Reclaim Unit Time Limit Exceeded
+.IP "NVME_FDP_EVENT_RESET" 12
+Controller Level Reset Modified Reclaim Unit Handles
+.IP "NVME_FDP_EVENT_PID" 12
+Invalid Placement Identifier
+.IP "NVME_FDP_EVENT_REALLOC" 12
+Media Reallocated
+.IP "NVME_FDP_EVENT_MODIFY" 12
+Implicitly Modified Reclaim Unit Handle

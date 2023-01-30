@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_feat_fdp_events_cdw11" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_feat_fdp_events_cdw11 \- FDP Events Feature Command Dword 11
+.SH SYNOPSIS
+struct nvme_feat_fdp_events_cdw11 {
+.br
+.BI "    __u16 phndl;"
+.br
+.BI "    __u8 noet;"
+.br
+.BI "    __u8 rsvd24;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "phndl" 12
+Placement Handle
+.IP "noet" 12
+Number of FDP Event Types
+.IP "rsvd24" 12
+Reserved

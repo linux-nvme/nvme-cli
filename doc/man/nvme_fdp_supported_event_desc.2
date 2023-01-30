@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_fdp_supported_event_desc" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_supported_event_desc \- Supported FDP Event Descriptor
+.SH SYNOPSIS
+struct nvme_fdp_supported_event_desc {
+.br
+.BI "    __u8 evt;"
+.br
+.BI "    __u8 evta;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "evt" 12
+FDP Event Type
+.IP "evta" 12
+FDP Event Type Attributes (\fIenum nvme_fdp_supported_event_attributes\fP)

@@ -1,0 +1,16 @@
+.TH "nvme_mi_set_probe_enabled" 9 "nvme_mi_set_probe_enabled" "January 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_set_probe_enabled \- enable/disable the probe for new endpoints
+.SH SYNOPSIS
+.B "void" nvme_mi_set_probe_enabled
+.BI "(nvme_root_t root "  ","
+.BI "bool enabled "  ");"
+.SH ARGUMENTS
+.IP "root" 12
+\fInvme_root_t\fP object
+.IP "enabled" 12
+whether to probe new endpoints
+.SH "DESCRIPTION"
+Controls whether newly-created endpoints are probed for quirks on creation.
+Defaults to enabled, which results in some initial messaging with the
+endpoint to determine model-specific details.

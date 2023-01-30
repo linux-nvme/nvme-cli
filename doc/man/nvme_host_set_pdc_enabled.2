@@ -1,0 +1,16 @@
+.TH "nvme_host_set_pdc_enabled" 9 "nvme_host_set_pdc_enabled" "January 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_host_set_pdc_enabled \- Set Persistent Discovery Controller flag
+.SH SYNOPSIS
+.B "void" nvme_host_set_pdc_enabled
+.BI "(nvme_host_t h "  ","
+.BI "bool enabled "  ");"
+.SH ARGUMENTS
+.IP "h" 12
+Host for which the falg should be set
+.IP "enabled" 12
+The bool to set the enabled flag
+.SH "DESCRIPTION"
+When \fBnvme_host_set_pdc_enabled\fP is not used to set the PDC flag,
+\fBnvme_host_is_pdc_enabled\fP will return the default value which was
+passed into the function and not the undefined flag value.

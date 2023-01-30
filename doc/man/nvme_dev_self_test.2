@@ -1,4 +1,4 @@
-.TH "nvme_dev_self_test" 9 "nvme_dev_self_test" "October 2022" "libnvme API manual" LINUX
+.TH "nvme_dev_self_test" 9 "nvme_dev_self_test" "January 2023" "libnvme API manual" LINUX
 .SH NAME
 nvme_dev_self_test \- Start or abort a self test
 .SH SYNOPSIS
@@ -15,7 +15,7 @@ controller and may include testing of the media associated with namespaces.
 The controller may return a response to this command immediately while
 running the self-test in the background.
 
-Set the 'nsid' field to 0 to not include namepsaces in the test. Set to
+Set the 'nsid' field to 0 to not include namespaces in the test. Set to
 0xffffffff to test all namespaces. All other values tests a specific
 namespace, if present.
 .SH "RETURN"

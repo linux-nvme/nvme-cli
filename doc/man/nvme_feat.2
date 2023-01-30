@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_feat" "October 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_feat" "January 2023" "API Manual" LINUX
 .SH NAME
 enum nvme_feat \- Features Access Shifts/Masks values
 .SH SYNOPSIS
@@ -393,6 +393,30 @@ enum nvme_feat {
 .br
 .br
 .BI "    NVME_FEAT_IOCSP_IOCSCI_MASK"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FDP_ENABLED_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FDP_ENABLED_MASK"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FDP_INDEX_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FDP_INDEX_MASK"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FDP_EVENTS_ENABLE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FDP_EVENTS_ENABLE_MASK"
 
 };
 .SH Constants
@@ -494,3 +518,9 @@ enum nvme_feat {
 .IP "NVME_FEAT_WP_WPS_MASK" 12
 .IP "NVME_FEAT_IOCSP_IOCSCI_SHIFT" 12
 .IP "NVME_FEAT_IOCSP_IOCSCI_MASK" 12
+.IP "NVME_FEAT_FDP_ENABLED_SHIFT" 12
+.IP "NVME_FEAT_FDP_ENABLED_MASK" 12
+.IP "NVME_FEAT_FDP_INDEX_SHIFT" 12
+.IP "NVME_FEAT_FDP_INDEX_MASK" 12
+.IP "NVME_FEAT_FDP_EVENTS_ENABLE_SHIFT" 12
+.IP "NVME_FEAT_FDP_EVENTS_ENABLE_MASK" 12

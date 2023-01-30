@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_fdp_event_realloc" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_event_realloc \- Media Reallocated Event Type Specific Information
+.SH SYNOPSIS
+struct nvme_fdp_event_realloc {
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    __u16 nlbam;"
+.br
+.BI "    __u64 lba;"
+.br
+.BI "    __u8 rsvd12[4];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "flags" 12
+Event Type Specific flags (\fIenum nvme_fdp_event_realloc_flags\fP)
+.IP "rsvd1" 12
+Reserved
+.IP "nlbam" 12
+Number of LBAs Moved
+.IP "lba" 12
+Logical Block Address
+.IP "rsvd12" 12
+Reserved

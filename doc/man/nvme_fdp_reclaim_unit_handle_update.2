@@ -1,0 +1,21 @@
+.TH "nvme_fdp_reclaim_unit_handle_update" 9 "nvme_fdp_reclaim_unit_handle_update" "January 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_fdp_reclaim_unit_handle_update \- Update a list of reclaim unit handles
+.SH SYNOPSIS
+.B "int" nvme_fdp_reclaim_unit_handle_update
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "unsigned int npids "  ","
+.BI "__u16 *pids "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "npids" 12
+Number of placement identifiers
+.IP "pids" 12
+List of placement identifiers
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

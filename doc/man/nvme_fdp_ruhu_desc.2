@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_fdp_ruhu_desc" "January 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_fdp_ruhu_desc \- Reclaim Unit Handle Usage Descriptor
+.SH SYNOPSIS
+struct nvme_fdp_ruhu_desc {
+.br
+.BI "    __u8 ruha;"
+.br
+.BI "    __u8 rsvd1[7];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ruha" 12
+Reclaim Unit Handle Attributes (\fIenum nvme_fdp_ruha\fP)
+.IP "rsvd1" 12
+Reserved

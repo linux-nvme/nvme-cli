@@ -1,0 +1,74 @@
+.TH "nvme_mi_admin_admin_passthru" 9 "nvme_mi_admin_admin_passthru" "January 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_admin_passthru \- Submit an nvme admin passthrough command
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_admin_passthru
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "__u8 opcode "  ","
+.BI "__u8 flags "  ","
+.BI "__u16 rsvd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u32 cdw2 "  ","
+.BI "__u32 cdw3 "  ","
+.BI "__u32 cdw10 "  ","
+.BI "__u32 cdw11 "  ","
+.BI "__u32 cdw12 "  ","
+.BI "__u32 cdw13 "  ","
+.BI "__u32 cdw14 "  ","
+.BI "__u32 cdw15 "  ","
+.BI "__u32 data_len "  ","
+.BI "void *data "  ","
+.BI "__u32 metadata_len "  ","
+.BI "void *metadata "  ","
+.BI "__u32 timeout_ms "  ","
+.BI "__u32 *result "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to send command to
+.IP "opcode" 12
+The nvme admin command to send
+.IP "flags" 12
+NVMe command flags (not used)
+.IP "rsvd" 12
+Reserved for future use
+.IP "nsid" 12
+Namespace identifier
+.IP "cdw2" 12
+Command dword 2
+.IP "cdw3" 12
+Command dword 3
+.IP "cdw10" 12
+Command dword 10
+.IP "cdw11" 12
+Command dword 11
+.IP "cdw12" 12
+Command dword 12
+.IP "cdw13" 12
+Command dword 13
+.IP "cdw14" 12
+Command dword 14
+.IP "cdw15" 12
+Command dword 15
+.IP "data_len" 12
+Length of the data transferred in this command in bytes
+.IP "data" 12
+Pointer to user address of the data buffer
+.IP "metadata_len" 12
+Length of metadata transferred in this command(not used)
+.IP "metadata" 12
+Pointer to user address of the metadata buffer(not used)
+.IP "timeout_ms" 12
+How long to wait for the command to complete
+.IP "result" 12
+Optional field to return the result from the CQE dword 0
+.SH "DESCRIPTION"
+Send a customized NVMe Admin command request message and get the corresponding
+response message.
+
+This interface supports no data, host to controller and controller to
+host but it doesn't support bidirectional data transfer.
+Also this interface only supports data transfer size range [0, 4096] (bytes)
+so the & data_len parameter must be less than 4097.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.
