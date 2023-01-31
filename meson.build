@@ -199,7 +199,10 @@ conf.set10(
 conf.set(
     'HAVE_LIBNSS',
     cc.links(
-      '''int main(int argc, char **argv) {
+      '''#include <sys/types.h>
+         #include <sys/socket.h>
+         #include <netdb.h>
+         int main(int argc, char **argv) {
              struct addrinfo hints, *result;
              return getaddrinfo(argv[1], argv[2], &hints, &result);
       }
