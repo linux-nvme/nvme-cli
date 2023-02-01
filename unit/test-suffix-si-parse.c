@@ -34,14 +34,14 @@ static struct tonum_test tonum_tests[] = {
 	{ "6.14T", 512, 11992187500 },
 	{ "6.14T", 520, 11807692307 },
 	{ "6.14T", 4096, 1499023437 },
-	{ "6.14", 512, 0 },
+	{ "6.14", 512, 6 },
 	{ "6.14#", 512, 0 },
 };
 
 void tonum_test(struct tonum_test *test)
 {
 	__u64 num;
-	bool suffixed;
+	bool suffixed = false;
 
 	num = suffix_si_parse(test->val, &suffixed);
 

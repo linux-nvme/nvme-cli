@@ -84,9 +84,12 @@ uint64_t suffix_si_parse(const char *value, bool *suffixed)
 		}
 	}
 
-	if (suffix[0] != '\0')
+	if (suffix[0] != '\0') {
 		errno = EINVAL;
+		return 0;
+	}
 
+	*suffixed = false;
 	return (uint64_t)ret;
 }
 
