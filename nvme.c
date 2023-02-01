@@ -4450,6 +4450,12 @@ static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
 	return nvme_cli_get_features(dev, &args);
 }
 
+static int filter_out_flags(int status)
+{
+	return status & (NVME_GET(NVME_SCT_MASK, SCT) |
+			 NVME_GET(NVME_SC_MASK, SC));
+}
+
 static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 				 void *buf)
 {
@@ -4471,7 +4477,8 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 			d_raw(buf, cfg.data_len);
 		}
 	} else if (err > 0) {
-		if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+		if (!nvme_status_equals(filter_out_flags(err),
+					NVME_STATUS_TYPE_NVME,
 					NVME_SC_INVALID_FIELD))
 			nvme_show_status(err);
 	} else {
@@ -4529,12 +4536,14 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 	for (i = cfg.feature_id; i < feat_max; i++, feat_num++) {
 		cfg.feature_id = i;
 		err = get_feature_id_changed(dev, cfg, changed);
-		if (err && !nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+		if (err && !nvme_status_equals(filter_out_flags(err),
+					       NVME_STATUS_TYPE_NVME,
 					       NVME_SC_INVALID_FIELD))
 			break;
 	}
 
-	if (feat_num == 1 && nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+	if (feat_num == 1 && nvme_status_equals(filter_out_flags(err),
+						NVME_STATUS_TYPE_NVME,
 						NVME_SC_INVALID_FIELD))
 		nvme_show_status(err);
 
