@@ -167,14 +167,15 @@ static struct binary_suffix {
 	{30, "Gi"},
 	{20, "Mi"},
 	{10, "Ki"},
-	{0, ""}
 };
 
 const char *suffix_binary_get(long long *value)
 {
-	struct binary_suffix *s;
+	int i;
 
-	for (s = binary_suffixes; s->shift != 0; s++) {
+	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
+		struct binary_suffix *s = &binary_suffixes[i];
+
 		if (llabs(*value) >= (1LL << s->shift)) {
 			*value =
 			    (*value + (1LL << (s->shift - 1))) / (1LL << s->shift);
@@ -187,9 +188,11 @@ const char *suffix_binary_get(long long *value)
 
 const char *suffix_dbinary_get(double *value)
 {
-	struct binary_suffix *s;
+	int i;
 
-	for (s = binary_suffixes; s->shift != 0; s++) {
+	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
+		struct binary_suffix *s = &binary_suffixes[i];
+
 		if (fabs(*value) >= (1LL << s->shift)) {
 			*value = *value / (1LL << s->shift);
 			return s->suffix;
@@ -199,24 +202,35 @@ const char *suffix_dbinary_get(double *value)
 	return "";
 }
 
-uint64_t suffix_binary_parse(const char *value)
+int suffix_binary_parse(const char *str, char **endptr, uint64_t *val)
 {
-	char *suffix;
-	errno = 0;
-	uint64_t ret = strtoull(value, &suffix, 0);
-	if (errno)
-		return 0;
+	uint64_t ret;
+	int i;
 
-	struct binary_suffix *s;
-	for (s = binary_suffixes; s->shift != 0; s++) {
-		if (tolower(suffix[0]) == tolower(s->suffix[0])) {
+	ret = strtoull(str, endptr, 0);
+	if (str == *endptr ||
+	    ((ret == ULLONG_MAX) && errno == ERANGE))
+		return -EINVAL;
+
+	if (str == *endptr) {
+		*val = ret;
+		return 0;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
+		struct binary_suffix *s = &binary_suffixes[i];
+
+		if (tolower((*endptr)[0]) == tolower(s->suffix[0]) &&
+		    (s->suffix[0] != '\0' &&
+		     (((*endptr)[0] != '\0' &&
+		       (*endptr)[1] != '\0' &&
+		       (*endptr)[2] == '\0') &&
+		      (tolower((*endptr)[1]) == tolower(s->suffix[1]))))) {
 			ret <<= s->shift;
-			return ret;
+			*val = ret;
+			return 0;
 		}
 	}
 
-	if (suffix[0] != '\0')
-		errno = EINVAL;
-
-	return ret;
+	return -EINVAL;
 }
