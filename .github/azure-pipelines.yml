@@ -8,6 +8,8 @@
 
 trigger:
   - master
+pr:
+  - master
 
 jobs:
   - job: blktests
