@@ -921,31 +921,36 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	list_head_init(&log_pages);
 
 	if (cfg.csi < 0) {
-		nvme_root_t nvme_root;
-		uint64_t cap;
-		int nvme_command_set_supported;
-		int other_command_sets_supported;
-		nvme_root = nvme_scan(NULL);
-		bar = mmap_registers(nvme_root, dev);
-		nvme_free_tree(nvme_root);
+		nvme_root_t r;
+		__u64 cap;
 
-		if (!bar) {
-			goto close_dev;
+		r = nvme_scan(NULL);
+		bar = mmap_registers(r, dev);
+		nvme_free_tree(r);
+
+		if (bar) {
+			cap = mmio_read64(bar + NVME_REG_CAP);
+			munmap(bar, getpagesize());
+		} else {
+			struct nvme_get_property_args args = {
+				.args_size	= sizeof(args),
+				.fd		= dev_fd(dev),
+				.offset		= NVME_REG_CAP,
+				.value		= &cap,
+				.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			};
+			err = nvme_get_property(&args);
+			if (err)
+				goto close_dev;
 		}
-		cap = mmio_read64(bar + NVME_REG_CAP);
-		munmap(bar, getpagesize());
 
-		nvme_command_set_supported = NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM;
-		other_command_sets_supported = NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI;
-
-		if (nvme_command_set_supported)
+		if (NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM)
 			err = collect_effects_log(dev, NVME_CSI_NVM,
 						  &log_pages, flags);
 
-		if (!err && other_command_sets_supported)
+		if (!err && (NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI))
 			err = collect_effects_log(dev, NVME_CSI_ZNS,
 						  &log_pages, flags);
-
 	} else {
 		err = collect_effects_log(dev, cfg.csi, &log_pages, flags);
 	}
