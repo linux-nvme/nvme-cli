@@ -5574,7 +5574,7 @@ static void json_nvme_zns_report_zones(void *report, __u32 descs,
 		json_object_add_value_string(zone, "type",
 			zone_type_to_string(desc->zt));
 		json_object_add_value_uint(zone, "attrs", desc->za);
-		json_object_add_value_uint(zone, "attrs", desc->zai);
+		json_object_add_value_uint(zone, "attrs_info", desc->zai);
 
 		if (ext_size) {
 			if (desc->za & NVME_ZNS_ZA_ZDEV) {
