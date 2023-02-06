@@ -24,8 +24,8 @@
 struct telemetry_log {
 	struct nvme_telemetry_log *log;
 	size_t log_size;
-	json_object *root;
-	json_object *configuration;
+	struct json_object *root;
+	struct json_object *configuration;
 };
 
 #endif /* _SOLIDIGM_TELEMETRY_LOG_H */

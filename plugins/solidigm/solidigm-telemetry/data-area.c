@@ -17,7 +17,7 @@
 
 static bool telemetry_log_get_value(const struct telemetry_log *tl,
 				    uint32_t offset_bit, uint32_t size_bit,
-				    bool is_signed, json_object **val_obj)
+				    bool is_signed, struct json_object **val_obj)
 {
 	uint32_t offset_bit_from_byte;
 	uint32_t additional_size_byte;
@@ -77,16 +77,16 @@ static bool telemetry_log_get_value(const struct telemetry_log *tl,
 }
 
 static int telemetry_log_structure_parse(const struct telemetry_log *tl,
-					 json_object *struct_def,
+					 struct json_object *struct_def,
 					 size_t parent_offset_bit,
-					 json_object *output,
-					 json_object *metadata)
+					 struct json_object *output,
+					 struct json_object *metadata)
 {
-	json_object *obj_arraySizeArray = NULL;
-	json_object *obj = NULL;
-	json_object *obj_memberList;
-	json_object *major_dimension;
-	json_object *sub_output;
+	struct json_object *obj_arraySizeArray = NULL;
+	struct json_object *obj = NULL;
+	struct json_object *obj_memberList;
+	struct json_object *major_dimension;
+	struct json_object *sub_output;
 	bool is_enumeration = false;
 	bool has_member_list;
 	const char *type = "";
@@ -155,7 +155,7 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 	uint32_t array_size_dimension[array_rank];
 
 	for (size_t i = 0; i < array_rank; i++) {
-		json_object *dimension = json_object_array_get_idx(obj_arraySizeArray, i);
+		struct json_object *dimension = json_object_array_get_idx(obj_arraySizeArray, i);
 
 		array_size_dimension[i] = json_object_get_uint64(dimension);
 		major_dimension = dimension;
@@ -163,7 +163,7 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 	if (array_rank > 1) {
 		uint32_t linear_pos_per_index = array_size_dimension[0];
 		uint32_t prev_index_offset_bit = 0;
-		json_object *dimension_output;
+		struct json_object *dimension_output;
 
 		for (int i = 1; i < (array_rank - 1); i++)
 			linear_pos_per_index *= array_size_dimension[i];
@@ -182,7 +182,7 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 		json_object_array_del_idx(obj_arraySizeArray, array_rank - 1, 1);
 
 		for (int i = 0 ; i < array_size_dimension[0]; i++) {
-			json_object *sub_array = json_create_array();
+			struct json_object *sub_array = json_create_array();
 			size_t offset;
 
 			offset = parent_offset_bit + prev_index_offset_bit;
@@ -213,7 +213,7 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 	for (uint32_t j = 0; j < array_size_dimension[0]; j++) {
 		if (is_enumeration || !has_member_list) {
 			bool is_signed = !strncmp(type, SIGNED_INT_PREFIX, sizeof(SIGNED_INT_PREFIX)-1);
-			json_object *val_obj;
+			struct json_object *val_obj;
 			size_t offset;
 
 			offset = parent_offset_bit + offset_bit + linear_array_pos_bit;
@@ -230,7 +230,7 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 				json_free_object(val_obj);
 			}
 		} else {
-			json_object *sub_sub_output = json_object_new_object();
+			struct json_object *sub_sub_output = json_object_new_object();
 			int num_members;
 
 			if (array_size_dimension[0] > 1)
@@ -240,7 +240,7 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 
 			num_members = json_object_array_length(obj_memberList);
 			for (int k = 0; k < num_members; k++) {
-				json_object *member = json_object_array_get_idx(obj_memberList, k);
+				struct json_object *member = json_object_array_get_idx(obj_memberList, k);
 				size_t offset;
 
 				offset = parent_offset_bit + offset_bit + linear_array_pos_bit;
@@ -322,8 +322,8 @@ struct telemetry_object_header {
 
 static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 					      enum nvme_telemetry_da da,
-					      json_object *toc_array,
-					      json_object *tele_obj_array)
+					      struct json_object *toc_array,
+					      struct json_object *tele_obj_array)
 {
 
 	const struct telemetry_object_header *header;
@@ -339,8 +339,8 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 	payload = (char *) tl->log;
 
 	for (int i = 0; i < toc->header.TableOfContentsCount; i++) {
-		json_object *structure_definition = NULL;
-		json_object *toc_item;
+		struct json_object *structure_definition = NULL;
+		struct json_object *toc_item;
 		uint32_t obj_offset;
 		bool has_struct;
 
@@ -379,15 +379,15 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 								  &structure_definition);
 
 		if (has_struct) {
-			json_object *tele_obj_item = json_create_object();
+			struct json_object *tele_obj_item = json_create_object();
 
 			json_object_array_add(tele_obj_array, tele_obj_item);
 			json_object_get(toc_item);
 			json_object_add_value_object(tele_obj_item, "metadata", toc_item);
-			json_object *parsed_struct = json_object_new_object();
+			struct json_object *parsed_struct = json_object_new_object();
 
 			json_object_add_value_object(tele_obj_item, "objectData", parsed_struct);
-			json_object *obj_hasTelemObjHdr = NULL;
+			struct json_object *obj_hasTelemObjHdr = NULL;
 			uint32_t header_offset = sizeof(const struct telemetry_object_header);
 			uint32_t file_offset;
 
@@ -411,8 +411,8 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 int solidigm_telemetry_log_data_areas_parse(const struct telemetry_log *tl,
 					    enum nvme_telemetry_da last_da)
 {
-	json_object *tele_obj_array = json_create_array();
-	json_object *toc_array = json_create_array();
+	struct json_object *tele_obj_array = json_create_array();
+	struct json_object *toc_array = json_create_array();
 
 	json_object_add_value_array(tl->root, "tableOfContents", toc_array);
 	json_object_add_value_array(tl->root, "telemetryObjects", tele_obj_array);

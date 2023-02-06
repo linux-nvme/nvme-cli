@@ -110,9 +110,9 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 
 		UNKNOWN = 0xFF,
 	};
-	json_object *telemetry_header = NULL;
-	json_object *COD_offset = NULL;
-	json_object *reason_id = NULL;
+	struct json_object *telemetry_header = NULL;
+	struct json_object *COD_offset = NULL;
+	struct json_object *reason_id = NULL;
 
 	if (!json_object_object_get_ex(tl->root, "telemetryHeader", &telemetry_header))
 		return;
@@ -144,7 +144,7 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 		return;
 	}
 
-	json_object *cod = json_create_object();
+	struct json_object *cod = json_create_object();
 	json_object_object_add(tl->root, "cod", cod);
 
 	for (int i =0 ; i < data->header.EntryCount; i++) {
