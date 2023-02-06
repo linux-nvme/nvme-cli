@@ -31,7 +31,7 @@ includedir = join_paths(prefixdir, get_option('includedir'))
 datadir    = join_paths(prefixdir, get_option('datadir'))
 mandir     = join_paths(prefixdir, get_option('mandir'))
 bindir     = join_paths(prefixdir, get_option('bindir'))
-sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
+sysconfdir = prefixdir + get_option('sysconfdir')
 
 ################################################################################
 conf = configuration_data()
