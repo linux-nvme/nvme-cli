@@ -59,10 +59,6 @@ else
   requires = 'Requires: json-c >= 0.13'
 endif
 
-# Check for zlib availability
-libz_dep = dependency('zlib', required: true,
-                      fallback : ['zlib', 'zlib_dep'])
-
 # Check for libhugetlbfs availability (optional)
 if cc.has_header('hugetlbfs.h')
   libhugetlbfs_dep = cc.find_library('hugetlbfs',
@@ -261,7 +257,7 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libnvme_mi_dep, json_c_dep, libz_dep,
+  dependencies: [ libnvme_dep, libnvme_mi_dep, json_c_dep,
                   libhugetlbfs_dep ],
   link_args: '-ldl',
   include_directories: incdir,
