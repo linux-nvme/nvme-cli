@@ -230,7 +230,7 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 				json_free_object(val_obj);
 			}
 		} else {
-			struct json_object *sub_sub_output = json_object_new_object();
+			struct json_object *sub_sub_output = json_create_object();
 			int num_members;
 
 			if (array_size_dimension[0] > 1)
@@ -384,7 +384,7 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 			json_object_array_add(tele_obj_array, tele_obj_item);
 			json_object_get(toc_item);
 			json_object_add_value_object(tele_obj_item, "metadata", toc_item);
-			struct json_object *parsed_struct = json_object_new_object();
+			struct json_object *parsed_struct = json_create_object();
 
 			json_object_add_value_object(tele_obj_item, "objectData", parsed_struct);
 			struct json_object *obj_hasTelemObjHdr = NULL;
