@@ -10,3 +10,4 @@ option('docs-build', type : 'boolean', value : false,  description : 'build docu
 option('python', type : 'combo', choices : ['auto', 'true', 'false'], description : 'Generate libnvme python bindings')
 option('openssl', type : 'feature', value: 'auto', description : 'OpenSSL support')
 option('libdbus', type : 'feature', value: 'auto', description : 'libdbus support')
+option('json-c', type : 'feature', value: 'auto', description : 'JSON support')
