@@ -2814,10 +2814,10 @@ static int detach_ns(int argc, char **argv, struct command *cmd, struct plugin *
 static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
 			    const char *val, __u8 flbas, __u64 *num)
 {
-	bool suffixed = false;
 	struct nvme_id_ctrl ctrl;
 	__u32 nsid = 1;
 	struct nvme_id_ns ns;
+	char *endptr;
 	int err = -EINVAL;
 	int i;
 	int lbas;
@@ -2878,17 +2878,17 @@ static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
 	i = flbas & NVME_NS_FLBAS_LOWER_MASK;
 	lbas = (1 << ns.lbaf[i].ds) + ns.lbaf[i].ms;
 
-	*num = suffix_si_parse(val, &suffixed);
-
-	if (errno)
+	if (suffix_si_parse(val, &endptr, (uint64_t*)num)) {
 		fprintf(stderr,
 			"Expected long suffixed integer argument for '%s-si' but got '%s'!\n",
 			opt, val);
+		return -errno;
+	}
 
-	if (suffixed)
+	if (endptr[0] != '\0')
 		*num /= lbas;
 
-	return errno;
+	return 0;
 }
 
 static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)

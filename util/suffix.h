@@ -36,10 +36,10 @@
 #include <stdbool.h>
 
 const char *suffix_si_get(double *value);
-uint64_t suffix_si_parse(const char *value, bool *suffixed);
+int suffix_si_parse(const char *str, char **endptr, uint64_t *val);
 const char *suffix_si_get_ld(long double *value);
 const char *suffix_binary_get(long long *value);
 const char *suffix_dbinary_get(double *value);
-uint64_t suffix_binary_parse(const char *value);
+int suffix_binary_parse(const char *str, char **endptr, uint64_t *val);
 
 #endif

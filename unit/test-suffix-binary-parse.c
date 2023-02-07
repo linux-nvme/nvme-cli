@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <locale.h>
 
 #include "../util/suffix.h"
 #include "../util/types.h"
@@ -31,18 +30,11 @@ struct tonum_test {
 };
 
 static struct tonum_test tonum_tests[] = {
-	{ "11995709440", 11995709440, 0 },
-	{ "1199570940", 1199570940, 0},
-	{ "234.567M", 234567000, 0 },
-	{ "1.2k", 1200, 0 },
-	{ "6.14T", 6140000000000, 0 },
-	{ "123.4567k", 123456, 0 },
-	{ "12345.6789101112M", 12345678910, 0},
-	{ "6.14", 6, 0 },
-	{ "6.14#", 0, -EINVAL },
-	{ "2,33", 0, -EINVAL },
-	{ "3..3", 0, -EINVAL },
-	{ "123.12MM", 0, -EINVAL },
+	{ "1Ki", 1024, 0},
+	{ "34Gi", 36507222016, 0 },
+	{ "1234", 0, -EINVAL },
+	{ "34.9Ki", 0, -EINVAL},
+	{ "32Gii", 0, -EINVAL },
 };
 
 void tonum_test(struct tonum_test *test)
@@ -51,7 +43,7 @@ void tonum_test(struct tonum_test *test)
 	uint64_t num;
 	int ret;
 
-	ret = suffix_si_parse(test->val, &endptr, &num);
+	ret = suffix_binary_parse(test->val, &endptr, &num);
 	if (ret != test->ret) {
 		printf("ERROR: converting {%s} failed\n", test->val);
 		test_rc = 1;
@@ -68,7 +60,6 @@ int main(void)
 	unsigned int i;
 
 	test_rc = 0;
-	setlocale(LC_NUMERIC, "C");
 
 	for (i = 0; i < ARRAY_SIZE(tonum_tests); i++)
 		tonum_test(&tonum_tests[i]);
