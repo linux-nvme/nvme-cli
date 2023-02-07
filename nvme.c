@@ -39,7 +39,6 @@
 #include <math.h>
 #include <dirent.h>
 #include <libgen.h>
-#include <zlib.h>
 #include <signal.h>
 
 #ifdef CONFIG_LIBHUGETLBFS
@@ -62,6 +61,7 @@
 #include "nvme-print.h"
 #include "plugin.h"
 #include "util/base64.h"
+#include "util/crc32.h"
 #include "nvme-wrap.h"
 
 #include "util/argconfig.h"

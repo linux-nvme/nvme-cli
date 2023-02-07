@@ -2,9 +2,10 @@
 
 sources += [
   'util/argconfig.c',
+  'util/base64.c',
   'util/cleanup.c',
+  'util/crc32.c',
   'util/json.c',
   'util/suffix.c',
-  'util/base64.c',
   'util/types.c',
 ]
