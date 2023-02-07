@@ -3,6 +3,8 @@
 
 #include "nvme-print.h"
 
+#ifdef CONFIG_JSONC
+
 void json_simple_topology(nvme_root_t r);
 void json_print_list_items(nvme_root_t r,
 			   enum nvme_print_flags flags);
@@ -80,5 +82,65 @@ void json_predictable_latency_per_nvmset(
 /* fabrics.c */
 void json_discovery_log(struct nvmf_discovery_log *log, int numrec);
 void json_connect_msg(nvme_ctrl_t c);
+
+#else /* !CONFIG_JSONC */
+
+#define json_simple_topology(r)
+#define json_print_list_items(r, flags)
+#define json_sanitize_log(sanitize_log, devname)
+#define json_self_test_log(self_test, dst_entries)
+#define json_ana_log(ana_log, devname)
+#define json_smart_log(smart, nsid, flags)
+#define json_support_log(support_log)
+#define json_endurance_log(endurance_group, group_id)
+#define json_effects_log_list(list)
+#define json_changed_ns_list_log(log, devname)
+#define json_fw_log(fw_log, devname)
+#define json_error_log(err_log, entries)
+#define json_nvme_resv_report(status, bytes, eds)
+#define json_nvme_endurance_group_list(endgrp_list)
+#define json_id_domain_list(id_dom)
+#define json_nvme_id_uuid_list(uuid_list)
+#define json_nvme_id_ns_granularity_list(glist)
+#define json_nvme_list_secondary_ctrl(sc_list, count)
+#define json_nvme_primary_ctrl_cap(caps)
+#define json_nvme_id_nvmset(nvmset)
+#define json_nvme_list_ctrl(ctrl_list, num)
+#define json_nvme_zns_report_zones(report, descs, ext_size, report_size, zone_list)
+#define json_nvme_list_ctrl(ctrl_list, num)
+#define json_nvme_list_ns(ns_list)
+#define json_nvme_zns_id_ns(ns, id_ns)
+#define json_nvme_zns_id_ctrl(ctrl)
+#define json_nvme_nvm_id_ns(nvm_ns, ns, cap_only)
+#define json_nvme_id_ctrl_nvm(ctrl_nvm)
+#define json_nvme_id_ctrl(ctrl, vs)
+#define json_nvme_id_ns_descs(data)
+#define json_nvme_cmd_set_independent_id_ns(ns)
+#define json_ctrl_registers(bar)
+#define json_nvme_id_ns(ns, cap_only)
+#define json_print_nvme_subsystem_list(r, show_ana)
+#define json_supported_cap_config_log(cap_log)
+#define json_nvme_fdp_ruh_status(status, len)
+#define json_nvme_fdp_events(log)
+#define json_nvme_fdp_stats(log)
+#define json_nvme_fdp_usage(log, len)
+#define json_nvme_fdp_configs(log, len)
+#define json_media_unit_stat_log(mus)
+#define json_boot_part_log(bp_log)
+#define json_mi_cmd_support_effects_log(mi_cmd_log)
+#define json_fid_support_effects_log(fid_log)
+#define json_resv_notif_log(resv)
+#define json_endurance_group_event_agg_log(endurance_log, log_entries)
+#define json_lba_status_log(lba_status)
+#define add_bitmap(i, seb, root, json_flag)
+#define json_persistent_event_log(pevent_log_info, size)
+#define json_predictable_latency_event_agg_log(pea_log, log_entries)
+#define json_predictable_latency_per_nvmset(plpns_log, nvmset_id)
+
+/* fabrics.c */
+#define json_discovery_log(log, numrec)
+#define json_connect_msg(c)
+
+#endif /* !CONFIG_JSONC */
 
 #endif // NVME_PRINT_JSON_H_

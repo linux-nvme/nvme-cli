@@ -5,7 +5,12 @@ sources += [
   'util/base64.c',
   'util/cleanup.c',
   'util/crc32.c',
-  'util/json.c',
   'util/suffix.c',
   'util/types.c',
 ]
+
+if json_c_dep.found()
+  sources += [
+    'util/json.c',
+  ]
+endif
