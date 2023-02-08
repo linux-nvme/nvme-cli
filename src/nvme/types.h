@@ -5941,6 +5941,13 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_ADMIN_CMD_MEDIA_NOT_READY: Admin Command Media Not Ready: The Admin
  *				      command requires access to media and
  *				      the media is not ready.
+ * @NVME_SC_FDP_DISABLED:	      Command is not allowed when
+ *				      Flexible Data Placement is disabled.
+ * @NVME_SC_INVALID_PLACEMENT_HANDLE_LIST: The Placement Handle List is invalid
+ *				      due to invalid Reclaim Unit Handle Identifier or
+ *				      valid Reclaim Unit Handle Identifier but restricted or
+ *				      the Placement Handle List number of entries exceeded the
+ *				      maximum number allowed.
  * @NVME_SC_LBA_RANGE:		      LBA Out of Range: The command references
  *				      an LBA that exceeds the size of the namespace.
  * @NVME_SC_CAP_EXCEEDED:	      Capacity Exceeded: Execution of the
@@ -6285,6 +6292,8 @@ enum nvme_status_field {
 	NVME_SC_TRAN_TPORT_ERROR		= 0x22,
 	NVME_SC_PROHIBITED_BY_CMD_AND_FEAT	= 0x23,
 	NVME_SC_ADMIN_CMD_MEDIA_NOT_READY	= 0x24,
+	NVME_SC_FDP_DISABLED			= 0x29,
+	NVME_SC_INVALID_PLACEMENT_HANDLE_LIST	= 0x2A,
 	NVME_SC_LBA_RANGE			= 0x80,
 	NVME_SC_CAP_EXCEEDED			= 0x81,
 	NVME_SC_NS_NOT_READY			= 0x82,
