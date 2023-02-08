@@ -112,18 +112,6 @@ struct tr_config {
 	const char *trsvcid;
 };
 
-static void space_strip_len(int max, char *str)
-{
-	int i;
-
-	for (i = max - 1; i >= 0; i--) {
-		if (str[i] != '\0' && str[i] != ' ')
-			return;
-		else
-			str[i] = '\0';
-	}
-}
-
 /*
  * Compare two C strings and handle NULL pointers gracefully.
  * If either of the two strings is NULL, return 0
@@ -304,9 +292,6 @@ static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 	for (i = 0; i < numrec; i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 
-		space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid);
-		space_strip_len(NVMF_TRADDR_SIZE, e->traddr);
-
 		printf("=====Discovery Log Entry %d======\n", i);
 		printf("trtype:  %s\n", nvmf_trtype_str(e->trtype));
 		printf("adrfam:  %s\n",
@@ -354,10 +339,6 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 	for (i = 0; i < numrec; i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 		struct json_object *entry = json_create_object();
-
-		space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid);
-		space_strip_len(NVMF_NQN_SIZE, e->subnqn);
-		space_strip_len(NVMF_TRADDR_SIZE, e->traddr);
 
 		json_object_add_value_string(entry, "trtype",
 					     nvmf_trtype_str(e->trtype));
@@ -563,7 +544,6 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			} else if (errno == ENVME_CONNECT_ALREADY && !quiet) {
 				char *traddr = log->entries[i].traddr;
 
-				space_strip_len(NVMF_TRADDR_SIZE, traddr);
 				fprintf(stderr,
 					"traddr=%s is already connected\n",
 					traddr);
