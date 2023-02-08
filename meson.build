@@ -239,6 +239,7 @@ sources = [
   'nvme.c',
   'nvme-models.c',
   'nvme-print.c',
+  'nvme-print-json.c',
   'nvme-rpmb.c',
   'nvme-wrap.c',
   'plugin.c',
