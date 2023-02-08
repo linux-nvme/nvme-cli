@@ -2753,12 +2753,15 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 static void nvme_show_cmd_set_independent_id_ns_nsfeat(__u8 nsfeat)
 {
-	__u8 rsvd5 = (nsfeat & 0xE0) >> 5;
+	__u8 rsvd6 = (nsfeat & 0xE0) >> 6;
+	__u8 vwcnp = (nsfeat & 0x20) >> 5;
 	__u8 rmedia = (nsfeat & 0x10) >> 4;
 	__u8 uidreuse = (nsfeat & 0x8) >> 3;
 	__u8 rsvd0 = (nsfeat & 0x7);
-	if (rsvd5)
-		printf("  [7:5] : %#x\tReserved\n", rsvd5);
+	if (rsvd6)
+		printf("  [7:6] : %#x\tReserved\n", rsvd6);
+	printf("  [5:5] : %#x\tVolatile Write Cache is %sPresent\n",
+		vwcnp, vwcnp ? "" : "Not ");
 	printf("  [4:4] : %#x\tNamespace %sstore data on rotational media\n",
 		rmedia, rmedia ? "" : "does not ");
 	printf("  [3:3] : %#x\tNGUID and EUI64 fields if non-zero, %sReused\n",
