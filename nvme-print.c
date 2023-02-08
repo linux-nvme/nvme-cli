@@ -4689,15 +4689,27 @@ static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 		switch (doper) {
 		case NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
 			printf("\tDirective support \n");
-			printf("\t\tIdentify Directive  : %s\n",
+			printf("\t\tIdentify Directive       : %s\n",
 				(*field & 0x1) ? "supported":"not supported");
-			printf("\t\tStream Directive    : %s\n",
+			printf("\t\tStream Directive         : %s\n",
 				(*field & 0x2) ? "supported":"not supported");
-			printf("\tDirective status \n");
-			printf("\t\tIdentify Directive  : %s\n",
+			printf("\t\tData Placement Directive : %s\n",
+				(*field & 0x4) ? "supported":"not supported");
+			printf("\tDirective enabled \n");
+			printf("\t\tIdentify Directive       : %s\n",
 				(*(field + 32) & 0x1) ? "enabled" : "disabled");
-			printf("\t\tStream Directive    : %s\n",
+			printf("\t\tStream Directive         : %s\n",
 				(*(field + 32) & 0x2) ? "enabled" : "disabled");
+			printf("\t\tData Placement Directive : %s\n",
+				(*(field + 32) & 0x4) ? "enabled" : "disabled");
+			printf("\tDirective Persistent Across Controller Level Resets \n");
+			printf("\t\tIdentify Directive       : %s\n",
+				(*(field + 32) & 0x1) ? "enabled" : "disabled");
+			printf("\t\tStream Directive         : %s\n",
+				(*(field + 32) & 0x2) ? "enabled" : "disabled");
+			printf("\t\tData Placement Directive : %s\n",
+				(*(field + 32) & 0x4) ? "enabled" : "disabled");
+
 			break;
 		default:
 			fprintf(stderr,
