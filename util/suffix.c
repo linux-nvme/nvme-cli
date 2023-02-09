@@ -217,6 +217,12 @@ int suffix_binary_parse(const char *str, char **endptr, uint64_t *val)
 		return 0;
 	}
 
+	/* simple number, no decimal point, no suffix */
+	if ((*endptr)[0] == '\0') {
+		*val = ret;
+		return 0;
+	}
+
 	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
 		struct binary_suffix *s = &binary_suffixes[i];
 

@@ -30,9 +30,9 @@ struct tonum_test {
 };
 
 static struct tonum_test tonum_tests[] = {
+	{ "1234", 1234, 0 },
 	{ "1Ki", 1024, 0},
 	{ "34Gi", 36507222016, 0 },
-	{ "1234", 0, -EINVAL },
 	{ "34.9Ki", 0, -EINVAL},
 	{ "32Gii", 0, -EINVAL },
 };

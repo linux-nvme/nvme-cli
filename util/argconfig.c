@@ -293,7 +293,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				goto out;
 			}
 		} else if (s->config_type == CFG_LONG_SUFFIX) {
-			if (suffix_binary_parse(optarg, &endptr, (uint64_t*)&value_addr)) {
+			if (suffix_binary_parse(optarg, &endptr, (uint64_t*)value_addr)) {
 				fprintf(stderr,
 					"Expected long suffixed integer argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
