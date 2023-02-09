@@ -318,11 +318,12 @@ nvme_list_opts () {
 			--block-count= -c --deac -d --limited-retry -l \
 			--force-unit-access -f --prinfo= -p --ref-tag= -r \
 			--app-tag-mask= -m --app-tag= -a \
-			--storage-tag= -S --storage-tag-check -C"
+			--storage-tag= -S --storage-tag-check -C \
+			--dir-type= -T --dir-spec= -S"
 			;;
 		"write-uncor")
 		opts+=" --namespace-id= -n --start-block= -s \
-			--block-count= -c"
+			--block-count= -c --dir-type= -T --dir-spec= -S"
 			;;
 		"verify")
 		opts+=" --namespace-id= -n --start-block= -s \

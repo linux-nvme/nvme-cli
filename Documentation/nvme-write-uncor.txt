@@ -11,7 +11,8 @@ SYNOPSIS
 'nvme-write-uncor' <device> [--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>]
 			[--namespace-id=<nsid> | -n <nsid>]
-			[--force]
+			[--dir-type=<dtype> | -T <dtype>]
+			[--dir-spec=<dspec> | -S <dspec>]
 
 DESCRIPTION
 -----------
@@ -32,9 +33,13 @@ OPTIONS
 -n <nsid>::
 	Namespace ID use in the command.
 
---force::
-    Ignore namespace is currently busy and performed the operation
-    even though.
+-T <dtype>::
+--dir-type=<dtype>::
+	Directive type
+
+-S <dspec>::
+--dir-spec=<dspec>::
+	Directive specific
 
 EXAMPLES
 --------
