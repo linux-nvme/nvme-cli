@@ -20,7 +20,8 @@ SYNOPSIS
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--storage-tag<storage-tag> | -S <storage-tag>]
 			[--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
-			[--force]
+			[--dir-type=<dtype> | -T <dtype>]
+			[--dir-spec=<dspec> | -D <dspec>]
 
 DESCRIPTION
 -----------
@@ -89,9 +90,13 @@ metadata is passes.
 	This bit specifies the Storage Tag field shall be checked as part of end-to-end
 	data protection processing.
 
---force::
-    Ignore namespace is currently busy and performed the operation
-    even though.
+-T <dtype>::
+--dir-type=<dtype>::
+	Directive type
+
+-D <dspec>::
+--dir-spec=<dspec>::
+	Directive specific
 
 EXAMPLES
 --------

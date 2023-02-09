@@ -6321,18 +6321,24 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		__u32	namespace_id;
 		__u64	start_block;
 		__u16	block_count;
+		__u8	dtype;
+		__u16	dspec;
 	};
 
 	struct config cfg = {
 		.namespace_id	= 0,
 		.start_block	= 0,
 		.block_count	= 0,
+		.dtype			= 0,
+		.dspec			= 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id, namespace_desired),
 		OPT_SUFFIX("start-block", 's', &cfg.start_block,  start_block),
 		OPT_SHRT("block-count",   'c', &cfg.block_count,  block_count),
+		OPT_BYTE("dir-type",      'T', &cfg.dtype,        dtype),
+		OPT_SHRT("dir-spec",      'S', &cfg.dspec,        dspec_w_dtype),
 		OPT_END()
 	};
 
@@ -6348,12 +6354,20 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		}
 	}
 
+	if (cfg.dtype > 0xf) {
+		fprintf(stderr, "Invalid directive type, %x\n",	cfg.dtype);
+		err = -EINVAL;
+		goto close_dev;
+	}
+
 	struct nvme_io_args args = {
 		.args_size	= sizeof(args),
 		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.start_block,
 		.nlb		= cfg.block_count,
+		.control	= cfg.dtype << 4,
+		.dspec		= cfg.dspec,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
 	};
@@ -6423,6 +6437,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		__u32	namespace_id;
 		__u64	start_block;
 		__u16	block_count;
+		__u8	dtype;
 		bool	deac;
 		bool	limited_retry;
 		bool	force_unit_access;
@@ -6432,27 +6447,31 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		__u16	app_tag;
 		__u64	storage_tag;
 		bool	storage_tag_check;
+		__u16	dspec;
 	};
 
 	struct config cfg = {
 		.namespace_id		= 0,
 		.start_block		= 0,
 		.block_count		= 0,
-		.deac			= false,
+		.dtype				= 0,
+		.deac				= false,
 		.limited_retry		= false,
 		.force_unit_access	= false,
-		.prinfo			= 0,
-		.ref_tag		= 0,
+		.prinfo				= 0,
+		.ref_tag			= 0,
 		.app_tag_mask		= 0,
-		.app_tag		= 0,
+		.app_tag			= 0,
 		.storage_tag		= 0,
 		.storage_tag_check	= false,
+		.dspec				= 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
 		OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
+		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
 		OPT_FLAG("deac",              'd', &cfg.deac,              deac),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
 		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
@@ -6462,6 +6481,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
 		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
+		OPT_SHRT("dir-spec",          'D', &cfg.dspec,             dspec_w_dtype),
 		OPT_END()
 	};
 
@@ -6470,6 +6490,12 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (cfg.prinfo > 0xf) {
+		err = -EINVAL;
+		goto close_dev;
+	}
+
+	if (cfg.dtype > 0xf) {
+		fprintf(stderr, "Invalid directive type, %x\n",	cfg.dtype);
 		err = -EINVAL;
 		goto close_dev;
 	}
@@ -6483,6 +6509,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		control |= NVME_IO_DEAC;
 	if (cfg.storage_tag_check)
 		control |= NVME_IO_STC;
+	control |= (cfg.dtype << 4);
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
@@ -6515,7 +6542,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 
 	struct nvme_io_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
+		.fd			= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.start_block,
 		.nlb		= cfg.block_count,
@@ -6526,6 +6553,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		.sts		= sts,
 		.pif		= pif,
 		.storage_tag	= cfg.storage_tag,
+		.dspec		= cfg.dspec,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
 	};
