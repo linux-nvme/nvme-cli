@@ -2239,8 +2239,8 @@ struct nvme_id_ctrl_nvm {
 	__u8     wzsl;
 	__u8     wusl;
 	__u8     dmrl;
-	__u32    dmrsl;
-	__u64    dmsl;
+	__le32   dmrsl;
+	__le64   dmsl;
 	__u8     rsvd16[4080];
 };
 
@@ -2407,7 +2407,7 @@ struct nvme_secondary_ctrl_list {
  * @iocsc:	List of supported IO Command Set Combination vectors
  */
 struct nvme_id_iocs {
-	__u64 iocsc[512];
+	__le64 iocsc[512];
 };
 
 /**
@@ -4147,15 +4147,15 @@ enum nvme_fdp_config_fdpa {
  * @ruhs:	Reclaim Unit Handle descriptors (&struct nvme_fdp_ruh_desc)
  */
 struct nvme_fdp_config_desc {
-	__u16 size;
+	__le16 size;
 	__u8  fdpa;
 	__u8  vss;
-	__u32 nrg;
-	__u16 nruh;
-	__u16 maxpids;
-	__u32 nnss;
-	__u64 runs;
-	__u32 erutl;
+	__le32 nrg;
+	__le16 nruh;
+	__le16 maxpids;
+	__le32 nnss;
+	__le64 runs;
+	__le32 erutl;
 	__u8  rsvd28[36];
 	struct nvme_fdp_ruh_desc ruhs[];
 };
@@ -4170,10 +4170,10 @@ struct nvme_fdp_config_desc {
  * @configs:	FDP Configuration descriptors (&struct nvme_fdp_config_desc)
  */
 struct nvme_fdp_config_log {
-	__u16 n;
+	__le16 n;
 	__u8  version;
 	__u8  rsvd3;
-	__u32 size;
+	__le32 size;
 	__u8  rsvd8[8];
 	struct nvme_fdp_config_desc configs[];
 };
@@ -4209,7 +4209,7 @@ struct nvme_fdp_ruhu_desc {
  * @ruhus:	Reclaim Unit Handle Usage descriptors
  */
 struct nvme_fdp_ruhu_log {
-	__u16 nruh;
+	__le16 nruh;
 	__u8  rsvd2[6];
 	struct nvme_fdp_ruhu_desc ruhus[];
 };
@@ -4268,8 +4268,8 @@ enum nvme_fdp_event_realloc_flags {
 struct nvme_fdp_event_realloc {
 	__u8  flags;
 	__u8  rsvd1;
-	__u16 nlbam;
-	__u64 lba;
+	__le16 nlbam;
+	__le64 lba;
 	__u8  rsvd12[4];
 };
 
@@ -4301,11 +4301,11 @@ enum nvme_fdp_event_flags {
 struct nvme_fdp_event {
 	__u8  type;
 	__u8  flags;
-	__u16 pid;
+	__le16 pid;
 	struct nvme_timestamp ts;
-	__u32 nsid;
+	__le32 nsid;
 	__u8  type_specific[16];
-	__u16 rgid;
+	__le16 rgid;
 	__u8  ruhid;
 	__u8  rsvd35[5];
 	__u8  vs[24];
@@ -4318,7 +4318,7 @@ struct nvme_fdp_event {
  * @events:	FDP Events (&struct nvme_fdp_event)
  */
 struct nvme_fdp_events_log {
-	__u32 n;
+	__le32 n;
 	__u8  rsvd4[60];
 	struct nvme_fdp_event events[63];
 };
@@ -4330,7 +4330,7 @@ struct nvme_fdp_events_log {
  * @rsvd24:	Reserved
  */
 struct nvme_feat_fdp_events_cdw11 {
-	__u16 phndl;
+	__le16 phndl;
 	__u8  noet;
 	__u8  rsvd24;
 };
@@ -4364,10 +4364,10 @@ struct nvme_fdp_supported_event_desc {
  * @rsvd16:	Reserved
  */
 struct nvme_fdp_ruh_status_desc {
-	__u16 pid;
-	__u16 ruhid;
-	__u32 earutr;
-	__u64 ruamw;
+	__le16 pid;
+	__le16 ruhid;
+	__le32 earutr;
+	__le64 ruamw;
 	__u8  rsvd16[16];
 };
 
@@ -4379,7 +4379,7 @@ struct nvme_fdp_ruh_status_desc {
  */
 struct nvme_fdp_ruh_status {
 	__u8  rsvd0[14];
-	__u16 nruhsd;
+	__le16 nruhsd;
 	struct nvme_fdp_ruh_status_desc ruhss[];
 };
 
@@ -4445,7 +4445,7 @@ enum nvme_apst_entry {
 struct nvme_metadata_element_desc {
 	__u8	type;
 	__u8	rev;
-	__u16	len;
+	__le16	len;
 	__u8	val[0];
 };
 
@@ -4541,8 +4541,8 @@ struct nvme_lba_range_type_entry {
 	__u8	type;
 	__u8	attributes;
 	__u8	rsvd2[14];
-	__u64	slba;
-	__u64	nlb;
+	__le64	slba;
+	__le64	nlb;
 	__u8	guid[16];
 	__u8	rsvd48[16];
 };
@@ -4779,10 +4779,12 @@ struct nvme_id_directives {
  * enum nvme_directive_types - Directives Supported or Enabled
  * @NVME_ID_DIR_ID_BIT: Identify directive is supported
  * @NVME_ID_DIR_SD_BIT: Streams directive is supported
+ * @NVME_ID_DIR_DP_BIT: Direct Placement directive is supported
  */
 enum nvme_directive_types {
 	NVME_ID_DIR_ID_BIT	= 0,
 	NVME_ID_DIR_SD_BIT	= 1,
+	NVME_ID_DIR_DP_BIT	= 2,
 };
 
 /**
@@ -4973,7 +4975,7 @@ union nvmf_tsas {
 		__u8	prtype;
 		__u8	cms;
 		__u8	rsvd3[5];
-		__u16	pkey;
+		__le16	pkey;
 		__u8	rsvd10[246];
 	} rdma;
 	struct tcp {
