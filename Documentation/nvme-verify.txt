@@ -18,7 +18,7 @@ SYNOPSIS
             [--app-tag-mask=<appmask> | -m <appmask>]
             [--app-tag=<apptag> | -a <apptag>]
             [--storage-tag<storage-tag> | -S <storage-tag>]
-            [--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
+            [--storage-tag-check | -C]
 
 DESCRIPTION
 -----------
@@ -75,13 +75,13 @@ metadata is passes.
 -a <apptag>::
 	Optional application tag when used with protection information.
 
---storage-tag=<storage-tag>::
 -S <storage-tag>::
+--storage-tag=<storage-tag>::
 	Variable Sized Expected Logical Block Storage Tag(ELBST).
 
---storage-tag-check=<storage-tag-check>::
--C <storage-tag-check>::
-	This bit specifies the Storage Tag field shall be checked as part of Verify operation.
+-C::
+--storage-tag-check::
+	This flag enables Storage Tag field checking as part of Verify operation.
 
 EXAMPLES
 --------
