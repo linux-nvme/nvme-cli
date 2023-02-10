@@ -823,6 +823,20 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 				 * on exit.
 				 */
 				persistent = true;
+				/*
+				 * When --host-traddr/--host-iface are not specified on the
+				 * command line, use the discovery controller's (c) host-
+				 * traddr/host-iface for the connections to controllers
+				 * returned in the Discovery Log Pages. This is essential
+				 * when invoking "connect-all" with --device to reuse an
+				 * existing persistent discovery controller (as is done
+				 * for the udev rules). This ensures that host-traddr/
+				 * host-iface are consistent with the discovery controller (c).
+				 */
+				if (!cfg.host_traddr)
+					cfg.host_traddr = (char *)nvme_ctrl_get_host_traddr(c);
+				if (!cfg.host_iface)
+					cfg.host_iface = (char *)nvme_ctrl_get_host_iface(c);
 			}
 		} else {
 			/*
