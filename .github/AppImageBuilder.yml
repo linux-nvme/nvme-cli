@@ -28,17 +28,15 @@ AppDir:
     include:
       - libjson-c5
       - libhugetlbfs0
+      - libssl3
   files:
     include:
-    - /lib64/libcrypto.so.3
-    - /lib64/libdbus-1.so.3
-    - /lib64/libjson-c.so.5
+      - libcrypt.so.3
+      - libdbus-1.so.3
+      - libjson-c.so.5
     exclude:
-    - usr/share/man
-    - usr/share/doc/*/README.*
-    - usr/share/doc/*/changelog.*
-    - usr/share/doc/*/NEWS.*
-    - usr/share/doc/*/TODO.*
+      - usr/share/man
+      - usr/share/doc
   test:
     fedora-30:
       image: appimagecrafters/tests-env:fedora-30
