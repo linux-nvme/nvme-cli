@@ -2,6 +2,7 @@
 #ifndef __JSON__H
 #define __JSON__H
 
+#ifdef CONFIG_JSONC
 #include <json.h>
 #include "util/types.h"
 
@@ -48,4 +49,11 @@ struct json_object *util_json_object_new_uint128(nvme_uint128_t val);
 struct json_object *util_json_object_new_uint128(nvme_uint128_t val);
 
 uint64_t util_json_object_get_uint64(struct json_object *obj);
+
+#else /* !CONFIG_JSONC */
+
+struct json_object;
+
+#endif
+
 #endif

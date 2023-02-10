@@ -148,4 +148,11 @@ const char *nvme_select_to_string(int sel);
 const char *nvme_feature_to_string(enum nvme_features_id feature);
 const char *nvme_register_to_string(int reg);
 
+void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len);
+char *zone_type_to_string(__u8 cond);
+char *zone_state_to_string(__u8 state);
+const char *nvme_pel_event_to_string(int type);
+const char *get_sanitize_log_sstat_status_str(__u16 status);
+const char *nvme_ana_state_to_string(enum nvme_ana_state state);
+
 #endif

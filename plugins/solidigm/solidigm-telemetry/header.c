@@ -63,10 +63,10 @@ static_assert(sizeof(const struct reason_indentifier_1_2) ==
 #pragma pack(pop, reason_indentifier)
 
 static void telemetry_log_reason_id_parse1_0_ext(const struct telemetry_log *tl,
-						 json_object *reason_id)
+						 struct json_object *reason_id)
 {
 	const struct reason_indentifier_1_0 *ri;
-	json_object *reserved;
+	struct json_object *reserved;
 
 	ri = (struct reason_indentifier_1_0 *) tl->log->rsnident;
 	json_object_object_add(reason_id, "FirmwareVersion", json_object_new_string_len(ri->FirmwareVersion, sizeof(ri->FirmwareVersion)));
@@ -76,16 +76,16 @@ static void telemetry_log_reason_id_parse1_0_ext(const struct telemetry_log *tl,
 	reserved = json_create_array();
 	json_object_add_value_array(reason_id, "Reserved", reserved);
 	for ( int i=0; i < sizeof(ri->Reserved); i++) {
-		json_object *val = json_object_new_int(ri->Reserved[i]);
+		struct json_object *val = json_object_new_int(ri->Reserved[i]);
 		json_object_array_add(reserved, val);
 	}
 }
 
 static void telemetry_log_reason_id_parse1_1_ext(const struct telemetry_log *tl,
-						 json_object *reason_id)
+						 struct json_object *reason_id)
 {
 	const struct reason_indentifier_1_1 *ri;
-	json_object *reserved;
+	struct json_object *reserved;
 
 	ri = (struct reason_indentifier_1_1 *) tl->log->rsnident;
 	json_object_object_add(reason_id, "FirmwareVersion", json_object_new_string_len(ri->FirmwareVersion, sizeof(ri->FirmwareVersion)));
@@ -98,17 +98,17 @@ static void telemetry_log_reason_id_parse1_1_ext(const struct telemetry_log *tl,
 	reserved = json_create_array();
 	json_object_add_value_array(reason_id, "Reserved", reserved);
 	for (int i = 0; i < sizeof(ri->Reserved); i++) {
-		json_object *val = json_object_new_int(ri->Reserved[i]);
+		struct json_object *val = json_object_new_int(ri->Reserved[i]);
 		json_object_array_add(reserved, val);
 	}
 }
 
 static void telemetry_log_reason_id_parse1_2_ext(const struct telemetry_log *tl,
-						 json_object *reason_id)
+						 struct json_object *reason_id)
 {
 	const struct reason_indentifier_1_2 *ri;
-	json_object *dp_reserved;
-	json_object *reserved;
+	struct json_object *dp_reserved;
+	struct json_object *reserved;
 
 	ri = (struct reason_indentifier_1_2 *) tl->log->rsnident;
 
@@ -121,19 +121,19 @@ static void telemetry_log_reason_id_parse1_2_ext(const struct telemetry_log *tl,
 	reserved = json_create_array();
 	json_object_add_value_array(reason_id, "Reserved2", reserved);
 	for (int i = 0; i < sizeof(ri->Reserved2); i++) {
-		json_object *val = json_object_new_int(ri->Reserved2[i]);
+		struct json_object *val = json_object_new_int(ri->Reserved2[i]);
 		json_object_array_add(reserved, val);
 	}
 
 	dp_reserved = json_create_array();
 	json_object_add_value_array(reason_id, "DualPortReserved", dp_reserved);
 	for (int i = 0; i < sizeof(ri->DualPortReserved); i++) {
-		json_object *val =  json_object_new_int(ri->DualPortReserved[i]);
+		struct json_object *val =  json_object_new_int(ri->DualPortReserved[i]);
 		json_object_array_add(dp_reserved, val);
 	}
 }
 
-static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *tl, json_object *reason_id)
+static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *tl, struct json_object *reason_id)
 {
 	const struct reason_indentifier_1_0 *ri1_0 =
 		(struct reason_indentifier_1_0 *) tl->log->rsnident;
@@ -161,9 +161,9 @@ static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *t
 bool solidigm_telemetry_log_header_parse(const struct telemetry_log *tl)
 {
 	const struct nvme_telemetry_log *log;
-	json_object *ieee_oui_id;
-	json_object *reason_id;
-	json_object *header;
+	struct json_object *ieee_oui_id;
+	struct json_object *reason_id;
+	struct json_object *header;
 
 	if (tl->log_size < sizeof(const struct nvme_telemetry_log)) {
 		SOLIDIGM_LOG_WARNING("Telemetry log too short.");
@@ -180,7 +180,7 @@ bool solidigm_telemetry_log_header_parse(const struct telemetry_log *tl)
 
 	json_object_object_add(header, "ieeeOuiIdentifier", ieee_oui_id);
 	for (int i = 0; i < sizeof(log->ieee); i++) {
-		json_object *val = json_object_new_int(log->ieee[i]);
+		struct json_object *val = json_object_new_int(log->ieee[i]);
 
 		json_object_array_add(ieee_oui_id, val);
 	}

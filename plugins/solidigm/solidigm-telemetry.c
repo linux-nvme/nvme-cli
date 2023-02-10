@@ -121,7 +121,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 				cfg.cfg_file, strerror(err));
 			goto close_fd;
 		}
-		json_tokener * jstok = json_tokener_new();
+		struct json_tokener * jstok = json_tokener_new();
 
 		tl.configuration = json_tokener_parse_ex(jstok, conf_str, length);
 		if (jstok->err != json_tokener_success)	{

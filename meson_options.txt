@@ -9,3 +9,4 @@ option('nvme-tests', type : 'boolean', value : false, description: 'Run tests ag
 option('docs', type : 'combo', choices : ['false', 'html', 'man', 'all'], description : 'install documentation')
 option('docs-build', type : 'boolean', value : false, description : 'build documentation')
 option('pdc-enabled', type: 'boolean', value : false, description : 'set default Persistent Discovery Controllers behavior')
+option('json-c', type: 'feature', value: 'auto', description: 'JSON suppport')
