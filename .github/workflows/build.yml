@@ -1,4 +1,4 @@
-name: libnvme meson CI
+name: libnvme build
 
 on:
   push:
