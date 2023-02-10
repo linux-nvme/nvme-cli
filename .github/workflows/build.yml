@@ -1,4 +1,4 @@
-name: libnvme meson CI
+name: libnvme build
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --werror
+          setup-options: --werror -Dlibdbus=enabled
           options: --verbose
           action: test
       # Preserve meson's log file on failure
@@ -131,7 +131,7 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --wrap-mode=forcefallback
+          setup-options: --wrap-mode=forcefallback -Dlibdbus=enabled
           options: --verbose
           action: test
           meson-version: 0.61.2
@@ -153,7 +153,7 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --wrap-mode=forcefallback --default-library=static
+          setup-options: --wrap-mode=forcefallback --default-library=static -Dlibdbus=enabled
           options: --verbose
           action: test
           meson-version: 0.61.2
@@ -175,7 +175,7 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --wrap-mode=forcefallback --cross-file=.github/cross/ubuntu-static.txt --default-library=static
+          setup-options: --wrap-mode=forcefallback --cross-file=.github/cross/ubuntu-static.txt --default-library=static -Dlibdbus=enabled
           options: --verbose
           action: test
           meson-version: 0.61.2
