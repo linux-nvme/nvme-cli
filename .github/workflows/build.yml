@@ -244,3 +244,47 @@ jobs:
         with:
           name: cross s390x build log
           path: build/meson-logs/meson-log.txt
+
+  build-minimal:
+    name: muon minimal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build muon and samurai build-tool
+        run: |
+          mkdir build-tools
+          cd build-tools
+          git clone --depth 1 https://git.sr.ht/~lattis/muon
+          cd muon
+
+          export CC=gcc
+          export ninja=build/samu
+
+          ./tools/bootstrap_ninja.sh build
+          ./bootstrap.sh build
+
+          build/muon setup               \
+              -Dlibcurl=disabled         \
+              -Dlibarchive=disabled      \
+              -Ddocs=disabled            \
+              -Dsamurai=disabled         \
+              build
+          build/samu -C build
+          build/muon -C build test
+      - name: fetch libnvme
+        run: |
+          cd subprojects
+          git clone https://github.com/linux-nvme/libnvme.git
+          libnvme_ref=$(sed -n "s/revision = \([0-9a-z]\+\)/\1/p" libnvme.wrap)
+          git -C libnvme checkout $libnvme_ref
+      - name: build
+        run: |
+          export PATH=$(pwd)/build-tools/muon/build:$PATH
+
+          muon setup                     \
+              -Dlibnvme:python=false     \
+              -Dlibnvme:json-c=disabled  \
+              -Djson-c=disabled          \
+              build
+          samu -C build
+          muon -C build test
