@@ -18,8 +18,9 @@ SYNOPSIS
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--hostid=<hostid>        | -I <hostid>]
 		[--raw=<filename>         | -r <filename>]
+		[--device=<device>        | -d <device>]
 		[--cfg-file=<cfg>         | -C <cfg>]
-		[--keep-alive-tmo=<#>     | -k <#>]
+		[--keep-alive-tmo=<sec>   | -k <sec>]
 		[--reconnect-delay=<#>    | -c <#>]
 		[--ctrl-loss-tmo=<#>	  | -l <#>]
 		[--hdr-digest             | -g]
@@ -113,6 +114,13 @@ OPTIONS
 	This field will take the output of the 'nvme connect-all' command
 	and dump it to a raw binary file. By default 'nvme connect-all' will
 	dump the output to stdout.
+
+-d <device>::
+--device=<device>::
+	This field takes a device as input. It must be a persistent device
+	associated with a Discovery Controller previously created by the
+	command "connect-all" or "discover". <device> follows the format
+	nvme*, eg. nvme0, nvme1.
 
 -C <cfg>::
 --config-file=<cfg>::
