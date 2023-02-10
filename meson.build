@@ -50,11 +50,14 @@ conf.set('PROJECT_VERSION', '"@0@"'.format(meson.project_version()))
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
-# Check for json-c availability
-json_c_dep = dependency('json-c',
-			version: '>=0.13',
-			required: true,
-			fallback : ['json-c', 'json_c_dep'])
+if get_option('json-c').disabled()
+    json_c_dep = dependency('', required: false)
+else
+    json_c_dep = dependency('json-c',
+                            version: '>=0.13',
+                            required: true,
+                            fallback : ['json-c', 'json_c_dep'])
+endif
 conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c required?')
 
 # Check for OpenSSL availability

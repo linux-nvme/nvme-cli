@@ -23,8 +23,10 @@ mi_sources = [
     'nvme/mi-mctp.c',
 ]
 
-if conf.get('CONFIG_JSONC')
+if json_c_dep.found()
     sources += 'nvme/json.c'
+else
+    sources += 'nvme/no-json.c'
 endif
 
 deps = [
