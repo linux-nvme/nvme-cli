@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: install dependencies
-        run: sudo apt-get install libjson-c-dev libdbus-1-dev libhugetlbfs-dev
+        run: sudo apt-get install libjson-c-dev libssl-dev libdbus-1-dev libhugetlbfs-dev
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
