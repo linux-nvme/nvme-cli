@@ -17,10 +17,12 @@ SYNOPSIS
 			[--nvmset-id=<nvmsetid> | -i <nvmsetid>]
 			[--csi=<command_set_identifier> | -y <command_set_identifier>]
 			[--lbstm=<lbstm> | -l <lbstm>]
+			[--nphndls=<nphndls> | -n <nphndls>]
 			[--block-size=<block-size> | -b <block-size>]
 			[--timeout=<timeout> | -t <timeout>]
 			[--nsze-si=<nsze-si> | -S <nsze-si>]
 			[--ncap-si=<ncap-si> | -C <ncap-si>]
+			[--phndls=<placement-handle-list,> | -p <placement-handle-list,>]
 
 DESCRIPTION
 -----------
@@ -72,6 +74,12 @@ OPTIONS
 --lbstm=<lbstm>::
 	Logical Block Storage Tag Mask for end-to-end protection.
 
+-n <nphndls>::
+--nphndls=<nphndls>::
+	Number of Placement Handle included in the Placement Handle List.
+	If the Flexible Data Placement capability is not supported or not enabled
+	in specified Endurance Group, then the controller shall ignore this field.
+
 -b::
 --block-size::
 	Target block size the new namespace should be formatted as. Potential FLBAS
@@ -89,6 +97,11 @@ OPTIONS
 	The namespace capacity (NCAP) in standard SI units.
 	The value SI suffixed is divided by the namespace LBA size to set as NCAP.
 	If the value not suffixed it is set as same with the ncap option.
+
+-p <placement-handle-list,>::
+--phndls=<placement-handle-list,>::
+	The comma separated list of Reclaim Unit Handle Identifier to be associated
+	with each Placement Handle.
 
 EXAMPLES
 --------
