@@ -1235,9 +1235,15 @@ int nvme_format_nvm(struct nvme_format_nvm_args *args)
 
 int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args)
 {
+	const size_t size_v1 = sizeof_args(struct nvme_ns_mgmt_args, csi, __u64);
+	const size_t size_v2 = sizeof_args(struct nvme_ns_mgmt_args, data, __u64);
 	__u32 cdw10    = NVME_SET(args->sel, NAMESPACE_MGMT_CDW10_SEL);
 	__u32 cdw11    = NVME_SET(args->csi, NAMESPACE_MGMT_CDW11_CSI);
-	__u32 data_len = args->ns ? sizeof(*args->ns) : 0;
+
+	if (args->args_size < size_v1 || args->args_size > size_v2) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	struct nvme_passthru_cmd cmd = {
 		.nsid	    = args->nsid,
@@ -1245,13 +1251,19 @@ int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args)
 		.cdw10	    = cdw10,
 		.cdw11	    = cdw11,
 		.timeout_ms = args->timeout,
-		.data_len   = data_len,
-		.addr	    = (__u64)(uintptr_t)args->ns,
 	};
 
-	if (args->args_size < sizeof(*args)) {
-		errno = EINVAL;
-		return -1;
+	if (args->args_size == size_v2) {
+		if (args->data) {
+			cmd.data_len = sizeof(*args->data);
+			cmd.addr = (__u64)(uintptr_t)args->data;
+		}
+	}
+	else {
+		if (args->ns) {
+			cmd.data_len = sizeof(*args->ns);
+			cmd.addr = (__u64)(uintptr_t)args->ns;
+		}
 	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }

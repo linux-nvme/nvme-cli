@@ -1077,14 +1077,19 @@ int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
 int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
 			  struct nvme_ns_mgmt_args *args)
 {
+	const size_t size_v1 = sizeof_args(struct nvme_ns_mgmt_args, csi, __u64);
+	const size_t size_v2 = sizeof_args(struct nvme_ns_mgmt_args, data, __u64);
 	struct nvme_mi_admin_resp_hdr resp_hdr;
 	struct nvme_mi_admin_req_hdr req_hdr;
 	struct nvme_mi_resp resp;
 	struct nvme_mi_req req;
 	int rc;
+	size_t data_len;
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < size_v1 || args->args_size > size_v2) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
 			       nvme_admin_ns_mgmt);
@@ -1092,10 +1097,23 @@ int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
 	req_hdr.cdw1 = cpu_to_le32(args->nsid);
 	req_hdr.cdw10 = cpu_to_le32(args->sel & 0xf);
 	req_hdr.cdw11 = cpu_to_le32(args->csi << 24);
-	if (args->ns) {
-		req.data = args->ns;
-		req.data_len = sizeof(*args->ns);
-		req_hdr.dlen = cpu_to_le32(sizeof(*args->ns));
+
+	if (args->args_size == size_v2) {
+		if (args->data) {
+			req.data = args->data;
+			data_len = sizeof(*args->data);
+		}
+	}
+	else {
+		if (args->ns) {
+			req.data = args->ns;
+			data_len = sizeof(*args->ns);
+		}
+	}
+
+	if (req.data) {
+		req.data_len = data_len;
+		req_hdr.dlen = cpu_to_le32(data_len);
 		req_hdr.flags = 0x1;
 	}
 

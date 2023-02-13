@@ -196,6 +196,9 @@ struct nvme_format_nvm_args {
  * @nsid:	Namespace identifier
  * @sel:	Type of management operation to perform
  * @csi:	Command Set Identifier
+ * @rsvd1:	Reserved
+ * @rsvd2:	Reserved
+ * @data:	Host Software Specified Fields
  */
 struct nvme_ns_mgmt_args {
 	__u32 *result;
@@ -206,6 +209,9 @@ struct nvme_ns_mgmt_args {
 	__u32 nsid;
 	enum nvme_ns_mgmt_sel sel;
 	__u8 csi;
+	__u8 rsvd1[3];
+	void *rsvd2;
+	struct nvme_ns_mgmt_host_sw_specified *data;
 };
 
 /**

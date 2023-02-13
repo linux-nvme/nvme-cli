@@ -3036,6 +3036,7 @@ int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args);
  * @timeout:		Override the default timeout to this value in milliseconds;
  *			set to 0 to use the system default.
  * @csi:		Command Set Identifier
+ * @data:	Host Software Specified Fields that defines ns creation parameters
  *
  * On successful creation, the namespace exists in the subsystem, but is not
  * attached to any controller. Use the nvme_ns_attach_ctrls() to assign the
@@ -3045,7 +3046,8 @@ int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args);
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
-			__u32 *nsid, __u32 timeout, __u8 csi)
+			__u32 *nsid, __u32 timeout, __u8 csi,
+			struct nvme_ns_mgmt_host_sw_specified *data)
 {
 	struct nvme_ns_mgmt_args args = {
 		.result = nsid,
@@ -3056,6 +3058,7 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
 		.nsid = NVME_NSID_NONE,
 		.sel = NVME_NS_MGMT_SEL_CREATE,
 		.csi = csi,
+		.data = data,
 	};
 
 	return nvme_ns_mgmt(&args);

@@ -2451,6 +2451,7 @@ int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
  * @ns: New namespace parameters
  * @csi: Command Set Identifier for new NS
  * @nsid: Set to new namespace ID on create
+ * @data:	Host Software Specified Fields that defines ns creation parameters
  *
  * Issues a Namespace Management (Create) command to @ctrl, to create a
  * new namespace specified by @ns, using command set @csi. On success,
@@ -2460,8 +2461,8 @@ int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_ns_mgmt_create(nvme_mi_ctrl_t ctrl,
-					       struct nvme_id_ns *ns,
-					       __u8 csi, __u32 *nsid)
+				struct nvme_id_ns *ns, __u8 csi, __u32 *nsid,
+				struct nvme_ns_mgmt_host_sw_specified *data)
 {
 	struct nvme_ns_mgmt_args args = {
 		.result = nsid,
@@ -2470,6 +2471,7 @@ static inline int nvme_mi_admin_ns_mgmt_create(nvme_mi_ctrl_t ctrl,
 		.nsid = NVME_NSID_NONE,
 		.sel = NVME_NS_MGMT_SEL_CREATE,
 		.csi = csi,
+		.data = data,
 	};
 
 	return nvme_mi_admin_ns_mgmt(ctrl, &args);

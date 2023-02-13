@@ -1291,7 +1291,7 @@ static int test_admin_ns_mgmt_cb(struct nvme_mi_ep *ep,
 				 void *data)
 {
 	__u8 *rq_hdr, *rs_hdr, sel, csi;
-	struct nvme_id_ns *id;
+	struct nvme_ns_mgmt_host_sw_specified *create_data;
 	__u32 nsid;
 
 	rq_hdr = (__u8 *)req->hdr;
@@ -1305,15 +1305,15 @@ static int test_admin_ns_mgmt_cb(struct nvme_mi_ep *ep,
 
 	switch (sel) {
 	case NVME_NS_MGMT_SEL_CREATE:
-		assert(req->data_len == sizeof(struct nvme_id_ns));
-		id = req->data;
+		assert(req->data_len == sizeof(struct nvme_ns_mgmt_host_sw_specified));
+		create_data = req->data;
 
 		/* No NSID on created namespaces */
 		assert(nsid == 0);
 		assert(csi == 0);
 
 		/* allow operations on nsze == 42, reject others */
-		if (le64_to_cpu(id->nsze) != 42) {
+		if (le64_to_cpu(create_data->nsze) != 42) {
 			rs_hdr[4] = 0;
 			/* response cdw0 is created NSID */
 			rs_hdr[8] = 0x04;
@@ -1342,7 +1342,7 @@ static int test_admin_ns_mgmt_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
 {
-	struct nvme_id_ns nsid = { 0 };
+	struct nvme_ns_mgmt_host_sw_specified data = { 0 };
 	nvme_mi_ctrl_t ctrl;
 	__u32 ns;
 	int rc;
@@ -1352,12 +1352,12 @@ static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
 	ctrl = nvme_mi_init_ctrl(ep, 5);
 	assert(ctrl);
 
-	rc = nvme_mi_admin_ns_mgmt_create(ctrl, &nsid, 0, &ns);
+	rc = nvme_mi_admin_ns_mgmt_create(ctrl, NULL, 0, &ns, &data);
 	assert(!rc);
 	assert(ns == 0x01020304);
 
-	nsid.nsze = cpu_to_le64(42);
-	rc = nvme_mi_admin_ns_mgmt_create(ctrl, &nsid, 0, &ns);
+	data.nsze = cpu_to_le64(42);
+	rc = nvme_mi_admin_ns_mgmt_create(ctrl, NULL, 0, &ns, &data);
 	assert(rc);
 }
 
