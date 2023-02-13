@@ -377,14 +377,16 @@ int nvme_cli_admin_passthru(struct nvme_dev *dev, __u8 opcode, __u8 flags,
 /* The MI & direct interfaces don't have an exactly-matching API for
  * ns_mgmt_create, as we don't support a timeout for MI.
  */
-int nvme_cli_ns_mgmt_create(struct nvme_dev *dev, struct nvme_id_ns *ns,
+int nvme_cli_ns_mgmt_create(struct nvme_dev *dev,
+			struct nvme_ns_mgmt_host_sw_specified *data,
 			__u32 *nsid, __u32 timeout, __u8 csi)
 {
 	if (dev->type == NVME_DEV_DIRECT)
-		return nvme_ns_mgmt_create(dev_fd(dev), ns, nsid, timeout, csi);
+		return nvme_ns_mgmt_create(dev_fd(dev), NULL, nsid, timeout,
+							csi, data);
 	if (dev->type == NVME_DEV_MI)
-		return nvme_mi_admin_ns_mgmt_create(dev->mi.ctrl, ns,
-						    csi, nsid);
+		return nvme_mi_admin_ns_mgmt_create(dev->mi.ctrl, NULL,
+						    csi, nsid, data);
 
 	return -ENODEV;
 }

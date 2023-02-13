@@ -94,7 +94,7 @@ nvme_list_opts () {
 		opts+=" --nsze= -s --ncap= -c --flbas= -f \
 			--dps= -d --nmic= -m --anagrp-id= -a --nvmset-id= -i \
 			--block-size= -b --timeout= -t --csi= -y --lbstm= -l \
-			--nsze-si= -S --ncap-si= -C"
+			--nphndls= -n --nsze-si= -S --ncap-si= -C --phndls= -p"
 			;;
 		"delete-ns")
 		opts+=" -namespace-id= -n --timeout= -t"
