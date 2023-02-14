@@ -996,10 +996,14 @@ struct __attribute__((__packed__)) wdc_bd_ca_log_format {
 	__u8	raw_value[8];
 };
 
-#define READ         0
-#define WRITE        1
-#define TRIM         2
-#define RESERVED     3
+#define LATENCY_LOG_BUCKET_READ         3
+#define LATENCY_LOG_BUCKET_WRITE        2
+#define LATENCY_LOG_BUCKET_TRIM         1
+#define LATENCY_LOG_BUCKET_RESERVED     0
+
+#define LATENCY_LOG_MEASURED_LAT_READ   2
+#define LATENCY_LOG_MEASURED_LAT_WRITE  1
+#define LATENCY_LOG_MEASURED_LAT_TRIM   0
 
 struct __attribute__((__packed__)) wdc_ssd_latency_monitor_log {
 	__u8    feature_status;                         /* 0x00  */
@@ -1014,7 +1018,7 @@ struct __attribute__((__packed__)) wdc_ssd_latency_monitor_log {
 	__u8    active_latency_min_window;              /* 0x0C  */
 	__u8    rsvd2[0x13];                            /* 0x0D  */
 
-	__le32  active_bucket_counter[4][4] ;           /* 0x20 - 0x5F  */
+	__le32  active_bucket_counter[4][4];            /* 0x20 - 0x5F  */
 	__le64  active_latency_timestamp[4][3];         /* 0x60 - 0xBF  */
 	__le16  active_measured_latency[4][3];          /* 0xC0 - 0xD7  */
 	__le16  active_latency_stamp_units;             /* 0xD8  */
@@ -4106,19 +4110,21 @@ static int wdc_print_latency_monitor_log_normal(struct nvme_dev *dev,
 	printf("                                                            Read                           Write                 Deallocate/Trim \n");
 	for (i = 0; i <= 3; i++) {
 	    printf("  Active Bucket Counter: Bucket %d    %27d     %27d     %27d \n",
-			i, le32_to_cpu(log_data->active_bucket_counter[i][READ]), le32_to_cpu(log_data->active_bucket_counter[i][WRITE]),
-			le32_to_cpu(log_data->active_bucket_counter[i][TRIM]));
+			i, le32_to_cpu(log_data->active_bucket_counter[i][LATENCY_LOG_BUCKET_READ]),
+			le32_to_cpu(log_data->active_bucket_counter[i][LATENCY_LOG_BUCKET_WRITE]),
+			le32_to_cpu(log_data->active_bucket_counter[i][LATENCY_LOG_BUCKET_TRIM]));
 	}
 
-	for (i = 0; i <= 3; i++) {
+	for (i = 3; i >= 0; i--) {
 	    printf("  Active Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms \n",
-			i, le16_to_cpu(log_data->active_measured_latency[i][READ]), le16_to_cpu(log_data->active_measured_latency[i][WRITE]),
-			le16_to_cpu(log_data->active_measured_latency[i][TRIM]));
+			3-i, le16_to_cpu(log_data->active_measured_latency[i][LATENCY_LOG_MEASURED_LAT_READ]),
+			le16_to_cpu(log_data->active_measured_latency[i][LATENCY_LOG_MEASURED_LAT_WRITE]),
+			le16_to_cpu(log_data->active_measured_latency[i][LATENCY_LOG_MEASURED_LAT_TRIM]));
 	}
 
-	for (i = 0; i <= 3; i++) {
-		printf("  Active Latency Time Stamp: Bucket %d    ", i);
-		for (j = 0; j <= 2; j++) {
+	for (i = 3; i >= 0; i--) {
+		printf("  Active Latency Time Stamp: Bucket %d    ", 3-i);
+		for (j = 2; j >= 0; j--) {
 		    if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1)
 		    	printf("                    N/A         ");
 		    else {
@@ -4131,19 +4137,21 @@ static int wdc_print_latency_monitor_log_normal(struct nvme_dev *dev,
 
 	for (i = 0; i <= 3; i++) {
 	    printf("  Static Bucket Counter: Bucket %d    %27d     %27d     %27d \n",
-			i, le32_to_cpu(log_data->static_bucket_counter[i][READ]), le32_to_cpu(log_data->static_bucket_counter[i][WRITE]),
-			le32_to_cpu(log_data->static_bucket_counter[i][TRIM]));
+			i, le32_to_cpu(log_data->static_bucket_counter[i][LATENCY_LOG_BUCKET_READ]),
+			le32_to_cpu(log_data->static_bucket_counter[i][LATENCY_LOG_BUCKET_WRITE]),
+			le32_to_cpu(log_data->static_bucket_counter[i][LATENCY_LOG_BUCKET_TRIM]));
 	}
 
-	for (i = 0; i <= 3; i++) {
+	for (i = 3; i >= 0; i--) {
 	    printf("  Static Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms \n",
-			i, le16_to_cpu(log_data->static_measured_latency[i][READ]), le16_to_cpu(log_data->static_measured_latency[i][WRITE]),
-			le16_to_cpu(log_data->static_measured_latency[i][TRIM]));
+			3-i, le16_to_cpu(log_data->static_measured_latency[i][LATENCY_LOG_MEASURED_LAT_READ]),
+			le16_to_cpu(log_data->static_measured_latency[i][LATENCY_LOG_MEASURED_LAT_WRITE]),
+			le16_to_cpu(log_data->static_measured_latency[i][LATENCY_LOG_MEASURED_LAT_TRIM]));
 	}
 
-	for (i = 0; i <= 3; i++) {
-		printf("  Static Latency Time Stamp: Bucket %d    ", i);
-		for (j = 0; j <= 2; j++) {
+	for (i = 3; i >= 0; i--) {
+		printf("  Static Latency Time Stamp: Bucket %d    ", 3-i);
+		for (j = 2; j >= 0; j--) {
 		    if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1)
 		    	printf("                    N/A         ");
 		    else {
@@ -4179,38 +4187,38 @@ static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_lo
 	json_object_add_value_int(root, "Debug Log Trigger Enable", le16_to_cpu(log_data->debug_log_trigger_enable));
 
 	for (i = 0; i <= 3; i++) {
-		for (j = 0; j <= 2; j++) {
-			sprintf(buf, "Active Bucket Counter: Bucket %d %s", i, operation[j]);
-			json_object_add_value_int(root, buf, le32_to_cpu(log_data->active_bucket_counter[i][j]));
+		for (j = 2; j >= 0; j--) {
+			sprintf(buf, "Active Bucket Counter: Bucket %d %s", i, operation[2-j]);
+			json_object_add_value_int(root, buf, le32_to_cpu(log_data->active_bucket_counter[i][j+1]));
 		}
 	}
-	for (i = 0; i <= 3; i++) {
-		for (j = 0; j <= 2; j++) {
-			sprintf(buf, "Active Measured Latency: Bucket %d %s", i, operation[j]);
+	for (i = 3; i >= 0; i--) {
+		for (j = 2; j >= 0; j--) {
+			sprintf(buf, "Active Measured Latency: Bucket %d %s", 3-i, operation[2-j]);
 			json_object_add_value_int(root, buf, le16_to_cpu(log_data->active_measured_latency[i][j]));
 		}
 	}
-	for (i = 0; i <= 3; i++) {
-		for (j = 0; j <= 2; j++) {
-			sprintf(buf, "Active Latency Time Stamp: Bucket %d %s", i, operation[j]);
+	for (i = 3; i >= 0; i--) {
+		for (j = 2; j >= 0; j--) {
+			sprintf(buf, "Active Latency Time Stamp: Bucket %d %s", 3-i, operation[2-j]);
 			json_object_add_value_int(root, buf, le64_to_cpu(log_data->active_latency_timestamp[i][j]));
 		}
 	}
 	for (i = 0; i <= 3; i++) {
-		for (j = 0; j <= 2; j++) {
-			sprintf(buf, "Static Bucket Counter: Bucket %d %s", i, operation[j]);
-			json_object_add_value_int(root, buf, le32_to_cpu(log_data->static_bucket_counter[i][j]));
+		for (j = 2; j >= 0; j--) {
+			sprintf(buf, "Static Bucket Counter: Bucket %d %s", i, operation[2-j]);
+			json_object_add_value_int(root, buf, le32_to_cpu(log_data->static_bucket_counter[i][j+1]));
 		}
 	}
-	for (i = 0; i <= 3; i++) {
-		for (j = 0; j <= 2; j++) {
-			sprintf(buf, "Static Measured Latency: Bucket %d %s", i, operation[j]);
+	for (i = 3; i >= 0; i--) {
+		for (j = 2; j >= 0; j--) {
+			sprintf(buf, "Static Measured Latency: Bucket %d %s", 3-i, operation[2-j]);
 			json_object_add_value_int(root, buf, le16_to_cpu(log_data->static_measured_latency[i][j]));
 		}
 	}
-	for (i = 0; i <= 3; i++) {
-		for (j = 0; j <= 2; j++) {
-			sprintf(buf, "Static Latency Time Stamp: Bucket %d %s", i, operation[j]);
+	for (i = 3; i >= 0; i--) {
+		for (j = 2; j >= 0; j--) {
+			sprintf(buf, "Static Latency Time Stamp: Bucket %d %s", 3-i, operation[2-j]);
 			json_object_add_value_int(root, buf, le64_to_cpu(log_data->static_latency_timestamp[i][j]));
 		}
 	}
