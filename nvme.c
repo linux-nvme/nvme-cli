@@ -638,7 +638,7 @@ static int parse_telemetry_da(struct nvme_dev *dev,
 	return 0;
 }
 
-static int get_log_telemetry_ctrl(struct nvme_dev *dev, size_t size,
+static int get_log_telemetry_ctrl(struct nvme_dev *dev, bool rae, size_t size,
 				  struct nvme_telemetry_log **buf)
 {
 	struct nvme_telemetry_log *log;
@@ -648,7 +648,7 @@ static int get_log_telemetry_ctrl(struct nvme_dev *dev, size_t size,
 	if (!log)
 		return -errno;
 
-	err = nvme_cli_get_log_telemetry_ctrl(dev, true, 0, size, log);
+	err = nvme_cli_get_log_telemetry_ctrl(dev, rae, 0, size, log);
 	if (err) {
 		free(log);
 		return -errno;
@@ -695,6 +695,7 @@ static int __create_telemetry_log_host(struct nvme_dev *dev,
 }
 
 static int __get_telemetry_log_ctrl(struct nvme_dev *dev,
+				    bool rae,
 				    enum nvme_telemetry_da da,
 				    size_t *size,
 				    struct nvme_telemetry_log **buf)
@@ -717,6 +718,13 @@ static int __get_telemetry_log_ctrl(struct nvme_dev *dev,
 		goto free;
 
 	if (!log->ctrlavail) {
+		if (!rae) {
+			err = nvme_cli_get_log_telemetry_ctrl(dev, rae, 0,
+							      NVME_LOG_TELEM_BLOCK_SIZE,
+							      log);
+			goto free;
+		}
+
 		*size = NVME_LOG_TELEM_BLOCK_SIZE;
 		*buf = log;
 
@@ -728,7 +736,7 @@ static int __get_telemetry_log_ctrl(struct nvme_dev *dev,
 	if (err)
 		goto free;
 
-	return get_log_telemetry_ctrl(dev, *size, buf);
+	return get_log_telemetry_ctrl(dev, rae, *size, buf);
 
 free:
 	free(log);
@@ -776,12 +784,14 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		__u32	host_gen;
 		bool	ctrl_init;
 		int	data_area;
+		bool	rae;
 	};
 	struct config cfg = {
 		.file_name	= NULL,
 		.host_gen	= 1,
 		.ctrl_init	= false,
 		.data_area	= 3,
+		.rae		= true,
 	};
 
 	OPT_ARGS(opts) = {
@@ -789,6 +799,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
 		OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
 		OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
+		OPT_FLAG("rae",             'r', &cfg.rae, rae),
 		OPT_END()
 	};
 
@@ -812,7 +823,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	}
 
 	if (cfg.ctrl_init)
-		err = __get_telemetry_log_ctrl(dev, cfg.data_area,
+		err = __get_telemetry_log_ctrl(dev, cfg.rae, cfg.data_area,
 					       &total_size, &log);
 	else if (cfg.host_gen)
 		err = __create_telemetry_log_host(dev, cfg.data_area,
