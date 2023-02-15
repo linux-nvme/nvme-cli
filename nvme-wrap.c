@@ -158,6 +158,12 @@ int nvme_cli_get_log(struct nvme_dev *dev, struct nvme_get_log_args *args)
 	return do_admin_args_op(get_log, dev, args);
 }
 
+int nvme_cli_get_log_page(struct nvme_dev *dev, __u32 xfer_len,
+			  struct nvme_get_log_args *args)
+{
+	return do_admin_op(get_log_page, dev, xfer_len, args);
+}
+
 int nvme_cli_get_nsid_log(struct nvme_dev *dev, bool rae,
 			  enum nvme_cmd_get_log_lid lid,
 			  __u32 nsid, __u32 len, void *log)

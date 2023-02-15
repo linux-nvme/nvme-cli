@@ -2119,6 +2119,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *raw = "output in raw format";
 	const char *csi = "command set identifier";
 	const char *offset_type = "offset type";
+	const char *xfer_len = "read chunk size (default 4k)";
 	struct nvme_dev *dev;
 	unsigned char *log;
 	int err;
@@ -2136,6 +2137,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		bool	raw_binary;
 		__u8	csi;
 		bool	ot;
+		__u32	xfer_len;
 	};
 
 	struct config cfg = {
@@ -2151,6 +2153,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.raw_binary	= false,
 		.csi		= NVME_CSI_NVM,
 		.ot		= false,
+		.xfer_len	= 4096,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2166,6 +2169,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
 		OPT_BYTE("csi",          'y', &cfg.csi,          csi),
 		OPT_FLAG("ot",           'O', &cfg.ot,           offset_type),
+		OPT_UINT("xfer-len",     'x', &cfg.xfer_len,     xfer_len),
 		OPT_END()
 	};
 
@@ -2196,6 +2200,12 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_dev;
 	}
 
+	if (cfg.xfer_len == 0 || cfg.xfer_len % 4096) {
+		fprintf(stderr, "xfer-len argument invalid. It needs to be mulitple of 4k");
+		err = -EINVAL;
+		goto close_dev;
+	}
+
 	log = malloc(cfg.log_len);
 	if (!log) {
 		perror("could not alloc buffer for log\n");
@@ -2218,7 +2228,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.log		= log,
 		.result		= NULL,
 	};
-	err = nvme_cli_get_log(dev, &args);
+	err = nvme_cli_get_log_page(dev, cfg.xfer_len, &args);
 	if (!err) {
 		if (!cfg.raw_binary) {
 			printf("Device:%s log-id:%d namespace-id:%#x\n",

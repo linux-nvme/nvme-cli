@@ -19,6 +19,7 @@ SYNOPSIS
 	      [--rae | -r]
 	      [--csi=<command_set_identifier> | -y <command_set_identifier>]
 	      [--ot=<offset_type> | -O <offset_type>]
+		    [--xfer-len=<length> | -x <length>]
 
 DESCRIPTION
 -----------
@@ -94,6 +95,11 @@ OPTIONS
 	data structures in the log page to be returned.
 	The default is byte offset. If the option is specified
 	the index mode is used.
+
+-x <length>::
+--xfer-len <length>:
+	Specify the read chunk size. The length argument is expected to be
+	a multiple of 4096. The default size is 4096.
 
 EXAMPLES
 --------

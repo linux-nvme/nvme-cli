@@ -51,6 +51,9 @@ int nvme_cli_get_features(struct nvme_dev *dev,
 
 
 int nvme_cli_get_log(struct nvme_dev *dev, struct nvme_get_log_args *args);
+int nvme_cli_get_log_page(struct nvme_dev *dev,
+                          __u32 xfer_len,
+                          struct nvme_get_log_args *args);
 
 int nvme_cli_get_nsid_log(struct nvme_dev *dev, bool rae,
 			  enum nvme_cmd_get_log_lid lid,
