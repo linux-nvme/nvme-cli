@@ -5108,7 +5108,7 @@ void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len)
 	snprintf(path, len, "%s", nvme_ns_get_name(n));
 }
 
-static void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len)
+void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len)
 {
 	int head_instance;
 	int instance;
