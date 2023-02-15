@@ -2179,19 +2179,19 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	}
 
 	if (!cfg.log_len) {
-		perror("non-zero log-len is required param\n");
+		fprintf(stderr, "non-zero log-len is required param\n");
 		err = -EINVAL;
 		goto close_dev;
 	}
 
 	if (cfg.lsp > 128) {
-		perror("invalid lsp param\n");
+		fprintf(stderr, "invalid lsp param\n");
 		err = -EINVAL;
 		goto close_dev;
 	}
 
 	if (cfg.uuid_index > 128) {
-		perror("invalid uuid index param\n");
+		fprintf(stderr, "invalid uuid index param\n");
 		err = -EINVAL;
 		goto close_dev;
 	}
