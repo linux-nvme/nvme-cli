@@ -595,6 +595,45 @@ ret:
 	return err;
 }
 
+static int parse_telemetry_da(struct nvme_dev *dev,
+			      enum nvme_telemetry_da da,
+			      struct nvme_telemetry_log *telem,
+			      size_t *size)
+
+{
+	struct nvme_id_ctrl id_ctrl;
+
+	switch (da) {
+	case NVME_TELEMETRY_DA_1:
+	case NVME_TELEMETRY_DA_2:
+	case NVME_TELEMETRY_DA_3:
+		/* dalb3 >= dalb2 >= dalb1 */
+		*size = (le16_to_cpu(telem->dalb3) + 1) *
+			NVME_LOG_TELEM_BLOCK_SIZE;
+		break;
+	case NVME_TELEMETRY_DA_4:
+		if (nvme_cli_identify_ctrl(dev, &id_ctrl)) {
+			perror("identify-ctrl");
+			return -errno;
+		}
+
+		if (id_ctrl.lpa & 0x40) {
+			*size = (le32_to_cpu(telem->dalb4) + 1) *
+				NVME_LOG_TELEM_BLOCK_SIZE;
+		} else {
+			fprintf(stderr, "Data area 4 unsupported, bit 6 "
+				"of Log Page Attributes not set\n");
+			return -EINVAL;
+		}
+		break;
+	default:
+		fprintf(stderr, "Invalid data area parameter - %d\n", da);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int get_telemetry_log_helper(struct nvme_dev *dev, bool create,
 				    bool ctrl, struct nvme_telemetry_log **buf,
 				    enum nvme_telemetry_da da,
@@ -602,7 +641,6 @@ static int get_telemetry_log_helper(struct nvme_dev *dev, bool create,
 {
 	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
 	struct nvme_telemetry_log *telem;
-	struct nvme_id_ctrl id_ctrl;
 	void *log, *tmp;
 	int err;
 	*size = 0;
@@ -632,33 +670,9 @@ static int get_telemetry_log_helper(struct nvme_dev *dev, bool create,
 		return 0;
 	}
 
-	switch (da) {
-	case NVME_TELEMETRY_DA_1:
-	case NVME_TELEMETRY_DA_2:
-	case NVME_TELEMETRY_DA_3:
-		/* dalb3 >= dalb2 >= dalb1 */
-		*size = (le16_to_cpu(telem->dalb3) + 1) * xfer;
-		break;
-	case NVME_TELEMETRY_DA_4:
-		err = nvme_cli_identify_ctrl(dev, &id_ctrl);
-		if (err) {
-			perror("identify-ctrl");
-			goto free;
-		}
-
-		if (id_ctrl.lpa & 0x40) {
-			*size = (le32_to_cpu(telem->dalb4) + 1) * xfer;
-		} else {
-			fprintf(stderr, "Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
-			err = -EINVAL;
-			goto free;
-		}
-		break;
-	default:
-		fprintf(stderr, "Invalid data area parameter - %d\n", da);
-		err = -EINVAL;
+	err = parse_telemetry_da(dev, da, telem, size);
+	if (err)
 		goto free;
-	}
 
 	if (xfer == *size) {
 		fprintf(stderr, "ERROR: No telemetry data block\n");
