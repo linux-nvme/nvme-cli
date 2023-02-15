@@ -841,9 +841,10 @@ static int __nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl,
 	return rc;
 }
 
-int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
+int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl, __u32 xfer_size,
+			       struct nvme_get_log_args *args)
 {
-	const size_t max_xfer_size = 4096;
+	const size_t max_xfer_size = xfer_size;
 	off_t xfer_offset;
 	int rc = 0;
 
@@ -885,6 +886,11 @@ int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
 		args->len = xfer_offset;
 
 	return rc;
+}
+
+int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
+{
+	return nvme_mi_admin_get_log_page(ctrl, 4096, args);
 }
 
 int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,

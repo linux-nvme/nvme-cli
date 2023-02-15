@@ -1,3 +1,8 @@
+LIBNVME_MI_1_4 {
+        global:
+                nvme_mi_admin_get_log_page;
+};
+
 LIBNVME_MI_1_3 {
 	global:
 		nvme_mi_admin_admin_passthru;
