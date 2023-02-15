@@ -661,7 +661,7 @@ static int get_telemetry_log_helper(struct nvme_dev *dev, bool create,
 	}
 
 	if (xfer == *size) {
-		fprintf(stderr, "ERRO: No telemetry data block\n");
+		fprintf(stderr, "ERROR: No telemetry data block\n");
 		err = -ENOENT;
 		goto free;
 	}
