@@ -5120,7 +5120,7 @@ void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len)
 	if (stat(path, &st) == 0)
 		return;
 
-	snprintf(path, len, "/dev/spkd/ng%dn%d", instance, head_instance);
+	snprintf(path, len, "/dev/spdk/ng%dn%d", instance, head_instance);
 	if (stat(path, &st) == 0)
 		return;
 	/*
