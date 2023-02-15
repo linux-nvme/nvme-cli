@@ -438,6 +438,8 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 	void *ptr = args->log;
 	int ret;
 
+	args->fd = fd;
+
 	/*
 	 * 4k is the smallest possible transfer unit, so restricting to 4k
 	 * avoids having to check the MDTS value of the controller.
