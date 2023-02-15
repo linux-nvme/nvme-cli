@@ -162,7 +162,7 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 {
 	time_t timep;
 	struct tm *logtime;
-	int icount, ioffset16k, iblock;
+	int icount, ioffset16k, iblock, ivsctype;
 	char currentdir[128], filename[512];
 	unsigned char data[4096], data16k[SIZE_16K], zerob[32];
 	unsigned int *pcheckdata;
@@ -195,6 +195,15 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 	if (getcwd(currentdir, 128) == NULL)
 		return -1;
 
+	ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x03, 0x00, 0x00, (char *)data, 4096);
+	if (ret == -1)
+		return ret;
+	
+	if (data[0] == 0x5A) 
+		ivsctype = 1;
+	else
+		ivsctype = 0;
+
 	time(&timep);
 	logtime = localtime(&timep);
 	sprintf(filename, "%s/eventlog_%02d%02d-%02d%02d%02d.elog", currentdir, logtime->tm_mon+1,
@@ -218,10 +227,13 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 		icount++;
 
 		memset(data, 0, 4096);
-		ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET_EVENT_LOG, 0, 0,
-				 (SRB_SIGNATURE >> 32),
-				 (SRB_SIGNATURE & 0xFFFFFFFF),
-				 (char *)data, 4096);
+		if (ivsctype == 1) 
+			ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x60, 0x00, 0x00, 0x00,(char *)data, 4096);
+		else
+			ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET_EVENT_LOG, 0, 0,
+					(SRB_SIGNATURE >> 32),
+					(SRB_SIGNATURE & 0xFFFFFFFF),
+					(char *)data, 4096);
 		if (ret == -1)
 			return ret;
 
@@ -302,7 +314,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 	time_t timep;
 	struct tm *logtime;
 	char currentdir[128], filename[512], fname[128];
-	unsigned int itotal, icur;
+	unsigned int itotal, icur, ivsctype;
 	unsigned char data[4096];
 	struct cdumpinfo cdumpinfo;
 	unsigned char busevsc = false;
@@ -326,28 +338,43 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 	time(&timep);
 	logtime = localtime(&timep);
 
+	ivsctype = 0;
 	ipackindex = 0;
 	memset(data, 0, 4096);
-	if (nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
-		       (SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
-		       (char *)data, 4096) == 0) {
-		memcpy(&cdumpinfo, &data[3072], sizeof(cdumpinfo));
-		if (cdumpinfo.sig == 0x5a5b5c5d) {
-			busevsc = true;
-			ipackcount = cdumpinfo.ipackcount;
-			if (ipackcount == 0) {
-				itotal = 0;
-			} else {
-				itotal = cdumpinfo.cdumppack[ipackindex].ilenth;
-				memset(fwvera, 0, sizeof(fwvera));
-				memcpy(fwvera, cdumpinfo.cdumppack[ipackindex].fwver, 8);
-				sprintf(fname, "cdump_%02d%02d-%02d%02d%02d_%d_%s.cdp", logtime->tm_mon+1,
-					logtime->tm_mday, logtime->tm_hour, logtime->tm_min, logtime->tm_sec,
-					ipackindex, fwvera);
-				sprintf(filename, "%s/%s", currentdir, fname);
-			}
+
+	ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x03, 0x00, 0x00, (char *)data, 4096);
+	if (ret == -1)
+		return ret;
+	
+	if (data[0] == 0x5A) {
+		ivsctype = 1;
+		ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,(char *)data, 4096);
+	} else {
+		ivsctype = 0;
+		ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
+					(SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
+					(char *)data, 4096);
+	}
+	if (ret == -1)
+		return ret;
+
+	memcpy(&cdumpinfo, &data[3072], sizeof(cdumpinfo));
+	if (cdumpinfo.sig == 0x5a5b5c5d) {
+		busevsc = true;
+		ipackcount = cdumpinfo.ipackcount;
+		if (ipackcount == 0) {
+			itotal = 0;
+		} else {
+			itotal = cdumpinfo.cdumppack[ipackindex].ilenth;
+			memset(fwvera, 0, sizeof(fwvera));
+			memcpy(fwvera, cdumpinfo.cdumppack[ipackindex].fwver, 8);
+			sprintf(fname, "cdump_%02d%02d-%02d%02d%02d_%d_%s.cdp", logtime->tm_mon+1,
+				logtime->tm_mday, logtime->tm_hour, logtime->tm_min, logtime->tm_sec,
+				ipackindex, fwvera);
+			sprintf(filename, "%s/%s", currentdir, fname);
 		}
 	}
+
 
 	if (busevsc == false) {
 		memset(data, 0, 4096);
@@ -375,16 +402,18 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 		setfilecontent(filename, data, strlen((char *)data));
 		for (icur = 0; icur < itotal; icur += 4096) {
 			memset(data, 0, 4096);
-			if (busevsc)
-				ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET,
-						 VSC_FN_GET_CDUMP, 0x00,
-						 (SRB_SIGNATURE >> 32),
-						 (SRB_SIGNATURE & 0xFFFFFFFF),
-						 (char *)data, 4096);
-			else
+			if (busevsc) {
+				if (ivsctype == 1) 
+					ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,(char *)data, 4096);
+				else
+					ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
+								(SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
+								(char *)data, 4096);					 
+			} else {
 				ret = nvme_get_nsid_log(dev_fd(dev), true,
 							0x07,
 							NVME_NSID_ALL, 4096, data);
+			}
 			if (ret != 0)
 				return ret;
 
@@ -399,17 +428,19 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 		ipackindex++;
 		if (ipackindex != ipackcount) {
 			memset(data, 0, 4096);
-			if (busevsc)
-				ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET,
-						 VSC_FN_GET_CDUMP, 0x00,
-						 (SRB_SIGNATURE >> 32),
-						 (SRB_SIGNATURE & 0xFFFFFFFF),
-						 (char *)data, 4096);
-			else
+			if (busevsc) {
+				if (ivsctype == 1) 
+					ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,(char *)data, 4096);
+				else
+					ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
+								(SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
+								(char *)data, 4096);							 
+			} else {
 				ret = nvme_get_nsid_log(dev_fd(dev), true,
 							0x07,
 							NVME_NSID_ALL, 4096,
 							data);
+			}
 			if (ret != 0)
 				return ret;
 
