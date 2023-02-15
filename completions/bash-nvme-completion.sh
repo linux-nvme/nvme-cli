@@ -92,8 +92,9 @@ nvme_list_opts () {
 			;;
 		"create-ns")
 		opts+=" --nsze= -s --ncap= -c --flbas= -f \
-			--dps= -d --nmic= -n --anagrp-id= -a --nvmset-id= -i \
-			--block-size= -b --timeout= -t--csi= -y"
+			--dps= -d --nmic= -m --anagrp-id= -a --nvmset-id= -i \
+			--block-size= -b --timeout= -t --csi= -y --lbstm= -l \
+			--nsze-si= -S --ncap-si= -C"
 			;;
 		"delete-ns")
 		opts+=" -namespace-id= -n --timeout= -t"
@@ -312,7 +313,7 @@ nvme_list_opts () {
 			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -v \
 			--dry-run -w --latency -t"
 			;;
-		"write-zeros")
+		"write-zeroes")
 		opts+=" --namespace-id= -n --start-block= -s \
 			--block-count= -c --deac -d --limited-retry -l \
 			--force-unit-access -f --prinfo= -p --ref-tag= -r \
