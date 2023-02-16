@@ -1,16 +1,17 @@
 ---
-name: AppImage
+name: appimage
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 env:
   DESTDIR: ../AppDir
 
 jobs:
   build-appimage:
+    name: build AppImage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
