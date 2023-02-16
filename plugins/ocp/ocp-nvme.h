@@ -17,9 +17,9 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("smart-add-log", "Retrieve extended SMART Information", ocp_smart_add_log)
 		ENTRY("latency-monitor-log", "Get Latency Monitor Log Page",
-		      ocp_latency_monitor_log)
+			ocp_latency_monitor_log)
 		ENTRY("clear-fw-activate-history", "Clear firmware update history log",
-		      clear_fw_update_history)
+			clear_fw_update_history)
 	)
 );
 
