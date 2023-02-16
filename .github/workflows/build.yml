@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: install dependencies
-        run: sudo apt-get install libjson-c-dev libhugetlbfs-dev
+        run: sudo apt-get install gcc pkg-config libjson-c-dev libhugetlbfs-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
@@ -23,7 +23,6 @@ jobs:
       - uses: bsfishy/meson-build@v1.0.3
         with:
           action: test
-          options: --verbose
           setup-options: >
             --werror
             --buildtype=debug
@@ -32,15 +31,15 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: gcc debug testlog
-          path: build/meson-logs/testlog.txt
+          name: gcc debug build log
+          path: build/meson-logs/meson-log.txt
 
   gcc-release:
     name: gcc release
     runs-on: ubuntu-latest
     steps:
       - name: install dependencies
-        run: sudo apt-get install libjson-c-dev libhugetlbfs-dev
+        run: sudo apt-get install gcc pkg-config libjson-c-dev libhugetlbfs-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
@@ -48,7 +47,6 @@ jobs:
       - uses: bsfishy/meson-build@v1.0.3
         with:
           action: test
-          options: --verbose
           setup-options: >
             --werror
             --buildtype=release
@@ -57,15 +55,15 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: gcc release testlog
-          path: build/meson-logs/testlog.txt
+          name: gcc release build log
+          path: build/meson-logs/meson-log.txt
 
   clang-release:
     name: clang release
     runs-on: ubuntu-latest
     steps:
       - name: install dependencies
-        run: sudo apt-get install clang libjson-c-dev libhugetlbfs-dev
+        run: sudo apt-get install clang pkg-config libjson-c-dev libhugetlbfs-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
@@ -73,7 +71,6 @@ jobs:
       - uses: bsfishy/meson-build@v1.0.3
         with:
           action: test
-          options: --verbose
           setup-options: >
             --werror
             --buildtype=release
@@ -84,8 +81,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: clang release testlog
-          path: build/meson-logs/testlog.txt
+          name: clang release build log
+          path: build/meson-logs/meson-log.txt
 
   fallback-shared-libraries:
     name: fallback shared libraries
@@ -100,7 +97,6 @@ jobs:
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test
-          options: --verbose
           setup-options: >
             --werror
             --buildtype=release
@@ -112,8 +108,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: fallback shared libaries testlog
-          path: build/meson-logs/testlog.txt
+          name: fallback shared libaries build log
+          path: build/meson-logs/meson-log.txt
 
   fallback-static-libraries:
     name: fallback static libraries
@@ -128,7 +124,6 @@ jobs:
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test
-          options: --verbose
           setup-options: >
             --werror
             --buildtype=release
@@ -140,8 +135,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: fallback static libaries testlog
-          path: build/meson-logs/testlog.txt
+          name: fallback static libaries build log
+          path: build/meson-logs/meson-log.txt
 
   cross-armhf:
     name: cross armhf
@@ -158,27 +153,25 @@ jobs:
           EOF
           sudo apt update
       - name: install armhf compiler
-        run: sudo apt install gcc-arm-linux-gnueabihf pkg-config
+        run: sudo apt install gcc-arm-linux-gnueabihf pkg-config qemu-user-static
       - name: install libraries
         run: sudo apt install libjson-c-dev:armhf
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          action: build
-          options: --verbose
+          action: test
           setup-options: >
             --werror
             --buildtype=release
             --cross-file=.github/cross/ubuntu-armhf.txt
-            -Dlibnvme:werror=false
             -Dlibnvme:python=false
             -Dopenssl:werror=false
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: cross armhf testlog
-          path: build/meson-logs/testlog.txt
+          name: cross armhf build log
+          path: build/meson-logs/meson-log.txt
 
   cross-ppc64le:
     name: cross ppc64le
@@ -195,14 +188,13 @@ jobs:
           EOF
           sudo apt update
       - name: install powerpc64le compiler
-        run: sudo apt install gcc-powerpc64le-linux-gnu pkg-config
+        run: sudo apt install gcc-powerpc64le-linux-gnu pkg-config qemu-user-static
       - name: install libraries
         run: sudo apt install libjson-c-dev:ppc64el
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          action: build
-          options: --verbose
+          action: test
           setup-options: >
             --werror
             --buildtype=release
@@ -214,5 +206,41 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: cross ppc64le testlog
-          path: build/meson-logs/testlog.txt
+          name: cross ppc64le build log
+          path: build/meson-logs/meson-log.txt
+
+  cross-s390x:
+    name: cross s390x
+    runs-on: ubuntu-latest
+    steps:
+      - name: set up s390x architecture
+        run: |
+          export release=$(lsb_release -c -s)
+          sudo dpkg --add-architecture s390x
+          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
+          sudo dd of=/etc/apt/sources.list.d/s390x.list <<EOF
+          deb [arch=s390x] http://ports.ubuntu.com/ $release main universe restricted"
+          deb [arch=s390x] http://ports.ubuntu.com/ $release-updates main universe restricted"
+          EOF
+          sudo apt update
+      - name: install s390x compiler
+        run: sudo apt install gcc-s390x-linux-gnu pkg-config qemu-user-static
+      - name: install libraries
+        run: sudo apt install libjson-c-dev:s390x
+      - uses: actions/checkout@v3
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: test
+          setup-options: >
+            --werror
+            --buildtype=release
+            --cross-file=.github/cross/ubuntu-s390x.txt
+            -Dlibnvme:werror=false
+            -Dlibnvme:python=false
+            -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cross s390x build log
+          path: build/meson-logs/meson-log.txt
