@@ -6,4 +6,5 @@
  *          leonardo.da.cunha@solidigm.com
  */
 
-int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+int ocp_clear_fw_update_history(int argc, char **argv,
+                                struct command *cmd, struct plugin *plugin);
