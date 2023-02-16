@@ -1,0 +1,38 @@
+---
+name: coverage
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  code-coverage:
+    name: code coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: install libraries
+        run: sudo apt-get install libjson-c-dev libdbus-1-dev lcov
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          # Can't use 'coverage' here, see
+          # https://github.com/BSFishy/meson-build/issues/4
+          action: test
+          options: --verbose
+          setup-options: >
+            --werror
+            --buildtype=release
+            --wrap-mode=nofallback
+            -Dlibdbus=enabled
+            -Db_coverage=true
+          meson-version: 0.61.2
+      - name: Generate Coverage Report
+        # Can't use meson here, see
+        # https://github.com/mesonbuild/meson/issues/7895
+        run: ninja -C build coverage --verbose
+      - uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: false

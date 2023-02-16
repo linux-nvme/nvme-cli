@@ -1,12 +1,14 @@
-name: Build and upload to PyPI
+---
+name: release python
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     tags:
       - '**'
   pull_request:
-    branches: [ master ]
+    branches: [master]
+
   workflow_dispatch:
 
 jobs:
