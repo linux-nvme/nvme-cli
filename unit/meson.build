@@ -35,3 +35,12 @@ test_uint128_si = executable(
 )
 
 test('uint128-si', test_uint128_si)
+
+test_argconfig_parse = executable(
+    'test-argconfig-parse',
+    ['test-argconfig-parse.c', '../util/argconfig.c', '../util/suffix.c'],
+    include_directories: [incdir, '..'],
+    dependencies: [libnvme_dep],
+)
+
+test('argconfig_parse', test_argconfig_parse)
