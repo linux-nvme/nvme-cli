@@ -3,29 +3,148 @@ name: build
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   workflow_dispatch:
 
 jobs:
-  build-distro:
+  gcc-debug:
+    name: gcc debug
     runs-on: ubuntu-latest
-
     steps:
       - name: install dependencies
-        run: sudo apt-get install libjson-c-dev libhugetlbfs-dev libdbus-1-dev
+        run: sudo apt-get install libjson-c-dev libhugetlbfs-dev
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
+          options: --verbose
+          setup-options: >
+            --werror
+            --buildtype=debug
+            -Dlibnvme:werror=false
+          meson-version: 0.61.2
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: gcc debug testlog
+          path: build/meson-logs/testlog.txt
+
+  gcc-release:
+    name: gcc release
+    runs-on: ubuntu-latest
+    steps:
+      - name: install dependencies
+        run: sudo apt-get install libjson-c-dev libhugetlbfs-dev
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
+          options: --verbose
+          setup-options: >
+            --werror
+            --buildtype=release
+            -Dlibnvme:werror=false
+          meson-version: 0.61.2
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: gcc release testlog
+          path: build/meson-logs/testlog.txt
+
+  clang-release:
+    name: clang release
+    runs-on: ubuntu-latest
+    steps:
+      - name: install dependencies
+        run: sudo apt-get install clang libjson-c-dev libhugetlbfs-dev
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
+          options: --verbose
+          setup-options: >
+            --werror
+            --buildtype=release
+            --cross-file=.github/cross/clang.txt
+            -Dlibnvme:werror=false
+            -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: clang release testlog
+          path: build/meson-logs/testlog.txt
+
+  fallback-shared-libraries:
+    name: fallback shared libraries
+    runs-on: ubuntu-latest
+    steps:
+      - name: install dependencies
+        run: sudo apt-get install libpam-dev libcap-ng-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --werror
           action: test
+          options: --verbose
+          setup-options: >
+            --werror
+            --buildtype=release
+            --wrap-mode=forcefallback
+            --default-library=shared
+            -Dlibnvme:werror=false
+            -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: fallback shared libaries testlog
+          path: build/meson-logs/testlog.txt
 
-  build-cross-armhf:
+  fallback-static-libraries:
+    name: fallback static libraries
+    runs-on: ubuntu-latest
+    steps:
+      - name: install dependencies
+        run: sudo apt-get install libpam-dev libcap-ng-dev
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: test
+          options: --verbose
+          setup-options: >
+            --werror
+            --buildtype=release
+            --wrap-mode=forcefallback
+            --default-library=static
+            -Dlibnvme:werror=false
+            -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: fallback static libaries testlog
+          path: build/meson-logs/testlog.txt
+
+  cross-armhf:
+    name: cross armhf
     runs-on: ubuntu-latest
     steps:
       - name: set up arm architecture
@@ -41,21 +160,28 @@ jobs:
       - name: install armhf compiler
         run: sudo apt install gcc-arm-linux-gnueabihf pkg-config
       - name: install libraries
-        run: sudo apt install uuid-dev:armhf libjson-c-dev:armhf libdbus-1-dev:armhf
+        run: sudo apt install libjson-c-dev:armhf
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          # suppress python for now; the python headers currently assume native
-          setup-options: --werror --cross-file=.github/cross/ubuntu-armhf.txt -Dlibnvme:python=false
-          options: --verbose
           action: build
+          options: --verbose
+          setup-options: >
+            --werror
+            --buildtype=release
+            --cross-file=.github/cross/ubuntu-armhf.txt
+            -Dlibnvme:werror=false
+            -Dlibnvme:python=false
+            -Dopenssl:werror=false
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: Linux_Meson_Testlog
+          name: cross armhf testlog
           path: build/meson-logs/testlog.txt
 
-  build-cross-ppc64le:
+  cross-ppc64le:
+    name: cross ppc64le
     runs-on: ubuntu-latest
     steps:
       - name: set up ppc64le architecture
@@ -71,48 +197,22 @@ jobs:
       - name: install powerpc64le compiler
         run: sudo apt install gcc-powerpc64le-linux-gnu pkg-config
       - name: install libraries
-        run: sudo apt install uuid-dev:ppc64el libjson-c-dev:ppc64el libdbus-1-dev:ppc64el
+        run: sudo apt install libjson-c-dev:ppc64el
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          # suppress python for now; the python headers currently assume native
-          setup-options: --werror --cross-file=.github/cross/ubuntu-ppc64le.txt -Dlibnvme:python=false
-          options: --verbose
           action: build
+          options: --verbose
+          setup-options: >
+            --werror
+            --buildtype=release
+            --cross-file=.github/cross/ubuntu-ppc64le.txt
+            -Dlibnvme:werror=false
+            -Dlibnvme:python=false
+            -Dopenssl:werror=false
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: Linux_Meson_Testlog
+          name: cross ppc64le testlog
           path: build/meson-logs/testlog.txt
-
-  build-fallback:
-    runs-on: ubuntu-latest
-    steps:
-      - name: install dependencies
-        run: sudo apt-get install -y libpam-dev libcap-ng-dev
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        with:
-          setup-options: --werror -Dopenssl:werror=false -Ddbus:werror=false --wrap-mode=forcefallback
-          options: --verbose
-          action: test
-          meson-version: 0.61.2
-
-  build-static:
-    runs-on: ubuntu-latest
-    steps:
-      - name: install dependencies
-        run: sudo apt-get install -y libpam-dev libcap-ng-dev
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        with:
-          setup-options: --werror -Dopenssl:werror=false -Ddbus:werror=false --wrap-mode=forcefallback --default-library=static
-          options: --verbose
-          action: test
-          meson-version: 0.61.2
