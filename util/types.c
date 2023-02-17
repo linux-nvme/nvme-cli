@@ -46,14 +46,31 @@ uint64_t int48_to_long(__u8 *data)
 	return result;
 }
 
-char *uint128_t_to_string(nvme_uint128_t val)
+static long double uint128_t_to_double(nvme_uint128_t data)
+{
+	int i;
+	long double result = 0;
+
+	for (i = 0; i < sizeof(data.words) / sizeof(*data.words); i++) {
+		result *= 4294967296;
+		result += data.words[i];
+	}
+
+	return result;
+}
+
+static char *__uint128_t_to_string(nvme_uint128_t val, bool l10n)
 {
 	static char str[60];
 	int idx = 60;
 	__u64 div, rem;
-	char *sep = localeconv()->thousands_sep;
-	int len = sep ? strlen(sep) : 0;
-	int i;
+	char *sep = NULL;
+	int i, len = 0;
+
+	if (l10n) {
+		sep = localeconv()->thousands_sep;
+		len = strlen(sep);
+	}
 
 	/* terminate at the end, and build up from the ones */
 	str[--idx] = '\0';
@@ -88,17 +105,14 @@ char *uint128_t_to_string(nvme_uint128_t val)
 	return str + idx;
 }
 
-static long double uint128_t_to_double(nvme_uint128_t data)
+char *uint128_t_to_string(nvme_uint128_t val)
 {
-	int i;
-	long double result = 0;
+	return __uint128_t_to_string(val, false);
+}
 
-	for (i = 0; i < sizeof(data.words) / sizeof(*data.words); i++) {
-		result *= 4294967296;
-		result += data.words[i];
-	}
-
-	return result;
+char *uint128_t_to_l10n_string(nvme_uint128_t val)
+{
+	return __uint128_t_to_string(val, true);
 }
 
 char *uint128_t_to_si_string(nvme_uint128_t val, __u32 bytes_per_unit)

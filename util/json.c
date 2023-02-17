@@ -35,10 +35,24 @@ struct json_object *util_json_object_new_uint64(uint64_t i)
 
 }
 
+static int util_json_object_string_to_number(struct json_object *jso,
+					     struct printbuf *pb, int level,
+					     int flags)
+{
+	ssize_t len = json_object_get_string_len(jso);
+
+	printbuf_memappend(pb, json_object_get_string(jso), len);
+
+	return 0;
+}
+
 struct json_object *util_json_object_new_uint128(nvme_uint128_t  val)
 {
 	struct json_object *obj;
+
 	obj = json_object_new_string(uint128_t_to_string(val));
+	json_object_set_serializer(obj, util_json_object_string_to_number, NULL, NULL);
+
 	return obj;
 }
 
