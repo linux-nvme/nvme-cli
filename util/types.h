@@ -29,6 +29,7 @@ long double int128_to_double(__u8 *data);
 uint64_t int48_to_long(__u8 *data);
 
 char *uint128_t_to_string(nvme_uint128_t val);
+char *uint128_t_to_l10n_string(nvme_uint128_t val);
 char *uint128_t_to_si_string(nvme_uint128_t val, __u32 bytes_per_unit);
 const char *util_uuid_to_string(unsigned char uuid[NVME_UUID_LEN]);
 const char *util_fw_to_string(char *c);
