@@ -279,7 +279,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: build muon and samury build-tool
+      - name: build muon and samurai build-tool
         run: |
           mkdir build-tools
           cd build-tools
@@ -311,3 +311,4 @@ jobs:
               -Djson-c=disabled     \
               build
           samu -C build
+          muon -C build test
