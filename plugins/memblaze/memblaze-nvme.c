@@ -707,7 +707,7 @@ static int glp_high_latency(FILE *fdi, char *buf, int buflen, int print)
         }
         else  //  sort
         {
-            timestamp = logEntry->timestampH - 1;
+            timestamp = logEntry->timestampH;
             timestamp = timestamp << 32;
             timestamp += logEntry->timestampL;
             tt = timestamp / 1000;
