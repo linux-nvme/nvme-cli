@@ -4549,6 +4549,9 @@ static int filter_out_flags(int status)
 static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 				 void *buf)
 {
+	int status = filter_out_flags(err);
+	enum nvme_status_type type = NVME_STATUS_TYPE_NVME;
+
 	if (!err) {
 		if (!cfg.raw_binary || !buf) {
 			printf("get-feature:%#0*x (%s), %s value:%#0*x\n",
@@ -4567,9 +4570,8 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 			d_raw(buf, cfg.data_len);
 		}
 	} else if (err > 0) {
-		if (!nvme_status_equals(filter_out_flags(err),
-					NVME_STATUS_TYPE_NVME,
-					NVME_SC_INVALID_FIELD))
+		if (!nvme_status_equals(status, type, NVME_SC_INVALID_FIELD) &&
+		    !nvme_status_equals(status,  type, NVME_SC_INVALID_NS))
 			nvme_show_status(err);
 	} else {
 		fprintf(stderr, "get-feature: %s\n", nvme_strerror(errno));
@@ -4616,6 +4618,8 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 	int feat_max = 0x100;
 	int feat_num = 0;
 	bool changed = false;
+	int status = 0;
+	enum nvme_status_type type = NVME_STATUS_TYPE_NVME;
 
 	if (cfg.sel == 8)
 		changed = true;
@@ -4626,15 +4630,21 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 	for (i = cfg.feature_id; i < feat_max; i++, feat_num++) {
 		cfg.feature_id = i;
 		err = get_feature_id_changed(dev, cfg, changed);
-		if (err && !nvme_status_equals(filter_out_flags(err),
-					       NVME_STATUS_TYPE_NVME,
-					       NVME_SC_INVALID_FIELD))
+		if (!err)
+			continue;
+		status = filter_out_flags(err);
+		if (nvme_status_equals(status, type, NVME_SC_INVALID_FIELD))
+			continue;
+		if (!nvme_status_equals(status, type, NVME_SC_INVALID_NS))
 			break;
+		fprintf(stderr, "get-feature:%#0*x (%s): ",
+			cfg.feature_id ? 4 : 2, cfg.feature_id,
+			nvme_feature_to_string(cfg.feature_id));
+		nvme_show_status(err);
 	}
 
-	if (feat_num == 1 && nvme_status_equals(filter_out_flags(err),
-						NVME_STATUS_TYPE_NVME,
-						NVME_SC_INVALID_FIELD))
+	if (feat_num == 1 &&
+	    nvme_status_equals(status, type, NVME_SC_INVALID_FIELD))
 		nvme_show_status(err);
 
 	return err;
