@@ -417,6 +417,9 @@ struct nvme_ns {
   }
 }
 
+%pythonappend nvme_host::nvme_host(struct nvme_root *r, const char *hostnqn,
+				   const char *hostid, const char *hostsymname) {
+    self.__parent = r  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend nvme_host {
   nvme_host(struct nvme_root *r, const char *hostnqn = NULL,
 	    const char *hostid = NULL, const char *hostsymname = NULL) {
@@ -501,6 +504,8 @@ struct nvme_ns {
   }
 }
 
+%pythonappend nvme_subsystem::nvme_subsystem(struct nvme_host *host, const char *subsysnqn, const char *name) {
+    self.__parent = host  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend nvme_subsystem {
   nvme_subsystem(struct nvme_host *host, const char *subsysnqn,
 		 const char *name = NULL) {
@@ -557,6 +562,8 @@ struct nvme_ns {
   }
 }
 
+%pythonappend nvme_ctrl::connect(struct nvme_host *h, struct nvme_fabrics_config *cfg) {
+    self.__parent = h  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend nvme_ctrl {
   nvme_ctrl(struct nvme_root *r, const char *subsysnqn, const char *transport,
 	    const char *traddr = NULL, const char *host_traddr = NULL,
@@ -720,6 +727,8 @@ struct nvme_ns {
   }
 %};
 
+%pythonappend nvme_ns::nvme_ns(struct nvme_subsystem *s, unsigned int nsid) {
+    self.__parent = s  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend nvme_ns {
   nvme_ns(struct nvme_subsystem *s, unsigned int nsid) {
     return nvme_subsystem_lookup_namespace(s, nsid);
