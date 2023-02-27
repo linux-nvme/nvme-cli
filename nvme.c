@@ -4502,6 +4502,8 @@ ret:
 static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
 			  void **buf, __u32 *result)
 {
+	size_t size;
+
 	if (!cfg->data_len)
 		nvme_get_feature_length(cfg->feature_id, cfg->cdw11,
 					&cfg->data_len);
@@ -4519,10 +4521,11 @@ static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
 		cfg->data_len = 0;
 
 	if (cfg->data_len) {
-		if (posix_memalign(buf, getpagesize(), cfg->data_len)) {
+		/* rounding up size to page size */
+		size = ((cfg->data_len - 1) / getpagesize() + 1) * getpagesize();
+		if (posix_memalign(buf, getpagesize(), size))
 			return -1;
-		}
-		memset(*buf, 0, cfg->data_len);
+		memset(*buf, 0, size);
 	}
 
 	struct nvme_get_features_args args = {
