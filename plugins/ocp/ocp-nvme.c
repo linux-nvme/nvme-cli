@@ -69,8 +69,8 @@ typedef enum {
 	SCAO_XRC	= 48,	/* XOR recovery count */
 	SCAO_UREC	= 56,	/* Uncorrectable read error count */
 	SCAO_SEEC	= 64,	/* Soft ecc error count */
-	SCAO_EECE	= 72,	/* End to end corrected errors */
-	SCAO_EEDC	= 76,	/* End to end detected errors */
+	SCAO_EEDC	= 72,	/* End to end detected errors */
+	SCAO_EECE	= 76,	/* End to end corrected errors */
 	SCAO_SDPU	= 80,	/* System data percent used */
 	SCAO_RFSC	= 81,	/* Refresh counts */
 	SCAO_MXUDEC	= 88,	/* Max User data erase counts */
@@ -177,10 +177,10 @@ static void ocp_print_C0_log_normal(void *data)
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UREC]));
 	printf("  Soft ecc error count				%"PRIu64"\n",
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SEEC]));
-	printf("  End to end corrected errors			%"PRIu32"\n",
-	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
 	printf("  End to end detected errors			%"PRIu32"\n",
 	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EEDC]));
+	printf("  End to end corrected errors			%"PRIu32"\n",
+	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
 	printf("  System data percent used			%d\n",
 	       (__u8)log_data[SCAO_SDPU]);
 	printf("  Refresh counts				%"PRIu64"\n",
@@ -270,10 +270,10 @@ static void ocp_print_C0_log_json(void *data)
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UREC]));
 	json_object_add_value_uint64(root, "Soft ecc error count",
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SEEC]));
-	json_object_add_value_uint(root, "End to end corrected errors",
-		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
 	json_object_add_value_uint(root, "End to end detected errors",
 		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EEDC]));
+	json_object_add_value_uint(root, "End to end corrected errors",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
 	json_object_add_value_uint(root, "System data percent used",
 		(__u8)log_data[SCAO_SDPU]);
 	json_object_add_value_uint64(root, "Refresh counts",
@@ -404,7 +404,7 @@ out:
 static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
 			     struct plugin *plugin)
 {
-	const char *desc = "Retrieve latency monitor log data.";
+	const char *desc = "Retrieve the extended SMART health data.";
 	struct nvme_dev *dev;
 	int ret = 0;
 
