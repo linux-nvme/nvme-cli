@@ -62,6 +62,7 @@ if have_python_support
 
     py_tests = [ 
         [ 'create ctrl object', files('tests/create-ctrl-obj.py') ], 
+        [ 'SIGSEGV during gc', files('tests/gc.py') ],
     ]
     foreach test: py_tests
         description = test[0]
