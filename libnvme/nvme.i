@@ -278,6 +278,9 @@ static void PyDict_SetItemStringDecRef(PyObject *p, const char *key, PyObject *v
   }
   $result = obj;
  };
+
+#define STR_OR_NONE(str) (!(str) ? "None" : str)
+
 struct nvme_root {
   %immutable config_file;
   char *config_file;
@@ -444,11 +447,9 @@ struct nvme_ns {
   void set_symname(const char *hostsymname) {
     nvme_host_set_hostsymname($self, hostsymname);
   }
-  char *__str__() {
-    static char tmp[2048];
 
-    sprintf(tmp, "nvme_host(%s,%s)", $self->hostnqn, $self->hostid);
-    return tmp;
+  PyObject *__str__() {
+    return PyUnicode_FromFormat("nvme.host(%s,%s)", STR_OR_NONE($self->hostnqn), STR_OR_NONE($self->hostid));
   }
   struct host_iter __iter__() {
     struct host_iter ret = { .root = nvme_host_get_root($self),
@@ -514,11 +515,8 @@ struct nvme_ns {
   ~nvme_subsystem() {
     nvme_free_subsystem($self);
   }
-  char *__str__() {
-    static char tmp[1024];
-
-    sprintf(tmp, "nvme_subsystem(%s,%s)", $self->name,$self->subsysnqn);
-    return tmp;
+  PyObject *__str__() {
+    return PyUnicode_FromFormat("nvme.subsystem(%s,%s)", STR_OR_NONE($self->name), STR_OR_NONE($self->subsysnqn));
   }
   struct subsystem_iter __iter__() {
     struct subsystem_iter ret = { .host = nvme_subsystem_get_host($self),
@@ -736,11 +734,8 @@ struct nvme_ns {
   ~nvme_ns() {
     nvme_free_ns($self);
   }
-  char *__str__() {
-    static char tmp[1024];
-
-    sprintf(tmp, "nvme_ns(%u)", $self->nsid);
-    return tmp;
+  PyObject *__str__() {
+    return PyUnicode_FromFormat("nvme.ns(%u)", $self->nsid);
   }
   struct ns_iter __iter__() {
     struct ns_iter ret = { .ctrl = nvme_ns_get_ctrl($self),
