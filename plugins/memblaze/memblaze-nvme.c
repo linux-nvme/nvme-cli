@@ -226,17 +226,17 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
     printf("Total thermal throttling minutes since power on			: %u\n",
         smart->items[THERMAL_THROTTLE].thermal_throttle.count);
 
-    printf("Maximum temperature in kelvin since last factory reset		: %u\n",
+    printf("Maximum temperature in kelvins since last factory reset		: %u\n",
         le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.max));
-    printf("Minimum temperature in kelvin since last factory reset		: %u\n",
+    printf("Minimum temperature in kelvins since last factory reset		: %u\n",
         le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.min));
     if (compare_fw_version(fw_ver, "0.09.0300") != 0) {
-        printf("Maximum temperature in kelvin since power on			: %u\n",
+        printf("Maximum temperature in kelvins since power on			: %u\n",
             le16_to_cpu(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.max));
-        printf("Minimum temperature in kelvin since power on			: %u\n",
+        printf("Minimum temperature in kelvins since power on			: %u\n",
             le16_to_cpu(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.min));
     }
-    printf("Current temperature in kelvin					: %u\n",
+    printf("Current temperature in kelvins					: %u\n",
         le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.curr));
 
     printf("Maximum power in watt since power on				: %u\n",
