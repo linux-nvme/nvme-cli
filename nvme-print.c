@@ -2087,14 +2087,14 @@ static void nvme_show_id_ctrl_apsta(__u8 apsta)
 
 static void nvme_show_id_ctrl_wctemp(__le16 wctemp)
 {
-	printf(" [15:0] : %ld°C (%u kelvin)\tWarning Composite Temperature Threshold (WCTEMP)\n",
+	printf(" [15:0] : %ld °C (%u K)\tWarning Composite Temperature Threshold (WCTEMP)\n",
 	       kelvin_to_celsius(le16_to_cpu(wctemp)), le16_to_cpu(wctemp));
 	printf("\n");
 }
 
 static void nvme_show_id_ctrl_cctemp(__le16 cctemp)
 {
-	printf(" [15:0] : %ld°C (%u kelvin)\tCritical Composite Temperature Threshold (CCTEMP)\n",
+	printf(" [15:0] : %ld °C (%u K)\tCritical Composite Temperature Threshold (CCTEMP)\n",
 	       kelvin_to_celsius(le16_to_cpu(cctemp)), le16_to_cpu(cctemp));
 	printf("\n");
 }
@@ -2144,14 +2144,14 @@ static void nvme_show_id_ctrl_hctma(__le16 ctrl_hctma)
 
 static void nvme_show_id_ctrl_mntmt(__le16 mntmt)
 {
-	printf(" [15:0] : %ld°C (%u kelvin)\tMinimum Thermal Management Temperature (MNTMT)\n",
+	printf(" [15:0] : %ld °C (%u K)\tMinimum Thermal Management Temperature (MNTMT)\n",
 	       kelvin_to_celsius(le16_to_cpu(mntmt)), le16_to_cpu(mntmt));
 	printf("\n");
 }
 
 static void nvme_show_id_ctrl_mxtmt(__le16 mxtmt)
 {
-	printf(" [15:0] : %ld°C (%u kelvin)\tMaximum Thermal Management Temperature (MXTMT)\n",
+	printf(" [15:0] : %ld °C (%u K)\tMaximum Thermal Management Temperature (MXTMT)\n",
 	       kelvin_to_celsius(le16_to_cpu(mxtmt)), le16_to_cpu(mxtmt));
 	printf("\n");
 }
@@ -4156,7 +4156,7 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		printf("      Persistent Mem. RO[5]          : %d\n", (smart->critical_warning & 0x20) >> 5);
 	}
 
-	printf("temperature				: %ld°C (%u kelvin)\n",
+	printf("temperature				: %ld °C (%u K)\n",
 		kelvin_to_celsius(temperature), temperature);
 	printf("available_spare				: %u%%\n",
 		smart->avail_spare);
@@ -4199,7 +4199,7 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 
 		if (temp == 0)
 			continue;
-		printf("Temperature Sensor %d           : %ld°C (%u kelvin)\n",
+		printf("Temperature Sensor %d           : %ld °C (%u K)\n",
 		       i + 1, kelvin_to_celsius(temp), temp);
 	}
 	printf("Thermal Management T1 Trans Count	: %u\n",
@@ -4899,7 +4899,7 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		field = (result & 0x000f0000) >> 16;
 		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n",
 		       field, nvme_feature_temp_sel_to_string(field));
-		printf("\tTemperature Threshold         (TMPTH): %ld°C (%u kelvin)\n",
+		printf("\tTemperature Threshold         (TMPTH): %ld °C (%u K)\n",
 		       kelvin_to_celsius(result & 0x0000ffff), result & 0x0000ffff);
 		break;
 	case NVME_FEAT_FID_ERR_RECOVERY:
@@ -4965,9 +4965,9 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
 		break;
 	case NVME_FEAT_FID_HCTM:
-		printf("\tThermal Management Temperature 1 (TMT1) : %u kelvin (%ld°C)\n",
+		printf("\tThermal Management Temperature 1 (TMT1) : %u K (%ld °C)\n",
 		       result >> 16, kelvin_to_celsius(result >> 16));
-		printf("\tThermal Management Temperature 2 (TMT2) : %u kelvin (%ld°C)\n",
+		printf("\tThermal Management Temperature 2 (TMT2) : %u K (%ld °C)\n",
 		       result & 0x0000ffff, kelvin_to_celsius(result & 0x0000ffff));
 		break;
 	case NVME_FEAT_FID_NOPSC:

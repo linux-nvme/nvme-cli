@@ -10576,7 +10576,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	if (ret != 0)
 		goto out;
 
-   	/* convert from kelvin to degrees Celsius */
+	/* convert from kelvins to degrees Celsius */
 	temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]) - 273;
 
 	/* retrieve HCTM Thermal Management Temperatures */
