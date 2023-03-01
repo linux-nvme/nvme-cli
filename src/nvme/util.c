@@ -403,14 +403,17 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 			  __u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
 			  __u32 *elbats, __u16 nr)
 {
-	int i;
+	int i, j;
 
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = cpu_to_le16(nlbs[i]);
 		copy[i].slba = cpu_to_le64(slbas[i]);
-		copy[i].elbt[2] = cpu_to_le64(eilbrts[i]);
 		copy[i].elbatm = cpu_to_le16(elbatms[i]);
 		copy[i].elbat = cpu_to_le16(elbats[i]);
+		for (j = 0; j < 8; j++)
+			copy[i].elbt[9 - j] = (eilbrts[i] >> (8 * j)) & 0xff;
+		copy[i].elbt[1] = 0;
+		copy[i].elbt[0] = 0;
 	}  
 }
 
