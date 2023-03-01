@@ -158,12 +158,12 @@ int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val)
 }
 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
-		    const struct argconfig_commandline_options *options)
+		    struct argconfig_commandline_options *options)
 {
 	char *short_opts;
 	char *endptr;
 	struct option *long_opts;
-	const struct argconfig_commandline_options *s;
+	struct argconfig_commandline_options *s;
 	int c, option_index = 0, short_index = 0, options_count = 0;
 	void *value_addr;
 	int ret = -EINVAL;
@@ -198,6 +198,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			long_opts[option_index].flag = NULL;
 			long_opts[option_index].val = 0;
 		}
+		s->seen = false;
 		option_index++;
 	}
 
@@ -232,6 +233,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		}
 
 		s = &options[option_index];
+		s->seen = true;
 		value_addr = (void *)(char *)s->default_value;
 		if (s->config_type == CFG_STRING) {
 			*((char **)value_addr) = optarg;

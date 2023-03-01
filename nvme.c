@@ -408,7 +408,7 @@ static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags)
 
 int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
 		   const char *desc,
-		   const struct argconfig_commandline_options *opts)
+		   struct argconfig_commandline_options *opts)
 {
 	int ret;
 
@@ -4700,7 +4700,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	if (err)
 		goto ret;
 
-	if (!cfg.namespace_id) {
+	if (!opts[1].seen) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
 			if (errno != ENOTTY) {
@@ -5878,14 +5878,13 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (err)
 		goto ret;
 
-	if (!cfg.namespace_id) {
+	if (!opts[0].seen) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
 			if (errno != ENOTTY) {
 				fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
 				goto close_dev;
 			}
-
 			cfg.namespace_id = NVME_NSID_ALL;
 		}
 	}

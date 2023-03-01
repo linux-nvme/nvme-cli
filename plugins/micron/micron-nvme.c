@@ -455,7 +455,7 @@ exit_status:
  */
 static int micron_parse_options(struct nvme_dev **dev, int argc, char **argv,
 				const char *desc,
-				const struct argconfig_commandline_options *opts,
+				struct argconfig_commandline_options *opts,
 				eDriveModel *modelp)
 {
     int idx = 0;
