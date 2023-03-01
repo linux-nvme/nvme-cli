@@ -38,6 +38,7 @@
 #include <getopt.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 enum argconfig_types {
 	CFG_FLAG,
@@ -62,7 +63,7 @@ enum argconfig_types {
 };
 
 #define OPT_ARGS(n) \
-	const struct argconfig_commandline_options n[]
+	struct argconfig_commandline_options n[]
 
 #define OPT_END() { NULL }
 
@@ -109,6 +110,7 @@ struct argconfig_commandline_options {
 	void *default_value;
 	int argument_type;
 	const char *help;
+	bool seen;
 };
 
 #define CFG_MAX_SUBOPTS 500
@@ -119,7 +121,7 @@ void argconfig_append_usage(const char *str);
 void argconfig_print_help(const char *program_desc,
 			  const struct argconfig_commandline_options *options);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
-		    const struct argconfig_commandline_options *options);
+		    struct argconfig_commandline_options *options);
 int argconfig_parse_subopt_string(char *string, char **options,
 				  size_t max_options);
 int argconfig_parse_comma_sep_array(char *string, int *ret,
