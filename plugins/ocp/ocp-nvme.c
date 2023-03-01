@@ -91,7 +91,8 @@ typedef enum {
 	SCAO_NUSE	= 152,	/* NUSE - Namespace utilization */
 	SCAO_PSC	= 160,	/* PLP start count */
 	SCAO_EEST	= 176,	/* Endurance estimate */
-	SCAO_PLRC	= 192,  /* PCIe Link Retraining Count */
+	SCAO_PLRC	= 192,	/* PCIe Link Retraining Count */
+	SCAO_PSCC	= 200,	/* Power State Change Count */
 	SCAO_LPV	= 494,	/* Log page version */
 	SCAO_LPG	= 496,	/* Log page GUID */
 } SMART_CLOUD_ATTRIBUTE_OFFSETS;
@@ -220,15 +221,17 @@ static void ocp_print_C0_log_normal(void *data)
 		printf("  Errata Version Field                          %d\n",
 		       (__u8)log_data[SCAO_EVF]);
 		printf("  Point Version Field                           %"PRIu16"\n",
-		       (uint16_t)log_data[SCAO_PVF]);
+		       le16_to_cpu(*(uint16_t *)&log_data[SCAO_PVF]));
 		printf("  Minor Version Field                           %"PRIu16"\n",
-		       (uint16_t)log_data[SCAO_MIVF]);
+		       le16_to_cpu(*(uint16_t *)&log_data[SCAO_MIVF]));
 		printf("  Major Version Field                           %d\n",
 		       (__u8)log_data[SCAO_MAVF]);
 		printf("  NVMe Errata Version				%d\n",
 		       (__u8)log_data[SCAO_NEV]);
 		printf("  PCIe Link Retraining Count			%"PRIu64"\n",
 		       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
+		printf("  Power State Change Count			%"PRIu64"\n",
+		       le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
 	}
 	printf("\n");
 }
@@ -317,15 +320,17 @@ static void ocp_print_C0_log_json(void *data)
 		json_object_add_value_uint(root, "Errata Version Field",
 					   (__u8)log_data[SCAO_EVF]);
 		json_object_add_value_uint(root, "Point Version Field",
-					   (uint16_t)log_data[SCAO_PVF]);
+					   le16_to_cpu(*(uint16_t *)&log_data[SCAO_PVF]));
 		json_object_add_value_uint(root, "Minor Version Field",
-					   (uint16_t)log_data[SCAO_MIVF]);
+					   le16_to_cpu(*(uint16_t *)&log_data[SCAO_MIVF]));
 		json_object_add_value_uint(root, "Major Version Field",
 					   (__u8)log_data[SCAO_MAVF]);
 		json_object_add_value_uint(root, "NVMe Errata Version",
 					   (__u8)log_data[SCAO_NEV]);
 		json_object_add_value_uint(root, "PCIe Link Retraining Count",
 					   (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
+		json_object_add_value_uint(root, "Power State Change Count",
+					   le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
 	}
 	json_print_object(root, NULL);
 	printf("\n");
