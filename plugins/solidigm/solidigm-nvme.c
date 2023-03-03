@@ -11,6 +11,7 @@
 #include "solidigm-nvme.h"
 
 #include "solidigm-smart.h"
+#include "solidigm-internal-logs.h"
 #include "solidigm-garbage-collection.h"
 #include "solidigm-latency-tracking.h"
 #include "solidigm-telemetry.h"
@@ -22,6 +23,11 @@
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	return solidigm_get_additional_smart_log(argc, argv, cmd, plugin);
+}
+
+static int get_internal_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return solidigm_get_internal_log(argc, argv, cmd, plugin);
 }
 
 static int get_garbage_collection_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)

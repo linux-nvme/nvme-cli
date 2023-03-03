@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (c) 2022 Solidigm.
+ * Copyright (c) 2022-2023 Solidigm.
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
@@ -13,12 +13,13 @@
 
 #include "cmd.h"
 
-#define SOLIDIGM_PLUGIN_VERSION "0.10"
+#define SOLIDIGM_PLUGIN_VERSION "0.11"
 
 PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("smart-log-add", "Retrieve Solidigm SMART Log", get_additional_smart_log)
 		ENTRY("vs-smart-add-log", "Get SMART / health extended log (redirects to ocp plug-in)", smart_cloud)
+		ENTRY("vs-internal-log", "Retrieve Debug log binaries", get_internal_log)
 		ENTRY("garbage-collect-log", "Retrieve Garbage Collection Log", get_garbage_collection_log)
 		ENTRY("latency-tracking-log", "Enable/Retrieve Latency tracking Log", get_latency_tracking_log)
 		ENTRY("parse-telemetry-log", "Parse Telemetry Log binary", get_telemetry_log)
