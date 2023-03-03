@@ -4842,6 +4842,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	struct stat sb;
 	void *fw_buf;
 	bool huge;
+	struct nvme_id_ctrl ctrl;
 
 	struct config {
 		char	*fw;
@@ -4894,7 +4895,18 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fw_fd;
 	}
 
-	if (cfg.xfer == 0 || cfg.xfer % 4096)
+	if (cfg.xfer == 0) {
+		err = nvme_cli_identify_ctrl(dev, &ctrl);
+		if (err) {
+			fprintf(stderr, "identify-ctrl: %s\n", nvme_strerror(errno));
+			goto close_fw_fd;
+		}
+		if (ctrl.fwug == 0 || ctrl.fwug == 0xff)
+			cfg.xfer = 4096;
+		else
+			cfg.xfer = ctrl.fwug * 4096;
+	}
+	else if (cfg.xfer % 4096)
 		cfg.xfer = 4096;
 
 	if (cfg.xfer < HUGE_MIN)
