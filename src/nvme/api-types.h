@@ -800,8 +800,8 @@ struct nvme_resv_report_args {
  * @nsid:	Namespace identifier
  * @data_len:	Length of @data
  * @timeout:	Timeout in ms
- * @mos		Management Operation Specific
- * @mo		Management Operation
+ * @mos:		Management Operation Specific
+ * @mo:		Management Operation
  */
 struct nvme_io_mgmt_recv_args {
 	void *data;
@@ -822,8 +822,8 @@ struct nvme_io_mgmt_recv_args {
  * @nsid:	Namespace identifier
  * @data_len:	Length of @data
  * @timeout:	Timeout in ms
- * @mos		Management Operation Specific
- * @mo		Management Operation
+ * @mos:		Management Operation Specific
+ * @mo:		Management Operation
  */
 struct nvme_io_mgmt_send_args {
 	void *data;
