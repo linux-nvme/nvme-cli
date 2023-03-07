@@ -2441,7 +2441,7 @@ void json_support_log(struct nvme_supported_log_pages *support_log)
 	__u32 support;
 
 	root = json_create_object();
-	valid = json_create_object();
+	valid = json_create_array();
 
 	for (lid = 0; lid < 256; lid++) {
 		support = le32_to_cpu(support_log->lid_support[lid]);
