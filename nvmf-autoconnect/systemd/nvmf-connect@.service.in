@@ -4,7 +4,9 @@
 
 [Unit]
 Description=NVMf auto-connect scan upon nvme discovery controller Events
-After=syslog.target
+DefaultDependencies=no
+After=systemd-udevd.service
+Before=local-fs-pre.target
 PartOf=nvmf-connect.target
 Requires=nvmf-connect.target
 
