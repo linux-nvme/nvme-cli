@@ -3790,9 +3790,12 @@ void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 		printf("vs		: %d\n", err_log[i].vs);
 		printf("trtype		: %s\n",
 			nvme_trtype_to_string(err_log[i].trtype));
+		printf("csi		: %d\n", err_log[i].csi);
+		printf("opcode		: %#x\n", err_log[i].opcode);
 		printf("cs		: %#"PRIx64"\n",
 		       le64_to_cpu(err_log[i].cs));
 		printf("trtype_spec_info: %#x\n", err_log[i].trtype_spec_info);
+		printf("log_page_version: %d\n", err_log[i].log_page_version);
 		printf(".................\n");
 	}
 }
