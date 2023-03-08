@@ -5283,14 +5283,14 @@ static int nvme_get_properties(int fd, void **pbar)
 {
 	int offset, err, size = getpagesize();
 	__u64 value;
+	void *bar = malloc(size);
 
-	*pbar = malloc(size);
-	if (!*pbar) {
+	if (!bar) {
 		fprintf(stderr, "malloc: %s\n", strerror(errno));
 		return -1;
 	}
 
-	memset(*pbar, 0xff, size);
+	memset(bar, 0xff, size);
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;) {
 		struct nvme_get_property_args args = {
 			.args_size	= sizeof(args),
@@ -5308,17 +5308,21 @@ static int nvme_get_properties(int fd, void **pbar)
 		} else if (err) {
 			fprintf(stderr, "get-property: %s\n",
 				nvme_strerror(errno));
-			free(*pbar);
 			break;
 		}
 		if (nvme_is_64bit_reg(offset)) {
-			*(uint64_t *)(*pbar + offset) = value;
+			*(uint64_t *)(bar + offset) = value;
 			offset += 8;
 		} else {
-			*(uint32_t *)(*pbar + offset) = value;
+			*(uint32_t *)(bar + offset) = value;
 			offset += 4;
 		}
 	}
+
+	if (err)
+		free(bar);
+	else
+		*pbar = bar;
 
 	return err;
 }
@@ -5413,7 +5417,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	bar = mmap_registers(r, dev);
 	if (!bar) {
 		err = nvme_get_properties(dev_fd(dev), &bar);
-		if (!bar)
+		if (err)
 			goto close_dev;
 		fabrics = true;
 	}
