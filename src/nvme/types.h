@@ -2515,12 +2515,18 @@ struct nvme_supported_log_pages {
  *			 related, this field shall be cleared to %0h. If the error
  *			 is transport related, this field shall be set to the type
  *			 of the transport - see &enum nvme_trtype.
- * @rsvd:		 Reserved
+ * @csi:		 Command Set Indicator: This field contains command set
+ *			 indicator for the command that the error is associated
+ *			 with.
+ * @opcode:		 Opcode: This field contains opcode for the command that
+ *			 the error is associated with.
  * @cs:			 Command Specific Information: This field contains command
  *			 specific information. If used, the command definition
  *			 specifies the information returned.
  * @trtype_spec_info:	 Transport Type Specific Information
- * @rsvd2:		 Reserved
+ * @rsvd:		 Reserved: [62:42]
+ * @log_page_version:	 This field shall be set to 1h. If set, @csi and @opcode
+ *			 will have valid values.
  */
 struct nvme_error_log_page {
 	__le64	error_count;
@@ -2532,10 +2538,12 @@ struct nvme_error_log_page {
 	__le32	nsid;
 	__u8	vs;
 	__u8	trtype;
-	__u8	rsvd[2];
+	__u8	csi;
+	__u8	opcode;
 	__le64	cs;
 	__le16	trtype_spec_info;
-	__u8	rsvd2[22];
+	__u8	rsvd[21];
+	__u8	log_page_version;
 };
 
 enum nvme_err_pel {
