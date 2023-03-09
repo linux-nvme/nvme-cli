@@ -805,3 +805,140 @@ static int clear_fw_update_history(int argc, char **argv,
 {
 	return ocp_clear_fw_update_history(argc, argv, cmd, plugin);
 }
+
+static const char *eol_plp_failure_mode_to_string(__u8 mode)
+{
+	switch (mode) {
+	case 1:
+		return "Read only mode (ROM)";
+	case 2:
+		return "Write through mode (WTM)";
+	case 3:
+		return "Normal mode";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
+static int eol_plp_failure_mode_get(struct nvme_dev *dev, const __u32 nsid,
+				    const __u8 fid, __u8 sel)
+{
+	__u32 result;
+	int err;
+
+	struct nvme_get_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= dev_fd(dev),
+		.fid		= fid,
+		.nsid		= nsid,
+		.sel		= sel,
+		.cdw11		= 0,
+		.uuidx		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
+	err = nvme_get_features(&args);
+	if (!err) {
+		printf("End of Life Behavior (feature: %#0*x): %#0*x (%s: %s)\n",
+		       fid ? 4 : 2, fid, result ? 10 : 8, result,
+		       nvme_select_to_string(sel),
+		       eol_plp_failure_mode_to_string(result));
+		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+			nvme_show_select_result(result);
+	} else {
+		printf("Could not get feature: %#0*x.\n", fid ? 4 : 2, fid);
+	}
+
+	return err;
+}
+
+static int eol_plp_failure_mode_set(struct nvme_dev *dev, const __u32 nsid,
+				    const __u8 fid, __u8 mode, bool save)
+{
+	__u32 result;
+	int err;
+
+	struct nvme_set_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= dev_fd(dev),
+		.fid		= fid,
+		.nsid		= nsid,
+		.cdw11		= mode << 30,
+		.cdw12		= 0,
+		.save		= save,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
+	err = nvme_set_features(&args);
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		perror("Define EOL/PLP failure mode");
+		fprintf(stderr, "Command failed while parsing.\n");
+	} else {
+		printf("Successfully set mode (feature: %#0*x): %#0*x (%s: %s).\n",
+		       fid ? 4 : 2, fid, mode ? 10 : 8, mode,
+		       save ? "Save" : "Not save",
+		       eol_plp_failure_mode_to_string(mode));
+	}
+
+	return err;
+}
+
+static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
+				struct plugin *plugin)
+{
+	const char *desc = "Define EOL or PLP circuitry failure mode.\n"\
+			   "No argument prints current mode.";
+	const char *mode = "[0-3]: default/rom/wtm/normal";
+	const char *save = "Specifies that the controller shall save the attribute";
+	const char *sel = "[0-3,8]: current/default/saved/supported/changed";
+	const __u32 nsid = 0;
+	const __u8 fid = 0xc2;
+	struct nvme_dev *dev;
+	int err;
+
+	struct config {
+		__u8 mode;
+		bool save;
+		__u8 sel;
+	};
+
+	struct config cfg = {
+		.mode = 0,
+		.save = false,
+		.sel = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("mode", 'm', &cfg.mode, mode),
+		OPT_FLAG("save", 's', &cfg.save, save),
+		OPT_BYTE("sel", 'S', &cfg.sel, sel),
+		{NULL}
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+
+	if (err)
+		return err;
+
+	if (opts[0].seen)
+		err = eol_plp_failure_mode_set(dev, nsid, fid, cfg.mode,
+					       cfg.save);
+	else
+		err = eol_plp_failure_mode_get(dev, nsid, fid, cfg.sel);
+
+	dev_close(dev);
+
+	return err;
+}
