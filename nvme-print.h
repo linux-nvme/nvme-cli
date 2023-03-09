@@ -155,5 +155,6 @@ char *zone_state_to_string(__u8 state);
 const char *nvme_pel_event_to_string(int type);
 const char *get_sanitize_log_sstat_status_str(__u16 status);
 const char *nvme_ana_state_to_string(enum nvme_ana_state state);
+const char *nvme_log_to_string(__u8 lid);
 
 #endif

@@ -2447,13 +2447,13 @@ void json_support_log(struct nvme_supported_log_pages *support_log)
 		support = le32_to_cpu(support_log->lid_support[lid]);
 		if (support & 0x1) {
 			valid_attrs = json_create_object();
-			sprintf(key, "lid_0x%x ", lid);
-			json_object_add_value_uint(valid_attrs, key, support);
+			sprintf(key, "LID_0x%x", lid);
+			json_object_add_value_string(valid_attrs, key, nvme_log_to_string(lid));
 			json_array_add_value_object(valid, valid_attrs);
 		}
 	}
 
-	json_object_add_value_object(root, "supported_logs", valid);
+	json_object_add_value_object(root, "Supported_Logs", valid);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);

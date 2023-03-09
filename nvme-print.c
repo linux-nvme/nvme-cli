@@ -4077,12 +4077,9 @@ void nvme_show_supported_log(struct nvme_supported_log_pages *support_log,
 	for (lid = 0; lid < 256; lid++) {
 		support = le32_to_cpu(support_log->lid_support[lid]);
 		if (support & 0x1) {
-			printf("LID 0x%x (%s), supports 0x%x\n", lid, nvme_log_to_string(lid),
-				support);
+			printf("LID 0x%x - %s\n", lid, nvme_log_to_string(lid));
 			if (human)
 				nvme_show_support_log_human(support, lid);
-			else
-				printf("\n");
 		}
 	}
 }
