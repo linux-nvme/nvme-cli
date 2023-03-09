@@ -3031,8 +3031,8 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_cctemp(ctrl->cctemp);
 	printf("mtfa      : %d\n", le16_to_cpu(ctrl->mtfa));
-	printf("hmpre     : %d\n", le32_to_cpu(ctrl->hmpre));
-	printf("hmmin     : %d\n", le32_to_cpu(ctrl->hmmin));
+	printf("hmpre     : %u\n", le32_to_cpu(ctrl->hmpre));
+	printf("hmmin     : %u\n", le32_to_cpu(ctrl->hmmin));
 	printf("tnvmcap   : %s\n",
 		uint128_t_to_l10n_string(le128_to_cpu(ctrl->tnvmcap)));
 	if (human)
@@ -3081,7 +3081,7 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_cqes(ctrl->cqes);
 	printf("maxcmd    : %d\n", le16_to_cpu(ctrl->maxcmd));
-	printf("nn        : %d\n", le32_to_cpu(ctrl->nn));
+	printf("nn        : %u\n", le32_to_cpu(ctrl->nn));
 	printf("oncs      : %#x\n", le16_to_cpu(ctrl->oncs));
 	if (human)
 		nvme_show_id_ctrl_oncs(ctrl->oncs);
