@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme supported-log-pages' <device> [--output-format=<fmt> | -o <fmt>]
-                            [--human-readable | -H]
+                            [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -30,10 +30,9 @@ OPTIONS
 	This option will set the reporting format to normal, json, or binary.
 	Only one output format can be used at a time.
 
--H::
---human-readable::
-	This option will parse and format many of the bit fields into a
-	human-readable format.
+-v::
+--verbose::
+	Show detailed information including LSUPP and IOP support details.
 
 EXAMPLES
 --------

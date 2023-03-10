@@ -33,7 +33,7 @@ nvme-supported-log-pages \- Send NVMe Supported Log pages request, returns resul
 .sp
 .nf
 \fInvme supported\-log\-pages\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
-                            [\-\-human\-readable | \-H]
+                            [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -49,9 +49,9 @@ On success, the returned supported log pages log structure will be printed for e
 This option will set the reporting format to normal, json, or binary\&. Only one output format can be used at a time\&.
 .RE
 .PP
-\-H, \-\-human\-readable
+\-v, \-\-verbose
 .RS 4
-This option will parse and format many of the bit fields into a human\-readable format\&.
+Show detailed information including LSUPP and IOP support details\&.
 .RE
 .SH "EXAMPLES"
 .sp
