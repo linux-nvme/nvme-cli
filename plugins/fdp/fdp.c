@@ -350,7 +350,8 @@ static int fdp_status(int argc, char **argv, struct command *cmd, struct plugin 
 		goto out;
 	}
 
-	len = le16_to_cpu(hdr.nruhsd) * sizeof(struct nvme_fdp_ruh_status_desc);
+	len = sizeof(struct nvme_fdp_ruh_status) +
+		le16_to_cpu(hdr.nruhsd) * sizeof(struct nvme_fdp_ruh_status_desc);
 	buf = malloc(len);
 	if (!buf) {
 		err = -ENOMEM;
