@@ -31,8 +31,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: gcc debug build logs
-          path: build/meson-logs/meson-log.txt
+          name: logs files
+          path: |
+            build/meson-logs/*.txt
 
   gcc-release:
     name: gcc release
@@ -56,8 +57,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: gcc debug build log
-          path: build/meson-logs/meson-log.txt
+          name: log files
+          path: |
+            build/meson-logs/*.txt
 
   clang-release:
     name: clang release
@@ -82,8 +84,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: gcc debug build log
-          path: build/meson-logs/meson-log.txt
+          name: log files
+          path: |
+            build/meson-logs/*.txt
 
   fallback-shared-libraries:
     name: fallback shared libraries
@@ -109,8 +112,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: fallback shared libraries build log
-          path: build/meson-logs/meson-log.txt
+          name: log files
+          path: |
+            build/meson-logs/*.txt
 
   fallback-static-libraries:
     name: fallback static libraries
@@ -137,8 +141,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: fallback static libraries build log
-          path: build/meson-logs/meson-log.txt
+          name: log files
+          path: |
+            build/meson-logs/*.txt
 
   fallback-all-static:
     name: fallback all static
@@ -166,8 +171,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: fallback all static build log
-          path: build/meson-logs/meson-log.txt
+          name: log files
+          path: |
+            build/meson-logs/*.txt
 
   cross-armhf:
     name: cross armhf
@@ -201,8 +207,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: cross armhf build log
-          path: build/meson-logs/meson-log.txt
+          name: log files
+          path: |
+            build/meson-logs/*.txt
 
   cross-ppc64le:
     name: cross ppc64le
@@ -236,8 +243,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: cross ppc64le build log
-          path: build/meson-logs/meson-log.txt
+          name: log files
+          path: |
+            build/meson-logs/*.txt
 
   cross-s390x:
     name: cross s390x
@@ -271,8 +279,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: cross s390x build log
-          path: build/meson-logs/meson-log.txt
+          name: log files
+          path: |
+            build/meson-logs/*.txt
 
   build-muon:
     name: muon minimal
