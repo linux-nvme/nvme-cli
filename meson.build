@@ -10,6 +10,7 @@ project(
       'buildtype=debug',
       'prefix=/usr/local',
       'warning_level=1',
+      'sysconfdir=etc',
     ]
 )
 
@@ -20,7 +21,7 @@ prefixdir  = get_option('prefix')
 datadir    = join_paths(prefixdir, get_option('datadir'))
 mandir     = join_paths(prefixdir, get_option('mandir'))
 sbindir    = join_paths(prefixdir, get_option('sbindir'))
-sysconfdir = prefixdir + get_option('sysconfdir')
+sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
 
 udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
 dracutrulesdir = join_paths(prefixdir, get_option('dracutrulesdir'))
