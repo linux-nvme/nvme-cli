@@ -2257,8 +2257,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		cfg.log_id = (cfg.aen >> 16) & 0xff;
 	}
 
-	if (!cfg.log_len) {
-		fprintf(stderr, "non-zero log-len is required param\n");
+	if (!cfg.log_len || cfg.log_len & (1 << 2)) {
+		fprintf(stderr, "non-zero or non-dw alignment log-len is required param\n");
 		err = -EINVAL;
 		goto close_dev;
 	}
