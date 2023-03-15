@@ -300,3 +300,19 @@ endforeach
 
 install_data(disc,
              install_dir: join_paths(sysconfdir, 'nvme'))
+
+################################################################################
+if meson.version().version_compare('>=0.53.0')
+    summary_dict = {
+        'prefixdir':         prefixdir,
+        'sysconfdir':        sysconfdir,
+        'sbindir':           sbindir,
+        'datadir':           datadir,
+        'mandir':            mandir,
+        'udevrulesdir':      udevrulesdir,
+        'dracutrulesdir':    dracutrulesdir,
+        'systemddir':        systemddir,
+        'build location':    meson.current_build_dir(),
+    }
+    summary(summary_dict)
+endif
