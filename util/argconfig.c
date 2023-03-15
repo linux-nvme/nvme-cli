@@ -234,6 +234,10 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 
 		s = &options[option_index];
 		s->seen = true;
+
+		if (!s->default_value)
+			continue;
+
 		value_addr = (void *)(char *)s->default_value;
 		if (s->config_type == CFG_STRING) {
 			*((char **)value_addr) = optarg;
