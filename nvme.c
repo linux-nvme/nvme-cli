@@ -1815,7 +1815,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 		goto close_dev;
 	}
 
-	if (cfg.lsp > 128) {
+	if (cfg.lsp > 127) {
 		fprintf(stderr, "invalid lsp param: %u\n", cfg.lsp);
 		err = -1;
 		goto close_dev;
@@ -2263,13 +2263,13 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_dev;
 	}
 
-	if (cfg.lsp > 128) {
+	if (cfg.lsp > 127) {
 		fprintf(stderr, "invalid lsp param\n");
 		err = -EINVAL;
 		goto close_dev;
 	}
 
-	if (cfg.uuid_index > 128) {
+	if (cfg.uuid_index > 127) {
 		fprintf(stderr, "invalid uuid index param\n");
 		err = -EINVAL;
 		goto close_dev;
@@ -4711,13 +4711,13 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		}
 	}
 
-	if (cfg.sel > 8) {
+	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
 		err = -EINVAL;
 		goto close_dev;
 	}
 
-	if (cfg.uuid_index > 128) {
+	if (cfg.uuid_index > 127) {
 		fprintf(stderr, "invalid uuid index param: %u\n", cfg.uuid_index);
 		err = -1;
 		goto close_dev;
@@ -5244,8 +5244,8 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	if (sanact == NVME_SANITIZE_SANACT_START_OVERWRITE) {
-		if (cfg.owpass > 16) {
-			fprintf(stderr, "OWPASS out of range [0-16]\n");
+		if (cfg.owpass > 15) {
+			fprintf(stderr, "OWPASS out of range [0-15]\n");
 			err = -EINVAL;
 			goto close_dev;
 		}
@@ -5899,7 +5899,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_dev;
 	}
 
-	if (cfg.uuid_index > 128) {
+	if (cfg.uuid_index > 127) {
 		fprintf(stderr, "invalid uuid index param: %u\n", cfg.uuid_index);
 		err = -1;
 		goto close_dev;
