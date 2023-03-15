@@ -252,3 +252,18 @@ subdir('libnvme')
 subdir('test')
 subdir('examples')
 subdir('doc')
+
+################################################################################
+if meson.version().version_compare('>=0.53.0')
+    summary_dict = {
+        'prefixdir':         prefixdir,
+        'sysconfdir':        sysconfdir,
+        'bindir':            bindir,
+        'includedir':        includedir,
+        'datadir':           datadir,
+        'mandir':            mandir,
+        'libdir':            libdir,
+        'build location':    meson.current_build_dir(),
+    }
+    summary(summary_dict)
+endif
