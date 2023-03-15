@@ -40,7 +40,21 @@
 		PyDict_SetItemString(p, key, val); /* Does NOT steal reference to val .. */
 		Py_XDECREF(val);                   /* .. therefore decrement ref. count. */
 	}
+	PyObject *hostnqn_from_file() {
+		char * val = nvmf_hostnqn_from_file();
+		PyObject * obj = PyUnicode_FromString(val);
+		free(val);
+		return obj;
+	}
+	PyObject *hostid_from_file() {
+		char * val = nvmf_hostid_from_file();
+		PyObject * obj = PyUnicode_FromString(val);
+		free(val);
+		return obj;
+	}
 %}
+PyObject *hostnqn_from_file();
+PyObject *hostid_from_file();
 
 %inline %{
 	struct host_iter {
