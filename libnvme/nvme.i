@@ -463,19 +463,32 @@ struct nvme_ns {
 @return: None"
 %enddef
 
+%define SET_KEY_DOCSTRING
+"@brief Set or Clear Host's DHCHAP Key
+
+@param key: A DHCHAP key, or None to clear the key.
+@type key: str|None
+
+@return: None"
+%enddef
+
 %pythonappend nvme_host::nvme_host(struct nvme_root *r,
 				   const char *hostnqn,
 				   const char *hostid,
+				   const char *hostkey,
 				   const char *hostsymname) {
 	self.__parent = r  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend nvme_host {
 	nvme_host(struct nvme_root *r,
 		  const char *hostnqn = NULL,
 		  const char *hostid = NULL,
+		  const char *hostkey = NULL,
 		  const char *hostsymname = NULL) {
 		nvme_host_t h = hostnqn ? nvme_lookup_host(r, hostnqn, hostid) : nvme_default_host(r);
 		if (hostsymname)
 			nvme_host_set_hostsymname(h, hostsymname);
+		if (hostkey)
+			nvme_host_set_dhchap_key(h, hostkey);
 		return h;
 	}
 	~nvme_host() {
@@ -486,6 +499,10 @@ struct nvme_ns {
 		nvme_host_set_hostsymname($self, hostsymname);
 	}
 
+	%feature("autodoc", SET_KEY_DOCSTRING) set_key;
+	void set_key(const char *key) {
+		nvme_host_set_dhchap_key($self, key);
+	}
 	PyObject* __str__() {
 		return PyUnicode_FromFormat("nvme.host(%s,%s)", STR_OR_NONE($self->hostnqn), STR_OR_NONE($self->hostid));
 	}
