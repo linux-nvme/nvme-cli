@@ -260,7 +260,7 @@ static void vt_process_string(char *str, const size_t size)
 	}
 }
 
-static int vt_add_entry_to_log(const int fd, const char *path, const struct vtview_save_log_settings *cfg)
+static int vt_add_entry_to_log(struct dev_handle *hdl, const char *path, const struct vtview_save_log_settings *cfg)
 {
 	struct vtview_smart_log_entry smart;
 	const char *filename;
@@ -275,26 +275,26 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 		filename = cfg->output_file;
 
 	smart.time_stamp = time(NULL);
-	ret = nvme_get_nsid(fd, &nsid);
+	ret = nvme_get_nsid(hdl, &nsid);
 
 	if (ret < 0) {
 		printf("Cannot read namespace-id\n");
 		return -1;
 	}
 
-	ret = nvme_identify_ns(fd, nsid, &smart.raw_ns);
+	ret = nvme_identify_ns(hdl, nsid, &smart.raw_ns);
 	if (ret) {
 		printf("Cannot read namespace identify\n");
 		return -1;
 	}
 
-	ret = nvme_identify_ctrl(fd, &smart.raw_ctrl);
+	ret = nvme_identify_ctrl(hdl, &smart.raw_ctrl);
 	if (ret) {
 		printf("Cannot read device identify controller\n");
 		return -1;
 	}
 
-	ret = nvme_get_log_smart(fd, NVME_NSID_ALL, false, &smart.raw_smart);
+	ret = nvme_get_log_smart(hdl, NVME_NSID_ALL, false, &smart.raw_smart);
 	if (ret) {
 		printf("Cannot read device SMART log\n");
 		return -1;
@@ -307,7 +307,7 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 	return ret;
 }
 
-static int vt_update_vtview_log_header(const int fd, const char *path, const struct vtview_save_log_settings *cfg)
+static int vt_update_vtview_log_header(struct dev_handle *hdl, const char *path, const struct vtview_save_log_settings *cfg)
 {
 	struct vtview_log_header header;
 	const char *filename;
@@ -340,13 +340,13 @@ static int vt_update_vtview_log_header(const int fd, const char *path, const str
 	printf("Log file: %s\n", filename);
 	header.time_stamp = time(NULL);
 
-	ret = nvme_identify_ctrl(fd, &header.raw_ctrl);
+	ret = nvme_identify_ctrl(hdl, &header.raw_ctrl);
 	if (ret) {
 		printf("Cannot read identify device\n");
 		return -1;
 	}
 
-	ret = nvme_get_log_fw_slot(fd, false, &header.raw_fw);
+	ret = nvme_get_log_fw_slot(hdl, false, &header.raw_fw);
 	if (ret) {
 		printf("Cannot read device firmware log\n");
 		return -1;
@@ -977,7 +977,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 	printf("Running for %lf hour(s)\n", cfg.run_time_hrs);
 	printf("Logging SMART data for every %lf hour(s)\n", cfg.log_record_frequency_hrs);
 
-	ret = vt_update_vtview_log_header(dev_fd(dev), path, &cfg);
+	ret = vt_update_vtview_log_header(dev_hdl(dev), path, &cfg);
 	if (ret) {
 		err = EINVAL;
 		dev_close(dev);
@@ -1000,7 +1000,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 		if (cur_time >= end_time)
 			break;
 
-		ret = vt_add_entry_to_log(dev_fd(dev), path, &cfg);
+		ret = vt_add_entry_to_log(dev_hdl(dev), path, &cfg);
 		if (ret) {
 			printf("Cannot update driver log\n");
 			break;
@@ -1035,7 +1035,7 @@ static int vt_show_identify(int argc, char **argv, struct command *cmd, struct p
 		return err;
 	}
 
-	ret = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	ret = nvme_identify_ctrl(dev_hdl(dev), &ctrl);
 	if (ret) {
 		printf("Cannot read identify device\n");
 		dev_close(dev);

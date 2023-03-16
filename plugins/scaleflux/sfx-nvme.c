@@ -128,7 +128,7 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item grown_bb; /* grown bad block */
 };
 
-int nvme_query_cap(int fd, __u32 nsid, __u32 data_len, void *data)
+int nvme_query_cap(struct dev_handle *hdl, __u32 nsid, __u32 data_len, void *data)
 {
 	int rc = 0;
 	struct nvme_passthru_cmd cmd = {
@@ -138,11 +138,11 @@ int nvme_query_cap(int fd, __u32 nsid, __u32 data_len, void *data)
 		.data_len	= data_len,
 	};
 
-	rc = ioctl(fd, SFX_GET_FREESPACE, data);
-	return rc ? nvme_submit_admin_passthru(fd, &cmd, NULL) : 0;
+	rc = ioctl(hdl->fd, SFX_GET_FREESPACE, data);
+	return rc ? nvme_submit_admin_passthru(hdl, &cmd, NULL) : 0;
 }
 
-int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
+int nvme_change_cap(struct dev_handle *hdl, __u32 nsid, __u64 capacity)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode	= nvme_admin_change_cap,
@@ -151,10 +151,10 @@ int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 		.cdw11	= (capacity >> 32),
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
-int nvme_sfx_set_features(int fd, __u32 nsid, __u32 fid, __u32 value)
+int nvme_sfx_set_features(struct dev_handle *hdl, __u32 nsid, __u32 fid, __u32 value)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode	= nvme_admin_sfx_set_features,
@@ -163,10 +163,10 @@ int nvme_sfx_set_features(int fd, __u32 nsid, __u32 fid, __u32 value)
 		.cdw11	= value,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
-int nvme_sfx_get_features(int fd, __u32 nsid, __u32 fid, __u32 *result)
+int nvme_sfx_get_features(struct dev_handle *hdl, __u32 nsid, __u32 fid, __u32 *result)
 {
 	int err = 0;
 		struct nvme_passthru_cmd cmd = {
@@ -175,7 +175,7 @@ int nvme_sfx_get_features(int fd, __u32 nsid, __u32 fid, __u32 *result)
 		.cdw10	= fid,
 	};
 
-	err = nvme_submit_admin_passthru(fd, &cmd, NULL);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err && result)
 		*result = cmd.result;
 
@@ -434,7 +434,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	if (err)
 		return err;
 
-	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
+	err = nvme_get_nsid_log(dev_hdl(dev), false, 0xca, cfg.namespace_id,
 				sizeof(smart_log), (void *)&smart_log);
 	if (!err) {
 		if (cfg.json)
@@ -649,7 +649,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(dev_fd(dev), cfg.write ? 0xc3 : 0xc1,
+	err = nvme_get_log_simple(dev_hdl(dev), cfg.write ? 0xc3 : 0xc1,
 				  sizeof(stats), (void *)&stats);
 	if (!err) {
 		if ((stats.ver.maj == VANDA_MAJOR_IDX) && (stats.ver.min == VANDA_MINOR_IDX)) {
@@ -673,7 +673,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	return err;
 }
 
-int sfx_nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
+int sfx_nvme_get_log(struct dev_handle *hdl, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode		   = nvme_admin_get_log_page,
@@ -687,7 +687,7 @@ int sfx_nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data
 	cmd.cdw10 = log_id | (numdl << 16);
 	cmd.cdw11 = numdu;
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 /**
@@ -699,14 +699,14 @@ int sfx_nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data
  *
  * @return -1 fail ; 0 success
  */
-static int get_bb_table(int fd, __u32 nsid, unsigned char *buf, __u64 size)
+static int get_bb_table(struct dev_handle *hdl, __u32 nsid, unsigned char *buf, __u64 size)
 {
-	if (fd < 0 || !buf || size != 256*4096*sizeof(unsigned char)) {
+	if (hdl->fd < 0 || !buf || size != 256*4096*sizeof(unsigned char)) {
 		fprintf(stderr, "Invalid Param \r\n");
 		return -EINVAL;
 	}
 
-	return sfx_nvme_get_log(fd, nsid, SFX_LOG_BBT, size, (void *)buf);
+	return sfx_nvme_get_log(hdl, nsid, SFX_LOG_BBT, size, (void *)buf);
 }
 
 /**
@@ -795,7 +795,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 		return -1;
 	}
 
-	err = get_bb_table(dev_fd(dev), 0xffffffff, data_buf, buf_size);
+	err = get_bb_table(dev_hdl(dev), 0xffffffff, data_buf, buf_size);
 	if (err < 0) {
 		perror("get-bad-block");
 	} else if (err) {
@@ -846,7 +846,7 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return err;
 
-	if (nvme_query_cap(dev_fd(dev), 0xffffffff, sizeof(ctx), &ctx)) {
+	if (nvme_query_cap(dev_hdl(dev), 0xffffffff, sizeof(ctx), &ctx)) {
 		perror("sfx-query-cap");
 		err = -1;
 	}
@@ -861,7 +861,7 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	return err;
 }
 
-static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
+static int change_sanity_check(struct dev_handle *hdl, __u64 trg_in_4k, int *shrink)
 {
 	struct sfx_freespace_ctx freespace_ctx = { 0 };
 	struct sysinfo s_info;
@@ -870,7 +870,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	__u64 provisoned_cap_4k = 0;
 	int extend = 0;
 
-	if (nvme_query_cap(fd, 0xffffffff, sizeof(freespace_ctx), &freespace_ctx))
+	if (nvme_query_cap(hdl, 0xffffffff, sizeof(freespace_ctx), &freespace_ctx))
 		return -1;
 
 	/*
@@ -985,7 +985,7 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	printf("%dG %"PRIu64"B %"PRIu64" 4K\n",
 		cfg.capacity_in_gb, (uint64_t)cfg.cap_in_byte, (uint64_t)cap_in_4k);
 
-	if (change_sanity_check(dev_fd(dev), cap_in_4k, &shrink)) {
+	if (change_sanity_check(dev_hdl(dev), cap_in_4k, &shrink)) {
 		printf("ScaleFlux change-capacity: fail\n");
 		dev_close(dev);
 		return err;
@@ -996,14 +996,14 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 		return 0;
 	}
 
-	err = nvme_change_cap(dev_fd(dev), 0xffffffff, cap_in_4k);
+	err = nvme_change_cap(dev_hdl(dev), 0xffffffff, cap_in_4k);
 	if (err < 0) {
 		perror("sfx-change-cap");
 	} else if (err) {
 		nvme_show_status(err);
 	} else {
 		printf("ScaleFlux change-capacity: success\n");
-		ioctl(dev_fd(dev), BLKRRPART);
+		ioctl(dev_hdl(dev)->fd, BLKRRPART);
 	}
 	dev_close(dev);
 	return err;
@@ -1026,14 +1026,14 @@ static int sfx_verify_chr(int fd)
 	return 0;
 }
 
-static int sfx_clean_card(int fd)
+static int sfx_clean_card(struct dev_handle *hdl)
 {
 	int ret;
 
-	ret = sfx_verify_chr(fd);
+	ret = sfx_verify_chr(hdl->fd);
 	if (ret)
 		return ret;
-	ret = ioctl(fd, NVME_IOCTL_CLR_CARD);
+	ret = ioctl(hdl->fd, NVME_IOCTL_CLR_CARD);
 	if (ret)
 		perror("Ioctl Fail.");
 	else
@@ -1105,14 +1105,14 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			dev_close(dev);
 			return 0;
 		} else {
-			return sfx_clean_card(dev_fd(dev));
+			return sfx_clean_card(dev_hdl(dev));
 		}
 
 	}
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value) {
 		if (cfg.namespace_id != 0xffffffff) {
-			err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id,
+			err = nvme_identify_ns(dev_hdl(dev), cfg.namespace_id,
 					       &ns);
 			if (err) {
 				if (err < 0)
@@ -1145,7 +1145,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 		}
 	}
 
-	err = nvme_sfx_set_features(dev_fd(dev), cfg.namespace_id,
+	err = nvme_sfx_set_features(dev_hdl(dev), cfg.namespace_id,
 				    cfg.feature_id,
 				    cfg.value);
 
@@ -1199,7 +1199,7 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 		return -EINVAL;
 	}
 
-	err = nvme_sfx_get_features(dev_fd(dev), cfg.namespace_id,
+	err = nvme_sfx_get_features(dev_hdl(dev), cfg.namespace_id,
 				    cfg.feature_id, &result);
 	if (err < 0) {
 		perror("ScaleFlux-get-feature");
@@ -1359,7 +1359,7 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 stor
 	FILE *fd = NULL;
 	struct nvme_get_log_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
+		.hdl		= dev_hdl(dev),
 		.lid		= NVME_LOG_LID_PERSISTENT_EVENT,
 		.nsid		= namespace_id,
 		.lpo		= NVME_LOG_LPO_NONE,
@@ -1599,7 +1599,7 @@ static int nvme_expand_cap(struct nvme_dev *dev, __u32 namespace_id, __u64 names
 		.cdw10       = 0x0e,
 	};
 
-	err = nvme_submit_admin_passthru(dev_fd(dev), &cmd, NULL);
+	err = nvme_submit_admin_passthru(dev_hdl(dev), &cmd, NULL);
 	if (err) {
 		fprintf(stderr, "Create ns failed\n");
 		nvme_show_status(err);

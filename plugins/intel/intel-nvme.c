@@ -363,7 +363,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(dev_fd(dev), 0xca, sizeof(smart_log),
+	err = nvme_get_log_simple(dev_hdl(dev), 0xca, sizeof(smart_log),
 				  &smart_log);
 	if (!err) {
 		if (cfg.json)
@@ -405,7 +405,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(dev_fd(dev), 0xdd, sizeof(log), log);
+	err = nvme_get_log_simple(dev_hdl(dev), 0xdd, sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			printf("Intel Marketing Name Log:\n%s\n", log);
@@ -467,7 +467,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(dev_fd(dev), 0xc5, sizeof(stats), &stats);
+	err = nvme_get_log_simple(dev_hdl(dev), 0xc5, sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_temp_stats(&stats);
@@ -1058,7 +1058,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	/* For optate, latency stats are deleted every time their LID is pulled.
 	 * Therefore, we query the longest lat_stats log page first.
 	 */
-	err = nvme_get_log_simple(dev_fd(dev), cfg.write ? 0xc2 : 0xc1,
+	err = nvme_get_log_simple(dev_hdl(dev), cfg.write ? 0xc2 : 0xc1,
 				  sizeof(data), &data);
 
 	media_version[0] = (data[1] << 8) | data[0];
@@ -1073,7 +1073,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 		struct nvme_get_features_args args = {
 			.args_size	= sizeof(args),
-			.fd		= dev_fd(dev),
+			.hdl		= dev_hdl(dev),
 			.fid		= 0xf7,
 			.nsid		= 0,
 			.sel		= 0,
@@ -1227,7 +1227,7 @@ static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
 }
 
 static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
-			   const size_t max_tfer, int out_fd, int ioctl_fd,
+			   const size_t max_tfer, int out_fd, struct dev_handle *hdl,
 			   __u8 *buf)
 {
 	int err = 0;
@@ -1235,7 +1235,7 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_admin_passthru(ioctl_fd, cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, cmd, NULL);
 		if (err) {
 			fprintf(stderr,
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
@@ -1269,7 +1269,7 @@ static int write_header(__u8 *buf, int fd, size_t amnt)
 	return 0;
 }
 
-static int read_header(struct nvme_passthru_cmd *cmd, __u8 *buf, int ioctl_fd,
+static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, struct dev_handle *hdl,
 			__u32 dw12, int nsid)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -1280,15 +1280,15 @@ static int read_header(struct nvme_passthru_cmd *cmd, __u8 *buf, int ioctl_fd,
 	cmd->cdw12 = dw12;
 	cmd->data_len = 0x1000;
 	cmd->addr = (unsigned long)(void *)buf;
-	return read_entire_cmd(cmd, 0x400, 0x400, -1, ioctl_fd, buf);
+	return read_entire_cmd(cmd, 0x400, 0x400, -1, hdl, buf);
 }
 
-static int setup_file(char *f, char *file, int fd, int type)
+static int setup_file(char *f, char *file, struct dev_handle *hdl, int type)
 {
 	struct nvme_id_ctrl ctrl;
 	int err = 0, i = sizeof(ctrl.sn) - 1;
 
-	err = nvme_identify_ctrl(fd, &ctrl);
+	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err)
 		return err;
 
@@ -1304,7 +1304,7 @@ static int setup_file(char *f, char *file, int fd, int type)
 	return err;
 }
 
-static int get_internal_log_old(__u8 *buf, int output, int fd,
+static int get_internal_log_old(__u8 *buf, int output, struct dev_handle *hdl,
 				struct nvme_passthru_cmd *cmd)
 {
 	struct intel_vu_log *intel;
@@ -1326,7 +1326,7 @@ static int get_internal_log_old(__u8 *buf, int output, int fd,
 	cmd->opcode = 0xd2;
 	cmd->cdw10 = min(dwmax, intel->size);
 	cmd->data_len = min(dmamax, intel->size);
-	err = read_entire_cmd(cmd, intel->size, dwmax, output, fd, buf);
+	err = read_entire_cmd(cmd, intel->size, dwmax, output, hdl, buf);
 	if (err)
 		goto out;
 
@@ -1395,7 +1395,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 	}
 
 	if (!cfg.file) {
-		err = setup_file(f, cfg.file, dev_fd(dev), cfg.log);
+		err = setup_file(f, cfg.file, dev_hdl(dev), cfg.log);
 		if (err)
 			goto out_free;
 		cfg.file = f;
@@ -1413,7 +1413,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 		goto out_free;
 	}
 
-	err = read_header(&cmd, buf, dev_fd(dev), cdlog.u.entireDword,
+	err = read_header(&cmd, buf, dev_hdl(dev), cdlog.u.entireDword,
 			  cfg.namespace_id);
 	if (err)
 		goto out;
@@ -1423,7 +1423,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 	if ((intel->ver.major < 1 && intel->ver.minor < 1) ||
 	    (intel->ver.major <= 1 && intel->ver.minor <= 1 && cfg.log == 0)) {
 		cmd.addr = (unsigned long)(void *)buf;
-		err = get_internal_log_old(buf, output, dev_fd(dev), &cmd);
+		err = get_internal_log_old(buf, output, dev_hdl(dev), &cmd);
 		goto out;
 	}
 
@@ -1468,7 +1468,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 				cmd.data_len = min(0x400, ad[i].assertsize) * 4;
 				err = read_entire_cmd(&cmd, ad[i].assertsize,
 						      0x400, output,
-						      dev_fd(dev),
+						      dev_hdl(dev),
 						      buf);
 				if (err)
 					goto out;
@@ -1478,7 +1478,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 				if (count > 1)
 					cdlog.u.fields.selectNlog = i;
 
-				err = read_header(&cmd, buf, dev_fd(dev),
+				err = read_header(&cmd, buf, dev_hdl(dev),
 						  cdlog.u.entireDword,
 						  cfg.namespace_id);
 				if (err)
@@ -1493,7 +1493,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 				cmd.data_len = min(0x1000, intel_nlog->nlogbytesize);
 				err = read_entire_cmd(&cmd, intel_nlog->nlogbytesize / 4,
 						      0x400, output,
-						      dev_fd(dev),
+						      dev_hdl(dev),
 						      buf);
 				if (err)
 					goto out;
@@ -1503,7 +1503,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 				cmd.data_len = 0x400;
 				err = read_entire_cmd(&cmd, ehdr->edumps[j].coresize,
 						      0x400, output,
-						      dev_fd(dev),
+						      dev_hdl(dev),
 						      buf);
 				if (err)
 					goto out;
@@ -1580,8 +1580,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		return err;
 
 	struct nvme_get_features_args args_get = {
+		.hdl            = dev_hdl(dev),
 		.args_size	= sizeof(args_get),
-		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.sel		= sel,
@@ -1594,8 +1594,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	};
 
 	struct nvme_set_features_args args_set = {
+		.hdl            = dev_hdl(dev),
 		.args_size	= sizeof(args_set),
-		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.cdw11		= option,
@@ -1684,7 +1684,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	 * valid buckets a user is allowed to modify. Read or write doesn't
 	 * matter
 	 */
-	err = nvme_get_log_simple(dev_fd(dev), 0xc2,
+	err = nvme_get_log_simple(dev_hdl(dev), 0xc2,
 				  sizeof(media_version), media_version);
 	if (err) {
 		fprintf(stderr, "Querying media version failed. ");
@@ -1705,8 +1705,8 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 		}
 
 		struct nvme_set_features_args args = {
+			.hdl            = dev_hdl(dev),
 			.args_size	= sizeof(args),
-			.fd		= dev_fd(dev),
 			.fid		= fid,
 			.nsid		= nsid,
 			.cdw11		= cfg.write ? 0x1 : 0x0,

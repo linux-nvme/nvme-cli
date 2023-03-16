@@ -434,7 +434,7 @@ static int get_c3_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C3_LATENCY_MON_OPCODE,
+	ret = nvme_get_log_simple(dev_hdl(dev), C3_LATENCY_MON_OPCODE,
 		C3_LATENCY_MON_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
@@ -594,19 +594,19 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 	if (err)
 		return err;
 
-	err = fstat(dev_fd(dev), &nvme_stat);
+	err = fstat(dev_hdl(dev)->fd, &nvme_stat);
 	if (err < 0)
 		return err;
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
-		err = nvme_get_nsid(dev_fd(dev), &nsid);
+		err = nvme_get_nsid(dev_hdl(dev), &nsid);
 		if (err < 0) {
 			perror("invalid-namespace-id");
 			return err;
 		}
 	}
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_identify_ctrl(dev_hdl(dev), &ctrl);
 	if (err)
 		return err;
 
@@ -625,7 +625,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
+		.hdl = dev_hdl(dev),
 		.fid = NVME_FEAT_OCP_LATENCY_MONITOR,
 		.nsid = 0,
 		.cdw12 = 0,
@@ -687,8 +687,8 @@ static int eol_plp_failure_mode_get(struct nvme_dev *dev, const __u32 nsid,
 	int err;
 
 	struct nvme_get_features_args args = {
+		.hdl            = dev_hdl(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.sel		= sel,
@@ -734,19 +734,19 @@ static int eol_plp_failure_mode_set(struct nvme_dev *dev, const __u32 nsid,
 
 
 	struct nvme_set_features_args args = {
-		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
-		.fid = fid,
-		.nsid = nsid,
-		.cdw11 = mode << 30,
-		.cdw12 = 0,
-		.save = save,
-		.uuidx = uuid_index,
-		.cdw15 = 0,
-		.data_len = 0,
-		.data = NULL,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = &result,
+		.hdl            = dev_hdl(dev),
+		.args_size	= sizeof(args),
+		.fid		= fid,
+		.nsid		= nsid,
+		.cdw11		= mode << 30,
+		.cdw12		= 0,
+		.save		= save,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 	};
 
 	err = nvme_set_features(&args);
@@ -878,7 +878,7 @@ static int get_telemetry_header(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
 	cmd.cdw13 = 0;
 	cmd.cdw14 = 0;
 
-	return nvme_submit_admin_passthru(dev_fd(dev), &cmd, NULL);
+	return nvme_submit_admin_passthru(dev_hdl(dev), &cmd, NULL);
 }
 
 static void print_telemetry_header(struct telemetry_initiated_log *logheader,
@@ -944,7 +944,7 @@ static int extract_dump_get_log(struct nvme_dev *dev, char *featurename, char *f
 			.result = NULL,
 			.log = (void *)data,
 			.args_size = sizeof(args),
-			.fd = dev_fd(dev),
+			.hdl = dev_hdl(dev),
 			.lid = log_id,
 			.len = transfersize,
 			.nsid = nsid,
@@ -1109,17 +1109,17 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 	if (err)
 		return err;
 
-	err = fstat(dev_fd(dev), &nvme_stat);
+	err = fstat(dev_hdl(dev)->fd, &nvme_stat);
 	if (err < 0)
 		return err;
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
-		err = nvme_get_nsid(dev_fd(dev), &nsid);
+		err = nvme_get_nsid(dev_hdl(dev), &nsid);
 		if (err < 0)
 			return err;
 	}
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_identify_ctrl(dev_hdl(dev), &ctrl);
 	if (err)
 		return err;
 
@@ -1344,7 +1344,7 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C5_UNSUPPORTED_REQS_OPCODE,
+	ret = nvme_get_log_simple(dev_hdl(dev), C5_UNSUPPORTED_REQS_OPCODE,
 				  C5_UNSUPPORTED_REQS_LEN, data);
 	if (!ret) {
 		log_data = (struct unsupported_requirement_log *)data;
@@ -1567,7 +1567,7 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C1_ERROR_RECOVERY_OPCODE, C1_ERROR_RECOVERY_LOG_BUF_LEN, data);
+	ret = nvme_get_log_simple(dev_hdl(dev), C1_ERROR_RECOVERY_OPCODE, C1_ERROR_RECOVERY_LOG_BUF_LEN, data);
 
 	if (!ret) {
 		log_data = (struct ocp_error_recovery_log_page *)data;
@@ -1781,7 +1781,7 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C4_DEV_CAP_REQ_OPCODE, C4_DEV_CAP_REQ_LEN, data);
+	ret = nvme_get_log_simple(dev_hdl(dev), C4_DEV_CAP_REQ_OPCODE, C4_DEV_CAP_REQ_LEN, data);
 
 	if (!ret) {
 		log_data = (struct ocp_device_capabilities_log_page *)data;

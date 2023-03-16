@@ -72,7 +72,7 @@ static int fdp_configs(int argc, char **argv, struct command *cmd,
 		goto out;
 	}
 
-	err = nvme_get_log_fdp_configurations(dev->direct.fd, cfg.egid, 0,
+	err = nvme_get_log_fdp_configurations(dev_hdl(dev), cfg.egid, 0,
 			sizeof(hdr), &hdr);
 	if (err) {
 		nvme_show_status(errno);
@@ -85,7 +85,7 @@ static int fdp_configs(int argc, char **argv, struct command *cmd,
 		goto out;
 	}
 
-	err = nvme_get_log_fdp_configurations(dev->direct.fd, cfg.egid, 0,
+	err = nvme_get_log_fdp_configurations(dev_hdl(dev), cfg.egid, 0,
 			hdr.size, log);
 	if (err) {
 		nvme_show_status(errno);
@@ -144,7 +144,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	err = nvme_get_log_reclaim_unit_handle_usage(dev->direct.fd, cfg.egid,
+	err = nvme_get_log_reclaim_unit_handle_usage(dev_hdl(dev), cfg.egid,
 			0, sizeof(hdr), &hdr);
 	if (err) {
 		nvme_show_status(err);
@@ -158,7 +158,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 		goto out;
 	}
 
-	err = nvme_get_log_reclaim_unit_handle_usage(dev->direct.fd, cfg.egid,
+	err = nvme_get_log_reclaim_unit_handle_usage(dev_hdl(dev), cfg.egid,
 			0, len, log);
 	if (err) {
 		nvme_show_status(err);
@@ -217,7 +217,7 @@ static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *
 
 	memset(&stats, 0x0, sizeof(stats));
 
-	err = nvme_get_log_fdp_stats(dev->direct.fd, cfg.egid, 0, sizeof(stats), &stats);
+	err = nvme_get_log_fdp_stats(dev_hdl(dev), cfg.egid, 0, sizeof(stats), &stats);
 	if (err) {
 		nvme_show_status(err);
 		goto out;
@@ -278,7 +278,7 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 
 	memset(&events, 0x0, sizeof(events));
 
-	err = nvme_get_log_fdp_events(dev->direct.fd, cfg.egid,
+	err = nvme_get_log_fdp_events(dev_hdl(dev), cfg.egid,
 			cfg.host_events, 0, sizeof(events), &events);
 	if (err) {
 		nvme_show_status(err);
@@ -336,14 +336,14 @@ static int fdp_status(int argc, char **argv, struct command *cmd, struct plugin 
 		flags = BINARY;
 
 	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
+		err = nvme_get_nsid(dev_hdl(dev), &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto out;
 		}
 	}
 
-	err = nvme_fdp_reclaim_unit_handle_status(dev_fd(dev),
+	err = nvme_fdp_reclaim_unit_handle_status(dev_hdl(dev),
 			cfg.namespace_id, sizeof(hdr), &hdr);
 	if (err) {
 		nvme_show_status(err);
@@ -358,7 +358,7 @@ static int fdp_status(int argc, char **argv, struct command *cmd, struct plugin 
 		goto out;
 	}
 
-	err = nvme_fdp_reclaim_unit_handle_status(dev_fd(dev),
+	err = nvme_fdp_reclaim_unit_handle_status(dev_hdl(dev),
 			cfg.namespace_id, len, buf);
 	if (err) {
 		nvme_show_status(err);
@@ -417,7 +417,7 @@ static int fdp_update(int argc, char **argv, struct command *cmd, struct plugin 
 	}
 
 	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
+		err = nvme_get_nsid(dev_hdl(dev), &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto out;
@@ -427,7 +427,7 @@ static int fdp_update(int argc, char **argv, struct command *cmd, struct plugin 
 	for (unsigned int i = 0; i < npids; i++)
 		buf[i] = cpu_to_le16(pids[i]);
 
-	err = nvme_fdp_reclaim_unit_handle_update(dev_fd(dev), cfg.namespace_id, npids, buf);
+	err = nvme_fdp_reclaim_unit_handle_update(dev_hdl(dev), cfg.namespace_id, npids, buf);
 	if (err) {
 		nvme_show_status(err);
 		goto out;
@@ -498,7 +498,7 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
+		err = nvme_get_nsid(dev_hdl(dev), &cfg.namespace_id);
 		if (err < 0) {
 			if (errno != ENOTTY) {
 				fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
@@ -513,8 +513,8 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 		buf[i] = (__u8)evts[i];
 
 	struct nvme_set_features_args args = {
+		.hdl            = dev_hdl(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= NVME_FEAT_FID_FDP_EVENTS,
 		.save		= cfg.save,
 		.nsid		= cfg.namespace_id,

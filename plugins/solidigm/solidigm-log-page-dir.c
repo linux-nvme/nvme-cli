@@ -79,7 +79,7 @@ static int get_supported_log_pages_log(struct nvme_dev *dev, int uuid_index,
 		.result = NULL,
 		.log = supported,
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
+		.hdl = dev_hdl(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = LID,
 		.len = sizeof(*supported),
@@ -255,7 +255,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 		lid_dirs[NO_UUID_INDEX] = get_standard_lids(&supported);
 
 		// Assume VU logs are the Solidigm log pages if UUID not supported.
-		if (nvme_identify_uuid(dev_fd(dev), &uuid_list)) {
+		if (nvme_identify_uuid(dev_hdl(dev), &uuid_list)) {
 			struct lid_dir *solidigm_lid_dir = get_solidigm_lids(&supported);
 
 			// Transfer supported Solidigm lids to lid directory at UUID index 0
@@ -294,7 +294,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 	}
 
 	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
+	close(dev_hdl(dev)->fd);
 	dev_close(dev);
 	return err;
 }

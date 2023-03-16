@@ -160,7 +160,7 @@ static void print_nlog_header(__u8 *buffer)
 #define INTERNAL_LOG_MAX_DWORD_TRANSFER (INTERNAL_LOG_MAX_BYTE_TRANSFER / 4)
 
 static int cmd_dump_repeat(struct nvme_passthru_cmd *cmd, __u32 total_dw_size,
-			   int out_fd, int ioctl_fd, bool force_max_transfer)
+			   int out_fd, struct dev_handle *hdl, bool force_max_transfer)
 {
 	int err = 0;
 
@@ -169,7 +169,7 @@ static int cmd_dump_repeat(struct nvme_passthru_cmd *cmd, __u32 total_dw_size,
 
 		cmd->cdw10 = force_max_transfer ? INTERNAL_LOG_MAX_DWORD_TRANSFER : dword_tfer;
 		cmd->data_len = dword_tfer * 4;
-		err = nvme_submit_admin_passthru(ioctl_fd, cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, cmd, NULL);
 		if (err)
 			return err;
 
@@ -194,18 +194,18 @@ static int write_header(__u8 *buf, int fd, size_t amnt)
 	return 0;
 }
 
-static int read_header(struct nvme_passthru_cmd *cmd, int ioctl_fd)
+static int read_header(struct nvme_passthru_cmd *cmd, struct dev_handle *hdl)
 {
 	memset((void *)(uintptr_t)cmd->addr, 0, INTERNAL_LOG_MAX_BYTE_TRANSFER);
-	return cmd_dump_repeat(cmd, INTERNAL_LOG_MAX_DWORD_TRANSFER, -1, ioctl_fd, false);
+	return cmd_dump_repeat(cmd, INTERNAL_LOG_MAX_DWORD_TRANSFER, -1, hdl, false);
 }
 
-static int get_serial_number(char *str, int fd)
+static int get_serial_number(char *str, struct dev_handle *hdl)
 {
 	struct nvme_id_ctrl ctrl = {0};
 	int err;
 
-	err = nvme_identify_ctrl(fd, &ctrl);
+	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err)
 		return err;
 
@@ -231,7 +231,7 @@ static int dump_assert_logs(struct nvme_dev *dev, struct config cfg)
 	};
 	int output, err;
 
-	err = read_header(&cmd, dev_fd(dev));
+	err = read_header(&cmd, dev_hdl(dev));
 	if (err)
 		return err;
 
@@ -260,7 +260,7 @@ static int dump_assert_logs(struct nvme_dev *dev, struct config cfg)
 		cmd.cdw13 = ad->core[i].coreoffset;
 		err = cmd_dump_repeat(&cmd, ad->core[i].assertsize,
 				output,
-				dev_fd(dev), false);
+				dev_hdl(dev), false);
 		if (err) {
 			close(output);
 			return err;
@@ -287,7 +287,7 @@ static int dump_event_logs(struct nvme_dev *dev, struct config cfg)
 	int output;
 	int core_num, err;
 
-	err = read_header(&cmd, dev_fd(dev));
+	err = read_header(&cmd, dev_hdl(dev));
 	if (err)
 		return err;
 	sprintf(file_path, "%s_EventLog.bin", cfg.file_prefix);
@@ -317,7 +317,7 @@ static int dump_event_logs(struct nvme_dev *dev, struct config cfg)
 		}
 		cmd.cdw13 = ehdr->edumps[j].coreoffset;
 		err = cmd_dump_repeat(&cmd, ehdr->edumps[j].coresize,
-				output, dev_fd(dev), false);
+				output, dev_hdl(dev), false);
 		if (err) {
 			close(output);
 			return err;
@@ -377,7 +377,7 @@ static int dump_nlogs(struct nvme_dev *dev, struct config cfg, int core)
 		do {
 			cmd.cdw13 = 0;
 			cmd.cdw12 = log_select.raw;
-			err = read_header(&cmd, dev_fd(dev));
+			err = read_header(&cmd, dev_hdl(dev));
 			if (err) {
 				if (is_open)
 					close(output);
@@ -400,7 +400,7 @@ static int dump_nlogs(struct nvme_dev *dev, struct config cfg, int core)
 				print_nlog_header(buf);
 			cmd.cdw13 = 0x400;
 			err = cmd_dump_repeat(&cmd, nlog_header->nlogbytesize / 4,
-					output, dev_fd(dev), true);
+					output, dev_hdl(dev), true);
 			if (err)
 				break;
 		} while (++log_select.selectNlog < count);
@@ -452,15 +452,15 @@ static int dump_telemetry(struct nvme_dev *dev, struct config cfg, enum telemetr
 
 	switch (ttype) {
 	case HOSTGENNEW:
-		err = nvme_get_new_host_telemetry(dev_fd(dev), &log,
+		err = nvme_get_new_host_telemetry(dev_hdl(dev), &log,
 						  data_area, &log_size);
 		break;
 	case HOSTGENOLD:
-		err = nvme_get_host_telemetry(dev_fd(dev), &log,
+		err = nvme_get_host_telemetry(dev_hdl(dev), &log,
 						  data_area, &log_size);
 		break;
 	case CONTROLLER:
-		err = nvme_get_ctrl_telemetry(dev_fd(dev), true, &log,
+		err = nvme_get_ctrl_telemetry(dev_hdl(dev), true, &log,
 					      data_area, &log_size);
 		break;
 	}
@@ -526,7 +526,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 		return err;
 
 	if (!cfg.file_prefix) {
-		err = get_serial_number(sn_prefix, dev_fd(dev));
+		err = get_serial_number(sn_prefix, dev_hdl(dev));
 		if (err)
 			goto out_dev;
 		cfg.file_prefix = sn_prefix;
@@ -591,7 +591,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 		printf("Total: %d log files with prefix: %s\n", log_count, cfg.file_prefix);
 out_dev:
 	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
+	close(dev_hdl(dev)->fd);
 	dev_close(dev);
 	return err;
 }

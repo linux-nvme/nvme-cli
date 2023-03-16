@@ -16,7 +16,7 @@ const unsigned char ocp_uuid[NVME_UUID_LEN] = {
 int ocp_get_uuid_index(struct nvme_dev *dev, int *index)
 {
 	struct nvme_id_uuid_list uuid_list;
-	int err = nvme_identify_uuid(dev_fd(dev), &uuid_list);
+	int err = nvme_identify_uuid(dev_hdl(dev), &uuid_list);
 
 	*index = 0;
 	if (err)
@@ -66,7 +66,7 @@ int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8 fid)
 		.result = &result,
 		.data = NULL,
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
+		.hdl = dev_hdl(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = 0,
 		.cdw11 = clear,
@@ -89,7 +89,7 @@ int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8 fid)
 		printf("Fail : %s\n", desc);
 close_dev:
 	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
+	close(dev_hdl(dev)->fd);
 	dev_close(dev);
 	return err;
 }
