@@ -112,7 +112,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 	}
 
 	if (cfg.cfg_file) {
-		char *conf_str = 0;
+		char *conf_str = NULL;
 		size_t length = 0;
 
 		err = read_file2buffer(cfg.cfg_file, &conf_str, &length);
@@ -124,6 +124,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 		struct json_tokener * jstok = json_tokener_new();
 
 		tl.configuration = json_tokener_parse_ex(jstok, conf_str, length);
+		free(conf_str);
 		if (jstok->err != json_tokener_success)	{
 			SOLIDIGM_LOG_WARNING("Parsing error on JSON configuration file %s: %s (at offset %d)",
 					     cfg.cfg_file,
@@ -160,11 +161,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 			goto close_fd;
 		}
 	}
-	solidigm_telemetry_log_header_parse(&tl);
-	if (cfg.cfg_file)
-		solidigm_telemetry_log_data_areas_parse(&tl, cfg.data_area);
-	else
-		solidigm_telemetry_log_cod_parse(&tl);
+	solidigm_telemetry_log_data_areas_parse(&tl, cfg.data_area);
 
 	json_print_object(tl.root, NULL);
 	json_free_object(tl.root);

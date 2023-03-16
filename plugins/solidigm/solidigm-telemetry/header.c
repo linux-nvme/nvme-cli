@@ -137,8 +137,8 @@ static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *t
 {
 	const struct reason_indentifier_1_0 *ri1_0 =
 		(struct reason_indentifier_1_0 *) tl->log->rsnident;
-	__u16 version_major = le16_to_cpu(ri1_0->versionMajor);
-	__u16 version_minor = le16_to_cpu(ri1_0->versionMinor);
+	uint16_t version_major = le16_to_cpu(ri1_0->versionMajor);
+	uint16_t version_minor = le16_to_cpu(ri1_0->versionMinor);
 
 	json_object_add_value_uint(reason_id, "versionMajor", version_major);
 	json_object_add_value_uint(reason_id, "versionMinor", version_minor);
