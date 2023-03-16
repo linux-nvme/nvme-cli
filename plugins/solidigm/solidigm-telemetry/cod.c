@@ -51,10 +51,10 @@ const char *oemDataMapDesc[] = {
 	"All Time Current Max Wear Level", // 0x28
 	"Media Wear Remaining", // 0x29
 	"Total Non-Defrag Writes",  // 0x2A
-	"Number of sectors relocated in reaction to an error" //Uid 0x2B = 43
+	"Media Health Relocations" //Uid 0x2B = 43
 };
 
-static const char * getOemDataMapDescription(__u32 id)
+static const char *getOemDataMapDescription(uint32_t id)
 {
 	if (id < (sizeof(oemDataMapDesc) / sizeof(oemDataMapDesc[0]))) {
 		return oemDataMapDesc[id];
@@ -121,7 +121,7 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 	if  (!json_object_object_get_ex(reason_id, "OemDataMapOffset", &COD_offset))
 		return;
 
-	__u64 offset = json_object_get_int(COD_offset);
+	uint64_t offset = json_object_get_int(COD_offset);
 
 	if  (offset ==  0) {
 		return;
@@ -132,7 +132,7 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 		return;
 	}
 
-	const struct cod_map *data = (struct cod_map *) (((__u8 *)tl->log ) + offset);
+	const struct cod_map *data = (struct cod_map *) (((uint8_t *)tl->log) + offset);
 
 	uint32_t signature = be32_to_cpu(data->header.Signature);
 	if ( signature != OEMSIGNATURE){
@@ -147,10 +147,11 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 	struct json_object *cod = json_create_object();
 	json_object_object_add(tl->root, "cod", cod);
 
-	for (int i =0 ; i < data->header.EntryCount; i++) {
+	for (uint64_t i = 0; i < data->header.EntryCount; i++) {
 		if ((offset + sizeof(struct cod_header) + (i + 1) * sizeof(struct cod_item)) >
 		tl->log_size){
-			SOLIDIGM_LOG_WARNING("Warning: COD data out of bounds at item %d!", i);
+			SOLIDIGM_LOG_WARNING("Warning: COD data out of bounds at item %"PRIu64"!",
+					     i);
 			return;
 		}
 		struct cod_item item = data->items[i];
