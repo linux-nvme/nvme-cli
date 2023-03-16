@@ -861,25 +861,37 @@ static int eol_plp_failure_mode_get(struct nvme_dev *dev, const __u32 nsid,
 }
 
 static int eol_plp_failure_mode_set(struct nvme_dev *dev, const __u32 nsid,
-				    const __u8 fid, __u8 mode, bool save)
+				    const __u8 fid, __u8 mode, bool save,
+				    bool uuid)
 {
 	__u32 result;
 	int err;
+	int uuid_index = 0;
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &uuid_index);
+		if (err || !uuid_index) {
+			fprintf(stderr, "ERROR: No OCP UUID index found\n");
+			return err;
+		}
+	}
+
 
 	struct nvme_set_features_args args = {
-		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
-		.fid		= fid,
-		.nsid		= nsid,
-		.cdw11		= mode << 30,
-		.cdw12		= 0,
-		.save		= save,
-		.uuidx		= 0,
-		.cdw15		= 0,
-		.data_len	= 0,
-		.data		= NULL,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = fid,
+		.nsid = nsid,
+		.cdw11 = mode << 30,
+		.cdw12 = 0,
+		.save = save,
+		.uuidx = uuid_index,
+		.cdw15 = 0,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = &result,
 	};
 
 	err = nvme_set_features(&args);
@@ -927,17 +939,18 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 		OPT_BYTE("mode", 'm', &cfg.mode, mode),
 		OPT_FLAG("save", 's', &cfg.save, save),
 		OPT_BYTE("sel", 'S', &cfg.sel, sel),
-		{NULL}
+		OPT_FLAG("no-uuid", 'n', NULL,
+			 "Skip UUID index search (UUID index not required for OCP 1.0)"),
+		OPT_END()
 	};
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
-
 	if (err)
 		return err;
 
 	if (opts[0].seen)
 		err = eol_plp_failure_mode_set(dev, nsid, fid, cfg.mode,
-					       cfg.save);
+					       cfg.save, !opts[3].seen);
 	else
 		err = eol_plp_failure_mode_get(dev, nsid, fid, cfg.sel);
 
