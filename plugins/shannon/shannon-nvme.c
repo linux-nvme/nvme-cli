@@ -234,8 +234,8 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	}
 
 	struct nvme_get_features_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= cfg.feature_id,
 		.nsid		= cfg.namespace_id,
 		.sel		= cfg.sel,
@@ -360,8 +360,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	}
 
 	struct nvme_set_features_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= cfg.feature_id,
 		.nsid		= cfg.namespace_id,
 		.cdw11		= cfg.value,

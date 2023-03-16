@@ -355,7 +355,7 @@ static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
 	}
 }
 
-static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
+static int nvme_get_ontap_c2_log(struct dev_handle *hnd, __u32 nsid, void *buf, __u32 buflen)
 {
 	struct nvme_passthru_cmd get_log;
 	int err;
@@ -376,7 +376,7 @@ static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
 	get_log.cdw10 |= ONTAP_C2_LOG_NSINFO_LSP << 8;
 	get_log.cdw11 = numdu;
 
-	err = nvme_submit_admin_passthru(fd, &get_log, NULL);
+	err = nvme_submit_admin_passthru(hnd, &get_log, NULL);
 	if (err) {
 		fprintf(stderr, "ioctl error %0x\n", err);
 		return 1;
@@ -385,12 +385,12 @@ static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
 	return 0;
 }
 
-static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
+static int netapp_smdevices_get_info(struct dev_handle *hnd, struct smdevice_info *item,
 				     const char *dev)
 {
 	int err;
 
-	err = nvme_identify_ctrl(fd, &item->ctrl);
+	err = nvme_identify_ctrl(hnd, &item->ctrl);
 	if (err) {
 		fprintf(stderr,
 			"Identify Controller failed to %s (%s)\n", dev,
@@ -402,8 +402,8 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 	if (strncmp("NetApp E-Series", item->ctrl.mn, 15) != 0)
 		return 0; /* not the right model of controller */
 
-	err = nvme_get_nsid(fd, &item->nsid);
-	err = nvme_identify_ns(fd, item->nsid, &item->ns);
+	err = nvme_get_nsid(hnd, &item->nsid);
+	err = nvme_identify_ns(hnd, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr,
 			"Unable to identify namespace for %s (%s)\n",
@@ -416,13 +416,13 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 	return 1;
 }
 
-static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
+static int netapp_ontapdevices_get_info(struct dev_handle *hnd, struct ontapdevice_info *item,
 		const char *dev)
 {
 	int err;
 	void *nsdescs;
 
-	err = nvme_identify_ctrl(fd, &item->ctrl);
+	err = nvme_identify_ctrl(hnd, &item->ctrl);
 	if (err) {
 		fprintf(stderr, "Identify Controller failed to %s (%s)\n",
 			dev, err < 0 ? strerror(-err) :
@@ -434,9 +434,9 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 		/* not the right controller model */
 		return 0;
 
-	err = nvme_get_nsid(fd, &item->nsid);
+	err = nvme_get_nsid(hnd, &item->nsid);
 
-	err = nvme_identify_ns(fd, item->nsid, &item->ns);
+	err = nvme_identify_ns(hnd, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace for %s (%s)\n",
 			dev, err < 0 ? strerror(-err) :
@@ -449,7 +449,7 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 		return 0;
 	}
 
-	err = nvme_identify_ns_descs(fd, item->nsid, nsdescs);
+	err = nvme_identify_ns_descs(hnd, item->nsid, nsdescs);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
 			dev, err < 0 ? strerror(-err) :
@@ -461,7 +461,7 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 	memcpy(item->uuid, nsdescs + sizeof(struct nvme_ns_id_desc), sizeof(item->uuid));
 	free(nsdescs);
 
-	err = nvme_get_ontap_c2_log(fd, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
+	err = nvme_get_ontap_c2_log(hnd, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get log page data for %s (%s)\n",
 			dev, err < 0 ? strerror(-err):
@@ -520,6 +520,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 	struct smdevice_info *smdevices;
 	char path[264];
 	int num_smdevices = 0;
+	struct dev_handle hnd;
 
 	struct config {
 		char *output_format;
@@ -566,7 +567,10 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 			continue;
 		}
 
-		num_smdevices += netapp_smdevices_get_info(fd,
+		hnd.fd = fd;
+		hnd.dev_type = NVME_DEV_DIRECT;
+
+		num_smdevices += netapp_smdevices_get_info(&hnd,
 						&smdevices[num_smdevices], path);
 		close(fd);
 	}
@@ -591,6 +595,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 	struct ontapdevice_info *ontapdevices;
 	char path[264];
 	int num_ontapdevices = 0;
+	struct dev_handle hnd;
 
 	struct config {
 		char *output_format;
@@ -636,8 +641,10 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 					strerror(errno));
 			continue;
 		}
+		hnd.fd = fd;
+                hnd.dev_type = NVME_DEV_DIRECT;
 
-		num_ontapdevices += netapp_ontapdevices_get_info(fd,
+		num_ontapdevices += netapp_ontapdevices_get_info(&hnd,
 				&ontapdevices[num_ontapdevices], path);
 
 		close(fd);

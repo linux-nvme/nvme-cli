@@ -1076,7 +1076,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 		struct nvme_get_features_args args = {
 			.args_size	= sizeof(args),
-			.fd		= dev_fd(dev),
+			.hnd		= dev_fd(dev),
 			.fid		= 0xf7,
 			.nsid		= 0,
 			.sel		= 0,
@@ -1230,7 +1230,7 @@ static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
 }
 
 static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
-			   const size_t max_tfer, int out_fd, int ioctl_fd,
+			   const size_t max_tfer, int out_fd, struct dev_handle *hnd,
 			   __u8 *buf)
 {
 	int err = 0;
@@ -1238,7 +1238,7 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_admin_passthru(ioctl_fd, cmd, NULL);
+		err = nvme_submit_admin_passthru(hnd, cmd, NULL);
 		if (err) {
 			fprintf(stderr,
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
@@ -1272,7 +1272,7 @@ static int write_header(__u8 *buf, int fd, size_t amnt)
 	return 0;
 }
 
-static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, int ioctl_fd,
+static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, struct dev_handle *hnd,
 			__u32 dw12, int nsid)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -1283,15 +1283,15 @@ static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, int ioctl_fd,
 	cmd->cdw12 = dw12;
 	cmd->data_len = 0x1000;
 	cmd->addr = (unsigned long)(void *)buf;
-	return read_entire_cmd(cmd, 0x400, 0x400, -1, ioctl_fd, buf);
+	return read_entire_cmd(cmd, 0x400, 0x400, -1, hnd, buf);
 }
 
-static int setup_file(char *f, char *file, int fd, int type)
+static int setup_file(char *f, char *file, struct dev_handle *hnd, int type)
 {
 	struct nvme_id_ctrl ctrl;
 	int err = 0, i = sizeof(ctrl.sn) - 1;
 
-	err = nvme_identify_ctrl(fd, &ctrl);
+	err = nvme_identify_ctrl(hnd, &ctrl);
 	if (err)
 		return err;
 
@@ -1307,7 +1307,7 @@ static int setup_file(char *f, char *file, int fd, int type)
 	return err;
 }
 
-static int get_internal_log_old(__u8 *buf, int output, int fd,
+static int get_internal_log_old(__u8 *buf, int output, struct dev_handle *hnd,
 				struct nvme_passthru_cmd *cmd)
 {
 	struct intel_vu_log *intel;
@@ -1329,7 +1329,7 @@ static int get_internal_log_old(__u8 *buf, int output, int fd,
 	cmd->opcode = 0xd2;
 	cmd->cdw10 = min(dwmax, intel->size);
 	cmd->data_len = min(dmamax, intel->size);
-	err = read_entire_cmd(cmd, intel->size, dwmax, output, fd, buf);
+	err = read_entire_cmd(cmd, intel->size, dwmax, output, hnd, buf);
 	if (err)
 		goto out;
 
@@ -1583,8 +1583,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		return err;
 
 	struct nvme_get_features_args args_get = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args_get),
-		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.sel		= sel,
@@ -1597,8 +1597,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	};
 
 	struct nvme_set_features_args args_set = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args_set),
-		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.cdw11		= option,
@@ -1707,8 +1707,8 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 		}
 
 		struct nvme_set_features_args args = {
+			.hnd            = dev_fd(dev),
 			.args_size	= sizeof(args),
-			.fd		= dev_fd(dev),
 			.fid		= fid,
 			.nsid		= nsid,
 			.cdw11		= cfg.write ? 0x1 : 0x0,

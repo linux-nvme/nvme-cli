@@ -173,7 +173,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 close_fd:
 	if (!cfg.is_input_file) {
 		/* Redundant close() to make static code analysis happy */
-		close(dev->direct.fd);
+		close(dev_fd(dev)->fd);
 		dev_close(dev);
 	}
 ret:

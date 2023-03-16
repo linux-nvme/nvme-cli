@@ -102,8 +102,8 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		.lpo = 0,
 		.result = NULL,
 		.log = &gc_log,
+		.hnd = dev_fd(dev),
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = solidigm_vu_gc_log_id,
 		.len = sizeof(gc_log),
@@ -131,7 +131,6 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 	}
 
 	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
 	dev_close(dev);
 	return err;
 }

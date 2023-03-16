@@ -95,7 +95,7 @@ enum dera_device_status
 	DEVICE_STAUTS__OVER_TEMPRATURE = 0x09,
 };
 
-static int nvme_dera_get_device_status(int fd, enum dera_device_status *result)
+static int nvme_dera_get_device_status(struct dev_handle *hnd, enum dera_device_status *result)
 {
 	int err = 0;
 
@@ -107,7 +107,7 @@ static int nvme_dera_get_device_status(int fd, enum dera_device_status *result)
 		.cdw12 = 0x104, 
 	};
 
-	err = nvme_submit_admin_passthru(fd, &cmd, NULL);
+	err = nvme_submit_admin_passthru(hnd, &cmd, NULL);
 	if (!err && result) {
 		*result = cmd.result;
 	}

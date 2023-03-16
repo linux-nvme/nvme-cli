@@ -238,8 +238,8 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		.lpo = 0,
 		.result = NULL,
 		.log = &smart_log_payload,
+		.hnd = dev_fd(dev),
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = solidigm_vu_smart_log_id,
 		.len = sizeof(smart_log_payload),
@@ -268,7 +268,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	}
 
 	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
+	close(dev_fd(dev)->fd);
 	dev_close(dev);
 	return err;
 }

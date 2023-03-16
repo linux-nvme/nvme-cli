@@ -340,7 +340,7 @@ static void ocp_print_C0_log_json(void *data)
 	json_free_object(root);
 }
 
-static int get_c0_log_page(int fd, char *format)
+static int get_c0_log_page(struct dev_handle *hnd, char *format)
 {
 	__u8 *data;
 	int i;
@@ -360,7 +360,7 @@ static int get_c0_log_page(int fd, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
 
-	ret = nvme_get_log_simple(fd, C0_SMART_CLOUD_ATTR_OPCODE,
+	ret = nvme_get_log_simple(hnd, C0_SMART_CLOUD_ATTR_OPCODE,
 		C0_SMART_CLOUD_ATTR_LEN, data);
 
 	if (strcmp(format, "json"))
@@ -837,8 +837,8 @@ static int eol_plp_failure_mode_get(struct nvme_dev *dev, const __u32 nsid,
 	int err;
 
 	struct nvme_get_features_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.sel		= sel,
@@ -884,19 +884,19 @@ static int eol_plp_failure_mode_set(struct nvme_dev *dev, const __u32 nsid,
 
 
 	struct nvme_set_features_args args = {
-		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
-		.fid = fid,
-		.nsid = nsid,
-		.cdw11 = mode << 30,
-		.cdw12 = 0,
-		.save = save,
-		.uuidx = uuid_index,
-		.cdw15 = 0,
-		.data_len = 0,
-		.data = NULL,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = &result,
+		.hnd            = dev_fd(dev),
+		.args_size	= sizeof(args),
+		.fid		= fid,
+		.nsid		= nsid,
+		.cdw11		= mode << 30,
+		.cdw12		= 0,
+		.save		= save,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 	};
 
 	err = nvme_set_features(&args);

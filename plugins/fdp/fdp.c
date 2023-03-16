@@ -72,7 +72,7 @@ static int fdp_configs(int argc, char **argv, struct command *cmd,
 		goto out;
 	}
 
-	err = nvme_get_log_fdp_configurations(dev->direct.fd, cfg.egid, 0,
+	err = nvme_get_log_fdp_configurations(dev_fd(dev), cfg.egid, 0,
 			sizeof(hdr), &hdr);
 	if (err) {
 		nvme_show_status(errno);
@@ -85,7 +85,7 @@ static int fdp_configs(int argc, char **argv, struct command *cmd,
 		goto out;
 	}
 
-	err = nvme_get_log_fdp_configurations(dev->direct.fd, cfg.egid, 0,
+	err = nvme_get_log_fdp_configurations(dev_fd(dev), cfg.egid, 0,
 			hdr.size, log);
 	if (err) {
 		nvme_show_status(errno);
@@ -144,7 +144,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	err = nvme_get_log_reclaim_unit_handle_usage(dev->direct.fd, cfg.egid,
+	err = nvme_get_log_reclaim_unit_handle_usage(dev_fd(dev), cfg.egid,
 			0, sizeof(hdr), &hdr);
 	if (err) {
 		nvme_show_status(err);
@@ -158,7 +158,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 		goto out;
 	}
 
-	err = nvme_get_log_reclaim_unit_handle_usage(dev->direct.fd, cfg.egid,
+	err = nvme_get_log_reclaim_unit_handle_usage(dev_fd(dev), cfg.egid,
 			0, len, log);
 	if (err) {
 		nvme_show_status(err);
@@ -217,7 +217,7 @@ static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *
 
 	memset(&stats, 0x0, sizeof(stats));
 
-	err = nvme_get_log_fdp_stats(dev->direct.fd, cfg.egid, 0, sizeof(stats), &stats);
+	err = nvme_get_log_fdp_stats(dev_fd(dev), cfg.egid, 0, sizeof(stats), &stats);
 	if (err) {
 		nvme_show_status(err);
 		goto out;
@@ -278,7 +278,7 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 
 	memset(&events, 0x0, sizeof(events));
 
-	err = nvme_get_log_fdp_events(dev->direct.fd, cfg.egid,
+	err = nvme_get_log_fdp_events(dev_fd(dev), cfg.egid,
 			cfg.host_events, 0, sizeof(events), &events);
 	if (err) {
 		nvme_show_status(err);
@@ -511,8 +511,8 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	struct nvme_set_features_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= NVME_FEAT_FID_FDP_EVENTS,
 		.nsid		= cfg.namespace_id,
 		.cdw11		= (nev << 16) | cfg.ph,

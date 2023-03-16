@@ -342,14 +342,14 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
     }
 }
 
-static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
+static int show_memblaze_smart_log(struct dev_handle *hnd, __u32 nsid, const char *devname,
     struct nvme_memblaze_smart_log *smart)
 {
     struct nvme_id_ctrl ctrl;
     char fw_ver[10];
     int err = 0;
 
-    err = nvme_identify_ctrl(fd, &ctrl);
+    err = nvme_identify_ctrl(hnd, &ctrl);
     if (err)
         return err;
 
@@ -477,8 +477,8 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
 	    return err;
 
     struct nvme_get_features_args args = {
+	    .hnd                = dev_fd(dev),
 	    .args_size		= sizeof(args),
-	    .fd			= dev_fd(dev),
 	    .fid		= feature_id,
 	    .nsid		= 0,
 	    .sel		= 0,
@@ -535,8 +535,8 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
 	    return err;
 
     struct nvme_set_features_args args = {
+	    .hnd                = dev_fd(dev),
 	    .args_size		= sizeof(args),
-	    .fd			= dev_fd(dev),
 	    .fid		= cfg.feature_id,
 	    .nsid		= 0,
 	    .cdw11		= cfg.value,
@@ -612,8 +612,8 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
     cfg.value = (param1 << MB_FEAT_HIGH_LATENCY_VALUE_SHIFT) | param2;
 
     struct nvme_set_features_args args = {
+	    .hnd                = dev_fd(dev),
 	    .args_size		= sizeof(args),
-	    .fd			= dev_fd(dev),
 	    .fid		= cfg.feature_id,
 	    .nsid		= 0,
 	    .cdw11		= cfg.value,
@@ -772,7 +772,8 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
     return err;
 }
 
-static int memblaze_fw_commit(int fd, int select)
+
+static int memblaze_fw_commit(struct dev_handle *hnd, int select)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_fw_commit,
@@ -780,7 +781,7 @@ static int memblaze_fw_commit(int fd, int select)
 		.cdw12      = select,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(hnd, &cmd, NULL);
 }
 
 static int mb_selective_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -879,8 +880,8 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 		xfer = min(xfer, fw_size);
 
 		struct nvme_fw_download_args args = {
+			.hnd            = dev_fd(dev),
 			.args_size	= sizeof(args),
-			.fd		= dev_fd(dev),
 			.offset		= offset,
 			.data_len	= xfer,
 			.data		= fw_buf,
@@ -1084,8 +1085,8 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
         return err;
 
     struct nvme_set_features_args args = {
+	.hnd            = dev_fd(dev),
         .args_size      = sizeof(args),
-        .fd             = dev_fd(dev),
         .fid            = cfg.feature_id,
         .nsid           = 0,
         .cdw11          = cfg.value,
@@ -1161,8 +1162,8 @@ static int mb_set_lat_stats(int argc, char **argv,
 		option = cfg.enable;
 
 	struct nvme_get_features_args args_get = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args_get),
-		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.sel		= sel,
@@ -1175,8 +1176,8 @@ static int mb_set_lat_stats(int argc, char **argv,
 	};
 
 	struct nvme_set_features_args args_set = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args_set),
-		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.cdw11		= option,

@@ -1544,8 +1544,8 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 	} else {
 
 		struct nvme_set_features_args args = {
+		.hnd         = dev_fd(dev),
 		.args_size  = sizeof(args),
-		.fd         = dev_fd(dev),
 		.fid        = 0xC1,
 		.nsid       = 0,
 		.cdw11      = 0x80000000,
@@ -1620,7 +1620,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	} else {
 		struct nvme_set_features_args args = {
 		.args_size  = sizeof(args),
-		.fd         = dev_fd(dev),
+		.hnd        = dev_fd(dev),
 		.fid        = 0xC3,
 		.nsid       = 0,
 		.cdw11      = 0x80000000,
@@ -1736,7 +1736,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		struct nvme_get_log_args args = {
 			.args_size  = sizeof(args),
-			.fd     = dev_fd(dev),
+			.hnd	    = dev_fd(dev),
 			.lid        = cfg.log_id,
 			.nsid       = cfg.namespace_id,
 			.lpo        = offset,
@@ -1853,7 +1853,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		struct nvme_get_log_args args = {
 			.args_size  = sizeof(args),
-			.fd     = dev_fd(dev),
+			.hnd        = dev_fd(dev),
 			.lid        = log_id,
 			.nsid       = cfg.namespace_id,
 			.lpo        = offset,
@@ -1983,7 +1983,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		struct nvme_get_log_args args = {
 			.args_size  = sizeof(args),
-			.fd     = dev_fd(dev),
+			.hnd        = dev_fd(dev),
 			.lid        = log_id,
 			.nsid       = cfg.namespace_id,
 			.lpo        = offset,

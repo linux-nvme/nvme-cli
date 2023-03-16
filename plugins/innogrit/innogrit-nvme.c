@@ -138,7 +138,7 @@ static unsigned char setfilecontent(char *filenamea, unsigned char *buffer,
 	return true;
 }
 
-static int nvme_vucmd(int fd, unsigned char opcode, unsigned int cdw12,
+static int nvme_vucmd(struct dev_handle *hnd, unsigned char opcode, unsigned int cdw12,
 		      unsigned int cdw13, unsigned int cdw14,
 		      unsigned int cdw15, char *data, int data_len)
 {
@@ -153,7 +153,7 @@ static int nvme_vucmd(int fd, unsigned char opcode, unsigned int cdw12,
 	cmd.nsid = 0;
 	cmd.addr = (__u64)(__u64)(uintptr_t)data;
 	cmd.data_len = data_len;
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(hnd, &cmd, NULL);
 }
 
 static int innogrit_vsc_geteventlog(int argc, char **argv,

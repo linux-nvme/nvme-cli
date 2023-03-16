@@ -26,6 +26,8 @@
 
 #include <libnvme-mi.h>
 
+#include <libxnvme.h>
+
 #include "plugin.h"
 #include "util/json.h"
 #include "util/argconfig.h"
@@ -45,16 +47,11 @@ enum nvme_cli_topo_ranking {
 
 #define SYS_NVME "/sys/class/nvme"
 
-enum nvme_dev_type {
-	NVME_DEV_DIRECT,
-	NVME_DEV_MI,
-};
-
 struct nvme_dev {
 	enum nvme_dev_type type;
 	union {
 		struct {
-			int fd;
+			struct dev_handle hnd;
 			struct stat stat;
 		} direct;
 		struct {
@@ -69,15 +66,15 @@ struct nvme_dev {
 
 #define dev_fd(d) __dev_fd(d, __func__, __LINE__)
 
-static inline int __dev_fd(struct nvme_dev *dev, const char *func, int line)
+static inline struct dev_handle* __dev_fd(struct nvme_dev *dev, const char *func, int line)
 {
-	if (dev->type != NVME_DEV_DIRECT) {
+	if ((dev->type != NVME_DEV_DIRECT)&&(dev->type != NVME_DEV_XNVME)) {
 		fprintf(stderr,
 			"warning: %s:%d not a direct transport!\n",
 			func, line);
-		return -1;
+		return NULL;
 	}
-	return dev->direct.fd;
+	return &(dev->direct.hnd);
 }
 
 static inline nvme_mi_ep_t dev_mi_ep(struct nvme_dev *dev)

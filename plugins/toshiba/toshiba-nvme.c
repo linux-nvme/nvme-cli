@@ -49,7 +49,7 @@ typedef enum {
 } DeviceCode;
 
 
-static int nvme_sct_op(int fd,  __u32 opcode, __u32 cdw10, __u32 cdw11, void* data, __u32 data_len )
+static int nvme_sct_op(struct dev_handle *hnd,  __u32 opcode, __u32 cdw10, __u32 cdw11, void* data, __u32 data_len )
 {
 	void  *metadata = NULL;
 	const __u32 cdw2 = 0;
@@ -66,7 +66,7 @@ static int nvme_sct_op(int fd,  __u32 opcode, __u32 cdw10, __u32 cdw11, void* da
 	int err = 0;
 
 	__u32 result;
-	err = nvme_admin_passthru(fd, opcode, flags, rsvd,
+	err = nvme_admin_passthru(hnd, opcode, flags, rsvd,
 				namespace_id, cdw2, cdw3, cdw10,
 				cdw11, cdw12, cdw13, cdw14, cdw15,
 				data_len, data, metadata_len, metadata,
@@ -74,7 +74,7 @@ static int nvme_sct_op(int fd,  __u32 opcode, __u32 cdw10, __u32 cdw11, void* da
 	return err;
 }
 
-static int nvme_get_sct_status(int fd, __u32 device_mask)
+static int nvme_get_sct_status(struct dev_handle *hnd, __u32 device_mask)
 {
 	int err;
 	void* data = NULL;
@@ -85,7 +85,7 @@ static int nvme_get_sct_status(int fd, __u32 device_mask)
 		return ENOMEM;
 
 	memset(data, 0, data_len);
-	err = nvme_sct_op(fd, OP_SCT_STATUS, DW10_SCT_STATUS_COMMAND, DW11_SCT_STATUS_COMMAND, data, data_len);
+	err = nvme_sct_op(hnd, OP_SCT_STATUS, DW10_SCT_STATUS_COMMAND, DW11_SCT_STATUS_COMMAND, data, data_len);
 	if (err) {
 		fprintf(stderr, "%s: SCT status failed :%d\n", __func__, err);
 		goto end;
@@ -129,7 +129,7 @@ end:
 	return err;
 }
 
-static int nvme_sct_command_transfer_log(int fd, bool current)
+static int nvme_sct_command_transfer_log(struct dev_handle *hnd, bool current)
 {
 	int err;
 	void *data = NULL;
@@ -148,12 +148,12 @@ static int nvme_sct_command_transfer_log(int fd, bool current)
 	memcpy(data, &action_code, sizeof(action_code));
 	memcpy(data + 2, &function_code, sizeof(function_code));
 
-	err = nvme_sct_op(fd, OP_SCT_COMMAND_TRANSFER, DW10_SCT_COMMAND_TRANSFER, DW11_SCT_COMMAND_TRANSFER, data, data_len);
+	err = nvme_sct_op(hnd, OP_SCT_COMMAND_TRANSFER, DW10_SCT_COMMAND_TRANSFER, DW11_SCT_COMMAND_TRANSFER, data, data_len);
 	free(data);
 	return err;
 }
 
-static int nvme_sct_data_transfer(int fd, void* data, size_t data_len, size_t offset)
+static int nvme_sct_data_transfer(struct dev_handle *hnd, void* data, size_t data_len, size_t offset)
 {
 	__u32 dw10, dw11, lba_count = (data_len) / 512;
 
@@ -167,7 +167,7 @@ static int nvme_sct_data_transfer(int fd, void* data, size_t data_len, size_t of
 
 	dw10 = (offset << 16) | lba_count;
 	dw11 = (offset >> 16);
-	return nvme_sct_op(fd, OP_SCT_DATA_TRANSFER, dw10, dw11, data, data_len);
+	return nvme_sct_op(hnd, OP_SCT_DATA_TRANSFER, dw10, dw11, data, data_len);
 }
 
 static int d_raw_to_fd(const unsigned char *buf, unsigned len, int fd)
@@ -211,7 +211,7 @@ static void progress_runner(float progress)
 	fflush(stdout);
 }
 
-static int nvme_get_internal_log(int fd, const char* const filename, bool current)
+static int nvme_get_internal_log(struct dev_handle *hnd, const char* const filename, bool current)
 {
 	int err;
 	int o_fd = -1;
@@ -233,7 +233,7 @@ static int nvme_get_internal_log(int fd, const char* const filename, bool curren
 	unsigned int j;
 	float progress = 0.0;
 
-	err = nvme_sct_command_transfer_log(fd, current);
+	err = nvme_sct_command_transfer_log(hnd, current);
 	if (err) {
 		fprintf(stderr, "%s: SCT command transfer failed\n", __func__);
 		goto end;
@@ -246,7 +246,7 @@ static int nvme_get_internal_log(int fd, const char* const filename, bool curren
 	memset(page_data, 0, max_pages * page_data_len);
 
 	/* Read the header to get the last log page - offsets 8->11, 12->15, 16->19 */
-	err = nvme_sct_data_transfer(fd, page_data, page_data_len, 0);
+	err = nvme_sct_data_transfer(hnd, page_data, page_data_len, 0);
 	if (err) {
 		fprintf(stderr, "%s: SCT data transfer failed, page 0\n",__func__);
 		goto end;
@@ -290,7 +290,7 @@ static int nvme_get_internal_log(int fd, const char* const filename, bool curren
 		if (pages_chunk + i >= pages)
 			pages_chunk = pages - i;
 
-		err = nvme_sct_data_transfer(fd, page_data,
+		err = nvme_sct_data_transfer(hnd, page_data,
 					     pages_chunk * page_data_len,
 					     i * page_sector_len);
 		if (err) {
@@ -319,7 +319,7 @@ static int nvme_get_internal_log(int fd, const char* const filename, bool curren
 	progress = 1.0f;
 	progress_runner(progress);
 	fprintf(stdout,"\n");
-	err = nvme_get_sct_status(fd, MASK_IGNORE);
+	err = nvme_get_sct_status(hnd, MASK_IGNORE);
 	if (err) {
 		fprintf(stderr, "%s: bad SCT status\n", __func__);
 		goto end;
@@ -334,14 +334,14 @@ end:
 	return err;
 }
 
-static int nvme_get_internal_log_file(int fd, const char* const filename, bool current)
+static int nvme_get_internal_log_file(struct dev_handle *hnd, const char* const filename, bool current)
 {
 	int err;
 
 	/* Check device supported */
-	err = nvme_get_sct_status(fd, MASK_0 | MASK_1);
+	err = nvme_get_sct_status(hnd, MASK_0 | MASK_1);
 	if (!err)
-		err = nvme_get_internal_log(fd, filename, current);
+		err = nvme_get_internal_log(hnd, filename, current);
 	return err;
 }
 
@@ -557,8 +557,8 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 		goto end;
 
 	struct nvme_set_features_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= feature_id,
 		.nsid		= namespace_id,
 		.cdw11		= value,

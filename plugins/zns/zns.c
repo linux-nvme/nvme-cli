@@ -272,8 +272,8 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	}
 
 	struct nvme_zns_mgmt_send_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zsa		= zsa,
@@ -305,14 +305,14 @@ ret:
 	return err;
 }
 
-static int get_zdes_bytes(int fd, __u32 nsid)
+static int get_zdes_bytes(struct dev_handle *hnd, __u32 nsid)
 {
 	struct nvme_zns_id_ns ns;
 	struct nvme_id_ns id_ns;
 	__u8 lbaf;
 	int err;
 
-	err = nvme_identify_ns(fd, nsid, &id_ns);
+	err = nvme_identify_ns(hnd, nsid, &id_ns);
 	if (err > 0) {
 		nvme_show_status(err);
 		return -1;
@@ -321,7 +321,7 @@ static int get_zdes_bytes(int fd, __u32 nsid)
 		return -1;
 	}
 
-	err = nvme_zns_identify_ns(fd, nsid,  &ns);
+	err = nvme_zns_identify_ns(hnd, nsid,  &ns);
 	if (err > 0) {
 		nvme_show_status(err);
 		return -1;
@@ -437,8 +437,8 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	struct nvme_zns_mgmt_send_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zsa		= cfg.zsa,
@@ -527,8 +527,8 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	struct nvme_zns_mgmt_send_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zsa		= NVME_ZNS_ZSA_OPEN,
@@ -641,8 +641,8 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	}
 
 	struct nvme_zns_mgmt_send_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zsa		= NVME_ZNS_ZSA_SET_DESC_EXT,
@@ -708,8 +708,8 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *cmd, struct pl
 	}
 
 	struct nvme_zns_mgmt_send_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.lba,
 		.zsa		= NVME_ZNS_ZSA_ZRWA_FLUSH,
@@ -801,8 +801,8 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	struct nvme_zns_mgmt_recv_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zra		= cfg.zra,
@@ -1186,8 +1186,8 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		control |= NVME_IO_ZNS_APPEND_PIREMAP;
 
 	struct nvme_zns_append_args args = {
+		.hnd            = dev_fd(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.zslba		= cfg.zslba,
 		.nlb		= nblocks,

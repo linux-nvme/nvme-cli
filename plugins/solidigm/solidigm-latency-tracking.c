@@ -42,7 +42,7 @@ struct config {
 };
 
 struct latency_tracker {
-	int fd;
+	struct dev_handle *hnd;
 	__u8 uuid_index;
 	struct config cfg;
 	enum nvme_print_flags print_flags;
@@ -278,8 +278,8 @@ static void latency_tracker_parse(struct latency_tracker *lt)
 static int latency_tracking_is_enable(struct latency_tracker *lt, __u32 * enabled)
 {
 	struct nvme_get_features_args args_get = {
+		.hnd            = lt->hnd,
 		.args_size	= sizeof(args_get),
-		.fd		= lt->fd,
 		.uuidx		= lt->uuid_index,
 		.fid		= LATENCY_TRACKING_FID,
 		.nsid		= 0,
@@ -309,9 +309,9 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 	}
 
 	struct nvme_set_features_args args_set = {
+		.hnd            = lt->hnd,
 		.args_size	= sizeof(args_set),
-		.fd		= lt->fd,
-		.uuidx		= lt->uuid_index,
+		.uuidx          = lt->uuid_index,
 		.fid		= LATENCY_TRACKING_FID,
 		.nsid		= 0,
 		.cdw11		= lt->cfg.enable,
@@ -359,9 +359,9 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 		.lpo	= 0,
 		.result = NULL,
 		.log	= &lt->stats,
+		.hnd    = lt->hnd,
 		.args_size = sizeof(args),
-		.fd	= lt->fd,
-		.uuidx	= lt->uuid_index,
+		.uuidx  = lt->uuid_index,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid	= lt->cfg.write ? WRITE_LOG_ID : READ_LOG_ID,
 		.len	= sizeof(lt->stats),
@@ -419,7 +419,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 	if (err)
 		return err;
 
-	lt.fd = dev_fd(dev);
+	lt.hnd = dev_fd(dev);
 
 	lt.print_flags = validate_output_format(lt.cfg.output_format);
 	if (lt.print_flags == -EINVAL) {
@@ -478,7 +478,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 		fprintf(stderr, "Could not read feature id 0xE2.\n");
 	}
 	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
+	close(dev_fd(dev)->fd);
 	dev_close(dev);
 	return err;
 }

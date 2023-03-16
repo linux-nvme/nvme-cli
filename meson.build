@@ -49,6 +49,7 @@ libnvme_dep = dependency('libnvme', version: '>=1.3', required: true,
                          fallback : ['libnvme', 'libnvme_dep'])
 libnvme_mi_dep = dependency('libnvme-mi', required: true,
                          fallback : ['libnvme', 'libnvme_mi_dep'])
+libxnvme_dep = dependency('xnvme', version: '>=0.2.0', required: true)
 
 # Check for libjson-c availability
 if get_option('json-c').disabled()
@@ -268,7 +269,7 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libnvme_mi_dep, json_c_dep,
+  dependencies: [ libxnvme_dep, libnvme_dep, libnvme_mi_dep, json_c_dep,
                   libhugetlbfs_dep ],
   link_args: '-ldl',
   include_directories: incdir,
