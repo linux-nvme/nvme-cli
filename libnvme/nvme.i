@@ -774,6 +774,9 @@ struct nvme_ns {
 	const char *nvme_ctrl_dhchap_key_get(struct nvme_ctrl *c) {
 		return nvme_ctrl_get_dhchap_key(c);
 	}
+	void nvme_ctrl_dhchap_key_set(struct nvme_ctrl *c, const char *key) {
+		nvme_ctrl_set_dhchap_key(c, key);
+	}
 	const char *nvme_ctrl_dhchap_host_key_get(struct nvme_ctrl *c) {
 		return nvme_ctrl_get_dhchap_host_key(c);
 	}
