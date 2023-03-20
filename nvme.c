@@ -4700,7 +4700,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	if (err)
 		goto ret;
 
-	if (!opts[1].seen) {
+	if (!argconfig_parse_seen(opts, "namespace-id")) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
 			if (errno != ENOTTY) {
@@ -5882,7 +5882,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (err)
 		goto ret;
 
-	if (!opts[0].seen) {
+	if (!argconfig_parse_seen(opts, "namespace-id")) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
 			if (errno != ENOTTY) {
