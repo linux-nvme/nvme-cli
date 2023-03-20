@@ -597,3 +597,16 @@ void argconfig_register_help_func(argconfig_help_func * f)
 		}
 	}
 }
+
+bool argconfig_parse_seen(struct argconfig_commandline_options *options,
+			  const char *option)
+{
+	struct argconfig_commandline_options *s;
+
+	for (s = options; s && s->option; s++) {
+		if (!strcmp(s->option, option))
+			return s->seen;;
+	}
+
+	return false;
+}

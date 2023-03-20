@@ -953,9 +953,10 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 	if (err)
 		return err;
 
-	if (opts[0].seen)
+	if (argconfig_parse_seen(opts, "mode"))
 		err = eol_plp_failure_mode_set(dev, nsid, fid, cfg.mode,
-					       cfg.save, !opts[3].seen);
+					       cfg.save,
+					       !argconfig_parse_seen(opts, "no-uuid"));
 	else
 		err = eol_plp_failure_mode_get(dev, nsid, fid, cfg.sel);
 
