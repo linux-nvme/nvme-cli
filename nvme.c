@@ -7213,7 +7213,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	int dfd, mfd;
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
-	__u16 control = 0;
+	__u16 control = 0, nblocks = 0;
 	__u32 dsmgmt = 0;
 	int logical_block_size = 0;
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
@@ -7403,9 +7403,14 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (cfg.data_size < buffer_size) {
 		fprintf(stderr, "Rounding data size to fit block count (%lld bytes)\n",
 				buffer_size);
-	} else {
+	} else
 		buffer_size = cfg.data_size;
-	}
+
+	/* Get the required block count. Note this is a zeroes based value. */
+	nblocks = ((buffer_size + (logical_block_size - 1)) / logical_block_size) - 1;
+
+	/* Update the data size based on the required block count */
+	buffer_size = (nblocks + 1) * logical_block_size;
 
 	buffer = nvme_alloc(buffer_size, &huge);
 	if (!buffer) {
@@ -7478,7 +7483,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("nsid         : %02x\n", cfg.namespace_id);
 		printf("flags        : %02x\n", 0);
 		printf("control      : %04x\n", control);
-		printf("nblocks      : %04x\n", cfg.block_count);
+		printf("nblocks      : %04x\n", nblocks);
 		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)mbuffer);
 		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
 		printf("slba         : %"PRIx64"\n", (uint64_t)cfg.start_block);
@@ -7499,7 +7504,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.start_block,
-		.nlb		= cfg.block_count,
+		.nlb		= nblocks,
 		.control	= control,
 		.dsm		= cfg.dsmgmt,
 		.sts		= sts,
