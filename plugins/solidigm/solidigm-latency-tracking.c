@@ -285,7 +285,6 @@ static int latency_tracking_is_enable(struct latency_tracker *lt, __u32 * enable
 		.nsid		= 0,
 		.sel		= 0,
 		.cdw11		= 0,
-		.uuidx		= 0,
 		.data_len	= LATENCY_TRACKING_FID_DATA_LEN,
 		.data		= NULL,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -317,7 +316,6 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 		.cdw11		= lt->cfg.enable,
 		.cdw12		= 0,
 		.save		= 0,
-		.uuidx		= 0,
 		.cdw15		= 0,
 		.data_len	= LATENCY_TRACKING_FID_DATA_LEN,
 		.data		= NULL,
@@ -369,7 +367,6 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 		.csi	= NVME_CSI_NVM,
 		.lsi	= NVME_LOG_LSI_NONE,
 		.lsp	= lt->cfg.type,
-		.uuidx	= NVME_UUID_NONE,
 		.rae	= false,
 		.ot	= false,
 	};
