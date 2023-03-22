@@ -8827,26 +8827,47 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		"to be used for the TLS key.";
 	const char *hmac = "HMAC function to use for the retained key "\
 		"(1 = SHA-256, 2 = SHA-384).";
+	const char *hostnqn = "Host NQN for the retained key.";
+	const char *subsysnqn = "Subsystem NQN for the retained key.";
+	const char *keyring = "Keyring for the retained key.";
+	const char *keytype = "Key type of the retained key.";
+	const char *insert = "Insert only, do not print the retained key.";
 
 	unsigned char *raw_secret;
 	char encoded_key[128];
 	int key_len = 32;
 	unsigned long crc = crc32(0L, NULL, 0);
-	int err = 0;
+	int err;
+	long tls_key;
 
 	struct config {
+		char		*keyring;
+		char		*keytype;
+		char		*hostnqn;
+		char		*subsysnqn;
 		char		*secret;
 		unsigned int	hmac;
+		bool		insert;
 	};
 
 	struct config cfg = {
+		.keyring	= ".nvme",
+		.keytype	= "psk",
+		.hostnqn	= NULL,
+		.subsysnqn	= NULL,
 		.secret		= NULL,
 		.hmac		= 1,
+		.insert		= false,
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
+		OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
 		OPT_STR("secret",	's', &cfg.secret,	secret),
 		OPT_UINT("hmac",	'm', &cfg.hmac,		hmac),
+		OPT_FLAG("insert",	'i', &cfg.insert,	insert),
 		OPT_END()
 	};
 
@@ -8857,7 +8878,10 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		fprintf(stderr, "Invalid HMAC identifier %u\n", cfg.hmac);
 		return -EINVAL;
 	}
-
+	if (cfg.insert && !cfg.subsysnqn) {
+		fprintf(stderr, "No subsystem NQN specified\n");
+		return -EINVAL;
+	}
 	if (cfg.hmac == 2)
 		key_len = 48;
 
@@ -8891,6 +8915,36 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		}
 	}
 
+	if (cfg.hostnqn && !cfg.subsysnqn) {
+		fprintf(stderr,
+			"Need to specify subsystem NQN to insert a TLS key\n");
+		return -EINVAL;
+	}
+	if (cfg.subsysnqn) {
+		if (!cfg.hostnqn) {
+			cfg.hostnqn = nvmf_hostnqn_from_file();
+			if (!cfg.hostnqn) {
+				fprintf(stderr,
+					"Failed to read host NQN\n");
+				return -EINVAL;
+			}
+		}
+
+		tls_key = nvme_insert_tls_key(cfg.keyring, cfg.keytype,
+				      cfg.hostnqn, cfg.subsysnqn, cfg.hmac,
+				      raw_secret, key_len);
+		if (tls_key < 0) {
+			fprintf(stderr,
+				"Failed to insert key, error %d\n", errno);
+			return -errno;
+		}
+
+		if (cfg.insert) {
+			printf("Inserted TLS key %08x\n",
+			       (unsigned int)tls_key);
+			return 0;
+		}
+	}
 	crc = crc32(crc, raw_secret, key_len);
 	raw_secret[key_len++] = crc & 0xff;
 	raw_secret[key_len++] = (crc >> 8) & 0xff;
