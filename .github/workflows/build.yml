@@ -22,11 +22,15 @@ jobs:
           python-version: '3.x'
       - uses: bsfishy/meson-build@v1.0.3
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=debug
             -Dlibnvme:werror=false
+          meson-version: 0.61.2
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -47,11 +51,15 @@ jobs:
           python-version: '3.x'
       - uses: bsfishy/meson-build@v1.0.3
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
             -Dlibnvme:werror=false
+          meson-version: 0.61.2
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -72,13 +80,17 @@ jobs:
           python-version: '3.x'
       - uses: bsfishy/meson-build@v1.0.3
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
             --cross-file=.github/cross/clang.txt
             -Dlibnvme:werror=false
             -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -99,7 +111,7 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -107,6 +119,10 @@ jobs:
             --default-library=shared
             -Dlibnvme:werror=false
             -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -127,7 +143,7 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -135,6 +151,10 @@ jobs:
             --default-library=static
             -Dlibnvme:werror=false
             -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -164,13 +184,17 @@ jobs:
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
             --cross-file=.github/cross/ubuntu-armhf.txt
             -Dlibnvme:python=false
             -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -200,7 +224,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -208,6 +232,10 @@ jobs:
             -Dlibnvme:werror=false
             -Dlibnvme:python=false
             -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -237,7 +265,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -245,6 +273,10 @@ jobs:
             -Dlibnvme:werror=false
             -Dlibnvme:python=false
             -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: bsfishy/meson-build@v1.0.3
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -295,4 +327,8 @@ jobs:
               -Djson-c=disabled          \
               build
           samu -C build
+      - name: test
+        run: |
+          export PATH=$(pwd)/build-tools/muon/build:$PATH
+
           muon -C build test
