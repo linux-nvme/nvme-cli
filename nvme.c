@@ -4338,7 +4338,7 @@ static void abort_self_test(struct nvme_dev_self_test_args *args)
 {
 	int err;
 
-	args->stc = NVME_ST_CODE_ABORT,
+	args->stc = NVME_DST_STC_ABORT;
 
 	err = nvme_dev_self_test(args);
 	if (!err) {
