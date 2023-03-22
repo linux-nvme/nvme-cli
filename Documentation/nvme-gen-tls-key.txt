@@ -8,18 +8,52 @@ nvme-gen-tls-key - Generate a NVMe TLS PSK
 SYNOPSIS
 --------
 [verse]
-'nvme gen-tls-key' [--hmac=<hmac-id> | -h <hmac-id>]
+'nvme gen-tls-key' [--keyring=<name> | -k <name>]
+                      [--keytype=<type> | -t <type> ]
+		      [--hostnqn=<nqn> | -n <nqn>]
+		      [--subsysnqn=<nqn> | -c <nqn>]
+		      [--hmac=<hmac-id> | -h <hmac-id>]
 		      [--secret=<secret> | -s <secret> ]
+		      [--insert | -i ]
 
 DESCRIPTION
 -----------
-Generate a base64-encoded NVMe TLS pre-shared key (PSK) in
-the PSK interchange format
-NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:
-and prints it to stdout.
+Generate a base64-encoded NVMe TLS pre-shared key (PSK).
+The resulting key is either printed in the PSK interchange format
+'NVMeTLSkey-1:01:<base64 encoded data>:',
+inserted as a 'retained' key into the specified keyring, or both.
+When the PSK should be inserted into the keyring a 'retained' key
+is derived from the secret key material, and the resulting 'retained'
+key is stored with the identity
+'NVMe0R0<hmac> <host NQN> <subsystem NQN>'
+in the keyring.
+The 'retained' key is derived from the secret key material,
+the specified subsystem NQN, and the host NQN.
+Once the 'retained' key is stored in the keyring the original
+secret key material cannot be retrieved.
 
 OPTIONS
 -------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring into which the 'retained' TLS key should be
+	stored. Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key for resulting TLS key.
+	Default is 'psk'.
+
+-n <nqn>::
+--hostnqn=<nqn>::
+	Host NVMe Qualified Name (NQN) to be used to derive the
+	'retained' TLS key
+
+-c <nqn>::
+--subsysnqn=<nqn>::
+	Subsystem NVMe Qualified Name (NQN) to be used to derive the
+	'retained' TLS key
+
 -h <hmac-id>::
 --hmac=<hmac-id>::
 	Select a HMAC algorithm to use. Possible values are:
@@ -30,6 +64,11 @@ OPTIONS
 --secret=<secret>::
 	Secret value (in hexadecimal) to be used for the key. If none are
 	provided a random value is used.
+
+-i::
+--insert::
+	Insert the resulting TLS key into the keyring without printing out
+	the key in PSK interchange format.
 
 EXAMPLES
 --------
