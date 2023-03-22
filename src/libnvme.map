@@ -3,6 +3,7 @@
 LIBNVME_1_4 {
 	global:
 		nvme_lookup_keyring;
+		nvme_insert_tls_key;
 };
 
 LIBNVME_1_3 {
