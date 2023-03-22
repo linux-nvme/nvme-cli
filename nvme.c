@@ -8794,24 +8794,37 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		"to be used for the TLS key.";
 	const char *hmac = "HMAC function to use for the retained key "\
 		"(1 = SHA-256, 2 = SHA-384).";
+	const char *hostnqn = "Host NQN for the retained key.";
+	const char *subsysnqn = "Subsystem NQN for the retained key.";
+	const char *keyring = "Keyring for the retained key.";
 
 	unsigned char *raw_secret;
 	char encoded_key[128];
 	int key_len = 32;
 	unsigned long crc = crc32(0L, NULL, 0);
-	int err = 0;
+	int err;
+	long tls_key;
 
 	struct config {
+		char		*keyring;
+		char		*hostnqn;
+		char		*subsysnqn;
 		char		*secret;
 		unsigned int	hmac;
 	};
 
 	struct config cfg = {
+		.keyring	= ".nvme",
+		.hostnqn	= NULL,
+		.subsysnqn	= NULL,
 		.secret		= NULL,
 		.hmac		= 1,
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
+		OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
 		OPT_STR("secret",	's', &cfg.secret,	secret),
 		OPT_UINT("hmac",	'm', &cfg.hmac,		hmac),
 		OPT_END()
@@ -8858,16 +8871,32 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		}
 	}
 
-	crc = crc32(crc, raw_secret, key_len);
-	raw_secret[key_len++] = crc & 0xff;
-	raw_secret[key_len++] = (crc >> 8) & 0xff;
-	raw_secret[key_len++] = (crc >> 16) & 0xff;
-	raw_secret[key_len++] = (crc >> 24) & 0xff;
+	if (!cfg.hostnqn && !cfg.subsysnqn) {
+		crc = crc32(crc, raw_secret, key_len);
+		raw_secret[key_len++] = crc & 0xff;
+		raw_secret[key_len++] = (crc >> 8) & 0xff;
+		raw_secret[key_len++] = (crc >> 16) & 0xff;
+		raw_secret[key_len++] = (crc >> 24) & 0xff;
 
-	memset(encoded_key, 0, sizeof(encoded_key));
-	base64_encode(raw_secret, key_len, encoded_key);
+		memset(encoded_key, 0, sizeof(encoded_key));
+		base64_encode(raw_secret, key_len, encoded_key);
+		printf("NVMeTLSkey-1:%02x:%s:\n",
+		       cfg.hmac, encoded_key);
+		return 0;
+	}
+	if ((!cfg.hostnqn && cfg.subsysnqn) ||
+	    (cfg.hostnqn && !cfg.subsysnqn)) {
+		fprintf(stderr,
+			"Need to specify both, host and subsystem NQN\n");
+		return -EINVAL;
+	}
+	tls_key = nvme_insert_tls_key(cfg.keyring, cfg.hostnqn,
+				      cfg.subsysnqn, cfg.hmac,
+				      raw_secret, key_len);
+	if (tls_key < 0)
+		return errno;
 
-	printf("NVMeTLSkey-1:%02x:%s:\n", cfg.hmac, encoded_key);
+	printf("Generated key %08x\n", (unsigned int)tls_key);
 	return 0;
 }
 

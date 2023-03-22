@@ -8,7 +8,10 @@ nvme-gen-tls-key - Generate a NVMe TLS PSK
 SYNOPSIS
 --------
 [verse]
-'nvme gen-tls-key' [--hmac=<hmac-id> | -h <hmac-id>]
+'nvme gen-tls-key' [--keyring=<keyring-name> | -k <keyring-name>]
+		      [--hostnqn=<nqn> | -n <nqn>]
+		      [--subsysnqn=<nqn> | -c <nqn>]
+		      [--hmac=<hmac-id> | -h <hmac-id>]
 		      [--secret=<secret> | -s <secret> ]
 
 DESCRIPTION
@@ -20,6 +23,19 @@ and prints it to stdout.
 
 OPTIONS
 -------
+-k <keyring-name>::
+--keyring=<keyring-name>::
+	Name of the keyring into which the resulting TLS key should be
+	stored. Default is '.nvme'.
+
+-n <nqn>::
+--hostnqn=<nqn>::
+	Host NVMe Qualified Name (NQN) to be used to derive the TLS key
+
+-c <nqn>::
+--subsysnqn=<nqn>::
+	Subsystem NVMe Qualified Name (NQN) to be used to derive the TLS key
+
 -h <hmac-id>::
 --hmac=<hmac-id>::
 	Select a HMAC algorithm to use. Possible values are:
