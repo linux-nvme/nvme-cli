@@ -122,21 +122,19 @@ static void show_option(const struct argconfig_commandline_options *option)
 }
 
 void argconfig_print_help(const char *program_desc,
-			  const struct argconfig_commandline_options *options)
+			  struct argconfig_commandline_options *s)
 {
-	const struct argconfig_commandline_options *s;
-
 	fprintf(stderr, "\033[1mUsage: %s\033[0m\n\n",
 		append_usage_str);
 
 	print_word_wrapped(program_desc, 0, 0, stderr);
 	fprintf(stderr, "\n");
 
-	if (!options || !options->option)
+	if (!s || !s->option)
 		return;
 
 	fprintf(stderr, "\n\033[1mOptions:\033[0m\n");
-	for (s = options; (s != NULL) && (s->option != NULL); s++)
+	for (; s && s->option; s++)
 		show_option(s);
 }
 
@@ -598,14 +596,12 @@ void argconfig_register_help_func(argconfig_help_func * f)
 	}
 }
 
-bool argconfig_parse_seen(struct argconfig_commandline_options *options,
+bool argconfig_parse_seen(struct argconfig_commandline_options *s,
 			  const char *option)
 {
-	struct argconfig_commandline_options *s;
-
-	for (s = options; s && s->option; s++) {
+	for (; s && s->option; s++) {
 		if (!strcmp(s->option, option))
-			return s->seen;;
+			return s->seen;
 	}
 
 	return false;
