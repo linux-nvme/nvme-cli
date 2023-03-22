@@ -8961,24 +8961,41 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 static int check_tls_key(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Check a TLS key for NVMe PSK Interchange format.\n";
-	const char *key = "TLS key (in PSK Interchange format) "\
+	const char *keydata = "TLS key (in PSK Interchange format) "\
 		"to be validated.";
+	const char *hostnqn = "Host NQN for the retained key.";
+	const char *subsysnqn = "Subsystem NQN for the retained key.";
+	const char *keyring = "Keyring for the retained key.";
+	const char *keytype = "Key type of the retained key.";
 
 	unsigned char decoded_key[128];
 	unsigned int decoded_len;
 	u_int32_t crc = crc32(0L, NULL, 0);
 	u_int32_t key_crc;
 	int err = 0, hmac;
+	long tls_key;
 	struct config {
-		char	*key;
+		char	*keyring;
+		char	*keytype;
+		char	*hostnqn;
+		char	*subsysnqn;
+		char	*keydata;
 	};
 
 	struct config cfg = {
-		.key	= NULL,
+		.keyring	= ".nvme",
+		.keytype	= "psk",
+		.hostnqn	= NULL,
+		.subsysnqn	= NULL,
+		.keydata	= NULL,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STR("key", 'k', &cfg.key, key),
+		OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
+		OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
+		OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
 		OPT_END()
 	};
 
@@ -8986,27 +9003,27 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	if (err)
 		return err;
 
-	if (!cfg.key) {
-		fprintf(stderr, "Key not specified\n");
+	if (!cfg.keydata) {
+		fprintf(stderr, "No key data\n");
 		return -EINVAL;
 	}
 
-	if (sscanf(cfg.key, "NVMeTLSkey-1:%02x:*s", &hmac) != 1) {
-		fprintf(stderr, "Invalid key header '%s'\n", cfg.key);
+	if (sscanf(cfg.keydata, "NVMeTLSkey-1:%02x:*s", &hmac) != 1) {
+		fprintf(stderr, "Invalid key '%s'\n", cfg.keydata);
 		return -EINVAL;
 	}
 	switch (hmac) {
 	case 1:
-		if (strlen(cfg.key) != 65) {
+		if (strlen(cfg.keydata) != 65) {
 			fprintf(stderr, "Invalid key length %zu for SHA(256)\n",
-				strlen(cfg.key));
+				strlen(cfg.keydata));
 			return -EINVAL;
 		}
 		break;
 	case 2:
-		if (strlen(cfg.key) != 89) {
+		if (strlen(cfg.keydata) != 89) {
 			fprintf(stderr, "Invalid key length %zu for SHA(384)\n",
-				strlen(cfg.key));
+				strlen(cfg.keydata));
 			return -EINVAL;
 		}
 		break;
@@ -9016,11 +9033,11 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		break;
 	}
 
-	err = base64_decode(cfg.key + 16, strlen(cfg.key) - 17,
+	err = base64_decode(cfg.keydata + 16, strlen(cfg.keydata) - 17,
 			    decoded_key);
 	if (err < 0) {
 		fprintf(stderr, "Base64 decoding failed (%s, error %d)\n",
-			cfg.key + 16, err);
+			cfg.keydata + 16, err);
 		return err;
 	}
 	decoded_len = err;
@@ -9039,8 +9056,27 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 			key_crc, crc);
 		return -EINVAL;
 	}
-	printf("Key is valid (HMAC %d, length %d, CRC %08x)\n",
-	       hmac, decoded_len, crc);
+	if (cfg.subsysnqn) {
+		if (!cfg.hostnqn) {
+			cfg.hostnqn = nvmf_hostnqn_from_file();
+			if (!cfg.hostnqn) {
+				fprintf(stderr,
+					"Failed to read host NQN\n");
+				return -EINVAL;
+			}
+		}
+
+		tls_key = nvme_insert_tls_key(cfg.keyring, cfg.keytype,
+				      cfg.hostnqn, cfg.subsysnqn, hmac,
+				      decoded_key, decoded_len);
+		if (tls_key < 0) {
+			fprintf(stderr,
+				"Failed to insert key, error %d\n", errno);
+			return -errno;
+		}
+	} else
+		printf("Key is valid (HMAC %d, length %d, CRC %08x)\n",
+		       hmac, decoded_len, crc);
 	return 0;
 }
 
