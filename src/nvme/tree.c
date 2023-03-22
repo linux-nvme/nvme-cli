@@ -1864,27 +1864,62 @@ free_ns:
 	return NULL;
 }
 
+static inline bool nvme_ns_is_generic(const char *name)
+{
+	int instance, head_instance;
+
+	if (sscanf(name, "ng%dn%d", &instance, &head_instance) != 2)
+		return false;
+	return true;
+}
+
+static char *nvme_ns_generic_to_blkdev(const char *generic)
+{
+
+	int instance, head_instance;
+	char blkdev[PATH_MAX];
+
+	if (!nvme_ns_is_generic(generic))
+		return strdup(generic);
+
+	sscanf(generic, "ng%dn%d", &instance, &head_instance);
+	sprintf(blkdev, "nvme%dn%d", instance, head_instance);
+
+	return strdup(blkdev);
+}
+
 static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, const char *name)
 {
 	struct nvme_ns *n;
 	char *path;
 	int ret;
+	char *blkdev;
 
-	ret = asprintf(&path, "%s/%s", sysfs_dir, name);
-	if (ret < 0) {
+	blkdev = nvme_ns_generic_to_blkdev(name);
+	if (!blkdev) {
 		errno = ENOMEM;
 		return NULL;
 	}
 
-	n = nvme_ns_open(name);
+	ret = asprintf(&path, "%s/%s", sysfs_dir, blkdev);
+	if (ret < 0) {
+		errno = ENOMEM;
+		goto free_blkdev;
+	}
+
+	n = nvme_ns_open(blkdev);
 	if (!n)
 		goto free_path;
 
 	n->sysfs_dir = path;
+
+	free(blkdev);
 	return n;
 
 free_path:
 	free(path);
+free_blkdev:
+	free(blkdev);
 	return NULL;
 }
 
