@@ -5627,12 +5627,11 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (err) {
 		if (errno == EBUSY) {
 			fprintf(stderr, "Failed to open %s.\n",
-		                basename(argv[optind]));
-			fprintf(stderr,
-				"Namespace is currently busy.\n");
+				basename(argv[optind]));
+			fprintf(stderr, "Namespace is currently busy.\n");
 			if (!cfg.force)
 				fprintf(stderr,
-				"Use the force [--force] option to ignore that.\n");
+					"Use the force [--force] option to ignore that.\n");
 		} else {
 			argconfig_print_help(desc, opts);
 		}
@@ -5649,7 +5648,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"), must be a power of two\n",
-				       (uint64_t) cfg.bs);
+				(uint64_t) cfg.bs);
 			err = -EINVAL;
 			goto close_dev;
 		}
@@ -5688,9 +5687,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (cfg.namespace_id != NVME_NSID_ALL) {
 		err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
 		if (err) {
-			if (err < 0)
+			if (err < 0) {
 				fprintf(stderr, "identify-namespace: %s\n", nvme_strerror(errno));
-			else {
+			} else {
 				fprintf(stderr, "identify failed\n");
 				nvme_show_status(err);
 			}
@@ -5715,10 +5714,12 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				err = -EINVAL;
 				goto close_dev;
 			}
-		} else  if (cfg.lbaf == 0xff)
+		} else  if (cfg.lbaf == 0xff) {
 			cfg.lbaf = prev_lbaf;
+		}
 	} else {
-		if (cfg.lbaf == 0xff) cfg.lbaf = 0;
+		if (cfg.lbaf == 0xff)
+			cfg.lbaf = 0;
 	}
 
 	/* ses & pi checks set to 7 for forward-compatibility */
@@ -5753,7 +5754,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			dev->name, cfg.namespace_id,
 			cfg.namespace_id == NVME_NSID_ALL ? "(ALL namespaces)" : "");
 		nvme_show_relatives(dev->name);
-		fprintf(stderr, "WARNING: Format may irrevocably delete this device's data.\n"
+		fprintf(stderr,
+			"WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
 			"Use the force [--force] option to suppress this warning.\n");
 		sleep(10);
@@ -5773,13 +5775,13 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.result		= NULL,
 	};
 	err = nvme_cli_format_nvm(dev, &args);
-	if (err < 0)
+	if (err < 0) {
 		fprintf(stderr, "format: %s\n", nvme_strerror(errno));
-	else if (err != 0)
+	} else if (err != 0) {
 		nvme_show_status(err);
-	else {
+	} else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
-		if (dev->type == NVME_DEV_DIRECT && cfg.lbaf != prev_lbaf){
+		if (dev->type == NVME_DEV_DIRECT && cfg.lbaf != prev_lbaf) {
 			if (is_chardev(dev)) {
 				if (ioctl(dev_fd(dev), NVME_IOCTL_RESCAN) < 0) {
 					fprintf(stderr, "failed to rescan namespaces\n");
@@ -5798,7 +5800,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				 */
 				if (ioctl(dev_fd(dev), BLKBSZSET, &block_size) < 0) {
 					fprintf(stderr, "failed to set block size to %d\n",
-							block_size);
+						block_size);
 					err = -errno;
 					goto close_dev;
 				}
