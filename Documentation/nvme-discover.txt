@@ -23,14 +23,17 @@ SYNOPSIS
 		[--keep-alive-tmo=<sec>   | -k <sec>]
 		[--reconnect-delay=<#>	  | -c <#>]
 		[--ctrl-loss-tmo=<#>	  | -l <#>]
-		[--hdr-digest             | -g]
-		[--data-digest            | -G]
 		[--nr-io-queues=<#>       | -i <#>]
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
 		[--queue-size=<#>         | -Q <#>]
+		[--keyring=<#>                    ]
+		[--tls_key=<#>                    ]
+		[--hdr-digest             | -g]
+		[--data-digest            | -G]
 		[--persistent             | -p]
 		[--quiet                  | -S]
+		[--tls                        ]
 		[--dump-config            | -O]
 		[--output-format=<fmt>    | -o <fmt>]
 		[--force]
@@ -165,14 +168,6 @@ OPTIONS
 --ctrl-loss-tmo=<#>::
 	Overrides the default controller loss timeout period (in seconds).
 
--g::
---hdr-digest::
-	Generates/verifies header digest (TCP).
-
--G::
---data-digest::
-	Generates/verifies data digest (TCP).
-
 -i <#>::
 --nr-io-queues=<#>::
 	Overrides the default number of I/O queues create by the driver.
@@ -194,10 +189,27 @@ OPTIONS
 	This option will be ignored for the discovery, and it is only
 	implemented for completeness.
 
+--keyring=<#>::
+	Keyring for TLS key lookup.
+
+--tls_key=<#>::
+	TLS key for the connection (TCP).
+
+-g::
+--hdr-digest::
+	Generates/verifies header digest (TCP).
+
+-G::
+--data-digest::
+	Generates/verifies data digest (TCP).
+
 -p::
 --persistent::
 	Don't remove the discovery controller after retrieving the discovery
 	log page.
+
+--tls::
+	Enable TLS encryption (TCP).
 
 -S::
 --quiet::

@@ -28,6 +28,8 @@ SYNOPSIS
 		[--reconnect-delay=<#>    | -c <#>]
 		[--ctrl-loss-tmo=<#>      | -l <#>]
 		[--tos=<#>                | -T <#>]
+		[--keyring=<#>                    ]
+		[--tls_key=<#>                    ]
 		[--duplicate-connect      | -D]
 		[--disable-sqflow         | -d]
 		[--hdr-digest             | -g]
@@ -155,6 +157,12 @@ OPTIONS
 -T <#>::
 --tos=<#>::
 	Type of service for the connection (TCP)
+
+--keyring=<#>::
+	Keyring for TLS key lookup.
+
+--tls_key=<#>::
+	TLS key for the connection (TCP).
 
 -D::
 --duplicate-connect::
