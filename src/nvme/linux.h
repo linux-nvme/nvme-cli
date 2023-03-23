@@ -206,6 +206,43 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 long nvme_lookup_keyring(const char *keyring);
 
 /**
+ * nvme_describe_key_serial() - Return key description
+ * @key_id:    Key serial number
+ *
+ * Fetches the description of the key or keyring identified
+ * by the serial number @key_id.
+ *
+ * Return: The description of @key_id or NULL on failure.
+ * The returned string needs to be freed by the caller.
+ */
+char *nvme_describe_key_serial(long key_id);
+
+/**
+ * nvme_lookup_key() - Lookup key serial number
+ * @type:        Key type
+ * @identity:    Key description
+ *
+ * Looks up the serial number of the key @identity
+ * with type %type in the current session keyring.
+ *
+ * Return: The key serial number of the key
+ * or 0 with errno set otherwise.
+ */
+long nvme_lookup_key(const char *type, const char *identity);
+
+/**
+ * nvme_set_keyring() - Link keyring for lookup
+ * @keyring_id:    Keyring id
+ *
+ * Links @keyring_id into the session keyring such that
+ * its keys are available for further key lookups.
+ *
+ * Return: 0 on success, a negative number on error
+ * with errno set.
+ */
+int nvme_set_keyring(long keyring_id);
+
+/**
  * nvme_insert_tls_key() - Derive and insert TLS key
  * @keyring:    Keyring to use
  * @key_type:	Type of the resulting key

@@ -791,6 +791,35 @@ long nvme_lookup_keyring(const char *keyring)
 	return keyring_id;
 }
 
+char *nvme_describe_key_serial(long key_id)
+{
+	char *desc;
+
+	if (keyctl_describe_alloc(key_id, &desc) < 0)
+		desc = NULL;
+	return desc;
+}
+
+long nvme_lookup_key(const char *type, const char *identity)
+{
+	key_serial_t key;
+
+	key = keyctl_search(KEY_SPEC_SESSION_KEYRING, type, identity, 0);
+	if (key < 0)
+		return 0;
+	return key;
+}
+
+int nvme_set_keyring(long key_id)
+{
+	long err;
+
+	err = keyctl_link(key_id, KEY_SPEC_SESSION_KEYRING);
+	if (err < 0)
+		return -1;
+	return 0;
+}
+
 long nvme_insert_tls_key(const char *keyring, const char *key_type,
 			 const char *hostnqn, const char *subsysnqn, int hmac,
 			 unsigned char *configured_key, int key_len)
@@ -801,7 +830,7 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 	int ret = -1;
 
 	keyring_id = nvme_lookup_keyring(keyring);
-	if (keyring_id < 0)
+	if (keyring_id == 0)
 		return -1;
 
 	identity = malloc(strlen(hostnqn) + strlen(subsysnqn) + 12);
@@ -847,6 +876,30 @@ long nvme_lookup_keyring(const char *keyring)
 		 "recompile with keyutils support.\n");
 	errno = ENOTSUP;
 	return 0;
+}
+
+char *nvme_describe_key_serial(long key_id)
+{
+	nvme_msg(NULL, LOG_ERR, "key operations not supported; "\
+		 "recompile with keyutils support.\n");
+	errno = ENOTSUP;
+	return NULL;
+}
+
+long nvme_lookup_key(const char *type, const char *identity)
+{
+	nvme_msg(NULL, LOG_ERR, "key operations not supported; "\
+		 "recompile with keyutils support.\n");
+	errno = ENOTSUP;
+	return 0;
+}
+
+int nvme_set_keyring(long key_id)
+{
+	nvme_msg(NULL, LOG_ERR, "key operations not supported; "\
+		 "recompile with keyutils support.\n");
+	errno = ENOTSUP;
+	return -1;
 }
 
 long nvme_insert_tls_key(const char *keyring, const char *key_type,
