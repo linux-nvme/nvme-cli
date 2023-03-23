@@ -28,6 +28,10 @@
 #endif
 #endif
 
+#ifdef CONFIG_KEYUTILS
+#include <keyutils.h>
+#endif
+
 #include <ccan/endian/endian.h>
 
 #include "linux.h"
@@ -638,3 +642,23 @@ out:
 	return err;
 }
 #endif /* !CONFIG_OPENSSL_3 */
+
+#ifdef CONFIG_KEYUTILS
+long nvme_lookup_keyring(const char *keyring)
+{
+	key_serial_t keyring_id;
+
+	keyring_id = find_key_by_type_and_desc("keyring", keyring, 0);
+	if (keyring_id < 0)
+		return 0;
+	return keyring_id;
+}
+#else
+long nvme_lookup_keyring(const char *keyring)
+{
+	nvme_msg(NULL, LOG_ERR, "key operations not supported; "\
+		 "recompile with keyutils support.\n");
+	errno = ENOTSUP;
+	return 0;
+}
+#endif

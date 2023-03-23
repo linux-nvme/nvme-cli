@@ -32,6 +32,7 @@ endif
 deps = [
     json_c_dep,
     openssl_dep,
+    keyutils_dep,
 ]
 
 mi_deps = [

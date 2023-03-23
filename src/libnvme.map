@@ -1,5 +1,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+LIBNVME_1_4 {
+	global:
+		nvme_lookup_keyring;
+};
+
 LIBNVME_1_3 {
 	global:
 		nvme_ctrl_is_unique_discovery_ctrl;

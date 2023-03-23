@@ -98,6 +98,15 @@ endif
 conf.set('CONFIG_OPENSSL', openssl_dep.found(),
          description: 'Is OpenSSL/LibreSSL available?')
 
+if get_option('keyutils').disabled()
+    keyutils_dep = dependency('', required: false)
+else
+    keyutils_dep = dependency('libkeyutils',
+                              required : get_option('keyutils'))
+endif
+conf.set('CONFIG_KEYUTILS', keyutils_dep.found(),
+         description: 'Is libkeyutils available?')
+
 if get_option('libdbus').disabled()
     libdbus_dep = dependency('', required: false)
 else

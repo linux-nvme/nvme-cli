@@ -11,3 +11,4 @@ option('python', type : 'feature', value: 'auto', description : 'Generate libnvm
 option('openssl', type : 'feature', value: 'auto', description : 'OpenSSL support')
 option('libdbus', type : 'feature', value: 'disabled', description : 'libdbus support')
 option('json-c', type : 'feature', value: 'auto', description : 'JSON support')
+option('keyutils', type: 'feature', value: 'auto', description: 'keyutils support')

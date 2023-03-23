@@ -194,4 +194,15 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 			unsigned int key_len, unsigned char *secret,
 			unsigned char *key);
 
+/**
+ * nvme_lookup_keyring() - Lookup keyring serial number
+ * @keyring:    Keyring name
+ *
+ * Looks up the serial number of the keyring @keyring.
+ *
+ * Return: The key serial number of the keyring
+ * or 0 with errno set otherwise.
+ */
+long nvme_lookup_keyring(const char *keyring);
+
 #endif /* _LIBNVME_LINUX_H */
