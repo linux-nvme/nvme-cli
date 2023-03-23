@@ -27,6 +27,7 @@ Fabrics-specific definitions.
     int nr_write_queues;
     int nr_poll_queues;
     int tos;
+    int keyring;
     bool duplicate_connect;
     bool disable_sqflow;
     bool hdr_digest;
@@ -68,6 +69,9 @@ Fabrics-specific definitions.
 
 ``tos``
   Type of service
+
+``keyring``
+  Serial number of the keyring to store and lookup keys
 
 ``duplicate_connect``
   Allow multiple connections to the same target

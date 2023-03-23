@@ -216,6 +216,7 @@ static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 			  NVMF_DEF_CTRL_LOSS_TMO);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, fast_io_fail_tmo, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
+	MERGE_CFG_OPTION(ctrl_cfg, cfg, keyring, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
@@ -243,6 +244,7 @@ void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
 			  NVMF_DEF_CTRL_LOSS_TMO);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, fast_io_fail_tmo, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, keyring, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
@@ -517,6 +519,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 			      cfg->fast_io_fail_tmo, false)) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(argstr, "tos", cfg->tos, true)) ||
+	    add_int_argument(argstr, "keyring", cfg->keyring, false) ||
 	    add_bool_argument(argstr, "duplicate_connect",
 			      cfg->duplicate_connect) ||
 	    add_bool_argument(argstr, "disable_sqflow",

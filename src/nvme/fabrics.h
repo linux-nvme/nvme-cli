@@ -35,6 +35,7 @@
  * @nr_write_queues:	Number of queues to use for exclusively for writing
  * @nr_poll_queues:	Number of queues to reserve for polling completions
  * @tos:		Type of service
+ * @keyring:		Keyring to store and lookup keys
  * @duplicate_connect:	Allow multiple connections to the same target
  * @disable_sqflow:	Disable controller sq flow control
  * @hdr_digest:		Generate/verify header digest (TCP)
@@ -53,6 +54,7 @@ struct nvme_fabrics_config {
 	int nr_write_queues;
 	int nr_poll_queues;
 	int tos;
+	int keyring;
 
 	bool duplicate_connect;
 	bool disable_sqflow;

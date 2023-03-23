@@ -17,6 +17,7 @@
 #include "fabrics.h"
 #include "log.h"
 #include "private.h"
+#include "linux.h"
 
 #define JSON_UPDATE_INT_OPTION(c, k, a, o)				\
 	if (!strcmp(# a, k ) && !c->a) c->a = json_object_get_int(o);
@@ -64,6 +65,19 @@ static void json_update_attributes(nvme_ctrl_t c,
 		if (!strcmp("discovery", key_str) &&
 		    !nvme_ctrl_is_discovery_ctrl(c))
 			nvme_ctrl_set_discovery_ctrl(c, true);
+		/*
+		 * The JSON configuration holds the keyring description
+		 * which needs to be converted into the keyring serial number.
+		 */
+		if (!strcmp("keyring", key_str) && cfg->keyring == 0) {
+			long keyring;
+
+			keyring = nvme_lookup_keyring(json_object_get_string(val_obj));
+			if (keyring) {
+				cfg->keyring = keyring;
+				nvme_set_keyring(cfg->keyring);
+			}
+		}
 	}
 }
 
@@ -299,6 +313,19 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	if (nvme_ctrl_is_discovery_ctrl(c))
 		json_object_object_add(port_obj, "discovery",
 				       json_object_new_boolean(true));
+	/*
+	 * Store the keyring description in the JSON config file.
+	 */
+	if (cfg->keyring) {
+		char *desc = nvme_describe_key_serial(cfg->keyring);
+
+		if (desc) {
+			json_object_object_add(port_obj, "keyring",
+					       json_object_new_string(desc));
+			free(desc);
+		}
+	}
+
 	json_object_array_add(ctrl_array, port_obj);
 }
 
