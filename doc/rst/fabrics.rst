@@ -28,6 +28,7 @@ Fabrics-specific definitions.
     int nr_poll_queues;
     int tos;
     int keyring;
+    int tls_key;
     bool duplicate_connect;
     bool disable_sqflow;
     bool hdr_digest;
@@ -72,6 +73,9 @@ Fabrics-specific definitions.
 
 ``keyring``
   Serial number of the keyring to store and lookup keys
+
+``tls_key``
+  Serial number of the TLS PSK for the connection
 
 ``duplicate_connect``
   Allow multiple connections to the same target

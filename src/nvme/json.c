@@ -78,6 +78,14 @@ static void json_update_attributes(nvme_ctrl_t c,
 				nvme_set_keyring(cfg->keyring);
 			}
 		}
+		if (!strcmp("tls_key", key_str) && cfg->tls_key == 0) {
+			long key;
+
+			key = nvme_lookup_key("psk",
+					      json_object_get_string(val_obj));
+			if (key)
+				cfg->tls_key = key;
+		}
 	}
 }
 
@@ -321,6 +329,15 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 
 		if (desc) {
 			json_object_object_add(port_obj, "keyring",
+					       json_object_new_string(desc));
+			free(desc);
+		}
+	}
+	if (cfg->tls_key) {
+		char *desc = nvme_describe_key_serial(cfg->tls_key);
+
+		if (desc) {
+			json_object_object_add(port_obj, "tls_key",
 					       json_object_new_string(desc));
 			free(desc);
 		}

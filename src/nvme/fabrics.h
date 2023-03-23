@@ -36,6 +36,7 @@
  * @nr_poll_queues:	Number of queues to reserve for polling completions
  * @tos:		Type of service
  * @keyring:		Keyring to store and lookup keys
+ * @tls_key:		TLS PSK for the connection
  * @duplicate_connect:	Allow multiple connections to the same target
  * @disable_sqflow:	Disable controller sq flow control
  * @hdr_digest:		Generate/verify header digest (TCP)
@@ -55,6 +56,7 @@ struct nvme_fabrics_config {
 	int nr_poll_queues;
 	int tos;
 	int keyring;
+	int tls_key;
 
 	bool duplicate_connect;
 	bool disable_sqflow;
