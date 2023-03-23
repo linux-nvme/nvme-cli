@@ -4957,11 +4957,46 @@ ret:
 static char *nvme_fw_status_reset_type(__u16 status)
 {
 	switch (status & 0x7ff) {
-	case NVME_SC_FW_NEEDS_CONV_RESET:	return "conventional";
-	case NVME_SC_FW_NEEDS_SUBSYS_RESET:	return "subsystem";
-	case NVME_SC_FW_NEEDS_RESET:		return "any controller";
-	default:				return "unknown";
+	case NVME_SC_FW_NEEDS_CONV_RESET:
+		return "conventional";
+	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
+		return "subsystem";
+	case NVME_SC_FW_NEEDS_RESET:
+		return "any controller";
+	default:
+		return "unknown";
 	}
+}
+
+static bool fw_commit_support_mud(struct nvme_dev *dev)
+{
+	struct nvme_id_ctrl ctrl;
+	int err;
+
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
+
+	if (err)
+		fprintf(stderr, "identify-ctrl: %s\n", nvme_strerror(errno));
+	else if (ctrl.frmw >> 5 & 0x1)
+		return true;
+
+	return false;
+}
+
+static void fw_commit_print_mud(struct nvme_dev *dev, __u32 result)
+{
+	if (!fw_commit_support_mud(dev))
+		return;
+
+	printf("Multiple Update Detected (MUD) Value: %u\n", result);
+
+	if (result & 0x1)
+		printf("Detected an overlapping firmware/boot partition image update command "\
+		       "sequence due to processing a command from a Management Endpoint");
+
+	if (result >> 1 & 0x1)
+		printf("Detected an overlapping firmware/boot partition image update command "\
+		       "sequence due to processing a command from an Admin SQ on a controller");
 }
 
 static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -5058,16 +5093,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		if (cfg.action == 6 || cfg.action == 7)
 			printf(" bpid:%d", cfg.bpid);
 		printf("\n");
-	}
-
-	if (err >= 0) {
-		printf("Multiple Update Detected (MUD) Value: %u\n", result);
-		if (result & 0x1)
-			printf("Detected an overlapping firmware/boot partition image update command "\
-				"sequence due to processing a command from a Management Endpoint");
-		if ((result >> 1) & 0x1)
-			printf("Detected an overlapping firmware/boot partition image update command "\
-				"sequence due to processing a command from an Admin SQ on a controller");
+		fw_commit_print_mud(dev, result);
 	}
 
 close_dev:
