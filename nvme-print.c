@@ -1741,30 +1741,35 @@ void d_raw(unsigned char *buf, unsigned len)
 
 void nvme_show_status(int status)
 {
-        int val = nvme_status_get_value(status);
-        int type = nvme_status_get_type(status);
+	int val;
+	int type;
 
-        /* Callers should be checking for negative values first, but provide a
-         * sensible fallback anyway
-         */
-        if (status < 0) {
-                fprintf(stderr, "Error: %s\n", nvme_strerror(errno));
-                return;
-        }
+	/*
+	 * Callers should be checking for negative values first, but provide a
+	 * sensible fallback anyway
+	 */
+	if (status < 0) {
+		fprintf(stderr, "Error: %s\n", nvme_strerror(errno));
+		return;
+	}
 
-        switch (type) {
-        case NVME_STATUS_TYPE_NVME:
-                fprintf(stderr, "NVMe status: %s(%#x)\n",
-                        nvme_status_to_string(val, false), val);
-                break;
-        case NVME_STATUS_TYPE_MI:
-                fprintf(stderr, "NVMe-MI status: %s(%#x)\n",
-                        nvme_mi_status_to_string(val), val);
-                break;
-        default:
-                fprintf(stderr, "Unknown status type %d, value %#x\n",
-                        type, val);
-        }
+	val = nvme_status_get_value(status);
+	type = nvme_status_get_type(status);
+
+	switch (type) {
+	case NVME_STATUS_TYPE_NVME:
+		fprintf(stderr, "NVMe status: %s(%#x)\n",
+			nvme_status_to_string(val, false), val);
+		break;
+	case NVME_STATUS_TYPE_MI:
+		fprintf(stderr, "NVMe-MI status: %s(%#x)\n",
+			nvme_mi_status_to_string(val), val);
+		break;
+	default:
+		fprintf(stderr, "Unknown status type %d, value %#x\n", type,
+			val);
+		break;
+	}
 }
 
 static void nvme_show_id_ctrl_cmic(__u8 cmic)
