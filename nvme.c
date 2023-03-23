@@ -6390,7 +6390,7 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 			result = 1;
 		break;
 	case 2:
-		if (sts > 0 && ref_tag >= (1LL << (64 - sts)))
+		if (sts > 0 && ref_tag >= (1LL << (48 - sts)))
 			result = 1;
 		break;
 	default:
