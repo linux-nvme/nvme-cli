@@ -79,17 +79,18 @@ static const char *nvmf_dup_connect	= "allow duplicate connections between same 
 static const char *nvmf_disable_sqflow	= "disable controller sq flow control (default false)";
 static const char *nvmf_hdr_digest	= "enable transport protocol header digest (TCP transport)";
 static const char *nvmf_data_digest	= "enable transport protocol data digest (TCP transport)";
+static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
 
 #define NVMF_OPTS(c)									\
 	OPT_STRING("transport",       't', "STR", &transport,	nvmf_tport), \
+	OPT_STRING("nqn",             'n', "STR", &subsysnqn,	nvmf_nqn), \
 	OPT_STRING("traddr",          'a', "STR", &traddr,	nvmf_traddr), \
 	OPT_STRING("trsvcid",         's', "STR", &trsvcid,	nvmf_trsvcid), \
 	OPT_STRING("host-traddr",     'w', "STR", &c.host_traddr,	nvmf_htraddr), \
 	OPT_STRING("host-iface",      'f', "STR", &c.host_iface,	nvmf_hiface), \
 	OPT_STRING("hostnqn",         'q', "STR", &hostnqn,	nvmf_hostnqn), \
 	OPT_STRING("hostid",          'I', "STR", &hostid,	nvmf_hostid), \
-	OPT_STRING("nqn",             'n', "STR", &subsysnqn,	nvmf_nqn), \
 	OPT_STRING("dhchap-secret",   'S', "STR", &hostkey,     nvmf_hostkey), \
 	OPT_INT("nr-io-queues",       'i', &c.nr_io_queues,       nvmf_nr_io_queues),	\
 	OPT_INT("nr-write-queues",    'W', &c.nr_write_queues,    nvmf_nr_write_queues),\
@@ -102,7 +103,8 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("duplicate-connect", 'D', &c.duplicate_connect,  nvmf_dup_connect),	\
 	OPT_FLAG("disable-sqflow",    'd', &c.disable_sqflow,     nvmf_disable_sqflow),	\
 	OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),	\
-	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest)	\
+	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest), \
+	OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls)	\
 
 struct tr_config {
 	const char *subsysnqn;

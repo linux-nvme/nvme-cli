@@ -27,10 +27,12 @@ SYNOPSIS
 		[--keep-alive-tmo=<#>     | -k <#>]
 		[--reconnect-delay=<#>    | -c <#>]
 		[--ctrl-loss-tmo=<#>      | -l <#>]
+		[--tos=<#>                | -T <#>]
 		[--duplicate-connect      | -D]
 		[--disable-sqflow         | -d]
 		[--hdr-digest             | -g]
 		[--data-digest            | -G]
+		[--tls                        ]
 		[--dump-config            | -O]
 		[--output-format=<fmt>    | -o <fmt>]
 
@@ -150,6 +152,10 @@ OPTIONS
 --ctrl-loss-tmo=<#>::
 	Overrides the default controller loss timeout period (in seconds).
 
+-T <#>::
+--tos=<#>::
+	Type of service for the connection (TCP)
+
 -D::
 --duplicate-connect::
 	Allows duplicated connections between same transport host and subsystem
@@ -167,6 +173,9 @@ OPTIONS
 -G::
 --data-digest::
 	Generates/verifies data digest (TCP).
+
+--tls::
+	Enable TLS encryption (TCP).
 
 -O::
 --dump-config::
