@@ -6,17 +6,17 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 want_python = get_option('python')
-if want_python != 'false'
-    python3 = import('python').find_installation('python3')
-    py3_dep = python3.dependency(required: want_python == 'true')
-    swig = find_program('swig', required: want_python == 'true')
-    header_found = cc.has_header('Python.h', dependencies: py3_dep, required: want_python == 'true')
-    have_python_support = py3_dep.found() and swig.found() and header_found
+if want_python.disabled()
+    build_python_bindings = false
 else
-    have_python_support = false
+    python3 = import('python').find_installation('python3')
+    py3_dep = python3.dependency(required: want_python)
+    swig = find_program('swig', required: want_python)
+    header_found = cc.has_header('Python.h', dependencies: py3_dep, required: want_python)
+    build_python_bindings = py3_dep.found() and swig.found() and header_found
 endif
 
-if have_python_support
+if build_python_bindings
     pymod_swig = custom_target(
         'nvme.py',
         input:   ['nvme.i'],

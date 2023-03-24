@@ -85,13 +85,13 @@ Using meson is similar to projects that use a `configure` script before running 
 To `configure` the project:
 
 ```
-meson .build
+meson setup .build
 ```
 
 Which will default to build a shared library. To configure for static libraries call
 
 ```
-meson .build --default-library=static
+meson setup .build --default-library=static
 ```
 
 One nice feature of meson is that it doesn't mix build artifacts
@@ -160,10 +160,10 @@ rm -rf .build
 
 A few build options can be specified on the command line when invoking meson.
 
-| Option | Values [default]    | Description                                                  |
-| ------ | ------------------- | ------------------------------------------------------------ |
-| man    | true, [false]       | Instruct meson to configure the project to build the `libnvme` documentation. <br />Example: `meson .build -Dman=true` |
-| python | [auto], true, false | Whether to build the Python bindings. When set to `auto`, the default, meson will check for the presence of the  tools and libraries (e.g. `swig`) required to build the Python bindings. If found, meson will configure the project to build the Python bindings. If a tool or library is missing, then the Python bindings won't be built. Setting this to `true`, forces the Python bindings to be built. When set to `false`, meson will configure the project to not build the Python bindings.<br />Example: `meson .build -Dpython=false` |
+| Option | Values [default]          | Description                                                  |
+| ------ | ------------------------- | ------------------------------------------------------------ |
+| man    | true, [false]             | Instruct meson to configure the project to build the `libnvme` documentation. <br />Example: `meson .build -Dman=true` |
+| python | [auto], enabled, disabled | Whether to build the Python bindings. When set to `auto`, the default, meson will check for the presence of the  tools and libraries (e.g. `swig`) required to build the Python bindings. If found, meson will configure the project to build the Python bindings. If a tool or library is missing, then the Python bindings won't be built. Setting this to `enabled`, forces the Python bindings to be built. When set to `disabled`, meson will configure the project to not build the Python bindings.<br />Example: `meson setup .build -Dpython=disabled` |
 
 ### Changing the build options from the command-line (i.e. w/o modifying any files)
 
@@ -171,19 +171,19 @@ To configure a build for debugging purposes (i.e. optimization turned
 off and debug symbols enabled):
 
 ```bash
-meson .build -Dbuildtype=debug
+meson setup .build --buildtype=debug
 ```
 
 To enable address sanitizer (advanced debugging of memory issues):
 
 ```bash
-meson .build -Db_sanitize=address
+meson setup .build -Db_sanitize=address
 ```
 
 This option adds `-fsanitize=address` to the gcc options. Note that when using the sanitize feature, the library `libasan.so` must be available and must be the very first library loaded when running an executable. Ensuring that `libasan.so` gets loaded first can be achieved with the `LD_PRELOAD` environment variable as follows: 
 
 ```
-meson .build -Db_sanitize=address && LD_PRELOAD=/lib64/libasan.so.6 ninja -C .build test 
+meson setup .build -Db_sanitize=address && LD_PRELOAD=/lib64/libasan.so.6 ninja -C .build test 
 ```
 
 To list configuration options that are available and possible values:

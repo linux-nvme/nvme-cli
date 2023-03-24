@@ -7,7 +7,7 @@ option('rstdir', type : 'string', value : '', description : 'directory for ReST 
 option('docs', type : 'combo', choices : ['false', 'html', 'man', 'rst', 'all'], description : 'install documentation')
 option('docs-build', type : 'boolean', value : false,  description : 'build documentation')
 
-option('python', type : 'combo', choices : ['auto', 'true', 'false'], description : 'Generate libnvme python bindings')
+option('python', type : 'feature', value: 'auto', description : 'Generate libnvme python bindings')
 option('openssl', type : 'feature', value: 'auto', description : 'OpenSSL support')
 option('libdbus', type : 'feature', value: 'disabled', description : 'libdbus support')
 option('json-c', type : 'feature', value: 'auto', description : 'JSON support')

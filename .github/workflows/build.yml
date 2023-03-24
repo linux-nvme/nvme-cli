@@ -244,7 +244,7 @@ jobs:
             --buildtype=release
             --wrap-mode=nofallback
             --cross-file=.github/cross/ubuntu-armhf.txt
-            -Dpython=false
+            -Dpython=disabled
           meson-version: 0.61.2
       - uses: BSFishy/meson-build@v1.0.3
         name: test
@@ -287,7 +287,7 @@ jobs:
             --buildtype=release
             --wrap-mode=nofallback
             --cross-file=.github/cross/ubuntu-ppc64le.txt
-            -Dpython=false
+            -Dpython=disabled
           meson-version: 0.61.2
       - uses: BSFishy/meson-build@v1.0.3
         name: test
@@ -330,7 +330,7 @@ jobs:
             --buildtype=release
             --wrap-mode=nofallback
             --cross-file=.github/cross/ubuntu-s390x.txt
-            -Dpython=false
+            -Dpython=disabled
           meson-version: 0.61.2
       - uses: BSFishy/meson-build@v1.0.3
         name: test
@@ -376,7 +376,7 @@ jobs:
           export PATH=$(pwd)/build-tools/muon/build:$PATH
 
           muon setup                \
-              -Dpython=false        \
+              -Dpython=disabled     \
               -Dopenssl=disabled    \
               -Dlibdbus=disabled    \
               -Djson-c=disabled     \
