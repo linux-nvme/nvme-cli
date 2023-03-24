@@ -21,14 +21,21 @@ jobs:
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=debug
             --wrap-mode=nofallback
           meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
+        name: upload logs
         if: failure()
         with:
           name: logs files
@@ -46,15 +53,22 @@ jobs:
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
             --wrap-mode=nofallback
             -Dlibdbus=enabled
           meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
+        name: upload logs
         if: failure()
         with:
           name: log files
@@ -72,8 +86,9 @@ jobs:
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -81,7 +96,13 @@ jobs:
             --cross-file=.github/cross/clang.txt
             -Dlibdbus=enabled
           meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
+        name: upload logs
         if: failure()
         with:
           name: log files
@@ -99,8 +120,9 @@ jobs:
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -108,6 +130,11 @@ jobs:
             -Dlibdbus=enabled
             -Ddbus:werror=false
             -Dopenssl:werror=false
+          meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
           meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -127,8 +154,9 @@ jobs:
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -138,7 +166,13 @@ jobs:
             -Ddbus:werror=false
             -Dopenssl:werror=false
           meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
+        name: upload logs
         if: failure()
         with:
           name: log files
@@ -156,8 +190,9 @@ jobs:
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -168,7 +203,13 @@ jobs:
             -Ddbus:werror=false
             -Dopenssl:werror=false
           meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
+        name: upload logs
         if: failure()
         with:
           name: log files
@@ -195,8 +236,9 @@ jobs:
         run: sudo apt install libjson-c-dev:armhf
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -204,7 +246,13 @@ jobs:
             --cross-file=.github/cross/ubuntu-armhf.txt
             -Dpython=false
           meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
+        name: upload logs
         if: failure()
         with:
           name: log files
@@ -231,8 +279,9 @@ jobs:
         run: sudo apt install libjson-c-dev:ppc64el
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -240,7 +289,13 @@ jobs:
             --cross-file=.github/cross/ubuntu-ppc64le.txt
             -Dpython=false
           meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
+        name: upload logs
         if: failure()
         with:
           name: log files
@@ -267,8 +322,9 @@ jobs:
         run: sudo apt install libjson-c-dev:s390x
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
-          action: test
+          action: build
           setup-options: >
             --werror
             --buildtype=release
@@ -276,7 +332,13 @@ jobs:
             --cross-file=.github/cross/ubuntu-s390x.txt
             -Dpython=false
           meson-version: 0.61.2
+      - uses: BSFishy/meson-build@v1.0.3
+        name: test
+        with:
+          action: test
+          meson-version: 0.61.2
       - uses: actions/upload-artifact@v3
+        name: upload logs
         if: failure()
         with:
           name: log files
@@ -309,7 +371,7 @@ jobs:
               build
           build/samu -C build
           build/muon -C build test
-      - name: build libnvme
+      - name: build
         run: |
           export PATH=$(pwd)/build-tools/muon/build:$PATH
 
@@ -320,4 +382,8 @@ jobs:
               -Djson-c=disabled     \
               build
           samu -C build
+      - name: test
+        run: |
+          export PATH=$(pwd)/build-tools/muon/build:$PATH
+
           muon -C build test
