@@ -42,6 +42,12 @@
 #include <string.h>
 #include <stdbool.h>
 
+#if __has_attribute(__fallthrough__)
+#define fallthrough __attribute__((__fallthrough__))
+#else
+#define fallthrough do {} while (0)
+#endif
+
 static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = { NULL };
 
 static char END_DEFAULT[] = "__end_default__";
@@ -138,51 +144,171 @@ void argconfig_print_help(const char *program_desc,
 		show_option(s);
 }
 
+static int argconfig_error(char *type, const char *opt, const char *arg)
+{
+	fprintf(stderr, "Expected %s argument for '%s' but got '%s'!\n", type, opt, arg);
+	return -EINVAL;
+}
+
 int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val)
 {
 	char *endptr;
 	unsigned long tmp = strtoul(str, &endptr, 0);
 
-	if (errno || tmp >= 1 << 8  || str == endptr) {
-		fprintf(stderr,
-			"Expected byte argument for '%s' but got '%s'!\n", opt,
-			str);
-		return -EINVAL;
-	}
+	if (errno || tmp >= 1 << 8 || str == endptr)
+		return argconfig_error("byte", opt, str);
 
 	*val = tmp;
 
 	return 0;
 }
 
+static int argconfig_parse_type(struct argconfig_commandline_options *s, struct option *option,
+				int index)
+{
+	void *value = (void *)(char *)s->default_value;
+	char *endptr;
+	const char *fopts = NULL;
+	FILE *f;
+	int ret = 0;
+	char **opts = ((char **)value);
+	int remaining_space = CFG_MAX_SUBOPTS - 2;
+
+	switch (s->config_type) {
+	case CFG_STRING:
+		*((char **)value) = optarg;
+		break;
+	case CFG_SIZE:
+		*((size_t *)value) = strtol(optarg, &endptr, 0);
+		if (errno || optarg == endptr)
+			ret = argconfig_error("integer", option[index].name, optarg);
+		break;
+	case CFG_INT:
+		*((int *)value) = strtol(optarg, &endptr, 0);
+		if (errno || optarg == endptr)
+			ret = argconfig_error("integer", option[index].name, optarg);
+		break;
+	case CFG_BOOL: {
+		int tmp = strtol(optarg, &endptr, 0);
+		if (errno || tmp < 0 || tmp > 1 || optarg == endptr)
+			ret = argconfig_error("0 or 1", option[index].name, optarg);
+		else
+			*((int *)value) = tmp;
+		break;
+	}
+	case CFG_BYTE:
+		ret = argconfig_parse_byte(option[index].name, optarg, (uint8_t *)value);
+		break;
+	case CFG_SHORT: {
+		unsigned long tmp = strtoul(optarg, &endptr, 0);
+		if (errno || tmp >= 1 << 16 || optarg == endptr)
+			ret = argconfig_error("short", option[index].name, optarg);
+		else
+			*((uint16_t *)value) = tmp;
+		break;
+	}
+	case CFG_POSITIVE: {
+		uint32_t tmp = strtoul(optarg, &endptr, 0);
+		if (errno || optarg == endptr)
+			ret = argconfig_error("word", option[index].name, optarg);
+		else
+			*((uint32_t *)value) = tmp;
+		break;
+	}
+	case CFG_INCREMENT:
+		*((int *)value) += 1;
+		break;
+	case CFG_LONG:
+		*((unsigned long *)value) = strtoul(optarg, &endptr, 0);
+		if (errno || optarg == endptr)
+			ret = argconfig_error("long integer", option[index].name, optarg);
+		break;
+	case CFG_LONG_SUFFIX:
+		ret = suffix_binary_parse(optarg, &endptr, (uint64_t*)value);
+		if (ret)
+			argconfig_error("long suffixed integer", option[index].name, optarg);
+		break;
+	case CFG_DOUBLE:
+		*((double *)value) = strtod(optarg, &endptr);
+		if (errno || optarg == endptr)
+			ret = argconfig_error("float", option[index].name, optarg);
+		break;
+	case CFG_SUBOPTS:
+		*opts = END_DEFAULT;
+		opts += 2;
+		ret = argconfig_parse_subopt_string(optarg, opts, remaining_space);
+		if (ret) {
+			if (ret == 2)
+				fprintf(stderr, "Error Parsing Sub-Options: Too many options!\n");
+			else
+				fprintf(stderr, "Error Parsing Sub-Options\n");
+			ret = -EINVAL;
+		}
+		break;
+	case CFG_FILE_A:
+		fopts = "a";
+		fallthrough;
+	case CFG_FILE_R:
+		if (!fopts)
+			fopts = "r";
+		fallthrough;
+	case CFG_FILE_W:
+		if (!fopts)
+			fopts = "w";
+		fallthrough;
+	case CFG_FILE_AP:
+		if (!fopts)
+			fopts = "a+";
+		fallthrough;
+	case CFG_FILE_RP:
+		if (!fopts)
+			fopts = "r+";
+		fallthrough;
+	case CFG_FILE_WP:
+		if (!fopts)
+			fopts = "w+";
+		f = fopen(optarg, fopts);
+		if (!f) {
+			fprintf(stderr, "Unable to open %s file: %s\n", s->option, optarg);
+			ret = -EINVAL;
+		} else {
+			*((FILE **)value) = f;
+		}
+		break;
+	case CFG_FLAG:
+		*((bool *)value) = true;
+		break;
+	default:
+		break;
+	}
+
+	return ret;
+}
+
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
 	char *short_opts;
-	char *endptr;
 	struct option *long_opts;
 	struct argconfig_commandline_options *s;
 	int c, option_index = 0, short_index = 0, options_count = 0;
-	void *value_addr;
-	int ret = -EINVAL;
+	int ret = 0;
 
 	errno = 0;
-	for (s = options; s->option != NULL; s++)
+	for (s = options; s->option; s++)
 		options_count++;
 
-	long_opts = malloc(sizeof(struct option) * (options_count + 2));
-	short_opts = malloc(sizeof(*short_opts) * (options_count * 3 + 4));
+	long_opts = calloc(1, sizeof(struct option) * (options_count + 2));
+	short_opts = calloc(1, sizeof(*short_opts) * (options_count * 3 + 4));
 
 	if (!long_opts || !short_opts) {
-		fprintf(stderr, "failed to allocate memory for opts: %s\n",
-				strerror(errno));
+		fprintf(stderr, "failed to allocate memory for opts: %s\n", strerror(errno));
 		ret = -errno;
 		goto out;
 	}
 
-	for (s = options; (s->option != NULL) && (option_index < options_count);
-	     s++) {
-		if (s->short_option != 0) {
+	for (s = options; s->option && option_index < options_count; s++) {
+		if (s->short_option) {
 			short_opts[short_index++] = s->short_option;
 			if (s->argument_type == required_argument ||
 			    s->argument_type == optional_argument)
@@ -193,36 +319,26 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		if (s->option && strlen(s->option)) {
 			long_opts[option_index].name = s->option;
 			long_opts[option_index].has_arg = s->argument_type;
-			long_opts[option_index].flag = NULL;
-			long_opts[option_index].val = 0;
 		}
 		s->seen = false;
 		option_index++;
 	}
 
 	long_opts[option_index].name = "help";
-	long_opts[option_index].flag = NULL;
 	long_opts[option_index].val = 'h';
-	option_index++;
-
-	long_opts[option_index].name = NULL;
-	long_opts[option_index].flag = NULL;
-	long_opts[option_index].val = 0;
 
 	short_opts[short_index++] = '?';
-	short_opts[short_index++] = 'h';
-	short_opts[short_index] = 0;
+	short_opts[short_index] = 'h';
 
 	optind = 0;
-	while ((c = getopt_long_only(argc, argv, short_opts, long_opts,
-				&option_index)) != -1) {
-		if (c != 0) {
+	while ((c = getopt_long_only(argc, argv, short_opts, long_opts, &option_index)) != -1) {
+		if (c) {
 			if (c == '?' || c == 'h') {
 				argconfig_print_help(program_desc, options);
-				goto out;
+				ret = -EINVAL;
+				break;
 			}
-			for (option_index = 0; option_index < options_count;
-			     option_index++) {
+			for (option_index = 0; option_index < options_count; option_index++) {
 				if (c == options[option_index].short_option)
 					break;
 			}
@@ -236,146 +352,11 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		if (!s->default_value)
 			continue;
 
-		value_addr = (void *)(char *)s->default_value;
-		if (s->config_type == CFG_STRING) {
-			*((char **)value_addr) = optarg;
-		} else if (s->config_type == CFG_SIZE) {
-			*((size_t *) value_addr) = strtol(optarg, &endptr, 0);
-			if (errno || optarg == endptr) {
-				fprintf(stderr,
-					"Expected integer argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
-				goto out;
-			}
-		} else if (s->config_type == CFG_INT) {
-			*((int *)value_addr) = strtol(optarg, &endptr, 0);
-			if (errno || optarg == endptr) {
-				fprintf(stderr,
-					"Expected integer argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
-				goto out;
-			}
-		} else if (s->config_type == CFG_BOOL) {
-			int tmp = strtol(optarg, &endptr, 0);
-			if (errno || tmp < 0 || tmp > 1 || optarg == endptr) {
-				fprintf(stderr,
-					"Expected 0 or 1 argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
-				goto out;
-			}
-			*((int *)value_addr) = tmp;
-		} else if (s->config_type == CFG_BYTE) {
-			if (argconfig_parse_byte(long_opts[option_index].name,
-						 optarg, (uint8_t *)value_addr))
-				goto out;
-		} else if (s->config_type == CFG_SHORT) {
-			unsigned long tmp = strtoul(optarg, &endptr, 0);
-			if (errno || tmp >= (1 << 16) || optarg == endptr) {
-				fprintf(stderr,
-					"Expected short argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
-				goto out;
-			}
-			*((uint16_t *) value_addr) = tmp;
-		} else if (s->config_type == CFG_POSITIVE) {
-			uint32_t tmp = strtoul(optarg, &endptr, 0);
-			if (errno || optarg == endptr) {
-				fprintf(stderr,
-					"Expected word argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
-				goto out;
-			}
-			*((uint32_t *) value_addr) = tmp;
-		} else if (s->config_type == CFG_INCREMENT) {
-			*((int *)value_addr) += 1;
-		} else if (s->config_type == CFG_LONG) {
-			*((unsigned long *)value_addr) = strtoul(optarg, &endptr, 0);
-			if (errno || optarg == endptr) {
-				fprintf(stderr,
-					"Expected long integer argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
-				goto out;
-			}
-		} else if (s->config_type == CFG_LONG_SUFFIX) {
-			if (suffix_binary_parse(optarg, &endptr, (uint64_t*)value_addr)) {
-				fprintf(stderr,
-					"Expected long suffixed integer argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
-				goto out;
-			}
-		} else if (s->config_type == CFG_DOUBLE) {
-			*((double *)value_addr) = strtod(optarg, &endptr);
-			if (errno || optarg == endptr) {
-				fprintf(stderr,
-					"Expected float argument for '%s' but got '%s'!\n",
-					long_opts[option_index].name, optarg);
-				goto out;
-			}
-		} else if (s->config_type == CFG_SUBOPTS) {
-			char **opts = ((char **)value_addr);
-			int remaining_space = CFG_MAX_SUBOPTS;
-			int enddefault = 0;
-			int r;
-			while (0 && *opts != NULL) {
-				if (*opts == END_DEFAULT)
-					enddefault = 1;
-				remaining_space--;
-				opts++;
-			}
-
-			if (!enddefault) {
-				*opts = END_DEFAULT;
-				remaining_space -= 2;
-				opts += 2;
-			}
-
-			r = argconfig_parse_subopt_string(optarg, opts,
-					remaining_space);
-			if (r == 2) {
-				fprintf(stderr,
-					"Error Parsing Sub-Options: Too many options!\n");
-				goto out;
-			} else if (r) {
-				fprintf(stderr, "Error Parsing Sub-Options\n");
-				goto out;
-			}
-		} else if (s->config_type == CFG_FILE_A ||
-			   s->config_type == CFG_FILE_R ||
-			   s->config_type == CFG_FILE_W ||
-			   s->config_type == CFG_FILE_AP ||
-			   s->config_type == CFG_FILE_RP ||
-			   s->config_type == CFG_FILE_WP) {
-			const char *fopts = "";
-			FILE *f;
-			if (s->config_type == CFG_FILE_A)
-				fopts = "a";
-			else if (s->config_type == CFG_FILE_R)
-				fopts = "r";
-			else if (s->config_type == CFG_FILE_W)
-				fopts = "w";
-			else if (s->config_type == CFG_FILE_AP)
-				fopts = "a+";
-			else if (s->config_type == CFG_FILE_RP)
-				fopts = "r+";
-			else if (s->config_type == CFG_FILE_WP)
-				fopts = "w+";
-
-			f = fopen(optarg, fopts);
-			if (f == NULL) {
-				fprintf(stderr, "Unable to open %s file: %s\n",
-					s->option, optarg);
-				goto out;
-			}
-			*((FILE **) value_addr) = f;
-		} else if (s->config_type == CFG_FLAG) {
-			*((bool *)value_addr) = true;
-		}
+		ret = argconfig_parse_type(s, long_opts,option_index);
+		if (ret)
+			break;
 	}
-	free(short_opts);
-	free(long_opts);
-
-	return 0;
- out:
+out:
 	free(short_opts);
 	free(long_opts);
 	return ret;
