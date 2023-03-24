@@ -1,14 +1,15 @@
 [wrap-file]
-directory = openssl-1.1.1l
-source_url = https://www.openssl.org/source/openssl-1.1.1l.tar.gz
-source_filename = openssl-1.1.1l.tar.gz
-source_hash = 0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1
-patch_filename = openssl_1.1.1l-3_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/openssl_1.1.1l-3/get_patch
-patch_hash = a0cb8285cda3ae0e1898b4e88427c19bf245184259f41395010182655f9f8ce6
+directory = openssl-3.0.7
+source_url = https://www.openssl.org/source/openssl-3.0.7.tar.gz
+source_filename = openssl-3.0.7.tar.gz
+source_hash = 83049d042a260e696f62406ac5c08bf706fd84383f945cf21bd61e9ed95c396e
+patch_filename = openssl_3.0.7-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/openssl_3.0.7-2/get_patch
+patch_hash = dcc5d21bb602a5ca43bbaf14de858955f748b2abb2c0102ba193bd3964ac13a4
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/openssl_3.0.7-2/openssl-3.0.7.tar.gz
+wrapdb_version = 3.0.7-2
 
 [provide]
 libcrypto = libcrypto_dep
 libssl = libssl_dep
 openssl = openssl_dep
-
