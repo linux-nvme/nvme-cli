@@ -78,6 +78,7 @@ void json_predictable_latency_event_agg_log(
 void json_predictable_latency_per_nvmset(
 	struct nvme_nvmset_predictable_lat_log *plpns_log,
 	__u16 nvmset_id);
+void json_output_status(int status);
 
 /* fabrics.c */
 void json_discovery_log(struct nvmf_discovery_log *log, int numrec);
@@ -136,6 +137,7 @@ void json_connect_msg(nvme_ctrl_t c);
 #define json_persistent_event_log(pevent_log_info, size)
 #define json_predictable_latency_event_agg_log(pea_log, log_entries)
 #define json_predictable_latency_per_nvmset(plpns_log, nvmset_id)
+#define json_output_status(status)
 
 /* fabrics.c */
 #define json_discovery_log(log, numrec)

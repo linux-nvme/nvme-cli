@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <errno.h>
 
 #include "nvme-print-json.h"
 
@@ -2812,4 +2813,44 @@ void json_connect_msg(nvme_ctrl_t c)
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
+}
+
+static void json_output_object(struct json_object *root)
+{
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void json_output_status(int status)
+{
+	struct json_object *root = json_create_object();
+	int val;
+	int type;
+
+	if (status < 0) {
+		json_object_add_value_string(root, "error", nvme_strerror(errno));
+		return json_output_object(root);
+	}
+
+	val = nvme_status_get_value(status);
+	type = nvme_status_get_type(status);
+
+	switch (type) {
+	case NVME_STATUS_TYPE_NVME:
+		json_object_add_value_string(root, "error", nvme_status_to_string(val, false));
+		json_object_add_value_string(root, "type", "nvme");
+		break;
+	case NVME_STATUS_TYPE_MI:
+		json_object_add_value_string(root, "error", nvme_mi_status_to_string(val));
+		json_object_add_value_string(root, "type", "nvme-mi");
+		break;
+	default:
+		json_object_add_value_string(root, "type", "unknow");
+		break;
+	}
+
+	json_object_add_value_int(root, "value", val);
+
+	json_output_object(root);
 }

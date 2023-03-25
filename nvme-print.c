@@ -1744,6 +1744,9 @@ void nvme_show_status(int status)
 	int val;
 	int type;
 
+	if (argconfig_output_format_json(false))
+		return json_output_status(status);
+
 	/*
 	 * Callers should be checking for negative values first, but provide a
 	 * sensible fallback anyway
