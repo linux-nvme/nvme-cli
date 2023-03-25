@@ -285,6 +285,16 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	return ret;
 }
 
+bool argconfig_output_format_json(bool set)
+{
+	static bool output_format_json = false;
+
+	if (set)
+		output_format_json = true;
+
+	return output_format_json;
+}
+
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
@@ -298,8 +308,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	for (s = options; s->option; s++)
 		options_count++;
 
-	long_opts = calloc(1, sizeof(struct option) * (options_count + 2));
-	short_opts = calloc(1, sizeof(*short_opts) * (options_count * 3 + 4));
+	long_opts = calloc(1, sizeof(struct option) * (options_count + 3));
+	short_opts = calloc(1, sizeof(*short_opts) * (options_count * 3 + 5));
 
 	if (!long_opts || !short_opts) {
 		fprintf(stderr, "failed to allocate memory for opts: %s\n", strerror(errno));
@@ -325,10 +335,14 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	}
 
 	long_opts[option_index].name = "help";
-	long_opts[option_index].val = 'h';
+	long_opts[option_index++].val = 'h';
+
+	long_opts[option_index].name = "json";
+	long_opts[option_index].val = 'j';
 
 	short_opts[short_index++] = '?';
-	short_opts[short_index] = 'h';
+	short_opts[short_index++] = 'h';
+	short_opts[short_index] = 'j';
 
 	optind = 0;
 	while ((c = getopt_long_only(argc, argv, short_opts, long_opts, &option_index)) != -1) {
@@ -338,6 +352,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				ret = -EINVAL;
 				break;
 			}
+			if (c == 'j')
+				argconfig_output_format_json(true);
 			for (option_index = 0; option_index < options_count; option_index++) {
 				if (c == options[option_index].short_option)
 					break;
