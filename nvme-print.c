@@ -5159,7 +5159,7 @@ void nvme_show_list_item(nvme_ns_t n)
 	nvme_dev_full_path(n, devname, sizeof(devname));
 	nvme_generic_full_path(n, genname, sizeof(genname));
 
-	printf("%-21s %-21s %-20s %-40s %-9d %-26s %-16s %-8s\n",
+	printf("%-21s %-21s %-20s %-40s %#-10x %-26s %-16s %-8s\n",
 		devname, genname, nvme_ns_get_serial(n),
 		nvme_ns_get_model(n), nvme_ns_get_nsid(n), usage, format,
 		nvme_ns_get_firmware(n));
@@ -5172,9 +5172,9 @@ static void nvme_show_simple_list(nvme_root_t r)
 	nvme_ctrl_t c;
 	nvme_ns_t n;
 
-	printf("%-21s %-21s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	printf("%-21s %-21s %-20s %-40s %-10s %-26s %-16s %-8s\n",
 	    "Node", "Generic", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-.21s %-.21s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n",
+	printf("%-.21s %-.21s %-.20s %-.40s %-.10s %-.26s %-.16s %-.8s\n",
 		dash, dash, dash, dash, dash, dash, dash, dash);
 
 	nvme_for_each_host(r, h) {
@@ -5209,7 +5209,7 @@ static void nvme_show_ns_details(nvme_ns_t n)
 	nvme_dev_full_path(n, devname, sizeof(devname));
 	nvme_generic_full_path(n, genname, sizeof(genname));
 
-	printf("%-12s %-12s %-8x %-26s %-16s ", devname,
+	printf("%-12s %-12s %#-10x %-26s %-16s ", devname,
 		genname, nvme_ns_get_nsid(n), usage, format);
 }
 
@@ -5279,9 +5279,9 @@ static void nvme_show_detailed_list(nvme_root_t r)
 	}
 	printf("\n");
 
-	printf("%-12s %-12s %-8s %-26s %-16s %-16s\n", "Device", "Generic",
+	printf("%-12s %-12s %-10s %-26s %-16s %-16s\n", "Device", "Generic",
 		"NSID", "Usage", "Format", "Controllers");
-	printf("%-.12s %-.12s %-.8s %-.26s %-.16s %-.16s\n", dash, dash, dash,
+	printf("%-.12s %-.12s %-.10s %-.26s %-.16s %-.16s\n", dash, dash, dash,
 		dash, dash, dash);
 
 	nvme_for_each_host(r, h) {
