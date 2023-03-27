@@ -21,6 +21,7 @@ jobs:
         with:
           python-version: '3.x'
       - uses: bsfishy/meson-build@v1.0.3
+        name: build
         with:
           action: build
           setup-options: >
@@ -29,6 +30,7 @@ jobs:
             -Dlibnvme:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
+        name: test
         with:
           action: test
           meson-version: 0.61.2
@@ -50,6 +52,7 @@ jobs:
         with:
           python-version: '3.x'
       - uses: bsfishy/meson-build@v1.0.3
+        name: build
         with:
           action: build
           setup-options: >
@@ -58,6 +61,7 @@ jobs:
             -Dlibnvme:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
+        name: test
         with:
           action: test
           meson-version: 0.61.2
@@ -79,6 +83,7 @@ jobs:
         with:
           python-version: '3.x'
       - uses: bsfishy/meson-build@v1.0.3
+        name: build
         with:
           action: build
           setup-options: >
@@ -89,6 +94,7 @@ jobs:
             -Dopenssl:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
+        name: test
         with:
           action: test
           meson-version: 0.61.2
@@ -110,6 +116,7 @@ jobs:
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
           action: build
           setup-options: >
@@ -121,6 +128,7 @@ jobs:
             -Dopenssl:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
+        name: test
         with:
           action: test
           meson-version: 0.61.2
@@ -142,6 +150,7 @@ jobs:
         with:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
           action: build
           setup-options: >
@@ -153,6 +162,7 @@ jobs:
             -Dopenssl:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
+        name: test
         with:
           action: test
           meson-version: 0.61.2
@@ -183,16 +193,18 @@ jobs:
         run: sudo apt install libjson-c-dev:armhf
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
           action: build
           setup-options: >
             --werror
             --buildtype=release
             --cross-file=.github/cross/ubuntu-armhf.txt
-            -Dlibnvme:python=false
+            -Dlibnvme:python=disabled
             -Dopenssl:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
+        name: test
         with:
           action: test
           meson-version: 0.61.2
@@ -223,6 +235,7 @@ jobs:
         run: sudo apt install libjson-c-dev:ppc64el
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
           action: build
           setup-options: >
@@ -230,10 +243,11 @@ jobs:
             --buildtype=release
             --cross-file=.github/cross/ubuntu-ppc64le.txt
             -Dlibnvme:werror=false
-            -Dlibnvme:python=false
+            -Dlibnvme:python=disabled
             -Dopenssl:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
+        name: test
         with:
           action: test
           meson-version: 0.61.2
@@ -264,6 +278,7 @@ jobs:
         run: sudo apt install libjson-c-dev:s390x
       - uses: actions/checkout@v3
       - uses: BSFishy/meson-build@v1.0.3
+        name: build
         with:
           action: build
           setup-options: >
@@ -271,10 +286,11 @@ jobs:
             --buildtype=release
             --cross-file=.github/cross/ubuntu-s390x.txt
             -Dlibnvme:werror=false
-            -Dlibnvme:python=false
+            -Dlibnvme:python=disabled
             -Dopenssl:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
+        name: test
         with:
           action: test
           meson-version: 0.61.2
@@ -322,7 +338,7 @@ jobs:
           export PATH=$(pwd)/build-tools/muon/build:$PATH
 
           muon setup                     \
-              -Dlibnvme:python=false     \
+              -Dlibnvme:python=disabled  \
               -Dlibnvme:json-c=disabled  \
               -Djson-c=disabled          \
               build
