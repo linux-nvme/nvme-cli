@@ -7446,8 +7446,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		goto close_mfd;
 	}
 
-	if (nvme_get_logical_block_size(dev_fd(dev), cfg.namespace_id,
-					&logical_block_size) < 0)
+	if (nvme_get_logical_block_size_attr(dev->name,
+				&logical_block_size) < 0)
 		goto close_mfd;
 
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
