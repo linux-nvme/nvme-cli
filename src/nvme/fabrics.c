@@ -110,8 +110,15 @@ static const char * const treqs[] = {
 	[NVMF_TREQ_NOT_SPECIFIED]	= "not specified",
 	[NVMF_TREQ_REQUIRED]		= "required",
 	[NVMF_TREQ_NOT_REQUIRED]	= "not required",
-	[NVMF_TREQ_DISABLE_SQFLOW]	= "not specified, "
-					  "sq flow control disable supported",
+	[NVMF_TREQ_NOT_SPECIFIED |
+	 NVMF_TREQ_DISABLE_SQFLOW]	= "not specified, "
+				"sq flow control disable supported",
+	[NVMF_TREQ_REQUIRED |
+	 NVMF_TREQ_DISABLE_SQFLOW]	= "required, "
+				"sq flow control disable supported",
+	[NVMF_TREQ_NOT_REQUIRED |
+	 NVMF_TREQ_DISABLE_SQFLOW]	= "not required, "
+				"sq flow control disable supported",
 };
 
 const char *nvmf_treq_str(__u8 treq)
