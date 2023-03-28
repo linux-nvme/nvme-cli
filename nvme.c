@@ -274,6 +274,21 @@ static bool is_blkdev(struct nvme_dev *dev)
 	return S_ISBLK(dev->direct.stat.st_mode);
 }
 
+static bool is_gendev(struct nvme_dev *dev)
+{
+	int instance, head_instance;
+	int ret;
+
+	if (!is_chardev(dev))
+		return false;
+
+	ret = sscanf(dev->name, "ng%dn%d", &instance, &head_instance);
+	if (ret != 2)
+		return false;
+
+	return true;
+}
+
 static int open_dev_direct(struct nvme_dev **devp, char *devstr, int flags)
 {
 	struct nvme_dev *dev;
@@ -7364,6 +7379,14 @@ static int submit_io(int opcode, char *command, const char *desc,
 			}
 			goto ret;
 		}
+	}
+
+	if (!(is_blkdev(dev) || is_gendev(dev))) {
+		fprintf(stderr, "Invalid device type, should be either "
+				"block device or generic device: (%s)\n",
+				dev->name);
+		err = -EINVAL;
+		goto close_dev;
 	}
 
 	if (!cfg.namespace_id) {
