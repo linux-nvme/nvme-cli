@@ -8,8 +8,8 @@ BUILDDIR="$(mktemp -d)"
 echo $BUILDDIR
 trap 'rm -rf -- $BUILDDIR' EXIT
 
-meson $BUILDDIR -Ddocs=man -Ddocs-build=true
-ninja -C $BUILDDIR
+meson setup $BUILDDIR -Ddocs=man -Ddocs-build=true
+meson compile -C $BUILDDIR
 
 rm -rf $DESTDIR/doc/man
 mkdir $DESTDIR/doc/man
@@ -22,8 +22,8 @@ BUILDDIR="$(mktemp -d)"
 echo $BUILDDIR
 trap 'rm -rf -- $BUILDDIR' EXIT
 
-meson $BUILDDIR -Ddocs=rst -Ddocs-build=true
-ninja -C $BUILDDIR
+meson setup $BUILDDIR -Ddocs=rst -Ddocs-build=true
+meson compile -C $BUILDDIR
 
 rm -rf $DESTDIR/doc/rst/*.rst
 mkdir -p $DESTDIR/doc/rst
