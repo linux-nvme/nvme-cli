@@ -257,7 +257,11 @@ char *nvmf_hostnqn_generate();
 
 /**
  * nvmf_hostnqn_from_file() - Reads the host nvm qualified name from the config
- *			      default location in @SYSCONFDIR@/nvme/
+ *			      default location
+ *
+ * Retrieve the qualified name from the config file located in $SYSCONFIDR/nvme.
+ * $SYSCONFDIR is usually /etc.
+ *
  * Return: The host nqn, or NULL if unsuccessful. If found, the caller
  * is responsible to free the string.
  */
@@ -265,7 +269,11 @@ char *nvmf_hostnqn_from_file();
 
 /**
  * nvmf_hostid_from_file() - Reads the host identifier from the config default
- *			     location in @SYSCONFDIR@/nvme/.
+ *			     location
+ *
+ * Retrieve the host idenditifer from the config file located in $SYSCONFDIR/nvme/.
+ * $SYSCONFDIR is usually /etc.
+ *
  * Return: The host identifier, or NULL if unsuccessful. If found, the caller
  *	   is responsible to free the string.
  */

@@ -53,24 +53,17 @@ test('kdoc', kernel_doc_check, args: api_paths)
 
 if want_docs != 'false'
 
-  conf = configuration_data()
-  conf.set('SYSCONFDIR', sysconfdir)
-
   if want_docs == 'all' or want_docs == 'man'
     mandir = join_paths(get_option('mandir'), 'man2')
     list_man_pages = find_program('list-man-pages.sh')
     if want_docs_build
       foreach apif : api_paths
-        subst = configure_file(
-            input: apif,
-            output: '@BASENAME@.subst',
-            configuration: conf)
-        c = run_command(list_man_pages, subst, check: true)
+        c = run_command(list_man_pages, apif, check: true)
         man_pages = c.stdout().split()
         foreach page : man_pages
           custom_target(
             page.underscorify() + '_man',
-            input: subst,
+            input: apif,
             output: page + '.2',
             capture: true,
             command: [kernel_doc,
@@ -78,7 +71,7 @@ if want_docs != 'false'
                       '-man',
                       '-function',
                       page,
-                      subst],
+                      apif],
             install: true,
             install_dir: mandir)
         endforeach
