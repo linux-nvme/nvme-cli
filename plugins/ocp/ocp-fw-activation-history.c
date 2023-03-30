@@ -65,9 +65,9 @@ static void ocp_fw_activation_history_print(const struct fw_activation_history *
 		printf("      %-22s%d\n", "entry length:", entry->entry_length);
 		printf("      %-22s%d\n", "activation count:",
 		       le16_to_cpu(entry->activation_count));
-		printf("      %-22s%ld\n", "timestamp:",
+		printf("      %-22s%"PRIu64"\n", "timestamp:",
 		       le64_to_cpu(entry->timestamp));
-		printf("      %-22s%ld\n", "power cycle count:",
+		printf("      %-22s%"PRIu64"\n", "power cycle count:",
 		       le64_to_cpu(entry->power_cycle_count));
 		printf("      %-22s%.*s\n", "previous firmware:", (int)sizeof(entry->previous_fw),
 		       entry->previous_fw);
