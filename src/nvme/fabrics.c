@@ -1012,6 +1012,12 @@ static int uuid_from_device_tree(char *system_uuid)
 
 #define PATH_DMI_ENTRIES       "/sys/firmware/dmi/entries"
 
+/*
+ * See System Management BIOS (SMBIOS) Reference Specification
+ * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.2.0.pdf
+ */
+#define DMI_SYSTEM_INFORMATION	1
+
 static int uuid_from_dmi_entries(char *system_uuid)
 {
 	int f;
@@ -1039,7 +1045,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
 			continue;
 		if (sscanf(buf, "%d", &type) != 1)
 			continue;
-		if (type != 1)
+		if (type != DMI_SYSTEM_INFORMATION)
 			continue;
 		sprintf(filename, "%s/%s/raw", PATH_DMI_ENTRIES, de->d_name);
 		f = open(filename, O_RDONLY);
