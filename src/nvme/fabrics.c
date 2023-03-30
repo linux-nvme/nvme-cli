@@ -1018,6 +1018,25 @@ static int uuid_from_device_tree(char *system_uuid)
  */
 #define DMI_SYSTEM_INFORMATION	1
 
+static bool is_dmi_uuid_valid(const char *buf, size_t len)
+{
+	int i;
+
+	/* UUID bytes are from byte 8 to 23 */
+	if (len < 24)
+		return false;
+
+	/* Test it's a invalid UUID with all zeros */
+	for (i = 8; i < 24; i++) {
+		if (buf[i])
+			break;
+	}
+	if (i == 24)
+		return false;
+
+	return true;
+}
+
 static int uuid_from_dmi_entries(char *system_uuid)
 {
 	int f;
@@ -1053,8 +1072,10 @@ static int uuid_from_dmi_entries(char *system_uuid)
 			continue;
 		len = read(f, buf, 512);
 		close(f);
-		if (len <= 0)
+
+		if (!is_dmi_uuid_valid(buf, len))
 			continue;
+
 		/* Sigh. https://en.wikipedia.org/wiki/Overengineering */
 		/* DMTF SMBIOS 3.0 Section 7.2.1 System UUID */
 		sprintf(system_uuid,
