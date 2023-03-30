@@ -18,6 +18,7 @@
 PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("smart-log-add", "Retrieve Solidigm SMART Log", get_additional_smart_log)
+		ENTRY("vs-smart-add-log", "Get SMART / health extended log (redirects to ocp plug-in)", smart_cloud)
 		ENTRY("garbage-collect-log", "Retrieve Garbage Collection Log", get_garbage_collection_log)
 		ENTRY("latency-tracking-log", "Enable/Retrieve Latency tracking Log", get_latency_tracking_log)
 		ENTRY("parse-telemetry-log", "Parse Telemetry Log binary", get_telemetry_log)
