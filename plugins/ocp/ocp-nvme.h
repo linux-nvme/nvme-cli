@@ -20,6 +20,7 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", NVME_VERSION),
 		ENTRY("clear-fw-activate-history", "Clear firmware update history log", clear_fw_update_history)
 		ENTRY("eol-plp-failure-mode", "Define EOL or PLP circuitry failure mode.", eol_plp_failure_mode)
 		ENTRY("clear-pcie-correctable-error-counters", "Clear PCIe correctable error counters", clear_pcie_corectable_error_counters)
+		ENTRY("vs-fw-activate-history", "Get firmware activation history log", fw_activation_history_log)
 	)
 );
 

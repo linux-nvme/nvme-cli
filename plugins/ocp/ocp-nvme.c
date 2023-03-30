@@ -25,6 +25,7 @@
 
 #include "ocp-smart-extended-log.h"
 #include "ocp-clear-fw-update-history.h"
+#include "ocp-fw-activation-history.h"
 
 #define CREATE_CMD
 #include "ocp-nvme.h"
@@ -645,4 +646,10 @@ static int clear_pcie_corectable_error_counters(int argc, char **argv,
 
 	return ocp_clear_feature(argc, argv, desc,
 				 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS);
+}
+
+static int fw_activation_history_log(int argc, char **argv, struct command *cmd,
+				     struct plugin *plugin)
+{
+	return ocp_fw_activation_history_log(argc, argv, cmd, plugin);
 }
