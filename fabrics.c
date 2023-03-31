@@ -630,7 +630,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 					  enum nvme_print_flags flags,
 					  bool force)
 {
-	const char *transport, *traddr, *trsvcid, *subsysnqn;
+	const char *transport, *traddr, *host_traddr, *trsvcid, *subsysnqn;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c, cn;
 	struct nvme_fabrics_config cfg;
@@ -640,9 +640,16 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 		nvme_subsystem_for_each_ctrl(s, c) {
 			transport = nvme_ctrl_get_transport(c);
 			traddr = nvme_ctrl_get_traddr(c);
+			host_traddr = nvme_ctrl_get_host_traddr(c);
 
 			if (!transport && !traddr)
 				continue;
+
+			/* ignore if no host_traddr for fc */
+			if (!strcmp(transport, "fc")) {
+				if (!host_traddr)
+					continue;
+			}
 
 			/* ignore none fabric transports */
 			if (strcmp(transport, "tcp") &&
@@ -668,7 +675,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 				.subsysnqn	= subsysnqn,
 				.transport	= transport,
 				.traddr		= traddr,
-				.host_traddr	= cfg.host_traddr,
+				.host_traddr	= host_traddr,
 				.host_iface	= cfg.host_iface,
 				.trsvcid	= trsvcid,
 			};
