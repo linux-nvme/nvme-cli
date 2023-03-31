@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_fabrics_config" "January 2023" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_fabrics_config" "March 2023" "API Manual" LINUX
 .SH NAME
 struct nvme_fabrics_config \- Defines all linux nvme fabrics initiator options
 .SH SYNOPSIS
@@ -25,6 +25,10 @@ struct nvme_fabrics_config {
 .BI "    int nr_poll_queues;"
 .br
 .BI "    int tos;"
+.br
+.BI "    int keyring;"
+.br
+.BI "    int tls_key;"
 .br
 .BI "    bool duplicate_connect;"
 .br
@@ -63,6 +67,10 @@ Number of queues to use for exclusively for writing
 Number of queues to reserve for polling completions
 .IP "tos" 12
 Type of service
+.IP "keyring" 12
+Keyring to store and lookup keys
+.IP "tls_key" 12
+TLS PSK for the connection
 .IP "duplicate_connect" 12
 Allow multiple connections to the same target
 .IP "disable_sqflow" 12

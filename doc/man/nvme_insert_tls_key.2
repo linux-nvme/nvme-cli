@@ -1,0 +1,33 @@
+.TH "nvme_insert_tls_key" 9 "nvme_insert_tls_key" "March 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_insert_tls_key \- Derive and insert TLS key
+.SH SYNOPSIS
+.B "long" nvme_insert_tls_key
+.BI "(const char *keyring "  ","
+.BI "const char *key_type "  ","
+.BI "const char *hostnqn "  ","
+.BI "const char *subsysnqn "  ","
+.BI "int hmac "  ","
+.BI "unsigned char *configured_key "  ","
+.BI "int key_len "  ");"
+.SH ARGUMENTS
+.IP "keyring" 12
+Keyring to use
+.IP "key_type" 12
+Type of the resulting key
+.IP "hostnqn" 12
+Host NVMe Qualified Name
+.IP "subsysnqn" 12
+Subsystem NVMe Qualified Name
+.IP "hmac" 12
+HMAC algorithm
+.IP "configured_key" 12
+Configured key data to derive the key from
+.IP "key_len" 12
+Length of \fIconfigured_key\fP
+.SH "DESCRIPTION"
+Derives a 'retained' TLS key as specified in NVMe TCP 1.0a and
+stores it as type \fIkey_type\fP in the keyring specified by \fIkeyring\fP.
+.SH "RETURN"
+The key serial number if the key could be inserted into
+the keyring or 0 with errno otherwise.

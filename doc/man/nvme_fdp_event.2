@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_fdp_event" "January 2023" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_fdp_event" "March 2023" "API Manual" LINUX
 .SH NAME
 struct nvme_fdp_event \- FDP Event
 .SH SYNOPSIS
@@ -8,15 +8,15 @@ struct nvme_fdp_event {
 .br
 .BI "    __u8 flags;"
 .br
-.BI "    __u16 pid;"
+.BI "    __le16 pid;"
 .br
 .BI "    struct nvme_timestamp ts;"
 .br
-.BI "    __u32 nsid;"
+.BI "    __le32 nsid;"
 .br
 .BI "    __u8 type_specific[16];"
 .br
-.BI "    __u16 rgid;"
+.BI "    __le16 rgid;"
 .br
 .BI "    __u8 ruhid;"
 .br

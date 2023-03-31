@@ -319,3 +319,123 @@ If key generation was successful the function returns 0 or
 -1 with errno set otherwise.
 
 
+.. c:function:: long nvme_lookup_keyring (const char *keyring)
+
+   Lookup keyring serial number
+
+**Parameters**
+
+``const char *keyring``
+  Keyring name
+
+**Description**
+
+Looks up the serial number of the keyring **keyring**.
+
+**Return**
+
+The key serial number of the keyring
+or 0 with errno set otherwise.
+
+
+.. c:function:: char * nvme_describe_key_serial (long key_id)
+
+   Return key description
+
+**Parameters**
+
+``long key_id``
+  Key serial number
+
+**Description**
+
+Fetches the description of the key or keyring identified
+by the serial number **key_id**.
+
+**Return**
+
+The description of **key_id** or NULL on failure.
+The returned string needs to be freed by the caller.
+
+
+.. c:function:: long nvme_lookup_key (const char *type, const char *identity)
+
+   Lookup key serial number
+
+**Parameters**
+
+``const char *type``
+  Key type
+
+``const char *identity``
+  Key description
+
+**Description**
+
+Looks up the serial number of the key **identity**
+with type ``type`` in the current session keyring.
+
+**Return**
+
+The key serial number of the key
+or 0 with errno set otherwise.
+
+
+.. c:function:: int nvme_set_keyring (long keyring_id)
+
+   Link keyring for lookup
+
+**Parameters**
+
+``long keyring_id``
+  Keyring id
+
+**Description**
+
+Links **keyring_id** into the session keyring such that
+its keys are available for further key lookups.
+
+**Return**
+
+0 on success, a negative number on error
+with errno set.
+
+
+.. c:function:: long nvme_insert_tls_key (const char *keyring, const char *key_type, const char *hostnqn, const char *subsysnqn, int hmac, unsigned char *configured_key, int key_len)
+
+   Derive and insert TLS key
+
+**Parameters**
+
+``const char *keyring``
+  Keyring to use
+
+``const char *key_type``
+  Type of the resulting key
+
+``const char *hostnqn``
+  Host NVMe Qualified Name
+
+``const char *subsysnqn``
+  Subsystem NVMe Qualified Name
+
+``int hmac``
+  HMAC algorithm
+
+``unsigned char *configured_key``
+  Configured key data to derive the key from
+
+``int key_len``
+  Length of **configured_key**
+
+**Description**
+
+Derives a 'retained' TLS key as specified in NVMe TCP 1.0a and
+stores it as type **key_type** in the keyring specified by **keyring**.
+
+**Return**
+
+The key serial number if the key could be inserted into
+the keyring or 0 with errno otherwise.
+
+

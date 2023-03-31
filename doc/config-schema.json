@@ -94,14 +94,6 @@
 		    "description": "Controller DH-HMAC-CHAP key",
 		    "type": "string"
 		},
-		"keyring": {
-		    "description": "Keyring to store and lookup keys",
-		    "type": "string",
-		},
-		"tls_key": {
-		    "description": "TLS PSK for the connection",
-		    "type": "string",
-		},
 		"nr_io_queues": {
 		    "description": "Number of I/O queues",
 		    "type": "integer"

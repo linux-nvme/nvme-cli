@@ -2756,8 +2756,8 @@ power scale value
     __u8 wzsl;
     __u8 wusl;
     __u8 dmrl;
-    __u32 dmrsl;
-    __u64 dmsl;
+    __le32 dmrsl;
+    __le64 dmsl;
     __u8 rsvd16[4080];
   };
 
@@ -3148,7 +3148,7 @@ power scale value
 ::
 
   struct nvme_id_iocs {
-    __u64 iocsc[512];
+    __le64 iocsc[512];
   };
 
 **Members**
@@ -3298,10 +3298,12 @@ Supported Log Pages (Log Identifier 00h)
     __le32 nsid;
     __u8 vs;
     __u8 trtype;
-    __u8 rsvd[2];
+    __u8 csi;
+    __u8 opcode;
     __le64 cs;
     __le16 trtype_spec_info;
-    __u8 rsvd2[22];
+    __u8 rsvd[21];
+    __u8 log_page_version;
   };
 
 **Members**
@@ -3377,8 +3379,14 @@ Supported Log Pages (Log Identifier 00h)
   is transport related, this field shall be set to the type
   of the transport - see :c:type:`enum nvme_trtype <nvme_trtype>`.
 
-``rsvd``
-  Reserved
+``csi``
+  Command Set Indicator: This field contains command set
+  indicator for the command that the error is associated
+  with.
+
+``opcode``
+  Opcode: This field contains opcode for the command that
+  the error is associated with.
 
 ``cs``
   Command Specific Information: This field contains command
@@ -3388,8 +3396,12 @@ Supported Log Pages (Log Identifier 00h)
 ``trtype_spec_info``
   Transport Type Specific Information
 
-``rsvd2``
-  Reserved
+``rsvd``
+  Reserved: [62:42]
+
+``log_page_version``
+  This field shall be set to 1h. If set, **csi** and **opcode**
+  will have valid values.
 
 
 
@@ -6286,15 +6298,15 @@ bytes, in size. This log captures the controller’s internal state.
 ::
 
   struct nvme_fdp_config_desc {
-    __u16 size;
+    __le16 size;
     __u8 fdpa;
     __u8 vss;
-    __u32 nrg;
-    __u16 nruh;
-    __u16 maxpids;
-    __u32 nnss;
-    __u64 runs;
-    __u32 erutl;
+    __le32 nrg;
+    __le16 nruh;
+    __le16 maxpids;
+    __le32 nnss;
+    __le64 runs;
+    __le32 erutl;
     __u8 rsvd28[36];
     struct nvme_fdp_ruh_desc ruhs[];
   };
@@ -6347,10 +6359,10 @@ bytes, in size. This log captures the controller’s internal state.
 ::
 
   struct nvme_fdp_config_log {
-    __u16 n;
+    __le16 n;
     __u8 version;
     __u8 rsvd3;
-    __u32 size;
+    __le32 size;
     __u8 rsvd8[8];
     struct nvme_fdp_config_desc configs[];
   };
@@ -6434,7 +6446,7 @@ bytes, in size. This log captures the controller’s internal state.
 ::
 
   struct nvme_fdp_ruhu_log {
-    __u16 nruh;
+    __le16 nruh;
     __u8 rsvd2[6];
     struct nvme_fdp_ruhu_desc ruhus[];
   };
@@ -6537,8 +6549,8 @@ bytes, in size. This log captures the controller’s internal state.
   struct nvme_fdp_event_realloc {
     __u8 flags;
     __u8 rsvd1;
-    __u16 nlbam;
-    __u64 lba;
+    __le16 nlbam;
+    __le64 lba;
     __u8 rsvd12[4];
   };
 
@@ -6592,11 +6604,11 @@ bytes, in size. This log captures the controller’s internal state.
   struct nvme_fdp_event {
     __u8 type;
     __u8 flags;
-    __u16 pid;
+    __le16 pid;
     struct nvme_timestamp ts;
-    __u32 nsid;
+    __le32 nsid;
     __u8 type_specific[16];
-    __u16 rgid;
+    __le16 rgid;
     __u8 ruhid;
     __u8 rsvd35[5];
     __u8 vs[24];
@@ -6647,7 +6659,7 @@ bytes, in size. This log captures the controller’s internal state.
 ::
 
   struct nvme_fdp_events_log {
-    __u32 n;
+    __le32 n;
     __u8 rsvd4[60];
     struct nvme_fdp_event events[63];
   };
@@ -6676,7 +6688,7 @@ bytes, in size. This log captures the controller’s internal state.
 ::
 
   struct nvme_feat_fdp_events_cdw11 {
-    __u16 phndl;
+    __le16 phndl;
     __u8 noet;
     __u8 rsvd24;
   };
@@ -6745,10 +6757,10 @@ bytes, in size. This log captures the controller’s internal state.
 ::
 
   struct nvme_fdp_ruh_status_desc {
-    __u16 pid;
-    __u16 ruhid;
-    __u32 earutr;
-    __u64 ruamw;
+    __le16 pid;
+    __le16 ruhid;
+    __le32 earutr;
+    __le64 ruamw;
     __u8 rsvd16[16];
   };
 
@@ -6783,7 +6795,7 @@ bytes, in size. This log captures the controller’s internal state.
 
   struct nvme_fdp_ruh_status {
     __u8 rsvd0[14];
-    __u16 nruhsd;
+    __le16 nruhsd;
     struct nvme_fdp_ruh_status_desc ruhss[];
   };
 
@@ -6925,7 +6937,7 @@ bytes, in size. This log captures the controller’s internal state.
   struct nvme_metadata_element_desc {
     __u8 type;
     __u8 rev;
-    __u16 len;
+    __le16 len;
     __u8 val[0];
   };
 
@@ -7085,8 +7097,8 @@ bytes, in size. This log captures the controller’s internal state.
     __u8 type;
     __u8 attributes;
     __u8 rsvd2[14];
-    __u64 slba;
-    __u64 nlb;
+    __le64 slba;
+    __le64 nlb;
     __u8 guid[16];
     __u8 rsvd48[16];
   };
@@ -7290,8 +7302,8 @@ bytes, in size. This log captures the controller’s internal state.
     __le16 nlb;
     __u8 rsvd18[6];
     __le32 eilbrt;
-    __le16 elbatm;
     __le16 elbat;
+    __le16 elbatm;
   };
 
 **Members**
@@ -7312,11 +7324,11 @@ bytes, in size. This log captures the controller’s internal state.
   Expected Initial Logical Block Reference Tag /
   Expected Logical Block Storage Tag
 
-``elbatm``
-  Expected Logical Block Application Tag Mask
-
 ``elbat``
   Expected Logical Block Application Tag
+
+``elbatm``
+  Expected Logical Block Application Tag Mask
 
 
 
@@ -7336,8 +7348,8 @@ bytes, in size. This log captures the controller’s internal state.
     __le16 nlb;
     __u8 rsvd18[8];
     __u8 elbt[10];
-    __le16 elbatm;
     __le16 elbat;
+    __le16 elbatm;
   };
 
 **Members**
@@ -7358,11 +7370,11 @@ bytes, in size. This log captures the controller’s internal state.
   Expected Initial Logical Block Reference Tag /
   Expected Logical Block Storage Tag
 
-``elbatm``
-  Expected Logical Block Application Tag Mask
-
 ``elbat``
   Expected Logical Block Application Tag
+
+``elbatm``
+  Expected Logical Block Application Tag Mask
 
 
 
@@ -7632,6 +7644,9 @@ bytes, in size. This log captures the controller’s internal state.
 ``NVME_ID_DIR_SD_BIT``
   Streams directive is supported
 
+``NVME_ID_DIR_DP_BIT``
+  Direct Placement directive is supported
+
 
 
 
@@ -7876,7 +7891,7 @@ bytes, in size. This log captures the controller’s internal state.
       __u8 prtype;
       __u8 cms;
       __u8 rsvd3[5];
-      __u16 pkey;
+      __le16 pkey;
       __u8 rsvd10[246];
     } rdma;
     struct tcp {

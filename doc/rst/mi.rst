@@ -1937,6 +1937,39 @@ See: :c:type:`struct nvme_secondary_ctrl_list <nvme_secondary_ctrl_list>`
 0 on success, non-zero on failure
 
 
+.. c:function:: int nvme_mi_admin_get_log_page (nvme_mi_ctrl_t ctrl, __u32 xfer_len, struct nvme_get_log_args *args)
+
+   Retrieve log page data from controller
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u32 xfer_len``
+  The chunk size of the read
+
+``struct nvme_get_log_args *args``
+  Get Log Page command arguments
+
+**Description**
+
+Performs a Get Log Page Admin command as specified by **args**. Response data
+is stored in **args->data**, which should be a buffer of **args->data_len** bytes.
+Resulting data length is stored in **args->data_len** on successful
+command completion.
+
+This request may be implemented as multiple log page commands, in order
+to fit within MI message-size limits.
+
+See: :c:type:`struct nvme_get_log_args <nvme_get_log_args>`
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_mi_admin_get_log (nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
 
    Retrieve log page data from controller

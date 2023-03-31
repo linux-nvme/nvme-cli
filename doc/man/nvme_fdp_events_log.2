@@ -1,10 +1,10 @@
-.TH "libnvme" 9 "struct nvme_fdp_events_log" "January 2023" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_fdp_events_log" "March 2023" "API Manual" LINUX
 .SH NAME
 struct nvme_fdp_events_log \- FDP Events Log Page
 .SH SYNOPSIS
 struct nvme_fdp_events_log {
 .br
-.BI "    __u32 n;"
+.BI "    __le32 n;"
 .br
 .BI "    __u8 rsvd4[60];"
 .br

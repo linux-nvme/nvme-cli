@@ -1,26 +1,26 @@
-.TH "libnvme" 9 "struct nvme_fdp_config_desc" "January 2023" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_fdp_config_desc" "March 2023" "API Manual" LINUX
 .SH NAME
 struct nvme_fdp_config_desc \- FDP Configuration Descriptor
 .SH SYNOPSIS
 struct nvme_fdp_config_desc {
 .br
-.BI "    __u16 size;"
+.BI "    __le16 size;"
 .br
 .BI "    __u8 fdpa;"
 .br
 .BI "    __u8 vss;"
 .br
-.BI "    __u32 nrg;"
+.BI "    __le32 nrg;"
 .br
-.BI "    __u16 nruh;"
+.BI "    __le16 nruh;"
 .br
-.BI "    __u16 maxpids;"
+.BI "    __le16 maxpids;"
 .br
-.BI "    __u32 nnss;"
+.BI "    __le32 nnss;"
 .br
-.BI "    __u64 runs;"
+.BI "    __le64 runs;"
 .br
-.BI "    __u32 erutl;"
+.BI "    __le32 erutl;"
 .br
 .BI "    __u8 rsvd28[36];"
 .br

@@ -1,10 +1,10 @@
-.TH "libnvme" 9 "struct nvme_id_iocs" "January 2023" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_iocs" "March 2023" "API Manual" LINUX
 .SH NAME
 struct nvme_id_iocs \- NVMe Identify IO Command Set data structure
 .SH SYNOPSIS
 struct nvme_id_iocs {
 .br
-.BI "    __u64 iocsc[512];"
+.BI "    __le64 iocsc[512];"
 .br
 .BI "
 };

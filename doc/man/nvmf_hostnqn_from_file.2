@@ -1,9 +1,13 @@
-.TH "nvmf_hostnqn_from_file" 9 "nvmf_hostnqn_from_file" "January 2023" "libnvme API manual" LINUX
+.TH "nvmf_hostnqn_from_file" 9 "nvmf_hostnqn_from_file" "March 2023" "libnvme API manual" LINUX
 .SH NAME
-nvmf_hostnqn_from_file \- Reads the host nvm qualified name from the config default location in /usr/local/etc/nvme/
+nvmf_hostnqn_from_file \- Reads the host nvm qualified name from the config default location
 .SH SYNOPSIS
 .B "char *" nvmf_hostnqn_from_file
 .SH ARGUMENTS
+.SH "DESCRIPTION"
+
+Retrieve the qualified name from the config file located in $SYSCONFIDR/nvme.
+$SYSCONFDIR is usually /etc.
 .SH "RETURN"
 The host nqn, or NULL if unsuccessful. If found, the caller
 is responsible to free the string.
