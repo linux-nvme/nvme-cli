@@ -768,7 +768,7 @@ nvme-write(1) Manual Page
                         [--dry-run | -w]
                         [--latency | -t]
                         [--storage-tag&lt;storage-tag&gt; | -g &lt;storage-tag&gt;]
-                        [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]
+                        [--storage-tag-check | -C]
                         [--force]</pre>
 <div class="attribution">
 </div></div>
@@ -1039,10 +1039,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---storage-tag=&lt;storage-tag&gt;
+-g &lt;storage-tag&gt;
 </dt>
 <dt class="hdlist1">
--g &lt;storage-tag&gt;
+--storage-tag=&lt;storage-tag&gt;
 </dt>
 <dd>
 <p>
@@ -1050,14 +1050,14 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---storage-tag-check=&lt;storage-tag-check&gt;
+-C
 </dt>
 <dt class="hdlist1">
--C &lt;storage-tag-check&gt;
+--storage-tag-check
 </dt>
 <dd>
 <p>
-        This bit specifies the Storage Tag field shall be checked as part of end-to-end
+        This flag enables Storage Tag field checking as part of end-to-end
         data protection processing.
 </p>
 </dd>
@@ -1090,7 +1090,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-01-30 14:14:16 CET
+ 2023-03-31 16:17:28 CEST
 </div>
 </div>
 </body>

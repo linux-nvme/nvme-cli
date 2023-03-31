@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/30/2023
+.\"      Date: 03/31/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "01/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "03/31/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -47,14 +47,17 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                 [\-\-keep\-alive\-tmo=<sec>   | \-k <sec>]
                 [\-\-reconnect\-delay=<#>    | \-c <#>]
                 [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
-                [\-\-hdr_digest             | \-g]
-                [\-\-data_digest            | \-G]
                 [\-\-nr\-io\-queues=<#>       | \-i <#>]
                 [\-\-nr\-write\-queues=<#>    | \-W <#>]
                 [\-\-nr\-poll\-queues=<#>     | \-P <#>]
                 [\-\-queue\-size=<#>         | \-Q <#>]
+                [\-\-keyring=<#>                    ]
+                [\-\-tls_key=<#>                    ]
+                [\-\-hdr\-digest             | \-g]
+                [\-\-data\-digest            | \-G]
                 [\-\-persistent             | \-p]
                 [\-\-quiet                  | \-S]
+                [\-\-tls                        ]
                 [\-\-dump\-config            | \-O]
                 [\-\-output\-format=<fmt>    | \-o <fmt>]
                 [\-\-force]
@@ -122,7 +125,7 @@ This field specifies the name for the NVMe subsystem to connect to\&.
 .PP
 \-a <traddr>, \-\-traddr=<traddr>
 .RS 4
-This field specifies the network address of the Discovery Controller\&. For transports using IP addressing (e\&.g\&. rdma) this should be an IP\-based (ex\&. IPv4) address\&.
+This field specifies the network address of the Discovery Controller\&. For transports using IP addressing (e\&.g\&. rdma) this should be an IP\-based address (ex\&. IPv4)\&.
 .RE
 .PP
 \-s <trsvcid>, \-\-trsvcid=<trsvcid>
@@ -161,7 +164,7 @@ will dump the output to stdout\&.
 .PP
 \-d <device>, \-\-device=<device>
 .RS 4
-This field takes a device as input\&. Device is in the format of nvme*, eg\&. nvme0, nvme1
+This field takes a device as input\&. It must be a persistent device associated with a Discovery Controller previously created by the command "connect\-all" or "discover"\&. <device> follows the format nvme*, eg\&. nvme0, nvme1\&.
 .RE
 .PP
 \-C <cfg>, \-\-config\-file=<cfg>
@@ -174,7 +177,7 @@ to not read in an existing configuration file\&. The JSON configuration file for
 .PP
 \-k <#>, \-\-keep\-alive\-tmo=<#>
 .RS 4
-Overrides the default timeout (in seconds) for keep alive\&. This option will be ignored for the discovery, and it is only implemented for completeness\&.
+Overrides the default keep alive timeout (in seconds)\&. This option will be ignored for discovery, and it is only implemented for completeness\&.
 .RE
 .PP
 \-c <#>, \-\-reconnect\-delay=<#>
@@ -185,16 +188,6 @@ Overrides the default delay (in seconds) before reconnect is attempted after a c
 \-l <#>, \-\-ctrl\-loss\-tmo=<#>
 .RS 4
 Overrides the default controller loss timeout period (in seconds)\&.
-.RE
-.PP
-\-g, \-\-hdr_digest
-.RS 4
-Generates/verifies header digest (TCP)\&.
-.RE
-.PP
-\-G, \-\-data_digest
-.RS 4
-Generates/verifies data digest (TCP)\&.
 .RE
 .PP
 \-i <#>, \-\-nr\-io\-queues=<#>
@@ -217,9 +210,34 @@ Adds additional queues that will be used for polling latency sensitive I/O\&.
 Overrides the default number of elements in the I/O queues created by the driver which can be found at drivers/nvme/host/fabrics\&.h\&. This option will be ignored for the discovery, and it is only implemented for completeness\&.
 .RE
 .PP
+\-\-keyring=<#>
+.RS 4
+Keyring for TLS key lookup\&.
+.RE
+.PP
+\-\-tls_key=<#>
+.RS 4
+TLS key for the connection (TCP)\&.
+.RE
+.PP
+\-g, \-\-hdr\-digest
+.RS 4
+Generates/verifies header digest (TCP)\&.
+.RE
+.PP
+\-G, \-\-data\-digest
+.RS 4
+Generates/verifies data digest (TCP)\&.
+.RE
+.PP
 \-p, \-\-persistent
 .RS 4
-Persistent discovery connection\&.
+Don\(cqt remove the discovery controller after retrieving the discovery log page\&.
+.RE
+.PP
+\-\-tls
+.RS 4
+Enable TLS encryption (TCP)\&.
 .RE
 .PP
 \-S, \-\-quiet

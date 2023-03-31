@@ -768,10 +768,14 @@ nvme-connect(1) Manual Page
                 [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
                 [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
                 [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
+                [--tos=&lt;#&gt;                | -T &lt;#&gt;]
+                [--keyring=&lt;#&gt;                    ]
+                [--tls_key=&lt;#&gt;                    ]
                 [--duplicate-connect      | -D]
                 [--disable-sqflow         | -d]
                 [--hdr-digest             | -g]
                 [--data-digest            | -G]
+                [--tls                        ]
                 [--dump-config            | -O]
                 [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
@@ -1047,6 +1051,33 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+-T &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--tos=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Type of service for the connection (TCP)
+</p>
+</dd>
+<dt class="hdlist1">
+--keyring=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Keyring for TLS key lookup.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls_key=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        TLS key for the connection (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
 -D
 </dt>
 <dt class="hdlist1">
@@ -1090,6 +1121,14 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Generates/verifies data digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+--tls
+</dt>
+<dd>
+<p>
+        Enable TLS encryption (TCP).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1162,7 +1201,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-01-30 14:14:16 CET
+ 2023-03-31 16:17:28 CEST
 </div>
 </div>
 </body>

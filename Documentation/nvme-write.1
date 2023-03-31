@@ -2,12 +2,12 @@
 .\"     Title: nvme-write
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/30/2023
+.\"      Date: 03/31/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WRITE" "1" "01/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-WRITE" "1" "03/31/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,7 +51,7 @@ nvme-write \- Send an NVMe write command, provide results
                         [\-\-dry\-run | \-w]
                         [\-\-latency | \-t]
                         [\-\-storage\-tag<storage\-tag> | \-g <storage\-tag>]
-                        [\-\-storage\-tag\-check<storage\-tag\-check> | \-C <storage\-tag\-check>]
+                        [\-\-storage\-tag\-check | \-C]
                         [\-\-force]
 .fi
 .SH "DESCRIPTION"
@@ -192,14 +192,14 @@ be set\&. Otherwise \-\-dry\-run option will be
 Print out the latency the IOCTL took (in us)\&.
 .RE
 .PP
-\-\-storage\-tag=<storage\-tag>, \-g <storage\-tag>
+\-g <storage\-tag>, \-\-storage\-tag=<storage\-tag>
 .RS 4
 Variable Sized Expected Logical Block Storage Tag(ELBST)\&.
 .RE
 .PP
-\-\-storage\-tag\-check=<storage\-tag\-check>, \-C <storage\-tag\-check>
+\-C, \-\-storage\-tag\-check
 .RS 4
-This bit specifies the Storage Tag field shall be checked as part of end\-to\-end data protection processing\&.
+This flag enables Storage Tag field checking as part of end\-to\-end data protection processing\&.
 .RE
 .PP
 \-\-force

@@ -2,12 +2,12 @@
 .\"     Title: nvme-verify
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/30/2023
+.\"      Date: 03/31/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-VERIFY" "1" "01/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-VERIFY" "1" "03/31/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,7 +42,7 @@ nvme-verify \- Send an NVMe Verify command, return results
             [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
             [\-\-app\-tag=<apptag> | \-a <apptag>]
             [\-\-storage\-tag<storage\-tag> | \-S <storage\-tag>]
-            [\-\-storage\-tag\-check<storage\-tag\-check> | \-C <storage\-tag\-check>]
+            [\-\-storage\-tag\-check | \-C]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -134,14 +134,14 @@ Optional application tag mask when used with protection information\&.
 Optional application tag when used with protection information\&.
 .RE
 .PP
-\-\-storage\-tag=<storage\-tag>, \-S <storage\-tag>
+\-S <storage\-tag>, \-\-storage\-tag=<storage\-tag>
 .RS 4
 Variable Sized Expected Logical Block Storage Tag(ELBST)\&.
 .RE
 .PP
-\-\-storage\-tag\-check=<storage\-tag\-check>, \-C <storage\-tag\-check>
+\-C, \-\-storage\-tag\-check
 .RS 4
-This bit specifies the Storage Tag field shall be checked as part of Verify operation\&.
+This flag enables Storage Tag field checking as part of Verify operation\&.
 .RE
 .SH "EXAMPLES"
 .sp

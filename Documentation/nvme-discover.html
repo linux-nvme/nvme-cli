@@ -764,14 +764,17 @@ nvme-discover(1) Manual Page
                 [--keep-alive-tmo=&lt;sec&gt;   | -k &lt;sec&gt;]
                 [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
                 [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
-                [--hdr_digest             | -g]
-                [--data_digest            | -G]
                 [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
                 [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
                 [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
                 [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
+                [--keyring=&lt;#&gt;                    ]
+                [--tls_key=&lt;#&gt;                    ]
+                [--hdr-digest             | -g]
+                [--data-digest            | -G]
                 [--persistent             | -p]
                 [--quiet                  | -S]
+                [--tls                        ]
                 [--dump-config            | -O]
                 [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]
                 [--force]</pre>
@@ -885,7 +888,7 @@ cellspacing="0" cellpadding="4">
 <p>
         This field specifies the network address of the Discovery Controller.
         For transports using IP addressing (e.g. rdma) this should be an
-        IP-based (ex. IPv4) address.
+        IP-based address (ex. IPv4).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -974,8 +977,10 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        This field takes a device as input. Device is in the format of nvme*,
-        eg. nvme0, nvme1
+        This field takes a device as input. It must be a persistent device
+        associated with a Discovery Controller previously created by the
+        command "connect-all" or "discover". &lt;device&gt; follows the format
+        nvme*, eg. nvme0, nvme1.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1001,8 +1006,8 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Overrides the default timeout (in seconds) for keep alive.
-        This option will be ignored for the discovery, and it is only
+        Overrides the default keep alive timeout (in seconds). This
+        option will be ignored for discovery, and it is only
         implemented for completeness.
 </p>
 </dd>
@@ -1027,28 +1032,6 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default controller loss timeout period (in seconds).
-</p>
-</dd>
-<dt class="hdlist1">
--g
-</dt>
-<dt class="hdlist1">
---hdr_digest
-</dt>
-<dd>
-<p>
-        Generates/verifies header digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
--G
-</dt>
-<dt class="hdlist1">
---data_digest
-</dt>
-<dd>
-<p>
-        Generates/verifies data digest (TCP).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1101,6 +1084,44 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+--keyring=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Keyring for TLS key lookup.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls_key=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        TLS key for the connection (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-g
+</dt>
+<dt class="hdlist1">
+--hdr-digest
+</dt>
+<dd>
+<p>
+        Generates/verifies header digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-G
+</dt>
+<dt class="hdlist1">
+--data-digest
+</dt>
+<dd>
+<p>
+        Generates/verifies data digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
 -p
 </dt>
 <dt class="hdlist1">
@@ -1108,7 +1129,16 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Persistent discovery connection.
+        Don&#8217;t remove the discovery controller after retrieving the discovery
+        log page.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls
+</dt>
+<dd>
+<p>
+        Enable TLS encryption (TCP).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1218,7 +1248,7 @@ nvme-connect-all(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-01-30 14:14:16 CET
+ 2023-03-31 16:17:28 CEST
 </div>
 </div>
 </body>

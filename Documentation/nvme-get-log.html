@@ -759,7 +759,8 @@ nvme-get-log(1) Manual Page
               [--lsi=&lt;field&gt; | -S &lt;field&gt;]
               [--rae | -r]
               [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
-              [--ot=&lt;offset_type&gt; | -O &lt;offset_type&gt;]</pre>
+              [--ot=&lt;offset_type&gt; | -O &lt;offset_type&gt;]
+                    [--xfer-len=&lt;length&gt; | -x &lt;length&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -918,6 +919,16 @@ program to parse.</p></div>
         the index mode is used.
 </p>
 </dd>
+<dt class="hdlist1">
+-x &lt;length&gt;
+</dt>
+<dd>
+<p>
+--xfer-len &lt;length&gt;:
+        Specify the read chunk size. The length argument is expected to be
+        a multiple of 4096. The default size is 4096.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -962,7 +973,7 @@ Have the program return the raw log page in binary:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-01-30 14:14:16 CET
+ 2023-03-31 16:17:28 CEST
 </div>
 </div>
 </body>

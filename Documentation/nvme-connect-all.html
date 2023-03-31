@@ -759,17 +759,21 @@ nvme-connect-all(1) Manual Page
                 [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
                 [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
                 [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]
+                [--device=&lt;device&gt;        | -d &lt;device&gt;]
                 [--cfg-file=&lt;cfg&gt;         | -C &lt;cfg&gt;]
-                [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
+                [--keep-alive-tmo=&lt;sec&gt;   | -k &lt;sec&gt;]
                 [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
                 [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
-                [--hdr-digest             | -g]
-                [--data-digest            | -G]
                 [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
                 [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
                 [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
                 [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
+                [--keyring=&lt;#&gt;                    ]
+                [--tls_key=&lt;#&gt;                    ]
+                [--hdr-digest             | -g]
+                [--data-digest            | -G]
                 [--persistent             | -p]
+                [--tls                        ]
                 [--quiet                  | -S]
                 [--dump-config            | -O]</pre>
 <div class="attribution">
@@ -945,6 +949,20 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+-d &lt;device&gt;
+</dt>
+<dt class="hdlist1">
+--device=&lt;device&gt;
+</dt>
+<dd>
+<p>
+        This field takes a device as input. It must be a persistent device
+        associated with a Discovery Controller previously created by the
+        command "connect-all" or "discover". &lt;device&gt; follows the format
+        nvme*, eg. nvme0, nvme1.
+</p>
+</dd>
+<dt class="hdlist1">
 -C &lt;cfg&gt;
 </dt>
 <dt class="hdlist1">
@@ -996,28 +1014,6 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--g
-</dt>
-<dt class="hdlist1">
---hdr-digest
-</dt>
-<dd>
-<p>
-        Generates/verifies header digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
--G
-</dt>
-<dt class="hdlist1">
---data-digest
-</dt>
-<dd>
-<p>
-        Generates/verifies data digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
 -i &lt;#&gt;
 </dt>
 <dt class="hdlist1">
@@ -1066,6 +1062,44 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+--keyring=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Keyring for TLS key lookup.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls_key=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        TLS key for the connection (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-g
+</dt>
+<dt class="hdlist1">
+--hdr-digest
+</dt>
+<dd>
+<p>
+        Generates/verifies header digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-G
+</dt>
+<dt class="hdlist1">
+--data-digest
+</dt>
+<dd>
+<p>
+        Generates/verifies data digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
 -p
 </dt>
 <dt class="hdlist1">
@@ -1075,6 +1109,14 @@ cellspacing="0" cellpadding="4">
 <p>
         Don&#8217;t remove the discovery controller after retrieving the discovery
         log page.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls
+</dt>
+<dd>
+<p>
+        Enable TLS encryption (TCP).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1156,7 +1198,7 @@ nvme-connect(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-01-30 14:14:16 CET
+ 2023-03-31 16:17:28 CEST
 </div>
 </div>
 </body>

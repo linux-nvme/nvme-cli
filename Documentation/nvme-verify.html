@@ -759,7 +759,7 @@ nvme-verify(1) Manual Page
             [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
             [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
             [--storage-tag&lt;storage-tag&gt; | -S &lt;storage-tag&gt;]
-            [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]</pre>
+            [--storage-tag-check | -C]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -912,10 +912,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---storage-tag=&lt;storage-tag&gt;
+-S &lt;storage-tag&gt;
 </dt>
 <dt class="hdlist1">
--S &lt;storage-tag&gt;
+--storage-tag=&lt;storage-tag&gt;
 </dt>
 <dd>
 <p>
@@ -923,14 +923,14 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---storage-tag-check=&lt;storage-tag-check&gt;
+-C
 </dt>
 <dt class="hdlist1">
--C &lt;storage-tag-check&gt;
+--storage-tag-check
 </dt>
 <dd>
 <p>
-        This bit specifies the Storage Tag field shall be checked as part of Verify operation.
+        This flag enables Storage Tag field checking as part of Verify operation.
 </p>
 </dd>
 </dl></div>
@@ -953,7 +953,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-01-30 14:14:16 CET
+ 2023-03-31 16:17:28 CEST
 </div>
 </div>
 </body>

@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/30/2023
+.\"      Date: 03/31/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "01/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "03/31/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,10 +51,14 @@ nvme-connect \- Connect to a Fabrics controller\&.
                 [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
                 [\-\-reconnect\-delay=<#>    | \-c <#>]
                 [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
+                [\-\-tos=<#>                | \-T <#>]
+                [\-\-keyring=<#>                    ]
+                [\-\-tls_key=<#>                    ]
                 [\-\-duplicate\-connect      | \-D]
                 [\-\-disable\-sqflow         | \-d]
                 [\-\-hdr\-digest             | \-g]
                 [\-\-data\-digest            | \-G]
+                [\-\-tls                        ]
                 [\-\-dump\-config            | \-O]
                 [\-\-output\-format=<fmt>    | \-o <fmt>]
 .fi
@@ -193,6 +197,21 @@ Overrides the default delay (in seconds) before reconnect is attempted after a c
 Overrides the default controller loss timeout period (in seconds)\&.
 .RE
 .PP
+\-T <#>, \-\-tos=<#>
+.RS 4
+Type of service for the connection (TCP)
+.RE
+.PP
+\-\-keyring=<#>
+.RS 4
+Keyring for TLS key lookup\&.
+.RE
+.PP
+\-\-tls_key=<#>
+.RS 4
+TLS key for the connection (TCP)\&.
+.RE
+.PP
 \-D, \-\-duplicate\-connect
 .RS 4
 Allows duplicated connections between same transport host and subsystem port\&.
@@ -211,6 +230,11 @@ Generates/verifies header digest (TCP)\&.
 \-G, \-\-data\-digest
 .RS 4
 Generates/verifies data digest (TCP)\&.
+.RE
+.PP
+\-\-tls
+.RS 4
+Enable TLS encryption (TCP)\&.
 .RE
 .PP
 \-O, \-\-dump\-config

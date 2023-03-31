@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/30/2023
+.\"      Date: 03/31/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "01/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "03/31/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,17 +42,21 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
                 [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
                 [\-\-hostid=<hostid>        | \-I <hostid>]
                 [\-\-raw=<filename>         | \-r <filename>]
+                [\-\-device=<device>        | \-d <device>]
                 [\-\-cfg\-file=<cfg>         | \-C <cfg>]
-                [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
+                [\-\-keep\-alive\-tmo=<sec>   | \-k <sec>]
                 [\-\-reconnect\-delay=<#>    | \-c <#>]
                 [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
-                [\-\-hdr\-digest             | \-g]
-                [\-\-data\-digest            | \-G]
                 [\-\-nr\-io\-queues=<#>       | \-i <#>]
                 [\-\-nr\-write\-queues=<#>    | \-W <#>]
                 [\-\-nr\-poll\-queues=<#>     | \-P <#>]
                 [\-\-queue\-size=<#>         | \-Q <#>]
+                [\-\-keyring=<#>                    ]
+                [\-\-tls_key=<#>                    ]
+                [\-\-hdr\-digest             | \-g]
+                [\-\-data\-digest            | \-G]
                 [\-\-persistent             | \-p]
+                [\-\-tls                        ]
                 [\-\-quiet                  | \-S]
                 [\-\-dump\-config            | \-O]
 .fi
@@ -151,6 +155,11 @@ command and dump it to a raw binary file\&. By default
 will dump the output to stdout\&.
 .RE
 .PP
+\-d <device>, \-\-device=<device>
+.RS 4
+This field takes a device as input\&. It must be a persistent device associated with a Discovery Controller previously created by the command "connect\-all" or "discover"\&. <device> follows the format nvme*, eg\&. nvme0, nvme1\&.
+.RE
+.PP
 \-C <cfg>, \-\-config\-file=<cfg>
 .RS 4
 Use the specified JSON configuration file instead of the default /usr/local/etc/nvme/config\&.json file or
@@ -174,16 +183,6 @@ Overrides the default delay (in seconds) before reconnect is attempted after a c
 Overrides the default controller loss timeout period (in seconds)\&.
 .RE
 .PP
-\-g, \-\-hdr\-digest
-.RS 4
-Generates/verifies header digest (TCP)\&.
-.RE
-.PP
-\-G, \-\-data\-digest
-.RS 4
-Generates/verifies data digest (TCP)\&.
-.RE
-.PP
 \-i <#>, \-\-nr\-io\-queues=<#>
 .RS 4
 Overrides the default number of I/O queues create by the driver\&. This option will be ignored for discovery, but will be passed on to the subsequent connect call\&.
@@ -204,9 +203,34 @@ Adds additional queues that will be used for polling latency sensitive I/O\&.
 Overrides the default number of elements in the I/O queues created by the driver\&. This option will be ignored for discovery, but will be passed on to the subsequent connect call\&.
 .RE
 .PP
+\-\-keyring=<#>
+.RS 4
+Keyring for TLS key lookup\&.
+.RE
+.PP
+\-\-tls_key=<#>
+.RS 4
+TLS key for the connection (TCP)\&.
+.RE
+.PP
+\-g, \-\-hdr\-digest
+.RS 4
+Generates/verifies header digest (TCP)\&.
+.RE
+.PP
+\-G, \-\-data\-digest
+.RS 4
+Generates/verifies data digest (TCP)\&.
+.RE
+.PP
 \-p, \-\-persistent
 .RS 4
 Don\(cqt remove the discovery controller after retrieving the discovery log page\&.
+.RE
+.PP
+\-\-tls
+.RS 4
+Enable TLS encryption (TCP)\&.
 .RE
 .PP
 \-S, \-\-quiet

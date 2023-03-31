@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/30/2023
+.\"      Date: 03/31/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LOG" "1" "01/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-LOG" "1" "03/31/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,6 +43,7 @@ nvme-get-log \- Retrieves a log page from an NVMe device
               [\-\-rae | \-r]
               [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
               [\-\-ot=<offset_type> | \-O <offset_type>]
+                    [\-\-xfer\-len=<length> | \-x <length>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -106,6 +107,11 @@ This field specifies the identifier of command set\&. if not issued, NVM Command
 \-O, \-\-ot
 .RS 4
 This field specifies the offset type\&. If set to false, the Log Page Offset Lower field and the Log Page Offset Upper field specify the byte offset into the log page to be returned\&. If set to true, the Log Page Offset Lower field and the Log Page Offset Upper field specify the index into the list of data structures in the log page to be returned\&. The default is byte offset\&. If the option is specified the index mode is used\&.
+.RE
+.PP
+\-x <length>
+.RS 4
+\-\-xfer\-len <length>: Specify the read chunk size\&. The length argument is expected to be a multiple of 4096\&. The default size is 4096\&.
 .RE
 .SH "EXAMPLES"
 .sp

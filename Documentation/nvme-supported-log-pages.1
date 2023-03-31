@@ -2,12 +2,12 @@
 .\"     Title: nvme-supported-log-pages
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/30/2023
+.\"      Date: 03/31/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SUPPORTED\-LOG" "1" "01/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-SUPPORTED\-LOG" "1" "03/31/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ nvme-supported-log-pages \- Send NVMe Supported Log pages request, returns resul
 .sp
 .nf
 \fInvme supported\-log\-pages\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
-                            [\-\-human\-readable | \-H]
+                            [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -49,9 +49,9 @@ On success, the returned supported log pages log structure will be printed for e
 This option will set the reporting format to normal, json, or binary\&. Only one output format can be used at a time\&.
 .RE
 .PP
-\-H, \-\-human\-readable
+\-v, \-\-verbose
 .RS 4
-This option will parse and format many of the bit fields into a human\-readable format\&.
+Show more information including LID Supported (LSUPP) and Index Offset Supported (IOP) details\&.
 .RE
 .SH "EXAMPLES"
 .sp
