@@ -8278,7 +8278,7 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *prefill = "prefill buffers with known byte-value, default 0";
 
 	int flags;
-	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
+	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH;
 	void *data = NULL, *mdata = NULL;
 	int err = 0, dfd, mfd;
 	struct nvme_dev *dev;
@@ -8420,8 +8420,9 @@ static int passthru(int argc, char **argv, bool admin,
 				perror("failed to read metadata write buffer");
 				goto free_metadata;
 			}
-		} else
+		} else {
 			memset(mdata, cfg.prefill, cfg.metadata_len);
+		}
 	}
 
 	if (cfg.data_len) {
@@ -8472,14 +8473,14 @@ static int passthru(int argc, char **argv, bool admin,
 
 	if (admin)
 		err = nvme_cli_admin_passthru(dev, cfg.opcode, cfg.flags,
-					  cfg.rsvd,
-					  cfg.namespace_id, cfg.cdw2,
-					  cfg.cdw3, cfg.cdw10,
-					  cfg.cdw11, cfg.cdw12, cfg.cdw13,
-					  cfg.cdw14,
-					  cfg.cdw15, cfg.data_len, data,
-					  cfg.metadata_len,
-					  mdata, cfg.timeout, &result);
+					      cfg.rsvd,
+					      cfg.namespace_id, cfg.cdw2,
+					      cfg.cdw3, cfg.cdw10,
+					      cfg.cdw11, cfg.cdw12, cfg.cdw13,
+					      cfg.cdw14,
+					      cfg.cdw15, cfg.data_len, data,
+					      cfg.metadata_len,
+					      mdata, cfg.timeout, &result);
 	else
 		err = nvme_io_passthru(dev_fd(dev), cfg.opcode, cfg.flags,
 				       cfg.rsvd,
@@ -8495,30 +8496,32 @@ static int passthru(int argc, char **argv, bool admin,
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
 	if (cfg.latency)
 		printf("%s Command %s latency: %llu us\n",
-			admin ? "Admin": "IO",
-			strcmp(cmd_name, "Unknown") ? cmd_name: "Vendor Specific",
-			elapsed_utime(start_time, end_time));
+		       admin ? "Admin" : "IO",
+		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
+		       elapsed_utime(start_time, end_time));
 
-	if (err < 0)
+	if (err < 0) {
 		fprintf(stderr, "passthru: %s\n", nvme_strerror(errno));
-	else if (err)
+	} else if (err) {
 		nvme_show_status(err);
-	else  {
+	} else  {
 		fprintf(stderr, "%s Command %s is Success and result: 0x%08x\n",
-				admin ? "Admin": "IO",
-				strcmp(cmd_name, "Unknown") ? cmd_name: "Vendor Specific",
-				result);
+			admin ? "Admin" : "IO",
+			strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
+			result);
 		if (cfg.read && strlen(cfg.input_file)) {
 			if (write(dfd, (void *)data, cfg.data_len) < 0)
 				perror("failed to write data buffer");
-			if (cfg.metadata_len && cfg.metadata)
+			if (cfg.metadata_len && cfg.metadata) {
 				if (write(mfd, (void *)mdata, cfg.metadata_len) < 0)
 					perror("failed to write metadata buffer");
+			}
 		} else if (!cfg.raw_binary) {
 			if (data && cfg.read && !err)
 				d((unsigned char *)data, cfg.data_len, 16, 1);
-		} else if (data && cfg.read)
+		} else if (data && cfg.read) {
 			d_raw((unsigned char *)data, cfg.data_len);
+		}
 	}
 free_metadata:
 	free(mdata);
