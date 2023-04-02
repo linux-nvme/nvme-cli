@@ -9192,6 +9192,108 @@ static int dim_cmd(int argc, char **argv, struct command *command, struct plugin
 	return nvmf_dim(desc, argc, argv);
 }
 
+static int nmi_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send a NVMe-MI Receive command to the specified device, return results.";
+	const char *opcode = "opcode (required)";
+	const char *data_len = "data I/O length (bytes)";
+	const char *nmimt = "nvme-mi message type";
+	const char *nmd0 = "nvme management dword 0 value";
+	const char *nmd1 = "nvme management dword 1 value";
+	const char *input = "data input or output file";
+
+	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH;
+	void *data = NULL;
+	int err = 0, fd;
+	struct nvme_dev *dev;
+	__u32 result;
+	bool huge = false;
+
+	struct config {
+		__u8 opcode;
+		__u32 namespace_id;
+		__u32 data_len;
+		__u32 nmimt;
+		__u32 nmd0;
+		__u32 nmd1;
+		char *input_file;
+	};
+
+	struct config cfg = {
+		.opcode = 0,
+		.namespace_id = 0,
+		.data_len = 0,
+		.nmimt = 0,
+		.nmd0 = 0,
+		.nmd1 = 0,
+		.input_file = "",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("opcode", 'o', &cfg.opcode, opcode),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		OPT_UINT("data-len", 'l', &cfg.data_len, data_len),
+		OPT_UINT("nmimt", 'm', &cfg.nmimt, nmimt),
+		OPT_UINT("nmd0", '0', &cfg.nmd0, nmd0),
+		OPT_UINT("nmd1", '1', &cfg.nmd1, nmd1),
+		OPT_FILE("input-file", 'i', &cfg.input_file, input),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		goto ret;
+
+	fd = STDOUT_FILENO;
+
+	if (strlen(cfg.input_file)) {
+		fd = open(cfg.input_file, O_WRONLY | O_CREAT, mode);
+		if (fd < 0) {
+			perror(cfg.input_file);
+			err = -EINVAL;
+			goto close_dev;
+		}
+	}
+
+	if (cfg.data_len) {
+		data = nvme_alloc(cfg.data_len, &huge);
+		if (!data) {
+			err = -ENOMEM;
+			goto close_fd;
+		}
+	}
+
+	err = nvme_cli_admin_passthru(dev, nvme_admin_nvme_mi_recv, 0, 0, cfg.namespace_id, 0, 0,
+				      cfg.nmimt << 11 | 4, cfg.opcode, cfg.nmd0, cfg.nmd1, 0, 0,
+				      cfg.data_len, data, 0, NULL, 0, &result);
+	if (err < 0) {
+		fprintf(stderr, "nmi_recv: %s\n", nvme_strerror(errno));
+	} else if (err) {
+		nvme_show_status(err);
+	} else  {
+		printf("%s Command is Success and result: 0x%08x (status: 0x%02x, response: 0x%06x)\n",
+		       nvme_cmd_to_string(true, nvme_admin_nvme_mi_recv),
+		       result, result & 0xff, result >> 8);
+		if (result & 0xff)
+			printf("status: %s\n", nvme_mi_status_to_string(result & 0xff));
+		if (strlen(cfg.input_file)) {
+			if (write(fd, (void *)data, cfg.data_len) < 0)
+				perror("failed to write data buffer");
+		} else if (data && !err) {
+			d((unsigned char *)data, cfg.data_len, 16, 1);
+		}
+	}
+
+	nvme_free(data, huge);
+close_fd:
+	if (strlen(cfg.input_file))
+		close(fd);
+close_dev:
+	dev_close(dev);
+ret:
+	return err;
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;
