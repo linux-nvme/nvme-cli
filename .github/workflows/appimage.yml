@@ -38,6 +38,7 @@ jobs:
     name: deploy AppImage
     runs-on: ubuntu-latest
     needs: build-appimage
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
     steps:
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
