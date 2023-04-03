@@ -33,11 +33,28 @@ jobs:
         with:
           name: AppImage
           path: '*.AppImage*'
-      - name: upload artifacts to external
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+
+  deploy-appimage:
+    name: deploy AppImage
+    runs-on: ubuntu-latest
+    needs: build-appimage
+    steps:
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
-          server: oxygen.monom.org
-          username: linux-nvme
-          password: ${{ secrets.SFTP_PASSWORD }}
-          protocol: sftp
+          workflow: ${{ github.event.workflow_run.workflow_id }}
+          workflow_conclusion: success
+      - name: FTP Deployer
+        uses: sand4rt/ftp-deployer@v1.4
+        with:
+          sftp: true
+          host: ${{ secrets.SFTP_SERVER }}
           port: 22
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          remote_folder: '/upload'
+          local_folder: '.'
+          cleanup: false
+          include: '[ "*", "**/*" ]'
+          exclude: '[".github/**", ".git/**", "*.env"]'
+          pasive: true
