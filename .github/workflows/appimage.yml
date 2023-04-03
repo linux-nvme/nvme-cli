@@ -29,6 +29,15 @@ jobs:
         with:
           recipe: .github/AppImageBuilder.yml
       - uses: actions/upload-artifact@v3
+        name: upload artifacts to github
         with:
           name: AppImage
           path: '*.AppImage*'
+      - name: upload artifacts to external
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: oxygen.monom.org
+          username: linux-nvme
+          password: ${{ secrets.SFTP_PASSWORD }}
+          protocol: sftp
+          port: 22
