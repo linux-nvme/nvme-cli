@@ -7232,15 +7232,14 @@ unsigned long long elapsed_utime(struct timeval start_time,
 	return err;
 }
 
-static int submit_io(int opcode, char *command, const char *desc,
-		     int argc, char **argv)
+static int submit_io(int opcode, char *command, const char *desc, int argc, char **argv)
 {
 	struct timeval start_time, end_time;
 	void *buffer, *mbuffer = NULL;
 	int err = 0;
 	int dfd, mfd;
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
-	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
+	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0, nblocks = 0;
 	__u32 dsmgmt = 0;
 	int logical_block_size = 0;
@@ -7352,13 +7351,11 @@ static int submit_io(int opcode, char *command, const char *desc,
 		err = open_exclusive(&dev, argc, argv, cfg.force);
 		if (err) {
 			if (errno == EBUSY) {
-				fprintf(stderr, "Failed to open %s.\n",
-					basename(argv[optind]));
-				fprintf(stderr,
-					"Namespace is currently busy.\n");
+				fprintf(stderr, "Failed to open %s.\n", basename(argv[optind]));
+				fprintf(stderr, "Namespace is currently busy.\n");
 				if (!cfg.force)
 					fprintf(stderr,
-					"Use the force [--force] option to ignore that.\n");
+						"Use the force [--force] option to ignore that.\n");
 			} else {
 				argconfig_print_help(desc, opts);
 			}
@@ -7390,8 +7387,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		control |= NVME_IO_STC;
 	if (cfg.dtype) {
 		if (cfg.dtype > 0xf) {
-			fprintf(stderr, "Invalid directive type, %x\n",
-				cfg.dtype);
+			fprintf(stderr, "Invalid directive type, %x\n", cfg.dtype);
 			err = -EINVAL;
 			goto close_dev;
 		}
@@ -7423,15 +7419,14 @@ static int submit_io(int opcode, char *command, const char *desc,
 		goto close_mfd;
 	}
 
-	if (nvme_get_logical_block_size(dev_fd(dev), cfg.namespace_id,
-					&logical_block_size) < 0)
+	if (nvme_get_logical_block_size(dev_fd(dev), cfg.namespace_id, &logical_block_size) < 0)
 		goto close_mfd;
 
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
-	if (cfg.data_size < buffer_size) {
+	if (cfg.data_size < buffer_size)
 		fprintf(stderr, "Rounding data size to fit block count (%lld bytes)\n",
-				buffer_size);
-	} else
+			buffer_size);
+	else
 		buffer_size = cfg.data_size;
 
 	/* Get the required block count. Note this is a zeroes based value. */
@@ -7459,8 +7454,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
 		ms = ns.lbaf[lba_index].ms;
 
-		err = nvme_identify_ns_csi(dev_fd(dev), 1, 0, NVME_CSI_NVM,
-					   &nvm_ns);
+		err = nvme_identify_ns_csi(dev_fd(dev), 1, 0, NVME_CSI_NVM, &nvm_ns);
 		if (!err) {
 			sts = nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_STS_MASK;
 			pif = (nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_PIF_MASK) >> 7;
@@ -7469,7 +7463,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;
 		if (ms && cfg.metadata_size < mbuffer_size) {
 			fprintf(stderr, "Rounding metadata size to fit block count (%lld bytes)\n",
-					mbuffer_size);
+				mbuffer_size);
 		} else {
 			mbuffer_size = cfg.metadata_size;
 		}
@@ -7491,7 +7485,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		if (err < 0) {
 			err = -errno;
 			fprintf(stderr, "failed to read data buffer from input"
-					" file %s\n", strerror(errno));
+				" file %s\n", strerror(errno));
 			goto free_mbuffer;
 		}
 	}
@@ -7501,7 +7495,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		if (err < 0) {
 			err = -errno;
 			fprintf(stderr, "failed to read meta-data buffer from"
-					" input file %s\n", strerror(errno));
+				" input file %s\n", strerror(errno));
 			goto free_mbuffer;
 		}
 	}
@@ -7553,24 +7547,24 @@ static int submit_io(int opcode, char *command, const char *desc,
 	err = nvme_io(&args, opcode);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
-		printf(" latency: %s: %llu us\n",
-			command, elapsed_utime(start_time, end_time));
-	if (err < 0)
+		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
+	if (err < 0) {
 		fprintf(stderr, "submit-io: %s\n", nvme_strerror(errno));
-	else if (err)
+	} else if (err) {
 		nvme_show_status(err);
-	else {
+	} else {
 		if (!(opcode & 1) && write(dfd, (void *)buffer, cfg.data_size) < 0) {
 			fprintf(stderr, "write: %s: failed to write buffer to output file\n",
-					strerror(errno));
+				strerror(errno));
 			err = -EINVAL;
 		} else if (!(opcode & 1) && cfg.metadata_size &&
-				write(mfd, (void *)mbuffer, mbuffer_size) < 0) {
+			   write(mfd, (void *)mbuffer, mbuffer_size) < 0) {
 			fprintf(stderr, "write: %s: failed to write meta-data buffer to output file\n",
-					strerror(errno));
+				strerror(errno));
 			err = -EINVAL;
-		} else
-			fprintf(stderr, "%s: Success\n", command);
+		} else {
+			printf("%s: Success\n", command);
+		}
 	}
 
 free_mbuffer:
@@ -8441,7 +8435,7 @@ static int passthru(int argc, char **argv, bool admin,
 			if (read(dfd, data, cfg.data_len) < 0) {
 				err = -errno;
 				fprintf(stderr, "failed to read write buffer "
-						"%s\n", strerror(errno));
+					"%s\n", strerror(errno));
 				goto free_data;
 			}
 		}
@@ -8495,8 +8489,7 @@ static int passthru(int argc, char **argv, bool admin,
 	gettimeofday(&end_time, NULL);
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
 	if (cfg.latency)
-		printf("%s Command %s latency: %llu us\n",
-		       admin ? "Admin" : "IO",
+		printf("%s Command %s latency: %llu us\n", admin ? "Admin" : "IO",
 		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
 		       elapsed_utime(start_time, end_time));
 
@@ -8505,10 +8498,8 @@ static int passthru(int argc, char **argv, bool admin,
 	} else if (err) {
 		nvme_show_status(err);
 	} else  {
-		fprintf(stderr, "%s Command %s is Success and result: 0x%08x\n",
-			admin ? "Admin" : "IO",
-			strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
-			result);
+		printf("%s Command %s is Success and result: 0x%08x\n", admin ? "Admin" : "IO",
+		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific", result);
 		if (cfg.read && strlen(cfg.input_file)) {
 			if (write(dfd, (void *)data, cfg.data_len) < 0)
 				perror("failed to write data buffer");
