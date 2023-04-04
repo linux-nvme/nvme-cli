@@ -9186,9 +9186,8 @@ static int dim_cmd(int argc, char **argv, struct command *command, struct plugin
 	return nvmf_dim(desc, argc, argv);
 }
 
-static int nmi_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 {
-	const char *desc = "Send a NVMe-MI Receive command to the specified device, return results.";
 	const char *opcode = "opcode (required)";
 	const char *data_len = "data I/O length (bytes)";
 	const char *nmimt = "nvme-mi message type";
@@ -9198,7 +9197,10 @@ static int nmi_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH;
 	void *data = NULL;
-	int err = 0, fd;
+	int err = 0;
+	bool send = admin_opcode == nvme_admin_nvme_mi_send ? true : false;
+	int fd = send ? STDIN_FILENO : STDOUT_FILENO;
+	int flags = send ? O_RDONLY : O_WRONLY | O_CREAT;
 	struct nvme_dev *dev;
 	__u32 result;
 	bool huge = false;
@@ -9238,10 +9240,8 @@ static int nmi_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (err)
 		goto ret;
 
-	fd = STDOUT_FILENO;
-
 	if (strlen(cfg.input_file)) {
-		fd = open(cfg.input_file, O_WRONLY | O_CREAT, mode);
+		fd = open(cfg.input_file, flags, mode);
 		if (fd < 0) {
 			perror(cfg.input_file);
 			err = -EINVAL;
@@ -9255,9 +9255,17 @@ static int nmi_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 			err = -ENOMEM;
 			goto close_fd;
 		}
+		if (send) {
+			if (read(fd, data, cfg.data_len) < 0) {
+				err = -errno;
+				fprintf(stderr, "failed to read write buffer %s\n",
+					strerror(errno));
+				goto free_data;
+			}
+		}
 	}
 
-	err = nvme_cli_admin_passthru(dev, nvme_admin_nvme_mi_recv, 0, 0, cfg.namespace_id, 0, 0,
+	err = nvme_cli_admin_passthru(dev, admin_opcode, 0, 0, cfg.namespace_id, 0, 0,
 				      cfg.nmimt << 11 | 4, cfg.opcode, cfg.nmd0, cfg.nmd1, 0, 0,
 				      cfg.data_len, data, 0, NULL, 0, &result);
 	if (err < 0) {
@@ -9266,18 +9274,19 @@ static int nmi_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		nvme_show_status(err);
 	} else  {
 		printf("%s Command is Success and result: 0x%08x (status: 0x%02x, response: 0x%06x)\n",
-		       nvme_cmd_to_string(true, nvme_admin_nvme_mi_recv),
+		       nvme_cmd_to_string(true, admin_opcode),
 		       result, result & 0xff, result >> 8);
 		if (result & 0xff)
 			printf("status: %s\n", nvme_mi_status_to_string(result & 0xff));
-		if (strlen(cfg.input_file)) {
+		if (!send && strlen(cfg.input_file)) {
 			if (write(fd, (void *)data, cfg.data_len) < 0)
 				perror("failed to write data buffer");
-		} else if (data && !err) {
+		} else if (data && !send && !err) {
 			d((unsigned char *)data, cfg.data_len, 16, 1);
 		}
 	}
 
+free_data:
 	nvme_free(data, huge);
 close_fd:
 	if (strlen(cfg.input_file))
@@ -9286,6 +9295,20 @@ close_dev:
 	dev_close(dev);
 ret:
 	return err;
+}
+
+static int nmi_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send a NVMe-MI Receive command to the specified device, return results.";
+
+	return nvme_mi(argc, argv, nvme_admin_nvme_mi_recv, desc);
+}
+
+static int nmi_send(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send a NVMe-MI Send command to the specified device, return results.";
+
+	return nvme_mi(argc, argv, nvme_admin_nvme_mi_send, desc);
 }
 
 void register_extension(struct plugin *plugin)

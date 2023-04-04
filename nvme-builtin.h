@@ -110,6 +110,7 @@ COMMAND_LIST(
 	ENTRY("io-mgmt-recv", "I/O Management Receive", io_mgmt_recv)
 	ENTRY("io-mgmt-send", "I/O Management Send", io_mgmt_send)
 	ENTRY("nvme-mi-recv", "Submit a NVMe-MI Receive command, return results", nmi_recv)
+	ENTRY("nvme-mi-send", "Submit a NVMe-MI Send command, return results", nmi_send)
 );
 
 #endif
