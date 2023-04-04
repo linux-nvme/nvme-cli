@@ -630,7 +630,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 					  enum nvme_print_flags flags,
 					  bool force)
 {
-	const char *transport, *traddr, *trsvcid, *subsysnqn;
+	const char *transport, *traddr, *host_traddr, *host_iface, *trsvcid, *subsysnqn;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c, cn;
 	struct nvme_fabrics_config cfg;
@@ -640,6 +640,8 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 		nvme_subsystem_for_each_ctrl(s, c) {
 			transport = nvme_ctrl_get_transport(c);
 			traddr = nvme_ctrl_get_traddr(c);
+			host_traddr = nvme_ctrl_get_host_traddr(c);
+			host_iface = nvme_ctrl_get_host_iface(c);
 
 			if (!transport && !traddr)
 				continue;
@@ -649,6 +651,22 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 			    strcmp(transport, "rdma") &&
 			    strcmp(transport, "fc"))
 				continue;
+
+			/* ignore if no host_traddr for fc */
+			if (!strcmp(transport, "fc")) {
+				if (!host_traddr) {
+					fprintf(stderr, "host_traddr required for fc\n");
+					continue;
+				}
+			}
+
+			/* ignore if host_iface set for any transport other than tcp */
+			if (!strcmp(transport, "rdma") || !strcmp(transport, "fc")) {
+				if (host_iface) {
+					fprintf(stderr, "host_iface not permitted for rdma or fc\n");
+					continue;
+				}
+			}
 
 			trsvcid = nvme_ctrl_get_trsvcid(c);
 			if (!trsvcid || !strcmp(trsvcid, ""))
@@ -668,8 +686,8 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 				.subsysnqn	= subsysnqn,
 				.transport	= transport,
 				.traddr		= traddr,
-				.host_traddr	= cfg.host_traddr,
-				.host_iface	= cfg.host_iface,
+				.host_traddr	= host_traddr,
+				.host_iface	= host_iface,
 				.trsvcid	= trsvcid,
 			};
 
