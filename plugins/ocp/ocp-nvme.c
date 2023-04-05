@@ -42,6 +42,7 @@
 #define C3_LATENCY_MON_OPCODE			0xC3
 #define C3_LATENCY_MON_VERSION			0x0001
 #define C3_GUID_LENGTH				16
+#define NVME_FEAT_OCP_LATENCY_MONITOR		0xC5
 
 #define C3_ACTIVE_BUCKET_TIMER_INCREMENT	5
 #define C3_ACTIVE_THRESHOLD_INCREMENT		5
@@ -95,6 +96,20 @@ struct __attribute__((__packed__)) ssd_latency_monitor_log {
 
 	__le16	log_page_version;		/* 0x1EE */
 	__u8	log_page_guid[0x10];		/* 0x1F0 */
+};
+
+struct __attribute__((__packed__)) feature_latency_monitor {
+	__u16 active_bucket_timer_threshold;
+	__u8  active_threshold_a;
+	__u8  active_threshold_b;
+	__u8  active_threshold_c;
+	__u8  active_threshold_d;
+	__u16 active_latency_config;
+	__u8  active_latency_minimum_window;
+	__u16 debug_log_trigger_enable;
+	__u8  discard_debug_log;
+	__u8  latency_monitor_feature_enable;
+	__u8  reserved[4083];
 };
 
 static int convert_ts(time_t time, char *ts_buf)
@@ -527,6 +542,136 @@ static int ocp_latency_monitor_log(int argc, char **argv,
 
 	dev_close(dev);
 	return ret;
+}
+
+int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	int err = -1;
+	struct nvme_dev *dev;
+	__u32 result;
+	struct feature_latency_monitor buf = {0,};
+	__u32  nsid = NVME_NSID_ALL;
+	struct stat nvme_stat;
+	struct nvme_id_ctrl ctrl;
+
+	const char *desc = "Set Latency Monitor feature.";
+	const char *active_bucket_timer_threshold = "This is the value that loads the Active Bucket Timer Threshold.";
+	const char *active_threshold_a = "This is the value that loads into the Active Threshold A.";
+	const char *active_threshold_b = "This is the value that loads into the Active Threshold B.";
+	const char *active_threshold_c = "This is the value that loads into the Active Threshold C.";
+	const char *active_threshold_d = "This is the value that loads into the Active Threshold D.";
+	const char *active_latency_config = "This is the value that loads into the Active Latency Configuration.";
+	const char *active_latency_minimum_window = "This is the value that loads into the Active Latency Minimum Window.";
+	const char *debug_log_trigger_enable = "This is the value that loads into the Debug Log Trigger Enable.";
+	const char *discard_debug_log = "Discard Debug Log.";
+	const char *latency_monitor_feature_enable = "Latency Monitor Feature Enable.";
+
+	struct config {
+		__u16 active_bucket_timer_threshold;
+		__u8 active_threshold_a;
+		__u8 active_threshold_b;
+		__u8 active_threshold_c;
+		__u8 active_threshold_d;
+		__u16 active_latency_config;
+		__u8 active_latency_minimum_window;
+		__u16 debug_log_trigger_enable;
+		__u8 discard_debug_log;
+		__u8 latency_monitor_feature_enable;
+	};
+
+	struct config cfg = {
+		.active_bucket_timer_threshold = 0x7E0,
+		.active_threshold_a = 0x5,
+		.active_threshold_b = 0x13,
+		.active_threshold_c = 0x1E,
+		.active_threshold_d = 0x2E,
+		.active_latency_config = 0xFFF,
+		.active_latency_minimum_window = 0xA,
+		.debug_log_trigger_enable = 0,
+		.discard_debug_log = 0,
+		.latency_monitor_feature_enable = 0x7,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("active_bucket_timer_threshold", 't', &cfg.active_bucket_timer_threshold, active_bucket_timer_threshold),
+		OPT_UINT("active_threshold_a", 'a', &cfg.active_threshold_a, active_threshold_a),
+		OPT_UINT("active_threshold_b", 'b', &cfg.active_threshold_b, active_threshold_b),
+		OPT_UINT("active_threshold_c", 'c', &cfg.active_threshold_c, active_threshold_c),
+		OPT_UINT("active_threshold_d", 'd', &cfg.active_threshold_d, active_threshold_d),
+		OPT_UINT("active_latency_config", 'f', &cfg.active_latency_config, active_latency_config),
+		OPT_UINT("active_latency_minimum_window", 'w', &cfg.active_latency_minimum_window, active_latency_minimum_window),
+		OPT_UINT("debug_log_trigger_enable", 'r', &cfg.debug_log_trigger_enable, debug_log_trigger_enable),
+		OPT_UINT("discard_debug_log", 'l', &cfg.discard_debug_log, discard_debug_log),
+		OPT_UINT("latency_monitor_feature_enable", 'e', &cfg.latency_monitor_feature_enable, latency_monitor_feature_enable),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = fstat(dev_fd(dev), &nvme_stat);
+	if (err < 0)
+		return err;
+
+	if (S_ISBLK(nvme_stat.st_mode)) {
+		err = nvme_get_nsid(dev_fd(dev), &nsid);
+		if (err < 0) {
+			perror("invalid-namespace-id");
+			return err;
+		}
+	}
+
+	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	if (err)
+		return err;
+
+	memset(&buf, 0, sizeof(struct feature_latency_monitor));
+
+	buf.active_bucket_timer_threshold = cfg.active_bucket_timer_threshold;
+	buf.active_threshold_a = cfg.active_threshold_a;
+	buf.active_threshold_b = cfg.active_threshold_b;
+	buf.active_threshold_c = cfg.active_threshold_c;
+	buf.active_threshold_d = cfg.active_threshold_d;
+	buf.active_latency_config = cfg.active_latency_config;
+	buf.active_latency_minimum_window = cfg.active_latency_minimum_window;
+	buf.debug_log_trigger_enable = cfg.debug_log_trigger_enable;
+	buf.discard_debug_log = cfg.discard_debug_log;
+	buf.latency_monitor_feature_enable = cfg.latency_monitor_feature_enable;
+
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = NVME_FEAT_OCP_LATENCY_MONITOR,
+		.nsid = 0,
+		.cdw12 = 0,
+		.save = 1,
+		.data_len = sizeof(struct feature_latency_monitor),
+		.data = (void*)&buf,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = &result,
+	};
+
+	err = nvme_set_features(&args);
+	if (err < 0) {
+		perror("set-feature");
+	} else if (!err) {
+		printf("NVME_FEAT_OCP_LATENCY_MONITOR: 0x%02x \n", NVME_FEAT_OCP_LATENCY_MONITOR);
+		printf("active bucket timer threshold: 0x%x \n", buf.active_bucket_timer_threshold);
+		printf("active threshold a: 0x%x \n", buf.active_threshold_a);
+		printf("active threshold b: 0x%x \n", buf.active_threshold_b);
+		printf("active threshold c: 0x%x \n", buf.active_threshold_c);
+		printf("active threshold d: 0x%x \n", buf.active_threshold_d);
+		printf("active latency config: 0x%x \n", buf.active_latency_config);
+		printf("active latency minimum window: 0x%x \n", buf.active_latency_minimum_window);
+		printf("debug log trigger enable: 0x%x \n", buf.debug_log_trigger_enable);
+		printf("discard debug log: 0x%x \n", buf.discard_debug_log);
+		printf("latency monitor feature enable: 0x%x \n", buf.latency_monitor_feature_enable);
+	} else if (err > 0) {
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err, false), err);
+	}
+
+	return err;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
