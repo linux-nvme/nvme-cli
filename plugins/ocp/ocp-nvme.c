@@ -46,6 +46,7 @@
 #define C3_ACTIVE_BUCKET_TIMER_INCREMENT	5
 #define C3_ACTIVE_THRESHOLD_INCREMENT		5
 #define C3_MINIMUM_WINDOW_INCREMENT		100
+#define C3_BUCKET_NUM				4
 
 static __u8 lat_mon_guid[C3_GUID_LENGTH] = {
 	0x92, 0x7a, 0xc0, 0x8c,
@@ -151,18 +152,41 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 	       le16_to_cpu(log_data->static_latency_stamp_units));
 	printf("  Debug Log Trigger Enable           %d\n",
 	       le16_to_cpu(log_data->debug_log_trigger_enable));
+	printf("  Debug Log Measured Latency         %d \n",
+	       le16_to_cpu(log_data->debug_log_measured_latency));
+	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1)
+	       printf("  Debug Log Latency Time Stamp       N/A \n");
+	else {
+	       convert_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
+	       printf("  Debug Log Latency Time Stamp       %s \n", ts_buf);
+	}
+	printf("  Debug Log Pointer                  %d \n",
+	       le16_to_cpu(log_data->debug_log_ptr));
+	printf("  Debug Counter Trigger Source       %d \n",
+	       le16_to_cpu(log_data->debug_log_counter_trigger));
+	printf("  Debug Log Stamp Units              %d \n",
+	       le16_to_cpu(log_data->debug_log_stamp_units));
+	printf("  Log Page Version                   %d \n",
+	       le16_to_cpu(log_data->log_page_version));
+
+	char guid[(C3_GUID_LENGTH * 2) + 1];
+	char *ptr = &guid[0];
+	for (i = C3_GUID_LENGTH - 1; i >= 0; i--) {
+		ptr += sprintf(ptr, "%02X", log_data->log_page_guid[i]);
+	}
+	printf("  Log Page GUID                      %s \n", guid);
+	printf("\n");
 
 	printf("                                                            Read                           Write                 Deallocate/Trim \n");
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		printf("  Active Latency Mode: Bucket %d      %27d     %27d     %27d\n",
 		       i,
 		       log_data->active_latency_config & (1 << pos),
 		       log_data->active_latency_config & (1 << pos),
 		       log_data->active_latency_config & (1 << pos));
 	}
-	printf("\n");
 
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		printf("  Active Bucket Counter: Bucket %d    %27d     %27d     %27d \n",
 		       i,
 		       le32_to_cpu(log_data->active_bucket_counter[i][READ]),
@@ -170,15 +194,7 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 		       le32_to_cpu(log_data->active_bucket_counter[i][TRIM]));
 	}
 
-	for (i = 0; i <= 3; i++) {
-		printf("  Active Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms\n",
-		       i,
-		       le16_to_cpu(log_data->active_measured_latency[i][READ]),
-		       le16_to_cpu(log_data->active_measured_latency[i][WRITE]),
-		       le16_to_cpu(log_data->active_measured_latency[i][TRIM]));
-	}
-
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		printf("  Active Latency Time Stamp: Bucket %d    ", i);
 		for (j = 0; j <= 2; j++) {
 			if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1)
@@ -191,7 +207,15 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 		printf("\n");
 	}
 
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Active Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms\n",
+		       i,
+		       le16_to_cpu(log_data->active_measured_latency[i][READ]),
+		       le16_to_cpu(log_data->active_measured_latency[i][WRITE]),
+		       le16_to_cpu(log_data->active_measured_latency[i][TRIM]));
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		printf("  Static Bucket Counter: Bucket %d    %27d     %27d     %27d\n",
 		       i,
 		       le32_to_cpu(log_data->static_bucket_counter[i][READ]),
@@ -199,15 +223,7 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 		       le32_to_cpu(log_data->static_bucket_counter[i][TRIM]));
 	}
 
-	for (i = 0; i <= 3; i++) {
-		printf("  Static Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms \n",
-		       i,
-		       le16_to_cpu(log_data->static_measured_latency[i][READ]),
-		       le16_to_cpu(log_data->static_measured_latency[i][WRITE]),
-		       le16_to_cpu(log_data->static_measured_latency[i][TRIM]));
-	}
-
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		printf("  Static Latency Time Stamp: Bucket %d    ", i);
 		for (j = 0; j <= 2; j++) {
 			if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1)
@@ -218,6 +234,14 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 			}
 		}
 		printf("\n");
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Static Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms \n",
+		       i,
+		       le16_to_cpu(log_data->static_measured_latency[i][READ]),
+		       le16_to_cpu(log_data->static_measured_latency[i][WRITE]),
+		       le16_to_cpu(log_data->static_measured_latency[i][TRIM]));
 	}
 
 	return 0;
@@ -254,17 +278,8 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 	json_object_add_value_uint(root, "Active Threshold D",
 		C3_ACTIVE_THRESHOLD_INCREMENT *
 		le16_to_cpu(log_data->active_threshold_d + 1));
-	json_object_add_value_uint(root, "Active Latency Minimum Window",
-		C3_MINIMUM_WINDOW_INCREMENT *
-		le16_to_cpu(log_data->active_latency_min_window));
-	json_object_add_value_uint(root, "Active Latency Stamp Units",
-		le16_to_cpu(log_data->active_latency_stamp_units));
-	json_object_add_value_uint(root, "Static Latency Stamp Units",
-		le16_to_cpu(log_data->static_latency_stamp_units));
-	json_object_add_value_uint(root, "Debug Log Trigger Enable",
-		le16_to_cpu(log_data->debug_log_trigger_enable));
 
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		struct json_object *bucket;
 
 		bucket = json_create_object();
@@ -276,7 +291,11 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		json_object_add_value_object(root, buf, bucket);
 	}
 
-	for (i = 0; i <= 3; i++) {
+	json_object_add_value_uint(root, "Active Latency Minimum Window",
+		C3_MINIMUM_WINDOW_INCREMENT *
+		le16_to_cpu(log_data->active_latency_min_window));
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		struct json_object *bucket;
 
 		bucket = json_create_object();
@@ -288,19 +307,7 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		json_object_add_value_object(root, buf, bucket);
 	}
 
-	for (i = 0; i <= 3; i++) {
-		struct json_object *bucket;
-
-		bucket = json_create_object();
-		sprintf(buf, "Active Measured Latency: Bucket %d", i);
-		for (j = 0; j <= 2; j++) {
-			json_object_add_value_uint(bucket, operation[j],
-				le16_to_cpu(log_data->active_measured_latency[i][j]));
-		}
-		json_object_add_value_object(root, buf, bucket);
-	}
-
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		struct json_object *bucket;
 
 		bucket = json_create_object();
@@ -316,7 +323,22 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		json_object_add_value_object(root, buf, bucket);
 	}
 
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		struct json_object *bucket;
+
+		bucket = json_create_object();
+		sprintf(buf, "Active Measured Latency: Bucket %d", i);
+		for (j = 0; j <= 2; j++) {
+			json_object_add_value_uint(bucket, operation[j],
+				le16_to_cpu(log_data->active_measured_latency[i][j]));
+		}
+		json_object_add_value_object(root, buf, bucket);
+	}
+
+	json_object_add_value_uint(root, "Active Latency Stamp Units",
+		le16_to_cpu(log_data->active_latency_stamp_units));
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		struct json_object *bucket;
 
 		bucket = json_create_object();
@@ -328,19 +350,7 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		json_object_add_value_object(root, buf, bucket);
 	}
 
-	for (i = 0; i <= 3; i++) {
-		struct json_object *bucket;
-
-		bucket = json_create_object();
-		sprintf(buf, "Static Measured Latency: Bucket %d", i);
-		for (j = 0; j <= 2; j++) {
-			json_object_add_value_uint(bucket, operation[j],
-				le16_to_cpu(log_data->static_measured_latency[i][j]));
-		}
-		json_object_add_value_object(root, buf, bucket);
-	}
-
-	for (i = 0; i <= 3; i++) {
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		struct json_object *bucket;
 
 		bucket = json_create_object();
@@ -355,6 +365,44 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		}
 		json_object_add_value_object(root, buf, bucket);
 	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		struct json_object *bucket;
+
+		bucket = json_create_object();
+		sprintf(buf, "Static Measured Latency: Bucket %d", i);
+		for (j = 0; j <= 2; j++) {
+			json_object_add_value_uint(bucket, operation[j],
+				le16_to_cpu(log_data->static_measured_latency[i][j]));
+		}
+		json_object_add_value_object(root, buf, bucket);
+	}
+
+	json_object_add_value_uint(root, "Static Latency Stamp Units",
+		le16_to_cpu(log_data->static_latency_stamp_units));
+	json_object_add_value_uint(root, "Debug Log Trigger Enable",
+		le16_to_cpu(log_data->debug_log_trigger_enable));
+	json_object_add_value_uint(root, "Debug Log Measured Latency",
+		le16_to_cpu(log_data->debug_log_measured_latency));
+	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1)
+		json_object_add_value_string(root, "Debug Log Latency Time Stamp", "NA");
+	else {
+		convert_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
+		json_object_add_value_string(root, "Debug Log Latency Time Stamp", ts_buf);
+	}
+	json_object_add_value_uint(root, "Debug Log Pointer",
+		le16_to_cpu(log_data->debug_log_ptr));
+	json_object_add_value_uint(root, "Debug Counter Trigger Source",
+		le16_to_cpu(log_data->debug_log_counter_trigger));
+	json_object_add_value_uint(root, "Debug Log Stamp Units",
+		le16_to_cpu(log_data->debug_log_stamp_units));
+	json_object_add_value_uint(root, "Log Page Version",
+		le16_to_cpu(log_data->log_page_version));
+	char guid[(C3_GUID_LENGTH * 2) + 1];
+	char *ptr = &guid[0];
+	for (i = C3_GUID_LENGTH - 1; i >= 0; i--)
+		ptr += sprintf(ptr, "%02X", log_data->log_page_guid[i]);
+	json_object_add_value_string(root, "Log Page GUID", guid);
 
 	json_print_object(root, NULL);
 	printf("\n");
