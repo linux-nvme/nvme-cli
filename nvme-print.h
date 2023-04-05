@@ -21,7 +21,7 @@ void nvme_show_lba_status_info(__u32 result);
 void nvme_show_relatives(const char *name);
 
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs);
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	void (*vendor_show)(__u8 *vs, struct json_object *root));
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		unsigned int lba_index, bool cap_only, enum nvme_print_flags flags);
