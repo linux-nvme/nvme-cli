@@ -38,14 +38,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 /// Latency Monitor Log
 
-#define C0_ACTIVE_BUCKET_TIMER_INCREMENT	5
-#define C0_ACTIVE_THRESHOLD_INCREMENT		5
-#define C0_MINIMUM_WINDOW_INCREMENT		100
-
 #define C3_LATENCY_MON_LOG_BUF_LEN		0x200
 #define C3_LATENCY_MON_OPCODE			0xC3
 #define C3_LATENCY_MON_VERSION			0x0001
 #define C3_GUID_LENGTH				16
+
+#define C3_ACTIVE_BUCKET_TIMER_INCREMENT	5
+#define C3_ACTIVE_THRESHOLD_INCREMENT		5
+#define C3_MINIMUM_WINDOW_INCREMENT		100
+
 static __u8 lat_mon_guid[C3_GUID_LENGTH] = {
 	0x92, 0x7a, 0xc0, 0x8c,
 	0xd0, 0x84, 0x6c, 0x9c,
@@ -124,25 +125,25 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 	printf("  Feature Status                     0x%x\n",
 	       log_data->feature_status);
 	printf("  Active Bucket Timer                %d min\n",
-	       C0_ACTIVE_BUCKET_TIMER_INCREMENT *
+	       C3_ACTIVE_BUCKET_TIMER_INCREMENT *
 	       le16_to_cpu(log_data->active_bucket_timer));
 	printf("  Active Bucket Timer Threshold      %d min\n",
-	       C0_ACTIVE_BUCKET_TIMER_INCREMENT *
+	       C3_ACTIVE_BUCKET_TIMER_INCREMENT *
 	       le16_to_cpu(log_data->active_bucket_timer_threshold));
 	printf("  Active Threshold A                 %d ms\n",
-	       C0_ACTIVE_THRESHOLD_INCREMENT *
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
 	       le16_to_cpu(log_data->active_threshold_a+1));
 	printf("  Active Threshold B                 %d ms\n",
-	       C0_ACTIVE_THRESHOLD_INCREMENT *
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
 	       le16_to_cpu(log_data->active_threshold_b+1));
 	printf("  Active Threshold C                 %d ms\n",
-	       C0_ACTIVE_THRESHOLD_INCREMENT *
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
 	       le16_to_cpu(log_data->active_threshold_c+1));
 	printf("  Active Threshold D                 %d ms\n",
-	       C0_ACTIVE_THRESHOLD_INCREMENT *
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
 	       le16_to_cpu(log_data->active_threshold_d+1));
 	printf("  Active Latency Minimum Window      %d ms\n",
-	       C0_MINIMUM_WINDOW_INCREMENT *
+	       C3_MINIMUM_WINDOW_INCREMENT *
 	       le16_to_cpu(log_data->active_latency_min_window));
 	printf("  Active Latency Stamp Units         %d\n",
 	       le16_to_cpu(log_data->active_latency_stamp_units));
@@ -236,25 +237,25 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 	json_object_add_value_uint(root, "Feature Status",
 		log_data->feature_status);
 	json_object_add_value_uint(root, "Active Bucket Timer",
-		C0_ACTIVE_BUCKET_TIMER_INCREMENT *
+		C3_ACTIVE_BUCKET_TIMER_INCREMENT *
 		le16_to_cpu(log_data->active_bucket_timer));
 	json_object_add_value_uint(root, "Active Bucket Timer Threshold",
-		C0_ACTIVE_BUCKET_TIMER_INCREMENT *
+		C3_ACTIVE_BUCKET_TIMER_INCREMENT *
 		le16_to_cpu(log_data->active_bucket_timer_threshold));
 	json_object_add_value_uint(root, "Active Threshold A",
-		C0_ACTIVE_THRESHOLD_INCREMENT *
+		C3_ACTIVE_THRESHOLD_INCREMENT *
 		le16_to_cpu(log_data->active_threshold_a + 1));
 	json_object_add_value_uint(root, "Active Threshold B",
-		C0_ACTIVE_THRESHOLD_INCREMENT *
+		C3_ACTIVE_THRESHOLD_INCREMENT *
 		le16_to_cpu(log_data->active_threshold_b + 1));
 	json_object_add_value_uint(root, "Active Threshold C",
-		C0_ACTIVE_THRESHOLD_INCREMENT *
+		C3_ACTIVE_THRESHOLD_INCREMENT *
 		le16_to_cpu(log_data->active_threshold_c + 1));
 	json_object_add_value_uint(root, "Active Threshold D",
-		C0_ACTIVE_THRESHOLD_INCREMENT *
+		C3_ACTIVE_THRESHOLD_INCREMENT *
 		le16_to_cpu(log_data->active_threshold_d + 1));
-	json_object_add_value_uint(root, "Active Lantency Minimum Window",
-		C0_MINIMUM_WINDOW_INCREMENT *
+	json_object_add_value_uint(root, "Active Latency Minimum Window",
+		C3_MINIMUM_WINDOW_INCREMENT *
 		le16_to_cpu(log_data->active_latency_min_window));
 	json_object_add_value_uint(root, "Active Latency Stamp Units",
 		le16_to_cpu(log_data->active_latency_stamp_units));
