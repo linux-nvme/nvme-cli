@@ -7682,6 +7682,22 @@ enum nvme_io_mgmt_send_mo {
  *        Handles included in the Placement Handle List
  * @rsvd394:  Reserved
  * @rsvd499:  Reserved for I/O Command Sets that extend this specification.
+ * @zns:      rsvd499( Zoned Namespace Command Set specific field )
+ * @znsco:    Zoned Namespace Create Options
+ *	      Bits 7-1: Reserved.
+ *	      Bits 0: Allocate ZRWA Resources (AZR): If set to ‘1’, then the
+ *	      namespace is to be created with the number of ZRWA resource specified
+ *	      in the RNUMZRWA field of this data structure. If cleared to ‘0’, then
+ *	      no ZRWA resources are allocated to the namespace to be created. If
+ *	      the ZRWASUP bit is cleared to ‘0’, then this field shall be ignored
+ *	      by the controller.
+ * @rar:      Requested Active Resources specifies the number of active
+ *	      resources to be allocated to the created namespace.
+ * @ror:      Requested Open Resources specifies the number of open resources
+ *	      to be allocated to the created namespace.
+ * @rnumzrwa: Requested Number of ZRWA Resources specifies the number of ZRWA
+ *	      resources to be allocated to the created namespace.
+ *        see &struct nvme_ns_mgmt_host_sw_specified_zns.
  * @phndl:    Placement Handle Associated RUH : This field specifies the Reclaim
  *        Unit Handle Identifier to be associated with the Placement Handle
  *        value. If the Flexible Data Placement capability is not supported or
@@ -7706,7 +7722,15 @@ struct nvme_ns_mgmt_host_sw_specified {
 	__le64			lbstm;
 	__le16			nphndls;
 	__u8			rsvd394[105];
-	__u8			rsvd499[13];
+	union {
+		__u8		rsvd499[13];
+		struct {
+			__u8	znsco;
+			__le32	rar;
+			__le32	ror;
+			__le32	rnumzrwa;
+		} __attribute__((packed)) zns;
+	};
 	__le16			phndl[128];
 	__u8			rsvd768[3328];
 };
