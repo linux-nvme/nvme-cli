@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-/* Copyright (c) 2022 Meta Platforms, Inc.
+/*
+ * Copyright (c) 2023 Meta Platforms, Inc.
  *
- * Authors: Arthur Shau <arthurshau@fb.com>,
- *          Wei Zhang <wzhang@fb.com>,
- *          Venkat Ramesh <venkatraghavan@fb.com>
+ * Authors: Arthur Shau <arthurshau@meta.com>,
+ *          Wei Zhang <wzhang@meta.com>,
+ *          Venkat Ramesh <venkatraghavan@meta.com>
  */
 #include <stdio.h>
 #include <string.h>
@@ -31,11 +32,16 @@
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/// Latency Monitor Log
+
 #define C0_ACTIVE_BUCKET_TIMER_INCREMENT	5
 #define C0_ACTIVE_THRESHOLD_INCREMENT		5
 #define C0_MINIMUM_WINDOW_INCREMENT		100
 
-/* C3 Latency Monitor Log Page */
 #define C3_LATENCY_MON_LOG_BUF_LEN		0x200
 #define C3_LATENCY_MON_OPCODE			0xC3
 #define C3_LATENCY_MON_VERSION			0x0001
@@ -88,8 +94,6 @@ struct __attribute__((__packed__)) ssd_latency_monitor_log {
 	__le16	log_page_version;		/* 0x1EE */
 	__u8	log_page_guid[0x10];		/* 0x1F0 */
 };
-
-static const __u8 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS = 0xC3;
 
 static int convert_ts(time_t time, char *ts_buf)
 {
@@ -439,12 +443,6 @@ out:
 	return ret;
 }
 
-static int smart_add_log(int argc, char **argv, struct command *cmd,
-			 struct plugin *plugin)
-{
-	return ocp_smart_add_log(argc, argv, cmd, plugin);
-}
-
 static int ocp_latency_monitor_log(int argc, char **argv,
 				   struct command *command,
 				   struct plugin *plugin)
@@ -481,11 +479,11 @@ static int ocp_latency_monitor_log(int argc, char **argv,
 	return ret;
 }
 
-static int clear_fw_update_history(int argc, char **argv,
-				   struct command *cmd, struct plugin *plugin)
-{
-	return ocp_clear_fw_update_history(argc, argv, cmd, plugin);
-}
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/// EOL/PLP Failure Mode
 
 static const char *eol_plp_failure_mode_to_string(__u8 mode)
 {
@@ -636,6 +634,26 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 	dev_close(dev);
 
 	return err;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/// Misc
+
+static const __u8 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS = 0xC3;
+
+static int clear_fw_update_history(int argc, char **argv,
+				   struct command *cmd, struct plugin *plugin)
+{
+	return ocp_clear_fw_update_history(argc, argv, cmd, plugin);
+}
+
+static int smart_add_log(int argc, char **argv, struct command *cmd,
+			 struct plugin *plugin)
+{
+	return ocp_smart_add_log(argc, argv, cmd, plugin);
 }
 
 static int clear_pcie_corectable_error_counters(int argc, char **argv,
