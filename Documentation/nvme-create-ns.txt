@@ -22,6 +22,10 @@ SYNOPSIS
 			[--timeout=<timeout> | -t <timeout>]
 			[--nsze-si=<nsze-si> | -S <nsze-si>]
 			[--ncap-si=<ncap-si> | -C <ncap-si>]
+			[--azr | -z]
+			[--rar=<rar> | -r <rar>]
+			[--ror=<ror> | -o <ror>]
+			[--rnumzrwa=<rnumzrwa> | -u <rnumzrwa>]
 			[--phndls=<placement-handle-list,> | -p <placement-handle-list,>]
 
 DESCRIPTION
@@ -97,6 +101,28 @@ OPTIONS
 	The namespace capacity (NCAP) in standard SI units.
 	The value SI suffixed is divided by the namespace LBA size to set as NCAP.
 	If the value not suffixed it is set as same with the ncap option.
+
+-z::
+--azr::
+	Allocate ZRWA Resources.
+	If set to 1, then the namespace is to be created with the number of ZRWA
+	resource specified in the RNUMZRWA field of this data structure. If cleared
+	to 0, then no ZRWA resources are allocated to the namespace to be created.
+
+-r <rar>::
+--rar=<rar>::
+	Requested Active Resources. This field specifies the number of active
+	resources to be allocated to the created namespace.
+
+-o <ror>::
+--ror=<ror>::
+	Requested Open Resources. This field specifies the number of open resources
+	to be allocated to the created namespace.
+
+-u <rnumzrwa>::
+--rnumzrwa=<rnumzrwa>::
+	Requested Number of ZRWA Resources. This field specifies the number of ZRWA
+	resources to be allocated to the created namespace.
 
 -p <placement-handle-list,>::
 --phndls=<placement-handle-list,>::

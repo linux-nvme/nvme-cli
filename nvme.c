@@ -2998,6 +2998,14 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		"value not entered";
 	const char *nsze_si = "size of ns (NSZE) in standard SI units";
 	const char *ncap_si = "capacity of ns (NCAP) in standard SI units";
+	const char *azr = "Allocate ZRWA Resources (AZR) for "\
+		"Zoned Namespace Command Set";
+	const char *rar = "Requested Active Resources (RAR) for "\
+		"Zoned Namespace Command Set";
+	const char *ror = "Requested Open Resources (ROR) for "\
+		"Zoned Namespace Command Set";
+	const char *rnumzrwa = "Requested Number of ZRWA Resources (RNUMZRWA) for "\
+		"Zoned Namespace Command Set";
 	const char *phndls = "Comma separated list of Placement Handle "\
 		"Associated RUH";
 
@@ -3023,6 +3031,10 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u16	nphndls;
 		char	*nsze_si;
 		char	*ncap_si;
+		bool	azr;
+		__u32	rar;
+		__u32	ror;
+		__u32	rnumzrwa;
 		char	*phndls;
 	};
 
@@ -3041,6 +3053,10 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.nphndls	= 0,
 		.nsze_si	= NULL,
 		.ncap_si	= NULL,
+		.azr		= false,
+		.rar		= 0,
+		.ror		= 0,
+		.rnumzrwa	= 0,
 		.phndls		= "",
 	};
 
@@ -3059,6 +3075,10 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_SHRT("nphndls",	     'n', &cfg.nphndls,  nphndls),
 		OPT_STR("nsze-si",       'S', &cfg.nsze_si,  nsze_si),
 		OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
+		OPT_FLAG("azr",          'z', &cfg.azr,      azr),
+		OPT_UINT("rar",          'r', &cfg.rar,      rar),
+		OPT_UINT("ror",          'o', &cfg.ror,      ror),
+		OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, rnumzrwa),
 		OPT_LIST("phndls",	     'p', &cfg.phndls,   phndls),
 		OPT_END()
 	};
@@ -3119,6 +3139,13 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (err)
 		goto close_dev;
 
+	if (cfg.csi != NVME_CSI_ZNS &&
+		(cfg.azr || cfg.rar || cfg.ror|| cfg.rnumzrwa)) {
+		fprintf(stderr, "Invaild ZNS argument is given (CSI:%#x)\n", cfg.csi);
+		err = -EINVAL;
+		goto close_dev;
+	}
+
 	struct nvme_ns_mgmt_host_sw_specified data = {
 		.nsze = cpu_to_le64(cfg.nsze),
 		.ncap = cpu_to_le64(cfg.ncap),
@@ -3128,6 +3155,10 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.anagrpid = cpu_to_le32(cfg.anagrpid),
 		.nvmsetid = cpu_to_le16(cfg.nvmsetid),
 		.lbstm = cpu_to_le64(cfg.lbstm),
+		.zns.znsco = cfg.azr,
+		.zns.rar = cpu_to_le32(cfg.rar),
+		.zns.ror = cpu_to_le32(cfg.ror),
+		.zns.rnumzrwa = cpu_to_le32(cfg.rnumzrwa),
 		.nphndls = cpu_to_le16(cfg.nphndls),
 	};
 
