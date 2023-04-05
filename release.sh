@@ -55,6 +55,8 @@ else
     exit 1
 fi
 
+git -C subprojects/libnvme fetch --all
+
 # extract the vesion string from libnvme by using the ref
 # defined in libnvme.wrap.
 libnvme_ref=$(sed -n "s/revision = \([0-9a-z]\+\)/\1/p" subprojects/libnvme.wrap)
