@@ -1481,7 +1481,7 @@ static int nvme_bytes_to_lba(nvme_ns_t n, off_t offset, size_t count,
 	int bs;
 
 	bs = nvme_ns_get_lba_size(n);
-	if (!count || offset & bs || count & bs) {
+	if (!count || offset & bs || count & (bs - 1)) {
 		errno = EINVAL;
 		return -1;
 	}
