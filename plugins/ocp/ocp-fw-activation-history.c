@@ -212,7 +212,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 		else if (print_flag == NORMAL)
 			ocp_fw_activation_history_normal(&fw_history);
 		else {
-			fprintf(stderr, "Error: Failed to parse.\n");
+			fprintf(stderr, "Error: Invalid output format.\n");
 			err = -EINVAL;
 		}
 	}
