@@ -169,9 +169,9 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 	       le16_to_cpu(log_data->debug_log_trigger_enable));
 	printf("  Debug Log Measured Latency         %d \n",
 	       le16_to_cpu(log_data->debug_log_measured_latency));
-	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1)
+	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1) {
 	       printf("  Debug Log Latency Time Stamp       N/A \n");
-	else {
+	} else {
 	       convert_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
 	       printf("  Debug Log Latency Time Stamp       %s \n", ts_buf);
 	}
@@ -212,9 +212,9 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		printf("  Active Latency Time Stamp: Bucket %d    ", i);
 		for (j = 2; j >= 0; j--) {
-			if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1)
+			if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1) {
 				printf("                    N/A         ");
-			else {
+			} else {
 				convert_ts(le64_to_cpu(log_data->active_latency_timestamp[i][j]), ts_buf);
 				printf("%s     ", ts_buf);
 			}
@@ -242,9 +242,9 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		printf("  Static Latency Time Stamp: Bucket %d    ", i);
 		for (j = 2; j >= 0; j--) {
-			if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1)
+			if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1) {
 				printf("                    N/A         ");
-			else {
+			} else {
 				convert_ts(le64_to_cpu(log_data->static_latency_timestamp[i][j]), ts_buf);
 				printf("%s     ", ts_buf);
 			}
@@ -329,9 +329,9 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		bucket = json_create_object();
 		sprintf(buf, "Active Latency Time Stamp: Bucket %d", i);
 		for (j = 2; j >= 0; j--) {
-			if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1)
+			if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1) {
 				json_object_add_value_string(bucket, operation[j], "NA");
-			else {
+			} else {
 				convert_ts(le64_to_cpu(log_data->active_latency_timestamp[i][j]), ts_buf);
 				json_object_add_value_string(bucket, operation[j], ts_buf);
 			}
@@ -372,9 +372,9 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		bucket = json_create_object();
 		sprintf(buf, "Static Latency Time Stamp: Bucket %d", i);
 		for (j = 2; j >= 0; j--) {
-			if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1)
+			if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1) {
 				json_object_add_value_string(bucket, operation[j], "NA");
-			else {
+			} else {
 				convert_ts(le64_to_cpu(log_data->static_latency_timestamp[i][j]), ts_buf);
 				json_object_add_value_string(bucket, operation[j], ts_buf);
 			}
@@ -400,9 +400,9 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		le16_to_cpu(log_data->debug_log_trigger_enable));
 	json_object_add_value_uint(root, "Debug Log Measured Latency",
 		le16_to_cpu(log_data->debug_log_measured_latency));
-	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1)
+	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1) {
 		json_object_add_value_string(root, "Debug Log Latency Time Stamp", "NA");
-	else {
+	} else {
 		convert_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
 		json_object_add_value_string(root, "Debug Log Latency Time Stamp", ts_buf);
 	}
@@ -829,6 +829,420 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 	dev_close(dev);
 
 	return err;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/// Telemetry Log
+
+#define TELEMETRY_HEADER_SIZE 512
+#define TELEMETRY_BYTE_PER_BLOCK 512
+#define TELEMETRY_TRANSFER_SIZE 1024
+#define FILE_NAME_SIZE 2048
+
+enum TELEMETRY_TYPE {
+	TELEMETRY_TYPE_NONE       = 0,
+	TELEMETRY_TYPE_HOST       = 7,
+	TELEMETRY_TYPE_CONTROLLER = 8,
+	TELEMETRY_TYPE_HOST_0     = 9,
+	TELEMETRY_TYPE_HOST_1     = 10,
+};
+
+struct telemetry_initiated_log {
+	__u8  LogIdentifier;
+	__u8  Reserved1[4];
+	__u8  IEEE[3];
+	__le16 DataArea1LastBlock;
+	__le16 DataArea2LastBlock;
+	__le16 DataArea3LastBlock;
+	__u8  Reserved2[368];
+	__u8  DataAvailable;
+	__u8  DataGenerationNumber;
+	__u8  ReasonIdentifier[128];
+};
+
+static void get_serial_number(struct nvme_id_ctrl *ctrl, char *sn)
+{
+	int i;
+	/* Remove trailing spaces from the name */
+	for (i = 0; i < sizeof(ctrl->sn); i++) {
+		if (ctrl->sn[i] == ' ')
+			break;
+		sn[i] = ctrl->sn[i];
+	}
+}
+
+static int get_telemetry_header(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
+				__u32 data_len, void *data, __u8 nLSP, __u8 nRAE)
+{
+	struct nvme_passthru_cmd cmd = {
+		.opcode = nvme_admin_get_log_page,
+		.nsid = ns,
+		.addr = (__u64)(uintptr_t) data,
+		.data_len = data_len,
+	};
+
+	__u32 numd = (data_len >> 2) - 1;
+	__u16 numdu = numd >> 16;
+	__u16 numdl = numd & 0xffff;
+
+	cmd.cdw10 = tele_type | (nLSP & 0x0F) << 8 | (nRAE & 0x01) << 15 | (numdl & 0xFFFF) << 16;
+	cmd.cdw11 = numdu;
+	cmd.cdw12 = 0;
+	cmd.cdw13 = 0;
+	cmd.cdw14 = 0;
+
+	return nvme_submit_admin_passthru(dev_fd(dev), &cmd, NULL);
+}
+
+static void print_telemetry_header(struct telemetry_initiated_log *logheader,
+		int tele_type)
+{
+	if (logheader != NULL) {
+		unsigned int i = 0, j = 0;
+
+		if (tele_type == TELEMETRY_TYPE_HOST)
+			printf("============ Telemetry Host Header ============\n");
+		else
+			printf("========= Telemetry Controller Header =========\n");
+
+		printf("Log Identifier         : 0x%02X\n", logheader->LogIdentifier);
+		printf("IEEE                   : 0x%02X%02X%02X\n",
+			logheader->IEEE[0], logheader->IEEE[1], logheader->IEEE[2]);
+		printf("Data Area 1 Last Block : 0x%04X\n",
+			le16_to_cpu(logheader->DataArea1LastBlock));
+		printf("Data Area 2 Last Block : 0x%04X\n",
+			le16_to_cpu(logheader->DataArea2LastBlock));
+		printf("Data Area 3 Last Block : 0x%04X\n",
+			le16_to_cpu(logheader->DataArea3LastBlock));
+		printf("Data Available         : 0x%02X\n",	logheader->DataAvailable);
+		printf("Data Generation Number : 0x%02X\n",	logheader->DataGenerationNumber);
+		printf("Reason Identifier      :\n");
+
+		for (i = 0; i < 8; i++) {
+			for (j = 0; j < 16; j++)
+				printf("%02X ",	logheader->ReasonIdentifier[127 - ((i * 16) + j)]);
+			printf("\n");
+		}
+		printf("===============================================\n\n");
+	}
+}
+
+static int extract_dump_get_log(struct nvme_dev *dev, char *featurename, char *filename, char *sn,
+				int dumpsize, int transfersize, __u32 nsid, __u8 log_id,
+				__u8 lsp, __u64 offset, bool rae)
+{
+	int i = 0, err = 0;
+
+	char *data = calloc(transfersize, sizeof(char));
+	char filepath[FILE_NAME_SIZE] = {0,};
+	int output = 0;
+	int total_loop_cnt = dumpsize / transfersize;
+	int last_xfer_size = dumpsize % transfersize;
+
+	if (last_xfer_size != 0)
+		total_loop_cnt++;
+	else
+		last_xfer_size = transfersize;
+
+	if (filename == 0)
+		snprintf(filepath, FILE_NAME_SIZE, "%s_%s.bin", featurename, sn);
+	else
+		snprintf(filepath, FILE_NAME_SIZE, "%s%s_%s.bin", filename, featurename, sn);
+
+	for (i = 0; i < total_loop_cnt; i++) {
+		memset(data, 0, transfersize);
+
+		struct nvme_get_log_args args = {
+			.lpo = offset,
+			.result = NULL,
+			.log = (void *)data,
+			.args_size = sizeof(args),
+			.fd = dev_fd(dev),
+			.lid = log_id,
+			.len = transfersize,
+			.nsid = nsid,
+			.lsp = lsp,
+			.uuidx = 0,
+			.rae = rae,
+			.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+			.csi = NVME_CSI_NVM,
+			.ot = false,
+		};
+
+		err = nvme_get_log(&args);
+		if (err) {
+			if (i > 0)
+				goto close_output;
+			else
+				goto end;
+		}
+
+		if (i != total_loop_cnt - 1) {
+			if (i == 0) {
+				output = open(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				if (output < 0) {
+					err = -13;
+					goto end;
+				}
+			}
+			if (write(output, data, transfersize) < 0) {
+				err = -10;
+				goto close_output;
+			}
+		} else {
+			if (write(output, data, last_xfer_size) < 0) {
+				err = -10;
+				goto close_output;
+			}
+		}
+		offset += transfersize;
+		printf("%d%%\r", (i + 1) * 100 / total_loop_cnt);
+	}
+	printf("100%%\nThe log file was saved at \"%s\"\n", filepath);
+
+close_output:
+	close(output);
+
+end:
+	free(data);
+	return err;
+}
+
+static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
+				enum TELEMETRY_TYPE tele_type, int data_area, bool header_print)
+{
+	__u32 err = 0, nsid = 0;
+	__u8 lsp = 0, rae = 0;
+
+	char data[TELEMETRY_TRANSFER_SIZE] = {0,};
+	char *featurename = 0;
+
+	if (tele_type == TELEMETRY_TYPE_HOST_0) {
+		featurename = "Host(0)";
+		lsp = 0;
+		rae = 0;
+		tele_type = TELEMETRY_TYPE_HOST;
+	} else if (tele_type == TELEMETRY_TYPE_HOST_1) {
+		featurename = "Host(1)";
+		lsp = 1;
+		rae = 0;
+		tele_type = TELEMETRY_TYPE_HOST;
+	} else {
+		featurename = "Controller";
+		lsp = 0;
+		rae = 1;
+	}
+
+	err = get_telemetry_header(dev, nsid, tele_type, TELEMETRY_HEADER_SIZE,
+				(void *)data, lsp, rae);
+	if (err)
+		return err;
+
+	struct telemetry_initiated_log *logheader = (struct telemetry_initiated_log *)data;
+
+	if (header_print)
+		print_telemetry_header(logheader, tele_type);
+
+	__u64 offset = 0, size = 0;
+
+	switch (data_area) {
+	case 1:
+		offset  = TELEMETRY_HEADER_SIZE;
+		size    = le16_to_cpu(logheader->DataArea1LastBlock);
+		break;
+	case 2:
+		offset  = TELEMETRY_HEADER_SIZE
+				+ (le16_to_cpu(logheader->DataArea1LastBlock) * TELEMETRY_BYTE_PER_BLOCK);
+		size    = le16_to_cpu(logheader->DataArea2LastBlock)
+				- le16_to_cpu(logheader->DataArea1LastBlock);
+		break;
+	case 3:
+		offset  = TELEMETRY_HEADER_SIZE
+				+ (le16_to_cpu(logheader->DataArea2LastBlock) * TELEMETRY_BYTE_PER_BLOCK);
+		size    = le16_to_cpu(logheader->DataArea3LastBlock)
+				- le16_to_cpu(logheader->DataArea2LastBlock);
+		break;
+	default:
+		break;
+	}
+
+	if (size == 0) {
+		printf("Telemetry %s Area %d is empty.\n", featurename, data_area);
+		return err;
+	}
+
+	char dumpname[FILE_NAME_SIZE] = {0,};
+
+	snprintf(dumpname, FILE_NAME_SIZE,
+					"Telemetry_%s_Area_%d", featurename, data_area);
+	err = extract_dump_get_log(dev, dumpname, filename, sn, size * TELEMETRY_BYTE_PER_BLOCK,
+			TELEMETRY_TRANSFER_SIZE, nsid, tele_type,
+			0, offset, rae);
+
+	return err;
+}
+
+static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
+			      struct plugin *plugin)
+{
+	struct nvme_dev *dev;
+	int err = 0;
+	const char *desc = "Retrieve and save telemetry log.";
+	const char *type = "Telemetry Type; 'host[Create bit]' or 'controller'";
+	const char *area = "Telemetry Data Area; 1 or 3";
+	const char *file = "Output file name with path;\n"
+			"e.g. '-o ./path/name'\n'-o ./path1/path2/';\n"
+			"If requested path does not exist, the directory will be newly created.";
+
+	__u32  nsid = NVME_NSID_ALL;
+	struct stat nvme_stat;
+	char sn[21] = {0,};
+	struct nvme_id_ctrl ctrl;
+	bool is_support_telemetry_controller;
+
+	int tele_type = 0;
+	int tele_area = 0;
+
+	struct config {
+		char *type;
+		int area;
+		char *file;
+	};
+
+	struct config cfg = {
+		.type = NULL,
+		.area = 0,
+		.file = NULL,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_STR("telemetry_type", 't', &cfg.type, type),
+		OPT_INT("telemetry_data_area", 'a', &cfg.area, area),
+		OPT_FILE("output-file", 'o', &cfg.file, file),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = fstat(dev_fd(dev), &nvme_stat);
+	if (err < 0)
+		return err;
+
+	if (S_ISBLK(nvme_stat.st_mode)) {
+		err = nvme_get_nsid(dev_fd(dev), &nsid);
+		if (err < 0)
+			return err;
+	}
+
+	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	if (err != 0) {
+		return err;
+	}
+
+	get_serial_number(&ctrl, sn);
+
+	is_support_telemetry_controller = ((ctrl.lpa & 0x8) >> 3);
+
+	if (!cfg.type && !cfg.area) {
+		tele_type = TELEMETRY_TYPE_NONE;
+		tele_area = 0;
+	} else if (cfg.type && cfg.area) {
+		if (!strcmp(cfg.type, "host0"))
+			tele_type = TELEMETRY_TYPE_HOST_0;
+		else if (!strcmp(cfg.type, "host1"))
+			tele_type = TELEMETRY_TYPE_HOST_1;
+		else if	(!strcmp(cfg.type, "controller"))
+			tele_type = TELEMETRY_TYPE_CONTROLLER;
+
+		tele_area = cfg.area;
+
+		if ((tele_area != 1 && tele_area != 3) ||
+			(tele_type == TELEMETRY_TYPE_CONTROLLER && tele_area != 3)) {
+			printf("\nUnsupported parameters entered.\n");
+			printf("Possible combinations; {'host0',1}, {'host0',3}, "
+					"{'host1',1}, {'host1',3}, {'controller',3}\n");
+			return err;
+		}
+	} else {
+		printf("\nShould provide these all; 'telemetry_type' "
+				"and 'telemetry_data_area'\n");
+		return err;
+	}
+
+	if (tele_type == TELEMETRY_TYPE_NONE) {
+		printf("\n-------------------------------------------------------------\n");
+		/* Host 0 (lsp == 0) must be executed before Host 1 (lsp == 1). */
+		printf("\nExtracting Telemetry Host 0 Dump (Data Area 1)...\n");
+
+		err = get_telemetry_dump(dev, cfg.file, sn,
+				TELEMETRY_TYPE_HOST_0, 1, true);
+		if (err != 0)
+			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
+
+		printf("\n-------------------------------------------------------------\n");
+
+		printf("\nExtracting Telemetry Host 0 Dump (Data Area 3)...\n");
+
+		err = get_telemetry_dump(dev, cfg.file, sn,
+				TELEMETRY_TYPE_HOST_0, 3, false);
+		if (err != 0)
+			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
+
+		printf("\n-------------------------------------------------------------\n");
+
+		printf("\nExtracting Telemetry Host 1 Dump (Data Area 1)...\n");
+
+		err = get_telemetry_dump(dev, cfg.file, sn,
+				TELEMETRY_TYPE_HOST_1, 1, true);
+		if (err != 0)
+			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
+
+		printf("\n-------------------------------------------------------------\n");
+
+		printf("\nExtracting Telemetry Host 1 Dump (Data Area 3)...\n");
+
+		err = get_telemetry_dump(dev, cfg.file, sn,
+				TELEMETRY_TYPE_HOST_1, 3, false);
+		if (err != 0)
+			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
+
+		printf("\n-------------------------------------------------------------\n");
+
+		printf("\nExtracting Telemetry Controller Dump (Data Area 3)...\n");
+
+		if (is_support_telemetry_controller == true) {
+			err = get_telemetry_dump(dev, cfg.file, sn,
+					TELEMETRY_TYPE_CONTROLLER, 3, true);
+			if (err != 0)
+				fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
+		}
+
+		printf("\n-------------------------------------------------------------\n");
+	} else if (tele_type == TELEMETRY_TYPE_CONTROLLER) {
+		printf("Extracting Telemetry Controller Dump (Data Area %d)...\n", tele_area);
+
+		if (is_support_telemetry_controller == true) {
+			err = get_telemetry_dump(dev, cfg.file, sn, tele_type, tele_area, true);
+			if (err != 0)
+				fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
+		}
+	} else {
+		printf("Extracting Telemetry Host(%d) Dump (Data Area %d)...\n",
+				(tele_type == TELEMETRY_TYPE_HOST_0) ? 0 : 1, tele_area);
+
+		err = get_telemetry_dump(dev, cfg.file, sn, tele_type, tele_area, true);
+		if (err != 0)
+			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
+	}
+
+	printf("telemetry-log done.\n");
+
+return err;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

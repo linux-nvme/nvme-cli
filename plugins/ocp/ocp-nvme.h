@@ -18,6 +18,7 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", NVME_VERSION),
 		ENTRY("smart-add-log", "Retrieve extended SMART Information", smart_add_log)
 		ENTRY("latency-monitor-log", "Get Latency Monitor Log Page", ocp_latency_monitor_log)
 		ENTRY("set-latency-monitor-feature", "Set Latency Monitor feature", ocp_set_latency_monitor_feature)
+		ENTRY("internal-log", "Retrieve and save internal device telemetry log", ocp_telemetry_log)
 		ENTRY("clear-fw-activate-history", "Clear firmware update history log", clear_fw_update_history)
 		ENTRY("eol-plp-failure-mode", "Define EOL or PLP circuitry failure mode.", eol_plp_failure_mode)
 		ENTRY("clear-pcie-correctable-error-counters", "Clear PCIe correctable error counters", clear_pcie_corectable_error_counters)
