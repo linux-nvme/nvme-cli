@@ -48,7 +48,7 @@ struct __attribute__ ((packed)) fw_activation_history {
 	__u64 log_page_guid[2];
 };
 
-static void ocp_fw_activation_history_print(const struct fw_activation_history *fw_history)
+static void ocp_fw_activation_history_normal(const struct fw_activation_history *fw_history)
 {
 	printf("Firmware History Log:\n");
 
@@ -210,7 +210,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 		if (print_flag == JSON)
 			ocp_fw_activation_history_json(&fw_history);
 		else if (print_flag == NORMAL)
-			ocp_fw_activation_history_print(&fw_history);
+			ocp_fw_activation_history_normal(&fw_history);
 		else {
 			fprintf(stderr, "Error: Failed to parse.\n");
 			err = -EINVAL;
