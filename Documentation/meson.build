@@ -88,6 +88,7 @@ adoc_sources = [
   'nvme-ocp-latency-monitor-log',
   'nvme-ocp-smart-add-log',
   'nvme-ocp-clear-fw-activate-history',
+  'nvme-ocp-clear-pcie-correctable-error-counters',
   'nvme-ocp-eol-plp-failure-mode',
   'nvme-persistent-event-log',
   'nvme-pred-lat-event-agg-log',
