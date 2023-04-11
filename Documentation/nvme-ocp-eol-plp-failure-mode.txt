@@ -1,0 +1,69 @@
+nvme-ocp-eol-plp-failure-mode(1)
+================================
+
+NAME
+----
+nvme-ocp-eol-plp-failure-mode - Define and print EOL or PLP circuitry failure mode
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp eol-plp-failure-mode' <device> [--mode=<mode> | -m <mode>] [--no-uuid | -n] [--save | -s]
+					 [--sel=<select> | -s <select>]
+
+DESCRIPTION
+-----------
+Define EOL or PLP circuitry failure mode.
+No argument prints current mode.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-m <mode>::
+--mode=<mode>::
+	Set the EOL or PLP circuitry failure mode to [0-3] ('0: default',
+        '1: rom', '2: wtm' or '3: normal'). Only one mode
+	can be used at a time. The default is rom.
+
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+        for old OCP 1.0 support)
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+-s <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
++
+[]
+|==================
+|Select|Description
+|0|Current
+|1|Default
+|2|Saved
+|3|Supported capabilities
+|4-7|Reserved
+|==================
+
+EXAMPLES
+--------
+* Has the program issue a eol-plp-failure-mode to retrieve the 0xC2 get features.
++
+------------
+# nvme ocp eol-plp-failure-mode /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
