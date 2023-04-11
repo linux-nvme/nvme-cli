@@ -65,3 +65,5 @@ uuid = executable(
 )
 
 test('uuid', uuid)
+
+subdir('nbft')
