@@ -84,6 +84,7 @@ adoc_sources = [
   'nvme-netapp-smdevices',
   'nvme-ns-descs',
   'nvme-ns-rescan',
+  'nvme-nvme-mi-recv',
   'nvme-nvm-id-ctrl',
   'nvme-ocp-latency-monitor-log',
   'nvme-ocp-smart-add-log',
