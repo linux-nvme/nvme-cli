@@ -51,11 +51,11 @@ OPTIONS
 []
 |==================
 |Select|Description
-|0|Current 
-|1|Default 
+|0|Current
+|1|Default
 |2|Saved
 |3|Supported capabilities
-|4–7|Reserved
+|4-7|Reserved
 |==================
 
 -U <uuid-index>::

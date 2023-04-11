@@ -13,7 +13,7 @@ SYNOPSIS
 			  [--uuid-index=<uuid-index> | -U <uuid_index>]
 			  [--data-len=<data-len> | -l <data-len>]
 			  [--data=<data-file> | -d <data-file>]
-			  [--save| -s]
+			  [--save | -s]
 
 DESCRIPTION
 -----------
@@ -58,7 +58,7 @@ OPTIONS
 
 -s::
 --save::
-	Save the attribute so that it persists through all power states and resets.	
+	Save the attribute so that it persists through all power states and resets.
 
 -U <uuid-index>::
 --uuid-index=<uuid-index>::
