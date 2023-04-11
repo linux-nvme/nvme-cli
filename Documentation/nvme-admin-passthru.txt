@@ -10,9 +10,11 @@ SYNOPSIS
 [verse]
 'nvme-admin-passthru' <device> [--opcode=<opcode> | -o <opcode>]
 		[--flags=<flags> | -f <flags>] [-rsvd=<rsvd> | -R <rsvd>]
-		[--namespace-id=<nsid>] [--cdw2=<cdw2>] [--cdw3=<cdw3>]
-		[--cdw10=<cdw10>] [--cdw11=<cdw11>] [--cdw12=<cdw12>]
-		[--cdw13=<cdw13>] [--cdw14=<cdw14>] [--cdw15=<cdw15>]
+		[--namespace-id=<nsid> | -n <nsid>] [--cdw2=<cdw2> | -2 <cdw2>]
+		[--cdw3=<cdw3> | -3 <cdw3>] [--cdw10=<cdw10> | -4 <cdw4>]
+		[--cdw11=<cdw11> | -5 <cdw5>] [--cdw12=<cdw12> | -6 <cdw6>]
+		[--cdw13=<cdw13> | -7 <cdw7>] [--cdw14=<cdw14> | -8 <cdw8>]
+		[--cdw15=<cdw15> | -9 <cdw9>]
 		[--data-len=<data-len> | -l <data-len>]
 		[--metadata-len=<len> | -m <len>]
 		[--input-file=<file> | -i <file>]
@@ -57,6 +59,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	The value for the ns-id in the command.
 
+-[2-9] <cdw>::
 --cdw[2-3,10-15]=<cdw>::
 	Specifies the command dword value for that specified entry in
 	the command

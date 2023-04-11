@@ -8,7 +8,7 @@ nvme-ocp-clear-fw-activate-history - Clear the OCP Firmware Update History Log
 SYNOPSIS
 --------
 [verse]
-'nvme ocp clear-fw-activate-history' <device> [--no-uuid | -n>]
+'nvme ocp clear-fw-activate-history' <device> [--no-uuid | -n]
 
 DESCRIPTION
 -----------
