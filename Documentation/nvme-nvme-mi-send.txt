@@ -1,0 +1,70 @@
+nvme-nvme-mi-send(1)
+====================
+
+NAME
+----
+nvme-nvme-mi-send - Send a NVMe-MI Send command to the specified device
+
+SYNOPSIS
+--------
+[verse]
+'nvme nvme-mi-send' <device> [--opcode=<opcode> | -o <opcode>]
+			     [--namespace-id=<nsid>]
+			     [--data-len=<data-len> | -l <data-len>]
+			     [--nmimt=<nmimt> | -m <nmimt>]
+			     [--nmd0=<nmd0> | -0 <nmd0>]
+			     [--nmd1=<nmd1> | -1 <nmd1>]
+			     [--input-file=<file> | -i <file>]
+
+DESCRIPTION
+-----------
+Send a NVMe-MI Send command to the specified device, return results.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <opcode>::
+--opcode=<opcode>::
+	The NVMe-MI opcode to send to the device in the command
+
+-n <nsid>::
+--namespace-id=<nsid>::
+	The value for the ns-id in the command.
+
+-l <data-len>::
+--data-len=<data-len>::
+	The data length for the buffer used for this command.
+
+-m <nmimt>::
+--nmimt=<nmimt>::
+	The value for the NVMe-MI message type in the command.
+
+-0 <nmd0>::
+--nmd0=<nmd0>::
+	The value for the NVMe management request dword 0 in the command.
+
+-1 <nmd1>::
+--nmd1=<nmd1>::
+	The value for the NVMe management request dword 1 in the command.
+
+-i <file>::
+--input-file=<file>::
+	If the command is a data-out (write) command, use this file
+	to fill the buffer sent to the device. If no file is given,
+	assumed to use STDIN.
+
+EXAMPLES
+--------
+* Has the program issue a nvme-mi-send to execute the VPD write.
++
+------------
+# nvme nvme-mi-send /dev/nvme0n1 -o 6 -m 1 -0 0 -1 0x100 -l 256 -i vpd.bin
+------------
+
+NVME
+----
+Part of the nvme-user suite.

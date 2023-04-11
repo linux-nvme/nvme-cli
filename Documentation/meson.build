@@ -85,6 +85,7 @@ adoc_sources = [
   'nvme-ns-descs',
   'nvme-ns-rescan',
   'nvme-nvme-mi-recv',
+  'nvme-nvme-mi-send',
   'nvme-nvm-id-ctrl',
   'nvme-ocp-latency-monitor-log',
   'nvme-ocp-smart-add-log',
