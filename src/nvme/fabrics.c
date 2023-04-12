@@ -30,6 +30,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 #include <ccan/array_size/array_size.h>
+#include <ccan/str/str.h>
 
 #include "fabrics.h"
 #include "linux.h"
@@ -261,7 +262,7 @@ void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls, false);
 }
 
-static int add_bool_argument(char **argstr, char *tok, bool arg)
+static int __add_bool_argument(char **argstr, char *tok, bool arg)
 {
 	char *nstr;
 
@@ -277,7 +278,7 @@ static int add_bool_argument(char **argstr, char *tok, bool arg)
 	return 0;
 }
 
-static int add_int_argument(char **argstr, char *tok, int arg, bool allow_zero)
+static int __add_int_argument(char **argstr, char *tok, int arg, bool allow_zero)
 {
 	char *nstr;
 
@@ -293,7 +294,7 @@ static int add_int_argument(char **argstr, char *tok, int arg, bool allow_zero)
 	return 0;
 }
 
-static int add_int_or_minus_one_argument(char **argstr, char *tok, int arg)
+static int __add_int_or_minus_one_argument(char **argstr, char *tok, int arg)
 {
 	char *nstr;
 
@@ -309,7 +310,7 @@ static int add_int_or_minus_one_argument(char **argstr, char *tok, int arg)
 	return 0;
 }
 
-static int add_argument(char **argstr, const char *tok, const char *arg)
+static int __add_argument(char **argstr, const char *tok, const char *arg)
 {
 	char *nstr;
 
@@ -324,6 +325,71 @@ static int add_argument(char **argstr, const char *tok, const char *arg)
 
 	return 0;
 }
+
+#define add_bool_argument(o, argstr, tok, arg)				\
+({									\
+	int ret;							\
+	if (r->options->tok) {						\
+		ret = __add_bool_argument(argstr,			\
+					  stringify(tok),		\
+					  arg);				\
+	} else {							\
+		nvme_msg(r, LOG_DEBUG,					\
+			 "option \"%s\" ignored\n",			\
+			 stringify(tok));				\
+		ret = 0;						\
+	}								\
+	ret;								\
+})
+
+#define add_int_argument(o, argstr, tok, arg, allow_zero) \
+({									\
+	int ret;							\
+	if (r->options->tok) {						\
+		ret = __add_int_argument(argstr,			\
+					stringify(tok),			\
+					arg,				\
+					allow_zero);			\
+	} else {							\
+		nvme_msg(r, LOG_DEBUG,					\
+			 "option \"%s\" ignored\n",			\
+			 stringify(tok));				\
+		ret = 0;						\
+	}								\
+	ret;								\
+})
+
+#define add_int_or_minus_one_argument(o, argstr, tok, arg)		\
+({									\
+	int ret;							\
+	if (r->options->tok) {						\
+		ret = __add_int_or_minus_one_argument(argstr,		\
+						     stringify(tok),	\
+						     arg);		\
+	} else {							\
+		nvme_msg(r, LOG_DEBUG,					\
+			 "option \"%s\" ignored\n",			\
+			 stringify(tok));				\
+		ret = 0;						\
+	}								\
+	ret;								\
+})
+
+#define add_argument(r, argstr, tok, arg)				\
+({									\
+	int ret;							\
+	if (r->options->tok) {						\
+		ret = __add_argument(argstr,				\
+				     stringify(tok),			\
+				     arg);				\
+	} else {							\
+		nvme_msg(r, LOG_NOTICE,					\
+			 "option \"%s\" ignored\n",			\
+			 stringify(tok));				\
+		ret = 0;						\
+	}								\
+	ret;								\
+})
 
 static int inet4_pton(const char *src, uint16_t port,
 		      struct sockaddr_storage *addr)
@@ -453,6 +519,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	const char *transport = nvme_ctrl_get_transport(c);
 	const char *hostnqn, *hostid, *hostkey, *ctrlkey;
 	bool discover = false, discovery_nqn = false;
+	nvme_root_t r = h->r;
 
 	if (!transport) {
 		nvme_msg(h->r, LOG_ERR, "need a transport (-t) argument\n");
@@ -487,65 +554,151 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	if (!hostkey)
 		hostkey = nvme_ctrl_get_dhchap_host_key(c);
 	ctrlkey = nvme_ctrl_get_dhchap_key(c);
-	if (add_argument(argstr, "transport", transport) ||
-	    add_argument(argstr, "traddr",
+	if (add_argument(r, argstr, transport, transport) ||
+	    add_argument(r, argstr, traddr,
 			 nvme_ctrl_get_traddr(c)) ||
-	    add_argument(argstr, "host_traddr",
+	    add_argument(r, argstr, host_traddr,
 			 cfg->host_traddr) ||
-	    add_argument(argstr, "host_iface",
+	    add_argument(r, argstr, host_iface,
 			 cfg->host_iface) ||
-	    add_argument(argstr, "trsvcid",
+	    add_argument(r, argstr, trsvcid,
 			 nvme_ctrl_get_trsvcid(c)) ||
-	    (hostnqn && add_argument(argstr, "hostnqn", hostnqn)) ||
-	    (hostid && add_argument(argstr, "hostid", hostid)) ||
+	    (hostnqn && add_argument(r, argstr, hostnqn, hostnqn)) ||
+	    (hostid && add_argument(r, argstr, hostid, hostid)) ||
 	    (discover && !discovery_nqn &&
-	     add_bool_argument(argstr, "discovery", true)) ||
+	     add_bool_argument(r, argstr, discovery, true)) ||
 	    (!discover && hostkey &&
-	     add_argument(argstr, "dhchap_secret", hostkey)) ||
+	     add_argument(r, argstr, dhchap_secret, hostkey)) ||
 	    (!discover && ctrlkey &&
-	     add_argument(argstr, "dhchap_ctrl_secret", ctrlkey)) ||
+	     add_argument(r, argstr, dhchap_ctrl_secret, ctrlkey)) ||
 	    (!discover &&
-	     add_int_argument(argstr, "nr_io_queues",
+	     add_int_argument(r, argstr, nr_io_queues,
 			      cfg->nr_io_queues, false)) ||
 	    (!discover &&
-	     add_int_argument(argstr, "nr_write_queues",
+	     add_int_argument(r, argstr, nr_write_queues,
 			      cfg->nr_write_queues, false)) ||
 	    (!discover &&
-	     add_int_argument(argstr, "nr_poll_queues",
+	     add_int_argument(r, argstr, nr_poll_queues,
 			      cfg->nr_poll_queues, false)) ||
 	    (!discover &&
-	     add_int_argument(argstr, "queue_size",
+	     add_int_argument(r, argstr, queue_size,
 			      cfg->queue_size, false)) ||
-	    add_int_argument(argstr, "keep_alive_tmo",
+	    add_int_argument(r, argstr, keep_alive_tmo,
 			     cfg->keep_alive_tmo, false) ||
-	    add_int_argument(argstr, "reconnect_delay",
+	    add_int_argument(r, argstr, reconnect_delay,
 			     cfg->reconnect_delay, false) ||
 	    (strcmp(transport, "loop") &&
-	     add_int_or_minus_one_argument(argstr, "ctrl_loss_tmo",
+	     add_int_or_minus_one_argument(r, argstr, ctrl_loss_tmo,
 			      cfg->ctrl_loss_tmo)) ||
 	    (strcmp(transport, "loop") &&
-	     add_int_argument(argstr, "fast_io_fail_tmo",
+	     add_int_argument(r, argstr, fast_io_fail_tmo,
 			      cfg->fast_io_fail_tmo, false)) ||
 	    (strcmp(transport, "loop") &&
-	     add_int_argument(argstr, "tos", cfg->tos, true)) ||
-	    add_int_argument(argstr, "keyring", cfg->keyring, false) ||
+	     add_int_argument(r, argstr, tos, cfg->tos, true)) ||
+	    add_int_argument(r, argstr, keyring, cfg->keyring, false) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_int_argument(argstr, "tls_key", cfg->tls_key, false)) ||
-	    add_bool_argument(argstr, "duplicate_connect",
+	     add_int_argument(r, argstr, tls_key, cfg->tls_key, false)) ||
+	    add_bool_argument(r, argstr, duplicate_connect,
 			      cfg->duplicate_connect) ||
-	    add_bool_argument(argstr, "disable_sqflow",
+	    add_bool_argument(r, argstr, disable_sqflow,
 			      cfg->disable_sqflow) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(argstr, "hdr_digest", cfg->hdr_digest)) ||
+	     add_bool_argument(r, argstr, hdr_digest, cfg->hdr_digest)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(argstr, "data_digest", cfg->data_digest)) ||
+	     add_bool_argument(r, argstr, data_digest, cfg->data_digest)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(argstr, "tls", cfg->tls))) {
+	     add_bool_argument(r, argstr, tls, cfg->tls))) {
 		free(*argstr);
 		return -1;
 	}
 
 	return 0;
+}
+
+#define parse_option(r, v, name)	   \
+	if (!strcmp(v, stringify(name))) { \
+		r->options->name = true;   \
+		continue;		   \
+	}
+
+static  int __nvmf_supported_options(nvme_root_t r)
+{
+	char buf[0x1000], *options, *p, *v;
+	int fd, ret;
+	size_t len;
+
+	if (r->options)
+		return 0;
+
+	r->options = calloc(1, sizeof(*r->options));
+	if (!r->options)
+		return -ENOMEM;
+
+	fd = open(nvmf_dev, O_RDONLY);
+	if (fd < 0) {
+		nvme_msg(r, LOG_ERR, "Failed to open %s: %s\n",
+			 nvmf_dev, strerror(errno));
+		return -ENVME_CONNECT_OPEN;
+	}
+
+	memset(buf, 0x0, sizeof(buf));
+	len = read(fd, buf, sizeof(buf) - 1);
+	if (len < 0) {
+		nvme_msg(r, LOG_ERR, "Failed to read from %s: %s\n",
+			 nvmf_dev, strerror(errno));
+		ret = -ENVME_CONNECT_READ;
+		goto out_close;
+	}
+
+	buf[len] = '\0';
+	options = buf;
+
+	nvme_msg(r, LOG_DEBUG, "kernel supports: ");
+
+	while ((p = strsep(&options, ",\n")) != NULL) {
+		if (!*p)
+			continue;
+		v = strsep(&p, "= ");
+		if (!v)
+			continue;
+		nvme_msg(r, LOG_DEBUG, "%s ", v);
+
+		parse_option(r, v, cntlid);
+		parse_option(r, v, ctrl_loss_tmo);
+		parse_option(r, v, data_digest);
+		parse_option(r, v, dhchap_ctrl_secret);
+		parse_option(r, v, dhchap_secret);
+		parse_option(r, v, disable_sqflow);
+		parse_option(r, v, discovery);
+		parse_option(r, v, duplicate_connect);
+		parse_option(r, v, fast_io_fail_tmo);
+		parse_option(r, v, hdr_digest);
+		parse_option(r, v, host_iface);
+		parse_option(r, v, host_traddr);
+		parse_option(r, v, hostid);
+		parse_option(r, v, hostnqn);
+		parse_option(r, v, instance);
+		parse_option(r, v, keep_alive_tmo);
+		parse_option(r, v, keyring);
+		parse_option(r, v, nqn);
+		parse_option(r, v, nr_io_queues);
+		parse_option(r, v, nr_poll_queues);
+		parse_option(r, v, nr_write_queues);
+		parse_option(r, v, queue_size);
+		parse_option(r, v, reconnect_delay);
+		parse_option(r, v, tls);
+		parse_option(r, v, tls_key);
+		parse_option(r, v, tos);
+		parse_option(r, v, traddr);
+		parse_option(r, v, transport);
+		parse_option(r, v, trsvcid);
+	}
+	nvme_msg(r, LOG_DEBUG, "\n");
+	ret = 0;
+
+out_close:
+	close(fd);
+	return ret;
 }
 
 static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
@@ -671,6 +824,9 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		free(traddr);
 	}
 
+	ret = __nvmf_supported_options(h->r);
+	if (ret)
+		return ret;
 	ret = build_options(h, c, &argstr);
 	if (ret)
 		return ret;

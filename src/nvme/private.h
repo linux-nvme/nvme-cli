@@ -120,6 +120,38 @@ struct nvme_host {
 				 * value */
 };
 
+struct nvme_fabric_options {
+	bool cntlid;
+	bool ctrl_loss_tmo;
+	bool data_digest;
+	bool dhchap_ctrl_secret;
+	bool dhchap_secret;
+	bool disable_sqflow;
+	bool discovery;
+	bool duplicate_connect;
+	bool fast_io_fail_tmo;
+	bool hdr_digest;
+	bool host_iface;
+	bool host_traddr;
+	bool hostid;
+	bool hostnqn;
+	bool instance;
+	bool keep_alive_tmo;
+	bool keyring;
+	bool nqn;
+	bool nr_io_queues;
+	bool nr_poll_queues;
+	bool nr_write_queues;
+	bool queue_size;
+	bool reconnect_delay;
+	bool tls;
+	bool tls_key;
+	bool tos;
+	bool traddr;
+	bool transport;
+	bool trsvcid;
+};
+
 struct nvme_root {
 	char *config_file;
 	struct list_head hosts;
@@ -130,6 +162,7 @@ struct nvme_root {
 	bool log_timestamp;
 	bool modified;
 	bool mi_probe_enabled;
+	struct nvme_fabric_options *options;
 };
 
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
