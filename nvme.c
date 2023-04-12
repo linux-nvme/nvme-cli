@@ -5814,7 +5814,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 					err = -errno;
 					goto close_dev;
 				}
-			} else {
+			} else if (cfg.namespace_id != NVME_NSID_ALL) {
 				block_size = 1 << ns.lbaf[cfg.lbaf].ds;
 
 				/*
