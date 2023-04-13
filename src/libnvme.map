@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+LIBNVME_1_5 {
+	global:
+		nvme_nbft_read;
+		nvme_nbft_free;
+};
+
 LIBNVME_1_4 {
 	global:
 		nvme_lookup_keyring;
@@ -7,8 +13,6 @@ LIBNVME_1_4 {
 		nvme_lookup_key;
 		nvme_set_keyring;
 		nvme_insert_tls_key;
-		nvme_nbft_read;
-		nvme_nbft_free;
 };
 
 LIBNVME_1_3 {
