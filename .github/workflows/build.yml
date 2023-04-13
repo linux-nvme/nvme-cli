@@ -27,7 +27,6 @@ jobs:
           setup-options: >
             --werror
             --buildtype=debug
-            --wrap-mode=nofallback
           meson-version: 0.61.2
       - uses: BSFishy/meson-build@v1.0.3
         name: test
@@ -59,7 +58,6 @@ jobs:
           setup-options: >
             --werror
             --buildtype=release
-            --wrap-mode=nofallback
             -Dlibdbus=enabled
           meson-version: 0.61.2
       - uses: BSFishy/meson-build@v1.0.3
@@ -92,7 +90,6 @@ jobs:
           setup-options: >
             --werror
             --buildtype=release
-            --wrap-mode=nofallback
             --cross-file=.github/cross/clang.txt
             -Dlibdbus=enabled
           meson-version: 0.61.2
@@ -242,7 +239,6 @@ jobs:
           setup-options: >
             --werror
             --buildtype=release
-            --wrap-mode=nofallback
             --cross-file=.github/cross/ubuntu-armhf.txt
             -Dpython=disabled
           meson-version: 0.61.2
@@ -285,7 +281,6 @@ jobs:
           setup-options: >
             --werror
             --buildtype=release
-            --wrap-mode=nofallback
             --cross-file=.github/cross/ubuntu-ppc64le.txt
             -Dpython=disabled
           meson-version: 0.61.2
@@ -328,7 +323,6 @@ jobs:
           setup-options: >
             --werror
             --buildtype=release
-            --wrap-mode=nofallback
             --cross-file=.github/cross/ubuntu-s390x.txt
             -Dpython=disabled
           meson-version: 0.61.2
