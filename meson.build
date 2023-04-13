@@ -11,6 +11,7 @@ project(
       'prefix=/usr/local',
       'warning_level=1',
       'sysconfdir=etc',
+      'wrap_mode=nofallback',
     ]
 )
 
