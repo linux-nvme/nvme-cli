@@ -28,6 +28,7 @@
 	#include "nvme/log.h"
 	#include "nvme/ioctl.h"
 	#include "nvme/types.h"
+	#include "nvme/nbft.h"
 
 	static int host_iter_err = 0;
 	static int subsys_iter_err = 0;
@@ -36,6 +37,10 @@
 	static int connect_err = 0;
 	static int discover_err = 0;
 
+	static void PyList_AppendDecRef(PyObject *p, PyObject *val) {
+	    PyList_Append(p, val); /* Does NOT steal reference to val .. */
+	    Py_XDECREF(val);       /* .. therefore decrement ref. count. */
+	}
 	static void PyDict_SetItemStringDecRef(PyObject * p, const char *key, PyObject *val) {
 		PyDict_SetItemString(p, key, val); /* Does NOT steal reference to val .. */
 		Py_XDECREF(val);                   /* .. therefore decrement ref. count. */
@@ -812,12 +817,229 @@ struct nvme_ns {
 	}
 %};
 
+/******
+  NBFT
+ ******/
+%{
+	static PyObject *ssns_to_dict(struct nbft_info_subsystem_ns *ss)
+	{
+		unsigned int i;
+		PyObject *output = PyDict_New();
+		PyObject *hfis = PyList_New(ss->num_hfis);
+
+		PyDict_SetItemStringDecRef(output, "index", PyLong_FromLong(ss->index));
+
+		PyDict_SetItemStringDecRef(output, "num_hfis", PyLong_FromLong(ss->num_hfis));
+		for (i = 0; i < ss->num_hfis; i++)
+			PyList_SetItem(hfis, i, PyLong_FromLong(ss->hfis[i]->index)); /* steals ref. to object - no need to decref */
+
+		PyDict_SetItemStringDecRef(output, "hfis", hfis);
+
+		PyDict_SetItemStringDecRef(output, "trtype", PyUnicode_FromString(ss->transport));
+		PyDict_SetItemStringDecRef(output, "traddr", PyUnicode_FromString(ss->traddr));
+		PyDict_SetItemStringDecRef(output, "trsvcid", PyUnicode_FromString(ss->trsvcid));
+		PyDict_SetItemStringDecRef(output, "subsys_port_id", PyLong_FromLong(ss->subsys_port_id));
+		PyDict_SetItemStringDecRef(output, "nsid", PyLong_FromLong(ss->nsid));
+
+		{
+			PyObject *nid;
+			switch (ss->nid_type) {
+			case NBFT_INFO_NID_TYPE_EUI64:
+				PyDict_SetItemStringDecRef(output, "nid_type", PyUnicode_FromString("eui64"));
+				nid = PyUnicode_FromFormat("%02x%02x%02x%02x%02x%02x%02x%02x",
+							   ss->nid[0], ss->nid[1], ss->nid[2], ss->nid[3],
+							   ss->nid[4], ss->nid[5], ss->nid[6], ss->nid[7]);
+				break;
+
+			case NBFT_INFO_NID_TYPE_NGUID:
+				PyDict_SetItemStringDecRef(output, "nid_type", PyUnicode_FromString("nguid"));
+				nid = PyUnicode_FromFormat("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+							   ss->nid[0], ss->nid[1], ss->nid[2], ss->nid[3],
+							   ss->nid[4], ss->nid[5], ss->nid[6], ss->nid[7],
+							   ss->nid[8], ss->nid[9], ss->nid[10], ss->nid[11],
+							   ss->nid[12], ss->nid[13], ss->nid[14], ss->nid[15]);
+				break;
+
+			case NBFT_INFO_NID_TYPE_NS_UUID:
+			{
+				char uuid_str[NVME_UUID_LEN_STRING];
+				PyDict_SetItemStringDecRef(output, "nid_type", PyUnicode_FromString("uuid"));
+				nvme_uuid_to_string(ss->nid, uuid_str);
+				nid = PyUnicode_FromString(uuid_str);
+				break;
+			}
+
+			default:
+				nid = NULL;
+				break;
+			}
+			if (nid)
+				PyDict_SetItemStringDecRef(output, "nid", nid);
+		}
+
+		if (ss->subsys_nqn)
+			PyDict_SetItemStringDecRef(output, "subsys_nqn", PyUnicode_FromString(ss->subsys_nqn));
+
+		PyDict_SetItemStringDecRef(output, "controller_id", PyLong_FromLong(ss->controller_id));
+		PyDict_SetItemStringDecRef(output, "asqsz", PyLong_FromLong(ss->asqsz));
+
+		if (ss->dhcp_root_path_string)
+			PyDict_SetItemStringDecRef(output, "dhcp_root_path_string", PyUnicode_FromString(ss->dhcp_root_path_string));
+
+		PyDict_SetItemStringDecRef(output, "pdu_header_digest_required", PyLong_FromLong(ss->pdu_header_digest_required));
+		PyDict_SetItemStringDecRef(output, "data_digest_required", PyLong_FromLong(ss->data_digest_required));
+
+		return output;
+	}
+
+	static PyObject *hfi_to_dict(struct nbft_info_hfi *hfi)
+	{
+		PyObject *output = PyDict_New();
+
+		PyDict_SetItemStringDecRef(output, "index", PyLong_FromLong(hfi->index));
+		PyDict_SetItemStringDecRef(output, "trtype", PyUnicode_FromString(hfi->transport));
+
+		if (!strcmp(hfi->transport, "tcp")) {
+			PyDict_SetItemStringDecRef(output, "pcidev",
+						   PyUnicode_FromFormat("%x:%x:%x.%x",
+									((hfi->tcp_info.pci_sbdf & 0xffff0000) >> 16),
+									((hfi->tcp_info.pci_sbdf & 0x0000ff00) >> 8),
+									((hfi->tcp_info.pci_sbdf & 0x000000f8) >> 3),
+									((hfi->tcp_info.pci_sbdf & 0x00000007) >> 0)));
+
+			PyDict_SetItemStringDecRef(output, "mac_addr",
+						   PyUnicode_FromFormat("%02x:%02x:%02x:%02x:%02x:%02x",
+									hfi->tcp_info.mac_addr[0],
+									hfi->tcp_info.mac_addr[1],
+									hfi->tcp_info.mac_addr[2],
+									hfi->tcp_info.mac_addr[3],
+									hfi->tcp_info.mac_addr[4],
+									hfi->tcp_info.mac_addr[5]));
+
+			PyDict_SetItemStringDecRef(output, "vlan", PyLong_FromLong(hfi->tcp_info.vlan));
+			PyDict_SetItemStringDecRef(output, "ip_origin", PyLong_FromLong(hfi->tcp_info.ip_origin));
+			PyDict_SetItemStringDecRef(output, "ipaddr", PyUnicode_FromString(hfi->tcp_info.ipaddr));
+			PyDict_SetItemStringDecRef(output, "subnet_mask_prefix", PyLong_FromLong(hfi->tcp_info.subnet_mask_prefix));
+			PyDict_SetItemStringDecRef(output, "gateway_ipaddr", PyUnicode_FromString(hfi->tcp_info.gateway_ipaddr));
+			PyDict_SetItemStringDecRef(output, "route_metric", PyLong_FromLong(hfi->tcp_info.route_metric));
+			PyDict_SetItemStringDecRef(output, "primary_dns_ipaddr", PyUnicode_FromString(hfi->tcp_info.primary_dns_ipaddr));
+			PyDict_SetItemStringDecRef(output, "secondary_dns_ipaddr", PyUnicode_FromString(hfi->tcp_info.secondary_dns_ipaddr));
+			PyDict_SetItemStringDecRef(output, "dhcp_server_ipaddr", PyUnicode_FromString(hfi->tcp_info.dhcp_server_ipaddr));
+
+			if (hfi->tcp_info.host_name)
+				PyDict_SetItemStringDecRef(output, "host_name", PyUnicode_FromString(hfi->tcp_info.host_name));
+
+			PyDict_SetItemStringDecRef(output, "this_hfi_is_default_route", PyLong_FromLong(hfi->tcp_info.this_hfi_is_default_route));
+			PyDict_SetItemStringDecRef(output, "dhcp_override", PyLong_FromLong(hfi->tcp_info.dhcp_override));
+		}
+
+		return output;
+	}
+
+	static PyObject *discovery_to_dict(struct nbft_info_discovery *disc)
+	{
+		PyObject *output = PyDict_New();
+
+		PyDict_SetItemStringDecRef(output, "index", PyLong_FromLong(disc->index));
+
+		if (disc->security)
+			PyDict_SetItemStringDecRef(output, "security", PyLong_FromLong(disc->security->index));
+		if (disc->hfi)
+			PyDict_SetItemStringDecRef(output, "hfi", PyLong_FromLong(disc->hfi->index));
+		if (disc->uri)
+			PyDict_SetItemStringDecRef(output, "uri", PyUnicode_FromString(disc->uri));
+		if (disc->nqn)
+			PyDict_SetItemStringDecRef(output, "nqn", PyUnicode_FromString(disc->nqn));
+
+		return output;
+	}
+
+	static PyObject *nbft_to_pydict(struct nbft_info *nbft)
+	{
+		PyObject *val;
+		PyObject *output = PyDict_New();
+
+		{
+			PyObject *host = PyDict_New();
+
+			if (nbft->host.nqn)
+				PyDict_SetItemStringDecRef(host, "nqn", PyUnicode_FromString(nbft->host.nqn));
+			if (nbft->host.id) {
+				char uuid_str[NVME_UUID_LEN_STRING];
+				nvme_uuid_to_string((unsigned char *)nbft->host.id, uuid_str);
+				PyDict_SetItemStringDecRef(host, "id", PyUnicode_FromString(uuid_str));
+			}
+
+			PyDict_SetItemStringDecRef(host, "host_id_configured", PyBool_FromLong(nbft->host.host_id_configured));
+			PyDict_SetItemStringDecRef(host, "host_nqn_configured", PyBool_FromLong(nbft->host.host_nqn_configured));
+
+			val = PyUnicode_FromString(nbft->host.primary == NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED ? "not indicated" :
+						   nbft->host.primary == NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED ? "unselected" :
+						   nbft->host.primary == NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_SELECTED ? "selected" : "reserved");
+			PyDict_SetItemStringDecRef(host, "primary_admin_host_flag", val);
+
+			PyDict_SetItemStringDecRef(output, "host", host);
+		}
+
+		{
+			struct nbft_info_subsystem_ns **ss;
+			PyObject *subsystem = PyList_New(0);
+
+			for (ss = nbft->subsystem_ns_list; ss && *ss; ss++)
+				PyList_AppendDecRef(subsystem, ssns_to_dict(*ss));
+
+			PyDict_SetItemStringDecRef(output, "subsystem", subsystem);
+		}
+
+		{
+			struct nbft_info_hfi **hfi;
+			PyObject *hfis = PyList_New(0);
+
+			for (hfi = nbft->hfi_list; hfi && *hfi; hfi++)
+				PyList_AppendDecRef(hfis, hfi_to_dict(*hfi));
+
+			PyDict_SetItemStringDecRef(output, "hfi", hfis);
+		}
+
+		{
+			struct nbft_info_discovery **disc;
+			PyObject *discovery = PyList_New(0);
+
+			for (disc = nbft->discovery_list; disc && *disc; disc++)
+				PyList_AppendDecRef(discovery, discovery_to_dict(*disc));
+
+			PyDict_SetItemStringDecRef(output, "discovery", discovery);
+		}
+
+		return output;
+	}
+
+	PyObject *nbft_get(const char * filename)
+	{
+		struct nbft_info *nbft;
+		PyObject *output;
+		int ret;
+
+		ret = nvme_nbft_read(&nbft, filename);
+		if (ret) {
+			Py_RETURN_NONE;
+		}
+
+		output = nbft_to_pydict(nbft);
+		nvme_nbft_free(nbft);
+		return output;
+	}
+%};
+
+%feature("autodoc", "@return an NBFT table as a dict on success, None otherwise.\n"
+		    "@param filename: file to read") nbft_get;
+PyObject *nbft_get(const char * filename);
 
 // We want to swig all the #define and enum from types.h, but none of the structs.
 #define __attribute__(x)
 %rename($ignore, %$isclass) "";     // ignore all classes/structs
 %rename($ignore, %$isfunction) "";  // ignore all functions
 %rename($ignore, %$isunion) "";     // ignore all unions
-%rename($ignore, %$isvariable ) ""; // ignore all variables
+%rename($ignore, %$isvariable) "";  // ignore all variables
 
 %include "../src/nvme/types.h"

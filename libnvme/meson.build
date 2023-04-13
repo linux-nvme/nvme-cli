@@ -62,12 +62,13 @@ if build_python_bindings
     test('[Python] import libnvme', python3, args: ['-c', 'from libnvme import nvme'], env: test_env, depends: pynvme_clib)
 
     py_tests = [ 
-        [ 'create ctrl object', files('tests/create-ctrl-obj.py') ], 
-        [ 'SIGSEGV during gc', files('tests/gc.py') ],
+        [ 'create ctrl object', [ files('tests/create-ctrl-obj.py'), ] ],
+        [ 'SIGSEGV during gc', [ files('tests/gc.py'), ] ],
+        [ 'Read NBFT file', [ files('tests/test-nbft.py'), '--filename', join_paths(meson.current_source_dir(), 'tests', 'NBFT') ] ],
     ]
     foreach test: py_tests
         description = test[0]
-        py_script   = test[1]
-        test('[Python] ' + description, python3, args: [py_script, ], env: test_env, depends: pynvme_clib)
+        args = test[1]
+        test('[Python] ' + description, python3, args: args, env: test_env, depends: pynvme_clib)
     endforeach
 endif
