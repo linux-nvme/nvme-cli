@@ -16,6 +16,7 @@ project(
         'buildtype=debug',
         'prefix=/usr/local',
         'sysconfdir=etc',
+        'wrap_mode=nofallback'
     ]
 )
 
