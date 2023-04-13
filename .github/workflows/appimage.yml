@@ -22,8 +22,14 @@ jobs:
           python-version: '3.x'
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --werror --buildtype=release --prefix=/usr
+          setup-options: >
+            --werror
+            --buildtype=release
+            --prefix=/usr
+            --force-fallback-for=libnvme
+            -Dlibnvme:werror=false
           action: install
+          meson-version: 0.61.2
       - name: build AppImage
         uses: AppImageCrafters/build-appimage@v1.3
         with:

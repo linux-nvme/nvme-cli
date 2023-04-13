@@ -27,6 +27,7 @@ jobs:
           setup-options: >
             --werror
             --buildtype=debug
+            --force-fallback-for=libnvme
             -Dlibnvme:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
@@ -58,6 +59,7 @@ jobs:
           setup-options: >
             --werror
             --buildtype=release
+            --force-fallback-for=libnvme
             -Dlibnvme:werror=false
           meson-version: 0.61.2
       - uses: bsfishy/meson-build@v1.0.3
@@ -90,6 +92,7 @@ jobs:
             --werror
             --buildtype=release
             --cross-file=.github/cross/clang.txt
+            --force-fallback-for=libnvme
             -Dlibnvme:werror=false
             -Dopenssl:werror=false
           meson-version: 0.61.2
@@ -200,6 +203,7 @@ jobs:
             --werror
             --buildtype=release
             --cross-file=.github/cross/ubuntu-armhf.txt
+            --force-fallback-for=libnvme
             -Dlibnvme:python=disabled
             -Dopenssl:werror=false
           meson-version: 0.61.2
@@ -242,6 +246,7 @@ jobs:
             --werror
             --buildtype=release
             --cross-file=.github/cross/ubuntu-ppc64le.txt
+            --force-fallback-for=libnvme
             -Dlibnvme:werror=false
             -Dlibnvme:python=disabled
             -Dopenssl:werror=false
@@ -285,6 +290,7 @@ jobs:
             --werror
             --buildtype=release
             --cross-file=.github/cross/ubuntu-s390x.txt
+            --force-fallback-for=libnvme
             -Dlibnvme:werror=false
             -Dlibnvme:python=disabled
             -Dopenssl:werror=false
@@ -301,50 +307,62 @@ jobs:
           path: |
             build/meson-logs/*.txt
 
-  build-minimal:
-    name: muon minimal
+  build-muon:
+    name: muon
     runs-on: ubuntu-latest
     steps:
+      - name: install dependencies
+        run: sudo apt install gcc make pkg-config libcurl4-openssl-dev libarchive-dev libpkgconf-dev
       - uses: actions/checkout@v3
-      - name: build muon and samurai build-tool
+      - name: build samurai
         run: |
-          mkdir build-tools
-          cd build-tools
-          git clone --depth 1 https://git.sr.ht/~lattis/muon
-          cd muon
+          cd ..
 
           export CC=gcc
-          export ninja=build/samu
+          export ROOT_PATH=$(pwd)/root
 
-          ./tools/bootstrap_ninja.sh build
-          ./bootstrap.sh build
+          git clone --depth 1 https://github.com/michaelforney/samurai.git
 
-          build/muon setup               \
-              -Dlibcurl=disabled         \
-              -Dlibarchive=disabled      \
+          cd samurai
+          make
+          make PREFIX=${ROOT_PATH} install
+      - name: build muon
+        run: |
+          cd ..
+
+          export CC=gcc
+          export ROOT_PATH=$(pwd)/root
+          export PATH=${ROOT_PATH}/bin:${PATH}
+
+
+          git clone https://git.sr.ht/~lattis/muon
+          git -C muon reset --hard 0.2.0
+
+          cd muon
+          ./bootstrap.sh stage1
+          stage1/muon setup              \
+              -Dprefix=${ROOT_PATH}      \
               -Ddocs=disabled            \
               -Dsamurai=disabled         \
-              build
-          build/samu -C build
-          build/muon -C build test
-      - name: fetch libnvme
-        run: |
-          cd subprojects
-          git clone https://github.com/linux-nvme/libnvme.git
-          libnvme_ref=$(sed -n "s/revision = \([0-9a-z]\+\)/\1/p" libnvme.wrap)
-          git -C libnvme checkout $libnvme_ref
+              .build
+          samu -C .build
+          .build/muon -C .build install
       - name: build
         run: |
-          export PATH=$(pwd)/build-tools/muon/build:$PATH
+          export ROOT_PATH=$(pwd)/../root
+          export PATH=${ROOT_PATH}/bin:${PATH}
 
-          muon setup                     \
-              -Dlibnvme:python=disabled  \
-              -Dlibnvme:json-c=disabled  \
-              -Djson-c=disabled          \
-              build
-          samu -C build
+          muon setup                    \
+             -Dprefix=${ROOT_PATH}      \
+             -Dwrap_mode=forcefallback  \
+             -Dlibnvme:python=disabled  \
+             -Dlibnvme:openssl=disabled \
+             .build
+          samu -C .build
+          muon -C .build install
       - name: test
         run: |
-          export PATH=$(pwd)/build-tools/muon/build:$PATH
+          export ROOT_PATH=$(pwd)/../root
+          export PATH=${ROOT_PATH}/bin:${PATH}
 
-          muon -C build test
+          muon -C .build test
