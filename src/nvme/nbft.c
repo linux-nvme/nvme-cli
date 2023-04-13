@@ -560,6 +560,8 @@ static int parse_raw_nbft(struct nbft_info *nbft)
 	nbft->host.id = (unsigned char *) &(host->host_id);
 	if (get_heap_obj(host, host_nqn_obj, 1, &nbft->host.nqn) != 0)
 		return -EINVAL;
+	nbft->host.host_id_configured = host->flags & NBFT_HOST_HOSTID_CONFIGURED;
+	nbft->host.host_nqn_configured = host->flags & NBFT_HOST_HOSTNQN_CONFIGURED;
 
 	/*
 	 * HFI
