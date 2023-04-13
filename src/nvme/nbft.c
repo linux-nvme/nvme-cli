@@ -169,7 +169,7 @@ static int read_ssns_exended_info(struct nbft_info *nbft,
 	       "invalid ID in SSNS extended info descriptor");
 	verify(raw_ssns_ei->version == 1,
 	       "invalid version in SSNS extended info descriptor");
-	verify(le16_to_cpu(raw_ssns_ei->ssns_index) == le16_to_cpu(ssns->index),
+	verify(le16_to_cpu(raw_ssns_ei->ssns_index) == ssns->index,
 	       "SSNS index doesn't match extended info descriptor index");
 
 	if (!(le32_to_cpu(raw_ssns_ei->flags) & NBFT_SSNS_EXT_INFO_VALID))
@@ -292,7 +292,7 @@ static int read_ssns(struct nbft_info *nbft,
 		goto fail;
 
 	/* SSNS extended info */
-	if (raw_ssns->flags & NBFT_SSNS_EXTENDED_INFO_IN_USE) {
+	if (le16_to_cpu(raw_ssns->flags) & NBFT_SSNS_EXTENDED_INFO_IN_USE) {
 		struct nbft_ssns_ext_info *ssns_extended_info;
 
 		if (!get_heap_obj(raw_ssns, ssns_extended_info_desc_obj, 0,
