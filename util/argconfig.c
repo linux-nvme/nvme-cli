@@ -295,6 +295,18 @@ bool argconfig_output_format_json(bool set)
 	return output_format_json;
 }
 
+static bool argconfig_check_output_format_json(struct argconfig_commandline_options *s)
+{
+	for (; s && s->option; s++) {
+		if (strcmp(s->option, "output-format") || s->config_type != CFG_STRING)
+			continue;
+		if (!strcmp(*(char **)s->default_value, "json"))
+			return true;
+	}
+
+	return false;
+}
+
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
@@ -372,6 +384,10 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		if (ret)
 			break;
 	}
+
+	if (argconfig_check_output_format_json(options))
+		argconfig_output_format_json(true);
+
 out:
 	free(short_opts);
 	free(long_opts);
