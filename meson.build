@@ -70,12 +70,10 @@ conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c available?'
 if cc.has_header('hugetlbfs.h')
   libhugetlbfs_dep = cc.find_library('hugetlbfs',
                                      required : false)
-  have_libhugetlbfs = libhugetlbfs_dep.found()
 else
-  libhugetlbfs_dep = []
-  have_libhugetlbfs = false
+  libhugetlbfs_dep = dependency('', required: false)
 endif
-conf.set('CONFIG_LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs available?')
+conf.set('CONFIG_LIBHUGETLBFS', libhugetlbfs_dep.found(), description: 'Is libhugetlbfs available?')
 
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
@@ -304,7 +302,7 @@ install_data(disc,
 
 ################################################################################
 if meson.version().version_compare('>=0.53.0')
-    summary_dict = {
+    path_dict = {
         'prefixdir':         prefixdir,
         'sysconfdir':        sysconfdir,
         'sbindir':           sbindir,
@@ -315,5 +313,14 @@ if meson.version().version_compare('>=0.53.0')
         'systemddir':        systemddir,
         'build location':    meson.current_build_dir(),
     }
-    summary(summary_dict)
+    summary(path_dict, section: 'Paths')
+    dep_dict = {
+        'json-c':            json_c_dep.found(),
+        'libhugetlbfs':      libhugetlbfs_dep.found(),
+    }
+    summary(dep_dict, section: 'Dependencies')
+    conf_dict = {
+        'pdc enabled':       get_option('pdc-enabled')
+    }
+    summary(conf_dict, section: 'Configuration')
 endif
