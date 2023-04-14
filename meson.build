@@ -270,7 +270,7 @@ subdir('doc')
 
 ################################################################################
 if meson.version().version_compare('>=0.53.0')
-    summary_dict = {
+    path_dict = {
         'prefixdir':         prefixdir,
         'sysconfdir':        sysconfdir,
         'bindir':            bindir,
@@ -280,5 +280,13 @@ if meson.version().version_compare('>=0.53.0')
         'libdir':            libdir,
         'build location':    meson.current_build_dir(),
     }
-    summary(summary_dict)
+    summary(path_dict, section: 'Paths')
+    dep_dict = {
+        'json-c':            json_c_dep.found(),
+        'OpenSSL':           openssl_dep.found(),
+        'keyutitls':         keyutils_dep.found(),
+        'libdbus':           libdbus_dep.found(),
+        'Python 3':          py3_dep.found(),
+    }
+    summary(dep_dict, section: 'Dependencies')
 endif

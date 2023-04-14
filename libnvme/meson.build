@@ -8,6 +8,7 @@
 want_python = get_option('python')
 if want_python.disabled()
     build_python_bindings = false
+    py3_dep = dependency('', required: false)
 else
     python3 = import('python').find_installation('python3')
     py3_dep = python3.dependency(required: want_python)
