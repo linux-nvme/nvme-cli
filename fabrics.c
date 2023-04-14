@@ -43,6 +43,7 @@
 #include "libnvme.h"
 #include "nvme-print.h"
 #include "nvme-print-json.h"
+#include "fabrics.h"
 
 #define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
 #define PATH_NVMF_CONFIG	SYSCONFDIR "/nvme/config.json"
@@ -109,15 +110,6 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),	\
 	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest), \
 	OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls)	\
-
-struct tr_config {
-	const char *subsysnqn;
-	const char *transport;
-	const char *traddr;
-	const char *host_traddr;
-	const char *host_iface;
-	const char *trsvcid;
-};
 
 /*
  * Compare two C strings and handle NULL pointers gracefully.
@@ -202,7 +194,7 @@ static nvme_ctrl_t lookup_discovery_ctrl(nvme_root_t r, struct tr_config *trcfg)
 	return __lookup_ctrl(r, trcfg, disc_ctrl_config_match);
 }
 
-static nvme_ctrl_t lookup_ctrl(nvme_root_t r, struct tr_config *trcfg)
+nvme_ctrl_t lookup_ctrl(nvme_root_t r, struct tr_config *trcfg)
 {
 	return __lookup_ctrl(r, trcfg, ctrl_config_match);
 }
