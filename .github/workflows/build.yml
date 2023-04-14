@@ -369,11 +369,11 @@ jobs:
         run: |
           export PATH=$(pwd)/build-tools/muon/build:$PATH
 
+          # Need to explicitly disable python as muon currently
+          # only partially supports the python module. It misses
+          # the dependency() implementation
           muon setup                \
               -Dpython=disabled     \
-              -Dopenssl=disabled    \
-              -Dlibdbus=disabled    \
-              -Djson-c=disabled     \
               build
           samu -C build
       - name: test
