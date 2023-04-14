@@ -5456,3 +5456,18 @@ void nvme_show_topology(nvme_root_t r, enum nvme_print_flags flags,
 	else
 		nvme_show_simple_topology(r, ranking);
 }
+
+void nvme_show_error(const char *msg, ...)
+{
+	va_list ap;
+	va_start(ap, msg);
+
+	if (argconfig_output_format_json(false))
+		return json_output_error(msg, ap);
+
+	vfprintf(stderr, msg, ap);
+
+	printf("\n");
+
+	va_end(ap);
+}
