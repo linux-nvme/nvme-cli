@@ -3335,7 +3335,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (flags < 0)
 		return err;
 	if (flags != JSON && flags != NORMAL) {
-		fprintf(stderr, "Invalid output format\n");
+		nvme_show_error("Invalid output format");
 		return -EINVAL;
 	}
 	if (cfg.verbose)
@@ -3343,14 +3343,12 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 
 	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
 	if (!r) {
-		fprintf(stderr, "Failed to create topology root: %s\n",
-			nvme_strerror(errno));
+		nvme_show_error("Failed to create topology root: %s", nvme_strerror(errno));
 		return -errno;
 	}
 	err = nvme_scan_topology(r, NULL, NULL);
 	if (err < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
-			 nvme_strerror(errno));
+		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
 		nvme_free_tree(r);
 		return err;
 	}

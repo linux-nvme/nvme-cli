@@ -9,6 +9,8 @@
 #include "nvme.h"
 #include "common.h"
 
+#define ERROR_MSG_LEN 100
+
 static const uint8_t zero_uuid[16] = { 0 };
 
 void json_nvme_id_ns(struct nvme_id_ns *ns, bool cap_only)
@@ -2853,4 +2855,28 @@ void json_output_status(int status)
 	json_object_add_value_int(root, "value", val);
 
 	json_output_object(root);
+}
+
+void json_output_error(const char *msg, va_list ap)
+{
+	struct json_object *root = json_create_object();
+	int len = ERROR_MSG_LEN;
+	char *error = (char *)malloc(ERROR_MSG_LEN);
+
+	if (!error)
+		return;
+
+	len = vsnprintf(error, len, msg, ap) + 1;
+	if (len > ERROR_MSG_LEN) {
+		error = (char *)realloc(error, len);
+		if (!error)
+			return;
+		vsnprintf(error, len, msg, ap);
+	}
+
+	json_object_add_value_string(root, "error", error);
+
+	json_output_object(root);
+
+	free(error);
 }
