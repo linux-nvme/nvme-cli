@@ -5,156 +5,81 @@
 
 NVM-Express user space tooling for Linux.
 
-nvme-cli uses meson as build system. In order to build nvme-cli
-run following commands
+## Build from source
 
-	$ meson .build
-	$ ninja -C .build
+nvme-cli uses meson as build system.
 
-nvme-cli depends on json-c
+### nvme-cli dependencies:
 
-To install, run:
+ | Library | Dependency | Notes |
+ |---------|------------|-------|
+ | libnvme, libnvme-mi| yes | be either installed or included into the build via meson fallback feature |
+ | json-c | optional | recommended, without all plugins are disabled and json-c output format is disabled |
+ | libhugetblfs | optional | adds support for hugetblfs |
+
+
+### Configuring
+
+In case libnvme is not installed on the system, it possible to use meson's
+fallback feature to resolve the dependency.
+
+	$ meson setup --force-fallback-for=libnvme .build
+
+If the libnvme is already installed on the system meson is using pkg-config to
+find the dependency. In this case a plain setup call is enough:
+
+	$ meson setup .build
+
+With meson's --wrap-mode argument it's possible to control if the additional
+dependencies should also resolved or not. The options are
+
+	--wrap-mode {default,nofallback,nodownload,forcefallback,nopromote}
+
+Note for nvme-cli the 'default' is set to nofallback.
+
+### Building
+
+	$ meson compile -C .build
+
+### Installing
 
 	# meson install -C .build
 
-There is a Makefile wrapper for meson for backwards compatiblily
+### Makefile wrapper
 
-    $ make
-    # make install
+There is a Makefile wrapper for meson for backwards compatibility
+
+	$ make
+	# make install
+
+Note in this case libnvme needs to be installed by hand first.
 
 RPM build support via Makefile that uses meson
 
-    $ make rpm
+	$ make rpm
 
 If not sure how to use, find the top-level documentation with:
 
-    $ man nvme
+	$ man nvme
 
 Or find a short summary with:
 
-    $ nvme help
+	$ nvme help
 
 ## Distro Support
 
-### Alpine Linux
+Many popular distributions (Alpine, Arch, Debian, Fedora, FreeBSD, Gentoo,
+Ubuntu, Nix(OS), openSUSE, ...) and the usual package name is nvme-cli.
 
-nvme-cli is tested on Alpine Linux 3.3.  Install it using:
-
-    # apk update && apk add nvme-cli nvme-cli-doc
-
-if you just use the device you're after, it will work flawless.
-```
-# nvme smart-log /dev/nvme0
-Smart Log for NVME device:/dev/nvme0 namespace-id:ffffffff
-critical_warning                    : 0
-temperature                         : 49 C
-available_spare                     : 100%
-```
-
-### Arch Linux
-
-nvme-cli is available in the `[community]` repository. It can be installed with:
-
-    # pacman -S nvme-cli
-
-The development version can be installed from AUR, e.g.:
-
-    $ yay -S nvme-cli-git
-
-### Debian
-
-nvme-cli is available in Debian 9 and up.  Install it with your favorite
-package manager.  For example:
-
-    $ sudo apt install nvme-cli
-
-### Fedora
-
-nvme-cli is available in Fedora 23 and up.  Install it with your favorite
-package manager.  For example:
-
-    $ sudo dnf install nvme-cli
-
-### FreeBSD
-
-`nvme-cli` is available in the FreeBSD Ports Collection.  A prebuilt binary
-package can be installed with:
-
-```console
-# pkg install nvme-cli
-```
-
-### Gentoo
-
-nvme-cli is available and tested in portage:
-```
-$ emerge -av nvme-cli
-```
-
-### Nix(OS)
-
-The attribute is named `nvme-cli` and can e.g. be installed with:
-```
-$ nix-env -f '<nixpkgs>' -iA nvme-cli
-```
-
-### openSUSE
-
-nvme-cli is available in openSUSE Leap 42.2 or later and Tumbleweed. You can
-install it using zypper. For example:
-
-    $ sudo zypper install nvme-cli
-
-### Ubuntu
-
-nvme-cli is supported in the Universe package sources for
-many architectures. For a complete list try running:
-  ```
-  rmadison nvme-cli
-   nvme-cli | 0.5-1          | xenial/universe         | source, amd64, arm64, armhf, i386, powerpc, ppc64el, s390x
-   nvme-cli | 0.5-1ubuntu0.2 | xenial-updates/universe | source, amd64, arm64,       armhf, i386, powerpc, ppc64el, s390x
-   nvme-cli | 1.5-1          | bionic/universe         | source, amd64, arm64,       armhf, i386, ppc64el, s390x
-   nvme-cli | 1.5-1ubuntu1.2 | bionic-updates          | source, amd64, arm64,       armhf, i386, ppc64el, s390x
-   nvme-cli | 1.9-1          | focal/universe          | source, amd64, arm64,       armhf, ppc64el, riscv64, s390x
-   nvme-cli | 1.9-1ubuntu0.1 | focal-updates           | source, amd64, arm64,       armhf, ppc64el, riscv64, s390x
-   nvme-cli | 1.14-1         | impish                  | source, amd64, arm64,       armhf, ppc64el, riscv64, s390x
-   nvme-cli | 1.16-3         | jammy                   | source, amd64, arm64,       armhf, ppc64el, riscv64, s390x
-  ```
-A Debian based package for nvme-cli is currently maintained as a
-Ubuntu PPA. To install nvme-cli using this approach please perform the following
-steps:
-   1. Perform an update of your repository list:
-   ```
-   sudo apt-get update
-   ```
-   2. Get nvme-cli!
-   ```
-   sudo apt-get install nvme-cli
-   ```
-   3. Test the code.
-   ```
-   sudo nvme list
-   ```
-   In the case of no NVMe devices you will see
-   ```
-   No NVMe devices detected.
-   ```
-   otherwise you will see information about each NVMe device installed
-   in the system.
-
-### OpenEmbedded/Yocto
+#### OpenEmbedded/Yocto
 
 An [nvme-cli recipe](https://layers.openembedded.org/layerindex/recipe/88631/)
 is available as part of the `meta-openembeded` layer collection.
 
-### Buildroot
+#### Buildroot
 
 `nvme-cli` is available as [buildroot](https://buildroot.org) package. The
 package is named `nvme`.
-
-### Other Distros
-
-TBD
 
 ## Developers
 
@@ -254,7 +179,7 @@ means if the current branch is updated via git, the subprojects/libnvme
 branch will not updated accordingly.  To update it, either use the 
 normal git operations or the command: 
 
-    $ meson subprojects update
+	$ meson subprojects update
 
 ## Dependency
 
