@@ -64,4 +64,3 @@ jobs:
           cleanup: false
           include: '[ "*", "**/*" ]'
           exclude: '[".github/**", ".git/**", "*.env"]'
-          pasive: true
