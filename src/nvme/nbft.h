@@ -1223,7 +1223,7 @@ struct nbft_info {
  * @filename: Filename of the raw NBFT table to read.
  *
  * Read and parse the specified NBFT file into a struct nbft_info.
- * Free with nbft_free().
+ * Free with nvme_nbft_free().
  *
  * Return: 0 on success, errno otherwise.
  */
