@@ -57,7 +57,7 @@ if get_option('json-c').disabled()
 else
     json_c_dep = dependency('json-c',
                             version: '>=0.13',
-                            required: true,
+                            required: get_option('json-c'),
                             fallback : ['json-c', 'json_c_dep'])
 endif
 conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c required?')
