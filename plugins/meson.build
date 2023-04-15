@@ -12,6 +12,7 @@ if json_c_dep.found()
     'plugins/intel/intel-nvme.c',
     'plugins/memblaze/memblaze-nvme.c',
     'plugins/micron/micron-nvme.c',
+    'plugins/nbft/nbft-plugin.c',
     'plugins/netapp/netapp-nvme.c',
     'plugins/nvidia/nvidia-nvme.c',
     'plugins/scaleflux/sfx-nvme.c',
