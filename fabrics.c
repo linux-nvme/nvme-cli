@@ -259,6 +259,7 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 
 	/* Find out the name of discovery controller */
 	struct nvme_id_ctrl id = { 0 };
+
 	if (nvme_ctrl_identify(c, &id)) {
 		fprintf(stderr,	"failed to identify controller, error %s\n",
 			nvme_strerror(errno));
@@ -285,9 +286,8 @@ static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 {
 	int i;
 
-	printf("\nDiscovery Log Number of Records %d, "
-	       "Generation counter %"PRIu64"\n",
-		numrec, le64_to_cpu(log->genctr));
+	printf("\nDiscovery Log Number of Records %d, Generation counter %"PRIu64"\n",
+	       numrec, le64_to_cpu(log->genctr));
 
 	for (i = 0; i < numrec; i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
@@ -296,7 +296,7 @@ static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		printf("trtype:  %s\n", nvmf_trtype_str(e->trtype));
 		printf("adrfam:  %s\n",
 			strlen(e->traddr) ?
-			nvmf_adrfam_str(e->adrfam): "");
+			nvmf_adrfam_str(e->adrfam) : "");
 		printf("subtype: %s\n", nvmf_subtype_str(e->subtype));
 		printf("treq:    %s\n", nvmf_treq_str(e->treq));
 		printf("portid:  %d\n", le16_to_cpu(e->portid));
@@ -330,15 +330,14 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 	uint64_t numrec = le64_to_cpu(log->numrec);
 	int fd, len, ret;
 
-	fd = open(raw, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+	fd = open(raw, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
-		fprintf(stderr, "failed to open %s: %s\n",
-			raw, strerror(errno));
+		fprintf(stderr, "failed to open %s: %s\n", raw, strerror(errno));
 		return;
 	}
 
-	len = sizeof(struct nvmf_discovery_log) +
-		numrec * sizeof(struct nvmf_disc_log_entry);
+	len = sizeof(struct nvmf_discovery_log) + numrec * sizeof(struct nvmf_disc_log_entry);
+
 	ret = write(fd, log, len);
 	if (ret < 0)
 		fprintf(stderr, "failed to write to %s: %s\n",
@@ -439,8 +438,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 				if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
 					continue;
 
-				/* Are we supposed to keep the discovery
-				 * controller around? */
+				/* Are we supposed to keep the discovery controller around? */
 				disconnect = !persistent;
 
 				if (strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
@@ -490,18 +488,16 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 }
 
 static char *get_default_trsvcid(const char *transport,
-			         bool discovery_ctrl)
+				 bool discovery_ctrl)
 {
 	if (!transport)
 		return NULL;
 	if (!strcmp(transport, "tcp")) {
-		if (discovery_ctrl) {
+		if (discovery_ctrl)
 			/* Default port for NVMe/TCP discovery controllers */
 			return stringify(NVME_DISC_IP_PORT);
-		} else {
-			/* Default port for NVMe/TCP io controllers */
-			return stringify(NVME_RDMA_IP_PORT);
-		}
+		/* Default port for NVMe/TCP io controllers */
+		return stringify(NVME_RDMA_IP_PORT);
 	} else if (!strcmp(transport, "rdma")) {
 		/* Default port for NVMe/RDMA controllers */
 		return stringify(NVME_RDMA_IP_PORT);
@@ -835,15 +831,13 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			/* Check if device matches command-line options */
 			if (!ctrl_config_match(c, &trcfg)) {
 				fprintf(stderr,
-					"ctrl device %s found, ignoring "
-					"non matching command-line options\n",
-					device);
+				    "ctrl device %s found, ignoring non matching command-line options\n",
+				    device);
 			}
 
 			if (!nvme_ctrl_is_discovery_ctrl(c)) {
 				fprintf(stderr,
-					"ctrl device %s found, ignoring "
-					"non discovery controller\n",
+					"ctrl device %s found, ignoring non discovery controller\n",
 					device);
 
 				nvme_free_ctrl(c);
@@ -890,7 +884,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
 		c = create_discover_ctrl(r, h, &cfg, &trcfg);
-	        if (!c) {
+		if (!c) {
 			fprintf(stderr,
 				"failed to add controller, error %s\n",
 				nvme_strerror(errno));
@@ -1347,13 +1341,13 @@ out:
 	return errno;
 }
 
-static void dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char * name)
+static void dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
 {
 	static const char * const task[] = {
 		[NVMF_DIM_TAS_REGISTER]   = "register",
 		[NVMF_DIM_TAS_DEREGISTER] = "deregister",
 	};
-	const char * t;
+	const char *t;
 	int status;
 	__u32 result;
 
