@@ -500,8 +500,10 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_fd;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 	if (cfg.human_readable)
@@ -557,8 +559,10 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_fd;
+	}
 
 	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err) {
@@ -907,8 +911,10 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	err = nvme_cli_get_log_endurance_group(dev, cfg.group_id,
 					       &endurance_log);
@@ -986,8 +992,10 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 	if (cfg.human_readable)
@@ -1077,8 +1085,10 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (cfg.verbose)
 		flags |= VERBOSE;
@@ -1135,8 +1145,10 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -1208,8 +1220,10 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -1257,8 +1271,10 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -1314,8 +1330,10 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -1379,8 +1397,10 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -1469,8 +1489,10 @@ static int get_persistent_event_log(int argc, char **argv,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (flags < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -1600,8 +1622,10 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -1681,8 +1705,10 @@ static int get_lba_status_log(int argc, char **argv,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	err = nvme_cli_get_log_lba_status(dev, true, 0, sizeof(__u32),
 					  &lslplen);
@@ -1749,8 +1775,10 @@ static int get_resv_notif_log(int argc, char **argv,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	err = nvme_cli_get_log_reservation(dev, false, &resv);
 	if (!err)
@@ -1806,8 +1834,10 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (!cfg.file_name) {
 		nvme_show_error("Please provide an output file!");
@@ -1910,8 +1940,10 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (cfg.raw_binary)
 		flags = BINARY;
@@ -1964,8 +1996,10 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (cfg.raw_binary)
 		flags = BINARY;
@@ -2359,8 +2393,10 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 	if (cfg.human_readable)
@@ -2410,8 +2446,10 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
@@ -2461,8 +2499,10 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
@@ -2516,8 +2556,10 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000)) {
 		nvme_show_error("can not allocate controller list payload");
@@ -2584,10 +2626,8 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
-		goto close_dev;
 	if (flags != JSON && flags != NORMAL) {
-		err = -EINVAL;
+		nvme_show_error("Invalid output format");
 		goto close_dev;
 	}
 
@@ -2664,8 +2704,10 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (cfg.verbose)
 		flags |= VERBOSE;
@@ -2717,10 +2759,7 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
-		goto close_dev;
 	if (flags != JSON && flags != NORMAL) {
-		err = -EINVAL;
 		nvme_show_error("invalid output format");
 		goto close_dev;
 	}
@@ -3257,10 +3296,8 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		devname = basename(argv[optind++]);
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
-		goto ret;
 	if (flags != JSON && flags != NORMAL) {
-		err = -EINVAL;
+		nvme_show_error("Invalid output format");
 		goto ret;
 	}
 	if (cfg.verbose)
@@ -3331,9 +3368,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (err < 0)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
-		return err;
+	flags = validate_output_format(cfg.output_format);
 	if (flags != JSON && flags != NORMAL) {
 		nvme_show_error("Invalid output format");
 		return -EINVAL;
@@ -3400,8 +3435,10 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 	if (cfg.vendor_specific)
@@ -3456,8 +3493,10 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	err = nvme_nvm_identify_ctrl(dev_fd(dev), &ctrl_nvm);
 	if (!err)
@@ -3511,8 +3550,10 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (cfg.verbose)
 		flags |= VERBOSE;
@@ -3585,8 +3626,10 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (cfg.verbose)
 		flags |= VERBOSE;
@@ -3647,8 +3690,10 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -3726,8 +3771,10 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 	if (cfg.vendor_specific)
@@ -3800,8 +3847,10 @@ static int cmd_set_independent_id_ns(int argc, char **argv,
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 	if (cfg.human_readable)
@@ -3859,8 +3908,10 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (posix_memalign((void *)&granularity_list, getpagesize(), NVME_IDENTIFY_DATA_SIZE)) {
 		nvme_show_error("can not allocate granularity list payload");
@@ -3916,8 +3967,10 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	err = nvme_identify_nvmset_list(dev_fd(dev), cfg.nvmset_id, &nvmset);
 	if (!err)
@@ -3970,8 +4023,10 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 	if (cfg.human_readable)
@@ -4062,8 +4117,10 @@ static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	err = nvme_identify_domain_list(dev_fd(dev), cfg.dom_id, &id_domain);
 	if (!err) {
@@ -4217,8 +4274,10 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
@@ -4274,8 +4333,10 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_err;
+	}
 
 	if (!cfg.num_entries) {
 		nvme_show_error("non-zero num-entries is required param");
@@ -4531,8 +4592,10 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
@@ -5487,8 +5550,10 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	r = nvme_scan(NULL);
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 	bar = mmap_registers(r, dev);
@@ -7252,8 +7317,10 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 	if (cfg.raw_binary)
 		flags = BINARY;
 
@@ -7968,8 +8035,10 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		goto err;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		goto close_dev;
+	}
 
 	if (!cfg.atype) {
 		nvme_show_error("action type (--action) has to be given");
@@ -9186,8 +9255,10 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		return err;
 
 	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		return err;
+	}
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
