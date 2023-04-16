@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
+// SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (C) 2016 Intel Corporation. All rights reserved.
  * Copyright (c) 2016 HGST, a Western Digital Company.
@@ -87,15 +87,15 @@ static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
 
 #define NVMF_OPTS(c)									\
-	OPT_STRING("transport",       't', "STR", &transport,	nvmf_tport), \
-	OPT_STRING("nqn",             'n', "STR", &subsysnqn,	nvmf_nqn), \
-	OPT_STRING("traddr",          'a', "STR", &traddr,	nvmf_traddr), \
-	OPT_STRING("trsvcid",         's', "STR", &trsvcid,	nvmf_trsvcid), \
-	OPT_STRING("host-traddr",     'w', "STR", &c.host_traddr,	nvmf_htraddr), \
-	OPT_STRING("host-iface",      'f', "STR", &c.host_iface,	nvmf_hiface), \
-	OPT_STRING("hostnqn",         'q', "STR", &hostnqn,	nvmf_hostnqn), \
-	OPT_STRING("hostid",          'I', "STR", &hostid,	nvmf_hostid), \
-	OPT_STRING("dhchap-secret",   'S', "STR", &hostkey,     nvmf_hostkey), \
+	OPT_STRING("transport",       't', "STR", &transport,	  nvmf_tport),		\
+	OPT_STRING("nqn",             'n', "STR", &subsysnqn,	  nvmf_nqn),		\
+	OPT_STRING("traddr",          'a', "STR", &traddr,	  nvmf_traddr),		\
+	OPT_STRING("trsvcid",         's', "STR", &trsvcid,	  nvmf_trsvcid),	\
+	OPT_STRING("host-traddr",     'w', "STR", &c.host_traddr, nvmf_htraddr),	\
+	OPT_STRING("host-iface",      'f', "STR", &c.host_iface,  nvmf_hiface),		\
+	OPT_STRING("hostnqn",         'q', "STR", &hostnqn,	  nvmf_hostnqn),	\
+	OPT_STRING("hostid",          'I', "STR", &hostid,	  nvmf_hostid),		\
+	OPT_STRING("dhchap-secret",   'S', "STR", &hostkey,       nvmf_hostkey),	\
 	OPT_INT("nr-io-queues",       'i', &c.nr_io_queues,       nvmf_nr_io_queues),	\
 	OPT_INT("nr-write-queues",    'W', &c.nr_write_queues,    nvmf_nr_write_queues),\
 	OPT_INT("nr-poll-queues",     'P', &c.nr_poll_queues,     nvmf_nr_poll_queues),	\
@@ -109,8 +109,8 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("duplicate-connect", 'D', &c.duplicate_connect,  nvmf_dup_connect),	\
 	OPT_FLAG("disable-sqflow",    'd', &c.disable_sqflow,     nvmf_disable_sqflow),	\
 	OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),	\
-	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest), \
-	OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls)	\
+	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest),	\
+	OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls)		\
 
 /*
  * Compare two C strings and handle NULL pointers gracefully.
@@ -330,7 +330,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 	uint64_t numrec = le64_to_cpu(log->numrec);
 	int fd, len, ret;
 
-	fd = open(raw, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR);
+	fd = open(raw, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	if (fd < 0) {
 		fprintf(stderr, "failed to open %s: %s\n", raw, strerror(errno));
 		return;
@@ -376,7 +376,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 	if (!log) {
 		fprintf(stderr, "failed to get discovery log: %s\n",
 			nvme_strerror(errno));
-		return errno;
+		return -errno;
 	}
 
 	numrec = le64_to_cpu(log->numrec);
@@ -948,18 +948,18 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	else if (!strcmp(format, "json"))
 		flags = JSON;
 	else
-		return EINVAL;
+		return -EINVAL;
 
 	if (!subsysnqn) {
 		fprintf(stderr,
 			"required argument [--nqn | -n] not specified\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (!transport) {
 		fprintf(stderr,
 			"required argument [--transport | -t] not specified\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (strcmp(transport, "loop")) {
@@ -967,7 +967,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 			fprintf(stderr,
 				"required argument [--traddr | -a] not specified for transport %s\n",
 				transport);
-			return EINVAL;
+			return -EINVAL;
 		}
 	}
 
@@ -1049,7 +1049,7 @@ out_free:
 	if (dump_config)
 		nvme_dump_config(r);
 	nvme_free_tree(r);
-	return errno;
+	return -errno;
 }
 
 static nvme_ctrl_t lookup_nvme_ctrl(nvme_root_t r, const char *name)
@@ -1069,12 +1069,36 @@ static nvme_ctrl_t lookup_nvme_ctrl(nvme_root_t r, const char *name)
 	return NULL;
 }
 
+static void nvmf_disconnect_nqn(nvme_root_t r, char *nqn)
+{
+	int i = 0;
+	char *n = nqn;
+	char *p;
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+
+	while ((p = strsep(&n, ",")) != NULL) {
+		if (!strlen(p))
+			continue;
+		nvme_for_each_host(r, h) {
+			nvme_for_each_subsystem(h, s) {
+				if (strcmp(nvme_subsystem_get_nqn(s), p))
+					continue;
+				nvme_subsystem_for_each_ctrl(s, c) {
+					if (!nvme_disconnect_ctrl(c))
+						i++;
+				}
+			}
+		}
+	}
+	printf("NQN:%s disconnected %d controller(s)\n", nqn, i);
+}
+
 int nvmf_disconnect(const char *desc, int argc, char **argv)
 {
 	const char *device = "nvme device handle";
 	nvme_root_t r;
-	nvme_host_t h;
-	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 	char *p;
 	int ret;
@@ -1101,7 +1125,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	if (!cfg.nqn && !cfg.device) {
 		fprintf(stderr,
 			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
@@ -1118,26 +1142,8 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 		return ret;
 	}
 
-	if (cfg.nqn) {
-		int i = 0;
-		char *n = cfg.nqn;
-
-		while ((p = strsep(&n, ",")) != NULL) {
-			if (!strlen(p))
-				continue;
-			nvme_for_each_host(r, h) {
-				nvme_for_each_subsystem(h, s) {
-					if (strcmp(nvme_subsystem_get_nqn(s), p))
-						continue;
-					nvme_subsystem_for_each_ctrl(s, c) {
-						if (!nvme_disconnect_ctrl(c))
-							i++;
-					}
-				}
-			}
-		}
-		printf("NQN:%s disconnected %d controller(s)\n", cfg.nqn, i);
-	}
+	if (cfg.nqn)
+		nvmf_disconnect_nqn(r, cfg.nqn);
 
 	if (cfg.device) {
 		char *d;
@@ -1151,7 +1157,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 				fprintf(stderr,
 					"Did not find device %s\n", p);
 				nvme_free_tree(r);
-				return errno;
+				return -errno;
 			}
 			ret = nvme_disconnect_ctrl(c);
 			if (ret)
@@ -1292,7 +1298,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		if (!transport) {
 			fprintf(stderr,
 				"required argument [--transport | -t] needed with --modify\n");
-			return EINVAL;
+			return -EINVAL;
 		}
 
 		if (!hostnqn)
@@ -1338,7 +1344,7 @@ out:
 	if (hnqn)
 		free(hnqn);
 	nvme_free_tree(r);
-	return errno;
+	return -errno;
 }
 
 static void dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
@@ -1394,13 +1400,13 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 	if (!cfg.nqn && !cfg.device) {
 		fprintf(stderr,
 			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (!cfg.tas) {
 		fprintf(stderr,
 			"Task [--task | -t] must be specified\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	/* Allow partial name (e.g. "reg" for "register" */
@@ -1410,7 +1416,7 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 		tas = NVMF_DIM_TAS_DEREGISTER;
 	} else {
 		fprintf(stderr, "Invalid --task: %s\n", cfg.tas);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
@@ -1459,7 +1465,7 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 					"Did not find device %s: %s\n",
 					p, nvme_strerror(errno));
 				nvme_free_tree(r);
-				return errno;
+				return -errno;
 			}
 			dim_operation(c, tas, p);
 		}
