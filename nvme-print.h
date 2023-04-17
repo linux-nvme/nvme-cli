@@ -156,5 +156,6 @@ const char *nvme_pel_event_to_string(int type);
 const char *get_sanitize_log_sstat_status_str(__u16 status);
 const char *nvme_ana_state_to_string(enum nvme_ana_state state);
 void nvme_show_error(const char *msg, ...);
+void nvme_show_perror(const char *msg);
 
 #endif
