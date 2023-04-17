@@ -610,10 +610,10 @@ void nvme_show_lba_status_log(void *lba_status, __u32 size,
 static const char *resv_notif_to_string(__u8 type)
 {
 	switch (type) {
-	case 0x1: return "Empty Log Page";
-	case 0x2: return "Registration Preempted";
-	case 0x3: return "Reservation Released";
-	case 0x4: return "Reservation Preempted";
+	case 0x0: return "Empty Log Page";
+	case 0x1: return "Registration Preempted";
+	case 0x2: return "Reservation Released";
+	case 0x3: return "Reservation Preempted";
 	default:  return "Reserved";
 	}
 }
