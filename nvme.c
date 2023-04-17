@@ -2042,7 +2042,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_UINT("mos",           's', &cfg.mos,            mos),
+		OPT_SHRT("mos",           's', &cfg.mos,            mos),
 		OPT_BYTE("mo",            'm', &cfg.mo,             mo),
 		OPT_FILE("data",          'd', &cfg.file,           data),
 		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
@@ -2138,7 +2138,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_UINT("mos",           's', &cfg.mos,            mos),
+		OPT_SHRT("mos",           's', &cfg.mos,            mos),
 		OPT_BYTE("mo",            'm', &cfg.mo,             mo),
 		OPT_FILE("data",          'd', &cfg.file,           data),
 		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
