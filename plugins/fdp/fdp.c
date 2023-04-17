@@ -449,6 +449,7 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 	const char *enable = "Enable/disable event";
 	const char *event_types = "Comma-separated list of event types";
 	const char *ph = "Placement Handle";
+	const char *save = "specifies that the controller shall save the attribute";
 
 	struct nvme_dev *dev;
 	int err = -1;
@@ -461,16 +462,19 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 		__u16   ph;
 		char    *event_types;
 		bool    enable;
+		bool	save;
 	};
 
 	struct config cfg = {
 		.enable = false,
+		.save	= false,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",     'n', &cfg.namespace_id, namespace_id),
 		OPT_SHRT("placement-handle", 'p', &cfg.ph,           ph),
 		OPT_FLAG("enable",           'e', &cfg.enable,       enable),
+		OPT_FLAG("save",             's', &cfg.save,         save),
 		OPT_LIST("event-types",      't', &cfg.event_types,  event_types),
 		OPT_END()
 	};
@@ -514,6 +518,7 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 		.args_size	= sizeof(args),
 		.fd		= dev_fd(dev),
 		.fid		= NVME_FEAT_FID_FDP_EVENTS,
+		.save		= cfg.save,
 		.nsid		= cfg.namespace_id,
 		.cdw11		= (nev << 16) | cfg.ph,
 		.cdw12		= cfg.enable ? 0x1 : 0x0,
