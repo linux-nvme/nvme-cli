@@ -2860,21 +2860,15 @@ void json_output_status(int status)
 void json_output_error(const char *msg, va_list ap)
 {
 	struct json_object *root = json_create_object();
-	int len = ERROR_MSG_LEN;
-	char *error = (char *)malloc(ERROR_MSG_LEN);
+	char *error;
 
-	if (!error)
-		return;
+	if (vasprintf(&error, msg, ap) < 0)
+		error = NULL;
 
-	len = vsnprintf(error, len, msg, ap) + 1;
-	if (len > ERROR_MSG_LEN) {
-		error = (char *)realloc(error, len);
-		if (!error)
-			return;
-		vsnprintf(error, len, msg, ap);
-	}
-
-	json_object_add_value_string(root, "error", error);
+	if (error)
+		json_object_add_value_string(root, "error", error);
+	else
+		json_object_add_value_string(root, "error", "Could not allocate string");
 
 	json_output_object(root);
 
