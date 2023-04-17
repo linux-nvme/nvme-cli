@@ -5471,3 +5471,11 @@ void nvme_show_error(const char *msg, ...)
 
 	va_end(ap);
 }
+
+void nvme_show_perror(const char *msg)
+{
+	if (argconfig_output_format_json(false))
+		return json_output_perror(msg);
+
+	perror(msg);
+}

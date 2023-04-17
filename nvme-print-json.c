@@ -2874,3 +2874,21 @@ void json_output_error(const char *msg, va_list ap)
 
 	free(error);
 }
+
+void json_output_perror(const char *msg)
+{
+	struct json_object *root = json_create_object();
+	char *error;
+
+	if (asprintf(&error, "%s: %s", msg, strerror(errno)) < 0)
+		error = NULL;
+
+	if (error)
+		json_object_add_value_string(root, "error", error);
+	else
+		json_object_add_value_string(root, "error", "Could not allocate string");
+
+	json_output_object(root);
+
+	free(error);
+}

@@ -287,19 +287,18 @@ static int open_dev_direct(struct nvme_dev **devp, char *devstr, int flags)
 	dev->name = basename(devstr);
 	err = open(devstr, flags);
 	if (err < 0) {
-		perror(devstr);
+		nvme_show_perror(devstr);
 		goto err_free;
 	}
 	dev->direct.fd = err;
 
 	err = fstat(dev_fd(dev), &dev->direct.stat);
 	if (err < 0) {
-		perror(devstr);
+		nvme_show_perror(devstr);
 		goto err_close;
 	}
 	if (!is_chardev(dev) && !is_blkdev(dev)) {
-		nvme_show_error("%s is not a block or character device",
-			devstr);
+		nvme_show_error("%s is not a block or character device", devstr);
 		err = -ENODEV;
 		goto err_close;
 	}
@@ -381,7 +380,7 @@ static int check_arg_dev(int argc, char **argv)
 {
 	if (optind >= argc) {
 		errno = EINVAL;
-		perror(argv[0]);
+		nvme_show_perror(argv[0]);
 		return -EINVAL;
 	}
 	return 0;
@@ -1050,7 +1049,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		perror("effects log page");
+		nvme_show_perror("effects log page");
 
 close_dev:
 	while ((node = list_pop(&log_pages, nvme_effects_log_node_t, node))) {
@@ -1167,7 +1166,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 
 	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err < 0) {
-		perror("identify controller");
+		nvme_show_perror("identify controller");
 		goto close_dev;
 	} else if (err) {
 		nvme_show_error("could not identify controller");
@@ -1189,8 +1188,10 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		perror("error log");
+		nvme_show_perror("error log");
+
 	free(err_log);
+
 close_dev:
 	dev_close(dev);
 ret:
@@ -2010,7 +2011,7 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		perror("supported capacity configuration list log");
+		nvme_show_perror("supported capacity configuration list log");
 
 close_dev:
 	dev_close(dev);
@@ -2056,7 +2057,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
-			perror("get-namespace-id");
+			nvme_show_perror("get-namespace-id");
 			goto close_dev;
 		}
 	}
@@ -2064,7 +2065,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 	if (cfg.data_len) {
 		buf = calloc(1, cfg.data_len);
 		if (!buf) {
-			perror("could not alloc memory for io mgmt receive data");
+			nvme_show_perror("could not alloc memory for io mgmt receive data");
 			err = -ENOMEM;
 			goto close_dev;
 		}
@@ -2073,14 +2074,14 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 	if (cfg.file) {
 		dfd = open(cfg.file, O_RDONLY);
 		if (dfd < 0) {
-			perror(cfg.file);
+			nvme_show_perror(cfg.file);
 			goto free;
 		}
 	}
 
 	err = read(dfd, buf, cfg.data_len);
 	if (err < 0) {
-		perror("read");
+		nvme_show_perror("read");
 		goto close_fd;
 	}
 
@@ -2102,7 +2103,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		perror("io-mgmt-send");
+		nvme_show_perror("io-mgmt-send");
 
 close_fd:
 	if (cfg.file)
@@ -2152,7 +2153,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
-			perror("get-namespace-id");
+			nvme_show_perror("get-namespace-id");
 			goto close_dev;
 		}
 	}
@@ -2160,7 +2161,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 	if (cfg.data_len) {
 		buf = calloc(1, cfg.data_len);
 		if (!buf) {
-			perror("could not alloc memory for io mgmt receive data");
+			nvme_show_perror("could not alloc memory for io mgmt receive data");
 			err = -ENOMEM;
 			goto close_dev;
 		}
@@ -2185,13 +2186,13 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 		if (cfg.file) {
 			dfd = open(cfg.file, O_WRONLY | O_CREAT, 0644);
 			if (dfd < 0) {
-				perror(cfg.file);
+				nvme_show_perror(cfg.file);
 				goto free;
 			}
 
 			err = write(dfd, buf, cfg.data_len);
 			if (err < 0) {
-				perror("write");
+				nvme_show_perror("write");
 				goto close_fd;
 			}
 		} else {
@@ -2200,7 +2201,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		perror("io-mgmt-recv");
+		nvme_show_perror("io-mgmt-recv");
 	}
 
 close_fd:
@@ -2316,7 +2317,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	log = malloc(cfg.log_len);
 	if (!log) {
-		perror("could not alloc buffer for log\n");
+		nvme_show_perror("could not alloc buffer for log\n");
 		err = -ENOMEM;
 		goto close_dev;
 	}
@@ -2715,7 +2716,8 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		perror("identify namespace for specific LBA format");
+		nvme_show_perror("identify namespace for specific LBA format");
+
 close_dev:
 	dev_close(dev);
 ret:
@@ -2897,7 +2899,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		perror(attach ? "attach namespace" : "detach namespace");
+		nvme_show_perror(attach ? "attach namespace" : "detach namespace");
 
 close_dev:
 	dev_close(dev);
@@ -3547,7 +3549,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
-			perror("get-namespace-id");
+			nvme_show_perror("get-namespace-id");
 			goto close_dev;
 		}
 	}
@@ -3566,7 +3568,8 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		perror("nvm identify namespace");
+		nvme_show_perror("nvm identify namespace");
+
 close_dev:
 	dev_close(dev);
 ret:
@@ -3625,16 +3628,16 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 		ns.nlbaf = NVME_FEAT_LBA_RANGE_MAX - 1;
 		ns.nulbaf = 0;
 	}
-	err = nvme_identify_iocs_ns_csi_user_data_format(dev_fd(dev),
-										cfg.lba_format_index,
-										cfg.uuid_index, NVME_CSI_NVM, &nvm_ns);
+
+	err = nvme_identify_iocs_ns_csi_user_data_format(dev_fd(dev), cfg.lba_format_index,
+							 cfg.uuid_index, NVME_CSI_NVM, &nvm_ns);
 	if (!err)
-		nvme_show_nvm_id_ns(&nvm_ns, 0, &ns, cfg.lba_format_index, true,
-						flags);
+		nvme_show_nvm_id_ns(&nvm_ns, 0, &ns, cfg.lba_format_index, true, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		perror("NVM identify namespace for specific LBA format");
+		nvme_show_perror("NVM identify namespace for specific LBA format");
+
 close_dev:
 	dev_close(dev);
 ret:
@@ -3848,10 +3851,9 @@ static int cmd_set_independent_id_ns(int argc, char **argv,
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(dev_fd(dev),
-						       &cfg.namespace_id);
+		err = cfg.namespace_id = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
-			perror("get-namespace-id");
+			nvme_show_perror("get-namespace-id");
 			goto close_dev;
 		}
 	}
@@ -4995,7 +4997,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 	err = fstat(fw_fd, &sb);
 	if (err < 0) {
-		perror("fstat");
+		nvme_show_perror("fstat");
 		goto close_fw_fd;
 	}
 
@@ -6199,7 +6201,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 
 		err = fstat(sec_fd, &sb);
 		if (err < 0) {
-			perror("fstat");
+			nvme_show_perror("fstat");
 			goto close_sec_fd;
 		}
 
@@ -7537,7 +7539,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (strlen(cfg.data)) {
 		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
-			perror(cfg.data);
+			nvme_show_perror(cfg.data);
 			err = -EINVAL;
 			goto close_dev;
 		}
@@ -7546,7 +7548,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (strlen(cfg.metadata)) {
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
-			perror(cfg.metadata);
+			nvme_show_perror(cfg.metadata);
 			err = -EINVAL;
 			goto close_dfd;
 		}
@@ -8524,7 +8526,7 @@ static int passthru(int argc, char **argv, bool admin,
 	if (strlen(cfg.input_file)) {
 		dfd = open(cfg.input_file, flags, mode);
 		if (dfd < 0) {
-			perror(cfg.input_file);
+			nvme_show_perror(cfg.input_file);
 			err = -EINVAL;
 			goto close_dev;
 		}
@@ -8533,7 +8535,7 @@ static int passthru(int argc, char **argv, bool admin,
 	if (cfg.metadata && strlen(cfg.metadata)) {
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
-			perror(cfg.metadata);
+			nvme_show_perror(cfg.metadata);
 			err = -EINVAL;
 			goto close_dfd;
 		}
@@ -8549,7 +8551,7 @@ static int passthru(int argc, char **argv, bool admin,
 		if (cfg.write) {
 			if (read(mfd, mdata, cfg.metadata_len) < 0) {
 				err = -errno;
-				perror("failed to read metadata write buffer");
+				nvme_show_perror("failed to read metadata write buffer");
 				goto free_metadata;
 			}
 		} else {
@@ -9354,7 +9356,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	if (strlen(cfg.input_file)) {
 		fd = open(cfg.input_file, flags, mode);
 		if (fd < 0) {
-			perror(cfg.input_file);
+			nvme_show_perror(cfg.input_file);
 			err = -EINVAL;
 			goto close_dev;
 		}
