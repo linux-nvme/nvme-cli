@@ -147,28 +147,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: install dependencies
-        run: sudo apt-get install libpam-dev libcap-ng-dev
+        run: sudo apt-get install gcc meson ninja-build libpam-dev libcap-ng-dev
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            --wrap-mode=forcefallback
-            --default-library=static
-            -Dlibnvme:werror=false
-            -Dopenssl:werror=false
-          meson-version: 0.61.2
-      - uses: bsfishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
+      - name: build
+        run: |
+          LDFLAGS=-static meson setup   \
+            --werror                    \
+            --buildtype=release         \
+            --wrap-mode=forcefallback   \
+            --default-library=static    \
+            -Dlibnvme:openssl=disabled  \
+            -Dlibnvme:python=disabled   \
+            -Dlibnvme:werror=false      \
+            .build
+          meson compile -C .build
+      - name: test
+        run: |
+          meson test -C .build
+          ldd .build/nvme 2>&1 | grep 'not a dynamic executable'
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
