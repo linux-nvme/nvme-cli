@@ -1913,7 +1913,7 @@ int nvme_resv_report(struct nvme_resv_report_args *args)
 
 int nvme_io_mgmt_recv(struct nvme_io_mgmt_recv_args *args)
 {
-	__u32 cdw10 = (args->mo & 0xf) | (args->mos & 0xff << 16);
+	__u32 cdw10 = args->mo | (args->mos << 16);
 	__u32 cdw11 = (args->data_len >> 2) - 1;
 
 	struct nvme_passthru_cmd cmd = {
@@ -1936,7 +1936,7 @@ int nvme_io_mgmt_recv(struct nvme_io_mgmt_recv_args *args)
 
 int nvme_io_mgmt_send(struct nvme_io_mgmt_send_args *args)
 {
-	__u32 cdw10 = (args->mo & 0xf) | ((args->mos & 0xff) << 16);
+	__u32 cdw10 = args->mo | (args->mos << 16);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_io_mgmt_send,
