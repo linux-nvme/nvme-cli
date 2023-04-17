@@ -15,7 +15,7 @@ and payloads, and utilities to connect, scan, and manage nvme devices
 on a Linux system.
 
 The public specification is the authority to resolve any protocol
-discrepencies with this library. For more info on NVM Express, please
+discrepancies with this library. For more info on NVM Express, please
 see:
 
   https://nvmexpress.org
@@ -36,51 +36,52 @@ Keith Busch 2020-02-06
 
 ------
 
-# Building with meson
-
-## What is the meson build system?
-
-Here's an excerpt from the meson web site: *Meson is **an open source
-build system** meant to be both extremely fast, and, even more
-importantly, as user friendly as possible. The main design point of
-Meson is that every moment a developer spends writing or debugging
-build definitions is a second wasted.*
-
-Several well-known projects such as `systemd` and `Gnome` use meson as
-their build system. A summary of projects using meson can be found
-[here](https://mesonbuild.com/Users.html). For more info on meson,
-please consult the following sites:
-
-**Wiki page**: https://en.wikipedia.org/wiki/Meson_(software)
-
-**meson documentation**: https://mesonbuild.com/
-
-**meson repo**: https://github.com/mesonbuild/meson
-
-## Dependency
+# Dependency
 
 libnvme depends on minimum Linux kernel version v4.15, which
 introduced the /sys/class/nvme-subsystem.
 
+# Build from source
 ## Prerequisite
 
-First, install meson.
+A minimal build depends on a set of build tools
 
-**Debian / Ubuntu**:
+  - gcc
+  - ninja
+  - meson
 
-```bash
-sudo apt-get install meson
-```
+Not all feature will be present with such configuration, e.g.
+the fabrics part of the library wont support authentication or
+TLS over the nvme-tcp transport.
 
-**Fedora / Red Hat**:
+To enable the optional features install following libraries
 
-```bash
-sudo dnf install meson
-```
+`/etc/nvme/config.json`` support:
+  - json-c (recommend)
+
+Authentication and TLS over nvme-tcp:
+  - openssl
+  - keyutils
+
+End point discovery for MI
+  - libdbus
+
+Python bindings
+  - Python 3 interpreter
+  - Python 3 development libraries
+
+## Minimal on embedded builds
+
+The reference implemention of the Meson specification is in Python 3. Installing
+or porting this dependency is not really feasible for embedded project. Though
+there are two project which implement the Ninja and the Meson API in pure C99
+
+  - samurai: https://github.com/michaelforney/samurai.git
+  - muon: https://git.sr.ht/~lattis/muon
+
+See the CI [build](.github/workflows/build.yml) for an example how to use it.
 
 ## To compile libnvme
-
-Using meson is similar to projects that use a `configure` script before running `make`.
 
 To `configure` the project:
 
@@ -91,7 +92,7 @@ meson setup .build
 Which will default to build a shared library. To configure for static libraries call
 
 ```
-meson setup .build --default-library=static
+meson setup --default-library=static .build
 ```
 
 One nice feature of meson is that it doesn't mix build artifacts
@@ -105,14 +106,7 @@ completely "clean" all the build artifacts, one need only delete the
 To compile:
 
 ```
-cd .build
-ninja
-```
-
-Or:
-
-```
-ninja -C .build
+meson -C .build
 ```
 
 ## To install libnvme
@@ -120,8 +114,7 @@ ninja -C .build
 To install `libnvme`:
 
 ```
-cd .build
-meson install
+meson install -C .build
 ```
 
 ## To run unit tests
@@ -129,23 +122,7 @@ meson install
 To run unit tests:
 
 ```
-cd .build
-meson test
-```
-
-## To clean after a build
-
-To perform the equivalent of a `make clean` without deleting the build configuration.
-
-```
-cd .build
-ninja -t clean
-```
-
-Or:
-
-```
-ninja -C .build -t clean
+meson test -C .build
 ```
 
 ## To purge everything
@@ -160,10 +137,24 @@ rm -rf .build
 
 A few build options can be specified on the command line when invoking meson.
 
-| Option | Values [default]          | Description                                                  |
-| ------ | ------------------------- | ------------------------------------------------------------ |
-| man    | true, [false]             | Instruct meson to configure the project to build the `libnvme` documentation. <br />Example: `meson .build -Dman=true` |
+| Option      | Values [default]          | Description                                                  |
+| ----------- | ------------------------- | ------------------------------------------------------------ |
+| version-tag | none                      | Overwrite the git version string in the binary               |
+| htmldir     | none                      | Installation directory for the HTML documentation            |
+| rstdir      | none                      | Installation directory for the RST documentation             |
+| docs        | [false], html, man, rst, all | Install documentation                                     |
+| docs-build  | [false], true             | Enable build documentation                                   |
 | python | [auto], enabled, disabled | Whether to build the Python bindings. When set to `auto`, the default, meson will check for the presence of the  tools and libraries (e.g. `swig`) required to build the Python bindings. If found, meson will configure the project to build the Python bindings. If a tool or library is missing, then the Python bindings won't be built. Setting this to `enabled`, forces the Python bindings to be built. When set to `disabled`, meson will configure the project to not build the Python bindings.<br />Example: `meson setup .build -Dpython=disabled` |
+| openssl     | [auto], enabled, disabled | Enables OpenSSL dependend features (e.g. authentication), adds build dependency on OpenSSL |
+| libdbus     | auto, enabled, [disabled] | Enables D-Bus dependend features (libnvme-mi: End point discovery), adds build dependency on libdbus |
+| json-c      | [auto], enabled, disabled | (recommended) Enables JSON-C dependend features (e.g. config.json parsing), adds build depdency on json-c |
+| keyutils    | [auto], enabled, disabled | Enables keyutils dependend features (e.g. TLS over TCP), adds build dependency on keyutils |
+
+See the full configuration options with
+
+```bash
+meson configure .build
+```
 
 ### Changing the build options from the command-line (i.e. w/o modifying any files)
 
@@ -183,12 +174,5 @@ meson setup .build -Db_sanitize=address
 This option adds `-fsanitize=address` to the gcc options. Note that when using the sanitize feature, the library `libasan.so` must be available and must be the very first library loaded when running an executable. Ensuring that `libasan.so` gets loaded first can be achieved with the `LD_PRELOAD` environment variable as follows: 
 
 ```
-meson setup .build -Db_sanitize=address && LD_PRELOAD=/lib64/libasan.so.6 ninja -C .build test 
+meson setup .build -Db_sanitize=address && LD_PRELOAD=/lib64/libasan.so.6 ninja -C .build test
 ```
-
-To list configuration options that are available and possible values:
-
-```bash
-meson configure .build
-```
-
