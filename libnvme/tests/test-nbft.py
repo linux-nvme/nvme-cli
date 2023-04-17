@@ -37,8 +37,8 @@ class Testclass(unittest.TestCase):
                 }
             ],
             "host": {
-                "host_id_configured": False,
-                "host_nqn_configured": False,
+                "host_id_configured": True,
+                "host_nqn_configured": True,
                 "id": "44454c4c-3400-1036-8038-b2c04f313233",
                 "nqn": "nqn.1988-11.com.dell:PowerEdge.R760.1234567",
                 "primary_admin_host_flag": "not indicated",
