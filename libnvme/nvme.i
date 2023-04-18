@@ -37,10 +37,6 @@
 	static int connect_err = 0;
 	static int discover_err = 0;
 
-	static void PyList_AppendDecRef(PyObject *p, PyObject *val) {
-	    PyList_Append(p, val); /* Does NOT steal reference to val .. */
-	    Py_XDECREF(val);       /* .. therefore decrement ref. count. */
-	}
 	static void PyDict_SetItemStringDecRef(PyObject * p, const char *key, PyObject *val) {
 		PyDict_SetItemString(p, key, val); /* Does NOT steal reference to val .. */
 		Py_XDECREF(val);                   /* .. therefore decrement ref. count. */
@@ -319,7 +315,7 @@ PyObject *hostid_from_file();
 		PyDict_SetItemStringDecRef(entry, "asqsz", val);
 		val = PyLong_FromLong(e->eflags);
 		PyDict_SetItemStringDecRef(entry, "eflags", val);
-		PyList_SetItem(obj, i, entry); /* steals ref. to entry */
+		PyList_SetItem(obj, i, entry); /* steals ref. to object - no need to decref */
 	}
 	$result = obj;
 };
@@ -738,7 +734,7 @@ struct nvme_ns {
 		if (!obj) Py_RETURN_NONE;
 
 		for (int i = 0; i < NVME_LOG_SUPPORTED_LOG_PAGES_MAX; i++)
-			PyList_SetItem(obj, i, PyLong_FromLong(le32_to_cpu(log.lid_support[i]))); /* steals ref. */
+			PyList_SetItem(obj, i, PyLong_FromLong(le32_to_cpu(log.lid_support[i]))); /* steals ref. to object - no need to decref */
 
 		return obj;
 	}
@@ -827,13 +823,10 @@ struct nvme_ns {
 		PyObject *output = PyDict_New();
 		PyObject *hfis = PyList_New(ss->num_hfis);
 
-		PyDict_SetItemStringDecRef(output, "index", PyLong_FromLong(ss->index));
-
-		PyDict_SetItemStringDecRef(output, "num_hfis", PyLong_FromLong(ss->num_hfis));
 		for (i = 0; i < ss->num_hfis; i++)
-			PyList_SetItem(hfis, i, PyLong_FromLong(ss->hfis[i]->index)); /* steals ref. to object - no need to decref */
+			PyList_SetItem(hfis, i, PyLong_FromLong(ss->hfis[i]->index - 1)); /* steals ref. to object - no need to decref */
 
-		PyDict_SetItemStringDecRef(output, "hfis", hfis);
+		PyDict_SetItemStringDecRef(output, "hfi_indexes", hfis);
 
 		PyDict_SetItemStringDecRef(output, "trtype", PyUnicode_FromString(ss->transport));
 		PyDict_SetItemStringDecRef(output, "traddr", PyUnicode_FromString(ss->traddr));
@@ -886,8 +879,8 @@ struct nvme_ns {
 		if (ss->dhcp_root_path_string)
 			PyDict_SetItemStringDecRef(output, "dhcp_root_path_string", PyUnicode_FromString(ss->dhcp_root_path_string));
 
-		PyDict_SetItemStringDecRef(output, "pdu_header_digest_required", PyLong_FromLong(ss->pdu_header_digest_required));
-		PyDict_SetItemStringDecRef(output, "data_digest_required", PyLong_FromLong(ss->data_digest_required));
+		PyDict_SetItemStringDecRef(output, "pdu_header_digest_required", PyBool_FromLong(ss->pdu_header_digest_required));
+		PyDict_SetItemStringDecRef(output, "data_digest_required", PyBool_FromLong(ss->data_digest_required));
 
 		return output;
 	}
@@ -896,7 +889,6 @@ struct nvme_ns {
 	{
 		PyObject *output = PyDict_New();
 
-		PyDict_SetItemStringDecRef(output, "index", PyLong_FromLong(hfi->index));
 		PyDict_SetItemStringDecRef(output, "trtype", PyUnicode_FromString(hfi->transport));
 
 		if (!strcmp(hfi->transport, "tcp")) {
@@ -929,8 +921,8 @@ struct nvme_ns {
 			if (hfi->tcp_info.host_name)
 				PyDict_SetItemStringDecRef(output, "host_name", PyUnicode_FromString(hfi->tcp_info.host_name));
 
-			PyDict_SetItemStringDecRef(output, "this_hfi_is_default_route", PyLong_FromLong(hfi->tcp_info.this_hfi_is_default_route));
-			PyDict_SetItemStringDecRef(output, "dhcp_override", PyLong_FromLong(hfi->tcp_info.dhcp_override));
+			PyDict_SetItemStringDecRef(output, "this_hfi_is_default_route", PyBool_FromLong(hfi->tcp_info.this_hfi_is_default_route));
+			PyDict_SetItemStringDecRef(output, "dhcp_override", PyBool_FromLong(hfi->tcp_info.dhcp_override));
 		}
 
 		return output;
@@ -940,12 +932,10 @@ struct nvme_ns {
 	{
 		PyObject *output = PyDict_New();
 
-		PyDict_SetItemStringDecRef(output, "index", PyLong_FromLong(disc->index));
-
 		if (disc->security)
-			PyDict_SetItemStringDecRef(output, "security", PyLong_FromLong(disc->security->index));
+			PyDict_SetItemStringDecRef(output, "security_index", PyLong_FromLong(disc->security->index));
 		if (disc->hfi)
-			PyDict_SetItemStringDecRef(output, "hfi", PyLong_FromLong(disc->hfi->index));
+			PyDict_SetItemStringDecRef(output, "hfi_index", PyLong_FromLong(disc->hfi->index - 1));
 		if (disc->uri)
 			PyDict_SetItemStringDecRef(output, "uri", PyUnicode_FromString(disc->uri));
 		if (disc->nqn)
@@ -982,34 +972,60 @@ struct nvme_ns {
 		}
 
 		{
+			size_t ss_num = 0;
 			struct nbft_info_subsystem_ns **ss;
-			PyObject *subsystem = PyList_New(0);
+			PyObject *subsystem;
 
+			/* First, let's find how many entries there are */
 			for (ss = nbft->subsystem_ns_list; ss && *ss; ss++)
-				PyList_AppendDecRef(subsystem, ssns_to_dict(*ss));
+				ss_num++;
+
+			/* Now, let's fill the list using "(*ss)->index - 1"
+			   as the index for writing to the list */
+			subsystem = PyList_New(ss_num);
+			for (ss = nbft->subsystem_ns_list; ss && *ss; ss++)
+				PyList_SetItem(subsystem, (*ss)->index - 1, ssns_to_dict(*ss)); /* steals ref. to object - no need to decref */
 
 			PyDict_SetItemStringDecRef(output, "subsystem", subsystem);
 		}
 
 		{
+			size_t hfi_num = 0;
 			struct nbft_info_hfi **hfi;
-			PyObject *hfis = PyList_New(0);
+			PyObject *hfis;
 
+			/* First, let's find how many entries there are */
 			for (hfi = nbft->hfi_list; hfi && *hfi; hfi++)
-				PyList_AppendDecRef(hfis, hfi_to_dict(*hfi));
+				hfi_num++;
+
+			/* Now, let's fill the list using "(*hfi)->index - 1"
+			   as the index for writing to the list */
+			hfis = PyList_New(hfi_num);
+			for (hfi = nbft->hfi_list; hfi && *hfi; hfi++)
+				PyList_SetItem(hfis, (*hfi)->index-1, hfi_to_dict(*hfi)); /* steals ref. to object - no need to decref */
 
 			PyDict_SetItemStringDecRef(output, "hfi", hfis);
 		}
 
 		{
+			size_t disc_num = 0;
 			struct nbft_info_discovery **disc;
-			PyObject *discovery = PyList_New(0);
+			PyObject *discovery;
 
+			/* First, let's find how many entries there are */
 			for (disc = nbft->discovery_list; disc && *disc; disc++)
-				PyList_AppendDecRef(discovery, discovery_to_dict(*disc));
+				disc_num++;
+
+			/* Now, let's fill the list using "(*disc)->index - 1"
+			   as the index for writing to the list */
+			discovery = PyList_New(disc_num);
+			for (disc = nbft->discovery_list; disc && *disc; disc++)
+				PyList_SetItem(discovery, (*disc)->index - 1, discovery_to_dict(*disc)); /* steals ref. to object - no need to decref */
 
 			PyDict_SetItemStringDecRef(output, "discovery", discovery);
 		}
+
+		/* Security profiles are currently not implemented. */
 
 		return output;
 	}

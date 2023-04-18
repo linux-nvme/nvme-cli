@@ -11,18 +11,16 @@ class Testclass(unittest.TestCase):
         self.expected_nbft = {
             "discovery": [
                 {
-                    "hfi": 1,
-                    "index": 1,
+                    "hfi_index": 0,
                     "nqn": "nqn.2014-08.org.nvmexpress.discovery",
                     "uri": "nvme+tcp://100.71.103.50:8009/",
                 }
             ],
             "hfi": [
                 {
-                    "dhcp_override": 1,
+                    "dhcp_override": True,
                     "dhcp_server_ipaddr": "100.71.245.254",
                     "gateway_ipaddr": "100.71.245.254",
-                    "index": 1,
                     "ip_origin": 82,
                     "ipaddr": "100.71.245.232",
                     "mac_addr": "b0:26:28:e8:7c:0e",
@@ -47,14 +45,12 @@ class Testclass(unittest.TestCase):
                 {
                     "asqsz": 0,
                     "controller_id": 5,
-                    "data_digest_required": 0,
-                    "hfis": [1],
-                    "index": 1,
+                    "data_digest_required": False,
+                    "hfi_indexes": [0],
                     "nid": "c82404ed9c15f53b8ccf0968002e0fca",
                     "nid_type": "nguid",
                     "nsid": 148,
-                    "num_hfis": 1,
-                    "pdu_header_digest_required": 0,
+                    "pdu_header_digest_required": False,
                     "subsys_nqn": "nqn.1988-11.com.dell:powerstore:00:2a64abf1c5b81F6C4549",
                     "subsys_port_id": 0,
                     "traddr": "100.71.103.48",
@@ -64,14 +60,12 @@ class Testclass(unittest.TestCase):
                 {
                     "asqsz": 0,
                     "controller_id": 4166,
-                    "data_digest_required": 0,
-                    "hfis": [1],
-                    "index": 2,
+                    "data_digest_required": False,
+                    "hfi_indexes": [0],
                     "nid": "c82404ed9c15f53b8ccf0968002e0fca",
                     "nid_type": "nguid",
                     "nsid": 148,
-                    "num_hfis": 1,
-                    "pdu_header_digest_required": 0,
+                    "pdu_header_digest_required": False,
                     "subsys_nqn": "nqn.1988-11.com.dell:powerstore:00:2a64abf1c5b81F6C4549",
                     "subsys_port_id": 0,
                     "traddr": "100.71.103.49",
@@ -83,7 +77,8 @@ class Testclass(unittest.TestCase):
 
     def test_read_nbft_file(self):
         """Make sure we get expected data when reading from binary NBFT file"""
-        self.assertEqual(nvme.nbft_get(args.filename), self.expected_nbft)
+        actual_nbft = nvme.nbft_get(args.filename)
+        self.assertEqual(actual_nbft, self.expected_nbft)
 
 
 if __name__ == "__main__":
