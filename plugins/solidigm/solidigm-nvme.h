@@ -24,6 +24,7 @@ PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_V
 		ENTRY("parse-telemetry-log", "Parse Telemetry Log binary", get_telemetry_log)
 		ENTRY("clear-fw-activate-history", "Clear firmware update history log (redirects to ocp plug-in)", clear_fw_update_history)
 		ENTRY("vs-fw-activate-history", "Get firmware activation history log (redirects to ocp plug-in)", fw_activation_history)
+		ENTRY("log-page-directory", "Retrieve log page directory", get_log_page_directory_log)
 	)
 );
 

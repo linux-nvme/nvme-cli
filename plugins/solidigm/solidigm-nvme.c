@@ -14,6 +14,7 @@
 #include "solidigm-garbage-collection.h"
 #include "solidigm-latency-tracking.h"
 #include "solidigm-telemetry.h"
+#include "solidigm-log-page-dir.h"
 
 #include "plugins/ocp/ocp-clear-fw-update-history.h"
 #include "plugins/ocp/ocp-smart-extended-log.h"
@@ -51,9 +52,14 @@ static int smart_cloud(int argc, char **argv, struct command *cmd,
 	return ocp_smart_add_log(argc, argv, cmd, plugin);
 }
 
-
 static int fw_activation_history(int argc, char **argv, struct command *cmd,
 				 struct plugin *plugin)
 {
 	return ocp_fw_activation_history_log(argc, argv, cmd, plugin);
+}
+
+static int get_log_page_directory_log(int argc, char **argv, struct command *cmd,
+				      struct plugin *plugin)
+{
+	return solidigm_get_log_page_directory_log(argc, argv, cmd, plugin);
 }
