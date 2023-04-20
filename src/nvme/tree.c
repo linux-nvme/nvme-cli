@@ -197,6 +197,19 @@ int nvme_dump_tree(nvme_root_t r)
 	return json_dump_tree(r);
 }
 
+const char *nvme_root_get_application(nvme_root_t r)
+{
+	return r->application;
+}
+
+void nvme_root_set_application(nvme_root_t r, const char *a)
+{
+	if (r->application)
+		free(r->application);
+	if (a)
+		r->application = strdup(a);
+}
+
 nvme_host_t nvme_first_host(nvme_root_t r)
 {
 	return list_top(&r->hosts, struct nvme_host, entry);
@@ -293,6 +306,8 @@ void nvme_free_tree(nvme_root_t r)
 		__nvme_free_host(h);
 	if (r->config_file)
 		free(r->config_file);
+	if (r->application)
+		free(r->application);
 	free(r);
 }
 
@@ -404,6 +419,8 @@ static void __nvme_free_subsystem(struct nvme_subsystem *s)
 		free(s->firmware);
 	if (s->subsystype)
 		free(s->subsystype);
+	if (s->application)
+		free(s->application);
 	free(s);
 }
 

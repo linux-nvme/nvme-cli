@@ -155,6 +155,7 @@ struct nvme_fabric_options {
 
 struct nvme_root {
 	char *config_file;
+	char *application;
 	struct list_head hosts;
 	struct list_head endpoints; /* MI endpoints */
 	FILE *fp;

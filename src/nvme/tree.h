@@ -45,6 +45,23 @@ typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t, nvme_ctrl_t,
 nvme_root_t nvme_create_root(FILE *fp, int log_level);
 
 /**
+ * nvme_root_set_application - Specify managing application
+ * @r:	&nvme_root_t object
+ * @a:	Application string
+ *
+ * Sets the managing application string for @r.
+ */
+void nvme_root_set_application(nvme_root_t r, const char *a);
+
+/**
+ * nvme_root_get_application - Get managing application
+ * @r:	&nvme_root_t object
+ *
+ * Returns the managing application string for @r or NULL if not set.
+ */
+const char *nvme_root_get_application(nvme_root_t r);
+
+/**
  * nvme_free_tree() - Free root object
  * @r:	&nvme_root_t object
  *

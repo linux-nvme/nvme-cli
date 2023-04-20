@@ -5,6 +5,8 @@ LIBNVME_1_5 {
 		nvme_ipaddrs_eq;
 		nvme_nbft_free;
 		nvme_nbft_read;
+		nvme_root_get_application;
+		nvme_root_set_application;
 		nvme_subsystem_get_application;
 		nvme_subsystem_set_application;
 };

@@ -326,7 +326,9 @@ PyObject *hostid_from_file();
 
 struct nvme_root {
 	%immutable config_file;
+	%immutable application;
 	char *config_file;
+	char *application;
 };
 
 struct nvme_host {
