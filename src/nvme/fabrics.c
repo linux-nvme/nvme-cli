@@ -819,6 +819,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		  const struct nvme_fabrics_config *cfg)
 {
 	nvme_subsystem_t s;
+	const char *root_app, *app;
 	char *argstr;
 	int ret;
 
@@ -853,6 +854,23 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 				nvme_ctrl_set_dhchap_key(c, key);
 		}
 
+	}
+
+	root_app = nvme_root_get_application(h->r);
+	app = nvme_subsystem_get_application(s);
+	if (root_app) {
+		/*
+		 * configuration is managed by an application,
+		 * refuse to act on subsystems which either have
+		 * no application set or which habe a different
+		 * application string.
+		 */
+		if (!app || strcmp(app, root_app)) {
+			nvme_msg(h->r, LOG_INFO, "skip %s, not managed by %s\n",
+				 nvme_subsystem_get_nqn(s), root_app);
+			errno = ENVME_CONNECT_INVAL;
+			return -1;
+		}
 	}
 
 	nvme_ctrl_set_discovered(c, true);

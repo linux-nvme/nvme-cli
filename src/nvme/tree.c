@@ -466,6 +466,12 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 		if (name && s->name &&
 		    strcmp(s->name, name))
 			continue;
+		if (h->r->application) {
+			if (!s->application)
+				continue;
+			if (strcmp(h->r->application, s->application))
+				continue;
+		}
 		return s;
 	}
 	return nvme_alloc_subsystem(h, name, subsysnqn);
@@ -572,6 +578,8 @@ static int nvme_init_subsystem(nvme_subsystem_t s, const char *name)
 	}
 	s->name = strdup(name);
 	s->sysfs_dir = (char *)path;
+	if (s->h->r->application)
+		s->application = strdup(s->h->r->application);
 
 	return 0;
 }
