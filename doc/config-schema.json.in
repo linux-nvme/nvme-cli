@@ -59,6 +59,10 @@
 		    "type": "array",
 		    "items": { "$ref": "#/$defs/port" }
 		},
+		"application": {
+		    "description": "Program managing this subsystem",
+		    "type": "string"
+		},
 		"required": [ "nqn" ]
 	    }
 	},

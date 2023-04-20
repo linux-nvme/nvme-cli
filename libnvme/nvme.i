@@ -346,10 +346,12 @@ struct nvme_subsystem {
 	%immutable model;
 	%immutable serial;
 	%immutable firmware;
+	%immutable application;
 	char *subsysnqn;
 	char *model;
 	char *serial;
 	char *firmware;
+	char *application;
 };
 
 struct nvme_ctrl {

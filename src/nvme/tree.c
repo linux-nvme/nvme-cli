@@ -316,6 +316,19 @@ const char *nvme_subsystem_get_type(nvme_subsystem_t s)
 	return s->subsystype;
 }
 
+const char *nvme_subsystem_get_application(nvme_subsystem_t s)
+{
+	return s->application;
+}
+
+void nvme_subsystem_set_application(nvme_subsystem_t s, const char *a)
+{
+	if (s->application)
+		free(s->application);
+	if (a)
+		s->application = strdup(a);
+}
+
 nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 {
 	return list_top(&s->ctrls, struct nvme_ctrl, entry);

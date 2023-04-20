@@ -2,9 +2,11 @@
 
 LIBNVME_1_5 {
 	global:
-		nvme_nbft_read;
-		nvme_nbft_free;
 		nvme_ipaddrs_eq;
+		nvme_nbft_free;
+		nvme_nbft_read;
+		nvme_subsystem_get_application;
+		nvme_subsystem_set_application;
 };
 
 LIBNVME_1_4 {

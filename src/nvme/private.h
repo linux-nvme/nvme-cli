@@ -104,6 +104,7 @@ struct nvme_subsystem {
 	char *serial;
 	char *firmware;
 	char *subsystype;
+	char *application;
 };
 
 struct nvme_host {

@@ -1105,6 +1105,23 @@ const char *nvme_subsystem_get_name(nvme_subsystem_t s);
 const char *nvme_subsystem_get_type(nvme_subsystem_t s);
 
 /**
+ * nvme_subsystem_get_application() - Return the application string
+ * @s:	nvme_subsystem_t object
+ *
+ * Return: Managing application string or NULL if not set.
+ */
+const char *nvme_subsystem_get_application(nvme_subsystem_t s);
+
+/**
+ * nvme_subsystem_set_application() - Set the application string
+ * @s:	nvme_subsystem_t object
+ * @a:  application string
+ *
+ * Sets the managing application string for @s.
+ */
+void nvme_subsystem_set_application(nvme_subsystem_t s, const char *a);
+
+/**
  * nvme_scan_topology() - Scan NVMe topology and apply filter
  * @r:	    nvme_root_t object
  * @f:	    filter to apply
