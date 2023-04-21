@@ -157,7 +157,8 @@ static const char space[51] = {[0 ... 49] = ' ', '\0'};
 
 static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
 
-static void *__nvme_alloc(size_t len, bool *huge) {
+static void *__nvme_alloc(size_t len, bool *huge)
+{
 	void *p;
 
 	if (!posix_memalign(&p, getpagesize(), len)) {
@@ -176,9 +177,9 @@ void nvme_free(void *p, bool huge)
 	if (huge) {
 		if (p)
 			free_hugepage_region(p);
-	}
-	else
+	} else {
 		free(p);
+	}
 }
 
 void *nvme_alloc(size_t len, bool *huge)
@@ -984,10 +985,10 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable_log),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_log),
-		OPT_INT("csi",            'c', &cfg.csi,            csi),
+		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
+		OPT_INT("csi",             'c', &cfg.csi,            csi),
 		OPT_END()
 	};
 
@@ -2382,10 +2383,10 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FLAG("rae",           'r', &cfg.rae,            rae),
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable_log),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_log),
+		OPT_FLAG("rae",            'r', &cfg.rae,            rae),
+		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
 		OPT_END()
 	};
 
@@ -2438,8 +2439,8 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable_log),
+		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
 		OPT_END()
 	};
 
@@ -2489,8 +2490,8 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable_log),
+		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
 		OPT_END()
 	};
 
@@ -2991,7 +2992,7 @@ static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
 	i = flbas & NVME_NS_FLBAS_LOWER_MASK;
 	lbas = (1 << ns.lbaf[i].ds) + ns.lbaf[i].ms;
 
-	if (suffix_si_parse(val, &endptr, (uint64_t*)num)) {
+	if (suffix_si_parse(val, &endptr, (uint64_t *)num)) {
 		nvme_show_error("Expected long suffixed integer argument for '%s-si' but got '%s'!",
 				opt, val);
 		return -errno;
@@ -3165,7 +3166,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (err)
 		goto close_dev;
 
-	if (cfg.csi != NVME_CSI_ZNS && (cfg.azr || cfg.rar || cfg.ror|| cfg.rnumzrwa)) {
+	if (cfg.csi != NVME_CSI_ZNS && (cfg.azr || cfg.rar || cfg.ror || cfg.rnumzrwa)) {
 		nvme_show_error("Invaild ZNS argument is given (CSI:%#x)", cfg.csi);
 		err = -EINVAL;
 		goto close_dev;
@@ -4082,7 +4083,8 @@ ret:
 	return err;
 }
 
-static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *plugin) {
+static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
 	const char *desc = "Send an Identify Domain List command to the "\
 		"given device, returns properties of the specified domain "\
 		"in either normal|json|binary format.";
@@ -4466,7 +4468,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		" which provides the necessary log to determine the state of the device";
 	const char *namespace_id = "Indicate the namespace in which the device self-test"\
 		" has to be carried out";
-	const char * self_test_code = "This field specifies the action taken by the device self-test command :\n"\
+	const char *self_test_code = "This field specifies the action taken by the device self-test command :\n"\
 		"0h Show current state of device self-test operation\n"\
 		"1h Start a short device self-test operation\n"\
 		"2h Start a extended device self-test operation\n"\
@@ -4799,14 +4801,14 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_BYTE("feature-id",    'f', &cfg.feature_id,     feature_id),
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_BYTE("sel",           's', &cfg.sel,            sel),
-		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
-		OPT_UINT("cdw11",         'c', &cfg.cdw11,          cdw11),
-		OPT_BYTE("uuid-index",    'U', &cfg.uuid_index,     uuid_index_specify),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id),
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		OPT_BYTE("sel",            's', &cfg.sel,            sel),
+		OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
+		OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
+		OPT_BYTE("uuid-index",     'U', &cfg.uuid_index,     uuid_index_specify),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		OPT_END()
 	};
 
@@ -5018,8 +5020,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 			cfg.xfer = 4096;
 		else
 			cfg.xfer = ctrl.fwug * 4096;
-	}
-	else if (cfg.xfer % 4096)
+	} else if (cfg.xfer % 4096)
 		cfg.xfer = 4096;
 
 	if (cfg.xfer < HUGE_MIN)
@@ -5534,8 +5535,8 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		OPT_END()
 	};
 
@@ -5596,8 +5597,8 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("offset",        'o', &cfg.offset,         offset),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_UINT("offset",         'o', &cfg.offset,         offset),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		OPT_END()
 	};
 
@@ -5773,7 +5774,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		goto ret;
 	}
 
-	if (cfg.lbaf != 0xff && cfg.bs !=0) {
+	if (cfg.lbaf != 0xff && cfg.bs != 0) {
 		nvme_show_error(
 		    "Invalid specification of both LBAF and Block Size, please specify only one");
 		err = -EINVAL;
@@ -6298,16 +6299,16 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
-		OPT_BYTE("dir-type",      'D', &cfg.dtype,          dtype),
-		OPT_BYTE("target-dir",    'T', &cfg.ttype,          ttype),
-		OPT_SHRT("dir-spec",      'S', &cfg.dspec,          dspec_w_dtype),
-		OPT_BYTE("dir-oper",      'O', &cfg.doper,          doper),
-		OPT_SHRT("endir",         'e', &cfg.endir,          endir),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable_directive),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_directive),
-		OPT_FILE("input-file",    'i', &cfg.file,	    input),
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
+		OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
+		OPT_BYTE("target-dir",     'T', &cfg.ttype,          ttype),
+		OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
+		OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
+		OPT_SHRT("endir",          'e', &cfg.endir,          endir),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive),
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
+		OPT_FILE("input-file",     'i', &cfg.file,	    input),
 		OPT_END()
 	};
 
@@ -7380,7 +7381,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	int err = 0;
 	int dfd, mfd;
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
-	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH;
+	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	__u16 control = 0, nblocks = 0;
 	__u32 dsmgmt = 0;
 	int logical_block_size = 0;
@@ -8186,14 +8187,14 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_directive),
-		OPT_BYTE("dir-type",      'D', &cfg.dtype,          dtype),
-		OPT_SHRT("dir-spec",      'S', &cfg.dspec,          dspec_w_dtype),
-		OPT_BYTE("dir-oper",      'O', &cfg.doper,          doper),
-		OPT_SHRT("req-resource",  'r', &cfg.nsr,            nsr),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable_directive),
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
+		OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
+		OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
+		OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
+		OPT_SHRT("req-resource",   'r', &cfg.nsr,            nsr),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive),
 		OPT_END()
 	};
 
@@ -8412,7 +8413,7 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *prefill = "prefill buffers with known byte-value, default 0";
 
 	int flags;
-	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH;
+	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	void *data = NULL, *mdata = NULL;
 	int err = 0, dfd, mfd;
 	struct nvme_dev *dev;
@@ -8814,7 +8815,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 		int secret_len = 0, i;
 		unsigned int c;
 
-		for (i = 0; i < strlen(cfg.secret); i+=2) {
+		for (i = 0; i < strlen(cfg.secret); i += 2) {
 			if (sscanf(&cfg.secret[i], "%02x", &c) != 1) {
 				nvme_show_error("Invalid secret '%s'", cfg.secret);
 				return -EINVAL;
@@ -9018,7 +9019,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		int secret_len = 0, i;
 		unsigned int c;
 
-		for (i = 0; i < strlen(cfg.secret); i+=2) {
+		for (i = 0; i < strlen(cfg.secret); i += 2) {
 			if (sscanf(&cfg.secret[i], "%02x", &c) != 1) {
 				nvme_show_error("Invalid secret '%s'", cfg.secret);
 				return -EINVAL;
@@ -9308,7 +9309,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	const char *nmd1 = "nvme management dword 1 value";
 	const char *input = "data input or output file";
 
-	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH;
+	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 	void *data = NULL;
 	int err = 0;
 	bool send = admin_opcode == nvme_admin_nvme_mi_send ? true : false;
