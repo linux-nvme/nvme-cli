@@ -3058,6 +3058,8 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
 		.nsid = NVME_NSID_NONE,
 		.sel = NVME_NS_MGMT_SEL_CREATE,
 		.csi = csi,
+		.rsvd1 = { 0, },
+		.rsvd2 = NULL,
 		.data = data,
 	};
 
@@ -3087,6 +3089,9 @@ static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 		.nsid = nsid,
 		.sel = NVME_NS_MGMT_SEL_DELETE,
 		.csi = 0,
+		.rsvd1 = { 0, },
+		.rsvd2 = NULL,
+		.data = NULL,
 	};
 
 	return nvme_ns_mgmt(&args);
