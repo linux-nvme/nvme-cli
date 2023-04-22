@@ -10,6 +10,7 @@
 #include "cod.h"
 #include "data-area.h"
 #include "config.h"
+#include "nlog.h"
 #include <ctype.h>
 
 #define SIGNED_INT_PREFIX "int"
@@ -302,6 +303,27 @@ static int telemetry_log_data_area_get_offset(const struct telemetry_log *tl,
 	return 0;
 }
 
+static int telemetry_log_nlog_parse(const struct telemetry_log *tl, struct json_object *formats,
+				    uint64_t nlog_file_offset,	uint64_t nlog_size,
+				    struct json_object *output, struct json_object *metadata)
+{
+	/* boundary check */
+	if (tl->log_size < (nlog_file_offset + nlog_size)) {
+		const char *name = "";
+		int media_bank = -1;
+		struct json_object *jobj;
+
+		if (json_object_object_get_ex(metadata, "objName", &jobj))
+			name = json_object_get_string(jobj);
+		if (json_object_object_get_ex(metadata, "mediaBankId", &jobj))
+			media_bank = json_object_get_int(jobj);
+		SOLIDIGM_LOG_WARNING("%s:%d do not fit this log dump.", name, media_bank);
+		return -1;
+	}
+	return solidigm_nlog_parse(((char *) tl->log) + nlog_file_offset,
+				   nlog_size, formats, metadata, output);
+}
+
 struct toc_item {
 	uint32_t OffsetBytes;
 	uint32_t ContentSizeBytes;
@@ -328,7 +350,6 @@ struct telemetry_object_header {
 	uint8_t Reserved[3];
 };
 
-
 static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 					      enum nvme_telemetry_da da,
 					      struct json_object *toc_array,
@@ -340,18 +361,22 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 	char *payload;
 	uint32_t da_offset;
 	uint32_t da_size;
+	struct json_object *nlog_formats;
 
 	if (telemetry_log_data_area_get_offset(tl, da, &da_offset, &da_size))
 		return;
 
 	toc = (struct table_of_contents *)(((char *)tl->log) + da_offset);
 	payload = (char *) tl->log;
+	nlog_formats = solidigm_config_get_nlog_formats(tl->configuration);
 
 	for (int i = 0; i < toc->header.TableOfContentsCount; i++) {
 		struct json_object *structure_definition = NULL;
 		struct json_object *toc_item;
 		uint32_t obj_offset;
 		bool has_struct;
+		const char *nlog_name = NULL;
+		uint32_t header_offset = sizeof(const struct telemetry_object_header);
 
 		if ((char *)&toc->items[i] > (((char *)toc) + da_size - sizeof(const struct toc_item))) {
 			SOLIDIGM_LOG_WARNING("Warning: Data Area %d, "
@@ -381,38 +406,49 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 		json_object_add_value_uint(toc_item, "objectId", header->Token);
 		json_object_add_value_uint(toc_item, "mediaBankId", header->CoreId);
 
-		has_struct = solidigm_config_get_by_token_version(tl->configuration,
+		has_struct = solidigm_config_get_struct_by_token_version(tl->configuration,
 							          header->Token,
 								  header->versionMajor,
 								  header->versionMinor,
 								  &structure_definition);
+		if (!has_struct) {
+			if (!nlog_formats)
+				continue;
+			nlog_name = solidigm_config_get_nlog_obj_name(tl->configuration,
+									header->Token);
+			if (!nlog_name)
+				continue;
+		}
+		struct json_object *tele_obj_item = json_create_object();
 
+		json_object_array_add(tele_obj_array, tele_obj_item);
+		json_object_get(toc_item);
+		json_object_add_value_object(tele_obj_item, "metadata", toc_item);
+		struct json_object *parsed_struct = json_create_object();
+
+		json_object_add_value_object(tele_obj_item, "objectData", parsed_struct);
+		struct json_object *obj_hasTelemObjHdr = NULL;
+		uint64_t object_file_offset;
+
+		if (json_object_object_get_ex(structure_definition,
+						"hasTelemObjHdr",
+						&obj_hasTelemObjHdr)) {
+			bool hasHeader = json_object_get_boolean(obj_hasTelemObjHdr);
+
+			if (hasHeader)
+				header_offset = 0;
+		}
+		object_file_offset = ((uint64_t)da_offset) + obj_offset + header_offset;
 		if (has_struct) {
-			struct json_object *tele_obj_item = json_create_object();
-
-			json_object_array_add(tele_obj_array, tele_obj_item);
-			json_object_get(toc_item);
-			json_object_add_value_object(tele_obj_item, "metadata", toc_item);
-			struct json_object *parsed_struct = json_create_object();
-
-			json_object_add_value_object(tele_obj_item, "objectData", parsed_struct);
-			struct json_object *obj_hasTelemObjHdr = NULL;
-			uint32_t header_offset = sizeof(const struct telemetry_object_header);
-			uint64_t file_offset;
-
-			if (json_object_object_get_ex(structure_definition,
-						      "hasTelemObjHdr",
-						       &obj_hasTelemObjHdr)) {
-				bool hasHeader = json_object_get_boolean(obj_hasTelemObjHdr);
-
-				if (hasHeader)
-					header_offset = 0;
-			}
-
-			file_offset = ((uint64_t)da_offset) + obj_offset + header_offset;
 			telemetry_log_structure_parse(tl, structure_definition,
-						      BITS_IN_BYTE * file_offset,
-						      parsed_struct, toc_item);
+						BITS_IN_BYTE * object_file_offset,
+						parsed_struct, toc_item);
+		} else if (nlog_formats) {
+			json_object_object_add(toc_item, "objName",
+					       json_object_new_string(nlog_name));
+			telemetry_log_nlog_parse(tl, nlog_formats, object_file_offset,
+						 toc->items[i].ContentSizeBytes - header_offset,
+						 parsed_struct, toc_item);
 		}
 	}
 }

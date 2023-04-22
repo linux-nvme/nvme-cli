@@ -69,12 +69,18 @@ static void telemetry_log_reason_id_parse1_0_ext(const struct telemetry_log *tl,
 	struct json_object *reserved;
 
 	ri = (struct reason_indentifier_1_0 *) tl->log->rsnident;
-	json_object_object_add(reason_id, "FirmwareVersion", json_object_new_string_len(ri->FirmwareVersion, sizeof(ri->FirmwareVersion)));
-	json_object_object_add(reason_id, "BootloaderVersion", json_object_new_string_len(ri->BootloaderVersion, sizeof(ri->BootloaderVersion)));
-	json_object_object_add(reason_id, "SerialNumber", json_object_new_string_len(ri->SerialNumber, sizeof(ri->SerialNumber)));
+	json_object_object_add(reason_id, "firmwareVersion",
+			       json_object_new_string_len(ri->FirmwareVersion,
+							  sizeof(ri->FirmwareVersion)));
+	json_object_object_add(reason_id, "bootloaderVersion",
+			       json_object_new_string_len(ri->BootloaderVersion,
+							  sizeof(ri->BootloaderVersion)));
+	json_object_object_add(reason_id, "serialNumber",
+			       json_object_new_string_len(ri->SerialNumber,
+							  sizeof(ri->SerialNumber)));
 
 	reserved = json_create_array();
-	json_object_add_value_array(reason_id, "Reserved", reserved);
+	json_object_add_value_array(reason_id, "reserved", reserved);
 	for ( int i=0; i < sizeof(ri->Reserved); i++) {
 		struct json_object *val = json_object_new_int(ri->Reserved[i]);
 		json_object_array_add(reserved, val);
@@ -88,15 +94,24 @@ static void telemetry_log_reason_id_parse1_1_ext(const struct telemetry_log *tl,
 	struct json_object *reserved;
 
 	ri = (struct reason_indentifier_1_1 *) tl->log->rsnident;
-	json_object_object_add(reason_id, "FirmwareVersion", json_object_new_string_len(ri->FirmwareVersion, sizeof(ri->FirmwareVersion)));
-	json_object_object_add(reason_id, "BootloaderVersion", json_object_new_string_len(ri->BootloaderVersion, sizeof(ri->BootloaderVersion)));
-	json_object_object_add(reason_id, "SerialNumber", json_object_new_string_len(ri->SerialNumber, sizeof(ri->SerialNumber)));
-	json_object_add_value_uint64(reason_id, "OemDataMapOffset", le64_to_cpu(ri->OemDataMapOffset));
-	json_object_add_value_uint(reason_id, "TelemetryMajorVersion", le16_to_cpu(ri->TelemetryMajorVersion));
-	json_object_add_value_uint(reason_id, "TelemetryMinorVersion", le16_to_cpu(ri->TelemetryMinorVersion));
+	json_object_object_add(reason_id, "firmwareVersion",
+			       json_object_new_string_len(ri->FirmwareVersion,
+							  sizeof(ri->FirmwareVersion)));
+	json_object_object_add(reason_id, "bootloaderVersion",
+			       json_object_new_string_len(ri->BootloaderVersion,
+							  sizeof(ri->BootloaderVersion)));
+	json_object_object_add(reason_id, "serialNumber",
+			       json_object_new_string_len(ri->SerialNumber,
+							  sizeof(ri->SerialNumber)));
+	json_object_add_value_uint64(reason_id, "oemDataMapOffset",
+				   le64_to_cpu(ri->OemDataMapOffset));
+	json_object_add_value_uint(reason_id, "telemetryMajorVersion",
+				   le16_to_cpu(ri->TelemetryMajorVersion));
+	json_object_add_value_uint(reason_id, "telemetryMinorVersion",
+				   le16_to_cpu(ri->TelemetryMinorVersion));
 
 	reserved = json_create_array();
-	json_object_add_value_array(reason_id, "Reserved", reserved);
+	json_object_add_value_array(reason_id, "reserved", reserved);
 	for (int i = 0; i < sizeof(ri->Reserved); i++) {
 		struct json_object *val = json_object_new_int(ri->Reserved[i]);
 		json_object_array_add(reserved, val);
@@ -112,21 +127,26 @@ static void telemetry_log_reason_id_parse1_2_ext(const struct telemetry_log *tl,
 
 	ri = (struct reason_indentifier_1_2 *) tl->log->rsnident;
 
-	json_object_object_add(reason_id, "SerialNumber", json_object_new_string_len(ri->SerialNumber, sizeof(ri->SerialNumber)));
-	json_object_add_value_uint64(reason_id, "OemDataMapOffset", le64_to_cpu(ri->OemDataMapOffset));
-	json_object_add_value_uint(reason_id, "TelemetryMajorVersion", le16_to_cpu(ri->TelemetryMajorVersion));
-	json_object_add_value_uint(reason_id, "TelemetryMinorVersion", le16_to_cpu(ri->TelemetryMinorVersion));
-	json_object_add_value_uint(reason_id, "ProductFamilyId", ri->ProductFamilyId);
+	json_object_object_add(reason_id, "serialNumber",
+			       json_object_new_string_len(ri->SerialNumber,
+							  sizeof(ri->SerialNumber)));
+	json_object_add_value_uint64(reason_id, "oemDataMapOffset",
+				     le64_to_cpu(ri->OemDataMapOffset));
+	json_object_add_value_uint(reason_id, "telemetryMajorVersion",
+				   le16_to_cpu(ri->TelemetryMajorVersion));
+	json_object_add_value_uint(reason_id, "telemetryMinorVersion",
+				   le16_to_cpu(ri->TelemetryMinorVersion));
+	json_object_add_value_uint(reason_id, "productFamilyId", ri->ProductFamilyId);
 
 	reserved = json_create_array();
-	json_object_add_value_array(reason_id, "Reserved2", reserved);
+	json_object_add_value_array(reason_id, "reserved2", reserved);
 	for (int i = 0; i < sizeof(ri->Reserved2); i++) {
 		struct json_object *val = json_object_new_int(ri->Reserved2[i]);
 		json_object_array_add(reserved, val);
 	}
 
 	dp_reserved = json_create_array();
-	json_object_add_value_array(reason_id, "DualPortReserved", dp_reserved);
+	json_object_add_value_array(reason_id, "dualPortReserved", dp_reserved);
 	for (int i = 0; i < sizeof(ri->DualPortReserved); i++) {
 		struct json_object *val =  json_object_new_int(ri->DualPortReserved[i]);
 		json_object_array_add(dp_reserved, val);
@@ -143,7 +163,9 @@ static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *t
 	json_object_add_value_uint(reason_id, "versionMajor", version_major);
 	json_object_add_value_uint(reason_id, "versionMinor", version_minor);
 	json_object_add_value_uint(reason_id, "reasonCode", le32_to_cpu(ri1_0->reasonCode));
-	json_object_add_value_object(reason_id, "DriveStatus", json_object_new_string_len(ri1_0->DriveStatus, sizeof(ri1_0->DriveStatus)));
+	json_object_add_value_object(reason_id, "driveStatus",
+				     json_object_new_string_len(ri1_0->DriveStatus,
+								sizeof(ri1_0->DriveStatus)));
 	if (version_major == 1) {
 		switch (version_minor) {
 			case 0:
