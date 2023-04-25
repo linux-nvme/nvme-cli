@@ -1052,6 +1052,7 @@ struct nvme_ns {
 PyObject *nbft_get(const char * filename);
 
 // We want to swig all the #define and enum from types.h, but none of the structs.
+#pragma SWIG nowarn=503             // Supress warnings about unnamed struct
 #define __attribute__(x)
 %rename($ignore, %$isclass) "";     // ignore all classes/structs
 %rename($ignore, %$isfunction) "";  // ignore all functions
