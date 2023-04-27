@@ -655,6 +655,20 @@ nvme_mi_ctrl_t nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id);
 void nvme_mi_close_ctrl(nvme_mi_ctrl_t ctrl);
 
 /**
+ * nvme_mi_ctrl_id() - get the ID of a controller
+ * @ctrl: controller to query
+ *
+ * Retrieve the ID of the controller, as defined by hardware, and available
+ * in the Identify (Controller List) data. This is the value passed to
+ * @nvme_mi_init_ctrl, but may have been created internally via
+ * @nvme_mi_scan_ep.
+ *
+ * Return: the (locally-stored) ID of this controller.
+ */
+__u16 nvme_mi_ctrl_id(nvme_mi_ctrl_t ctrl);
+
+
+/**
  * nvme_mi_endpoint_desc - Get a string describing a MI endpoint.
  * @ep: endpoint to describe
  *

@@ -1,3 +1,8 @@
+LIBNVME_MI_1_5 {
+	global:
+		nvme_mi_ctrl_id;
+};
+
 LIBNVME_MI_1_4 {
         global:
                 nvme_mi_admin_get_log_page;

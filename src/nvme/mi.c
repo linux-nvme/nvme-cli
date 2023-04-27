@@ -304,6 +304,11 @@ struct nvme_mi_ctrl *nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id)
 	return ctrl;
 }
 
+__u16 nvme_mi_ctrl_id(nvme_mi_ctrl_t ctrl)
+{
+	return ctrl->id;
+}
+
 int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
 {
 	struct nvme_ctrl_list list;
