@@ -7651,6 +7651,7 @@ enum nvme_io_mgmt_send_mo {
 	NVME_IO_MGMT_SEND_RUH_UPDATE = 0x1,
 };
 
+#ifndef SWIG
 /**
  * struct nvme_ns_mgmt_host_sw_specified - Namespace management Host Software
  * Specified Fields.
@@ -7734,5 +7735,6 @@ struct nvme_ns_mgmt_host_sw_specified {
 	__le16			phndl[128];
 	__u8			rsvd768[3328];
 };
+#endif /* SWIG */
 
 #endif /* _LIBNVME_TYPES_H */
