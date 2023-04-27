@@ -8,7 +8,7 @@
 want_python = get_option('python')
 if want_python.disabled()
     build_python_bindings = false
-    py3_dep = dependency('', required: false)
+    py3_dep = dependency('', required: false)  # Needed for muon
 else
     python3 = import('python').find_installation('python3')
     py3_dep = python3.dependency(required: want_python)
@@ -18,11 +18,19 @@ else
 endif
 
 if build_python_bindings
+    r = run_command(swig, ['-version'], check: true)  # Returns: "\nSWIG Version 4.1.1\n\nCompiled with ..."
+    swig_version = r.stdout().split('\n')[1].split()[2].strip()
+    if swig_version.version_compare('<4.1.0')
+        swig_cmd = [swig, '-python', '-py3', '-o', '@OUTPUT1@', '@INPUT0@']
+    else
+        swig_cmd = [swig, '-python', '-o', '@OUTPUT1@', '@INPUT0@']
+    endif
+
     pymod_swig = custom_target(
         'nvme.py',
         input:   ['nvme.i'],
         output:  ['nvme.py', 'nvme_wrap.c'],
-        command: [swig, '-python', '-py3', '-o', '@OUTPUT1@', '@INPUT0@'],
+        command: swig_cmd,
         install: true,
         install_dir: [python3.get_install_dir(pure: false, subdir: 'libnvme'), false],
     )
