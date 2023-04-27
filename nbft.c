@@ -33,7 +33,7 @@ int nbft_filter(const struct dirent *dent)
 	return !fnmatch(NBFT_SYSFS_FILENAME, dent->d_name, FNM_PATHNAME);
 }
 
-int read_nbft_files(struct list_head *nbft_list, char *path)
+int read_nbft_files(struct list_head *nbft_list, const char *path)
 {
 	struct dirent **dent;
 	char filename[PATH_MAX];
@@ -71,13 +71,13 @@ void free_nbfts(struct list_head *nbft_list)
 	}
 }
 
-int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
-		       char *hostnqn_sys, char *hostid_sys,
+int discover_from_nbft(nvme_root_t r, const char *hostnqn_arg, const char *hostid_arg,
+		       const char *hostnqn_sys, const char *hostid_sys,
 		       const char *desc, bool connect,
-		       const struct nvme_fabrics_config *cfg, char *nbft_path,
+		       const struct nvme_fabrics_config *cfg, const char *nbft_path,
 		       enum nvme_print_flags flags, bool verbose)
 {
-	char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
+	const char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	int ret, i;

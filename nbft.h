@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
+#include <libnvme.h>
+#include "nvme.h"
 
 #include <ccan/list/list.h>
 
@@ -9,11 +11,11 @@ struct nbft_file_entry {
 	struct nbft_info *nbft;
 };
 
-int read_nbft_files(struct list_head *nbft_list, char *path);
+int read_nbft_files(struct list_head *nbft_list, const char *path);
 void free_nbfts(struct list_head *nbft_list);
 
-extern int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
-			      char *hostnqn_sys, char *hostid_sys,
+extern int discover_from_nbft(nvme_root_t r, const char *hostnqn_arg, const char *hostid_arg,
+			      const char *hostnqn_sys, const char *hostid_sys,
 			      const char *desc, bool connect,
-			      const struct nvme_fabrics_config *cfg, char *nbft_path,
+			      const struct nvme_fabrics_config *cfg, const char *nbft_path,
 			      enum nvme_print_flags flags, bool verbose);
