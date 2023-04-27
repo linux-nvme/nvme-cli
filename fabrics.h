@@ -9,6 +9,9 @@ struct tr_config {
 	const char *host_traddr;
 	const char *host_iface;
 	const char *trsvcid;
+	const char *hostnqn;
+	const char *hostid;
+	const char *hostkey;
 };
 
 extern nvme_ctrl_t lookup_ctrl(nvme_root_t r, struct tr_config *trcfg);
