@@ -1456,6 +1456,224 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+/// Error Recovery Log Page(0xC1)
+
+#define C1_ERROR_RECOVERY_LOG_BUF_LEN       0x200
+#define C1_ERROR_RECOVERY_OPCODE            0xC1
+#define C1_ERROR_RECOVERY_VERSION           0x0002
+#define C1_GUID_LENGTH                      16
+static __u8 error_recovery_guid[C1_GUID_LENGTH] = {
+	0x44, 0xd9, 0x31, 0x21,
+	0xfe, 0x30, 0x34, 0xae,
+	0xab, 0x4d, 0xfd, 0x3d,
+	0xba, 0x83, 0x19, 0x5a
+};
+
+/**
+ * struct ocp_error_recovery_log_page -	Error Recovery Log Page
+ * @panic_reset_wait_time:				Panic Reset Wait Time
+ * @panic_reset_action: 	        	Panic Reset Action
+ * @device_recover_action_1:			Device Recovery Action 1
+ * @panic_id:		                	Panic ID
+ * @device_capabilities:				Device Capabilities
+ * @vendor_specific_recovery_opcode:   	Vendor Specific Recovery Opcode
+ * @reserved:		                	Reserved
+ * @vendor_specific_command_cdw12:		Vendor Specific Command CDW12
+ * @vendor_specific_command_cdw13:		Vendor Specific Command CDW13
+ * @vendor_specific_command_timeout:	Vendor Specific Command Timeout
+ * @device_recover_action_2:			Device Recovery Action 2
+ * @device_recover_action_2_timeout:	Device Recovery Action 2 Timeout
+ * @reserved2:		                	Reserved
+ * @log_page_version:		        	Log Page Version
+ * @log_page_guid:		        		Log Page GUID
+ */
+struct __attribute__((__packed__)) ocp_error_recovery_log_page {
+	__le16  panic_reset_wait_time;                   /* 2 bytes      - 0x00 - 0x01 */
+	__u8    panic_reset_action;                      /* 1 byte       - 0x02 */
+	__u8    device_recover_action_1;                 /* 1 byte       - 0x03 */
+	__le64  panic_id;                                /* 8 bytes      - 0x04 - 0x0B */
+	__le32  device_capabilities;                     /* 4 bytes      - 0x0C - 0x0F */
+	__u8    vendor_specific_recovery_opcode;         /* 1 byte       - 0x10 */
+	__u8    reserved[0x3];                           /* 3 bytes      - 0x11 - 0x13 */
+	__le32  vendor_specific_command_cdw12;           /* 4 bytes      - 0x14 - 0x17 */
+	__le32  vendor_specific_command_cdw13;           /* 4 bytes      - 0x18 - 0x1B */
+	__u8    vendor_specific_command_timeout;         /* 1 byte       - 0x1C */
+	__u8    device_recover_action_2;                 /* 1 byte       - 0x1D */
+	__u8    device_recover_action_2_timeout;         /* 1 byte       - 0x1E */
+	__u8    reserved2[0x1cf];                        /* 463 bytes    - 0x1F - 0x1ED */
+	__le16  log_page_version;                        /* 2 bytes      - 0x1EE - 0x1EF */
+	__u8    log_page_guid[0x10];                     /* 16 bytes     - 0x1F0 - 0x1FF */
+};
+
+static void ocp_print_c1_log_normal(struct ocp_error_recovery_log_page *log_data);
+static void ocp_print_c1_log_json(struct ocp_error_recovery_log_page *log_data);
+static void ocp_print_c1_log_binary(struct ocp_error_recovery_log_page *log_data);
+static int get_c1_log_page(struct nvme_dev *dev, char *format);
+static int ocp_error_recovery_log(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+
+static void ocp_print_c1_log_normal(struct ocp_error_recovery_log_page *log_data)
+{
+	int i;
+	printf("  Error Recovery/C1 Log Page Data \n");
+	printf("  Panic Reset Wait Time             : 0x%x \n", le16_to_cpu(log_data->panic_reset_wait_time));
+	printf("  Panic Reset Action                : 0x%x \n", log_data->panic_reset_action);
+	printf("  Device Recovery Action 1          : 0x%x \n", log_data->device_recover_action_1);
+	printf("  Panic ID                          : 0x%x \n", le32_to_cpu(log_data->panic_id));
+	printf("  Device Capabilities               : 0x%x \n", le32_to_cpu(log_data->device_capabilities));
+	printf("  Vendor Specific Recovery Opcode   : 0x%x \n", log_data->vendor_specific_recovery_opcode);
+	printf("  Vendor Specific Command CDW12     : 0x%x \n", le32_to_cpu(log_data->vendor_specific_command_cdw12));
+	printf("  Vendor Specific Command CDW13     : 0x%x \n", le32_to_cpu(log_data->vendor_specific_command_cdw13));
+	printf("  Vendor Specific Command Timeout   : 0x%x \n", log_data->vendor_specific_command_timeout);
+	printf("  Device Recovery Action 2          : 0x%x \n", log_data->device_recover_action_2);
+	printf("  Device Recovery Action 2 Timeout  : 0x%x \n", log_data->device_recover_action_2_timeout);
+	printf("  Log Page Version                  : 0x%x \n", le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID			    : 0x");
+	for (i = C1_GUID_LENGTH - 1; i >= 0; i--) {
+			printf("%x", log_data->log_page_guid[i]);
+	}
+	printf("\n");
+}
+
+static void ocp_print_c1_log_json(struct ocp_error_recovery_log_page *log_data)
+{
+	struct json_object *root;
+	root = json_create_object();
+	char guid[64];
+
+	json_object_add_value_int(root, "Panic Reset Wait Time", le16_to_cpu(log_data->panic_reset_wait_time));
+	json_object_add_value_int(root, "Panic Reset Action", log_data->panic_reset_action);
+	json_object_add_value_int(root, "Device Recovery Action 1", log_data->device_recover_action_1);
+	json_object_add_value_int(root, "Panic ID", le32_to_cpu(log_data->panic_id));
+	json_object_add_value_int(root, "Device Capabilities", le32_to_cpu(log_data->device_capabilities));
+	json_object_add_value_int(root, "Vendor Specific Recovery Opcode", log_data->vendor_specific_recovery_opcode);
+	json_object_add_value_int(root, "Vendor Specific Command CDW12", le32_to_cpu(log_data->vendor_specific_command_cdw12));
+	json_object_add_value_int(root, "Vendor Specific Command CDW13", le32_to_cpu(log_data->vendor_specific_command_cdw13));
+	json_object_add_value_int(root, "Vendor Specific Command Timeout", log_data->vendor_specific_command_timeout);
+	json_object_add_value_int(root, "Device Recovery Action 2", log_data->device_recover_action_2);
+	json_object_add_value_int(root, "Device Recovery Action 2 Timeout", log_data->device_recover_action_2_timeout);
+	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
+
+	memset((void*)guid, 0, 64);
+	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	json_object_add_value_string(root, "Log page GUID", guid);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+static void ocp_print_c1_log_binary(struct ocp_error_recovery_log_page *log_data)
+{
+    return d_raw((unsigned char *)log_data, sizeof(*log_data));
+}
+
+static int get_c1_log_page(struct nvme_dev *dev, char *format)
+{
+	int ret = 0;
+	int fmt = -1;
+	__u8 *data;
+	int i,j;
+	struct ocp_error_recovery_log_page *log_data;
+
+	fmt = validate_output_format(format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		return fmt;
+	}
+
+	if ((data = (__u8 *) malloc(sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN)) == NULL) {
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		return -1;
+	}
+	memset(data, 0, sizeof (__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
+
+	ret = nvme_get_log_simple(dev_fd(dev), C1_ERROR_RECOVERY_OPCODE, C1_ERROR_RECOVERY_LOG_BUF_LEN, data);
+
+	if (ret == 0) {
+		log_data = (struct ocp_error_recovery_log_page *)data;
+
+		/* check log page version */
+		if (log_data->log_page_version != C1_ERROR_RECOVERY_VERSION) {
+			fprintf(stderr, "ERROR : OCP : invalid error recovery log page version\n");
+			ret = -1;
+			goto out;
+		}
+
+		/* check log page guid */
+		/* Verify GUID matches */
+		for (i=0; i<16; i++) {
+			if (error_recovery_guid[i] != log_data->log_page_guid[i]) {
+				fprintf(stderr, "ERROR : OCP : Unknown GUID in C1 Log Page data\n");
+				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", error_recovery_guid[j]);
+				}
+				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+				}
+				fprintf(stderr, "\n");
+
+				ret = -1;
+				goto out;
+			}
+		}
+
+		switch (fmt) {
+		case NORMAL:
+			ocp_print_c1_log_normal(log_data);
+			break;
+		case JSON:
+			ocp_print_c1_log_json(log_data);
+			break;
+		case BINARY:
+			ocp_print_c1_log_binary(log_data);
+			break;
+		}
+	} else {
+		fprintf(stderr, "ERROR : OCP : Unable to read C1 data from buffer\n");
+	}
+
+out:
+	free(data);
+	return ret;
+}
+
+static int ocp_error_recovery_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+    const char *desc = "Retrieve C1h Error Recovery Log data.";
+	struct nvme_dev *dev;
+	int ret = 0;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "output Format: normal|json|binary"),
+		OPT_END()
+	};
+
+	ret = parse_and_open(&dev, argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	ret = get_c1_log_page(dev, cfg.output_format);
+	if (ret)
+		fprintf(stderr, "ERROR : OCP : Failure reading the C1h Log Page, ret = %d\n", ret);
+	dev_close(dev);
+	return ret;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// Misc
 
 static const __u8 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS = 0xC3;
