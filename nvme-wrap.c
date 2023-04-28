@@ -40,7 +40,6 @@
 	int __rc;							\
 	if (d->type == NVME_DEV_DIRECT) {				\
 		args->fd = d->direct.fd;				\
-		args->timeout = NVME_DEFAULT_IOCTL_TIMEOUT;		\
 		__rc = nvme_ ## op(args);				\
 	} else if (d->type == NVME_DEV_MI)				\
 		__rc = nvme_mi_admin_ ## op (d->mi.ctrl, args);		\
