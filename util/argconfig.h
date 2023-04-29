@@ -114,9 +114,7 @@ struct argconfig_commandline_options {
 };
 
 #define CFG_MAX_SUBOPTS 500
-#define MAX_HELP_FUNC 20
 
-typedef void argconfig_help_func();
 void argconfig_append_usage(const char *str);
 void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *options);
@@ -132,7 +130,6 @@ int argconfig_parse_comma_sep_array_long(char *string,
 					      unsigned long long *ret,
 					      unsigned max_length);
 int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val);
-void argconfig_register_help_func(argconfig_help_func * f);
 
 void print_word_wrapped(const char *s, int indent, int start, FILE *stream);
 bool argconfig_parse_seen(struct argconfig_commandline_options *options,

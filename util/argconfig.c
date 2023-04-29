@@ -48,8 +48,6 @@
 #define fallthrough do {} while (0)
 #endif
 
-static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = { NULL };
-
 static char END_DEFAULT[] = "__end_default__";
 
 static const char *append_usage_str = "";
@@ -593,19 +591,6 @@ int argconfig_parse_comma_sep_array_long(char *string,
 		if (*p != 0)
 			return -1;
 		ret++;
-	}
-}
-
-void argconfig_register_help_func(argconfig_help_func * f)
-{
-	int i;
-	for (i = 0; i < MAX_HELP_FUNC; i++) {
-		if (help_funcs[i] == NULL) {
-			help_funcs[i] = f;
-			if (i < MAX_HELP_FUNC - 1)
-				help_funcs[i + 1] = NULL;
-			break;
-		}
 	}
 }
 
