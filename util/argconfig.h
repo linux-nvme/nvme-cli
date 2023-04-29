@@ -39,6 +39,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 enum argconfig_types {
 	CFG_FLAG,
@@ -53,6 +54,7 @@ enum argconfig_types {
 	CFG_SHORT,
 	CFG_POSITIVE,
 	CFG_INCREMENT,
+	CFG_VAL,
 };
 
 #define OPT_ARGS(n) \
@@ -95,6 +97,66 @@ enum argconfig_types {
 #define OPT_LIST(l, s, v, d) OPT_STRING(l, s, "LIST", v, d)
 #define OPT_STR(l, s, v, d) OPT_STRING(l, s, "STRING", v, d)
 
+#define OPT_VAL(l, s, v, d, o) \
+	{l, s, "VAL", CFG_VAL, v, required_argument, d, false, o}
+
+#define OPT_VALS(n) \
+	struct argconfig_opt_val n[]
+
+#define VAL_END() { NULL }
+
+#define VAL_FLAG(s, l, v) \
+	{s, l, CFG_FLAG, .val.flag = v}
+
+#define VAL_LONG_SUFFIX(s, l, v) \
+	{s, l, CFG_LONG_SUFFIX, .val.long_suffix = v}
+
+#define VAL_UINT(s, l, v) \
+	{s, l, CFG_POSITIVE, v}
+
+#define VAL_INT(s, l, v) \
+	{s, l, CFG_INT, .val.int_val = v}
+
+#define VAL_LONG(s, l, v) \
+	{s, l, CFG_LONG, .val.long_val = v}
+
+#define VAL_DOUBLE(s, l, v) \
+	{s, l, CFG_DOUBLE, .val.double_val = v}
+
+#define VAL_BYTE(s, l, v) \
+	{s, l, CFG_BYTE, .val.byte = v}
+
+#define VAL_SHRT(s, l, v) \
+	{s, l, CFG_SHORT, .val.short_val = v}
+
+#define VAL_INCR(s, l, v) \
+	{s, l, CFG_INCREMENT, .val.increment = v}
+
+#define VAL_STRING(s, l, m, v) \
+	{s, l, CFG_STRING, .val.string = v}
+
+union argconfig_val {
+	char *string;
+	size_t size;
+	int int_val;
+	int bool_val;
+	uint8_t byte;
+	uint16_t short_val;
+	uint32_t positive;
+	int increment;
+	unsigned long long_val;
+	uint64_t long_suffix;
+	double double_val;
+	bool flag;
+};
+
+struct argconfig_opt_val {
+	const char *str;
+	const int len;
+	enum argconfig_types type;
+	union argconfig_val val;
+};
+
 struct argconfig_commandline_options {
 	const char *option;
 	const char short_option;
@@ -104,6 +166,7 @@ struct argconfig_commandline_options {
 	int argument_type;
 	const char *help;
 	bool seen;
+	struct argconfig_opt_val *opt_val;
 };
 
 void argconfig_append_usage(const char *str);

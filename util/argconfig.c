@@ -50,6 +50,9 @@
 
 static const char *append_usage_str = "";
 
+static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
+			       int index);
+
 void argconfig_append_usage(const char *str)
 {
 	append_usage_str = str;
@@ -160,13 +163,13 @@ int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val)
 }
 
 static int argconfig_parse_type(struct argconfig_commandline_options *s, struct option *option,
-				int index)
+				int index, enum argconfig_types type)
 {
 	void *value = (void *)(char *)s->default_value;
 	char *endptr;
 	int ret = 0;
 
-	switch (s->config_type) {
+	switch (type) {
 	case CFG_STRING:
 		*((char **)value) = optarg;
 		break;
@@ -216,7 +219,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 			ret = argconfig_error("long integer", option[index].name, optarg);
 		break;
 	case CFG_LONG_SUFFIX:
-		ret = suffix_binary_parse(optarg, &endptr, (uint64_t*)value);
+		ret = suffix_binary_parse(optarg, &endptr, (uint64_t *)value);
 		if (ret)
 			argconfig_error("long suffixed integer", option[index].name, optarg);
 		break;
@@ -228,11 +231,65 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	case CFG_FLAG:
 		*((bool *)value) = true;
 		break;
+	case CFG_VAL:
+		ret = argconfig_parse_val(s, option, index);
+		break;
 	default:
 		break;
 	}
 
 	return ret;
+}
+
+static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
+			       int index)
+{
+	const char *str = optarg;
+	void *val = s->default_value;
+	int len = strlen(optarg);
+	struct argconfig_opt_val *v;
+
+	for (v = s->opt_val; v && v->str; v++) {
+		if (strncasecmp(str, v->str, len > v->len ? len : v->len))
+			continue;
+		switch (v->type) {
+		case CFG_FLAG:
+			*(bool *)val = v->val.bool_val;
+			break;
+		case CFG_LONG_SUFFIX:
+			*(uint64_t *)val = v->val.long_suffix;
+			break;
+		case CFG_POSITIVE:
+			*(uint32_t *)val = v->val.positive;
+			break;
+		case CFG_INT:
+			*(int *)val = v->val.int_val;
+			break;
+		case CFG_LONG:
+			*(unsigned long *)val = v->val.long_val;
+			break;
+		case CFG_DOUBLE:
+			*(double *)val = v->val.double_val;
+			break;
+		case CFG_BYTE:
+			*(uint8_t *)val = v->val.byte;
+			break;
+		case CFG_SHORT:
+			*(uint16_t *)val = v->val.short_val;
+			break;
+		case CFG_INCREMENT:
+			*(int *)val = v->val.increment;
+			break;
+		case CFG_STRING:
+			*(char **)val = v->val.string;
+			break;
+		default:
+			break;
+		}
+		return 0;
+	}
+
+	return argconfig_parse_type(s, option, index, s->opt_val->type);
 }
 
 bool argconfig_output_format_json(bool set)
@@ -330,7 +387,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		if (!s->default_value)
 			continue;
 
-		ret = argconfig_parse_type(s, long_opts,option_index);
+		ret = argconfig_parse_type(s, long_opts, option_index, s->config_type);
 		if (ret)
 			break;
 	}
