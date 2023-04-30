@@ -166,8 +166,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 {
 	void *value = (void *)(char *)s->default_value;
 	char *endptr;
-	const char *fopts = NULL;
-	FILE *f;
 	int ret = 0;
 	char **opts = ((char **)value);
 	int remaining_space = CFG_MAX_SUBOPTS - 2;
@@ -241,36 +239,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 			else
 				fprintf(stderr, "Error Parsing Sub-Options\n");
 			ret = -EINVAL;
-		}
-		break;
-	case CFG_FILE_A:
-		fopts = "a";
-		fallthrough;
-	case CFG_FILE_R:
-		if (!fopts)
-			fopts = "r";
-		fallthrough;
-	case CFG_FILE_W:
-		if (!fopts)
-			fopts = "w";
-		fallthrough;
-	case CFG_FILE_AP:
-		if (!fopts)
-			fopts = "a+";
-		fallthrough;
-	case CFG_FILE_RP:
-		if (!fopts)
-			fopts = "r+";
-		fallthrough;
-	case CFG_FILE_WP:
-		if (!fopts)
-			fopts = "w+";
-		f = fopen(optarg, fopts);
-		if (!f) {
-			fprintf(stderr, "Unable to open %s file: %s\n", s->option, optarg);
-			ret = -EINVAL;
-		} else {
-			*((FILE **)value) = f;
 		}
 		break;
 	case CFG_FLAG:

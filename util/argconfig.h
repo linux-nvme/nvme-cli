@@ -54,12 +54,6 @@ enum argconfig_types {
 	CFG_POSITIVE,
 	CFG_INCREMENT,
 	CFG_SUBOPTS,
-	CFG_FILE_A,
-	CFG_FILE_W,
-	CFG_FILE_R,
-	CFG_FILE_AP,
-	CFG_FILE_WP,
-	CFG_FILE_RP,
 };
 
 #define OPT_ARGS(n) \
