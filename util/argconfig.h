@@ -53,7 +53,6 @@ enum argconfig_types {
 	CFG_SHORT,
 	CFG_POSITIVE,
 	CFG_INCREMENT,
-	CFG_SUBOPTS,
 };
 
 #define OPT_ARGS(n) \
@@ -107,15 +106,11 @@ struct argconfig_commandline_options {
 	bool seen;
 };
 
-#define CFG_MAX_SUBOPTS 500
-
 void argconfig_append_usage(const char *str);
 void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *options);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options);
-int argconfig_parse_subopt_string(char *string, char **options,
-				  size_t max_options);
 int argconfig_parse_comma_sep_array(char *string, int *ret,
 					 unsigned max_length);
 int argconfig_parse_comma_sep_array_short(char *string, unsigned short *ret,

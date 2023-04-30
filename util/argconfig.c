@@ -48,8 +48,6 @@
 #define fallthrough do {} while (0)
 #endif
 
-static char END_DEFAULT[] = "__end_default__";
-
 static const char *append_usage_str = "";
 
 void argconfig_append_usage(const char *str)
@@ -167,8 +165,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	void *value = (void *)(char *)s->default_value;
 	char *endptr;
 	int ret = 0;
-	char **opts = ((char **)value);
-	int remaining_space = CFG_MAX_SUBOPTS - 2;
 
 	switch (s->config_type) {
 	case CFG_STRING:
@@ -228,18 +224,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		*((double *)value) = strtod(optarg, &endptr);
 		if (errno || optarg == endptr)
 			ret = argconfig_error("float", option[index].name, optarg);
-		break;
-	case CFG_SUBOPTS:
-		*opts = END_DEFAULT;
-		opts += 2;
-		ret = argconfig_parse_subopt_string(optarg, opts, remaining_space);
-		if (ret) {
-			if (ret == 2)
-				fprintf(stderr, "Error Parsing Sub-Options: Too many options!\n");
-			else
-				fprintf(stderr, "Error Parsing Sub-Options\n");
-			ret = -EINVAL;
-		}
 		break;
 	case CFG_FLAG:
 		*((bool *)value) = true;
@@ -358,82 +342,6 @@ out:
 	free(short_opts);
 	free(long_opts);
 	return ret;
-}
-
-int argconfig_parse_subopt_string(char *string, char **options,
-				  size_t max_options)
-{
-	char **o = options;
-	char *tmp;
-	size_t toklen;
-
-	if (!string || !strlen(string)) {
-		*(o++) = NULL;
-		*(o++) = NULL;
-		return 0;
-	}
-
-	tmp = calloc(strlen(string) + 2, 1);
-	if (!tmp)
-		return 1;
-	strcpy(tmp, string);
-
-	toklen = strcspn(tmp, "=");
-
-	if (!toklen) {
-		free(tmp);
-		return 1;
-	}
-
-	*(o++) = tmp;
-	tmp[toklen] = 0;
-	tmp += toklen + 1;
-
-	while (1) {
-		if (*tmp == '"' || *tmp == '\'' || *tmp == '[' || *tmp == '(' ||
-		    *tmp == '{') {
-
-			tmp++;
-			toklen = strcspn(tmp, "\"'])}");
-
-			if (!toklen)
-				return 1;
-
-			*(o++) = tmp;
-			tmp[toklen] = 0;
-			tmp += toklen + 1;
-
-			toklen = strcspn(tmp, ";:,");
-			tmp[toklen] = 0;
-			tmp += toklen + 1;
-		} else {
-			toklen = strcspn(tmp, ";:,");
-
-			if (!toklen)
-				return 1;
-
-			*(o++) = tmp;
-			tmp[toklen] = 0;
-			tmp += toklen + 1;
-		}
-
-		toklen = strcspn(tmp, "=");
-
-		if (!toklen)
-			break;
-
-		*(o++) = tmp;
-		tmp[toklen] = 0;
-		tmp += toklen + 1;
-
-		if ((o - options) > (max_options - 2))
-			return 2;
-	}
-
-	*(o++) = NULL;
-	*(o++) = NULL;
-
-	return 0;
 }
 
 int argconfig_parse_comma_sep_array(char *string, int *val,
