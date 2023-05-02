@@ -5270,28 +5270,6 @@ ret:
 	return err;
 }
 
-static int parse_sanact(char *str, __u8 *val)
-{
-	int len = strlen(str);
-
-	if (!strncasecmp(str, "exit-failure", len > 1 ? len : 1))
-		*val = NVME_SANITIZE_SANACT_EXIT_FAILURE;
-
-	if (!strncasecmp(str, "start-block-erase", len > 7 ? len : 7))
-		*val = NVME_SANITIZE_SANACT_START_BLOCK_ERASE;
-
-	if (!strncasecmp(str, "start-overwrite", len > 7 ? len : 7))
-		*val = NVME_SANITIZE_SANACT_START_OVERWRITE;
-
-	if (!strncasecmp(str, "start-crypto-erase", len > 7 ? len : 7))
-		*val = NVME_SANITIZE_SANACT_START_CRYPTO_ERASE;
-
-	if (*val)
-		return 0;
-
-	return argconfig_parse_byte("sanact", str, val);
-}
-
 static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send a sanitize command.";
@@ -5303,14 +5281,13 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	const char *ovrpat_desc = "Overwrite pattern.";
 	struct nvme_dev *dev;
 	int err;
-	__u8 sanact = 0;
 
 	struct config {
 		bool	no_dealloc;
 		bool	oipbp;
 		__u8	owpass;
 		bool	ause;
-		char	*sanact;
+		__u8 	sanact;
 		__u32	ovrpat;
 	};
 
@@ -5319,8 +5296,16 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		.oipbp		= false,
 		.owpass		= 0,
 		.ause		= false,
-		.sanact		= NULL,
+		.sanact		= 0,
 		.ovrpat		= 0,
+	};
+
+	OPT_VALS(sanact) = {
+		VAL_BYTE("exit-failure", 1, NVME_SANITIZE_SANACT_EXIT_FAILURE),
+		VAL_BYTE("start-block-erase", 7, NVME_SANITIZE_SANACT_START_BLOCK_ERASE),
+		VAL_BYTE("start-overwrite", 7, NVME_SANITIZE_SANACT_START_OVERWRITE),
+		VAL_BYTE("start-crypto-erase", 7, NVME_SANITIZE_SANACT_START_CRYPTO_ERASE),
+		VAL_END()
 	};
 
 	OPT_ARGS(opts) = {
@@ -5328,7 +5313,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_FLAG("oipbp",      'i', &cfg.oipbp,      oipbp_desc),
 		OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
 		OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
-		OPT_STR("sanact",      'a', &cfg.sanact,     sanact_desc),
+		OPT_VAL("sanact",      'a', &cfg.sanact,     sanact_desc, sanact),
 		OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
 		OPT_END()
 	};
@@ -5337,13 +5322,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	if (err)
 		goto ret;
 
-	if (cfg.sanact) {
-		err = parse_sanact(cfg.sanact, &sanact);
-		if (err)
-			goto close_dev;
-	}
-
-	switch (sanact) {
+	switch (cfg.sanact) {
 	case NVME_SANITIZE_SANACT_EXIT_FAILURE:
 	case NVME_SANITIZE_SANACT_START_BLOCK_ERASE:
 	case NVME_SANITIZE_SANACT_START_OVERWRITE:
@@ -5355,7 +5334,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		goto close_dev;
 	}
 
-	if (sanact == NVME_SANITIZE_SANACT_EXIT_FAILURE) {
+	if (cfg.sanact == NVME_SANITIZE_SANACT_EXIT_FAILURE) {
 		if (cfg.ause || cfg.no_dealloc) {
 			nvme_show_error("SANACT is Exit Failure Mode");
 			err = -EINVAL;
@@ -5363,7 +5342,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		}
 	}
 
-	if (sanact == NVME_SANITIZE_SANACT_START_OVERWRITE) {
+	if (cfg.sanact == NVME_SANITIZE_SANACT_START_OVERWRITE) {
 		if (cfg.owpass > 15) {
 			nvme_show_error("OWPASS out of range [0-15]");
 			err = -EINVAL;
@@ -5379,7 +5358,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 
 	struct nvme_sanitize_nvm_args args = {
 		.args_size	= sizeof(args),
-		.sanact		= sanact,
+		.sanact		= cfg.sanact,
 		.ause		= cfg.ause,
 		.owpass		= cfg.owpass,
 		.oipbp		= cfg.oipbp,
