@@ -241,6 +241,25 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	return ret;
 }
 
+static int argconfig_get_val_len(struct argconfig_opt_val *opt_val, const char *str)
+{
+	struct argconfig_opt_val *v;
+	int len;
+	int match;
+
+	for (len = 1; len <= strlen(str); len++) {
+		match = 0;
+		for (v = opt_val; v && v->str; v++) {
+			if (!strncasecmp(str, v->str, len))
+				match++;
+		}
+		if (match == 1)
+			break;
+	}
+
+	return len;
+}
+
 static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
 			       int index)
 {
@@ -248,9 +267,11 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s, struct o
 	void *val = s->default_value;
 	int len = strlen(optarg);
 	struct argconfig_opt_val *v;
+	int val_len;
 
 	for (v = s->opt_val; v && v->str; v++) {
-		if (strncasecmp(str, v->str, len > v->len ? len : v->len))
+		val_len = argconfig_get_val_len(s->opt_val, v->str);
+		if (strncasecmp(str, v->str, len > val_len ? len : val_len))
 			continue;
 		switch (v->type) {
 		case CFG_FLAG:

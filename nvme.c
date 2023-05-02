@@ -5301,10 +5301,10 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	OPT_VALS(sanact) = {
-		VAL_BYTE("exit-failure", 1, NVME_SANITIZE_SANACT_EXIT_FAILURE),
-		VAL_BYTE("start-block-erase", 7, NVME_SANITIZE_SANACT_START_BLOCK_ERASE),
-		VAL_BYTE("start-overwrite", 7, NVME_SANITIZE_SANACT_START_OVERWRITE),
-		VAL_BYTE("start-crypto-erase", 7, NVME_SANITIZE_SANACT_START_CRYPTO_ERASE),
+		VAL_BYTE("exit-failure", NVME_SANITIZE_SANACT_EXIT_FAILURE),
+		VAL_BYTE("start-block-erase", NVME_SANITIZE_SANACT_START_BLOCK_ERASE),
+		VAL_BYTE("start-overwrite", NVME_SANITIZE_SANACT_START_OVERWRITE),
+		VAL_BYTE("start-crypto-erase", NVME_SANITIZE_SANACT_START_CRYPTO_ERASE),
 		VAL_END()
 	};
 
