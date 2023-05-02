@@ -260,6 +260,46 @@ static int argconfig_get_val_len(struct argconfig_opt_val *opt_val, const char *
 	return len;
 }
 
+static int argconfig_set_opt_val(enum argconfig_types type, union argconfig_val *opt_val, void *val)
+{
+	switch (type) {
+	case CFG_FLAG:
+		*(bool *)val = opt_val->bool_val;
+		break;
+	case CFG_LONG_SUFFIX:
+		*(uint64_t *)val = opt_val->long_suffix;
+		break;
+	case CFG_POSITIVE:
+		*(uint32_t *)val = opt_val->positive;
+		break;
+	case CFG_INT:
+		*(int *)val = opt_val->int_val;
+		break;
+	case CFG_LONG:
+		*(unsigned long *)val = opt_val->long_val;
+		break;
+	case CFG_DOUBLE:
+		*(double *)val = opt_val->double_val;
+		break;
+	case CFG_BYTE:
+		*(uint8_t *)val = opt_val->byte;
+		break;
+	case CFG_SHORT:
+		*(uint16_t *)val = opt_val->short_val;
+		break;
+	case CFG_INCREMENT:
+		*(int *)val = opt_val->increment;
+		break;
+	case CFG_STRING:
+		*(char **)val = opt_val->string;
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
 static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
 			       int index)
 {
@@ -273,41 +313,7 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s, struct o
 		val_len = argconfig_get_val_len(s->opt_val, v->str);
 		if (strncasecmp(str, v->str, len > val_len ? len : val_len))
 			continue;
-		switch (v->type) {
-		case CFG_FLAG:
-			*(bool *)val = v->val.bool_val;
-			break;
-		case CFG_LONG_SUFFIX:
-			*(uint64_t *)val = v->val.long_suffix;
-			break;
-		case CFG_POSITIVE:
-			*(uint32_t *)val = v->val.positive;
-			break;
-		case CFG_INT:
-			*(int *)val = v->val.int_val;
-			break;
-		case CFG_LONG:
-			*(unsigned long *)val = v->val.long_val;
-			break;
-		case CFG_DOUBLE:
-			*(double *)val = v->val.double_val;
-			break;
-		case CFG_BYTE:
-			*(uint8_t *)val = v->val.byte;
-			break;
-		case CFG_SHORT:
-			*(uint16_t *)val = v->val.short_val;
-			break;
-		case CFG_INCREMENT:
-			*(int *)val = v->val.increment;
-			break;
-		case CFG_STRING:
-			*(char **)val = v->val.string;
-			break;
-		default:
-			break;
-		}
-		return 0;
+		return argconfig_set_opt_val(v->type, &v->val, val);
 	}
 
 	return argconfig_parse_type(s, option, index, s->opt_val->type);
