@@ -106,34 +106,34 @@ enum argconfig_types {
 #define VAL_END() { NULL }
 
 #define VAL_FLAG(s, l, v) \
-	{s, l, CFG_FLAG, .val.flag = v}
+	{s, CFG_FLAG, .val.flag = v}
 
-#define VAL_LONG_SUFFIX(s, l, v) \
-	{s, l, CFG_LONG_SUFFIX, .val.long_suffix = v}
+#define VAL_LONG_SUFFIX(s, v) \
+	{s, CFG_LONG_SUFFIX, .val.long_suffix = v}
 
-#define VAL_UINT(s, l, v) \
-	{s, l, CFG_POSITIVE, v}
+#define VAL_UINT(s, v) \
+	{s, CFG_POSITIVE, v}
 
-#define VAL_INT(s, l, v) \
-	{s, l, CFG_INT, .val.int_val = v}
+#define VAL_INT(s, v) \
+	{s, CFG_INT, .val.int_val = v}
 
-#define VAL_LONG(s, l, v) \
-	{s, l, CFG_LONG, .val.long_val = v}
+#define VAL_LONG(s, v) \
+	{s, CFG_LONG, .val.long_val = v}
 
-#define VAL_DOUBLE(s, l, v) \
-	{s, l, CFG_DOUBLE, .val.double_val = v}
+#define VAL_DOUBLE(s, v) \
+	{s, CFG_DOUBLE, .val.double_val = v}
 
-#define VAL_BYTE(s, l, v) \
-	{s, l, CFG_BYTE, .val.byte = v}
+#define VAL_BYTE(s, v) \
+	{s, CFG_BYTE, .val.byte = v}
 
-#define VAL_SHRT(s, l, v) \
-	{s, l, CFG_SHORT, .val.short_val = v}
+#define VAL_SHRT(s, v) \
+	{s, CFG_SHORT, .val.short_val = v}
 
-#define VAL_INCR(s, l, v) \
-	{s, l, CFG_INCREMENT, .val.increment = v}
+#define VAL_INCR(s, v) \
+	{s, CFG_INCREMENT, .val.increment = v}
 
-#define VAL_STRING(s, l, m, v) \
-	{s, l, CFG_STRING, .val.string = v}
+#define VAL_STRING(s, m, v) \
+	{s, CFG_STRING, .val.string = v}
 
 union argconfig_val {
 	char *string;
@@ -152,7 +152,6 @@ union argconfig_val {
 
 struct argconfig_opt_val {
 	const char *str;
-	const int len;
 	enum argconfig_types type;
 	union argconfig_val val;
 };
