@@ -612,7 +612,9 @@ struct nvme_ns {
 
 %pythonappend nvme_ctrl::connect(struct nvme_host *h,
 				 struct nvme_fabrics_config *cfg) {
-    self.__parent = h  # Keep a reference to parent to ensure garbage collection happens in the right order}
+    self.__host = h  # Keep a reference to parent to ensure ctrl obj gets GCed before host}
+%pythonappend nvme_ctrl::init(struct nvme_host *h, int instance) {
+    self.__host = h  # Keep a reference to parent to ensure ctrl obj gets GCed before host}
 %extend nvme_ctrl {
 	nvme_ctrl(struct nvme_root *r,
 		  const char *subsysnqn,
