@@ -35,7 +35,7 @@ _nvme () {
 	'error-log:retrieve error log'
 	'endurance-event-agg-log:retrieve endurance group event aggregate log'
 	'lba-status-log:retrieve lba status log'
-	'resv-notif-log: retrieve reservation notification log'
+	'resv-notif-log:retrieve reservation notification log'
 	'get-feature:display a controller feature'
 	'set-feature:set a controller feature and show results'
 	'format:apply new block format to namespace'
@@ -54,16 +54,17 @@ _nvme () {
 	'compare:compare data on device to data elsewhere'
 	'read:submit a read command'
 	'write:submit a write command'
-	'capacity-mgmt: submit capacity management command'
+	'capacity-mgmt:submit capacity management command'
 	'show-regs:shows the controller registers; requires admin character device'
-	'boot-part-log: retrieve boot partition log'
+	'boot-part-log:retrieve boot partition log'
 	'fid-support-effects-log:retrieve fid support and effects log'
-	'supported-log-pages: retrieve support log pages details'
+	'supported-log-pages:retrieve support log pages details'
 	'lockdown:submit a lockdown command'
-	'media-unit-stat-log: retrieve media unit status log pages details'
-	'supported-cap-config-log: retrieve support log pages details'
-	'show-topology: show subystem topology'
+	'media-unit-stat-log:retrieve media unit status log pages details'
+	'supported-cap-config-log:retrieve support log pages details'
+	'show-topology:show subystem topology'
 	'help:print brief descriptions of all nvme commands'
+	'json:dump output in json format'
 	)
 
 	local expl
@@ -86,7 +87,6 @@ _nvme () {
 			--vendor-specific':also dump binary vendor infos'
 			-v':alias of --vendor-specific'
 			)
-
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme id-ctrl options" _idctrl
 			;;
@@ -1009,11 +1009,11 @@ _nvme () {
 			     set-feature format fw-activate fw-download admin-passthru io-passthru
 			     security-send security-recv resv-acquire resv-register resv-release
 			     resv-report flush compare read write copy show-regs persistent-event-log
-				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
-				 resv-notif-log capacity-mgmt id-domain boot-part-log fid-support-effects-log
-				 supported-log-pages lockdown media-unit-stat-log id-ns-lba-format nvm-id-ns
-				 nvm-id-ns-lba-format supported-cap-config-log show-topology
-			   )
+			     pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
+			     resv-notif-log capacity-mgmt id-domain boot-part-log fid-support-effects-log
+			     supported-log-pages lockdown media-unit-stat-log id-ns-lba-format nvm-id-ns
+			     nvm-id-ns-lba-format supported-cap-config-log show-topology
+			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
 			;;
