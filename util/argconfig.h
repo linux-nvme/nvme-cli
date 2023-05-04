@@ -62,40 +62,40 @@ enum argconfig_types {
 
 #define OPT_END() { NULL }
 
-#define OPT_FLAG(l, s, v, d) \
-	{l, s, NULL, CFG_FLAG, v, no_argument, d}
+#define OPT_FLAG(l, s, v, d, ...) \
+	{l, s, NULL, CFG_FLAG, v, no_argument, d, false, __VA_ARGS__}
 
-#define OPT_SUFFIX(l, s, v, d) \
-	{l, s, "IONUM", CFG_LONG_SUFFIX, v, required_argument, d}
+#define OPT_SUFFIX(l, s, v, d, ...) \
+	{l, s, "IONUM", CFG_LONG_SUFFIX, v, required_argument, d, false, __VA_ARGS__}
 
-#define OPT_UINT(l, s, v, d) \
-	{l, s, "NUM", CFG_POSITIVE, v, required_argument, d}
+#define OPT_UINT(l, s, v, d, ...) \
+	{l, s, "NUM", CFG_POSITIVE, v, required_argument, d, false, __VA_ARGS__}
 
-#define OPT_INT(l, s, v, d) \
-	{l, s, "NUM", CFG_INT, v, required_argument, d}
+#define OPT_INT(l, s, v, d, ...) \
+	{l, s, "NUM", CFG_INT, v, required_argument, d, false, __VA_ARGS__}
 
-#define OPT_LONG(l, s, v, d) \
-	{l, s, "NUM", CFG_LONG, v, required_argument, d}
+#define OPT_LONG(l, s, v, d, ...) \
+	{l, s, "NUM", CFG_LONG, v, required_argument, d, false, __VA_ARGS__}
 
-#define OPT_DOUBLE(l, s, v, d) \
-	{l, s, "NUM", CFG_DOUBLE, v, required_argument, d}
+#define OPT_DOUBLE(l, s, v, d, ...) \
+	{l, s, "NUM", CFG_DOUBLE, v, required_argument, d, false, __VA_ARGS__}
 
-#define OPT_BYTE(l, s, v, d) \
-	{l, s, "NUM", CFG_BYTE, v, required_argument, d}
+#define OPT_BYTE(l, s, v, d, ...) \
+	{l, s, "NUM", CFG_BYTE, v, required_argument, d, false, __VA_ARGS__}
 
-#define OPT_SHRT(l, s, v, d) \
-	{l, s, "NUM", CFG_SHORT, v, required_argument, d}
+#define OPT_SHRT(l, s, v, d, ...) \
+	{l, s, "NUM", CFG_SHORT, v, required_argument, d, false, __VA_ARGS__}
 
-#define OPT_INCR(l, s, v, d) \
-	{l, s, "NUM", CFG_INCREMENT, v, no_argument, d}
+#define OPT_INCR(l, s, v, d, ...) \
+	{l, s, "NUM", CFG_INCREMENT, v, no_argument, d, false, __VA_ARGS__}
 
-#define OPT_STRING(l, s, m, v, d) \
-	{l, s, m, CFG_STRING, v, required_argument, d}
+#define OPT_STRING(l, s, m, v, d, ...) \
+	{l, s, m, CFG_STRING, v, required_argument, d, false, __VA_ARGS__}
 
-#define OPT_FMT(l, s, v, d)  OPT_STRING(l, s, "FMT", v, d)
-#define OPT_FILE(l, s, v, d) OPT_STRING(l, s, "FILE", v, d)
-#define OPT_LIST(l, s, v, d) OPT_STRING(l, s, "LIST", v, d)
-#define OPT_STR(l, s, v, d) OPT_STRING(l, s, "STRING", v, d)
+#define OPT_FMT(l, s, v, d, ...)  OPT_STRING(l, s, "FMT", v, d, __VA_ARGS__)
+#define OPT_FILE(l, s, v, d, ...) OPT_STRING(l, s, "FILE", v, d, __VA_ARGS__)
+#define OPT_LIST(l, s, v, d, ...) OPT_STRING(l, s, "LIST", v, d, __VA_ARGS__)
+#define OPT_STR(l, s, v, d, ...) OPT_STRING(l, s, "STRING", v, d, __VA_ARGS__)
 
 #define OPT_VAL(l, s, v, d, o) \
 	{l, s, "VAL", CFG_VAL, v, required_argument, d, false, o}

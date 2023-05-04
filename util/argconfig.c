@@ -163,13 +163,13 @@ int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val)
 }
 
 static int argconfig_parse_type(struct argconfig_commandline_options *s, struct option *option,
-				int index, enum argconfig_types type)
+				int index)
 {
 	void *value = (void *)(char *)s->default_value;
 	char *endptr;
 	int ret = 0;
 
-	switch (type) {
+	switch (s->config_type) {
 	case CFG_STRING:
 		*((char **)value) = optarg;
 		break;
@@ -230,9 +230,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		break;
 	case CFG_FLAG:
 		*((bool *)value) = true;
-		break;
-	case CFG_VAL:
-		ret = argconfig_parse_val(s, option, index);
 		break;
 	default:
 		break;
@@ -316,7 +313,7 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s, struct o
 		return argconfig_set_opt_val(v->type, &v->val, val);
 	}
 
-	return argconfig_parse_type(s, option, index, s->opt_val->type);
+	return argconfig_parse_type(s, option, index);
 }
 
 bool argconfig_output_format_json(bool set)
@@ -414,7 +411,10 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		if (!s->default_value)
 			continue;
 
-		ret = argconfig_parse_type(s, long_opts, option_index, s->config_type);
+		if (s->opt_val)
+			ret = argconfig_parse_val(s, long_opts, option_index);
+		else
+			ret = argconfig_parse_type(s, long_opts, option_index);
 		if (ret)
 			break;
 	}
