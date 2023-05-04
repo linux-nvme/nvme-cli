@@ -430,7 +430,7 @@ nvme_list_opts () {
 			;;
 	esac
 
-	opts+=" -h --help"
+	opts+=" -h --help -j --json"
 
 	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
 
