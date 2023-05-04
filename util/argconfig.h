@@ -54,7 +54,6 @@ enum argconfig_types {
 	CFG_SHORT,
 	CFG_POSITIVE,
 	CFG_INCREMENT,
-	CFG_VAL,
 };
 
 #define OPT_ARGS(n) \
@@ -96,9 +95,6 @@ enum argconfig_types {
 #define OPT_FILE(l, s, v, d, ...) OPT_STRING(l, s, "FILE", v, d, __VA_ARGS__)
 #define OPT_LIST(l, s, v, d, ...) OPT_STRING(l, s, "LIST", v, d, __VA_ARGS__)
 #define OPT_STR(l, s, v, d, ...) OPT_STRING(l, s, "STRING", v, d, __VA_ARGS__)
-
-#define OPT_VAL(l, s, v, d, o) \
-	{l, s, "VAL", CFG_VAL, v, required_argument, d, false, o}
 
 #define OPT_VALS(n) \
 	struct argconfig_opt_val n[]
