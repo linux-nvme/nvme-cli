@@ -5313,7 +5313,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_FLAG("oipbp",      'i', &cfg.oipbp,      oipbp_desc),
 		OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
 		OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
-		OPT_VAL("sanact",      'a', &cfg.sanact,     sanact_desc, sanact),
+		OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc, sanact),
 		OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
 		OPT_END()
 	};
