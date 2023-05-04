@@ -4800,7 +4800,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		}
 	}
 
-	if (cfg.sel > 7) {
+	if (cfg.sel > 8) {
 		nvme_show_error("invalid 'select' param:%d", cfg.sel);
 		err = -EINVAL;
 		goto close_dev;
