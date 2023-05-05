@@ -92,6 +92,7 @@
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
 #define WDC_NVME_SN520_DEV_ID_2				0x5005
 #define WDC_NVME_SN530_DEV_ID				0x5009
+#define WDC_NVME_SN530_DEV_ID_1			0x501d
 #define WDC_NVME_SN720_DEV_ID				0x5002
 #define WDC_NVME_SN730A_DEV_ID				0x5006
 #define WDC_NVME_SN740_DEV_ID				0x5015
@@ -1685,6 +1686,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		/* FALLTHRU */
 		case WDC_NVME_SN520_DEV_ID_2:
 		case WDC_NVME_SN530_DEV_ID:
+		case WDC_NVME_SN530_DEV_ID_1:
 		case WDC_NVME_SN810_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA;
 			break;
