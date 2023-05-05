@@ -88,7 +88,7 @@ nvme_list_opts () {
 		opts+=" --endgrp-id= -i --output-format= -o"
 			;;
 		"id-iocs")
-		opts+=" --controller-id= -c --output-format= -o --human-readable -H"
+		opts+=" --controller-id= -c"
 			;;
 		"id-domain")
 		opts+=" --domain-id= -c --output-format= -o"
