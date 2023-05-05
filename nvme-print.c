@@ -1931,7 +1931,7 @@ static void nvme_show_id_ctrl_nvmsr(__u8 nvmsr)
 		printf(" [7:2] : %#x\tReserved\n", rsvd);
 	printf("  [1:1] : %#x\tNVM subsystem %spart of an Enclosure\n",
 		nvmee, nvmee ? "" : "Not ");
-	printf("  [0:0] : %#x\tNVM subsystem %spart of an Storage Device\n",
+	printf("  [0:0] : %#x\tNVM subsystem %spart of a Storage Device\n",
 		nvmesd, nvmesd ? "" : "Not ");
 	printf("\n");
 }

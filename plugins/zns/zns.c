@@ -114,7 +114,7 @@ static int list(int argc, char **argv, struct command *cmd,
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an ZNS specific Identify Controller command to "\
+	const char *desc = "Send a ZNS specific Identify Controller command to "\
 		"the given device and report information about the specified "\
 		"controller in various formats.";
 
@@ -158,7 +158,7 @@ close_fd:
 
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an ZNS specific Identify Namespace command to "\
+	const char *desc = "Send a ZNS specific Identify Namespace command to "\
 		"the given device and report information about the specified "\
 		"namespace in varios formats.";
 	const char *vendor_specific = "dump binary vendor fields";
