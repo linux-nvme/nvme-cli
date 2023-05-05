@@ -22,7 +22,7 @@ _nvme () {
 	'list-ctrl:identify all controller(s) attached'
 	'nvm-id-ctrl:display information about the nvm command set'
 	'nvm-id-ns:display information about the namespace of nvm command set'
-	'id-ns-lba-format:display information about the namespace of nvm command set capability fields for specific LBA format'
+	'nvm-id-ns-lba-format:display information about the namespace of nvm command set capability fields for specific LBA format'
 	'list-endgrp:display information about nvme endurance group list'
 	'get-ns-id:get namespace id of opened block device'
 	'get-log:retrieve any log in raw format'
@@ -192,7 +192,7 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme nvm-id-ns options" _nvmidns
 			;;
-		(id-ns-lba-format)
+		(nvm-id-ns-lba-format)
 			local _nvm_idns_lba_format
 			_nvm_idns_lba_format=(
 			/dev/nvme':supply a device to use (required)'
