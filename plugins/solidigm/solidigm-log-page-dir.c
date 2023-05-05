@@ -15,7 +15,8 @@
 
 #include "plugins/ocp/ocp-utils.h"
 
-static const int MIN_VENDOR_LID = 0xC0;
+#define MIN_VENDOR_LID 0xC0
+#define SOLIDIGM_MAX_UUID 2
 
 struct lid_dir {
 	struct __attribute__((packed)) {
@@ -177,14 +178,14 @@ static struct lid_dir* get_ocp_lids(struct nvme_supported_log_pages *supported)
 	return &ocp_dir;
 }
 
-static void supported_log_pages_normal(struct lid_dir *lid_dir[NVME_ID_UUID_LIST_MAX + 1])
+static void supported_log_pages_normal(struct lid_dir *lid_dir[SOLIDIGM_MAX_UUID + 1])
 {
 	printf("Log Page Directory:\n");
 	printf("-----------------------------------------------------------------\n");
 	printf("| %-5s| %-42s| %-11s|\n", "LID", "Description", "UUID Index");
 	printf("-----------------------------------------------------------------\n");
 
-	for (int uuid_index = 0; uuid_index <= NVME_ID_UUID_LIST_MAX; uuid_index++) {
+	for (int uuid_index = 0; uuid_index <= SOLIDIGM_MAX_UUID; uuid_index++) {
 		if (!lid_dir[uuid_index])
 			continue;
 
@@ -201,12 +202,12 @@ static void supported_log_pages_normal(struct lid_dir *lid_dir[NVME_ID_UUID_LIST
 	printf("-----------------------------------------------------------------\n");
 }
 
-static void supported_log_pages_json(struct lid_dir *lid_dir[NVME_ID_UUID_LIST_MAX + 1])
+static void supported_log_pages_json(struct lid_dir *lid_dir[SOLIDIGM_MAX_UUID + 1])
 {
 	struct json_object *root = json_create_object();
 	struct json_object *supported_arry = json_create_array();
 
-	for (int uuid_index = 0; uuid_index <= NVME_ID_UUID_LIST_MAX; uuid_index++) {
+	for (int uuid_index = 0; uuid_index <= SOLIDIGM_MAX_UUID; uuid_index++) {
 		if (!lid_dir[uuid_index])
 			continue;
 
@@ -249,7 +250,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 	if (err)
 		return err;
 
-	struct lid_dir *lid_dirs[NVME_ID_UUID_LIST_MAX + 1] = { 0 };
+	struct lid_dir *lid_dirs[SOLIDIGM_MAX_UUID + 1] = { 0 };
 	struct nvme_id_uuid_list uuid_list = { 0 };
 	struct nvme_supported_log_pages supported = { 0 };
 	
@@ -269,7 +270,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 			}
 		}
 		else {
-			for (int uuid_index = 1; uuid_index <= NVME_ID_UUID_LIST_MAX; uuid_index++) {
+			for (int uuid_index = 1; uuid_index <= SOLIDIGM_MAX_UUID; uuid_index++) {
 				if (is_invalid_uuid(uuid_list.entry[uuid_index - 1]))
 					break;
 				else if (get_supported_log_pages_log(dev, uuid_index, &supported))
