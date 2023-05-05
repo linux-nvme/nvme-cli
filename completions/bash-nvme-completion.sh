@@ -90,6 +90,9 @@ nvme_list_opts () {
 		"id-iocs")
 		opts+=" --controller-id= -c --output-format= -o --human-readable -H"
 			;;
+		"id-domain")
+		opts+=" --domain-id= -c --output-format= -o"
+			;;
 		"create-ns")
 		opts+=" --nsze= -s --ncap= -c --flbas= -f \
 			--dps= -d --nmic= -m --anagrp-id= -a --nvmset-id= -i \
@@ -1350,7 +1353,7 @@ _nvme_subcmds () {
 		id-ns-granularity list-ns list-ctrl \
 		id-ns-lba-format nvm-id-ns nvm-id-ns-lba-format \
 		nvm-id-ctrl primary-ctrl-caps list-secondary \
-		ns-descs id-nvmset id-uuid id-iocs create-ns \
+		ns-descs id-nvmset id-uuid id-iocs id-domain create-ns \
 		delete-ns get-ns-id get-log telemetry-log \
 		fw-log changed-ns-list-log smart-log ana-log \
 		error-log effects-log endurance-log \
