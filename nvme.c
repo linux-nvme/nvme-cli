@@ -108,6 +108,7 @@ static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
 static const char *block_count = "number of blocks (zeroes based) on device to access";
 static const char *crkey = "current reservation key";
+static const char *csi = "command set identifier";
 static const char *buf_len = "buffer len (if) data is sent or received";
 static const char *domainid = "Domain Identifier";
 static const char *doper = "directive operation";
@@ -957,7 +958,6 @@ static int collect_effects_log(struct nvme_dev *dev, enum nvme_csi csi,
 static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve command effects log page and print the table.";
-	const char *csi = "";
 	struct list_head log_pages;
 	nvme_effects_log_node_t *node;
 	struct nvme_dev *dev;
@@ -2213,7 +2213,6 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *lpo = "log page offset specifies the location within a log page from where to start returning data";
 	const char *lsi = "log specific identifier specifies an identifier that is required for a particular log page";
 	const char *raw = "output in raw format";
-	const char *csi = "command set identifier";
 	const char *offset_type = "offset type";
 	const char *xfer_len = "read chunk size (default 4k)";
 	struct nvme_dev *dev;
