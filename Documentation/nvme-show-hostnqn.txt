@@ -3,7 +3,7 @@ nvme-show-hostnqn(1)
 
 NAME
 ----
-nvme-show-hostnqn - Generate a host NVMe Qualified Name
+nvme-show-hostnqn - Show the host NQN configured for the system
 
 SYNOPSIS
 --------
