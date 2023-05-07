@@ -5,8 +5,11 @@
 # Kelly Kaoudis kelly.n.kaoudis at intel.com, Aug. 2015
 
 nvme_list_opts () {
-    local opts=""
+	local opts=""
 	local compargs=""
+	local vals=""
+	local opt=""
+	local val=""
 
 	local nonopt_args=0
 	for (( i=0; i < ${#words[@]}-1; i++ )); do
@@ -20,6 +23,19 @@ nvme_list_opts () {
 	fi
 
 	opts+=" "
+	vals+=" "
+
+	if [[ $cur != -* ]] && [[ $cur != "" ]] && [[ $prev == "=" ]] && [[ ${words[$cword-2]} == --* ]]; then
+		opt+="${words[$cword-2]}"
+		val+="$cur"
+	elif [[ $cur == "" ]] && [[ $prev != "=" ]] || [[ $cur == "=" ]] && [[ $prev == --* ]]; then
+		opt+="$prev"
+	elif [[ $cur != "=" ]] && [[ $prev != --* ]] && [[ $prev != "=" ]]; then
+		opt+="$prev"
+		val+="$cur"
+	else
+		opt+="$cur"
+	fi
 
 	# Listed here in the same order as in nvme-builtin.h
 	case "$1" in
@@ -339,6 +355,11 @@ nvme_list_opts () {
 		"sanitize")
 		opts+=" --no-dealloc -d --oipbp -i --owpass= -n \
 			--ause -u --sanact= -a --ovrpat= -p"
+		case $opt in
+			--sanact|-a)
+			vals+=" exit-failure start-block-erase start-overwrite start-crypto-erase"
+				;;
+		esac
 			;;
 		"sanitize-log")
 		opts+=" --rae -r --output-format= -o --human-readable -H \
@@ -435,7 +456,11 @@ nvme_list_opts () {
 
 	opts+=" -h --help -j --json"
 
-	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+	if [[ $vals == " " ]]; then
+		COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+	else
+		COMPREPLY+=( $( compgen $compargs -W "$vals" -- $val ) )
+	fi
 
 	return 0
 }
