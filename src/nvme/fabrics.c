@@ -625,7 +625,7 @@ static  int __nvmf_supported_options(nvme_root_t r)
 {
 	char buf[0x1000], *options, *p, *v;
 	int fd, ret;
-	size_t len;
+	ssize_t len;
 
 	if (r->options)
 		return 0;
