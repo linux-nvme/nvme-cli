@@ -196,6 +196,37 @@ const char *nvmf_cms_str(__u8 cm)
 	return arg_str(cms, ARRAY_SIZE(cms), cm);
 }
 
+/*
+ * Derived from Linux's supported options (the opt_tokens table)
+ * when the mechanism to report supported options was added (f18ee3d988157).
+ * Not all of these options may actually be supported,
+ * but we retain the old behavior of passing all that might be.
+ */
+static const struct nvme_fabric_options default_supported_options = {
+	.ctrl_loss_tmo = true,
+	.data_digest = true,
+	.disable_sqflow = true,
+	.discovery = true,
+	.duplicate_connect = true,
+	.fast_io_fail_tmo = true,
+	.hdr_digest = true,
+	.host_iface = true,
+	.host_traddr = true,
+	.hostid = true,
+	.hostnqn = true,
+	.keep_alive_tmo = true,
+	.nqn = true,
+	.nr_io_queues = true,
+	.nr_poll_queues = true,
+	.nr_write_queues = true,
+	.queue_size = true,
+	.reconnect_delay = true,
+	.tos = true,
+	.traddr = true,
+	.transport = true,
+	.trsvcid = true,
+};
+
 void nvmf_default_config(struct nvme_fabrics_config *cfg)
 {
 	memset(cfg, 0, sizeof(*cfg));
@@ -644,6 +675,19 @@ static  int __nvmf_supported_options(nvme_root_t r)
 	memset(buf, 0x0, sizeof(buf));
 	len = read(fd, buf, sizeof(buf) - 1);
 	if (len < 0) {
+		if (errno == EINVAL) {
+			/*
+			 * Older Linux kernels don't allow reading from nvmf_dev
+			 * to get supported options, so use a default set
+			 */
+			nvme_msg(r, LOG_DEBUG,
+			         "Cannot read %s, using default options\n",
+			         nvmf_dev);
+			*r->options = default_supported_options;
+			ret = 0;
+			goto out_close;
+		}
+
 		nvme_msg(r, LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, strerror(errno));
 		ret = -ENVME_CONNECT_READ;
