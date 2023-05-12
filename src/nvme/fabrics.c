@@ -1036,9 +1036,10 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 		nvme_msg(r, LOG_DEBUG, "%s: get header (try %d/%d)\n",
 			name, retries, max_retries);
 		args->rae = true;
+		args->lpo = 0;
 		args->len = size;
 		args->log = log;
-		ret = nvme_get_log_page(fd, 4096, args);
+		ret = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, args);
 		if (ret) {
 			nvme_msg(r, LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
@@ -1065,15 +1066,33 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 		}
 
 		nvme_msg(r, LOG_DEBUG,
-			 "%s: get header and %" PRIu64
+			 "%s: get %" PRIu64
 			 " records (length %d genctr %" PRIu64 ")\n",
 			 name, numrec, size, genctr);
 
-		args->rae = false;
-		args->len = size;
-		args->log = log;
-		ret = nvme_get_log_page(fd, 4096, args);
+		args->rae = true;
+		args->lpo = sizeof(struct nvmf_discovery_log);
+		args->len = size - sizeof(struct nvmf_discovery_log);
+		args->log = log->entries;
+		ret = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, args);
+		if (ret) {
+			nvme_msg(r, LOG_INFO,
+				 "%s: discover try %d/%d failed, error %d\n",
+				 name, retries, max_retries, errno);
+			goto out_free_log;
+		}
 
+		/*
+		 * If the log page was read with multiple Get Log Page commands,
+		 * genctr must be checked afterwards to ensure atomicity
+		 */
+		nvme_msg(r, LOG_DEBUG, "%s: get header again\n", name);
+
+		args->rae = false;
+		args->lpo = 0;
+		args->len = sizeof(struct nvmf_discovery_log);
+		args->log = log;
+		ret = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, args);
 		if (ret) {
 			nvme_msg(r, LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
@@ -1088,7 +1107,8 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 		errno = EAGAIN;
 	} else if (numrec != le64_to_cpu(log->numrec)) {
 		nvme_msg(r, LOG_INFO,
-			 "%s: could only fetch %" PRIu64 " of %" PRIu64 " records\n",
+			 "%s: numrec changed unexpectedly "
+			 "from %" PRIu64 " to %" PRIu64 "\n",
 			 name, numrec, le64_to_cpu(log->numrec));
 		errno = EBADSLT;
 	} else {
