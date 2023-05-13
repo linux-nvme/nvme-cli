@@ -1296,6 +1296,65 @@ plugin_inspur_opts () {
 	return 0
 }
 
+plugin_ocp_opts () {
+    local opts=""
+	local compargs=""
+
+	local nonopt_args=0
+	for (( i=0; i < ${#words[@]}-1; i++ )); do
+		if [[ ${words[i]} != -* ]]; then
+			let nonopt_args+=1
+		fi
+	done
+
+	if [ $nonopt_args -eq 3 ]; then
+		opts="/dev/nvme* "
+	fi
+
+	opts+=" "
+
+	case "$1" in
+		"smart-add-log")
+		opts+=" --output-format= -o"
+			;;
+		"latency-monitor-log")
+		opts+=" --output-format= -o"
+			;;
+		"set-latency-monitor-feature")
+		opts+=" --active_bucket_timer_threshold= -t \
+			--active_threshold_a= -a --active_threshold_b= -b \
+			--active_threshold_c= -c --active_threshold_d= -d \
+			--active_latency_config= -f \
+			--active_latency_minimum_window= -w \
+			--debug_log_trigger_enable -r --discard_debug_log= -l \
+			--latency_monitor_feature_enable= -e"
+			;;
+		"internal-log")
+		opts+=" --telemetry_type= -t --telemetry_data_area= -a \
+			--output-file= -o"
+			;;
+		"clear-fw-activate-history")
+		opts+=" --no-uuid -n"
+			;;
+		"eol-plp-failure-mode")
+		opts+=" --mode= -m --save -s --sel= -S --no-uuid -n"
+			;;
+		"clear-pcie-correctable-error-counters")
+		opts+=" --no-uuid -n"
+			;;
+		"vs-fw-activate-history")
+		opts+=" --output-format= -o"
+			;;
+		"help")
+		opts+=$NO_OPTS
+			;;
+	esac
+
+	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+
+	return 0
+}
+
 _nvme_subcmds () {
 	local cur prev words cword
 	_init_completion || return
@@ -1350,6 +1409,11 @@ _nvme_subcmds () {
 		[nvidia]="id-ctrl"
 		[ymtc]="smart-log-add"
 		[inspur]="nvme-vendor-log"
+		[ocp]="smart-add-log latency-monitor-log \
+			set-latency-monitor-feature internal-log \
+			clear-fw-activate-history eol-plp-failure-mode \
+			clear-pcie-correctable-error-counters \
+			vs-fw-activate-history"
 	)
 
 	# Associative array mapping plugins to coresponding option completions
@@ -1371,6 +1435,7 @@ _nvme_subcmds () {
 		[nvidia]="plugin_nvidia_opts"
 		[ymtc]="plugin_ymtc_opts"
 		[inspur]="plugin_inspur_opts"
+		[ocp]="plugin_ocp_opts"
 	)
 
 	# Top level commands
