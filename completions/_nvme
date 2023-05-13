@@ -115,6 +115,128 @@ _nvme () {
 	if (( CURRENT == 1 )); then
 		_describe -t commands "nvme subcommands" _cmds
 		return
+	elif (( CURRENT > 2 )); then
+		case ${words[1]} in
+		(ocp)
+			case ${words[2]} in
+			(smart-add-log)
+				local _smart_add_log
+				_smart_add_log=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp smart-add-log options" _smart_add_log
+				;;
+			(latency-monitor-log)
+				local _latency_monitor_log
+				_latency_monitor_log=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp latency-monitor-log options" _latency_monitor_log
+				;;
+			(set-latency-monitor-feature)
+				local _set_latency_monitor_feature
+				_set_latency_monitor_feature=(
+				/dev/nvme':supply a device to use (required)'
+				--active_bucket_timer_threshold=':Active Bucket Timer Threshold'
+				-t':alias for --active_bucket_timer_threshold'
+				--active_threshold_a=':Active Threshold A'
+				-a':alias for --active_threshold_a'
+				--active_threshold_a=':Active Threshold B'
+				-b':alias for --active_threshold_b'
+				--active_threshold_c=':Active Threshold C'
+				-c':alias for --active_threshold_c'
+				--active_threshold_d=':Active Threshold D'
+				-d':alias for --active_threshold_d'
+				--active_latency_config=':Active Latency Configuration'
+				-f':alias for --active_latency_config'
+				--active_latency_minimum_window=':Active Latency Minimum Window'
+				-w':alias for --active_latency_minimum_window'
+				--debug_log_trigger_enable='Debug Log Trigger Enable'
+				-r':alias for --debug_log_trigger_enable'
+				--discard_debug_log='Discard Debug Log'
+				-l':alias for --discard_debug_log'
+				--latency_monitor_feature_enable='Latency Monitor Feature Enable'
+				-e':alias for --latency_monitor_feature_enable'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp set-latency-monitor-feature options" _set_latency_monitor_feature
+				;;
+			(internal-log)
+				local _internal_log
+				_internal_log=(
+				/dev/nvme':supply a device to use (required)'
+				--telemetry_type=':Telemetry Type; host (Create bit) or controller'
+				-t':alias for --telemetry_type'
+				--telemetry_data_area=':Telemetry Data Area; 1 or 3'
+				-a':alias for --telemetry_data_area'
+				--output-file=':Output file name with path'
+				-o':alias for --output-file'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp internal-log options" _internal_log
+				;;
+			(clear-fw-activate-history)
+				local _clear_fw_activate_history
+				_clear_fw_activate_history=(
+				/dev/nvme':supply a device to use (required)'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp clear-fw-activate-history options" _clear_fw_activate_history
+				;;
+			(eol-plp-failure-mode)
+				local _eol_plp_failure_mode
+				_eol_plp_failure_mode=(
+				/dev/nvme':supply a device to use (required)'
+				--mode=':0-3: default/rom/wtm/normal'
+				-m':alias for --mode'
+				--save':Specifies that the controller shall save the attribute'
+				-s':alias for --save'
+				--sel=':0-3,8: current/default/saved/supported/changed:'
+				-S':alias for --sel'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp eol-plp-failure-mode options" _eol_plp_failure_mode
+				;;
+			(clear-pcie-correctable-error-counters)
+				local _clear_pcie_correctable_error_counters
+				_clear_pcie_correctable_error_counters=(
+				/dev/nvme':supply a device to use (required)'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp clear-pcie-correctable-error-counters options" _clear_pcie_correctable_error_counters
+				;;
+			(vs-fw-activate-history)
+				local _vs_fw_activate_history
+				_vs_fw_activate_history=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp vs-fw-activate-history options" _vs_fw_activate_history
+				;;
+		(*)
+				_files
+				;;
+			esac
+			;;
+		(*)
+			_files
+			;;
+		esac
+		return
 	else
 		case ${words[CURRENT-1]} in
 		(list)
@@ -1842,7 +1964,7 @@ _nvme () {
 			_ocp=(
 			smart-add-log':Retrieve extended SMART Information'
 			latency-monitor-log':Get Latency Monitor Log Page'
-			set-latency-dsmonitor-feature':Set Latency Monitor feature'
+			set-latency-monitor-feature':Set Latency Monitor feature'
 			internal-log':Retrieve and save internal device telemetry log'
 			clear-fw-activate-history':Clear firmware update history log"'
 			eol-plp-failure-mode':Define EOL or PLP circuitry failure mode'
