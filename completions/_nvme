@@ -103,6 +103,7 @@ _nvme () {
 	'rpmb:submit an NVMe RPMB command'
 	'show-topology:show subsystem topology'
 	'version:show the program version'
+	'ocp:OCP cloud SSD extensions'
 	'help:print brief descriptions of all nvme commands'
 	'json:dump output in json format'
 	)
@@ -1836,6 +1837,21 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme version options" _version
 			;;
+		(ocp)
+			local _ocp
+			_ocp=(
+			smart-add-log':Retrieve extended SMART Information'
+			latency-monitor-log':Get Latency Monitor Log Page'
+			set-latency-dsmonitor-feature':Set Latency Monitor feature'
+			internal-log':Retrieve and save internal device telemetry log'
+			clear-fw-activate-history':Clear firmware update history log"'
+			eol-plp-failure-mode':Define EOL or PLP circuitry failure mode'
+			clear-pcie-correctable-error-counters':Clear PCIe correctable error counters'
+			vs-fw-activate-history':Get firmware activation history log'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme ocp options" _ocp
+			;;
 		(help)
 			local _h
 			_h=( id-ctrl id-ns list-ns id-iocs create-ns delete-ns attach-ns detach-ns
@@ -1853,7 +1869,7 @@ _nvme () {
 			     get-property write-zeroes write-uncor verify sanitize sanitize-log reset
 			     subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
 			     dim disconnect disconnect-all gen-hostnqn show-hostnqn dir-receive dir-send
-			     virt-mgmt rpmb version
+			     virt-mgmt rpmb version ocp
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
