@@ -40,6 +40,7 @@
 #include <float.h>
 #include <limits.h>
 #include <locale.h>
+#include <stdio.h>
 
 static struct si_suffix {
 	long double magnitude;
@@ -68,11 +69,26 @@ const char *suffix_si_get(double *value)
 	return suffix;
 }
 
+static bool suffix_si_check(const char val)
+{
+	int i;
+	struct si_suffix *s;
+
+	for (i = 0; i < ARRAY_SIZE(si_suffixes); i++) {
+		s = &si_suffixes[i];
+
+		if (val == *s->suffix)
+			return true;
+	}
+
+	return false;
+}
+
 int suffix_si_parse(const char *str, char **endptr, uint64_t *val)
 {
-	unsigned long long num, frac;
+	unsigned long long num, frac = 0;
 	char *sep, *tmp;
-	int frac_len, len, i;
+	int frac_len = 0, len, i;
 
 	num = strtoull(str, endptr, 0);
 	if (str == *endptr ||
@@ -93,23 +109,31 @@ int suffix_si_parse(const char *str, char **endptr, uint64_t *val)
 		len = 0;
 
 	for (i = 0; i < len; i++) {
+		if (suffix_si_check((*endptr)[i]))
+			break;
 		if (((*endptr)[i] == '\0') || (*endptr)[i] != sep[i])
 			return -EINVAL;
 	}
-	*endptr += len;
-	tmp = *endptr;
 
-	/* extract the digits after decimal point */
-	frac = strtoull(tmp, endptr, 0);
-	if (tmp == *endptr ||
-	    ((frac == ULLONG_MAX) && errno == ERANGE))
-		return -EINVAL;
+	if (suffix_si_check((*endptr)[i])) {
+		if ((*endptr)[i + 1] != '\0')
+			return -EINVAL;
+	} else {
+		*endptr += len;
+		tmp = *endptr;
 
-	/* test that we have max one character as suffix */
-	if ((*endptr)[0] != '\0' && (*endptr)[1] != '\0')
-		return -EINVAL;
+		/* extract the digits after decimal point */
+		frac = strtoull(tmp, endptr, 0);
+		if (tmp == *endptr ||
+		    ((frac == ULLONG_MAX) && errno == ERANGE))
+			return -EINVAL;
 
-	frac_len = *endptr - tmp;
+		/* test that we have max one character as suffix */
+		if ((*endptr)[0] != '\0' && (*endptr)[1] != '\0')
+			return -EINVAL;
+
+		frac_len = *endptr - tmp;
+	}
 
 	for (i = 0; i < ARRAY_SIZE(si_suffixes); i++) {
 		struct si_suffix *s = &si_suffixes[i];
