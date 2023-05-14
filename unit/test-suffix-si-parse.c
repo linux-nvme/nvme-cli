@@ -43,6 +43,12 @@ static struct tonum_test tonum_tests[] = {
 	{ "2,33", 0, -EINVAL },
 	{ "3..3", 0, -EINVAL },
 	{ "123.12MM", 0, -EINVAL },
+	{ "800G", 800000000000, 0 },
+	{ "800GG", 0, -EINVAL },
+	{ "800G800", 0, -EINVAL },
+	{ "800.0G", 800000000000, 0 },
+	{ "800.G", 0, -EINVAL },
+	{ "800.", 0, -EINVAL },
 };
 
 void tonum_test(struct tonum_test *test)
