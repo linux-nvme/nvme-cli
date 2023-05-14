@@ -227,7 +227,17 @@ _nvme () {
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp vs-fw-activate-history options" _vs_fw_activate_history
 				;;
-		(*)
+			(*)
+				_files
+				;;
+			esac
+			;;
+		(sanitize)
+			case ${words[CURRENT-1]} in
+			(--sanact=|-a)
+				_values '' 'exit-failure' 'start-block-erase' 'start-overwrite' 'start-crypto-erase'
+				;;
+			(*)
 				_files
 				;;
 			esac
