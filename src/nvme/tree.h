@@ -877,7 +877,7 @@ const char *nvme_ctrl_get_firmware(nvme_ctrl_t c);
 const char *nvme_ctrl_get_model(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_state() - Running state of an controller
+ * nvme_ctrl_get_state() - Running state of a controller
  * @c:	Controller instance
  *
  * Return: String indicating the running state of @c
