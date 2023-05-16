@@ -108,6 +108,13 @@ struct passthru_config {
 	bool	latency;
 };
 
+#define NVME_ARGS(n, c, ...)                             \
+	struct argconfig_commandline_options n[] = {     \
+		OPT_FLAG("verbose", 'v', NULL, verbose), \
+		##__VA_ARGS__,                           \
+		OPT_END()                                \
+	}
+
 static const char nvme_version_string[] = NVME_VERSION;
 
 static struct plugin builtin = {
@@ -445,6 +452,8 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
 	ret = get_dev(dev, argc, argv, O_RDONLY);
 	if (ret < 0)
 		argconfig_print_help(desc, opts);
+	else if (argconfig_parse_seen(opts, "verbose"))
+		nvme_cli_set_debug(*dev, true);
 
 	return ret;
 }
@@ -516,14 +525,11 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		.human_readable	= false,
 	};
 
-
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_output),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_output),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -580,11 +586,9 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("groups", 'g', &cfg.groups, groups),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FLAG("groups", 'g', &cfg.groups, groups),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -834,14 +838,12 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		.rae		= true,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FILE("output-file",     'o', &cfg.file_name, fname),
-		OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
-		OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
-		OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
-		OPT_FLAG("rae",             'r', &cfg.rae, rae),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FILE("output-file",     'o', &cfg.file_name, fname),
+		  OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
+		  OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
+		  OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
+		  OPT_FLAG("rae",             'r', &cfg.rae, rae));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -935,11 +937,9 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 		.group_id	= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_SHRT("group-id",     'g', &cfg.group_id,      group_id),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_SHRT("group-id",     'g', &cfg.group_id,      group_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1013,13 +1013,11 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		.csi		= -1,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
-		OPT_INT("csi",             'c', &cfg.csi,            csi),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
+		  OPT_INT("csi",             'c', &cfg.csi,            csi));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1167,12 +1165,10 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1246,11 +1242,9 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1297,11 +1291,9 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_output),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_output));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1355,12 +1347,10 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("nvmset-id",	 'i', &cfg.nvmset_id,     nvmset_id),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,	  raw_use),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_SHRT("nvmset-id",	 'i', &cfg.nvmset_id,     nvmset_id),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,	  raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1419,13 +1409,11 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
+		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1510,13 +1498,11 @@ static int get_persistent_event_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("action",       'a', &cfg.action,        action),
-		OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("action",       'a', &cfg.action,        action),
+		  OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1640,13 +1626,11 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
+		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1724,11 +1708,9 @@ static int get_lba_status_log(int argc, char **argv,
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1791,10 +1773,8 @@ static int get_resv_notif_log(int argc, char **argv,
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1846,12 +1826,10 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 		.file_name	= NULL,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("lsp",          's', &cfg.lsp,           lsp),
-		OPT_FILE("output-file",  'f', &cfg.file_name,     fname),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("lsp",          's', &cfg.lsp,           lsp),
+		  OPT_FILE("output-file",  'f', &cfg.file_name,     fname),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1948,12 +1926,10 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("domain-id",     'd', &cfg.domainid, domainid),
-		OPT_FMT("output-format",  'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_use),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("domain-id",     'd', &cfg.domainid, domainid),
+		  OPT_FMT("output-format",  'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2003,12 +1979,10 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("domain-id",     'd', &cfg.domainid,       domainid),
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_use),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("domain-id",     'd', &cfg.domainid,       domainid),
+		  OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2060,14 +2034,12 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 		.mos = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_SHRT("mos",           's', &cfg.mos,            mos),
-		OPT_BYTE("mo",            'm', &cfg.mo,             mo),
-		OPT_FILE("data",          'd', &cfg.file,           data),
-		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_SHRT("mos",           's', &cfg.mos,            mos),
+		  OPT_BYTE("mo",            'm', &cfg.mo,             mo),
+		  OPT_FILE("data",          'd', &cfg.file,           data),
+		  OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2156,14 +2128,12 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 		.mos = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_SHRT("mos",           's', &cfg.mos,            mos),
-		OPT_BYTE("mo",            'm', &cfg.mo,             mo),
-		OPT_FILE("data",          'd', &cfg.file,           data),
-		OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_SHRT("mos",           's', &cfg.mos,            mos),
+		  OPT_BYTE("mo",            'm', &cfg.mo,             mo),
+		  OPT_FILE("data",          'd', &cfg.file,           data),
+		  OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2283,22 +2253,20 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.xfer_len	= 4096,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id),
-		OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
-		OPT_UINT("aen",          'a', &cfg.aen,          aen),
-		OPT_SUFFIX("lpo",        'o', &cfg.lpo,          lpo),
-		OPT_BYTE("lsp",          's', &cfg.lsp,          lsp),
-		OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
-		OPT_FLAG("rae",          'r', &cfg.rae,          rae),
-		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_BYTE("csi",          'y', &cfg.csi,          csi),
-		OPT_FLAG("ot",           'O', &cfg.ot,           offset_type),
-		OPT_UINT("xfer-len",     'x', &cfg.xfer_len,     xfer_len),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id),
+		  OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
+		  OPT_UINT("aen",          'a', &cfg.aen,          aen),
+		  OPT_SUFFIX("lpo",        'o', &cfg.lpo,          lpo),
+		  OPT_BYTE("lsp",          's', &cfg.lsp,          lsp),
+		  OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
+		  OPT_FLAG("rae",          'r', &cfg.rae,          rae),
+		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+		  OPT_BYTE("csi",          'y', &cfg.csi,          csi),
+		  OPT_FLAG("ot",           'O', &cfg.ot,           offset_type),
+		  OPT_UINT("xfer-len",     'x', &cfg.xfer_len,     xfer_len));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2399,13 +2367,11 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("rae",            'r', &cfg.rae,            rae),
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FLAG("rae",            'r', &cfg.rae,            rae),
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2455,11 +2421,9 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2506,11 +2470,9 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2560,12 +2522,10 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id_optional),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id_optional),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2628,13 +2588,11 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_INT("csi",           'y', &cfg.csi,           csi),
-		OPT_FLAG("all",          'a', &cfg.all,           all),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
+		  OPT_INT("csi",           'y', &cfg.csi,           csi),
+		  OPT_FLAG("all",          'a', &cfg.all,           all),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2762,11 +2720,9 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("endgrp-id",    'i', &cfg.endgrp_id,     endurance_grp_id),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_SHRT("endgrp-id",    'i', &cfg.endgrp_id,     endurance_grp_id),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2820,11 +2776,9 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.timeout	= 120000,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2872,11 +2826,9 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		.cntlist	= "",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_LIST("controllers",  'c', &cfg.cntlist,      cont),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		  OPT_LIST("controllers",  'c', &cfg.cntlist,      cont));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3103,29 +3055,27 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.phndls		= "",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
-		OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
-		OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
-		OPT_BYTE("dps",          'd', &cfg.dps,      dps),
-		OPT_BYTE("nmic",         'm', &cfg.nmic,     nmic),
-		OPT_UINT("anagrp-id",    'a', &cfg.anagrpid, anagrpid),
-		OPT_UINT("nvmset-id",    'i', &cfg.nvmsetid, nvmsetid),
-		OPT_UINT("endg-id",      'e', &cfg.endgid,   endgid),
-		OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
-		OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
-		OPT_BYTE("csi",          'y', &cfg.csi,      csi),
-		OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
-		OPT_SHRT("nphndls",      'n', &cfg.nphndls,  nphndls),
-		OPT_STR("nsze-si",       'S', &cfg.nsze_si,  nsze_si),
-		OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
-		OPT_FLAG("azr",          'z', &cfg.azr,      azr),
-		OPT_UINT("rar",          'r', &cfg.rar,      rar),
-		OPT_UINT("ror",          'o', &cfg.ror,      ror),
-		OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, rnumzrwa),
-		OPT_LIST("phndls",       'p', &cfg.phndls,   phndls),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
+		  OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
+		  OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
+		  OPT_BYTE("dps",          'd', &cfg.dps,      dps),
+		  OPT_BYTE("nmic",         'm', &cfg.nmic,     nmic),
+		  OPT_UINT("anagrp-id",    'a', &cfg.anagrpid, anagrpid),
+		  OPT_UINT("nvmset-id",    'i', &cfg.nvmsetid, nvmsetid),
+		  OPT_UINT("endg-id",      'e', &cfg.endgid,   endgid),
+		  OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
+		  OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
+		  OPT_BYTE("csi",          'y', &cfg.csi,      csi),
+		  OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
+		  OPT_SHRT("nphndls",      'n', &cfg.nphndls,  nphndls),
+		  OPT_STR("nsze-si",       'S', &cfg.nsze_si,  nsze_si),
+		  OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
+		  OPT_FLAG("azr",          'z', &cfg.azr,      azr),
+		  OPT_UINT("rar",          'r', &cfg.rar,      rar),
+		  OPT_UINT("ror",          'o', &cfg.ror,      ror),
+		  OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, rnumzrwa),
+		  OPT_LIST("phndls",       'p', &cfg.phndls,   phndls));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3423,13 +3373,11 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 		.human_readable		= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
-		OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
-		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
+		  OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
+		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
+		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3487,10 +3435,8 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format,   output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format,   output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3682,12 +3628,10 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,  namespace_id_desired),
-		OPT_FMT("output-format",  'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,    raw),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,  namespace_id_desired),
+		  OPT_FMT("output-format",  'o', &cfg.output_format, output_format),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3761,15 +3705,13 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		.human_readable		= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
-		OPT_FLAG("force",             0, &cfg.force,           force),
-		OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
-		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
-		OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
+		  OPT_FLAG("force",             0, &cfg.force,           force),
+		  OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
+		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
+		  OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
+		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3840,13 +3782,11 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *cmd,
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
-		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
-		OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
+		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
+		  OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
+		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3904,10 +3844,8 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3961,11 +3899,9 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("nvmset_id",    'i', &cfg.nvmset_id,     nvmset_id),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_SHRT("nvmset_id",    'i', &cfg.nvmset_id,     nvmset_id),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4015,12 +3951,10 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4069,10 +4003,8 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.cntid	= 0xffff,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("controller-id", 'c', &cfg.cntid, controller_id),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_SHRT("controller-id", 'c', &cfg.cntid, controller_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4114,11 +4046,9 @@ static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("dom-id",         'd', &cfg.dom_id,         domain_id),
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_SHRT("dom-id",         'd', &cfg.dom_id,         domain_id),
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4154,9 +4084,7 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 	unsigned int nsid;
 	int err = 0;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4212,13 +4140,11 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 		.nr	= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("cntlid", 'c', &cfg.cntlid, cntlid),
-		OPT_BYTE("rt",     'r', &cfg.rt,     rt),
-		OPT_BYTE("act",    'a', &cfg.act,    act),
-		OPT_SHRT("nr",     'n', &cfg.nr,     nr),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("cntlid", 'c', &cfg.cntlid, cntlid),
+		  OPT_BYTE("rt",     'r', &cfg.rt,     rt),
+		  OPT_BYTE("act",    'a', &cfg.act,    act),
+		  OPT_SHRT("nr",     'n', &cfg.nr,     nr));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4270,12 +4196,10 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("cntlid",         'c', &cfg.cntlid, cntlid),
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("cntlid",         'c', &cfg.cntlid, cntlid),
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4328,12 +4252,10 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
-		OPT_UINT("num-entries",  'e', &cfg.num_entries,   num_entries),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
+		  OPT_UINT("num-entries",  'e', &cfg.num_entries,   num_entries),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4497,12 +4419,10 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		.wait		= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
-		OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
-		OPT_FLAG("wait",           'w', &cfg.wait,         wait),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
+		  OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
+		  OPT_FLAG("wait",           'w', &cfg.wait,         wait));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4806,17 +4726,15 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id),
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_BYTE("sel",            's', &cfg.sel,            sel),
-		OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
-		OPT_BYTE("uuid-index",     'U', &cfg.uuid_index,     uuid_index_specify),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id),
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_BYTE("sel",            's', &cfg.sel,            sel),
+		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
+		  OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
+		  OPT_BYTE("uuid-index",     'U', &cfg.uuid_index,     uuid_index_specify),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4990,14 +4908,12 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		.ignore_ovr = false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FILE("fw",         'f', &cfg.fw,         fw),
-		OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
-		OPT_UINT("offset",     'o', &cfg.offset,     offset),
-		OPT_FLAG("progress",   'p', &cfg.progress,   progress),
-		OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FILE("fw",         'f', &cfg.fw,         fw),
+		  OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
+		  OPT_UINT("offset",     'o', &cfg.offset,     offset),
+		  OPT_FLAG("progress",   'p', &cfg.progress,   progress),
+		  OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5153,12 +5069,10 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		.bpid	= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("slot",   's', &cfg.slot,   slot),
-		OPT_BYTE("action", 'a', &cfg.action, action),
-		OPT_BYTE("bpid",   'b', &cfg.bpid,   bpid),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("slot",   's', &cfg.slot,   slot),
+		  OPT_BYTE("action", 'a', &cfg.action, action),
+		  OPT_BYTE("bpid",   'b', &cfg.bpid,   bpid));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5236,9 +5150,7 @@ static int subsystem_reset(int argc, char **argv, struct command *cmd, struct pl
 	struct nvme_dev *dev;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5263,9 +5175,7 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 	struct nvme_dev *dev;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5286,9 +5196,7 @@ static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *
 	struct nvme_dev *dev;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5341,15 +5249,13 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		VAL_END()
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("no-dealloc", 'd', &cfg.no_dealloc, no_dealloc_desc),
-		OPT_FLAG("oipbp",      'i', &cfg.oipbp,      oipbp_desc),
-		OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
-		OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
-		OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc, sanact),
-		OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FLAG("no-dealloc", 'd', &cfg.no_dealloc, no_dealloc_desc),
+		  OPT_FLAG("oipbp",      'i', &cfg.oipbp,      oipbp_desc),
+		  OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
+		  OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
+		  OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc, sanact),
+		  OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5526,11 +5432,9 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5587,11 +5491,9 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("offset",         'o', &cfg.offset,         offset),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("offset",         'o', &cfg.offset,         offset),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5643,11 +5545,9 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		.value	= -1,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("offset", 'o', &cfg.offset, offset),
-		OPT_UINT("value",  'v', &cfg.value,  value),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("offset", 'o', &cfg.offset, offset),
+		  OPT_UINT("value",  'v', &cfg.value,  value));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5734,19 +5634,17 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.bs		= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
-		OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
-		OPT_BYTE("ses",          's', &cfg.ses,          ses),
-		OPT_BYTE("pi",           'i', &cfg.pi,           pi),
-		OPT_BYTE("pil",          'p', &cfg.pil,          pil),
-		OPT_BYTE("ms",           'm', &cfg.ms,           ms),
-		OPT_FLAG("reset",        'r', &cfg.reset,        reset),
-		OPT_FLAG("force",          0, &cfg.force,        force),
-		OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
+		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
+		  OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
+		  OPT_BYTE("ses",          's', &cfg.ses,          ses),
+		  OPT_BYTE("pi",           'i', &cfg.pi,           pi),
+		  OPT_BYTE("pil",          'p', &cfg.pil,          pil),
+		  OPT_BYTE("ms",           'm', &cfg.ms,           ms),
+		  OPT_FLAG("reset",        'r', &cfg.reset,        reset),
+		  OPT_FLAG("force",          0, &cfg.force,        force),
+		  OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -5993,17 +5891,15 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		.save		= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		OPT_BYTE("feature-id",   'f', &cfg.feature_id,   feature_id),
-		OPT_SUFFIX("value",      'v', &cfg.value,        value),
-		OPT_UINT("cdw12",        'c', &cfg.cdw12,        cdw12),
-		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index_specify),
-		OPT_UINT("data-len",     'l', &cfg.data_len,     buf_len),
-		OPT_FILE("data",         'd', &cfg.file,         data),
-		OPT_FLAG("save",         's', &cfg.save,         save),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_BYTE("feature-id",   'f', &cfg.feature_id,   feature_id),
+		  OPT_SUFFIX("value",      'v', &cfg.value,        value),
+		  OPT_UINT("cdw12",        'c', &cfg.cdw12,        cdw12),
+		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index_specify),
+		  OPT_UINT("data-len",     'l', &cfg.data_len,     buf_len),
+		  OPT_FILE("data",         'd', &cfg.file,         data),
+		  OPT_FLAG("save",         's', &cfg.save,         save));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6155,15 +6051,13 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		.tl		= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		OPT_FILE("file",         'f', &cfg.file,         file),
-		OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
-		OPT_BYTE("secp",         'p', &cfg.secp,         secp),
-		OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
-		OPT_UINT("tl",           't', &cfg.tl,           tl),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_FILE("file",         'f', &cfg.file,         file),
+		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
+		  OPT_BYTE("secp",         'p', &cfg.secp,         secp),
+		  OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
+		  OPT_UINT("tl",           't', &cfg.tl,           tl));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6286,19 +6180,17 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		.file		= "",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
-		OPT_BYTE("target-dir",     'T', &cfg.ttype,          ttype),
-		OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
-		OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
-		OPT_SHRT("endir",          'e', &cfg.endir,          endir),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
-		OPT_FILE("input-file",     'i', &cfg.file,	    input),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
+		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
+		  OPT_BYTE("target-dir",     'T', &cfg.ttype,          ttype),
+		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
+		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
+		  OPT_SHRT("endir",          'e', &cfg.endir,          endir),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
+		  OPT_FILE("input-file",     'i', &cfg.file,	    input));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6429,14 +6321,12 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		.dspec			= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id, namespace_desired),
-		OPT_SUFFIX("start-block", 's', &cfg.start_block,  start_block),
-		OPT_SHRT("block-count",   'c', &cfg.block_count,  block_count),
-		OPT_BYTE("dir-type",      'T', &cfg.dtype,        dtype),
-		OPT_SHRT("dir-spec",      'S', &cfg.dspec,        dspec_w_dtype),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id, namespace_desired),
+		  OPT_SUFFIX("start-block", 's', &cfg.start_block,  start_block),
+		  OPT_SHRT("block-count",   'c', &cfg.block_count,  block_count),
+		  OPT_BYTE("dir-type",      'T', &cfg.dtype,        dtype),
+		  OPT_SHRT("dir-spec",      'S', &cfg.dspec,        dspec_w_dtype));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6566,23 +6456,21 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		.dspec				= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
-		OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
-		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
-		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
-		OPT_FLAG("deac",              'd', &cfg.deac,              deac),
-		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
-		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
-		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
-		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
-		OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
-		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
-		OPT_SHRT("dir-spec",          'D', &cfg.dspec,             dspec_w_dtype),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
+		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
+		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
+		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
+		  OPT_FLAG("deac",              'd', &cfg.deac,              deac),
+		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
+		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
+		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
+		  OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
+		  OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
+		  OPT_SHRT("dir-spec",          'D', &cfg.dspec,             dspec_w_dtype));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6713,17 +6601,15 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		.cdw11		= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		OPT_LIST("ctx-attrs",    'a', &cfg.ctx_attrs,    context_attrs),
-		OPT_LIST("blocks",	 'b', &cfg.blocks,       blocks),
-		OPT_LIST("slbs",	 's', &cfg.slbas,        starting_blocks),
-		OPT_FLAG("ad",	         'd', &cfg.ad,           ad),
-		OPT_FLAG("idw",		 'w', &cfg.idw,          idw),
-		OPT_FLAG("idr",		 'r', &cfg.idr,          idr),
-		OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
+		  OPT_LIST("ctx-attrs",    'a', &cfg.ctx_attrs,    context_attrs),
+		  OPT_LIST("blocks",	 'b', &cfg.blocks,       blocks),
+		  OPT_LIST("slbs",	 's', &cfg.slbas,        starting_blocks),
+		  OPT_FLAG("ad",	         'd', &cfg.ad,           ad),
+		  OPT_FLAG("idw",		 'w', &cfg.idw,          idw),
+		  OPT_FLAG("idr",		 'r', &cfg.idr,          idr),
+		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6855,26 +6741,24 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 		.format		= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",	   'n', &cfg.namespace_id,	namespace_id_desired),
-		OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
-		OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
-		OPT_LIST("blocks",                 'b', &cfg.nlbs,		d_nlbs),
-		OPT_FLAG("limited-retry",          'l', &cfg.lr,		d_lr),
-		OPT_FLAG("force-unit-access",      'f', &cfg.fua,		d_fua),
-		OPT_BYTE("prinfow",                'p', &cfg.prinfow,		d_prinfow),
-		OPT_BYTE("prinfor",                'P', &cfg.prinfor,		d_prinfor),
-		OPT_SUFFIX("ref-tag",              'r', &cfg.ilbrt,		d_ilbrt),
-		OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts,		d_eilbrts),
-		OPT_SHRT("app-tag",                'a', &cfg.lbat,		d_lbat),
-		OPT_LIST("expected-app-tags",      'A', &cfg.elbats,		d_elbats),
-		OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,		d_lbatm),
-		OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms,		d_elbatms),
-		OPT_BYTE("dir-type",               'T', &cfg.dtype,		d_dtype),
-		OPT_SHRT("dir-spec",               'S', &cfg.dspec,		d_dspec),
-		OPT_BYTE("format",                 'F', &cfg.format,		d_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",	   'n', &cfg.namespace_id,	namespace_id_desired),
+		  OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
+		  OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
+		  OPT_LIST("blocks",                 'b', &cfg.nlbs,		d_nlbs),
+		  OPT_FLAG("limited-retry",          'l', &cfg.lr,		d_lr),
+		  OPT_FLAG("force-unit-access",      'f', &cfg.fua,		d_fua),
+		  OPT_BYTE("prinfow",                'p', &cfg.prinfow,		d_prinfow),
+		  OPT_BYTE("prinfor",                'P', &cfg.prinfor,		d_prinfor),
+		  OPT_SUFFIX("ref-tag",              'r', &cfg.ilbrt,		d_ilbrt),
+		  OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts,		d_eilbrts),
+		  OPT_SHRT("app-tag",                'a', &cfg.lbat,		d_lbat),
+		  OPT_LIST("expected-app-tags",      'A', &cfg.elbats,		d_elbats),
+		  OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,		d_lbatm),
+		  OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms,		d_elbatms),
+		  OPT_BYTE("dir-type",               'T', &cfg.dtype,		d_dtype),
+		  OPT_SHRT("dir-spec",               'S', &cfg.dspec,		d_dspec),
+		  OPT_BYTE("format",                 'F', &cfg.format,		d_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6970,10 +6854,8 @@ static int flush_cmd(int argc, char **argv, struct command *cmd, struct plugin *
 		.namespace_id	= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -7030,15 +6912,13 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		.iekey		= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
-		OPT_SUFFIX("prkey",      'p', &cfg.prkey,        prkey),
-		OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
-		OPT_BYTE("racqa",        'a', &cfg.racqa,        racqa),
-		OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
+		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
+		  OPT_SUFFIX("prkey",      'p', &cfg.prkey,        prkey),
+		  OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
+		  OPT_BYTE("racqa",        'a', &cfg.racqa,        racqa),
+		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -7111,15 +6991,13 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		.cptpl		= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
-		OPT_SUFFIX("nrkey",      'k', &cfg.nrkey,        nrkey),
-		OPT_BYTE("rrega",        'r', &cfg.rrega,        rrega),
-		OPT_BYTE("cptpl",        'p', &cfg.cptpl,        cptpl),
-		OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
+		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
+		  OPT_SUFFIX("nrkey",      'k', &cfg.nrkey,        nrkey),
+		  OPT_BYTE("rrega",        'r', &cfg.rrega,        rrega),
+		  OPT_BYTE("cptpl",        'p', &cfg.cptpl,        cptpl),
+		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -7200,14 +7078,12 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		.iekey		= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
-		OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
-		OPT_BYTE("rrela",        'a', &cfg.rrela,        rrela),
-		OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
+		  OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
+		  OPT_BYTE("rrela",        'a', &cfg.rrela,        rrela),
+		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -7281,14 +7157,12 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_UINT("numd",          'd', &cfg.numd,           numd),
-		OPT_FLAG("eds",           'e', &cfg.eds,            eds),
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_dump),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_UINT("numd",          'd', &cfg.numd,           numd),
+		  OPT_FLAG("eds",           'e', &cfg.eds,            eds),
+		  OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_dump));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -7439,31 +7313,29 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.force			= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_id_desired),
-		OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block_addr),
-		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
-		OPT_SUFFIX("data-size",       'z', &cfg.data_size,         data_size),
-		OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size,     metadata_size),
-		OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
-		OPT_FILE("data",              'd', &cfg.data,              data),
-		OPT_FILE("metadata",          'M', &cfg.metadata,          metadata),
-		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
-		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
-		OPT_SUFFIX("storage-tag",     'g', &cfg.storage_tag,       storage_tag),
-		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry_num),
-		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
-		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
-		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype_for_write),
-		OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
-		OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
-		OPT_FLAG("show-command",      'v', &cfg.show,              show),
-		OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
-		OPT_FLAG("latency",           't', &cfg.latency,           latency),
-		OPT_FLAG("force",	        0, &cfg.force,             force),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_id_desired),
+		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block_addr),
+		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
+		  OPT_SUFFIX("data-size",       'z', &cfg.data_size,         data_size),
+		  OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size,     metadata_size),
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
+		  OPT_FILE("data",              'd', &cfg.data,              data),
+		  OPT_FILE("metadata",          'M', &cfg.metadata,          metadata),
+		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
+		  OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
+		  OPT_SUFFIX("storage-tag",     'g', &cfg.storage_tag,       storage_tag),
+		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry_num),
+		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
+		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype_for_write),
+		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
+		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
+		  OPT_FLAG("show-command",      'v', &cfg.show,              show),
+		  OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
+		  OPT_FLAG("latency",           't', &cfg.latency,           latency),
+		  OPT_FLAG("force",	        0, &cfg.force,             force));
 
 	if (opcode != nvme_cmd_write) {
 		err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -7775,20 +7647,18 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.storage_tag_check	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
-		OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
-		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
-		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access_verify),
-		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
-		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
-		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
-		OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
-		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
+		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
+		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
+		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
+		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access_verify),
+		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
+		  OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
+		  OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -7901,16 +7771,14 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		OPT_UINT("size",         'x', &cfg.size,         size),
-		OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
-		OPT_BYTE("secp",         'p', &cfg.secp,         secp),
-		OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
-		OPT_UINT("al",           't', &cfg.al,           al),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_UINT("size",         'x', &cfg.size,         size),
+		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
+		  OPT_BYTE("secp",         'p', &cfg.secp,         secp),
+		  OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
+		  OPT_UINT("al",           't', &cfg.al,           al),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -7998,16 +7866,14 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_desired),
-		OPT_SUFFIX("start-lba",  's', &cfg.slba,          slba),
-		OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
-		OPT_BYTE("action",       'a', &cfg.atype,         atype),
-		OPT_SHRT("range-len",    'l', &cfg.rl,            rl),
-		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_desired),
+		  OPT_SUFFIX("start-lba",  's', &cfg.slba,          slba),
+		  OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
+		  OPT_BYTE("action",       'a', &cfg.atype,         atype),
+		  OPT_SHRT("range-len",    'l', &cfg.rl,            rl),
+		  OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -8089,13 +7955,11 @@ static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plug
 		.dw12		= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("operation",   'o', &cfg.operation,    operation),
-		OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
-		OPT_UINT("cap-lower",   'l', &cfg.dw11,		cap_lower),
-		OPT_UINT("cap-upper",   'u', &cfg.dw12,         cap_upper),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("operation",   'o', &cfg.operation,    operation),
+		  OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
+		  OPT_UINT("cap-lower",   'l', &cfg.dw11,		cap_lower),
+		  OPT_UINT("cap-upper",   'u', &cfg.dw12,         cap_upper));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -8170,17 +8034,15 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 		.human_readable	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
-		OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
-		OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
-		OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
-		OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
-		OPT_SHRT("req-resource",   'r', &cfg.nsr,            nsr),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
+		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
+		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
+		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
+		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
+		  OPT_SHRT("req-resource",   'r', &cfg.nsr,            nsr),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -8313,14 +8175,12 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		.uuid	= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("ofi",		'o', &cfg.ofi,      ofi_desc),
-		OPT_BYTE("ifc",		'f', &cfg.ifc,      ifc_desc),
-		OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
-		OPT_BYTE("scp",		's', &cfg.scp,      scp_desc),
-		OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("ofi",		'o', &cfg.ofi,      ofi_desc),
+		  OPT_BYTE("ifc",		'f', &cfg.ifc,      ifc_desc),
+		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
+		  OPT_BYTE("scp",		's', &cfg.scp,      scp_desc),
+		  OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -8458,33 +8318,31 @@ static int passthru(int argc, char **argv, bool admin,
 		.latency	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("opcode",       'o', &cfg.opcode,       opcode),
-		OPT_BYTE("flags",        'f', &cfg.flags,        cflags),
-		OPT_BYTE("prefill",      'p', &cfg.prefill,      prefill),
-		OPT_SHRT("rsvd",         'R', &cfg.rsvd,         rsvd),
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
-		OPT_UINT("metadata-len", 'm', &cfg.metadata_len, metadata_len),
-		OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
-		OPT_UINT("cdw2",         '2', &cfg.cdw2,         cdw2),
-		OPT_UINT("cdw3",         '3', &cfg.cdw3,         cdw3),
-		OPT_UINT("cdw10",        '4', &cfg.cdw10,        cdw10),
-		OPT_UINT("cdw11",        '5', &cfg.cdw11,        cdw11),
-		OPT_UINT("cdw12",        '6', &cfg.cdw12,        cdw12),
-		OPT_UINT("cdw13",        '7', &cfg.cdw13,        cdw13),
-		OPT_UINT("cdw14",        '8', &cfg.cdw14,        cdw14),
-		OPT_UINT("cdw15",        '9', &cfg.cdw15,        cdw15),
-		OPT_FILE("input-file",   'i', &cfg.input_file,   input),
-		OPT_FILE("metadata",     'M', &cfg.metadata,     metadata),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump),
-		OPT_FLAG("show-command", 's', &cfg.show_command, show),
-		OPT_FLAG("dry-run",      'd', &cfg.dry_run,      dry),
-		OPT_FLAG("read",         'r', &cfg.read,         re),
-		OPT_FLAG("write",        'w', &cfg.write,        wr),
-		OPT_FLAG("latency",      'T', &cfg.latency,      latency),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("opcode",       'o', &cfg.opcode,       opcode),
+		  OPT_BYTE("flags",        'f', &cfg.flags,        cflags),
+		  OPT_BYTE("prefill",      'p', &cfg.prefill,      prefill),
+		  OPT_SHRT("rsvd",         'R', &cfg.rsvd,         rsvd),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
+		  OPT_UINT("metadata-len", 'm', &cfg.metadata_len, metadata_len),
+		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
+		  OPT_UINT("cdw2",         '2', &cfg.cdw2,         cdw2),
+		  OPT_UINT("cdw3",         '3', &cfg.cdw3,         cdw3),
+		  OPT_UINT("cdw10",        '4', &cfg.cdw10,        cdw10),
+		  OPT_UINT("cdw11",        '5', &cfg.cdw11,        cdw11),
+		  OPT_UINT("cdw12",        '6', &cfg.cdw12,        cdw12),
+		  OPT_UINT("cdw13",        '7', &cfg.cdw13,        cdw13),
+		  OPT_UINT("cdw14",        '8', &cfg.cdw14,        cdw14),
+		  OPT_UINT("cdw15",        '9', &cfg.cdw15,        cdw15),
+		  OPT_FILE("input-file",   'i', &cfg.input_file,   input),
+		  OPT_FILE("metadata",     'M', &cfg.metadata,     metadata),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump),
+		  OPT_FLAG("show-command", 's', &cfg.show_command, show),
+		  OPT_FLAG("dry-run",      'd', &cfg.dry_run,      dry),
+		  OPT_FLAG("read",         'r', &cfg.read,         re),
+		  OPT_FLAG("write",        'w', &cfg.write,        wr),
+		  OPT_FLAG("latency",      'T', &cfg.latency,      latency));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -8723,13 +8581,11 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 		.hmac		= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_STR("secret",	's', &cfg.secret,	secret),
-		OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
-		OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
-		OPT_UINT("hmac",	'm', &cfg.hmac,		hmac),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_STR("secret",	's', &cfg.secret,	secret),
+		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
+		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
+		  OPT_UINT("hmac",	'm', &cfg.hmac,		hmac));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -8842,10 +8698,8 @@ static int check_dhchap_key(int argc, char **argv, struct command *command, stru
 		.key	= NULL,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_STR("key", 'k', &cfg.key, key),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_STR("key", 'k', &cfg.key, key));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -8953,16 +8807,14 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		.insert		= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		OPT_STR("secret",	's', &cfg.secret,	secret),
-		OPT_UINT("hmac",	'm', &cfg.hmac,		hmac),
-		OPT_FLAG("insert",	'i', &cfg.insert,	insert),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
+		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
+		  OPT_STR("secret",	's', &cfg.secret,	secret),
+		  OPT_UINT("hmac",	'm', &cfg.hmac,		hmac),
+		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -9074,14 +8926,12 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		.keydata	= NULL,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
+		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
+		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -9314,16 +9164,14 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 		.input_file = "",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("opcode", 'o', &cfg.opcode, opcode),
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		OPT_UINT("data-len", 'l', &cfg.data_len, data_len),
-		OPT_UINT("nmimt", 'm', &cfg.nmimt, nmimt),
-		OPT_UINT("nmd0", '0', &cfg.nmd0, nmd0),
-		OPT_UINT("nmd1", '1', &cfg.nmd1, nmd1),
-		OPT_FILE("input-file", 'i', &cfg.input_file, input),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("opcode", 'o', &cfg.opcode, opcode),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
+		  OPT_UINT("data-len", 'l', &cfg.data_len, data_len),
+		  OPT_UINT("nmimt", 'm', &cfg.nmimt, nmimt),
+		  OPT_UINT("nmd0", '0', &cfg.nmd0, nmd0),
+		  OPT_UINT("nmd1", '1', &cfg.nmd1, nmd1),
+		  OPT_FILE("input-file", 'i', &cfg.input_file, input));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
