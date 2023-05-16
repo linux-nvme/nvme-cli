@@ -429,3 +429,8 @@ int nvme_cli_security_receive(struct nvme_dev *dev,
 	return -ENODEV;
 }
 
+void nvme_cli_set_debug(struct nvme_dev *dev, bool set)
+{
+	if (dev->type == NVME_DEV_DIRECT)
+		nvme_set_debug(set);
+}
