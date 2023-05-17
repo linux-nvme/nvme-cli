@@ -1674,6 +1674,222 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *cmd, st
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+/// Device Capabilities (Log Identifier C4h) Requirements
+
+#define C4_DEV_CAP_REQ_LEN			0x1000
+#define C4_DEV_CAP_REQ_OPCODE		0xC4
+#define C4_DEV_CAP_REQ_VERSION		0x0001
+#define C4_GUID_LENGTH				16
+static __u8 dev_cap_req_guid[C4_GUID_LENGTH] = {
+	0x97, 0x42, 0x05, 0x0d,
+	0xd1, 0xe1, 0xc9, 0x98,
+	0x5d, 0x49, 0x58, 0x4b,
+	0x91, 0x3c, 0x05, 0xb7
+};
+
+/**
+ * struct ocp_device_capabilities_log_page -	Device Capability Log page
+ * @pcie_exp_port:						PCI Express Ports
+ * @oob_management_support:				OOB Management Support
+ * @wz_cmd_support:						Write Zeroes Command Support
+ * @sanitize_cmd_support:				Sanitize Command Support
+ * @dsm_cmd_support:					Dataset Management Command Support
+ * @wu_cmd_support:						Write Uncorrectable Command Support
+ * @fused_operation_support:			Fused Operation Support
+ * @min_valid_dssd_pwr_state:			Minimum Valid DSSD Power State
+ * @dssd_pwr_state_desc:				DSSD Power State Descriptors
+ * @vendor_specific_command_timeout:	Vendor Specific Command Timeout
+ * @reserved:							Reserved
+ * @log_page_version:					Log Page Version
+ * @log_page_guid:						Log Page GUID
+ */
+struct __attribute__((__packed__)) ocp_device_capabilities_log_page {
+	__le16  pcie_exp_port;
+	__le16  oob_management_support;
+	__le16  wz_cmd_support;
+	__le16  sanitize_cmd_support;
+	__le16  dsm_cmd_support;
+	__le16  wu_cmd_support;
+	__le16  fused_operation_support;
+	__le16  min_valid_dssd_pwr_state;
+	__u8    dssd_pwr_state_desc[128];
+	__u8    reserved[3934];
+	__le16  log_page_version;
+	__u8    log_page_guid[16];
+};
+
+static void ocp_print_c4_log_normal(struct ocp_device_capabilities_log_page *log_data);
+static void ocp_print_c4_log_json(struct ocp_device_capabilities_log_page *log_data);
+static void ocp_print_c4_log_binary(struct ocp_device_capabilities_log_page *log_data);
+static int get_c4_log_page(struct nvme_dev *dev, char *format);
+static int ocp_device_capabilities_log(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+
+static void ocp_print_c4_log_normal(struct ocp_device_capabilities_log_page *log_data)
+{
+	int i;
+	printf("  Device Capability/C4 Log Page Data \n");
+	printf("  PCI Express Ports						: 0x%x \n", le16_to_cpu(log_data->pcie_exp_port));
+	printf("  OOB Management Support				: 0x%x \n", le16_to_cpu(log_data->oob_management_support));
+	printf("  Write Zeroes Command Support			: 0x%x \n", le16_to_cpu(log_data->wz_cmd_support));
+	printf("  Sanitize Command Support				: 0x%x \n", le16_to_cpu(log_data->sanitize_cmd_support));
+	printf("  Dataset Management Command Support	: 0x%x \n", le16_to_cpu(log_data->dsm_cmd_support));
+	printf("  Write Uncorrectable Command Support	: 0x%x \n", le16_to_cpu(log_data->wu_cmd_support));
+	printf("  Fused Operation Support				: 0x%x \n", le16_to_cpu(log_data->fused_operation_support));
+	printf("  Minimum Valid DSSD Power State		: 0x%x \n", le16_to_cpu(log_data->min_valid_dssd_pwr_state));
+	printf("  DSSD Power State Descriptors					: 0x");
+	for (i = 0; i <= 127; i++) {
+		printf("%x", log_data->dssd_pwr_state_desc[i]);
+	}
+	printf("\n");
+	printf("  Log Page Version						: 0x%x \n", le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID							: 0x");
+	for (i = C4_GUID_LENGTH - 1; i >= 0; i--) {
+		printf("%x", log_data->log_page_guid[i]);
+	}
+	printf("\n");
+}
+
+static void ocp_print_c4_log_json(struct ocp_device_capabilities_log_page *log_data)
+{
+	struct json_object *root;
+	root = json_create_object();
+	char guid[64];
+	int i;
+
+	json_object_add_value_int(root, "PCI Express Ports", le16_to_cpu(log_data->pcie_exp_port));
+	json_object_add_value_int(root, "OOB Management Support", le16_to_cpu(log_data->oob_management_support));
+	json_object_add_value_int(root, "Write Zeroes Command Support", le16_to_cpu(log_data->wz_cmd_support));
+	json_object_add_value_int(root, "Sanitize Command Support", le16_to_cpu(log_data->sanitize_cmd_support));
+	json_object_add_value_int(root, "Dataset Management Command Support", le16_to_cpu(log_data->dsm_cmd_support));
+	json_object_add_value_int(root, "Write Uncorrectable Command Support", le16_to_cpu(log_data->wu_cmd_support));
+	json_object_add_value_int(root, "Fused Operation Support", le16_to_cpu(log_data->fused_operation_support));
+	json_object_add_value_int(root, "Minimum Valid DSSD Power State", le16_to_cpu(log_data->min_valid_dssd_pwr_state));
+	for (i = 0; i <= 127; i++) {
+		json_object_add_value_int(root, "DSSD Power State Descriptors", log_data->dssd_pwr_state_desc[i]);
+	}
+	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
+
+	memset((void*)guid, 0, 64);
+	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	json_object_add_value_string(root, "Log page GUID", guid);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+static void ocp_print_c4_log_binary(struct ocp_device_capabilities_log_page *log_data)
+{
+    return d_raw((unsigned char *)log_data, sizeof(*log_data));
+}
+
+static int get_c4_log_page(struct nvme_dev *dev, char *format)
+{
+	int ret = 0;
+	int fmt = -1;
+	__u8 *data;
+	int i,j;
+	struct ocp_device_capabilities_log_page *log_data;
+
+	fmt = validate_output_format(format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		return fmt;
+	}
+
+	if ((data = (__u8 *) malloc(sizeof(__u8) * C4_DEV_CAP_REQ_LEN)) == NULL) {
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		return -1;
+	}
+	memset(data, 0, sizeof (__u8) * C4_DEV_CAP_REQ_LEN);
+
+	ret = nvme_get_log_simple(dev_fd(dev), C4_DEV_CAP_REQ_OPCODE, C4_DEV_CAP_REQ_LEN, data);
+
+	if (ret == 0) {
+		log_data = (struct ocp_device_capabilities_log_page *)data;
+
+		/* check log page version */
+		if (log_data->log_page_version != C4_DEV_CAP_REQ_VERSION) {
+			fprintf(stderr, "ERROR : OCP : invalid device capabilities log page version\n");
+			ret = -1;
+			goto out;
+		}
+
+		/* check log page guid */
+		/* Verify GUID matches */
+		for (i=0; i<16; i++) {
+			if (dev_cap_req_guid[i] != log_data->log_page_guid[i]) {
+				fprintf(stderr, "ERROR : OCP : Unknown GUID in C4 Log Page data\n");
+				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", dev_cap_req_guid[j]);
+				}
+				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+				}
+				fprintf(stderr, "\n");
+
+				ret = -1;
+				goto out;
+			}
+		}
+
+		switch (fmt) {
+		case NORMAL:
+			ocp_print_c4_log_normal(log_data);
+			break;
+		case JSON:
+			ocp_print_c4_log_json(log_data);
+			break;
+		case BINARY:
+			ocp_print_c4_log_binary(log_data);
+			break;
+		}
+	} else {
+		fprintf(stderr, "ERROR : OCP : Unable to read C4 data from buffer\n");
+	}
+
+out:
+	free(data);
+	return ret;
+}
+
+static int ocp_device_capabilities_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+    const char *desc = "Retrieve C4h Device Capabilities Log data.";
+	struct nvme_dev *dev;
+	int ret = 0;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "output Format: normal|json|binary"),
+		OPT_END()
+	};
+
+	ret = parse_and_open(&dev, argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	ret = get_c4_log_page(dev, cfg.output_format);
+	if (ret)
+		fprintf(stderr, "ERROR : OCP : Failure reading the C4h Log Page, ret = %d\n", ret);
+	dev_close(dev);
+	return ret;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// Misc
 
 static const __u8 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS = 0xC3;
