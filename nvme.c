@@ -68,6 +68,7 @@
 #include "fabrics.h"
 #define CREATE_CMD
 #include "nvme-builtin.h"
+
 struct feat_cfg {
 	enum nvme_features_id feature_id;
 	__u32 namespace_id;
@@ -78,6 +79,33 @@ struct feat_cfg {
 	__u32 data_len;
 	bool  raw_binary;
 	bool  human_readable;
+};
+
+struct passthru_config {
+	__u8	opcode;
+	__u8	flags;
+	__u16	rsvd;
+	__u32	namespace_id;
+	__u32	data_len;
+	__u32	metadata_len;
+	__u32	timeout;
+	__u32	cdw2;
+	__u32	cdw3;
+	__u32	cdw10;
+	__u32	cdw11;
+	__u32	cdw12;
+	__u32	cdw13;
+	__u32	cdw14;
+	__u32	cdw15;
+	char	*input_file;
+	char	*metadata;
+	bool	raw_binary;
+	bool	show_command;
+	bool	dry_run;
+	bool	read;
+	bool	write;
+	__u8	prefill;
+	bool	latency;
 };
 
 static const char nvme_version_string[] = NVME_VERSION;
@@ -8340,6 +8368,31 @@ ret:
 	return err;
 }
 
+static void passthru_print_read_output(struct passthru_config cfg, void *data, int dfd, void *mdata,
+				       int mfd, int err)
+{
+	if (strlen(cfg.input_file)) {
+		if (write(dfd, (void *)data, cfg.data_len) < 0)
+			perror("failed to write data buffer");
+	} else if (data) {
+		if (cfg.raw_binary)
+			d_raw((unsigned char *)data, cfg.data_len);
+		else if (!err)
+			d((unsigned char *)data, cfg.data_len, 16, 1);
+	}
+	if (cfg.metadata_len && cfg.metadata) {
+		if (strlen(cfg.metadata)) {
+			if (write(mfd, (void *)mdata, cfg.metadata_len) < 0)
+				perror("failed to write metadata buffer");
+		} else {
+			if (cfg.raw_binary)
+				d_raw((unsigned char *)mdata, cfg.metadata_len);
+			else if (!err)
+				d((unsigned char *)mdata, cfg.metadata_len, 16, 1);
+		}
+	}
+}
+
 static int passthru(int argc, char **argv, bool admin,
 		const char *desc, struct command *cmd)
 {
@@ -8373,34 +8426,7 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *cmd_name = NULL;
 	struct timeval start_time, end_time;
 
-	struct config {
-		__u8	opcode;
-		__u8	flags;
-		__u16	rsvd;
-		__u32	namespace_id;
-		__u32	data_len;
-		__u32	metadata_len;
-		__u32	timeout;
-		__u32	cdw2;
-		__u32	cdw3;
-		__u32	cdw10;
-		__u32	cdw11;
-		__u32	cdw12;
-		__u32	cdw13;
-		__u32	cdw14;
-		__u32	cdw15;
-		char	*input_file;
-		char	*metadata;
-		bool	raw_binary;
-		bool	show_command;
-		bool	dry_run;
-		bool	read;
-		bool	write;
-		__u8	prefill;
-		bool	latency;
-	};
-
-	struct config cfg = {
+	struct passthru_config cfg = {
 		.opcode		= 0,
 		.flags		= 0,
 		.prefill	= 0,
@@ -8591,28 +8617,8 @@ static int passthru(int argc, char **argv, bool admin,
 	} else  {
 		printf("%s Command %s is Success and result: 0x%08x\n", admin ? "Admin" : "IO",
 		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific", result);
-		if (cfg.read) {
-			if (strlen(cfg.input_file)) {
-				if (write(dfd, (void *)data, cfg.data_len) < 0)
-					perror("failed to write data buffer");
-			} else if (data) {
-				if (cfg.raw_binary)
-					d_raw((unsigned char *)data, cfg.data_len);
-				else if (!err)
-					d((unsigned char *)data, cfg.data_len, 16, 1);
-			}
-			if (cfg.metadata_len && cfg.metadata) {
-				if (strlen(cfg.metadata)) {
-					if (write(mfd, (void *)mdata, cfg.metadata_len) < 0)
-						perror("failed to write metadata buffer");
-				} else {
-					if (cfg.raw_binary)
-						d_raw((unsigned char *)mdata, cfg.metadata_len);
-					else if (!err)
-						d((unsigned char *)mdata, cfg.metadata_len, 16, 1);
-				}
-			}
-		}
+		if (cfg.read)
+			passthru_print_read_output(cfg, data, dfd, mdata, mfd, err);
 	}
 free_metadata:
 	free(mdata);
