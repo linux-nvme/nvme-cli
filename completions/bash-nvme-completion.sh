@@ -1345,6 +1345,9 @@ plugin_ocp_opts () {
 		"vs-fw-activate-history")
 		opts+=" --output-format= -o"
 			;;
+		"device-capability-log")
+		opts+=" --output-format= -o"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1413,7 +1416,7 @@ _nvme_subcmds () {
 			set-latency-monitor-feature internal-log \
 			clear-fw-activate-history eol-plp-failure-mode \
 			clear-pcie-correctable-error-counters \
-			vs-fw-activate-history"
+			vs-fw-activate-history device-capability-log"
 	)
 
 	# Associative array mapping plugins to coresponding option completions
