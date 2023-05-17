@@ -8591,18 +8591,27 @@ static int passthru(int argc, char **argv, bool admin,
 	} else  {
 		printf("%s Command %s is Success and result: 0x%08x\n", admin ? "Admin" : "IO",
 		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific", result);
-		if (cfg.read && strlen(cfg.input_file)) {
-			if (write(dfd, (void *)data, cfg.data_len) < 0)
-				perror("failed to write data buffer");
-			if (cfg.metadata_len && cfg.metadata) {
-				if (write(mfd, (void *)mdata, cfg.metadata_len) < 0)
-					perror("failed to write metadata buffer");
+		if (cfg.read) {
+			if (strlen(cfg.input_file)) {
+				if (write(dfd, (void *)data, cfg.data_len) < 0)
+					perror("failed to write data buffer");
+			} else if (data) {
+				if (cfg.raw_binary)
+					d_raw((unsigned char *)data, cfg.data_len);
+				else if (!err)
+					d((unsigned char *)data, cfg.data_len, 16, 1);
 			}
-		} else if (!cfg.raw_binary) {
-			if (data && cfg.read && !err)
-				d((unsigned char *)data, cfg.data_len, 16, 1);
-		} else if (data && cfg.read) {
-			d_raw((unsigned char *)data, cfg.data_len);
+			if (cfg.metadata_len && cfg.metadata) {
+				if (strlen(cfg.metadata)) {
+					if (write(mfd, (void *)mdata, cfg.metadata_len) < 0)
+						perror("failed to write metadata buffer");
+				} else {
+					if (cfg.raw_binary)
+						d_raw((unsigned char *)mdata, cfg.metadata_len);
+					else if (!err)
+						d((unsigned char *)mdata, cfg.metadata_len, 16, 1);
+				}
+			}
 		}
 	}
 free_metadata:
