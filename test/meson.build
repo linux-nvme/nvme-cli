@@ -66,4 +66,13 @@ uuid = executable(
 
 test('uuid', uuid)
 
+tree = executable(
+    'tree',
+    ['tree.c'],
+    dependencies: libnvme_dep,
+    include_directories: [incdir, internal_incdir]
+)
+
+test('tree', tree)
+
 subdir('nbft')
