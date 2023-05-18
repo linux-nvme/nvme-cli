@@ -312,7 +312,7 @@ jobs:
           EOF
           sudo apt update
       - name: install s390x compiler
-        run: sudo apt install gcc-s390x-linux-gnu pkg-config qemu-user-static
+        run: sudo apt install gcc-s390x-linux-gnu libgcc-s1:s390x pkg-config qemu-user-static
       - name: install libraries
         run: sudo apt install libjson-c-dev:s390x
       - uses: actions/checkout@v3
