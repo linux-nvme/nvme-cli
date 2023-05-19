@@ -12,7 +12,7 @@ ENV{NVME_HOST_IFACE}=="", ENV{NVME_HOST_IFACE}="none"
 # Events from persistent discovery controllers or nvme-fc transport events
 # NVME_AEN:
 #   type 0x2 (NOTICE) info 0xf0 (DISCOVERY_LOG_CHANGE) log-page-id 0x70 (DISCOVERY_LOG_PAGE)
-ACTION=="change", SUBSYSTEM=="nvme", ENV{NVME_AEN}=="0x70f002",\
+ACTION=="change", SUBSYSTEM=="nvme", ENV{NVME_AEN}=="0x70f002", \
   ENV{NVME_TRTYPE}=="*", ENV{NVME_TRADDR}=="*", \
   ENV{NVME_TRSVCID}=="*", ENV{NVME_HOST_TRADDR}=="*", ENV{NVME_HOST_IFACE}=="*", \
   RUN+="@SYSTEMCTL@ --no-block restart nvmf-connect@--device=$kernel\t--transport=$env{NVME_TRTYPE}\t--traddr=$env{NVME_TRADDR}\t--trsvcid=$env{NVME_TRSVCID}\t--host-traddr=$env{NVME_HOST_TRADDR}\t--host-iface=$env{NVME_HOST_IFACE}.service"
