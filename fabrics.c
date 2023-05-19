@@ -86,7 +86,7 @@ static const char *nvmf_data_digest	= "enable transport protocol data digest (TC
 static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
 
-#define NVMF_OPTS(c)									\
+#define NVMF_ARGS(n, c, ...) struct argconfig_commandline_options n[] = {		\
 	OPT_STRING("transport",       't', "STR", &transport,	  nvmf_tport),		\
 	OPT_STRING("nqn",             'n', "STR", &subsysnqn,	  nvmf_nqn),		\
 	OPT_STRING("traddr",          'a', "STR", &traddr,	  nvmf_traddr),		\
@@ -110,7 +110,10 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("disable-sqflow",    'd', &c.disable_sqflow,     nvmf_disable_sqflow),	\
 	OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),	\
 	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest),	\
-	OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls)		\
+	OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls),		\
+	__VA_ARGS__,									\
+	OPT_END()									\
+}
 
 /*
  * Compare two C strings and handle NULL pointers gracefully.
@@ -522,16 +525,13 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 	struct nvme_fabrics_config cfg;
 	bool force = false;
 
-	OPT_ARGS(opts) = {
-		NVMF_OPTS(cfg),
+	NVMF_ARGS(opts, cfg,
 		OPT_FMT("output-format", 'o', &format,        output_format),
 		OPT_FILE("raw",          'r', &raw,           "save raw output to file"),
 		OPT_FLAG("persistent",   'p', &persistent,    "persistent discovery connection"),
 		OPT_FLAG("quiet",        'S', &quiet,         "suppress already connected errors"),
 		OPT_INCR("verbose",      'v', &verbose,       "Increase logging verbosity"),
-		OPT_FLAG("force",          0, &force,         "Force persistent discovery controller creation"),
-		OPT_END()
-	};
+		OPT_FLAG("force",          0, &force,         "Force persistent discovery controller creation"));
 
 	nvmf_default_config(&cfg);
 
@@ -725,9 +725,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	bool nbft = false, nonbft = false;
 	char *nbft_path = NBFT_SYSFS_PATH;
 
-	OPT_ARGS(opts) = {
+	NVMF_ARGS(opts, cfg,
 		OPT_STRING("device",   'd', "DEV", &device, "use existing discovery controller device"),
-		NVMF_OPTS(cfg),
 		OPT_FMT("output-format", 'o', &format,        output_format),
 		OPT_FILE("raw",          'r', &raw,           "save raw output to file"),
 		OPT_FLAG("persistent",   'p', &persistent,    "persistent discovery connection"),
@@ -738,9 +737,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FLAG("force",          0, &force,         "Force persistent discovery controller creation"),
 		OPT_FLAG("nbft",           0, &nbft,          "Only look at NBFT tables"),
 		OPT_FLAG("no-nbft",        0, &nonbft,        "Do not look at NBFT tables"),
-		OPT_STRING("nbft-path",  0, "STR", &nbft_path, "user-defined path for NBFT tables"),
-		OPT_END()
-	};
+		OPT_STRING("nbft-path",  0, "STR", &nbft_path, "user-defined path for NBFT tables"));
 
 	nvmf_default_config(&cfg);
 
@@ -925,15 +922,12 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	enum nvme_print_flags flags = -1;
 	char *format = "";
 
-	OPT_ARGS(opts) = {
-		NVMF_OPTS(cfg),
+	NVMF_ARGS(opts, cfg,
 		OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,  nvmf_ctrlkey),
 		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
 		OPT_FLAG("dump-config", 'O', &dump_config, "Dump JSON configuration to stdout"),
-		OPT_FMT("output-format", 'o', &format, "Output format: normal|json"),
-		OPT_END()
-	};
+		OPT_FMT("output-format", 'o', &format, "Output format: normal|json"));
 
 	nvmf_default_config(&cfg);
 
@@ -1246,17 +1240,14 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	struct nvme_fabrics_config cfg;
 	bool scan_tree = false, modify_config = false, update_config = false;
 
-	OPT_ARGS(opts) = {
-		NVMF_OPTS(cfg),
+	NVMF_ARGS(opts, cfg,
 		OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,  nvmf_ctrlkey),
 		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
 		OPT_FLAG("scan", 'R', &scan_tree, "Scan current NVMeoF topology"),
 		OPT_FLAG("modify", 'M', &modify_config, "Modify JSON configuration file"),
 		OPT_FLAG("dump", 'O', &dump_config, "Dump JSON configuration to stdout"),
-		OPT_FLAG("update", 'U', &update_config, "Update JSON configuration file"),
-		OPT_END()
-	};
+		OPT_FLAG("update", 'U', &update_config, "Update JSON configuration file"));
 
 	nvmf_default_config(&cfg);
 
