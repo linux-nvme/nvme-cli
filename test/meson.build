@@ -75,4 +75,11 @@ tree = executable(
 
 test('tree', tree)
 
+test_util = executable(
+    'test-util',
+    ['test-util.c'],
+    include_directories: [incdir, internal_incdir]
+)
+test('Test util.c', test_util)
+
 subdir('nbft')

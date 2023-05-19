@@ -626,4 +626,13 @@ int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN]);
  */
 int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN]);
 
+/**
+ * ipaddrs_eq - Check if 2 IP addresses are equal.
+ * @addr1: IP address (can be IPv4 or IPv6)
+ * @addr2: IP address (can be IPv4 or IPv6)
+ *
+ * Return: true if addr1 == addr2. false otherwise.
+ */
+bool ipaddrs_eq(const char *addr1, const char *addr2);
+
 #endif /* _LIBNVME_UTIL_H */
