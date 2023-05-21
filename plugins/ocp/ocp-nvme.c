@@ -718,14 +718,14 @@ static int eol_plp_failure_mode_get(struct nvme_dev *dev, const __u32 nsid,
 
 	err = nvme_get_features(&args);
 	if (!err) {
-		printf("End of Life Behavior (feature: %#0*x): %#0*x (%s: %s)\n",
-		       fid ? 4 : 2, fid, result ? 10 : 8, result,
-		       nvme_select_to_string(sel),
-		       eol_plp_failure_mode_to_string(result));
+		nvme_show_result("End of Life Behavior (feature: %#0*x): %#0*x (%s: %s)",
+				 fid ? 4 : 2, fid, result ? 10 : 8, result,
+				 nvme_select_to_string(sel),
+				 eol_plp_failure_mode_to_string(result));
 		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(result);
 	} else {
-		printf("Could not get feature: %#0*x.\n", fid ? 4 : 2, fid);
+		nvme_show_error("Could not get feature: %#0*x.", fid ? 4 : 2, fid);
 	}
 
 	return err;
@@ -743,7 +743,7 @@ static int eol_plp_failure_mode_set(struct nvme_dev *dev, const __u32 nsid,
 		/* OCP 2.0 requires UUID index support */
 		err = ocp_get_uuid_index(dev, &uuid_index);
 		if (err || !uuid_index) {
-			fprintf(stderr, "ERROR: No OCP UUID index found\n");
+			nvme_show_error("ERROR: No OCP UUID index found");
 			return err;
 		}
 	}
@@ -769,13 +769,13 @@ static int eol_plp_failure_mode_set(struct nvme_dev *dev, const __u32 nsid,
 	if (err > 0) {
 		nvme_show_status(err);
 	} else if (err < 0) {
-		perror("Define EOL/PLP failure mode");
+		nvme_show_perror("Define EOL/PLP failure mode");
 		fprintf(stderr, "Command failed while parsing.\n");
 	} else {
-		printf("Successfully set mode (feature: %#0*x): %#0*x (%s: %s).\n",
-		       fid ? 4 : 2, fid, mode ? 10 : 8, mode,
-		       save ? "Save" : "Not save",
-		       eol_plp_failure_mode_to_string(mode));
+		nvme_show_result("Successfully set mode (feature: %#0*x): %#0*x (%s: %s).",
+				 fid ? 4 : 2, fid, mode ? 10 : 8, mode,
+				 save ? "Save" : "Not save",
+				 eol_plp_failure_mode_to_string(mode));
 	}
 
 	return err;
