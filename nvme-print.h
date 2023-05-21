@@ -13,6 +13,9 @@ typedef struct nvme_effects_log_node {
 	struct list_node node;
 } nvme_effects_log_node_t;
 
+#define nvme_show_error(msg, ...) nvme_show_message(true, msg, ##__VA_ARGS__)
+#define nvme_show_result(msg, ...) nvme_show_message(false, msg, ##__VA_ARGS__)
+
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 
@@ -155,7 +158,7 @@ char *zone_state_to_string(__u8 state);
 const char *nvme_pel_event_to_string(int type);
 const char *get_sanitize_log_sstat_status_str(__u16 status);
 const char *nvme_ana_state_to_string(enum nvme_ana_state state);
-void nvme_show_error(const char *msg, ...);
+void nvme_show_message(bool error, const char *msg, ...);
 void nvme_show_perror(const char *msg);
 
 #endif

@@ -5457,18 +5457,21 @@ void nvme_show_topology(nvme_root_t r, enum nvme_print_flags flags,
 		nvme_show_simple_topology(r, ranking);
 }
 
-void nvme_show_error(const char *msg, ...)
+void nvme_show_message(bool error, const char *msg, ...)
 {
 	va_list ap;
 	va_start(ap, msg);
 
 	if (argconfig_output_format_json(false)) {
-		json_output_error(msg, ap);
+		if (error)
+			json_output_error(msg, ap);
+		else
+			json_output_result(msg, ap);
 		va_end(ap);
 		return;
 	}
 
-	vfprintf(stderr, msg, ap);
+	vfprintf(error ? stderr : stdout, msg, ap);
 
 	printf("\n");
 
