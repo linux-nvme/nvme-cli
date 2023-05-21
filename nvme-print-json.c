@@ -2857,22 +2857,23 @@ void json_output_status(int status)
 	json_output_object(root);
 }
 
-void json_output_error(const char *msg, va_list ap)
+void json_output_message(bool error, const char *msg, va_list ap)
 {
 	struct json_object *root = json_create_object();
-	char *error;
+	char *value;
+	const char *key = error ? "error" : "result";
 
-	if (vasprintf(&error, msg, ap) < 0)
-		error = NULL;
+	if (vasprintf(&value, msg, ap) < 0)
+		value = NULL;
 
-	if (error)
-		json_object_add_value_string(root, "error", error);
+	if (value)
+		json_object_add_value_string(root, key, value);
 	else
-		json_object_add_value_string(root, "error", "Could not allocate string");
+		json_object_add_value_string(root, key, "Could not allocate string");
 
 	json_output_object(root);
 
-	free(error);
+	free(value);
 }
 
 void json_output_perror(const char *msg)
