@@ -5,6 +5,9 @@
 
 #ifdef CONFIG_JSONC
 
+#define json_output_error(msg, ap) json_output_message(true, msg, ap)
+#define json_output_result(msg, ap) json_output_message(false, msg, ap)
+
 void json_simple_topology(nvme_root_t r);
 void json_print_list_items(nvme_root_t r,
 			   enum nvme_print_flags flags);
@@ -79,7 +82,7 @@ void json_predictable_latency_per_nvmset(
 	struct nvme_nvmset_predictable_lat_log *plpns_log,
 	__u16 nvmset_id);
 void json_output_status(int status);
-void json_output_error(const char *msg, va_list ap);
+void json_output_message(bool error, const char *msg, va_list ap);
 void json_output_perror(const char *msg);
 
 /* fabrics.c */
@@ -142,6 +145,7 @@ void json_connect_msg(nvme_ctrl_t c);
 #define json_output_status(status)
 #define json_output_error(const char *msg, va_list ap)
 #define json_output_perror(const char *msg)
+#define json_output_result(const char *msg, va_list ap)
 
 /* fabrics.c */
 #define json_discovery_log(log, numrec)
