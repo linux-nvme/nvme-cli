@@ -5462,8 +5462,11 @@ void nvme_show_error(const char *msg, ...)
 	va_list ap;
 	va_start(ap, msg);
 
-	if (argconfig_output_format_json(false))
-		return json_output_error(msg, ap);
+	if (argconfig_output_format_json(false)) {
+		json_output_error(msg, ap);
+		va_end(ap);
+		return;
+	}
 
 	vfprintf(stderr, msg, ap);
 
@@ -5474,8 +5477,10 @@ void nvme_show_error(const char *msg, ...)
 
 void nvme_show_perror(const char *msg)
 {
-	if (argconfig_output_format_json(false))
-		return json_output_perror(msg);
+	if (argconfig_output_format_json(false)) {
+		json_output_perror(msg);
+		return;
+	}
 
 	perror(msg);
 }
