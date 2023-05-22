@@ -16,6 +16,8 @@ PLUGIN(NAME("sfx", "ScaleFlux vendor specific extensions", NVME_VERSION),
 		ENTRY("change-cap", "Dynamic change capacity", change_cap)
 		ENTRY("set-feature", "Set a feature", sfx_set_feature)
 		ENTRY("get-feature", "Get a feature", sfx_get_feature)
+		ENTRY("dump-evtlog", "dump evtlog into file and parse warning & error log", sfx_dump_evtlog)
+		ENTRY("expand-cap", "expand the last namespace capacity lossless", sfx_expand_cap)
 	)
 );
 
