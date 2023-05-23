@@ -236,6 +236,7 @@ foreach file : systemd_files
 endforeach
 
 udev_files = [
+  '65-persistent-net-nbft.rules',
   '70-nvmf-autoconnect.rules',
   '71-nvmf-netapp.rules',
 ]
