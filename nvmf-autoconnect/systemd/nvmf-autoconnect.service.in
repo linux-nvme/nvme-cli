@@ -1,7 +1,7 @@
 [Unit]
 Description=Connect NVMe-oF subsystems automatically during boot
-ConditionPathExists=|!@SYSCONFDIR@/nvme/config.json
-ConditionPathExists=|!@SYSCONFDIR@/nvme/discovery.conf
+ConditionPathExists=|@SYSCONFDIR@/nvme/config.json
+ConditionPathExists=|@SYSCONFDIR@/nvme/discovery.conf
 After=network-online.target
 Before=remote-fs-pre.target
 
