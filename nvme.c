@@ -5818,7 +5818,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &prev_lbaf);
 
 		if (cfg.bs) {
-			for (i = 0; i < ns.nlbaf; ++i) {
+			for (i = 0; i <= ns.nlbaf; ++i) {
 				if ((1ULL << ns.lbaf[i].ds) == cfg.bs && ns.lbaf[i].ms == 0) {
 					cfg.lbaf = i;
 					break;
