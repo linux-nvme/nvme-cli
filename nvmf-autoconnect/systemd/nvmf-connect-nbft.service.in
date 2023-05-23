@@ -1,0 +1,11 @@
+# This unit is meant to be started by network management software
+# after a network interface defined in the NBFT gets set up
+[Unit]
+Description=Connect NBFT-defined NVMe-oF subsystems automatically
+ConditionPathExists=|/sys/firmware/acpi/tables/NBFT
+ConditionPathExists=|/sys/firmware/acpi/tables/NBFT1
+
+[Service]
+Type=oneshot
+ExecStartPre=/sbin/modprobe nvme-fabrics
+ExecStart=@SBINDIR@/nvme connect-all --nbft
