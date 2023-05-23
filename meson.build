@@ -222,6 +222,7 @@ endforeach
 systemd_files = [
   'nvmefc-boot-connections.service',
   'nvmf-autoconnect.service',
+  'nvmf-connect-nbft.service',
   'nvmf-connect.target',
   'nvmf-connect@.service',
 ]
