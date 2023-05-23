@@ -4423,7 +4423,7 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		printf("\n");
 
 	printf("Sanitize Status                        (SSTAT) :  %#x\n",
-		le16_to_cpu(sanitize->sstat) & NVME_SANITIZE_SSTAT_STATUS_MASK);
+		le16_to_cpu(sanitize->sstat));
 	if (human)
 		nvme_show_sanitize_log_sstat(le16_to_cpu(sanitize->sstat));
 
