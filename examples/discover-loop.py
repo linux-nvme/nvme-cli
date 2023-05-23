@@ -56,7 +56,7 @@ except Exception as e:
     sys.exit(f'Failed to discover: {e}')
 
 try:
-c.disconnect()
+    c.disconnect()
 except Exception as e:
     sys.exit(f'Failed to disconnect: {e}')
 
