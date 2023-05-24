@@ -333,13 +333,14 @@ retry:
 		nvme_msg(ep->root, LOG_ERR,
 			 "Failed polling on MCTP socket: %m");
 		errno = errno_save;
-		return -1;
+		goto out;
 	}
 
 	if (rc == 0) {
 		nvme_msg(ep->root, LOG_DEBUG, "Timeout on MCTP socket");
 		errno = ETIMEDOUT;
-		return -1;
+		rc = -1;
+		goto out;
 	}
 
 	rc = -1;
