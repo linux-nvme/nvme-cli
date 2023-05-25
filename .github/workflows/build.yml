@@ -351,8 +351,10 @@ jobs:
           muon setup                    \
              -Dprefix=${ROOT_PATH}      \
              -Dwrap_mode=forcefallback  \
+             -Dlibnvme:json-c=disabled  \
              -Dlibnvme:python=disabled  \
              -Dlibnvme:openssl=disabled \
+             -Djson-c=disabled          \
              .build
           samu -C .build
           muon -C .build install
