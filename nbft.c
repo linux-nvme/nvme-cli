@@ -10,6 +10,8 @@
 #include "libnvme.h"
 #include "fabrics.h"
 
+#include "util/types.h"
+
 #define NBFT_SYSFS_FILENAME	"NBFT*"
 
 static void print_connect_msg(nvme_ctrl_t c)
