@@ -142,10 +142,11 @@ void json_connect_msg(nvme_ctrl_t c);
 #define json_persistent_event_log(pevent_log_info, size)
 #define json_predictable_latency_event_agg_log(pea_log, log_entries)
 #define json_predictable_latency_per_nvmset(plpns_log, nvmset_id)
+#define json_output_error(msg, ap)
+#define json_output_result(msg, ap)
 #define json_output_status(status)
-#define json_output_error(const char *msg, va_list ap)
-#define json_output_perror(const char *msg)
-#define json_output_result(const char *msg, va_list ap)
+#define json_output_message(error, msg, ap)
+#define json_output_perror(msg)
 
 /* fabrics.c */
 #define json_discovery_log(log, numrec)
