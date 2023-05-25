@@ -1320,25 +1320,34 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)
 			snprintf(str_buffer + str_pos, 16, "[%d-", fw_core);
 			str_pos = strlen(str_buffer);
 
-			fw_time = ((__u64)info->time_stamp[2] << 32) + ((__u64)info->time_stamp[1] << 16) + (__u64)info->time_stamp[0];
+			fw_time = ((__u64)info->time_stamp[2] << 32) + \
+                      ((__u64)info->time_stamp[1] << 16) + (__u64)info->time_stamp[0];
 			sfx_convert_ts(fw_time, str_buffer + str_pos);
 			str_pos = strlen(str_buffer);
 
 			strcpy(str_buffer + str_pos, "]    event-log:\n");
 			str_pos = strlen(str_buffer);
 
-			snprintf(str_buffer + str_pos, 128, "  > fw_version:         %s\n  > bl2_version:        %s\n", info->fw_ver, info->bl2_ver);
+			snprintf(str_buffer + str_pos, 128, \
+                    "  > fw_version:         %s\n  > bl2_version:        %s\n",\
+                    info->fw_ver, info->bl2_ver);
 			str_pos = strlen(str_buffer);
 
 			code_level = (info->code & 0x100) >> 8;
 			code_type  = (info->code % 0x100);
 			if (code_level == sfx_evtlog_level_warning) {
-				snprintf(str_buffer + str_pos, 128, "  > error_str:          [WARNING][%s]\n\n", sfx_evtlog_warning[code_type]);
+				snprintf(str_buffer + str_pos, 128,\
+                       "  > error_str:          [WARNING][%s]\n\n",\
+                       sfx_evtlog_warning[code_type]);
 			} else {
 				if (info->assert_id) {
-					snprintf(str_buffer + str_pos, 128, "  > error_str:          [ERROR][%s]\n  > assert_id:          %d\n\n", sfx_evtlog_error[code_type], info->assert_id);
+					snprintf(str_buffer + str_pos, 128,\
+                            "  > error_str:          [ERROR][%s]\n  > assert_id:          %d\n\n",\
+                            sfx_evtlog_error[code_type], info->assert_id);
 				} else {
-					snprintf(str_buffer + str_pos, 128, "  > error_str:          [ERROR][%s]\n\n", sfx_evtlog_error[code_type]);
+					snprintf(str_buffer + str_pos, 128,\
+                            "  > error_str:          [ERROR][%s]\n\n",\
+                            sfx_evtlog_error[code_type]);
 				}
 			}
 			str_pos = strlen(str_buffer);
@@ -1365,7 +1374,8 @@ ret:
 	return err;
 }
 
-static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 storage_medium, char* file, bool parse, char*output)
+static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
+        __u32 storage_medium, char* file, bool parse, char*output)
 {
 	struct nvme_persistent_event_log *pevent;
 	void *pevent_log_info;
@@ -1568,7 +1578,8 @@ ret:
 	return err;
 }
 
-static int nvme_expand_cap(struct nvme_dev *dev, __u32 namespace_id, __u64 namespace_size, __u64 namespace_cap, __u32 lbaf, __u32 units)
+static int nvme_expand_cap(struct nvme_dev *dev, __u32 namespace_id,\
+        __u64 namespace_size, __u64 namespace_cap, __u32 lbaf, __u32 units)
 {
 	struct dirent **devices;
 	char dev_name[32] = "";
