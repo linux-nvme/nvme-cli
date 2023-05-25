@@ -1240,21 +1240,9 @@ static void progress_runner(char* name, float progress)
 	fflush(stdout);
 }
 
-static int sfx_convert_ts(time_t time, char *ts_buf)
+static inline int sfx_convert_ts(time_t time, char *ts_buf)
 {
-	struct tm  gmTimeInfo;
-	time_t     time_Human, time_ms;
-	char       buf[80];
-
-	time_Human = time / 1000;
-	time_ms = time % 1000;
-
-	gmtime_r((const time_t *)&time_Human, &gmTimeInfo);
-
-	strftime(buf, sizeof(buf), "%Y-%m-%dD|%H:%M:%S", &gmTimeInfo);
-	sprintf(ts_buf, "%s:%03ld", buf, time_ms);
-
-	return 0;
+    return convert_ts(time, ts_buf);
 }
 
 static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)

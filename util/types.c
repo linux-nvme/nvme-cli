@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <locale.h>
+#include <time.h>
 
 #include <ccan/endian/endian.h>
 
@@ -149,4 +150,21 @@ const char *util_fw_to_string(char *c)
 		ret[i] = c[i] >= '!' && c[i] <= '~' ? c[i] : '.';
 	ret[i] = '\0';
 	return ret;
+}
+
+int convert_ts(time_t time, char *ts_buf)
+{
+	struct tm  time_info;
+	time_t     time_human, time_ms;
+	char       buf[80];
+
+	time_human = time / 1000;
+	time_ms = time % 1000;
+
+	gmtime_r((const time_t *)&time_human, &time_info);
+
+	strftime(buf, sizeof(buf), "%Y-%m-%dD|%H:%M:%S", &time_info);
+	sprintf(ts_buf, "%s:%03ld", buf, time_ms);
+
+	return 0;
 }
