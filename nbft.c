@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <fnmatch.h>
+#include <stdlib.h>
 
 #include "nvme.h"
 #include "nbft.h"
