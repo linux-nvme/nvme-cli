@@ -102,7 +102,7 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 	return "Unknown";
 }
 
-const char *get_sanitize_log_sstat_status_str(__u16 status)
+const char *nvme_sstat_status_to_string(__u16 status)
 {
 	switch (status & NVME_SANITIZE_SSTAT_STATUS_MASK) {
 	case NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED:
@@ -205,7 +205,7 @@ const char *nvme_pel_event_to_string(int type)
 	}
 }
 
-static const char *nvme_show_nss_hw_error(__u16 error_code)
+const char *nvme_nss_hw_error_to_string(__u16 error_code)
 {
 	switch (error_code) {
 	case 0x01:
@@ -439,7 +439,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			nss_hw_err_event = pevent_log_info + offset;
 			printf("NVM Subsystem Hardware Error Event Code Entry: %u, %s\n",
 				le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code),
-				nvme_show_nss_hw_error(nss_hw_err_event->nss_hw_err_event_code));
+				nvme_nss_hw_error_to_string(nss_hw_err_event->nss_hw_err_event_code));
 			break;
 		case NVME_PEL_CHANGE_NS_EVENT:
 			ns_event = pevent_log_info + offset;
@@ -607,7 +607,7 @@ void nvme_show_lba_status_log(void *lba_status, __u32 size,
 	}
 }
 
-static const char *resv_notif_to_string(__u8 type)
+const char *nvme_resv_notif_to_string(__u8 type)
 {
 	switch (type) {
 	case 0x0: return "Empty Log Page";
@@ -631,7 +631,7 @@ void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
 		le64_to_cpu(resv->lpc));
 	printf("Resv Notif Log Page Type	: %u (%s)\n",
 		resv->rnlpt,
-		resv_notif_to_string(resv->rnlpt));
+		nvme_resv_notif_to_string(resv->rnlpt));
 	printf("Num of Available Log Pages	: %u\n", resv->nalp);
 	printf("Namespace ID:				: %"PRIx32"\n",
 		le32_to_cpu(resv->nsid));
@@ -874,7 +874,7 @@ void nvme_show_fdp_stats(struct nvme_fdp_stats_log *log,
 		uint128_t_to_l10n_string(le128_to_cpu(log->mbe)));
 }
 
-static const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
+const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
 {
 	switch (event) {
 	case NVME_FDP_EVENT_RUNFW:	return "Reclaim Unit Not Fully Written";
@@ -1277,7 +1277,7 @@ static void nvme_show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 			(cmbloc & 0x00000007));
 }
 
-static const char *nvme_register_szu_to_string(__u8 szu)
+const char *nvme_register_szu_to_string(__u8 szu)
 {
 	switch (szu) {
 	case 0:	return "4 KB";
@@ -1402,7 +1402,7 @@ static void nvme_show_registers_pmrctl(__u32 pmrctl)
 		"READY" : "Disabled");
 }
 
-static const char *nvme_register_pmr_hsts_to_string(__u8 hsts)
+const char *nvme_register_pmr_hsts_to_string(__u8 hsts)
 {
 	switch (hsts) {
 	case 0: return "Normal Operation";
@@ -1427,7 +1427,7 @@ static void nvme_show_registers_pmrsts(__u32 pmrsts, __u32 pmrctl)
 	printf("\tError                            (ERR): %x\n", (pmrsts & 0x000000ff));
 }
 
-static const char *nvme_register_pmr_pmrszu_to_string(__u8 pmrszu)
+const char *nvme_register_pmr_pmrszu_to_string(__u8 pmrszu)
 {
 	switch (pmrszu) {
 	case 0: return "Bytes";
@@ -3404,7 +3404,7 @@ void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
 		printf("zid %03d: %"PRIu64"\n", i, (uint64_t)le64_to_cpu(log->zid[i]));
 }
 
-char *zone_type_to_string(__u8 cond)
+const char *nvme_zone_type_to_string(__u8 cond)
 {
 	switch (cond) {
 	case NVME_ZONE_TYPE_SEQWRITE_REQ:
@@ -3414,7 +3414,7 @@ char *zone_type_to_string(__u8 cond)
 	}
 }
 
-char *zone_state_to_string(__u8 state)
+const char *nvme_zone_state_to_string(__u8 state)
 {
 	switch (state) {
 	case NVME_ZNS_ZS_EMPTY:
@@ -3478,8 +3478,8 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 		if(verbose) {
 			printf("SLBA: %#-10"PRIx64" WP: %#-10"PRIx64" Cap: %#-10"PRIx64" State: %-12s Type: %-14s\n",
 				(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
-				(uint64_t)le64_to_cpu(desc->zcap), zone_state_to_string(desc->zs >> 4),
-				zone_type_to_string(desc->zt));
+				(uint64_t)le64_to_cpu(desc->zcap), nvme_zone_state_to_string(desc->zs >> 4),
+				nvme_zone_type_to_string(desc->zt));
 			nvme_show_zns_report_zone_attributes(desc->za, desc->zai);
 		}
 		else {
@@ -3753,7 +3753,7 @@ void nvme_show_id_iocs(struct nvme_id_iocs *iocs)
 				(uint64_t)le64_to_cpu(iocs->iocsc[i]));
 }
 
-static const char *nvme_trtype_to_string(__u8 trtype)
+const char *nvme_trtype_to_string(__u8 trtype)
 {
 	switch (trtype) {
 	case 0: return "The transport type is not indicated or the error "\
@@ -4375,7 +4375,7 @@ static void nvme_show_sanitize_log_sprog(__u32 sprog)
 
 static void nvme_show_sanitize_log_sstat(__u16 status)
 {
-	const char *str = get_sanitize_log_sstat_status_str(status);
+	const char *str = nvme_sstat_status_to_string(status);
 
 	printf("\t[2:0]\t%s\n", str);
 	str = "Number of completed passes if most recent operation was overwrite";
@@ -4532,7 +4532,7 @@ void nvme_show_select_result(__u32 result)
 		printf("  Feature is changeable\n");
 }
 
-static const char *nvme_feature_lba_type_to_string(__u8 type)
+const char *nvme_feature_lba_type_to_string(__u8 type)
 {
 	switch (type) {
 	case 0:	return "Reserved";
@@ -4572,7 +4572,7 @@ void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 }
 
 
-static const char *nvme_feature_wl_hints_to_string(__u8 wh)
+const char *nvme_feature_wl_hints_to_string(__u8 wh)
 {
 	switch (wh) {
 	case 0:	return "No Workload";
@@ -4582,7 +4582,7 @@ static const char *nvme_feature_wl_hints_to_string(__u8 wh)
 	}
 }
 
-static const char *nvme_feature_temp_type_to_string(__u8 type)
+const char *nvme_feature_temp_type_to_string(__u8 type)
 {
 	switch (type) {
 	case 0:	return "Over Temperature Threshold";
@@ -4591,7 +4591,7 @@ static const char *nvme_feature_temp_type_to_string(__u8 type)
 	}
 }
 
-static const char *nvme_feature_temp_sel_to_string(__u8 sel)
+const char *nvme_feature_temp_sel_to_string(__u8 sel)
 {
 	switch (sel) {
 	case 0:	return "Composite Temperature";
@@ -4662,7 +4662,7 @@ static void nvme_show_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
 		le32_to_cpu(hmb->hsize));
 }
 
-static const char *nvme_show_ns_wp_cfg(enum nvme_ns_write_protect_cfg state)
+const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state)
 {
 	switch (state) {
 	case NVME_NS_WP_CFG_NONE:
@@ -4777,7 +4777,7 @@ void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 res
 		d(buf, len, 16, 1);
 }
 
-static const char *nvme_plm_window(__u32 plm)
+const char *nvme_plm_window_to_string(__u32 plm)
 {
 	switch (plm & 0x7) {
 	case 1:
@@ -4803,8 +4803,8 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwintt));
 }
 
-static char *nvme_show_host_metadata_type_to_string(enum nvme_features_id fid,
-						    __u8 type)
+const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid,
+					      __u8 type)
 {
        switch (fid) {
        case NVME_FEAT_FID_ENH_CTRL_METADATA:
@@ -4878,7 +4878,7 @@ static void nvme_show_host_metadata(enum nvme_features_id fid,
 
 	       printf("\tElement[%-3d]:\n", i);
 	       printf("\t\tType	    : 0x%02x (%s)\n", desc->type,
-		       nvme_show_host_metadata_type_to_string(fid, desc->type));
+		       nvme_host_metadata_type_to_string(fid, desc->type));
 	       printf("\t\tRevision : %d\n", desc->rev);
 	       printf("\t\tLength   : %d\n", len);
 	       printf("\t\tValue    : %s\n", val);
@@ -5006,7 +5006,7 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 			nvme_show_plm_config((struct nvme_plm_config *)buf);
 		break;
 	case NVME_FEAT_FID_PLM_WINDOW:
-		printf("\tWindow Select: %s", nvme_plm_window(result));
+		printf("\tWindow Select: %s", nvme_plm_window_to_string(result));
 		break;
 	case NVME_FEAT_FID_LBA_STS_INTERVAL:
 		nvme_show_lba_status_info(result);
@@ -5057,7 +5057,7 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		printf("\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
 	case NVME_FEAT_FID_WRITE_PROTECT:
-		printf("\tNamespace Write Protect: %s\n", nvme_show_ns_wp_cfg(result));
+		printf("\tNamespace Write Protect: %s\n", nvme_ns_wp_cfg_to_string(result));
 		break;
 	case NVME_FEAT_FID_FDP:
 		printf("\tFlexible Direct Placement Enable (FDPE)       : %s\n",
