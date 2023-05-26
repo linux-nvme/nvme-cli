@@ -1166,14 +1166,13 @@ void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len)
 {
 	struct stat st;
 
+	snprintf(path, len, "%s", nvme_ns_get_name(n));
+	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
+		return;
+
 	snprintf(path, len, "/dev/%s", nvme_ns_get_name(n));
 	if (stat(path, &st) == 0)
 		return;
-
-	snprintf(path, len, "/dev/spdk/%s", nvme_ns_get_name(n));
-	if (stat(path, &st) == 0)
-		return;
-
 	/*
 	 * We could start trying to search for it but let's make
 	 * it simple and just don't show the path at all.
@@ -1187,13 +1186,17 @@ void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len)
 	int instance;
 	struct stat st;
 
+	/*
+	 * There is no block devices for SPDK, point generic path to existing
+	 * chardevice.
+	 */
+	snprintf(path, len, "%s", nvme_ns_get_name(n));
+	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
+		return;
+
 	sscanf(nvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance);
 	snprintf(path, len, "/dev/ng%dn%d", instance, head_instance);
 
-	if (stat(path, &st) == 0)
-		return;
-
-	snprintf(path, len, "/dev/spdk/ng%dn%d", instance, head_instance);
 	if (stat(path, &st) == 0)
 		return;
 	/*

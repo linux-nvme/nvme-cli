@@ -4615,11 +4615,11 @@ static void stdout_dev_full_path(nvme_ns_t n, char *path, size_t len)
 {
 	struct stat st;
 
-	snprintf(path, len, "/dev/%s", nvme_ns_get_name(n));
-	if (stat(path, &st) == 0)
+	snprintf(path, len, "%s", nvme_ns_get_name(n));
+	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
 		return;
 
-	snprintf(path, len, "/dev/spdk/%s", nvme_ns_get_name(n));
+	snprintf(path, len, "/dev/%s", nvme_ns_get_name(n));
 	if (stat(path, &st) == 0)
 		return;
 
@@ -4636,6 +4636,14 @@ static void stdout_generic_full_path(nvme_ns_t n, char *path, size_t len)
 	int instance;
 	struct stat st;
 
+	/*
+	 * There is no block devices for SPDK, point generic path to existing
+	 * chardevice.
+	 */
+	snprintf(path, len, "%s", nvme_ns_get_name(n));
+	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
+		return;
+
 	if (sscanf(nvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance) != 2)
 		return;
 
@@ -4644,9 +4652,6 @@ static void stdout_generic_full_path(nvme_ns_t n, char *path, size_t len)
 	if (stat(path, &st) == 0)
 		return;
 
-	snprintf(path, len, "/dev/spdk/ng%dn%d", instance, head_instance);
-	if (stat(path, &st) == 0)
-		return;
 	/*
 	 * We could start trying to search for it but let's make
 	 * it simple and just don't show the path at all.
