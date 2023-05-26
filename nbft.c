@@ -3,11 +3,14 @@
 #include <errno.h>
 #include <stdio.h>
 #include <fnmatch.h>
+#include <stdlib.h>
 
 #include "nvme.h"
 #include "nbft.h"
 #include "libnvme.h"
 #include "fabrics.h"
+
+#include "util/types.h"
 
 #define NBFT_SYSFS_FILENAME	"NBFT*"
 
@@ -18,6 +21,7 @@ static void print_connect_msg(nvme_ctrl_t c)
 
 static void json_connect_msg(nvme_ctrl_t c)
 {
+#ifdef CONFIG_JSONC
 	struct json_object *root;
 
 	root = json_create_object();
@@ -26,6 +30,7 @@ static void json_connect_msg(nvme_ctrl_t c)
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
+#endif
 }
 
 int nbft_filter(const struct dirent *dent)

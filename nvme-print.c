@@ -4423,7 +4423,7 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		printf("\n");
 
 	printf("Sanitize Status                        (SSTAT) :  %#x\n",
-		le16_to_cpu(sanitize->sstat) & NVME_SANITIZE_SSTAT_STATUS_MASK);
+		le16_to_cpu(sanitize->sstat));
 	if (human)
 		nvme_show_sanitize_log_sstat(le16_to_cpu(sanitize->sstat));
 
@@ -5457,15 +5457,21 @@ void nvme_show_topology(nvme_root_t r, enum nvme_print_flags flags,
 		nvme_show_simple_topology(r, ranking);
 }
 
-void nvme_show_error(const char *msg, ...)
+void nvme_show_message(bool error, const char *msg, ...)
 {
 	va_list ap;
 	va_start(ap, msg);
 
-	if (argconfig_output_format_json(false))
-		return json_output_error(msg, ap);
+	if (argconfig_output_format_json(false)) {
+		if (error)
+			json_output_error(msg, ap);
+		else
+			json_output_result(msg, ap);
+		va_end(ap);
+		return;
+	}
 
-	vfprintf(stderr, msg, ap);
+	vfprintf(error ? stderr : stdout, msg, ap);
 
 	printf("\n");
 
@@ -5474,8 +5480,10 @@ void nvme_show_error(const char *msg, ...)
 
 void nvme_show_perror(const char *msg)
 {
-	if (argconfig_output_format_json(false))
-		return json_output_perror(msg);
+	if (argconfig_output_format_json(false)) {
+		json_output_perror(msg);
+		return;
+	}
 
 	perror(msg);
 }
