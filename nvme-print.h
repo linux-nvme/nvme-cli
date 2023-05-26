@@ -143,18 +143,33 @@ void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
 void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
 		enum nvme_print_flags flags);
 
+const char *nvme_ana_state_to_string(enum nvme_ana_state state);
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
-const char *nvme_select_to_string(int sel);
+const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event);
+const char *nvme_feature_lba_type_to_string(__u8 type);
+const char *nvme_feature_temp_sel_to_string(__u8 sel);
+const char *nvme_feature_temp_type_to_string(__u8 type);
 const char *nvme_feature_to_string(enum nvme_features_id feature);
+const char *nvme_feature_wl_hints_to_string(__u8 wh);
+const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid, __u8 type);
+const char *nvme_log_to_string(__u8 lid);
+const char *nvme_nss_hw_error_to_string(__u16 error_code);
+const char *nvme_pel_event_to_string(int type);
+const char *nvme_register_pmr_hsts_to_string(__u8 hsts);
+const char *nvme_register_pmr_pmrszu_to_string(__u8 pmrszu);
+const char *nvme_register_szu_to_string(__u8 szu);
 const char *nvme_register_to_string(int reg);
+const char *nvme_resv_notif_to_string(__u8 type);
+const char *nvme_select_to_string(int sel);
+const char *nvme_sstat_status_to_string(__u16 status);
+const char *nvme_trtype_to_string(__u8 trtype);
+const char *nvme_zone_state_to_string(__u8 state);
+const char *nvme_zone_type_to_string(__u8 cond);
+const char *nvme_plm_window_to_string(__u32 plm);
+const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state);
 
 void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len);
-char *zone_type_to_string(__u8 cond);
-char *zone_state_to_string(__u8 state);
-const char *nvme_pel_event_to_string(int type);
-const char *get_sanitize_log_sstat_status_str(__u16 status);
-const char *nvme_ana_state_to_string(enum nvme_ana_state state);
 void nvme_show_message(bool error, const char *msg, ...);
 void nvme_show_perror(const char *msg);
 

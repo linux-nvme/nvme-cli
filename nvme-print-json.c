@@ -779,7 +779,7 @@ void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 		(status >> NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT) &
 			NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK);
 
-	status_str = get_sanitize_log_sstat_status_str(status);
+	status_str = nvme_sstat_status_to_string(status);
 	sprintf(str, "(%d) %s", status & NVME_SANITIZE_SSTAT_STATUS_MASK,
 		status_str);
 	json_object_add_value_string(sstat, "status", str);
@@ -2160,9 +2160,9 @@ void json_nvme_zns_report_zones(void *report, __u32 descs,
 		json_object_add_value_uint64(zone, "cap",
 					     le64_to_cpu(desc->zcap));
 		json_object_add_value_string(zone, "state",
-			zone_state_to_string(desc->zs >> 4));
+			nvme_zone_state_to_string(desc->zs >> 4));
 		json_object_add_value_string(zone, "type",
-			zone_type_to_string(desc->zt));
+			nvme_zone_type_to_string(desc->zt));
 		json_object_add_value_uint(zone, "attrs", desc->za);
 		json_object_add_value_uint(zone, "attrs_info", desc->zai);
 
