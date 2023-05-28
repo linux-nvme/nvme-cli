@@ -185,6 +185,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		break;
 	case CFG_BOOL: {
 		int tmp = strtol(optarg, &endptr, 0);
+
 		if (errno || tmp < 0 || tmp > 1 || optarg == endptr)
 			ret = argconfig_error("0 or 1", option[index].name, optarg);
 		else
@@ -196,6 +197,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		break;
 	case CFG_SHORT: {
 		unsigned long tmp = strtoul(optarg, &endptr, 0);
+
 		if (errno || tmp >= 1 << 16 || optarg == endptr)
 			ret = argconfig_error("short", option[index].name, optarg);
 		else
@@ -204,6 +206,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	}
 	case CFG_POSITIVE: {
 		uint32_t tmp = strtoul(optarg, &endptr, 0);
+
 		if (errno || optarg == endptr)
 			ret = argconfig_error("word", option[index].name, optarg);
 		else
@@ -318,7 +321,7 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s, struct o
 
 bool argconfig_output_format_json(bool set)
 {
-	static bool output_format_json = false;
+	static bool output_format_json;
 
 	if (set)
 		output_format_json = true;
@@ -428,8 +431,7 @@ out:
 	return ret;
 }
 
-int argconfig_parse_comma_sep_array(char *string, int *val,
-					 unsigned max_length)
+int argconfig_parse_comma_sep_array(char *string, int *val, unsigned int max_length)
 {
 	int ret = 0;
 	unsigned long v;
@@ -475,7 +477,7 @@ int argconfig_parse_comma_sep_array(char *string, int *val,
 }
 
 int argconfig_parse_comma_sep_array_short(char *string, unsigned short *val,
-					  unsigned max_length)
+					  unsigned int max_length)
 {
 	int ret = 0;
 	unsigned long v;
@@ -519,9 +521,8 @@ int argconfig_parse_comma_sep_array_short(char *string, unsigned short *val,
 	}
 }
 
-int argconfig_parse_comma_sep_array_long(char *string,
-					      unsigned long long *val,
-					      unsigned max_length)
+int argconfig_parse_comma_sep_array_long(char *string, unsigned long long *val,
+					 unsigned int max_length)
 {
 	int ret = 0;
 	char *tmp;
