@@ -11,6 +11,11 @@
 #define min(x, y) ((x) > (y) ? (y) : (x))
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
+#ifdef __packed
+#else /* __packed */
+#define __packed __attribute__((__packed__))
+#endif /* __packed */
+
 static inline uint32_t mmio_read32(void *addr)
 {
 	leint32_t *p = addr;
