@@ -14,6 +14,7 @@ nvme_uint128_t le128_to_cpu(__u8 *data)
 {
 	nvme_uint128_t u;
 	nvme_uint128_t tmp;
+
 	memcpy(tmp.bytes, data, 16);
 	u.words[0] = le32_to_cpu(tmp.words[3]);
 	u.words[1] = le32_to_cpu(tmp.words[2]);
@@ -24,8 +25,8 @@ nvme_uint128_t le128_to_cpu(__u8 *data)
 
 long double int128_to_double(__u8 *data)
 {
-	int i;
 	long double result = 0;
+	int i;
 
 	for (i = 0; i < 16; i++) {
 		result *= 256;
@@ -48,8 +49,8 @@ uint64_t int48_to_long(__u8 *data)
 
 static long double uint128_t_to_double(nvme_uint128_t data)
 {
-	int i;
 	long double result = 0;
+	int i;
 
 	for (i = 0; i < sizeof(data.words) / sizeof(*data.words); i++) {
 		result *= 4294967296;
@@ -117,8 +118,8 @@ char *uint128_t_to_l10n_string(nvme_uint128_t val)
 
 char *uint128_t_to_si_string(nvme_uint128_t val, __u32 bytes_per_unit)
 {
-	static char str[40];
 	long double bytes = uint128_t_to_double(val) * bytes_per_unit;
+	static char str[40];
 	const char *suffix = suffix_si_get_ld(&bytes);
 	int n = snprintf(str, sizeof(str), "%.2Lf %sB", bytes, suffix);
 
