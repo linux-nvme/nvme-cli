@@ -467,8 +467,10 @@ static int get_c3_log_page(struct nvme_dev *dev, char *format)
 			goto out;
 		}
 
-		/* check log page guid */
-		/* Verify GUID matches */
+		/*
+		 * check log page guid
+		 * Verify GUID matches
+		 */
 		for (i = 0; i < 16; i++) {
 			if (lat_mon_guid[i] != log_data->log_page_guid[i]) {
 				int j;
@@ -647,7 +649,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 		.cdw12 = 0,
 		.save = 1,
 		.data_len = sizeof(struct feature_latency_monitor),
-		.data = (void*)&buf,
+		.data = (void *)&buf,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = &result,
 	};
@@ -1272,7 +1274,7 @@ static __u8 unsupported_req_guid[C5_GUID_LENGTH] = {
  * @unsupported_req_list:     Unsupported Requirements lists upto 253.
  * @rsvd2:                    Reserved
  * @log_page_version:         indicates the version of the mapping this log page uses.
-                              Shall be set to 0001h
+ *                            Shall be set to 0001h
  * @log_page_guid:            Shall be set to C7BB98B7D0324863BB2C23990E9C722Fh.
 */
 struct __attribute__((__packed__)) unsupported_requirement_log {
@@ -1286,10 +1288,10 @@ struct __attribute__((__packed__)) unsupported_requirement_log {
 
 /*Function declaration for unsupported requirement log page(LID:C5h)*/
 static int ocp_unsupported_requirements_log(int argc, char **argv, struct command *cmd,
-                                            struct plugin *plugin);
+					    struct plugin *plugin);
 
 static int ocp_print_C5_log_normal(struct nvme_dev *dev,
-				                   struct unsupported_requirement_log *log_data)
+				   struct unsupported_requirement_log *log_data)
 {
 	int j;
 	printf("Unsupported Requirement-C5 Log Page Data- \n");
@@ -1328,10 +1330,9 @@ static void ocp_print_C5_log_json(struct unsupported_requirement_log *log_data)
 	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
 	char guid_buf[C5_GUID_LENGTH];
 	char *guid = guid_buf;
-	memset((void*)guid, 0, C5_GUID_LENGTH);
-	for (j = C5_GUID_LENGTH - 1; j >= 0; j--){
+	memset((void *)guid, 0, C5_GUID_LENGTH);
+	for (j = C5_GUID_LENGTH - 1; j >= 0; j--)
 		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
-	}
 	json_object_add_value_string(root, "Log page GUID", guid_buf);
 
 	json_print_object(root, NULL);
@@ -1359,17 +1360,17 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 		return fmt;
 	}
 
-	if ((data = (__u8 *) malloc(sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN)) == NULL) {
+	data = (__u8 *)malloc(sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
+	if (!data) {
 		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof (__u8) * C5_UNSUPPORTED_REQS_LEN);
+	memset(data, 0, sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
 
 	ret = nvme_get_log_simple(dev_fd(dev), C5_UNSUPPORTED_REQS_OPCODE,
-							  C5_UNSUPPORTED_REQS_LEN, data);
-
-	if (ret == 0) {
-		log_data = (struct unsupported_requirement_log*)data;
+				  C5_UNSUPPORTED_REQS_LEN, data);
+	if (!ret) {
+		log_data = (struct unsupported_requirement_log *)data;
 
 		/* check log page version */
 		if (log_data->log_page_version != C5_UNSUPPORTED_REQS_LOG_VERSION) {
@@ -1378,20 +1379,20 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 			goto out;
 		}
 
-		/* check log page guid */
-		/* Verify GUID matches */
-		for (i=0; i<16; i++) {
+		/*
+		 * check log page guid
+		 * Verify GUID matches
+		 */
+		for (i = 0; i < 16; i++) {
 			if (unsupported_req_guid[i] != log_data->log_page_guid[i]) {
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C5 Log Page data\n");
 				int j;
 				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
-				for (j = 0; j<16; j++) {
+				for (j = 0; j < 16; j++)
 					fprintf(stderr, "%x", unsupported_req_guid[j]);
-				}
 				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
-				for (j = 0; j<16; j++) {
+				for (j = 0; j < 16; j++)
 					fprintf(stderr, "%x", log_data->log_page_guid[j]);
-				}
 				fprintf(stderr, "\n");
 
 				ret = -1;
@@ -1421,7 +1422,7 @@ out:
 
 
 static int ocp_unsupported_requirements_log(int argc, char **argv, struct command *cmd,
-                                            struct plugin *plugin)
+					    struct plugin *plugin)
 {
 	const char *desc = "Retrieve unsupported requirements log data.";
 	struct nvme_dev *dev;
@@ -1553,9 +1554,9 @@ static void ocp_print_c1_log_json(struct ocp_error_recovery_log_page *log_data)
 	json_object_add_value_int(root, "Device Recovery Action 2 Timeout", log_data->device_recover_action_2_timeout);
 	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
 
-	memset((void*)guid, 0, 64);
-	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	memset((void *)guid, 0, 64);
+	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"", (uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	json_print_object(root, NULL);
@@ -1573,7 +1574,7 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 	int ret = 0;
 	int fmt = -1;
 	__u8 *data;
-	int i,j;
+	int i, j;
 	struct ocp_error_recovery_log_page *log_data;
 
 	fmt = validate_output_format(format);
@@ -1582,15 +1583,16 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 		return fmt;
 	}
 
-	if ((data = (__u8 *) malloc(sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN)) == NULL) {
+	data = (__u8 *)malloc(sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
+	if (!data) {
 		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof (__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
+	memset(data, 0, sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
 
 	ret = nvme_get_log_simple(dev_fd(dev), C1_ERROR_RECOVERY_OPCODE, C1_ERROR_RECOVERY_LOG_BUF_LEN, data);
 
-	if (ret == 0) {
+	if (!ret) {
 		log_data = (struct ocp_error_recovery_log_page *)data;
 
 		/* check log page version */
@@ -1600,19 +1602,19 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 			goto out;
 		}
 
-		/* check log page guid */
-		/* Verify GUID matches */
-		for (i=0; i<16; i++) {
+		/*
+		 * check log page guid
+		 * Verify GUID matches
+		 */
+		for (i = 0; i < 16; i++) {
 			if (error_recovery_guid[i] != log_data->log_page_guid[i]) {
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C1 Log Page data\n");
 				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
-				for (j = 0; j<16; j++) {
+				for (j = 0; j < 16; j++)
 					fprintf(stderr, "%x", error_recovery_guid[j]);
-				}
 				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
-				for (j = 0; j<16; j++) {
+				for (j = 0; j < 16; j++)
 					fprintf(stderr, "%x", log_data->log_page_guid[j]);
-				}
 				fprintf(stderr, "\n");
 
 				ret = -1;
@@ -1769,9 +1771,9 @@ static void ocp_print_c4_log_json(struct ocp_device_capabilities_log_page *log_d
 	}
 	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
 
-	memset((void*)guid, 0, 64);
-	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
-			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	memset((void *)guid, 0, 64);
+	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"", (uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
 	json_print_object(root, NULL);
@@ -1789,7 +1791,7 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 	int ret = 0;
 	int fmt = -1;
 	__u8 *data;
-	int i,j;
+	int i, j;
 	struct ocp_device_capabilities_log_page *log_data;
 
 	fmt = validate_output_format(format);
@@ -1798,7 +1800,8 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 		return fmt;
 	}
 
-	if ((data = (__u8 *) malloc(sizeof(__u8) * C4_DEV_CAP_REQ_LEN)) == NULL) {
+	data = (__u8 *)malloc(sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
+	if (!data) {
 		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
 		return -1;
 	}
@@ -1806,7 +1809,7 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 
 	ret = nvme_get_log_simple(dev_fd(dev), C4_DEV_CAP_REQ_OPCODE, C4_DEV_CAP_REQ_LEN, data);
 
-	if (ret == 0) {
+	if (!ret) {
 		log_data = (struct ocp_device_capabilities_log_page *)data;
 
 		/* check log page version */
@@ -1816,19 +1819,19 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 			goto out;
 		}
 
-		/* check log page guid */
-		/* Verify GUID matches */
-		for (i=0; i<16; i++) {
+		/*
+		 * check log page guid
+		 * Verify GUID matches
+		 */
+		for (i = 0; i < 16; i++) {
 			if (dev_cap_req_guid[i] != log_data->log_page_guid[i]) {
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C4 Log Page data\n");
 				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
-				for (j = 0; j<16; j++) {
+				for (j = 0; j < 16; j++)
 					fprintf(stderr, "%x", dev_cap_req_guid[j]);
-				}
 				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
-				for (j = 0; j<16; j++) {
+				for (j = 0; j < 16; j++)
 					fprintf(stderr, "%x", log_data->log_page_guid[j]);
-				}
 				fprintf(stderr, "\n");
 
 				ret = -1;
