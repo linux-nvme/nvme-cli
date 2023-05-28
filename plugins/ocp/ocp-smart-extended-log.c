@@ -26,7 +26,7 @@ static __u8 scao_guid[C0_GUID_LENGTH] = {
 	0xC9, 0x14, 0xD5, 0xAF
 };
 
-typedef enum {
+enum {
 	SCAO_PMUW	= 0,	/* Physical media units written */
 	SCAO_PMUR	= 16,	/* Physical media units read */
 	SCAO_BUNBR	= 32,	/* Bad user nand blocks raw */
@@ -62,7 +62,7 @@ typedef enum {
 	SCAO_PSCC	= 200,	/* Power State Change Count */
 	SCAO_LPV	= 494,	/* Log page version */
 	SCAO_LPG	= 496,	/* Log page GUID */
-} SMART_CLOUD_ATTRIBUTE_OFFSETS;
+};
 
 static void ocp_print_C0_log_normal(void *data)
 {
@@ -71,10 +71,10 @@ static void ocp_print_C0_log_normal(void *data)
 
 	printf("SMART Cloud Attributes :-\n");
 
-	printf("  Physical media units written -   	        %"PRIu64" %"PRIu64"\n",
+	printf("  Physical media units written -		%"PRIu64" %"PRIu64"\n",
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW + 8] & 0xFFFFFFFFFFFFFFFF),
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
-	printf("  Physical media units read    - 	        %"PRIu64" %"PRIu64"\n",
+	printf("  Physical media units read    -		%"PRIu64" %"PRIu64"\n",
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8] & 0xFFFFFFFFFFFFFFFF),
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
 	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
@@ -105,7 +105,7 @@ static void ocp_print_C0_log_normal(void *data)
 	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MNUDEC]));
 	printf("  Number of Thermal throttling events		%d\n",
 	       (__u8)log_data[SCAO_NTTE]);
-	printf("  Current throttling status		  	0x%x\n",
+	printf("  Current throttling status			0x%x\n",
 	       (__u8)log_data[SCAO_CTS]);
 	printf("  PCIe correctable error count			%"PRIu64"\n",
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PCEC]));
@@ -286,14 +286,12 @@ static int get_c0_log_page(int fd, char *format)
 
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C0 Log Page data\n");
 				fprintf(stderr, "ERROR : OCP : Expected GUID:  0x");
-				for (j = 0; j < 16; j++) {
+				for (j = 0; j < 16; j++)
 					fprintf(stderr, "%x", scao_guid[j]);
-				}
 
 				fprintf(stderr, "\nERROR : OCP : Actual GUID:    0x");
-				for (j = 0; j < 16; j++) {
+				for (j = 0; j < 16; j++)
 					fprintf(stderr, "%x", data[SCAO_LPG + j]);
-				}
 				fprintf(stderr, "\n");
 
 				ret = -1;
