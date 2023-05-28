@@ -81,24 +81,24 @@ int base64_decode(const char *src, int srclen, unsigned char *dst)
 	int i, bits = 0;
 	unsigned char *bp = dst;
 
-        for (i = 0; i < srclen; i++) {
-                const char *p = strchr(base64_table, src[i]);
+	for (i = 0; i < srclen; i++) {
+		const char *p = strchr(base64_table, src[i]);
 
-                if (src[i] == '=') {
-                        ac = (ac << 6);
+		if (src[i] == '=') {
+			ac = (ac << 6);
 			bits += 6;
 			if (bits >= 8)
 				bits -= 8;
-                        continue;
-                }
-                if (p == NULL || src[i] == 0)
-                        return -EINVAL;
-                ac = (ac << 6) | (p - base64_table);
-                bits += 6;
-                if (bits >= 8) {
-                        bits -= 8;
-                        *bp++ = (unsigned char)(ac >> bits);
-                }
+			continue;
+		}
+		if (!p || !src[i])
+			return -EINVAL;
+		ac = (ac << 6) | (p - base64_table);
+		bits += 6;
+		if (bits >= 8) {
+			bits -= 8;
+			*bp++ = (unsigned char)(ac >> bits);
+		}
 	}
 	if (ac && ((1 << bits) - 1))
 		return -EAGAIN;
