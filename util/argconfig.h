@@ -169,13 +169,11 @@ void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *options);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options);
-int argconfig_parse_comma_sep_array(char *string, int *ret,
-					 unsigned max_length);
+int argconfig_parse_comma_sep_array(char *string, int *ret, unsigned int max_length);
 int argconfig_parse_comma_sep_array_short(char *string, unsigned short *ret,
-					  unsigned max_length);
-int argconfig_parse_comma_sep_array_long(char *string,
-					      unsigned long long *ret,
-					      unsigned max_length);
+					  unsigned int max_length);
+int argconfig_parse_comma_sep_array_long(char *string, unsigned long long *ret,
+					 unsigned int max_length);
 int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val);
 
 void print_word_wrapped(const char *s, int indent, int start, FILE *stream);
