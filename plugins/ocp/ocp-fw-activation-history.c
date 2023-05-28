@@ -22,7 +22,7 @@ static const unsigned char ocp_fw_activation_history_guid[16] = {
 	0xac, 0xf3, 0x1c, 0xd1
 };
 
-struct __attribute__ ((packed)) fw_activation_history_entry {
+struct __packed fw_activation_history_entry {
 	__u8 ver_num;
 	__u8 entry_length;
 	__u16 reserved1;
@@ -38,7 +38,7 @@ struct __attribute__ ((packed)) fw_activation_history_entry {
 	__u8 reserved3[14];
 };
 
-struct __attribute__ ((packed)) fw_activation_history {
+struct __packed fw_activation_history {
 	__u8 log_id;
 	__u8 reserved1[3];
 	__u32 valid_entries;
