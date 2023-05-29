@@ -168,3 +168,29 @@ int convert_ts(time_t time, char *ts_buf)
 
 	return 0;
 }
+
+void util_spinner(const char *disp_name, float percent)
+{
+    static const char dash[51] = {[0 ... 49] = '=', '\0'};
+    static const char space[51] = {[0 ... 49] = ' ', '\0'};
+    static const char spin[] = {'-', '\\', '|', '/' };
+    static int i = 0, progress = 0;
+
+    if (percent < 0) {
+        percent = 0;
+    } else if (percent > 1) {
+        percent =1;
+    }
+
+    progress = (int)(percent * 100.0);
+
+    if (progress < 2)
+        printf("\r%s [%c%.*s] %3d%%", (disp_name ? disp_name : ""), spin[i % 4], 49, space, progress);
+    else if (progress < 100)
+        printf("\r%s [%.*s%c%.*s] %3d%%", (disp_name ? disp_name : ""), progress / 2 -1, dash, spin[i % 4], 50 - progress / 2, space, progress);
+    else
+        printf("\r%s [%.*s] %3d%%\n", (disp_name ? disp_name : ""), 50, dash, 100);
+    i++;
+    fflush(stdout);
+}
+

@@ -1221,25 +1221,6 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 
 }
 
-/* Display progress (incoming 0->1.0) */
-static void progress_runner(char* name, float progress)
-{
-	const size_t barWidth = 70;
-	size_t i, pos;
-
-	fprintf(stdout, "%s: [", name);
-	pos = barWidth * progress;
-	for (i = 0; i < barWidth; ++i) {
-		if (i <= pos)
-			fprintf(stdout, "=");
-		else
-			fprintf(stdout, " ");
-	}
-
-	fprintf(stdout, "] %d %%\r",(int)(progress * 100.0));
-	fflush(stdout);
-}
-
 static inline int sfx_convert_ts(time_t time, char *ts_buf)
 {
     return convert_ts(time, ts_buf);
@@ -1362,7 +1343,7 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)
 		length--;
 
 		if (!(offset % (log_len / 100)) || (offset == log_len)) {
-			progress_runner("Parse", (float) (offset) / (float) (log_len));
+			util_spinner("Parse", (float) (offset) / (float) (log_len));
 		}
 	}
 
@@ -1477,7 +1458,7 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
 
 		offset  += args.len;
 		length  -= args.len;
-		progress_runner("Dump", (float) (offset) / (float) (log_len));
+		util_spinner("Parse", (float) (offset) / (float) (log_len));
 	}
 
 	printf("\nDump-evtlog: Success\n");

@@ -44,4 +44,16 @@ const char *util_fw_to_string(char *c);
  * @return 0 success
  */
 int convert_ts(time_t time, char *ts_buf);
+
+/**
+ * @brief print once a progress of spinner to stdout
+ *        the output will be looks like if disp_name is "LogDump" and percent is 0.5
+ *        LogDump [========================-                         ]  50%
+
+ *
+ * @param disp_name, const string displayed before spiner
+ * @param percent [0, 1.0] about the progress
+ *
+ */
+void util_spinner(const char *disp_name, float percent);
 #endif /* _MISC_H */
