@@ -966,6 +966,13 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		}
 	}
 
+	if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		fprintf(stderr,
+			"avoiding connect to %s, use nvme discover instead\n",
+			NVME_DISC_SUBSYS_NAME);
+		return -EINVAL;
+	}
+
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
