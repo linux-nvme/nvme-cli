@@ -73,7 +73,6 @@ void json_endurance_group_event_agg_log(
 	struct nvme_aggregate_predictable_lat_event *endurance_log,
 	__u64 log_entries);
 void json_lba_status_log(void *lba_status);
-void add_bitmap(int i, __u8 seb, struct json_object *root, int json_flag);
 void json_persistent_event_log(void *pevent_log_info, __u32 size);
 void json_predictable_latency_event_agg_log(
 	struct nvme_aggregate_predictable_lat_event *pea_log,
@@ -138,7 +137,6 @@ void json_connect_msg(nvme_ctrl_t c);
 #define json_resv_notif_log(resv)
 #define json_endurance_group_event_agg_log(endurance_log, log_entries)
 #define json_lba_status_log(lba_status)
-#define add_bitmap(i, seb, root, json_flag)
 #define json_persistent_event_log(pevent_log_info, size)
 #define json_predictable_latency_event_agg_log(pea_log, log_entries)
 #define json_predictable_latency_per_nvmset(plpns_log, nvmset_id)

@@ -267,6 +267,18 @@ static void nvme_show_persistent_event_entry_ehai(__u8 ehai)
 		"Event not associated with any port and PELPID does not apply");
 }
 
+static void add_bitmap(int i, __u8 seb)
+{
+        for (int bit = 0; bit < 8; bit++) {
+                if (nvme_pel_event_to_string(bit + i * 8)) {
+			if (nvme_pel_event_to_string(bit + i * 8))
+				if ((seb >> bit) & 0x1)
+					printf("        Support %s\n",
+					       nvme_pel_event_to_string(bit + i * 8));
+		}
+	}
+}
+
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	enum nvme_print_flags flags)
@@ -336,7 +348,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->seb[i] == 0)
 				continue;
-			add_bitmap(i, pevent_log_head->seb[i], NULL, 0);
+			add_bitmap(i, pevent_log_head->seb[i]);
 		}
 	} else {
 		printf("No log data can be shown with this log len at least " \
