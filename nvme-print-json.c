@@ -871,25 +871,18 @@ void json_predictable_latency_event_agg_log(
 	json_free_object(root);
 }
 
-void add_bitmap(int i, __u8 seb, struct json_object *root, int json_flag)
+static void json_add_bitmap(int i, __u8 seb, struct json_object *root)
 {
 	char evt_str[50];
 	char key[128];
 
 	for (int bit = 0; bit < 8; bit++) {
 		if (nvme_pel_event_to_string(bit + i * 8)) {
-			if (json_flag == 1) {
-				sprintf(key, "bitmap_%x", (bit + i * 8));
-				if ((seb >> bit) & 0x1)
-					snprintf(evt_str, sizeof(evt_str), "Support %s",
-						nvme_pel_event_to_string(bit + i * 8));
-				json_object_add_value_string(root, key, evt_str);
-			} else {
-				if (nvme_pel_event_to_string(bit + i * 8))
-					if ((seb >> bit) & 0x1)
-						printf("	Support %s\n",
-							nvme_pel_event_to_string(bit + i * 8));
-			}
+			sprintf(key, "bitmap_%x", (bit + i * 8));
+			if ((seb >> bit) & 0x1)
+				snprintf(evt_str, sizeof(evt_str), "Support %s",
+					 nvme_pel_event_to_string(bit + i * 8));
+			json_object_add_value_string(root, key, evt_str);
 		}
 	}
 }
@@ -965,7 +958,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->seb[i] == 0)
 				continue;
-			add_bitmap(i, pevent_log_head->seb[i], root, 1);
+			json_add_bitmap(i, pevent_log_head->seb[i], root);
 		}
 	} else {
 		printf("No log data can be shown with this log len at least " \
