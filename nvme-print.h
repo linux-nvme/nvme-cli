@@ -63,9 +63,6 @@ void nvme_show_predictable_latency_event_agg_log(
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	enum nvme_print_flags flags);
-void json_endurance_group_event_agg_log(
-	struct nvme_aggregate_predictable_lat_event *endurance_log,
-	__u64 log_entries);
 void nvme_show_endurance_group_event_agg_log(
 	struct nvme_aggregate_predictable_lat_event *endurance_log,
 	__u64 log_entries, __u32 size, const char *devname,
