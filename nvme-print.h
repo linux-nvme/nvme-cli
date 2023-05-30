@@ -148,6 +148,10 @@ void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
 void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
 		enum nvme_print_flags flags);
 
+void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
+			     enum nvme_print_flags flags);
+void nvme_show_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags);
+
 const char *nvme_ana_state_to_string(enum nvme_ana_state state);
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
 const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event);

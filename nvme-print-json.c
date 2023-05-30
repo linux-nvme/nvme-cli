@@ -2743,8 +2743,8 @@ void json_simple_topology(nvme_root_t r)
 	json_free_object(root);
 }
 
-/* fabrics.c */
-void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
+void json_discovery_log(struct nvmf_discovery_log *log, int numrec,
+			enum nvme_print_flags flags)
 {
 	struct json_object *root;
 	struct json_object *entries;
@@ -2798,7 +2798,7 @@ void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 	json_free_object(root);
 }
 
-void json_connect_msg(nvme_ctrl_t c)
+void json_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags)
 {
 	struct json_object *root;
 
