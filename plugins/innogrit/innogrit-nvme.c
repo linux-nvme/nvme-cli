@@ -146,11 +146,13 @@ static int nvme_vucmd(int fd, unsigned char opcode, unsigned int cdw12,
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = opcode;
+	cmd.cdw2  = 0x69677673;
+	cmd.cdw10 = data_len / 4;
 	cmd.cdw12 = cdw12;
 	cmd.cdw13 = cdw13;
 	cmd.cdw14 = cdw14;
 	cmd.cdw15 = cdw15;
-	cmd.nsid = 0;
+	cmd.nsid = 0xffffffff;
 	cmd.addr = (__u64)(__u64)(uintptr_t)data;
 	cmd.data_len = data_len;
 	return nvme_submit_admin_passthru(fd, &cmd, NULL);
