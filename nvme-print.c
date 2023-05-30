@@ -1634,9 +1634,10 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 	}
 }
 
-void nvme_show_single_property(int offset, uint64_t value64, int human)
+void nvme_show_single_property(int offset, uint64_t value64, enum nvme_print_flags flags)
 {
 	uint32_t value32;
+	int human = flags & VERBOSE;
 
 	if (!human) {
 		if (nvme_is_64bit_reg(offset))
@@ -2119,7 +2120,7 @@ static void nvme_show_id_ctrl_unvmcap(__u8 *unvmcap)
 	printf("\tUnallocated NVM Capacity (UNVMCAP)\n\n");
 }
 
-void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, enum nvme_print_flags flags)
 {
 	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
 	__u32 asz = (rpmbs & 0xFF000000) >> 24;
@@ -3054,7 +3055,7 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 		nvme_show_id_ctrl_unvmcap(ctrl->unvmcap);
 	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
 	if (human)
-		nvme_show_id_ctrl_rpmbs(ctrl->rpmbs);
+		nvme_show_id_ctrl_rpmbs(ctrl->rpmbs, flags);
 	printf("edstt     : %d\n", le16_to_cpu(ctrl->edstt));
 	printf("dsto      : %d\n", ctrl->dsto);
 	printf("fwug      : %d\n", ctrl->fwug);
@@ -3221,11 +3222,12 @@ void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	}
 }
 
-void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
+void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl,
+			   enum nvme_print_flags flags)
 {
-	if (mode & BINARY)
+	if (flags & BINARY)
 		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
-	else if (mode & JSON)
+	else if (flags & JSON)
 		return json_nvme_zns_id_ctrl(ctrl);
 
 	printf("NVMe ZNS Identify Controller:\n");
@@ -3284,7 +3286,8 @@ static void nvme_show_zns_id_ns_zrwacap(__u8 zrwacap)
 }
 
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
-	struct nvme_id_ns *id_ns, unsigned long flags)
+			 struct nvme_id_ns *id_ns,
+			 enum nvme_print_flags flags)
 {
 	int human = flags & VERBOSE, vs = flags & VS;
 	uint8_t lbaf;
@@ -3383,7 +3386,7 @@ void nvme_show_list_ns(struct nvme_ns_list *ns_list, enum nvme_print_flags flags
 }
 
 void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
-	unsigned long flags)
+			   enum nvme_print_flags flags)
 {
 	uint16_t nrzid;
 	int i;
@@ -3455,8 +3458,9 @@ static void nvme_show_zns_report_zone_attributes(__u8 za, __u8 zai)
 }
 
 void nvme_show_zns_report_zones(void *report, __u32 descs,
-	__u8 ext_size, __u32 report_size, unsigned long flags,
-	struct json_object *zone_list)
+				__u8 ext_size, __u32 report_size,
+				struct json_object *zone_list,
+				enum nvme_print_flags flags)
 {
 	struct nvme_zone_report *r = report;
 	struct nvme_zns_desc *desc;
@@ -3743,7 +3747,7 @@ void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_
 	}
 }
 
-void nvme_show_id_iocs(struct nvme_id_iocs *iocs)
+void nvme_show_id_iocs(struct nvme_id_iocs *iocs, enum nvme_print_flags flags)
 {
 	__u16 i;
 
@@ -3993,7 +3997,10 @@ void nvme_print_effects_log_segment(int admin, int a, int b, struct nvme_cmd_eff
 	free(stream_location);
 }
 
-void nvme_print_effects_log_page(enum nvme_csi csi, struct nvme_cmd_effects_log *effects, int flags) {
+void nvme_print_effects_log_page(enum nvme_csi csi,
+				 struct nvme_cmd_effects_log *effects,
+				 enum nvme_print_flags flags)
+{
 	int human = flags & VERBOSE;
 
 	switch (csi) {
@@ -4018,7 +4025,7 @@ void nvme_print_effects_log_page(enum nvme_csi csi, struct nvme_cmd_effects_log 
 }
 
 void nvme_print_effects_log_pages(struct list_head *list,
-			   int flags)
+				  enum nvme_print_flags flags)
 {
 	if (flags & JSON)
 		return json_effects_log_list(list);
@@ -4224,7 +4231,7 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 }
 
 void nvme_show_ana_log(struct nvme_ana_log *ana_log, const char *devname,
-			enum nvme_print_flags flags, size_t len)
+		       size_t len, enum nvme_print_flags flags)
 {
 	int offset = sizeof(struct nvme_ana_log);
 	struct nvme_ana_log *hdr = ana_log;
@@ -4548,7 +4555,8 @@ const char *nvme_feature_lba_type_to_string(__u8 type)
 	}
 }
 
-void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
+void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
+			 enum nvme_print_flags flags)
 {
 	int i, j;
 
@@ -4913,7 +4921,7 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		field = result & 0x0000003f;
 		printf("\tNumber of LBA Ranges (NUM): %u\n", field + 1);
 		if (buf)
-			nvme_show_lba_range((struct nvme_lba_range_type *)buf, field);
+			nvme_show_lba_range((struct nvme_lba_range_type *)buf, field, 0);
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
 		field = (result & 0x00300000) >> 20;
@@ -5448,8 +5456,9 @@ static void nvme_show_simple_topology(nvme_root_t r,
 	}
 }
 
-void nvme_show_topology(nvme_root_t r, enum nvme_print_flags flags,
-			enum nvme_cli_topo_ranking ranking)
+void nvme_show_topology(nvme_root_t r,
+			enum nvme_cli_topo_ranking ranking,
+			enum nvme_print_flags flags)
 {
 	if (flags & JSON)
 		json_simple_topology(r);

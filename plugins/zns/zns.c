@@ -995,7 +995,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 
 		if (!err)
 			nvme_show_zns_report_zones(report, nr_zones_chunks, 
-					zdes, log_len, flags, zone_list);
+					zdes, log_len, zone_list, flags);
 
 		nr_zones_retrieved += nr_zones_chunks;
 		offset = le64_to_cpu(report->entries[nr_zones_chunks-1].zslba) + zsze;
