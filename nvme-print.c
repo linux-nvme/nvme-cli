@@ -5508,3 +5508,80 @@ void nvme_show_perror(const char *msg)
 
 	perror(msg);
 }
+
+static void print_discovery_log(struct nvmf_discovery_log *log, int numrec,
+				enum nvme_print_flags flags)
+{
+	int i;
+
+	printf("\nDiscovery Log Number of Records %d, Generation counter %"PRIu64"\n",
+	       numrec, le64_to_cpu(log->genctr));
+
+	for (i = 0; i < numrec; i++) {
+		struct nvmf_disc_log_entry *e = &log->entries[i];
+
+		printf("=====Discovery Log Entry %d======\n", i);
+		printf("trtype:  %s\n", nvmf_trtype_str(e->trtype));
+		printf("adrfam:  %s\n",
+			strlen(e->traddr) ?
+			nvmf_adrfam_str(e->adrfam) : "");
+		printf("subtype: %s\n", nvmf_subtype_str(e->subtype));
+		printf("treq:    %s\n", nvmf_treq_str(e->treq));
+		printf("portid:  %d\n", le16_to_cpu(e->portid));
+		printf("trsvcid: %s\n", e->trsvcid);
+		printf("subnqn:  %s\n", e->subnqn);
+		printf("traddr:  %s\n", e->traddr);
+		printf("eflags:  %s\n",
+		       nvmf_eflags_str(le16_to_cpu(e->eflags)));
+
+		switch (e->trtype) {
+		case NVMF_TRTYPE_RDMA:
+			printf("rdma_prtype: %s\n",
+				nvmf_prtype_str(e->tsas.rdma.prtype));
+			printf("rdma_qptype: %s\n",
+				nvmf_qptype_str(e->tsas.rdma.qptype));
+			printf("rdma_cms:    %s\n",
+				nvmf_cms_str(e->tsas.rdma.cms));
+			printf("rdma_pkey: 0x%04x\n",
+				le16_to_cpu(e->tsas.rdma.pkey));
+			break;
+		case NVMF_TRTYPE_TCP:
+			printf("sectype: %s\n",
+				nvmf_sectype_str(e->tsas.tcp.sectype));
+			break;
+		}
+	}
+}
+
+void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
+			     enum nvme_print_flags flags)
+{
+	if (flags & BINARY) {
+		d_raw((unsigned char *)log,
+		      sizeof(struct nvmf_discovery_log) +
+		      numrec * sizeof(struct nvmf_disc_log_entry));
+		return;
+	}
+
+	if (flags & JSON) {
+		json_discovery_log(log, numrec, flags);
+		return;
+	}
+
+	print_discovery_log(log, numrec, flags);
+}
+
+static void print_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags)
+{
+	printf("device: %s\n", nvme_ctrl_get_name(c));
+}
+
+void nvme_show_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags)
+{
+	if (flags & JSON) {
+		json_connect_msg(c, flags);
+		return;
+	}
+
+	print_connect_msg(c, flags);
+}

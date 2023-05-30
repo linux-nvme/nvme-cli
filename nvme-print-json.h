@@ -85,8 +85,9 @@ void json_output_message(bool error, const char *msg, va_list ap);
 void json_output_perror(const char *msg);
 
 /* fabrics.c */
-void json_discovery_log(struct nvmf_discovery_log *log, int numrec);
-void json_connect_msg(nvme_ctrl_t c);
+void json_discovery_log(struct nvmf_discovery_log *log, int numrec,
+			enum nvme_print_flags flags);
+void json_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags);
 
 #else /* !CONFIG_JSONC */
 
@@ -147,8 +148,8 @@ void json_connect_msg(nvme_ctrl_t c);
 #define json_output_perror(msg)
 
 /* fabrics.c */
-#define json_discovery_log(log, numrec)
-#define json_connect_msg(c)
+#define json_discovery_log(log, numrec, flags)
+#define json_connect_msg(c, flags)
 
 #endif /* !CONFIG_JSONC */
 
