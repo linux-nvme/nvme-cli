@@ -10,7 +10,6 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "nvme-print.h"
-#include "nvme-print-json.h"
 #include "nvme-models.h"
 #include "util/suffix.h"
 #include "util/types.h"
@@ -42,6 +41,9 @@ do {							\
 static struct print_ops *nvme_print_ops(enum nvme_print_flags flags)
 {
 	struct print_ops *ops = NULL;
+
+	if (flags & JSON)
+		ops = nvme_get_json_print_ops(flags);
 
 	return ops;
 }
@@ -149,9 +151,6 @@ void nvme_show_predictable_latency_per_nvmset(
 	if (flags & BINARY)
 		return d_raw((unsigned char *)plpns_log,
 			sizeof(*plpns_log));
-	if (flags & JSON)
-		return json_predictable_latency_per_nvmset(plpns_log,
-			nvmset_id);
 
 	printf("Predictable Latency Per NVM Set Log for device: %s\n",
 		devname);
@@ -191,9 +190,6 @@ void nvme_show_predictable_latency_event_agg_log(
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)pea_log, size);
-	if (flags & JSON)
-		return json_predictable_latency_event_agg_log(pea_log,
-			log_entries);
 
 	num_entries = le64_to_cpu(pea_log->num_entries);
 	printf("Predictable Latency Event Aggregate Log for"\
@@ -332,8 +328,6 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)pevent_log_info, size);
-	if (flags & JSON)
-		return json_persistent_event_log(pevent_log_info, size);
 
 	offset = sizeof(*pevent_log_head);
 
@@ -583,9 +577,6 @@ void nvme_show_endurance_group_event_agg_log(
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)endurance_log, size);
-	if (flags & JSON)
-		return json_endurance_group_event_agg_log(endurance_log,
-			log_entries);
 
 	printf("Endurance Group Event Aggregate Log for"\
 		" device: %s\n", devname);
@@ -612,8 +603,6 @@ void nvme_show_lba_status_log(void *lba_status, __u32 size,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)lba_status, size);
-	if (flags & JSON)
-		return json_lba_status_log(lba_status);
 
 	hdr = lba_status;
 	printf("LBA Status Log for device: %s\n", devname);
@@ -668,8 +657,6 @@ void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)resv, sizeof(*resv));
-	if (flags & JSON)
-		return json_resv_notif_log(resv);
 
 	printf("Reservation Notif Log for device: %s\n", devname);
 	printf("Log Page Count				: %"PRIx64"\n",
@@ -715,8 +702,6 @@ void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fi
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)fid_log, sizeof(*fid_log));
-	if (flags & JSON)
-		return json_fid_support_effects_log(fid_log);
 
 	printf("FID Supports Effects Log for device: %s\n", devname);
 	printf("Admin Command Set\n");
@@ -766,8 +751,6 @@ void nvme_show_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_l
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)mi_cmd_log, sizeof(*mi_cmd_log));
-	if (flags & JSON)
-		return json_mi_cmd_support_effects_log(mi_cmd_log);
 
 	printf("MI Commands Support Effects Log for device: %s\n", devname);
 	printf("Admin Command Set\n");
@@ -793,8 +776,6 @@ void nvme_show_boot_part_log(void *bp_log, const char *devname,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)bp_log, size);
-	if (flags & JSON)
-		return json_boot_part_log(bp_log);
 
 	hdr = bp_log;
 	printf("Boot Partition Log for device: %s\n", devname);
@@ -813,8 +794,6 @@ void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)mus_log, sizeof(*mus_log));
-	else if (flags & JSON)
-		return json_media_unit_stat_log(mus_log);
 
 	printf("Number of Media Unit Status Descriptors: %u\n", nmu);
 	printf("Number of Channels: %u\n", le16_to_cpu(mus_log->cchans));
@@ -865,8 +844,6 @@ void nvme_show_fdp_configs(struct nvme_fdp_config_log *log, size_t len,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)log, len);
-	if (flags & JSON)
-		return json_nvme_fdp_configs(log, len);
 
 	n = le16_to_cpu(log->n) + 1;
 
@@ -903,8 +880,6 @@ void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)log, len);
-	if (flags & JSON)
-		return json_nvme_fdp_usage(log, len);
 
 	uint16_t nruh = le16_to_cpu(log->nruh);
 
@@ -925,8 +900,6 @@ void nvme_show_fdp_stats(struct nvme_fdp_stats_log *log,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char*)log, sizeof(*log));
-	if (flags & JSON)
-		return json_nvme_fdp_stats(log);
 
 	printf("Host Bytes with Metadata Written (HBMW): %s\n",
 		uint128_t_to_l10n_string(le128_to_cpu(log->hbmw)));
@@ -961,8 +934,6 @@ void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char*)log, sizeof(*log));
-	if (flags & JSON)
-		return json_nvme_fdp_events(log);
 
 	uint32_t n = le32_to_cpu(log->n);
 
@@ -1011,8 +982,6 @@ void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)status, len);
-	if (flags & JSON)
-		return json_nvme_fdp_ruh_status(status, len);
 
 	uint16_t nruhsd = le16_to_cpu(status->nruhsd);
 
@@ -1041,8 +1010,6 @@ void nvme_show_supported_cap_config_log(
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)cap, sizeof(*cap));
-	else if (flags & JSON)
-		return json_supported_cap_config_log(cap);
 
 	sccn = cap->sccn;
 	printf("Number of Supported Capacity Configurations: %u\n", sccn);
@@ -1160,8 +1127,6 @@ void nvme_show_subsystem_list(nvme_root_t r, bool show_ana,
 {
 	nvme_print(print_nvme_subsystem_list, flags, r, show_ana);
 
-	if (flags & JSON)
-		return json_print_nvme_subsystem_list(r, show_ana);
 	nvme_show_subsystem(r, show_ana);
 }
 
@@ -1554,8 +1519,6 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)bar, reg_size);
-	if (flags & JSON)
-		return json_ctrl_registers(bar);
 
 	cap = mmio_read64(bar + NVME_REG_CAP);
 	vs = mmio_read32(bar + NVME_REG_VS);
@@ -1831,9 +1794,6 @@ void nvme_show_status(int status)
 		ops->show_status(status);
 		return;
 	}
-
-	if (argconfig_output_format_json(false))
-		return json_output_status(status);
 
 	/*
 	 * Callers should be checking for negative values first, but provide a
@@ -2738,8 +2698,6 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
-	if (flags & JSON)
-		return json_nvme_id_ns(ns, cap_only);
 
 	if (!cap_only) {
 		printf("NVME Identify Namespace %d:\n", nsid);
@@ -2884,8 +2842,6 @@ void nvme_show_cmd_set_independent_id_ns(
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
-	if (flags & JSON)
-		return json_nvme_cmd_set_independent_id_ns(ns);
 
 	printf("NVME Identify Command Set Independent Namespace %d:\n", nsid);
 	printf("nsfeat  : %#x\n", ns->nsfeat);
@@ -2926,8 +2882,6 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 
 	if (flags & BINARY)
 		return  d_raw((unsigned char *)data, 0x1000);
-	if (flags & JSON)
-		return json_nvme_id_ns_descs(data);
 
 	printf("NVME Namespace Identification Descriptors NS %d:\n", nsid);
 	for (pos = 0; pos < NVME_IDENTIFY_DATA_SIZE; pos += len) {
@@ -3066,8 +3020,6 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
-	else if (flags & JSON)
-		return json_nvme_id_ctrl(ctrl, vendor_show);
 
 	printf("NVME Identify Controller:\n");
 	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
@@ -3250,8 +3202,6 @@ void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ctrl_nvm, sizeof(*ctrl_nvm));
-	else if (flags & JSON)
-		return json_nvme_id_ctrl_nvm(ctrl_nvm);
 
 	printf("NVMe Identify Controller NVM:\n");
 	printf("vsl    : %u\n", ctrl_nvm->vsl);
@@ -3292,8 +3242,6 @@ void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)nvm_ns, sizeof(*nvm_ns));
-	else if (flags & JSON)
-		return json_nvme_nvm_id_ns(nvm_ns, ns, cap_only);
 
 	if (!cap_only) {
 		printf("NVMe NVM Identify Namespace %d:\n", nsid);
@@ -3330,8 +3278,6 @@ void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
-	else if (flags & JSON)
-		return json_nvme_zns_id_ctrl(ctrl);
 
 	printf("NVMe ZNS Identify Controller:\n");
 	printf("zasl    : %u\n", ctrl->zasl);
@@ -3402,8 +3348,6 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
-	else if (flags & JSON)
-		return json_nvme_zns_id_ns(ns, id_ns);
 
 	printf("ZNS Command Set Identify Namespace:\n");
 
@@ -3481,8 +3425,6 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 void nvme_show_list_ns(struct nvme_ns_list *ns_list, enum nvme_print_flags flags)
 {
 	int i;
-	if (flags & JSON)
-		return json_nvme_list_ns(ns_list);
 
 	nvme_print(ns_list, flags, ns_list);
 
@@ -3584,9 +3526,6 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)report, report_size);
-	else if (flags & JSON)
-		return json_nvme_zns_report_zones(report, descs,
-				ext_size, report_size, zone_list);
 
 	for (i = 0; i < descs; i++) {
 		desc = (struct nvme_zns_desc *)
@@ -3623,8 +3562,6 @@ void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ctrl_list, sizeof(*ctrl_list));
-	if (flags & JSON)
-		return json_nvme_list_ctrl(ctrl_list, num);
 
 	printf("num of ctrls present: %u\n", num);
 	for (i = 0; i < min(num, 2047); i++) {
@@ -3640,8 +3577,6 @@ void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)nvmset, sizeof(*nvmset));
-	if (flags & JSON)
-		return json_nvme_id_nvmset(nvmset);
 
 	nvme_print(id_nvmset_list, flags, nvmset, nvmset_id);
 
@@ -3690,8 +3625,6 @@ void nvme_show_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)caps, sizeof(*caps));
-	else if (flags & JSON)
-		return json_nvme_primary_ctrl_cap(caps);
 
 	printf("NVME Identify Primary Controller Capabilities:\n");
 	printf("cntlid    : %#x\n", le16_to_cpu(caps->cntlid));
@@ -3720,7 +3653,6 @@ void nvme_show_list_secondary_ctrl(
 	const struct nvme_secondary_ctrl *sc_entry =
 		&sc_list->sc_entry[0];
 	static const char * const state_desc[] = { "Offline", "Online" };
-
 	__u16 num = sc_list->num;
 	__u32 entries = min(num, count);
 	int i;
@@ -3729,8 +3661,6 @@ void nvme_show_list_secondary_ctrl(
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)sc_list, sizeof(*sc_list));
-	if (flags & JSON)
-		return json_nvme_list_secondary_ctrl(sc_list, entries);
 
 	printf("Identify Secondary Controller List:\n");
 	printf("   NUMID       : Number of Identifiers           : %d\n", num);
@@ -3763,8 +3693,6 @@ void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)glist, sizeof(*glist));
-	if (flags & JSON)
-		return json_nvme_id_ns_granularity_list(glist);
 
 	printf("Identify Namespace Granularity List:\n");
 	printf("   ATTR        : Namespace Granularity Attributes: 0x%x\n",
@@ -3792,8 +3720,6 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)uuid_list, sizeof(*uuid_list));
-	if (flags & JSON)
-		return json_nvme_id_uuid_list(uuid_list);
 
 	/* The 0th entry is reserved */
 	printf("NVME Identify UUID:\n");
@@ -3841,8 +3767,6 @@ void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)id_dom, sizeof(*id_dom));
-	else if (flags & JSON)
-		return json_id_domain_list(id_dom);
 
 	printf("Number of Domain Entries: %u\n", id_dom->num);
 	for (i = 0; i < id_dom->num; i++) {
@@ -3868,8 +3792,6 @@ void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_
 
 	nvme_print(endurance_group_list, flags, endgrp_list);
 
-	if (flags & JSON)
-		return json_nvme_endurance_group_list(endgrp_list);
 
 	printf("num of endurance group ids: %u\n", num);
 	for (i = 0; i < min(num, 2047); i++) {
@@ -3912,8 +3834,6 @@ void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 	if (flags & BINARY)
 		return d_raw((unsigned char *)err_log,
 			     entries * sizeof(*err_log));
-	else if (flags & JSON)
-		return json_error_log(err_log, entries);
 
 	printf("Error Log Entries for device:%s entries:%d\n", devname,
 								entries);
@@ -3958,8 +3878,6 @@ void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)status, bytes);
-	else if (flags & JSON)
-		return json_nvme_resv_report(status, bytes, eds);
 
 	regctl = status->regctl[0] | (status->regctl[1] << 8);
 
@@ -4024,8 +3942,6 @@ void nvme_show_fw_log(struct nvme_firmware_slot *fw_log,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)fw_log, sizeof(*fw_log));
-	if (flags & JSON)
-		return json_fw_log(fw_log, devname);
 
 	printf("Firmware Log for device:%s\n", devname);
 	printf("afi  : %#x\n", fw_log->afi);
@@ -4050,8 +3966,6 @@ void nvme_show_changed_ns_list_log(struct nvme_ns_list *log,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)log, sizeof(*log));
-	else if (flags & JSON)
-		return json_changed_ns_list_log(log, devname);
 
 	if (log->ns[0] != cpu_to_le32(NVME_NSID_ALL)) {
 		for (i = 0; i < NVME_ID_NS_LIST_MAX; i++) {
@@ -4167,9 +4081,6 @@ void nvme_print_effects_log_page(enum nvme_csi csi,
 void nvme_print_effects_log_pages(struct list_head *list,
 				  enum nvme_print_flags flags)
 {
-	if (flags & JSON)
-		return json_effects_log_list(list);
-
 	nvme_print(effects_log_list, flags, list);
 
 	nvme_effects_log_node_t *node;
@@ -4235,8 +4146,6 @@ void nvme_show_supported_log(struct nvme_supported_log_pages *support_log,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)support_log, sizeof(*support_log));
-	else if (flags & JSON)
-		return json_support_log(support_log);
 
 	printf("Support Log Pages Details for %s:\n", devname);
 	for (lid = 0; lid < 256; lid++) {
@@ -4258,8 +4167,6 @@ void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	if (flags & BINARY)
 		return d_raw((unsigned char *)endurance_log,
 			sizeof(*endurance_log));
-	else if (flags & JSON)
-		return json_endurance_log(endurance_log, group_id);
 
 	printf("Endurance Group Log for NVME device:%s Group ID:%x\n", devname,
 		group_id);
@@ -4306,8 +4213,6 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)smart, sizeof(*smart));
-	else if (flags & JSON)
-		return json_smart_log(smart, nsid, flags);
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 	printf("critical_warning			: %#x\n",
@@ -4393,8 +4298,6 @@ void nvme_show_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ana_log, len);
-	else if (flags & JSON)
-		return json_ana_log(ana_log, devname);
 
 	printf("Asymmetric Namespace Access Log for NVMe device: %s\n",
 			devname);
@@ -4511,8 +4414,6 @@ void nvme_show_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entr
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)self_test, size);
-	if (flags & JSON)
-		return json_self_test_log(self_test, dst_entries);
 
 	printf("Device Self Test Log for NVME device:%s\n", devname);
 	printf("Current operation  : %#x\n", self_test->current_operation);
@@ -4570,10 +4471,6 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 
 	if (flags & BINARY)
 		d_raw((unsigned char *)sanitize, sizeof(*sanitize));
-	else if (flags & JSON) {
-		json_sanitize_log(sanitize, devname);
-		return;
-	}
 
 	printf("Sanitize Progress                      (SPROG) :  %u",
 	       le16_to_cpu(sanitize->sprog));
@@ -5503,9 +5400,7 @@ void nvme_show_list_items(nvme_root_t r, enum nvme_print_flags flags)
 
 	nvme_print(list_items, flags, r);
 
-	if (flags & JSON)
-		json_print_list_items(r, flags);
-	else if (flags & VERBOSE)
+	if (flags & VERBOSE)
 		nvme_show_detailed_list(r);
 	else
 		nvme_show_simple_list(r);
@@ -5632,10 +5527,7 @@ void nvme_show_topology(nvme_root_t r,
 {
 	nvme_print(topology_namespace, flags, r);
 
-	if (flags & JSON)
-		json_simple_topology(r);
-	else
-		nvme_show_simple_topology(r, ranking);
+	nvme_show_simple_topology(r, ranking);
 }
 
 void nvme_show_message(bool error, const char *msg, ...)
@@ -5652,15 +5544,6 @@ void nvme_show_message(bool error, const char *msg, ...)
 		if (!ops->show_message)
 			return;
 		ops->show_message(error, msg, ap);
-		va_end(ap);
-		return;
-	}
-
-	if (argconfig_output_format_json(false)) {
-		if (error)
-			json_output_error(msg, ap);
-		else
-			json_output_result(msg, ap);
 		va_end(ap);
 		return;
 	}
@@ -5684,11 +5567,6 @@ void nvme_show_perror(const char *msg)
 		if (!ops->show_perror)
 			return;
 		ops->show_perror(msg);
-		return;
-	}
-
-	if (argconfig_output_format_json(false)) {
-		json_output_perror(msg);
 		return;
 	}
 
@@ -5751,11 +5629,6 @@ void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
 		return;
 	}
 
-	if (flags & JSON) {
-		json_discovery_log(log, numrec, flags);
-		return;
-	}
-
 	print_discovery_log(log, numrec, flags);
 }
 
@@ -5767,11 +5640,6 @@ static void print_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags)
 void nvme_show_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags)
 {
 	nvme_print(connect_msg, flags, c);
-
-	if (flags & JSON) {
-		json_connect_msg(c, flags);
-		return;
-	}
 
 	print_connect_msg(c, flags);
 }
