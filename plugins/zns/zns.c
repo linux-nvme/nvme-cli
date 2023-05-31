@@ -1001,8 +1001,12 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		offset = le64_to_cpu(report->entries[nr_zones_chunks-1].zslba) + zsze;
     }
 
-	if (flags & JSON)
-		json_nvme_finish_zone_list(total_nr_zones, zone_list);
+	if (flags & JSON) {
+		struct print_ops *ops;
+		ops = nvme_get_json_print_ops(flags);
+		if (ops)
+			ops->zns_finish_zone_list(total_nr_zones, zone_list);
+	}
 
 	nvme_free(report, huge);
 
