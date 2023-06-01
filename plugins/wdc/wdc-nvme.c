@@ -4062,23 +4062,6 @@ static int wdc_print_log(struct wdc_ssd_perf_stats *perf, int fmt)
 	return 0;
 }
 
-static int wdc_convert_ts(time_t time, char *ts_buf)
-{
-	struct tm  gmTimeInfo;
-	time_t     time_Human, time_ms;
-	char       buf[80];
-
-	time_Human = time/1000;
-	time_ms = time % 1000;
-
-	gmtime_r((const time_t *)&time_Human, &gmTimeInfo);
-
-	strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &gmTimeInfo);
-	sprintf(ts_buf, "%s.%03ld GMT", buf, time_ms);
-
-	return 0;
-}
-
 static int wdc_print_latency_monitor_log_normal(struct nvme_dev *dev,
 						struct wdc_ssd_latency_monitor_log *log_data)
 {
@@ -4130,7 +4113,7 @@ static int wdc_print_latency_monitor_log_normal(struct nvme_dev *dev,
 		    if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1)
 		    	printf("                    N/A         ");
 		    else {
-		    	wdc_convert_ts(le64_to_cpu(log_data->active_latency_timestamp[i][j]), ts_buf);
+		    	convert_ts(le64_to_cpu(log_data->active_latency_timestamp[i][j]), ts_buf);
 		    	printf("%s     ",	ts_buf);
 		    }
 		}
@@ -4157,7 +4140,7 @@ static int wdc_print_latency_monitor_log_normal(struct nvme_dev *dev,
 		    if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1)
 		    	printf("                    N/A         ");
 		    else {
-		    	wdc_convert_ts(le64_to_cpu(log_data->static_latency_timestamp[i][j]), ts_buf);
+		    	convert_ts(le64_to_cpu(log_data->static_latency_timestamp[i][j]), ts_buf);
 		    	printf("%s     ",	ts_buf);
 		    }
 		}

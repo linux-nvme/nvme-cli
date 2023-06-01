@@ -112,23 +112,6 @@ struct __packed feature_latency_monitor {
 	__u8  reserved[4083];
 };
 
-static int convert_ts(time_t time, char *ts_buf)
-{
-	struct tm gmTimeInfo;
-	time_t time_Human, time_ms;
-	char buf[80];
-
-	time_Human = time/1000;
-	time_ms = time % 1000;
-
-	gmtime_r((const time_t *)&time_Human, &gmTimeInfo);
-
-	strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &gmTimeInfo);
-	sprintf(ts_buf, "%s.%03ld GMT", buf, time_ms);
-
-	return 0;
-}
-
 static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 				   struct ssd_latency_monitor_log *log_data)
 {
