@@ -34,4 +34,15 @@ char *uint128_t_to_si_string(nvme_uint128_t val, __u32 bytes_per_unit);
 const char *util_uuid_to_string(unsigned char uuid[NVME_UUID_LEN]);
 const char *util_fw_to_string(char *c);
 
+/**
+ * @brief convert time_t format time to a human readable string
+ *
+ * @param time, input time_t time
+ * @param ts_buf, output time string
+ * @Note, time string format is "Y-M-D|H:M:S:MS"
+ *
+ * @return 0 success
+ */
+int convert_ts(time_t time, char *ts_buf);
+
 #endif /* _MISC_H */
