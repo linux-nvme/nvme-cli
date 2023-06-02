@@ -4,6 +4,7 @@ LIBNVME_1_5 {
 	global:
 		nvme_nbft_read;
 		nvme_nbft_free;
+		nvme_ipaddrs_eq;
 };
 
 LIBNVME_1_4 {

@@ -8,7 +8,7 @@
 */
 
 /**
- * In this file we test private functions found in
+ * In this file we test private and public functions found in
  * "src/nvme/util.c". Note that the source files are included
  * directly because the private functions are not available from
  * the libnvme.so.
@@ -67,7 +67,7 @@ static bool test_ipaddrs_eq() {
 	}
 
 	for (i = 0; i < n; i++) {
-		bool result = ipaddrs_eq(addrs[i].a, addrs[i].b);
+		bool result = nvme_ipaddrs_eq(addrs[i].a, addrs[i].b);
 		bool pass = result == addrs[i].exp_result;
 		int pad_a = longest_a - safe_strlen(addrs[i].a);
 		int pad_b = longest_b - safe_strlen(addrs[i].b);
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 
 	printf("\n------------------------------------------------------------------------------\n");
 	pass = test_ipaddrs_eq();
-	printf("ipaddrs_eq() %s", pass ? "[PASS]" : "[FAIL]");
+	printf("nvme_ipaddrs_eq() %s", pass ? "[PASS]" : "[FAIL]");
 	if (!pass)
 		exit_val = EXIT_FAILURE;
 
