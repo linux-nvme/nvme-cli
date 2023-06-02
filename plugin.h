@@ -31,7 +31,6 @@ struct command {
 	char *alias;
 };
 
-void usage(struct plugin *plugin);
 void general_help(struct plugin *plugin);
 int handle_plugin(int argc, char **argv, struct plugin *plugin);
 
