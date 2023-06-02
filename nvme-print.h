@@ -107,6 +107,7 @@ static inline struct print_ops *nvme_get_json_print_ops(enum nvme_print_flags fl
 #endif /* !CONFIG_JSONC */
 
 struct print_ops *nvme_get_stdout_print_ops(enum nvme_print_flags flags);
+struct print_ops *nvme_get_binary_print_ops(enum nvme_print_flags flags);
 
 void nvme_show_status(int status);
 void nvme_show_lba_status_info(__u32 result);
