@@ -9,7 +9,7 @@
 
 #include <libnvme.h>
 
-static int version(struct plugin *plugin)
+static int version_cmd(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
 
@@ -55,7 +55,7 @@ static int help(int argc, char **argv, struct plugin *plugin)
 	return 0;
 }
 
-void usage(struct plugin *plugin)
+static void usage_cmd(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
 
@@ -75,7 +75,7 @@ void general_help(struct plugin *plugin)
 
 	printf("%s-%s\n", prog->name, prog->version);
 
-	usage(plugin);
+	usage_cmd(plugin);
 
 	printf("\n");
 	print_word_wrapped(prog->desc, 0, 0, stdout);
@@ -163,7 +163,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	if (!strcmp(str, "help"))
 		return help(argc, argv, plugin);
 	if (!strcmp(str, "version"))
-		return version(plugin);
+		return version_cmd(plugin);
 
 	while (*cmd) {
 		if (!strcmp(str, (*cmd)->name) ||
