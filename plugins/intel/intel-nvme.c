@@ -16,25 +16,25 @@
 #define CREATE_CMD
 #include "intel-nvme.h"
 
-struct  __attribute__((packed)) nvme_additional_smart_log_item {
+struct __packed nvme_additional_smart_log_item {
 	__u8			key;
 	__u8			_kp[2];
 	__u8			norm;
 	__u8			_np;
-	union __attribute__((packed)) {
+	union __packed {
 		__u8		raw[6];
-		struct __attribute__((packed))  wear_level {
+		struct __packed  wear_level {
 			__le16	min;
 			__le16	max;
 			__le16	avg;
 		} wear_level;
-		struct __attribute__((packed)) thermal_throttle {
+		struct __packed thermal_throttle {
 			__u8	pct;
 			__u32	count;
 		} thermal_throttle;
-	} ;
+	};
 	__u8			_rp;
-} ;
+};
 
 struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	program_fail_cnt;
@@ -79,7 +79,7 @@ static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 	struct json_object *root)
 {
 	json_object_add_value_int(root, "ss", id->ss);
-	json_object_add_value_string(root, "health", health );
+	json_object_add_value_string(root, "health", health);
 	json_object_add_value_int(root, "cls", id->cls);
 	json_object_add_value_int(root, "nlw", id->nlw);
 	json_object_add_value_int(root, "scap", id->scap);
@@ -92,7 +92,7 @@ static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
-	struct nvme_vu_id_ctrl_field* id = (struct nvme_vu_id_ctrl_field *)vs;
+	struct nvme_vu_id_ctrl_field *id = (struct nvme_vu_id_ctrl_field *)vs;
 
 	char health[21] = { 0 };
 	char bl[9] = { 0 };
@@ -100,15 +100,10 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 	char mic_bl[5] = { 0 };
 	char mic_fw[5] = { 0 };
 
-
-	if (id->health[0]==0)
-	{
-			snprintf(health, 21, "%s", "healthy");
-	}
+	if (id->health[0] == 0)
+		snprintf(health, 21, "%s", "healthy");
 	else
-	{
-			snprintf(health, 21, "%s", id->health);
-	}
+		snprintf(health, 21, "%s", id->health);
 
 	snprintf(bl, 9, "%s", id->bl);
 	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", id->ww[7],
@@ -203,57 +198,57 @@ static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->retry_buffer_overflow_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->retry_buffer_overflow_cnt.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->retry_buffer_overflow_cnt.raw));
 	json_object_add_value_object(dev_stats, "retry_buffer_overflow_count", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->pll_lock_loss_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->pll_lock_loss_cnt.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->pll_lock_loss_cnt.raw));
 	json_object_add_value_object(dev_stats, "pll_lock_loss_count", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->nand_bytes_written.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->nand_bytes_written.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->nand_bytes_written.raw));
 	json_object_add_value_object(dev_stats, "nand_bytes_written", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->host_bytes_written.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->host_bytes_written.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->host_bytes_written.raw));
 	json_object_add_value_object(dev_stats, "host_bytes_written", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->host_ctx_wear_used.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->host_ctx_wear_used.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->host_ctx_wear_used.raw));
 	json_object_add_value_object(dev_stats, "host_ctx_wear_used", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->perf_stat_indicator.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->perf_stat_indicator.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->perf_stat_indicator.raw));
 	json_object_add_value_object(dev_stats, "perf_stat_indicator", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->re_alloc_sectr_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->re_alloc_sectr_cnt.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->re_alloc_sectr_cnt.raw));
 	json_object_add_value_object(dev_stats, "re_alloc_sectr_cnt", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->soft_ecc_err_rate.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->soft_ecc_err_rate.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->soft_ecc_err_rate.raw));
 	json_object_add_value_object(dev_stats, "soft_ecc_err_rate", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->unexp_power_loss.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->unexp_power_loss.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->unexp_power_loss.raw));
 	json_object_add_value_object(dev_stats, "unexp_power_loss", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->media_bytes_read.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->media_bytes_read.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->media_bytes_read.raw));
 	json_object_add_value_object(dev_stats, "media_bytes_read", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->avail_fw_downgrades.norm);
-	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->avail_fw_downgrades.raw));
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->avail_fw_downgrades.raw));
 	json_object_add_value_object(dev_stats, "avail_fw_downgrades", entry_stats);
 
 	json_object_add_value_object(root, "Device stats", dev_stats);
@@ -337,11 +332,11 @@ static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Get Intel vendor specific additional smart log (optionally, "\
-		      "for the specified namespace), and show it.";
+	const char *desc =
+	    "Get Intel vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "Dump output in binary format";
-	const char *json= "Dump output in json format";
+	const char *json = "Dump output in json format";
 
 	struct nvme_additional_smart_log smart_log;
 	struct nvme_dev *dev;
@@ -379,9 +374,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 					     dev->name);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
-	}
-	else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 	dev_close(dev);
 	return err;
 }
@@ -490,7 +485,7 @@ struct intel_lat_stats {
 	__u32 data[1216];
 };
 
-struct __attribute__((__packed__)) optane_lat_stats {
+struct __packed optane_lat_stats {
 	__u16 maj;
 	__u16 min;
 	__u64 data[9];
@@ -645,7 +640,7 @@ static void show_optane_lat_stats_bucket(struct optane_lat_stats *stats,
 	set_unit_string(buffer, upper_us, fu, end_type);
 	printf("%-*s", COL_WIDTH, buffer);
 
-	printf("%-*lu\n", COL_WIDTH, (long unsigned int)stats->data[i]);
+	printf("%-*lu\n", COL_WIDTH, (unsigned long)stats->data[i]);
 }
 
 
@@ -888,6 +883,7 @@ static void json_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 	}
 
 	struct json_object *subroot = json_create_object();
+
 	json_object_add_value_object(root, "Average latency since last reset", subroot);
 
 	json_object_add_value_uint(subroot, "value in us", stats->data[8]);
@@ -900,12 +896,13 @@ static void json_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 static void show_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 {
 	int i;
+
 	if (write) {
 		for (i = 0; i < OPTANE_V1000_BUCKET_LEN - 1; i++)
 			show_optane_lat_stats_bucket(stats,
 						     v1000_bucket.write[i],
 						     NOINF,
-						     v1000_bucket.write[i + 1] -1,
+						     v1000_bucket.write[i + 1] - 1,
 						     NOINF, i);
 
 		show_optane_lat_stats_bucket(stats, v1000_bucket.write[i],
@@ -916,7 +913,7 @@ static void show_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 			show_optane_lat_stats_bucket(stats,
 						     v1000_bucket.read[i],
 						     NOINF,
-						     v1000_bucket.read[i + 1] -1,
+						     v1000_bucket.read[i + 1] - 1,
 						     NOINF, i);
 
 		show_optane_lat_stats_bucket(stats, v1000_bucket.read[i],
@@ -924,7 +921,7 @@ static void show_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 					     POSINF, i);
 	}
 
-	printf("Average latency since last reset: %lu us\n", (long unsigned int)stats->data[8]);
+	printf("Average latency since last reset: %lu us\n", (unsigned long)stats->data[8]);
 
 }
 
@@ -1035,7 +1032,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
 	const char *raw = "Dump output in binary format";
-	const char *json= "Dump output in json format";
+	const char *json = "Dump output in json format";
 	const char *write = "Get write statistics (read default)";
 
 	struct config {
@@ -1159,11 +1156,11 @@ struct intel_event_header {
 };
 
 struct intel_vu_log {
-    struct intel_vu_version ver;
-    __u32    header;
-    __u32    size;
-    __u32    numcores;
-    __u8     reserved[4080];
+	struct intel_vu_version ver;
+	__u32    header;
+	__u32    size;
+	__u32    numcores;
+	__u8     reserved[4080];
 };
 
 struct intel_vu_nlog {
@@ -1197,7 +1194,7 @@ struct intel_cd_log {
 			__u32 reserved2  : 16;
 		} fields;
 		__u32 entireDword;
-    } u;
+	} u;
 };
 
 static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
@@ -1272,7 +1269,7 @@ static int write_header(__u8 *buf, int fd, size_t amnt)
 	return 0;
 }
 
-static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, int ioctl_fd,
+static int read_header(struct nvme_passthru_cmd *cmd, __u8 *buf, int ioctl_fd,
 			__u32 dw12, int nsid)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -1476,7 +1473,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 				if (err)
 					goto out;
 
-			} else if(cfg.log == 0) {
+			} else if (cfg.log == 0) {
 				/* If the user selected to read the entire nlog */
 				if (count > 1)
 					cdlog.u.fields.selectNlog = i;
@@ -1640,7 +1637,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		break;
 	default:
 		printf("%d not supported.\n", option);
-		return EINVAL;
+		return -EINVAL;
 	}
 	dev_close(dev);
 	return err;
@@ -1697,6 +1694,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 
 	if (media_version[0] == 1000) {
 		int thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
+
 		num = argconfig_parse_comma_sep_array(cfg.bucket_thresholds,
 						      thresholds,
 						      sizeof(thresholds));
