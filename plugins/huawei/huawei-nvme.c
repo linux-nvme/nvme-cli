@@ -47,9 +47,9 @@
 struct huawei_list_item {
 	char                node[1024];
 	struct nvme_id_ctrl ctrl;
-	unsigned            nsid;
+	unsigned int        nsid;
 	struct nvme_id_ns   ns;
-	unsigned            block;
+	unsigned int        block;
 	char                ns_name[NS_NAME_LEN];
 	char                array_name[ARRAY_NAME_LEN];
 	bool                huawei_device;
@@ -98,23 +98,19 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 	item->block = S_ISBLK(nvme_stat_info.st_mode);
 
 	if (item->ns.vs[0] == 0) {
-
 		len = snprintf(item->ns_name, NS_NAME_LEN, "%s", "----");
 		if (len < 0)
 			return -EINVAL;
-	}
-	else {
+	} else {
 		memcpy(item->ns_name, item->ns.vs, NS_NAME_LEN);
 		item->ns_name[NS_NAME_LEN - 1] = '\0';
 	}
 
 	if (item->ctrl.vs[0] == 0) {
-
 		len = snprintf(item->array_name, ARRAY_NAME_LEN, "%s", "----");
-	if (len < 0)
+		if (len < 0)
 			return -EINVAL;
-	}
-	else {
+	} else {
 		memcpy(item->array_name, item->ctrl.vs, ARRAY_NAME_LEN);
 		item->array_name[ARRAY_NAME_LEN - 1] = '\0';
 	}
@@ -123,9 +119,8 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 
 static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 {
+	fmt_sz = snprintf(formatter, fmt_sz, "%-*.*s", (int)tofmtsz, (int)tofmtsz, tofmt);
 
-	fmt_sz = snprintf(formatter,fmt_sz, "%-*.*s",
-		 (int)tofmtsz, (int)tofmtsz, tofmt);
 	/* trim() the obnoxious trailing white lines */
 	while (fmt_sz) {
 		if (formatter[fmt_sz - 1] != ' ' && formatter[fmt_sz - 1] != '\0') {
@@ -137,7 +132,7 @@ static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 }
 
 static void huawei_json_print_list_items(struct huawei_list_item *list_items,
-					 unsigned len)
+					 unsigned int len)
 {
 	struct json_object *root;
 	struct json_object *devices;
@@ -210,8 +205,9 @@ static void huawei_print_list_item(struct huawei_list_item *list_item,
 				   struct huawei_list_element_len element_len)
 {
 	__u8 lba_index;
+
 	nvme_id_ns_flbas_to_lbaf_inuse(list_item->ns.flbas, &lba_index);
-	unsigned long long int lba = 1ULL << list_item->ns.lbaf[lba_index].ds;
+	unsigned long long lba = 1ULL << list_item->ns.lbaf[lba_index].ds;
 	double nsze       = le64_to_cpu(list_item->ns.nsze) * lba;
 	double nuse       = le64_to_cpu(list_item->ns.nuse) * lba;
 
@@ -223,8 +219,7 @@ static void huawei_print_list_item(struct huawei_list_item *list_item,
 	char *nguid = nguid_buf;
 	int i;
 
-	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
-		nsze, s_suffix);
+	sprintf(usage, "%6.2f %2sB / %6.2f %2sB", nuse, u_suffix, nsze, s_suffix);
 
 	memset(nguid, 0, sizeof(nguid_buf));
 	for (i = 0; i < sizeof(list_item->ns.nguid); i++)
@@ -247,37 +242,37 @@ static unsigned int choose_len(unsigned int old_len, unsigned int cur_len, unsig
 
 	temp_len = (cur_len > default_len) ? cur_len : default_len;
 	if (temp_len > old_len)
-	{
 		return temp_len;
-	}
 	return old_len;
 }
 
-static unsigned int huawei_get_ns_len(struct huawei_list_item *list_items, unsigned len, unsigned default_len)
+static unsigned int huawei_get_ns_len(struct huawei_list_item *list_items, unsigned int len,
+				      unsigned int default_len)
 {
 	int i;
 	unsigned int min_len = default_len;
 
 	for (i = 0 ; i < len ; i++)
-		min_len = choose_len(min_len , strlen(list_items->ns_name), default_len);
+		min_len = choose_len(min_len, strlen(list_items->ns_name), default_len);
 
 	return min_len;
 }
 
-static int huawei_get_array_len(struct huawei_list_item *list_items, unsigned len, unsigned default_len)
+static int huawei_get_array_len(struct huawei_list_item *list_items, unsigned int len,
+				unsigned int default_len)
 {
 	int i;
 	int min_len = default_len;
 
 	for (i = 0 ; i < len ; i++)
-		min_len = choose_len(min_len , strlen(list_items->array_name), default_len);
+		min_len = choose_len(min_len, strlen(list_items->array_name), default_len);
 
 	return min_len;
 }
 
-static void huawei_print_list_items(struct huawei_list_item *list_items, unsigned len)
+static void huawei_print_list_items(struct huawei_list_item *list_items, unsigned int len)
 {
-	unsigned i;
+	unsigned int i;
 	struct huawei_list_element_len element_len;
 
 	element_len.node = 16;
@@ -350,13 +345,12 @@ static int huawei_list(int argc, char **argv, struct command *command,
 			close(fd);
 			goto out_free_list_items;
 		}
-		if (list_items[huawei_num].huawei_device == true) {
+		if (list_items[huawei_num].huawei_device == true)
 			huawei_num++;
-		}
 		close(fd);
 	}
 
-	if (huawei_num > 0){
+	if (huawei_num > 0) {
 		if (fmt == JSON)
 			huawei_json_print_list_items(list_items, huawei_num);
 		else
