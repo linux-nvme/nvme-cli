@@ -25,11 +25,10 @@ void show_r1_vendor_log(r1_cli_vendor_log_t *vendorlog)
 {
 	int i = 0;
 
-	if (vendorlog->device_state == 0) {
+	if (vendorlog->device_state == 0)
 		printf("device_state              : [healthy]\n");
-	} else {
+	else
 		printf("device_state              : [warning]\n");
-	}
 
 	printf("commit id          : %s\n", vendorlog->commit_id);
 	printf("mcu data id(mcu)          : 0x%x\n", le32_to_cpu(vendorlog->mcu_data_id));
@@ -44,9 +43,8 @@ void show_r1_vendor_log(r1_cli_vendor_log_t *vendorlog)
 	printf("nand_max_temper(mcu)           : %d C\n", le32_to_cpu(vendorlog->nand_max_temper) - 273);
 	printf("nand_overtemper_cout(mcu)      : %u\n", le32_to_cpu(vendorlog->nand_overtemper_cout));
 
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < 4; i++)
 		printf("temperature[%d](mcu)           : %d C\n", i, le32_to_cpu(vendorlog->current_temp[i]) - 273);
-	}
 
 	printf("CAP Time from 32v to 27v(mcu)  : %u ms\n", le32_to_cpu(vendorlog->cap_transtime.cap_trans_time1));
 	printf("CAP Time from 27v to 10v(mcu)  : %u ms\n", le32_to_cpu(vendorlog->cap_transtime.cap_trans_time2));
@@ -86,9 +84,8 @@ void show_r1_vendor_log(r1_cli_vendor_log_t *vendorlog)
 	printf("-->temp_low_warning       : %x\n", vendorlog->detail_warning_his_bit.temp_low_warning);
 	printf("-->mcu_disable(mcu)       : %x\n", vendorlog->detail_warning_his_bit.mcu_disable);
 
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < 4; i++)
 		printf("[%d]nand_bytes_written        : %" PRIu64 " GB\n", i, le64_to_cpu(vendorlog->nand_bytes_written[i]));
-	}
 
 	for (i = 0; i < 4; i++) {
 		printf("[%d]io_apptag_err         : %u\n", i, le32_to_cpu(vendorlog->io_err[i].io_apptag_err));
@@ -202,9 +199,8 @@ void show_r1_media_err_log(r1_cli_vendor_log_t *vendorlog)
 
 	for (i = 0; i < 4; i++) {
 		printf("DM%d read err lba:\n", i);
-		for (j = 0; j < 10; j++) {
+		for (j = 0; j < 10; j++)
 			printf("[%d]lba : %" PRIu64 "\n", j, le64_to_cpu(vendorlog->media_err[i].lba_err[j]));
-		}
 	}
 }
 
