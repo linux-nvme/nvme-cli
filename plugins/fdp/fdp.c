@@ -121,7 +121,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	struct config cfg = {
-		.egid      = 0,
+		.egid		= 0,
 		.output_format	= "normal",
 		.raw_binary	= false,
 	};
@@ -192,7 +192,7 @@ static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	struct config cfg = {
-		.egid      = 0,
+		.egid		= 0,
 		.output_format	= "normal",
 		.raw_binary	= false,
 	};
@@ -251,8 +251,8 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	struct config cfg = {
-		.egid      = 0,
-		.host_events = false,
+		.egid		= 0,
+		.host_events =	false,
 		.output_format	= "normal",
 		.raw_binary	= false,
 	};
@@ -424,9 +424,8 @@ static int fdp_update(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 
-	for (unsigned int i = 0; i < npids; i++) {
+	for (unsigned int i = 0; i < npids; i++)
 		buf[i] = cpu_to_le16(pids[i]);
-	}
 
 	err = nvme_fdp_reclaim_unit_handle_update(dev_fd(dev), cfg.namespace_id, npids, buf);
 	if (err) {
@@ -459,14 +458,14 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 
 	struct config {
 		__u32	namespace_id;
-		__u16   ph;
-		char    *event_types;
-		bool    enable;
+		__u16	ph;
+		char	*event_types;
+		bool	enable;
 		bool	save;
 	};
 
 	struct config cfg = {
-		.enable = false,
+		.enable	= false,
 		.save	= false,
 	};
 
@@ -510,9 +509,8 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 		}
 	}
 
-	for (unsigned int i = 0; i < nev; i++) {
+	for (unsigned int i = 0; i < nev; i++)
 		buf[i] = (__u8)evts[i];
-	}
 
 	struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
