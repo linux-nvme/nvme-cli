@@ -104,13 +104,12 @@ static int nvme_dera_get_device_status(int fd, enum dera_device_status *result)
 		.addr = (__u64)(uintptr_t)NULL,
 		.data_len = 0,
 		.cdw10 = 0,
-		.cdw12 = 0x104, 
+		.cdw12 = 0x104,
 	};
 
 	err = nvme_submit_admin_passthru(fd, &cmd, NULL);
-	if (!err && result) {
+	if (!err && result)
 		*result = cmd.result;
-	}
 
 	return err;
 }
@@ -130,13 +129,12 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
-	
-	err = nvme_get_log_simple(dev_fd(dev), 0xc0, sizeof(log), &log);
-	if (err) {
-		goto exit;
-	}
 
-	const char* dev_status[] = {
+	err = nvme_get_log_simple(dev_fd(dev), 0xc0, sizeof(log), &log);
+	if (err)
+		goto exit;
+
+	static const char *dev_status[] = {
 		"Normal",
 		"Quick Rebuilding",
 		"Full Rebuilding",
@@ -148,25 +146,22 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 		"Firmware Committing",
 		"Over Temperature" };
 
-	const char *volt_status[] = {
+	static const char *volt_status[] = {
 		"Normal",
 		"Initial Low",
 		"Runtime Low",
 	};
 
 	err = nvme_dera_get_device_status(dev_fd(dev), &state);
-	if (!err){
-		if (state > 0 && state < 4){
+	if (!err) {
+		if (state > 0 && state < 4)
 			printf("device_status                       : %s %d%% completed\n", dev_status[state], log.rebuild_percent);
-		}
-		else{
+		else
 			printf("device_status                       : %s\n", dev_status[state]);
-		}
-	}
-	else {
+	} else {
 		goto exit;
 	}
-	
+
 	printf("dev_status_up                       : %s\n", dev_status[log.dev_status_up]);
 	printf("cap_aged                            : %s\n", log.cap_aged == 1 ? "True" : "False");
 	printf("cap_aged_ratio                      : %d%%\n", log.cap_aged_ratio < 100 ? log.cap_aged_ratio : 100);
@@ -188,12 +183,10 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	printf("fw_loader_version                   : %.*s\n", 8, log.fw_loader_version);
 	printf("uefi_driver_version                 : %.*s\n", 8, log.uefi_driver_version);
 
-	if (log.pcie_volt_status < sizeof(volt_status) / sizeof(const char *)){
+	if (log.pcie_volt_status < sizeof(volt_status) / sizeof(const char *))
 		printf("pcie_volt_status                    : %s\n", volt_status[log.pcie_volt_status]);
-	}
-	else{
+	else
 		printf("pcie_volt_status                    : Unknown\n");
-	}
 
 	printf("current_pcie_volt                   : %d mV\n", log.current_pcie_volt[1] << 8 | log.current_pcie_volt[0]);
 	printf("init_pcie_volt_low_cnt              : %d\n", log.init_pcie_volt_low[1] << 8 | log.init_pcie_volt_low[0]);
