@@ -28,15 +28,15 @@ static void json_amzn_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 
 static void amzn_id_ctrl(__u8 *vs, struct json_object *root)
 {
-	struct nvme_vu_id_ctrl_field* id = (struct nvme_vu_id_ctrl_field *)vs;
+	struct nvme_vu_id_ctrl_field *id = (struct nvme_vu_id_ctrl_field *)vs;
 
 	char bdev[32] = { 0 };
 
 	int len = 0;
+
 	while (len < 31) {
-		if (id->bdev[++len] == ' ') {
+		if (id->bdev[++len] == ' ')
 			break;
-		}
 	}
 	snprintf(bdev, len+1, "%s", id->bdev);
 
