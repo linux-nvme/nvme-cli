@@ -38,7 +38,7 @@ int wdc_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer, const char *forma
 	return res;
 }
 
-void wdc_UtilsDeleteCharFromString(char* buffer, int buffSize, char charToRemove)
+void wdc_UtilsDeleteCharFromString(char *buffer, int buffSize, char charToRemove)
 {
 	int i = 0;
 	int count = 0;
@@ -62,7 +62,7 @@ int wdc_UtilsGetTime(PUtilsTimeInfo timeInfo)
 	time_t currTime;
 	struct tm currTimeInfo;
 
-	if(!timeInfo)
+	if (!timeInfo)
 		return WDC_STATUS_INVALID_PARAMETER;
 
 	tzset();
@@ -81,7 +81,7 @@ int wdc_UtilsGetTime(PUtilsTimeInfo timeInfo)
 #if defined(__GLIBC__) && !defined(__UCLIBC__) && !defined(__MUSL__)
 	timeInfo->zone			= -currTimeInfo.tm_gmtoff / 60;
 #else
-	timeInfo->zone 			= -1 * (timezone / SECONDS_IN_MIN);
+	timeInfo->zone			= -1 * (timezone / SECONDS_IN_MIN);
 #endif
 
 	return WDC_STATUS_SUCCESS;
@@ -92,7 +92,7 @@ int wdc_UtilsCreateDir(char *path)
 	int retStatus;
 	int status = WDC_STATUS_SUCCESS;
 
-	if  (!path )
+	if (!path)
 		return WDC_STATUS_INVALID_PARAMETER;
 
 	retStatus = mkdir(path, 0x999);
@@ -125,7 +125,7 @@ int wdc_WriteToFile(char *fileName, char *buffer, unsigned int bufferLen)
 		status = WDC_STATUS_UNABLE_TO_WRITE_ALL_DATA;
 
 end:
-	if(file)
+	if (file)
 		fclose(file);
 	return status;
 }
@@ -151,9 +151,7 @@ int wdc_UtilsStrCompare(char *pcSrc, char *pcDst)
 
 void wdc_StrFormat(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 {
-
-	fmt_sz = snprintf(formatter,fmt_sz, "%-*.*s",
-		 (int)tofmtsz, (int)tofmtsz, tofmt);
+	fmt_sz = snprintf(formatter, fmt_sz, "%-*.*s", (int)tofmtsz, (int)tofmtsz, tofmt);
 	/* trim() the obnoxious trailing white lines */
 	while (fmt_sz) {
 		if (formatter[fmt_sz - 1] != ' ' && formatter[fmt_sz - 1] != '\0') {
