@@ -198,8 +198,8 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 	ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x03, 0x00, 0x00, (char *)data, 4096);
 	if (ret == -1)
 		return ret;
-	
-	if (data[0] == 0x5A) 
+
+	if (data[0] == 0x5A)
 		ivsctype = 1;
 	else
 		ivsctype = 0;
@@ -227,8 +227,9 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 		icount++;
 
 		memset(data, 0, 4096);
-		if (ivsctype == 1) 
-			ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x60, 0x00, 0x00, 0x00,(char *)data, 4096);
+		if (ivsctype == 1)
+			ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x60, 0x00, 0x00, 0x00, (char *)data,
+					 4096);
 		else
 			ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET_EVENT_LOG, 0, 0,
 					(SRB_SIGNATURE >> 32),
@@ -345,10 +346,10 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 	ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x03, 0x00, 0x00, (char *)data, 4096);
 	if (ret == -1)
 		return ret;
-	
+
 	if (data[0] == 0x5A) {
 		ivsctype = 1;
-		ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,(char *)data, 4096);
+		ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00, (char *)data, 4096);
 	} else {
 		ivsctype = 0;
 		ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
@@ -403,12 +404,13 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 		for (icur = 0; icur < itotal; icur += 4096) {
 			memset(data, 0, 4096);
 			if (busevsc) {
-				if (ivsctype == 1) 
-					ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,(char *)data, 4096);
+				if (ivsctype == 1)
+					ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,
+							 (char *)data, 4096);
 				else
 					ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
 								(SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
-								(char *)data, 4096);					 
+								(char *)data, 4096);
 			} else {
 				ret = nvme_get_nsid_log(dev_fd(dev), true,
 							0x07,
@@ -429,12 +431,13 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 		if (ipackindex != ipackcount) {
 			memset(data, 0, 4096);
 			if (busevsc) {
-				if (ivsctype == 1) 
-					ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,(char *)data, 4096);
+				if (ivsctype == 1)
+					ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,
+							 (char *)data, 4096);
 				else
 					ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
 								(SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
-								(char *)data, 4096);							 
+								(char *)data, 4096);
 			} else {
 				ret = nvme_get_nsid_log(dev_fd(dev), true,
 							0x07,
