@@ -323,7 +323,7 @@ static int json_show_nbfts(struct list_head *nbft_list, bool show_subsys,
 
 	nbft_json_array = json_create_array();
 	if (!nbft_json_array)
-		return ENOMEM;
+		return -ENOMEM;
 
 	list_for_each(nbft_list, entry, node) {
 		nbft_json = nbft_to_json(entry->nbft, show_subsys, show_hfi, show_discovery);
@@ -341,7 +341,7 @@ static int json_show_nbfts(struct list_head *nbft_list, bool show_subsys,
 	return 0;
 fail:
 	json_free_object(nbft_json_array);
-	return ENOMEM;
+	return -ENOMEM;
 }
 
 static void print_nbft_hfi_info(struct nbft_info *nbft)
@@ -553,7 +553,7 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 	else if (!strcmp(format, "json"))
 		flags = JSON;
 	else
-		return EINVAL;
+		return -EINVAL;
 
 	list_head_init(&nbft_list);
 	ret = read_nbft_files(&nbft_list, nbft_path);
