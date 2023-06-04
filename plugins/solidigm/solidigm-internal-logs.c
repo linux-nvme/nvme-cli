@@ -285,7 +285,7 @@ static int dump_event_logs(struct nvme_dev *dev, struct config cfg)
 		.cdw13 = 0,
 	};
 	int output;
-	int core_num,err;
+	int core_num, err;
 
 	err = read_header(&cmd, dev_fd(dev));
 	if (err)
@@ -500,8 +500,8 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 	bool all = false;
 
 	const char *desc = "Get Debug Firmware Logs and save them.";
-	const char *type = "Log type: ALL, CONTROLLERINITTELEMETRY, HOSTINITTELEMETRY, "
-			   "HOSTINITTELEMETRYNOGEN, NLOG, ASSERT, EVENT. Defaults to ALL.";
+	const char *type =
+	    "Log type: ALL, CONTROLLERINITTELEMETRY, HOSTINITTELEMETRY, HOSTINITTELEMETRYNOGEN, NLOG, ASSERT, EVENT. Defaults to ALL.";
 	const char *prefix = "Output file prefix; defaults to device serial number.";
 	const char *verbose = "To print out verbose info.";
 	const char *namespace_id = "Namespace to get logs from.";

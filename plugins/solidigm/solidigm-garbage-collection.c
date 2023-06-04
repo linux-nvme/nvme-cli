@@ -21,26 +21,27 @@
 #include "solidigm-garbage-collection.h"
 #include "solidigm-util.h"
 
-typedef struct __attribute__((packed)) gc_item {
+struct __packed gc_item {
 	__le32 timer_type;
 	__le64 timestamp;
-} gc_item_t;
+};
 
 #define VU_GC_MAX_ITEMS 100
-typedef struct garbage_control_collection_log {
+struct garbage_control_collection_log {
 	__le16 version_major;
 	__le16 version_minor;
-	gc_item_t item[VU_GC_MAX_ITEMS];
+	struct __packed gc_item item[VU_GC_MAX_ITEMS];
 	__u8 reserved[2892];
-} garbage_control_collection_log_t;
+};
 
-static void vu_gc_log_show_json(garbage_control_collection_log_t *payload, const char *devname)
+static void vu_gc_log_show_json(struct garbage_control_collection_log *payload, const char *devname)
 {
 	struct json_object *gc_entries = json_create_array();
 
 	for (int i = 0; i < VU_GC_MAX_ITEMS; i++) {
-		gc_item_t item = payload->item[i];
+		struct __packed gc_item item = payload->item[i];
 		struct json_object *entry = json_create_object();
+
 		json_object_add_value_int(entry, "timestamp", le64_to_cpu(item.timestamp));
 		json_object_add_value_int(entry, "timer_type", le32_to_cpu(item.timer_type));
 		json_array_add_value_object(gc_entries, entry);
@@ -50,7 +51,7 @@ static void vu_gc_log_show_json(garbage_control_collection_log_t *payload, const
 	json_free_object(gc_entries);
 }
 
-static void vu_gc_log_show(garbage_control_collection_log_t *payload, const char *devname,
+static void vu_gc_log_show(struct garbage_control_collection_log *payload, const char *devname,
 			   __u8 uuid_index)
 {
 	printf("Solidigm Garbage Collection Log for NVME device:%s UUID-idx:%d\n", devname,
@@ -58,7 +59,8 @@ static void vu_gc_log_show(garbage_control_collection_log_t *payload, const char
 	printf("Timestamp     Timer Type\n");
 
 	for (int i = 0; i < VU_GC_MAX_ITEMS; i++) {
-		gc_item_t item = payload->item[i];
+		struct __packed gc_item item = payload->item[i];
+
 		printf("%-13" PRIu64 " %d\n", le64_to_cpu(item.timestamp), le32_to_cpu(item.timer_type));
 	}
 }
@@ -88,15 +90,16 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		return err;
 
 	enum nvme_print_flags flags = validate_output_format(cfg.output_format);
+
 	if (flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	uuid_index = solidigm_get_vu_uuid_index(dev);
 
-	garbage_control_collection_log_t gc_log;
+	struct garbage_control_collection_log gc_log;
 	const int solidigm_vu_gc_log_id = 0xfd;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
@@ -118,15 +121,13 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 
 	err =  nvme_get_log(&args);
 	if (!err) {
-		if (flags & BINARY)	{
+		if (flags & BINARY)
 			d_raw((unsigned char *)&gc_log, sizeof(gc_log));
-		} else if (flags & JSON) {
+		else if (flags & JSON)
 			vu_gc_log_show_json(&gc_log, dev->name);
-		} else {
+		else
 			vu_gc_log_show(&gc_log, dev->name, uuid_index);
-		}
-	}
-	else if (err > 0) {
+	} else if (err > 0) {
 		nvme_show_status(err);
 	}
 

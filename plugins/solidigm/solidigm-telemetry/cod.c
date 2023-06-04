@@ -56,17 +56,15 @@ const char *oemDataMapDesc[] = {
 
 static const char *getOemDataMapDescription(uint32_t id)
 {
-	if (id < (sizeof(oemDataMapDesc) / sizeof(oemDataMapDesc[0]))) {
+	if (id < ARRAY_SIZE(oemDataMapDesc))
 		return oemDataMapDesc[id];
-	}
 	return "unknown";
 }
 
 #define OEMSIGNATURE 0x504D4443
 
 #pragma pack(push, cod, 1)
-struct cod_header
-{
+struct cod_header {
 	uint32_t versionMajor;
 	uint32_t versionMinor;
 	uint32_t Signature;      //!Fixed signature value (0x504D4443) for identification and validation
@@ -75,8 +73,7 @@ struct cod_header
 	uint8_t Reserved[12];
 };
 
-struct cod_item
-{
+struct cod_item {
 	uint32_t DataFieldMapUid;       //!The data field unique identifier value
 	uint32_t reserved1 : 8;
 	uint32_t dataFieldType : 8;
@@ -90,8 +87,7 @@ struct cod_item
 	uint8_t Reserved2[8];
 };
 
-struct cod_map
-{
+struct cod_map {
 	struct cod_header header;
 	struct cod_item items[];
 };
@@ -100,8 +96,7 @@ struct cod_map
 
 void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 {
-	enum cod_field_type
-	{
+	enum cod_field_type {
 		INTEGER,
 		FLOAT,
 		STRING,
@@ -123,9 +118,8 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 
 	uint64_t offset = json_object_get_int(COD_offset);
 
-	if  (offset ==  0) {
+	if (!offset)
 		return;
-	}
 
 	if ((offset + sizeof(struct cod_header)) > tl->log_size) {
 		SOLIDIGM_LOG_WARNING("Warning: COD map header out of bounds.");
@@ -135,61 +129,62 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 	const struct cod_map *data = (struct cod_map *) (((uint8_t *)tl->log) + offset);
 
 	uint32_t signature = be32_to_cpu(data->header.Signature);
-	if ( signature != OEMSIGNATURE){
+
+	if (signature != OEMSIGNATURE) {
 		SOLIDIGM_LOG_WARNING("Warning: Unsupported COD data signature %x!", signature);
 		return;
 	}
-	if ((offset + data->header.MapSizeInBytes) > tl->log_size){
+	if ((offset + data->header.MapSizeInBytes) > tl->log_size) {
 		SOLIDIGM_LOG_WARNING("Warning: COD map data out of bounds.");
 		return;
 	}
 
 	struct json_object *cod = json_create_object();
+
 	json_object_object_add(tl->root, "cod", cod);
 
 	for (uint64_t i = 0; i < data->header.EntryCount; i++) {
 		if ((offset + sizeof(struct cod_header) + (i + 1) * sizeof(struct cod_item)) >
-		tl->log_size){
+		    tl->log_size) {
 			SOLIDIGM_LOG_WARNING("Warning: COD data out of bounds at item %"PRIu64"!",
 					     i);
 			return;
 		}
 		struct cod_item item = data->items[i];
-		if (item.DataFieldOffset + item.DataFieldOffset > tl->log_size) {
+
+		if (item.DataFieldOffset + item.DataFieldOffset > tl->log_size)
 			continue;
-		}
-		if (item.dataInvalid) {
+		if (item.dataInvalid)
 			continue;
-		}
-		uint8_t *val = ((uint8_t *)tl->log )+ item.DataFieldOffset;
+		uint8_t *val = ((uint8_t *)tl->log) + item.DataFieldOffset;
 		const char *key =  getOemDataMapDescription(item.DataFieldMapUid);
-		switch(item.dataFieldType){
-			case(INTEGER):
-				if (item.issigned) {
-					json_object_object_add(cod, key,
-						json_object_new_int64(le64_to_cpu(*(uint64_t *)val)));
-				} else {
-					json_object_add_value_uint64(cod, key, le64_to_cpu(*(uint64_t *)val));
-				}
-				break;
-			case(FLOAT):
-				json_object_add_value_float(cod, key, *(float *) val);
-				break;
-			case(STRING):
+
+		switch (item.dataFieldType) {
+		case INTEGER:
+			if (item.issigned)
 				json_object_object_add(cod, key,
-					json_object_new_string_len((const char *)val, item.DataFieldSizeInBytes));
-				break;
-			case(TWO_BYTE_ASCII):
-				json_object_object_add(cod, key,
-					json_object_new_string_len((const char *)val,2));
-				break;
-			case(FOUR_BYTE_ASCII):
-				json_object_object_add(cod, key,
-					json_object_new_string_len((const char *)val, 4));
-				break;
-			default:
-				SOLIDIGM_LOG_WARNING("Warning: Unknown COD field type (%d)", item.DataFieldMapUid);
-				
+					json_object_new_int64(le64_to_cpu(*(uint64_t *)val)));
+			else
+				json_object_add_value_uint64(cod, key, le64_to_cpu(*(uint64_t *)val));
+			break;
+		case FLOAT:
+			json_object_add_value_float(cod, key, *(float *)val);
+			break;
+		case STRING:
+			json_object_object_add(cod, key,
+			    json_object_new_string_len((const char *)val, item.DataFieldSizeInBytes));
+			break;
+		case TWO_BYTE_ASCII:
+			json_object_object_add(cod, key,
+					       json_object_new_string_len((const char *)val, 2));
+			break;
+		case FOUR_BYTE_ASCII:
+			json_object_object_add(cod, key,
+				json_object_new_string_len((const char *)val, 4));
+			break;
+		default:
+			SOLIDIGM_LOG_WARNING("Warning: Unknown COD field type (%d)", item.DataFieldMapUid);
+			break;
 		}
 	}
 }

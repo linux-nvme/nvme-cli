@@ -19,7 +19,7 @@
 #define SOLIDIGM_MAX_UUID 2
 
 struct lid_dir {
-	struct __attribute__((packed)) {
+	struct __packed {
 		bool supported;
 		const char *str;
 	} lid[NVME_LOG_SUPPORTED_LOG_PAGES_MAX];
@@ -38,8 +38,8 @@ static void init_lid_dir(struct lid_dir *lid_dir)
 static bool is_invalid_uuid(const struct nvme_id_uuid_list_entry entry)
 {
 	static const unsigned char ALL_ZERO_UUID[NVME_UUID_LEN] = {
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
 
 	return memcmp(ALL_ZERO_UUID, entry.uuid, NVME_UUID_LEN) == 0;
@@ -68,7 +68,7 @@ static bool is_ocp_uuid(const struct nvme_id_uuid_list_entry entry)
 static int get_supported_log_pages_log(struct nvme_dev *dev, int uuid_index,
 				       struct nvme_supported_log_pages *supported)
 {
-	static const __u8 LID = 0x00;
+	static const __u8 LID;
 
 	memset(supported, 0, sizeof(*supported));
 	struct nvme_get_log_args args = {
@@ -92,7 +92,7 @@ static int get_supported_log_pages_log(struct nvme_dev *dev, int uuid_index,
 	return nvme_get_log(&args);
 }
 
-static struct lid_dir* get_standard_lids(struct nvme_supported_log_pages *supported)
+static struct lid_dir *get_standard_lids(struct nvme_supported_log_pages *supported)
 {
 	static struct lid_dir standard_dir = { 0 };
 
@@ -135,17 +135,17 @@ static struct lid_dir* get_standard_lids(struct nvme_supported_log_pages *suppor
 }
 
 static void update_vendor_lid_supported(struct nvme_supported_log_pages *supported,
-					struct lid_dir* lid_dir)
+					struct lid_dir *lid_dir)
 {
 	for (int lid = 0; lid < NVME_LOG_SUPPORTED_LOG_PAGES_MAX; lid++) {
-		if (!supported->lid_support[lid]|| lid < MIN_VENDOR_LID)
+		if (!supported->lid_support[lid] || lid < MIN_VENDOR_LID)
 			continue;
 
 		lid_dir->lid[lid].supported = true;
 	}
 }
 
-static struct lid_dir* get_solidigm_lids(struct nvme_supported_log_pages *supported)
+static struct lid_dir *get_solidigm_lids(struct nvme_supported_log_pages *supported)
 {
 	static struct lid_dir solidigm_dir = { 0 };
 
@@ -161,7 +161,7 @@ static struct lid_dir* get_solidigm_lids(struct nvme_supported_log_pages *suppor
 	return &solidigm_dir;
 }
 
-static struct lid_dir* get_ocp_lids(struct nvme_supported_log_pages *supported)
+static struct lid_dir *get_ocp_lids(struct nvme_supported_log_pages *supported)
 {
 	static struct lid_dir ocp_dir = { 0 };
 
@@ -253,7 +253,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 	struct lid_dir *lid_dirs[SOLIDIGM_MAX_UUID + 1] = { 0 };
 	struct nvme_id_uuid_list uuid_list = { 0 };
 	struct nvme_supported_log_pages supported = { 0 };
-	
+
 	err = get_supported_log_pages_log(dev, NO_UUID_INDEX, &supported);
 
 	if (!err) {
@@ -268,30 +268,29 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 				if (solidigm_lid_dir->lid[lid].supported)
 					lid_dirs[NO_UUID_INDEX]->lid[lid] = solidigm_lid_dir->lid[lid];
 			}
-		}
-		else {
+		} else {
 			for (int uuid_index = 1; uuid_index <= SOLIDIGM_MAX_UUID; uuid_index++) {
 				if (is_invalid_uuid(uuid_list.entry[uuid_index - 1]))
 					break;
 				else if (get_supported_log_pages_log(dev, uuid_index, &supported))
 					continue;
-				
+
 				if (is_solidigm_uuid(uuid_list.entry[uuid_index - 1]))
 					lid_dirs[uuid_index] = get_solidigm_lids(&supported);
 				else if (is_ocp_uuid(uuid_list.entry[uuid_index - 1]))
 					lid_dirs[uuid_index] = get_ocp_lids(&supported);
 			}
 		}
-	}
-	else
+	} else {
 		nvme_show_status(err);
+	}
 
 	if (!err) {
 		const enum nvme_print_flags print_flag = validate_output_format(format);
 
-		if (print_flag == NORMAL)
+		if (print_flag == NORMAL) {
 			supported_log_pages_normal(lid_dirs);
-		else if (print_flag == JSON) {
+		} else if (print_flag == JSON) {
 			supported_log_pages_json(lid_dirs);
 		} else {
 			fprintf(stderr, "Error: Invalid output format specified: %s.\n", format);

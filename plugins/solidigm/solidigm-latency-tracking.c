@@ -94,7 +94,6 @@ static void latency_tracker_bucket_parse(const struct latency_tracker *lt, int i
 	__u32 bucket_data = le32_to_cpu(lt->stats.data[id]);
 
 	if (lt->print_flags == NORMAL) {
-
 		printf("%-*d", COL_WIDTH, id);
 
 		get_time_unit_label(buffer, lower_us, true);
@@ -137,12 +136,10 @@ static void latency_tracker_parse_linear(const struct latency_tracker *lt,
 					 __u32 bytes_per, __u32 us_step,
 					 bool nonzero_print)
 {
-	for (int i = (start_offset / bytes_per) - 1;
-			i < end_offset / bytes_per; i++) {
-		if (nonzero_print && lt->stats.data[i] == 0)
+	for (int i = (start_offset / bytes_per) - 1; i < end_offset / bytes_per; i++) {
+		if (nonzero_print && !lt->stats.data[i])
 			continue;
-		latency_tracker_bucket_parse(lt, i, us_step * i,
-				             us_step * (i + 1), true);
+		latency_tracker_bucket_parse(lt, i, us_step * i, us_step * (i + 1), true);
 	}
 }
 
@@ -153,6 +150,7 @@ static void latency_tracker_parse_linear(const struct latency_tracker *lt,
 static int latency_tracker_bucket_pos2us(const struct latency_tracker *lt, int i)
 {
 	__u32 base_val = 1 <<  lt->base_range_bits;
+
 	if (i < (base_val << 1))
 		return i;
 
@@ -171,15 +169,15 @@ static int latency_tracker_bucket_pos2us(const struct latency_tracker *lt, int i
  *     "values" : {
  */
 static void latency_tracker_populate_json_root(const struct latency_tracker *lt,
-                                               struct json_object *root)
+					       struct json_object *root)
 {
 	struct json_object *subroot = json_create_object();
 
 	json_object_add_value_object(root, "latstats", subroot);
 	json_object_add_value_string(subroot, "type", lt->cfg.write ? "write" : "read");
-	if (lt->has_average_latency_field) {
-		json_object_add_value_uint64(subroot, "average_latency", le64_to_cpu(lt->stats.average_latency));
-	}
+	if (lt->has_average_latency_field)
+		json_object_add_value_uint64(subroot, "average_latency",
+					     le64_to_cpu(lt->stats.average_latency));
 	json_object_add_value_object(subroot, "values", lt->bucket_list);
 }
 
@@ -199,13 +197,12 @@ static void latency_tracker_parse_4_0(const struct latency_tracker *lt)
 		int lower_us = latency_tracker_bucket_pos2us(lt, i);
 		int upper_us = latency_tracker_bucket_pos2us(lt, i + 1);
 
-		latency_tracker_bucket_parse(lt, i, lower_us,
-				             upper_us,
+		latency_tracker_bucket_parse(lt, i, lower_us, upper_us,
 					     i < (lt->bucket_list_size - 1));
 	}
 }
 
-static void print_dash_separator()
+static void print_dash_separator(void)
 {
 	printf("--------------------------------------------------\n");
 }
@@ -218,16 +215,14 @@ static void latency_tracker_pre_parse(struct latency_tracker *lt)
 		printf("UUID-idx: %d\n", lt->uuid_index);
 		printf("Major Revision: %u\nMinor Revision: %u\n",
 			le16_to_cpu(lt->stats.version_major), le16_to_cpu(lt->stats.version_minor));
-		if (lt->has_average_latency_field) {
+		if (lt->has_average_latency_field)
 			printf("Average Latency: %" PRIu64 "\n", le64_to_cpu(lt->stats.average_latency));
-		}
 		print_dash_separator();
 		printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
 		print_dash_separator();
 	}
-	if (lt->print_flags == JSON) {
+	if (lt->print_flags == JSON)
 		lt->bucket_list = json_object_new_array();
-	}
 }
 
 static void latency_tracker_post_parse(struct latency_tracker *lt)
@@ -253,11 +248,10 @@ static void latency_tracker_parse(struct latency_tracker *lt)
 		latency_tracker_parse_3_0(lt);
 		break;
 	case 4:
-		if (version_minor >= 8){
+		if (version_minor >= 8)
 			lt->has_average_latency_field = true;
-		}
 		latency_tracker_pre_parse(lt);
-		if (version_minor == 0){
+		if (!version_minor) {
 			lt->base_range_bits = BASE_RANGE_BITS_4_0;
 			lt->bucket_list_size = BUCKET_LIST_SIZE_4_0;
 		}
@@ -275,7 +269,7 @@ static void latency_tracker_parse(struct latency_tracker *lt)
 #define LATENCY_TRACKING_FID 0xe2
 #define LATENCY_TRACKING_FID_DATA_LEN 32
 
-static int latency_tracking_is_enable(struct latency_tracker *lt, __u32 * enabled)
+static int latency_tracking_is_enable(struct latency_tracker *lt, __u32 *enabled)
 {
 	struct nvme_get_features_args args_get = {
 		.args_size	= sizeof(args_get),
@@ -298,13 +292,12 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 	__u32 result;
 	int err;
 
-	if (!(lt->cfg.enable || lt->cfg.disable)){
+	if (!(lt->cfg.enable || lt->cfg.disable))
 		return 0;
-	}
 
-	if (lt->cfg.enable && lt->cfg.disable){
-		fprintf(stderr,"Cannot enable and disable simultaneously.\n");
-		return EINVAL;
+	if (lt->cfg.enable && lt->cfg.disable) {
+		fprintf(stderr, "Cannot enable and disable simultaneously.\n");
+		return -EINVAL;
 	}
 
 	struct nvme_set_features_args args_set = {
@@ -345,9 +338,9 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 {
 	int err;
 
-	if (lt->cfg.read && lt->cfg.write){
-		fprintf(stderr,"Cannot capture read and write logs simultaneously.\n");
-		return EINVAL;
+	if (lt->cfg.read && lt->cfg.write) {
+		fprintf(stderr, "Cannot capture read and write logs simultaneously.\n");
+		return -EINVAL;
 	}
 
 	if (!(lt->cfg.read || lt->cfg.write))
@@ -422,31 +415,31 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 	if (lt.print_flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", lt.cfg.output_format);
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (lt.cfg.type > 0xf) {
 		fprintf(stderr, "Invalid Log type value '%d'\n", lt.cfg.type);
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (lt.cfg.type && !(lt.cfg.read || lt.cfg.write)) {
 		fprintf(stderr, "Log type option valid only when retrieving statistics\n");
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	lt.uuid_index = solidigm_get_vu_uuid_index(dev);
 
 	err = latency_tracking_enable(&lt);
-	if (err){
+	if (err) {
 		dev_close(dev);
 		return err;
 	}
 
 	err = latency_tracker_get_log(&lt);
-	if (err){
+	if (err) {
 		dev_close(dev);
 		return err;
 	}
@@ -460,16 +453,16 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 	if (!err) {
 		if (lt.print_flags == JSON) {
 			struct json_object *root = json_create_object();
-			json_object_add_value_int(root,"enabled", enabled);
+
+			json_object_add_value_int(root, "enabled", enabled);
 			json_print_object(root, NULL);
 			json_free_object(root);
 			printf("\n");
 		} else if (lt.print_flags == BINARY) {
 			putchar(enabled);
 		} else {
-		printf(
-			"Latency Statistics Tracking (UUID-idx:%d, FID:0x%X) is currently %i.\n",
-			lt.uuid_index, LATENCY_TRACKING_FID, enabled);
+			printf("Latency Statistics Tracking (UUID-idx:%d, FID:0x%X) is currently %i.\n",
+			       lt.uuid_index, LATENCY_TRACKING_FID, enabled);
 		}
 	} else {
 		fprintf(stderr, "Could not read feature id 0xE2.\n");

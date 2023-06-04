@@ -28,7 +28,7 @@ static bool telemetry_log_get_value(const struct telemetry_log *tl,
 	uint32_t offset_byte;
 	uint64_t val;
 
-	if (size_bit == 0) {
+	if (!size_bit) {
 		char err_msg[MAX_WARNING_SIZE];
 
 		snprintf(err_msg, MAX_WARNING_SIZE,
@@ -57,9 +57,8 @@ static bool telemetry_log_get_value(const struct telemetry_log *tl,
 		char err_msg[MAX_WARNING_SIZE];
 
 		snprintf(err_msg, MAX_WARNING_SIZE,
-			 "Value crossing 64 bit, byte aligned bounday, "
-			 "not supported. size_bit=%u, offset_bit_from_byte=%u.",
-			  size_bit, offset_bit_from_byte);
+		    "Value crossing 64 bit, byte aligned bounday, not supported. size_bit=%u, offset_bit_from_byte=%u.",
+		    size_bit, offset_bit_from_byte);
 		*val_obj = json_object_new_string(err_msg);
 
 		return false;
@@ -118,18 +117,18 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 		type = json_object_get_string(obj);
 
 	if (!json_object_object_get_ex(struct_def, "offsetBit", &obj)) {
-		SOLIDIGM_LOG_WARNING("Warning: Structure definition missing "
-				     "property 'offsetBit': %s",
-				     json_object_to_json_string(struct_def));
+		SOLIDIGM_LOG_WARNING(
+		    "Warning: Structure definition missing property 'offsetBit': %s",
+		    json_object_to_json_string(struct_def));
 		return  -1;
 	}
 
 	offset_bit = json_object_get_uint64(obj);
 
 	if (!json_object_object_get_ex(struct_def, "sizeBit", &obj)) {
-		SOLIDIGM_LOG_WARNING("Warning: Structure definition missing "
-				     "property 'sizeBit': %s",
-				     json_object_to_json_string(struct_def));
+		SOLIDIGM_LOG_WARNING(
+		    "Warning: Structure definition missing property 'sizeBit': %s",
+		    json_object_to_json_string(struct_def));
 		return  -1;
 	}
 
@@ -144,23 +143,23 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 
 	if (!json_object_object_get_ex(struct_def, "arraySize",
 				       &obj_arraySizeArray)) {
-		SOLIDIGM_LOG_WARNING("Warning: Structure definition missing "
-				     "property 'arraySize': %s",
-				     json_object_to_json_string(struct_def));
+		SOLIDIGM_LOG_WARNING(
+		    "Warning: Structure definition missing property 'arraySize': %s",
+		    json_object_to_json_string(struct_def));
 		return  -1;
 	}
 
 	array_rank = json_object_array_length(obj_arraySizeArray);
-	if (array_rank == 0) {
-		SOLIDIGM_LOG_WARNING("Warning: Structure property 'arraySize' "
-				     "don't support flexible array: %s",
-				     json_object_to_json_string(struct_def));
+	if (!array_rank) {
+		SOLIDIGM_LOG_WARNING(
+		    "Warning: Structure property 'arraySize' don't support flexible array: %s",
+		    json_object_to_json_string(struct_def));
 		return -1;
 	}
 	if (array_rank > MAX_ARRAY_RANK) {
-		SOLIDIGM_LOG_WARNING("Warning: Structure property 'arraySize' "
-				     "don't support more than %d dimensions: %s", MAX_ARRAY_RANK,
-				     json_object_to_json_string(struct_def));
+		SOLIDIGM_LOG_WARNING(
+		    "Warning: Structure property 'arraySize' don't support more than %d dimensions: %s",
+		    MAX_ARRAY_RANK, json_object_to_json_string(struct_def));
 		return -1;
 	}
 
@@ -233,10 +232,10 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 				else
 					json_object_object_add(sub_output, name, val_obj);
 			} else {
-				SOLIDIGM_LOG_WARNING("Warning: %s From property '%s', "
-						     "array index %u, structure definition: %s",
-						     json_object_get_string(val_obj),
-						     name, j, json_object_to_json_string(struct_def));
+				SOLIDIGM_LOG_WARNING(
+				    "Warning: %s From property '%s', array index %u, structure definition: %s",
+				    json_object_get_string(val_obj), name, j,
+				    json_object_to_json_string(struct_def));
 				json_free_object(val_obj);
 			}
 		} else {
@@ -378,17 +377,18 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 		const char *nlog_name = NULL;
 		uint32_t header_offset = sizeof(const struct telemetry_object_header);
 
-		if ((char *)&toc->items[i] > (((char *)toc) + da_size - sizeof(const struct toc_item))) {
-			SOLIDIGM_LOG_WARNING("Warning: Data Area %d, "
-					     "Table of Contents item %d "
-					     "crossed Data Area size.", da, i);
+		if ((char *)&toc->items[i] >
+		    (((char *)toc) + da_size - sizeof(const struct toc_item))) {
+			SOLIDIGM_LOG_WARNING(
+			    "Warning: Data Area %d, Table of Contents item %d crossed Data Area size.",
+			    da, i);
 			return;
 		}
 
 		obj_offset = toc->items[i].OffsetBytes;
 		if ((obj_offset + sizeof(const struct telemetry_object_header)) > da_size) {
-			SOLIDIGM_LOG_WARNING("Warning: Data Area %d, item %d "
-					     "data, crossed Data Area size.", da, i);
+			SOLIDIGM_LOG_WARNING(
+			    "Warning: Data Area %d, item %d data, crossed Data Area size.", da, i);
 			continue;
 		}
 
@@ -407,10 +407,10 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 		json_object_add_value_uint(toc_item, "mediaBankId", header->CoreId);
 
 		has_struct = solidigm_config_get_struct_by_token_version(tl->configuration,
-							          header->Token,
-								  header->versionMajor,
-								  header->versionMinor,
-								  &structure_definition);
+									 header->Token,
+									 header->versionMajor,
+									 header->versionMinor,
+									 &structure_definition);
 		if (!has_struct) {
 			if (!nlog_formats)
 				continue;
