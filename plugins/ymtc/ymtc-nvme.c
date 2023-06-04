@@ -120,8 +120,8 @@ static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_ymtc_smart_log smart_log;
-	char *desc = "Get Ymtc vendor specific additional smart log (optionally, "\
-		     "for the specified namespace), and show it.";
+	char *desc =
+	    "Get Ymtc vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
 	struct nvme_dev *dev;
