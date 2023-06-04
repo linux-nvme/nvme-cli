@@ -54,79 +54,54 @@ static char *log_pages_supp_print(__u32 pageID)
 	switch (pageID) {
 	case 0x01:
 		return "ERROR_INFORMATION";
-		break;
 	case 0x02:
 		return "SMART_INFORMATION";
-		break;
 	case 0x03:
 		return "FW_SLOT_INFORMATION";
-		break;
 	case 0x04:
 		return "CHANGED_NAMESPACE_LIST";
-		break;
 	case 0x05:
 		return "COMMANDS_SUPPORTED_AND_EFFECTS";
-		break;
 	case 0x06:
 		return "DEVICE_SELF_TEST";
-		break;
 	case 0x07:
 		return "TELEMETRY_HOST_INITIATED";
-		break;
 	case 0x08:
 		return "TELEMETRY_CONTROLLER_INITIATED";
-		break;
 	case 0xC0:
 		return "VS_MEDIA_SMART_LOG";
-		break;
 	case 0xC1:
 		return "VS_DEBUG_LOG1";
-		break;
 	case 0xC2:
 		return "VS_SEC_ERROR_LOG_PAGE";
-		break;
 	case 0xC3:
 		return "VS_LIFE_TIME_DRIVE_HISTORY";
-		break;
 	case 0xC4:
 		return "VS_EXTENDED_SMART_INFO";
-		break;
 	case 0xC5:
 		return "VS_LIST_SUPPORTED_LOG_PAGE";
-		break;
 	case 0xC6:
 		return "VS_POWER_MONITOR_LOG_PAGE";
-		break;
 	case 0xC7:
 		return "VS_CRITICAL_EVENT_LOG_PAGE";
-		break;
 	case 0xC8:
 		return "VS_RECENT_DRIVE_HISTORY";
-		break;
 	case 0xC9:
 		return "VS_SEC_ERROR_LOG_PAGE";
-		break;
 	case 0xCA:
 		return "VS_LIFE_TIME_DRIVE_HISTORY";
-		break;
 	case 0xCB:
 		return "VS_PCIE_ERROR_LOG_PAGE";
-		break;
 	case 0xCF:
 		return "DRAM Supercap SMART Attributes";
-		break;
 	case 0xD6:
 		return "VS_OEM2_WORK_LOAD";
-		break;
 	case 0xD7:
 		return "VS_OEM2_FW_SECURITY";
-		break;
 	case 0xD8:
 		return "VS_OEM2_REVISION";
-		break;
 	default:
 		return "UNKNOWN";
-		break;
 	}
 }
 
@@ -136,9 +111,8 @@ static int stx_is_jag_pan(char *devMN)
 
 	for (int i = 0; i < STX_NUM_LEGACY_DRV; i++) {
 		match_found = strncmp(devMN, stx_jag_pan_mn[i], strlen(stx_jag_pan_mn[i]));
-		if (match_found == 0) {
+		if (!match_found)
 			break;
-		}
 	}
 
 	return match_found;
@@ -157,6 +131,7 @@ static void json_log_pages_supp(log_page_map *logPageMap)
 
 	for (i = 0; i < le32_to_cpu(logPageMap->NumLogPages); i++) {
 		struct json_object *lbaf = json_create_object();
+
 		json_object_add_value_int(lbaf, "logpage_id",
 			le32_to_cpu(logPageMap->LogPageEntry[i].LogPageID));
 		json_object_add_value_string(lbaf, "logpage_name",
@@ -199,9 +174,9 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 				  sizeof(logPageMap), &logPageMap);
 	if (!err) {
 		if (strcmp(cfg.output_format, "json")) {
-			printf ("Seagate Supported Log-pages count :%d\n",
+			printf("Seagate Supported Log-pages count :%d\n",
 				le32_to_cpu(logPageMap.NumLogPages));
-			printf ("%-15s %-30s\n", "LogPage-Id", "LogPage-Name");
+			printf("%-15s %-30s\n", "LogPage-Id", "LogPage-Name");
 
 			for (fmt = 0; fmt < 45; fmt++)
 				printf("-");
@@ -227,154 +202,107 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 
 /* EOF Command for "log-pages-supp" */
 
-
 /***************************************
-* Extended-SMART Information
-***************************************/
+ * Extended-SMART Information
+ ***************************************/
 static char *print_ext_smart_id(__u8 attrId)
 {
 	switch (attrId) {
 	case VS_ATTR_ID_SOFT_READ_ERROR_RATE:
 		return "Soft ECC error count";
-		break;
 	case VS_ATTR_ID_REALLOCATED_SECTOR_COUNT:
 		return "Bad NAND block count";
-		break;
 	case VS_ATTR_ID_POWER_ON_HOURS:
 		return "Power On Hours";
-		break;
 	case VS_ATTR_ID_POWER_FAIL_EVENT_COUNT:
 		return "Power Fail Event Count";
-		break;
 	case VS_ATTR_ID_DEVICE_POWER_CYCLE_COUNT:
 		return "Device Power Cycle Count";
-		break;
 	case VS_ATTR_ID_RAW_READ_ERROR_RATE:
 		return "Raw Read Error Count";
-		break;
 	case VS_ATTR_ID_GROWN_BAD_BLOCK_COUNT:
 		return "Bad NAND block count";
-		break;
 	case VS_ATTR_ID_END_2_END_CORRECTION_COUNT:
 		return "SSD End to end correction counts";
-		break;
 	case VS_ATTR_ID_MIN_MAX_WEAR_RANGE_COUNT:
 		return "User data erase counts";
-		break;
 	case VS_ATTR_ID_REFRESH_COUNT:
 		return "Refresh count";
-		break;
 	case VS_ATTR_ID_BAD_BLOCK_COUNT_USER:
 		return "User data erase fail count";
-		break;
 	case VS_ATTR_ID_BAD_BLOCK_COUNT_SYSTEM:
 		return "System area erase fail count";
-		break;
 	case VS_ATTR_ID_THERMAL_THROTTLING_STATUS:
 		return "Thermal throttling status and count";
-		break;
 	case VS_ATTR_ID_ALL_PCIE_CORRECTABLE_ERROR_COUNT:
 		return "PCIe Correctable Error count";
-		break;
 	case VS_ATTR_ID_ALL_PCIE_UNCORRECTABLE_ERROR_COUNT:
 		return "PCIe Uncorrectable Error count";
-		break;
 	case VS_ATTR_ID_INCOMPLETE_SHUTDOWN_COUNT:
 		return "Incomplete shutdowns";
-		break;
 	case VS_ATTR_ID_GB_ERASED_LSB:
 		return "LSB of Flash GB erased";
-		break;
 	case VS_ATTR_ID_GB_ERASED_MSB:
 		return "MSB of Flash GB erased";
-		break;
 	case VS_ATTR_ID_LIFETIME_DEVSLEEP_EXIT_COUNT:
 		return "LIFETIME_DEV_SLEEP_EXIT_COUNT";
-		break;
 	case VS_ATTR_ID_LIFETIME_ENTERING_PS4_COUNT:
 		return "LIFETIME_ENTERING_PS4_COUNT";
-		break;
 	case VS_ATTR_ID_LIFETIME_ENTERING_PS3_COUNT:
 		return "LIFETIME_ENTERING_PS3_COUNT";
-		break;
 	case VS_ATTR_ID_RETIRED_BLOCK_COUNT:
 		return "Retired block count";
-		break;
 	case VS_ATTR_ID_PROGRAM_FAILURE_COUNT:
 		return "Program fail count";
-		break;
 	case VS_ATTR_ID_ERASE_FAIL_COUNT:
 		return "Erase Fail Count";
-		break;
 	case VS_ATTR_ID_AVG_ERASE_COUNT:
 		return "System data % used";
-		break;
 	case VS_ATTR_ID_UNEXPECTED_POWER_LOSS_COUNT:
 		return "Unexpected power loss count";
-		break;
 	case VS_ATTR_ID_WEAR_RANGE_DELTA:
 		return "Wear range delta";
-		break;
 	case VS_ATTR_ID_SATA_INTERFACE_DOWNSHIFT_COUNT:
 		return "PCIE_INTF_DOWNSHIFT_COUNT";
-		break;
 	case VS_ATTR_ID_END_TO_END_CRC_ERROR_COUNT:
 		return "E2E_CRC_ERROR_COUNT";
-		break;
 	case VS_ATTR_ID_UNCORRECTABLE_READ_ERRORS:
 		return "Uncorrectable Read Error Count";
-		break;
 	case VS_ATTR_ID_MAX_LIFE_TEMPERATURE:
 		return "Max lifetime temperature";
-		break;
 	case VS_ATTR_ID_RAISE_ECC_CORRECTABLE_ERROR_COUNT:
 		return "RAIS_ECC_CORRECT_ERR_COUNT";
-		break;
 	case VS_ATTR_ID_UNCORRECTABLE_RAISE_ERRORS:
 		return "Uncorrectable RAISE error count";
-		break;
 	case VS_ATTR_ID_DRIVE_LIFE_PROTECTION_STATUS:
 		return "DRIVE_LIFE_PROTECTION_STATUS";
-		break;
 	case VS_ATTR_ID_REMAINING_SSD_LIFE:
 		return "Remaining SSD life";
-		break;
 	case VS_ATTR_ID_LIFETIME_WRITES_TO_FLASH_LSB:
 		return "LSB of Physical (NAND) bytes written";
-		break;
 	case VS_ATTR_ID_LIFETIME_WRITES_TO_FLASH_MSB:
 		return "MSB of Physical (NAND) bytes written";
-		break;
 	case VS_ATTR_ID_LIFETIME_WRITES_FROM_HOST_LSB:
 		return "LSB of Physical (HOST) bytes written";
-		break;
 	case VS_ATTR_ID_LIFETIME_WRITES_FROM_HOST_MSB:
 		return "MSB of Physical (HOST) bytes written";
-		break;
 	case VS_ATTR_ID_LIFETIME_READS_TO_HOST_LSB:
 		return "LSB of Physical (NAND) bytes read";
-		break;
 	case VS_ATTR_ID_LIFETIME_READS_TO_HOST_MSB:
 		return "MSB of Physical (NAND) bytes read";
-		break;
 	case VS_ATTR_ID_FREE_SPACE:
 		return "Free Space";
-		break;
 	case VS_ATTR_ID_TRIM_COUNT_LSB:
 		return "LSB of Trim count";
-		break;
 	case VS_ATTR_ID_TRIM_COUNT_MSB:
 		return "MSB of Trim count";
-		break;
 	case VS_ATTR_ID_OP_PERCENTAGE:
 		return "OP percentage";
-		break;
 	case VS_ATTR_ID_MAX_SOC_LIFE_TEMPERATURE:
 		return "Max lifetime SOC temperature";
-		break;
 	default:
 		return "Un-Known";
-    }
+	}
 }
 
 static __u64 smart_attribute_vs(__u16 verNo, SmartVendorSpecific attr)
@@ -451,14 +379,13 @@ static void print_smart_log(__u16 verNo, SmartVendorSpecific attr, int lastAttr)
 		hideAttr = 1;
 	}
 
-	if ((attr.AttributeNumber != 0) && (hideAttr != 1)) {
+	if ((attr.AttributeNumber) && (hideAttr != 1)) {
 		printf("%-40s", print_ext_smart_id(attr.AttributeNumber));
 		printf("%-15d", attr.AttributeNumber);
 		printf(" 0x%016"PRIx64"\n", (uint64_t)smart_attribute_vs(verNo, attr));
 	}
 
 	if (lastAttr == 1) {
-
 		sprintf(strBuf, "%s", (print_ext_smart_id(VS_ATTR_ID_GB_ERASED_LSB) + 7));
 		printf("%-40s", strBuf);
 
@@ -516,7 +443,8 @@ static void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T
 
 	for (index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++) {
 		struct json_object *lbaf = json_create_object();
-		if (ExtdSMARTInfo->vendorData[index].AttributeNumber != 0) {
+
+		if (ExtdSMARTInfo->vendorData[index].AttributeNumber) {
 			json_object_add_value_string(lbaf, "attribute_name", print_ext_smart_id(ExtdSMARTInfo->vendorData[index].AttributeNumber));
 			json_object_add_value_int(lbaf, "attribute_id", ExtdSMARTInfo->vendorData[index].AttributeNumber);
 			json_object_add_value_int(lbaf, "attribute_value", smart_attribute_vs(ExtdSMARTInfo->Version, ExtdSMARTInfo->vendorData[index]));
@@ -612,8 +540,9 @@ static void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T
 static void print_smart_log_CF(vendor_log_page_CF *pLogPageCF)
 {
 	__u64 currentTemp, maxTemp;
+
 	printf("\n\nSeagate DRAM Supercap SMART Attributes :\n");
-	printf("%-39s %-19s \n", "Description", "Supercap Attributes");
+	printf("%-39s %-19s\n", "Description", "Supercap Attributes");
 
 	printf("%-40s", "Super-cap current temperature");
 	currentTemp = pLogPageCF->AttrCF.SuperCapCurrentTemperature;
@@ -698,7 +627,7 @@ static void json_print_smart_log_CF(struct json_object *root, vendor_log_page_CF
 static void print_stx_smart_log_C0(STX_EXT_SMART_LOG_PAGE_C0 *pLogPageC0)
 {
 	printf("\n\nSeagate SMART Health Attributes :\n");
-	printf("%-39s %-19s \n", "Description", "Health Attributes");
+	printf("%-39s %-19s\n", "Description", "Health Attributes");
 
 	printf("%-40s", "Physical Media Units Written");
 	printf(" 0x%016"PRIx64"%016"PRIx64"\n", le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.MS__u64),
@@ -986,7 +915,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err) {
-		printf ("\nDevice not found \n");
+		printf("\nDevice not found\n");
 		return -1;
 	}
 
@@ -1008,12 +937,11 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		return err;
 	}
 
-	if (stx_is_jag_pan(modelNo) == 0) {
-
+	if (!stx_is_jag_pan(modelNo)) {
 		err = nvme_get_log_simple(dev_fd(dev), 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 		if (!err) {
 			if (strcmp(cfg.output_format, "json")) {
-				printf("%-39s %-15s %-19s \n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
+				printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
 				for (index = 0; index < 80; index++)
 					printf("-");
 				printf("\n");
@@ -1046,15 +974,15 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 				json_print_object(root, NULL);
 				json_free_object(root);
 			}
-		} else if (err > 0)
+		} else if (err > 0) {
 			nvme_show_status(err);
+		}
 	} else {
 		err = nvme_get_log_simple(dev_fd(dev), 0xC0, sizeof(ehExtSmart), &ehExtSmart);
 
 		if (!err) {
 			if (strcmp(cfg.output_format, "json")) {
 				print_stx_smart_log_C0(&ehExtSmart);
-
 			} else {
 				lbafs_ExtSmart = json_create_object();
 				json_print_stx_smart_log_C0(lbafs_ExtSmart, &ehExtSmart);
@@ -1075,7 +1003,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 				  sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 	if (!err) {
 		if (strcmp(cfg.output_format, "json")) {
-			printf("%-39s %-15s %-19s \n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
+			printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
 			for (index = 0; index < 80; index++)
 				printf("-");
 			printf("\n");
@@ -1105,10 +1033,12 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 				json_array_add_value_object(lbafs, lbafs_DramSmart);
 				json_print_object(root, NULL);
 			}
-		} else if (!strcmp(cfg.output_format, "json"))
+		} else if (!strcmp(cfg.output_format, "json")) {
 			json_print_object(root, NULL);
-	} else if (err > 0)
+		}
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 
 	dev_close(dev);
 
@@ -1123,8 +1053,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 static void json_temp_stats(__u32 temperature, __u32 PcbTemp, __u32 SocTemp, __u32 maxTemperature,
 							__u32 MaxSocTemp, __u32 cf_err, __u32 scCurrentTemp, __u32 scMaxTem)
 {
-	struct json_object *root;
-	root = json_create_object();
+	struct json_object *root = json_create_object();
 
 	json_object_add_value_int(root, "Current temperature", temperature);
 	json_object_add_value_int(root, "Current PCB temperature", PcbTemp);
@@ -1167,7 +1096,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err) {
-		printf ("\nDevice not found \n");;
+		printf("\nDevice not found\n");
 		return -1;
 	}
 
@@ -1239,19 +1168,16 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
  ***************************************/
 static void print_vs_pcie_error_log(pcie_error_log_page  pcieErrorLog)
 {
-	__u32 correctPcieEc = 0;
-	__u32 uncorrectPcieEc = 0;
-	correctPcieEc = pcieErrorLog.BadDllpErrCnt + pcieErrorLog.BadTlpErrCnt
-		+ pcieErrorLog.RcvrErrCnt + pcieErrorLog.ReplayTOErrCnt
-		+ pcieErrorLog.ReplayNumRolloverErrCnt;
-
-	uncorrectPcieEc = pcieErrorLog.FCProtocolErrCnt + pcieErrorLog.DllpProtocolErrCnt
-		+ pcieErrorLog.CmpltnTOErrCnt + pcieErrorLog.RcvrQOverflowErrCnt
-		+ pcieErrorLog.UnexpectedCplTlpErrCnt + pcieErrorLog.CplTlpURErrCnt
-		+ pcieErrorLog.CplTlpCAErrCnt + pcieErrorLog.ReqCAErrCnt
-		+ pcieErrorLog.ReqURErrCnt + pcieErrorLog.EcrcErrCnt
-		+ pcieErrorLog.MalformedTlpErrCnt + pcieErrorLog.CplTlpPoisonedErrCnt
-		+ pcieErrorLog.MemRdTlpPoisonedErrCnt;
+	__u32 correctPcieEc = pcieErrorLog.BadDllpErrCnt + pcieErrorLog.BadTlpErrCnt +
+			      pcieErrorLog.RcvrErrCnt + pcieErrorLog.ReplayTOErrCnt +
+			      pcieErrorLog.ReplayNumRolloverErrCnt;
+	__u32 uncorrectPcieEc = pcieErrorLog.FCProtocolErrCnt + pcieErrorLog.DllpProtocolErrCnt +
+				pcieErrorLog.CmpltnTOErrCnt + pcieErrorLog.RcvrQOverflowErrCnt +
+				pcieErrorLog.UnexpectedCplTlpErrCnt + pcieErrorLog.CplTlpURErrCnt +
+				pcieErrorLog.CplTlpCAErrCnt + pcieErrorLog.ReqCAErrCnt +
+				pcieErrorLog.ReqURErrCnt + pcieErrorLog.EcrcErrCnt +
+				pcieErrorLog.MalformedTlpErrCnt + pcieErrorLog.CplTlpPoisonedErrCnt +
+				pcieErrorLog.MemRdTlpPoisonedErrCnt;
 
 	printf("%-45s : %u\n", "PCIe Correctable Error Count", correctPcieEc);
 	printf("%-45s : %u\n", "PCIe Un-Correctable Error Count", uncorrectPcieEc);
@@ -1279,21 +1205,17 @@ static void print_vs_pcie_error_log(pcie_error_log_page  pcieErrorLog)
 
 static void json_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 {
-	struct json_object *root;
-	root = json_create_object();
-	__u32 correctPcieEc = 0;
-	__u32 uncorrectPcieEc = 0;
-	correctPcieEc = pcieErrorLog.BadDllpErrCnt + pcieErrorLog.BadTlpErrCnt
-		+ pcieErrorLog.RcvrErrCnt + pcieErrorLog.ReplayTOErrCnt
-		+ pcieErrorLog.ReplayNumRolloverErrCnt;
-
-	uncorrectPcieEc = pcieErrorLog.FCProtocolErrCnt + pcieErrorLog.DllpProtocolErrCnt
-		+ pcieErrorLog.CmpltnTOErrCnt + pcieErrorLog.RcvrQOverflowErrCnt
-		+ pcieErrorLog.UnexpectedCplTlpErrCnt + pcieErrorLog.CplTlpURErrCnt
-		+ pcieErrorLog.CplTlpCAErrCnt + pcieErrorLog.ReqCAErrCnt
-		+ pcieErrorLog.ReqURErrCnt + pcieErrorLog.EcrcErrCnt
-		+ pcieErrorLog.MalformedTlpErrCnt + pcieErrorLog.CplTlpPoisonedErrCnt
-		+ pcieErrorLog.MemRdTlpPoisonedErrCnt;
+	struct json_object *root = json_create_object();
+	__u32 correctPcieEc = pcieErrorLog.BadDllpErrCnt + pcieErrorLog.BadTlpErrCnt +
+			      pcieErrorLog.RcvrErrCnt + pcieErrorLog.ReplayTOErrCnt +
+			      pcieErrorLog.ReplayNumRolloverErrCnt;
+	__u32 uncorrectPcieEc = pcieErrorLog.FCProtocolErrCnt + pcieErrorLog.DllpProtocolErrCnt +
+				pcieErrorLog.CmpltnTOErrCnt + pcieErrorLog.RcvrQOverflowErrCnt +
+				pcieErrorLog.UnexpectedCplTlpErrCnt + pcieErrorLog.CplTlpURErrCnt +
+				pcieErrorLog.CplTlpCAErrCnt + pcieErrorLog.ReqCAErrCnt +
+				pcieErrorLog.ReqURErrCnt + pcieErrorLog.EcrcErrCnt +
+				pcieErrorLog.MalformedTlpErrCnt + pcieErrorLog.CplTlpPoisonedErrCnt +
+				pcieErrorLog.MemRdTlpPoisonedErrCnt;
 
 	json_object_add_value_int(root, "PCIe Correctable Error Count", correctPcieEc);
 	json_object_add_value_int(root, "PCIe Un-Correctable Error Count", uncorrectPcieEc);
@@ -1341,7 +1263,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err) {
-		printf ("\nDevice not found \n");;
+		printf("\nDevice not found\n");
 		return -1;
 	}
 
@@ -1351,13 +1273,14 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	err = nvme_get_log_simple(dev_fd(dev), 0xCB,
 				  sizeof(pcieErrorLog), &pcieErrorLog);
 	if (!err) {
-		if (strcmp(cfg.output_format, "json")) {
+		if (strcmp(cfg.output_format, "json"))
 			print_vs_pcie_error_log(pcieErrorLog);
-		} else
+		else
 			json_vs_pcie_error_log(pcieErrorLog);
 
-	} else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 
 	dev_close(dev);
 	return err;
@@ -1384,8 +1307,8 @@ static void print_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwAct
 			printf("   %-4d   ", fwActivHis.fwActHisEnt[i].fwActivCnt);
 
 			time_t t = fwActivHis.fwActHisEnt[i].timeStamp / 1000;
-			struct tm  ts;
-			ts = *localtime(&t);
+			struct tm  ts = *localtime(&t);
+
 			strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
 			printf(" %-20s   ", buf);
 			printf("%-5" PRId64 "   ",
@@ -1401,7 +1324,7 @@ static void print_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwAct
 
 			printf("  %-2d  ", fwActivHis.fwActHisEnt[i].slotNum);
 			printf("      0x%02x      ", fwActivHis.fwActHisEnt[i].commitActionType);
-			printf("  0x%02x   \n", fwActivHis.fwActHisEnt[i].result);
+			printf("  0x%02x\n", fwActivHis.fwActHisEnt[i].result);
 		}
 	} else {
 		printf("%s\n", "Do not have valid FW Activation History");
@@ -1410,14 +1333,13 @@ static void print_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwAct
 
 static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActivHis)
 {
-	struct json_object *root;
-	root = json_create_object();
+	struct json_object *root = json_create_object();
 	__u32 i;
 
 	char buf[80];
 
-	struct json_object *historyLogPage;
-	historyLogPage = json_create_array();
+	struct json_object *historyLogPage = json_create_array();
+
 	json_object_add_value_array(root, "Seagate FW Activation History", historyLogPage);
 
 	if (fwActivHis.numValidFwActHisEnt > 0) {
@@ -1429,8 +1351,8 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 			json_object_add_value_int(lbaf, "Counter", fwActivHis.fwActHisEnt[i].fwActivCnt);
 
 			time_t t = fwActivHis.fwActHisEnt[i].timeStamp / 1000;
-			struct tm  ts;
-			ts = *localtime(&t);
+			struct tm  ts = *localtime(&t);
+
 			strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
 			printf(" %-20s   ", buf);
 			json_object_add_value_string(lbaf, "Timestamp", buf);
@@ -1479,7 +1401,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err < 0) {
-		printf ("\nDevice not found \n");;
+		printf("\nDevice not found\n");
 		return -1;
 	}
 
@@ -1488,13 +1410,14 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 
 	err = nvme_get_log_simple(dev_fd(dev), 0xC2, sizeof(fwActivHis), &fwActivHis);
 	if (!err) {
-		if (strcmp(cfg.output_format, "json")) {
+		if (strcmp(cfg.output_format, "json"))
 			print_stx_vs_fw_activate_history(fwActivHis);
-		} else
+		else
 			json_stx_vs_fw_activate_history(fwActivHis);
 
-	} else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 
 	dev_close(dev);
 	return err;
@@ -1527,7 +1450,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err < 0) {
-		printf ("\nDevice not found \n");
+		printf("\nDevice not found\n");
 		return -1;
 	}
 
@@ -1539,10 +1462,9 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 		return err;
 	}
 
-	if (stx_is_jag_pan(modelNo) == 0) {
-		printf ("\nDevice does not support Clear FW Activation History \n");
+	if (!stx_is_jag_pan(modelNo)) {
+		printf("\nDevice does not support Clear FW Activation History\n");
 	} else {
-
 		struct nvme_set_features_args args = {
 		.args_size  = sizeof(args),
 		.fd         = dev_fd(dev),
@@ -1560,7 +1482,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 	};
 	err = nvme_set_features(&args);
 	if (err)
-		fprintf(stderr, "%s: couldn't clear PCIe correctable errors \n",
+		fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n",
 			__func__);
 	}
 
@@ -1602,7 +1524,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err) {
-		printf ("\nDevice not found \n");;
+		printf("\nDevice not found\n");
 		return -1;
 	}
 
@@ -1615,27 +1537,27 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 		return err;
 	}
 
-	if (stx_is_jag_pan(modelNo) == 0) {
+	if (!stx_is_jag_pan(modelNo)) {
 		err = nvme_set_features_simple(dev_fd(dev), 0xE1, 0, 0xCB, cfg.save, &result);
 	} else {
 		struct nvme_set_features_args args = {
-		.args_size  = sizeof(args),
-		.fd         = dev_fd(dev),
-		.fid        = 0xC3,
-		.nsid       = 0,
-		.cdw11      = 0x80000000,
-		.cdw12      = 0,
-		.save       = 0,
-		.uuidx      = 0,
-		.cdw15      = 0,
-		.data_len   = 0,
-		.data       = NULL,
-		.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result     = &result,
-	};
-	err = nvme_set_features(&args);
-	if (err)
-		fprintf(stderr, "%s: couldn't clear PCIe correctable errors \n", __func__);
+			.args_size  = sizeof(args),
+			.fd         = dev_fd(dev),
+			.fid        = 0xC3,
+			.nsid       = 0,
+			.cdw11      = 0x80000000,
+			.cdw12      = 0,
+			.save       = 0,
+			.uuidx      = 0,
+			.cdw15      = 0,
+			.data_len   = 0,
+			.data       = NULL,
+			.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result     = &result,
+		};
+		err = nvme_set_features(&args);
+		if (err)
+			fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n", __func__);
 	}
 
 	err = nvme_set_features_simple(dev_fd(dev), 0xE1, 0, 0xCB, cfg.save, &result);
@@ -1651,11 +1573,11 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 
 static int get_host_tele(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Capture the Telemetry Host-Initiated Data in either " \
-		"hex-dump (default) or binary format";
+	const char *desc =
+	    "Capture the Telemetry Host-Initiated Data in either hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
-	const char *log_specific = "1 - controller shall capture Data representing the internal " \
-		"state of the controller at the time the command is processed. " \
+	const char *log_specific = "1 - controller shall capture Data representing the internal "
+		"state of the controller at the time the command is processed. "
 		"0 - controller shall not update the Telemetry Host Initiated Data.";
 	const char *raw = "output in raw format";
 	struct nvme_temetry_log_hdr tele_log;
@@ -1706,10 +1628,11 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 			d((unsigned char *)(&tele_log), sizeof(tele_log), 16, 1);
 		} else
 			seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
-	} else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
-	else
+	} else {
 		perror("log page");
+	}
 
 	blkCnt = 0;
 
@@ -1718,7 +1641,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		blksToGet = ((maxBlk - blkCnt) >= TELEMETRY_BLOCKS_TO_READ) ? TELEMETRY_BLOCKS_TO_READ : (maxBlk - blkCnt);
 
-		if (blksToGet == 0) {
+		if (!blksToGet) {
 			dev_close(dev);
 			return err;
 		}
@@ -1729,7 +1652,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log\n");
 			dev_close(dev);
-			return EINVAL;
+			return -EINVAL;
 		}
 
 		memset(log, 0, bytesToGet);
@@ -1761,10 +1684,11 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 				d((unsigned char *)log, bytesToGet, 16, 1);
 			} else
 				seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
-		} else if (err > 0)
+		} else if (err > 0) {
 			nvme_show_status(err);
-		else
+		} else {
 			perror("log page");
+		}
 
 		blkCnt += blksToGet;
 
@@ -1777,8 +1701,8 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Capture the Telemetry Controller-Initiated Data in either " \
-		"hex-dump (default) or binary format";
+	const char *desc =
+	    "Capture the Telemetry Controller-Initiated Data in either hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
 	const char *raw = "output in raw format";
 	struct nvme_dev *dev;
@@ -1826,10 +1750,11 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 			d((unsigned char *)(&tele_log), sizeof(tele_log), 16, 1);
 		} else
 			seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
-	} else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
-	else
+	} else {
 		perror("log page");
+	}
 
 	blkCnt = 0;
 
@@ -1838,7 +1763,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		blksToGet = ((maxBlk - blkCnt) >= TELEMETRY_BLOCKS_TO_READ) ? TELEMETRY_BLOCKS_TO_READ : (maxBlk - blkCnt);
 
-		if (blksToGet == 0)
+		if (!blksToGet)
 			return err;
 
 		bytesToGet = (unsigned long long)blksToGet * 512;
@@ -1846,7 +1771,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log\n");
-			return EINVAL;
+			return -EINVAL;
 		}
 
 		memset(log, 0, bytesToGet);
@@ -1878,10 +1803,11 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 				d((unsigned char *)log, bytesToGet, 16, 1);
 			} else
 				seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
-		} else if (err > 0)
+		} else if (err > 0) {
 			nvme_show_status(err);
-		else
+		} else {
 			perror("log page");
+		}
 
 		blkCnt += blksToGet;
 
@@ -1895,21 +1821,20 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 void seaget_d_raw(unsigned char *buf, int len, int fd)
 {
 	if (write(fd, (void *)buf, len) <= 0)
-		printf("%s: Write Failed\n", __FUNCTION__);
+		printf("%s: Write Failed\n", __func__);
 }
 
 
 static int vs_internal_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Capture the Telemetry Controller-Initiated Data in " \
-		"binary format";
+	const char *desc = "Capture the Telemetry Controller-Initiated Data in binary format";
 	const char *namespace_id = "desired namespace";
 
 	const char *file = "dump file";
 	struct nvme_dev *dev;
 	int err, dump_fd;
 	int flags = O_WRONLY | O_CREAT;
-	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	int mode = 0664;
 	struct nvme_temetry_log_hdr tele_log;
 	__le64  offset = 0;
 	__u16 log_id;
@@ -1942,7 +1867,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		if (dump_fd < 0) {
 			perror(cfg.file);
 			dev_close(dev);
-			return EINVAL;
+			return -EINVAL;
 		}
 	}
 
@@ -1954,10 +1879,11 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		offset += 512;
 
 		seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
-	} else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
-	else
+	} else {
 		perror("log page");
+	}
 
 	blkCnt = 0;
 
@@ -1966,9 +1892,8 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		blksToGet = ((maxBlk - blkCnt) >= TELEMETRY_BLOCKS_TO_READ) ? TELEMETRY_BLOCKS_TO_READ : (maxBlk - blkCnt);
 
-		if (blksToGet == 0) {
+		if (!blksToGet)
 			goto out;
-		}
 
 		bytesToGet = (unsigned long long)blksToGet * 512;
 		log = malloc(bytesToGet);
@@ -2004,10 +1929,11 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 			seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
 
-		} else if (err > 0)
+		} else if (err > 0) {
 			nvme_show_status(err);
-		else
+		} else {
 			perror("log page");
+		}
 
 		blkCnt += blksToGet;
 
@@ -2024,7 +1950,7 @@ out:
 /*SEAGATE-PLUGIN Version */
 static int seagate_plugin_version(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	printf("Seagate-Plugin version : %d.%d \n",
+	printf("Seagate-Plugin version : %d.%d\n",
 		   SEAGATE_PLUGIN_VERSION_MAJOR,
 		   SEAGATE_PLUGIN_VERSION_MINOR);
 	return 0;
@@ -2034,7 +1960,7 @@ static int seagate_plugin_version(int argc, char **argv, struct command *cmd, st
 /*OCP SEAGATE-PLUGIN Version */
 static int stx_ocp_plugin_version(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	printf("Seagate-OCP-Plugin version : %d.%d \n",
+	printf("Seagate-OCP-Plugin version : %d.%d\n",
 		SEAGATE_OCP_PLUGIN_VERSION_MAJOR,
 		SEAGATE_OCP_PLUGIN_VERSION_MINOR);
 	return 0;
