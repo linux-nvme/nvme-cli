@@ -61,8 +61,7 @@ enum sfx_nvme_admin_opcode {
 	nvme_admin_sfx_get_features	= 0xd6,
 };
 
-struct sfx_freespace_ctx
-{
+struct sfx_freespace_ctx {
 	__u64 free_space;
 	__u64 phy_cap;		/* physical capacity, in unit of sector */
 	__u64 phy_space;	/* physical space considering OP, in unit of sector */
@@ -83,72 +82,73 @@ struct nvme_capacity_info {
 	__u64 free_space;
 };
 
-struct  __attribute__((packed)) nvme_additional_smart_log_item {
+struct __packed nvme_additional_smart_log_item {
 	__u8			key;
 	__u8			_kp[2];
 	__u8			norm;
 	__u8			_np;
-	union __attribute__((packed)) {
+	union __packed {
 		__u8		raw[6];
-		struct __attribute__((packed))  wear_level {
+		struct __packed  wear_level {
 			__le16	min;
 			__le16	max;
 			__le16	avg;
 		} wear_level;
-		struct __attribute__((packed)) thermal_throttle {
+		struct __packed thermal_throttle {
 			__u8	pct;
 			__u32	count;
 		} thermal_throttle;
-	} ;
+	};
 	__u8			_rp;
-} ;
+};
 
 struct nvme_additional_smart_log {
-	struct nvme_additional_smart_log_item	 program_fail_cnt;
-	struct nvme_additional_smart_log_item	 erase_fail_cnt;
-	struct nvme_additional_smart_log_item	 wear_leveling_cnt;
-	struct nvme_additional_smart_log_item	 e2e_err_cnt;
-	struct nvme_additional_smart_log_item	 crc_err_cnt;
-	struct nvme_additional_smart_log_item	 timed_workload_media_wear;
-	struct nvme_additional_smart_log_item	 timed_workload_host_reads;
-	struct nvme_additional_smart_log_item	 timed_workload_timer;
-	struct nvme_additional_smart_log_item	 thermal_throttle_status;
-	struct nvme_additional_smart_log_item	 retry_buffer_overflow_cnt;
-	struct nvme_additional_smart_log_item	 pll_lock_loss_cnt;
-	struct nvme_additional_smart_log_item	 nand_bytes_written;
-	struct nvme_additional_smart_log_item	 host_bytes_written;
-	struct nvme_additional_smart_log_item	 raid_recover_cnt; // errors which can be recovered by RAID
-	struct nvme_additional_smart_log_item	 prog_timeout_cnt;
-	struct nvme_additional_smart_log_item	 erase_timeout_cnt;
-	struct nvme_additional_smart_log_item	 read_timeout_cnt;
-	struct nvme_additional_smart_log_item	 read_ecc_cnt;//retry cnt
-	struct nvme_additional_smart_log_item    non_media_crc_err_cnt;
-	struct nvme_additional_smart_log_item    compression_path_err_cnt;
-	struct nvme_additional_smart_log_item    out_of_space_flag;
-	struct nvme_additional_smart_log_item    physical_usage_ratio;
-	struct nvme_additional_smart_log_item    grown_bb; //grown bad block
+	struct nvme_additional_smart_log_item program_fail_cnt;
+	struct nvme_additional_smart_log_item erase_fail_cnt;
+	struct nvme_additional_smart_log_item wear_leveling_cnt;
+	struct nvme_additional_smart_log_item e2e_err_cnt;
+	struct nvme_additional_smart_log_item crc_err_cnt;
+	struct nvme_additional_smart_log_item timed_workload_media_wear;
+	struct nvme_additional_smart_log_item timed_workload_host_reads;
+	struct nvme_additional_smart_log_item timed_workload_timer;
+	struct nvme_additional_smart_log_item thermal_throttle_status;
+	struct nvme_additional_smart_log_item retry_buffer_overflow_cnt;
+	struct nvme_additional_smart_log_item pll_lock_loss_cnt;
+	struct nvme_additional_smart_log_item nand_bytes_written;
+	struct nvme_additional_smart_log_item host_bytes_written;
+	struct nvme_additional_smart_log_item raid_recover_cnt; /* errors which can be recovered by RAID */
+	struct nvme_additional_smart_log_item prog_timeout_cnt;
+	struct nvme_additional_smart_log_item erase_timeout_cnt;
+	struct nvme_additional_smart_log_item read_timeout_cnt;
+	struct nvme_additional_smart_log_item read_ecc_cnt; /* retry cnt */
+	struct nvme_additional_smart_log_item non_media_crc_err_cnt;
+	struct nvme_additional_smart_log_item compression_path_err_cnt;
+	struct nvme_additional_smart_log_item out_of_space_flag;
+	struct nvme_additional_smart_log_item physical_usage_ratio;
+	struct nvme_additional_smart_log_item grown_bb; /* grown bad block */
 };
 
 int nvme_query_cap(int fd, __u32 nsid, __u32 data_len, void *data)
 {
-	 int rc = 0;
-	 struct nvme_passthru_cmd cmd = {
-        .opcode          = nvme_admin_query_cap_info,
-        .nsid            = nsid,
-        .addr            = (__u64)(uintptr_t) data,
-        .data_len        = data_len,
-        };
+	int rc = 0;
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_admin_query_cap_info,
+		.nsid		= nsid,
+		.addr		= (__u64)(uintptr_t) data,
+		.data_len	= data_len,
+	};
 
-	 rc = ioctl(fd, SFX_GET_FREESPACE, data);
-	 return rc == 0 ? 0 : nvme_submit_admin_passthru(fd, &cmd, NULL);
+	rc = ioctl(fd, SFX_GET_FREESPACE, data);
+	return rc ? nvme_submit_admin_passthru(fd, &cmd, NULL) : 0;
 }
+
 int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 {
 	struct nvme_passthru_cmd cmd = {
-	.opcode		 = nvme_admin_change_cap,
-	.nsid		 = nsid,
-	.cdw10		 = (capacity & 0xffffffff),
-	.cdw11		 = (capacity >> 32),
+		.opcode	= nvme_admin_change_cap,
+		.nsid	= nsid,
+		.cdw10	= (capacity & 0xffffffff),
+		.cdw11	= (capacity >> 32),
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd, NULL);
@@ -157,10 +157,10 @@ int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 int nvme_sfx_set_features(int fd, __u32 nsid, __u32 fid, __u32 value)
 {
 	struct nvme_passthru_cmd cmd = {
-	.opcode		 = nvme_admin_sfx_set_features,
-	.nsid		 = nsid,
-	.cdw10		 = fid,
-	.cdw11		 = value,
+		.opcode	= nvme_admin_sfx_set_features,
+		.nsid	= nsid,
+		.cdw10	= fid,
+		.cdw11	= value,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd, NULL);
@@ -169,16 +169,15 @@ int nvme_sfx_set_features(int fd, __u32 nsid, __u32 fid, __u32 value)
 int nvme_sfx_get_features(int fd, __u32 nsid, __u32 fid, __u32 *result)
 {
 	int err = 0;
-	struct nvme_passthru_cmd cmd = {
-	.opcode		 = nvme_admin_sfx_get_features,
-	.nsid		 = nsid,
-	.cdw10		 = fid,
+		struct nvme_passthru_cmd cmd = {
+		.opcode	= nvme_admin_sfx_get_features,
+		.nsid	= nsid,
+		.cdw10	= fid,
 	};
 
 	err = nvme_submit_admin_passthru(fd, &cmd, NULL);
-	if (!err && result) {
+	if (!err && result)
 		*result = cmd.result;
-	}
 
 	return err;
 }
@@ -406,11 +405,11 @@ static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
-	char *desc = "Get ScaleFlux vendor specific additional smart log (optionally, "\
-			  "for the specified namespace), and show it.";
+	char *desc =
+	    "Get ScaleFlux vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
+	const char *json = "Dump output in json format";
 	struct nvme_dev *dev;
 	struct config {
 		__u32 namespace_id;
@@ -446,14 +445,14 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 					   dev->name);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
-	}
-	else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 	dev_close(dev);
 	return err;
 }
 
-struct __attribute__((__packed__)) sfx_lat_stats_vanda {
+struct __packed sfx_lat_stats_vanda {
 	__u16    maj;
 	__u16    min;
 	__u32	 bucket_1[32];	/* 0~1ms, step 32us */
@@ -464,7 +463,7 @@ struct __attribute__((__packed__)) sfx_lat_stats_vanda {
 	__u32	 bucket_6[1];	/* 4s+, specifically 4096ms+ */
 };
 
-struct __attribute__((__packed__)) sfx_lat_stats_myrtle {
+struct __packed sfx_lat_stats_myrtle {
 	__u16    maj;
 	__u16    min;
 	__u32	 bucket_1[64];	/* 0us~63us, step 1us */
@@ -490,7 +489,7 @@ struct __attribute__((__packed__)) sfx_lat_stats_myrtle {
 };
 
 
-struct __attribute__((__packed__)) sfx_lat_status_ver {
+struct __packed sfx_lat_status_ver {
 	__u16 maj;
 	__u16 min;
 };
@@ -654,23 +653,22 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 				  sizeof(stats), (void *)&stats);
 	if (!err) {
 		if ((stats.ver.maj == VANDA_MAJOR_IDX) && (stats.ver.min == VANDA_MINOR_IDX)) {
-			if (!cfg.raw_binary) {
+			if (!cfg.raw_binary)
 				show_lat_stats_vanda(&stats.vanda, cfg.write);
-			} else {
+			else
 				d_raw((unsigned char *)&stats.vanda, sizeof(struct sfx_lat_stats_vanda));
-			}
 		} else if ((stats.ver.maj == MYRTLE_MAJOR_IDX) && (stats.ver.min == MYRTLE_MINOR_IDX)) {
-			if (!cfg.raw_binary) {
+			if (!cfg.raw_binary)
 				show_lat_stats_myrtle(&stats.myrtle, cfg.write);
-			} else {
+			else
 				d_raw((unsigned char *)&stats.myrtle, sizeof(struct sfx_lat_stats_myrtle));
-			}
 		} else {
 			printf("ScaleFlux IO %s Command Latency Statistics Invalid Version Maj %d Min %d\n",
 				    cfg.write ? "Write" : "Read", stats.ver.maj, stats.ver.min);
 		}
-	} else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 	dev_close(dev);
 	return err;
 }
@@ -705,7 +703,7 @@ static int get_bb_table(int fd, __u32 nsid, unsigned char *buf, __u64 size)
 {
 	if (fd < 0 || !buf || size != 256*4096*sizeof(unsigned char)) {
 		fprintf(stderr, "Invalid Param \r\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	return sfx_nvme_get_log(fd, nsid, SFX_LOG_BBT, size, (void *)buf);
@@ -739,7 +737,7 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	remap_gbb_count = *((__u32 *)(bd_table + 4 * sizeof(__u32)));
 	bb_elem = (__u64 *)(bd_table + 5 * sizeof(__u32));
 
-	printf("Bad Block Table \n");
+	printf("Bad Block Table\n");
 	printf("MF_BB_COUNT:           %u\n", mf_bb_count);
 	printf("GROWN_BB_COUNT:        %u\n", grown_bb_count);
 	printf("TOTAL_BB_COUNT:        %u\n", total_bb_count);
@@ -800,7 +798,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 	err = get_bb_table(dev_fd(dev), 0xffffffff, data_buf, buf_size);
 	if (err < 0) {
 		perror("get-bad-block");
-	} else if (err != 0) {
+	} else if (err) {
 		nvme_show_status(err);
 	} else {
 		bd_table_show(data_buf, buf_size);
@@ -854,11 +852,10 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	if (!err) {
-		if (!cfg.raw_binary) {
+		if (!cfg.raw_binary)
 			show_cap_info(&ctx);
-		} else {
+		else
 			d_raw((unsigned char *)&ctx, sizeof(ctx));
-		}
 	}
 	dev_close(dev);
 	return err;
@@ -873,9 +870,8 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	__u64 provisoned_cap_4k = 0;
 	int extend = 0;
 
-	if (nvme_query_cap(fd, 0xffffffff, sizeof(freespace_ctx), &freespace_ctx)) {
-	    return -1;
-	}
+	if (nvme_query_cap(fd, 0xffffffff, sizeof(freespace_ctx), &freespace_ctx))
+		return -1;
 
 	/*
 	 * capacity illegal check
@@ -886,13 +882,12 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	    trg_in_4k > ((__u64)provisoned_cap_4k * 4)) {
 		fprintf(stderr,
 			"WARNING: Only support 1.0~4.0 x provisoned capacity!\n");
-		if (trg_in_4k < provisoned_cap_4k) {
+		if (trg_in_4k < provisoned_cap_4k)
 			fprintf(stderr,
 				"WARNING: The target capacity is less than 1.0 x provisioned capacity!\n");
-		} else {
+		else
 			fprintf(stderr,
 				"WARNING: The target capacity is larger than 4.0 x provisioned capacity!\n");
-		}
 		return -1;
 	}
 	if (trg_in_4k > ((__u64)provisoned_cap_4k*4)) {
@@ -902,7 +897,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 
 	/*
 	 * check whether mem enough if extend
-	 * */
+	 */
 	cur_in_4k = freespace_ctx.user_space >> (SFX_PAGE_SHIFT - SECTOR_SHIFT);
 	extend = (cur_in_4k <= trg_in_4k);
 	if (extend) {
@@ -913,10 +908,9 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 		mem_need = (trg_in_4k - cur_in_4k) * 8;
 		if (s_info.freeram <= 10 || mem_need > s_info.freeram) {
 			fprintf(stderr,
-				"WARNING: Free memory is not enough! "
-				"Please drop cache or extend more memory and retry\n"
-				"WARNING: Memory needed is %"PRIu64", free memory is %"PRIu64"\n",
-				(uint64_t)mem_need, (uint64_t)s_info.freeram);
+			    "WARNING: Free memory is not enough! Please drop cache or extend more memory and retry\n"
+			    "WARNING: Memory needed is %"PRIu64", free memory is %"PRIu64"\n",
+			    (uint64_t)mem_need, (uint64_t)s_info.freeram);
 			return -1;
 		}
 	}
@@ -935,6 +929,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 static int sfx_confirm_change(const char *str)
 {
 	unsigned char confirm;
+
 	fprintf(stderr, "WARNING: %s.\n"
 			"Use the force [--force] option to suppress this warning.\n", str);
 
@@ -944,7 +939,7 @@ static int sfx_confirm_change(const char *str)
 		fprintf(stderr, "Cancled.\n");
 		return 0;
 	}
-	fprintf(stderr, "Sending operation ... \n");
+	fprintf(stderr, "Sending operation ...\n");
 	return 1;
 }
 
@@ -1002,11 +997,11 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	}
 
 	err = nvme_change_cap(dev_fd(dev), 0xffffffff, cap_in_4k);
-	if (err < 0)
+	if (err < 0) {
 		perror("sfx-change-cap");
-	else if (err != 0)
+	} else if (err) {
 		nvme_show_status(err);
-	else {
+	} else {
 		printf("ScaleFlux change-capacity: success\n");
 		ioctl(dev_fd(dev), BLKRRPART);
 	}
@@ -1026,7 +1021,7 @@ static int sfx_verify_chr(int fd)
 	if (!S_ISCHR(nvme_stat.st_mode)) {
 		fprintf(stderr,
 			"Error: requesting clean card on non-controller handle\n");
-		return ENOTBLK;
+		return -ENOTBLK;
 	}
 	return 0;
 }
@@ -1050,13 +1045,12 @@ static int sfx_clean_card(int fd)
 char *sfx_feature_to_string(int feature)
 {
 	switch (feature) {
-		case SFX_FEAT_ATOMIC:
-			return "ATOMIC";
-		case SFX_FEAT_UP_P_CAP:
-			return "UPDATE_PROVISION_CAPACITY";
-
-		default:
-			return "Unknown";
+	case SFX_FEAT_ATOMIC:
+		return "ATOMIC";
+	case SFX_FEAT_UP_P_CAP:
+		return "UPDATE_PROVISION_CAPACITY";
+	default:
+		return "Unknown";
 	}
 }
 
@@ -1102,7 +1096,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (cfg.feature_id == SFX_FEAT_CLR_CARD) {
@@ -1116,7 +1110,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 
 	}
 
-	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value != 0) {
+	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value) {
 		if (cfg.namespace_id != 0xffffffff) {
 			err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id,
 					       &ns);
@@ -1134,14 +1128,14 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			if ((ns.flbas & 0xf) != 1) {
 				printf("Please change-sector size to 4K, then retry\n");
 				dev_close(dev);
-				return EFAULT;
+				return -EFAULT;
 			}
 		}
 	} else if (cfg.feature_id == SFX_FEAT_UP_P_CAP) {
 		if (cfg.value <= 0) {
 			fprintf(stderr, "Invalid Param\n");
 			dev_close(dev);
-			return EINVAL;
+			return -EINVAL;
 		}
 
 		/*Warning for change pacp by GB*/
@@ -1162,8 +1156,9 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	} else if (!err) {
 		printf("ScaleFlux set-feature:%#02x (%s), value:%d\n", cfg.feature_id,
 			sfx_feature_to_string(cfg.feature_id), cfg.value);
-	} else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 
 	dev_close(dev);
 	return err;
@@ -1201,7 +1196,7 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	err = nvme_sfx_get_features(dev_fd(dev), cfg.namespace_id,
@@ -1213,15 +1208,16 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 	} else if (!err) {
 		printf("ScaleFlux get-feature:%02x (%s), value:%d\n", cfg.feature_id,
 			sfx_feature_to_string(cfg.feature_id), result);
-	} else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 
 	dev_close(dev);
 	return err;
 
 }
 
-static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)
+static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char *output)
 {
 	__u32 offset = 0;
 	__u32 length = log_len;
@@ -1231,7 +1227,7 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)
 	__u8  code_type;
 	char  str_buffer[512];
 	__u32 str_pos;
-	FILE* fd;
+	FILE *fd;
 	int   err = 0;
 
 	enum sfx_evtlog_level {
@@ -1239,14 +1235,14 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)
 		sfx_evtlog_level_error,
 	};
 
-	const char* sfx_evtlog_warning[4] = {
+	const char *sfx_evtlog_warning[4] = {
 		"RESERVED",
 		"TOO_MANY_BB",
 		"LOW_SPACE",
 		"HIGH_TEMPERATURE"
 	};
 
-	const char* sfx_evtlog_error[14] = {
+	const char *sfx_evtlog_error[14] = {
 		"RESERVED",
 		"HAS_ASSERT",
 		"HAS_PANIC_DUMP",
@@ -1273,18 +1269,19 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)
 		char      bl2_ver[32];
 		__u16     code;
 		__u16     assert_id;
-	} __attribute__((packed));
+	} __packed;
 
-	struct sfx_nvme_evtlog_info* info = NULL;
+	struct sfx_nvme_evtlog_info *info = NULL;
 
-	if ((fd = fopen(output, "w+")) == NULL) {
+	fd = fopen(output, "w+");
+	if (!fd) {
 		fprintf(stderr, "Failed to open %s file to write\n", output);
 		err = ENOENT;
 		goto ret;
 	}
 
-	while(length > 0) {
-		info = (struct sfx_nvme_evtlog_info*)(pevent_log_info + offset);
+	while (length > 0) {
+		info = (struct sfx_nvme_evtlog_info *)(pevent_log_info + offset);
 
 		if ((info->magic1 == 0x474F4C545645) &&
 		    (info->magic2 == 0x38B0B3ABA9BA)) {
@@ -1303,27 +1300,26 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)
 			strcpy(str_buffer + str_pos, "]    event-log:\n");
 			str_pos = strlen(str_buffer);
 
-			snprintf(str_buffer + str_pos, 128, \
-                    "  > fw_version:         %s\n  > bl2_version:        %s\n",\
-                    info->fw_ver, info->bl2_ver);
+			snprintf(str_buffer + str_pos, 128,
+				 "  > fw_version:         %s\n  > bl2_version:        %s\n",
+				 info->fw_ver, info->bl2_ver);
 			str_pos = strlen(str_buffer);
 
 			code_level = (info->code & 0x100) >> 8;
 			code_type  = (info->code % 0x100);
 			if (code_level == sfx_evtlog_level_warning) {
-				snprintf(str_buffer + str_pos, 128,\
-                       "  > error_str:          [WARNING][%s]\n\n",\
-                       sfx_evtlog_warning[code_type]);
+				snprintf(str_buffer + str_pos, 128,
+					 "  > error_str:          [WARNING][%s]\n\n",
+					 sfx_evtlog_warning[code_type]);
 			} else {
-				if (info->assert_id) {
-					snprintf(str_buffer + str_pos, 128,\
-                            "  > error_str:          [ERROR][%s]\n  > assert_id:          %d\n\n",\
-                            sfx_evtlog_error[code_type], info->assert_id);
-				} else {
-					snprintf(str_buffer + str_pos, 128,\
-                            "  > error_str:          [ERROR][%s]\n\n",\
-                            sfx_evtlog_error[code_type]);
-				}
+				if (info->assert_id)
+					snprintf(str_buffer + str_pos, 128,
+						 "  > error_str:          [ERROR][%s]\n  > assert_id:          %d\n\n",
+						 sfx_evtlog_error[code_type], info->assert_id);
+				else
+					snprintf(str_buffer + str_pos, 128,
+						 "  > error_str:          [ERROR][%s]\n\n",
+						 sfx_evtlog_error[code_type]);
 			}
 			str_pos = strlen(str_buffer);
 
@@ -1336,9 +1332,8 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char* output)
 		offset++;
 		length--;
 
-		if (!(offset % (log_len / 100)) || (offset == log_len)) {
+		if (!(offset % (log_len / 100)) || (offset == log_len))
 			util_spinner("Parse", (float) (offset) / (float) (log_len));
-		}
 	}
 
 	printf("\nParse-evtlog: Success\n");
@@ -1349,8 +1344,8 @@ ret:
 	return err;
 }
 
-static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
-        __u32 storage_medium, char* file, bool parse, char*output)
+static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 storage_medium,
+			    char *file, bool parse, char *output)
 {
 	struct nvme_persistent_event_log *pevent;
 	void *pevent_log_info;
@@ -1364,7 +1359,7 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
 	FILE *fd = NULL;
 	struct nvme_get_log_args args = {
 		.args_size	= sizeof(args),
-		.fd		    = dev_fd(dev),
+		.fd		= dev_fd(dev),
 		.lid		= NVME_LOG_LID_PERSISTENT_EVENT,
 		.nsid		= namespace_id,
 		.lpo		= NVME_LOG_LPO_NONE,
@@ -1373,14 +1368,14 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
 		.rae		= false,
 		.uuidx		= NVME_UUID_NONE,
 		.csi		= NVME_CSI_NVM,
-		.ot		    = false,
+		.ot		= false,
 		.len		= 0,
 		.log		= NULL,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
 	};
 
-	if (storage_medium == 0) {
+	if (!storage_medium) {
 		lsp_base = 0;
 		single_len = 64 * 1024 - 4;
 	} else {
@@ -1412,9 +1407,8 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
 	}
 
 	log_len = le64_to_cpu(pevent->tll);
-	if (log_len % 4 != 0) {
+	if (log_len % 4)
 		log_len = (log_len / 4 + 1) * 4;
-	}
 
 	pevent_log_info = nvme_alloc(single_len, &huge);
 	if (!pevent_log_info) {
@@ -1422,7 +1416,8 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
 		goto free_pevent;
 	}
 
-	if ((fd = fopen(file, "wb+")) == NULL) {
+	fd = fopen(file, "wb+");
+	if (!fd) {
 		fprintf(stderr, "Failed to open %s file to write\n", file);
 		err = ENOENT;
 		goto free;
@@ -1431,7 +1426,7 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
 	args.lsp = lsp_base + NVME_PEVENT_LOG_READ;
 	args.log = pevent_log_info;
 	length = log_len;
-	while(length > 0) {
+	while (length > 0) {
 		args.lpo = offset;
 		if (length > single_len) {
 			args.len = single_len;
@@ -1467,7 +1462,8 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id,\
 		}
 
 		fclose(fd);
-		if ((fd = fopen(file, "rb")) == NULL) {
+		fd = fopen(file, "rb");
+		if (!fd) {
 			fprintf(stderr, "Failed to open %s file to read\n", file);
 			err = ENOENT;
 			goto free;
@@ -1492,22 +1488,22 @@ ret:
 
 static int sfx_dump_evtlog(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	char* desc = "dump evtlog into file and parse";
-	const char* file = "evtlog file(required)";
-	const char* namespace_id = "desired namespace";
-	const char* storage_medium = "evtlog storage medium\n"
-	                             "0: nand(default) 1: nor";
-	const char* parse = "parse error & warning evtlog from evtlog file";
-	const char* output = "parse result output file";
+	char *desc = "dump evtlog into file and parse";
+	const char *file = "evtlog file(required)";
+	const char *namespace_id = "desired namespace";
+	const char *storage_medium = "evtlog storage medium\n"
+				     "0: nand(default) 1: nor";
+	const char *parse = "parse error & warning evtlog from evtlog file";
+	const char *output = "parse result output file";
 	struct nvme_dev *dev;
 	int err = 0;
 
 	struct config {
-		char* file;
+		char *file;
 		__u32 namespace_id;
 		__u32 storage_medium;
 		bool  parse;
-		char* output;
+		char *output;
 	};
 	struct config cfg = {
 		.file = NULL,
@@ -1543,9 +1539,6 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *cmd, struct pl
 	}
 
 	err = nvme_dump_evtlog(dev, cfg.namespace_id, cfg.storage_medium, cfg.file, cfg.parse, cfg.output);
-	if (err) {
-		goto close_dev;
-	}
 
 close_dev:
 	dev_close(dev);
@@ -1553,8 +1546,8 @@ ret:
 	return err;
 }
 
-static int nvme_expand_cap(struct nvme_dev *dev, __u32 namespace_id,\
-        __u64 namespace_size, __u64 namespace_cap, __u32 lbaf, __u32 units)
+static int nvme_expand_cap(struct nvme_dev *dev, __u32 namespace_id, __u64 namespace_size,
+			   __u64 namespace_cap, __u32 lbaf, __u32 units)
 {
 	struct dirent **devices;
 	char dev_name[32] = "";
@@ -1568,13 +1561,12 @@ static int nvme_expand_cap(struct nvme_dev *dev, __u32 namespace_id,\
 		__u8  reserve[10];
 		__u8  lbaf;
 		__u8  reserve1[5];
-	} __attribute__((packed));
+	} __packed;
 
-	if (S_ISCHR(dev->direct.stat.st_mode)) {
+	if (S_ISCHR(dev->direct.stat.st_mode))
 		snprintf(dev_name, 32, "%sn%u", dev->name, namespace_id);
-	} else {
+	else
 		strcpy(dev_name, dev->name);
-	}
 
 	num = scandir("/dev", &devices, nvme_namespace_filter, alphasort);
 	if (num <= 0) {
@@ -1588,7 +1580,7 @@ static int nvme_expand_cap(struct nvme_dev *dev, __u32 namespace_id,\
 		goto free_devices;
 	}
 
-	if (units == 0) {
+	if (!units) {
 		namespace_size = IDEMA_CAP(namespace_size) / (1 << (lbaf * 3));
 		namespace_cap  = IDEMA_CAP(namespace_cap) / (1 << (lbaf * 3));
 	}
@@ -1615,9 +1607,8 @@ static int nvme_expand_cap(struct nvme_dev *dev, __u32 namespace_id,\
 	}
 
 free_devices:
-	for (i=0; i<num; i++) {
+	for (i = 0; i < num; i++)
 		free(devices[i]);
-	}
 	free(devices);
 ret:
 	return err;
@@ -1625,14 +1616,14 @@ ret:
 
 static int sfx_expand_cap(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	char* desc = "expand capacity";
-	const char* namespace_id = "desired namespace";
-	const char* namespace_size = "namespace size(required)";
-	const char* namespace_cap = "namespace capacity(required)";
-	const char* lbaf = "LBA format to apply\n"
-	                   "0: 512(default) 1: 4096";
-	const char* units= "namespace size/capacity units\n"
-	                   "0: GB(default) 1: LBA";
+	char *desc = "expand capacity";
+	const char *namespace_id = "desired namespace";
+	const char *namespace_size = "namespace size(required)";
+	const char *namespace_cap = "namespace capacity(required)";
+	const char *lbaf = "LBA format to apply\n"
+			   "0: 512(default) 1: 4096";
+	const char *units = "namespace size/capacity units\n"
+			    "0: GB(default) 1: LBA";
 	struct nvme_dev *dev;
 	int err = 0;
 
@@ -1685,9 +1676,8 @@ static int sfx_expand_cap(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	err = nvme_expand_cap(dev, cfg.namespace_id, cfg.namespace_size, cfg.namespace_cap, cfg.lbaf, cfg.units);
-	if (err) {
+	if (err)
 		goto close_dev;
-	}
 
 	printf("%s: Success, create nsid:%d\n", cmd->name, cfg.namespace_id);
 
