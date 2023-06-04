@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
-* Copyright (c) 2018 NetApp, Inc.
-*
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* as published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-*/
+ * Copyright (c) 2018 NetApp, Inc.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
 #include <stdio.h>
 #include <dirent.h>
@@ -57,14 +57,14 @@ enum {
 static const char *dev_path = "/dev/";
 
 struct smdevice_info {
-	unsigned		nsid;
+	unsigned int		nsid;
 	struct nvme_id_ctrl	ctrl;
 	struct nvme_id_ns	ns;
 	char			dev[265];
 };
 
 struct ontapdevice_info {
-	unsigned		nsid;
+	unsigned int		nsid;
 	struct nvme_id_ctrl	ctrl;
 	struct nvme_id_ns	ns;
 	unsigned char		uuid[NVME_UUID_LEN];
@@ -107,6 +107,7 @@ static void netapp_get_ns_size(char *size, unsigned long long *lba,
 		struct nvme_id_ns *ns)
 {
 	__u8 lba_index;
+
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	*lba = 1ULL << ns->lbaf[lba_index].ds;
 	double nsze = le64_to_cpu(ns->nsze) * (*lba);
@@ -237,8 +238,8 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 	char array_label[ARRAY_LABEL_LEN / 2 + 1];
 	char volume_label[VOLUME_LABEL_LEN / 2 + 1];
 	char nguid_str[33];
-	char basestr[] = "%s, Array Name %s, Volume Name %s, NSID %d, "
-			"Volume ID %s, Controller %c, Access State %s, %s\n";
+	char basestr[] =
+	    "%s, Array Name %s, Volume Name %s, NSID %d, Volume ID %s, Controller %c, Access State %s, %s\n";
 	char columnstr[] = "%-16s %-30s %-30s %4d %32s  %c   %-12s %9s\n";
 	char *formatstr = basestr; /* default to "normal" output format */
 	__u8 lba_index;
@@ -254,8 +255,7 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 			"------------------------------", "----",
 			"--------------------------------", "----",
 			"------------", "---------");
-	}
-	else if (format == NJSON) {
+	} else if (format == NJSON) {
 		/* prepare for json output */
 		root = json_create_object();
 		json_devices = json_create_array();
@@ -263,7 +263,7 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 
 	for (i = 0; i < count; i++) {
 		nvme_id_ns_flbas_to_lbaf_inuse(devices[i].ns.flbas, &lba_index);
-		unsigned long long int lba = 1ULL << devices[i].ns.lbaf[lba_index].ds;
+		unsigned long long lba = 1ULL << devices[i].ns.lbaf[lba_index].ds;
 		double nsze = le64_to_cpu(devices[i].ns.nsze) * lba;
 		const char *s_suffix = suffix_si_get(&nsze);
 		char size[128];
@@ -464,7 +464,7 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 	err = nvme_get_ontap_c2_log(fd, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get log page data for %s (%s)\n",
-			dev, err < 0 ? strerror(-err):
+			dev, err < 0 ? strerror(-err) :
 			nvme_status_to_string(err, false));
 		return 0;
 	}
@@ -553,7 +553,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 	smdevices = calloc(num, sizeof(*smdevices));
 	if (!smdevices) {
 		fprintf(stderr, "Unable to allocate memory for devices.\n");
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	for (i = 0; i < num; i++) {
