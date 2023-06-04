@@ -16,25 +16,25 @@
 #define CREATE_CMD
 #include "shannon-nvme.h"
 
-typedef enum {
+enum {
 	PROGRAM_FAIL_CNT,
 	ERASE_FAIL_CNT,
 	WEARLEVELING_COUNT,
 	E2E_ERR_CNT,
 	CRC_ERR_CNT,
-	TIME_WORKLOAD_MEDIA_WEAR,	
-	TIME_WORKLOAD_HOST_READS, 	
-	TIME_WORKLOAD_TIMER,	  	
-	THERMAL_THROTTLE,	      
-	RETRY_BUFFER_OVERFLOW,		
-	PLL_LOCK_LOSS,			 	
+	TIME_WORKLOAD_MEDIA_WEAR,
+	TIME_WORKLOAD_HOST_READS,
+	TIME_WORKLOAD_TIMER,
+	THERMAL_THROTTLE,
+	RETRY_BUFFER_OVERFLOW,
+	PLL_LOCK_LOSS,
 	NAND_WRITE,
 	HOST_WRITE,
 	SRAM_ERROR_CNT,
 	ADD_SMART_ITEMS,
-}addtional_smart_items;
+};
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
 struct nvme_shannon_smart_log_item {
 	__u8			rsv1[3];
 	__u8			norm;
@@ -45,7 +45,7 @@ struct nvme_shannon_smart_log_item {
 			__le16	min;
 			__le16	max;
 			__le16	avg;
-		} wear_level ;
+		} wear_level;
 		struct thermal_throttle {
 			__u8	st;
 			__u32	count;
@@ -57,68 +57,67 @@ struct nvme_shannon_smart_log_item {
 
 struct nvme_shannon_smart_log {
 	struct nvme_shannon_smart_log_item items[ADD_SMART_ITEMS];
-	 __u8  vend_spec_resv; 
+	__u8  vend_spec_resv;
 };
 
-static void show_shannon_smart_log(struct nvme_shannon_smart_log *smart,
-		unsigned int nsid, const char *devname)
+static void show_shannon_smart_log(struct nvme_shannon_smart_log *smart, unsigned int nsid,
+				   const char *devname)
 {
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
-		devname, nsid);
+	       devname, nsid);
 	printf("key                               normalized value\n");
 	printf("program_fail_count              : %3d%%       %"PRIu64"\n",
-		smart->items[PROGRAM_FAIL_CNT].norm,
-		int48_to_long(smart->items[PROGRAM_FAIL_CNT].item_val));
+	       smart->items[PROGRAM_FAIL_CNT].norm,
+	       int48_to_long(smart->items[PROGRAM_FAIL_CNT].item_val));
 	printf("erase_fail_count                : %3d%%       %"PRIu64"\n",
-		smart->items[ERASE_FAIL_CNT].norm,
-		int48_to_long(smart->items[ERASE_FAIL_CNT].item_val));
+	       smart->items[ERASE_FAIL_CNT].norm,
+	       int48_to_long(smart->items[ERASE_FAIL_CNT].item_val));
 	printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
-		smart->items[WEARLEVELING_COUNT].norm,
-		le16_to_cpu(smart->items[WEARLEVELING_COUNT].wear_level.min),
-		le16_to_cpu(smart->items[WEARLEVELING_COUNT].wear_level.max),
-		le16_to_cpu(smart->items[WEARLEVELING_COUNT].wear_level.avg));
+	       smart->items[WEARLEVELING_COUNT].norm,
+	       le16_to_cpu(smart->items[WEARLEVELING_COUNT].wear_level.min),
+	       le16_to_cpu(smart->items[WEARLEVELING_COUNT].wear_level.max),
+	       le16_to_cpu(smart->items[WEARLEVELING_COUNT].wear_level.avg));
 	printf("end_to_end_error_detection_count: %3d%%       %"PRIu64"\n",
-		smart->items[E2E_ERR_CNT].norm,
-		int48_to_long(smart->items[E2E_ERR_CNT].item_val));
+	       smart->items[E2E_ERR_CNT].norm,
+	       int48_to_long(smart->items[E2E_ERR_CNT].item_val));
 	printf("crc_error_count                 : %3d%%       %"PRIu64"\n",
-		smart->items[CRC_ERR_CNT].norm,
-		int48_to_long(smart->items[CRC_ERR_CNT].item_val));
+	       smart->items[CRC_ERR_CNT].norm,
+	       int48_to_long(smart->items[CRC_ERR_CNT].item_val));
 	printf("timed_workload_media_wear       : %3d%%       %.3f%%\n",
-		smart->items[TIME_WORKLOAD_MEDIA_WEAR].norm,
-		((float)int48_to_long(smart->items[TIME_WORKLOAD_MEDIA_WEAR].item_val)) / 1024);
+	       smart->items[TIME_WORKLOAD_MEDIA_WEAR].norm,
+	       ((float)int48_to_long(smart->items[TIME_WORKLOAD_MEDIA_WEAR].item_val)) / 1024);
 	printf("timed_workload_host_reads       : %3d%%       %"PRIu64"%%\n",
-		smart->items[TIME_WORKLOAD_HOST_READS].norm,
-		int48_to_long(smart->items[TIME_WORKLOAD_HOST_READS].item_val));
+	       smart->items[TIME_WORKLOAD_HOST_READS].norm,
+	       int48_to_long(smart->items[TIME_WORKLOAD_HOST_READS].item_val));
 	printf("timed_workload_timer            : %3d%%       %"PRIu64" min\n",
-		smart->items[TIME_WORKLOAD_TIMER].norm,
-		int48_to_long(smart->items[TIME_WORKLOAD_TIMER].item_val));
+	       smart->items[TIME_WORKLOAD_TIMER].norm,
+	       int48_to_long(smart->items[TIME_WORKLOAD_TIMER].item_val));
 	printf("thermal_throttle_status         : %3d%%       CurTTSta: %u%%, TTCnt: %u\n",
-		smart->items[THERMAL_THROTTLE].norm,
-		smart->items[THERMAL_THROTTLE].thermal_throttle.st,
-		smart->items[THERMAL_THROTTLE].thermal_throttle.count);
+	       smart->items[THERMAL_THROTTLE].norm,
+	       smart->items[THERMAL_THROTTLE].thermal_throttle.st,
+	       smart->items[THERMAL_THROTTLE].thermal_throttle.count);
 	printf("retry_buffer_overflow_count     : %3d%%       %"PRIu64"\n",
-		smart->items[RETRY_BUFFER_OVERFLOW].norm,
-		int48_to_long(smart->items[RETRY_BUFFER_OVERFLOW].item_val));
+	       smart->items[RETRY_BUFFER_OVERFLOW].norm,
+	       int48_to_long(smart->items[RETRY_BUFFER_OVERFLOW].item_val));
 	printf("pll_lock_loss_count             : %3d%%       %"PRIu64"\n",
-		smart->items[PLL_LOCK_LOSS].norm,
-		int48_to_long(smart->items[PLL_LOCK_LOSS].item_val));
+	       smart->items[PLL_LOCK_LOSS].norm,
+	       int48_to_long(smart->items[PLL_LOCK_LOSS].item_val));
 	printf("nand_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
-		smart->items[NAND_WRITE].norm,
-		int48_to_long(smart->items[NAND_WRITE].item_val));
+	       smart->items[NAND_WRITE].norm,
+	       int48_to_long(smart->items[NAND_WRITE].item_val));
 	printf("host_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
-		smart->items[HOST_WRITE].norm,
-		int48_to_long(smart->items[HOST_WRITE].item_val));
-	printf("sram_error_count		: %3d%%       %"PRIu64"\n",
-		smart->items[RETRY_BUFFER_OVERFLOW].norm,
-		int48_to_long(smart->items[SRAM_ERROR_CNT].item_val));
+	       smart->items[HOST_WRITE].norm,
+	       int48_to_long(smart->items[HOST_WRITE].item_val));
+	printf("sram_error_count        : %3d%%       %"PRIu64"\n",
+	       smart->items[RETRY_BUFFER_OVERFLOW].norm,
+	       int48_to_long(smart->items[SRAM_ERROR_CNT].item_val));
 }
-
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_shannon_smart_log smart_log;
-	char *desc = "Get Shannon vendor specific additional smart log (optionally, "\
-		      "for the specified namespace), and show it.";
+	char *desc =
+	    "Get Shannon vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
 	struct nvme_dev *dev;
@@ -134,7 +133,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
+		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	  raw),
 		OPT_END()
 	};
 
@@ -145,30 +144,29 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 				sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
-			show_shannon_smart_log(&smart_log, cfg.namespace_id,
-					       dev->name);
+			show_shannon_smart_log(&smart_log, cfg.namespace_id, dev->name);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
-	}
-	else if (err > 0)
+	} else if (err > 0) {
 		nvme_show_status(err);
+	}
 	dev_close(dev);
 	return err;
 }
 
 static int get_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Read operating parameters of the "\
-		"specified controller. Operating parameters are grouped "\
-		"and identified by Feature Identifiers; each Feature "\
-		"Identifier contains one or more attributes that may affect "\
-		"behavior of the feature. Each Feature has three possible "\
-		"settings: default, saveable, and current. If a Feature is "\
-		"saveable, it may be modified by set-feature. Default values "\
-		"are vendor-specific and not changeable. Use set-feature to "\
-		"change saveable Features.\n\n"\
-		"Available additional feature id:\n"\
-		"0x02:	Shannon power management\n";
+	const char *desc = "Read operating parameters of the "
+		"specified controller. Operating parameters are grouped "
+		"and identified by Feature Identifiers; each Feature "
+		"Identifier contains one or more attributes that may affect "
+		"behavior of the feature. Each Feature has three possible "
+		"settings: default, saveable, and current. If a Feature is "
+		"saveable, it may be modified by set-feature. Default values "
+		"are vendor-specific and not changeable. Use set-feature to "
+		"change saveable Features.\n\n"
+		"Available additional feature id:\n"
+		"0x02:  Shannon power management\n";
 	const char *raw = "show infos in binary format";
 	const char *namespace_id = "identifier of desired namespace";
 	const char *feature_id = "hexadecimal feature name";
@@ -194,19 +192,19 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	struct config cfg = {
 		.namespace_id = 1,
 		.feature_id   = 0,
-		.sel          = 0,
-		.cdw11        = 0,
-		.data_len     = 0,
+		.sel		  = 0,
+		.cdw11		  = 0,
+		.data_len	  = 0,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
-		OPT_UINT("feature-id",    'f', &cfg.feature_id,     feature_id),
-		OPT_BYTE("sel",           's', &cfg.sel,            sel),
-		OPT_UINT("data-len",      'l', &cfg.data_len,       data_len),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
-		OPT_UINT("cdw11",         'c', &cfg.cdw11,          cdw11),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,	namespace_id),
+		OPT_UINT("feature-id",	   'f', &cfg.feature_id,	feature_id),
+		OPT_BYTE("sel",		   's', &cfg.sel,		sel),
+		OPT_UINT("data-len",	   'l', &cfg.data_len,		data_len),
+		OPT_FLAG("raw-binary",	   'b', &cfg.raw_binary,	raw),
+		OPT_UINT("cdw11",	   'c', &cfg.cdw11,		cdw11),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable,	human_readable),
 		OPT_END()
 	};
 
@@ -217,16 +215,15 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 	if (cfg.data_len) {
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
-		{
+		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			dev_close(dev);
 			exit(ENOMEM);
 		}
@@ -247,23 +244,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		.result		= &result,
 	};
 	err = nvme_get_features(&args);
-	if (!err) {
-#if 0
-		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
-				nvme_feature_to_string(cfg.feature_id),
-				nvme_select_to_string(cfg.sel), result);
-		if (cfg.human_readable)
-			nvme_feature_show_fields(cfg.feature_id, result, buf);
-		else {
-			if (buf) {
-				if (!cfg.raw_binary)
-					d(buf, cfg.data_len, 16, 1);
-				else
-					d_raw(buf, cfg.data_len);
-			}
-		}
-#endif
-	} else if (err > 0)
+	if (err > 0)
 		nvme_show_status(err);
 	if (buf)
 		free(buf);
@@ -272,17 +253,17 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 
 static int set_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Modify the saveable or changeable "\
-		"current operating parameters of the controller. Operating "\
-		"parameters are grouped and identified by Feature "\
-		"Identifiers. Feature settings can be applied to the entire "\
-		"controller and all associated namespaces, or to only a few "\
-		"namespace(s) associated with the controller. Default values "\
-		"for each Feature are vendor-specific and may not be modified."\
-		"Use get-feature to determine which Features are supported by "\
-		"the controller and are saveable/changeable.\n\n"\
-		"Available additional feature id:\n"\
-		"0x02:	Shannon power management\n";
+	const char *desc = "Modify the saveable or changeable "
+		"current operating parameters of the controller. Operating "
+		"parameters are grouped and identified by Feature "
+		"Identifiers. Feature settings can be applied to the entire "
+		"controller and all associated namespaces, or to only a few "
+		"namespace(s) associated with the controller. Default values "
+		"for each Feature are vendor-specific and may not be modified."
+		"Use get-feature to determine which Features are supported by "
+		"the controller and are saveable/changeable.\n\n"
+		"Available additional feature id:\n"
+		"0x02:  Shannon power management\n";
 	const char *namespace_id = "desired namespace";
 	const char *feature_id = "hex feature name (required)";
 	const char *data_len = "buffer length if data required";
@@ -305,21 +286,21 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	};
 
 	struct config cfg = {
-		.file         = "",
+		.file	      = "",
 		.namespace_id = 0,
 		.feature_id   = 0,
-		.value        = 0,
+		.value	      = 0,
 		.data_len     = 0,
-		.save         = 0,
+		.save	      = 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("feature-id",   'f', &cfg.feature_id,   feature_id),
-		OPT_UINT("value",        'v', &cfg.value,        value),
-		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
-		OPT_FILE("data",         'd', &cfg.file,         data),
-		OPT_FLAG("save",         's', &cfg.save,         save),
+		OPT_UINT("feature-id",	 'f', &cfg.feature_id,	 feature_id),
+		OPT_UINT("value",	 'v', &cfg.value,	 value),
+		OPT_UINT("data-len",	 'l', &cfg.data_len,	 data_len),
+		OPT_FILE("data",	 'd', &cfg.file,	 data),
+		OPT_FLAG("save",	 's', &cfg.save,	 save),
 		OPT_END()
 	};
 
@@ -330,14 +311,14 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
 		dev_close(dev);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (cfg.data_len) {
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len)){
+		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
 			dev_close(dev);
-			return ENOMEM;
+			return -ENOMEM;
 		}
 		memset(buf, 0, cfg.data_len);
 	}
@@ -380,10 +361,6 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		goto free;
 	}
 	if (!err) {
-#if 0
-		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
-			nvme_feature_to_string(cfg.feature_id), cfg.value);
-#endif
 		if (buf)
 			d(buf, cfg.data_len, 16, 1);
 	} else if (err > 0)
