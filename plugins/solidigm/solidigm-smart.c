@@ -21,32 +21,31 @@
 #include "solidigm-smart.h"
 #include "solidigm-util.h"
 
-struct  __attribute__((packed)) nvme_additional_smart_log_item {
+struct __packed nvme_additional_smart_log_item {
 	__u8			id;
 	__u8			_kp[2];
 	__u8			normalized;
 	__u8			_np;
-	union __attribute__((packed)) {
+	union __packed {
 		__u8		raw[6];
-		struct __attribute__((packed))  wear_level {
+		struct __packed  wear_level {
 			__le16	min;
 			__le16	max;
 			__le16	avg;
 		} wear_level;
-		struct __attribute__((packed)) thermal_throttle {
+		struct __packed thermal_throttle {
 			__u8	pct;
 			__u32	count;
 		} thermal_throttle;
-	} ;
+	};
 	__u8			_rp;
-} ;
-typedef struct nvme_additional_smart_log_item smart_log_item_t;
+};
 
 #define VU_SMART_PAGE_SIZE 512
-#define VU_SMART_MAX_ITEMS VU_SMART_PAGE_SIZE / sizeof(smart_log_item_t)
-typedef struct vu_smart_log {
-	smart_log_item_t item[VU_SMART_MAX_ITEMS];
-} vu_smart_log_t;
+#define VU_SMART_MAX_ITEMS (VU_SMART_PAGE_SIZE / sizeof(struct nvme_additional_smart_log_item))
+struct vu_smart_log {
+	struct nvme_additional_smart_log_item item[VU_SMART_MAX_ITEMS];
+};
 
 static char *id_to_name(__u8 id)
 {
@@ -110,11 +109,10 @@ static char *id_to_name(__u8 id)
 	}
 }
 
-static void smart_log_item_print(smart_log_item_t *item)
+static void smart_log_item_print(struct nvme_additional_smart_log_item *item)
 {
-	if (!item->id) {
+	if (!item->id)
 		return;
-	}
 
 	printf("%#x    %-45s  %3d         ",
 		item->id, id_to_name(item->id), item->normalized);
@@ -136,13 +134,12 @@ static void smart_log_item_print(smart_log_item_t *item)
 	}
 }
 
-static void smart_log_item_add_json(smart_log_item_t *item, struct json_object *dev_stats)
+static void smart_log_item_add_json(struct nvme_additional_smart_log_item *item, struct json_object *dev_stats)
 {
 	struct json_object *entry_stats = json_create_object();
 
-	if (!item->id) {
+	if (!item->id)
 		return;
-	}
 
 	json_object_add_value_int(entry_stats, "normalized", item->normalized);
 
@@ -162,15 +159,14 @@ static void smart_log_item_add_json(smart_log_item_t *item, struct json_object *
 	json_object_add_value_object(dev_stats, id_to_name(item->id), entry_stats);
 }
 
-static void vu_smart_log_show_json(vu_smart_log_t *payload, unsigned int nsid, const char *devname)
+static void vu_smart_log_show_json(struct vu_smart_log *payload, unsigned int nsid, const char *devname)
 {
 	struct json_object *dev_stats = json_create_object();
-	smart_log_item_t *item = payload->item;
+	struct nvme_additional_smart_log_item *item = payload->item;
 	struct json_object *root;
 
-	for (int i = 0; i < VU_SMART_MAX_ITEMS; i++) {
+	for (int i = 0; i < VU_SMART_MAX_ITEMS; i++)
 		smart_log_item_add_json(&item[i], dev_stats);
-	}
 
 	root = json_create_object();
 	json_object_add_value_string(root, "Solidigm SMART log", devname);
@@ -180,26 +176,25 @@ static void vu_smart_log_show_json(vu_smart_log_t *payload, unsigned int nsid, c
 	json_free_object(root);
 }
 
-static void vu_smart_log_show(vu_smart_log_t *payload, unsigned int nsid, const char *devname,
+static void vu_smart_log_show(struct vu_smart_log *payload, unsigned int nsid, const char *devname,
 			      __u8 uuid_index)
 {
-	smart_log_item_t *item = payload->item;
+	struct nvme_additional_smart_log_item *item = payload->item;
 
 	printf("Additional Smart Log for NVMe device:%s namespace-id:%x UUID-idx:%d\n",
 		devname, nsid, uuid_index);
 	printf("ID             KEY                                 Normalized     Raw\n");
 
-	for (int i = 0; i < VU_SMART_MAX_ITEMS; i++) {
+	for (int i = 0; i < VU_SMART_MAX_ITEMS; i++)
 		smart_log_item_print(&item[i]);
-	}
 }
 
 int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Get Solidigm vendor specific smart log (optionally, "\
-		      "for the specified namespace), and show it.";
+	const char *desc =
+	    "Get Solidigm vendor specific smart log (optionally, for the specified namespace), and show it.";
 	const int solidigm_vu_smart_log_id = 0xCA;
-	vu_smart_log_t smart_log_payload;
+	struct vu_smart_log smart_log_payload;
 	enum nvme_print_flags flags;
 	struct nvme_dev *dev;
 	int err;
@@ -254,15 +249,14 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 
 	err =  nvme_get_log(&args);
 	if (!err) {
-		if (flags & JSON) {
+		if (flags & JSON)
 			vu_smart_log_show_json(&smart_log_payload,
 					       cfg.namespace_id, dev->name);
-		} else if (flags & BINARY) {
+		else if (flags & BINARY)
 			d_raw((unsigned char *)&smart_log_payload, sizeof(smart_log_payload));
-		} else {
+		else
 			vu_smart_log_show(&smart_log_payload, cfg.namespace_id,
 					  dev->name, uuid_index);
-		}
 	} else if (err > 0) {
 		nvme_show_status(err);
 	}

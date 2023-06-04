@@ -9,8 +9,7 @@
 #include "header.h"
 
 #pragma pack(push, reason_indentifier, 1)
-struct reason_indentifier_1_0
-{
+struct reason_indentifier_1_0 {
 	uint16_t versionMajor;
 	uint16_t versionMinor;
 	uint32_t reasonCode;		//! 0 denotes no issue. All other values denote a potential issue.
@@ -24,8 +23,7 @@ static_assert(sizeof(const struct reason_indentifier_1_0) ==
 	      MEMBER_SIZE(struct nvme_telemetry_log, rsnident),
 	      "Size mismatch for reason_indentifier_1_0");
 
-struct reason_indentifier_1_1
-{
+struct reason_indentifier_1_1 {
 	uint16_t versionMajor;
 	uint16_t versionMinor;
 	uint32_t reasonCode;		//! 0 denotes no issue. All other values denote a potential issue.
@@ -42,8 +40,7 @@ static_assert(sizeof(const struct reason_indentifier_1_1) ==
 	      MEMBER_SIZE(struct nvme_telemetry_log, rsnident),
 	      "Size mismatch for reason_indentifier_1_1");
 
-struct reason_indentifier_1_2
-{
+struct reason_indentifier_1_2 {
 	uint16_t versionMajor;
 	uint16_t versionMinor;
 	uint32_t reasonCode;		//! 0 denotes no issue. All other values denote a potential issue.
@@ -81,8 +78,9 @@ static void telemetry_log_reason_id_parse1_0_ext(const struct telemetry_log *tl,
 
 	reserved = json_create_array();
 	json_object_add_value_array(reason_id, "reserved", reserved);
-	for ( int i=0; i < sizeof(ri->Reserved); i++) {
+	for (int i = 0; i < sizeof(ri->Reserved); i++) {
 		struct json_object *val = json_object_new_int(ri->Reserved[i]);
+
 		json_object_array_add(reserved, val);
 	}
 }
@@ -114,6 +112,7 @@ static void telemetry_log_reason_id_parse1_1_ext(const struct telemetry_log *tl,
 	json_object_add_value_array(reason_id, "reserved", reserved);
 	for (int i = 0; i < sizeof(ri->Reserved); i++) {
 		struct json_object *val = json_object_new_int(ri->Reserved[i]);
+
 		json_object_array_add(reserved, val);
 	}
 }
@@ -142,6 +141,7 @@ static void telemetry_log_reason_id_parse1_2_ext(const struct telemetry_log *tl,
 	json_object_add_value_array(reason_id, "reserved2", reserved);
 	for (int i = 0; i < sizeof(ri->Reserved2); i++) {
 		struct json_object *val = json_object_new_int(ri->Reserved2[i]);
+
 		json_object_array_add(reserved, val);
 	}
 
@@ -149,6 +149,7 @@ static void telemetry_log_reason_id_parse1_2_ext(const struct telemetry_log *tl,
 	json_object_add_value_array(reason_id, "dualPortReserved", dp_reserved);
 	for (int i = 0; i < sizeof(ri->DualPortReserved); i++) {
 		struct json_object *val =  json_object_new_int(ri->DualPortReserved[i]);
+
 		json_object_array_add(dp_reserved, val);
 	}
 }
@@ -168,14 +169,15 @@ static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *t
 								sizeof(ri1_0->DriveStatus)));
 	if (version_major == 1) {
 		switch (version_minor) {
-			case 0:
-				telemetry_log_reason_id_parse1_0_ext(tl, reason_id);
-				break;
-			case 1:
-				telemetry_log_reason_id_parse1_1_ext(tl, reason_id);
-				break;
-			default:
-				telemetry_log_reason_id_parse1_2_ext(tl, reason_id);
+		case 0:
+			telemetry_log_reason_id_parse1_0_ext(tl, reason_id);
+			break;
+		case 1:
+			telemetry_log_reason_id_parse1_1_ext(tl, reason_id);
+			break;
+		default:
+			telemetry_log_reason_id_parse1_2_ext(tl, reason_id);
+			break;
 		}
 	}
 }
