@@ -7657,7 +7657,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.storage_tag	= cfg.storage_tag,
 		.data_len	= buffer_size,
 		.data		= buffer,
-		.metadata_len	= cfg.metadata_size,
+		.metadata_len	= mbuffer_size,
 		.metadata	= mbuffer,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
