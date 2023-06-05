@@ -217,15 +217,15 @@ _nvme () {
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp clear-pcie-correctable-error-counters options" _clear_pcie_correctable_error_counters
 				;;
-			(vs-fw-activate-history)
-				local _vs_fw_activate_history
-				_vs_fw_activate_history=(
+			(fw-activate-history)
+				local _fw_activate_history
+				_fw_activate_history=(
 				/dev/nvme':supply a device to use (required)'
 				--output-format=':Output format: normal|json'
 				-o':alias for --output-format'
 				)
 				_arguments '*:: :->subcmds'
-				_describe -t commands "nvme ocp vs-fw-activate-history options" _vs_fw_activate_history
+				_describe -t commands "nvme ocp fw-activate-history options" _fw_activate_history
 				;;
 			(device-capability-log)
 				local _device_capability_log
