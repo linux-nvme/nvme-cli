@@ -1342,7 +1342,7 @@ plugin_ocp_opts () {
 		"clear-pcie-correctable-error-counters")
 		opts+=" --no-uuid -n"
 			;;
-		"vs-fw-activate-history")
+		"fw-activate-history")
 		opts+=" --output-format= -o"
 			;;
 		"device-capability-log")
