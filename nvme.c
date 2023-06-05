@@ -122,9 +122,9 @@ static struct program nvme = {
 	.name = "nvme",
 	.version = nvme_version_string,
 	.usage = "<command> [<device>] [<args>]",
-	.desc = "The '<device>' may be either an NVMe character "
-		"device (ex: /dev/nvme0), an nvme block device "
-		"(ex: /dev/nvme0n1), or a mctp address in the form "
+	.desc = "The '<device>' may be either an NVMe character\n"
+		"device (ex: /dev/nvme0), an nvme block device\n"
+		"(ex: /dev/nvme0n1), or a mctp address in the form\n"
 		"mctp:<net>,<eid>[:ctrl-id]",
 	.extensions = &builtin,
 };
@@ -150,7 +150,7 @@ static const char *human_readable_info = "show info in readable format";
 static const char *human_readable_log = "show log in readable format";
 static const char *iekey = "ignore existing res. key";
 static const char *latency = "output latency statistics";
-static const char *lba_format_index = "The index into the LBA Format list "
+static const char *lba_format_index = "The index into the LBA Format list\n"
 	"identifying the LBA Format capabilities that are to be returned";
 static const char *limited_retry = "limit media access attempts";
 static const char *lsp = "log specific field";
@@ -494,8 +494,8 @@ void dev_close(struct nvme_dev *dev)
 static int get_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_smart_log smart_log;
-	const char *desc = "Retrieve SMART log for the given device "
-		"(or optionally a namespace) in either decoded format "
+	const char *desc = "Retrieve SMART log for the given device\n"
+		"(or optionally a namespace) in either decoded format\n"
 		"(default) or binary.";
 	const char *namespace = "(optional) desired namespace";
 	enum nvme_print_flags flags;
@@ -559,7 +559,7 @@ ret:
 static int get_ana_log(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
-	const char *desc = "Retrieve ANA log for the given device in "
+	const char *desc = "Retrieve ANA log for the given device in\n"
 		"decoded format (default), json or binary.";
 	const char *groups = "Return ANA groups only.";
 	void *ana_log;
@@ -1140,8 +1140,8 @@ ret:
 
 static int get_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve specified number of "
-		"error log entries from a given device "
+	const char *desc = "Retrieve specified number of\n"
+		"error log entries from a given device\n"
 		"in either decoded format (default) or binary.";
 	const char *log_entries = "number of entries to retrieve";
 	const char *raw = "dump in binary format";
@@ -1225,7 +1225,7 @@ ret:
 
 static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve the firmware log for the "
+	const char *desc = "Retrieve the firmware log for the\n"
 		"specified device in either decoded format (default) or binary.";
 	struct nvme_firmware_slot fw_log;
 	enum nvme_print_flags flags;
@@ -1276,7 +1276,7 @@ ret:
 
 static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Changed Namespaces log for the given device "
+	const char *desc = "Retrieve Changed Namespaces log for the given device\n"
 		"in either decoded format (default) or binary.";
 	struct nvme_ns_list changed_ns_list_log;
 	enum nvme_print_flags flags;
@@ -1330,8 +1330,8 @@ ret:
 static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 	struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Predictable latency per nvm set log "
-		"page and prints it for the given device in either decoded "
+	const char *desc = "Retrieve Predictable latency per nvm set log\n"
+		"page and prints it for the given device in either decoded\n"
 		"format(default),json or binary.";
 	const char *nvmset_id = "NVM Set Identifier";
 	struct nvme_nvmset_predictable_lat_log plpns_log;
@@ -1390,8 +1390,8 @@ ret:
 static int get_pred_lat_event_agg_log(int argc, char **argv,
 		struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Predictable Latency Event "
-		"Aggregate Log page and prints it, for the given "
+	const char *desc = "Retrieve Predictable Latency Event\n"
+		"Aggregate Log page and prints it, for the given\n"
 		"device in either decoded format(default), json or binary.";
 	const char *log_entries = "Number of pending NVM Set log Entries list";
 	enum nvme_print_flags flags;
@@ -1480,9 +1480,9 @@ ret:
 static int get_persistent_event_log(int argc, char **argv,
 		struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Persistent Event log info for "
+	const char *desc = "Retrieve Persistent Event log info for\n"
 		"the given device in either decoded format(default), json or binary.";
-	const char *action = "action the controller shall take during "
+	const char *action = "action the controller shall take during\n"
 		"processing this persistent log page command.";
 	const char *log_len = "number of bytes to retrieve";
 	struct nvme_persistent_event_log *pevent, *pevent_collected;
@@ -1585,7 +1585,7 @@ static int get_persistent_event_log(int argc, char **argv,
 		}
 		pevent_collected = pevent_log_info;
 		if (pevent_collected->gen_number != pevent->gen_number) {
-			printf("Collected Persistent Event Log may be invalid, "
+			printf("Collected Persistent Event Log may be invalid,\n"
 			       "Re-read the log is required\n");
 			goto free;
 		}
@@ -1611,8 +1611,8 @@ ret:
 static int get_endurance_event_agg_log(int argc, char **argv,
 		struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Retrieve Predictable Latency "
-		"Event Aggregate page and prints it, for the given "
+	const char *desc = "Retrieve Retrieve Predictable Latency\n"
+		"Event Aggregate page and prints it, for the given\n"
 		"device in either decoded format(default), json or binary.";
 	const char *log_entries = "Number of pending Endurance Group Event log Entries list";
 	void *endurance_log;
@@ -1702,7 +1702,7 @@ ret:
 static int get_lba_status_log(int argc, char **argv,
 		struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Get LBA Status Info Log and prints it, "
+	const char *desc = "Retrieve Get LBA Status Info Log and prints it,\n"
 		"for the given device in either decoded format(default),json or binary.";
 	void *lab_status;
 	enum nvme_print_flags flags;
@@ -1771,8 +1771,8 @@ static int get_resv_notif_log(int argc, char **argv,
 	struct command *cmd, struct plugin *plugin)
 {
 
-	const char *desc = "Retrieve Reservation Notification "
-		"log page and prints it, for the given "
+	const char *desc = "Retrieve Reservation Notification\n"
+		"log page and prints it, for the given\n"
 		"device in either decoded format(default), json or binary.";
 	struct nvme_resv_notification_log resv;
 	enum nvme_print_flags flags;
@@ -1819,8 +1819,8 @@ ret:
 
 static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Boot Partition "
-		"log page and prints it, for the given "
+	const char *desc = "Retrieve Boot Partition\n"
+		"log page and prints it, for the given\n"
 		"device in either decoded format(default), json or binary.";
 	const char *fname = "boot partition data output file name";
 	struct nvme_boot_partition boot;
@@ -2232,8 +2232,8 @@ close_dev:
 
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve desired number of bytes "
-		"from a given log on a specified device in either "
+	const char *desc = "Retrieve desired number of bytes\n"
+		"from a given log on a specified device in either\n"
 		"hex-dump (default) or binary format";
 	const char *log_id = "identifier of log to retrieve";
 	const char *log_len = "how many bytes to retrieve";
@@ -2536,7 +2536,7 @@ ret:
 
 static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Show controller list information for the subsystem the "
+	const char *desc = "Show controller list information for the subsystem the\n"
 		"given device is part of, or optionally controllers attached to a specific namespace.";
 	const char *controller = "controller to display";
 	struct nvme_ctrl_list *cntlist;
@@ -2600,7 +2600,7 @@ ret:
 
 static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "For the specified controller handle, show the "
+	const char *desc = "For the specified controller handle, show the\n"
 		"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
 	const char *namespace_id = "first nsid returned list should start from";
 	const char *csi = "I/O command set identifier";
@@ -2679,8 +2679,8 @@ ret:
 
 static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Namespace command to the given "
-		"device, returns capability field properties of the specified "
+	const char *desc = "Send an Identify Namespace command to the given\n"
+		"device, returns capability field properties of the specified\n"
 		"LBA Format index in  various formats.";
 	enum nvme_print_flags flags;
 	struct nvme_id_ns ns;
@@ -2796,11 +2796,11 @@ ret:
 
 static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Delete the given namespace by "
-		"sending a namespace management command to "
-		"the provided device. All controllers should be detached from "
-		"the namespace prior to namespace deletion. A namespace ID "
-		"becomes inactive when that namespace is detached or, if "
+	const char *desc = "Delete the given namespace by\n"
+		"sending a namespace management command to\n"
+		"the provided device. All controllers should be detached from\n"
+		"the namespace prior to namespace deletion. A namespace ID\n"
+		"becomes inactive when that namespace is detached or, if\n"
 		"the namespace is not already inactive, once deleted.";
 	const char *namespace_id = "namespace to delete";
 	struct nvme_dev *dev;
@@ -2921,10 +2921,10 @@ ret:
 
 static int attach_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Attach the given namespace to the "
-		"given controller or comma-sep list of controllers. ID of the "
-		"given namespace becomes active upon attachment to a "
-		"controller. A namespace must be attached to a controller "
+	const char *desc = "Attach the given namespace to the\n"
+		"given controller or comma-sep list of controllers. ID of the\n"
+		"given namespace becomes active upon attachment to a\n"
+		"controller. A namespace must be attached to a controller\n"
 		"before IO commands may be directed to that namespace.";
 
 	return nvme_attach_ns(argc, argv, 1, desc, cmd);
@@ -2932,9 +2932,9 @@ static int attach_ns(int argc, char **argv, struct command *cmd, struct plugin *
 
 static int detach_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Detach the given namespace from the "
-		"given controller; de-activates the given namespace's ID. A "
-		"namespace must be attached to a controller before IO "
+	const char *desc = "Detach the given namespace from the\n"
+		"given controller; de-activates the given namespace's ID. A\n"
+		"namespace must be attached to a controller before IO\n"
 		"commands may be directed to that namespace.";
 
 	return nvme_attach_ns(argc, argv, 0, desc, cmd);
@@ -3019,10 +3019,10 @@ static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
 
 static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send a namespace management command "
-		"to the specified device to create a namespace with the given "
-		"parameters. The next available namespace ID is used for the "
-		"create operation. Note that create-ns does not attach the "
+	const char *desc = "Send a namespace management command\n"
+		"to the specified device to create a namespace with the given\n"
+		"parameters. The next available namespace ID is used for the\n"
+		"create operation. Note that create-ns does not attach the\n"
 		"namespace to a controller, the attach-ns command is needed.";
 	const char *nsze = "size of ns (NSZE)";
 	const char *ncap = "capacity of ns (NCAP)";
@@ -3389,10 +3389,10 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 		void (*vs)(__u8 *vs, struct json_object *root))
 {
-	const char *desc = "Send an Identify Controller command to "
-		"the given device and report information about the specified "
-		"controller in human-readable or "
-		"binary format. May also return vendor-specific "
+	const char *desc = "Send an Identify Controller command to\n"
+		"the given device and report information about the specified\n"
+		"controller in human-readable or\n"
+		"binary format. May also return vendor-specific\n"
 		"controller attributes in hex-dump if requested.";
 	const char *vendor_specific = "dump binary vendor field";
 	enum nvme_print_flags flags;
@@ -3462,8 +3462,8 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Controller NVM Command Set "
-		"command to the given device and report information about "
+	const char *desc = "Send an Identify Controller NVM Command Set\n"
+		"command to the given device and report information about\n"
 		"the specified controller in various formats.";
 	enum nvme_print_flags flags;
 	struct nvme_id_ctrl_nvm ctrl_nvm;
@@ -3509,8 +3509,8 @@ ret:
 static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Namespace NVM Command Set "
-		"command to the given device and report information about "
+	const char *desc = "Send an Identify Namespace NVM Command Set\n"
+		"command to the given device and report information about\n"
 		"the specified namespace in various formats.";
 	enum nvme_print_flags flags;
 	struct nvme_nvm_id_ns id_ns;
@@ -3585,8 +3585,8 @@ ret:
 
 static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an NVM Command Set specific Identify Namespace "
-		"command to the given device, returns capability field properties of "
+	const char *desc = "Send an NVM Command Set specific Identify Namespace\n"
+		"command to the given device, returns capability field properties of\n"
 		"the specified LBA Format index in the specified namespace in various formats.";
 	enum nvme_print_flags flags;
 	struct nvme_id_ns ns;
@@ -3652,8 +3652,8 @@ ret:
 
 static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send Namespace Identification Descriptors command to the "
-		"given device, returns the namespace identification descriptors "
+	const char *desc = "Send Namespace Identification Descriptors command to the\n"
+		"given device, returns the namespace identification descriptors\n"
 		"of the specific namespace in either human-readable or binary format.";
 	const char *raw = "show descriptors in binary format";
 	enum nvme_print_flags flags;
@@ -3722,9 +3722,9 @@ ret:
 
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Namespace command to the "
-		"given device, returns properties of the specified namespace "
-		"in either human-readable or binary format. Can also return "
+	const char *desc = "Send an Identify Namespace command to the\n"
+		"given device, returns properties of the specified namespace\n"
+		"in either human-readable or binary format. Can also return\n"
 		"binary vendor-specific namespace attributes.";
 	const char *force = "Return this namespace, even if not attached (1.2 devices only)";
 	const char *vendor_specific = "dump binary vendor fields";
@@ -3809,8 +3809,8 @@ ret:
 static int cmd_set_independent_id_ns(int argc, char **argv, struct command *cmd,
 				     struct plugin *plugin)
 {
-	const char *desc = "Send an I/O Command Set Independent Identify "
-		"Namespace command to the given device, returns properties of the "
+	const char *desc = "Send an I/O Command Set Independent Identify\n"
+		"Namespace command to the given device, returns properties of the\n"
 		"specified namespace in human-readable or binary or json format.";
 	enum nvme_print_flags flags;
 	struct nvme_id_independent_id_ns ns;
@@ -3879,8 +3879,8 @@ ret:
 
 static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Namespace Granularity List command to the "
-		"given device, returns namespace granularity list "
+	const char *desc = "Send an Identify Namespace Granularity List command to the\n"
+		"given device, returns namespace granularity list\n"
 		"in either human-readable or binary format.";
 	struct nvme_id_ns_granularity_list *granularity_list;
 	enum nvme_print_flags flags;
@@ -3932,9 +3932,9 @@ ret:
 
 static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify NVM Set List command to the "
-		"given device, returns entries for NVM Set identifiers greater "
-		"than or equal to the value specified CDW11.NVMSETID "
+	const char *desc = "Send an Identify NVM Set List command to the\n"
+		"given device, returns entries for NVM Set identifiers greater\n"
+		"than or equal to the value specified CDW11.NVMSETID\n"
 		"in either binary format or json format";
 	const char *nvmset_id = "NVM Set Identify value";
 	struct nvme_id_nvmset_list nvmset;
@@ -3984,8 +3984,8 @@ ret:
 
 static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify UUID List command to the "
-		"given device, returns list of supported Vendor Specific UUIDs "
+	const char *desc = "Send an Identify UUID List command to the\n"
+		"given device, returns list of supported Vendor Specific UUIDs\n"
 		"in either human-readable or binary format.";
 	const char *raw = "show uuid in binary format";
 	const char *human_readable = "show uuid in readable format";
@@ -4044,8 +4044,8 @@ ret:
 
 static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Command Set Data command to "
-		"the given device, returns properties of the specified controller "
+	const char *desc = "Send an Identify Command Set Data command to\n"
+		"the given device, returns properties of the specified controller\n"
 		"in either human-readable or binary format.";
 	const char *controller_id = "identifier of desired controller";
 	struct nvme_id_iocs iocs;
@@ -4086,8 +4086,8 @@ ret:
 
 static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Domain List command to the "
-		"given device, returns properties of the specified domain "
+	const char *desc = "Send an Identify Domain List command to the\n"
+		"given device, returns properties of the specified domain\n"
 		"in either normal|json|binary format.";
 	const char *domain_id = "identifier of desired domain";
 	struct nvme_id_domain_list id_domain;
@@ -4170,7 +4170,7 @@ ret:
 
 static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "The Virtualization Management command is supported by primary controllers "
+	const char *desc = "The Virtualization Management command is supported by primary controllers\n"
 		"that support the Virtualization Enhancements capability. This command is used for:\n"
 		"  1. Modifying Flexible Resource allocation for the primary controller\n"
 		"  2. Assigning Flexible Resources for secondary controllers\n"
@@ -4241,8 +4241,8 @@ ret:
 static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *cntlid = "Controller ID";
-	const char *desc = "Send an Identify Primary Controller Capabilities "
-		"command to the given device and report the information in a "
+	const char *desc = "Send an Identify Primary Controller Capabilities\n"
+		"command to the given device and report the information in a\n"
 		"decoded format (default), json or binary.";
 	struct nvme_primary_ctrl_cap caps;
 	enum nvme_print_flags flags;
@@ -4464,7 +4464,7 @@ static void abort_self_test(struct nvme_dev_self_test_args *args)
 
 static int device_self_test(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Implementing the device self-test feature "
+	const char *desc = "Implementing the device self-test feature\n"
 		"which provides the necessary log to determine the state of the device";
 	const char *namespace_id =
 	    "Indicate the namespace in which the device self-test has to be carried out";
@@ -4561,9 +4561,9 @@ ret:
 
 static int self_test_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve the self-test log for the given device and given test "
+	const char *desc = "Retrieve the self-test log for the given device and given test\n"
 		"(or optionally a namespace) in either decoded format (default) or binary.";
-	const char *dst_entries = "Indicate how many DST log entries to be retrieved, "
+	const char *dst_entries = "Indicate how many DST log entries to be retrieved,\n"
 		"by default all the 20 entries will be retrieved";
 	struct nvme_self_test_log log;
 	enum nvme_print_flags flags;
@@ -4772,14 +4772,14 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 static int get_feature(int argc, char **argv, struct command *cmd,
 		       struct plugin *plugin)
 {
-	const char *desc = "Read operating parameters of the "
-		"specified controller. Operating parameters are grouped "
-		"and identified by Feature Identifiers; each Feature "
-		"Identifier contains one or more attributes that may affect "
-		"behavior of the feature. Each Feature has three possible "
-		"settings: default, saveable, and current. If a Feature is "
-		"saveable, it may be modified by set-feature. Default values "
-		"are vendor-specific and not changeable. Use set-feature to "
+	const char *desc = "Read operating parameters of the\n"
+		"specified controller. Operating parameters are grouped\n"
+		"and identified by Feature Identifiers; each Feature\n"
+		"Identifier contains one or more attributes that may affect\n"
+		"behavior of the feature. Each Feature has three possible\n"
+		"settings: default, saveable, and current. If a Feature is\n"
+		"saveable, it may be modified by set-feature. Default values\n"
+		"are vendor-specific and not changeable. Use set-feature to\n"
 		"change saveable Features.";
 	const char *raw = "show feature in binary format";
 	const char *feature_id = "feature identifier";
@@ -4947,13 +4947,13 @@ static int fw_download_single(struct nvme_dev *dev, void *fw_buf,
 
 static int fw_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Copy all or part of a firmware image to "
-		"a controller for future update. Optionally, specify how "
-		"many KiB of the firmware to transfer at once. The offset will "
-		"start at 0 and automatically adjust based on xfer size "
-		"unless fw is split across multiple files. May be submitted "
-		"while outstanding commands exist on the Admin and IO "
-		"Submission Queues. Activate downloaded firmware with "
+	const char *desc = "Copy all or part of a firmware image to\n"
+		"a controller for future update. Optionally, specify how\n"
+		"many KiB of the firmware to transfer at once. The offset will\n"
+		"start at 0 and automatically adjust based on xfer size\n"
+		"unless fw is split across multiple files. May be submitted\n"
+		"while outstanding commands exist on the Admin and IO\n"
+		"Submission Queues. Activate downloaded firmware with\n"
 		"fw-activate, and then reset the device to apply the downloaded firmware.";
 	const char *fw = "firmware file (required)";
 	const char *xfer = "transfer chunksize limit";
@@ -5113,20 +5113,20 @@ static void fw_commit_print_mud(struct nvme_dev *dev, __u32 result)
 	printf("Multiple Update Detected (MUD) Value: %u\n", result);
 
 	if (result & 0x1)
-		printf("Detected an overlapping firmware/boot partition image update command "
+		printf("Detected an overlapping firmware/boot partition image update command\n"
 		       "sequence due to processing a command from a Management Endpoint");
 
 	if (result >> 1 & 0x1)
-		printf("Detected an overlapping firmware/boot partition image update command "
+		printf("Detected an overlapping firmware/boot partition image update command\n"
 		       "sequence due to processing a command from an Admin SQ on a controller");
 }
 
 static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Verify downloaded firmware image and "
-		"commit to specific firmware slot. Device is not automatically "
-		"reset following firmware activation. A reset may be issued "
-		"with an 'echo 1 > /sys/class/nvme/nvmeX/reset_controller'. "
+	const char *desc = "Verify downloaded firmware image and\n"
+		"commit to specific firmware slot. Device is not automatically\n"
+		"reset following firmware activation. A reset may be issued\n"
+		"with an 'echo 1 > /sys/class/nvme/nvmeX/reset_controller'.\n"
 		"Ensure nvmeX is the device you just activated before reset.";
 	const char *slot = "[0-7]: firmware slot for commit action";
 	const char *action = "[0-7]: commit action";
@@ -5314,7 +5314,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		bool	oipbp;
 		__u8	owpass;
 		bool	ause;
-		__u8 	sanact;
+		__u8	sanact;
 		__u32	ovrpat;
 	};
 
@@ -5499,7 +5499,7 @@ static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev)
 
 static int show_registers(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Reads and shows the defined NVMe controller registers "
+	const char *desc = "Reads and shows the defined NVMe controller registers\n"
 		"in binary or human-readable format";
 	const char *human_readable =
 	    "show info in readable format in case of output_format == normal";
@@ -5562,7 +5562,7 @@ ret:
 
 static int get_property(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Reads and shows the defined NVMe controller property "
+	const char *desc = "Reads and shows the defined NVMe controller property\n"
 		"for NVMe over Fabric. Property offset must be one of:\n"
 		"CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20";
 	const char *offset = "offset of the requested property";
@@ -5683,9 +5683,9 @@ ret:
 
 static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Re-format a specified namespace on the "
-		"given device. Can erase all data in namespace (user "
-		"data erase) or delete data encryption key if specified. "
+	const char *desc = "Re-format a specified namespace on the\n"
+		"given device. Can erase all data in namespace (user\n"
+		"data erase) or delete data encryption key if specified.\n"
 		"Can also be used to change LBAF to change the namespaces reported physical block format.";
 	const char *lbaf = "LBA format to apply (required)";
 	const char *ses = "[0-2]: secure erase";
@@ -5798,7 +5798,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 
 	if (cfg.namespace_id == 0) {
 		nvme_show_error(
-		    "Invalid namespace ID, specify a namespace to format or use "
+		    "Invalid namespace ID, specify a namespace to format or use\n"
 		    "'-n 0xffffffff' to format all namespaces on this controller.");
 		err = -EINVAL;
 		goto close_dev;
@@ -5946,14 +5946,14 @@ ret:
 
 static int set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Modify the saveable or changeable "
-		"current operating parameters of the controller. "
-		"Operating parameters are grouped and identified by Feature "
-		"Identifiers. Feature settings can be applied to the entire "
-		"controller and all associated namespaces, or to only a few "
-		"namespace(s) associated with the controller. Default values "
-		"for each Feature are vendor-specific and may not be modified. "
-		"Use get-feature to determine which Features are supported by "
+	const char *desc = "Modify the saveable or changeable\n"
+		"current operating parameters of the controller.\n"
+		"Operating parameters are grouped and identified by Feature\n"
+		"Identifiers. Feature settings can be applied to the entire\n"
+		"controller and all associated namespaces, or to only a few\n"
+		"namespace(s) associated with the controller. Default values\n"
+		"for each Feature are vendor-specific and may not be modified.\n"
+		"Use get-feature to determine which Features are supported by\n"
 		"the controller and are saveable/changeable.";
 	const char *feature_id = "feature identifier (required)";
 	const char *data = "optional file for feature data (default stdin)";
@@ -6120,9 +6120,9 @@ ret:
 static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct stat sb;
-	const char *desc = "Transfer security protocol data to "
-		"a controller. Security Receives for the same protocol should be "
-		"performed after Security Sends. The security protocol field "
+	const char *desc = "Transfer security protocol data to\n"
+		"a controller. Security Receives for the same protocol should be\n"
+		"performed after Security Sends. The security protocol field\n"
 		"associates Security Sends (security-send) and Security Receives (security-recv).";
 	const char *file = "transfer payload";
 	const char *tl = "transfer length (cf. SPC-4)";
@@ -6523,7 +6523,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	const char *deac =
 	    "Set DEAC bit, requesting controller to deallocate specified logical blocks";
 	const char *storage_tag_check =
-	    "This bit specifies the Storage Tag field shall be checked as "
+	    "This bit specifies the Storage Tag field shall be checked as\n"
 	    "part of end-to-end data protection processing";
 
 	struct config {
@@ -6665,9 +6665,9 @@ ret:
 
 static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "The Dataset Management command is used by the host to "
-		"indicate attributes for ranges of logical blocks. This includes attributes "
-		"for discarding unused blocks, data read and write frequency, access size, and other "
+	const char *desc = "The Dataset Management command is used by the host to\n"
+		"indicate attributes for ranges of logical blocks. This includes attributes\n"
+		"for discarding unused blocks, data read and write frequency, access size, and other\n"
 		"information that may be used to optimize performance and reliability.";
 	const char *blocks = "Comma separated list of the number of blocks in each range";
 	const char *starting_blocks = "Comma separated list of the starting block in each range";
@@ -6770,8 +6770,8 @@ ret:
 
 static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "The Copy command is used by the host to copy data "
-		"from one or more source logical block ranges to a "
+	const char *desc = "The Copy command is used by the host to copy data\n"
+		"from one or more source logical block ranges to a\n"
 		"single consecutive destination logical block range.";
 	const char *d_sdlba = "64-bit addr of first destination logical block";
 	const char *d_slbas = "64-bit addr of first block per range (comma-separated list)";
@@ -6951,10 +6951,10 @@ ret:
 
 static int flush_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Commit data and metadata associated with "
-		"given namespaces to nonvolatile media. Applies to all commands "
-		"finished before the flush was submitted. Additional data may also be "
-		"flushed by the controller, from any namespace, depending on controller and "
+	const char *desc = "Commit data and metadata associated with\n"
+		"given namespaces to nonvolatile media. Applies to all commands\n"
+		"finished before the flush was submitted. Additional data may also be\n"
+		"flushed by the controller, from any namespace, depending on controller and\n"
 		"associated namespace status.";
 	struct nvme_dev *dev;
 	int err;
@@ -6999,10 +6999,10 @@ ret:
 
 static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Obtain a reservation on a given "
-		"namespace. Only one reservation is allowed at a time on a "
-		"given namespace, though multiple controllers may register "
-		"with that namespace. Namespace reservation will abort with "
+	const char *desc = "Obtain a reservation on a given\n"
+		"namespace. Only one reservation is allowed at a time on a\n"
+		"given namespace, though multiple controllers may register\n"
+		"with that namespace. Namespace reservation will abort with\n"
 		"status Reservation Conflict if the given namespace is already reserved.";
 	const char *prkey = "pre-empt reservation key";
 	const char *racqa = "reservation acquire action";
@@ -7082,8 +7082,8 @@ ret:
 
 static int resv_register(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Register, de-register, or "
-		"replace a controller's reservation on a given namespace. "
+	const char *desc = "Register, de-register, or\n"
+		"replace a controller's reservation on a given namespace.\n"
 		"Only one reservation at a time is allowed on any namespace.";
 	const char *nrkey = "new reservation key";
 	const char *rrega = "reservation registration action";
@@ -7169,13 +7169,13 @@ ret:
 
 static int resv_release(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Releases reservation held on a "
-		"namespace by the given controller. If rtype != current reservation "
-		"type, release will fails. If the given controller holds no "
-		"reservation on the namespace or is not the namespace's current "
-		"reservation holder, the release command completes with no "
-		"effect. If the reservation type is not Write Exclusive or "
-		"Exclusive Access, all registrants on the namespace except "
+	const char *desc = "Releases reservation held on a\n"
+		"namespace by the given controller. If rtype != current reservation\n"
+		"type, release will fails. If the given controller holds no\n"
+		"reservation on the namespace or is not the namespace's current\n"
+		"reservation holder, the release command completes with no\n"
+		"effect. If the reservation type is not Write Exclusive or\n"
+		"Exclusive Access, all registrants on the namespace except\n"
 		"the issuing controller are notified.";
 	const char *rrela = "reservation release action";
 	struct nvme_dev *dev;
@@ -7250,9 +7250,9 @@ ret:
 
 static int resv_report(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Returns Reservation Status data "
-		"structure describing any existing reservations on and the "
-		"status of a given namespace. Namespace Reservation Status "
+	const char *desc = "Returns Reservation Status data\n"
+		"structure describing any existing reservations on and the\n"
+		"status of a given namespace. Namespace Reservation Status\n"
 		"depends on the number of controllers registered for that namespace.";
 	const char *numd = "number of dwords to transfer";
 	const char *eds = "request extended data structure";
@@ -7382,7 +7382,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	const char *dtype_for_write = "directive type (for write-only)";
 	const char *dspec = "directive specific (for write-only)";
 	const char *dsm = "dataset management attributes (lower 8 bits)";
-	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be "
+	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be\n"
 		"checked as part of end-to-end data protection processing";
 	const char *force = "The \"I know what I'm doing\" flag, do not enforce exclusive access for write";
 
@@ -7704,8 +7704,8 @@ ret:
 
 static int compare(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Compare specified logical blocks on "
-		"device with specified data buffer; return failure if buffer "
+	const char *desc = "Compare specified logical blocks on\n"
+		"device with specified data buffer; return failure if buffer\n"
 		"and block(s) are dissimilar";
 
 	return submit_io(nvme_cmd_compare, "compare", desc, argc, argv);
@@ -7713,7 +7713,7 @@ static int compare(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 static int read_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Copy specified logical blocks on the given "
+	const char *desc = "Copy specified logical blocks on the given\n"
 		"device to specified data buffer (default buffer is stdout).";
 
 	return submit_io(nvme_cmd_read, "read", desc, argc, argv);
@@ -7721,7 +7721,7 @@ static int read_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 
 static int write_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Copy from provided data buffer (default "
+	const char *desc = "Copy from provided data buffer (default\n"
 		"buffer is stdin) to specified logical blocks on the given device.";
 
 	return submit_io(nvme_cmd_write, "write", desc, argc, argv);
@@ -7864,11 +7864,11 @@ ret:
 
 static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Obtain results of one or more "
-		"previously submitted security-sends. Results, and association "
-		"between Security Send and Receive, depend on the security "
-		"protocol field as they are defined by the security protocol "
-		"used. A Security Receive must follow a Security Send made with "
+	const char *desc = "Obtain results of one or more\n"
+		"previously submitted security-sends. Results, and association\n"
+		"between Security Send and Receive, depend on the security\n"
+		"protocol field as they are defined by the security protocol\n"
+		"used. A Security Receive must follow a Security Send made with\n"
 		"the same security protocol.";
 	const char *size = "size of buffer (prints to stdout on success)";
 	const char *al = "allocation length (cf. SPC-4)";
@@ -7962,7 +7962,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	    "Starting LBA(SLBA) in 64-bit address of the first logical block addressed by this command";
 	const char *mndw =
 	    "Maximum Number of Dwords(MNDW) specifies maximum number of dwords to return";
-	const char *atype = "Action Type(ATYPE) specifies the mechanism "
+	const char *atype = "Action Type(ATYPE) specifies the mechanism\n"
 		"the controller uses in determining the LBA Status Descriptors to return.";
 	const char *rl =
 	    "Range Length(RL) specifies the length of the range of contiguous LBAs beginning at SLBA";
@@ -8055,9 +8055,9 @@ err:
 
 static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Host software uses the Capacity Management command to "
-		"configure Endurance Groups and NVM Sets in an NVM subsystem by either "
-		"selecting one of a set of supported configurations or by specifying the "
+	const char *desc = "Host software uses the Capacity Management command to\n"
+		"configure Endurance Groups and NVM Sets in an NVM subsystem by either\n"
+		"selecting one of a set of supported configurations or by specifying the\n"
 		"capacity of the Endurance Group or NVM Set to be created";
 	const char *operation = "Operation to be performed by the controller";
 	const char *element_id = "Value specific to the value of the Operation field.";
@@ -8270,23 +8270,23 @@ static int rpmb_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 
 static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "The Lockdown command is used to control the "
-		"Command and Feature Lockdown capability which configures the "
-		"prohibition or allowance of execution of the specified command "
+	const char *desc = "The Lockdown command is used to control the\n"
+		"Command and Feature Lockdown capability which configures the\n"
+		"prohibition or allowance of execution of the specified command\n"
 		"or Set Features command targeting a specific Feature Identifier.";
-	const char *ofi_desc = "Opcode or Feature Identifier (OFI) "
-		"specifies the command opcode or Set Features Feature Identifier "
+	const char *ofi_desc = "Opcode or Feature Identifier (OFI)\n"
+		"specifies the command opcode or Set Features Feature Identifier\n"
 		"identified by the Scope field.";
 	const char *ifc_desc =
 	    "[0-3] Interface (INF) field identifies the interfaces affected by this command.";
-	const char *prhbt_desc = "[0-1]Prohibit(PRHBT) bit specifies whether "
-		"to prohibit or allow the command opcode or Set Features Feature "
+	const char *prhbt_desc = "[0-1]Prohibit(PRHBT) bit specifies whether\n"
+		"to prohibit or allow the command opcode or Set Features Feature\n"
 		"Identifier specified by this command.";
 	const char *scp_desc =
 	    "[0-15]Scope(SCP) field specifies the contents of the Opcode or Feature Identifier field.";
-	const char *uuid_desc = "UUID Index - If this field is set to a non-zero "
-		"value, then the value of this field is the index of a UUID in the UUID "
-		"List that is used by the command.If this field is cleared to 0h, "
+	const char *uuid_desc = "UUID Index - If this field is set to a non-zero\n"
+		"value, then the value of this field is the index of a UUID in the UUID\n"
+		"List that is used by the command.If this field is cleared to 0h,\n"
 		"then no UUID index is specified";
 
 	struct nvme_dev *dev;

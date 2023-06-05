@@ -500,8 +500,8 @@ static int micron_selective_download(int argc, char **argv,
 				     struct command *cmd, struct plugin *plugin)
 {
 	const char *desc =
-		"This performs a selective firmware download, which allows the user to "
-		"select which firmware binary to update for 9200 devices. This requires "
+		"This performs a selective firmware download, which allows the user to\n"
+		"select which firmware binary to update for 9200 devices. This requires\n"
 		"a power cycle once the update completes. The options available are:\n\n"
 		"OOB - This updates the OOB and main firmware\n"
 		"EEP - This updates the eeprom and main firmware\n"

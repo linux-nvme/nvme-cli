@@ -156,14 +156,14 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 static int get_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Read operating parameters of the "
-		"specified controller. Operating parameters are grouped "
-		"and identified by Feature Identifiers; each Feature "
-		"Identifier contains one or more attributes that may affect "
-		"behavior of the feature. Each Feature has three possible "
-		"settings: default, saveable, and current. If a Feature is "
-		"saveable, it may be modified by set-feature. Default values "
-		"are vendor-specific and not changeable. Use set-feature to "
+	const char *desc = "Read operating parameters of the\n"
+		"specified controller. Operating parameters are grouped\n"
+		"and identified by Feature Identifiers; each Feature\n"
+		"Identifier contains one or more attributes that may affect\n"
+		"behavior of the feature. Each Feature has three possible\n"
+		"settings: default, saveable, and current. If a Feature is\n"
+		"saveable, it may be modified by set-feature. Default values\n"
+		"are vendor-specific and not changeable. Use set-feature to\n"
 		"change saveable Features.\n\n"
 		"Available additional feature id:\n"
 		"0x02:  Shannon power management\n";
@@ -253,14 +253,14 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 
 static int set_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Modify the saveable or changeable "
-		"current operating parameters of the controller. Operating "
-		"parameters are grouped and identified by Feature "
-		"Identifiers. Feature settings can be applied to the entire "
-		"controller and all associated namespaces, or to only a few "
-		"namespace(s) associated with the controller. Default values "
-		"for each Feature are vendor-specific and may not be modified."
-		"Use get-feature to determine which Features are supported by "
+	const char *desc = "Modify the saveable or changeable\n"
+		"current operating parameters of the controller. Operating\n"
+		"parameters are grouped and identified by Feature\n"
+		"Identifiers. Feature settings can be applied to the entire\n"
+		"controller and all associated namespaces, or to only a few\n"
+		"namespace(s) associated with the controller. Default values\n"
+		"for each Feature are vendor-specific and may not be modified.\n"
+		"Use get-feature to determine which Features are supported by\n"
 		"the controller and are saveable/changeable.\n\n"
 		"Available additional feature id:\n"
 		"0x02:  Shannon power management\n";
