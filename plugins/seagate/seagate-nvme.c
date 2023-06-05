@@ -1576,8 +1576,8 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc =
 	    "Capture the Telemetry Host-Initiated Data in either hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
-	const char *log_specific = "1 - controller shall capture Data representing the internal "
-		"state of the controller at the time the command is processed. "
+	const char *log_specific = "1 - controller shall capture Data representing the internal\n"
+		"state of the controller at the time the command is processed.\n"
 		"0 - controller shall not update the Telemetry Host Initiated Data.";
 	const char *raw = "output in raw format";
 	struct nvme_temetry_log_hdr tele_log;

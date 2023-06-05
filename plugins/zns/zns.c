@@ -109,8 +109,8 @@ static int list(int argc, char **argv, struct command *cmd,
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send a ZNS specific Identify Controller command to "
-			   "the given device and report information about the specified "
+	const char *desc = "Send a ZNS specific Identify Controller command to\n"
+			   "the given device and report information about the specified\n"
 			   "controller in various formats.";
 
 	enum nvme_print_flags flags;
@@ -153,8 +153,8 @@ close_fd:
 
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send a ZNS specific Identify Namespace command to "
-			   "the given device and report information about the specified "
+	const char *desc = "Send a ZNS specific Identify Namespace command to\n"
+			   "the given device and report information about the specified\n"
 			   "namespace in varios formats.";
 	const char *vendor_specific = "dump binary vendor fields";
 	const char *human_readable = "show identify in readable format";
@@ -991,6 +991,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 
 	if (flags & JSON) {
 		struct print_ops *ops;
+
 		ops = nvme_get_json_print_ops(flags);
 		if (ops)
 			ops->zns_finish_zone_list(total_nr_zones, zone_list);
@@ -1007,8 +1008,8 @@ close_dev:
 
 static int zone_append(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "The zone append command is used to write to a zone "
-			   "using the slba of the zone, and the write will be appended from the "
+	const char *desc = "The zone append command is used to write to a zone\n"
+			   "using the slba of the zone, and the write will be appended from the\n"
 			   "write pointer of the zone";
 	const char *zslba = "starting LBA of the zone";
 	const char *data = "file containing data to write";
