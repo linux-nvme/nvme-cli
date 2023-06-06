@@ -156,6 +156,12 @@ conf.set10(
     description: 'Is sys/random.h(getrandom) include-able?'
 )
 
+if cc.has_function_attribute('fallthrough')
+  conf.set('fallthrough', '__attribute__((__fallthrough__))')
+else
+  conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
+endif
+
 configure_file(
     output: 'config.h',
     configuration: conf

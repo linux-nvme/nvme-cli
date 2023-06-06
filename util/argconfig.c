@@ -42,12 +42,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#if __has_attribute(__fallthrough__)
-#define fallthrough __attribute__((__fallthrough__))
-#else
-#define fallthrough do {} while (0)
-#endif
-
 static const char *append_usage_str = "";
 
 static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
