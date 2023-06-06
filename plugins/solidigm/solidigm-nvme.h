@@ -13,10 +13,11 @@
 
 #include "cmd.h"
 
-#define SOLIDIGM_PLUGIN_VERSION "0.12"
+#define SOLIDIGM_PLUGIN_VERSION "0.13"
 
 PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_VERSION),
 	COMMAND_LIST(
+		ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
 		ENTRY("smart-log-add", "Retrieve Solidigm SMART Log", get_additional_smart_log)
 		ENTRY("vs-smart-add-log", "Get SMART / health extended log (redirects to ocp plug-in)", smart_cloud)
 		ENTRY("vs-internal-log", "Retrieve Debug log binaries", get_internal_log)

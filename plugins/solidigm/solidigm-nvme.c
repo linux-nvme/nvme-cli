@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (c) 2022 Solidigm.
+ * Copyright (c) 2022-2023 Solidigm.
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
@@ -10,6 +10,7 @@
 #define CREATE_CMD
 #include "solidigm-nvme.h"
 
+#include "solidigm-id-ctrl.h"
 #include "solidigm-smart.h"
 #include "solidigm-internal-logs.h"
 #include "solidigm-garbage-collection.h"
@@ -20,6 +21,11 @@
 #include "plugins/ocp/ocp-clear-fw-update-history.h"
 #include "plugins/ocp/ocp-smart-extended-log.h"
 #include "plugins/ocp/ocp-fw-activation-history.h"
+
+static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return __id_ctrl(argc, argv, cmd, plugin, sldgm_id_ctrl);
+}
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
