@@ -7,6 +7,7 @@
 #define NVME_VSC_GET			0xE6
 #define VSC_FN_GET_CDUMP		0x08
 #define EVLOG_SIG			0x65766C67
+#define IGVSC_SIG           0x69677673
 #define SRB_SIGNATURE			0x544952474F4E4E49ULL
 #define XCLEAN_LINE			"\033[K"
 

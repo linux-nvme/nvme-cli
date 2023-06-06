@@ -146,7 +146,7 @@ static int nvme_vucmd(int fd, unsigned char opcode, unsigned int cdw12,
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = opcode;
-	cmd.cdw2  = 0x69677673;
+	cmd.cdw2  = IGVSC_SIG;
 	cmd.cdw10 = data_len / 4;
 	cmd.cdw12 = cdw12;
 	cmd.cdw13 = cdw13;
