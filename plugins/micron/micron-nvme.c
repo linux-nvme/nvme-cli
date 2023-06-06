@@ -3259,7 +3259,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 					bSize += (16 * 1024) - (bSize % (16 * 1024));
 			}
 			dataBuffer = (unsigned char *)malloc(bSize);
-			if (bSize && !dataBuffer) {
+			if (bSize && dataBuffer) {
 				memset(dataBuffer, 0, bSize);
 				if (eModel == M5410 || eModel == M5407)
 					err = NVMEGetLogPage(dev_fd(dev),
