@@ -7672,7 +7672,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	} else if (err) {
 		nvme_show_status(err);
 	} else {
-		if (!(opcode & 1) && write(dfd, (void *)buffer, cfg.data_size) < 0) {
+		if (!(opcode & 1) && write(dfd, (void *)buffer, buffer_size) < 0) {
 			nvme_show_error("write: %s: failed to write buffer to output file",
 				strerror(errno));
 			err = -EINVAL;
