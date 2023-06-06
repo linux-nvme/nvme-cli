@@ -34,4 +34,27 @@ char *uint128_t_to_si_string(nvme_uint128_t val, __u32 bytes_per_unit);
 const char *util_uuid_to_string(unsigned char uuid[NVME_UUID_LEN]);
 const char *util_fw_to_string(char *c);
 
+/**
+ * @brief convert time_t format time to a human readable string
+ *
+ * @param time, input time_t time
+ * @param ts_buf, output time string
+ * @Note, time string format is "Y-M-D|H:M:S:MS"
+ *
+ * @return 0 success
+ */
+int convert_ts(time_t time, char *ts_buf);
+
+/**
+ * @brief print once a progress of spinner to stdout
+ *        the output will be looks like if disp_name is "LogDump" and percent is 0.5
+ *        LogDump [========================-                         ]  50%
+
+ *
+ * @param disp_name, const string displayed before spiner
+ * @param percent [0, 1.0] about the progress
+ *
+ */
+void util_spinner(const char *disp_name, float percent);
+
 #endif /* _MISC_H */

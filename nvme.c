@@ -4072,7 +4072,7 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 	err = nvme_identify_iocs(dev_fd(dev), cfg.cntid, &iocs);
 	if (!err) {
 		printf("NVMe Identify I/O Command Set:\n");
-		nvme_show_id_iocs(&iocs);
+		nvme_show_id_iocs(&iocs, 0);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
@@ -6098,7 +6098,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 			nvme_show_lba_status_info(result);
 		if (buf) {
 			if (cfg.feature_id == NVME_FEAT_FID_LBA_RANGE)
-				nvme_show_lba_range((struct nvme_lba_range_type *)buf, result);
+				nvme_show_lba_range((struct nvme_lba_range_type *)buf, result, 0);
 			else
 				d(buf, cfg.data_len, 16, 1);
 		}
@@ -7657,7 +7657,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.storage_tag	= cfg.storage_tag,
 		.data_len	= buffer_size,
 		.data		= buffer,
-		.metadata_len	= cfg.metadata_size,
+		.metadata_len	= mbuffer_size,
 		.metadata	= mbuffer,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
@@ -9213,7 +9213,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		return err;
 	}
 
-	nvme_show_topology(r, flags, rank);
+	nvme_show_topology(r, rank, flags);
 	nvme_free_tree(r);
 
 	return err;

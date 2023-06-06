@@ -16,6 +16,5 @@ int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd, stru
 {
 	const char *desc = "OCP Clear Firmware Update History";
 
-	return ocp_clear_feature(argc, argv, desc,
-				 OCP_FID_CLEAR_FW_ACTIVATION_HISTORY);
+	return ocp_clear_feature(argc, argv, desc, OCP_FID_CLEAR_FW_ACTIVATION_HISTORY);
 }

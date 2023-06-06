@@ -9,7 +9,7 @@
 
 #include <libnvme.h>
 
-static int version(struct plugin *plugin)
+static int version_cmd(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
 
@@ -55,7 +55,7 @@ static int help(int argc, char **argv, struct plugin *plugin)
 	return 0;
 }
 
-void usage(struct plugin *plugin)
+static void usage_cmd(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
 
@@ -69,12 +69,13 @@ void general_help(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
 	struct plugin *extension;
-	unsigned i = 0;
-	unsigned padding = 15;
-	unsigned curr_length = 0;
+	unsigned int i = 0;
+	unsigned int padding = 15;
+	unsigned int curr_length = 0;
+
 	printf("%s-%s\n", prog->name, prog->version);
 
-	usage(plugin);
+	usage_cmd(plugin);
 
 	printf("\n");
 	print_word_wrapped(prog->desc, 0, 0, stdout);
@@ -88,11 +89,15 @@ void general_help(struct plugin *plugin)
 
 	printf("\nThe following are all implemented sub-commands:\n");
 
-	/* iterate through all commands to get maximum length */
-	/* Still need to handle the case of ultra long strings, help messages, etc */
-	for (; plugin->commands[i]; i++)
-		if (padding < (curr_length = 2 + strlen(plugin->commands[i]->name)))
+	/*
+	 * iterate through all commands to get maximum length
+	 * Still need to handle the case of ultra long strings, help messages, etc
+	 */
+	for (; plugin->commands[i]; i++) {
+		curr_length = 2 + strlen(plugin->commands[i]->name);
+		if (padding < curr_length)
 			padding = curr_length;
+	}
 
 	i = 0;
 	for (; plugin->commands[i]; i++)
@@ -110,8 +115,10 @@ void general_help(struct plugin *plugin)
 		printf("See '%s help <command>' for more information on a specific command\n",
 			prog->name);
 
-	/* The first plugin is the built-in. If we're not showing help for the
-	 * built-in, don't show the program's other extensions */
+	/*
+	 * The first plugin is the built-in. If we're not showing help for the
+	 * built-in, don't show the program's other extensions
+	 */
 	if (plugin->name)
 		return;
 
@@ -156,7 +163,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	if (!strcmp(str, "help"))
 		return help(argc, argv, plugin);
 	if (!strcmp(str, "version"))
-		return version(plugin);
+		return version_cmd(plugin);
 
 	while (*cmd) {
 		if (!strcmp(str, (*cmd)->name) ||
@@ -183,7 +190,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	if (plugin->name) {
 		printf("ERROR: Invalid sub-command '%s' for plugin %s\n", str, plugin->name);
 		return -ENOTTY;
-        }
+	}
 
 	extension = plugin->next;
 	while (extension) {
@@ -192,8 +199,10 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 		extension = extension->next;
 	}
 
-	/* If the command is executed with the extension name and
-	 * command together ("plugin-command"), run the plug in */
+	/*
+	 * If the command is executed with the extension name and
+	 * command together ("plugin-command"), run the plug in
+	 */
 	extension = plugin->next;
 	while (extension) {
 		if (!strncmp(str, extension->name, strlen(extension->name))) {

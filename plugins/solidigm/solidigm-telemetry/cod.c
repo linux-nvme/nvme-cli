@@ -118,7 +118,7 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 		return;
 	if (!json_object_object_get_ex(telemetry_header, "reasonIdentifier", &reason_id))
 		return;
-	if  (!json_object_object_get_ex(reason_id, "OemDataMapOffset", &COD_offset))
+	if  (!json_object_object_get_ex(reason_id, "oemDataMapOffset", &COD_offset))
 		return;
 
 	uint64_t offset = json_object_get_int(COD_offset);

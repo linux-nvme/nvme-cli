@@ -43,7 +43,6 @@
 #include "nbft.h"
 #include "libnvme.h"
 #include "nvme-print.h"
-#include "nvme-print-json.h"
 #include "fabrics.h"
 
 #define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
@@ -286,49 +285,6 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	return __create_discover_ctrl(r, h, cfg, trcfg);
 }
 
-static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
-{
-	int i;
-
-	printf("\nDiscovery Log Number of Records %d, Generation counter %"PRIu64"\n",
-	       numrec, le64_to_cpu(log->genctr));
-
-	for (i = 0; i < numrec; i++) {
-		struct nvmf_disc_log_entry *e = &log->entries[i];
-
-		printf("=====Discovery Log Entry %d======\n", i);
-		printf("trtype:  %s\n", nvmf_trtype_str(e->trtype));
-		printf("adrfam:  %s\n",
-			strlen(e->traddr) ?
-			nvmf_adrfam_str(e->adrfam) : "");
-		printf("subtype: %s\n", nvmf_subtype_str(e->subtype));
-		printf("treq:    %s\n", nvmf_treq_str(e->treq));
-		printf("portid:  %d\n", le16_to_cpu(e->portid));
-		printf("trsvcid: %s\n", e->trsvcid);
-		printf("subnqn:  %s\n", e->subnqn);
-		printf("traddr:  %s\n", e->traddr);
-		printf("eflags:  %s\n",
-		       nvmf_eflags_str(le16_to_cpu(e->eflags)));
-
-		switch (e->trtype) {
-		case NVMF_TRTYPE_RDMA:
-			printf("rdma_prtype: %s\n",
-				nvmf_prtype_str(e->tsas.rdma.prtype));
-			printf("rdma_qptype: %s\n",
-				nvmf_qptype_str(e->tsas.rdma.qptype));
-			printf("rdma_cms:    %s\n",
-				nvmf_cms_str(e->tsas.rdma.cms));
-			printf("rdma_pkey: 0x%04x\n",
-				le16_to_cpu(e->tsas.rdma.pkey));
-			break;
-		case NVMF_TRTYPE_TCP:
-			printf("sectype: %s\n",
-				nvmf_sectype_str(e->tsas.tcp.sectype));
-			break;
-		}
-	}
-}
-
 static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 {
 	uint64_t numrec = le64_to_cpu(log->numrec);
@@ -350,11 +306,6 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 		printf("Discovery log is saved to %s\n", raw);
 
 	close(fd);
-}
-
-static void print_connect_msg(nvme_ctrl_t c)
-{
-	printf("device: %s\n", nvme_ctrl_get_name(c));
 }
 
 static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
@@ -387,21 +338,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 	if (raw)
 		save_discovery_log(raw, log);
 	else if (!connect) {
-		switch (flags) {
-		case NORMAL:
-			print_discovery_log(log, numrec);
-			break;
-		case JSON:
-			json_discovery_log(log, numrec);
-			break;
-		case BINARY:
-			d_raw((unsigned char *)log,
-			      sizeof(struct nvmf_discovery_log) +
-			      numrec * sizeof(struct nvmf_disc_log_entry));
-			break;
-		default:
-			break;
-		}
+		nvme_show_discovery_log(log, numrec, flags);
 	} else if (connect) {
 		int i;
 
@@ -966,6 +903,13 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		}
 	}
 
+	if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		fprintf(stderr,
+			"avoiding connect to %s, use nvme discover instead\n",
+			NVME_DISC_SUBSYS_NAME);
+		return -EINVAL;
+	}
+
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
@@ -1032,10 +976,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 			nvme_strerror(errno));
 	else {
 		errno = 0;
-		if (flags == NORMAL)
-			print_connect_msg(c);
-		else if (flags == JSON)
-			json_connect_msg(c);
+		nvme_show_connect_msg(c, flags);
 	}
 
 out_free:
