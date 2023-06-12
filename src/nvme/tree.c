@@ -48,6 +48,34 @@ static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 				    char *name);
 static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name);
 
+/**
+ * Compare two C strings and handle NULL pointers gracefully.
+ * Return true if both pointers are equal (including both set to NULL).
+ * Return false if one and only one of the two pointers is NULL.
+ * Perform string comparisong only if both pointers are not NULL and
+ * return true if both strings are the same, false otherwise.
+ */
+static bool streq0(const char *s1, const char *s2)
+{
+	if (s1 == s2)
+		return true;
+	if (!s1 || !s2)
+		return false;
+	return !strcmp(s1, s2);
+}
+
+/**
+ * Same as streq0() but ignore the case of the characters.
+ */
+static bool streqcase0(const char *s1, const char *s2)
+{
+	if (s1 == s2)
+		return true;
+	if (!s1 || !s2)
+		return false;
+	return !strcasecmp(s1, s2);
+}
+
 static inline void nvme_free_dirents(struct dirent **d, int i)
 {
 	while (i-- > 0)
@@ -1111,22 +1139,28 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 
 {
 	struct nvme_ctrl *c;
+	bool (*addreq)(const char *, const char *);
+
+	if (!strcmp(transport, "tcp") || !strcmp(transport, "rdma"))
+		addreq = nvme_ipaddrs_eq; /* IP address compare for TCP/RDMA */
+	else
+		addreq = streqcase0; /* Case-insensitive for FC (n/a for loop) */
 
 	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
-		if (strcmp(c->transport, transport))
+		if (!streq0(c->transport, transport))
 			continue;
 		if (traddr && c->traddr &&
-		    strcasecmp(c->traddr, traddr))
+		    !addreq(c->traddr, traddr))
 			continue;
 		if (host_traddr && c->cfg.host_traddr &&
-		    strcmp(c->cfg.host_traddr, host_traddr))
+		    !addreq(c->cfg.host_traddr, host_traddr))
 			continue;
 		if (host_iface && c->cfg.host_iface &&
-		    strcmp(c->cfg.host_iface, host_iface))
+		    !streq0(c->cfg.host_iface, host_iface))
 			continue;
 		if (trsvcid && c->trsvcid &&
-		    strcmp(c->trsvcid, trsvcid))
+		    !streq0(c->trsvcid, trsvcid))
 			continue;
 		return c;
 	}
