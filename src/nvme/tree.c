@@ -34,6 +34,8 @@
 #include "log.h"
 #include "private.h"
 
+const char *nvme_slots_sysfs_dir = "/sys/bus/pci/slots";
+
 static struct nvme_host *default_host;
 
 static void __nvme_free_host(nvme_host_t h);
@@ -822,6 +824,11 @@ const char *nvme_ctrl_get_address(nvme_ctrl_t c)
 	return c->address ? c->address : "";
 }
 
+const char *nvme_ctrl_get_phy_slot(nvme_ctrl_t c)
+{
+	return c->phy_slot ? c->phy_slot : "";
+}
+
 const char *nvme_ctrl_get_firmware(nvme_ctrl_t c)
 {
 	return c->firmware;
@@ -1009,6 +1016,7 @@ void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->address);
 	FREE_CTRL_ATTR(c->dctype);
 	FREE_CTRL_ATTR(c->cntrltype);
+	FREE_CTRL_ATTR(c->phy_slot);
 }
 
 int nvme_disconnect_ctrl(nvme_ctrl_t c)
@@ -1256,6 +1264,50 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_root_t r,
 	return subsys_name;
 }
 
+static char *nvme_ctrl_lookup_phy_slot(nvme_root_t r, const char *address)
+{
+	char *target_addr;
+	char *addr;
+	char *path;
+	int found = 0;
+	int ret;
+	DIR *slots_dir;
+	struct dirent *entry;
+
+	slots_dir = opendir(nvme_slots_sysfs_dir);
+	if (!slots_dir) {
+		nvme_msg(r, LOG_WARNING, "failed to open slots dir %s\n",
+		nvme_slots_sysfs_dir);
+		return NULL;
+	}
+
+	target_addr = strndup(address, 10);
+	while (!(entry = readdir(slots_dir))) {
+		if (entry->d_type == DT_DIR &&
+		    strncmp(entry->d_name, ".", 1) != 0 &&
+		    strncmp(entry->d_name, "..", 2) != 0) {
+			ret = asprintf(&path, "/sys/bus/pci/slots/%s", entry->d_name);
+			if (ret < 0) {
+				errno = ENOMEM;
+				return NULL;
+			}
+			addr = nvme_get_attr(path, "address");
+			if (strcmp(addr, target_addr) == 0) {
+				found = 1;
+				free(path);
+				free(addr);
+				break;
+			}
+			free(path);
+			free(addr);
+		}
+	}
+	free(target_addr);
+	if (found)
+		return strdup(entry->d_name);
+	return NULL;
+}
+
 static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 			       const char *name)
 {
@@ -1297,6 +1349,7 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 	}
 	c->cntrltype = nvme_get_ctrl_attr(c, "cntrltype");
 	c->dctype = nvme_get_ctrl_attr(c, "dctype");
+	c->phy_slot = nvme_ctrl_lookup_phy_slot(r, c->address);
 
 	errno = 0; /* cleanup after nvme_get_ctrl_attr() */
 	return 0;

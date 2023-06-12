@@ -802,6 +802,15 @@ const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c);
 const char *nvme_ctrl_get_address(nvme_ctrl_t c);
 
 /**
+ * nvme_ctrl_get_phy_slot() - PCI physical slot number of a controller
+ * @c:	Controller instance
+ *
+ * Return: PCI physical slot number of @c or empty string if slot
+ * number is not present.
+ */
+const char *nvme_ctrl_get_phy_slot(nvme_ctrl_t c);
+
+/**
  * nvme_ctrl_get_firmware() - Firmware string of a controller
  * @c:	Controller instance
  *

@@ -2,6 +2,7 @@
 
 LIBNVME_1_5 {
 	global:
+		nvme_ctrl_get_phy_slot;
 		nvme_ipaddrs_eq;
 		nvme_nbft_free;
 		nvme_nbft_read;
