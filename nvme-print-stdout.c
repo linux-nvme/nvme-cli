@@ -784,8 +784,7 @@ static void stdout_supported_cap_config_log(struct nvme_supported_cap_config_lis
 	}
 }
 
-static unsigned int stdout_subsystem_multipath(nvme_subsystem_t s,
-					       bool show_ana)
+static unsigned int stdout_subsystem_multipath(nvme_subsystem_t s)
 {
 	nvme_ns_t n;
 	nvme_path_t p;
@@ -797,10 +796,7 @@ static unsigned int stdout_subsystem_multipath(nvme_subsystem_t s,
 
 	nvme_namespace_for_each_path(n, p) {
 		nvme_ctrl_t c = nvme_path_get_ctrl(p);
-		const char *ana_state = "";
-
-		if (show_ana)
-			ana_state = nvme_path_get_ana_state(p);
+		const char *ana_state = ana_state = nvme_path_get_ana_state(p);
 
 		printf(" +- %s %s %s %s %s\n",
 			nvme_ctrl_get_name(c),
@@ -839,7 +835,7 @@ static void stdout_subsystem(nvme_root_t r, bool show_ana)
 			       nvme_subsystem_get_nqn(s));
 			printf("\\\n");
 
-			if (!stdout_subsystem_multipath(s, show_ana))
+			if (!show_ana || !stdout_subsystem_multipath(s))
 				stdout_subsystem_ctrls(s);
 		}
 	}

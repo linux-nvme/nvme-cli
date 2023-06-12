@@ -1717,7 +1717,6 @@ static void json_nvme_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t 
 }
 
 static unsigned int json_print_nvme_subsystem_multipath(nvme_subsystem_t s,
-							bool show_ana,
 						        json_object *paths)
 {
 	nvme_ns_t n;
@@ -1741,9 +1740,8 @@ static unsigned int json_print_nvme_subsystem_multipath(nvme_subsystem_t s,
 					     nvme_ctrl_get_address(c));
 		json_object_add_value_string(path_attrs, "State",
 					     nvme_ctrl_get_state(c));
-		if (show_ana)
-			json_object_add_value_string(path_attrs, "ANAState",
-						     nvme_path_get_ana_state(p));
+		json_object_add_value_string(path_attrs, "ANAState",
+					     nvme_path_get_ana_state(p));
 		json_array_add_value_object(paths, path_attrs);
 		i++;
 	}
@@ -1803,7 +1801,7 @@ static void json_print_nvme_subsystem_list(nvme_root_t r, bool show_ana)
 			json_array_add_value_object(subsystems, subsystem_attrs);
 			paths = json_create_array();
 
-			if (!json_print_nvme_subsystem_multipath(s, show_ana, paths))
+			if (!show_ana || !json_print_nvme_subsystem_multipath(s, paths))
 				json_print_nvme_subsystem_ctrls(s, paths);
 
 			json_object_add_value_array(subsystem_attrs, "Paths",
