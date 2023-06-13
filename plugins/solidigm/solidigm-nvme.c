@@ -17,6 +17,7 @@
 #include "solidigm-latency-tracking.h"
 #include "solidigm-telemetry.h"
 #include "solidigm-log-page-dir.h"
+#include "solidigm-market-log.h"
 
 #include "plugins/ocp/ocp-clear-fw-update-history.h"
 #include "plugins/ocp/ocp-smart-extended-log.h"
@@ -74,4 +75,10 @@ static int get_log_page_directory_log(int argc, char **argv, struct command *cmd
 				      struct plugin *plugin)
 {
 	return solidigm_get_log_page_directory_log(argc, argv, cmd, plugin);
+}
+
+static int get_market_log(int argc, char **argv, struct command *cmd,
+				      struct plugin *plugin)
+{
+	return sldgm_get_market_log(argc, argv, cmd, plugin);
 }

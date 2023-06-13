@@ -7,5 +7,7 @@ sources += [
   'plugins/solidigm/solidigm-log-page-dir.c',
   'plugins/solidigm/solidigm-telemetry.c',
   'plugins/solidigm/solidigm-internal-logs.c',
+  'plugins/solidigm/solidigm-market-log.c',
 ]
 subdir('solidigm-telemetry')
+
