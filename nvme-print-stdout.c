@@ -4462,23 +4462,24 @@ static void stdout_detailed_list(nvme_root_t r)
 	}
 	printf("\n");
 
-	printf("%-8s %-20s %-40s %-8s %-6s %-14s %-12s %-16s\n", "Device",
-		"SN", "MN", "FR", "TxPort", "Address", "Subsystem", "Namespaces");
-	printf("%-.8s %-.20s %-.40s %-.8s %-.6s %-.14s %-.12s %-.16s\n", dash, dash,
-		dash, dash, dash, dash, dash, dash);
+	printf("%-8s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n", "Device",
+		"SN", "MN", "FR", "TxPort", "Address", "Slot", "Subsystem", "Namespaces");
+	printf("%-.8s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n", dash,
+		dash, dash, dash, dash, dash, dash, dash, dash);
 
 	nvme_for_each_host(r, h) {
 		nvme_for_each_subsystem(h, s) {
 			nvme_subsystem_for_each_ctrl(s, c) {
 				bool first = true;
 
-				printf("%-8s %-20s %-40s %-8s %-6s %-14s %-12s ",
+				printf("%-8s %-20s %-40s %-8s %-6s %-14s %-6s %-12s ",
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_serial(c),
 				       nvme_ctrl_get_model(c),
 				       nvme_ctrl_get_firmware(c),
 				       nvme_ctrl_get_transport(c),
 				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_phy_slot(c),
 				       nvme_subsystem_get_name(s));
 
 				nvme_ctrl_for_each_ns(c, n) {
