@@ -2526,6 +2526,7 @@ static void json_detail_list(nvme_root_t r)
 				json_object_add_value_string(jctrl, "Firmware", nvme_ctrl_get_firmware(c));
 				json_object_add_value_string(jctrl, "Transport", nvme_ctrl_get_transport(c));
 				json_object_add_value_string(jctrl, "Address", nvme_ctrl_get_address(c));
+				json_object_add_value_string(jctrl, "Slot", nvme_ctrl_get_phy_slot(c));
 
 				nvme_ctrl_for_each_ns(c, n) {
 					struct json_object *jns = json_create_object();
