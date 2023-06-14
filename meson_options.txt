@@ -42,6 +42,12 @@ option(
   description : 'set default Persistent Discovery Controllers behavior'
 )
 option(
+  'rundir',
+  type: 'string',
+  value: 'run',
+  description: 'directory for volatile configuration files',
+)
+option(
   'systemctl',
   type : 'string',
   value : '/usr/bin/systemctl',

@@ -27,6 +27,7 @@ sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
 udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
 dracutrulesdir = join_paths(prefixdir, get_option('dracutrulesdir'))
 systemddir     = join_paths(prefixdir, get_option('systemddir'))
+rundir         = join_paths(prefixdir, get_option('rundir'))
 
 ###############################################################################
 conf = configuration_data()
@@ -44,6 +45,7 @@ else
 endif
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
+conf.set('RUNDIR', '"@0@"'.format(rundir))
 
 # Check for libnvme availability
 libnvme_dep = dependency('libnvme', version: '>=1.4', required: true,
@@ -182,6 +184,7 @@ substs.set('DRACUTRILESDIR', dracutrulesdir)
 substs.set('REQUIRES', requires)
 substs.set('DATADIR', datadir)
 substs.set('MANDIR', mandir)
+substs.set('RUNDIR', rundir)
 substs.set('SBINDIR', sbindir)
 substs.set('SYSCONFDIR', sysconfdir)
 substs.set('SYSTEMDDIR', systemddir)
@@ -319,6 +322,7 @@ if meson.version().version_compare('>=0.53.0')
         'mandir':            mandir,
         'udevrulesdir':      udevrulesdir,
         'dracutrulesdir':    dracutrulesdir,
+        'rundir':            rundir,
         'systemddir':        systemddir,
         'build location':    meson.current_build_dir(),
     }
