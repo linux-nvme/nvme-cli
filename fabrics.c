@@ -47,6 +47,7 @@
 
 #define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
 #define PATH_NVMF_CONFIG	SYSCONFDIR "/nvme/config.json"
+#define PATH_NVMF_RUNDIR	RUNDIR "/nvme"
 #define MAX_DISC_ARGS		32
 #define MAX_DISC_RETRIES	10
 
@@ -84,6 +85,7 @@ static const char *nvmf_hdr_digest	= "enable transport protocol header digest (T
 static const char *nvmf_data_digest	= "enable transport protocol data digest (TCP transport)";
 static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
+static const char *nvmf_context		= "execution context identification string";
 
 #define NVMF_ARGS(n, c, ...)                                                                     \
 	struct argconfig_commandline_options opts[] = {                                          \
@@ -641,6 +643,40 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 	return ret;
 }
 
+static int nvme_read_volatile_config(nvme_root_t r)
+{
+	char *filename, *ext;
+	struct dirent *dir;
+	DIR *d;
+	int ret = -ENOENT;
+
+	d = opendir(PATH_NVMF_RUNDIR);
+	if (!d)
+		return -ENOTDIR;
+
+	while ((dir = readdir(d))) {
+		if (dir->d_type != DT_REG)
+			continue;
+
+		ext = strchr(dir->d_name, '.');
+		if (!ext || strcmp("json", ext + 1))
+			continue;
+
+		if (asprintf(&filename, "%s/%s", PATH_NVMF_RUNDIR, dir->d_name) < 0) {
+			ret = -ENOMEM;
+			break;
+		}
+
+		if (nvme_read_config(r, filename))
+			ret = 0;
+
+		free(filename);
+	}
+	closedir(d);
+
+	return ret;
+}
+
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
@@ -649,6 +685,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	char *hnqn = NULL, *hid = NULL;
+	char *context = NULL;
 	enum nvme_print_flags flags;
 	nvme_root_t r;
 	nvme_host_t h;
@@ -675,7 +712,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
 		  OPT_FLAG("no-nbft",        0, &nonbft,              "Do not look at NBFT tables"),
-		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"));
+		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"),
+		  OPT_STRING("context",      0, "STR", &context,       nvmf_context));
 
 	nvmf_default_config(&cfg);
 
@@ -696,6 +734,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			nvme_strerror(errno));
 		return -errno;
 	}
+	if (context)
+		nvme_root_set_application(r, context);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
@@ -703,7 +743,10 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		nvme_free_tree(r);
 		return ret;
 	}
+
 	if (!nvme_read_config(r, config_file))
+		json_config = true;
+	if (!nvme_read_volatile_config(r))
 		json_config = true;
 
 	hostnqn_arg = hostnqn;
@@ -820,9 +863,10 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		/* No device or non-matching device, create a new controller */
 		c = create_discover_ctrl(r, h, &cfg, &trcfg);
 		if (!c) {
-			fprintf(stderr,
-				"failed to add controller, error %s\n",
-				nvme_strerror(errno));
+			if (errno != ENVME_CONNECT_IGNORED)
+				fprintf(stderr,
+					"failed to add controller, error %s\n",
+					nvme_strerror(errno));
 			ret = errno;
 			goto out_free;
 		}
@@ -851,6 +895,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *hostkey = NULL, *ctrlkey = NULL;
 	char *hnqn = NULL, *hid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
+	char *context = NULL;
 	unsigned int verbose = 0;
 	nvme_root_t r;
 	nvme_host_t h;
@@ -860,12 +905,14 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	struct nvme_fabrics_config cfg = { 0 };
 	char *format = "";
 
+
 	NVMF_ARGS(opts, cfg,
 		  OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,      nvmf_ctrlkey),
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_INCR("verbose",              'v', &verbose,             "Increase logging verbosity"),
-		  OPT_FLAG("dump-config",          'O', &dump_config,         "Dump JSON configuration to stdout"),
-		  OPT_FMT("output-format",         'o', &format,              "Output format: normal|json"));
+		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"),
+		  OPT_FMT("output-format",         'o', &format,       "Output format: normal|json"),
+		  OPT_STRING("context",              0, "STR", &context,  nvmf_context));
 
 	nvmf_default_config(&cfg);
 
@@ -905,6 +952,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 			nvme_strerror(errno));
 		return -errno;
 	}
+	if (context)
+		nvme_root_set_application(r, context);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
@@ -913,6 +962,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		return ret;
 	}
 	nvme_read_config(r, config_file);
+	nvme_read_volatile_config(r);
 
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
@@ -1035,9 +1085,9 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	struct config cfg = { 0 };
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("nqn",    'n', "NAME", &cfg.nqn,    nvmf_nqn),
-		OPT_STRING("device", 'd', "DEV",  &cfg.device, device),
-		OPT_INCR("verbose",  'v', &cfg.verbose, "Increase logging verbosity"),
+		OPT_STRING("nqn",        'n', "NAME", &cfg.nqn,    nvmf_nqn),
+		OPT_STRING("device",     'd', "DEV",  &cfg.device, device),
+		OPT_INCR("verbose",      'v', &cfg.verbose, "Increase logging verbosity"),
 		OPT_END()
 	};
 
