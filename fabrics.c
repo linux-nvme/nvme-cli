@@ -856,8 +856,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	int ret;
-	struct nvme_fabrics_config cfg;
-	enum nvme_print_flags flags = -1;
+	enum nvme_print_flags flags;
+	struct nvme_fabrics_config cfg = { 0 };
 	char *format = "";
 
 	NVMF_ARGS(opts, cfg,
@@ -873,14 +873,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	if (!strcmp(format, ""))
-		flags = -1;
-	else if (!strcmp(format, "normal"))
-		flags = NORMAL;
-	else if (!strcmp(format, "json"))
-		flags = JSON;
-	else
-		return -EINVAL;
+	flags = validate_output_format(format);
 
 	if (!subsysnqn) {
 		fprintf(stderr,
@@ -969,7 +962,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 			nvme_strerror(errno));
 	else {
 		errno = 0;
-		nvme_show_connect_msg(c, flags);
+		if (flags != -EINVAL)
+			nvme_show_connect_msg(c, flags);
 	}
 
 out_free:
