@@ -9,6 +9,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "nvme-print.h"
@@ -17,6 +18,8 @@
 
 #define MIN_VENDOR_LID 0xC0
 #define SOLIDIGM_MAX_UUID 2
+
+static const char dash[100] = {[0 ... 99] = '-'};
 
 struct lid_dir {
 	struct __packed {
@@ -180,10 +183,8 @@ static struct lid_dir *get_ocp_lids(struct nvme_supported_log_pages *supported)
 
 static void supported_log_pages_normal(struct lid_dir *lid_dir[SOLIDIGM_MAX_UUID + 1])
 {
-	printf("Log Page Directory:\n");
-	printf("-----------------------------------------------------------------\n");
-	printf("| %-5s| %-42s| %-11s|\n", "LID", "Description", "UUID Index");
-	printf("-----------------------------------------------------------------\n");
+	printf("%-5s %-4s %-42s\n", "uuidx", "LID", "Description");
+	printf("%-.5s %-.4s %-.42s\n", dash, dash, dash);
 
 	for (int uuid_index = 0; uuid_index <= SOLIDIGM_MAX_UUID; uuid_index++) {
 		if (!lid_dir[uuid_index])
@@ -193,19 +194,15 @@ static void supported_log_pages_normal(struct lid_dir *lid_dir[SOLIDIGM_MAX_UUID
 			if (!lid_dir[uuid_index]->lid[lid].supported)
 				continue;
 
-			printf("| 0x%-3.02x", le32_to_cpu(lid));
-			printf("| %-42s", lid_dir[uuid_index]->lid[lid].str);
-			printf("| %-11d|\n", le32_to_cpu(uuid_index));
+			printf("%-5d 0x%02x %s\n", le32_to_cpu(uuid_index), le32_to_cpu(lid),
+				   lid_dir[uuid_index]->lid[lid].str);
 		}
 	}
-
-	printf("-----------------------------------------------------------------\n");
 }
 
 static void supported_log_pages_json(struct lid_dir *lid_dir[SOLIDIGM_MAX_UUID + 1])
 {
-	struct json_object *root = json_create_object();
-	struct json_object *supported_arry = json_create_array();
+	struct json_object *root = json_create_array();
 
 	for (int uuid_index = 0; uuid_index <= SOLIDIGM_MAX_UUID; uuid_index++) {
 		if (!lid_dir[uuid_index])
@@ -217,15 +214,13 @@ static void supported_log_pages_json(struct lid_dir *lid_dir[SOLIDIGM_MAX_UUID +
 
 			struct json_object *lid_obj = json_create_object();
 
+			json_object_add_value_uint(lid_obj, "uuidx", le32_to_cpu(uuid_index));
 			json_object_add_value_uint(lid_obj, "lid", le32_to_cpu(lid));
 			json_object_add_value_string(lid_obj, "description",
 						     lid_dir[uuid_index]->lid[lid].str);
-			json_object_add_value_uint(lid_obj, "uuid index", le32_to_cpu(uuid_index));
-			json_array_add_value_object(supported_arry, lid_obj);
+			json_array_add_value_object(root, lid_obj);
 		}
 	}
-
-	json_object_add_value_array(root, "supported", supported_arry);
 
 	json_print_object(root, NULL);
 	json_free_object(root);
@@ -236,7 +231,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 					struct plugin *plugin)
 {
 	const int NO_UUID_INDEX = 0;
-	const char *description = "Retrieves the list of supported log pages.";
+	const char *description = "Retrieves list of supported log pages for each UUID index.";
 	char *format = "normal";
 
 	OPT_ARGS(options) = {
@@ -294,10 +289,12 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 			supported_log_pages_json(lid_dirs);
 		} else {
 			fprintf(stderr, "Error: Invalid output format specified: %s.\n", format);
-			return -EINVAL;
+			err = -EINVAL;
 		}
 	}
 
+	/* Redundant close() to make static code analysis happy */
+	close(dev->direct.fd);
 	dev_close(dev);
 	return err;
 }
