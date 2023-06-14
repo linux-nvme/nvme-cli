@@ -38,6 +38,7 @@
  * @ENVME_CONNECT_OPNOTSUPP:	not supported
  * @ENVME_CONNECT_CONNREFUSED:	connection refused
  * @ENVME_CONNECT_ADDRNOTAVAIL:	cannot assign requested address
+ * @ENVME_CONNECT_IGNORED:	connect attempt is ignored due to configuration
  */
 enum nvme_connect_err {
 	ENVME_CONNECT_RESOLVE	= 1000,
@@ -59,6 +60,7 @@ enum nvme_connect_err {
 	ENVME_CONNECT_OPNOTSUPP,
 	ENVME_CONNECT_CONNREFUSED,
 	ENVME_CONNECT_ADDRNOTAVAIL,
+	ENVME_CONNECT_IGNORED,
 };
 
 /**

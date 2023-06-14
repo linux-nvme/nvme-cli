@@ -871,7 +871,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		if (!app || strcmp(app, root_app)) {
 			nvme_msg(h->r, LOG_INFO, "skip %s, not managed by %s\n",
 				 nvme_subsystem_get_nqn(s), root_app);
-			errno = ENVME_CONNECT_INVAL;
+			errno = ENVME_CONNECT_IGNORED;
 			return -1;
 		}
 	}
