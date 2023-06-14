@@ -860,15 +860,33 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	}
 
 	root_app = nvme_root_get_application(h->r);
-	app = nvme_subsystem_get_application(s);
 	if (root_app) {
+		app = nvme_subsystem_get_application(s);
+		if (!app && nvme_ctrl_is_discovery_ctrl(c)) {
+			nvme_subsystem_t s;
+			nvme_ctrl_t fc;
+
+			nvme_for_each_subsystem(h, s) {
+				fc = __nvme_lookup_ctrl(s, nvme_ctrl_get_transport(c),
+							nvme_ctrl_get_traddr(c),
+							nvme_ctrl_get_host_traddr(c),
+							nvme_ctrl_get_host_iface(c),
+							nvme_ctrl_get_trsvcid(c),
+							NULL);
+
+				if (fc) {
+					app = nvme_subsystem_get_application(s);
+					break;
+				}
+			}
+		}
 		/*
 		 * configuration is managed by an application,
 		 * refuse to act on subsystems which either have
 		 * no application set or which habe a different
 		 * application string.
 		 */
-		if (!app || strcmp(app, root_app)) {
+		if (app && strcmp(app, root_app)) {
 			nvme_msg(h->r, LOG_INFO, "skip %s, not managed by %s\n",
 				 nvme_subsystem_get_nqn(s), root_app);
 			errno = ENVME_CONNECT_IGNORED;
