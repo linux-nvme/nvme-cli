@@ -526,7 +526,7 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 	struct list_head nbft_list;
 	char *format = "normal";
 	char *nbft_path = NBFT_SYSFS_PATH;
-	enum nvme_print_flags flags = -1;
+	enum nvme_print_flags flags;
 	int ret;
 	bool show_subsys = false, show_hfi = false, show_discovery = false;
 
@@ -543,17 +543,12 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 	if (ret)
 		return ret;
 
+	ret = flags = validate_output_format(format);
+	if (ret < 0)
+		return ret;
+
 	if (!(show_subsys || show_hfi || show_discovery))
 		show_subsys = show_hfi = show_discovery = true;
-
-	if (!strcmp(format, ""))
-		flags = -1;
-	else if (!strcmp(format, "normal"))
-		flags = NORMAL;
-	else if (!strcmp(format, "json"))
-		flags = JSON;
-	else
-		return -EINVAL;
 
 	list_head_init(&nbft_list);
 	ret = read_nbft_files(&nbft_list, nbft_path);
