@@ -579,7 +579,7 @@ const char *nvme_errno_to_string(int status)
 	return s;
 }
 
-#ifdef HAVE_LIBNSS
+#ifdef HAVE_NETDB
 char *hostname2traddr(struct nvme_root *r, const char *traddr)
 {
 	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
@@ -623,9 +623,7 @@ free_addrinfo:
 	freeaddrinfo(host_info);
 	return ret_traddr;
 }
-
-#else  /* !HAVE_LIBNSS */
-
+#else /* HAVE_NETDB */
 char *hostname2traddr(struct nvme_root *r, const char *traddr)
 {
 	nvme_msg(NULL, LOG_ERR, "No support for hostname IP address resolution; " \
@@ -634,7 +632,7 @@ char *hostname2traddr(struct nvme_root *r, const char *traddr)
 	errno = -ENOTSUP;
 	return NULL;
 }
-#endif /* HAVE_LIBNSS */
+#endif /* HAVE_NETDB */
 
 char *startswith(const char *s, const char *prefix)
 {

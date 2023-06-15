@@ -216,7 +216,7 @@ conf.set10(
 )
 
 conf.set(
-    'HAVE_LIBNSS',
+    'HAVE_NETDB',
     cc.links(
       '''#include <sys/types.h>
          #include <sys/socket.h>
@@ -226,7 +226,7 @@ conf.set(
              return getaddrinfo(argv[1], argv[2], &hints, &result);
       }
       ''',
-      name: 'libnss',
+      name: 'netdb',
     ),
     description: 'Is network address and service translation available'
 )
