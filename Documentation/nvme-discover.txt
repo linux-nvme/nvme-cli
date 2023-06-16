@@ -40,6 +40,7 @@ SYNOPSIS
                 [--nbft]
                 [--no-nbft]
                 [--nbft-path=<STR>]
+		[--context=<STR>]
 
 DESCRIPTION
 -----------
@@ -241,6 +242,9 @@ OPTIONS
 --nbft-path=<STR>::
         Use a user-defined path to the NBFT tables
 
+--context <STR>::
+	Set the execution context to <STR>. This allows to coordinate
+	the management of the global resources.
 
 EXAMPLES
 --------

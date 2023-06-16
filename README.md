@@ -234,3 +234,52 @@ $ git rebase master
 # Push your changes to github and trigger a PR
 $ git push -u origin fix-something
 ```
+
+## Persistent, volatile configuration
+
+Persistent configurations can be stored in two different locations: either in
+the file `/etc/nvme/discovery.conf` using the old style, or in the file
+`/etc/nvme/config.json` using the new style.
+
+On the other hand, volatile configurations, such as those obtained from
+third-party tools like `nvme-stats` or `blktests'` can be stored in the
+`/run/nvme` directory. When using the `nvme-cli` tool, all these configurations
+are combined into a single configuration that is used as input.
+
+The volatile configuration is particularly useful for coordinating access to the
+global resources among various components. For example, when executing
+`blktests` for the FC transport, the `nvme-cli` udev rules can be triggered. To
+prevent interference with a test, `blktests` can create a JSON configuration
+file in `/run/nvme` to inform `nvme-cli` that it should not perform any actions
+trigged from the udev context. This behavior can be controlled using the
+`--context` argument.
+
+For example a `blktests` volatile configuration could look like:
+
+```json
+[
+  {
+    "hostnqn": "nqn.2014-08.org.nvmexpress:uuid:242d4a24-2484-4a80-8234-d0169409c5e8",
+    "hostid": "242d4a24-2484-4a80-8234-d0169409c5e8",
+    "subsystems": [
+      {
+	"application": "blktests",
+        "nqn": "blktests-subsystem-1",
+        "ports": [
+          {
+            "transport": "fc",
+	    "traddr": "nn-0x10001100aa000001:pn-0x20001100aa000001",
+	    "host_traddr": "nn-0x10001100aa000002:pn-0x20001100aa000002"
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+Note when updating the volatile configuration during runtime, it should done in
+a an atomic way. For example create a temporary file without the `.json` file
+extension in `/run/nvme` and write the contents to this file. When finished use
+`rename` to add the `'.json'` file name extension. This ensures nvme-cli only
+sees the complete file.
