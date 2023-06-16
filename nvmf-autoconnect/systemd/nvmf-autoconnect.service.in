@@ -8,7 +8,7 @@ Before=remote-fs-pre.target
 [Service]
 Type=oneshot
 ExecStartPre=/sbin/modprobe nvme-fabrics
-ExecStart=@SBINDIR@/nvme connect-all
+ExecStart=@SBINDIR@/nvme connect-all --context=autoconnect
 
 [Install]
 WantedBy=default.target
