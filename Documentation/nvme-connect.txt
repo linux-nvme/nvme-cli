@@ -37,6 +37,7 @@ SYNOPSIS
 		[--tls                        ]
 		[--dump-config            | -O]
 		[--output-format=<fmt>    | -o <fmt>]
+		[--application=<id>                 ]
 
 DESCRIPTION
 -----------
@@ -194,6 +195,10 @@ OPTIONS
 	Set the reporting format to 'normal' or 'json'. Only one output format can
 	be used at a time. When this option is specified, the device associated with
 	the connection will be printed. Nothing is printed otherwise.
+
+--context <STR>::
+	Set the execution context to <STR>. This allows to coordinate
+	the management of the global resources.
 
 EXAMPLES
 --------
