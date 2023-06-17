@@ -193,18 +193,22 @@ static struct json_object *parse_json(nvme_root_t r, int fd)
 {
 	char buf[JSON_FILE_BUF_SIZE];
 	struct json_object *obj = NULL;
-	struct printbuf *pb;
+	char *str = NULL;
 	json_tokener *tok = NULL;
 	int ret;
+	void *ptr = NULL;
+	int len = 0;
 
-	pb = printbuf_new();
-	if (!pb)
-		return NULL;
+	while ((ret = read(fd, buf, JSON_FILE_BUF_SIZE)) > 0) {
+		str = realloc(ptr, len + ret);
+		if (!str)
+			goto out;
+		memcpy(&str[len], buf, ret);
+		len += ret;
+		ptr = str;
+	}
 
-	while ((ret = read(fd, buf, JSON_FILE_BUF_SIZE)) > 0)
-		printbuf_memappend(pb, buf, ret);
-
-	if (ret < 0)
+	if (ret < 0 || !len)
 		goto out;
 
 	tok = json_tokener_new_ex(JSON_TOKENER_DEFAULT_DEPTH);
@@ -214,14 +218,14 @@ static struct json_object *parse_json(nvme_root_t r, int fd)
 	/* Enforce correctly formatted JSON */
 	tok->flags = JSON_TOKENER_STRICT;
 
-	obj = json_tokener_parse_ex(tok, pb->buf, printbuf_length(pb));
+	obj = json_tokener_parse_ex(tok, str, len);
 	if (!obj)
 		nvme_msg(r, LOG_DEBUG, "JSON parsing failed: %s\n",
 			 json_util_get_last_err());
 out:
 	if (tok)
 		json_tokener_free(tok);
-	printbuf_free(pb);
+	free(ptr);
 
 	return obj;
 }
