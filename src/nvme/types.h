@@ -611,6 +611,19 @@ static const __u64 NVME_PMRMSC_CBA_MASK = 0xfffffffffffffull;
 #define NVME_PMRMSC_CMSE(pmrmsc)	NVME_GET(pmrmsc, PMRMSC_CMSE)
 #define NVME_PMRMSC_CBA(pmrmsc)		NVME_GET(pmrmsc, PMRMSC_CBA)
 
+enum nvme_flbas {
+	NVME_FLBAS_LOWER_SHIFT		= 0,
+	NVME_FLBAS_META_EXT_SHIFT	= 4,
+	NVME_FLBAS_HIGHER_SHIFT		= 5,
+	NVME_FLBAS_LOWER_MASK		= 0xf,
+	NVME_FLBAS_META_EXT_MASK	= 0x1,
+	NVME_FLBAS_HIGHER_MASK		= 0x3,
+};
+
+#define NVME_FLBAS_LOWER(flbas)		NVME_GET(flbas, FLBAS_LOWER)
+#define NVME_FLBAS_META_EXT(flbas)	NVME_GET(flbas, FLBAS_META_EXT)
+#define NVME_FLBAS_HIGHER(flbas)	NVME_GET(flbas, FLBAS_HIGHER)
+
 /**
  * enum nvme_psd_flags - Possible flag values in nvme power state descriptor
  * @NVME_PSD_FLAGS_MXPS: Indicates the scale for the Maximum Power

@@ -449,8 +449,8 @@ static inline void nvme_feature_decode_namespace_write_protect(__u32 value,
 
 static inline void nvme_id_ns_flbas_to_lbaf_inuse(__u8 flbas, __u8 *lbaf_inuse)
 {
-	*lbaf_inuse = (((flbas & NVME_NS_FLBAS_HIGHER_MASK) >> 1) |
-			(flbas & NVME_NS_FLBAS_LOWER_MASK));
+	*lbaf_inuse = ((NVME_FLBAS_HIGHER(flbas) >> 1) |
+			NVME_FLBAS_LOWER(flbas));
 }
 
 struct nvme_root;
