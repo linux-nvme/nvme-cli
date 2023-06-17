@@ -6630,7 +6630,7 @@ static inline __u32 nvme_status_get_type(int status)
  */
 static inline __u32 nvme_status_get_value(int status)
 {
-	return status & ~(NVME_STATUS_TYPE_MASK << NVME_STATUS_TYPE_SHIFT);
+	return status & ~NVME_SET(NVME_STATUS_TYPE_MASK, STATUS_TYPE);
 }
 
 /**
