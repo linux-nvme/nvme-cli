@@ -57,10 +57,10 @@ int nvme_cli_get_log_page(struct nvme_dev *dev,
                           struct nvme_get_log_args *args);
 
 int nvme_cli_get_nsid_log(struct nvme_dev *dev, bool rae,
-			  enum nvme_cmd_get_log_lid lid,
+			  enum nvme_log_lid lid,
 			  __u32 nsid, __u32 len, void *log);
 int nvme_cli_get_log_simple(struct nvme_dev *dev,
-			    enum nvme_cmd_get_log_lid lid,
+			    enum nvme_log_lid lid,
 			    __u32 len, void *log);
 int nvme_cli_get_log_supported_log_pages(struct nvme_dev *dev, bool rae,
 					 struct nvme_supported_log_pages *log);
