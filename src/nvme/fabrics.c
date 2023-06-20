@@ -1033,8 +1033,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		c->cfg.disable_sqflow = true;
 
 	if (e->trtype == NVMF_TRTYPE_TCP &&
-	    (e->treq & NVMF_TREQ_REQUIRED ||
-	     e->treq & NVMF_TREQ_NOT_REQUIRED))
+	    e->tsas.tcp.sectype != NVMF_TCP_SECTYPE_NONE)
 		c->cfg.tls = true;
 
 	ret = nvmf_add_ctrl(h, c, cfg);
