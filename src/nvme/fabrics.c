@@ -869,8 +869,8 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 			nvme_for_each_subsystem(h, s) {
 				fc = __nvme_lookup_ctrl(s, nvme_ctrl_get_transport(c),
 							nvme_ctrl_get_traddr(c),
-							nvme_ctrl_get_host_traddr(c),
-							nvme_ctrl_get_host_iface(c),
+							NULL,
+							NULL,
 							nvme_ctrl_get_trsvcid(c),
 							NULL);
 
