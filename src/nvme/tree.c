@@ -1274,6 +1274,9 @@ static char *nvme_ctrl_lookup_phy_slot(nvme_root_t r, const char *address)
 	DIR *slots_dir;
 	struct dirent *entry;
 
+	if (!address)
+		return NULL;
+
 	slots_dir = opendir(nvme_slots_sysfs_dir);
 	if (!slots_dir) {
 		nvme_msg(r, LOG_WARNING, "failed to open slots dir %s\n",
