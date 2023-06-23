@@ -55,6 +55,8 @@ else
     exit 1
 fi
 
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
 git -C subprojects/libnvme fetch --all
 
 # extract the vesion string from libnvme by using the ref
@@ -104,7 +106,7 @@ fi
 
 if [ "$build_doc" = true ]; then
     # update documentation
-    ./$doc_dir/update-docs.sh
+    ./scripts/update-docs.sh
     if [[ "${dry_run}" = false ]]; then
         git add $doc_dir
         git commit -s -m "doc: Regenerate all docs for $VERSION"
