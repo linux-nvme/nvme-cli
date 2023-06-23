@@ -6,6 +6,7 @@ usage() {
     echo "The script does all necessary steps to create a new release."
     echo ""
     echo " -d:  no documentation update"
+    echo " -n:  dry run"
     echo ""
     echo "Note: The version number needs to be exactly"
     echo "      '^v[\d]+.[\d]+(.[\d\]+(-rc[0-9]+)?$'"
@@ -16,11 +17,15 @@ usage() {
 }
 
 build_doc=true
+dry_run=false
 
-while getopts "d" o; do
+while getopts "dn" o; do
     case "${o}" in
         d)
             build_doc=false
+            ;;
+        n)
+            dry_run=true
             ;;
         *)
             usage
@@ -36,21 +41,45 @@ if [ -z "$VERSION" ] ; then
     exit 1
 fi
 
-ver=""
-
+# expected version regex
 re='^v([0-9]+\.[0-9]+(\.[0-9]+)?)(-rc[0-9]+)?$'
-if [[ "$VERSION" =~ $re ]]; then
-    echo "Valid version $VERSION string"
+
+# use the version string provided from the command line
+if [[ "$VERSION" =~ ${re} ]]; then
+    echo "valid version $VERSION string"
+
     # remove the leading 'v'
-    ver=${VERSION#v}
+    ver="${VERSION#v}"
 else
-    echo "Invalid version string $VERSION"
+    echo "invalid version string $VERSION"
     exit 1
 fi
 
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+if [[ -f subprojects/libnvme.wrap ]]; then
+    git -C subprojects/libnvme fetch --all
+
+    # extract the vesion string from libnvme by using the ref
+    # defined in libnvme.wrap.
+    libnvme_ref=$(sed -n "s/revision = \([0-9a-z]\+\)/\1/p" subprojects/libnvme.wrap)
+    libnvme_VERSION=$(git -C subprojects/libnvme describe "${libnvme_ref}")
+    if [[ "${libnvme_VERSION}" =~ ${re} ]]; then
+        echo "libnvme: valid version ${libnvme_VERSION} string"
+
+        # remove the leading 'v'
+        libnvme_ver="${libnvme_VERSION#v}"
+    else
+        echo "libnvme: invalid version string ${libnvme_VERSION}"
+        exit 1
+    fi
+fi
+
 if [[ -n $(git status -s) ]]; then
-    echo "tree is dirty. abort."
-    exit 1
+    echo "tree is dirty."
+    if [[ "${dry_run}" = false ]]; then
+        exit 1
+    fi
 fi
 
 if [ "$(git rev-parse --abbrev-ref HEAD)" != "master" ] ; then
@@ -71,14 +100,26 @@ fi
 
 # update meson.build
 sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
-git add meson.build
-git commit -s -m "build: Update version to $VERSION"
+if [[ -f subprojects/libnvme.wrap ]]; then
+    sed -i -e "s/\(dependency('libnvme', version: '>=\)\([\.1-9]\+\)/\1$libnvme_ver/" meson.build
+fi
+
+if [[ "${dry_run}" = false ]]; then
+    git add meson.build
+    git commit -s -m "build: Update version to $VERSION"
+fi
 
 if [ "$build_doc" = true ]; then
     # update documentation
-    ./$doc_dir/update-docs.sh
-    git add $doc_dir
-    git commit -s -m "doc: Regenerate all docs for $VERSION"
+    ./scripts/update-docs.sh
+    if [[ "${dry_run}" = false ]]; then
+        git add $doc_dir
+        git commit -s -m "doc: Regenerate all docs for $VERSION"
+    fi
+fi
+
+if [[ "${dry_run}" = true ]]; then
+    exit 0
 fi
 
 git tag -s -m "Release $VERSION" "$VERSION"
