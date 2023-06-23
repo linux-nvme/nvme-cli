@@ -23,7 +23,7 @@ struct print_ops {
 	/* libnvme types.h print functions */
 	void (*ana_log)(struct nvme_ana_log *ana_log, const char *devname, size_t len);
 	void (*boot_part_log)(void *bp_log, const char *devname, __u32 size);
-	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list, __u16 num);
+	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list);
 	void (*ctrl_registers)(void *bar, bool fabrics);
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result, void *buf, __u32 len);
 	void (*discovery_log)(struct nvmf_discovery_log *log, int numrec);

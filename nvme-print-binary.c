@@ -165,7 +165,7 @@ static void binary_zns_report_zones(void *report, __u32 descs,
 	d_raw((unsigned char *)report, report_size);
 }
 
-static void binary_list_ctrl(struct nvme_ctrl_list *ctrl_list, __u16 num)
+static void binary_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 {
 	d_raw((unsigned char *)ctrl_list, sizeof(*ctrl_list));
 }

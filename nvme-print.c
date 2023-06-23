@@ -545,9 +545,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
 	enum nvme_print_flags flags)
 {
-	__u16 num = le16_to_cpu(ctrl_list->num);
-
-	nvme_print(ctrl_list, flags, ctrl_list, num);
+	nvme_print(ctrl_list, flags, ctrl_list);
 }
 
 void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
