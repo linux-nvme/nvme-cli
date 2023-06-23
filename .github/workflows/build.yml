@@ -15,203 +15,125 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: install libraries
-        run: sudo apt-get install gcc pkg-config libjson-c-dev libssl-dev python3-dev
+        run: sudo apt-get install meson gcc pkg-config libjson-c-dev libssl-dev python3-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=debug
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
+      - name: build
+        run: |
+          scripts/build.sh -b debug -c gcc
       - uses: actions/upload-artifact@v3
         name: upload logs
         if: failure()
         with:
           name: logs files
           path: |
-            build/meson-logs/*.txt
+            .build-ci/meson-logs/*.txt
 
   gcc-release:
     name: gcc release
     runs-on: ubuntu-latest
     steps:
       - name: install libraries
-        run: sudo apt-get install gcc pkg-config libjson-c-dev libdbus-1-dev python3-dev
+        run: sudo apt-get install meson gcc pkg-config libjson-c-dev libdbus-1-dev python3-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            -Dlibdbus=enabled
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
+      - name: build
+        run: |
+          scripts/build.sh -b release -c gcc libdbus
       - uses: actions/upload-artifact@v3
         name: upload logs
         if: failure()
         with:
           name: log files
           path: |
-            build/meson-logs/*.txt
+            .build-ci/meson-logs/*.txt
+
+  gcc-release-static:
+    name: gcc release static
+    runs-on: ubuntu-latest
+    steps:
+      - name: install libraries
+        run: sudo apt-get install meson gcc pkg-config libpam-dev libcap-ng-dev
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: build
+        run: |
+          scripts/build.sh -b release -c gcc static
+      - uses: actions/upload-artifact@v3
+        name: upload logs
+        if: failure()
+        with:
+          name: log files
+          path: |
+            .build-ci/meson-logs/*.txt
+
+  clang-debug:
+    name: clang debug
+    runs-on: ubuntu-latest
+    steps:
+      - name: install libraries
+        run: sudo apt-get install meson clang pkg-config libjson-c-dev libdbus-1-dev python3-dev
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: build
+        run: |
+          scripts/build.sh -b debug -c clang libdbus
+      - uses: actions/upload-artifact@v3
+        name: upload logs
+        if: failure()
+        with:
+          name: log files
+          path: |
+            .build-ci/meson-logs/*.txt
 
   clang-release:
     name: clang release
     runs-on: ubuntu-latest
     steps:
       - name: install libraries
-        run: sudo apt-get install clang pkg-config libjson-c-dev libdbus-1-dev python3-dev
+        run: sudo apt-get install meson clang pkg-config libjson-c-dev libdbus-1-dev python3-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            --cross-file=.github/cross/clang.txt
-            -Dlibdbus=enabled
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
+      - name: build
+        run: |
+          scripts/build.sh -b release -c clang libdbus
       - uses: actions/upload-artifact@v3
         name: upload logs
         if: failure()
         with:
           name: log files
           path: |
-            build/meson-logs/*.txt
+            .build-ci/meson-logs/*.txt
 
   fallback-shared-libraries:
     name: fallback shared libraries
     runs-on: ubuntu-latest
     steps:
       - name: install libraries
-        run: sudo apt-get install libpam-dev libcap-ng-dev
+        run: sudo apt-get install meson gcc pkg-config libpam-dev libcap-ng-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            --wrap-mode=forcefallback
-            -Dlibdbus=enabled
-            -Ddbus:werror=false
-            -Dopenssl:werror=false
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
+      - name: build
+        run: |
+          scripts/build.sh -b release -c gcc fallback
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: log files
           path: |
-            build/meson-logs/*.txt
-
-  fallback-static-libraries:
-    name: fallback static libraries
-    runs-on: ubuntu-latest
-    steps:
-      - name: install libraries
-        run: sudo apt-get install libpam-dev libcap-ng-dev
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            --wrap-mode=forcefallback
-            --default-library=static
-            -Dlibdbus=enabled
-            -Ddbus:werror=false
-            -Dopenssl:werror=false
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
-      - uses: actions/upload-artifact@v3
-        name: upload logs
-        if: failure()
-        with:
-          name: log files
-          path: |
-            build/meson-logs/*.txt
-
-  fallback-all-static:
-    name: fallback all static
-    runs-on: ubuntu-latest
-    steps:
-      - name: install libraries
-        run: sudo apt-get install libpam-dev libcap-ng-dev
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            --wrap-mode=forcefallback
-            --default-library=static
-            --cross-file=.github/cross/ubuntu-static.txt
-            -Dlibdbus=enabled
-            -Ddbus:werror=false
-            -Dopenssl:werror=false
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
-      - uses: actions/upload-artifact@v3
-        name: upload logs
-        if: failure()
-        with:
-          name: log files
-          path: |
-            build/meson-logs/*.txt
+            .build-ci/meson-logs/*.txt
 
   cross-armhf:
     name: cross armhf
@@ -228,32 +150,20 @@ jobs:
           EOF
           sudo apt update
       - name: install armhf compiler
-        run: sudo apt install gcc-arm-linux-gnueabihf pkg-config qemu-user-static
+        run: sudo apt install meson gcc-arm-linux-gnueabihf pkg-config qemu-user-static
       - name: install libraries
         run: sudo apt install libjson-c-dev:armhf
       - uses: actions/checkout@v3
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            --cross-file=.github/cross/ubuntu-armhf.txt
-            -Dpython=disabled
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
+      - name: build
+        run: |
+          scripts/build.sh -b release -c gcc cross_armhf
       - uses: actions/upload-artifact@v3
         name: upload logs
         if: failure()
         with:
           name: log files
           path: |
-            build/meson-logs/*.txt
+            .build-ci/meson-logs/*.txt
 
   cross-ppc64le:
     name: cross ppc64le
@@ -270,32 +180,20 @@ jobs:
           EOF
           sudo apt update
       - name: install powerpc64le compiler
-        run: sudo apt install gcc-powerpc64le-linux-gnu pkg-config qemu-user-static
+        run: sudo apt install meson gcc-powerpc64le-linux-gnu pkg-config qemu-user-static
       - name: install libraries
         run: sudo apt install libjson-c-dev:ppc64el
       - uses: actions/checkout@v3
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            --cross-file=.github/cross/ubuntu-ppc64le.txt
-            -Dpython=disabled
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
+      - name: build
+        run: |
+          scripts/build.sh -b release -c gcc cross_ppc64le
       - uses: actions/upload-artifact@v3
         name: upload logs
         if: failure()
         with:
           name: log files
           path: |
-            build/meson-logs/*.txt
+            .build-ci/meson-logs/*.txt
 
   cross-s390x:
     name: cross s390x
@@ -312,72 +210,26 @@ jobs:
           EOF
           sudo apt update
       - name: install s390x compiler
-        run: sudo apt install gcc-s390x-linux-gnu libgcc-s1:s390x pkg-config qemu-user-static
+        run: sudo apt install meson gcc-s390x-linux-gnu libgcc-s1:s390x pkg-config qemu-user-static
       - name: install libraries
         run: sudo apt install libjson-c-dev:s390x
       - uses: actions/checkout@v3
-      - uses: BSFishy/meson-build@v1.0.3
-        name: build
-        with:
-          action: build
-          setup-options: >
-            --werror
-            --buildtype=release
-            --cross-file=.github/cross/ubuntu-s390x.txt
-            -Dpython=disabled
-          meson-version: 0.61.2
-      - uses: BSFishy/meson-build@v1.0.3
-        name: test
-        with:
-          action: test
-          meson-version: 0.61.2
+      - name: build
+        run: |
+          scripts/build.sh -b release -c gcc cross_s390x
       - uses: actions/upload-artifact@v3
         name: upload logs
         if: failure()
         with:
           name: log files
           path: |
-            build/meson-logs/*.txt
+            .build-ci/meson-logs/*.txt
 
   build-muon:
     name: muon minimal
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: build muon and samurai build-tool
-        run: |
-          mkdir build-tools
-          cd build-tools
-          git clone --depth 1 https://git.sr.ht/~lattis/muon
-          cd muon
-
-          export CC=gcc
-          export ninja=build/samu
-
-          ./tools/bootstrap_ninja.sh build
-          ./bootstrap.sh build
-
-          build/muon setup           \
-              -Dlibcurl=disabled     \
-              -Dlibarchive=disabled  \
-              -Ddocs=disabled        \
-              -Dsamurai=disabled     \
-              build
-          build/samu -C build
-          build/muon -C build test
       - name: build
         run: |
-          export PATH=$(pwd)/build-tools/muon/build:$PATH
-
-          # Need to explicitly disable python as muon currently
-          # only partially supports the python module. It misses
-          # the dependency() implementation
-          muon setup                \
-              -Dpython=disabled     \
-              build
-          samu -C build
-      - name: test
-        run: |
-          export PATH=$(pwd)/build-tools/muon/build:$PATH
-
-          muon -C build test
+          scripts/build.sh -m muon
