@@ -8,22 +8,22 @@ usage() {
     echo ""
     echo "CI build script."
     echo ""
-    echo " -b [release]|debug	build type"
-    echo " -c [gcc]|clang 	compiler to use"
-    echo " -m [meson]|muon	use meson or muon"
+    echo " -b [release]|debug   build type"
+    echo " -c [gcc]|clang       compiler to use"
+    echo " -m [meson]|muon      use meson or muon"
     echo ""
     echo "configs with meson:"
-    echo "  [default]		default settings"
-    echo "  libdbus		build with libdbus"
+    echo "  [default]           default settings"
+    echo "  libdbus             build with libdbus"
     echo "  static              build without any depedencies and static"
-    echo "  fallback		download all dependencies"
-    echo "			and build them as shared libaries"
-    echo "  cross_armhf		build armhf with a cross compiler"
-    echo "  cross_ppc64le	build ppc64le with a cross compiler"
+    echo "  fallback            download all dependencies"
+    echo "                      and build them as shared libaries"
+    echo "  cross_armhf         build armhf with a cross compiler"
+    echo "  cross_ppc64le       build ppc64le with a cross compiler"
     echo "  cross_s390x         build s390x with a cross compiler"
     echo ""
     echo "configs with muon:"
-    echo "  [default]		minimal build"
+    echo "  [default]           minimal build"
 }
 
 BUILDTOOL=meson
@@ -39,12 +39,12 @@ while getopts "b:c:m:" o; do
         c)
             CC="${OPTARG}"
             ;;
-	m)
-	    BUILDTOOL="${OPTARG}"
-	    ;;
+        m)
+            BUILDTOOL="${OPTARG}"
+            ;;
         *)
             usage
-	    exit 1
+            exit 1
             ;;
     esac
 done
@@ -57,79 +57,79 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 BUILDDIR="$(pwd)/.build-ci"
 
 config_meson_default() {
-    CC="${CC}" "${MESON}" setup 		\
-	--werror 				\
-	--buildtype="${BUILDTYPE}"		\
-	"${BUILDDIR}"
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        "${BUILDDIR}"
 }
 
 config_meson_libdbus() {
-    CC="${CC}" "${MESON}" setup 		\
-	--werror				\
-	--buildtype="${BUILDTYPE}"		\
-	-Dlibdbus=enabled			\
-	--prefix=/				\
-	"${BUILDDIR}"
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dlibdbus=enabled                       \
+        --prefix=/                              \
+        "${BUILDDIR}"
 }
 
 config_meson_static() {
-    CC="${CC}" CFLAGS="${CFLAGS} -static"	\
-	"${MESON}" setup 			\
-        --werror 				\
-        --buildtype="${BUILDTYPE}"		\
-        --default-library=static		\
-	-Dlibdbus=disabled			\
-	-Dopenssl=disabled			\
-	-Dkeyutils=disabled			\
-	-Dpython=disabled			\
-	"${BUILDDIR}"
+    CC="${CC}" CFLAGS="${CFLAGS} -static"       \
+        "${MESON}" setup                        \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        --default-library=static                \
+        -Dlibdbus=disabled                      \
+        -Dopenssl=disabled                      \
+        -Dkeyutils=disabled                     \
+        -Dpython=disabled                       \
+        "${BUILDDIR}"
 }
 
 config_meson_fallback() {
-    CC="${CC}" "${MESON}" setup 		\
-        --werror				\
-        --buildtype="${BUILDTYPE}"		\
-        --wrap-mode=forcefallback 		\
-        -Dlibdbus=enabled			\
-        -Ddbus:werror=false			\
-        -Dopenssl:werror=false 			\
-	"${BUILDDIR}"
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        --wrap-mode=forcefallback               \
+        -Dlibdbus=enabled                       \
+        -Ddbus:werror=false                     \
+        -Dopenssl:werror=false                  \
+        "${BUILDDIR}"
 }
 
 config_meson_cross_armhf() {
-    CC="${CC}" "${MESON}" setup 		\
-        --werror				\
-	--buildtype="${BUILDTYPE}"		\
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
         --cross-file=.github/cross/ubuntu-armhf.txt \
-        -Dpython=disabled			\
-	"${BUILDDIR}"
+        -Dpython=disabled                       \
+        "${BUILDDIR}"
 }
 
 config_meson_cross_ppc64le() {
-    CC="${CC}" "${MESON}" setup 		\
-        --werror 				\
-        --buildtype="${BUILDTYPE}"		\
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
         --cross-file=.github/cross/ubuntu-ppc64le.txt \
-        -Dpython=disabled			\
-	"${BUILDDIR}"
+        -Dpython=disabled                       \
+        "${BUILDDIR}"
 }
 
 config_meson_cross_s390x() {
-    CC="${CC}" "${MESON}" setup 		\
-        --werror				\
-	--buildtype="${BUILDTYPE}" 		\
-	--cross-file=.github/cross/ubuntu-s390x.txt \
-	-Dpython=disabled			\
-	"${BUILDDIR}"
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        --cross-file=.github/cross/ubuntu-s390x.txt \
+        -Dpython=disabled                       \
+        "${BUILDDIR}"
 }
 build_meson() {
-    "${MESON}" compile				\
-	-C "${BUILDDIR}"
+    "${MESON}" compile                          \
+        -C "${BUILDDIR}"
 }
 
 test_meson() {
-    "${MESON}" test				\
-	-C "${BUILDDIR}"
+    "${MESON}" test                             \
+        -C "${BUILDDIR}"
 }
 
 tools_build_muon() {
@@ -143,11 +143,11 @@ tools_build_muon() {
     CC="${CC}" ninja="${SAMU}" ./bootstrap.sh build
     BOOTSTRAP_MUON="${BUILDDIR}/build-tools/muon/build/muon"
 
-    CC="${CC}" ninja="${SAMU}" ${BOOTSTRAP_MUON} setup 	\
-        -Dlibcurl=disabled				\
-        -Dlibarchive=disabled				\
-	-Ddocs=disabled					\
-        -Dsamurai=disabled				\
+    CC="${CC}" ninja="${SAMU}" ${BOOTSTRAP_MUON} setup  \
+        -Dlibcurl=disabled                              \
+        -Dlibarchive=disabled                           \
+        -Ddocs=disabled                                 \
+        -Dsamurai=disabled                              \
         "${BUILDDIR}/build-tools/muon-bin"
     "${SAMU}" -C "${BUILDDIR}/build-tools/muon-bin"
     #"${BOOTSTRAP_MUON}" -C "${BUILDDIR}/build-tools/muon-bin" test
@@ -161,8 +161,8 @@ config_muon_default() {
     # Need to explicitly disable python as muon currently
     # only partially supports the python module. It misses
     # the dependency() implementation
-    ninja="${SAMU}" "${MUON}" setup			\
-        -Dpython=disabled				\
+    ninja="${SAMU}" "${MUON}" setup                     \
+        -Dpython=disabled                               \
         "${BUILDDIR}"
 }
 
@@ -178,10 +178,10 @@ rm -rf "${BUILDDIR}"
 
 if [[ "${BUILDTOOL}" == "muon" ]]; then
     if ! which samu || ! which muon ; then
-	tools_build_muon
+        tools_build_muon
     else
-	SAMU="$(which samu)"
-	MUON="$(which muon)"
+        SAMU="$(which samu)"
+        MUON="$(which muon)"
     fi
 fi
 
