@@ -89,7 +89,7 @@ struct print_ops {
 
 	/* status and error messages */
 	void (*connect_msg)(nvme_ctrl_t c);
-	void (*show_message)(bool errror, const char *msg, va_list ap);
+	void (*show_message)(bool error, const char *msg, va_list ap);
 	void (*show_perror)(const char *msg);
 	void (*show_status)(int status);
 
