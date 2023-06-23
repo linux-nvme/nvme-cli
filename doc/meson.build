@@ -45,10 +45,12 @@ endforeach
 
 subdir('rst')
 
+top_source_dir = meson.current_source_dir() + '/../'
+
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
-kernel_doc = find_program('kernel-doc')
-kernel_doc_check = find_program('kernel-doc-check')
+kernel_doc = find_program(top_source_dir + 'scripts/kernel-doc')
+kernel_doc_check = find_program(top_source_dir +'scripts/kernel-doc-check')
 
 test('kdoc', kernel_doc_check, args: api_paths)
 
@@ -56,7 +58,7 @@ if want_docs != 'false'
 
   if want_docs == 'all' or want_docs == 'man'
     mandir = join_paths(get_option('mandir'), 'man2')
-    list_man_pages = find_program('list-man-pages.sh')
+    list_man_pages = find_program(top_source_dir + 'scripts/list-man-pages.sh')
     if want_docs_build
       foreach apif : api_paths
         c = run_command(list_man_pages, apif, check: true)
@@ -79,7 +81,7 @@ if want_docs != 'false'
       endforeach
     else
       if want_docs == 'all' or want_docs == 'man'
-        list_pre_compiled = find_program('list-pre-compiled.sh')
+        list_pre_compiled = find_program(top_source_dir + 'scripts/list-pre-compiled.sh')
         m = run_command(list_pre_compiled, check: true)
         man_pages = m.stdout().strip().split('\n')
         install_data(man_pages, install_dir: mandir)
