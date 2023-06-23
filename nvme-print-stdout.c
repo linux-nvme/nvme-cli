@@ -3073,9 +3073,9 @@ static void stdout_zns_report_zones(void *report, __u32 descs,
 	}
 }
 
-static void stdout_list_ctrl(struct nvme_ctrl_list *ctrl_list,
-			     __u16 num)
+static void stdout_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 {
+	__u16 num = le16_to_cpu(ctrl_list->num);
 	int i;
 
 	printf("num of ctrls present: %u\n", num);

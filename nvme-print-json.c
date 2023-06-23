@@ -2204,8 +2204,9 @@ static void json_nvme_zns_report_zones(void *report, __u32 descs,
 	}
 }
 
-static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list, __u16 num)
+static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 {
+	__u16 num = le16_to_cpu(ctrl_list->num);
 	struct json_object *root;
 	struct json_object *valid_attrs;
 	struct json_object *valid;
