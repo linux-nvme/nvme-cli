@@ -44,33 +44,35 @@ fi
 # expected version regex
 re='^v([0-9]+\.[0-9]+(\.[0-9]+)?)(-rc[0-9]+)?$'
 
-# use the version string provided from the command line for nvme-cli
+# use the version string provided from the command line
 if [[ "$VERSION" =~ ${re} ]]; then
-    echo "nvme-cli: valid version $VERSION string"
+    echo "valid version $VERSION string"
 
     # remove the leading 'v'
     ver="${VERSION#v}"
 else
-    echo "nvme-cli: invalid version string ${VERSION}"
+    echo "invalid version string $VERSION"
     exit 1
 fi
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
-git -C subprojects/libnvme fetch --all
+if [[ -f subprojects/libnvme.wrap ]]; then
+    git -C subprojects/libnvme fetch --all
 
-# extract the vesion string from libnvme by using the ref
-# defined in libnvme.wrap.
-libnvme_ref=$(sed -n "s/revision = \([0-9a-z]\+\)/\1/p" subprojects/libnvme.wrap)
-libnvme_VERSION=$(git -C subprojects/libnvme describe "${libnvme_ref}")
-if [[ "${libnvme_VERSION}" =~ ${re} ]]; then
-    echo "libnvme: valid version ${libnvme_VERSION} string"
+    # extract the vesion string from libnvme by using the ref
+    # defined in libnvme.wrap.
+    libnvme_ref=$(sed -n "s/revision = \([0-9a-z]\+\)/\1/p" subprojects/libnvme.wrap)
+    libnvme_VERSION=$(git -C subprojects/libnvme describe "${libnvme_ref}")
+    if [[ "${libnvme_VERSION}" =~ ${re} ]]; then
+        echo "libnvme: valid version ${libnvme_VERSION} string"
 
-    # remove the leading 'v'
-    libnvme_ver="${libnvme_VERSION#v}"
-else
-    echo "libnvme: invalid version string ${libnvme_VERSION}"
-    exit 1
+        # remove the leading 'v'
+        libnvme_ver="${libnvme_VERSION#v}"
+    else
+        echo "libnvme: invalid version string ${libnvme_VERSION}"
+        exit 1
+    fi
 fi
 
 if [[ -n $(git status -s) ]]; then
@@ -98,7 +100,10 @@ fi
 
 # update meson.build
 sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
-sed -i -e "s/\(dependency('libnvme', version: '>=\)\([\.1-9]\+\)/\1$libnvme_ver/" meson.build
+if [[ -f subprojects/libnvme.wrap ]]; then
+    sed -i -e "s/\(dependency('libnvme', version: '>=\)\([\.1-9]\+\)/\1$libnvme_ver/" meson.build
+fi
+
 if [[ "${dry_run}" = false ]]; then
     git add meson.build
     git commit -s -m "build: Update version to $VERSION"
