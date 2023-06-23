@@ -888,9 +888,6 @@ const char *nvme_plm_window_to_string(__u32 plm)
 void nvme_show_lba_status_info(__u32 result)
 {
 	nvme_print(lba_status_info, 0, result);
-
-	printf("\tLBA Status Information Poll Interval (LSIPI)  : %u\n", (result >> 16) & 0xffff);
-	printf("\tLBA Status Information Report Interval (LSIRI): %u\n", result & 0xffff);
 }
 
 const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid,
@@ -1064,13 +1061,6 @@ void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
 			     enum nvme_print_flags flags)
 {
 	nvme_print(discovery_log, flags, log, numrec);
-
-	if (flags & BINARY) {
-		d_raw((unsigned char *)log,
-		      sizeof(struct nvmf_discovery_log) +
-		      numrec * sizeof(struct nvmf_disc_log_entry));
-		return;
-	}
 }
 
 void nvme_show_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags)
