@@ -9,7 +9,7 @@ struct nbft_file_entry {
 	struct nbft_info *nbft;
 };
 
-int read_nbft_files(struct list_head *nbft_list, char *path);
+int read_nbft_files(nvme_root_t r, struct list_head *nbft_list, char *path);
 void free_nbfts(struct list_head *nbft_list);
 
 extern int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,

@@ -551,7 +551,7 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 		show_subsys = show_hfi = show_discovery = true;
 
 	list_head_init(&nbft_list);
-	ret = read_nbft_files(&nbft_list, nbft_path);
+	ret = read_nbft_files(NULL, &nbft_list, nbft_path);
 	if (!ret) {
 		if (flags == NORMAL)
 			normal_show_nbfts(&nbft_list, show_subsys, show_hfi, show_discovery);

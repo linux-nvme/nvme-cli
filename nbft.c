@@ -38,7 +38,7 @@ int nbft_filter(const struct dirent *dent)
 	return !fnmatch(NBFT_SYSFS_FILENAME, dent->d_name, FNM_PATHNAME);
 }
 
-int read_nbft_files(struct list_head *nbft_list, char *path)
+int read_nbft_files(nvme_root_t r, struct list_head *nbft_list, char *path)
 {
 	struct dirent **dent;
 	char filename[PATH_MAX];
@@ -54,7 +54,7 @@ int read_nbft_files(struct list_head *nbft_list, char *path)
 
 	for (i = 0; i < count; i++) {
 		snprintf(filename, sizeof(filename), "%s/%s", path, dent[i]->d_name);
-		ret = nvme_nbft_read(&nbft, filename);
+		ret = nvme_nbft_read(r, &nbft, filename);
 		if (!ret) {
 			entry = calloc(1, sizeof(*entry));
 			entry->nbft = nbft;
@@ -96,7 +96,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 		return 0;
 
 	list_head_init(&nbft_list);
-	ret = read_nbft_files(&nbft_list, nbft_path);
+	ret = read_nbft_files(r, &nbft_list, nbft_path);
 	if (ret)
 		goto out_free_2;
 
