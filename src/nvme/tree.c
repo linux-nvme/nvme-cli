@@ -198,6 +198,7 @@ nvme_root_t nvme_create_root(FILE *fp, int log_level)
 		r->fp = fp;
 	list_head_init(&r->hosts);
 	list_head_init(&r->endpoints);
+	nvme_set_root(r);
 	return r;
 }
 
@@ -364,6 +365,7 @@ void nvme_free_tree(nvme_root_t r)
 		free(r->config_file);
 	if (r->application)
 		free(r->application);
+	nvme_set_root(NULL);
 	free(r);
 }
 

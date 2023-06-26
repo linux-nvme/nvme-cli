@@ -35,4 +35,17 @@
  */
 void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp);
 
+/**
+ * nvme_set_root() - Set nvme_root_t context
+ * @r:		nvme_root_t context
+ *
+ * In order to be able to log from code paths where no root object is passed in
+ * via the arguments use the the default one which can be set via this call.
+ * When creating a new root object with @nvme_create_root the global root object
+ * will be set as well. This means the global root object is always pointing to
+ * the latest created root object. Note the first @nvme_free_tree call will reset
+ * the global root object.
+ */
+void nvme_set_root(nvme_root_t r);
+
 #endif /* _LOG_H */

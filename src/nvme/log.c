@@ -26,11 +26,13 @@
 #define LOG_CLOCK CLOCK_MONOTONIC
 #endif
 
+static nvme_root_t root;
+
 void __attribute__((format(printf, 4, 5)))
 __nvme_msg(nvme_root_t r, int lvl,
 	   const char *func, const char *format, ...)
 {
-	FILE *fp = r ? r->fp : stderr;
+	FILE *fp = stderr;
 	va_list ap;
 	char pidbuf[16];
 	char timebuf[32];
@@ -47,6 +49,12 @@ __nvme_msg(nvme_root_t r, int lvl,
 	char *header __cleanup__(cleanup_charp) = NULL;
 	char *message __cleanup__(cleanup_charp) = NULL;
 	int idx = 0;
+
+	if (!r)
+		r = root;
+
+	if (r)
+		fp = r->fp;
 
 	if (r && lvl > r->log_level)
 		return;
@@ -89,4 +97,9 @@ void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp)
 	r->log_level = lvl;
 	r->log_pid = log_pid;
 	r->log_timestamp = log_tstamp;
+}
+
+void nvme_set_root(nvme_root_t r)
+{
+	root = r;
 }
