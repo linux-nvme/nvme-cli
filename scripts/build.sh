@@ -11,27 +11,26 @@ usage() {
     echo " -b [release]|debug   build type"
     echo " -c [gcc]|clang       compiler to use"
     echo " -m [meson]|muon      use meson or muon"
+    echo " -t [arm]|ppc64le|s390x  cross compile target"
     echo ""
     echo "configs with meson:"
     echo "  [default]           default settings"
     echo "  libdbus             build with libdbus"
-    echo "  static              build without any depedencies and static"
     echo "  fallback            download all dependencies"
     echo "                      and build them as shared libaries"
-    echo "  cross_armhf         build armhf with a cross compiler"
-    echo "  cross_ppc64le       build ppc64le with a cross compiler"
-    echo "  cross_s390x         build s390x with a cross compiler"
+    echo "  cross               use cross toolchain to build"
     echo ""
     echo "configs with muon:"
-    echo "  [default]           minimal build"
+    echo "  [default]           minimal static build"
 }
 
 BUILDTOOL=meson
 MESON=meson
 BUILDTYPE=release
+CROSS_TARGET=arm
 CC=${CC:-"gcc"}
 
-while getopts "b:c:m:" o; do
+while getopts "b:c:m:t:" o; do
     case "${o}" in
         b)
             BUILDTYPE="${OPTARG}"
@@ -41,6 +40,9 @@ while getopts "b:c:m:" o; do
             ;;
         m)
             BUILDTOOL="${OPTARG}"
+            ;;
+        t)
+            CROSS_TARGET="${OPTARG}"
             ;;
         *)
             usage
@@ -72,19 +74,6 @@ config_meson_libdbus() {
         "${BUILDDIR}"
 }
 
-config_meson_static() {
-    CC="${CC}" CFLAGS="${CFLAGS} -static"       \
-        "${MESON}" setup                        \
-        --werror                                \
-        --buildtype="${BUILDTYPE}"              \
-        --default-library=static                \
-        -Dlibdbus=disabled                      \
-        -Dopenssl=disabled                      \
-        -Dkeyutils=disabled                     \
-        -Dpython=disabled                       \
-        "${BUILDDIR}"
-}
-
 config_meson_fallback() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
@@ -96,32 +85,16 @@ config_meson_fallback() {
         "${BUILDDIR}"
 }
 
-config_meson_cross_armhf() {
+config_meson_cross() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-        --cross-file=.github/cross/ubuntu-armhf.txt \
+        --cross-file=.github/cross/ubuntu-cross-"${CROSS_TARGET}".txt \
         -Dpython=disabled                       \
+        -Dopenssl=disabled                      \
         "${BUILDDIR}"
 }
 
-config_meson_cross_ppc64le() {
-    CC="${CC}" "${MESON}" setup                 \
-        --werror                                \
-        --buildtype="${BUILDTYPE}"              \
-        --cross-file=.github/cross/ubuntu-ppc64le.txt \
-        -Dpython=disabled                       \
-        "${BUILDDIR}"
-}
-
-config_meson_cross_s390x() {
-    CC="${CC}" "${MESON}" setup                 \
-        --werror                                \
-        --buildtype="${BUILDTYPE}"              \
-        --cross-file=.github/cross/ubuntu-s390x.txt \
-        -Dpython=disabled                       \
-        "${BUILDDIR}"
-}
 build_meson() {
     "${MESON}" compile                          \
         -C "${BUILDDIR}"
@@ -129,39 +102,54 @@ build_meson() {
 
 test_meson() {
     "${MESON}" test                             \
+        --verbose                               \
         -C "${BUILDDIR}"
+}
+
+tools_build_samurai() {
+    mkdir -p "${BUILDDIR}"/build-tools
+    git clone --depth 1 https://github.com/michaelforney/samurai.git \
+        "${BUILDDIR}/build-tools/samurai"
+    pushd "${BUILDDIR}/build-tools/samurai" || exit 1
+
+    CC="${CC}" make
+    SAMU="${BUILDDIR}/build-tools/samurai/samu"
+
+    popd || exit 1
 }
 
 tools_build_muon() {
     mkdir -p "${BUILDDIR}"/build-tools
-    git clone --depth 1 https://git.sr.ht/~lattis/muon "${BUILDDIR}/build-tools/muon"
+    git clone --depth 1 https://git.sr.ht/~lattis/muon \
+        "${BUILDDIR}/build-tools/muon"
     pushd "${BUILDDIR}/build-tools/muon" || exit 1
 
-    CC="${CC}" ./tools/bootstrap_ninja.sh build
-    SAMU="${BUILDDIR}/build-tools/muon/build/samu"
+    CC="${CC}" ninja="${SAMU}" ./bootstrap.sh stage1
 
-    CC="${CC}" ninja="${SAMU}" ./bootstrap.sh build
-    BOOTSTRAP_MUON="${BUILDDIR}/build-tools/muon/build/muon"
-
-    CC="${CC}" ninja="${SAMU}" ${BOOTSTRAP_MUON} setup  \
-        -Dlibcurl=disabled                              \
-        -Dlibarchive=disabled                           \
+    CC="${CC}" ninja="${SAMU}" stage1/muon setup        \
+        -Dprefix="${BUILDDIR}/build-tools"              \
+        -Dlibcurl=enabled                               \
+        -Dlibarchive=enabled                            \
+        -Dlibpkgconf=enabled                            \
         -Ddocs=disabled                                 \
         -Dsamurai=disabled                              \
-        "${BUILDDIR}/build-tools/muon-bin"
-    "${SAMU}" -C "${BUILDDIR}/build-tools/muon-bin"
-    #"${BOOTSTRAP_MUON}" -C "${BUILDDIR}/build-tools/muon-bin" test
+        "${BUILDDIR}/build-tools/.build-muon"
+    "${SAMU}" -C "${BUILDDIR}/build-tools/.build-muon"
+    MUON="${BUILDDIR}/build-tools/.build-muon/muon"
 
-    MUON="${BUILDDIR}/build-tools/muon-bin/muon"
+    # "${MUON}" -C "${BUILDDIR}/build-tools/.build-muon" test
 
     popd || exit 1
 }
 
 config_muon_default() {
-    # Need to explicitly disable python as muon currently
-    # only partially supports the python module. It misses
-    # the dependency() implementation
-    ninja="${SAMU}" "${MUON}" setup                     \
+    CC="${CC}" CFLAGS="${CFLAGS} -static"               \
+        ninja="${SAMU}" "${MUON}" setup                 \
+        -Ddefault_library=static                        \
+        -Djson-c=disabled                               \
+        -Dopenssl=disabled                              \
+        -Dkeyutils=disabled                             \
+        -Dpython=disabled                               \
         -Dpython=disabled                               \
         "${BUILDDIR}"
 }
@@ -177,10 +165,15 @@ test_muon() {
 rm -rf "${BUILDDIR}"
 
 if [[ "${BUILDTOOL}" == "muon" ]]; then
-    if ! which samu || ! which muon ; then
-        tools_build_muon
+    if ! which samu ; then
+        tools_build_samurai
     else
         SAMU="$(which samu)"
+    fi
+
+    if ! which muon ; then
+        tools_build_muon
+    else
         MUON="$(which muon)"
     fi
 fi

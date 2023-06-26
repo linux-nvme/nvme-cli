@@ -10,19 +10,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  gcc-debug:
-    name: gcc debug
+  default:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        buildtype: [debug, release]
+    container:
+      image: ghcr.io/igaw/linux-nvme/debian:0.30
     steps:
-      - name: install libraries
-        run: sudo apt-get install meson gcc pkg-config libjson-c-dev libssl-dev python3-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
       - name: build
         run: |
-          scripts/build.sh -b debug -c gcc
+          scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }}
       - uses: actions/upload-artifact@v3
         name: upload logs
         if: failure()
@@ -31,12 +34,53 @@ jobs:
           path: |
             .build-ci/meson-logs/*.txt
 
-  gcc-release:
-    name: gcc release
+  cross:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: armhf
+            port: armhf
+            compiler: gcc-arm-linux-gnueabihf
+            packages:
+          - arch: s390x
+            port: s390x
+            compiler: gcc-s390x-linux-gnu
+            packages: libgcc-s1:s390x
+          - arch: ppc64le
+            port: ppc64el
+            compiler: gcc-powerpc64le-linux-gnu
+            packges:
     steps:
-      - name: install libraries
-        run: sudo apt-get install meson gcc pkg-config libjson-c-dev libdbus-1-dev python3-dev
+      - uses: actions/checkout@v3
+      - name: set up arm architecture
+        run: |
+          export release=$(lsb_release -c -s)
+          sudo dpkg --add-architecture ${{ matrix.port }}
+          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
+          sudo dd of=/etc/apt/sources.list.d/${{ matrix.arch }}.list <<EOF
+          deb [arch=${{ matrix.port }}] http://ports.ubuntu.com/ $release main universe restricted"
+          deb [arch=${{ matrix.port }}] http://ports.ubuntu.com/ $release-updates main universe restricted"
+          EOF
+          sudo apt update
+          sudo apt install -y meson pkg-config qemu-user-static ${{ matrix.compiler}} libjson-c-dev:${{ matrix.port }} ${{ matrix.packages }}
+      - name: build
+        run: |
+          scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
+      - uses: actions/upload-artifact@v3
+        name: upload logs
+        if: failure()
+        with:
+          name: log files
+          path: |
+            .build-ci/meson-logs/*.txt
+
+  libdbus:
+    name: libdbus
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/igaw/linux-nvme/debian:0.30
+    steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
@@ -52,75 +96,13 @@ jobs:
           path: |
             .build-ci/meson-logs/*.txt
 
-  gcc-release-static:
-    name: gcc release static
-    runs-on: ubuntu-latest
-    steps:
-      - name: install libraries
-        run: sudo apt-get install meson gcc pkg-config libpam-dev libcap-ng-dev
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - name: build
-        run: |
-          scripts/build.sh -b release -c gcc static
-      - uses: actions/upload-artifact@v3
-        name: upload logs
-        if: failure()
-        with:
-          name: log files
-          path: |
-            .build-ci/meson-logs/*.txt
-
-  clang-debug:
-    name: clang debug
-    runs-on: ubuntu-latest
-    steps:
-      - name: install libraries
-        run: sudo apt-get install meson clang pkg-config libjson-c-dev libdbus-1-dev python3-dev
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - name: build
-        run: |
-          scripts/build.sh -b debug -c clang libdbus
-      - uses: actions/upload-artifact@v3
-        name: upload logs
-        if: failure()
-        with:
-          name: log files
-          path: |
-            .build-ci/meson-logs/*.txt
-
-  clang-release:
-    name: clang release
-    runs-on: ubuntu-latest
-    steps:
-      - name: install libraries
-        run: sudo apt-get install meson clang pkg-config libjson-c-dev libdbus-1-dev python3-dev
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - name: build
-        run: |
-          scripts/build.sh -b release -c clang libdbus
-      - uses: actions/upload-artifact@v3
-        name: upload logs
-        if: failure()
-        with:
-          name: log files
-          path: |
-            .build-ci/meson-logs/*.txt
-
   fallback-shared-libraries:
     name: fallback shared libraries
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/igaw/linux-nvme/debian:0.30
+    if: github.ref == 'refs/heads/master'
     steps:
-      - name: install libraries
-        run: sudo apt-get install meson gcc pkg-config libpam-dev libcap-ng-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
@@ -135,99 +117,11 @@ jobs:
           path: |
             .build-ci/meson-logs/*.txt
 
-  cross-armhf:
-    name: cross armhf
-    runs-on: ubuntu-latest
-    steps:
-      - name: set up arm architecture
-        run: |
-          export release=$(lsb_release -c -s)
-          sudo dpkg --add-architecture armhf
-          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
-          sudo dd of=/etc/apt/sources.list.d/armhf.list <<EOF
-          deb [arch=armhf] http://ports.ubuntu.com/ $release main universe restricted"
-          deb [arch=armhf] http://ports.ubuntu.com/ $release-updates main universe restricted"
-          EOF
-          sudo apt update
-      - name: install armhf compiler
-        run: sudo apt install meson gcc-arm-linux-gnueabihf pkg-config qemu-user-static
-      - name: install libraries
-        run: sudo apt install libjson-c-dev:armhf
-      - uses: actions/checkout@v3
-      - name: build
-        run: |
-          scripts/build.sh -b release -c gcc cross_armhf
-      - uses: actions/upload-artifact@v3
-        name: upload logs
-        if: failure()
-        with:
-          name: log files
-          path: |
-            .build-ci/meson-logs/*.txt
-
-  cross-ppc64le:
-    name: cross ppc64le
-    runs-on: ubuntu-latest
-    steps:
-      - name: set up ppc64le architecture
-        run: |
-          export release=$(lsb_release -c -s)
-          sudo dpkg --add-architecture ppc64el
-          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
-          sudo dd of=/etc/apt/sources.list.d/ppc64el.list <<EOF
-          deb [arch=ppc64el] http://ports.ubuntu.com/ $release main universe restricted"
-          deb [arch=ppc64el] http://ports.ubuntu.com/ $release-updates main universe restricted"
-          EOF
-          sudo apt update
-      - name: install powerpc64le compiler
-        run: sudo apt install meson gcc-powerpc64le-linux-gnu pkg-config qemu-user-static
-      - name: install libraries
-        run: sudo apt install libjson-c-dev:ppc64el
-      - uses: actions/checkout@v3
-      - name: build
-        run: |
-          scripts/build.sh -b release -c gcc cross_ppc64le
-      - uses: actions/upload-artifact@v3
-        name: upload logs
-        if: failure()
-        with:
-          name: log files
-          path: |
-            .build-ci/meson-logs/*.txt
-
-  cross-s390x:
-    name: cross s390x
-    runs-on: ubuntu-latest
-    steps:
-      - name: set up s390x architecture
-        run: |
-          export release=$(lsb_release -c -s)
-          sudo dpkg --add-architecture s390x
-          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
-          sudo dd of=/etc/apt/sources.list.d/s390x.list <<EOF
-          deb [arch=s390x] http://ports.ubuntu.com/ $release main universe restricted"
-          deb [arch=s390x] http://ports.ubuntu.com/ $release-updates main universe restricted"
-          EOF
-          sudo apt update
-      - name: install s390x compiler
-        run: sudo apt install meson gcc-s390x-linux-gnu libgcc-s1:s390x pkg-config qemu-user-static
-      - name: install libraries
-        run: sudo apt install libjson-c-dev:s390x
-      - uses: actions/checkout@v3
-      - name: build
-        run: |
-          scripts/build.sh -b release -c gcc cross_s390x
-      - uses: actions/upload-artifact@v3
-        name: upload logs
-        if: failure()
-        with:
-          name: log files
-          path: |
-            .build-ci/meson-logs/*.txt
-
   build-muon:
-    name: muon minimal
+    name: muon minimal static
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/igaw/linux-nvme/debian:0.30
     steps:
       - uses: actions/checkout@v3
       - name: build
