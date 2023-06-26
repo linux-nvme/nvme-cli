@@ -66,20 +66,22 @@ uuid = executable(
 
 test('uuid', uuid)
 
-tree = executable(
-    'tree',
-    ['tree.c'],
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir]
-)
+if conf.get('HAVE_NETDB')
+    tree = executable(
+        'tree',
+        ['tree.c'],
+        dependencies: libnvme_dep,
+        include_directories: [incdir, internal_incdir]
+    )
 
-test('tree', tree)
+    test('tree', tree)
 
-test_util = executable(
-    'test-util',
-    ['test-util.c'],
-    include_directories: [incdir, internal_incdir]
-)
-test('Test util.c', test_util)
+    test_util = executable(
+        'test-util',
+        ['test-util.c'],
+        include_directories: [incdir, internal_incdir]
+    )
+    test('Test util.c', test_util)
+endif
 
 subdir('nbft')

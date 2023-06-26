@@ -905,7 +905,9 @@ int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
 	return 0;
 }
 
-bool nvme_ipaddrs_eq(const char *addr1, const char *addr2) {
+#ifdef HAVE_NETDB
+bool nvme_ipaddrs_eq(const char *addr1, const char *addr2)
+{
 	bool result = false;
 	struct addrinfo *info1 = NULL, hint1 = { .ai_flags=AI_NUMERICHOST, .ai_family=AF_UNSPEC };
 	struct addrinfo *info2 = NULL, hint2 = { .ai_flags=AI_NUMERICHOST, .ai_family=AF_UNSPEC };
@@ -961,4 +963,12 @@ ipaddrs_eq_fail:
 		freeaddrinfo(info2);
 	return result;
 }
+#else /* HAVE_NETDB */
+bool nvme_ipaddrs_eq(const char *addr1, const char *addr2)
+{
+	nvme_msg(NULL, LOG_ERR, "no support for hostname ip address resolution; " \
+		"recompile with libnss support.\n");
 
+	return false;
+}
+#endif /* HAVE_NETDB */
