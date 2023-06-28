@@ -11,7 +11,7 @@ struct tr_config {
 	const char *trsvcid;
 };
 
-extern nvme_ctrl_t lookup_ctrl(nvme_root_t r, struct tr_config *trcfg);
+extern nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct tr_config *trcfg);
 extern int nvmf_discover(const char *desc, int argc, char **argv, bool connect);
 extern int nvmf_connect(const char *desc, int argc, char **argv);
 extern int nvmf_disconnect(const char *desc, int argc, char **argv);

@@ -149,6 +149,8 @@ static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
 	return false;
 }
 
+typedef bool (*ctrl_match_fn_t)(nvme_ctrl_t, struct tr_config *);
+
 static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
 {
 	if (nvme_ctrl_is_discovery_ctrl(c) &&
@@ -175,21 +177,32 @@ static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
 	return false;
 }
 
-static nvme_ctrl_t __lookup_ctrl(nvme_root_t r, struct tr_config *trcfg,
-			     bool (*filter)(nvme_ctrl_t, struct tr_config *))
+static nvme_ctrl_t __lookup_host_ctrl(nvme_host_t h, struct tr_config *trcfg,
+				      ctrl_match_fn_t filter)
 {
-	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 
-	nvme_for_each_host(r, h) {
-		nvme_for_each_subsystem(h, s) {
-			nvme_subsystem_for_each_ctrl(s, c) {
-				if (!(filter(c, trcfg)))
-					continue;
+	nvme_for_each_subsystem(h, s) {
+		nvme_subsystem_for_each_ctrl(s, c) {
+			if (filter(c, trcfg))
 				return c;
-			}
 		}
+	}
+
+	return NULL;
+}
+
+static nvme_ctrl_t __lookup_ctrl(nvme_root_t r, struct tr_config *trcfg,
+				 ctrl_match_fn_t filter)
+{
+	nvme_host_t h;
+	nvme_ctrl_t c;
+
+	nvme_for_each_host(r, h) {
+		c = __lookup_host_ctrl(h, trcfg, filter);
+		if (c)
+			return c;
 	}
 
 	return NULL;
@@ -200,9 +213,9 @@ static nvme_ctrl_t lookup_discovery_ctrl(nvme_root_t r, struct tr_config *trcfg)
 	return __lookup_ctrl(r, trcfg, disc_ctrl_config_match);
 }
 
-nvme_ctrl_t lookup_ctrl(nvme_root_t r, struct tr_config *trcfg)
+nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct tr_config *trcfg)
 {
-	return __lookup_ctrl(r, trcfg, ctrl_config_match);
+	return __lookup_host_ctrl(h, trcfg, ctrl_config_match);
 }
 
 static int set_discovery_kato(struct nvme_fabrics_config *cfg)
@@ -317,7 +330,6 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 	struct nvmf_discovery_log *log = NULL;
 	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
 	nvme_host_t h = nvme_subsystem_get_host(s);
-	nvme_root_t r = nvme_host_get_root(h);
 	uint64_t numrec;
 
 	struct nvme_get_discovery_args args = {
@@ -362,7 +374,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			};
 
 			/* Already connected ? */
-			cl = lookup_ctrl(r, &trcfg);
+			cl = lookup_ctrl(h, &trcfg);
 			if (cl && nvme_ctrl_get_name(cl))
 				continue;
 
@@ -989,7 +1001,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		.trsvcid	= trsvcid,
 	};
 
-	c = lookup_ctrl(r, &trcfg);
+	c = lookup_ctrl(h, &trcfg);
 	if (c && nvme_ctrl_get_name(c)) {
 		fprintf(stderr, "already connected\n");
 		errno = EALREADY;
