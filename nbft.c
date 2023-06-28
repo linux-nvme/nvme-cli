@@ -144,7 +144,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 				};
 
 				/* Already connected ? */
-				cl = lookup_ctrl(r, &trcfg);
+				cl = lookup_ctrl(h, &trcfg);
 				if (cl && nvme_ctrl_get_name(cl))
 					continue;
 
@@ -170,7 +170,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 					nvme_free_ctrl(c);
 
 					trcfg.host_traddr = NULL;
-					cl = lookup_ctrl(r, &trcfg);
+					cl = lookup_ctrl(h, &trcfg);
 					if (cl && nvme_ctrl_get_name(cl))
 						continue;
 
