@@ -229,7 +229,10 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 		json_object_add_value_int(psd, "max_power",
 			le16_to_cpu(ctrl->psd[i].mp));
-		json_object_add_value_int(psd, "flags", ctrl->psd[i].flags);
+		json_object_add_value_int(psd, "max_power_scale",
+			ctrl->psd[i].flags & 0x1);
+		json_object_add_value_int(psd, "non-operational_state",
+			(ctrl->psd[i].flags & 0x2) >> 1);
 		json_object_add_value_uint(psd, "entry_lat",
 			le32_to_cpu(ctrl->psd[i].enlat));
 		json_object_add_value_uint(psd, "exit_lat",
