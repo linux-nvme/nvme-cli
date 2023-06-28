@@ -1,5 +1,0 @@
-[binaries]
-c = 'clang'
-cpp = 'clang++'
-strip = 'strip'
-pkgconfig = 'pkg-config'
