@@ -1,0 +1,55 @@
+.TH "libnvme" 9 "struct nbft_ssns_ext_info" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_ssns_ext_info \- Subsystem and Namespace Extended Information Descriptor (Figure 19)
+.SH SYNOPSIS
+struct nbft_ssns_ext_info {
+.br
+.BI "    __u8 structure_id;"
+.br
+.BI "    __u8 version;"
+.br
+.BI "    __le16 ssns_index;"
+.br
+.BI "    __le32 flags;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le16 asqsz;"
+.br
+.BI "    struct nbft_heap_obj dhcp_root_path_str_obj;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "structure_id" 12
+Structure ID: This field shall be set to 9h
+(i.e., SSNS Extended Info; #NBFT_DESC_SSNS_EXT_INFO).
+.IP "version" 12
+Version: This field shall be set to 1h.
+.IP "ssns_index" 12
+SSNS Descriptor Index: This field indicates the value
+of the SSNS Descriptor Index field of the Subsystem
+and Namespace Descriptor (see \fIstruct nbft_ssns\fP) whose
+SSNS Extended Information Descriptor Heap Object
+Reference field indicates this descriptor.
+.IP "flags" 12
+Flags, see \fIenum nbft_ssns_ext_info_flags\fP.
+.IP "cntlid" 12
+Controller ID: The controller identifier of the first
+controller associated with the Admin Queue by the driver.
+If a controller identifier is not administratively
+specified or direct configuration is not supported
+by the driver, then this field shall be cleared to 0h.
+.IP "asqsz" 12
+Admin Submission Queue Size (ASQSZ): The Admin Submission
+Queue Size utilized for the respective SSNS by the driver.
+.IP "dhcp_root_path_str_obj" 12
+DHCP Root Path String Heap Object Reference: If the
+SSNS DHCP Root Path Override (#NBFT_SSNS_DHCP_ROOT_PATH_OVERRIDE)
+flag bit is set to 1h, then this field indicates
+the offset in bytes of a heap object containing
+an DHCP Root Path String used by the driver. If the
+SNSS DHCP Root Path Override flag bit is cleared to 0h,
+then this field is reserved.

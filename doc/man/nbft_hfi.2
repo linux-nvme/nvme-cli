@@ -1,0 +1,44 @@
+.TH "libnvme" 9 "struct nbft_hfi" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_hfi \- Host Fabric Interface (HFI) Descriptor (Figure 11)
+.SH SYNOPSIS
+struct nbft_hfi {
+.br
+.BI "    __u8 structure_id;"
+.br
+.BI "    __u8 index;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 reserved1[12];"
+.br
+.BI "    struct nbft_heap_obj trinfo_obj;"
+.br
+.BI "    __u8 reserved2[10];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "structure_id" 12
+Structure ID: This field shall be set to 3h (i.e., Host Fabric
+Interface Descriptor; #NBFT_DESC_HFI).
+.IP "index" 12
+HFI Descriptor Index: This field indicates the number of this
+HFI Descriptor in the Host Fabric Interface Descriptor List.
+.IP "flags" 12
+HFI Descriptor Flags, see \fIenum nbft_hfi_flags\fP.
+.IP "trtype" 12
+HFI Transport Type, see \fIenum nbft_trtype\fP.
+.IP "reserved1" 12
+Reserved.
+.IP "trinfo_obj" 12
+HFI Transport Info Descriptor Heap Object Reference: If this
+field is set to a non-zero value, then this field indicates
+the location and size of a heap object containing
+a HFI Transport Info.
+.IP "reserved2" 12
+Reserved.

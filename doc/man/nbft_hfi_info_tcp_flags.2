@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "enum nbft_hfi_info_tcp_flags" "June 2023" "API Manual" LINUX
+.SH NAME
+enum nbft_hfi_info_tcp_flags \- HFI Transport Flags
+.SH SYNOPSIS
+enum nbft_hfi_info_tcp_flags {
+.br
+.BI "    NBFT_HFI_INFO_TCP_VALID"
+, 
+.br
+.br
+.BI "    NBFT_HFI_INFO_TCP_GLOBAL_ROUTE"
+, 
+.br
+.br
+.BI "    NBFT_HFI_INFO_TCP_DHCP_OVERRIDE"
+
+};
+.SH Constants
+.IP "NBFT_HFI_INFO_TCP_VALID" 12
+Descriptor Valid: if set to 1h, then this
+descriptor is valid. If cleared to 0h, then
+this descriptor is reserved.
+.IP "NBFT_HFI_INFO_TCP_GLOBAL_ROUTE" 12
+Global Route vs. Link Local Override Flag:
+if set to 1h, then the BIOS utilized this
+interface described by HFI to be the default
+route with highest priority. If cleared to 0h,
+then routes are local to their own scope.
+.IP "NBFT_HFI_INFO_TCP_DHCP_OVERRIDE" 12
+DHCP Override: if set to 1, then HFI information
+was populated by consuming the DHCP on this
+interface. If cleared to 0h, then the HFI
+information was set administratively by
+a configuration interface to the driver and
+pre-OS envrionment.

@@ -9625,6 +9625,17 @@ entries are of a variable lengths (TEL), TEL is always a multiple of
   command requires access to media and
   the media is not ready.
 
+``NVME_SC_FDP_DISABLED``
+  Command is not allowed when
+  Flexible Data Placement is disabled.
+
+``NVME_SC_INVALID_PLACEMENT_HANDLE_LIST``
+  The Placement Handle List is invalid
+  due to invalid Reclaim Unit Handle Identifier or
+  valid Reclaim Unit Handle Identifier but restricted or
+  the Placement Handle List number of entries exceeded the
+  maximum number allowed.
+
 ``NVME_SC_LBA_RANGE``
   LBA Out of Range: The command references
   an LBA that exceeds the size of the namespace.
@@ -11750,5 +11761,127 @@ true if **status** is of the specified type and value
 
 ``NVME_IO_MGMT_SEND_RUH_UPDATE``
   Reclaim Unit Handle Update
+
+
+
+
+.. c:struct:: nvme_ns_mgmt_host_sw_specified
+
+   Namespace management Host Software Specified Fields.
+
+**Definition**
+
+::
+
+  struct nvme_ns_mgmt_host_sw_specified {
+    __le64 nsze;
+    __le64 ncap;
+    __u8 rsvd16[10];
+    __u8 flbas;
+    __u8 rsvd27[2];
+    __u8 dps;
+    __u8 nmic;
+    __u8 rsvd31[61];
+    __le32 anagrpid;
+    __u8 rsvd96[4];
+    __le16 nvmsetid;
+    __le16 endgid;
+    __u8 rsvd104[280];
+    __le64 lbstm;
+    __le16 nphndls;
+    __u8 rsvd394[105];
+    union {
+      __u8 rsvd499[13];
+      struct {
+        __u8 znsco;
+        __le32 rar;
+        __le32 ror;
+        __le32 rnumzrwa;
+      } zns;
+    };
+    __le16 phndl[128];
+    __u8 rsvd768[3328];
+  };
+
+**Members**
+
+``nsze``
+  Namespace Size indicates the total size of the namespace in
+  logical blocks. The number of logical blocks is based on the
+  formatted LBA size.
+
+``ncap``
+  Namespace Capacity indicates the maximum number of logical blocks
+  that may be allocated in the namespace at any point in time. The
+  number of logical blocks is based on the formatted LBA size.
+
+``rsvd16``
+  Reserved
+
+``flbas``
+  Formatted LBA Size, see :c:type:`enum nvme_id_ns_flbas <nvme_id_ns_flbas>`.
+
+``rsvd27``
+  Reserved
+
+``dps``
+  End-to-end Data Protection Type Settings, see
+  :c:type:`enum nvme_id_ns_dps <nvme_id_ns_dps>`.
+
+``nmic``
+  Namespace Multi-path I/O and Namespace Sharing Capabilities, see
+  :c:type:`enum nvme_id_ns_nmic <nvme_id_ns_nmic>`.
+
+``rsvd31``
+  Reserved
+
+``anagrpid``
+  ANA Group Identifier indicates the ANA Group Identifier of the
+  ANA group of which the namespace is a member.
+
+``rsvd96``
+  Reserved
+
+``nvmsetid``
+  NVM Set Identifier indicates the NVM Set with which this
+  namespace is associated.
+
+``endgid``
+  Endurance Group Identifier indicates the Endurance Group with
+  which this namespace is associated.
+
+``rsvd104``
+  Reserved
+
+``lbstm``
+  Logical Block Storage Tag Mask Identifies the mask for the
+  Storage Tag field for the protection information
+
+``nphndls``
+  Number of Placement Handles specifies the number of Placement
+  Handles included in the Placement Handle List
+
+``rsvd394``
+  Reserved
+
+``{unnamed_union}``
+  anonymous
+
+``rsvd499``
+  Reserved for I/O Command Sets that extend this specification.
+
+``zns``
+  rsvd499( Zoned Namespace Command Set specific field )
+
+``phndl``
+  Placement Handle Associated RUH : This field specifies the Reclaim
+  Unit Handle Identifier to be associated with the Placement Handle
+  value. If the Flexible Data Placement capability is not supported or
+  not enabled in specified Endurance Group, then the controller shall
+  ignore this field.
+
+``rsvd768``
+  Reserved
+
 
 

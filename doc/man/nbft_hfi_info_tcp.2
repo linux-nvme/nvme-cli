@@ -1,0 +1,137 @@
+.TH "libnvme" 9 "struct nbft_hfi_info_tcp" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_hfi_info_tcp \- HFI Transport Info Descriptor - NVMe/TCP (Figure 13)
+.SH SYNOPSIS
+struct nbft_hfi_info_tcp {
+.br
+.BI "    __u8 structure_id;"
+.br
+.BI "    __u8 version;"
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 trinfo_version;"
+.br
+.BI "    __le16 hfi_index;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __le32 pci_sbdf;"
+.br
+.BI "    __u8 mac_addr[6];"
+.br
+.BI "    __le16 vlan;"
+.br
+.BI "    __u8 ip_origin;"
+.br
+.BI "    __u8 ip_address[16];"
+.br
+.BI "    __u8 subnet_mask_prefix;"
+.br
+.BI "    __u8 ip_gateway[16];"
+.br
+.BI "    __u8 reserved1;"
+.br
+.BI "    __le16 route_metric;"
+.br
+.BI "    __u8 primary_dns[16];"
+.br
+.BI "    __u8 secondary_dns[16];"
+.br
+.BI "    __u8 dhcp_server[16];"
+.br
+.BI "    struct nbft_heap_obj host_name_obj;"
+.br
+.BI "    __u8 reserved2[18];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "structure_id" 12
+Structure ID: This field shall be set to 7h (i.e.,
+HFI Transport Info; #NBFT_DESC_HFI_TRINFO).
+.IP "version" 12
+Version: This field shall be set to 1h.
+.IP "trtype" 12
+HFI Transport Type, see \fIenum nbft_trtype\fP: This field
+shall be set to 03h (i.e., NVMe/TCP; #NBFT_TRTYPE_TCP).
+.IP "trinfo_version" 12
+Transport Info Version: Implementations compliant to this
+specification shall set this field to 1h.
+.IP "hfi_index" 12
+HFI Descriptor Index: The value of the HFI Descriptor Index
+field of the HFI Descriptor (see \fIstruct nbft_hfi\fP.index)
+whose HFI Transport Info Descriptor Heap Object Reference
+field indicates this HFI Transport Info Descriptor.
+.IP "flags" 12
+HFI Transport Flags, see \fIenum nbft_hfi_info_tcp_flags\fP.
+.IP "pci_sbdf" 12
+PCI Express Routing ID for the HFI Transport Function:
+This field indicates the PCI Express Routing ID as specified
+in the PCI Express Base Specification.
+.IP "mac_addr" 12
+MAC Address: The MAC address of this HFI, in EUI-48TM format,
+as defined in the IEEE Guidelines for Use of Extended Unique
+Identifiers. This field shall be set to a non-zero value.
+.IP "vlan" 12
+VLAN: If this field is set to a non-zero value, then this
+field contains the VLAN identifier if the VLAN associated
+with this HFI, as defined in IEEE 802.1q-2018. If no VLAN
+is associated with this HFI, then this field shall be cleared
+to 0h.
+.IP "ip_origin" 12
+IP Origin: If this field is set to a non-zero value, then
+this field indicates the source of Ethernet L3 configuration
+information used by the driver for this interface. Valid
+values are defined in the Win 32 API: NL_PREFIX_ORIGIN
+enumeration specification. This field should be cleared
+to 0h if the IP Origin field is unused by driver.
+.IP "ip_address" 12
+IP Address: This field indicates the IPv4 or IPv6 address
+of this HFI. This field shall be set to a non-zero value.
+.IP "subnet_mask_prefix" 12
+Subnet Mask Prefix: This field indicates the IPv4 or IPv6
+subnet mask in CIDR routing prefix notation.
+.IP "ip_gateway" 12
+IP Gateway: If this field is set to a non-zero value, this
+field indicates the IPv4 or IPv6 address of the IP gateway
+for this HFI. If this field is cleared to 0h, then
+no IP gateway is specified.
+.IP "reserved1" 12
+Reserved.
+.IP "route_metric" 12
+Route Metric: If this field is set to a non-zero value,
+this field indicates the cost value for the route indicated
+by this HF. This field contains the value utilized by the
+pre-OS driver when chosing among all available routes. Lower
+values relate to higher priority. Refer to IETF RFC 4249.
+If the pre-OS driver supports routing and did not configure
+a specific route metric for this interface, then the pre-OS
+driver should set this value to 500. If the pre-OS driver
+does not support routing, then this field should be cleared
+to 0h.
+.IP "primary_dns" 12
+Primary DNS: If this field is set to a non-zero value,
+this field indicates the IPv4 or IPv6 address of the
+Primary DNS server for this HFI, if any, from byte offset
+0h of the NBFT Table Header. If this field is cleared to 0h,
+then no Primary DNS is specified.
+.IP "secondary_dns" 12
+Secondary DNS: If this field is set to a non-zero value,
+this field indicates the IPv4 or IPv6 address of
+the Secondary DNS server for this HFI, if any, from byte
+offset 0h of the NBFT Table Header. If this field is
+cleared to 0h, then no Secondary DNS is specified.
+.IP "dhcp_server" 12
+DHCP Server: If the DHCP Override bit is set to 1h, then
+this field indicates the IPv4 or IPv6 address of the DHCP
+server used to assign this HFI address. If that bit is
+cleared to 0h, then this field is reserved.
+.IP "host_name_obj" 12
+Host Name Heap Object Reference: If this field is set
+to a non-zero value, then this field indicates the location
+and size of a heap object containing a Host Name string.
+.IP "reserved2" 12
+Reserved.

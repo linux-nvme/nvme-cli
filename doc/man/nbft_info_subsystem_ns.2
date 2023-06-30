@@ -1,0 +1,94 @@
+.TH "libnvme" 9 "struct nbft_info_subsystem_ns" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_info_subsystem_ns \- Subsystem Namespace (SSNS) info
+.SH SYNOPSIS
+struct nbft_info_subsystem_ns {
+.br
+.BI "    int index;"
+.br
+.BI "    struct nbft_info_discovery *discovery;"
+.br
+.BI "    struct nbft_info_security *security;"
+.br
+.BI "    int num_hfis;"
+.br
+.BI "    struct nbft_info_hfi **hfis;"
+.br
+.BI "    char transport[8];"
+.br
+.BI "    char traddr[40];"
+.br
+.BI "    char *trsvcid;"
+.br
+.BI "    __u16 subsys_port_id;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    enum nbft_info_nid_type nid_type;"
+.br
+.BI "    __u8 *nid;"
+.br
+.BI "    char *subsys_nqn;"
+.br
+.BI "    bool pdu_header_digest_required;"
+.br
+.BI "    bool data_digest_required;"
+.br
+.BI "    int controller_id;"
+.br
+.BI "    int asqsz;"
+.br
+.BI "    char *dhcp_root_path_string;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "index" 12
+SSNS Descriptor Index in the descriptor list.
+.IP "discovery" 12
+Primary Discovery Controller associated with
+this SSNS Descriptor.
+.IP "security" 12
+Security Profile Descriptor associated with
+this namespace.
+.IP "num_hfis" 12
+Number of HFIs.
+.IP "hfis" 12
+List of HFIs associated with this namespace.
+Includes the primary HFI at the first position
+and all secondary HFIs. This array is null-terminated.
+.IP "transport" 12
+Transport Type string (e.g. 'tcp').
+.IP "traddr" 12
+Subsystem Transport Address.
+.IP "trsvcid" 12
+Subsystem Transport Service Identifier.
+.IP "subsys_port_id" 12
+The Subsystem Port ID.
+.IP "nsid" 12
+The Namespace ID of this descriptor or when \fInid\fP
+should be used instead.
+.IP "nid_type" 12
+Namespace Identifier Type, see \fIenum nbft_info_nid_type\fP.
+.IP "nid" 12
+The Namespace Identifier value.
+.IP "subsys_nqn" 12
+Subsystem and Namespace NQN.
+.IP "pdu_header_digest_required" 12
+PDU Header Digest (HDGST) Flag: the use of NVM Header
+Digest Enabled is required.
+.IP "data_digest_required" 12
+Data Digest (DDGST) Flag: the use of NVM Data Digest
+Enabled is required.
+.IP "controller_id" 12
+Controller ID (SSNS Extended Information Descriptor):
+The controller ID associated with the Admin Queue
+or 0 if not supported.
+.IP "asqsz" 12
+Admin Submission Queue Size (SSNS Extended Information
+Descriptor) or 0 if not supported.
+.IP "dhcp_root_path_string" 12
+DHCP Root Path Override string (SSNS Extended
+Information Descriptor).

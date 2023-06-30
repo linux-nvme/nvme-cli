@@ -1029,6 +1029,27 @@ New controller object, or NULL on failure.
   controller to free
 
 
+.. c:function:: __u16 nvme_mi_ctrl_id (nvme_mi_ctrl_t ctrl)
+
+   get the ID of a controller
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  controller to query
+
+**Description**
+
+Retrieve the ID of the controller, as defined by hardware, and available
+in the Identify (Controller List) data. This is the value passed to
+**nvme_mi_init_ctrl**, but may have been created internally via
+**nvme_mi_scan_ep**.
+
+**Return**
+
+the (locally-stored) ID of this controller.
+
+
 .. c:function:: char * nvme_mi_endpoint_desc (nvme_mi_ep_t ep)
 
    Get a string describing a MI endpoint.
@@ -2969,7 +2990,7 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-.. c:function:: int nvme_mi_admin_ns_mgmt_create (nvme_mi_ctrl_t ctrl, struct nvme_id_ns *ns, __u8 csi, __u32 *nsid)
+.. c:function:: int nvme_mi_admin_ns_mgmt_create (nvme_mi_ctrl_t ctrl, struct nvme_id_ns *ns, __u8 csi, __u32 *nsid, struct nvme_ns_mgmt_host_sw_specified *data)
 
    Helper for Namespace Management Create command
 
@@ -2986,6 +3007,9 @@ The nvme command status if a response was received (see
 
 ``__u32 *nsid``
   Set to new namespace ID on create
+
+``struct nvme_ns_mgmt_host_sw_specified *data``
+  Host Software Specified Fields that defines ns creation parameters
 
 **Description**
 

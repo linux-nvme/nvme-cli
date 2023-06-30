@@ -1,0 +1,14 @@
+.TH "nvme_subsystem_set_application" 9 "nvme_subsystem_set_application" "June 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsystem_set_application \- Set the application string
+.SH SYNOPSIS
+.B "void" nvme_subsystem_set_application
+.BI "(nvme_subsystem_t s "  ","
+.BI "const char *a "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+nvme_subsystem_t object
+.IP "a" 12
+application string
+.SH "DESCRIPTION"
+Sets the managing application string for \fIs\fP.

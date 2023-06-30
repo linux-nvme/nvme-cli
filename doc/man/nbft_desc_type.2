@@ -1,0 +1,74 @@
+.TH "libnvme" 9 "enum nbft_desc_type" "June 2023" "API Manual" LINUX
+.SH NAME
+enum nbft_desc_type \- NBFT Elements - Descriptor Types (Figure 5)
+.SH SYNOPSIS
+enum nbft_desc_type {
+.br
+.BI "    NBFT_DESC_HEADER"
+, 
+.br
+.br
+.BI "    NBFT_DESC_CONTROL"
+, 
+.br
+.br
+.BI "    NBFT_DESC_HOST"
+, 
+.br
+.br
+.BI "    NBFT_DESC_HFI"
+, 
+.br
+.br
+.BI "    NBFT_DESC_SSNS"
+, 
+.br
+.br
+.BI "    NBFT_DESC_SECURITY"
+, 
+.br
+.br
+.BI "    NBFT_DESC_DISCOVERY"
+, 
+.br
+.br
+.BI "    NBFT_DESC_HFI_TRINFO"
+, 
+.br
+.br
+.BI "    NBFT_DESC_RESERVED_8"
+, 
+.br
+.br
+.BI "    NBFT_DESC_SSNS_EXT_INFO"
+
+};
+.SH Constants
+.IP "NBFT_DESC_HEADER" 12
+Header: an ACPI structure header with some additional
+NBFT specific info.
+.IP "NBFT_DESC_CONTROL" 12
+Control Descriptor: indicates the location of host,
+HFI, SSNS, security, and discovery descriptors.
+.IP "NBFT_DESC_HOST" 12
+Host Descriptor: host information.
+.IP "NBFT_DESC_HFI" 12
+HFI Descriptor: an indexable table of HFI Descriptors,
+one for each fabric interface on the host.
+.IP "NBFT_DESC_SSNS" 12
+Subsystem Namespace Descriptor: an indexable table
+of SSNS Descriptors.
+.IP "NBFT_DESC_SECURITY" 12
+Security Descriptor: an indexable table of Security
+descriptors.
+.IP "NBFT_DESC_DISCOVERY" 12
+Discovery Descriptor: an indexable table of Discovery
+Descriptors.
+.IP "NBFT_DESC_HFI_TRINFO" 12
+HFI Transport Descriptor: indicated by an HFI Descriptor,
+corresponds to a specific transport for a single HFI.
+.IP "NBFT_DESC_RESERVED_8" 12
+Reserved.
+.IP "NBFT_DESC_SSNS_EXT_INFO" 12
+SSNS Extended Info Descriptor: indicated by an SSNS
+Descriptor if required.

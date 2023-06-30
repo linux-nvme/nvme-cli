@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct nbft_info_hfi" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_info_hfi \- Host Fabric Interface (HFI) Descriptor
+.SH SYNOPSIS
+struct nbft_info_hfi {
+.br
+.BI "    int index;"
+.br
+.BI "    char transport[8];"
+.br
+.BI "    struct nbft_info_hfi_info_tcp tcp_info;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "index" 12
+HFI Descriptor Index: indicates the number of this HFI Descriptor
+in the Host Fabric Interface Descriptor List.
+.IP "transport" 12
+Transport Type string (e.g. 'tcp').
+.IP "tcp_info" 12
+The HFI Transport Info Descriptor, see \fIstruct nbft_info_hfi_info_tcp\fP.

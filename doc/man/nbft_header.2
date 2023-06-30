@@ -1,0 +1,93 @@
+.TH "libnvme" 9 "struct nbft_header" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_header \- NBFT Table - Header (Figure 8)
+.SH SYNOPSIS
+struct nbft_header {
+.br
+.BI "    char signature[4];"
+.br
+.BI "    __le32 length;"
+.br
+.BI "    __u8 major_revision;"
+.br
+.BI "    __u8 checksum;"
+.br
+.BI "    char oem_id[6];"
+.br
+.BI "    char oem_table_id[8];"
+.br
+.BI "    __le32 oem_revision;"
+.br
+.BI "    __le32 creator_id;"
+.br
+.BI "    __le32 creator_revision;"
+.br
+.BI "    __le32 heap_offset;"
+.br
+.BI "    __le32 heap_length;"
+.br
+.BI "    struct nbft_heap_obj driver_dev_path_sig;"
+.br
+.BI "    __u8 minor_revision;"
+.br
+.BI "    __u8 reserved[13];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "signature" 12
+Signature: An ASCII string representation of the table
+identifier. This field shall be set to the value 4E424654h
+(i.e. "NBFT", see #NBFT_HEADER_SIG).
+.IP "length" 12
+Length: The length of the table, in bytes, including the
+header, starting from offset 0h. This field is used to record
+the size of the entire table.
+.IP "major_revision" 12
+Major Revision: The major revision of the structure
+corresponding to the Signature field. Larger major revision
+numbers should not be assumed backward compatible to lower
+major revision numbers with the same signature.
+.IP "checksum" 12
+Checksum: The entire table, including the Checksum field,
+shall sum to 0h to be considered valid.
+.IP "oem_id" 12
+OEMID shall be populated by the NBFT driver writer by
+an OEM-supplied string that identifies the OEM. All
+trailing bytes shall be NULL.
+.IP "oem_table_id" 12
+OEM Table ID: This field shall be populated by the NBFT
+driver writer with an OEM-supplied string that the OEM
+uses to identify the particular data table. This field is
+particularly useful when defining a definition block to
+distinguish definition block functions. The OEM assigns
+each dissimilar table a new OEM Table ID.
+.IP "oem_revision" 12
+OEM Revision: An OEM-supplied revision number. Larger
+numbers are assumed to be newer revisions.
+.IP "creator_id" 12
+Creator ID: Vendor ID of utility that created the table.
+For instance, this may be the ID for the ASL Compiler.
+.IP "creator_revision" 12
+Creator Revision: Revision of utility that created the
+table. For instance, this may be the ID for the ASL Compiler.
+.IP "heap_offset" 12
+Heap Offset (HO): This field indicates the offset in bytes
+of the heap, if any, from byte offset 0h of the NBFT
+Table Header.
+.IP "heap_length" 12
+Heap Length (HL): The length of the heap, if any.
+.IP "driver_dev_path_sig" 12
+Driver Signature Heap Object Reference: This field indicates
+the offset in bytes of a heap object containing the Driver
+Signature, if any, from byte offset 0h of the NBFT Table
+Header.
+.IP "minor_revision" 12
+Minor Revision: The minor revision of the structure
+corresponding to the Signature field. If the major revision
+numbers are the same, any minor revision number differences
+shall be backwards compatible with the same signature.
+.IP "reserved" 12
+Reserved.

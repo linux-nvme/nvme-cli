@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "struct nbft_info_host" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_info_host \- Host Descriptor
+.SH SYNOPSIS
+struct nbft_info_host {
+.br
+.BI "    unsigned char *id;"
+.br
+.BI "    char *nqn;"
+.br
+.BI "    bool host_id_configured;"
+.br
+.BI "    bool host_nqn_configured;"
+.br
+.BI "    enum nbft_info_primary_admin_host_flag primary;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "id" 12
+Host ID (raw UUID, length = 16 bytes).
+.IP "nqn" 12
+Host NQN.
+.IP "host_id_configured" 12
+HostID Configured Flag: value of True indicates that \fIid\fP
+contains administratively-configured value, or driver
+default value if False.
+.IP "host_nqn_configured" 12
+Host NQN Configured Flag: value of True indicates that
+\fInqn\fP contains administratively-configured value,
+or driver default value if False.
+.IP "primary" 12
+Primary Administrative Host Descriptor, see
+\fIenum nbft_info_primary_admin_host_flag\fP.

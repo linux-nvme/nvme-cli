@@ -1,0 +1,44 @@
+.TH "libnvme" 9 "enum nbft_ssns_trflags" "June 2023" "API Manual" LINUX
+.SH NAME
+enum nbft_ssns_trflags \- SSNS Transport Specific Flags Field (Figure 17)
+.SH SYNOPSIS
+enum nbft_ssns_trflags {
+.br
+.BI "    NBFT_SSNS_TRFLAG_VALID"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_PDU_HEADER_DIGEST"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_DATA_DIGEST"
+
+};
+.SH Constants
+.IP "NBFT_SSNS_TRFLAG_VALID" 12
+Transport Specific Flags in Use: If set to 1h, then
+this descriptor is valid. If cleared to 0h, then
+this descriptor is not valid.
+.IP "NBFT_SSNS_PDU_HEADER_DIGEST" 12
+PDU Header Digest (HDGST) Flag: If set to 1h, then
+the host or administrator required the connection
+described by this Subsystem and Namespace Descriptor
+to use the NVM Header Digest Enabled. A consumer
+of this information should attempt to use NVM Header
+Digest when recreating this connection if enabled.
+If cleared to 0h, then the host or administrator
+did not require the connection described by this
+Subsystem and Namespace Descriptor to use the
+NVM Header Digest Enabled.
+.IP "NBFT_SSNS_DATA_DIGEST" 12
+Data Digest (DDGST) Flag: If set to 1h, then
+the host or administrator required the connection
+described by this Subsystem and Namespace Descriptor
+to use the NVM Data Digest Enabled. If cleared
+to 0h, then the host or administrator did not
+require the connection described by this Subsystem
+and Namespace Descriptor to use the NVM Data Digest
+Enabled. A consumer of this field should attempt
+to use NVM Data Digest when recreating this
+connection if enabled.

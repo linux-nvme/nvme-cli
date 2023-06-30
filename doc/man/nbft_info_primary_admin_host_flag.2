@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "enum nbft_info_primary_admin_host_flag" "June 2023" "API Manual" LINUX
+.SH NAME
+enum nbft_info_primary_admin_host_flag \- Primary Administrative Host Descriptor Flags
+.SH SYNOPSIS
+enum nbft_info_primary_admin_host_flag {
+.br
+.BI "    NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED"
+, 
+.br
+.br
+.BI "    NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED"
+, 
+.br
+.br
+.BI "    NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_SELECTED"
+, 
+.br
+.br
+.BI "    NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_RESERVED"
+
+};
+.SH Constants
+.IP "NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED" 12
+Not Indicated by Driver: The driver
+that created this NBFT provided no
+administrative priority hint for
+this NBFT.
+.IP "NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED" 12
+Unselected: The driver that created
+this NBFT explicitly indicated that
+this NBFT should not be prioritized
+over any other NBFT.
+.IP "NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_SELECTED" 12
+Selected: The driver that created
+this NBFT explicitly indicated that
+this NBFT should be prioritized over
+any other NBFT.
+.IP "NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_RESERVED" 12
+Reserved.

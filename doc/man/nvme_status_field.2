@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_status_field" "March 2023" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_status_field" "June 2023" "API Manual" LINUX
 .SH NAME
 enum nvme_status_field \- Defines all parts of the nvme status field: status code, status code type, and additional flags.
 .SH SYNOPSIS
@@ -181,6 +181,14 @@ enum nvme_status_field {
 .br
 .br
 .BI "    NVME_SC_ADMIN_CMD_MEDIA_NOT_READY"
+, 
+.br
+.br
+.BI "    NVME_SC_FDP_DISABLED"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_PLACEMENT_HANDLE_LIST"
 , 
 .br
 .br
@@ -773,6 +781,15 @@ the Command and Feature Lockdown.
 Admin Command Media Not Ready: The Admin
 command requires access to media and
 the media is not ready.
+.IP "NVME_SC_FDP_DISABLED" 12
+Command is not allowed when
+Flexible Data Placement is disabled.
+.IP "NVME_SC_INVALID_PLACEMENT_HANDLE_LIST" 12
+The Placement Handle List is invalid
+due to invalid Reclaim Unit Handle Identifier or
+valid Reclaim Unit Handle Identifier but restricted or
+the Placement Handle List number of entries exceeded the
+maximum number allowed.
 .IP "NVME_SC_LBA_RANGE" 12
 LBA Out of Range: The command references
 an LBA that exceeds the size of the namespace.

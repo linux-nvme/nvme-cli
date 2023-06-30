@@ -67,6 +67,12 @@ libnvme utility functions
 ``ENVME_CONNECT_CONNREFUSED``
   connection refused
 
+``ENVME_CONNECT_ADDRNOTAVAIL``
+  cannot assign requested address
+
+``ENVME_CONNECT_IGNORED``
+  connect attempt is ignored due to configuration
+
 
 .. c:function:: __u8 nvme_status_to_errno (int status, bool fabrics)
 
@@ -573,5 +579,22 @@ https://www.rfc-editor.org/rfc/rfc4122#section-4.4
 **Return**
 
 Returns error code if generating of random number fails.
+
+
+.. c:function:: bool nvme_ipaddrs_eq (const char *addr1, const char *addr2)
+
+   Check if 2 IP addresses are equal.
+
+**Parameters**
+
+``const char *addr1``
+  IP address (can be IPv4 or IPv6)
+
+``const char *addr2``
+  IP address (can be IPv4 or IPv6)
+
+**Return**
+
+true if addr1 == addr2. false otherwise.
 
 

@@ -22,6 +22,37 @@ libnvme tree object interface
 Initialized :c:type:`nvme_root_t` object
 
 
+.. c:function:: void nvme_root_set_application (nvme_root_t r, const char *a)
+
+   Specify managing application
+
+**Parameters**
+
+``nvme_root_t r``
+  :c:type:`nvme_root_t` object
+
+``const char *a``
+  Application string
+
+**Description**
+
+Sets the managing application string for **r**.
+
+
+.. c:function:: const char * nvme_root_get_application (nvme_root_t r)
+
+   Get managing application
+
+**Parameters**
+
+``nvme_root_t r``
+  :c:type:`nvme_root_t` object
+
+**Description**
+
+Returns the managing application string for **r** or NULL if not set.
+
+
 .. c:function:: void nvme_free_tree (nvme_root_t r)
 
    Free root object
@@ -1319,6 +1350,21 @@ NVMe-over-Fabrics address string of **c** or empty string
 of no address is present.
 
 
+.. c:function:: const char * nvme_ctrl_get_phy_slot (nvme_ctrl_t c)
+
+   PCI physical slot number of a controller
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller instance
+
+**Return**
+
+PCI physical slot number of **c** or empty string if slot
+number is not present.
+
+
 .. c:function:: const char * nvme_ctrl_get_firmware (nvme_ctrl_t c)
 
    Firmware string of a controller
@@ -1883,6 +1929,37 @@ Returns the subsystem type of **s**.
 **Return**
 
 'nvm' or 'discovery'
+
+
+.. c:function:: const char * nvme_subsystem_get_application (nvme_subsystem_t s)
+
+   Return the application string
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  nvme_subsystem_t object
+
+**Return**
+
+Managing application string or NULL if not set.
+
+
+.. c:function:: void nvme_subsystem_set_application (nvme_subsystem_t s, const char *a)
+
+   Set the application string
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  nvme_subsystem_t object
+
+``const char *a``
+  application string
+
+**Description**
+
+Sets the managing application string for **s**.
 
 
 .. c:function:: int nvme_scan_topology (nvme_root_t r, nvme_scan_filter_t f, void *f_args)

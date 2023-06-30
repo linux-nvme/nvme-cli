@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_connect_err" "March 2023" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_connect_err" "June 2023" "API Manual" LINUX
 .SH NAME
 enum nvme_connect_err \- nvme connect error codes
 .SH SYNOPSIS
@@ -73,6 +73,14 @@ enum nvme_connect_err {
 .br
 .br
 .BI "    ENVME_CONNECT_CONNREFUSED"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_ADDRNOTAVAIL"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_IGNORED"
 
 };
 .SH Constants
@@ -112,3 +120,7 @@ invalid interface
 not supported
 .IP "ENVME_CONNECT_CONNREFUSED" 12
 connection refused
+.IP "ENVME_CONNECT_ADDRNOTAVAIL" 12
+cannot assign requested address
+.IP "ENVME_CONNECT_IGNORED" 12
+connect attempt is ignored due to configuration

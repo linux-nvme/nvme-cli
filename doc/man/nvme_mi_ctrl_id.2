@@ -1,0 +1,16 @@
+.TH "nvme_mi_ctrl_id" 9 "nvme_mi_ctrl_id" "June 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_ctrl_id \- get the ID of a controller
+.SH SYNOPSIS
+.B "__u16" nvme_mi_ctrl_id
+.BI "(nvme_mi_ctrl_t ctrl "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+controller to query
+.SH "DESCRIPTION"
+Retrieve the ID of the controller, as defined by hardware, and available
+in the Identify (Controller List) data. This is the value passed to
+\fInvme_mi_init_ctrl\fP, but may have been created internally via
+\fInvme_mi_scan_ep\fP.
+.SH "RETURN"
+the (locally-stored) ID of this controller.

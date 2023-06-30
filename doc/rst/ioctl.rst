@@ -3883,7 +3883,7 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-.. c:function:: int nvme_ns_mgmt_create (int fd, struct nvme_id_ns *ns, __u32 *nsid, __u32 timeout, __u8 csi)
+.. c:function:: int nvme_ns_mgmt_create (int fd, struct nvme_id_ns *ns, __u32 *nsid, __u32 timeout, __u8 csi, struct nvme_ns_mgmt_host_sw_specified *data)
 
    Create a non attached namespace
 
@@ -3904,6 +3904,9 @@ The nvme command status if a response was received (see
 
 ``__u8 csi``
   Command Set Identifier
+
+``struct nvme_ns_mgmt_host_sw_specified *data``
+  Host Software Specified Fields that defines ns creation parameters
 
 **Description**
 

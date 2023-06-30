@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "struct nbft_host" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_host \- Host Descriptor (Figure 9)
+.SH SYNOPSIS
+struct nbft_host {
+.br
+.BI "    __u8 structure_id;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 host_id[16];"
+.br
+.BI "    struct nbft_heap_obj host_nqn_obj;"
+.br
+.BI "    __u8 reserved[8];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "structure_id" 12
+Structure ID: This field shall be set to 2h (i.e.,
+Host Descriptor; #NBFT_DESC_HOST).
+.IP "flags" 12
+Host Flags, see \fIenum nbft_host_flags\fP.
+.IP "host_id" 12
+Host ID: This field shall be set to the Host Identifier. This
+field shall not be empty if the NBFT and NVMe Boot are supported
+by the Platform.
+.IP "host_nqn_obj" 12
+Host NQN Heap Object Reference: this field indicates a heap
+object containing a Host NQN. This object shall not be empty
+if the NBFT and NVMe Boot are supported by the Platform.
+.IP "reserved" 12
+Reserved.

@@ -1,0 +1,169 @@
+.TH "libnvme" 9 "struct nbft_control" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nbft_control \- NBFT Table - Control Descriptor (Figure 8)
+.SH SYNOPSIS
+struct nbft_control {
+.br
+.BI "    __u8 structure_id;"
+.br
+.BI "    __u8 major_revision;"
+.br
+.BI "    __u8 minor_revision;"
+.br
+.BI "    __u8 reserved1;"
+.br
+.BI "    __le16 csl;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 reserved2;"
+.br
+.BI "    struct nbft_heap_obj hdesc;"
+.br
+.BI "    __u8 hsv;"
+.br
+.BI "    __u8 reserved3;"
+.br
+.BI "    __le32 hfio;"
+.br
+.BI "    __le16 hfil;"
+.br
+.BI "    __u8 hfiv;"
+.br
+.BI "    __u8 num_hfi;"
+.br
+.BI "    __le32 ssnso;"
+.br
+.BI "    __le16 ssnsl;"
+.br
+.BI "    __u8 ssnsv;"
+.br
+.BI "    __u8 num_ssns;"
+.br
+.BI "    __le32 seco;"
+.br
+.BI "    __le16 secl;"
+.br
+.BI "    __u8 secv;"
+.br
+.BI "    __u8 num_sec;"
+.br
+.BI "    __le32 disco;"
+.br
+.BI "    __le16 discl;"
+.br
+.BI "    __u8 discv;"
+.br
+.BI "    __u8 num_disc;"
+.br
+.BI "    __u8 reserved4[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "structure_id" 12
+Structure ID: This field specifies the element (refer to
+\fIenum nbft_desc_type\fP). This field shall be set to 1h (i.e.,
+Control, #NBFT_DESC_CONTROL).
+.IP "major_revision" 12
+Major Revision: The major revision of the structure corresponding
+to the Signature field. Larger major revision numbers should
+not be assumed backward compatible to lower major revision
+numbers with the same signature.
+.IP "minor_revision" 12
+Minor Revision: The minor revision of the structure corresponding
+to the signature field. If the major revision numbers are
+the same, any minor revision number differences shall be backwards
+compatible with the same signature.
+.IP "reserved1" 12
+Reserved.
+.IP "csl" 12
+Control Structure Length (CSL): This field indicates the length
+in bytes of the Control Descriptor.
+.IP "flags" 12
+Flags, see \fIenum nbft_control_flags\fP.
+.IP "reserved2" 12
+Reserved.
+.IP "hdesc" 12
+Host Descriptor (HDESC): This field indicates the location
+and length of the Host Descriptor (see \fIstruct nbft_host\fP).
+.IP "hsv" 12
+Host Descriptor Version (HSV): This field indicates the version
+of the Host Descriptor.
+.IP "reserved3" 12
+Reserved.
+.IP "hfio" 12
+HFI Descriptor List Offset (HFIO): If this field is set to
+a non-zero value, then this field indicates the offset in bytes
+of the HFI Descriptor List, if any, from byte offset 0h of the
+NBFT Table Header. If the \fInum_hfi\fP field is cleared to 0h,
+then this field is reserved.
+.IP "hfil" 12
+HFI Descriptor Length (HFIL): This field indicates the length
+in bytes of each HFI Descriptor, if any. If the \fInum_hfi\fP field
+is cleared to 0h, then this field is reserved.
+.IP "hfiv" 12
+HFI Descriptor Version (HFIV): This field indicates the version
+of each HFI Descriptor.
+.IP "num_hfi" 12
+Number of Host Fabric Interface Descriptors (NumHFI): This field
+indicates the number of HFI Descriptors (see \fIstruct nbft_hfi\fP)
+in the HFI Descriptor List, if any. If no interfaces have been
+configured, then this field shall be cleared to 0h.
+.IP "ssnso" 12
+SSNS Descriptor List Offset (SSNSO):: This field indicates
+the offset in bytes of the SSNS Descriptor List, if any, from
+byte offset 0h of the NBFT Table Header. If the \fInum_ssns\fP field
+is cleared to 0h, then this field is reserved.
+.IP "ssnsl" 12
+SSNS Descriptor Length (SSNSL): This field indicates the length
+in bytes of each SSNS Descriptor, if any. If the \fInum_ssns\fP
+field is cleared to 0h, then this field is reserved.
+.IP "ssnsv" 12
+SSNS Descriptor Version (SSNSV): This field indicates the version
+of the SSNS Descriptor.
+.IP "num_ssns" 12
+Number of Subsystem and Namespace Descriptors (NumSSNS): This
+field indicates the number of Subsystem Namespace (SSNS)
+Descriptors (see \fIstruct nbft_ssns\fP) in the SSNS Descriptor List,
+if any.
+.IP "seco" 12
+Security Profile Descriptor List Offset (SECO): This field
+indicates the offset in bytes of the Security Profile Descriptor
+List, if any, from byte offset 0h of the NBFT Table Header.
+If the \fInum_sec\fP field is cleared to 0h, then this field
+is reserved.
+.IP "secl" 12
+Security Profile Descriptor Length (SECL): This field indicates
+the length in bytes of each Security Profile Descriptor, if any.
+If the \fInum_sec\fP field is cleared to 0h, then this field
+is reserved.
+.IP "secv" 12
+Security Profile Descriptor Version (SECV): This field indicates
+the version of the Security Profile Descriptor.
+.IP "num_sec" 12
+Number of Security Profile Descriptors (NumSec): This field
+indicates the number of Security Profile Descriptors
+(see \fIstruct nbft_security\fP), if any, in the Security Profile
+Descriptor List.
+.IP "disco" 12
+Discovery Descriptor Offset (DISCO): This field indicates
+the offset in bytes of the Discovery Descriptor List, if any,
+from byte offset 0h of the NBFT Table Header. If the \fInum_disc\fP
+field is cleared to 0h, then this field is reserved.
+.IP "discl" 12
+Discovery Descriptor Length (DISCL): This field indicates
+the length in bytes of each Discovery Descriptor, if any.
+If the \fInum_disc\fP field is cleared to 0h, then this field
+is reserved.
+.IP "discv" 12
+Discovery Descriptor Version (DISCV): This field indicates
+the version of the Discovery Descriptor.
+.IP "num_disc" 12
+Number of Discovery Descriptors (NumDisc): This field indicates
+the number of Discovery Descriptors (see \fIstruct nbft_discovery\fP),
+if any, in the Discovery Descriptor List, if any.
+.IP "reserved4" 12
+Reserved.

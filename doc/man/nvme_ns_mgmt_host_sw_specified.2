@@ -1,0 +1,122 @@
+.TH "libnvme" 9 "struct nvme_ns_mgmt_host_sw_specified" "June 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_ns_mgmt_host_sw_specified \- Namespace management Host Software Specified Fields.
+.SH SYNOPSIS
+struct nvme_ns_mgmt_host_sw_specified {
+.br
+.BI "    __le64 nsze;"
+.br
+.BI "    __le64 ncap;"
+.br
+.BI "    __u8 rsvd16[10];"
+.br
+.BI "    __u8 flbas;"
+.br
+.BI "    __u8 rsvd27[2];"
+.br
+.BI "    __u8 dps;"
+.br
+.BI "    __u8 nmic;"
+.br
+.BI "    __u8 rsvd31[61];"
+.br
+.BI "    __le32 anagrpid;"
+.br
+.BI "    __u8 rsvd96[4];"
+.br
+.BI "    __le16 nvmsetid;"
+.br
+.BI "    __le16 endgid;"
+.br
+.BI "    __u8 rsvd104[280];"
+.br
+.BI "    __le64 lbstm;"
+.br
+.BI "    __le16 nphndls;"
+.br
+.BI "    __u8 rsvd394[105];"
+.br
+.BI "    union {"
+.br
+.BI "      __u8 rsvd499[13];"
+.br
+.BI "      struct {"
+.br
+.BI "        __u8 znsco;"
+.br
+.BI "        __le32 rar;"
+.br
+.BI "        __le32 ror;"
+.br
+.BI "        __le32 rnumzrwa;"
+.br
+.BI "      } zns;"
+.br
+.BI "    };"
+.br
+.BI "    __le16 phndl[128];"
+.br
+.BI "    __u8 rsvd768[3328];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsze" 12
+Namespace Size indicates the total size of the namespace in
+logical blocks. The number of logical blocks is based on the
+formatted LBA size.
+.IP "ncap" 12
+Namespace Capacity indicates the maximum number of logical blocks
+that may be allocated in the namespace at any point in time. The
+number of logical blocks is based on the formatted LBA size.
+.IP "rsvd16" 12
+Reserved
+.IP "flbas" 12
+Formatted LBA Size, see \fIenum nvme_id_ns_flbas\fP.
+.IP "rsvd27" 12
+Reserved
+.IP "dps" 12
+End-to-end Data Protection Type Settings, see
+\fIenum nvme_id_ns_dps\fP.
+.IP "nmic" 12
+Namespace Multi-path I/O and Namespace Sharing Capabilities, see
+\fIenum nvme_id_ns_nmic\fP.
+.IP "rsvd31" 12
+Reserved
+.IP "anagrpid" 12
+ANA Group Identifier indicates the ANA Group Identifier of the
+ANA group of which the namespace is a member.
+.IP "rsvd96" 12
+Reserved
+.IP "nvmsetid" 12
+NVM Set Identifier indicates the NVM Set with which this
+namespace is associated.
+.IP "endgid" 12
+Endurance Group Identifier indicates the Endurance Group with
+which this namespace is associated.
+.IP "rsvd104" 12
+Reserved
+.IP "lbstm" 12
+Logical Block Storage Tag Mask Identifies the mask for the
+Storage Tag field for the protection information
+.IP "nphndls" 12
+Number of Placement Handles specifies the number of Placement
+Handles included in the Placement Handle List
+.IP "rsvd394" 12
+Reserved
+.IP "{unnamed_union}" 12
+anonymous
+.IP "rsvd499" 12
+Reserved for I/O Command Sets that extend this specification.
+.IP "zns" 12
+rsvd499( Zoned Namespace Command Set specific field )
+.IP "phndl" 12
+Placement Handle Associated RUH : This field specifies the Reclaim
+Unit Handle Identifier to be associated with the Placement Handle
+value. If the Flexible Data Placement capability is not supported or
+not enabled in specified Endurance Group, then the controller shall
+ignore this field.
+.IP "rsvd768" 12
+Reserved
