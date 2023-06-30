@@ -2,12 +2,12 @@
 .\"     Title: nvme-write-zeroes
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/31/2023
+.\"      Date: 06/30/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WRITE\-ZEROES" "1" "03/31/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-WRITE\-ZEROES" "1" "06/30/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -44,7 +44,8 @@ nvme-write-zeroes \- Send an NVMe write zeroes command, return results
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-storage\-tag<storage\-tag> | \-S <storage\-tag>]
                         [\-\-storage\-tag\-check<storage\-tag\-check> | \-C <storage\-tag\-check>]
-                        [\-\-force]
+                        [\-\-dir\-type=<dtype> | \-T <dtype>]
+                        [\-\-dir\-spec=<dspec> | \-D <dspec>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -151,9 +152,14 @@ Variable Sized Logical Block Storage Tag(LBST)\&.
 This bit specifies the Storage Tag field shall be checked as part of end\-to\-end data protection processing\&.
 .RE
 .PP
-\-\-force
+\-T <dtype>, \-\-dir\-type=<dtype>
 .RS 4
-Ignore namespace is currently busy and performed the operation even though\&.
+Directive type
+.RE
+.PP
+\-D <dspec>, \-\-dir\-spec=<dspec>
+.RS 4
+Directive specific
 .RE
 .SH "EXAMPLES"
 .sp

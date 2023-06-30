@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/31/2023
+.\"      Date: 06/30/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "03/31/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "06/30/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -61,6 +61,7 @@ nvme-connect \- Connect to a Fabrics controller\&.
                 [\-\-tls                        ]
                 [\-\-dump\-config            | \-O]
                 [\-\-output\-format=<fmt>    | \-o <fmt>]
+                [\-\-application=<id>                 ]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -248,6 +249,11 @@ Set the reporting format to
 \fInormal\fR
 or
 \fIjson\fR\&. Only one output format can be used at a time\&. When this option is specified, the device associated with the connection will be printed\&. Nothing is printed otherwise\&.
+.RE
+.PP
+\-\-context <STR>
+.RS 4
+Set the execution context to <STR>\&. This allows to coordinate the management of the global resources\&.
 .RE
 .SH "EXAMPLES"
 .sp

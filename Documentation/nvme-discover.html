@@ -777,7 +777,11 @@ nvme-discover(1) Manual Page
                 [--tls                        ]
                 [--dump-config            | -O]
                 [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]
-                [--force]</pre>
+                [--force]
+                [--nbft]
+                [--no-nbft]
+                [--nbft-path=&lt;STR&gt;]
+                [--context=&lt;STR&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -812,7 +816,7 @@ contained in that NVMe subsystem on the NVMe Target.</p></div>
 Name) format which an NVMe endpoint (device, subsystem, etc) must
 follow to guarantee a unique name under the NVMe standard.
 In particular, the Host NQN uniquely identifies the NVMe Host, and
-may be used by the the Discovery Controller to control what NVMe Target
+may be used by the Discovery Controller to control what NVMe Target
 resources are allocated to the NVMe Host for a connection.</p></div>
 <div class="paragraph"><p>A Discovery Controller has it&#8217;s own NQN defined in the NVMe-over-Fabrics
 specification, <strong>nqn.2014-08.org.nvmexpress.discovery</strong>.  All Discovery
@@ -1185,6 +1189,39 @@ cellspacing="0" cellpadding="4">
         persistent discovery connection.
 </p>
 </dd>
+<dt class="hdlist1">
+--nbft
+</dt>
+<dd>
+<p>
+        Only look at NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--no-nbft
+</dt>
+<dd>
+<p>
+        Do not look at NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--nbft-path=&lt;STR&gt;
+</dt>
+<dd>
+<p>
+        Use a user-defined path to the NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--context &lt;STR&gt;
+</dt>
+<dd>
+<p>
+        Set the execution context to &lt;STR&gt;. This allows to coordinate
+        the management of the global resources.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1202,6 +1239,24 @@ Port 4420 is used by default:
 <div class="content">
 <pre><code># nvme discover --transport=rdma --traddr=192.168.1.3 \
 --hostnqn=host1-rogue-nqn</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Issue a <em>nvme discover</em> command using the default system defined NBFT tables:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme discover --nbft</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Issue a <em>nvme discover</em> command with a user-defined path for the NBFT table:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme discover --nbft-path=/sys/firmware/acpi/tables/NBFT1</code></pre>
 </div></div>
 </li>
 <li>
@@ -1248,7 +1303,7 @@ nvme-connect-all(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-03-31 16:17:28 CEST
+ 2023-06-30 15:20:22 CEST
 </div>
 </div>
 </body>

@@ -777,7 +777,8 @@ nvme-connect(1) Manual Page
                 [--data-digest            | -G]
                 [--tls                        ]
                 [--dump-config            | -O]
-                [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]</pre>
+                [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]
+                [--application=&lt;id&gt;                 ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1155,6 +1156,15 @@ cellspacing="0" cellpadding="4">
         the connection will be printed. Nothing is printed otherwise.
 </p>
 </dd>
+<dt class="hdlist1">
+--context &lt;STR&gt;
+</dt>
+<dd>
+<p>
+        Set the execution context to &lt;STR&gt;. This allows to coordinate
+        the management of the global resources.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1201,7 +1211,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-03-31 16:17:28 CEST
+ 2023-06-30 15:20:22 CEST
 </div>
 </div>
 </body>

@@ -752,7 +752,8 @@ nvme-uncor(1) Manual Page
 <pre class="content"><em>nvme-write-uncor</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
                         [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--force]</pre>
+                        [--dir-type=&lt;dtype&gt; | -T &lt;dtype&gt;]
+                        [--dir-spec=&lt;dspec&gt; | -S &lt;dspec&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -802,12 +803,25 @@ blocks.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---force
+-T &lt;dtype&gt;
+</dt>
+<dt class="hdlist1">
+--dir-type=&lt;dtype&gt;
 </dt>
 <dd>
 <p>
-    Ignore namespace is currently busy and performed the operation
-    even though.
+        Directive type
+</p>
+</dd>
+<dt class="hdlist1">
+-S &lt;dspec&gt;
+</dt>
+<dt class="hdlist1">
+--dir-spec=&lt;dspec&gt;
+</dt>
+<dd>
+<p>
+        Directive specific
 </p>
 </dd>
 </dl></div>
@@ -830,7 +844,7 @@ blocks.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-03-31 16:17:28 CEST
+ 2023-06-30 15:20:22 CEST
 </div>
 </div>
 </body>

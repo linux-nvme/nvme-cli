@@ -2,12 +2,12 @@
 .\"     Title: nvme-uncor
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/31/2023
+.\"      Date: 06/30/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-UNCOR" "1" "03/31/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-UNCOR" "1" "06/30/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,7 +35,8 @@ nvme-write-uncor \- Send an NVMe write uncorrectable command, return results
 \fInvme\-write\-uncor\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
                         [\-\-block\-count=<nlb> | \-c <nlb>]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-force]
+                        [\-\-dir\-type=<dtype> | \-T <dtype>]
+                        [\-\-dir\-spec=<dspec> | \-S <dspec>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -57,9 +58,14 @@ Number of logical blocks to write uncorrectable\&.
 Namespace ID use in the command\&.
 .RE
 .PP
-\-\-force
+\-T <dtype>, \-\-dir\-type=<dtype>
 .RS 4
-Ignore namespace is currently busy and performed the operation even though\&.
+Directive type
+.RE
+.PP
+\-S <dspec>, \-\-dir\-spec=<dspec>
+.RS 4
+Directive specific
 .RE
 .SH "EXAMPLES"
 .sp

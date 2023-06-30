@@ -761,7 +761,8 @@ nvme-write-zeroes(1) Manual Page
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--storage-tag&lt;storage-tag&gt; | -S &lt;storage-tag&gt;]
                         [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]
-                        [--force]</pre>
+                        [--dir-type=&lt;dtype&gt; | -T &lt;dtype&gt;]
+                        [--dir-spec=&lt;dspec&gt; | -D &lt;dspec&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -947,12 +948,25 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---force
+-T &lt;dtype&gt;
+</dt>
+<dt class="hdlist1">
+--dir-type=&lt;dtype&gt;
 </dt>
 <dd>
 <p>
-    Ignore namespace is currently busy and performed the operation
-    even though.
+        Directive type
+</p>
+</dd>
+<dt class="hdlist1">
+-D &lt;dspec&gt;
+</dt>
+<dt class="hdlist1">
+--dir-spec=&lt;dspec&gt;
+</dt>
+<dd>
+<p>
+        Directive specific
 </p>
 </dd>
 </dl></div>
@@ -975,7 +989,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-03-31 16:17:28 CEST
+ 2023-06-30 15:20:22 CEST
 </div>
 </div>
 </body>

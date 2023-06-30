@@ -758,10 +758,16 @@ nvme-create-ns(1) Manual Page
                         [--nvmset-id=&lt;nvmsetid&gt; | -i &lt;nvmsetid&gt;]
                         [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
                         [--lbstm=&lt;lbstm&gt; | -l &lt;lbstm&gt;]
+                        [--nphndls=&lt;nphndls&gt; | -n &lt;nphndls&gt;]
                         [--block-size=&lt;block-size&gt; | -b &lt;block-size&gt;]
                         [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]
                         [--nsze-si=&lt;nsze-si&gt; | -S &lt;nsze-si&gt;]
-                        [--ncap-si=&lt;ncap-si&gt; | -C &lt;ncap-si&gt;]</pre>
+                        [--ncap-si=&lt;ncap-si&gt; | -C &lt;ncap-si&gt;]
+                        [--azr | -z]
+                        [--rar=&lt;rar&gt; | -r &lt;rar&gt;]
+                        [--ror=&lt;ror&gt; | -o &lt;ror&gt;]
+                        [--rnumzrwa=&lt;rnumzrwa&gt; | -u &lt;rnumzrwa&gt;]
+                        [--phndls=&lt;placement-handle-list,&gt; | -p &lt;placement-handle-list,&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -883,6 +889,19 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </p>
 </dd>
 <dt class="hdlist1">
+-n &lt;nphndls&gt;
+</dt>
+<dt class="hdlist1">
+--nphndls=&lt;nphndls&gt;
+</dt>
+<dd>
+<p>
+        Number of Placement Handle included in the Placement Handle List.
+        If the Flexible Data Placement capability is not supported or not enabled
+        in specified Endurance Group, then the controller shall ignore this field.
+</p>
+</dd>
+<dt class="hdlist1">
 -b
 </dt>
 <dt class="hdlist1">
@@ -921,6 +940,68 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
         If the value not suffixed it is set as same with the ncap option.
 </p>
 </dd>
+<dt class="hdlist1">
+-z
+</dt>
+<dt class="hdlist1">
+--azr
+</dt>
+<dd>
+<p>
+        Allocate ZRWA Resources.
+        If set to 1, then the namespace is to be created with the number of ZRWA
+        resource specified in the RNUMZRWA field of this data structure. If cleared
+        to 0, then no ZRWA resources are allocated to the namespace to be created.
+</p>
+</dd>
+<dt class="hdlist1">
+-r &lt;rar&gt;
+</dt>
+<dt class="hdlist1">
+--rar=&lt;rar&gt;
+</dt>
+<dd>
+<p>
+        Requested Active Resources. This field specifies the number of active
+        resources to be allocated to the created namespace.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;ror&gt;
+</dt>
+<dt class="hdlist1">
+--ror=&lt;ror&gt;
+</dt>
+<dd>
+<p>
+        Requested Open Resources. This field specifies the number of open resources
+        to be allocated to the created namespace.
+</p>
+</dd>
+<dt class="hdlist1">
+-u &lt;rnumzrwa&gt;
+</dt>
+<dt class="hdlist1">
+--rnumzrwa=&lt;rnumzrwa&gt;
+</dt>
+<dd>
+<p>
+        Requested Number of ZRWA Resources. This field specifies the number of ZRWA
+        resources to be allocated to the created namespace.
+</p>
+</dd>
+<dt class="hdlist1">
+-p &lt;placement-handle-list,&gt;
+</dt>
+<dt class="hdlist1">
+--phndls=&lt;placement-handle-list,&gt;
+</dt>
+<dd>
+<p>
+        The comma separated list of Reclaim Unit Handle Identifier to be associated
+        with each Placement Handle.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -952,7 +1033,7 @@ Create a namespace:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-03-31 16:17:28 CEST
+ 2023-06-30 15:20:22 CEST
 </div>
 </div>
 </body>

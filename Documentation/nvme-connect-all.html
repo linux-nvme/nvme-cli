@@ -775,7 +775,11 @@ nvme-connect-all(1) Manual Page
                 [--persistent             | -p]
                 [--tls                        ]
                 [--quiet                  | -S]
-                [--dump-config            | -O]</pre>
+                [--dump-config            | -O]
+                [--nbft]
+                [--no-nbft]
+                [--nbft-path=&lt;STR&gt;]
+                [--context=&lt;STR&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1141,6 +1145,39 @@ cellspacing="0" cellpadding="4">
         Print out resulting JSON configuration file to stdout.
 </p>
 </dd>
+<dt class="hdlist1">
+--nbft
+</dt>
+<dd>
+<p>
+        Only look at NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--no-nbft
+</dt>
+<dd>
+<p>
+        Do not look at NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--nbft-path=&lt;STR&gt;
+</dt>
+<dd>
+<p>
+        Use a user-defined path to the NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--context &lt;STR&gt;
+</dt>
+<dd>
+<p>
+        Set the execution context to &lt;STR&gt;. This allows to coordinate
+        the management of the global resources.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1158,6 +1195,24 @@ the RDMA network. Port 4420 is used by default:
 <div class="content">
 <pre><code># nvme connect-all --transport=rdma --traddr=192.168.1.3 \
 --hostnqn=host1-rogue-nqn</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Issue a <em>nvme connect-all</em> command using the default system defined NBFT tables:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme connect-all --nbft</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Issue a <em>nvme connect-all</em> command with a user-defined path for the NBFT table:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme connet-all --nbft-path=/sys/firmware/acpi/tables/NBFT1</code></pre>
 </div></div>
 </li>
 <li>
@@ -1198,7 +1253,7 @@ nvme-connect(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-03-31 16:17:28 CEST
+ 2023-06-30 15:20:22 CEST
 </div>
 </div>
 </body>
