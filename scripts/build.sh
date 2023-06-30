@@ -11,7 +11,7 @@ usage() {
     echo " -b [release]|debug   build type"
     echo " -c [gcc]|clang       compiler to use"
     echo " -m [meson]|muon      use meson or muon"
-    echo " -t [arm]|ppc64le|s390x  cross compile target"
+    echo " -t [armhf]|ppc64le|s390x  cross compile target"
     echo ""
     echo "configs with meson:"
     echo "  [default]           default settings"
@@ -27,7 +27,7 @@ usage() {
 BUILDTOOL=meson
 MESON=meson
 BUILDTYPE=release
-CROSS_TARGET=arm
+CROSS_TARGET=armhf
 CC=${CC:-"gcc"}
 
 while getopts "b:c:m:t:" o; do
@@ -102,7 +102,6 @@ build_meson() {
 
 test_meson() {
     "${MESON}" test                             \
-        --verbose                               \
         -C "${BUILDDIR}"
 }
 
