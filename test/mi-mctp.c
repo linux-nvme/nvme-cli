@@ -293,6 +293,89 @@ static void test_mi_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
 	assert(rc == 0x2);
 }
 
+static void setup_unaligned_ctrl_list_resp(struct test_peer *peer)
+{
+	/* even number of controllers */
+	peer->tx_buf[8] = 0x02;
+	peer->tx_buf[9] = 0x00;
+
+	/* controller ID 1 */
+	peer->tx_buf[10] = 0x01;
+	peer->tx_buf[11] = 0x00;
+
+	/* controller ID 2 */
+	peer->tx_buf[12] = 0x02;
+	peer->tx_buf[13] = 0x00;
+
+	peer->tx_buf_len = 14;
+}
+
+/* Will call through the xfer/submit API expecting a full-sized list (so
+ * resp->data_len is set to sizeof(list)), but the endpoint will return an
+ * unaligned short list.
+ */
+static void test_mi_resp_unaligned(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_ctrl_list list;
+	int rc;
+
+	setup_unaligned_ctrl_list_resp(peer);
+
+	memset(&list, 0, sizeof(list));
+
+	rc = nvme_mi_mi_read_mi_data_ctrl_list(ep, 0, &list);
+	assert(rc == 0);
+
+	assert(le16_to_cpu(list.num) == 2);
+	assert(le16_to_cpu(list.identifier[0]) == 1);
+	assert(le16_to_cpu(list.identifier[1]) == 2);
+}
+
+/* Will call through the xfer/submit API expecting an unaligned list,
+ * and get a response of exactly that size.
+ */
+static void test_mi_resp_unaligned_expected(nvme_mi_ep_t ep,
+					    struct test_peer *peer)
+{
+	/* direct access to the raw submit() API */
+	extern int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
+		   struct nvme_mi_resp *resp);
+	struct nvme_mi_mi_resp_hdr resp_hdr;
+	struct nvme_mi_mi_req_hdr req_hdr;
+	struct nvme_ctrl_list list;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	setup_unaligned_ctrl_list_resp(peer);
+
+	memset(&list, 0, sizeof(list));
+
+	memset(&req_hdr, 0, sizeof(req_hdr));
+	req_hdr.hdr.type = NVME_MI_MSGTYPE_NVME;
+	req_hdr.hdr.nmp = (NVME_MI_ROR_REQ << 7) | (NVME_MI_MT_MI << 3);
+	req_hdr.opcode = nvme_mi_mi_opcode_mi_data_read;
+	req_hdr.cdw0 = cpu_to_le32(nvme_mi_dtyp_ctrl_list << 24);
+
+	memset(&req, 0, sizeof(req));
+	req.hdr = &req_hdr.hdr;
+	req.hdr_len = sizeof(req_hdr);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &resp_hdr.hdr;
+	resp.hdr_len = sizeof(resp_hdr);
+	resp.data = &list;
+	resp.data_len = peer->tx_buf_len;
+
+	rc = nvme_mi_submit(ep, &req, &resp);
+	assert(rc == 0);
+	assert(resp.data_len == 6); /* 2-byte length, 2*2 byte controller IDs */
+
+	assert(le16_to_cpu(list.num) == 2);
+	assert(le16_to_cpu(list.identifier[0]) == 1);
+	assert(le16_to_cpu(list.identifier[1]) == 2);
+}
+
 static void test_admin_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
 {
 	struct nvme_id_ctrl id;
@@ -335,30 +418,6 @@ static void test_admin_resp_sizes(nvme_mi_ep_t ep, struct test_peer *peer)
 		rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
 		assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_MI);
 		assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
-	}
-
-	nvme_mi_close_ctrl(ctrl);
-}
-
-/* test: unaligned response sizes - should always report a transport error */
-static void test_admin_resp_sizes_unaligned(nvme_mi_ep_t ep, struct test_peer *peer)
-{
-	struct nvme_id_ctrl id;
-	nvme_mi_ctrl_t ctrl;
-	unsigned int i;
-	int rc;
-
-	ctrl = nvme_mi_init_ctrl(ep, 1);
-	assert(ctrl);
-
-	peer->tx_buf[4] = 0x02; /* internal error */
-
-	for (i = 8; i <= 4096 + 8; i++) {
-		peer->tx_buf_len = i;
-		if (!(i & 0x3))
-			continue;
-		rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
-		assert(rc < 0);
 	}
 
 	nvme_mi_close_ctrl(ctrl);
@@ -664,9 +723,10 @@ struct test {
 	DEFINE_TEST(read_mi_data),
 	DEFINE_TEST(poll_err),
 	DEFINE_TEST(mi_resp_err),
+	DEFINE_TEST(mi_resp_unaligned),
+	DEFINE_TEST(mi_resp_unaligned_expected),
 	DEFINE_TEST(admin_resp_err),
 	DEFINE_TEST(admin_resp_sizes),
-	DEFINE_TEST(admin_resp_sizes_unaligned),
 	DEFINE_TEST(poll_timeout_value),
 	DEFINE_TEST(poll_timeout),
 	DEFINE_TEST(mpr_mi),

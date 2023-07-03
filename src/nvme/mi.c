@@ -413,11 +413,6 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 		return -1;
 	}
 
-	if (resp->data_len & 0x3) {
-		errno = EINVAL;
-		return -1;
-	}
-
 	if (ep->transport->mic_enabled)
 		nvme_mi_calc_req_mic(req);
 
