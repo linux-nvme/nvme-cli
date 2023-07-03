@@ -580,8 +580,10 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 		return -1;
 	}
 
-	/* must be aligned */
-	if (resp_data_offset & 0x3) {
+	/* request and response lengths & offset must be aligned */
+	if ((req_data_size & 0x3) ||
+	    (*resp_data_size & 0x3) ||
+	    (resp_data_offset & 0x3)) {
 		errno = EINVAL;
 		return -1;
 	}
