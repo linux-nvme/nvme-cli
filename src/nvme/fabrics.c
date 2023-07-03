@@ -818,6 +818,27 @@ out_close:
 	return ret;
 }
 
+static const char *lookup_context(nvme_root_t r, nvme_ctrl_t c)
+{
+
+	nvme_host_t h;
+	nvme_subsystem_t s;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			if (__nvme_lookup_ctrl(s, nvme_ctrl_get_transport(c),
+					       nvme_ctrl_get_traddr(c),
+					       NULL,
+					       NULL,
+					       nvme_ctrl_get_trsvcid(c),
+					       NULL))
+				return nvme_subsystem_get_application(s);
+		}
+	}
+
+	return NULL;
+}
+
 int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		  const struct nvme_fabrics_config *cfg)
 {
@@ -862,24 +883,9 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	root_app = nvme_root_get_application(h->r);
 	if (root_app) {
 		app = nvme_subsystem_get_application(s);
-		if (!app && nvme_ctrl_is_discovery_ctrl(c)) {
-			nvme_subsystem_t s;
-			nvme_ctrl_t fc;
+		if (!app && nvme_ctrl_is_discovery_ctrl(c))
+			app = lookup_context(h->r, c);
 
-			nvme_for_each_subsystem(h, s) {
-				fc = __nvme_lookup_ctrl(s, nvme_ctrl_get_transport(c),
-							nvme_ctrl_get_traddr(c),
-							NULL,
-							NULL,
-							nvme_ctrl_get_trsvcid(c),
-							NULL);
-
-				if (fc) {
-					app = nvme_subsystem_get_application(s);
-					break;
-				}
-			}
-		}
 		/*
 		 * configuration is managed by an application,
 		 * refuse to act on subsystems which either have
