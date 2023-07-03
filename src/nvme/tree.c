@@ -341,6 +341,14 @@ void nvme_free_tree(nvme_root_t r)
 	free(r);
 }
 
+void nvme_root_release_fds(nvme_root_t r)
+{
+	struct nvme_host *h, *_h;
+
+	nvme_for_each_host_safe(r, h, _h)
+		nvme_host_release_fds(h);
+}
+
 const char *nvme_subsystem_get_nqn(nvme_subsystem_t s)
 {
 	return s->subsysnqn;
@@ -412,7 +420,7 @@ nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
 static void __nvme_free_ns(struct nvme_ns *n)
 {
 	list_del_init(&n->entry);
-	close(n->fd);
+	nvme_ns_release_fd(n);
 	free(n->generic_name);
 	free(n->name);
 	free(n->sysfs_dir);
@@ -452,6 +460,18 @@ static void __nvme_free_subsystem(struct nvme_subsystem *s)
 	if (s->application)
 		free(s->application);
 	free(s);
+}
+
+void nvme_subsystem_release_fds(struct nvme_subsystem *s)
+{
+	struct nvme_ctrl *c, *_c;
+	struct nvme_ns *n, *_n;
+
+	nvme_subsystem_for_each_ctrl_safe(s, c, _c)
+		nvme_ctrl_release_fd(c);
+
+	nvme_subsystem_for_each_ns_safe(s, n, _n)
+		nvme_ns_release_fd(n);
 }
 
 /*
@@ -522,6 +542,14 @@ static void __nvme_free_host(struct nvme_host *h)
 	nvme_host_set_hostsymname(h, NULL);
 	h->r->modified = true;
 	free(h);
+}
+
+void nvme_host_release_fds(struct nvme_host *h)
+{
+	struct nvme_subsystem *s, *_s;
+
+	nvme_for_each_subsystem_safe(h, s, _s)
+		nvme_subsystem_release_fds(s);
 }
 
 /* Stub for SWIG */
@@ -787,16 +815,23 @@ free_path:
 
 int nvme_ctrl_get_fd(nvme_ctrl_t c)
 {
-	nvme_root_t r = c->s && c->s->h ? c->s->h->r : NULL;
-
 	if (c->fd < 0) {
 		c->fd = nvme_open(c->name);
 		if (c->fd < 0)
-			nvme_msg(r, LOG_ERR,
+			nvme_msg(root_from_ctrl(c), LOG_ERR,
 				 "Failed to open ctrl %s, errno %d\n",
 				 c->name, errno);
 	}
 	return c->fd;
+}
+
+void nvme_ctrl_release_fd(nvme_ctrl_t c)
+{
+	if (c->fd < 0)
+		return;
+
+	close(c->fd);
+	c->fd = -1;
 }
 
 nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c)
@@ -998,10 +1033,7 @@ nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
 	do { if (a) { free(a); (a) = NULL; } } while (0)
 void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 {
-	if (c->fd >= 0) {
-		close(c->fd);
-		c->fd = -1;
-	}
+	nvme_ctrl_release_fd(c);
 	FREE_CTRL_ATTR(c->name);
 	FREE_CTRL_ATTR(c->sysfs_dir);
 	FREE_CTRL_ATTR(c->firmware);
@@ -1289,7 +1321,8 @@ static char *nvme_ctrl_lookup_phy_slot(nvme_root_t r, const char *address)
 		if (entry->d_type == DT_DIR &&
 		    strncmp(entry->d_name, ".", 1) != 0 &&
 		    strncmp(entry->d_name, "..", 2) != 0) {
-			ret = asprintf(&path, "/sys/bus/pci/slots/%s", entry->d_name);
+			ret = asprintf(&path, "%s/%s",
+				       nvme_slots_sysfs_dir, entry->d_name);
 			if (ret < 0) {
 				errno = ENOMEM;
 				free(target_addr);
@@ -1625,7 +1658,24 @@ static int nvme_bytes_to_lba(nvme_ns_t n, off_t offset, size_t count,
 
 int nvme_ns_get_fd(nvme_ns_t n)
 {
+	if (n->fd < 0) {
+		n->fd = nvme_open(n->name);
+		if (n->fd < 0)
+			nvme_msg(root_from_ns(n), LOG_ERR,
+				 "Failed to open ns %s, errno %d\n",
+				 n->name, errno);
+	}
+
 	return n->fd;
+}
+
+void nvme_ns_release_fd(nvme_ns_t n)
+{
+	if (n->fd < 0)
+		return;
+
+	close(n->fd);
+	n->fd = -1;
 }
 
 nvme_subsystem_t nvme_ns_get_subsystem(nvme_ns_t n)
@@ -1962,6 +2012,7 @@ static void nvme_ns_set_generic_name(struct nvme_ns *n, const char *name)
 static nvme_ns_t nvme_ns_open(const char *name)
 {
 	struct nvme_ns *n;
+	int fd;
 
 	n = calloc(1, sizeof(*n));
 	if (!n) {
@@ -1969,27 +2020,29 @@ static nvme_ns_t nvme_ns_open(const char *name)
 		return NULL;
 	}
 
+	n->fd = -1;
 	n->name = strdup(name);
-	n->fd = nvme_open(n->name);
-	if (n->fd < 0)
+
+	fd = nvme_ns_get_fd(n);
+	if (fd < 0)
 		goto free_ns;
 
 	nvme_ns_set_generic_name(n, name);
 
-	if (nvme_get_nsid(n->fd, &n->nsid) < 0)
-		goto close_fd;
+	if (nvme_get_nsid(fd, &n->nsid) < 0)
+		goto free_ns;
 
 	if (nvme_ns_init(n) != 0)
-		goto close_fd;
+		goto free_ns;
 
 	list_head_init(&n->paths);
 	list_node_init(&n->entry);
 
+	nvme_ns_release_fd(n); /* Do not leak fds */
 	return n;
 
-close_fd:
-	close(n->fd);
 free_ns:
+	nvme_ns_release_fd(n);
 	free(n->generic_name);
 	free(n->name);
 	free(n);

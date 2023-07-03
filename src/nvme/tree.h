@@ -62,6 +62,17 @@ void nvme_root_set_application(nvme_root_t r, const char *a);
 const char *nvme_root_get_application(nvme_root_t r);
 
 /**
+ * nvme_root_release_fds - Close all opened file descriptors in the tree
+ * @r:	&nvme_root_t object
+ *
+ * Controller and Namespace objects cache the file descriptors
+ * of opened nvme devices. This API can be used to close and
+ * clear all cached fds in the tree.
+ *
+ */
+void nvme_root_release_fds(nvme_root_t r);
+
+/**
  * nvme_free_tree() - Free root object
  * @r:	&nvme_root_t object
  *
@@ -484,9 +495,23 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  * nvme_ns_get_fd() - Get associated file descriptor
  * @n:	Namespace instance
  *
+ * libnvme will open() the file (if not already opened) and keep
+ * an internal copy of the file descriptor. Following calls to
+ * this API retrieve the internal cached copy of the file
+ * descriptor. The file will remain opened and the fd will
+ * remain cached until the ns object is deleted or
+ * nvme_ns_release_fd() is called.
+ *
  * Return: File descriptor associated with @n or -1
  */
 int nvme_ns_get_fd(nvme_ns_t n);
+
+/**
+ * nvme_ns_release_fd() - Close fd and clear fd from ns object
+ * @n:	Namespace instance
+ *
+ */
+void nvme_ns_release_fd(nvme_ns_t n);
 
 /**
  * nvme_ns_get_nsid() - NSID of a namespace
@@ -772,9 +797,23 @@ nvme_ns_t nvme_path_get_ns(nvme_path_t p);
  * nvme_ctrl_get_fd() - Get associated file descriptor
  * @c:	Controller instance
  *
+ * libnvme will open() the file (if not already opened) and keep
+ * an internal copy of the file descriptor. Following calls to
+ * this API retrieve the internal cached copy of the file
+ * descriptor. The file will remain opened and the fd will
+ * remain cached until the controller object is deleted or
+ * nvme_ctrl_release_fd() is called.
+ *
  * Return: File descriptor associated with @c or -1
  */
 int nvme_ctrl_get_fd(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_release_fd() - Close fd and clear fd from controller object
+ * @c:	Controller instance
+ *
+ */
+void nvme_ctrl_release_fd(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_get_name() - sysfs name of a controller
@@ -1177,6 +1216,16 @@ const char *nvme_host_get_hostnqn(nvme_host_t h);
 const char *nvme_host_get_hostid(nvme_host_t h);
 
 /**
+ * nvme_host_release_fds() - Close all opened file descriptors under host
+ * @h:	nvme_host_t object
+ *
+ * Controller and Namespace objects cache the file descriptors
+ * of opened nvme devices. This API can be used to close and
+ * clear all cached fds under this host.
+ */
+void nvme_host_release_fds(struct nvme_host *h);
+
+/**
  * nvme_free_host() - Free nvme_host_t object
  * @h:	nvme_host_t object
  */
@@ -1291,6 +1340,18 @@ char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
  */
 nvme_ns_t nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 					  __u32 nsid);
+
+/**
+ * nvme_subsystem_release_fds() - Close all opened fds under subsystem
+ * @s:		nvme_subsystem_t object
+ *
+ * Controller and Namespace objects cache the file descriptors
+ * of opened nvme devices. This API can be used to close and
+ * clear all cached fds under this subsystem.
+ *
+ */
+void nvme_subsystem_release_fds(struct nvme_subsystem *s);
+
 
 /**
  * nvme_get_path_attr() - Read path sysfs attribute
