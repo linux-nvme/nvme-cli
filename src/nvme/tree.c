@@ -1292,6 +1292,8 @@ static char *nvme_ctrl_lookup_phy_slot(nvme_root_t r, const char *address)
 			ret = asprintf(&path, "/sys/bus/pci/slots/%s", entry->d_name);
 			if (ret < 0) {
 				errno = ENOMEM;
+				free(target_addr);
+				closedir(slots_dir);
 				return NULL;
 			}
 			addr = nvme_get_attr(path, "address");
@@ -1306,6 +1308,7 @@ static char *nvme_ctrl_lookup_phy_slot(nvme_root_t r, const char *address)
 		}
 	}
 	free(target_addr);
+	closedir(slots_dir);
 	if (found)
 		return strdup(entry->d_name);
 	return NULL;
