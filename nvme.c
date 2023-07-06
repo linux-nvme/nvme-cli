@@ -619,7 +619,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 
 	err = nvme_cli_get_log_ana(dev, lsp, true, 0, ana_log_len, ana_log);
 	if (!err)
-		nvme_show_ana_log(ana_log, dev->name, flags, ana_log_len);
+		nvme_show_ana_log(ana_log, dev->name, ana_log_len, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1900,7 +1900,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 					      sizeof(boot) + bpsz,
 					      (struct nvme_boot_partition *)bp_log);
 	if (!err)
-		nvme_show_boot_part_log(&bp_log, dev->name, flags, sizeof(boot) + bpsz);
+		nvme_show_boot_part_log(&bp_log, dev->name, sizeof(boot) + bpsz, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
