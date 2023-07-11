@@ -15,6 +15,7 @@ SYNOPSIS
 			[--nmic=<nmic> | -m <nmic>]
 			[--anagrp-id=<anagrpid> | -a <anagrpid>]
 			[--nvmset-id=<nvmsetid> | -i <nvmsetid>]
+			[--endg-id=<endgid> | -e <endgid>]
 			[--csi=<command_set_identifier> | -y <command_set_identifier>]
 			[--lbstm=<lbstm> | -l <lbstm>]
 			[--nphndls=<nphndls> | -n <nphndls>]
@@ -68,6 +69,10 @@ OPTIONS
 -i <nvmsetid>::
 --nvmset-id=<nvmsetid>::
 	This field specifies the identifier of the NVM Set.
+
+-e <endgid>::
+--endg-id=<endgid>::
+	This field specifies the identifier of the endurance group.
 
 -y <command_set_identifier>::
 --csi=<command_set_identifier>::
