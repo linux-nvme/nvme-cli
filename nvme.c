@@ -3032,6 +3032,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *nmic = "multipath and sharing capabilities (NMIC)";
 	const char *anagrpid = "ANA Group Identifier (ANAGRPID)";
 	const char *nvmsetid = "NVM Set Identifier (NVMSETID)";
+	const char *endgid = "Endurance Group Identifier (ENDGID)";
 	const char *csi = "command set identifier (CSI)";
 	const char *lbstm = "logical block storage tag mask (LBSTM)";
 	const char *nphndls = "Number of Placement Handles (NPHNDLS)";
@@ -3060,6 +3061,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u8	nmic;
 		__u32	anagrpid;
 		__u16	nvmsetid;
+		__u16	endgid;
 		__u64	bs;
 		__u32	timeout;
 		__u8	csi;
@@ -3082,7 +3084,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.nmic		= 0,
 		.anagrpid	= 0,
 		.nvmsetid	= 0,
-		.bs			= 0x00,
+		.endgid		= 0,
+		.bs		= 0x00,
 		.timeout	= 120000,
 		.csi		= 0,
 		.lbstm		= 0,
@@ -3102,20 +3105,21 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
 		OPT_BYTE("dps",          'd', &cfg.dps,      dps),
 		OPT_BYTE("nmic",         'm', &cfg.nmic,     nmic),
-		OPT_UINT("anagrp-id",	 'a', &cfg.anagrpid, anagrpid),
-		OPT_UINT("nvmset-id",	 'i', &cfg.nvmsetid, nvmsetid),
+		OPT_UINT("anagrp-id",    'a', &cfg.anagrpid, anagrpid),
+		OPT_UINT("nvmset-id",    'i', &cfg.nvmsetid, nvmsetid),
+		OPT_UINT("endg-id",      'e', &cfg.endgid,   endgid),
 		OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
 		OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
 		OPT_BYTE("csi",          'y', &cfg.csi,      csi),
 		OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
-		OPT_SHRT("nphndls",	     'n', &cfg.nphndls,  nphndls),
+		OPT_SHRT("nphndls",      'n', &cfg.nphndls,  nphndls),
 		OPT_STR("nsze-si",       'S', &cfg.nsze_si,  nsze_si),
 		OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
 		OPT_FLAG("azr",          'z', &cfg.azr,      azr),
 		OPT_UINT("rar",          'r', &cfg.rar,      rar),
 		OPT_UINT("ror",          'o', &cfg.ror,      ror),
 		OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, rnumzrwa),
-		OPT_LIST("phndls",	     'p', &cfg.phndls,   phndls),
+		OPT_LIST("phndls",       'p', &cfg.phndls,   phndls),
 		OPT_END()
 	};
 
@@ -3186,6 +3190,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.nmic = cfg.nmic,
 		.anagrpid = cpu_to_le32(cfg.anagrpid),
 		.nvmsetid = cpu_to_le16(cfg.nvmsetid),
+		.endgid = cpu_to_le16(cfg.endgid),
 		.lbstm = cpu_to_le64(cfg.lbstm),
 		.zns.znsco = cfg.azr,
 		.zns.rar = cpu_to_le32(cfg.rar),

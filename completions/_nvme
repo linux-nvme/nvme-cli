@@ -525,6 +525,8 @@ _nvme () {
 			-a':alias of --anagrp-id'
 			--nvmset-id=':NVM Set Identifier'
 			-i':alias of --nvmset-id'
+			--endg-id=':Endurance Group Identifier'
+			-e':alias of --endg-id'
 			--block-size=':target block size'
 			-b':alias of --block-size'
 			--timeout=':value for timeout'
