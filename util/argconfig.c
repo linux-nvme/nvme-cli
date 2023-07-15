@@ -178,15 +178,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		if (errno || optarg == endptr)
 			ret = argconfig_error("integer", option[index].name, optarg);
 		break;
-	case CFG_BOOL: {
-		int tmp = strtol(optarg, &endptr, 0);
-
-		if (errno || tmp < 0 || tmp > 1 || optarg == endptr)
-			ret = argconfig_error("0 or 1", option[index].name, optarg);
-		else
-			*((int *)value) = tmp;
-		break;
-	}
 	case CFG_BYTE:
 		ret = argconfig_parse_byte(option[index].name, optarg, (uint8_t *)value);
 		break;
