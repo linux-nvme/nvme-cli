@@ -15,7 +15,7 @@ nvme-cli uses meson as build system.
  |---------|------------|-------|
  | libnvme, libnvme-mi| yes | be either installed or included into the build via meson fallback feature |
  | json-c | optional | recommended, without all plugins are disabled and json-c output format is disabled |
- | libhugetblfs | optional | adds support for hugetblfs |
+ | libhugetlbfs | optional | adds support for hugetlbfs |
 
 
 ### Configuring
