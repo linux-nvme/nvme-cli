@@ -106,7 +106,7 @@ completely "clean" all the build artifacts, one need only delete the
 To compile:
 
 ```
-meson -C .build
+meson compile -C .build
 ```
 
 ## To install libnvme
