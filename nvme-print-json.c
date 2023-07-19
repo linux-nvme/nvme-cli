@@ -2378,8 +2378,8 @@ static void json_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 
 	root = json_create_object();
 	entries = json_create_array();
-	/* The 0th entry is reserved */
-	for (i = 1; i < NVME_ID_UUID_LIST_MAX; i++) {
+
+	for (i = 0; i < NVME_ID_UUID_LIST_MAX; i++) {
 		__u8 uuid[NVME_UUID_LEN];
 		struct json_object *entry = json_create_object();
 
