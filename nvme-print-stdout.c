@@ -2993,7 +2993,7 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 					pif == 1 ? "32b Guard" : "16b Guard",
 					pif, sts, i == (ns->flbas & 0xf) ? in_use : "");
 		else
-			printf("elbaf %2d : pif:%d lbads:%-2d %s\n", i,
+			printf("elbaf %2d : pif:%d sts:%-2d %s\n", i,
 				pif, sts, i == (ns->flbas & 0xf) ? in_use : "");
 	}
 }
