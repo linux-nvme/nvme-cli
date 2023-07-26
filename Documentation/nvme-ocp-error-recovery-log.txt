@@ -34,7 +34,7 @@ EXAMPLES
 * Has the program issue a error-recovery-log command to retrieve the 0xC1 log page.
 +
 ------------
-# nvme ocp unsupported-reqs-log /dev/nvme0 -o normal
+# nvme ocp error-recovery-log /dev/nvme0 -o normal
 ------------
 
 NVME
