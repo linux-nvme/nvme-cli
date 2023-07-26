@@ -1016,7 +1016,11 @@ void nvme_show_topology(nvme_root_t r,
 			enum nvme_cli_topo_ranking ranking,
 			enum nvme_print_flags flags)
 {
-	nvme_print(topology_namespace, flags, r);
+	if (ranking == NVME_CLI_TOPO_NAMESPACE) {
+		nvme_print(topology_namespace, flags, r);
+	} else {
+		nvme_print(topology_ctrl, flags, r);
+	}
 }
 
 void nvme_show_message(bool error, const char *msg, ...)
