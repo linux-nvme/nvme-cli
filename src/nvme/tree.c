@@ -710,7 +710,7 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 		else
 			ret = -ENOMEM;
 	} else if (strcmp(s->subsysnqn, subsysnqn)) {
-		nvme_msg(r, LOG_WARNING, "NQN mismatch for subsystem '%s'\n",
+		nvme_msg(r, LOG_DEBUG, "NQN mismatch for subsystem '%s'\n",
 			 name);
 		ret = -EINVAL;
 	}
