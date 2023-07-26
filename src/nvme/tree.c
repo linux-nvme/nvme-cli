@@ -382,6 +382,11 @@ void nvme_subsystem_set_application(nvme_subsystem_t s, const char *a)
 		s->application = strdup(a);
 }
 
+const char *nvme_subsystem_get_iopolicy(nvme_subsystem_t s)
+{
+	return s->iopolicy;
+}
+
 nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 {
 	return list_top(&s->ctrls, struct nvme_ctrl, entry);
@@ -459,6 +464,8 @@ static void __nvme_free_subsystem(struct nvme_subsystem *s)
 		free(s->subsystype);
 	if (s->application)
 		free(s->application);
+	if (s->iopolicy)
+		free(s->iopolicy);
 	free(s);
 }
 
@@ -638,6 +645,7 @@ static int nvme_init_subsystem(nvme_subsystem_t s, const char *name)
 	s->sysfs_dir = (char *)path;
 	if (s->h->r->application)
 		s->application = strdup(s->h->r->application);
+	s->iopolicy = nvme_get_attr(path, "iopolicy");
 
 	return 0;
 }

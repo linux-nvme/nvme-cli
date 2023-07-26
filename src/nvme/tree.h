@@ -1187,6 +1187,14 @@ const char *nvme_subsystem_get_application(nvme_subsystem_t s);
 void nvme_subsystem_set_application(nvme_subsystem_t s, const char *a);
 
 /**
+ * nvme_subsystem_get_iopolicy() - Return the IO policy of subsytem
+ * @s:	nvme_subsystem_t object
+ *
+ * Return: IO policy used by current subsystem
+ */
+const char *nvme_subsystem_get_iopolicy(nvme_subsystem_t s);
+
+/**
  * nvme_scan_topology() - Scan NVMe topology and apply filter
  * @r:	    nvme_root_t object
  * @f:	    filter to apply
