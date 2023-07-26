@@ -4764,6 +4764,9 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 
 	if (ranking == NVME_CLI_TOPO_NAMESPACE) {
 		nvme_subsystem_for_each_ns(s, n) {
+			if (!nvme_namespace_first_path(n))
+				continue;
+
 			printf(" +- ns %d\n", nvme_ns_get_nsid(n));
 			printf(" \\\n");
 
