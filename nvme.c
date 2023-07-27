@@ -7549,6 +7549,20 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (nvme_get_logical_block_size(dev_fd(dev), cfg.namespace_id, &logical_block_size) < 0)
 		goto close_mfd;
 
+	err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
+	if (err > 0) {
+		nvme_show_status(err);
+		goto close_mfd;
+	} else if (err < 0) {
+		nvme_show_error("identify namespace: %s", nvme_strerror(errno));
+		goto close_mfd;
+	}
+
+	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
+	ms = ns.lbaf[lba_index].ms;
+	if (ns.flbas & NVME_NS_FLBAS_META_EXT)
+		logical_block_size += ms;
+
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
 	if (cfg.data_size < buffer_size)
 		nvme_show_error("Rounding data size to fit block count (%lld bytes)", buffer_size);
@@ -7568,18 +7582,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	if (cfg.metadata_size) {
-		err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
-		if (err > 0) {
-			nvme_show_status(err);
-			goto free_buffer;
-		} else if (err < 0) {
-			nvme_show_error("identify namespace: %s", nvme_strerror(errno));
-			goto free_buffer;
-		}
-
-		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
-		ms = ns.lbaf[lba_index].ms;
-
 		err = nvme_identify_ns_csi(dev_fd(dev), 1, 0, NVME_CSI_NVM, &nvm_ns);
 		if (!err) {
 			sts = nvm_ns.elbaf[lba_index] & NVME_NVM_ELBAF_STS_MASK;
