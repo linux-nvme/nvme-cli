@@ -145,10 +145,10 @@ A few build options can be specified on the command line when invoking meson.
 | docs        | [false], html, man, rst, all | Install documentation                                     |
 | docs-build  | [false], true             | Enable build documentation                                   |
 | python | [auto], enabled, disabled | Whether to build the Python bindings. When set to `auto`, the default, meson will check for the presence of the  tools and libraries (e.g. `swig`) required to build the Python bindings. If found, meson will configure the project to build the Python bindings. If a tool or library is missing, then the Python bindings won't be built. Setting this to `enabled`, forces the Python bindings to be built. When set to `disabled`, meson will configure the project to not build the Python bindings.<br />Example: `meson setup .build -Dpython=disabled` |
-| openssl     | [auto], enabled, disabled | Enables OpenSSL dependend features (e.g. authentication), adds build dependency on OpenSSL |
-| libdbus     | auto, enabled, [disabled] | Enables D-Bus dependend features (libnvme-mi: End point discovery), adds build dependency on libdbus |
+| openssl     | [auto], enabled, disabled | Enables OpenSSL dependent features (e.g. TLS over TCP), adds build dependency on OpenSSL |
+| libdbus     | auto, enabled, [disabled] | Enables D-Bus dependent features (libnvme-mi: End point discovery), adds build dependency on libdbus |
 | json-c      | [auto], enabled, disabled | (recommended) Enables JSON-C dependend features (e.g. config.json parsing), adds build depdency on json-c |
-| keyutils    | [auto], enabled, disabled | Enables keyutils dependend features (e.g. TLS over TCP), adds build dependency on keyutils |
+| keyutils    | [auto], enabled, disabled | Enables keyutils dependent features (e.g. authentication), adds build dependency on keyutils |
 
 See the full configuration options with
 
