@@ -84,4 +84,5 @@ if conf.get('HAVE_NETDB')
     test('Test util.c', test_util)
 endif
 
+subdir('ioctl')
 subdir('nbft')
