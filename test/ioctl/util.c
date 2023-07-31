@@ -48,3 +48,11 @@ void cmp(const void *actual, const void *expected, size_t len, const char *msg)
 	hexdump(expected, len);
 	abort();
 }
+
+void arbitrary(void *buf_, size_t len)
+{
+	uint8_t *buf = buf_;
+
+	while (len--)
+		*(buf++) = rand();
+}

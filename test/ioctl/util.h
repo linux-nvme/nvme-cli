@@ -12,4 +12,6 @@ noreturn void fail(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
 void cmp(const void *actual, const void *expected, size_t len, const char *msg);
 
+void arbitrary(void *buf, size_t len);
+
 #endif /* #ifndef _LIBNVME_TEST_IOCTL_UTIL_H */
