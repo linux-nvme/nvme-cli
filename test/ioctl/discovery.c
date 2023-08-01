@@ -195,7 +195,7 @@ static void test_genctr_change(nvme_ctrl_t c)
 	};
 	/*
 	 * genctr changes after the entries are fetched the first time,
-	 * so the log page fetch is retried
+	 * so the log page entries are refetched
 	 */
 	struct mock_cmd mock_admin_cmds[] = {
 		{
@@ -212,13 +212,6 @@ static void test_genctr_change(nvme_ctrl_t c)
 			       | NVME_LOG_LID_DISCOVER, /* NUMDL */
 			.cdw12 = sizeof(header1), /* LPOL */
 			.out_data = entries1,
-		},
-		{
-			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header2),
-			.cdw10 = (sizeof(header2) / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
-			.out_data = &header2,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
@@ -283,13 +276,6 @@ static void test_max_retries(nvme_ctrl_t c)
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.cdw12 = sizeof(header1), /* LPOL */
 			.out_data = &entry,
-		},
-		{
-			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header2),
-			.cdw10 = (sizeof(header2) / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
-			.out_data = &header2,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
