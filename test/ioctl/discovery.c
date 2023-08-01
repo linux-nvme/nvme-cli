@@ -13,6 +13,7 @@
 #include "util.h"
 
 #define TEST_FD 0xFD
+#define HEADER_LEN 20
 
 static void arbitrary_ascii_string(size_t max_len, char *str, char *log_str)
 {
@@ -61,8 +62,8 @@ static void test_no_entries(nvme_ctrl_t c)
 	struct mock_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header),
-			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -89,8 +90,8 @@ static void test_four_entries(nvme_ctrl_t c)
 	struct mock_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header),
-			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -104,8 +105,8 @@ static void test_four_entries(nvme_ctrl_t c)
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header),
-			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -139,8 +140,8 @@ static void test_five_entries(nvme_ctrl_t c)
 	struct mock_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header),
-			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -163,8 +164,8 @@ static void test_five_entries(nvme_ctrl_t c)
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header),
-			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -200,8 +201,8 @@ static void test_genctr_change(nvme_ctrl_t c)
 	struct mock_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header1),
-			.cdw10 = (sizeof(header1) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header1,
 		},
@@ -215,8 +216,8 @@ static void test_genctr_change(nvme_ctrl_t c)
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header2),
-			.cdw10 = (sizeof(header2) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header2,
 		},
@@ -230,8 +231,8 @@ static void test_genctr_change(nvme_ctrl_t c)
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header2),
-			.cdw10 = (sizeof(header2) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header2,
 		},
@@ -264,8 +265,8 @@ static void test_max_retries(nvme_ctrl_t c)
 	struct mock_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header1),
-			.cdw10 = (sizeof(header1) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header1,
 		},
@@ -279,8 +280,8 @@ static void test_max_retries(nvme_ctrl_t c)
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header2),
-			.cdw10 = (sizeof(header2) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header2,
 		},
@@ -294,8 +295,8 @@ static void test_max_retries(nvme_ctrl_t c)
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header3),
-			.cdw10 = (sizeof(header3) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header3,
 		},
@@ -312,13 +313,12 @@ static void test_max_retries(nvme_ctrl_t c)
 
 static void test_header_error(nvme_ctrl_t c)
 {
-	size_t header_size = sizeof(struct nvmf_discovery_log);
 	/* Stop after an error in fetching the header the first time */
 	struct mock_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = header_size,
-			.cdw10 = (header_size / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.err = NVME_SC_INVALID_OPCODE,
 		},
@@ -339,8 +339,8 @@ static void test_entries_error(nvme_ctrl_t c)
 	struct mock_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header),
-			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -370,8 +370,8 @@ static void test_genctr_error(nvme_ctrl_t c)
 	struct mock_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header),
-			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -385,8 +385,8 @@ static void test_genctr_error(nvme_ctrl_t c)
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
-			.data_len = sizeof(header),
-			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
+			.data_len = HEADER_LEN,
+			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.err = NVME_SC_INTERNAL,
 		},

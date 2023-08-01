@@ -1054,6 +1054,13 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	return NULL;
 }
 
+/*
+ * Most of nvmf_discovery_log is reserved, so only fetch the initial bytes.
+ * 8 bytes for GENCTR, 8 for NUMREC, and 2 for RECFMT.
+ * Since only multiples of 4 bytes are allowed, round 18 up to 20.
+ */
+#define DISCOVERY_HEADER_LEN 20
+
 static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 						     struct nvme_get_log_args *args,
 						     int max_retries)
@@ -1077,7 +1084,7 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 		 name, retries, max_retries);
 	args->lpo = 0;
 	args->log = log;
-	args->len = sizeof(*log);
+	args->len = DISCOVERY_HEADER_LEN;
 	if (nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, args)) {
 		nvme_msg(r, LOG_INFO,
 			 "%s: discover try %d/%d failed, error %d\n",
@@ -1126,7 +1133,7 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 
 		args->lpo = 0;
 		args->log = log;
-		args->len = sizeof(*log);
+		args->len = DISCOVERY_HEADER_LEN;
 		if (nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, args)) {
 			nvme_msg(r, LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
