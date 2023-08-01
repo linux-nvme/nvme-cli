@@ -63,7 +63,6 @@ static void test_no_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header),
 			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -92,7 +91,6 @@ static void test_four_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header),
 			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -100,7 +98,6 @@ static void test_four_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entries),
 			.cdw10 = (sizeof(entries) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.cdw12 = sizeof(header), /* LPOL */
 			.out_data = log_entries,
@@ -144,7 +141,6 @@ static void test_five_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header),
 			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -161,7 +157,6 @@ static void test_five_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = second_data_len,
 			.cdw10 = (second_data_len / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.cdw12 = sizeof(header) + first_data_len, /* LPOL */
 			.out_data = log_entries + first_entries,
@@ -207,7 +202,6 @@ static void test_genctr_change(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header1),
 			.cdw10 = (sizeof(header1) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header1,
 		},
@@ -215,7 +209,6 @@ static void test_genctr_change(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entries1),
 			.cdw10 = (sizeof(entries1) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* NUMDL */
 			.cdw12 = sizeof(header1), /* LPOL */
 			.out_data = entries1,
@@ -231,7 +224,6 @@ static void test_genctr_change(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header2),
 			.cdw10 = (sizeof(header2) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header2,
 		},
@@ -239,7 +231,6 @@ static void test_genctr_change(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entries2),
 			.cdw10 = (sizeof(entries2) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.cdw12 = sizeof(header2), /* LPOL */
 			.out_data = log_entries2,
@@ -282,7 +273,6 @@ static void test_max_retries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header1),
 			.cdw10 = (sizeof(header1) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header1,
 		},
@@ -290,7 +280,6 @@ static void test_max_retries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entry),
 			.cdw10 = (sizeof(entry) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.cdw12 = sizeof(header1), /* LPOL */
 			.out_data = &entry,
@@ -306,7 +295,6 @@ static void test_max_retries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header2),
 			.cdw10 = (sizeof(header2) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header2,
 		},
@@ -314,7 +302,6 @@ static void test_max_retries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entry),
 			.cdw10 = (sizeof(entry) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.cdw12 = sizeof(header2), /* LPOL */
 			.out_data = &entry,
@@ -346,7 +333,6 @@ static void test_header_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = header_size,
 			.cdw10 = (header_size / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.err = NVME_SC_INVALID_OPCODE,
 		},
@@ -369,7 +355,6 @@ static void test_entries_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header),
 			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -377,7 +362,6 @@ static void test_entries_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = entry_size,
 			.cdw10 = (entry_size / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.cdw12 = sizeof(header), /* LPOL */
 			.err = -EIO,
@@ -402,7 +386,6 @@ static void test_genctr_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(header),
 			.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.out_data = &header,
 		},
@@ -410,7 +393,6 @@ static void test_genctr_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entry),
 			.cdw10 = (sizeof(entry) / 4 - 1) << 16 /* NUMDL */
-			       | 1 << 15 /* RAE */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
 			.cdw12 = sizeof(header), /* LPOL */
 			.out_data = &entry,

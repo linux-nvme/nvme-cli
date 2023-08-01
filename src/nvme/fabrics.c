@@ -1082,7 +1082,6 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 
 		nvme_msg(r, LOG_DEBUG, "%s: get header (try %d/%d)\n",
 			name, retries, max_retries);
-		args->rae = true;
 		args->lpo = 0;
 		args->len = size;
 		args->log = log;
@@ -1117,7 +1116,6 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 			 " records (length %d genctr %" PRIu64 ")\n",
 			 name, numrec, size, genctr);
 
-		args->rae = true;
 		args->lpo = sizeof(struct nvmf_discovery_log);
 		args->len = size - sizeof(struct nvmf_discovery_log);
 		args->log = log->entries;
@@ -1135,7 +1133,6 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 		 */
 		nvme_msg(r, LOG_DEBUG, "%s: get header again\n", name);
 
-		args->rae = false;
 		args->lpo = 0;
 		args->len = sizeof(struct nvmf_discovery_log);
 		args->log = log;
