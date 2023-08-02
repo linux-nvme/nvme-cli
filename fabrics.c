@@ -117,28 +117,32 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_END()                                                                        \
 	}
 
-/*
+/**
  * Compare two C strings and handle NULL pointers gracefully.
- * If either of the two strings is NULL, return 0
- * to let caller ignore the compare.
+ * Return true if both pointers are equal (including both set to NULL).
+ * Return false if one and only one of the two pointers is NULL.
+ * Perform string comparisong only if both pointers are not NULL and
+ * return true if both strings are the same, false otherwise.
  */
-static inline int strcmp0(const char *s1, const char *s2)
+static inline bool streq0(const char *s1, const char *s2)
 {
+	if (s1 == s2)
+		return true;
 	if (!s1 || !s2)
-		return 0;
-	return strcmp(s1, s2);
+		return false;
+	return !strcmp(s1, s2);
 }
 
-/*
- * Compare two C strings and handle NULL pointers gracefully.
- * If either of the two strings is NULL, return 0
- * to let caller ignore the compare.
+/**
+ * Same as streq0() but ignore the case of the characters.
  */
-static inline int strcasecmp0(const char *s1, const char *s2)
+static inline bool streqcase0(const char *s1, const char *s2)
 {
+	if (s1 == s2)
+		return true;
 	if (!s1 || !s2)
-		return 0;
-	return strcasecmp(s1, s2);
+		return false;
+	return !strcasecmp(s1, s2);
 }
 
 static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
@@ -149,29 +153,41 @@ static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
 	return false;
 }
 
-typedef bool (*ctrl_match_fn_t)(nvme_ctrl_t, struct tr_config *);
+typedef bool (*addreq_t)(const char *, const char *);
+typedef bool (*ctrl_match_fn_t)(nvme_ctrl_t, struct tr_config *, addreq_t);
 
-static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
+/** Return the function to be used when comparing addresses
+ *  (traddr, host-traddr). For IP addresses (especially
+ *  IPv6) we can't just do simple string comparison. */
+static addreq_t addreq_func(const char *transport)
+{
+	if (!strcmp(transport, "tcp") || !strcmp(transport, "rdma"))
+		return nvme_ipaddrs_eq;
+
+	return streqcase0; /* FC and loop can use case-insensitive string compare */
+}
+
+static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg, addreq_t addreq)
 {
 	if (nvme_ctrl_is_discovery_ctrl(c) &&
-	    !strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
-	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
-	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
-	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
-	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
+	    streq0(nvme_ctrl_get_transport(c), trcfg->transport) &&
+	    addreq(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
+	    streq0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
+	    addreq(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
+	    streq0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
 		return true;
 
 	return false;
 }
 
-static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
+static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg, addreq_t addreq)
 {
-	if (!strcmp0(nvme_ctrl_get_subsysnqn(c), trcfg->subsysnqn) &&
-	    !strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
-	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
-	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
-	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
-	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
+	if (streq0(nvme_ctrl_get_subsysnqn(c), trcfg->subsysnqn) &&
+	    streq0(nvme_ctrl_get_transport(c), trcfg->transport) &&
+	    addreq(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
+	    streq0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
+	    addreq(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
+	    streq0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
 		return true;
 
 	return false;
@@ -182,10 +198,13 @@ static nvme_ctrl_t __lookup_host_ctrl(nvme_host_t h, struct tr_config *trcfg,
 {
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
+	addreq_t addreq;
+
+	addreq = addreq_func(trcfg->transport);
 
 	nvme_for_each_subsystem(h, s) {
 		nvme_subsystem_for_each_ctrl(s, c) {
-			if (filter(c, trcfg))
+			if (filter(c, trcfg, addreq))
 				return c;
 		}
 	}
@@ -804,7 +823,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		c = nvme_scan_ctrl(r, device);
 		if (c) {
 			/* Check if device matches command-line options */
-			if (!ctrl_config_match(c, &trcfg)) {
+			if (!ctrl_config_match(c, &trcfg, addreq_func(transport))) {
 				fprintf(stderr,
 				    "ctrl device %s found, ignoring non matching command-line options\n",
 				    device);
