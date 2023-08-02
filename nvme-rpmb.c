@@ -32,6 +32,7 @@
 #include "common.h"
 #include "nvme.h"
 #include "libnvme.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 
@@ -48,7 +49,6 @@
 #define HMAC_SHA256_HASH_SIZE		32
 #define MD5_HASH_HASH_SIZE		16
 
-extern int nvme_show_id_ctrl_rpmbs(unsigned int);
 /*
  * Utility function to create hash value of given data (with given key) using
  * given hash algorithm; this function uses kernel crypto services
@@ -903,7 +903,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 	
 	/* parse and validate options; default print rpmb support info */
 	if (cfg.cmd == 0 || strcmp(cfg.cmd, "info") == 0) {
-		nvme_show_id_ctrl_rpmbs(regs.rpmbs);
+		nvme_show_id_ctrl_rpmbs(regs.rpmbs, 0);
 		goto out;
 	}
 	

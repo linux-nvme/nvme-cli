@@ -116,6 +116,7 @@ void nvme_show_relatives(const char *name);
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs, enum nvme_print_flags flags);
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	void (*vendor_show)(__u8 *vs, struct json_object *root));
+void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, enum nvme_print_flags flags);
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		unsigned int lba_index, bool cap_only, enum nvme_print_flags flags);
 void nvme_show_cmd_set_independent_id_ns(
