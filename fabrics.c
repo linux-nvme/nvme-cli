@@ -193,24 +193,9 @@ static nvme_ctrl_t __lookup_host_ctrl(nvme_host_t h, struct tr_config *trcfg,
 	return NULL;
 }
 
-static nvme_ctrl_t __lookup_ctrl(nvme_root_t r, struct tr_config *trcfg,
-				 ctrl_match_fn_t filter)
+static nvme_ctrl_t lookup_discovery_ctrl(nvme_host_t h, struct tr_config *trcfg)
 {
-	nvme_host_t h;
-	nvme_ctrl_t c;
-
-	nvme_for_each_host(r, h) {
-		c = __lookup_host_ctrl(h, trcfg, filter);
-		if (c)
-			return c;
-	}
-
-	return NULL;
-}
-
-static nvme_ctrl_t lookup_discovery_ctrl(nvme_root_t r, struct tr_config *trcfg)
-{
-	return __lookup_ctrl(r, trcfg, disc_ctrl_config_match);
+	return __lookup_host_ctrl(h, trcfg, disc_ctrl_config_match);
 }
 
 nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct tr_config *trcfg)
@@ -539,7 +524,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		};
 
 		if (!force) {
-			c = lookup_discovery_ctrl(r, &trcfg);
+			c = lookup_discovery_ctrl(h, &trcfg);
 			if (c) {
 				__discover(c, &cfg, raw, connect,
 					   true, flags);
@@ -633,7 +618,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 			};
 
 			if (!force) {
-				cn = lookup_discovery_ctrl(r, &trcfg);
+				cn = lookup_discovery_ctrl(h, &trcfg);
 				if (cn) {
 					__discover(cn, &cfg, raw, connect,
 						   true, flags);
@@ -867,7 +852,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 	if (!c && !force) {
-		c = lookup_discovery_ctrl(r, &trcfg);
+		c = lookup_discovery_ctrl(h, &trcfg);
 		if (c)
 			persistent = true;
 	}
