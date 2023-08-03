@@ -689,6 +689,43 @@ static int nvme_read_volatile_config(nvme_root_t r)
 	return ret;
 }
 
+char *nvmf_hostid_from_hostnqn(const char *hostnqn)
+{
+	const char *uuid;
+
+	if (!hostnqn)
+		return NULL;
+
+	uuid = strstr(hostnqn, "uuid:");
+	if (!uuid)
+		return NULL;
+
+	return strdup(uuid + strlen("uuid:"));
+}
+
+void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn)
+{
+	char *hostid_from_file, *hostid_from_hostnqn;
+
+	if (!hostid)
+		return;
+
+	hostid_from_file = nvmf_hostid_from_file();
+	if (hostid_from_file && strcmp(hostid_from_file, hostid)) {
+		fprintf(stderr, "warning: use generated hostid instead of hostid file\n");
+		free(hostid_from_file);
+	}
+
+	if (!hostnqn)
+		return;
+
+	hostid_from_hostnqn = nvmf_hostid_from_hostnqn(hostnqn);
+	if (hostid_from_hostnqn && strcmp(hostid_from_hostnqn, hostid)) {
+		fprintf(stderr, "warning: use hostid which does not match uuid in hostnqn\n");
+		free(hostid_from_hostnqn);
+	}
+}
+
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
@@ -765,10 +802,13 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	hostid_arg = hostid;
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
-	if (!hostnqn)
+	if (!hostnqn) {
 		hostnqn = hnqn = nvmf_hostnqn_generate();
+		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
+	}
 	if (!hostid)
 		hostid = hid = nvmf_hostid_from_file();
+	nvmf_check_hostid_and_hostnqn(hostid, hostnqn);
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		ret = ENOMEM;
@@ -978,10 +1018,13 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
-	if (!hostnqn)
+	if (!hostnqn) {
 		hostnqn = hnqn = nvmf_hostnqn_generate();
+		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
+	}
 	if (!hostid)
 		hostid = hid = nvmf_hostid_from_file();
+	nvmf_check_hostid_and_hostnqn(hostid, hostnqn);
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		errno = ENOMEM;
