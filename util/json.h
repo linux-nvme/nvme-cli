@@ -28,16 +28,18 @@
 	json_object_object_add(o, k, util_json_object_new_double(v))
 #define json_object_add_value_float(o, k, v) \
 	json_object_object_add(o, k, json_object_new_double(v))
-#define json_object_add_value_string(o, k, v) \
-	json_object_object_add(o, k, json_object_new_string(v))
+static inline int json_object_add_value_string(struct json_object *o, const char *k, const char *v) {
+	return json_object_object_add(o, k, v ? json_object_new_string(v) : NULL);
+}
 #define json_object_add_value_array(o, k, v) \
 	json_object_object_add(o, k, v)
 #define json_object_add_value_object(o, k, v) \
 	json_object_object_add(o, k, v)
 #define json_array_add_value_object(o, k) \
 	json_object_array_add(o, k)
-#define json_array_add_value_string(o, v) \
-	json_object_array_add(o, json_object_new_string(v))
+static inline int json_array_add_value_string(struct json_object *o, const char *v) {
+	return json_object_array_add(o, v ? json_object_new_string(v) : NULL);
+}
 #define json_print_object(o, u)						\
 	printf("%s", json_object_to_json_string_ext(o,			\
 		JSON_C_TO_STRING_PRETTY |				\
