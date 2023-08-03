@@ -839,8 +839,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	unsigned int nr_zones_chunks = 1024,   /* 1024 entries * 64 bytes per entry = 64k byte transfer */
 			nr_zones_retrieved = 0,
 			nr_zones,
-			offset,
 			log_len;
+	__u64 offset;
 	int total_nr_zones = 0;
 	struct nvme_zns_id_ns id_zns;
 	struct nvme_id_ns id_ns;
