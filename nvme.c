@@ -7690,7 +7690,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 			    strerror(errno));
 			err = -EINVAL;
 		} else {
-			printf("%s: Success\n", command);
+			fprintf(stderr, "%s: Success\n", command);
 		}
 	}
 
@@ -8622,8 +8622,8 @@ static int passthru(int argc, char **argv, bool admin,
 	} else if (err) {
 		nvme_show_status(err);
 	} else  {
-		printf("%s Command %s is Success and result: 0x%08x\n", admin ? "Admin" : "IO",
-		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific", result);
+		fprintf(stderr, "%s Command %s is Success and result: 0x%08x\n", admin ? "Admin" : "IO",
+			strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific", result);
 		if (cfg.read)
 			passthru_print_read_output(cfg, data, dfd, mdata, mfd, err);
 	}
