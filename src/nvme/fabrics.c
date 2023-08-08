@@ -1029,7 +1029,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		return NULL;
 	}
 
-	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW)
+	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW &&
+	    nvmf_check_option(h->r, disable_sqflow))
 		c->cfg.disable_sqflow = true;
 
 	if (e->trtype == NVMF_TRTYPE_TCP &&
