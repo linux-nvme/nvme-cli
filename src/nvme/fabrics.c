@@ -1170,34 +1170,15 @@ static void sanitize_discovery_log_entry(struct nvmf_disc_log_entry *e)
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 			   int max_retries)
 {
-	struct nvmf_discovery_log *log;
-
-	struct nvme_get_log_args args = {
-		.args_size = sizeof(args),
-		.fd = nvme_ctrl_get_fd(c),
-		.nsid = NVME_NSID_NONE,
-		.lsp = NVMF_LOG_DISC_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.uuidx = NVME_UUID_NONE,
+	struct nvme_get_discovery_args args = {
+		.c = c,
+		.max_retries = max_retries,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
-		.lid = NVME_LOG_LID_DISCOVER,
-		.log = NULL,
-		.len = 0,
-		.csi = NVME_CSI_NVM,
-		.rae = false,
-		.ot = false,
+		.lsp = NVMF_LOG_DISC_LSP_NONE,
 	};
 
-	log = nvme_discovery_log(c, &args, max_retries);
-	if (!log)
-		return -1;
-
-	for (int i = 0; i < le64_to_cpu(log->numrec); i++)
-		sanitize_discovery_log_entry(&log->entries[i]);
-
-	*logp = log;
-	return 0;
+	*logp = nvmf_get_discovery_wargs(&args);
+	return *logp ? 0 : -1;
 }
 
 struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args)
