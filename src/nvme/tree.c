@@ -692,7 +692,7 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 				continue;
 			if (strcmp(_s->name, name))
 				continue;
-			if (!__nvme_scan_subsystem(r, s, f, f_args)) {
+			if (!__nvme_scan_subsystem(r, _s, f, f_args)) {
 				errno = -EINVAL;
 				goto out_free;
 			}
