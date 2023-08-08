@@ -650,15 +650,16 @@ static int nvme_init_subsystem(nvme_subsystem_t s, const char *name)
 	return 0;
 }
 
-static void __nvme_scan_subsystem(struct nvme_root *r, nvme_subsystem_t s,
+static bool __nvme_scan_subsystem(struct nvme_root *r, nvme_subsystem_t s,
 				  nvme_scan_filter_t f, void *f_args)
 {
 	if (f && !f(s, NULL, NULL, f_args)) {
 		nvme_msg(r, LOG_DEBUG, "filter out subsystem %s\n", s->name);
 		__nvme_free_subsystem(s);
-		return;
+		return false;
 	}
 	nvme_subsystem_scan_namespaces(r, s, f, f_args);
+	return true;
 }
 
 static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
@@ -691,8 +692,11 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 				continue;
 			if (strcmp(_s->name, name))
 				continue;
+			if (!__nvme_scan_subsystem(r, s, f, f_args)) {
+				errno = -EINVAL;
+				goto out_free;
+			}
 			s = _s;
-			__nvme_scan_subsystem(r, s, f, f_args);
 		}
 	}
 	if (!s) {
@@ -705,16 +709,20 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 			 name);
 		h = nvme_default_host(r);
 		s = nvme_alloc_subsystem(h, name, subsysnqn);
-		if (s)
-			__nvme_scan_subsystem(r, s, f, f_args);
-		else
+		if (!s) {
 			ret = -ENOMEM;
+			goto out_free;
+		}
+		if (!__nvme_scan_subsystem(r, s, f, f_args)) {
+			ret = -EINVAL;
+			goto out_free;
+		}
 	} else if (strcmp(s->subsysnqn, subsysnqn)) {
 		nvme_msg(r, LOG_DEBUG, "NQN mismatch for subsystem '%s'\n",
 			 name);
 		ret = -EINVAL;
 	}
-
+out_free:
 	free(subsysnqn);
 
 	if (ret) {
