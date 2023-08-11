@@ -164,6 +164,8 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	char *endptr;
 	int ret = 0;
 
+	errno = 0;    /* To distinguish success/failure after strtol/stroul call */
+
 	switch (s->config_type) {
 	case CFG_STRING:
 		*((char **)value) = optarg;
