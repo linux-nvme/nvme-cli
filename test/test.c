@@ -16,6 +16,7 @@
  * somewhere.
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <inttypes.h>
@@ -274,7 +275,7 @@ static int test_namespace(nvme_ns_t n)
 {
 	int ret, nsid = nvme_ns_get_nsid(n), fd = nvme_ns_get_fd(n);
 	struct nvme_id_ns ns = { 0 }, allocated = { 0 };
-	struct nvme_ns_id_desc descs = { 0 };
+	struct nvme_ns_id_desc *descs;
 	__u32 result = 0;
 	__u8 flbas;
 
@@ -292,11 +293,16 @@ static int test_namespace(nvme_ns_t n)
 		printf("  Identify allocated ns\n");
 	else
 		printf("  ERROR: Identify allocated ns:%x\n", ret);
-	ret = nvme_identify_ns_descs(fd, nsid,  &descs);
+	descs = malloc(NVME_IDENTIFY_DATA_SIZE);
+	if (!descs)
+		return -1;
+
+	ret = nvme_identify_ns_descs(fd, nsid, descs);
 	if (!ret)
 		printf("  Identify NS Descriptors\n");
 	else
 		printf("  ERROR: Identify NS Descriptors:%x\n", ret);
+	free(descs);
 	ret = nvme_get_features_write_protect(fd, nsid,
 		NVME_GET_FEATURES_SEL_CURRENT, &result);
 	if (!ret)
