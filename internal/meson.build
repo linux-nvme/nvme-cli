@@ -19,3 +19,10 @@ internal_incdir = include_directories('.')
 config_dep = declare_dependency(
   include_directories : internal_incdir,
   sources: config_h)
+
+add_project_arguments(
+    [
+        '-include', '@0@'.format(config_h),
+    ],
+    language : 'c',
+)

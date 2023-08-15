@@ -253,7 +253,6 @@ add_project_arguments(
     [
         '-fomit-frame-pointer',
         '-D_GNU_SOURCE',
-        '-include', 'internal/config.h',
     ],
     language : 'c',
 )
