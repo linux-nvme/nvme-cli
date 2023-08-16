@@ -638,14 +638,18 @@ static int parse_telemetry_da(struct nvme_dev *dev,
 
 {
 	struct nvme_id_ctrl id_ctrl;
+	size_t dalb = 0;
 
 	switch (da) {
 	case NVME_TELEMETRY_DA_1:
+		dalb = le16_to_cpu(telem->dalb1);
+		break;
 	case NVME_TELEMETRY_DA_2:
+		dalb = le16_to_cpu(telem->dalb2);
+		break;
 	case NVME_TELEMETRY_DA_3:
 		/* dalb3 >= dalb2 >= dalb1 */
-		*size = (le16_to_cpu(telem->dalb3) + 1) *
-			NVME_LOG_TELEM_BLOCK_SIZE;
+		dalb = le16_to_cpu(telem->dalb3);
 		break;
 	case NVME_TELEMETRY_DA_4:
 		if (nvme_cli_identify_ctrl(dev, &id_ctrl)) {
@@ -654,8 +658,7 @@ static int parse_telemetry_da(struct nvme_dev *dev,
 		}
 
 		if (id_ctrl.lpa & 0x40) {
-			*size = (le32_to_cpu(telem->dalb4) + 1) *
-				NVME_LOG_TELEM_BLOCK_SIZE;
+			dalb = le32_to_cpu(telem->dalb4);
 		} else {
 			nvme_show_error(
 			    "Data area 4 unsupported, bit 6 of Log Page Attributes not set");
@@ -667,10 +670,11 @@ static int parse_telemetry_da(struct nvme_dev *dev,
 		return -EINVAL;
 	}
 
-	if (*size == NVME_LOG_TELEM_BLOCK_SIZE) {
+	if (dalb == 0) {
 		nvme_show_error("ERROR: No telemetry data block");
 		return -ENOENT;
 	}
+	*size = (dalb + 1) * NVME_LOG_TELEM_BLOCK_SIZE;
 	return 0;
 }
 
