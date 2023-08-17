@@ -906,6 +906,46 @@ int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
 }
 
 #ifdef HAVE_NETDB
+static bool _nvme_ipaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
+{
+	struct sockaddr_in *sockaddr_v4;
+	struct sockaddr_in6 *sockaddr_v6;
+
+	if (addr1->sa_family == AF_INET && addr2->sa_family == AF_INET) {
+		struct sockaddr_in *sockaddr1 = (struct sockaddr_in *)addr1;
+		struct sockaddr_in *sockaddr2 = (struct sockaddr_in *)addr2;
+		return sockaddr1->sin_addr.s_addr == sockaddr2->sin_addr.s_addr;
+	}
+
+	if (addr1->sa_family == AF_INET6 && addr2->sa_family == AF_INET6) {
+		struct sockaddr_in6 *sockaddr1 = (struct sockaddr_in6 *)addr1;
+		struct sockaddr_in6 *sockaddr2 = (struct sockaddr_in6 *)addr2;
+		return !memcmp(&sockaddr1->sin6_addr, &sockaddr2->sin6_addr, sizeof(struct in6_addr));
+	}
+
+	switch (addr1->sa_family) {
+	case AF_INET:
+		sockaddr_v6 = (struct sockaddr_in6 *)addr2;
+		if (IN6_IS_ADDR_V4MAPPED(&sockaddr_v6->sin6_addr)) {
+			sockaddr_v4 = (struct sockaddr_in *)addr1;
+			return sockaddr_v4->sin_addr.s_addr == sockaddr_v6->sin6_addr.s6_addr32[3];
+		}
+		break;
+
+	case AF_INET6:
+		sockaddr_v6 = (struct sockaddr_in6 *)addr1;
+		if (IN6_IS_ADDR_V4MAPPED(&sockaddr_v6->sin6_addr)) {
+			sockaddr_v4 = (struct sockaddr_in *)addr2;
+			return sockaddr_v4->sin_addr.s_addr == sockaddr_v6->sin6_addr.s6_addr32[3];
+		}
+		break;
+
+	default: ;
+	}
+
+	return false;
+}
+
 bool nvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
 	bool result = false;
@@ -924,37 +964,7 @@ bool nvme_ipaddrs_eq(const char *addr1, const char *addr2)
 	if (getaddrinfo(addr2, 0, &hint2, &info2) || !info2)
 		goto ipaddrs_eq_fail;
 
-	if (info1->ai_family == AF_INET && info2->ai_family == AF_INET) {
-		struct sockaddr_in *sockaddr1 = (struct sockaddr_in *)(info1->ai_addr);
-		struct sockaddr_in *sockaddr2 = (struct sockaddr_in *)(info2->ai_addr);
-		result = sockaddr1->sin_addr.s_addr == sockaddr2->sin_addr.s_addr;
-	} else if (info1->ai_family == AF_INET6 && info2->ai_family == AF_INET6) {
-		struct sockaddr_in6 *sockaddr1 = (struct sockaddr_in6 *)(info1->ai_addr);
-		struct sockaddr_in6 *sockaddr2 = (struct sockaddr_in6 *)(info2->ai_addr);
-		result = !memcmp(&sockaddr1->sin6_addr, &sockaddr2->sin6_addr, sizeof(struct in6_addr));
-	} else {
-		struct sockaddr_in *sockaddr_v4;
-		struct sockaddr_in6 *sockaddr_v6;
-		switch (info1->ai_family) {
-		case AF_INET:
-			sockaddr_v6 = (struct sockaddr_in6 *)(info2->ai_addr);
-			if (IN6_IS_ADDR_V4MAPPED(&sockaddr_v6->sin6_addr)) {
-				sockaddr_v4 = (struct sockaddr_in *)(info1->ai_addr);
-				result = sockaddr_v4->sin_addr.s_addr == sockaddr_v6->sin6_addr.s6_addr32[3];
-			}
-			break;
-
-		case AF_INET6:
-			sockaddr_v6 = (struct sockaddr_in6 *)(info1->ai_addr);
-			if (IN6_IS_ADDR_V4MAPPED(&sockaddr_v6->sin6_addr)) {
-				sockaddr_v4 = (struct sockaddr_in *)(info2->ai_addr);
-				result = sockaddr_v4->sin_addr.s_addr == sockaddr_v6->sin6_addr.s6_addr32[3];
-			}
-			break;
-
-		default: ;
-		}
-	}
+	result = _nvme_ipaddrs_eq(info1->ai_addr, info2->ai_addr);
 
 ipaddrs_eq_fail:
 	if (info1)
