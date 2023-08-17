@@ -6,10 +6,13 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include <ccan/array_size/array_size.h>
 
 #include <libnvme.h>
+#include <nvme/private.h>
 
 struct test_data {
 	/* input data */
@@ -29,6 +32,8 @@ struct test_data {
 
 #define DEFAULT_SUBSYSNAME "subsysname"
 #define DEFAULT_SUBSYSNQN "subsysnqn"
+#define SRC_ADDR4 "192.168.56.100"
+#define SRC_ADDR6 "1234:5678:abcd:EF01:1234:5678:abcd:EF01"
 
 struct test_data test_data[] = {
 	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "tcp", "192.168.1.1", "192.168.1.20", NULL, "4420" },
@@ -254,10 +259,160 @@ static void test_lookup_2(void)
 	nvme_free_tree(r);
 }
 
+bool test_src_addr()
+{
+	bool pass = true;
+	nvme_root_t r;
+	nvme_host_t h;
+	nvme_ctrl_t c;
+	nvme_subsystem_t s;
+	char *src_addr, buffer[100]; /* big enough for IPv6 max length */
+
+	printf("\n"
+	       "test_src_addr:\n");
+
+	r = nvme_create_root(stdout, LOG_DEBUG);
+	assert(r);
+
+	h = nvme_default_host(r);
+	assert(h);
+
+	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN);
+	assert(s);
+
+	c = nvme_lookup_ctrl(s, "tcp", "192.168.56.1", NULL, NULL, "8009", NULL);
+	assert(c);
+
+	c->address = NULL;
+	printf(" - Test c->address = NULL                                                       : src_addr = NULL             ");
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (src_addr != NULL) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address=NULL should return src_addr=NULL\n");
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = "";
+	printf(" - Test c->address = \"\"                                                         : src_addr = NULL             ");
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (src_addr != NULL) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address="" should return src_addr=NULL\n");
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = "traddr=192.168.56.1,trsvcid=8009";
+	printf(" - Test c->address = \"%s\"                         : src_addr = NULL             ", c->address);
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (src_addr != NULL) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address=%s should return src_addr=NULL\n",
+			c->address);
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = "traddr=192.168.56.1,trsvcid=8009,src_addr=" SRC_ADDR4;
+	printf(" - Test c->address = \"%s\" : src_addr = \"" SRC_ADDR4 "\" ", c->address);
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (!src_addr || strcmp(src_addr, SRC_ADDR4)) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address=%s should return src_addr=" SRC_ADDR4 "\n",
+			c->address);
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = "traddr=192.168.56.1,src_addr=" SRC_ADDR4 ",trsvcid=8009";
+	printf(" - Test c->address = \"%s\" : src_addr = \"" SRC_ADDR4 "\" ", c->address);
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (!src_addr || strcmp(src_addr, SRC_ADDR4)) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address=%s should return src_addr=" SRC_ADDR4 "\n",
+			c->address);
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = "traddr=1234::abcd,trsvcid=8009,src_addr=" SRC_ADDR6;
+	printf(" - Test c->address = \"%s\"       : src_addr = \"" SRC_ADDR6 "\" ", c->address);
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (!src_addr || strcmp(src_addr, SRC_ADDR6)) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address=%s should return src_addr=" SRC_ADDR6 "\n",
+			c->address);
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = "traddr=1234::abcd,src_addr=" SRC_ADDR6 ",trsvcid=8009";
+	printf(" - Test c->address = \"%s\"       : src_addr = \"" SRC_ADDR6 "\" ", c->address);
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (!src_addr || strcmp(src_addr, SRC_ADDR6)) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address=%s should return src_addr=" SRC_ADDR6 "\n",
+			c->address);
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = "traddr=1234::abcd,trsvcid=8009,src_addr=" SRC_ADDR6 "%scope";
+	printf(" - Test c->address = \"%s\" : src_addr = \"" SRC_ADDR6 "\" ", c->address);
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (!src_addr || strcmp(src_addr, SRC_ADDR6)) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address=%s should return src_addr=" SRC_ADDR6 "\n",
+			c->address);
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = "traddr=1234::abcd,src_addr=" SRC_ADDR6 "%scope,trsvcid=8009";
+	printf(" - Test c->address = \"%s\" : src_addr = \"" SRC_ADDR6 "\" ", c->address);
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (!src_addr || strcmp(src_addr, SRC_ADDR6)) {
+		printf("[FAIL]\n");
+		fprintf(stderr,
+			"nvme_ctrl_get_src_addr() c->address=%s should return src_addr=" SRC_ADDR6 "\n",
+			c->address);
+		pass = false;
+	} else {
+		printf("[PASS]\n");
+	}
+
+	c->address = NULL; /* Needed to avoid freeing non-malloced memory (see above) */
+
+	nvme_free_tree(r);
+
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
+	int exit_val = EXIT_SUCCESS;
+
 	test_lookup_1();
 	test_lookup_2();
 
-	return 0;
+	if (!test_src_addr()) exit_val = EXIT_FAILURE;
+
+	exit(exit_val);
 }
