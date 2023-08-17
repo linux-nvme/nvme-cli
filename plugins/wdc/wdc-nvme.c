@@ -80,12 +80,13 @@
 #define WDC_NVME_SN655_DEV_ID				0x2722
 #define WDC_NVME_SN860_DEV_ID				0x2730
 #define WDC_NVME_SN660_DEV_ID				0x2704
-
-/* This id's are no longer supported, delete ?? */
-#define WDC_NVME_SN550_DEV_ID				0x2708
 #define WDC_NVME_SN560_DEV_ID_1				0x2712
 #define WDC_NVME_SN560_DEV_ID_2				0x2713
 #define WDC_NVME_SN560_DEV_ID_3				0x2714
+#define WDC_NVME_SN861_DEV_ID				0x2750
+
+/* This id's are no longer supported, delete ?? */
+#define WDC_NVME_SN550_DEV_ID				0x2708
 
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
 #define WDC_NVME_SN520_DEV_ID				0x5003
@@ -1666,6 +1667,17 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 						 WDC_DRIVE_CAP_CLEAR_PCIE);
 
 			break;
+		case WDC_NVME_SN861_DEV_ID:
+			capabilities |= (WDC_DRIVE_CAP_C0_LOG_PAGE | WDC_DRIVE_CAP_OCP_C1_LOG_PAGE |
+				WDC_DRIVE_CAP_C3_LOG_PAGE | WDC_DRIVE_CAP_OCP_C4_LOG_PAGE |
+				WDC_DRIVE_CAP_OCP_C5_LOG_PAGE);
+
+			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
+					 WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
+					 WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY |
+					 WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG |
+					 WDC_DRIVE_CAP_REASON_ID);
+
 		default:
 			capabilities = 0;
 		}
@@ -6514,6 +6526,8 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 	case WDC_NVME_SN560_DEV_ID_3:
 		fallthrough;
 	case WDC_NVME_SN550_DEV_ID:
+		fallthrough;
+	case WDC_NVME_SN861_DEV_ID:
 		ret = wdc_get_c0_log_page_sn(r, dev, uuid_index, format, namespace_id, fmt);
 		break;
 	case WDC_NVME_ZN350_DEV_ID:
