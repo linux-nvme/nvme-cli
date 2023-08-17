@@ -881,6 +881,32 @@ const char *nvme_ctrl_get_address(nvme_ctrl_t c)
 	return c->address ? c->address : "";
 }
 
+char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
+{
+	size_t l;
+	char *p;
+
+	if (!c->address)
+		return NULL;
+
+	p = strstr(c->address, "src_addr=");
+	if (!p)
+		return NULL;
+
+	p += strlen("src_addr=");
+	l = strcspn(p, ",%"); /* % to eliminate IPv6 scope (if present) */
+	if (l >= src_addr_len) {
+		nvme_msg(root_from_ctrl(c), LOG_ERR,
+			 "Buffer for src_addr is too small (%zu must be > %zu)\n",
+			 src_addr_len, l);
+		return NULL;
+	}
+
+	strncpy(src_addr, p, l);
+	src_addr[l] = '\0';
+	return src_addr;
+}
+
 const char *nvme_ctrl_get_phy_slot(nvme_ctrl_t c)
 {
 	return c->phy_slot ? c->phy_slot : "";

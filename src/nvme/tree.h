@@ -15,6 +15,7 @@
 #include <stddef.h>
 
 #include <sys/types.h>
+#include <netinet/in.h>
 
 #include "ioctl.h"
 #include "util.h"
@@ -839,6 +840,16 @@ const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c);
  * of no address is present.
  */
 const char *nvme_ctrl_get_address(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_get_src_addr() - Extract src_addr from the c->address string
+ * @c:	Controller instance
+ * @src_addr: Where to copy the src_addr. Size must be at least INET6_ADDRSTRLEN.
+ * @src_addr_len: Length of the buffer @src_addr.
+ *
+ * Return: Pointer to @src_addr on success. NULL on failure to extract the src_addr.
+ */
+char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len);
 
 /**
  * nvme_ctrl_get_phy_slot() - PCI physical slot number of a controller
