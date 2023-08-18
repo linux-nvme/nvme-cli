@@ -3075,11 +3075,13 @@ struct nvme_telemetry_log {
 /**
  * struct nvme_endurance_group_log -  Endurance Group Information Log
  * @critical_warning:		Critical Warning
- * @rsvd1:			Reserved
+ * @endurance_group_features:	Endurance Group Features
+ * @rsvd2:			Reserved
  * @avl_spare:			Available Spare
  * @avl_spare_threshold:	Available Spare Threshold
  * @percent_used:		Percentage Used
- * @rsvd6:			Reserved
+ * @domain_identifier:		Domain Identifier
+ * @rsvd8:			Reserved
  * @endurance_estimate:		Endurance Estimate
  * @data_units_read:		Data Units Read
  * @data_units_written:		Data Units Written
@@ -3088,15 +3090,19 @@ struct nvme_telemetry_log {
  * @host_write_cmds:		Host Write Commands
  * @media_data_integrity_err:	Media and Data Integrity Errors
  * @num_err_info_log_entries:	Number of Error Information Log Entries
- * @rsvd160:			Reserved
+ * @total_end_grp_cap:		Total Endurance Group Capacity
+ * @unalloc_end_grp_cap:	Unallocated Endurance Group Capacity
+ * @rsvd192:			Reserved
  */
 struct nvme_endurance_group_log {
 	__u8	critical_warning;
-	__u8	rsvd1[2];
+	__u8	endurance_group_features;
+	__u8	rsvd2;
 	__u8	avl_spare;
 	__u8	avl_spare_threshold;
 	__u8	percent_used;
-	__u8	rsvd6[26];
+	__le16	domain_identifier;
+	__u8	rsvd8[24];
 	__u8	endurance_estimate[16];
 	__u8	data_units_read[16];
 	__u8	data_units_written[16];
@@ -3105,7 +3111,9 @@ struct nvme_endurance_group_log {
 	__u8	host_write_cmds[16];
 	__u8	media_data_integrity_err[16];
 	__u8	num_err_info_log_entries[16];
-	__u8	rsvd160[352];
+	__u8	total_end_grp_cap[16];
+	__u8	unalloc_end_grp_cap[16];
+	__u8	rsvd192[320];
 };
 
 /**
