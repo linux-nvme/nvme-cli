@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <unistd.h>
+#include <ifaddrs.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -33,6 +34,26 @@
 #include "fabrics.h"
 #include "log.h"
 #include "private.h"
+
+/**
+ * struct candidate_args - Used to look for a controller matching these parameters
+ * @transport:		Transport type: loop, fc, rdma, tcp
+ * @traddr:		Transport address (destination address)
+ * @trsvcid:		Transport service ID
+ * @subsysnqn:		Subsystem NQN
+ * @host_traddr:	Host transport address (source address)
+ * @host_iface:		Host interface for connection (tcp only)
+ * @iface_list:		Interface list (tcp only)
+ */
+struct candidate_args {
+	const char *transport;
+	const char *traddr;
+	const char *trsvcid;
+	const char *subsysnqn;
+	const char *host_traddr;
+	const char *host_iface;
+	struct ifaddrs *iface_list;
+};
 
 const char *nvme_slots_sysfs_dir = "/sys/bus/pci/slots";
 
@@ -1220,6 +1241,259 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 	return c;
 }
 
+/**
+ * _tcp_ctrl_match_host_traddr_no_src_addr() - Match host_traddr w/o src_addr
+ * @c:	An existing controller instance
+ * @candidate:	Candidate ctrl we're trying to match with @c.
+ *
+ * On kernels prior to 6.1 (i.e. src_addr is not available), try to match
+ * a candidate controller's host_traddr to that of an existing controller.
+ *
+ * This function takes an optimistic approach. In doubt, it will declare a
+ * match and return true.
+ *
+ * Return: true if @c->host_traddr matches @candidate->host_traddr. false otherwise.
+ */
+static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct nvme_ctrl *c, struct candidate_args *candidate)
+{
+	if (c->cfg.host_traddr) {
+		if (!nvme_ipaddrs_eq(candidate->host_traddr, c->cfg.host_traddr))
+			return false;
+	} else {
+		/* If c->cfg.host_traddr is NULL, then the controller (c)
+		 * uses the interface's primary address as the source
+		 * address. If c->cfg.host_iface is defined we can
+		 * determine the primary address associated with that
+		 * interface and compare that to the candidate->host_traddr.
+		 */
+		if (c->cfg.host_iface) {
+			if (!nvme_iface_primary_addr_matches(candidate->iface_list,
+							     c->cfg.host_iface,
+							     candidate->host_traddr))
+				return false;
+		} else {
+			/* If both c->cfg.host_traddr and c->cfg.host_iface are
+			 * NULL, we don't have enough information to make a
+			 * 100% positive match. Regardless, let's be optimistic
+			 * and assume that we have a match.
+			 */
+			nvme_msg(root_from_ctrl(c), LOG_DEBUG,
+				 "Not enough data, but assume %s matches candidate's host_traddr: %s\n",
+				 nvme_ctrl_get_name(c),
+				 candidate->host_traddr);
+		}
+	}
+
+	return true;
+}
+
+/**
+ * _tcp_ctrl_match_host_iface_no_src_addr() - Match host_iface w/o src_addr
+ * @c:	An existing controller instance
+ * @candidate:	Candidate ctrl we're trying to match with @c.
+ *
+ * On kernels prior to 6.1 (i.e. src_addr is not available), try to match
+ * a candidate controller's host_iface to that of an existing controller.
+ *
+ * This function takes an optimistic approach. In doubt, it will declare a
+ * match and return true.
+ *
+ * Return: true if @c->host_iface matches @candidate->host_iface. false otherwise.
+ */
+static bool _tcp_ctrl_match_host_iface_no_src_addr(struct nvme_ctrl *c, struct candidate_args *candidate)
+{
+	if (c->cfg.host_iface) {
+		if (!streq0(candidate->host_iface, c->cfg.host_iface))
+			return false;
+	} else {
+		if (c->cfg.host_traddr) {
+			const char *c_host_iface;
+
+			c_host_iface = nvme_iface_matching_addr(candidate->iface_list,
+								c->cfg.host_traddr);
+			if (!streq0(candidate->host_iface, c_host_iface))
+				return false;
+		} else {
+			/* If both c->cfg.host_traddr and c->cfg.host_iface are
+			 * NULL, we don't have enough information to make a
+			 * 100% positive match. Regardless, let's be optimistic
+			 * and assume that we have a match.
+			 */
+			nvme_msg(root_from_ctrl(c), LOG_DEBUG,
+				 "Not enough data, but assume %s matches candidate's host_iface: %s\n",
+				 nvme_ctrl_get_name(c),
+				 candidate->host_iface);
+		}
+	}
+
+	return true;
+}
+
+/**
+ * _tcp_opt_params_match_no_src_addr() - Match optional host_traddr/host_iface w/o src_addr
+ * @c:	An existing controller instance
+ * @candidate:	Candidate ctrl we're trying to match with @c.
+ *
+ * Before kernel 6.1, the src_addr was not reported by the kernel which makes
+ * it hard to match a candidate's host_traddr and host_iface to an existing
+ * controller if that controller was created without specifying the
+ * host_traddr and/or host_iface. This function tries its best in the absense
+ * of a src_addr to match @c to @candidate. This may not be 100% accurate.
+ * Only the src_addr can provide 100% accuracy.
+ *
+ * This function takes an optimistic approach. In doubt, it will declare a
+ * match and return true.
+ *
+ * Return: true if @c matches @candidate. false otherwise.
+ */
+static bool _tcp_opt_params_match_no_src_addr(struct nvme_ctrl *c, struct candidate_args *candidate)
+{
+	/* Check host_traddr only if candidate is interested */
+	if (candidate->host_traddr) {
+		if (!_tcp_ctrl_match_host_traddr_no_src_addr(c, candidate))
+			return false;
+	}
+
+	/* Check host_iface only if candidate is interested */
+	if (candidate->host_iface) {
+		if (!_tcp_ctrl_match_host_iface_no_src_addr(c, candidate))
+			return false;
+	}
+
+	return true;
+}
+
+/**
+ * _tcp_opt_params_match() - Match optional host_traddr/host_iface
+ * @c:	An existing controller instance
+ * @candidate:	Candidate ctrl we're trying to match with @c.
+ *
+ * The host_traddr and host_iface are optional for TCP. When they are not
+ * specified, the kernel looks up the destination IP address (traddr) in the
+ * routing table to determine the best interface for the connection. The
+ * kernel then retrieves the primary IP address assigned to that interface
+ * and uses that as the connection’s source address.
+ *
+ * An interface’s primary address is the default source address used for
+ * all connections made on that interface unless host-traddr is used to
+ * override the default. Kernel-selected interfaces and/or source addresses
+ * are hidden from user-space applications unless the kernel makes that
+ * information available through the "src_addr" attribute in the
+ * sysfs (kernel 6.1 or later).
+ *
+ * Sometimes, an application may force the interface by specifying the
+ * "host-iface" or may force a different source address (instead of the
+ * primary address) by providing the "host-traddr".
+ *
+ * If the candidate specifies the host_traddr and/or host_iface but they
+ * do not match the existing controller's host_traddr and/or host_iface
+ * (they could be NULL), we may still be able to find a match by taking
+ * the existing controller's src_addr into consideration since that
+ * parameter identifies the actual source address of the connection and
+ * therefore can be used to infer the interface of the connection. However,
+ * the src_addr can only be read from the nvme device's sysfs "address"
+ * attribute starting with kernel 6.1 (or kernels that backported the
+ * src_addr patch).
+ *
+ * For legacy kernels that do not provide the src_addr we must use a
+ * different algorithm to match the host_traddr and host_iface, but
+ * it's not 100% accurate.
+ *
+ * Return: true if @c matches @candidate. false otherwise.
+ */
+static bool _tcp_opt_params_match(struct nvme_ctrl *c, struct candidate_args *candidate)
+{
+	char *src_addr, buffer[INET6_ADDRSTRLEN];
+
+	/* Check if src_addr is available (kernel 6.1 or later) */
+	src_addr = nvme_ctrl_get_src_addr(c, buffer, sizeof(buffer));
+	if (!src_addr)
+		return _tcp_opt_params_match_no_src_addr(c, candidate);
+
+	/* Check host_traddr only if candidate is interested */
+	if (candidate->host_traddr &&
+	    !nvme_ipaddrs_eq(candidate->host_traddr, src_addr))
+		return false;
+
+	/* Check host_iface only if candidate is interested */
+	if (candidate->host_iface &&
+	    !streq0(candidate->host_iface,
+		    nvme_iface_matching_addr(candidate->iface_list, src_addr)))
+		return false;
+
+	return true;
+}
+
+/**
+ * _tcp_lookup_ctrl() - Look for an existing controller that can be reused
+ * @s:	Subsystem object under which to do the search
+ * @transport:	Transport type ("tcp")
+ * @traddr:	Destination IP address
+ * @host_iface:	Interface for the connection (optional)
+ * @host_traddr:	Source IP address (optional)
+ * @trsvcid:	Destination TCP port
+ * @p:	Starting point is the linked-list (NULL to start at the beginning)
+ *
+ * We want to determine if an existing controller can be re-used
+ * for the candidate controller we're trying to instantiate. The
+ * candidate is identified by @transport, @traddr, @trsvcid,
+ * @host_traddr, and @host_iface.
+ *
+ * For TCP, we do not have a match if the candidate's transport, traddr,
+ * trsvcid are not identical to those of the the existing controller.
+ * These 3 parameters are mandatory for a match.
+ *
+ * The host_traddr and host_iface are optional. When the candidate does
+ * not specify them (both NULL), we can ignore them. Otherwise, we must
+ * employ advanced investigation techniques to determine if there's a match.
+ *
+ * Return: Pointer to the matching controller or NULL.
+ */
+static nvme_ctrl_t _tcp_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+				    const char *traddr, const char *host_traddr,
+				    const char *host_iface, const char *trsvcid,
+				    nvme_ctrl_t p)
+{
+	struct candidate_args candidate = {0};
+	struct nvme_ctrl *c, *matching_c = NULL;
+
+	candidate.traddr = traddr;
+	candidate.trsvcid = trsvcid;
+	candidate.transport = transport;
+	candidate.host_iface = host_iface;
+	candidate.host_traddr = host_traddr;
+
+	/* For TCP we may need to access the interface map. Let's retrieve
+	 * and cache the map and use it for the duration of the loop below.
+	 */
+	if (getifaddrs(&candidate.iface_list) == -1)
+		candidate.iface_list = NULL;
+
+	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
+	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
+		if (!streq0(c->transport, candidate.transport))
+			continue;
+
+		if (!streq0(c->trsvcid, candidate.trsvcid))
+			continue;
+
+		if (!nvme_ipaddrs_eq(c->traddr, candidate.traddr))
+			continue;
+
+		/* Check host_traddr / host_iface only if candidate is interested */
+		if ((candidate.host_iface || candidate.host_traddr) &&
+		    !_tcp_opt_params_match(c, &candidate))
+			continue;
+
+		matching_c = c;
+		break;
+	}
+
+	freeifaddrs(candidate.iface_list); /* This is NULL-safe */
+
+	return matching_c;
+}
+
 nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			       const char *traddr, const char *host_traddr,
 			       const char *host_iface, const char *trsvcid,
@@ -1229,10 +1503,15 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 	struct nvme_ctrl *c;
 	bool (*addreq)(const char *, const char *);
 
-	if (!strcmp(transport, "tcp") || !strcmp(transport, "rdma"))
-		addreq = nvme_ipaddrs_eq; /* IP address compare for TCP/RDMA */
+	/* TCP requires special handling */
+	if (streq0(transport, "tcp"))
+		return _tcp_lookup_ctrl(s, transport, traddr,
+					host_traddr, host_iface, trsvcid, p);
+
+	if (streq0(transport, "rdma"))
+		addreq = nvme_ipaddrs_eq; /* IP address compare for RDMA */
 	else
-		addreq = streqcase0; /* Case-insensitive for FC (n/a for loop) */
+		addreq = streqcase0; /* Case-insensitive for everything else */
 
 	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
