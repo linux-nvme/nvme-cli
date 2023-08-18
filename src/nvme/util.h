@@ -9,6 +9,8 @@
 #ifndef _LIBNVME_UTIL_H
 #define _LIBNVME_UTIL_H
 
+#include <ifaddrs.h>
+
 #include "types.h"
 
 /**
@@ -638,5 +640,32 @@ int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN]);
  * Return: true if addr1 == addr2. false otherwise.
  */
 bool nvme_ipaddrs_eq(const char *addr1, const char *addr2);
+
+/**
+ * nvme_iface_matching_addr - Get interface matching @addr
+ * @iface_list: Interface list returned by getifaddrs()
+ * @addr: Address to match
+ *
+ * Parse the interface list pointed to by @iface_list looking
+ * for the interface that has @addr as one of its assigned
+ * addresses.
+ *
+ * Return: The name of the interface that owns @addr or NULL.
+ */
+const char *nvme_iface_matching_addr(const struct ifaddrs *iface_list, const char *addr);
+
+/**
+ * nvme_iface_primary_addr_matches - Check that interface's primary address matches
+ * @iface_list: Interface list returned by getifaddrs()
+ * @iface: Interface to match
+ * @addr: Address to match
+ *
+ * Parse the interface list pointed to by @iface_list and looking for
+ * interface @iface. The get its primary address and check if it matches
+ * @addr.
+ *
+ * Return: true if a match is found, false otherwise.
+ */
+bool nvme_iface_primary_addr_matches(const struct ifaddrs *iface_list, const char *iface, const char *addr);
 
 #endif /* _LIBNVME_UTIL_H */
