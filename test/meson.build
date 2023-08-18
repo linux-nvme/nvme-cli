@@ -67,14 +67,20 @@ uuid = executable(
 test('uuid', uuid)
 
 if conf.get('HAVE_NETDB')
+    mock_ifaddrs = library(
+        'mock-ifaddrs',
+        ['mock-ifaddrs.c', ],
+    )
+
     tree = executable(
         'tree',
         ['tree.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir, internal_incdir]
+        include_directories: [incdir, internal_incdir],
+        link_with: mock_ifaddrs,
     )
 
-    test('tree', tree)
+    test('tree', tree, env: ['LD_PRELOAD=' + mock_ifaddrs.full_path()])
 
     test_util = executable(
         'test-util',
