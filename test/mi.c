@@ -1245,7 +1245,6 @@ static int test_admin_id_secondary_ctrl_list_cb(struct nvme_mi_ep *ep,
 						void *data)
 {
 	__u16 cns, ctrlid;
-	__u32 nsid;
 	__u8 *hdr;
 
 	hdr = (__u8 *)req->hdr;
@@ -1255,9 +1254,6 @@ static int test_admin_id_secondary_ctrl_list_cb(struct nvme_mi_ep *ep,
 
 	cns = hdr[45] << 8 | hdr[44];
 	assert(cns == NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST);
-
-	nsid = hdr[11] << 24 | hdr[10] << 16 | hdr[9] << 8 | hdr[8];
-	assert(nsid == 0x01020304);
 
 	ctrlid = hdr[47] << 8 | hdr[46];
 	assert(ctrlid == 5);
@@ -1280,8 +1276,7 @@ static void test_admin_id_secondary_ctrl_list(struct nvme_mi_ep *ep)
 	ctrl = nvme_mi_init_ctrl(ep, 5);
 	assert(ctrl);
 
-	rc = nvme_mi_admin_identify_secondary_ctrl_list(ctrl, 0x01020304,
-							5, &list);
+	rc = nvme_mi_admin_identify_secondary_ctrl_list(ctrl, 5, &list);
 	assert(!rc);
 }
 

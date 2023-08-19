@@ -1395,7 +1395,6 @@ static inline int nvme_mi_admin_identify_primary_ctrl(nvme_mi_ctrl_t ctrl,
  * nvme_mi_admin_identify_secondary_ctrl_list() - Perform an Admin identify for
  * a secondary controller list.
  * @ctrl: Controller to process identify command
- * @nsid: Namespace ID to specify list start
  * @cntid: Controller ID to specify list start
  * @list: List data to populate
  *
@@ -1412,7 +1411,6 @@ static inline int nvme_mi_admin_identify_primary_ctrl(nvme_mi_ctrl_t ctrl,
  * See: &struct nvme_secondary_ctrl_list
  */
 static inline int nvme_mi_admin_identify_secondary_ctrl_list(nvme_mi_ctrl_t ctrl,
-							     __u32 nsid,
 							     __u16 cntid,
 							     struct nvme_secondary_ctrl_list *list)
 {
@@ -1422,7 +1420,7 @@ static inline int nvme_mi_admin_identify_secondary_ctrl_list(nvme_mi_ctrl_t ctrl
 		.args_size = sizeof(args),
 		.cns = NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
 		.csi = NVME_CSI_NVM,
-		.nsid = nsid,
+		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
 		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
