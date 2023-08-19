@@ -106,11 +106,11 @@ int nvme_cli_identify_primary_ctrl(struct nvme_dev *dev, __u32 nsid,
 	return do_admin_op(identify_primary_ctrl, dev, nsid, cap);
 }
 
-int nvme_cli_identify_secondary_ctrl_list(struct nvme_dev *dev, __u32 nsid,
+int nvme_cli_identify_secondary_ctrl_list(struct nvme_dev *dev,
 					  __u16 ctrl_id,
 					  struct nvme_secondary_ctrl_list *sc_list)
 {
-	return do_admin_op(identify_secondary_ctrl_list, dev, nsid, ctrl_id,
+	return do_admin_op(identify_secondary_ctrl_list, dev, ctrl_id,
 			   sc_list);
 }
 

@@ -4314,21 +4314,18 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 
 	struct config {
 		__u16	cntid;
-		__u32	namespace_id;
 		__u32	num_entries;
 		char	*output_format;
 	};
 
 	struct config cfg = {
 		.cntid		= 0,
-		.namespace_id	= 0,
 		.num_entries	= ARRAY_SIZE(sc_list->sc_entry),
 		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id_optional),
 		OPT_UINT("num-entries",  'e', &cfg.num_entries,   num_entries),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_END()
@@ -4356,7 +4353,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		goto close_err;
 	}
 
-	err = nvme_cli_identify_secondary_ctrl_list(dev, cfg.namespace_id, cfg.cntid, sc_list);
+	err = nvme_cli_identify_secondary_ctrl_list(dev, cfg.cntid, sc_list);
 	if (!err)
 		nvme_show_list_secondary_ctrl(sc_list, cfg.num_entries, flags);
 	else if (err > 0)
