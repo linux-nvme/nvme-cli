@@ -468,14 +468,19 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 	    le128_to_cpu(endurance_group->media_data_integrity_err);
 	nvme_uint128_t num_err_info_log_entries =
 	    le128_to_cpu(endurance_group->num_err_info_log_entries);
+	nvme_uint128_t total_end_grp_cap = le128_to_cpu(endurance_group->total_end_grp_cap);
+	nvme_uint128_t unalloc_end_grp_cap = le128_to_cpu(endurance_group->unalloc_end_grp_cap);
 
 	root = json_create_object();
 
 	json_object_add_value_int(root, "critical_warning", endurance_group->critical_warning);
+	json_object_add_value_int(root, "endurance_group_features",
+				  endurance_group->endurance_group_features);
 	json_object_add_value_int(root, "avl_spare", endurance_group->avl_spare);
 	json_object_add_value_int(root, "avl_spare_threshold",
 				  endurance_group->avl_spare_threshold);
 	json_object_add_value_int(root, "percent_used", endurance_group->percent_used);
+	json_object_add_value_int(root, "domain_identifier", endurance_group->domain_identifier);
 	json_object_add_value_uint128(root, "endurance_estimate", endurance_estimate);
 	json_object_add_value_uint128(root, "data_units_read", data_units_read);
 	json_object_add_value_uint128(root, "data_units_written", data_units_written);
@@ -484,6 +489,8 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 	json_object_add_value_uint128(root, "host_write_cmds", host_write_cmds);
 	json_object_add_value_uint128(root, "media_data_integrity_err", media_data_integrity_err);
 	json_object_add_value_uint128(root, "num_err_info_log_entries", num_err_info_log_entries);
+	json_object_add_value_uint128(root, "total_end_grp_cap", total_end_grp_cap);
+	json_object_add_value_uint128(root, "unalloc_end_grp_cap", unalloc_end_grp_cap);
 
 	json_print_object(root, NULL);
 	printf("\n");
