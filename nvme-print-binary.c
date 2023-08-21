@@ -234,8 +234,8 @@ static void binary_supported_log(struct nvme_supported_log_pages *support_log,
 	d_raw((unsigned char *)support_log, sizeof(*support_log));
 }
 
-static void binary_endurance_log(struct nvme_endurance_group_log *endurance_log,
-	__u16 group_id, const char *devname)
+static void binary_endurance_log(struct nvme_endurance_group_log *endurance_log, __u16 group_id,
+				 const char *devname)
 {
 	return d_raw((unsigned char *)endurance_log, sizeof(*endurance_log));
 }

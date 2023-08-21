@@ -3709,41 +3709,30 @@ static void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 	}
 }
 
-static void stdout_endurance_log(struct nvme_endurance_group_log *endurance_log,
-				 __u16 group_id, const char *devname)
+static void stdout_endurance_log(struct nvme_endurance_group_log *endurance_log, __u16 group_id,
+				 const char *devname)
 {
-	printf("Endurance Group Log for NVME device:%s Group ID:%x\n", devname,
-		group_id);
-	printf("critical warning	: %u\n",
-		endurance_log->critical_warning);
+	printf("Endurance Group Log for NVME device:%s Group ID:%x\n", devname, group_id);
+	printf("critical_warning	: %u\n", endurance_log->critical_warning);
 	printf("avl_spare		: %u\n", endurance_log->avl_spare);
-	printf("avl_spare_threshold	: %u\n",
-		endurance_log->avl_spare_threshold);
+	printf("avl_spare_threshold	: %u\n", endurance_log->avl_spare_threshold);
 	printf("percent_used		: %u%%\n", endurance_log->percent_used);
 	printf("endurance_estimate	: %s\n",
-		uint128_t_to_l10n_string(
-			le128_to_cpu(endurance_log->endurance_estimate)));
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->endurance_estimate)));
 	printf("data_units_read		: %s\n",
-		uint128_t_to_l10n_string(
-			le128_to_cpu(endurance_log->data_units_read)));
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->data_units_read)));
 	printf("data_units_written	: %s\n",
-		uint128_t_to_l10n_string(
-			le128_to_cpu(endurance_log->data_units_written)));
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->data_units_written)));
 	printf("media_units_written	: %s\n",
-		uint128_t_to_l10n_string(
-			le128_to_cpu(endurance_log->media_units_written)));
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->media_units_written)));
 	printf("host_read_cmds		: %s\n",
-		uint128_t_to_l10n_string(
-			le128_to_cpu(endurance_log->host_read_cmds)));
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->host_read_cmds)));
 	printf("host_write_cmds		: %s\n",
-		uint128_t_to_l10n_string(
-			le128_to_cpu(endurance_log->host_write_cmds)));
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->host_write_cmds)));
 	printf("media_data_integrity_err: %s\n",
-		uint128_t_to_l10n_string(
-			le128_to_cpu(endurance_log->media_data_integrity_err)));
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->media_data_integrity_err)));
 	printf("num_err_info_log_entries: %s\n",
-		uint128_t_to_l10n_string(
-			le128_to_cpu(endurance_log->num_err_info_log_entries)));
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->num_err_info_log_entries)));
 }
 
 static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
