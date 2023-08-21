@@ -3714,9 +3714,11 @@ static void stdout_endurance_log(struct nvme_endurance_group_log *endurance_log,
 {
 	printf("Endurance Group Log for NVME device:%s Group ID:%x\n", devname, group_id);
 	printf("critical_warning	: %u\n", endurance_log->critical_warning);
+	printf("endurance_group_features: %u\n", endurance_log->endurance_group_features);
 	printf("avl_spare		: %u\n", endurance_log->avl_spare);
 	printf("avl_spare_threshold	: %u\n", endurance_log->avl_spare_threshold);
 	printf("percent_used		: %u%%\n", endurance_log->percent_used);
+	printf("domain_identifier	: %u\n", endurance_log->domain_identifier);
 	printf("endurance_estimate	: %s\n",
 	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->endurance_estimate)));
 	printf("data_units_read		: %s\n",
@@ -3733,6 +3735,10 @@ static void stdout_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->media_data_integrity_err)));
 	printf("num_err_info_log_entries: %s\n",
 	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->num_err_info_log_entries)));
+	printf("total_end_grp_cap	: %s\n",
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->total_end_grp_cap)));
+	printf("unalloc_end_grp_cap	: %s\n",
+	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->unalloc_end_grp_cap)));
 }
 
 static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
