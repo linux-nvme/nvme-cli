@@ -167,6 +167,8 @@ LIBNVME_1_0 {
 		nvme_get_path_attr;
 		nvme_get_property;
 		nvme_get_subsys_attr;
+		nvme_get_telemetry_log;
+		nvme_get_telemetry_max;
 		nvme_host_get_dhchap_key;
 		nvme_host_get_hostid;
 		nvme_host_get_hostnqn;

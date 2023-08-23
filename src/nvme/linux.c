@@ -122,17 +122,44 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 	return err;
 }
 
-static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
-				  struct nvme_telemetry_log **buf, enum nvme_telemetry_da da,
-				  size_t *size)
+int nvme_get_telemetry_max(int fd, enum nvme_telemetry_da *da, size_t *data_tx)
+{
+	struct nvme_id_ctrl id_ctrl;
+	int err = nvme_identify_ctrl(fd, &id_ctrl);
+
+	if (err)
+		return err;
+
+	if (data_tx) {
+		*data_tx = id_ctrl.mdts;
+		if (id_ctrl.mdts) {
+			/* assuming CAP.MPSMIN is zero minimum Memory Page Size is at least
+			 * 4096 bytes
+			 */
+			*data_tx = (1 << id_ctrl.mdts) * 4096;
+		}
+	}
+	if (da) {
+		if (id_ctrl.lpa & 0x8)
+			*da = NVME_TELEMETRY_DA_3;
+		if (id_ctrl.lpa & 0x40)
+			*da = NVME_TELEMETRY_DA_4;
+
+	}
+	return err;
+}
+
+int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, size_t max_data_tx,
+			   enum nvme_telemetry_da da, struct nvme_telemetry_log **buf,
+			   size_t *size)
 {
 	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
 
 	struct nvme_telemetry_log *telem;
 	enum nvme_cmd_get_log_lid lid;
-	struct nvme_id_ctrl id_ctrl;
 	void *log, *tmp;
 	int err;
+	size_t dalb;
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -178,35 +205,31 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 
 	switch (da) {
 	case NVME_TELEMETRY_DA_1:
+		dalb = le16_to_cpu(telem->dalb1);
+		break;
 	case NVME_TELEMETRY_DA_2:
+		dalb = le16_to_cpu(telem->dalb2);
+		break;
 	case NVME_TELEMETRY_DA_3:
 		/* dalb3 >= dalb2 >= dalb1 */
-		*size = (le16_to_cpu(telem->dalb3) + 1) * xfer;
+		dalb = le16_to_cpu(telem->dalb3);
 		break;
 	case NVME_TELEMETRY_DA_4:
-		err = nvme_identify_ctrl(fd, &id_ctrl);
-		if (err) {
-			perror("identify-ctrl");
-			errno = EINVAL;
-			goto free;
-		}
-
-		if (id_ctrl.lpa & 0x40) {
-			*size = (le32_to_cpu(telem->dalb4) + 1) * xfer;
-		} else {
-			fprintf(stderr, "Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
-			errno = EINVAL;
-			err = -1;
-			goto free;
-		}
+		dalb = le32_to_cpu(telem->dalb4);
 		break;
 	default:
-		fprintf(stderr, "Invalid data area parameter - %d\n", da);
 		errno = EINVAL;
 		err = -1;
 		goto free;
 	}
 
+	if (dalb == 0) {
+		errno = ENOENT;
+		err = -1;
+		goto free;
+	}
+
+	*size = (dalb + 1) * xfer;
 	tmp = realloc(log, *size);
 	if (!tmp) {
 		errno = ENOMEM;
@@ -218,7 +241,7 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 	args.lid = lid;
 	args.log = log;
 	args.len = *size;
-	err = nvme_get_log_page(fd, 4096, &args);
+	err = nvme_get_log_page(fd, max_data_tx, &args);
 	if (!err) {
 		*buf = log;
 		return 0;
@@ -228,22 +251,40 @@ free:
 	return err;
 }
 
+
+static int nvme_check_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
+					struct nvme_telemetry_log **log, enum nvme_telemetry_da da,
+					size_t *size)
+{
+	enum nvme_telemetry_da max_da = 0;
+	int err = nvme_get_telemetry_max(fd, &max_da, NULL);
+
+	if (err)
+		return err;
+	if (da > max_da) {
+		errno = ENOENT;
+		return -1;
+	}
+	return nvme_get_telemetry_log(fd, create, ctrl, rae, 4096, da, log, size);
+}
+
+
 int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size)
 {
-	return nvme_get_telemetry_log(fd, false, true, rae, log, da, size);
+	return nvme_check_get_telemetry_log(fd, false, true, rae, log, da, size);
 }
 
 int nvme_get_host_telemetry(int fd, struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size)
 {
-	return nvme_get_telemetry_log(fd, false, false, false, log, da, size);
+	return nvme_check_get_telemetry_log(fd, false, false, false, log, da, size);
 }
 
 int nvme_get_new_host_telemetry(int fd, struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size)
 {
-	return nvme_get_telemetry_log(fd, true, false, false, log, da, size);
+	return nvme_check_get_telemetry_log(fd, true, false, false, log, da, size);
 }
 
 int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log)

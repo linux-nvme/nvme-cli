@@ -49,6 +49,37 @@ enum nvme_telemetry_da {
 };
 
 /**
+ * nvme_get_telemetry_max() - Get telemetry limits
+ * @fd:		File descriptor of nvme device
+ * @da:		On success return max supported data area
+ * @max_data_tx: On success set to max transfer chunk supported by the controller
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_telemetry_max(int fd, enum nvme_telemetry_da *da, size_t *max_data_tx);
+
+/**
+ * nvme_get_telemetry_log() - Get specified telemetry log
+ * @fd:		File descriptor of nvme device
+ * @create:	Generate new host initated telemetry capture
+ * @ctrl:	Get controller Initiated log
+ * @rae:	Retain asynchronous events
+ * @max_data_tx: Set the max data transfer size to be used retrieving telemetry.
+ * @da:		Log page data area, valid values: &enum nvme_telemetry_da.
+ * @log:	On success, set to the value of the allocated and retrieved log.
+ * @size:	Ptr to the telemetry log size, so it can be returned
+ *
+ * The total size allocated can be calculated as:
+ *   (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, size_t max_data_tx,
+			   enum nvme_telemetry_da da, struct nvme_telemetry_log **log,
+			   size_t *size);
+/**
  * nvme_get_ctrl_telemetry() - Get controller telemetry log
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
