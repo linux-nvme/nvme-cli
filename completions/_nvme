@@ -237,6 +237,20 @@ _nvme () {
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp device-capability-log options" _device_capability_log
 				;;
+			(set-dssd-power-state-feature)
+				local _set_dssd_power_state_feature
+				_set_dssd_power_state_feature=(
+				/dev/nvme':supply a device to use (required)'
+				--power-state=':DSSD Power State to set in watts'
+				-p':alias for --power-state'
+				--save':Specifies that the controller shall save the attribute'
+				-s':alias for --save'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp set-dssd-power-state-feature options" _set_dssd_power_state_feature
+				;;
 			(*)
 				_files
 				;;
@@ -1993,6 +2007,7 @@ _nvme () {
 			clear-pcie-correctable-error-counters':Clear PCIe correctable error counters'
 			vs-fw-activate-history':Get firmware activation history log'
 			device-capability-log':Get Device capability log'
+			set-dssd-power-state-feature':Set DSSD Power State'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme ocp options" _ocp

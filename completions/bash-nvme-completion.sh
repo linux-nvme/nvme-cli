@@ -1348,6 +1348,9 @@ plugin_ocp_opts () {
 		"device-capability-log")
 		opts+=" --output-format= -o"
 			;;
+		"set-dssd-power-state-feature")
+		opts+=" --power-state= -p --no-uuid -n --save -s"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1416,7 +1419,8 @@ _nvme_subcmds () {
 			set-latency-monitor-feature internal-log \
 			clear-fw-activate-history eol-plp-failure-mode \
 			clear-pcie-correctable-error-counters \
-			vs-fw-activate-history device-capability-log"
+			vs-fw-activate-history device-capability-log \
+			set-dssd-power-state-feature"
 	)
 
 	# Associative array mapping plugins to coresponding option completions
