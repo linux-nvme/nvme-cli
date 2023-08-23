@@ -1867,6 +1867,103 @@ static int ocp_device_capabilities_log(int argc, char **argv, struct command *cm
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+/// DSSD Power State (Feature Identifier C7h) Set Feature
+
+static int set_dssd_power_state(struct nvme_dev *dev, const __u32 nsid,
+				const __u8 fid, __u8 power_state, bool save,
+				bool uuid)
+{
+	__u32 result;
+	int err;
+	int uuid_index = 0;
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &uuid_index);
+		if (err || !uuid_index) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
+
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = fid,
+		.nsid = nsid,
+		.cdw11 = power_state,
+		.cdw12 = 0,
+		.save = save,
+		.uuidx = uuid_index,
+		.cdw15 = 0,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = &result,
+	};
+
+	err = nvme_set_features(&args);
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Define DSSD Power State");
+		fprintf(stderr, "Command failed while parsing.\n");
+	} else {
+		printf("Successfully set DSSD Power State (feature: 0xC7) to below values\n");
+		printf("DSSD Power State: 0x%x\n", power_state);
+		printf("Save bit Value: 0x%x\n", save);
+	}
+
+	return err;
+}
+
+static int set_dssd_power_state_feature(int argc, char **argv, struct command *cmd,
+										struct plugin *plugin)
+{
+	const char *desc = "Define DSSD Power State (Feature Identifier C7h) Set Feature.";
+	const char *power_state = "DSSD Power State to set in watts";
+	const char *save = "Specifies that the controller shall save the attribute";
+	const __u32 nsid = 0;
+	const __u8 fid = 0xC7;
+	struct nvme_dev *dev;
+	int err;
+
+	struct config {
+		__u8 power_state;
+		bool save;
+	};
+
+	struct config cfg = {
+		.power_state = 0,
+		.save = false,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("power-state", 'p', &cfg.power_state, power_state),
+		OPT_FLAG("save", 's', &cfg.save, save),
+		OPT_FLAG("no-uuid", 'n', NULL,
+			 "Skip UUID index search (UUID index not required for OCP 1.0)"),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "power state"))
+		err = set_dssd_power_state(dev, nsid, fid, cfg.power_state,
+					       cfg.save,
+					       !argconfig_parse_seen(opts, "no-uuid"));
+
+	dev_close(dev);
+
+	return err;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// Misc
 
 static const __u8 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS = 0xC3;
