@@ -6725,9 +6725,9 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	if (err)
 		goto ret;
 
-	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, (int *)ctx_attrs, ARRAY_SIZE(ctx_attrs));
-	nb = argconfig_parse_comma_sep_array(cfg.blocks, (int *)nlbs, ARRAY_SIZE(nlbs));
-	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, (unsigned long long *)slbas, ARRAY_SIZE(slbas));
+	nc = argconfig_parse_comma_sep_array_u32(cfg.ctx_attrs, ctx_attrs, ARRAY_SIZE(ctx_attrs));
+	nb = argconfig_parse_comma_sep_array_u32(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
+	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
 	nr = max(nc, max(nb, ns));
 	if (!nr || nr > 256) {
 		nvme_show_error("No range definition provided");
@@ -6794,7 +6794,7 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	uint16_t nr, nb, ns, nrts, natms, nats;
 	__u16 nlbs[128] = { 0 };
-	unsigned long long slbas[128] = {0,};
+	__u64 slbas[128] = { 0 };
 	struct nvme_dev *dev;
 	int err;
 
@@ -6876,24 +6876,23 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (err)
 		goto ret;
 
-	nb = argconfig_parse_comma_sep_array_short(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
-	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, ARRAY_SIZE(slbas));
+	nb = argconfig_parse_comma_sep_array_u16(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
+	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
 
 	if (cfg.format == 0) {
-		nrts = argconfig_parse_comma_sep_array(cfg.eilbrts, (int *)eilbrts.f0,
-						       ARRAY_SIZE(eilbrts.f0));
+		nrts = argconfig_parse_comma_sep_array_u32(cfg.eilbrts, eilbrts.f0,
+							   ARRAY_SIZE(eilbrts.f0));
 	} else if (cfg.format == 1) {
-		nrts = argconfig_parse_comma_sep_array_long(cfg.eilbrts,
-							    (unsigned long long *)eilbrts.f1,
-							    ARRAY_SIZE(eilbrts.f1));
+		nrts = argconfig_parse_comma_sep_array_u64(cfg.eilbrts, eilbrts.f1,
+							   ARRAY_SIZE(eilbrts.f1));
 	} else {
 		nvme_show_error("invalid format");
 		err = -EINVAL;
 		goto close_dev;
 	}
 
-	natms = argconfig_parse_comma_sep_array(cfg.elbatms, (int *)elbatms, ARRAY_SIZE(elbatms));
-	nats = argconfig_parse_comma_sep_array(cfg.elbats, (int *)elbats, ARRAY_SIZE(elbats));
+	natms = argconfig_parse_comma_sep_array_u32(cfg.elbatms, elbatms, ARRAY_SIZE(elbatms));
+	nats = argconfig_parse_comma_sep_array_u32(cfg.elbats, elbats, ARRAY_SIZE(elbats));
 
 	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
 	if (!nr || nr > 128 || (cfg.format == 1 && nr > 101)) {
@@ -6911,11 +6910,9 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	if (cfg.format == 0)
-		nvme_init_copy_range(copy.f0, nlbs, (__u64 *)slbas,
-		  eilbrts.f0, elbatms, elbats, nr);
+		nvme_init_copy_range(copy.f0, nlbs, slbas, eilbrts.f0, elbatms, elbats, nr);
 	else if (cfg.format == 1)
-		nvme_init_copy_range_f1(copy.f1, nlbs, (__u64 *)slbas,
-		  eilbrts.f1, elbatms, elbats, nr);
+		nvme_init_copy_range_f1(copy.f1, nlbs, slbas, eilbrts.f1, elbatms, elbats, nr);
 
 	struct nvme_copy_args args = {
 		.args_size	= sizeof(args),
