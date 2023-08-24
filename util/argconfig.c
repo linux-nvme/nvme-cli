@@ -556,6 +556,58 @@ int argconfig_parse_comma_sep_array_long(char *string, unsigned long long *val,
 	}
 }
 
+#define DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(size)		\
+int argconfig_parse_comma_sep_array_u##size(char *string,		\
+					    __u##size *val,		\
+					    unsigned int max_length)	\
+{									\
+	int ret = 0;							\
+	uintmax_t v;							\
+	char *tmp;							\
+	char *p;							\
+									\
+	if (!string || !strlen(string))				\
+		return 0;						\
+									\
+	tmp = strtok(string, ",");					\
+	if (!tmp)							\
+		return 0;						\
+									\
+	v = strtoumax(tmp, &p, 0);					\
+	if (*p != 0)							\
+		return -1;						\
+	if (v > UINT##size##_MAX) {					\
+		fprintf(stderr, "%s out of range\n", tmp);		\
+		return -1;						\
+	}								\
+	val[ret] = v;							\
+									\
+	ret++;								\
+	while (1) {							\
+		tmp = strtok(NULL, ",");				\
+									\
+		if (tmp == NULL)					\
+			return ret;					\
+									\
+		if (ret >= max_length)					\
+			return -1;					\
+									\
+		v = strtoumax(tmp, &p, 0);				\
+		if (*p != 0)						\
+			return -1;					\
+		if (v > UINT##size##_MAX) {				\
+			fprintf(stderr, "%s out of range\n", tmp);	\
+			return -1;					\
+		}							\
+		val[ret] = v;						\
+		ret++;							\
+	}								\
+}
+
+DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(16);
+DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(32);
+DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(64);
+
 bool argconfig_parse_seen(struct argconfig_commandline_options *s,
 			  const char *option)
 {

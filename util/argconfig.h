@@ -41,6 +41,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <linux/types.h>
+
 enum argconfig_types {
 	CFG_FLAG,
 	CFG_STRING,
@@ -173,6 +175,12 @@ int argconfig_parse_comma_sep_array_short(char *string, unsigned short *ret,
 					  unsigned int max_length);
 int argconfig_parse_comma_sep_array_long(char *string, unsigned long long *ret,
 					 unsigned int max_length);
+int argconfig_parse_comma_sep_array_u16(char *string, __u16 *val,
+					unsigned int max_length);
+int argconfig_parse_comma_sep_array_u32(char *string, __u32 *val,
+					unsigned int max_length);
+int argconfig_parse_comma_sep_array_u64(char *string, __u64 *val,
+					unsigned int max_length);
 int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val);
 
 void print_word_wrapped(const char *s, int indent, int start, FILE *stream);
