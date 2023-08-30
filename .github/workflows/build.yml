@@ -17,7 +17,7 @@ jobs:
         compiler: [gcc, clang]
         buildtype: [debug, release]
     container:
-      image: ghcr.io/igaw/linux-nvme/debian:0.30
+      image: ghcr.io/igaw/linux-nvme/debian:0.34
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -40,33 +40,22 @@ jobs:
       matrix:
         include:
           - arch: armhf
-            port: armhf
-            compiler: gcc-arm-linux-gnueabihf
-            packages:
           - arch: s390x
-            port: s390x
-            compiler: gcc-s390x-linux-gnu
-            packages: libgcc-s1:s390x
           - arch: ppc64le
-            port: ppc64el
-            compiler: gcc-powerpc64le-linux-gnu
-            packges:
     steps:
       - uses: actions/checkout@v3
-      - name: set up arm architecture
-        run: |
-          export release=$(lsb_release -c -s)
-          sudo dpkg --add-architecture ${{ matrix.port }}
-          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
-          sudo dd of=/etc/apt/sources.list.d/${{ matrix.arch }}.list <<EOF
-          deb [arch=${{ matrix.port }}] http://ports.ubuntu.com/ $release main universe restricted"
-          deb [arch=${{ matrix.port }}] http://ports.ubuntu.com/ $release-updates main universe restricted"
-          EOF
-          sudo apt update
-          sudo apt install -y meson pkg-config qemu-user-static ${{ matrix.compiler}} libjson-c-dev:${{ matrix.port }} ${{ matrix.packages }}
-      - name: build
-        run: |
-          scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
+      - name: enable foreign arch
+        uses: dbhi/qus/action@main
+      - name: compile and run unit tests
+        uses: mosteo-actions/docker-run@v1
+        with:
+          image: ghcr.io/igaw/linux-nvme/ubuntu-cross-${{ matrix.arch }}:0.34
+          guest-dir: /build
+          host-dir: ${{ github.workspace }}
+          command: |
+            scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
+          params: "--platform linux/amd64"
+          pull-params: "--platform linux/amd64"
       - uses: actions/upload-artifact@v3
         name: upload logs
         if: failure()
@@ -79,7 +68,7 @@ jobs:
     name: libdbus
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/igaw/linux-nvme/debian:0.30
+      image: ghcr.io/igaw/linux-nvme/debian:0.34
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -100,7 +89,7 @@ jobs:
     name: fallback shared libraries
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/igaw/linux-nvme/debian:0.30
+      image: ghcr.io/igaw/linux-nvme/debian:0.34
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v3
@@ -121,7 +110,7 @@ jobs:
     name: muon minimal static
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/igaw/linux-nvme/debian:0.30
+      image: ghcr.io/igaw/linux-nvme/debian:0.34
     steps:
       - uses: actions/checkout@v3
       - name: build
