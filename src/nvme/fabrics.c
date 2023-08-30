@@ -1166,30 +1166,10 @@ out_free_log:
 	return NULL;
 }
 
-static void sanitize_discovery_log_entry(struct nvmf_disc_log_entry  *e)
+static void sanitize_discovery_log_entry(struct nvmf_disc_log_entry *e)
 {
-	switch (e->trtype) {
-	case NVMF_TRTYPE_RDMA:
-	case NVMF_TRTYPE_TCP:
-		switch (e->adrfam) {
-		case NVMF_ADDR_FAMILY_IP4:
-		case NVMF_ADDR_FAMILY_IP6:
-			strchomp(e->traddr, NVMF_TRADDR_SIZE);
-			strchomp(e->trsvcid, NVMF_TRSVCID_SIZE);
-			break;
-		}
-		break;
-        case NVMF_TRTYPE_FC:
-		switch (e->adrfam) {
-		case NVMF_ADDR_FAMILY_FC:
-			strchomp(e->traddr, NVMF_TRADDR_SIZE);
-			break;
-		}
-		break;
-	case NVMF_TRTYPE_LOOP:
-		strchomp(e->traddr, NVMF_TRADDR_SIZE);
-		break;
-	}
+	strchomp(e->trsvcid, sizeof(e->trsvcid));
+	strchomp(e->traddr, sizeof(e->traddr));
 }
 
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
