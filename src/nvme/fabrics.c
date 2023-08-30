@@ -47,7 +47,7 @@
 const char *nvmf_dev = "/dev/nvme-fabrics";
 
 /**
- * strchomp() - Strip trailing white space
+ * strchomp() - Strip trailing spaces
  * @str: String to strip
  * @max: Maximum length of string
  */
@@ -55,11 +55,8 @@ static void strchomp(char *str, int max)
 {
 	int i;
 
-	for (i = max - 1; i >= 0; i--) {
-		if (str[i] != '\0' && str[i] != ' ')
-			return;
-		else
-			str[i] = '\0';
+	for (i = max - 1; i >= 0 && str[i] == ' '; i--) {
+		str[i] = '\0';
 	}
 }
 
