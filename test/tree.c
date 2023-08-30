@@ -71,14 +71,51 @@ static void show_ctrl(nvme_ctrl_t c)
 
 	if (d)
 		printf("ctrl%d ", d->ctrl_id);
+	else
+		printf("      ");
 
-	printf("0x%p: %s %s %s %s %s\n",
+	printf("0x%p: %s %s %s %s %s ",
 	       c,
 	       nvme_ctrl_get_transport(c),
 	       nvme_ctrl_get_traddr(c),
 	       nvme_ctrl_get_host_traddr(c),
 	       nvme_ctrl_get_host_iface(c),
 	       nvme_ctrl_get_trsvcid(c));
+}
+
+static bool match_ctrl(struct test_data *d, nvme_ctrl_t c)
+{
+	bool pass = true;
+	const char *trsvid, *host_traddr, *host_iface;
+
+	if (d->c != c)
+		pass = false;
+
+	if (strcmp(d->transport, nvme_ctrl_get_transport(d->c)))
+		pass = false;
+
+	if (strcmp(d->traddr, nvme_ctrl_get_traddr(d->c)))
+		pass = false;
+
+
+	host_traddr = nvme_ctrl_get_host_traddr(c);
+	if (d->host_traddr &&
+	    (!host_traddr || strcmp(d->host_traddr, host_traddr)))
+		pass = false;
+
+	host_iface = nvme_ctrl_get_host_iface(c);
+	if (d->host_iface &&
+	    (!host_iface || strcmp(d->host_iface, host_iface)))
+		pass = false;
+
+	trsvid = nvme_ctrl_get_trsvcid(c);
+	if (d->trsvcid &&
+	    (!trsvid || strcmp(d->trsvcid, trsvid)))
+		pass = false;
+
+	printf("[%s]", pass? "PASS" : "FAILED");
+
+	return pass;
 }
 
 static nvme_root_t create_tree()
@@ -103,14 +140,10 @@ static nvme_root_t create_tree()
 		assert(d->c);
 		d->ctrl_id = i;
 
-		assert(!strcmp(d->transport, nvme_ctrl_get_transport(d->c)));
-		assert(!strcmp(d->traddr, nvme_ctrl_get_traddr(d->c)));
-		assert(!d->host_traddr || !strcmp(d->host_traddr, nvme_ctrl_get_host_traddr(d->c)));
-		assert(!d->host_iface || !strcmp(d->host_iface, nvme_ctrl_get_host_iface(d->c)));
-		assert(!d->trsvcid || !strcmp(d->trsvcid, nvme_ctrl_get_trsvcid(d->c)));
-
 		printf("    ");
 		show_ctrl(d->c);
+		match_ctrl(d, d->c);
+		printf("\n");
 	}
 	printf("\n");
 
@@ -124,22 +157,76 @@ static unsigned int count_entries(nvme_root_t r)
 	nvme_ctrl_t c;
 	unsigned int i = 0;
 
-	nvme_for_each_host(r, h) {
-		nvme_for_each_subsystem(h, s) {
-			nvme_subsystem_for_each_ctrl(s, c) {
+	nvme_for_each_host(r, h)
+		nvme_for_each_subsystem(h, s)
+			nvme_subsystem_for_each_ctrl(s, c)
 				i++;
-			}
-		}
-	}
 
 	return i;
 }
 
-static void ctrl_lookups(nvme_root_t r)
+static bool tcp_ctrl_lookup(nvme_subsystem_t s, struct test_data *d)
+{
+	nvme_ctrl_t c;
+	bool pass = true;
+
+	c = nvme_lookup_ctrl(s, d->transport, d->traddr, NULL,
+			     NULL, d->trsvcid, NULL);
+	printf("%10s %12s %10s -> ", d->trsvcid, "", "");
+	show_ctrl(c);
+	pass &= match_ctrl(d, c);
+	printf("\n");
+
+	if (d->host_traddr) {
+		c = nvme_lookup_ctrl(s, d->transport, d->traddr, d->host_traddr,
+				     NULL, d->trsvcid, NULL);
+		printf("%10s %12s %10s -> ", d->trsvcid, d->host_traddr, "");
+		show_ctrl(c);
+		pass &= match_ctrl(d, c);
+		printf("\n");
+	}
+
+	if (d->host_iface) {
+		c = nvme_lookup_ctrl(s, d->transport, d->traddr, NULL,
+				     d->host_iface, d->trsvcid, NULL);
+		printf("%10s %12s %10s -> ", d->trsvcid, "", d->host_iface);
+		show_ctrl(c);
+		pass &= match_ctrl(d, c);
+		printf("\n");
+	}
+
+	if (d->host_iface && d->traddr)	{
+		c = nvme_lookup_ctrl(s, d->transport, d->traddr, d->host_traddr,
+				     d->host_iface, d->trsvcid, NULL);
+		printf("%10s %12s %10s -> ", d->trsvcid, d->host_traddr, d->host_iface);
+		show_ctrl(c);
+		pass &= match_ctrl(d, c);
+		printf("\n");
+	}
+
+	return pass;
+}
+
+static bool default_ctrl_lookup(nvme_subsystem_t s, struct test_data *d)
+{
+	nvme_ctrl_t c;
+	bool pass = true;
+
+	c = nvme_lookup_ctrl(s, d->transport, d->traddr, d->host_traddr,
+			     NULL, NULL, NULL);
+	printf("%10s %12s %10s -> ", "", "", "");
+	show_ctrl(c);
+	pass &= match_ctrl(d, c);
+	printf("\n");
+
+	return pass;
+}
+
+static bool ctrl_lookups(nvme_root_t r)
 {
 	nvme_host_t h;
 	nvme_subsystem_t s;
-	nvme_ctrl_t c;
+	bool pass = true;
 
 	h = nvme_first_host(r);
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN);
@@ -148,69 +235,35 @@ static void ctrl_lookups(nvme_root_t r)
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
 		struct test_data *d = &test_data[i];
 
-		printf("%10s %10s    ", "", "");
+		printf("%10s %12s %10s    ", "", "", "");
 		show_ctrl(d->c);
-		c = nvme_lookup_ctrl(s, d->transport, d->traddr, d->host_traddr,
-				     NULL, NULL, NULL);
-		printf("%10s %10s -> ", "-", "-");
-		show_ctrl(c);
+		printf("\n");
 
-		assert(!strcmp(d->transport, nvme_ctrl_get_transport(c)));
-		assert(!strcmp(d->traddr, nvme_ctrl_get_traddr(c)));
-		assert(!strcmp(d->host_traddr, nvme_ctrl_get_host_traddr(c)));
-
-		if (d->host_iface) {
-			c = nvme_lookup_ctrl(s, d->transport, d->traddr, d->host_traddr,
-					     d->host_iface, NULL, NULL);
-			printf("%10s %10s -> ", d->host_iface, "-");
-			show_ctrl(c);
-
-			assert(!strcmp(d->transport, nvme_ctrl_get_transport(c)));
-			assert(!strcmp(d->traddr, nvme_ctrl_get_traddr(c)));
-			assert(!strcmp(d->host_traddr, nvme_ctrl_get_host_traddr(c)));
-			assert(!strcmp(d->host_iface, nvme_ctrl_get_host_iface(c)));
-		}
-
-		if (d->trsvcid) {
-			c = nvme_lookup_ctrl(s, d->transport, d->traddr, d->host_traddr,
-					     NULL, d->trsvcid, NULL);
-			printf("%10s %10s -> ", "-", d->trsvcid);
-			show_ctrl(c);
-
-			assert(!strcmp(d->transport, nvme_ctrl_get_transport(c)));
-			assert(!strcmp(d->traddr, nvme_ctrl_get_traddr(c)));
-			assert(!strcmp(d->host_traddr, nvme_ctrl_get_host_traddr(c)));
-			assert(!strcmp(d->trsvcid, nvme_ctrl_get_trsvcid(c)));
-		}
-
-		if (d->host_iface && d->trsvcid) {
-			c = nvme_lookup_ctrl(s, d->transport, d->traddr, d->host_traddr,
-					     d->host_iface, d->trsvcid, NULL);
-			printf("%10s %10s -> ", d->host_iface, d->trsvcid);
-			show_ctrl(c);
-
-			assert(!strcmp(d->transport, nvme_ctrl_get_transport(c)));
-			assert(!strcmp(d->traddr, nvme_ctrl_get_traddr(c)));
-			assert(!strcmp(d->host_traddr, nvme_ctrl_get_host_traddr(c)));
-			assert(!strcmp(d->trsvcid, nvme_ctrl_get_trsvcid(c)));
-			assert(!strcmp(d->host_iface, nvme_ctrl_get_host_iface(c)));
-		}
+		if (!strcmp("tcp", d->transport))
+			pass &= tcp_ctrl_lookup(s, d);
+		else
+			pass &= default_ctrl_lookup(s, d);
 
 		printf("\n");
 	}
+
+	return pass;
 }
 
-static void test_lookup_1(void)
+static bool test_lookup(void)
 {
 	nvme_root_t r;
+	bool pass;
 
-	printf("test_lookup_1:\n");
+	printf("test_lookup:\n");
 
 	r = create_tree();
-	assert(count_entries(r) == ARRAY_SIZE(test_data));
-	ctrl_lookups(r);
+	pass = count_entries(r) == ARRAY_SIZE(test_data);
+	pass &= ctrl_lookups(r);
 
 	nvme_free_tree(r);
+
+	return pass;
 }
 
 static bool test_src_addr()
@@ -981,8 +1034,7 @@ int main(int argc, char *argv[])
 {
 	bool pass = true;
 
-	test_lookup_1();
-
+	pass &= test_lookup();
 	pass &= test_src_addr();
 	pass &= test_ctrl_match_fc();
 	pass &= test_ctrl_match_rdma();
