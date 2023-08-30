@@ -213,7 +213,7 @@ static void test_lookup_1(void)
 	nvme_free_tree(r);
 }
 
-bool test_src_addr()
+static bool test_src_addr()
 {
 	bool pass = true;
 	nvme_root_t r;
@@ -368,13 +368,13 @@ struct ctrl_args {
 	const char *address;
 };
 
-void set_ctrl_args(struct ctrl_args *args,
-		   const char *transport,
-		   const char *traddr,
-		   const char *trsvcid,
-		   const char *host_traddr,
-		   const char *host_iface,
-		   const char *address)
+static void set_ctrl_args(struct ctrl_args *args,
+			  const char *transport,
+			  const char *traddr,
+			  const char *trsvcid,
+			  const char *host_traddr,
+			  const char *host_iface,
+			  const char *address)
 {
 	args->transport   = transport;
 	args->traddr      = traddr;
