@@ -14,4 +14,6 @@ void cmp(const void *actual, const void *expected, size_t len, const char *msg);
 
 void arbitrary(void *buf, size_t len);
 
+size_t arbitrary_range(size_t max);
+
 #endif /* #ifndef _LIBNVME_TEST_IOCTL_UTIL_H */

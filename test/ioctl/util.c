@@ -56,3 +56,10 @@ void arbitrary(void *buf_, size_t len)
 	while (len--)
 		*(buf++) = rand();
 }
+
+size_t arbitrary_range(size_t max)
+{
+	size_t value;
+	arbitrary(&value, sizeof(value));
+	return value % max;
+}
