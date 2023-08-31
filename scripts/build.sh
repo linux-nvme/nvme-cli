@@ -119,6 +119,8 @@ test_meson() {
 }
 
 test_meson_coverage() {
+    "${MESON}" test                             \
+        -C "${BUILDDIR}"
     ninja -C "${BUILDDIR}" coverage --verbose
 }
 
