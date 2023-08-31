@@ -21,14 +21,14 @@ jobs:
        run: |
          scripts/build.sh appimage
      - name: build AppImage
-        uses: AppImageCrafters/build-appimage@v1.3
-        with:
-          recipe: .github/AppImageBuilder.yml
-      - uses: actions/upload-artifact@v3
-        name: upload artifacts to github
-        with:
-          name: AppImage
-          path: '*.AppImage*'
+       uses: AppImageCrafters/build-appimage@v1.3
+       with:
+         recipe: .github/AppImageBuilder.yml
+     - uses: actions/upload-artifact@v3
+       name: upload artifacts to github
+       with:
+         name: AppImage
+         path: '*.AppImage*'
 
   deploy-appimage:
     name: deploy AppImage
