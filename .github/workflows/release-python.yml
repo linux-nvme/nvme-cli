@@ -15,11 +15,13 @@ jobs:
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/igaw/linux-nvme/debian.python:0.34
     steps:
-      - name: install libraries
-        run: sudo apt-get install gcc pkg-config libjson-c-dev libssl-dev python3-dev
-
       - uses: actions/checkout@v3
+
+      - name: Allow workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Build sdist
         run: pipx run build --sdist
