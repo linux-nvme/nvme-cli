@@ -19,6 +19,7 @@ usage() {
     echo "  fallback            download all dependencies"
     echo "                      and build them as shared libaries"
     echo "  cross               use cross toolchain to build"
+    echo "  coverage            build coverage report"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -58,6 +59,8 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 
 BUILDDIR="$(pwd)/.build-ci"
 
+fn_exists() { declare -F "$1" > /dev/null; }
+
 config_meson_default() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
@@ -95,14 +98,32 @@ config_meson_cross() {
         "${BUILDDIR}"
 }
 
+config_meson_coverage() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        --wrap-mode=nofallback                  \
+        -Dlibdbus=enabled                       \
+        -Db_coverage=true                       \
+        "${BUILDDIR}"
+}
+
 build_meson() {
     "${MESON}" compile                          \
         -C "${BUILDDIR}"
 }
 
+build_meson_coverage() {
+    ninja -C "${BUILDDIR}" coverage --verbose
+}
+
 test_meson() {
     "${MESON}" test                             \
         -C "${BUILDDIR}"
+}
+
+test_meson_covarage() {
+    true;
 }
 
 tools_build_samurai() {
@@ -178,5 +199,5 @@ if [[ "${BUILDTOOL}" == "muon" ]]; then
 fi
 
 config_"${BUILDTOOL}"_"${CONFIG}"
-build_"${BUILDTOOL}"
-test_"${BUILDTOOL}"
+fn_exists "build_${BUILDTOOL}_${CONFIG}" && "build_${BUILDTOOL}_${CONFIG}" || build_"${BUILDTOOL}"
+fn_exists "test_${BUILDTOOL}_${CONFIG}" && "test_${BUILDTOOL}_${CONFIG}" || test_"${BUILDTOOL}"
