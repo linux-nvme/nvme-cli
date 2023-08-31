@@ -1256,33 +1256,28 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
  */
 static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct nvme_ctrl *c, struct candidate_args *candidate)
 {
-	if (c->cfg.host_traddr) {
-		if (!nvme_ipaddrs_eq(candidate->host_traddr, c->cfg.host_traddr))
-			return false;
-	} else {
-		/* If c->cfg.host_traddr is NULL, then the controller (c)
-		 * uses the interface's primary address as the source
-		 * address. If c->cfg.host_iface is defined we can
-		 * determine the primary address associated with that
-		 * interface and compare that to the candidate->host_traddr.
-		 */
-		if (c->cfg.host_iface) {
-			if (!nvme_iface_primary_addr_matches(candidate->iface_list,
-							     c->cfg.host_iface,
-							     candidate->host_traddr))
-				return false;
-		} else {
-			/* If both c->cfg.host_traddr and c->cfg.host_iface are
-			 * NULL, we don't have enough information to make a
-			 * 100% positive match. Regardless, let's be optimistic
-			 * and assume that we have a match.
-			 */
-			nvme_msg(root_from_ctrl(c), LOG_DEBUG,
-				 "Not enough data, but assume %s matches candidate's host_traddr: %s\n",
-				 nvme_ctrl_get_name(c),
-				 candidate->host_traddr);
-		}
-	}
+	if (c->cfg.host_traddr)
+		return nvme_ipaddrs_eq(candidate->host_traddr, c->cfg.host_traddr);
+
+	/* If c->cfg.host_traddr is NULL, then the controller (c)
+	 * uses the interface's primary address as the source
+	 * address. If c->cfg.host_iface is defined we can
+	 * determine the primary address associated with that
+	 * interface and compare that to the candidate->host_traddr.
+	 */
+	if (c->cfg.host_iface)
+		return nvme_iface_primary_addr_matches(candidate->iface_list,
+						       c->cfg.host_iface,
+						       candidate->host_traddr);
+
+	/* If both c->cfg.host_traddr and c->cfg.host_iface are
+	 * NULL, we don't have enough information to make a
+	 * 100% positive match. Regardless, let's be optimistic
+	 * and assume that we have a match.
+	 */
+	nvme_msg(root_from_ctrl(c), LOG_DEBUG,
+		 "Not enough data, but assume %s matches candidate's host_traddr: %s\n",
+		 nvme_ctrl_get_name(c), candidate->host_traddr);
 
 	return true;
 }
@@ -1302,29 +1297,27 @@ static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct nvme_ctrl *c, struct 
  */
 static bool _tcp_ctrl_match_host_iface_no_src_addr(struct nvme_ctrl *c, struct candidate_args *candidate)
 {
-	if (c->cfg.host_iface) {
-		if (!streq0(candidate->host_iface, c->cfg.host_iface))
-			return false;
-	} else {
-		if (c->cfg.host_traddr) {
-			const char *c_host_iface;
+	if (c->cfg.host_iface)
+		return streq0(candidate->host_iface, c->cfg.host_iface);
 
-			c_host_iface = nvme_iface_matching_addr(candidate->iface_list,
-								c->cfg.host_traddr);
-			if (!streq0(candidate->host_iface, c_host_iface))
-				return false;
-		} else {
-			/* If both c->cfg.host_traddr and c->cfg.host_iface are
-			 * NULL, we don't have enough information to make a
-			 * 100% positive match. Regardless, let's be optimistic
-			 * and assume that we have a match.
-			 */
-			nvme_msg(root_from_ctrl(c), LOG_DEBUG,
-				 "Not enough data, but assume %s matches candidate's host_iface: %s\n",
-				 nvme_ctrl_get_name(c),
-				 candidate->host_iface);
-		}
+	/* If c->cfg.host_traddr is not NULL we can infer the controller's (c)
+	 * interface from it and compare it to the candidate->host_iface.
+	 */
+	if (c->cfg.host_traddr) {
+		const char *c_host_iface;
+
+		c_host_iface = nvme_iface_matching_addr(candidate->iface_list, c->cfg.host_traddr);
+		return streq0(candidate->host_iface, c_host_iface);
 	}
+
+	/* If both c->cfg.host_traddr and c->cfg.host_iface are
+	 * NULL, we don't have enough information to make a
+	 * 100% positive match. Regardless, let's be optimistic
+	 * and assume that we have a match.
+	 */
+	nvme_msg(root_from_ctrl(c), LOG_DEBUG,
+		 "Not enough data, but assume %s matches candidate's host_iface: %s\n",
+		 nvme_ctrl_get_name(c), candidate->host_iface);
 
 	return true;
 }
