@@ -13,24 +13,14 @@ jobs:
   build-appimage:
     name: build AppImage
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/igaw/linux-nvme/debian:0.36
     steps:
-      - uses: actions/checkout@v3
-      - name: install dependencies
-        run: sudo apt-get install libjson-c-dev libssl-dev libdbus-1-dev libhugetlbfs-dev
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - uses: BSFishy/meson-build@v1.0.3
-        with:
-          setup-options: >
-            --werror
-            --buildtype=release
-            --prefix=/usr
-            --force-fallback-for=libnvme
-            -Dlibnvme:werror=false
-          action: install
-          meson-version: 0.61.2
-      - name: build AppImage
+     - uses: actions/checkout@v3
+     - name: build
+        run: |
+          scripts/build.sh appimage
+     - name: build AppImage
         uses: AppImageCrafters/build-appimage@v1.3
         with:
           recipe: .github/AppImageBuilder.yml

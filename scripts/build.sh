@@ -18,6 +18,8 @@ usage() {
     echo "  fallback            download all dependencies"
     echo "                      and build them as shared libaries"
     echo "  cross               use cross toolchain to build"
+    echo "  coverage            build coverage report"
+    echo "  appimage            build AppImage target"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -57,6 +59,8 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 
 BUILDDIR="$(pwd)/.build-ci"
 
+fn_exists() { declare -F "$1" > /dev/null; }
+
 config_meson_default() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
@@ -89,13 +93,46 @@ config_meson_cross() {
         "${BUILDDIR}"
 }
 
+config_meson_coverage() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        --force-fallback-for=libnvme            \
+        -Dlibnvme:werror=false                  \
+        -Db_coverage=true                       \
+        "${BUILDDIR}"
+}
+
+config_meson_appimage() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        --force-fallback-for=libnvme            \
+        --prefix=/usr                           \
+        -Dlibnvme:werror=false                  \
+        "${BUILDDIR}"
+}
+
 build_meson() {
     "${MESON}" compile                          \
         -C "${BUILDDIR}"
 }
 
+build_meson_coverage() {
+    ninja -C "${BUILDDIR}" coverage --verbose
+}
+
 test_meson() {
     "${MESON}" test                             \
+        -C "${BUILDDIR}"
+}
+
+test_meson_covarage() {
+    true;
+}
+
+install_meson_appimage() {
+    "${MESON}" install                             \
         -C "${BUILDDIR}"
 }
 
@@ -173,5 +210,6 @@ if [[ "${BUILDTOOL}" == "muon" ]]; then
 fi
 
 config_"${BUILDTOOL}"_"${CONFIG}"
-build_"${BUILDTOOL}"
-test_"${BUILDTOOL}"
+fn_exists "build_${BUILDTOOL}_${CONFIG}" && "build_${BUILDTOOL}_${CONFIG}" || build_"${BUILDTOOL}"
+fn_exists "test_${BUILDTOOL}_${CONFIG}" && "test_${BUILDTOOL}_${CONFIG}" || test_"${BUILDTOOL}"
+fn_exists "install_${BUILDTOOL}_${CONFIG}" && "install_${BUILDTOOL}_${CONFIG}" || true;
