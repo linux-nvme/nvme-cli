@@ -157,6 +157,11 @@ conf.set10(
     ),
     description: 'Is sys/random.h(getrandom) include-able?'
 )
+conf.set10(
+    'HAVE_ATTRIBUTE_UNUSED',
+    cc.get_id() == 'clang',
+    description: 'Is compiler warning about unused static line function?'
+)
 
 if cc.has_function_attribute('fallthrough')
   conf.set('fallthrough', '__attribute__((__fallthrough__))')
