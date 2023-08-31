@@ -18,8 +18,8 @@ jobs:
     steps:
      - uses: actions/checkout@v3
      - name: build
-        run: |
-          scripts/build.sh appimage
+       run: |
+         scripts/build.sh appimage
      - name: build AppImage
         uses: AppImageCrafters/build-appimage@v1.3
         with:
