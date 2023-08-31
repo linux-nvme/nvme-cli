@@ -17,7 +17,7 @@ jobs:
         compiler: [gcc, clang]
         buildtype: [debug, release]
     container:
-      image: ghcr.io/igaw/linux-nvme/debian:0.35
+      image: ghcr.io/igaw/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -49,7 +49,7 @@ jobs:
       - name: compile and run unit tests
         uses: mosteo-actions/docker-run@v1
         with:
-          image: ghcr.io/igaw/linux-nvme/ubuntu-cross-${{ matrix.arch }}:0.35
+          image: ghcr.io/igaw/linux-nvme/ubuntu-cross-${{ matrix.arch }}:latest
           guest-dir: /build
           host-dir: ${{ github.workspace }}
           command: |
@@ -68,7 +68,7 @@ jobs:
     name: libdbus
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/igaw/linux-nvme/debian:0.35
+      image: ghcr.io/igaw/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -89,7 +89,7 @@ jobs:
     name: fallback shared libraries
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/igaw/linux-nvme/debian:0.35
+      image: ghcr.io/igaw/linux-nvme/debian:latest
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v3
@@ -110,7 +110,7 @@ jobs:
     name: muon minimal static
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/igaw/linux-nvme/debian:0.35
+      image: ghcr.io/igaw/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v3
       - name: build

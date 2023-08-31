@@ -16,7 +16,7 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/igaw/linux-nvme/debian.python:0.35
+      image: ghcr.io/igaw/linux-nvme/debian.python:latest
     steps:
       - uses: actions/checkout@v3
 
