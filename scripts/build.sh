@@ -118,17 +118,13 @@ build_meson() {
         -C "${BUILDDIR}"
 }
 
-build_meson_coverage() {
-    ninja -C "${BUILDDIR}" coverage --verbose
-}
-
 test_meson() {
     "${MESON}" test                             \
         -C "${BUILDDIR}"
 }
 
-test_meson_covarage() {
-    true;
+test_meson_coverage() {
+    ninja -C "${BUILDDIR}" coverage --verbose
 }
 
 install_meson_appimage() {
