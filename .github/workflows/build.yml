@@ -19,7 +19,7 @@ jobs:
     container:
       image: ghcr.io/igaw/linux-nvme/debian.python:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build
         run: |
           scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }}
@@ -40,7 +40,7 @@ jobs:
           - arch: s390x
           - arch: ppc64le
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: enable foreign arch
         uses: dbhi/qus/action@main
       - name: compile and run unit tests
@@ -68,7 +68,7 @@ jobs:
       image: ghcr.io/igaw/linux-nvme/debian:latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build
         run: |
           scripts/build.sh -b release -c gcc fallback
@@ -85,7 +85,7 @@ jobs:
     container:
       image: ghcr.io/igaw/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build
         run: |
           scripts/build.sh -m muon
