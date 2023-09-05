@@ -2739,7 +2739,7 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 close_dev:
 	dev_close(dev);
 ret:
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
@@ -3589,7 +3589,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 close_dev:
 	dev_close(dev);
 ret:
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -3656,7 +3656,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 close_dev:
 	dev_close(dev);
 ret:
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
