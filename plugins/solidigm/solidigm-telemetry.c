@@ -22,6 +22,7 @@
 #include "solidigm-telemetry/header.h"
 #include "solidigm-telemetry/config.h"
 #include "solidigm-telemetry/data-area.h"
+#include "solidigm-util.h"
 
 static int read_file2buffer(char *file_name, char **buffer, size_t *length)
 {
@@ -71,7 +72,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 	struct config cfg = {
 		.host_gen   = 1,
 		.ctrl_init  = false,
-		.data_area  = 3,
+		.data_area  = -1,
 		.cfg_file   = NULL,
 		.is_input_file = false,
 	};
@@ -89,6 +90,10 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 
 	if (err)
 		goto ret;
+
+	/* When not selected on the command line, get minimum data area required */
+	if (cfg.data_area == -1)
+		cfg.data_area =  cfg.cfg_file ? 3 : 1;
 
 	if (cfg.is_input_file) {
 		if (optind >= argc) {
@@ -138,19 +143,23 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 	}
 
 	if (!cfg.is_input_file) {
-		if (cfg.ctrl_init)
-			err = nvme_get_ctrl_telemetry(dev_fd(dev), true,
-						      &tl.log, cfg.data_area,
-						      &tl.log_size);
-		else if (cfg.host_gen)
-			err = nvme_get_new_host_telemetry(dev_fd(dev), &tl.log,
-							  cfg.data_area,
-							  &tl.log_size);
-		else
-			err = nvme_get_host_telemetry(dev_fd(dev), &tl.log,
-						      cfg.data_area,
-						      &tl.log_size);
+		size_t max_data_tx;
 
+		err = nvme_get_telemetry_max(dev_fd(dev), NULL, &max_data_tx);
+		if (err < 0) {
+			SOLIDIGM_LOG_WARNING("identify_ctrl: %s",
+					     nvme_strerror(errno));
+			goto close_fd;
+		} else if (err > 0) {
+			nvme_show_status(err);
+			SOLIDIGM_LOG_WARNING("Failed to acquire identify ctrl %d!", err);
+			goto close_fd;
+		}
+		if (max_data_tx > DRIVER_MAX_TX_256K)
+			max_data_tx = DRIVER_MAX_TX_256K;
+
+		err = nvme_get_telemetry_log(dev_fd(dev), cfg.host_gen, cfg.ctrl_init, true,
+					     max_data_tx, cfg.data_area, &tl.log, &tl.log_size);
 		if (err < 0) {
 			SOLIDIGM_LOG_WARNING("get-telemetry-log: %s",
 					     nvme_strerror(errno));

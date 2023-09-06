@@ -19,6 +19,7 @@
 #include "libnvme.h"
 #include "plugin.h"
 #include "nvme-print.h"
+#include "solidigm-util.h"
 
 #define DWORD_SIZE 4
 
@@ -427,7 +428,8 @@ static int dump_telemetry(struct nvme_dev *dev, struct config cfg, enum telemetr
 	int err = 0, output;
 	__u8 *buffer = NULL;
 	size_t bytes_remaining = 0;
-	int data_area = NVME_TELEMETRY_DA_3;
+	enum nvme_telemetry_da da;
+	size_t max_data_tx;
 	char file_path[PATH_MAX];
 	char *log_name;
 
@@ -444,6 +446,12 @@ static int dump_telemetry(struct nvme_dev *dev, struct config cfg, enum telemetr
 	default:
 		return -EINVAL;
 	}
+	err = nvme_get_telemetry_max(dev_fd(dev), &da, &max_data_tx);
+	if (err)
+		return err;
+
+	if (max_data_tx > DRIVER_MAX_TX_256K)
+		max_data_tx = DRIVER_MAX_TX_256K;
 
 	sprintf(file_path, "%s_%s.bin", cfg.file_prefix, log_name);
 	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -452,16 +460,16 @@ static int dump_telemetry(struct nvme_dev *dev, struct config cfg, enum telemetr
 
 	switch (ttype) {
 	case HOSTGENNEW:
-		err = nvme_get_new_host_telemetry(dev_fd(dev), &log,
-						  data_area, &log_size);
+		err = nvme_get_telemetry_log(dev_fd(dev), true, false, false, max_data_tx, da,
+					     &log, &log_size);
 		break;
 	case HOSTGENOLD:
-		err = nvme_get_host_telemetry(dev_fd(dev), &log,
-						  data_area, &log_size);
+		err = nvme_get_telemetry_log(dev_fd(dev), false, false, false, max_data_tx, da,
+					     &log, &log_size);
 		break;
 	case CONTROLLER:
-		err = nvme_get_ctrl_telemetry(dev_fd(dev), true, &log,
-					      data_area, &log_size);
+		err = nvme_get_telemetry_log(dev_fd(dev), false, true, true, max_data_tx, da, &log,
+					     &log_size);
 		break;
 	}
 
@@ -546,42 +554,42 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 		if (err == 0)
 			log_count++;
 		else if (err < 0)
-			perror("Assert log");
+			perror("Error retrieving Assert log");
 	}
 	if (all || !strcmp(cfg.type, "EVENT")) {
 		err = dump_event_logs(dev, cfg);
 		if (err == 0)
 			log_count++;
 		else if (err < 0)
-			perror("Eventt log");
+			perror("Error retrieving Event log");
 	}
 	if (all || !strcmp(cfg.type, "NLOG")) {
 		err = dump_nlogs(dev, cfg, -1);
 		if (err == 0)
 			log_count++;
 		else if (err < 0)
-			perror("Nlog");
+			perror("Error retrieving Nlog");
 	}
 	if (all || !strcmp(cfg.type, "CONTROLLERINITTELEMETRY")) {
 		err = dump_telemetry(dev, cfg, CONTROLLER);
 		if (err == 0)
 			log_count++;
 		else if (err < 0)
-			perror("Telemetry Controller Initated");
+			perror("Error retrieving Telemetry Controller Initiated");
 	}
 	if (all || !strcmp(cfg.type, "HOSTINITTELEMETRYNOGEN")) {
 		err = dump_telemetry(dev, cfg, HOSTGENOLD);
 		if (err == 0)
 			log_count++;
 		else if (err < 0)
-			perror("Previously existing Telemetry Host Initated");
+			perror("Error retrieving previously existing Telemetry Host Initiated");
 	}
 	if (all || !strcmp(cfg.type, "HOSTINITTELEMETRY")) {
 		err = dump_telemetry(dev, cfg, HOSTGENNEW);
 		if (err == 0)
 			log_count++;
 		else if (err < 0)
-			perror("Telemetry Host Initated");
+			perror("Error retrieving Telemetry Host Initiated");
 	}
 
 	if (log_count == 0) {
