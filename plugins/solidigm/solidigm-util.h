@@ -7,4 +7,6 @@
 
 #include "nvme.h"
 
+#define DRIVER_MAX_TX_256K (256 * 1024)
+
 __u8 solidigm_get_vu_uuid_index(struct nvme_dev *dev);
