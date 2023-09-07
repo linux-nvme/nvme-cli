@@ -29,6 +29,7 @@
 #include "plugin.h"
 #include "util/json.h"
 #include "util/argconfig.h"
+#include "nvme/handle.h"
 
 enum nvme_print_flags {
 	NORMAL	= 0,
@@ -45,51 +46,6 @@ enum nvme_cli_topo_ranking {
 
 #define SYS_NVME "/sys/class/nvme"
 
-enum nvme_dev_type {
-	NVME_DEV_DIRECT,
-	NVME_DEV_MI,
-};
-
-struct nvme_dev {
-	enum nvme_dev_type type;
-	union {
-		struct {
-			int fd;
-			struct stat stat;
-		} direct;
-		struct {
-			nvme_root_t root;
-			nvme_mi_ep_t ep;
-			nvme_mi_ctrl_t ctrl;
-		} mi;
-	};
-
-	const char *name;
-};
-
-#define dev_fd(d) __dev_fd(d, __func__, __LINE__)
-
-static inline int __dev_fd(struct nvme_dev *dev, const char *func, int line)
-{
-	if (dev->type != NVME_DEV_DIRECT) {
-		fprintf(stderr,
-			"warning: %s:%d not a direct transport!\n",
-			func, line);
-		return -1;
-	}
-	return dev->direct.fd;
-}
-
-static inline nvme_mi_ep_t dev_mi_ep(struct nvme_dev *dev)
-{
-	if (dev->type != NVME_DEV_MI) {
-		fprintf(stderr,
-			"warning: not a MI transport!\n");
-		return NULL;
-	}
-	return dev->mi.ep;
-}
-
 void register_extension(struct plugin *plugin);
 
 /*
@@ -97,8 +53,6 @@ void register_extension(struct plugin *plugin);
  */
 int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *desc,
 	struct argconfig_commandline_options *clo);
-
-void dev_close(struct nvme_dev *dev);
 
 extern const char *output_format;
 

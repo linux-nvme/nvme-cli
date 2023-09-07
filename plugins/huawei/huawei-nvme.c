@@ -69,10 +69,14 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 	int err;
 	int len;
 	struct stat nvme_stat_info;
+	struct dev_handle hdl;
+
+	hdl.fd = fd;
+	hdl.dev_type = NVME_DEV_DIRECT;
 
 	memset(item, 0, sizeof(*item));
 
-	err = nvme_identify_ctrl(fd, &item->ctrl);
+	err = nvme_identify_ctrl(&hdl, &item->ctrl);
 	if (err)
 		return err;
 
@@ -84,8 +88,8 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 	}
 
 	item->huawei_device = true;
-	err = nvme_get_nsid(fd, &item->nsid);
-	err = nvme_identify_ns(fd, item->nsid, &item->ns);
+	err = nvme_get_nsid(&hdl, &item->nsid);
+	err = nvme_identify_ns(&hdl, item->nsid, &item->ns);
 	if (err)
 		return err;
 

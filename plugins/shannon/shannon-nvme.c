@@ -140,7 +140,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
-	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
+	err = nvme_get_nsid_log(dev_hdl(dev), false, 0xca, cfg.namespace_id,
 				sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -231,8 +231,8 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	}
 
 	struct nvme_get_features_args args = {
+		.hdl            = dev_hdl(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= cfg.feature_id,
 		.nsid		= cfg.namespace_id,
 		.sel		= cfg.sel,
@@ -341,8 +341,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	}
 
 	struct nvme_set_features_args args = {
+		.hdl            = dev_hdl(dev),
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.fid		= cfg.feature_id,
 		.nsid		= cfg.namespace_id,
 		.cdw11		= cfg.value,

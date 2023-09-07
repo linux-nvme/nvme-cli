@@ -47,7 +47,7 @@ int sldgm_get_market_log(int argc, char **argv, struct command *command,
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(dev_fd(dev), 0xdd, sizeof(log), log);
+	err = nvme_get_log_simple(dev_hdl(dev), 0xdd, sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			printf("Solidigm Marketing Name Log:\n%s\n", log);
@@ -57,7 +57,7 @@ int sldgm_get_market_log(int argc, char **argv, struct command *command,
 
 	nvme_show_status(err);
 	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
+	close(dev_hdl(dev)->fd);
 	dev_close(dev);
 	return err;
 }

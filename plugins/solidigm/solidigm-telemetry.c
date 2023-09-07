@@ -139,15 +139,15 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 
 	if (!cfg.is_input_file) {
 		if (cfg.ctrl_init)
-			err = nvme_get_ctrl_telemetry(dev_fd(dev), true,
+			err = nvme_get_ctrl_telemetry(dev_hdl(dev), true,
 						      &tl.log, cfg.data_area,
 						      &tl.log_size);
 		else if (cfg.host_gen)
-			err = nvme_get_new_host_telemetry(dev_fd(dev), &tl.log,
+			err = nvme_get_new_host_telemetry(dev_hdl(dev), &tl.log,
 							  cfg.data_area,
 							  &tl.log_size);
 		else
-			err = nvme_get_host_telemetry(dev_fd(dev), &tl.log,
+			err = nvme_get_host_telemetry(dev_hdl(dev), &tl.log,
 						      cfg.data_area,
 						      &tl.log_size);
 
@@ -170,7 +170,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 close_fd:
 	if (!cfg.is_input_file) {
 		/* Redundant close() to make static code analysis happy */
-		close(dev->direct.fd);
+		close(dev_hdl(dev)->fd);
 		dev_close(dev);
 	}
 ret:

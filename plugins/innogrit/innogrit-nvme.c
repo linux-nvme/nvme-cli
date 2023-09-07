@@ -44,7 +44,7 @@ static int innogrit_smart_log_additional(int argc, char **argv,
 	if (err)
 		return err;
 
-	nvme_get_log_smart(dev_fd(dev), cfg.namespace_id, false, &smart_log);
+	nvme_get_log_smart(dev_hdl(dev), cfg.namespace_id, false, &smart_log);
 	nvme_show_smart_log(&smart_log, cfg.namespace_id, dev->name, NORMAL);
 
 	printf("DW0[0-1]  Defect Cnt                    : %u\n", pvsc_smart->defect_cnt);
@@ -138,7 +138,7 @@ static unsigned char setfilecontent(char *filenamea, unsigned char *buffer,
 	return true;
 }
 
-static int nvme_vucmd(int fd, unsigned char opcode, unsigned int cdw12,
+static int nvme_vucmd(struct dev_handle *hdl, unsigned char opcode, unsigned int cdw12,
 		      unsigned int cdw13, unsigned int cdw14,
 		      unsigned int cdw15, char *data, int data_len)
 {
@@ -155,7 +155,7 @@ static int nvme_vucmd(int fd, unsigned char opcode, unsigned int cdw12,
 	cmd.nsid = 0xffffffff;
 	cmd.addr = (__u64)(__u64)(uintptr_t)data;
 	cmd.data_len = data_len;
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 static int innogrit_vsc_geteventlog(int argc, char **argv,
@@ -197,7 +197,7 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 	if (getcwd(currentdir, 128) == NULL)
 		return -1;
 
-	ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x03, 0x00, 0x00, (char *)data, 4096);
+	ret = nvme_vucmd(dev_hdl(dev), 0xFE, 0x82, 0x03, 0x00, 0x00, (char *)data, 4096);
 	if (ret == -1)
 		return ret;
 
@@ -230,10 +230,10 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 
 		memset(data, 0, 4096);
 		if (ivsctype == 1)
-			ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x60, 0x00, 0x00, 0x00, (char *)data,
+			ret = nvme_vucmd(dev_hdl(dev), 0xFE, 0x60, 0x00, 0x00, 0x00, (char *)data,
 					 4096);
 		else
-			ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET_EVENT_LOG, 0, 0,
+			ret = nvme_vucmd(dev_hdl(dev), NVME_VSC_GET_EVENT_LOG, 0, 0,
 					(SRB_SIGNATURE >> 32),
 					(SRB_SIGNATURE & 0xFFFFFFFF),
 					(char *)data, 4096);
@@ -301,7 +301,7 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 
 	if (cfg.clean_flg == 1) {
 		printf("Clean eventlog\n");
-		nvme_vucmd(dev_fd(dev), NVME_VSC_CLEAN_EVENT_LOG, 0, 0,
+		nvme_vucmd(dev_hdl(dev), NVME_VSC_CLEAN_EVENT_LOG, 0, 0,
 			   (SRB_SIGNATURE >> 32),
 			   (SRB_SIGNATURE & 0xFFFFFFFF), (char *)NULL, 0);
 	}
@@ -345,16 +345,16 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 	ipackindex = 0;
 	memset(data, 0, 4096);
 
-	ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x03, 0x00, 0x00, (char *)data, 4096);
+	ret = nvme_vucmd(dev_hdl(dev), 0xFE, 0x82, 0x03, 0x00, 0x00, (char *)data, 4096);
 	if (ret == -1)
 		return ret;
 
 	if (data[0] == 0x5A) {
 		ivsctype = 1;
-		ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00, (char *)data, 4096);
+		ret = nvme_vucmd(dev_hdl(dev), 0xFE, 0x82, 0x08, 0x00, 0x00, (char *)data, 4096);
 	} else {
 		ivsctype = 0;
-		ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
+		ret = nvme_vucmd(dev_hdl(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
 					(SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
 					(char *)data, 4096);
 	}
@@ -381,7 +381,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 
 	if (busevsc == false) {
 		memset(data, 0, 4096);
-		ret = nvme_get_nsid_log(dev_fd(dev), true, 0x07,
+		ret = nvme_get_nsid_log(dev_hdl(dev), true, 0x07,
 					NVME_NSID_ALL,
 					4096, data);
 		if (ret != 0)
@@ -407,14 +407,14 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 			memset(data, 0, 4096);
 			if (busevsc) {
 				if (ivsctype == 1)
-					ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,
+					ret = nvme_vucmd(dev_hdl(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,
 							 (char *)data, 4096);
 				else
-					ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
+					ret = nvme_vucmd(dev_hdl(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
 								(SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
 								(char *)data, 4096);
 			} else {
-				ret = nvme_get_nsid_log(dev_fd(dev), true,
+				ret = nvme_get_nsid_log(dev_hdl(dev), true,
 							0x07,
 							NVME_NSID_ALL, 4096, data);
 			}
@@ -434,14 +434,14 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 			memset(data, 0, 4096);
 			if (busevsc) {
 				if (ivsctype == 1)
-					ret = nvme_vucmd(dev_fd(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,
+					ret = nvme_vucmd(dev_hdl(dev), 0xFE, 0x82, 0x08, 0x00, 0x00,
 							 (char *)data, 4096);
 				else
-					ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
+					ret = nvme_vucmd(dev_hdl(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
 								(SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
 								(char *)data, 4096);
 			} else {
-				ret = nvme_get_nsid_log(dev_fd(dev), true,
+				ret = nvme_get_nsid_log(dev_hdl(dev), true,
 							0x07,
 							NVME_NSID_ALL, 4096,
 							data);

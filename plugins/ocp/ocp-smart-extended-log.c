@@ -250,7 +250,7 @@ static void ocp_print_C0_log_json(void *data)
 	json_free_object(root);
 }
 
-static int get_c0_log_page(int fd, char *format)
+static int get_c0_log_page(struct dev_handle *hdl, char *format)
 {
 	__u8 *data;
 	int i;
@@ -270,7 +270,7 @@ static int get_c0_log_page(int fd, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
 
-	ret = nvme_get_log_simple(fd, C0_SMART_CLOUD_ATTR_OPCODE,
+	ret = nvme_get_log_simple(hdl, C0_SMART_CLOUD_ATTR_OPCODE,
 		C0_SMART_CLOUD_ATTR_LEN, data);
 
 	if (strcmp(format, "json"))
@@ -341,7 +341,7 @@ int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
 	if (ret)
 		return ret;
 
-	ret = get_c0_log_page(dev_fd(dev), cfg.output_format);
+	ret = get_c0_log_page(dev_hdl(dev), cfg.output_format);
 	if (ret)
 		fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
 			ret);

@@ -21,7 +21,7 @@
 #define do_admin_op(op, d, ...) ({					\
 	int __rc;							\
 	if (d->type == NVME_DEV_DIRECT)					\
-		__rc = nvme_ ## op(d->direct.fd, __VA_ARGS__);		\
+		__rc = nvme_ ## op(&d->direct.hdl, __VA_ARGS__);	\
 	else if (d->type == NVME_DEV_MI)				\
 		__rc = nvme_mi_admin_ ## op (d->mi.ctrl, __VA_ARGS__);	\
 	else								\
@@ -39,7 +39,8 @@
 #define do_admin_args_op(op, d, args) ({				\
 	int __rc;							\
 	if (d->type == NVME_DEV_DIRECT) {				\
-		args->fd = d->direct.fd;				\
+		args->hdl = &d->direct.hdl;				\
+		args->timeout = NVME_DEFAULT_IOCTL_TIMEOUT;		\
 		__rc = nvme_ ## op(args);				\
 	} else if (d->type == NVME_DEV_MI)				\
 		__rc = nvme_mi_admin_ ## op (d->mi.ctrl, args);		\
@@ -381,7 +382,7 @@ int nvme_cli_ns_mgmt_create(struct nvme_dev *dev,
 			__u32 *nsid, __u32 timeout, __u8 csi)
 {
 	if (dev->type == NVME_DEV_DIRECT)
-		return nvme_ns_mgmt_create(dev_fd(dev), NULL, nsid, timeout,
+		return nvme_ns_mgmt_create(dev_hdl(dev), NULL, nsid, timeout,
 							csi, data);
 	if (dev->type == NVME_DEV_MI)
 		return nvme_mi_admin_ns_mgmt_create(dev->mi.ctrl, NULL,
@@ -412,7 +413,7 @@ int nvme_cli_security_receive(struct nvme_dev *dev,
 {
 	/* Cannot use do_admin_args_op here because the API have different suffix*/
 	if (dev->type == NVME_DEV_DIRECT) {
-		args->fd = dev->direct.fd;
+		args->hdl = dev_hdl(dev);
 		args->timeout = NVME_DEFAULT_IOCTL_TIMEOUT;
 		return nvme_security_receive(args);
 	}

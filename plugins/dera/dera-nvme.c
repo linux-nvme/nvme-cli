@@ -95,7 +95,7 @@ enum dera_device_status
 	DEVICE_STAUTS__OVER_TEMPRATURE = 0x09,
 };
 
-static int nvme_dera_get_device_status(int fd, enum dera_device_status *result)
+static int nvme_dera_get_device_status(struct dev_handle *hdl, enum dera_device_status *result)
 {
 	int err = 0;
 
@@ -107,8 +107,8 @@ static int nvme_dera_get_device_status(int fd, enum dera_device_status *result)
 		.cdw12 = 0x104,
 	};
 
-	err = nvme_submit_admin_passthru(fd, &cmd, NULL);
-	if (!err && result)
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	if (!err && result) 
 		*result = cmd.result;
 
 	return err;
@@ -130,7 +130,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(dev_fd(dev), 0xc0, sizeof(log), &log);
+	err = nvme_get_log_simple(dev_hdl(dev), 0xc0, sizeof(log), &log);
 	if (err)
 		goto exit;
 
@@ -152,7 +152,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 		"Runtime Low",
 	};
 
-	err = nvme_dera_get_device_status(dev_fd(dev), &state);
+	err = nvme_dera_get_device_status(dev_hdl(dev), &state);
 	if (!err) {
 		if (state > 0 && state < 4)
 			printf("device_status                       : %s %d%% completed\n", dev_status[state], log.rebuild_percent);
