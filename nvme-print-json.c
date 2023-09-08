@@ -210,6 +210,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	json_object_add_value_uint(root, "mnan", le32_to_cpu(ctrl->mnan));
 	json_object_add_value_uint128(root, "maxdna", maxdna);
 	json_object_add_value_uint(root, "maxcna", le32_to_cpu(ctrl->maxcna));
+	json_object_add_value_uint(root, "oaqd", le32_to_cpu(ctrl->oaqd));
 
 	if (strlen(subnqn))
 		json_object_add_value_string(root, "subnqn", subnqn);
