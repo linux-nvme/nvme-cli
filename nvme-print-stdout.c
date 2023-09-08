@@ -2914,6 +2914,7 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	printf("maxdna    : %s\n",
 		uint128_t_to_l10n_string(le128_to_cpu(ctrl->maxdna)));
 	printf("maxcna    : %u\n", le32_to_cpu(ctrl->maxcna));
+	printf("oaqd      : %u\n", le32_to_cpu(ctrl->oaqd));
 	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
 	printf("ioccsz    : %u\n", le32_to_cpu(ctrl->ioccsz));
 	printf("iorcsz    : %u\n", le32_to_cpu(ctrl->iorcsz));
