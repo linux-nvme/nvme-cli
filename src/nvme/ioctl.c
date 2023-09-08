@@ -685,7 +685,7 @@ int nvme_set_features_auto_pst(int fd, bool apste, bool save,
 int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp)
 {
 	__le64 t = cpu_to_le64(timestamp);
-	struct nvme_timestamp ts;
+	struct nvme_timestamp ts = {};
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
