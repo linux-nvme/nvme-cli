@@ -5,6 +5,7 @@ LIBNVME_1_6 {
 		nvme_ctrl_find;
 		nvme_ctrl_get_src_addr;
 		nvme_ctrl_release_fd;
+		nvme_get_features_host_mem_buf2;
 		nvme_host_release_fds;
 		nvme_ns_release_fd;
 		nvme_root_release_fds;

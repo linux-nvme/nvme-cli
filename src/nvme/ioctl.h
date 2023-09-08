@@ -2758,6 +2758,10 @@ int nvme_get_features_auto_pst(int fd, enum nvme_get_features_sel sel,
 
 /**
  * nvme_get_features_host_mem_buf() - Get host memory buffer feature
+ *
+ * Deprecated: doesn't fetch the Host Memory Buffer Attributes data structure.
+ * Use nvme_get_features_host_mem_buf2() instead.
+ *
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
@@ -2766,7 +2770,21 @@ int nvme_get_features_auto_pst(int fd, enum nvme_get_features_sel sel,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_features_host_mem_buf(int fd, enum nvme_get_features_sel sel,
-				   __u32 *result);
+				   __u32 *result) __attribute__((deprecated));
+
+/**
+ * nvme_get_features_host_mem_buf2() - Get host memory buffer feature
+ * @fd:		File descriptor of nvme device
+ * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @attrs:	Buffer for returned Host Memory Buffer Attributes
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_features_host_mem_buf2(int fd, enum nvme_get_features_sel sel,
+				    struct nvme_host_mem_buf_attrs *attrs,
+				    __u32 *result);
 
 /**
  * nvme_get_features_timestamp() - Get timestamp feature
