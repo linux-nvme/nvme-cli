@@ -930,7 +930,10 @@ struct nvme_id_psd {
  * @maxcna:    Maximum I/O Controller Namespace Attachments indicates the
  *	       maximum number of namespaces that are allowed to be attached to
  *	       this I/O controller.
- * @rsvd564:   Reserved
+ * @oaqd:      Optimal Aggregated Queue Depth indicates the recommended maximum
+ *	       total number of outstanding I/O commands across all I/O queues
+ *	       on the controller for optimal operation.
+ * @rsvd568:   Reserved
  * @subnqn:    NVM Subsystem NVMe Qualified Name, UTF-8 null terminated string
  * @rsvd1024:  Reserved
  * @ioccsz:    I/O Queue Command Capsule Supported Size, defines the maximum
@@ -1035,7 +1038,8 @@ struct nvme_id_ctrl {
 	__le32			mnan;
 	__u8			maxdna[16];
 	__le32			maxcna;
-	__u8			rsvd564[204];
+	__le32			oaqd;
+	__u8			rsvd568[200];
 	char			subnqn[NVME_NQN_LENGTH];
 	__u8			rsvd1024[768];
 
