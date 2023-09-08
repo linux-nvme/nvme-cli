@@ -13,6 +13,15 @@ discovery = executable(
 
 test('discovery', discovery, env: ['LD_PRELOAD=' + mock_ioctl.full_path()])
 
+features = executable(
+    'test-features',
+    'features.c',
+    dependencies: libnvme_dep,
+    link_with: mock_ioctl,
+)
+
+test('features', features, env: ['LD_PRELOAD=' + mock_ioctl.full_path()])
+
 identify = executable(
     'test-identify',
     'identify.c',
