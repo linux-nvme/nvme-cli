@@ -54,3 +54,11 @@ rpm:
 debug:
 	meson ${BUILD-DIR} --buildtype=debug
 	ninja -C ${BUILD-DIR}
+
+.PHONY: static
+static:
+	meson ${BUILD-DIR} --buildtype=release \
+		--default-library=static -Dc_link_args="-static" \
+		--wrap-mode=forcefallback \
+		-Dlibnvme:tests=false -Dlibnvme:keyutils=disabled
+	ninja -C ${BUILD-DIR}
