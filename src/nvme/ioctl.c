@@ -585,7 +585,7 @@ int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
 				 __u32 *result)
 {
 	__u32 value = NVME_SET(ps, FEAT_PWRMGMT_PS) |
-			NVME_SET(wh, FEAT_PWRMGMT_PS);
+			NVME_SET(wh, FEAT_PWRMGMT_WH);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_POWER_MGMT, value, save,
 				   result);
@@ -630,8 +630,8 @@ int nvme_set_features_volatile_wc(int fd, bool wce, bool save, __u32 *result)
 int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time, bool save,
 				   __u32 *result)
 {
-	__u32 value = NVME_SET(thr, FEAT_IRQC_TIME) |
-			NVME_SET(time, FEAT_IRQC_THR);
+	__u32 value = NVME_SET(thr, FEAT_IRQC_THR) |
+			NVME_SET(time, FEAT_IRQC_TIME);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_IRQ_COALESCE, value, save,
 				   result);
