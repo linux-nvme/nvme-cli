@@ -18,7 +18,7 @@ jobs:
     container:
       image: ghcr.io/igaw/linux-nvme/debian.python:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Allow workspace
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
