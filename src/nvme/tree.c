@@ -44,6 +44,8 @@
  * @host_traddr:	Host transport address (source address)
  * @host_iface:		Host interface for connection (tcp only)
  * @iface_list:		Interface list (tcp only)
+ * @addreq:		Address comparison function (for traddr, host-traddr)
+ * @well_known_nqn:	Set to "true" when @subsysnqn is the well-known NQN
  */
 struct candidate_args {
 	const char *transport;
@@ -53,7 +55,10 @@ struct candidate_args {
 	const char *host_traddr;
 	const char *host_iface;
 	struct ifaddrs *iface_list;
+	bool (*addreq)(const char *, const char *);
+	bool well_known_nqn;
 };
+typedef bool (*ctrl_match_t)(struct nvme_ctrl *c, struct candidate_args *candidate);
 
 const char *nvme_slots_sysfs_dir = "/sys/bus/pci/slots";
 
@@ -1257,7 +1262,7 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct nvme_ctrl *c, struct candidate_args *candidate)
 {
 	if (c->cfg.host_traddr)
-		return nvme_ipaddrs_eq(candidate->host_traddr, c->cfg.host_traddr);
+		return candidate->addreq(candidate->host_traddr, c->cfg.host_traddr);
 
 	/* If c->cfg.host_traddr is NULL, then the controller (c)
 	 * uses the interface's primary address as the source
@@ -1405,7 +1410,7 @@ static bool _tcp_opt_params_match(struct nvme_ctrl *c, struct candidate_args *ca
 
 	/* Check host_traddr only if candidate is interested */
 	if (candidate->host_traddr &&
-	    !nvme_ipaddrs_eq(candidate->host_traddr, src_addr))
+	    !candidate->addreq(candidate->host_traddr, src_addr))
 		return false;
 
 	/* Check host_iface only if candidate is interested */
@@ -1418,19 +1423,12 @@ static bool _tcp_opt_params_match(struct nvme_ctrl *c, struct candidate_args *ca
 }
 
 /**
- * _tcp_lookup_ctrl() - Look for an existing controller that can be reused
- * @s:	Subsystem object under which to do the search
- * @transport:	Transport type ("tcp")
- * @traddr:	Destination IP address
- * @host_iface:	Interface for the connection (optional)
- * @host_traddr:	Source IP address (optional)
- * @trsvcid:	Destination TCP port
- * @p:	Starting point is the linked-list (NULL to start at the beginning)
+ * _tcp_match_ctrl() - Check if controller matches candidate (TCP only)
+ * @c:	An existing controller instance
+ * @candidate:	Candidate ctrl we're trying to match with @c.
  *
  * We want to determine if an existing controller can be re-used
- * for the candidate controller we're trying to instantiate. The
- * candidate is identified by @transport, @traddr, @trsvcid,
- * @host_traddr, and @host_iface.
+ * for the candidate controller we're trying to instantiate.
  *
  * For TCP, we do not have a match if the candidate's transport, traddr,
  * trsvcid are not identical to those of the the existing controller.
@@ -1440,92 +1438,204 @@ static bool _tcp_opt_params_match(struct nvme_ctrl *c, struct candidate_args *ca
  * not specify them (both NULL), we can ignore them. Otherwise, we must
  * employ advanced investigation techniques to determine if there's a match.
  *
- * Return: Pointer to the matching controller or NULL.
+ * Return: true if a match is found, false otherwise.
  */
-static nvme_ctrl_t _tcp_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-				    const char *traddr, const char *host_traddr,
-				    const char *host_iface, const char *trsvcid,
-				    nvme_ctrl_t p)
+static bool _tcp_match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidate)
 {
-	struct candidate_args candidate = {0};
-	struct nvme_ctrl *c, *matching_c = NULL;
+	if (!streq0(c->transport, candidate->transport))
+		return false;
 
-	candidate.traddr = traddr;
-	candidate.trsvcid = trsvcid;
-	candidate.transport = transport;
-	candidate.host_iface = host_iface;
-	candidate.host_traddr = host_traddr;
+	if (!streq0(c->trsvcid, candidate->trsvcid))
+		return false;
 
-	/* For TCP we may need to access the interface map. Let's retrieve
-	 * and cache the map and use it for the duration of the loop below.
-	 */
-	if (getifaddrs(&candidate.iface_list) == -1)
-		candidate.iface_list = NULL;
+	if (!candidate->addreq(c->traddr, candidate->traddr))
+		return false;
 
-	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
-	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
-		if (!streq0(c->transport, candidate.transport))
-			continue;
+	if (candidate->well_known_nqn && !nvme_ctrl_is_discovery_ctrl(c))
+		return false;
 
-		if (!streq0(c->trsvcid, candidate.trsvcid))
-			continue;
+	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
+		return false;
 
-		if (!nvme_ipaddrs_eq(c->traddr, candidate.traddr))
-			continue;
+	/* Check host_traddr / host_iface only if candidate is interested */
+	if ((candidate->host_iface || candidate->host_traddr) &&
+	    !_tcp_opt_params_match(c, candidate))
+		return false;
 
-		/* Check host_traddr / host_iface only if candidate is interested */
-		if ((candidate.host_iface || candidate.host_traddr) &&
-		    !_tcp_opt_params_match(c, &candidate))
-			continue;
+	return true;
+}
 
-		matching_c = c;
-		break;
+/**
+ * _match_ctrl() - Check if controller matches candidate (non TCP transport)
+ * @c:	An existing controller instance
+ * @candidate:	Candidate ctrl we're trying to match with @c.
+ *
+ * We want to determine if an existing controller can be re-used
+ * for the candidate controller we're trying to instantiate. This function
+ * is used for all transports except TCP.
+ *
+ * Return: true if a match is found, false otherwise.
+ */
+static bool _match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidate)
+{
+	if (!streq0(c->transport, candidate->transport))
+		return false;
+
+	if (candidate->traddr && c->traddr &&
+	    !candidate->addreq(c->traddr, candidate->traddr))
+		return false;
+
+	if (candidate->host_traddr && c->cfg.host_traddr &&
+	    !candidate->addreq(c->cfg.host_traddr, candidate->host_traddr))
+		return false;
+
+	if (candidate->host_iface && c->cfg.host_iface &&
+	    !streq0(c->cfg.host_iface, candidate->host_iface))
+		return false;
+
+	if (candidate->trsvcid && c->trsvcid &&
+	    !streq0(c->trsvcid, candidate->trsvcid))
+		return false;
+
+	if (candidate->well_known_nqn && !nvme_ctrl_is_discovery_ctrl(c))
+		return false;
+
+	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
+		return false;
+
+	return true;
+}
+/**
+ * _candidate_init() - Init candidate and get the matching function
+ *
+ * @candidate:		Candidate struct to initialize
+ * @transport:		Transport name
+ * @traddr:		Transport address
+ * @trsvcid:		Transport service identifier
+ * @subsysnqn:		Subsystem NQN
+ * @host_traddr:	Host transport address
+ * @host_iface:		Host interface name
+ * @host_iface:		Host interface name
+ *
+ * The function _candidate_free() must be called to release resources once
+ * the candidate object is not longer required.
+ *
+ * Return: The matching function to use when comparing an existing
+ * controller to the candidate controller.
+ */
+static ctrl_match_t _candidate_init(struct candidate_args *candidate,
+				    const char *transport,
+				    const char *traddr,
+				    const char *trsvcid,
+				    const char *subsysnqn,
+				    const char *host_traddr,
+				    const char *host_iface)
+{
+	memset(candidate, 0, sizeof(*candidate));
+
+	candidate->traddr = traddr;
+	candidate->trsvcid = trsvcid;
+	candidate->transport = transport;
+	candidate->subsysnqn = subsysnqn;
+	candidate->host_iface = host_iface;
+	candidate->host_traddr = host_traddr;
+
+	if (streq0(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		/* Since TP8013, the NQN of discovery controllers can be the
+		 * well-known NQN (i.e. nqn.2014-08.org.nvmexpress.discovery) or
+		 * a unique NQN. A DC created using the well-known NQN may later
+		 * display a unique NQN when looked up in the sysfs. Therefore,
+		 * ignore (i.e. set to NULL) the well-known NQN when looking for
+		 * a match.
+		 */
+		candidate->subsysnqn = NULL;
+		candidate->well_known_nqn = true;
 	}
 
-	freeifaddrs(candidate.iface_list); /* This is NULL-safe */
+	if (streq0(transport, "tcp")) {
+		/* For TCP we may need to access the interface map.
+		 * Let's retrieve and cache the map.
+		 */
+		if (getifaddrs(&candidate->iface_list) == -1)
+			candidate->iface_list = NULL;
 
-	return matching_c;
+		candidate->addreq = nvme_ipaddrs_eq;
+		return _tcp_match_ctrl;
+	}
+
+	if (streq0(transport, "rdma")) {
+		candidate->addreq = nvme_ipaddrs_eq;
+		return _match_ctrl;
+	}
+
+	/* All other transport types */
+	candidate->addreq = streqcase0;
+	return _match_ctrl;
+}
+
+/**
+ * _candidate_free() - Release resources allocated by _candidate_init()
+ *
+ * @candidate:	data to free.
+ */
+static void _candidate_free(struct candidate_args *candidate)
+{
+	freeifaddrs(candidate->iface_list); /* This is NULL-safe */
 }
 
 nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			       const char *traddr, const char *host_traddr,
 			       const char *host_iface, const char *trsvcid,
-			       nvme_ctrl_t p)
-
+			       const char *subsysnqn, nvme_ctrl_t p)
 {
-	struct nvme_ctrl *c;
-	bool (*addreq)(const char *, const char *);
+	struct nvme_ctrl *c, *matching_c = NULL;
+	struct candidate_args candidate;
+	ctrl_match_t ctrl_match;
 
-	/* TCP requires special handling */
-	if (streq0(transport, "tcp"))
-		return _tcp_lookup_ctrl(s, transport, traddr,
-					host_traddr, host_iface, trsvcid, p);
-
-	if (streq0(transport, "rdma"))
-		addreq = nvme_ipaddrs_eq; /* IP address compare for RDMA */
-	else
-		addreq = streqcase0; /* Case-insensitive for everything else */
+	/* Init candidate and get the matching function to use */
+	ctrl_match = _candidate_init(&candidate, transport, traddr, trsvcid,
+				     subsysnqn, host_traddr, host_iface);
 
 	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
-		if (!streq0(c->transport, transport))
-			continue;
-		if (traddr && c->traddr &&
-		    !addreq(c->traddr, traddr))
-			continue;
-		if (host_traddr && c->cfg.host_traddr &&
-		    !addreq(c->cfg.host_traddr, host_traddr))
-			continue;
-		if (host_iface && c->cfg.host_iface &&
-		    !streq0(c->cfg.host_iface, host_iface))
-			continue;
-		if (trsvcid && c->trsvcid &&
-		    !streq0(c->trsvcid, trsvcid))
-			continue;
-		return c;
+		if (ctrl_match(c, &candidate)) {
+			matching_c = c;
+			break;
+		}
 	}
 
-	return NULL;
+	_candidate_free(&candidate);
+
+	return matching_c;
+}
+
+bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
+			    const char *traddr, const char *trsvcid,
+			    const char *subsysnqn, const char *host_traddr,
+			    const char *host_iface)
+{
+	bool match;
+	ctrl_match_t ctrl_match;
+	struct candidate_args candidate;
+
+	/* Init candidate and get the matching function to use */
+	ctrl_match = _candidate_init(&candidate, transport, traddr, trsvcid,
+				     subsysnqn, host_traddr, host_iface);
+
+	match = ctrl_match(c, &candidate);
+
+	_candidate_free(&candidate);
+
+	return match;
+}
+
+nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
+			   const char *traddr, const char *trsvcid,
+			   const char *subsysnqn, const char *host_traddr,
+			   const char *host_iface)
+{
+	return __nvme_lookup_ctrl(s, transport, traddr, host_traddr, host_iface,
+				  trsvcid, subsysnqn, NULL/*p*/);
 }
 
 nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
@@ -1540,7 +1650,7 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 		return NULL;
 
 	c = __nvme_lookup_ctrl(s, transport, traddr, host_traddr,
-			       host_iface, trsvcid, p);
+			       host_iface, trsvcid, NULL, p);
 	if (c)
 		return c;
 

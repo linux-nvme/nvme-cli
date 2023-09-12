@@ -307,6 +307,51 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			     const char *host_iface, const char *trsvcid,
 			     nvme_ctrl_t p);
 
+/**
+ * nvme_ctrl_find() - Locate an existing controller
+ * @s:			&nvme_subsystem_t object
+ * @transport:		Transport name
+ * @traddr:		Transport address
+ * @trsvcid:		Transport service identifier
+ * @subsysnqn:		Subsystem NQN
+ * @host_traddr:	Host transport address
+ * @host_iface:		Host interface name
+ *
+ * Lookup a controller in @s based on @transport, @traddr, @trsvcid,
+ * @subsysnqn, @host_traddr, and @host_iface. @transport must be specified,
+ * other fields may be required depending on the transport. Parameters set
+ * to NULL will be ignored.
+ *
+ * Unlike nvme_lookup_ctrl(), this function does not create a new object if
+ * an existing controller cannot be found.
+ *
+ * Return: Controller instance on success, NULL otherwise.
+ */
+nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
+			   const char *traddr, const char *trsvcid,
+			   const char *subsysnqn, const char *host_traddr,
+			   const char *host_iface);
+
+/**
+ * nvme_ctrl_config_match() - Check if ctrl @c matches config params
+ * @c:			An existing controller instance
+ * @transport:		Transport name
+ * @traddr:		Transport address
+ * @trsvcid:		Transport service identifier
+ * @subsysnqn:		Subsystem NQN
+ * @host_traddr:	Host transport address
+ * @host_iface:		Host interface name
+ *
+ * Check that controller @c matches parameters: @transport, @traddr,
+ * @trsvcid, @subsysnqn, @host_traddr, and @host_iface. Parameters set
+ * to NULL will be ignored.
+ *
+ * Return: true if there's a match, false otherwise.
+ */
+bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
+			    const char *traddr, const char *trsvcid,
+			    const char *subsysnqn, const char *host_traddr,
+			    const char *host_iface);
 
 /**
  * nvme_create_ctrl() - Allocate an unconnected NVMe controller

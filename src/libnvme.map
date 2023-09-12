@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_1_6 {
 	global:
+		nvme_ctrl_config_match;
+		nvme_ctrl_find;
 		nvme_ctrl_get_src_addr;
 		nvme_ctrl_release_fd;
 		nvme_host_release_fds;

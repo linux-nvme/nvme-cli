@@ -834,6 +834,7 @@ static const char *lookup_context(nvme_root_t r, nvme_ctrl_t c)
 					       NULL,
 					       NULL,
 					       nvme_ctrl_get_trsvcid(c),
+					       NULL,
 					       NULL))
 				return nvme_subsystem_get_application(s);
 		}
@@ -863,6 +864,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 					nvme_ctrl_get_host_traddr(c),
 					nvme_ctrl_get_host_iface(c),
 					nvme_ctrl_get_trsvcid(c),
+					NULL,
 					NULL);
 		if (fc) {
 			const char *key;
