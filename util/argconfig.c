@@ -340,6 +340,12 @@ static bool argconfig_check_human_readable(struct argconfig_commandline_options 
 	return false;
 }
 
+static void argconfig_parse_short_opt(int c)
+{
+	if (c == 'j')
+		argconfig_set_output_format_json(true);
+}
+
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
@@ -397,12 +403,15 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				ret = -EINVAL;
 				break;
 			}
-			if (c == 'j')
-				argconfig_set_output_format_json(true);
+			if (option_index >= options_count)
+				argconfig_parse_short_opt(c);
 			for (option_index = 0; option_index < options_count; option_index++) {
 				if (c == options[option_index].short_option)
 					break;
 			}
+			if (option_index == options_count ||
+			    !strcmp(options[option_index].option, "json"))
+				argconfig_parse_short_opt(c);
 			if (option_index == options_count)
 				continue;
 		}
