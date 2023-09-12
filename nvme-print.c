@@ -258,6 +258,12 @@ void nvme_show_boot_part_log(void *bp_log, const char *devname,
 	nvme_print(boot_part_log, flags, bp_log, devname, size);
 }
 
+void nvme_show_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller,
+	enum nvme_print_flags flags)
+{
+	nvme_print(phy_rx_eom_log, flags, log, controller);
+}
+
 void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
 				   enum nvme_print_flags flags)
 {

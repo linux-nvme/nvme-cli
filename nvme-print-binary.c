@@ -63,6 +63,18 @@ static void binary_boot_part_log(void *bp_log, const char *devname,
 	d_raw((unsigned char *)bp_log, size);
 }
 
+static void binary_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log,
+	__u16 controller)
+{
+	size_t len;
+	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED)
+		len = log->hsize + log->dsize * log->nd;
+	else
+		len = log->hsize;
+
+	d_raw((unsigned char *)log, len);
+}
+
 static void binary_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 {
 	 d_raw((unsigned char *)mus_log, sizeof(*mus_log));
@@ -288,6 +300,7 @@ static void binary_discovery_log(struct nvmf_discovery_log *log, int numrec)
 static struct print_ops binary_print_ops = {
 	.ana_log			= binary_ana_log,
 	.boot_part_log			= binary_boot_part_log,
+	.phy_rx_eom_log			= binary_phy_rx_eom_log,
 	.ctrl_list			= binary_list_ctrl,
 	.ctrl_registers			= binary_ctrl_registers,
 	.directive			= binary_directive,

@@ -105,6 +105,8 @@ int nvme_cli_get_log_mi_cmd_supported_effects(struct nvme_dev *dev, bool rae,
 int nvme_cli_get_log_boot_partition(struct nvme_dev *dev, bool rae, __u8 lsp,
 				    __u32 len,
 				    struct nvme_boot_partition *part);
+int nvme_cli_get_log_phy_rx_eom(struct nvme_dev *dev, __u8 lsp, __u16 controller,
+				__u32 len, struct nvme_phy_rx_eom_log *part);
 int nvme_cli_get_log_discovery(struct nvme_dev *dev, bool rae,
 			       __u32 offset, __u32 len, void *log);
 int nvme_cli_get_log_media_unit_stat(struct nvme_dev *dev, __u16 domid,

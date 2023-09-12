@@ -1409,6 +1409,116 @@ static void json_boot_part_log(void *bp_log, const char *devname,
 	json_free_object(root);
 }
 
+/* Printable Eye string is allocated and returned, caller must free */
+static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
+				    struct json_object *root)
+{
+	char *eye = (char *)lane->eye_desc;
+
+	char *printable = malloc(lane->nrows * lane->ncols + lane->ncols);
+	char *printable_start = printable;
+	if (!printable)
+		goto exit;
+
+	int i, j;
+	for (i = 0; i < lane->nrows; i++) {
+		for (j = 0; j < lane->ncols; j++, printable++)
+			sprintf(printable, "%c", eye[i * lane->ncols + j]);
+		sprintf(printable++, "\n");
+	}
+
+	json_object_add_value_string(root, "printable_eye", printable_start);
+
+exit:
+	return printable_start;
+}
+
+
+static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
+			struct json_object *root, char **allocated_eyes)
+{
+	void *p = log->descs;
+	uint16_t num_descs = le16_to_cpu(log->nd);
+	int i;
+	struct json_object *descs;
+
+	descs = json_create_array();
+	json_object_add_value_array(root, "descs", descs);
+
+	for (i = 0; i < num_descs; i++) {
+		struct nvme_eom_lane_desc *desc = p;
+		struct json_object *jdesc = json_create_object();
+
+		json_object_add_value_uint(jdesc, "lid", desc->mstatus);
+		json_object_add_value_uint(jdesc, "lane", desc->lane);
+		json_object_add_value_uint(jdesc, "eye", desc->eye);
+		json_object_add_value_uint(jdesc, "top", le16_to_cpu(desc->top));
+		json_object_add_value_uint(jdesc, "bottom", le16_to_cpu(desc->bottom));
+		json_object_add_value_uint(jdesc, "left", le16_to_cpu(desc->left));
+		json_object_add_value_uint(jdesc, "right", le16_to_cpu(desc->right));
+		json_object_add_value_uint(jdesc, "nrows", le16_to_cpu(desc->nrows));
+		json_object_add_value_uint(jdesc, "ncols", le16_to_cpu(desc->ncols));
+		json_object_add_value_uint(jdesc, "edlen", le16_to_cpu(desc->edlen));
+
+		if (log->odp & NVME_EOM_PRINTABLE_EYE_PRESENT)
+			allocated_eyes[i] = json_eom_printable_eye(desc, root);
+
+		/* Eye Data field is vendor specific, doesn't map to JSON */
+
+		json_array_add_value_object(descs, jdesc);
+
+		p += log->dsize;
+	}
+}
+
+static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller)
+{
+	char **allocated_eyes = NULL;
+	int i;
+
+	struct json_object *root;
+	root = json_create_object();
+
+	json_object_add_value_uint(root, "lid", log->lid);
+	json_object_add_value_uint(root, "eomip", log->eomip);
+	json_object_add_value_uint(root, "hsize", le16_to_cpu(log->hsize));
+	json_object_add_value_uint(root, "rsize", le32_to_cpu(log->rsize));
+	json_object_add_value_uint(root, "eomdgn", log->eomdgn);
+	json_object_add_value_uint(root, "lr", log->lr);
+	json_object_add_value_uint(root, "lanes", log->lanes);
+	json_object_add_value_uint(root, "epl", log->epl);
+	json_object_add_value_uint(root, "lspfc", log->lspfc);
+	json_object_add_value_uint(root, "li", log->li);
+	json_object_add_value_uint(root, "lsic", le16_to_cpu(log->lsic));
+	json_object_add_value_uint(root, "dsize", le32_to_cpu(log->dsize));
+	json_object_add_value_uint(root, "nd", le16_to_cpu(log->nd));
+	json_object_add_value_uint(root, "maxtb", le16_to_cpu(log->maxtb));
+	json_object_add_value_uint(root, "maxlr", le16_to_cpu(log->maxlr));
+	json_object_add_value_uint(root, "etgood", le16_to_cpu(log->etgood));
+	json_object_add_value_uint(root, "etbetter", le16_to_cpu(log->etbetter));
+	json_object_add_value_uint(root, "etbest", le16_to_cpu(log->etbest));
+
+	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED) {
+		/* Save Printable Eye strings allocated to free later */
+		allocated_eyes = malloc(log->nd * sizeof(char *));
+		if (allocated_eyes)
+			json_phy_rx_eom_descs(log, root, allocated_eyes);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	if (allocated_eyes) {
+		for (i = 0; i < log->nd; i++) {
+			/* Free any Printable Eye strings allocated */
+			if (allocated_eyes[i])
+				free(allocated_eyes[i]);
+		}
+		free(allocated_eyes);
+	}
+	json_free_object(root);
+}
+
 static void json_media_unit_stat_log(struct nvme_media_unit_stat_log *mus)
 {
 
@@ -2921,6 +3031,7 @@ static void json_output_perror(const char *msg)
 static struct print_ops json_print_ops = {
 	.ana_log			= json_ana_log,
 	.boot_part_log			= json_boot_part_log,
+	.phy_rx_eom_log			= json_phy_rx_eom_log,
 	.ctrl_list			= json_nvme_list_ctrl,
 	.ctrl_registers			= json_ctrl_registers,
 	.discovery_log			= json_discovery_log,

@@ -49,6 +49,7 @@ COMMAND_LIST(
 	ENTRY("lba-status-log", "Retrieve LBA Status Information Log, show it", get_lba_status_log)
 	ENTRY("resv-notif-log", "Retrieve Reservation Notification Log, show it", get_resv_notif_log)
 	ENTRY("boot-part-log", "Retrieve Boot Partition Log, show it", get_boot_part_log)
+	ENTRY("phy-rx-eom-log", "Retrieve Physical Interface Receiver Eye Opening Measurement, show it", get_phy_rx_eom_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)
 	ENTRY("device-self-test", "Perform the necessary tests to observe the performance", device_self_test)
 	ENTRY("self-test-log", "Retrieve the SELF-TEST Log, show it", self_test_log)

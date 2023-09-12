@@ -23,6 +23,7 @@ struct print_ops {
 	/* libnvme types.h print functions */
 	void (*ana_log)(struct nvme_ana_log *ana_log, const char *devname, size_t len);
 	void (*boot_part_log)(void *bp_log, const char *devname, __u32 size);
+	void (*phy_rx_eom_log)(struct nvme_phy_rx_eom_log *log, __u16 controller);
 	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list);
 	void (*ctrl_registers)(void *bar, bool fabrics);
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result, void *buf, __u32 len);
@@ -166,6 +167,8 @@ void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_boot_part_log(void *bp_log, const char *devname,
 	__u32 size, enum nvme_print_flags flags);
+void nvme_show_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log,
+	__u16 controller, enum nvme_print_flags flags);
 void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fid_log,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log,
