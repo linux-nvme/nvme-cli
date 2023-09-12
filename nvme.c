@@ -1965,6 +1965,104 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 	return err;
 }
 
+static int get_phy_rx_eom_log(int argc, char **argv, struct command *cmd,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve Physical Interface Receiver Eye Opening\n"
+		"Measurement log for the given device in decoded format\n"
+		"(default), json or binary.";
+	const char *controller = "Target Controller ID.";
+	_cleanup_free_ struct nvme_phy_rx_eom_log *phy_rx_eom_log = NULL;
+	size_t phy_rx_eom_log_len;
+	enum nvme_print_flags flags;
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int err = -1;
+	__u8 lsp_tmp;
+
+	struct config {
+		__u8	lsp;
+		__u16	controller;
+		char	*output_format;
+	};
+
+	struct config cfg = {
+		.lsp		= 0,
+		.controller	= NVME_LOG_LSI_NONE,
+		.output_format	= "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("lsp",          's', &cfg.lsp,           lsp),
+		OPT_SHRT("controller",   'c', &cfg.controller,    controller),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (cfg.lsp > 127) {
+		nvme_show_error("invalid lsp param: %u", cfg.lsp);
+		return -1;
+	} else if ((cfg.lsp & 3) == 3) {
+		nvme_show_error("invalid measurement quality: %u", cfg.lsp & 3);
+		return -1;
+	} else if ((cfg.lsp & 12) == 12) {
+		nvme_show_error("invalid action: %u", cfg.lsp & 12);
+		return -1;
+	}
+
+	/* Fetching header to calculate total log length */
+	phy_rx_eom_log_len = sizeof(struct nvme_phy_rx_eom_log);
+	phy_rx_eom_log = nvme_alloc(phy_rx_eom_log_len);
+	if (!phy_rx_eom_log)
+		return -ENOMEM;
+
+	/* Just read measurement, take given action when fetching full log */
+	lsp_tmp = cfg.lsp & 0xf3;
+
+	err = nvme_cli_get_log_phy_rx_eom(dev, lsp_tmp, cfg.controller,
+		phy_rx_eom_log_len, phy_rx_eom_log);
+	if (err) {
+		if (err > 0)
+			nvme_show_status(err);
+		else
+			nvme_show_error("phy-rx-eom-log: %s", nvme_strerror(errno));
+
+		return err;
+	}
+
+	if (phy_rx_eom_log->eomip == NVME_PHY_RX_EOM_COMPLETED) {
+		phy_rx_eom_log_len = le16_to_cpu(phy_rx_eom_log->hsize) +
+				     le32_to_cpu(phy_rx_eom_log->dsize) *
+				     le16_to_cpu(phy_rx_eom_log->nd);
+	} else {
+		phy_rx_eom_log_len = le16_to_cpu(phy_rx_eom_log->hsize);
+	}
+
+	phy_rx_eom_log = nvme_realloc(phy_rx_eom_log, phy_rx_eom_log_len);
+	if (!phy_rx_eom_log)
+		return -ENOMEM;
+
+	err = nvme_cli_get_log_phy_rx_eom(dev, cfg.lsp, cfg.controller,
+		phy_rx_eom_log_len, phy_rx_eom_log);
+	if (!err)
+		nvme_show_phy_rx_eom_log(phy_rx_eom_log, cfg.controller, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		nvme_show_error("phy-rx-eom-log: %s", nvme_strerror(errno));
+
+	return err;
+}
+
 static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
 				   struct plugin *plugin)
 {

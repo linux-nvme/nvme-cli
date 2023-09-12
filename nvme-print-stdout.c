@@ -705,6 +705,111 @@ static void stdout_boot_part_log(void *bp_log, const char *devname,
 	printf("Active BPID: %u\n", (le32_to_cpu(hdr->bpinfo) >> 31) & 0x1);
 }
 
+static const char *eomip_to_string(__u8 eomip)
+{
+	const char *string;
+	switch (eomip) {
+	case NVME_PHY_RX_EOM_NOT_STARTED:
+		string = "Not Started";
+		break;
+	case NVME_PHY_RX_EOM_IN_PROGRESS:
+		string = "In Progress";
+		break;
+	case NVME_PHY_RX_EOM_COMPLETED:
+		string = "Completed";
+		break;
+	default:
+		string = "Unknown";
+	}
+	return string;
+}
+
+static void stdout_phy_rx_eom_odp(uint8_t odp)
+{
+	__u8 rsvd = (odp >> 2) & 0x3F;
+	__u8 edfp = (odp >> 1) & 0x1;
+	__u8 pefp = odp & 0x1;
+
+	if (rsvd)
+		printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\tEye Data Field %sPresent\n",
+		edfp, edfp ? "" : "Not ");
+	printf("  [0:0] : %#x\tPrintable Eye Field %sPresent\n",
+		pefp, pefp ? "" : "Not ");
+}
+
+static void stdout_eom_printable_eye(struct nvme_eom_lane_desc *lane)
+{
+	char *eye = (char *)lane->eye_desc;
+	int i, j;
+	for (i = 0; i < lane->nrows; i++) {
+		for (j = 0; j < lane->ncols; j++)
+			printf("%c", eye[i * lane->ncols + j]);
+		printf("\n");
+	}
+}
+
+static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
+{
+	void *p = log->descs;
+	int i;
+
+	for (i = 0; i < log->nd; i++) {
+		struct nvme_eom_lane_desc *desc = p;
+
+		printf("Measurement Status: %s\n",
+			desc->mstatus ? "Successful" : "Not Successful");
+		printf("Lane: %u\n", desc->lane);
+		printf("Eye: %u\n", desc->eye);
+		printf("Top: %u\n", le16_to_cpu(desc->top));
+		printf("Bottom: %u\n", le16_to_cpu(desc->bottom));
+		printf("Left: %u\n", le16_to_cpu(desc->left));
+		printf("Right: %u\n", le16_to_cpu(desc->right));
+		printf("Number of Rows: %u\n", le16_to_cpu(desc->nrows));
+		printf("Number of Columns: %u\n", le16_to_cpu(desc->ncols));
+		printf("Eye Data Length: %u\n", le16_to_cpu(desc->edlen));
+
+		if (log->odp & NVME_EOM_PRINTABLE_EYE_PRESENT)
+			stdout_eom_printable_eye(desc);
+
+		/* Eye Data field is vendor specific */
+
+		p += log->dsize;
+	}
+}
+
+static void stdout_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller)
+{
+	int human = stdout_print_ops.flags & VERBOSE;
+
+	printf("Physical Interface Receiver Eye Opening Measurement Log for controller ID: %u\n", controller);
+	printf("Log ID: %u\n", log->lid);
+	printf("EOM In Progress: %s\n", eomip_to_string(log->eomip));
+	printf("Header Size: %u\n", le16_to_cpu(log->hsize));
+	printf("Result Size: %u\n", le32_to_cpu(log->rsize));
+	printf("EOM Data Generation Number: %u\n", log->eomdgn);
+	printf("Log Revision: %u\n", log->lr);
+	printf("Optional Data Present: %u\n", log->odp);
+	if (human)
+		stdout_phy_rx_eom_odp(log->odp);
+	printf("Lanes: %u\n", log->lanes);
+	printf("Eyes Per Lane: %u\n", log->epl);
+	printf("Log Specific Parameter Field Copy: %u\n", log->lspfc);
+	printf("Link Information: %u\n", log->li);
+	printf("Log Specific Identifier Copy: %u\n", le16_to_cpu(log->lsic));
+	printf("Descriptor Size: %u\n", le32_to_cpu(log->dsize));
+	printf("Number of Descriptors: %u\n", le16_to_cpu(log->nd));
+	printf("Maximum Top Bottom: %u\n", le16_to_cpu(log->maxtb));
+	printf("Maximum Left Right: %u\n", le16_to_cpu(log->maxlr));
+	printf("Estimated Time for Good Quality: %u\n", le16_to_cpu(log->etgood));
+	printf("Estimated Time for Better Quality: %u\n", le16_to_cpu(log->etbetter));
+	printf("Estimated Time for Best Quality: %u\n", le16_to_cpu(log->etbest));
+
+	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED) {
+		stdout_phy_rx_eom_descs(log);
+	}
+}
+
 static void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 {
 	int i;
@@ -4942,6 +5047,7 @@ static void stdout_connect_msg(nvme_ctrl_t c)
 static struct print_ops stdout_print_ops = {
 	.ana_log			= stdout_ana_log,
 	.boot_part_log			= stdout_boot_part_log,
+	.phy_rx_eom_log			= stdout_phy_rx_eom_log,
 	.ctrl_list			= stdout_list_ctrl,
 	.ctrl_registers			= stdout_ctrl_registers,
 	.directive			= stdout_directive_show,
