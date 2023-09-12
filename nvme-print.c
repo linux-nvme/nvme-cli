@@ -420,7 +420,7 @@ void nvme_show_status(int status)
 {
 	struct print_ops *ops;
 
-	if (argconfig_output_format_json(false))
+	if (argconfig_get_output_format_json())
 		ops = nvme_print_ops(JSON);
 	else
 		ops =nvme_print_ops(0);
@@ -1029,7 +1029,7 @@ void nvme_show_message(bool error, const char *msg, ...)
 	va_list ap;
 	va_start(ap, msg);
 
-	if (argconfig_output_format_json(false))
+	if (argconfig_get_output_format_json())
 		ops = nvme_print_ops(JSON);
 	else
 		ops = nvme_print_ops(0);
@@ -1048,7 +1048,7 @@ void nvme_show_perror(const char *msg)
 {
 	struct print_ops *ops;
 
-	if (argconfig_output_format_json(false))
+	if (argconfig_get_output_format_json())
 		ops = nvme_print_ops(JSON);
 	else
 		ops = nvme_print_ops(0);

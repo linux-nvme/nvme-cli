@@ -186,5 +186,6 @@ int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val);
 void print_word_wrapped(const char *s, int indent, int start, FILE *stream);
 bool argconfig_parse_seen(struct argconfig_commandline_options *options,
 			  const char *option);
-bool argconfig_output_format_json(bool set);
+void argconfig_set_output_format_json(bool enable);
+bool argconfig_get_output_format_json(void);
 #endif
