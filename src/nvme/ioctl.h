@@ -1929,6 +1929,41 @@ static inline int nvme_get_log_boot_partition(int fd, bool rae,
 }
 
 /**
+ * nvme_get_log_phy_rx_eom() - Retrieve Physical Interface Receiver Eye Opening Measurement Log
+ * @fd:		File descriptor of nvme device
+ * @lsp:	Log specific, controls action and measurement quality
+ * @controller:	Target controller ID
+ * @len:	The allocated size, minimum
+ *		struct nvme_phy_rx_eom_log
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_phy_rx_eom(int fd, __u8 lsp, __u16 controller,
+				__u32 len, struct nvme_phy_rx_eom_log *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_PHY_RX_EOM,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = controller,
+		.lsp = lsp,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+}
+
+/**
  * nvme_get_log_discovery() - Retrieve Discovery log page
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events

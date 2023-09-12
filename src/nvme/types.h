@@ -3722,6 +3722,110 @@ struct nvme_boot_partition {
 };
 
 /**
+ * struct nvme_eom_lane_desc - EOM Lane Descriptor
+ * @rsvd0:	Reserved
+ * @mstatus:	Measurement Status
+ * @lane:	Lane number
+ * @eye:	Eye number
+ * @top:	Absolute number of rows from center to top edge of eye
+ * @bottom:	Absolute number of rows from center to bottom edge of eye
+ * @left:	Absolute number of rows from center to left edge of eye
+ * @right:	Absolute number of rows from center to right edge of eye
+ * @nrows:	Number of Rows
+ * @ncols:	Number of Columns
+ * @edlen:	Eye Data Length
+ * @rsvd18:	Reserved
+ * @eye_desc:	Printable Eye, Eye Data, and any Padding
+ */
+struct nvme_eom_lane_desc {
+	__u8	rsvd0;
+	__u8	mstatus;
+	__u8	lane;
+	__u8	eye;
+	__le16	top;
+	__le16	bottom;
+	__le16	left;
+	__le16	right;
+	__le16	nrows;
+	__le16	ncols;
+	__le16	edlen;
+	__u8	rsvd18[14];
+	__u8	eye_desc[];
+};
+
+/**
+ * struct nvme_phy_rx_eom_log - Physical Interface Receiver Eye Opening Measurement Log
+ * @lid:	Log Identifier
+ * @eomip:	EOM In Progress
+ * @hsize:	Header Size
+ * @rsize:	Result Size
+ * @eomdgn:	EOM Data Generation Number
+ * @lr:		Log Revision
+ * @odp:	Optional Data Present
+ * @lanes:	Number of lanes configured for this port
+ * @epl:	Eyes Per Lane
+ * @lspfc:	Log Specific Parameter Field Copy
+ * @li:		Link Information
+ * @rsvd15:	Reserved
+ * @lsic:	Log Specific Identifier Copy
+ * @dsize:	Descriptor Size
+ * @nd:		Number of Descriptors
+ * @maxtb:	Maximum Top Bottom
+ * @maxlr:	Maximum Left Right
+ * @etgood:	Estimated Time for Good Quality
+ * @etbetter:	Estimated Time for Better Quality
+ * @etbest:	Estimated Time for Best Quality
+ * @rsvd36:	Reserved
+ * @descs:	EOM Lane Descriptors
+ */
+struct nvme_phy_rx_eom_log {
+	__u8	lid;
+	__u8	eomip;
+	__le16	hsize;
+	__le32	rsize;
+	__u8	eomdgn;
+	__u8	lr;
+	__u8	odp;
+	__u8	lanes;
+	__u8	epl;
+	__u8	lspfc;
+	__u8	li;
+	__u8	rsvd15[3];
+	__le16	lsic;
+	__le32	dsize;
+	__le16	nd;
+	__le16	maxtb;
+	__le16	maxlr;
+	__le16	etgood;
+	__le16	etbetter;
+	__le16	etbest;
+	__u8	rsvd36[28];
+	struct nvme_eom_lane_desc descs[];
+};
+
+/**
+ * enum nvme_eom_optional_data - EOM Optional Data Present Fields
+ * @NVME_EOM_EYE_DATA_PRESENT:		Eye Data Present
+ * @NVME_EOM_PRINTABLE_EYE_PRESENT:	Printable Eye Present
+ */
+enum nvme_eom_optional_data {
+	NVME_EOM_EYE_DATA_PRESENT	= 1,
+	NVME_EOM_PRINTABLE_EYE_PRESENT	= 1 << 1,
+};
+
+/**
+ * enum nvme_phy_rx_eom_progress - EOM In Progress Values
+ * @NVME_PHY_RX_EOM_NOT_STARTED:	EOM Not Started
+ * @NVME_PHY_RX_EOM_IN_PROGRESS:	EOM In Progress
+ * @NVME_PHY_RX_EOM_COMPLETED:		EOM Completed
+ */
+enum nvme_phy_rx_eom_progress {
+	NVME_PHY_RX_EOM_NOT_STARTED	= 0,
+	NVME_PHY_RX_EOM_IN_PROGRESS	= 1,
+	NVME_PHY_RX_EOM_COMPLETED	= 2,
+};
+
+/**
  * struct nvme_media_unit_stat_desc - Media Unit Status Descriptor
  * @muid:	  Media Unit Identifier
  * @domainid:	  Domain Identifier
@@ -6700,6 +6804,7 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_FID_SUPPORTED_EFFECTS:		Feature Identifiers Supported and Effects
  * @NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS:	NVMe-MI Commands Supported and Effects
  * @NVME_LOG_LID_BOOT_PARTITION:		Boot Partition
+ * @NVME_LOG_LID_PHY_RX_EOM:			Physical Interface Receiver Eye Opening Measurement
  * @NVME_LOG_LID_FDP_CONFIGS:			FDP Configurations
  * @NVME_LOG_LID_FDP_RUH_USAGE:			Reclaim Unit Handle Usage
  * @NVME_LOG_LID_FDP_STATS:			FDP Statistics
@@ -6731,6 +6836,7 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_FID_SUPPORTED_EFFECTS			= 0x12,
 	NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS			= 0x13,
 	NVME_LOG_LID_BOOT_PARTITION				= 0x15,
+	NVME_LOG_LID_PHY_RX_EOM					= 0x19,
 	NVME_LOG_LID_FDP_CONFIGS				= 0x20,
 	NVME_LOG_LID_FDP_RUH_USAGE				= 0x21,
 	NVME_LOG_LID_FDP_STATS					= 0x22,
@@ -7282,6 +7388,30 @@ enum nvme_ns_write_protect_cfg {
 enum nvme_log_ana_lsp {
 	NVME_LOG_ANA_LSP_RGO_NAMESPACES				= 0,
 	NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY			= 1,
+};
+
+/**
+ * enum nvme_log_phy_rx_eom_action - Physical Interface Receiver Eye Opening Measurement Action
+ * @NVME_LOG_PHY_RX_EOM_READ:		Read Log Data
+ * @NVME_LOG_PHY_RX_EOM_START_READ:	Start Measurement and Read Log Data
+ * @NVME_LOG_PHY_RX_EOM_ABORT_CLEAR:	Abort Measurement and Clear Log Data
+ */
+enum nvme_log_phy_rx_eom_action {
+	NVME_LOG_PHY_RX_EOM_READ				= 0,
+	NVME_LOG_PHY_RX_EOM_START_READ				= 1,
+	NVME_LOG_PHY_RX_EOM_ABORT_CLEAR				= 2,
+};
+
+/**
+ * enum nvme_log_phy_rx_eom_quality - Physical Interface Receiver Eye Opening Measurement Quality
+ * @NVME_LOG_PHY_RX_EOM_GOOD:		<= Better Quality
+ * @NVME_LOG_PHY_RX_EOM_BETTER:		<= Best Quality, >= Good Quality
+ * @NVME_LOG_PHY_RX_EOM_BEST:		>= Better Quality
+ */
+enum nvme_log_phy_rx_eom_quality {
+	NVME_LOG_PHY_RX_EOM_GOOD				= 0,
+	NVME_LOG_PHY_RX_EOM_BETTER				= 1,
+	NVME_LOG_PHY_RX_EOM_BEST				= 2,
 };
 
 /**
