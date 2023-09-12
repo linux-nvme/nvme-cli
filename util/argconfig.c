@@ -44,6 +44,7 @@
 #include <locale.h>
 
 static const char *append_usage_str = "";
+static bool argconfig_output_format_json;
 
 static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
 			       int index);
@@ -307,14 +308,14 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s, struct o
 	return argconfig_parse_type(s, option, index);
 }
 
-bool argconfig_output_format_json(bool set)
+void argconfig_set_output_format_json(bool enable)
 {
-	static bool output_format_json;
+	argconfig_output_format_json = enable;
+}
 
-	if (set)
-		output_format_json = true;
-
-	return output_format_json;
+bool argconfig_get_output_format_json(void)
+{
+	return argconfig_output_format_json;
 }
 
 static bool argconfig_check_output_format_json(struct argconfig_commandline_options *s)
@@ -397,7 +398,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				break;
 			}
 			if (c == 'j')
-				argconfig_output_format_json(true);
+				argconfig_set_output_format_json(true);
 			for (option_index = 0; option_index < options_count; option_index++) {
 				if (c == options[option_index].short_option)
 					break;
@@ -421,7 +422,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	}
 
 	if (argconfig_check_output_format_json(options))
-		argconfig_output_format_json(true);
+		argconfig_set_output_format_json(true);
 
 	if (!argconfig_check_human_readable(options))
 		setlocale(LC_ALL, "C");
