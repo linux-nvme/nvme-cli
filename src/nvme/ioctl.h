@@ -3855,4 +3855,16 @@ int nvme_zns_append(struct nvme_zns_append_args *args);
  */
 int nvme_dim_send(struct nvme_dim_args *args);
 
+/**
+ * nvme_set_debug - Set NVMe command debugging output
+ * @debug:	true to enable or false to disable
+ */
+void nvme_set_debug(bool debug);
+
+/**
+ * nvme_get_debug - Get NVMe command debugging output
+ *
+ * Return: false if disabled or true if enabled.
+ */
+bool nvme_get_debug(void);
 #endif /* _LIBNVME_IOCTL_H */
