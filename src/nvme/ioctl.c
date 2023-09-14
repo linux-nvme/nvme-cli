@@ -1207,7 +1207,7 @@ int nvme_get_features_endurance_event_cfg(int fd, enum nvme_get_features_sel sel
 		.fid = NVME_FEAT_FID_ENDURANCE_EVT_CFG,
 		.nsid = NVME_NSID_NONE,
 		.sel = sel,
-		.cdw11 = 0,
+		.cdw11 = endgid,
 		.uuidx = NVME_UUID_NONE,
 		.data_len = 0,
 		.data = NULL,
