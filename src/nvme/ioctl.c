@@ -845,7 +845,7 @@ int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 				   result);
 }
 
-int nvme_set_features_host_id(int fd, bool save, bool exhid, __u8 *hostid)
+int nvme_set_features_host_id(int fd, bool exhid, bool save, __u8 *hostid)
 {
 	__u32 len = exhid ? 16 : 8;
 	__u32 value = !!exhid;
