@@ -887,7 +887,7 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 				   false, result);
 }
 
-int nvme_set_features_iocs_profile(int fd, __u8 iocsi, bool save)
+int nvme_set_features_iocs_profile(int fd, __u16 iocsi, bool save)
 {
 	__u32 value = NVME_SET(iocsi, FEAT_IOCSP_IOCSCI);
 

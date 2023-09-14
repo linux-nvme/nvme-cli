@@ -2552,6 +2552,17 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 				    bool save, __u32 *result);
 
 /**
+ * nvme_set_features_iocs_profile() - Set I/O command set profile feature
+ * @fd:		File descriptor of nvme device
+ * @iocsi:	I/O Command Set Combination Index
+ * @save:	Save value across power states
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_set_features_iocs_profile(int fd, __u16 iocsi, bool save);
+
+/**
  * nvme_get_features() - Retrieve a feature attribute
  * @args:	&struct nvme_get_features_args argument structure
  *
