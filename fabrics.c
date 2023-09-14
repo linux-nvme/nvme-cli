@@ -117,34 +117,6 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_END()                                                                        \
 	}
 
-/**
- * Compare two C strings and handle NULL pointers gracefully.
- * Return true if both pointers are equal (including both set to NULL).
- * Return false if one and only one of the two pointers is NULL.
- * Perform string comparisong only if both pointers are not NULL and
- * return true if both strings are the same, false otherwise.
- */
-static inline bool streq0(const char *s1, const char *s2)
-{
-	if (s1 == s2)
-		return true;
-	if (!s1 || !s2)
-		return false;
-	return !strcmp(s1, s2);
-}
-
-/**
- * Same as streq0() but ignore the case of the characters.
- */
-static inline bool streqcase0(const char *s1, const char *s2)
-{
-	if (s1 == s2)
-		return true;
-	if (!s1 || !s2)
-		return false;
-	return !strcasecmp(s1, s2);
-}
-
 static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
 {
 	if (nvme_host_is_pdc_enabled(h, DEFAULT_PDC_ENABLED))
@@ -153,73 +125,24 @@ static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
 	return false;
 }
 
-typedef bool (*addreq_t)(const char *, const char *);
-typedef bool (*ctrl_match_fn_t)(nvme_ctrl_t, struct tr_config *, addreq_t);
-
-/** Return the function to be used when comparing addresses
- *  (traddr, host-traddr). For IP addresses (especially
- *  IPv6) we can't just do simple string comparison. */
-static addreq_t addreq_func(const char *transport)
-{
-	if (!strcmp(transport, "tcp") || !strcmp(transport, "rdma"))
-		return nvme_ipaddrs_eq;
-
-	return streqcase0; /* FC and loop can use case-insensitive string compare */
-}
-
-static bool disc_ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg, addreq_t addreq)
-{
-	if (nvme_ctrl_is_discovery_ctrl(c) &&
-	    streq0(nvme_ctrl_get_transport(c), trcfg->transport) &&
-	    addreq(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
-	    streq0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
-	    addreq(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
-	    streq0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
-		return true;
-
-	return false;
-}
-
-static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg, addreq_t addreq)
-{
-	if (streq0(nvme_ctrl_get_subsysnqn(c), trcfg->subsysnqn) &&
-	    streq0(nvme_ctrl_get_transport(c), trcfg->transport) &&
-	    addreq(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
-	    streq0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
-	    addreq(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
-	    streq0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
-		return true;
-
-	return false;
-}
-
-static nvme_ctrl_t __lookup_host_ctrl(nvme_host_t h, struct tr_config *trcfg,
-				      ctrl_match_fn_t filter)
+nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct tr_config *trcfg)
 {
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
-	addreq_t addreq;
-
-	addreq = addreq_func(trcfg->transport);
 
 	nvme_for_each_subsystem(h, s) {
-		nvme_subsystem_for_each_ctrl(s, c) {
-			if (filter(c, trcfg, addreq))
-				return c;
-		}
+		c = nvme_ctrl_find(s,
+				   trcfg->transport,
+				   trcfg->traddr,
+				   trcfg->trsvcid,
+				   trcfg->subsysnqn,
+				   trcfg->host_traddr,
+				   trcfg->host_iface);
+		if (c)
+			return c;
 	}
 
 	return NULL;
-}
-
-static nvme_ctrl_t lookup_discovery_ctrl(nvme_host_t h, struct tr_config *trcfg)
-{
-	return __lookup_host_ctrl(h, trcfg, disc_ctrl_config_match);
-}
-
-nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct tr_config *trcfg)
-{
-	return __lookup_host_ctrl(h, trcfg, ctrl_config_match);
 }
 
 static int set_discovery_kato(struct nvme_fabrics_config *cfg)
@@ -543,7 +466,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		};
 
 		if (!force) {
-			c = lookup_discovery_ctrl(h, &trcfg);
+			c = lookup_ctrl(h, &trcfg);
 			if (c) {
 				__discover(c, &cfg, raw, connect,
 					   true, flags);
@@ -637,7 +560,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 			};
 
 			if (!force) {
-				cn = lookup_discovery_ctrl(h, &trcfg);
+				cn = lookup_ctrl(h, &trcfg);
 				if (cn) {
 					__discover(cn, &cfg, raw, connect,
 						   true, flags);
@@ -863,7 +786,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		c = nvme_scan_ctrl(r, device);
 		if (c) {
 			/* Check if device matches command-line options */
-			if (!ctrl_config_match(c, &trcfg, addreq_func(transport))) {
+			if (!nvme_ctrl_config_match(c, transport, traddr, trsvcid, subsysnqn,
+						    cfg.host_traddr, cfg.host_iface)) {
 				fprintf(stderr,
 				    "ctrl device %s found, ignoring non matching command-line options\n",
 				    device);
@@ -911,7 +835,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 	if (!c && !force) {
-		c = lookup_discovery_ctrl(h, &trcfg);
+		c = lookup_ctrl(h, &trcfg);
 		if (c)
 			persistent = true;
 	}
