@@ -532,7 +532,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	err = flags = validate_output_format(cfg.output_format);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
-		goto close_fd;
+		goto close_dev;
 	}
 
 	if (cfg.raw_binary)
@@ -550,7 +550,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		nvme_show_status(err);
 	else
 		nvme_show_error("smart log: %s", nvme_strerror(errno));
-close_fd:
+close_dev:
 	dev_close(dev);
 ret:
 	return err;
@@ -593,14 +593,14 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	err = flags = validate_output_format(cfg.output_format);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
-		goto close_fd;
+		goto close_dev;
 	}
 
 	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err) {
 		nvme_show_error("ERROR : nvme_identify_ctrl() failed: %s",
 			nvme_strerror(errno));
-		goto close_fd;
+		goto close_dev;
 	}
 
 	ana_log_len = sizeof(struct nvme_ana_log) +
@@ -611,7 +611,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	ana_log = malloc(ana_log_len);
 	if (!ana_log) {
 		err = -ENOMEM;
-		goto close_fd;
+		goto close_dev;
 	}
 
 	lsp = cfg.groups ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY :
@@ -625,7 +625,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	else
 		nvme_show_error("ana-log: %s", nvme_strerror(errno));
 	free(ana_log);
-close_fd:
+close_dev:
 	dev_close(dev);
 ret:
 	return err;
@@ -4166,12 +4166,12 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 	if (err < 0) {
 		nvme_show_error("get namespace ID: %s", nvme_strerror(errno));
 		err = errno;
-		goto close_fd;
+		goto close_dev;
 	}
 	err = 0;
 	printf("%s: namespace-id:%d\n", dev->name, nsid);
 
-close_fd:
+close_dev:
 	dev_close(dev);
 ret:
 	return err;

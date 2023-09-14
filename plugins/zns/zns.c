@@ -137,7 +137,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	err = flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
-		goto close_fd;
+		goto close_dev;
 
 	err = nvme_zns_identify_ctrl(dev_fd(dev), &ctrl);
 	if (!err)
@@ -146,7 +146,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 		nvme_show_status(err);
 	else
 		perror("zns identify controller");
-close_fd:
+close_dev:
 	dev_close(dev);
 	return err;
 }
@@ -190,7 +190,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 
 	flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
-		goto close_fd;
+		goto close_dev;
 	if (cfg.vendor_specific)
 		flags |= VS;
 	if (cfg.human_readable)
@@ -200,14 +200,14 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
-			goto close_fd;
+			goto close_dev;
 		}
 	}
 
 	err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id, &id_ns);
 	if (err) {
 		nvme_show_status(err);
-		goto close_fd;
+		goto close_dev;
 	}
 
 	err = nvme_zns_identify_ns(dev_fd(dev), cfg.namespace_id, &ns);
@@ -217,7 +217,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		nvme_show_status(err);
 	else
 		perror("zns identify namespace");
-close_fd:
+close_dev:
 	dev_close(dev);
 	return err;
 }
@@ -1258,13 +1258,13 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 
 	flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
-		goto close_fd;
+		goto close_dev;
 
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
-			goto close_fd;
+			goto close_dev;
 		}
 	}
 
@@ -1277,7 +1277,7 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 	else
 		perror("zns changed-zone-list");
 
-close_fd:
+close_dev:
 	dev_close(dev);
 	return err;
 }
