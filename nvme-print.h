@@ -8,8 +8,8 @@
 #include <ccan/list/list.h>
 
 typedef struct nvme_effects_log_node {
+	struct nvme_cmd_effects_log effects; /* needs to be first member because of alignment requirement. */
 	enum nvme_csi csi;
-	struct nvme_cmd_effects_log effects;
 	struct list_node node;
 } nvme_effects_log_node_t;
 

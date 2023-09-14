@@ -16,10 +16,10 @@ DECLARE_CLEANUP_FUNC(name, type)		\
 
 DECLARE_CLEANUP_FUNC(cleanup_charp, char *);
 
-static inline void freep(void *p) {
+static inline void freep(void *p)
+{
         free(*(void**) p);
 }
-
 #define _cleanup_free_ __cleanup__(freep)
 
 #endif
