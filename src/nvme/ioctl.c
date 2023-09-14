@@ -811,7 +811,7 @@ int nvme_set_features_host_behavior(int fd, bool save,
 		.nsid = NVME_NSID_NONE,
 		.cdw11 = 0,
 		.cdw12 = 0,
-		.save = save,
+		.save = false,
 		.uuidx = NVME_UUID_NONE,
 		.cdw15 = 0,
 		.data_len = sizeof(*data),
@@ -884,7 +884,7 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 				    bool save, __u32 *result)
 {
 	return __nvme_set_features(fd, NVME_FEAT_FID_WRITE_PROTECT, state,
-				   save, result);
+				   false, result);
 }
 
 int nvme_set_features_iocs_profile(int fd, __u8 iocsi, bool save)
