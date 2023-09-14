@@ -183,7 +183,20 @@ static const char space[51] = {[0 ... 49] = ' ', '\0'};
 
 static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
 
-static void *__nvme_alloc(size_t len, bool *huge)
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+
+static void *nvme_alloc(size_t len)
+{
+	size_t _len = ROUND_UP(len, 0x1000);
+	void *p;
+
+	if (posix_memalign((void *)&p, getpagesize(), _len))
+		return NULL;
+
+	memset(p, 0, _len);
+	return p;
+}
+
 static void *__nvme_alloc_huge(size_t len, bool *huge)
 {
 	void *p;
