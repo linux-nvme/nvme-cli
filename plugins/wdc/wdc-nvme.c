@@ -9451,7 +9451,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 	    cfg.log_id != NVME_LOG_LID_TELEMETRY_CTRL) {
 		fprintf(stderr, "ERROR: WDC: Invalid Log ID. It must be 7 (Host) or 8 (Controller)\n");
 		ret = -1;
-		goto close_fd;
+		goto close_dev;
 	}
 
 	if (cfg.file) {
@@ -9462,7 +9462,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 		if (verify_file < 0) {
 			fprintf(stderr, "ERROR: WDC: open: %s\n", strerror(errno));
 			ret = -1;
-			goto close_fd;
+			goto close_dev;
 		}
 		close(verify_file);
 		strncpy(f, cfg.file, PATH_MAX - 1);
@@ -9480,12 +9480,12 @@ static int wdc_reason_identifier(int argc, char **argv,
 		if (wdc_get_serial_name(dev, f, PATH_MAX, fileSuffix) == -1) {
 			fprintf(stderr, "ERROR: WDC: failed to generate file name\n");
 			ret = -1;
-			goto close_fd;
+			goto close_dev;
 		}
 		if (strlen(f) > PATH_MAX - 5) {
 			fprintf(stderr, "ERROR: WDC: file name overflow\n");
 			ret = -1;
-			goto close_fd;
+			goto close_dev;
 		}
 		strcat(f, ".bin");
 	}
@@ -9502,7 +9502,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 
 	nvme_show_status(ret);
 
-close_fd:
+close_dev:
 	dev_close(dev);
 	nvme_free_tree(r);
 	return ret;

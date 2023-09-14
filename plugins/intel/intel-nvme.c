@@ -1065,7 +1065,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	media_version[1] = (data[3] << 8) | data[2];
 
 	if (err)
-		goto close_fd;
+		goto close_dev;
 
 	if (media_version[0] == 1000) {
 		__u32 thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
@@ -1088,7 +1088,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		if (err) {
 			fprintf(stderr, "Quering thresholds failed. ");
 			nvme_show_status(err);
-			goto close_fd;
+			goto close_dev;
 		}
 
 		/* Update bucket thresholds to be printed */
@@ -1124,7 +1124,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 			      sizeof(stats));
 	}
 
-close_fd:
+close_dev:
 	dev_close(dev);
 	return err;
 }
