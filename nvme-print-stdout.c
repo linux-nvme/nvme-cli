@@ -2333,9 +2333,9 @@ static void stdout_id_ns_dpc(__u8 dpc)
 	__u8 pit1 = dpc & 0x1;
 	if (rsvd)
 		printf("  [7:5] : %#x\tReserved\n", rsvd);
-	printf("  [4:4] : %#x\tProtection Information Transferred as Last 8 Bytes of Metadata %sSupported\n",
+	printf("  [4:4] : %#x\tProtection Information Transferred as Last Bytes of Metadata %sSupported\n",
 		pil8, pil8 ? "" : "Not ");
-	printf("  [3:3] : %#x\tProtection Information Transferred as First 8 Bytes of Metadata %sSupported\n",
+	printf("  [3:3] : %#x\tProtection Information Transferred as First Bytes of Metadata %sSupported\n",
 		pif8, pif8 ? "" : "Not ");
 	printf("  [2:2] : %#x\tProtection Information Type 3 %sSupported\n",
 		pit3, pit3 ? "" : "Not ");
@@ -2353,7 +2353,7 @@ static void stdout_id_ns_dps(__u8 dps)
 	__u8 pit = dps & 0x7;
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tProtection Information is Transferred as %s 8 Bytes of Metadata\n",
+	printf("  [3:3] : %#x\tProtection Information is Transferred as %s Bytes of Metadata\n",
 		pif8, pif8 ? "First" : "Last");
 	printf("  [2:0] : %#x\tProtection Information %s\n", pit,
 		pit == 3 ? "Type 3 Enabled" :
