@@ -1799,7 +1799,7 @@ static void GetGenericLogs(int fd, const char *dir)
 	}
 
 	log_len = le64_to_cpu(pevent_log.tll);
-	pevent_log_info = nvme_alloc(log_len, &huge);
+	pevent_log_info = nvme_alloc_huge(log_len, &huge);
 	if (!pevent_log_info) {
 		perror("could not alloc buffer for persistent event log page (ignored)!\n");
 		return;
@@ -1809,7 +1809,7 @@ static void GetGenericLogs(int fd, const char *dir)
 	if (!err)
 		WriteData((__u8 *)pevent_log_info, log_len, dir,
 			  "persistent_event_log.bin", "persistent event log");
-	nvme_free(pevent_log_info, huge);
+	nvme_free_huge(pevent_log_info, huge);
 }
 
 static void GetNSIDDInfo(int fd, const char *dir, int nsid)

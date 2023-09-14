@@ -10386,7 +10386,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 		goto out;
 	}
 
-	pcieStatsPtr = nvme_alloc(pcie_stats_size, &huge);
+	pcieStatsPtr = nvme_alloc_huge(pcie_stats_size, &huge);
 	if (!pcieStatsPtr) {
 		fprintf(stderr, "ERROR: WDC: PCIE Stats alloc: %s\n", strerror(errno));
 		ret = -1;
@@ -10417,7 +10417,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 		}
 	}
 
-	nvme_free(pcieStatsPtr, huge);
+	nvme_free_huge(pcieStatsPtr, huge);
 
 out:
 	nvme_free_tree(r);

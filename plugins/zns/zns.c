@@ -949,7 +949,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
 	report_size = log_len;
 
-	report = nvme_alloc(report_size, &huge);
+	report = nvme_alloc_huge(report_size, &huge);
 	if (!report) {
 		perror("alloc");
 		err = -ENOMEM;
@@ -997,7 +997,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 			ops->zns_finish_zone_list(total_nr_zones, zone_list);
 	}
 
-	nvme_free(report, huge);
+	nvme_free_huge(report, huge);
 
 free_buff:
 	free(buff);
