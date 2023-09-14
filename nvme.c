@@ -5037,10 +5037,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	} else if (cfg.xfer % 4096)
 		cfg.xfer = 4096;
 
-	if (cfg.xfer < HUGE_MIN)
-		fw_buf = __nvme_alloc(fw_size, &huge);
-	else
-		fw_buf = nvme_alloc(fw_size, &huge);
+	fw_buf = nvme_alloc(fw_size, &huge);
 
 	if (!fw_buf) {
 		err = -ENOMEM;
