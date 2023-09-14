@@ -184,6 +184,7 @@ static const char space[51] = {[0 ... 49] = ' ', '\0'};
 static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
 
 static void *__nvme_alloc(size_t len, bool *huge)
+static void *__nvme_alloc_huge(size_t len, bool *huge)
 {
 	void *p;
 
@@ -198,7 +199,7 @@ static void *__nvme_alloc(size_t len, bool *huge)
 #define HUGE_MIN 0x80000
 
 #ifdef CONFIG_LIBHUGETLBFS
-void nvme_free(void *p, bool huge)
+void nvme_free_huge(void *p, bool huge)
 {
 	if (huge) {
 		if (p)
@@ -208,29 +209,29 @@ void nvme_free(void *p, bool huge)
 	}
 }
 
-void *nvme_alloc(size_t len, bool *huge)
+void *nvme_alloc_huge(size_t len, bool *huge)
 {
 	void *p;
 
 	if (len < HUGE_MIN)
-		return __nvme_alloc(len, huge);
+		return __nvme_alloc_huge(len, huge);
 
 	p = get_hugepage_region(len, GHR_DEFAULT);
 	if (!p)
-		return __nvme_alloc(len, huge);
+		return __nvme_alloc_huge(len, huge);
 
 	*huge = true;
 	return p;
 }
 #else
-void nvme_free(void *p, bool huge)
+void nvme_free_huge(void *p, bool huge)
 {
 	free(p);
 }
 
-void *nvme_alloc(size_t len, bool *huge)
+void *nvme_alloc_huge(size_t len, bool *huge)
 {
-	return __nvme_alloc(len, huge);
+	return __nvme_alloc_huge(len, huge);
 }
 #endif
 
@@ -1569,7 +1570,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
 		cfg.action = NVME_PEVENT_LOG_READ;
 
-	pevent_log_info = nvme_alloc(cfg.log_len, &huge);
+	pevent_log_info = nvme_alloc_huge(cfg.log_len, &huge);
 	if (!pevent_log_info) {
 		err = -ENOMEM;
 		goto free_pevent;
@@ -1603,7 +1604,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	}
 
 free:
-	nvme_free(pevent_log_info, huge);
+	nvme_free_huge(pevent_log_info, huge);
 free_pevent:
 	free(pevent);
 close_dev:
@@ -5037,7 +5038,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	} else if (cfg.xfer % 4096)
 		cfg.xfer = 4096;
 
-	fw_buf = nvme_alloc(fw_size, &huge);
+	fw_buf = nvme_alloc_huge(fw_size, &huge);
 
 	if (!fw_buf) {
 		err = -ENOMEM;
@@ -5070,7 +5071,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 free:
-	nvme_free(fw_buf, huge);
+	nvme_free_huge(fw_buf, huge);
 close_fw_fd:
 	close(fw_fd);
 close_dev:
@@ -7570,7 +7571,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	/* Update the data size based on the required block count */
 	buffer_size = (nblocks + 1) * logical_block_size;
 
-	buffer = nvme_alloc(buffer_size, &huge);
+	buffer = nvme_alloc_huge(buffer_size, &huge);
 	if (!buffer) {
 		err = -ENOMEM;
 		goto close_mfd;
@@ -7692,7 +7693,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 free_mbuffer:
 	free(mbuffer);
 free_buffer:
-	nvme_free(buffer, huge);
+	nvme_free_huge(buffer, huge);
 close_mfd:
 	if (strlen(cfg.metadata))
 		close(mfd);
@@ -8540,7 +8541,7 @@ static int passthru(int argc, char **argv, bool admin,
 	}
 
 	if (cfg.data_len) {
-		data = nvme_alloc(cfg.data_len, &huge);
+		data = nvme_alloc_huge(cfg.data_len, &huge);
 		if (!data) {
 			err = -ENOMEM;
 			goto free_metadata;
@@ -8625,7 +8626,7 @@ static int passthru(int argc, char **argv, bool admin,
 free_metadata:
 	free(mdata);
 free_data:
-	nvme_free(data, huge);
+	nvme_free_huge(data, huge);
 close_dfd:
 	if (strlen(cfg.input_file))
 		close(dfd);
@@ -9336,7 +9337,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	}
 
 	if (cfg.data_len) {
-		data = nvme_alloc(cfg.data_len, &huge);
+		data = nvme_alloc_huge(cfg.data_len, &huge);
 		if (!data) {
 			err = -ENOMEM;
 			goto close_fd;
@@ -9372,7 +9373,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	}
 
 free_data:
-	nvme_free(data, huge);
+	nvme_free_huge(data, huge);
 close_fd:
 	if (strlen(cfg.input_file))
 		close(fd);
