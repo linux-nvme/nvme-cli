@@ -591,10 +591,12 @@ int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
 				   result);
 }
 
-int nvme_set_features_lba_range(int fd, __u32 nsid, __u32 nr_ranges, bool save,
+int nvme_set_features_lba_range(int fd, __u32 nsid, __u8 nr_ranges, bool save,
 				struct nvme_lba_range_type *data, __u32 *result)
 {
-	return -1;
+	return nvme_set_features_data(
+		fd, NVME_FEAT_FID_LBA_RANGE, nsid, nr_ranges - 1, save,
+		sizeof(*data), data, result);
 }
 
 int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,

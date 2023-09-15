@@ -2240,7 +2240,7 @@ int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_set_features_lba_range(int fd, __u32 nsid, __u32 nr_ranges, bool save,
+int nvme_set_features_lba_range(int fd, __u32 nsid, __u8 nr_ranges, bool save,
 				struct nvme_lba_range_type *data, __u32 *result);
 
 /**
