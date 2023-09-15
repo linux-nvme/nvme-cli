@@ -615,8 +615,8 @@ int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler, bool dulbe,
 	__u32 value = NVME_SET(tler, FEAT_ERROR_RECOVERY_TLER) |
 			NVME_SET(!!dulbe, FEAT_ERROR_RECOVERY_DULBE);
 
-	return __nvme_set_features(fd, NVME_FEAT_FID_ERR_RECOVERY, value, save,
-				   result);
+	return nvme_set_features_simple(
+		fd, NVME_FEAT_FID_ERR_RECOVERY, nsid, value, save, result);
 }
 
 int nvme_set_features_volatile_wc(int fd, bool wce, bool save, __u32 *result)
@@ -874,10 +874,24 @@ int nvme_set_features_resv_mask(int fd, __u32 mask, bool save, __u32 *result)
 				   result);
 }
 
+int nvme_set_features_resv_mask2(int fd, __u32 nsid, __u32 mask, bool save,
+				 __u32 *result)
+{
+	return nvme_set_features_simple(
+		fd, NVME_FEAT_FID_RESV_MASK, nsid, mask, save, result);
+}
+
 int nvme_set_features_resv_persist(int fd, bool ptpl, bool save, __u32 *result)
 {
 	return __nvme_set_features(fd, NVME_FEAT_FID_RESV_PERSIST, !!ptpl, save,
 				   result);
+}
+
+int nvme_set_features_resv_persist2(int fd, __u32 nsid, bool ptpl, bool save,
+				    __u32 *result)
+{
+	return nvme_set_features_simple(
+		fd, NVME_FEAT_FID_RESV_PERSIST, nsid, !!ptpl, save, result);
 }
 
 int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
@@ -885,6 +899,14 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 {
 	return __nvme_set_features(fd, NVME_FEAT_FID_WRITE_PROTECT, state,
 				   false, result);
+}
+
+int nvme_set_features_write_protect2(int fd, __u32 nsid,
+				     enum nvme_feat_nswpcfg_state state,
+				     bool save, __u32 *result)
+{
+	return nvme_set_features_simple(
+		fd, NVME_FEAT_FID_WRITE_PROTECT, nsid, state, false, result);
 }
 
 int nvme_set_features_iocs_profile(int fd, __u16 iocsi, bool save)
@@ -972,6 +994,26 @@ int nvme_get_features_lba_range(int fd, enum nvme_get_features_sel sel,
 	return nvme_get_features(&args);
 }
 
+int nvme_get_features_lba_range2(int fd, enum nvme_get_features_sel sel,
+				 __u32 nsid, struct nvme_lba_range_type *data,
+				 __u32 *result)
+{
+	struct nvme_get_features_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.fid = NVME_FEAT_FID_LBA_RANGE,
+		.nsid = nsid,
+		.sel = sel,
+		.uuidx = NVME_UUID_NONE,
+		.data = data,
+		.data_len = sizeof(*data),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+
+	return nvme_get_features(&args);
+}
+
 int nvme_get_features_temp_thresh(int fd, enum nvme_get_features_sel sel,
 				  __u32 *result)
 {
@@ -983,6 +1025,24 @@ int nvme_get_features_err_recovery(int fd, enum nvme_get_features_sel sel,
 {
 	return __nvme_get_features(fd, NVME_FEAT_FID_ERR_RECOVERY, sel,
 				   result);
+}
+
+int nvme_get_features_err_recovery2(int fd, enum nvme_get_features_sel sel,
+				    __u32 nsid, __u32 *result)
+{
+
+	struct nvme_get_features_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.fid = NVME_FEAT_FID_ERR_RECOVERY,
+		.nsid = nsid,
+		.sel = sel,
+		.uuidx = NVME_UUID_NONE,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+
+	return nvme_get_features(&args);
 }
 
 int nvme_get_features_volatile_wc(int fd, enum nvme_get_features_sel sel,
@@ -1250,10 +1310,44 @@ int nvme_get_features_resv_mask(int fd, enum nvme_get_features_sel sel,
 	return __nvme_get_features(fd, NVME_FEAT_FID_RESV_MASK, sel, result);
 }
 
+int nvme_get_features_resv_mask2(int fd, enum nvme_get_features_sel sel,
+				 __u32 nsid, __u32 *result)
+{
+	struct nvme_get_features_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.fid = NVME_FEAT_FID_RESV_MASK,
+		.nsid = nsid,
+		.sel = sel,
+		.uuidx = NVME_UUID_NONE,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+
+	return nvme_get_features(&args);
+}
+
 int nvme_get_features_resv_persist(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result)
 {
 	return __nvme_get_features(fd, NVME_FEAT_FID_RESV_PERSIST, sel, result);
+}
+
+int nvme_get_features_resv_persist2(int fd, enum nvme_get_features_sel sel,
+				    __u32 nsid, __u32 *result)
+{
+	struct nvme_get_features_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.fid = NVME_FEAT_FID_RESV_PERSIST,
+		.nsid = nsid,
+		.sel = sel,
+		.uuidx = NVME_UUID_NONE,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+
+	return nvme_get_features(&args);
 }
 
 int nvme_get_features_write_protect(int fd, __u32 nsid,
