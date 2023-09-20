@@ -198,7 +198,7 @@ static int test_ctrl(nvme_ctrl_t c)
 		printf("  Temperature Threshold:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Temperature Threshold:%x\n", ret);
-	ret = nvme_get_features_err_recovery(fd, sel, &result);
+	ret = nvme_get_features_err_recovery2(fd, sel, 0, &result);
 	if (!ret)
 		printf("  Error Recovery:%x\n", result);
 	else if (ret > 0)
@@ -258,12 +258,12 @@ static int test_ctrl(nvme_ctrl_t c)
 		printf("  SW Progress Marker:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Sanitize:%x\n", ret);
-	ret = nvme_get_features_resv_mask(fd, sel, &result);
+	ret = nvme_get_features_resv_mask2(fd, sel, 0, &result);
 	if (!ret)
 		printf("  Reservation Mask:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Reservation Mask:%x\n", ret);
-	ret = nvme_get_features_resv_persist(fd, sel, &result);
+	ret = nvme_get_features_resv_persist2(fd, sel, 0, &result);
 	if (!ret)
 		printf("  Reservation Persistence:%x\n", result);
 	else if (ret > 0)
