@@ -100,38 +100,13 @@ static struct lid_dir *get_standard_lids(struct nvme_supported_log_pages *suppor
 	static struct lid_dir standard_dir = { 0 };
 
 	init_lid_dir(&standard_dir);
-	standard_dir.lid[0x00].str = "Supported Log Pages";
-	standard_dir.lid[0x01].str = "Error Information";
-	standard_dir.lid[0x02].str = "SMART / Health Information";
-	standard_dir.lid[0x03].str = "Firmware Slot Information";
-	standard_dir.lid[0x04].str = "Changed Namespace List";
-	standard_dir.lid[0x05].str = "Commands Supported and Effects";
-	standard_dir.lid[0x06].str = "Device Self Test";
-	standard_dir.lid[0x07].str = "Telemetry Host-Initiated";
-	standard_dir.lid[0x08].str = "Telemetry Controller-Initiated";
-	standard_dir.lid[0x09].str = "Endurance Group Information";
-	standard_dir.lid[0x0A].str = "Predictable Latency Per NVM Set";
-	standard_dir.lid[0x0B].str = "Predictable Latency Event Aggregate";
-	standard_dir.lid[0x0C].str = "Asymmetric Namespace Access";
-	standard_dir.lid[0x0D].str = "Persistent Event Log";
-	standard_dir.lid[0x0E].str = "Predictable Latency Event Aggregate";
-	standard_dir.lid[0x0F].str = "Endurance Group Event Aggregate";
-	standard_dir.lid[0x10].str = "Media Unit Status";
-	standard_dir.lid[0x11].str = "Supported Capacity Configuration List";
-	standard_dir.lid[0x12].str = "Feature Identifiers Supported and Effects";
-	standard_dir.lid[0x13].str = "NVMe-MI Commands Supported and Effects";
-	standard_dir.lid[0x14].str = "Command and Feature lockdown";
-	standard_dir.lid[0x15].str = "Boot Partition";
-	standard_dir.lid[0x16].str = "Rotational Media Information";
-	standard_dir.lid[0x70].str = "Discovery";
-	standard_dir.lid[0x80].str = "Reservation Notification";
-	standard_dir.lid[0x81].str = "Sanitize Status";
 
 	for (int lid = 0; lid < NVME_LOG_SUPPORTED_LOG_PAGES_MAX; lid++) {
 		if (!supported->lid_support[lid] || lid >= MIN_VENDOR_LID)
 			continue;
 
 		standard_dir.lid[lid].supported = true;
+		standard_dir.lid[lid].str = nvme_log_to_string(lid);
 	}
 
 	return &standard_dir;
@@ -158,6 +133,14 @@ static struct lid_dir *get_solidigm_lids(struct nvme_supported_log_pages *suppor
 	solidigm_dir.lid[0xC4].str = "Endurance Manager Statistics";
 	solidigm_dir.lid[0xC5].str = "Temperature Statistics";
 	solidigm_dir.lid[0xCA].str = "SMART Attributes";
+	solidigm_dir.lid[0xCB].str = "VU NVMe IO Queue Metrics Log Page";
+	solidigm_dir.lid[0xDD].str = "VU Marketing Description Log Page";
+	solidigm_dir.lid[0xEF].str = "Performance Rating and LBA Access Histogram";
+	solidigm_dir.lid[0xF2].str = "Get Power Usage Log Page";
+	solidigm_dir.lid[0xF6].str = "Vt Histo Get Log Page";
+	solidigm_dir.lid[0xF9].str = "Workload Tracker Get Log Page";
+	solidigm_dir.lid[0xFD].str = "Garbage Control Collection  Log Page";
+	solidigm_dir.lid[0xFE].str = "Latency Outlier Log Page";
 
 	update_vendor_lid_supported(supported, &solidigm_dir);
 
