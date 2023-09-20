@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 usage() {
     echo "Usage: build.sh [-b [release|debug]] "
