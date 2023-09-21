@@ -1477,7 +1477,7 @@ _nvme_subcmds () {
 		_cmds+=" $plugin"
 	done
 
-	cmds+=" version help"
+	_cmds+=" version help"
 
 	if [[ ${#words[*]} -lt 3 ]]; then
 		COMPREPLY+=( $(compgen -W "$_cmds" -- $cur ) )
