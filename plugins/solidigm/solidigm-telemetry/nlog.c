@@ -8,15 +8,16 @@
 #include "nlog.h"
 #include "config.h"
 #include <string.h>
-#include <math.h>
 #include <stdio.h>
+
+#include "ccan/ilog/ilog.h"
 
 #define LOG_ENTRY_HEADER_SIZE 1
 #define LOG_ENTRY_TIMESTAMP_SIZE 2
 #define LOG_ENTRY_NUM_ARGS_MAX 8
 #define LOG_ENTRY_MAX_SIZE (LOG_ENTRY_HEADER_SIZE + LOG_ENTRY_TIMESTAMP_SIZE + \
 			    LOG_ENTRY_NUM_ARGS_MAX)
-#define NUM_ARGS_MASK ((1 << ((int)log2(LOG_ENTRY_NUM_ARGS_MAX)+1)) - 1)
+#define NUM_ARGS_MASK ((1 << ((int)STATIC_ILOG_32(LOG_ENTRY_NUM_ARGS_MAX))) - 1)
 #define MAX_HEADER_MISMATCH_TRACK 10
 
 static int formats_find(struct json_object *formats, uint32_t val, struct json_object **format)
