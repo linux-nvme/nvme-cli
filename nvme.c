@@ -69,6 +69,7 @@
 #include "fabrics.h"
 #define CREATE_CMD
 #include "nvme-builtin.h"
+#include "malloc.h"
 
 struct feat_cfg {
 	enum nvme_features_id feature_id;
@@ -198,6 +199,20 @@ static void *nvme_alloc(size_t len)
 	return p;
 }
 
+void *nvme_realloc(void *p, size_t len)
+{
+	size_t old_len = malloc_usable_size(p);
+
+	void *result = nvme_alloc(len);
+
+	if (p) {
+		memcpy(result, p, min(old_len, len));
+		free(p);
+	}
+
+	return result;
+}
+
 static void *__nvme_alloc_huge(size_t len, bool *huge)
 {
 	void *p;
@@ -248,6 +263,21 @@ void *nvme_alloc_huge(size_t len, bool *huge)
 	return __nvme_alloc_huge(len, huge);
 }
 #endif
+
+void *nvme_realloc_huge(void *p, size_t len, bool *huge)
+{
+	size_t old_len = malloc_usable_size(p);
+	bool was_huge = *huge;
+
+	void *result = nvme_alloc_huge(len, huge);
+
+	if (p) {
+		memcpy(result, p, min(old_len, len));
+		nvme_free_huge(p, was_huge);
+	}
+
+	return result;
+}
 
 const char *nvme_strerror(int errnum)
 {
