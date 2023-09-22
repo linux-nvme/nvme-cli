@@ -13,7 +13,7 @@
 
 #include "cmd.h"
 
-#define SOLIDIGM_PLUGIN_VERSION "0.16"
+#define SOLIDIGM_PLUGIN_VERSION "0.17"
 
 PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_VERSION),
 	COMMAND_LIST(
@@ -28,6 +28,7 @@ PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_V
 		ENTRY("clear-fw-activate-history", "Clear firmware update history log (redirects to ocp plug-in)", clear_fw_update_history)
 		ENTRY("vs-fw-activate-history", "Get firmware activation history log (redirects to ocp plug-in)", fw_activation_history)
 		ENTRY("log-page-directory", "Retrieve log page directory", get_log_page_directory_log)
+		ENTRY("temp-stats", "Retrieve Temperature Statistics log", get_temp_stats_log)
 	)
 );
 
