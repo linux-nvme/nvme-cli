@@ -88,7 +88,7 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 static const char *nvmf_context		= "execution context identification string";
 
 #define NVMF_ARGS(n, c, ...)                                                                     \
-	struct argconfig_commandline_options opts[] = {                                          \
+	struct argconfig_commandline_options n[] = {                                             \
 		OPT_STRING("transport",       't', "STR", &transport,     nvmf_tport),           \
 		OPT_STRING("nqn",             'n', "STR", &subsysnqn,     nvmf_nqn),             \
 		OPT_STRING("traddr",          'a', "STR", &traddr,        nvmf_traddr),          \
