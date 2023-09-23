@@ -4990,7 +4990,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_file_ int fw_fd = -1;
-	unsigned int fw_size;
+	unsigned int fw_size, pos;
 	int err;
 	struct stat sb;
 	void *fw_buf;
@@ -5068,16 +5068,14 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		goto free;
 	}
 
-	while (cfg.offset < fw_size) {
-		cfg.xfer = min(cfg.xfer, fw_size);
+	for (pos = 0; pos < fw_size; pos += cfg.xfer) {
+		cfg.xfer = min(cfg.xfer, fw_size - pos);
 
-		err = fw_download_single(dev, fw_buf + cfg.offset, fw_size,
-					 cfg.offset, cfg.xfer, cfg.progress,
-					 cfg.ignore_ovr);
+		err = fw_download_single(dev, fw_buf + pos, fw_size,
+					 cfg.offset + pos, cfg.xfer,
+					 cfg.progress, cfg.ignore_ovr);
 		if (err)
 			break;
-
-		cfg.offset += cfg.xfer;
 	}
 
 	if (!err) {
