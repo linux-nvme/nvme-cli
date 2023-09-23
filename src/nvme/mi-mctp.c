@@ -472,23 +472,29 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)
 		return NULL;
 
 	mctp = malloc(sizeof(*mctp));
-	if (!mctp)
-		goto err_free_ep;
+	if (!mctp) {
+		errno_save = errno;
+		goto err_close_ep;
+	}
 
 	memset(mctp, 0, sizeof(*mctp));
 	mctp->sd = -1;
 
 	mctp->resp_buf_size = 4096;
 	mctp->resp_buf = malloc(mctp->resp_buf_size);
-	if (!mctp->resp_buf)
-		goto err_free_ep;
+	if (!mctp->resp_buf) {
+		errno_save = errno;
+		goto err_free_mctp;
+	}
 
 	mctp->net = netid;
 	mctp->eid = eid;
 
 	mctp->sd = ops.socket(AF_MCTP, SOCK_DGRAM, 0);
-	if (mctp->sd < 0)
-		goto err_free_ep;
+	if (mctp->sd < 0) {
+		errno_save = errno;
+		goto err_free_rspbuf;
+	}
 
 	ep->transport = &nvme_mi_transport_mctp;
 	ep->transport_data = mctp;
@@ -504,11 +510,14 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)
 
 	return ep;
 
-err_free_ep:
-	errno_save = errno;
-	nvme_mi_close(ep);
+err_free_rspbuf:
 	free(mctp->resp_buf);
+err_free_mctp:
 	free(mctp);
+err_close_ep:
+	/* the ep->transport is not set yet, so this will not call back
+	 * into nvme_mi_mctp_close() */
+	nvme_mi_close(ep);
 	errno = errno_save;
 	return NULL;
 }
