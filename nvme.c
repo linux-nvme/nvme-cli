@@ -1155,19 +1155,14 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 
 	struct config {
 		char	*output_format;
-		bool	verbose;
 	};
 
 	struct config cfg = {
 		.output_format	= "normal",
-		.verbose	= false
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("verbose",       'v', &cfg.verbose,        verbose),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format,  output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1179,7 +1174,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 		return err;
 	}
 
-	if (cfg.verbose)
+	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
 	supports = nvme_alloc(sizeof(*supports));
@@ -2770,24 +2765,19 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 	struct config {
 		__u16	lba_format_index;
 		__u8	uuid_index;
-		bool	verbose;
 		char	*output_format;
 	};
 
 	struct config cfg = {
 		.lba_format_index	= 0,
 		.uuid_index		= NVME_UUID_NONE,
-		.verbose		= false,
 		.output_format		= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
-		OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index),
-		OPT_FLAG("verbose",          'v', &cfg.verbose,          verbose),
-		OPT_FMT("output-format",     'o', &cfg.output_format,    output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
+		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index),
+		  OPT_FMT("output-format",     'o', &cfg.output_format,    output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2799,7 +2789,7 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 		return err;
 	}
 
-	if (cfg.verbose)
+	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
 	ns = nvme_alloc(sizeof(*ns));
@@ -3351,19 +3341,14 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 
 	struct config {
 		char	*output_format;
-		int	verbose;
 	};
 
 	struct config cfg = {
 		.output_format	= "normal",
-		.verbose	= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
-		OPT_INCR("verbose",      'v', &cfg.verbose,       verbose),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err < 0)
@@ -3379,10 +3364,10 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		goto ret;
 	}
 
-	if (cfg.verbose)
+	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
-	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	r = nvme_create_root(stderr, map_log_level(!!(flags & VERBOSE), false));
 	if (!r) {
 		if (devname)
 			nvme_show_error("Failed to scan nvme subsystem for %s", devname);
@@ -3426,19 +3411,14 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 
 	struct config {
 		char	*output_format;
-		bool	verbose;
 	};
 
 	struct config cfg = {
 		.output_format	= "normal",
-		.verbose	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
-		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err < 0)
@@ -3450,10 +3430,10 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		return -EINVAL;
 	}
 
-	if (cfg.verbose)
+	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
-	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	r = nvme_create_root(stderr, map_log_level(!!(flags & VERBOSE), false));
 	if (!r) {
 		nvme_show_error("Failed to create topology root: %s", nvme_strerror(errno));
 		return -errno;
@@ -3610,23 +3590,18 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 		__u32	namespace_id;
 		__u8	uuid_index;
 		char	*output_format;
-		bool	verbose;
 	};
 
 	struct config cfg = {
 		.namespace_id	= 0,
 		.uuid_index	= NVME_UUID_NONE,
 		.output_format	= "normal",
-		.verbose	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,    namespace_id_desired),
-		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      uuid_index),
-		OPT_FMT("output-format", 'o', &cfg.output_format,   output_format),
-		OPT_FLAG("verbose",      'v', &cfg.verbose,         verbose),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,    namespace_id_desired),
+		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      uuid_index),
+		  OPT_FMT("output-format", 'o', &cfg.output_format,   output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3638,7 +3613,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 		return err;
 	}
 
-	if (cfg.verbose)
+	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -3691,24 +3666,19 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 	struct config {
 		__u16	lba_format_index;
 		__u8	uuid_index;
-		bool	verbose;
 		char	*output_format;
 	};
 
 	struct config cfg = {
 		.lba_format_index	= 0,
 		.uuid_index		= NVME_UUID_NONE,
-		.verbose		= false,
 		.output_format		= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
-		OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index),
-		OPT_FLAG("verbose",          'v', &cfg.verbose,          verbose),
-		OPT_FMT("output-format",     'o', &cfg.output_format,    output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
+		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index),
+		  OPT_FMT("output-format",     'o', &cfg.output_format,    output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3720,7 +3690,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 		return err;
 	}
 
-	if (cfg.verbose)
+	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
 	ns = nvme_alloc(sizeof(*ns));
@@ -4655,21 +4625,16 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	struct config {
 		__u8	dst_entries;
 		char	*output_format;
-		bool	verbose;
 	};
 
 	struct config cfg = {
 		.dst_entries	= NVME_LOG_ST_MAX_RESULTS,
 		.output_format	= "normal",
-		.verbose	= false,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   dst_entries),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   dst_entries),
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4681,7 +4646,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 		return err;
 	}
 
-	if (cfg.verbose)
+	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
 	log = nvme_alloc(sizeof(*log));
@@ -9042,22 +9007,17 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 
 	struct config {
 		char	*output_format;
-		int	verbose;
 		char	*ranking;
 	};
 
 	struct config cfg = {
 		.output_format	= "normal",
-		.verbose	= 0,
 		.ranking	= "namespace",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_INCR("verbose",      'v', &cfg.verbose,       verbose),
-		OPT_FMT("ranking",       'r', &cfg.ranking,       ranking),
-		OPT_END()
-	};
+	NVME_ARGS(opts, cfg,
+		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -9069,7 +9029,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		return err;
 	}
 
-	if (cfg.verbose)
+	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
 	if (!strcmp(cfg.ranking, "namespace")) {
@@ -9081,7 +9041,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		return -EINVAL;
 	}
 
-	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	r = nvme_create_root(stderr, map_log_level(!!(flags & VERBOSE), false));
 	if (!r) {
 		nvme_show_error("Failed to create topology root: %s", nvme_strerror(errno));
 		return -errno;
