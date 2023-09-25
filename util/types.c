@@ -67,20 +67,21 @@ static char *__uint128_t_to_string(nvme_uint128_t val, bool l10n)
 	int idx = 60;
 	__u64 div, rem;
 	char *sep = NULL;
-	int i, len = 0;
+	int i, len = 0, cl = 0;
 
 	if (l10n) {
 		sep = localeconv()->thousands_sep;
 		len = strlen(sep);
+		cl = 1;
 	}
 
 	/* terminate at the end, and build up from the ones */
 	str[--idx] = '\0';
 
 	do {
-		if (len && !((sizeof(str) - idx) % (3 + len))) {
+		if (len && !((sizeof(str) - idx) % (3 + cl))) {
 			for (i = 0; i < len; i++)
-				str[--idx] = sep[i];
+				str[--idx] = sep[len - i - 1];
 		}
 
 		rem = val.words[0];
