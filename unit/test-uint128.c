@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <locale.h>
 
 #include "../util/types.h"
 
@@ -27,25 +28,36 @@ static void check_str(nvme_uint128_t val, const char *exp, const char *res)
 }
 
 struct tostr_test {
+	const char *locale;
 	nvme_uint128_t val;
 	const char *exp;
 };
 
 static struct tostr_test tostr_tests[] = {
-	{ U128(0, 0, 0, 0), "0" },
-	{ U128(0, 0, 0, 1), "1" },
-	{ U128(0, 0, 0, 10), "10" },
-	{ U128(4, 3, 2, 1), "316912650112397582603894390785" },
+	{ NULL, U128(0, 0, 0, 0),"0" },
+	{ NULL, U128(0, 0, 0, 1), "1" },
+	{ NULL, U128(0, 0, 0, 10), "10" },
+	{ NULL, U128(4, 3, 2, 1), "316912650112397582603894390785" },
 	{
+		NULL,
 		U128(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff),
 		"340282366920938463463374607431768211455"
 	},
+	{ "fr_FR.utf-8", U128(0, 0, 0, 1000), "1\u202f000" },
 };
 
 void tostr_test(struct tostr_test *test)
 {
 	char *str;
-	str = uint128_t_to_string(test->val);
+
+	if (!setlocale(LC_NUMERIC, test->locale))
+		return;
+
+	if (test->locale)
+		str = uint128_t_to_l10n_string(test->val);
+	else
+		str = uint128_t_to_string(test->val);
+
 	check_str(test->val, test->exp, str);
 }
 
