@@ -110,11 +110,12 @@ struct passthru_config {
 	bool	latency;
 };
 
-#define NVME_ARGS(n, c, ...)                             \
-	struct argconfig_commandline_options n[] = {     \
-		OPT_FLAG("verbose", 'v', NULL, verbose), \
-		##__VA_ARGS__,                           \
-		OPT_END()                                \
+#define NVME_ARGS(n, c, ...)                                                      \
+	struct argconfig_commandline_options n[] = {                              \
+		OPT_FLAG("verbose",      'v', NULL,               verbose),       \
+		OPT_FMT("output-format", 'o', &output_format_val, output_format), \
+		##__VA_ARGS__,                                                    \
+		OPT_END()                                                         \
 	}
 
 static const char nvme_version_string[] = NVME_VERSION;
@@ -139,8 +140,6 @@ static struct program nvme = {
 };
 
 const char *output_format = "Output format: normal|json|binary";
-static const char *output_format_no_binary = "Output format: normal|json";
-
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
 static const char *block_count = "number of blocks (zeroes based) on device to access";
@@ -189,6 +188,8 @@ static const char *uuid_index_specify = "specify uuid index";
 static const char *verbose = "Increase output verbosity";
 static const char dash[51] = {[0 ... 49] = '=', '\0'};
 static const char space[51] = {[0 ... 49] = ' ', '\0'};
+
+static char *output_format_val = "normal";
 
 static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
 
@@ -531,6 +532,11 @@ enum nvme_print_flags validate_output_format(const char *format)
 	return -EINVAL;
 }
 
+bool nvme_is_output_format_json(void)
+{
+	return validate_output_format(output_format_val) == JSON;
+}
+
 void dev_close(struct nvme_dev *dev)
 {
 	switch (dev->type) {
@@ -559,21 +565,18 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 
 	struct config {
 		__u32	namespace_id;
-		char	*output_format;
 		bool	raw_binary;
 		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
-		.output_format	= "normal",
 		.raw_binary	= false,
 		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_output),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
 
@@ -581,7 +584,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -627,23 +630,20 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 
 	struct config {
 		bool	groups;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.groups = false,
-		.output_format = "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FLAG("groups", 'g', &cfg.groups, groups),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_FLAG("groups", 'g', &cfg.groups, groups));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -901,7 +901,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		  OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
 		  OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
 		  OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
-		  OPT_FLAG("rae",             'r', &cfg.rae, rae));
+		  OPT_FLAG("rae",             'r', &cfg.rae,       rae));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -982,24 +982,21 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	int err;
 
 	struct config {
-		char	*output_format;
 		__u16	group_id;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.group_id	= 0,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		  OPT_SHRT("group-id",     'g', &cfg.group_id,      group_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1057,21 +1054,18 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	enum nvme_print_flags flags;
 
 	struct config {
-		char	*output_format;
 		bool	human_readable;
 		bool	raw_binary;
 		int	csi;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.human_readable	= false,
 		.raw_binary	= false,
 		.csi		= -1,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
 		  OPT_INT("csi",             'c', &cfg.csi,            csi));
@@ -1080,7 +1074,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1153,22 +1147,13 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 	int err = -1;
 
-	struct config {
-		char	*output_format;
-	};
-
-	struct config cfg = {
-		.output_format	= "normal",
-	};
-
-	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format,  output_format));
+	NVME_ARGS(opts, cfg);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1208,26 +1193,23 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 
 	struct config {
 		__u32	log_entries;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.log_entries	= 64,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1278,24 +1260,21 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	int err;
 
 	struct config {
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1330,24 +1309,21 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 	int err;
 
 	struct config {
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_output));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1388,26 +1364,23 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 
 	struct config {
 		__u16	nvmset_id;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.nvmset_id	= 1,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_SHRT("nvmset-id",	 'i', &cfg.nvmset_id,     nvmset_id),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,	  raw_use));
+		  OPT_SHRT("nvmset-id",	   'i', &cfg.nvmset_id,     nvmset_id),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1451,28 +1424,25 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	struct config {
 		__u64	log_entries;
 		bool	rae;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.log_entries	= 2044,
 		.rae		= false,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
 		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1540,28 +1510,25 @@ static int get_persistent_event_log(int argc, char **argv,
 	struct config {
 		__u8	action;
 		__u32	log_len;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.action		= 0xff,
 		.log_len	= 0,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_BYTE("action",       'a', &cfg.action,        action),
 		  OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1660,28 +1627,25 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	struct config {
 		__u64	log_entries;
 		bool	rae;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.log_entries	= 2044,
 		.rae		= false,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
 		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1743,23 +1707,20 @@ static int get_lba_status_log(int argc, char **argv,
 
 	struct config {
 		bool	rae;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.rae		= false,
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_FLAG("rae",          'r', &cfg.rae,           rae));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1803,22 +1764,13 @@ static int get_resv_notif_log(int argc, char **argv,
 	enum nvme_print_flags flags;
 	int err;
 
-	struct config {
-		char	*output_format;
-	};
-
-	struct config cfg = {
-		.output_format	= "normal",
-	};
-
-	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+	NVME_ARGS(opts, cfg);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1858,25 +1810,22 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 	struct config {
 		__u8	lsp;
 		char	*file_name;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.lsp		= 0,
-		.output_format	= "normal",
 		.file_name	= NULL,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_BYTE("lsp",          's', &cfg.lsp,           lsp),
-		  OPT_FILE("output-file",  'f', &cfg.file_name,     fname),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_FILE("output-file",  'f', &cfg.file_name,     fname));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2048,26 +1997,23 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
 
 	struct config {
 		__u16	domainid;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.domainid	= 0,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("domain-id",     'd', &cfg.domainid, domainid),
-		  OPT_FMT("output-format",  'o', &cfg.output_format, output_format),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2103,26 +2049,23 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 
 	struct config {
 		__u16	domainid;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.domainid	= 0,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("domain-id",     'd', &cfg.domainid,       domainid),
-		  OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2463,21 +2406,18 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 
 	struct config {
 		bool	rae;
-		char	*output_format;
 		bool	human_readable;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.rae		= false,
-		.output_format	= "normal",
 		.human_readable	= false,
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_FLAG("rae",            'r', &cfg.rae,            rae),
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log));
 
@@ -2485,7 +2425,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2523,24 +2463,21 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 	int err = -1;
 
 	struct config {
-		char	*output_format;
 		bool	human_readable;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2575,24 +2512,21 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 	int err = -1;
 
 	struct config {
-		char	*output_format;
 		bool	human_readable;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2630,25 +2564,22 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 	struct config {
 		__u16	cntid;
 		__u32	namespace_id;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.cntid		= 0,
 		.namespace_id	= NVME_NSID_NONE,
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id_optional),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id_optional));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2690,27 +2621,24 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		__u32	namespace_id;
 		int	csi;
 		bool	all;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id	= 1,
 		.csi		= -1,
 		.all		= false,
-		.output_format = "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		  OPT_INT("csi",           'y', &cfg.csi,           csi),
-		  OPT_FLAG("all",          'a', &cfg.all,           all),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary));
+		  OPT_FLAG("all",          'a', &cfg.all,           all));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (flags != JSON && flags != NORMAL) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2765,25 +2693,22 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 	struct config {
 		__u16	lba_format_index;
 		__u8	uuid_index;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.lba_format_index	= 0,
 		.uuid_index		= NVME_UUID_NONE,
-		.output_format		= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
-		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index),
-		  OPT_FMT("output-format",     'o', &cfg.output_format,    output_format));
+		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2822,23 +2747,20 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 
 	struct config {
 		__u16	endgrp_id;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.endgrp_id	= 0,
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_SHRT("endgrp-id",    'i', &cfg.endgrp_id,     endurance_grp_id),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_SHRT("endgrp-id",    'i', &cfg.endgrp_id,     endurance_grp_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (flags != JSON && flags != NORMAL) {
 		nvme_show_error("invalid output format");
 		return err;
@@ -3339,16 +3261,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	int err;
 	int nsid = NVME_NSID_ALL;
 
-	struct config {
-		char	*output_format;
-	};
-
-	struct config cfg = {
-		.output_format	= "normal",
-	};
-
-	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary));
+	NVME_ARGS(opts, cfg);
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err < 0)
@@ -3358,7 +3271,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (optind < argc)
 		devname = basename(argv[optind++]);
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (flags != JSON && flags != NORMAL) {
 		nvme_show_error("Invalid output format");
 		goto ret;
@@ -3409,22 +3322,13 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	nvme_root_t r;
 	int err = 0;
 
-	struct config {
-		char	*output_format;
-	};
-
-	struct config cfg = {
-		.output_format	= "normal",
-	};
-
-	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary));
+	NVME_ARGS(opts, cfg);
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err < 0)
 		return err;
 
-	flags = validate_output_format(cfg.output_format);
+	flags = validate_output_format(output_format_val);
 	if (flags != JSON && flags != NORMAL) {
 		nvme_show_error("Invalid output format");
 		return -EINVAL;
@@ -3468,21 +3372,18 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 
 	struct config {
 		bool	vendor_specific;
-		char	*output_format;
 		bool	raw_binary;
 		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.vendor_specific	= false,
-		.output_format		= "normal",
 		.raw_binary		= false,
 		.human_readable		= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
-		  OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
 		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
 		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
 
@@ -3490,7 +3391,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3537,22 +3438,13 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 	int err = -1;
 
-	struct config {
-		char	*output_format;
-	};
-
-	struct config cfg = {
-		.output_format	= "normal",
-	};
-
-	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format,   output_format));
+	NVME_ARGS(opts, cfg);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3589,25 +3481,22 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 	struct config {
 		__u32	namespace_id;
 		__u8	uuid_index;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id	= 0,
 		.uuid_index	= NVME_UUID_NONE,
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,    namespace_id_desired),
-		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      uuid_index),
-		  OPT_FMT("output-format", 'o', &cfg.output_format,   output_format));
+		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      uuid_index));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3666,25 +3555,22 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 	struct config {
 		__u16	lba_format_index;
 		__u8	uuid_index;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.lba_format_index	= 0,
 		.uuid_index		= NVME_UUID_NONE,
-		.output_format		= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
-		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index),
-		  OPT_FMT("output-format",     'o', &cfg.output_format,    output_format));
+		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3733,26 +3619,23 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	struct config {
 		__u32	namespace_id;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.namespace_id	= 0,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,  namespace_id_desired),
-		  OPT_FMT("output-format",  'o', &cfg.output_format, output_format),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3803,7 +3686,6 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		bool	force;
 		bool	vendor_specific;
 		bool	raw_binary;
-		char	*output_format;
 		bool	human_readable;
 	};
 
@@ -3812,7 +3694,6 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		.force			= false,
 		.vendor_specific	= false,
 		.raw_binary		= false,
-		.output_format		= "normal",
 		.human_readable		= false,
 	};
 
@@ -3821,14 +3702,13 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		  OPT_FLAG("force",             0, &cfg.force,           force),
 		  OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
 		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		  OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
 		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3885,28 +3765,25 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *cmd,
 	struct config {
 		__u32	namespace_id;
 		bool	raw_binary;
-		char	*output_format;
 		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.namespace_id	= 0,
 		.raw_binary	= false,
-		.output_format	= "normal",
 		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
 		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		  OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
 		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3953,22 +3830,13 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 	enum nvme_print_flags flags;
 	int err;
 
-	struct config {
-		char	*output_format;
-	};
-
-	struct config cfg = {
-		.output_format	= "normal",
-	};
-
-	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+	NVME_ARGS(opts, cfg);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4004,23 +3872,20 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 
 	struct config {
 		__u16	nvmset_id;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.nvmset_id	= 0,
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_SHRT("nvmset_id",    'i', &cfg.nvmset_id,     nvmset_id),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_SHRT("nvmset_id",    'i', &cfg.nvmset_id,     nvmset_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4055,19 +3920,16 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 	int err;
 
 	struct config {
-		char	*output_format;
 		bool	raw_binary;
 		bool	human_readable;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.raw_binary	= false,
 		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
@@ -4075,7 +3937,7 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4159,23 +4021,20 @@ static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *
 
 	struct config {
 		__u16	dom_id;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.dom_id		= 0xffff,
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_SHRT("dom-id",         'd', &cfg.dom_id,         domain_id),
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format));
+		  OPT_SHRT("dom-id",         'd', &cfg.dom_id,         domain_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4305,26 +4164,23 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 
 	struct config {
 		__u16	cntlid;
-		char	*output_format;
 		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.cntlid		= 0,
-		.output_format	= "normal",
 		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("cntlid",         'c', &cfg.cntlid, cntlid),
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4364,25 +4220,22 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 	struct config {
 		__u16	cntid;
 		__u32	num_entries;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.cntid		= 0,
 		.num_entries	= ARRAY_SIZE(sc_list->sc_entry),
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
 		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
-		  OPT_UINT("num-entries",  'e', &cfg.num_entries,   num_entries),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_UINT("num-entries",  'e', &cfg.num_entries,   num_entries));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4624,23 +4477,20 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 
 	struct config {
 		__u8	dst_entries;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.dst_entries	= NVME_LOG_ST_MAX_RESULTS,
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   dst_entries),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   dst_entries));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -5518,17 +5368,14 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	int err;
 
 	struct config {
-		char	*output_format;
 		bool	human_readable;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -5536,7 +5383,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 		return err;
 
 	r = nvme_scan(NULL);
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		goto free_tree;
@@ -6245,7 +6092,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		  OPT_SHRT("endir",          'e', &cfg.endir,          endir),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
-		  OPT_FILE("input-file",     'i', &cfg.file,	    input));
+		  OPT_FILE("input-file",     'i', &cfg.file,           input));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6641,11 +6488,11 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
 		  OPT_LIST("ctx-attrs",    'a', &cfg.ctx_attrs,    context_attrs),
-		  OPT_LIST("blocks",	 'b', &cfg.blocks,       blocks),
-		  OPT_LIST("slbs",	 's', &cfg.slbas,        starting_blocks),
-		  OPT_FLAG("ad",	         'd', &cfg.ad,           ad),
-		  OPT_FLAG("idw",		 'w', &cfg.idw,          idw),
-		  OPT_FLAG("idr",		 'r', &cfg.idr,          idr),
+		  OPT_LIST("blocks",       'b', &cfg.blocks,       blocks),
+		  OPT_LIST("slbs",         's', &cfg.slbas,        starting_blocks),
+		  OPT_FLAG("ad",           'd', &cfg.ad,           ad),
+		  OPT_FLAG("idw",          'w', &cfg.idw,          idw),
+		  OPT_FLAG("idr",          'r', &cfg.idr,          idr),
 		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -6779,7 +6626,7 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_UINT("namespace-id",	   'n', &cfg.namespace_id,	namespace_id_desired),
+		  OPT_UINT("namespace-id",           'n', &cfg.namespace_id,	namespace_id_desired),
 		  OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
 		  OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
 		  OPT_LIST("blocks",                 'b', &cfg.nlbs,		d_nlbs),
@@ -7170,7 +7017,6 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		__u32	namespace_id;
 		__u32	numd;
 		__u8	eds;
-		char	*output_format;
 		bool	raw_binary;
 	};
 
@@ -7178,7 +7024,6 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		.namespace_id	= 0,
 		.numd		= 0,
 		.eds		= false,
-		.output_format	= "normal",
 		.raw_binary	= false,
 	};
 
@@ -7186,14 +7031,13 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
 		  OPT_UINT("numd",          'd', &cfg.numd,           numd),
 		  OPT_FLAG("eds",           'e', &cfg.eds,            eds),
-		  OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_dump));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -7354,7 +7198,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_FLAG("show-command",      'v', &cfg.show,              show),
 		  OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
 		  OPT_FLAG("latency",           't', &cfg.latency,           latency),
-		  OPT_FLAG("force",	        0, &cfg.force,             force));
+		  OPT_FLAG("force",               0, &cfg.force,             force));
 
 	if (opcode != nvme_cmd_write) {
 		err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -7873,7 +7717,6 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		__u8	atype;
 		__u16	rl;
 		__u32	timeout;
-		char	*output_format;
 	};
 
 	struct config cfg = {
@@ -7883,7 +7726,6 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		.atype		= 0,
 		.rl		= 0,
 		.timeout	= 0,
-		.output_format	= "normal",
 	};
 
 	NVME_ARGS(opts, cfg,
@@ -7892,14 +7734,13 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		  OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
 		  OPT_BYTE("action",       'a', &cfg.atype,         atype),
 		  OPT_SHRT("range-len",    'l', &cfg.rl,            rl),
-		  OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format));
+		  OPT_UINT("timeout",      't', &cfg.timeout,       timeout));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -7972,7 +7813,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plug
 	NVME_ARGS(opts, cfg,
 		  OPT_BYTE("operation",   'o', &cfg.operation,    operation),
 		  OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
-		  OPT_UINT("cap-lower",   'l', &cfg.dw11,		cap_lower),
+		  OPT_UINT("cap-lower",   'l', &cfg.dw11,         cap_lower),
 		  OPT_UINT("cap-upper",   'u', &cfg.dw12,         cap_upper));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -8177,10 +8018,10 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_BYTE("ofi",		'o', &cfg.ofi,      ofi_desc),
-		  OPT_BYTE("ifc",		'f', &cfg.ifc,      ifc_desc),
+		  OPT_BYTE("ofi",	'o', &cfg.ofi,      ofi_desc),
+		  OPT_BYTE("ifc",	'f', &cfg.ifc,      ifc_desc),
 		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
-		  OPT_BYTE("scp",		's', &cfg.scp,      scp_desc),
+		  OPT_BYTE("scp",	's', &cfg.scp,      scp_desc),
 		  OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -8573,10 +8414,10 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_STR("secret",	's', &cfg.secret,	secret),
+		  OPT_STR("secret",		's', &cfg.secret,	secret),
 		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
 		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
-		  OPT_UINT("hmac",	'm', &cfg.hmac,		hmac));
+		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -9006,24 +8847,21 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 	int err;
 
 	struct config {
-		char	*output_format;
 		char	*ranking;
 	};
 
 	struct config cfg = {
-		.output_format	= "normal",
 		.ranking	= "namespace",
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = flags = validate_output_format(output_format_val);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;

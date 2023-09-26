@@ -111,6 +111,7 @@ static inline void cleanup_nvme_dev(struct nvme_dev **dev)
 extern const char *output_format;
 
 enum nvme_print_flags validate_output_format(const char *format);
+bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));
 
