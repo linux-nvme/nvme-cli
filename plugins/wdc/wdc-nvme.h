@@ -5,7 +5,7 @@
 #if !defined(WDC_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define WDC_NVME
 
-#define WDC_PLUGIN_VERSION   "2.3.1"
+#define WDC_PLUGIN_VERSION   "2.3.2"
 #include "cmd.h"
 
 PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERSION),
@@ -45,6 +45,7 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERS
 		ENTRY("vs-cloud-log", "WDC Get the Cloud Log Page", wdc_vs_cloud_log)
 		ENTRY("vs-hw-rev-log", "WDC Get the Hardware Revision Log Page", wdc_vs_hw_rev_log)
 		ENTRY("vs-device-waf", "WDC Calculate Device Write Amplication Factor", wdc_vs_device_waf)
+		ENTRY("set-latency-monitor-feature", "WDC set Latency Monitor feature", wdc_set_latency_monitor_feature)
 	)
 );
 
