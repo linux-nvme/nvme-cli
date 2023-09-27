@@ -2,9 +2,6 @@
 
 version: 2
 
-python:
-  system_packages: true
-
 build:
   os: ubuntu-22.04
   tools:
