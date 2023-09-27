@@ -1,7 +1,7 @@
 # libnvme
 
-![MesonBuild](https://github.com/linux-nvme/libnvme/actions/workflows/meson.yml/badge.svg)
-![PyBuild](https://github.com/linux-nvme/libnvme/actions/workflows/python-publish.yml/badge.svg)
+![MesonBuild](https://github.com/linux-nvme/libnvme/actions/workflows/build.yml/badge.svg)
+![PyBuild](https://github.com/linux-nvme/libnvme/actions/workflows/release-python.yml/badge.svg)
 [![PyPI](https://img.shields.io/pypi/v/libnvme)](https://pypi.org/project/libnvme/)
 [![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme)](https://pypi.org/project/libnvme/)
 ![GitHub](https://img.shields.io/github/license/linux-nvme/libnvme)
