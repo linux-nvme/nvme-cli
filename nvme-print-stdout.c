@@ -28,11 +28,23 @@ static struct print_ops stdout_print_ops;
 
 struct nvme_bar_cap {
 	__u16	mqes;
-	__u8	ams_cqr;
+	__u8	cqr:1;
+	__u8	ams:2;
+	__u8	rsvd19:5;
 	__u8	to;
-	__u16	bps_css_nssrs_dstrd;
-	__u8	mpsmax_mpsmin;
-	__u8	rsvd_crms_nsss_cmbs_pmrs;
+	__u16	dstrd:4;
+	__u16	nssrs:1;
+	__u16	css:8;
+	__u16	bps:1;
+	__u8	cps:2;
+	__u8	mpsmin:4;
+	__u8	mpsmax:4;
+	__u8	pmrs:1;
+	__u8	cmbs:1;
+	__u8	nsss:1;
+	__u8	crwms:1;
+	__u8	crims:1;
+	__u8	rsvd61:3;
 };
 
 static const char *subsys_key(const struct nvme_subsystem *s)
@@ -1103,39 +1115,33 @@ static void stdout_subsystem_list(nvme_root_t r, bool show_ana)
 static void stdout_registers_cap(struct nvme_bar_cap *cap)
 {
 	printf("\tController Ready With Media Support (CRWMS): %s\n",
-		((cap->rsvd_crms_nsss_cmbs_pmrs & 0x08) >> 3) ? "Supported" : "Not Supported");
+	       cap->crwms ? "Supported" : "Not Supported");
 	printf("\tController Ready Independent of Media Support (CRIMS): %s\n",
-		((cap->rsvd_crms_nsss_cmbs_pmrs & 0x10) >> 4) ? "Supported" : "Not Supported");
+	       cap->crims ? "Supported" : "Not Supported");
+	printf("\tNVM Subsystem Shutdown Supported   (NSSS): %s\n", cap->nsss ? "Supported" : "Not Supported");
 	printf("\tController Memory Buffer Supported (CMBS): The Controller Memory Buffer is %s\n",
-		((cap->rsvd_crms_nsss_cmbs_pmrs & 0x02) >> 1) ? "Supported" :
-			"Not Supported");
+	       cap->cmbs ? "Supported" : "Not Supported");
 	printf("\tPersistent Memory Region Supported (PMRS): The Persistent Memory Region is %s\n",
-		(cap->rsvd_crms_nsss_cmbs_pmrs & 0x01) ? "Supported" : "Not Supported");
-	printf("\tMemory Page Size Maximum         (MPSMAX): %u bytes\n",
-		1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
-	printf("\tMemory Page Size Minimum         (MPSMIN): %u bytes\n",
-		1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
-	printf("\tBoot Partition Support              (BPS): %s\n",
-		(cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
+	       cap->pmrs ? "Supported" : "Not Supported");
+	printf("\tMemory Page Size Maximum         (MPSMAX): %u bytes\n", 1 << (12 + cap->mpsmax));
+	printf("\tMemory Page Size Minimum         (MPSMIN): %u bytes\n", 1 << (12 + cap->mpsmin));
+	printf("\tController Power Scope              (CPS): %s\n",
+	       !cap->cps ? "Not Reported" : cap->cps == 1 ? "Controller scope" :
+	       cap->cps == 2 ? "Domain scope" : "NVM subsystem scope");
+	printf("\tBoot Partition Support              (BPS): %s\n", cap->bps ? "Yes" : "No");
 	printf("\tCommand Sets Supported              (CSS): NVM command set is %s\n",
-		(cap->bps_css_nssrs_dstrd & 0x0020) ? "Supported" : "Not Supported");
+	       cap->css & 0x01 ? "Supported" : "Not Supported");
 	printf("\t                                           One or more I/O Command Sets are %s\n",
-		(cap->bps_css_nssrs_dstrd & 0x0800) ? "Supported" : "Not Supported");
+	       cap->css & 0x40 ? "Supported" : "Not Supported");
 	printf("\t                                           %s\n",
-		(cap->bps_css_nssrs_dstrd & 0x1000) ? "Only Admin Command Set Supported" :
-		"I/O Command Set is Supported");
-	printf("\tNVM Subsystem Reset Supported     (NSSRS): %s\n",
-		(cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
-	printf("\tDoorbell Stride                   (DSTRD): %u bytes\n",
-		1 << (2 + (cap->bps_css_nssrs_dstrd & 0x000f)));
-	printf("\tTimeout                              (TO): %u ms\n",
-		cap->to * 500);
+	       cap->css & 0x80 ? "Only Admin Command Set Supported" : "I/O Command Set is Supported");
+	printf("\tNVM Subsystem Reset Supported     (NSSRS): %s\n", cap->nssrs ? "Yes" : "No");
+	printf("\tDoorbell Stride                   (DSTRD): %u bytes\n", 1 << (2 + cap->dstrd));
+	printf("\tTimeout                              (TO): %u ms\n", cap->to * 500);
 	printf("\tArbitration Mechanism Supported     (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
-		(cap->ams_cqr & 0x02) ? "supported":"not supported");
-	printf("\tContiguous Queues Required          (CQR): %s\n",
-		(cap->ams_cqr & 0x01) ? "Yes":"No");
-	printf("\tMaximum Queue Entries Supported    (MQES): %u\n\n",
-		cap->mqes + 1);
+	       cap->ams & 0x02 ? "Supported" : "Not supported");
+	printf("\tContiguous Queues Required          (CQR): %s\n", cap->cqr ? "Yes" : "No");
+	printf("\tMaximum Queue Entries Supported    (MQES): %u\n\n", cap->mqes + 1);
 }
 
 static void stdout_registers_version(__u32 vs)
