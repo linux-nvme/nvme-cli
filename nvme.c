@@ -3180,6 +3180,10 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		return -EINVAL;
 	}
 
+	data = nvme_alloc(sizeof(*data));
+	if (!data)
+		return -ENOMEM;
+
 	data->nsze = cpu_to_le64(cfg.nsze);
 	data->ncap = cpu_to_le64(cfg.ncap);
 	data->flbas = cfg.flbas;
