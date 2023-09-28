@@ -5051,6 +5051,7 @@ static void stdout_connect_msg(nvme_ctrl_t c)
 }
 
 static struct print_ops stdout_print_ops = {
+	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
 	.boot_part_log			= stdout_boot_part_log,
 	.phy_rx_eom_log			= stdout_phy_rx_eom_log,
@@ -5072,7 +5073,6 @@ static struct print_ops stdout_print_ops = {
 	.fw_log				= stdout_fw_log,
 	.id_ctrl			= stdout_id_ctrl,
 	.id_ctrl_nvm			= stdout_id_ctrl_nvm,
-	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs,
 	.id_domain_list			= stdout_id_domain_list,
 	.id_independent_id_ns		= stdout_cmd_set_independent_id_ns,
 	.id_iocs			= stdout_id_iocs,
@@ -5081,9 +5081,7 @@ static struct print_ops stdout_print_ops = {
 	.id_ns_granularity_list		= stdout_id_ns_granularity_list,
 	.id_nvmset_list			= stdout_id_nvmset,
 	.id_uuid_list			= stdout_id_uuid_list,
-	.lba_range			= stdout_lba_range,
 	.lba_status			= stdout_lba_status,
-	.lba_status_info		= stdout_lba_status_info,
 	.lba_status_log			= stdout_lba_status_log,
 	.media_unit_stat_log		= stdout_media_unit_stat_log,
 	.mi_cmd_support_effects_log	= stdout_mi_cmd_support_effects_log,
@@ -5100,25 +5098,32 @@ static struct print_ops stdout_print_ops = {
 	.secondary_ctrl_list		= stdout_list_secondary_ctrl,
 	.select_result			= stdout_select_result,
 	.self_test_log 			= stdout_self_test_log,
-	.show_feature_fields		= stdout_feature_show_fields,
 	.single_property		= stdout_single_property,
 	.smart_log			= stdout_smart_log,
 	.supported_cap_config_list_log	= stdout_supported_cap_config_log,
 	.supported_log_pages		= stdout_supported_log,
 	.zns_changed_zone_log		= stdout_zns_changed,
+	.zns_finish_zone_list		= NULL,
 	.zns_id_ctrl			= stdout_zns_id_ctrl,
 	.zns_id_ns			= stdout_zns_id_ns,
 	.zns_report_zones		= stdout_zns_report_zones,
+	.show_feature_fields		= stdout_feature_show_fields,
+	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs,
+	.lba_range			= stdout_lba_range,
+	.lba_status_info		= stdout_lba_status_info,
 
+	/* libnvme tree print functions */
+	.list_item			= stdout_list_item,
 	.list_items			= stdout_list_items,
 	.print_nvme_subsystem_list	= stdout_subsystem_list,
 	.topology_ctrl			= stdout_topology_ctrl,
 	.topology_namespace		= stdout_topology_namespace,
 
-	.show_status			= stdout_status,
+	/* status and error messages */
+	.connect_msg			= stdout_connect_msg,
 	.show_message			= stdout_message,
 	.show_perror			= stdout_perror,
-	.connect_msg			= stdout_connect_msg,
+	.show_status			= stdout_status,
 };
 
 struct print_ops *nvme_get_stdout_print_ops(enum nvme_print_flags flags)
