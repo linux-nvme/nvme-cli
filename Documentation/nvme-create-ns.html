@@ -756,6 +756,7 @@ nvme-create-ns(1) Manual Page
                         [--nmic=&lt;nmic&gt; | -m &lt;nmic&gt;]
                         [--anagrp-id=&lt;anagrpid&gt; | -a &lt;anagrpid&gt;]
                         [--nvmset-id=&lt;nvmsetid&gt; | -i &lt;nvmsetid&gt;]
+                        [--endg-id=&lt;endgid&gt; | -e &lt;endgid&gt;]
                         [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
                         [--lbstm=&lt;lbstm&gt; | -l &lt;lbstm&gt;]
                         [--nphndls=&lt;nphndls&gt; | -n &lt;nphndls&gt;]
@@ -863,6 +864,17 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <dd>
 <p>
         This field specifies the identifier of the NVM Set.
+</p>
+</dd>
+<dt class="hdlist1">
+-e &lt;endgid&gt;
+</dt>
+<dt class="hdlist1">
+--endg-id=&lt;endgid&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the identifier of the endurance group.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1033,7 +1045,7 @@ Create a namespace:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-06-30 15:20:22 CEST
+ 2023-09-29 08:33:07 CEST
 </div>
 </div>
 </body>
