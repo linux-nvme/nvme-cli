@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_log_phy_rx_eom_action" "September 2023" "API Manual" LINUX
+.SH NAME
+enum nvme_log_phy_rx_eom_action \- Physical Interface Receiver Eye Opening Measurement Action
+.SH SYNOPSIS
+enum nvme_log_phy_rx_eom_action {
+.br
+.BI "    NVME_LOG_PHY_RX_EOM_READ"
+, 
+.br
+.br
+.BI "    NVME_LOG_PHY_RX_EOM_START_READ"
+, 
+.br
+.br
+.BI "    NVME_LOG_PHY_RX_EOM_ABORT_CLEAR"
+
+};
+.SH Constants
+.IP "NVME_LOG_PHY_RX_EOM_READ" 12
+Read Log Data
+.IP "NVME_LOG_PHY_RX_EOM_START_READ" 12
+Start Measurement and Read Log Data
+.IP "NVME_LOG_PHY_RX_EOM_ABORT_CLEAR" 12
+Abort Measurement and Clear Log Data

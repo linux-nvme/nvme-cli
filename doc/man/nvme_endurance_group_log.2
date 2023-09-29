@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_endurance_group_log" "June 2023" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_endurance_group_log" "September 2023" "API Manual" LINUX
 .SH NAME
 struct nvme_endurance_group_log \- Endurance Group Information Log
 .SH SYNOPSIS
@@ -6,7 +6,9 @@ struct nvme_endurance_group_log {
 .br
 .BI "    __u8 critical_warning;"
 .br
-.BI "    __u8 rsvd1[2];"
+.BI "    __u8 endurance_group_features;"
+.br
+.BI "    __u8 rsvd2;"
 .br
 .BI "    __u8 avl_spare;"
 .br
@@ -14,7 +16,9 @@ struct nvme_endurance_group_log {
 .br
 .BI "    __u8 percent_used;"
 .br
-.BI "    __u8 rsvd6[26];"
+.BI "    __le16 domain_identifier;"
+.br
+.BI "    __u8 rsvd8[24];"
 .br
 .BI "    __u8 endurance_estimate[16];"
 .br
@@ -32,7 +36,11 @@ struct nvme_endurance_group_log {
 .br
 .BI "    __u8 num_err_info_log_entries[16];"
 .br
-.BI "    __u8 rsvd160[352];"
+.BI "    __u8 total_end_grp_cap[16];"
+.br
+.BI "    __u8 unalloc_end_grp_cap[16];"
+.br
+.BI "    __u8 rsvd192[320];"
 .br
 .BI "
 };
@@ -41,7 +49,9 @@ struct nvme_endurance_group_log {
 .SH Members
 .IP "critical_warning" 12
 Critical Warning
-.IP "rsvd1" 12
+.IP "endurance_group_features" 12
+Endurance Group Features
+.IP "rsvd2" 12
 Reserved
 .IP "avl_spare" 12
 Available Spare
@@ -49,7 +59,9 @@ Available Spare
 Available Spare Threshold
 .IP "percent_used" 12
 Percentage Used
-.IP "rsvd6" 12
+.IP "domain_identifier" 12
+Domain Identifier
+.IP "rsvd8" 12
 Reserved
 .IP "endurance_estimate" 12
 Endurance Estimate
@@ -67,5 +79,9 @@ Host Write Commands
 Media and Data Integrity Errors
 .IP "num_err_info_log_entries" 12
 Number of Error Information Log Entries
-.IP "rsvd160" 12
+.IP "total_end_grp_cap" 12
+Total Endurance Group Capacity
+.IP "unalloc_end_grp_cap" 12
+Unallocated Endurance Group Capacity
+.IP "rsvd192" 12
 Reserved

@@ -1,0 +1,36 @@
+.TH "nvme_get_telemetry_log" 9 "nvme_get_telemetry_log" "September 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_telemetry_log \- Get specified telemetry log
+.SH SYNOPSIS
+.B "int" nvme_get_telemetry_log
+.BI "(int fd "  ","
+.BI "bool create "  ","
+.BI "bool ctrl "  ","
+.BI "bool rae "  ","
+.BI "size_t max_data_tx "  ","
+.BI "enum nvme_telemetry_da da "  ","
+.BI "struct nvme_telemetry_log **log "  ","
+.BI "size_t *size "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "create" 12
+Generate new host initated telemetry capture
+.IP "ctrl" 12
+Get controller Initiated log
+.IP "rae" 12
+Retain asynchronous events
+.IP "max_data_tx" 12
+Set the max data transfer size to be used retrieving telemetry.
+.IP "da" 12
+Log page data area, valid values: \fIenum nvme_telemetry_da\fP.
+.IP "log" 12
+On success, set to the value of the allocated and retrieved log.
+.IP "size" 12
+Ptr to the telemetry log size, so it can be returned
+.SH "DESCRIPTION"
+The total size allocated can be calculated as:
+(nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

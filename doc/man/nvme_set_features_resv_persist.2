@@ -1,4 +1,4 @@
-.TH "nvme_set_features_resv_persist" 9 "nvme_set_features_resv_persist" "June 2023" "libnvme API manual" LINUX
+.TH "nvme_set_features_resv_persist" 9 "nvme_set_features_resv_persist" "September 2023" "libnvme API manual" LINUX
 .SH NAME
 nvme_set_features_resv_persist \- Set persist through power loss feature
 .SH SYNOPSIS
@@ -16,6 +16,10 @@ Persist Through Power Loss
 Save value across power states
 .IP "result" 12
 The command completion result from CQE dword0
+.SH "DESCRIPTION"
+
+Deprecated: doesn't support specifying a NSID.
+Use \fBnvme_set_features_resv_persist2\fP instead.
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

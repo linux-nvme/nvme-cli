@@ -53,6 +53,22 @@ Sets the managing application string for **r**.
 Returns the managing application string for **r** or NULL if not set.
 
 
+.. c:function:: void nvme_root_release_fds (nvme_root_t r)
+
+   Close all opened file descriptors in the tree
+
+**Parameters**
+
+``nvme_root_t r``
+  :c:type:`nvme_root_t` object
+
+**Description**
+
+Controller and Namespace objects cache the file descriptors
+of opened nvme devices. This API can be used to close and
+clear all cached fds in the tree.
+
+
 .. c:function:: void nvme_free_tree (nvme_root_t r)
 
    Free root object
@@ -469,6 +485,86 @@ will start at **p** instead of the first controller.
 Controller instance
 
 
+.. c:function:: nvme_ctrl_t nvme_ctrl_find (nvme_subsystem_t s, const char *transport, const char *traddr, const char *trsvcid, const char *subsysnqn, const char *host_traddr, const char *host_iface)
+
+   Locate an existing controller
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  :c:type:`nvme_subsystem_t` object
+
+``const char *transport``
+  Transport name
+
+``const char *traddr``
+  Transport address
+
+``const char *trsvcid``
+  Transport service identifier
+
+``const char *subsysnqn``
+  Subsystem NQN
+
+``const char *host_traddr``
+  Host transport address
+
+``const char *host_iface``
+  Host interface name
+
+**Description**
+
+Lookup a controller in **s** based on **transport**, **traddr**, **trsvcid**,
+**subsysnqn**, **host_traddr**, and **host_iface**. **transport** must be specified,
+other fields may be required depending on the transport. Parameters set
+to NULL will be ignored.
+
+Unlike nvme_lookup_ctrl(), this function does not create a new object if
+an existing controller cannot be found.
+
+**Return**
+
+Controller instance on success, NULL otherwise.
+
+
+.. c:function:: bool nvme_ctrl_config_match (struct nvme_ctrl *c, const char *transport, const char *traddr, const char *trsvcid, const char *subsysnqn, const char *host_traddr, const char *host_iface)
+
+   Check if ctrl **c** matches config params
+
+**Parameters**
+
+``struct nvme_ctrl *c``
+  An existing controller instance
+
+``const char *transport``
+  Transport name
+
+``const char *traddr``
+  Transport address
+
+``const char *trsvcid``
+  Transport service identifier
+
+``const char *subsysnqn``
+  Subsystem NQN
+
+``const char *host_traddr``
+  Host transport address
+
+``const char *host_iface``
+  Host interface name
+
+**Description**
+
+Check that controller **c** matches parameters: **transport**, **traddr**,
+**trsvcid**, **subsysnqn**, **host_traddr**, and **host_iface**. Parameters set
+to NULL will be ignored.
+
+**Return**
+
+true if there's a match, false otherwise.
+
+
 .. c:function:: nvme_ctrl_t nvme_create_ctrl (nvme_root_t r, const char *subsysnqn, const char *transport, const char *traddr, const char *host_traddr, const char *host_iface, const char *trsvcid)
 
    Allocate an unconnected NVMe controller
@@ -776,9 +872,28 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
 ``nvme_ns_t n``
   Namespace instance
 
+**Description**
+
+libnvme will open() the file (if not already opened) and keep
+an internal copy of the file descriptor. Following calls to
+this API retrieve the internal cached copy of the file
+descriptor. The file will remain opened and the fd will
+remain cached until the ns object is deleted or
+nvme_ns_release_fd() is called.
+
 **Return**
 
 File descriptor associated with **n** or -1
+
+
+.. c:function:: void nvme_ns_release_fd (nvme_ns_t n)
+
+   Close fd and clear fd from ns object
+
+**Parameters**
+
+``nvme_ns_t n``
+  Namespace instance
 
 
 .. c:function:: int nvme_ns_get_nsid (nvme_ns_t n)
@@ -1302,9 +1417,28 @@ Parent namespace if present
 ``nvme_ctrl_t c``
   Controller instance
 
+**Description**
+
+libnvme will open() the file (if not already opened) and keep
+an internal copy of the file descriptor. Following calls to
+this API retrieve the internal cached copy of the file
+descriptor. The file will remain opened and the fd will
+remain cached until the controller object is deleted or
+nvme_ctrl_release_fd() is called.
+
 **Return**
 
 File descriptor associated with **c** or -1
+
+
+.. c:function:: void nvme_ctrl_release_fd (nvme_ctrl_t c)
+
+   Close fd and clear fd from controller object
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller instance
 
 
 .. c:function:: const char * nvme_ctrl_get_name (nvme_ctrl_t c)
@@ -1348,6 +1482,26 @@ sysfs directory name of **c**
 
 NVMe-over-Fabrics address string of **c** or empty string
 of no address is present.
+
+
+.. c:function:: char * nvme_ctrl_get_src_addr (nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
+
+   Extract src_addr from the c->address string
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller instance
+
+``char *src_addr``
+  Where to copy the src_addr. Size must be at least INET6_ADDRSTRLEN.
+
+``size_t src_addr_len``
+  Length of the buffer **src_addr**.
+
+**Return**
+
+Pointer to **src_addr** on success. NULL on failure to extract the src_addr.
 
 
 .. c:function:: const char * nvme_ctrl_get_phy_slot (nvme_ctrl_t c)
@@ -1395,7 +1549,7 @@ Model string of **c**
 
 .. c:function:: const char * nvme_ctrl_get_state (nvme_ctrl_t c)
 
-   Running state of an controller
+   Running state of a controller
 
 **Parameters**
 
@@ -1962,6 +2116,20 @@ Managing application string or NULL if not set.
 Sets the managing application string for **s**.
 
 
+.. c:function:: const char * nvme_subsystem_get_iopolicy (nvme_subsystem_t s)
+
+   Return the IO policy of subsytem
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  nvme_subsystem_t object
+
+**Return**
+
+IO policy used by current subsystem
+
+
 .. c:function:: int nvme_scan_topology (nvme_root_t r, nvme_scan_filter_t f, void *f_args)
 
    Scan NVMe topology and apply filter
@@ -2013,6 +2181,22 @@ Host NQN of **h**
 **Return**
 
 Host ID of **h**
+
+
+.. c:function:: void nvme_host_release_fds (struct nvme_host *h)
+
+   Close all opened file descriptors under host
+
+**Parameters**
+
+``struct nvme_host *h``
+  nvme_host_t object
+
+**Description**
+
+Controller and Namespace objects cache the file descriptors
+of opened nvme devices. This API can be used to close and
+clear all cached fds under this host.
 
 
 .. c:function:: void nvme_free_host (nvme_host_t h)
@@ -2218,6 +2402,22 @@ String with the contents of **attr** or ``NULL`` in case of an empty value
 **Return**
 
 nvme_ns_t of the namespace with id **nsid** in subsystem **s**
+
+
+.. c:function:: void nvme_subsystem_release_fds (struct nvme_subsystem *s)
+
+   Close all opened fds under subsystem
+
+**Parameters**
+
+``struct nvme_subsystem *s``
+  nvme_subsystem_t object
+
+**Description**
+
+Controller and Namespace objects cache the file descriptors
+of opened nvme devices. This API can be used to close and
+clear all cached fds under this subsystem.
 
 
 .. c:function:: char * nvme_get_path_attr (nvme_path_t p, const char *attr)

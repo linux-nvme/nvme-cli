@@ -1923,7 +1923,7 @@ See: :c:type:`struct nvme_primary_ctrl_cap <nvme_primary_ctrl_cap>`
 0 on success, non-zero on failure
 
 
-.. c:function:: int nvme_mi_admin_identify_secondary_ctrl_list (nvme_mi_ctrl_t ctrl, __u32 nsid, __u16 cntid, struct nvme_secondary_ctrl_list *list)
+.. c:function:: int nvme_mi_admin_identify_secondary_ctrl_list (nvme_mi_ctrl_t ctrl, __u16 cntid, struct nvme_secondary_ctrl_list *list)
 
    Perform an Admin identify for a secondary controller list.
 
@@ -1931,9 +1931,6 @@ See: :c:type:`struct nvme_primary_ctrl_cap <nvme_primary_ctrl_cap>`
 
 ``nvme_mi_ctrl_t ctrl``
   Controller to process identify command
-
-``__u32 nsid``
-  Namespace ID to specify list start
 
 ``__u16 cntid``
   Controller ID to specify list start
@@ -2620,6 +2617,34 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_phy_rx_eom (nvme_mi_ctrl_t ctrl, __u8 lsp, __u16 controller, __u32 len, struct nvme_phy_rx_eom_log *log)
+
+   Retrieve Physical Interface Receiver Eye Opening Measurement Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u8 lsp``
+  Log specific, controls action and measurement quality
+
+``__u16 controller``
+  Target controller ID
+
+``__u32 len``
+  The allocated size, minimum
+  struct nvme_phy_rx_eom_log
+
+``struct nvme_phy_rx_eom_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
 
 
 .. c:function:: int nvme_mi_admin_get_log_discovery (nvme_mi_ctrl_t ctrl, bool rae, __u32 offset, __u32 len, void *log)

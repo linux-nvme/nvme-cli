@@ -607,7 +607,8 @@ power scale value
     __le32 mnan;
     __u8 maxdna[16];
     __le32 maxcna;
-    __u8 rsvd564[204];
+    __le32 oaqd;
+    __u8 rsvd568[200];
     char subnqn[NVME_NQN_LENGTH];
     __u8 rsvd1024[768];
     __le32 ioccsz;
@@ -976,7 +977,12 @@ power scale value
   maximum number of namespaces that are allowed to be attached to
   this I/O controller.
 
-``rsvd564``
+``oaqd``
+  Optimal Aggregated Queue Depth indicates the recommended maximum
+  total number of outstanding I/O commands across all I/O queues
+  on the controller for optimal operation.
+
+``rsvd568``
   Reserved
 
 ``subnqn``
@@ -4196,11 +4202,13 @@ bytes, in size. This log captures the controller’s internal state.
 
   struct nvme_endurance_group_log {
     __u8 critical_warning;
-    __u8 rsvd1[2];
+    __u8 endurance_group_features;
+    __u8 rsvd2;
     __u8 avl_spare;
     __u8 avl_spare_threshold;
     __u8 percent_used;
-    __u8 rsvd6[26];
+    __le16 domain_identifier;
+    __u8 rsvd8[24];
     __u8 endurance_estimate[16];
     __u8 data_units_read[16];
     __u8 data_units_written[16];
@@ -4209,7 +4217,9 @@ bytes, in size. This log captures the controller’s internal state.
     __u8 host_write_cmds[16];
     __u8 media_data_integrity_err[16];
     __u8 num_err_info_log_entries[16];
-    __u8 rsvd160[352];
+    __u8 total_end_grp_cap[16];
+    __u8 unalloc_end_grp_cap[16];
+    __u8 rsvd192[320];
   };
 
 **Members**
@@ -4217,7 +4227,10 @@ bytes, in size. This log captures the controller’s internal state.
 ``critical_warning``
   Critical Warning
 
-``rsvd1``
+``endurance_group_features``
+  Endurance Group Features
+
+``rsvd2``
   Reserved
 
 ``avl_spare``
@@ -4229,7 +4242,10 @@ bytes, in size. This log captures the controller’s internal state.
 ``percent_used``
   Percentage Used
 
-``rsvd6``
+``domain_identifier``
+  Domain Identifier
+
+``rsvd8``
   Reserved
 
 ``endurance_estimate``
@@ -4256,7 +4272,13 @@ bytes, in size. This log captures the controller’s internal state.
 ``num_err_info_log_entries``
   Number of Error Information Log Entries
 
-``rsvd160``
+``total_end_grp_cap``
+  Total Endurance Group Capacity
+
+``unalloc_end_grp_cap``
+  Unallocated Endurance Group Capacity
+
+``rsvd192``
   Reserved
 
 
@@ -5499,6 +5521,213 @@ bytes, in size. This log captures the controller’s internal state.
   Contains the contents of the
   specified Boot Partition
 
+
+
+
+
+.. c:struct:: nvme_eom_lane_desc
+
+   EOM Lane Descriptor
+
+**Definition**
+
+::
+
+  struct nvme_eom_lane_desc {
+    __u8 rsvd0;
+    __u8 mstatus;
+    __u8 lane;
+    __u8 eye;
+    __le16 top;
+    __le16 bottom;
+    __le16 left;
+    __le16 right;
+    __le16 nrows;
+    __le16 ncols;
+    __le16 edlen;
+    __u8 rsvd18[14];
+    __u8 eye_desc[];
+  };
+
+**Members**
+
+``rsvd0``
+  Reserved
+
+``mstatus``
+  Measurement Status
+
+``lane``
+  Lane number
+
+``eye``
+  Eye number
+
+``top``
+  Absolute number of rows from center to top edge of eye
+
+``bottom``
+  Absolute number of rows from center to bottom edge of eye
+
+``left``
+  Absolute number of rows from center to left edge of eye
+
+``right``
+  Absolute number of rows from center to right edge of eye
+
+``nrows``
+  Number of Rows
+
+``ncols``
+  Number of Columns
+
+``edlen``
+  Eye Data Length
+
+``rsvd18``
+  Reserved
+
+``eye_desc``
+  Printable Eye, Eye Data, and any Padding
+
+
+
+
+
+.. c:struct:: nvme_phy_rx_eom_log
+
+   Physical Interface Receiver Eye Opening Measurement Log
+
+**Definition**
+
+::
+
+  struct nvme_phy_rx_eom_log {
+    __u8 lid;
+    __u8 eomip;
+    __le16 hsize;
+    __le32 rsize;
+    __u8 eomdgn;
+    __u8 lr;
+    __u8 odp;
+    __u8 lanes;
+    __u8 epl;
+    __u8 lspfc;
+    __u8 li;
+    __u8 rsvd15[3];
+    __le16 lsic;
+    __le32 dsize;
+    __le16 nd;
+    __le16 maxtb;
+    __le16 maxlr;
+    __le16 etgood;
+    __le16 etbetter;
+    __le16 etbest;
+    __u8 rsvd36[28];
+    struct nvme_eom_lane_desc descs[];
+  };
+
+**Members**
+
+``lid``
+  Log Identifier
+
+``eomip``
+  EOM In Progress
+
+``hsize``
+  Header Size
+
+``rsize``
+  Result Size
+
+``eomdgn``
+  EOM Data Generation Number
+
+``lr``
+  Log Revision
+
+``odp``
+  Optional Data Present
+
+``lanes``
+  Number of lanes configured for this port
+
+``epl``
+  Eyes Per Lane
+
+``lspfc``
+  Log Specific Parameter Field Copy
+
+``li``
+  Link Information
+
+``rsvd15``
+  Reserved
+
+``lsic``
+  Log Specific Identifier Copy
+
+``dsize``
+  Descriptor Size
+
+``nd``
+  Number of Descriptors
+
+``maxtb``
+  Maximum Top Bottom
+
+``maxlr``
+  Maximum Left Right
+
+``etgood``
+  Estimated Time for Good Quality
+
+``etbetter``
+  Estimated Time for Better Quality
+
+``etbest``
+  Estimated Time for Best Quality
+
+``rsvd36``
+  Reserved
+
+``descs``
+  EOM Lane Descriptors
+
+
+
+
+
+.. c:enum:: nvme_eom_optional_data
+
+   EOM Optional Data Present Fields
+
+**Constants**
+
+``NVME_EOM_EYE_DATA_PRESENT``
+  Eye Data Present
+
+``NVME_EOM_PRINTABLE_EYE_PRESENT``
+  Printable Eye Present
+
+
+
+
+.. c:enum:: nvme_phy_rx_eom_progress
+
+   EOM In Progress Values
+
+**Constants**
+
+``NVME_PHY_RX_EOM_NOT_STARTED``
+  EOM Not Started
+
+``NVME_PHY_RX_EOM_IN_PROGRESS``
+  EOM In Progress
+
+``NVME_PHY_RX_EOM_COMPLETED``
+  EOM Completed
 
 
 
@@ -10508,6 +10737,9 @@ true if **status** is of the specified type and value
 ``NVME_LOG_LID_BOOT_PARTITION``
   Boot Partition
 
+``NVME_LOG_LID_PHY_RX_EOM``
+  Physical Interface Receiver Eye Opening Measurement
+
 ``NVME_LOG_LID_FDP_CONFIGS``
   FDP Configurations
 
@@ -11215,6 +11447,42 @@ true if **status** is of the specified type and value
 ``NVME_LOG_ANA_LSP_RGO_NAMESPACES``
 
 ``NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY``
+
+
+
+
+.. c:enum:: nvme_log_phy_rx_eom_action
+
+   Physical Interface Receiver Eye Opening Measurement Action
+
+**Constants**
+
+``NVME_LOG_PHY_RX_EOM_READ``
+  Read Log Data
+
+``NVME_LOG_PHY_RX_EOM_START_READ``
+  Start Measurement and Read Log Data
+
+``NVME_LOG_PHY_RX_EOM_ABORT_CLEAR``
+  Abort Measurement and Clear Log Data
+
+
+
+
+.. c:enum:: nvme_log_phy_rx_eom_quality
+
+   Physical Interface Receiver Eye Opening Measurement Quality
+
+**Constants**
+
+``NVME_LOG_PHY_RX_EOM_GOOD``
+  <= Better Quality
+
+``NVME_LOG_PHY_RX_EOM_BETTER``
+  <= Best Quality, >= Good Quality
+
+``NVME_LOG_PHY_RX_EOM_BEST``
+  >= Better Quality
 
 
 

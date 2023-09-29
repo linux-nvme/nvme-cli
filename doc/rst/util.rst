@@ -598,3 +598,52 @@ Returns error code if generating of random number fails.
 true if addr1 == addr2. false otherwise.
 
 
+.. c:function:: const char * nvme_iface_matching_addr (const struct ifaddrs *iface_list, const char *addr)
+
+   Get interface matching **addr**
+
+**Parameters**
+
+``const struct ifaddrs *iface_list``
+  Interface list returned by getifaddrs()
+
+``const char *addr``
+  Address to match
+
+**Description**
+
+Parse the interface list pointed to by **iface_list** looking
+for the interface that has **addr** as one of its assigned
+addresses.
+
+**Return**
+
+The name of the interface that owns **addr** or NULL.
+
+
+.. c:function:: bool nvme_iface_primary_addr_matches (const struct ifaddrs *iface_list, const char *iface, const char *addr)
+
+   Check that interface's primary address matches
+
+**Parameters**
+
+``const struct ifaddrs *iface_list``
+  Interface list returned by getifaddrs()
+
+``const char *iface``
+  Interface to match
+
+``const char *addr``
+  Address to match
+
+**Description**
+
+Parse the interface list pointed to by **iface_list** and looking for
+interface **iface**. The get its primary address and check if it matches
+**addr**.
+
+**Return**
+
+true if a match is found, false otherwise.
+
+

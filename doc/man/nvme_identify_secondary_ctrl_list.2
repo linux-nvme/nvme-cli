@@ -1,17 +1,14 @@
-.TH "nvme_identify_secondary_ctrl_list" 9 "nvme_identify_secondary_ctrl_list" "June 2023" "libnvme API manual" LINUX
+.TH "nvme_identify_secondary_ctrl_list" 9 "nvme_identify_secondary_ctrl_list" "September 2023" "libnvme API manual" LINUX
 .SH NAME
 nvme_identify_secondary_ctrl_list \- Retrieves secondary controller list
 .SH SYNOPSIS
 .B "int" nvme_identify_secondary_ctrl_list
 .BI "(int fd "  ","
-.BI "__u32 nsid "  ","
 .BI "__u16 cntid "  ","
 .BI "struct nvme_secondary_ctrl_list *sc_list "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
 File descriptor of nvme device
-.IP "nsid" 12
-Namespace identifier
 .IP "cntid" 12
 Return controllers starting at this identifier
 .IP "sc_list" 12

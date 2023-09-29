@@ -1,4 +1,4 @@
-.TH "nvme_get_features_err_recovery" 9 "nvme_get_features_err_recovery" "June 2023" "libnvme API manual" LINUX
+.TH "nvme_get_features_err_recovery" 9 "nvme_get_features_err_recovery" "September 2023" "libnvme API manual" LINUX
 .SH NAME
 nvme_get_features_err_recovery \- Get error recovery feature
 .SH SYNOPSIS
@@ -13,6 +13,10 @@ File descriptor of nvme device
 Select which type of attribute to return, see \fIenum nvme_get_features_sel\fP
 .IP "result" 12
 The command completion result from CQE dword0
+.SH "DESCRIPTION"
+
+Deprecated: doesn't support specifying a NSID.
+Use \fBnvme_get_features_err_recovery2\fP instead.
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

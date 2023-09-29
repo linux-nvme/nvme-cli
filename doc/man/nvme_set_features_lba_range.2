@@ -1,11 +1,11 @@
-.TH "nvme_set_features_lba_range" 9 "nvme_set_features_lba_range" "June 2023" "libnvme API manual" LINUX
+.TH "nvme_set_features_lba_range" 9 "nvme_set_features_lba_range" "September 2023" "libnvme API manual" LINUX
 .SH NAME
 nvme_set_features_lba_range \- Set LBA range feature
 .SH SYNOPSIS
 .B "int" nvme_set_features_lba_range
 .BI "(int fd "  ","
 .BI "__u32 nsid "  ","
-.BI "__u32 nr_ranges "  ","
+.BI "__u8 nr_ranges "  ","
 .BI "bool save "  ","
 .BI "struct nvme_lba_range_type *data "  ","
 .BI "__u32 *result "  ");"

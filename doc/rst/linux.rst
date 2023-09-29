@@ -53,6 +53,68 @@ The nvme command status if a response was received (see
   Data Area 4
 
 
+.. c:function:: int nvme_get_telemetry_max (int fd, enum nvme_telemetry_da *da, size_t *max_data_tx)
+
+   Get telemetry limits
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``enum nvme_telemetry_da *da``
+  On success return max supported data area
+
+``size_t *max_data_tx``
+  On success set to max transfer chunk supported by the controller
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_telemetry_log (int fd, bool create, bool ctrl, bool rae, size_t max_data_tx, enum nvme_telemetry_da da, struct nvme_telemetry_log **log, size_t *size)
+
+   Get specified telemetry log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool create``
+  Generate new host initated telemetry capture
+
+``bool ctrl``
+  Get controller Initiated log
+
+``bool rae``
+  Retain asynchronous events
+
+``size_t max_data_tx``
+  Set the max data transfer size to be used retrieving telemetry.
+
+``enum nvme_telemetry_da da``
+  Log page data area, valid values: :c:type:`enum nvme_telemetry_da <nvme_telemetry_da>`.
+
+``struct nvme_telemetry_log **log``
+  On success, set to the value of the allocated and retrieved log.
+
+``size_t *size``
+  Ptr to the telemetry log size, so it can be returned
+
+**Description**
+
+The total size allocated can be calculated as:
+  (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_get_ctrl_telemetry (int fd, bool rae, struct nvme_telemetry_log **log, enum nvme_telemetry_da da, size_t *size)
 
    Get controller telemetry log

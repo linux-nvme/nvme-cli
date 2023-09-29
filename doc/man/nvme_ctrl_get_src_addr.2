@@ -1,0 +1,17 @@
+.TH "nvme_ctrl_get_src_addr" 9 "nvme_ctrl_get_src_addr" "September 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_src_addr \- Extract src_addr from the c->address string
+.SH SYNOPSIS
+.B "char *" nvme_ctrl_get_src_addr
+.BI "(nvme_ctrl_t c "  ","
+.BI "char *src_addr "  ","
+.BI "size_t src_addr_len "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.IP "src_addr" 12
+Where to copy the src_addr. Size must be at least INET6_ADDRSTRLEN.
+.IP "src_addr_len" 12
+Length of the buffer \fIsrc_addr\fP.
+.SH "RETURN"
+Pointer to \fIsrc_addr\fP on success. NULL on failure to extract the src_addr.

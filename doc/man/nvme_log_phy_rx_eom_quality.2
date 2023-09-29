@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_log_phy_rx_eom_quality" "September 2023" "API Manual" LINUX
+.SH NAME
+enum nvme_log_phy_rx_eom_quality \- Physical Interface Receiver Eye Opening Measurement Quality
+.SH SYNOPSIS
+enum nvme_log_phy_rx_eom_quality {
+.br
+.BI "    NVME_LOG_PHY_RX_EOM_GOOD"
+, 
+.br
+.br
+.BI "    NVME_LOG_PHY_RX_EOM_BETTER"
+, 
+.br
+.br
+.BI "    NVME_LOG_PHY_RX_EOM_BEST"
+
+};
+.SH Constants
+.IP "NVME_LOG_PHY_RX_EOM_GOOD" 12
+<= Better Quality
+.IP "NVME_LOG_PHY_RX_EOM_BETTER" 12
+<= Best Quality, >= Good Quality
+.IP "NVME_LOG_PHY_RX_EOM_BEST" 12
+>= Better Quality

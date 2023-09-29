@@ -1,0 +1,37 @@
+.TH "nvme_ctrl_find" 9 "nvme_ctrl_find" "September 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_find \- Locate an existing controller
+.SH SYNOPSIS
+.B "nvme_ctrl_t" nvme_ctrl_find
+.BI "(nvme_subsystem_t s "  ","
+.BI "const char *transport "  ","
+.BI "const char *traddr "  ","
+.BI "const char *trsvcid "  ","
+.BI "const char *subsysnqn "  ","
+.BI "const char *host_traddr "  ","
+.BI "const char *host_iface "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+\fInvme_subsystem_t\fP object
+.IP "transport" 12
+Transport name
+.IP "traddr" 12
+Transport address
+.IP "trsvcid" 12
+Transport service identifier
+.IP "subsysnqn" 12
+Subsystem NQN
+.IP "host_traddr" 12
+Host transport address
+.IP "host_iface" 12
+Host interface name
+.SH "DESCRIPTION"
+Lookup a controller in \fIs\fP based on \fItransport\fP, \fItraddr\fP, \fItrsvcid\fP,
+\fIsubsysnqn\fP, \fIhost_traddr\fP, and \fIhost_iface\fP. \fItransport\fP must be specified,
+other fields may be required depending on the transport. Parameters set
+to NULL will be ignored.
+
+Unlike \fBnvme_lookup_ctrl\fP, this function does not create a new object if
+an existing controller cannot be found.
+.SH "RETURN"
+Controller instance on success, NULL otherwise.

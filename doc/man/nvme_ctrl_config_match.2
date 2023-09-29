@@ -1,0 +1,33 @@
+.TH "nvme_ctrl_config_match" 9 "nvme_ctrl_config_match" "September 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_config_match \- Check if ctrl @c matches config params
+.SH SYNOPSIS
+.B "bool" nvme_ctrl_config_match
+.BI "(struct nvme_ctrl *c "  ","
+.BI "const char *transport "  ","
+.BI "const char *traddr "  ","
+.BI "const char *trsvcid "  ","
+.BI "const char *subsysnqn "  ","
+.BI "const char *host_traddr "  ","
+.BI "const char *host_iface "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+An existing controller instance
+.IP "transport" 12
+Transport name
+.IP "traddr" 12
+Transport address
+.IP "trsvcid" 12
+Transport service identifier
+.IP "subsysnqn" 12
+Subsystem NQN
+.IP "host_traddr" 12
+Host transport address
+.IP "host_iface" 12
+Host interface name
+.SH "DESCRIPTION"
+Check that controller \fIc\fP matches parameters: \fItransport\fP, \fItraddr\fP,
+\fItrsvcid\fP, \fIsubsysnqn\fP, \fIhost_traddr\fP, and \fIhost_iface\fP. Parameters set
+to NULL will be ignored.
+.SH "RETURN"
+true if there's a match, false otherwise.

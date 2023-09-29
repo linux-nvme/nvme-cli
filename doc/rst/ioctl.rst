@@ -1081,7 +1081,7 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-.. c:function:: int nvme_identify_secondary_ctrl_list (int fd, __u32 nsid, __u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
+.. c:function:: int nvme_identify_secondary_ctrl_list (int fd, __u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
 
    Retrieves secondary controller list
 
@@ -1089,9 +1089,6 @@ The nvme command status if a response was received (see
 
 ``int fd``
   File descriptor of nvme device
-
-``__u32 nsid``
-  Namespace identifier
 
 ``__u16 cntid``
   Return controllers starting at this identifier
@@ -2185,6 +2182,34 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
 
 
+.. c:function:: int nvme_get_log_phy_rx_eom (int fd, __u8 lsp, __u16 controller, __u32 len, struct nvme_phy_rx_eom_log *log)
+
+   Retrieve Physical Interface Receiver Eye Opening Measurement Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u8 lsp``
+  Log specific, controls action and measurement quality
+
+``__u16 controller``
+  Target controller ID
+
+``__u32 len``
+  The allocated size, minimum
+  struct nvme_phy_rx_eom_log
+
+``struct nvme_phy_rx_eom_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
 .. c:function:: int nvme_get_log_discovery (int fd, bool rae, __u32 offset, __u32 len, void *log)
 
    Retrieve Discovery log page
@@ -2499,7 +2524,7 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-.. c:function:: int nvme_set_features_lba_range (int fd, __u32 nsid, __u32 nr_ranges, bool save, struct nvme_lba_range_type *data, __u32 *result)
+.. c:function:: int nvme_set_features_lba_range (int fd, __u32 nsid, __u8 nr_ranges, bool save, struct nvme_lba_range_type *data, __u32 *result)
 
    Set LBA range feature
 
@@ -2511,7 +2536,7 @@ The nvme command status if a response was received (see
 ``__u32 nsid``
   Namespace ID
 
-``__u32 nr_ranges``
+``__u8 nr_ranges``
   Number of ranges in **data**
 
 ``bool save``
@@ -3063,6 +3088,39 @@ The nvme command status if a response was received (see
 ``__u32 *result``
   The command completion result from CQE dword0
 
+**Description**
+
+
+Deprecated: doesn't support specifying a NSID.
+Use nvme_set_features_resv_mask2() instead.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_set_features_resv_mask2 (int fd, __u32 nsid, __u32 mask, bool save, __u32 *result)
+
+   Set reservation notification mask feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u32 nsid``
+  Namespace ID
+
+``__u32 mask``
+  Reservation Notification Mask Field
+
+``bool save``
+  Save value across power states
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
 **Return**
 
 The nvme command status if a response was received (see
@@ -3077,6 +3135,39 @@ The nvme command status if a response was received (see
 
 ``int fd``
   File descriptor of nvme device
+
+``bool ptpl``
+  Persist Through Power Loss
+
+``bool save``
+  Save value across power states
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
+**Description**
+
+
+Deprecated: doesn't support specifying a NSID.
+Use nvme_set_features_resv_persist2() instead.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_set_features_resv_persist2 (int fd, __u32 nsid, bool ptpl, bool save, __u32 *result)
+
+   Set persist through power loss feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u32 nsid``
+  Namespace ID
 
 ``bool ptpl``
   Persist Through Power Loss
@@ -3110,6 +3201,60 @@ The nvme command status if a response was received (see
 
 ``__u32 *result``
   The command completion result from CQE dword0
+
+**Description**
+
+
+Deprecated: doesn't support specifying a NSID.
+Use nvme_set_features_write_protect2() instead.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_set_features_write_protect2 (int fd, __u32 nsid, enum nvme_feat_nswpcfg_state state, bool save, __u32 *result)
+
+   Set write protect feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u32 nsid``
+  Namespace ID
+
+``enum nvme_feat_nswpcfg_state state``
+  Write Protection State
+
+``bool save``
+  Save value across power states
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_set_features_iocs_profile (int fd, __u16 iocsi, bool save)
+
+   Set I/O command set profile feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u16 iocsi``
+  I/O Command Set Combination Index
+
+``bool save``
+  Save value across power states
 
 **Return**
 
@@ -3246,6 +3391,39 @@ The nvme command status if a response was received (see
 ``__u32 *result``
   The command completion result from CQE dword0
 
+**Description**
+
+
+Deprecated: doesn't support specifying a NSID.
+Use nvme_get_features_lba_range2() instead.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_features_lba_range2 (int fd, enum nvme_get_features_sel sel, __u32 nsid, struct nvme_lba_range_type *data, __u32 *result)
+
+   Get LBA range feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``enum nvme_get_features_sel sel``
+  Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 nsid``
+  Namespace ID
+
+``struct nvme_lba_range_type *data``
+  Buffer to receive LBA Range Type data structure
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
 **Return**
 
 The nvme command status if a response was received (see
@@ -3284,6 +3462,36 @@ The nvme command status if a response was received (see
 
 ``enum nvme_get_features_sel sel``
   Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
+**Description**
+
+
+Deprecated: doesn't support specifying a NSID.
+Use nvme_get_features_err_recovery2() instead.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_features_err_recovery2 (int fd, enum nvme_get_features_sel sel, __u32 nsid, __u32 *result)
+
+   Get error recovery feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``enum nvme_get_features_sel sel``
+  Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 nsid``
+  Namespace ID
 
 ``__u32 *result``
   The command completion result from CQE dword0
@@ -3456,6 +3664,36 @@ The nvme command status if a response was received (see
 
 ``enum nvme_get_features_sel sel``
   Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
+**Description**
+
+
+Deprecated: doesn't fetch the Host Memory Buffer Attributes data structure.
+Use nvme_get_features_host_mem_buf2() instead.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_features_host_mem_buf2 (int fd, enum nvme_get_features_sel sel, struct nvme_host_mem_buf_attrs *attrs, __u32 *result)
+
+   Get host memory buffer feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``enum nvme_get_features_sel sel``
+  Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``struct nvme_host_mem_buf_attrs *attrs``
+  Buffer for returned Host Memory Buffer Attributes
 
 ``__u32 *result``
   The command completion result from CQE dword0
@@ -3774,6 +4012,36 @@ The nvme command status if a response was received (see
 ``__u32 *result``
   The command completion result from CQE dword0
 
+**Description**
+
+
+Deprecated: doesn't support specifying a NSID.
+Use nvme_get_features_resv_mask2() instead.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_features_resv_mask2 (int fd, enum nvme_get_features_sel sel, __u32 nsid, __u32 *result)
+
+   Get reservation mask feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``enum nvme_get_features_sel sel``
+  Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 nsid``
+  Namespace ID
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
 **Return**
 
 The nvme command status if a response was received (see
@@ -3791,6 +4059,36 @@ The nvme command status if a response was received (see
 
 ``enum nvme_get_features_sel sel``
   Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
+**Description**
+
+
+Deprecated: doesn't support specifying a NSID.
+Use nvme_get_features_resv_persist2() instead.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_features_resv_persist2 (int fd, enum nvme_get_features_sel sel, __u32 nsid, __u32 *result)
+
+   Get reservation persist feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``enum nvme_get_features_sel sel``
+  Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 nsid``
+  Namespace ID
 
 ``__u32 *result``
   The command completion result from CQE dword0
@@ -4901,5 +5199,29 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: void nvme_set_debug (bool debug)
+
+   Set NVMe command debugging output
+
+**Parameters**
+
+``bool debug``
+  true to enable or false to disable
+
+
+.. c:function:: bool nvme_get_debug (void)
+
+   Get NVMe command debugging output
+
+**Parameters**
+
+``void``
+  no arguments
+
+**Return**
+
+false if disabled or true if enabled.
 
 

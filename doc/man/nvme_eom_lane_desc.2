@@ -1,0 +1,63 @@
+.TH "libnvme" 9 "struct nvme_eom_lane_desc" "September 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_eom_lane_desc \- EOM Lane Descriptor
+.SH SYNOPSIS
+struct nvme_eom_lane_desc {
+.br
+.BI "    __u8 rsvd0;"
+.br
+.BI "    __u8 mstatus;"
+.br
+.BI "    __u8 lane;"
+.br
+.BI "    __u8 eye;"
+.br
+.BI "    __le16 top;"
+.br
+.BI "    __le16 bottom;"
+.br
+.BI "    __le16 left;"
+.br
+.BI "    __le16 right;"
+.br
+.BI "    __le16 nrows;"
+.br
+.BI "    __le16 ncols;"
+.br
+.BI "    __le16 edlen;"
+.br
+.BI "    __u8 rsvd18[14];"
+.br
+.BI "    __u8 eye_desc[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "mstatus" 12
+Measurement Status
+.IP "lane" 12
+Lane number
+.IP "eye" 12
+Eye number
+.IP "top" 12
+Absolute number of rows from center to top edge of eye
+.IP "bottom" 12
+Absolute number of rows from center to bottom edge of eye
+.IP "left" 12
+Absolute number of rows from center to left edge of eye
+.IP "right" 12
+Absolute number of rows from center to right edge of eye
+.IP "nrows" 12
+Number of Rows
+.IP "ncols" 12
+Number of Columns
+.IP "edlen" 12
+Eye Data Length
+.IP "rsvd18" 12
+Reserved
+.IP "eye_desc" 12
+Printable Eye, Eye Data, and any Padding
