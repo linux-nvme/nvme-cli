@@ -114,7 +114,11 @@ void end_mock_cmds(void)
 	} \
 })
 
+#ifdef HAVE_GLIBC_IOCTL
 int ioctl(int fd, unsigned long request, ...)
+#else
+int ioctl(int fd, int request, ...)
+#endif
 {
 	struct mock_cmds *mock_cmds;
 	bool result64;
@@ -141,7 +145,7 @@ int ioctl(int fd, unsigned long request, ...)
 		result64 = true;
 		break;
 	default:
-		fail("unexpected %s %lu", __func__, request);
+		fail("unexpected %s %lu", __func__, (unsigned long) request);
 	}
 	check(mock_cmds->remaining_cmds,
 	      "unexpected %s command", mock_cmds->name);
