@@ -273,7 +273,9 @@ subdir('internal')
 subdir('ccan')
 subdir('src')
 subdir('libnvme')
-subdir('test')
+if get_option('tests')
+    subdir('test')
+endif
 subdir('examples')
 subdir('doc')
 
