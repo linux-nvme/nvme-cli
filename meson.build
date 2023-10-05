@@ -236,7 +236,7 @@ endforeach
 
 udev_files = [
   '70-nvmf-autoconnect.rules',
-  '71-nvmf-iopolicy-netapp.rules',
+  '71-nvmf-netapp.rules',
 ]
 
 foreach file : udev_files
