@@ -2833,12 +2833,13 @@ static int detach_ns(int argc, char **argv, struct command *cmd, struct plugin *
 }
 
 static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
-			    const char *val, __u8 flbas, __u64 *num)
+			    const char *val, __u8 flbas, __u64 *num, __u32 align)
 {
 	_cleanup_free_ struct nvme_ns_list *ns_list = NULL;
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	__u32 nsid = 1;
+	unsigned int remainder;
 	char *endptr;
 	int err = -EINVAL;
 	int i;
@@ -2916,6 +2917,12 @@ static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
 		return -errno;
 	}
 
+	if (endptr[0]) {
+		remainder = *num % align;
+		if (remainder)
+			*num += align - remainder;
+	}
+
 	if (endptr[0] != '\0')
 		*num /= lbas;
 
@@ -2958,6 +2965,10 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	__u32 nsid;
 	uint16_t num_phandle;
 	uint16_t phndl[128] = { 0, };
+	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	_cleanup_free_ struct nvme_id_ns_granularity_list *gr_list = NULL;
+	__u32 align_nsze = 1 << 20; /* Default 1 MiB */
+	__u32 align_ncap = align_nsze;
 
 	struct config {
 		__u64	nsze;
@@ -3075,11 +3086,56 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		return -EINVAL;
 	}
 
-	err = parse_lba_num_si(dev, "nsze", cfg.nsze_si, cfg.flbas, &cfg.nsze);
+	id = nvme_alloc(sizeof(*id));
+	if (!id)
+		return -ENOMEM;
+
+	err = nvme_identify_ctrl(dev_fd(dev), id);
+	if (err) {
+		if (err < 0) {
+			nvme_show_error("identify-controller: %s", nvme_strerror(errno));
+		} else {
+			fprintf(stderr, "identify controller failed\n");
+			nvme_show_status(err);
+		}
+		return err;
+	}
+
+	if (id->ctratt & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) {
+		gr_list = nvme_alloc(sizeof(*gr_list));
+		if (!gr_list)
+			return -ENOMEM;
+
+		if (!nvme_identify_ns_granularity(dev_fd(dev), gr_list)) {
+			struct nvme_id_ns_granularity_desc *desc;
+			int index = cfg.flbas;
+
+			/* FIXME: add a proper bitmask to libnvme */
+			if (!(gr_list->attributes & 1)) {
+				/* Only the first descriptor is valid */
+				index = 0;
+			} else if (index > gr_list->num_descriptors) {
+				/*
+				 * The descriptor will contain only zeroes
+				 * so we don't need to read it.
+				 */
+				goto parse_lba;
+			}
+			desc = &gr_list->entry[index];
+
+			if (desc->nszegran && desc->nszegran < align_nsze)
+				align_nsze = desc->nszegran;
+			if (desc->ncapgran && desc->ncapgran < align_ncap)
+				align_ncap = desc->ncapgran;
+		}
+	}
+
+parse_lba:
+	err = parse_lba_num_si(dev, "nsze", cfg.nsze_si, cfg.flbas, &cfg.nsze, align_nsze);
 	if (err)
 		return err;
 
-	err = parse_lba_num_si(dev, "ncap", cfg.ncap_si, cfg.flbas, &cfg.ncap);
+	err = parse_lba_num_si(dev, "ncap", cfg.ncap_si, cfg.flbas, &cfg.ncap, align_ncap);
 	if (err)
 		return err;
 
