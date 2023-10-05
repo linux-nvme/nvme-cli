@@ -98,13 +98,15 @@ OPTIONS
 
 -S::
 --nsze-si::
-	The namespace size (NSZE) in standard SI units.
+	The namespace size (NSZE) in standard SI units (aligned on 1Mib boundaries,
+	unless the controller recommends a smaller value).
 	The value SI suffixed is divided by the namespace LBA size to set as NSZE.
 	If the value not suffixed it is set as same with the nsze option.
 
 -C::
 --ncap-si::
-	The namespace capacity (NCAP) in standard SI units.
+	The namespace capacity (NCAP) in standard SI units (aligned on 1Mib boundaries,
+	unless the controller recommends a smaller value).
 	The value SI suffixed is divided by the namespace LBA size to set as NCAP.
 	If the value not suffixed it is set as same with the ncap option.
 
