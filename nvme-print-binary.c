@@ -349,6 +349,7 @@ static struct print_ops binary_print_ops = {
 	.smart_log			= binary_smart_log,
 	.supported_cap_config_list_log	= binary_supported_cap_config_log,
 	.supported_log_pages		= binary_supported_log,
+	.zns_start_zone_list		= NULL,
 	.zns_changed_zone_log		= binary_zns_changed,
 	.zns_finish_zone_list		= NULL,
 	.zns_id_ctrl			= binary_zns_id_ctrl,

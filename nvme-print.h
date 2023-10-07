@@ -71,6 +71,7 @@ struct print_ops {
 	void (*smart_log)(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 	void (*supported_cap_config_list_log)(struct nvme_supported_cap_config_list_log *cap_log);
 	void (*supported_log_pages)(struct nvme_supported_log_pages *support_log, const char *devname);
+	void (*zns_start_zone_list)(__u64 nr_zones, struct json_object **zone_list);
 	void (*zns_changed_zone_log)(struct nvme_zns_changed_zone_log *log);
 	void (*zns_finish_zone_list)(__u64 nr_zones, struct json_object *zone_list);
 	void (*zns_id_ctrl)(struct nvme_zns_id_ctrl *ctrl);
@@ -221,6 +222,8 @@ void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 						bool cap_only, enum nvme_print_flags flags);
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 			 struct nvme_id_ns *id_ns, enum nvme_print_flags flags);
+void nvme_zns_start_zone_list(__u64 nr_zones, struct json_object **zone_list,
+			      enum nvme_print_flags flags);
 void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
 			   enum nvme_print_flags flags);
 void nvme_zns_finish_zone_list(__u64 nr_zones, struct json_object *zone_list,

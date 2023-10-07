@@ -957,10 +957,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	offset = cfg.zslba;
-	if (flags & JSON)
-		zone_list = json_create_array();
-	else
-		printf("nr_zones: %"PRIu64"\n", (uint64_t)le64_to_cpu(total_nr_zones));
+
+	nvme_zns_start_zone_list(total_nr_zones, &zone_list, flags);
 
 	while (nr_zones_retrieved < nr_zones) {
 		if (nr_zones_retrieved >= nr_zones)
