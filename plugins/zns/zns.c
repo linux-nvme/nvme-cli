@@ -846,7 +846,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	struct nvme_id_ns id_ns;
 	uint8_t lbaf;
 	__le64	zsze;
-	struct json_object *zone_list = 0;
+	struct json_object *zone_list = NULL;
 
 	struct config {
 		char *output_format;
@@ -989,13 +989,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		offset = le64_to_cpu(report->entries[nr_zones_chunks-1].zslba) + zsze;
 	}
 
-	if (flags & JSON) {
-		struct print_ops *ops;
-
-		ops = nvme_get_json_print_ops(flags);
-		if (ops)
-			ops->zns_finish_zone_list(total_nr_zones, zone_list);
-	}
+	nvme_zns_finish_zone_list(total_nr_zones, zone_list, flags);
 
 	nvme_free_huge(report, huge);
 
