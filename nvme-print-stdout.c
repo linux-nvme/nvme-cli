@@ -3318,8 +3318,7 @@ static void stdout_zns_report_zones(void *report, __u32 descs,
 				(uint64_t)le64_to_cpu(desc->zcap), nvme_zone_state_to_string(desc->zs >> 4),
 				nvme_zone_type_to_string(desc->zt));
 			stdout_zns_report_zone_attributes(desc->za, desc->zai);
-		}
-		else {
+		} else {
 			printf("SLBA: %#-10"PRIx64" WP: %#-10"PRIx64" Cap: %#-10"PRIx64" State: %#-4x Type: %#-4x Attrs: %#-4x AttrsInfo: %#-4x\n",
 				(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
 				(uint64_t)le64_to_cpu(desc->zcap), desc->zs, desc->zt,
@@ -3340,9 +3339,8 @@ static void stdout_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 	int i;
 
 	printf("num of ctrls present: %u\n", num);
-	for (i = 0; i < min(num, 2047); i++) {
+	for (i = 0; i < min(num, 2047); i++)
 		printf("[%4u]:%#x\n", i, le16_to_cpu(ctrl_list->identifier[i]));
-	}
 }
 
 static void stdout_id_nvmset(struct nvme_id_nvmset_list *nvmset,

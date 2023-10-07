@@ -507,6 +507,12 @@ void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
 	nvme_print(zns_changed_zone_log, flags, log);
 }
 
+void nvme_zns_finish_zone_list(__u64 nr_zones, struct json_object *zone_list,
+			       enum nvme_print_flags flags)
+{
+	nvme_print(zns_finish_zone_list, flags, nr_zones, zone_list);
+}
+
 const char *nvme_zone_type_to_string(__u8 cond)
 {
 	switch (cond) {
