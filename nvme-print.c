@@ -501,6 +501,12 @@ void nvme_show_list_ns(struct nvme_ns_list *ns_list, enum nvme_print_flags flags
 	nvme_print(ns_list, flags, ns_list);
 }
 
+void nvme_zns_start_zone_list(__u64 nr_zones, struct json_object **zone_list,
+			      enum nvme_print_flags flags)
+{
+	nvme_print(zns_start_zone_list, flags, nr_zones, zone_list);
+}
+
 void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
 			   enum nvme_print_flags flags)
 {

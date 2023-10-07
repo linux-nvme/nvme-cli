@@ -2257,6 +2257,11 @@ static void json_nvme_list_ns(struct nvme_ns_list *ns_list)
 	json_free_object(root);
 }
 
+static void json_zns_start_zone_list(__u64 nr_zones, struct json_object **zone_list)
+{
+	*zone_list = json_create_array();
+}
+
 static void json_zns_finish_zone_list(__u64 nr_zones,
 				      struct json_object *zone_list)
 {
@@ -3080,6 +3085,7 @@ static struct print_ops json_print_ops = {
 	.smart_log			= json_smart_log,
 	.supported_cap_config_list_log	= json_supported_cap_config_log,
 	.supported_log_pages		= json_support_log,
+	.zns_start_zone_list		= json_zns_start_zone_list,
 	.zns_changed_zone_log		= NULL,
 	.zns_finish_zone_list		= json_zns_finish_zone_list,
 	.zns_id_ctrl			= json_nvme_zns_id_ctrl,

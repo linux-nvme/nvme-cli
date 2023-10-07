@@ -3261,6 +3261,11 @@ static void stdout_list_ns(struct nvme_ns_list *ns_list)
 	}
 }
 
+static void stdout_zns_start_zone_list(__u64 nr_zones, struct json_object **zone_list)
+{
+	printf("nr_zones: %"PRIu64"\n", (uint64_t)le64_to_cpu(nr_zones));
+}
+
 static void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
 {
 	uint16_t nrzid;
@@ -5100,6 +5105,7 @@ static struct print_ops stdout_print_ops = {
 	.smart_log			= stdout_smart_log,
 	.supported_cap_config_list_log	= stdout_supported_cap_config_log,
 	.supported_log_pages		= stdout_supported_log,
+	.zns_start_zone_list		= stdout_zns_start_zone_list,
 	.zns_changed_zone_log		= stdout_zns_changed,
 	.zns_finish_zone_list		= NULL,
 	.zns_id_ctrl			= stdout_zns_id_ctrl,
