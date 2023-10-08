@@ -1822,8 +1822,7 @@ static void json_nvme_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t 
 	json_free_object(root);
 }
 
-static unsigned int json_print_nvme_subsystem_multipath(nvme_subsystem_t s,
-						        json_object *paths)
+static unsigned int json_print_nvme_subsystem_multipath(nvme_subsystem_t s, json_object *paths)
 {
 	nvme_ns_t n;
 	nvme_path_t p;
@@ -2780,8 +2779,7 @@ static unsigned int json_subsystem_topology_multipath(nvme_subsystem_t s,
 		struct json_object *paths;
 
 		ns_attrs = json_create_object();
-	        json_object_add_value_int(ns_attrs, "NSID",
-					  nvme_ns_get_nsid(n));
+		json_object_add_value_int(ns_attrs, "NSID", nvme_ns_get_nsid(n));
 
 		paths = json_create_array();
 		nvme_namespace_for_each_path(n, p) {
@@ -2823,10 +2821,9 @@ static void json_print_nvme_subsystem_topology(nvme_subsystem_t s,
 			struct json_object *ctrl;
 
 			ns_attrs = json_create_object();
-		        json_object_add_value_int(ns_attrs, "NSID",
-						  nvme_ns_get_nsid(n));
+			json_object_add_value_int(ns_attrs, "NSID", nvme_ns_get_nsid(n));
 
-		        ctrl = json_create_array();
+			ctrl = json_create_array();
 			ctrl_attrs = json_create_object();
 			json_object_add_value_string(ctrl_attrs, "Name",
 						     nvme_ctrl_get_name(c));
@@ -2890,6 +2887,145 @@ static void json_simple_topology(nvme_root_t r)
 	json_free_object(root);
 }
 
+static void json_directive_show_fields_identify(__u8 doper, __u8 *field, struct json_object *root)
+{
+	struct json_object *support;
+	struct json_object *enabled;
+	struct json_object *persistent;
+
+	switch (doper) {
+	case NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
+		support = json_create_array();
+		json_object_add_value_array(root, "Directive support", support);
+		json_object_add_value_string(support, "Identify Directive",
+					     *field & 0x1 ? "supported" : "not supported");
+		json_object_add_value_string(support, "Stream Directive",
+					     *field & 0x2 ? "supported" : "not supported");
+		json_object_add_value_string(support, "Data Placement Directive",
+					     *field & 0x4 ? "supported" : "not supported");
+		enabled = json_create_array();
+		json_object_add_value_array(root, "Directive enabled", enabled);
+		json_object_add_value_string(enabled, "Identify Directive",
+					     *(field + 32) & 0x1 ? "enabled" : "disabled");
+		json_object_add_value_string(enabled, "Stream Directive",
+					     *(field + 32) & 0x2 ? "enabled" : "disabled");
+		json_object_add_value_string(enabled, "Data Placement Directive",
+					     *(field + 32) & 0x4 ? "enabled" : "disabled");
+		persistent = json_create_array();
+		json_object_add_value_array(root,
+					    "Directive Persistent Across Controller Level Resets",
+					    persistent);
+		json_object_add_value_string(persistent, "Identify Directive",
+					     *(field + 32) & 0x1 ? "enabled" : "disabled");
+		json_object_add_value_string(persistent, "Stream Directive",
+					     *(field + 32) & 0x2 ? "enabled" : "disabled");
+		json_object_add_value_string(persistent, "Data Placement Directive",
+					     *(field + 32) & 0x4 ? "enabled" : "disabled");
+		break;
+	default:
+		json_object_add_value_string(root, "error",
+					     "invalid directive operations for Identify Directives");
+		break;
+	}
+}
+
+static void json_directive_show_fields_streams(__u8 doper,  unsigned int result, __u16 *field,
+					       struct json_object *root)
+{
+	int count;
+	int i;
+	char json_str[40];
+
+	switch (doper) {
+	case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
+		json_object_add_value_uint(root, "Max Streams Limit (MSL)",
+					   le16_to_cpu(*field));
+		json_object_add_value_uint(root, "NVM Subsystem Streams Available (NSSA)",
+					   le16_to_cpu(*(field + 2)));
+		json_object_add_value_uint(root, "NVM Subsystem Streams Open (NSSO)",
+					   le16_to_cpu(*(field + 4)));
+		json_object_add_value_uint(root, "NVM Subsystem Stream Capability (NSSC)",
+					   le16_to_cpu(*(field + 6)));
+		json_object_add_value_uint(root,
+					   "Stream Write Size (in unit of LB size) (SWS)",
+					   le16_to_cpu(*(__u32 *)(field + 16)));
+		json_object_add_value_uint(root,
+					   "Stream Granularity Size (in unit of SWS) (SGS)\n",
+					   le16_to_cpu(*(field + 20)));
+		json_object_add_value_uint(root, "Namespace Streams Allocated (NSA)",
+					   le16_to_cpu(*(field + 22)));
+		json_object_add_value_uint(root, "Namespace Streams Open (NSO)",
+					   le16_to_cpu(*(field + 24)));
+		break;
+	case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
+		count = *field;
+		json_object_add_value_uint(root, "Open Stream Count",
+					   le16_to_cpu(*field));
+		for (i = 0; i < count; i++) {
+			sprintf(json_str, "Stream Identifier %.6u", i + 1);
+			json_object_add_value_uint(root, json_str,
+						   le16_to_cpu(*(field + (i + 1) * 2)));
+		}
+		break;
+	case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE:
+		json_object_add_value_uint(root, "Namespace Streams Allocated (NSA)",
+					   result & 0xffff);
+		break;
+	default:
+		json_object_add_value_string(root, "error",
+					     "invalid directive operations for Streams Directives");
+		break;
+	}
+}
+
+static void json_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result,
+				       __u8 *field, struct json_object *root)
+{
+	switch (dtype) {
+	case NVME_DIRECTIVE_DTYPE_IDENTIFY:
+		json_directive_show_fields_identify(doper, field, root);
+		break;
+	case NVME_DIRECTIVE_DTYPE_STREAMS:
+		json_directive_show_fields_streams(doper, result, (__u16 *)field, root);
+		break;
+	default:
+		json_object_add_value_string(root, "error", "invalid directive type");
+		break;
+	}
+}
+
+static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+				void *buf, __u32 len)
+{
+	struct json_object *root;
+	struct json_object *data;
+	char json_str[40];
+
+	root = json_create_object();
+	sprintf(json_str, "%#x", type);
+	json_object_add_value_string(root, "type", json_str);
+	sprintf(json_str, "%#x", oper);
+	json_object_add_value_string(root, "operation", json_str);
+	sprintf(json_str, "%#x", spec);
+	json_object_add_value_string(root, "spec", json_str);
+	sprintf(json_str, "%#x", nsid);
+	json_object_add_value_string(root, "nsid", json_str);
+	sprintf(json_str, "%#x", result);
+	json_object_add_value_string(root, "result", json_str);
+
+	if (json_print_ops.flags & VERBOSE) {
+		json_directive_show_fields(type, oper, result, buf, root);
+	} else if (buf) {
+		data = json_create_array();
+		d_json((unsigned char *)buf, len, 16, 1, data);
+		json_object_add_value_array(root, "data", data);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 {
 	struct json_object *root;
@@ -2935,6 +3071,8 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		case NVMF_TRTYPE_TCP:
 			json_object_add_value_string(entry, "sectype",
 				nvmf_sectype_str(e->tsas.tcp.sectype));
+			break;
+		default:
 			break;
 		}
 		json_array_add_value_object(entries, entry);
@@ -3040,7 +3178,7 @@ static struct print_ops json_print_ops = {
 	.phy_rx_eom_log			= json_phy_rx_eom_log,
 	.ctrl_list			= json_nvme_list_ctrl,
 	.ctrl_registers			= json_ctrl_registers,
-	.directive			= NULL,
+	.directive			= json_directive_show,
 	.discovery_log			= json_discovery_log,
 	.effects_log_list		= json_effects_log_list,
 	.endurance_group_event_agg_log	= json_endurance_group_event_agg_log,
