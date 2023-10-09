@@ -3538,7 +3538,7 @@ static void stdout_id_iocs(struct nvme_id_iocs *iocs)
 {
 	__u16 i;
 
-	for (i = 0; i < 512; i++)
+	for (i = 0; i < ARRAY_SIZE(iocs->iocsc); i++)
 		if (iocs->iocsc[i])
 			printf("I/O Command Set Combination[%u]:%"PRIx64"\n", i,
 				(uint64_t)le64_to_cpu(iocs->iocsc[i]));
