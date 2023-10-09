@@ -2206,6 +2206,104 @@ static void json_nvme_zns_report_zones(void *report, __u32 descs,
 	}
 }
 
+static void json_feature_show_fields_arbitration(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+	char json_str[STR_LEN];
+
+	json_object_add_value_uint(root, "High Priority Weight (HPW)", ((result & 0xff000000) >> 24) + 1);
+	json_object_add_value_uint(root, "Medium Priority Weight (MPW)", ((result & 0x00ff0000) >> 16) + 1);
+	json_object_add_value_uint(root, "Low Priority Weight (LPW)", ((result & 0x0000ff00) >> 8) + 1);
+
+	if ((result & 0x00000007) == 7)
+		sprintf(json_str, "No limit");
+	else
+		sprintf(json_str, "%u", 1 << (result & 0x00000007));
+
+	json_object_add_value_string(root, "Arbitration Burst (AB)", json_str);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_power_mgmt(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+	__u8 field = (result & 0x000000E0) >> 5;
+
+	json_object_add_value_uint(root, "Workload Hint (WH)", field);
+	json_object_add_value_string(root, "WH description", nvme_feature_wl_hints_to_string(field));
+	json_object_add_value_uint(root, "Power State (PS)", result & 0x0000001f);
+
+	json_print(root);
+}
+
+static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
+			   struct json_object *root)
+{
+	char json_str[STR_LEN];
+	struct json_object *lbare;
+	int i;
+	int j;
+
+	for (i = 0; i <= nr_ranges; i++) {
+		lbare = json_create_array();
+		sprintf(json_str, "LBA range[%d]", i);
+		json_object_add_value_array(root, json_str, lbare);
+		sprintf(json_str, "%#x", lbrt->entry[i].type);
+		json_object_add_value_string(lbare, "type", json_str);
+		json_object_add_value_string(lbare, "type description",
+					     nvme_feature_lba_type_to_string(lbrt->entry[i].type));
+		sprintf(json_str, "%#x", lbrt->entry[i].attributes);
+		json_object_add_value_string(lbare, "attributes", json_str);
+		json_object_add_value_string(lbare, "attribute[0]",
+					     lbrt->entry[i].attributes & 0x0001 ?
+					     "LBA range may be overwritten" :
+					     "LBA range should not be overwritten");
+		json_object_add_value_string(lbare, "attribute[1]",
+					     lbrt->entry[i].attributes & 0x0002 ?
+					     "LBA range should be hidden from the OS/EFI/BIOS" :
+					     "LBA range should be visible from the OS/EFI/BIOS");
+		sprintf(json_str, "%#"PRIx64"", le64_to_cpu(lbrt->entry[i].slba));
+		json_object_add_value_string(lbare, "slba", json_str);
+		sprintf(json_str, "%#"PRIx64"", le64_to_cpu(lbrt->entry[i].nlb));
+		json_object_add_value_string(lbare, "nlb", json_str);
+		for (j = 0; j < ARRAY_SIZE(lbrt->entry[i].guid); j++)
+			sprintf(&json_str[j * 2], "%02x", lbrt->entry[i].guid[j]);
+		json_object_add_value_string(lbare, "guid", json_str);
+	}
+}
+
+static void json_feature_show_fields_lba_range(unsigned int result, unsigned char *buf)
+{
+	struct json_object *root = json_create_object();
+	__u8 field = result & 0x0000003f;
+
+	json_object_add_value_uint(root, "Number of LBA Ranges (NUM)", field + 1);
+
+	if (buf)
+		json_lba_range((struct nvme_lba_range_type *)buf, field, root);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
+				     unsigned char *buf)
+{
+	switch (fid) {
+	case NVME_FEAT_FID_ARBITRATION:
+		json_feature_show_fields_arbitration(result);
+		break;
+	case NVME_FEAT_FID_POWER_MGMT:
+		json_feature_show_fields_power_mgmt(result);
+		break;
+	case NVME_FEAT_FID_LBA_RANGE:
+		json_feature_show_fields_lba_range(result, buf);
+		break;
+	default:
+		break;
+	}
+}
+
 static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 {
 	__u16 num = le16_to_cpu(ctrl_list->num);
@@ -3059,7 +3157,7 @@ static struct print_ops json_print_ops = {
 	.zns_id_ctrl			= json_nvme_zns_id_ctrl,
 	.zns_id_ns			= json_nvme_zns_id_ns,
 	.zns_report_zones		= json_nvme_zns_report_zones,
-	.show_feature_fields		= NULL,
+	.show_feature_fields		= json_feature_show_fields,
 	.id_ctrl_rpmbs			= NULL,
 	.lba_range			= NULL,
 	.lba_status_info		= NULL,
