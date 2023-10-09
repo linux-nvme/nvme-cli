@@ -10,9 +10,28 @@
 #include "common.h"
 
 #define ERROR_MSG_LEN 100
+#define STR_LEN 40
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
+
+static void json_id_iocs(struct nvme_id_iocs *iocs)
+{
+	struct json_object *root = json_create_object();
+	char json_str[STR_LEN];
+	__u16 i;
+
+	for (i = 0; i < ARRAY_SIZE(iocs->iocsc); i++) {
+		if (iocs->iocsc[i]) {
+			sprintf(json_str, "I/O Command Set Combination[%u]", i);
+			json_object_add_value_uint64(root, json_str, le64_to_cpu(iocs->iocsc[i]));
+		}
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
 
 static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 			    unsigned int lba_index, bool cap_only)
@@ -2034,7 +2053,7 @@ static void json_nvme_cmd_set_independent_id_ns(
 static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 {
 	/* large enough to hold uuid str (37) or nguid str (32) + zero byte */
-	char json_str[40];
+	char json_str[STR_LEN];
 	char *json_str_p;
 
 	union {
@@ -2934,7 +2953,7 @@ static void json_directive_show_fields_streams(__u8 doper,  unsigned int result,
 {
 	int count;
 	int i;
-	char json_str[40];
+	char json_str[STR_LEN];
 
 	switch (doper) {
 	case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
@@ -2997,11 +3016,10 @@ static void json_directive_show_fields(__u8 dtype, __u8 doper, unsigned int resu
 static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 				void *buf, __u32 len)
 {
-	struct json_object *root;
+	struct json_object *root = json_create_object();
 	struct json_object *data;
-	char json_str[40];
+	char json_str[STR_LEN];
 
-	root = json_create_object();
 	sprintf(json_str, "%#x", type);
 	json_object_add_value_string(root, "type", json_str);
 	sprintf(json_str, "%#x", oper);
@@ -3196,7 +3214,7 @@ static struct print_ops json_print_ops = {
 	.id_ctrl_nvm			= json_nvme_id_ctrl_nvm,
 	.id_domain_list			= json_id_domain_list,
 	.id_independent_id_ns		= json_nvme_cmd_set_independent_id_ns,
-	.id_iocs			= NULL,
+	.id_iocs			= json_id_iocs,
 	.id_ns				= json_nvme_id_ns,
 	.id_ns_descs			= json_nvme_id_ns_descs,
 	.id_ns_granularity_list		= json_nvme_id_ns_granularity_list,
