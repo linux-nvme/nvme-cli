@@ -4157,7 +4157,7 @@ static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 		printf("\tslba       : %#"PRIx64"\n", le64_to_cpu(lbrt->entry[i].slba));
 		printf("\tnlb        : %#"PRIx64"\n", le64_to_cpu(lbrt->entry[i].nlb));
 		printf("\tguid       : ");
-		for (j = 0; j < 16; j++)
+		for (j = 0; j < ARRAY_SIZE(lbrt->entry[i].guid); j++)
 			printf("%02x", lbrt->entry[i].guid[j]);
 		printf("\n");
 	}
@@ -4491,7 +4491,9 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
+		fallthrough;
 	case NVME_FEAT_FID_CTRL_METADATA:
+		fallthrough;
 	case NVME_FEAT_FID_NS_METADATA:
 		if (buf)
 			stdout_host_metadata(fid, (struct nvme_host_metadata *)buf);
@@ -4536,6 +4538,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			printf("\t%-53s: %sEnabled\n", nvme_fdp_event_to_string(d->evt),
 					d->evta & 0x1 ? "" : "Not ");
 		}
+		break;
 	default:
 		break;
 	}
