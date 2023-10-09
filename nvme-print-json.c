@@ -2212,13 +2212,13 @@ static void json_feature_show_fields_arbitration(unsigned int result)
 	char json_str[STR_LEN];
 
 	json_object_add_value_uint(root, "High Priority Weight (HPW)", ((result & 0xff000000) >> 24) + 1);
-	json_object_add_value_uint(root, "Medium Priority Weight (MPW)", ((result & 0x00ff0000) >> 16) + 1);
-	json_object_add_value_uint(root, "Low Priority Weight (LPW)", ((result & 0x0000ff00) >> 8) + 1);
+	json_object_add_value_uint(root, "Medium Priority Weight (MPW)", ((result & 0xff0000) >> 16) + 1);
+	json_object_add_value_uint(root, "Low Priority Weight (LPW)", ((result & 0xff00) >> 8) + 1);
 
-	if ((result & 0x00000007) == 7)
+	if ((result & 7) == 7)
 		sprintf(json_str, "No limit");
 	else
-		sprintf(json_str, "%u", 1 << (result & 0x00000007));
+		sprintf(json_str, "%u", 1 << (result & 7));
 
 	json_object_add_value_string(root, "Arbitration Burst (AB)", json_str);
 
@@ -2228,11 +2228,11 @@ static void json_feature_show_fields_arbitration(unsigned int result)
 static void json_feature_show_fields_power_mgmt(unsigned int result)
 {
 	struct json_object *root = json_create_object();
-	__u8 field = (result & 0x000000E0) >> 5;
+	__u8 field = (result & 0xe0) >> 5;
 
 	json_object_add_value_uint(root, "Workload Hint (WH)", field);
 	json_object_add_value_string(root, "WH description", nvme_feature_wl_hints_to_string(field));
-	json_object_add_value_uint(root, "Power State (PS)", result & 0x0000001f);
+	json_object_add_value_uint(root, "Power State (PS)", result & 0x1f);
 
 	json_print(root);
 }
@@ -2273,15 +2273,37 @@ static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
 	}
 }
 
-static void json_feature_show_fields_lba_range(unsigned int result, unsigned char *buf)
+static void json_feature_show_fields_lba_range(__u8 field, unsigned char *buf)
 {
 	struct json_object *root = json_create_object();
-	__u8 field = result & 0x0000003f;
 
 	json_object_add_value_uint(root, "Number of LBA Ranges (NUM)", field + 1);
 
 	if (buf)
 		json_lba_range((struct nvme_lba_range_type *)buf, field, root);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_temp_thresh(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+	__u8 field = (result & 0x300000) >> 20;
+	char json_str[STR_LEN];
+
+	json_object_add_value_uint(root, "Threshold Type Select (THSEL)", field);
+	json_object_add_value_string(root, "THSEL description", nvme_feature_temp_type_to_string(field));
+
+	field = (result & 0xf0000) >> 16;
+
+	json_object_add_value_uint(root, "Threshold Temperature Select (TMPSEL)", field);
+	json_object_add_value_string(root, "TMPSEL description", nvme_feature_temp_sel_to_string(field));
+
+	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result & 0xffff));
+	json_object_add_value_string(root, "Temperature Threshold (TMPTH)", json_str);
+
+	sprintf(json_str, "%u K", result & 0xffff);
+	json_object_add_value_string(root, "TMPTH kelvin", json_str);
 
 	json_print(root);
 }
@@ -2297,7 +2319,10 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		json_feature_show_fields_power_mgmt(result);
 		break;
 	case NVME_FEAT_FID_LBA_RANGE:
-		json_feature_show_fields_lba_range(result, buf);
+		json_feature_show_fields_lba_range(result & 0x3f, buf);
+		break;
+	case NVME_FEAT_FID_TEMP_THRESH:
+		json_feature_show_fields_temp_thresh(result);
 		break;
 	default:
 		break;
