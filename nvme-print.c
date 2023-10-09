@@ -29,7 +29,7 @@ static struct print_ops *nvme_print_ops(enum nvme_print_flags flags)
 {
 	struct print_ops *ops = NULL;
 
-	if (flags & JSON)
+	if (flags & JSON || nvme_is_output_format_json())
 		ops = nvme_get_json_print_ops(flags);
 	else if (flags & BINARY)
 		ops = nvme_get_binary_print_ops(flags);
