@@ -15,6 +15,13 @@
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
 
+static void json_print(struct json_object *root)
+{
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 static void json_id_iocs(struct nvme_id_iocs *iocs)
 {
 	struct json_object *root = json_create_object();
@@ -862,7 +869,6 @@ static void json_add_bitmap(int i, __u8 seb, struct json_object *root)
 	}
 }
 
-
 static void json_persistent_event_log(void *pevent_log_info, __u8 action,
 				      __u32 size, const char *devname)
 
@@ -1190,7 +1196,6 @@ static void json_persistent_event_log(void *pevent_log_info, __u8 action,
 	json_free_object(root);
 }
 
-
 static void json_endurance_group_event_agg_log(
 		struct nvme_aggregate_predictable_lat_event *endurance_log,
 		__u64 log_entries, __u32 size, const char *devname)
@@ -1214,6 +1219,47 @@ static void json_endurance_group_event_agg_log(
 	json_free_object(root);
 }
 
+static void json_lba_status(struct nvme_lba_status *list,
+			      unsigned long len)
+{
+	struct json_object *root = json_create_object();
+	int idx;
+	struct nvme_lba_status_desc *e;
+	struct json_object *lsde;
+	char json_str[STR_LEN];
+
+	json_object_add_value_uint(root, "Number of LBA Status Descriptors (NLSD)",
+				   le32_to_cpu(list->nlsd));
+	json_object_add_value_uint(root, "Completion Condition (CMPC)", list->cmpc);
+
+	switch (list->cmpc) {
+	case 1:
+		json_object_add_value_string(root, "cmpc-definition",
+		    "Completed due to transferring the amount of data specified in the MNDW field\n");
+		break;
+	case 2:
+		json_object_add_value_string(root, "cmpc-definition",
+		    "Completed due to having performed the action specified in the Action Type field over the number of logical blocks specified in the Range Length field");
+		break;
+	default:
+		break;
+	}
+
+	for (idx = 0; idx < list->nlsd; idx++) {
+		lsde = json_create_array();
+		sprintf(json_str, "LSD entry %d", idx);
+		json_object_add_value_array(root, json_str, lsde);
+		e = &list->descs[idx];
+		sprintf(json_str, "0x%016"PRIu64"", le64_to_cpu(e->dslba));
+		json_object_add_value_string(lsde, "DSLBA", json_str);
+		sprintf(json_str, "0x%08x", le32_to_cpu(e->nlb));
+		json_object_add_value_string(lsde, "NLB", json_str);
+		sprintf(json_str, "0x%02x", e->status);
+		json_object_add_value_string(lsde, "Status", json_str);
+	}
+
+	json_print(root);
+}
 
 static void json_lba_status_log(void *lba_status, __u32 size,
 				const char *devname)
@@ -1273,7 +1319,6 @@ static void json_lba_status_log(void *lba_status, __u32 size,
 	json_free_object(root);
 }
 
-
 static void json_resv_notif_log(struct nvme_resv_notification_log *resv,
 				const char *devname)
 {
@@ -1292,7 +1337,6 @@ static void json_resv_notif_log(struct nvme_resv_notification_log *resv,
 	printf("\n");
 	json_free_object(root);
 }
-
 
 static void json_fid_support_effects_log(
 		struct nvme_fid_supported_effects_log *fid_log,
@@ -1321,7 +1365,6 @@ static void json_fid_support_effects_log(
 	json_free_object(root);
 }
 
-
 static void json_mi_cmd_support_effects_log(
 		struct nvme_mi_cmd_supported_effects_log *mi_cmd_log,
 		const char *devname)
@@ -1349,7 +1392,6 @@ static void json_mi_cmd_support_effects_log(
 
 	json_free_object(root);
 }
-
 
 static void json_boot_part_log(void *bp_log, const char *devname,
 			       __u32 size)
@@ -1391,7 +1433,6 @@ static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
 exit:
 	return printable_start;
 }
-
 
 static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 			struct json_object *root, char **allocated_eyes)
@@ -1508,7 +1549,6 @@ static void json_media_unit_stat_log(struct nvme_media_unit_stat_log *mus)
 	json_free_object(root);
 }
 
-
 static void json_supported_cap_config_log(
 		struct nvme_supported_cap_config_list_log *cap_log)
 {
@@ -1597,7 +1637,6 @@ static void json_supported_cap_config_log(
 	json_free_object(root);
 }
 
-
 static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 {
 	struct json_object *root, *obj_configs;
@@ -1649,7 +1688,6 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 	json_free_object(root);
 }
 
-
 static void json_nvme_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
 {
 	struct json_object *root, *obj_ruhus;
@@ -1680,7 +1718,6 @@ static void json_nvme_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
 	json_free_object(root);
 }
 
-
 static void json_nvme_fdp_stats(struct nvme_fdp_stats_log *log)
 {
 	struct json_object *root = json_create_object();
@@ -1694,7 +1731,6 @@ static void json_nvme_fdp_stats(struct nvme_fdp_stats_log *log)
 
 	json_free_object(root);
 }
-
 
 static void json_nvme_fdp_events(struct nvme_fdp_events_log *log)
 {
@@ -3094,7 +3130,7 @@ static struct print_ops json_print_ops = {
 	.id_ns_granularity_list		= json_nvme_id_ns_granularity_list,
 	.id_nvmset_list			= json_nvme_id_nvmset,
 	.id_uuid_list			= json_nvme_id_uuid_list,
-	.lba_status			= NULL,
+	.lba_status			= json_lba_status,
 	.lba_status_log			= json_lba_status_log,
 	.media_unit_stat_log		= json_media_unit_stat_log,
 	.mi_cmd_support_effects_log	= json_mi_cmd_support_effects_log,
