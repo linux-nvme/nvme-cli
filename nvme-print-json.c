@@ -621,6 +621,23 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	json_print(root);
 }
 
+static void json_select_result(__u32 result)
+{
+	struct json_object *root = json_create_object();
+	struct json_object *feature = json_create_array();
+
+	if (result & 0x1)
+		json_array_add_value_string(feature, "saveable");
+	if (result & 0x2)
+		json_array_add_value_string(feature, "per-namespace");
+	if (result & 0x4)
+		json_array_add_value_string(feature, "changeable");
+
+	json_object_add_value_array(root, "Feature", feature);
+
+	json_print(root);
+}
+
 static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,
 			       __u32 size, const char *devname)
 {
@@ -3030,7 +3047,7 @@ static struct print_ops json_print_ops = {
 	.resv_report			= json_nvme_resv_report,
 	.sanitize_log_page		= json_sanitize_log,
 	.secondary_ctrl_list		= json_nvme_list_secondary_ctrl,
-	.select_result			= NULL,
+	.select_result			= json_select_result,
 	.self_test_log 			= json_self_test_log,
 	.single_property		= NULL,
 	.smart_log			= json_smart_log,
