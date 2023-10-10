@@ -49,7 +49,6 @@ LIBNVME_MI_1_1 {
 		nvme_mi_admin_security_send;
 		nvme_mi_admin_security_recv;
 		nvme_mi_endpoint_desc;
-		nvme_mi_root_close;
 		nvme_mi_first_endpoint;
 		nvme_mi_next_endpoint;
 		nvme_mi_first_ctrl;
