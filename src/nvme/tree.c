@@ -2404,26 +2404,33 @@ static void nvme_ns_parse_descriptors(struct nvme_ns *n,
 
 static int nvme_ns_init(struct nvme_ns *n)
 {
-	struct nvme_id_ns ns = { };
-	uint8_t buffer[NVME_IDENTIFY_DATA_SIZE] = { };
-	struct nvme_ns_id_desc *descs = (void *)buffer;
+	struct nvme_id_ns *ns;
+	struct nvme_ns_id_desc *descs;
 	uint8_t flbas;
 	int ret;
 
-	ret = nvme_ns_identify(n, &ns);
-	if (ret)
+	ns = __nvme_alloc(sizeof(*ns));
+	if (!ns)
+		return 0;
+	ret = nvme_ns_identify(n, ns);
+	if (ret) {
+		free(ns);
 		return ret;
+	}
 
-	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &flbas);
-	n->lba_shift = ns.lbaf[flbas].ds;
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
+	n->lba_shift = ns->lbaf[flbas].ds;
 	n->lba_size = 1 << n->lba_shift;
-	n->lba_count = le64_to_cpu(ns.nsze);
-	n->lba_util = le64_to_cpu(ns.nuse);
-	n->meta_size = le16_to_cpu(ns.lbaf[flbas].ms);
+	n->lba_count = le64_to_cpu(ns->nsze);
+	n->lba_util = le64_to_cpu(ns->nuse);
+	n->meta_size = le16_to_cpu(ns->lbaf[flbas].ms);
 
-	if (!nvme_ns_identify_descs(n, descs))
+	descs = __nvme_alloc(NVME_IDENTIFY_DATA_SIZE);
+	if (descs && !nvme_ns_identify_descs(n, descs))
 		nvme_ns_parse_descriptors(n, descs);
 
+	free(ns);
+	free(descs);
 	return 0;
 }
 
