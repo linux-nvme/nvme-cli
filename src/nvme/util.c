@@ -7,6 +7,7 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -1058,3 +1059,15 @@ bool nvme_iface_primary_addr_matches(const struct ifaddrs *iface_list, const cha
 }
 
 #endif /* HAVE_NETDB */
+
+void *__nvme_alloc(size_t len)
+{
+	size_t _len = round_up(len, 0x1000);
+	void *p;
+
+	if (posix_memalign((void *)&p, getpagesize(), _len))
+		return NULL;
+
+	memset(p, 0, _len);
+	return p;
+}
