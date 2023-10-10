@@ -4170,15 +4170,15 @@ static void stdout_auto_pst(struct nvme_feat_auto_pst *apst)
 
 	printf( "\tAuto PST Entries");
 	printf("\t.................\n");
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < ARRAY_SIZE(apst->apst_entry); i++) {
 		value = le64_to_cpu(apst->apst_entry[i]);
 
 		printf("\tEntry[%2d]   \n", i);
 		printf("\t.................\n");
 		printf("\tIdle Time Prior to Transition (ITPT): %u ms\n",
-			(__u32)(value >> NVME_APST_ENTRY_ITPT_SHIFT) & NVME_APST_ENTRY_ITPT_MASK);
+		       (__u32)NVME_GET(value, APST_ENTRY_ITPT));
 		printf("\tIdle Transition Power State   (ITPS): %u\n",
-			(__u32)(value >> NVME_APST_ENTRY_ITPS_SHIFT ) & NVME_APST_ENTRY_ITPS_MASK);
+		       (__u32)NVME_GET(value, APST_ENTRY_ITPS));
 		printf("\t.................\n");
 	}
 }
@@ -4368,8 +4368,8 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		break;
 	case NVME_FEAT_FID_POWER_MGMT:
 		field = (result & 0x000000E0) >> 5;
-		printf("\tWorkload Hint (WH): %u - %s\n",  field, nvme_feature_wl_hints_to_string(field));
-		printf("\tPower State   (PS): %u\n",  result & 0x0000001f);
+		printf("\tWorkload Hint (WH): %u - %s\n", field, nvme_feature_wl_hints_to_string(field));
+		printf("\tPower State   (PS): %u\n", result & 0x0000001f);
 		break;
 	case NVME_FEAT_FID_LBA_RANGE:
 		field = result & 0x0000003f;
@@ -4398,15 +4398,15 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		break;
 	case NVME_FEAT_FID_NUM_QUEUES:
 		printf("\tNumber of IO Completion Queues Allocated (NCQA): %u\n", ((result & 0xffff0000) >> 16) + 1);
-		printf("\tNumber of IO Submission Queues Allocated (NSQA): %u\n",  (result & 0x0000ffff) + 1);
+		printf("\tNumber of IO Submission Queues Allocated (NSQA): %u\n", (result & 0x0000ffff) + 1);
 		break;
 	case NVME_FEAT_FID_IRQ_COALESCE:
 		printf("\tAggregation Time     (TIME): %u usec\n", ((result & 0x0000ff00) >> 8) * 100);
-		printf("\tAggregation Threshold (THR): %u\n",  (result & 0x000000ff) + 1);
+		printf("\tAggregation Threshold (THR): %u\n", (result & 0x000000ff) + 1);
 		break;
 	case NVME_FEAT_FID_IRQ_CONFIG:
 		printf("\tCoalescing Disable (CD): %s\n", ((result & 0x00010000) >> 16) ? "True" : "False");
-		printf("\tInterrupt Vector   (IV): %u\n",  result & 0x0000ffff);
+		printf("\tInterrupt Vector   (IV): %u\n", result & 0x0000ffff);
 		break;
 	case NVME_FEAT_FID_WRITE_ATOMIC:
 		printf("\tDisable Normal (DN): %s\n", (result & 0x00000001) ? "True" : "False");

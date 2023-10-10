@@ -2244,11 +2244,14 @@ static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
 	struct json_object *lbare;
 	int i;
 	int j;
+	struct json_object *lbara = json_create_array();
+
+	json_object_add_value_array(root, "LBA Ranges", lbara);
 
 	for (i = 0; i <= nr_ranges; i++) {
-		lbare = json_create_array();
-		sprintf(json_str, "LBA range[%d]", i);
-		json_object_add_value_array(root, json_str, lbare);
+		lbare = json_create_object();
+		json_array_add_value_object(lbara, lbare);
+		json_object_add_value_int(lbare, "LBA range", i);
 		sprintf(json_str, "%#x", lbrt->entry[i].type);
 		json_object_add_value_string(lbare, "type", json_str);
 		json_object_add_value_string(lbare, "type description",
@@ -2308,6 +2311,150 @@ static void json_feature_show_fields_temp_thresh(unsigned int result)
 	json_print(root);
 }
 
+static void json_feature_show_fields_err_recovery(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+	char json_str[STR_LEN];
+
+	json_object_add_value_string(root,
+				     "Deallocated or Unwritten Logical Block Error Enable (DULBE)",
+				     (result & 0x10000) >> 16 ? "Enabled" : "Disabled");
+
+	sprintf(json_str, "%u ms", (result & 0xffff) * 100);
+	json_object_add_value_string(root, "Time Limited Error Recovery (TLER)", json_str);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_volatile_wc(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Volatile Write Cache Enable (WCE)",
+				     result & 1 ? "Enabled" : "Disabled");
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_num_queues(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_uint(root, "Number of IO Completion Queues Allocated (NCQA)",
+				   ((result & 0xffff0000) >> 16) + 1);
+
+	json_object_add_value_uint(root, "Number of IO Submission Queues Allocated (NSQA)",
+				   (result & 0xffff) + 1);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_irq_coalesce(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+	char json_str[STR_LEN];
+
+	sprintf(json_str, "%u usec", ((result & 0xff00) >> 8) * 100);
+	json_object_add_value_string(root, "Aggregation Time (TIME)", json_str);
+
+	json_object_add_value_uint(root, "Aggregation Threshold (THR)",  (result & 0xff) + 1);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_irq_config(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Coalescing Disable (CD)",
+				     (result & 0x10000) >> 16 ? "True" : "False");
+
+	json_object_add_value_uint(root, "Interrupt Vector (IV)", result & 0xffff);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_write_atomic(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Disable Normal (DN)", result & 1 ? "True" : "False");
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_async_event(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Discovery Log Page Change Notices",
+				     (result & 0x80000000) >> 31 ? "Send async event" :
+				     "Do not send async event");
+	json_object_add_value_string(root, "Endurance Group Event Aggregate Log Change Notices",
+				     (result & 0x4000) >> 14 ? "Send async event" :
+				     "Do not send async event");
+	json_object_add_value_string(root, "LBA Status Information Notices",
+				     (result & 0x2000) >> 13 ? "Send async event" :
+				     "Do not send async event");
+	json_object_add_value_string(root, "Predictable Latency Event Aggregate Log Change Notices",
+				     (result & 0x1000) >> 12 ? "Send async event" :
+				     "Do not send async event");
+	json_object_add_value_string(root, "Asymmetric Namespace Access Change Notices",
+				     (result & 0x800) >> 11 ? "Send async event" :
+				     "Do not send async event");
+	json_object_add_value_string(root, "Telemetry Log Notices",
+				     (result & 0x400) >> 10 ? "Send async event" :
+				     "Do not send async event");
+	json_object_add_value_string(root, "Firmware Activation Notices",
+				     (result & 0x200) >> 9 ? "Send async event" :
+				     "Do not send async event");
+	json_object_add_value_string(root, "Namespace Attribute Notices",
+				     (result & 0x100) >> 8 ? "Send async event" :
+				     "Do not send async event");
+	json_object_add_value_string(root, "SMART / Health Critical Warnings",
+				     result & 0xff ? "Send async event" :
+				     "Do not send async event");
+
+	json_print(root);
+}
+
+static void json_auto_pst(struct nvme_feat_auto_pst *apst, struct json_object *root)
+{
+	int i;
+	__u64 value;
+	char json_str[STR_LEN];
+	struct json_object *apsta = json_create_array();
+	struct json_object *apste;
+
+	json_object_add_value_array(root, "Auto PST Entries", apsta);
+
+	for (i = 0; i < ARRAY_SIZE(apst->apst_entry); i++) {
+		apste = json_create_object();
+		json_array_add_value_object(apsta, apste);
+		sprintf(json_str, "%2d", i);
+		json_object_add_value_string(apste, "Entry", json_str);
+		value = le64_to_cpu(apst->apst_entry[i]);
+		sprintf(json_str, "%u ms", (__u32)NVME_GET(value, APST_ENTRY_ITPT));
+		json_object_add_value_string(apste, "Idle Time Prior to Transition (ITPT)",
+					     json_str);
+		json_object_add_value_uint(apste, "Idle Transition Power State (ITPS)",
+					   (__u32)NVME_GET(value, APST_ENTRY_ITPS));
+	}
+}
+
+static void json_feature_show_fields_auto_pst(unsigned int result, unsigned char *buf)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Autonomous Power State Transition Enable (APSTE)",
+				     result & 1 ? "Enabled" : "Disabled");
+
+	if (buf)
+		json_auto_pst((struct nvme_feat_auto_pst *)buf, root);
+
+	json_print(root);
+}
+
 static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 				     unsigned char *buf)
 {
@@ -2323,6 +2470,30 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
 		json_feature_show_fields_temp_thresh(result);
+		break;
+	case NVME_FEAT_FID_ERR_RECOVERY:
+		json_feature_show_fields_err_recovery(result);
+		break;
+	case NVME_FEAT_FID_VOLATILE_WC:
+		json_feature_show_fields_volatile_wc(result);
+		break;
+	case NVME_FEAT_FID_NUM_QUEUES:
+		json_feature_show_fields_num_queues(result);
+		break;
+	case NVME_FEAT_FID_IRQ_COALESCE:
+		json_feature_show_fields_irq_coalesce(result);
+		break;
+	case NVME_FEAT_FID_IRQ_CONFIG:
+		json_feature_show_fields_irq_config(result);
+		break;
+	case NVME_FEAT_FID_WRITE_ATOMIC:
+		json_feature_show_fields_write_atomic(result);
+		break;
+	case NVME_FEAT_FID_ASYNC_EVENT:
+		json_feature_show_fields_async_event(result);
+		break;
+	case NVME_FEAT_FID_AUTO_PST:
+		json_feature_show_fields_auto_pst(result, buf);
 		break;
 	default:
 		break;
