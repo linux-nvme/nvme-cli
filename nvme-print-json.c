@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <time.h>
 
 #include "nvme-print.h"
 
@@ -11,6 +12,7 @@
 
 #define ERROR_MSG_LEN 100
 #define STR_LEN 40
+#define BUF_LEN 320
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
@@ -582,11 +584,9 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	__u32 nr_nsids;
 	int i, j;
 
-	json_object_add_value_string(root,
-			"Asymmetric Namespace Access Log for NVMe device",
-			devname);
-	json_object_add_value_uint64(root, "chgcnt",
-			le64_to_cpu(hdr->chgcnt));
+	json_object_add_value_string(root, "Asymmetric Namespace Access Log for NVMe device",
+				     devname);
+	json_object_add_value_uint64(root, "chgcnt", le64_to_cpu(hdr->chgcnt));
 	json_object_add_value_uint(root, "ngrps", le16_to_cpu(hdr->ngrps));
 
 	for (i = 0; i < le16_to_cpu(ana_log->ngrps); i++) {
@@ -596,20 +596,16 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 		nsid_buf_size = nr_nsids * sizeof(__le32);
 
 		offset += sizeof(*ana_desc);
-		json_object_add_value_uint(desc, "grpid",
-				le32_to_cpu(ana_desc->grpid));
-		json_object_add_value_uint(desc, "nnsids",
-				le32_to_cpu(ana_desc->nnsids));
-		json_object_add_value_uint(desc, "chgcnt",
-				le64_to_cpu(ana_desc->chgcnt));
+		json_object_add_value_uint(desc, "grpid", le32_to_cpu(ana_desc->grpid));
+		json_object_add_value_uint(desc, "nnsids", le32_to_cpu(ana_desc->nnsids));
+		json_object_add_value_uint64(desc, "chgcnt", le64_to_cpu(ana_desc->chgcnt));
 		json_object_add_value_string(desc, "state",
-				nvme_ana_state_to_string(ana_desc->state));
+					     nvme_ana_state_to_string(ana_desc->state));
 
 		ns_list = json_create_array();
 		for (j = 0; j < le32_to_cpu(ana_desc->nnsids); j++) {
 			nsid = json_create_object();
-			json_object_add_value_uint(nsid, "nsid",
-					le32_to_cpu(ana_desc->nsids[j]));
+			json_object_add_value_uint(nsid, "nsid", le32_to_cpu(ana_desc->nsids[j]));
 			json_array_add_value_object(ns_list, nsid);
 		}
 		json_object_add_value_array(desc, "NSIDS", ns_list);
@@ -2119,12 +2115,12 @@ static void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	for (i = 0; i <= id_ns->nlbaf; i++) {
 		struct json_object *lbaf = json_create_object();
 
-		json_object_add_value_int(lbaf, "zsze",
-			le64_to_cpu(ns->lbafe[i].zsze));
+		json_object_add_value_uint64(lbaf, "zsze", le64_to_cpu(ns->lbafe[i].zsze));
 		json_object_add_value_int(lbaf, "zdes", ns->lbafe[i].zdes);
 
 		json_array_add_value_object(lbafs, lbaf);
 	}
+
 	json_print(root);
 }
 
@@ -2455,6 +2451,67 @@ static void json_feature_show_fields_auto_pst(unsigned int result, unsigned char
 	json_print(root);
 }
 
+static void json_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb, struct json_object *root)
+{
+	char json_str[STR_LEN];
+
+	json_object_add_value_uint(root, "Host Memory Descriptor List Entry Count (HMDLEC)",
+				   le32_to_cpu(hmb->hmdlec));
+
+	sprintf(json_str, "0x%x", le32_to_cpu(hmb->hmdlau));
+	json_object_add_value_string(root, "Host Memory Descriptor List Address (HMDLAU)", json_str);
+
+	sprintf(json_str, "0x%x", le32_to_cpu(hmb->hmdlal));
+	json_object_add_value_string(root, "Host Memory Descriptor List Address (HMDLAL)", json_str);
+
+	json_object_add_value_uint(root, "Host Memory Buffer Size (HSIZE)",
+				   le32_to_cpu(hmb->hsize));
+}
+
+static void json_feature_show_fields_host_mem_buf(unsigned int result, unsigned char *buf)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Enable Host Memory (EHM)",
+				     result & 1 ? "Enabled" : "Disabled");
+
+	if (buf)
+		json_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf, root);
+
+	json_print(root);
+}
+
+static void json_timestamp(struct nvme_timestamp *ts)
+{
+	struct json_object *root = json_create_object();
+	char buffer[BUF_LEN];
+	time_t timestamp = int48_to_long(ts->timestamp) / 1000;
+	struct tm *tm = localtime(&timestamp);
+
+	json_object_add_value_uint64(root, "timestamp", int48_to_long(ts->timestamp));
+
+	if(!strftime(buffer, sizeof(buffer), "%c %Z", tm))
+		sprintf(buffer, "%s", "-");
+
+	json_object_add_value_string(root, "timestamp string", buffer);
+
+	json_object_add_value_string(root, "timestamp origin", ts->attr & 2 ?
+	    "The Timestamp field was initialized with a Timestamp value using a Set Features command." :
+	    "The Timestamp field was initialized to 0h by a Controller Level Reset.");
+
+	json_object_add_value_string(root, "synch", ts->attr & 1 ?
+	    "The controller may have stopped counting during vendor specific intervals after the Timestamp value was initialized." :
+	    "The controller counted time in milliseconds continuously since the Timestamp value was initialized.");
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_timestamp(unsigned char *buf)
+{
+	if (buf)
+		json_timestamp((struct nvme_timestamp *)buf);
+}
+
 static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 				     unsigned char *buf)
 {
@@ -2494,6 +2551,12 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_AUTO_PST:
 		json_feature_show_fields_auto_pst(result, buf);
+		break;
+	case NVME_FEAT_FID_HOST_MEM_BUF:
+		json_feature_show_fields_host_mem_buf(result, buf);
+		break;
+	case NVME_FEAT_FID_TIMESTAMP:
+		json_feature_show_fields_timestamp(buf);
 		break;
 	default:
 		break;
