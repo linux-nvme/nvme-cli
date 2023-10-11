@@ -7306,11 +7306,16 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	else
 		buffer_size = cfg.data_size;
 
-	/* Get the required block count. Note this is a zeroes based value. */
-	nblocks = ((buffer_size + (logical_block_size - 1)) / logical_block_size) - 1;
+	if (argconfig_parse_seen(opts, "block-count")) {
+		/* Use the value provided */
+		nblocks = cfg.block_count;
+	} else {
+		/* Get the required block count. Note this is a zeroes based value. */
+		nblocks = ((buffer_size + (logical_block_size - 1)) / logical_block_size) - 1;
 
-	/* Update the data size based on the required block count */
-	buffer_size = (nblocks + 1) * logical_block_size;
+		/* Update the data size based on the required block count */
+		buffer_size = (nblocks + 1) * logical_block_size;
+	}
 
 	buffer = nvme_alloc_huge(buffer_size, &huge);
 	if (!buffer) {
