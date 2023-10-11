@@ -80,6 +80,9 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERS
 		ENTRY("vs-device-waf",
 			"WDC Calculate Device Write Amplication Factor",
 			wdc_vs_device_waf)
+		ENTRY("set-latency-monitor-feature",
+			"WDC set Latency Monitor feature",
+			wdc_set_latency_monitor_feature)
 	)
 );
 
