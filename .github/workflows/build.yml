@@ -89,3 +89,13 @@ jobs:
       - name: build
         run: |
           scripts/build.sh -m muon
+  build-make-static:
+    name: make static
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/igaw/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: |
+          make static
