@@ -51,7 +51,7 @@ jobs:
   upload_pypi:
     needs: [build_sdist]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'linux-nvme/libnvme'
     steps:
       - name: Check if it is a release tag
         id: check-tag

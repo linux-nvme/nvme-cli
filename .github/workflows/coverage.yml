@@ -7,6 +7,7 @@ on:
 
 jobs:
   code-coverage:
+    if: github.repository == 'linux-nvme/libnvme'
     name: code coverage
     runs-on: ubuntu-latest
     container:
