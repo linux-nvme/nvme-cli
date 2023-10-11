@@ -34,7 +34,7 @@ jobs:
     name: deploy AppImage
     runs-on: ubuntu-latest
     needs: build-appimage
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && github.repository == 'linux-nvme/nvme-cli' }}
     steps:
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
