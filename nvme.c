@@ -7297,8 +7297,15 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	ms = ns->lbaf[lba_index].ms;
-	if (ns->flbas & NVME_NS_FLBAS_META_EXT)
-		logical_block_size += ms;
+	if (ns->flbas & NVME_NS_FLBAS_META_EXT) {
+		/*
+		 * No meta data is transfered for PRACT=1 and MD=8:
+		 *   5.2.2.1 Protection Information and Write Commands
+		 *   5.2.2.2 Protection Informatio and Read Commands
+		 */
+		if (!(cfg.prinfo == 0x1 && ms == 8))
+			logical_block_size += ms;
+	}
 
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
 	if (cfg.data_size < buffer_size)
