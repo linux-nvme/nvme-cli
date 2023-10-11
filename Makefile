@@ -59,6 +59,7 @@ debug:
 static:
 	meson ${BUILD-DIR} --buildtype=release \
 		--default-library=static -Dc_link_args="-static" \
-		--wrap-mode=forcefallback \
+		-Dlibhugetlbfs=disabled --wrap-mode=forcefallback \
 		-Dlibnvme:tests=false -Dlibnvme:keyutils=disabled
 	ninja -C ${BUILD-DIR}
+	@echo "Static binary dose not support libhugetlbfs"

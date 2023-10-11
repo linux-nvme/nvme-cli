@@ -70,3 +70,10 @@ option(
   type : 'string',
   description : 'override the git version string'
 )
+
+option(
+  'libhugetlbfs',
+  type: 'feature',
+  value: 'auto',
+  description : 'Use libhugetlbfs if library is exist when this option is not disabled'
+)
