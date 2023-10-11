@@ -851,6 +851,10 @@ static int __get_telemetry_log_host(struct nvme_dev *dev,
 	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
 	int err;
 
+	log = nvme_alloc(sizeof(*log));
+	if (!log)
+		return -errno;
+
 	err = nvme_cli_get_log_telemetry_host(dev, 0,
 					      NVME_LOG_TELEM_BLOCK_SIZE,
 					      log);
