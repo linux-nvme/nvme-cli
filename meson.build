@@ -69,7 +69,7 @@ endif
 conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c available?')
 
 # Check for libhugetlbfs availability (optional)
-if cc.has_header('hugetlbfs.h')
+if not get_option('libhugetlbfs').disabled() and cc.has_header('hugetlbfs.h')
   libhugetlbfs_dep = cc.find_library('hugetlbfs',
                                      required : false)
 else
