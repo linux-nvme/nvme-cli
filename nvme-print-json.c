@@ -13,6 +13,8 @@
 #define ERROR_MSG_LEN 100
 #define STR_LEN 40
 #define BUF_LEN 320
+#define VAL_LEN 4096
+#define BYTE_TO_BIT(byte) ((byte) * 8)
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
@@ -2543,6 +2545,287 @@ static void json_feature_show_fields_timestamp(unsigned char *buf)
 		json_timestamp((struct nvme_timestamp *)buf);
 }
 
+static void json_feature_show_fields_kato(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_uint(root, "Keep Alive Timeout (KATO) in milliseconds", result);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_hctm(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+	char json_str[STR_LEN];
+
+	sprintf(json_str, "%u K", result >> 16);
+	json_object_add_value_string(root, "Thermal Management Temperature 1 (TMT1)", json_str);
+
+	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result >> 16));
+	json_object_add_value_string(root, "TMT1 celsius", json_str);
+
+	sprintf(json_str, "%u K", result & 0xffff);
+	json_object_add_value_string(root, "Thermal Management Temperature 2", json_str);
+
+	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result & 0xffff));
+	json_object_add_value_string(root, "TMT2 celsius", json_str);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_nopsc(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root,
+				     "Non-Operational Power State Permissive Mode Enable (NOPPME)",
+				     result & 1 ? "True" : "False");
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_rrl(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_uint(root, "Read Recovery Level (RRL)", result & 0xf);
+
+	json_print(root);
+}
+
+static void json_plm_config(struct nvme_plm_config *plmcfg, struct json_object *root)
+{
+	char json_str[STR_LEN];
+
+	sprintf(json_str, "%04x", le16_to_cpu(plmcfg->ee));
+	json_object_add_value_string(root, "Enable Event", json_str);
+
+	json_object_add_value_uint64(root, "DTWIN Reads Threshold", le64_to_cpu(plmcfg->dtwinrt));
+	json_object_add_value_uint64(root, "DTWIN Writes Threshold", le64_to_cpu(plmcfg->dtwinwt));
+	json_object_add_value_uint64(root, "DTWIN Time Threshold", le64_to_cpu(plmcfg->dtwintt));
+}
+
+static void json_feature_show_fields_plm_config(unsigned int result, unsigned char *buf)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Predictable Latency Window Enabled",
+				     result & 1 ? "True" : "False");
+
+	if (buf)
+		json_plm_config((struct nvme_plm_config *)buf, root);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_plm_window(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Window Select", nvme_plm_window_to_string(result));
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_lba_sts_interval(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_uint(root, "LBA Status Information Poll Interval (LSIPI)",
+				   result >> 16);
+	json_object_add_value_uint(root, "LBA Status Information Report Interval (LSIRI)",
+				   result & 0xffff);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_host_behavior(unsigned char *buf)
+{
+	struct json_object *root = json_create_object();
+
+	if (buf)
+		json_object_add_value_string(root, "Host Behavior Support",
+					     buf[0] & 0x1 ? "True" : "False");
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_sanitize(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_uint(root, "No-Deallocate Response Mode (NODRM)", result & 1);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_endurance_evt_cfg(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_uint(root, "Endurance Group Identifier (ENDGID)", result & 0xffff);
+	json_object_add_value_uint(root, "Endurance Group Critical Warnings", result >> 16 & 0xff);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_iocs_profile(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "I/O Command Set Profile",
+				     result & 0x1 ? "True" : "False");
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_spinup_control(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Spinup control feature Enabled",
+				     result & 1 ? "True" : "False");
+
+	json_print(root);
+}
+
+static void json_host_metadata(enum nvme_features_id fid, struct nvme_host_metadata *data)
+{
+	struct json_object *root = json_create_object();
+	struct nvme_metadata_element_desc *desc = &data->descs[0];
+	int i;
+	char val[VAL_LEN];
+	__u16 len;
+	char json_str[STR_LEN];
+	struct json_object *desca = json_create_array();
+	struct json_object *desce;
+
+	json_object_add_value_int(root, "Num Metadata Element Descriptors", data->ndesc);
+
+	json_object_add_value_array(root, "Metadata Element Descriptors", desca);
+
+	for (i = 0; i < data->ndesc; i++) {
+		desce = json_create_object();
+		json_array_add_value_object(desca, desce);
+
+		json_object_add_value_int(desce, "Element", i);
+
+		sprintf(json_str, "0x%02x", desc->type);
+		json_object_add_value_string(desce, "Type", json_str);
+
+		json_object_add_value_string(desce, "Type definition",
+					    nvme_host_metadata_type_to_string(fid, desc->type));
+
+		json_object_add_value_int(desce, "Revision", desc->rev);
+
+		len = le16_to_cpu(desc->len);
+		json_object_add_value_int(desce, "Length", len);
+
+		strncpy(val, (char *)desc->val, min(sizeof(val) - 1, len));
+		json_object_add_value_string(desce, "Value", val);
+
+		desc = (struct nvme_metadata_element_desc *)&desc->val[desc->len];
+	}
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_ns_metadata(enum nvme_features_id fid, unsigned char *buf)
+{
+	if (buf)
+		json_host_metadata(fid, (struct nvme_host_metadata *)buf);
+}
+
+static void json_feature_show_fields_sw_progress(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_uint(root, "Pre-boot Software Load Count (PBSLC)", result & 0xff);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_host_id(unsigned char *buf)
+{
+	struct json_object *root = json_create_object();
+	uint64_t ull = 0;
+	int i;
+
+	if (buf) {
+		for (i = sizeof(ull) / sizeof(*buf); i; i--) {
+			ull |=  buf[i - 1];
+			if (i - 1)
+				ull <<= BYTE_TO_BIT(sizeof(buf[i]));
+		}
+		json_object_add_value_uint64(root, "Host Identifier (HOSTID)", ull);
+	}
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_resv_mask(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Mask Reservation Preempted Notification (RESPRE)",
+				     (result & 8) >> 3 ? "True" : "False");
+	json_object_add_value_string(root, "Mask Reservation Released Notification (RESREL)",
+				     (result & 4) >> 2 ? "True" : "False");
+	json_object_add_value_string(root, "Mask Registration Preempted Notification (REGPRE)",
+				     (result & 2) >> 1 ? "True" : "False");
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_resv_persist(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Persist Through Power Loss (PTPL)",
+				     result & 1 ? "True" : "False");
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_write_protect(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Namespace Write Protect",
+				     nvme_ns_wp_cfg_to_string(result));
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_fdp(unsigned int result)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_string(root, "Flexible Direct Placement Enable (FDPE)",
+				     result & 1 ? "Yes" : "No");
+	json_object_add_value_uint(root, "Flexible Direct Placement Configuration Index",
+				   result >> 8 & 0xf);
+
+	json_print(root);
+}
+
+static void json_feature_show_fields_fdp_events(unsigned int result, unsigned char *buf)
+{
+	struct json_object *root = json_create_object();
+	unsigned int i;
+	struct nvme_fdp_supported_event_desc *d;
+	char json_str[STR_LEN];
+
+	for (i = 0; i < result; i++) {
+		d = &((struct nvme_fdp_supported_event_desc *)buf)[i];
+		sprintf(json_str, "%sEnabled", d->evta & 0x1 ? "" : "Not ");
+		json_object_add_value_string(root, nvme_fdp_event_to_string(d->evt), json_str);
+	}
+
+	json_print(root);
+}
+
 static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 				     unsigned char *buf)
 {
@@ -2588,6 +2871,70 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_TIMESTAMP:
 		json_feature_show_fields_timestamp(buf);
+		break;
+	case NVME_FEAT_FID_KATO:
+		json_feature_show_fields_kato(result);
+		break;
+	case NVME_FEAT_FID_HCTM:
+		json_feature_show_fields_hctm(result);
+		break;
+	case NVME_FEAT_FID_NOPSC:
+		json_feature_show_fields_nopsc(result);
+		break;
+	case NVME_FEAT_FID_RRL:
+		json_feature_show_fields_rrl(result);
+		break;
+	case NVME_FEAT_FID_PLM_CONFIG:
+		json_feature_show_fields_plm_config(result, buf);
+		break;
+	case NVME_FEAT_FID_PLM_WINDOW:
+		json_feature_show_fields_plm_window(result);
+		break;
+	case NVME_FEAT_FID_LBA_STS_INTERVAL:
+		json_feature_show_fields_lba_sts_interval(result);
+		break;
+	case NVME_FEAT_FID_HOST_BEHAVIOR:
+		json_feature_show_fields_host_behavior(buf);
+		break;
+	case NVME_FEAT_FID_SANITIZE:
+		json_feature_show_fields_sanitize(result);
+		break;
+	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:
+		json_feature_show_fields_endurance_evt_cfg(result);
+		break;
+	case NVME_FEAT_FID_IOCS_PROFILE:
+		json_feature_show_fields_iocs_profile(result);
+		break;
+	case NVME_FEAT_FID_SPINUP_CONTROL:
+		json_feature_show_fields_spinup_control(result);
+		break;
+	case NVME_FEAT_FID_ENH_CTRL_METADATA:
+		fallthrough;
+	case NVME_FEAT_FID_CTRL_METADATA:
+		fallthrough;
+	case NVME_FEAT_FID_NS_METADATA:
+		json_feature_show_fields_ns_metadata(fid, buf);
+		break;
+	case NVME_FEAT_FID_SW_PROGRESS:
+		json_feature_show_fields_sw_progress(result);
+		break;
+	case NVME_FEAT_FID_HOST_ID:
+		json_feature_show_fields_host_id(buf);
+		break;
+	case NVME_FEAT_FID_RESV_MASK:
+		json_feature_show_fields_resv_mask(result);
+		break;
+	case NVME_FEAT_FID_RESV_PERSIST:
+		json_feature_show_fields_resv_persist(result);
+		break;
+	case NVME_FEAT_FID_WRITE_PROTECT:
+		json_feature_show_fields_write_protect(result);
+		break;
+	case NVME_FEAT_FID_FDP:
+		json_feature_show_fields_fdp(result);
+		break;
+	case NVME_FEAT_FID_FDP_EVENTS:
+		json_feature_show_fields_fdp_events(result, buf);
 		break;
 	default:
 		break;
