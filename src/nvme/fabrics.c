@@ -1073,7 +1073,7 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 		size = sizeof(struct nvmf_discovery_log);
 
 		free(log);
-		log = calloc(1, size);
+		log = __nvme_alloc(size);
 		if (!log) {
 			nvme_msg(r, LOG_ERR,
 				 "could not allocate memory for discovery log header\n");
@@ -1105,7 +1105,7 @@ static struct nvmf_discovery_log *nvme_discovery_log(nvme_ctrl_t c,
 			sizeof(struct nvmf_disc_log_entry) * numrec;
 
 		free(log);
-		log = calloc(1, size);
+		log = __nvme_alloc(size);
 		if (!log) {
 			nvme_msg(r, LOG_ERR,
 				 "could not alloc memory for discovery log page\n");
@@ -1709,26 +1709,35 @@ static const char *dctype_str[] = {
  */
 static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 {
-	struct nvme_id_ctrl id = { 0 };
+	struct nvme_id_ctrl *id;
 	int ret;
 
-	ret = nvme_ctrl_identify(c, &id);
-	if (ret)
+	id = __nvme_alloc(sizeof(*id));
+	if (!id) {
+		errno = ENOMEM;
+		return -1;
+	}
+
+	ret = nvme_ctrl_identify(c, id);
+	if (ret) {
+		free(id);
 		return ret;
+	}
 
 	if (!c->cntrltype) {
-		if (id.cntrltype > NVME_CTRL_CNTRLTYPE_ADMIN || !cntrltype_str[id.cntrltype])
+		if (id->cntrltype > NVME_CTRL_CNTRLTYPE_ADMIN || !cntrltype_str[id->cntrltype])
 			c->cntrltype = strdup("reserved");
 		else
-			c->cntrltype = strdup(cntrltype_str[id.cntrltype]);
+			c->cntrltype = strdup(cntrltype_str[id->cntrltype]);
 	}
 
-	if (!c->dctype)	{
-		if (id.dctype > NVME_CTRL_DCTYPE_CDC || !dctype_str[id.dctype])
+	if (!c->dctype) {
+		if (id->dctype > NVME_CTRL_DCTYPE_CDC || !dctype_str[id->dctype])
 			c->dctype = strdup("reserved");
 		else
-			c->dctype = strdup(dctype_str[id.dctype]);
+			c->dctype = strdup(dctype_str[id->dctype]);
 	}
+	free(id);
 	return 0;
 }
 
