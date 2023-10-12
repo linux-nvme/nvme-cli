@@ -124,28 +124,37 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 
 int nvme_get_telemetry_max(int fd, enum nvme_telemetry_da *da, size_t *data_tx)
 {
-	struct nvme_id_ctrl id_ctrl;
-	int err = nvme_identify_ctrl(fd, &id_ctrl);
+	struct nvme_id_ctrl *id_ctrl;
+	int err;
 
-	if (err)
+	id_ctrl = __nvme_alloc(sizeof(*id_ctrl));
+	if (!id_ctrl) {
+		errno = ENOMEM;
+		return -1;
+	}
+	err = nvme_identify_ctrl(fd, id_ctrl);
+	if (err) {
+		free(id_ctrl);
 		return err;
+	}
 
 	if (data_tx) {
-		*data_tx = id_ctrl.mdts;
-		if (id_ctrl.mdts) {
+		*data_tx = id_ctrl->mdts;
+		if (id_ctrl->mdts) {
 			/* assuming CAP.MPSMIN is zero minimum Memory Page Size is at least
 			 * 4096 bytes
 			 */
-			*data_tx = (1 << id_ctrl.mdts) * 4096;
+			*data_tx = (1 << id_ctrl->mdts) * 4096;
 		}
 	}
 	if (da) {
-		if (id_ctrl.lpa & 0x8)
+		if (id_ctrl->lpa & 0x8)
 			*da = NVME_TELEMETRY_DA_3;
-		if (id_ctrl.lpa & 0x40)
+		if (id_ctrl->lpa & 0x40)
 			*da = NVME_TELEMETRY_DA_4;
 
 	}
+	free(id_ctrl);
 	return err;
 }
 
@@ -376,32 +385,48 @@ int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
 
 int nvme_get_ana_log_len(int fd, size_t *analen)
 {
-	struct nvme_id_ctrl ctrl;
+	struct nvme_id_ctrl *ctrl;
 	int ret;
 
-	ret = nvme_identify_ctrl(fd, &ctrl);
-	if (ret)
+	ctrl = __nvme_alloc(sizeof(*ctrl));
+	if (!ctrl) {
+		errno = ENOMEM;
+		return -1;
+	}
+	ret = nvme_identify_ctrl(fd, ctrl);
+	if (ret) {
+		free(ctrl);
 		return ret;
+	}
 
 	*analen = sizeof(struct nvme_ana_log) +
-		le32_to_cpu(ctrl.nanagrpid) * sizeof(struct nvme_ana_group_desc) +
-		le32_to_cpu(ctrl.mnan) * sizeof(__le32);
+		le32_to_cpu(ctrl->nanagrpid) * sizeof(struct nvme_ana_group_desc) +
+		le32_to_cpu(ctrl->mnan) * sizeof(__le32);
+	free(ctrl);
 	return 0;
 }
 
 int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize)
 {
-	struct nvme_id_ns ns;
+	struct nvme_id_ns *ns;
 	__u8 flbas;
 	int ret;
 
-	ret = nvme_identify_ns(fd, nsid, &ns);
-	if (ret)
+	ns = __nvme_alloc(sizeof(*ns));
+	if (!ns) {
+		errno = ENOMEM;
+		return -1;
+	}
+	ret = nvme_identify_ns(fd, nsid, ns);
+	if (ret) {
+		free(ns);
 		return ret;
+	}
 
-	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &flbas);
-	*blksize = 1 << ns.lbaf[flbas].ds;
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
+	*blksize = 1 << ns->lbaf[flbas].ds;
 
+	free(ns);
 	return 0;
 }
 
