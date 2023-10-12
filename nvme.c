@@ -4570,11 +4570,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 
 	if (!err) {
 		if (!cfg.raw_binary || !buf) {
-			printf("get-feature:%#0*x (%s), %s value:%#0*x\n",
-			       cfg.feature_id ? 4 : 2, cfg.feature_id,
-			       nvme_feature_to_string(cfg.feature_id),
-			       nvme_select_to_string(cfg.sel), result ? 10 : 8,
-			       result);
+			nvme_feature_show(cfg.feature_id, cfg.sel, result);
 			if (cfg.sel == 3)
 				nvme_show_select_result(result);
 			else if (cfg.human_readable)

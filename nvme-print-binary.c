@@ -355,6 +355,7 @@ static struct print_ops binary_print_ops = {
 	.zns_id_ctrl			= binary_zns_id_ctrl,
 	.zns_id_ns			= binary_zns_id_ns,
 	.zns_report_zones		= binary_zns_report_zones,
+	.show_feature			= NULL,
 	.show_feature_fields		= NULL,
 	.id_ctrl_rpmbs			= NULL,
 	.lba_range			= NULL,

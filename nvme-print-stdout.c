@@ -4355,6 +4355,12 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 	}
 }
 
+static void stdout_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
+{
+	printf("get-feature:%#0*x (%s), %s value:%#0*x\n", fid ? 4 : 2, fid,
+	       nvme_feature_to_string(fid), nvme_select_to_string(sel), result ? 10 : 8, result);
+}
+
 static void stdout_feature_show_fields(enum nvme_features_id fid,
 				       unsigned int result,
 				       unsigned char *buf)
@@ -5128,6 +5134,7 @@ static struct print_ops stdout_print_ops = {
 	.zns_id_ctrl			= stdout_zns_id_ctrl,
 	.zns_id_ns			= stdout_zns_id_ns,
 	.zns_report_zones		= stdout_zns_report_zones,
+	.show_feature			= stdout_feature_show,
 	.show_feature_fields		= stdout_feature_show_fields,
 	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs,
 	.lba_range			= stdout_lba_range,

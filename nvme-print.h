@@ -77,6 +77,7 @@ struct print_ops {
 	void (*zns_id_ctrl)(struct nvme_zns_id_ctrl *ctrl);
 	void (*zns_id_ns)(struct nvme_zns_id_ns *ns, struct nvme_id_ns *id_ns);
 	void (*zns_report_zones)(void *report, __u32 descs, __u8 ext_size, __u32 report_size, struct json_object *zone_list);
+	void (*show_feature)(enum nvme_features_id id, int sel, unsigned int result);
 	void (*show_feature_fields)(enum nvme_features_id id, unsigned int result, unsigned char *buf);
 	void (*id_ctrl_rpmbs)(__le32 ctrl_rpmbs);
 	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
@@ -208,6 +209,7 @@ void nvme_show_topology(nvme_root_t t,
 			enum nvme_cli_topo_ranking ranking,
 			enum nvme_print_flags flags);
 
+void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result);
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 	void *buf, __u32 len, enum nvme_print_flags flags);
