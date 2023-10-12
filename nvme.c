@@ -7301,7 +7301,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	ms = ns->lbaf[lba_index].ms;
-	if (ns->flbas & NVME_NS_FLBAS_META_EXT) {
+	if (NVME_FLBAS_META_EXT(ns->flbas)) {
 		/*
 		 * No meta data is transfered for PRACT=1 and MD=8:
 		 *   5.2.2.1 Protection Information and Write Commands
