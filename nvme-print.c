@@ -970,6 +970,11 @@ const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid,
        }
 }
 
+void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
+{
+	nvme_print(show_feature, 0, fid, sel, result);
+}
+
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf)
 {
 	nvme_print(show_feature_fields, 0, fid, result, buf);

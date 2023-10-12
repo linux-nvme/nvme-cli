@@ -2826,6 +2826,23 @@ static void json_feature_show_fields_fdp_events(unsigned int result, unsigned ch
 	json_print(root);
 }
 
+static void json_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
+{
+	struct json_object *root = json_create_object();
+	char json_str[STR_LEN];
+
+	sprintf(json_str, "%#0*x", fid ? 4 : 2, fid);
+	json_object_add_value_string(root, "feature", json_str);
+
+	json_object_add_value_string(root, "name", nvme_feature_to_string(fid));
+
+	sprintf(json_str, "%#0*x", result ? 10 : 8, result);
+	json_object_add_value_string(root, nvme_select_to_string(sel), json_str);
+
+	json_print(root);
+}
+
+
 static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 				     unsigned char *buf)
 {
@@ -3803,6 +3820,7 @@ static struct print_ops json_print_ops = {
 	.zns_id_ctrl			= json_nvme_zns_id_ctrl,
 	.zns_id_ns			= json_nvme_zns_id_ns,
 	.zns_report_zones		= json_nvme_zns_report_zones,
+	.show_feature			= json_feature_show,
 	.show_feature_fields		= json_feature_show_fields,
 	.id_ctrl_rpmbs			= NULL,
 	.lba_range			= NULL,
