@@ -4586,7 +4586,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 		    !nvme_status_equals(status,  type, NVME_SC_INVALID_NS))
 			nvme_show_status(err);
 	} else {
-		fprintf(stderr, "get-feature: %s\n", nvme_strerror(errno));
+		nvme_show_error("get-feature: %s", nvme_strerror(errno));
 	}
 }
 
@@ -4649,9 +4649,8 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 			continue;
 		if (!nvme_status_equals(status, type, NVME_SC_INVALID_NS))
 			break;
-		fprintf(stderr, "get-feature:%#0*x (%s): ",
-			cfg.feature_id ? 4 : 2, cfg.feature_id,
-			nvme_feature_to_string(cfg.feature_id));
+		nvme_show_error("get-feature:%#0*x (%s): ", cfg.feature_id ? 4 : 2, cfg.feature_id,
+				nvme_feature_to_string(cfg.feature_id));
 		nvme_show_status(err);
 	}
 
