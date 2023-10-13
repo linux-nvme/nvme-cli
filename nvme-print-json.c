@@ -3345,6 +3345,16 @@ static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 	json_print(root);
 }
 
+static void json_lba_status_info(__u32 result)
+{
+	struct json_object *root = json_create_object();
+
+	root_add_uint("LBA Status Information Poll Interval (LSIPI)", (result >> 16) & 0xffff);
+	root_add_uint("LBA Status Information Report Interval (LSIRI)", result & 0xffff);
+
+	json_print(root);
+}
+
 void json_d(unsigned char *buf, int len, int width, int group)
 {
 	struct json_object *root = json_create_object();
@@ -4222,7 +4232,7 @@ static struct print_ops json_print_ops = {
 	.show_feature_fields		= json_feature_show_fields,
 	.id_ctrl_rpmbs			= json_id_ctrl_rpmbs,
 	.lba_range			= json_lba_range,
-	.lba_status_info		= NULL,
+	.lba_status_info		= json_lba_status_info,
 	.d				= json_d,
 
 	/* libnvme tree print functions */
