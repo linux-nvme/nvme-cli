@@ -27,7 +27,7 @@
 #define root_add_int(k, v) obj_add_int(root, k, v)
 #define root_add_int_secs(k, v) obj_add_int_secs(root, k, v)
 #define root_add_prix64(k, v) obj_add_prix64(root, k, v)
-#define root_add_result(v) obj_add_result(root, v)
+#define root_add_result(v, ...) obj_add_result(root, v, ##__VA_ARGS__)
 #define root_add_str(k, v) json_object_add_value_string(root, k, v)
 #define root_add_uint(k, v) json_object_add_value_uint(root, k, v)
 #define root_add_uint64(k, v) json_object_add_value_uint64(root, k, v)
@@ -98,9 +98,21 @@ static void obj_add_int_secs(struct json_object *o, const char *k, int v)
 	obj_add_str(o, k, str);
 }
 
-static void obj_add_result(struct json_object *o, const char *v)
+static void obj_add_result(struct json_object *o, const char *v, ...)
 {
-	obj_add_str(o, result_str, v);
+	va_list ap;
+	va_start(ap, v);
+	char *value;
+
+	if (vasprintf(&value, v, ap) < 0)
+		value = NULL;
+
+	if (value)
+		obj_add_str(o, result_str, value);
+	else
+		json_object_add_value_string(o, result_str, "Could not allocate string");
+
+	free(value);
 }
 
 static void json_print(struct json_object *root)
@@ -1645,8 +1657,8 @@ static void json_lba_status_log(void *lba_status, __u32 size,
 				json_array_add_value_object(desc_list, desc);
 			}
 		} else {
-			printf("Number of LBA Range Descriptors (NLRD) set to %#x for " \
-				"NS element %d", num_lba_desc, ele);
+			root_add_result("Number of LBA Range Descriptors (NLRD) set to %#x for NS element %d",
+					num_lba_desc, ele);
 		}
 
 		json_object_add_value_array(element, "descs", desc_list);
@@ -4153,9 +4165,9 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 	else
 		json_object_add_value_string(root, key, "Could not allocate string");
 
-	json_output_object(root);
-
 	free(value);
+
+	json_output_object(root);
 }
 
 static void json_output_perror(const char *msg)
