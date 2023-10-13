@@ -1047,9 +1047,7 @@ static void json_effects_log_list(struct list_head *list)
 		json_array_add_value_object(json_list, json_page);
 	}
 
-	json_print_object(json_list, NULL);
-	printf("\n");
-	json_free_object(json_list);
+	json_print(json_list);
 }
 
 static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
