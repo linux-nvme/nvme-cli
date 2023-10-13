@@ -100,6 +100,27 @@ struct print_ops {
 	enum nvme_print_flags flags;
 };
 
+struct nvme_bar_cap {
+	__u16	mqes;
+	__u8	cqr:1;
+	__u8	ams:2;
+	__u8	rsvd19:5;
+	__u8	to;
+	__u16	dstrd:4;
+	__u16	nssrs:1;
+	__u16	css:8;
+	__u16	bps:1;
+	__u8	cps:2;
+	__u8	mpsmin:4;
+	__u8	mpsmax:4;
+	__u8	pmrs:1;
+	__u8	cmbs:1;
+	__u8	nsss:1;
+	__u8	crwms:1;
+	__u8	crims:1;
+	__u8	rsvd61:3;
+};
+
 #ifdef CONFIG_JSONC
 
 struct print_ops *nvme_get_json_print_ops(enum nvme_print_flags flags);

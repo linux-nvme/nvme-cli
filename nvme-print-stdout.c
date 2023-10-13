@@ -26,27 +26,6 @@ static const char dash[100] = {[0 ... 99] = '-'};
 
 static struct print_ops stdout_print_ops;
 
-struct nvme_bar_cap {
-	__u16	mqes;
-	__u8	cqr:1;
-	__u8	ams:2;
-	__u8	rsvd19:5;
-	__u8	to;
-	__u16	dstrd:4;
-	__u16	nssrs:1;
-	__u16	css:8;
-	__u16	bps:1;
-	__u8	cps:2;
-	__u8	mpsmin:4;
-	__u8	mpsmax:4;
-	__u8	pmrs:1;
-	__u8	cmbs:1;
-	__u8	nsss:1;
-	__u8	crwms:1;
-	__u8	crims:1;
-	__u8	rsvd61:3;
-};
-
 static const char *subsys_key(const struct nvme_subsystem *s)
 {
 	return nvme_subsystem_get_name((nvme_subsystem_t)s);
@@ -1246,10 +1225,8 @@ static void stdout_registers_csts(__u32 csts)
 
 static void stdout_registers_crto(__u32 crto)
 {
-	printf("\tCRIMT                               : %d secs\n",
-		NVME_CRTO_CRIMT(crto)/2 );
-	printf("\tCRWMT                               : %d secs\n",
-		NVME_CRTO_CRWMT(crto)/2 );
+	printf("\tCRIMT                               : %d secs\n", NVME_CRTO_CRIMT(crto) / 2);
+	printf("\tCRWMT                               : %d secs\n", NVME_CRTO_CRWMT(crto) / 2);
 }
 
 static void stdout_registers_aqa(__u32 aqa)
@@ -1612,23 +1589,17 @@ void stdout_ctrl_registers(void *bar, bool fabrics)
 static void stdout_single_property(int offset, uint64_t value64)
 {
 	int human = stdout_print_ops.flags & VERBOSE;
-
-	uint32_t value32;
+	uint32_t value32 = (uint32_t)value64;
 
 	if (!human) {
 		if (nvme_is_64bit_reg(offset))
 			printf("property: 0x%02x (%s), value: %"PRIx64"\n",
-				offset, nvme_register_to_string(offset),
-				value64);
+			       offset, nvme_register_to_string(offset), value64);
 		else
 			printf("property: 0x%02x (%s), value: %x\n", offset,
-				   nvme_register_to_string(offset),
-				   (uint32_t) value64);
-
+			       nvme_register_to_string(offset), value32);
 		return;
 	}
-
-	value32 = (uint32_t) value64;
 
 	switch (offset) {
 	case NVME_REG_CAP:
@@ -1649,8 +1620,7 @@ static void stdout_single_property(int offset, uint64_t value64)
 		break;
 	case NVME_REG_NSSR:
 		printf("nssr : %x\n", value32);
-		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n",
-			value32);
+		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", value32);
 		break;
 	case NVME_REG_CRTO:
 		printf("crto : %x\n", value32);
@@ -1658,7 +1628,7 @@ static void stdout_single_property(int offset, uint64_t value64)
 		break;
 	default:
 		printf("unknown property: 0x%02x (%s), value: %"PRIx64"\n",
-			offset, nvme_register_to_string(offset), value64);
+		       offset, nvme_register_to_string(offset), value64);
 		break;
 	}
 }

@@ -11,13 +11,67 @@
 #include "common.h"
 
 #define ERROR_MSG_LEN 100
-#define STR_LEN 40
+#define STR_LEN 100
 #define BUF_LEN 320
 #define VAL_LEN 4096
 #define BYTE_TO_BIT(byte) ((byte) * 8)
+#define POWER_OF_TWO(exponent) (1 << (exponent))
+#define MS500_TO_SEC(time) ((time) / 2)
+
+#define array_add_obj(o, k) json_array_add_value_object(o, k);
+#define obj_add_str(o, k, v) json_object_add_value_string(o, k, v)
+#define root_add_array(k, v) json_object_add_value_array(root, k, v)
+#define root_add_int_secs(k, v) obj_add_int_secs(root, k, v)
+#define root_add_prix64(k, v) obj_add_prix64(root, k, v)
+#define root_add_str(k, v) json_object_add_value_string(root, k, v)
+#define root_add_uint(k, v) json_object_add_value_uint(root, k, v)
+#define root_add_uint_0x(k, v) obj_add_uint_0x(root, k, v)
+#define root_add_uint_x(k, v) obj_add_uint_x(root, k, v)
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
+
+static const char *supported = "Supported";
+static const char *not_supported = "Not Supported";
+static const char *yes = "Yes";
+static const char *no = "No";
+static const char *enabled = "Enabled";
+static const char *disabled = "Disabled";
+static const char *reserved = "Reserved";
+static const char *true_str = "True";
+static const char *false_str = "False";
+
+static void obj_add_uint_x(struct json_object *o, const char *k, __u32 v)
+{
+	char str[STR_LEN];
+
+	sprintf(str, "%x", v);
+	obj_add_str(o, k, str);
+}
+
+static void obj_add_uint_0x(struct json_object *o, const char *k, __u32 v)
+{
+	char str[STR_LEN];
+
+	sprintf(str, "0x%02x", v);
+	obj_add_str(o, k, str);
+}
+
+static void obj_add_prix64(struct json_object *o, const char *k, uint64_t v)
+{
+	char str[STR_LEN];
+
+	sprintf(str, "%"PRIx64"", v);
+	obj_add_str(o, k, str);
+}
+
+static void obj_add_int_secs(struct json_object *o, const char *k, int v)
+{
+	char str[STR_LEN];
+
+	sprintf(str, "%d secs", v);
+	obj_add_str(o, k, str);
+}
 
 static void json_print(struct json_object *root)
 {
@@ -689,6 +743,255 @@ add:
 	}
 
 	json_object_add_value_array(root, "List of Valid Reports", valid);
+
+	json_print(root);
+}
+
+static void json_registers_cap(struct nvme_bar_cap *cap, struct json_object *root)
+{
+	char json_str[STR_LEN];
+	struct json_object *cssa = json_create_array();
+	struct json_object *csso = json_create_object();
+	struct json_object *amsa = json_create_array();
+	struct json_object *amso = json_create_object();
+
+	sprintf(json_str, "%"PRIx64"", *(uint64_t *)cap);
+	json_object_add_value_string(root, "cap", json_str);
+
+	root_add_str("Controller Ready With Media Support (CRWMS)",
+		     cap->crwms ? supported : not_supported);
+	root_add_str("Controller Ready Independent of Media Support (CRIMS)",
+		     cap->crims ? supported : not_supported);
+	root_add_str("NVM Subsystem Shutdown Supported (NSSS)",
+		     cap->nsss ? supported : not_supported);
+	root_add_str("Controller Memory Buffer Supported (CMBS):",
+		     cap->cmbs ? supported : not_supported);
+	root_add_str("Persistent Memory Region Supported (PMRS)",
+		     cap->pmrs ? supported : not_supported);
+
+	sprintf(json_str, "%u bytes", 1 << (12 + cap->mpsmax));
+	root_add_str("Memory Page Size Maximum (MPSMAX)", json_str);
+
+	sprintf(json_str, "%u bytes", 1 << (12 + cap->mpsmin));
+	root_add_str("Memory Page Size Minimum (MPSMIN)", json_str);
+
+	root_add_str("Controller Power Scope (CPS)", !cap->cps ? "Not Reported" : cap->cps == 1 ?
+		     "Controller scope" : cap->cps == 2 ? "Domain scope" : "NVM subsystem scope");
+	root_add_str("Boot Partition Support (BPS)", cap->bps ? yes : no);
+
+	root_add_array("Command Sets Supported (CSS)", cssa);
+	obj_add_str(csso, "NVM command set is %s", cap->css & 1 ? supported : not_supported);
+	obj_add_str(csso, "One or more I/O Command Sets are %s",
+		    cap->css & 0x40 ? supported : not_supported);
+	obj_add_str(csso, cap->css & 0x80 ? "Only Admin Command Set" : "I/O Command Set",
+		    supported);
+	array_add_obj(cssa, csso);
+
+	root_add_str("NVM Subsystem Reset Supported (NSSRS): %s", cap->nssrs ? yes : no);
+
+	sprintf(json_str, "%u bytes", 1 << (2 + cap->dstrd));
+	root_add_str("Doorbell Stride (DSTRD)", json_str);
+
+	root_add_uint("Timeout (TO): %u ms", cap->to * 500);
+
+	root_add_array("Arbitration Mechanism Supported (AMS)", amsa);
+	obj_add_str(amso, "Weighted Round Robin with Urgent Priority Class",
+		    cap->ams & 2 ? supported : not_supported);
+	array_add_obj(amsa, amso);
+
+	root_add_str("Contiguous Queues Required (CQR)", cap->cqr ? yes : no);
+	root_add_uint("Maximum Queue Entries Supported (MQES)", cap->mqes + 1);
+}
+
+static void json_registers_version(__u32 vs, struct json_object *root)
+{
+	char json_str[STR_LEN];
+
+	sprintf(json_str, "%x", vs);
+	root_add_str("version", json_str);
+
+	sprintf(json_str, "%d.%d", (vs & 0xffff0000) >> 16, (vs & 0x0000ff00) >> 8);
+	root_add_str("NVMe specification", json_str);
+}
+
+static void json_registers_cc_ams (__u8 ams, struct json_object *root)
+{
+	char json_str[STR_LEN];
+
+	switch (ams) {
+	case 0:
+		sprintf(json_str, "Round Robin");
+		break;
+	case 1:
+		sprintf(json_str, "Weighted Round Robin with Urgent Priority Class");
+		break;
+	case 7:
+		sprintf(json_str, "Vendor Specific");
+		break;
+	default:
+		sprintf(json_str, "Reserved");
+		break;
+	}
+
+	root_add_str("Arbitration Mechanism Selected (AMS)", json_str);
+}
+
+static void json_registers_cc_shn (__u8 shn, struct json_object *root)
+{
+	char json_str[STR_LEN];
+
+	switch (shn) {
+	case 0:
+		sprintf(json_str, "No notification; no effect");
+		break;
+	case 1:
+		sprintf(json_str, "Normal shutdown notification");
+		break;
+	case 2:
+		sprintf(json_str, "Abrupt shutdown notification");
+		break;
+	default:
+		sprintf(json_str, "Reserved");
+		break;
+	}
+
+	root_add_str("Shutdown Notification (SHN)", json_str);
+}
+
+static void json_registers_cc(__u32 cc, struct json_object *root)
+{
+	char json_str[STR_LEN];
+
+	sprintf(json_str, "%x", cc);
+	root_add_str("cc", json_str);
+
+	root_add_str("Controller Ready Independent of Media Enable (CRIME)",
+		     NVME_CC_CRIME(cc) ? enabled : disabled);
+
+	sprintf(json_str, "%u bytes", POWER_OF_TWO(NVME_GET(cc, CC_IOCQES)));
+	root_add_str("I/O Completion Queue Entry Size (IOCQES): ", json_str);
+
+	sprintf(json_str, "%u bytes", POWER_OF_TWO(NVME_GET(cc, CC_IOSQES)));
+	root_add_str("I/O Submission Queue Entry Size (IOSQES)", json_str);
+
+	json_registers_cc_shn((cc & 0xc000) >> NVME_CC_SHN_SHIFT, root);
+	json_registers_cc_ams((cc & 0x3800) >> NVME_CC_AMS_SHIFT, root);
+
+	sprintf(json_str, "%u bytes", POWER_OF_TWO(12 + NVME_GET(cc, CC_MPS)));
+	root_add_str("Memory Page Size (MPS)", json_str);
+
+	root_add_str("I/O Command Set Selected (CSS)", (cc & 0x70) == 0x00 ? "NVM Command Set" :
+		     (cc & 0x70) == 0x60 ? "All supported I/O Command Sets" :
+		     (cc & 0x70) == 0x70 ? "Admin Command Set only" : reserved);
+	root_add_str("Enable (EN)", cc & 1 ? yes : no);
+}
+
+static void json_registers_csts_shst(__u8 shst, struct json_object *root)
+{
+	char json_str[STR_LEN];
+
+	switch (shst) {
+	case 0:
+		sprintf(json_str, "Normal operation (no shutdown has been requested)");
+		break;
+	case 1:
+		sprintf(json_str, "Shutdown processing occurring");
+		break;
+	case 2:
+		sprintf(json_str, "Shutdown processing complete");
+		break;
+	default:
+		sprintf(json_str, "Reserved");
+		break;
+	}
+	root_add_str("Shutdown Status (SHST)", json_str);
+}
+
+static void json_registers_csts(__u32 csts, struct json_object *root)
+{
+	root_add_uint_x("csts", csts);
+
+	root_add_str("Processing Paused (PP)", csts & 0x20 ? yes : no);
+	root_add_str("NVM Subsystem Reset Occurred (NSSRO)", csts & 0x10 ? yes : no);
+
+	json_registers_csts_shst((csts & 0xc) >> 2, root);
+
+	root_add_str("Controller Fatal Status (CFS)", csts & 2 ? true_str : false_str);
+	root_add_str("Ready (RDY)", csts & 1 ? yes : no);
+}
+
+static void json_registers_nssr(__u32 nssr, struct json_object *root)
+{
+	root_add_uint_x("nssr", nssr);
+	root_add_uint("NVM Subsystem Reset Control (NSSRC)", nssr);
+}
+
+static void json_registers_crto(__u32 crto, struct json_object *root)
+{
+	root_add_uint_x("crto", crto);
+
+	root_add_int_secs("CRIMT", MS500_TO_SEC(NVME_CRTO_CRIMT(crto)));
+	root_add_int_secs("CRWMT", MS500_TO_SEC(NVME_CRTO_CRWMT(crto)));
+}
+
+static void json_registers_unknown(int offset, uint64_t value64, struct json_object *root)
+{
+	root_add_uint_0x("unknown property", offset);
+	root_add_str("name", nvme_register_to_string(offset));
+	root_add_prix64("value", value64);
+}
+
+static void json_single_property_human(int offset, uint64_t value64, struct json_object *root)
+{
+	uint32_t value32 = (uint32_t)value64;
+
+	switch (offset) {
+	case NVME_REG_CAP:
+		json_registers_cap((struct nvme_bar_cap *)&value64, root);
+		break;
+	case NVME_REG_VS:
+		json_registers_version(value32, root);
+		break;
+	case NVME_REG_CC:
+		json_registers_cc(value32, root);
+		break;
+	case NVME_REG_CSTS:
+		json_registers_csts(value32, root);
+		break;
+	case NVME_REG_NSSR:
+		json_registers_nssr(value32, root);
+		break;
+	case NVME_REG_CRTO:
+		json_registers_crto(value32, root);
+		break;
+	default:
+		json_registers_unknown(offset, value64, root);
+		break;
+	}
+}
+
+static void json_single_property(int offset, uint64_t value64)
+{
+	struct json_object *root = json_create_object();
+	char json_str[STR_LEN];
+	int human = json_print_ops.flags & VERBOSE;
+	uint32_t value32 = (uint32_t)value64;
+
+	if (human) {
+		json_single_property_human(offset, value64, root);
+	} else {
+		sprintf(json_str, "0x%02x", offset);
+		json_object_add_value_string(root, "property", json_str);
+
+		json_object_add_value_string(root, "name", nvme_register_to_string(offset));
+
+		if (nvme_is_64bit_reg(offset))
+			sprintf(json_str, "%"PRIx64"", value64);
+		else
+			sprintf(json_str, "%x", value32);
+
+		json_object_add_value_string(root, "value", json_str);
+	}
 
 	json_print(root);
 }
@@ -3820,7 +4123,7 @@ static struct print_ops json_print_ops = {
 	.secondary_ctrl_list		= json_nvme_list_secondary_ctrl,
 	.select_result			= json_select_result,
 	.self_test_log 			= json_self_test_log,
-	.single_property		= NULL,
+	.single_property		= json_single_property,
 	.smart_log			= json_smart_log,
 	.supported_cap_config_list_log	= json_supported_cap_config_log,
 	.supported_log_pages		= json_support_log,
