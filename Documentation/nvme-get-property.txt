@@ -9,7 +9,7 @@ for NVMe over Fabric
 SYNOPSIS
 --------
 [verse]
-'nvme get-property' <device> [--offset=<offset> | -o <offset>]
+'nvme get-property' <device> [--offset=<offset> | -O <offset>]
 				[--human-readable | -H ]
 
 
@@ -20,7 +20,7 @@ Reads and shows the defined NVMe controller property for NVMe over Fabric.
 
 OPTIONS
 -------
--o::
+-O::
 --offset::
         The offset of the property. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
 
