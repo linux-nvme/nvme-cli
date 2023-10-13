@@ -1043,18 +1043,16 @@ struct json_object* json_effects_log(enum nvme_csi csi,
 
 static void json_effects_log_list(struct list_head *list)
 {
-	struct json_object *json_list;
+	struct json_object *root = json_create_array();
 	nvme_effects_log_node_t *node;
-
-	json_list = json_create_array();
 
 	list_for_each(list, node, node) {
 		struct json_object *json_page =
 			json_effects_log(node->csi, &node->effects);
-		json_array_add_value_object(json_list, json_page);
+		json_array_add_value_object(root, json_page);
 	}
 
-	json_print(json_list);
+	json_print(root);
 }
 
 static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
@@ -3562,7 +3560,7 @@ static void json_support_log(struct nvme_supported_log_pages *support_log,
 
 static void json_detail_list(nvme_root_t r)
 {
-	struct json_object *jroot = json_create_object();
+	struct json_object *root = json_create_object();
 	struct json_object *jdev = json_create_array();
 
 	nvme_host_t h;
@@ -3660,9 +3658,9 @@ static void json_detail_list(nvme_root_t r)
 		json_array_add_value_object(jdev, hss);
 	}
 
-	json_object_add_value_array(jroot, "Devices", jdev);
+	json_object_add_value_array(root, "Devices", jdev);
 
-	json_print(jroot);
+	json_print(root);
 }
 
 static struct json_object *json_list_item(nvme_ns_t n)
@@ -3694,7 +3692,7 @@ static struct json_object *json_list_item(nvme_ns_t n)
 
 static void json_simple_list(nvme_root_t r)
 {
-	struct json_object *jroot = json_create_object();
+	struct json_object *root = json_create_object();
 	struct json_object *jdevices = json_create_array();
 
 	nvme_host_t h;
@@ -3715,9 +3713,9 @@ static void json_simple_list(nvme_root_t r)
 		}
 	}
 
-	json_object_add_value_array(jroot, "Devices", jdevices);
+	json_object_add_value_array(root, "Devices", jdevices);
 
-	json_print(jroot);
+	json_print(root);
 }
 
 static void json_print_list_items(nvme_root_t r)
