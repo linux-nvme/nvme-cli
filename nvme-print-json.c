@@ -1241,9 +1241,10 @@ static void json_persistent_event_log(void *pevent_log_info, __u8 action,
 			json_add_bitmap(i, pevent_log_head->seb[i], root);
 		}
 	} else {
-		printf("No log data can be shown with this log len at least " \
-			"512 bytes is required or can be 0 to read the complete "\
-			"log page after context established\n");
+		root_add_str(result_str, "No log data can be shown with this log len at least " \
+			     "512 bytes is required or can be 0 to read the complete "\
+			     "log page after context established\n");
+		json_print(root);
 		return;
 	}
 	for (int i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
