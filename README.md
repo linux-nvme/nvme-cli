@@ -171,7 +171,9 @@ To enable address sanitizer (advanced debugging of memory issues):
 meson setup .build -Db_sanitize=address
 ```
 
-This option adds `-fsanitize=address` to the gcc options. Note that when using the sanitize feature, the library `libasan.so` must be available and must be the very first library loaded when running an executable. Ensuring that `libasan.so` gets loaded first can be achieved with the `LD_PRELOAD` environment variable as follows: 
+This option adds `-fsanitize=address` to the gcc options. The tests can then be run normally (`meson test -C .build`).
+
+Note that when using the sanitize feature, the library `libasan.so` must be available and must be the very first library loaded when running an executable. If experiencing linking issues, you can ensure that `libasan.so` gets loaded first with the `LD_PRELOAD` environment variable as follows:
 
 ```
 meson setup .build -Db_sanitize=address && LD_PRELOAD=/lib64/libasan.so.6 ninja -C .build test
