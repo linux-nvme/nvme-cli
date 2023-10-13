@@ -901,7 +901,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FILE("output-file",     'o', &cfg.file_name, fname),
+		  OPT_FILE("output-file",     'O', &cfg.file_name, fname),
 		  OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
 		  OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
 		  OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
@@ -2317,7 +2317,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		  OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id),
 		  OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
 		  OPT_UINT("aen",          'a', &cfg.aen,          aen),
-		  OPT_SUFFIX("lpo",        'o', &cfg.lpo,          lpo),
+		  OPT_SUFFIX("lpo",        'L', &cfg.lpo,          lpo),
 		  OPT_BYTE("lsp",          's', &cfg.lsp,          lsp),
 		  OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
 		  OPT_FLAG("rae",          'r', &cfg.rae,          rae),
@@ -3113,7 +3113,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		  OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
 		  OPT_FLAG("azr",          'z', &cfg.azr,      azr),
 		  OPT_UINT("rar",          'r', &cfg.rar,      rar),
-		  OPT_UINT("ror",          'o', &cfg.ror,      ror),
+		  OPT_UINT("ror",          'O', &cfg.ror,      ror),
 		  OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, rnumzrwa),
 		  OPT_LIST("phndls",       'p', &cfg.phndls,   phndls));
 
@@ -3385,7 +3385,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
+		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
 		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
 		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
 
@@ -3702,7 +3702,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
 		  OPT_FLAG("force",             0, &cfg.force,           force),
-		  OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
+		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
 		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
 		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
 
@@ -4879,7 +4879,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	NVME_ARGS(opts, cfg,
 		  OPT_FILE("fw",         'f', &cfg.fw,         fw),
 		  OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
-		  OPT_UINT("offset",     'o', &cfg.offset,     offset),
+		  OPT_UINT("offset",     'O', &cfg.offset,     offset),
 		  OPT_FLAG("progress",   'p', &cfg.progress,   progress),
 		  OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr));
 
@@ -5433,7 +5433,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_UINT("offset",         'o', &cfg.offset,         offset),
+		  OPT_UINT("offset",         'O', &cfg.offset,         offset),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -5484,8 +5484,8 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_UINT("offset", 'o', &cfg.offset, offset),
-		  OPT_UINT("value",  'v', &cfg.value,  value));
+		  OPT_UINT("offset", 'O', &cfg.offset, offset),
+		  OPT_UINT("value",  'V', &cfg.value,  value));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5822,7 +5822,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	NVME_ARGS(opts, cfg,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_BYTE("feature-id",   'f', &cfg.feature_id,   feature_id),
-		  OPT_SUFFIX("value",      'v', &cfg.value,        value),
+		  OPT_SUFFIX("value",      'V', &cfg.value,        value),
 		  OPT_UINT("cdw12",        'c', &cfg.cdw12,        cdw12),
 		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index_specify),
 		  OPT_UINT("data-len",     'l', &cfg.data_len,     buf_len),
@@ -7195,7 +7195,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype_for_write),
 		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
 		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
-		  OPT_FLAG("show-command",      'v', &cfg.show,              show),
+		  OPT_FLAG("show-command",      'V', &cfg.show,              show),
 		  OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
 		  OPT_FLAG("latency",           't', &cfg.latency,           latency),
 		  OPT_FLAG("force",               0, &cfg.force,             force));
@@ -7823,7 +7823,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_BYTE("operation",   'o', &cfg.operation,    operation),
+		  OPT_BYTE("operation",   'O', &cfg.operation,    operation),
 		  OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
 		  OPT_UINT("cap-lower",   'l', &cfg.dw11,         cap_lower),
 		  OPT_UINT("cap-upper",   'u', &cfg.dw12,         cap_upper));
@@ -8030,7 +8030,7 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_BYTE("ofi",	'o', &cfg.ofi,      ofi_desc),
+		  OPT_BYTE("ofi",	'O', &cfg.ofi,      ofi_desc),
 		  OPT_BYTE("ifc",	'f', &cfg.ifc,      ifc_desc),
 		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
 		  OPT_BYTE("scp",	's', &cfg.scp,      scp_desc),
@@ -8166,7 +8166,7 @@ static int passthru(int argc, char **argv, bool admin,
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_BYTE("opcode",       'o', &cfg.opcode,       opcode),
+		  OPT_BYTE("opcode",       'O', &cfg.opcode,       opcode),
 		  OPT_BYTE("flags",        'f', &cfg.flags,        cflags),
 		  OPT_BYTE("prefill",      'p', &cfg.prefill,      prefill),
 		  OPT_SHRT("rsvd",         'R', &cfg.rsvd,         rsvd),
@@ -9001,7 +9001,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	};
 
 	NVME_ARGS(opts, cfg,
-		  OPT_BYTE("opcode", 'o', &cfg.opcode, opcode),
+		  OPT_BYTE("opcode", 'O', &cfg.opcode, opcode),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_UINT("data-len", 'l', &cfg.data_len, data_len),
 		  OPT_UINT("nmimt", 'm', &cfg.nmimt, nmimt),
