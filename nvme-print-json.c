@@ -18,8 +18,10 @@
 #define POWER_OF_TWO(exponent) (1 << (exponent))
 #define MS500_TO_SEC(time) ((time) / 2)
 
-#define array_add_obj(o, k) json_array_add_value_object(o, k);
-#define obj_add_str(o, k, v) json_object_add_value_string(o, k, v)
+#define array_add_obj json_array_add_value_object
+#define obj_add_str json_object_add_value_string
+#define obj_add_int json_object_add_value_int
+
 #define root_add_array(k, v) json_object_add_value_array(root, k, v)
 #define root_add_int_secs(k, v) obj_add_int_secs(root, k, v)
 #define root_add_prix64(k, v) obj_add_prix64(root, k, v)
@@ -67,6 +69,14 @@ static void obj_add_uint_nx(struct json_object *o, const char *k, __u32 v)
 	char str[STR_LEN];
 
 	sprintf(str, "%#x", v);
+	obj_add_str(o, k, str);
+}
+
+static void obj_add_nprix64(struct json_object *o, const char *k, uint64_t v)
+{
+	char str[STR_LEN];
+
+	sprintf(str, "%#"PRIx64"", v);
 	obj_add_str(o, k, str);
 }
 
@@ -2610,8 +2620,8 @@ static void json_feature_show_fields_power_mgmt(unsigned int result)
 	json_print(root);
 }
 
-static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
-			   struct json_object *root)
+static void json_lba_range_entry(struct nvme_lba_range_type *lbrt, int nr_ranges,
+				 struct json_object *root)
 {
 	char json_str[STR_LEN];
 	struct json_object *lbare;
@@ -2619,42 +2629,36 @@ static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
 	int j;
 	struct json_object *lbara = json_create_array();
 
-	json_object_add_value_array(root, "LBA Ranges", lbara);
+	root_add_array("LBA Ranges", lbara);
 
 	for (i = 0; i <= nr_ranges; i++) {
 		lbare = json_create_object();
-		json_array_add_value_object(lbara, lbare);
+		array_add_obj(lbara, lbare);
 
-		json_object_add_value_int(lbare, "LBA range", i);
+		obj_add_int(lbare, "LBA range", i);
 
-		sprintf(json_str, "%#x", lbrt->entry[i].type);
-		json_object_add_value_string(lbare, "type", json_str);
+		obj_add_uint_nx(lbare, "type", lbrt->entry[i].type);
 
-		json_object_add_value_string(lbare, "type description",
-					     nvme_feature_lba_type_to_string(lbrt->entry[i].type));
+		obj_add_str(lbare, "type description",
+			    nvme_feature_lba_type_to_string(lbrt->entry[i].type));
 
-		sprintf(json_str, "%#x", lbrt->entry[i].attributes);
-		json_object_add_value_string(lbare, "attributes", json_str);
+		obj_add_uint_nx(lbare, "attributes", lbrt->entry[i].attributes);
 
-		json_object_add_value_string(lbare, "attribute[0]",
-					     lbrt->entry[i].attributes & 0x0001 ?
-					     "LBA range may be overwritten" :
-					     "LBA range should not be overwritten");
+		obj_add_str(lbare, "attribute[0]", lbrt->entry[i].attributes & 1 ?
+			    "LBA range may be overwritten" : "LBA range should not be overwritten");
 
-		json_object_add_value_string(lbare, "attribute[1]",
-					     lbrt->entry[i].attributes & 0x0002 ?
-					     "LBA range should be hidden from the OS/EFI/BIOS" :
-					     "LBA range should be visible from the OS/EFI/BIOS");
+		obj_add_str(lbare, "attribute[1]", lbrt->entry[i].attributes & 2 ?
+			    "LBA range should be hidden from the OS/EFI/BIOS" :
+			    "LBA range should be visible from the OS/EFI/BIOS");
 
-		sprintf(json_str, "%#"PRIx64"", le64_to_cpu(lbrt->entry[i].slba));
-		json_object_add_value_string(lbare, "slba", json_str);
+		obj_add_nprix64(lbare, "slba", le64_to_cpu(lbrt->entry[i].slba));
 
-		sprintf(json_str, "%#"PRIx64"", le64_to_cpu(lbrt->entry[i].nlb));
-		json_object_add_value_string(lbare, "nlb", json_str);
+		obj_add_nprix64(lbare, "nlb", le64_to_cpu(lbrt->entry[i].nlb));
 
 		for (j = 0; j < ARRAY_SIZE(lbrt->entry[i].guid); j++)
 			sprintf(&json_str[j * 2], "%02x", lbrt->entry[i].guid[j]);
-		json_object_add_value_string(lbare, "guid", json_str);
+
+		obj_add_str(lbare, "guid", json_str);
 	}
 }
 
@@ -2665,7 +2669,7 @@ static void json_feature_show_fields_lba_range(__u8 field, unsigned char *buf)
 	json_object_add_value_uint(root, "Number of LBA Ranges (NUM)", field + 1);
 
 	if (buf)
-		json_lba_range((struct nvme_lba_range_type *)buf, field, root);
+		json_lba_range_entry((struct nvme_lba_range_type *)buf, field, root);
 
 	json_print(root);
 }
@@ -3324,10 +3328,19 @@ void json_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 	root_add_uint_nx("[23:16]: Total Size", tsz);
 
 	if (rsvd)
-		root_add_uint_nx("[15:6] :Reserved", rsvd);
+		root_add_uint_nx("[15:6]: Reserved", rsvd);
 
-	root_add_uint_nx("[5:3] : Authentication Method", auth);
-	root_add_uint_nx("[2:0] : Number of RPMB Units", rpmb);
+	root_add_uint_nx("[5:3]: Authentication Method", auth);
+	root_add_uint_nx("[2:0]: Number of RPMB Units", rpmb);
+
+	json_print(root);
+}
+
+static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
+{
+	struct json_object *root = json_create_object();
+
+	json_lba_range_entry(lbrt, nr_ranges, root);
 
 	json_print(root);
 }
@@ -4208,7 +4221,7 @@ static struct print_ops json_print_ops = {
 	.show_feature			= json_feature_show,
 	.show_feature_fields		= json_feature_show_fields,
 	.id_ctrl_rpmbs			= json_id_ctrl_rpmbs,
-	.lba_range			= NULL,
+	.lba_range			= json_lba_range,
 	.lba_status_info		= NULL,
 	.d				= json_d,
 
