@@ -12,6 +12,7 @@
 
 #define ERROR_MSG_LEN 100
 #define STR_LEN 100
+#define NAME_LEN 128
 #define BUF_LEN 320
 #define VAL_LEN 4096
 #define BYTE_TO_BIT(byte) ((byte) * 8)
@@ -19,10 +20,11 @@
 #define MS500_TO_SEC(time) ((time) / 2)
 
 #define array_add_obj json_array_add_value_object
-#define obj_add_str json_object_add_value_string
 #define obj_add_int json_object_add_value_int
+#define obj_add_str json_object_add_value_string
 
 #define root_add_array(k, v) json_object_add_value_array(root, k, v)
+#define root_add_int(k, v) obj_add_int(root, k, v)
 #define root_add_int_secs(k, v) obj_add_int_secs(root, k, v)
 #define root_add_prix64(k, v) obj_add_prix64(root, k, v)
 #define root_add_result(v) obj_add_result(root, v)
@@ -3717,12 +3719,11 @@ static void json_detail_list(nvme_root_t r)
 	json_print(root);
 }
 
-static struct json_object *json_list_item(nvme_ns_t n)
+static struct json_object *json_list_item_obj(nvme_ns_t n)
 {
-	struct json_object *jdevice = json_create_object();
-	char devname[128] = { 0 };
-	char genname[128] = { 0 };
-
+	struct json_object *root = json_create_object();
+	char devname[NAME_LEN] = { 0 };
+	char genname[NAME_LEN] = { 0 };
 	int lba = nvme_ns_get_lba_size(n);
 	uint64_t nsze = nvme_ns_get_lba_count(n) * lba;
 	uint64_t nuse = nvme_ns_get_lba_util(n) * lba;
@@ -3730,18 +3731,18 @@ static struct json_object *json_list_item(nvme_ns_t n)
 	nvme_dev_full_path(n, devname, sizeof(devname));
 	nvme_generic_full_path(n, genname, sizeof(genname));
 
-	json_object_add_value_int(jdevice, "NameSpace", nvme_ns_get_nsid(n));
-	json_object_add_value_string(jdevice, "DevicePath", devname);
-	json_object_add_value_string(jdevice, "GenericPath", genname);
-	json_object_add_value_string(jdevice, "Firmware", nvme_ns_get_firmware(n));
-	json_object_add_value_string(jdevice, "ModelNumber", nvme_ns_get_model(n));
-	json_object_add_value_string(jdevice, "SerialNumber", nvme_ns_get_serial(n));
-	json_object_add_value_uint64(jdevice, "UsedBytes", nuse);
-	json_object_add_value_uint64(jdevice, "MaximumLBA", nvme_ns_get_lba_count(n));
-	json_object_add_value_uint64(jdevice, "PhysicalSize", nsze);
-	json_object_add_value_int(jdevice, "SectorSize", lba);
+	root_add_int("NameSpace", nvme_ns_get_nsid(n));
+	root_add_str("DevicePath", devname);
+	root_add_str("GenericPath", genname);
+	root_add_str("Firmware", nvme_ns_get_firmware(n));
+	root_add_str("ModelNumber", nvme_ns_get_model(n));
+	root_add_str("SerialNumber", nvme_ns_get_serial(n));
+	root_add_uint64("UsedBytes", nuse);
+	root_add_uint64("MaximumLBA", nvme_ns_get_lba_count(n));
+	root_add_uint64("PhysicalSize", nsze);
+	root_add_int("SectorSize", lba);
 
-	return jdevice;
+	return root;
 }
 
 static void json_simple_list(nvme_root_t r)
@@ -3757,17 +3758,22 @@ static void json_simple_list(nvme_root_t r)
 	nvme_for_each_host(r, h) {
 		nvme_for_each_subsystem(h, s) {
 			nvme_subsystem_for_each_ns(s, n)
-				json_array_add_value_object(jdevices,
-							    json_list_item(n));
+				json_array_add_value_object(jdevices, json_list_item_obj(n));
 
 			nvme_subsystem_for_each_ctrl(s, c)
 				nvme_ctrl_for_each_ns(c, n)
-				json_array_add_value_object(jdevices,
-							    json_list_item(n));
+				json_array_add_value_object(jdevices, json_list_item_obj(n));
 		}
 	}
 
 	json_object_add_value_array(root, "Devices", jdevices);
+
+	json_print(root);
+}
+
+static void json_list_item(nvme_ns_t n)
+{
+	struct json_object *root = json_list_item_obj(n);
 
 	json_print(root);
 }
@@ -4236,7 +4242,7 @@ static struct print_ops json_print_ops = {
 	.d				= json_d,
 
 	/* libnvme tree print functions */
-	.list_item			= NULL,
+	.list_item			= json_list_item,
 	.list_items			= json_print_list_items,
 	.print_nvme_subsystem_list	= json_print_nvme_subsystem_list,
 	.topology_ctrl			= json_simple_topology,
