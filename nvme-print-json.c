@@ -28,6 +28,7 @@
 #define root_add_uint(k, v) json_object_add_value_uint(root, k, v)
 #define root_add_uint64(k, v) json_object_add_value_uint64(root, k, v)
 #define root_add_uint_0x(k, v) obj_add_uint_0x(root, k, v)
+#define root_add_uint_nx(k, v) obj_add_uint_nx(root, k, v)
 #define root_add_uint_x(k, v) obj_add_uint_x(root, k, v)
 
 static const uint8_t zero_uuid[16] = { 0 };
@@ -58,6 +59,14 @@ static void obj_add_uint_0x(struct json_object *o, const char *k, __u32 v)
 	char str[STR_LEN];
 
 	sprintf(str, "0x%02x", v);
+	obj_add_str(o, k, str);
+}
+
+static void obj_add_uint_nx(struct json_object *o, const char *k, __u32 v)
+{
+	char str[STR_LEN];
+
+	sprintf(str, "%#x", v);
 	obj_add_str(o, k, str);
 }
 
@@ -3301,6 +3310,28 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 	}
 }
 
+void json_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+{
+	struct json_object *root = json_create_object();
+	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
+	__u32 asz = (rpmbs & 0xFF000000) >> 24;
+	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
+	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
+	__u32 auth = (rpmbs & 0x38) >> 3;
+	__u32 rpmb = rpmbs & 7;
+
+	root_add_uint_nx("[31:24]: Access Size", asz);
+	root_add_uint_nx("[23:16]: Total Size", tsz);
+
+	if (rsvd)
+		root_add_uint_nx("[15:6] :Reserved", rsvd);
+
+	root_add_uint_nx("[5:3] : Authentication Method", auth);
+	root_add_uint_nx("[2:0] : Number of RPMB Units", rpmb);
+
+	json_print(root);
+}
+
 void json_d(unsigned char *buf, int len, int width, int group)
 {
 	struct json_object *root = json_create_object();
@@ -4176,7 +4207,7 @@ static struct print_ops json_print_ops = {
 	.zns_report_zones		= json_nvme_zns_report_zones,
 	.show_feature			= json_feature_show,
 	.show_feature_fields		= json_feature_show_fields,
-	.id_ctrl_rpmbs			= NULL,
+	.id_ctrl_rpmbs			= json_id_ctrl_rpmbs,
 	.lba_range			= NULL,
 	.lba_status_info		= NULL,
 	.d				= json_d,
