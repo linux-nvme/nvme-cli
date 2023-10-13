@@ -26,6 +26,7 @@
 #define root_add_result(v) obj_add_result(root, v)
 #define root_add_str(k, v) json_object_add_value_string(root, k, v)
 #define root_add_uint(k, v) json_object_add_value_uint(root, k, v)
+#define root_add_uint64(k, v) json_object_add_value_uint64(root, k, v)
 #define root_add_uint_0x(k, v) obj_add_uint_0x(root, k, v)
 #define root_add_uint_x(k, v) obj_add_uint_x(root, k, v)
 
@@ -2496,6 +2497,26 @@ static void json_zns_start_zone_list(__u64 nr_zones, struct json_object **zone_l
 	*zone_list = json_create_array();
 }
 
+static void json_zns_changed(struct nvme_zns_changed_zone_log *log)
+{
+	struct json_object *root = json_create_object();
+	char json_str[STR_LEN];
+	uint16_t nrzid = le16_to_cpu(log->nrzid);
+	int i;
+
+	if (nrzid == 0xFFFF) {
+		root_add_result("Too many zones have changed to fit into the log. Use report zones for changes.");
+	} else {
+		root_add_uint("nrzid", nrzid);
+		for (i = 0; i < nrzid; i++) {
+			sprintf(json_str, "zid %03d", i);
+			root_add_uint64(json_str, (uint64_t)le64_to_cpu(log->zid[i]));
+		}
+	}
+
+	json_print(root);
+}
+
 static void json_zns_finish_zone_list(__u64 nr_zones,
 				      struct json_object *zone_list)
 {
@@ -4150,7 +4171,7 @@ static struct print_ops json_print_ops = {
 	.supported_cap_config_list_log	= json_supported_cap_config_log,
 	.supported_log_pages		= json_support_log,
 	.zns_start_zone_list		= json_zns_start_zone_list,
-	.zns_changed_zone_log		= NULL,
+	.zns_changed_zone_log		= json_zns_changed,
 	.zns_finish_zone_list		= json_zns_finish_zone_list,
 	.zns_id_ctrl			= json_nvme_zns_id_ctrl,
 	.zns_id_ns			= json_nvme_zns_id_ns,
