@@ -1533,7 +1533,7 @@ static void json_lba_status(struct nvme_lba_status *list,
 	switch (list->cmpc) {
 	case 1:
 		json_object_add_value_string(root, "cmpc-definition",
-		    "Completed due to transferring the amount of data specified in the MNDW field\n");
+		    "Completed due to transferring the amount of data specified in the MNDW field");
 		break;
 	case 2:
 		json_object_add_value_string(root, "cmpc-definition",
@@ -3866,7 +3866,7 @@ static void json_directive_show_fields_streams(__u8 doper,  unsigned int result,
 					   "Stream Write Size (in unit of LB size) (SWS)",
 					   le16_to_cpu(*(__u32 *)(field + 16)));
 		json_object_add_value_uint(root,
-					   "Stream Granularity Size (in unit of SWS) (SGS)\n",
+					   "Stream Granularity Size (in unit of SWS) (SGS)",
 					   le16_to_cpu(*(field + 20)));
 		json_object_add_value_uint(root, "Namespace Streams Allocated (NSA)",
 					   le16_to_cpu(*(field + 22)));
