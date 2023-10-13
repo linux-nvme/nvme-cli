@@ -23,6 +23,7 @@
 #define root_add_array(k, v) json_object_add_value_array(root, k, v)
 #define root_add_int_secs(k, v) obj_add_int_secs(root, k, v)
 #define root_add_prix64(k, v) obj_add_prix64(root, k, v)
+#define root_add_result(v) obj_add_result(root, v)
 #define root_add_str(k, v) json_object_add_value_string(root, k, v)
 #define root_add_uint(k, v) json_object_add_value_uint(root, k, v)
 #define root_add_uint_0x(k, v) obj_add_uint_0x(root, k, v)
@@ -73,6 +74,11 @@ static void obj_add_int_secs(struct json_object *o, const char *k, int v)
 
 	sprintf(str, "%d secs", v);
 	obj_add_str(o, k, str);
+}
+
+static void obj_add_result(struct json_object *o, const char *v)
+{
+	obj_add_str(o, result_str, v);
 }
 
 static void json_print(struct json_object *root)
@@ -1502,9 +1508,9 @@ static void json_persistent_event_log(void *pevent_log_info, __u8 action,
 		json_pevent_entry(pevent_log_info, action, size, devname, offset, valid);
 		json_object_add_value_array(root, "list_of_event_entries", valid);
 	} else {
-		root_add_str(result_str, "No log data can be shown with this log len at least " \
-			     "512 bytes is required or can be 0 to read the complete "\
-			     "log page after context established\n");
+		root_add_result("No log data can be shown with this log len at least " \
+				"512 bytes is required or can be 0 to read the complete "\
+				"log page after context established");
 	}
 
 	json_print(root);
@@ -3941,7 +3947,7 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 	sprintf(json_str, "%#x", nsid);
 	json_object_add_value_string(root, "nsid", json_str);
 	sprintf(json_str, "%#x", result);
-	json_object_add_value_string(root, result_str, json_str);
+	root_add_result(json_str);
 
 	if (json_print_ops.flags & VERBOSE) {
 		json_directive_show_fields(type, oper, result, buf, root);
