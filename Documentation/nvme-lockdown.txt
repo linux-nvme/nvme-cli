@@ -8,7 +8,7 @@ nvme-lockdown - Send an NVMe Lockdown command to prohibit or allow the execution
 SYNOPSIS
 --------
 [verse]
-'nvme-lockdown' <device> [--ofi=<ofi> | -o <ofi>]
+'nvme-lockdown' <device> [--ofi=<ofi> | -O <ofi>]
 			[--ifc=<ifc> | -f <ifc>]
 			[--prhbt=<prhbt> | -p <prhbt>]
 			[--scp=<scp> | -s <scp>]
@@ -24,7 +24,7 @@ Identifier.
 OPTIONS
 -------
 --ofi=<ofi>::
--o <ofi>::
+-O <ofi>::
 	Opcode or Feature Identifier(OFI) specifies the command opcode or Set
 	Features Feature Identifier identified by the Scope field.
 

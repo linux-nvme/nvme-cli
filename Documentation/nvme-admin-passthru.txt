@@ -8,7 +8,7 @@ nvme-admin-passthru - Submit an arbitrary admin command, return results
 SYNOPSIS
 --------
 [verse]
-'nvme-admin-passthru' <device> [--opcode=<opcode> | -o <opcode>]
+'nvme-admin-passthru' <device> [--opcode=<opcode> | -O <opcode>]
 		[--flags=<flags> | -f <flags>] [-rsvd=<rsvd> | -R <rsvd>]
 		[--namespace-id=<nsid> | -n <nsid>] [--cdw2=<cdw2> | -2 <cdw2>]
 		[--cdw3=<cdw3> | -3 <cdw3>] [--cdw10=<cdw10> | -4 <cdw4>]
@@ -43,7 +43,7 @@ printed to stdout for another program to parse.
 
 OPTIONS
 -------
--o <opcode>::
+-O <opcode>::
 --opcode=<opcode>::
 	The NVMe opcode to send to the device in the command
 

@@ -9,8 +9,8 @@ for NVMe over Fabric
 SYNOPSIS
 --------
 [verse]
-'nvme set-property' <device> [--offset=<offset> | -o <offset>]
-				[--value=<val> | -v <val>]
+'nvme set-property' <device> [--offset=<offset> | -O <offset>]
+				[--value=<val> | -V <val>]
 
 
 DESCRIPTION
@@ -19,11 +19,11 @@ Writes and shows the defined NVMe controller property for NVMe over Fabric.
 
 OPTIONS
 -------
--o::
+-O::
 --offset::
        The offset of the property.
 
--v::
+-V::
 --value:
 	The value of the property to be set.
 

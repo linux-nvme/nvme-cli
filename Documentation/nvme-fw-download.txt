@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme fw-download' <device> [--fw=<firmware-file> | -f <firmware-file>]
 		    [--xfer=<transfer-size> | -x <transfer-size>]
-		    [--offset=<offset> | -o <offset>]
+		    [--offset=<offset> | -O <offset>]
 
 DESCRIPTION
 -----------
@@ -48,7 +48,7 @@ OPTIONS
 	the device has a max transfer size requirement for firmware. It
 	defaults to 4k.
 
--o <offset>::
+-O <offset>::
 --offset=<offset>::
 	This specifies the starting offset in dwords. This is really only
 	useful if your firmware is split in multiple files; otherwise

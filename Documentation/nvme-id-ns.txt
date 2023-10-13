@@ -8,7 +8,7 @@ nvme-id-ns - Send NVMe Identify Namespace, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme id-ns' <device> [-v | --vendor-specific] [-b | --raw-binary]
+'nvme id-ns' <device> [-V | --vendor-specific] [-b | --raw-binary]
 		    [--namespace-id=<nsid> | -n <nsid>] [--force]
 		    [--human-readable | -H]
 		    [--output-format=<fmt> | -o <fmt>]
@@ -51,7 +51,7 @@ OPTIONS
 	Print the raw buffer to stdout. Structure is not parsed by
 	program. This overrides the vendor specific and human readable options.
 
--v::
+-V::
 --vendor-specific::
 	In addition to parsing known fields, this option will dump
 	the vendor specific region of the structure in hex with ascii
@@ -93,7 +93,7 @@ the vendor unique field:
 +
 ------------
 # nvme id-ns /dev/nvme0n1 --vendor-specific
-# nvme id-ns /dev/nvme0n1 -v
+# nvme id-ns /dev/nvme0n1 -V
 ------------
 +
 The above will dump the \'vs' buffer in hex since it doesn't know how to

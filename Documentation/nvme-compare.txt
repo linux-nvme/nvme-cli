@@ -23,7 +23,7 @@ SYNOPSIS
 			[--dir-type=<type> | -T <type>]
 			[--dir-spec=<spec> | -S <spec>]
 			[--dsm=<dsm> | -D <dsm>]
-			[--show-command | -v]
+			[--show-command | -V]
 			[--dry-run | -w]
 			[--latency | -t]
 			[--storage-tag<storage-tag> | -g <storage-tag>]
@@ -127,7 +127,7 @@ metadata is passes.
 	among other things, as well as yet to be defined types. Please
 	consult the NVMe specification for detailed breakdown of how to
 	use this field.
--v::
+-V::
 --show-cmd::
 	Print out the command to be sent.
 

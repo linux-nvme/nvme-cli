@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme set-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--feature-id=<fid> | -f <fid>] [--value=<value> | -v <value>]
+			  [--feature-id=<fid> | -f <fid>] [--value=<value> | -V <value>]
 			  [--uuid-index=<uuid-index> | -U <uuid_index>]
 			  [--data-len=<data-len> | -l <data-len>]
 			  [--data=<data-file> | -d <data-file>]
@@ -51,7 +51,7 @@ OPTIONS
 	Range Type and host identifier. This defaults to STDIN so files
 	and echo can be piped.
 
--v <value>::
+-V <value>::
 --value=<value>::
 	The value for command dword 11, the value you want to set the
 	feature to.
@@ -69,7 +69,7 @@ EXAMPLES
 * Sets the Power State (PS) to 1  in feature id 2:
 +
 ------------
-# nvme set-feature /dev/nvme0 -f 2 /dev/nvme0n1 -v 0x1
+# nvme set-feature /dev/nvme0 -f 2 /dev/nvme0n1 -V 0x1
 ------------
 +
 
