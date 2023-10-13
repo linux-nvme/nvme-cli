@@ -2610,16 +2610,16 @@ static void json_feature_show_fields_arbitration(unsigned int result)
 	struct json_object *root = json_create_object();
 	char json_str[STR_LEN];
 
-	json_object_add_value_uint(root, "High Priority Weight (HPW)", ((result & 0xff000000) >> 24) + 1);
-	json_object_add_value_uint(root, "Medium Priority Weight (MPW)", ((result & 0xff0000) >> 16) + 1);
-	json_object_add_value_uint(root, "Low Priority Weight (LPW)", ((result & 0xff00) >> 8) + 1);
+	root_add_uint("High Priority Weight (HPW)", ((result & 0xff000000) >> 24) + 1);
+	root_add_uint("Medium Priority Weight (MPW)", ((result & 0xff0000) >> 16) + 1);
+	root_add_uint("Low Priority Weight (LPW)", ((result & 0xff00) >> 8) + 1);
 
 	if ((result & 7) == 7)
 		sprintf(json_str, "No limit");
 	else
 		sprintf(json_str, "%u", 1 << (result & 7));
 
-	json_object_add_value_string(root, "Arbitration Burst (AB)", json_str);
+	root_add_str("Arbitration Burst (AB)", json_str);
 
 	json_print(root);
 }
@@ -2629,9 +2629,9 @@ static void json_feature_show_fields_power_mgmt(unsigned int result)
 	struct json_object *root = json_create_object();
 	__u8 field = (result & 0xe0) >> 5;
 
-	json_object_add_value_uint(root, "Workload Hint (WH)", field);
-	json_object_add_value_string(root, "WH description", nvme_feature_wl_hints_to_string(field));
-	json_object_add_value_uint(root, "Power State (PS)", result & 0x1f);
+	root_add_uint("Workload Hint (WH)", field);
+	root_add_str("WH description", nvme_feature_wl_hints_to_string(field));
+	root_add_uint("Power State (PS)", result & 0x1f);
 
 	json_print(root);
 }
@@ -2682,7 +2682,7 @@ static void json_feature_show_fields_lba_range(__u8 field, unsigned char *buf)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_uint(root, "Number of LBA Ranges (NUM)", field + 1);
+	root_add_uint("Number of LBA Ranges (NUM)", field + 1);
 
 	if (buf)
 		json_lba_range_entry((struct nvme_lba_range_type *)buf, field, root);
@@ -2696,19 +2696,19 @@ static void json_feature_show_fields_temp_thresh(unsigned int result)
 	__u8 field = (result & 0x300000) >> 20;
 	char json_str[STR_LEN];
 
-	json_object_add_value_uint(root, "Threshold Type Select (THSEL)", field);
-	json_object_add_value_string(root, "THSEL description", nvme_feature_temp_type_to_string(field));
+	root_add_uint("Threshold Type Select (THSEL)", field);
+	root_add_str("THSEL description", nvme_feature_temp_type_to_string(field));
 
 	field = (result & 0xf0000) >> 16;
 
-	json_object_add_value_uint(root, "Threshold Temperature Select (TMPSEL)", field);
-	json_object_add_value_string(root, "TMPSEL description", nvme_feature_temp_sel_to_string(field));
+	root_add_uint("Threshold Temperature Select (TMPSEL)", field);
+	root_add_str("TMPSEL description", nvme_feature_temp_sel_to_string(field));
 
 	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result & 0xffff));
-	json_object_add_value_string(root, "Temperature Threshold (TMPTH)", json_str);
+	root_add_str("Temperature Threshold (TMPTH)", json_str);
 
 	sprintf(json_str, "%u K", result & 0xffff);
-	json_object_add_value_string(root, "TMPTH kelvin", json_str);
+	root_add_str("TMPTH kelvin", json_str);
 
 	json_print(root);
 }
@@ -2718,12 +2718,11 @@ static void json_feature_show_fields_err_recovery(unsigned int result)
 	struct json_object *root = json_create_object();
 	char json_str[STR_LEN];
 
-	json_object_add_value_string(root,
-				     "Deallocated or Unwritten Logical Block Error Enable (DULBE)",
-				     (result & 0x10000) >> 16 ? "Enabled" : "Disabled");
+	root_add_str("Deallocated or Unwritten Logical Block Error Enable (DULBE)",
+		     (result & 0x10000) >> 16 ? enabled : disabled);
 
 	sprintf(json_str, "%u ms", (result & 0xffff) * 100);
-	json_object_add_value_string(root, "Time Limited Error Recovery (TLER)", json_str);
+	root_add_str("Time Limited Error Recovery (TLER)", json_str);
 
 	json_print(root);
 }
@@ -2732,8 +2731,7 @@ static void json_feature_show_fields_volatile_wc(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Volatile Write Cache Enable (WCE)",
-				     result & 1 ? "Enabled" : "Disabled");
+	root_add_str("Volatile Write Cache Enable (WCE)", result & 1 ? enabled : disabled);
 
 	json_print(root);
 }
@@ -2742,11 +2740,10 @@ static void json_feature_show_fields_num_queues(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_uint(root, "Number of IO Completion Queues Allocated (NCQA)",
-				   ((result & 0xffff0000) >> 16) + 1);
+	root_add_uint("Number of IO Completion Queues Allocated (NCQA)",
+		      ((result & 0xffff0000) >> 16) + 1);
 
-	json_object_add_value_uint(root, "Number of IO Submission Queues Allocated (NSQA)",
-				   (result & 0xffff) + 1);
+	root_add_uint("Number of IO Submission Queues Allocated (NSQA)", (result & 0xffff) + 1);
 
 	json_print(root);
 }
@@ -2757,9 +2754,9 @@ static void json_feature_show_fields_irq_coalesce(unsigned int result)
 	char json_str[STR_LEN];
 
 	sprintf(json_str, "%u usec", ((result & 0xff00) >> 8) * 100);
-	json_object_add_value_string(root, "Aggregation Time (TIME)", json_str);
+	root_add_str("Aggregation Time (TIME)", json_str);
 
-	json_object_add_value_uint(root, "Aggregation Threshold (THR)",  (result & 0xff) + 1);
+	root_add_uint("Aggregation Threshold (THR)", (result & 0xff) + 1);
 
 	json_print(root);
 }
@@ -2768,10 +2765,9 @@ static void json_feature_show_fields_irq_config(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Coalescing Disable (CD)",
-				     (result & 0x10000) >> 16 ? "True" : "False");
+	root_add_str("Coalescing Disable (CD)", (result & 0x10000) >> 16 ? true_str : false_str);
 
-	json_object_add_value_uint(root, "Interrupt Vector (IV)", result & 0xffff);
+	root_add_uint("Interrupt Vector (IV)", result & 0xffff);
 
 	json_print(root);
 }
@@ -2780,7 +2776,7 @@ static void json_feature_show_fields_write_atomic(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Disable Normal (DN)", result & 1 ? "True" : "False");
+	root_add_str("Disable Normal (DN)", result & 1 ? true_str : false_str);
 
 	json_print(root);
 }
@@ -2789,33 +2785,24 @@ static void json_feature_show_fields_async_event(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Discovery Log Page Change Notices",
-				     (result & 0x80000000) >> 31 ? "Send async event" :
-				     "Do not send async event");
-	json_object_add_value_string(root, "Endurance Group Event Aggregate Log Change Notices",
-				     (result & 0x4000) >> 14 ? "Send async event" :
-				     "Do not send async event");
-	json_object_add_value_string(root, "LBA Status Information Notices",
-				     (result & 0x2000) >> 13 ? "Send async event" :
-				     "Do not send async event");
-	json_object_add_value_string(root, "Predictable Latency Event Aggregate Log Change Notices",
-				     (result & 0x1000) >> 12 ? "Send async event" :
-				     "Do not send async event");
-	json_object_add_value_string(root, "Asymmetric Namespace Access Change Notices",
-				     (result & 0x800) >> 11 ? "Send async event" :
-				     "Do not send async event");
-	json_object_add_value_string(root, "Telemetry Log Notices",
-				     (result & 0x400) >> 10 ? "Send async event" :
-				     "Do not send async event");
-	json_object_add_value_string(root, "Firmware Activation Notices",
-				     (result & 0x200) >> 9 ? "Send async event" :
-				     "Do not send async event");
-	json_object_add_value_string(root, "Namespace Attribute Notices",
-				     (result & 0x100) >> 8 ? "Send async event" :
-				     "Do not send async event");
-	json_object_add_value_string(root, "SMART / Health Critical Warnings",
-				     result & 0xff ? "Send async event" :
-				     "Do not send async event");
+	root_add_str("Discovery Log Page Change Notices", (result & 0x80000000) >> 31 ?
+		     "Send async event" : "Do not send async event");
+	root_add_str("Endurance Group Event Aggregate Log Change Notices", (result & 0x4000) >> 14 ?
+		     "Send async event" : "Do not send async event");
+	root_add_str("LBA Status Information Notices", (result & 0x2000) >> 13 ?
+		     "Send async event" : "Do not send async event");
+	root_add_str("Predictable Latency Event Aggregate Log Change Notices",
+		     (result & 0x1000) >> 12 ? "Send async event" : "Do not send async event");
+	root_add_str("Asymmetric Namespace Access Change Notices", (result & 0x800) >> 11 ?
+		     "Send async event" : "Do not send async event");
+	root_add_str("Telemetry Log Notices", (result & 0x400) >> 10 ? "Send async event" :
+		     "Do not send async event");
+	root_add_str("Firmware Activation Notices", (result & 0x200) >> 9 ? "Send async event" :
+		     "Do not send async event");
+	root_add_str("Namespace Attribute Notices", (result & 0x100) >> 8 ? "Send async event" :
+		     "Do not send async event");
+	root_add_str("SMART / Health Critical Warnings", result & 0xff ? "Send async event" :
+		     "Do not send async event");
 
 	json_print(root);
 }
@@ -2828,19 +2815,18 @@ static void json_auto_pst(struct nvme_feat_auto_pst *apst, struct json_object *r
 	struct json_object *apsta = json_create_array();
 	struct json_object *apste;
 
-	json_object_add_value_array(root, "Auto PST Entries", apsta);
+	root_add_array("Auto PST Entries", apsta);
 
 	for (i = 0; i < ARRAY_SIZE(apst->apst_entry); i++) {
 		apste = json_create_object();
-		json_array_add_value_object(apsta, apste);
+		array_add_obj(apsta, apste);
 		sprintf(json_str, "%2d", i);
-		json_object_add_value_string(apste, "Entry", json_str);
+		obj_add_str(apste, "Entry", json_str);
 		value = le64_to_cpu(apst->apst_entry[i]);
 		sprintf(json_str, "%u ms", (__u32)NVME_GET(value, APST_ENTRY_ITPT));
-		json_object_add_value_string(apste, "Idle Time Prior to Transition (ITPT)",
-					     json_str);
-		json_object_add_value_uint(apste, "Idle Transition Power State (ITPS)",
-					   (__u32)NVME_GET(value, APST_ENTRY_ITPS));
+		obj_add_str(apste, "Idle Time Prior to Transition (ITPT)", json_str);
+		obj_add_uint(apste, "Idle Transition Power State (ITPS)",
+			     (__u32)NVME_GET(value, APST_ENTRY_ITPS));
 	}
 }
 
@@ -2848,8 +2834,8 @@ static void json_feature_show_fields_auto_pst(unsigned int result, unsigned char
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Autonomous Power State Transition Enable (APSTE)",
-				     result & 1 ? "Enabled" : "Disabled");
+	root_add_str("Autonomous Power State Transition Enable (APSTE)", result & 1 ? enabled :
+		     disabled);
 
 	if (buf)
 		json_auto_pst((struct nvme_feat_auto_pst *)buf, root);
@@ -2861,25 +2847,22 @@ static void json_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb, struct jso
 {
 	char json_str[STR_LEN];
 
-	json_object_add_value_uint(root, "Host Memory Descriptor List Entry Count (HMDLEC)",
-				   le32_to_cpu(hmb->hmdlec));
+	root_add_uint("Host Memory Descriptor List Entry Count (HMDLEC)", le32_to_cpu(hmb->hmdlec));
 
 	sprintf(json_str, "0x%x", le32_to_cpu(hmb->hmdlau));
-	json_object_add_value_string(root, "Host Memory Descriptor List Address (HMDLAU)", json_str);
+	root_add_str("Host Memory Descriptor List Address (HMDLAU)", json_str);
 
 	sprintf(json_str, "0x%x", le32_to_cpu(hmb->hmdlal));
-	json_object_add_value_string(root, "Host Memory Descriptor List Address (HMDLAL)", json_str);
+	root_add_str("Host Memory Descriptor List Address (HMDLAL)", json_str);
 
-	json_object_add_value_uint(root, "Host Memory Buffer Size (HSIZE)",
-				   le32_to_cpu(hmb->hsize));
+	root_add_uint("Host Memory Buffer Size (HSIZE)", le32_to_cpu(hmb->hsize));
 }
 
 static void json_feature_show_fields_host_mem_buf(unsigned int result, unsigned char *buf)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Enable Host Memory (EHM)",
-				     result & 1 ? "Enabled" : "Disabled");
+	root_add_str("Enable Host Memory (EHM)", result & 1 ? enabled : disabled);
 
 	if (buf)
 		json_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf, root);
@@ -2894,18 +2877,18 @@ static void json_timestamp(struct nvme_timestamp *ts)
 	time_t timestamp = int48_to_long(ts->timestamp) / 1000;
 	struct tm *tm = localtime(&timestamp);
 
-	json_object_add_value_uint64(root, "timestamp", int48_to_long(ts->timestamp));
+	root_add_uint64("timestamp", int48_to_long(ts->timestamp));
 
 	if(!strftime(buffer, sizeof(buffer), "%c %Z", tm))
 		sprintf(buffer, "%s", "-");
 
-	json_object_add_value_string(root, "timestamp string", buffer);
+	root_add_str("timestamp string", buffer);
 
-	json_object_add_value_string(root, "timestamp origin", ts->attr & 2 ?
+	root_add_str("timestamp origin", ts->attr & 2 ?
 	    "The Timestamp field was initialized with a Timestamp value using a Set Features command." :
 	    "The Timestamp field was initialized to 0h by a Controller Level Reset.");
 
-	json_object_add_value_string(root, "synch", ts->attr & 1 ?
+	root_add_str("synch", ts->attr & 1 ?
 	    "The controller may have stopped counting during vendor specific intervals after the Timestamp value was initialized." :
 	    "The controller counted time in milliseconds continuously since the Timestamp value was initialized.");
 
@@ -2922,7 +2905,7 @@ static void json_feature_show_fields_kato(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_uint(root, "Keep Alive Timeout (KATO) in milliseconds", result);
+	root_add_uint("Keep Alive Timeout (KATO) in milliseconds", result);
 
 	json_print(root);
 }
@@ -2933,16 +2916,16 @@ static void json_feature_show_fields_hctm(unsigned int result)
 	char json_str[STR_LEN];
 
 	sprintf(json_str, "%u K", result >> 16);
-	json_object_add_value_string(root, "Thermal Management Temperature 1 (TMT1)", json_str);
+	root_add_str("Thermal Management Temperature 1 (TMT1)", json_str);
 
 	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result >> 16));
-	json_object_add_value_string(root, "TMT1 celsius", json_str);
+	root_add_str("TMT1 celsius", json_str);
 
 	sprintf(json_str, "%u K", result & 0xffff);
-	json_object_add_value_string(root, "Thermal Management Temperature 2", json_str);
+	root_add_str("Thermal Management Temperature 2", json_str);
 
 	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result & 0xffff));
-	json_object_add_value_string(root, "TMT2 celsius", json_str);
+	root_add_str("TMT2 celsius", json_str);
 
 	json_print(root);
 }
@@ -2951,9 +2934,8 @@ static void json_feature_show_fields_nopsc(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root,
-				     "Non-Operational Power State Permissive Mode Enable (NOPPME)",
-				     result & 1 ? "True" : "False");
+	root_add_str("Non-Operational Power State Permissive Mode Enable (NOPPME)", result & 1 ?
+		     true_str : false_str);
 
 	json_print(root);
 }
@@ -2962,7 +2944,7 @@ static void json_feature_show_fields_rrl(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_uint(root, "Read Recovery Level (RRL)", result & 0xf);
+	root_add_uint("Read Recovery Level (RRL)", result & 0xf);
 
 	json_print(root);
 }
@@ -2972,19 +2954,18 @@ static void json_plm_config(struct nvme_plm_config *plmcfg, struct json_object *
 	char json_str[STR_LEN];
 
 	sprintf(json_str, "%04x", le16_to_cpu(plmcfg->ee));
-	json_object_add_value_string(root, "Enable Event", json_str);
+	root_add_str("Enable Event", json_str);
 
-	json_object_add_value_uint64(root, "DTWIN Reads Threshold", le64_to_cpu(plmcfg->dtwinrt));
-	json_object_add_value_uint64(root, "DTWIN Writes Threshold", le64_to_cpu(plmcfg->dtwinwt));
-	json_object_add_value_uint64(root, "DTWIN Time Threshold", le64_to_cpu(plmcfg->dtwintt));
+	root_add_uint64("DTWIN Reads Threshold", le64_to_cpu(plmcfg->dtwinrt));
+	root_add_uint64("DTWIN Writes Threshold", le64_to_cpu(plmcfg->dtwinwt));
+	root_add_uint64("DTWIN Time Threshold", le64_to_cpu(plmcfg->dtwintt));
 }
 
 static void json_feature_show_fields_plm_config(unsigned int result, unsigned char *buf)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Predictable Latency Window Enabled",
-				     result & 1 ? "True" : "False");
+	root_add_str("Predictable Latency Window Enabled", result & 1 ? true_str : false_str);
 
 	if (buf)
 		json_plm_config((struct nvme_plm_config *)buf, root);
@@ -2996,7 +2977,7 @@ static void json_feature_show_fields_plm_window(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Window Select", nvme_plm_window_to_string(result));
+	root_add_str("Window Select", nvme_plm_window_to_string(result));
 
 	json_print(root);
 }
@@ -3005,10 +2986,8 @@ static void json_feature_show_fields_lba_sts_interval(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_uint(root, "LBA Status Information Poll Interval (LSIPI)",
-				   result >> 16);
-	json_object_add_value_uint(root, "LBA Status Information Report Interval (LSIRI)",
-				   result & 0xffff);
+	root_add_uint("LBA Status Information Poll Interval (LSIPI)", result >> 16);
+	root_add_uint("LBA Status Information Report Interval (LSIRI)", result & 0xffff);
 
 	json_print(root);
 }
@@ -3018,8 +2997,7 @@ static void json_feature_show_fields_host_behavior(unsigned char *buf)
 	struct json_object *root = json_create_object();
 
 	if (buf)
-		json_object_add_value_string(root, "Host Behavior Support",
-					     buf[0] & 0x1 ? "True" : "False");
+		root_add_str("Host Behavior Support", buf[0] & 0x1 ? true_str : false_str);
 
 	json_print(root);
 }
@@ -3028,7 +3006,7 @@ static void json_feature_show_fields_sanitize(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_uint(root, "No-Deallocate Response Mode (NODRM)", result & 1);
+	root_add_uint("No-Deallocate Response Mode (NODRM)", result & 1);
 
 	json_print(root);
 }
@@ -3037,8 +3015,8 @@ static void json_feature_show_fields_endurance_evt_cfg(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_uint(root, "Endurance Group Identifier (ENDGID)", result & 0xffff);
-	json_object_add_value_uint(root, "Endurance Group Critical Warnings", result >> 16 & 0xff);
+	root_add_uint("Endurance Group Identifier (ENDGID)", result & 0xffff);
+	root_add_uint("Endurance Group Critical Warnings", result >> 16 & 0xff);
 
 	json_print(root);
 }
@@ -3047,8 +3025,7 @@ static void json_feature_show_fields_iocs_profile(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "I/O Command Set Profile",
-				     result & 0x1 ? "True" : "False");
+	root_add_str("I/O Command Set Profile", result & 0x1 ? true_str : false_str);
 
 	json_print(root);
 }
@@ -3057,8 +3034,7 @@ static void json_feature_show_fields_spinup_control(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Spinup control feature Enabled",
-				     result & 1 ? "True" : "False");
+	root_add_str("Spinup control feature Enabled", result & 1 ? true_str : false_str);
 
 	json_print(root);
 }
@@ -3074,29 +3050,29 @@ static void json_host_metadata(enum nvme_features_id fid, struct nvme_host_metad
 	struct json_object *desca = json_create_array();
 	struct json_object *desce;
 
-	json_object_add_value_int(root, "Num Metadata Element Descriptors", data->ndesc);
+	root_add_int("Num Metadata Element Descriptors", data->ndesc);
 
-	json_object_add_value_array(root, "Metadata Element Descriptors", desca);
+	root_add_array("Metadata Element Descriptors", desca);
 
 	for (i = 0; i < data->ndesc; i++) {
 		desce = json_create_object();
-		json_array_add_value_object(desca, desce);
+		array_add_obj(desca, desce);
 
-		json_object_add_value_int(desce, "Element", i);
+		obj_add_int(desce, "Element", i);
 
 		sprintf(json_str, "0x%02x", desc->type);
-		json_object_add_value_string(desce, "Type", json_str);
+		obj_add_str(desce, "Type", json_str);
 
-		json_object_add_value_string(desce, "Type definition",
-					    nvme_host_metadata_type_to_string(fid, desc->type));
+		obj_add_str(desce, "Type definition",
+			    nvme_host_metadata_type_to_string(fid, desc->type));
 
-		json_object_add_value_int(desce, "Revision", desc->rev);
+		obj_add_int(desce, "Revision", desc->rev);
 
 		len = le16_to_cpu(desc->len);
-		json_object_add_value_int(desce, "Length", len);
+		obj_add_int(desce, "Length", len);
 
 		strncpy(val, (char *)desc->val, min(sizeof(val) - 1, len));
-		json_object_add_value_string(desce, "Value", val);
+		obj_add_str(desce, "Value", val);
 
 		desc = (struct nvme_metadata_element_desc *)&desc->val[desc->len];
 	}
@@ -3114,7 +3090,7 @@ static void json_feature_show_fields_sw_progress(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_uint(root, "Pre-boot Software Load Count (PBSLC)", result & 0xff);
+	root_add_uint("Pre-boot Software Load Count (PBSLC)", result & 0xff);
 
 	json_print(root);
 }
@@ -3131,7 +3107,7 @@ static void json_feature_show_fields_host_id(unsigned char *buf)
 			if (i - 1)
 				ull <<= BYTE_TO_BIT(sizeof(buf[i]));
 		}
-		json_object_add_value_uint64(root, "Host Identifier (HOSTID)", ull);
+		root_add_uint64("Host Identifier (HOSTID)", ull);
 	}
 
 	json_print(root);
@@ -3141,12 +3117,12 @@ static void json_feature_show_fields_resv_mask(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Mask Reservation Preempted Notification (RESPRE)",
-				     (result & 8) >> 3 ? "True" : "False");
-	json_object_add_value_string(root, "Mask Reservation Released Notification (RESREL)",
-				     (result & 4) >> 2 ? "True" : "False");
-	json_object_add_value_string(root, "Mask Registration Preempted Notification (REGPRE)",
-				     (result & 2) >> 1 ? "True" : "False");
+	root_add_str("Mask Reservation Preempted Notification (RESPRE)", (result & 8) >> 3 ?
+		     true_str : false_str);
+	root_add_str("Mask Reservation Released Notification (RESREL)", (result & 4) >> 2 ?
+		     true_str : false_str);
+	root_add_str("Mask Registration Preempted Notification (REGPRE)", (result & 2) >> 1 ?
+		     true_str : false_str);
 
 	json_print(root);
 }
@@ -3155,8 +3131,7 @@ static void json_feature_show_fields_resv_persist(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Persist Through Power Loss (PTPL)",
-				     result & 1 ? "True" : "False");
+	root_add_str("Persist Through Power Loss (PTPL)", result & 1 ? true_str : false_str);
 
 	json_print(root);
 }
@@ -3165,8 +3140,7 @@ static void json_feature_show_fields_write_protect(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Namespace Write Protect",
-				     nvme_ns_wp_cfg_to_string(result));
+	root_add_str("Namespace Write Protect", nvme_ns_wp_cfg_to_string(result));
 
 	json_print(root);
 }
@@ -3175,10 +3149,8 @@ static void json_feature_show_fields_fdp(unsigned int result)
 {
 	struct json_object *root = json_create_object();
 
-	json_object_add_value_string(root, "Flexible Direct Placement Enable (FDPE)",
-				     result & 1 ? "Yes" : "No");
-	json_object_add_value_uint(root, "Flexible Direct Placement Configuration Index",
-				   result >> 8 & 0xf);
+	root_add_str("Flexible Direct Placement Enable (FDPE)", result & 1 ? yes : no);
+	root_add_uint("Flexible Direct Placement Configuration Index", result >> 8 & 0xf);
 
 	json_print(root);
 }
@@ -3193,7 +3165,7 @@ static void json_feature_show_fields_fdp_events(unsigned int result, unsigned ch
 	for (i = 0; i < result; i++) {
 		d = &((struct nvme_fdp_supported_event_desc *)buf)[i];
 		sprintf(json_str, "%sEnabled", d->evta & 0x1 ? "" : "Not ");
-		json_object_add_value_string(root, nvme_fdp_event_to_string(d->evt), json_str);
+		root_add_str(nvme_fdp_event_to_string(d->evt), json_str);
 	}
 
 	json_print(root);
@@ -3205,12 +3177,12 @@ static void json_feature_show(enum nvme_features_id fid, int sel, unsigned int r
 	char json_str[STR_LEN];
 
 	sprintf(json_str, "%#0*x", fid ? 4 : 2, fid);
-	json_object_add_value_string(root, "feature", json_str);
+	root_add_str("feature", json_str);
 
-	json_object_add_value_string(root, "name", nvme_feature_to_string(fid));
+	root_add_str("name", nvme_feature_to_string(fid));
 
 	sprintf(json_str, "%#0*x", result ? 10 : 8, result);
-	json_object_add_value_string(root, nvme_select_to_string(sel), json_str);
+	root_add_str(nvme_select_to_string(sel), json_str);
 
 	json_print(root);
 }
