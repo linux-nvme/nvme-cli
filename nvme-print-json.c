@@ -20,17 +20,20 @@
 #define MS500_TO_SEC(time) ((time) / 2)
 
 #define array_add_obj json_array_add_value_object
+#define obj_add_array json_object_add_value_array
 #define obj_add_int json_object_add_value_int
 #define obj_add_str json_object_add_value_string
+#define obj_add_uint json_object_add_value_uint
+#define obj_add_uint64 json_object_add_value_uint64
 
-#define root_add_array(k, v) json_object_add_value_array(root, k, v)
+#define root_add_array(k, v) obj_add_array(root, k, v)
 #define root_add_int(k, v) obj_add_int(root, k, v)
 #define root_add_int_secs(k, v) obj_add_int_secs(root, k, v)
 #define root_add_prix64(k, v) obj_add_prix64(root, k, v)
 #define root_add_result(v, ...) obj_add_result(root, v, ##__VA_ARGS__)
 #define root_add_str(k, v) json_object_add_value_string(root, k, v)
-#define root_add_uint(k, v) json_object_add_value_uint(root, k, v)
-#define root_add_uint64(k, v) json_object_add_value_uint64(root, k, v)
+#define root_add_uint(k, v) obj_add_uint(root, k, v)
+#define root_add_uint64(k, v) obj_add_uint64(root, k, v)
 #define root_add_uint_0x(k, v) obj_add_uint_0x(root, k, v)
 #define root_add_uint_nx(k, v) obj_add_uint_nx(root, k, v)
 #define root_add_uint_x(k, v) obj_add_uint_x(root, k, v)
@@ -1613,8 +1616,7 @@ static void json_lba_status(struct nvme_lba_status *list,
 	json_print(root);
 }
 
-static void json_lba_status_log(void *lba_status, __u32 size,
-				const char *devname)
+static void json_lba_status_log(void *lba_status, __u32 size, const char *devname)
 {
 	struct json_object *root = json_create_object();
 	struct json_object *desc;
@@ -1627,45 +1629,45 @@ static void json_lba_status_log(void *lba_status, __u32 size,
 	int offset = sizeof(*hdr);
 	__u32 num_lba_desc;
 	__u32 num_elements = le32_to_cpu(hdr->nlslne);
+	int ele;
+	int i;
 
-	json_object_add_value_uint(root, "lslplen", le32_to_cpu(hdr->lslplen));
-	json_object_add_value_uint(root, "nlslne", num_elements);
-	json_object_add_value_uint(root, "estulb", le32_to_cpu(hdr->estulb));
-	json_object_add_value_uint(root, "lsgc", le16_to_cpu(hdr->lsgc));
+	root_add_uint("lslplen", le32_to_cpu(hdr->lslplen));
+	root_add_uint("nlslne", num_elements);
+	root_add_uint("estulb", le32_to_cpu(hdr->estulb));
+	root_add_uint("lsgc", le16_to_cpu(hdr->lsgc));
 
-	for (int ele = 0; ele < num_elements; ele++) {
+	for (ele = 0; ele < num_elements; ele++) {
 		ns_element = lba_status + offset;
 		element = json_create_object();
-		json_object_add_value_uint(element, "neid",
-			le32_to_cpu(ns_element->neid));
+		obj_add_uint(element, "neid", le32_to_cpu(ns_element->neid));
 		num_lba_desc = le32_to_cpu(ns_element->nlrd);
-		json_object_add_value_uint(element, "nlrd", num_lba_desc);
-		json_object_add_value_uint(element, "ratype", ns_element->ratype);
+		obj_add_uint(element, "nlrd", num_lba_desc);
+		obj_add_uint(element, "ratype", ns_element->ratype);
 
 		offset += sizeof(*ns_element);
 		desc_list = json_create_array();
+
 		if (num_lba_desc != 0xffffffff) {
-			for (int i = 0; i < num_lba_desc; i++) {
+			for (i = 0; i < num_lba_desc; i++) {
 				range_desc = lba_status + offset;
 				desc = json_create_object();
-				json_object_add_value_uint64(desc, "rslba",
-					le64_to_cpu(range_desc->rslba));
-				json_object_add_value_uint(desc, "rnlb",
-					le32_to_cpu(range_desc->rnlb));
+				obj_add_uint64(desc, "rslba", le64_to_cpu(range_desc->rslba));
+				obj_add_uint(desc, "rnlb", le32_to_cpu(range_desc->rnlb));
 
 				offset += sizeof(*range_desc);
-				json_array_add_value_object(desc_list, desc);
+				array_add_obj(desc_list, desc);
 			}
 		} else {
 			root_add_result("Number of LBA Range Descriptors (NLRD) set to %#x for NS element %d",
 					num_lba_desc, ele);
 		}
 
-		json_object_add_value_array(element, "descs", desc_list);
-		json_array_add_value_object(elements_list, element);
+		obj_add_array(element, "descs", desc_list);
+		array_add_obj(elements_list, element);
 	}
 
-	json_object_add_value_array(root, "ns_elements", elements_list);
+	root_add_array("ns_elements", elements_list);
 
 	json_print(root);
 }
