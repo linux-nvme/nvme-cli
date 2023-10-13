@@ -40,6 +40,8 @@ static const char *disabled = "Disabled";
 static const char *reserved = "Reserved";
 static const char *true_str = "True";
 static const char *false_str = "False";
+static const char *result_str = "result";
+static const char *error_str = "error";
 
 static void obj_add_uint_x(struct json_object *o, const char *k, __u32 v)
 {
@@ -3838,7 +3840,7 @@ static void json_directive_show_fields_identify(__u8 doper, __u8 *field, struct 
 					     *(field + 32) & 0x4 ? "enabled" : "disabled");
 		break;
 	default:
-		json_object_add_value_string(root, "error",
+		json_object_add_value_string(root, error_str,
 					     "invalid directive operations for Identify Directives");
 		break;
 	}
@@ -3887,7 +3889,7 @@ static void json_directive_show_fields_streams(__u8 doper,  unsigned int result,
 					   result & 0xffff);
 		break;
 	default:
-		json_object_add_value_string(root, "error",
+		json_object_add_value_string(root, error_str,
 					     "invalid directive operations for Streams Directives");
 		break;
 	}
@@ -3904,7 +3906,7 @@ static void json_directive_show_fields(__u8 dtype, __u8 doper, unsigned int resu
 		json_directive_show_fields_streams(doper, result, (__u16 *)field, root);
 		break;
 	default:
-		json_object_add_value_string(root, "error", "invalid directive type");
+		json_object_add_value_string(root, error_str, "invalid directive type");
 		break;
 	}
 }
@@ -3925,7 +3927,7 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 	sprintf(json_str, "%#x", nsid);
 	json_object_add_value_string(root, "nsid", json_str);
 	sprintf(json_str, "%#x", result);
-	json_object_add_value_string(root, "result", json_str);
+	json_object_add_value_string(root, result_str, json_str);
 
 	if (json_print_ops.flags & VERBOSE) {
 		json_directive_show_fields(type, oper, result, buf, root);
@@ -4012,7 +4014,7 @@ static void json_output_status(int status)
 	int type;
 
 	if (status < 0) {
-		json_object_add_value_string(root, "error", nvme_strerror(errno));
+		json_object_add_value_string(root, error_str, nvme_strerror(errno));
 		return json_output_object(root);
 	}
 
@@ -4021,11 +4023,11 @@ static void json_output_status(int status)
 
 	switch (type) {
 	case NVME_STATUS_TYPE_NVME:
-		json_object_add_value_string(root, "error", nvme_status_to_string(val, false));
+		json_object_add_value_string(root, error_str, nvme_status_to_string(val, false));
 		json_object_add_value_string(root, "type", "nvme");
 		break;
 	case NVME_STATUS_TYPE_MI:
-		json_object_add_value_string(root, "error", nvme_mi_status_to_string(val));
+		json_object_add_value_string(root, error_str, nvme_mi_status_to_string(val));
 		json_object_add_value_string(root, "type", "nvme-mi");
 		break;
 	default:
@@ -4042,7 +4044,7 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 {
 	struct json_object *root = json_create_object();
 	char *value;
-	const char *key = error ? "error" : "result";
+	const char *key = error ? error_str : result_str;
 
 	if (vasprintf(&value, msg, ap) < 0)
 		value = NULL;
@@ -4066,9 +4068,9 @@ static void json_output_perror(const char *msg)
 		error = NULL;
 
 	if (error)
-		json_object_add_value_string(root, "error", error);
+		json_object_add_value_string(root, error_str, error);
 	else
-		json_object_add_value_string(root, "error", "Could not allocate string");
+		json_object_add_value_string(root, error_str, "Could not allocate string");
 
 	json_output_object(root);
 
