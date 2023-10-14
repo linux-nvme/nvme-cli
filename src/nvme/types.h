@@ -43,7 +43,7 @@
  * Returns: The 'name' field from 'value'
  */
 #define NVME_SET(value, name) \
-	(((value) & NVME_##name##_MASK) << NVME_##name##_SHIFT)
+	(((__u32)(value) & NVME_##name##_MASK) << NVME_##name##_SHIFT)
 
 /**
  * enum nvme_constants - A place to stash various constant nvme values
