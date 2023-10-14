@@ -33,17 +33,15 @@ static __u8 csum(const __u8 *buffer, ssize_t length)
 
 static void format_ip_addr(char *buf, size_t buflen, __u8 *addr)
 {
-	struct in6_addr *addr_ipv6;
+	struct in6_addr addr_ipv6;
 
-	addr_ipv6 = (struct in6_addr *)addr;
-	if (addr_ipv6->s6_addr32[0] == 0 &&
-	    addr_ipv6->s6_addr32[1] == 0 &&
-	    ntohl(addr_ipv6->s6_addr32[2]) == 0xffff)
+	memcpy(&addr_ipv6, addr, sizeof(addr_ipv6));
+	if (IN6_IS_ADDR_V4MAPPED(&addr_ipv6))
 		/* ipv4 */
-		inet_ntop(AF_INET, &(addr_ipv6->s6_addr32[3]), buf, buflen);
+		inet_ntop(AF_INET, &addr_ipv6.s6_addr32[3], buf, buflen);
 	else
 		/* ipv6 */
-		inet_ntop(AF_INET6, addr_ipv6, buf, buflen);
+		inet_ntop(AF_INET6, &addr_ipv6, buf, buflen);
 }
 
 static bool in_heap(struct nbft_header *header, struct nbft_heap_obj obj)
