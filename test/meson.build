@@ -72,6 +72,11 @@ if conf.get('HAVE_NETDB')
         ['mock-ifaddrs.c', ],
     )
 
+    # See comment in test/ioctl/meson.build explaining how LD_PRELOAD is used
+    mock_ifaddrs_env = environment()
+    mock_ifaddrs_env.append('LD_PRELOAD', mock_ifaddrs.full_path())
+    mock_ifaddrs_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
+
     tree = executable(
         'tree',
         ['tree.c'],
@@ -80,7 +85,7 @@ if conf.get('HAVE_NETDB')
         link_with: mock_ifaddrs,
     )
 
-    test('tree', tree, env: ['LD_PRELOAD=' + mock_ifaddrs.full_path()])
+    test('tree', tree, env: mock_ifaddrs_env)
 
     test_util = executable(
         'test-util',
