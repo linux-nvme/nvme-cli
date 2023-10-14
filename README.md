@@ -178,3 +178,5 @@ Note that when using the sanitize feature, the library `libasan.so` must be avai
 ```
 meson setup .build -Db_sanitize=address && LD_PRELOAD=/lib64/libasan.so.6 ninja -C .build test
 ```
+
+It's also possible to enable the undefined behavior sanitizer with `-Db_sanitize=undefined`. To enable both, use `-Db_sanitize=address,undefined`.
