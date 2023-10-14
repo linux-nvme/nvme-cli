@@ -445,6 +445,14 @@ nvme_list_opts () {
 		"show-topology")
 		opts+=" --output-format= -o --verbose -v --ranking= -r"
 			;;
+		"nvme-mi-recv")
+		opts+=" --opcode= -O --namespace-id= -n --data-len= -l \
+			--nmimt= -m --nmd0= -0 --nmd1= -1 --input-file= -i"
+			;;
+		"nvme-mi-send")
+		opts+=" --opcode= -O --namespace-id= -n --data-len= -l \
+			--nmimt= -m --nmd0= -0 --nmd1= -1 --input-file= -i"
+			;;
 		"version")
 		opts+=$NO_OPTS
 			;;
@@ -1469,7 +1477,8 @@ _nvme_subcmds () {
 		show-hostnqn dir-receive dir-send virt-mgmt \
 		rpmb boot-part-log fid-support-effects-log \
 		supported-log-pages lockdown media-unit-stat-log \
-		supported-cap-config-log dim show-topology list-endgrp"
+		supported-cap-config-log dim show-topology list-endgrp \
+		nvme-mi-recv nvme-mi-send"
 
 	# Add plugins:
 	for plugin in "${!_plugin_subcmds[@]}"; do

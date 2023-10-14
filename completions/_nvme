@@ -102,6 +102,8 @@ _nvme () {
 	'virt-mgmt:submit a Virtualization Management command'
 	'rpmb:submit an NVMe RPMB command'
 	'show-topology:show subsystem topology'
+	'nvme-mi-recv:send a NVMe-MI receive command'
+	'nvme-mi-send:send a NVMe-MI send command'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'help:print brief descriptions of all nvme commands'
@@ -1997,6 +1999,48 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme show-topology options" _showtopology
+			;;
+		(nvme-mi-recv)
+			local _nvme_mi_recv
+			_nvme_mi_recv=(
+			--opcode=':NVMe-MI opcode to send'
+			-O':alias of --opcode'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--data-len=':length for data buffer'
+			-l':alias of --data-len'
+			--nmimt':value for NVMe-MI message type'
+			-m':alias of --nmimt'
+			--nmd0':value for NVMe management request dword 0'
+			-0':alias of --nmd0'
+			--nmd1':value for NVMe management request dword 1'
+			-1':alias of --nmd1'
+			--input-file=':defaults to stdin; input for write (send direction)'
+			-i':alias for --input-file'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvme-mi-recv options" _nvme_mi_recv
+			;;
+		(nvme-mi-send)
+			local _nvme_mi_send
+			_nvme_mi_send=(
+			--opcode=':NVMe-MI opcode to send'
+			-O':alias of --opcode'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--data-len=':length for data buffer'
+			-l':alias of --data-len'
+			--nmimt':value for NVMe-MI message type'
+			-m':alias of --nmimt'
+			--nmd0':value for NVMe management request dword 0'
+			-0':alias of --nmd0'
+			--nmd1':value for NVMe management request dword 1'
+			-1':alias of --nmd1'
+			--input-file=':defaults to stdin; input for write (send direction)'
+			-i':alias for --input-file'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvme-mi-send options" _nvme_mi_send
 			;;
 		(version)
 			local _version
