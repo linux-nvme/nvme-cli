@@ -22,6 +22,7 @@
 #define array_add_obj json_array_add_value_object
 #define obj_add_array json_object_add_value_array
 #define obj_add_int json_object_add_value_int
+#define obj_add_obj json_object_add_value_object
 #define obj_add_str json_object_add_value_string
 #define obj_add_uint json_object_add_value_uint
 #define obj_add_uint64 json_object_add_value_uint64
@@ -29,6 +30,7 @@
 #define root_add_array(k, v) obj_add_array(root, k, v)
 #define root_add_int(k, v) obj_add_int(root, k, v)
 #define root_add_int_secs(k, v) obj_add_int_secs(root, k, v)
+#define root_add_obj(k, v) obj_add_obj(root, k, v)
 #define root_add_prix64(k, v) obj_add_prix64(root, k, v)
 #define root_add_result(v, ...) obj_add_result(root, v, ##__VA_ARGS__)
 #define root_add_str(k, v) json_object_add_value_string(root, k, v)
@@ -488,7 +490,7 @@ void json_fw_log(struct nvme_firmware_slot *fw_log, const char *devname)
 		}
 	}
 
-	json_object_add_value_object(root, devname, fwsi);
+	root_add_obj(devname, fwsi);
 
 	json_print(root);
 }
@@ -519,7 +521,7 @@ void json_changed_ns_list_log(struct nvme_ns_list *log,
 		obj_add_str(nsi, fmt, str);
 	}
 
-	json_object_add_value_object(root, devname, nsi);
+	root_add_obj(devname, nsi);
 
 	json_print(root);
 }
@@ -591,7 +593,7 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		obj_add_int(crt, "vmbu_failed", (smart->critical_warning & 0x10) >> 4);
 		obj_add_int(crt, "pmr_ro", (smart->critical_warning & 0x20) >> 5);
 
-		json_object_add_value_object(root, "critical_warning", crt);
+		root_add_obj("critical_warning", crt);
 	} else {
 		root_add_int("critical_warning", smart->critical_warning);
 	}
@@ -1021,7 +1023,7 @@ struct json_object* json_effects_log(enum nvme_csi csi,
 		}
 	}
 
-	json_object_add_value_object(root, "admin_cmd_set", acs);
+	root_add_obj("admin_cmd_set", acs);
 
 	for (opcode = 0; opcode < 256; opcode++) {
 		effect = le32_to_cpu(effects_log->iocs[opcode]);
@@ -1032,7 +1034,7 @@ struct json_object* json_effects_log(enum nvme_csi csi,
 		}
 	}
 
-	json_object_add_value_object(root, "io_cmd_set", iocs);
+	root_add_obj("io_cmd_set", iocs);
 	return root;
 }
 
@@ -1071,7 +1073,7 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 		status_str);
 	obj_add_str(sstat, "status", str);
 
-	json_object_add_value_object(dev, "sstat", sstat);
+	obj_add_obj(dev, "sstat", sstat);
 	obj_add_uint(dev, "cdw10_info", le32_to_cpu(sanitize_log->scdw10));
 	obj_add_uint(dev, "time_over_write", le32_to_cpu(sanitize_log->eto));
 	obj_add_uint(dev, "time_block_erase", le32_to_cpu(sanitize_log->etbe));
@@ -1080,7 +1082,7 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	obj_add_uint(dev, "time_block_erase_no_dealloc", le32_to_cpu(sanitize_log->etbend));
 	obj_add_uint(dev, "time_crypto_erase_no_dealloc", le32_to_cpu(sanitize_log->etcend));
 
-	json_object_add_value_object(root, devname, dev);
+	root_add_obj(devname, dev);
 
 	json_print(root);
 }
@@ -1622,7 +1624,7 @@ static void json_fid_support_effects_log(
 		}
 	}
 
-	json_object_add_value_object(root, "fid_support", fids_list);
+	root_add_obj("fid_support", fids_list);
 
 	json_print(root);
 }
@@ -1648,7 +1650,7 @@ static void json_mi_cmd_support_effects_log(
 		}
 	}
 
-	json_object_add_value_object(root, "mi_command_support", mi_cmds_list);
+	root_add_obj("mi_command_support", mi_cmds_list);
 
 	json_print(root);
 }
@@ -3466,7 +3468,7 @@ static void json_support_log(struct nvme_supported_log_pages *support_log,
 		}
 	}
 
-	json_object_add_value_object(root, "supported_logs", valid);
+	root_add_obj("supported_logs", valid);
 
 	json_print(root);
 }
@@ -3529,7 +3531,7 @@ static void json_detail_list(nvme_root_t r)
 
 					array_add_obj(jnss, jns);
 				}
-				json_object_add_value_object(jctrl, "Namespaces", jnss);
+				obj_add_obj(jctrl, "Namespaces", jnss);
 
 				nvme_ctrl_for_each_path(c, p) {
 					struct json_object *jpath = json_create_object();
@@ -3539,11 +3541,11 @@ static void json_detail_list(nvme_root_t r)
 
 					array_add_obj(jpaths, jpath);
 				}
-				json_object_add_value_object(jctrl, "Paths", jpaths);
+				obj_add_obj(jctrl, "Paths", jpaths);
 
 				array_add_obj(jctrls, jctrl);
 			}
-			json_object_add_value_object(jss, "Controllers", jctrls);
+			obj_add_obj(jss, "Controllers", jctrls);
 
 			nvme_subsystem_for_each_ns(s, n) {
 				struct json_object *jns = json_create_object();
@@ -3562,12 +3564,12 @@ static void json_detail_list(nvme_root_t r)
 
 				array_add_obj(jnss, jns);
 			}
-			json_object_add_value_object(jss, "Namespaces", jnss);
+			obj_add_obj(jss, "Namespaces", jnss);
 
 			array_add_obj(jsslist, jss);
 		}
 
-		json_object_add_value_object(hss, "Subsystems", jsslist);
+		obj_add_obj(hss, "Subsystems", jsslist);
 		array_add_obj(jdev, hss);
 	}
 
