@@ -44,7 +44,8 @@ static int test_transport_submit(struct nvme_mi_ep *ep,
 
 	/* start from a minimal response: zeroed data, nmp to match request */
 	memset(resp->hdr, 0, resp->hdr_len);
-	memset(resp->data, 0, resp->data_len);
+	if (resp->data_len)
+		memset(resp->data, 0, resp->data_len);
 	resp->hdr->type = NVME_MI_MSGTYPE_NVME;
 	resp->hdr->nmp = req->hdr->nmp | (NVME_MI_ROR_RSP << 7);
 

@@ -75,10 +75,12 @@ void end_mock_cmds(void)
 	check((cmd)->metadata_len == (mock_cmd)->metadata_len, \
 	      "got metadata_len %" PRIu32 ", expected %" PRIu32, \
 	      (cmd)->metadata_len, (mock_cmd)->metadata_len); \
-	cmp((void const *)(uintptr_t)(cmd)->metadata, \
-	    (mock_cmd)->metadata, \
-	    (cmd)->metadata_len, \
-	    "incorrect metadata"); \
+	if ((cmd)->metadata_len) { \
+		cmp((void const *)(uintptr_t)(cmd)->metadata, \
+		    (mock_cmd)->metadata, \
+		    (cmd)->metadata_len, \
+		    "incorrect metadata"); \
+	} \
 	__u32 data_len = (cmd)->data_len; \
 	check(data_len == (mock_cmd)->data_len, \
 	      "got data_len %" PRIu32 ", expected %" PRIu32, \
