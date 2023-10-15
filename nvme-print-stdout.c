@@ -1335,7 +1335,6 @@ static void stdout_registers_bprsel(__u32 bprsel)
 
 static void stdout_registers_bpmbl(uint64_t bpmbl)
 {
-
 	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n",
 		bpmbl);
 }
@@ -4748,7 +4747,6 @@ static bool stdout_detailed_subsys(const char *name, void *arg)
 	for (s = htable_subsys_getfirst(&res->ht_s, name, &it);
 	     s;
 	     s = htable_subsys_getnext(&res->ht_s, name, &it)) {
-
 		if (first) {
 			printf("%-16s %-96s ", name, nvme_subsystem_get_nqn(s));
 			first = false;
@@ -4823,7 +4821,6 @@ static bool stdout_detailed_ns(const char *name, void *arg)
 	for (n = htable_ns_getfirst(&res->ht_n, name, &it);
 	     n;
 	     n = htable_ns_getnext(&res->ht_n, name, &it)) {
-
 		if (first) {
 			stdout_ns_details(n);
 			first = false;
