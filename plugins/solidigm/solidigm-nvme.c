@@ -60,6 +60,12 @@ static int clear_fw_update_history(int argc, char **argv, struct command *cmd,
 	return ocp_clear_fw_update_history(argc, argv, cmd, plugin);
 }
 
+static int clear_pcie_corectable_error_counters(int argc, char **argv, struct command *cmd,
+						struct plugin *plugin)
+{
+	return ocp_clear_pcie_corectable_error_counters(argc, argv, cmd, plugin);
+}
+
 static int smart_cloud(int argc, char **argv, struct command *cmd,
 		       struct plugin *plugin)
 {
