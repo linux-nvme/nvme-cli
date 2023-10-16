@@ -20,7 +20,7 @@
 #include "solidigm-market-log.h"
 #include "solidigm-temp-stats.h"
 
-#include "plugins/ocp/ocp-clear-fw-update-history.h"
+#include "plugins/ocp/ocp-clear-features.h"
 #include "plugins/ocp/ocp-smart-extended-log.h"
 #include "plugins/ocp/ocp-fw-activation-history.h"
 
