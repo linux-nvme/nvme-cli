@@ -20,6 +20,7 @@
 #include "solidigm-market-log.h"
 #include "solidigm-temp-stats.h"
 #include "solidigm-get-drive-info.h"
+#include "solidigm-ocp-version.h"
 
 #include "plugins/ocp/ocp-clear-features.h"
 #include "plugins/ocp/ocp-smart-extended-log.h"
@@ -99,4 +100,10 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 static int get_drive_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	return sldgm_get_drive_info(argc, argv, cmd, plugin);
+}
+
+static int get_cloud_SSDplugin_version(int argc, char **argv, struct command *cmd,
+				       struct plugin *plugin)
+{
+	return sldgm_ocp_version(argc, argv, cmd, plugin);
 }
