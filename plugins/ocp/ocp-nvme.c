@@ -25,7 +25,7 @@
 #include "nvme-print.h"
 
 #include "ocp-smart-extended-log.h"
-#include "ocp-clear-fw-update-history.h"
+#include "ocp-clear-features.h"
 #include "ocp-fw-activation-history.h"
 
 #define CREATE_CMD
@@ -2106,8 +2106,6 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 ///////////////////////////////////////////////////////////////////////////////
 /// Misc
 
-static const __u8 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS = 0xC3;
-
 static int clear_fw_update_history(int argc, char **argv,
 				   struct command *cmd, struct plugin *plugin)
 {
@@ -2120,14 +2118,10 @@ static int smart_add_log(int argc, char **argv, struct command *cmd,
 	return ocp_smart_add_log(argc, argv, cmd, plugin);
 }
 
-static int clear_pcie_corectable_error_counters(int argc, char **argv,
-						struct command *cmd,
+static int clear_pcie_corectable_error_counters(int argc, char **argv, struct command *cmd,
 						struct plugin *plugin)
 {
-	const char *desc = "OCP Clear PCIe Correctable Error Counters";
-
-	return ocp_clear_feature(argc, argv, desc,
-				 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS);
+	return ocp_clear_pcie_corectable_error_counters(argc, argv, cmd, plugin);
 }
 
 static int fw_activation_history_log(int argc, char **argv, struct command *cmd,

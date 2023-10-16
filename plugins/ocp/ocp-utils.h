@@ -16,5 +16,3 @@
  * Return: Zero if nvme device has UUID list log page, or result of get uuid list otherwise.
  */
 int ocp_get_uuid_index(struct nvme_dev *dev, int *index);
-
-int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8 fid);
