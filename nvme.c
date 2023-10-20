@@ -5875,16 +5875,18 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		if (cfg.feature_id == NVME_FEAT_FID_TIMESTAMP && cfg.value) {
 			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
 		} else {
-			if (strlen(cfg.file)) {
+			if (strlen(cfg.file))
 				ffd = open(cfg.file, O_RDONLY);
-				if (ffd <= 0) {
-					nvme_show_error("Failed to open file %s: %s",
-							cfg.file, strerror(errno));
-					return -EINVAL;
-				}
+			else
+				ffd = dup(STDIN_FILENO);
+
+			if (ffd < 0) {
+				nvme_show_error("Failed to open file %s: %s",
+						cfg.file, strerror(errno));
+				return -EINVAL;
 			}
 
-			err = read(ffd, (void *)buf, cfg.data_len);
+			err = read(ffd, buf, cfg.data_len);
 			if (err < 0) {
 				nvme_show_error("failed to read data buffer from input file: %s",
 						strerror(errno));
