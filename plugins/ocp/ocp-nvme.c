@@ -1964,6 +1964,144 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *c
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+/// plp_health_check_interval
+
+static int set_plp_health_check_interval(int argc, char **argv, struct command *cmd,
+                struct plugin *plugin)
+{
+    const char *desc = "Define Issue Set Feature command (FID : 0xC2) PLP Health Check Interval";
+    const char *plp_health_interval = "[31:16]:PLP Health Check Interval";
+    const char *save = "Specifies that the controller shall save the attribute";
+    const __u32 nsid = 0;
+    const __u8 fid = 0xc6;
+    struct nvme_dev *dev;
+    int err;
+    __u32 result;
+    int uuid_index = 0;
+
+    struct config {
+        __le16 plp_health_interval;
+        bool save;
+    };
+
+    struct config cfg = {
+        .plp_health_interval = 0,
+        .save = false,
+    };
+
+    OPT_ARGS(opts) = {
+        OPT_BYTE("plp_health_interval", 'p', &cfg.plp_health_interval, plp_health_interval),
+        OPT_FLAG("save", 's', &cfg.save, save),
+        OPT_FLAG("no-uuid", 'n', NULL,
+             "Skip UUID index search (UUID index not required for OCP 1.0)"),
+        OPT_END()
+    };
+
+    err = parse_and_open(&dev, argc, argv, desc, opts);
+    if (err)
+        return err;
+
+
+    if (!argconfig_parse_seen(opts, "no-uuid")) {
+        /* OCP 2.0 requires UUID index support */
+        err = ocp_get_uuid_index(dev, &uuid_index);
+        if (err || !uuid_index) {
+            printf("ERROR: No OCP UUID index found");
+            return err;
+        }
+    }
+
+
+    struct nvme_set_features_args args = {
+        .args_size = sizeof(args),
+        .fd = dev_fd(dev),
+        .fid = fid,
+        .nsid = nsid,
+        .cdw11 = cfg.plp_health_interval << 16,
+        .cdw12 = 0,
+        .save = cfg.save,
+        .uuidx = uuid_index,
+        .cdw15 = 0,
+        .data_len = 0,
+        .data = NULL,
+        .timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+        .result = &result,
+    };
+
+    err = nvme_set_features(&args);
+    if (err > 0) {
+        nvme_show_status(err);
+    } else if (err < 0) {
+        nvme_show_perror("Define PLP Health Check Interval");
+        fprintf(stderr, "Command failed while parsing.\n");
+    } else {
+        printf("Successfully set the PLP Health Check Interval");
+        printf("PLP Health Check Interval: 0x%x\n", cfg.plp_health_interval);
+        printf("Save bit Value: 0x%x\n", cfg.save);
+    }
+    return err;
+}
+
+static int get_plp_health_check_interval(int argc, char **argv, struct command *cmd,
+                struct plugin *plugin)
+{
+    const char *desc = "Define Issue Get Feature command (FID : 0xC2) PLP Health Check Interval";
+    const char *sel = "[0-3,8]: current/default/saved/supported/changed";
+    const __u32 nsid = 0;
+    const __u8 fid = 0xc6;
+    struct nvme_dev *dev;
+    __u32 result;
+    int err;
+
+    struct config {
+        __u8 sel;
+    };
+
+    struct config cfg = {
+        .sel = 0,
+    };
+
+    OPT_ARGS(opts) = {
+        OPT_BYTE("sel", 'S', &cfg.sel, sel),
+        OPT_END()
+    };
+
+    err = parse_and_open(&dev, argc, argv, desc, opts);
+    if (err)
+        return err;
+
+
+    struct nvme_get_features_args args = {
+        .args_size  = sizeof(args),
+        .fd         = dev_fd(dev),
+        .fid        = fid,
+        .nsid       = nsid,
+        .sel        = cfg.sel,
+        .cdw11      = 0,
+        .uuidx      = 0,
+        .data_len   = 0,
+        .data       = NULL,
+        .timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
+        .result     = &result,
+    };
+
+    err = nvme_get_features(&args);
+    if (!err) {
+        printf("get-feature:0xC6 %s value: %#08x\n", nvme_select_to_string(cfg.sel), result);
+
+        if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+            nvme_show_select_result(result);
+    } else {
+        nvme_show_error("Could not get feature: 0xC6");
+    }
+
+    return err;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// Misc
 
 static const __u8 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS = 0xC3;
