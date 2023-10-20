@@ -9,9 +9,10 @@ SYNOPSIS
 --------
 [verse]
 'nvme gen-dhchap-key' [--hmac=<hmac-id> | -h <hmac-id>]
-		      [--secret=<secret> | -s <secret> ]
-		      [--key-length=<len> | -l <len> ]
-		      [--nqn=<host-nqn> | -n <host-nqn> ]
+			[--secret=<secret> | -s <secret>]
+			[--key-length=<len> | -l <len>]
+			[--nqn=<host-nqn> | -n <host-nqn>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -42,6 +43,15 @@ OPTIONS
 --nqn=<hostnqn>::
 	Host-NQN to be used for the transformation. This parameter is only
 	valid if a non-zero HMAC function has been specified.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

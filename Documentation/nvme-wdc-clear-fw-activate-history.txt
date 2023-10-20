@@ -32,7 +32,6 @@ EXAMPLES
 # nvme wdc clear-fw-activate-history /dev/nvme0
 ------------
 
-
 NVME
 ----
 Part of the nvme-user suite

@@ -24,6 +24,7 @@ SYNOPSIS
 			[--dir-type=<type> | -T <type>]
 			[--dir-spec=<spec> | -S <spec>]
 			[--format=<entry-format> | -F <entry-format>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -32,75 +33,84 @@ logical block ranges to a single consecutive destination logical block range.
 
 OPTIONS
 -------
---sdlba=<sdlba>::
 -d <sdlba>::
+--sdlba=<sdlba>::
 	64-bit addr of first destination logical block
 
---blocks=<nlb-list,>::
 -b <nlb-list,>::
+--blocks=<nlb-list,>::
 	Comma separated list of the number of blocks in each range
 
---slbs=<slbas,>::
 -s <slbas,>::
+--slbs=<slbas,>::
 	Comma separated list of the starting blocks in each range
 
---limited-retry::
 -l::
+--limited-retry::
 	Sets the limited retry flag.
 
---force-unit-access::
 -f::
+--force-unit-access::
 	Set the force-unit access flag.
 
---prinfow=<prinfow>::
 -p <prinfow>::
+--prinfow=<prinfow>::
 	Protection Information field write definition.
 
---prinfor=<prinfor>::
 -P <prinfor>::
+--prinfor=<prinfor>::
 	Protection Information field read definition.
 
---ref-tag=<reftag>::
 -r <reftag>::
+--ref-tag=<reftag>::
 	initial lba reference tag.
 
---expected-ref-tags=<reftag,>::
 -R <reftag,>::
+--expected-ref-tags=<reftag,>::
 	expected lba reference tags (comma-separated list).
 
---app-tag=<apptag>::
 -a <apptag>::
+--app-tag=<apptag>::
 	lba app tag
 
---expected-app-tags=<apptag,>::
 -A <apptag,>::
+--expected-app-tags=<apptag,>::
 	expected lba app tags (comma-separated list)
 
---app-mask=<appmask>::
 -m <appmask>::
+--app-mask=<appmask>::
 	lba tag mask
 
---expected-app-masks=<appmask,>::
 -M <appmask,>::
+--expected-app-masks=<appmask,>::
 	expected lba tag masks (comma-separated list)
 
---dir-type=<type>::
 -T <type>::
+--dir-type=<type>::
 	Optional directive type. The nvme-cli only enforces the value
 	be in the defined range for the directive type, though the NVMe
 	specification (1.3a) defines only one directive, 01h, for write
 	stream identifiers.
 
---dir-spec=<spec>::
 -S <spec>::
+--dir-spec=<spec>::
 	Optional field for directive specifics. When used with
 	write streams, this value is defined to be the write stream
 	identifier. The nvme-cli will not validate the stream requested
 	is within the controller's capabilities.
 
---format=<entry-format>::
 -F <entry-format>::
+--format=<entry-format>::
 	source range entry format
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

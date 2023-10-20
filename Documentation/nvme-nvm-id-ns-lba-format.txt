@@ -11,8 +11,7 @@ SYNOPSIS
 [verse]
 'nvme nvm-id-ns-lba-format' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--lba-format-index=<lba_format_index> | -i <lba_format_index>]
-			[-v | --verbose]
-			[--output-format=<fmt> | -o <fmt>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -37,14 +36,14 @@ OPTIONS
 	This field specifies the index into the LBA Format list identifying
 	the LBA Format capabilities that are to be returned
 
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
 -v::
 --verbose::
 	Increase the information detail in the output.
-
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
 
 EXAMPLES
 --------

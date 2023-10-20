@@ -9,7 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme device-self-test' <device> [--namespace-id=<NUM> | -n <NUM>]
-			[--self-test-code=<NUM> | -s <NUM>]  [--wait | -w]
+			[--self-test-code=<NUM> | -s <NUM>] [--wait | -w]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -28,12 +29,12 @@ OPTIONS
 
 -s <NUM>::
 --self-test-code=<NUM>::
-        This field specifies the action taken by the device self-test command :
-         0h: Show current state of device self-test operation
-         1h: Start a short device self-test operation
-         2h: Start a extended device self-test operation
-         eh: Start a vendor specific device self-test operation
-         fh: Abort the device self-test operation
+	This field specifies the action taken by the device self-test command :
+	 0h: Show current state of device self-test operation
+	 1h: Start a short device self-test operation
+	 2h: Start a extended device self-test operation
+	 eh: Start a vendor specific device self-test operation
+	 fh: Abort the device self-test operation
 	Default is 0h.
 
 -w::
@@ -41,6 +42,15 @@ OPTIONS
 	Wait for the device self test to complete before exiting
 	The device self-test is aborted by SIGINT signal interrupt for the wait
 	The option is ignored if the abort self-test code option specified.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

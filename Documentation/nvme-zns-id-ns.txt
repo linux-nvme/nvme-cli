@@ -3,15 +3,14 @@ nvme-zns-id-ns(1)
 
 NAME
 ----
-nvme-zns-id-ns - Send NVMe Zoned Command Set Identify namespace, return
-                   result and structure
+nvme-zns-id-ns - Send NVMe Zoned Command Set Identify namespace, return result
+and structure
 
 SYNOPSIS
 --------
 [verse]
-'nvme zns id-ns' <device>  [--namespace-id=<NUM> | -n <NUM>]
-			     [-o <fmt> | --output-format=<fmt>]
-			     [-v | --verbose]
+'nvme zns id-ns' <device> [--namespace-id=<NUM> | -n <NUM>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -36,10 +35,10 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or
+	'binary'. Only one output format can be used at a time.
 
 EXAMPLES
 --------

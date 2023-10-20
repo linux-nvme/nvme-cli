@@ -4,13 +4,13 @@ nvme-mi-cmd-support-effects-log(1)
 NAME
 ----
 nvme-mi-cmd-support-effects-log - Send NVMe MI Command Support and Effects log,
-                                  returns results and structure
+returns results and structure
 
 SYNOPSIS
 --------
 [verse]
-'nvme-mi-cmd-support-effects-log' <device> [-o <fmt> | --output-format=<fmt>]
-					[-H | --human-readable]
+'nvme-mi-cmd-support-effects-log' <device> [--human-readable | -H]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -26,15 +26,19 @@ raw buffer may be printed to stdout.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
-    Set the reporting format to 'normal', 'json', or
-    'binary'. Only one output format can be used at a time.
-
 -H::
 --human-readable::
 	This option will parse and format many of the bit fields
 	into human-readable formats.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

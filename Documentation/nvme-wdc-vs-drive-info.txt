@@ -38,11 +38,9 @@ HyperScale Boot Version
 
 TCG Device Ownership
 
-
 EXAMPLE
 --------
 # nvme wdc vs-drive-info /dev/nvme0
-
 
 NVME
 ----

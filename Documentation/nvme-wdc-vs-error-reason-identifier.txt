@@ -13,8 +13,8 @@ SYNOPSIS
 DESCRIPTION
 -----------
 For the NVMe device given, retrieve the telemetry log error reason id field for either the host generated or 
-controller initiated log.  The controller initiated telemetry log page option must be enabled to retrieve the
-error reason id for that log page id.  
+controller initiated log. The controller initiated telemetry log page option must be enabled to retrieve the
+error reason id for that log page id.
 
 The <device> parameter is mandatory and must be the NVMe character device (ex: /dev/nvme0).
 
@@ -27,7 +27,7 @@ OPTIONS
 -------
 -i <id>::
 --log-id=<id>::
-	Specifies the telemetry log id of the error reason identifier to retrieve.  
+	Specifies the telemetry log id of the error reason identifier to retrieve.
 	Use id 7 for the host generated log page.
 	Use id 8 for the controller initiated log page. 
 	The default is 7/host generated

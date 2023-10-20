@@ -4,12 +4,12 @@ nvme-resv-notif-log(1)
 NAME
 ----
 nvme-resv-notif-log - Send NVMe Reservation Notification log page request,
-                      return result and log
+return result and log
 
 SYNOPSIS
 --------
 [verse]
-'nvme resv-notif-log' <device> [--output-format=<fmt> | -o <fmt>]
+'nvme resv-notif-log' <device> [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -26,10 +26,14 @@ may be printed to stdout for another program to parse.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

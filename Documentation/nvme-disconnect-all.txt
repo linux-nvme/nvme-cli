@@ -8,7 +8,7 @@ nvme-disconnect-all - Disconnect from all connected Fabrics controllers.
 SYNOPSIS
 --------
 [verse]
-'nvme disconnect-all'
+'nvme disconnect-all' [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -16,6 +16,17 @@ Disconnects and removes all existing NVMe over Fabrics controllers.
 
 See the documentation for the nvme-disconnect(1) command for further
 background.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

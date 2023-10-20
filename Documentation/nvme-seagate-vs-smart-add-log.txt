@@ -24,23 +24,23 @@ The log contents may be associated with the controller, in which case the namesp
 
 Two logs exist, page 0xC4 (Extended SMART log page) and page 0xCF (DRAM Supercap SMART log page)
 
-This command will only work on Seagate devices supporting this feature.  Not
+This command will only work on Seagate devices supporting this feature. Not
 all commands work across all product families.
 
 OPTIONS
 -------
 -l <NUM>::
 --log=<NUM>::
-        Log number, page 0xC4 (Extended SMART log page) and page 0xCF (DRAM
-        Supercap SMART log page)
+	Log number, page 0xC4 (Extended SMART log page) and page 0xCF (DRAM
+	Supercap SMART log page)
 
 -n <NUM>::
 --namespace-id=<NUM>::
-        Namespace number
+	Namespace number
 
 -o <FILE>::
 --output-file=<FILE>::
-        Output in binary format. Defaults to text-formatted dump to stdout
+	Output in binary format. Defaults to text-formatted dump to stdout
 
 EXAMPLES
 --------

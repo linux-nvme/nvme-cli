@@ -24,8 +24,8 @@ On success it returns 0, error code otherwise.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal' or 'json' or 'binary'. 
 	Only one output format can be used at a time. The default is normal.
 

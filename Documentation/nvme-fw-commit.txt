@@ -9,8 +9,9 @@ SYNOPSIS
 --------
 [verse]
 'nvme fw-commit' <device> [--slot=<slot> | -s <slot>]
-		    [--action=<action> | -a <action>]
-		    [--bpid=<boot-partid> | -b <boot-partid> ]
+			[--action=<action> | -a <action>]
+			[--bpid=<boot-partid> | -b <boot-partid>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -74,6 +75,15 @@ BPINFO.ABPID.
 -b <boot-partid>::
 	Specifies the Boot partition that shall be used for the Commit Action,
 	if applicable (default: 0)
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

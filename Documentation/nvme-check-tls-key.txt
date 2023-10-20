@@ -8,11 +8,12 @@ nvme-check-tls-key - Check a generated NVMe TLS PSK
 SYNOPSIS
 --------
 [verse]
-'nvme check-tls-key' [--keyring=<name>  | -k <name> ]
-		     [--keytype=<type>  | -t <type> ]
-		     [--hostnqn=<nqn>   | -n <nqn>  ]
-		     [--subsysnqn=<nqn> | -c <nqn>  ]
-		     [--keydata=<key>   | -d <key>  ]
+'nvme check-tls-key' [--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--hostnqn=<nqn> | -n <nqn>]
+			[--subsysnqn=<nqn> | -c <nqn>]
+			[--keydata=<key> | -d <key>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -45,6 +46,15 @@ OPTIONS
 -d <key>::
 --keydata=<key>::
 	Key to be checked.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

@@ -29,7 +29,7 @@ OPTIONS
 
 -s <SIZE>::
 --transfer-size=<SIZE>::
-    Transfer size; defaults to 0x10000 (65536 decimal) bytes
+	Transfer size; defaults to 0x10000 (65536 decimal) bytes
 
 EXAMPLES
 --------

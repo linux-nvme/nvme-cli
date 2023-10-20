@@ -3,15 +3,15 @@ nvme-dim(1)
 
 NAME
 ----
-nvme-dim - Send Discovery Information Management command to one or more Discovery Controllers.
+nvme-dim - Send Discovery Information Management command to one or more
+Discovery Controllers.
 
 SYNOPSIS
 --------
 [verse]
-'nvme dim'
-		[--task=<task>     | -t <task>]
-		[--nqn=<nqn>       | -n <nqn>]
-		[--device=<device> | -d <device>]
+'nvme dim' [--task=<task> | -t <task>] [--nqn=<nqn> | -n <nqn>]
+			[--device=<device> | -d <device>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -50,6 +50,15 @@ OPTIONS
 	The DIM command will be sent to the Discovery Controllers (DC) associated
 	with this NVMe device handle. A list of comma-separated device handles can
 	be supplied to apply the command to more than one DC.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

@@ -9,8 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme boot-part-log' <device> [--lsp=<field> | -s <field>]
-                    [--output-file=<file> | -o <file>]
-                    [--output-format=<fmt> | -o <fmt>]
+			[--output-file=<file> | -f <file>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -29,14 +29,18 @@ OPTIONS
 --lsp=<field>::
 	The log specified field of LID.
 
--o <file>::
+-f <file>::
 --output-file=<file>::
 	File name to which raw binary data will be saved to.
 
--o <format>::
---output-format=<format>::
-    Set the reporting format to 'normal', 'json', or
-    'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

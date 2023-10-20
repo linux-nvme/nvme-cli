@@ -3,14 +3,15 @@ nvme-list-endgrp(1)
 
 NAME
 ----
-nvme-list-endgrp - Send NVMe Identify Endurance Group List, return result and structure
+nvme-list-endgrp - Send NVMe Identify Endurance Group List, return result and
+structure
 
 SYNOPSIS
 --------
 [verse]
 'nvme list-endgrp' <device> [--endgrp-id=<endgrp-id> | -i <endgrp-id>]
-			[-o <fmt> | --output-format=<fmt>]
-        
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
 DESCRIPTION
 -----------
 For the NVMe device given, sends an identify command for endurance group list
@@ -26,13 +27,17 @@ OPTIONS
 -------
 -i <endgrp-id>::
 --endgrp-id=<endgrp-id>::
-	Retrieve the identify endurance group list structure starting for the given
-    endurance group id.
+	Retrieve the identify endurance group list structure starting for the
+	given endurance group id.
 
--o <format>::
---output-format=<format>::
-	Set the reporting format to 'normal' or 'json'. Only one output
-	format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

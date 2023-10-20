@@ -8,9 +8,8 @@ nvme-fdp-stats - Get Flexible Data Placement Statistics
 SYNOPSIS
 --------
 [verse]
-'nvme fdp stats' <device> [--endgrp-id=<NUM> | -e <NUM>]
-			  [--raw-binary | -b]
-			  [--output-format=<FMT> | -o <FMT>]
+'nvme fdp stats' <device> [--endgrp-id=<NUM> | -e <NUM>] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -27,8 +26,8 @@ OPTIONS
 --raw-binary::
 	Print the raw buffer to the standard output stream.
 
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal', 'json', or 'binary'. Only one
 	output format can be used at a time.
 

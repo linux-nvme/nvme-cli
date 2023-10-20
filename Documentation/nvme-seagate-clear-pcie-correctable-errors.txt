@@ -8,12 +8,12 @@ nvme-seagate-clear-pcie-correctable-errors - Clear Seagate PCIe error statistics
 SYNOPSIS
 --------
 [verse]
-'nvme seagate clear-pcie-correctable-errors [<device>]  [OPTIONS]'
+'nvme seagate clear-pcie-correctable-errors [<device>] [OPTIONS]'
 
 DESCRIPTION
 -----------
 
-This command will only work on Seagate devices supporting this feature.  Not
+This command will only work on Seagate devices supporting this feature. Not
 all commands work across all product families.
 
 The '<device>' parameter is mandatory and may be either an NVMe character device (ex: /dev/nvme0), or an
@@ -23,7 +23,7 @@ OPTIONS
 -------
 -s::
 --save::
-        Specifies that the controller shall save the attribute
+	Specifies that the controller shall save the attribute
 
 EXAMPLES
 --------

@@ -23,7 +23,6 @@ OPTIONS
 -------
 none
 
-
 EXAMPLES
 --------
 * Print the Transcend device's bad blocks in a human readable format:

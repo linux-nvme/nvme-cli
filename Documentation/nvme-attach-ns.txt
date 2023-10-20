@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme attach-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--controllers=<ctrl-list,> | -c <ctrl-list,>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -28,11 +29,20 @@ OPTIONS
 	The comma separated list of controller identifiers to attach
 	the namespace too.
 
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
 EXAMPLES
 --------
 	Attach namespace to the controller:
 
-		# nvme attach-ns /dev/nvme1  -n 0x2 -c 0x21
+		# nvme attach-ns /dev/nvme1 -n 0x2 -c 0x21
 
 NVME
 ----
