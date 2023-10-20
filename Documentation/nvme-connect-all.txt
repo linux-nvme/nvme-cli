@@ -8,37 +8,29 @@ nvme-connect-all - Discover and Connect to Fabrics controllers.
 SYNOPSIS
 --------
 [verse]
-'nvme connect-all'
-		[--transport=<trtype>     | -t <trtype>]
-		[--nqn=<subnqn>           | -n <subnqn>]
-		[--traddr=<traddr>        | -a <traddr>]
-		[--trsvcid=<trsvcid>      | -s <trsvcid>]
-		[--host-traddr=<traddr>   | -w <traddr>]
-		[--host-iface=<iface>     | -f <iface>]
-		[--hostnqn=<hostnqn>      | -q <hostnqn>]
-		[--hostid=<hostid>        | -I <hostid>]
-		[--raw=<filename>         | -r <filename>]
-		[--device=<device>        | -d <device>]
-		[--cfg-file=<cfg>         | -C <cfg>]
-		[--keep-alive-tmo=<sec>   | -k <sec>]
-		[--reconnect-delay=<#>    | -c <#>]
-		[--ctrl-loss-tmo=<#>	  | -l <#>]
-		[--nr-io-queues=<#>       | -i <#>]
-		[--nr-write-queues=<#>    | -W <#>]
-		[--nr-poll-queues=<#>     | -P <#>]
-		[--queue-size=<#>         | -Q <#>]
-		[--keyring=<#>                    ]
-		[--tls_key=<#>                    ]
-		[--hdr-digest             | -g]
-		[--data-digest            | -G]
-		[--persistent             | -p]
-		[--tls                        ]
-		[--quiet                  | -S]
-		[--dump-config            | -O]
-                [--nbft]
-                [--no-nbft]
-                [--nbft-path=<STR>]
-                [--context=<STR>]
+'nvme connect-all' [--transport=<trtype> | -t <trtype>]
+			[--nqn=<subnqn> | -n <subnqn>]
+			[--traddr=<traddr> | -a <traddr>]
+			[--trsvcid=<trsvcid> | -s <trsvcid>]
+			[--host-traddr=<traddr> | -w <traddr>]
+			[--host-iface=<iface> | -f <iface>]
+			[--hostnqn=<hostnqn> | -q <hostnqn>]
+			[--hostid=<hostid> | -I <hostid>]
+			[--raw=<filename> | -r <filename>]
+			[--device=<device> | -d <device>]
+			[--cfg-file=<cfg> | -C <cfg>]
+			[--keep-alive-tmo=<sec> | -k <sec>]
+			[--reconnect-delay=<#> | -c <#>]
+			[--ctrl-loss-tmo=<#>	 | -l <#>]
+			[--nr-io-queues=<#> | -i <#>]
+			[--nr-write-queues=<#> | -W <#>]
+			[--nr-poll-queues=<#> | -P <#>]
+			[--queue-size=<#> | -Q <#>] [--keyring=<#>]
+			[--tls_key=<#>] [--hdr-digest | -g] [--data-digest | -G]
+			[--persistent | -p] [--tls] [--quiet | -S]
+			[--dump-config | -O] [--nbft] [--no-nbft]
+			[--nbft-path=<STR>] [--context=<STR>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -62,13 +54,13 @@ OPTIONS
 -t <trtype>::
 --transport=<trtype>::
 	This field specifies the network fabric being used for
-	a NVMe-over-Fabrics network.  Current string values include:
+	a NVMe-over-Fabrics network. Current string values include:
 +
 []
 |=================
 |Value|Definition
 |rdma|The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)
-|fc  |*WIP* The network fabric is a Fibre Channel network.
+|fc |*WIP* The network fabric is a Fibre Channel network.
 |tcp |The network fabric is a TCP/IP network.
 |loop|Connect to a NVMe over Fabrics target on the local host
 |=================
@@ -85,7 +77,7 @@ OPTIONS
 
 -s <trsvcid>::
 --trsvcid=<trsvcid>::
-	This field specifies the transport service id.  For transports using IP
+	This field specifies the transport service id. For transports using IP
 	addressing (e.g. rdma) this field is the port number. By default, the IP
 	port number for the RDMA transport is 4420.
 
@@ -203,17 +195,26 @@ OPTIONS
 	Print out resulting JSON configuration file to stdout.
 
 --nbft::
-        Only look at NBFT tables
+	Only look at NBFT tables
 
 --no-nbft::
-        Do not look at NBFT tables
+	Do not look at NBFT tables
 
 --nbft-path=<STR>::
-        Use a user-defined path to the NBFT tables
+	Use a user-defined path to the NBFT tables
 
 --context <STR>::
 	Set the execution context to <STR>. This allows to coordinate
 	the management of the global resources.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
@@ -241,9 +242,9 @@ the RDMA network. Port 4420 is used by default:
 * Issue a 'nvme connect-all' command using a @SYSCONFDIR@/nvme/discovery.conf file:
 +
 -----------
-# Machine default 'nvme discover' commands.  Query the
+# Machine default 'nvme discover' commands. Query the
 # Discovery Controller's two ports (some resources may only
-# be accessible on a single port).  Note an official
+# be accessible on a single port). Note an official
 # nqn (Host) name defined in the NVMe specification is being used
 # in this example.
 -t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432

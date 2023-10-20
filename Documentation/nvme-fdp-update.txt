@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme fdp update' <device> [--namespace-id=<NUM> | -n <NUM>]
-			   [--pids=<NUM,> | -p <NUM,>]
+			[--pids=<NUM,> | -p <NUM,>]
 
 DESCRIPTION
 -----------

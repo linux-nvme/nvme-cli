@@ -8,8 +8,8 @@ nvme-id-nvmset - Send NVMe Identify NVM Set List, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme id-nvmset' <device> [-i <id> | --nvmset_id=<id> ]
-			[-o <fmt> | --output-format=<fmt>]
+'nvme id-nvmset' <device> [--nvmset_id=<id> | -i <id>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -27,14 +27,18 @@ OPTIONS
 -------
 -i <id>::
 --nvmset_id=<id>::
-	This field specifies the identifier of the NVM Set.  If given, NVM set
+	This field specifies the identifier of the NVM Set. If given, NVM set
 	identifier whose entry is to be in result data will be greater than or
 	equal to this value.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

@@ -8,9 +8,8 @@ nvme-zns-changed-zone-list - Retrieve Changed Zone log for the given device
 SYNOPSIS
 --------
 [verse]
-'nvme zns changed-zone-list' <device> [-o <fmt> | --output-format=<fmt>]
-				      [--namespace-id=<NUM> | -n <NUM>]
-				      [--rae | -r]
+'nvme zns changed-zone-list' <device> [--output-format=<fmt> | -o <fmt>]
+			[--namespace-id=<NUM> | -n <NUM>] [--rae | -r]
 
 DESCRIPTION
 -----------
@@ -25,10 +24,10 @@ ways.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or
+	'binary'. Only one output format can be used at a time.
 
 -r::
 --rae::

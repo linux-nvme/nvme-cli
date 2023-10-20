@@ -9,10 +9,10 @@ SYNOPSIS
 --------
 [verse]
 'nvme io-mgmt-send' <device> [--namespace-id=<NUM> | -n <NUM>]
-			     [--mos=<NUM> | -s <NUM>]
-			     [--mo=<NUM> | -m <NUM>]
-			     [--data=<FILE> | -d <FILE>]
-			     [--data-len=<NUM> | -l <NUM>]
+			[--mos=<NUM> | -s <NUM>] [--mo=<NUM> | -m <NUM>]
+			[--data=<FILE> | -d <FILE>]
+			[--data-len=<NUM> | -l <NUM>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -48,6 +48,14 @@ OPTIONS
 --mos=<NUM>::
 	Management Operation Specific parameter.
 
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 NVME
 ----

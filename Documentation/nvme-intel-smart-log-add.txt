@@ -3,14 +3,14 @@ nvme-intel-smart-log-add(1)
 
 NAME
 ----
-nvme-intel-smart-log-add - Send NVMe Intel Additional SMART log page request, returns result and log
+nvme-intel-smart-log-add - Send NVMe Intel Additional SMART log page request,
+returns result and log
 
 SYNOPSIS
 --------
 [verse]
 'nvme intel smart-log-add' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--raw-binary | -b]
-			[--json | -j]
+			[--raw-binary | -b] [--json | -j]
 
 DESCRIPTION
 -----------
@@ -41,7 +41,7 @@ OPTIONS
 
 -j::
 --json::
-              Dump output in json format.
+	Dump output in json format.
 
 EXAMPLES
 --------

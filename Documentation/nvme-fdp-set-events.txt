@@ -9,9 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme fdp set-events' <device> [--namespace-id=<NUM> | -n <NUM>]
-			       [--placement-handle=<NUM> | -p <NUM>]
-			       [--enable | -e]
-			       [--event-types=<NUM,> | -t <NUM,>]
+			[--placement-handle=<NUM> | -p <NUM>] [--enable | -e]
+			[--event-types=<NUM,> | -t <NUM,>]
 
 DESCRIPTION
 -----------
@@ -29,8 +28,8 @@ OPTIONS
 --raw-binary::
 	Print the raw buffer to the standard output stream.
 
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal', 'json', or 'binary'. Only one
 	output format can be used at a time.
 

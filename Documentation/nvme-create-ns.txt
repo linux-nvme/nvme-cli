@@ -28,6 +28,7 @@ SYNOPSIS
 			[--ror=<ror> | -O <ror>]
 			[--rnumzrwa=<rnumzrwa> | -u <rnumzrwa>]
 			[--phndls=<placement-handle-list,> | -p <placement-handle-list,>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -92,8 +93,8 @@ OPTIONS
 -b::
 --block-size::
 	Target block size the new namespace should be formatted as. Potential FLBAS
-  values will be values will be scanned and the lowest numbered will be
-  selected for the create-ns operation. Conflicts with --flbas argument.
+	values will be values will be scanned and the lowest numbered will be
+	selected for the create-ns operation. Conflicts with --flbas argument.
 
 -S::
 --nsze-si::
@@ -133,6 +134,15 @@ OPTIONS
 --phndls=<placement-handle-list,>::
 	The comma separated list of Reclaim Unit Handle Identifier to be associated
 	with each Placement Handle.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

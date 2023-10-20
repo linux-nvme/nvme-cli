@@ -8,9 +8,9 @@ nvme-wdc-id-ctrl - Send NVMe Identify Controller, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme wdc id-ctrl' <device> [-v | --vendor-specific] [-b | --raw-binary]
-			[-H | --human-readable]
-			[-o <fmt> | --output-format=<fmt>]
+'nvme wdc id-ctrl' <device> [--vendor-specific | -v] [--raw-binary | -b]
+			[--human-readable | -H]
+			[--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -48,10 +48,10 @@ OPTIONS
 	This option will parse and format many of the bit fields
 	into human-readable formats.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or
+	'binary'. Only one output format can be used at a time.
 
 EXAMPLES
 --------

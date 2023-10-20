@@ -34,7 +34,7 @@ OPTIONS
 -n::
 --no-uuid::
 	Do not try to automatically detect UUID index for this command (required
-        for old OCP 1.0 support)
+	for old OCP 1.0 support)
 
 EXAMPLES
 --------

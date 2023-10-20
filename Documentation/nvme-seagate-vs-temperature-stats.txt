@@ -13,7 +13,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-This command will only work on Seagate devices supporting this feature.  Not
+This command will only work on Seagate devices supporting this feature. Not
 all commands work across all product families.
 
 The '<device>'parameter is mandatory and it may be either an NVMe character device (ex: /dev/nvme0) or an
@@ -21,9 +21,9 @@ nvme block device (ex: /dev/nvme0n1).
 
 OPTIONS
 -------
--o <FMT>::
---output-format=<FMT>::
-        Output in binary format
+-o <fmt>::
+--output-format=<fmt>::
+	Output in binary format
 
 EXAMPLES
 --------

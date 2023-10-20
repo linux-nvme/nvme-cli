@@ -8,33 +8,28 @@ nvme-config - NVMe-over-Fabrics configuration.
 SYNOPSIS
 --------
 [verse]
-'nvme config'
-		[--scan                   | -R]
-		[--modify                 | -M]
-		[--update                 | -U]
-		[--dump                   | -O]
-		[--config=<cfg>      | -J <cfg> ]
-		[--transport=<trtype>     | -t <trtype>]
-		[--nqn=<subnqn>           | -n <subnqn>]
-		[--traddr=<traddr>        | -a <traddr>]
-		[--trsvcid=<trsvcid>      | -s <trsvcid>]
-		[--host-traddr=<traddr>   | -w <traddr>]
-		[--host-iface=<iface>     | -f <iface>]
-		[--hostnqn=<hostnqn>      | -q <hostnqn>]
-		[--hostid=<hostid>        | -I <hostid>]
-		[--dhchap-secret=<secret> | -S <secret>]
-		[--dhchap-ctrl-secret=<secret> | -C <secret>]
-		[--nr-io-queues=<#>       | -i <#>]
-		[--nr-write-queues=<#>    | -W <#>]
-		[--nr-poll-queues=<#>     | -P <#>]
-		[--queue-size=<#>         | -Q <#>]
-		[--keep-alive-tmo=<#>     | -k <#>]
-		[--reconnect-delay=<#>    | -c <#>]
-		[--ctrl-loss-tmo=<#>      | -l <#>]
-		[--duplicate-connect      | -D]
-		[--disable-sqflow         | -d]
-		[--hdr-digest             | -g]
-		[--data-digest            | -G]
+'nvme config' [--scan | -R] [--modify | -M] [--update | -U] [--dump | -O]
+			[--config=<cfg> | -J <cfg>]
+			[--transport=<trtype> | -t <trtype>]
+			[--nqn=<subnqn> | -n <subnqn>]
+			[--traddr=<traddr> | -a <traddr>]
+			[--trsvcid=<trsvcid> | -s <trsvcid>]
+			[--host-traddr=<traddr> | -w <traddr>]
+			[--host-iface=<iface> | -f <iface>]
+			[--hostnqn=<hostnqn> | -q <hostnqn>]
+			[--hostid=<hostid> | -I <hostid>]
+			[--dhchap-secret=<secret> | -S <secret>]
+			[--dhchap-ctrl-secret=<secret> | -C <secret>]
+			[--nr-io-queues=<#> | -i <#>]
+			[--nr-write-queues=<#> | -W <#>]
+			[--nr-poll-queues=<#> | -P <#>]
+			[--queue-size=<#> | -Q <#>]
+			[--keep-alive-tmo=<#> | -k <#>]
+			[--reconnect-delay=<#> | -c <#>]
+			[--ctrl-loss-tmo=<#> | -l <#>]
+			[--duplicate-connect | -D] [--disable-sqflow | -d]
+			[--hdr-digest | -g] [--data-digest | -G]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -52,7 +47,7 @@ OPTIONS
 -M::
 --modify::
 	Add or modify entries in the configuration based on the values from
-        the commandline.
+	the commandline.
 
 -U::
 --update::
@@ -71,7 +66,7 @@ OPTIONS
 -t <trtype>::
 --transport=<trtype>::
 	This field specifies the network fabric being used for
-	a NVMe-over-Fabrics network.  Current string values include:
+	a NVMe-over-Fabrics network. Current string values include:
 +
 []
 |=================
@@ -94,7 +89,7 @@ OPTIONS
 
 -s <trsvcid>::
 --trsvcid=<trsvcid>::
-	This field specifies the transport service id.  For transports using IP
+	This field specifies the transport service id. For transports using IP
 	addressing (e.g. rdma) this field is the port number. By default, the IP
 	port number for the RDMA transport is 4420.
 
@@ -186,6 +181,15 @@ OPTIONS
 --data-digest::
 	Generates/verifies data digest (TCP).
 
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
 EXAMPLES
 --------
 * Read the current system configuration and write the contents to /tmp/config.json:
@@ -199,7 +203,6 @@ SEE ALSO
 nvme-discover(1)
 nvme-connect(1)
 https://github.com/linux-nvme/libnvme/doc/config-schema.json
-
 
 AUTHORS
 -------

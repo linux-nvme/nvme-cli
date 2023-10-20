@@ -4,13 +4,12 @@ nvme-wdc-get-dev-capabilities-log(1)
 NAME
 ----
 nvme-wdc-get-dev-capabilities-log - Send NVMe WDC get-dev-capabilities-log 
-									plugin command, return parsed log output
+plugin command, return parsed log output
 
 SYNOPSIS
 --------
 [verse]
-'nvme wdc get-dev-capabilities-log' <device> [--output-format=<normal|json> 
--o <normal|json>]
+'nvme wdc get-dev-capabilities-log' <device> [--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -29,8 +28,8 @@ code otherwise.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal', or
 	'json'. Only one output format can be used at a time.
 	Default is normal.

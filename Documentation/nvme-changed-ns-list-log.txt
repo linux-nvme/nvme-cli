@@ -4,13 +4,13 @@ nvme-changed-ns-list-log(1)
 NAME
 ----
 nvme-changed-ns-list-log - Send NVMe Changed Namespace List log page
-                           request, returns result and log.
+request, returns result and log.
 
 SYNOPSIS
 --------
 [verse]
 'nvme changed-ns-list-log' <device> [--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -31,10 +31,14 @@ OPTIONS
 --raw-binary::
 	Print the raw Changed Namespace List log buffer to stdout.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

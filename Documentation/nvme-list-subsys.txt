@@ -8,7 +8,7 @@ nvme-list-subsys - List all NVMe subsystems
 SYNOPSIS
 --------
 [verse]
-'nvme list-subsys' [-o <fmt> | --output-format=<fmt>] <device>
+'nvme list-subsys' <device> [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -19,10 +19,14 @@ and subsystems leading to the device.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
-	Set the reporting format to 'normal' or 'json'. Only one output
-	format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

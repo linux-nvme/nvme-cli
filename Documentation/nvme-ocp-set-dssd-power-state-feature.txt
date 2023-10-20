@@ -8,8 +8,9 @@ nvme-ocp-set-dssd-power-state-feature - Set DSSD Power State
 SYNOPSIS
 --------
 [verse]
-'nvme ocp set-dssd-power-state-feature' <device> [--power-state=<fmt> | -p <fmt>] [--no-uuid | -n]
-                                                 [--save | -s]
+'nvme ocp set-dssd-power-state-feature' <device>
+			[--power-state=<fmt> | -p <fmt>] [--no-uuid | -n]
+			[--save | -s]
 
 DESCRIPTION
 -----------
@@ -25,8 +26,8 @@ On success it returns 0, error code otherwise.
 
 OPTIONS
 -------
--p <format>::
---power-state=<format>::
+-p <fmt>::
+--power-state=<fmt>::
 	DSSD Power State to set in watts.
 
 EXAMPLES

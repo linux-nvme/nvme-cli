@@ -9,13 +9,13 @@ SYNOPSIS
 --------
 [verse]
 'nvme rpmb' <device> [--cmd=<command> | -c <command>]
-		    [--msgfile=<data-file> | -f <data-file>]
-		    [--keyfile=<key-file> | -g <key-file>]
-		    [--key=<key> | -k <key>]
-		    [--msg=<data> | -d <data>]
-		    [--address=<offset> | -o <offset>]
-		    [--blocks=<512 byte sectors> | -b <sectors> ]
-		    [--target=<target-id> | -t <id> ]
+			[--msgfile=<data-file> | -f <data-file>]
+			[--keyfile=<key-file> | -g <key-file>]
+			[--key=<key> | -k <key>] [--msg=<data> | -d <data>]
+			[--address=<offset> | -o <offset>]
+			[--blocks=<512 byte sectors> | -b <sectors>]
+			[--target=<target-id> | -t <id>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -71,7 +71,7 @@ OPTIONS
 	nvme-rpmb without sending it to device. RPMB target 0 is used as the
 	default target if --target or -t is not specified. 0x0 is used as the
 	default address if no -address or -o option is specified, 
-	
+
 -t <target>::
 --target=<target>::
 	RPMB target id. This should be one of the supported RPMB targets as
@@ -104,6 +104,15 @@ OPTIONS
 --blocks=<sectors>::
 	The size in 512 byte sectors to be used for data transfer commands
 	(read or write) for a specified RPMB target.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
@@ -147,4 +156,3 @@ EXAMPLES
 NVME
 ----
 Part of the nvme-user suite
-

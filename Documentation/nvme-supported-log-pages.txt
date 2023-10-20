@@ -8,8 +8,7 @@ nvme-supported-log-pages - Send NVMe Supported Log pages request, returns result
 SYNOPSIS
 --------
 [verse]
-'nvme supported-log-pages' <device> [--output-format=<fmt> | -o <fmt>]
-                            [--verbose | -v]
+'nvme supported-log-pages' <device> [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -25,14 +24,15 @@ for each command that is supported.
 OPTIONS
 -------
 
--o <format>::
---output-format=<format>::
-	This option will set the reporting format to normal, json, or binary.
-	Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
 
 -v::
 --verbose::
-	Show more information including LID Supported (LSUPP) and Index Offset Supported (IOP) details.
+	Increase the information detail in the output. Show more information
+	including LID Supported (LSUPP) and Index Offset Supported (IOP) details.
 
 EXAMPLES
 --------

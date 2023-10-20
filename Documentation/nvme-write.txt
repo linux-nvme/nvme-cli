@@ -18,17 +18,13 @@ SYNOPSIS
 			[--prinfo=<prinfo> | -p <prinfo>]
 			[--app-tag-mask=<appmask> | -m <appmask>]
 			[--app-tag=<apptag> | -a <apptag>]
-			[--limited-retry | -l]
-			[--force-unit-access | -f]
+			[--limited-retry | -l] [--force-unit-access | -f]
 			[--dir-type=<type> | -T <type>]
-			[--dir-spec=<spec> | -S <spec>]
-			[--dsm=<dsm> | -D <dsm>]
-			[--show-command | -V]
-			[--dry-run | -w]
-			[--latency | -t]
+			[--dir-spec=<spec> | -S <spec>] [--dsm=<dsm> | -D <dsm>]
+			[--show-command | -V] [--dry-run | -w] [--latency | -t]
 			[--storage-tag<storage-tag> | -g <storage-tag>]
-			[--storage-tag-check | -C]
-			[--force]
+			[--storage-tag-check | -C] [--force]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -38,34 +34,34 @@ if you don't provide a file.
 
 OPTIONS
 -------
---start-block=<slba>::
 -s <slba>::
+--start-block=<slba>::
 	Start block.
 
---block-count::
 -c::
+--block-count::
 	The number of blocks to transfer. This is a zeroes based value to
 	align with the kernel's use of this field. (ie. 0 means transfer
 	1 block).
 
---data-size=<size>::
 -z <size>::
+--data-size=<size>::
 	Size of data, in bytes.
 
---metadata-size=<size>::
 -y <size>::
+--metadata-size=<size>::
 	Size of metadata in bytes.
 
---data=<data-file>::
 -d <data-file>::
+--data=<data-file>::
 	Data file. If none provided, contents are sent from STDIN.
 
---metadata=<metadata-file>::
 -M <metadata-file>::
+--metadata=<metadata-file>::
 	Metadata file, if necessary.
 
---prinfo=<prinfo>::
 -p <prinfo>::
+--prinfo=<prinfo>::
 	Protection Information field definition.
 +
 []
@@ -80,24 +76,24 @@ metadata is passes.
 |0|Set to 1 enables checking the reference tag
 |=================
 
---ref-tag=<reftag>::
 -r <reftag>::
+--ref-tag=<reftag>::
 	Optional reftag when used with protection information.
 
---app-tag-mask=<appmask>::
 -m <appmask>::
+--app-tag-mask=<appmask>::
 	Optional application tag mask when used with protection information.
 
---app-tag=<apptag>::
 -a <apptag>::
+--app-tag=<apptag>::
 	Optional application tag when used with protection information.
 
---limited-retry::
 -l::
+--limited-retry::
 	Sets the limited retry flag.
 
---force-unit-access::
 -f::
+--force-unit-access::
 	Set the force-unit access flag.
 
 -T <type>::
@@ -149,8 +145,17 @@ metadata is passes.
 	data protection processing.
 
 --force::
-    Ignore namespace is currently busy and performed the operation
-    even though.
+	Ignore namespace is currently busy and performed the operation
+	even though.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

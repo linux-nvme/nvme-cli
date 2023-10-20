@@ -9,10 +9,10 @@ SYNOPSIS
 --------
 [verse]
 'nvme zns set-zone-desc' <device> [--namespace-id=<NUM> | -n <NUM>]
-				 [--start-lba=<IONUM>, -s <IONUM>]
-				 [--zrwaa | -r]
-				 [-data=<FILE>, -d <FILE>]
-				 [--timeout=<timeout> | -t <timeout>]
+			[--start-lba=<IONUM>, -s <IONUM>]
+			[--zrwaa | -r]
+			[--data=<FILE>, -d <FILE>]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -37,8 +37,8 @@ OPTIONS
 --zrwaa::
 	Allocate Zone Random Write Area to zone.
 
--d <FILE::
--data=<FILE>::
+-d <FILE>::
+--data=<FILE>::
 	Optional file for data (default stdin)
 
 -t <timeout>::

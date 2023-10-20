@@ -8,13 +8,12 @@ nvme-sanitize - Send NVMe Sanitize Command, return result
 SYNOPSIS
 --------
 [verse]
-'nvme sanitize' <device> [--no-dealloc | -d]
-              [--oipbp | -i]
-              [--owpass=<overwrite-pass-count> | -n <overwrite-pass-count>]
-              [--ause | -u]
-              [--sanact=<action> | -a <action>]
-              [--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
-	      [--force]
+'nvme sanitize' <device> [--no-dealloc | -d] [--oipbp | -i]
+			[--owpass=<overwrite-pass-count> | -n <overwrite-pass-count>]
+			[--ause | -u] [--sanact=<action> | -a <action>]
+			[--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
+			[--force]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -29,42 +28,42 @@ OPTIONS
 -------
 -d::
 --no-dealloc::
-    No Deallocate After Sanitize:
-    If set, then the controller shall not deallocate any logical
-    blocks as a result of successfully completing the sanitize
-    operation. If cleared, then the controller should deallocate
-    logical blocks as a result of successfully completing the
-    sanitize operation.  This bit shall be ignored if the Sanitize
-    Action field is set to 001b (i.e., Exit Failure Mode).
+	No Deallocate After Sanitize:
+	If set, then the controller shall not deallocate any logical
+	blocks as a result of successfully completing the sanitize
+	operation. If cleared, then the controller should deallocate
+	logical blocks as a result of successfully completing the
+	sanitize operation. This bit shall be ignored if the Sanitize
+	Action field is set to 001b (i.e., Exit Failure Mode).
 
 -i::
 --oipbp::
-    Overwrite Invert Pattern Between Passes:
-    If set, then the Overwrite Pattern shall be inverted between
-    passes. If cleared, then the overwrite pattern shall not be
-    inverted between passes. This bit shall be ignored unless the
-    Sanitize Action field is set to 011b (i.e., Overwrite).
+	Overwrite Invert Pattern Between Passes:
+	If set, then the Overwrite Pattern shall be inverted between
+	passes. If cleared, then the overwrite pattern shall not be
+	inverted between passes. This bit shall be ignored unless the
+	Sanitize Action field is set to 011b (i.e., Overwrite).
 
 -n <overwrite-pass-count>::
 --owpass=<overwrite-pass-count>::
-    Overwrite Pass Count:
-    This field specifies the number of overwrite passes (i.e.,
-    how many times the media is to be overwritten) using the data
-    from the Overwrite Pattern field of this command. A value of 0
-    specifies 16 overwrite passes. This field shall be ignored
-    unless the Sanitize Action field is set to 011b (i.e., Overwrite).
+	Overwrite Pass Count:
+	This field specifies the number of overwrite passes (i.e.,
+	how many times the media is to be overwritten) using the data
+	from the Overwrite Pattern field of this command. A value of 0
+	specifies 16 overwrite passes. This field shall be ignored
+	unless the Sanitize Action field is set to 011b (i.e., Overwrite).
 
 -u::
 --ause::
-    Allow Unrestricted Sanitize Exit:
-    If set, then the sanitize operation is performed in unrestricted
-    completion mode. If cleared then the sanitize operation is
-    performed in restricted completion mode. This bit shall be ignored
-    if the Sanitize Action field is set to 001b (i.e., Exit Failure Mode).
+	Allow Unrestricted Sanitize Exit:
+	If set, then the sanitize operation is performed in unrestricted
+	completion mode. If cleared then the sanitize operation is
+	performed in restricted completion mode. This bit shall be ignored
+	if the Sanitize Action field is set to 001b (i.e., Exit Failure Mode).
 
 -a <action>::
 --sanact=<action>::
-    Sanitize Action:
+	Sanitize Action:
 +
 []
 |=================
@@ -78,15 +77,24 @@ OPTIONS
 
 -p <overwrite-pattern>::
 --ovrpat=<overwrite-pattern>::
-    Overwrite Pattern:
-    This field is ignored unless the Sanitize Action field in
-    Command Dword 10 is set to 011b (i.e., Overwrite). This field
-    specifies a 32-bit pattern that is used for the Overwrite
-    sanitize operation.
+	Overwrite Pattern:
+	This field is ignored unless the Sanitize Action field in
+	Command Dword 10 is set to 011b (i.e., Overwrite). This field
+	specifies a 32-bit pattern that is used for the Overwrite
+	sanitize operation.
 
 --force::
-    Ignore namespace is currently busy and performed the operation
-    even though.
+	Ignore namespace is currently busy and performed the operation
+	even though.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

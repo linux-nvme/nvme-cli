@@ -8,7 +8,8 @@ nvme-ana-log - Send NVMe ANA log page request, returns result and log
 SYNOPSIS
 --------
 [verse]
-'nvme ana-log' <device> [-o <fmt> | --output-format=<fmt>] 
+'nvme ana-log' <device> [--groups | -g]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -26,12 +27,16 @@ OPTIONS
 -------
 -g::
 --groups::
-              Return the list of ANA groups without the namespace listing.
+	Return the list of ANA groups without the namespace listing.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

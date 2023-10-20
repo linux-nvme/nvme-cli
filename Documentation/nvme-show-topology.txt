@@ -8,7 +8,7 @@ nvme-show-topology - Show topology of all NVMe subsystems
 SYNOPSIS
 --------
 [verse]
-'nvme show-topology'
+'nvme show-topology' [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -16,8 +16,8 @@ Show the topology of all NVMe subsystems.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal' or 'json'. Only one output
 	format can be used at a time.
 
@@ -32,6 +32,15 @@ OPTIONS
 	Set the ranking orer to 'namespace' (default) or 'ctrl'. This option
 	has only an effect for output format 'normal'. The JSON output is
 	always 'namespace' ordered.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

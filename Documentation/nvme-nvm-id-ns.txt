@@ -10,8 +10,7 @@ SYNOPSIS
 [verse]
 'nvme nvm-id-ns' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--namespace-id=<NUM> | -n <NUM>]
-			[-v | --verbose]
-			[--output-format=<fmt> | -o <fmt>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -37,14 +36,14 @@ OPTIONS
 --uuid-index=<uuid-index>::
 	UUID Index of the feature
 
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
 -v::
 --verbose::
 	Increase the information detail in the output.
-
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
 
 EXAMPLES
 --------

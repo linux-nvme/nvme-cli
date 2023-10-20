@@ -9,8 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme zns zrwa-flush-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
-			            [--lba=<LBA> | -l <LBA>]
-				    [--timeout=<timeout> | -t <timeout> ]
+			[--lba=<LBA> | -l <LBA>]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------

@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme flush' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,15 @@ OPTIONS
 --namespace-id=<nsid>::
 	Specify the optional namespace id for this command. Defaults to
 	0xffffffff, indicating flush for all namespaces.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

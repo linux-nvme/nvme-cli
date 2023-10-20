@@ -9,7 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme telemetry-log' <device> [--output-file=<file> | -O <file>]
-		      [--host-generate=<gen> | -g <gen>]
+			[--host-generate=<gen> | -g <gen>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -40,6 +41,15 @@ OPTIONS
 	Retrieves the specific data area requested. Valid inputs are 1,2,3,4. If
 	this option is not specified, the default value is 3, since data area
 	4 may not be supported.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

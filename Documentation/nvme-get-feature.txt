@@ -9,12 +9,13 @@ SYNOPSIS
 --------
 [verse]
 'nvme get-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--feature-id=<fid> | -f <fid>] [--cdw11=<cdw11>]
-			  [--uuid-index=<uuid-index> | -U <uuid_index>]
-			  [--data-len=<data-len> | -l <data-len>]
-			  [--sel=<select> | -s <select>]
-			  [--raw-binary | -b]
-			  [--human-readable | -H]
+			[--feature-id=<fid> | -f <fid>] [--cdw11=<cdw11>]
+			[--uuid-index=<uuid-index> | -U <uuid_index>]
+			[--data-len=<data-len> | -l <data-len>]
+			[--sel=<select> | -s <select>]
+			[--raw-binary | -b]
+			[--human-readable | -H]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -80,6 +81,15 @@ OPTIONS
 --human-readable::
 	This option will parse and format many of the bit fields
 	into human-readable formats.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

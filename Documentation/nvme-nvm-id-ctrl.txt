@@ -8,7 +8,7 @@ nvme-nvm-id-ctrl - Send NVMe Identify Controller, return NVM command set structu
 SYNOPSIS
 --------
 [verse]
-'nvme nvm-id-ctrl' <device> [-o <fmt> | --output-format=<fmt>]
+'nvme nvm-id-ctrl' <device> [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -23,10 +23,14 @@ displayed in one of several ways.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

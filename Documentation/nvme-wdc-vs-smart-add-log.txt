@@ -3,7 +3,8 @@ nvme-wdc-vs-smart-add-log(1)
 
 NAME
 ----
-nvme-wdc-vs-smart-add-log - Send NVMe WDC vs-smart-add-log Vendor Unique Command, return result
+nvme-wdc-vs-smart-add-log - Send NVMe WDC vs-smart-add-log Vendor Unique Command,
+return result
 
 SYNOPSIS
 --------
@@ -31,26 +32,27 @@ OPTIONS
 -------
 -i <NUM>::
 --interval=<NUM>::
-	Return the statistics from specific interval, defaults to 14.  This parameter is only valid for the 0xC1 log page
-	and ignored for all other log pages.
+	Return the statistics from specific interval, defaults to 14. This
+	parameter is only valid for the 0xC1 log page and ignored for all other
+	log pages.
 
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal', or
 	'json'. Only one output format can be used at a time.
 	Default is normal.
 
 -l <NUM>::
 --log-page-version=<NUM>::
-    Log Page Version: 0 = vendor, 1 = WDC.  This parameter is only valid for the 0xC0 log page and ignored for all
-    other log pages.
+	Log Page Version: 0 = vendor, 1 = WDC. This parameter is only valid for
+	the 0xC0 log page and ignored for all other log pages.
 
 -p <LIST>::
 --log-page-mask=<LIST>::
-    Supply a comma separated list of desired log pages to display.
-    The possible values are 0xc0, 0xc1, 0xca, 0xd0.  
-    Note: Not all pages are supported on all drives.  
-    The default is to display all supported log pages.  
+	Supply a comma separated list of desired log pages to display.
+	The possible values are 0xc0, 0xc1, 0xca, 0xd0.
+	Note: Not all pages are supported on all drives.
+	The default is to display all supported log pages.
 
 -n <nsid>::
 --namespace-id=<nsid>::
@@ -81,7 +83,6 @@ accumulated statistics.
 |*15*
 |The statistical set accumulated during the entire lifetime of the device.
 |===
-
 
 EXAMPLES
 --------
