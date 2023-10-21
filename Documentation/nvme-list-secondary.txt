@@ -1,0 +1,54 @@
+nvme-list-secondary(1)
+======================
+
+NAME
+----
+nvme-list-secondary - Show secondary controller list associated with the primary
+controller of the given device
+
+SYNOPSIS
+--------
+[verse]
+'nvme list-secondary' <device> [--cntid=<cntid> | -c <cntid>]
+			[--num-entries=<entries> | -e <entries>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+Show secondary controller list associated with the primary  of the given device
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+On success, the secondary controller list is printed.
+
+OPTIONS
+-------
+-c <cntid>::
+--cntid=<cntid>::
+	Lowest controller identifier to display.
+
+-e <entries>::
+--num-entries=<entries>::
+	Number of entries to retrieve.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+EXAMPLES
+--------
+* Has the program issue a list-secondary to display list.
++
+------------
+# nvme list-secondary /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
