@@ -1,0 +1,70 @@
+nvme-virt-mgmt(1)
+=================
+
+NAME
+----
+nvme-virt-mgmt - Manage flexible resources between primary and secondary
+controller
+
+SYNOPSIS
+--------
+[verse]
+'nvme virt-mgmt' <device> [--cntlid=<cntlid> | -c <cntlid>]
+			[--rt=<rt> | -r <rt>] [--act=<act> | -a <act>]
+			[--nr=<nr> | -n <nr>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+Manage flexible resources between primary and secondary controller, return
+results.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-c <cntlid>::
+--cntlid=<cntlid>::
+	Controller identifier (CNTLID)
+
+-r <rt>::
+--rt=<rt>::
+	Resource Type (RT): [0,1]
+	0h: VQ Resources
+	1h: VI Resources
+
+-a <act>::
+--act=<act>::
+	Action(ACT): [1,7,8,9]
+	1h: Primary Flexible
+	7h: Secondary Offline
+	8h: Secondary Assign
+	9h: Secondary Online
+
+-n <nr>::
+--nr=<nr>::
+	Number of controller resources (NR)
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+EXAMPLES
+--------
+* Has the program issue a virt-mgmt to manage flexible resources.
++
+------------
+# nvme virt-mgmt /dev/nvme0 -c 0 -r 1 -a 1 -n 0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
