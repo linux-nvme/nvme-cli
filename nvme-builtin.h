@@ -103,7 +103,7 @@ COMMAND_LIST(
 	ENTRY("check-tls-key", "Validate NVMeoF TLS PSK", check_tls_key)
 	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
-	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller ", virtual_mgmt)
+	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller", virtual_mgmt)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
 	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd) \
