@@ -291,6 +291,10 @@ static const char * const nvm_status[] = {
 	[NVME_SC_INVALID_PI]			 = "Invalid Protection Information: The command's Protection Information Field settings are invalid for the namespace's Protection Information format",
 	[NVME_SC_READ_ONLY]			 = "Attempted Write to Read Only Range: The LBA range specified contains read-only blocks",
 	[NVME_SC_CMD_SIZE_LIMIT_EXCEEDED]	 = "Command Size Limit Exceeded",
+	[NVME_SC_INCOMPATIBLE_NS]		 = "Incompatible Namespace or Format",
+	[NVME_SC_FAST_COPY_NOT_POSSIBLE]	 = "Fast Copy Not Possible",
+	[NVME_SC_OVERLAPPING_IO_RANGE]		 = "Overlapping I/O Range",
+	[NVME_SC_INSUFFICIENT_RESOURCES]	 = "Insufficient Resources",
 	[NVME_SC_ZNS_INVALID_OP_REQUEST]	 = "Invalid Zone Operation Request: The operation requested is invalid",
 	[NVME_SC_ZNS_ZRWA_RESOURCES_UNAVAILABLE] = "ZRWA Resources Unavailable: No ZRWAs are available",
 	[NVME_SC_ZNS_BOUNDARY_ERROR]		 = "Zoned Boundary Error: Invalid Zone Boundary crossing",
@@ -386,6 +390,16 @@ const char *nvme_status_to_string(int status, bool fabrics)
 	return s;
 }
 
+static inline void nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
+{
+	int i;
+
+	for (i = 0; i < 8; i++)
+		elbt[9 - i] = (eilbrt >> (8 * i)) & 0xff;
+	elbt[1] = 0;
+	elbt[0] = 0;
+}
+
 void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
 			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
 			  __u32 *elbats, __u16 nr)
@@ -405,18 +419,51 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 			  __u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
 			  __u32 *elbats, __u16 nr)
 {
-	int i, j;
+	int i;
 
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = cpu_to_le16(nlbs[i]);
 		copy[i].slba = cpu_to_le64(slbas[i]);
 		copy[i].elbatm = cpu_to_le16(elbatms[i]);
 		copy[i].elbat = cpu_to_le16(elbats[i]);
-		for (j = 0; j < 8; j++)
-			copy[i].elbt[9 - j] = (eilbrts[i] >> (8 * j)) & 0xff;
-		copy[i].elbt[1] = 0;
-		copy[i].elbt[0] = 0;
+		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
 	}  
+}
+
+void nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy, __u32 *snsids,
+			  __u16 *nlbs, __u64 *slbas, __u16 *sopts,
+			  __u32 *eilbrts, __u32 *elbatms, __u32 *elbats,
+			  __u16 nr)
+{
+	int i;
+
+	for (i = 0; i < nr; i++) {
+		copy[i].snsid = cpu_to_le32(snsids[i]);
+		copy[i].nlb = cpu_to_le16(nlbs[i]);
+		copy[i].slba = cpu_to_le64(slbas[i]);
+		copy[i].sopt = cpu_to_le16(sopts[i]);
+		copy[i].eilbrt = cpu_to_le32(eilbrts[i]);
+		copy[i].elbatm = cpu_to_le16(elbatms[i]);
+		copy[i].elbat = cpu_to_le16(elbats[i]);
+	}
+}
+
+void nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
+			  __u16 *nlbs, __u64 *slbas, __u16 *sopts,
+			  __u64 *eilbrts, __u32 *elbatms, __u32 *elbats,
+			  __u16 nr)
+{
+	int i;
+
+	for (i = 0; i < nr; i++) {
+		copy[i].snsid = cpu_to_le32(snsids[i]);
+		copy[i].nlb = cpu_to_le16(nlbs[i]);
+		copy[i].slba = cpu_to_le64(slbas[i]);
+		copy[i].sopt = cpu_to_le16(sopts[i]);
+		copy[i].elbatm = cpu_to_le16(elbatms[i]);
+		copy[i].elbat = cpu_to_le16(elbats[i]);
+		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+	}
 }
 
 void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,

@@ -1976,6 +1976,10 @@ int nvme_copy(struct nvme_copy_args *args)
 
 	if (args->format == 1)
 		data_len = args->nr * sizeof(struct nvme_copy_range_f1);
+	else if (args->format == 2)
+		data_len = args->nr * sizeof(struct nvme_copy_range_f2);
+	else if (args->format == 3)
+		data_len = args->nr * sizeof(struct nvme_copy_range_f3);
 	else
 		data_len = args->nr * sizeof(struct nvme_copy_range);
 
