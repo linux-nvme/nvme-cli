@@ -11,6 +11,8 @@ SYNOPSIS
 'nvme-copy' <device> [--sdlba=<sdlba> | -d <sdlba>]
 			[--blocks=<nlb-list,> | -b <nlb-list,>]
 			[--slbs=<slbas,> | -s <slbas,>]
+			[--snsids=<snsids,> | -N <snsids,>]
+			[--sopts=<sopts,> | -O <sopts,>]
 			[--limited-retry | -l]
 			[--force-unit-access | -f]
 			[--prinfow=<prinfow> | -p <prinfow>]
@@ -44,6 +46,14 @@ OPTIONS
 -s <slbas,>::
 --slbs=<slbas,>::
 	Comma separated list of the starting blocks in each range
+
+--snsids=<snsids,>::
+-N <snsids,>::
+	Comma separated list of the source namespace identifiers in each range
+
+--sopts=<sopts,>::
+-O <sopts,>::
+	Comma separated list of the source options in each range
 
 -l::
 --limited-retry::

@@ -6554,6 +6554,8 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *d_sdlba = "64-bit addr of first destination logical block";
 	const char *d_slbas = "64-bit addr of first block per range (comma-separated list)";
 	const char *d_nlbs = "number of blocks per range (comma-separated list, zeroes-based values)";
+	const char *d_snsids = "source namespace identifier per range (comma-separated list)";
+	const char *d_sopts = "source options per range (comma-separated list)";
 	const char *d_lr = "limited retry";
 	const char *d_fua = "force unit access";
 	const char *d_prinfor = "protection information and check field (read part)";
@@ -6569,22 +6571,26 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *d_format = "source range entry format";
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	uint16_t nr, nb, ns, nrts, natms, nats;
-	__u16 nlbs[128] = { 0 };
-	__u64 slbas[128] = { 0 };
+	__u16 nr, nb, ns, nrts, natms, nats, nids;
+	__u16 nlbs[256] = { 0 };
+	__u64 slbas[256] = { 0 };
+	__u32 snsids[256] = { 0 };
+	__u16 sopts[256] = { 0 };
 	int err;
 
 	union {
-		__u32 f0[128];
-		__u64 f1[101];
+		__u32 short_pi[256];
+		__u64 long_pi[256];
 	} eilbrts;
 
-	__u32 elbatms[128] = { 0 };
-	__u32 elbats[128] = { 0 };
+	__u32 elbatms[256] = { 0 };
+	__u32 elbats[256] = { 0 };
 
 	union {
-		struct nvme_copy_range f0[128];
-		struct nvme_copy_range_f1 f1[101];
+		struct nvme_copy_range f0[256];
+		struct nvme_copy_range_f1 f1[256];
+		struct nvme_copy_range_f2 f2[256];
+		struct nvme_copy_range_f3 f3[256];
 	} *copy;
 
 	struct config {
@@ -6592,6 +6598,8 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 		__u64	sdlba;
 		char	*slbas;
 		char	*nlbs;
+		char	*snsids;
+		char	*sopts;
 		bool	lr;
 		bool	fua;
 		__u8	prinfow;
@@ -6612,6 +6620,8 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 		.sdlba		= 0,
 		.slbas		= "",
 		.nlbs		= "",
+		.snsids		= "",
+		.sopts		= "",
 		.lr		= false,
 		.fua		= false,
 		.prinfow	= 0,
@@ -6632,6 +6642,8 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 		  OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
 		  OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
 		  OPT_LIST("blocks",                 'b', &cfg.nlbs,		d_nlbs),
+		  OPT_LIST("snsids",                 'N', &cfg.snsids,		d_snsids),
+		  OPT_LIST("sopts",                  'O', &cfg.sopts,		d_sopts),
 		  OPT_FLAG("limited-retry",          'l', &cfg.lr,		d_lr),
 		  OPT_FLAG("force-unit-access",      'f', &cfg.fua,		d_fua),
 		  OPT_BYTE("prinfow",                'p', &cfg.prinfow,		d_prinfow),
@@ -6652,13 +6664,15 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	nb = argconfig_parse_comma_sep_array_u16(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
 	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
+	nids = argconfig_parse_comma_sep_array_u32(cfg.snsids, snsids, ARRAY_SIZE(snsids));
+	argconfig_parse_comma_sep_array_u16(cfg.sopts, sopts, ARRAY_SIZE(sopts));
 
-	if (cfg.format == 0) {
-		nrts = argconfig_parse_comma_sep_array_u32(cfg.eilbrts, eilbrts.f0,
-							   ARRAY_SIZE(eilbrts.f0));
-	} else if (cfg.format == 1) {
-		nrts = argconfig_parse_comma_sep_array_u64(cfg.eilbrts, eilbrts.f1,
-							   ARRAY_SIZE(eilbrts.f1));
+	if (cfg.format == 0 || cfg.format == 2) {
+		nrts = argconfig_parse_comma_sep_array_u32(cfg.eilbrts, eilbrts.short_pi,
+							   ARRAY_SIZE(eilbrts.short_pi));
+	} else if (cfg.format == 1 || cfg.format == 3) {
+		nrts = argconfig_parse_comma_sep_array_u64(cfg.eilbrts, eilbrts.long_pi,
+							   ARRAY_SIZE(eilbrts.long_pi));
 	} else {
 		nvme_show_error("invalid format");
 		return -EINVAL;
@@ -6668,7 +6682,16 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	nats = argconfig_parse_comma_sep_array_u32(cfg.elbats, elbats, ARRAY_SIZE(elbats));
 
 	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
-	if (!nr || nr > 128 || (cfg.format == 1 && nr > 101)) {
+	if (cfg.format == 2 || cfg.format == 3) {
+		if (nr != nids) {
+			nvme_show_error("formats 2 and 3 require source namespace ids for each source range");
+			return -EINVAL;
+		}
+	} else if (nids) {
+		nvme_show_error("formats 0 and 1 do not support cross-namespace copy");
+		return -EINVAL;
+	}
+	if (!nr || nr > 256) {
 		nvme_show_error("invalid range");
 		return -EINVAL;
 	}
@@ -6686,9 +6709,15 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 		return -ENOMEM;
 
 	if (cfg.format == 0)
-		nvme_init_copy_range(copy->f0, nlbs, slbas, eilbrts.f0, elbatms, elbats, nr);
+		nvme_init_copy_range(copy->f0, nlbs, slbas, eilbrts.short_pi, elbatms, elbats, nr);
 	else if (cfg.format == 1)
-		nvme_init_copy_range_f1(copy->f1, nlbs, slbas, eilbrts.f1, elbatms, elbats, nr);
+		nvme_init_copy_range_f1(copy->f1, nlbs, slbas, eilbrts.long_pi, elbatms, elbats, nr);
+	else if (cfg.format == 2)
+		nvme_init_copy_range_f2(copy->f2, snsids, nlbs, slbas, sopts, eilbrts.short_pi, elbatms,
+					elbats, nr);
+	else if (cfg.format == 3)
+		nvme_init_copy_range_f3(copy->f3, snsids, nlbs, slbas, sopts, eilbrts.long_pi, elbatms,
+					elbats, nr);
 
 	struct nvme_copy_args args = {
 		.args_size	= sizeof(args),
