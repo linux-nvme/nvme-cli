@@ -2167,19 +2167,25 @@ static void stdout_id_ctrl_cqes(__u8 cqes)
 static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 {
 	__u16 oncs = le16_to_cpu(ctrl_oncs);
-	__u16 rsvd = (oncs & 0xFE00) >> 9;
-	__u16 copy = (oncs & 0x100) >> 8;
-	__u16 vrfy = (oncs & 0x80) >> 7;
-	__u16 tmst = (oncs & 0x40) >> 6;
-	__u16 resv = (oncs & 0x20) >> 5;
-	__u16 save = (oncs & 0x10) >> 4;
-	__u16 wzro = (oncs & 0x8) >> 3;
-	__u16 dsms = (oncs & 0x4) >> 2;
-	__u16 wunc = (oncs & 0x2) >> 1;
-	__u16 cmp = oncs & 0x1;
+	__u16 rsvd = oncs >> 11;
+	bool afc  = !!(oncs & NVME_CTRL_ONCS_ALL_FAST_COPY);
+	bool csa  = !!(oncs & NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY);
+	bool copy = !!(oncs & NVME_CTRL_ONCS_COPY);
+	bool vrfy = !!(oncs & NVME_CTRL_ONCS_VERIFY);
+	bool tmst = !!(oncs & NVME_CTRL_ONCS_TIMESTAMP);
+	bool resv = !!(oncs & NVME_CTRL_ONCS_RESERVATIONS);
+	bool save = !!(oncs & NVME_CTRL_ONCS_SAVE_FEATURES);
+	bool wzro = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES);
+	bool dsms = !!(oncs & NVME_CTRL_ONCS_DSM);
+	bool wunc = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
+	bool cmp  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
 
 	if (rsvd)
-		printf(" [15:9] : %#x\tReserved\n", rsvd);
+		printf(" [15:11] : %#x\tReserved\n", rsvd);
+	printf("  [10:10] : %#x\tAll Fast Copy %sSupported\n",
+		afc, afc ? "" : "Not ");
+	printf("  [9:9] : %#x\tCopy Single Atomicity %sSupported\n",
+		csa, csa ? "" : "Not ");
 	printf("  [8:8] : %#x\tCopy %sSupported\n",
 		copy, copy ? "" : "Not ");
 	printf("  [7:7] : %#x\tVerify %sSupported\n",
@@ -2288,15 +2294,16 @@ static void stdout_id_ctrl_nwpc(__u8 nwpc)
 static void stdout_id_ctrl_ocfs(__le16 ctrl_ocfs)
 {
 	__u16 ocfs = le16_to_cpu(ctrl_ocfs);
-	__u16 rsvd = (ocfs & 0xfffc) >> 2;
-	__u8 copy_fmt_1 = (ocfs >> 1) & 0x1;
-	__u8 copy_fmt_0 = ocfs & 0x1;
+	__u16 rsvd = ocfs >> 4;
+	__u8 copy_fmt_supported;
+	int copy_fmt;
 	if (rsvd)
-		printf("  [15:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tController Copy Format 1h %sSupported\n",
-		copy_fmt_1, copy_fmt_1 ? "" : "Not ");
-	printf("  [0:0] : %#x\tController Copy Format 0h %sSupported\n",
-		copy_fmt_0, copy_fmt_0 ? "" : "Not ");
+		printf("  [15:4] : %#x\tReserved\n", rsvd);
+	for (copy_fmt = 3; copy_fmt >= 0; copy_fmt--) {
+		copy_fmt_supported = ocfs >> copy_fmt & 1;
+		printf("  [%d:%d] : %#x\tController Copy Format %xh %sSupported\n", copy_fmt, copy_fmt,
+			copy_fmt_supported, copy_fmt, copy_fmt_supported ? "" : "Not ");
+	}
 	printf("\n");
 }
 
@@ -4483,6 +4490,10 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			       host_behavior->etdas ? "True" : "False");
 			printf("\tLBA Format Extension Enable (LBAFEE): %s\n",
 			       host_behavior->lbafee ? "True" : "False");
+			printf("\tCopy Descriptor Format 2h Enabled (CDFE): %s\n",
+			       host_behavior->cdfe & (1 << 2) ? "True" : "False");
+			printf("\tCopy Descriptor Format 3h Enabled (CDFE): %s\n",
+			       host_behavior->cdfe & (1 << 3) ? "True" : "False");
 		}
 		break;
 	case NVME_FEAT_FID_SANITIZE:

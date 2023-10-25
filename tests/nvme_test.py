@@ -58,11 +58,13 @@ class TestNVMe(unittest.TestCase):
         self.ctrl = "XXX"
         self.ns1 = "XXX"
         self.test_log_dir = "XXX"
+        self.do_validate_pci_device = True
         self.default_nsid = 0x1
         self.config_file = 'tests/config.json'
 
         self.load_config()
-        self.validate_pci_device()
+        if self.do_validate_pci_device:
+            self.validate_pci_device()
 
     def tearDown(self):
         """ Post Section for TestNVMe. """
@@ -93,6 +95,7 @@ class TestNVMe(unittest.TestCase):
             self.ctrl = config['controller']
             self.ns1 = config['ns1']
             self.log_dir = config['log_dir']
+            self.do_validate_pci_device = config.get('do_validate_pci_device', self.do_validate_pci_device)
             self.clear_log_dir = False
 
             if self.clear_log_dir is True:
@@ -227,6 +230,19 @@ class TestNVMe(unittest.TestCase):
                 break
         print(ncap)
         return int(ncap)
+
+    def get_ocfs(self):
+        """ Wrapper for extracting optional copy formats supported
+            - Args:
+                - None
+            - Returns:
+                - Optional Copy Formats Supported
+        """
+        pattern = re.compile(r'^ocfs\s*: 0x[0-9a-fA-F]+$')
+        output = subprocess.check_output(["nvme", "id-ctrl", self.ctrl], encoding='utf-8')
+        ocfs_line = next(line for line in output.splitlines() if pattern.match(line))
+        ocfs = ocfs_line.split(":")[1].strip()
+        return int(ocfs, 16)
 
     def get_format(self):
         """ Wrapper for extracting format.
