@@ -3282,7 +3282,7 @@ static void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
 static void stdout_zns_report_zone_attributes(__u8 za, __u8 zai)
 {
 	const char *const recommended_limit[4] = {"","1","2","3"};
-	printf("Attrs: Zone Descriptor Extension is %sVaild\n", 
+	printf("Attrs: Zone Descriptor Extension is %sVaild\n",
 		(za & NVME_ZNS_ZA_ZDEV)? "" : "Not ");
 	if(za & NVME_ZNS_ZA_RZR) {
 		printf("       Reset Zone Recommended with Reset Recommended Limit%s\n",
@@ -4474,8 +4474,16 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_lba_status_info(result);
 		break;
 	case NVME_FEAT_FID_HOST_BEHAVIOR:
-		if (buf)
-			printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
+		if (buf) {
+			struct nvme_feat_host_behavior *host_behavior =
+				(struct nvme_feat_host_behavior *)buf;
+			printf("\tAdvanced Command Retry Enable (ACRE): %s\n",
+			       host_behavior->acre ? "True" : "False");
+			printf("\tExtended Telemetry Data Area 4 Supported (ETDAS): %s\n",
+			       host_behavior->etdas ? "True" : "False");
+			printf("\tLBA Format Extension Enable (LBAFEE): %s\n",
+			       host_behavior->lbafee ? "True" : "False");
+		}
 		break;
 	case NVME_FEAT_FID_SANITIZE:
 		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
