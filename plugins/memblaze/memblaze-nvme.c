@@ -2120,7 +2120,9 @@ static void performance_stats_v1_print(struct performance_stats *log, int durati
 			entry.write_latency     = log->v1.timestamps[i].entries[j].write_latency;
 			entry.write_latency_max = log->v1.timestamps[i].entries[j].write_latency_max;
 
-			if (entry.read_iops == 0 && entry.write_iops == 0) continue;
+			if (entry.read_iops == 0 && entry.write_iops == 0) {
+				continue;
+			}
 
 			printf("%-8u%-14u%-21u%-22u%-22u%-15u%-22u%-23u%-23u\n",
 				   j + 1,
