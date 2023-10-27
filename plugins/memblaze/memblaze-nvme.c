@@ -2109,17 +2109,29 @@ static void performance_stats_v1_print(struct performance_stats *log, int durati
 
 		// Print all entries content
 
-		struct performance_stats_entry *entry = NULL;
+		struct performance_stats_entry entry = {0};
 		for (int j = 0; j < 3600; j++) {
-			entry = &(log->v1.timestamps[i].entries[j]);
-			if (entry->read_iops == 0 && entry->write_iops == 0) continue;
+			entry.read_iops         = log->v1.timestamps[i].entries[j].read_iops;
+			entry.read_bandwidth    = log->v1.timestamps[i].entries[j].read_bandwidth;
+			entry.read_latency      = log->v1.timestamps[i].entries[j].read_latency;
+			entry.read_latency_max  = log->v1.timestamps[i].entries[j].read_latency_max;
+			entry.write_iops        = log->v1.timestamps[i].entries[j].write_iops;
+			entry.write_bandwidth   = log->v1.timestamps[i].entries[j].write_bandwidth;
+			entry.write_latency     = log->v1.timestamps[i].entries[j].write_latency;
+			entry.write_latency_max = log->v1.timestamps[i].entries[j].write_latency_max;
 
-			printf("%-8u%-14u%-21u%-22u%-22u%-15u%-22u%-23u%-23u\n", j + 1, entry->read_iops,
-			       entry->read_bandwidth,
-			       entry->read_iops == 0 ? 0 : entry->read_latency / (1000 * entry->read_iops),
-			       entry->read_latency_max, entry->write_iops, entry->write_bandwidth,
-			       entry->write_iops == 0 ? 0 : entry->write_latency / (1000 * entry->write_iops),
-			       entry->write_latency_max);
+			if (entry.read_iops == 0 && entry.write_iops == 0) continue;
+
+			printf("%-8u%-14u%-21u%-22u%-22u%-15u%-22u%-23u%-23u\n",
+				   j + 1,
+				   entry.read_iops,
+			       entry.read_bandwidth,
+			       entry.read_iops == 0 ? 0 : entry.read_latency / (1000 * entry.read_iops),
+			       entry.read_latency_max,
+				   entry.write_iops,
+				   entry.write_bandwidth,
+			       entry.write_iops == 0 ? 0 : entry.write_latency / (1000 * entry.write_iops),
+			       entry.write_latency_max);
 			usleep(100);
 		}
 		printf("\n");
