@@ -20,9 +20,6 @@ jobs:
       image: ghcr.io/igaw/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
       - name: build
         run: |
           scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }}
@@ -71,9 +68,6 @@ jobs:
       image: ghcr.io/igaw/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
       - name: build
         run: |
           scripts/build.sh -b release -c gcc libdbus
@@ -93,9 +87,6 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
       - name: build
         run: |
           scripts/build.sh -b release -c gcc fallback
