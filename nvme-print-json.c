@@ -1930,23 +1930,22 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_print(root);
 }
 
-static void d_json(unsigned char *buf, int len, int width, int group,
-	    struct json_object *array)
+static void d_json(unsigned char *buf, int len, int width, int group, struct json_object *array)
 {
-	int i, line_done = 0;
-	char ascii[32 + 1];
+	int i;
+	char ascii[32 + 1] = { 0 };
+
 	assert(width < sizeof(ascii));
 
 	for (i = 0; i < len; i++) {
-		line_done = 0;
 		ascii[i % width] = (buf[i] >= '!' && buf[i] <= '~') ? buf[i] : '.';
-		if (((i + 1) % width) == 0) {
-			ascii[i % width + 1] = '\0';
+		if (!((i + 1) % width)) {
 			json_array_add_value_string(array, ascii);
-			line_done = 1;
+			memset(ascii, 0, sizeof(ascii));
 		}
 	}
-	if (!line_done) {
+
+	if (strlen(ascii)) {
 		ascii[i % width + 1] = '\0';
 		json_array_add_value_string(array, ascii);
 	}
@@ -2958,6 +2957,17 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 	}
 }
 
+void json_d(unsigned char *buf, int len, int width, int group)
+{
+	struct json_object *root = json_create_object();
+	struct json_object *data = json_create_array();
+
+	d_json(buf, len, width, group, data);
+	json_object_add_value_array(root, "data", data);
+
+	json_print(root);
+}
+
 static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 {
 	__u16 num = le16_to_cpu(ctrl_list->num);
@@ -3825,6 +3835,7 @@ static struct print_ops json_print_ops = {
 	.id_ctrl_rpmbs			= NULL,
 	.lba_range			= NULL,
 	.lba_status_info		= NULL,
+	.d				= json_d,
 
 	/* libnvme tree print functions */
 	.list_item			= NULL,

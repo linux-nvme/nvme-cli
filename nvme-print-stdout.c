@@ -4316,6 +4316,41 @@ static void stdout_lba_status_info(__u32 result)
 	printf("\tLBA Status Information Report Interval (LSIRI): %u\n", result & 0xffff);
 }
 
+void stdout_d(unsigned char *buf, int len, int width, int group)
+{
+	int i, offset = 0;
+	char ascii[32 + 1] = { 0 };
+
+	assert(width < sizeof(ascii));
+
+	printf("     ");
+
+	for (i = 0; i <= 15; i++)
+		printf("%3x", i);
+
+	for (i = 0; i < len; i++) {
+		if (!(i % width))
+			printf( "\n%04x:", offset);
+		if (i % group)
+			printf( "%02x", buf[i]);
+		else
+			printf( " %02x", buf[i]);
+		ascii[i % width] = (buf[i] >= '!' && buf[i] <= '~') ? buf[i] : '.';
+		if (!((i + 1) % width)) {
+			printf( " \"%.*s\"", width, ascii);
+			offset += width;
+			memset(ascii, 0, sizeof(ascii));
+		}
+	}
+
+	if (strlen(ascii)) {
+		unsigned b = width - (i % width);
+		printf( " %*s \"%.*s\"", 2 * b + b / group + (b % group ? 1 : 0), "", width, ascii);
+	}
+
+	printf( "\n");
+}
+
 static void stdout_plm_config(struct nvme_plm_config *plmcfg)
 {
 	printf("\tEnable Event          :%04x\n", le16_to_cpu(plmcfg->ee));
@@ -5128,6 +5163,7 @@ static struct print_ops stdout_print_ops = {
 	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs,
 	.lba_range			= stdout_lba_range,
 	.lba_status_info		= stdout_lba_status_info,
+	.d				= stdout_d,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,
