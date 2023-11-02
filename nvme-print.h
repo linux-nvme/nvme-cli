@@ -82,6 +82,7 @@ struct print_ops {
 	void (*id_ctrl_rpmbs)(__le32 ctrl_rpmbs);
 	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
 	void (*lba_status_info)(__u32 result);
+	void (*d)(unsigned char *buf, int len, int width, int group);
 
 	/* libnvme tree print functions */
 	void (*list_item)(nvme_ns_t n);
