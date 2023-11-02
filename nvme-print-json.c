@@ -17,7 +17,9 @@
 #define VAL_LEN 4096
 #define BYTE_TO_BIT(byte) ((byte) * 8)
 #define POWER_OF_TWO(exponent) (1 << (exponent))
-#define MS500_TO_SEC(time) ((time) / 2)
+#define MS_TO_SEC(time) ((time) / 1000)
+#define MS500_TO_MS(time) ((time) * 500)
+#define MS500_TO_SEC(time) (MS_TO_SEC(MS500_TO_MS(time)))
 
 #define array_add_obj json_array_add_value_object
 #define array_add_str json_array_add_value_string
@@ -43,6 +45,7 @@
 #define root_add_uint_0x(k, v) obj_add_uint_0x(root, k, v)
 #define root_add_uint_nx(k, v) obj_add_uint_nx(root, k, v)
 #define root_add_uint_x(k, v) obj_add_uint_x(root, k, v)
+#define root_create_array_obj(k) obj_create_array_obj(root, k)
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
@@ -158,11 +161,27 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 	free(value);
 }
 
+static struct json_object *obj_create_array_obj(struct json_object *o, const char *k)
+{
+	struct json_object *array = json_create_array();
+	struct json_object *obj = json_create_object();
+
+	obj_add_array(o, k, array);
+	array_add_obj(array, obj);
+
+	return obj;
+}
+
 static void json_print(struct json_object *root)
 {
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
+}
+
+static bool human(void)
+{
+	return json_print_ops.flags & VERBOSE;
 }
 
 static void json_id_iocs(struct nvme_id_iocs *iocs)
@@ -824,20 +843,20 @@ static void json_registers_cap(struct nvme_bar_cap *cap, struct json_object *roo
 	root_add_str("Boot Partition Support (BPS)", cap->bps ? yes_str : no_str);
 
 	root_add_array("Command Sets Supported (CSS)", cssa);
-	obj_add_str(csso, "NVM command set is %s", cap->css & 1 ? supported_str :
-		    not_supported_str);
-	obj_add_str(csso, "One or more I/O Command Sets are %s",
+	obj_add_str(csso, "NVM command set", cap->css & 1 ? supported_str : not_supported_str);
+	obj_add_str(csso, "One or more I/O Command Sets",
 		    cap->css & 0x40 ? supported_str : not_supported_str);
 	obj_add_str(csso, cap->css & 0x80 ? "Only Admin Command Set" : "I/O Command Set",
 		    supported_str);
 	array_add_obj(cssa, csso);
 
-	root_add_str("NVM Subsystem Reset Supported (NSSRS): %s", cap->nssrs ? yes_str : no_str);
+	root_add_str("NVM Subsystem Reset Supported (NSSRS)", cap->nssrs ? yes_str : no_str);
 
 	sprintf(json_str, "%u bytes", 1 << (2 + cap->dstrd));
 	root_add_str("Doorbell Stride (DSTRD)", json_str);
 
-	root_add_uint("Timeout (TO): %u ms", cap->to * 500);
+	sprintf(json_str, "%u ms", MS500_TO_MS(cap->to));
+	root_add_str("Timeout (TO)", json_str);
 
 	root_add_array("Arbitration Mechanism Supported (AMS)", amsa);
 	obj_add_str(amso, "Weighted Round Robin with Urgent Priority Class",
@@ -859,7 +878,7 @@ static void json_registers_version(__u32 vs, struct json_object *root)
 	root_add_str("NVMe specification", json_str);
 }
 
-static void json_registers_cc_ams (__u8 ams, struct json_object *root)
+static void json_registers_cc_ams(__u8 ams, struct json_object *root)
 {
 	char json_str[STR_LEN];
 
@@ -881,7 +900,7 @@ static void json_registers_cc_ams (__u8 ams, struct json_object *root)
 	root_add_str("Arbitration Mechanism Selected (AMS)", json_str);
 }
 
-static void json_registers_cc_shn (__u8 shn, struct json_object *root)
+static void json_registers_cc_shn(__u8 shn, struct json_object *root)
 {
 	char json_str[STR_LEN];
 
@@ -949,6 +968,7 @@ static void json_registers_csts_shst(__u8 shst, struct json_object *root)
 		sprintf(json_str, "%s", reserved_str);
 		break;
 	}
+
 	root_add_str("Shutdown Status (SHST)", json_str);
 }
 
@@ -2167,17 +2187,71 @@ static void json_print_nvme_subsystem_list(nvme_root_t r, bool show_ana)
 	json_print(root);
 }
 
+static void json_ctrl_registers_cap(void *bar, struct json_object *root)
+{
+	uint64_t cap = mmio_read64(bar + NVME_REG_CAP);
+
+	if (human())
+		json_registers_cap((struct nvme_bar_cap *)&cap, root_create_array_obj("cap"));
+	else
+		root_add_uint64("cap", cap);
+}
+
+static void json_ctrl_registers_vs(void *bar, struct json_object *root)
+{
+	uint32_t vs = mmio_read32(bar + NVME_REG_VS);
+
+	if (human())
+		json_registers_version(vs, root_create_array_obj("vs"));
+	else
+		root_add_int("vs", vs);
+}
+
+static void json_ctrl_registers_cc(void *bar, struct json_object *root)
+{
+	uint32_t cc = mmio_read32(bar + NVME_REG_CC);
+
+	if (human())
+		json_registers_cc(cc, root_create_array_obj("cc"));
+	else
+		root_add_int("cc", cc);
+}
+
+static void json_ctrl_registers_csts(void *bar, struct json_object *root)
+{
+	uint32_t csts = mmio_read32(bar + NVME_REG_CSTS);
+
+	if (human())
+		json_registers_csts(csts, root_create_array_obj("csts"));
+	else
+		root_add_int("csts", csts);
+}
+
+static void json_ctrl_registers_nssr(void *bar, struct json_object *root)
+{
+	uint32_t nssr = mmio_read32(bar + NVME_REG_NSSR);
+
+	if (human())
+		json_registers_nssr(nssr, root_create_array_obj("nssr"));
+	else
+		root_add_int("nssr", nssr);
+}
+
+static void json_ctrl_registers_crto(void *bar, struct json_object *root)
+{
+	uint32_t crto = mmio_read32(bar + NVME_REG_CRTO);
+
+	if (human())
+		json_registers_crto(crto, root_create_array_obj("crto"));
+	else
+		root_add_int("crto", crto);
+}
+
 static void json_ctrl_registers(void *bar, bool fabrics)
 {
 	struct json_object *root = json_create_object();
-	uint64_t cap = mmio_read64(bar + NVME_REG_CAP);
-	uint32_t vs = mmio_read32(bar + NVME_REG_VS);
 	uint32_t intms = mmio_read32(bar + NVME_REG_INTMS);
 	uint32_t intmc = mmio_read32(bar + NVME_REG_INTMC);
-	uint32_t cc = mmio_read32(bar + NVME_REG_CC);
-	uint32_t csts = mmio_read32(bar + NVME_REG_CSTS);
-	uint32_t nssr = mmio_read32(bar + NVME_REG_NSSR);
-	uint32_t crto = mmio_read32(bar + NVME_REG_CRTO);
 	uint32_t aqa = mmio_read32(bar + NVME_REG_AQA);
 	uint64_t asq = mmio_read64(bar + NVME_REG_ASQ);
 	uint64_t acq = mmio_read64(bar + NVME_REG_ACQ);
@@ -2196,14 +2270,17 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	uint32_t pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
 	uint32_t pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
 
-	root_add_uint64("cap", cap);
-	root_add_int("vs", vs);
+	json_ctrl_registers_cap(bar, root);
+	json_ctrl_registers_vs(bar, root);
+
 	root_add_int("intms", intms);
 	root_add_int("intmc", intmc);
-	root_add_int("cc", cc);
-	root_add_int("csts", csts);
-	root_add_int("nssr", nssr);
-	root_add_int("crto", crto);
+
+	json_ctrl_registers_cc(bar, root);
+	json_ctrl_registers_csts(bar, root);
+	json_ctrl_registers_nssr(bar, root);
+	json_ctrl_registers_crto(bar, root);
+
 	root_add_int("aqa", aqa);
 	root_add_uint64("asq", asq);
 	root_add_uint64("acq", acq);
@@ -2246,9 +2323,8 @@ static void d_json(unsigned char *buf, int len, int width, int group, struct jso
 	}
 }
 
-static void json_nvme_cmd_set_independent_id_ns(
-		struct nvme_id_independent_id_ns *ns,
-		unsigned int nsid)
+static void json_nvme_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *ns,
+						unsigned int nsid)
 {
 	struct json_object *root = json_create_object();
 
@@ -3293,7 +3369,6 @@ static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list)
 	root_add_uint("num_ctrl", le16_to_cpu(ctrl_list->num));
 
 	for (i = 0; i < min(num, 2047); i++) {
-
 		valid_attrs = json_create_object();
 		obj_add_uint(valid_attrs, "ctrl_id", le16_to_cpu(ctrl_list->identifier[i]));
 		array_add_obj(valid, valid_attrs);
