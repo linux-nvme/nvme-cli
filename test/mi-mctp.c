@@ -83,12 +83,14 @@ static void test_set_tx_mic(struct test_peer *peer)
 {
 	extern __u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len);
 	__u32 crc = 0xffffffff;
+	__le32 crc_le;
 
-	assert(peer->tx_buf_len + sizeof(crc) <= MAX_BUFSIZ);
+	assert(peer->tx_buf_len + sizeof(crc_le) <= MAX_BUFSIZ);
 
 	crc = nvme_mi_crc32_update(crc, peer->tx_buf, peer->tx_buf_len);
-	*(uint32_t *)(peer->tx_buf + peer->tx_buf_len) = cpu_to_le32(~crc);
-	peer->tx_buf_len += sizeof(crc);
+	crc_le = cpu_to_le32(~crc);
+	memcpy(peer->tx_buf + peer->tx_buf_len, &crc_le, sizeof(crc_le));
+	peer->tx_buf_len += sizeof(crc_le);
 }
 
 int __wrap_socket(int family, int type, int protocol)
