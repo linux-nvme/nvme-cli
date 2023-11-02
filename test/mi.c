@@ -1647,7 +1647,10 @@ static int test_admin_format_nvm_cb(struct nvme_mi_ep *ep,
 
 	assert(rq_hdr[4] == nvme_admin_format_nvm);
 
-	nsid = rq_hdr[11] << 24 | rq_hdr[10] << 16 | rq_hdr[9] << 8 | rq_hdr[8];
+	nsid = (__u32)rq_hdr[11] << 24
+	     | rq_hdr[10] << 16
+	     | rq_hdr[9] << 8
+	     | rq_hdr[8];
 	assert(nsid == args->nsid);
 
 	assert(((rq_hdr[44] >> 0) & 0xf) == args->lbaf);
@@ -1722,7 +1725,7 @@ static int test_admin_sanitize_nvm_cb(struct nvme_mi_ep *ep,
 	assert(((rq_hdr[45] >> 0) & 0x1) == args->oipbp);
 	assert(((rq_hdr[45] >> 1) & 0x1) == args->nodas);
 
-	ovrpat = rq_hdr[51] << 24 | rq_hdr[50] << 16 |
+	ovrpat = (__u32)rq_hdr[51] << 24 | rq_hdr[50] << 16 |
 		rq_hdr[49] << 8 | rq_hdr[48];
 	assert(ovrpat == args->ovrpat);
 

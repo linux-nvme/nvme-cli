@@ -46,7 +46,7 @@ static void test_set_features(void)
 		.nsid = TEST_NSID,
 		.in_data = data,
 		.data_len = sizeof(data),
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | TEST_FID,
 		.cdw11 = TEST_CDW11,
 		.cdw12 = TEST_CDW12,
@@ -163,7 +163,7 @@ static void test_set_features_simple(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
 		.nsid = TEST_NSID,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | TEST_FID,
 		.cdw11 = TEST_CDW11,
 		.result = TEST_RESULT,
@@ -205,7 +205,7 @@ static void test_set_arbitration(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
 		.cdw10 = NVME_FEAT_FID_ARBITRATION,
-		.cdw11 = HPW << 24 | MPW << 16 | LPW << 8 | AB,
+		.cdw11 = (uint32_t)HPW << 24 | MPW << 16 | LPW << 8 | AB,
 		.result = TEST_RESULT,
 	};
 	uint32_t result = 0;
@@ -243,7 +243,7 @@ static void test_set_power_mgmt(void)
 	uint8_t PS = 0b10101, WH = 0b101;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_POWER_MGMT,
 		.cdw11 = WH << 5 | PS,
 		.result = TEST_RESULT,
@@ -337,7 +337,7 @@ static void test_set_temp_thresh(void)
 		NVME_FEATURE_TEMPTHRESH_THSEL_UNDER;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_TEMP_THRESH,
 		.cdw11 = THSEL << 20 | TMPSEL << 16 | TMPTH,
 		.result = TEST_RESULT,
@@ -424,7 +424,7 @@ static void test_set_volatile_wc(void)
 {
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_VOLATILE_WC,
 		.cdw11 = 1 << 0, /* WCE */
 		.result = TEST_RESULT,
@@ -521,7 +521,7 @@ static void test_set_irq_config(void)
 	uint16_t IV = 0x1234;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_IRQ_CONFIG,
 		.cdw11 = 1 << 16 /* CD */
 		       | IV,
@@ -600,7 +600,7 @@ static void test_set_async_event(void)
 	uint32_t EVENTS = 0x87654321;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_ASYNC_EVENT,
 		.cdw11 = EVENTS,
 		.result = TEST_RESULT,
@@ -717,7 +717,7 @@ static void test_set_timestamp(void)
 		.opcode = nvme_admin_set_features,
 		.in_data = &ts,
 		.data_len = sizeof(ts),
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_TIMESTAMP,
 	};
 	int err;
@@ -771,7 +771,7 @@ static void test_set_hctm(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
 		.cdw10 = NVME_FEAT_FID_HCTM,
-		.cdw11 = TMT1 << 16 | TMT2,
+		.cdw11 = (uint32_t)TMT1 << 16 | TMT2,
 		.result = TEST_RESULT,
 	};
 	uint32_t result = 0;
@@ -807,7 +807,7 @@ static void test_set_nopsc(void)
 {
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_NOPSC,
 		.cdw11 = 1 << 0 /* NOPPME */,
 		.result = TEST_RESULT,
@@ -890,7 +890,7 @@ static void test_set_plm_config(void)
 		.opcode = nvme_admin_set_features,
 		.in_data = &config,
 		.data_len = sizeof(config),
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_PLM_CONFIG,
 		.cdw11 = NVMSETID,
 		.cdw12 = 1 << 0 /* Predictable Latency Enable */,
@@ -984,7 +984,7 @@ static void test_set_lba_sts_interval(void)
 	uint16_t LSIRI = 0x1234, LSIPI = 0x5678;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_LBA_STS_INTERVAL,
 		.cdw11 = LSIPI << 16 | LSIRI,
 		.result = TEST_RESULT,
@@ -1105,7 +1105,7 @@ static void test_set_endurance_evt_cfg(void)
 	uint8_t EGWARN = 0xCD;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_ENDURANCE_EVT_CFG,
 		.cdw11 = EGWARN << 16 | ENDGID,
 		.result = TEST_RESULT,
@@ -1182,7 +1182,7 @@ static void test_set_sw_progress(void)
 	uint8_t PBSLC = 0xBA;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_SW_PROGRESS,
 		.cdw11 = PBSLC,
 		.result = TEST_RESULT,
@@ -1223,7 +1223,7 @@ static void test_set_host_id(void)
 		.opcode = nvme_admin_set_features,
 		.in_data = hostid,
 		.data_len = sizeof(hostid),
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_HOST_ID,
 		.result = TEST_RESULT,
 	};
@@ -1305,7 +1305,7 @@ static void test_set_resv_mask(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
 		.nsid = TEST_NSID,
-		.cdw10 = 1 << 31 /* SAVE */
+		.cdw10 = (uint32_t)1 << 31 /* SAVE */
 		       | NVME_FEAT_FID_RESV_MASK,
 		.cdw11 = MASK,
 		.result = TEST_RESULT,
