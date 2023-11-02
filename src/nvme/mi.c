@@ -1048,7 +1048,7 @@ int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
 			       nvme_admin_set_features);
 
 	req_hdr.cdw1 = cpu_to_le32(args->nsid);
-	req_hdr.cdw10 = cpu_to_le32((args->save ? 1 : 0) << 31 |
+	req_hdr.cdw10 = cpu_to_le32((__u32)!!args->save << 31 |
 				    (args->fid & 0xff));
 	req_hdr.cdw14 = cpu_to_le32(args->uuidx & 0x7f);
 	req_hdr.cdw11 = cpu_to_le32(args->cdw11);
@@ -1220,7 +1220,7 @@ int nvme_mi_admin_fw_commit(nvme_mi_ctrl_t ctrl,
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
 			       nvme_admin_fw_commit);
 
-	req_hdr.cdw10 = cpu_to_le32(((args->bpid & 0x1) << 31) |
+	req_hdr.cdw10 = cpu_to_le32(((__u32)(args->bpid & 0x1) << 31) |
 				    ((args->action & 0x7) << 3) |
 				    ((args->slot & 0x7) << 0));
 
