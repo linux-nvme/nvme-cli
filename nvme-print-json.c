@@ -20,6 +20,7 @@
 #define MS500_TO_SEC(time) ((time) / 2)
 
 #define array_add_obj json_array_add_value_object
+#define array_add_str json_array_add_value_string
 
 #define obj_add_array json_object_add_value_array
 #define obj_add_int json_object_add_value_int
@@ -691,11 +692,11 @@ static void json_select_result(__u32 result)
 	struct json_object *feature = json_create_array();
 
 	if (result & 0x1)
-		json_array_add_value_string(feature, "saveable");
+		array_add_str(feature, "saveable");
 	if (result & 0x2)
-		json_array_add_value_string(feature, "per-namespace");
+		array_add_str(feature, "per-namespace");
 	if (result & 0x4)
-		json_array_add_value_string(feature, "changeable");
+		array_add_str(feature, "changeable");
 
 	root_add_array("Feature", feature);
 
@@ -2199,14 +2200,14 @@ static void d_json(unsigned char *buf, int len, int width, int group, struct jso
 	for (i = 0; i < len; i++) {
 		ascii[i % width] = (buf[i] >= '!' && buf[i] <= '~') ? buf[i] : '.';
 		if (!((i + 1) % width)) {
-			json_array_add_value_string(array, ascii);
+			array_add_str(array, ascii);
 			memset(ascii, 0, sizeof(ascii));
 		}
 	}
 
 	if (strlen(ascii)) {
 		ascii[i % width + 1] = '\0';
-		json_array_add_value_string(array, ascii);
+		array_add_str(array, ascii);
 	}
 }
 
