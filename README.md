@@ -251,7 +251,7 @@ global resources among various components. For example, when executing
 `blktests` for the FC transport, the `nvme-cli` udev rules can be triggered. To
 prevent interference with a test, `blktests` can create a JSON configuration
 file in `/run/nvme` to inform `nvme-cli` that it should not perform any actions
-trigged from the udev context. This behavior can be controlled using the
+triggered from the udev context. This behavior can be controlled using the
 `--context` argument.
 
 For example a `blktests` volatile configuration could look like:

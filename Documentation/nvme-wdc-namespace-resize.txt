@@ -8,7 +8,7 @@ nvme-wdc-namespace-resize - Resizes the device's namespace.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc namespace-resize' <device> [--nsid=<NAMSPACE ID>, -n <NAMSPACE ID>]
+'nvme wdc namespace-resize' <device> [--nsid=<NAMESPACE ID>, -n <NAMSPACE ID>]
 			[--op_option=<OP OPTION>, -o <OP OPTION>] 
 
 DESCRIPTION
@@ -24,8 +24,8 @@ Results for any other device are undefined.
 
 OPTIONS
 -------
--n <NAMSPACE ID>::
---namespace-id=<NAMSPACE_ID>::
+-n <NAMESPACE ID>::
+--namespace-id=<NAMESPACE_ID>::
 	Namespace ID; ID of the namespace to resize
 
 -o <OP OPTION>::

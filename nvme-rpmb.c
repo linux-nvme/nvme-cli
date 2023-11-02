@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2020 Micron Techology Inc. All rights reserved.
+ * Copyright (C) 2020 Micron Technology Inc. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -68,7 +68,7 @@ unsigned char *create_hash(const char *algo,
 		.salg_name = { 0 }
 	};
 
-	/* copy algorith name */
+	/* copy algorithm name */
 	if (strlen(algo) > sizeof(provider_sa.salg_name)) {
 		fprintf(stderr, "%s: algorithm name overflow", __func__);
 		return hash;
@@ -608,7 +608,7 @@ static int rpmb_program_auth_key(int fd, unsigned char target,
 		goto out;
 	}
 
-	/* re-use response buffer */
+	/* reuse response buffer */
 	memset(rsp, 0, rsp_size);
 	err = recv_rpmb_rsp(fd, req->target, rsp_size, rsp);
 	if (err != 0) {
@@ -1005,7 +1005,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 						  cfg.blocks,
 						  (regs.access_size + 1));
 			if (err > 0 && msg_buf != NULL) {
-				printf("Writting %d bytes to file %s\n",
+				printf("Writing %d bytes to file %s\n",
 					err * 512, cfg.msgfile);
 				write_file(msg_buf, err * 512, NULL,
 					   cfg.msgfile, NULL);

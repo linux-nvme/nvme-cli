@@ -17,7 +17,7 @@ usage() {
     echo "configs with meson:"
     echo "  [default]           default settings"
     echo "  fallback            download all dependencies"
-    echo "                      and build them as shared libaries"
+    echo "                      and build them as shared libraries"
     echo "  cross               use cross toolchain to build"
     echo "  coverage            build coverage report"
     echo "  appimage            build AppImage target"

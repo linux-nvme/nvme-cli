@@ -47,7 +47,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         - Attributes:
               - feature_id_list : list of the mandatory features.
               - get_vector_list_cmd : vector list collection for 09h.
-              - vector_list_len : numer of the interrupt vectors.
+              - vector_list_len : number of the interrupt vectors.
     """
 
     def setUp(self):

@@ -926,7 +926,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	/**
 	 * Here we should identify if the drive is a Panthor or Jaguar.
 	 * Here we need to extract the model no from ctrl-id abd use it
-	 * to deternine drive family.
+	 * to determine drive family.
 	 */
 
 	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
@@ -1299,7 +1299,7 @@ static void print_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwAct
 	char buf[80];
 
 	if (fwActivHis.numValidFwActHisEnt > 0) {
-		printf("\n\nSeagate FW Activation Histry :\n");
+		printf("\n\nSeagate FW Activation History :\n");
 		printf("%-9s %-21s %-7s %-13s %-9s %-5s %-15s %-9s\n", "Counter ", "      Timestamp ", " PCC ", "Previous FW ", "New FW ", "Slot", "Commit Action", "Result");
 
 		for (i = 0; i < fwActivHis.numValidFwActHisEnt; i++) {
@@ -1406,7 +1406,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 	}
 
 	if (strcmp(cfg.output_format, "json"))
-		printf("Seagate FW Activation Histry Information :\n");
+		printf("Seagate FW Activation History Information :\n");
 
 	err = nvme_get_log_simple(dev_fd(dev), 0xC2, sizeof(fwActivHis), &fwActivHis);
 	if (!err) {

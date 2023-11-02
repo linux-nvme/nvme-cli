@@ -95,5 +95,5 @@ if autopep8.found() and isort.found()
         command : [python, linter_script, 'format'],
     )
 else
-    message('autopep8 or isort not found. Python formating disabled')
+    message('autopep8 or isort not found. Python formatting disabled')
 endif
