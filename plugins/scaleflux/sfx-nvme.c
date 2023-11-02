@@ -881,7 +881,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	if (trg_in_4k < provisoned_cap_4k ||
 	    trg_in_4k > ((__u64)provisoned_cap_4k * 4)) {
 		fprintf(stderr,
-			"WARNING: Only support 1.0~4.0 x provisoned capacity!\n");
+			"WARNING: Only support 1.0~4.0 x provisioned capacity!\n");
 		if (trg_in_4k < provisoned_cap_4k)
 			fprintf(stderr,
 				"WARNING: The target capacity is less than 1.0 x provisioned capacity!\n");
@@ -924,7 +924,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
  *
  * @param str, prompt string
  *
- * @return 0, cancled; 1 confirmed
+ * @return 0, canceled; 1 confirmed
  */
 static int sfx_confirm_change(const char *str)
 {
@@ -936,7 +936,7 @@ static int sfx_confirm_change(const char *str)
 	fprintf(stderr, "Confirm Y/y, Others cancel:\n");
 	confirm = (unsigned char)fgetc(stdin);
 	if (confirm != 'y' && confirm != 'Y') {
-		fprintf(stderr, "Cancled.\n");
+		fprintf(stderr, "Canceled.\n");
 		return 0;
 	}
 	fprintf(stderr, "Sending operation ...\n");

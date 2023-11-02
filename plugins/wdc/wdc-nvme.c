@@ -1339,7 +1339,7 @@ struct __packed wdc_fw_act_history_log_format_c2 {
 struct __packed wdc_ocp_C4_dev_cap_log {
 	__le16  num_pcie_ports;                        /* 0000 - Number of PCI Express Ports         */
 	__le16  oob_mgmt_support;                      /* 0002 - OOB Management Interfaces Supported */
-	__le16  wrt_zeros_support;                     /* 0004 - Write Zeros Commmand Support        */
+	__le16  wrt_zeros_support;                     /* 0004 - Write Zeros Command Support        */
 	__le16  sanitize_support;                      /* 0006 - Sanitize Command Support            */
 	__le16  dsm_support;                           /* 0008 - Dataset Management Command Support  */
 	__le16  wrt_uncor_support;                     /* 0010 - Write Uncorrectable Command Support */
@@ -1674,7 +1674,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 							      WDC_DEV_CAP_LOG_ID))
 				capabilities |= WDC_DRIVE_CAP_OCP_C4_LOG_PAGE;
 
-			/* verify the 0xC5 (OCP Unsupported Requirments) log page is supported */
+			/* verify the 0xC5 (OCP Unsupported Requirements) log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
 							      WDC_UNSUPPORTED_REQS_LOG_ID))
 				capabilities |= WDC_DRIVE_CAP_OCP_C5_LOG_PAGE;
@@ -1763,7 +1763,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 			if (wdc_nvme_check_supported_log_page(r, dev, WDC_DEV_CAP_LOG_ID))
 				capabilities |= WDC_DRIVE_CAP_OCP_C4_LOG_PAGE;
 
-			/* verify the 0xC5 (OCP Unsupported Requirments) log page is supported */
+			/* verify the 0xC5 (OCP Unsupported Requirements) log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev, WDC_UNSUPPORTED_REQS_LOG_ID))
 				capabilities |= WDC_DRIVE_CAP_OCP_C5_LOG_PAGE;
 
@@ -2099,7 +2099,7 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 			remaining_len = 0;
 			valid_log = false;
 
-			/* The struture is invalid, so any match that was found is invalid. */
+			/* The structure is invalid, so any match that was found is invalid. */
 			*p_p_found_log_entry = NULL;
 		} else {
 			/* Structure must have at least one valid entry to be considered valid */
@@ -4680,7 +4680,7 @@ static void wdc_print_dev_cap_log_normal(struct wdc_ocp_C4_dev_cap_log *log_data
 	printf("  Minimum DSSD Power State		: 0x%x\n", le16_to_cpu(log_data->min_dssd_ps));
 
 	for (j = 0; j < WDC_OCP_C4_NUM_PS_DESCR; j++)
-		printf("  DSSD Power State %d Desriptor	: 0x%x\n", j, log_data->dssd_ps_descr[j]);
+		printf("  DSSD Power State %d Descriptor	: 0x%x\n", j, log_data->dssd_ps_descr[j]);
 
 	printf("  Log Page Version			: 0x%x\n", le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID				: 0x");
@@ -10959,7 +10959,7 @@ static int wdc_do_vs_nand_stats_sn810_2(struct nvme_dev *dev, char *format)
 					   NVME_NSID_ALL);
 
 	if (ret) {
-		fprintf(stderr, "ERROR: WDC: %s : Failed to retreive NAND stats\n", __func__);
+		fprintf(stderr, "ERROR: WDC: %s : Failed to retrieve NAND stats\n", __func__);
 		goto out;
 	} else {
 		fmt = validate_output_format(format);
@@ -11003,7 +11003,7 @@ static int wdc_do_vs_nand_stats(struct nvme_dev *dev, char *format)
 	ret = nvme_get_log_simple(dev_fd(dev), WDC_NVME_NAND_STATS_LOG_ID,
 				  WDC_NVME_NAND_STATS_SIZE, (void *)output);
 	if (ret) {
-		fprintf(stderr, "ERROR: WDC: %s : Failed to retreive NAND stats\n", __func__);
+		fprintf(stderr, "ERROR: WDC: %s : Failed to retrieve NAND stats\n", __func__);
 		goto out;
 	} else {
 		fmt = validate_output_format(format);
@@ -11279,13 +11279,13 @@ static int wdc_vs_drive_info(int argc, char **argv,
 				rev = (double)(cpu_to_le32(result) & 0x0000ffff);
 
 				if (fmt == NORMAL) {
-					printf("Drive HW Revison: %4.1f\n", (.1 * rev));
+					printf("Drive HW Revision: %4.1f\n", (.1 * rev));
 					printf("FTL Unit Size:     0x%x KB\n", size);
 					printf("Customer SN:        %-.*s\n", (int)sizeof(ctrl.sn), &ctrl.sn[0]);
 				} else if (fmt == JSON) {
 					root = json_create_object();
 					sprintf(rev_str, "%4.1f", (.1 * rev));
-					json_object_add_value_string(root, "Drive HW Revison", rev_str);
+					json_object_add_value_string(root, "Drive HW Revision", rev_str);
 
 					json_object_add_value_int(root, "FTL Unit Size", le16_to_cpu(size));
 					wdc_StrFormat(formatter, sizeof(formatter), &ctrl.sn[0], sizeof(ctrl.sn));

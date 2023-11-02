@@ -64,7 +64,7 @@ class TestNVMeAttachDetachNSCmd(TestNVMe):
         Post Section for TestNVMeAttachDetachNSCmd
 
             - Create primary namespace.
-            - Atttach it to controller.
+            - Attach it to controller.
             - Call super class's destructor.
         """
         self.assertEqual(self.create_and_validate_ns(self.default_nsid,

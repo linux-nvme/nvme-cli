@@ -133,8 +133,8 @@ end:
 /**
  * Compares the strings ignoring their cases.
  *
- * @param pcSrc Points to a null terminated string for comapring.
- * @param pcDst Points to a null terminated string for comapring.
+ * @param pcSrc Points to a null terminated string for comparing.
+ * @param pcDst Points to a null terminated string for comparing.
  *
  * @returns zero if the string matches or
  *          1 if the pcSrc string is lexically higher than pcDst or

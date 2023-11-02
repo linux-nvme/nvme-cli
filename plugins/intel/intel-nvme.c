@@ -1086,7 +1086,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		};
 		err = nvme_get_features(&args);
 		if (err) {
-			fprintf(stderr, "Quering thresholds failed. ");
+			fprintf(stderr, "Querying thresholds failed. ");
 			nvme_show_status(err);
 			goto close_dev;
 		}

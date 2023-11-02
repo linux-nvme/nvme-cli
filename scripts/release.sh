@@ -60,7 +60,7 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 if [[ -f subprojects/libnvme.wrap ]]; then
     git -C subprojects/libnvme fetch --all
 
-    # extract the vesion string from libnvme by using the ref
+    # extract the version string from libnvme by using the ref
     # defined in libnvme.wrap.
     libnvme_ref=$(sed -n "s/revision = \([0-9a-z]\+\)/\1/p" subprojects/libnvme.wrap)
     libnvme_VERSION=$(git -C subprojects/libnvme describe "${libnvme_ref}")
@@ -94,7 +94,7 @@ if [ -d "Documentation" ]; then
 elif [ -d "doc" ]; then
     doc_dir="doc"
 else
-    echo "documenation directory not found"
+    echo "documentation directory not found"
     exit 1
 fi
 

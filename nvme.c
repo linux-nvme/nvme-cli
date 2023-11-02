@@ -299,7 +299,7 @@ int map_log_level(int verbose, bool quiet)
 	int log_level;
 
 	/*
-	 * LOG_NOTICE is unsued thus the user has to provide two 'v' for getting
+	 * LOG_NOTICE is unused thus the user has to provide two 'v' for getting
 	 * any feedback at all. Thus skip this level
 	 */
 	verbose++;
@@ -7297,9 +7297,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	ms = ns->lbaf[lba_index].ms;
 	if (NVME_FLBAS_META_EXT(ns->flbas)) {
 		/*
-		 * No meta data is transfered for PRACT=1 and MD=8:
+		 * No meta data is transferred for PRACT=1 and MD=8:
 		 *   5.2.2.1 Protection Information and Write Commands
-		 *   5.2.2.2 Protection Informatio and Read Commands
+		 *   5.2.2.2 Protection Information and Read Commands
 		 */
 		if (!(cfg.prinfo == 0x1 && ms == 8))
 			logical_block_size += ms;

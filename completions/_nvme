@@ -36,7 +36,7 @@ _nvme () {
 	'get-log:retrieve any log in raw format'
 	'predictable-lat-log:retrieve predictable latency per nvmset log'
 	'pred-lat-event-agg-log:retrieve predictable latency event aggregate log'
-	'persistent-event-log:retrieve presistent event log'
+	'persistent-event-log:retrieve persistent event log'
 	'telemetry-log:retrieve telemetry log'
 	'fw-log:retrieve fw log'
 	'changed-ns-list-log:retrieve changed namespaces log'

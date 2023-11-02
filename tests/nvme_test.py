@@ -39,7 +39,7 @@ from nvme_test_logger import TestNVMeLogger
 class TestNVMe(unittest.TestCase):
 
     """
-    Represents a testcase, each testcase shuold inherit this
+    Represents a testcase, each testcase should inherit this
     class or appropriate subclass which is a child of this class.
 
     Common utility functions used in various testcases.
@@ -70,7 +70,7 @@ class TestNVMe(unittest.TestCase):
             shutil.rmtree(self.log_dir, ignore_errors=True)
 
     def validate_pci_device(self):
-        """ Validate underlaying device belogs to pci subsystem.
+        """ Validate underlying device belongs to pci subsystem.
             - Args:
                 - None
             - Returns:
@@ -162,7 +162,7 @@ class TestNVMe(unittest.TestCase):
         return ctrl_id
 
     def get_ns_list(self):
-        """ Wrapper for extrating the namespace list.
+        """ Wrapper for extracting the namespace list.
             - Args:
                 - None
             - Returns:
@@ -181,7 +181,7 @@ class TestNVMe(unittest.TestCase):
         return ns_list
 
     def get_max_ns(self):
-        """ Wrapper for extracting maximum number of namspaces supported.
+        """ Wrapper for extracting maximum number of namespaces supported.
             - Args:
                 - None
             - Returns:

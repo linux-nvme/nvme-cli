@@ -2221,7 +2221,7 @@ static int display_fw_activate_entry(int entry_count, struct fw_activation_histo
 	else
 		sprintf(ptr, "| pass");
 
-	/* replace all null charecters with spaces */
+	/* replace all null characters with spaces */
 	ptr = formatted_entry;
 	while (index < entry_size) {
 		if (ptr[index] == '\0')
@@ -2289,7 +2289,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *c
 		goto out;
 	}
 
-	/* check if we have atleast one entry to print */
+	/* check if we have at least one entry to print */
 	struct micron_fw_activation_history_table *table =
 			   (struct micron_fw_activation_history_table *)logC2;
 
@@ -2696,7 +2696,7 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *c
 
 	/* check for models that support 0xC0 log */
 	if (eModel != M51CX) {
-		printf("Unsupported drive model for vs-smart-add-log commmand\n");
+		printf("Unsupported drive model for vs-smart-add-log command\n");
 		err = -1;
 		goto out;
 	}

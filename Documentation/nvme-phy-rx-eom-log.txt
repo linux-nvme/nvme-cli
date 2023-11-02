@@ -32,7 +32,7 @@ OPTIONS
 
 -c <id>::
 --controller=<id>::
-	Controller ID of the controller associated wit the PCIe port to be
+	Controller ID of the controller associated with the PCIe port to be
 	measured.
 
 -o <fmt>::

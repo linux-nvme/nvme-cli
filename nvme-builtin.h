@@ -44,7 +44,7 @@ COMMAND_LIST(
 	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
 	ENTRY("predictable-lat-log", "Retrieve Predictable Latency per Nvmset Log, show it", get_pred_lat_per_nvmset_log)
 	ENTRY("pred-lat-event-agg-log", "Retrieve Predictable Latency Event Aggregate Log, show it", get_pred_lat_event_agg_log)
-	ENTRY("persistent-event-log", "Retrieve Presistent Event Log, show it", get_persistent_event_log)
+	ENTRY("persistent-event-log", "Retrieve Persistent Event Log, show it", get_persistent_event_log)
 	ENTRY("endurance-event-agg-log", "Retrieve Endurance Group Event Aggregate Log, show it", get_endurance_event_agg_log)
 	ENTRY("lba-status-log", "Retrieve LBA Status Information Log, show it", get_lba_status_log)
 	ENTRY("resv-notif-log", "Retrieve Reservation Notification Log, show it", get_resv_notif_log)

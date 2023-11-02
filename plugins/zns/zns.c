@@ -560,7 +560,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc = "Set Zone Descriptor Extension\n";
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *zrwaa = "Allocate Zone Random Write Area to zone";
-	const char *data = "optional file for zone extention data (default stdin)";
+	const char *data = "optional file for zone extension data (default stdin)";
 	const char *timeout = "timeout value, in milliseconds";
 
 	int ffd = STDIN_FILENO, err;
@@ -603,7 +603,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 
 	if (!data_len || data_len < 0) {
 		fprintf(stderr,
-			"zone format does not provide descriptor extention\n");
+			"zone format does not provide descriptor extension\n");
 		errno = EINVAL;
 		err = -1;
 		goto close_dev;

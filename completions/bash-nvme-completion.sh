@@ -1430,7 +1430,7 @@ _nvme_subcmds () {
 			set-dssd-power-state-feature"
 	)
 
-	# Associative array mapping plugins to coresponding option completions
+	# Associative array mapping plugins to corresponding option completions
 	typeset -Ar _plugin_funcs=(
 		[intel]="plugin_intel_opts"
 		[amzn]="plugin_amzn_opts"

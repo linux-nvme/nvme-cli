@@ -3312,7 +3312,7 @@ static void json_output_status(int status)
 		json_object_add_value_string(root, "type", "nvme-mi");
 		break;
 	default:
-		json_object_add_value_string(root, "type", "unknow");
+		json_object_add_value_string(root, "type", "unknown");
 		break;
 	}
 
