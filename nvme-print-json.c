@@ -3603,13 +3603,15 @@ static void json_lba_status_info(__u32 result)
 
 void json_d(unsigned char *buf, int len, int width, int group)
 {
-	struct json_object *r = json_create_object();
+	struct json_object *r = json_r ? json_r : json_create_object();
+	char json_str[STR_LEN];
 	struct json_object *data = json_create_array();
 
+	sprintf(json_str, "Data: buf=%p len=%d width=%d group=%d", buf, len, width, group);
 	d_json(buf, len, width, group, data);
-	obj_add_array(r, "Data", data);
+	obj_add_array(r, json_str, data);
 
-	json_print(r);
+	obj_print(r);
 }
 
 static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list)
@@ -4333,19 +4335,17 @@ static void json_output_status(int status)
 
 static void json_output_error_status(int status, const char *msg, va_list ap)
 {
-	struct json_object *r = json_create_object();
+	struct json_object *r;
+	char json_str[STR_LEN];
 	char *value;
-	const char *key = "Error";
 	int val;
 	int type;
 
 	if (vasprintf(&value, msg, ap) < 0)
 		value = NULL;
 
-	if (value)
-		obj_add_str(r, key, value);
-	else
-		obj_add_str(r, key, "Could not allocate string");
+	sprintf(json_str, "Error: %s", value ? value : "Could not allocate string");
+	r = obj_create(json_str);
 
 	free(value);
 
@@ -4373,7 +4373,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 
 	obj_add_int(r, "Value", val);
 
-	json_output_object(r);
+	obj_print(r);
 }
 
 static void json_output_message(bool error, const char *msg, va_list ap)
