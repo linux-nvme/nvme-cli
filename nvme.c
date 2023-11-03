@@ -7104,7 +7104,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	int mode = 0644;
 	__u16 control = 0, nblocks = 0;
 	__u32 dsmgmt = 0;
-	int logical_block_size = 0;
+	unsigned int logical_block_size = 0;
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	bool huge;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
@@ -7275,9 +7275,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		goto close_mfd;
 	}
 
-	if (nvme_get_logical_block_size(dev_fd(dev), cfg.namespace_id, &logical_block_size) < 0)
-		goto close_mfd;
-
 	ns = nvme_alloc(sizeof(*ns));
 	if (!ns) {
 		err = -ENOMEM;
@@ -7294,6 +7291,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
+	logical_block_size = 1 << ns->lbaf[lba_index].ds;
 	ms = ns->lbaf[lba_index].ms;
 	if (NVME_FLBAS_META_EXT(ns->flbas)) {
 		/*
