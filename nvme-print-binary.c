@@ -360,6 +360,9 @@ static struct print_ops binary_print_ops = {
 	.id_ctrl_rpmbs			= NULL,
 	.lba_range			= NULL,
 	.lba_status_info		= NULL,
+	.d				= NULL,
+	.show_init			= NULL,
+	.show_finish			= NULL,
 
 	/* libnvme tree print functions */
 	.list_item			= NULL,
@@ -373,6 +376,7 @@ static struct print_ops binary_print_ops = {
 	.show_message			= NULL,
 	.show_perror			= NULL,
 	.show_status			= NULL,
+	.show_error_status		= NULL,
 };
 
 struct print_ops *nvme_get_binary_print_ops(enum nvme_print_flags flags)

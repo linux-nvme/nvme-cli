@@ -15,15 +15,15 @@
 #include "util/types.h"
 #include "common.h"
 
-#define nvme_print(name, flags, ...)			\
-do {							\
-	struct print_ops *ops = nvme_print_ops(flags);	\
-	if (ops) {					\
-		if (ops->name)				\
-			ops->name(__VA_ARGS__);		\
-		return;					\
-	}						\
-} while(0);
+#define nvme_print(name, flags, ...)				\
+	do {							\
+		struct print_ops *ops = nvme_print_ops(flags);	\
+		if (ops && ops->name)				\
+			ops->name(__VA_ARGS__);			\
+	} while (false)
+
+#define nvme_print_output_format(name, ...)			\
+	nvme_print(name, nvme_is_output_format_json() ? JSON : NORMAL, ##__VA_ARGS__);
 
 static struct print_ops *nvme_print_ops(enum nvme_print_flags flags)
 {
@@ -135,7 +135,6 @@ void nvme_show_predictable_latency_per_nvmset(
 	__u16 nvmset_id, const char *devname,
 	enum nvme_print_flags flags)
 {
-
 	nvme_print(predictable_latency_per_nvmset, flags,
 		   plpns_log, nvmset_id, devname);
 }
@@ -279,7 +278,6 @@ void nvme_show_fdp_configs(struct nvme_fdp_config_log *log, size_t len,
 void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
 		enum nvme_print_flags flags)
 {
-
 	nvme_print(fdp_usage_log, flags,log, len);
 }
 
@@ -312,7 +310,6 @@ void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
 void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
 		enum nvme_print_flags flags)
 {
-
 	nvme_print(fdp_ruh_status, flags, status, len);
 }
 
@@ -394,20 +391,18 @@ void d_raw(unsigned char *buf, unsigned len)
 
 void nvme_show_status(int status)
 {
-	struct print_ops *ops = nvme_print_ops(0);
+	struct print_ops *ops = nvme_print_ops(NORMAL);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
-	if (!ops || !ops->show_status)
-		return;
-
-	ops->show_status(status);
+	if (ops && ops->show_status)
+		ops->show_status(status);
 }
 
 void nvme_show_error_status(int status, const char *msg, ...)
 {
-	struct print_ops *ops = nvme_print_ops(0);
+	struct print_ops *ops = nvme_print_ops(NORMAL);
 	va_list ap;
 
 	va_start(ap, msg);
@@ -612,13 +607,13 @@ const char *nvme_trtype_to_string(__u8 trtype)
 }
 
 void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
-			const char *devname, enum nvme_print_flags flags)
+			 const char *devname, enum nvme_print_flags flags)
 {
 	nvme_print(error_log, flags, err_log, entries, devname);
 }
 
 void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
-	bool eds, enum nvme_print_flags flags)
+			   bool eds, enum nvme_print_flags flags)
 {
 	nvme_print(resv_report, flags, status, bytes, eds);
 }
@@ -873,9 +868,8 @@ const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state)
 }
 
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
-	void *buf, __u32 len, enum nvme_print_flags flags)
+			 void *buf, __u32 len, enum nvme_print_flags flags)
 {
-
 	nvme_print(directive, flags, type, oper, spec, nsid, result, buf, len);
 }
 
@@ -967,7 +961,7 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 }
 
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
-			enum nvme_print_flags flags)
+			  enum nvme_print_flags flags)
 {
 	nvme_print(lba_status, flags, list, len);
 }
@@ -1027,16 +1021,15 @@ void nvme_show_topology(nvme_root_t r,
 			enum nvme_cli_topo_ranking ranking,
 			enum nvme_print_flags flags)
 {
-	if (ranking == NVME_CLI_TOPO_NAMESPACE) {
+	if (ranking == NVME_CLI_TOPO_NAMESPACE)
 		nvme_print(topology_namespace, flags, r);
-	} else {
+	else
 		nvme_print(topology_ctrl, flags, r);
-	}
 }
 
 void nvme_show_message(bool error, const char *msg, ...)
 {
-	struct print_ops *ops = nvme_print_ops(0);
+	struct print_ops *ops = nvme_print_ops(NORMAL);
 	va_list ap;
 
 	va_start(ap, msg);
@@ -1052,19 +1045,13 @@ void nvme_show_message(bool error, const char *msg, ...)
 
 void nvme_show_perror(const char *msg)
 {
-	struct print_ops *ops;
+	struct print_ops *ops = nvme_print_ops(NORMAL);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
-	else
-		ops = nvme_print_ops(0);
 
-	if (!ops)
-		return;
-
-	if (!ops->show_perror)
-		return;
-	ops->show_perror(msg);
+	if (ops && ops->show_perror)
+		ops->show_perror(msg);
 }
 
 void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
@@ -1076,4 +1063,14 @@ void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
 void nvme_show_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags)
 {
 	nvme_print(connect_msg, flags, c);
+}
+
+void nvme_show_init(void)
+{
+	nvme_print_output_format(show_init);
+}
+
+void nvme_show_finish(void)
+{
+	nvme_print_output_format(show_finish);
 }
