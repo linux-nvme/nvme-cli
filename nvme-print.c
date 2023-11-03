@@ -379,7 +379,7 @@ void nvme_show_relatives(const char *name)
 
 void d(unsigned char *buf, int len, int width, int group)
 {
-	nvme_print(d, 0, buf, len, width, group);
+	nvme_print(d, NORMAL, buf, len, width, group);
 }
 
 void d_raw(unsigned char *buf, unsigned len)
@@ -789,9 +789,9 @@ const char *nvme_select_to_string(int sel)
 	}
 }
 
-void nvme_show_select_result(__u32 result)
+void nvme_show_select_result(enum nvme_features_id fid, __u32 result)
 {
-	nvme_print(select_result, 0, result);
+	nvme_print(select_result, NORMAL, fid, result);
 }
 
 const char *nvme_feature_lba_type_to_string(__u8 type)
@@ -887,7 +887,7 @@ const char *nvme_plm_window_to_string(__u32 plm)
 
 void nvme_show_lba_status_info(__u32 result)
 {
-	nvme_print(lba_status_info, 0, result);
+	nvme_print(lba_status_info, NORMAL, result);
 }
 
 const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid,
@@ -952,12 +952,12 @@ const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid,
 
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
-	nvme_print(show_feature, 0, fid, sel, result);
+	nvme_print(show_feature, NORMAL, fid, sel, result);
 }
 
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf)
 {
-	nvme_print(show_feature_fields, 0, fid, result, buf);
+	nvme_print(show_feature_fields, NORMAL, fid, result, buf);
 }
 
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
@@ -1009,7 +1009,7 @@ void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len)
 
 void nvme_show_list_item(nvme_ns_t n)
 {
-	nvme_print(list_item, 0, n);
+	nvme_print(list_item, NORMAL, n);
 }
 
 void nvme_show_list_items(nvme_root_t r, enum nvme_print_flags flags)

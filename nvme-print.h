@@ -65,7 +65,7 @@ struct print_ops {
 	void (*resv_report)(struct nvme_resv_status *status, int bytes, bool eds);
 	void (*sanitize_log_page)(struct nvme_sanitize_log_page *sanitize_log, const char *devname);
 	void (*secondary_ctrl_list)(const struct nvme_secondary_ctrl_list *sc_list, __u32 count);
-	void (*select_result)(__u32 result);
+	void (*select_result)(enum nvme_features_id fid, __u32 result);
 	void (*self_test_log)(struct nvme_self_test_log *self_test, __u8 dst_entries, __u32 size, const char *devname);
 	void (*single_property)(int offset, uint64_t value64);
 	void (*smart_log)(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
@@ -77,8 +77,8 @@ struct print_ops {
 	void (*zns_id_ctrl)(struct nvme_zns_id_ctrl *ctrl);
 	void (*zns_id_ns)(struct nvme_zns_id_ns *ns, struct nvme_id_ns *id_ns);
 	void (*zns_report_zones)(void *report, __u32 descs, __u8 ext_size, __u32 report_size, struct json_object *zone_list);
-	void (*show_feature)(enum nvme_features_id id, int sel, unsigned int result);
-	void (*show_feature_fields)(enum nvme_features_id id, unsigned int result, unsigned char *buf);
+	void (*show_feature)(enum nvme_features_id fid, int sel, unsigned int result);
+	void (*show_feature_fields)(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
 	void (*id_ctrl_rpmbs)(__le32 ctrl_rpmbs);
 	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
 	void (*lba_status_info)(__u32 result);
@@ -238,7 +238,7 @@ void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result);
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 	void *buf, __u32 len, enum nvme_print_flags flags);
-void nvme_show_select_result(__u32 result);
+void nvme_show_select_result(enum nvme_features_id fid, __u32 result);
 
 void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl,
 			   enum nvme_print_flags flags);
