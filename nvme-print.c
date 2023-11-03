@@ -394,20 +394,31 @@ void d_raw(unsigned char *buf, unsigned len)
 
 void nvme_show_status(int status)
 {
-	struct print_ops *ops;
+	struct print_ops *ops = nvme_print_ops(0);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
-	else
-		ops =nvme_print_ops(0);
 
-	if (!ops)
-		return;
-
-	if (!ops->show_status)
+	if (!ops || !ops->show_status)
 		return;
 
 	ops->show_status(status);
+}
+
+void nvme_show_error_status(int status, const char *msg, ...)
+{
+	struct print_ops *ops = nvme_print_ops(0);
+	va_list ap;
+
+	va_start(ap, msg);
+
+	if (nvme_is_output_format_json())
+		ops = nvme_print_ops(JSON);
+
+	if (ops && ops->show_status)
+		ops->show_error_status(status, msg, ap);
+
+	va_end(ap);
 }
 
 void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, enum nvme_print_flags flags)
@@ -1025,21 +1036,16 @@ void nvme_show_topology(nvme_root_t r,
 
 void nvme_show_message(bool error, const char *msg, ...)
 {
-	struct print_ops *ops;
+	struct print_ops *ops = nvme_print_ops(0);
 	va_list ap;
+
 	va_start(ap, msg);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
-	else
-		ops = nvme_print_ops(0);
 
-	if (!ops)
-		return;
-
-	if (!ops->show_message)
-		return;
-	ops->show_message(error, msg, ap);
+	if (ops && ops->show_message)
+		ops->show_message(error, msg, ap);
 
 	va_end(ap);
 }

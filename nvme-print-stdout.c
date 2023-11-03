@@ -1665,6 +1665,13 @@ static void stdout_status(int status)
 	}
 }
 
+static void stdout_error_status(int status, const char *msg, va_list ap)
+{
+	vfprintf(stderr, msg, ap);
+
+	stdout_status(status);
+}
+
 static void stdout_id_ctrl_cmic(__u8 cmic)
 {
 	__u8 rsvd = (cmic & 0xF0) >> 4;
@@ -5011,7 +5018,7 @@ static void stdout_message(bool error, const char *msg, va_list ap)
 {
 	vfprintf(error ? stderr : stdout, msg, ap);
 
-	printf("\n");
+	fprintf(error ? stderr : stdout, "\n");
 }
 
 static void stdout_perror(const char *msg)
@@ -5144,6 +5151,7 @@ static struct print_ops stdout_print_ops = {
 	.show_message			= stdout_message,
 	.show_perror			= stdout_perror,
 	.show_status			= stdout_status,
+	.show_error_status		= stdout_error_status,
 };
 
 struct print_ops *nvme_get_stdout_print_ops(enum nvme_print_flags flags)

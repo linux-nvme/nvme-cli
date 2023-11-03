@@ -96,6 +96,7 @@ struct print_ops {
 	void (*show_message)(bool error, const char *msg, va_list ap);
 	void (*show_perror)(const char *msg);
 	void (*show_status)(int status);
+	void (*show_error_status)(int status, const char *msg, va_list ap);
 
 	enum nvme_print_flags flags;
 };
@@ -304,5 +305,6 @@ void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_show_message(bool error, const char *msg, ...);
 void nvme_show_perror(const char *msg);
+void nvme_show_error_status(int status, const char *msg, ...);
 
 #endif
