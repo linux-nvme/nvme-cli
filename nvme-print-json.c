@@ -4423,6 +4423,51 @@ static void json_output_status(int status)
 	json_output_object(r);
 }
 
+static void json_output_error_status(int status, const char *msg, va_list ap)
+{
+	struct json_object *r = json_create_object();
+	char *value;
+	const char *key = "Error";
+	int val;
+	int type;
+
+	if (vasprintf(&value, msg, ap) < 0)
+		value = NULL;
+
+	if (value)
+		obj_add_str(r, key, value);
+	else
+		obj_add_str(r, key, "Could not allocate string");
+
+	free(value);
+
+	if (status < 0) {
+		obj_add_str(r, "Error", nvme_strerror(errno));
+		return json_output_object(r);
+	}
+
+	val = nvme_status_get_value(status);
+	type = nvme_status_get_type(status);
+
+	switch (type) {
+	case NVME_STATUS_TYPE_NVME:
+		obj_add_str(r, "Status", nvme_status_to_string(val, false));
+		obj_add_str(r, "Type", "nvme");
+		break;
+	case NVME_STATUS_TYPE_MI:
+		obj_add_str(r, "Status", nvme_mi_status_to_string(val));
+		obj_add_str(r, "Type", "nvme-mi");
+		break;
+	default:
+		obj_add_str(r, "Type", "Unknown");
+		break;
+	}
+
+	obj_add_int(r, "Value", val);
+
+	json_output_object(r);
+}
+
 static void json_output_message(bool error, const char *msg, va_list ap)
 {
 	struct json_object *r = json_create_object();
@@ -4537,6 +4582,7 @@ static struct print_ops json_print_ops = {
 	.show_message			= json_output_message,
 	.show_perror			= json_output_perror,
 	.show_status			= json_output_status,
+	.show_error_status		= json_output_error_status,
 };
 
 struct print_ops *nvme_get_json_print_ops(enum nvme_print_flags flags)
