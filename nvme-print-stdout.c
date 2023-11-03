@@ -1668,7 +1668,7 @@ static void stdout_status(int status)
 static void stdout_error_status(int status, const char *msg, va_list ap)
 {
 	vfprintf(stderr, msg, ap);
-
+	fprintf(stderr, ": ");
 	stdout_status(status);
 }
 
@@ -5138,6 +5138,8 @@ static struct print_ops stdout_print_ops = {
 	.lba_range			= stdout_lba_range,
 	.lba_status_info		= stdout_lba_status_info,
 	.d				= stdout_d,
+	.show_init			= NULL,
+	.show_finish			= NULL,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,

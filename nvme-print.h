@@ -83,6 +83,8 @@ struct print_ops {
 	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
 	void (*lba_status_info)(__u32 result);
 	void (*d)(unsigned char *buf, int len, int width, int group);
+	void (*show_init)(void);
+	void (*show_finish)(void);
 
 	/* libnvme tree print functions */
 	void (*list_item)(nvme_ns_t n);
@@ -306,5 +308,6 @@ void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_show_message(bool error, const char *msg, ...);
 void nvme_show_perror(const char *msg);
 void nvme_show_error_status(int status, const char *msg, ...);
-
-#endif
+void nvme_show_init(void);
+void nvme_show_finish(void);
+#endif /* NVME_PRINT_H */
