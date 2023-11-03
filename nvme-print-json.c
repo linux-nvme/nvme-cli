@@ -4304,13 +4304,17 @@ static void json_output_object(struct json_object *r)
 
 static void json_output_status(int status)
 {
-	struct json_object *r = json_create_object();
+	struct json_object *r;
+	char json_str[STR_LEN];
 	int val;
 	int type;
 
+	sprintf(json_str, "Status: %d", status);
+	r = obj_create(json_str);
+
 	if (status < 0) {
 		obj_add_str(r, "Error", nvme_strerror(errno));
-		return json_output_object(r);
+		return obj_print(r);
 	}
 
 	val = nvme_status_get_value(status);
@@ -4330,9 +4334,7 @@ static void json_output_status(int status)
 		break;
 	}
 
-	obj_add_int(r, "Value", val);
-
-	json_output_object(r);
+	obj_print(r);
 }
 
 static void json_output_error_status(int status, const char *msg, va_list ap)
@@ -4353,7 +4355,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 
 	if (status < 0) {
 		obj_add_str(r, "Error", nvme_strerror(errno));
-		return json_output_object(r);
+		return obj_print(r);
 	}
 
 	val = nvme_status_get_value(status);
@@ -4380,21 +4382,17 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 
 static void json_output_message(bool error, const char *msg, va_list ap)
 {
-	struct json_object *r = json_create_object();
+	struct json_object *r = json_r ? json_r : json_create_object();
 	char *value;
-	const char *key = error ? "Error" : "Result";
 
 	if (vasprintf(&value, msg, ap) < 0)
 		value = NULL;
 
-	if (value)
-		obj_add_str(r, key, value);
-	else
-		obj_add_str(r, key, "Could not allocate string");
+	obj_add_str(r, error ? "Error" : "Result", value ? value : "Could not allocate string");
 
 	free(value);
 
-	json_output_object(r);
+	obj_print(r);
 }
 
 static void json_output_perror(const char *msg)
