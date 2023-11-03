@@ -1818,11 +1818,11 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *cmd,
 	if (!err) {
 		printf("%s have done successfully. result = %#" PRIx32 ".\n", cmd->name, result);
 
-		printf("latency statistics enable status = %d\n", (result & (0x01 << 0) >> 0));
+		printf("latency statistics enable status = %d\n", (result & (0x01 << 0)) >> 0);
 		printf("high latency enable status = %d\n", (result & (0x01 << 1)) >> 1);
 		printf("performance stat enable status = %d\n", (result & (0x01 << 2)) >> 2);
 
-		printf("Monitor Read command = %d\n", (result & (0x01 << 4) >> 4));
+		printf("Monitor Read command = %d\n", (result & (0x01 << 4)) >> 4);
 		printf("Monitor Write command = %d\n", (result & (0x01 << 5)) >> 5);
 		printf("Monitor Trim command = %d\n", (result & (0x01 << 6)) >> 6);
 
