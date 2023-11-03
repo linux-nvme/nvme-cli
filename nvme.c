@@ -7317,7 +7317,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		nblocks = ((buffer_size + (logical_block_size - 1)) / logical_block_size) - 1;
 
 		/* Update the data size based on the required block count */
-		buffer_size = (nblocks + 1) * logical_block_size;
+		buffer_size = ((unsigned long long)nblocks + 1) * logical_block_size;
 	}
 
 	buffer = nvme_alloc_huge(buffer_size, &huge);
