@@ -724,9 +724,10 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	json_print(r);
 }
 
-static void json_select_result(__u32 result)
+static void json_select_result(enum nvme_features_id fid, __u32 result)
 {
-	struct json_object *r = json_create_object();
+	struct json_object *r = json_r ? json_r : json_create_object();
+	char json_str[STR_LEN];
 	struct json_object *feature = json_create_array();
 
 	if (result & 0x1)
@@ -736,9 +737,10 @@ static void json_select_result(__u32 result)
 	if (result & 0x4)
 		array_add_str(feature, "changeable");
 
-	obj_add_array(r, "Feature", feature);
+	sprintf(json_str, "Feature: %#0*x: select", fid ? 4 : 2, fid);
+	obj_add_array(r, json_str, feature);
 
-	json_print(r);
+	obj_print(r);
 }
 
 static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,

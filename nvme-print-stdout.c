@@ -4113,7 +4113,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		le32_to_cpu(sanitize->etcend));
 }
 
-static void stdout_select_result(__u32 result)
+static void stdout_select_result(enum nvme_features_id fid, __u32 result)
 {
 	if (result & 0x1)
 		printf("  Feature is saveable\n");
