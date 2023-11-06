@@ -8,7 +8,7 @@ nvme-ocp-set-plp-health-check-interval - Define and set PLP health check interva
 SYNOPSIS
 --------
 [verse]
-'nvme ocp set-plp-health-check-interval' <device> [--plp_health_interval=<plp_health_interval> | -p <plp_health_interval>] [--save | -s] [--no-uuid | -n] 
+'nvme ocp set-plp-health-check-interval' <device> [--plp_health_interval=<plp_health_interval> | -p <plp_health_interval>] [--save | -s] [--no-uuid | -n]
 
 
 DESCRIPTION

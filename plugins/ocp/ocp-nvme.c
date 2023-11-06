@@ -1967,9 +1967,10 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *c
 /// plp_health_check_interval
 
 static int set_plp_health_check_interval(int argc, char **argv, struct command *cmd,
-                struct plugin *plugin)
+                                         struct plugin *plugin)
 {
-    const char *desc = "Define Issue Set Feature command (FID : 0xC2) PLP Health Check Interval";
+
+    const char *desc = "Define Issue Set Feature command (FID : 0xC6) PLP Health Check Interval";
     const char *plp_health_interval = "[31:16]:PLP Health Check Interval";
     const char *save = "Specifies that the controller shall save the attribute";
     const __u32 nsid = 0;
@@ -2043,9 +2044,10 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 }
 
 static int get_plp_health_check_interval(int argc, char **argv, struct command *cmd,
-                struct plugin *plugin)
+                                         struct plugin *plugin)
 {
-    const char *desc = "Define Issue Get Feature command (FID : 0xC2) PLP Health Check Interval";
+
+    const char *desc = "Define Issue Get Feature command (FID : 0xC6) PLP Health Check Interval";
     const char *sel = "[0-3,8]: current/default/saved/supported/changed";
     const __u32 nsid = 0;
     const __u8 fid = 0xc6;
