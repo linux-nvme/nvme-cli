@@ -197,15 +197,15 @@ static int read_ssns(struct nbft_info *nbft,
 	verify(raw_ssns->structure_id == NBFT_DESC_SSNS,
 	       "invalid ID in SSNS descriptor");
 
+	/* verify transport type */
+	verify(raw_ssns->trtype == NBFT_TRTYPE_TCP,
+	       "invalid transport type in SSNS descriptor");
+
 	ssns = calloc(1, sizeof(*ssns));
 	if (!ssns)
 		return -ENOMEM;
 
 	ssns->index = le16_to_cpu(raw_ssns->index);
-
-	/* transport type */
-	verify(raw_ssns->trtype == NBFT_TRTYPE_TCP,
-	       "invalid transport type in SSNS descriptor");
 	strncpy(ssns->transport, trtype_to_string(raw_ssns->trtype), sizeof(ssns->transport));
 
 	/* transport specific flags */
