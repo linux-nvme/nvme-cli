@@ -411,26 +411,29 @@ static int read_discovery(struct nbft_info *nbft,
 			  struct nbft_discovery *raw_discovery,
 			  struct nbft_info_discovery **d)
 {
-	struct nbft_info_discovery *discovery;
+	struct nbft_info_discovery *discovery = NULL;
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
+	int r = -EINVAL;
 
 	if (!(raw_discovery->flags & NBFT_DISCOVERY_VALID))
-		return -EINVAL;
+		goto error;
 
 	verify(raw_discovery->structure_id == NBFT_DESC_DISCOVERY,
 	       "invalid ID in discovery descriptor");
 
 	discovery = calloc(1, sizeof(struct nbft_info_discovery));
-	if (!discovery)
-		return -ENOMEM;
+	if (!discovery) {
+		r = -ENOMEM;
+		goto error;
+	}
 
 	discovery->index = raw_discovery->index;
 
 	if (get_heap_obj(raw_discovery, discovery_ctrl_addr_obj, 1, &discovery->uri))
-		return -EINVAL;
+		goto error;
 
 	if (get_heap_obj(raw_discovery, discovery_ctrl_nqn_obj, 1, &discovery->nqn))
-		return -EINVAL;
+		goto error;
 
 	discovery->hfi = hfi_from_index(nbft, raw_discovery->hfi_index);
 	if (raw_discovery->hfi_index && !discovery->hfi)
@@ -445,7 +448,12 @@ static int read_discovery(struct nbft_info *nbft,
 			 nbft->filename, discovery->index);
 
 	*d = discovery;
-	return 0;
+	r = 0;
+
+error:
+	if (r)
+		free(discovery);
+	return r;
 }
 
 static int read_security(struct nbft_info *nbft,
