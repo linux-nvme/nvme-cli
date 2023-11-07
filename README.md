@@ -58,6 +58,11 @@ RPM build support via Makefile that uses meson
 
 	$ make rpm
 
+Static binary(no dependency) build support via Makefile that uses meson
+Caution : it will not support libhugetlbfs
+
+	$ make static
+
 If not sure how to use, find the top-level documentation with:
 
 	$ man nvme
