@@ -56,6 +56,7 @@ enum eDriveModel {
 	M51CX,
 	M5407,
 	M5411,
+  M6003,
 	UNKNOWN_MODEL
 };
 
@@ -159,6 +160,9 @@ static enum eDriveModel GetDriveModel(int idx)
 		case 0x5411:
 			eModel = M5411;
 			break;
+    case 0x6003:
+      eModel = M6003;
+      break;
 		default:
 			break;
 		}
