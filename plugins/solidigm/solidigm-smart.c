@@ -69,15 +69,17 @@ static char *id_to_name(__u8 id)
 	case 0xE2:
 		return "media_wear_percentage";
 	case 0xE3:
-		return "host_reads";
+		return "timed_work_load_host_reads";
 	case 0xE4:
-		return "timed_work_load";
+		return "timed_work_load_timer";
 	case 0xE5:
 		return "read_commands_in_flight_counter";
 	case 0xE6:
 		return "write_commands_in_flight_counter";
 	case 0xEA:
 		return "thermal_throttle_status";
+	case 0xEE:
+		return "re_sku_count";
 	case 0xF0:
 		return "retry_buffer_overflow_counter";
 	case 0xF3:
