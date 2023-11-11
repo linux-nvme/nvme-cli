@@ -157,9 +157,6 @@ tools_build_muon() {
 
     CC="${CC}" ninja="${SAMU}" stage1/muon setup        \
         -Dprefix="${BUILDDIR}/build-tools"              \
-        -Dlibcurl=enabled                               \
-        -Dlibarchive=enabled                            \
-        -Dlibpkgconf=enabled                            \
         -Ddocs=disabled                                 \
         -Dsamurai=disabled                              \
         "${BUILDDIR}/build-tools/.build-muon"
