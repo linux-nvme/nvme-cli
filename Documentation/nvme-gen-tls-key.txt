@@ -13,6 +13,7 @@ SYNOPSIS
 			[--hostnqn=<nqn> | -n <nqn>]
 			[--subsysnqn=<nqn> | -c <nqn>]
 			[--hmac=<hmac-id> | -h <hmac-id>]
+			[--identity=<id-vers> | -I <id-vers>]
 			[--secret=<secret> | -s <secret>]
 			[--insert | -i]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
@@ -24,10 +25,12 @@ The resulting key is either printed in the PSK interchange format
 'NVMeTLSkey-1:01:<base64 encoded data>:',
 inserted as a 'retained' key into the specified keyring, or both.
 When the PSK should be inserted into the keyring a 'retained' key
-is derived from the secret key material, and the resulting 'retained'
+is derived from the secret key material. The resulting 'retained'
 key is stored with the identity
 'NVMe0R0<hmac> <host NQN> <subsystem NQN>'
-in the keyring.
+(for identity version '0') or
+'NVMe1R0<hmac> <host NQN> <subsystem NQN> <PSK hash>'
+(for identity version '1') in the keyring.
 The 'retained' key is derived from the secret key material,
 the specified subsystem NQN, and the host NQN.
 Once the 'retained' key is stored in the keyring the original
@@ -60,6 +63,12 @@ OPTIONS
 	Select a HMAC algorithm to use. Possible values are:
 	1 - SHA-256 (default)
 	2 - SHA-384
+
+-I <vers>::
+--identity=<id-vers>::
+	Select the TLS identity to use. Possible values are:
+	0 - Original NVMe TLS 1.0c identity
+	1 - NVMe TLS 2.0 (TP8018) identity
 
 -s <secret>::
 --secret=<secret>::
