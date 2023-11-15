@@ -556,6 +556,7 @@ static int derive_retained_key(const EVP_MD *md, const char *hostnqn,
 			       size_t key_len)
 {
 	EVP_PKEY_CTX *ctx;
+	uint16_t length = key_len & 0xFFFF;
 	int ret;
 
 	ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
@@ -572,6 +573,9 @@ static int derive_retained_key(const EVP_MD *md, const char *hostnqn,
 	if (EVP_PKEY_CTX_set_hkdf_md(ctx, md) <= 0)
 		goto out_free_ctx;
 	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, generated, key_len) <= 0)
+		goto out_free_ctx;
+	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
+			(const unsigned char *)&length, 2) <= 0)
 		goto out_free_ctx;
 	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
 			(const unsigned char *)"tls13 ", 6) <= 0)
@@ -600,6 +604,7 @@ static int derive_tls_key(const EVP_MD *md, const char *identity,
 			  unsigned char *psk, size_t key_len)
 {
 	EVP_PKEY_CTX *ctx;
+	uint16_t length = key_len & 0xFFFF;
 	int ret;
 
 	ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
@@ -616,6 +621,9 @@ static int derive_tls_key(const EVP_MD *md, const char *identity,
 	if (EVP_PKEY_CTX_set_hkdf_md(ctx, md) <= 0)
 		goto out_free_ctx;
 	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, retained, key_len) <= 0)
+		goto out_free_ctx;
+	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
+			(const unsigned char *)&length, 2) <= 0)
 		goto out_free_ctx;
 	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
 			(const unsigned char *)"tls13 ", 6) <= 0)
