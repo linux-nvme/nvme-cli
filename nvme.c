@@ -8702,9 +8702,18 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 				cfg.identity);
 		return -EINVAL;
 	}
-	if (cfg.insert && !cfg.subsysnqn) {
-		nvme_show_error("No subsystem NQN specified");
-		return -EINVAL;
+	if (cfg.insert) {
+		if (!cfg.subsysnqn) {
+			nvme_show_error("No subsystem NQN specified");
+			return -EINVAL;
+		}
+		if (!cfg.hostnqn) {
+			cfg.hostnqn = nvmf_hostnqn_from_file();
+			if (!cfg.hostnqn) {
+				nvme_show_error("Failed to read host NQN");
+				return -EINVAL;
+			}
+		}
 	}
 	if (cfg.hmac == 2)
 		key_len = 48;
@@ -8736,19 +8745,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		}
 	}
 
-	if (cfg.hostnqn && !cfg.subsysnqn) {
-		nvme_show_error("Need to specify subsystem NQN to insert a TLS key");
-		return -EINVAL;
-	}
-	if (cfg.subsysnqn) {
-		if (!cfg.hostnqn) {
-			cfg.hostnqn = nvmf_hostnqn_from_file();
-			if (!cfg.hostnqn) {
-				nvme_show_error("Failed to read host NQN");
-				return -EINVAL;
-			}
-		}
-
+	if (cfg.insert) {
 		tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
 					cfg.keytype, cfg.hostnqn,
 					cfg.subsysnqn, cfg.identity,
@@ -8758,10 +8755,8 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 			return -errno;
 		}
 
-		if (cfg.insert) {
-			printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
-			return 0;
-		}
+		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
+		return 0;
 	}
 	crc = crc32(crc, raw_secret, key_len);
 	raw_secret[key_len++] = crc & 0xff;

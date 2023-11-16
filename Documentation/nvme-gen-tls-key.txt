@@ -22,8 +22,9 @@ DESCRIPTION
 -----------
 Generate a base64-encoded NVMe TLS pre-shared key (PSK).
 The resulting key is either printed in the PSK interchange format
-'NVMeTLSkey-1:01:<base64 encoded data>:',
-inserted as a 'retained' key into the specified keyring, or both.
+'NVMeTLSkey-1:01:<base64 encoded data>:' or inserted as a
+'retained' key into the specified keyring if the '--insert' option
+is given.
 When the PSK should be inserted into the keyring a 'retained' key
 is derived from the secret key material. The resulting 'retained'
 key is stored with the identity
