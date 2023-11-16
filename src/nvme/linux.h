@@ -316,4 +316,23 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 				   int version, int hmac,
 				   unsigned char *configured_key, int key_len);
 
+/**
+ * nvme_generate_tls_key_identity() - Generate the TLS key identity
+ * @hostnqn:	Host NVMe Qualified Name
+ * @subsysnqn:	Subsystem NVMe Qualified Name
+ * @version:	Key version to use
+ * @hmac:	HMAC algorithm
+ * @configured_key:	Configured key data to derive the key from
+ * @key_len:	Length of @configured_key
+ *
+ * Derives a 'retained' TLS key as specified in NVMe TCP and
+ * generate the corresponding TLs identity.
+ *
+ * Return: The string containing the TLS identity. It is the responsibility
+ * of the caller to free the returned string.
+ */
+char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
+				     int version, int hmac,
+				     unsigned char *configured_key, int key_len);
+
 #endif /* _LIBNVME_LINUX_H */
