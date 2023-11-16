@@ -56,7 +56,7 @@ enum eDriveModel {
 	M51CX,
 	M5407,
 	M5411,
-  M6003,
+	M6003,
 	UNKNOWN_MODEL
 };
 
