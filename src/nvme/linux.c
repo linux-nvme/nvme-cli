@@ -550,14 +550,41 @@ static int derive_nvme_keys(const char *hostnqn, const char *identity,
 	return -1;
 }
 #else /* CONFIG_OPENSSL */
-static int derive_retained_key(const EVP_MD *md, const char *hostnqn,
+static const EVP_MD *select_hmac(int hmac, size_t *key_len)
+{
+	const EVP_MD *md = NULL;
+
+	switch (hmac) {
+	case NVME_HMAC_ALG_SHA2_256:
+		md = EVP_sha256();
+		*key_len = 32;
+		break;
+	case NVME_HMAC_ALG_SHA2_384:
+		md = EVP_sha384();
+		*key_len = 48;
+		break;
+	default:
+		break;
+	}
+	return md;
+}
+
+static int derive_retained_key(int hmac, const char *hostnqn,
 			       unsigned char *generated,
 			       unsigned char *retained,
 			       size_t key_len)
 {
+	const EVP_MD *md;
 	EVP_PKEY_CTX *ctx;
 	uint16_t length = key_len & 0xFFFF;
+	size_t hmac_len;
 	int ret;
+
+	md = select_hmac(hmac, &hmac_len);
+	if (!md || hmac_len > key_len) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
 	if (!ctx) {
@@ -599,13 +626,21 @@ out_free_ctx:
 	return ret;
 }
 
-static int derive_tls_key(const EVP_MD *md, const char *identity,
+static int derive_tls_key(int hmac, const char *identity,
 			  unsigned char *retained,
 			  unsigned char *psk, size_t key_len)
 {
+	const EVP_MD *md;
 	EVP_PKEY_CTX *ctx;
+	size_t hmac_len;
 	uint16_t length = key_len & 0xFFFF;
 	int ret;
+
+	md = select_hmac(hmac, &hmac_len);
+	if (!md || hmac_len > key_len) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
 	if (!ctx) {
@@ -653,23 +688,10 @@ static int derive_nvme_keys(const char *hostnqn, const char *identity,
 			    int hmac, unsigned char *configured,
 			    unsigned char *psk, int key_len)
 {
-	const EVP_MD *md;
 	unsigned char *retained;
 	int ret = -1;
 
 	if (!hostnqn || !identity) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	switch (hmac) {
-	case 1:
-		md = EVP_sha256();
-		break;
-	case 2:
-		md = EVP_sha384();
-		break;
-	default:
 		errno = EINVAL;
 		return -1;
 	}
@@ -679,9 +701,9 @@ static int derive_nvme_keys(const char *hostnqn, const char *identity,
 		errno = ENOMEM;
 		return -1;
 	}
-	ret = derive_retained_key(md, hostnqn, configured, retained, key_len);
+	ret = derive_retained_key(hmac, hostnqn, configured, retained, key_len);
 	if (ret > 0)
-		ret = derive_tls_key(md, identity, retained, psk, key_len);
+		ret = derive_tls_key(hmac, identity, retained, psk, key_len);
 	free(retained);
 	return ret;
 }
