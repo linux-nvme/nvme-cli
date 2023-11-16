@@ -2092,7 +2092,7 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
         printf("get-feature:0xC6 %s value: %#08x\n", nvme_select_to_string(cfg.sel), result);
 
         if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
-            nvme_show_select_result(result);
+            nvme_show_select_result(fid, result);
     } else {
         nvme_show_error("Could not get feature: 0xC6");
     }
