@@ -542,11 +542,33 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 	return 0;
 }
 
-static int derive_nvme_keys(const char *hostnqn, const char *identity,
-			    int hmac, unsigned char *configured,
-			    unsigned char *psk, int key_len)
+static int derive_retained_key(int hmac, const char *hostnqn,
+			       unsigned char *generated,
+			       unsigned char *retained,
+			       size_t key_len)
 {
-	errno = EOPNOTSUPP;
+	nvme_msg(NULL, LOG_ERR, "NVMe TLS is not supported; "
+		 "recompile with OpenSSL support.\n");
+	errno = NOTSUP;
+	return -1;
+}
+
+static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
+			    int hmac, char *identity,
+			    unsigned char *retained, size_t key_len)
+{
+	sprintf(identity, "NVMe0R%02d %s %s",
+		version, hmac, hostnqn, subsysnqn);
+	return strlen(identity);
+}
+
+static int derive_tls_key(int hmac, const char *identity,
+			  unsigned char *retained,
+			  unsigned char *psk, size_t key_len)
+{
+	nvme_msg(NULL, LOG_ERR, "NVMe TLS is not supported; "
+		 "recompile with OpenSSL support.\n");
+	errno = NOTSUP;
 	return -1;
 }
 #else /* CONFIG_OPENSSL */
@@ -683,30 +705,6 @@ out_free_ctx:
 
 	return ret;
 }
-
-static int derive_nvme_keys(const char *hostnqn, const char *identity,
-			    int hmac, unsigned char *configured,
-			    unsigned char *psk, int key_len)
-{
-	unsigned char *retained;
-	int ret = -1;
-
-	if (!hostnqn || !identity) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	retained = malloc(key_len);
-	if (!retained) {
-		errno = ENOMEM;
-		return -1;
-	}
-	ret = derive_retained_key(hmac, hostnqn, configured, retained, key_len);
-	if (ret > 0)
-		ret = derive_tls_key(hmac, identity, retained, psk, key_len);
-	free(retained);
-	return ret;
-}
 #endif /* CONFIG_OPENSSL */
 
 #ifdef CONFIG_OPENSSL_1
@@ -779,6 +777,15 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 out:
 	HMAC_CTX_free(hmac_ctx);
 	return err;
+}
+
+static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
+			    int hmac, char *identity,
+			    unsigned char *retained, size_t key_len)
+{
+	sprintf(identity, "NVMe0R%02d %s %s",
+		hmac, hostnqn, subsysnqn);
+	return strlen(identity);
 }
 #endif /* !CONFIG_OPENSSL_1 */
 
@@ -874,9 +881,49 @@ out:
 
 	return err;
 }
+
+static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
+			    int hmac, char *identity,
+			    unsigned char *retained, size_t key_len)
+{
+	sprintf(identity, "NVMe0R%02d %s %s",
+		version, hmac, hostnqn, subsysnqn);
+	return strlen(identity);
+}
 #endif /* !CONFIG_OPENSSL_3 */
 
 #ifdef CONFIG_KEYUTILS
+static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
+			    char *identity,
+			    int hmac, unsigned char *configured,
+			    unsigned char *psk, int key_len)
+{
+	unsigned char *retained;
+	int ret = -1;
+
+	if (!hostnqn || !subsysnqn || !identity) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	retained = malloc(key_len);
+	if (!retained) {
+		errno = ENOMEM;
+		return -1;
+	}
+	ret = derive_retained_key(hmac, hostnqn, configured, retained, key_len);
+	if (ret < 0)
+		goto out;
+	ret = gen_tls_identity(hostnqn, subsysnqn, hmac,
+			       identity, retained, key_len);
+	if (ret < 0)
+		goto out;
+	ret = derive_tls_key(hmac, identity, retained, psk, key_len);
+out:
+	free(retained);
+	return ret;
+}
+
 long nvme_lookup_keyring(const char *keyring)
 {
 	key_serial_t keyring_id;
@@ -922,6 +969,7 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 {
 	key_serial_t keyring_id, key = 0;
 	char *identity;
+	size_t identity_len;
 	unsigned char *psk;
 	int ret = -1;
 
@@ -929,13 +977,12 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 	if (keyring_id == 0)
 		return -1;
 
-	identity = malloc(strlen(hostnqn) + strlen(subsysnqn) + 12);
+	identity_len = strlen(hostnqn) + strlen(subsysnqn) + 12;
+	identity = malloc(identity_len);
 	if (!identity) {
 		errno = ENOMEM;
 		return -1;
 	}
-
-	sprintf(identity, "NVMe0R%02d %s %s", hmac, hostnqn, subsysnqn);
 
 	psk = malloc(key_len);
 	if (!psk) {
@@ -943,7 +990,7 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 		goto out_free_identity;
 	}
 	memset(psk, 0, key_len);
-	ret = derive_nvme_keys(hostnqn, identity, hmac,
+	ret = derive_nvme_keys(hostnqn, subsysnqn, identity, hmac,
 			       configured_key, psk, key_len);
 	if (ret != key_len)
 		goto out_free_psk;
@@ -1002,6 +1049,9 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 			 const char *hostnqn, const char *subsysnqn, int hmac,
 			 unsigned char *configured_key, int key_len)
 {
-	return derive_nvme_keys(NULL, NULL, 0, NULL, NULL, 0);
+	nvme_msg(NULL, LOG_ERR, "key operations not supported; "
+		 "recompile with keyutils support.\n");
+	errno = ENOTSUP;
+	return -1;
 }
 #endif
