@@ -602,8 +602,8 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 			   const char *devname)
 {
-	int c, human = json_print_ops.flags  & VERBOSE;
 	struct json_object *r = json_create_object();
+	int c;
 	char key[21];
 	unsigned int temperature = ((smart->temperature[1] << 8) |
 		smart->temperature[0]);
@@ -618,7 +618,7 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	nvme_uint128_t media_errors = le128_to_cpu(smart->media_errors);
 	nvme_uint128_t num_err_log_entries = le128_to_cpu(smart->num_err_log_entries);
 
-	if (human) {
+	if (human()) {
 		struct json_object *crt = json_create_object();
 
 		obj_add_int(crt, "Value", smart->critical_warning);
@@ -1236,10 +1236,9 @@ static void json_single_property(int offset, uint64_t value64)
 {
 	struct json_object *r = json_create_object();
 	char json_str[STR_LEN];
-	int human = json_print_ops.flags & VERBOSE;
 	uint32_t value32 = (uint32_t)value64;
 
-	if (human) {
+	if (human()) {
 		json_single_property_human(offset, value64, r);
 	} else {
 		sprintf(json_str, "0x%02x", offset);
