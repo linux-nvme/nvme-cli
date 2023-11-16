@@ -183,8 +183,10 @@ tools_build_muon() {
 }
 
 config_muon_default() {
-    CC="${CC}" CFLAGS="${CFLAGS} -static"               \
-        ninja="${SAMU}" "${MUON}" setup                 \
+    CC="${CC}" CFLAGS="${CFLAGS}" ninja="${SAMU}"       \
+        "${MUON}" setup                                 \
+        -Ddefault_library=static                        \
+        -Dc_link_args="-static"                         \
         -Dwrap_mode=forcefallback                       \
         -Dlibnvme:json-c=disabled                       \
         -Dlibnvme:python=disabled                       \
