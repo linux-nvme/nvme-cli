@@ -167,9 +167,6 @@ tools_build_muon() {
 
     CC="${CC}" ninja="${SAMU}" stage1/muon setup        \
         -Dprefix="${TOOLDIR}"                           \
-        -Dlibcurl=enabled                               \
-        -Dlibarchive=enabled                            \
-        -Dlibpkgconf=enabled                            \
         -Ddocs=disabled                                 \
         -Dsamurai=disabled                              \
         "${TOOLDIR}/build-muon"
@@ -183,6 +180,8 @@ tools_build_muon() {
 }
 
 config_muon_default() {
+    # wrap_mode=forcefallback depends on git being available
+
     CC="${CC}" CFLAGS="${CFLAGS}" ninja="${SAMU}"       \
         "${MUON}" setup                                 \
         -Ddefault_library=static                        \
