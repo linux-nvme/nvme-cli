@@ -158,12 +158,6 @@ static void json_print(struct json_object *r)
 	json_free_object(r);
 }
 
-static void obj_print(struct json_object *o)
-{
-	if (!json_r)
-		json_print(o);
-}
-
 static bool human(void)
 {
 	return json_print_ops.flags & VERBOSE;
@@ -740,7 +734,7 @@ static void json_select_result(enum nvme_features_id fid, __u32 result)
 	sprintf(json_str, "Feature: %#0*x: select", fid ? 4 : 2, fid);
 	obj_add_array(r, json_str, feature);
 
-	obj_print(r);
+	json_print(r);
 }
 
 static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,
@@ -3436,7 +3430,7 @@ static void json_feature_show(enum nvme_features_id fid, int sel, unsigned int r
 	sprintf(json_str, "%#0*x", result ? 10 : 8, result);
 	obj_add_str(r, nvme_select_to_string(sel), json_str);
 
-	obj_print(r);
+	json_print(r);
 }
 
 static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
@@ -3559,7 +3553,7 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	}
 
-	obj_print(r);
+	json_print(r);
 }
 
 void json_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
@@ -3613,7 +3607,7 @@ void json_d(unsigned char *buf, int len, int width, int group)
 	d_json(buf, len, width, group, data);
 	obj_add_array(r, json_str, data);
 
-	obj_print(r);
+	json_print(r);
 }
 
 static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list)
@@ -4314,7 +4308,8 @@ static void json_output_status(int status)
 
 	if (status < 0) {
 		obj_add_str(r, "Error", nvme_strerror(errno));
-		return obj_print(r);
+		json_print(r);
+		return;
 	}
 
 	val = nvme_status_get_value(status);
@@ -4334,7 +4329,7 @@ static void json_output_status(int status)
 		break;
 	}
 
-	obj_print(r);
+	json_print(r);
 }
 
 static void json_output_error_status(int status, const char *msg, va_list ap)
@@ -4355,7 +4350,8 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 
 	if (status < 0) {
 		obj_add_str(r, "Error", nvme_strerror(errno));
-		return obj_print(r);
+		json_print(r);
+		return;
 	}
 
 	val = nvme_status_get_value(status);
@@ -4377,7 +4373,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 
 	obj_add_int(r, "Value", val);
 
-	obj_print(r);
+	json_print(r);
 }
 
 static void json_output_message(bool error, const char *msg, va_list ap)
@@ -4392,7 +4388,7 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 
 	free(value);
 
-	obj_print(r);
+	json_print(r);
 }
 
 static void json_output_perror(const char *msg)
