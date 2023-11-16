@@ -107,9 +107,6 @@ OPTIONS
 --dhchap-secret=<secret>::
 	NVMe In-band authentication secret; needs to be in ASCII format as
 	specified in NVMe 2.0 section 8.13.5.8 'Secret representation'.
-	If this option is not specified, the default is read from
-	@SYSCONFDIR@/nvme/hostkey. If that does not exist no in-band authentication
-	is attempted.
 
 -C <secret>::
 --dhchap-ctrl-secret=<secret>::
