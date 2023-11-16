@@ -83,7 +83,7 @@ int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd, stru
 	return ocp_clear_feature(argc, argv, desc, OCP_FID_CLEAR_FW_ACTIVATION_HISTORY);
 }
 
-int ocp_clear_pcie_corectable_error_counters(int argc, char **argv, struct command *cmd,
+int ocp_clear_pcie_correctable_errors(int argc, char **argv, struct command *cmd,
 					     struct plugin *plugin)
 {
 	const char *desc = "OCP Clear PCIe Correctable Error Counters";
