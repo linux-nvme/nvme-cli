@@ -293,4 +293,27 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 			 const char *hostnqn, const char *subsysnqn, int hmac,
 			 unsigned char *configured_key, int key_len);
 
+/**
+ * nvme_insert_tls_key_versioned() - Derive and insert TLS key
+ * @keyring:    Keyring to use
+ * @key_type:	Type of the resulting key
+ * @hostnqn:	Host NVMe Qualified Name
+ * @subsysnqn:	Subsystem NVMe Qualified Name
+ * @version:	Key version to use
+ * @hmac:	HMAC algorithm
+ * @configured_key:	Configured key data to derive the key from
+ * @key_len:	Length of @configured_key
+ *
+ * Derives a 'retained' TLS key as specified in NVMe TCP 1.0a (if
+ * @version s set to '0') or NVMe TP8028 (if @version is set to '1) and
+ * stores it as type @key_type in the keyring specified by @keyring.
+ *
+ * Return: The key serial number if the key could be inserted into
+ * the keyring or 0 with errno otherwise.
+ */
+long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
+				   const char *hostnqn, const char *subsysnqn,
+				   int version, int hmac,
+				   unsigned char *configured_key, int key_len);
+
 #endif /* _LIBNVME_LINUX_H */

@@ -3,6 +3,7 @@ LIBNVME_1_7 {
 	global:
 		nvme_init_copy_range_f2;
 		nvme_init_copy_range_f3;
+		nvme_insert_tls_key_versioned;
 };
 
 LIBNVME_1_6 {
