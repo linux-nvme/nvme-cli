@@ -59,6 +59,7 @@ CONFIG=${1:-"default"}
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
 BUILDDIR="$(pwd)/.build-ci"
+TOOLDIR="$(pwd)/.build-tools"
 
 fn_exists() { declare -F "$1" > /dev/null; }
 
@@ -126,37 +127,46 @@ test_meson_coverage() {
 }
 
 tools_build_samurai() {
-    mkdir -p "${BUILDDIR}"/build-tools
-    git clone --depth 1 https://github.com/michaelforney/samurai.git \
-        "${BUILDDIR}/build-tools/samurai"
-    pushd "${BUILDDIR}/build-tools/samurai" || exit 1
+    if [ ! -d "${TOOLDIR}"/samurai ]; then
+        git clone --depth 1 https://github.com/michaelforney/samurai.git \
+            "${TOOLDIR}/samurai"
+    fi
 
+    if [[ -f "${TOOLDIR}/samurai/samu" ]]; then
+        return
+    fi
+
+    pushd "${TOOLDIR}/samurai" || exit 1
     CC="${CC}" make
-    SAMU="${BUILDDIR}/build-tools/samurai/samu"
-
     popd || exit 1
 }
 
 tools_build_muon() {
-    mkdir -p "${BUILDDIR}"/build-tools
-    git clone --depth 1 https://git.sr.ht/~lattis/muon \
-        "${BUILDDIR}/build-tools/muon"
-    pushd "${BUILDDIR}/build-tools/muon" || exit 1
+    if [ ! -d "${TOOLDIR}/muon" ]; then
+        git clone --depth 1 https://git.sr.ht/~lattis/muon \
+            "${TOOLDIR}/muon"
+    fi
+
+    if [[ -f "${TOOLDIR}/build-muon/muon" ]]; then
+        return
+    fi
+
+    pushd "${TOOLDIR}/muon" || exit 1
 
     CC="${CC}" ninja="${SAMU}" ./bootstrap.sh stage1
 
     CC="${CC}" ninja="${SAMU}" stage1/muon setup        \
-        -Dprefix="${BUILDDIR}/build-tools"              \
         -Dlibcurl=enabled                               \
         -Dlibarchive=enabled                            \
         -Dlibpkgconf=enabled                            \
+        -Dprefix="${TOOLDIR}"                           \
         -Ddocs=disabled                                 \
         -Dsamurai=disabled                              \
-        "${BUILDDIR}/build-tools/.build-muon"
-    "${SAMU}" -C "${BUILDDIR}/build-tools/.build-muon"
-    MUON="${BUILDDIR}/build-tools/.build-muon/muon"
+        "${TOOLDIR}/build-muon"
+    "${SAMU}" -C "${TOOLDIR}/build-muon"
 
-    # "${MUON}" -C "${BUILDDIR}/build-tools/.build-muon" test
+    # "${TOOLDIR}/build-muon/muon" \
+    #    -C "${TOOLDIR}/build-muon" test
 
     popd || exit 1
 }
@@ -181,21 +191,24 @@ test_muon() {
     ninja="${SAMU}" "${MUON}" -C "${BUILDDIR}" test
 }
 
-rm -rf "${BUILDDIR}"
-
 if [[ "${BUILDTOOL}" == "muon" ]]; then
-    if ! which samu ; then
+    SAMU="$(which samu 2> /dev/null)" || true
+    if [[ -z "${SAMU}" ]]; then
         tools_build_samurai
-    else
-        SAMU="$(which samu)"
+        SAMU="${TOOLDIR}/samurai/samu"
     fi
 
-    if ! which muon ; then
+    MUON="$(which muon 2> /dev/null)" || true
+    if [[ -z "${MUON}" ]]; then
         tools_build_muon
-    else
-        MUON="$(which muon)"
+        MUON="${TOOLDIR}/build-muon/muon"
     fi
 fi
+
+echo "samu: ${SAMU}"
+echo "muon: ${MUON}"
+
+rm -rf "${BUILDDIR}"
 
 config_"${BUILDTOOL}"_"${CONFIG}"
 fn_exists "build_${BUILDTOOL}_${CONFIG}" && "build_${BUILDTOOL}_${CONFIG}" || build_"${BUILDTOOL}"
