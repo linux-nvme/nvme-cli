@@ -156,9 +156,6 @@ tools_build_muon() {
     CC="${CC}" ninja="${SAMU}" ./bootstrap.sh stage1
 
     CC="${CC}" ninja="${SAMU}" stage1/muon setup        \
-        -Dlibcurl=enabled                               \
-        -Dlibarchive=enabled                            \
-        -Dlibpkgconf=enabled                            \
         -Dprefix="${TOOLDIR}"                           \
         -Ddocs=disabled                                 \
         -Dsamurai=disabled                              \
