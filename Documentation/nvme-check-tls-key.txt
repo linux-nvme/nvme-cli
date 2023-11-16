@@ -13,13 +13,17 @@ SYNOPSIS
 			[--hostnqn=<nqn> | -n <nqn>]
 			[--subsysnqn=<nqn> | -c <nqn>]
 			[--keydata=<key> | -d <key>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--output-format=<fmt> | -o <fmt>]
+			[--identity=<id-vers> | -I <id-vers>]
+			[--insert | -i ]
+			[--verbose | -v]
 
 DESCRIPTION
 -----------
 Checks if the key is a valid NVMe TLS PSK in the PSK interchange format
-'NVMeTLSkey-1:01:<base64-encoded data>:', and stores the derived 'retained'
-TLS key in the keyring if the subsystem NQN is specified.
+'NVMeTLSkey-1:01:<base64-encoded data>:'. If '--insert' is specified the
+the derived 'retained' TLS key is stored in the keyring, otherwise the
+TLS identity of the key is printed out.
 
 OPTIONS
 -------
@@ -46,6 +50,16 @@ OPTIONS
 -d <key>::
 --keydata=<key>::
 	Key to be checked.
+
+-I <id-vers>::
+--identity=<id-vers>::
+	NVMe TLS key identity version to be used; '0' for the default
+	identity, and '1' for the TLS identity suffixed by the PSK hash
+	as specified in TP8018.
+
+-i:
+--insert:
+	Insert the derived 'retained' key in the keyring.
 
 -o <fmt>::
 --output-format=<fmt>::

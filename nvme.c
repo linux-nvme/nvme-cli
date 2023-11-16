@@ -8780,10 +8780,12 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 {
 	const char *desc = "Check a TLS key for NVMe PSK Interchange format.\n";
 	const char *keydata = "TLS key (in PSK Interchange format) to be validated.";
+	const char *identity = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
 	const char *hostnqn = "Host NQN for the retained key.";
 	const char *subsysnqn = "Subsystem NQN for the retained key.";
 	const char *keyring = "Keyring for the retained key.";
 	const char *keytype = "Key type of the retained key.";
+	const char *insert = "Insert retained key into the keyring.";
 
 	unsigned char decoded_key[128];
 	unsigned int decoded_len;
@@ -8792,11 +8794,13 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	int err = 0, hmac;
 	long tls_key;
 	struct config {
-		char	*keyring;
-		char	*keytype;
-		char	*hostnqn;
-		char	*subsysnqn;
-		char	*keydata;
+		char		*keyring;
+		char		*keytype;
+		char		*hostnqn;
+		char		*subsysnqn;
+		char		*keydata;
+		unsigned int	identity;
+		bool		insert;
 	};
 
 	struct config cfg = {
@@ -8805,6 +8809,8 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		.hostnqn	= NULL,
 		.subsysnqn	= NULL,
 		.keydata	= NULL,
+		.identity	= 0,
+		.insert		= false,
 	};
 
 	NVME_ARGS(opts, cfg,
@@ -8812,7 +8818,9 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
 		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
 		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata));
+		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
+		  OPT_UINT("identity",	'I', &cfg.identity,	identity),
+		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -8820,6 +8828,11 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 
 	if (!cfg.keydata) {
 		nvme_show_error("No key data");
+		return -EINVAL;
+	}
+	if (cfg.identity > 1) {
+		nvme_show_error("Invalid TLS identity version %u",
+				cfg.identity);
 		return -EINVAL;
 	}
 
@@ -8845,6 +8858,18 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		return -EINVAL;
 	}
 
+	if (cfg.subsysnqn) {
+		if (cfg.insert && !cfg.hostnqn) {
+			cfg.hostnqn = nvmf_hostnqn_from_file();
+			if (!cfg.hostnqn) {
+				nvme_show_error("Failed to read host NQN");
+				return -EINVAL;
+			}
+		}
+	} else if (cfg.insert || cfg.identity == 1) {
+		nvme_show_error("Need to specify a subsystem NQN");
+		return -EINVAL;
+	}
 	err = base64_decode(cfg.keydata + 16, strlen(cfg.keydata) - 17, decoded_key);
 	if (err < 0) {
 		nvme_show_error("Base64 decoding failed (%s, error %d)", cfg.keydata + 16, err);
@@ -8865,23 +8890,28 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		nvme_show_error("CRC mismatch (key %08x, crc %08x)", key_crc, crc);
 		return -EINVAL;
 	}
-	if (cfg.subsysnqn) {
-		if (!cfg.hostnqn) {
-			cfg.hostnqn = nvmf_hostnqn_from_file();
-			if (!cfg.hostnqn) {
-				nvme_show_error("Failed to read host NQN");
-				return -EINVAL;
-			}
-		}
-
-		tls_key = nvme_insert_tls_key(cfg.keyring, cfg.keytype, cfg.hostnqn, cfg.subsysnqn,
-					      hmac, decoded_key, decoded_len);
+	if (cfg.insert) {
+		tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
+					cfg.keytype, cfg.hostnqn,
+					cfg.subsysnqn, cfg.identity,
+					hmac, decoded_key, decoded_len);
 		if (tls_key < 0) {
 			nvme_show_error("Failed to insert key, error %d", errno);
 			return -errno;
 		}
 	} else {
-		printf("Key is valid (HMAC %d, length %d, CRC %08x)\n", hmac, decoded_len, crc);
+		char *tls_id;
+
+		tls_id = nvme_generate_tls_key_identity(cfg.hostnqn,
+					cfg.subsysnqn, cfg.identity,
+					hmac, decoded_key, decoded_len);
+		if (!tls_id) {
+			nvme_show_error("Failed to generated identity, error %d",
+					errno);
+			return -errno;
+		}
+		printf("%s\n", tls_id);
+		free(tls_id);
 	}
 	return 0;
 }
