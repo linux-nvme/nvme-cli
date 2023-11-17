@@ -42,10 +42,6 @@
 #include <libgen.h>
 #include <signal.h>
 
-#ifdef CONFIG_LIBHUGETLBFS
-#include <hugetlbfs.h>
-#endif
-
 #include <linux/fs.h>
 
 #include <sys/mman.h>
@@ -1411,10 +1407,10 @@ static int get_persistent_event_log(int argc, char **argv,
 
 	_cleanup_free_ struct nvme_persistent_event_log *pevent_collected = NULL;
 	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	enum nvme_print_flags flags;
 	void *pevent_log_info;
-	bool huge;
 	int err;
 
 	struct config {
@@ -1483,9 +1479,10 @@ static int get_persistent_event_log(int argc, char **argv,
 	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
 		cfg.action = NVME_PEVENT_LOG_READ;
 
-	pevent_log_info = nvme_alloc_huge(cfg.log_len, &huge);
+	pevent_log_info = nvme_alloc_huge(cfg.log_len, &mh);
 	if (!pevent_log_info)
 		return -ENOMEM;
+
 	err = nvme_cli_get_log_persistent_event(dev, cfg.action,
 						cfg.log_len, pevent_log_info);
 	if (!err) {
@@ -1494,17 +1491,16 @@ static int get_persistent_event_log(int argc, char **argv,
 							pevent);
 		if (err < 0) {
 			nvme_show_error("persistent event log: %s", nvme_strerror(errno));
-			goto free;
+			return err;
 		} else if (err) {
 			nvme_show_status(err);
-			goto free;
+			return err;
 		}
 		pevent_collected = pevent_log_info;
 		if (pevent_collected->gen_number != pevent->gen_number) {
 			printf("Collected Persistent Event Log may be invalid,\n"
 			       "Re-read the log is required\n");
-			err = -EINVAL;
-			goto free;
+			return -EINVAL;
 		}
 
 		nvme_show_persistent_event_log(pevent_log_info, cfg.action,
@@ -1515,8 +1511,6 @@ static int get_persistent_event_log(int argc, char **argv,
 		nvme_show_error("persistent event log: %s", nvme_strerror(errno));
 	}
 
-free:
-	nvme_free_huge(pevent_log_info, huge);
 	return err;
 }
 
@@ -4756,12 +4750,12 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	const char *ignore_ovr = "ignore overwrite errors";
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_file_ int fw_fd = -1;
 	unsigned int fw_size, pos;
 	int err;
 	struct stat sb;
 	void *fw_buf;
-	bool huge;
 	struct nvme_id_ctrl ctrl;
 
 	struct config {
@@ -4823,14 +4817,14 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	} else if (cfg.xfer % 4096)
 		cfg.xfer = 4096;
 
-	fw_buf = nvme_alloc_huge(fw_size, &huge);
+	fw_buf = nvme_alloc_huge(fw_size, &mh);
 	if (!fw_buf)
 		return -ENOMEM;
 
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
 		err = -errno;
 		nvme_show_error("read :%s :%s", cfg.fw, strerror(errno));
-		goto free;
+		return err;
 	}
 
 	for (pos = 0; pos < fw_size; pos += cfg.xfer) {
@@ -4849,9 +4843,6 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 			printf("\n");
 		printf("Firmware download success\n");
 	}
-
-free:
-	nvme_free_huge(fw_buf, huge);
 
 	return err;
 }
@@ -7040,7 +7031,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	__u32 dsmgmt = 0;
 	unsigned int logical_block_size = 0;
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
-	bool huge;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
@@ -7257,15 +7248,13 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		buffer_size = ((unsigned long long)nblocks + 1) * logical_block_size;
 	}
 
-	buffer = nvme_alloc_huge(buffer_size, &huge);
+	buffer = nvme_alloc_huge(buffer_size, &mh);
 	if (!buffer)
 		return -ENOMEM;
 
 	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
-	if (!nvm_ns) {
-		err = -ENOMEM;
-		goto free_buffer;
-	}
+	if (!nvm_ns)
+		return -ENOMEM;
 
 	if (cfg.metadata_size) {
 		err = nvme_identify_ns_csi(dev_fd(dev), 1, 0, NVME_CSI_NVM, nvm_ns);
@@ -7282,24 +7271,20 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 			mbuffer_size = cfg.metadata_size;
 
 		mbuffer = malloc(mbuffer_size);
-		if (!mbuffer) {
-			err = -ENOMEM;
-			goto free_buffer;
-		}
+		if (!mbuffer)
+			return -ENOMEM;
 		memset(mbuffer, 0, mbuffer_size);
 	}
 
-	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif)) {
-		err = -EINVAL;
-		goto free_buffer;
-	}
+	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
+		return -EINVAL;
 
 	if (opcode & 1) {
 		err = read(dfd, (void *)buffer, cfg.data_size);
 		if (err < 0) {
 			err = -errno;
 			nvme_show_error("failed to read data buffer from input file %s", strerror(errno));
-			goto free_buffer;
+			return err;
 		}
 	}
 
@@ -7308,7 +7293,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (err < 0) {
 			err = -errno;
 			nvme_show_error("failed to read meta-data buffer from input file %s", strerror(errno));
-			goto free_buffer;
+			return err;
 		}
 	}
 
@@ -7331,7 +7316,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		printf("sts             : %02x\n", sts);
 	}
 	if (cfg.dry_run)
-		goto free_buffer;
+		return 0;
 
 	struct nvme_io_args args = {
 		.args_size	= sizeof(args),
@@ -7379,9 +7364,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 			fprintf(stderr, "%s: Success\n", command);
 		}
 	}
-
-free_buffer:
-	nvme_free_huge(buffer, huge);
 
 	return err;
 }
@@ -8054,6 +8036,7 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *wr = "set dataflow direction to send";
 	const char *prefill = "prefill buffers with known byte-value, default 0";
 
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_file_ int dfd = -1, mfd = -1;
 	int flags;
@@ -8062,7 +8045,6 @@ static int passthru(int argc, char **argv, bool admin,
 	_cleanup_free_ void *mdata = NULL;
 	int err = 0;
 	__u32 result;
-	bool huge = false;
 	const char *cmd_name = NULL;
 	struct timeval start_time, end_time;
 
@@ -8160,7 +8142,7 @@ static int passthru(int argc, char **argv, bool admin,
 			if (read(mfd, mdata, cfg.metadata_len) < 0) {
 				err = -errno;
 				nvme_show_perror("failed to read metadata write buffer");
-				return -errno;
+				return err;
 			}
 		} else {
 			memset(mdata, cfg.prefill, cfg.metadata_len);
@@ -8168,20 +8150,19 @@ static int passthru(int argc, char **argv, bool admin,
 	}
 
 	if (cfg.data_len) {
-		data = nvme_alloc_huge(cfg.data_len, &huge);
+		data = nvme_alloc_huge(cfg.data_len, &mh);
 		if (!data)
 			return -ENOMEM;
 
 		memset(data, cfg.prefill, cfg.data_len);
 		if (!cfg.read && !cfg.write) {
 			nvme_show_error("data direction not given");
-			err = -EINVAL;
-			goto free_data;
+			return -EINVAL;
 		} else if (cfg.write) {
 			if (read(dfd, data, cfg.data_len) < 0) {
 				err = -errno;
 				nvme_show_error("failed to read write buffer %s", strerror(errno));
-				goto free_data;
+				return err;
 			}
 		}
 	}
@@ -8206,7 +8187,7 @@ static int passthru(int argc, char **argv, bool admin,
 		printf("timeout_ms   : %08x\n", cfg.timeout);
 	}
 	if (cfg.dry_run)
-		goto free_data;
+		return 0;
 
 	gettimeofday(&start_time, NULL);
 
@@ -8248,8 +8229,6 @@ static int passthru(int argc, char **argv, bool admin,
 		if (cfg.read)
 			passthru_print_read_output(cfg, data, dfd, mdata, mfd, err);
 	}
-free_data:
-	nvme_free_huge(data, huge);
 
 	return err;
 }
@@ -8923,9 +8902,9 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	bool send;
 	_cleanup_file_ int fd = -1;
 	int flags;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	__u32 result;
-	bool huge = false;
 
 	struct config {
 		__u8 opcode;
@@ -8979,14 +8958,15 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	}
 
 	if (cfg.data_len) {
-		data = nvme_alloc_huge(cfg.data_len, &huge);
+		data = nvme_alloc_huge(cfg.data_len, &mh);
 		if (!data)
 			return -ENOMEM;
+
 		if (send) {
 			if (read(fd, data, cfg.data_len) < 0) {
 				err = -errno;
 				nvme_show_error("failed to read write buffer %s", strerror(errno));
-				goto free_data;
+				return err;
 			}
 		}
 	}
@@ -9011,9 +8991,6 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 			d((unsigned char *)data, cfg.data_len, 16, 1);
 		}
 	}
-
-free_data:
-	nvme_free_huge(data, huge);
 
 	return err;
 }

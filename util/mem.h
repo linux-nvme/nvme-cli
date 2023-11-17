@@ -8,7 +8,13 @@
 void *nvme_alloc(size_t len);
 void *nvme_realloc(void *p, size_t len);
 
-void *nvme_alloc_huge(size_t len, bool *huge);
-void nvme_free_huge(void *p, bool huge);
+struct nvme_mem_huge {
+	size_t len;
+	bool posix_memalign; /* p has been allocated using posix_memalign */
+	void *p;
+};
+
+void *nvme_alloc_huge(size_t len, struct nvme_mem_huge *mh);
+void nvme_free_huge(struct nvme_mem_huge *mh);
 
 #endif /* MEM_H_ */
