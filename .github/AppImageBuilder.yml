@@ -27,7 +27,6 @@ AppDir:
       - sourceline: deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
     include:
       - libjson-c5
-      - libhugetlbfs0
       - libssl3
   files:
     include:

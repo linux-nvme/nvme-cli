@@ -26,7 +26,6 @@ script which helps to setup a build environment.
  |---------|------------|-------|
  | libnvme, libnvme-mi| yes | be either installed or included into the build via meson fallback feature |
  | json-c | optional | recommended, without all plugins are disabled and json-c output format is disabled |
- | libhugetlbfs | optional | adds support for hugetlbfs |
 
 
 ### Build with meson
@@ -99,7 +98,6 @@ RPM build support via Makefile that uses meson
 	$ make rpm
 
 Static binary(no dependency) build support via Makefile that uses meson   
-Caution : it will not support libhugetlbfs
 
 	$ make static
 
