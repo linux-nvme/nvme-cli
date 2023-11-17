@@ -21,6 +21,7 @@
 #include "linux/types.h"
 #include "nvme-wrap.h"
 #include "nvme-print.h"
+#include "util/cleanup.h"
 
 #define CREATE_CMD
 #include "sfx-nvme.h"
@@ -1349,12 +1350,12 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 stor
 {
 	struct nvme_persistent_event_log *pevent;
 	void *pevent_log_info;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	__u8  lsp_base;
 	__u32 offset = 0;
 	__u32 length = 0;
 	__u32 log_len;
 	__u32 single_len;
-	bool huge;
 	int  err = 0;
 	FILE *fd = NULL;
 	struct nvme_get_log_args args = {
@@ -1410,7 +1411,7 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 stor
 	if (log_len % 4)
 		log_len = (log_len / 4 + 1) * 4;
 
-	pevent_log_info = nvme_alloc_huge(single_len, &huge);
+	pevent_log_info = nvme_alloc_huge(single_len, &mh);
 	if (!pevent_log_info) {
 		err = -ENOMEM;
 		goto free_pevent;
@@ -1420,7 +1421,7 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 stor
 	if (!fd) {
 		fprintf(stderr, "Failed to open %s file to write\n", file);
 		err = ENOENT;
-		goto free;
+		goto free_pevent;
 	}
 
 	args.lsp = lsp_base + NVME_PEVENT_LOG_READ;
@@ -1453,8 +1454,8 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 stor
 	printf("\nDump-evtlog: Success\n");
 
 	if (parse) {
-		nvme_free_huge(pevent_log_info, huge);
-		pevent_log_info = nvme_alloc_huge(log_len, &huge);
+		nvme_free_huge(&mh);
+		pevent_log_info = nvme_alloc_huge(log_len, &mh);
 		if (!pevent_log_info) {
 			fprintf(stderr, "Failed to alloc enough memory 0x%x to parse evtlog\n", log_len);
 			err = -ENOMEM;
@@ -1466,7 +1467,7 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 stor
 		if (!fd) {
 			fprintf(stderr, "Failed to open %s file to read\n", file);
 			err = ENOENT;
-			goto free;
+			goto free_pevent;
 		}
 		if (fread(pevent_log_info, 1, log_len, fd) != log_len) {
 			fprintf(stderr, "Failed to read evtlog to buffer\n");
@@ -1478,8 +1479,6 @@ static int nvme_dump_evtlog(struct nvme_dev *dev, __u32 namespace_id, __u32 stor
 
 close_fd:
 	fclose(fd);
-free:
-	nvme_free_huge(pevent_log_info, huge);
 free_pevent:
 	free(pevent);
 ret:

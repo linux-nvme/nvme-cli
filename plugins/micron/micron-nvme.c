@@ -16,6 +16,7 @@
 #include <limits.h>
 #include "linux/types.h"
 #include "nvme-print.h"
+#include "util/cleanup.h"
 
 #define CREATE_CMD
 #include "micron-nvme.h"
@@ -1767,10 +1768,10 @@ static void GetGenericLogs(int fd, const char *dir)
 	struct nvme_firmware_slot fw_log;
 	struct nvme_cmd_effects_log effects;
 	struct nvme_persistent_event_log pevent_log;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	void *pevent_log_info = NULL;
 	__u32 log_len = 0;
 	int err = 0;
-	bool huge = false;
 
 	/* get self test log */
 	if (!nvme_get_log_device_self_test(fd, &self_test_log))
@@ -1799,17 +1800,17 @@ static void GetGenericLogs(int fd, const char *dir)
 	}
 
 	log_len = le64_to_cpu(pevent_log.tll);
-	pevent_log_info = nvme_alloc_huge(log_len, &huge);
+	pevent_log_info = nvme_alloc_huge(log_len, &mh);
 	if (!pevent_log_info) {
 		perror("could not alloc buffer for persistent event log page (ignored)!\n");
 		return;
 	}
+
 	err = nvme_get_log_persistent_event(fd, NVME_PEVENT_LOG_READ,
 					    log_len, pevent_log_info);
 	if (!err)
 		WriteData((__u8 *)pevent_log_info, log_len, dir,
 			  "persistent_event_log.bin", "persistent event log");
-	nvme_free_huge(pevent_log_info, huge);
 }
 
 static void GetNSIDDInfo(int fd, const char *dir, int nsid)

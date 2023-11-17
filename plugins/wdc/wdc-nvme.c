@@ -36,6 +36,7 @@
 #include "libnvme.h"
 #include "plugin.h"
 #include "linux/types.h"
+#include "util/cleanup.h"
 #include "util/types.h"
 #include "nvme-print.h"
 
@@ -11116,9 +11117,9 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 	nvme_root_t r;
 	__u64 capabilities = 0;
 	int fmt = -1;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	struct wdc_vs_pcie_stats *pcieStatsPtr = NULL;
 	int pcie_stats_size = sizeof(struct wdc_vs_pcie_stats);
-	bool huge;
 
 	struct config {
 		char *output_format;
@@ -11146,7 +11147,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 		goto out;
 	}
 
-	pcieStatsPtr = nvme_alloc_huge(pcie_stats_size, &huge);
+	pcieStatsPtr = nvme_alloc_huge(pcie_stats_size, &mh);
 	if (!pcieStatsPtr) {
 		fprintf(stderr, "ERROR: WDC: PCIE Stats alloc: %s\n", strerror(errno));
 		ret = -1;
@@ -11176,9 +11177,6 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 			}
 		}
 	}
-
-	nvme_free_huge(pcieStatsPtr, huge);
-
 out:
 	nvme_free_tree(r);
 	dev_close(dev);

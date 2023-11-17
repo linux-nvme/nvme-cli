@@ -12,6 +12,7 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "nvme-print.h"
+#include "util/cleanup.h"
 
 #define CREATE_CMD
 #include "zns.h"
@@ -833,8 +834,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	int zdes = 0, err = -1;
 	struct nvme_dev *dev;
 	__u32 report_size;
-	bool huge = false;
 	struct nvme_zone_report *report, *buff;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 
 	unsigned int nr_zones_chunks = 1024,   /* 1024 entries * 64 bytes per entry = 64k byte transfer */
 			nr_zones_retrieved = 0,
@@ -949,7 +950,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
 	report_size = log_len;
 
-	report = nvme_alloc_huge(report_size, &huge);
+	report = nvme_alloc_huge(report_size, &mh);
 	if (!report) {
 		perror("alloc");
 		err = -ENOMEM;
@@ -988,8 +989,6 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	nvme_zns_finish_zone_list(total_nr_zones, zone_list, flags);
-
-	nvme_free_huge(report, huge);
 
 free_buff:
 	free(buff);

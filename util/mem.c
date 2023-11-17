@@ -3,22 +3,24 @@
 #include <unistd.h>
 #include <malloc.h>
 #include <string.h>
+#include <sys/mman.h>
 
 #include "mem.h"
 
 #include "common.h"
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define HUGE_MIN 0x80000
 
 void *nvme_alloc(size_t len)
 {
-	size_t _len = ROUND_UP(len, 0x1000);
 	void *p;
 
-	if (posix_memalign((void *)&p, getpagesize(), _len))
+	len = ROUND_UP(len, 0x1000);
+	if (posix_memalign((void *)&p, getpagesize(), len))
 		return NULL;
 
-	memset(p, 0, _len);
+	memset(p, 0, len);
 	return p;
 }
 
@@ -36,68 +38,72 @@ void *nvme_realloc(void *p, size_t len)
 	return result;
 }
 
-static void *__nvme_alloc_huge(size_t len, bool *huge)
+void *nvme_alloc_huge(size_t len, struct nvme_mem_huge *mh)
 {
-	void *p;
+	memset(mh, 0, sizeof(*mh));
 
-	if (!posix_memalign(&p, getpagesize(), len)) {
-		*huge = false;
-		memset(p, 0, len);
-		return p;
-	}
-	return NULL;
-}
+	len = ROUND_UP(len, 0x1000);
 
-#define HUGE_MIN 0x80000
-
-#ifdef CONFIG_LIBHUGETLBFS
-void nvme_free_huge(void *p, bool huge)
-{
-	if (huge) {
-		if (p)
-			free_hugepage_region(p);
-	} else {
-		free(p);
-	}
-}
-
-void *nvme_alloc_huge(size_t len, bool *huge)
-{
-	void *p;
-
-	if (len < HUGE_MIN)
-		return __nvme_alloc_huge(len, huge);
-
-	p = get_hugepage_region(len, GHR_DEFAULT);
-	if (!p)
-		return __nvme_alloc_huge(len, huge);
-
-	*huge = true;
-	return p;
-}
-#else
-void nvme_free_huge(void *p, bool huge)
-{
-	free(p);
-}
-
-void *nvme_alloc_huge(size_t len, bool *huge)
-{
-	return __nvme_alloc_huge(len, huge);
-}
-#endif
-
-void *nvme_realloc_huge(void *p, size_t len, bool *huge)
-{
-	size_t old_len = malloc_usable_size(p);
-	bool was_huge = *huge;
-
-	void *result = nvme_alloc_huge(len, huge);
-
-	if (p) {
-		memcpy(result, p, min(old_len, len));
-		nvme_free_huge(p, was_huge);
+	/*
+	 * For smaller allocation we just use posix_memalign and hope the kernel
+	 * is able to convert to a contiguous memory region.
+	 */
+	if (len < HUGE_MIN) {
+		mh->p = nvme_alloc(len);
+		if (!mh->p)
+			return NULL;
+		mh->posix_memalign = true;
+		mh->len = len;
+		return mh->p;
 	}
 
-	return result;
+	/*
+	 * Larger allocation will almost certainly fail with the small
+	 * allocation approach. Instead try pre-allocating memory from the
+	 * HugeTLB pool.
+	 *
+	 * https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt
+	 */
+	mh->p = mmap(NULL, len, PROT_READ | PROT_WRITE,
+		     MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB, -1, 0);
+	if (mh->p != MAP_FAILED) {
+		mh->len = len;
+		return mh->p;
+	}
+
+	/*
+	 * And if mmap fails because the pool is empty, try to use
+	 * posix_memalign/madvise as fallback with a 2MB aligmnent in order to
+	 * fullfil the request. This gives the kernel a chance to try to claim
+	 * some huge pages. This might still fail though.
+	 */
+	len = ROUND_UP(len, 0x200000);
+	if (posix_memalign(&mh->p, 0x200000, len))
+		return NULL;
+	mh->posix_memalign = true;
+	mh->len = len;
+
+	memset(mh->p, 0, mh->len);
+
+	if (madvise(mh->p, mh->len, MADV_HUGEPAGE) < 0) {
+		nvme_free_huge(mh);
+		return NULL;
+	}
+
+	return mh->p;
+}
+
+void nvme_free_huge(struct nvme_mem_huge *mh)
+
+{
+	if (!mh || mh->len == 0)
+		return;
+
+	if (mh->posix_memalign)
+		free(mh->p);
+	else
+		munmap(mh->p, mh->len);
+
+	mh->len = 0;
+	mh->p = NULL;
 }
