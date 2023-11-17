@@ -8718,7 +8718,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 				nvme_show_error("Invalid secret '%s'", cfg.secret);
 				return -EINVAL;
 			}
-			if (i >= key_len) {
+			if (i >= key_len * 2) {
 				fprintf(stderr, "Skipping excess secret bytes\n");
 				break;
 			}
