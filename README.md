@@ -79,7 +79,13 @@ there are two project which implement the Ninja and the Meson API in pure C99
   - samurai: https://github.com/michaelforney/samurai.git
   - muon: https://git.sr.ht/~lattis/muon
 
-See the CI [build](.github/workflows/build.yml) for an example how to use it.
+The CI build helper script `scripts/build.sh` is able to setup and build this
+project in a minimal setup using samurai and muon and thus only depending on:
+- gcc
+- make
+- git
+
+`scripts/build.sh -m muon`
 
 ## To compile libnvme
 
