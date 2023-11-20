@@ -550,7 +550,7 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 {
 	nvme_msg(NULL, LOG_ERR, "NVMe TLS is not supported; "
 		 "recompile with OpenSSL support.\n");
-	errno = NOTSUP;
+	errno = ENOTSUP;
 	return -1;
 }
 
@@ -561,7 +561,7 @@ static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 	if (version != 0) {
 		nvme_msg(NULL, LOG_ERR, "NVMe TLS 2.0 is not supported; "
 			 "recompile with OpenSSL support.\n");
-		errno = NOTSUP;
+		errno = ENOTSUP;
 		return -1;
 	}
 	sprintf(identity, "NVMe0R%02d %s %s",
@@ -575,7 +575,7 @@ static int derive_tls_key(int hmac, const char *identity,
 {
 	nvme_msg(NULL, LOG_ERR, "NVMe TLS is not supported; "
 		 "recompile with OpenSSL support.\n");
-	errno = NOTSUP;
+	errno = ENOTSUP;
 	return -1;
 }
 #else /* CONFIG_OPENSSL */
