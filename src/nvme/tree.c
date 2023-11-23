@@ -261,8 +261,10 @@ const char *nvme_root_get_application(nvme_root_t r)
 
 void nvme_root_set_application(nvme_root_t r, const char *a)
 {
-	if (r->application)
+	if (r->application) {
 		free(r->application);
+		r->application = NULL;
+	}
 	if (a)
 		r->application = strdup(a);
 }
@@ -404,8 +406,10 @@ const char *nvme_subsystem_get_application(nvme_subsystem_t s)
 
 void nvme_subsystem_set_application(nvme_subsystem_t s, const char *a)
 {
-	if (s->application)
+	if (s->application) {
 		free(s->application);
+		s->application = NULL;
+	}
 	if (a)
 		s->application = strdup(a);
 }
