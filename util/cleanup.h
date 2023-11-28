@@ -17,8 +17,6 @@ DECLARE_CLEANUP_FUNC(name, type)		\
 		free_fn(*__p);			\
 }
 
-DECLARE_CLEANUP_FUNC(cleanup_charp, char *);
-
 static inline void freep(void *p)
 {
         free(*(void**) p);
