@@ -28,6 +28,7 @@
 
 #include "plugin.h"
 #include "util/json.h"
+#include "util/mem.h"
 #include "util/argconfig.h"
 #include "util/cleanup.h"
 
@@ -116,8 +117,6 @@ int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));
 
 extern int current_index;
-void *nvme_alloc_huge(size_t len, bool *huge);
-void nvme_free_huge(void *p, bool huge);
 
 const char *nvme_strerror(int errnum);
 
