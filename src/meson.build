@@ -6,7 +6,6 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 sources = [
-    'nvme/cleanup.c',
     'nvme/nbft.c',
     'nvme/fabrics.c',
     'nvme/filters.c',
@@ -19,7 +18,6 @@ sources = [
 ]
 
 mi_sources = [
-    'nvme/cleanup.c',
     'nvme/log.c',
     'nvme/mi.c',
     'nvme/mi-mctp.c',

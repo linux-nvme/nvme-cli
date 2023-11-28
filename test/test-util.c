@@ -20,7 +20,6 @@
 #include <netdb.h>
 #include <string.h>
 
-#include "nvme/cleanup.c"	/* to resolve cleanup_charp() */
 #include "nvme/log.c"		/* to resolve __nvme_msg() */
 #include "nvme/util.c"
 

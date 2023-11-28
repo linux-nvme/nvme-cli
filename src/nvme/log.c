@@ -46,8 +46,8 @@ __nvme_msg(nvme_root_t r, int lvl,
 		"[%s] <%s>%s ",
 		"[%s] <%s> %s: ",
 	};
-	char *header __cleanup__(cleanup_charp) = NULL;
-	char *message __cleanup__(cleanup_charp) = NULL;
+	_cleanup_free_ char *header = NULL;
+	_cleanup_free_ char *message = NULL;
 	int idx = 0;
 
 	if (!r)
