@@ -14,6 +14,7 @@
 
 #include <json.h>
 
+#include "cleanup.h"
 #include "fabrics.h"
 #include "log.h"
 #include "private.h"
@@ -189,31 +190,34 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 	}
 }
 
+static DEFINE_CLEANUP_FUNC(cleanup_tokener, json_tokener *, json_tokener_free)
+#define _cleanup_tokener_ __cleanup__(cleanup_tokener)
+
 static struct json_object *parse_json(nvme_root_t r, int fd)
 {
 	char buf[JSON_FILE_BUF_SIZE];
-	struct json_object *obj = NULL;
+	struct json_object *obj;
 	char *str = NULL;
-	json_tokener *tok = NULL;
+	_cleanup_tokener_ json_tokener *tok = NULL;
 	int ret;
-	void *ptr = NULL;
+	_cleanup_free_ void *ptr = NULL;
 	int len = 0;
 
 	while ((ret = read(fd, buf, JSON_FILE_BUF_SIZE)) > 0) {
 		str = realloc(ptr, len + ret);
 		if (!str)
-			goto out;
+			return NULL;
 		memcpy(&str[len], buf, ret);
 		len += ret;
 		ptr = str;
 	}
 
 	if (ret < 0 || !len)
-		goto out;
+		return NULL;
 
 	tok = json_tokener_new_ex(JSON_TOKENER_DEFAULT_DEPTH);
 	if (!tok)
-		goto out;
+		return NULL;
 
 	/* Enforce correctly formatted JSON */
 	tok->flags = JSON_TOKENER_STRICT;
@@ -222,10 +226,6 @@ static struct json_object *parse_json(nvme_root_t r, int fd)
 	if (!obj)
 		nvme_msg(r, LOG_DEBUG, "JSON parsing failed: %s\n",
 			 json_util_get_last_err());
-out:
-	if (tok)
-		json_tokener_free(tok);
-	free(ptr);
 
 	return obj;
 }
@@ -335,21 +335,21 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	 * Store the keyring description in the JSON config file.
 	 */
 	if (cfg->keyring) {
-		char *desc = nvme_describe_key_serial(cfg->keyring);
+		_cleanup_free_ char *desc =
+			nvme_describe_key_serial(cfg->keyring);
 
 		if (desc) {
 			json_object_object_add(port_obj, "keyring",
 					       json_object_new_string(desc));
-			free(desc);
 		}
 	}
 	if (cfg->tls_key) {
-		char *desc = nvme_describe_key_serial(cfg->tls_key);
+		_cleanup_free_ char *desc =
+			nvme_describe_key_serial(cfg->tls_key);
 
 		if (desc) {
 			json_object_object_add(port_obj, "tls_key",
 					       json_object_new_string(desc));
-			free(desc);
 		}
 	}
 
