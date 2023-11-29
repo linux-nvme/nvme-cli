@@ -101,11 +101,8 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *des
 
 void dev_close(struct nvme_dev *dev);
 
-static inline void cleanup_nvme_dev(struct nvme_dev **dev)
-{
-	if (*dev)
-		dev_close(*dev);
-}
+static inline DEFINE_CLEANUP_FUNC(
+	cleanup_nvme_dev, struct nvme_dev *, dev_close)
 #define _cleanup_nvme_dev_ __cleanup__(cleanup_nvme_dev)
 
 extern const char *output_format;
