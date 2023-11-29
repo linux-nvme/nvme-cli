@@ -32,6 +32,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/str/str.h>
 
+#include "cleanup.h"
 #include "fabrics.h"
 #include "linux.h"
 #include "ioctl.h"
@@ -445,7 +446,6 @@ static int inet4_pton(const char *src, uint16_t port,
 static int inet6_pton(nvme_root_t r, const char *src, uint16_t port,
 		      struct sockaddr_storage *addr)
 {
-	int ret = -EINVAL;
 	struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
 	const char *scope = NULL;
 	char *p;
@@ -453,7 +453,7 @@ static int inet6_pton(nvme_root_t r, const char *src, uint16_t port,
 	if (strlen(src) > INET6_ADDRSTRLEN)
 		return -EINVAL;
 
-	char  *tmp = strdup(src);
+	_cleanup_free_ char *tmp = strdup(src);
 	if (!tmp) {
 		nvme_msg(r, LOG_ERR, "cannot copy: %s\n", src);
 		return -ENOMEM;
@@ -466,24 +466,20 @@ static int inet6_pton(nvme_root_t r, const char *src, uint16_t port,
 	}
 
 	if (inet_pton(AF_INET6, tmp, &addr6->sin6_addr) != 1)
-		goto free_tmp;
+		return -EINVAL;
 
 	if (IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr) && scope) {
 		addr6->sin6_scope_id = if_nametoindex(scope);
 		if (addr6->sin6_scope_id == 0) {
 			nvme_msg(r, LOG_ERR,
 				 "can't find iface index for: %s (%m)\n", scope);
-			goto free_tmp;
+			return -EINVAL;
 		}
 	}
 
 	addr6->sin6_family = AF_INET6;
 	addr6->sin6_port = htons(port);
-	ret = 0;
-
-free_tmp:
-	free(tmp);
-	return ret;
+	return 0;
 }
 
 /**
@@ -658,7 +654,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 static  int __nvmf_supported_options(nvme_root_t r)
 {
 	char buf[0x1000], *options, *p, *v;
-	int fd, ret;
+	_cleanup_fd_ int fd = -1;
 	ssize_t len;
 
 	if (r->options)
@@ -687,14 +683,12 @@ static  int __nvmf_supported_options(nvme_root_t r)
 			         "Cannot read %s, using default options\n",
 			         nvmf_dev);
 			*r->options = default_supported_options;
-			ret = 0;
-			goto out_close;
+			return 0;
 		}
 
 		nvme_msg(r, LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, strerror(errno));
-		ret = -ENVME_CONNECT_READ;
-		goto out_close;
+		return -ENVME_CONNECT_READ;
 	}
 
 	buf[len] = '\0';
@@ -741,16 +735,13 @@ static  int __nvmf_supported_options(nvme_root_t r)
 		parse_option(r, v, trsvcid);
 	}
 	nvme_msg(r, LOG_DEBUG, "\n");
-	ret = 0;
-
-out_close:
-	close(fd);
-	return ret;
+	return 0;
 }
 
 static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 {
-	int ret, fd, len = strlen(argstr);
+	_cleanup_fd_ int fd;
+	int ret, len = strlen(argstr);
 	char buf[0x1000], *options, *p;
 
 	fd = open(nvmf_dev, O_RDWR);
@@ -768,31 +759,22 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 			 nvmf_dev, strerror(errno));
 		switch (errno) {
 		case EALREADY:
-			ret = -ENVME_CONNECT_ALREADY;
-			break;
+			return -ENVME_CONNECT_ALREADY;
 		case EINVAL:
-			ret = -ENVME_CONNECT_INVAL;
-			break;
+			return -ENVME_CONNECT_INVAL;
 		case EADDRINUSE:
-			ret = -ENVME_CONNECT_ADDRINUSE;
-			break;
+			return -ENVME_CONNECT_ADDRINUSE;
 		case ENODEV:
-			ret = -ENVME_CONNECT_NODEV;
-			break;
+			return -ENVME_CONNECT_NODEV;
 		case EOPNOTSUPP:
-			ret = -ENVME_CONNECT_OPNOTSUPP;
-			break;
+			return -ENVME_CONNECT_OPNOTSUPP;
 		case ECONNREFUSED:
-			ret = -ENVME_CONNECT_CONNREFUSED;
-			break;
+			return -ENVME_CONNECT_CONNREFUSED;
 		case EADDRNOTAVAIL:
-			ret = -ENVME_CONNECT_ADDRNOTAVAIL;
-			break;
+			return -ENVME_CONNECT_ADDRNOTAVAIL;
 		default:
-			ret = -ENVME_CONNECT_WRITE;
-			break;
+			return -ENVME_CONNECT_WRITE;
 		}
-		goto out_close;
 	}
 
 	memset(buf, 0x0, sizeof(buf));
@@ -800,8 +782,7 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 	if (len < 0) {
 		nvme_msg(r, LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, strerror(errno));
-		ret = -ENVME_CONNECT_READ;
-		goto out_close;
+		return -ENVME_CONNECT_READ;
 	}
 	nvme_msg(r, LOG_DEBUG, "connect ctrl, response '%.*s'\n",
 		 (int)strcspn(buf, "\n"), buf);
@@ -811,14 +792,11 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 		if (!*p)
 			continue;
 		if (sscanf(p, "instance=%d", &ret) == 1)
-			goto out_close;
+			return ret;
 	}
 
 	nvme_msg(r, LOG_ERR, "Failed to parse ctrl info for \"%s\"\n", argstr);
-	ret = -ENVME_CONNECT_PARSE;
-out_close:
-	close(fd);
-	return ret;
+	return -ENVME_CONNECT_PARSE;
 }
 
 static const char *lookup_context(nvme_root_t r, nvme_ctrl_t c)
@@ -848,7 +826,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 {
 	nvme_subsystem_t s;
 	const char *root_app, *app;
-	char *argstr;
+	_cleanup_free_ char *argstr = NULL;
 	int ret;
 
 	/* highest prio have configs from command line */
@@ -923,7 +901,6 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		return ret;
 
 	ret = __nvmf_add_ctrl(h->r, argstr);
-	free(argstr);
 	if (ret < 0) {
 		errno = -ret;
 		return -1;
@@ -1209,7 +1186,7 @@ struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_ar
 static int uuid_from_device_tree(char *system_uuid)
 {
 	ssize_t len;
-	int f;
+	_cleanup_fd_ int f;
 
 	f = open(PATH_UUID_IBM, O_RDONLY);
 	if (f < 0)
@@ -1217,7 +1194,6 @@ static int uuid_from_device_tree(char *system_uuid)
 
 	memset(system_uuid, 0, NVME_UUID_LEN_STRING);
 	len = read(f, system_uuid, NVME_UUID_LEN_STRING - 1);
-	close(f);
 	if (len < 0)
 		return -ENXIO;
 
@@ -1254,7 +1230,7 @@ static bool is_dmi_uuid_valid(const char *buf, size_t len)
 static int uuid_from_dmi_entries(char *system_uuid)
 {
 	int f;
-	DIR *d;
+	_cleanup_dir_ DIR *d;
 	struct dirent *de;
 	char buf[512] = {0};
 
@@ -1305,7 +1281,6 @@ static int uuid_from_dmi_entries(char *system_uuid)
 			(uint8_t)buf[8 + 14], (uint8_t)buf[8 + 15]);
 		break;
 	}
-	closedir(d);
 	return strlen(system_uuid) ? 0 : -ENXIO;
 }
 
@@ -1319,10 +1294,9 @@ static int uuid_from_dmi_entries(char *system_uuid)
  */
 static int uuid_from_product_uuid(char *system_uuid)
 {
-	FILE *stream;
+	_cleanup_file_ FILE *stream;
 	ssize_t nread;
-	int ret;
-	char *line = NULL;
+	_cleanup_free_ char *line = NULL;
 	size_t len = 0;
 
 	stream = fopen(PATH_DMI_PROD_UUID, "re");
@@ -1331,10 +1305,8 @@ static int uuid_from_product_uuid(char *system_uuid)
 	system_uuid[0] = '\0';
 
 	nread = getline(&line, &len, stream);
-	if (nread != NVME_UUID_LEN_STRING) {
-		ret = -ENXIO;
-		goto out;
-	}
+	if (nread != NVME_UUID_LEN_STRING)
+		return -ENXIO;
 
 	/* The kernel is handling the byte swapping according DMTF
 	 * SMBIOS 3.0 Section 7.2.1 System UUID */
@@ -1342,13 +1314,7 @@ static int uuid_from_product_uuid(char *system_uuid)
 	memcpy(system_uuid, line, NVME_UUID_LEN_STRING - 1);
 	system_uuid[NVME_UUID_LEN_STRING - 1] = '\0';
 
-	ret = 0;
-
-out:
-	free(line);
-	fclose(stream);
-
-	return ret;
+	return 0;
 }
 
 /**
@@ -1398,7 +1364,8 @@ char *nvmf_hostnqn_generate()
 static char *nvmf_read_file(const char *f, int len)
 {
 	char buf[len];
-	int ret, fd;
+	_cleanup_fd_ int fd;
+	int ret;
 
 	fd = open(f, O_RDONLY);
 	if (fd < 0)
@@ -1406,7 +1373,6 @@ static char *nvmf_read_file(const char *f, int len)
 
 	memset(buf, 0, len);
 	ret = read(fd, buf, len - 1);
-	close (fd);
 
 	if (ret < 0 || !strlen(buf))
 		return NULL;
@@ -1530,7 +1496,7 @@ static int nvmf_dim(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 		    __u32 *result)
 {
 	nvme_root_t r = c->s && c->s->h ? c->s->h->r : NULL;
-	struct nvmf_dim_data *dim;
+	_cleanup_free_ struct nvmf_dim_data *dim = NULL;
 	struct nvmf_ext_die  *die;
 	__u32 tdl;
 	__u32 tel;
@@ -1617,11 +1583,7 @@ static int nvmf_dim(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 
 	args.data_len = tdl;
 	args.data = dim;
-	ret = nvme_dim_send(&args);
-
-	free(dim);
-
-	return ret;
+	return nvme_dim_send(&args);
 }
 
 /**
@@ -1675,7 +1637,7 @@ static const char *dctype_str[] = {
  */
 static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 {
-	struct nvme_id_ctrl *id;
+	_cleanup_free_ struct nvme_id_ctrl *id;
 	int ret;
 
 	id = __nvme_alloc(sizeof(*id));
@@ -1685,10 +1647,8 @@ static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 	}
 
 	ret = nvme_ctrl_identify(c, id);
-	if (ret) {
-		free(id);
+	if (ret)
 		return ret;
-	}
 
 	if (!c->cntrltype) {
 		if (id->cntrltype > NVME_CTRL_CNTRLTYPE_ADMIN || !cntrltype_str[id->cntrltype])
@@ -1703,7 +1663,6 @@ static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 		else
 			c->dctype = strdup(dctype_str[id->dctype]);
 	}
-	free(id);
 	return 0;
 }
 
