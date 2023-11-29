@@ -1597,6 +1597,7 @@ static int get_persistent_event_log(int argc, char **argv,
 		if (pevent_collected->gen_number != pevent->gen_number) {
 			printf("Collected Persistent Event Log may be invalid,\n"
 			       "Re-read the log is required\n");
+			err = -EINVAL;
 			goto free;
 		}
 
