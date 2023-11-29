@@ -23,6 +23,7 @@
 
 #include <ccan/endian/endian.h>
 
+#include "cleanup.h"
 #include "private.h"
 #include "util.h"
 #include "log.h"
@@ -427,7 +428,7 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 		copy[i].elbatm = cpu_to_le16(elbatms[i]);
 		copy[i].elbat = cpu_to_le16(elbats[i]);
 		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
-	}  
+	}
 }
 
 void nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy, __u32 *snsids,
@@ -756,7 +757,7 @@ char *kv_keymatch(const char *kv, const char *key)
 static size_t read_file(const char * fname, char *buffer, size_t *bufsz)
 {
 	char   *p;
-	FILE   *file;
+	_cleanup_file_ FILE *file;
 	size_t len;
 
 	file = fopen(fname, "re");
@@ -764,7 +765,6 @@ static size_t read_file(const char * fname, char *buffer, size_t *bufsz)
 		return 0;
 
 	p = fgets(buffer, *bufsz, file);
-	fclose(file);
 
 	if (!p)
 		return 0;
@@ -806,7 +806,7 @@ size_t get_entity_name(char *buffer, size_t bufsz)
 
 size_t get_entity_version(char *buffer, size_t bufsz)
 {
-	FILE    *file;
+	_cleanup_file_ FILE *file;
 	size_t  num_bytes = 0;
 
 	/* /proc/sys/kernel/ostype typically contains the string "Linux" */
@@ -856,7 +856,6 @@ size_t get_entity_version(char *buffer, size_t bufsz)
 			if (s)
 				ver_id_len = copy_value(ver_id, sizeof(ver_id), s);
 		}
-		fclose(file);
 
 		if (name_len) {
 			/* Append a space */
@@ -929,14 +928,13 @@ int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
 
 int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
 {
-	int f;
+	_cleanup_fd_ int f;
 	ssize_t n;
 
 	f = open("/dev/urandom", O_RDONLY);
 	if (f < 0)
 		return -errno;
 	n = read(f, uuid, NVME_UUID_LEN);
-	close(f);
 	if (n < 0)
 		return -errno;
 	else if (n != NVME_UUID_LEN)
