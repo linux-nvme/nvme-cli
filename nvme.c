@@ -7126,7 +7126,8 @@ unsigned long long elapsed_utime(struct timeval start_time,
 static int submit_io(int opcode, char *command, const char *desc, int argc, char **argv)
 {
 	struct timeval start_time, end_time;
-	void *buffer, *mbuffer = NULL;
+	void *buffer;
+	_cleanup_free_ void *mbuffer = NULL;
 	int err = 0;
 	int dfd, mfd;
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
@@ -7393,7 +7394,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (err < 0) {
 			err = -errno;
 			nvme_show_error("failed to read data buffer from input file %s", strerror(errno));
-			goto free_mbuffer;
+			goto free_buffer;
 		}
 	}
 
@@ -7402,7 +7403,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (err < 0) {
 			err = -errno;
 			nvme_show_error("failed to read meta-data buffer from input file %s", strerror(errno));
-			goto free_mbuffer;
+			goto free_buffer;
 		}
 	}
 
@@ -7425,7 +7426,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		printf("sts             : %02x\n", sts);
 	}
 	if (cfg.dry_run)
-		goto free_mbuffer;
+		goto free_buffer;
 
 	struct nvme_io_args args = {
 		.args_size	= sizeof(args),
@@ -7474,8 +7475,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		}
 	}
 
-free_mbuffer:
-	free(mbuffer);
 free_buffer:
 	nvme_free_huge(buffer, huge);
 close_mfd:
@@ -8158,7 +8157,8 @@ static int passthru(int argc, char **argv, bool admin,
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int flags;
 	int mode = 0644;
-	void *data = NULL, *mdata = NULL;
+	void *data = NULL;
+	_cleanup_free_ void *mdata = NULL;
 	int err = 0, dfd, mfd;
 	__u32 result;
 	bool huge = false;
@@ -8266,7 +8266,7 @@ static int passthru(int argc, char **argv, bool admin,
 			if (read(mfd, mdata, cfg.metadata_len) < 0) {
 				err = -errno;
 				nvme_show_perror("failed to read metadata write buffer");
-				goto free_metadata;
+				goto close_mfd;
 			}
 		} else {
 			memset(mdata, cfg.prefill, cfg.metadata_len);
@@ -8277,7 +8277,7 @@ static int passthru(int argc, char **argv, bool admin,
 		data = nvme_alloc_huge(cfg.data_len, &huge);
 		if (!data) {
 			err = -ENOMEM;
-			goto free_metadata;
+			goto close_mfd;
 		}
 
 		memset(data, cfg.prefill, cfg.data_len);
@@ -8356,8 +8356,6 @@ static int passthru(int argc, char **argv, bool admin,
 		if (cfg.read)
 			passthru_print_read_output(cfg, data, dfd, mdata, mfd, err);
 	}
-free_metadata:
-	free(mdata);
 free_data:
 	nvme_free_huge(data, huge);
 close_dfd:
