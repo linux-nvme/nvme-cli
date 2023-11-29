@@ -27,7 +27,7 @@ static inline void freep(void *p)
 
 static inline void close_file(int *f)
 {
-	if (*f >= 0)
+	if (*f > STDERR_FILENO)
 		close(*f);
 }
 #define _cleanup_file_ __cleanup__(close_file)

@@ -5792,7 +5792,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *buf = NULL;
-	_cleanup_file_ int ffd = -1;
+	_cleanup_file_ int ffd = STDIN_FILENO;
 	int err;
 	__u32 result;
 
@@ -5875,8 +5875,6 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		} else {
 			if (strlen(cfg.file))
 				ffd = open(cfg.file, O_RDONLY);
-			else
-				ffd = dup(STDIN_FILENO);
 
 			if (ffd < 0) {
 				nvme_show_error("Failed to open file %s: %s",
@@ -6053,7 +6051,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	_cleanup_free_ void *buf = NULL;
 	__u32 result;
 	__u32 dw12 = 0;
-	int ffd = STDIN_FILENO;
+	_cleanup_file_ int ffd = STDIN_FILENO;
 	int err;
 
 	struct config {
@@ -7129,8 +7127,8 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	void *buffer;
 	_cleanup_free_ void *mbuffer = NULL;
 	int err = 0;
-	int dfd, mfd;
-	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
+	_cleanup_file_ int dfd = -1, mfd = -1;
+	int flags;
 	int mode = 0644;
 	__u16 control = 0, nblocks = 0;
 	__u32 dsmgmt = 0;
@@ -7261,7 +7259,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		}
 	}
 
-	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (cfg.prinfo > 0xf)
 		return err;
 
@@ -7282,6 +7279,14 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		dsmgmt |= ((__u32)cfg.dspec) << 16;
 	}
 
+	if (opcode & 1) {
+		dfd = mfd = STDIN_FILENO;
+		flags = O_RDONLY;
+	} else {
+		dfd = mfd = STDOUT_FILENO;
+		flags = O_WRONLY | O_CREAT;
+	}
+
 	if (strlen(cfg.data)) {
 		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
@@ -7294,30 +7299,26 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			nvme_show_perror(cfg.metadata);
-			err = -EINVAL;
-			goto close_dfd;
+			return -EINVAL;
 		}
 	}
 
 	if (!cfg.data_size) {
 		nvme_show_error("data size not provided");
-		err = -EINVAL;
-		goto close_mfd;
+		return -EINVAL;
 	}
 
 	ns = nvme_alloc(sizeof(*ns));
-	if (!ns) {
-		err = -ENOMEM;
-		goto close_mfd;
-	}
+	if (!ns)
+		return -ENOMEM;
 
 	err = nvme_cli_identify_ns(dev, cfg.namespace_id, ns);
 	if (err > 0) {
 		nvme_show_status(err);
-		goto close_mfd;
+		return err;
 	} else if (err < 0) {
 		nvme_show_error("identify namespace: %s", nvme_strerror(errno));
-		goto close_mfd;
+		return err;
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
@@ -7351,15 +7352,13 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	buffer = nvme_alloc_huge(buffer_size, &huge);
-	if (!buffer) {
-		err = -ENOMEM;
-		goto close_mfd;
-	}
+	if (!buffer)
+		return -ENOMEM;
 
 	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
 	if (!nvm_ns) {
 		err = -ENOMEM;
-		goto close_mfd;
+		goto free_buffer;
 	}
 
 	if (cfg.metadata_size) {
@@ -7477,11 +7476,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 
 free_buffer:
 	nvme_free_huge(buffer, huge);
-close_mfd:
-	if (strlen(cfg.metadata))
-		close(mfd);
-close_dfd:
-	close(dfd);
 
 	return err;
 }
@@ -8155,11 +8149,12 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *prefill = "prefill buffers with known byte-value, default 0";
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	_cleanup_file_ int dfd = -1, mfd = -1;
 	int flags;
 	int mode = 0644;
 	void *data = NULL;
 	_cleanup_free_ void *mdata = NULL;
-	int err = 0, dfd, mfd;
+	int err = 0;
 	__u32 result;
 	bool huge = false;
 	const char *cmd_name = NULL;
@@ -8222,18 +8217,14 @@ static int passthru(int argc, char **argv, bool admin,
 	if (err)
 		return err;
 
-	if (cfg.opcode & 0x01)
+	if (cfg.opcode & 0x01) {
 		cfg.write = true;
-
-	if (cfg.opcode & 0x02)
-		cfg.read = true;
-
-	if (cfg.write) {
 		flags = O_RDONLY;
 		dfd = mfd = STDIN_FILENO;
 	}
 
-	if (cfg.read) {
+	if (cfg.opcode & 0x02) {
+		cfg.read = true;
 		flags = O_WRONLY | O_CREAT;
 		dfd = mfd = STDOUT_FILENO;
 	}
@@ -8250,23 +8241,20 @@ static int passthru(int argc, char **argv, bool admin,
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			nvme_show_perror(cfg.metadata);
-			err = -EINVAL;
-			goto close_dfd;
+			return -EINVAL;
 		}
 	}
 
 	if (cfg.metadata_len) {
 		mdata = malloc(cfg.metadata_len);
-		if (!mdata) {
-			err = -ENOMEM;
-			goto close_mfd;
-		}
+		if (!mdata)
+			return -ENOMEM;
 
 		if (cfg.write) {
 			if (read(mfd, mdata, cfg.metadata_len) < 0) {
 				err = -errno;
 				nvme_show_perror("failed to read metadata write buffer");
-				goto close_mfd;
+				return -errno;
 			}
 		} else {
 			memset(mdata, cfg.prefill, cfg.metadata_len);
@@ -8275,10 +8263,8 @@ static int passthru(int argc, char **argv, bool admin,
 
 	if (cfg.data_len) {
 		data = nvme_alloc_huge(cfg.data_len, &huge);
-		if (!data) {
-			err = -ENOMEM;
-			goto close_mfd;
-		}
+		if (!data)
+			return -ENOMEM;
 
 		memset(data, cfg.prefill, cfg.data_len);
 		if (!cfg.read && !cfg.write) {
@@ -8358,12 +8344,6 @@ static int passthru(int argc, char **argv, bool admin,
 	}
 free_data:
 	nvme_free_huge(data, huge);
-close_dfd:
-	if (strlen(cfg.input_file))
-		close(dfd);
-close_mfd:
-	if (cfg.metadata && strlen(cfg.metadata))
-		close(mfd);
 
 	return err;
 }
@@ -8998,9 +8978,9 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	int mode = 0644;
 	void *data = NULL;
 	int err = 0;
-	bool send = admin_opcode == nvme_admin_nvme_mi_send ? true : false;
-	int fd = send ? STDIN_FILENO : STDOUT_FILENO;
-	int flags = send ? O_RDONLY : O_WRONLY | O_CREAT;
+	bool send;
+	_cleanup_file_ int fd = -1;
+	int flags;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	__u32 result;
 	bool huge = false;
@@ -9038,6 +9018,16 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	if (err)
 		return err;
 
+	if (admin_opcode == nvme_admin_nvme_mi_send) {
+		flags = O_RDONLY;
+		fd = STDIN_FILENO;
+		send = true;
+	} else {
+		flags = O_WRONLY | O_CREAT;
+		fd = STDOUT_FILENO;
+		send = false;
+	}
+
 	if (strlen(cfg.input_file)) {
 		fd = open(cfg.input_file, flags, mode);
 		if (fd < 0) {
@@ -9048,10 +9038,8 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 
 	if (cfg.data_len) {
 		data = nvme_alloc_huge(cfg.data_len, &huge);
-		if (!data) {
-			err = -ENOMEM;
-			goto close_fd;
-		}
+		if (!data)
+			return -ENOMEM;
 		if (send) {
 			if (read(fd, data, cfg.data_len) < 0) {
 				err = -errno;
@@ -9084,9 +9072,6 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 
 free_data:
 	nvme_free_huge(data, huge);
-close_fd:
-	if (strlen(cfg.input_file))
-		close(fd);
 
 	return err;
 }
