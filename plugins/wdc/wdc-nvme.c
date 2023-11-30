@@ -85,6 +85,7 @@
 #define WDC_NVME_SN560_DEV_ID_2				0x2713
 #define WDC_NVME_SN560_DEV_ID_3				0x2714
 #define WDC_NVME_SN861_DEV_ID				0x2750
+#define WDC_NVME_SN861_DEV_ID_1				0x2751
 
 /* This id's are no longer supported, delete ?? */
 #define WDC_NVME_SN550_DEV_ID				0x2708
@@ -1494,6 +1495,15 @@ static int wdc_get_vendor_id(struct nvme_dev *dev, uint32_t *vendor_id)
 	return ret;
 }
 
+static bool is_sn861(__u32 device_id)
+{
+	if ((device_id == WDC_NVME_SN861_DEV_ID) ||
+	    (device_id == WDC_NVME_SN861_DEV_ID_1))
+		return true;
+	else
+		return false;
+}
+
 static bool wdc_check_power_of_2(int num)
 {
 	return num && (!(num & (num-1)));
@@ -1794,6 +1804,8 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 
 			break;
 		case WDC_NVME_SN861_DEV_ID:
+			fallthrough;
+		case WDC_NVME_SN861_DEV_ID_1:
 			capabilities |= (WDC_DRIVE_CAP_C0_LOG_PAGE |
 				WDC_DRIVE_CAP_C3_LOG_PAGE |
 				WDC_DRIVE_CAP_CA_LOG_PAGE |
@@ -3685,7 +3697,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 
 	ret = wdc_get_pci_ids(r, dev, &device_id, &read_vendor_id);
 
-	if (device_id != WDC_NVME_SN861_DEV_ID) {
+	if (!is_sn861(device_id)) {
 		if (cfg.file) {
 			int verify_file;
 
@@ -3790,7 +3802,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 
 	capabilities = wdc_get_drive_capabilities(r, dev);
 	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
-		if (device_id != WDC_NVME_SN861_DEV_ID) {
+		if (!is_sn861(device_id)) {
 			/* Set the default DA to 3 if not specified */
 			if (!telemetry_data_area)
 				telemetry_data_area = 3;
@@ -5343,7 +5355,7 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 		printf("  Firmware Activate History Log\n");
 		if (cust_id == WDC_CUSTOMER_ID_0x1005 ||
 		    vendor_id == WDC_NVME_SNDK_VID ||
-		    device_id == WDC_NVME_SN861_DEV_ID) {
+		    is_sn861(device_id)) {
 			printf("           Power on Hour       Power Cycle     Previous    New\n");
 			printf("  Entry      hh:mm:ss             Count        Firmware    Firmware    Slot   Action  Result\n");
 			printf("  -----  -----------------  -----------------  ---------   ---------   -----  ------  -------\n");
@@ -5402,7 +5414,7 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 						(int)((timestamp/1000)%60));
 				printf("%s", time_str);
 				printf("     ");
-			} else if (device_id == WDC_NVME_SN861_DEV_ID) {
+			} else if (is_sn861(device_id)) {
 				printf("        ");
 				char timestamp[20];
 				__u64 hour;
@@ -5589,7 +5601,7 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 				sprintf((char *)time_str, "%04d:%02d:%02d", (int)((timestamp/(3600*1000))%24), (int)((timestamp/(1000*60))%60),
 						(int)((timestamp/1000)%60));
 				json_object_add_value_string(root, "Power on Hour", time_str);
-			} else if (device_id == WDC_NVME_SN861_DEV_ID) {
+			} else if (is_sn861(device_id)) {
 				__u64 timestamp_sec =
 					le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)
 					/ 1000;
@@ -7922,7 +7934,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	if (((capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE) == WDC_DRIVE_CAP_C0_LOG_PAGE) &&
 	    (page_mask & WDC_C0_PAGE_MASK)) {
 		/* Get 0xC0 log page if possible. */
-		if (device_id != WDC_NVME_SN861_DEV_ID) {
+		if (!is_sn861(device_id)) {
 			ret = wdc_get_c0_log_page(r, dev, cfg.output_format,
 						uuid_index, cfg.namespace_id);
 			if (ret)
@@ -7970,7 +7982,8 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		}
 	}
 	if (((capabilities & (WDC_DRIVE_CAP_CA_LOG_PAGE)) == (WDC_DRIVE_CAP_CA_LOG_PAGE)) &&
-	    (page_mask & WDC_CA_PAGE_MASK) && device_id != WDC_NVME_SN861_DEV_ID) {
+	    (page_mask & WDC_CA_PAGE_MASK) &&
+	    (!is_sn861(device_id))) {
 		/* Get the CA Log Page */
 		ret = wdc_get_ca_log_page(r, dev, cfg.output_format);
 		if (ret)
@@ -8836,7 +8849,7 @@ static int wdc_get_fw_act_history_C2(nvme_root_t r, struct nvme_dev *dev,
 
 		if (tot_entries > 0) {
 			/* get the FW customer id */
-			if (device_id != WDC_NVME_SN861_DEV_ID) {
+			if (!is_sn861(device_id)) {
 				cust_id = wdc_get_fw_cust_id(r, dev);
 				if (cust_id == WDC_INVALID_CUSTOMER_ID) {
 					fprintf(stderr,
@@ -10355,7 +10368,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE_C8 :
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE;
 
-		if (device_id != WDC_NVME_SN861_DEV_ID) {
+		if (!is_sn861(device_id)) {
 			/* verify the 0xC2 Device Manageability log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev, log_id) == false) {
 				fprintf(stderr,
@@ -11387,6 +11400,8 @@ static int wdc_vs_drive_info(int argc, char **argv,
 
 			break;
 		case WDC_NVME_SN861_DEV_ID:
+			fallthrough;
+		case WDC_NVME_SN861_DEV_ID_1:
 			data_len = sizeof(info);
 			num_dwords = data_len / 4;
 			if (data_len % 4 != 0)
