@@ -1799,7 +1799,6 @@ enum nvme_lbaf_rp {
  *	      remains fixed throughout the life of the namespace and is
  *	      preserved across namespace and controller operations
  * @lbaf:     LBA Format, see &struct nvme_lbaf.
- * @lbstm:    Logical Block Storage Tag Mask for end-to-end protection
  * @vs:	      Vendor Specific
  */
 struct nvme_id_ns {
@@ -1843,8 +1842,7 @@ struct nvme_id_ns {
 	__u8			nguid[16];
 	__u8			eui64[8];
 	struct nvme_lbaf	lbaf[64];
-	__le64			lbstm;
-	__u8			vs[3704];
+	__u8			vs[3712];
 };
 
 /**
