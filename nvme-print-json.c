@@ -267,6 +267,12 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		array_add_obj(lbafs, lbaf);
 	}
 
+	// If vs is null-terminated, include it. JSON will escape the string.
+	// Data beyond the null byte will be ignored.
+	if (strnlen((const char *)ns->vs, sizeof(ns->vs)) < sizeof(ns->vs)) {
+		obj_add_str(r, "vs", (const char *)ns->vs);
+	}
+
 	json_print(r);
 }
 
