@@ -136,8 +136,8 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 	if (err)
 		return errno;
 
-	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 
 	err = nvme_zns_identify_ctrl(dev_fd(dev), &ctrl);
@@ -189,8 +189,8 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	if (err)
 		return errno;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 	if (cfg.vendor_specific)
 		flags |= VS;
@@ -766,8 +766,8 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return errno;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 
 	if (!cfg.namespace_id) {
@@ -881,8 +881,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	if (err)
 		return errno;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 	if (cfg.verbose)
 		flags |= VERBOSE;
@@ -1247,8 +1247,8 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 	if (err)
 		return errno;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 
 	if (!cfg.namespace_id) {

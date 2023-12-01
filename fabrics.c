@@ -414,9 +414,11 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 
 	nvmf_default_config(&cfg);
 
-	ret = flags = validate_output_format(format);
-	if (ret < 0)
+	ret = validate_output_format(format, &flags);
+	if (ret < 0) {
+		nvme_show_error("Invalid output format");
 		return ret;
+	}
 
 	f = fopen(PATH_NVMF_DISC, "r");
 	if (f == NULL) {
@@ -697,9 +699,11 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (ret)
 		return ret;
 
-	ret = flags = validate_output_format(format);
-	if (ret < 0)
+	ret = validate_output_format(format, &flags);
+	if (ret < 0) {
+		nvme_show_error("Invalid output format");
 		return ret;
+	}
 
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
@@ -900,7 +904,11 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	flags = validate_output_format(format);
+	ret = validate_output_format(format, &flags);
+	if (ret < 0) {
+		nvme_show_error("Invalid output format");
+		return ret;
+	}
 
 	if (!subsysnqn) {
 		fprintf(stderr,

@@ -416,15 +416,15 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 static int get_c3_log_page(struct nvme_dev *dev, char *format)
 {
 	struct ssd_latency_monitor_log *log_data;
-	int ret = 0;
-	int fmt = -1;
+	enum nvme_print_flags fmt;
+	int ret;
 	__u8 *data;
 	int i;
 
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR : OCP : invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = malloc(sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
@@ -481,6 +481,9 @@ static int get_c3_log_page(struct nvme_dev *dev, char *format)
 		case JSON:
 			ocp_print_C3_log_json(log_data);
 			break;
+		default:
+			fprintf(stderr, "unhandled output format\n");
+
 		}
 	} else {
 		fprintf(stderr,
@@ -1324,17 +1327,17 @@ static void ocp_print_c5_log_binary(struct unsupported_requirement_log *log_data
 
 static int get_c5_log_page(struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
+	enum nvme_print_flags fmt;
+	int ret;
 	__u8 *data;
 	int i;
 	struct unsupported_requirement_log *log_data;
 	int j;
 
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR : OCP : invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
@@ -1385,6 +1388,8 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 			break;
 		case BINARY:
 			ocp_print_c5_log_binary(log_data);
+			break;
+		default:
 			break;
 		}
 	} else {
@@ -1548,16 +1553,16 @@ static void ocp_print_c1_log_binary(struct ocp_error_recovery_log_page *log_data
 
 static int get_c1_log_page(struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
+	struct ocp_error_recovery_log_page *log_data;
+	enum nvme_print_flags fmt;
+	int ret;
 	__u8 *data;
 	int i, j;
-	struct ocp_error_recovery_log_page *log_data;
 
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR : OCP : invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
@@ -1608,6 +1613,8 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 			break;
 		case BINARY:
 			ocp_print_c1_log_binary(log_data);
+			break;
+		default:
 			break;
 		}
 	} else {
@@ -1762,16 +1769,16 @@ static void ocp_print_c4_log_binary(struct ocp_device_capabilities_log_page *log
 
 static int get_c4_log_page(struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
+	struct ocp_device_capabilities_log_page *log_data;
+	enum nvme_print_flags fmt;
+	int ret;
 	__u8 *data;
 	int i, j;
-	struct ocp_device_capabilities_log_page *log_data;
 
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR : OCP : invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
@@ -1822,6 +1829,8 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 			break;
 		case BINARY:
 			ocp_print_c4_log_binary(log_data);
+			break;
+		default:
 			break;
 		}
 	} else {

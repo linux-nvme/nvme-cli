@@ -68,6 +68,7 @@ static void vu_gc_log_show(struct garbage_control_collection_log *payload, const
 int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Get and parse Solidigm vendor specific garbage collection event log.";
+	enum nvme_print_flags flags;
 	struct nvme_dev *dev;
 	int err;
 	__u8 uuid_index;
@@ -89,9 +90,8 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 	if (err)
 		return err;
 
-	enum nvme_print_flags flags = validate_output_format(cfg.output_format);
-
-	if (flags == -EINVAL) {
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
 		dev_close(dev);
 		return -EINVAL;
