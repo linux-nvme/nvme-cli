@@ -5384,6 +5384,8 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		goto free_tree;
+	} else {
+		err = 0 ;
 	}
 
 	if (cfg.human_readable)
