@@ -2322,60 +2322,164 @@ int nvme_ns_flush(nvme_ns_t n)
 	return nvme_flush(nvme_ns_get_fd(n), nvme_ns_get_nsid(n));
 }
 
-static void nvme_ns_parse_descriptors(struct nvme_ns *n,
-				      struct nvme_ns_id_desc *descs)
+static int nvme_strtou64(const char *str, void *res)
 {
-	void *d = descs;
-	int i, len;
+	char *endptr;
+	__u64 v;
 
-	for (i = 0; i < NVME_IDENTIFY_DATA_SIZE; i += len) {
-		struct nvme_ns_id_desc *desc = d + i;
+	errno = 0;
+	v = strtoull(str, &endptr, 0);
 
-		if (!desc->nidl)
-			break;
-		len = desc->nidl + sizeof(*desc);
+	if (errno != 0)
+		return -errno;
 
-		switch (desc->nidt) {
-		case NVME_NIDT_EUI64:
-			memcpy(n->eui64, desc->nid, sizeof(n->eui64));
-			break;
-		case NVME_NIDT_NGUID:
-			memcpy(n->nguid, desc->nid, sizeof(n->nguid));
-			break;
-		case NVME_NIDT_UUID:
-			memcpy(n->uuid, desc->nid, sizeof(n->uuid));
-			break;
-		case NVME_NIDT_CSI:
-			memcpy(&n->csi, desc->nid, sizeof(n->csi));
-			break;
-		}
+	if (endptr == str) {
+		/* no digits found */
+		return -EINVAL;
 	}
+
+	*(__u64 *)res = v;
+	return 0;
 }
 
-static int nvme_ns_init(struct nvme_ns *n)
+static int nvme_strtou32(const char *str, void *res)
 {
-	_cleanup_free_ struct nvme_id_ns *ns;
-	_cleanup_free_ struct nvme_ns_id_desc *descs = NULL;
-	uint8_t flbas;
+	char *endptr;
+	__u32 v;
+
+	errno = 0;
+	v = strtol(str, &endptr, 0);
+
+	if (errno != 0)
+		return -errno;
+
+	if (endptr == str) {
+		/* no digits found */
+		return -EINVAL;
+	}
+
+	*(__u32 *)res = v;
+	return 0;
+}
+
+static int nvme_strtoi(const char *str, void *res)
+{
+	char *endptr;
+	int v;
+
+	errno = 0;
+	v = strtol(str, &endptr, 0);
+
+	if (errno != 0)
+		return -errno;
+
+	if (endptr == str) {
+		/* no digits found */
+		return -EINVAL;
+	}
+
+	*(int *)res = v;
+	return 0;
+}
+
+static int nvme_strtoeuid(const char *str, void *res)
+{
+	memcpy(res, str, 8);
+	return 0;
+}
+
+static int nvme_strtouuid(const char *str, void *res)
+{
+	memcpy(res, str, NVME_UUID_LEN);
+	return 0;
+}
+
+struct sysfs_attr_table {
+	void *var;
+	int (*parse)(const char *str, void *res);
+	bool mandatory;
+	const char *name;
+};
+
+#define GETSHIFT(x) (__builtin_ffsll(x) - 1)
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+static int parse_attrs(const char *path, struct sysfs_attr_table *tbl, int size)
+{
+	char *str;
+	int ret, i;
+
+	for (i = 0; i < size; i++) {
+		struct sysfs_attr_table *e = &tbl[i];
+
+		str = nvme_get_attr(path, e->name);
+		if (!str) {
+			if (!e->mandatory)
+				continue;
+			return -ENOENT;
+		}
+		ret = e->parse(str, e->var);
+		free(str);
+		if (ret)
+			return ret;
+	}
+
+	return 0;
+}
+
+static int nvme_ns_init(const char *path, struct nvme_ns *ns)
+{
+	_cleanup_free_ char *attr = NULL;
+	struct stat sb;
 	int ret;
 
-	ns = __nvme_alloc(sizeof(*ns));
-	if (!ns)
-		return 0;
-	ret = nvme_ns_identify(n, ns);
+	struct sysfs_attr_table base[] = {
+		{ &ns->nsid,      nvme_strtou32,  true, "nsid" },
+		{ &ns->lba_count, nvme_strtou64,  true, "size" },
+		{ &ns->lba_size,  nvme_strtou64,  true, "queue/physical_block_size" },
+		{ ns->eui64,      nvme_strtoeuid, false, "eui" },
+		{ ns->nguid,      nvme_strtouuid, false, "nguid" },
+		{ ns->uuid,       nvme_strtouuid, false, "uuid" }
+	};
+
+	ret = parse_attrs(path, base, ARRAY_SIZE(base));
 	if (ret)
 		return ret;
 
-	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
-	n->lba_shift = ns->lbaf[flbas].ds;
-	n->lba_size = 1 << n->lba_shift;
-	n->lba_count = le64_to_cpu(ns->nsze);
-	n->lba_util = le64_to_cpu(ns->nuse);
-	n->meta_size = le16_to_cpu(ns->lbaf[flbas].ms);
+	ns->lba_shift = GETSHIFT(ns->lba_size);
 
-	descs = __nvme_alloc(NVME_IDENTIFY_DATA_SIZE);
-	if (descs && !nvme_ns_identify_descs(n, descs))
-		nvme_ns_parse_descriptors(n, descs);
+	if (asprintf(&attr, "%s/csi", path) < 0)
+		return -errno;
+	ret = stat(attr, &sb);
+	if (ret == 0) {
+		/* only available on kernels >= 6.8 */
+		struct sysfs_attr_table ext[] = {
+			{ &ns->csi,       nvme_strtoi,	 true, "csi" },
+			{ &ns->lba_util,  nvme_strtou64, true, "nuse" },
+			{ &ns->meta_size, nvme_strtoi,	 true, "metadata_bytes"},
+
+		};
+
+		ret = parse_attrs(path, ext, ARRAY_SIZE(ext));
+		if (ret)
+			return ret;
+	} else {
+		struct nvme_id_ns *id;
+		uint8_t flbas;
+
+		id = __nvme_alloc(sizeof(*ns));
+		if (!id)
+			return -ENOMEM;
+
+		ret = nvme_ns_identify(ns, id);
+		if (ret)
+			free(ns);
+
+		nvme_id_ns_flbas_to_lbaf_inuse(id->flbas, &flbas);
+		ns->lba_count = le64_to_cpu(id->nsze);
+		ns->lba_util = le64_to_cpu(id->nuse);
+		ns->meta_size = le16_to_cpu(id->lbaf[flbas].ms);
+	}
 
 	return 0;
 }
@@ -2394,7 +2498,7 @@ static void nvme_ns_set_generic_name(struct nvme_ns *n, const char *name)
 	n->generic_name = strdup(generic_name);
 }
 
-static nvme_ns_t nvme_ns_open(const char *name)
+static nvme_ns_t nvme_ns_open(const char *sys_path, const char *name)
 {
 	struct nvme_ns *n;
 	int fd;
@@ -2414,10 +2518,7 @@ static nvme_ns_t nvme_ns_open(const char *name)
 
 	nvme_ns_set_generic_name(n, name);
 
-	if (nvme_get_nsid(fd, &n->nsid) < 0)
-		goto free_ns;
-
-	if (nvme_ns_init(n) != 0)
+	if (nvme_ns_init(sys_path, n) != 0)
 		goto free_ns;
 
 	list_head_init(&n->paths);
@@ -2477,7 +2578,7 @@ static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, const char *
 		return NULL;
 	}
 
-	n = nvme_ns_open(blkdev);
+	n = nvme_ns_open(path, blkdev);
 	if (!n)
 		return NULL;
 
