@@ -264,15 +264,18 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 	}
 
 	if (!err) {
-		const enum nvme_print_flags print_flag = validate_output_format(format);
+		enum nvme_print_flags print_flag;
+
+		err = validate_output_format(format, &print_flag);
+		if (err < 0) {
+			fprintf(stderr, "Error: Invalid output format specified: %s.\n", format);
+			return err;
+		}
 
 		if (print_flag == NORMAL) {
 			supported_log_pages_normal(lid_dirs);
 		} else if (print_flag == JSON) {
 			supported_log_pages_json(lid_dirs);
-		} else {
-			fprintf(stderr, "Error: Invalid output format specified: %s.\n", format);
-			err = -EINVAL;
 		}
 	}
 

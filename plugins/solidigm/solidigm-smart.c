@@ -222,11 +222,11 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	if (err)
 		return err;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags == -EINVAL) {
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
 		dev_close(dev);
-		return flags;
+		return err;
 	}
 
 	uuid_index = solidigm_get_vu_uuid_index(dev);

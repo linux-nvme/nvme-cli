@@ -6835,17 +6835,17 @@ static int wdc_get_c0_log_page_sn(nvme_root_t r, struct nvme_dev *dev, int uuid_
 static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format, int uuid_index,
 			       __u32 namespace_id)
 {
-	int ret = 0;
-	int fmt = -1;
-	__u8 *data;
 	uint32_t device_id, read_vendor_id;
+	enum nvme_print_flags fmt;
+	int ret;
+	__u8 *data;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	ret = wdc_get_pci_ids(r, dev, &device_id, &read_vendor_id);
@@ -7091,19 +7091,19 @@ static int wdc_print_fw_act_history_log(__u8 *data, int num_entries, int fmt,
 
 static int wdc_get_ca_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
-	__u8 *data;
-	struct wdc_ssd_ca_perf_stats *perf;
 	uint32_t read_device_id, read_vendor_id;
+	struct wdc_ssd_ca_perf_stats *perf;
+	enum nvme_print_flags fmt;
 	__u32 cust_id;
+	__u8 *data;
+	int ret;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	/* verify the 0xCA log page is supported */
@@ -7227,23 +7227,24 @@ static int wdc_get_ca_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 static int wdc_get_c1_log_page(nvme_root_t r, struct nvme_dev *dev,
 			       char *format, uint8_t interval)
 {
-	int ret = 0;
-	int fmt = -1;
+	struct wdc_log_page_subpage_header *sph;
+	struct wdc_ssd_perf_stats *perf;
+	struct wdc_log_page_header *l;
+	enum nvme_print_flags fmt;
+	int total_subpages;
+	int skip_cnt = 4;
 	__u8 *data;
 	__u8 *p;
 	int i;
-	int skip_cnt = 4;
-	int total_subpages;
-	struct wdc_log_page_header *l;
-	struct wdc_log_page_subpage_header *sph;
-	struct wdc_ssd_perf_stats *perf;
+	int ret;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	if (interval < 1 || interval > 15) {
@@ -7285,18 +7286,19 @@ static int wdc_get_c1_log_page(nvme_root_t r, struct nvme_dev *dev,
 
 static int wdc_get_c3_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
-	__u8 *data;
-	int i;
 	struct wdc_ssd_latency_monitor_log *log_data;
+	enum nvme_print_flags fmt;
+	__u8 *data;
+	int ret;
+	int i;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * WDC_LATENCY_MON_LOG_BUF_LEN);
@@ -7356,18 +7358,19 @@ out:
 
 static int wdc_get_ocp_c1_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
-	__u8 *data;
-	int i;
 	struct wdc_ocp_c1_error_recovery_log *log_data;
+	enum nvme_print_flags fmt;
+	__u8 *data;
+	int ret;
+	int i;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * WDC_ERROR_REC_LOG_BUF_LEN);
@@ -7426,18 +7429,19 @@ out:
 
 static int wdc_get_ocp_c4_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
-	__u8 *data;
-	int i;
 	struct wdc_ocp_C4_dev_cap_log *log_data;
+	enum nvme_print_flags fmt;
+	__u8 *data;
+	int ret;
+	int i;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * WDC_DEV_CAP_LOG_BUF_LEN);
@@ -7495,18 +7499,19 @@ out:
 
 static int wdc_get_ocp_c5_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
+	struct wdc_ocp_C5_unsupported_reqs *log_data;
+	enum nvme_print_flags fmt;
+	int ret;
 	__u8 *data;
 	int i;
-	struct wdc_ocp_C5_unsupported_reqs *log_data;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * WDC_UNSUPPORTED_REQS_LOG_BUF_LEN);
@@ -7564,17 +7569,18 @@ out:
 
 static int wdc_get_d0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
-	int ret = 0;
-	int fmt = -1;
-	__u8 *data;
 	struct wdc_ssd_d0_smart_log *perf;
+	enum nvme_print_flags fmt;
+	int ret = 0;
+	__u8 *data;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	/* verify the 0xD0 log page is supported */
@@ -7846,12 +7852,12 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	const char *log_page_version = "Log Page Version: 0 = vendor, 1 = WDC";
 	const char *log_page_mask = "Log Page Mask, comma separated list: 0xC0, 0xC1, 0xCA, 0xD0";
 	const char *namespace_id = "desired namespace id";
+	enum nvme_print_flags fmt;
 	struct nvme_dev *dev;
 	nvme_root_t r;
 	int ret = 0;
 	int uuid_index = 0;
 	int page_mask = 0, num, i;
-	int fmt = -1;
 	int log_page_list[16];
 	__u64 capabilities = 0;
 	__u32 device_id, read_vendor_id;
@@ -7945,8 +7951,8 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 			struct ocp_cloud_smart_log log;
 			char buf[2 * sizeof(log.log_page_guid) + 3];
 
-			fmt = validate_output_format(cfg.output_format);
-			if (fmt < 0) {
+			ret = validate_output_format(output_format, &fmt);
+			if (ret < 0) {
 				fprintf(stderr, "Invalid output format: %s\n", cfg.output_format);
 				goto out;
 			}
@@ -7967,9 +7973,9 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 				if (strcmp(buf, "0xafd514c97c6f4f9ca4f2bfea2810afc5"))
 					fprintf(stderr, "Invalid GUID: %s\n", buf);
 				else {
-					if (fmt & BINARY)
+					if (fmt == BINARY)
 						d_raw((unsigned char *)&log, sizeof(log));
-					else if (fmt & JSON)
+					else if (fmt == JSON)
 						show_cloud_smart_log_json(&log);
 					else
 						show_cloud_smart_log_normal(&log, dev);
@@ -8016,10 +8022,11 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
 {
 	const char *desc = "Retrieve Cloud Log Smart/Health Information";
 	const char *namespace_id = "desired namespace id";
+	enum nvme_print_flags fmt;
 	__u64 capabilities = 0;
 	struct nvme_dev *dev;
-	int ret, fmt = -1;
 	nvme_root_t r;
+	int ret;
 	__u8 *data;
 
 	struct config {
@@ -8060,14 +8067,13 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
 		nvme_show_status(ret);
 
 	if (!ret) {
-		fmt = validate_output_format(cfg.output_format);
-		if (fmt < 0) {
+		ret = validate_output_format(cfg.output_format, &fmt);
+		if (ret < 0) {
 			fprintf(stderr, "ERROR: WDC %s: invalid output format\n", __func__);
-			ret = fmt;
+		} else {
+			/* parse the data */
+			wdc_print_ext_smart_cloud_log(data, fmt);
 		}
-
-		/* parse the data */
-		wdc_print_ext_smart_cloud_log(data, fmt);
 	} else {
 		fprintf(stderr, "ERROR: WDC: Unable to read C0 Log Page V1 data\n");
 		ret = -1;
@@ -8087,9 +8093,10 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
 {
 	const char *desc = "Retrieve Hardware Revision Log Information";
 	const char *namespace_id = "desired namespace id";
+	enum nvme_print_flags fmt;
 	__u64 capabilities = 0;
 	struct nvme_dev *dev;
-	int ret, fmt = -1;
+	int ret;
 	__u8 *data = NULL;
 	nvme_root_t r;
 
@@ -8129,10 +8136,9 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
 		nvme_show_status(ret);
 
 	if (!ret) {
-		fmt = validate_output_format(cfg.output_format);
-		if (fmt < 0) {
+		ret = validate_output_format(cfg.output_format, &fmt);
+		if (ret < 0) {
 			fprintf(stderr, "ERROR: WDC %s: invalid output format\n", __func__);
-			ret = fmt;
 			goto free_buf;
 		}
 
@@ -8147,6 +8153,8 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
 			break;
 		case JSON:
 			wdc_print_hw_rev_log_json(data);
+			break;
+		default:
 			break;
 		}
 	} else {
@@ -8170,11 +8178,11 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
 	const char *desc = "Retrieve Device Write Amplication Factor";
 	const char *namespace_id = "desired namespace id";
 	struct nvme_smart_log smart_log;
+	enum nvme_print_flags fmt;
 	struct nvme_dev *dev;
 	__u8 *data;
 	nvme_root_t r;
 	int ret = 0;
-	int fmt = -1;
 	__u64 capabilities = 0;
 	struct __packed wdc_nvme_ext_smart_log * ext_smart_log_ptr;
 	long double  data_units_written = 0,
@@ -8250,10 +8258,9 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
 	if (strcmp(cfg.output_format, "json"))
 		nvme_show_status(ret);
 
-	fmt = validate_output_format(cfg.output_format);
-	if (fmt < 0) {
+	ret = validate_output_format(cfg.output_format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC %s: invalid output format\n", __func__);
-		ret = fmt;
 		goto out;
 	}
 
@@ -8727,18 +8734,18 @@ out:
 static int wdc_get_fw_act_history(nvme_root_t r, struct nvme_dev *dev,
 				  char *format)
 {
-	int ret = 0;
-	int fmt = -1;
-	__u8 *data;
 	struct wdc_fw_act_history_log_hdr *fw_act_history_hdr;
+	enum nvme_print_flags fmt;
+	int ret;
+	__u8 *data;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
 
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	/* verify the FW Activate History log page is supported */
@@ -8808,21 +8815,21 @@ static __u32 wdc_get_fw_cust_id(nvme_root_t r, struct nvme_dev *dev)
 static int wdc_get_fw_act_history_C2(nvme_root_t r, struct nvme_dev *dev,
 				     char *format)
 {
-	int ret = 0;
-	int fmt = -1;
-	__u8 *data;
-	__u32 cust_id = 0;
 	struct wdc_fw_act_history_log_format_c2 *fw_act_history_log;
 	__u32 tot_entries = 0, num_entries = 0;
 	__u32 vendor_id = 0, device_id = 0;
+	__u32 cust_id = 0;
+	enum nvme_print_flags fmt;
+	__u8 *data;
+	int ret;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
 
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	ret = wdc_get_pci_ids(r, dev, &device_id, &vendor_id);
@@ -10321,6 +10328,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve Log Page Directory.";
+	enum nvme_print_flags fmt;
 	struct nvme_dev *dev;
 	int ret = 0;
 	nvme_root_t r;
@@ -10347,13 +10355,12 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 	if (ret)
 		return ret;
 
-	ret = validate_output_format(cfg.output_format);
+	ret = validate_output_format(cfg.output_format, &fmt);
 	if (ret < 0) {
 		fprintf(stderr, "%s: ERROR: WDC: invalid output format\n", __func__);
 		dev_close(dev);
 		return ret;
 	}
-	ret = 0;
 
 	r = nvme_scan(NULL);
 	capabilities = wdc_get_drive_capabilities(r, dev);
@@ -10440,12 +10447,16 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 					0, &result);
 
 			if (!ret) {
-				if (!strcmp(cfg.output_format, "binary"))
+				switch (fmt) {
+				case BINARY:
 					d_raw((unsigned char *)data, 32);
-				else if (!strcmp(cfg.output_format, "json"))
+					break;
+				case JSON:
 					__json_log_page_directory(dir);
-				else
+					break;
+				default:
 					__show_log_page_directory(dir);
+				}
 			} else {
 				fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(ret, false), ret);
@@ -10964,9 +10975,9 @@ static void wdc_print_pcie_stats_json(struct wdc_vs_pcie_stats *pcie_stats)
 
 static int wdc_do_vs_nand_stats_sn810_2(struct nvme_dev *dev, char *format)
 {
-	int ret;
-	int fmt = -1;
+	enum nvme_print_flags fmt;
 	uint8_t *data = NULL;
+	int ret;
 
 	data = NULL;
 	ret = nvme_get_ext_smart_cloud_log(dev_fd(dev), &data, 0,
@@ -10976,10 +10987,9 @@ static int wdc_do_vs_nand_stats_sn810_2(struct nvme_dev *dev, char *format)
 		fprintf(stderr, "ERROR: WDC: %s : Failed to retrieve NAND stats\n", __func__);
 		goto out;
 	} else {
-		fmt = validate_output_format(format);
-		if (fmt < 0) {
+		ret = validate_output_format(format, &fmt);
+		if (ret < 0) {
 			fprintf(stderr, "ERROR: WDC: %s : invalid output format\n", __func__);
-			ret = fmt;
 			goto out;
 		}
 
@@ -10990,6 +11000,8 @@ static int wdc_do_vs_nand_stats_sn810_2(struct nvme_dev *dev, char *format)
 			break;
 		case JSON:
 			wdc_print_ext_smart_cloud_log_json(data, WDC_SCA_V1_NAND_STATS);
+			break;
+		default:
 			break;
 		}
 	}
@@ -11002,10 +11014,10 @@ out:
 
 static int wdc_do_vs_nand_stats(struct nvme_dev *dev, char *format)
 {
-	int ret;
-	int fmt = -1;
+	enum nvme_print_flags fmt;
 	uint8_t *output = NULL;
 	__u16 version = 0;
+	int ret;
 
 	output = (uint8_t *)calloc(WDC_NVME_NAND_STATS_SIZE, sizeof(uint8_t));
 	if (!output) {
@@ -11020,10 +11032,9 @@ static int wdc_do_vs_nand_stats(struct nvme_dev *dev, char *format)
 		fprintf(stderr, "ERROR: WDC: %s : Failed to retrieve NAND stats\n", __func__);
 		goto out;
 	} else {
-		fmt = validate_output_format(format);
-		if (fmt < 0) {
+		ret = validate_output_format(format, &fmt);
+		if (ret < 0) {
 			fprintf(stderr, "ERROR: WDC: invalid output format\n");
-			ret = fmt;
 			goto out;
 		}
 
@@ -11036,6 +11047,8 @@ static int wdc_do_vs_nand_stats(struct nvme_dev *dev, char *format)
 			break;
 		case JSON:
 			wdc_print_nand_stats_json(version, output);
+			break;
+		default:
 			break;
 		}
 	}
@@ -11125,11 +11138,11 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve PCIE statistics.";
+	enum nvme_print_flags fmt;
 	struct nvme_dev *dev;
-	int ret = 0;
 	nvme_root_t r;
+	int ret;
 	__u64 capabilities = 0;
-	int fmt = -1;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	struct wdc_vs_pcie_stats *pcieStatsPtr = NULL;
 	int pcie_stats_size = sizeof(struct wdc_vs_pcie_stats);
@@ -11151,12 +11164,10 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-
 	r = nvme_scan(NULL);
-	fmt = validate_output_format(cfg.output_format);
-	if (fmt < 0) {
+	ret = validate_output_format(cfg.output_format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		ret = fmt;
 		goto out;
 	}
 
@@ -11187,6 +11198,8 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 			case JSON:
 				wdc_print_pcie_stats_json(pcieStatsPtr);
 				break;
+			default:
+				break;
 			}
 		}
 	}
@@ -11200,6 +11213,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send a vs-drive-info command.";
+	enum nvme_print_flags fmt;
 	nvme_root_t r;
 	uint64_t capabilities = 0;
 	struct nvme_dev *dev;
@@ -11213,7 +11227,6 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	__u8 *data = NULL;
 	__u32 ftl_unit_size = 0, tcg_dev_ownership = 0;
 	__u16 boot_spec_major = 0, boot_spec_minor = 0;
-	int fmt = -1;
 	struct json_object *root = NULL;
 	char formatter[41] = { 0 };
 	char rev_str[16] = { 0 };
@@ -11240,11 +11253,11 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	fmt = validate_output_format(cfg.output_format);
-	if (fmt < 0) {
+	ret = validate_output_format(cfg.output_format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC %s invalid output format\n", __func__);
 		dev_close(dev);
-		return fmt;
+		return ret;
 	}
 
 	/* get the id ctrl data used to fill in drive info below */
@@ -11468,12 +11481,13 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	const char *desc = "Send a vs-temperature-stats command.";
 	struct nvme_smart_log smart_log;
 	struct nvme_id_ctrl id_ctrl;
+	enum nvme_print_flags fmt;
 	struct nvme_dev *dev;
 	nvme_root_t r;
 	uint64_t capabilities = 0;
 	__u32 hctm_tmt;
 	int temperature, temp_tmt1, temp_tmt2;
-	int ret, fmt = -1;
+	int ret;
 
 	struct config {
 		char *output_format;
@@ -11493,10 +11507,9 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 		return ret;
 
 	r = nvme_scan(NULL);
-	fmt = validate_output_format(cfg.output_format);
-	if (fmt < 0) {
+	ret = validate_output_format(cfg.output_format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
-		ret = fmt;
 		goto out;
 	}
 

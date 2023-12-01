@@ -108,7 +108,7 @@ static inline DEFINE_CLEANUP_FUNC(
 
 extern const char *output_format;
 
-enum nvme_print_flags validate_output_format(const char *format);
+int validate_output_format(const char *format, enum nvme_print_flags *flags);
 bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));

@@ -252,15 +252,15 @@ static void ocp_print_C0_log_json(void *data)
 
 static int get_c0_log_page(int fd, char *format)
 {
+	enum nvme_print_flags fmt;
 	__u8 *data;
 	int i;
-	int ret = 0;
-	int fmt = -1;
+	int ret;
 
-	fmt = validate_output_format(format);
-	if (fmt < 0) {
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
 		fprintf(stderr, "ERROR : OCP : invalid output format\n");
-		return fmt;
+		return ret;
 	}
 
 	data = malloc(sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
@@ -306,6 +306,8 @@ static int get_c0_log_page(int fd, char *format)
 			break;
 		case JSON:
 			ocp_print_C0_log_json(data);
+			break;
+		default:
 			break;
 		}
 	} else {

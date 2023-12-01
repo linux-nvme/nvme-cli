@@ -207,16 +207,18 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 	}
 
 	if (!err) {
-		const enum nvme_print_flags print_flag = validate_output_format(format);
+		enum nvme_print_flags print_flag;
+
+		err = validate_output_format(format, &print_flag);
+		if (err < 0) {
+			fprintf(stderr, "Error: Invalid output format.\n");
+			return err;
+		}
 
 		if (print_flag == JSON)
 			ocp_fw_activation_history_json(&fw_history);
 		else if (print_flag == NORMAL)
 			ocp_fw_activation_history_normal(&fw_history);
-		else {
-			fprintf(stderr, "Error: Invalid output format.\n");
-			err = -EINVAL;
-		}
 	}
 
 	return err;
