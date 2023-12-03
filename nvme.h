@@ -30,7 +30,6 @@
 #include "util/json.h"
 #include "util/mem.h"
 #include "util/argconfig.h"
-#include "util/cleanup.h"
 
 enum nvme_print_flags {
 	NORMAL	= 0,
@@ -101,10 +100,6 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *des
 	struct argconfig_commandline_options *clo);
 
 void dev_close(struct nvme_dev *dev);
-
-static inline DEFINE_CLEANUP_FUNC(
-	cleanup_nvme_dev, struct nvme_dev *, dev_close)
-#define _cleanup_nvme_dev_ __cleanup__(cleanup_nvme_dev)
 
 extern const char *output_format;
 

@@ -6,6 +6,7 @@
  */
 
 #include <errno.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "nvme-print.h"
