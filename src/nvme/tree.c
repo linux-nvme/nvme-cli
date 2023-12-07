@@ -2501,7 +2501,6 @@ static void nvme_ns_set_generic_name(struct nvme_ns *n, const char *name)
 static nvme_ns_t nvme_ns_open(const char *sys_path, const char *name)
 {
 	struct nvme_ns *n;
-	int fd;
 
 	n = calloc(1, sizeof(*n));
 	if (!n) {
@@ -2511,10 +2510,6 @@ static nvme_ns_t nvme_ns_open(const char *sys_path, const char *name)
 
 	n->fd = -1;
 	n->name = strdup(name);
-
-	fd = nvme_ns_get_fd(n);
-	if (fd < 0)
-		goto free_ns;
 
 	nvme_ns_set_generic_name(n, name);
 
@@ -2528,7 +2523,6 @@ static nvme_ns_t nvme_ns_open(const char *sys_path, const char *name)
 	return n;
 
 free_ns:
-	nvme_ns_release_fd(n);
 	free(n->generic_name);
 	free(n->name);
 	free(n);
