@@ -1568,6 +1568,7 @@ int nvme_get_lba_status(struct nvme_get_lba_status_args *args)
 		.opcode =  nvme_admin_get_lba_status,
 		.nsid = args->nsid,
 		.addr = (__u64)(uintptr_t)args->lbas,
+		.data_len = (args->mndw + 1) << 2,
 		.cdw10 = cdw10,
 		.cdw11 = cdw11,
 		.cdw12 = cdw12,
