@@ -4859,17 +4859,17 @@ static void stdout_detailed_list(nvme_root_t r)
 	strset_iterate(&res.subsystems, stdout_detailed_subsys, &res);
 	printf("\n");
 
-	printf("%-8s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n", "Device",
+	printf("%-16s %-5s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n", "Device",
 		"Cntlid", "SN", "MN", "FR", "TxPort", "Address", "Slot", "Subsystem",
 		"Namespaces");
-	printf("%-.8s %-.6s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n",
+	printf("%-.16s %-.6s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n",
 			dash, dash, dash, dash, dash, dash, dash, dash, dash, dash);
 	strset_iterate(&res.ctrls, stdout_detailed_ctrl, &res);
 	printf("\n");
 
-	printf("%-12s %-12s %-10s %-26s %-16s %-16s\n", "Device", "Generic",
+	printf("%-17s %-17s %-10s %-26s %-16s %-16s\n", "Device", "Generic",
 		"NSID", "Usage", "Format", "Controllers");
-	printf("%-.12s %-.12s %-.10s %-.26s %-.16s %-.16s\n", dash, dash, dash,
+	printf("%-.17s %-.17s %-.10s %-.26s %-.16s %-.16s\n", dash, dash, dash,
 		dash, dash, dash);
 	strset_iterate(&res.namespaces, stdout_detailed_ns, &res);
 
