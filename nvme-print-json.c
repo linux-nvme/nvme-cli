@@ -36,6 +36,27 @@ static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
 static struct json_object *json_r = NULL;
 
+static void d_json(unsigned char *buf, int len, int width, int group, struct json_object *array)
+{
+	int i;
+	char ascii[32 + 1] = { 0 };
+
+	assert(width < sizeof(ascii));
+
+	for (i = 0; i < len; i++) {
+		ascii[i % width] = (buf[i] >= '!' && buf[i] <= '~') ? buf[i] : '.';
+		if (!((i + 1) % width)) {
+			array_add_str(array, ascii);
+			memset(ascii, 0, sizeof(ascii));
+		}
+	}
+
+	if (strlen(ascii)) {
+		ascii[i % width + 1] = '\0';
+		array_add_str(array, ascii);
+	}
+}
+
 static void obj_add_uint_x(struct json_object *o, const char *k, __u32 v)
 {
 	char str[STR_LEN];
@@ -187,6 +208,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	char *nguid = nguid_buf, *eui64 = eui64_buf;
 	struct json_object *r = json_create_object();
 	struct json_object *lbafs = json_create_array();
+	struct json_object *vs = json_create_array();
 	int i;
 	nvme_uint128_t nvmcap = le128_to_cpu(ns->nvmcap);
 
@@ -266,6 +288,9 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 		array_add_obj(lbafs, lbaf);
 	}
+
+	d_json(ns->vs, strnlen((const char *)ns->vs, sizeof(ns->vs)), 16, 1, vs);
+	obj_add_array(r, "vs", vs);
 
 	json_print(r);
 }
@@ -2662,27 +2687,6 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_ctrl_registers_pmrmscu(bar, r);
 
 	json_print(r);
-}
-
-static void d_json(unsigned char *buf, int len, int width, int group, struct json_object *array)
-{
-	int i;
-	char ascii[32 + 1] = { 0 };
-
-	assert(width < sizeof(ascii));
-
-	for (i = 0; i < len; i++) {
-		ascii[i % width] = (buf[i] >= '!' && buf[i] <= '~') ? buf[i] : '.';
-		if (!((i + 1) % width)) {
-			array_add_str(array, ascii);
-			memset(ascii, 0, sizeof(ascii));
-		}
-	}
-
-	if (strlen(ascii)) {
-		ascii[i % width + 1] = '\0';
-		array_add_str(array, ascii);
-	}
 }
 
 static void json_nvme_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *ns,
