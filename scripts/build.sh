@@ -169,6 +169,7 @@ tools_build_muon() {
         -Dprefix="${TOOLDIR}"                           \
         -Ddocs=disabled                                 \
         -Dsamurai=disabled                              \
+        -Dbestline=disabled                             \
         "${TOOLDIR}/build-muon"
     "${SAMU}" -C "${TOOLDIR}/build-muon"
     MUON="${BUILDDIR}/build-tools/.build-muon/muon"
