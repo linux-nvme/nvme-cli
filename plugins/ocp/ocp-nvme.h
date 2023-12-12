@@ -29,6 +29,7 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", NVME_VERSION),
 		ENTRY("set-dssd-power-state-feature", "Get Device capabilities Requirements Log Page", set_dssd_power_state_feature)
 		ENTRY("set-plp-health-check-interval", "Set PLP Health Check Interval", set_plp_health_check_interval)
 		ENTRY("get-plp-health-check-interval", "Get PLP Health Check Interval", get_plp_health_check_interval)
+		ENTRY("telemetry-string-log", "Retrieve Telemetry string Log Page", ocp_telemetry_str_log_format)
 	)
 );
 
