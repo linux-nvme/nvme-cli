@@ -1358,6 +1358,9 @@ plugin_ocp_opts () {
 		"set-dssd-power-state-feature")
 		opts+=" --power-state= -p --no-uuid -n --save -s"
 			;;
+		"telemetry-string-log")
+		opts+=" --output-file= -o"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1427,7 +1430,7 @@ _nvme_subcmds () {
 			clear-fw-activate-history eol-plp-failure-mode \
 			clear-pcie-correctable-error-counters \
 			vs-fw-activate-history device-capability-log \
-			set-dssd-power-state-feature"
+			set-dssd-power-state-feature telemetry-string-log"
 	)
 
 	# Associative array mapping plugins to corresponding option completions

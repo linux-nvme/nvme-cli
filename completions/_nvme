@@ -253,6 +253,16 @@ _nvme () {
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp set-dssd-power-state-feature options" _set_dssd_power_state_feature
 				;;
+			(telemetry-string-log)
+				local _telemetry_string_log
+				_telemetry_string_log=(
+				/dev/nvme':supply a device to use (required)'
+				--output-file=':Output file name with path'
+				-o':alias for --output-file'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp internal-log options" _internal_log
+				;;
 			(*)
 				_files
 				;;
@@ -2062,6 +2072,7 @@ _nvme () {
 			vs-fw-activate-history':Get firmware activation history log'
 			device-capability-log':Get Device capability log'
 			set-dssd-power-state-feature':Set DSSD Power State'
+			telemetry-string-log':Retrieve Telemetry string Log Page'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme ocp options" _ocp
