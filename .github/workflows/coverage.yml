@@ -18,5 +18,10 @@ jobs:
         run: |
           scripts/build.sh coverage
       - uses: codecov/codecov-action@v3
+        ignore:
+          - 'subprojects'
+          - 'ccan'
+          - 'test'
+          - 'examples'
         with:
           fail_ci_if_error: false
