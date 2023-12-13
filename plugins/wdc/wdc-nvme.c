@@ -2377,8 +2377,8 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 
 	if (!found) {
 		/* not found with uuid = 1 try with uuid = 0 */
-		fprintf(stderr, "Requesting Log page with uuid_index %d", uuid_index);
 		uuid_ix = 0;
+		fprintf(stderr, "Not found, requesting log page with uuid_index %d\n", uuid_index);
 
 		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
 	}
@@ -6941,6 +6941,8 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 	enum nvme_print_flags fmt;
 	int ret;
 	__u8 *data;
+	__u8 log_id;
+	__u32 length;
 
 	if (!wdc_check_device(r, dev))
 		return -1;
@@ -6967,6 +6969,16 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 		fallthrough;
 	case WDC_NVME_SN860_DEV_ID:
 		fallthrough;
+	case WDC_NVME_SN560_DEV_ID_1:
+		fallthrough;
+	case WDC_NVME_SN560_DEV_ID_2:
+		fallthrough;
+	case WDC_NVME_SN560_DEV_ID_3:
+		fallthrough;
+	case WDC_NVME_SN550_DEV_ID:
+		ret = wdc_get_c0_log_page_sn(r, dev, uuid_index, format, namespace_id, fmt);
+		break;
+
 	case WDC_NVME_SN650_DEV_ID:
 		fallthrough;
 	case WDC_NVME_SN650_DEV_ID_1:
@@ -6977,17 +6989,64 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 		fallthrough;
 	case WDC_NVME_SN650_DEV_ID_4:
 		fallthrough;
-	case WDC_NVME_SN560_DEV_ID_1:
-		fallthrough;
-	case WDC_NVME_SN560_DEV_ID_2:
-		fallthrough;
-	case WDC_NVME_SN560_DEV_ID_3:
-		fallthrough;
-	case WDC_NVME_SN550_DEV_ID:
-		ret = wdc_get_c0_log_page_sn(r, dev, uuid_index, format, namespace_id, fmt);
-		break;
 	case WDC_NVME_SN655_DEV_ID:
-		fallthrough;
+		if (uuid_index == 0) {
+			log_id = WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID;
+			length = WDC_NVME_SMART_CLOUD_ATTR_LEN;
+		} else {
+			log_id = WDC_NVME_GET_EOL_STATUS_LOG_OPCODE;
+			length = WDC_NVME_EOL_STATUS_LOG_LEN;
+		}
+
+		data = (__u8 *)malloc(sizeof(__u8) * length);
+		if (!data) {
+			fprintf(stderr, "ERROR: WDC: malloc: %s\n", strerror(errno));
+			return -1;
+		}
+
+		if (namespace_id == NVME_NSID_ALL) {
+			ret = nvme_get_nsid(dev_fd(dev), &namespace_id);
+			if (ret < 0)
+				namespace_id = NVME_NSID_ALL;
+		}
+
+		/* Get the 0xC0 log data */
+		struct nvme_get_log_args args = {
+			.args_size	= sizeof(args),
+			.fd			= dev_fd(dev),
+			.lid		= log_id,
+			.nsid		= namespace_id,
+			.lpo		= 0,
+			.lsp		= NVME_LOG_LSP_NONE,
+			.lsi		= 0,
+			.rae		= false,
+			.uuidx		= uuid_index,
+			.csi		= NVME_CSI_NVM,
+			.ot			= false,
+			.len		= length,
+			.log		= data,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
+		};
+		ret = nvme_get_log(&args);
+
+		if (strcmp(format, "json"))
+			nvme_show_status(ret);
+
+		if (!ret) {
+			/* parse the data */
+			if (uuid_index == 0)
+				wdc_print_c0_cloud_attr_log(data, fmt);
+			else
+				wdc_print_c0_eol_log(data, fmt);
+		} else {
+			fprintf(stderr, "ERROR: WDC: Unable to read C0 Log Page data ");
+			fprintf(stderr, "with uuid index %d\n", uuid_index);
+			ret = -1;
+		}
+		free(data);
+		break;
+
 	case WDC_NVME_ZN350_DEV_ID:
 		fallthrough;
 	case WDC_NVME_ZN350_DEV_ID_1:
