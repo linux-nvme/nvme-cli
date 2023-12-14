@@ -2143,7 +2143,7 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *c
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "power state"))
+	if (argconfig_parse_seen(opts, "power-state"))
 		err = set_dssd_power_state(dev, nsid, fid, cfg.power_state,
 					       cfg.save,
 					       !argconfig_parse_seen(opts, "no-uuid"));
