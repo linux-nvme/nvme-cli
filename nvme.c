@@ -8566,7 +8566,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
 		return err;
-	if (cfg.hmac < 1 || cfg.hmac > 3) {
+	if (cfg.hmac < 1 || cfg.hmac > 2) {
 		nvme_show_error("Invalid HMAC identifier %u", cfg.hmac);
 		return -EINVAL;
 	}
