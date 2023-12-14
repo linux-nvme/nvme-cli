@@ -1361,6 +1361,9 @@ plugin_ocp_opts () {
 		"telemetry-string-log")
 		opts+=" --output-file= -o"
 			;;
+		"set-telemetry-profile")
+		opts+=" --telemetry-profile-select= -t"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1430,7 +1433,8 @@ _nvme_subcmds () {
 			clear-fw-activate-history eol-plp-failure-mode \
 			clear-pcie-correctable-error-counters \
 			vs-fw-activate-history device-capability-log \
-			set-dssd-power-state-feature telemetry-string-log"
+			set-dssd-power-state-feature telemetry-string-log \
+			set-telemetry-profile"
 	)
 
 	# Associative array mapping plugins to corresponding option completions
