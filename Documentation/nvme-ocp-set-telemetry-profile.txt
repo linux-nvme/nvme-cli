@@ -1,0 +1,43 @@
+nvme-ocp-set-telemetry-profile(1)
+=================================
+
+NAME
+----
+nvme-ocp-set-telemetry-profile - Set Telemetry Profile
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp set-telemetry-profile' <device>
+			[--telemetry-profile-select=<tps> | -t <tps>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sets the OCP Set Telemetry Profile Feature
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-t <tps>::
+--tps=<tps>::
+	Telemetry Profile Select. The device shall collect debug data per the
+	specified profile number.
+
+EXAMPLES
+--------
+* Has the program issue a set-telemetry-profile command to use profile five.
++
+------------
+# nvme ocp set-telemetry-profile /dev/nvme0 -t 5
+------------
+
+NVME
+----
+Part of the nvme-user suite.

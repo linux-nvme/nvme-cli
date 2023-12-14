@@ -2060,6 +2060,90 @@ static int ocp_device_capabilities_log(int argc, char **argv, struct command *cm
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+/// Set Telemetry Profile (Feature Identifier C8h) Set Feature
+
+static int ocp_set_telemetry_profile(struct nvme_dev *dev, __u8 tps)
+{
+	__u32 result;
+	int err;
+	int uuid_index = 0;
+
+	/* OCP 2.0 requires UUID index support */
+	err = ocp_get_uuid_index(dev, &uuid_index);
+	if (err || !uuid_index) {
+		nvme_show_error("ERROR: No OCP UUID index found");
+		return err;
+	}
+
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = 0xC8,
+		.nsid = 0xFFFFFFFF,
+		.cdw11 = tps,
+		.cdw12 = 0,
+		.save = true,
+		.uuidx = uuid_index,
+		.cdw15 = 0,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = &result,
+	};
+
+	err = nvme_set_features(&args);
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set Telemetry Profile");
+		fprintf(stderr, "Command failed while parsing.\n");
+	} else {
+		printf("Successfully Set Telemetry Profile (feature: 0xC8) to below values\n");
+		printf("Telemetry Profile Select: 0x%x\n", tps);
+	}
+
+	return err;
+}
+
+static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct command *cmd,
+					     struct plugin *plugin)
+{
+	const char *desc = "Set Telemetry Profile (Feature Identifier C8h) Set Feature.";
+	const char *tps = "Telemetry Profile Select for device debug data collection";
+	struct nvme_dev *dev;
+	int err;
+
+	struct config {
+		__u8 tps;
+	};
+
+	struct config cfg = {
+		.tps = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("telemetry-profile-select", 't', &cfg.tps, tps),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "telemetry-profile-select"))
+		err = ocp_set_telemetry_profile(dev, cfg.tps);
+	else
+		nvme_show_error("Telemetry Profile Select is a required argument");
+
+	dev_close(dev);
+
+	return err;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// DSSD Power State (Feature Identifier C7h) Set Feature
 
 static int set_dssd_power_state(struct nvme_dev *dev, const __u32 nsid,
