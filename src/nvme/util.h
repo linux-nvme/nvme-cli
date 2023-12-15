@@ -667,6 +667,15 @@ int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN]);
 int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN]);
 
 /**
+ * nvme_uuid_find - Find UUID position on UUID list
+ * @uuid_list:	UUID list returned by identify UUID
+ * @uuid:	Binary encoded input UUID
+ *
+ * Return: The array position where given UUID is present, or -1 on failure with errno set.
+ */
+int nvme_uuid_find(struct nvme_id_uuid_list *uuid_list, const unsigned char uuid[NVME_UUID_LEN]);
+
+/**
  * nvme_ipaddrs_eq - Check if 2 IP addresses are equal.
  * @addr1: IP address (can be IPv4 or IPv6)
  * @addr2: IP address (can be IPv4 or IPv6)

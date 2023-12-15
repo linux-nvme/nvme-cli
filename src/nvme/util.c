@@ -951,6 +951,25 @@ int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
 	return 0;
 }
 
+int nvme_uuid_find(struct nvme_id_uuid_list *uuid_list, const unsigned char uuid[NVME_UUID_LEN])
+{
+	const unsigned char uuid_end[NVME_UUID_LEN] = {0};
+
+	if ((!uuid_list) || (!uuid)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	for (int i = 0; i < NVME_ID_UUID_LIST_MAX; i++) {
+		if (memcmp(uuid, &uuid_list->entry[i].uuid, NVME_UUID_LEN) == 0)
+			return i + 1;
+		if (memcmp(uuid_end, &uuid_list->entry[i].uuid, NVME_UUID_LEN) == 0)
+			break;
+	}
+	errno = ENOENT;
+	return -1;
+}
+
 #ifdef HAVE_NETDB
 static bool _nvme_ipaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
 {
