@@ -887,7 +887,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	int ret;
 	enum nvme_print_flags flags;
 	struct nvme_fabrics_config cfg = { 0 };
-	char *format = "";
+	char *format = "normal";
 
 
 	NVMF_ARGS(opts, cfg,
