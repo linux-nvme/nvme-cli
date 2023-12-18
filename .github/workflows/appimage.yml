@@ -24,7 +24,7 @@ jobs:
        uses: AppImageCrafters/build-appimage@v1.3
        with:
          recipe: .github/AppImageBuilder.yml
-     - uses: actions/upload-artifact@v3
+     - uses: actions/upload-artifact@v4
        name: upload artifacts to github
        with:
          name: AppImage
