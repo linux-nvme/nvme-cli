@@ -245,20 +245,20 @@ nvme_list_opts () {
 		"admin-passthru")
 		opts+=" --opcode= -O --flags= -f --prefil= -p --rsvd= -R \
 			--namespace-id= -n --data-len= -l --metadata-len= -m \
-			--timeout= -t --cdw2= -2 --cdw3= -3 --cdw10= -4 \
+			--timeout= -T --cdw2= -2 --cdw3= -3 --cdw10= -4 \
 			--cdw11= -5 --cdw12= -6 --cdw13= -7 --cdw14= -8 \
 			--cdw15= -9 --input-file= -i --raw-binary -b \
 			--show-command -s --dry-run -d --read -r --write -w \
-			--latency -T"
+			--latency -t"
 			;;
 		"io-passthru")
 		opts+=" --opcode= -O --flags= -f --prefill= -p --rsvd= -R \
 			--namespace-id= -n --data-len= -l --metadata-len= -m \
-			--timeout= -t --cdw2= -2 --cdw3= -3 --cdw10= -4 \
+			--timeout= -T --cdw2= -2 --cdw3= -3 --cdw10= -4 \
 			--cdw11= -5 --cdw12= -6 --cdw13= -7 --cdw14= -8 \
 			--cdw15= -9 --input-file= -i --raw-binary -b \
 			--show-command -s --dry-run -d --read -r --write -w \
-			--latency -T"
+			--latency -t"
 			;;
 		"security-send")
 		opts+=" --namespace-id= -n --file= -f --nssf= -N --secp= -p \

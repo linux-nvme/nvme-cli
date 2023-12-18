@@ -19,12 +19,12 @@ SYNOPSIS
 			[--metadata-len=<len> | -m <len>]
 			[--input-file=<file> | -i <file>]
 			[--read | -r] [--write | -w]
-			[--timeout=<to> | -t <to>]
+			[--timeout=<to> | -T <to>]
 			[--show-command | -s]
 			[--dry-run | -d]
 			[--raw-binary | -b]
 			[--prefill=<prefill> | -p <prefill>]
-			[--latency | -T]
+			[--latency | -t]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION

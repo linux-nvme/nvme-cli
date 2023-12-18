@@ -103,13 +103,13 @@ struct passthru_config {
 	bool	read;
 	bool	write;
 	__u8	prefill;
-	bool	latency;
 };
 
 #define NVME_ARGS(n, c, ...)                                                      \
 	struct argconfig_commandline_options n[] = {                              \
 		OPT_FLAG("verbose",      'v', NULL,               verbose),       \
 		OPT_FMT("output-format", 'o', &output_format_val, output_format), \
+		OPT_FLAG("latency",      't', NULL,               latency),       \
 		##__VA_ARGS__,                                                    \
 		OPT_END()                                                         \
 	}
@@ -6378,7 +6378,6 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		bool	idw;
 		bool	idr;
 		__u32	cdw11;
-		bool	latency;
 	};
 
 	struct config cfg = {
@@ -6390,7 +6389,6 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		.idw		= false,
 		.idr		= false,
 		.cdw11		= 0,
-		.latency		= false,
 	};
 
 	NVME_ARGS(opts, cfg,
@@ -6401,8 +6399,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		  OPT_FLAG("ad",           'd', &cfg.ad,           ad),
 		  OPT_FLAG("idw",          'w', &cfg.idw,          idw),
 		  OPT_FLAG("idr",          'r', &cfg.idr,          idr),
-		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11),
-		  OPT_FLAG("latency",      't', &cfg.latency,      latency));
+		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6453,7 +6450,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		nvme_show_status(err);
 	} else {
 		printf("NVMe DSM: success\n");
-		if (cfg.latency)
+		if (argconfig_parse_seen(opts, "latency"))
 			printf(" latency: %llu us\n", elapsed_utime(start_time, end_time));
 	}
 
@@ -7093,7 +7090,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		__u8	dsmgmt;
 		bool	show;
 		bool	dry_run;
-		bool	latency;
 		bool	force;
 	};
 
@@ -7118,7 +7114,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.dsmgmt			= 0,
 		.show			= false,
 		.dry_run		= false,
-		.latency		= false,
 		.force			= false,
 	};
 
@@ -7143,7 +7138,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
 		  OPT_FLAG("show-command",      'V', &cfg.show,              show),
 		  OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
-		  OPT_FLAG("latency",           't', &cfg.latency,           latency),
 		  OPT_FLAG("force",               0, &cfg.force,             force));
 
 	if (opcode != nvme_cmd_write) {
@@ -7364,7 +7358,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	gettimeofday(&start_time, NULL);
 	err = nvme_io(&args, opcode);
 	gettimeofday(&end_time, NULL);
-	if (cfg.latency)
+	if (argconfig_parse_seen(opts, "latency"))
 		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
 	if (err < 0) {
 		nvme_show_error("submit-io: %s", nvme_strerror(errno));
@@ -8093,7 +8087,6 @@ static int passthru(int argc, char **argv, bool admin,
 		.dry_run	= false,
 		.read		= false,
 		.write		= false,
-		.latency	= false,
 	};
 
 	NVME_ARGS(opts, cfg,
@@ -8104,7 +8097,7 @@ static int passthru(int argc, char **argv, bool admin,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
 		  OPT_UINT("metadata-len", 'm', &cfg.metadata_len, metadata_len),
-		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
+		  OPT_UINT("timeout",      'T', &cfg.timeout,      timeout),
 		  OPT_UINT("cdw2",         '2', &cfg.cdw2,         cdw2),
 		  OPT_UINT("cdw3",         '3', &cfg.cdw3,         cdw3),
 		  OPT_UINT("cdw10",        '4', &cfg.cdw10,        cdw10),
@@ -8119,8 +8112,7 @@ static int passthru(int argc, char **argv, bool admin,
 		  OPT_FLAG("show-command", 's', &cfg.show_command, show),
 		  OPT_FLAG("dry-run",      'd', &cfg.dry_run,      dry),
 		  OPT_FLAG("read",         'r', &cfg.read,         re),
-		  OPT_FLAG("write",        'w', &cfg.write,        wr),
-		  OPT_FLAG("latency",      'T', &cfg.latency,      latency));
+		  OPT_FLAG("write",        'w', &cfg.write,        wr));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -8235,7 +8227,7 @@ static int passthru(int argc, char **argv, bool admin,
 
 	gettimeofday(&end_time, NULL);
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
-	if (cfg.latency)
+	if (argconfig_parse_seen(opts, "latency"))
 		printf("%s Command %s latency: %llu us\n", admin ? "Admin" : "IO",
 		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
 		       elapsed_utime(start_time, end_time));

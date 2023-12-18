@@ -1241,7 +1241,7 @@ _nvme () {
 			--metadata-len=':length for metadata buffer'
 			-m':alias of --metadata-len'
 			--timeout=':value for timeout'
-			-t':alias of --timeout'
+			-T':alias of --timeout'
 			--cdw2=':value for command dword 2'
 			-2':alias for --cdw2'
 			--cdw3=':value for command dword 3'
@@ -1270,6 +1270,8 @@ _nvme () {
 			-r':alias for --read'
 			--write':set dataflow direction to send'
 			-w':alias for --write'
+			--latency':latency statistics will be output following admin-passthru'
+			-t':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme admin-passthru options" _admin
@@ -1291,7 +1293,7 @@ _nvme () {
 			--metadata-len=':length for metadata buffer'
 			-m':alias of --metadata-len'
 			--timeout=':value for timeout'
-			-t':alias of --timeout'
+			-T':alias of --timeout'
 			--cdw2=':value for command dword 2'
 			-2':alias for --cdw2'
 			--cdw3=':value for command dword 3'
@@ -1320,6 +1322,8 @@ _nvme () {
 			-r':alias for --read'
 			--write':set dataflow direction to send'
 			-w':alias for --write'
+			--latency':latency statistics will be output following io-passthru'
+			-t':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme io-passthru options" _io
