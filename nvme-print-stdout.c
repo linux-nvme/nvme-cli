@@ -5082,7 +5082,7 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 
 static void stdout_connect_msg(nvme_ctrl_t c)
 {
-	printf("device: %s\n", nvme_ctrl_get_name(c));
+	printf("connecting to device: %s\n", nvme_ctrl_get_name(c));
 }
 
 static struct print_ops stdout_print_ops = {
