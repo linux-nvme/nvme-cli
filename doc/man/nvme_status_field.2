@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_status_field" "September 2023" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_status_field" "December 2023" "API Manual" LINUX
 .SH NAME
 enum nvme_status_field \- Defines all parts of the nvme status field: status code, status code type, and additional flags.
 .SH SYNOPSIS
@@ -429,6 +429,22 @@ enum nvme_status_field {
 .br
 .br
 .BI "    NVME_SC_CMD_SIZE_LIMIT_EXCEEDED"
+, 
+.br
+.br
+.BI "    NVME_SC_INCOMPATIBLE_NS"
+, 
+.br
+.br
+.BI "    NVME_SC_FAST_COPY_NOT_POSSIBLE"
+, 
+.br
+.br
+.BI "    NVME_SC_OVERLAPPING_IO_RANGE"
+, 
+.br
+.br
+.BI "    NVME_SC_INSUFFICIENT_RESOURCES"
 , 
 .br
 .br
@@ -1027,6 +1043,25 @@ Invalid Protection Information
 Attempted Write to Read Only Range
 .IP "NVME_SC_CMD_SIZE_LIMIT_EXCEEDED" 12
 Command Size Limit Exceeded
+.IP "NVME_SC_INCOMPATIBLE_NS" 12
+Incompatible Namespace or Format: At
+least one source namespace and the
+destination namespace have incompatible
+formats.
+.IP "NVME_SC_FAST_COPY_NOT_POSSIBLE" 12
+Fast Copy Not Possible: The Fast Copy
+Only (FCO) bit was set to ‘1’ in a Source
+Range entry and the controller was not
+able to use fast copy operations to copy
+the specified data.
+.IP "NVME_SC_OVERLAPPING_IO_RANGE" 12
+Overlapping I/O Range: A source logical
+block range overlaps the destination
+logical block range.
+.IP "NVME_SC_INSUFFICIENT_RESOURCES" 12
+Insufficient Resources: A resource
+shortage prevented the controller from
+performing the requested copy.
 .IP "NVME_SC_CONNECT_FORMAT" 12
 Incompatible Format: The NVM subsystem
 does not support the record format

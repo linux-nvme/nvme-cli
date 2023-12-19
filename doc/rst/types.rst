@@ -1618,6 +1618,18 @@ power scale value
   If set, then the controller supports
   the copy command.
 
+``NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY``
+  If set, then the write portion of a
+  Copy command is performed as a single
+  write command to which the same
+  atomicity requirements that apply to
+  a write command apply.
+
+``NVME_CTRL_ONCS_ALL_FAST_COPY``
+  If set, then all copy operations for
+  the Copy command are fast copy
+  operations.
+
 
 
 
@@ -1892,8 +1904,7 @@ power scale value
     __u8 nguid[16];
     __u8 eui64[8];
     struct nvme_lbaf        lbaf[64];
-    __le64 lbstm;
-    __u8 vs[3704];
+    __u8 vs[3712];
   };
 
 **Members**
@@ -2075,9 +2086,6 @@ power scale value
 
 ``lbaf``
   LBA Format, see :c:type:`struct nvme_lbaf <nvme_lbaf>`.
-
-``lbstm``
-  Logical Block Storage Tag Mask for end-to-end protection
 
 ``vs``
   Vendor Specific
@@ -7461,7 +7469,11 @@ bytes, in size. This log captures the controller’s internal state.
 
   struct nvme_feat_host_behavior {
     __u8 acre;
-    __u8 rsvd1[511];
+    __u8 etdas;
+    __u8 lbafee;
+    __u8 rsvd3;
+    __u16 cdfe;
+    __u8 rsvd6[506];
   };
 
 **Members**
@@ -7469,7 +7481,19 @@ bytes, in size. This log captures the controller’s internal state.
 ``acre``
   Advanced Command Retry Enable
 
-``rsvd1``
+``etdas``
+  Extended Telemetry Data Area 4 Supported
+
+``lbafee``
+  LBA Format Extension Enable
+
+``rsvd3``
+  Reserved
+
+``cdfe``
+  Copy Descriptor Formats Enable
+
+``rsvd6``
   Reserved
 
 
@@ -7593,6 +7617,130 @@ bytes, in size. This log captures the controller’s internal state.
   Number of Logical Blocks
 
 ``rsvd18``
+  Reserved
+
+``elbt``
+  Expected Initial Logical Block Reference Tag /
+  Expected Logical Block Storage Tag
+
+``elbat``
+  Expected Logical Block Application Tag
+
+``elbatm``
+  Expected Logical Block Application Tag Mask
+
+
+
+
+
+.. c:enum:: nvme_copy_range_sopt
+
+   NVMe Copy Range Source Options
+
+**Constants**
+
+``NVME_COPY_SOPT_FCO``
+  NVMe Copy Source Option Fast Copy Only
+
+
+
+
+.. c:struct:: nvme_copy_range_f2
+
+   Copy - Source Range Entries Descriptor Format 2h
+
+**Definition**
+
+::
+
+  struct nvme_copy_range_f2 {
+    __le32 snsid;
+    __u8 rsvd4[4];
+    __le64 slba;
+    __le16 nlb;
+    __u8 rsvd18[4];
+    __le16 sopt;
+    __le32 eilbrt;
+    __le16 elbat;
+    __le16 elbatm;
+  };
+
+**Members**
+
+``snsid``
+  Source Namespace Identifier
+
+``rsvd4``
+  Reserved
+
+``slba``
+  Starting LBA
+
+``nlb``
+  Number of Logical Blocks
+
+``rsvd18``
+  Reserved
+
+``sopt``
+  Source Options
+
+``eilbrt``
+  Expected Initial Logical Block Reference Tag /
+  Expected Logical Block Storage Tag
+
+``elbat``
+  Expected Logical Block Application Tag
+
+``elbatm``
+  Expected Logical Block Application Tag Mask
+
+
+
+
+
+.. c:struct:: nvme_copy_range_f3
+
+   Copy - Source Range Entries Descriptor Format 3h
+
+**Definition**
+
+::
+
+  struct nvme_copy_range_f3 {
+    __le32 snsid;
+    __u8 rsvd4[4];
+    __le64 slba;
+    __le16 nlb;
+    __u8 rsvd18[4];
+    __le16 sopt;
+    __u8 rsvd24[2];
+    __u8 elbt[10];
+    __le16 elbat;
+    __le16 elbatm;
+  };
+
+**Members**
+
+``snsid``
+  Source Namespace Identifier
+
+``rsvd4``
+  Reserved
+
+``slba``
+  Starting LBA
+
+``nlb``
+  Number of Logical Blocks
+
+``rsvd18``
+  Reserved
+
+``sopt``
+  Source Options
+
+``rsvd24``
   Reserved
 
 ``elbt``
@@ -10161,6 +10309,29 @@ entries are of a variable lengths (TEL), TEL is always a multiple of
 
 ``NVME_SC_CMD_SIZE_LIMIT_EXCEEDED``
   Command Size Limit Exceeded
+
+``NVME_SC_INCOMPATIBLE_NS``
+  Incompatible Namespace or Format: At
+  least one source namespace and the
+  destination namespace have incompatible
+  formats.
+
+``NVME_SC_FAST_COPY_NOT_POSSIBLE``
+  Fast Copy Not Possible: The Fast Copy
+  Only (FCO) bit was set to ‘1’ in a Source
+  Range entry and the controller was not
+  able to use fast copy operations to copy
+  the specified data.
+
+``NVME_SC_OVERLAPPING_IO_RANGE``
+  Overlapping I/O Range: A source logical
+  block range overlaps the destination
+  logical block range.
+
+``NVME_SC_INSUFFICIENT_RESOURCES``
+  Insufficient Resources: A resource
+  shortage prevented the controller from
+  performing the requested copy.
 
 ``NVME_SC_CONNECT_FORMAT``
   Incompatible Format: The NVM subsystem

@@ -233,6 +233,74 @@ otherwise.
   Number of descriptors to construct
 
 
+.. c:function:: void nvme_init_copy_range_f2 (struct nvme_copy_range_f2 *copy, __u32 *snsids, __u16 *nlbs, __u64 *slbas, __u16 *sopts, __u32 *eilbrts, __u32 *elbatms, __u32 *elbats, __u16 nr)
+
+   Constructs a copy range f2 structure
+
+**Parameters**
+
+``struct nvme_copy_range_f2 *copy``
+  Copy range array
+
+``__u32 *snsids``
+  Source namespace identifier
+
+``__u16 *nlbs``
+  Number of logical blocks
+
+``__u64 *slbas``
+  Starting LBA
+
+``__u16 *sopts``
+  Source options
+
+``__u32 *eilbrts``
+  Expected initial logical block reference tag
+
+``__u32 *elbatms``
+  Expected logical block application tag mask
+
+``__u32 *elbats``
+  Expected logical block application tag
+
+``__u16 nr``
+  Number of descriptors to construct
+
+
+.. c:function:: void nvme_init_copy_range_f3 (struct nvme_copy_range_f3 *copy, __u32 *snsids, __u16 *nlbs, __u64 *slbas, __u16 *sopts, __u64 *eilbrts, __u32 *elbatms, __u32 *elbats, __u16 nr)
+
+   Constructs a copy range f3 structure
+
+**Parameters**
+
+``struct nvme_copy_range_f3 *copy``
+  Copy range array
+
+``__u32 *snsids``
+  Source namespace identifier
+
+``__u16 *nlbs``
+  Number of logical blocks
+
+``__u64 *slbas``
+  Starting LBA
+
+``__u16 *sopts``
+  Source options
+
+``__u64 *eilbrts``
+  Expected initial logical block reference tag
+
+``__u32 *elbatms``
+  Expected logical block application tag mask
+
+``__u32 *elbats``
+  Expected logical block application tag
+
+``__u16 nr``
+  Number of descriptors to construct
+
+
 .. c:function:: int nvme_get_feature_length (int fid, __u32 cdw11, __u32 *len)
 
    Retreive the command payload length for a specific feature identifier

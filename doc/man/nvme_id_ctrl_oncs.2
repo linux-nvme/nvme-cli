@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_oncs" "September 2023" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_oncs" "December 2023" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_oncs \- This field indicates the optional NVM commands and features supported by the controller.
 .SH SYNOPSIS
@@ -37,6 +37,14 @@ enum nvme_id_ctrl_oncs {
 .br
 .br
 .BI "    NVME_CTRL_ONCS_COPY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_ALL_FAST_COPY"
 
 };
 .SH Constants
@@ -70,3 +78,13 @@ the Verify command.
 .IP "NVME_CTRL_ONCS_COPY" 12
 If set, then the controller supports
 the copy command.
+.IP "NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY" 12
+If set, then the write portion of a
+Copy command is performed as a single
+write command to which the same
+atomicity requirements that apply to
+a write command apply.
+.IP "NVME_CTRL_ONCS_ALL_FAST_COPY" 12
+If set, then all copy operations for
+the Copy command are fast copy
+operations.

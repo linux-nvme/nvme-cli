@@ -501,3 +501,80 @@ The key serial number if the key could be inserted into
 the keyring or 0 with errno otherwise.
 
 
+.. c:function:: long nvme_insert_tls_key_versioned (const char *keyring, const char *key_type, const char *hostnqn, const char *subsysnqn, int version, int hmac, unsigned char *configured_key, int key_len)
+
+   Derive and insert TLS key
+
+**Parameters**
+
+``const char *keyring``
+  Keyring to use
+
+``const char *key_type``
+  Type of the resulting key
+
+``const char *hostnqn``
+  Host NVMe Qualified Name
+
+``const char *subsysnqn``
+  Subsystem NVMe Qualified Name
+
+``int version``
+  Key version to use
+
+``int hmac``
+  HMAC algorithm
+
+``unsigned char *configured_key``
+  Configured key data to derive the key from
+
+``int key_len``
+  Length of **configured_key**
+
+**Description**
+
+Derives a 'retained' TLS key as specified in NVMe TCP 1.0a (if
+**version** s set to '0') or NVMe TP8028 (if **version** is set to '1) and
+stores it as type **key_type** in the keyring specified by **keyring**.
+
+**Return**
+
+The key serial number if the key could be inserted into
+the keyring or 0 with errno otherwise.
+
+
+.. c:function:: char * nvme_generate_tls_key_identity (const char *hostnqn, const char *subsysnqn, int version, int hmac, unsigned char *configured_key, int key_len)
+
+   Generate the TLS key identity
+
+**Parameters**
+
+``const char *hostnqn``
+  Host NVMe Qualified Name
+
+``const char *subsysnqn``
+  Subsystem NVMe Qualified Name
+
+``int version``
+  Key version to use
+
+``int hmac``
+  HMAC algorithm
+
+``unsigned char *configured_key``
+  Configured key data to derive the key from
+
+``int key_len``
+  Length of **configured_key**
+
+**Description**
+
+Derives a 'retained' TLS key as specified in NVMe TCP and
+generate the corresponding TLs identity.
+
+**Return**
+
+The string containing the TLS identity. It is the responsibility
+of the caller to free the returned string.
+
+

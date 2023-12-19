@@ -1,0 +1,52 @@
+.TH "libnvme" 9 "struct nvme_copy_range_f3" "December 2023" "API Manual" LINUX
+.SH NAME
+struct nvme_copy_range_f3 \- Copy - Source Range Entries Descriptor Format 3h
+.SH SYNOPSIS
+struct nvme_copy_range_f3 {
+.br
+.BI "    __le32 snsid;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    __le64 slba;"
+.br
+.BI "    __le16 nlb;"
+.br
+.BI "    __u8 rsvd18[4];"
+.br
+.BI "    __le16 sopt;"
+.br
+.BI "    __u8 rsvd24[2];"
+.br
+.BI "    __u8 elbt[10];"
+.br
+.BI "    __le16 elbat;"
+.br
+.BI "    __le16 elbatm;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "snsid" 12
+Source Namespace Identifier
+.IP "rsvd4" 12
+Reserved
+.IP "slba" 12
+Starting LBA
+.IP "nlb" 12
+Number of Logical Blocks
+.IP "rsvd18" 12
+Reserved
+.IP "sopt" 12
+Source Options
+.IP "rsvd24" 12
+Reserved
+.IP "elbt" 12
+Expected Initial Logical Block Reference Tag /
+Expected Logical Block Storage Tag
+.IP "elbat" 12
+Expected Logical Block Application Tag
+.IP "elbatm" 12
+Expected Logical Block Application Tag Mask

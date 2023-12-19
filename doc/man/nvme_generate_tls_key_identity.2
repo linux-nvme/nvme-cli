@@ -1,0 +1,30 @@
+.TH "nvme_generate_tls_key_identity" 9 "nvme_generate_tls_key_identity" "December 2023" "libnvme API manual" LINUX
+.SH NAME
+nvme_generate_tls_key_identity \- Generate the TLS key identity
+.SH SYNOPSIS
+.B "char *" nvme_generate_tls_key_identity
+.BI "(const char *hostnqn "  ","
+.BI "const char *subsysnqn "  ","
+.BI "int version "  ","
+.BI "int hmac "  ","
+.BI "unsigned char *configured_key "  ","
+.BI "int key_len "  ");"
+.SH ARGUMENTS
+.IP "hostnqn" 12
+Host NVMe Qualified Name
+.IP "subsysnqn" 12
+Subsystem NVMe Qualified Name
+.IP "version" 12
+Key version to use
+.IP "hmac" 12
+HMAC algorithm
+.IP "configured_key" 12
+Configured key data to derive the key from
+.IP "key_len" 12
+Length of \fIconfigured_key\fP
+.SH "DESCRIPTION"
+Derives a 'retained' TLS key as specified in NVMe TCP and
+generate the corresponding TLs identity.
+.SH "RETURN"
+The string containing the TLS identity. It is the responsibility
+of the caller to free the returned string.

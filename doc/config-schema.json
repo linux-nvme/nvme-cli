@@ -156,14 +156,6 @@
 		    "type": "boolean",
 		    "default": false
 		},
-		"keyring": {
-		    "description": "Keyring for TLS key lookup",
-		    "type": "integer"
-		},
-		"tls_key": {
-		    "description": "TLS key for the connection",
-		    "type": "integer"
-		},
 		"tls": {
 		    "description": "Enable TLS encryption",
 		    "type": "boolean",
