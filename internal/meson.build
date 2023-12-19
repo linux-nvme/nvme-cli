@@ -20,9 +20,11 @@ config_dep = declare_dependency(
   include_directories : internal_incdir,
   sources: config_h)
 
+config_h_path = meson.current_build_dir() / 'config.h'
+
 add_project_arguments(
     [
-        '-include', '@0@'.format(config_h),
+        '-include', config_h_path,
     ],
     language : 'c',
 )
