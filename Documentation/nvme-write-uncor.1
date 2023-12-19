@@ -2,12 +2,12 @@
 .\"     Title: nvme-uncor
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-UNCOR" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-UNCOR" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,23 +37,24 @@ nvme-write-uncor \- Send an NVMe write uncorrectable command, return results
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-dir\-type=<dtype> | \-T <dtype>]
                         [\-\-dir\-spec=<dspec> | \-S <dspec>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
 The Write Uncorrectable command is used to invalidate a range of logical blocks\&.
 .SH "OPTIONS"
 .PP
-\-\-start\-block=<slba>, \-s <slba>
+\-s <slba>, \-\-start\-block=<slba>
 .RS 4
 Start block\&.
 .RE
 .PP
-\-\-block\-count=<nlb>, \-c
+\-c, \-\-block\-count=<nlb>
 .RS 4
 Number of logical blocks to write uncorrectable\&.
 .RE
 .PP
-\-\-namespace\-id=<nsid>, \-n <nsid>
+\-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
 Namespace ID use in the command\&.
 .RE
@@ -66,6 +67,20 @@ Directive type
 \-S <dspec>, \-\-dir\-spec=<dspec>
 .RS 4
 Directive specific
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

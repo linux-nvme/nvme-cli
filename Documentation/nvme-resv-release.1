@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-release
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-RELEASE" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-RELEASE" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,10 +33,10 @@ nvme-resv-release \- Release an nvme reservation
 .sp
 .nf
 \fInvme resv\-release\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                             [\-\-crkey=<crkey> | \-c <crkey>]
-                             [\-\-rtype=<rtype> | \-t <rtype>]
-                             [\-\-rrela=<rrela> | \-a <rrela>]
-                             [\-\-iekey | \-i]
+                        [\-\-crkey=<crkey> | \-c <crkey>]
+                        [\-\-rtype=<rtype> | \-t <rtype>]
+                        [\-\-rrela=<rrela> | \-a <rrela>] [\-\-iekey | \-i]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -156,6 +156,20 @@ Ignore Existing Key: If this bit is set to a
 .sp
 Indicator option, defaults to
 \fI0\fR\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

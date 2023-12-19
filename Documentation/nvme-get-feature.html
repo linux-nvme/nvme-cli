@@ -750,12 +750,13 @@ nvme-get-feature(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme get-feature</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                          [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--cdw11=&lt;cdw11&gt;]
-                          [--uuid-index=&lt;uuid-index&gt; | -U &lt;uuid_index&gt;]
-                          [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                          [--sel=&lt;select&gt; | -s &lt;select&gt;]
-                          [--raw-binary | -b]
-                          [--human-readable | -H]</pre>
+                        [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--cdw11=&lt;cdw11&gt;]
+                        [--uuid-index=&lt;uuid-index&gt; | -U &lt;uuid_index&gt;]
+                        [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
+                        [--sel=&lt;select&gt; | -s &lt;select&gt;]
+                        [--raw-binary | -b]
+                        [--human-readable | -H]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -906,6 +907,29 @@ cellspacing="0" cellpadding="4">
         into human-readable formats.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -977,7 +1001,7 @@ format:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

@@ -2,12 +2,12 @@
 .\"     Title: nvme-set-feature
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SET\-FEATURE" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-SET\-FEATURE" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,11 +33,11 @@ nvme-set-feature \- Sets an NVMe feature, returns applicable results
 .sp
 .nf
 \fInvme set\-feature\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                          [\-\-feature\-id=<fid> | \-f <fid>] [\-\-value=<value> | \-v <value>]
-                          [\-\-uuid\-index=<uuid\-index> | \-U <uuid_index>]
-                          [\-\-data\-len=<data\-len> | \-l <data\-len>]
-                          [\-\-data=<data\-file> | \-d <data\-file>]
-                          [\-\-save | \-s]
+                        [\-\-feature\-id=<fid> | \-f <fid>] [\-\-value=<value> | \-V <value>]
+                        [\-\-uuid\-index=<uuid\-index> | \-U <uuid_index>]
+                        [\-\-data\-len=<data\-len> | \-l <data\-len>]
+                        [\-\-data=<data\-file> | \-d <data\-file>] [\-\-save | \-s]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -68,7 +68,7 @@ The data length for the buffer submitted for this feature\&. Most known features
 The data file for the buffer submitted for this feature\&. Most known features do not use this value\&. The exceptions is LBA Range Type and host identifier\&. This defaults to STDIN so files and echo can be piped\&.
 .RE
 .PP
-\-v <value>, \-\-value=<value>
+\-V <value>, \-\-value=<value>
 .RS 4
 The value for command dword 11, the value you want to set the feature to\&.
 .RE
@@ -81,6 +81,20 @@ Save the attribute so that it persists through all power states and resets\&.
 \-U <uuid\-index>, \-\-uuid\-index=<uuid\-index>
 .RS 4
 UUID Index of the feature
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -98,7 +112,7 @@ Sets the Power State (PS) to 1 in feature id 2:
 .RS 4
 .\}
 .nf
-# nvme set\-feature /dev/nvme0 \-f 2 /dev/nvme0n1 \-v 0x1
+# nvme set\-feature /dev/nvme0 \-f 2 /dev/nvme0n1 \-V 0x1
 .fi
 .if n \{\
 .RE

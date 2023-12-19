@@ -2,12 +2,12 @@
 .\"     Title: nvme-boot-part-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-BOOT\-PART\-LO" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-BOOT\-PART\-LO" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,8 +33,8 @@ nvme-boot-part-log \- Retrieves a Boot Partition log page from an NVMe device
 .sp
 .nf
 \fInvme boot\-part\-log\fR <device> [\-\-lsp=<field> | \-s <field>]
-                    [\-\-output\-file=<file> | \-o <file>]
-                    [\-\-output\-format=<fmt> | \-o <fmt>]
+                        [\-\-output\-file=<file> | \-f <file>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -50,17 +50,23 @@ On success, the returned log structure will be in raw binary format \fIonly\fR w
 The log specified field of LID\&.
 .RE
 .PP
-\-o <file>, \-\-output\-file=<file>
+\-f <file>, \-\-output\-file=<file>
 .RS 4
 File name to which raw binary data will be saved to\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

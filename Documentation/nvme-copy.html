@@ -752,6 +752,8 @@ nvme-copy(1) Manual Page
 <pre class="content"><em>nvme-copy</em> &lt;device&gt; [--sdlba=&lt;sdlba&gt; | -d &lt;sdlba&gt;]
                         [--blocks=&lt;nlb-list,&gt; | -b &lt;nlb-list,&gt;]
                         [--slbs=&lt;slbas,&gt; | -s &lt;slbas,&gt;]
+                        [--snsids=&lt;snsids,&gt; | -N &lt;snsids,&gt;]
+                        [--sopts=&lt;sopts,&gt; | -O &lt;sopts,&gt;]
                         [--limited-retry | -l]
                         [--force-unit-access | -f]
                         [--prinfow=&lt;prinfow&gt; | -p &lt;prinfow&gt;]
@@ -764,7 +766,8 @@ nvme-copy(1) Manual Page
                         [--expected-app-masks=&lt;appmask,&gt; | -M &lt;appmask,&gt;]
                         [--dir-type=&lt;type&gt; | -T &lt;type&gt;]
                         [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;]
-                        [--format=&lt;entry-format&gt; | -F &lt;entry-format&gt;]</pre>
+                        [--format=&lt;entry-format&gt; | -F &lt;entry-format&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -781,10 +784,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
---sdlba=&lt;sdlba&gt;
+-d &lt;sdlba&gt;
 </dt>
 <dt class="hdlist1">
--d &lt;sdlba&gt;
+--sdlba=&lt;sdlba&gt;
 </dt>
 <dd>
 <p>
@@ -792,10 +795,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---blocks=&lt;nlb-list,&gt;
+-b &lt;nlb-list,&gt;
 </dt>
 <dt class="hdlist1">
--b &lt;nlb-list,&gt;
+--blocks=&lt;nlb-list,&gt;
 </dt>
 <dd>
 <p>
@@ -803,10 +806,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---slbs=&lt;slbas,&gt;
+-s &lt;slbas,&gt;
 </dt>
 <dt class="hdlist1">
--s &lt;slbas,&gt;
+--slbs=&lt;slbas,&gt;
 </dt>
 <dd>
 <p>
@@ -814,10 +817,32 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---limited-retry
+--snsids=&lt;snsids,&gt;
 </dt>
 <dt class="hdlist1">
+-N &lt;snsids,&gt;
+</dt>
+<dd>
+<p>
+        Comma separated list of the source namespace identifiers in each range
+</p>
+</dd>
+<dt class="hdlist1">
+--sopts=&lt;sopts,&gt;
+</dt>
+<dt class="hdlist1">
+-O &lt;sopts,&gt;
+</dt>
+<dd>
+<p>
+        Comma separated list of the source options in each range
+</p>
+</dd>
+<dt class="hdlist1">
 -l
+</dt>
+<dt class="hdlist1">
+--limited-retry
 </dt>
 <dd>
 <p>
@@ -825,10 +850,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---force-unit-access
+-f
 </dt>
 <dt class="hdlist1">
--f
+--force-unit-access
 </dt>
 <dd>
 <p>
@@ -836,10 +861,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---prinfow=&lt;prinfow&gt;
+-p &lt;prinfow&gt;
 </dt>
 <dt class="hdlist1">
--p &lt;prinfow&gt;
+--prinfow=&lt;prinfow&gt;
 </dt>
 <dd>
 <p>
@@ -847,10 +872,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---prinfor=&lt;prinfor&gt;
+-P &lt;prinfor&gt;
 </dt>
 <dt class="hdlist1">
--P &lt;prinfor&gt;
+--prinfor=&lt;prinfor&gt;
 </dt>
 <dd>
 <p>
@@ -858,10 +883,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---ref-tag=&lt;reftag&gt;
+-r &lt;reftag&gt;
 </dt>
 <dt class="hdlist1">
--r &lt;reftag&gt;
+--ref-tag=&lt;reftag&gt;
 </dt>
 <dd>
 <p>
@@ -869,10 +894,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---expected-ref-tags=&lt;reftag,&gt;
+-R &lt;reftag,&gt;
 </dt>
 <dt class="hdlist1">
--R &lt;reftag,&gt;
+--expected-ref-tags=&lt;reftag,&gt;
 </dt>
 <dd>
 <p>
@@ -880,10 +905,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---app-tag=&lt;apptag&gt;
+-a &lt;apptag&gt;
 </dt>
 <dt class="hdlist1">
--a &lt;apptag&gt;
+--app-tag=&lt;apptag&gt;
 </dt>
 <dd>
 <p>
@@ -891,10 +916,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---expected-app-tags=&lt;apptag,&gt;
+-A &lt;apptag,&gt;
 </dt>
 <dt class="hdlist1">
--A &lt;apptag,&gt;
+--expected-app-tags=&lt;apptag,&gt;
 </dt>
 <dd>
 <p>
@@ -902,10 +927,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---app-mask=&lt;appmask&gt;
+-m &lt;appmask&gt;
 </dt>
 <dt class="hdlist1">
--m &lt;appmask&gt;
+--app-mask=&lt;appmask&gt;
 </dt>
 <dd>
 <p>
@@ -913,10 +938,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---expected-app-masks=&lt;appmask,&gt;
+-M &lt;appmask,&gt;
 </dt>
 <dt class="hdlist1">
--M &lt;appmask,&gt;
+--expected-app-masks=&lt;appmask,&gt;
 </dt>
 <dd>
 <p>
@@ -924,10 +949,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---dir-type=&lt;type&gt;
+-T &lt;type&gt;
 </dt>
 <dt class="hdlist1">
--T &lt;type&gt;
+--dir-type=&lt;type&gt;
 </dt>
 <dd>
 <p>
@@ -938,10 +963,10 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---dir-spec=&lt;spec&gt;
+-S &lt;spec&gt;
 </dt>
 <dt class="hdlist1">
--S &lt;spec&gt;
+--dir-spec=&lt;spec&gt;
 </dt>
 <dd>
 <p>
@@ -952,14 +977,37 @@ logical block ranges to a single consecutive destination logical block range.</p
 </p>
 </dd>
 <dt class="hdlist1">
---format=&lt;entry-format&gt;
+-F &lt;entry-format&gt;
 </dt>
 <dt class="hdlist1">
--F &lt;entry-format&gt;
+--format=&lt;entry-format&gt;
 </dt>
 <dd>
 <p>
         source range entry format
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -982,7 +1030,7 @@ logical block ranges to a single consecutive destination logical block range.</p
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

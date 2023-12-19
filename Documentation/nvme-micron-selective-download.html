@@ -740,7 +740,7 @@ nvme-micron-selective-download(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-micron-selective-download -
-   Performs selective firmware download that allows user to select which firmware binary to update for 9200 devices. This requires power cycle once the update completes.
+   Performs selective firmware download that allows user select which firmware binary to update for 9200 devices. This requires power cycle the update completes.
 </p>
 </div>
 </div>
@@ -749,7 +749,8 @@ nvme-micron-selective-download(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme micron selective-download</em> &lt;device&gt; [--fw=&lt;FILE&gt;, -f &lt;FILE&gt;] [--select=&lt;flag&gt;, -s &lt;flag&gt;]</pre>
+<pre class="content"><em>nvme micron selective-download</em> &lt;device&gt; [--fw=&lt;FILE&gt;, -f &lt;FILE&gt;]
+                        [--select=&lt;flag&gt;, -s &lt;flag&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -757,13 +758,14 @@ nvme-micron-selective-download(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>This command uses micron vendor specific nvme commands to download given firmware image to the
-specified 9200 device to update selected or all portions of firmware image.</p></div>
+<div class="paragraph"><p>This command uses micron vendor specific nvme commands to download given
+firmware image to the 9200 device to update selected or all portions of firmware
+image.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
 /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>This will only work on Micron devices devices of model number 9200. Support for new devices
-may be added subsequently. Results for any other device are undefined.</p></div>
+<div class="paragraph"><p>This will only work on Micron devices devices of model number 9200. Support for
+new devices be added subsequently. Results for any other device are undefined.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -867,7 +869,7 @@ Update eeprom, OOB and main firmware
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

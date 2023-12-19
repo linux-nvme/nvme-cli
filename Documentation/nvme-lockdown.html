@@ -749,11 +749,12 @@ nvme-lockdown(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-lockdown</em> &lt;device&gt; [--ofi=&lt;ofi&gt; | -o &lt;ofi&gt;]
+<pre class="content"><em>nvme-lockdown</em> &lt;device&gt; [--ofi=&lt;ofi&gt; | -O &lt;ofi&gt;]
                         [--ifc=&lt;ifc&gt; | -f &lt;ifc&gt;]
                         [--prhbt=&lt;prhbt&gt; | -p &lt;prhbt&gt;]
                         [--scp=&lt;scp&gt; | -s &lt;scp&gt;]
-                        [--uuid=&lt;UUID_Index&gt; | -U &lt;UUID_Index&gt;]</pre>
+                        [--uuid=&lt;UUID_Index&gt; | -U &lt;UUID_Index&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -772,10 +773,10 @@ Identifier.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
---ofi=&lt;ofi&gt;
+-O &lt;ofi&gt;
 </dt>
 <dt class="hdlist1">
--o &lt;ofi&gt;
+--ofi=&lt;ofi&gt;
 </dt>
 <dd>
 <p>
@@ -784,10 +785,10 @@ Identifier.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---ifc=&lt;ifc&gt;
+-f &lt;ifc&gt;
 </dt>
 <dt class="hdlist1">
--f &lt;ifc&gt;
+--ifc=&lt;ifc&gt;
 </dt>
 <dd>
 <p>
@@ -795,10 +796,10 @@ Identifier.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---prhbt=&lt;prhbt&gt;
+-p &lt;prhbt&gt;
 </dt>
 <dt class="hdlist1">
--p &lt;prhbt&gt;
+--prhbt=&lt;prhbt&gt;
 </dt>
 <dd>
 <p>
@@ -807,10 +808,10 @@ Identifier.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---scp=&lt;scp&gt;
+-s &lt;scp&gt;
 </dt>
 <dt class="hdlist1">
--s &lt;scp&gt;
+--scp=&lt;scp&gt;
 </dt>
 <dd>
 <p>
@@ -818,16 +819,39 @@ Identifier.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---uuid=&lt;UUID_Index&gt;
+-U &lt;UUID_Index&gt;
 </dt>
 <dt class="hdlist1">
--U &lt;UUID_Index&gt;
+--uuid=&lt;UUID_Index&gt;
 </dt>
 <dd>
 <p>
         UUID Index - If this field is set to a non-zero value, then the value of
         this field is the index of a UUID in the UUID List that is used by the command.
         If this field is cleared to 0h,then no UUID index is specified.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -850,7 +874,7 @@ Identifier.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

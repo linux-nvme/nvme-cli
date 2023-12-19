@@ -754,15 +754,14 @@ nvme-write-zeroes(1) Manual Page
                         [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
                         [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
                         [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
-                        [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
-                        [--deac | -d]
-                        [--limited-retry | -l]
-                        [--force-unit-access | -f]
+                        [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;] [--deac | -d]
+                        [--limited-retry | -l] [--force-unit-access | -f]
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--storage-tag&lt;storage-tag&gt; | -S &lt;storage-tag&gt;]
                         [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]
                         [--dir-type=&lt;dtype&gt; | -T &lt;dtype&gt;]
-                        [--dir-spec=&lt;dspec&gt; | -D &lt;dspec&gt;]</pre>
+                        [--dir-spec=&lt;dspec&gt; | -D &lt;dspec&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -778,10 +777,10 @@ nvme-write-zeroes(1) Manual Page
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
---start-block=&lt;slba&gt;
+-s &lt;slba&gt;
 </dt>
 <dt class="hdlist1">
--s &lt;slba&gt;
+--start-block=&lt;slba&gt;
 </dt>
 <dd>
 <p>
@@ -789,10 +788,10 @@ nvme-write-zeroes(1) Manual Page
 </p>
 </dd>
 <dt class="hdlist1">
---block-count=&lt;nlb&gt;
+-c &lt;nlb&gt;
 </dt>
 <dt class="hdlist1">
--c &lt;nlb&gt;
+--block-count=&lt;nlb&gt;
 </dt>
 <dd>
 <p>
@@ -800,10 +799,10 @@ nvme-write-zeroes(1) Manual Page
 </p>
 </dd>
 <dt class="hdlist1">
---prinfo=&lt;prinfo&gt;
+-p &lt;prinfo&gt;
 </dt>
 <dt class="hdlist1">
--p &lt;prinfo&gt;
+--prinfo=&lt;prinfo&gt;
 </dt>
 <dd>
 <p>
@@ -848,10 +847,10 @@ metadata is passes.</p></td>
 </div>
 </dd>
 <dt class="hdlist1">
---ref-tag=&lt;reftag&gt;
+-r &lt;reftag&gt;
 </dt>
 <dt class="hdlist1">
--r &lt;reftag&gt;
+--ref-tag=&lt;reftag&gt;
 </dt>
 <dd>
 <p>
@@ -859,10 +858,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---app-tag-mask=&lt;appmask&gt;
+-m &lt;appmask&gt;
 </dt>
 <dt class="hdlist1">
--m &lt;appmask&gt;
+--app-tag-mask=&lt;appmask&gt;
 </dt>
 <dd>
 <p>
@@ -870,10 +869,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---app-tag=&lt;apptag&gt;
+-a &lt;apptag&gt;
 </dt>
 <dt class="hdlist1">
--a &lt;apptag&gt;
+--app-tag=&lt;apptag&gt;
 </dt>
 <dd>
 <p>
@@ -881,10 +880,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---limited-retry
+-l
 </dt>
 <dt class="hdlist1">
--l
+--limited-retry
 </dt>
 <dd>
 <p>
@@ -892,10 +891,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---deac
+-d
 </dt>
 <dt class="hdlist1">
--d
+--deac
 </dt>
 <dd>
 <p>
@@ -903,10 +902,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---force-unit-access
+-f
 </dt>
 <dt class="hdlist1">
--f
+--force-unit-access
 </dt>
 <dd>
 <p>
@@ -914,10 +913,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
+-n &lt;nsid&gt;
 </dt>
 <dt class="hdlist1">
--n &lt;nsid&gt;
+--namespace-id=&lt;nsid&gt;
 </dt>
 <dd>
 <p>
@@ -925,10 +924,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---storage-tag=&lt;storage-tag&gt;
+-S &lt;storage-tag&gt;
 </dt>
 <dt class="hdlist1">
--S &lt;storage-tag&gt;
+--storage-tag=&lt;storage-tag&gt;
 </dt>
 <dd>
 <p>
@@ -936,10 +935,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---storage-tag-check=&lt;storage-tag-check&gt;
+-C &lt;storage-tag-check&gt;
 </dt>
 <dt class="hdlist1">
--C &lt;storage-tag-check&gt;
+--storage-tag-check=&lt;storage-tag-check&gt;
 </dt>
 <dd>
 <p>
@@ -969,6 +968,29 @@ metadata is passes.</p></td>
         Directive specific
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -989,7 +1011,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:08 CEST
+ 2023-12-19 12:48:30 CET
 </div>
 </div>
 </body>

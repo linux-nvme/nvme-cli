@@ -2,12 +2,12 @@
 .\"     Title: nvme-wdc-id-ctrl
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WDC\-ID\-CTRL" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-WDC\-ID\-CTRL" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,9 @@ nvme-wdc-id-ctrl \- Send NVMe Identify Controller, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme wdc id\-ctrl\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
-                        [\-H | \-\-human\-readable]
-                        [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme wdc id\-ctrl\fR <device> [\-\-vendor\-specific | \-v] [\-\-raw\-binary | \-b]
+                        [\-\-human\-readable | \-H]
+                        [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -64,7 +64,7 @@ In addition to parsing known fields, this option will dump the vendor specific r
 This option will parse and format many of the bit fields into human\-readable formats\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,

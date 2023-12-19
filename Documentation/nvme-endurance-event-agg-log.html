@@ -751,7 +751,7 @@ nvme-endurance-event-agg-log(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme endurance-event-agg-log</em> &lt;device&gt; [--log-entries=&lt;log_entries&gt; | -e &lt;log_entries&gt;]
                         [--rae | -r] [--raw-binary | -b]
-                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -781,11 +781,11 @@ printed to stdout for another program to parse, or reported in json format.</p><
 </dt>
 <dd>
 <p>
-    Retrieve the Endurance Group Event Aggregate Log pending entries.
-    This argument is mandatory and its success may depend on the device&#8217;s
-    statistics to provide this log For More details see NVM Express 1.4 Spec.
-    Section 5.14.1.15. The maximum number of log entries supported is 2044
-    for the device.
+        Retrieve the Endurance Group Event Aggregate Log pending entries.
+        This argument is mandatory and its success may depend on the device&#8217;s
+        statistics to provide this log For More details see NVM Express 1.4 Spec.
+        Section 5.14.1.15. The maximum number of log entries supported is 2044
+        for the device.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -800,15 +800,26 @@ printed to stdout for another program to parse, or reported in json format.</p><
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;format&gt;
+-o &lt;fmt&gt;
 </dt>
 <dt class="hdlist1">
---output-format=&lt;format&gt;
+--output-format=&lt;fmt&gt;
 </dt>
 <dd>
 <p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -851,7 +862,7 @@ Print the raw Endurance log to a file:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

@@ -759,17 +759,13 @@ nvme-read(1) Manual Page
                         [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
                         [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
                         [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
-                        [--limited-retry | -l]
-                        [--force-unit-access | -f]
+                        [--limited-retry | -l] [--force-unit-access | -f]
                         [--dir-type=&lt;type&gt; | -T &lt;type&gt;]
-                        [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;]
-                        [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
-                        [--show-command | -v]
-                        [--dry-run | -w]
-                        [--latency | -t]
+                        [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;] [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
+                        [--show-command | -V] [--dry-run | -w] [--latency | -t]
                         [--storage-tag&lt;storage-tag&gt; | -g &lt;storage-tag&gt;]
-                        [--storage-tag-check | -C ]
-                        [--force]</pre>
+                        [--storage-tag-check | -C] [--force]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -787,10 +783,10 @@ by default if you don&#8217;t provide a file.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
---start-block=&lt;slba&gt;
+-s &lt;slba&gt;
 </dt>
 <dt class="hdlist1">
--s &lt;slba&gt;
+--start-block=&lt;slba&gt;
 </dt>
 <dd>
 <p>
@@ -798,10 +794,10 @@ by default if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---block-count
+-c
 </dt>
 <dt class="hdlist1">
--c
+--block-count
 </dt>
 <dd>
 <p>
@@ -811,10 +807,10 @@ by default if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---data-size=&lt;size&gt;
+-z &lt;size&gt;
 </dt>
 <dt class="hdlist1">
--z &lt;size&gt;
+--data-size=&lt;size&gt;
 </dt>
 <dd>
 <p>
@@ -822,10 +818,10 @@ by default if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---metadata-size=&lt;size&gt;
+-y &lt;size&gt;
 </dt>
 <dt class="hdlist1">
--y &lt;size&gt;
+--metadata-size=&lt;size&gt;
 </dt>
 <dd>
 <p>
@@ -833,10 +829,10 @@ by default if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---data=&lt;data-file&gt;
+-d &lt;data-file&gt;
 </dt>
 <dt class="hdlist1">
--d &lt;data-file&gt;
+--data=&lt;data-file&gt;
 </dt>
 <dd>
 <p>
@@ -844,10 +840,10 @@ by default if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---metadata=&lt;metadata-file&gt;
+-M &lt;metadata-file&gt;
 </dt>
 <dt class="hdlist1">
--M &lt;metadata-file&gt;
+--metadata=&lt;metadata-file&gt;
 </dt>
 <dd>
 <p>
@@ -855,10 +851,10 @@ by default if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---prinfo=&lt;prinfo&gt;
+-p &lt;prinfo&gt;
 </dt>
 <dt class="hdlist1">
--p &lt;prinfo&gt;
+--prinfo=&lt;prinfo&gt;
 </dt>
 <dd>
 <p>
@@ -903,10 +899,10 @@ metadata is passes.</p></td>
 </div>
 </dd>
 <dt class="hdlist1">
---ref-tag=&lt;reftag&gt;
+-r &lt;reftag&gt;
 </dt>
 <dt class="hdlist1">
--r &lt;reftag&gt;
+--ref-tag=&lt;reftag&gt;
 </dt>
 <dd>
 <p>
@@ -914,10 +910,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---app-tag-mask=&lt;appmask&gt;
+-m &lt;appmask&gt;
 </dt>
 <dt class="hdlist1">
--m &lt;appmask&gt;
+--app-tag-mask=&lt;appmask&gt;
 </dt>
 <dd>
 <p>
@@ -925,10 +921,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---force-unit-access
+-f
 </dt>
 <dt class="hdlist1">
--f
+--force-unit-access
 </dt>
 <dd>
 <p>
@@ -982,7 +978,7 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
--v
+-V
 </dt>
 <dt class="hdlist1">
 --show-cmd
@@ -1048,6 +1044,29 @@ metadata is passes.</p></td>
         even though.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1068,7 +1087,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

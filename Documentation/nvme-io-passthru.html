@@ -749,23 +749,22 @@ nvme-io-passthru(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-io-passthru</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -o &lt;opcode&gt;]
-                [--flags=&lt;flags&gt; | -f &lt;flags&gt;] [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
-                [--namespace-id=&lt;nsid&gt; | -nsid &lt;nsid&gt;]
-                [--cdw2=&lt;cdw2&gt;] [--cdw3=&lt;cdw3&gt;] [--cdw10=&lt;cdw10&gt;]
-                [--cdw11=&lt;cdw11&gt;] [--cdw12=&lt;cdw12&gt;] [--cdw13=&lt;cdw13&gt;]
-                [--cdw14=&lt;cdw14&gt;] [--cdw15=&lt;cdw15&gt;]
-                [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
-                [--read | -r ] [--write | -w]
-                [--input-file=&lt;file&gt; | -i &lt;file&gt;]
-                [--metadata=&lt;file&gt; | -M &lt;file&gt;]
-                [--timeout=&lt;to&gt; | -t &lt;to&gt;]
-                [--show-command | -s]
-                [--dry-run | -d]
-                [--raw-binary | -b]
-                [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]
-                [--latency | -T]</pre>
+<pre class="content"><em>nvme-io-passthru</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]
+                        [--flags=&lt;flags&gt; | -f &lt;flags&gt;] [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -nsid &lt;nsid&gt;]
+                        [--cdw2=&lt;cdw2&gt;] [--cdw3=&lt;cdw3&gt;] [--cdw10=&lt;cdw10&gt;]
+                        [--cdw11=&lt;cdw11&gt;] [--cdw12=&lt;cdw12&gt;] [--cdw13=&lt;cdw13&gt;]
+                        [--cdw14=&lt;cdw14&gt;] [--cdw15=&lt;cdw15&gt;]
+                        [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
+                        [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
+                        [--read | -r] [--write | -w]
+                        [--input-file=&lt;file&gt; | -i &lt;file&gt;]
+                        [--metadata=&lt;file&gt; | -M &lt;file&gt;]
+                        [--timeout=&lt;to&gt; | -t &lt;to&gt;] [--show-command | -s]
+                        [--dry-run | -d] [--raw-binary | -b]
+                        [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]
+                        [--latency | -T]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -790,7 +789,7 @@ printed to stdout for another program to parse.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;opcode&gt;
+-O &lt;opcode&gt;
 </dt>
 <dt class="hdlist1">
 --opcode=&lt;opcode&gt;
@@ -973,6 +972,29 @@ printed to stdout for another program to parse.</p></div>
         Print out the latency the IOCTL took (in us).
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -993,7 +1015,7 @@ printed to stdout for another program to parse.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

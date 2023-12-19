@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-notif-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-NOTIF\-L" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-NOTIF\-L" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-resv-notif-log \- Send NVMe Reservation Notification log page request, retu
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme resv\-notif\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
+\fInvme resv\-notif\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -43,12 +43,18 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 On success, the returned Reservation Notification log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

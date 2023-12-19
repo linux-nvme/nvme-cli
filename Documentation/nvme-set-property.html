@@ -749,8 +749,9 @@ nvme-set-property(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme set-property</em> &lt;device&gt; [--offset=&lt;offset&gt; | -o &lt;offset&gt;]
-                                [--value=&lt;val&gt; | -v &lt;val&gt;]</pre>
+<pre class="content"><em>nvme set-property</em> &lt;device&gt; [--offset=&lt;offset&gt; | -O &lt;offset&gt;]
+                        [--value=&lt;val&gt; | -V &lt;val&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -766,23 +767,46 @@ nvme-set-property(1) Manual Page
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o
+-O
 </dt>
 <dt class="hdlist1">
 --offset
 </dt>
 <dd>
 <p>
-       The offset of the property.
+        The offset of the property.
 </p>
 </dd>
 <dt class="hdlist1">
--v
+-V
 </dt>
 <dd>
 <p>
 --value:
         The value of the property to be set.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -805,7 +829,7 @@ nvme-set-property(1) Manual Page
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:30 CET
 </div>
 </div>
 </body>

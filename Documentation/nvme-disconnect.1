@@ -2,12 +2,12 @@
 .\"     Title: nvme-disconnect
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCONNECT" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCONNECT" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,9 @@ nvme-disconnect \- Disconnect one or more Fabrics controller(s)\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme disconnect\fR
-                [\-\-nqn=<subnqn>           | \-n <subnqn>]
-                [\-\-device=<device>        | \-d <device>]
+\fInvme disconnect\fR [\-\-nqn=<subnqn> | \-n <subnqn>]
+                        [\-\-device=<device> | \-d <device>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -49,6 +49,20 @@ Indicates that all controllers for the NVMe subsystems specified should be remov
 \-d <device>, \-\-device <device>
 .RS 4
 Indicates that the controller with the specified name should be removed\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -749,13 +749,13 @@ nvme-nvme-mi-recv(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme nvme-mi-recv</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -o &lt;opcode&gt;]
-                             [--namespace-id=&lt;nsid&gt;]
-                             [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                             [--nmimt=&lt;nmimt&gt; | -m &lt;nmimt&gt;]
-                             [--nmd0=&lt;nmd0&gt; | -0 &lt;nmd0&gt;]
-                             [--nmd1=&lt;nmd1&gt; | -1 &lt;nmd1&gt;]
-                             [--input-file=&lt;file&gt; | -i &lt;file&gt;]</pre>
+<pre class="content"><em>nvme nvme-mi-recv</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
+                        [--nmimt=&lt;nmimt&gt; | -m &lt;nmimt&gt;]
+                        [--nmd0=&lt;nmd0&gt; | -0 &lt;nmd0&gt;] [--nmd1=&lt;nmd1&gt; | -1 &lt;nmd1&gt;]
+                        [--input-file=&lt;file&gt; | -i &lt;file&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -774,7 +774,7 @@ device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;opcode&gt;
+-O &lt;opcode&gt;
 </dt>
 <dt class="hdlist1">
 --opcode=&lt;opcode&gt;
@@ -852,6 +852,29 @@ device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).</p></div>
         assumed to use STDIN.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -865,7 +888,7 @@ Has the program issue a nvme-mi-recv to execute the VPD read.
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme nvme-mi-recv /dev/nvme0n1 -o 5 -m 1 -0 0 -1 0x100 -l 256</code></pre>
+<pre><code># nvme nvme-mi-recv /dev/nvme0n1 -O 5 -m 1 -0 0 -1 0x100 -l 256</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -882,7 +905,7 @@ Has the program issue a nvme-mi-recv to execute the VPD read.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

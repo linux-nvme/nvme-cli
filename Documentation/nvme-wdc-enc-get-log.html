@@ -749,7 +749,9 @@ nvme-wdc-enc-get-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc enc-get-log</em> &lt;device&gt; [--log-id=&lt;NUM&gt;, -l &lt;NUM&gt;] [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;] [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]</pre>
+<pre class="content"><em>nvme wdc enc-get-log</em> &lt;device&gt; [--log-id=&lt;NUM&gt;, -l &lt;NUM&gt;]
+                        [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;]
+                        [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -761,7 +763,8 @@ nvme-wdc-enc-get-log(1) Manual Page
 output the Enclosure logs.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0).</p></div>
-<div class="paragraph"><p>The --log-id=&lt;NUM&gt;, -l &lt;NUM&gt; parameter is mandatory and may be either 0xd1, 0xd2, 0xd3, 0xd4, 0xe2 and 0xe4.</p></div>
+<div class="paragraph"><p>The --log-id=&lt;NUM&gt;, -l &lt;NUM&gt; parameter is mandatory and may be either 0xd1, 0xd2,
+0xd3, 0xd4, 0xe2 and 0xe4.</p></div>
 <div class="paragraph"><p>This will only work on WDC devices supporting this feature.
 Results for any other device are undefined.</p></div>
 <div class="paragraph"><p>On success it returns the enclosure log data, error code otherwise.</p></div>
@@ -779,7 +782,7 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-    Output file pathname
+        Output file pathname
 </p>
 </dd>
 <dt class="hdlist1">
@@ -790,7 +793,8 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-    Data retrieval transfer size, maximum transfer size should be 0x2000 (decimal 8192)
+        Data retrieval transfer size, maximum transfer size should be 0x2000
+        (decimal 8192)
 </p>
 </dd>
 </dl></div>
@@ -802,7 +806,8 @@ Results for any other device are undefined.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Gets the enclosure log from the device based on the log id(0xd1) with transfer size(0x2000) and saves to defined file in current directory:
+Gets the enclosure log from the device based on the log id(0xd1) with transfer
+  size(0x2000) and saves to defined file in current directory:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -832,7 +837,7 @@ Gets the enclosure log from the device based on the log id(0xd2) with default tr
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:08 CEST
+ 2023-12-19 12:48:30 CET
 </div>
 </div>
 </body>

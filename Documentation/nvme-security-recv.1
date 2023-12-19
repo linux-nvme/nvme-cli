@@ -2,12 +2,12 @@
 .\"     Title: nvme-security-recv
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SECURITY\-RECV" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-SECURITY\-RECV" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,12 +33,12 @@ nvme-security-recv \- Security Recv command
 .sp
 .nf
 \fInvme security\-recv\fR <device> [\-\-size=<size> | \-x <size>]
-                    [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
-                    [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
-                    [\-\-nssf=<nvme\-specific> | \-N <nvme\-specific>]
-                    [\-\-al=<allocation\-length> | \-t <allocation\-length>]
-                    [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                    [\-\-raw\-binary | \-b]
+                        [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
+                        [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
+                        [\-\-nssf=<nvme\-specific> | \-N <nvme\-specific>]
+                        [\-\-al=<allocation\-length> | \-t <allocation\-length>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -82,6 +82,20 @@ Allocation Length: The value of this field is specific to the Security Protocol 
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw buffer to stdout\&. Defaults to print in hex\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LOG" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-LOG" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,17 +33,18 @@ nvme-get-log \- Retrieves a log page from an NVMe device
 .sp
 .nf
 \fInvme get\-log\fR <device> [\-\-log\-id=<log\-id> | \-i <log\-id>]
-              [\-\-log\-len=<log\-len> | \-l <log\-len>]
-              [\-\-aen=<aen> | \-a <aen>]
-              [\-\-namespace\-id=<nsid> | \-n <nsid>]
-              [\-\-raw\-binary | \-b]
-              [\-\-lpo=<offset> | \-o <offset>]
-              [\-\-lsp=<field> | \-s <field>]
-              [\-\-lsi=<field> | \-S <field>]
-              [\-\-rae | \-r]
-              [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
-              [\-\-ot=<offset_type> | \-O <offset_type>]
-                    [\-\-xfer\-len=<length> | \-x <length>]
+                        [\-\-log\-len=<log\-len> | \-l <log\-len>]
+                        [\-\-aen=<aen> | \-a <aen>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-raw\-binary | \-b]
+                        [\-\-lpo=<offset> | \-L <offset>]
+                        [\-\-lsp=<field> | \-s <field>]
+                        [\-\-lsi=<field> | \-S <field>]
+                        [\-\-rae | \-r]
+                        [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
+                        [\-\-ot=<offset_type> | \-O <offset_type>]
+                        [\-\-xfer\-len=<length> | \-x <length>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -79,7 +80,7 @@ Sets the command\(cqs nsid value to the given nsid\&. Defaults to 0xffffffff if 
 Print the raw log buffer to stdout\&.
 .RE
 .PP
-\-o <offset>, \-\-lpo=<offset>
+\-L <offset>, \-\-lpo=<offset>
 .RS 4
 The log page offset specifies the location within a log page to start returning data from\&. It\(cqs Dword\-aligned and 64\-bits\&.
 .RE
@@ -112,6 +113,20 @@ This field specifies the offset type\&. If set to false, the Log Page Offset Low
 \-x <length>
 .RS 4
 \-\-xfer\-len <length>: Specify the read chunk size\&. The length argument is expected to be a multiple of 4096\&. The default size is 4096\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

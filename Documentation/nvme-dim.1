@@ -2,12 +2,12 @@
 .\"     Title: nvme-dim
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DIM" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-DIM" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,9 @@ nvme-dim \- Send Discovery Information Management command to one or more Discove
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme dim\fR
-                [\-\-task=<task>     | \-t <task>]
-                [\-\-nqn=<nqn>       | \-n <nqn>]
-                [\-\-device=<device> | \-d <device>]
+\fInvme dim\fR [\-\-task=<task> | \-t <task>] [\-\-nqn=<nqn> | \-n <nqn>]
+                        [\-\-device=<device> | \-d <device>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -61,6 +60,20 @@ The DIM command will be sent to the Discovery Controller (DC) matching this NQN\
 \-d <device>, \-\-device <device>
 .RS 4
 The DIM command will be sent to the Discovery Controllers (DC) associated with this NVMe device handle\&. A list of comma\-separated device handles can be supplied to apply the command to more than one DC\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

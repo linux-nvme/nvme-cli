@@ -749,9 +749,9 @@ nvme-sanitize-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme sanitize-log</em> &lt;device&gt; [--rae | -r] [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]
-                             [--human-readable | -H]
-                             [--raw-binary | -b]</pre>
+<pre class="content"><em>nvme sanitize-log</em> &lt;device&gt; [--rae | -r] [--human-readable | -H]
+                        [--raw-binary | -b]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -798,11 +798,11 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Global Data Erased bit
 If set to 1 then non-volatile storage in the NVM subsystem has
 not been written to:
-    a) since being manufactured and the NVM subsystem has never been sanitized; or
-    b) since the most recent successful sanitize operation.
+ a) since being manufactured and the NVM subsystem has never been sanitized; or
+ b) since the most recent successful sanitize operation.
 If cleared to 0, then non-volatile storage in the NVM subsystem has been written to:
-    a) since being manufactured and the NVM subsystem has never been sanitized; or
-    b) since the most recent successful sanitize operation of the NVM subsystem.</p></td>
+ a) since being manufactured and the NVM subsystem has never been sanitized; or
+ b) since the most recent successful sanitize operation of the NVM subsystem.</p></td>
 </tr>
 </tbody>
 </table>
@@ -827,18 +827,6 @@ If cleared to 0, then non-volatile storage in the NVM subsystem has been written
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;format&gt;
-</dt>
-<dt class="hdlist1">
---output-format=&lt;format&gt;
-</dt>
-<dd>
-<p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
-</p>
-</dd>
-<dt class="hdlist1">
 -H
 </dt>
 <dt class="hdlist1">
@@ -860,6 +848,29 @@ If cleared to 0, then non-volatile storage in the NVM subsystem has been written
 <p>
         Print the raw buffer to stdout. Structure is not parsed by
         program. This overrides the vendor specific and human readable options.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -892,7 +903,7 @@ Has the program issue Sanitize-log Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:30 CET
 </div>
 </div>
 </body>

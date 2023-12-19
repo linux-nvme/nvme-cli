@@ -2,12 +2,12 @@
 .\"     Title: nvme-list-endgrp
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LIST\-ENDGRP" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-LIST\-ENDGRP" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ nvme-list-endgrp \- Send NVMe Identify Endurance Group List, return result and s
 .sp
 .nf
 \fInvme list\-endgrp\fR <device> [\-\-endgrp\-id=<endgrp\-id> | \-i <endgrp\-id>]
-                        [\-o <fmt> | \-\-output\-format=<fmt>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -47,12 +47,18 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 Retrieve the identify endurance group list structure starting for the given endurance group id\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
-\fInormal\fR
+\fInormal\fR,
+\fIjson\fR
 or
-\fIjson\fR\&. Only one output format can be used at a time\&.
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

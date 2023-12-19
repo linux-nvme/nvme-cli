@@ -749,39 +749,30 @@ nvme-discover(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme discover</em>
-                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
-                [--nqn=&lt;subnqn&gt;           | -n &lt;subnqn&gt;]
-                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
-                [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
-                [--host-iface=&lt;iface&gt;     | -f &lt;iface&gt;]
-                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
-                [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
-                [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]
-                [--device=&lt;device&gt;        | -d &lt;device&gt;]
-                [--cfg-file=&lt;cfg&gt;         | -C &lt;cfg&gt; ]
-                [--keep-alive-tmo=&lt;sec&gt;   | -k &lt;sec&gt;]
-                [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
-                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
-                [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
-                [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
-                [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
-                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
-                [--keyring=&lt;#&gt;                    ]
-                [--tls_key=&lt;#&gt;                    ]
-                [--hdr-digest             | -g]
-                [--data-digest            | -G]
-                [--persistent             | -p]
-                [--quiet                  | -S]
-                [--tls                        ]
-                [--dump-config            | -O]
-                [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]
-                [--force]
-                [--nbft]
-                [--no-nbft]
-                [--nbft-path=&lt;STR&gt;]
-                [--context=&lt;STR&gt;]</pre>
+<pre class="content"><em>nvme discover</em> [--transport=&lt;trtype&gt; | -t &lt;trtype&gt;]
+                        [--nqn=&lt;subnqn&gt; | -n &lt;subnqn&gt;]
+                        [--traddr=&lt;traddr&gt; | -a &lt;traddr&gt;]
+                        [--trsvcid=&lt;trsvcid&gt; | -s &lt;trsvcid&gt;]
+                        [--host-traddr=&lt;traddr&gt; | -w &lt;traddr&gt;]
+                        [--host-iface=&lt;iface&gt; | -f &lt;iface&gt;]
+                        [--hostnqn=&lt;hostnqn&gt; | -q &lt;hostnqn&gt;]
+                        [--hostid=&lt;hostid&gt; | -I &lt;hostid&gt;]
+                        [--raw=&lt;filename&gt; | -r &lt;filename&gt;]
+                        [--device=&lt;device&gt; | -d &lt;device&gt;]
+                        [--cfg-file=&lt;cfg&gt; | -C &lt;cfg&gt;]
+                        [--keep-alive-tmo=&lt;sec&gt; | -k &lt;sec&gt;]
+                        [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]
+                        [--ctrl-loss-tmo=&lt;#&gt; | -l &lt;#&gt;]
+                        [--nr-io-queues=&lt;#&gt; | -i &lt;#&gt;]
+                        [--nr-write-queues=&lt;#&gt; | -W &lt;#&gt;]
+                        [--nr-poll-queues=&lt;#&gt; | -P &lt;#&gt;]
+                        [--queue-size=&lt;#&gt; | -Q &lt;#&gt;] [--keyring=&lt;#&gt;]
+                        [--tls_key=&lt;#&gt;] [--hdr-digest | -g] [--data-digest | -G]
+                        [--persistent | -p] [--quiet | -S] [--tls]
+                        [--dump-config | -O] [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]
+                        [--force] [--nbft] [--no-nbft] [--nbft-path=&lt;STR&gt;]
+                        [--context=&lt;STR&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -793,7 +784,7 @@ nvme-discover(1) Manual Page
 Controller.</p></div>
 <div class="paragraph"><p>If no parameters are given, then <em>nvme discover</em> will attempt to
 find a /usr/local/etc/nvme/discovery.conf file to use to supply a list of
-Discovery commands to run.  If no /usr/local/etc/nvme/discovery.conf file
+Discovery commands to run. If no /usr/local/etc/nvme/discovery.conf file
 exists, the command will quit with an error.</p></div>
 <div class="paragraph"><p>Otherwise, a specific Discovery Controller should be specified using the
 --transport, --traddr, and if necessary the --trsvcid flags. A Discovery
@@ -806,7 +797,7 @@ request will then be sent to the specified Discovery Controller.</p></div>
 <div class="paragraph"><p>The NVMe-over-Fabrics specification defines the concept of a
 Discovery Controller that an NVMe Host can query on a fabric
 network to discover NVMe subsystems contained in NVMe Targets
-which it can connect to on the network.  The Discovery Controller
+which it can connect to on the network. The Discovery Controller
 will return Discovery Log Pages that provide the NVMe Host
 with specific information (such as network address and unique
 subsystem NQN) the NVMe Host can use to issue an
@@ -819,7 +810,7 @@ In particular, the Host NQN uniquely identifies the NVMe Host, and
 may be used by the Discovery Controller to control what NVMe Target
 resources are allocated to the NVMe Host for a connection.</p></div>
 <div class="paragraph"><p>A Discovery Controller has it&#8217;s own NQN defined in the NVMe-over-Fabrics
-specification, <strong>nqn.2014-08.org.nvmexpress.discovery</strong>.  All Discovery
+specification, <strong>nqn.2014-08.org.nvmexpress.discovery</strong>. All Discovery
 Controllers must use this NQN name. This NQN is used by default by
 nvme-cli for the <em>discover</em> command.</p></div>
 </div>
@@ -837,7 +828,7 @@ nvme-cli for the <em>discover</em> command.</p></div>
 <dd>
 <p>
         This field specifies the network fabric being used for
-        a NVMe-over-Fabrics network.  Current string values include:
+        a NVMe-over-Fabrics network. Current string values include:
 </p>
 <div class="tableblock">
 <table rules="all"
@@ -903,7 +894,7 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        This field specifies the transport service id.  For transports using IP
+        This field specifies the transport service id. For transports using IP
         addressing (e.g. rdma) this field is the port number. By default, the IP
         port number for the RDMA transport is 4420.
 </p>
@@ -1168,15 +1159,15 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;format&gt;
+-o &lt;fmt&gt;
 </dt>
 <dt class="hdlist1">
---output-format=&lt;format&gt;
+--output-format=&lt;fmt&gt;
 </dt>
 <dd>
 <p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1222,6 +1213,29 @@ cellspacing="0" cellpadding="4">
         the management of the global resources.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1265,9 +1279,9 @@ Issue a <em>nvme discover</em> command using a /usr/local/etc/nvme/discovery.con
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># Machine default 'nvme discover' commands.  Query the
+<pre><code># Machine default 'nvme discover' commands. Query the
 # Discovery Controller's two ports (some resources may only
-# be accessible on a single port).  Note an official
+# be accessible on a single port). Note an official
 # nqn (Host) name defined in the NVMe specification is being used
 # in this example.
 -t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
@@ -1303,7 +1317,7 @@ nvme-connect-all(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

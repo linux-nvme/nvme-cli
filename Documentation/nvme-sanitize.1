@@ -2,12 +2,12 @@
 .\"     Title: nvme-sanitize
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SANITIZE" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-SANITIZE" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,12 @@ nvme-sanitize \- Send NVMe Sanitize Command, return result
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme sanitize\fR <device> [\-\-no\-dealloc | \-d]
-              [\-\-oipbp | \-i]
-              [\-\-owpass=<overwrite\-pass\-count> | \-n <overwrite\-pass\-count>]
-              [\-\-ause | \-u]
-              [\-\-sanact=<action> | \-a <action>]
-              [\-\-ovrpat=<overwrite\-pattern> | \-p <overwrite\-pattern>]
-              [\-\-force]
+\fInvme sanitize\fR <device> [\-\-no\-dealloc | \-d] [\-\-oipbp | \-i]
+                        [\-\-owpass=<overwrite\-pass\-count> | \-n <overwrite\-pass\-count>]
+                        [\-\-ause | \-u] [\-\-sanact=<action> | \-a <action>]
+                        [\-\-ovrpat=<overwrite\-pattern> | \-p <overwrite\-pattern>]
+                        [\-\-force]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -126,6 +125,20 @@ Overwrite Pattern: This field is ignored unless the Sanitize Action field in Com
 \-\-force
 .RS 4
 Ignore namespace is currently busy and performed the operation even though\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

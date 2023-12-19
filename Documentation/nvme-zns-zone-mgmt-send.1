@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-zone-mgmt-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-ZONE\-MGM" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-ZONE\-MGM" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,13 +33,11 @@ nvme-zns-zone-mgmt-send \- Zone Management Send command
 .sp
 .nf
 \fInvme zns zone\-mgmt\-send\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                                   [\-\-start\-lba=<IONUM>, \-s <IONUM>]
-                                   [\-\-zsaso, \-o]
-                                   [\-\-select\-all, \-a]
-                                   [\-\-zsa=<NUM>, \-z <NUM>]
-                                   [\-\-data\-len=<IONUM>, \-l <IONUM>]
-                                   [\-\-data=<FILE>, \-d <FILE>]
-                                   [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-start\-lba=<IONUM>, \-s <IONUM>] [\-\-zsaso, \-o]
+                        [\-\-select\-all, \-a] [\-\-zsa=<NUM>, \-z <NUM>]
+                        [\-\-data\-len=<IONUM>, \-l <IONUM>]
+                        [\-\-data=<FILE>, \-d <FILE>]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -66,7 +64,7 @@ Send data buffer length
 Zone Send Action Specific Option
 .RE
 .PP
-\-\-select\-all, \-a
+\-a, \-\-select\-all
 .RS 4
 Send command to all zones
 .RE
@@ -81,7 +79,7 @@ Zone send action\&.
 Buffer length if data required
 .RE
 .PP
-\-d <FILE, \-\-data=<FILE>
+\-d <FILE>, \-\-data=<FILE>
 .RS 4
 Optional file for data (default stdin)
 .RE

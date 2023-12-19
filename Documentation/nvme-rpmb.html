@@ -750,13 +750,13 @@ nvme-rpmb(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme rpmb</em> &lt;device&gt; [--cmd=&lt;command&gt; | -c &lt;command&gt;]
-                    [--msgfile=&lt;data-file&gt; | -f &lt;data-file&gt;]
-                    [--keyfile=&lt;key-file&gt; | -g &lt;key-file&gt;]
-                    [--key=&lt;key&gt; | -k &lt;key&gt;]
-                    [--msg=&lt;data&gt; | -d &lt;data&gt;]
-                    [--address=&lt;offset&gt; | -o &lt;offset&gt;]
-                    [--blocks=&lt;512 byte sectors&gt; | -b &lt;sectors&gt; ]
-                    [--target=&lt;target-id&gt; | -t &lt;id&gt; ]</pre>
+                        [--msgfile=&lt;data-file&gt; | -f &lt;data-file&gt;]
+                        [--keyfile=&lt;key-file&gt; | -g &lt;key-file&gt;]
+                        [--key=&lt;key&gt; | -k &lt;key&gt;] [--msg=&lt;data&gt; | -d &lt;data&gt;]
+                        [--address=&lt;offset&gt; | -o &lt;offset&gt;]
+                        [--blocks=&lt;512 byte sectors&gt; | -b &lt;sectors&gt;]
+                        [--target=&lt;target-id&gt; | -t &lt;id&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -921,6 +921,29 @@ default address if no -address or -o option is specified,</code></pre>
         (read or write) for a specified RPMB target.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1001,7 +1024,7 @@ data onto output.bin
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

@@ -749,12 +749,14 @@ nvme-dsm(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme dsm</em> &lt;device&gt;  [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
-                        [ --ctx-attrs=&lt;attribute-list,&gt; | -a &lt;attribute-list,&gt; ]
-                        [ --blocks=&lt;nlb-list,&gt; | -b &lt;nlb-list,&gt; ]
-                        [ --slbs=&lt;slba-list,&gt; | -s &lt;slba-list,&gt; ]
-                        [ --ad | -d ] [ --idw | -w ] [ --idr | -r ]
-                        [ --cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt; ]</pre>
+<pre class="content"><em>nvme dsm</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--ctx-attrs=&lt;attribute-list,&gt; | -a &lt;attribute-list,&gt;]
+                        [--blocks=&lt;nlb-list,&gt; | -b &lt;nlb-list,&gt;]
+                        [--slbs=&lt;slba-list,&gt; | -s &lt;slba-list,&gt;]
+                        [--ad=&lt;deallocate&gt; | -d &lt;deallocate&gt;]
+                        [--idw=&lt;write&gt; | -w &lt;write&gt;] [--idr=&lt;read&gt; | -r &lt;read&gt;]
+                        [--cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -873,6 +875,29 @@ any settings from the flags may have provided.</p></div>
         specifying individual attributes
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -893,7 +918,7 @@ any settings from the flags may have provided.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-19 12:48:29 CET
 </div>
 </div>
 </body>

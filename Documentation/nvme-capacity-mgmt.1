@@ -2,12 +2,12 @@
 .\"     Title: nvme-capacity-mgmt
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CAPACITY\-MGMT" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-CAPACITY\-MGMT" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,11 @@ nvme-capacity-mgmt \- Send capacity management command to configure/create/delet
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme capacity\-mgmt\fR <device> [\-\-operation=<operation> | \-o <operation>]
+\fInvme capacity\-mgmt\fR <device> [\-\-operation=<operation> | \-O <operation>]
                         [\-\-element\-id=<element\-id> | \-i <element\-id>]
                         [\-\-cap\-lower=<cap\-lower> | \-l <cap\-lower>]
                         [\-\-cap\-upper=<cap\-upper> | \-u <cap\-upper>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,7 +45,7 @@ For the NVMe device given, sends a capacity management command to configure/crea
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .SH "OPTIONS"
 .PP
-\-o <operation>, \-\-operation=<operation>
+\-O <operation>, \-\-operation=<operation>
 .RS 4
 Operation to be performed by the controller
 .RE
@@ -62,6 +63,20 @@ Least significant 32 bits of the capacity in bytes of the Endurance Group or NVM
 \-u <cap\-upper>, \-\-cap\-upper=<cap\-upper>
 .RS 4
 Most significant 32 bits of the capacity in bytes of the Endurance Group or NVM Set to be created
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

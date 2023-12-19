@@ -2,12 +2,12 @@
 .\"     Title: nvme-micron-smart-add-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-MICRON\-SMART\" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-MICRON\-SMART\" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-micron-smart-add-log \- Retrieves NAND statistics (2200 model drives) or Ex
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme micron vs\-smart\-add\-log\fR <device>  \-f <json|normal>
+\fInvme micron vs\-smart\-add\-log\fR <device> \-f <json|normal>
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,8 +44,11 @@ The \fI\-f\fR option controls the displayed output data format based on the opti
 .sp
 This will only work on Micron devices devices of model numbers 54XX and OCP complaint controllers\&. Support for new devices may be added subsequently\&.
 .SH "OPTIONS"
-.sp
-\-f <json|normal> controls the format of displayed output\&.
+.PP
+\-f <json|normal>
+.RS 4
+Controls the format of displayed output\&.
+.RE
 .SH "EXAMPLES"
 .sp
 .RS 4

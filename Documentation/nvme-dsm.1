@@ -2,12 +2,12 @@
 .\"     Title: nvme-dsm
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DSM" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-DSM" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,12 +32,14 @@ nvme-dsm \- Send NVMe Data Set Management, return results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme dsm\fR <device>  [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
-                        [ \-\-ctx\-attrs=<attribute\-list,> | \-a <attribute\-list,> ]
-                        [ \-\-blocks=<nlb\-list,> | \-b <nlb\-list,> ]
-                        [ \-\-slbs=<slba\-list,> | \-s <slba\-list,> ]
-                        [ \-\-ad | \-d ] [ \-\-idw | \-w ] [ \-\-idr | \-r ]
-                        [ \-\-cdw11=<cdw11> | \-c <cdw11> ]
+\fInvme dsm\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-ctx\-attrs=<attribute\-list,> | \-a <attribute\-list,>]
+                        [\-\-blocks=<nlb\-list,> | \-b <nlb\-list,>]
+                        [\-\-slbs=<slba\-list,> | \-s <slba\-list,>]
+                        [\-\-ad=<deallocate> | \-d <deallocate>]
+                        [\-\-idw=<write> | \-w <write>] [\-\-idr=<read> | \-r <read>]
+                        [\-\-cdw11=<cdw11> | \-c <cdw11>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -88,6 +90,20 @@ Attribute Integral Dataset for Read\&.
 \-c <cdw11>, \-\-cdw11=<cdw11>
 .RS 4
 All the command command dword 11 attributes\&. Use exclusive from specifying individual attributes
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

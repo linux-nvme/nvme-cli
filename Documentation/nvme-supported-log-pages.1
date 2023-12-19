@@ -2,12 +2,12 @@
 .\"     Title: nvme-supported-log-pages
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SUPPORTED\-LOG" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-SUPPORTED\-LOG" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,7 @@ nvme-supported-log-pages \- Send NVMe Supported Log pages request, returns resul
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme supported\-log\-pages\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
-                            [\-\-verbose | \-v]
+\fInvme supported\-log\-pages\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,14 +43,18 @@ The <device> parameter is mandatory and should be the NVMe character device (ex:
 On success, the returned supported log pages log structure will be printed for each command that is supported\&.
 .SH "OPTIONS"
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
-This option will set the reporting format to normal, json, or binary\&. Only one output format can be used at a time\&.
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
 .RE
 .PP
 \-v, \-\-verbose
 .RS 4
-Show more information including LID Supported (LSUPP) and Index Offset Supported (IOP) details\&.
+Increase the information detail in the output\&. Show more information including LID Supported (LSUPP) and Index Offset Supported (IOP) details\&.
 .RE
 .SH "EXAMPLES"
 .sp

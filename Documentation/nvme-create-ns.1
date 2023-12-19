@@ -2,12 +2,12 @@
 .\"     Title: nvme-create-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/19/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-CREATE\-NS" "1" "12/19/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,6 +39,7 @@ nvme-create-ns \- Send NVMe Namespace management command to create namespace, re
                         [\-\-nmic=<nmic> | \-m <nmic>]
                         [\-\-anagrp\-id=<anagrpid> | \-a <anagrpid>]
                         [\-\-nvmset\-id=<nvmsetid> | \-i <nvmsetid>]
+                        [\-\-endg\-id=<endgid> | \-e <endgid>]
                         [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
                         [\-\-lbstm=<lbstm> | \-l <lbstm>]
                         [\-\-nphndls=<nphndls> | \-n <nphndls>]
@@ -48,9 +49,10 @@ nvme-create-ns \- Send NVMe Namespace management command to create namespace, re
                         [\-\-ncap\-si=<ncap\-si> | \-C <ncap\-si>]
                         [\-\-azr | \-z]
                         [\-\-rar=<rar> | \-r <rar>]
-                        [\-\-ror=<ror> | \-o <ror>]
+                        [\-\-ror=<ror> | \-O <ror>]
                         [\-\-rnumzrwa=<rnumzrwa> | \-u <rnumzrwa>]
                         [\-\-phndls=<placement\-handle\-list,> | \-p <placement\-handle\-list,>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -94,6 +96,11 @@ ANA Group Identifier\&. If this value is 0h specifies that the controller determ
 This field specifies the identifier of the NVM Set\&.
 .RE
 .PP
+\-e <endgid>, \-\-endg\-id=<endgid>
+.RS 4
+This field specifies the identifier of the endurance group\&.
+.RE
+.PP
 \-y <command_set_identifier>, \-\-csi=<command_set_identifier>
 .RS 4
 This field specifies the identifier of command set\&. if not issued, NVM Command Set will be selected\&.
@@ -134,7 +141,7 @@ Allocate ZRWA Resources\&. If set to 1, then the namespace is to be created with
 Requested Active Resources\&. This field specifies the number of active resources to be allocated to the created namespace\&.
 .RE
 .PP
-\-o <ror>, \-\-ror=<ror>
+\-O <ror>, \-\-ror=<ror>
 .RS 4
 Requested Open Resources\&. This field specifies the number of open resources to be allocated to the created namespace\&.
 .RE
@@ -147,6 +154,20 @@ Requested Number of ZRWA Resources\&. This field specifies the number of ZRWA re
 \-p <placement\-handle\-list,>, \-\-phndls=<placement\-handle\-list,>
 .RS 4
 The comma separated list of Reclaim Unit Handle Identifier to be associated with each Placement Handle\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp
