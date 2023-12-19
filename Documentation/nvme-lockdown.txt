@@ -4,6 +4,7 @@ nvme-lockdown(1)
 NAME
 ----
 nvme-lockdown - Send an NVMe Lockdown command to prohibit or allow the execution of command
+
 SYNOPSIS
 --------
 [verse]
