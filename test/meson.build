@@ -92,7 +92,7 @@ if conf.get('HAVE_NETDB')
         ['test-util.c'],
         include_directories: [incdir, internal_incdir]
     )
-    test('Test util.c', test_util)
+    test('util', test_util)
 endif
 
 subdir('ioctl')
