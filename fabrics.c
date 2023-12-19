@@ -632,7 +632,7 @@ char *nvmf_hostid_from_hostnqn(const char *hostnqn)
 	return strdup(uuid + strlen("uuid:"));
 }
 
-void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn)
+void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn, unsigned int verbose)
 {
 	char *hostid_from_file, *hostid_from_hostnqn;
 
@@ -641,7 +641,9 @@ void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn)
 
 	hostid_from_file = nvmf_hostid_from_file();
 	if (hostid_from_file && strcmp(hostid_from_file, hostid)) {
-		fprintf(stderr, "warning: use generated hostid instead of hostid file\n");
+		if (verbose)
+			fprintf(stderr,
+				"warning: use generated hostid instead of hostid file\n");
 		free(hostid_from_file);
 	}
 
@@ -650,7 +652,9 @@ void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn)
 
 	hostid_from_hostnqn = nvmf_hostid_from_hostnqn(hostnqn);
 	if (hostid_from_hostnqn && strcmp(hostid_from_hostnqn, hostid)) {
-		fprintf(stderr, "warning: use hostid which does not match uuid in hostnqn\n");
+		if (verbose)
+			fprintf(stderr,
+				"warning: use hostid which does not match uuid in hostnqn\n");
 		free(hostid_from_hostnqn);
 	}
 }
@@ -741,7 +745,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		hostid = hid = nvmf_hostid_from_file();
 	if (!hostid && hostnqn)
 		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
-	nvmf_check_hostid_and_hostnqn(hostid, hostnqn);
+	nvmf_check_hostid_and_hostnqn(hostid, hostnqn, verbose);
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		ret = ENOMEM;
@@ -964,7 +968,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		hostid = hid = nvmf_hostid_from_file();
 	if (!hostid && hostnqn)
 		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
-	nvmf_check_hostid_and_hostnqn(hostid, hostnqn);
+	nvmf_check_hostid_and_hostnqn(hostid, hostnqn, verbose);
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		errno = ENOMEM;
