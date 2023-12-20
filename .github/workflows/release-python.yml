@@ -56,7 +56,7 @@ jobs:
       - name: Check if it is a release tag
         id: check-tag
         run: |
-           if [[ ${{ github.event.ref }} =~ ^refs/tags/v([0-9]+\.[0-9]+)(-rc[0-9]+)?$ ]]; then
+           if [[ ${{ github.event.ref }} =~ ^refs/tags/v([0-9]+\.[0-9]+)(\.[0-9]+)?(-rc[0-9]+)?$ ]]; then
                echo ::set-output name=match::true
            fi
       - name: Download artifiact
