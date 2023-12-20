@@ -19,12 +19,12 @@ SYNOPSIS
 			[--metadata-len=<len> | -m <len>]
 			[--input-file=<file> | -i <file>]
 			[--read | -r] [--write | -w]
-			[--timeout=<to> | -T <to>]
+			[--timeout=<to> | -t <to>]
 			[--show-command | -s]
 			[--dry-run | -d]
 			[--raw-binary | -b]
 			[--prefill=<prefill> | -p <prefill>]
-			[--latency | -t]
+			[--latency | -L]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
@@ -110,7 +110,7 @@ OPTIONS
 	value. It may also be useful if you need to confirm if a device
 	is overwriting a buffer for a data-in command.
 
--T::
+-L::
 --latency::
 	Print out the latency the IOCTL took (in us).
 
@@ -122,6 +122,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

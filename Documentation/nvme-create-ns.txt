@@ -144,6 +144,10 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
 EXAMPLES
 --------
 * Create a namespace:

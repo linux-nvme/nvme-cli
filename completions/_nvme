@@ -650,7 +650,7 @@ _nvme () {
 			--aen=':result of the aen, use to override log id'
 			-a':alias of --aen'
 			--lpo=':log page offset specifies the location within a log page from where to start returning data'
-			-L':alias of --lpo'
+			-O':alias of --lpo'
 			--lsi=':log specific identifier specifies an identifier that is required for a particular log page'
 			-S':alias of --lsi'
 			--rae':Retain an Asynchronous Event'
@@ -660,9 +660,11 @@ _nvme () {
 			--csi=':command set identifier'
 			-y':alias of --csi'
 			--ot':offset type'
-			-O':alias of --ot'
+			-t':alias of --ot'
 			--xfer-len=':read chunk size (default 4k)'
 			-x':alias of --xfer-len'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias of --output-format'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-log options" _getlog
@@ -1241,7 +1243,7 @@ _nvme () {
 			--metadata-len=':length for metadata buffer'
 			-m':alias of --metadata-len'
 			--timeout=':value for timeout'
-			-T':alias of --timeout'
+			-t':alias of --timeout'
 			--cdw2=':value for command dword 2'
 			-2':alias for --cdw2'
 			--cdw3=':value for command dword 3'
@@ -1271,7 +1273,7 @@ _nvme () {
 			--write':set dataflow direction to send'
 			-w':alias for --write'
 			--latency':latency statistics will be output following admin-passthru'
-			-t':alias of --latency'
+			-L':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme admin-passthru options" _admin
@@ -1293,7 +1295,7 @@ _nvme () {
 			--metadata-len=':length for metadata buffer'
 			-m':alias of --metadata-len'
 			--timeout=':value for timeout'
-			-T':alias of --timeout'
+			-t':alias of --timeout'
 			--cdw2=':value for command dword 2'
 			-2':alias for --cdw2'
 			--cdw3=':value for command dword 3'
@@ -1323,7 +1325,7 @@ _nvme () {
 			--write':set dataflow direction to send'
 			-w':alias for --write'
 			--latency':latency statistics will be output following io-passthru'
-			-t':alias of --latency'
+			-L':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme io-passthru options" _io
@@ -1476,6 +1478,8 @@ _nvme () {
 			-r':alias of --idr'
 			--cdw11=':value for command dword 11'
 			-c':alias for --cdw11'
+			--latency':latency statistics will be output following dsm'
+			-L':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme dsm options" _dsm
@@ -1587,7 +1591,7 @@ _nvme () {
 			--limited-retry':if included, controller should try less hard to retrieve data from media (if not included, all available data-recovery means used)'
 			-l':alias of --limited-retry'
 			--latency':latency statistics will be output following read'
-			-t':alias of --latency'
+			-L':alias of --latency'
 			--force-unit-access':data read shall be returned from nonvolatile media before command completion is indicated'
 			-f':alias of --force-unit-access'
 			--show-command':show command instead of sending to device'
@@ -1623,7 +1627,7 @@ _nvme () {
 			--limited-retry':if included, controller should try less hard to send data to media (if not included, all available data-recovery means used)'
 			-l':alias of --limited-retry'
 			--latency':latency statistics will be output following write'
-			-t':alias of --latency'
+			-L':alias of --latency'
 			--force-unit-access':data shall be written to nonvolatile media before command completion is indicated'
 			-f':alias of --force-unit-access'
 			--show-command':show command instead of sending to device'

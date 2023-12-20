@@ -109,7 +109,7 @@ struct passthru_config {
 	struct argconfig_commandline_options n[] = {                              \
 		OPT_FLAG("verbose",      'v', NULL,               verbose),       \
 		OPT_FMT("output-format", 'o', &output_format_val, output_format), \
-		OPT_FLAG("latency",      't', NULL,               latency),       \
+		OPT_FLAG("latency",      'L', NULL,               latency),       \
 		##__VA_ARGS__,                                                    \
 		OPT_END()                                                         \
 	}
@@ -2227,14 +2227,14 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		  OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id),
 		  OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
 		  OPT_UINT("aen",          'a', &cfg.aen,          aen),
-		  OPT_SUFFIX("lpo",        'L', &cfg.lpo,          lpo),
+		  OPT_SUFFIX("lpo",        'O', &cfg.lpo,          lpo),
 		  OPT_BYTE("lsp",          's', &cfg.lsp,          lsp),
 		  OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
 		  OPT_FLAG("rae",          'r', &cfg.rae,          rae),
 		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
 		  OPT_BYTE("csi",          'y', &cfg.csi,          csi),
-		  OPT_FLAG("ot",           'O', &cfg.ot,           offset_type),
+		  OPT_FLAG("ot",           't', &cfg.ot,           offset_type),
 		  OPT_UINT("xfer-len",     'x', &cfg.xfer_len,     xfer_len));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -8097,7 +8097,7 @@ static int passthru(int argc, char **argv, bool admin,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
 		  OPT_UINT("metadata-len", 'm', &cfg.metadata_len, metadata_len),
-		  OPT_UINT("timeout",      'T', &cfg.timeout,      timeout),
+		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
 		  OPT_UINT("cdw2",         '2', &cfg.cdw2,         cdw2),
 		  OPT_UINT("cdw3",         '3', &cfg.cdw3,         cdw3),
 		  OPT_UINT("cdw10",        '4', &cfg.cdw10,        cdw10),

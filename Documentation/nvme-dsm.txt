@@ -16,6 +16,7 @@ SYNOPSIS
 			[--idw=<write> | -w <write>] [--idr=<read> | -r <read>]
 			[--cdw11=<cdw11> | -c <cdw11>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -82,6 +83,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

@@ -21,7 +21,7 @@ SYNOPSIS
 			[--limited-retry | -l] [--force-unit-access | -f]
 			[--dir-type=<type> | -T <type>]
 			[--dir-spec=<spec> | -S <spec>] [--dsm=<dsm> | -D <dsm>]
-			[--show-command | -V] [--dry-run | -w] [--latency | -t]
+			[--show-command | -V] [--dry-run | -w] [--latency | -L]
 			[--storage-tag<storage-tag> | -g <storage-tag>]
 			[--storage-tag-check | -C] [--force]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
@@ -131,7 +131,7 @@ metadata is passes.
 	--show-cmd option _must_ be set. Otherwise --dry-run option will be
 	_ignored_.
 
--t::
+-L::
 --latency::
 	Print out the latency the IOCTL took (in us).
 

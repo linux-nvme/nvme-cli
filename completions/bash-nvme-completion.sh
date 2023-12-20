@@ -131,8 +131,8 @@ nvme_list_opts () {
 		"get-log")
 		opts+=" --log-id= -i --log-len= -l --namespace-id= -n \
 			--aen= -a --lpo= -O --lsp= -s --lsi= -S \
-			--rae -r --uuid-index= -U --csi= -y --ot -O \
-			--raw-binary -b"
+			--rae -r --uuid-index= -U --csi= -y --ot -t \
+			--raw-binary -b --output-format= -o"
 			;;
 		"supported-log-pages")
 		opts+=" --output-format= -o --human-readable -H"
@@ -245,20 +245,20 @@ nvme_list_opts () {
 		"admin-passthru")
 		opts+=" --opcode= -O --flags= -f --prefil= -p --rsvd= -R \
 			--namespace-id= -n --data-len= -l --metadata-len= -m \
-			--timeout= -T --cdw2= -2 --cdw3= -3 --cdw10= -4 \
+			--timeout= -t --cdw2= -2 --cdw3= -3 --cdw10= -4 \
 			--cdw11= -5 --cdw12= -6 --cdw13= -7 --cdw14= -8 \
 			--cdw15= -9 --input-file= -i --raw-binary -b \
 			--show-command -s --dry-run -d --read -r --write -w \
-			--latency -t"
+			--latency -L"
 			;;
 		"io-passthru")
 		opts+=" --opcode= -O --flags= -f --prefill= -p --rsvd= -R \
 			--namespace-id= -n --data-len= -l --metadata-len= -m \
-			--timeout= -T --cdw2= -2 --cdw3= -3 --cdw10= -4 \
+			--timeout= -t --cdw2= -2 --cdw3= -3 --cdw10= -4 \
 			--cdw11= -5 --cdw12= -6 --cdw13= -7 --cdw14= -8 \
 			--cdw15= -9 --input-file= -i --raw-binary -b \
 			--show-command -s --dry-run -d --read -r --write -w \
-			--latency -t"
+			--latency -L"
 			;;
 		"security-send")
 		opts+=" --namespace-id= -n --file= -f --nssf= -N --secp= -p \
@@ -291,7 +291,8 @@ nvme_list_opts () {
 			;;
 		"dsm")
 		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b\
-			--slbs= -s --ad -d --idw -w --idr -r --cdw11= -c"
+			--slbs= -s --ad -d --idw -w --idr -r --cdw11= -c\
+			--latency -L"
 			;;
 		"copy")
 		opts+=" --namespace-id= -n --sdlba= -d --blocks= -b --slbs= -s \
