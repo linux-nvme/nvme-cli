@@ -2473,7 +2473,7 @@ static int nvme_ns_init(const char *path, struct nvme_ns *ns)
 
 		ret = nvme_ns_identify(ns, id);
 		if (ret)
-			free(ns);
+			return ret;
 
 		nvme_id_ns_flbas_to_lbaf_inuse(id->flbas, &flbas);
 		ns->lba_count = le64_to_cpu(id->nsze);
