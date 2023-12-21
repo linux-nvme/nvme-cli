@@ -2632,6 +2632,16 @@ static int wdc_do_dump_e6(int fd, __u32 opcode, __u32 data_len,
 	int i;
 	struct nvme_passthru_cmd admin_cmd;
 
+	/* if data_len is not 4 byte aligned */
+	if (data_len & 0x00000003) {
+		/* Round down to the next 4 byte aligned value */
+		fprintf(stderr, "%s: INFO: data_len 0x%x not 4 byte aligned.\n",
+				__func__, data_len);
+		fprintf(stderr, "%s: INFO: Round down to 0x%x.\n",
+				__func__, (data_len &= 0xFFFFFFFC));
+		data_len &= 0xFFFFFFFC;
+	}
+
 	dump_data = (__u8 *)malloc(sizeof(__u8) * data_len);
 
 	if (!dump_data) {
@@ -2649,7 +2659,8 @@ static int wdc_do_dump_e6(int fd, __u32 opcode, __u32 data_len,
 	admin_cmd.opcode = opcode;
 	admin_cmd.cdw12 = cdw12;
 
-	log_size = data_len;
+	/* subtract off the header size since that was already copied into the buffer */
+	log_size = (data_len - curr_data_offset);
 	while (log_size > 0) {
 		xfer_size = min(xfer_size, log_size);
 
@@ -8112,7 +8123,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 			struct ocp_cloud_smart_log log;
 			char buf[2 * sizeof(log.log_page_guid) + 3];
 
-			ret = validate_output_format(output_format, &fmt);
+			ret = validate_output_format(cfg.output_format, &fmt);
 			if (ret < 0) {
 				fprintf(stderr, "Invalid output format: %s\n", cfg.output_format);
 				goto out;
