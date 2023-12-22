@@ -8727,14 +8727,14 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	}
 
 	if (cfg.subsysnqn) {
-		if (cfg.insert && !cfg.hostnqn) {
+		if (!cfg.hostnqn) {
 			cfg.hostnqn = nvmf_hostnqn_from_file();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
 			}
 		}
-	} else if (cfg.insert || cfg.identity == 1) {
+	} else {
 		nvme_show_error("Need to specify a subsystem NQN");
 		return -EINVAL;
 	}
