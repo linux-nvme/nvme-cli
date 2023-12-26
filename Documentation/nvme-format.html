@@ -750,15 +750,13 @@ nvme-format(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme format</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                    [--lbaf=&lt;lbaf&gt; | -l &lt;lbaf&gt;]
-                    [--block-size=&lt;block size | -b &lt;block size&gt;]
-                    [--ses=&lt;ses&gt; | -s &lt;ses&gt;]
-                    [--pil=&lt;pil&gt; | -p &lt;pil&gt;]
-                    [--pi=&lt;pi&gt; | -i &lt;pi&gt;]
-                    [--ms=&lt;ms&gt; | -m &lt;ms&gt;]
-                    [--reset | -r ]
-                    [--force ]
-                    [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt; ]</pre>
+                        [--lbaf=&lt;lbaf&gt; | -l &lt;lbaf&gt;]
+                        [--block-size=&lt;block size | -b &lt;block size&gt;]
+                        [--ses=&lt;ses&gt; | -s &lt;ses&gt;] [--pil=&lt;pil&gt; | -p &lt;pil&gt;]
+                        [--pi=&lt;pi&gt; | -i &lt;pi&gt;] [--ms=&lt;ms&gt; | -m &lt;ms&gt;]
+                        [--reset | -r] [--force]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -995,6 +993,29 @@ cellspacing="0" cellpadding="4">
         Override default timeout value. In milliseconds.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1035,7 +1056,7 @@ information:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

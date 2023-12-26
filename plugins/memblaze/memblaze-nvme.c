@@ -646,7 +646,7 @@ static int glp_high_latency_show_bar(FILE *fdi, int print)
 }
 
 /*
- * High latency log page definiton
+ * High latency log page definition
  * Total 32 bytes
  */
 struct log_page_high_latency {

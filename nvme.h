@@ -28,6 +28,7 @@
 
 #include "plugin.h"
 #include "util/json.h"
+#include "util/mem.h"
 #include "util/argconfig.h"
 #include "util/cleanup.h"
 
@@ -101,23 +102,18 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *des
 
 void dev_close(struct nvme_dev *dev);
 
-static inline void cleanup_nvme_dev(struct nvme_dev **dev)
-{
-	if (*dev)
-		dev_close(*dev);
-}
+static inline DEFINE_CLEANUP_FUNC(
+	cleanup_nvme_dev, struct nvme_dev *, dev_close)
 #define _cleanup_nvme_dev_ __cleanup__(cleanup_nvme_dev)
 
 extern const char *output_format;
 
-enum nvme_print_flags validate_output_format(const char *format);
+int validate_output_format(const char *format, enum nvme_print_flags *flags);
 bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));
 
 extern int current_index;
-void *nvme_alloc_huge(size_t len, bool *huge);
-void nvme_free_huge(void *p, bool huge);
 
 const char *nvme_strerror(int errnum);
 

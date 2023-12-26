@@ -749,7 +749,8 @@ nvme-flush(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme flush</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+<pre class="content"><em>nvme flush</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -780,6 +781,29 @@ any namespace.</p></div>
         0xffffffff, indicating flush for all namespaces.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -800,7 +824,7 @@ any namespace.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

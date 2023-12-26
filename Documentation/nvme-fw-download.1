@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-download
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-DOWNLOAD" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-DOWNLOAD" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,8 +33,9 @@ nvme-fw-download \- Download all or a portion of an nvme firmware image\&.
 .sp
 .nf
 \fInvme fw\-download\fR <device> [\-\-fw=<firmware\-file> | \-f <firmware\-file>]
-                    [\-\-xfer=<transfer\-size> | \-x <transfer\-size>]
-                    [\-\-offset=<offset> | \-o <offset>]
+                        [\-\-xfer=<transfer\-size> | \-x <transfer\-size>]
+                        [\-\-offset=<offset> | \-O <offset>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -55,11 +56,25 @@ Required argument\&. This specifies the path to the device\(cqs firmware file on
 This specifies the size to split each transfer\&. This is useful if the device has a max transfer size requirement for firmware\&. It defaults to 4k\&.
 .RE
 .PP
-\-o <offset>, \-\-offset=<offset>
+\-O <offset>, \-\-offset=<offset>
 .RS 4
 This specifies the starting offset in dwords\&. This is really only useful if your firmware is split in multiple files; otherwise the offset starts at zero and automatically adjusts based on the
 \fIxfer\fR
 size given\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

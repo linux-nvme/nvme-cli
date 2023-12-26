@@ -9,7 +9,7 @@
 #include <string.h>
 #include "config.h"
 
-// max 16 bit unsigned integer nummber 65535
+// max 16 bit unsigned integer number 65535
 #define MAX_16BIT_NUM_AS_STRING_SIZE  6
 
 #define OBJ_NAME_PREFIX "UID_"

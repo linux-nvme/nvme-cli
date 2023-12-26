@@ -8,7 +8,8 @@ nvme-check-dhchap-key - Check a generated host DH-HMAC-CHAP key
 SYNOPSIS
 --------
 [verse]
-'nvme check-dhchap-key' [--key=<key> ]
+'nvme check-dhchap-key' [--key=<key>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -21,6 +22,15 @@ OPTIONS
 -k <key>::
 --key=<key>::
 	Key to be checked.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

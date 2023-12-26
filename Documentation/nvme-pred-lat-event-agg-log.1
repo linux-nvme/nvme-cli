@@ -2,12 +2,12 @@
 .\"     Title: nvme-pred-lat-event-agg-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-PRED\-LAT\-EVE" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-PRED\-LAT\-EVE" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,10 @@ nvme-pred-lat-event-agg-log \- Send Predictable Latency Event Aggregate Log Page
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme pred\-lat\-event\-agg\-log\fR <device> [\-\-log\-entries=<log_entries> | \-e <log_entries>]
+\fInvme pred\-lat\-event\-agg\-log\fR <device>
+                        [\-\-log\-entries=<log_entries> | \-e <log_entries>]
                         [\-\-rae | \-r] [\-\-raw\-binary | \-b]
-                        [\-\-output\-format=<fmt> | \-o <fmt>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -60,7 +61,7 @@ Retain an Asynchronous Event\&.
 Print the raw Predictable Latency Event Aggregate log buffer to stdout\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,

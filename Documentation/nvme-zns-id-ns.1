@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-ID\-NS" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-ID\-NS" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,8 @@ nvme-zns-id-ns \- Send NVMe Zoned Command Set Identify namespace, return result 
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme zns id\-ns\fR <device>  [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                             [\-o <fmt> | \-\-output\-format=<fmt>]
-                             [\-v | \-\-verbose]
+\fInvme zns id\-ns\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -55,7 +54,7 @@ Use the provided namespace id for the command\&. If not provided, the namespace 
 Increase the information detail in the output\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,

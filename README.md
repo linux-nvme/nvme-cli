@@ -7,7 +7,18 @@ NVM-Express user space tooling for Linux.
 
 ## Build from source
 
-nvme-cli uses meson as build system.
+nvme-cli uses meson as build system. There is more than one way to configure and
+build the project in order to mitigate meson dependency on the build
+environment.
+
+If you build on a relative modern system, either use meson directly or the
+Makefile wrapper.
+
+Older distros might ship a too old version of meson, in this case it's possible
+to build the project using [samurai](https://github.com/michaelforney/samurai)
+and [muon](https://github.com/annacrombie/muon). Both build tools have only a
+minimal dependency on the build environment. Too easy this step there is a build
+script which helps to setup a build environment.
 
 ### nvme-cli dependencies:
 
@@ -15,10 +26,11 @@ nvme-cli uses meson as build system.
  |---------|------------|-------|
  | libnvme, libnvme-mi| yes | be either installed or included into the build via meson fallback feature |
  | json-c | optional | recommended, without all plugins are disabled and json-c output format is disabled |
- | libhugetlbfs | optional | adds support for hugetlbfs |
 
 
-### Configuring
+### Build with meson
+
+#### Configuring
 
 In case libnvme is not installed on the system, it possible to use meson's
 fallback feature to resolve the dependency.
@@ -37,15 +49,42 @@ dependencies should also resolved or not. The options are
 
 Note for nvme-cli the 'default' is set to nofallback.
 
-### Building
+#### Building
 
 	$ meson compile -C .build
 
-### Installing
+#### Installing
 
 	# meson install -C .build
+	
+### Build with build.sh wrapper
 
-### Makefile wrapper
+The `scripts/build.sh` is used for the CI build but can also be used for
+configuring and building the project.
+
+Running `scripts/build.sh` without any argument builds the project in the
+default configuration (meson, gcc and defaults)
+
+It's possible to change the compiler to clang
+
+`scripts/builds.sh -c clang`
+
+or enabling all the fallbacks
+
+`scripts/build.sh fallback`
+
+### Minimal static build with muon
+
+`scripts/build.sh -m muon` will download and build `samurai` and `muon` instead
+using `meson` to build the project. This reduces the dependency on the build
+environment to:
+- gcc
+- make
+- git
+
+Furthermore, this configuration will produce a static binary.
+
+### Build with Makefile wrapper
 
 There is a Makefile wrapper for meson for backwards compatibility
 
@@ -58,6 +97,10 @@ RPM build support via Makefile that uses meson
 
 	$ make rpm
 
+Static binary(no dependency) build support via Makefile that uses meson   
+
+	$ make static
+
 If not sure how to use, find the top-level documentation with:
 
 	$ man nvme
@@ -65,7 +108,7 @@ If not sure how to use, find the top-level documentation with:
 Or find a short summary with:
 
 	$ nvme help
-
+	
 ## Distro Support
 
 Many popular distributions (Alpine, Arch, Debian, Fedora, FreeBSD, Gentoo,
@@ -251,7 +294,7 @@ global resources among various components. For example, when executing
 `blktests` for the FC transport, the `nvme-cli` udev rules can be triggered. To
 prevent interference with a test, `blktests` can create a JSON configuration
 file in `/run/nvme` to inform `nvme-cli` that it should not perform any actions
-trigged from the udev context. This behavior can be controlled using the
+triggered from the udev context. This behavior can be controlled using the
 `--context` argument.
 
 For example a `blktests` volatile configuration could look like:
@@ -283,3 +326,10 @@ a an atomic way. For example create a temporary file without the `.json` file
 extension in `/run/nvme` and write the contents to this file. When finished use
 `rename` to add the `'.json'` file name extension. This ensures nvme-cli only
 sees the complete file.
+
+## Testing
+
+For testing purposes a x86_64 AppImage is build from the current HEAD and is
+available here:
+
+https://monom.org/linux-nvme/upload/AppImage/nvme-cli-latest-x86_64.AppImage

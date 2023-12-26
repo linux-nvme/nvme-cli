@@ -44,7 +44,7 @@ COMMAND_LIST(
 	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
 	ENTRY("predictable-lat-log", "Retrieve Predictable Latency per Nvmset Log, show it", get_pred_lat_per_nvmset_log)
 	ENTRY("pred-lat-event-agg-log", "Retrieve Predictable Latency Event Aggregate Log, show it", get_pred_lat_event_agg_log)
-	ENTRY("persistent-event-log", "Retrieve Presistent Event Log, show it", get_persistent_event_log)
+	ENTRY("persistent-event-log", "Retrieve Persistent Event Log, show it", get_persistent_event_log)
 	ENTRY("endurance-event-agg-log", "Retrieve Endurance Group Event Aggregate Log, show it", get_endurance_event_agg_log)
 	ENTRY("lba-status-log", "Retrieve LBA Status Information Log, show it", get_lba_status_log)
 	ENTRY("resv-notif-log", "Retrieve Reservation Notification Log, show it", get_resv_notif_log)
@@ -103,7 +103,7 @@ COMMAND_LIST(
 	ENTRY("check-tls-key", "Validate NVMeoF TLS PSK", check_tls_key)
 	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
-	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller ", virtual_mgmt)
+	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller", virtual_mgmt)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
 	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd) \

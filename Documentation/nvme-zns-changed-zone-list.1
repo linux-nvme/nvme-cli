@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-changed-zone-list
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-CHANGED\-" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-CHANGED\-" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,8 @@ nvme-zns-changed-zone-list \- Retrieve Changed Zone log for the given device
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme zns changed\-zone\-list\fR <device> [\-o <fmt> | \-\-output\-format=<fmt>]
-                                      [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                                      [\-\-rae | \-r]
+\fInvme zns changed\-zone\-list\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
+                        [\-\-namespace\-id=<NUM> | \-n <NUM>] [\-\-rae | \-r]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -45,7 +44,7 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 On success, the returned list may be decoded and displayed in one of several ways\&.
 .SH "OPTIONS"
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,

@@ -2,12 +2,12 @@
 .\"     Title: nvme-list-ctrl
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LIST\-CTRL" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-LIST\-CTRL" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,25 +33,17 @@ nvme-list-ctrl \- Send NVMe Identify List Controllers, return result and structu
 .sp
 .nf
 \fInvme list\-ctrl\fR <device> [\-\-cntid=<cntid> | \-c <cntid>]
-                        [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-o <fmt> | \-\-output\-format=<fmt>]
-DESCRIPTION
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
+.SH "DESCRIPTION"
 .sp
-.nf
-For the NVMe device given, sends an identify command for controller list
-and provides the result and returned structure\&. This uses either mode
-12h or 13h depending on the requested namespace identifier\&.
-
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
-The starting controller in the list always begins with 0 unless the
-`\*(Aq\-\-cntid\*(Aq` option is given to override\&.
-
-On success, the controller array is printed for each index and controller
-identifier\&.
-
-OPTIONS
-.fi
+For the NVMe device given, sends an identify command for controller list and provides the result and returned structure\&. This uses either mode 12h or 13h depending on the requested namespace identifier\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. The starting controller in the list always begins with 0 unless the \*(Aq\-\-cntid\*(Aq option is given to override\&.
+.sp
+On success, the controller array is printed for each index and controller identifier\&.
+.SH "OPTIONS"
 .PP
 \-c <cntid>, \-\-cntid=<cntid>
 .RS 4
@@ -63,12 +55,18 @@ Retrieve the identify list structure starting with the given controller id\&.
 If provided, will request the controllers attached to the specified namespace\&. If no namespace is given, or set to 0, the command requests the controller list for the entire subsystem, whether or not they are attached to namespace(s)\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
-\fInormal\fR
+\fInormal\fR,
+\fIjson\fR
 or
-\fIjson\fR\&. Only one output format can be used at a time\&.
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

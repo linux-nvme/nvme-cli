@@ -2,12 +2,12 @@
 .\"     Title: nvme-lba-status-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LBA\-STATUS\-L" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-LBA\-STATUS\-L" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,8 @@ nvme-lba-status-log \- Send LBA Status Log Page request returns result and log
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme lba\-status\-log\fR <device> [\-\-rae | \-r] [\-\-output\-format=<fmt> | \-o <fmt>]
+\fInvme lba\-status\-log\fR <device> [\-\-rae | \-r]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -48,12 +49,18 @@ On success, the returned LBA Status Log Page structure may be returned in one of
 Retain an Asynchronous Event\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -57,7 +57,7 @@ static bool telemetry_log_get_value(const struct telemetry_log *tl,
 		char err_msg[MAX_WARNING_SIZE];
 
 		snprintf(err_msg, MAX_WARNING_SIZE,
-		    "Value crossing 64 bit, byte aligned bounday, not supported. size_bit=%u, offset_bit_from_byte=%u.",
+		    "Value crossing 64 bit, byte aligned boundary, not supported. size_bit=%u, offset_bit_from_byte=%u.",
 		    size_bit, offset_bit_from_byte);
 		*val_obj = json_object_new_string(err_msg);
 

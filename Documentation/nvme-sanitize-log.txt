@@ -8,9 +8,9 @@ nvme-sanitize-log - Send NVMe sanitize-log Command, return result
 SYNOPSIS
 --------
 [verse]
-'nvme sanitize-log' <device> [--rae | -r] [--output-format=<fmt> | -o <fmt>]
-			     [--human-readable | -H]
-			     [--raw-binary | -b]
+'nvme sanitize-log' <device> [--rae | -r] [--human-readable | -H]
+			[--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -41,11 +41,11 @@ Expected status and description :-
 |Global Data Erased bit
 If set to 1 then non-volatile storage in the NVM subsystem has
 not been written to:
-    a) since being manufactured and the NVM subsystem has never been sanitized; or
-    b) since the most recent successful sanitize operation.
+ a) since being manufactured and the NVM subsystem has never been sanitized; or
+ b) since the most recent successful sanitize operation.
 If cleared to 0, then non-volatile storage in the NVM subsystem has been written to:
-    a) since being manufactured and the NVM subsystem has never been sanitized; or
-    b) since the most recent successful sanitize operation of the NVM subsystem.
+ a) since being manufactured and the NVM subsystem has never been sanitized; or
+ b) since the most recent successful sanitize operation of the NVM subsystem.
 |===
 
 Sanitize Progress - percentage complete
@@ -58,11 +58,6 @@ OPTIONS
 --rae::
 	Retain an Asynchronous Event.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
-
 -H::
 --human-readable::
 	This option will parse and format many of the bit fields
@@ -72,6 +67,15 @@ OPTIONS
 --raw-binary::
 	Print the raw buffer to stdout. Structure is not parsed by
 	program. This overrides the vendor specific and human readable options.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

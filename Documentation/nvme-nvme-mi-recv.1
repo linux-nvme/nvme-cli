@@ -2,12 +2,12 @@
 .\"     Title: nvme-nvme-mi-recv
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-NVME\-MI\-RECV" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-NVME\-MI\-RECV" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,13 @@ nvme-nvme-mi-recv \- Send a NVMe\-MI Receive command to the specified device
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme nvme\-mi\-recv\fR <device> [\-\-opcode=<opcode> | \-o <opcode>]
-                             [\-\-namespace\-id=<nsid>]
-                             [\-\-data\-len=<data\-len> | \-l <data\-len>]
-                             [\-\-nmimt=<nmimt> | \-m <nmimt>]
-                             [\-\-nmd0=<nmd0> | \-0 <nmd0>]
-                             [\-\-nmd1=<nmd1> | \-1 <nmd1>]
-                             [\-\-input\-file=<file> | \-i <file>]
+\fInvme nvme\-mi\-recv\fR <device> [\-\-opcode=<opcode> | \-O <opcode>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-data\-len=<data\-len> | \-l <data\-len>]
+                        [\-\-nmimt=<nmimt> | \-m <nmimt>]
+                        [\-\-nmd0=<nmd0> | \-0 <nmd0>] [\-\-nmd1=<nmd1> | \-1 <nmd1>]
+                        [\-\-input\-file=<file> | \-i <file>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -49,7 +49,7 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 On success it returns 0, error code otherwise\&.
 .SH "OPTIONS"
 .PP
-\-o <opcode>, \-\-opcode=<opcode>
+\-O <opcode>, \-\-opcode=<opcode>
 .RS 4
 The NVMe\-MI opcode to send to the device in the command
 .RE
@@ -83,6 +83,20 @@ The value for the NVMe management request dword 1 in the command\&.
 .RS 4
 If the command is a data\-out (write) command, use this file to fill the buffer sent to the device\&. If no file is given, assumed to use STDIN\&.
 .RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
 .SH "EXAMPLES"
 .sp
 .RS 4
@@ -99,7 +113,7 @@ Has the program issue a nvme\-mi\-recv to execute the VPD read\&.
 .RS 4
 .\}
 .nf
-# nvme nvme\-mi\-recv /dev/nvme0n1 \-o 5 \-m 1 \-0 0 \-1 0x100 \-l 256
+# nvme nvme\-mi\-recv /dev/nvme0n1 \-O 5 \-m 1 \-0 0 \-1 0x100 \-l 256
 .fi
 .if n \{\
 .RE

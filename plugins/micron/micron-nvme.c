@@ -16,6 +16,7 @@
 #include <limits.h>
 #include "linux/types.h"
 #include "nvme-print.h"
+#include "util/cleanup.h"
 
 #define CREATE_CMD
 #include "micron-nvme.h"
@@ -1767,10 +1768,10 @@ static void GetGenericLogs(int fd, const char *dir)
 	struct nvme_firmware_slot fw_log;
 	struct nvme_cmd_effects_log effects;
 	struct nvme_persistent_event_log pevent_log;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	void *pevent_log_info = NULL;
 	__u32 log_len = 0;
 	int err = 0;
-	bool huge = false;
 
 	/* get self test log */
 	if (!nvme_get_log_device_self_test(fd, &self_test_log))
@@ -1799,17 +1800,17 @@ static void GetGenericLogs(int fd, const char *dir)
 	}
 
 	log_len = le64_to_cpu(pevent_log.tll);
-	pevent_log_info = nvme_alloc_huge(log_len, &huge);
+	pevent_log_info = nvme_alloc_huge(log_len, &mh);
 	if (!pevent_log_info) {
 		perror("could not alloc buffer for persistent event log page (ignored)!\n");
 		return;
 	}
+
 	err = nvme_get_log_persistent_event(fd, NVME_PEVENT_LOG_READ,
 					    log_len, pevent_log_info);
 	if (!err)
 		WriteData((__u8 *)pevent_log_info, log_len, dir,
 			  "persistent_event_log.bin", "persistent event log");
-	nvme_free_huge(pevent_log_info, huge);
 }
 
 static void GetNSIDDInfo(int fd, const char *dir, int nsid)
@@ -2221,7 +2222,7 @@ static int display_fw_activate_entry(int entry_count, struct fw_activation_histo
 	else
 		sprintf(ptr, "| pass");
 
-	/* replace all null charecters with spaces */
+	/* replace all null characters with spaces */
 	ptr = formatted_entry;
 	while (index < entry_size) {
 		if (ptr[index] == '\0')
@@ -2289,7 +2290,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *c
 		goto out;
 	}
 
-	/* check if we have atleast one entry to print */
+	/* check if we have at least one entry to print */
 	struct micron_fw_activation_history_table *table =
 			   (struct micron_fw_activation_history_table *)logC2;
 
@@ -2696,7 +2697,7 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *c
 
 	/* check for models that support 0xC0 log */
 	if (eModel != M51CX) {
-		printf("Unsupported drive model for vs-smart-add-log commmand\n");
+		printf("Unsupported drive model for vs-smart-add-log command\n");
 		err = -1;
 		goto out;
 	}

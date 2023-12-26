@@ -8,8 +8,9 @@ nvme-telemetry-log - Retrieves a Telemetry Host-Initiated log page from an NVMe 
 SYNOPSIS
 --------
 [verse]
-'nvme telemetry-log' <device> [--output-file=<file> | -o <file>]
-		      [--host-generate=<gen> | -g <gen>]
+'nvme telemetry-log' <device> [--output-file=<file> | -O <file>]
+			[--host-generate=<gen> | -g <gen>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -24,7 +25,7 @@ On success, the returned log structure will be in raw binary format _only_ with
 
 OPTIONS
 -------
--o <file>::
+-O <file>::
 --output-file=<file>::
 	File name to which raw binary data will be saved to.
 
@@ -40,6 +41,15 @@ OPTIONS
 	Retrieves the specific data area requested. Valid inputs are 1,2,3,4. If
 	this option is not specified, the default value is 3, since data area
 	4 may not be supported.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

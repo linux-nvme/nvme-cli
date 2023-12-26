@@ -8,7 +8,7 @@ nvme-get-ns-id - Retrieves the namespace ID for an NVMe block device
 SYNOPSIS
 --------
 [verse]
-'nvme get-ns-id' <device>
+'nvme get-ns-id' <device> [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -17,7 +17,14 @@ is mandatory and must be an NVMe block device (ex: /dev/nvme0n1).
 
 OPTIONS
 -------
-None
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

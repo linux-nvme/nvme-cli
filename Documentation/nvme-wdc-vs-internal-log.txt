@@ -8,15 +8,18 @@ nvme-wdc-vs-internal-log - Retrieve WDC device's internal firmware log and save 
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-internal-log' <device> [--output-file=<FILE>, -o <FILE>] [--transfer-size=<SIZE>, -s <SIZE>]
-    [--data-area=<DATA AREA>, -d <DATA_AREA>] [--file-size=<FILE SIZE>, -f <FILE SIZE>] [--offset=<OFFSET>, -e <OFFSET>]
-    [--type=<TYPE>, -t <type>] [--verbose, -v]
+'nvme wdc vs-internal-log' <device> [--output-file=<FILE>, -o <FILE>]
+			[--transfer-size=<SIZE>, -s <SIZE>]
+			[--data-area=<DATA AREA>, -d <DATA_AREA>]
+			[--file-size=<FILE SIZE>, -f <FILE SIZE>]
+			[--offset=<OFFSET>, -e <OFFSET>]
+			[--type=<TYPE>, -t <type>] [--verbose, -v]
 
 DESCRIPTION
 -----------
 
-For the NVMe device given, sends the WDC Vendor Specific Internal Log request and saves
-the result to a file.
+For the NVMe device given, sends the WDC Vendor Specific Internal Log request
+and saves the result to a file.
 
 The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
 
@@ -27,35 +30,40 @@ OPTIONS
 -------
 -o <FILE>::
 --output-file=<FILE>::
-	Output file; defaults to device serial number followed by "_internal_fw_log_<date>_<time>.bin" suffix
+	Output file; defaults to device serial number followed by
+	"_internal_fw_log_<date>_<time>.bin" suffix
 
 -s <SIZE>::
 --transfer-size=<SIZE>::
-    Transfer size; defaults to 0x10000 (65536 decimal) bytes
+	Transfer size; defaults to 0x10000 (65536 decimal) bytes
 
 -d <DATA AREA>::
 --data-area=<DATA AREA>::
-    DUI data area to retrieve.  The DUI data areas from 1 to <DATA AREA> will be retrieved.  This parameter
-    is currently only supported on the SN340, SN640, SN730, and SN840 devices.
+	DUI data area to retrieve. The DUI data areas from 1 to <DATA AREA> will
+	be retrieved. This parameter is currently only supported on the SN340,
+	SN640, SN730, and SN840 devices.
 
 -f <FILE SIZE>::
 --file-size=<FILE SIZE>::
-    Specifies the desired size of the data file starting at the passed in offset.  This allows the user to
-    retrieve the data in several smaller files of the passed in size.  This parameter is currently only
-    supported on the SN340 device.
+	Specifies the desired size of the data file starting at the passed in
+	offset. This allows the user to retrieve the data in several smaller
+	files of the passed in size. This parameter is currently only supported
+	on the SN340 device.
 
 -e <OFFSET>::
 --offset=<OFFSET>::
-	Specifies the data offset at which to start retrieving the data.  This parameter is used in combination
-	with the file size parameter to retrieve the data in several smaller files.  This parameter is currently
-    only supported on the SN340 device.
+	Specifies the data offset at which to start retrieving the data. This
+	parameter is used in combination with the file size parameter to
+	retrieve the data in several smaller files. This parameter is currently
+	only supported on the SN340 device.
 
 -t <TYPE>::
 --type=<TYPE>::
-	Specifies the telemetry type - NONE, HOST, or CONTROLLER.  This parameter is used to get either the host
-	generated or controller initiated telemetry log page.  If not specified or none is specified, the command
-    will return the default E6 log data.  This parameter is currently only supported on the SN640 and SN840
-    devices.
+	Specifies the telemetry type - NONE, HOST, or CONTROLLER. This parameter
+	is used to get either the host generated or controller initiated
+	telemetry log page. If not specified or none is specified, the command
+	will return the default E6 log data. This parameter is currently only
+	supported on the SN640 and SN840 devices.
 
 -v <VERBOSE>::
 --verbose=<VERBOSE>::

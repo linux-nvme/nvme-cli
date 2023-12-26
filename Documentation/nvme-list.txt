@@ -8,7 +8,7 @@ nvme-list - List all recognized NVMe devices
 SYNOPSIS
 --------
 [verse]
-'nvme list' [-o <fmt> | --output-format=<fmt>]
+'nvme list' [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -17,10 +17,10 @@ for those devices as well as some pertinent information about them.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
-	Set the reporting format to 'normal' or 'json'. Only one output
-	format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
 
 -v::
 --verbose::
@@ -31,7 +31,6 @@ OPTIONS
 ENVIRONMENT
 -----------
 PCI_IDS_PATH - Full path of pci.ids file in case nvme could not find it in common locations.
-
 
 EXAMPLES
 --------

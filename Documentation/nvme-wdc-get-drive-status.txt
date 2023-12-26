@@ -3,7 +3,8 @@ nvme-wdc-get-drive-status(1)
 
 NAME
 ----
-nvme-wdc-get-drive-status - Send the NVMe WDC get-drive-status command, return result
+nvme-wdc-get-drive-status - Send the NVMe WDC get-drive-status command, return
+result
 
 SYNOPSIS
 --------
@@ -33,19 +34,18 @@ Output Explanation
 |The percentage of drive function used.
 
 |*EOL (End of Life) Status*
-|The 3 possible states are :  Normal, Read Only, or End of Life.
+|The 3 possible states are : Normal, Read Only, or End of Life.
 
 |*Assert Dump Status*
-|The 2 possible states are :  Present or Not Present.
+|The 2 possible states are : Present or Not Present.
 
 |*Thermal Throttling Status*
-|The 3 possible states are :  Off, On, or Unavailable.
+|The 3 possible states are : Off, On, or Unavailable.
 
 |*Format Corrupt Reason*
-|The 3 possible states are :  Not Corrupted, Corrupt due to FW Assert, or Corrupt for Unknown Reason.
+|The 3 possible states are : Not Corrupted, Corrupt due to FW Assert, or Corrupt for Unknown Reason.
 
 |===
-
 
 EXAMPLES
 --------

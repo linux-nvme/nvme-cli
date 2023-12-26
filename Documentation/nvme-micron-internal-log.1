@@ -2,12 +2,12 @@
 .\"     Title: nvme-micron-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-MICRON\-INTERN" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-MICRON\-INTERN" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,7 +36,7 @@ nvme-micron-internal-log \- Retrieve Micron device\*(Aqs internal logs and save 
 .fi
 .SH "DESCRIPTION"
 .sp
-For the given NVMe device, sends the Micron vendor specific device commands to retrieve various logs (in binary format) and compresses them and saves into specified zip file\&. These vendor unique logs can be analyzed with Micron Technical support team for any device specific issues
+For the given NVMe device, sends the Micron vendor specific device commands to retrieve various logs (in binary format) and compresses them and saves into specified zip file\&. These vendor unique logs can be analyzed with Micron Technical support team for any device specific issues\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp

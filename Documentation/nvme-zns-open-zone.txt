@@ -9,10 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme zns open-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
-			      [--start-lba=<LBA> | -s <LBA>]
-			      [--zrwaa | -r]
-			      [--select-all | -a]
-			      [--timeout=<timeout> | -t <timeout>]
+			[--start-lba=<LBA> | -s <LBA>] [--zrwaa | -r]
+			[--select-all | -a] [--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------

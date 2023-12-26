@@ -26,27 +26,6 @@ static const char dash[100] = {[0 ... 99] = '-'};
 
 static struct print_ops stdout_print_ops;
 
-struct nvme_bar_cap {
-	__u16	mqes;
-	__u8	cqr:1;
-	__u8	ams:2;
-	__u8	rsvd19:5;
-	__u8	to;
-	__u16	dstrd:4;
-	__u16	nssrs:1;
-	__u16	css:8;
-	__u16	bps:1;
-	__u8	cps:2;
-	__u8	mpsmin:4;
-	__u8	mpsmax:4;
-	__u8	pmrs:1;
-	__u8	cmbs:1;
-	__u8	nsss:1;
-	__u8	crwms:1;
-	__u8	crims:1;
-	__u8	rsvd61:3;
-};
-
 static const char *subsys_key(const struct nvme_subsystem *s)
 {
 	return nvme_subsystem_get_name((nvme_subsystem_t)s);
@@ -1246,10 +1225,8 @@ static void stdout_registers_csts(__u32 csts)
 
 static void stdout_registers_crto(__u32 crto)
 {
-	printf("\tCRIMT                               : %d secs\n",
-		NVME_CRTO_CRIMT(crto)/2 );
-	printf("\tCRWMT                               : %d secs\n",
-		NVME_CRTO_CRWMT(crto)/2 );
+	printf("\tCRIMT                               : %d secs\n", NVME_CRTO_CRIMT(crto) / 2);
+	printf("\tCRWMT                               : %d secs\n", NVME_CRTO_CRWMT(crto) / 2);
 }
 
 static void stdout_registers_aqa(__u32 aqa)
@@ -1358,7 +1335,6 @@ static void stdout_registers_bprsel(__u32 bprsel)
 
 static void stdout_registers_bpmbl(uint64_t bpmbl)
 {
-
 	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n",
 		bpmbl);
 }
@@ -1612,23 +1588,17 @@ void stdout_ctrl_registers(void *bar, bool fabrics)
 static void stdout_single_property(int offset, uint64_t value64)
 {
 	int human = stdout_print_ops.flags & VERBOSE;
-
-	uint32_t value32;
+	uint32_t value32 = (uint32_t)value64;
 
 	if (!human) {
 		if (nvme_is_64bit_reg(offset))
 			printf("property: 0x%02x (%s), value: %"PRIx64"\n",
-				offset, nvme_register_to_string(offset),
-				value64);
+			       offset, nvme_register_to_string(offset), value64);
 		else
 			printf("property: 0x%02x (%s), value: %x\n", offset,
-				   nvme_register_to_string(offset),
-				   (uint32_t) value64);
-
+			       nvme_register_to_string(offset), value32);
 		return;
 	}
-
-	value32 = (uint32_t) value64;
 
 	switch (offset) {
 	case NVME_REG_CAP:
@@ -1649,8 +1619,7 @@ static void stdout_single_property(int offset, uint64_t value64)
 		break;
 	case NVME_REG_NSSR:
 		printf("nssr : %x\n", value32);
-		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n",
-			value32);
+		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", value32);
 		break;
 	case NVME_REG_CRTO:
 		printf("crto : %x\n", value32);
@@ -1658,7 +1627,7 @@ static void stdout_single_property(int offset, uint64_t value64)
 		break;
 	default:
 		printf("unknown property: 0x%02x (%s), value: %"PRIx64"\n",
-			offset, nvme_register_to_string(offset), value64);
+		       offset, nvme_register_to_string(offset), value64);
 		break;
 	}
 }
@@ -1694,6 +1663,13 @@ static void stdout_status(int status)
 			val);
 		break;
 	}
+}
+
+static void stdout_error_status(int status, const char *msg, va_list ap)
+{
+	vfprintf(stderr, msg, ap);
+	fprintf(stderr, ": ");
+	stdout_status(status);
 }
 
 static void stdout_id_ctrl_cmic(__u8 cmic)
@@ -2167,19 +2143,25 @@ static void stdout_id_ctrl_cqes(__u8 cqes)
 static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 {
 	__u16 oncs = le16_to_cpu(ctrl_oncs);
-	__u16 rsvd = (oncs & 0xFE00) >> 9;
-	__u16 copy = (oncs & 0x100) >> 8;
-	__u16 vrfy = (oncs & 0x80) >> 7;
-	__u16 tmst = (oncs & 0x40) >> 6;
-	__u16 resv = (oncs & 0x20) >> 5;
-	__u16 save = (oncs & 0x10) >> 4;
-	__u16 wzro = (oncs & 0x8) >> 3;
-	__u16 dsms = (oncs & 0x4) >> 2;
-	__u16 wunc = (oncs & 0x2) >> 1;
-	__u16 cmp = oncs & 0x1;
+	__u16 rsvd = oncs >> 11;
+	bool afc  = !!(oncs & NVME_CTRL_ONCS_ALL_FAST_COPY);
+	bool csa  = !!(oncs & NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY);
+	bool copy = !!(oncs & NVME_CTRL_ONCS_COPY);
+	bool vrfy = !!(oncs & NVME_CTRL_ONCS_VERIFY);
+	bool tmst = !!(oncs & NVME_CTRL_ONCS_TIMESTAMP);
+	bool resv = !!(oncs & NVME_CTRL_ONCS_RESERVATIONS);
+	bool save = !!(oncs & NVME_CTRL_ONCS_SAVE_FEATURES);
+	bool wzro = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES);
+	bool dsms = !!(oncs & NVME_CTRL_ONCS_DSM);
+	bool wunc = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
+	bool cmp  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
 
 	if (rsvd)
-		printf(" [15:9] : %#x\tReserved\n", rsvd);
+		printf(" [15:11] : %#x\tReserved\n", rsvd);
+	printf("  [10:10] : %#x\tAll Fast Copy %sSupported\n",
+		afc, afc ? "" : "Not ");
+	printf("  [9:9] : %#x\tCopy Single Atomicity %sSupported\n",
+		csa, csa ? "" : "Not ");
 	printf("  [8:8] : %#x\tCopy %sSupported\n",
 		copy, copy ? "" : "Not ");
 	printf("  [7:7] : %#x\tVerify %sSupported\n",
@@ -2288,15 +2270,16 @@ static void stdout_id_ctrl_nwpc(__u8 nwpc)
 static void stdout_id_ctrl_ocfs(__le16 ctrl_ocfs)
 {
 	__u16 ocfs = le16_to_cpu(ctrl_ocfs);
-	__u16 rsvd = (ocfs & 0xfffc) >> 2;
-	__u8 copy_fmt_1 = (ocfs >> 1) & 0x1;
-	__u8 copy_fmt_0 = ocfs & 0x1;
+	__u16 rsvd = ocfs >> 4;
+	__u8 copy_fmt_supported;
+	int copy_fmt;
 	if (rsvd)
-		printf("  [15:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tController Copy Format 1h %sSupported\n",
-		copy_fmt_1, copy_fmt_1 ? "" : "Not ");
-	printf("  [0:0] : %#x\tController Copy Format 0h %sSupported\n",
-		copy_fmt_0, copy_fmt_0 ? "" : "Not ");
+		printf("  [15:4] : %#x\tReserved\n", rsvd);
+	for (copy_fmt = 3; copy_fmt >= 0; copy_fmt--) {
+		copy_fmt_supported = ocfs >> copy_fmt & 1;
+		printf("  [%d:%d] : %#x\tController Copy Format %xh %sSupported\n", copy_fmt, copy_fmt,
+			copy_fmt_supported, copy_fmt, copy_fmt_supported ? "" : "Not ");
+	}
 	printf("\n");
 }
 
@@ -3282,7 +3265,7 @@ static void stdout_zns_changed(struct nvme_zns_changed_zone_log *log)
 static void stdout_zns_report_zone_attributes(__u8 za, __u8 zai)
 {
 	const char *const recommended_limit[4] = {"","1","2","3"};
-	printf("Attrs: Zone Descriptor Extension is %sVaild\n", 
+	printf("Attrs: Zone Descriptor Extension is %sVaild\n",
 		(za & NVME_ZNS_ZA_ZDEV)? "" : "Not ");
 	if(za & NVME_ZNS_ZA_RZR) {
 		printf("       Reset Zone Recommended with Reset Recommended Limit%s\n",
@@ -4130,7 +4113,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		le32_to_cpu(sanitize->etcend));
 }
 
-static void stdout_select_result(__u32 result)
+static void stdout_select_result(enum nvme_features_id fid, __u32 result)
 {
 	if (result & 0x1)
 		printf("  Feature is saveable\n");
@@ -4316,6 +4299,41 @@ static void stdout_lba_status_info(__u32 result)
 	printf("\tLBA Status Information Report Interval (LSIRI): %u\n", result & 0xffff);
 }
 
+void stdout_d(unsigned char *buf, int len, int width, int group)
+{
+	int i, offset = 0;
+	char ascii[32 + 1] = { 0 };
+
+	assert(width < sizeof(ascii));
+
+	printf("     ");
+
+	for (i = 0; i <= 15; i++)
+		printf("%3x", i);
+
+	for (i = 0; i < len; i++) {
+		if (!(i % width))
+			printf( "\n%04x:", offset);
+		if (i % group)
+			printf( "%02x", buf[i]);
+		else
+			printf( " %02x", buf[i]);
+		ascii[i % width] = (buf[i] >= '!' && buf[i] <= '~') ? buf[i] : '.';
+		if (!((i + 1) % width)) {
+			printf( " \"%.*s\"", width, ascii);
+			offset += width;
+			memset(ascii, 0, sizeof(ascii));
+		}
+	}
+
+	if (strlen(ascii)) {
+		unsigned b = width - (i % width);
+		printf( " %*s \"%.*s\"", 2 * b + b / group + (b % group ? 1 : 0), "", width, ascii);
+	}
+
+	printf( "\n");
+}
+
 static void stdout_plm_config(struct nvme_plm_config *plmcfg)
 {
 	printf("\tEnable Event          :%04x\n", le16_to_cpu(plmcfg->ee));
@@ -4346,6 +4364,12 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 
 		desc = (struct nvme_metadata_element_desc *)&desc->val[desc->len];
 	}
+}
+
+static void stdout_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
+{
+	printf("get-feature:%#0*x (%s), %s value:%#0*x\n", fid ? 4 : 2, fid,
+	       nvme_feature_to_string(fid), nvme_select_to_string(sel), result ? 10 : 8, result);
 }
 
 static void stdout_feature_show_fields(enum nvme_features_id fid,
@@ -4474,8 +4498,20 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		stdout_lba_status_info(result);
 		break;
 	case NVME_FEAT_FID_HOST_BEHAVIOR:
-		if (buf)
-			printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
+		if (buf) {
+			struct nvme_feat_host_behavior *host_behavior =
+				(struct nvme_feat_host_behavior *)buf;
+			printf("\tAdvanced Command Retry Enable (ACRE): %s\n",
+			       host_behavior->acre ? "True" : "False");
+			printf("\tExtended Telemetry Data Area 4 Supported (ETDAS): %s\n",
+			       host_behavior->etdas ? "True" : "False");
+			printf("\tLBA Format Extension Enable (LBAFEE): %s\n",
+			       host_behavior->lbafee ? "True" : "False");
+			printf("\tCopy Descriptor Format 2h Enabled (CDFE): %s\n",
+			       host_behavior->cdfe & (1 << 2) ? "True" : "False");
+			printf("\tCopy Descriptor Format 3h Enabled (CDFE): %s\n",
+			       host_behavior->cdfe & (1 << 3) ? "True" : "False");
+		}
 		break;
 	case NVME_FEAT_FID_SANITIZE:
 		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
@@ -4718,7 +4754,6 @@ static bool stdout_detailed_subsys(const char *name, void *arg)
 	for (s = htable_subsys_getfirst(&res->ht_s, name, &it);
 	     s;
 	     s = htable_subsys_getnext(&res->ht_s, name, &it)) {
-
 		if (first) {
 			printf("%-16s %-96s ", name, nvme_subsystem_get_nqn(s));
 			first = false;
@@ -4793,7 +4828,6 @@ static bool stdout_detailed_ns(const char *name, void *arg)
 	for (n = htable_ns_getfirst(&res->ht_n, name, &it);
 	     n;
 	     n = htable_ns_getnext(&res->ht_n, name, &it)) {
-
 		if (first) {
 			stdout_ns_details(n);
 			first = false;
@@ -4995,7 +5029,7 @@ static void stdout_message(bool error, const char *msg, va_list ap)
 {
 	vfprintf(error ? stderr : stdout, msg, ap);
 
-	printf("\n");
+	fprintf(error ? stderr : stdout, "\n");
 }
 
 static void stdout_perror(const char *msg)
@@ -5048,7 +5082,7 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 
 static void stdout_connect_msg(nvme_ctrl_t c)
 {
-	printf("device: %s\n", nvme_ctrl_get_name(c));
+	printf("connecting to device: %s\n", nvme_ctrl_get_name(c));
 }
 
 static struct print_ops stdout_print_ops = {
@@ -5109,10 +5143,14 @@ static struct print_ops stdout_print_ops = {
 	.zns_id_ctrl			= stdout_zns_id_ctrl,
 	.zns_id_ns			= stdout_zns_id_ns,
 	.zns_report_zones		= stdout_zns_report_zones,
+	.show_feature			= stdout_feature_show,
 	.show_feature_fields		= stdout_feature_show_fields,
 	.id_ctrl_rpmbs			= stdout_id_ctrl_rpmbs,
 	.lba_range			= stdout_lba_range,
 	.lba_status_info		= stdout_lba_status_info,
+	.d				= stdout_d,
+	.show_init			= NULL,
+	.show_finish			= NULL,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,
@@ -5126,6 +5164,7 @@ static struct print_ops stdout_print_ops = {
 	.show_message			= stdout_message,
 	.show_perror			= stdout_perror,
 	.show_status			= stdout_status,
+	.show_error_status		= stdout_error_status,
 };
 
 struct print_ops *nvme_get_stdout_print_ops(enum nvme_print_flags flags)

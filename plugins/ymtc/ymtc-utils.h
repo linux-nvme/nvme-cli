@@ -34,7 +34,7 @@ typedef unsigned char           u8;
 #define SI_VD_THERMAL_THROTTLE_TIME_ID               0xEB
 #define SI_VD_FLASH_MEDIA_ERROR_ID                   0xED
 
-/* Addtional smart internal ID */
+/* Additional smart internal ID */
 typedef enum
 {
     /* smart attr following intel */

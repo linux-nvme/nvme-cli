@@ -2,12 +2,12 @@
 .\"     Title: nvme-device-self-test
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DEVICE\-SELF\-" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-DEVICE\-SELF\-" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,8 @@ nvme-device-self-test \- Perform the necessary tests to observe the performance 
 .sp
 .nf
 \fInvme device\-self\-test\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                        [\-\-self\-test\-code=<NUM> | \-s <NUM>]  [\-\-wait | \-w]
+                        [\-\-self\-test\-code=<NUM> | \-s <NUM>] [\-\-wait | \-w]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -57,6 +58,20 @@ This field specifies the action taken by the device self\-test command : 0h: Sho
 \-w, \-\-wait
 .RS 4
 Wait for the device self test to complete before exiting The device self\-test is aborted by SIGINT signal interrupt for the wait The option is ignored if the abort self\-test code option specified\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

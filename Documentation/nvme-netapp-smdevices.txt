@@ -8,7 +8,7 @@ nvme-netapp-smdevices - Display information for each NVMe path to an E-Series vo
 SYNOPSIS
 --------
 [verse]
-'nvme netapp smdevices' [-o <fmt> | --output-format=<fmt>]
+'nvme netapp smdevices' [--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------

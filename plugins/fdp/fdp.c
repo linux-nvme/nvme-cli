@@ -56,7 +56,7 @@ static int fdp_configs(int argc, char **argv, struct command *cmd,
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = validate_output_format(cfg.output_format, &flags);
 	if (flags < 0)
 		goto out;
 
@@ -137,7 +137,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = validate_output_format(cfg.output_format, &flags);
 	if (flags < 0)
 		goto out;
 
@@ -208,7 +208,7 @@ static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = validate_output_format(cfg.output_format, &flags);
 	if (flags < 0)
 		goto out;
 
@@ -269,7 +269,7 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = validate_output_format(cfg.output_format, &flags);
 	if (flags < 0)
 		goto out;
 
@@ -328,7 +328,7 @@ static int fdp_status(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err)
 		return err;
 
-	err = flags = validate_output_format(cfg.output_format);
+	err = validate_output_format(cfg.output_format, &flags);
 	if (flags < 0)
 		goto out;
 

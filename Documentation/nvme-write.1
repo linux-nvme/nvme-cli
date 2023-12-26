@@ -2,12 +2,12 @@
 .\"     Title: nvme-write
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WRITE" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-WRITE" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,54 +42,50 @@ nvme-write \- Send an NVMe write command, provide results
                         [\-\-prinfo=<prinfo> | \-p <prinfo>]
                         [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
                         [\-\-app\-tag=<apptag> | \-a <apptag>]
-                        [\-\-limited\-retry | \-l]
-                        [\-\-force\-unit\-access | \-f]
+                        [\-\-limited\-retry | \-l] [\-\-force\-unit\-access | \-f]
                         [\-\-dir\-type=<type> | \-T <type>]
-                        [\-\-dir\-spec=<spec> | \-S <spec>]
-                        [\-\-dsm=<dsm> | \-D <dsm>]
-                        [\-\-show\-command | \-v]
-                        [\-\-dry\-run | \-w]
-                        [\-\-latency | \-t]
+                        [\-\-dir\-spec=<spec> | \-S <spec>] [\-\-dsm=<dsm> | \-D <dsm>]
+                        [\-\-show\-command | \-V] [\-\-dry\-run | \-w] [\-\-latency | \-t]
                         [\-\-storage\-tag<storage\-tag> | \-g <storage\-tag>]
-                        [\-\-storage\-tag\-check | \-C]
-                        [\-\-force]
+                        [\-\-storage\-tag\-check | \-C] [\-\-force]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
 The Write command writes the logical blocks specified by the command to the medium from the data data buffer provided\&. Will use stdin by default if you don\(cqt provide a file\&.
 .SH "OPTIONS"
 .PP
-\-\-start\-block=<slba>, \-s <slba>
+\-s <slba>, \-\-start\-block=<slba>
 .RS 4
 Start block\&.
 .RE
 .PP
-\-\-block\-count, \-c
+\-c, \-\-block\-count
 .RS 4
 The number of blocks to transfer\&. This is a zeroes based value to align with the kernel\(cqs use of this field\&. (ie\&. 0 means transfer 1 block)\&.
 .RE
 .PP
-\-\-data\-size=<size>, \-z <size>
+\-z <size>, \-\-data\-size=<size>
 .RS 4
 Size of data, in bytes\&.
 .RE
 .PP
-\-\-metadata\-size=<size>, \-y <size>
+\-y <size>, \-\-metadata\-size=<size>
 .RS 4
 Size of metadata in bytes\&.
 .RE
 .PP
-\-\-data=<data\-file>, \-d <data\-file>
+\-d <data\-file>, \-\-data=<data\-file>
 .RS 4
 Data file\&. If none provided, contents are sent from STDIN\&.
 .RE
 .PP
-\-\-metadata=<metadata\-file>, \-M <metadata\-file>
+\-M <metadata\-file>, \-\-metadata=<metadata\-file>
 .RS 4
 Metadata file, if necessary\&.
 .RE
 .PP
-\-\-prinfo=<prinfo>, \-p <prinfo>
+\-p <prinfo>, \-\-prinfo=<prinfo>
 .RS 4
 Protection Information field definition\&.
 .TS
@@ -134,27 +130,27 @@ T}
 .sp 1
 .RE
 .PP
-\-\-ref\-tag=<reftag>, \-r <reftag>
+\-r <reftag>, \-\-ref\-tag=<reftag>
 .RS 4
 Optional reftag when used with protection information\&.
 .RE
 .PP
-\-\-app\-tag\-mask=<appmask>, \-m <appmask>
+\-m <appmask>, \-\-app\-tag\-mask=<appmask>
 .RS 4
 Optional application tag mask when used with protection information\&.
 .RE
 .PP
-\-\-app\-tag=<apptag>, \-a <apptag>
+\-a <apptag>, \-\-app\-tag=<apptag>
 .RS 4
 Optional application tag when used with protection information\&.
 .RE
 .PP
-\-\-limited\-retry, \-l
+\-l, \-\-limited\-retry
 .RS 4
 Sets the limited retry flag\&.
 .RE
 .PP
-\-\-force\-unit\-access, \-f
+\-f, \-\-force\-unit\-access
 .RS 4
 Set the force\-unit access flag\&.
 .RE
@@ -174,7 +170,7 @@ Optional field for directive specifics\&. When used with write streams, this val
 The optional data set management attributes for this command\&. The argument for this is the least significant 8 bits of the DSM field in a write command; the most significant 16 bits of the field come from the directive specific field, if used\&. This may be used to set attributes for the LBAs being written, like access frequency, type, latency, among other things, as well as yet to be defined types\&. Please consult the NVMe specification for detailed breakdown of how to use this field\&.
 .RE
 .PP
-\-v, \-\-show\-cmd
+\-V, \-\-show\-cmd
 .RS 4
 Print out the command to be sent\&.
 .RE
@@ -205,6 +201,20 @@ This flag enables Storage Tag field checking as part of end\-to\-end data protec
 \-\-force
 .RS 4
 Ignore namespace is currently busy and performed the operation even though\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

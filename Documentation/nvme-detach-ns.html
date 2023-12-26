@@ -750,7 +750,8 @@ nvme-detach-ns(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme detach-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;</pre>
+                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -782,12 +783,35 @@ controller identifiers.</p></div>
 -c &lt;ctrl-list,&gt;
 </dt>
 <dt class="hdlist1">
--controllers=&lt;ctrl-list,&gt;
+--controllers=&lt;ctrl-list,&gt;
 </dt>
 <dd>
 <p>
         The comma separated list of controller identifiers to detach
         the namespace from.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -810,7 +834,7 @@ controller identifiers.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

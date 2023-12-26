@@ -750,14 +750,14 @@ nvme-dir-send(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme dir-send</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                          [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                          [--dir-type=&lt;dtype&gt; | -D &lt;dtype&gt;]
-                          [--dir-spec=&lt;dspec&gt; | -S &lt;dspec&gt;]
-                          [--dir-oper=&lt;doper&gt; | -O &lt;doper&gt;]
-                          [--endir=&lt;endir&gt; | -e &lt;endir&gt;]
-                          [--target-dir=&lt;tdir&gt; | -T &lt;tdir&gt;]
-                          [--human-readable | -H]
-                          [--raw-binary | -b]</pre>
+                        [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
+                        [--dir-type=&lt;dtype&gt; | -D &lt;dtype&gt;]
+                        [--dir-spec=&lt;dspec&gt; | -S &lt;dspec&gt;]
+                        [--dir-oper=&lt;doper&gt; | -O &lt;doper&gt;]
+                        [--endir=&lt;endir&gt; | -e &lt;endir&gt;]
+                        [--target-dir=&lt;tdir&gt; | -T &lt;tdir&gt;]
+                        [--human-readable | -H] [--raw-binary | -b]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -848,9 +848,6 @@ printed to stdout for another program to parse.</p></div>
 <p>
         Target directive enable(1) or disable (0) operation
 </p>
-</dd>
-</dl></div>
-<div class="paragraph"><p>+</p></div>
 <div class="tableblock">
 <table rules="all"
 width="100%"
@@ -886,7 +883,7 @@ cellspacing="0" cellpadding="4">
 </tbody>
 </table>
 </div>
-<div class="dlist"><dl>
+</dd>
 <dt class="hdlist1">
 -l &lt;data-len&gt;
 </dt>
@@ -922,6 +919,29 @@ cellspacing="0" cellpadding="4">
 <p>
         Print the decoded receive buffer to stdout if the command returns
         a structure.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -982,7 +1002,7 @@ Release stream ID 3 :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

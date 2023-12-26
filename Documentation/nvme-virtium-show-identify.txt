@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme virtium show-identify' <device>
-			
+
 DESCRIPTION
 -----------
 This command prints complete detail of the identify device information. The
@@ -24,8 +24,7 @@ On success, the command prints identify device in human readable format.
 OPTIONS
 -------
 none
-	
-	
+
 EXAMPLES
 --------
 * Show Identify Device:

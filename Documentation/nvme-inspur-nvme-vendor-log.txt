@@ -23,7 +23,6 @@ OPTIONS
 -------
 none
 
-
 EXAMPLES
 --------
 * Print the Inspur Device Vendor log page in a human readable format:

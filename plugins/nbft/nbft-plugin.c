@@ -543,7 +543,7 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 	if (ret)
 		return ret;
 
-	ret = flags = validate_output_format(format);
+	ret = validate_output_format(format, &flags);
 	if (ret < 0)
 		return ret;
 

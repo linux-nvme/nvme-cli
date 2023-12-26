@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,10 @@ nvme-id-ns \- Send NVMe Identify Namespace, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme id\-ns\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
-                    [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-\-force]
-                    [\-\-human\-readable | \-H]
-                    [\-\-output\-format=<fmt> | \-o <fmt>]
+\fInvme id\-ns\fR <device> [\-\-vendor\-specific | \-v] [\-\-raw\-binary | \-b]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-\-force]
+                        [\-\-human\-readable | \-H]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -61,7 +61,7 @@ Request controller return the identify namespace structure even if the namespace
 Print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the vendor specific and human readable options\&.
 .RE
 .PP
-\-v, \-\-vendor\-specific
+\-V, \-\-vendor\-specific
 .RS 4
 In addition to parsing known fields, this option will dump the vendor specific region of the structure in hex with ascii interpretation\&.
 .RE
@@ -71,12 +71,18 @@ In addition to parsing known fields, this option will dump the vendor specific r
 This option will parse and format many of the bit fields into human\-readable formats\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -139,7 +145,7 @@ In addition to showing the known fields, have the program to display the vendor 
 .\}
 .nf
 # nvme id\-ns /dev/nvme0n1 \-\-vendor\-specific
-# nvme id\-ns /dev/nvme0n1 \-v
+# nvme id\-ns /dev/nvme0n1 \-V
 .fi
 .if n \{\
 .RE

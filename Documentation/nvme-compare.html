@@ -764,12 +764,13 @@ nvme-compare(1) Manual Page
                         [--dir-type=&lt;type&gt; | -T &lt;type&gt;]
                         [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;]
                         [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
-                        [--show-command | -v]
+                        [--show-command | -V]
                         [--dry-run | -w]
                         [--latency | -t]
                         [--storage-tag&lt;storage-tag&gt; | -g &lt;storage-tag&gt;]
                         [--storage-tag-check | -C]
-                        [--force]</pre>
+                        [--force]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -877,9 +878,6 @@ provided, then a comparison is also performed for the metadata.</p></div>
 <p>
         Protection Information and check field.
 </p>
-</dd>
-</dl></div>
-<div class="paragraph"><p>+</p></div>
 <div class="tableblock">
 <table rules="all"
 width="100%"
@@ -917,7 +915,7 @@ metadata is passes.</p></td>
 </tbody>
 </table>
 </div>
-<div class="dlist"><dl>
+</dd>
 <dt class="hdlist1">
 -m &lt;appmask&gt;
 </dt>
@@ -1009,7 +1007,7 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
--v
+-V
 </dt>
 <dt class="hdlist1">
 --show-cmd
@@ -1071,8 +1069,31 @@ metadata is passes.</p></td>
 </dt>
 <dd>
 <p>
-    Ignore namespace is currently busy and performed the operation
-    even though.
+        Ignore namespace is currently busy and performed the operation
+        even though.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -1095,7 +1116,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

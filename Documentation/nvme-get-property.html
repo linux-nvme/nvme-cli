@@ -749,8 +749,9 @@ nvme-get-property(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme get-property</em> &lt;device&gt; [--offset=&lt;offset&gt; | -o &lt;offset&gt;]
-                                [--human-readable | -H ]</pre>
+<pre class="content"><em>nvme get-property</em> &lt;device&gt; [--offset=&lt;offset&gt; | -O &lt;offset&gt;]
+                        [--human-readable | -H]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -766,7 +767,7 @@ nvme-get-property(1) Manual Page
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o
+-O
 </dt>
 <dt class="hdlist1">
 --offset
@@ -783,6 +784,29 @@ nvme-get-property(1) Manual Page
 <p>
 --human-readable:
         Show the fields packed in the property
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -843,7 +867,7 @@ Then look for NVMe Fabrics command (0x7f) at trace
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

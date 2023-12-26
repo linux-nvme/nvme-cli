@@ -9,17 +9,18 @@ SYNOPSIS
 --------
 [verse]
 'nvme get-log' <device> [--log-id=<log-id> | -i <log-id>]
-	      [--log-len=<log-len> | -l <log-len>]
-	      [--aen=<aen> | -a <aen>]
-	      [--namespace-id=<nsid> | -n <nsid>]
-	      [--raw-binary | -b]
-	      [--lpo=<offset> | -o <offset>]
-	      [--lsp=<field> | -s <field>]
-	      [--lsi=<field> | -S <field>]
-	      [--rae | -r]
-	      [--csi=<command_set_identifier> | -y <command_set_identifier>]
-	      [--ot=<offset_type> | -O <offset_type>]
-		    [--xfer-len=<length> | -x <length>]
+			[--log-len=<log-len> | -l <log-len>]
+			[--aen=<aen> | -a <aen>]
+			[--namespace-id=<nsid> | -n <nsid>]
+			[--raw-binary | -b]
+			[--lpo=<offset> | -L <offset>]
+			[--lsp=<field> | -s <field>]
+			[--lsi=<field> | -S <field>]
+			[--rae | -r]
+			[--csi=<command_set_identifier> | -y <command_set_identifier>]
+			[--ot=<offset_type> | -O <offset_type>]
+			[--xfer-len=<length> | -x <length>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -63,7 +64,7 @@ OPTIONS
 --raw-binary::
 	Print the raw log buffer to stdout.
 
--o <offset>::
+-L <offset>::
 --lpo=<offset>::
 	The log page offset specifies the location within a log page to start
 	returning data from. It's Dword-aligned and 64-bits.
@@ -100,6 +101,15 @@ OPTIONS
 --xfer-len <length>:
 	Specify the read chunk size. The length argument is expected to be
 	a multiple of 4096. The default size is 4096.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

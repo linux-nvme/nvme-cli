@@ -750,11 +750,12 @@ nvme-security-send(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme security-send</em> &lt;device&gt; [--file=&lt;file&gt; | -f &lt;file&gt;]
-                    [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
-                    [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
-                    [--tl=&lt;transfer-length&gt; | -t &lt;transfer-length&gt;]
-                    [--nssf=&lt;nvme-specific&gt; | -N &lt;nvme-specific&gt;]
-                    [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+                        [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
+                        [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
+                        [--tl=&lt;transfer-length&gt; | -t &lt;transfer-length&gt;]
+                        [--nssf=&lt;nvme-specific&gt; | -N &lt;nvme-specific&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -852,6 +853,29 @@ Receive command is Security Protocol field dependent as defined in SPC-4.</p></d
         Security Protocol as defined in SPC-4.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -872,7 +896,7 @@ Receive command is Security Protocol field dependent as defined in SPC-4.</p></d
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

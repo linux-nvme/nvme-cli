@@ -2,12 +2,12 @@
 .\"     Title: nvme-verify
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-VERIFY" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-VERIFY" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,48 +33,48 @@ nvme-verify \- Send an NVMe Verify command, return results
 .sp
 .nf
 \fInvme\-verify\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-            [\-\-start\-block=<slba> | \-s <slba>]
-            [\-\-block\-count=<nlb> | \-c <nlb>]
-            [\-\-limited\-retry | \-l]
-            [\-\-force\-unit\-access | \-f]
-            [\-\-prinfo=<prinfo> | \-p <prinfo>]
-            [\-\-ref\-tag=<reftag> | \-r <reftag>]
-            [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
-            [\-\-app\-tag=<apptag> | \-a <apptag>]
-            [\-\-storage\-tag<storage\-tag> | \-S <storage\-tag>]
-            [\-\-storage\-tag\-check | \-C]
+                        [\-\-start\-block=<slba> | \-s <slba>]
+                        [\-\-block\-count=<nlb> | \-c <nlb>] [\-\-limited\-retry | \-l]
+                        [\-\-force\-unit\-access | \-f]
+                        [\-\-prinfo=<prinfo> | \-p <prinfo>]
+                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
+                        [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
+                        [\-\-app\-tag=<apptag> | \-a <apptag>]
+                        [\-\-storage\-tag<storage\-tag> | \-S <storage\-tag>]
+                        [\-\-storage\-tag\-check | \-C]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
 The Verify command verifies the integrity of the stored information by reading data and metadata\&.
 .SH "OPTIONS"
 .PP
-\-\-namespace\-id=<nsid>, \-n <nsid>
+\-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
 Namespace ID use in the command\&.
 .RE
 .PP
-\-\-start\-block=<slba>, \-s <slba>
+\-s <slba>, \-\-start\-block=<slba>
 .RS 4
 Start block address\&.
 .RE
 .PP
-\-\-block\-count=<nlb>, \-c <nlb>
+\-c <nlb>, \-\-block\-count=<nlb>
 .RS 4
 Number of logical blocks to Verify\&.
 .RE
 .PP
-\-\-limited\-retry, \-l
+\-l, \-\-limited\-retry
 .RS 4
 Sets the limited retry flag\&.
 .RE
 .PP
-\-\-force\-unit\-access, \-f
+\-f, \-\-force\-unit\-access
 .RS 4
 Set the force\-unit access flag\&.
 .RE
 .PP
-\-\-prinfo=<prinfo>, \-p <prinfo>
+\-p <prinfo>, \-\-prinfo=<prinfo>
 .RS 4
 Protection Information field definition\&.
 .TS
@@ -119,17 +119,17 @@ T}
 .sp 1
 .RE
 .PP
-\-\-ref\-tag=<reftag>, \-r <reftag>
+\-r <reftag>, \-\-ref\-tag=<reftag>
 .RS 4
 Optional reftag when used with protection information\&.
 .RE
 .PP
-\-\-app\-tag\-mask=<appmask>, \-m <appmask>
+\-m <appmask>, \-\-app\-tag\-mask=<appmask>
 .RS 4
 Optional application tag mask when used with protection information\&.
 .RE
 .PP
-\-\-app\-tag=<apptag>, \-a <apptag>
+\-a <apptag>, \-\-app\-tag=<apptag>
 .RS 4
 Optional application tag when used with protection information\&.
 .RE
@@ -142,6 +142,20 @@ Variable Sized Expected Logical Block Storage Tag(ELBST)\&.
 \-C, \-\-storage\-tag\-check
 .RS 4
 This flag enables Storage Tag field checking as part of Verify operation\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -749,7 +749,7 @@ nvme-disconnect-all(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme disconnect-all</em></pre>
+<pre class="content"><em>nvme disconnect-all</em> [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -760,6 +760,36 @@ nvme-disconnect-all(1) Manual Page
 <div class="paragraph"><p>Disconnects and removes all existing NVMe over Fabrics controllers.</p></div>
 <div class="paragraph"><p>See the documentation for the nvme-disconnect(1) command for further
 background.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -795,7 +825,7 @@ Disconnect all existing nvme controllers:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

@@ -13,26 +13,27 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-This will only work on Seagate devices supporting this feature.  Not all
+This will only work on Seagate devices supporting this feature. Not all
 commands work across all product families.
 
-The '<device>' parameter is mandatory and may be either an NVMe character device (ex: /dev/nvme0) or an
-nvme block device (ex: /dev/nvme0n1).
+The '<device>' parameter is mandatory and may be either an NVMe character device
+(ex: /dev/nvme0) or an block device (ex: /dev/nvme0n1).
 
 OPTIONS
 -------
 -n <NUM>::
 --namespace-id=<NUM>::
-        desired namespace
+	desired namespace
 
 -i <NUM>::
 --log_specific=<NUM>::
-        1 - controller shall capture Data representing the internal state of the controller at the time the command is processed.
-        0 - controller shall not update the Telemetry Host Initiated Data.
+	1 - controller shall capture Data representing the internal state of the
+	controller at the time the command is processed.
+	0 - controller shall not update the Telemetry Host Initiated Data.
 
 -b::
 --raw-binary::
-        output in raw format
+	output in raw format
 
 EXAMPLES
 --------

@@ -749,8 +749,8 @@ nvme-wdc-vs-telemetry-controller-option(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc vs-telemetry-controller-option</em> &lt;device&gt; [--disable, -d] [--enable, -e]
-    [--status, -s]</pre>
+<pre class="content"><em>nvme wdc vs-telemetry-controller-option</em> &lt;device&gt;
+                        [--disable, -d] [--enable, -e] [--status, -s]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -758,8 +758,9 @@ nvme-wdc-vs-telemetry-controller-option(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends the WDC Vendor Specific set feature command to disable, enable or get current status
-of the controller initiated option of the telemetry log page.</p></div>
+<div class="paragraph"><p>For the NVMe device given, sends the WDC Vendor Specific set feature command to
+disable, enable or get current status the controller initiated option of the
+telemetry log page.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0).</p></div>
 <div class="paragraph"><p>This will only work on WDC devices supporting this feature.
 Results for any other device are undefined.</p></div>
@@ -799,7 +800,8 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Returns the current status (enabled or disabled) of the controller initiated option of the telemetry log page.
+        Returns the current status (enabled or disabled) of the controller
+        initiated option of the telemetry log page.
 </p>
 </dd>
 </dl></div>
@@ -853,7 +855,7 @@ Gets the current status (enabled or disabled) of the controller initiated option
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:08 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

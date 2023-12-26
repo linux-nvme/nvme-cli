@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-lba-status
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LBA\-STAT" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-LBA\-STAT" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,12 +33,12 @@ nvme-get-lba-status \- Get LBA Status from NVMe device
 .sp
 .nf
 \fInvme get\-lba\-status\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                    [\-\-start\-lba=<slba> | \-s <slba>]
-                    [\-\-max\-dw=<max\-dw> | \-m <max\-dw>]
-                    [\-\-action=<action\-type> | \-a <action\-type>]
-                    [\-\-range\-len=<range\-len> | \-l <range\-len>]
-                    [\-\-timeout=<timeout> | \-t <timeout> ]
-                   [\-\-output\-format=<format> | \-o <format>]
+                        [\-\-start\-lba=<slba> | \-s <slba>]
+                        [\-\-max\-dw=<max\-dw> | \-m <max\-dw>]
+                        [\-\-action=<action\-type> | \-a <action\-type>]
+                        [\-\-range\-len=<range\-len> | \-l <range\-len>]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -79,12 +79,18 @@ Range Length(RL) specifies the length of the range of contiguous LBAs beginning 
 Override default timeout value\&. In milliseconds\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

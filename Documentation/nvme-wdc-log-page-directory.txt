@@ -13,7 +13,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 For the NVMe device given, retrieves the log page directory which contains the list of 
-log page IDs supported by the drive.  The --output-format option will format the output as
+log page IDs supported by the drive. The --output-format option will format the output as
 specified.
 
 The <device> parameter is mandatory and must be the NVMe character device (ex: /dev/nvme0).
@@ -25,8 +25,8 @@ On success it returns the log page directory information, error code otherwise.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal', 'json', or 'binary'. Only one output format
 	can be used at a time. The default is normal.
 

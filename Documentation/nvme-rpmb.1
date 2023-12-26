@@ -2,12 +2,12 @@
 .\"     Title: nvme-rpmb
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RPMB" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-RPMB" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,13 +33,13 @@ nvme-rpmb \- Send RPMB commands to an NVMe device
 .sp
 .nf
 \fInvme rpmb\fR <device> [\-\-cmd=<command> | \-c <command>]
-                    [\-\-msgfile=<data\-file> | \-f <data\-file>]
-                    [\-\-keyfile=<key\-file> | \-g <key\-file>]
-                    [\-\-key=<key> | \-k <key>]
-                    [\-\-msg=<data> | \-d <data>]
-                    [\-\-address=<offset> | \-o <offset>]
-                    [\-\-blocks=<512 byte sectors> | \-b <sectors> ]
-                    [\-\-target=<target\-id> | \-t <id> ]
+                        [\-\-msgfile=<data\-file> | \-f <data\-file>]
+                        [\-\-keyfile=<key\-file> | \-g <key\-file>]
+                        [\-\-key=<key> | \-k <key>] [\-\-msg=<data> | \-d <data>]
+                        [\-\-address=<offset> | \-o <offset>]
+                        [\-\-blocks=<512 byte sectors> | \-b <sectors>]
+                        [\-\-target=<target\-id> | \-t <id>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -180,6 +180,20 @@ The address (in 512 byte sector offset from 0) to be used for data transfer comm
 \-b, \-\-blocks=<sectors>
 .RS 4
 The size in 512 byte sectors to be used for data transfer commands (read or write) for a specified RPMB target\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

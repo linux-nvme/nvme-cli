@@ -2,12 +2,12 @@
 .\"     Title: nvme-micron-selective-download
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-MICRON\-SELECT" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-MICRON\-SELECT" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,19 +28,20 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-micron-selective-download \- Performs selective firmware download that allows user to select which firmware binary to update for 9200 devices\&. This requires power cycle once the update completes\&.
+nvme-micron-selective-download \- Performs selective firmware download that allows user select which firmware binary to update for 9200 devices\&. This requires power cycle the update completes\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme micron selective\-download\fR <device> [\-\-fw=<FILE>, \-f <FILE>] [\-\-select=<flag>, \-s <flag>]
+\fInvme micron selective\-download\fR <device> [\-\-fw=<FILE>, \-f <FILE>]
+                        [\-\-select=<flag>, \-s <flag>]
 .fi
 .SH "DESCRIPTION"
 .sp
-This command uses micron vendor specific nvme commands to download given firmware image to the specified 9200 device to update selected or all portions of firmware image\&.
+This command uses micron vendor specific nvme commands to download given firmware image to the 9200 device to update selected or all portions of firmware image\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
-This will only work on Micron devices devices of model number 9200\&. Support for new devices may be added subsequently\&. Results for any other device are undefined\&.
+This will only work on Micron devices devices of model number 9200\&. Support for new devices be added subsequently\&. Results for any other device are undefined\&.
 .SH "OPTIONS"
 .PP
 \-f <FILE>, \-\-fw=<FILE>

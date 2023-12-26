@@ -2,12 +2,12 @@
 .\"     Title: nvme-list-subsys
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LIST\-SUBSYS" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-LIST\-SUBSYS" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,19 +32,25 @@ nvme-list-subsys \- List all NVMe subsystems
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme list\-subsys\fR [\-o <fmt> | \-\-output\-format=<fmt>] <device>
+\fInvme list\-subsys\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
 Scan the sysfs tree for NVM Express subsystems and return the controllers for those subsystems as well as some pertinent information about them\&. If a device is given, print out only the values for the controllers and subsystems leading to the device\&.
 .SH "OPTIONS"
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
-\fInormal\fR
+\fInormal\fR,
+\fIjson\fR
 or
-\fIjson\fR\&. Only one output format can be used at a time\&.
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

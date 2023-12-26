@@ -23,7 +23,7 @@ jobs:
       - name: build
         run: |
           scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         name: upload logs
         if: failure()
         with:
@@ -53,7 +53,7 @@ jobs:
             scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
           params: "--platform linux/amd64"
           pull-params: "--platform linux/amd64"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         name: upload logs
         if: failure()
         with:
@@ -72,7 +72,7 @@ jobs:
       - name: build
         run: |
           scripts/build.sh -b release -c gcc fallback
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: log files
@@ -95,7 +95,7 @@ jobs:
     container:
       image: ghcr.io/igaw/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build
         run: |
           make static

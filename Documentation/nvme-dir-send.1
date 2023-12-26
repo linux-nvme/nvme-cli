@@ -2,12 +2,12 @@
 .\"     Title: nvme-dir-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DIR\-SEND" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-DIR\-SEND" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,14 +33,14 @@ nvme-dir-send \- Issue a directive send command, returns applicable results
 .sp
 .nf
 \fInvme dir\-send\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                          [\-\-data\-len=<data\-len> | \-l <data\-len>]
-                          [\-\-dir\-type=<dtype> | \-D <dtype>]
-                          [\-\-dir\-spec=<dspec> | \-S <dspec>]
-                          [\-\-dir\-oper=<doper> | \-O <doper>]
-                          [\-\-endir=<endir> | \-e <endir>]
-                          [\-\-target\-dir=<tdir> | \-T <tdir>]
-                          [\-\-human\-readable | \-H]
-                          [\-\-raw\-binary | \-b]
+                        [\-\-data\-len=<data\-len> | \-l <data\-len>]
+                        [\-\-dir\-type=<dtype> | \-D <dtype>]
+                        [\-\-dir\-spec=<dspec> | \-S <dspec>]
+                        [\-\-dir\-oper=<doper> | \-O <doper>]
+                        [\-\-endir=<endir> | \-e <endir>]
+                        [\-\-target\-dir=<tdir> | \-T <tdir>]
+                        [\-\-human\-readable | \-H] [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -79,9 +79,6 @@ Target directive of the operation
 \-e <endir>, \-\-endir=<endir>
 .RS 4
 Target directive enable(1) or disable (0) operation
-.RE
-.sp
-+
 .TS
 allbox tab(:);
 lt lt
@@ -91,49 +88,38 @@ lt lt
 lt lt
 lt lt.
 T{
-.sp
 Select
 T}:T{
-.sp
 Description
 T}
 T{
-.sp
 0
 T}:T{
-.sp
 Current
 T}
 T{
-.sp
 1
 T}:T{
-.sp
 Default
 T}
 T{
-.sp
 2
 T}:T{
-.sp
 Saved
 T}
 T{
-.sp
 3
 T}:T{
-.sp
 Supported capabilities
 T}
 T{
-.sp
 4\(en7
 T}:T{
-.sp
 Reserved
 T}
 .TE
 .sp 1
+.RE
 .PP
 \-l <data\-len>, \-\-data\-len=<data\-len>
 .RS 4
@@ -148,6 +134,20 @@ Print the raw receive buffer to stdout if the command returns a structure\&.
 \-H, \-\-human\-readable
 .RS 4
 Print the decoded receive buffer to stdout if the command returns a structure\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

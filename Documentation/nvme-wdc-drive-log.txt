@@ -28,7 +28,6 @@ OPTIONS
 --output-file=<FILE>::
 	Output file; defaults to device serial number followed by "drive_log" suffix
 
-
 EXAMPLES
 --------
 * Gets the drive log from the device and saves to default file in current directory (e.g. STM00019F3F9drive_log.bin):

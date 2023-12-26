@@ -10,9 +10,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme persistent-event-log' <device> [--action=<action> | -a <action>]
-            [--log-len=<log-len> | -l <log-len>]
-            [--raw-binary | -b]
-            [--output-format=<fmt> | -o <fmt>]
+			[--log-len=<log-len> | -l <log-len>] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -31,28 +30,32 @@ OPTIONS
 -------
 -a <action>::
 --action=<action>::
-    While try to retrieve this log action the controller shall take
-    during processing this persistent log page command. This mandatory
-    field, based on the value issued it may Read Log Data, Establish
-    Context and Read Log Data or Release Context can occur. For More
-    details see NVM Express 1.4 Spec. Section 5.14.1.13 Persistent
-    Event Log (Log Identifier 0Dh)
+	While try to retrieve this log action the controller shall take
+	during processing this persistent log page command. This mandatory
+	field, based on the value issued it may Read Log Data, Establish
+	Context and Read Log Data or Release Context can occur. For More
+	details see NVM Express 1.4 Spec. Section 5.14.1.13 Persistent
+	Event Log (Log Identifier 0Dh)
 
 -l <log-len>::
 --log-len=<log-len>::
-    Allocates a buffer of <log-len> bytes size and requests this
-    many bytes be returned in the constructed NVMe command. This
-    param is mandatory. If <log-len> given is 0 and action is 0,
-    it will read the Total Log Length(TLL) of the page.
+	Allocates a buffer of <log-len> bytes size and requests this
+	many bytes be returned in the constructed NVMe command. This
+	param is mandatory. If <log-len> given is 0 and action is 0,
+	it will read the Total Log Length(TLL) of the page.
 
 -b::
 --raw-binary::
-    Print the raw persistent event log buffer to stdout.
+	Print the raw persistent event log buffer to stdout.
 
--o <format>::
---output-format=<format>::
-    Set the reporting format to 'normal', 'json', or 'binary'.
-    Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

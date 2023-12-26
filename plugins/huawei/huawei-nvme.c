@@ -296,7 +296,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	struct huawei_list_item *list_items;
 	unsigned int i, n, ret;
 	unsigned int huawei_num = 0;
-	int fmt;
+	enum nvme_print_flags fmt;
 	const char *desc = "Retrieve basic information for the given huawei device";
 	struct config {
 		char *output_format;
@@ -315,9 +315,9 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	fmt = validate_output_format(cfg.output_format);
-	if (fmt != JSON && fmt != NORMAL)
-		return -EINVAL;
+	ret = validate_output_format(cfg.output_format, &fmt);
+	if (ret < 0 || (fmt != JSON && fmt != NORMAL))
+		return ret;
 
 	n = scandir("/dev", &devices, nvme_namespace_filter, alphasort);
 	if (n <= 0)

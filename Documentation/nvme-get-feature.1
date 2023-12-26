@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-feature
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-FEATURE" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-FEATURE" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,12 +33,13 @@ nvme-get-feature \- Gets an NVMe feature, returns applicable results
 .sp
 .nf
 \fInvme get\-feature\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                          [\-\-feature\-id=<fid> | \-f <fid>] [\-\-cdw11=<cdw11>]
-                          [\-\-uuid\-index=<uuid\-index> | \-U <uuid_index>]
-                          [\-\-data\-len=<data\-len> | \-l <data\-len>]
-                          [\-\-sel=<select> | \-s <select>]
-                          [\-\-raw\-binary | \-b]
-                          [\-\-human\-readable | \-H]
+                        [\-\-feature\-id=<fid> | \-f <fid>] [\-\-cdw11=<cdw11>]
+                        [\-\-uuid\-index=<uuid\-index> | \-U <uuid_index>]
+                        [\-\-data\-len=<data\-len> | \-l <data\-len>]
+                        [\-\-sel=<select> | \-s <select>]
+                        [\-\-raw\-binary | \-b]
+                        [\-\-human\-readable | \-H]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -127,6 +128,20 @@ Print the raw feature buffer to stdout if the feature returns a structure\&.
 \-H, \-\-human\-readable
 .RS 4
 This option will parse and format many of the bit fields into human\-readable formats\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

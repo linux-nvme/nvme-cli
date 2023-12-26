@@ -34,7 +34,6 @@ EXAMPLES
 # nvme wdc clear-pcie-correctable-errors /dev/nvme0
 ------------
 
-
 NVME
 ----
 Part of the nvme-user suite

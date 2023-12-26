@@ -2,12 +2,12 @@
 .\"     Title: nvme-lockdown
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LOCKDOWN" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-LOCKDOWN" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,40 +32,55 @@ nvme-lockdown \- Send an NVMe Lockdown command to prohibit or allow the executio
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-lockdown\fR <device> [\-\-ofi=<ofi> | \-o <ofi>]
+\fInvme\-lockdown\fR <device> [\-\-ofi=<ofi> | \-O <ofi>]
                         [\-\-ifc=<ifc> | \-f <ifc>]
                         [\-\-prhbt=<prhbt> | \-p <prhbt>]
                         [\-\-scp=<scp> | \-s <scp>]
                         [\-\-uuid=<UUID_Index> | \-U <UUID_Index>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
 The Lockdown command is used to control the Command and Feature Lockdown capability which configures the prohibition or allowance of execution of the specified command or Set Features command targeting a specific Feature Identifier\&.
 .SH "OPTIONS"
 .PP
-\-\-ofi=<ofi>, \-o <ofi>
+\-O <ofi>, \-\-ofi=<ofi>
 .RS 4
 Opcode or Feature Identifier(OFI) specifies the command opcode or Set Features Feature Identifier identified by the Scope field\&.
 .RE
 .PP
-\-\-ifc=<ifc>, \-f <ifc>
+\-f <ifc>, \-\-ifc=<ifc>
 .RS 4
 Interface (INF) field identifies the interfaces affected by this command\&.
 .RE
 .PP
-\-\-prhbt=<prhbt>, \-p <prhbt>
+\-p <prhbt>, \-\-prhbt=<prhbt>
 .RS 4
 Prohibit (PRHBT) bit specifies whether to prohibit or allow the command opcode or Set Features Feature Identifier specified by this command\&.
 .RE
 .PP
-\-\-scp=<scp>, \-s <scp>
+\-s <scp>, \-\-scp=<scp>
 .RS 4
 Scope (SCP) field specifies the contents of the Opcode or Feature Identifier field\&.
 .RE
 .PP
-\-\-uuid=<UUID_Index>, \-U <UUID_Index>
+\-U <UUID_Index>, \-\-uuid=<UUID_Index>
 .RS 4
 UUID Index \- If this field is set to a non\-zero value, then the value of this field is the index of a UUID in the UUID List that is used by the command\&. If this field is cleared to 0h,then no UUID index is specified\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

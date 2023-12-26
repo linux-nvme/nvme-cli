@@ -47,11 +47,11 @@ nvme_list_opts () {
 			;;
 		"id-ctrl")
 		opts+=" --raw-binary -b --human-readable -H \
-			--vendor-specific -v --output-format= -o"
+			--vendor-specific -V --output-format= -o"
 			;;
 		"id-ns")
 		opts+=" --namespace-id= -n --raw-binary -b \
-			--human-readable -H --vendor-specific -v \
+			--human-readable -H --vendor-specific -V \
 			--force -f --output-format= -o"
 			;;
 		"id-ns-granularity")
@@ -114,7 +114,7 @@ nvme_list_opts () {
 			--dps= -d --nmic= -m --anagrp-id= -a --nvmset-id= -i \
 			--block-size= -b --timeout= -t --csi= -y --lbstm= -l \
 			--nphndls= -n --nsze-si= -S --ncap-si= -C --azr -z --rar= -r \
-			--ror= -o --rnumzrwa= -u --phndls= -p --endg-id= -e"
+			--ror= -O --rnumzrwa= -u --phndls= -p --endg-id= -e"
 			;;
 		"delete-ns")
 		opts+=" -namespace-id= -n --timeout= -t"
@@ -130,7 +130,7 @@ nvme_list_opts () {
 			;;
 		"get-log")
 		opts+=" --log-id= -i --log-len= -l --namespace-id= -n \
-			--aen= -a --lpo= -o --lsp= -s --lsi= -S \
+			--aen= -a --lpo= -O --lsp= -s --lsi= -S \
 			--rae -r --uuid-index= -U --csi= -y --ot -O \
 			--raw-binary -b"
 			;;
@@ -138,7 +138,7 @@ nvme_list_opts () {
 		opts+=" --output-format= -o --human-readable -H"
 			;;
 		"telemetry-log")
-		opts+=" --output-file= -o --host-generate= -g \
+		opts+=" --output-file= -O --host-generate= -g \
 			--controller-init -c --data-area= -d"
 			;;
 		"fw-log")
@@ -220,10 +220,10 @@ nvme_list_opts () {
 			--cdw12= -c"
 			;;
 		"set-property")
-		opts+=" --offset= -o --value= -v"
+		opts+=" --offset= -O --value= -V"
 			;;
 		"get-property")
-		opts=+" --offset= -o --human-readable -H"
+		opts=+" --offset= -O --human-readable -H"
 			;;
 		"format")
 		opts+=" --namespace-id= -n --timeout= -t --lbaf= -l \
@@ -233,18 +233,17 @@ nvme_list_opts () {
 		opts+=" --slot= -s --action= -a --bpid= -b"
 			;;
 		"fw-download")
-		opts+=" --fw= -f --xfer= -x --offset= -o"
+		opts+=" --fw= -f --xfer= -x --offset= -O"
 			;;
 		"capacity-mgmt")
-		opts+=" --operation= -f --element-id= -i --cap-lower= -l \
-				--cap-upper= -u"
+		opts+=" --operation= -O --element-id= -i --cap-lower= -l \
+			--cap-upper= -u"
 			;;
 		"lockdown")
-		opts+=" --ofi= -O --ifc= -F --prhbt= -P \
-			-scp= -S --uuid -U"
+		opts+=" --ofi= -O --ifc= -f --prhbt= -p --scp= -s --uuid -U"
 			;;
 		"admin-passthru")
-		opts+=" --opcode= -o --flags= -f --prefil= -p --rsvd= -R \
+		opts+=" --opcode= -O --flags= -f --prefil= -p --rsvd= -R \
 			--namespace-id= -n --data-len= -l --metadata-len= -m \
 			--timeout= -t --cdw2= -2 --cdw3= -3 --cdw10= -4 \
 			--cdw11= -5 --cdw12= -6 --cdw13= -7 --cdw14= -8 \
@@ -253,7 +252,7 @@ nvme_list_opts () {
 			--latency -T"
 			;;
 		"io-passthru")
-		opts+=" --opcode= -o --flags= -f --prefill= -p --rsvd= -R \
+		opts+=" --opcode= -O --flags= -f --prefill= -p --rsvd= -R \
 			--namespace-id= -n --data-len= -l --metadata-len= -m \
 			--timeout= -t --cdw2= -2 --cdw3= -3 --cdw10= -4 \
 			--cdw11= -5 --cdw12= -6 --cdw13= -7 --cdw14= -8 \
@@ -312,7 +311,7 @@ nvme_list_opts () {
 			--metadata= -M --prinfo= -p --app-tag-mask= -m \
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
-			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -v \
+			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
 			--dry-run -w --latency -t"
 			;;
 		"read")
@@ -321,7 +320,7 @@ nvme_list_opts () {
 			--metadata= -M --prinfo= -p --app-tag-mask= -m \
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
-			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -v \
+			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
 			--dry-run -w --latency -t"
 			;;
 		"write")
@@ -330,7 +329,7 @@ nvme_list_opts () {
 			--metadata= -M --prinfo= -p --app-tag-mask= -m \
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
-			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -v \
+			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
 			--dry-run -w --latency -t"
 			;;
 		"write-zeroes")
@@ -445,6 +444,14 @@ nvme_list_opts () {
 			;;
 		"show-topology")
 		opts+=" --output-format= -o --verbose -v --ranking= -r"
+			;;
+		"nvme-mi-recv")
+		opts+=" --opcode= -O --namespace-id= -n --data-len= -l \
+			--nmimt= -m --nmd0= -0 --nmd1= -1 --input-file= -i"
+			;;
+		"nvme-mi-send")
+		opts+=" --opcode= -O --namespace-id= -n --data-len= -l \
+			--nmimt= -m --nmd0= -0 --nmd1= -1 --input-file= -i"
 			;;
 		"version")
 		opts+=$NO_OPTS
@@ -983,7 +990,7 @@ plugin_shannon_opts () {
 			--data-len= -l --raw-binary -b --cdw11= -c --human-readable -H"
 			;;
 		"set-feature-add")
-		opts+=" --namespace-id= -n --feature-id= -f --value= -v \
+		opts+=" --namespace-id= -n --feature-id= -f --value= -V \
 			--data-len= -l --data= -d --save -s"
 			;;
 		"id-ctrl")
@@ -1351,6 +1358,9 @@ plugin_ocp_opts () {
 		"set-dssd-power-state-feature")
 		opts+=" --power-state= -p --no-uuid -n --save -s"
 			;;
+		"telemetry-string-log")
+		opts+=" --output-file= -o"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1420,10 +1430,10 @@ _nvme_subcmds () {
 			clear-fw-activate-history eol-plp-failure-mode \
 			clear-pcie-correctable-error-counters \
 			vs-fw-activate-history device-capability-log \
-			set-dssd-power-state-feature"
+			set-dssd-power-state-feature telemetry-string-log"
 	)
 
-	# Associative array mapping plugins to coresponding option completions
+	# Associative array mapping plugins to corresponding option completions
 	typeset -Ar _plugin_funcs=(
 		[intel]="plugin_intel_opts"
 		[amzn]="plugin_amzn_opts"
@@ -1470,7 +1480,8 @@ _nvme_subcmds () {
 		show-hostnqn dir-receive dir-send virt-mgmt \
 		rpmb boot-part-log fid-support-effects-log \
 		supported-log-pages lockdown media-unit-stat-log \
-		supported-cap-config-log dim show-topology list-endgrp"
+		supported-cap-config-log dim show-topology list-endgrp \
+		nvme-mi-recv nvme-mi-send"
 
 	# Add plugins:
 	for plugin in "${!_plugin_subcmds[@]}"; do

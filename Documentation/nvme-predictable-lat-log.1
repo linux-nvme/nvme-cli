@@ -2,12 +2,12 @@
 .\"     Title: nvme-predictable-lat-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-PREDICTABLE\-L" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-PREDICTABLE\-L" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,7 +34,7 @@ nvme-predictable-lat-log \- Send Predictable latency per NVM set log page reques
 .nf
 \fInvme predictable\-lat\-log\fR <device> [\-\-nvmset\-id=<nvmset_id> | \-i <nvmset_id>]
                         [\-\-raw\-binary | \-b]
-                        [\-\-output\-format=<fmt> | \-o <fmt>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -55,12 +55,18 @@ Retrieve the Predictable latency per NVM set log for the given nvmset id\&. This
 Print the raw Predictable latency per NVM set log buffer to stdout\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

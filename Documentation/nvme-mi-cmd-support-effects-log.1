@@ -2,12 +2,12 @@
 .\"     Title: nvme-mi-cmd-support-effects-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-MI\-CMD\-SUPPO" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-MI\-CMD\-SUPPO" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,8 @@ nvme-mi-cmd-support-effects-log \- Send NVMe MI Command Support and Effects log,
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-mi\-cmd\-support\-effects\-log\fR <device> [\-o <fmt> | \-\-output\-format=<fmt>]
-                                        [\-H | \-\-human\-readable]
+\fInvme\-mi\-cmd\-support\-effects\-log\fR <device> [\-\-human\-readable | \-H]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,17 +44,23 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
 .SH "OPTIONS"
 .PP
-\-o <format>, \-\-output\-format=<format>
-.RS 4
-Set the reporting format to
-\fInormal\fR,
-\fIjson\fR, or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
-.RE
-.PP
 \-H, \-\-human\-readable
 .RS 4
 This option will parse and format many of the bit fields into human\-readable formats\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -750,17 +750,18 @@ nvme-get-log(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme get-log</em> &lt;device&gt; [--log-id=&lt;log-id&gt; | -i &lt;log-id&gt;]
-              [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
-              [--aen=&lt;aen&gt; | -a &lt;aen&gt;]
-              [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-              [--raw-binary | -b]
-              [--lpo=&lt;offset&gt; | -o &lt;offset&gt;]
-              [--lsp=&lt;field&gt; | -s &lt;field&gt;]
-              [--lsi=&lt;field&gt; | -S &lt;field&gt;]
-              [--rae | -r]
-              [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
-              [--ot=&lt;offset_type&gt; | -O &lt;offset_type&gt;]
-                    [--xfer-len=&lt;length&gt; | -x &lt;length&gt;]</pre>
+                        [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
+                        [--aen=&lt;aen&gt; | -a &lt;aen&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--raw-binary | -b]
+                        [--lpo=&lt;offset&gt; | -L &lt;offset&gt;]
+                        [--lsp=&lt;field&gt; | -s &lt;field&gt;]
+                        [--lsi=&lt;field&gt; | -S &lt;field&gt;]
+                        [--rae | -r]
+                        [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
+                        [--ot=&lt;offset_type&gt; | -O &lt;offset_type&gt;]
+                        [--xfer-len=&lt;length&gt; | -x &lt;length&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -845,7 +846,7 @@ program to parse.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;offset&gt;
+-L &lt;offset&gt;
 </dt>
 <dt class="hdlist1">
 --lpo=&lt;offset&gt;
@@ -929,6 +930,29 @@ program to parse.</p></div>
         a multiple of 4096. The default size is 4096.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -973,7 +997,7 @@ Have the program return the raw log page in binary:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

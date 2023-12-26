@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,37 +32,29 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme connect\-all\fR
-                [\-\-transport=<trtype>     | \-t <trtype>]
-                [\-\-nqn=<subnqn>           | \-n <subnqn>]
-                [\-\-traddr=<traddr>        | \-a <traddr>]
-                [\-\-trsvcid=<trsvcid>      | \-s <trsvcid>]
-                [\-\-host\-traddr=<traddr>   | \-w <traddr>]
-                [\-\-host\-iface=<iface>     | \-f <iface>]
-                [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
-                [\-\-hostid=<hostid>        | \-I <hostid>]
-                [\-\-raw=<filename>         | \-r <filename>]
-                [\-\-device=<device>        | \-d <device>]
-                [\-\-cfg\-file=<cfg>         | \-C <cfg>]
-                [\-\-keep\-alive\-tmo=<sec>   | \-k <sec>]
-                [\-\-reconnect\-delay=<#>    | \-c <#>]
-                [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
-                [\-\-nr\-io\-queues=<#>       | \-i <#>]
-                [\-\-nr\-write\-queues=<#>    | \-W <#>]
-                [\-\-nr\-poll\-queues=<#>     | \-P <#>]
-                [\-\-queue\-size=<#>         | \-Q <#>]
-                [\-\-keyring=<#>                    ]
-                [\-\-tls_key=<#>                    ]
-                [\-\-hdr\-digest             | \-g]
-                [\-\-data\-digest            | \-G]
-                [\-\-persistent             | \-p]
-                [\-\-tls                        ]
-                [\-\-quiet                  | \-S]
-                [\-\-dump\-config            | \-O]
-                [\-\-nbft]
-                [\-\-no\-nbft]
-                [\-\-nbft\-path=<STR>]
-                [\-\-context=<STR>]
+\fInvme connect\-all\fR [\-\-transport=<trtype> | \-t <trtype>]
+                        [\-\-nqn=<subnqn> | \-n <subnqn>]
+                        [\-\-traddr=<traddr> | \-a <traddr>]
+                        [\-\-trsvcid=<trsvcid> | \-s <trsvcid>]
+                        [\-\-host\-traddr=<traddr> | \-w <traddr>]
+                        [\-\-host\-iface=<iface> | \-f <iface>]
+                        [\-\-hostnqn=<hostnqn> | \-q <hostnqn>]
+                        [\-\-hostid=<hostid> | \-I <hostid>]
+                        [\-\-raw=<filename> | \-r <filename>]
+                        [\-\-device=<device> | \-d <device>]
+                        [\-\-cfg\-file=<cfg> | \-C <cfg>]
+                        [\-\-keep\-alive\-tmo=<sec> | \-k <sec>]
+                        [\-\-reconnect\-delay=<#> | \-c <#>]
+                        [\-\-ctrl\-loss\-tmo=<#>     | \-l <#>]
+                        [\-\-nr\-io\-queues=<#> | \-i <#>]
+                        [\-\-nr\-write\-queues=<#> | \-W <#>]
+                        [\-\-nr\-poll\-queues=<#> | \-P <#>]
+                        [\-\-queue\-size=<#> | \-Q <#>] [\-\-keyring=<#>]
+                        [\-\-tls_key=<#>] [\-\-hdr\-digest | \-g] [\-\-data\-digest | \-G]
+                        [\-\-persistent | \-p] [\-\-tls] [\-\-quiet | \-S]
+                        [\-\-dump\-config | \-O] [\-\-nbft] [\-\-no\-nbft]
+                        [\-\-nbft\-path=<STR>] [\-\-context=<STR>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -266,6 +258,20 @@ Use a user\-defined path to the NBFT tables
 .RS 4
 Set the execution context to <STR>\&. This allows to coordinate the management of the global resources\&.
 .RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
 .SH "EXAMPLES"
 .sp
 .RS 4
@@ -352,9 +358,9 @@ command using a /usr/local/etc/nvme/discovery\&.conf file:
 .RS 4
 .\}
 .nf
-# Machine default \*(Aqnvme discover\*(Aq commands\&.  Query the
+# Machine default \*(Aqnvme discover\*(Aq commands\&. Query the
 # Discovery Controller\*(Aqs two ports (some resources may only
-# be accessible on a single port)\&.  Note an official
+# be accessible on a single port)\&. Note an official
 # nqn (Host) name defined in the NVMe specification is being used
 # in this example\&.
 \-t rdma \-a 192\&.168\&.69\&.33 \-s 4420 \-q nqn\&.2014\-08\&.com\&.example:nvme:nvm\-subsystem\-sn\-d78432

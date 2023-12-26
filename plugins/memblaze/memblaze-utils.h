@@ -34,7 +34,7 @@
 #define RAISIN_SI_VD_THERMAL_THROTTLE_TIME_ID		0xEB
 #define RAISIN_SI_VD_FLASH_MEDIA_ERROR_ID		0xED
 
-/* Raisin Addtional smart internal ID */
+/* Raisin Additional smart internal ID */
 typedef enum
 {
 	/* smart attr following intel */
@@ -154,7 +154,7 @@ struct nvme_p4_smart_log
 	/**
 	 * change 512 to 4096.
 	 * because micron's getlogpage request,the size of many commands have changed to 4k.
-	 * request size > user malloc size,casuing parameters that are closed in momery are dirty.
+	 * request size > user malloc size,casuing parameters that are closed in memery are dirty.
 	 */
 	__u8 resv[SMART_INFO_NEW_SIZE - sizeof(struct nvme_p4_smart_log_item) * NR_SMART_ITEMS];
 };

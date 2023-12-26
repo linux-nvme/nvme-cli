@@ -749,37 +749,29 @@ nvme-connect-all(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme connect-all</em>
-                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
-                [--nqn=&lt;subnqn&gt;           | -n &lt;subnqn&gt;]
-                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
-                [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
-                [--host-iface=&lt;iface&gt;     | -f &lt;iface&gt;]
-                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
-                [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
-                [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]
-                [--device=&lt;device&gt;        | -d &lt;device&gt;]
-                [--cfg-file=&lt;cfg&gt;         | -C &lt;cfg&gt;]
-                [--keep-alive-tmo=&lt;sec&gt;   | -k &lt;sec&gt;]
-                [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
-                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
-                [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
-                [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
-                [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
-                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
-                [--keyring=&lt;#&gt;                    ]
-                [--tls_key=&lt;#&gt;                    ]
-                [--hdr-digest             | -g]
-                [--data-digest            | -G]
-                [--persistent             | -p]
-                [--tls                        ]
-                [--quiet                  | -S]
-                [--dump-config            | -O]
-                [--nbft]
-                [--no-nbft]
-                [--nbft-path=&lt;STR&gt;]
-                [--context=&lt;STR&gt;]</pre>
+<pre class="content"><em>nvme connect-all</em> [--transport=&lt;trtype&gt; | -t &lt;trtype&gt;]
+                        [--nqn=&lt;subnqn&gt; | -n &lt;subnqn&gt;]
+                        [--traddr=&lt;traddr&gt; | -a &lt;traddr&gt;]
+                        [--trsvcid=&lt;trsvcid&gt; | -s &lt;trsvcid&gt;]
+                        [--host-traddr=&lt;traddr&gt; | -w &lt;traddr&gt;]
+                        [--host-iface=&lt;iface&gt; | -f &lt;iface&gt;]
+                        [--hostnqn=&lt;hostnqn&gt; | -q &lt;hostnqn&gt;]
+                        [--hostid=&lt;hostid&gt; | -I &lt;hostid&gt;]
+                        [--raw=&lt;filename&gt; | -r &lt;filename&gt;]
+                        [--device=&lt;device&gt; | -d &lt;device&gt;]
+                        [--cfg-file=&lt;cfg&gt; | -C &lt;cfg&gt;]
+                        [--keep-alive-tmo=&lt;sec&gt; | -k &lt;sec&gt;]
+                        [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]
+                        [--ctrl-loss-tmo=&lt;#&gt;     | -l &lt;#&gt;]
+                        [--nr-io-queues=&lt;#&gt; | -i &lt;#&gt;]
+                        [--nr-write-queues=&lt;#&gt; | -W &lt;#&gt;]
+                        [--nr-poll-queues=&lt;#&gt; | -P &lt;#&gt;]
+                        [--queue-size=&lt;#&gt; | -Q &lt;#&gt;] [--keyring=&lt;#&gt;]
+                        [--tls_key=&lt;#&gt;] [--hdr-digest | -g] [--data-digest | -G]
+                        [--persistent | -p] [--tls] [--quiet | -S]
+                        [--dump-config | -O] [--nbft] [--no-nbft]
+                        [--nbft-path=&lt;STR&gt;] [--context=&lt;STR&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -813,7 +805,7 @@ background.</p></div>
 <dd>
 <p>
         This field specifies the network fabric being used for
-        a NVMe-over-Fabrics network.  Current string values include:
+        a NVMe-over-Fabrics network. Current string values include:
 </p>
 <div class="tableblock">
 <table rules="all"
@@ -879,7 +871,7 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        This field specifies the transport service id.  For transports using IP
+        This field specifies the transport service id. For transports using IP
         addressing (e.g. rdma) this field is the port number. By default, the IP
         port number for the RDMA transport is 4420.
 </p>
@@ -1178,6 +1170,29 @@ cellspacing="0" cellpadding="4">
         the management of the global resources.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1221,9 +1236,9 @@ Issue a <em>nvme connect-all</em> command using a /usr/local/etc/nvme/discovery.
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># Machine default 'nvme discover' commands.  Query the
+<pre><code># Machine default 'nvme discover' commands. Query the
 # Discovery Controller's two ports (some resources may only
-# be accessible on a single port).  Note an official
+# be accessible on a single port). Note an official
 # nqn (Host) name defined in the NVMe specification is being used
 # in this example.
 -t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
@@ -1253,7 +1268,7 @@ nvme-connect(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

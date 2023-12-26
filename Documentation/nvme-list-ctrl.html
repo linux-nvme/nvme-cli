@@ -750,26 +750,29 @@ nvme-list-ctrl(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme list-ctrl</em> &lt;device&gt; [--cntid=&lt;cntid&gt; | -c &lt;cntid&gt;]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]
-DESCRIPTION</pre>
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>For the NVMe device given, sends an identify command for controller list
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>For the NVMe device given, sends an identify command for controller list
 and provides the result and returned structure. This uses either mode
-12h or 13h depending on the requested namespace identifier.
-
-The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+12h or 13h depending on the requested namespace identifier.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 The starting controller in the list always begins with 0 unless the
-`'--cntid'` option is given to override.
-
-On success, the controller array is printed for each index and controller
-identifier.
-
-OPTIONS</code></pre>
-</div></div>
+<code>'--cntid'</code> option is given to override.</p></div>
+<div class="paragraph"><p>On success, the controller array is printed for each index and controller
+identifier.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
 -c &lt;cntid&gt;
@@ -797,15 +800,26 @@ OPTIONS</code></pre>
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;format&gt;
+-o &lt;fmt&gt;
 </dt>
 <dt class="hdlist1">
---output-format=&lt;format&gt;
+--output-format=&lt;fmt&gt;
 </dt>
 <dd>
 <p>
-        Set the reporting format to <em>normal</em> or <em>json</em>. Only one output
-        format can be used at a time.
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -828,7 +842,7 @@ OPTIONS</code></pre>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

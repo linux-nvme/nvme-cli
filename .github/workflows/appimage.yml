@@ -24,7 +24,7 @@ jobs:
        uses: AppImageCrafters/build-appimage@v1.3
        with:
          recipe: .github/AppImageBuilder.yml
-     - uses: actions/upload-artifact@v3
+     - uses: actions/upload-artifact@v4
        name: upload artifacts to github
        with:
          name: AppImage
@@ -37,7 +37,7 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && github.repository == 'linux-nvme/nvme-cli' }}
     steps:
       - name: Download artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           workflow_conclusion: success

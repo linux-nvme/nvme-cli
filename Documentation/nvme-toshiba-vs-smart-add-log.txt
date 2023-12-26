@@ -3,7 +3,8 @@ nvme-toshiba-vs-smart-add-log(1)
 
 NAME
 ----
-nvme-toshiba-vs-smart-add-log - Retrieve a Toshiba device's vendor specific extended SMART log page contents and either save to file or dump the contents.
+nvme-toshiba-vs-smart-add-log - Retrieve a Toshiba device's vendor specific
+extended SMART log page contents and either save to file or dump the contents.
 
 SYNOPSIS
 --------
@@ -11,7 +12,6 @@ SYNOPSIS
 'nvme toshiba vs-smart-add-log ' <device> [--log=<NUM>, -l <NUM>]
 		[--namespace-id=<NUM>, -n <NUM>]
 		[--output-file=<FILE>, -o <FILE>]
-
 
 DESCRIPTION
 -----------
@@ -22,7 +22,8 @@ The <device> parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
 /dev/nvme0n1). 
 
-The log contents may be associated with the controller, in which case the namespace parameter is ignored.
+The log contents may be associated with the controller, in which case the
+namespace parameter is ignored.
 
 Two logs exist, page 0xC0 (log page directory) and page 0xCA (vendor log page)
 
@@ -33,7 +34,7 @@ OPTIONS
 
 -l <NUM>::
 --log=<NUM>::
-	Log page: 0xC0 or 0xCA  (defaults to 0xCA)
+	Log page: 0xC0 or 0xCA (defaults to 0xCA)
 
 -n <NUM>::
 --namespace-id=<NUM>::
@@ -41,8 +42,6 @@ OPTIONS
 -o <FILE>::
 --output-file=<FILE>::
 	Output binary file. Defaults to text-formatted dump to stdout
-
-
 
 EXAMPLES
 --------

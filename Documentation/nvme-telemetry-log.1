@@ -2,12 +2,12 @@
 .\"     Title: nvme-telemetry-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-TELEMETRY\-LOG" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-TELEMETRY\-LOG" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,9 @@ nvme-telemetry-log \- Retrieves a Telemetry Host\-Initiated log page from an NVM
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme telemetry\-log\fR <device> [\-\-output\-file=<file> | \-o <file>]
-                      [\-\-host\-generate=<gen> | \-g <gen>]
+\fInvme telemetry\-log\fR <device> [\-\-output\-file=<file> | \-O <file>]
+                        [\-\-host\-generate=<gen> | \-g <gen>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,7 +45,7 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 On success, the returned log structure will be in raw binary format \fIonly\fR with \-\-output\-file option which is mandatory\&.
 .SH "OPTIONS"
 .PP
-\-o <file>, \-\-output\-file=<file>
+\-O <file>, \-\-output\-file=<file>
 .RS 4
 File name to which raw binary data will be saved to\&.
 .RE
@@ -59,6 +60,20 @@ update this data\&.
 \-d <da>, \-\-data\-area=<da>
 .RS 4
 Retrieves the specific data area requested\&. Valid inputs are 1,2,3,4\&. If this option is not specified, the default value is 3, since data area 4 may not be supported\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

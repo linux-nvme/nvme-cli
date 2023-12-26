@@ -54,7 +54,7 @@ static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
 	/* Table Title */
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
 	       dev->name, nsid);
-	/* Clumn Name*/
+	/* Column Name*/
 	printf("key                               normalized raw\n");
 	/* 00 SI_VD_PROGRAM_FAIL */
 	get_ymtc_smart_info(smart, SI_VD_PROGRAM_FAIL, nm, raw);

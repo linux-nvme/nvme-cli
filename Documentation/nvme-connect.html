@@ -749,36 +749,29 @@ nvme-connect(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme connect</em>
-                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
-                [--nqn=&lt;subnqn&gt;           | -n &lt;subnqn&gt;]
-                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
-                [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
-                [--host-iface=&lt;iface&gt;     | -f &lt;iface&gt;]
-                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
-                [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
-                [--config-file=&lt;cfg&gt;      | -J &lt;cfg&gt; ]
-                [--dhchap-secret=&lt;secret&gt; | -S &lt;secret&gt;]
-                [--dhchap-ctrl-secret=&lt;secret&gt; | -C &lt;secret&gt;]
-                [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
-                [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
-                [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
-                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
-                [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
-                [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
-                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
-                [--tos=&lt;#&gt;                | -T &lt;#&gt;]
-                [--keyring=&lt;#&gt;                    ]
-                [--tls_key=&lt;#&gt;                    ]
-                [--duplicate-connect      | -D]
-                [--disable-sqflow         | -d]
-                [--hdr-digest             | -g]
-                [--data-digest            | -G]
-                [--tls                        ]
-                [--dump-config            | -O]
-                [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]
-                [--application=&lt;id&gt;                 ]</pre>
+<pre class="content"><em>nvme connect</em> [--transport=&lt;trtype&gt; | -t &lt;trtype&gt;]
+                        [--nqn=&lt;subnqn&gt; | -n &lt;subnqn&gt;]
+                        [--traddr=&lt;traddr&gt; | -a &lt;traddr&gt;]
+                        [--trsvcid=&lt;trsvcid&gt; | -s &lt;trsvcid&gt;]
+                        [--host-traddr=&lt;traddr&gt; | -w &lt;traddr&gt;]
+                        [--host-iface=&lt;iface&gt; | -f &lt;iface&gt;]
+                        [--hostnqn=&lt;hostnqn&gt; | -q &lt;hostnqn&gt;]
+                        [--hostid=&lt;hostid&gt; | -I &lt;hostid&gt;]
+                        [--config-file=&lt;cfg&gt; | -J &lt;cfg&gt;]
+                        [--dhchap-secret=&lt;secret&gt; | -S &lt;secret&gt;]
+                        [--dhchap-ctrl-secret=&lt;secret&gt; | -C &lt;secret&gt;]
+                        [--nr-io-queues=&lt;#&gt; | -i &lt;#&gt;]
+                        [--nr-write-queues=&lt;#&gt; | -W &lt;#&gt;]
+                        [--nr-poll-queues=&lt;#&gt; | -P &lt;#&gt;]
+                        [--queue-size=&lt;#&gt; | -Q &lt;#&gt;]
+                        [--keep-alive-tmo=&lt;#&gt; | -k &lt;#&gt;]
+                        [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]
+                        [--ctrl-loss-tmo=&lt;#&gt; | -l &lt;#&gt;] [--tos=&lt;#&gt; | -T &lt;#&gt;]
+                        [--keyring=&lt;#&gt;] [--tls_key=&lt;#&gt;]
+                        [--duplicate-connect | -D] [--disable-sqflow | -d]
+                        [--hdr-digest | -g] [--data-digest | -G] [--tls]
+                        [--dump-config | -O] [--application=&lt;id&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -804,7 +797,7 @@ specified by the --nqn option.</p></div>
 <dd>
 <p>
         This field specifies the network fabric being used for
-        a NVMe-over-Fabrics network.  Current string values include:
+        a NVMe-over-Fabrics network. Current string values include:
 </p>
 <div class="tableblock">
 <table rules="all"
@@ -870,7 +863,7 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        This field specifies the transport service id.  For transports using IP
+        This field specifies the transport service id. For transports using IP
         addressing (e.g. rdma) this field is the port number. By default, the IP
         port number for the RDMA transport is 4420.
 </p>
@@ -953,9 +946,6 @@ cellspacing="0" cellpadding="4">
 <p>
         NVMe In-band authentication secret; needs to be in ASCII format as
         specified in NVMe 2.0 section 8.13.5.8 <em>Secret representation</em>.
-        If this option is not specified, the default is read from
-        /usr/local/etc/nvme/hostkey. If that does not exist no in-band authentication
-        is attempted.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1144,25 +1134,35 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;format&gt;
-</dt>
-<dt class="hdlist1">
---output-format=&lt;format&gt;
-</dt>
-<dd>
-<p>
-        Set the reporting format to <em>normal</em> or <em>json</em>. Only one output format can
-        be used at a time. When this option is specified, the device associated with
-        the connection will be printed. Nothing is printed otherwise.
-</p>
-</dd>
-<dt class="hdlist1">
 --context &lt;STR&gt;
 </dt>
 <dd>
 <p>
         Set the execution context to &lt;STR&gt;. This allows to coordinate
         the management of the global resources.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -1211,7 +1211,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

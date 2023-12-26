@@ -1,0 +1,43 @@
+nvme-ocp-telemetry-string-log-page(1)
+=====================================
+
+NAME
+----
+nvme-ocp-telemetry-string-log-page - Retrieve OCP Telemetry String Log page
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp telemetry-str-log' <device> [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, Retrieve OCP Telemetry String Log page
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	This option will set the reporting format to normal, json, or binary.
+	Only one output format can be used at a time.
+
+
+EXAMPLES
+--------
+* Has the program issue a telemetry-string-log command to get the log page data from bin file.
++
+------------
+# nvme ocp telemetry-string-log /dev/nvme0n1
+------------
+
+NVME
+----
+Part of the nvme-user suite.

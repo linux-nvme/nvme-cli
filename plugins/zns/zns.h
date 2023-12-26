@@ -15,7 +15,7 @@ PLUGIN(NAME("zns", "Zoned Namespace Command Set", NVME_VERSION),
 		ENTRY("report-zones", "Report zones associated to a Zoned Namespace", report_zones)
 		ENTRY("reset-zone", "Reset one or more zones", reset_zone)
 		ENTRY("close-zone", "Close one or more zones", close_zone)
-		ENTRY("finish-zone", "Finishe one or more zones", finish_zone)
+		ENTRY("finish-zone", "Finish one or more zones", finish_zone)
 		ENTRY("open-zone", "Open one or more zones", open_zone)
 		ENTRY("offline-zone", "Offline one or more zones", offline_zone)
 		ENTRY("set-zone-desc", "Attach zone descriptor extension data to a zone", set_zone_desc)

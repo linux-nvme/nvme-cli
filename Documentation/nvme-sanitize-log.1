@@ -2,12 +2,12 @@
 .\"     Title: nvme-sanitize-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SANITIZE\-LOG" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-SANITIZE\-LOG" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,9 @@ nvme-sanitize-log \- Send NVMe sanitize\-log Command, return result
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme sanitize\-log\fR <device> [\-\-rae | \-r] [\-\-output\-format=<fmt> | \-o <fmt>]
-                             [\-\-human\-readable | \-H]
-                             [\-\-raw\-binary | \-b]
+\fInvme sanitize\-log\fR <device> [\-\-rae | \-r] [\-\-human\-readable | \-H]
+                        [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -105,14 +105,6 @@ On success it returns 0, error code otherwise\&.
 Retain an Asynchronous Event\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
-.RS 4
-Set the reporting format to
-\fInormal\fR,
-\fIjson\fR, or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
-.RE
-.PP
 \-H, \-\-human\-readable
 .RS 4
 This option will parse and format many of the bit fields into human\-readable formats\&.
@@ -121,6 +113,20 @@ This option will parse and format many of the bit fields into human\-readable fo
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the vendor specific and human readable options\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

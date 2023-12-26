@@ -2,12 +2,12 @@
 .\"     Title: nvme-list
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LIST" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-LIST" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,19 +32,20 @@ nvme-list \- List all recognized NVMe devices
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme list\fR [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme list\fR [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
 Scan the sysfs tree for NVM Express devices and return the /dev node for those devices as well as some pertinent information about them\&.
 .SH "OPTIONS"
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
-\fInormal\fR
+\fInormal\fR,
+\fIjson\fR
 or
-\fIjson\fR\&. Only one output format can be used at a time\&.
+\fIbinary\fR\&. Only one output format can be used at a time\&.
 .RE
 .PP
 \-v, \-\-verbose

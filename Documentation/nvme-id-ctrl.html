@@ -749,8 +749,8 @@ nvme-id-ctrl(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme id-ctrl</em> &lt;device&gt; [-v | --vendor-specific] [-b | --raw-binary]
-                        [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme id-ctrl</em> &lt;device&gt; [--vendor-specific | -V] [--raw-binary | -b]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -784,7 +784,7 @@ raw buffer may be printed to stdout.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--v
+-V
 </dt>
 <dt class="hdlist1">
 --vendor-specific
@@ -809,15 +809,26 @@ raw buffer may be printed to stdout.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;format&gt;
+-o &lt;fmt&gt;
 </dt>
 <dt class="hdlist1">
---output-format=&lt;format&gt;
+--output-format=&lt;fmt&gt;
 </dt>
 <dd>
 <p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -845,7 +856,7 @@ the vendor unique field:
 <div class="listingblock">
 <div class="content">
 <pre><code># nvme id-ctrl /dev/nvme0 --vendor-specific
-# nvme id-ctrl /dev/nvme0 -v</code></pre>
+# nvme id-ctrl /dev/nvme0 -V</code></pre>
 </div></div>
 <div class="paragraph"><p>The above will dump the <em>vs</em> buffer in hex since it doesn&#8217;t know how to
 interpret it.</p></div>
@@ -910,7 +921,7 @@ int main(int argc, char **argv)
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

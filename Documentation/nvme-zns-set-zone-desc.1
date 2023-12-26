@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-set-zone-desc
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-SET\-ZONE" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-SET\-ZONE" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,10 +33,10 @@ nvme-zns-set-zone-desc \- Set extended descriptor data for a zone
 .sp
 .nf
 \fInvme zns set\-zone\-desc\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                                 [\-\-start\-lba=<IONUM>, \-s <IONUM>]
-                                 [\-\-zrwaa | \-r]
-                                 [\-data=<FILE>, \-d <FILE>]
-                                 [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-start\-lba=<IONUM>, \-s <IONUM>]
+                        [\-\-zrwaa | \-r]
+                        [\-\-data=<FILE>, \-d <FILE>]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -58,7 +58,7 @@ The starting LBA of the zone to manage send\&.
 Allocate Zone Random Write Area to zone\&.
 .RE
 .PP
-\-d <FILE, \-data=<FILE>
+\-d <FILE>, \-\-data=<FILE>
 .RS 4
 Optional file for data (default stdin)
 .RE

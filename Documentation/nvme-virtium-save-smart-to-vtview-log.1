@@ -2,12 +2,12 @@
 .\"     Title: nvme-virtium-save-smart-to-vtview-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-VIRTIUM\-SAVE\" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-VIRTIUM\-SAVE\" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,7 +39,7 @@ nvme-virtium-save-smart-to-vtview-log \- Periodically save smart attributes into
 .fi
 .SH "DESCRIPTION"
 .sp
-This command automates the process of collecting SMART data periodically and saving the data in a ready\-to\-analyze format\&. Each entry is saved with timestamp and in csv format\&. Users can use excel to analyze the data\&. Some examples of use cases are collecting SMART data for temperature characterization, collecting data to calculate endurance, or collecting SMART data during a test or during normal operation\&.
+This command automates the process of collecting SMART data periodically and saving the data in a ready\-to\-analyze format\&. Each entry is saved with timestamp and in csv format\&. Users can use excel to analyze the data\&. Some examples of use cases are collecting SMART data for temperature characterization, data to calculate endurance, or collecting SMART data during a test or during normal operation\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
@@ -57,7 +57,7 @@ If the test\-name option is specified, it will be recorded in the log file and b
 .PP
 \-f <NUM>, \-\-freq=<NUM>
 .RS 4
-(optional) How often you want to log SMART data (0\&.25 = 15\*(Aq , 0\&.5 = 30\*(Aq , 1 = 1 hour, 2 = 2 hours, etc\&.)\&. Default = 10 hours\&.
+(optional) How often you want to log SMART data (0\&.25 = 15\*(Aq, 0\&.5 = 30\*(Aq, 1 = 1 hour, 2 = 2 hours, etc\&.)\&. Default = 10 hours\&.
 .RE
 .PP
 \-o <FILE>, \-\-output\-file=<FILE>

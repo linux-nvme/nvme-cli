@@ -24,6 +24,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include "nvme.h"
+#include "libnvme.h"
+#include "nvme-print.h"
 #include "wdc-utils.h"
 
 int wdc_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer, const char *format, ...)
@@ -133,8 +136,8 @@ end:
 /**
  * Compares the strings ignoring their cases.
  *
- * @param pcSrc Points to a null terminated string for comapring.
- * @param pcDst Points to a null terminated string for comapring.
+ * @param pcSrc Points to a null terminated string for comparing.
+ * @param pcDst Points to a null terminated string for comparing.
  *
  * @returns zero if the string matches or
  *          1 if the pcSrc string is lexically higher than pcDst or
@@ -162,3 +165,42 @@ void wdc_StrFormat(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 	}
 }
 
+bool wdc_CheckUuidListSupport(struct nvme_dev *dev, struct nvme_id_uuid_list *uuid_list)
+{
+	int err;
+	struct nvme_id_ctrl ctrl;
+
+	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
+	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	if (err) {
+		fprintf(stderr, "ERROR: WDC: nvme_identify_ctrl() failed 0x%x\n", err);
+		return false;
+	}
+
+	if ((ctrl.ctratt & NVME_CTRL_CTRATT_UUID_LIST) == NVME_CTRL_CTRATT_UUID_LIST) {
+		err = nvme_identify_uuid(dev_fd(dev), uuid_list);
+		if (!err)
+			return true;
+		else if (err > 0)
+			nvme_show_status(err);
+		else
+			nvme_show_error("identify UUID list: %s", nvme_strerror(errno));
+	}
+
+	return false;
+}
+
+bool wdc_UuidEqual(struct nvme_id_uuid_list_entry *entry1, struct nvme_id_uuid_list_entry *entry2)
+{
+	int i;
+
+	for (i = 0; i < 16; i++) {
+		if (entry1->uuid[i] != entry2->uuid[i])
+			break;
+	}
+
+	if (i == 16)
+		return true;
+	else
+		return false;
+}

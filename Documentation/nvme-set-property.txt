@@ -9,9 +9,9 @@ for NVMe over Fabric
 SYNOPSIS
 --------
 [verse]
-'nvme set-property' <device> [--offset=<offset> | -o <offset>]
-				[--value=<val> | -v <val>]
-
+'nvme set-property' <device> [--offset=<offset> | -O <offset>]
+			[--value=<val> | -V <val>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -19,13 +19,22 @@ Writes and shows the defined NVMe controller property for NVMe over Fabric.
 
 OPTIONS
 -------
--o::
+-O::
 --offset::
-       The offset of the property.
+	The offset of the property.
 
--v::
+-V::
 --value:
 	The value of the property to be set.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

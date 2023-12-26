@@ -740,7 +740,7 @@ nvme-mi-cmd-support-effects-log(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-mi-cmd-support-effects-log -
-   Send NVMe MI Command Support and Effects log,                                   returns results and structure
+   Send NVMe MI Command Support and Effects log, returns results and structure
 </p>
 </div>
 </div>
@@ -749,8 +749,8 @@ nvme-mi-cmd-support-effects-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-mi-cmd-support-effects-log</em> &lt;device&gt; [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]
-                                        [-H | --human-readable]</pre>
+<pre class="content"><em>nvme-mi-cmd-support-effects-log</em> &lt;device&gt; [--human-readable | -H]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -772,18 +772,6 @@ raw buffer may be printed to stdout.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;format&gt;
-</dt>
-<dt class="hdlist1">
---output-format=&lt;format&gt;
-</dt>
-<dd>
-<p>
-    Set the reporting format to <em>normal</em>, <em>json</em>, or
-    <em>binary</em>. Only one output format can be used at a time.
-</p>
-</dd>
-<dt class="hdlist1">
 -H
 </dt>
 <dt class="hdlist1">
@@ -793,6 +781,29 @@ raw buffer may be printed to stdout.</p></div>
 <p>
         This option will parse and format many of the bit fields
         into human-readable formats.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -815,7 +826,7 @@ raw buffer may be printed to stdout.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-09-29 08:33:07 CEST
+ 2023-12-21 15:49:29 CET
 </div>
 </div>
 </body>

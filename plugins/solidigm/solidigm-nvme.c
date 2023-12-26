@@ -18,8 +18,11 @@
 #include "solidigm-telemetry.h"
 #include "solidigm-log-page-dir.h"
 #include "solidigm-market-log.h"
+#include "solidigm-temp-stats.h"
+#include "solidigm-get-drive-info.h"
+#include "solidigm-ocp-version.h"
 
-#include "plugins/ocp/ocp-clear-fw-update-history.h"
+#include "plugins/ocp/ocp-clear-features.h"
 #include "plugins/ocp/ocp-smart-extended-log.h"
 #include "plugins/ocp/ocp-fw-activation-history.h"
 
@@ -59,6 +62,12 @@ static int clear_fw_update_history(int argc, char **argv, struct command *cmd,
 	return ocp_clear_fw_update_history(argc, argv, cmd, plugin);
 }
 
+static int clear_pcie_correctable_error_counters(int argc, char **argv, struct command *cmd,
+						struct plugin *plugin)
+{
+	return ocp_clear_pcie_correctable_errors(argc, argv, cmd, plugin);
+}
+
 static int smart_cloud(int argc, char **argv, struct command *cmd,
 		       struct plugin *plugin)
 {
@@ -81,4 +90,20 @@ static int get_market_log(int argc, char **argv, struct command *cmd,
 				      struct plugin *plugin)
 {
 	return sldgm_get_market_log(argc, argv, cmd, plugin);
+}
+
+static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return sldgm_get_temp_stats_log(argc, argv, cmd, plugin);
+}
+
+static int get_drive_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return sldgm_get_drive_info(argc, argv, cmd, plugin);
+}
+
+static int get_cloud_SSDplugin_version(int argc, char **argv, struct command *cmd,
+				       struct plugin *plugin)
+{
+	return sldgm_ocp_version(argc, argv, cmd, plugin);
 }

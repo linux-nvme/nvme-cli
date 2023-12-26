@@ -1,0 +1,15 @@
+name: checkpatch review
+on: [pull_request]
+jobs:
+  checkpatch:
+    name: checkpatch review
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Calculate PR commits + 1'
+      run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_ENV
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+    - name: Run checkpatch review
+      uses: webispy/checkpatch-action@v9

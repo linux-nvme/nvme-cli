@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,36 +32,29 @@ nvme-connect \- Connect to a Fabrics controller\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme connect\fR
-                [\-\-transport=<trtype>     | \-t <trtype>]
-                [\-\-nqn=<subnqn>           | \-n <subnqn>]
-                [\-\-traddr=<traddr>        | \-a <traddr>]
-                [\-\-trsvcid=<trsvcid>      | \-s <trsvcid>]
-                [\-\-host\-traddr=<traddr>   | \-w <traddr>]
-                [\-\-host\-iface=<iface>     | \-f <iface>]
-                [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
-                [\-\-hostid=<hostid>        | \-I <hostid>]
-                [\-\-config\-file=<cfg>      | \-J <cfg> ]
-                [\-\-dhchap\-secret=<secret> | \-S <secret>]
-                [\-\-dhchap\-ctrl\-secret=<secret> | \-C <secret>]
-                [\-\-nr\-io\-queues=<#>       | \-i <#>]
-                [\-\-nr\-write\-queues=<#>    | \-W <#>]
-                [\-\-nr\-poll\-queues=<#>     | \-P <#>]
-                [\-\-queue\-size=<#>         | \-Q <#>]
-                [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
-                [\-\-reconnect\-delay=<#>    | \-c <#>]
-                [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
-                [\-\-tos=<#>                | \-T <#>]
-                [\-\-keyring=<#>                    ]
-                [\-\-tls_key=<#>                    ]
-                [\-\-duplicate\-connect      | \-D]
-                [\-\-disable\-sqflow         | \-d]
-                [\-\-hdr\-digest             | \-g]
-                [\-\-data\-digest            | \-G]
-                [\-\-tls                        ]
-                [\-\-dump\-config            | \-O]
-                [\-\-output\-format=<fmt>    | \-o <fmt>]
-                [\-\-application=<id>                 ]
+\fInvme connect\fR [\-\-transport=<trtype> | \-t <trtype>]
+                        [\-\-nqn=<subnqn> | \-n <subnqn>]
+                        [\-\-traddr=<traddr> | \-a <traddr>]
+                        [\-\-trsvcid=<trsvcid> | \-s <trsvcid>]
+                        [\-\-host\-traddr=<traddr> | \-w <traddr>]
+                        [\-\-host\-iface=<iface> | \-f <iface>]
+                        [\-\-hostnqn=<hostnqn> | \-q <hostnqn>]
+                        [\-\-hostid=<hostid> | \-I <hostid>]
+                        [\-\-config\-file=<cfg> | \-J <cfg>]
+                        [\-\-dhchap\-secret=<secret> | \-S <secret>]
+                        [\-\-dhchap\-ctrl\-secret=<secret> | \-C <secret>]
+                        [\-\-nr\-io\-queues=<#> | \-i <#>]
+                        [\-\-nr\-write\-queues=<#> | \-W <#>]
+                        [\-\-nr\-poll\-queues=<#> | \-P <#>]
+                        [\-\-queue\-size=<#> | \-Q <#>]
+                        [\-\-keep\-alive\-tmo=<#> | \-k <#>]
+                        [\-\-reconnect\-delay=<#> | \-c <#>]
+                        [\-\-ctrl\-loss\-tmo=<#> | \-l <#>] [\-\-tos=<#> | \-T <#>]
+                        [\-\-keyring=<#>] [\-\-tls_key=<#>]
+                        [\-\-duplicate\-connect | \-D] [\-\-disable\-sqflow | \-d]
+                        [\-\-hdr\-digest | \-g] [\-\-data\-digest | \-G] [\-\-tls]
+                        [\-\-dump\-config | \-O] [\-\-application=<id>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -154,7 +147,7 @@ to not read in an existing configuration file\&. The JSON configuration file for
 \-S <secret>, \-\-dhchap\-secret=<secret>
 .RS 4
 NVMe In\-band authentication secret; needs to be in ASCII format as specified in NVMe 2\&.0 section 8\&.13\&.5\&.8
-\fISecret representation\fR\&. If this option is not specified, the default is read from /usr/local/etc/nvme/hostkey\&. If that does not exist no in\-band authentication is attempted\&.
+\fISecret representation\fR\&.
 .RE
 .PP
 \-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
@@ -243,17 +236,23 @@ Enable TLS encryption (TCP)\&.
 Print out resulting JSON configuration file to stdout\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
-.RS 4
-Set the reporting format to
-\fInormal\fR
-or
-\fIjson\fR\&. Only one output format can be used at a time\&. When this option is specified, the device associated with the connection will be printed\&. Nothing is printed otherwise\&.
-.RE
-.PP
 \-\-context <STR>
 .RS 4
 Set the execution context to <STR>\&. This allows to coordinate the management of the global resources\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

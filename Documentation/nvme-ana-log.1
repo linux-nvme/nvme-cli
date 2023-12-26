@@ -2,12 +2,12 @@
 .\"     Title: nvme-ana-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ANA\-LOG" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-ANA\-LOG" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,8 @@ nvme-ana-log \- Send NVMe ANA log page request, returns result and log
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme ana\-log\fR <device> [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme ana\-log\fR <device> [\-\-groups | \-g]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -48,12 +49,18 @@ On success, the returned ANA log structure may be returned in one of several way
 Return the list of ANA groups without the namespace listing\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -2,12 +2,12 @@
 .\"     Title: nvme-compare
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-COMPARE" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-COMPARE" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -47,12 +47,13 @@ nvme-compare \- Send an NVMe Compare command, provide results
                         [\-\-dir\-type=<type> | \-T <type>]
                         [\-\-dir\-spec=<spec> | \-S <spec>]
                         [\-\-dsm=<dsm> | \-D <dsm>]
-                        [\-\-show\-command | \-v]
+                        [\-\-show\-command | \-V]
                         [\-\-dry\-run | \-w]
                         [\-\-latency | \-t]
                         [\-\-storage\-tag<storage\-tag> | \-g <storage\-tag>]
                         [\-\-storage\-tag\-check | \-C]
                         [\-\-force]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -97,9 +98,6 @@ Metadata file\&.
 \-p <prinfo>, \-\-prinfo=<prinfo>
 .RS 4
 Protection Information and check field\&.
-.RE
-.sp
-+
 .TS
 allbox tab(:);
 lt lt
@@ -109,49 +107,38 @@ lt lt
 lt lt
 lt lt.
 T{
-.sp
 Bit
 T}:T{
-.sp
 Description
 T}
 T{
-.sp
 3
 T}:T{
-.sp
 PRACT: Protection Information Action\&. When set to 1, PI is stripped/inserted on read/write when the block format\(cqs metadata size is 8\&. When set to 0, metadata is passes\&.
 T}
 T{
-.sp
 2:0
 T}:T{
-.sp
 PRCHK: Protection Information Check:
 T}
 T{
-.sp
 2
 T}:T{
-.sp
 Set to 1 enables checking the guard tag
 T}
 T{
-.sp
 1
 T}:T{
-.sp
 Set to 1 enables checking the application tag
 T}
 T{
-.sp
 0
 T}:T{
-.sp
 Set to 1 enables checking the reference tag
 T}
 .TE
 .sp 1
+.RE
 .PP
 \-m <appmask>, \-\-app\-tag\-mask=<appmask>
 .RS 4
@@ -188,7 +175,7 @@ Optional field for directive specifics\&. When used with write streams, this val
 The optional data set management attributes for this command\&. The argument for this is the least significant 8 bits of the DSM field in a write command; the most significant 16 bits of the field come from the directive specific field, if used\&. This may be used to set attributes for the LBAs being written, like access frequency, type, latency, among other things, as well as yet to be defined types\&. Please consult the NVMe specification for detailed breakdown of how to use this field\&.
 .RE
 .PP
-\-v, \-\-show\-cmd
+\-V, \-\-show\-cmd
 .RS 4
 Print out the command to be sent\&.
 .RE
@@ -219,6 +206,20 @@ This flag enables Storage Tag field checking as part of end\-to\-end data protec
 \-\-force
 .RS 4
 Ignore namespace is currently busy and performed the operation even though\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

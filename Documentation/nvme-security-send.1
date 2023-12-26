@@ -2,12 +2,12 @@
 .\"     Title: nvme-security-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SECURITY\-SEND" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-SECURITY\-SEND" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,11 +33,12 @@ nvme-security-send \- Security Send command
 .sp
 .nf
 \fInvme security\-send\fR <device> [\-\-file=<file> | \-f <file>]
-                    [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
-                    [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
-                    [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
-                    [\-\-nssf=<nvme\-specific> | \-N <nvme\-specific>]
-                    [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
+                        [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
+                        [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
+                        [\-\-nssf=<nvme\-specific> | \-N <nvme\-specific>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -74,6 +75,20 @@ SP Specific: The value of this field is specific to the Security Protocol as def
 \-t <trans\-length>, \-\-tl=<trans\-length>
 .RS 4
 Transfer Length: The value of this field is specific to the Security Protocol as defined in SPC\-4\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

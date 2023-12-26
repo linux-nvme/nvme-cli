@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-report-zones
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/30/2023
+.\"      Date: 12/21/2023
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-REPORT\-Z" "1" "06/30/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-REPORT\-Z" "1" "12/21/2023" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,7 +39,7 @@ nvme-zns-report-zones \- Retrieve and display the Report Zones data structure
                                  [\-\-extended | \-e]
                                  [\-\-partial | \-p]
                                  [\-\-verbose | \-v]
-                                 [\-\-output\-format=<FMT> | \-o <FMT>]
+                                 [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -143,7 +143,7 @@ If set, the device will return the number of zones that match the state rather t
 Increase the information detail in the output\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,

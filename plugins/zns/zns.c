@@ -12,6 +12,7 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "nvme-print.h"
+#include "util/cleanup.h"
 
 #define CREATE_CMD
 #include "zns.h"
@@ -135,8 +136,8 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 	if (err)
 		return errno;
 
-	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 
 	err = nvme_zns_identify_ctrl(dev_fd(dev), &ctrl);
@@ -188,8 +189,8 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	if (err)
 		return errno;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 	if (cfg.vendor_specific)
 		flags |= VS;
@@ -560,7 +561,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc = "Set Zone Descriptor Extension\n";
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *zrwaa = "Allocate Zone Random Write Area to zone";
-	const char *data = "optional file for zone extention data (default stdin)";
+	const char *data = "optional file for zone extension data (default stdin)";
 	const char *timeout = "timeout value, in milliseconds";
 
 	int ffd = STDIN_FILENO, err;
@@ -603,7 +604,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 
 	if (!data_len || data_len < 0) {
 		fprintf(stderr,
-			"zone format does not provide descriptor extention\n");
+			"zone format does not provide descriptor extension\n");
 		errno = EINVAL;
 		err = -1;
 		goto close_dev;
@@ -765,8 +766,8 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return errno;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 
 	if (!cfg.namespace_id) {
@@ -833,8 +834,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	int zdes = 0, err = -1;
 	struct nvme_dev *dev;
 	__u32 report_size;
-	bool huge = false;
 	struct nvme_zone_report *report, *buff;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 
 	unsigned int nr_zones_chunks = 1024,   /* 1024 entries * 64 bytes per entry = 64k byte transfer */
 			nr_zones_retrieved = 0,
@@ -880,8 +881,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	if (err)
 		return errno;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 	if (cfg.verbose)
 		flags |= VERBOSE;
@@ -949,7 +950,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
 	report_size = log_len;
 
-	report = nvme_alloc_huge(report_size, &huge);
+	report = nvme_alloc_huge(report_size, &mh);
 	if (!report) {
 		perror("alloc");
 		err = -ENOMEM;
@@ -988,8 +989,6 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	nvme_zns_finish_zone_list(total_nr_zones, zone_list, flags);
-
-	nvme_free_huge(report, huge);
 
 free_buff:
 	free(buff);
@@ -1248,8 +1247,8 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 	if (err)
 		return errno;
 
-	flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0)
 		goto close_dev;
 
 	if (!cfg.namespace_id) {

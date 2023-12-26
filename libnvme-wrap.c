@@ -7,19 +7,24 @@
 
 #include <dlfcn.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include <libnvme.h>
+#include "nvme-print.h"
 
 #define PROTO(args...) args
 #define ARGS(args...) args
 
-#define VOID_FN(name, proto, args)				\
-void __attribute__((weak)) name(proto)				\
-{								\
-	void (*fn)(proto);					\
-	fn = dlsym(RTLD_NEXT, #name);				\
-	if (fn)							\
-		fn(args);					\
+#define VOID_FN(name, proto, args)					\
+void __attribute__((weak)) name(proto)					\
+{									\
+	void (*fn)(proto);						\
+	fn = dlsym(RTLD_NEXT, #name);					\
+	if (!fn) {							\
+		nvme_show_error("libnvme function " #name " not found");\
+		exit(EXIT_FAILURE);					\
+	}								\
+	fn(args);						 	\
 }
 
 #define FN(name, rtype, proto, args, defret)			\
@@ -41,6 +46,18 @@ VOID_FN(nvme_init_copy_range_f1,
 	      __u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
 	      __u32 *elbats, __u16 nr),
 	ARGS(copy, nlbs, slbas, eilbrts, elbatms, elbats, nr))
+
+VOID_FN(nvme_init_copy_range_f2,
+	PROTO(struct nvme_copy_range_f2 *copy, __u32 *snsids,
+	      __u16 *nlbs, __u64 *slbas, __u16 *sopts, __u32 *eilbrts,
+	      __u32 *elbatms, __u32 *elbats, __u16 nr),
+	ARGS(copy, snsids, nlbs, slbas, sopts, eilbrts, elbatms, elbats, nr))
+
+VOID_FN(nvme_init_copy_range_f3,
+	PROTO(struct nvme_copy_range_f3 *copy, __u32 *snsids,
+	      __u16 *nlbs, __u64 *slbas, __u16 *sopts, __u64 *eilbrts,
+	      __u32 *elbatms, __u32 *elbats, __u16 nr),
+	ARGS(copy, snsids, nlbs, slbas, sopts, eilbrts, elbatms, elbats, nr))
 
 FN(nvme_get_feature_length2,
 	int,

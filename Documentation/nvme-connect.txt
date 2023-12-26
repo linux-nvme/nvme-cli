@@ -8,36 +8,29 @@ nvme-connect - Connect to a Fabrics controller.
 SYNOPSIS
 --------
 [verse]
-'nvme connect'
-		[--transport=<trtype>     | -t <trtype>]
-		[--nqn=<subnqn>           | -n <subnqn>]
-		[--traddr=<traddr>        | -a <traddr>]
-		[--trsvcid=<trsvcid>      | -s <trsvcid>]
-		[--host-traddr=<traddr>   | -w <traddr>]
-		[--host-iface=<iface>     | -f <iface>]
-		[--hostnqn=<hostnqn>      | -q <hostnqn>]
-		[--hostid=<hostid>        | -I <hostid>]
-		[--config-file=<cfg>      | -J <cfg> ]
-		[--dhchap-secret=<secret> | -S <secret>]
-		[--dhchap-ctrl-secret=<secret> | -C <secret>]
-		[--nr-io-queues=<#>       | -i <#>]
-		[--nr-write-queues=<#>    | -W <#>]
-		[--nr-poll-queues=<#>     | -P <#>]
-		[--queue-size=<#>         | -Q <#>]
-		[--keep-alive-tmo=<#>     | -k <#>]
-		[--reconnect-delay=<#>    | -c <#>]
-		[--ctrl-loss-tmo=<#>      | -l <#>]
-		[--tos=<#>                | -T <#>]
-		[--keyring=<#>                    ]
-		[--tls_key=<#>                    ]
-		[--duplicate-connect      | -D]
-		[--disable-sqflow         | -d]
-		[--hdr-digest             | -g]
-		[--data-digest            | -G]
-		[--tls                        ]
-		[--dump-config            | -O]
-		[--output-format=<fmt>    | -o <fmt>]
-		[--application=<id>                 ]
+'nvme connect' [--transport=<trtype> | -t <trtype>]
+			[--nqn=<subnqn> | -n <subnqn>]
+			[--traddr=<traddr> | -a <traddr>]
+			[--trsvcid=<trsvcid> | -s <trsvcid>]
+			[--host-traddr=<traddr> | -w <traddr>]
+			[--host-iface=<iface> | -f <iface>]
+			[--hostnqn=<hostnqn> | -q <hostnqn>]
+			[--hostid=<hostid> | -I <hostid>]
+			[--config-file=<cfg> | -J <cfg>]
+			[--dhchap-secret=<secret> | -S <secret>]
+			[--dhchap-ctrl-secret=<secret> | -C <secret>]
+			[--nr-io-queues=<#> | -i <#>]
+			[--nr-write-queues=<#> | -W <#>]
+			[--nr-poll-queues=<#> | -P <#>]
+			[--queue-size=<#> | -Q <#>]
+			[--keep-alive-tmo=<#> | -k <#>]
+			[--reconnect-delay=<#> | -c <#>]
+			[--ctrl-loss-tmo=<#> | -l <#>] [--tos=<#> | -T <#>]
+			[--keyring=<#>] [--tls_key=<#>]
+			[--duplicate-connect | -D] [--disable-sqflow | -d]
+			[--hdr-digest | -g] [--data-digest | -G] [--tls]
+			[--dump-config | -O] [--application=<id>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -50,7 +43,7 @@ OPTIONS
 -t <trtype>::
 --transport=<trtype>::
 	This field specifies the network fabric being used for
-	a NVMe-over-Fabrics network.  Current string values include:
+	a NVMe-over-Fabrics network. Current string values include:
 +
 []
 |=================
@@ -73,7 +66,7 @@ OPTIONS
 
 -s <trsvcid>::
 --trsvcid=<trsvcid>::
-	This field specifies the transport service id.  For transports using IP
+	This field specifies the transport service id. For transports using IP
 	addressing (e.g. rdma) this field is the port number. By default, the IP
 	port number for the RDMA transport is 4420.
 
@@ -114,9 +107,6 @@ OPTIONS
 --dhchap-secret=<secret>::
 	NVMe In-band authentication secret; needs to be in ASCII format as
 	specified in NVMe 2.0 section 8.13.5.8 'Secret representation'.
-	If this option is not specified, the default is read from
-	@SYSCONFDIR@/nvme/hostkey. If that does not exist no in-band authentication
-	is attempted.
 
 -C <secret>::
 --dhchap-ctrl-secret=<secret>::
@@ -190,15 +180,18 @@ OPTIONS
 --dump-config::
 	Print out resulting JSON configuration file to stdout.
 
--o <format>::
---output-format=<format>::
-	Set the reporting format to 'normal' or 'json'. Only one output format can
-	be used at a time. When this option is specified, the device associated with
-	the connection will be printed. Nothing is printed otherwise.
-
 --context <STR>::
 	Set the execution context to <STR>. This allows to coordinate
 	the management of the global resources.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
@@ -214,7 +207,6 @@ SEE ALSO
 --------
 nvme-discover(1)
 nvme-connect-all(1)
-
 
 AUTHORS
 -------

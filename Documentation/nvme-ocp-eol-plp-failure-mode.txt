@@ -3,13 +3,15 @@ nvme-ocp-eol-plp-failure-mode(1)
 
 NAME
 ----
-nvme-ocp-eol-plp-failure-mode - Define and print EOL or PLP circuitry failure mode
+nvme-ocp-eol-plp-failure-mode - Define and print EOL or PLP circuitry failure
+mode
 
 SYNOPSIS
 --------
 [verse]
-'nvme ocp eol-plp-failure-mode' <device> [--mode=<mode> | -m <mode>] [--no-uuid | -n] [--save | -s]
-					 [--sel=<select> | -s <select>]
+'nvme ocp eol-plp-failure-mode' <device> [--mode=<mode> | -m <mode>]
+			[--no-uuid | -n] [--save | -s]
+			[--sel=<select> | -s <select>]
 
 DESCRIPTION
 -----------
@@ -29,17 +31,18 @@ OPTIONS
 -m <mode>::
 --mode=<mode>::
 	Set the EOL or PLP circuitry failure mode to [0-3] ('0: default',
-        '1: rom', '2: wtm' or '3: normal'). Only one mode
+	'1: rom', '2: wtm' or '3: normal'). Only one mode
 	can be used at a time. The default is rom.
 
 -n::
 --no-uuid::
 	Do not try to automatically detect UUID index for this command (required
-        for old OCP 1.0 support)
+	for old OCP 1.0 support)
 
 -s::
 --save::
-	Save the attribute so that it persists through all power states and resets.
+	Save the attribute so that it persists through all power states and
+	resets.
 
 -s <select>::
 --sel=<select>::
