@@ -21,6 +21,9 @@ PLUGIN(NAME("memblaze", "Memblaze vendor specific extensions", NVME_VERSION),
 		ENTRY("smart-log-add-x", "Retrieve Memblaze SMART Log, show it", mb_get_smart_log_add)
 		ENTRY("lat-set-feature-x", "Set Enable/Disable for Latency Monitor feature", mb_set_latency_feature)
 		ENTRY("lat-get-feature-x", "Get Enabled/Disabled of Latency Monitor feature", mb_get_latency_feature)
+        ENTRY("lat-stats-print-x", "Get Latency Statistics log and show it.", mb_get_latency_stats)
+		ENTRY("lat-log-print-x", "Get High Latency log and show it.", mb_get_high_latency_log)
+        ENTRY("perf-stats-print-x", "Get Performance Stat log and show it.", mb_get_performance_stats)
 	)
 );
 
