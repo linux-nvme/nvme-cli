@@ -2025,8 +2025,8 @@ static void high_latency_log_v1_print(struct high_latency_log *log, int size)
 		char   str_time_s[20]  = {0};
 		char   str_time_ms[24] = {0};
 
-		strftime(str_time_s, sizeof(str_time_s), "%Y-%m-%d %H:%M:%S", localtime(&timestamp_s));
-		sprintf(str_time_ms, "%s.%03d", str_time_s, time_ms);
+		strftime(str_time_s, sizeof str_time_s, "%Y-%m-%d %H:%M:%S", localtime(&timestamp_s));
+		snprintf(str_time_ms, sizeof str_time_ms, "%s.%03d", str_time_s, time_ms);
 		printf("%-24s", str_time_ms);
 
 		//
