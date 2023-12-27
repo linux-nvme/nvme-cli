@@ -387,6 +387,15 @@ static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags)
 	return ret != 0 ? -errno : 0;
 }
 
+static void set_opts(struct nvme_dev *dev, struct argconfig_commandline_options *opts)
+{
+	if (argconfig_parse_seen(opts, "verbose"))
+		nvme_cli_set_debug(dev, true);
+
+	if (argconfig_parse_seen(opts, "latency"))
+		nvme_cli_set_latency(dev, true);
+}
+
 int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
 		   const char *desc,
 		   struct argconfig_commandline_options *opts)
@@ -400,8 +409,8 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
 	ret = get_dev(dev, argc, argv, O_RDONLY);
 	if (ret < 0)
 		argconfig_print_help(desc, opts);
-	else if (argconfig_parse_seen(opts, "verbose"))
-		nvme_cli_set_debug(*dev, true);
+	else
+		set_opts(*dev, opts);
 
 	return ret;
 }
@@ -6366,8 +6375,6 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	__u32 nlbs[256] = {0,};
 	__u64 slbas[256] = {0,};
 	int err;
-	struct timeval start_time;
-	struct timeval end_time;
 
 	struct config {
 		__u32	namespace_id;
@@ -6440,19 +6447,14 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		.result		= NULL,
 	};
 
-	gettimeofday(&start_time, NULL);
 	err = nvme_dsm(&args);
-	gettimeofday(&end_time, NULL);
 
-	if (err < 0) {
+	if (err < 0)
 		nvme_show_error("data-set management: %s", nvme_strerror(errno));
-	} else if (err != 0) {
+	else if (err != 0)
 		nvme_show_status(err);
-	} else {
+	else
 		printf("NVMe DSM: success\n");
-		if (argconfig_parse_seen(opts, "latency"))
-			printf(" latency: %llu us\n", elapsed_utime(start_time, end_time));
-	}
 
 	return err;
 }
@@ -7038,7 +7040,6 @@ unsigned long long elapsed_utime(struct timeval start_time,
 
 static int submit_io(int opcode, char *command, const char *desc, int argc, char **argv)
 {
-	struct timeval start_time, end_time;
 	void *buffer;
 	_cleanup_free_ void *mbuffer = NULL;
 	int err = 0;
@@ -7355,11 +7356,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
 	};
-	gettimeofday(&start_time, NULL);
 	err = nvme_io(&args, opcode);
-	gettimeofday(&end_time, NULL);
-	if (argconfig_parse_seen(opts, "latency"))
-		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
 	if (err < 0) {
 		nvme_show_error("submit-io: %s", nvme_strerror(errno));
 	} else if (err) {
@@ -8061,7 +8058,6 @@ static int passthru(int argc, char **argv, bool admin,
 	int err = 0;
 	__u32 result;
 	const char *cmd_name = NULL;
-	struct timeval start_time, end_time;
 
 	struct passthru_config cfg = {
 		.opcode		= 0,
@@ -8202,8 +8198,6 @@ static int passthru(int argc, char **argv, bool admin,
 	if (cfg.dry_run)
 		return 0;
 
-	gettimeofday(&start_time, NULL);
-
 	if (admin)
 		err = nvme_cli_admin_passthru(dev, cfg.opcode, cfg.flags,
 					      cfg.rsvd,
@@ -8225,12 +8219,7 @@ static int passthru(int argc, char **argv, bool admin,
 				       cfg.metadata_len,
 				       mdata, cfg.timeout, &result);
 
-	gettimeofday(&end_time, NULL);
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
-	if (argconfig_parse_seen(opts, "latency"))
-		printf("%s Command %s latency: %llu us\n", admin ? "Admin" : "IO",
-		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
-		       elapsed_utime(start_time, end_time));
 
 	if (err < 0) {
 		nvme_show_error("%s: %s", __func__, nvme_strerror(errno));

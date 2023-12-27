@@ -434,3 +434,9 @@ void nvme_cli_set_debug(struct nvme_dev *dev, bool set)
 	if (dev->type == NVME_DEV_DIRECT)
 		nvme_set_debug(set);
 }
+
+void nvme_cli_set_latency(struct nvme_dev *dev, bool set)
+{
+	if (dev->type == NVME_DEV_DIRECT)
+		nvme_set_latency(set);
+}

@@ -148,4 +148,5 @@ int nvme_cli_security_receive(struct nvme_dev *dev,
 			      struct nvme_security_receive_args* args);
 
 void nvme_cli_set_debug(struct nvme_dev *dev, bool set);
+void nvme_cli_set_latency(struct nvme_dev *dev, bool set);
 #endif /* _NVME_WRAP_H */
