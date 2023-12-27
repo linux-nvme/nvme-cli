@@ -2196,7 +2196,7 @@ static void performance_stats_v2_print(struct performance_stats *log, int durati
 		for (int j = 0; j < 3600; j++) {
 			uint32_t read_iops =
 				log->v2.timestamps[i].entries[j].read_iops;
-            uint32_t read_bandwidth            =
+			uint32_t read_bandwidth            =
 				log->v2.timestamps[i].entries[j].read_bandwidth;
 			uint32_t read_latency_avg          =
 				log->v2.timestamps[i].entries[j].read_latency_avg;
@@ -2228,7 +2228,8 @@ static void performance_stats_v2_print(struct performance_stats *log, int durati
 			uint32_t scale_of_write_latency_max =
 				log->v2.timestamps[i].entries[j].scale_of_write_latency_max;
 
-			if (read_iops == 0 && write_iops == 0) continue;
+			if (read_iops == 0 && write_iops == 0)
+				continue;
 
 			while (scale_of_read_iops < 4 && scale_of_read_iops) {
 				read_iops *= 10;
