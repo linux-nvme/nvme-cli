@@ -5508,6 +5508,8 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 			argconfig_print_help(desc, opts);
 		}
 		return err;
+	} else {
+		set_opts(dev, opts);
 	}
 
 	if (cfg.lbaf != 0xff && cfg.bs != 0) {
@@ -7161,6 +7163,8 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 				argconfig_print_help(desc, opts);
 			}
 			return err;
+		} else {
+			set_opts(dev, opts);
 		}
 	}
 
