@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc namespace-resize' <device> [--nsid=<NAMESPACE ID>, -n <NAMSPACE ID>]
-			[--op_option=<OP OPTION>, -o <OP OPTION>] 
+			[--op_option=<OP OPTION>, -o <OP OPTION>]
 
 DESCRIPTION
 -----------

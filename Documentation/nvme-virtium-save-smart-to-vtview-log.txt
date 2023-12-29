@@ -27,7 +27,7 @@ The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
 On success, the command generates a log file, which contains an entry for
-identify device (current features & settings) and periodic entries of SMART data. 
+identify device (current features & settings) and periodic entries of SMART data.
 
 This command runs for the time specified by the option <run-time>, and collects
 SMART data at the frequency specified by the option <freq>. If the output file

@@ -10,7 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc vs-telemetry-controller-option' <device>
-			[--disable, -d] [--enable, -e] [--status, -s] 
+			[--disable, -d] [--enable, -e] [--status, -s]
 
 DESCRIPTION
 -----------

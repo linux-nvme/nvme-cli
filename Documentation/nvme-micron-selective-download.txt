@@ -17,7 +17,7 @@ DESCRIPTION
 -----------
 This command uses micron vendor specific nvme commands to download given
 firmware image to the 9200 device to update selected or all portions of firmware
-image. 
+image.
 
 The <device> parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
