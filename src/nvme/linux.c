@@ -124,7 +124,7 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 
 int nvme_get_telemetry_max(int fd, enum nvme_telemetry_da *da, size_t *data_tx)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id_ctrl;
+	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
 	int err;
 
 	id_ctrl = __nvme_alloc(sizeof(*id_ctrl));
@@ -385,7 +385,7 @@ int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
 
 int nvme_get_ana_log_len(int fd, size_t *analen)
 {
-	_cleanup_free_ struct nvme_id_ctrl *ctrl;
+	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	int ret;
 
 	ctrl = __nvme_alloc(sizeof(*ctrl));
@@ -405,7 +405,7 @@ int nvme_get_ana_log_len(int fd, size_t *analen)
 
 int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize)
 {
-	_cleanup_free_ struct nvme_id_ns *ns;
+	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	__u8 flbas;
 	int ret;
 
@@ -426,7 +426,7 @@ int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize)
 
 static int __nvme_set_attr(const char *path, const char *value)
 {
-	_cleanup_fd_ int fd;
+	_cleanup_fd_ int fd = -1;
 
 	fd = open(path, O_WRONLY);
 	if (fd < 0) {
