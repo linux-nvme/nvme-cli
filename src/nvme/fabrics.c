@@ -740,7 +740,7 @@ static  int __nvmf_supported_options(nvme_root_t r)
 
 static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 {
-	_cleanup_fd_ int fd;
+	_cleanup_fd_ int fd = -1;
 	int ret, len = strlen(argstr);
 	char buf[0x1000], *options, *p;
 
@@ -1186,7 +1186,7 @@ struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_ar
 static int uuid_from_device_tree(char *system_uuid)
 {
 	ssize_t len;
-	_cleanup_fd_ int f;
+	_cleanup_fd_ int f = -1;
 
 	f = open(PATH_UUID_IBM, O_RDONLY);
 	if (f < 0)
@@ -1230,7 +1230,7 @@ static bool is_dmi_uuid_valid(const char *buf, size_t len)
 static int uuid_from_dmi_entries(char *system_uuid)
 {
 	int f;
-	_cleanup_dir_ DIR *d;
+	_cleanup_dir_ DIR *d = NULL;
 	struct dirent *de;
 	char buf[512] = {0};
 
@@ -1294,7 +1294,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
  */
 static int uuid_from_product_uuid(char *system_uuid)
 {
-	_cleanup_file_ FILE *stream;
+	_cleanup_file_ FILE *stream = NULL;
 	ssize_t nread;
 	_cleanup_free_ char *line = NULL;
 	size_t len = 0;
@@ -1364,7 +1364,7 @@ char *nvmf_hostnqn_generate()
 static char *nvmf_read_file(const char *f, int len)
 {
 	char buf[len];
-	_cleanup_fd_ int fd;
+	_cleanup_fd_ int fd = -1;
 	int ret;
 
 	fd = open(f, O_RDONLY);
@@ -1637,7 +1637,7 @@ static const char *dctype_str[] = {
  */
 static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id;
+	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
 	int ret;
 
 	id = __nvme_alloc(sizeof(*id));
