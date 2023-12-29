@@ -15,6 +15,7 @@ SYNOPSIS
 			[--nmd0=<nmd0> | -0 <nmd0>] [--nmd1=<nmd1> | -1 <nmd1>]
 			[--input-file=<file> | -i <file>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -65,6 +66,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

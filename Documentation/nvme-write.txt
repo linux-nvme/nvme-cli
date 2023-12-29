@@ -21,10 +21,11 @@ SYNOPSIS
 			[--limited-retry | -l] [--force-unit-access | -f]
 			[--dir-type=<type> | -T <type>]
 			[--dir-spec=<spec> | -S <spec>] [--dsm=<dsm> | -D <dsm>]
-			[--show-command | -V] [--dry-run | -w] [--latency | -L]
+			[--show-command | -V] [--dry-run | -w]
 			[--storage-tag<storage-tag> | -g <storage-tag>]
 			[--storage-tag-check | -C] [--force]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -131,10 +132,6 @@ metadata is passes.
 	--show-cmd option _must_ be set. Otherwise --dry-run option will be
 	_ignored_.
 
--L::
---latency::
-	Print out the latency the IOCTL took (in us).
-
 -g <storage-tag>::
 --storage-tag=<storage-tag>::
 	Variable Sized Expected Logical Block Storage Tag(ELBST).
@@ -156,6 +153,10 @@ metadata is passes.
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

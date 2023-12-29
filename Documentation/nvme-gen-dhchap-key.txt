@@ -13,6 +13,7 @@ SYNOPSIS
 			[--key-length=<len> | -l <len>]
 			[--nqn=<host-nqn> | -n <host-nqn>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------

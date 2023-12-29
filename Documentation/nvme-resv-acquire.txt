@@ -14,6 +14,7 @@ SYNOPSIS
 			[--rtype=<rtype> | -t <rtype>]
 			[--racqa=<racqa> | -a <racqa>] [--iekey | -i]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -91,6 +92,10 @@ Indicator option, defaults to '0'.
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

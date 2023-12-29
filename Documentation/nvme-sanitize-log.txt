@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme sanitize-log' <device> [--rae | -r] [--human-readable | -H]
 			[--raw-binary | -b]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -76,6 +77,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

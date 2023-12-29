@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme boot-part-log' <device> [--lsp=<field> | -s <field>]
 			[--output-file=<file> | -f <file>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -41,6 +42,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

@@ -38,6 +38,10 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
+
 EXAMPLES
 --------
 * Get Primary Ctrl Caps of the device in default format

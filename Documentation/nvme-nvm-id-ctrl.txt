@@ -32,6 +32,10 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
+
 EXAMPLES
 --------
 * Has the program interpret the returned buffer and display the known

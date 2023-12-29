@@ -30,6 +30,7 @@ SYNOPSIS
 			[--duplicate-connect | -D] [--disable-sqflow | -d]
 			[--hdr-digest | -g] [--data-digest | -G]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------

@@ -13,6 +13,7 @@ SYNOPSIS
 			[--log-entries=<log_entries> | -e <log_entries>]
 			[--rae | -r] [--raw-binary | -b]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------

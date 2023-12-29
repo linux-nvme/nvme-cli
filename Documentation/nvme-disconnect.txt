@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme disconnect' [--nqn=<subnqn> | -n <subnqn>]
 			[--device=<device> | -d <device>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------

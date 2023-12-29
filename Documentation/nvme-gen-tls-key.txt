@@ -17,6 +17,7 @@ SYNOPSIS
 			[--secret=<secret> | -s <secret>]
 			[--insert | -i]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------

@@ -15,6 +15,7 @@ SYNOPSIS
 			[--al=<allocation-length> | -t <allocation-length>]
 			[--namespace-id=<nsid> | -n <nsid>] [--raw-binary | -b]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -79,6 +80,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

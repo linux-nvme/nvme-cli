@@ -35,6 +35,10 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
+
 EXAMPLES
 --------
 * Get the Reservation Notification log and print it in a human readable format:

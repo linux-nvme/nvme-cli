@@ -12,6 +12,7 @@ SYNOPSIS
 'nvme dim' [--task=<task> | -t <task>] [--nqn=<nqn> | -n <nqn>]
 			[--device=<device> | -d <device>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------

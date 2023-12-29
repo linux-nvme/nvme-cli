@@ -24,8 +24,8 @@ SYNOPSIS
 			[--dry-run | -d]
 			[--raw-binary | -b]
 			[--prefill=<prefill> | -p <prefill>]
-			[--latency | -L]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -110,10 +110,6 @@ OPTIONS
 	value. It may also be useful if you need to confirm if a device
 	is overwriting a buffer for a data-in command.
 
--L::
---latency::
-	Print out the latency the IOCTL took (in us).
-
 -o <fmt>::
 --output-format=<fmt>::
 	Set the reporting format to 'normal', 'json' or 'binary'. Only one
@@ -122,6 +118,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 -t <timeout>::
 --timeout=<timeout>::

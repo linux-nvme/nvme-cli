@@ -12,6 +12,7 @@ SYNOPSIS
 'nvme phy-rx-eom-log' <device> [--lsp=<field> | -s <field>]
 			[--controller=<id> | -c <id>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -48,6 +49,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

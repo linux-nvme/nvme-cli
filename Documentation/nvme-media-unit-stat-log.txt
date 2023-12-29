@@ -11,6 +11,7 @@ SYNOPSIS
 [verse]
 'nvme media-unit-stat-log' <device> [--dom-id | -d] [--raw-binary | -b]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------

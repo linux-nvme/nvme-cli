@@ -12,6 +12,7 @@ SYNOPSIS
 'nvme nvm-id-ns-lba-format' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--lba-format-index=<lba_format_index> | -i <lba_format_index>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
@@ -44,6 +45,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-L::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------

@@ -32,6 +32,7 @@ SYNOPSIS
 			[--force] [--nbft] [--no-nbft] [--nbft-path=<STR>]
 			[--context=<STR>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--latency | -L]
 
 DESCRIPTION
 -----------
