@@ -23,7 +23,6 @@ hfi_list[0]->tcp_info.dhcp_override=0
 subsystem_ns_list[0]->index=1
 subsystem_ns_list[0]->num_hfis=1
 subsystem_ns_list[0]->hfis[0]->index=1
-subsystem_ns_list[0]->hfis[1]->index=1
 subsystem_ns_list[0]->transport=tcp
 subsystem_ns_list[0]->traddr=fd09:9a46:b5c1:1fe::13f
 subsystem_ns_list[0]->trsvcid=4420

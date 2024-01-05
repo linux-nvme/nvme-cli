@@ -28,7 +28,6 @@ subsystem_ns_list[0]->index=1
 subsystem_ns_list[0]->discovery->index=1
 subsystem_ns_list[0]->num_hfis=1
 subsystem_ns_list[0]->hfis[0]->index=1
-subsystem_ns_list[0]->hfis[1]->index=1
 subsystem_ns_list[0]->transport=tcp
 subsystem_ns_list[0]->traddr=192.168.49.10
 subsystem_ns_list[0]->trsvcid=4420
