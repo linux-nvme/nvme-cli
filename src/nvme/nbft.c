@@ -274,6 +274,7 @@ static int read_ssns(struct nbft_info *nbft,
 		ret = -EINVAL;
 		goto fail;
 	}
+	ssns->num_hfis = 1;
 	for (i = 0; i < le16_to_cpu(raw_ssns->secondary_hfi_assoc_obj.length); i++) {
 		ssns->hfis[i + 1] = hfi_from_index(nbft, ss_hfi_indexes[i]);
 		if (ss_hfi_indexes[i] && !ssns->hfis[i + 1])
