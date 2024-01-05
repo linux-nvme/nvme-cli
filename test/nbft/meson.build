@@ -18,6 +18,7 @@ tables = [
     'NBFT-static-ipv4',
     'NBFT-static-ipv4-discovery',
     'NBFT-static-ipv6',
+    'NBFT-Dell.PowerEdge.R760'
 ]
 
 tables_bad = [
