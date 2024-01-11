@@ -276,6 +276,27 @@ static int read_ssns(struct nbft_info *nbft,
 	}
 	ssns->num_hfis = 1;
 	for (i = 0; i < le16_to_cpu(raw_ssns->secondary_hfi_assoc_obj.length); i++) {
+		bool duplicate = false;
+		int j;
+
+		for (j = 0; j < i; j++) {
+			if (ss_hfi_indexes[i] == ss_hfi_indexes[j]) {
+				duplicate = true;
+				break;
+			}
+		}
+
+		if (!duplicate &&
+		    ss_hfi_indexes[i] == raw_ssns->primary_hfi_desc_index)
+			duplicate = true;
+
+		if (duplicate) {
+			nvme_msg(NULL, LOG_DEBUG,
+				 "file %s: SSNS %d skipping duplicate HFI index %d\n",
+				 nbft->filename, ssns->index, ss_hfi_indexes[i]);
+			continue;
+		}
+
 		ssns->hfis[i + 1] = hfi_from_index(nbft, ss_hfi_indexes[i]);
 		if (ss_hfi_indexes[i] && !ssns->hfis[i + 1])
 			nvme_msg(NULL, LOG_DEBUG,
