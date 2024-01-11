@@ -8767,6 +8767,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 			nvme_show_error("Failed to insert key, error %d", errno);
 			return -errno;
 		}
+		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
 	} else {
 		char *tls_id;
 
@@ -8774,7 +8775,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 					cfg.subsysnqn, cfg.identity,
 					hmac, decoded_key, decoded_len);
 		if (!tls_id) {
-			nvme_show_error("Failed to generated identity, error %d",
+			nvme_show_error("Failed to generate identity, error %d",
 					errno);
 			return -errno;
 		}
