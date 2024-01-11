@@ -1104,6 +1104,11 @@ static size_t nvme_identity_len(int hmac, int version, const char *hostnqn,
 {
 	size_t len;
 
+	if (!hostnqn || !subsysnqn) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	len = strlen(hostnqn) + strlen(subsysnqn) + 12;
 	if (version == 1) {
 		len += 66;
