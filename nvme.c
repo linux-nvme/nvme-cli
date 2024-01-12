@@ -701,8 +701,11 @@ static int __create_telemetry_log_host(struct nvme_dev *dev,
 	if (err)
 		return -errno;
 
-	*size = NVME_LOG_TELEM_BLOCK_SIZE;
-	return get_log_telemetry_host(dev, NVME_LOG_TELEM_BLOCK_SIZE, buf);
+	err = parse_telemetry_da(dev, da, log, size);
+	if (err)
+		return err;
+
+	return get_log_telemetry_host(dev, *size, buf);
 }
 
 static int __get_telemetry_log_ctrl(struct nvme_dev *dev,
