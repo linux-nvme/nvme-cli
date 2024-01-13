@@ -440,3 +440,13 @@ void nvme_cli_set_latency(struct nvme_dev *dev, bool set)
 	if (dev->type == NVME_DEV_DIRECT)
 		nvme_set_latency(set);
 }
+
+const char *nvme_cli_admin_to_string(__u8 opcode)
+{
+	return nvme_admin_to_string(opcode);
+}
+
+const char *nvme_cli_nvm_to_string(__u8 opcode)
+{
+	return nvme_nvm_to_string(opcode);
+}

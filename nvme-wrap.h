@@ -149,4 +149,6 @@ int nvme_cli_security_receive(struct nvme_dev *dev,
 
 void nvme_cli_set_debug(struct nvme_dev *dev, bool set);
 void nvme_cli_set_latency(struct nvme_dev *dev, bool set);
+const char *nvme_cli_admin_to_string(__u8 opcode);
+const char *nvme_cli_nvm_to_string(__u8 opcode);
 #endif /* _NVME_WRAP_H */

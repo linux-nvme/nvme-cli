@@ -14,6 +14,7 @@
 #include "util/suffix.h"
 #include "util/types.h"
 #include "common.h"
+#include "nvme-wrap.h"
 
 #define nvme_print(name, flags, ...)				\
 	do {							\
@@ -58,58 +59,17 @@ const char *nvme_ana_state_to_string(enum nvme_ana_state state)
 
 const char *nvme_cmd_to_string(int admin, __u8 opcode)
 {
-	if (admin) {
-		switch (opcode) {
-		case nvme_admin_delete_sq:	return "Delete I/O Submission Queue";
-		case nvme_admin_create_sq:	return "Create I/O Submission Queue";
-		case nvme_admin_get_log_page:	return "Get Log Page";
-		case nvme_admin_delete_cq:	return "Delete I/O Completion Queue";
-		case nvme_admin_create_cq:	return "Create I/O Completion Queue";
-		case nvme_admin_identify:	return "Identify";
-		case nvme_admin_abort_cmd:	return "Abort";
-		case nvme_admin_set_features:	return "Set Features";
-		case nvme_admin_get_features:	return "Get Features";
-		case nvme_admin_async_event:	return "Asynchronous Event Request";
-		case nvme_admin_ns_mgmt:	return "Namespace Management";
-		case nvme_admin_fw_commit:	return "Firmware Commit";
-		case nvme_admin_fw_download:	return "Firmware Image Download";
-		case nvme_admin_dev_self_test:	return "Device Self-test";
-		case nvme_admin_ns_attach:	return "Namespace Attachment";
-		case nvme_admin_keep_alive:	return "Keep Alive";
-		case nvme_admin_directive_send:	return "Directive Send";
-		case nvme_admin_directive_recv:	return "Directive Receive";
-		case nvme_admin_virtual_mgmt:	return "Virtualization Management";
-		case nvme_admin_nvme_mi_send:	return "NVMe-MI Send";
-		case nvme_admin_nvme_mi_recv:	return "NVMe-MI Receive";
-		case nvme_admin_dbbuf:		return "Doorbell Buffer Config";
-		case nvme_admin_format_nvm:	return "Format NVM";
-		case nvme_admin_security_send:	return "Security Send";
-		case nvme_admin_security_recv:	return "Security Receive";
-		case nvme_admin_sanitize_nvm:	return "Sanitize";
-		case nvme_admin_get_lba_status:	return "Get LBA Status";
-		}
-	} else {
-		switch (opcode) {
-		case nvme_cmd_flush:		return "Flush";
-		case nvme_cmd_write:		return "Write";
-		case nvme_cmd_read:		return "Read";
-		case nvme_cmd_write_uncor:	return "Write Uncorrectable";
-		case nvme_cmd_compare:		return "Compare";
-		case nvme_cmd_write_zeroes:	return "Write Zeroes";
-		case nvme_cmd_dsm:		return "Dataset Management";
-		case nvme_cmd_resv_register:	return "Reservation Register";
-		case nvme_cmd_resv_report:	return "Reservation Report";
-		case nvme_cmd_resv_acquire:	return "Reservation Acquire";
-		case nvme_cmd_resv_release:	return "Reservation Release";
-		case nvme_cmd_verify:		return "Verify";
-		case nvme_cmd_copy:		return "Copy";
-		case nvme_zns_cmd_mgmt_send:	return "Zone Management Send";
-		case nvme_zns_cmd_mgmt_recv:	return "Zone Management Receive";
-		case nvme_zns_cmd_append:	return "Zone Append";
-		}
-	}
+	const char *cmd_name;
 
-	return "Unknown";
+	if (admin)
+		cmd_name = nvme_cli_admin_to_string(opcode);
+	else
+		cmd_name = nvme_cli_nvm_to_string(opcode);
+
+	if (!cmd_name)
+		return "Unknown";
+
+	return cmd_name;
 }
 
 const char *nvme_sstat_status_to_string(__u16 status)
