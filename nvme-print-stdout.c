@@ -4864,7 +4864,7 @@ static void stdout_detailed_list(nvme_root_t r)
 	printf("\n");
 
 	printf("%-8s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n", "Device",
-		"SN", "MN", "FR", "TxPort", "Asdress", "Slot", "Subsystem", "Namespaces");
+		"SN", "MN", "FR", "TxPort", "Address", "Slot", "Subsystem", "Namespaces");
 	printf("%-.8s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n", dash,
 		dash, dash, dash, dash, dash, dash, dash, dash);
 	strset_iterate(&res.ctrls, stdout_detailed_ctrl, &res);
