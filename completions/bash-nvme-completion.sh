@@ -40,10 +40,10 @@ nvme_list_opts () {
 	# Listed here in the same order as in nvme-builtin.h
 	case "$1" in
 		"list")
-		opts+=$NO_OPTS
+		opts=+=" --output-format= -o --verbose -v --latency -L"
 			;;
 		"list-subsys")
-		opts=+=" --output-format= -o --verbose -v"
+		opts=+=" --output-format= -o --verbose -v --latency -L"
 			;;
 		"id-ctrl")
 		opts+=" --raw-binary -b --human-readable -H \
@@ -59,7 +59,7 @@ nvme_list_opts () {
 			;;
 		"id-ns-lba-format")
 		opts+=" --lba-format-index= -i --uuid-index= -U \
-			--verbose -v --output-format= -o"
+			--verbose -v --output-format= -o --latency -L"
 			;;
 		"list-ns")
 		opts+=" --namespace-id= -n --al -a --csi= -y \
@@ -74,31 +74,33 @@ nvme_list_opts () {
 			--human-readable -H --output-format= -o"
 			;;
 		"nvm-id-ctrl")
-		opts+=" --output-format= -o"
+		opts+=" --output-format= -o --latency -L"
 			;;
 		"nvm-id-ns")
 		opts+=" --namespace-id= -n --uuid-index= -U\
-			--verbose -v --output-format= -o"
+			--verbose -v --output-format= -o --latency -L"
 			;;
 		"nvm-id-ns-lba-format")
 		opts+=" --lba-format-index= -i --uuid-index= -U \
-			--verbose -v --output-format= -o"
+			--verbose -v --output-format= -o --latency -L"
 			;;
 		"primary-ctrl-caps")
-		opts+=" --output-format= -o --human-readable -H"
+		opts+=" --output-format= -o --human-readable -H --latency -L"
 			;;
 		"list-secondary")
 		opts+=" --cntid= -c --namespace-id= n --num-entries -e \
 			--output-format= -o"
 			;;
 		"ns-descs")
-		opts+=" --namespace-id= -n --output-format -o --raw-binary -b"
+		opts+=" --namespace-id= -n --output-format -o --raw-binary -b \
+			--latency -L"
 			;;
 		"id-nvmset")
 		opts+=" --nvmeset-id= -i --output-format= -o"
 			;;
 		"id-uuid")
-		opts+=" --output-format= -o --raw-binary -b --human-readable -H"
+		opts+=" --output-format= -o --raw-binary -b --human-readable -H \
+			--latency -L"
 			;;
 		"list-endgrp")
 		opts+=" --endgrp-id= -i --output-format= -o"
@@ -135,21 +137,21 @@ nvme_list_opts () {
 			--raw-binary -b --output-format= -o"
 			;;
 		"supported-log-pages")
-		opts+=" --output-format= -o --human-readable -H"
+		opts+=" --output-format= -o --human-readable -H --latency -L"
 			;;
 		"telemetry-log")
 		opts+=" --output-file= -O --host-generate= -g \
-			--controller-init -c --data-area= -d"
+			--controller-init -c --data-area= -d --latency -L"
 			;;
 		"fw-log")
 		opts+=" --raw-binary -b --output-format= -o"
 			;;
 		"changed-ns-list-log")
-		opts+=" --output-format= -o --raw-binary -b"
+		opts+=" --output-format= -o --raw-binary -b --latency -L"
 			;;
 		"smart-log")
 		opts+=" --namespace-id= -n --raw-binary -b \
-			--output-format= -o"
+			--output-format= -o --latency -L"
 			;;
 		"ana-log")
 		opts+=" --output-format -o"
@@ -170,7 +172,7 @@ nvme_list_opts () {
 			;;
 		"predictable-lat-log")
 		opts+=" --nvmset-id= -i --raw-binary -b \
-			--output-format= -o"
+			--output-format= -o --latency -L"
 			;;
 		"pred-lat-event-agg-log")
 		opts+=" --log-entries= -e  --rae -r \
@@ -178,11 +180,11 @@ nvme_list_opts () {
 			;;
 		"persistent-event-log")
 		opts+=" --action= -a --log-len= -l \
-			--raw-binary -b --output-format= -o"
+			--raw-binary -b --output-format= -o --latency -L"
 			;;
 		"endurance-event-agg-log")
 		opts+=" --log-entries= -e  --rae -r \
-			--raw-binary -b --output-format= -o"
+			--raw-binary -b --output-format= -o --latency -L"
 			;;
 		"lba-status-log")
 		opts+=" --rae -r --output-format= -o"
@@ -192,7 +194,7 @@ nvme_list_opts () {
 			;;
 		"boot-part-log")
 		opts+=" --lsp -s --output-file= -f \
-			--output-format= -o"
+			--output-format= -o --latency -L"
 			;;
 		"media-unit-stat-log")
 		opts+=" --dom-id= -d --output-format= -o \
@@ -200,47 +202,49 @@ nvme_list_opts () {
 			;;
 		"supported-cap-config-log")
 		opts+=" --dom-id= -d --output-format= -o \
-				--raw-binary -b"
+			--raw-binary -b"
 			;;
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \
 			--data-len= -l --cdw11= --c -uuid-index= -U --raw-binary -b \
-			--human-readable -H"
+			--human-readable -H --latency -L"
 			;;
 		"device-self-test")
-		opts+=" --namespace-id= -n --self-test-code= -s"
+		opts+=" --namespace-id= -n --self-test-code= -s --latency -L"
 			;;
 		"self-test-log")
 		opts+=" --dst-entries= -e --output-format= -o \
-			--verbose -v"
+			--verbose -v --latency -L"
 			;;
 		"set-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --value= -v \
 			--data-len= -l -data= -d --value= -v --save -s --uuid-index= -U \
-			--cdw12= -c"
+			--cdw12= -c --latency -L"
 			;;
 		"set-property")
-		opts+=" --offset= -O --value= -V"
+		opts+=" --offset= -O --value= -V --latency -L"
 			;;
 		"get-property")
-		opts=+" --offset= -O --human-readable -H"
+		opts=+" --offset= -O --human-readable -H --latency -L"
 			;;
 		"format")
 		opts+=" --namespace-id= -n --timeout= -t --lbaf= -l \
-			--ses= -s --pil= -p -pi= -i --ms= -m --reset -r"
+			--ses= -s --pil= -p -pi= -i --ms= -m --reset -r \
+			--latency -L"
 			;;
 		"fw-commit")
-		opts+=" --slot= -s --action= -a --bpid= -b"
+		opts+=" --slot= -s --action= -a --bpid= -b --latency -L"
 			;;
 		"fw-download")
-		opts+=" --fw= -f --xfer= -x --offset= -O"
+		opts+=" --fw= -f --xfer= -x --offset= -O --latency -L"
 			;;
 		"capacity-mgmt")
 		opts+=" --operation= -O --element-id= -i --cap-lower= -l \
-			--cap-upper= -u"
+			--cap-upper= -u --latency -L"
 			;;
 		"lockdown")
-		opts+=" --ofi= -O --ifc= -f --prhbt= -p --scp= -s --uuid -U"
+		opts+=" --ofi= -O --ifc= -f --prhbt= -p --scp= -s --uuid -U \
+			--latency -L"
 			;;
 		"admin-passthru")
 		opts+=" --opcode= -O --flags= -f --prefil= -p --rsvd= -R \
@@ -313,7 +317,7 @@ nvme_list_opts () {
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
 			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
-			--dry-run -w --latency -t"
+			--dry-run -w --latency -L"
 			;;
 		"read")
 		opts+=" --start-block= -s --block-count= -c --data-size= -z \
@@ -322,7 +326,7 @@ nvme_list_opts () {
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
 			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
-			--dry-run -w --latency -t"
+			--dry-run -w --latency -L"
 			;;
 		"write")
 		opts+=" --start-block= -s --block-count= -c --data-size= -z \
@@ -331,7 +335,7 @@ nvme_list_opts () {
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
 			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
-			--dry-run -w --latency -t"
+			--dry-run -w --latency -L"
 			;;
 		"write-zeroes")
 		opts+=" --namespace-id= -n --start-block= -s \
@@ -350,11 +354,11 @@ nvme_list_opts () {
 			--block-count= -c --limited-retry -l \
 			--force-unit-access -f --prinfo= -p --ref-tag= -r \
 			--app-tag= -a --app-tag-mask= -m \
-			--storage-tag= -S --storage-tag-check -C"
+			--storage-tag= -S --storage-tag-check -C --latency -L"
 			;;
 		"sanitize")
 		opts+=" --no-dealloc -d --oipbp -i --owpass= -n \
-			--ause -u --sanact= -a --ovrpat= -p"
+			--ause -u --sanact= -a --ovrpat= -p --latency -L"
 		case $opt in
 			--sanact|-a)
 			vals+=" exit-failure start-block-erase start-overwrite start-crypto-erase"
@@ -363,7 +367,7 @@ nvme_list_opts () {
 			;;
 		"sanitize-log")
 		opts+=" --rae -r --output-format= -o --human-readable -H \
-			--raw-binary -b"
+			--raw-binary -b --latency -L"
 			;;
 		"reset")
 		opts+=$NO_OPTS
@@ -428,7 +432,7 @@ nvme_list_opts () {
 		"dir-receive")
 		opts+=" --namespace-id= -n --data-len= -l --raw-binary -b \
 			--dir-type= -D --dir-spec= -S --dir-oper= -O \
-			--req-resource= -r --human-readable -H"
+			--req-resource= -r --human-readable -H --latency -L"
 			;;
 		"dir-send")
 		opts+=" --namespace-id= -n --data-len= -l --dir-type= -D \
@@ -444,7 +448,8 @@ nvme_list_opts () {
 			--target= -t"
 			;;
 		"show-topology")
-		opts+=" --output-format= -o --verbose -v --ranking= -r"
+		opts+=" --output-format= -o --verbose -v --ranking= -r \
+			--latency -L"
 			;;
 		"nvme-mi-recv")
 		opts+=" --opcode= -O --namespace-id= -n --data-len= -l \
@@ -1195,7 +1200,7 @@ plugin_zns_opts () {
 			--metadata-size= -y --data= -d --metadata= -M \
 			--limited-retry -l --force-unit-access -f --ref-tag= -r
 			--app-tag-mask= -m --app-tag= -a --prinfo= -p \
-			--piremap -P --latency -t"
+			--piremap -P --latency -L"
 			;;
 		"changed-zone-list")
 		opts+=" --namespace-id= -n --output-format= -o --rae -r"

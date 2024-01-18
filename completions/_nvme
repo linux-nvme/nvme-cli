@@ -996,6 +996,8 @@ _nvme () {
 			-V'alias to --value'
 			--uuid-index=':uuid index'
 			-U':alias for --uuid-index'
+			--latency':latency statistics will be output following IOCTL'
+			-L':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-feature options" _setf
@@ -1008,6 +1010,8 @@ _nvme () {
 			-O':alias to --offset'
 			--value=':the value of the property to be set'
 			-V':alias to --value'
+			--latency':latency statistics will be output following IOCTL'
+			-L':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-property options" _set_property
@@ -1044,6 +1048,8 @@ _nvme () {
 			-i':alias of --pi'
 			--ms=':extended format? 0 - off (metadata in separate buffer), 1 - on (extended LBA used)'
 			-m':alias of --ms'
+			--latency':latency statistics will be output following IOCTL'
+			-L':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme format options" _format
@@ -1056,6 +1062,8 @@ _nvme () {
 			-a':alias of --action'
 			--slot=':firmware slot to activate'
 			-s':alias of --slot'
+			--latency':latency statistics will be output following IOCTL'
+			-L':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme fw-activate options" _fwact
@@ -1576,8 +1584,8 @@ _nvme () {
 			-F':alias of --format'
 			)
 			_arguments '*:: :->subcmds'
-                       _describe -t commands "nvme copy options" _copy
-		       ;;
+			_describe -t commands "nvme copy options" _copy
+			;;
 		(flush)
 			local _flush
 			_flush=(
@@ -1963,8 +1971,6 @@ _nvme () {
 		(show-hostnqn)
 			local _show_hostnqn
 			_show_hostnqn=(
-			--latency':latency statistics will be output following IOCTL'
-			-L':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme show-hostnqn options" _show_hostnqn

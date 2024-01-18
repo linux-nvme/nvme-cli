@@ -8276,7 +8276,7 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *command, stru
 
 	hostnqn = nvmf_hostnqn_from_file();
 	if (!hostnqn)
-		hostnqn =  nvmf_hostnqn_generate();
+		hostnqn = nvmf_hostnqn_generate();
 
 	if (!hostnqn) {
 		nvme_show_error("hostnqn is not available -- use nvme gen-hostnqn");

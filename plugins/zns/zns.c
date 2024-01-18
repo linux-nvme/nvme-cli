@@ -1060,7 +1060,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_SHRT("app-tag",           'a', &cfg.lbat,          lbat),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,        prinfo),
 		OPT_FLAG("piremap",           'P', &cfg.piremap,       piremap),
-		OPT_FLAG("latency",           't', &cfg.latency,       latency),
+		OPT_FLAG("latency",           'L', &cfg.latency,       latency),
 		OPT_END()
 	};
 
