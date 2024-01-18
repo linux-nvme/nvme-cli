@@ -260,6 +260,7 @@ static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, data_digest, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls, false);
+	MERGE_CFG_OPTION(ctrl_cfg, cfg, concat, false);
 
 	return ctrl_cfg;
 }
@@ -289,6 +290,7 @@ void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, data_digest, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls, false);
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, concat, false);
 }
 
 static int __add_bool_argument(char **argstr, char *tok, bool arg)
@@ -637,7 +639,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	    (!strcmp(transport, "tcp") &&
 	     add_bool_argument(r, argstr, data_digest, cfg->data_digest)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(r, argstr, tls, cfg->tls))) {
+	     add_bool_argument(r, argstr, tls, cfg->tls)) ||
+	    (!strcmp(transport, "tcp") &&
+	     add_bool_argument(r, argstr, concat, cfg->concat))) {
 		free(*argstr);
 		return -1;
 	}
@@ -705,6 +709,7 @@ static  int __nvmf_supported_options(nvme_root_t r)
 		nvme_msg(r, LOG_DEBUG, "%s ", v);
 
 		parse_option(r, v, cntlid);
+		parse_option(r, v, concat);
 		parse_option(r, v, ctrl_loss_tmo);
 		parse_option(r, v, data_digest);
 		parse_option(r, v, dhchap_ctrl_secret);

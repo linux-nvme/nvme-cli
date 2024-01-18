@@ -169,6 +169,11 @@
 		    "type": "boolean",
 		    "default": false
 		},
+		"concat": {
+		    "description": "Enable secure concatenation",
+		    "type": "boolean",
+		    "default": false
+		},
 		"persistent": {
 		    "description": "Create persistent discovery connection",
 		    "type": "boolean"

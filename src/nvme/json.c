@@ -60,6 +60,8 @@ static void json_update_attributes(nvme_ctrl_t c,
 					data_digest, val_obj);
 		JSON_UPDATE_BOOL_OPTION(cfg, key_str,
 					tls, val_obj);
+		JSON_UPDATE_BOOL_OPTION(cfg, key_str,
+					concat, val_obj);
 		if (!strcmp("persistent", key_str) &&
 		    !nvme_ctrl_is_persistent(c))
 			nvme_ctrl_set_persistent(c, true);
@@ -325,6 +327,7 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_BOOL_OPTION(cfg, port_obj, hdr_digest);
 	JSON_BOOL_OPTION(cfg, port_obj, data_digest);
 	JSON_BOOL_OPTION(cfg, port_obj, tls);
+	JSON_BOOL_OPTION(cfg, port_obj, concat);
 	if (nvme_ctrl_is_persistent(c))
 		json_object_object_add(port_obj, "persistent",
 				       json_object_new_boolean(true));
@@ -501,6 +504,7 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_BOOL_OPTION(cfg, ctrl_obj, hdr_digest);
 	JSON_BOOL_OPTION(cfg, ctrl_obj, data_digest);
 	JSON_BOOL_OPTION(cfg, ctrl_obj, tls);
+	JSON_BOOL_OPTION(cfg, ctrl_obj, concat);
 	if (nvme_ctrl_is_persistent(c))
 		json_object_object_add(ctrl_obj, "persistent",
 				       json_object_new_boolean(true));

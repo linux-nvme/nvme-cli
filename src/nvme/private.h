@@ -125,6 +125,7 @@ struct nvme_host {
 
 struct nvme_fabric_options {
 	bool cntlid;
+	bool concat;
 	bool ctrl_loss_tmo;
 	bool data_digest;
 	bool dhchap_ctrl_secret;
