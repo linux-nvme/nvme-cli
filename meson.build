@@ -22,9 +22,9 @@ project(
 
 vstr = meson.project_version().split('-rc')[0]
 vid = vstr.split('.')
-library_version = '.'.join(vid[0], vid[1])
+library_version = '.'.join([vid[0], vid[1]])
 if vid.length() == 3
-  library_version = '.'.join(library_version, vid[2])
+  library_version = '.'.join([library_version, vid[2]])
 else
   library_version = library_version + '.0'
 endif
