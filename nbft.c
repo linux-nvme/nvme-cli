@@ -164,7 +164,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 				 * obtains a different local IP address than the
 				 * firmware had. Retry without host_traddr.
 				 */
-				if (ret == -1 && errno == ENVME_CONNECT_WRITE &&
+				if (ret == -1 && errno == ENVME_CONNECT_ADDRNOTAVAIL &&
 				    !strcmp((*ss)->transport, "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
 					nvme_free_ctrl(c);
