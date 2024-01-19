@@ -306,7 +306,7 @@ static void test_invalid_crc(nvme_mi_ep_t ep)
 
 	test_set_transport_callback(ep, test_invalid_crc_cb, NULL);
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
-	assert(rc != 0);
+	assert(rc < 0);
 }
 
 /* test: test that the controller list populates the endpoint's list of

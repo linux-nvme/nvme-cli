@@ -433,7 +433,8 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 		rc = nvme_mi_verify_resp_mic(resp);
 		if (rc) {
 			nvme_msg(ep->root, LOG_WARNING, "crc mismatch\n");
-			return rc;
+			errno = EBADMSG;
+			return -1;
 		}
 	}
 
