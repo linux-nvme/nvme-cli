@@ -153,6 +153,29 @@ conf.set10(
     cc.get_id() == 'clang',
     description: 'Is compiler warning about unused static line function?'
 )
+conf.set10(
+    'HAVE_SED_OPAL',
+    cc.compiles(
+        '''#include <linux/sed-opal.h>''',
+        name: 'linux/sed-opal.h'
+
+    ),
+    description: 'Is linux/sed-opa.h include-able?'
+)
+conf.set10(
+    'HAVE_KEY_TYPE',
+    cc.compiles(
+        '''
+	   #include <linux/sed-opal.h>
+	   int main(void) {
+                struct opal_key key;
+                key.key_type = OPAL_INCLUDED;
+           }
+        ''',
+        name: 'key_type'
+    ),
+    description: 'Does struct opal_key have a key_type field?'
+)
 
 if cc.has_function_attribute('fallthrough')
   conf.set('fallthrough', '__attribute__((__fallthrough__))')

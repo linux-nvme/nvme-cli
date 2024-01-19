@@ -29,4 +29,7 @@ if json_c_dep.found()
   ]
   subdir('solidigm')
   subdir('ocp')
+  if conf.has('HAVE_SED_OPAL')
+    subdir('sed')
+  endif
 endif
