@@ -1145,7 +1145,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *desc = "Retrieve the firmware log for the "
 		"specified device in either decoded format (default) or binary.";
 
-	_cleanup_free_ struct nvme_firmware_slot *fw_log = NULL;;
+	_cleanup_free_ struct nvme_firmware_slot *fw_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	enum nvme_print_flags flags;
 	int err;
@@ -3558,7 +3558,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *raw = "show descriptors in binary format";
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	_cleanup_free_ void *nsdescs = NULL;;
+	_cleanup_free_ void *nsdescs = NULL;
 	enum nvme_print_flags flags;
 	int err;
 
