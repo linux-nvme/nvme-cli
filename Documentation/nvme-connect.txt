@@ -29,7 +29,7 @@ SYNOPSIS
 			[--keyring=<#>] [--tls_key=<#>]
 			[--duplicate-connect | -D] [--disable-sqflow | -d]
 			[--hdr-digest | -g] [--data-digest | -G] [--tls]
-			[--dump-config | -O] [--application=<id>]
+			[--concat] [--dump-config | -O] [--application=<id>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
@@ -175,6 +175,9 @@ OPTIONS
 
 --tls::
 	Enable TLS encryption (TCP).
+
+--concat::
+	Enable secure concatenation (TCP).
 
 -O::
 --dump-config::
