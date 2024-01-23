@@ -84,6 +84,7 @@ static const char *nvmf_disable_sqflow	= "disable controller sq flow control (de
 static const char *nvmf_hdr_digest	= "enable transport protocol header digest (TCP transport)";
 static const char *nvmf_data_digest	= "enable transport protocol data digest (TCP transport)";
 static const char *nvmf_tls		= "enable TLS";
+static const char *nvmf_concat		= "enable secure concatenation";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
 static const char *nvmf_context		= "execution context identification string";
 
@@ -113,6 +114,7 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),      \
 		OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest),     \
 		OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls),             \
+		OPT_FLAG("concat",              0, &c.concat,             nvmf_concat),          \
 		__VA_ARGS__,                                                                     \
 		OPT_END()                                                                        \
 	}
