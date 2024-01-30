@@ -1,0 +1,32 @@
+{
+  "hosts":[
+    {
+      "hostnqn":"nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6",
+      "hostid":"ce4fee3e-c02c-11ee-8442-830d068a36c6",
+      "subsystems":[
+        {
+          "name":"nvme-subsys1",
+          "nqn":"nqn.2019-08.org.qemu:nvme-0",
+          "controllers":[
+            {
+              "name":"nvme1",
+              "transport":"pcie",
+              "traddr":"0000:00:05.0"
+            }
+          ]
+        },
+        {
+          "name":"nvme-subsys0",
+          "nqn":"nqn.2019-08.org.qemu:subsys1",
+          "controllers":[
+            {
+              "name":"nvme0",
+              "transport":"pcie",
+              "traddr":"0000:0f:00.0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
