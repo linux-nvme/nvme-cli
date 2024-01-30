@@ -17,9 +17,9 @@
 #include "mi.h"
 
 
-extern const char *nvme_ctrl_sysfs_dir;
-extern const char *nvme_subsys_sysfs_dir;
-extern const char *nvme_ns_sysfs_dir;
+char *nvme_ctrl_sysfs_dir(void);
+char *nvme_subsys_sysfs_dir(void);
+char *nvme_ns_sysfs_dir(void);
 
 struct nvme_path {
 	struct list_node entry;

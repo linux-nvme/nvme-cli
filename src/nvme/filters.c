@@ -21,10 +21,53 @@
 #include "filters.h"
 #include "types.h"
 #include "util.h"
+#include "cleanup.h"
 
-const char *nvme_ctrl_sysfs_dir = "/sys/class/nvme";
-const char *nvme_ns_sysfs_dir = "/sys/block";
-const char *nvme_subsys_sysfs_dir = "/sys/class/nvme-subsystem";
+#define PATH_SYSFS_NVME			"/sys/class/nvme"
+#define PATH_SYSFS_NVME_SUBSYSTEM	"/sys/class/nvme-subsystem"
+#define PATH_SYSFS_BLOCK		"/sys/block"
+
+char *nvme_ctrl_sysfs_dir(void)
+{
+	char *basepath = getenv("LIBNVME_SYSFS_PATH");
+	char *str;
+
+	if (!basepath)
+		return strdup(PATH_SYSFS_NVME);
+
+	if (!asprintf(&str, "%s" PATH_SYSFS_NVME, basepath))
+		return NULL;
+
+	return str;
+}
+
+char *nvme_ns_sysfs_dir(void)
+{
+	char *basepath = getenv("LIBNVME_SYSFS_PATH");
+	char *str;
+
+	if (!basepath)
+		return strdup(PATH_SYSFS_BLOCK);
+
+	if (!asprintf(&str, "%s" PATH_SYSFS_BLOCK, basepath))
+		return NULL;
+
+	return str;
+}
+
+char *nvme_subsys_sysfs_dir(void)
+{
+	char *basepath = getenv("LIBNVME_SYSFS_PATH");
+	char *str;
+
+	if (!basepath)
+		return strdup(PATH_SYSFS_NVME_SUBSYSTEM);
+
+	if (!asprintf(&str, "%s" PATH_SYSFS_NVME_SUBSYSTEM, basepath))
+		return NULL;
+
+	return str;
+}
 
 int nvme_namespace_filter(const struct dirent *d)
 {
@@ -89,8 +132,9 @@ int nvme_subsys_filter(const struct dirent *d)
 
 int nvme_scan_subsystems(struct dirent ***subsys)
 {
-	return scandir(nvme_subsys_sysfs_dir, subsys, nvme_subsys_filter,
-		       alphasort);
+	_cleanup_free_ char *dir = nvme_subsys_sysfs_dir();
+
+	return scandir(dir, subsys, nvme_subsys_filter, alphasort);
 }
 
 int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***ns)
@@ -101,8 +145,9 @@ int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***ns)
 
 int nvme_scan_ctrls(struct dirent ***ctrls)
 {
-	return scandir(nvme_ctrl_sysfs_dir, ctrls, nvme_ctrls_filter,
-		       alphasort);
+	_cleanup_free_ char *dir = nvme_ctrl_sysfs_dir();
+
+	return scandir(dir, ctrls, nvme_ctrls_filter, alphasort);
 }
 
 int nvme_scan_ctrl_namespace_paths(nvme_ctrl_t c, struct dirent ***paths)

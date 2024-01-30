@@ -1188,12 +1188,27 @@ struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_ar
 
 #define PATH_UUID_IBM	"/proc/device-tree/ibm,partition-uuid"
 
+static char *uuid_ibm_filename(void)
+{
+	char *basepath = getenv("LIBNVME_SYSFS_PATH");
+	char *str;
+
+	if (!basepath)
+		return strdup(PATH_UUID_IBM);
+
+	if (!asprintf(&str, "%s" PATH_UUID_IBM, basepath))
+		return NULL;
+
+	return str;
+}
+
 static int uuid_from_device_tree(char *system_uuid)
 {
-	ssize_t len;
+	_cleanup_free_ char *filename = uuid_ibm_filename();
 	_cleanup_fd_ int f = -1;
+	ssize_t len;
 
-	f = open(PATH_UUID_IBM, O_RDONLY);
+	f = open(filename, O_RDONLY);
 	if (f < 0)
 		return -ENXIO;
 
@@ -1206,6 +1221,20 @@ static int uuid_from_device_tree(char *system_uuid)
 }
 
 #define PATH_DMI_ENTRIES       "/sys/firmware/dmi/entries"
+
+static char *dmi_entries_dir(void)
+{
+	char *basepath = getenv("LIBNVME_SYSFS_PATH");
+	char *str;
+
+	if (!basepath)
+		return strdup(PATH_DMI_ENTRIES);
+
+	if (!asprintf(&str, "%s" PATH_DMI_ENTRIES, basepath))
+		return NULL;
+
+	return str;
+}
 
 /*
  * See System Management BIOS (SMBIOS) Reference Specification
@@ -1234,13 +1263,14 @@ static bool is_dmi_uuid_valid(const char *buf, size_t len)
 
 static int uuid_from_dmi_entries(char *system_uuid)
 {
-	int f;
 	_cleanup_dir_ DIR *d = NULL;
+	_cleanup_free_ char *entries_dir = dmi_entries_dir();
+	int f;
 	struct dirent *de;
 	char buf[512] = {0};
 
 	system_uuid[0] = '\0';
-	d = opendir(PATH_DMI_ENTRIES);
+	d = opendir(entries_dir);
 	if (!d)
 		return -ENXIO;
 	while ((de = readdir(d))) {
@@ -1249,7 +1279,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
 
 		if (de->d_name[0] == '.')
 			continue;
-		sprintf(filename, "%s/%s/type", PATH_DMI_ENTRIES, de->d_name);
+		sprintf(filename, "%s/%s/type", entries_dir, de->d_name);
 		f = open(filename, O_RDONLY);
 		if (f < 0)
 			continue;
@@ -1261,7 +1291,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
 			continue;
 		if (type != DMI_SYSTEM_INFORMATION)
 			continue;
-		sprintf(filename, "%s/%s/raw", PATH_DMI_ENTRIES, de->d_name);
+		sprintf(filename, "%s/%s/raw", entries_dir, de->d_name);
 		f = open(filename, O_RDONLY);
 		if (f < 0)
 			continue;
