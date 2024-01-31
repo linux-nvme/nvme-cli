@@ -576,9 +576,9 @@ int json_dump_tree(nvme_root_t r)
 	}
 	json_object_object_add(json_root, "hosts", host_array);
 
-	ret = json_object_to_fd(1, json_root, JSON_C_TO_STRING_PRETTY);
+	ret = json_object_to_fd(fileno(r->fp), json_root, JSON_C_TO_STRING_PRETTY);
 	if (ret < 0) {
-		nvme_msg(r, LOG_ERR, "Failed to write to stdout, %s\n",
+		nvme_msg(r, LOG_ERR, "Failed to write, %s\n",
 			 json_util_get_last_err());
 		ret = -1;
 		errno = EIO;
