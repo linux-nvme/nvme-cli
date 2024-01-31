@@ -4227,11 +4227,11 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 				(*(field + 32) & 0x4) ? "enabled" : "disabled");
 			printf("\tDirective Persistent Across Controller Level Resets \n");
 			printf("\t\tIdentify Directive       : %s\n",
-				(*(field + 32) & 0x1) ? "enabled" : "disabled");
+				(*(field + 64) & 0x1) ? "enabled" : "disabled");
 			printf("\t\tStream Directive         : %s\n",
-				(*(field + 32) & 0x2) ? "enabled" : "disabled");
+				(*(field + 64) & 0x2) ? "enabled" : "disabled");
 			printf("\t\tData Placement Directive : %s\n",
-				(*(field + 32) & 0x4) ? "enabled" : "disabled");
+				(*(field + 64) & 0x4) ? "enabled" : "disabled");
 			break;
 		default:
 			fprintf(stderr,

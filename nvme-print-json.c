@@ -4148,11 +4148,11 @@ static void json_directive_show_fields_identify(__u8 doper, __u8 *field, struct 
 		obj_add_array(r, "Directive Persistent Across Controller Level Resets",
 			      persistent);
 		obj_add_str(persistent, "Identify Directive",
-			    *(field + 32) & 0x1 ? "Enabled" : "Disabled");
+			    *(field + 64) & 0x1 ? "Enabled" : "Disabled");
 		obj_add_str(persistent, "Stream Directive",
-			    *(field + 32) & 0x2 ? "Enabled" : "Disabled");
+			    *(field + 64) & 0x2 ? "Enabled" : "Disabled");
 		obj_add_str(persistent, "Data Placement Directive",
-			    *(field + 32) & 0x4 ? "Enabled" : "Disabled");
+			    *(field + 64) & 0x4 ? "Enabled" : "Disabled");
 		break;
 	default:
 		obj_add_str(r, "Error", "invalid directive operations for Identify Directives");
