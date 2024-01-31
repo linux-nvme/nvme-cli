@@ -1416,11 +1416,21 @@ static char *nvmf_read_file(const char *f, int len)
 
 char *nvmf_hostnqn_from_file()
 {
+	char *hostnqn = getenv("LIBNVME_HOSTNQN");
+
+	if (hostnqn)
+		return strdup(hostnqn);
+
 	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
 }
 
 char *nvmf_hostid_from_file()
 {
+	char *hostid = getenv("LIBNVME_HOSTID");
+
+	if (hostid)
+		return strdup(hostid);
+
 	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
 }
 
