@@ -106,7 +106,7 @@ struct passthru_config {
 	bool	latency;
 };
 
-#define NVME_ARGS(n, c, ...)                                                      \
+#define NVME_ARGS(n, ...)                                                         \
 	struct argconfig_commandline_options n[] = {                              \
 		OPT_FLAG("verbose",      'v', NULL,               verbose),       \
 		OPT_FMT("output-format", 'o', &output_format_val, output_format), \
@@ -486,7 +486,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_output),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
@@ -547,7 +547,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		.groups = false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("groups", 'g', &cfg.groups, groups));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -814,7 +814,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		.rae		= true,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FILE("output-file",     'O', &cfg.file_name, fname),
 		  OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
 		  OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
@@ -907,7 +907,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 		.group_id	= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SHRT("group-id",     'g', &cfg.group_id,      group_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -983,7 +983,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		.csi		= -1,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
 		  OPT_INT("csi",             'c', &cfg.csi,            csi));
@@ -1065,7 +1065,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 	int err = -1;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1119,7 +1119,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
@@ -1185,7 +1185,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -1234,7 +1234,7 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_output));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -1290,7 +1290,7 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SHRT("nvmset-id",	   'i', &cfg.nvmset_id,     nvmset_id),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
@@ -1351,7 +1351,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
 		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
@@ -1437,7 +1437,7 @@ static int get_persistent_event_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("action",       'a', &cfg.action,        action),
 		  OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
@@ -1553,7 +1553,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
 		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
@@ -1630,7 +1630,7 @@ static int get_lba_status_log(int argc, char **argv,
 		.rae		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("rae",          'r', &cfg.rae,           rae));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -1681,7 +1681,7 @@ static int get_resv_notif_log(int argc, char **argv,
 	enum nvme_print_flags flags;
 	int err;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1734,7 +1734,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 		.file_name	= NULL,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("lsp",          's', &cfg.lsp,           lsp),
 		  OPT_FILE("output-file",  'f', &cfg.file_name,     fname));
 
@@ -1828,7 +1828,7 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *cmd,
 		.controller	= NVME_LOG_LSI_NONE,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("lsp",        's', &cfg.lsp,        lsp),
 		  OPT_SHRT("controller", 'c', &cfg.controller, controller));
 
@@ -1916,7 +1916,7 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("domain-id",     'd', &cfg.domainid, domainid),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_use));
 
@@ -1968,7 +1968,7 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("domain-id",     'd', &cfg.domainid,       domainid),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_use));
 
@@ -2023,7 +2023,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 		.mos = 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
 		  OPT_SHRT("mos",           's', &cfg.mos,            mos),
 		  OPT_BYTE("mo",            'm', &cfg.mo,             mo),
@@ -2110,7 +2110,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 		.mos = 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
 		  OPT_SHRT("mos",           's', &cfg.mos,            mos),
 		  OPT_BYTE("mo",            'm', &cfg.mo,             mo),
@@ -2225,7 +2225,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.xfer_len	= 4096,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id),
 		  OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
@@ -2327,7 +2327,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("rae",            'r', &cfg.rae,            rae),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log));
@@ -2381,7 +2381,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -2430,7 +2430,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -2482,7 +2482,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 		.namespace_id	= NVME_NSID_NONE,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id_optional));
 
@@ -2540,7 +2540,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.all		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		  OPT_INT("csi",           'y', &cfg.csi,           csi),
 		  OPT_FLAG("all",          'a', &cfg.all,           all));
@@ -2611,7 +2611,7 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 		.uuid_index		= NVME_UUID_NONE,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
 		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index));
 
@@ -2664,7 +2664,7 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 		.endgrp_id	= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SHRT("endgrp-id",    'i', &cfg.endgrp_id,     endurance_grp_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -2715,7 +2715,7 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.timeout	= 120000,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout));
 
@@ -2762,7 +2762,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		.cntlist	= "",
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		  OPT_LIST("controllers",  'c', &cfg.cntlist,      cont));
 
@@ -3008,7 +3008,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.phndls		= "",
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
 		  OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
 		  OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
@@ -3176,7 +3176,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	int err;
 	int nsid = NVME_NSID_ALL;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err < 0)
@@ -3237,7 +3237,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	nvme_root_t r;
 	int err = 0;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err < 0)
@@ -3297,7 +3297,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 		.human_readable		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
 		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
 		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
@@ -3353,7 +3353,7 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 	int err = -1;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3403,7 +3403,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 		.uuid_index	= NVME_UUID_NONE,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,    namespace_id_desired),
 		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      uuid_index));
 
@@ -3477,7 +3477,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 		.uuid_index		= NVME_UUID_NONE,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
 		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index));
 
@@ -3542,7 +3542,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,  namespace_id_desired),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,    raw));
 
@@ -3612,7 +3612,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		.human_readable		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
 		  OPT_FLAG("force",             0, &cfg.force,           force),
 		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
@@ -3689,7 +3689,7 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *cmd,
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
 		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
 		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
@@ -3745,7 +3745,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 	enum nvme_print_flags flags;
 	int err;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3793,7 +3793,7 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 		.nvmset_id	= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SHRT("nvmset_id",    'i', &cfg.nvmset_id,     nvmset_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -3844,7 +3844,7 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
@@ -3898,7 +3898,7 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.cntid	= 0xffff,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SHRT("controller-id", 'c', &cfg.cntid, controller_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -3942,7 +3942,7 @@ static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *
 		.dom_id		= 0xffff,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SHRT("dom-id",         'd', &cfg.dom_id,         domain_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -3981,7 +3981,7 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 	unsigned int nsid;
 	int err;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4034,7 +4034,7 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 		.nr	= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("cntlid", 'c', &cfg.cntlid, cntlid),
 		  OPT_BYTE("rt",     'r', &cfg.rt,     rt),
 		  OPT_BYTE("act",    'a', &cfg.act,    act),
@@ -4087,7 +4087,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("cntlid",         'c', &cfg.cntlid, cntlid),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
 
@@ -4142,7 +4142,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		.num_entries	= ARRAY_SIZE(sc_list->sc_entry),
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
 		  OPT_UINT("num-entries",  'e', &cfg.num_entries,   num_entries));
 
@@ -4309,7 +4309,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		.wait		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
 		  OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
 		  OPT_FLAG("wait",           'w', &cfg.wait,         wait));
@@ -4398,7 +4398,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 		.dst_entries	= NVME_LOG_ST_MAX_RESULTS,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   dst_entries));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -4604,7 +4604,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id),
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
 		  OPT_BYTE("sel",            's', &cfg.sel,            sel),
@@ -4786,7 +4786,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		.ignore_ovr = false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FILE("fw",         'f', &cfg.fw,         fw),
 		  OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
 		  OPT_UINT("offset",     'O', &cfg.offset,     offset),
@@ -4935,7 +4935,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		.bpid	= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("slot",   's', &cfg.slot,   slot),
 		  OPT_BYTE("action", 'a', &cfg.action, action),
 		  OPT_BYTE("bpid",   'b', &cfg.bpid,   bpid));
@@ -5011,7 +5011,7 @@ static int subsystem_reset(int argc, char **argv, struct command *cmd, struct pl
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5035,7 +5035,7 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5055,7 +5055,7 @@ static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
 
-	NVME_ARGS(opts, cfg);
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5107,7 +5107,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		VAL_END()
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("no-dealloc", 'd', &cfg.no_dealloc, no_dealloc_desc),
 		  OPT_FLAG("oipbp",      'i', &cfg.oipbp,      oipbp_desc),
 		  OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
@@ -5282,7 +5282,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -5339,7 +5339,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("offset",         'O', &cfg.offset,         offset),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
@@ -5390,7 +5390,7 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		.value	= -1,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("offset", 'O', &cfg.offset, offset),
 		  OPT_UINT("value",  'V', &cfg.value,  value));
 
@@ -5475,7 +5475,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.bs		= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
 		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
 		  OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
@@ -5726,7 +5726,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		.save		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_BYTE("feature-id",   'f', &cfg.feature_id,   feature_id),
 		  OPT_SUFFIX("value",      'V', &cfg.value,        value),
@@ -5873,7 +5873,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		.tl		= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_FILE("file",         'f', &cfg.file,         file),
 		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
@@ -5989,7 +5989,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		.file		= "",
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
 		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
 		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
@@ -6116,7 +6116,7 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		.dspec			= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id, namespace_desired),
 		  OPT_SUFFIX("start-block", 's', &cfg.start_block,  start_block),
 		  OPT_SHRT("block-count",   'c', &cfg.block_count,  block_count),
@@ -6247,7 +6247,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		.dspec				= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
@@ -6392,7 +6392,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		.cdw11		= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
 		  OPT_LIST("ctx-attrs",    'a', &cfg.ctx_attrs,    context_attrs),
 		  OPT_LIST("blocks",       'b', &cfg.blocks,       blocks),
@@ -6542,7 +6542,7 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 		.format		= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",           'n', &cfg.namespace_id,	namespace_id_desired),
 		  OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
 		  OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
@@ -6674,7 +6674,7 @@ static int flush_cmd(int argc, char **argv, struct command *cmd, struct plugin *
 		.namespace_id	= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
@@ -6731,7 +6731,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		.iekey		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
 		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
 		  OPT_SUFFIX("prkey",      'p', &cfg.prkey,        prkey),
@@ -6807,7 +6807,7 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		.cptpl		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
 		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
 		  OPT_SUFFIX("nrkey",      'k', &cfg.nrkey,        nrkey),
@@ -6890,7 +6890,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		.iekey		= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
 		  OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
@@ -6963,7 +6963,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
 		  OPT_UINT("numd",          'd', &cfg.numd,           numd),
 		  OPT_FLAG("eds",           'e', &cfg.eds,            eds),
@@ -7113,7 +7113,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.force			= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_id_desired),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block_addr),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
@@ -7448,7 +7448,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.storage_tag_check	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
@@ -7574,7 +7574,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		.raw_binary	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_UINT("size",         'x', &cfg.size,         size),
 		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
@@ -7660,7 +7660,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		.timeout	= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_desired),
 		  OPT_SUFFIX("start-lba",  's', &cfg.slba,          slba),
 		  OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
@@ -7742,7 +7742,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plug
 		.dw12		= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("operation",   'O', &cfg.operation,    operation),
 		  OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
 		  OPT_UINT("cap-lower",   'l', &cfg.dw11,         cap_lower),
@@ -7817,7 +7817,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 		.human_readable	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
 		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
@@ -7949,7 +7949,7 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		.uuid	= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("ofi",	'O', &cfg.ofi,      ofi_desc),
 		  OPT_BYTE("ifc",	'f', &cfg.ifc,      ifc_desc),
 		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
@@ -8087,7 +8087,7 @@ static int passthru(int argc, char **argv, bool admin,
 		.latency	= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("opcode",       'O', &cfg.opcode,       opcode),
 		  OPT_BYTE("flags",        'f', &cfg.flags,        cflags),
 		  OPT_BYTE("prefill",      'p', &cfg.prefill,      prefill),
@@ -8327,7 +8327,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 		.hmac		= 0,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_STR("secret",		's', &cfg.secret,	secret),
 		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
 		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
@@ -8444,7 +8444,7 @@ static int check_dhchap_key(int argc, char **argv, struct command *command, stru
 		.key	= NULL,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_STR("key", 'k', &cfg.key, key));
 
 	err = argconfig_parse(argc, argv, desc, opts);
@@ -8556,7 +8556,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		.insert		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
 		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
 		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
@@ -8684,7 +8684,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		.insert		= false,
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
 		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
 		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
@@ -8805,7 +8805,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		.ranking	= "namespace",
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
 
 	err = argconfig_parse(argc, argv, desc, opts);
@@ -8939,7 +8939,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 		.input_file = "",
 	};
 
-	NVME_ARGS(opts, cfg,
+	NVME_ARGS(opts,
 		  OPT_BYTE("opcode", 'O', &cfg.opcode, opcode),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_UINT("data-len", 'l', &cfg.data_len, data_len),
