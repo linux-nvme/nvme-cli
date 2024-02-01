@@ -101,7 +101,7 @@ OPTIONS
 	default @SYSCONFDIR@/nvme/config.json file or 'none' to not read in
 	an existing configuration file. The JSON configuration file
 	format is documented in
-	https://github.com/linux-nvme/libnvme/doc/config-schema.json
+	https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json
 
 -S <secret>::
 --dhchap-secret=<secret>::
