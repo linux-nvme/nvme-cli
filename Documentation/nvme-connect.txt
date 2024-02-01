@@ -16,7 +16,7 @@ SYNOPSIS
 			[--host-iface=<iface> | -f <iface>]
 			[--hostnqn=<hostnqn> | -q <hostnqn>]
 			[--hostid=<hostid> | -I <hostid>]
-			[--config-file=<cfg> | -J <cfg>]
+			[--config=<filename> | -J <filename>]
 			[--dhchap-secret=<secret> | -S <secret>]
 			[--dhchap-ctrl-secret=<secret> | -C <secret>]
 			[--nr-io-queues=<#> | -i <#>]
@@ -95,8 +95,8 @@ OPTIONS
 	UUID(Universally Unique Identifier) to be discovered which should be
 	formatted.
 
--J <cfg>::
---config-file=<cfg>::
+-J <filename>::
+--config=<filename>::
 	Use the specified JSON configuration file instead of the
 	default @SYSCONFDIR@/nvme/config.json file or 'none' to not read in
 	an existing configuration file. The JSON configuration file

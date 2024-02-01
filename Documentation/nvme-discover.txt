@@ -18,7 +18,7 @@ SYNOPSIS
 			[--hostid=<hostid> | -I <hostid>]
 			[--raw=<filename> | -r <filename>]
 			[--device=<device> | -d <device>]
-			[--cfg-file=<cfg> | -C <cfg>]
+			[--config=<filename> | -J <filename>]
 			[--keep-alive-tmo=<sec> | -k <sec>]
 			[--reconnect-delay=<#> | -c <#>]
 			[--ctrl-loss-tmo=<#> | -l <#>]
@@ -140,8 +140,8 @@ OPTIONS
 	command "connect-all" or "discover". <device> follows the format
 	nvme*, eg. nvme0, nvme1.
 
--C <cfg>::
---config-file=<cfg>::
+-J <filename>::
+--config=<filename>::
 	Use the specified JSON configuration file instead of the
 	default @SYSCONFDIR@/nvme/config.json file or 'none' to not read in
 	an existing configuration file. The JSON configuration file
