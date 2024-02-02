@@ -5,9 +5,10 @@
 #include <fnmatch.h>
 #include <stdlib.h>
 
+#include <libnvme.h>
+
 #include "nvme.h"
 #include "nbft.h"
-#include "libnvme.h"
 #include "fabrics.h"
 
 #include "util/types.h"
