@@ -10,6 +10,7 @@
 #include "nvme.h"
 #include "nbft.h"
 #include "fabrics.h"
+#include "nvme-print.h"
 
 #include "util/types.h"
 
@@ -48,10 +49,8 @@ int read_nbft_files(struct list_head *nbft_list, char *path)
 	struct nbft_info *nbft;
 
 	count = scandir(path, &dent, nbft_filter, NULL);
-	if (count < 0) {
-		fprintf(stderr, "Failed to open %s.\n", path);
-		return -1;
-	}
+	if (count < 0)
+		return -errno;
 
 	for (i = 0; i < count; i++) {
 		snprintf(filename, sizeof(filename), "%s/%s", path, dent[i]->d_name);
@@ -98,8 +97,11 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 
 	list_head_init(&nbft_list);
 	ret = read_nbft_files(&nbft_list, nbft_path);
-	if (ret)
+	if (ret) {
+		if (ret != ENOENT)
+			nvme_show_perror("Failed to access ACPI tables directory");
 		goto out_free_2;
+	}
 
 	list_for_each(&nbft_list, entry, node)
 		for (ss = entry->nbft->subsystem_ns_list; ss && *ss; ss++)
