@@ -161,6 +161,9 @@ enum nvme_csi {
  * @NVME_REG_BPMBL:	Boot Partition Memory Buffer Location
  * @NVME_REG_CMBMSC:	Controller Memory Buffer Memory Space Control
  * @NVME_REG_CMBSTS:	Controller Memory Buffer Status
+ * @NVME_REG_CMBEBS:	Controller Memory Buffer Elasticity Buffer Size
+ * @NVME_REG_CMBSWTP:	Controller Memory Buffer Sustained Write Throughput
+ * @NVME_REG_NSSD:	NVM Subsystem Shutdown
  * @NVME_REG_CRTO:	Controller Ready Timeouts
  * @NVME_REG_PMRCAP:	Persistent Memory Capabilities
  * @NVME_REG_PMRCTL:	Persistent Memory Region Control
@@ -188,6 +191,9 @@ enum nvme_register_offsets {
 	NVME_REG_BPMBL			= 0x0048,
 	NVME_REG_CMBMSC			= 0x0050,
 	NVME_REG_CMBSTS			= 0x0058,
+	NVME_REG_CMBEBS			= 0x005c,
+	NVME_REG_CMBSWTP		= 0x0060,
+	NVME_REG_NSSD			= 0x0064,
 	NVME_REG_CRTO			= 0x0068,
 	NVME_REG_PMRCAP			= 0x0e00,
 	NVME_REG_PMRCTL			= 0x0e04,
