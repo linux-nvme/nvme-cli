@@ -17,6 +17,6 @@ jobs:
       - name: build
         run: |
           scripts/build.sh coverage
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: false
