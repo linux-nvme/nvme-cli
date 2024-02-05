@@ -3550,9 +3550,7 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		json_feature_show_fields_spinup_control(r, result);
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
-		fallthrough;
 	case NVME_FEAT_FID_CTRL_METADATA:
-		fallthrough;
 	case NVME_FEAT_FID_NS_METADATA:
 		json_feature_show_fields_ns_metadata(r, fid, buf);
 		break;

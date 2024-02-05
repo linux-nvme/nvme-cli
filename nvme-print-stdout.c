@@ -4546,9 +4546,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
-		fallthrough;
 	case NVME_FEAT_FID_CTRL_METADATA:
-		fallthrough;
 	case NVME_FEAT_FID_NS_METADATA:
 		if (buf)
 			stdout_host_metadata(fid, (struct nvme_host_metadata *)buf);

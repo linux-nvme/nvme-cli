@@ -1726,7 +1726,6 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 	case WDC_NVME_VID_2:
 		switch (read_device_id) {
 		case WDC_NVME_SN630_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN630_DEV_ID_1:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
@@ -1743,19 +1742,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 			break;
 
 		case WDC_NVME_SN640_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN640_DEV_ID_1:
-			fallthrough;
 		case WDC_NVME_SN640_DEV_ID_2:
-			fallthrough;
 		case WDC_NVME_SN640_DEV_ID_3:
-			fallthrough;
 		case WDC_NVME_SN560_DEV_ID_1:
-			fallthrough;
 		case WDC_NVME_SN560_DEV_ID_2:
-			fallthrough;
 		case WDC_NVME_SN560_DEV_ID_3:
-			fallthrough;
 		case WDC_NVME_SN660_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
@@ -1816,9 +1808,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 			break;
 
 		case WDC_NVME_SN840_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN840_DEV_ID_1:
-			fallthrough;
 		case WDC_NVME_SN860_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
@@ -1826,7 +1816,6 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
 			fallthrough;
 		case WDC_NVME_ZN540_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN540_DEV_ID:
 			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
@@ -1847,17 +1836,11 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 			break;
 
 		case WDC_NVME_SN650_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN650_DEV_ID_1:
-			fallthrough;
 		case WDC_NVME_SN650_DEV_ID_2:
-			fallthrough;
 		case WDC_NVME_SN650_DEV_ID_3:
-			fallthrough;
 		case WDC_NVME_SN650_DEV_ID_4:
-			fallthrough;
 		case WDC_NVME_SN655_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN550_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
@@ -1907,7 +1890,6 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 			break;
 
 		case WDC_NVME_SN861_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN861_DEV_ID_1:
 			capabilities |= (WDC_DRIVE_CAP_C0_LOG_PAGE |
 				WDC_DRIVE_CAP_C3_LOG_PAGE |
@@ -1937,11 +1919,8 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 			break;
 
 		case WDC_NVME_SN520_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN520_DEV_ID_1:
-			fallthrough;
 		case WDC_NVME_SN520_DEV_ID_2:
-			fallthrough;
 		case WDC_NVME_SN810_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA;
 			break;
@@ -2011,19 +1990,14 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case WDC_NVME_SN8000S_DEV_ID:
 			fallthrough;
 		case WDC_NVME_SN740_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN740_DEV_ID_1:
-			fallthrough;
 		case WDC_NVME_SN740_DEV_ID_2:
-			fallthrough;
 		case WDC_NVME_SN740_DEV_ID_3:
-			fallthrough;
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
 			break;
 
 		case WDC_NVME_ZN350_DEV_ID:
-			fallthrough;
 		case WDC_NVME_ZN350_DEV_ID_1:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
 				       WDC_DRIVE_CAP_C0_LOG_PAGE |
@@ -7057,39 +7031,23 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 
 	switch (device_id) {
 	case WDC_NVME_SN640_DEV_ID:
-		fallthrough;
 	case WDC_NVME_SN640_DEV_ID_1:
-		fallthrough;
 	case WDC_NVME_SN640_DEV_ID_2:
-		fallthrough;
 	case WDC_NVME_SN640_DEV_ID_3:
-		fallthrough;
 	case WDC_NVME_SN840_DEV_ID:
-		fallthrough;
 	case WDC_NVME_SN840_DEV_ID_1:
-		fallthrough;
 	case WDC_NVME_SN860_DEV_ID:
-		fallthrough;
 	case WDC_NVME_SN560_DEV_ID_1:
-		fallthrough;
 	case WDC_NVME_SN560_DEV_ID_2:
-		fallthrough;
 	case WDC_NVME_SN560_DEV_ID_3:
-		fallthrough;
 	case WDC_NVME_SN550_DEV_ID:
 		ret = wdc_get_c0_log_page_sn(r, dev, uuid_index, format, namespace_id, fmt);
 		break;
-
 	case WDC_NVME_SN650_DEV_ID:
-		fallthrough;
 	case WDC_NVME_SN650_DEV_ID_1:
-		fallthrough;
 	case WDC_NVME_SN650_DEV_ID_2:
-		fallthrough;
 	case WDC_NVME_SN650_DEV_ID_3:
-		fallthrough;
 	case WDC_NVME_SN650_DEV_ID_4:
-		fallthrough;
 	case WDC_NVME_SN655_DEV_ID:
 		if (uuid_index == 0) {
 			log_id = WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID;
@@ -7147,9 +7105,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 		}
 		free(data);
 		break;
-
 	case WDC_NVME_ZN350_DEV_ID:
-		fallthrough;
 	case WDC_NVME_ZN350_DEV_ID_1:
 		data = (__u8 *)malloc(sizeof(__u8) * WDC_NVME_SMART_CLOUD_ATTR_LEN);
 		if (!data) {
@@ -7415,17 +7371,11 @@ static int wdc_get_ca_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 		}
 		break;
 	case WDC_NVME_SN640_DEV_ID:
-		fallthrough;
 	case WDC_NVME_SN640_DEV_ID_1:
-		fallthrough;
 	case WDC_NVME_SN640_DEV_ID_2:
-		fallthrough;
 	case WDC_NVME_SN640_DEV_ID_3:
-		fallthrough;
 	case WDC_NVME_SN840_DEV_ID:
-		fallthrough;
 	case WDC_NVME_SN840_DEV_ID_1:
-		fallthrough;
 	case WDC_NVME_SN860_DEV_ID:
 		if (cust_id == WDC_CUSTOMER_ID_0x1005) {
 			data = (__u8 *)malloc(sizeof(__u8) * WDC_FB_CA_LOG_BUF_LEN);
@@ -11688,7 +11638,6 @@ static int wdc_vs_drive_info(int argc, char **argv,
 
 			break;
 		case WDC_NVME_SN861_DEV_ID:
-			fallthrough;
 		case WDC_NVME_SN861_DEV_ID_1:
 			data_len = sizeof(info);
 			num_dwords = data_len / 4;
