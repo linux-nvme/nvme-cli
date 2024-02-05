@@ -7239,7 +7239,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		 *   5.2.2.1 Protection Information and Write Commands
 		 *   5.2.2.2 Protection Information and Read Commands
 		 */
-		if (!(cfg.prinfo == 0x1 && ms == 8))
+		if (!((cfg.prinfo & 0x8) != 0 && ms == 8))
 			logical_block_size += ms;
 	}
 
