@@ -2010,7 +2010,7 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	}
 	subsysname = nvme_ctrl_lookup_subsystem_name(r, name);
 	if (!subsysname) {
-		nvme_msg(r, LOG_ERR,
+		nvme_msg(r, LOG_DEBUG,
 			 "failed to lookup subsystem for controller %s\n",
 			 name);
 		errno = ENXIO;
