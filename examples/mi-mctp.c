@@ -201,7 +201,7 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 
 	partial = argc > 2 && !strcmp(argv[2], "--partial");
 
-	ctrl = nvme_mi_init_ctrl(ep, tmp);
+	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
 	if (!ctrl) {
 		warn("can't create controller");
 		return -1;
@@ -211,7 +211,7 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 	id_args.args_size = sizeof(id_args);
 	id_args.cns = NVME_IDENTIFY_CNS_CTRL;
 	id_args.nsid = NVME_NSID_NONE;
-	id_args.cntid = ctrl_id;
+	id_args.cntid = 0;
 	id_args.csi = NVME_CSI_NVM;
 
 	/* for this example code, we can either do a full or partial identify;
