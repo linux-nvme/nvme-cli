@@ -41,3 +41,5 @@ subsystem_ns_list[0]->data_digest_required=0
 subsystem_ns_list[0]->controller_id=7
 subsystem_ns_list[0]->asqsz=0
 subsystem_ns_list[0]->dhcp_root_path_string=(null)
+subsystem_ns_list[0]->discovered=1
+subsystem_ns_list[0]->unavailable=0

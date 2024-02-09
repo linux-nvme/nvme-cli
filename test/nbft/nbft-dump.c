@@ -96,6 +96,8 @@ static void print_nbft(struct nbft_info *table)
 		printf("subsystem_ns_list[%u]->controller_id=%d\n", i, (*ssns)->controller_id);
 		printf("subsystem_ns_list[%u]->asqsz=%d\n", i, (*ssns)->asqsz);
 		printf("subsystem_ns_list[%u]->dhcp_root_path_string=%s\n", i, (*ssns)->dhcp_root_path_string);
+		printf("subsystem_ns_list[%u]->discovered=%d\n", i, (*ssns)->discovered);
+		printf("subsystem_ns_list[%u]->unavailable=%d\n", i, (*ssns)->unavailable);
 	}
 }
 
