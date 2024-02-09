@@ -246,6 +246,10 @@ static int read_ssns(struct nbft_info *nbft,
 	ssns->nid_type = raw_ssns->nidt;
 	ssns->nid = raw_ssns->nid;
 
+	/* flags */
+	ssns->unavailable = !!(le16_to_cpu(raw_ssns->flags) &
+			       NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL);
+
 	/* security profile */
 	if (raw_ssns->security_desc_index) {
 		ssns->security = security_from_index(nbft, raw_ssns->security_desc_index);

@@ -1180,6 +1180,8 @@ enum nbft_info_nid_type {
  * 				Descriptor) or 0 if not supported.
  * @dhcp_root_path_string:	DHCP Root Path Override string (SSNS Extended
  * 				Information Descriptor).
+ * @unavailable:		Namespace is unavailable as indicated by
+ *				the pre-OS driver.
  */
 struct nbft_info_subsystem_ns {
 	int index;
@@ -1200,6 +1202,7 @@ struct nbft_info_subsystem_ns {
 	int controller_id;
 	int asqsz;
 	char *dhcp_root_path_string;
+	bool unavailable;
 };
 
 /**
