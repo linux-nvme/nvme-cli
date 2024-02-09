@@ -725,7 +725,7 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 			unsigned char *key)
 {
 	const char hmac_seed[] = "NVMe-over-Fabrics";
-	_cleanup_hmac_ctx_ HMAC_CTX *hmac_ctx;
+	_cleanup_hmac_ctx_ HMAC_CTX *hmac_ctx = NULL;
 	const EVP_MD *md;
 
 	ENGINE_load_builtin_engines();
@@ -881,7 +881,7 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 {
 	const char hmac_seed[] = "NVMe-over-Fabrics";
 	OSSL_PARAM params[2], *p = params;
-	_cleanup_ossl_lib_ctx_ OSSL_LIB_CTX *lib_ctx;
+	_cleanup_ossl_lib_ctx_ OSSL_LIB_CTX *lib_ctx = NULL;
 	_cleanup_evp_mac_ctx_ EVP_MAC_CTX *mac_ctx = NULL;
 	_cleanup_evp_mac_ EVP_MAC *mac = NULL;
 	char *progq = NULL;
