@@ -9567,10 +9567,10 @@ static int wdc_fetch_log_file_from_device(struct nvme_dev *dev, __u32 fileId,
 					  __u16 spiDestn, __u64 fileSize, __u8 *dataBuffer)
 {
 	int ret = WDC_STATUS_FAILURE;
-	__u32                     chunckSize = WDC_DE_VU_READ_BUFFER_STANDARD_OFFSET;
-	__u32                     maximumTransferLength = 0;
-	__u32                     buffSize = 0;
-	__u64                     offsetIdx = 0;
+	__u32 chunckSize = WDC_DE_VU_READ_BUFFER_STANDARD_OFFSET;
+	__u32 maximumTransferLength = 0;
+	__u32 buffSize = 0;
+	__u64 offsetIdx = 0;
 
 	if (!dev || !dataBuffer || !fileSize) {
 		ret = WDC_STATUS_INVALID_PARAMETER;
@@ -9618,18 +9618,17 @@ end:
 
 static int wdc_de_get_dump_trace(struct nvme_dev *dev, char *filePath, __u16 binFileNameLen, char *binFileName)
 {
-	int                     ret = WDC_STATUS_FAILURE;
-	__u8                    *readBuffer = NULL;
-	__u32                   readBufferLen = 0;
-	__u32                   lastPktReadBufferLen = 0;
-	__u32                   maxTransferLen = 0;
-	__u32                   dumptraceSize = 0;
-	__u32                   chunkSize = 0;
-	__u32                   chunks = 0;
-	__u32                   offset = 0;
-	__u8                    loop = 0;
-	__u16					i = 0;
-	__u32                   maximumTransferLength = 0;
+	int ret = WDC_STATUS_FAILURE;
+	__u8 *readBuffer = NULL;
+	__u32 readBufferLen = 0;
+	__u32 lastPktReadBufferLen = 0;
+	__u32 maxTransferLen = 0;
+	__u32 dumptraceSize = 0;
+	__u32 chunkSize;
+	__u32 chunks;
+	__u32 offset;
+	__u16 i;
+	__u32 maximumTransferLength = 0;
 
 	if (!dev || !binFileName || !filePath) {
 		ret = WDC_STATUS_INVALID_PARAMETER;
@@ -9678,7 +9677,7 @@ static int wdc_de_get_dump_trace(struct nvme_dev *dev, char *filePath, __u16 bin
 		}
 
 		for (i = 0; i < chunks; i++) {
-			offset = ((i*chunkSize) / 4);
+			offset = (i * chunkSize) / 4;
 
 			/* Last loop call, Assign readBufferLen to read only left over bytes */
 			if (i == (chunks - 1))
@@ -9693,7 +9692,7 @@ static int wdc_de_get_dump_trace(struct nvme_dev *dev, char *filePath, __u16 bin
 				break;
 			}
 		}
-	} while (loop);
+	} while (0);
 
 	if (ret == WDC_STATUS_SUCCESS) {
 		ret = wdc_WriteToFile(binFileName, (char *)readBuffer, dumptraceSize);
