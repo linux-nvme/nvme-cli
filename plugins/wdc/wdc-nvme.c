@@ -9627,7 +9627,7 @@ static int wdc_de_get_dump_trace(struct nvme_dev *dev, char *filePath, __u16 bin
 	__u32 chunkSize;
 	__u32 chunks;
 	__u32 offset;
-	__u16 i;
+	__u32 i;
 	__u32 maximumTransferLength = 0;
 
 	if (!dev || !binFileName || !filePath) {
