@@ -168,7 +168,11 @@ static json_object *ssns_to_json(struct nbft_info_subsystem_ns *ss)
 	    || json_object_add_value_int(ss_json, "pdu_header_digest_required",
 					 ss->pdu_header_digest_required)
 	    || json_object_add_value_int(ss_json, "data_digest_required",
-					 ss->data_digest_required))
+					 ss->data_digest_required)
+	    || json_object_add_value_int(ss_json, "discovered",
+					 ss->discovered)
+	    || json_object_add_value_int(ss_json, "unavailable",
+					 ss->unavailable))
 		goto fail;
 
 	return ss_json;
