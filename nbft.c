@@ -163,6 +163,17 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 				ret = nvmf_add_ctrl(h, c, cfg);
 
 				/*
+				 * In case this SSNS was marked as 'unavailable' and
+				 * the connection attempt failed again, ignore it.
+				 */
+				if (ret == -1 && (*ss)->unavailable) {
+					if (verbose >= 1)
+						fprintf(stderr,
+							"subsystem reported as unavailable, skipping\n");
+					continue;
+				}
+
+				/*
 				 * With TCP/DHCP, it can happen that the OS
 				 * obtains a different local IP address than the
 				 * firmware had. Retry without host_traddr.
