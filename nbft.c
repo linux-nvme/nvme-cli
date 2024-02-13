@@ -13,6 +13,7 @@
 #include "nvme-print.h"
 
 #include "util/types.h"
+#include "util/logging.h"
 
 #define NBFT_SYSFS_FILENAME	"NBFT*"
 
@@ -107,6 +108,9 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 		for (ss = entry->nbft->subsystem_ns_list; ss && *ss; ss++)
 			for (i = 0; i < (*ss)->num_hfis; i++) {
 				nvme_ctrl_t cl;
+				int saved_log_level = log_level;
+				bool saved_log_pid = false;
+				bool saved_log_tstamp = false;
 
 				hfi = (*ss)->hfis[i];
 				if (hostnqn_arg)
@@ -159,8 +163,23 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 					goto out_free;
 				}
 
+				/* Pause logging for unavailable SSNSs */
+				if ((*ss)->unavailable && verbose < 1) {
+					saved_log_level = nvme_get_logging_level(r,
+										 &saved_log_pid,
+										 &saved_log_tstamp);
+					nvme_init_logging(r, -1, false, false);
+				}
+
 				errno = 0;
 				ret = nvmf_add_ctrl(h, c, cfg);
+
+				/* Resume logging */
+				if ((*ss)->unavailable && verbose < 1)
+					nvme_init_logging(r,
+							  saved_log_level,
+							  saved_log_pid,
+							  saved_log_tstamp);
 
 				/*
 				 * In case this SSNS was marked as 'unavailable' and
