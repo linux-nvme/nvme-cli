@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 12/21/2023
+.\"      Date: 02/14/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "12/21/2023" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "02/14/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,7 +40,7 @@ nvme-connect \- Connect to a Fabrics controller\&.
                         [\-\-host\-iface=<iface> | \-f <iface>]
                         [\-\-hostnqn=<hostnqn> | \-q <hostnqn>]
                         [\-\-hostid=<hostid> | \-I <hostid>]
-                        [\-\-config\-file=<cfg> | \-J <cfg>]
+                        [\-\-config=<filename> | \-J <filename>]
                         [\-\-dhchap\-secret=<secret> | \-S <secret>]
                         [\-\-dhchap\-ctrl\-secret=<secret> | \-C <secret>]
                         [\-\-nr\-io\-queues=<#> | \-i <#>]
@@ -53,7 +53,7 @@ nvme-connect \- Connect to a Fabrics controller\&.
                         [\-\-keyring=<#>] [\-\-tls_key=<#>]
                         [\-\-duplicate\-connect | \-D] [\-\-disable\-sqflow | \-d]
                         [\-\-hdr\-digest | \-g] [\-\-data\-digest | \-G] [\-\-tls]
-                        [\-\-dump\-config | \-O] [\-\-application=<id>]
+                        [\-\-concat] [\-\-dump\-config | \-O] [\-\-application=<id>]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
@@ -136,12 +136,12 @@ Overrides the default Host NQN that identifies the NVMe Host\&. If this option i
 UUID(Universally Unique Identifier) to be discovered which should be formatted\&.
 .RE
 .PP
-\-J <cfg>, \-\-config\-file=<cfg>
+\-J <filename>, \-\-config=<filename>
 .RS 4
 Use the specified JSON configuration file instead of the default /usr/local/etc/nvme/config\&.json file or
 \fInone\fR
 to not read in an existing configuration file\&. The JSON configuration file format is documented in
-\m[blue]\fBhttps://github\&.com/linux\-nvme/libnvme/doc/config\-schema\&.json\fR\m[]
+\m[blue]\fBhttps://github\&.com/linux\-nvme/libnvme/blob/master/doc/config\-schema\&.json\fR\m[]
 .RE
 .PP
 \-S <secret>, \-\-dhchap\-secret=<secret>
@@ -229,6 +229,11 @@ Generates/verifies data digest (TCP)\&.
 \-\-tls
 .RS 4
 Enable TLS encryption (TCP)\&.
+.RE
+.PP
+\-\-concat
+.RS 4
+Enable secure concatenation (TCP)\&.
 .RE
 .PP
 \-O, \-\-dump\-config

@@ -759,7 +759,7 @@ nvme-discover(1) Manual Page
                         [--hostid=&lt;hostid&gt; | -I &lt;hostid&gt;]
                         [--raw=&lt;filename&gt; | -r &lt;filename&gt;]
                         [--device=&lt;device&gt; | -d &lt;device&gt;]
-                        [--cfg-file=&lt;cfg&gt; | -C &lt;cfg&gt;]
+                        [--config=&lt;filename&gt; | -J &lt;filename&gt;]
                         [--keep-alive-tmo=&lt;sec&gt; | -k &lt;sec&gt;]
                         [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]
                         [--ctrl-loss-tmo=&lt;#&gt; | -l &lt;#&gt;]
@@ -768,7 +768,7 @@ nvme-discover(1) Manual Page
                         [--nr-poll-queues=&lt;#&gt; | -P &lt;#&gt;]
                         [--queue-size=&lt;#&gt; | -Q &lt;#&gt;] [--keyring=&lt;#&gt;]
                         [--tls_key=&lt;#&gt;] [--hdr-digest | -g] [--data-digest | -G]
-                        [--persistent | -p] [--quiet | -S] [--tls]
+                        [--persistent | -p] [--quiet | -S] [--tls] [--concat]
                         [--dump-config | -O] [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]
                         [--force] [--nbft] [--no-nbft] [--nbft-path=&lt;STR&gt;]
                         [--context=&lt;STR&gt;]
@@ -979,10 +979,10 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--C &lt;cfg&gt;
+-J &lt;filename&gt;
 </dt>
 <dt class="hdlist1">
---config-file=&lt;cfg&gt;
+--config=&lt;filename&gt;
 </dt>
 <dd>
 <p>
@@ -990,7 +990,7 @@ cellspacing="0" cellpadding="4">
         default /usr/local/etc/nvme/config.json file or <em>none</em> to not read in
         an existing configuration file. The JSON configuration file
         format is documented in
-        <a href="https://github.com/linux-nvme/libnvme/doc/config-schema.json">https://github.com/linux-nvme/libnvme/doc/config-schema.json</a>
+        <a href="https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json">https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json</a>
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1134,6 +1134,14 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Enable TLS encryption (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+--concat
+</dt>
+<dd>
+<p>
+        Enable secure concatenation (TCP).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1317,7 +1325,7 @@ nvme-connect-all(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-12-21 15:49:29 CET
+ 2024-02-14 10:43:42 CET
 </div>
 </div>
 </body>
