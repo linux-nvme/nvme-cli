@@ -99,6 +99,19 @@ void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp)
 	r->log_timestamp = log_tstamp;
 }
 
+int nvme_get_logging_level(nvme_root_t r, bool *log_pid, bool *log_tstamp)
+{
+	if (!r)
+		r = root;
+	if (!r)
+		return DEFAULT_LOGLEVEL;
+	if (log_pid)
+		*log_pid = r->log_pid;
+	if (log_tstamp)
+		*log_tstamp = r->log_timestamp;
+	return r->log_level;
+}
+
 void nvme_set_root(nvme_root_t r)
 {
 	root = r;

@@ -36,6 +36,20 @@
 void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp);
 
 /**
+ * nvme_get_logging_level() - Get current logging level
+ * @r:		nvme_root_t context
+ * @log_pid:	Pointer to store a current value of logging of
+ *		the PID flag at (optional).
+ * @log_tstamp:	Pointer to store a current value of logging of
+ *		the timestamp flag at (optional).
+ *
+ * Retrieves current values of logging variables.
+ *
+ * Return: current log level value or DEFAULT_LOGLEVEL if not initialized.
+ */
+int nvme_get_logging_level(nvme_root_t r, bool *log_pid, bool *log_tstamp);
+
+/**
  * nvme_set_root() - Set nvme_root_t context
  * @r:		nvme_root_t context
  *
