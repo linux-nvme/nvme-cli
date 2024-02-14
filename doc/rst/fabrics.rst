@@ -34,6 +34,7 @@ Fabrics-specific definitions.
     bool hdr_digest;
     bool data_digest;
     bool tls;
+    bool concat;
   };
 
 **Members**
@@ -91,6 +92,9 @@ Fabrics-specific definitions.
 
 ``tls``
   Start TLS on the connection (TCP)
+
+``concat``
+  Enable secure concatenation (TCP)
 
 
 

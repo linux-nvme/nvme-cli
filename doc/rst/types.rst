@@ -241,6 +241,15 @@ The 'name' field from 'value'
 ``NVME_REG_CMBSTS``
   Controller Memory Buffer Status
 
+``NVME_REG_CMBEBS``
+  Controller Memory Buffer Elasticity Buffer Size
+
+``NVME_REG_CMBSWTP``
+  Controller Memory Buffer Sustained Write Throughput
+
+``NVME_REG_NSSD``
+  NVM Subsystem Shutdown
+
 ``NVME_REG_CRTO``
   Controller Ready Timeouts
 

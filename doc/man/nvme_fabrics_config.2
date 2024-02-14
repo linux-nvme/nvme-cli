@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_fabrics_config" "December 2023" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_fabrics_config" "February 2024" "API Manual" LINUX
 .SH NAME
 struct nvme_fabrics_config \- Defines all linux nvme fabrics initiator options
 .SH SYNOPSIS
@@ -39,6 +39,8 @@ struct nvme_fabrics_config {
 .BI "    bool data_digest;"
 .br
 .BI "    bool tls;"
+.br
+.BI "    bool concat;"
 .br
 .BI "
 };
@@ -81,3 +83,5 @@ Generate/verify header digest (TCP)
 Generate/verify data digest (TCP)
 .IP "tls" 12
 Start TLS on the connection (TCP)
+.IP "concat" 12
+Enable secure concatenation (TCP)

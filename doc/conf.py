@@ -12,7 +12,7 @@ copyright = '2020, Keith Busch'
 author = 'Keith Busch <kbusch@kernel.org>'
 master_doc = 'index'
 
-release = '1.7.1'
+release = '1.8'
 
 
 # -- General configuration ---------------------------------------------------

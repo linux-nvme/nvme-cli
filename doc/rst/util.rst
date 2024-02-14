@@ -649,6 +649,23 @@ https://www.rfc-editor.org/rfc/rfc4122#section-4.4
 Returns error code if generating of random number fails.
 
 
+.. c:function:: int nvme_uuid_find (struct nvme_id_uuid_list *uuid_list, const unsigned char uuid[NVME_UUID_LEN])
+
+   Find UUID position on UUID list
+
+**Parameters**
+
+``struct nvme_id_uuid_list *uuid_list``
+  UUID list returned by identify UUID
+
+``const unsigned char uuid[NVME_UUID_LEN]``
+  Binary encoded input UUID
+
+**Return**
+
+The array position where given UUID is present, or -1 on failure with errno set.
+
+
 .. c:function:: bool nvme_ipaddrs_eq (const char *addr1, const char *addr2)
 
    Check if 2 IP addresses are equal.
