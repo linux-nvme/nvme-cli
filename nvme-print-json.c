@@ -3836,7 +3836,7 @@ static void json_support_log(struct nvme_supported_log_pages *support_log,
 		}
 	}
 
-	obj_add_obj(r, "supported_logs", valid);
+	obj_add_array(r, "supported_logs", valid);
 
 	json_print(r);
 }
