@@ -12,6 +12,14 @@
 #include <sys/types.h>
 #include "util.h"
 
+/**
+ * DOC: nbft.h
+ *
+ * NVM Express Boot Specification, Revision 1.0
+ *
+ * Note: this API is currently unstable, subject to further additions.
+ */
+
 /*
  *  ACPI NBFT table structures (TP8012 Boot Specification rev. 1.0)
  */

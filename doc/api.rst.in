@@ -16,3 +16,4 @@ functions.
 .. include::   rst/filters.rst
 .. include::   rst/util.rst
 .. include::   rst/log.rst
+.. include::   rst/nbft.rst
