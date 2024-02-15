@@ -58,6 +58,8 @@ __nvme_msg(nvme_root_t r, int lvl,
 
 	if (r && lvl > r->log_level)
 		return;
+	if (!r && lvl > DEFAULT_LOGLEVEL)
+		return;
 
 	if (r && r->log_timestamp) {
 		struct timespec now;
