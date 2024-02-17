@@ -24,7 +24,7 @@ OPTIONS
 	The offset of the property.
 
 -V::
---value:
+--value::
 	The value of the property to be set.
 
 -o <fmt>::
