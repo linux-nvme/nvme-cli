@@ -171,6 +171,7 @@ int sedopal_cmd_initialize(int fd)
 	struct opal_user_lr_setup lr_setup = {};
 
 	sedopal_ask_key = true;
+	sedopal_ask_new_key = true;
 	rc = sedopal_set_key(&key);
 	if (rc != 0)
 		return rc;
