@@ -249,6 +249,8 @@ static int read_ssns(struct nbft_info *nbft,
 	/* flags */
 	ssns->unavailable = !!(le16_to_cpu(raw_ssns->flags) &
 			       NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL);
+	ssns->discovered = !!(le16_to_cpu(raw_ssns->flags) &
+			      NBFT_SSNS_DISCOVERED_NAMESPACE);
 
 	/* security profile */
 	if (raw_ssns->security_desc_index) {
