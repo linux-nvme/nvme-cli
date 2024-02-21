@@ -57,7 +57,7 @@ struct nvme_fabrics_config {
 	int nr_poll_queues;
 	int tos;
 	int keyring;
-	int tls_key;
+	long tls_key;
 
 	bool duplicate_connect;
 	bool disable_sqflow;

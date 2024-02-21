@@ -1772,7 +1772,7 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 			       const char *name)
 {
 	DIR *d;
-	char *host_key;
+	char *host_key, *tls_psk;
 
 	d = opendir(path);
 	if (!d) {
@@ -1806,6 +1806,16 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 	if (c->dhchap_ctrl_key && !strcmp(c->dhchap_ctrl_key, "none")) {
 		free(c->dhchap_ctrl_key);
 		c->dhchap_ctrl_key = NULL;
+	}
+	tls_psk = nvme_get_ctrl_attr(c, "tls_key");
+	if (tls_psk) {
+		char *endptr;
+		long key_id = strtol(tls_psk, &endptr, 16);
+
+		if (endptr != tls_psk) {
+			c->cfg.tls_key = key_id;
+			c->cfg.tls = true;
+		}
 	}
 	c->cntrltype = nvme_get_ctrl_attr(c, "cntrltype");
 	c->dctype = nvme_get_ctrl_attr(c, "dctype");
