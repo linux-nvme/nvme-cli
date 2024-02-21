@@ -31,6 +31,8 @@
 
 #ifdef CONFIG_KEYUTILS
 #include <keyutils.h>
+
+#define NVME_TLS_DEFAULT_KEYRING ".nvme"
 #endif
 
 #include <ccan/endian/endian.h>
@@ -1158,6 +1160,8 @@ long nvme_lookup_keyring(const char *keyring)
 {
 	key_serial_t keyring_id;
 
+	if (!keyring)
+		keyring = NVME_TLS_DEFAULT_KEYRING;
 	keyring_id = find_key_by_type_and_desc("keyring", keyring, 0);
 	if (keyring_id < 0)
 		return 0;
