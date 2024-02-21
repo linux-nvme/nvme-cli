@@ -25,6 +25,23 @@
 #define JSON_UPDATE_BOOL_OPTION(c, k, a, o)				\
 	if (!strcmp(# a, k ) && !c->a) c->a = json_object_get_boolean(o);
 
+static void json_export_nvme_tls_key(long keyring_id, long tls_key,
+				     struct json_object *obj)
+{
+	int key_len;
+	_cleanup_free_ unsigned char *key_data;
+
+	key_data = nvme_read_key(keyring_id, tls_key, &key_len);
+	if (key_data) {
+		_cleanup_free_ char *tls_str;
+
+		tls_str = nvme_export_tls_key(key_data, key_len);
+		if (tls_str)
+			json_object_object_add(obj, "tls_key",
+					       json_object_new_string(tls_str));
+	}
+}
+
 static void json_update_attributes(nvme_ctrl_t c,
 				   struct json_object *ctrl_obj)
 {
@@ -346,15 +363,11 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 					       json_object_new_string(desc));
 		}
 	}
-	if (cfg->tls_key) {
-		_cleanup_free_ char *desc =
-			nvme_describe_key_serial(cfg->tls_key);
-
-		if (desc) {
-			json_object_object_add(port_obj, "tls_key",
-					       json_object_new_string(desc));
-		}
-	}
+	/*
+	 * Store the TLS key in PSK interchange format
+	 */
+	if (cfg->tls_key)
+		json_export_nvme_tls_key(cfg->keyring, cfg->tls_key, port_obj);
 
 	json_object_array_add(ctrl_array, port_obj);
 }
