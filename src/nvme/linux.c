@@ -43,6 +43,7 @@
 #include "log.h"
 #include "private.h"
 #include "base64.h"
+#include "crc32.h"
 
 static int __nvme_open(const char *name)
 {
@@ -1350,4 +1351,43 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 	return nvme_insert_tls_key_versioned(keyring, key_type,
 					     hostnqn, subsysnqn, 0, hmac,
 					     configured_key, key_len);
+}
+
+char *nvme_export_tls_key(const unsigned char *key_data, int key_len)
+{
+	unsigned char raw_secret[52];
+	char *encoded_key;
+	unsigned int raw_len, encoded_len, len;
+	unsigned long crc = crc32(0L, NULL, 0);
+
+	if (key_len == 32) {
+		raw_len = 32;
+	} else if (key_len == 48) {
+		raw_len = 48;
+	} else {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	memcpy(raw_secret, key_data, raw_len);
+	crc = crc32(crc, raw_secret, raw_len);
+	raw_secret[raw_len++] = crc & 0xff;
+	raw_secret[raw_len++] = (crc >> 8) & 0xff;
+	raw_secret[raw_len++] = (crc >> 16) & 0xff;
+	raw_secret[raw_len++] = (crc >> 24) & 0xff;
+
+	encoded_len = (raw_len * 2) + 20;
+	encoded_key = malloc(encoded_len);
+	if (!encoded_key) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	memset(encoded_key, 0, encoded_len);
+	len = sprintf(encoded_key, "NVMeTLSkey-1:%02x:",
+		      key_len == 32 ? 1 : 2);
+	len += base64_encode(raw_secret, raw_len, encoded_key + len);
+	encoded_key[len++] = ':';
+	encoded_key[len++] = '\0';
+
+	return encoded_key;
 }

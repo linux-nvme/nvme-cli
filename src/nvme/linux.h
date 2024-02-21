@@ -371,6 +371,20 @@ char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
 				     unsigned char *configured_key, int key_len);
 
 /**
+ * nvme_export_tls_key() - Export a TLS key
+ * @key_data:	Raw data of the key
+ * @key_len:	Length of @key_data
+ *
+ * Returns @key_data in the PSK Interchange format as defined in section
+ * 3.6.1.5 of the NVMe TCP Transport specification.
+ *
+ * Return: The string containing the TLS identity or NULL with errno set
+ * on error. It is the responsibility of the caller to free the returned
+ * string.
+ */
+char *nvme_export_tls_key(const unsigned char *key_data, int key_len);
+
+/**
  * nvme_submit_passthru - Low level ioctl wrapper for passthru commands
  * @fd:		File descriptor of the nvme device
  * @ioctl_cmd:	IOCTL command id

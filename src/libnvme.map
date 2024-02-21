@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_1.9 {
 	global:
+		nvme_export_tls_key;
 		nvme_get_logging_level;
 		nvme_read_key;
 		nvme_submit_passthru;
