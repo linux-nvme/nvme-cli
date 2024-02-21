@@ -1191,10 +1191,38 @@ int nvme_set_keyring(long key_id)
 {
 	long err;
 
+	if (key_id == 0) {
+		key_id = nvme_lookup_keyring(NULL);
+		if (key_id == 0) {
+			errno = ENOKEY;
+			return -1;
+		}
+	}
+
 	err = keyctl_link(key_id, KEY_SPEC_SESSION_KEYRING);
 	if (err < 0)
 		return -1;
 	return 0;
+}
+
+unsigned char *nvme_read_key(long keyring_id, long key_id, int *len)
+{
+	void *buffer;
+	int ret;
+
+	ret = nvme_set_keyring(keyring_id);
+	if (ret < 0) {
+		errno = -ret;
+		return NULL;
+	}
+	ret = keyctl_read_alloc(key_id, &buffer);
+	if (ret < 0) {
+		errno = -ret;
+		buffer = NULL;
+	} else
+		*len = ret;
+
+	return buffer;
 }
 
 long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
@@ -1277,6 +1305,12 @@ int nvme_set_keyring(long key_id)
 		 "recompile with keyutils support.\n");
 	errno = ENOTSUP;
 	return -1;
+}
+
+unsigned char *nvme_read_key(long keyring_id, long key_id, int *len)
+{
+	errno = ENOTSUP;
+	return NULL;
 }
 
 long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,

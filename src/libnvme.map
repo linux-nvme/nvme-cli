@@ -2,6 +2,7 @@
 LIBNVME_1.9 {
 	global:
 		nvme_get_logging_level;
+		nvme_read_key;
 		nvme_submit_passthru;
 		nvme_submit_passthru64;
 };

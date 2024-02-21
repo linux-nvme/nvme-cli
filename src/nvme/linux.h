@@ -274,6 +274,22 @@ long nvme_lookup_key(const char *type, const char *identity);
 int nvme_set_keyring(long keyring_id);
 
 /**
+ * nvme_read_key() - Read key raw data
+ * @keyring_id:     Id of the keyring holding %key_id
+ * @key_id:      Key id
+ * @len:         Length of the returned data
+ *
+ * Links the keyring specified by @keyring_id into the session
+ * keyring and reads the payload of the key specified by @key_id.
+ * @len holds the size of the returned buffer.
+ * If @keyring is 0 the default keyring '.nvme' is used.
+ *
+ * Return: Pointer to the payload on success,
+ * or NULL with errno set otherwise.
+ */
+unsigned char *nvme_read_key(long keyring_id, long key_id, int *len);
+
+/**
  * nvme_insert_tls_key() - Derive and insert TLS key
  * @keyring:    Keyring to use
  * @key_type:	Type of the resulting key
