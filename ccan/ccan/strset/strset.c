@@ -194,6 +194,7 @@ char *strset_del(struct strset *set, const char *member)
 
 			/* Sew empty string back so remaining logic works */
 			free(n->u.n);
+			n->u.n = NULL;
 			n->u.s = empty_str;
 			break;
 		}
@@ -208,7 +209,7 @@ char *strset_del(struct strset *set, const char *member)
 	}
 
 	/* Did we find it? */
-	if (!streq(member, n->u.s)) {
+	if (!n->u.s || !streq(member, n->u.s)) {
 		errno = ENOENT;
 		return NULL;
 	}
