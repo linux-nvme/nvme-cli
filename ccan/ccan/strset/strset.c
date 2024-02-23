@@ -194,6 +194,7 @@ char *strset_del(struct strset *set, const char *member)
 
 			/* Sew empty string back so remaining logic works */
 			free(n->u.n);
+			n->u.n = NULL;
 			n->u.s = empty_str;
 			break;
 		}
@@ -202,13 +203,14 @@ char *strset_del(struct strset *set, const char *member)
 		if (n->u.n->byte_num < len) {
 			c = bytes[n->u.n->byte_num];
 			direction = (c >> n->u.n->bit_num) & 1;
-		} else
+		} else {
 			direction = 0;
+		}
 		n = &n->u.n->child[direction];
 	}
 
 	/* Did we find it? */
-	if (!streq(member, n->u.s)) {
+	if (!n->u.s || !streq(member, n->u.s)) {
 		errno = ENOENT;
 		return NULL;
 	}
