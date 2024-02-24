@@ -3615,6 +3615,9 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (cfg.raw_binary)
 		flags = BINARY;
 
+	if (argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
 		if (err < 0) {

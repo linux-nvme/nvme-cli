@@ -2714,7 +2714,7 @@ static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *n
 static void stdout_id_ns_descs(void *data, unsigned int nsid)
 {
 	int pos, len = 0;
-	int i;
+	int i, verbose = stdout_print_ops.flags & VERBOSE;
 	__u8 uuid[NVME_UUID_LEN];
 	char uuid_str[NVME_UUID_LEN_STRING];
 	__u8 eui64[8];
@@ -2727,6 +2727,12 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 
 		if (cur->nidl == 0)
 			break;
+
+		if (verbose) {
+			printf("loc     : %d\n", pos);
+			printf("nidt    : %d\n", (int)cur->nidt);
+			printf("nidl    : %d\n", (int)cur->nidl);
+		}
 
 		switch (cur->nidt) {
 		case NVME_NIDT_EUI64:
