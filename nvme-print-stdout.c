@@ -2714,7 +2714,7 @@ static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *n
 static void stdout_id_ns_descs(void *data, unsigned int nsid)
 {
 	int pos, len = 0;
-	int i;
+	int i, verbose = stdout_print_ops.flags & VERBOSE;
 	__u8 uuid[NVME_UUID_LEN];
 	char uuid_str[NVME_UUID_LEN_STRING];
 	__u8 eui64[8];
@@ -2728,9 +2728,17 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 		if (cur->nidl == 0)
 			break;
 
+		if (verbose) {
+			printf("loc     : %d\n", pos);
+			printf("nidt    : %d\n", (int)cur->nidt);
+			printf("nidl    : %d\n", (int)cur->nidl);
+		}
+
 		switch (cur->nidt) {
 		case NVME_NIDT_EUI64:
 			memcpy(eui64, data + pos + sizeof(*cur), sizeof(eui64));
+			if (verbose)
+				printf("type    : eui64\n");
 			printf("eui64   : ");
 			for (i = 0; i < 8; i++)
 				printf("%02x", eui64[i]);
@@ -2739,6 +2747,8 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
+			if (verbose)
+				printf("type    : nguid\n");
 			printf("nguid   : ");
 			for (i = 0; i < 16; i++)
 				printf("%02x", nguid[i]);
@@ -2748,11 +2758,15 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
 			nvme_uuid_to_string(uuid, uuid_str);
+			if (verbose)
+				printf("type    : uuid\n");
 			printf("uuid    : %s\n", uuid_str);
 			len = sizeof(uuid);
 			break;
 		case NVME_NIDT_CSI:
 			memcpy(&csi, data + pos + sizeof(*cur), 1);
+			if (verbose)
+				printf("type    : csi\n");
 			printf("csi     : %#x\n", csi);
 			len += sizeof(csi);
 			break;
