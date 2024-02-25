@@ -219,10 +219,10 @@ static void stdout_predictable_latency_event_agg_log(
 static void stdout_persistent_event_log_rci(__le32 pel_header_rci)
 {
 	__u32 rci = le32_to_cpu(pel_header_rci);
-	__u32 rsvd19 = (rci & 0xfff80000) >> 19;
-	__u8 rce = (rci & 0x40000) >> 18;
-	__u8 rcpit = (rci & 0x30000) >> 16;
-	__u16 rcpid = rci & 0xffff;
+	__u32 rsvd19 = NVME_PEL_RCI_RSVD(rci);
+	__u8 rce = NVME_PEL_RCI_RCE(rci);
+	__u8 rcpit = NVME_PEL_RCI_RCPIT(rci);
+	__u16 rcpid = NVME_PEL_RCI_RCPID(rci);
 
 	if(rsvd19)
 		printf("  [31:19] : %#x\tReserved\n", rsvd19);
