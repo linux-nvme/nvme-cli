@@ -14,7 +14,8 @@ sources = [
     'nvme/log.c',
     'nvme/tree.c',
     'nvme/util.c',
-    'nvme/base64.c'
+    'nvme/base64.c',
+    'nvme/crc32.c'
 ]
 
 mi_sources = [
