@@ -950,6 +950,21 @@ const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid,
        }
 }
 
+const char *nvme_pel_rci_rcpit_to_string(enum nvme_pel_rci_rcpit rcpit)
+{
+	switch (rcpit) {
+	case NVME_PEL_RCI_RCPIT_NOT_EXIST:
+		return "Does not already exist";
+	case NVME_PEL_RCI_RCPIT_EST_PORT:
+		return "NVM subsystem port";
+	case NVME_PEL_RCI_RCPIT_EST_ME:
+		return "NVMe-MI port";
+	default:
+		break;
+	}
+	return "Reserved";
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);
