@@ -3375,6 +3375,18 @@ enum nvme_pel_rci {
 #define NVME_PEL_RCI_RSVD(rci)	NVME_GET(rci, PEL_RCI_RSVD)
 
 /**
+ * enum nvme_pel_rci_rcpit - Persistent Event Log Reporting Context - Port Identifier Type
+ * @NVME_PEL_RCI_RCPIT_NOT_EXIST:	Does not already exist
+ * @NVME_PEL_RCI_RCPIT_EST_PORT:	Established by an NVM subsystem port
+ * @NVME_PEL_RCI_RCPIT_EST_ME:		Established by a Management Endpoint
+ */
+enum nvme_pel_rci_rcpit {
+	NVME_PEL_RCI_RCPIT_NOT_EXIST	= 0,
+	NVME_PEL_RCI_RCPIT_EST_PORT	= 1,
+	NVME_PEL_RCI_RCPIT_EST_ME	= 2,
+};
+
+/**
  * struct nvme_persistent_event_entry - Persistent Event
  * @etype:	Event Type
  * @etype_rev:	Event Type Revision
