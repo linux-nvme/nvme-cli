@@ -224,14 +224,11 @@ static void stdout_persistent_event_log_rci(__le32 pel_header_rci)
 	__u8 rcpit = NVME_PEL_RCI_RCPIT(rci);
 	__u16 rcpid = NVME_PEL_RCI_RCPID(rci);
 
-	if(rsvd19)
+	if (rsvd19)
 		printf("  [31:19] : %#x\tReserved\n", rsvd19);
-	printf("\tReporting Context Exists (RCE): %s(%u)\n",
-		rce ? "true" : "false", rce);
+	printf("\tReporting Context Exists (RCE): %s(%u)\n", rce ? "true" : "false", rce);
 	printf("\tReporting Context Port Identifier Type (RCPIT): %u(%s)\n", rcpit,
-		(rcpit == 0x00) ? "Does not already exist" :
-		(rcpit == 0x01) ? "NVM subsystem port" :
-		(rcpit == 0x02) ? "NVMe-MI port" : "Reserved");
+	       nvme_pel_rci_rcpit_to_string(rcpit));
 	printf("\tReporting Context Port Identifier (RCPID): %#x\n\n", rcpid);
 }
 
