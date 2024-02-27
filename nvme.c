@@ -8562,10 +8562,9 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert only, do not print the retained key.";
 
-	unsigned char *raw_secret;
-	char encoded_key[128];
+	_cleanup_free_ unsigned char *raw_secret = NULL;
+	_cleanup_free_ char *encoded_key = NULL;
 	int key_len = 32;
-	unsigned long crc = crc32(0L, NULL, 0);
 	int err;
 	long tls_key;
 
@@ -8669,16 +8668,8 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
 		return 0;
 	}
-	crc = crc32(crc, raw_secret, key_len);
-	raw_secret[key_len++] = crc & 0xff;
-	raw_secret[key_len++] = (crc >> 8) & 0xff;
-	raw_secret[key_len++] = (crc >> 16) & 0xff;
-	raw_secret[key_len++] = (crc >> 24) & 0xff;
-
-	memset(encoded_key, 0, sizeof(encoded_key));
-	base64_encode(raw_secret, key_len, encoded_key);
-
-	printf("NVMeTLSkey-1:%02x:%s:\n", cfg.hmac, encoded_key);
+	encoded_key = nvme_export_tls_key(raw_secret, key_len);
+	printf("%s\n", encoded_key);
 	return 0;
 }
 
@@ -8693,11 +8684,9 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
 
-	unsigned char decoded_key[128];
-	unsigned int decoded_len;
-	u_int32_t crc = crc32(0L, NULL, 0);
-	u_int32_t key_crc;
-	int err = 0, hmac;
+	_cleanup_free_ unsigned char *decoded_key = NULL;
+	int decoded_len, err = 0;
+	unsigned int hmac;
 	long tls_key;
 	struct config {
 		char		*keyring;
@@ -8742,26 +8731,10 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		return -EINVAL;
 	}
 
-	if (sscanf(cfg.keydata, "NVMeTLSkey-1:%02x:*s", &hmac) != 1) {
-		nvme_show_error("Invalid key '%s'", cfg.keydata);
-		return -EINVAL;
-	}
-	switch (hmac) {
-	case 1:
-		if (strlen(cfg.keydata) != 65) {
-			nvme_show_error("Invalid key length %zu for SHA(256)", strlen(cfg.keydata));
-			return -EINVAL;
-		}
-		break;
-	case 2:
-		if (strlen(cfg.keydata) != 89) {
-			nvme_show_error("Invalid key length %zu for SHA(384)", strlen(cfg.keydata));
-			return -EINVAL;
-		}
-		break;
-	default:
-		nvme_show_error("Invalid HMAC identifier %d", hmac);
-		return -EINVAL;
+	decoded_key = nvme_import_tls_key(cfg.keydata, &decoded_len, &hmac);
+	if (!decoded_key) {
+		nvme_show_error("Key decoding failed, error %d\n", errno);
+		return -errno;
 	}
 
 	if (cfg.subsysnqn) {
@@ -8776,26 +8749,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		nvme_show_error("Need to specify a subsystem NQN");
 		return -EINVAL;
 	}
-	err = base64_decode(cfg.keydata + 16, strlen(cfg.keydata) - 17, decoded_key);
-	if (err < 0) {
-		nvme_show_error("Base64 decoding failed (%s, error %d)", cfg.keydata + 16, err);
-		return err;
-	}
-	decoded_len = err;
-	decoded_len -= 4;
-	if (decoded_len != 32 && decoded_len != 48) {
-		nvme_show_error("Invalid key length %d", decoded_len);
-		return -EINVAL;
-	}
-	crc = crc32(crc, decoded_key, decoded_len);
-	key_crc = ((u_int32_t)decoded_key[decoded_len]) |
-		((u_int32_t)decoded_key[decoded_len + 1] << 8) |
-		((u_int32_t)decoded_key[decoded_len + 2] << 16) |
-		((u_int32_t)decoded_key[decoded_len + 3] << 24);
-	if (key_crc != crc) {
-		nvme_show_error("CRC mismatch (key %08x, crc %08x)", key_crc, crc);
-		return -EINVAL;
-	}
+
 	if (cfg.insert) {
 		tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
 					cfg.keytype, cfg.hostnqn,
@@ -8807,7 +8761,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		}
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
 	} else {
-		char *tls_id;
+		_cleanup_free_ char *tls_id = NULL;
 
 		tls_id = nvme_generate_tls_key_identity(cfg.hostnqn,
 					cfg.subsysnqn, cfg.identity,
@@ -8818,7 +8772,6 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 			return -errno;
 		}
 		printf("%s\n", tls_id);
-		free(tls_id);
 	}
 	return 0;
 }
