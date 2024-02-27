@@ -290,6 +290,25 @@ int nvme_set_keyring(long keyring_id);
 unsigned char *nvme_read_key(long keyring_id, long key_id, int *len);
 
 /**
+ * nvme_update_key() - Update key raw data
+ * @keyring_id:  Id of the keyring holding %key_id
+ * @key_type:    Type of the key to insert
+ * @identity:    Key identity string
+ * @key_data:    Raw data of the key
+ * @key_len:     Length of @key_data
+ *
+ * Links the keyring specified by @keyring_id into the session
+ * keyring and updates the key reference by @identity with @key_data.
+ * The old key with identity @identity will be revoked to make it
+ * inaccessible.
+ *
+ * Return: Key id of the new key or 0 with errno set otherwise.
+ */
+long nvme_update_key(long keyring_id, const char *key_type,
+		     const char *identity, unsigned char *key_data,
+		     int key_len);
+
+/**
  * nvme_insert_tls_key() - Derive and insert TLS key
  * @keyring:    Keyring to use
  * @key_type:	Type of the resulting key

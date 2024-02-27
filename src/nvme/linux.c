@@ -1225,6 +1225,24 @@ unsigned char *nvme_read_key(long keyring_id, long key_id, int *len)
 	return buffer;
 }
 
+long nvme_update_key(long keyring_id, const char *key_type,
+		     const char *identity, unsigned char *key_data,
+		     int key_len)
+{
+	long key;
+
+	key = keyctl_search(keyring_id, key_type, identity, 0);
+	if (key > 0) {
+		if (keyctl_revoke(key) < 0)
+			return 0;
+	}
+	key = add_key(key_type, identity,
+		      key_data, key_len, keyring_id);
+	if (key < 0)
+		key = 0;
+	return key;
+}
+
 long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 				   const char *hostnqn, const char *subsysnqn,
 				   int version, int hmac,
@@ -1261,16 +1279,8 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 	if (ret != key_len)
 		return 0;
 
-	key = keyctl_search(keyring_id, key_type, identity, 0);
-	if (key > 0) {
-		if (keyctl_update(key, psk, key_len) < 0)
-			key = 0;
-	} else {
-		key = add_key(key_type, identity,
-			      psk, key_len, keyring_id);
-		if (key < 0)
-			key = 0;
-	}
+	key = nvme_update_key(keyring_id, key_type, identity,
+			      psk, key_len);
 	return key;
 }
 
@@ -1311,6 +1321,14 @@ unsigned char *nvme_read_key(long keyring_id, long key_id, int *len)
 {
 	errno = ENOTSUP;
 	return NULL;
+}
+
+long nvme_update_key(long keyring_id, const char *key_type,
+		     const char *identity, unsigned char *key_data,
+		     int key_len)
+{
+	errno = ENOTSUP;
+	return 0;
 }
 
 long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,

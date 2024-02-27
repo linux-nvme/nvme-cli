@@ -5,6 +5,7 @@ LIBNVME_1.9 {
 		nvme_read_key;
 		nvme_submit_passthru;
 		nvme_submit_passthru64;
+		nvme_update_key;
 };
 
 LIBNVME_1_8 {
