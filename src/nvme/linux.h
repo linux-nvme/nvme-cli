@@ -309,6 +309,37 @@ long nvme_update_key(long keyring_id, const char *key_type,
 		     int key_len);
 
 /**
+ * typedef nvme_scan_tls_keys_cb_t - Callback for iterating TLS keys
+ * @keyring:	Keyring which has been iterated
+ * @key:	Key for which the callback has been invoked
+ * @desc:	Description of the key
+ * @desc_len:	Length of @desc
+ * @data:	Pointer for caller data
+ *
+ * Called for each TLS PSK in the keyring.
+ */
+typedef void (*nvme_scan_tls_keys_cb_t)(long keyring, long key,
+					char *desc, int desc_len, void *data);
+
+/**
+ * nvme_scan_tls_keys() - Iterate over TLS keys in a keyring
+ * @keyring:	Keyring holding TLS keys
+ * @cb:		Callback function
+ * @data:	Pointer for data to be passed to @cb
+ *
+ * Iterates @keyring and call @cb for each TLS key. When @keyring is NULL
+ * the default '.nvme' keyring is used.
+ * A TLS key must be of type 'psk' and the description must be of the
+ * form 'NVMe<0|1><R|G>0<1|2> <identity>', otherwise it will be skipped
+ * during iteration.
+ *
+ * Return: Number of keys for which @cb was called, or -1 with errno set
+ * on error.
+ */
+int nvme_scan_tls_keys(const char *keyring, nvme_scan_tls_keys_cb_t cb,
+		       void *data);
+
+/**
  * nvme_insert_tls_key() - Derive and insert TLS key
  * @keyring:    Keyring to use
  * @key_type:	Type of the resulting key

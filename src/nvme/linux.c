@@ -1244,6 +1244,67 @@ long nvme_update_key(long keyring_id, const char *key_type,
 	return key;
 }
 
+struct __scan_keys_data {
+	nvme_scan_tls_keys_cb_t cb;
+	key_serial_t keyring;
+	void *data;
+};
+
+int __scan_keys_cb(key_serial_t parent, key_serial_t key,
+		   char *desc, int desc_len, void *data)
+{
+	struct __scan_keys_data *d = data;
+	int ver, hmac, uid, gid, perm;
+	char type, *ptr;
+
+	if (desc_len < 6)
+		return 0;
+	if (sscanf(desc, "psk;%d;%d;%08x;NVMe%01d%c%02d %*s",
+		   &uid, &gid, &perm, &ver, &type, &hmac) != 6)
+		return 0;
+	/* skip key type */
+	ptr = strchr(desc, ';');
+	if (!ptr)
+		return 0;
+	/* skip key uid */
+	ptr = strchr(ptr + 1, ';');
+	if (!ptr)
+		return 0;
+	/* skip key gid */
+	ptr = strchr(ptr + 1, ';');
+	if (!ptr)
+		return 0;
+	/* skip key permissions */
+	ptr = strchr(ptr + 1, ';');
+	if (!ptr)
+		return 0;
+	/* Only use the key description for the callback */
+	(d->cb)(d->keyring, key, ptr + 1, strlen(ptr) - 1, d->data);
+	return 1;
+}
+
+int nvme_scan_tls_keys(const char *keyring, nvme_scan_tls_keys_cb_t cb,
+		       void *data)
+{
+	struct __scan_keys_data d;
+	key_serial_t keyring_id = nvme_lookup_keyring(keyring);
+	int ret;
+
+	if (!keyring_id) {
+		errno = EINVAL;
+		return -1;
+	}
+	ret = nvme_set_keyring(keyring_id);
+	if (ret < 0)
+		return ret;
+
+	d.keyring = keyring_id;
+	d.cb = cb;
+	d.data = data;
+	ret = recursive_key_scan(keyring_id, __scan_keys_cb, &d);
+	return ret;
+}
+
 long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 				   const char *hostnqn, const char *subsysnqn,
 				   int version, int hmac,
@@ -1339,6 +1400,13 @@ long nvme_update_key(long keyring_id, const char *key_type,
 {
 	errno = ENOTSUP;
 	return 0;
+}
+
+int nvme_scan_tls_keys(const char *keyring, nvme_scan_tls_keys_cb_t cb,
+		       void *data)
+{
+	errno = ENOTSUP;
+	return -1;
 }
 
 long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
