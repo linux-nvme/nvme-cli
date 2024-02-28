@@ -554,7 +554,13 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_BOOL_OPTION(cfg, ctrl_obj, disable_sqflow);
 	JSON_BOOL_OPTION(cfg, ctrl_obj, hdr_digest);
 	JSON_BOOL_OPTION(cfg, ctrl_obj, data_digest);
-	JSON_BOOL_OPTION(cfg, ctrl_obj, tls);
+	if (!strcmp(transport, "tcp")) {
+		JSON_BOOL_OPTION(cfg, ctrl_obj, tls);
+
+		if (cfg->tls_key)
+			json_export_nvme_tls_key(cfg->keyring, cfg->tls_key,
+						 ctrl_obj);
+	}
 	JSON_BOOL_OPTION(cfg, ctrl_obj, concat);
 	if (nvme_ctrl_is_persistent(c))
 		json_object_object_add(ctrl_obj, "persistent",
