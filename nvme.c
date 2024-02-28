@@ -8753,6 +8753,124 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	return 0;
 }
 
+static void __scan_tls_key(long keyring_id, long key_id,
+			   char *desc, int desc_len, void *data)
+{
+	FILE *fd = data;
+	_cleanup_free_ const unsigned char *key_data = NULL;
+	_cleanup_free_ char *encoded_key = NULL;
+	int key_len;
+
+	key_data = nvme_read_key(keyring_id, key_id, &key_len);
+	if (!key_data)
+		return;
+	encoded_key = nvme_export_tls_key(key_data, key_len);
+	if (!encoded_key)
+		return;
+	fprintf(fd, "%s %s\n", desc, encoded_key);
+}
+
+static int tls_key(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Manipulation of TLS keys.\n";
+	const char *keyring = "Keyring for the retained key.";
+	const char *keytype = "Key type of the retained key.";
+	const char *keyfile = "File for list of keys.";
+	const char *import = "Import all keys into the keyring.";
+	const char *export = "Export all keys from the keyring.";
+
+	FILE *fd;
+	int err = 0;
+
+	struct config {
+		char		*keyring;
+		char		*keytype;
+		char		*keyfile;
+		bool		import;
+		bool		export;
+	};
+
+	struct config cfg = {
+		.keyring	= ".nvme",
+		.keytype	= "psk",
+		.keyfile	= NULL,
+		.import		= false,
+		.export		= false,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
+		  OPT_FLAG("import",	'i', &cfg.import,	import),
+		  OPT_FLAG("export",	'e', &cfg.export,	export));
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (cfg.keyfile) {
+		fd = fopen(cfg.keyfile, "r");
+		if (!fd) {
+			nvme_show_error("Cannot open keyfile %s, error %d\n",
+					cfg.keyfile, errno);
+			return -errno;
+		}
+	} else
+		fd = stdin;
+
+	if (cfg.export && cfg.import) {
+		nvme_show_error("Cannot specify both --import and --export");
+		err = -EINVAL;
+	} else if (cfg.export) {
+		nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
+	} else if (cfg.import) {
+		long keyring_id;
+		char tls_str[512];
+		char *tls_key;
+		unsigned char *psk;
+		unsigned int hmac;
+		int linenum = -1, key_len;
+
+		keyring_id = nvme_lookup_keyring(cfg.keyring);
+		if (!keyring_id) {
+			nvme_show_error("Invalid keyring '%s'", cfg.keyring);
+			err = -ENOKEY;
+			goto out;
+		}
+
+		while (fgets(tls_str, 512, fd)) {
+			linenum++;
+			tls_key = strrchr(tls_str, ' ');
+			if (!tls_key) {
+				nvme_show_error("Parse error in line %d",
+						linenum);
+				continue;
+			}
+			*tls_key = '\0';
+			tls_key++;
+			psk = nvme_import_tls_key(tls_key, &key_len, &hmac);
+			if (!psk) {
+				nvme_show_error("Failed to import key in line %d",
+						linenum);
+				continue;
+			}
+			nvme_update_key(keyring_id, "psk", tls_str,
+					psk, key_len);
+			free(psk);
+		}
+	} else {
+		nvme_show_error("Must specify either --import or --export");
+		err = -EINVAL;
+	}
+
+out:
+	if (cfg.keyfile)
+		fclose(fd);
+
+	return err;
+}
+
 static int show_topology_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Show the topology\n";
