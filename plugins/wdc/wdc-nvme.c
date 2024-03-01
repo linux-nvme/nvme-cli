@@ -1921,6 +1921,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				WDC_DRIVE_CAP_INFO |
 				WDC_DRIVE_CAP_CLOUD_SSD_VERSION |
 				WDC_DRIVE_CAP_LOG_PAGE_DIR |
+				WDC_DRIVE_CAP_DRIVE_STATUS |
 				WDC_DRIVE_CAP_SET_LATENCY_MONITOR);
 			break;
 
@@ -2450,23 +2451,32 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 			uuid_index = index + 1;
 	}
 
-	if (!uuid_index && needs_c2_log_page_check(device_id)) {
-		/* In certain devices that don't support UUID lists, there are multiple
-		 * definitions of the C2 logpage. In those cases, the code
-		 * needs to try two UUID indexes and use an identification algorithm
-		 * to determine which is returning the correct log page data.
-		 */
-		uuid_ix = 1;
-	}
-
-	found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
-
-	if (!found) {
-		/* not found with uuid = 1 try with uuid = 0 */
-		uuid_ix = 0;
-		fprintf(stderr, "Not found, requesting log page with uuid_index %d\n", uuid_index);
+	if (uuid_present) {
+		/* use the uuid index found above */
+		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
+	} else if (device_id == WDC_NVME_ZN350_DEV_ID || device_id == WDC_NVME_ZN350_DEV_ID_1) {
+		uuid_index = 0;
+		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
+	} else {
+		if (!uuid_index && needs_c2_log_page_check(device_id)) {
+			/* In certain devices that don't support UUID lists, there are multiple
+			 * definitions of the C2 logpage. In those cases, the code
+			 * needs to try two UUID indexes and use an identification algorithm
+			 * to determine which is returning the correct log page data.
+			 */
+			uuid_ix = 1;
+		}
 
 		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
+
+		if (!found) {
+			/* not found with uuid = 1 try with uuid = 0 */
+			uuid_ix = 0;
+			fprintf(stderr, "Not found, requesting log page with uuid_index %d\n",
+					uuid_index);
+
+			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
+		}
 	}
 
 	return found;
