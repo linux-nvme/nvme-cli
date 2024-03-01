@@ -192,5 +192,5 @@ bool wdc_CheckUuidListSupport(struct nvme_dev *dev, struct nvme_id_uuid_list *uu
 
 bool wdc_UuidEqual(struct nvme_id_uuid_list_entry *entry1, struct nvme_id_uuid_list_entry *entry2)
 {
-	return !memcmp(entry1, entry2, NVME_UUID_LEN);
+	return !memcmp(entry1->uuid, entry2->uuid, NVME_UUID_LEN);
 }
