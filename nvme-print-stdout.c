@@ -1223,6 +1223,11 @@ static void stdout_registers_csts(__u32 csts)
 
 }
 
+static void stdout_registers_nssd(__u32 nssd)
+{
+	printf("\tNVM Subsystem Shutdown Control (NSSC): %#x\n\n", nssd);
+}
+
 static void stdout_registers_crto(__u32 crto)
 {
 	printf("\tCRIMT                               : %d secs\n", NVME_CRTO_CRIMT(crto) / 2);
@@ -1620,6 +1625,10 @@ static void stdout_single_property(int offset, uint64_t value64)
 	case NVME_REG_NSSR:
 		printf("nssr : %x\n", value32);
 		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", value32);
+		break;
+	case NVME_REG_NSSD:
+		printf("nssd : %x\n", value32);
+		stdout_registers_nssd(value32);
 		break;
 	case NVME_REG_CRTO:
 		printf("crto : %x\n", value32);
