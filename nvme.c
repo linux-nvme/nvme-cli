@@ -5377,7 +5377,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 {
 	const char *desc = "Reads and shows the defined NVMe controller property\n"
 		"for NVMe over Fabric. Property offset must be one of:\n"
-		"CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20";
+		"CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20, NSSD=0x64, CRTO=0x68";
 	const char *offset = "offset of the requested property";
 	const char *human_readable = "show property in readable format";
 

@@ -1011,6 +1011,11 @@ static void json_registers_nssr(__u32 nssr, struct json_object *r)
 	obj_add_uint(r, "NVM Subsystem Reset Control (NSSRC)", nssr);
 }
 
+static void json_registers_nssd(__u32 nssd, struct json_object *r)
+{
+	obj_add_uint_nx(r, "NVM Subsystem Shutdown Control (NSSC)", nssd);
+}
+
 static void json_registers_crto(__u32 crto, struct json_object *r)
 {
 	obj_add_uint_x(r, "crto", crto);
@@ -1247,6 +1252,9 @@ static void json_single_property_human(int offset, uint64_t value64, struct json
 		break;
 	case NVME_REG_NSSR:
 		json_registers_nssr(value32, r);
+		break;
+	case NVME_REG_NSSD:
+		json_registers_nssd(value32, r);
 		break;
 	case NVME_REG_CRTO:
 		json_registers_crto(value32, r);
@@ -2476,6 +2484,16 @@ static void json_ctrl_registers_nssr(void *bar, struct json_object *r)
 		obj_add_int(r, "nssr", nssr);
 }
 
+static void json_ctrl_registers_nssd(void *bar, struct json_object *r)
+{
+	uint32_t nssd = mmio_read32(bar + NVME_REG_NSSD);
+
+	if (human())
+		json_registers_nssd(nssd, obj_create_array_obj(r, "nssd"));
+	else
+		obj_add_int(r, "nssd", nssd);
+}
+
 static void json_ctrl_registers_crto(void *bar, struct json_object *r)
 {
 	uint32_t crto = mmio_read32(bar + NVME_REG_CRTO);
@@ -2667,6 +2685,7 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_ctrl_registers_cc(bar, r);
 	json_ctrl_registers_csts(bar, r);
 	json_ctrl_registers_nssr(bar, r);
+	json_ctrl_registers_nssd(bar, r);
 	json_ctrl_registers_crto(bar, r);
 	json_ctrl_registers_aqa(bar, r);
 	json_ctrl_registers_asq(bar, r);
