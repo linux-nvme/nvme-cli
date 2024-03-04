@@ -250,11 +250,11 @@ static void stdout_persistent_event_entry_ehai(__u8 ehai)
 
 static void stdout_add_bitmap(int i, __u8 seb)
 {
-	for (int bit = 0; bit < 8; bit++) {
-		if (nvme_pel_event_to_string(bit + i * 8)) {
+	for (int bit = 0; bit < CHAR_BIT; bit++) {
+		if (nvme_pel_event_to_string(bit + i * CHAR_BIT)) {
 			if ((seb >> bit) & 0x1)
 				printf("	Support %s\n",
-				       nvme_pel_event_to_string(bit + i * 8));
+				       nvme_pel_event_to_string(bit + i * CHAR_BIT));
 		}
 	}
 }
