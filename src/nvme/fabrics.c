@@ -1297,6 +1297,8 @@ static int uuid_from_dmi_entries(char *system_uuid)
 			continue;
 		len = read(f, buf, 512);
 		close(f);
+		if (len <= 0)
+			continue;
 
 		if (!is_dmi_uuid_valid(buf, len))
 			continue;
