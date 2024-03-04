@@ -66,7 +66,7 @@ static void ocp_fw_activation_history_normal(const struct fw_activation_history 
 		printf("      %-22s%d\n", "activation count:",
 		       le16_to_cpu(entry->activation_count));
 		printf("      %-22s%"PRIu64"\n", "timestamp:",
-		       le64_to_cpu(entry->timestamp));
+				(0x0000FFFFFFFFFFFF & le64_to_cpu(entry->timestamp)));
 		printf("      %-22s%"PRIu64"\n", "power cycle count:",
 		       le64_to_cpu(entry->power_cycle_count));
 		printf("      %-22s%.*s\n", "previous firmware:", (int)sizeof(entry->previous_fw),
@@ -106,7 +106,7 @@ static void ocp_fw_activation_history_json(const struct fw_activation_history *f
 		json_object_add_value_uint(entry_obj, "activation count",
 					   le16_to_cpu(entry->activation_count));
 		json_object_add_value_uint64(entry_obj, "timestamp",
-					     le64_to_cpu(entry->timestamp));
+				(0x0000FFFFFFFFFFFF & le64_to_cpu(entry->timestamp)));
 		json_object_add_value_uint(entry_obj, "power cycle count",
 					   le64_to_cpu(entry->power_cycle_count));
 
