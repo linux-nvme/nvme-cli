@@ -27,6 +27,7 @@
 #endif
 
 static nvme_root_t root;
+static bool nvme_debug;
 
 void __attribute__((format(printf, 4, 5)))
 __nvme_msg(nvme_root_t r, int lvl,
@@ -102,4 +103,14 @@ void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp)
 void nvme_set_root(nvme_root_t r)
 {
 	root = r;
+}
+
+void nvme_set_debug(bool debug)
+{
+	nvme_debug = debug;
+}
+
+bool nvme_get_debug(void)
+{
+	return nvme_debug;
 }

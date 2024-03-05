@@ -24,8 +24,7 @@
 
 #include "ioctl.h"
 #include "util.h"
-
-static bool nvme_debug;
+#include "log.h"
 
 static int nvme_verify_chr(int fd)
 {
@@ -114,16 +113,6 @@ static void nvme_show_command(struct nvme_passthru_cmd *cmd, int err, struct tim
 	printf("err          : %d\n", err);
 	printf("latency      : %lu us\n",
 	       (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec));
-}
-
-void nvme_set_debug(bool debug)
-{
-	nvme_debug = debug;
-}
-
-bool nvme_get_debug(void)
-{
-	return nvme_debug;
 }
 
 static int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,

@@ -48,4 +48,17 @@ void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp);
  */
 void nvme_set_root(nvme_root_t r);
 
+/**
+ * nvme_set_debug - Set NVMe command debugging output
+ * @debug:	true to enable or false to disable
+ */
+void nvme_set_debug(bool debug);
+
+/**
+ * nvme_get_debug - Get NVMe command debugging output
+ *
+ * Return: false if disabled or true if enabled.
+ */
+bool nvme_get_debug(void);
+
 #endif /* _LOG_H */
