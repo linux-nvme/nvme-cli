@@ -38,10 +38,11 @@
 #include <sys/types.h>
 #include <linux/types.h>
 
+#include <libnvme.h>
+
 #include "common.h"
 #include "nvme.h"
 #include "nbft.h"
-#include "libnvme.h"
 #include "nvme-print.h"
 #include "fabrics.h"
 
