@@ -45,6 +45,7 @@
 #include "nbft.h"
 #include "nvme-print.h"
 #include "fabrics.h"
+#include "util/logging.h"
 
 #define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
 #define PATH_NVMF_CONFIG	SYSCONFDIR "/nvme/config.json"
