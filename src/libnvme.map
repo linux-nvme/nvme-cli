@@ -1,4 +1,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
+LIBNVME_1.9 {
+	global:
+		nvme_submit_passthru;
+		nvme_submit_passthru64;
+};
+
 LIBNVME_1_8 {
 	global:
 		nvme_uuid_find;

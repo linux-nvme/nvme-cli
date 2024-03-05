@@ -335,4 +335,39 @@ char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
 				     int version, int hmac,
 				     unsigned char *configured_key, int key_len);
 
+/**
+ * nvme_submit_passthru - Low level ioctl wrapper for passthru commands
+ * @fd:		File descriptor of the nvme device
+ * @ioctl_cmd:	IOCTL command id
+ * @cmd:	Passhtru command
+ * @result:	Optional field to return the result
+ *
+ * This is a low level library function which should not be used directly. It is
+ * exposed as weak symbol so that the user application is able to provide their own
+ * implementation of this function with additional debugging or logging code.
+ *
+ * Return: The value from the ioctl system call (see ioctl documentation)
+ */
+__attribute__((weak))
+int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
+			 struct nvme_passthru_cmd *cmd, __u32 *result);
+
+/**
+ * nvme_submit_passthru64 - Low level ioctl wrapper for passthru commands
+ * @fd:		File descriptor of the nvme device
+ * @ioctl_cmd:	IOCTL command id
+ * @cmd:	Passhtru command
+ * @result:	Optional field to return the result
+ *
+ * This is a low level library function which should not be used directly. It is
+ * exposed as weak symbol so that the user application is able to provide their own
+ * implementation of this function with additional debugging or logging code.
+ *
+ * Return: The value from the ioctl system call (see ioctl documentation)
+ */
+__attribute__((weak))
+int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
+			   struct nvme_passthru_cmd64 *cmd,
+			   __u64 *result);
+
 #endif /* _LIBNVME_LINUX_H */
