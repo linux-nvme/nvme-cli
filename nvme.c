@@ -110,7 +110,7 @@ struct passthru_config {
 
 #define NVME_ARGS(n, ...)                                                         \
 	struct argconfig_commandline_options n[] = {                              \
-		OPT_FLAG("verbose",      'v', NULL,               verbose),       \
+		OPT_INCR("verbose",      'v', &verbose_level,     verbose),       \
 		OPT_FMT("output-format", 'o', &output_format_val, output_format), \
 		##__VA_ARGS__,                                                    \
 		OPT_END()                                                         \
@@ -188,6 +188,7 @@ static const char dash[51] = {[0 ... 49] = '=', '\0'};
 static const char space[51] = {[0 ... 49] = ' ', '\0'};
 
 static char *output_format_val = "normal";
+int verbose_level;
 
 static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
 
@@ -3223,7 +3224,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
-	log_level = map_log_level(!!(flags & VERBOSE), false);
+	log_level = map_log_level(verbose_level, false);
 
 	r = nvme_create_root(stderr, log_level);
 	if (!r) {
@@ -3282,7 +3283,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
-	log_level = map_log_level(!!(flags & VERBOSE), false);
+	log_level = map_log_level(verbose_level, false);
 
 	r = nvme_create_root(stderr, log_level);
 	if (!r) {
@@ -8865,7 +8866,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		return -EINVAL;
 	}
 
-	log_level = map_log_level(!!(flags & VERBOSE), false);
+	log_level = map_log_level(verbose_level, false);
 
 	r = nvme_create_root(stderr, log_level);
 	if (!r) {
