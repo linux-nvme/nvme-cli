@@ -5,6 +5,8 @@
 
 #include <stdbool.h>
 
+extern int log_level;
+
 int map_log_level(int verbose, bool quiet);
 
 #endif // DEBUG_H_

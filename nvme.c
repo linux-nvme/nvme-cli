@@ -3223,7 +3223,9 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
-	r = nvme_create_root(stderr, map_log_level(!!(flags & VERBOSE), false));
+	log_level = map_log_level(!!(flags & VERBOSE), false);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		if (devname)
 			nvme_show_error("Failed to scan nvme subsystem for %s", devname);
@@ -3280,7 +3282,9 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (argconfig_parse_seen(opts, "verbose"))
 		flags |= VERBOSE;
 
-	r = nvme_create_root(stderr, map_log_level(!!(flags & VERBOSE), false));
+	log_level = map_log_level(!!(flags & VERBOSE), false);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		nvme_show_error("Failed to create topology root: %s", nvme_strerror(errno));
 		return -errno;
@@ -5272,7 +5276,7 @@ static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev)
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		if (map_log_level(0, false) >= LOG_DEBUG)
+		if (log_level >= LOG_DEBUG)
 			nvme_show_error("%s did not find a pci resource, open failed %s",
 					dev->name, strerror(errno));
 		return NULL;
@@ -5280,7 +5284,7 @@ static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev)
 
 	membase = mmap(NULL, getpagesize(), PROT_READ, MAP_SHARED, fd, 0);
 	if (membase == MAP_FAILED) {
-		if (map_log_level(0, false) >= LOG_DEBUG) {
+		if (log_level >= LOG_DEBUG) {
 			fprintf(stderr, "%s failed to map. ", dev->name);
 			fprintf(stderr, "Did your kernel enable CONFIG_IO_STRICT_DEVMEM?\n");
 		}
@@ -8861,7 +8865,9 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		return -EINVAL;
 	}
 
-	r = nvme_create_root(stderr, map_log_level(!!(flags & VERBOSE), false));
+	log_level = map_log_level(!!(flags & VERBOSE), false);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		nvme_show_error("Failed to create topology root: %s", nvme_strerror(errno));
 		return -errno;
