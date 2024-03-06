@@ -90,53 +90,14 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 	return err;
 }
 
-static void nvme_show_command(struct nvme_passthru_cmd *cmd, int err, struct timeval start,
-			      struct timeval end)
-{
-	printf("opcode       : %02x\n", cmd->opcode);
-	printf("flags        : %02x\n", cmd->flags);
-	printf("rsvd1        : %04x\n", cmd->rsvd1);
-	printf("nsid         : %08x\n", cmd->nsid);
-	printf("cdw2         : %08x\n", cmd->cdw2);
-	printf("cdw3         : %08x\n", cmd->cdw3);
-	printf("data_len     : %08x\n", cmd->data_len);
-	printf("metadata_len : %08x\n", cmd->metadata_len);
-	printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)cmd->addr);
-	printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)cmd->metadata);
-	printf("cdw10        : %08x\n", cmd->cdw10);
-	printf("cdw11        : %08x\n", cmd->cdw11);
-	printf("cdw12        : %08x\n", cmd->cdw12);
-	printf("cdw13        : %08x\n", cmd->cdw13);
-	printf("cdw14        : %08x\n", cmd->cdw14);
-	printf("cdw15        : %08x\n", cmd->cdw15);
-	printf("timeout_ms   : %08x\n", cmd->timeout_ms);
-	printf("result       : %08x\n", cmd->result);
-	printf("err          : %d\n", err);
-	printf("latency      : %lu us\n",
-	       (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec));
-}
-
 __attribute__((weak))
 int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 			 struct nvme_passthru_cmd *cmd, __u32 *result)
 {
-	struct timeval start;
-	struct timeval end;
-	int err;
-
-	if (nvme_get_debug())
-		gettimeofday(&start, NULL);
-
-	err = ioctl(fd, ioctl_cmd, cmd);
-
-	if (nvme_get_debug()) {
-		gettimeofday(&end, NULL);
-		nvme_show_command(cmd, err, start, end);
-	}
+	int err = ioctl(fd, ioctl_cmd, cmd);
 
 	if (err >= 0 && result)
 		*result = cmd->result;
-
 	return err;
 }
 

@@ -51,11 +51,15 @@ void nvme_set_root(nvme_root_t r);
 /**
  * nvme_set_debug - Set NVMe command debugging output
  * @debug:	true to enable or false to disable
+ *
+ * Don't use it, it's debricated.
  */
 void nvme_set_debug(bool debug);
 
 /**
  * nvme_get_debug - Get NVMe command debugging output
+ *
+ * Don't use it, it's debricated.
  *
  * Return: false if disabled or true if enabled.
  */
