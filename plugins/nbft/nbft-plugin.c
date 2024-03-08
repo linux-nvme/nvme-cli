@@ -4,11 +4,12 @@
 #include <stdio.h>
 #include <fnmatch.h>
 
+#include <libnvme.h>
 #include "nvme-print.h"
 #include "nvme.h"
 #include "nbft.h"
-#include "libnvme.h"
 #include "fabrics.h"
+#include "util/logging.h"
 
 #define CREATE_CMD
 #include "nbft-plugin.h"
@@ -533,6 +534,8 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 	enum nvme_print_flags flags;
 	int ret;
 	bool show_subsys = false, show_hfi = false, show_discovery = false;
+	unsigned int verbose = 0;
+	nvme_root_t r;
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("output-format", 'o', &format, "Output format: normal|json"),
@@ -540,6 +543,7 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 		OPT_FLAG("hfi", 'H', &show_hfi, "show NBFT HFIs"),
 		OPT_FLAG("discovery", 'd', &show_discovery, "show NBFT discovery controllers"),
 		OPT_STRING("nbft-path", 0, "STR", &nbft_path, "user-defined path for NBFT tables"),
+		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
 		OPT_END()
 	};
 
@@ -547,9 +551,14 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 	if (ret)
 		return ret;
 
+	log_level = map_log_level(verbose, false /* quiet */);
+
 	ret = validate_output_format(format, &flags);
 	if (ret < 0)
 		return ret;
+
+	/* initialize libnvme logging */
+	r = nvme_create_root(stderr, log_level);
 
 	if (!(show_subsys || show_hfi || show_discovery))
 		show_subsys = show_hfi = show_discovery = true;
@@ -563,5 +572,6 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 			ret = json_show_nbfts(&nbft_list, show_subsys, show_hfi, show_discovery);
 		free_nbfts(&nbft_list);
 	}
+	nvme_free_tree(r);
 	return ret;
 }
