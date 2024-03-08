@@ -16,7 +16,7 @@ SYNOPSIS
 			[--host-iface=<iface> | -f <iface>]
 			[--hostnqn=<hostnqn> | -q <hostnqn>]
 			[--hostid=<hostid> | -I <hostid>]
-			[--config-file=<cfg> | -J <cfg>]
+			[--config=<filename> | -J <filename>]
 			[--dhchap-secret=<secret> | -S <secret>]
 			[--dhchap-ctrl-secret=<secret> | -C <secret>]
 			[--nr-io-queues=<#> | -i <#>]
@@ -29,7 +29,7 @@ SYNOPSIS
 			[--keyring=<#>] [--tls_key=<#>]
 			[--duplicate-connect | -D] [--disable-sqflow | -d]
 			[--hdr-digest | -g] [--data-digest | -G] [--tls]
-			[--dump-config | -O] [--application=<id>]
+			[--concat] [--dump-config | -O] [--application=<id>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
@@ -95,13 +95,13 @@ OPTIONS
 	UUID(Universally Unique Identifier) to be discovered which should be
 	formatted.
 
--J <cfg>::
---config-file=<cfg>::
+-J <filename>::
+--config=<filename>::
 	Use the specified JSON configuration file instead of the
 	default @SYSCONFDIR@/nvme/config.json file or 'none' to not read in
 	an existing configuration file. The JSON configuration file
 	format is documented in
-	https://github.com/linux-nvme/libnvme/doc/config-schema.json
+	https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json
 
 -S <secret>::
 --dhchap-secret=<secret>::
@@ -175,6 +175,9 @@ OPTIONS
 
 --tls::
 	Enable TLS encryption (TCP).
+
+--concat::
+	Enable secure concatenation (TCP).
 
 -O::
 --dump-config::

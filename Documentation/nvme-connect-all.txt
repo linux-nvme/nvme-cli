@@ -18,7 +18,7 @@ SYNOPSIS
 			[--hostid=<hostid> | -I <hostid>]
 			[--raw=<filename> | -r <filename>]
 			[--device=<device> | -d <device>]
-			[--cfg-file=<cfg> | -C <cfg>]
+			[--config=<filename> | -J <cfg>]
 			[--keep-alive-tmo=<sec> | -k <sec>]
 			[--reconnect-delay=<#> | -c <#>]
 			[--ctrl-loss-tmo=<#>	 | -l <#>]
@@ -27,7 +27,7 @@ SYNOPSIS
 			[--nr-poll-queues=<#> | -P <#>]
 			[--queue-size=<#> | -Q <#>] [--keyring=<#>]
 			[--tls_key=<#>] [--hdr-digest | -g] [--data-digest | -G]
-			[--persistent | -p] [--tls] [--quiet | -S]
+			[--persistent | -p] [--tls] [--concat] [--quiet | -S]
 			[--dump-config | -O] [--nbft] [--no-nbft]
 			[--nbft-path=<STR>] [--context=<STR>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
@@ -121,13 +121,13 @@ OPTIONS
 	command "connect-all" or "discover". <device> follows the format
 	nvme*, eg. nvme0, nvme1.
 
--C <cfg>::
---config-file=<cfg>::
+-J <filename>::
+--config=<filename>::
 	Use the specified JSON configuration file instead of the
 	default @SYSCONFDIR@/nvme/config.json file or 'none' to not read in
 	an existing configuration file. The JSON configuration file
 	format is documented in
-	https://github.com/linux-nvme/libnvme/doc/config-schema.json
+	https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json
 
 -k <#>::
 --keep-alive-tmo=<#>::
@@ -185,6 +185,9 @@ OPTIONS
 
 --tls::
 	Enable TLS encryption (TCP).
+
+--concat::
+	Enable secure concatenation (TCP).
 
 -S::
 --quiet::

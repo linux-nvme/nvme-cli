@@ -1087,6 +1087,89 @@ plugin_sfx_opts () {
 	return 0
 }
 
+plugin_solidigm_opts () {
+    local opts=""
+	local compargs=""
+
+	local nonopt_args=0
+	for (( i=0; i < ${#words[@]}-1; i++ )); do
+		if [[ ${words[i]} != -* ]]; then
+			let nonopt_args+=1
+		fi
+	done
+
+	if [ $nonopt_args -eq 3 ]; then
+		opts="/dev/nvme* "
+	fi
+
+	opts+=" "
+
+	case "$1" in
+		"id-ctrl")
+		opts+=" --raw-binary -b --human-readable -H \
+			--vendor-specific -v --output-format= -o \
+			--verbose -v "
+			;;
+		"vs-smart-add-log")
+		opts+="--output-format= -o"
+			;;
+		"garbage-collect-log")
+		opts+="--output-format= -o"
+			;;
+		"vs-internal-log")
+		opts+=" --type= -t --namespace-id= -n \
+		--file-prefix= -p --verbose -v"
+			;;
+		"latency-tracking-log")
+		opts+=" --enable -e --disable -d \
+		--read -r --write -w \
+		--type -t --output-format -o"
+			;;
+		"clear-pcie-correctable-errors")
+		opts+=" --no-uuid -n"
+			;;
+		"parse-telemetry-log")
+		opts+=" --host-generate -g --controller-init -c \
+		--data-area -d --config-file -j \
+		--source-file -s"
+			;;
+		"clear-fw-activate-history")
+		opts+=" --no-uuid -n"
+			;;
+		"vs-fw-activate-history")
+		opts+=" --output-format -o"
+			;;
+		"log-page-directory")
+		opts+=" --output-format -o"
+			;;
+		"vs-drive-info")
+		opts+=" "
+			;;
+		"cloud-SSDplugin-version")
+		opts+=$NO_OPTS
+			;;
+		"market-log")
+		opts+=" --raw-binary -b"
+			;;
+		"smart-log-add")
+		opts+=" --namespace-id= -n --output-format -o"
+			;;
+		"temp-stats")
+		opts+=" --raw-binary -b"
+			;;
+		"version")
+		opts+=$NO_OPTS
+			;;
+		"help")
+		opts+=$NO_OPTS
+			;;
+	esac
+
+	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+
+	return 0
+}
+
 plugin_transcend_opts () {
     local opts=""
 	local compargs=""
@@ -1417,6 +1500,12 @@ _nvme_subcmds () {
 		[dera]="smart-log-add"
 		[sfx]="smart-log-add lat-stats get-bad-block query-cap \
 			change-cap set-feature get-feature"
+    		[solidigm]="id-ctrl vs-smart-add-log garbage-collect-log \
+			vs-internal-log latency-tracking-log \
+			clear-pcie-correctable-errors parse-telemetry-log \
+			clear-fw-activate-history vs-fw-activate-history log-page-directory \
+			vs-drive-info cloud-SSDplugin-version market-log \
+			smart-log-add temp-stats version help"
 		[transcend]="healthvalue badblock"
 		[zns]="id-ctrl id-ns zone-mgmt-recv \
 			zone-mgmt-send report-zones close-zone \
@@ -1447,6 +1536,7 @@ _nvme_subcmds () {
 		[shannon]="plugin_shannon_opts"
 		[dera]="plugin_dera_opts"
 		[sfx]="plugin_sfx_opts"
+    		[solidigm]="plugin_solidigm_opts"
 		[transcend]="plugin_transcend_opts"
 		[zns]="plugin_zns_opts"
 		[nvidia]="plugin_nvidia_opts"

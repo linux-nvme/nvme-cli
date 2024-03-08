@@ -38,12 +38,14 @@
 #include <sys/types.h>
 #include <linux/types.h>
 
+#include <libnvme.h>
+
 #include "common.h"
 #include "nvme.h"
 #include "nbft.h"
-#include "libnvme.h"
 #include "nvme-print.h"
 #include "fabrics.h"
+#include "util/logging.h"
 
 #define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
 #define PATH_NVMF_CONFIG	SYSCONFDIR "/nvme/config.json"
@@ -84,6 +86,7 @@ static const char *nvmf_disable_sqflow	= "disable controller sq flow control (de
 static const char *nvmf_hdr_digest	= "enable transport protocol header digest (TCP transport)";
 static const char *nvmf_data_digest	= "enable transport protocol data digest (TCP transport)";
 static const char *nvmf_tls		= "enable TLS";
+static const char *nvmf_concat		= "enable secure concatenation";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
 static const char *nvmf_context		= "execution context identification string";
 
@@ -113,6 +116,7 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),      \
 		OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest),     \
 		OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls),             \
+		OPT_FLAG("concat",              0, &c.concat,             nvmf_concat),          \
 		__VA_ARGS__,                                                                     \
 		OPT_END()                                                                        \
 	}
@@ -632,7 +636,7 @@ char *nvmf_hostid_from_hostnqn(const char *hostnqn)
 	return strdup(uuid + strlen("uuid:"));
 }
 
-void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn)
+void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn, unsigned int verbose)
 {
 	char *hostid_from_file, *hostid_from_hostnqn;
 
@@ -641,7 +645,9 @@ void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn)
 
 	hostid_from_file = nvmf_hostid_from_file();
 	if (hostid_from_file && strcmp(hostid_from_file, hostid)) {
-		fprintf(stderr, "warning: use generated hostid instead of hostid file\n");
+		if (verbose)
+			fprintf(stderr,
+				"warning: use generated hostid instead of hostid file\n");
 		free(hostid_from_file);
 	}
 
@@ -650,7 +656,9 @@ void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn)
 
 	hostid_from_hostnqn = nvmf_hostid_from_hostnqn(hostnqn);
 	if (hostid_from_hostnqn && strcmp(hostid_from_hostnqn, hostid)) {
-		fprintf(stderr, "warning: use hostid which does not match uuid in hostnqn\n");
+		if (verbose)
+			fprintf(stderr,
+				"warning: use hostid which does not match uuid in hostnqn\n");
 		free(hostid_from_hostnqn);
 	}
 }
@@ -708,7 +716,9 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
-	r = nvme_create_root(stderr, map_log_level(verbose, quiet));
+	log_level = map_log_level(verbose, quiet);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			nvme_strerror(errno));
@@ -741,7 +751,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		hostid = hid = nvmf_hostid_from_file();
 	if (!hostid && hostnqn)
 		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
-	nvmf_check_hostid_and_hostnqn(hostid, hostnqn);
+	nvmf_check_hostid_and_hostnqn(hostid, hostnqn, verbose);
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		ret = ENOMEM;
@@ -936,7 +946,9 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
-	r = nvme_create_root(stderr, map_log_level(verbose, quiet));
+	log_level = map_log_level(verbose, quiet);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			nvme_strerror(errno));
@@ -964,7 +976,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		hostid = hid = nvmf_hostid_from_file();
 	if (!hostid && hostnqn)
 		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
-	nvmf_check_hostid_and_hostnqn(hostid, hostnqn);
+	nvmf_check_hostid_and_hostnqn(hostid, hostnqn, verbose);
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		errno = ENOMEM;
@@ -1096,7 +1108,9 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 		return -EINVAL;
 	}
 
-	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	log_level = map_log_level(cfg.verbose, false);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			nvme_strerror(errno));
@@ -1164,7 +1178,9 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	log_level = map_log_level(cfg.verbose, false);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			nvme_strerror(errno));
@@ -1232,7 +1248,9 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
-	r = nvme_create_root(stderr, map_log_level(verbose, quiet));
+	log_level = map_log_level(verbose, quiet);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			nvme_strerror(errno));
@@ -1384,7 +1402,9 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 		return -EINVAL;
 	}
 
-	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	log_level = map_log_level(cfg.verbose, false);
+
+	r = nvme_create_root(stderr, log_level);
 	if (!r) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			nvme_strerror(errno));

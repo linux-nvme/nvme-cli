@@ -4,7 +4,7 @@ project(
     'nvme-cli', ['c'],
     meson_version: '>= 0.50.0',
     license: 'GPL-2.0-only',
-    version: '2.7.1',
+    version: '2.8',
     default_options: [
       'c_std=gnu99',
       'buildtype=debug',
@@ -48,7 +48,7 @@ conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 conf.set('RUNDIR', '"@0@"'.format(rundir))
 
 # Check for libnvme availability
-libnvme_dep = dependency('libnvme', version: '>=1.7', required: true,
+libnvme_dep = dependency('libnvme', version: '>=1.8', required: true,
                          fallback : ['libnvme', 'libnvme_dep'])
 libnvme_mi_dep = dependency('libnvme-mi', required: true,
                          fallback : ['libnvme', 'libnvme_mi_dep'])
@@ -152,6 +152,29 @@ conf.set10(
     'HAVE_ATTRIBUTE_UNUSED',
     cc.get_id() == 'clang',
     description: 'Is compiler warning about unused static line function?'
+)
+conf.set10(
+    'HAVE_SED_OPAL',
+    cc.compiles(
+        '''#include <linux/sed-opal.h>''',
+        name: 'linux/sed-opal.h'
+
+    ),
+    description: 'Is linux/sed-opa.h include-able?'
+)
+conf.set10(
+    'HAVE_KEY_TYPE',
+    cc.compiles(
+        '''
+	   #include <linux/sed-opal.h>
+	   int main(void) {
+                struct opal_key key;
+                key.key_type = OPAL_INCLUDED;
+           }
+        ''',
+        name: 'key_type'
+    ),
+    description: 'Does struct opal_key have a key_type field?'
 )
 
 if cc.has_function_attribute('fallthrough')

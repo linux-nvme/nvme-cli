@@ -935,7 +935,8 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </dt>
 <dd>
 <p>
-        The namespace size (NSZE) in standard SI units.
+        The namespace size (NSZE) in standard SI units (aligned on 1Mib boundaries,
+        unless the controller recommends a smaller value).
         The value SI suffixed is divided by the namespace LBA size to set as NSZE.
         If the value not suffixed it is set as same with the nsze option.
 </p>
@@ -948,7 +949,8 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </dt>
 <dd>
 <p>
-        The namespace capacity (NCAP) in standard SI units.
+        The namespace capacity (NCAP) in standard SI units (aligned on 1Mib boundaries,
+        unless the controller recommends a smaller value).
         The value SI suffixed is divided by the namespace LBA size to set as NCAP.
         If the value not suffixed it is set as same with the ncap option.
 </p>
@@ -1069,7 +1071,7 @@ Create a namespace:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-12-21 15:49:29 CET
+ 2024-02-14 10:43:42 CET
 </div>
 </div>
 </body>

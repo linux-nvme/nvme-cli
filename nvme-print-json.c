@@ -179,6 +179,12 @@ static void json_print(struct json_object *r)
 	json_free_object(r);
 }
 
+static void obj_print(struct json_object *o)
+{
+	if (!json_r)
+		json_print(o);
+}
+
 static bool human(void)
 {
 	return json_print_ops.flags & VERBOSE;
@@ -759,7 +765,7 @@ static void json_select_result(enum nvme_features_id fid, __u32 result)
 	sprintf(json_str, "Feature: %#0*x: select", fid ? 4 : 2, fid);
 	obj_add_array(r, json_str, feature);
 
-	json_print(r);
+	obj_print(r);
 }
 
 static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,
@@ -1011,6 +1017,11 @@ static void json_registers_nssr(__u32 nssr, struct json_object *r)
 	obj_add_uint(r, "NVM Subsystem Reset Control (NSSRC)", nssr);
 }
 
+static void json_registers_nssd(__u32 nssd, struct json_object *r)
+{
+	obj_add_uint_nx(r, "NVM Subsystem Shutdown Control (NSSC)", nssd);
+}
+
 static void json_registers_crto(__u32 crto, struct json_object *r)
 {
 	obj_add_uint_x(r, "crto", crto);
@@ -1248,6 +1259,9 @@ static void json_single_property_human(int offset, uint64_t value64, struct json
 	case NVME_REG_NSSR:
 		json_registers_nssr(value32, r);
 		break;
+	case NVME_REG_NSSD:
+		json_registers_nssd(value32, r);
+		break;
 	case NVME_REG_CRTO:
 		json_registers_crto(value32, r);
 		break;
@@ -1416,12 +1430,12 @@ static void json_add_bitmap(int i, __u8 seb, struct json_object *r)
 	char evt_str[50];
 	char key[128];
 
-	for (int bit = 0; bit < 8; bit++) {
-		if (nvme_pel_event_to_string(bit + i * 8)) {
-			sprintf(key, "bitmap_%x", (bit + i * 8));
+	for (int bit = 0; bit < CHAR_BIT; bit++) {
+		if (nvme_pel_event_to_string(bit + i * CHAR_BIT)) {
+			sprintf(key, "bitmap_%x", (bit + i * CHAR_BIT));
 			if ((seb >> bit) & 0x1)
 				snprintf(evt_str, sizeof(evt_str), "Support %s",
-					 nvme_pel_event_to_string(bit + i * 8));
+					 nvme_pel_event_to_string(bit + i * CHAR_BIT));
 			obj_add_str(r, key, evt_str);
 		}
 	}
@@ -2476,6 +2490,16 @@ static void json_ctrl_registers_nssr(void *bar, struct json_object *r)
 		obj_add_int(r, "nssr", nssr);
 }
 
+static void json_ctrl_registers_nssd(void *bar, struct json_object *r)
+{
+	uint32_t nssd = mmio_read32(bar + NVME_REG_NSSD);
+
+	if (human())
+		json_registers_nssd(nssd, obj_create_array_obj(r, "nssd"));
+	else
+		obj_add_int(r, "nssd", nssd);
+}
+
 static void json_ctrl_registers_crto(void *bar, struct json_object *r)
 {
 	uint32_t crto = mmio_read32(bar + NVME_REG_CRTO);
@@ -2667,6 +2691,7 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_ctrl_registers_cc(bar, r);
 	json_ctrl_registers_csts(bar, r);
 	json_ctrl_registers_nssr(bar, r);
+	json_ctrl_registers_nssd(bar, r);
 	json_ctrl_registers_crto(bar, r);
 	json_ctrl_registers_aqa(bar, r);
 	json_ctrl_registers_asq(bar, r);
@@ -3433,7 +3458,7 @@ static void json_feature_show(enum nvme_features_id fid, int sel, unsigned int r
 	sprintf(json_str, "%#0*x", result ? 10 : 8, result);
 	obj_add_str(r, nvme_select_to_string(sel), json_str);
 
-	json_print(r);
+	obj_print(r);
 }
 
 static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
@@ -3556,7 +3581,7 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	}
 
-	json_print(r);
+	obj_print(r);
 }
 
 void json_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
@@ -3610,7 +3635,7 @@ void json_d(unsigned char *buf, int len, int width, int group)
 	d_json(buf, len, width, group, data);
 	obj_add_array(r, json_str, data);
 
-	json_print(r);
+	obj_print(r);
 }
 
 static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list)
@@ -3836,7 +3861,7 @@ static void json_support_log(struct nvme_supported_log_pages *support_log,
 		}
 	}
 
-	obj_add_obj(r, "supported_logs", valid);
+	obj_add_array(r, "supported_logs", valid);
 
 	json_print(r);
 }
@@ -4148,11 +4173,11 @@ static void json_directive_show_fields_identify(__u8 doper, __u8 *field, struct 
 		obj_add_array(r, "Directive Persistent Across Controller Level Resets",
 			      persistent);
 		obj_add_str(persistent, "Identify Directive",
-			    *(field + 32) & 0x1 ? "Enabled" : "Disabled");
+			    *(field + 64) & 0x1 ? "Enabled" : "Disabled");
 		obj_add_str(persistent, "Stream Directive",
-			    *(field + 32) & 0x2 ? "Enabled" : "Disabled");
+			    *(field + 64) & 0x2 ? "Enabled" : "Disabled");
 		obj_add_str(persistent, "Data Placement Directive",
-			    *(field + 32) & 0x4 ? "Enabled" : "Disabled");
+			    *(field + 64) & 0x4 ? "Enabled" : "Disabled");
 		break;
 	default:
 		obj_add_str(r, "Error", "invalid directive operations for Identify Directives");
@@ -4311,7 +4336,7 @@ static void json_output_status(int status)
 
 	if (status < 0) {
 		obj_add_str(r, "error", nvme_strerror(errno));
-		json_print(r);
+		obj_print(r);
 		return;
 	}
 
@@ -4332,7 +4357,7 @@ static void json_output_status(int status)
 		break;
 	}
 
-	json_print(r);
+	obj_print(r);
 }
 
 static void json_output_error_status(int status, const char *msg, va_list ap)
@@ -4353,7 +4378,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 
 	if (status < 0) {
 		obj_add_str(r, "error", nvme_strerror(errno));
-		json_print(r);
+		obj_print(r);
 		return;
 	}
 
@@ -4376,7 +4401,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 
 	obj_add_int(r, "value", val);
 
-	json_print(r);
+	obj_print(r);
 }
 
 static void json_output_message(bool error, const char *msg, va_list ap)
@@ -4391,7 +4416,7 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 
 	free(value);
 
-	json_print(r);
+	obj_print(r);
 }
 
 static void json_output_perror(const char *msg)

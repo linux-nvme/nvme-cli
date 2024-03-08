@@ -113,8 +113,6 @@ bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));
 
-extern int current_index;
-
 const char *nvme_strerror(int errnum);
 
 unsigned long long elapsed_utime(struct timeval start_time,
@@ -127,5 +125,4 @@ void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 uint64_t int48_to_long(uint8_t *data);
 
-int map_log_level(int verbose, bool quiet);
 #endif /* _NVME_H */

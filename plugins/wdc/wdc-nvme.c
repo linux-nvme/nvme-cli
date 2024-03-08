@@ -94,10 +94,40 @@
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
 #define WDC_NVME_SN520_DEV_ID_2				0x5005
-#define WDC_NVME_SN530_DEV_ID				0x5009
-#define WDC_NVME_SN530_DEV_ID_1				0x501d
+
+#define WDC_NVME_SN530_DEV_ID_1				0x5007
+#define WDC_NVME_SN530_DEV_ID_2				0x5008
+#define WDC_NVME_SN530_DEV_ID_3				0x5009
+#define WDC_NVME_SN530_DEV_ID_4				0x500b
+#define WDC_NVME_SN530_DEV_ID_5				0x501d
+
+#define WDC_NVME_SN350_DEV_ID				0x5019
+
+#define WDC_NVME_SN570_DEV_ID				0x501A
+
+#define WDC_NVME_SN850X_DEV_ID				0x5030
+
+#define WDC_NVME_SN5000_DEV_ID_1			0x5034
+#define WDC_NVME_SN5000_DEV_ID_2			0x5035
+#define WDC_NVME_SN5000_DEV_ID_3			0x5036
+#define WDC_NVME_SN5000_DEV_ID_4			0x504A
+
+#define WDC_NVME_SN7000S_DEV_ID_1			0x5039
+
+#define WDC_NVME_SN7150_DEV_ID_1			0x503b
+#define WDC_NVME_SN7150_DEV_ID_2			0x503c
+#define WDC_NVME_SN7150_DEV_ID_3			0x503d
+#define WDC_NVME_SN7150_DEV_ID_4			0x503e
+#define WDC_NVME_SN7150_DEV_ID_5			0x503f
+
+#define WDC_NVME_SN7100_DEV_ID_1			0x5043
+#define WDC_NVME_SN7100_DEV_ID_2			0x5044
+#define WDC_NVME_SN7100_DEV_ID_3			0x5045
+
+#define WDC_NVME_SN8000S_DEV_ID				0x5049
+
 #define WDC_NVME_SN720_DEV_ID				0x5002
-#define WDC_NVME_SN730A_DEV_ID				0x5006
+#define WDC_NVME_SN730_DEV_ID				0x5006
 #define WDC_NVME_SN740_DEV_ID				0x5015
 #define WDC_NVME_SN740_DEV_ID_1				0x5016
 #define WDC_NVME_SN740_DEV_ID_2				0x5017
@@ -989,7 +1019,7 @@ struct wdc_e6_log_hdr {
 /* DUI log header */
 struct wdc_dui_log_section {
 	__le16	section_type;
-	__le16	data_area_id;
+	__le16	reserved;
 	__le32	section_size;
 };
 
@@ -1671,6 +1701,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 					WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP |
 					WDC_DRIVE_CAP_PURGE);
 			break;
+
 		case WDC_NVME_SN200_DEV_ID:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG | WDC_DRIVE_CAP_CLEAR_PCIE |
 					WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP |
@@ -1686,10 +1717,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 							      WDC_NVME_ADD_LOG_OPCODE))
 				capabilities |= WDC_DRIVE_CAP_C1_LOG_PAGE;
 			break;
+
 		default:
 			capabilities = 0;
 		}
 		break;
+
 	case WDC_NVME_VID_2:
 		switch (read_device_id) {
 		case WDC_NVME_SN630_DEV_ID:
@@ -1708,6 +1741,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 							      WDC_NVME_GET_VU_SMART_LOG_OPCODE))
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 			break;
+
 		case WDC_NVME_SN640_DEV_ID:
 			fallthrough;
 		case WDC_NVME_SN640_DEV_ID_1:
@@ -1780,6 +1814,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
 
 			break;
+
 		case WDC_NVME_SN840_DEV_ID:
 			fallthrough;
 		case WDC_NVME_SN840_DEV_ID_1:
@@ -1810,6 +1845,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 							      WDC_NVME_GET_VU_SMART_LOG_OPCODE))
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 			break;
+
 		case WDC_NVME_SN650_DEV_ID:
 			fallthrough;
 		case WDC_NVME_SN650_DEV_ID_1:
@@ -1869,6 +1905,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 						 WDC_DRIVE_CAP_CLEAR_PCIE);
 
 			break;
+
 		case WDC_NVME_SN861_DEV_ID:
 			fallthrough;
 		case WDC_NVME_SN861_DEV_ID_1:
@@ -1884,30 +1921,31 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				WDC_DRIVE_CAP_INFO |
 				WDC_DRIVE_CAP_CLOUD_SSD_VERSION |
 				WDC_DRIVE_CAP_LOG_PAGE_DIR |
+				WDC_DRIVE_CAP_DRIVE_STATUS |
 				WDC_DRIVE_CAP_SET_LATENCY_MONITOR);
 			break;
+
 		default:
 			capabilities = 0;
 		}
 		break;
+
 	case WDC_NVME_SNDK_VID:
 		switch (read_device_id) {
 		case WDC_NVME_SXSLCL_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DRIVE_ESSENTIALS;
 			break;
+
 		case WDC_NVME_SN520_DEV_ID:
 			fallthrough;
 		case WDC_NVME_SN520_DEV_ID_1:
 			fallthrough;
 		case WDC_NVME_SN520_DEV_ID_2:
 			fallthrough;
-		case WDC_NVME_SN530_DEV_ID:
-			fallthrough;
-		case WDC_NVME_SN530_DEV_ID_1:
-			fallthrough;
 		case WDC_NVME_SN810_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA;
 			break;
+
 		case WDC_NVME_SN820CL_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA |
 				       WDC_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION |
@@ -1916,15 +1954,62 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				       WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_NAND_STATS |
 				       WDC_DRIVE_CAP_DEVICE_WAF | WDC_DRIVE_CAP_TEMP_STATS;
 			break;
+
 		case WDC_NVME_SN720_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS |
 				       WDC_DRIVE_CAP_NS_RESIZE;
 			break;
-		case WDC_NVME_SN730A_DEV_ID:
+
+		case WDC_NVME_SN730_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI | WDC_DRIVE_CAP_NAND_STATS |
 				       WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_TEMP_STATS |
 				       WDC_DRIVE_CAP_VUC_CLEAR_PCIE | WDC_DRIVE_CAP_PCIE_STATS;
 			break;
+
+		case WDC_NVME_SN530_DEV_ID_1:
+			fallthrough;
+		case WDC_NVME_SN530_DEV_ID_2:
+			fallthrough;
+		case WDC_NVME_SN530_DEV_ID_3:
+			fallthrough;
+		case WDC_NVME_SN530_DEV_ID_4:
+			fallthrough;
+		case WDC_NVME_SN530_DEV_ID_5:
+			fallthrough;
+		case WDC_NVME_SN350_DEV_ID:
+			fallthrough;
+		case WDC_NVME_SN570_DEV_ID:
+			fallthrough;
+		case WDC_NVME_SN850X_DEV_ID:
+			fallthrough;
+		case WDC_NVME_SN5000_DEV_ID_1:
+			fallthrough;
+		case WDC_NVME_SN5000_DEV_ID_2:
+			fallthrough;
+		case WDC_NVME_SN5000_DEV_ID_3:
+			fallthrough;
+		case WDC_NVME_SN5000_DEV_ID_4:
+			fallthrough;
+		case WDC_NVME_SN7000S_DEV_ID_1:
+			fallthrough;
+		case WDC_NVME_SN7150_DEV_ID_1:
+			fallthrough;
+		case WDC_NVME_SN7150_DEV_ID_2:
+			fallthrough;
+		case WDC_NVME_SN7150_DEV_ID_3:
+			fallthrough;
+		case WDC_NVME_SN7150_DEV_ID_4:
+			fallthrough;
+		case WDC_NVME_SN7150_DEV_ID_5:
+			fallthrough;
+		case WDC_NVME_SN7100_DEV_ID_1:
+			fallthrough;
+		case WDC_NVME_SN7100_DEV_ID_2:
+			fallthrough;
+		case WDC_NVME_SN7100_DEV_ID_3:
+			fallthrough;
+		case WDC_NVME_SN8000S_DEV_ID:
+			fallthrough;
 		case WDC_NVME_SN740_DEV_ID:
 			fallthrough;
 		case WDC_NVME_SN740_DEV_ID_1:
@@ -1936,6 +2021,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
 			break;
+
 		case WDC_NVME_ZN350_DEV_ID:
 			fallthrough;
 		case WDC_NVME_ZN350_DEV_ID_1:
@@ -1945,6 +2031,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				       WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 | WDC_DRIVE_CAP_INFO |
 				       WDC_DRIVE_CAP_CLOUD_SSD_VERSION | WDC_DRIVE_CAP_LOG_PAGE_DIR;
 			break;
+
 		default:
 			capabilities = 0;
 		}
@@ -2364,23 +2451,32 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 			uuid_index = index + 1;
 	}
 
-	if (!uuid_index && needs_c2_log_page_check(device_id)) {
-		/* In certain devices that don't support UUID lists, there are multiple
-		 * definitions of the C2 logpage. In those cases, the code
-		 * needs to try two UUID indexes and use an identification algorithm
-		 * to determine which is returning the correct log page data.
-		 */
-		uuid_ix = 1;
-	}
-
-	found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
-
-	if (!found) {
-		/* not found with uuid = 1 try with uuid = 0 */
-		uuid_ix = 0;
-		fprintf(stderr, "Not found, requesting log page with uuid_index %d\n", uuid_index);
+	if (uuid_present) {
+		/* use the uuid index found above */
+		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
+	} else if (device_id == WDC_NVME_ZN350_DEV_ID || device_id == WDC_NVME_ZN350_DEV_ID_1) {
+		uuid_index = 0;
+		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
+	} else {
+		if (!uuid_index && needs_c2_log_page_check(device_id)) {
+			/* In certain devices that don't support UUID lists, there are multiple
+			 * definitions of the C2 logpage. In those cases, the code
+			 * needs to try two UUID indexes and use an identification algorithm
+			 * to determine which is returning the correct log page data.
+			 */
+			uuid_ix = 1;
+		}
 
 		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
+
+		if (!found) {
+			/* not found with uuid = 1 try with uuid = 0 */
+			uuid_ix = 0;
+			fprintf(stderr, "Not found, requesting log page with uuid_index %d\n",
+					uuid_index);
+
+			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
+		}
 	}
 
 	return found;
@@ -2632,6 +2728,16 @@ static int wdc_do_dump_e6(int fd, __u32 opcode, __u32 data_len,
 	int i;
 	struct nvme_passthru_cmd admin_cmd;
 
+	/* if data_len is not 4 byte aligned */
+	if (data_len & 0x00000003) {
+		/* Round down to the next 4 byte aligned value */
+		fprintf(stderr, "%s: INFO: data_len 0x%x not 4 byte aligned.\n",
+				__func__, data_len);
+		fprintf(stderr, "%s: INFO: Round down to 0x%x.\n",
+				__func__, (data_len &= 0xFFFFFFFC));
+		data_len &= 0xFFFFFFFC;
+	}
+
 	dump_data = (__u8 *)malloc(sizeof(__u8) * data_len);
 
 	if (!dump_data) {
@@ -2649,7 +2755,8 @@ static int wdc_do_dump_e6(int fd, __u32 opcode, __u32 data_len,
 	admin_cmd.opcode = opcode;
 	admin_cmd.cdw12 = cdw12;
 
-	log_size = data_len;
+	/* subtract off the header size since that was already copied into the buffer */
+	log_size = (data_len - curr_data_offset);
 	while (log_size > 0) {
 		xfer_size = min(xfer_size, log_size);
 
@@ -2890,6 +2997,8 @@ static int wdc_do_cap_dui_v1(int fd, char *file, __u32 xfer_size, int data_area,
 		fprintf(stderr, "INFO: WDC: Capture V1 Device Unit Info log, data area = %d\n",
 			data_area);
 		fprintf(stderr, "INFO: WDC: DUI Header Version = 0x%x\n", log_hdr->hdr_version);
+		fprintf(stderr, "INFO: WDC: DUI section count = 0x%x\n", log_hdr->section_count);
+		fprintf(stderr, "INFO: WDC: DUI log size = 0x%x\n", log_hdr->log_size);
 	}
 
 	if (!cap_dui_length) {
@@ -2899,23 +3008,15 @@ static int wdc_do_cap_dui_v1(int fd, char *file, __u32 xfer_size, int data_area,
 
 	/* parse log header for all sections up to specified data area inclusively */
 	if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
-		for (j = 0; j < WDC_NVME_DUI_MAX_SECTION; j++) {
-			if (log_hdr->log_section[j].data_area_id <= data_area &&
-					log_hdr->log_section[j].data_area_id) {
-				log_size += log_hdr->log_section[j].section_size;
-				if (verbose)
-					fprintf(stderr,
-						"%s: Data area ID %d : section size 0x%x, total size = 0x%x\n",
-						__func__, log_hdr->log_section[j].data_area_id,
-						(unsigned int)log_hdr->log_section[j].section_size,
-						(unsigned int)log_size);
+		for (j = 0; j < log_hdr->section_count; j++) {
+			log_size += log_hdr->log_section[j].section_size;
+			if (verbose)
+				fprintf(stderr,
+					"%s: section size 0x%x, total size = 0x%x\n",
+					__func__,
+					(unsigned int)log_hdr->log_section[j].section_size,
+					(unsigned int)log_size);
 
-			} else {
-				if (verbose)
-					fprintf(stderr, "%s: break, total size = 0x%x\n", __func__,
-						(unsigned int)log_size);
-				break;
-			}
 		}
 	} else {
 		log_size = cap_dui_length;
@@ -8112,7 +8213,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 			struct ocp_cloud_smart_log log;
 			char buf[2 * sizeof(log.log_page_guid) + 3];
 
-			ret = validate_output_format(output_format, &fmt);
+			ret = validate_output_format(cfg.output_format, &fmt);
 			if (ret < 0) {
 				fprintf(stderr, "Invalid output format: %s\n", cfg.output_format);
 				goto out;
@@ -11496,7 +11597,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 				}
 			}
 			break;
-		case WDC_NVME_SN730A_DEV_ID:
+		case WDC_NVME_SN730_DEV_ID:
 			memcpy(vsData, &ctrl.vs[0], 32);
 
 			major_rev = ctrl.sn[12];

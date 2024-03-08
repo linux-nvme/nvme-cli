@@ -890,64 +890,78 @@ void nvme_show_lba_status_info(__u32 result)
 	nvme_print(lba_status_info, NORMAL, result);
 }
 
-const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid,
-					      __u8 type)
+const char *nvme_host_metadata_type_to_string(enum nvme_features_id fid, __u8 type)
 {
-       switch (fid) {
-       case NVME_FEAT_FID_ENH_CTRL_METADATA:
-       case NVME_FEAT_FID_CTRL_METADATA:
-	       switch (type) {
-	       case NVME_CTRL_METADATA_OS_CTRL_NAME:
-		       return "Operating System Controller Name";
-	       case NVME_CTRL_METADATA_OS_DRIVER_NAME:
-		       return "Operating System Driver Name";
-	       case NVME_CTRL_METADATA_OS_DRIVER_VER:
-		       return "Operating System Driver Version";
-	       case NVME_CTRL_METADATA_PRE_BOOT_CTRL_NAME:
-		       return "Pre-boot Controller Name";
-	       case NVME_CTRL_METADATA_PRE_BOOT_DRIVER_NAME:
-		       return "Pre-boot Driver Name";
-	       case NVME_CTRL_METADATA_PRE_BOOT_DRIVER_VER:
-		       return "Pre-boot Driver Version";
-	       case NVME_CTRL_METADATA_SYS_PROC_MODEL:
-		       return "System Processor Model";
-	       case NVME_CTRL_METADATA_CHIPSET_DRV_NAME:
-		       return "Chipset Driver Name";
-	       case NVME_CTRL_METADATA_CHIPSET_DRV_VERSION:
-		       return "Chipset Driver Version";
-	       case NVME_CTRL_METADATA_OS_NAME_AND_BUILD:
-		       return "Operating System Name and Build";
-	       case NVME_CTRL_METADATA_SYS_PROD_NAME:
-		       return "System Product Name";
-	       case NVME_CTRL_METADATA_FIRMWARE_VERSION:
-		       return "Firmware Version";
-	       case NVME_CTRL_METADATA_OS_DRIVER_FILENAME:
-		       return "Operating System Driver Filename";
-	       case NVME_CTRL_METADATA_DISPLAY_DRV_NAME:
-		       return "Display Driver Name";
-	       case NVME_CTRL_METADATA_DISPLAY_DRV_VERSION:
-		       return "Display Driver Version";
-	       case NVME_CTRL_METADATA_HOST_DET_FAIL_REC:
-		       return "Host-Determined Failure Record";
-	       default:
-		       return "Unknown Controller Type";
-	       }
-       case NVME_FEAT_FID_NS_METADATA:
-	       switch (type) {
-	       case NVME_NS_METADATA_OS_NS_NAME:
-		       return "Operating System Namespace Name";
-	       case NVME_NS_METADATA_PRE_BOOT_NS_NAME:
-		       return "Pre-boot Namespace Name";
-	       case NVME_NS_METADATA_OS_NS_QUAL_1:
-		       return "Operating System Namespace Name Qualifier 1";
-	       case NVME_NS_METADATA_OS_NS_QUAL_2:
-		       return "Operating System Namespace Name Qualifier 2";
-	       default:
-		       return "Unknown Namespace Type";
-	       }
-       default:
-	       return "Unknown Feature";
-       }
+	switch (fid) {
+	case NVME_FEAT_FID_ENH_CTRL_METADATA:
+	case NVME_FEAT_FID_CTRL_METADATA:
+		switch (type) {
+		case NVME_CTRL_METADATA_OS_CTRL_NAME:
+			return "Operating System Controller Name";
+		case NVME_CTRL_METADATA_OS_DRIVER_NAME:
+			return "Operating System Driver Name";
+		case NVME_CTRL_METADATA_OS_DRIVER_VER:
+			return "Operating System Driver Version";
+		case NVME_CTRL_METADATA_PRE_BOOT_CTRL_NAME:
+			return "Pre-boot Controller Name";
+		case NVME_CTRL_METADATA_PRE_BOOT_DRIVER_NAME:
+			return "Pre-boot Driver Name";
+		case NVME_CTRL_METADATA_PRE_BOOT_DRIVER_VER:
+			return "Pre-boot Driver Version";
+		case NVME_CTRL_METADATA_SYS_PROC_MODEL:
+			return "System Processor Model";
+		case NVME_CTRL_METADATA_CHIPSET_DRV_NAME:
+			return "Chipset Driver Name";
+		case NVME_CTRL_METADATA_CHIPSET_DRV_VERSION:
+			return "Chipset Driver Version";
+		case NVME_CTRL_METADATA_OS_NAME_AND_BUILD:
+			return "Operating System Name and Build";
+		case NVME_CTRL_METADATA_SYS_PROD_NAME:
+			return "System Product Name";
+		case NVME_CTRL_METADATA_FIRMWARE_VERSION:
+			return "Firmware Version";
+		case NVME_CTRL_METADATA_OS_DRIVER_FILENAME:
+			return "Operating System Driver Filename";
+		case NVME_CTRL_METADATA_DISPLAY_DRV_NAME:
+			return "Display Driver Name";
+		case NVME_CTRL_METADATA_DISPLAY_DRV_VERSION:
+			return "Display Driver Version";
+		case NVME_CTRL_METADATA_HOST_DET_FAIL_REC:
+			return "Host-Determined Failure Record";
+		default:
+			return "Unknown Controller Type";
+		}
+	case NVME_FEAT_FID_NS_METADATA:
+		switch (type) {
+		case NVME_NS_METADATA_OS_NS_NAME:
+			return "Operating System Namespace Name";
+		case NVME_NS_METADATA_PRE_BOOT_NS_NAME:
+			return "Pre-boot Namespace Name";
+		case NVME_NS_METADATA_OS_NS_QUAL_1:
+			return "Operating System Namespace Name Qualifier 1";
+		case NVME_NS_METADATA_OS_NS_QUAL_2:
+			return "Operating System Namespace Name Qualifier 2";
+		default:
+			return "Unknown Namespace Type";
+		}
+	default:
+		return "Unknown Feature";
+	}
+}
+
+const char *nvme_pel_rci_rcpit_to_string(enum nvme_pel_rci_rcpit rcpit)
+{
+	switch (rcpit) {
+	case NVME_PEL_RCI_RCPIT_NOT_EXIST:
+		return "Does not already exist";
+	case NVME_PEL_RCI_RCPIT_EST_PORT:
+		return "NVM subsystem port";
+	case NVME_PEL_RCI_RCPIT_EST_ME:
+		return "NVMe-MI port";
+	default:
+		break;
+	}
+	return "Reserved";
 }
 
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)

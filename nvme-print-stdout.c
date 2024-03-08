@@ -219,19 +219,16 @@ static void stdout_predictable_latency_event_agg_log(
 static void stdout_persistent_event_log_rci(__le32 pel_header_rci)
 {
 	__u32 rci = le32_to_cpu(pel_header_rci);
-	__u32 rsvd19 = (rci & 0xfff80000) >> 19;
-	__u8 rce = (rci & 0x40000) >> 18;
-	__u8 rcpit = (rci & 0x30000) >> 16;
-	__u16 rcpid = rci & 0xffff;
+	__u32 rsvd19 = NVME_PEL_RCI_RSVD(rci);
+	__u8 rce = NVME_PEL_RCI_RCE(rci);
+	__u8 rcpit = NVME_PEL_RCI_RCPIT(rci);
+	__u16 rcpid = NVME_PEL_RCI_RCPID(rci);
 
-	if(rsvd19)
+	if (rsvd19)
 		printf("  [31:19] : %#x\tReserved\n", rsvd19);
-	printf("\tReporting Context Exists (RCE): %s(%u)\n",
-		rce ? "true" : "false", rce);
+	printf("\tReporting Context Exists (RCE): %s(%u)\n", rce ? "true" : "false", rce);
 	printf("\tReporting Context Port Identifier Type (RCPIT): %u(%s)\n", rcpit,
-		(rcpit == 0x00) ? "Does not already exist" :
-		(rcpit == 0x01) ? "NVM subsystem port" :
-		(rcpit == 0x02) ? "NVMe-MI port" : "Reserved");
+	       nvme_pel_rci_rcpit_to_string(rcpit));
 	printf("\tReporting Context Port Identifier (RCPID): %#x\n\n", rcpid);
 }
 
@@ -250,12 +247,11 @@ static void stdout_persistent_event_entry_ehai(__u8 ehai)
 
 static void stdout_add_bitmap(int i, __u8 seb)
 {
-	for (int bit = 0; bit < 8; bit++) {
-		if (nvme_pel_event_to_string(bit + i * 8)) {
-			if (nvme_pel_event_to_string(bit + i * 8))
-				if ((seb >> bit) & 0x1)
-					printf("	Support %s\n",
-					       nvme_pel_event_to_string(bit + i * 8));
+	for (int bit = 0; bit < CHAR_BIT; bit++) {
+		if (nvme_pel_event_to_string(bit + i * CHAR_BIT)) {
+			if ((seb >> bit) & 0x1)
+				printf("	Support %s\n",
+				       nvme_pel_event_to_string(bit + i * CHAR_BIT));
 		}
 	}
 }
@@ -1223,6 +1219,11 @@ static void stdout_registers_csts(__u32 csts)
 
 }
 
+static void stdout_registers_nssd(__u32 nssd)
+{
+	printf("\tNVM Subsystem Shutdown Control (NSSC): %#x\n\n", nssd);
+}
+
 static void stdout_registers_crto(__u32 crto)
 {
 	printf("\tCRIMT                               : %d secs\n", NVME_CRTO_CRIMT(crto) / 2);
@@ -1620,6 +1621,10 @@ static void stdout_single_property(int offset, uint64_t value64)
 	case NVME_REG_NSSR:
 		printf("nssr : %x\n", value32);
 		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", value32);
+		break;
+	case NVME_REG_NSSD:
+		printf("nssd : %x\n", value32);
+		stdout_registers_nssd(value32);
 		break;
 	case NVME_REG_CRTO:
 		printf("crto : %x\n", value32);
@@ -2714,7 +2719,7 @@ static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *n
 static void stdout_id_ns_descs(void *data, unsigned int nsid)
 {
 	int pos, len = 0;
-	int i;
+	int i, verbose = stdout_print_ops.flags & VERBOSE;
 	__u8 uuid[NVME_UUID_LEN];
 	char uuid_str[NVME_UUID_LEN_STRING];
 	__u8 eui64[8];
@@ -2728,9 +2733,17 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 		if (cur->nidl == 0)
 			break;
 
+		if (verbose) {
+			printf("loc     : %d\n", pos);
+			printf("nidt    : %d\n", (int)cur->nidt);
+			printf("nidl    : %d\n", (int)cur->nidl);
+		}
+
 		switch (cur->nidt) {
 		case NVME_NIDT_EUI64:
 			memcpy(eui64, data + pos + sizeof(*cur), sizeof(eui64));
+			if (verbose)
+				printf("type    : eui64\n");
 			printf("eui64   : ");
 			for (i = 0; i < 8; i++)
 				printf("%02x", eui64[i]);
@@ -2739,6 +2752,8 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
+			if (verbose)
+				printf("type    : nguid\n");
 			printf("nguid   : ");
 			for (i = 0; i < 16; i++)
 				printf("%02x", nguid[i]);
@@ -2748,11 +2763,15 @@ static void stdout_id_ns_descs(void *data, unsigned int nsid)
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
 			nvme_uuid_to_string(uuid, uuid_str);
+			if (verbose)
+				printf("type    : uuid\n");
 			printf("uuid    : %s\n", uuid_str);
 			len = sizeof(uuid);
 			break;
 		case NVME_NIDT_CSI:
 			memcpy(&csi, data + pos + sizeof(*cur), 1);
+			if (verbose)
+				printf("type    : csi\n");
 			printf("csi     : %#x\n", csi);
 			len += sizeof(csi);
 			break;
@@ -4227,11 +4246,11 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 				(*(field + 32) & 0x4) ? "enabled" : "disabled");
 			printf("\tDirective Persistent Across Controller Level Resets \n");
 			printf("\t\tIdentify Directive       : %s\n",
-				(*(field + 32) & 0x1) ? "enabled" : "disabled");
+				(*(field + 64) & 0x1) ? "enabled" : "disabled");
 			printf("\t\tStream Directive         : %s\n",
-				(*(field + 32) & 0x2) ? "enabled" : "disabled");
+				(*(field + 64) & 0x2) ? "enabled" : "disabled");
 			printf("\t\tData Placement Directive : %s\n",
-				(*(field + 32) & 0x4) ? "enabled" : "disabled");
+				(*(field + 64) & 0x4) ? "enabled" : "disabled");
 			break;
 		default:
 			fprintf(stderr,
@@ -4864,7 +4883,7 @@ static void stdout_detailed_list(nvme_root_t r)
 	printf("\n");
 
 	printf("%-8s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n", "Device",
-		"SN", "MN", "FR", "TxPort", "Asdress", "Slot", "Subsystem", "Namespaces");
+		"SN", "MN", "FR", "TxPort", "Address", "Slot", "Subsystem", "Namespaces");
 	printf("%-.8s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n", dash,
 		dash, dash, dash, dash, dash, dash, dash, dash);
 	strset_iterate(&res.ctrls, stdout_detailed_ctrl, &res);
