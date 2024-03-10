@@ -19,8 +19,8 @@ Reads and shows the defined NVMe controller property for NVMe over Fabric.
 
 OPTIONS
 -------
--O::
---offset::
+-O <offset>::
+--offset=<offset>::
 	The offset of the property. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
 
 -H::
