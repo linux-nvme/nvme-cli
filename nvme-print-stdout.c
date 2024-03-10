@@ -988,12 +988,12 @@ static void stdout_supported_cap_config_log(struct nvme_supported_cap_config_lis
 					cap->cap_config_desc[i].egcd[j].end_est)));
 			egsets = le16_to_cpu(cap->cap_config_desc[i].egcd[j].egsets);
 			printf("Number of NVM Sets: %u\n", egsets);
-			for (k = 0; k < egsets; k++) {
+			for (k = 0; k < egsets; k++)
 				printf("NVM Set %d Identifier: %u\n", i,
-					le16_to_cpu(cap->cap_config_desc[i].egcd[j].nvmsetid[k]));
-			}
-			chan_desc = (struct nvme_end_grp_chan_desc *) \
-					((cap->cap_config_desc[i].egcd[j].nvmsetid[0]) * (sizeof(__u16)*egsets));
+				       le16_to_cpu(cap->cap_config_desc[i].egcd[j].nvmsetid[k]));
+
+			chan_desc = (struct nvme_end_grp_chan_desc *)
+			    &cap->cap_config_desc[i].egcd[j].nvmsetid[egsets];
 			egchans = le16_to_cpu(chan_desc->egchans);
 			printf("Number of Channels: %u\n", egchans);
 			for (l = 0; l < egchans; l++) {
