@@ -4667,7 +4667,9 @@ static void stdout_generic_full_path(nvme_ns_t n, char *path, size_t len)
 	int instance;
 	struct stat st;
 
-	sscanf(nvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance);
+	if (sscanf(nvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance) != 2)
+		return;
+
 	snprintf(path, len, "/dev/ng%dn%d", instance, head_instance);
 
 	if (stat(path, &st) == 0)
