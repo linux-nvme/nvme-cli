@@ -14,6 +14,7 @@ SYNOPSIS
 			[--data-len=<data-len> | -l <data-len>]
 			[--data=<data-file> | -d <data-file>] [--save | -s]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--cdw12=<cdw12> | -c <cdw12>]
 
 DESCRIPTION
 -----------
@@ -72,6 +73,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-c <cdw12>::
+--cdw12=<cdw12>::
+	The value for command dword 12, if applicable.
 
 EXAMPLES
 --------
