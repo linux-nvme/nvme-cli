@@ -108,6 +108,61 @@ struct passthru_config {
 	bool	latency;
 };
 
+struct get_reg_config {
+	int offset;
+	bool human_readable;
+	bool cap;
+	bool vs;
+	bool intms;
+	bool intmc;
+	bool cc;
+	bool csts;
+	bool nssr;
+	bool aqa;
+	bool asq;
+	bool acq;
+	bool cmbloc;
+	bool cmbsz;
+	bool bpinfo;
+	bool bprsel;
+	bool bpmbl;
+	bool cmbmsc;
+	bool cmbsts;
+	bool cmbebs;
+	bool cmbswtp;
+	bool nssd;
+	bool crto;
+	bool pmrcap;
+	bool pmrctl;
+	bool pmrsts;
+	bool pmrebs;
+	bool pmrswtp;
+	bool pmrmscl;
+	bool pmrmscu;
+	bool fabrics;
+};
+
+struct set_reg_config {
+	int offset;
+	bool mmio32;
+	__u64 value;
+	__u32 intms;
+	__u32 intmc;
+	__u32 cc;
+	__u32 csts;
+	__u32 nssr;
+	__u32 aqa;
+	__u64 asq;
+	__u64 acq;
+	__u32 bprsel;
+	__u64 bpmbl;
+	__u64 cmbmsc;
+	__u32 nssd;
+	__u32 pmrctl;
+	__u32 pmrmscl;
+	__u32 pmrmscu;
+};
+
 #define NVME_ARGS(n, ...)                                                         \
 	struct argconfig_commandline_options n[] = {                              \
 		OPT_INCR("verbose",      'v', &verbose_level,     verbose),       \
@@ -186,6 +241,22 @@ static const char *uuid_index_specify = "specify uuid index";
 static const char *verbose = "Increase output verbosity";
 static const char dash[51] = {[0 ... 49] = '=', '\0'};
 static const char space[51] = {[0 ... 49] = ' ', '\0'};
+static const char *offset = "offset of the requested register";
+static const char *intms = "INTMS=0xc register offset";
+static const char *intmc = "INTMC=0x10 register offset";
+static const char *cc = "CC=0x14 register offset";
+static const char *csts = "CSTS=0x1c register offset";
+static const char *nssr = "NSSR=0x20 register offset";
+static const char *aqa = "AQA=0x24 register offset";
+static const char *asq = "ASQ=0x28 register offset";
+static const char *acq = "ACQ=0x30 register offset";
+static const char *bprsel = "BPRSEL=0x44 register offset";
+static const char *bpmbl = "BPMBL=0x48 register offset";
+static const char *cmbmsc = "CMBMSC=0x50 register offset";
+static const char *nssd = "NSSD=0x64 register offset";
+static const char *pmrctl = "PMRCTL=0xe04 register offset";
+static const char *pmrmscl = "PMRMSCL=0xe14 register offset";
+static const char *pmrmscu = "PMRMSCU=0xe18 register offset";
 
 static char *output_format_val = "normal";
 int verbose_level;
@@ -5201,42 +5272,62 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	return err;
 }
 
-static int nvme_get_properties(int fd, void **pbar)
+static int nvme_get_single_property(int fd, struct get_reg_config *cfg, __u64 *value)
 {
-	int offset, err, size = getpagesize();
-	__u64 value;
-	void *bar = malloc(size);
+	int err;
+	struct nvme_get_property_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.offset		= cfg->offset,
+		.value		= value,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+	};
 
+	err = nvme_get_property(&args);
+	if (!err)
+		return 0;
+
+	if (!cfg->fabrics &&
+	    nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
+		*value = -1;
+		return 0;
+	}
+
+	if (cfg->fabrics && err > 0)
+		nvme_show_status(err);
+	else
+		nvme_show_error("get-property: %s", nvme_strerror(errno));
+
+	return err;
+}
+
+static int nvme_get_properties(int fd, void **pbar, struct get_reg_config *cfg)
+{
+	int err, size = getpagesize();
+	bool is_64bit = false;
+	__u64 value;
+	void *bar;
+	int offset;
+
+	bar = malloc(size);
 	if (!bar) {
 		nvme_show_error("malloc: %s", strerror(errno));
-		return -1;
+		return -errno;
 	}
 
 	memset(bar, 0xff, size);
-	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;) {
-		struct nvme_get_property_args args = {
-			.args_size	= sizeof(args),
-			.fd		= fd,
-			.offset		= offset,
-			.value		= &value,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		};
-
-		err = nvme_get_property(&args);
-		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
-			err = 0;
-			value = -1;
-		} else if (err) {
-			nvme_show_error("get-property: %s", nvme_strerror(errno));
+	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;
+	     offset += is_64bit ? sizeof(uint64_t) : sizeof(uint32_t)) {
+		cfg->offset = offset;
+		err = nvme_get_single_property(fd, cfg, &value);
+		if (err)
 			break;
-		}
-		if (nvme_is_64bit_reg(offset)) {
-			*(uint64_t *)(bar + offset) = value;
-			offset += 8;
-		} else {
-			*(uint32_t *)(bar + offset) = value;
-			offset += 4;
-		}
+
+		is_64bit = nvme_is_64bit_reg(cfg->offset);
+		if (is_64bit)
+			*(uint64_t *)(bar + cfg->offset) = value;
+		else
+			*(uint32_t *)(bar + cfg->offset) = value;
 	}
 
 	if (err)
@@ -5292,11 +5383,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	void *bar;
 	int err;
 
-	struct config {
-		bool	human_readable;
-	};
-
-	struct config cfg = {
+	struct get_reg_config cfg = {
 		.human_readable	= false,
 	};
 
@@ -5333,6 +5420,574 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	return 0;
 }
 
+int get_reg_size(int offset)
+{
+	return nvme_is_64bit_reg(offset) ? sizeof(uint64_t) : sizeof(uint32_t);
+}
+
+static bool is_reg_selected(struct get_reg_config *cfg, int offset)
+{
+	switch (offset) {
+	case NVME_REG_CAP:
+		return cfg->cap;
+	case NVME_REG_VS:
+		return cfg->vs;
+	case NVME_REG_INTMS:
+		return cfg->intms;
+	case NVME_REG_INTMC:
+		return cfg->intmc;
+	case NVME_REG_CC:
+		return cfg->cc;
+	case NVME_REG_CSTS:
+		return cfg->csts;
+	case NVME_REG_NSSR:
+		return cfg->nssr;
+	case NVME_REG_AQA:
+		return cfg->aqa;
+	case NVME_REG_ASQ:
+		return cfg->asq;
+	case NVME_REG_ACQ:
+		return cfg->acq;
+	case NVME_REG_CMBLOC:
+		return cfg->cmbloc;
+	case NVME_REG_CMBSZ:
+		return cfg->cmbsz;
+	case NVME_REG_BPINFO:
+		return cfg->bpinfo;
+	case NVME_REG_BPRSEL:
+		return cfg->bprsel;
+	case NVME_REG_BPMBL:
+		return cfg->bpmbl;
+	case NVME_REG_CMBMSC:
+		return cfg->cmbmsc;
+	case NVME_REG_CMBSTS:
+		return cfg->cmbsts;
+	case NVME_REG_CMBEBS:
+		return cfg->cmbebs;
+	case NVME_REG_CMBSWTP:
+		return cfg->cmbswtp;
+	case NVME_REG_NSSD:
+		return cfg->nssd;
+	case NVME_REG_CRTO:
+		return cfg->crto;
+	case NVME_REG_PMRCAP:
+		return cfg->pmrcap;
+	case NVME_REG_PMRCTL:
+		return cfg->pmrctl;
+	case NVME_REG_PMRSTS:
+		return cfg->pmrsts;
+	case NVME_REG_PMREBS:
+		return cfg->pmrebs;
+	case NVME_REG_PMRSWTP:
+		return cfg->pmrswtp;
+	case NVME_REG_PMRMSCL:
+		return cfg->pmrmscl;
+	case NVME_REG_PMRMSCU:
+		return cfg->pmrmscu;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+static int get_register_properties(int fd, void **pbar, struct get_reg_config *cfg)
+{
+	int offset = NVME_REG_CRTO;
+	__u64 value;
+	int size;
+	int err;
+	void *bar;
+	struct nvme_get_property_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.value = &value,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+	};
+
+	size = offset + get_reg_size(offset);
+	bar = malloc(size);
+	if (!bar) {
+		nvme_show_error("malloc: %s", strerror(errno));
+		return -1;
+	}
+
+	for (offset = NVME_REG_CAP; offset <= NVME_REG_CRTO; offset += get_reg_size(offset)) {
+		if ((cfg->offset != offset && !is_reg_selected(cfg, offset)) ||
+		    !nvme_is_fabrics_reg(offset))
+			continue;
+
+		args.offset = offset;
+		err = nvme_get_property(&args);
+		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
+			value = -1;
+		} else if (err) {
+			nvme_show_error("get-property: %s", nvme_strerror(errno));
+			free(bar);
+			return err;
+		}
+
+		if (nvme_is_64bit_reg(offset))
+			*(uint64_t *)(bar + offset) = value;
+		else
+			*(uint32_t *)(bar + offset) = value;
+	}
+
+	*pbar = bar;
+
+	return 0;
+}
+
+bool nvme_is_ctrl_reg(int offset)
+{
+	switch (offset) {
+	case NVME_REG_CAP:
+	case NVME_REG_VS:
+	case NVME_REG_INTMS:
+	case NVME_REG_INTMC:
+	case NVME_REG_CC:
+	case NVME_REG_CSTS:
+	case NVME_REG_NSSR:
+	case NVME_REG_AQA:
+	case NVME_REG_ASQ:
+	case NVME_REG_ACQ:
+	case NVME_REG_CMBLOC:
+	case NVME_REG_CMBSZ:
+	case NVME_REG_BPINFO:
+	case NVME_REG_BPRSEL:
+	case NVME_REG_BPMBL:
+	case NVME_REG_CMBMSC:
+	case NVME_REG_CMBSTS:
+	case NVME_REG_CMBEBS:
+	case NVME_REG_CMBSWTP:
+	case NVME_REG_NSSD:
+	case NVME_REG_CRTO:
+	case NVME_REG_PMRCAP:
+	case NVME_REG_PMRCTL:
+	case NVME_REG_PMRSTS:
+	case NVME_REG_PMREBS:
+	case NVME_REG_PMRSWTP:
+	case NVME_REG_PMRMSCL:
+	case NVME_REG_PMRMSCU:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+static bool get_register_offset(void *bar, bool fabrics, struct get_reg_config *cfg,
+				enum nvme_print_flags flags)
+{
+	bool offset_matched = cfg->offset >= 0;
+	int offset;
+
+	if (offset_matched)
+		nvme_show_ctrl_register(bar, fabrics, cfg->offset, flags);
+
+	for (offset = NVME_REG_CAP; offset <= NVME_REG_PMRMSCU; offset += get_reg_size(offset)) {
+		if (!nvme_is_ctrl_reg(offset) || offset == cfg->offset || !is_reg_selected(cfg, offset))
+			continue;
+		nvme_show_ctrl_register(bar, fabrics, offset, flags);
+		if (!offset_matched)
+			offset_matched = true;
+	}
+
+	return offset_matched;
+}
+
+static int get_register(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Reads and shows the defined NVMe controller register.\n"
+		"Register offset must be one of:\n"
+		"CAP=0x0, VS=0x8, INTMS=0xc, INTMC=0x10, CC=0x14, CSTS=0x1c,\n"
+		"NSSR=0x20, AQA=0x24, ASQ=0x28, ACQ=0x30, CMBLOC=0x38,\n"
+		"CMBSZ=0x3c, BPINFO=0x40, BPRSEL=0x44, BPMBL=0x48, CMBMSC=0x50,\n"
+		"CMBSTS=0x58, CRTO=0x68, PMRCAP=0xe00, PMRCTL=0xe04,\n"
+		"PMRSTS=0xe08, PMREBS=0xe0c, PMRSWTP=0xe10, PMRMSCL=0xe14, PMRMSCU=0xe18";
+	const char *human_readable = "show register in readable format";
+	const char *cap = "CAP=0x0 register offset";
+	const char *vs = "VS=0x8 register offset";
+	const char *cmbloc = "CMBLOC=0x38 register offset";
+	const char *cmbsz = "CMBSZ=0x3c register offset";
+	const char *bpinfo = "BPINFO=0x40 register offset";
+	const char *cmbsts = "CMBSTS=0x58 register offset";
+	const char *cmbebs = "CMBEBS=0x5c register offset";
+	const char *cmbswtp = "CMBSWTP=0x60 register offset";
+	const char *crto = "CRTO=0x68 register offset";
+	const char *pmrcap = "PMRCAP=0xe00 register offset";
+	const char *pmrsts = "PMRSTS=0xe08 register offset";
+	const char *pmrebs = "PMREBS=0xe0c register offset";
+	const char *pmrswtp = "PMRSWTP=0xe10 register offset";
+	const char *pmrmscl = "PMRMSCL=0xe14 register offset";
+	const char *pmrmscu = "PMRMSCU=0xe18 register offset";
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int err;
+	enum nvme_print_flags flags;
+	bool fabrics = false;
+
+	void *bar;
+
+	struct get_reg_config cfg = {
+		.offset = -1,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_UINT("offset",         'O', &cfg.offset,         offset),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
+		  OPT_FLAG("cap",              0, &cfg.cap,            cap),
+		  OPT_FLAG("vs",               0, &cfg.vs,             vs),
+		  OPT_FLAG("cmbloc",           0, &cfg.cmbloc,         cmbloc),
+		  OPT_FLAG("cmbsz",            0, &cfg.cmbsz,          cmbsz),
+		  OPT_FLAG("bpinfo",           0, &cfg.bpinfo,         bpinfo),
+		  OPT_FLAG("cmbsts",           0, &cfg.cmbsts,         cmbsts),
+		  OPT_FLAG("cmbebs",           0, &cfg.cmbebs,         cmbebs),
+		  OPT_FLAG("cmbswtp",          0, &cfg.cmbswtp,        cmbswtp),
+		  OPT_FLAG("crto",             0, &cfg.crto,           crto),
+		  OPT_FLAG("pmrcap",           0, &cfg.pmrcap,         pmrcap),
+		  OPT_FLAG("pmrsts",           0, &cfg.pmrsts,         pmrsts),
+		  OPT_FLAG("pmrebs",           0, &cfg.pmrebs,         pmrebs),
+		  OPT_FLAG("pmrswtp",          0, &cfg.pmrswtp,        pmrswtp),
+		  OPT_FLAG("intms",            0, &cfg.intms,          intms),
+		  OPT_FLAG("intmc",            0, &cfg.intmc,          intmc),
+		  OPT_FLAG("cc",               0, &cfg.cc,             cc),
+		  OPT_FLAG("csts",             0, &cfg.csts,           csts),
+		  OPT_FLAG("nssr",             0, &cfg.nssr,           nssr),
+		  OPT_FLAG("aqa",              0, &cfg.aqa,            aqa),
+		  OPT_FLAG("asq",              0, &cfg.asq,            asq),
+		  OPT_FLAG("acq",              0, &cfg.acq,            acq),
+		  OPT_FLAG("bprsel",           0, &cfg.bprsel,         bprsel),
+		  OPT_FLAG("bpmbl",            0, &cfg.bpmbl,          bpmbl),
+		  OPT_FLAG("cmbmsc",           0, &cfg.cmbmsc,         cmbmsc),
+		  OPT_FLAG("nssd",             0, &cfg.nssd,           nssd),
+		  OPT_FLAG("pmrctl",           0, &cfg.pmrctl,         pmrctl),
+		  OPT_FLAG("pmrmscl",          0, &cfg.pmrmscl,        pmrmscl),
+		  OPT_FLAG("pmrmscu",          0, &cfg.pmrmscu,        pmrmscu));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(output_format_val, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (cfg.human_readable)
+		flags |= VERBOSE;
+
+	bar = mmap_registers(dev, false);
+	if (!bar) {
+		err = get_register_properties(dev_fd(dev), &bar, &cfg);
+		if (err)
+			return err;
+		fabrics = true;
+	}
+
+	nvme_show_init();
+
+	if (!get_register_offset(bar, fabrics, &cfg, flags)) {
+		nvme_show_error("offset required param");
+		err = -EINVAL;
+	}
+
+	nvme_show_finish();
+
+	if (fabrics)
+		free(bar);
+	else
+		munmap(bar, getpagesize());
+
+	return err;
+}
+
+static int nvme_set_single_property(int fd, int offset, uint64_t value)
+{
+	struct nvme_set_property_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.offset		= offset,
+		.value		= value,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	int err = nvme_set_property(&args);
+
+	if (err < 0)
+		nvme_show_error("set-property: %s", nvme_strerror(errno));
+	else if (!err)
+		printf("set-property: %#02x (%s), value: %#"PRIx64"\n", offset,
+		       nvme_register_to_string(offset), value);
+	else if (err > 0)
+		nvme_show_status(err);
+
+	return err;
+}
+
+static int set_register_property(int fd, int offset, uint64_t value)
+{
+	if (!nvme_is_fabrics_reg(offset)) {
+		printf("register: %#04x (%s) not fabrics\n", offset,
+		       nvme_register_to_string(offset));
+		return -EINVAL;
+	}
+
+	return nvme_set_single_property(fd, offset, value);
+}
+
+static int nvme_set_register(int fd, void *bar, int offset, uint64_t value, bool mmio32)
+{
+	if (!bar)
+		return set_register_property(fd, offset, value);
+
+	if (nvme_is_64bit_reg(offset))
+		mmio_write64(bar + offset, value, mmio32);
+	else
+		mmio_write32(bar + offset, value);
+
+	printf("set-register: %#02x (%s), value: %#"PRIx64"\n", offset,
+	       nvme_register_to_string(offset), value);
+
+	return 0;
+}
+
+static inline int set_register_names_check(struct argconfig_commandline_options *opts, int offset)
+{
+	switch (offset) {
+	case NVME_REG_INTMS:
+		if (argconfig_parse_seen(opts, "intms"))
+			return -EINVAL;
+		break;
+	case NVME_REG_INTMC:
+		if (argconfig_parse_seen(opts, "intmc"))
+			return -EINVAL;
+		break;
+	case NVME_REG_CC:
+		if (argconfig_parse_seen(opts, "cc"))
+			return -EINVAL;
+		break;
+	case NVME_REG_CSTS:
+		if (argconfig_parse_seen(opts, "csts"))
+			return -EINVAL;
+		break;
+	case NVME_REG_NSSR:
+		if (argconfig_parse_seen(opts, "nssr"))
+			return -EINVAL;
+		break;
+	case NVME_REG_AQA:
+		if (argconfig_parse_seen(opts, "aqa"))
+			return -EINVAL;
+		break;
+	case NVME_REG_ASQ:
+		if (argconfig_parse_seen(opts, "asq"))
+			return -EINVAL;
+		break;
+	case NVME_REG_ACQ:
+		if (argconfig_parse_seen(opts, "acq"))
+			return -EINVAL;
+		break;
+	case NVME_REG_BPRSEL:
+		if (argconfig_parse_seen(opts, "bprsel"))
+			return -EINVAL;
+		break;
+	case NVME_REG_CMBMSC:
+		if (argconfig_parse_seen(opts, "cmbmsc"))
+			return -EINVAL;
+		break;
+	case NVME_REG_NSSD:
+		if (argconfig_parse_seen(opts, "nssd"))
+			return -EINVAL;
+		break;
+	case NVME_REG_PMRCTL:
+		if (argconfig_parse_seen(opts, "pmrctl"))
+			return -EINVAL;
+		break;
+	case NVME_REG_PMRMSCL:
+		if (argconfig_parse_seen(opts, "pmrmscl"))
+			return -EINVAL;
+		break;
+	case NVME_REG_PMRMSCU:
+		if (argconfig_parse_seen(opts, "pmrmscu"))
+			return -EINVAL;
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
+static int set_register_offset(int fd, void *bar, struct argconfig_commandline_options *opts,
+			       struct set_reg_config *cfg)
+{
+	int err;
+
+	if (!argconfig_parse_seen(opts, "value")) {
+		nvme_show_error("value required param");
+		return -EINVAL;
+	}
+
+	err = set_register_names_check(opts, cfg->offset);
+	if (err) {
+		nvme_show_error("offset duplicated param");
+		return err;
+	}
+
+	err = nvme_set_register(fd, bar, cfg->offset, cfg->value, cfg->mmio32);
+	if (err)
+		return err;
+
+	return 0;
+}
+
+static int set_register_names(int fd, void *bar, struct argconfig_commandline_options *opts,
+			      struct set_reg_config *cfg)
+{
+	int err;
+
+	if (argconfig_parse_seen(opts, "intms")) {
+		err = nvme_set_register(fd, bar, NVME_REG_INTMS, cfg->intms, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "intmc")) {
+		err = nvme_set_register(fd, bar, NVME_REG_INTMC, cfg->intmc, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "cc")) {
+		err = nvme_set_register(fd, bar, NVME_REG_CC, cfg->cc, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "csts")) {
+		err = nvme_set_register(fd, bar, NVME_REG_CSTS, cfg->csts, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "nssr")) {
+		err = nvme_set_register(fd, bar, NVME_REG_NSSR, cfg->nssr, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "aqa")) {
+		err = nvme_set_register(fd, bar, NVME_REG_AQA, cfg->aqa, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "asq")) {
+		err = nvme_set_register(fd, bar, NVME_REG_ASQ, cfg->asq, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "acq")) {
+		err = nvme_set_register(fd, bar, NVME_REG_ACQ, cfg->acq, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "bprsel")) {
+		err = nvme_set_register(fd, bar, NVME_REG_BPRSEL, cfg->bprsel, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "cmbmsc")) {
+		err = nvme_set_register(fd, bar, NVME_REG_CMBMSC, cfg->cmbmsc, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "nssd")) {
+		err = nvme_set_register(fd, bar, NVME_REG_NSSD, cfg->nssd, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "pmrctl")) {
+		err = nvme_set_register(fd, bar, NVME_REG_PMRCTL, cfg->pmrctl, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "pmrmscl")) {
+		err = nvme_set_register(fd, bar, NVME_REG_PMRMSCL, cfg->pmrmscl, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	if (argconfig_parse_seen(opts, "pmrmscu")) {
+		err = nvme_set_register(fd, bar, NVME_REG_PMRMSCU, cfg->pmrmscu, cfg->mmio32);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
+
+static int set_register(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Writes and shows the defined NVMe controller register";
+	const char *value = "the value of the register to be set";
+	const char *mmio32 = "Access 64-bit registers as 2 32-bit";
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int err;
+
+	void *bar;
+
+	struct set_reg_config cfg = {
+		.offset = -1,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_UINT("offset",  'O', &cfg.offset,  offset),
+		  OPT_SUFFIX("value", 'V', &cfg.value,   value),
+		  OPT_FLAG("mmio32",  'm', &cfg.mmio32,  mmio32),
+		  OPT_UINT("intms",     0, &cfg.intms,   intms),
+		  OPT_UINT("intmc",     0, &cfg.intmc,   intmc),
+		  OPT_UINT("cc",        0, &cfg.cc,      cc),
+		  OPT_UINT("csts",      0, &cfg.csts,    csts),
+		  OPT_UINT("nssr",      0, &cfg.nssr,    nssr),
+		  OPT_UINT("aqa",       0, &cfg.aqa,     aqa),
+		  OPT_SUFFIX("asq",     0, &cfg.asq,     asq),
+		  OPT_SUFFIX("acq",     0, &cfg.acq,     acq),
+		  OPT_UINT("bprsel",    0, &cfg.bprsel,  bprsel),
+		  OPT_SUFFIX("bpmbl",   0, &cfg.bpmbl,   bpmbl),
+		  OPT_SUFFIX("cmbmsc",  0, &cfg.cmbmsc,  cmbmsc),
+		  OPT_UINT("nssd",      0, &cfg.nssd,    nssd),
+		  OPT_UINT("pmrctl",    0, &cfg.pmrctl,  pmrctl),
+		  OPT_UINT("pmrmscl",   0, &cfg.pmrmscl, pmrmscl),
+		  OPT_UINT("pmrmscu",   0, &cfg.pmrmscu, pmrmscu));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	bar = mmap_registers(dev, true);
+
+	if (argconfig_parse_seen(opts, "offset"))
+		err = set_register_offset(dev_fd(dev), bar, opts, &cfg);
+
+	if (!err)
+		err = set_register_names(dev_fd(dev), bar, opts, &cfg);
+
+	if (bar)
+		munmap(bar, getpagesize());
+
+	return err;
+}
+
 static int get_property(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Reads and shows the defined NVMe controller property\n"
@@ -5345,14 +6000,10 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 	__u64 value;
 	int err;
 
-	struct config {
-		int	offset;
-		bool	human_readable;
-	};
-
-	struct config cfg = {
+	struct get_reg_config cfg = {
 		.offset		= -1,
 		.human_readable	= false,
+		.fabrics	= true,
 	};
 
 	NVME_ARGS(opts,
@@ -5368,20 +6019,9 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		return -EINVAL;
 	}
 
-	struct nvme_get_property_args args = {
-		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
-		.offset		= cfg.offset,
-		.value		= &value,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-	};
-	err = nvme_get_property(&args);
-	if (err < 0)
-		nvme_show_error("get-property: %s", nvme_strerror(errno));
-	else if (!err)
+	err = nvme_get_single_property(dev_fd(dev), &cfg, &value);
+	if (!err)
 		nvme_show_single_property(cfg.offset, value, cfg.human_readable);
-	else if (err > 0)
-		nvme_show_status(err);
 
 	return err;
 }
@@ -5396,12 +6036,7 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
 
-	struct config {
-		int	offset;
-		int	value;
-	};
-
-	struct config cfg = {
+	struct set_reg_config cfg = {
 		.offset	= -1,
 		.value	= -1,
 	};
@@ -5423,24 +6058,7 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		return -EINVAL;
 	}
 
-	struct nvme_set_property_args args = {
-		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
-		.offset		= cfg.offset,
-		.value		= cfg.value,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
-	};
-	err = nvme_set_property(&args);
-	if (err < 0)
-		nvme_show_error("set-property: %s", nvme_strerror(errno));
-	else if (!err)
-		printf("set-property: %02x (%s), value: %#08x\n", cfg.offset,
-		       nvme_register_to_string(cfg.offset), cfg.value);
-	else if (err > 0)
-		nvme_show_status(err);
-
-	return err;
+	return nvme_set_single_property(dev_fd(dev), cfg.offset, cfg.value);
 }
 
 static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)

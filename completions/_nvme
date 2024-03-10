@@ -104,6 +104,8 @@ _nvme () {
 	'show-topology:show subsystem topology'
 	'nvme-mi-recv:send a NVMe-MI receive command'
 	'nvme-mi-send:send a NVMe-MI send command'
+	'get-reg:read and show the defined NVMe controller register'
+	'set-seg:write and show the defined NVMe controller register'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
@@ -2243,6 +2245,81 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme nvme-mi-send options" _nvme_mi_send
+			;;
+		(get-reg)
+			local _get_reg
+			_get_reg=(
+			--offset=':offset of the requested register'
+			-O':alias for --offset'
+			--human-readable':show register in readable format'
+			-H':alias for --human-readable'
+			--cap':CAP=0x0 register offset'
+			--vs':VS=0x8 register offset'
+			--cmbloc':CMBLOC=0x38 register offset'
+			--cmbsz':CMBSZ=0x3c register offset'
+			--bpinfo':BPINFO=0x40 register offset'
+			--cmbsts':CMBSTS=0x58 register offset'
+			--cmbebs':CMBEBS=0x5c register offset'
+			--cmbswtp':CMBSWTP=0x60 register offset'
+			--crto':CRTO=0x68 register offset'
+			--pmrcap':PMRCAP=0xe00 register offset'
+			--pmrsts':PMRSTS=0xe08 register offset'
+			--pmrebs':PMREBS=0xe0c register offset'
+			--pmrswtp':PMRSWTP=0xe10 register offset'
+			--intms':INTMS=0xc register offset'
+			--intmc':INTMC=0x10 register offset'
+			--cc':CC=0x14 register offset'
+			--csts':CSTS=0x1c register offset'
+			--nssr':NSSR=0x20 register offset'
+			--aqa':AQA=0x24 register offset'
+			--asq':ASQ=0x28 register offset'
+			--acq':ACQ=0x30 register offset'
+			--bprsel':BPRSEL=0x44 register offset'
+			--bpmbl':BPMBL=0x48 register offset'
+			--cmbmsc':CMBMSC=0x50 register offset'
+			--nssd':NSSD=0x64 register offset'
+			--pmrctl':PMRCTL=0xe04 register offset'
+			--pmrmscl':PMRMSCL=0xe14 register offset'
+			--pmrmscu':PMRMSCU=0xe18 register offset'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme get-reg options" _get_reg
+			;;
+		(set-reg)
+			local _set_reg
+			_set_reg=(
+			--offset=':offset of the requested register'
+			-O':alias for --offset'
+			--value=':the value of the register to be set'
+			-V':alias for --value'
+			--mmio32':Access 64-bit registers as 2 32-bit'
+			-m':alias for --mmio32'
+			--intms=':INTMS=0xc register offset'
+			--intmc=':INTMC=0x10 register offset'
+			--cc=':CC=0x14 register offset'
+			--csts=':CSTS=0x1c register offset'
+			--nssr=':NSSR=0x20 register offset'
+			--aqa=':AQA=0x24 register offset'
+			--asq=':ASQ=0x28 register offset'
+			--acq=':ACQ=0x30 register offset'
+			--bprsel=':BPRSEL=0x44 register offset'
+			--bpmbl=':BPMBL=0x48 register offset'
+			--cmbmsc=':CMBMSC=0x50 register offset'
+			--nssd=':NSSD=0x64 register offset'
+			--pmrctl=':PMRCTL=0xe04 register offset'
+			--pmrmscl=':PMRMSCL=0xe14 register offset'
+			--pmrmscu=':PMRMSCU=0xe18 register offset'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme set-reg options" _set_reg
 			;;
 		(version)
 			local _version
