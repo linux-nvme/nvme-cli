@@ -9,11 +9,11 @@ SYNOPSIS
 --------
 [verse]
 'nvme get-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--feature-id=<fid> | -f <fid>] [--cdw11=<cdw11>]
+			[--feature-id=<fid> | -f <fid>]
 			[--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--data-len=<data-len> | -l <data-len>]
 			[--sel=<select> | -s <select>]
-			[--raw-binary | -b]
+			[--raw-binary | -b] [--cdw11=<cdw11> | -c <cdw11>]
 			[--human-readable | -H]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
@@ -69,6 +69,7 @@ OPTIONS
 	known features do not use this value. The exception is LBA
 	Range Type
 
+-c <cdw11>::
 --cdw11=<cdw11>::
 	The value for command dword 11, if applicable.
 
