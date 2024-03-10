@@ -32,7 +32,7 @@ static inline uint64_t mmio_read64(void *addr)
 	low = le32_to_cpu(*p);
 	high = le32_to_cpu(*(p + 1));
 
-	return ((uint64_t) high << 32) | low;
+	return ((uint64_t)high << 32) | low;
 }
 
 #endif
