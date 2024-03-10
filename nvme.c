@@ -504,7 +504,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		"decoded format (default), json or binary.";
 	const char *groups = "Return ANA groups only.";
 
-	_cleanup_nvme_dev_ struct nvme_dev *dev= NULL;
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_free_ void *ana_log = NULL;
 	size_t ana_log_len;
