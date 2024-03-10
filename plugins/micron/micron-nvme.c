@@ -216,7 +216,6 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 	int length = 0;
 	int nIndex = 0;
 	char *strTemp = NULL;
-	struct stat dirStat;
 	int j;
 	int k = 0;
 	int i = 0;
@@ -294,16 +293,15 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 	strMainDirName[nIndex] = '\0';
 
 	j = 1;
-	while (!stat(strMainDirName, &dirStat)) {
+	while (mkdir(strMainDirName, 0777) < 0) {
+		if (errno != EEXIST) {
+			err = -1;
+			goto exit_status;
+		}
 		strMainDirName[nIndex] = '\0';
 		sprintf(strAppend, "-%d", j);
 		strcat(strMainDirName, strAppend);
 		j++;
-	}
-
-	if (mkdir(strMainDirName, 0777) < 0) {
-		err = -1;
-		goto exit_status;
 	}
 
 	if (strOSDirName) {
@@ -321,7 +319,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 				rmdir(strOSDirName);
 			rmdir(strMainDirName);
 			err = -1;
-	}
+		}
 	}
 
 exit_status:
