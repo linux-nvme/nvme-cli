@@ -1359,21 +1359,21 @@ static void stdout_registers_cmbsts(__u32 cmbsts)
 
 static void stdout_registers_pmrcap(__u32 pmrcap)
 {
-	printf("\tController Memory Space Supported                   (CMSS): "\
-	       "Referencing PMR with host supplied addresses is %s\n",
-	       ((pmrcap & 0x01000000) >> 24) ? "Supported" : "Not Supported");
+	printf("\tController Memory Space Supported                   (CMSS): ");
+	printf("Referencing PMR with host supplied addresses is %sSupported\n",
+	       NVME_PMRCAP_CMSS(pmrcap) ? "" : "Not ");
 	printf("\tPersistent Memory Region Timeout                   (PMRTO): %x\n",
-		(pmrcap & 0x00ff0000) >> 16);
+	       NVME_PMRCAP_PMRTO(pmrcap));
 	printf("\tPersistent Memory Region Write Barrier Mechanisms (PMRWBM): %x\n",
-		(pmrcap & 0x00003c00) >> 10);
-	printf("\tPersistent Memory Region Time Units                (PMRTU): PMR time unit is %s\n",
-		(pmrcap & 0x00000300) >> 8 ? "minutes" : "500 milliseconds");
+	       NVME_PMRCAP_PMRWMB(pmrcap));
+	printf("\tPersistent Memory Region Time Units                (PMRTU): ");
+	printf("PMR time unit is %s\n", NVME_PMRCAP_PMRTU(pmrcap) ? "minutes" : "500 milliseconds");
 	printf("\tBase Indicator Register                              (BIR): %x\n",
-		(pmrcap & 0x000000e0) >> 5);
-	printf("\tWrite Data Support                                   (WDS): Write data to the PMR is %s\n",
-		(pmrcap & 0x00000010) ? "supported" : "not supported");
-	printf("\tRead Data Support                                    (RDS): Read data from the PMR is %s\n",
-		(pmrcap & 0x00000008) ? "supported" : "not supported");
+	       NVME_PMRCAP_BIR(pmrcap));
+	printf("\tWrite Data Support                                   (WDS): ");
+	printf("Write data to the PMR is %ssupported\n", NVME_PMRCAP_WDS(pmrcap) ? "" : "not ");
+	printf("\tRead Data Support                                    (RDS): ");
+	printf("Read data from the PMR is %ssupported\n", NVME_PMRCAP_RDS(pmrcap) ? "" : "not ");
 }
 
 static void stdout_registers_pmrctl(__u32 pmrctl)
