@@ -6402,6 +6402,8 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	__u32 nlbs[256] = {0,};
 	__u64 slbas[256] = {0,};
 	int err;
+	struct timeval start_time;
+	struct timeval end_time;
 
 	struct config {
 		__u32	namespace_id;
@@ -6412,6 +6414,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		bool	idw;
 		bool	idr;
 		__u32	cdw11;
+		bool	latency;
 	};
 
 	struct config cfg = {
@@ -6433,7 +6436,8 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		  OPT_FLAG("ad",           'd', &cfg.ad,           ad),
 		  OPT_FLAG("idw",          'w', &cfg.idw,          idw),
 		  OPT_FLAG("idr",          'r', &cfg.idr,          idr),
-		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11));
+		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11),
+		  OPT_FLAG("latency",      'l', &cfg.latency,      latency));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6473,7 +6477,13 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
 	};
+	if (cfg.latency)
+		gettimeofday(&start_time, NULL);
 	err = nvme_dsm(&args);
+	if (cfg.latency) {
+		gettimeofday(&end_time, NULL);
+		printf(" latency: %s: %llu us\n", __func__, elapsed_utime(start_time, end_time));
+	}
 	if (err < 0)
 		nvme_show_error("data-set management: %s", nvme_strerror(errno));
 	else if (err != 0)

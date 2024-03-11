@@ -291,7 +291,8 @@ nvme_list_opts () {
 			;;
 		"dsm")
 		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b\
-			--slbs= -s --ad -d --idw -w --idr -r --cdw11= -c"
+			--slbs= -s --ad -d --idw -w --idr -r --cdw11= -c\
+			--latency -l"
 			;;
 		"copy")
 		opts+=" --namespace-id= -n --sdlba= -d --blocks= -b --slbs= -s \

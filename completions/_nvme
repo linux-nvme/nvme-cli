@@ -1654,6 +1654,8 @@ _nvme () {
 			-r':alias of --idr'
 			--cdw11=':value for command dword 11'
 			-c':alias for --cdw11'
+			--latency':latency statistics will be output following dsm'
+			-l':alias of --latency'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme dsm options" _dsm
