@@ -1395,12 +1395,13 @@ static void stdout_registers_pmrsts(__u32 pmrsts, __u32 pmrctl)
 
 static void stdout_registers_pmrebs(__u32 pmrebs)
 {
-	printf("\tPMR Elasticity Buffer Size Base  (PMRWBZ): %x\n", (pmrebs & 0xffffff00) >> 8);
-	printf("\tRead Bypass Behavior                     : memory reads not conflicting with memory writes "\
-	       "in the PMR Elasticity Buffer %s bypass those memory writes\n",
-	       (pmrebs & 0x00000010) ? "SHALL" : "MAY");
+	printf("\tPMR Elasticity Buffer Size Base  (PMRWBZ): %x\n", NVME_PMREBS_PMRWBZ(pmrebs));
+	printf("\tRead Bypass Behavior                     : ");
+	printf("memory reads not conflicting with memory writes ");
+	printf("in the PMR Elasticity Buffer %s bypass those memory writes\n",
+	       NVME_PMREBS_RBB(pmrebs) ? "SHALL" : "MAY");
 	printf("\tPMR Elasticity Buffer Size Units (PMRSZU): %s\n",
-		nvme_register_pmr_pmrszu_to_string(pmrebs & 0x0000000f));
+	       nvme_register_pmr_pmrszu_to_string(NVME_PMREBS_PMRSZU(pmrebs)));
 }
 
 static void stdout_registers_pmrswtp(__u32 pmrswtp)
