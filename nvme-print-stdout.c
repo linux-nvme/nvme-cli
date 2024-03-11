@@ -1415,9 +1415,8 @@ static void stdout_registers_pmrswtp(__u32 pmrswtp)
 static void stdout_registers_pmrmscl(uint32_t pmrmscl)
 {
 	printf("\tController Base Address         (CBA): %#x\n",
-		(pmrmscl & 0xfffff000) >> 12);
-	printf("\tController Memory Space Enable (CMSE): %#x\n\n",
-		(pmrmscl & 0x00000002) >> 1);
+	       (uint32_t)NVME_PMRMSC_CBA(pmrmscl));
+	printf("\tController Memory Space Enable (CMSE): %#x\n\n", NVME_PMRMSC_CMSE(pmrmscl));
 }
 
 static void stdout_registers_pmrmscu(uint32_t pmrmscu)
