@@ -1403,9 +1403,9 @@ static void stdout_registers_pmrebs(__u32 pmrebs)
 static void stdout_registers_pmrswtp(__u32 pmrswtp)
 {
 	printf("\tPMR Sustained Write Throughput       (PMRSWTV): %x\n",
-		(pmrswtp & 0xffffff00) >> 8);
+	       NVME_PMRSWTP_PMRSWTV(pmrswtp));
 	printf("\tPMR Sustained Write Throughput Units (PMRSWTU): %s/second\n",
-		nvme_register_pmr_pmrszu_to_string(pmrswtp & 0x0000000f));
+	       nvme_register_pmr_pmrszu_to_string(NVME_PMRSWTP_PMRSWTU(pmrswtp)));
 }
 
 static void stdout_registers_pmrmscl(uint32_t pmrmscl)
