@@ -1379,16 +1379,14 @@ static void stdout_registers_pmrctl(__u32 pmrctl)
 
 static void stdout_registers_pmrsts(__u32 pmrsts, __u32 pmrctl)
 {
-	printf("\tController Base Address Invalid (CBAI): %x\n",
-		(pmrsts & 0x00001000) >> 12);
+	printf("\tController Base Address Invalid (CBAI): %x\n", NVME_PMRSTS_CBAI(pmrsts));
 	printf("\tHealth Status                   (HSTS): %s\n",
-		nvme_register_pmr_hsts_to_string((pmrsts & 0x00000e00) >> 9));
-	printf("\tNot Ready                       (NRDY): "\
-		"The Persistent Memory Region is %s to process "\
-		"PCI Express memory read and write requests\n",
-			(pmrsts & 0x00000100) == 0 && (pmrctl & 0x00000001) ?
-				"READY" : "Not Ready");
-	printf("\tError                            (ERR): %x\n", (pmrsts & 0x000000ff));
+	       nvme_register_pmr_hsts_to_string(NVME_PMRSTS_HSTS(pmrsts)));
+	printf("\tNot Ready                       (NRDY): ");
+	printf("The Persistent Memory Region is %s to process ",
+	       !NVME_PMRSTS_NRDY(pmrsts) && NVME_PMRCTL_EN(pmrctl) ? "READY" : "Not Ready");
+	printf("PCI Express memory read and write requests\n");
+	printf("\tError                            (ERR): %x\n", NVME_PMRSTS_ERR(pmrsts));
 }
 
 static void stdout_registers_pmrebs(__u32 pmrebs)
