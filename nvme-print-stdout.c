@@ -1374,8 +1374,7 @@ static void stdout_registers_pmrcap(__u32 pmrcap)
 
 static void stdout_registers_pmrctl(__u32 pmrctl)
 {
-	printf("\tEnable (EN): PMR is %s\n", (pmrctl & 0x00000001) ?
-		"READY" : "Disabled");
+	printf("\tEnable (EN): PMR is %s\n", NVME_PMRCTL_EN(pmrctl) ? "READY" : "Disabled");
 }
 
 static void stdout_registers_pmrsts(__u32 pmrsts, __u32 pmrctl)
