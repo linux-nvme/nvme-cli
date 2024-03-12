@@ -909,12 +909,14 @@ static void stdout_fdp_events(struct nvme_fdp_events_log *log)
 		tm = localtime(&ts);
 
 		printf("Event[%u]\n", i);
-		printf("  Event Type: 0x%"PRIx8" (%s)\n", event->type, nvme_fdp_event_to_string(event->type));
+		printf("  Event Type: 0x%"PRIx8" (%s)\n", event->type,
+		       nvme_fdp_event_to_string(event->type));
 		printf("  Event Timestamp: %"PRIu64" (%s)\n", int48_to_long(event->ts.timestamp),
 			strftime(buffer, sizeof(buffer), "%c %Z", tm) ? buffer : "-");
 
 		if (event->flags & NVME_FDP_EVENT_F_PIV)
-			printf("  Placement Identifier (PID): 0x%"PRIx16"\n", le16_to_cpu(event->pid));
+			printf("  Placement Identifier (PID): 0x%"PRIx16"\n",
+			       le16_to_cpu(event->pid));
 
 		if (event->flags & NVME_FDP_EVENT_F_NSIDV)
 			printf("  Namespace Identifier (NSID): %"PRIu32"\n", le32_to_cpu(event->nsid));
@@ -927,7 +929,8 @@ static void stdout_fdp_events(struct nvme_fdp_events_log *log)
 			printf("  Number of LBAs Moved (NLBAM): %"PRIu16"\n", le16_to_cpu(mr->nlbam));
 
 			if (mr->flags & NVME_FDP_EVENT_REALLOC_F_LBAV)
-				printf("  Logical Block Address (LBA): 0x%"PRIx64"\n", le64_to_cpu(mr->lba));
+				printf("  Logical Block Address (LBA): 0x%"PRIx64"\n",
+				       le64_to_cpu(mr->lba));
 		}
 
 		if (event->flags & NVME_FDP_EVENT_F_LV) {
@@ -1243,8 +1246,8 @@ static void stdout_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 		printf("\tController Memory Buffer feature is not supported\n\n");
 		return;
 	}
-	printf("\tOffset                                                        (OFST): 0x%x (See cmbsz.szu for granularity)\n",
-	       (cmbloc & 0xfffff000) >> 12);
+	printf("\tOffset                                                        (OFST): ");
+	printf("0x%x (See cmbsz.szu for granularity)\n", (cmbloc & 0xfffff000) >> 12);
 
 	printf("\tCMB Queue Dword Alignment                                     (CQDA): %d\n",
 	       (cmbloc & 0x00000100) >> 8);
@@ -2281,8 +2284,8 @@ static void stdout_id_ctrl_ocfs(__le16 ctrl_ocfs)
 		printf("  [15:4] : %#x\tReserved\n", rsvd);
 	for (copy_fmt = 3; copy_fmt >= 0; copy_fmt--) {
 		copy_fmt_supported = ocfs >> copy_fmt & 1;
-		printf("  [%d:%d] : %#x\tController Copy Format %xh %sSupported\n", copy_fmt, copy_fmt,
-			copy_fmt_supported, copy_fmt, copy_fmt_supported ? "" : "Not ");
+		printf("  [%d:%d] : %#x\tController Copy Format %xh %sSupported\n", copy_fmt,
+		       copy_fmt, copy_fmt_supported, copy_fmt, copy_fmt_supported ? "" : "Not ");
 	}
 	printf("\n");
 }
