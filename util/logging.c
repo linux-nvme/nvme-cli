@@ -65,22 +65,22 @@ static void nvme_show_common(struct nvme_passthru_cmd *cmd)
 	printf("timeout_ms   : %08x\n", cmd->timeout_ms);
 }
 
-static void nvme_show_command(struct nvme_passthru_cmd *cmd, int err, struct timeval start,
-			      struct timeval end)
+static void nvme_show_command(struct nvme_passthru_cmd *cmd, int err)
 {
 	nvme_show_common(cmd);
 	printf("result       : %08x\n", cmd->result);
 	printf("err          : %d\n", err);
-	printf("latency      : %lu us\n",
-	       (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec));
 }
 
-static void nvme_show_command64(struct nvme_passthru_cmd64 *cmd, int err, struct timeval start,
-			      struct timeval end)
+static void nvme_show_command64(struct nvme_passthru_cmd64 *cmd, int err)
 {
 	nvme_show_common((struct nvme_passthru_cmd *)cmd);
 	printf("result       : %"PRIx64"\n", (uint64_t)(uintptr_t)cmd->result);
 	printf("err          : %d\n", err);
+}
+
+static void nvme_show_latency(struct timeval start, struct timeval end)
+{
 	printf("latency      : %lu us\n",
 	       (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec));
 }
@@ -92,14 +92,16 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	struct timeval end;
 	int err;
 
-	if (log_level >= LOG_DEBUG)
+	if (log_level >= LOG_INFO)
 		gettimeofday(&start, NULL);
 
 	err = ioctl(fd, ioctl_cmd, cmd);
 
-	if (log_level >= LOG_DEBUG) {
+	if (log_level >= LOG_INFO) {
 		gettimeofday(&end, NULL);
-		nvme_show_command(cmd, err, start, end);
+		if (log_level >= LOG_DEBUG)
+			nvme_show_command(cmd, err);
+		nvme_show_latency(start, end);
 	}
 
 	if (err >= 0 && result)
@@ -116,15 +118,17 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 	struct timeval end;
 	int err;
 
-	if (log_level >= LOG_DEBUG)
+	if (log_level >= LOG_INFO)
 		gettimeofday(&start, NULL);
 
 
 	err = ioctl(fd, ioctl_cmd, cmd);
 
-	if (log_level >= LOG_DEBUG) {
+	if (log_level >= LOG_INFO) {
 		gettimeofday(&end, NULL);
-		nvme_show_command64(cmd, err, start, end);
+		if (log_level >= LOG_DEBUG)
+			nvme_show_command64(cmd, err);
+		nvme_show_latency(start, end);
 	}
 
 	if (err >= 0 && result)
