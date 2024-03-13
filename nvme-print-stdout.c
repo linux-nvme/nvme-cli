@@ -4636,7 +4636,7 @@ static void stdout_lba_status(struct nvme_lba_status *list,
 	for (idx = 0; idx < list->nlsd; idx++) {
 		struct nvme_lba_status_desc *e = &list->descs[idx];
 
-		printf("{ DSLBA: 0x%016"PRIu64", NLB: 0x%08x, Status: 0x%02x }\n",
+		printf("{ DSLBA: 0x%016"PRIx64", NLB: 0x%08x, Status: 0x%02x }\n",
 				le64_to_cpu(e->dslba), le32_to_cpu(e->nlb),
 				e->status);
 	}
