@@ -5527,11 +5527,13 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 	char previous_fw[9];
 	char new_fw[9];
 	char commit_action_bin[8];
-	char time_str[11];
+	char time_str[100];
 	__u16 oldestEntryIdx = 0, entryIdx = 0;
+	uint64_t timestamp;
+	__u64 timestamp_sec;
 	char *null_fw = "--------";
 
-	memset((void *)time_str, 0, 11);
+	memset((void *)time_str, '\0', 100);
 
 	if (data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
 		printf("  Firmware Activate History Log\n");
@@ -5578,17 +5580,17 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 
 			printf("%5"PRIu16"", (uint16_t)le16_to_cpu(fw_act_history_entry->entry[entryIdx].fw_act_hist_entries));
 
-			uint64_t timestamp = (0x0000FFFFFFFFFFFF &
+			timestamp = (0x0000FFFFFFFFFFFF &
 				le64_to_cpu(
 					fw_act_history_entry->entry[entryIdx].timestamp));
-			__u64 timestamp_sec = le64_to_cpu(timestamp) / 1000;
+			timestamp_sec = timestamp / 1000;
 			if (cust_id == WDC_CUSTOMER_ID_0x1005) {
 				printf("       ");
 				memset((void *)time_str, 0, 9);
-				sprintf((char *)time_str, "%04d:%02d:%02d",
-						(int)(le64_to_cpu(timestamp_sec)/3600),
-						(int)((le64_to_cpu(timestamp_sec%3600)/60)),
-						(int)(le64_to_cpu(timestamp_sec%60)));
+				sprintf((char *)time_str, "%"PRIu32":%u:%u",
+						(__u32)(timestamp_sec/3600),
+						(__u8)(timestamp_sec%3600/60),
+						(__u8)(timestamp_sec%60));
 
 				printf("%s", time_str);
 				printf("     ");
@@ -5596,10 +5598,10 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 				printf("       ");
 
 				memset((void *)time_str, 0, 9);
-				sprintf((char *)time_str, "%04d:%02d:%02d",
-						(int)((le64_to_cpu(timestamp_sec)/3600)%24),
-						(int)((le64_to_cpu(timestamp_sec)/60)%60),
-						(int)(le64_to_cpu(timestamp_sec)%60));
+				sprintf((char *)time_str, "%"PRIu32":%u:%u",
+						(__u32)((timestamp_sec/3600)%24),
+						(__u8)((timestamp_sec/60)%60),
+						(__u8)(timestamp_sec%60));
 				printf("%s", time_str);
 				printf("     ");
 			} else {
@@ -5708,13 +5710,15 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 	char new_fw[9];
 	char commit_action_bin[8];
 	char fail_str[32];
-	char time_str[11];
+	char time_str[100];
 	char ext_time_str[20];
+	uint64_t timestamp;
+	__u64 timestamp_sec;
 
 	memset((void *)previous_fw, 0, 9);
 	memset((void *)new_fw, 0, 9);
 	memset((void *)commit_action_bin, 0, 8);
-	memset((void *)time_str, 0, 11);
+	memset((void *)time_str, '\0', 100);
 	memset((void *)ext_time_str, 0, 20);
 	memset((void *)fail_str, 0, 11);
 	char *null_fw = "--------";
@@ -5754,23 +5758,23 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries,
 			json_object_add_value_int(root, "Entry",
 			    le16_to_cpu(fw_act_history_entry->entry[entryIdx].fw_act_hist_entries));
 
-			uint64_t timestamp = (0x0000FFFFFFFFFFFF &
+			timestamp = (0x0000FFFFFFFFFFFF &
 				le64_to_cpu(
 					fw_act_history_entry->entry[entryIdx].timestamp));
-			__u64 timestamp_sec = le64_to_cpu(timestamp)/1000;
+			timestamp_sec = timestamp / 1000;
 			if (cust_id == WDC_CUSTOMER_ID_0x1005) {
-				sprintf((char *)time_str, "%04d:%02d:%02d",
-						(int)(le64_to_cpu(timestamp_sec)/3600),
-						(int)((le64_to_cpu(timestamp_sec)%3600/60)),
-						(int)(le64_to_cpu(timestamp_sec)%60));
+				sprintf((char *)time_str, "%"PRIu32":%u:%u",
+						(__u32)(timestamp_sec/3600),
+						(__u8)(timestamp_sec%3600/60),
+						(__u8)(timestamp_sec%60));
 
 				json_object_add_value_string(root, "Power on Hour", time_str);
 
 			} else if (vendor_id == WDC_NVME_SNDK_VID) {
-				sprintf((char *)time_str, "%04d:%02d:%02d",
-						(int)((le64_to_cpu(timestamp_sec)/3600)%24),
-						(int)((le64_to_cpu(timestamp_sec)/60)%60),
-						(int)(le64_to_cpu(timestamp_sec)%60));
+				sprintf((char *)time_str, "%"PRIu32":%u:%u",
+						(__u32)((timestamp_sec/3600)%24),
+						(__u8)((timestamp_sec/60)%60),
+						(__u8)(timestamp_sec%60));
 				json_object_add_value_string(root, "Power on Hour", time_str);
 			} else {
 				json_object_add_value_uint64(root, "Timestamp", timestamp);
@@ -9015,7 +9019,6 @@ static int wdc_get_fw_act_history_C2(nvme_root_t r, struct nvme_dev *dev,
 	enum nvme_print_flags fmt;
 	__u8 *data;
 	int ret;
-	int i;
 	bool c2GuidMatch = false;
 
 	if (!wdc_check_device(r, dev))
@@ -9048,15 +9051,9 @@ static int wdc_get_fw_act_history_C2(nvme_root_t r, struct nvme_dev *dev,
 		/* Get the log page data and verify the GUID */
 		fw_act_history_log = (struct wdc_fw_act_history_log_format_c2 *)(data);
 
-		for (i = 0; i < 16; i++) {
-			if (ocp_C2_guid[i] != fw_act_history_log->log_page_guid[i]) {
-				c2GuidMatch = false;
-				break;
-			}
-		}
-
-		if (i == 16)
-			c2GuidMatch = true;
+		c2GuidMatch = !memcmp(ocp_C2_guid,
+				fw_act_history_log->log_page_guid,
+				WDC_C2_GUID_LENGTH);
 
 		if (c2GuidMatch) {
 			/* parse the data */
@@ -9147,7 +9144,7 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 			ret = wdc_get_fw_act_history_C2(r, dev, cfg.output_format);
 		else
 			ret = wdc_get_fw_act_history(r, dev, cfg.output_format);
-	} else if (capabilities & WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 {
+	} else if (capabilities & WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2) {
 		ret = wdc_get_fw_act_history_C2(r, dev, cfg.output_format);
 	}
 
