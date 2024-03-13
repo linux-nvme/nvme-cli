@@ -878,7 +878,7 @@ static void stdout_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len)
 	for (int i = 0; i < nruh; i++) {
 		struct nvme_fdp_ruhu_desc *ruhu = &log->ruhus[i];
 
-		printf("Reclaim Unit Handle %d Attributes: 0x%"PRIx8" (%s)\n", i, ruhu->ruha,
+		printf("Reclaim Unit Handle %d Attributes: %#"PRIx8" (%s)\n", i, ruhu->ruha,
 				ruhu->ruha == 0x0 ? "Unused" : (
 				ruhu->ruha == 0x1 ? "Host Specified" : (
 				ruhu->ruha == 0x2 ? "Controller Specified" : "Unknown")));
@@ -909,13 +909,13 @@ static void stdout_fdp_events(struct nvme_fdp_events_log *log)
 		tm = localtime(&ts);
 
 		printf("Event[%u]\n", i);
-		printf("  Event Type: 0x%"PRIx8" (%s)\n", event->type,
+		printf("  Event Type: %#"PRIx8" (%s)\n", event->type,
 		       nvme_fdp_event_to_string(event->type));
 		printf("  Event Timestamp: %"PRIu64" (%s)\n", int48_to_long(event->ts.timestamp),
 			strftime(buffer, sizeof(buffer), "%c %Z", tm) ? buffer : "-");
 
 		if (event->flags & NVME_FDP_EVENT_F_PIV)
-			printf("  Placement Identifier (PID): 0x%"PRIx16"\n",
+			printf("  Placement Identifier (PID): %#"PRIx16"\n",
 			       le16_to_cpu(event->pid));
 
 		if (event->flags & NVME_FDP_EVENT_F_NSIDV)
@@ -929,7 +929,7 @@ static void stdout_fdp_events(struct nvme_fdp_events_log *log)
 			printf("  Number of LBAs Moved (NLBAM): %"PRIu16"\n", le16_to_cpu(mr->nlbam));
 
 			if (mr->flags & NVME_FDP_EVENT_REALLOC_F_LBAV)
-				printf("  Logical Block Address (LBA): 0x%"PRIx64"\n",
+				printf("  Logical Block Address (LBA): %#"PRIx64"\n",
 				       le64_to_cpu(mr->lba));
 		}
 
@@ -1247,7 +1247,7 @@ static void stdout_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 		return;
 	}
 	printf("\tOffset                                                        (OFST): ");
-	printf("0x%x (See cmbsz.szu for granularity)\n", (cmbloc & 0xfffff000) >> 12);
+	printf("%#x (See cmbsz.szu for granularity)\n", (cmbloc & 0xfffff000) >> 12);
 
 	printf("\tCMB Queue Dword Alignment                                     (CQDA): %d\n",
 	       (cmbloc & 0x00000100) >> 8);
@@ -1267,7 +1267,7 @@ static void stdout_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 	printf("\tCMB Queue Mixed Memory Support                               (CQMMS): %s\n",
 	       enforced[(cmbloc & 0x00000008) >> 3]);
 
-	printf("\tBase Indicator Register                                        (BIR): 0x%x\n\n",
+	printf("\tBase Indicator Register                                        (BIR): %#x\n\n",
 	       (cmbloc & 0x00000007));
 }
 
@@ -1589,10 +1589,10 @@ static void stdout_single_property(int offset, uint64_t value64)
 
 	if (!human) {
 		if (nvme_is_64bit_reg(offset))
-			printf("property: 0x%02x (%s), value: %"PRIx64"\n",
+			printf("property: %#02x (%s), value: %#"PRIx64"\n",
 			       offset, nvme_register_to_string(offset), value64);
 		else
-			printf("property: 0x%02x (%s), value: %x\n", offset,
+			printf("property: %#02x (%s), value: %#x\n", offset,
 			       nvme_register_to_string(offset), value32);
 		return;
 	}
@@ -1627,7 +1627,7 @@ static void stdout_single_property(int offset, uint64_t value64)
 		stdout_registers_crto(value32);
 		break;
 	default:
-		printf("unknown property: 0x%02x (%s), value: %"PRIx64"\n",
+		printf("unknown property: %#02x (%s), value: %"PRIx64"\n",
 		       offset, nvme_register_to_string(offset), value64);
 		break;
 	}
@@ -3246,12 +3246,12 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 	for (i = 0; i <= id_ns->nlbaf; i++) {
 		if (human)
-			printf("LBA Format Extension %2d : Zone Size: 0x%"PRIx64" LBAs - "
+			printf("LBA Format Extension %2d : Zone Size: %#"PRIx64" LBAs - "
 					"Zone Descriptor Extension Size: %-1d bytes%s\n",
 				i, le64_to_cpu(ns->lbafe[i].zsze), ns->lbafe[i].zdes << 6,
 				i == lbaf ? " (in use)" : "");
 		else
-			printf("lbafe %2d: zsze:0x%"PRIx64" zdes:%u%s\n", i,
+			printf("lbafe %2d: zsze:%#"PRIx64" zdes:%u%s\n", i,
 				(uint64_t)le64_to_cpu(ns->lbafe[i].zsze),
 				ns->lbafe[i].zdes, i == lbaf ? " (in use)" : "");
 	}
@@ -3442,18 +3442,18 @@ static void stdout_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc
 	for (i = 0; i < entries; i++) {
 		printf("   SCEntry[%-3d]:\n", i);
 		printf("................\n");
-		printf("     SCID      : Secondary Controller Identifier : 0x%.04x\n",
+		printf("     SCID      : Secondary Controller Identifier : %#.04x\n",
 				le16_to_cpu(sc_entry[i].scid));
-		printf("     PCID      : Primary Controller Identifier   : 0x%.04x\n",
+		printf("     PCID      : Primary Controller Identifier   : %#.04x\n",
 				le16_to_cpu(sc_entry[i].pcid));
-		printf("     SCS       : Secondary Controller State      : 0x%.04x (%s)\n",
+		printf("     SCS       : Secondary Controller State      : %#.04x (%s)\n",
 				sc_entry[i].scs,
 				state_desc[sc_entry[i].scs & 0x1]);
-		printf("     VFN       : Virtual Function Number         : 0x%.04x\n",
+		printf("     VFN       : Virtual Function Number         : %#.04x\n",
 				le16_to_cpu(sc_entry[i].vfn));
-		printf("     NVQ       : Num VQ Flex Resources Assigned  : 0x%.04x\n",
+		printf("     NVQ       : Num VQ Flex Resources Assigned  : %#.04x\n",
 				le16_to_cpu(sc_entry[i].nvq));
-		printf("     NVI       : Num VI Flex Resources Assigned  : 0x%.04x\n",
+		printf("     NVI       : Num VI Flex Resources Assigned  : %#.04x\n",
 				le16_to_cpu(sc_entry[i].nvi));
 	}
 }
@@ -3463,7 +3463,7 @@ static void stdout_id_ns_granularity_list(const struct nvme_id_ns_granularity_li
 	int i;
 
 	printf("Identify Namespace Granularity List:\n");
-	printf("   ATTR        : Namespace Granularity Attributes: 0x%x\n",
+	printf("   ATTR        : Namespace Granularity Attributes: %#x\n",
 		glist->attributes);
 	printf("   NUMD        : Number of Descriptors           : %d\n",
 		glist->num_descriptors);
@@ -3472,9 +3472,9 @@ static void stdout_id_ns_granularity_list(const struct nvme_id_ns_granularity_li
 	for (i = 0; i <= glist->num_descriptors; i++) {
 		printf("\n     Entry[%2d] :\n", i);
 		printf("................\n");
-		printf("     NSG       : Namespace Size Granularity     : 0x%"PRIx64"\n",
+		printf("     NSG       : Namespace Size Granularity     : %#"PRIx64"\n",
 			le64_to_cpu(glist->entry[i].nszegran));
-		printf("     NCG       : Namespace Capacity Granularity : 0x%"PRIx64"\n",
+		printf("     NCG       : Namespace Capacity Granularity : %#"PRIx64"\n",
 			le64_to_cpu(glist->entry[i].ncapgran));
 	}
 }
@@ -3511,7 +3511,7 @@ static void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 		}
 		printf(" Entry[%3d]\n", i+1);
 		printf(".................\n");
-		printf("association  : 0x%x %s\n", identifier_association, association);
+		printf("association  : %#x %s\n", identifier_association, association);
 		printf("UUID         : %s", util_uuid_to_string(uuid));
 		if (memcmp(uuid_list->entry[i].uuid, invalid_uuid,
 			   sizeof(zero_uuid)) == 0)
@@ -3825,7 +3825,7 @@ static void stdout_supported_log(struct nvme_supported_log_pages *support_log,
 	for (lid = 0; lid < 256; lid++) {
 		support = le32_to_cpu(support_log->lid_support[lid]);
 		if (support & 0x1) {
-			printf("LID 0x%x - %s\n", lid, nvme_log_to_string(lid));
+			printf("LID %#x - %s\n", lid, nvme_log_to_string(lid));
 			if (human)
 				stdout_support_log_human(support, lid);
 		}
@@ -4223,9 +4223,9 @@ static void stdout_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
 {
 	printf("\tHost Memory Descriptor List Entry Count (HMDLEC): %u\n",
 		le32_to_cpu(hmb->hmdlec));
-	printf("\tHost Memory Descriptor List Address     (HMDLAU): 0x%x\n",
+	printf("\tHost Memory Descriptor List Address     (HMDLAU): %#x\n",
 		le32_to_cpu(hmb->hmdlau));
-	printf("\tHost Memory Descriptor List Address     (HMDLAL): 0x%x\n",
+	printf("\tHost Memory Descriptor List Address     (HMDLAL): %#x\n",
 		le32_to_cpu(hmb->hmdlal));
 	printf("\tHost Memory Buffer Size                  (HSIZE): %u\n",
 		le32_to_cpu(hmb->hsize));
@@ -4387,7 +4387,7 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 		strncpy(val, (char *)desc->val, min(sizeof(val) - 1, len));
 
 		printf("\tElement[%-3d]:\n", i);
-		printf("\t\tType	    : 0x%02x (%s)\n", desc->type,
+		printf("\t\tType	    : %#02x (%s)\n", desc->type,
 		       nvme_host_metadata_type_to_string(fid, desc->type));
 		printf("\t\tRevision : %d\n", desc->rev);
 		printf("\t\tLength   : %d\n", len);
@@ -4636,7 +4636,7 @@ static void stdout_lba_status(struct nvme_lba_status *list,
 	for (idx = 0; idx < list->nlsd; idx++) {
 		struct nvme_lba_status_desc *e = &list->descs[idx];
 
-		printf("{ DSLBA: 0x%016"PRIx64", NLB: 0x%08x, Status: 0x%02x }\n",
+		printf("{ DSLBA: %#016"PRIx64", NLB: %#08x, Status: %#02x }\n",
 				le64_to_cpu(e->dslba), le32_to_cpu(e->nlb),
 				e->status);
 	}
@@ -5101,7 +5101,7 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 				nvmf_qptype_str(e->tsas.rdma.qptype));
 			printf("rdma_cms:    %s\n",
 				nvmf_cms_str(e->tsas.rdma.cms));
-			printf("rdma_pkey: 0x%04x\n",
+			printf("rdma_pkey: %#04x\n",
 				le16_to_cpu(e->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
