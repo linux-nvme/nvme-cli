@@ -964,6 +964,23 @@ const char *nvme_pel_rci_rcpit_to_string(enum nvme_pel_rci_rcpit rcpit)
 	return "Reserved";
 }
 
+const char *nvme_pel_ehai_pit_to_string(enum nvme_pel_ehai_pit pit)
+{
+	switch (pit) {
+	case NVME_PEL_EHAI_PIT_NOT_REPORTED:
+		return "PIT not reported and PELPID does not apply";
+	case NVME_PEL_EHAI_PIT_NSS_PORT:
+		return "NVM subsystem port";
+	case NVME_PEL_EHAI_PIT_NMI_PORT:
+		return "NVMe-MI port";
+	case NVME_PEL_EHAI_PIT_NOT_ASSOCIATED:
+		return "Event not associated with any port and PELPID does not apply";
+	default:
+		break;
+	}
+	return "Reserved";
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);
