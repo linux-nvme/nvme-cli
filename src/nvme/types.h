@@ -3445,6 +3445,41 @@ enum nvme_persistent_event_types {
 };
 
 /**
+ * enum nvme_pel_ehai - This field indicates the persistent event header additional information
+ * @NVME_PEL_EHAI_PIT_SHIFT:	Shift amount to get the reporting context port identifier
+ *				from the &struct nvme_persistent_event_log.rci field.
+ * @NVME_PEL_EHAI_RSVD_SHIFT:	Shift amount to get the reserved reporting context
+ *				from the &struct nvme_persistent_event_log.rci field.
+ * @NVME_PEL_EHAI_PIT_MASK:	Mask to get the reporting context port identifier from
+ *				the &struct nvme_st_result.dsts field.
+ * @NVME_PEL_EHAI_RSVD_MASK:	Mask to get the reserved reporting context from
+ *				the &struct nvme_st_result.dsts field.
+ */
+enum nvme_pel_ehai {
+	NVME_PEL_EHAI_PIT_SHIFT		= 0,
+	NVME_PEL_EHAI_RSVD_SHIFT	= 2,
+	NVME_PEL_EHAI_PIT_MASK		= 0x3,
+	NVME_PEL_EHAI_RSVD_MASK		= 0x3f,
+};
+
+#define NVME_PEL_EHAI_PIT(ehai)		NVME_GET(ehai, PEL_EHAI_PIT)
+#define NVME_PEL_EHAI_RSVD(ehai)	NVME_GET(ehai, PEL_EHAI_RSVD)
+
+/**
+ * enum nvme_pel_ehai_pit - Persistent Event Header Additional Information - Port Identifier Type
+ * @NVME_PEL_EHAI_PIT_NOT_REPORTED:	PIT not reported and PELPID does not apply
+ * @NVME_PEL_EHAI_PIT_NSS_PORT:		NVM subsystem port
+ * @NVME_PEL_EHAI_PIT_NMI_PORT:		NVMe-MI port
+ * @NVME_PEL_EHAI_PIT_NOT_ASSOCIATED:	Event not associated with any port and PELPID does not apply
+ */
+enum nvme_pel_ehai_pit {
+	NVME_PEL_EHAI_PIT_NOT_REPORTED		= 0,
+	NVME_PEL_EHAI_PIT_NSS_PORT		= 1,
+	NVME_PEL_EHAI_PIT_NMI_PORT		= 2,
+	NVME_PEL_EHAI_PIT_NOT_ASSOCIATED	= 3,
+};
+
+/**
  * struct nvme_fw_commit_event - Firmware Commit Event Data
  * @old_fw_rev:			Old Firmware Revision
  * @new_fw_rev:			New Firmware Revision
