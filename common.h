@@ -8,6 +8,8 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
+#define CHECK_BIT(val, bit) ((val >> bit) & 1)
+
 #define min(x, y) ((x) > (y) ? (y) : (x))
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
