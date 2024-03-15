@@ -230,15 +230,11 @@ static void stdout_persistent_event_log_rci(__le32 pel_header_rci)
 
 static void stdout_persistent_event_entry_ehai(__u8 ehai)
 {
-	__u8 rsvd1 = (ehai & 0xfc) >> 2;
-	__u8 pit = ehai & 0x03;
+	__u8 rsvd1 = NVME_PEL_EHAI_RSVD(ehai);
+	__u8 pit = NVME_PEL_EHAI_PIT(ehai);
 
 	printf("  [7:2] : %#x\tReserved\n", rsvd1);
-	printf("\tPort Identifier Type (PIT): %u(%s)\n", pit,
-		(pit == 0x00) ? "PIT not reported and PELPID does not apply" :
-		(pit == 0x01) ? "NVM subsystem port" :
-		(pit == 0x02) ? "NVMe-MI port" :
-		"Event not associated with any port and PELPID does not apply");
+	printf("\tPort Identifier Type (PIT): %u(%s)\n", pit, nvme_pel_ehai_pit_to_string(pit));
 }
 
 static void stdout_add_bitmap(int i, __u8 seb)
