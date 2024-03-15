@@ -31,6 +31,8 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", NVME_VERSION),
 		ENTRY("get-plp-health-check-interval", "Get PLP Health Check Interval", get_plp_health_check_interval)
 		ENTRY("telemetry-string-log", "Retrieve Telemetry string Log Page", ocp_telemetry_str_log_format)
 		ENTRY("set-telemetry-profile", "Set Telemetry Profile Feature", ocp_set_telemetry_profile_feature)
+		ENTRY("set-dssd-async-event-config", "Set DSSD Async Event Config", set_dssd_async_event_config)
+		ENTRY("get-dssd-async-event-config", "Get DSSD Async Event Config", get_dssd_async_event_config)
 	)
 );
 

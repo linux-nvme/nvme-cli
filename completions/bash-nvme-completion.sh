@@ -1461,6 +1461,12 @@ plugin_ocp_opts () {
 		"set-telemetry-profile")
 		opts+=" --telemetry-profile-select= -t"
 			;;
+		"set-dssd-async-event-config")
+		opts+=" --enable-panic-notices -e --save -s"
+			;;
+		"get-dssd-power-state-feature")
+		opts+=" --sel= -S"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1537,7 +1543,8 @@ _nvme_subcmds () {
 			clear-pcie-correctable-error-counters \
 			vs-fw-activate-history device-capability-log \
 			set-dssd-power-state-feature telemetry-string-log \
-			set-telemetry-profile"
+			set-telemetry-profile set-dssd-async-event-config \
+			get-dssd-async-event-config"
 	)
 
 	# Associative array mapping plugins to corresponding option completions

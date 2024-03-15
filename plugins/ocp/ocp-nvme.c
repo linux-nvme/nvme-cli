@@ -2381,6 +2381,140 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+/// dssd_async_event_config
+
+static int set_dssd_async_event_config(int argc, char **argv, struct command *cmd,
+                                       struct plugin *plugin)
+{
+
+    const char *desc = "Issue Set Feature command (FID : 0xC9) DSSD Async Event Config";
+    const char *epn = "[0]:Enable Panic Notices";
+    const char *save = "Specifies that the controller shall save the attribute";
+    const __u32 nsid = 0;
+    const __u8 fid = 0xc9;
+    struct nvme_dev *dev;
+    int err;
+    __u32 result;
+    int uuid_index = 0;
+
+    struct config {
+        bool epn;
+        bool save;
+    };
+
+    struct config cfg = {
+        .epn = false,
+        .save = false,
+    };
+
+    OPT_ARGS(opts) = {
+        OPT_FLAG("enable-panic-notices", 'e', &cfg.epn, epn),
+        OPT_FLAG("save", 's', &cfg.save, save),
+        OPT_END()
+    };
+
+    err = parse_and_open(&dev, argc, argv, desc, opts);
+    if (err)
+        return err;
+
+    /* OCP 2.0 requires UUID index support */
+    err = ocp_get_uuid_index(dev, &uuid_index);
+    if (err || !uuid_index) {
+        printf("ERROR: No OCP UUID index found\n");
+        return err;
+    }
+
+    struct nvme_set_features_args args = {
+        .args_size = sizeof(args),
+        .fd = dev_fd(dev),
+        .fid = fid,
+        .nsid = nsid,
+        .cdw11 = cfg.epn ? 1 : 0,
+        .cdw12 = 0,
+        .save = cfg.save,
+        .uuidx = uuid_index,
+        .cdw15 = 0,
+        .data_len = 0,
+        .data = NULL,
+        .timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+        .result = &result,
+    };
+
+    err = nvme_set_features(&args);
+    if (err > 0) {
+        nvme_show_status(err);
+    } else if (err < 0) {
+        nvme_show_perror("Set DSSD Asynchronous Event Configuration\n");
+        fprintf(stderr, "Command failed while parsing.\n");
+    } else {
+        printf("Successfully set the DSSD Asynchronous Event Configuration\n");
+        printf("Enable Panic Notices bit Value: 0x%x\n", cfg.epn);
+        printf("Save bit Value: 0x%x\n", cfg.save);
+    }
+    return err;
+}
+
+static int get_dssd_async_event_config(int argc, char **argv, struct command *cmd,
+                                       struct plugin *plugin)
+{
+
+    const char *desc = "Issue Get Feature command (FID : 0xC9) DSSD Async Event Config";
+    const char *sel = "[0-3]: current/default/saved/supported";
+    const __u32 nsid = 0;
+    const __u8 fid = 0xc9;
+    struct nvme_dev *dev;
+    __u32 result;
+    int err;
+
+    struct config {
+        __u8 sel;
+    };
+
+    struct config cfg = {
+        .sel = 0,
+    };
+
+    OPT_ARGS(opts) = {
+        OPT_BYTE("sel", 'S', &cfg.sel, sel),
+        OPT_END()
+    };
+
+    err = parse_and_open(&dev, argc, argv, desc, opts);
+    if (err)
+        return err;
+
+
+    struct nvme_get_features_args args = {
+        .args_size  = sizeof(args),
+        .fd         = dev_fd(dev),
+        .fid        = fid,
+        .nsid       = nsid,
+        .sel        = cfg.sel,
+        .cdw11      = 0,
+        .uuidx      = 0,
+        .data_len   = 0,
+        .data       = NULL,
+        .timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
+        .result     = &result,
+    };
+
+    err = nvme_get_features(&args);
+    if (!err) {
+        printf("get-feature:0xC9 %s value: %#08x\n", nvme_select_to_string(cfg.sel), result);
+
+        if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+            nvme_show_select_result(fid, result);
+    } else {
+        nvme_show_error("Could not get feature: 0xC9\n");
+    }
+
+    return err;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// Telemetry String Log Format Log Page (LID : C9h)
 
 /* C9 Telemetry String Log Format Log Page */

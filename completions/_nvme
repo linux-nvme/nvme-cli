@@ -266,6 +266,29 @@ _nvme () {
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp telemetry-string-log options" _telemetry_string_log
 				;;
+			(set-dssd-async-event-config)
+				local _set_dssd_async_event_config
+				_set_dssd_async_event_config=(
+				/dev/nvme':supply a device to use (required)'
+				--enable-panic-notices':Specifies whether an asynchronous event notification
+				is sent to the host for a panic event'
+				-e':alias for --enable-panic-notices'
+				--save':Specifies that the controller shall save the attribute'
+				-s':alias for --save'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp set-dssd-async-event-config options" _set_dssd_async_event_config
+				;;
+			(get-dssd-async-event-config)
+				local _get_dssd_async_event_config
+				_get_dssd_async_event_config=(
+				/dev/nvme':supply a device to use (required)'
+				--sel=':select from 0 - current, 1 - default, 2 - saved, 3 - supported'
+				-S':alias to --sel'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp get-dssd-async-event-config options" _get_dssd_async_event_config
+				;;
 			(*)
 				_files
 				;;

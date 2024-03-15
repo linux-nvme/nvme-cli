@@ -1,0 +1,53 @@
+nvme-ocp-get-dssd-async-event-config(1)
+=======================================
+
+NAME
+----
+nvme-ocp-get-dssd-async-event-config - Get dssd-async-event-config value
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp get-dssd-async-event-config' <device> [--sel=<select> | -s <select>]
+
+DESCRIPTION
+-----------
+Get dssd-async-event-config.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+
+-s <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
++
+[]
+|==================
+|Select|Description
+|0|Current
+|1|Default
+|2|Saved
+|3|Supported capabilities
+|4-7|Reserved
+|==================
+
+EXAMPLES
+--------
+* Has the program issue a get-dssd-async-event-config to retrieve the saved 0xC9 get features.
++
+------------
+# nvme ocp get-dssd-async-event-config /dev/nvme0 -s 2
+------------
+
+NVME
+----
+Part of the nvme-user suite.
