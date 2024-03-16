@@ -5322,7 +5322,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return err;
 
-	r = nvme_scan(NULL);
+	r = nvme_scan_no_id(NULL);
 	err = validate_output_format(output_format_val, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
