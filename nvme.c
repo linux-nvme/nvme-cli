@@ -254,7 +254,8 @@ static int open_dev_direct(struct nvme_dev **devp, char *devstr, int flags)
 	}
 	if (!is_chardev(dev) && !is_blkdev(dev)) {
 		nvme_show_error("%s is not a block or character device", devstr);
-		err = -ENODEV;
+		errno = ENODEV;
+		err = -1;
 		goto err_close;
 	}
 	*devp = dev;
