@@ -3350,13 +3350,13 @@ struct nvme_persistent_event_log {
  * @NVME_PEL_RCI_RSVD_SHIFT:	Shift amount to get the reserved reporting context
  *				from the &struct nvme_persistent_event_log.rci field.
  * @NVME_PEL_RCI_RCPID_MASK:	Mask to get the reporting context port identifier from
- *				the &struct nvme_st_result.dsts field.
+ *				the &struct nvme_persistent_event_log.rci field.
  * @NVME_PEL_RCI_RCPIT_MASK:	Mask to get the reporting context port identifier type from
- *				the &struct nvme_st_result.dsts field.
+ *				the &struct nvme_persistent_event_log.rci field.
  * @NVME_PEL_RCI_RCE_MASK:	Mask to get the reporting context exists from
- *				the &struct nvme_st_result.dsts field.
+ *				the &struct nvme_persistent_event_log.rci field.
  * @NVME_PEL_RCI_RSVD_MASK:	Mask to get the reserved reporting context from
- *				the &struct nvme_st_result.dsts field.
+ *				the &struct nvme_persistent_event_log.rci field.
  */
 enum nvme_pel_rci {
 	NVME_PEL_RCI_RCPID_SHIFT	= 0,
