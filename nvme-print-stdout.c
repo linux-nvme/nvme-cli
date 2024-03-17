@@ -483,13 +483,13 @@ static void stdout_persistent_event_log(void *pevent_log_info,
 		case NVME_PEL_SET_FEATURE_EVENT:
 			set_feat_event = pevent_log_info + offset;
 			printf("Set Feature Event Entry:\n");
-			dword_cnt =  set_feat_event->layout & 0x03;
-			fid = le32_to_cpu(set_feat_event->cdw_mem[0]) & 0x000f;
+			dword_cnt = NVME_SET_FEAT_EVENT_DW_COUNT(set_feat_event->layout);
+			fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), FEATURES_CDW10_FID);
 			cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
 
 			printf("Set Feature ID  :%#02x (%s),  value:%#08x\n", fid,
 				nvme_feature_to_string(fid), cdw11);
-			if (((set_feat_event->layout & 0xff) >> 2) != 0) {
+			if (NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout)) {
 				mem_buf = (unsigned char *)(set_feat_event + 4 + dword_cnt * 4);
 				stdout_feature_show_fields(fid, cdw11, mem_buf);
 			}
