@@ -675,13 +675,13 @@ static void stdout_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effec
 static void stdout_boot_part_log(void *bp_log, const char *devname,
 				 __u32 size)
 {
-	struct nvme_boot_partition *hdr;
+	struct nvme_boot_partition *hdr = bp_log;
 
-	hdr = bp_log;
 	printf("Boot Partition Log for device: %s\n", devname);
 	printf("Log ID: %u\n", hdr->lid);
-	printf("Boot Partition Size: %u KiB\n", le32_to_cpu(hdr->bpinfo) & 0x7fff);
-	printf("Active BPID: %u\n", (le32_to_cpu(hdr->bpinfo) >> 31) & 0x1);
+	printf("Boot Partition Size: %u KiB\n",
+	       NVME_BOOT_PARTITION_INFO_BPSZ(le32_to_cpu(hdr->bpinfo)));
+	printf("Active BPID: %u\n", NVME_BOOT_PARTITION_INFO_ABPID(le32_to_cpu(hdr->bpinfo)));
 }
 
 static const char *eomip_to_string(__u8 eomip)
