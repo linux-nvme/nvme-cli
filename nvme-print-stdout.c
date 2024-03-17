@@ -645,7 +645,7 @@ static void stdout_mi_cmd_support_effects_log_human(__u32 mi_cmd_support)
 	printf("  NIC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_NIC) ? set : clr);
 	printf("  CCC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_CCC) ? set : clr);
 
-	csp = (mi_cmd_support >> NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_SHIFT) & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_MASK;
+	csp = NVME_GET(mi_cmd_support, MI_CMD_SUPPORTED_EFFECTS_SCOPE);
 
 	printf("  NAMESPACE SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NS) ? set : clr);
 	printf("  CONTROLLER SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_CTRL) ? set : clr);
