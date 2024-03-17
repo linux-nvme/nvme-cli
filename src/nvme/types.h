@@ -3831,6 +3831,27 @@ struct nvme_boot_partition {
 };
 
 /**
+ * enum nvme_boot_partition_info - This field indicates the boot partition information
+ * @NVME_BOOT_PARTITION_INFO_BPSZ_SHIFT:	Shift amount to get the boot partition size from
+ *						the &struct nvme_boot_partition.bpinfo field.
+ * @NVME_BOOT_PARTITION_INFO_ABPID_SHIFT:	Shift amount to get the active boot partition ID
+ *						from the &struct nvme_boot_partition.bpinfo field.
+ * @NVME_BOOT_PARTITION_INFO_BPSZ_MASK:		Mask to get the boot partition size from the
+ *						&struct nvme_boot_partition.bpinfo field.
+ * @NVME_BOOT_PARTITION_INFO_ABPID_MASK:	Mask to get the active boot partition ID from the
+ *						&struct nvme_boot_partition.bpinfo field.
+ */
+enum nvme_boot_partition_info {
+	NVME_BOOT_PARTITION_INFO_BPSZ_SHIFT	= 0,
+	NVME_BOOT_PARTITION_INFO_ABPID_SHIFT	= 31,
+	NVME_BOOT_PARTITION_INFO_BPSZ_MASK	= 0x7fff,
+	NVME_BOOT_PARTITION_INFO_ABPID_MASK	= 0x1,
+};
+
+#define NVME_BOOT_PARTITION_INFO_BPSZ(bpinfo)	NVME_GET(bpinfo, BOOT_PARTITION_INFO_BPSZ)
+#define NVME_BOOT_PARTITION_INFO_ABPID(bpinfo)	NVME_GET(bpinfo, BOOT_PARTITION_INFO_ABPID)
+
+/**
  * struct nvme_eom_lane_desc - EOM Lane Descriptor
  * @rsvd0:	Reserved
  * @mstatus:	Measurement Status
