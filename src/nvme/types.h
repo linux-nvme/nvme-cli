@@ -3652,6 +3652,34 @@ struct nvme_set_feature_event {
 };
 
 /**
+ * enum nvme_set_feat_event_layout - This field indicates the set feature event layout
+ * @NVME_SET_FEAT_EVENT_DW_COUNT_SHIFT:	Shift amount to get the Dword count from the
+ *					&struct nvme_set_feature_event.layout field.
+ * @NVME_SET_FEAT_EVENT_CC_DW0_SHIFT:	Shift amount to get the logged command completion Dword 0
+ *					from the &struct nvme_set_feature_event.layout field.
+ * @NVME_SET_FEAT_EVENT_MB_COUNT_SHIFT:	Shift amount to get the memory buffer count from
+ *					the &struct nvme_set_feature_event.layout field.
+ * @NVME_SET_FEAT_EVENT_DW_COUNT_MASK:	Mask to get the Dword count from the &struct
+ *					nvme_set_feature_event.layout field.
+ * @NVME_SET_FEAT_EVENT_CC_DW0_MASK:	Mask to get the logged command completion Dword 0 from
+ *					the &struct nvme_set_feature_event.layout field.
+ * @NVME_SET_FEAT_EVENT_MB_COUNT_MASK:	Mask to get the memory buffer count from the &struct
+ *					nvme_set_feature_event.layout field.
+ */
+enum nvme_set_feat_event_layout {
+	NVME_SET_FEAT_EVENT_DW_COUNT_SHIFT	= 0,
+	NVME_SET_FEAT_EVENT_CC_DW0_SHIFT	= 3,
+	NVME_SET_FEAT_EVENT_MB_COUNT_SHIFT	= 16,
+	NVME_SET_FEAT_EVENT_DW_COUNT_MASK	= 0x7,
+	NVME_SET_FEAT_EVENT_CC_DW0_MASK		= 0x1,
+	NVME_SET_FEAT_EVENT_MB_COUNT_MASK	= 0xffff,
+};
+
+#define NVME_SET_FEAT_EVENT_DW_COUNT(layout)	NVME_GET(layout, SET_FEAT_EVENT_DW_COUNT)
+#define NVME_SET_FEAT_EVENT_CC_DW0(layout)	NVME_GET(layout, SET_FEAT_EVENT_CC_DW0)
+#define NVME_SET_FEAT_EVENT_MB_COUNT(layout)	NVME_GET(layout, SET_FEAT_EVENT_MB_COUNT)
+
+/**
  * struct nvme_thermal_exc_event -  Thermal Excursion Event Data
  * @over_temp:	Over Temperature
  * @threshold:	temperature threshold
