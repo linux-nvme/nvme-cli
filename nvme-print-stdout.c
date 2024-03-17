@@ -602,7 +602,7 @@ static void stdout_fid_support_effects_log_human(__u32 fid_support)
 	printf("  CCC%s", (fid_support & NVME_FID_SUPPORTED_EFFECTS_CCC) ? set : clr);
 	printf("  USS%s", (fid_support & NVME_FID_SUPPORTED_EFFECTS_UUID_SEL) ? set : clr);
 
-	fsp = (fid_support >> NVME_FID_SUPPORTED_EFFECTS_SCOPE_SHIFT) & NVME_FID_SUPPORTED_EFFECTS_SCOPE_MASK;
+	fsp = NVME_GET(fid_support, FID_SUPPORTED_EFFECTS_SCOPE);
 
 	printf("  NAMESPACE SCOPE%s", (fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_NS) ? set : clr);
 	printf("  CONTROLLER SCOPE%s", (fsp & NVME_FID_SUPPORTED_EFFECTS_SCOPE_CTRL) ? set : clr);
