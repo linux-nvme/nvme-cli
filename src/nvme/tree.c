@@ -1870,7 +1870,7 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_root_t r, nvme_subsystem_t s,
 {
 	nvme_ctrl_t c, p;
 	_cleanup_free_ char *addr = NULL, *address = NULL;
-	char *a, *e;
+	char *a = NULL, *e = NULL;
 	_cleanup_free_ char *transport = NULL;
 	char *traddr = NULL, *trsvcid = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;

@@ -189,6 +189,8 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 
 void *__nvme_alloc(size_t len);
 
+void *__nvme_realloc(void *p, size_t len);
+
 #if (LOG_FUNCNAME == 1)
 #define __nvme_log_func __func__
 #else

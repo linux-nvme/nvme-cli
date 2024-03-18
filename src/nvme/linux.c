@@ -186,7 +186,7 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, size_t max_
 
 	*size = 0;
 
-	log = malloc(xfer);
+	log = __nvme_alloc(xfer);
 	if (!log) {
 		errno = ENOMEM;
 		return -1;
@@ -239,7 +239,7 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, size_t max_
 	}
 
 	*size = (dalb + 1) * xfer;
-	tmp = realloc(log, *size);
+	tmp = __nvme_realloc(log, *size);
 	if (!tmp) {
 		errno = ENOMEM;
 		return -1;
