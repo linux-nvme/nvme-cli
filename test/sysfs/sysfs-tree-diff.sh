@@ -1,0 +1,22 @@
+#!/bin/bash -e
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+BUILD_DIR=$1
+SYSFS_TREE_PRINT=$2
+INPUT=$3
+EXPECTED_OUTPUT=$4
+
+TEST_NAME="$(basename -s .tar.xz $INPUT)"
+TEST_DIR="$BUILD_DIR/$TEST_NAME"
+ACTUAL_OUTPUT="$TEST_DIR.out"
+
+rm -rf "$TEST_DIR"
+mkdir "$TEST_DIR"
+tar -x -f "$INPUT" -C "$TEST_DIR"
+
+LIBNVME_SYSFS_PATH="$TEST_DIR" \
+LIBNVME_HOSTNQN=nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6 \
+LIBNVME_HOSTID=ce4fee3e-c02c-11ee-8442-830d068a36c6 \
+"$SYSFS_TREE_PRINT" > "$ACTUAL_OUTPUT"
+
+diff -u "$EXPECTED_OUTPUT" "$ACTUAL_OUTPUT"
