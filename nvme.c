@@ -190,7 +190,7 @@ static const char space[51] = {[0 ... 49] = ' ', '\0'};
 static char *output_format_val = "normal";
 int verbose_level;
 
-static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
+static void *mmap_registers(struct nvme_dev *dev);
 
 const char *nvme_strerror(int errnum)
 {
@@ -984,7 +984,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		__u64 cap;
 
 		r = nvme_scan(NULL);
-		bar = mmap_registers(r, dev);
+		bar = mmap_registers(dev);
 		nvme_free_tree(r);
 
 		if (bar) {
@@ -5249,31 +5249,13 @@ static int nvme_get_properties(int fd, void **pbar)
 	return err;
 }
 
-static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev)
+static void *mmap_registers(struct nvme_dev *dev)
 {
-	nvme_ctrl_t c = NULL;
-	nvme_ns_t n = NULL;
-
 	char path[512];
 	void *membase;
 	int fd;
 
-	c = nvme_scan_ctrl(r, dev->name);
-	if (c) {
-		snprintf(path, sizeof(path), "%s/device/resource0",
-			nvme_ctrl_get_sysfs_dir(c));
-		nvme_free_ctrl(c);
-	} else {
-		n = nvme_scan_namespace(dev->name);
-		if (!n) {
-			nvme_show_error("Unable to find %s", dev->name);
-			return NULL;
-		}
-		snprintf(path, sizeof(path), "%s/device/device/resource0",
-			 nvme_ns_get_sysfs_dir(n));
-		nvme_free_ns(n);
-	}
-
+	sprintf(path, "/sys/class/nvme/%s/device/resource0", dev->name);
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		if (log_level >= LOG_DEBUG)
@@ -5305,7 +5287,6 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	enum nvme_print_flags flags;
 	bool fabrics = false;
-	nvme_root_t r;
 	void *bar;
 	int err;
 
@@ -5324,21 +5305,20 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return err;
 
-	r = nvme_scan(NULL);
 	err = validate_output_format(output_format_val, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
-		goto free_tree;
+		return err;
 	}
 
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	bar = mmap_registers(r, dev);
+	bar = mmap_registers(dev);
 	if (!bar) {
 		err = nvme_get_properties(dev_fd(dev), &bar);
 		if (err)
-			goto free_tree;
+			return err;
 		fabrics = true;
 	}
 
@@ -5347,9 +5327,8 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 		free(bar);
 	else
 		munmap(bar, getpagesize());
-free_tree:
-	nvme_free_tree(r);
-	return err;
+
+	return 0;
 }
 
 static int get_property(int argc, char **argv, struct command *cmd, struct plugin *plugin)
