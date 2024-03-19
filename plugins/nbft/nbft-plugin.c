@@ -319,7 +319,7 @@ static int json_show_nbfts(struct list_head *nbft_list, bool show_subsys,
 			   bool show_hfi, bool show_discovery)
 {
 	struct json_object *nbft_json_array, *nbft_json;
-	struct nbft_file_entry *entry;
+	struct nbft_file_entry *entry = NULL;
 
 	nbft_json_array = json_create_array();
 	if (!nbft_json_array)
@@ -510,7 +510,7 @@ static void normal_show_nbfts(struct list_head *nbft_list, bool show_subsys,
 			      bool show_hfi, bool show_discovery)
 {
 	bool not_first = false;
-	struct nbft_file_entry *entry;
+	struct nbft_file_entry *entry = NULL;
 
 	list_for_each(nbft_list, entry, node) {
 		if (not_first)
