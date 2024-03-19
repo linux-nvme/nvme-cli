@@ -87,7 +87,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 	nvme_ctrl_t c;
 	int ret, i;
 	struct list_head nbft_list;
-	struct nbft_file_entry *entry;
+	struct nbft_file_entry *entry = NULL;
 	struct nbft_info_subsystem_ns **ss;
 	struct nbft_info_hfi *hfi;
 
