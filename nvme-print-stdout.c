@@ -3791,7 +3791,7 @@ static void stdout_effects_log_page(enum nvme_csi csi,
 
 static void stdout_effects_log_pages(struct list_head *list)
 {
-	nvme_effects_log_node_t *node;
+	nvme_effects_log_node_t *node = NULL;
 
 	list_for_each(list, node, node) {
 		stdout_effects_log_page(node->csi, &node->effects);
