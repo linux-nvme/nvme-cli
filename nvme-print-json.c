@@ -1335,7 +1335,7 @@ struct json_object* json_effects_log(enum nvme_csi csi,
 static void json_effects_log_list(struct list_head *list)
 {
 	struct json_object *r = json_create_array();
-	nvme_effects_log_node_t *node;
+	nvme_effects_log_node_t *node = NULL;
 
 	list_for_each(list, node, node) {
 		struct json_object *json_page =
