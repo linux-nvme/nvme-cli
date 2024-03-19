@@ -3248,7 +3248,8 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 
 	err = nvme_scan_topology(r, filter, (void *)devname);
 	if (err) {
-		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
+		if (errno != ENOENT)
+			nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
 		goto ret;
 	}
 
@@ -3289,7 +3290,8 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	}
 	err = nvme_scan_topology(r, NULL, NULL);
 	if (err < 0) {
-		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
+		if (errno != ENOENT)
+			nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
 		nvme_free_tree(r);
 		return err;
 	}
@@ -8871,7 +8873,8 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 
 	err = nvme_scan_topology(r, NULL, NULL);
 	if (err < 0) {
-		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
+		if (errno != ENOENT)
+			nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
 		nvme_free_tree(r);
 		return err;
 	}

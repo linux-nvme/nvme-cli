@@ -728,8 +728,9 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		nvme_root_set_application(r, context);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
-			 nvme_strerror(errno));
+		if (errno != ENOENT)
+			fprintf(stderr, "Failed to scan topology: %s\n",
+				nvme_strerror(errno));
 		nvme_free_tree(r);
 		return ret;
 	}
@@ -958,8 +959,9 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		nvme_root_set_application(r, context);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
-			 nvme_strerror(errno));
+		if (errno != ENOENT)
+			fprintf(stderr, "Failed to scan topology: %s\n",
+				nvme_strerror(errno));
 		nvme_free_tree(r);
 		return ret;
 	}
@@ -1118,8 +1120,9 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	}
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
-			 nvme_strerror(errno));
+		if (errno != ENOENT)
+			fprintf(stderr, "Failed to scan topology: %s\n",
+				nvme_strerror(errno));
 		nvme_free_tree(r);
 		return ret;
 	}
@@ -1188,8 +1191,9 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 	}
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
-			 nvme_strerror(errno));
+		if (errno != ENOENT)
+			fprintf(stderr, "Failed to scan topology: %s\n",
+				nvme_strerror(errno));
 		nvme_free_tree(r);
 		return ret;
 	}
@@ -1259,8 +1263,9 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	if (scan_tree) {
 		ret = nvme_scan_topology(r, NULL, NULL);
 		if (ret < 0) {
-			fprintf(stderr, "Failed to scan topology: %s\n",
-				nvme_strerror(errno));
+			if (errno != ENOENT)
+				fprintf(stderr, "Failed to scan topology: %s\n",
+					nvme_strerror(errno));
 			nvme_free_tree(r);
 			return ret;
 		}
@@ -1412,8 +1417,9 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 	}
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
-			 nvme_strerror(errno));
+		if (errno != ENOENT)
+			fprintf(stderr, "Failed to scan topology: %s\n",
+				nvme_strerror(errno));
 		nvme_free_tree(r);
 		return ret;
 	}
