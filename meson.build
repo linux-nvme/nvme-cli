@@ -7,7 +7,7 @@ project(
     version: '2.8',
     default_options: [
       'c_std=gnu99',
-      'buildtype=debug',
+      'buildtype=debugoptimized',
       'prefix=/usr/local',
       'warning_level=1',
       'sysconfdir=etc',
