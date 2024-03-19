@@ -34,7 +34,7 @@ static void json_import_nvme_tls_key(nvme_ctrl_t c, const char *keyring_str,
 	int key_len;
 	unsigned int hmac;
 	long key_id;
-	_cleanup_free_ unsigned char *key_data;
+	_cleanup_free_ unsigned char *key_data = NULL;
 
 	if (!hostnqn || !subsysnqn) {
 		nvme_msg(NULL, LOG_ERR, "Invalid NQNs (%s, %s)\n",
@@ -63,11 +63,11 @@ static void json_export_nvme_tls_key(long keyring_id, long tls_key,
 				     struct json_object *obj)
 {
 	int key_len;
-	_cleanup_free_ unsigned char *key_data;
+	_cleanup_free_ unsigned char *key_data = NULL;
 
 	key_data = nvme_read_key(keyring_id, tls_key, &key_len);
 	if (key_data) {
-		_cleanup_free_ char *tls_str;
+		_cleanup_free_ char *tls_str = NULL;
 
 		tls_str = nvme_export_tls_key(key_data, key_len);
 		if (tls_str)
