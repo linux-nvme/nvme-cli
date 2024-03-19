@@ -61,22 +61,6 @@ struct candidate_args {
 };
 typedef bool (*ctrl_match_t)(struct nvme_ctrl *c, struct candidate_args *candidate);
 
-#define PATH_SYSFS_SLOTS "/sys/bus/pci/slots"
-
-static char *nvme_slots_sysfs_dir(void)
-{
-	char *basepath = getenv("LIBNVME_SYSFS_PATH");
-	char *str;
-
-	if (!basepath)
-		return strdup(PATH_SYSFS_SLOTS);
-
-	if (!asprintf(&str, "%s" PATH_SYSFS_SLOTS, basepath))
-		return NULL;
-
-	return str;
-}
-
 static struct nvme_host *default_host;
 
 static void __nvme_free_host(nvme_host_t h);
@@ -672,10 +656,9 @@ static int nvme_subsystem_scan_namespaces(nvme_root_t r, nvme_subsystem_t s,
 
 static int nvme_init_subsystem(nvme_subsystem_t s, const char *name)
 {
-	_cleanup_free_ char *subsys_dir = nvme_subsys_sysfs_dir();
 	char *path;
 
-	if (asprintf(&path, "%s/%s", subsys_dir, name) < 0)
+	if (asprintf(&path, "%s/%s", nvme_subsys_sysfs_dir(), name) < 0)
 		return -1;
 
 	s->model = nvme_get_attr(path, "model");
@@ -716,12 +699,11 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 {
 	struct nvme_subsystem *s = NULL, *_s;
 	_cleanup_free_ char *path = NULL, *subsysnqn = NULL;
-	_cleanup_free_ char *subsys_dir = nvme_subsys_sysfs_dir();
 	nvme_host_t h = NULL;
 	int ret;
 
 	nvme_msg(r, LOG_DEBUG, "scan subsystem %s\n", name);
-	ret = asprintf(&path, "%s/%s", subsys_dir, name);
+	ret = asprintf(&path, "%s/%s", nvme_subsys_sysfs_dir(), name);
 	if (ret < 0)
 		return ret;
 
@@ -1703,7 +1685,7 @@ static int nvme_ctrl_scan_namespaces(nvme_root_t r, struct nvme_ctrl *c)
 static char *nvme_ctrl_lookup_subsystem_name(nvme_root_t r,
 					     const char *ctrl_name)
 {
-	_cleanup_free_ char *subsys_dir = nvme_subsys_sysfs_dir();
+	const char *subsys_dir = nvme_subsys_sysfs_dir();
 	_cleanup_dirents_ struct dirents subsys = {};
 	int i;
 
@@ -1730,7 +1712,7 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_root_t r,
 
 static char *nvme_ctrl_lookup_phy_slot(nvme_root_t r, const char *address)
 {
-	_cleanup_free_ char *slots_sysfs_dir = nvme_slots_sysfs_dir();
+	const char *slots_sysfs_dir = nvme_slots_sysfs_dir();
 	_cleanup_free_ char *target_addr = NULL;
 	_cleanup_dir_ DIR *slots_dir = NULL;
 	int ret;
@@ -1827,7 +1809,6 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 
 int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 {
-	_cleanup_free_ char *ctrl_dir = nvme_ctrl_sysfs_dir();
 	_cleanup_free_ char *subsys_name = NULL;
 	_cleanup_free_ char *name = NULL;
 	nvme_subsystem_t s;
@@ -1839,7 +1820,7 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		errno = ENOMEM;
 		return -1;
 	}
-	ret = asprintf(&path, "%s/nvme%d", ctrl_dir, instance);
+	ret = asprintf(&path, "%s/%s", nvme_ctrl_sysfs_dir(), name);
 	if (ret < 0) {
 		errno = ENOMEM;
 		return ret;
@@ -1983,11 +1964,10 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	_cleanup_free_ char *path = NULL;
 	_cleanup_free_ char *hostnqn = NULL, *hostid = NULL;
 	_cleanup_free_ char *subsysnqn = NULL, *subsysname = NULL;
-	_cleanup_free_ char *ctrl_dir = nvme_ctrl_sysfs_dir();
 	int ret;
 
 	nvme_msg(r, LOG_DEBUG, "scan controller %s\n", name);
-	ret = asprintf(&path, "%s/%s", ctrl_dir, name);
+	ret = asprintf(&path, "%s/%s", nvme_ctrl_sysfs_dir(), name);
 	if (ret < 0) {
 		errno = ENOMEM;
 		return NULL;
@@ -2615,9 +2595,7 @@ static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, const char *
 
 nvme_ns_t nvme_scan_namespace(const char *name)
 {
-	_cleanup_free_ char *ns_dir = nvme_ns_sysfs_dir();
-
-	return __nvme_scan_namespace(ns_dir, name);
+	return __nvme_scan_namespace(nvme_ns_sysfs_dir(), name);
 }
 
 static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,

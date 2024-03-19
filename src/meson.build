@@ -12,6 +12,7 @@ sources = [
     'nvme/ioctl.c',
     'nvme/linux.c',
     'nvme/log.c',
+    'nvme/sysfs.c',
     'nvme/tree.c',
     'nvme/util.c',
     'nvme/base64.c',

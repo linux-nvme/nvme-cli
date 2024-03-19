@@ -1186,29 +1186,12 @@ struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_ar
 	return log;
 }
 
-#define PATH_UUID_IBM	"/proc/device-tree/ibm,partition-uuid"
-
-static char *uuid_ibm_filename(void)
-{
-	char *basepath = getenv("LIBNVME_SYSFS_PATH");
-	char *str;
-
-	if (!basepath)
-		return strdup(PATH_UUID_IBM);
-
-	if (!asprintf(&str, "%s" PATH_UUID_IBM, basepath))
-		return NULL;
-
-	return str;
-}
-
 static int uuid_from_device_tree(char *system_uuid)
 {
-	_cleanup_free_ char *filename = uuid_ibm_filename();
 	_cleanup_fd_ int f = -1;
 	ssize_t len;
 
-	f = open(filename, O_RDONLY);
+	f = open(nvme_uuid_ibm_filename(), O_RDONLY);
 	if (f < 0)
 		return -ENXIO;
 
@@ -1218,22 +1201,6 @@ static int uuid_from_device_tree(char *system_uuid)
 		return -ENXIO;
 
 	return strlen(system_uuid) ? 0 : -ENXIO;
-}
-
-#define PATH_DMI_ENTRIES       "/sys/firmware/dmi/entries"
-
-static char *dmi_entries_dir(void)
-{
-	char *basepath = getenv("LIBNVME_SYSFS_PATH");
-	char *str;
-
-	if (!basepath)
-		return strdup(PATH_DMI_ENTRIES);
-
-	if (!asprintf(&str, "%s" PATH_DMI_ENTRIES, basepath))
-		return NULL;
-
-	return str;
 }
 
 /*
@@ -1264,7 +1231,7 @@ static bool is_dmi_uuid_valid(const char *buf, size_t len)
 static int uuid_from_dmi_entries(char *system_uuid)
 {
 	_cleanup_dir_ DIR *d = NULL;
-	_cleanup_free_ char *entries_dir = dmi_entries_dir();
+	const char *entries_dir = nvme_dmi_entries_dir();
 	int f;
 	struct dirent *de;
 	char buf[512] = {0};

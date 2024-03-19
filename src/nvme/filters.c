@@ -6,68 +6,12 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
-#include <libgen.h>
-
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #include "filters.h"
-#include "types.h"
-#include "util.h"
-#include "cleanup.h"
-
-#define PATH_SYSFS_NVME			"/sys/class/nvme"
-#define PATH_SYSFS_NVME_SUBSYSTEM	"/sys/class/nvme-subsystem"
-#define PATH_SYSFS_BLOCK		"/sys/block"
-
-char *nvme_ctrl_sysfs_dir(void)
-{
-	char *basepath = getenv("LIBNVME_SYSFS_PATH");
-	char *str;
-
-	if (!basepath)
-		return strdup(PATH_SYSFS_NVME);
-
-	if (!asprintf(&str, "%s" PATH_SYSFS_NVME, basepath))
-		return NULL;
-
-	return str;
-}
-
-char *nvme_ns_sysfs_dir(void)
-{
-	char *basepath = getenv("LIBNVME_SYSFS_PATH");
-	char *str;
-
-	if (!basepath)
-		return strdup(PATH_SYSFS_BLOCK);
-
-	if (!asprintf(&str, "%s" PATH_SYSFS_BLOCK, basepath))
-		return NULL;
-
-	return str;
-}
-
-char *nvme_subsys_sysfs_dir(void)
-{
-	char *basepath = getenv("LIBNVME_SYSFS_PATH");
-	char *str;
-
-	if (!basepath)
-		return strdup(PATH_SYSFS_NVME_SUBSYSTEM);
-
-	if (!asprintf(&str, "%s" PATH_SYSFS_NVME_SUBSYSTEM, basepath))
-		return NULL;
-
-	return str;
-}
+#include "private.h"
 
 int nvme_namespace_filter(const struct dirent *d)
 {
@@ -132,7 +76,7 @@ int nvme_subsys_filter(const struct dirent *d)
 
 int nvme_scan_subsystems(struct dirent ***subsys)
 {
-	_cleanup_free_ char *dir = nvme_subsys_sysfs_dir();
+	const char *dir = nvme_subsys_sysfs_dir();
 
 	return scandir(dir, subsys, nvme_subsys_filter, alphasort);
 }
@@ -145,7 +89,7 @@ int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***ns)
 
 int nvme_scan_ctrls(struct dirent ***ctrls)
 {
-	_cleanup_free_ char *dir = nvme_ctrl_sysfs_dir();
+	const char *dir = nvme_ctrl_sysfs_dir();
 
 	return scandir(dir, ctrls, nvme_ctrls_filter, alphasort);
 }
