@@ -456,7 +456,7 @@ int sedopal_cmd_discover(int fd)
 	struct level_0_discovery_features *feat;
 	struct level_0_discovery_features *feat_end;
 	uint16_t code;
-	uint8_t locking_flags;
+	uint8_t locking_flags = 0;
 	char buf[4096];
 
 	discover.data = (__u64)buf;
