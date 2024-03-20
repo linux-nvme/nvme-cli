@@ -13,7 +13,7 @@ project(
     default_options: [
         'c_std=gnu99',
         'warning_level=1',
-        'buildtype=debug',
+        'buildtype=debugoptimized',
         'prefix=/usr/local',
         'sysconfdir=etc',
         'wrap_mode=nofallback'
