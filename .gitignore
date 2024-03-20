@@ -12,6 +12,7 @@ compile_commands.json
 
 .build
 .cache
+.vscode/
 
 subprojects/*
 !subprojects/*.wrap
