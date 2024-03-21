@@ -1729,7 +1729,7 @@ static char *nvme_ctrl_lookup_phy_slot(nvme_root_t r, const char *address)
 	}
 
 	target_addr = strndup(address, 10);
-	while (!(entry = readdir(slots_dir))) {
+	while ((entry = readdir(slots_dir))) {
 		if (entry->d_type == DT_DIR &&
 		    strncmp(entry->d_name, ".", 1) != 0 &&
 		    strncmp(entry->d_name, "..", 2) != 0) {
