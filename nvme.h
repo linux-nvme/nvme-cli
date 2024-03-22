@@ -45,8 +45,6 @@ enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_CTRL,
 };
 
-#define SYS_NVME "/sys/class/nvme"
-
 enum nvme_dev_type {
 	NVME_DEV_DIRECT,
 	NVME_DEV_MI,

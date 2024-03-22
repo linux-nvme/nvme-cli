@@ -5256,7 +5256,7 @@ static void *mmap_registers(struct nvme_dev *dev)
 	void *membase;
 	int fd;
 
-	sprintf(path, "/sys/class/nvme/%s/device/resource0", dev->name);
+	sprintf(path, "%s/%s/device/resource0", nvme_ctrl_sysfs_dir(), dev->name);
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		if (log_level >= LOG_DEBUG)
