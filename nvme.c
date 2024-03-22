@@ -981,12 +981,9 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	list_head_init(&log_pages);
 
 	if (cfg.csi < 0) {
-		nvme_root_t r;
 		__u64 cap;
 
-		r = nvme_scan(NULL);
 		bar = mmap_registers(dev);
-		nvme_free_tree(r);
 
 		if (bar) {
 			cap = mmio_read64(bar + NVME_REG_CAP);
