@@ -351,15 +351,22 @@ const char *nvme_register_pmr_hsts_to_string(__u8 hsts)
 	}
 }
 
-const char *nvme_register_pmr_pmrszu_to_string(__u8 pmrszu)
+const char *nvme_register_unit_to_string(__u8 unit)
 {
-	switch (pmrszu) {
-	case 0: return "Bytes";
-	case 1: return "One KB";
-	case 2: return "One MB";
-	case 3: return "One GB";
-	default: return "Reserved";
+	switch (unit) {
+	case 0:
+		return "Bytes";
+	case 1:
+		return "One KB";
+	case 2:
+		return "One MB";
+	case 3:
+		return "One GB";
+	default:
+		break;
 	}
+
+	return "Reserved";
 }
 
 bool nvme_registers_cmbloc_support(__u32 cmbsz)
