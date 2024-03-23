@@ -26,6 +26,7 @@ struct print_ops {
 	void (*phy_rx_eom_log)(struct nvme_phy_rx_eom_log *log, __u16 controller);
 	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list);
 	void (*ctrl_registers)(void *bar, bool fabrics);
+	void (*ctrl_register)(int offset, uint64_t value);
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result, void *buf, __u32 len);
 	void (*discovery_log)(struct nvmf_discovery_log *log, int numrec);
 	void (*effects_log_list)(struct list_head *list);
@@ -205,6 +206,7 @@ void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus,
 void nvme_show_supported_cap_config_log(struct nvme_supported_cap_config_list_log *caplog,
 				enum nvme_print_flags flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags);
+void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, enum nvme_print_flags flags);
 void nvme_show_single_property(int offset, uint64_t prop, enum nvme_print_flags flags);
 void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags);
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
@@ -294,6 +296,7 @@ const char *nvme_register_pmr_hsts_to_string(__u8 hsts);
 const char *nvme_register_unit_to_string(__u8 unit);
 const char *nvme_register_szu_to_string(__u8 szu);
 const char *nvme_register_to_string(int reg);
+const char *nvme_register_symbol_to_string(int offset);
 const char *nvme_resv_notif_to_string(__u8 type);
 const char *nvme_select_to_string(int sel);
 const char *nvme_sstat_status_to_string(__u16 status);
@@ -312,6 +315,7 @@ void nvme_show_perror(const char *msg);
 void nvme_show_error_status(int status, const char *msg, ...);
 void nvme_show_init(void);
 void nvme_show_finish(void);
+bool nvme_is_fabrics_reg(int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);
 bool nvme_registers_pmrctl_ready(__u32 pmrctl);
 #endif /* NVME_PRINT_H */

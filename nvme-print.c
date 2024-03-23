@@ -369,6 +369,23 @@ const char *nvme_register_unit_to_string(__u8 unit)
 	return "Reserved";
 }
 
+bool nvme_is_fabrics_reg(int offset)
+{
+	switch (offset) {
+	case NVME_REG_CAP:
+	case NVME_REG_VS:
+	case NVME_REG_CC:
+	case NVME_REG_CSTS:
+	case NVME_REG_NSSR:
+	case NVME_REG_CRTO:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
 bool nvme_registers_cmbloc_support(__u32 cmbsz)
 {
 	return !!cmbsz;
@@ -378,6 +395,25 @@ bool nvme_registers_pmrctl_ready(__u32 pmrctl)
 {
 	return NVME_PMRCTL_EN(pmrctl);
 }
+
+void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, enum nvme_print_flags flags)
+{
+	uint64_t value;
+
+	if (fabrics && !nvme_is_fabrics_reg(offset)) {
+		printf("register: %#04x (%s) not fabrics\n", offset,
+		       nvme_register_to_string(offset));
+		return;
+	}
+
+	if (nvme_is_64bit_reg(offset))
+		value = mmio_read64(bar + offset);
+	else
+		value = mmio_read32(bar + offset);
+
+	nvme_print(ctrl_register, flags, offset, value);
+}
+
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags)
 {
 	nvme_print(ctrl_registers, flags, bar, fabrics);
@@ -777,20 +813,67 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 const char *nvme_register_to_string(int reg)
 {
 	switch (reg) {
-	case NVME_REG_CAP:	return "Controller Capabilities";
-	case NVME_REG_VS:	return "Version";
-	case NVME_REG_INTMS:	return "Interrupt Vector Mask Set";
-	case NVME_REG_INTMC:	return "Interrupt Vector Mask Clear";
-	case NVME_REG_CC:	return "Controller Configuration";
-	case NVME_REG_CSTS:	return "Controller Status";
-	case NVME_REG_NSSR:	return "NVM Subsystem Reset";
-	case NVME_REG_AQA:	return "Admin Queue Attributes";
-	case NVME_REG_ASQ:	return "Admin Submission Queue Base Address";
-	case NVME_REG_ACQ:	return "Admin Completion Queue Base Address";
-	case NVME_REG_CMBLOC:	return "Controller Memory Buffer Location";
-	case NVME_REG_CMBSZ:	return "Controller Memory Buffer Size";
-	default:		return "Unknown";
+	case NVME_REG_CAP:
+		return "Controller Capabilities";
+	case NVME_REG_VS:
+		return "Version";
+	case NVME_REG_INTMS:
+		return "Interrupt Vector Mask Set";
+	case NVME_REG_INTMC:
+		return "Interrupt Vector Mask Clear";
+	case NVME_REG_CC:
+		return "Controller Configuration";
+	case NVME_REG_CSTS:
+		return "Controller Status";
+	case NVME_REG_NSSR:
+		return "NVM Subsystem Reset";
+	case NVME_REG_AQA:
+		return "Admin Queue Attributes";
+	case NVME_REG_ASQ:
+		return "Admin Submission Queue Base Address";
+	case NVME_REG_ACQ:
+		return "Admin Completion Queue Base Address";
+	case NVME_REG_CMBLOC:
+		return "Controller Memory Buffer Location";
+	case NVME_REG_CMBSZ:
+		return "Controller Memory Buffer Size";
+	case NVME_REG_BPINFO:
+		return "Boot Partition Information";
+	case NVME_REG_BPRSEL:
+		return "Boot Partition Read Select";
+	case NVME_REG_BPMBL:
+		return "Boot Partition Memory Buffer Location";
+	case NVME_REG_CMBMSC:
+		return "Controller Memory Buffer Memory Space Control";
+	case NVME_REG_CMBSTS:
+		return "Controller Memory Buffer Status";
+	case NVME_REG_CMBEBS:
+		return "Controller Memory Buffer Elasticity Buffer Size";
+	case NVME_REG_CMBSWTP:
+		return "Controller Memory Buffer Sustained Write Throughput";
+	case NVME_REG_NSSD:
+		return "NVM Subsystem Shutdown";
+	case NVME_REG_CRTO:
+		return "Controller Ready Timeouts";
+	case NVME_REG_PMRCAP:
+		return "Persistent Memory Region Capabilities";
+	case NVME_REG_PMRCTL:
+		return "Persistent Memory Region Control";
+	case NVME_REG_PMRSTS:
+		return "Persistent Memory Region Status";
+	case NVME_REG_PMREBS:
+		return "Persistent Memory Region Elasticity Buffer Size";
+	case NVME_REG_PMRSWTP:
+		return "Persistent Memory Region Sustained Write Throughput";
+	case NVME_REG_PMRMSCL:
+		return "Persistent Memory Region Memory Space Control Lower";
+	case NVME_REG_PMRMSCU:
+		return "Persistent Memory Region Memory Space Control Upper";
+	default:
+		break;
 	}
+
+	return "Unknown";
 }
 
 const char *nvme_select_to_string(int sel)
@@ -995,6 +1078,72 @@ const char *nvme_pel_ehai_pit_to_string(enum nvme_pel_ehai_pit pit)
 		break;
 	}
 	return "Reserved";
+}
+
+const char *nvme_register_symbol_to_string(int offset)
+{
+	switch (offset) {
+	case NVME_REG_CAP:
+		return "cap";
+	case NVME_REG_VS:
+		return "version";
+	case NVME_REG_INTMS:
+		return "intms";
+	case NVME_REG_INTMC:
+		return "intmc";
+	case NVME_REG_CC:
+		return "cc";
+	case NVME_REG_CSTS:
+		return "csts";
+	case NVME_REG_NSSR:
+		return "nssr";
+	case NVME_REG_AQA:
+		return "aqa";
+	case NVME_REG_ASQ:
+		return "asq";
+	case NVME_REG_ACQ:
+		return "acq";
+	case NVME_REG_CMBLOC:
+		return "cmbloc";
+	case NVME_REG_CMBSZ:
+		return "cmbsz";
+	case NVME_REG_BPINFO:
+		return "bpinfo";
+	case NVME_REG_BPRSEL:
+		return "bprsel";
+	case NVME_REG_BPMBL:
+		return "bpmbl";
+	case NVME_REG_CMBMSC:
+		return "cmbmsc";
+	case NVME_REG_CMBSTS:
+		return "cmbsts";
+	case NVME_REG_CMBEBS:
+		return "cmbebs";
+	case NVME_REG_CMBSWTP:
+		return "cmbswtp";
+	case NVME_REG_NSSD:
+		return "nssd";
+	case NVME_REG_CRTO:
+		return "crto";
+	case NVME_REG_PMRCAP:
+		return "pmrcap";
+	case NVME_REG_PMRCTL:
+		return "pmrctl";
+	case NVME_REG_PMRSTS:
+		return "pmrsts";
+	case NVME_REG_PMREBS:
+		return "pmrebs";
+	case NVME_REG_PMRSWTP:
+		return "pmrswtp";
+	case NVME_REG_PMRMSCL:
+		return "pmrmscl";
+	case NVME_REG_PMRMSCU:
+		return "pmrmscu";
+	default:
+		break;
+	}
+
+	return "unknown";
 }
 
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
