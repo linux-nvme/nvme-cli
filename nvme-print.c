@@ -362,6 +362,15 @@ const char *nvme_register_pmr_pmrszu_to_string(__u8 pmrszu)
 	}
 }
 
+bool nvme_registers_cmbloc_support(__u32 cmbsz)
+{
+	return !!cmbsz;
+}
+
+bool nvme_registers_pmrctl_ready(__u32 pmrctl)
+{
+	return NVME_PMRCTL_EN(pmrctl);
+}
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags)
 {
 	nvme_print(ctrl_registers, flags, bar, fabrics);
