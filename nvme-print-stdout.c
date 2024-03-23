@@ -1225,14 +1225,15 @@ static void stdout_registers_aqa(__u32 aqa)
 	printf("\tAdmin Submission Queue Size (ASQS): %u\n\n", NVME_AQA_ASQS(aqa) + 1);
 }
 
-static void stdout_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
+static void stdout_registers_cmbloc(__u32 cmbloc, bool support)
 {
 	static const char * const enforced[] = { "Enforced", "Not Enforced" };
 
-	if (cmbsz == 0) {
+	if (!support) {
 		printf("\tController Memory Buffer feature is not supported\n\n");
 		return;
 	}
+
 	printf("\tOffset                                                        (OFST): ");
 	printf("%#x (See cmbsz.szu for granularity)\n", (cmbloc & 0xfffff000) >> 12);
 

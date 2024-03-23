@@ -1049,13 +1049,11 @@ static void json_registers_acq(uint64_t acq, struct json_object *r)
 	obj_add_prix64(r, "Admin Completion Queue Base (ACQB)", acq);
 }
 
-static void json_registers_cmbloc(uint32_t cmbloc, void *bar, struct json_object *r)
+static void json_registers_cmbloc(uint32_t cmbloc, bool support, struct json_object *r)
 {
-	uint32_t cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
-
 	obj_add_uint_x(r, "cmbloc", cmbloc);
 
-	if (!cmbsz) {
+	if (!support) {
 		obj_add_result(r, "Controller Memory Buffer feature is not supported");
 		return;
 	}
@@ -1184,17 +1182,15 @@ static void json_registers_pmrctl(uint32_t pmrctl, struct json_object *r)
 	obj_add_str(r, "Enable (EN)", pmrctl & 1 ? "Ready" : "Disabled");
 }
 
-static void json_registers_pmrsts(uint32_t pmrsts, void *bar, struct json_object *r)
+static void json_registers_pmrsts(uint32_t pmrsts, bool ready, struct json_object *r)
 {
-	uint32_t pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
-
 	obj_add_uint_x(r, "pmrsts", pmrsts);
 
 	obj_add_uint_x(r, "Controller Base Address Invalid (CBAI)", (pmrsts & 0x1000) >> 12);
 	obj_add_str(r, "Health Status (HSTS)",
-		     nvme_register_pmr_hsts_to_string((pmrsts & 0xe00) >> 9));
+		    nvme_register_pmr_hsts_to_string((pmrsts & 0xe00) >> 9));
 	obj_add_str(r, "Not Ready (NRDY)",
-		     !(pmrsts & 0x100) && (pmrctl & 1) ? "Ready" : "Not ready");
+		    !(pmrsts & 0x100) && ready ? "Ready" : "Not ready");
 	obj_add_uint_x(r, "Error (ERR)", pmrsts & 0xff);
 }
 
@@ -2543,11 +2539,16 @@ static void json_ctrl_registers_acq(void *bar, struct json_object *r)
 static void json_ctrl_registers_cmbloc(void *bar, struct json_object *r)
 {
 	uint32_t cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
+	uint32_t cmbsz;
+	bool support;
 
-	if (human())
-		json_registers_cmbloc(cmbloc, bar, obj_create_array_obj(r, "cmbloc"));
-	else
+	if (human()) {
+		cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
+		support = nvme_registers_cmbloc_support(cmbsz);
+		json_registers_cmbloc(cmbloc, support, obj_create_array_obj(r, "cmbloc"));
+	} else {
 		obj_add_int(r, "cmbloc", cmbloc);
+	}
 }
 
 static void json_ctrl_registers_cmbsz(void *bar, struct json_object *r)
@@ -2633,11 +2634,16 @@ static void json_ctrl_registers_pmrctl(void *bar, struct json_object *r)
 static void json_ctrl_registers_pmrsts(void *bar, struct json_object *r)
 {
 	uint32_t pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
+	uint32_t pmrctl;
+	bool ready;
 
-	if (human())
-		json_registers_pmrsts(pmrsts, bar, obj_create_array_obj(r, "pmrsts"));
-	else
+	if (human()) {
+		pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+		ready = nvme_registers_pmrctl_ready(pmrctl);
+		json_registers_pmrsts(pmrsts, ready, obj_create_array_obj(r, "pmrsts"));
+	} else {
 		obj_add_int(r, "pmrsts", pmrsts);
+	}
 }
 
 static void json_ctrl_registers_pmrebs(void *bar, struct json_object *r)
