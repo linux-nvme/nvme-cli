@@ -291,7 +291,7 @@ const char *nvme_log_to_string(__u8 lid);
 const char *nvme_nss_hw_error_to_string(__u16 error_code);
 const char *nvme_pel_event_to_string(int type);
 const char *nvme_register_pmr_hsts_to_string(__u8 hsts);
-const char *nvme_register_pmr_pmrszu_to_string(__u8 pmrszu);
+const char *nvme_register_unit_to_string(__u8 unit);
 const char *nvme_register_szu_to_string(__u8 szu);
 const char *nvme_register_to_string(int reg);
 const char *nvme_resv_notif_to_string(__u8 type);

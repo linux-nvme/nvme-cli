@@ -1201,7 +1201,7 @@ static void json_registers_pmrebs(uint32_t pmrebs, struct json_object *r)
 	obj_add_uint_x(r, "PMR Elasticity Buffer Size Base (PMRWBZ)", (pmrebs & 0xffffff00) >> 8);
 	obj_add_str(r, "Read Bypass Behavior", pmrebs & 0x10 ? "Shall" : "May");
 	obj_add_str(r, "PMR Elasticity Buffer Size Units (PMRSZU)",
-		     nvme_register_pmr_pmrszu_to_string(pmrebs & 0xf));
+		    nvme_register_unit_to_string(pmrebs & 0xf));
 }
 
 static void json_registers_pmrswtp(uint32_t pmrswtp, struct json_object *r)
@@ -1210,7 +1210,7 @@ static void json_registers_pmrswtp(uint32_t pmrswtp, struct json_object *r)
 
 	obj_add_uint_x(r, "PMR Sustained Write Throughput (PMRSWTV)", (pmrswtp & 0xffffff00) >> 8);
 	obj_add_key(r, "PMR Sustained Write Throughput Units (PMRSWTU)", "%s/second",
-		     nvme_register_pmr_pmrszu_to_string(pmrswtp & 0xf));
+		    nvme_register_unit_to_string(pmrswtp & 0xf));
 }
 
 static void json_registers_pmrmscl(uint32_t pmrmscl, struct json_object *r)

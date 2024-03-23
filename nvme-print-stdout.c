@@ -1388,7 +1388,7 @@ static void stdout_registers_pmrebs(__u32 pmrebs)
 	printf("in the PMR Elasticity Buffer %s bypass those memory writes\n",
 	       NVME_PMREBS_RBB(pmrebs) ? "SHALL" : "MAY");
 	printf("\tPMR Elasticity Buffer Size Units (PMRSZU): %s\n",
-	       nvme_register_pmr_pmrszu_to_string(NVME_PMREBS_PMRSZU(pmrebs)));
+	       nvme_register_unit_to_string(NVME_PMREBS_PMRSZU(pmrebs)));
 }
 
 static void stdout_registers_pmrswtp(__u32 pmrswtp)
@@ -1396,7 +1396,7 @@ static void stdout_registers_pmrswtp(__u32 pmrswtp)
 	printf("\tPMR Sustained Write Throughput       (PMRSWTV): %x\n",
 	       NVME_PMRSWTP_PMRSWTV(pmrswtp));
 	printf("\tPMR Sustained Write Throughput Units (PMRSWTU): %s/second\n",
-	       nvme_register_pmr_pmrszu_to_string(NVME_PMRSWTP_PMRSWTU(pmrswtp)));
+	       nvme_register_unit_to_string(NVME_PMRSWTP_PMRSWTU(pmrswtp)));
 }
 
 static void stdout_registers_pmrmscl(uint32_t pmrmscl)
