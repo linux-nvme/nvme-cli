@@ -2011,7 +2011,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		obj_add_uint(jdesc, "ncols", le16_to_cpu(desc->ncols));
 		obj_add_uint(jdesc, "edlen", le16_to_cpu(desc->edlen));
 
-		if (log->odp & NVME_EOM_PRINTABLE_EYE_PRESENT)
+		if (NVME_EOM_ODP_PEFP(log->odp))
 			allocated_eyes[i] = json_eom_printable_eye(desc, r);
 
 		/* Eye Data field is vendor specific, doesn't map to JSON */
