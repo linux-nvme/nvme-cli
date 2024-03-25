@@ -77,6 +77,74 @@ void free_nbfts(struct list_head *nbft_list)
 	}
 }
 
+/* returns 0 for success or negative errno otherwise */
+static int do_connect(nvme_root_t r,
+		      nvme_host_t h,
+		      struct nbft_info_subsystem_ns *ss,
+		      struct tr_config *trcfg,
+		      const struct nvme_fabrics_config *cfg,
+		      enum nvme_print_flags flags,
+		      unsigned int verbose)
+{
+	nvme_ctrl_t c;
+	int saved_log_level = log_level;
+	bool saved_log_pid = false;
+	bool saved_log_tstamp = false;
+	int ret;
+
+	/* Already connected ? */
+	c = lookup_ctrl(h, trcfg);
+	if (c && nvme_ctrl_get_name(c))
+		return 0;
+
+	c = nvme_create_ctrl(r, trcfg->subsysnqn, trcfg->transport,
+			     trcfg->traddr, trcfg->host_traddr,
+			     trcfg->host_iface, trcfg->trsvcid);
+	if (!c)
+		return -ENOMEM;
+
+	/* Pause logging for unavailable SSNSs */
+	if (ss && ss->unavailable && verbose < 1) {
+		saved_log_level = nvme_get_logging_level(r,
+							 &saved_log_pid,
+							 &saved_log_tstamp);
+		nvme_init_logging(r, -1, false, false);
+	}
+
+	errno = 0;
+	ret = nvmf_add_ctrl(h, c, cfg);
+
+	/* Resume logging */
+	if (ss && ss->unavailable && verbose < 1)
+		nvme_init_logging(r,
+				  saved_log_level,
+				  saved_log_pid,
+				  saved_log_tstamp);
+
+	if (ret == -1) {
+		nvme_free_ctrl(c);
+		/*
+		 * In case this SSNS was marked as 'unavailable' and
+		 * our connection attempt has failed, ignore it.
+		 */
+		if (ss && ss->unavailable) {
+			if (verbose >= 1)
+				fprintf(stderr,
+					"SSNS %d reported as unavailable, skipping\n",
+					ss->index);
+			return 0;
+		}
+		return -errno;
+	}
+
+	if (flags == NORMAL)
+		print_connect_msg(c);
+	else if (flags == JSON)
+		json_connect_msg(c);
+
+	return 0;
+}
+
 int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 		       char *hostnqn_sys, char *hostid_sys,
 		       const char *desc, bool connect,
@@ -85,7 +153,6 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 {
 	char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
 	nvme_host_t h;
-	nvme_ctrl_t c;
 	int ret, i;
 	struct list_head nbft_list;
 	struct nbft_file_entry *entry = NULL;
@@ -101,39 +168,33 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 	if (ret) {
 		if (ret != ENOENT)
 			nvme_show_perror("Failed to access ACPI tables directory");
-		goto out_free_2;
+		goto out_free;
 	}
 
-	list_for_each(&nbft_list, entry, node)
+	list_for_each(&nbft_list, entry, node) {
+		if (hostnqn_arg)
+			hostnqn = hostnqn_arg;
+		else {
+			hostnqn = entry->nbft->host.nqn;
+			if (!hostnqn)
+				hostnqn = hostnqn_sys;
+		}
+
+		if (hostid_arg)
+			hostid = hostid_arg;
+		else if (*entry->nbft->host.id) {
+			hostid = (char *)util_uuid_to_string(entry->nbft->host.id);
+			if (!hostid)
+				hostid = hostid_sys;
+		}
+
+		h = nvme_lookup_host(r, hostnqn, hostid);
+		if (!h)
+			goto out_free;
+
 		for (ss = entry->nbft->subsystem_ns_list; ss && *ss; ss++)
 			for (i = 0; i < (*ss)->num_hfis; i++) {
-				nvme_ctrl_t cl;
-				int saved_log_level = log_level;
-				bool saved_log_pid = false;
-				bool saved_log_tstamp = false;
-
 				hfi = (*ss)->hfis[i];
-				if (hostnqn_arg)
-					hostnqn = hostnqn_arg;
-				else {
-					hostnqn = entry->nbft->host.nqn;
-					if (!hostnqn)
-						hostnqn = hostnqn_sys;
-				}
-
-				if (hostid_arg)
-					hostid = hostid_arg;
-				else if (*entry->nbft->host.id) {
-					hostid = (char *)util_uuid_to_string(entry->nbft->host.id);
-					if (!hostid)
-						hostid = hostid_sys;
-				}
-
-				h = nvme_lookup_host(r, hostnqn, hostid);
-				if (!h) {
-					errno = ENOMEM;
-					goto out_free;
-				}
 
 				if (!cfg->host_traddr) {
 					host_traddr = NULL;
@@ -150,73 +211,22 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 					.trsvcid	= (*ss)->trsvcid,
 				};
 
-				/* Already connected ? */
-				cl = lookup_ctrl(h, &trcfg);
-				if (cl && nvme_ctrl_get_name(cl))
-					continue;
-
-				c = nvme_create_ctrl(r, (*ss)->subsys_nqn, (*ss)->transport,
-						     (*ss)->traddr, host_traddr, NULL,
-						     (*ss)->trsvcid);
-				if (!c) {
-					errno = ENOMEM;
-					goto out_free;
-				}
-
-				/* Pause logging for unavailable SSNSs */
-				if ((*ss)->unavailable && verbose < 1) {
-					saved_log_level = nvme_get_logging_level(r,
-										 &saved_log_pid,
-										 &saved_log_tstamp);
-					nvme_init_logging(r, -1, false, false);
-				}
-
-				errno = 0;
-				ret = nvmf_add_ctrl(h, c, cfg);
-
-				/* Resume logging */
-				if ((*ss)->unavailable && verbose < 1)
-					nvme_init_logging(r,
-							  saved_log_level,
-							  saved_log_pid,
-							  saved_log_tstamp);
-
-				/*
-				 * In case this SSNS was marked as 'unavailable' and
-				 * the connection attempt failed again, ignore it.
-				 */
-				if (ret == -1 && (*ss)->unavailable) {
-					if (verbose >= 1)
-						fprintf(stderr,
-							"SSNS %d reported as unavailable, skipping\n",
-							(*ss)->index);
-					continue;
-				}
+				ret = do_connect(r, h, *ss, &trcfg,
+						 cfg, flags, verbose);
 
 				/*
 				 * With TCP/DHCP, it can happen that the OS
 				 * obtains a different local IP address than the
 				 * firmware had. Retry without host_traddr.
 				 */
-				if (ret == -1 && errno == ENVME_CONNECT_ADDRNOTAVAIL &&
+				if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
 				    !strcmp((*ss)->transport, "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
-					nvme_free_ctrl(c);
-
 					trcfg.host_traddr = NULL;
-					cl = lookup_ctrl(h, &trcfg);
-					if (cl && nvme_ctrl_get_name(cl))
-						continue;
 
-					c = nvme_create_ctrl(r, (*ss)->subsys_nqn, (*ss)->transport,
-							     (*ss)->traddr,
-							     NULL, NULL, (*ss)->trsvcid);
-					if (!c) {
-						errno = ENOMEM;
-						goto out_free;
-					}
-					errno = 0;
-					ret = nvmf_add_ctrl(h, c, cfg);
+					ret = do_connect(r, h, *ss, &trcfg,
+							 cfg, flags, verbose);
+
 					if (ret == 0 && verbose >= 1)
 						fprintf(stderr,
 							"SSNS %d: connect with host_traddr=\"%s\" failed, success after omitting host_traddr\n",
@@ -227,17 +237,12 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 				if (ret)
 					fprintf(stderr, "SSNS %d: no controller found\n",
 						(*ss)->index);
-				else {
-					if (flags == NORMAL)
-						print_connect_msg(c);
-					else if (flags == JSON)
-						json_connect_msg(c);
-				}
-out_free:
-				if (errno == ENOMEM)
-					goto out_free_2;
+
+				if (ret == -ENOMEM)
+					goto out_free;
 			}
-out_free_2:
+	}
+out_free:
 	free_nbfts(&nbft_list);
 	return errno;
 }
