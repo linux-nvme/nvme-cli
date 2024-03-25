@@ -3963,12 +3963,12 @@ struct nvme_phy_rx_eom_log {
 
 /**
  * enum nvme_eom_optional_data - EOM Optional Data Present Fields
- * @NVME_EOM_EYE_DATA_PRESENT:		Eye Data Present
  * @NVME_EOM_PRINTABLE_EYE_PRESENT:	Printable Eye Present
+ * @NVME_EOM_EYE_DATA_PRESENT:		Eye Data Present
  */
 enum nvme_eom_optional_data {
-	NVME_EOM_EYE_DATA_PRESENT	= 1,
-	NVME_EOM_PRINTABLE_EYE_PRESENT	= 1 << 1,
+	NVME_EOM_PRINTABLE_EYE_PRESENT	= 0x1 << 0,
+	NVME_EOM_EYE_DATA_PRESENT	= 0x1 << 1,
 };
 
 /**
