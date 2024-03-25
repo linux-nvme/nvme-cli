@@ -8539,10 +8539,9 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert only, do not print the retained key.";
 
-	unsigned char *raw_secret;
-	char encoded_key[128];
+	_cleanup_free_ unsigned char *raw_secret = NULL;
+	_cleanup_free_ char *encoded_key = NULL;
 	int key_len = 32;
-	unsigned long crc = crc32(0L, NULL, 0);
 	int err;
 	long tls_key;
 
@@ -8646,16 +8645,8 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
 		return 0;
 	}
-	crc = crc32(crc, raw_secret, key_len);
-	raw_secret[key_len++] = crc & 0xff;
-	raw_secret[key_len++] = (crc >> 8) & 0xff;
-	raw_secret[key_len++] = (crc >> 16) & 0xff;
-	raw_secret[key_len++] = (crc >> 24) & 0xff;
-
-	memset(encoded_key, 0, sizeof(encoded_key));
-	base64_encode(raw_secret, key_len, encoded_key);
-
-	printf("NVMeTLSkey-1:%02x:%s:\n", cfg.hmac, encoded_key);
+	encoded_key = nvme_export_tls_key(raw_secret, key_len);
+	printf("%s\n", encoded_key);
 	return 0;
 }
 
@@ -8670,11 +8661,9 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
 
-	unsigned char decoded_key[128];
-	unsigned int decoded_len;
-	u_int32_t crc = crc32(0L, NULL, 0);
-	u_int32_t key_crc;
-	int err = 0, hmac;
+	_cleanup_free_ unsigned char *decoded_key = NULL;
+	int decoded_len, err = 0;
+	unsigned int hmac;
 	long tls_key;
 	struct config {
 		char		*keyring;
@@ -8719,26 +8708,10 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		return -EINVAL;
 	}
 
-	if (sscanf(cfg.keydata, "NVMeTLSkey-1:%02x:*s", &hmac) != 1) {
-		nvme_show_error("Invalid key '%s'", cfg.keydata);
-		return -EINVAL;
-	}
-	switch (hmac) {
-	case 1:
-		if (strlen(cfg.keydata) != 65) {
-			nvme_show_error("Invalid key length %zu for SHA(256)", strlen(cfg.keydata));
-			return -EINVAL;
-		}
-		break;
-	case 2:
-		if (strlen(cfg.keydata) != 89) {
-			nvme_show_error("Invalid key length %zu for SHA(384)", strlen(cfg.keydata));
-			return -EINVAL;
-		}
-		break;
-	default:
-		nvme_show_error("Invalid HMAC identifier %d", hmac);
-		return -EINVAL;
+	decoded_key = nvme_import_tls_key(cfg.keydata, &decoded_len, &hmac);
+	if (!decoded_key) {
+		nvme_show_error("Key decoding failed, error %d\n", errno);
+		return -errno;
 	}
 
 	if (cfg.subsysnqn) {
@@ -8753,26 +8726,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		nvme_show_error("Need to specify a subsystem NQN");
 		return -EINVAL;
 	}
-	err = base64_decode(cfg.keydata + 16, strlen(cfg.keydata) - 17, decoded_key);
-	if (err < 0) {
-		nvme_show_error("Base64 decoding failed (%s, error %d)", cfg.keydata + 16, err);
-		return err;
-	}
-	decoded_len = err;
-	decoded_len -= 4;
-	if (decoded_len != 32 && decoded_len != 48) {
-		nvme_show_error("Invalid key length %d", decoded_len);
-		return -EINVAL;
-	}
-	crc = crc32(crc, decoded_key, decoded_len);
-	key_crc = ((u_int32_t)decoded_key[decoded_len]) |
-		((u_int32_t)decoded_key[decoded_len + 1] << 8) |
-		((u_int32_t)decoded_key[decoded_len + 2] << 16) |
-		((u_int32_t)decoded_key[decoded_len + 3] << 24);
-	if (key_crc != crc) {
-		nvme_show_error("CRC mismatch (key %08x, crc %08x)", key_crc, crc);
-		return -EINVAL;
-	}
+
 	if (cfg.insert) {
 		tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
 					cfg.keytype, cfg.hostnqn,
@@ -8784,7 +8738,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		}
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
 	} else {
-		char *tls_id;
+		_cleanup_free_ char *tls_id = NULL;
 
 		tls_id = nvme_generate_tls_key_identity(cfg.hostnqn,
 					cfg.subsysnqn, cfg.identity,
@@ -8795,9 +8749,126 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 			return -errno;
 		}
 		printf("%s\n", tls_id);
-		free(tls_id);
 	}
 	return 0;
+}
+
+static void __scan_tls_key(long keyring_id, long key_id,
+			   char *desc, int desc_len, void *data)
+{
+	FILE *fd = data;
+	_cleanup_free_ const unsigned char *key_data = NULL;
+	_cleanup_free_ char *encoded_key = NULL;
+	int key_len;
+
+	key_data = nvme_read_key(keyring_id, key_id, &key_len);
+	if (!key_data)
+		return;
+	encoded_key = nvme_export_tls_key(key_data, key_len);
+	if (!encoded_key)
+		return;
+	fprintf(fd, "%s %s\n", desc, encoded_key);
+}
+
+static int tls_key(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Manipulation of TLS keys.\n";
+	const char *keyring = "Keyring for the retained key.";
+	const char *keytype = "Key type of the retained key.";
+	const char *keyfile = "File for list of keys.";
+	const char *import = "Import all keys into the keyring.";
+	const char *export = "Export all keys from the keyring.";
+
+	FILE *fd;
+	int err = 0;
+
+	struct config {
+		char		*keyring;
+		char		*keytype;
+		char		*keyfile;
+		bool		import;
+		bool		export;
+	};
+
+	struct config cfg = {
+		.keyring	= ".nvme",
+		.keytype	= "psk",
+		.keyfile	= NULL,
+		.import		= false,
+		.export		= false,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
+		  OPT_FLAG("import",	'i', &cfg.import,	import),
+		  OPT_FLAG("export",	'e', &cfg.export,	export));
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (cfg.keyfile) {
+		fd = fopen(cfg.keyfile, "r");
+		if (!fd) {
+			nvme_show_error("Cannot open keyfile %s, error %d\n",
+					cfg.keyfile, errno);
+			return -errno;
+		}
+	} else
+		fd = stdin;
+
+	if (cfg.export && cfg.import) {
+		nvme_show_error("Cannot specify both --import and --export");
+		err = -EINVAL;
+	} else if (cfg.export) {
+		nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
+	} else if (cfg.import) {
+		long keyring_id;
+		char tls_str[512];
+		char *tls_key;
+		unsigned char *psk;
+		unsigned int hmac;
+		int linenum = -1, key_len;
+
+		keyring_id = nvme_lookup_keyring(cfg.keyring);
+		if (!keyring_id) {
+			nvme_show_error("Invalid keyring '%s'", cfg.keyring);
+			err = -ENOKEY;
+			goto out;
+		}
+
+		while (fgets(tls_str, 512, fd)) {
+			linenum++;
+			tls_key = strrchr(tls_str, ' ');
+			if (!tls_key) {
+				nvme_show_error("Parse error in line %d",
+						linenum);
+				continue;
+			}
+			*tls_key = '\0';
+			tls_key++;
+			psk = nvme_import_tls_key(tls_key, &key_len, &hmac);
+			if (!psk) {
+				nvme_show_error("Failed to import key in line %d",
+						linenum);
+				continue;
+			}
+			nvme_update_key(keyring_id, "psk", tls_str,
+					psk, key_len);
+			free(psk);
+		}
+	} else {
+		nvme_show_error("Must specify either --import or --export");
+		err = -EINVAL;
+	}
+
+out:
+	if (cfg.keyfile)
+		fclose(fd);
+
+	return err;
 }
 
 static int show_topology_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
