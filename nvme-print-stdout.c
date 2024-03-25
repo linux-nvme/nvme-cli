@@ -707,9 +707,9 @@ static const char *eomip_to_string(__u8 eomip)
 
 static void stdout_phy_rx_eom_odp(uint8_t odp)
 {
-	__u8 rsvd = (odp >> 2) & 0x3F;
-	__u8 edfp = (odp >> 1) & 0x1;
-	__u8 pefp = odp & 0x1;
+	__u8 rsvd = NVME_EOM_ODP_RSVD(odp);
+	__u8 edfp = NVME_EOM_ODP_EDFP(odp);
+	__u8 pefp = NVME_EOM_ODP_PEFP(odp);
 
 	if (rsvd)
 		printf("  [7:2] : %#x\tReserved\n", rsvd);
@@ -751,7 +751,7 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 		printf("Number of Columns: %u\n", le16_to_cpu(desc->ncols));
 		printf("Eye Data Length: %u\n", le16_to_cpu(desc->edlen));
 
-		if (log->odp & NVME_EOM_PRINTABLE_EYE_PRESENT)
+		if (NVME_EOM_ODP_PEFP(log->odp))
 			stdout_eom_printable_eye(desc);
 
 		/* Eye Data field is vendor specific */
