@@ -8319,7 +8319,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 	    "HMAC function to use for key transformation (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
 	const char *nqn = "Host NQN to use for key transformation.";
 
-	unsigned char *raw_secret;
+	_cleanup_free_ unsigned char *raw_secret = NULL;
 	unsigned char key[68];
 	char encoded_key[128];
 	unsigned long crc = crc32(0L, NULL, 0);
@@ -8539,7 +8539,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert only, do not print the retained key.";
 
-	unsigned char *raw_secret;
+	_cleanup_free_ unsigned char *raw_secret = NULL;
 	char encoded_key[128];
 	int key_len = 32;
 	unsigned long crc = crc32(0L, NULL, 0);
