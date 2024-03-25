@@ -190,7 +190,7 @@ static const char space[51] = {[0 ... 49] = ' ', '\0'};
 static char *output_format_val = "normal";
 int verbose_level;
 
-static void *mmap_registers(struct nvme_dev *dev);
+static void *mmap_registers(struct nvme_dev *dev, bool writable);
 
 const char *nvme_strerror(int errnum)
 {
@@ -983,7 +983,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	if (cfg.csi < 0) {
 		__u64 cap;
 
-		bar = mmap_registers(dev);
+		bar = mmap_registers(dev, false);
 
 		if (bar) {
 			cap = mmio_read64(bar + NVME_REG_CAP);
@@ -5247,14 +5247,18 @@ static int nvme_get_properties(int fd, void **pbar)
 	return err;
 }
 
-static void *mmap_registers(struct nvme_dev *dev)
+static void *mmap_registers(struct nvme_dev *dev, bool writable)
 {
 	char path[512];
 	void *membase;
 	int fd;
+	int prot = PROT_READ;
+
+	if (writable)
+		prot |= PROT_WRITE;
 
 	sprintf(path, "/sys/class/nvme/%s/device/resource0", dev->name);
-	fd = open(path, O_RDONLY);
+	fd = open(path, writable ? O_RDWR : O_RDONLY);
 	if (fd < 0) {
 		if (log_level >= LOG_DEBUG)
 			nvme_show_error("%s did not find a pci resource, open failed %s",
@@ -5262,7 +5266,7 @@ static void *mmap_registers(struct nvme_dev *dev)
 		return NULL;
 	}
 
-	membase = mmap(NULL, getpagesize(), PROT_READ, MAP_SHARED, fd, 0);
+	membase = mmap(NULL, getpagesize(), prot, MAP_SHARED, fd, 0);
 	if (membase == MAP_FAILED) {
 		if (log_level >= LOG_DEBUG) {
 			fprintf(stderr, "%s failed to map. ", dev->name);
@@ -5312,9 +5316,9 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	bar = mmap_registers(dev);
+	bar = mmap_registers(dev, false);
 	if (!bar) {
-		err = nvme_get_properties(dev_fd(dev), &bar);
+		err = nvme_get_properties(dev_fd(dev), &bar, &cfg);
 		if (err)
 			return err;
 		fabrics = true;
