@@ -3962,13 +3962,41 @@ struct nvme_phy_rx_eom_log {
 };
 
 /**
- * enum nvme_eom_optional_data - EOM Optional Data Present Fields
+ * enum nvme_eom_optional_data_present - EOM Optional Data Present Fields
+ * @NVME_EOM_ODP_PEFP_SHIFT:	Shift amount to get the printable eye field present
+ *				from the &struct nvme_phy_rx_eom_log.odp field.
+ * @NVME_EOM_ODP_EDFP_SHIFT:	Shift amount to get the eye data field present
+ *				from the &struct nvme_phy_rx_eom_log.odp field.
+ * @NVME_EOM_ODP_RSVD_SHIFT:	Shift amount to get the reserved optional data present
+ *				from the &struct nvme_phy_rx_eom_log.odp field.
+ * @NVME_EOM_ODP_PEFP_MASK:	Mask to get the printable eye field present
+ *				from the &struct nvme_phy_rx_eom_log.odp field.
+ * @NVME_EOM_ODP_EDFP_MASK:	Mask to get the eye data field present
+ *				from the &struct nvme_phy_rx_eom_log.odp field.
+ * @NVME_EOM_ODP_RSVD_MASK:	Mask to get the reserved data present
+ *				from the &struct nvme_phy_rx_eom_log.odp field.
+ */
+enum nvme_eom_optional_data_present {
+	NVME_EOM_ODP_PEFP_SHIFT	= 0,
+	NVME_EOM_ODP_EDFP_SHIFT	= 1,
+	NVME_EOM_ODP_RSVD_SHIFT	= 2,
+	NVME_EOM_ODP_PEFP_MASK	= 0x1,
+	NVME_EOM_ODP_EDFP_MASK	= 0x1,
+	NVME_EOM_ODP_RSVD_MASK	= 0x3f,
+};
+
+#define NVME_EOM_ODP_PEFP(odp)	NVME_GET(odp, EOM_ODP_PEFP)
+#define NVME_EOM_ODP_EDFP(odp)	NVME_GET(odp, EOM_ODP_EDFP)
+#define NVME_EOM_ODP_RSVD(odp)	NVME_GET(odp, EOM_ODP_RSVD)
+
+/**
+ * enum nvme_eom_optional_data - EOM Optional Data Present Fields (Deprecated)
  * @NVME_EOM_PRINTABLE_EYE_PRESENT:	Printable Eye Present
  * @NVME_EOM_EYE_DATA_PRESENT:		Eye Data Present
  */
 enum nvme_eom_optional_data {
-	NVME_EOM_PRINTABLE_EYE_PRESENT	= 0x1 << 0,
-	NVME_EOM_EYE_DATA_PRESENT	= 0x1 << 1,
+	NVME_EOM_PRINTABLE_EYE_PRESENT	= NVME_EOM_ODP_PEFP_MASK << NVME_EOM_ODP_PEFP_SHIFT,
+	NVME_EOM_EYE_DATA_PRESENT	= NVME_EOM_ODP_EDFP_MASK << NVME_EOM_ODP_EDFP_SHIFT,
 };
 
 /**
