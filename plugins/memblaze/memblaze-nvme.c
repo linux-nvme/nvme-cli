@@ -422,8 +422,8 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 	    "Get Memblaze vendor specific additional smart log, and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
-	struct nvme_dev *dev;
-	struct config {
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    struct config {
 		__u32 namespace_id;
 		bool  raw_binary;
 	};
@@ -455,7 +455,6 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 	if (err > 0)
 		nvme_show_status(err);
 
-	dev_close(dev);
 	return err;
 }
 
@@ -479,8 +478,8 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
 	const char *desc = "Get Memblaze power management ststus\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
 	__u32 result;
 	__u32 feature_id = MB_FEAT_POWER_MGMT;
-	struct nvme_dev *dev;
-	int err;
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    int err;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
@@ -511,7 +510,6 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
 		       mb_feature_to_string(feature_id), nvme_select_to_string(0), result);
 	else if (err > 0)
 		nvme_show_status(err);
-	dev_close(dev);
 	return err;
 }
 
@@ -521,8 +519,8 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
 	const char *desc = "Set Memblaze power management status\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
 	const char *value = "new value of feature (required)";
 	const char *save = "specifies that the controller shall save the attribute";
-	struct nvme_dev *dev;
-	__u32 result;
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    __u32 result;
 	int err;
 
 	struct config {
@@ -571,7 +569,6 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
 	else if (err > 0)
 		nvme_show_status(err);
 
-	dev_close(dev);
 	return err;
 }
 
@@ -587,8 +584,8 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd,
 			   "	p2 value: 1 .. 5000 ms";
 	const char *param = "input parameters";
 	int param1 = 0, param2 = 0;
-	struct nvme_dev *dev;
-	__u32 result;
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    __u32 result;
 	int err;
 
 	struct config {
@@ -614,12 +611,10 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd,
 
 	if (parse_params(cfg.param, 2, &param1, &param2)) {
 		printf("setfeature: invalid formats %s\n", cfg.param);
-		dev_close(dev);
 		return -EINVAL;
 	}
 	if ((param1 == 1) && (param2 < P2MIN || param2 > P2MAX)) {
 		printf("setfeature: invalid high io latency threshold %d\n", param2);
-		dev_close(dev);
 		return -EINVAL;
 	}
 	cfg.value = (param1 << MB_FEAT_HIGH_LATENCY_VALUE_SHIFT) | param2;
@@ -648,7 +643,6 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd,
 	else if (err > 0)
 		nvme_show_status(err);
 
-	dev_close(dev);
 	return err;
 }
 
@@ -744,8 +738,8 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
 {
 	const char *desc = "Get Memblaze high latency log";
 	char buf[LOG_PAGE_SIZE];
-	struct nvme_dev *dev;
-	FILE *fdi = NULL;
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    FILE *fdi = NULL;
 	int err;
 
 	OPT_ARGS(opts) = {
@@ -774,7 +768,6 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
 
 	if (fdi)
 		fclose(fdi);
-	dev_close(dev);
 	return err;
 }
 
@@ -803,8 +796,8 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 	int xfer = 4096;
 	void *fw_buf;
 	int selectNo, fw_fd, fw_size, err, offset = 0;
-	struct nvme_dev *dev;
-	struct stat sb;
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    struct stat sb;
 	int i;
 
 	struct config {
@@ -917,7 +910,6 @@ out_free:
 out_close:
 	close(fw_fd);
 out:
-	dev_close(dev);
 	return err;
 }
 
@@ -1011,8 +1003,8 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
 	char stats[LOG_PAGE_SIZE];
 	char f1[] = FID_C1_LOG_FILENAME;
 	char f2[] = FID_C2_LOG_FILENAME;
-	struct nvme_dev *dev;
-	int err;
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    int err;
 
 	const char *desc = "Get Latency Statistics log and show it.";
 	const char *write = "Get write statistics (read default)";
@@ -1041,7 +1033,6 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
 	else
 		nvme_show_status(err);
 
-	dev_close(dev);
 	return err;
 }
 
@@ -1049,8 +1040,8 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
 	char *desc = "Clear Memblaze devices error log.";
-	struct nvme_dev *dev;
-	int err;
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    int err;
 
 	__u32 result;
 
@@ -1098,7 +1089,6 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd,
 	else if (err > 0)
 		nvme_show_status(err);
 
-	dev_close(dev);
 	return err;
 }
 
@@ -1116,8 +1106,8 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *command, stru
 	const __u32 cdw12 = 0x0;
 	const __u32 data_len = 32;
 	const __u32 save = 0;
-	struct nvme_dev *dev;
-	void *buf = NULL;
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+    void *buf = NULL;
 	__u32 result;
 	int err;
 
@@ -1190,7 +1180,6 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *command, stru
 			       result);
 		} else {
 			printf("Could not read feature id 0xE2.\n");
-			dev_close(dev);
 			return err;
 		}
 		break;
@@ -1210,7 +1199,6 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *command, stru
 		printf("%d not supported.\n", option);
 		err = EINVAL;
 	}
-	dev_close(dev);
 	return err;
 }
 
@@ -1254,17 +1242,17 @@ struct __packed smart_log_add_item_12 {
 	uint8_t rsvd1;
 	union {
 		struct wear_level wear_level;  // 0xad
-		struct temp_since_born {       // 0xe7
+		struct __packed temp_since_born {  // 0xe7
 			__le16 max;
 			__le16 min;
 			__le16 curr;
 		} temp_since_born;
-		struct power_consumption {  // 0xe8
+		struct __packed power_consumption {  // 0xe8
 			__le16 max;
 			__le16 min;
 			__le16 curr;
 		} power_consumption;
-		struct temp_since_power_on {  // 0xaf
+		struct __packed temp_since_power_on {  // 0xaf
 			__le16 max;
 			__le16 min;
 			__le16 curr;
@@ -1284,10 +1272,10 @@ struct __packed smart_log_add_item_10 {
 	uint8_t rsvd[2];
 };
 
-struct smart_log_add {
+struct __packed smart_log_add {
 	union {
 		union {
-			struct smart_log_add_v0 {
+			struct __packed smart_log_add_v0 {
 				struct smart_log_add_item_12 program_fail_count;
 				struct smart_log_add_item_12 erase_fail_count;
 				struct smart_log_add_item_12 wear_leveling_count;
@@ -1316,7 +1304,7 @@ struct smart_log_add {
 		};
 
 		union {
-			struct smart_log_add_v2 {
+			struct __packed smart_log_add_v2 {
 				struct smart_log_add_item_12 program_fail_count;
 				struct smart_log_add_item_12 erase_fail_count;
 				struct smart_log_add_item_12 wear_leveling_count;
@@ -1338,7 +1326,7 @@ struct smart_log_add {
 				struct smart_log_add_item_12 xor_fail_count;
 				struct smart_log_add_item_12 xor_invoked_count;
 				struct smart_log_add_item_12 inflight_read_io_cmd;
-				struct smart_log_add_item_12 flash_error_media_count;
+				struct smart_log_add_item_12 inflight_write_io_cmd;
 				struct smart_log_add_item_12 nand_bytes_read;
 				struct smart_log_add_item_12 temp_since_born;
 				struct smart_log_add_item_12 power_consumption;
@@ -1350,7 +1338,7 @@ struct smart_log_add {
 		};
 
 		union {
-			struct smart_log_add_v3 {
+			struct __packed smart_log_add_v3 {
 				struct smart_log_add_item_10 program_fail_count;
 				struct smart_log_add_item_10 erase_fail_count;
 				struct smart_log_add_item_10 wear_leveling_count;
@@ -1476,7 +1464,7 @@ static void smart_log_add_v2_print(struct smart_log_add_item_12 *item, int item_
 		[0xfd] = {18, "xor_fail_count"              },
 		[0xfe] = {19, "xor_invoked_count"           },
 		[0xe5] = {20, "inflight_read_io_cmd"        },
-		[0xe6] = {21, "flash_error_media_count"     },
+		[0xe6] = {21, "inflight_write_io_cmd"       },
 		[0xf8] = {22, "nand_bytes_read"             },
 		[0xe7] = {23, "temp_since_born"             },
 		[0xe8] = {24, "power_consumption"           },
@@ -1620,11 +1608,9 @@ static int mb_get_smart_log_add(int argc, char **argv, struct command *cmd, stru
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, "dump the whole log buffer in binary format"),
 		OPT_END()};
 
-	// Open device
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 
-	struct nvme_dev *dev = NULL;
-
-	err = parse_and_open(&dev, argc, argv, cmd->help, opts);
+    err = parse_and_open(&dev, argc, argv, cmd->help, opts);
 	if (err)
 		return err;
 
@@ -1645,9 +1631,6 @@ static int mb_get_smart_log_add(int argc, char **argv, struct command *cmd, stru
 		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
 	}
 
-	// Close device
-
-	dev_close(dev);
 	return err;
 }
 
@@ -1660,7 +1643,7 @@ struct latency_stats_bucket {
 
 struct __packed latency_stats {
 	union {
-		struct latency_stats_v2_0 {
+		struct __packed latency_stats_v2_0 {
 			uint32_t minor_version;
 			uint32_t major_version;
 			uint32_t bucket_read_data[32];
@@ -1677,9 +1660,9 @@ struct __packed latency_stats {
 
 struct __packed high_latency_log {
 	union {
-		struct high_latency_log_v1 {
+		struct __packed high_latency_log_v1 {
 			uint32_t version;
-			struct high_latency_log_entry {
+			struct __packed high_latency_log_entry {
 				uint64_t timestamp;  // ms
 				uint32_t latency;
 				uint32_t qid;
@@ -1705,12 +1688,12 @@ struct __packed high_latency_log {
 
 struct __packed performance_stats {
 	union {
-		struct performance_stats_v1 {
+		struct __packed performance_stats_v1 {
 			uint8_t version;
 			uint8_t rsvd[3];
-			struct performance_stats_timestamp {
+			struct __packed performance_stats_timestamp {
 				uint8_t timestamp[6];
-				struct performance_stats_entry {
+				struct __packed performance_stats_entry {
 					uint16_t read_iops;          // K IOPS
 					uint16_t read_bandwidth;     // MiB
 					uint32_t read_latency;       // us
@@ -1761,11 +1744,9 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *cmd, st
 					"set trim high latency log threshold, it's a 0-based value and unit is 10ms"),
 		OPT_END()};
 
-	// Open device
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 
-	struct nvme_dev *dev = NULL;
-
-	err = parse_and_open(&dev, argc, argv, cmd->help, opts);
+    err = parse_and_open(&dev, argc, argv, cmd->help, opts);
 	if (err)
 		return err;
 
@@ -1802,9 +1783,6 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *cmd, st
 	else
 		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
 
-	// Close device
-
-	dev_close(dev);
 	return err;
 }
 
@@ -1817,11 +1795,9 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *cmd, st
 	OPT_ARGS(opts) = {
 		OPT_END()};
 
-	// Open device
+    _cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 
-	struct nvme_dev *dev = NULL;
-
-	err = parse_and_open(&dev, argc, argv, cmd->help, opts);
+    err = parse_and_open(&dev, argc, argv, cmd->help, opts);
 	if (err)
 		return err;
 
@@ -1850,8 +1826,5 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *cmd, st
 		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
 	}
 
-	// Close device
-
-	dev_close(dev);
 	return err;
 }
