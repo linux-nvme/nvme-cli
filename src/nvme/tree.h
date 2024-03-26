@@ -1026,6 +1026,14 @@ const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c);
 const char *nvme_ctrl_get_dhchap_host_key(nvme_ctrl_t c);
 
 /**
+ *  nvme_ctrl_get_cntlid() - Controller id
+ *  @c:	Controller to be checked
+ *
+ *  Return : Controller id of @c
+ */
+const char *nvme_ctrl_get_cntlid(nvme_ctrl_t c);
+
+/**
  * nvme_ctrl_set_dhchap_host_key() - Set host key
  * @c:		Host for which the key should be set
  * @key:	DH-HMAC-CHAP Key to set or NULL to clear existing key

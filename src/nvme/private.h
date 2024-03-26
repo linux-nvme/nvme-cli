@@ -86,6 +86,7 @@ struct nvme_ctrl {
 	char *dhchap_key;
 	char *dhchap_ctrl_key;
 	char *cntrltype;
+	char *cntlid;
 	char *dctype;
 	char *phy_slot;
 	bool discovery_ctrl;
