@@ -166,7 +166,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 	list_head_init(&nbft_list);
 	ret = read_nbft_files(&nbft_list, nbft_path);
 	if (ret) {
-		if (ret != ENOENT)
+		if (ret != -ENOENT)
 			nvme_show_perror("Failed to access ACPI tables directory");
 		goto out_free;
 	}
