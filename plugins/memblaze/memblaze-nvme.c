@@ -1464,7 +1464,7 @@ static void smart_log_add_v2_print(struct smart_log_add_item_12 *item, int item_
 		[0xfd] = {18, "xor_fail_count"              },
 		[0xfe] = {19, "xor_invoked_count"           },
 		[0xe5] = {20, "inflight_read_io_cmd"        },
-		[0xe6] = {21, "inflight_write_io_cmd"     },
+		[0xe6] = {21, "inflight_write_io_cmd"       },
 		[0xf8] = {22, "nand_bytes_read"             },
 		[0xe7] = {23, "temp_since_born"             },
 		[0xe8] = {24, "power_consumption"           },
@@ -1705,6 +1705,31 @@ struct __packed performance_stats {
 				} entries[3600];
 			} timestamps[24];
 		} v1;
+		struct __packed performance_stats_v2 {
+			uint8_t version;
+			uint8_t rsvd[3];
+			struct __packed performance_stats_timestamp_v2 {
+				uint8_t timestamp[6];
+				struct __packed performance_stats_entry_v2 {
+					uint16_t read_iops;
+					uint16_t read_bandwidth;
+					uint16_t read_latency_avg;
+					uint16_t read_latency_max;
+					uint8_t  scale_of_read_iops;
+					uint8_t  scale_of_read_bandwidth;
+					uint8_t  scale_of_read_latency_avg;
+					uint8_t  scale_of_read_latency_max;
+					uint16_t write_iops;
+					uint16_t write_bandwidth;
+					uint16_t write_latency_avg;
+					uint16_t write_latency_max;
+					uint8_t  scale_of_write_iops;
+					uint8_t  scale_of_write_bandwidth;
+					uint8_t  scale_of_write_latency_avg;
+					uint8_t  scale_of_write_latency_max;
+				} entries[3600];
+			} timestamps[24];
+		} v2;
 		uint8_t raw[4 + 24 * (6 + 3600 * 24)];
 	};
 };
@@ -1727,21 +1752,21 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *cmd, st
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("sel-perf-log", 's', &cfg.perf_monitor,
-				 "Select features to turn on, default: Disable\n"
-				 "    bit 0: latency statistics\n"
-				 "    bit 1: high latency log\n"
-				 "    bit 2: Performance stat"),
+			 "Select features to turn on, default: Disable\n"
+			 "    bit 0: latency statistics\n"
+			 "    bit 1: high latency log\n"
+			 "    bit 2: Performance stat"),
 		OPT_UINT("set-commands-mask", 'm', &cfg.cmd_mask,
-				 "Set Enable, default: Disable\n"
-				 "    bit 0: Read commands\n"
-				 "    bit 1: high Write commands\n"
-				 "    bit 2: De-allocate/TRIM (this bit is not worked for Performance stat.)"),
+		  "Set Enable, default: Disable\n"
+		  "    bit 0: Read commands\n"
+		  "    bit 1: high Write commands\n"
+		  "    bit 2: De-allocate/TRIM (this bit is not worked for Performance stat.)"),
 		OPT_UINT("set-read-threshold", 'r', &cfg.read_threshold,
-					"set read high latency log threshold, it's a 0-based value and unit is 10ms"),
+		  "set read high latency log threshold, it's a 0-based value and unit is 10ms"),
 		OPT_UINT("set-write-threshold", 'w', &cfg.write_threshold,
-					"set write high latency log threshold, it's a 0-based value and unit is 10ms"),
+		  "set write high latency log threshold, it's a 0-based value and unit is 10ms"),
 		OPT_UINT("set-trim-threshold", 't', &cfg.de_allocate_trim_threshold,
-					"set trim high latency log threshold, it's a 0-based value and unit is 10ms"),
+		  "set trim high latency log threshold, it's a 0-based value and unit is 10ms"),
 		OPT_END()};
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
@@ -1820,6 +1845,513 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *cmd, st
 		printf("Threshold for Read = %dms\n", (((result & (0xff << 8)) >> 8) + 1) * 10);
 		printf("Threshold for Write = %dms\n", (((result & (0xff << 16)) >> 16) + 1) * 10);
 		printf("Threshold for Trim = %dms\n", (((result & (0xff << 24)) >> 24) + 1) * 10);
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else {
+		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+	}
+
+	return err;
+}
+
+static void latency_stats_v2_0_print(struct latency_stats *log, int size)
+{
+	static const struct latency_stats_bucket buckets[0xff] = {
+		[1] = {"0us",   "50us" },
+		[2] = {"50us",  "100us"},
+		[3] = {"100us", "150us"},
+		[4] = {"150us", "200us"},
+		[5] = {"200us", "300us"},
+		[6] = {"300us", "400us"},
+		[7] = {"400us", "500us"},
+		[8] = {"500us", "600us"},
+		[9] = {"600us", "700us"},
+		[10] = {"700us", "800us"},
+		[11] = {"800us", "900us"},
+		[12] = {"900us", "1ms"  },
+		[13] = {"1ms",   "5ms"  },
+		[14] = {"5ms",   "10ms" },
+		[15] = {"10ms",  "20ms" },
+		[16] = {"20ms",  "50ms" },
+		[17] = {"50ms",  "100ms"},
+		[18] = {"100ms", "200ms"},
+		[19] = {"200ms", "300ms"},
+		[20] = {"300ms", "400ms"},
+		[21] = {"400ms", "500ms"},
+		[22] = {"500ms", "600ms"},
+		[23] = {"600ms", "700ms"},
+		[24] = {"700ms", "800ms"},
+		[25] = {"800ms", "900ms"},
+		[26] = {"900ms", "1s"   },
+		[27] = {"1s",    "2s"   },
+		[28] = {"2s",    "3s"   },
+		[29] = {"3s",    "4s"   },
+		[30] = {"4s",    "5s"   },
+		[31] = {"5s",    "8s"   },
+		[32] = {"8s",    "INF"  },
+	};
+
+	printf("Bucket 1-32 IO Read Command Data\n");
+	printf("-------------------------------------------\n");
+	printf("%-12s%-12s%-12s%-12s\n", "Bucket", "Start(>=)", "End(<)", "Value");
+	int bucket_count = sizeof(log->v2_0.bucket_read_data) / sizeof(uint32_t);
+
+	for (int i = 0; i < bucket_count; i++) {
+		printf("%-12u%-12s%-12s%-12u\n", i + 1, buckets[i + 1].start_threshold,
+		       buckets[i + 1].end_threshold, log->v2_0.bucket_read_data[i]);
+	}
+	printf("\n");
+
+	printf("Bucket 1-32 IO Write Command Data\n");
+	printf("-------------------------------------------\n");
+	printf("%-12s%-12s%-12s%-12s\n", "Bucket", "Start(>=)", "End(<)", "Value");
+	bucket_count = sizeof(log->v2_0.bucket_write_data) / sizeof(uint32_t);
+
+	for (int i = 0; i < bucket_count; i++) {
+		printf("%-12u%-12s%-12s%-12u\n", i + 1, buckets[i + 1].start_threshold,
+		       buckets[i + 1].end_threshold, log->v2_0.bucket_write_data[i]);
+	}
+	printf("\n");
+
+	printf("Bucket 1-32 IO Trim Command Data\n");
+	printf("-------------------------------------------\n");
+	printf("%-12s%-12s%-12s%-12s\n", "Bucket", "Start(>=)", "End(<)", "Value");
+	bucket_count = sizeof(log->v2_0.bucket_trim_data) / sizeof(uint32_t);
+
+	for (int i = 0; i < bucket_count; i++) {
+		printf("%-12u%-12s%-12s%-12u\n", i + 1, buckets[i + 1].start_threshold,
+		       buckets[i + 1].end_threshold, log->v2_0.bucket_trim_data[i]);
+	}
+	printf("\n");
+}
+
+static void latency_stats_print(struct latency_stats *log, const char *devname)
+{
+	uint32_t minor_version = *(uint32_t *)&log->raw[0];
+	uint32_t major_version = *(uint32_t *)&log->raw[4];
+
+	printf("Major Version: %u, Minor Version: %u\n", major_version, minor_version);
+	printf("\n");
+	printf("Latency Statistics Log for NVMe device: %s\n", devname);
+	printf("\n");
+
+	switch (major_version) {
+	case 2:
+		switch (minor_version) {
+		case 0:
+			latency_stats_v2_0_print(log, sizeof(struct latency_stats));
+			break;
+		default:
+			fprintf(stderr, "Major Version %u, Minor Version %u: Not supported yet\n",
+				major_version, minor_version);
+			break;
+		}
+		break;
+
+	default:
+		fprintf(stderr, "Major Version %u: Not supported yet\n", major_version);
+		break;
+	}
+}
+
+static int mb_get_latency_stats(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	// Get the configuration
+
+	struct config {
+		bool raw_binary;
+	};
+
+	struct config cfg = {0};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary",
+			'b',
+			&cfg.raw_binary,
+			"dump the whole log buffer in binary format"),
+		OPT_END()};
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	int err = parse_and_open(&dev, argc, argv, cmd->help, opts);
+
+	if (err)
+		return err;
+
+	// Get log
+
+	struct latency_stats log = {0};
+
+	err = nvme_get_log_simple(dev_fd(dev), LID_LATENCY_STATISTICS, sizeof(struct latency_stats),
+				  &log);
+	if (!err) {
+		if (!cfg.raw_binary)
+			latency_stats_print(&log, dev->name);
+		else
+			d_raw((unsigned char *)&log, sizeof(struct latency_stats));
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else {
+		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+	}
+
+	return err;
+}
+
+static void high_latency_log_v1_print(struct high_latency_log *log, int size)
+{
+	printf("%-24s%-12s%-12s%-6s%-6s%-6s%-6s%-12s%-24s%-6s%-6s%-6s%-6s%-6s\n",
+	       "Timestamp", "Latency(us)", "QID", "OpC", "Fuse", "PSDT", "CID", "NSID", "SLBA",
+	       "NLB", "DType", "PInfo", "FUA", "LR");
+
+	for (int i = 0; i < 1024; i++) {
+		if (log->v1.entries[i].timestamp == 0)
+			break;
+
+		// Get the timestamp
+
+		time_t timestamp_ms    = log->v1.entries[i].timestamp;
+		time_t timestamp_s     = timestamp_ms / 1000;
+		int    time_ms         = timestamp_ms % 1000;
+		char   str_time_s[20]  = {0};
+		char   str_time_ms[32] = {0};
+
+		strftime(str_time_s, sizeof(str_time_s), "%Y-%m-%d %H:%M:%S",
+			 localtime(&timestamp_s));
+		snprintf(str_time_ms, sizeof(str_time_ms), "%s.%03d", str_time_s, time_ms);
+		printf("%-24s", str_time_ms);
+
+		//
+		printf("%-12" PRIu32, log->v1.entries[i].latency);
+		printf("%-12" PRIu32, log->v1.entries[i].qid);
+		printf("%#-6" PRIx32, log->v1.entries[i].opcode);
+		printf("%-6" PRIu32, log->v1.entries[i].fuse);
+		printf("%-6" PRIu32, log->v1.entries[i].psdt);
+		printf("%-6" PRIu32, log->v1.entries[i].cid);
+		printf("%-12" PRIu32, log->v1.entries[i].nsid);
+		printf("%-24" PRIu64, log->v1.entries[i].slba);
+		printf("%-6" PRIu32, log->v1.entries[i].nlb);
+		printf("%-6" PRIu32, log->v1.entries[i].dtype);
+		printf("%-6" PRIu32, log->v1.entries[i].pinfo);
+		printf("%-6" PRIu32, log->v1.entries[i].fua);
+		printf("%-6" PRIu32, log->v1.entries[i].lr);
+		printf("\n");
+	}
+}
+
+static void high_latency_log_print(struct high_latency_log *log, const char *devname)
+{
+	uint32_t version = *(uint32_t *)&log->raw[0];
+
+	printf("Version: %u\n", version);
+	printf("\n");
+	printf("High Latency Log for NVMe device: %s\n", devname);
+	printf("\n");
+
+	switch (version) {
+	case 1:
+		high_latency_log_v1_print(log, sizeof(struct high_latency_log));
+		break;
+
+	default:
+		fprintf(stderr, "Version %u: Not supported yet\n", version);
+		break;
+	}
+}
+
+static int mb_get_high_latency_log(int argc, char **argv, struct command *cmd,
+				   struct plugin *plugin)
+{
+	// Get the configuration
+
+	struct config {
+		bool raw_binary;
+	};
+
+	struct config cfg = {0};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary",
+			'b',
+			&cfg.raw_binary,
+			"dump the whole log buffer in binary format"),
+		OPT_END()};
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	int err = parse_and_open(&dev, argc, argv, cmd->help, opts);
+
+	if (err)
+		return err;
+
+	// Get log
+
+	struct high_latency_log log = {0};
+
+	err = nvme_get_log_simple(dev_fd(dev), LID_HIGH_LATENCY_LOG,
+				  sizeof(struct high_latency_log), &log);
+	if (!err) {
+		if (!cfg.raw_binary)
+			high_latency_log_print(&log, dev->name);
+		else
+			d_raw((unsigned char *)&log, sizeof(struct high_latency_log));
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else {
+		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+	}
+
+	return err;
+}
+
+static void performance_stats_v1_print(struct performance_stats *log, int duration)
+{
+	for (int i = 0; i < duration; i++) {
+		// Print timestamp
+
+		time_t timestamp_ms = int48_to_long(log->v1.timestamps[i].timestamp);
+		time_t timestamp_s  = timestamp_ms / 1000;
+		int    time_ms      = timestamp_ms % 1000;
+		char   time_s[32]   = {0};
+
+		strftime(time_s, sizeof(time_s), "%Y-%m-%d %H:%M:%S", localtime(&timestamp_s));
+		printf("Timestamp %2d: %s.%03d\n", i + 1, time_s, time_ms);
+
+		// Print entry title
+
+		printf("%-8s%-14s%-21s%-22s%-22s%-15s%-22s%-23s%-23s\n", "Entry", "Read-IOs(K)",
+		       "Read-Bandwidth(MiB)", "Avg-Read-Latency(us)", "Max-Read-Latency(us)",
+		       "Write-IOs(K)", "Write-Bandwidth(MiB)", "Avg-Write-Latency(us)",
+		       "Max-Write-Latency(us)");
+
+		// Print all entries content
+
+		struct performance_stats_entry entry = {0};
+
+		for (int j = 0; j < 3600; j++) {
+			entry.read_iops         =
+				log->v1.timestamps[i].entries[j].read_iops;
+			entry.read_bandwidth    =
+				log->v1.timestamps[i].entries[j].read_bandwidth;
+			entry.read_latency      =
+				log->v1.timestamps[i].entries[j].read_latency;
+			entry.read_latency_max  =
+				log->v1.timestamps[i].entries[j].read_latency_max;
+			entry.write_iops        =
+				log->v1.timestamps[i].entries[j].write_iops;
+			entry.write_bandwidth   =
+				log->v1.timestamps[i].entries[j].write_bandwidth;
+			entry.write_latency     =
+				log->v1.timestamps[i].entries[j].write_latency;
+			entry.write_latency_max =
+				log->v1.timestamps[i].entries[j].write_latency_max;
+
+			if (entry.read_iops == 0 && entry.write_iops == 0)
+				continue;
+
+			printf("%-8u%-14u%-21u%-22u%-22u%-15u%-22u%-23u%-23u\n",
+			       j + 1,
+			       entry.read_iops,
+			       entry.read_bandwidth,
+			       entry.read_iops == 0 ?
+					0 : entry.read_latency / (1000 * entry.read_iops),
+			       entry.read_latency_max,
+			       entry.write_iops,
+			       entry.write_bandwidth,
+			       entry.write_iops == 0 ?
+					0 : entry.write_latency / (1000 * entry.write_iops),
+			       entry.write_latency_max);
+			usleep(100);
+		}
+		printf("\n");
+	}
+}
+
+static void performance_stats_v2_print(struct performance_stats *log, int duration)
+{
+	for (int i = 0; i < duration; i++) {
+		// Print timestamp
+
+		time_t timestamp_ms = int48_to_long(log->v2.timestamps[i].timestamp);
+		time_t timestamp_s  = timestamp_ms / 1000;
+		int    time_ms      = timestamp_ms % 1000;
+		char   time_s[32]   = {0};
+
+		strftime(time_s, sizeof(time_s), "%Y-%m-%d %H:%M:%S", localtime(&timestamp_s));
+		printf("Timestamp %2d: %s.%03d\n", i + 1, time_s, time_ms);
+
+		// Print entry title
+
+		printf("%-8s%-23s%-23s%-23s%-23s%-23s%-23s%-23s%-23s\n",
+		       "Entry",
+		       "Read-IOs(IOPS)", "Read-Bandwidth(KiB)",
+		       "Avg-Read-Latency(us)", "Max-Read-Latency(us)",
+		       "Write-IOs(IOPS)", "Write-Bandwidth(KiB)",
+		       "Avg-Write-Latency(us)", "Max-Write-Latency(us)");
+
+		// Print all entries content
+		for (int j = 0; j < 3600; j++) {
+			uint32_t read_iops =
+				log->v2.timestamps[i].entries[j].read_iops;
+			uint32_t read_bandwidth            =
+				log->v2.timestamps[i].entries[j].read_bandwidth;
+			uint32_t read_latency_avg          =
+				log->v2.timestamps[i].entries[j].read_latency_avg;
+			uint32_t read_latency_max          =
+				log->v2.timestamps[i].entries[j].read_latency_max;
+			uint32_t scale_of_read_iops        =
+				log->v2.timestamps[i].entries[j].scale_of_read_iops;
+			uint32_t scale_of_read_bandwidth   =
+				log->v2.timestamps[i].entries[j].scale_of_read_bandwidth;
+			uint32_t scale_of_read_latency_avg =
+				log->v2.timestamps[i].entries[j].scale_of_read_latency_avg;
+			uint32_t scale_of_read_latency_max =
+				log->v2.timestamps[i].entries[j].scale_of_read_latency_max;
+
+			uint32_t write_iops                 =
+				log->v2.timestamps[i].entries[j].write_iops;
+			uint32_t write_bandwidth            =
+				log->v2.timestamps[i].entries[j].write_bandwidth;
+			uint32_t write_latency_avg          =
+				log->v2.timestamps[i].entries[j].write_latency_avg;
+			uint32_t write_latency_max          =
+				log->v2.timestamps[i].entries[j].write_latency_max;
+			uint32_t scale_of_write_iops        =
+				log->v2.timestamps[i].entries[j].scale_of_write_iops;
+			uint32_t scale_of_write_bandwidth   =
+				log->v2.timestamps[i].entries[j].scale_of_write_bandwidth;
+			uint32_t scale_of_write_latency_avg =
+				log->v2.timestamps[i].entries[j].scale_of_write_latency_avg;
+			uint32_t scale_of_write_latency_max =
+				log->v2.timestamps[i].entries[j].scale_of_write_latency_max;
+
+			if (read_iops == 0 && write_iops == 0)
+				continue;
+
+			while (scale_of_read_iops < 4 && scale_of_read_iops) {
+				read_iops *= 10;
+				scale_of_read_iops--;
+			}
+			while (scale_of_read_bandwidth < 3 && scale_of_read_bandwidth) {
+				read_bandwidth *= 1024;
+				scale_of_read_bandwidth--;
+			}
+			while (scale_of_read_latency_avg < 3 && scale_of_read_latency_avg) {
+				read_latency_avg *= 1000;
+				scale_of_read_latency_avg--;
+			}
+			while (scale_of_read_latency_max < 3 && scale_of_read_latency_max) {
+				read_latency_max *= 1000;
+				scale_of_read_latency_max--;
+			}
+
+			while (scale_of_write_iops < 4 && scale_of_write_iops) {
+				write_iops *= 10;
+				scale_of_write_iops--;
+			}
+			while (scale_of_write_bandwidth < 3 && scale_of_write_bandwidth) {
+				write_bandwidth *= 1024;
+				scale_of_write_bandwidth--;
+			}
+			while (scale_of_write_latency_avg < 3 && scale_of_write_latency_avg) {
+				write_latency_avg *= 1000;
+				scale_of_write_latency_avg--;
+			}
+			while (scale_of_write_latency_max < 3 && scale_of_write_latency_max) {
+				write_latency_max *= 1000;
+				scale_of_write_latency_max--;
+			}
+
+			printf("%-8u%-23u%-23u%-23u%-23u%-23u%-23u%-23u%-23u\n",
+			       j + 1,
+			       read_iops,
+			       read_bandwidth,
+			       read_latency_avg,
+			       read_latency_max,
+			       write_iops,
+			       write_bandwidth,
+			       write_latency_avg,
+			       write_latency_max);
+			usleep(100);
+		}
+		printf("\n");
+	}
+}
+
+static void performance_stats_print(struct performance_stats *log, const char *devname,
+				    int duration)
+{
+	uint8_t version = *(uint8_t *)&log->raw[0];
+
+	printf("Version: %u\n", version);
+	printf("\n");
+	printf("Performance Stat log for NVMe device: %s\n", devname);
+	printf("\n");
+
+	switch (version) {
+	case 1:
+		performance_stats_v1_print(log, duration);
+		break;
+	case 2:
+		performance_stats_v2_print(log, duration);
+		break;
+	default:
+		fprintf(stderr, "Version %u: Not supported yet\n", version);
+		break;
+	}
+}
+
+static int mb_get_performance_stats(int argc, char **argv, struct command *cmd,
+				    struct plugin *plugin)
+{
+	// Get the configuration
+
+	struct config {
+		int  duration;
+		bool raw_binary;
+	};
+
+	struct config cfg = {.duration = 1, .raw_binary = false};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("duration",
+			'd',
+			&cfg.duration,
+			"[1-24] hours: duration of the log to be printed, default is 1 hour"),
+		OPT_FLAG("raw-binary",
+			'b',
+			&cfg.raw_binary,
+			"dump the whole log buffer in binary format"),
+		OPT_END()};
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	int err = parse_and_open(&dev, argc, argv, cmd->help, opts);
+
+	if (err)
+		return err;
+
+	// Check parameters
+	if (cfg.duration < 1 || cfg.duration > 24) {
+		fprintf(stderr, "duration must be between 1 and 24.\n");
+		exit(1);
+	}
+
+	// Get log
+
+	struct performance_stats log = {0};
+
+	int log_size = 4 + cfg.duration * sizeof(struct performance_stats_timestamp);
+	// Get one more timestamp if duration is odd number to avoid non-dw alignment issues
+	int xfer_size = (cfg.duration % 2) > 0 ?
+		(4 + (cfg.duration + 1) * sizeof(struct performance_stats_timestamp)) : log_size;
+
+	err = nvme_get_log_simple(dev_fd(dev), LID_PERFORMANCE_STATISTICS, xfer_size, &log);
+	if (!err) {
+		if (!cfg.raw_binary)
+			performance_stats_print(&log, dev->name, cfg.duration);
+		else
+			d_raw((unsigned char *)&log, log_size);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
