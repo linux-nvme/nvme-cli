@@ -5098,7 +5098,7 @@ static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *
 
 	err = nvme_ns_rescan(dev_fd(dev));
 	if (err < 0)
-		nvme_show_error("Namespace Rescan");
+		nvme_show_error("Namespace Rescan: %s\n", nvme_strerror(errno));
 
 	return err;
 }
