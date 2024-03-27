@@ -169,6 +169,7 @@ int sedopal_cmd_initialize(int fd)
 	struct opal_key key;
 	struct opal_lr_act lr_act = {};
 	struct opal_user_lr_setup lr_setup = {};
+	struct opal_new_pw new_pw = {};
 
 	sedopal_ask_key = true;
 	sedopal_ask_new_key = true;
@@ -217,6 +218,21 @@ int sedopal_cmd_initialize(int fd)
 			"Error: failed to setup locking range - %d\n", rc);
 		return rc;
 	}
+
+	/*
+	 * set password
+	 */
+	new_pw.new_user_pw.who = OPAL_ADMIN1;
+	new_pw.new_user_pw.opal_key.lr = 0;
+	new_pw.session.who = OPAL_ADMIN1;
+	new_pw.session.sum = 0;
+	new_pw.session.opal_key.lr = 0;
+	new_pw.session.opal_key = key;
+	new_pw.new_user_pw.opal_key = key;
+
+	rc = ioctl(fd, IOC_OPAL_SET_PW, &new_pw);
+	if (rc != 0)
+		fprintf(stderr, "Error: failed setting password - %d\n", rc);
 
 	return rc;
 }
