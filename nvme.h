@@ -125,4 +125,6 @@ void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 uint64_t int48_to_long(uint8_t *data);
 
+int get_reg_size(int offset);
+bool nvme_is_ctrl_reg(int offset);
 #endif /* _NVME_H */

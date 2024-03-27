@@ -1049,13 +1049,11 @@ static void json_registers_acq(uint64_t acq, struct json_object *r)
 	obj_add_prix64(r, "Admin Completion Queue Base (ACQB)", acq);
 }
 
-static void json_registers_cmbloc(uint32_t cmbloc, void *bar, struct json_object *r)
+static void json_registers_cmbloc(uint32_t cmbloc, bool support, struct json_object *r)
 {
-	uint32_t cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
-
 	obj_add_uint_x(r, "cmbloc", cmbloc);
 
-	if (!cmbsz) {
+	if (!support) {
 		obj_add_result(r, "Controller Memory Buffer feature is not supported");
 		return;
 	}
@@ -1184,17 +1182,15 @@ static void json_registers_pmrctl(uint32_t pmrctl, struct json_object *r)
 	obj_add_str(r, "Enable (EN)", pmrctl & 1 ? "Ready" : "Disabled");
 }
 
-static void json_registers_pmrsts(uint32_t pmrsts, void *bar, struct json_object *r)
+static void json_registers_pmrsts(uint32_t pmrsts, bool ready, struct json_object *r)
 {
-	uint32_t pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
-
 	obj_add_uint_x(r, "pmrsts", pmrsts);
 
 	obj_add_uint_x(r, "Controller Base Address Invalid (CBAI)", (pmrsts & 0x1000) >> 12);
 	obj_add_str(r, "Health Status (HSTS)",
-		     nvme_register_pmr_hsts_to_string((pmrsts & 0xe00) >> 9));
+		    nvme_register_pmr_hsts_to_string((pmrsts & 0xe00) >> 9));
 	obj_add_str(r, "Not Ready (NRDY)",
-		     !(pmrsts & 0x100) && (pmrctl & 1) ? "Ready" : "Not ready");
+		    !(pmrsts & 0x100) && ready ? "Ready" : "Not ready");
 	obj_add_uint_x(r, "Error (ERR)", pmrsts & 0xff);
 }
 
@@ -1205,7 +1201,7 @@ static void json_registers_pmrebs(uint32_t pmrebs, struct json_object *r)
 	obj_add_uint_x(r, "PMR Elasticity Buffer Size Base (PMRWBZ)", (pmrebs & 0xffffff00) >> 8);
 	obj_add_str(r, "Read Bypass Behavior", pmrebs & 0x10 ? "Shall" : "May");
 	obj_add_str(r, "PMR Elasticity Buffer Size Units (PMRSZU)",
-		     nvme_register_pmr_pmrszu_to_string(pmrebs & 0xf));
+		    nvme_register_unit_to_string(pmrebs & 0xf));
 }
 
 static void json_registers_pmrswtp(uint32_t pmrswtp, struct json_object *r)
@@ -1214,7 +1210,7 @@ static void json_registers_pmrswtp(uint32_t pmrswtp, struct json_object *r)
 
 	obj_add_uint_x(r, "PMR Sustained Write Throughput (PMRSWTV)", (pmrswtp & 0xffffff00) >> 8);
 	obj_add_key(r, "PMR Sustained Write Throughput Units (PMRSWTU)", "%s/second",
-		     nvme_register_pmr_pmrszu_to_string(pmrswtp & 0xf));
+		    nvme_register_unit_to_string(pmrswtp & 0xf));
 }
 
 static void json_registers_pmrmscl(uint32_t pmrmscl, struct json_object *r)
@@ -2543,11 +2539,16 @@ static void json_ctrl_registers_acq(void *bar, struct json_object *r)
 static void json_ctrl_registers_cmbloc(void *bar, struct json_object *r)
 {
 	uint32_t cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
+	uint32_t cmbsz;
+	bool support;
 
-	if (human())
-		json_registers_cmbloc(cmbloc, bar, obj_create_array_obj(r, "cmbloc"));
-	else
+	if (human()) {
+		cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
+		support = nvme_registers_cmbloc_support(cmbsz);
+		json_registers_cmbloc(cmbloc, support, obj_create_array_obj(r, "cmbloc"));
+	} else {
 		obj_add_int(r, "cmbloc", cmbloc);
+	}
 }
 
 static void json_ctrl_registers_cmbsz(void *bar, struct json_object *r)
@@ -2633,11 +2634,16 @@ static void json_ctrl_registers_pmrctl(void *bar, struct json_object *r)
 static void json_ctrl_registers_pmrsts(void *bar, struct json_object *r)
 {
 	uint32_t pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
+	uint32_t pmrctl;
+	bool ready;
 
-	if (human())
-		json_registers_pmrsts(pmrsts, bar, obj_create_array_obj(r, "pmrsts"));
-	else
+	if (human()) {
+		pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+		ready = nvme_registers_pmrctl_ready(pmrctl);
+		json_registers_pmrsts(pmrsts, ready, obj_create_array_obj(r, "pmrsts"));
+	} else {
 		obj_add_int(r, "pmrsts", pmrsts);
+	}
 }
 
 static void json_ctrl_registers_pmrebs(void *bar, struct json_object *r)
@@ -2712,6 +2718,149 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_ctrl_registers_pmrmscu(bar, r);
 
 	json_print(r);
+}
+
+static void json_registers_cmbebs(__u32 cmbebs, struct json_object *r)
+{
+	char buffer[BUF_LEN];
+
+	obj_add_uint_nx(r, "cmbebs", cmbebs);
+
+	obj_add_uint_nx(r, "CMB Elasticity Buffer Size Base (CMBWBZ)", cmbebs >> 8);
+	sprintf(buffer, "%s", cmbebs & 0x10 ? "shall" : "may");
+	obj_add_str(r, "Read Bypass Behavior", buffer);
+	obj_add_str(r, "CMB Elasticity Buffer Size Units (CMBSZU)",
+		    nvme_register_unit_to_string(cmbebs & 0xf));
+}
+
+static void json_registers_cmbswtp(__u32 cmbswtp, struct json_object *r)
+{
+	char str[STR_LEN];
+
+	obj_add_uint_nx(r, "cmbswtp", cmbswtp);
+
+	obj_add_uint_nx(r, "CMB Sustained Write Throughput (CMBSWTV)", cmbswtp >> 8);
+	sprintf(str, "%s", nvme_register_unit_to_string(cmbswtp & 0xf));
+	obj_add_str(r, "CMB Sustained Write Throughput Units (CMBSWTU)", str);
+}
+
+static void json_ctrl_register_human(int offset, uint64_t value, struct json_object *r)
+{
+	char buffer[BUF_LEN];
+	struct json_object *array_obj = NULL;
+
+	switch (offset) {
+	case NVME_REG_CAP:
+		array_obj = obj_create_array_obj(r, "cap");
+		break;
+	case NVME_REG_VS:
+		array_obj = obj_create_array_obj(r, "vs");
+		break;
+	case NVME_REG_INTMS:
+		obj_add_nprix64(r, "Interrupt Vector Mask Set (IVMS)", value);
+		break;
+	case NVME_REG_INTMC:
+		obj_add_nprix64(r, "Interrupt Vector Mask Clear (IVMC)", value);
+		break;
+	case NVME_REG_CC:
+		array_obj = obj_create_array_obj(r, "cc");
+		break;
+	case NVME_REG_CSTS:
+		array_obj = obj_create_array_obj(r, "csts");
+		break;
+	case NVME_REG_NSSR:
+		obj_add_uint64(r, "NVM Subsystem Reset Control (NSSRC)", value);
+		break;
+	case NVME_REG_AQA:
+		json_registers_aqa(value, obj_create_array_obj(r, "aqa"));
+		break;
+	case NVME_REG_ASQ:
+		obj_add_nprix64(r, "Admin Submission Queue Base (ASQB)", value);
+		break;
+	case NVME_REG_ACQ:
+		obj_add_nprix64(r, "Admin Completion Queue Base (ACQB)", value);
+		break;
+	case NVME_REG_CMBLOC:
+		json_registers_cmbloc(value, true, obj_create_array_obj(r, "cmbloc"));
+		break;
+	case NVME_REG_CMBSZ:
+		json_registers_cmbsz(value, obj_create_array_obj(r, "cmbsz"));
+		break;
+	case NVME_REG_BPINFO:
+		json_registers_bpinfo(value, obj_create_array_obj(r, "bpinfo"));
+		break;
+	case NVME_REG_BPRSEL:
+		json_registers_bprsel(value, obj_create_array_obj(r, "bprsel"));
+		break;
+	case NVME_REG_BPMBL:
+		json_registers_bpmbl(value, obj_create_array_obj(r, "bpmbl"));
+		break;
+	case NVME_REG_CMBMSC:
+		json_registers_cmbmsc(value, obj_create_array_obj(r, "cmbmsc"));
+		break;
+	case NVME_REG_CMBSTS:
+		json_registers_cmbsts(value, obj_create_array_obj(r, "cmbsts"));
+		break;
+	case NVME_REG_CMBEBS:
+		json_registers_cmbebs(value, obj_create_array_obj(r, "cmbebs"));
+		break;
+	case NVME_REG_CMBSWTP:
+		json_registers_cmbswtp(value, obj_create_array_obj(r, "cmbswtp"));
+		break;
+	case NVME_REG_NSSD:
+		json_registers_nssd(value, obj_create_array_obj(r, "nssd"));
+		break;
+	case NVME_REG_CRTO:
+		array_obj = obj_create_array_obj(r, "crto");
+		break;
+	case NVME_REG_PMRCAP:
+		json_registers_pmrcap(value, obj_create_array_obj(r, "pmrcap"));
+		break;
+	case NVME_REG_PMRCTL:
+		json_registers_pmrctl(value, obj_create_array_obj(r, "pmrctl"));
+		break;
+	case NVME_REG_PMRSTS:
+		json_registers_pmrsts(value, true, obj_create_array_obj(r, "pmrsts"));
+		break;
+	case NVME_REG_PMREBS:
+		json_registers_pmrebs(value, obj_create_array_obj(r, "pmrebs"));
+		break;
+	case NVME_REG_PMRSWTP:
+		json_registers_pmrswtp(value, obj_create_array_obj(r, "pmrswtp"));
+		break;
+	case NVME_REG_PMRMSCL:
+		json_registers_pmrmscl(value, obj_create_array_obj(r, "pmrmscl"));
+		break;
+	case NVME_REG_PMRMSCU:
+		json_registers_pmrmscu(value, obj_create_array_obj(r, "pmrmscu"));
+		break;
+	default:
+		sprintf(buffer, "%#04x (%s)", offset, nvme_register_to_string(offset));
+		obj_add_str(r, "register", buffer);
+		obj_add_nprix64(r, "value", value);
+		break;
+	}
+
+	if (array_obj)
+		json_single_property_human(offset, value, array_obj);
+}
+
+static void json_ctrl_register(int offset, uint64_t value)
+{
+	bool human = json_print_ops.flags & VERBOSE;
+	struct json_object *r;
+	char json_str[STR_LEN];
+
+	sprintf(json_str, "register: %#04x", offset);
+	r = obj_create(json_str);
+
+	if (human) {
+		obj_add_uint64(r, nvme_register_to_string(offset), value);
+		json_ctrl_register_human(offset, value, r);
+	} else {
+		obj_add_str(r, "name", nvme_register_symbol_to_string(offset));
+		obj_add_uint64(r, "value", value);
+	}
 }
 
 static void json_nvme_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *ns,
@@ -4455,6 +4604,7 @@ static struct print_ops json_print_ops = {
 	.phy_rx_eom_log			= json_phy_rx_eom_log,
 	.ctrl_list			= json_nvme_list_ctrl,
 	.ctrl_registers			= json_ctrl_registers,
+	.ctrl_register			= json_ctrl_register,
 	.directive			= json_directive_show,
 	.discovery_log			= json_discovery_log,
 	.effects_log_list		= json_effects_log_list,
