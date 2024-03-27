@@ -432,9 +432,8 @@ static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags)
 	return ret != 0 ? -errno : 0;
 }
 
-int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
-		   const char *desc,
-		   struct argconfig_commandline_options *opts)
+static int parse_args(int argc, char *argv[], const char *desc,
+		      struct argconfig_commandline_options *opts)
 {
 	int ret;
 
@@ -442,11 +441,25 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
 	if (ret)
 		return ret;
 
+	log_level = map_log_level(verbose_level, false);
+	nvme_init_default_logging(stderr, log_level, false, false);
+
+	return 0;
+}
+
+int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
+		   const char *desc,
+		   struct argconfig_commandline_options *opts)
+{
+	int ret;
+
+	ret = parse_args(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
 	ret = get_dev(dev, argc, argv, O_RDONLY);
 	if (ret < 0)
 		argconfig_print_help(desc, opts);
-	else
-		log_level = map_log_level(verbose_level, false);
 
 	return ret;
 }
@@ -3279,7 +3292,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 
 	NVME_ARGS(opts);
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err < 0)
 		return err;
 
@@ -3337,7 +3350,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 
 	NVME_ARGS(opts);
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err < 0)
 		return err;
 
@@ -6121,7 +6134,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		  OPT_FLAG("force",          0, &cfg.force,        force),
 		  OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -7776,7 +7789,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (err)
 			return err;
 	} else {
-		err = argconfig_parse(argc, argv, desc, opts);
+		err = parse_args(argc, argv, desc, opts);
 		if (err)
 			return err;
 		err = open_exclusive(&dev, argc, argv, cfg.force);
@@ -8968,7 +8981,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
 		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -9082,7 +9095,7 @@ static int check_dhchap_key(int argc, char **argv, struct command *command, stru
 	NVME_ARGS(opts,
 		  OPT_STR("key", 'k', &cfg.key, key));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -9201,7 +9214,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		  OPT_UINT("identity",	'I', &cfg.identity,	identity),
 		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 	if (cfg.hmac < 1 || cfg.hmac > 2) {
@@ -9319,7 +9332,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		  OPT_UINT("identity",	'I', &cfg.identity,	identity),
 		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
