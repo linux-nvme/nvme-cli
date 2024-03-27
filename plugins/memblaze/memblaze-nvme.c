@@ -1338,7 +1338,7 @@ struct smart_log_add {
 				struct smart_log_add_item_12 xor_fail_count;
 				struct smart_log_add_item_12 xor_invoked_count;
 				struct smart_log_add_item_12 inflight_read_io_cmd;
-				struct smart_log_add_item_12 flash_error_media_count;
+				struct smart_log_add_item_12 inflight_write_io_cmd;
 				struct smart_log_add_item_12 nand_bytes_read;
 				struct smart_log_add_item_12 temp_since_born;
 				struct smart_log_add_item_12 power_consumption;
@@ -1476,7 +1476,7 @@ static void smart_log_add_v2_print(struct smart_log_add_item_12 *item, int item_
 		[0xfd] = {18, "xor_fail_count"              },
 		[0xfe] = {19, "xor_invoked_count"           },
 		[0xe5] = {20, "inflight_read_io_cmd"        },
-		[0xe6] = {21, "flash_error_media_count"     },
+		[0xe6] = {21, "inflight_write_io_cmd"     },
 		[0xf8] = {22, "nand_bytes_read"             },
 		[0xe7] = {23, "temp_since_born"             },
 		[0xe8] = {24, "power_consumption"           },
