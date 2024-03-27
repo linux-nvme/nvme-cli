@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include <libnvme.h>
+
 #include "util/mem.h"
 
 #define __cleanup__(fn) __attribute__((cleanup(fn)))
@@ -33,5 +35,12 @@ static inline void close_file(int *f)
 		close(*f);
 }
 #define _cleanup_file_ __cleanup__(close_file)
+
+static inline void cleanup_nvme_root(nvme_root_t *r)
+{
+	if (r)
+		nvme_free_tree(*r);
+}
+#define _cleanup_nvme_root_ __cleanup__(cleanup_nvme_root)
 
 #endif
