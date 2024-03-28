@@ -290,4 +290,7 @@ struct __mi_mctp_socket_ops {
 };
 void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 
+#define SECTOR_SIZE	512
+#define SECTOR_SHIFT	9
+
 #endif /* _LIBNVME_PRIVATE_H */
