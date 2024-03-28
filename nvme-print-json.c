@@ -1365,7 +1365,7 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	status_str = nvme_sstat_status_to_string(status);
 	sprintf(str, "(%d) %s", status & NVME_SANITIZE_SSTAT_STATUS_MASK,
 		status_str);
-	obj_add_str(sstat, status_str, str);
+	obj_add_str(sstat, "status", str);
 
 	obj_add_obj(dev, "sstat", sstat);
 	obj_add_uint(dev, "cdw10_info", le32_to_cpu(sanitize_log->scdw10));
