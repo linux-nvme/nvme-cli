@@ -100,17 +100,16 @@ int nvme_cli_identify_allocated_ns_list(struct nvme_dev *dev, __u32 nsid,
 	return do_admin_op(identify_allocated_ns_list, dev, nsid, list);
 }
 
-int nvme_cli_identify_primary_ctrl(struct nvme_dev *dev, __u32 nsid,
+int nvme_cli_identify_primary_ctrl(struct nvme_dev *dev, __u16 cntid,
 				   struct nvme_primary_ctrl_cap *cap)
 {
-	return do_admin_op(identify_primary_ctrl, dev, nsid, cap);
+	return do_admin_op(identify_primary_ctrl, dev, cntid, cap);
 }
 
-int nvme_cli_identify_secondary_ctrl_list(struct nvme_dev *dev,
-					  __u16 ctrl_id,
+int nvme_cli_identify_secondary_ctrl_list(struct nvme_dev *dev, __u16 cntid,
 					  struct nvme_secondary_ctrl_list *sc_list)
 {
-	return do_admin_op(identify_secondary_ctrl_list, dev, ctrl_id,
+	return do_admin_op(identify_secondary_ctrl_list, dev, cntid,
 			   sc_list);
 }
 
