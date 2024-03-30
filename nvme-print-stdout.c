@@ -820,10 +820,10 @@ static void stdout_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log)
 
 static void stdout_fdp_config_fdpa(uint8_t fdpa)
 {
-	__u8 valid = (fdpa >> 7) & 0x1;
+	__u8 valid = NVME_GET(fdpa, FDP_CONFIG_FDPA_VALID);
 	__u8 rsvd = (fdpa >> 5) & 0x3;
-	__u8 fdpvwc = (fdpa >> 4) & 0x1;
-	__u8 rgif = fdpa & 0xf;
+	__u8 fdpvwc = NVME_GET(fdpa, FDP_CONFIG_FDPA_FDPVWC);
+	__u8 rgif = NVME_GET(fdpa, FDP_CONFIG_FDPA_RGIF);
 
 	printf("  [7:7] : %#x\tFDP Configuration %sValid\n",
 		valid, valid ? "" : "Not ");
