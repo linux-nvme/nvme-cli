@@ -1126,13 +1126,13 @@ static void stdout_registers_cc_ams(__u8 ams)
 {
 	printf("\tArbitration Mechanism Selected     (AMS): ");
 	switch (ams) {
-	case 0:
+	case NVME_CC_AMS_RR:
 		printf("Round Robin\n");
 		break;
-	case 1:
+	case NVME_CC_AMS_WRRU:
 		printf("Weighted Round Robin with Urgent Priority Class\n");
 		break;
-	case 7:
+	case NVME_CC_AMS_VS:
 		printf("Vendor Specific\n");
 		break;
 	default:
@@ -1145,13 +1145,13 @@ static void stdout_registers_cc_shn(__u8 shn)
 {
 	printf("\tShutdown Notification              (SHN): ");
 	switch (shn) {
-	case 0:
+	case NVME_CC_SHN_NONE:
 		printf("No notification; no effect\n");
 		break;
-	case 1:
+	case NVME_CC_SHN_NORMAL:
 		printf("Normal shutdown notification\n");
 		break;
-	case 2:
+	case NVME_CC_SHN_ABRUPT:
 		printf("Abrupt shutdown notification\n");
 		break;
 	default:
@@ -1165,20 +1165,17 @@ static void stdout_registers_cc(__u32 cc)
 	printf("\tController Ready Independent of Media Enable (CRIME): %s\n",
 		NVME_CC_CRIME(cc) ? "Enabled" : "Disabled");
 
-	printf("\tI/O Completion Queue Entry Size (IOCQES): %u bytes\n",
-		1 << ((cc & 0x00f00000) >> NVME_CC_IOCQES_SHIFT));
-	printf("\tI/O Submission Queue Entry Size (IOSQES): %u bytes\n",
-		1 << ((cc & 0x000f0000) >> NVME_CC_IOSQES_SHIFT));
-	stdout_registers_cc_shn((cc & 0x0000c000) >> NVME_CC_SHN_SHIFT);
-	stdout_registers_cc_ams((cc & 0x00003800) >> NVME_CC_AMS_SHIFT);
+	printf("\tI/O Completion Queue Entry Size (IOCQES): %u bytes\n", 1 << NVME_CC_IOCQES(cc));
+	printf("\tI/O Submission Queue Entry Size (IOSQES): %u bytes\n", 1 << NVME_CC_IOSQES(cc));
+	stdout_registers_cc_shn(NVME_CC_SHN(cc));
+	stdout_registers_cc_ams(NVME_CC_AMS(cc));
 	printf("\tMemory Page Size                   (MPS): %u bytes\n",
-		1 << (12 + ((cc & 0x00000780) >> NVME_CC_MPS_SHIFT)));
+	       1 << (12 + NVME_CC_MPS(cc)));
 	printf("\tI/O Command Set Selected           (CSS): %s\n",
-		(cc & 0x00000070) == 0x00 ? "NVM Command Set" :
-		(cc & 0x00000070) == 0x60 ? "All supported I/O Command Sets" :
-		(cc & 0x00000070) == 0x70 ? "Admin Command Set only" : "Reserved");
-	printf("\tEnable                              (EN): %s\n\n",
-		(cc & 0x00000001) ? "Yes" : "No");
+	       NVME_CC_CSS(cc) == NVME_CC_CSS_NVM ? "NVM Command Set" :
+	       NVME_CC_CSS(cc) == NVME_CC_CSS_CSI ? "All supported I/O Command Sets" :
+	       NVME_CC_CSS(cc) == NVME_CC_CSS_ADMIN ? "Admin Command Set only" : "Reserved");
+	printf("\tEnable                              (EN): %s\n\n", NVME_CC_EN(cc) ? "Yes" : "No");
 }
 
 static void stdout_registers_csts_shst(__u8 shst)
