@@ -1221,11 +1221,8 @@ static void stdout_registers_crto(__u32 crto)
 
 static void stdout_registers_aqa(__u32 aqa)
 {
-	printf("\tAdmin Completion Queue Size (ACQS): %u\n",
-		((aqa & 0x0fff0000) >> 16) + 1);
-	printf("\tAdmin Submission Queue Size (ASQS): %u\n\n",
-		(aqa & 0x00000fff) + 1);
-
+	printf("\tAdmin Completion Queue Size (ACQS): %u\n", NVME_AQA_ACQS(aqa) + 1);
+	printf("\tAdmin Submission Queue Size (ASQS): %u\n\n", NVME_AQA_ASQS(aqa) + 1);
 }
 
 static void stdout_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
