@@ -1181,13 +1181,13 @@ static void stdout_registers_csts_shst(__u8 shst)
 {
 	printf("\tShutdown Status               (SHST): ");
 	switch (shst) {
-	case 0:
+	case NVME_CSTS_SHST_NORMAL:
 		printf("Normal operation (no shutdown has been requested)\n");
 		break;
-	case 1:
+	case NVME_CSTS_SHST_OCCUR:
 		printf("Shutdown processing occurring\n");
 		break;
-	case 2:
+	case NVME_CSTS_SHST_CMPLT:
 		printf("Shutdown processing complete\n");
 		break;
 	default:
@@ -1198,16 +1198,14 @@ static void stdout_registers_csts_shst(__u8 shst)
 
 static void stdout_registers_csts(__u32 csts)
 {
-	printf("\tProcessing Paused               (PP): %s\n",
-		(csts & 0x00000020) ? "Yes" : "No");
+	printf("\tProcessing Paused               (PP): %s\n", NVME_CSTS_PP(csts) ? "Yes" : "No");
 	printf("\tNVM Subsystem Reset Occurred (NSSRO): %s\n",
-		(csts & 0x00000010) ? "Yes" : "No");
-	stdout_registers_csts_shst((csts & 0x0000000c) >> 2);
+	       NVME_CSTS_NSSRO(csts) ? "Yes" : "No");
+	stdout_registers_csts_shst(NVME_CSTS_SHST(csts));
 	printf("\tController Fatal Status        (CFS): %s\n",
-		(csts & 0x00000002) ? "True" : "False");
+	       NVME_CSTS_CFS(csts) ? "True" : "False");
 	printf("\tReady                          (RDY): %s\n\n",
-		(csts & 0x00000001) ? "Yes" : "No");
-
+	       NVME_CSTS_RDY(csts) ? "Yes" : "No");
 }
 
 static void stdout_registers_nssd(__u32 nssd)
