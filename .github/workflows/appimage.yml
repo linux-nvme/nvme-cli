@@ -42,7 +42,7 @@ jobs:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           workflow_conclusion: success
       - name: FTP Deployer
-        uses: sand4rt/ftp-deployer@v1.7
+        uses: sand4rt/ftp-deployer@v1.8
         with:
           sftp: true
           host: ${{ secrets.SFTP_SERVER }}
