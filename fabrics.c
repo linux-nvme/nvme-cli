@@ -78,6 +78,7 @@ static const char *nvmf_queue_size	= "number of io queue elements to use (defaul
 static const char *nvmf_keep_alive_tmo	= "keep alive timeout period in seconds";
 static const char *nvmf_reconnect_delay	= "reconnect timeout period in seconds";
 static const char *nvmf_ctrl_loss_tmo	= "controller loss timeout period in seconds";
+static const char *nvmf_fast_io_fail_tmo = "fast I/O fail timeout (default off)";
 static const char *nvmf_tos		= "type of service";
 static const char *nvmf_keyring		= "Keyring for TLS key lookup";
 static const char *nvmf_tls_key		= "TLS key to use";
@@ -108,6 +109,7 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_INT("keep-alive-tmo",     'k', &c.keep_alive_tmo,     nvmf_keep_alive_tmo),  \
 		OPT_INT("reconnect-delay",    'c', &c.reconnect_delay,    nvmf_reconnect_delay), \
 		OPT_INT("ctrl-loss-tmo",      'l', &c.ctrl_loss_tmo,      nvmf_ctrl_loss_tmo),   \
+		OPT_INT("fast_io_fail_tmo",   'F', &c.fast_io_fail_tmo,   nvmf_fast_io_fail_tmo),\
 		OPT_INT("tos",                'T', &c.tos,                nvmf_tos),             \
 		OPT_INT("keyring",              0, &c.keyring,            nvmf_keyring),         \
 		OPT_INT("tls_key",              0, &c.tls_key,            nvmf_tls_key),         \
