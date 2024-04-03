@@ -8537,7 +8537,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	const char *subsysnqn = "Subsystem NQN for the retained key.";
 	const char *keyring = "Keyring for the retained key.";
 	const char *keytype = "Key type of the retained key.";
-	const char *insert = "Insert only, do not print the retained key.";
+	const char *insert = "Insert retained key into the keyring.";
 
 	_cleanup_free_ unsigned char *raw_secret = NULL;
 	_cleanup_free_ char *encoded_key = NULL;
@@ -8632,6 +8632,9 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		}
 	}
 
+	encoded_key = nvme_export_tls_key(raw_secret, key_len);
+	printf("%s\n", encoded_key);
+
 	if (cfg.insert) {
 		tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
 					cfg.keytype, cfg.hostnqn,
@@ -8643,10 +8646,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		}
 
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
-		return 0;
 	}
-	encoded_key = nvme_export_tls_key(raw_secret, key_len);
-	printf("%s\n", encoded_key);
 	return 0;
 }
 
