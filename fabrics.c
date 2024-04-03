@@ -1001,7 +1001,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	};
 
 	c = lookup_ctrl(h, &trcfg);
-	if (c && nvme_ctrl_get_name(c)) {
+	if (c && nvme_ctrl_get_name(c) && !cfg.duplicate_connect) {
 		fprintf(stderr, "already connected\n");
 		errno = EALREADY;
 		goto out_free;
