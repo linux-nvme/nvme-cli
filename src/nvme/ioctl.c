@@ -795,9 +795,23 @@ int nvme_set_features_write_protect2(int fd, __u32 nsid,
 int nvme_set_features_iocs_profile(int fd, __u16 iocsi, bool save)
 {
 	__u32 value = NVME_SET(iocsi, FEAT_IOCSP_IOCSCI);
+	__u32 result = 0;
+	int err;
+
+	err = __nvme_set_features(fd, NVME_FEAT_FID_IOCS_PROFILE, value,
+				  save, &result);
+	if (err && result)
+		err = result;
+	return err;
+}
+
+int nvme_set_features_iocs_profile2(int fd, __u16 iocsi, bool save,
+				    __u32 *result)
+{
+	__u32 value = NVME_SET(iocsi, FEAT_IOCSP_IOCSCI);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_IOCS_PROFILE, value,
-				   save, NULL);
+				   save, result);
 }
 
 int nvme_get_features(struct nvme_get_features_args *args)
