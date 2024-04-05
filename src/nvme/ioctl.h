@@ -3319,6 +3319,20 @@ int nvme_get_features_timestamp(int fd, enum nvme_get_features_sel sel,
 				struct nvme_timestamp *ts);
 
 /**
+ * nvme_get_features_timestamp2() - Get timestamp feature
+ * @fd:		File descriptor of nvme device
+ * @sel:	Select which type of attribute to return, see
+ *		&enum nvme_get_features_sel
+ * @ts:		Current timestamp
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
+ */
+int nvme_get_features_timestamp2(int fd, enum nvme_get_features_sel sel,
+				 struct nvme_timestamp *ts, __u32 *result);
+
+/**
  * nvme_get_features_kato() - Get keep alive timeout feature
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
