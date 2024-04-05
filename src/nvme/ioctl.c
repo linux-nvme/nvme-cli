@@ -661,7 +661,19 @@ int nvme_set_features_lba_sts_interval(int fd, __u16 lsiri, __u16 lsipi,
 }
 
 int nvme_set_features_host_behavior(int fd, bool save,
-	struct nvme_feat_host_behavior *data)
+		struct nvme_feat_host_behavior *data)
+{
+	__u32 result = 0;
+	int err;
+
+	err = nvme_set_features_host_behavior2(fd, save, data, &result);
+	if (err && result)
+		err = result;
+	return err;
+}
+
+int nvme_set_features_host_behavior2(int fd, bool save,
+		struct nvme_feat_host_behavior *data, __u32 *result)
 {
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
@@ -676,7 +688,7 @@ int nvme_set_features_host_behavior(int fd, bool save,
 		.data_len = sizeof(*data),
 		.data = data,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.result = result,
 	};
 
 	return nvme_set_features(&args);
