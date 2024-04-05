@@ -3479,7 +3479,22 @@ int nvme_get_features_sw_progress(int fd, enum nvme_get_features_sel sel,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_features_host_id(int fd, enum nvme_get_features_sel sel,
-			      bool exhid, __u32 len, __u8 *hostid);
+			bool exhid, __u32 len, __u8 *hostid);
+
+/**
+ * nvme_get_features_host_id2() - Get host id feature
+ * @fd:		File descriptor of nvme device
+ * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @exhid:	Enable Extended Host Identifier
+ * @len:	Length of @hostid
+ * @hostid:	Buffer for returned host ID
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
+ */
+int nvme_get_features_host_id2(int fd, enum nvme_get_features_sel sel,
+			bool exhid, __u32 len, __u8 *hostid, __u32 *result);
 
 /**
  * nvme_get_features_resv_mask() - Get reservation mask feature
