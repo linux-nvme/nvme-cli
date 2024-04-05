@@ -575,11 +575,13 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  */
 int nvme_identify(struct nvme_identify_args *args);
 
-static inline int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
-					 __u32 nsid, void *data)
+static inline int nvme_identify_cns_nsid(int fd,
+			enum nvme_identify_cns cns, __u32 nsid, void *data)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = data,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -592,7 +594,10 @@ static inline int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err < 0 && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -718,6 +723,8 @@ static inline int nvme_identify_allocated_ns_list(int fd, __u32 nsid,
 static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
 			struct nvme_ctrl_list *cntlist)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
 		.result = NULL,
 		.data = cntlist,
@@ -732,7 +739,10 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -751,11 +761,13 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1
  */
-static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
-			struct nvme_ctrl_list *cntlist)
+static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid,
+			__u16 cntid, struct nvme_ctrl_list *cntlist)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = cntlist,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -768,7 +780,10 @@ static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -814,8 +829,10 @@ static inline int nvme_identify_ns_descs(int fd, __u32 nsid,
 static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 			struct nvme_id_nvmset_list *nvmset)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = nvmset,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -828,7 +845,10 @@ static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -846,8 +866,10 @@ static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 			struct nvme_primary_ctrl_cap *cap)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = cap,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -860,7 +882,10 @@ static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -883,8 +908,10 @@ static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 static inline int nvme_identify_secondary_ctrl_list(int fd,
 			__u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = sc_list,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -897,7 +924,10 @@ static inline int nvme_identify_secondary_ctrl_list(int fd,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -960,8 +990,10 @@ static inline int nvme_identify_uuid(int fd,
 static inline int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 uuidx,
 			enum nvme_csi csi, void *data)
 {
+	__u32 result;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = data,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -974,7 +1006,10 @@ static inline int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 uuidx,
 		.uuidx = uuidx,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -990,10 +1025,13 @@ static inline int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 uuidx,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
+static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi,
+			void *data)
 {
+	__u32 result;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = data,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1006,7 +1044,10 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1029,8 +1070,10 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
 static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
 			enum nvme_csi csi, struct nvme_ns_list *ns_list)
 {
+	__u32 result;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = ns_list,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1043,7 +1086,10 @@ static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1066,8 +1112,10 @@ static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
 static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
 			enum nvme_csi csi, struct nvme_ns_list *ns_list)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = ns_list,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1080,7 +1128,10 @@ static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1121,8 +1172,10 @@ static inline int nvme_identify_ns_csi_user_data_format(int fd,
 			__u16 user_data_format, __u8 uuidx,
 			enum nvme_csi csi, void *data)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = data,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1135,7 +1188,10 @@ static inline int nvme_identify_ns_csi_user_data_format(int fd,
 		.uuidx = uuidx,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1157,8 +1213,10 @@ static inline int nvme_identify_iocs_ns_csi_user_data_format(int fd,
 			__u16 user_data_format, __u8 uuidx,
 			enum nvme_csi csi, void *data)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = data,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1171,7 +1229,10 @@ static inline int nvme_identify_iocs_ns_csi_user_data_format(int fd,
 		.uuidx = uuidx,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1209,8 +1270,10 @@ static inline int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id)
 static inline int nvme_identify_domain_list(int fd, __u16 domid,
 			struct nvme_id_domain_list *list)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = list,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1223,7 +1286,10 @@ static inline int nvme_identify_domain_list(int fd, __u16 domid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1238,8 +1304,10 @@ static inline int nvme_identify_domain_list(int fd, __u16 domid,
 static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 			struct nvme_id_endurance_group_list *list)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = list,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1252,7 +1320,10 @@ static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1270,8 +1341,10 @@ static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 static inline int nvme_identify_iocs(int fd, __u16 cntlid,
 			struct nvme_id_iocs *iocs)
 {
+	__u32 result;
+	int err;
 	struct nvme_identify_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = iocs,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1284,7 +1357,10 @@ static inline int nvme_identify_iocs(int fd, __u16 cntlid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_identify(&args);
+	err = nvme_identify(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1338,9 +1414,11 @@ static inline int nvme_get_nsid_log(int fd, bool rae,
 			enum nvme_cmd_get_log_lid lid,
 			__u32 nsid, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1356,11 +1434,14 @@ static inline int nvme_get_nsid_log(int fd, bool rae,
 		.ot = false,
 	};
 
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
-static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
-				      __u32 len, void *log)
+static inline int nvme_get_log_simple(int fd,
+			enum nvme_cmd_get_log_lid lid, __u32 len, void *log)
 {
 	return nvme_get_nsid_log(fd, false, lid, NVME_NSID_ALL, len, log);
 }
@@ -1482,9 +1563,11 @@ static inline int nvme_get_log_changed_ns_list(int fd, bool rae,
 static inline int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
 			struct nvme_cmd_effects_log *effects_log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = effects_log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1499,7 +1582,11 @@ static inline int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1532,9 +1619,11 @@ static inline int nvme_get_log_device_self_test(int fd,
 static inline int nvme_get_log_create_telemetry_host(int fd,
 			struct nvme_telemetry_log *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1549,7 +1638,11 @@ static inline int nvme_get_log_create_telemetry_host(int fd,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1568,9 +1661,11 @@ static inline int nvme_get_log_create_telemetry_host(int fd,
 static inline int nvme_get_log_telemetry_host(int fd, __u64 offset,
 			__u32 len, void *log)
 {
+	__u32 result;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1585,7 +1680,11 @@ static inline int nvme_get_log_telemetry_host(int fd, __u64 offset,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1605,9 +1704,11 @@ static inline int nvme_get_log_telemetry_host(int fd, __u64 offset,
 static inline int nvme_get_log_telemetry_ctrl(int fd, bool rae,
 			__u64 offset, __u32 len, void *log)
 {
+	__u32 result;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1622,7 +1723,11 @@ static inline int nvme_get_log_telemetry_ctrl(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1644,9 +1749,11 @@ static inline int nvme_get_log_telemetry_ctrl(int fd, bool rae,
 static inline int nvme_get_log_endurance_group(int fd, __u16 endgid,
 			struct nvme_endurance_group_log *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1661,7 +1768,11 @@ static inline int nvme_get_log_endurance_group(int fd, __u16 endgid,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1676,9 +1787,11 @@ static inline int nvme_get_log_endurance_group(int fd, __u16 endgid,
 static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 			struct nvme_nvmset_predictable_lat_log *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1693,7 +1806,11 @@ static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1710,9 +1827,11 @@ static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
 			__u32 offset, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1727,7 +1846,10 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1737,13 +1859,18 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
  * @offset:	Offset into log page
  * @len:	Length (in bytes) of provided user buffer to hold the log data
  * @log:	Log page data buffer
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_fdp_configurations(int fd, __u16 egid,
 			__u32 offset, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1757,7 +1884,10 @@ static inline int nvme_get_log_fdp_configurations(int fd, __u16 egid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_get_log(&args);
+	err = nvme_get_log(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1767,13 +1897,18 @@ static inline int nvme_get_log_fdp_configurations(int fd, __u16 egid,
  * @offset:	Offset into log page
  * @len:	Length (in bytes) of provided user buffer to hold the log data
  * @log:	Log page data buffer
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_reclaim_unit_handle_usage(int fd, __u16 egid,
 			__u32 offset, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1787,7 +1922,10 @@ static inline int nvme_get_log_reclaim_unit_handle_usage(int fd, __u16 egid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_get_log(&args);
+	err = nvme_get_log(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1797,12 +1935,18 @@ static inline int nvme_get_log_reclaim_unit_handle_usage(int fd, __u16 egid,
  * @offset:	Offset into log page
  * @len:	Length (in bytes) of provided user buffer to hold the log data
  * @log:	Log page data buffer
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_get_log_fdp_stats(int fd, __u16 egid, __u32 offset, __u32 len, void *log)
+static inline int nvme_get_log_fdp_stats(int fd, __u16 egid, __u32 offset,
+			__u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1816,7 +1960,10 @@ static inline int nvme_get_log_fdp_stats(int fd, __u16 egid, __u32 offset, __u32
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_get_log(&args);
+	err = nvme_get_log(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1827,13 +1974,18 @@ static inline int nvme_get_log_fdp_stats(int fd, __u16 egid, __u32 offset, __u32
  * @offset:		Offset into log page
  * @len:		Length (in bytes) of provided user buffer to hold the log data
  * @log:		Log page data buffer
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_get_log_fdp_events(int fd, __u16 egid, bool host_events, __u32 offset,
-		__u32 len, void *log)
+static inline int nvme_get_log_fdp_events(int fd, __u16 egid, bool host_events,
+			__u32 offset, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1847,7 +1999,10 @@ static inline int nvme_get_log_fdp_events(int fd, __u16 egid, bool host_events, 
 		.uuidx = NVME_UUID_NONE,
 	};
 
-	return nvme_get_log(&args);
+	err = nvme_get_log(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1871,9 +2026,11 @@ static inline int nvme_get_log_fdp_events(int fd, __u16 egid, bool host_events, 
 static inline int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
 				   __u64 offset, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1888,7 +2045,10 @@ static inline int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1924,9 +2084,11 @@ static inline int nvme_get_log_ana_groups(int fd, bool rae, __u32 len,
 static inline int nvme_get_log_lba_status(int fd, bool rae,
 			__u64 offset, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1941,7 +2103,11 @@ static inline int nvme_get_log_lba_status(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -1958,9 +2124,11 @@ static inline int nvme_get_log_lba_status(int fd, bool rae,
 static inline int nvme_get_log_endurance_grp_evt(int fd, bool rae,
 			__u32 offset, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1975,7 +2143,11 @@ static inline int nvme_get_log_endurance_grp_evt(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -2025,9 +2197,11 @@ static inline int nvme_get_log_mi_cmd_supported_effects(int fd, bool rae,
 static inline int nvme_get_log_boot_partition(int fd, bool rae,
 			__u8 lsp, __u32 len, struct nvme_boot_partition *part)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = part,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -2042,7 +2216,11 @@ static inline int nvme_get_log_boot_partition(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -2060,9 +2238,11 @@ static inline int nvme_get_log_boot_partition(int fd, bool rae,
 static inline int nvme_get_log_phy_rx_eom(int fd, __u8 lsp, __u16 controller,
 				__u32 len, struct nvme_phy_rx_eom_log *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -2077,7 +2257,11 @@ static inline int nvme_get_log_phy_rx_eom(int fd, __u8 lsp, __u16 controller,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -2097,9 +2281,11 @@ static inline int nvme_get_log_phy_rx_eom(int fd, __u8 lsp, __u16 controller,
 static inline int nvme_get_log_discovery(int fd, bool rae,
 			__u32 offset, __u32 len, void *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = offset,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -2114,7 +2300,11 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -2129,9 +2319,11 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
 static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
 			struct nvme_media_unit_stat_log *mus)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = mus,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -2146,7 +2338,11 @@ static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -2161,9 +2357,11 @@ static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
 static inline int nvme_get_log_support_cap_config_list(int fd, __u16 domid,
 			struct nvme_supported_cap_config_list_log *cap)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = cap,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -2178,7 +2376,11 @@ static inline int nvme_get_log_support_cap_config_list(int fd, __u16 domid,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -2231,9 +2433,11 @@ static inline int nvme_get_log_sanitize(int fd, bool rae,
 static inline int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 			struct nvme_zns_changed_zone_log *log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -2248,7 +2452,10 @@ static inline int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 		.rae = rae,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -2265,9 +2472,11 @@ static inline int nvme_get_log_persistent_event(int fd,
 			enum nvme_pevent_log_action action,
 			__u32 size, void *pevent_log)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_get_log_args args = {
 		.lpo = 0,
-		.result = NULL,
+		.result = &result,
 		.log = pevent_log,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -2282,7 +2491,10 @@ static inline int nvme_get_log_persistent_event(int fd,
 		.rae = false,
 		.ot = false,
 	};
-	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3328,8 +3540,10 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
 			__u32 *nsid, __u32 timeout, __u8 csi,
 			struct nvme_ns_mgmt_host_sw_specified *data)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_ns_mgmt_args args = {
-		.result = nsid,
+		.result = &result,
 		.ns = ns,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3342,7 +3556,12 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
 		.data = data,
 	};
 
-	return nvme_ns_mgmt(&args);
+	err = nvme_ns_mgmt(&args);
+	if (!err)
+		*nsid = result;
+	else if (result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3359,8 +3578,10 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
  */
 static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_ns_mgmt_args args = {
-		.result = NULL,
+		.result = &result,
 		.ns = NULL,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3373,7 +3594,10 @@ static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 		.data = NULL,
 	};
 
-	return nvme_ns_mgmt(&args);
+	err = nvme_ns_mgmt(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3397,8 +3621,10 @@ int nvme_ns_attach(struct nvme_ns_attach_args *args);
 static inline int nvme_ns_attach_ctrls(int fd, __u32 nsid,
 			struct nvme_ctrl_list *ctrlist)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_ns_attach_args args = {
-		.result = NULL,
+		.result = &result,
 		.ctrlist = ctrlist,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3407,7 +3633,10 @@ static inline int nvme_ns_attach_ctrls(int fd, __u32 nsid,
 		.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
 	};
 
-	return nvme_ns_attach(&args);
+	err = nvme_ns_attach(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3422,8 +3651,10 @@ static inline int nvme_ns_attach_ctrls(int fd, __u32 nsid,
 static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
 			struct nvme_ctrl_list *ctrlist)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_ns_attach_args args = {
-		.result = NULL,
+		.result = &result,
 		.ctrlist = ctrlist,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3432,7 +3663,10 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
 		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
 	};
 
-	return nvme_ns_attach(&args);
+	err = nvme_ns_attach(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3547,8 +3781,10 @@ int nvme_directive_send_id_endir(int fd, __u32 nsid, bool endir,
 static inline int nvme_directive_send_stream_release_identifier(int fd,
 			__u32 nsid, __u16 stream_id)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_directive_send_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = NULL,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3561,7 +3797,10 @@ static inline int nvme_directive_send_stream_release_identifier(int fd,
 		.dspec = stream_id,
 	};
 
-	return nvme_directive_send(&args);
+	err = nvme_directive_send(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3574,8 +3813,10 @@ static inline int nvme_directive_send_stream_release_identifier(int fd,
  */
 static inline int nvme_directive_send_stream_release_resource(int fd, __u32 nsid)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_directive_send_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = NULL,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3588,7 +3829,10 @@ static inline int nvme_directive_send_stream_release_resource(int fd, __u32 nsid
 		.dspec = 0,
 	};
 
-	return nvme_directive_send(&args);
+	err = nvme_directive_send(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3612,8 +3856,10 @@ int nvme_directive_recv(struct nvme_directive_recv_args *args);
 static inline int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
 			struct nvme_id_directives *id)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_directive_recv_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = id,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3626,7 +3872,10 @@ static inline int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
 		.dspec = 0,
 	};
 
-	return nvme_directive_recv(&args);
+	err = nvme_directive_recv(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3641,8 +3890,10 @@ static inline int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
 static inline int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
 			struct nvme_streams_directive_params *parms)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_directive_recv_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = parms,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3655,7 +3906,10 @@ static inline int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
 		.dspec = 0,
 	};
 
-	return nvme_directive_recv(&args);
+	err = nvme_directive_recv(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3672,8 +3926,10 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
 			unsigned int nr_entries,
 			struct nvme_streams_directive_status *id)
 {
+	__u32 result = 0;
+	int err;
 	struct nvme_directive_recv_args args = {
-		.result = NULL,
+		.result = &result,
 		.data = id,
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -3686,7 +3942,10 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
 		.dspec = 0,
 	};
 
-	return nvme_directive_recv(&args);
+	err = nvme_directive_recv(&args);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
@@ -3824,11 +4083,16 @@ int nvme_virtual_mgmt(struct nvme_virtual_mgmt_args *args);
 static inline int nvme_flush(int fd, __u32 nsid)
 {
 	struct nvme_passthru_cmd cmd = {};
+	__u32 result = 0;
+	int err;
 
 	cmd.opcode = nvme_cmd_flush;
 	cmd.nsid = nsid;
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	err = nvme_submit_io_passthru(fd, &cmd, &result);
+	if (err && result)
+		err = result;
+	return err;
 }
 
 /**
