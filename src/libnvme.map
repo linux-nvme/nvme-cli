@@ -12,6 +12,7 @@ LIBNVME_1.9 {
 		nvme_ctrl_get_cntlid;
 		nvme_set_features_timestamp2;
 		nvme_set_features_host_behavior2;
+		nvme_set_features_host_id2;
 };
 
 LIBNVME_1_8 {

@@ -2904,6 +2904,20 @@ int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 int nvme_set_features_host_id(int fd, bool exhid, bool save, __u8 *hostid);
 
 /**
+ * nvme_set_features_host_id2() - Set enable extended host identifiers feature
+ * @fd:		File descriptor of nvme device
+ * @exhid:	Enable Extended Host Identifier
+ * @save:	Save value across power states
+ * @hostid:	Host ID to set
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
+ */
+int nvme_set_features_host_id2(int fd, bool exhid, bool save, __u8 *hostid,
+			       __u32 *result);
+
+/**
  * nvme_set_features_resv_mask() - Set reservation notification mask feature
  *
  * Deprecated: doesn't support specifying a NSID.
