@@ -2731,6 +2731,19 @@ int nvme_set_features_auto_pst(int fd, bool apste, bool save,
 int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp);
 
 /**
+ * nvme_set_features_timestamp2() - Set timestamp feature
+ * @fd:		File descriptor of nvme device
+ * @save:	Save value across power states
+ * @timestamp:	The current timestamp value to assign to this feature
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
+ */
+int nvme_set_features_timestamp2(int fd, bool save, __u64 timestamp,
+		__u32 *result);
+
+/**
  * nvme_set_features_hctm() - Set thermal management feature
  * @fd:		File descriptor of nvme device
  * @tmt2:	Thermal Management Temperature 2

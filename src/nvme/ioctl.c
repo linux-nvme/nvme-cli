@@ -531,6 +531,18 @@ int nvme_set_features_auto_pst(int fd, bool apste, bool save,
 
 int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp)
 {
+	__u32 result = 0;
+	int err;
+
+	err = nvme_set_features_timestamp2(fd, save, timestamp, &result);
+	if (err && result)
+		err = result;
+	return err;
+}
+
+int nvme_set_features_timestamp2(int fd, bool save, __u64 timestamp,
+		__u32 *result)
+{
 	__le64 t = cpu_to_le64(timestamp);
 	struct nvme_timestamp ts = {};
 	struct nvme_set_features_args args = {
@@ -546,7 +558,7 @@ int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp)
 		.data_len = sizeof(ts),
 		.data = &ts,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.result = result,
 	};
 
 	memcpy(ts.timestamp, &t, sizeof(ts.timestamp));

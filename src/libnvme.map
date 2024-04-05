@@ -10,6 +10,7 @@ LIBNVME_1.9 {
 		nvme_submit_passthru64;
 		nvme_update_key;
 		nvme_ctrl_get_cntlid;
+		nvme_set_features_timestamp2;
 };
 
 LIBNVME_1_8 {
