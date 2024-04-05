@@ -327,8 +327,8 @@ enum nvme_cmd_dword_fields {
  *
  * Uses NVME_IOCTL_ADMIN64_CMD for the ioctl request.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_submit_admin_passthru64(int fd, struct nvme_passthru_cmd64 *cmd,
 				 __u64 *result);
@@ -360,8 +360,8 @@ int nvme_submit_admin_passthru64(int fd, struct nvme_passthru_cmd64 *cmd,
  *
  * Known values for @opcode are defined in &enum nvme_admin_opcode.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_admin_passthru64(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11,
@@ -377,8 +377,8 @@ int nvme_admin_passthru64(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
  *
  * Uses NVME_IOCTL_ADMIN_CMD for the ioctl request.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd,
 			       __u32 *result);
@@ -410,8 +410,8 @@ int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd,
  *
  * Known values for @opcode are defined in &enum nvme_admin_opcode.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_admin_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11,
@@ -427,8 +427,8 @@ int nvme_admin_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
  *
  * Uses NVME_IOCTL_IO64_CMD for the ioctl request.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_submit_io_passthru64(int fd, struct nvme_passthru_cmd64 *cmd,
 			    __u64 *result);
@@ -460,8 +460,8 @@ int nvme_submit_io_passthru64(int fd, struct nvme_passthru_cmd64 *cmd,
  *
  * Known values for @opcode are defined in &enum nvme_io_opcode.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_io_passthru64(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11,
@@ -474,12 +474,11 @@ int nvme_io_passthru64(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
  * @fd:		File descriptor of nvme device
  * @cmd:	The nvme io command to send
  * @result:	Optional field to return the result from the CQE dword 0
- * @result:	Optional field to return the result from the CQE DW0
  *
  * Uses NVME_IOCTL_IO_CMD for the ioctl request.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd,
 			    __u32 *result);
@@ -511,8 +510,8 @@ int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd,
  *
  * Known values for @opcode are defined in &enum nvme_io_opcode.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_io_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11,
@@ -572,8 +571,7 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  * The Identify command returns a data buffer that describes information about
  * the NVM subsystem, the controller or the namespace(s).
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_identify(struct nvme_identify_args *args);
 
@@ -635,7 +633,8 @@ static inline int nvme_identify_ctrl(int fd, struct nvme_id_ctrl *id)
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_identify_ns(int fd, __u32 nsid, struct nvme_id_ns *ns)
+static inline int nvme_identify_ns(int fd, __u32 nsid,
+			struct nvme_id_ns *ns)
 {
 	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_NS, nsid, ns);
 }
@@ -937,7 +936,8 @@ static inline int nvme_identify_ns_granularity(int fd,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *uuid_list)
+static inline int nvme_identify_uuid(int fd,
+			struct nvme_id_uuid_list *uuid_list)
 {
 	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_UUID_LIST,
 				      NVME_NSID_NONE, uuid_list);
@@ -1320,8 +1320,7 @@ static inline int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
  * nvme_get_log() - NVMe Admin Get Log command
  * @args:	&struct nvme_get_log_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_get_log(struct nvme_get_log_args *args);
 
@@ -1331,8 +1330,7 @@ int nvme_get_log(struct nvme_get_log_args *args);
  * @xfer_len:	Max log transfer size per request to split the total.
  * @args:	&struct nvme_get_log_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args);
 
@@ -1397,8 +1395,8 @@ static inline int nvme_get_log_supported_log_pages(int fd, bool rae,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_get_log_error(int fd, unsigned int nr_entries, bool rae,
-				     struct nvme_error_log_page *err_log)
+static inline int nvme_get_log_error(int fd, unsigned int nr_entries,
+			bool rae, struct nvme_error_log_page *err_log)
 {
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_ERROR,
 				 NVME_NSID_ALL, sizeof(*err_log) * nr_entries,
@@ -2291,8 +2289,7 @@ static inline int nvme_get_log_persistent_event(int fd,
  * nvme_set_features() - Set a feature attribute
  * @args:	&struct nvme_set_features_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_set_features(struct nvme_set_features_args *args);
 
@@ -2307,8 +2304,8 @@ int nvme_set_features(struct nvme_set_features_args *args);
  * @data:	User address of feature data, if applicable
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
 			__u32 cdw11, bool save, __u32 data_len, void *data,
@@ -2342,8 +2339,8 @@ static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 static inline int nvme_set_features_simple(int fd, __u8 fid, __u32 nsid,
 			__u32 cdw11, bool save, __u32 *result)
@@ -2362,8 +2359,8 @@ static inline int nvme_set_features_simple(int fd, __u8 fid, __u32 nsid,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_arbitration(int fd, __u8 ab, __u8 lpw, __u8 mpw,
 				  __u8 hpw, bool  save, __u32 *result);
@@ -2376,8 +2373,8 @@ int nvme_set_features_arbitration(int fd, __u8 ab, __u8 lpw, __u8 mpw,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
 				 __u32 *result);
@@ -2391,8 +2388,8 @@ int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
  * @data:	User address of feature data
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_lba_range(int fd, __u32 nsid, __u8 nr_ranges, bool save,
 				struct nvme_lba_range_type *data, __u32 *result);
@@ -2406,8 +2403,8 @@ int nvme_set_features_lba_range(int fd, __u32 nsid, __u8 nr_ranges, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
 				  enum nvme_feat_tmpthresh_thsel thsel,
@@ -2422,8 +2419,8 @@ int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler,
 				   bool dulbe, bool save, __u32 *result);
@@ -2435,8 +2432,8 @@ int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_volatile_wc(int fd, bool wce, bool save,
 				  __u32 *result);
@@ -2449,8 +2446,8 @@ int nvme_set_features_volatile_wc(int fd, bool wce, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time,
 				   bool save, __u32 *result);
@@ -2463,8 +2460,8 @@ int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_irq_config(int fd, __u16 iv, bool cd, bool save,
 				 __u32 *result);
@@ -2476,8 +2473,8 @@ int nvme_set_features_irq_config(int fd, __u16 iv, bool cd, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_write_atomic(int fd, bool dn, bool save,
 				   __u32 *result);
@@ -2489,8 +2486,8 @@ int nvme_set_features_write_atomic(int fd, bool dn, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_async_event(int fd, __u32 events, bool save,
 				  __u32 *result);
@@ -2503,8 +2500,8 @@ int nvme_set_features_async_event(int fd, __u32 events, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_auto_pst(int fd, bool apste, bool save,
 			       struct nvme_feat_auto_pst *apst,
@@ -2529,8 +2526,8 @@ int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp);
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1, bool save,
 			   __u32 *result);
@@ -2542,8 +2539,8 @@ int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_nopsc(int fd, bool noppme, bool save, __u32 *result);
 
@@ -2555,8 +2552,8 @@ int nvme_set_features_nopsc(int fd, bool noppme, bool save, __u32 *result);
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_rrl(int fd, __u8 rrl, __u16 nvmsetid, bool save,
 			  __u32 *result);
@@ -2570,8 +2567,8 @@ int nvme_set_features_rrl(int fd, __u8 rrl, __u16 nvmsetid, bool save,
  * @data:	Pointer to structure nvme_plm_config
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_plm_config(int fd, bool enable, __u16 nvmsetid,
 				 bool save, struct nvme_plm_config *data,
@@ -2585,8 +2582,8 @@ int nvme_set_features_plm_config(int fd, bool enable, __u16 nvmsetid,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
 				 __u16 nvmsetid, bool save, __u32 *result);
@@ -2599,8 +2596,8 @@ int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
  * @lsipi:	LBA Status Information Poll Interval
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_lba_sts_interval(int fd, __u16 lsiri, __u16 lsipi,
 				       bool save, __u32 *result);
@@ -2611,8 +2608,7 @@ int nvme_set_features_lba_sts_interval(int fd, __u16 lsiri, __u16 lsipi,
  * @save:	Save value across power states
  * @data:	Pointer to structure nvme_feat_host_behavior
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_set_features_host_behavior(int fd, bool save,
 				    struct nvme_feat_host_behavior *data);
@@ -2624,8 +2620,9 @@ int nvme_set_features_host_behavior(int fd, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_set_features_sanitize(int fd, bool nodrm, bool save, __u32 *result);
 
@@ -2637,8 +2634,8 @@ int nvme_set_features_sanitize(int fd, bool nodrm, bool save, __u32 *result);
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_endurance_evt_cfg(int fd, __u16 endgid, __u8 egwarn,
 					bool save, __u32 *result);
@@ -2650,8 +2647,8 @@ int nvme_set_features_endurance_evt_cfg(int fd, __u16 endgid, __u8 egwarn,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 				  __u32 *result);
@@ -2679,8 +2676,8 @@ int nvme_set_features_host_id(int fd, bool exhid, bool save, __u8 *hostid);
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_resv_mask(int fd, __u32 mask, bool save, __u32 *result)
 	__attribute__((deprecated));
@@ -2693,8 +2690,8 @@ int nvme_set_features_resv_mask(int fd, __u32 mask, bool save, __u32 *result)
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_resv_mask2(int fd, __u32 nsid, __u32 mask, bool save,
 				 __u32 *result);
@@ -2710,8 +2707,8 @@ int nvme_set_features_resv_mask2(int fd, __u32 nsid, __u32 mask, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_resv_persist(int fd, bool ptpl, bool save, __u32 *result)
 	 __attribute__((deprecated));
@@ -2724,8 +2721,8 @@ int nvme_set_features_resv_persist(int fd, bool ptpl, bool save, __u32 *result)
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_resv_persist2(int fd, __u32 nsid, bool ptpl, bool save,
 				    __u32 *result);
@@ -2741,8 +2738,8 @@ int nvme_set_features_resv_persist2(int fd, __u32 nsid, bool ptpl, bool save,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 				    bool save, __u32 *result)
@@ -2756,8 +2753,8 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_set_features_write_protect2(int fd, __u32 nsid,
 				     enum nvme_feat_nswpcfg_state state,
@@ -2778,8 +2775,7 @@ int nvme_set_features_iocs_profile(int fd, __u16 iocsi, bool save);
  * nvme_get_features() - Retrieve a feature attribute
  * @args:	&struct nvme_get_features_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_get_features(struct nvme_get_features_args *args);
 
@@ -2792,8 +2788,8 @@ int nvme_get_features(struct nvme_get_features_args *args);
  * @data:	User address of feature data, if applicable
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
 			__u32 nsid, __u32 data_len, void *data, __u32 *result)
@@ -2822,8 +2818,8 @@ static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
  * @nsid:	Namespace ID, if applicable
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 static inline int nvme_get_features_simple(int fd, enum nvme_features_id fid,
 			__u32 nsid, __u32 *result)
@@ -2837,8 +2833,8 @@ static inline int nvme_get_features_simple(int fd, enum nvme_features_id fid,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_arbitration(int fd, enum nvme_get_features_sel sel,
 				  __u32 *result);
@@ -2849,8 +2845,8 @@ int nvme_get_features_arbitration(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_power_mgmt(int fd, enum nvme_get_features_sel sel,
 				 __u32 *result);
@@ -2866,8 +2862,8 @@ int nvme_get_features_power_mgmt(int fd, enum nvme_get_features_sel sel,
  * @data:	User address of feature data, if applicable
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_lba_range(int fd, enum nvme_get_features_sel sel,
 				struct nvme_lba_range_type *data,
@@ -2881,8 +2877,8 @@ int nvme_get_features_lba_range(int fd, enum nvme_get_features_sel sel,
  * @data:	Buffer to receive LBA Range Type data structure
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_lba_range2(int fd, enum nvme_get_features_sel sel,
 				 __u32 nsid, struct nvme_lba_range_type *data,
@@ -2894,8 +2890,8 @@ int nvme_get_features_lba_range2(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_temp_thresh(int fd, enum nvme_get_features_sel sel,
 				  __u32 *result);
@@ -2910,8 +2906,8 @@ int nvme_get_features_temp_thresh(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_err_recovery(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result) __attribute__((deprecated));
@@ -2923,8 +2919,8 @@ int nvme_get_features_err_recovery(int fd, enum nvme_get_features_sel sel,
  * @nsid:	Namespace ID
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_err_recovery2(int fd, enum nvme_get_features_sel sel,
 				    __u32 nsid, __u32 *result);
@@ -2935,8 +2931,8 @@ int nvme_get_features_err_recovery2(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_volatile_wc(int fd, enum nvme_get_features_sel sel,
 				  __u32 *result);
@@ -2947,8 +2943,8 @@ int nvme_get_features_volatile_wc(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_num_queues(int fd, enum nvme_get_features_sel sel,
 				 __u32 *result);
@@ -2959,8 +2955,8 @@ int nvme_get_features_num_queues(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_irq_coalesce(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result);
@@ -2972,8 +2968,8 @@ int nvme_get_features_irq_coalesce(int fd, enum nvme_get_features_sel sel,
  * @iv:
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_irq_config(int fd, enum nvme_get_features_sel sel,
 				 __u16 iv, __u32 *result);
@@ -2984,8 +2980,8 @@ int nvme_get_features_irq_config(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_write_atomic(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result);
@@ -2996,8 +2992,8 @@ int nvme_get_features_write_atomic(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_async_event(int fd, enum nvme_get_features_sel sel,
 				  __u32 *result);
@@ -3009,8 +3005,8 @@ int nvme_get_features_async_event(int fd, enum nvme_get_features_sel sel,
  * @apst:
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_auto_pst(int fd, enum nvme_get_features_sel sel,
 			       struct nvme_feat_auto_pst *apst, __u32 *result);
@@ -3025,8 +3021,8 @@ int nvme_get_features_auto_pst(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_host_mem_buf(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result) __attribute__((deprecated));
@@ -3038,8 +3034,8 @@ int nvme_get_features_host_mem_buf(int fd, enum nvme_get_features_sel sel,
  * @attrs:	Buffer for returned Host Memory Buffer Attributes
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_host_mem_buf2(int fd, enum nvme_get_features_sel sel,
 				    struct nvme_host_mem_buf_attrs *attrs,
@@ -3063,8 +3059,8 @@ int nvme_get_features_timestamp(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_kato(int fd, enum nvme_get_features_sel sel, __u32 *result);
 
@@ -3074,8 +3070,8 @@ int nvme_get_features_kato(int fd, enum nvme_get_features_sel sel, __u32 *result
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_hctm(int fd, enum nvme_get_features_sel sel, __u32 *result);
 
@@ -3085,8 +3081,8 @@ int nvme_get_features_hctm(int fd, enum nvme_get_features_sel sel, __u32 *result
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_nopsc(int fd, enum nvme_get_features_sel sel, __u32 *result);
 
@@ -3096,8 +3092,8 @@ int nvme_get_features_nopsc(int fd, enum nvme_get_features_sel sel, __u32 *resul
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_rrl(int fd, enum nvme_get_features_sel sel, __u32 *result);
 
@@ -3109,8 +3105,8 @@ int nvme_get_features_rrl(int fd, enum nvme_get_features_sel sel, __u32 *result)
  * @data:
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_plm_config(int fd, enum nvme_get_features_sel sel,
 				 __u16 nvmsetid, struct nvme_plm_config *data,
@@ -3123,8 +3119,8 @@ int nvme_get_features_plm_config(int fd, enum nvme_get_features_sel sel,
  * @nvmsetid:	NVM set id
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_plm_window(int fd, enum nvme_get_features_sel sel,
 	__u16 nvmsetid, __u32 *result);
@@ -3135,8 +3131,8 @@ int nvme_get_features_plm_window(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_lba_sts_interval(int fd, enum nvme_get_features_sel sel,
 				       __u32 *result);
@@ -3148,8 +3144,8 @@ int nvme_get_features_lba_sts_interval(int fd, enum nvme_get_features_sel sel,
  * @data:	Pointer to structure nvme_feat_host_behavior
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_host_behavior(int fd, enum nvme_get_features_sel sel,
 				    struct nvme_feat_host_behavior *data,
@@ -3161,8 +3157,8 @@ int nvme_get_features_host_behavior(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_sanitize(int fd, enum nvme_get_features_sel sel,
 				__u32 *result);
@@ -3174,8 +3170,8 @@ int nvme_get_features_sanitize(int fd, enum nvme_get_features_sel sel,
  * @endgid:	Endurance Group Identifier
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_endurance_event_cfg(int fd, enum nvme_get_features_sel sel,
 					  __u16 endgid, __u32 *result);
@@ -3186,8 +3182,8 @@ int nvme_get_features_endurance_event_cfg(int fd, enum nvme_get_features_sel sel
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_sw_progress(int fd, enum nvme_get_features_sel sel,
 				  __u32 *result);
@@ -3216,8 +3212,8 @@ int nvme_get_features_host_id(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_resv_mask(int fd, enum nvme_get_features_sel sel,
 				__u32 *result) __attribute__((deprecated));
@@ -3229,8 +3225,8 @@ int nvme_get_features_resv_mask(int fd, enum nvme_get_features_sel sel,
  * @nsid:	Namespace ID
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_resv_mask2(int fd, enum nvme_get_features_sel sel,
 				 __u32 nsid, __u32 *result);
@@ -3245,8 +3241,8 @@ int nvme_get_features_resv_mask2(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_resv_persist(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result) __attribute__((deprecated));
@@ -3258,8 +3254,8 @@ int nvme_get_features_resv_persist(int fd, enum nvme_get_features_sel sel,
  * @nsid:	Namespace ID
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_resv_persist2(int fd, enum nvme_get_features_sel sel,
 				    __u32 nsid, __u32 *result);
@@ -3271,8 +3267,8 @@ int nvme_get_features_resv_persist2(int fd, enum nvme_get_features_sel sel,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_write_protect(int fd, __u32 nsid,
 				    enum nvme_get_features_sel sel,
@@ -3284,8 +3280,8 @@ int nvme_get_features_write_protect(int fd, __u32 nsid,
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result);
@@ -3299,8 +3295,7 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
  * format may destroy all data and metadata associated with all namespaces or
  * only the specific namespace associated with the command
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_format_nvm(struct nvme_format_nvm_args *args);
 
@@ -3308,8 +3303,7 @@ int nvme_format_nvm(struct nvme_format_nvm_args *args);
  * nvme_ns_mgmt() - Issue a Namespace management command
  * @args:	&struct nvme_ns_mgmt_args Argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args);
 
@@ -3459,8 +3453,7 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
  * Download command. Use the nvme_fw_commit() to activate a newly downloaded
  * image.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_fw_download(struct nvme_fw_download_args *args);
 
@@ -3470,10 +3463,9 @@ int nvme_fw_download(struct nvme_fw_download_args *args);
  *
  * The Firmware Commit command modifies the firmware image or Boot Partitions.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise. The command
- * status response may specify additional reset actions required to complete
- * the commit process.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
+ * The command status response may specify additional reset actions required
+ * to complete the commit process.
  */
 int nvme_fw_commit(struct nvme_fw_commit_args *args);
 
@@ -3490,8 +3482,7 @@ int nvme_fw_commit(struct nvme_fw_commit_args *args);
  * The security data is protocol specific and is not defined by the NVMe
  * specification.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_security_send(struct nvme_security_send_args *args);
 
@@ -3499,8 +3490,7 @@ int nvme_security_send(struct nvme_security_send_args *args);
  * nvme_security_receive() - Security Receive command
  * @args:	&struct nvme_security_receive argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_security_receive(struct nvme_security_receive_args *args);
 
@@ -3511,8 +3501,7 @@ int nvme_security_receive(struct nvme_security_receive_args *args);
  * The Get LBA Status command requests information about Potentially
  * Unrecoverable LBAs. Refer to the specification for action type descriptions.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_get_lba_status(struct nvme_get_lba_status_args *args);
 
@@ -3707,8 +3696,8 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
  * @nsr:	Namespace Streams Requested
  * @result:	If successful, the CQE dword0 value
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
 			__u16 nsr, __u32 *result)
@@ -3734,8 +3723,7 @@ static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
  * nvme_capacity_mgmt() - Capacity management command
  * @args:	&struct nvme_capacity_mgmt_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args);
 
@@ -3743,8 +3731,7 @@ int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args);
  * nvme_lockdown() - Issue lockdown command
  * @args:	&struct nvme_lockdown_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_lockdown(struct nvme_lockdown_args *args);
 
@@ -3755,8 +3742,7 @@ int nvme_lockdown(struct nvme_lockdown_args *args);
  * This is an NVMe-over-Fabrics specific command, not applicable to PCIe. These
  * properties align to the PCI MMIO controller registers.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_set_property(struct nvme_set_property_args *args);
 
@@ -3767,8 +3753,7 @@ int nvme_set_property(struct nvme_set_property_args *args);
  * This is an NVMe-over-Fabrics specific command, not applicable to PCIe. These
  * properties align to the PCI MMIO controller registers.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_get_property(struct nvme_get_property_args *args);
 
@@ -3786,8 +3771,7 @@ int nvme_get_property(struct nvme_get_property_args *args);
  * operations are processed in the background, i.e., completion of the sanitize
  * command does not indicate completion of the sanitize operation.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args);
 
@@ -3806,8 +3790,7 @@ int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args);
  * 0xffffffff to test all namespaces. All other values tests a specific
  * namespace, if present.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_dev_self_test(struct nvme_dev_self_test_args *args);
 
@@ -3823,8 +3806,7 @@ int nvme_dev_self_test(struct nvme_dev_self_test_args *args);
  *	- Assigning Flexible Resources for secondary controllers
  *	- Setting the Online and Offline state for secondary controllers
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_virtual_mgmt(struct nvme_virtual_mgmt_args *args);
 
@@ -3854,8 +3836,7 @@ static inline int nvme_flush(int fd, __u32 nsid)
  * @args:	&struct nvme_io_args argument structure
  * @opcode:	Opcode to execute
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_io(struct nvme_io_args *args, __u8 opcode);
 
@@ -3863,8 +3844,7 @@ int nvme_io(struct nvme_io_args *args, __u8 opcode);
  * nvme_read() - Submit an nvme user read command
  * @args:	&struct nvme_io_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 static inline int nvme_read(struct nvme_io_args *args)
 {
@@ -3875,8 +3855,7 @@ static inline int nvme_read(struct nvme_io_args *args)
  * nvme_write() - Submit an nvme user write command
  * @args:	&struct nvme_io_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 static inline int nvme_write(struct nvme_io_args *args)
 {
@@ -3887,8 +3866,7 @@ static inline int nvme_write(struct nvme_io_args *args)
  * nvme_compare() - Submit an nvme user compare command
  * @args:	&struct nvme_io_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 static inline int nvme_compare(struct nvme_io_args *args)
 {
@@ -3904,8 +3882,7 @@ static inline int nvme_compare(struct nvme_io_args *args)
  * reads of logical blocks in this range shall be all bytes cleared to 0h until
  * a write occurs to this LBA range.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 static inline int nvme_write_zeros(struct nvme_io_args *args)
 {
@@ -3921,8 +3898,7 @@ static inline int nvme_write_zeros(struct nvme_io_args *args)
  * is returned with Unrecovered Read Error status. To clear the invalid logical
  * block status, a write operation on those logical blocks is required.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 static inline int nvme_write_uncorrectable(struct nvme_io_args *args)
 {
@@ -3937,8 +3913,7 @@ static inline int nvme_write_uncorrectable(struct nvme_io_args *args)
  * and metadata, if applicable, for the LBAs indicated without transferring any
  * data or metadata to the host.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 static inline int nvme_verify(struct nvme_io_args *args)
 {
@@ -3955,8 +3930,7 @@ static inline int nvme_verify(struct nvme_io_args *args)
  * to optimize performance and reliability, and may be used to
  * deallocate/unmap/trim those logical blocks.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_dsm(struct nvme_dsm_args *args);
 
@@ -3965,8 +3939,7 @@ int nvme_dsm(struct nvme_dsm_args *args);
  *
  * @args:	&struct nvme_copy_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_copy(struct nvme_copy_args *args);
 
@@ -3978,8 +3951,7 @@ int nvme_copy(struct nvme_copy_args *args);
  * preempt a reservation held on a namespace, and abort a reservation held on a
  * namespace.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_resv_acquire(struct nvme_resv_acquire_args *args);
 
@@ -3990,8 +3962,7 @@ int nvme_resv_acquire(struct nvme_resv_acquire_args *args);
  * The Reservation Register command registers, unregisters, or replaces a
  * reservation key.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_resv_register(struct nvme_resv_register_args *args);
 
@@ -3999,8 +3970,7 @@ int nvme_resv_register(struct nvme_resv_register_args *args);
  * nvme_resv_release() - Send an nvme reservation release
  * @args:	&struct nvme_resv_release_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_resv_release(struct nvme_resv_release_args *args);
 
@@ -4012,8 +3982,7 @@ int nvme_resv_release(struct nvme_resv_release_args *args);
  * registration and reservation status of a namespace. See the definition for
  * the returned structure, &struct nvme_reservation_status, for more details.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_resv_report(struct nvme_resv_report_args *args);
 
@@ -4021,8 +3990,7 @@ int nvme_resv_report(struct nvme_resv_report_args *args);
  * nvme_io_mgmt_recv() - I/O Management Receive command
  * @args:	&struct nvme_io_mgmt_recv_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_io_mgmt_recv(struct nvme_io_mgmt_recv_args *args);
 
@@ -4057,8 +4025,7 @@ static inline int nvme_fdp_reclaim_unit_handle_status(int fd, __u32 nsid,
  * nvme_io_mgmt_send() - I/O Management Send command
  * @args:	&struct nvme_io_mgmt_send_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_io_mgmt_send(struct nvme_io_mgmt_send_args *args);
 
@@ -4093,8 +4060,7 @@ static inline int nvme_fdp_reclaim_unit_handle_update(int fd, __u32 nsid,
  * nvme_zns_mgmt_send() - ZNS management send command
  * @args:	&struct nvme_zns_mgmt_send_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_zns_mgmt_send(struct nvme_zns_mgmt_send_args *args);
 
@@ -4103,8 +4069,7 @@ int nvme_zns_mgmt_send(struct nvme_zns_mgmt_send_args *args);
  * nvme_zns_mgmt_recv() - ZNS management receive command
  * @args:	&struct nvme_zns_mgmt_recv_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_zns_mgmt_recv(struct nvme_zns_mgmt_recv_args *args);
 
@@ -4121,8 +4086,8 @@ int nvme_zns_mgmt_recv(struct nvme_zns_mgmt_recv_args *args);
  * @timeout:	timeout in ms
  * @result:	The command completion result from CQE dword0
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
+ * a non-zero state is returned in @result, or -1 with errno set otherwise.
  */
 static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
 			  enum nvme_zns_report_options opts,
@@ -4152,8 +4117,7 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
  * nvme_zns_append() - Append data to a zone
  * @args:	&struct nvme_zns_append_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_zns_append(struct nvme_zns_append_args *args);
 
@@ -4161,8 +4125,7 @@ int nvme_zns_append(struct nvme_zns_append_args *args);
  * nvme_dim_send - Send a Discovery Information Management (DIM) command
  * @args:	&struct nvme_dim_args argument structure
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_dim_send(struct nvme_dim_args *args);
 
