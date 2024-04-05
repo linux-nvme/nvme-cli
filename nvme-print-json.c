@@ -3899,6 +3899,7 @@ static void json_detail_list(nvme_root_t t)
 				struct json_object *jpaths = json_create_array();
 
 				obj_add_str(jctrl, "Controller", nvme_ctrl_get_name(c));
+				obj_add_str(jctrl, "Cntlid", nvme_ctrl_get_cntlid(c));
 				obj_add_str(jctrl, "SerialNumber", nvme_ctrl_get_serial(c));
 				obj_add_str(jctrl, "ModelNumber", nvme_ctrl_get_model(c));
 				obj_add_str(jctrl, "Firmware", nvme_ctrl_get_firmware(c));
