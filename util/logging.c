@@ -2,6 +2,7 @@
 
 #include <inttypes.h>
 
+#include <errno.h>
 #include <stdint.h>
 #include <sys/ioctl.h>
 #include <sys/syslog.h>
@@ -104,8 +105,14 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 		nvme_show_latency(start, end);
 	}
 
-	if (err >= 0 && result)
-		*result = cmd->result;
+	if (err >= 0) {
+		if (result)
+			*result = cmd->result;
+		if (cmd->result) {
+			errno = EPROTO;
+			err = -1;
+		}
+	}
 
 	return err;
 }
@@ -131,8 +138,14 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 		nvme_show_latency(start, end);
 	}
 
-	if (err >= 0 && result)
-		*result = cmd->result;
+	if (err >= 0) {
+		if (result)
+			*result = cmd->result;
+		if (cmd->result) {
+			errno = EPROTO;
+			err = -1;
+		}
+	}
 
 	return err;
 }
