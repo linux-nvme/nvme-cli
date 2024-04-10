@@ -3647,6 +3647,44 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
 }
 
 /**
+ * nvme_ns_mgmt_delete_timeout() - Delete a non attached namespace with timeout
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace identifier to delete
+ * @timeout:	Override the default timeout to this value in milliseconds;
+ *		set to 0 to use the system default.
+ *
+ * It is recommended that a namespace being deleted is not attached to any
+ * controller. Use the nvme_ns_detach_ctrls() first if the namespace is still
+ * attached.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_ns_mgmt_delete_timeout(int fd, __u32 nsid, __u32 timeout)
+{
+	__u32 result = 0;
+	int err;
+	struct nvme_ns_mgmt_args args = {
+		.result = &result,
+		.ns = NULL,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = timeout,
+		.nsid = nsid,
+		.sel = NVME_NS_MGMT_SEL_DELETE,
+		.csi = 0,
+		.rsvd1 = { 0, },
+		.rsvd2 = NULL,
+		.data = NULL,
+	};
+
+	err = nvme_ns_mgmt(&args);
+	if (err && result)
+		err = result;
+	return err;
+}
+
+/**
  * nvme_ns_mgmt_delete() - Delete a non attached namespace
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier to delete
@@ -3660,26 +3698,7 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
  */
 static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 {
-	__u32 result = 0;
-	int err;
-	struct nvme_ns_mgmt_args args = {
-		.result = &result,
-		.ns = NULL,
-		.args_size = sizeof(args),
-		.fd = fd,
-		.timeout = 0,
-		.nsid = nsid,
-		.sel = NVME_NS_MGMT_SEL_DELETE,
-		.csi = 0,
-		.rsvd1 = { 0, },
-		.rsvd2 = NULL,
-		.data = NULL,
-	};
-
-	err = nvme_ns_mgmt(&args);
-	if (err && result)
-		err = result;
-	return err;
+	return nvme_ns_mgmt_delete_timeout(fd, nsid, 0);
 }
 
 /**
