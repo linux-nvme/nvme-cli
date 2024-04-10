@@ -119,8 +119,11 @@ int nvme_cli_get_features(struct nvme_dev *dev,
 	return do_admin_args_op(get_features, dev, args);
 }
 
-int nvme_cli_ns_mgmt_delete(struct nvme_dev *dev, __u32 nsid)
+int nvme_cli_ns_mgmt_delete(struct nvme_dev *dev, __u32 nsid, __u32 timeout)
 {
+	if (dev->type == NVME_DEV_DIRECT)
+		return nvme_ns_mgmt_delete_timeout(dev_fd(dev), nsid, timeout);
+
 	return do_admin_op(ns_mgmt_delete, dev, nsid);
 }
 
