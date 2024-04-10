@@ -4,5 +4,6 @@ sources += [
   'plugins/ocp/ocp-clear-features.c',
   'plugins/ocp/ocp-smart-extended-log.c',
   'plugins/ocp/ocp-fw-activation-history.c',
+  'plugins/ocp/ocp-telemetry-decode.c',
 ]
 
