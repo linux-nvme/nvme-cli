@@ -199,6 +199,7 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 					struct nvme_fabrics_config *cfg,
 					struct tr_config *trcfg)
 {
+	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
 	nvme_ctrl_t c;
 
 	c = __create_discover_ctrl(r, h, cfg, trcfg);
@@ -208,10 +209,12 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	if (nvme_ctrl_is_unique_discovery_ctrl(c))
 		return c;
 
-	/* Find out the name of discovery controller */
-	struct nvme_id_ctrl id = { 0 };
+	id = nvme_alloc(sizeof(*id));
+	if (!id)
+		return NULL;
 
-	if (nvme_ctrl_identify(c, &id)) {
+	/* Find out the name of discovery controller */
+	if (nvme_ctrl_identify(c, id)) {
 		fprintf(stderr,	"failed to identify controller, error %s\n",
 			nvme_strerror(errno));
 		nvme_disconnect_ctrl(c);
@@ -219,7 +222,7 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 		return NULL;
 	}
 
-	if (!strcmp(id.subnqn, NVME_DISC_SUBSYS_NAME))
+	if (!strcmp(id->subnqn, NVME_DISC_SUBSYS_NAME))
 		return c;
 
 	/*
@@ -229,7 +232,7 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	nvme_disconnect_ctrl(c);
 	nvme_free_ctrl(c);
 
-	trcfg->subsysnqn = id.subnqn;
+	trcfg->subsysnqn = id->subnqn;
 	return __create_discover_ctrl(r, h, cfg, trcfg);
 }
 
