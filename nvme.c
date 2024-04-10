@@ -89,7 +89,6 @@ struct passthru_config {
 	__u32	namespace_id;
 	__u32	data_len;
 	__u32	metadata_len;
-	__u32	timeout;
 	__u32	cdw2;
 	__u32	cdw3;
 	__u32	cdw10;
@@ -167,6 +166,7 @@ struct set_reg_config {
 struct nvme_config {
 	char *output_format;
 	int verbose;
+	__u32 timeout;
 };
 
 #define NVME_ARGS(n, ...)                                                              \
@@ -174,6 +174,12 @@ struct nvme_config {
 		OPT_INCR("verbose",      'v', &nvme_cfg.verbose,       verbose),       \
 		OPT_FMT("output-format", 'o', &nvme_cfg.output_format, output_format), \
 		##__VA_ARGS__,                                                         \
+		/*                                                                     \
+		 * the ordering of the arguments matters, as the argument parser uses  \
+		 * the first match, thus any command which defines -t shorthand will   \
+		 * match first.                                                        \
+		 */                                                                    \
+		OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout),       \
 		OPT_END()                                                              \
 	}
 
@@ -2782,17 +2788,16 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 
 	struct config {
 		__u32	namespace_id;
-		__u32	timeout;
 	};
 
 	struct config cfg = {
 		.namespace_id	= 0,
-		.timeout	= 120000,
 	};
 
+	nvme_cfg.timeout = 120000;
+
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -3058,7 +3063,6 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u16	nvmsetid;
 		__u16	endgid;
 		__u64	bs;
-		__u32	timeout;
 		__u8	csi;
 		__u64	lbstm;
 		__u16	nphndls;
@@ -3081,7 +3085,6 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.nvmsetid	= 0,
 		.endgid		= 0,
 		.bs		= 0x00,
-		.timeout	= 120000,
 		.csi		= 0,
 		.lbstm		= 0,
 		.nphndls	= 0,
@@ -3094,6 +3097,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.phndls		= "",
 	};
 
+	nvme_cfg.timeout = 120000;
+
 	NVME_ARGS(opts,
 		  OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
 		  OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
@@ -3104,7 +3109,6 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		  OPT_UINT("nvmset-id",    'i', &cfg.nvmsetid, nvmsetid),
 		  OPT_UINT("endg-id",      'e', &cfg.endgid,   endgid),
 		  OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
-		  OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
 		  OPT_BYTE("csi",          'y', &cfg.csi,      csi),
 		  OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
 		  OPT_SHRT("nphndls",      'n', &cfg.nphndls,  nphndls),
@@ -3250,7 +3254,7 @@ parse_lba:
 	for (i = 0; i < num_phandle; i++)
 		data->phndl[i] = cpu_to_le16(phndl[i]);
 
-	err = nvme_cli_ns_mgmt_create(dev, data, &nsid, cfg.timeout, cfg.csi);
+	err = nvme_cli_ns_mgmt_create(dev, data, &nsid, nvme_cfg.timeout, cfg.csi);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
@@ -6115,7 +6119,6 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 
 	struct config {
 		__u32	namespace_id;
-		__u32	timeout;
 		__u8	lbaf;
 		__u8	ses;
 		__u8	pi;
@@ -6128,7 +6131,6 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 
 	struct config cfg = {
 		.namespace_id	= 0,
-		.timeout	= 600000,
 		.lbaf		= 0xff,
 		.ses		= 0,
 		.pi		= 0,
@@ -6139,9 +6141,10 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.bs		= 0,
 	};
 
+	nvme_cfg.timeout = 600000;
+
 	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
 		  OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
 		  OPT_BYTE("ses",          's', &cfg.ses,          ses),
 		  OPT_BYTE("pi",           'i', &cfg.pi,           pi),
@@ -6298,7 +6301,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.pi		= cfg.pi,
 		.pil		= cfg.pil,
 		.ses		= cfg.ses,
-		.timeout	= cfg.timeout,
+		.timeout	= nvme_cfg.timeout,
 		.result		= NULL,
 	};
 	err = nvme_cli_format_nvm(dev, &args);
@@ -8320,7 +8323,6 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		__u32	mndw;
 		__u8	atype;
 		__u16	rl;
-		__u32	timeout;
 	};
 
 	struct config cfg = {
@@ -8329,7 +8331,6 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		.mndw		= 0,
 		.atype		= 0,
 		.rl		= 0,
-		.timeout	= 0,
 	};
 
 	NVME_ARGS(opts,
@@ -8337,8 +8338,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		  OPT_SUFFIX("start-lba",  's', &cfg.slba,          slba),
 		  OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
 		  OPT_BYTE("action",       'a', &cfg.atype,         atype),
-		  OPT_SHRT("range-len",    'l', &cfg.rl,            rl),
-		  OPT_UINT("timeout",      't', &cfg.timeout,       timeout));
+		  OPT_SHRT("range-len",    'l', &cfg.rl,            rl));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -8740,7 +8740,6 @@ static int passthru(int argc, char **argv, bool admin,
 		.namespace_id	= 0,
 		.data_len	= 0,
 		.metadata_len	= 0,
-		.timeout	= 0,
 		.cdw2		= 0,
 		.cdw3		= 0,
 		.cdw10		= 0,
@@ -8767,7 +8766,6 @@ static int passthru(int argc, char **argv, bool admin,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
 		  OPT_UINT("metadata-len", 'm', &cfg.metadata_len, metadata_len),
-		  OPT_UINT("timeout",      't', &cfg.timeout,      timeout),
 		  OPT_UINT("cdw2",         '2', &cfg.cdw2,         cdw2),
 		  OPT_UINT("cdw3",         '3', &cfg.cdw3,         cdw3),
 		  OPT_UINT("cdw10",        '4', &cfg.cdw10,        cdw10),
@@ -8868,7 +8866,7 @@ static int passthru(int argc, char **argv, bool admin,
 		printf("cdw13        : %08x\n", cfg.cdw13);
 		printf("cdw14        : %08x\n", cfg.cdw14);
 		printf("cdw15        : %08x\n", cfg.cdw15);
-		printf("timeout_ms   : %08x\n", cfg.timeout);
+		printf("timeout_ms   : %08x\n", nvme_cfg.timeout);
 	}
 	if (cfg.dry_run)
 		return 0;
@@ -8884,7 +8882,7 @@ static int passthru(int argc, char **argv, bool admin,
 					      cfg.cdw14,
 					      cfg.cdw15, cfg.data_len, data,
 					      cfg.metadata_len,
-					      mdata, cfg.timeout, &result);
+					      mdata, nvme_cfg.timeout, &result);
 	else
 		err = nvme_io_passthru(dev_fd(dev), cfg.opcode, cfg.flags,
 				       cfg.rsvd,
@@ -8894,7 +8892,7 @@ static int passthru(int argc, char **argv, bool admin,
 				       cfg.cdw14,
 				       cfg.cdw15, cfg.data_len, data,
 				       cfg.metadata_len,
-				       mdata, cfg.timeout, &result);
+				       mdata, nvme_cfg.timeout, &result);
 
 	gettimeofday(&end_time, NULL);
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
