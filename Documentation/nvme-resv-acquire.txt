@@ -14,6 +14,7 @@ SYNOPSIS
 			[--rtype=<rtype> | -t <rtype>]
 			[--racqa=<racqa> | -a <racqa>] [--iekey | -i]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -91,6 +92,9 @@ Indicator option, defaults to '0'.
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

@@ -15,6 +15,7 @@ SYNOPSIS
 			[--al=<allocation-length> | -t <allocation-length>]
 			[--namespace-id=<nsid> | -n <nsid>] [--raw-binary | -b]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -79,6 +80,9 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

@@ -15,6 +15,7 @@ SYNOPSIS
 			[--nssf=<nvme-specific> | -N <nvme-specific>]
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -72,6 +73,9 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

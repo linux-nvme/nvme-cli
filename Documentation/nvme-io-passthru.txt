@@ -20,7 +20,7 @@ SYNOPSIS
 			[--read | -r] [--write | -w]
 			[--input-file=<file> | -i <file>]
 			[--metadata=<file> | -M <file>]
-			[--timeout=<to> | -t <to>] [--show-command | -s]
+			[--timeout=<timeout> | -t <timeout>] [--show-command | -s]
 			[--dry-run | -d] [--raw-binary | -b]
 			[--prefill=<prefill> | -p <prefill>]
 			[--latency | -T]
@@ -129,6 +129,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

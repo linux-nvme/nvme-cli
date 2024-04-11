@@ -14,6 +14,7 @@ SYNOPSIS
 			[--dir-type=<dtype> | -T <dtype>]
 			[--dir-spec=<dspec> | -S <dspec>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -50,6 +51,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

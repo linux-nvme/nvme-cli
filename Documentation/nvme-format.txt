@@ -131,7 +131,7 @@ cryptographically. This is accomplished by deleting the encryption key.
 
 -t <timeout>::
 --timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+	Override default timeout value 600,000. In milliseconds.
 
 -o <fmt>::
 --output-format=<fmt>::

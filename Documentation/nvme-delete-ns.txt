@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme delete-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -34,6 +35,10 @@ OPTIONS
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value 120,000. In milliseconds.
 
 EXAMPLES
 --------
