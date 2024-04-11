@@ -19,6 +19,7 @@ SYNOPSIS
 			[--storage-tag<storage-tag> | -S <storage-tag>]
 			[--storage-tag-check | -C]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -91,6 +92,10 @@ metadata is passes.
 -v::
 --verbose::
 	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------
