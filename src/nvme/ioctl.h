@@ -3024,19 +3024,6 @@ int nvme_set_features_write_protect2(int fd, __u32 nsid,
 int nvme_set_features_iocs_profile(int fd, __u16 iocsi, bool save);
 
 /**
- * nvme_set_features_iocs_profile2() - Set I/O command set profile feature
- * @fd:		File descriptor of nvme device
- * @iocsi:	I/O Command Set Combination Index
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
- *
- * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
- * a non-zero state is returned in @result, or -1 with errno set otherwise.
- */
-int nvme_set_features_iocs_profile2(int fd, __u16 iocsi, bool save,
-				    __u32 *result);
-
-/**
  * nvme_get_features() - Retrieve a feature attribute
  * @args:	&struct nvme_get_features_args argument structure
  *

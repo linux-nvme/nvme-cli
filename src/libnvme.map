@@ -13,7 +13,6 @@ LIBNVME_1.9 {
 		nvme_set_features_timestamp2;
 		nvme_set_features_host_behavior2;
 		nvme_set_features_host_id2;
-		nvme_set_features_iocs_profile2;
 };
 
 LIBNVME_1_8 {
