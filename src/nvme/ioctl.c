@@ -1194,19 +1194,7 @@ int nvme_get_features_sw_progress(int fd, enum nvme_get_features_sel sel,
 }
 
 int nvme_get_features_host_id(int fd, enum nvme_get_features_sel sel,
-			bool exhid, __u32 len, __u8 *hostid)
-{
-	__u32 result = 0;
-	int err;
-
-	err = nvme_get_features_host_id2(fd, sel, exhid, len, hostid, &result);
-	if (err && result)
-		err = result;
-	return err;
-}
-
-int nvme_get_features_host_id2(int fd, enum nvme_get_features_sel sel,
-			bool exhid, __u32 len, __u8 *hostid, __u32 *result)
+			      bool exhid, __u32 len, __u8 *hostid)
 {
 	struct nvme_get_features_args args = {
 		.args_size = sizeof(args),
@@ -1219,7 +1207,7 @@ int nvme_get_features_host_id2(int fd, enum nvme_get_features_sel sel,
 		.data_len = len,
 		.data = hostid,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.result = NULL,
 	};
 
 	return nvme_get_features(&args);
