@@ -718,18 +718,6 @@ int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 
 int nvme_set_features_host_id(int fd, bool exhid, bool save, __u8 *hostid)
 {
-	__u32 result = 0;
-	int err;
-
-	err = nvme_set_features_host_id2(fd, exhid, save, hostid, &result);
-	if (err && result)
-		err = result;
-	return err;
-}
-
-int nvme_set_features_host_id2(int fd, bool exhid, bool save, __u8 *hostid,
-			       __u32 *result)
-{
 	__u32 len = exhid ? 16 : 8;
 	__u32 value = !!exhid;
 	struct nvme_set_features_args args = {
@@ -745,7 +733,7 @@ int nvme_set_features_host_id2(int fd, bool exhid, bool save, __u8 *hostid,
 		.data_len = len,
 		.data = hostid,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.result = NULL,
 	};
 
 	return nvme_set_features(&args);
