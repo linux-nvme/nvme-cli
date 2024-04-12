@@ -1051,7 +1051,6 @@ static struct nvmf_discovery_log *nvme_discovery_log(
 	int retries = 0;
 	const char *name = nvme_ctrl_get_name(args->c);
 	uint64_t genctr, numrec;
-	__u32 result;
 	int fd = nvme_ctrl_get_fd(args->c);
 	struct nvme_get_log_args log_args = {
 		.result = args->result,
@@ -1077,21 +1076,13 @@ static struct nvmf_discovery_log *nvme_discovery_log(
 		 name, retries, args->max_retries);
 	log_args.log = log;
 	log_args.len = DISCOVERY_HEADER_LEN;
-	if (!args->result)
-		log_args.result = &result;
-retry_header:
 	if (nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &log_args)) {
 		nvme_msg(r, LOG_INFO,
 			 "%s: discover try %d/%d failed, error %d\n",
 			 name, retries, args->max_retries, errno);
-		if (*log_args.result &&
-		    !(*log_args.result & NVME_SC_DNR) &&
-		    (++retries < args->max_retries))
-			goto retry_header;
 		goto out_free_log;
 	}
 
-	retries = 0;
 	do {
 		size_t entries_size;
 
@@ -1122,9 +1113,6 @@ retry_header:
 			nvme_msg(r, LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
 				 name, retries, args->max_retries, errno);
-			if (*log_args.result &&
-			    !(*log_args.result & NVME_SC_DNR))
-				continue;
 			goto out_free_log;
 		}
 
@@ -1141,9 +1129,6 @@ retry_header:
 			nvme_msg(r, LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
 				 name, retries, args->max_retries, errno);
-			if (*log_args.result &&
-			    !(*log_args.result & NVME_SC_DNR))
-				continue;
 			goto out_free_log;
 		}
 	} while (genctr != le64_to_cpu(log->genctr) &&
