@@ -1043,18 +1043,6 @@ int nvme_get_features_host_mem_buf2(int fd, enum nvme_get_features_sel sel,
 int nvme_get_features_timestamp(int fd, enum nvme_get_features_sel sel,
 				struct nvme_timestamp *ts)
 {
-	__u32 result = 0;
-	int err;
-
-	err = nvme_get_features_timestamp2(fd, sel, ts, &result);
-	if (err && result)
-		err = result;
-	return err;
-}
-
-int nvme_get_features_timestamp2(int fd, enum nvme_get_features_sel sel,
-				 struct nvme_timestamp *ts, __u32 *result)
-{
 	struct nvme_get_features_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1066,7 +1054,7 @@ int nvme_get_features_timestamp2(int fd, enum nvme_get_features_sel sel,
 		.data_len = sizeof(*ts),
 		.data = ts,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.result = NULL,
 	};
 
 	return nvme_get_features(&args);
