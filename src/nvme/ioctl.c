@@ -85,14 +85,8 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 {
 	int err = ioctl(fd, ioctl_cmd, cmd);
 
-	if (err >= 0) {
-		if (result)
-			*result = cmd->result;
-		if (cmd->result) {
-			errno = EPROTO;
-			err = -1;
-		}
-	}
+	if (err >= 0 && result)
+		*result = cmd->result;
 	return err;
 }
 
@@ -102,14 +96,8 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 {
 	int err = ioctl(fd, ioctl_cmd, cmd);
 
-	if (err >= 0) {
-		if (result)
-			*result = cmd->result;
-		if (cmd->result) {
-			errno = EPROTO;
-			err = -1;
-		}
-	}
+	if (err >= 0 && result)
+		*result = cmd->result;
 	return err;
 }
 
