@@ -1533,8 +1533,6 @@ int nvme_directive_send_id_endir(int fd, __u32 nsid, bool endir,
 {
 	__u32 cdw12 = NVME_SET(dtype, DIRECTIVE_SEND_IDENTIFY_CDW12_DTYPE) |
 		NVME_SET(endir, DIRECTIVE_SEND_IDENTIFY_CDW12_ENDIR);
-	__u32 result = 0;
-	int err;
 	struct nvme_directive_send_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
@@ -1546,13 +1544,10 @@ int nvme_directive_send_id_endir(int fd, __u32 nsid, bool endir,
 		.data_len = sizeof(*id),
 		.data = id,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = &result,
+		.result = NULL,
 	};
 
-	err = nvme_directive_send(&args);
-	if (err && result)
-		err = result;
-	return err;
+	return nvme_directive_send(&args);
 }
 
 int nvme_directive_recv(struct nvme_directive_recv_args *args)
