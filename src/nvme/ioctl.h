@@ -2833,24 +2833,10 @@ int nvme_set_features_lba_sts_interval(int fd, __u16 lsiri, __u16 lsipi,
  * @save:	Save value across power states
  * @data:	Pointer to structure nvme_feat_host_behavior
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_set_features_host_behavior(int fd, bool save,
-			struct nvme_feat_host_behavior *data);
-
-/**
- * nvme_set_features_host_behavior2() - Set host behavior feature
- * @fd:		File descriptor of nvme device
- * @save:	Save value across power states
- * @data:	Pointer to structure nvme_feat_host_behavior
- * @result:	The command completion result from CQE dword0
- *
- * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
- * a non-zero state is returned in @result, or -1 with errno set otherwise.
- */
-int nvme_set_features_host_behavior2(int fd, bool save,
-			struct nvme_feat_host_behavior *data, __u32 *result);
+				    struct nvme_feat_host_behavior *data);
 
 /**
  * nvme_set_features_sanitize() - Set sanitize feature
@@ -2861,6 +2847,7 @@ int nvme_set_features_host_behavior2(int fd, bool save,
  *
  * Return: 0 if the ioctl was successful, -1 with errno set to EPROTO when
  * a non-zero state is returned in @result, or -1 with errno set otherwise.
+ * Return: 0 if the ioctl was successful or -1 with errno set otherwise.
  */
 int nvme_set_features_sanitize(int fd, bool nodrm, bool save, __u32 *result);
 
