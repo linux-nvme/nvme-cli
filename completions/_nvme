@@ -612,6 +612,8 @@ _nvme () {
 			-a':alias of --all'
 			--output-format=':Output format: normal|json|binary'
 			-o':alias for --output-format'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme list-ns options" _listns
@@ -1048,6 +1050,8 @@ _nvme () {
 			-b':alias to --raw-binary'
 			--csi=':command set identifier'
 			-c':alias of --csi'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme effects-log options" _effects_log
@@ -1125,6 +1129,8 @@ _nvme () {
 			--cdw11=':dword 11 value, used for interrupt vector configuration only'
 			--raw-binary':dump infos in binary format'
 			-b':alias to --raw-binary'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-feature options" _getf
@@ -1139,6 +1145,8 @@ _nvme () {
 			-s':alias for --self-test-code'
 			--wait':Wait for the test to finish'
 			-w':alias to --wait'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme device-self-test options" _device_self_test
@@ -1171,6 +1179,8 @@ _nvme () {
 			-s':alias of --scp'
 			--uuid=':UUID Index field required aligned with Scope'
 			-U':alias of --uuid'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme lockdown options" _lockdown
@@ -1191,6 +1201,8 @@ _nvme () {
 			-V'alias to --value'
 			--uuid-index=':uuid index'
 			-U':alias for --uuid-index'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-feature options" _setf
@@ -1203,6 +1215,8 @@ _nvme () {
 			-O':alias to --offset'
 			--value=':the value of the property to be set'
 			-V':alias to --value'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-property options" _set_property
@@ -1215,6 +1229,8 @@ _nvme () {
 			-O':alias to --offset'
 			--human-readable':show infos in readable format'
 			-H':alias of --human-readable'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-property options" _get_property
@@ -1249,6 +1265,8 @@ _nvme () {
 			-a':alias of --action'
 			--slot=':firmware slot to activate'
 			-s':alias of --slot'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme fw-commit options" _fw_commit
@@ -1263,13 +1281,15 @@ _nvme () {
 			-x':alias of --xfer'
 			--offset=':starting offset, in dwords (defaults to 0, only useful if download is split across multiple files)'
 			-O':alias of --offset'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme fw-download options" _fwd
 			;;
 		(capacity-mgmt)
-			local _fwd
-			_fwd=(
+			local _capacity_mgmt
+			_capacity_mgmt=(
 			/dev/nvme':supply a device to use (required)'
 			--operation=':Operation to be performed by the controller'
 			-O':alias of --operation'
@@ -1279,9 +1299,11 @@ _nvme () {
 			-l':alias of --cap-lower'
 			--cap-upper=':Most significant 32 bits of the capacity in bytes'
 			-u':alias of --cap-upper'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
-			_describe -t commands "nvme capacity-mgmt options" _fwd
+			_describe -t commands "nvme capacity-mgmt options" _capacity_mgmt
 			;;
 		(write-zeroes)
 			local _write_zeroes
@@ -1315,6 +1337,8 @@ _nvme () {
 			-C':alias of --storage-tag-check'
 			--dir-spec=':directive specific'
 			-D':alias of --dir-spec'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme write-zeroes options" _write_zeroes
@@ -1333,6 +1357,8 @@ _nvme () {
 			-T':alias of --dir-type'
 			--dir-spec':directive specific'
 			-S':alias of --dir-spec'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme write-uncor options" _write_uncor
@@ -1363,6 +1389,8 @@ _nvme () {
 			-S':alias of --storage-tag'
 			--storage-tag-check':Storage Tag field shall be checked as part of end-to-end data protection processing'
 			-C':alias of --storage-tag-check'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme verify options" _verify
@@ -1573,6 +1601,7 @@ _nvme () {
 			-s':alias for --spsp'
 			--tl=':transfer length as defined in SPC-4'
 			-t':alias for --tl'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme security-send options" _ssend
@@ -1591,6 +1620,8 @@ _nvme () {
 			-a':alias for --al'
 			--raw-binary':dump output in binary format'
 			-b':alias for --raw-binary'
+			--timeout=':value for timeout'
+			-t':alias for --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme security-recv options" _srecv
@@ -1633,6 +1664,7 @@ _nvme () {
 			-i':alias for --iekey'
 			--crkey':current reservation key'
 			-c':alias for --crkey'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-acquire options" _acq
@@ -1649,6 +1681,7 @@ _nvme () {
 			-a':alias of --rrela'
 			--iekey':ignore existing reservation key'
 			-i':alias of --iekey'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-release options" _rel
@@ -1665,6 +1698,8 @@ _nvme () {
 			-e':alias of --eds'
 			--raw-binary':dump output in binary format'
 			-b':alias of --raw-binary'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-report options" _rep
@@ -1685,6 +1720,8 @@ _nvme () {
 			-r':alias for --rrega'
 			--iekey':ignore existing reservation key'
 			-i':alias for --iekey'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-register options" _reg
@@ -1709,6 +1746,8 @@ _nvme () {
 			-r':alias of --idr'
 			--cdw11=':value for command dword 11'
 			-c':alias for --cdw11'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme dsm options" _dsm
@@ -1749,10 +1788,12 @@ _nvme () {
 			-S':alias of --dir-spec'
 			--format=':source range entry format'
 			-F':alias of --format'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
-                       _describe -t commands "nvme copy options" _copy
-		       ;;
+			_describe -t commands "nvme copy options" _copy
+			;;
 		(flush)
 			local _flush
 			_flush=(
@@ -1791,6 +1832,9 @@ _nvme () {
 			-V':alias of --show-command'
 			--dry-run':show command instead of sending to device'
 			-w':alias of --show-command'
+			--latency':latency statistics will be output following compare'
+			-t':alias of --latency'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme compare options" _comp
@@ -1827,6 +1871,7 @@ _nvme () {
 			-V':alias of --show-command'
 			--dry-run':show command instead of sending to device'
 			-w':alias of --show-command'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme read options" _read
@@ -1863,6 +1908,7 @@ _nvme () {
 			-V':alias of --show-command'
 			--dry-run':show command instead of sending to device'
 			-w':alias of --show-command'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme write options" _wr
@@ -1871,6 +1917,8 @@ _nvme () {
 			local _shor
 			_shor=(
 			/dev/nvme':supply a device to use (required)'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme show-regs options" _shor
@@ -2162,6 +2210,8 @@ _nvme () {
 			-r':alias of --req-resource'
 			--human-readable':show infos in readable format'
 			-H':alias of --human-readable'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme dir-receive options" _dir_receive
@@ -2190,6 +2240,8 @@ _nvme () {
 			-b':alias for --raw-binary'
 			--input-file=':write/send file (default stdin)'
 			-i':alias of --input-file'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme dir-send options" _dir_send
@@ -2206,6 +2258,8 @@ _nvme () {
 			-a':alias of --act'
 			--nr=':Number of Controller Resources(NR)'
 			-n':alias of --nr'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme virt-mgmt options" _virt_mgmt
@@ -2331,6 +2385,8 @@ _nvme () {
 			-o ':alias for --output-format'
 			--verbose':Increase the information detail in the output.'
 			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-reg options" _get_reg
@@ -2364,6 +2420,8 @@ _nvme () {
 			-o ':alias for --output-format'
 			--verbose':Increase the information detail in the output.'
 			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-reg options" _set_reg
