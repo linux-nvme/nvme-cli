@@ -105,7 +105,9 @@ _nvme () {
 	'nvme-mi-recv:send a NVMe-MI receive command'
 	'nvme-mi-send:send a NVMe-MI send command'
 	'get-reg:read and show the defined NVMe controller register'
-	'set-seg:write and show the defined NVMe controller register'
+	'set-reg:write and show the defined NVMe controller register'
+	'io-mgmt-recv:send an I/O management receive command'
+	'io-mgmt-send:send an I/O management send command'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
@@ -2365,6 +2367,54 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-reg options" _set_reg
+			;;
+		(io-mgmt-recv)
+			local _io_mgmt_recv
+			_io_mgmt_recv=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':identifier of desired namespace'
+			-n':alias for --namespace-id'
+			--mos=':management operation specific'
+			-s':alias for --mos'
+			--mo=':management operation'
+			-m':alias for --mo'
+			--data=':optional file for data (default stdout)'
+			-d':alias for --data'
+			--data-len=':buffer len (if) data is received'
+			-l':alias for --data-len'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme set-reg options" _io_mgmt_recv
+			;;
+		(io-mgmt-send)
+			local _io_mgmt_send
+			_io_mgmt_send=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':identifier of desired namespace'
+			-n':alias for --namespace-id'
+			--mos=':management operation specific'
+			-s':alias for --mos'
+			--mo=':management operation'
+			-m':alias for --mo'
+			--data=':optional file for data (default stdin)'
+			-d':alias for --data'
+			--data-len=':buffer len (if) data is sent'
+			-l':alias for --data-len'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme set-reg options" _io_mgmt_send
 			;;
 		(version)
 			local _version
