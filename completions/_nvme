@@ -56,7 +56,7 @@ _nvme () {
 	'set-property:writes and shows the defined NVMe controller property for NVMe over Fabric'
 	'get-property:Reads and shows the defined NVMe controller property for NVMe over Fabric'
 	'format:apply new block format to namespace'
-	'fw-activate:activate a firmware on the device'
+	'fw-commit:verify and commit firmware to a specific slot (fw-activate in old version < 1.2)'
 	'fw-download:download a firmware to the device'
 	'admin-passthru:submit a passthrough admin command IOCTL'
 	'io-passthru:submit a passthrough io command IOCTL'
@@ -1239,9 +1239,9 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme format options" _format
 			;;
-		(fw-activate)
-			local _fwact
-			_fwact=(
+		(fw-commit)
+			local _fw_commit
+			_fw_commit=(
 			/dev/nvme':supply a device to use (required)'
 			--action=':activation action (required)? 0 - replace fw without activating, 1 - replace with activation, 2 - replace with activation at next reset'
 			-a':alias of --action'
@@ -1249,7 +1249,7 @@ _nvme () {
 			-s':alias of --slot'
 			)
 			_arguments '*:: :->subcmds'
-			_describe -t commands "nvme fw-activate options" _fwact
+			_describe -t commands "nvme fw-commit options" _fw_commit
 			;;
 		(fw-download)
 			local _fwd
