@@ -2248,6 +2248,7 @@ _nvme () {
 		(nvme-mi-recv)
 			local _nvme_mi_recv
 			_nvme_mi_recv=(
+			/dev/nvme':supply a device to use (required)'
 			--opcode=':NVMe-MI opcode to send'
 			-O':alias of --opcode'
 			--namespace-id=':value for nsid'
@@ -2269,6 +2270,7 @@ _nvme () {
 		(nvme-mi-send)
 			local _nvme_mi_send
 			_nvme_mi_send=(
+			/dev/nvme':supply a device to use (required)'
 			--opcode=':NVMe-MI opcode to send'
 			-O':alias of --opcode'
 			--namespace-id=':value for nsid'
@@ -2290,6 +2292,7 @@ _nvme () {
 		(get-reg)
 			local _get_reg
 			_get_reg=(
+			/dev/nvme':supply a device to use (required)'
 			--offset=':offset of the requested register'
 			-O':alias for --offset'
 			--human-readable':show register in readable format'
@@ -2333,6 +2336,7 @@ _nvme () {
 		(set-reg)
 			local _set_reg
 			_set_reg=(
+			/dev/nvme':supply a device to use (required)'
 			--offset=':offset of the requested register'
 			-O':alias for --offset'
 			--value=':the value of the register to be set'
