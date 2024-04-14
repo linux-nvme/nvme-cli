@@ -1312,18 +1312,14 @@ static void stdout_registers_bpinfo(__u32 bpinfo)
 
 static void stdout_registers_bprsel(__u32 bprsel)
 {
-	printf("\tBoot Partition Identifier      (BPID): %u\n",
-		(bprsel & 0x80000000) >> 31);
-	printf("\tBoot Partition Read Offset    (BPROF): %x\n",
-		(bprsel & 0x3ffffc00) >> 10);
-	printf("\tBoot Partition Read Size      (BPRSZ): %x\n",
-		bprsel & 0x000003ff);
+	printf("\tBoot Partition Identifier      (BPID): %u\n", NVME_BPRSEL_BPID(bprsel));
+	printf("\tBoot Partition Read Offset    (BPROF): %x\n", NVME_BPRSEL_BPROF(bprsel));
+	printf("\tBoot Partition Read Size      (BPRSZ): %x\n", NVME_BPRSEL_BPRSZ(bprsel));
 }
 
 static void stdout_registers_bpmbl(uint64_t bpmbl)
 {
-	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n",
-		bpmbl);
+	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n", bpmbl);
 }
 
 static void stdout_registers_cmbmsc(uint64_t cmbmsc)
