@@ -1235,28 +1235,28 @@ static void stdout_registers_cmbloc(__u32 cmbloc, bool support)
 	}
 
 	printf("\tOffset                                                        (OFST): ");
-	printf("%#x (See cmbsz.szu for granularity)\n", (cmbloc & 0xfffff000) >> 12);
+	printf("%#x (See cmbsz.szu for granularity)\n", NVME_CMBLOC_OFST(cmbloc));
 
 	printf("\tCMB Queue Dword Alignment                                     (CQDA): %d\n",
-	       (cmbloc & 0x00000100) >> 8);
+	       NVME_CMBLOC_CQDA(cmbloc));
 
 	printf("\tCMB Data Metadata Mixed Memory Support                      (CDMMMS): %s\n",
-	       enforced[(cmbloc & 0x00000080) >> 7]);
+	       enforced[NVME_CMBLOC_CDMMMS(cmbloc)]);
 
 	printf("\tCMB Data Pointer and Command Independent Locations Support (CDPCILS): %s\n",
-	       enforced[(cmbloc & 0x00000040) >> 6]);
+	       enforced[NVME_CMBLOC_CDPCILS(cmbloc)]);
 
 	printf("\tCMB Data Pointer Mixed Locations Support                    (CDPMLS): %s\n",
-	       enforced[(cmbloc & 0x00000020) >> 5]);
+	       enforced[NVME_CMBLOC_CDPLMS(cmbloc)]);
 
 	printf("\tCMB Queue Physically Discontiguous Support                   (CQPDS): %s\n",
-	       enforced[(cmbloc & 0x00000010) >> 4]);
+	       enforced[NVME_CMBLOC_CQPDS(cmbloc)]);
 
 	printf("\tCMB Queue Mixed Memory Support                               (CQMMS): %s\n",
-	       enforced[(cmbloc & 0x00000008) >> 3]);
+	       enforced[NVME_CMBLOC_CQMMS(cmbloc)]);
 
 	printf("\tBase Indicator Register                                        (BIR): %#x\n\n",
-	       (cmbloc & 0x00000007));
+	       NVME_CMBLOC_BIR(cmbloc));
 }
 
 static void stdout_registers_cmbsz(__u32 cmbsz)
