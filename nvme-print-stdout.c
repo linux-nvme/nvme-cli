@@ -1261,23 +1261,24 @@ static void stdout_registers_cmbloc(__u32 cmbloc, bool support)
 
 static void stdout_registers_cmbsz(__u32 cmbsz)
 {
-	if (cmbsz == 0) {
+	if (!cmbsz) {
 		printf("\tController Memory Buffer feature is not supported\n\n");
 		return;
 	}
-	printf("\tSize                      (SZ): %u\n", (cmbsz & 0xfffff000) >> 12);
+
+	printf("\tSize                      (SZ): %u\n", NVME_CMBSZ_SZ(cmbsz));
 	printf("\tSize Units               (SZU): %s\n",
-	       nvme_register_szu_to_string((cmbsz & 0x00000f00) >> 8));
+	       nvme_register_szu_to_string(NVME_CMBSZ_SZU(cmbsz)));
 	printf("\tWrite Data Support       (WDS): Write Data and metadata transfer in Controller Memory Buffer is %s\n",
-	       (cmbsz & 0x00000010) ? "Supported" : "Not supported");
+	       NVME_CMBSZ_WDS(cmbsz) ? "Supported" : "Not supported");
 	printf("\tRead Data Support        (RDS): Read Data and metadata transfer in Controller Memory Buffer is %s\n",
-	       (cmbsz & 0x00000008) ? "Supported" : "Not supported");
+	       NVME_CMBSZ_RDS(cmbsz) ? "Supported" : "Not supported");
 	printf("\tPRP SGL List Support   (LISTS): PRP/SG Lists in Controller Memory Buffer is %s\n",
-	       (cmbsz & 0x00000004) ? "Supported" : "Not supported");
+	       NVME_CMBSZ_LISTS(cmbsz) ? "Supported" : "Not supported");
 	printf("\tCompletion Queue Support (CQS): Admin and I/O Completion Queues in Controller Memory Buffer is %s\n",
-	       (cmbsz & 0x00000002) ? "Supported" : "Not supported");
+	       NVME_CMBSZ_CQS(cmbsz) ? "Supported" : "Not supported");
 	printf("\tSubmission Queue Support (SQS): Admin and I/O Submission Queues in Controller Memory Buffer is %s\n\n",
-	       (cmbsz & 0x00000001) ? "Supported" : "Not supported");
+	       NVME_CMBSZ_SQS(cmbsz) ? "Supported" : "Not supported");
 }
 
 static void stdout_registers_bpinfo_brs(__u8 brs)
