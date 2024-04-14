@@ -1305,11 +1305,9 @@ static void stdout_registers_bpinfo_brs(__u8 brs)
 
 static void stdout_registers_bpinfo(__u32 bpinfo)
 {
-	printf("\tActive Boot Partition ID      (ABPID): %u\n",
-		(bpinfo & 0x80000000) >> 31);
-	stdout_registers_bpinfo_brs((bpinfo & 0x03000000) >> 24);
-	printf("\tBoot Partition Size            (BPSZ): %u\n",
-		bpinfo & 0x00007fff);
+	printf("\tActive Boot Partition ID      (ABPID): %u\n", NVME_BPINFO_ABPID(bpinfo));
+	stdout_registers_bpinfo_brs(NVME_BPINFO_BRS(bpinfo));
+	printf("\tBoot Partition Size            (BPSZ): %u\n", NVME_BPINFO_BPSZ(bpinfo));
 }
 
 static void stdout_registers_bprsel(__u32 bprsel)
