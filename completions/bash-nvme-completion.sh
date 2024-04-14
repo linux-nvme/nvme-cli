@@ -63,7 +63,7 @@ nvme_list_opts () {
 			;;
 		"list-ns")
 		opts+=" --namespace-id= -n --al -a --csi= -y \
-			--outputformat= -o"
+			--outputformat= -o --timeout= -t"
 			;;
 		"list-ctrl")
 		opts+=" --namespace-id= -n --cntid= -c \
@@ -163,7 +163,7 @@ nvme_list_opts () {
 			;;
 		"effects-log")
 		opts+=" --output-format= -o --human-readable -H \
-			--raw-binary -b"
+			--raw-binary -b --timeout= -t"
 			;;
 		"endurance-log")
 		opts+=" --output-format= -o --group-id -g"
@@ -205,10 +205,10 @@ nvme_list_opts () {
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \
 			--data-len= -l --cdw11= --c -uuid-index= -U --raw-binary -b \
-			--human-readable -H"
+			--human-readable -H --timeout= -t"
 			;;
 		"device-self-test")
-		opts+=" --namespace-id= -n --self-test-code= -s"
+		opts+=" --namespace-id= -n --self-test-code= -s --timeout= -t"
 			;;
 		"self-test-log")
 		opts+=" --dst-entries= -e --output-format= -o \
@@ -217,30 +217,31 @@ nvme_list_opts () {
 		"set-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --value= -v \
 			--data-len= -l -data= -d --value= -v --save -s --uuid-index= -U \
-			--cdw12= -c"
+			--cdw12= -c --timeout= -t"
 			;;
 		"set-property")
-		opts+=" --offset= -O --value= -V"
+		opts+=" --offset= -O --value= -V --timeout= -t"
 			;;
 		"get-property")
-		opts=+" --offset= -O --human-readable -H"
+		opts=+" --offset= -O --human-readable -H --timeout= -t"
 			;;
 		"format")
 		opts+=" --namespace-id= -n --timeout= -t --lbaf= -l \
 			--ses= -s --pil= -p -pi= -i --ms= -m --reset -r"
 			;;
 		"fw-commit")
-		opts+=" --slot= -s --action= -a --bpid= -b"
+		opts+=" --slot= -s --action= -a --bpid= -b --timeout= -t"
 			;;
 		"fw-download")
-		opts+=" --fw= -f --xfer= -x --offset= -O"
+		opts+=" --fw= -f --xfer= -x --offset= -O --timeout= -t"
 			;;
 		"capacity-mgmt")
 		opts+=" --operation= -O --element-id= -i --cap-lower= -l \
-			--cap-upper= -u"
+			--cap-upper= -u --timeout= -t"
 			;;
 		"lockdown")
-		opts+=" --ofi= -O --ifc= -f --prhbt= -p --scp= -s --uuid -U"
+		opts+=" --ofi= -O --ifc= -f --prhbt= -p --scp= -s --uuid -U \
+			--timeout= -t"
 			;;
 		"admin-passthru")
 		opts+=" --opcode= -O --flags= -f --prefil= -p --rsvd= -R \
@@ -262,11 +263,11 @@ nvme_list_opts () {
 			;;
 		"security-send")
 		opts+=" --namespace-id= -n --file= -f --nssf= -N --secp= -p \
-			--spsp= -s --tl= -t"
+			--spsp= -s --tl= -t --timeout="
 			;;
 		"security-recv")
 		opts+=" --namespace-id= -n --size= -x --secp= -p --spsp= -s \
-			--al= -t --raw-binary -b"
+			--al= -t --raw-binary -b --timeout="
 			;;
 		"get-lba-status")
 		opts+=" --namespace-id= -n --start-lba= -s --max-dw= -m \
@@ -275,23 +276,24 @@ nvme_list_opts () {
 			;;
 		"resv-acquire")
 		opts+=" --namespace-id= -n --crkey= -c --prkey= -p \
-			--rtype= -t --racqa= -a --iekey= -i"
+			--rtype= -t --racqa= -a --iekey= -i --timeout="
 			;;
 		"resv-register")
 		opts+=" --namespace-id= -n --crkey= -c --nrkey= -k \
-			--rrega= -r --cptpl= -p --iekey -i"
+			--rrega= -r --cptpl= -p --iekey -i --timeout= -t"
 			;;
 		"resv-release")
 		opts+=" --namespace-id= -n --crkey -c --rtype= -t \
-			--rrela= -a --iekey -i"
+			--rrela= -a --iekey -i --timeout="
 			;;
 		"resv-report")
 		opts+=" --namespace-id= -n --numd= -d --eds -e \
-			--raw-binary= -b --output-format= -o"
+			--raw-binary= -b --output-format= -o --timeout= -t"
 			;;
 		"dsm")
-		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b\
-			--slbs= -s --ad -d --idw -w --idr -r --cdw11= -c"
+		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b \
+			--slbs= -s --ad -d --idw -w --idr -r --cdw11= -c \
+			--timeout= -t"
 			;;
 		"copy")
 		opts+=" --namespace-id= -n --sdlba= -d --blocks= -b --slbs= -s \
@@ -300,7 +302,7 @@ nvme_list_opts () {
 			--ref-tag= -r --expected-ref-tag= -R \
 			--app-tag= -a --expected-app-tag= -A \
 			--app-tag-mask= -m --expected-app-tag-mask= -M \
-			--dir-type= -T --dir-spec= -S --format= -F"
+			--dir-type= -T --dir-spec= -S --format= -F --timeout= -t"
 			;;
 		"flush")
 		opts+=" --namespace-id= -n"
@@ -312,7 +314,7 @@ nvme_list_opts () {
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
 			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
-			--dry-run -w --latency -t"
+			--dry-run -w --latency -t --timeout="
 			;;
 		"read")
 		opts+=" --start-block= -s --block-count= -c --data-size= -z \
@@ -321,7 +323,7 @@ nvme_list_opts () {
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
 			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
-			--dry-run -w --latency -t"
+			--dry-run -w --latency -t --timeout="
 			;;
 		"write")
 		opts+=" --start-block= -s --block-count= -c --data-size= -z \
@@ -330,7 +332,7 @@ nvme_list_opts () {
 			--app-tag= -a --limited-retry -l \
 			--force-unit-access -f --storage-tag-check -C \
 			--dir-type= -T --dir-spec= -S --dsm= -D --show-command -V \
-			--dry-run -w --latency -t"
+			--dry-run -w --latency -t --timeout="
 			;;
 		"write-zeroes")
 		opts+=" --namespace-id= -n --start-block= -s \
@@ -338,18 +340,19 @@ nvme_list_opts () {
 			--force-unit-access -f --prinfo= -p --ref-tag= -r \
 			--app-tag-mask= -m --app-tag= -a \
 			--storage-tag= -S --storage-tag-check -C \
-			--dir-type= -T --dir-spec= -S"
+			--dir-type= -T --dir-spec= -S --timeout= -t"
 			;;
 		"write-uncor")
 		opts+=" --namespace-id= -n --start-block= -s \
-			--block-count= -c --dir-type= -T --dir-spec= -S"
+			--block-count= -c --dir-type= -T --dir-spec= -S \
+			--timeout= -t"
 			;;
 		"verify")
 		opts+=" --namespace-id= -n --start-block= -s \
 			--block-count= -c --limited-retry -l \
 			--force-unit-access -f --prinfo= -p --ref-tag= -r \
 			--app-tag= -a --app-tag-mask= -m \
-			--storage-tag= -S --storage-tag-check -C"
+			--storage-tag= -S --storage-tag-check -C --timeout= -t"
 			;;
 		"sanitize")
 		opts+=" --no-dealloc -d --oipbp -i --owpass= -n \
@@ -374,7 +377,7 @@ nvme_list_opts () {
 		opts+=$NO_OPTS
 			;;
 		"show-regs")
-		opts+=" --output-format= -o --human-readable -H"
+		opts+=" --output-format= -o --human-readable -H --timeout= -t"
 			;;
 		"discover")
 		opts+=" --transport= -t -traddr= -a -trsvcid= -s \
@@ -427,15 +430,16 @@ nvme_list_opts () {
 		"dir-receive")
 		opts+=" --namespace-id= -n --data-len= -l --raw-binary -b \
 			--dir-type= -D --dir-spec= -S --dir-oper= -O \
-			--req-resource= -r --human-readable -H"
+			--req-resource= -r --human-readable -H --timeout= -t"
 			;;
 		"dir-send")
 		opts+=" --namespace-id= -n --data-len= -l --dir-type= -D \
 			--target-dir= -T --dir-spec= -S --dir-oper= -O \
-			--endir= -e --human-readable -H --raw-binary -b"
+			--endir= -e --human-readable -H --raw-binary -b \
+			--timeout= -t"
 			;;
 		"virt-mgmt")
-		opts+=" --cntlid= -c --rt= -r --act= -a --nr= -n"
+		opts+=" --cntlid= -c --rt= -r --act= -a --nr= -n --timeout= -t"
 			;;
 		"rpmb")
 		opts+=" --cmd= -c --msgfile= -f --keyfile= -g \
@@ -459,13 +463,14 @@ nvme_list_opts () {
 			--pmrcap --pmrsts --pmrebs --pmrswtp --intms --intmc \
 			--cc --csts --nssr --aqa --asq --acq --bprsel --bpmbl \
 			--cmbmsc --nssd --pmrctl --pmrmscl --pmrmscu \
-			--output-format -o --verbose -v"
+			--output-format -o --verbose -v --timeout= -t"
 			;;
 		"set-reg")
 		opts+=" --offset, -O --value= -V --mmio32 -m --intms= --intmc= \
 			--cc= --csts= --nssr= --aqa= --asq= --acq= --bprsel= \
 			--bpmbl= --cmbmsc= --nssd= --pmrctl= --pmrmscl= \
-			--pmrmscu= --output-format= -o --verbose= -v"
+			--pmrmscu= --output-format= -o --verbose= -v \
+			--timeout= -t"
 			;;
 		"version")
 		opts+=$NO_OPTS
