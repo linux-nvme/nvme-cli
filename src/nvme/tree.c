@@ -2488,7 +2488,7 @@ static int nvme_ns_init(const char *path, struct nvme_ns *ns)
 		if (ret)
 			return ret;
 	} else {
-		struct nvme_id_ns *id;
+		_cleanup_free_ struct nvme_id_ns *id = NULL;
 		uint8_t flbas;
 
 		id = __nvme_alloc(sizeof(*ns));
