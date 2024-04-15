@@ -354,13 +354,13 @@ const char *nvme_register_pmr_hsts_to_string(__u8 hsts)
 const char *nvme_register_unit_to_string(__u8 unit)
 {
 	switch (unit) {
-	case 0:
+	case NVME_UNIT_B:
 		return "Bytes";
-	case 1:
+	case NVME_UNIT_1K:
 		return "One KB";
-	case 2:
+	case NVME_UNIT_1M:
 		return "One MB";
-	case 3:
+	case NVME_UNIT_1G:
 		return "One GB";
 	default:
 		break;
