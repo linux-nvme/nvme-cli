@@ -1114,6 +1114,25 @@ struct nvme_id_ctrl {
 	__u8			vs[1024];
 };
 
+enum nvme_cmic {
+	NVME_CMIC_MULTI_PORT_SHIFT	= 0,
+	NVME_CMIC_MULTI_CTRL_SHIFT	= 1,
+	NVME_CMIC_MULTI_SRIOV_SHIFT	= 2,
+	NVME_CMIC_MULTI_ANA_SHIFT	= 3,
+	NVME_CMIC_MULTI_RSVD_SHIFT	= 4,
+	NVME_CMIC_MULTI_PORT_MASK	= 0x1,
+	NVME_CMIC_MULTI_CTRL_MASK	= 0x1,
+	NVME_CMIC_MULTI_SRIOV_MASK	= 0x1,
+	NVME_CMIC_MULTI_ANA_MASK	= 0x1,
+	NVME_CMIC_MULTI_RSVD_MASK	= 0xf,
+};
+
+#define NVME_CMIC_MULTI_PORT(cmic)	NVME_GET(cmic, CMIC_MULTI_PORT)
+#define NVME_CMIC_MULTI_CTRL(cmic)	NVME_GET(cmic, CMIC_MULTI_CTRL)
+#define NVME_CMIC_MULTI_SRIOV(cmic)	NVME_GET(cmic, CMIC_MULTI_SRIOV)
+#define NVME_CMIC_MULTI_ANA(cmic)	NVME_GET(cmic, CMIC_MULTI_ANA)
+#define NVME_CMIC_MULTI_RSVD(cmic)	NVME_GET(cmic, CMIC_MULTI_RSVD)
+
 /**
  * enum nvme_id_ctrl_cmic - Controller Multipath IO and Namespace Sharing
  *			    Capabilities of the controller and NVM subsystem.
