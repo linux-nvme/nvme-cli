@@ -66,6 +66,15 @@ uuid = executable(
 
 test('uuid', uuid)
 
+uriparser = executable(
+    'test-uriparser',
+    ['uriparser.c'],
+    dependencies: libnvme_dep,
+    include_directories: [incdir, internal_incdir]
+)
+
+test('uriparser', uriparser)
+
 if conf.get('HAVE_NETDB')
     mock_ifaddrs = library(
         'mock-ifaddrs',
