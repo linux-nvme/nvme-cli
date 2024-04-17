@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (c) 2023 Solidigm.
+ * Copyright (c) 2023-2024 Solidigm.
  *
  * Author: karl.dedow@solidigm.com
  */
@@ -15,6 +15,7 @@
 #include "nvme-print.h"
 
 #include "plugins/ocp/ocp-utils.h"
+#include "solidigm-util.h"
 
 #define MIN_VENDOR_LID 0xC0
 #define SOLIDIGM_MAX_UUID 2
@@ -38,41 +39,9 @@ static void init_lid_dir(struct lid_dir *lid_dir)
 	}
 }
 
-static bool is_invalid_uuid(const struct nvme_id_uuid_list_entry entry)
-{
-	static const unsigned char ALL_ZERO_UUID[NVME_UUID_LEN] = {
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-	};
-
-	return memcmp(ALL_ZERO_UUID, entry.uuid, NVME_UUID_LEN) == 0;
-}
-
-static bool is_solidigm_uuid(const struct nvme_id_uuid_list_entry entry)
-{
-	static const unsigned char SOLIDIGM_UUID[NVME_UUID_LEN] = {
-		0x96, 0x19, 0x58, 0x6e, 0xc1, 0x1b, 0x43, 0xad,
-		0xaa, 0xaa, 0x65, 0x41, 0x87, 0xf6, 0xbb, 0xb2
-	};
-
-	return memcmp(SOLIDIGM_UUID, entry.uuid, NVME_UUID_LEN) == 0;
-}
-
-static bool is_ocp_uuid(const struct nvme_id_uuid_list_entry entry)
-{
-	static const unsigned char OCP_UUID[NVME_UUID_LEN] = {
-		0xc1, 0x94, 0xd5, 0x5b, 0xe0, 0x94, 0x47, 0x94,
-		0xa2, 0x1d, 0x29, 0x99, 0x8f, 0x56, 0xbe, 0x6f
-	};
-
-	return memcmp(OCP_UUID, entry.uuid, NVME_UUID_LEN) == 0;
-}
-
 static int get_supported_log_pages_log(struct nvme_dev *dev, int uuid_index,
 				       struct nvme_supported_log_pages *supported)
 {
-	static const __u8 LID;
-
 	memset(supported, 0, sizeof(*supported));
 	struct nvme_get_log_args args = {
 		.lpo = 0,
@@ -81,7 +50,7 @@ static int get_supported_log_pages_log(struct nvme_dev *dev, int uuid_index,
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = LID,
+		.lid = NVME_LOG_LID_SUPPORTED_LOG_PAGES,
 		.len = sizeof(*supported),
 		.nsid = NVME_NSID_ALL,
 		.csi = NVME_CSI_NVM,
@@ -101,8 +70,8 @@ static struct lid_dir *get_standard_lids(struct nvme_supported_log_pages *suppor
 
 	init_lid_dir(&standard_dir);
 
-	for (int lid = 0; lid < NVME_LOG_SUPPORTED_LOG_PAGES_MAX; lid++) {
-		if (!supported->lid_support[lid] || lid >= MIN_VENDOR_LID)
+	for (int lid = 0; lid < MIN_VENDOR_LID; lid++) {
+		if (!supported->lid_support[lid])
 			continue;
 
 		standard_dir.lid[lid].supported = true;
@@ -222,7 +191,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 		OPT_END()
 	};
 
-	struct nvme_dev *dev = NULL;
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err = parse_and_open(&dev, argc, argv, description, options);
 
 	if (err)
@@ -247,16 +216,21 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 					lid_dirs[NO_UUID_INDEX]->lid[lid] = solidigm_lid_dir->lid[lid];
 			}
 		} else {
-			for (int uuid_index = 1; uuid_index <= SOLIDIGM_MAX_UUID; uuid_index++) {
-				if (is_invalid_uuid(uuid_list.entry[uuid_index - 1]))
-					break;
-				else if (get_supported_log_pages_log(dev, uuid_index, &supported))
-					continue;
+			__u8 sldgm_idx;
+			__u8 ocp_idx;
 
-				if (is_solidigm_uuid(uuid_list.entry[uuid_index - 1]))
-					lid_dirs[uuid_index] = get_solidigm_lids(&supported);
-				else if (is_ocp_uuid(uuid_list.entry[uuid_index - 1]))
-					lid_dirs[uuid_index] = get_ocp_lids(&supported);
+			sldgm_find_uuid_index(&uuid_list, &sldgm_idx);
+			ocp_find_uuid_index(&uuid_list, &ocp_idx);
+
+			if (sldgm_idx && (sldgm_idx <= SOLIDIGM_MAX_UUID)) {
+				err = get_supported_log_pages_log(dev, sldgm_idx, &supported);
+				if (!err)
+					lid_dirs[sldgm_idx] = get_solidigm_lids(&supported);
+			}
+			if (ocp_idx && (ocp_idx <= SOLIDIGM_MAX_UUID)) {
+				err = get_supported_log_pages_log(dev, ocp_idx, &supported);
+				if (!err)
+					lid_dirs[ocp_idx] = get_ocp_lids(&supported);
 			}
 		}
 	} else {
@@ -279,8 +253,5 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 		}
 	}
 
-	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
-	dev_close(dev);
 	return err;
 }
