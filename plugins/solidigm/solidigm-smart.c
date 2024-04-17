@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (c) 2022 Solidigm.
+ * Copyright (c) 2022-2024 Solidigm.
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
@@ -229,7 +229,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		return err;
 	}
 
-	uuid_index = solidigm_get_vu_uuid_index(dev);
+	sldgm_get_uuid_index(dev, &uuid_index);
 
 	struct nvme_get_log_args args = {
 		.lpo = 0,

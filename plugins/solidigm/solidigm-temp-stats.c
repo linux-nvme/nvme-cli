@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (c) 2023 Solidigm.
+ * Copyright (c) 2023-2024 Solidigm.
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
@@ -63,7 +63,7 @@ int sldgm_get_temp_stats_log(int argc, char **argv, struct command *cmd, struct 
 	if (err)
 		return err;
 
-	uuid_idx = solidigm_get_vu_uuid_index(dev);
+	sldgm_get_uuid_index(dev, &uuid_idx);
 
 	struct nvme_get_log_args args = {
 		.lpo	= 0,
