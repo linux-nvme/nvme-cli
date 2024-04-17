@@ -1629,18 +1629,17 @@ static void stdout_error_status(int status, const char *msg, va_list ap)
 
 static void stdout_id_ctrl_cmic(__u8 cmic)
 {
-	__u8 rsvd = (cmic & 0xF0) >> 4;
-	__u8 ana = (cmic & 0x8) >> 3;
-	__u8 sriov = (cmic & 0x4) >> 2;
-	__u8 mctl = (cmic & 0x2) >> 1;
-	__u8 mp = cmic & 0x1;
+	__u8 rsvd = NVME_CMIC_MULTI_RSVD(cmic);
+	__u8 ana = NVME_CMIC_MULTI_ANA(cmic);
+	__u8 sriov = NVME_CMIC_MULTI_SRIOV(cmic);
+	__u8 mctl = NVME_CMIC_MULTI_CTRL(cmic);
+	__u8 mp = NVME_CMIC_MULTI_PORT(cmic);
 
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
 	printf("  [3:3] : %#x\tANA %ssupported\n", ana, ana ? "" : "not ");
 	printf("  [2:2] : %#x\t%s\n", sriov, sriov ? "SR-IOV" : "PCI");
-	printf("  [1:1] : %#x\t%s Controller\n",
-		mctl, mctl ? "Multi" : "Single");
+	printf("  [1:1] : %#x\t%s Controller\n", mctl, mctl ? "Multi" : "Single");
 	printf("  [0:0] : %#x\t%s Port\n", mp, mp ? "Multi" : "Single");
 	printf("\n");
 }
