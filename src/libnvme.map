@@ -2,6 +2,8 @@
 LIBNVME_1.10 {
 	global:
 		nvme_init_default_logging;
+		nvme_parse_uri;
+		nvme_free_uri;
 };
 
 LIBNVME_1.9 {

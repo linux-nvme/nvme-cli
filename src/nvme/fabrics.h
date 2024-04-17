@@ -68,6 +68,28 @@ struct nvme_fabrics_config {
 };
 
 /**
+ * struct nvme_fabrics_uri - Parsed URI structure
+ * @scheme:		Scheme name (typically 'nvme')
+ * @protocol:		Optional protocol/transport (e.g. 'tcp')
+ * @userinfo:		Optional user information component of the URI authority
+ * @host:		Host transport address
+ * @port:		The port subcomponent or 0 if not specified
+ * @path_segments:	NULL-terminated array of path segments
+ * @query:		Optional query string component (separated by '?')
+ * @fragment:		Optional fragment identifier component (separated by '#')
+ */
+struct nvme_fabrics_uri {
+	char *scheme;
+	char *protocol;
+	char *userinfo;
+	char *host;
+	int port;
+	char **path_segments;
+	char *query;
+	char *fragment;
+};
+
+/**
  * nvmf_trtype_str() - Decode TRTYPE field
  * @trtype: value to be decoded
  *
@@ -323,5 +345,27 @@ bool nvmf_is_registration_supported(nvme_ctrl_t c);
  * Return: 0 on success; on failure -1 is returned and errno is set
  */
 int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
+
+/**
+ * nvme_parse_uri() - Parse the URI string
+ * @str:	URI string
+ *
+ * Parse the URI string as defined in the NVM Express Boot Specification.
+ * Supported URI elements looks as follows:
+ *
+ *   nvme+tcp://user@host:port/subsys_nqn/nid?query=val#fragment
+ *
+ * Return: &nvme_fabrics_uri structure on success; NULL on failure with errno
+ * set.
+ */
+struct nvme_fabrics_uri *nvme_parse_uri(const char *str);
+
+/**
+ * nvme_free_uri() - Free the URI structure
+ * @uri:	&nvme_fabrics_uri structure
+ *
+ * Free an &nvme_fabrics_uri structure.
+ */
+void nvme_free_uri(struct nvme_fabrics_uri *uri);
 
 #endif /* _LIBNVME_FABRICS_H */
