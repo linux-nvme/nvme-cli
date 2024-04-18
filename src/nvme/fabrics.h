@@ -280,6 +280,26 @@ struct nvmf_discovery_log *nvmf_get_discovery_wargs(struct nvme_get_discovery_ar
 char *nvmf_hostnqn_generate();
 
 /**
+ * nvmf_hostnqn_generate_from_hostid() - Generate a host nqn from host identifier
+ * @hostid:		Host identifier
+ *
+ * If @hostid is NULL, the function generates it based on the machine
+ * identifier.
+ *
+ * Return: On success, an NVMe Qualified Name for host identification. This
+ * name is based on the given host identifier. On failure, NULL.
+ */
+char *nvmf_hostnqn_generate_from_hostid(char *hostid);
+
+/**
+ * nvmf_hostid_generate() - Generate a machine specific host identifier
+ *
+ * Return: On success, an identifier string based on the machine identifier to
+ * be used as NVMe Host Identifier, or NULL on failure.
+ */
+char *nvmf_hostid_generate();
+
+/**
  * nvmf_hostnqn_from_file() - Reads the host nvm qualified name from the config
  *			      default location
  *

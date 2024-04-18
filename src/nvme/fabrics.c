@@ -1342,27 +1342,42 @@ static int uuid_from_dmi(char *system_uuid)
 	return ret;
 }
 
-char *nvmf_hostnqn_generate()
+char *nvmf_hostid_generate()
 {
-	char *hostnqn;
 	int ret;
 	char uuid_str[NVME_UUID_LEN_STRING];
 	unsigned char uuid[NVME_UUID_LEN];
 
 	ret = uuid_from_dmi(uuid_str);
-	if (ret < 0) {
+	if (ret < 0)
 		ret = uuid_from_device_tree(uuid_str);
-	}
 	if (ret < 0) {
 		if (nvme_uuid_random(uuid) < 0)
 			memset(uuid, 0, NVME_UUID_LEN);
 		nvme_uuid_to_string(uuid, uuid_str);
 	}
 
-	if (asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", uuid_str) < 0)
-		return NULL;
+	return strdup(uuid_str);
+}
 
-	return hostnqn;
+char *nvmf_hostnqn_generate_from_hostid(char *hostid)
+{
+	char *hid = NULL;
+	char *hostnqn;
+	int ret;
+
+	if (!hostid)
+		hostid = hid = nvmf_hostid_generate();
+
+	ret = asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", hostid);
+	free(hid);
+
+	return (ret < 0) ? NULL : hostnqn;
+}
+
+char *nvmf_hostnqn_generate()
+{
+	return nvmf_hostnqn_generate_from_hostid(NULL);
 }
 
 static char *nvmf_read_file(const char *f, int len)
