@@ -11,7 +11,8 @@
 #include "nvme-print.h"
 #include "solidigm-util.h"
 
-#define SLDGM_TEMP_STATS_LID 0xC5
+#define SLDGM_LEGACY_TEMP_STATS_LID 0xC5
+#define SLDGM_TEMP_STATS_LID 0xD5
 
 struct temp_stats {
 	__le64	curr;
@@ -40,7 +41,7 @@ static void show_temp_stats(struct temp_stats *stats)
 int sldgm_get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	unsigned char buffer[4096] = {0};
-	struct nvme_dev *dev;
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	__u8 uuid_idx;
 	int err;
 
@@ -84,25 +85,26 @@ int sldgm_get_temp_stats_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	err = nvme_get_log(&args);
-	if (!err) {
-		uint64_t *guid = (uint64_t *)&buffer[4080];
+	if (err > 0) {
+		args.lid = SLDGM_LEGACY_TEMP_STATS_LID;
+		err = nvme_get_log(&args);
+		if (!err) {
+			uint64_t *guid = (uint64_t *)&buffer[4080];
 
-		if (guid[1] == 0xC7BB98B7D0324863 && guid[0] == 0xBB2C23990E9C722F) {
-			fprintf(stderr, "Error: Log page has 'OCP unsupported Requirements' GUID\n");
-			err = -EBADMSG;
-			goto closefd;
+			if (guid[1] == 0xC7BB98B7D0324863 && guid[0] == 0xBB2C23990E9C722F) {
+				fprintf(stderr,
+					"Error: Log page has OCP unsupported Requirements GUID\n");
+				return -EBADMSG;
+			}
 		}
+	}
+	if (!err) {
 		if (!cfg.raw_binary)
 			show_temp_stats((struct temp_stats *) buffer);
 		else
 			d_raw(buffer, sizeof(struct temp_stats));
-	} else if (err > 0) {
+	} else if (err > 0)
 		nvme_show_status(err);
-	}
 
-closefd:
-	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
-	dev_close(dev);
 	return err;
 }

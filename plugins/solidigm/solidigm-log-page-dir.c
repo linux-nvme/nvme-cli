@@ -97,12 +97,15 @@ static struct lid_dir *get_solidigm_lids(struct nvme_supported_log_pages *suppor
 	static struct lid_dir solidigm_dir = { 0 };
 
 	init_lid_dir(&solidigm_dir);
+	solidigm_dir.lid[0xC0].str = "OCP SMART / Health Information Extended";
 	solidigm_dir.lid[0xC1].str = "Read Commands Latency Statistics";
 	solidigm_dir.lid[0xC2].str = "Write Commands Latency Statistics";
+	solidigm_dir.lid[0xC3].str = "OCP Latency Monitor";
 	solidigm_dir.lid[0xC4].str = "Endurance Manager Statistics";
 	solidigm_dir.lid[0xC5].str = "Temperature Statistics";
 	solidigm_dir.lid[0xCA].str = "SMART Attributes";
 	solidigm_dir.lid[0xCB].str = "VU NVMe IO Queue Metrics Log Page";
+	solidigm_dir.lid[0xD5].str = solidigm_dir.lid[0xC5].str;
 	solidigm_dir.lid[0xDD].str = "VU Marketing Description Log Page";
 	solidigm_dir.lid[0xEF].str = "Performance Rating and LBA Access Histogram";
 	solidigm_dir.lid[0xF2].str = "Get Power Usage Log Page";
