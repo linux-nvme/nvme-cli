@@ -643,20 +643,9 @@ char *nvmf_hostid_from_hostnqn(const char *hostnqn)
 
 void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn, unsigned int verbose)
 {
-	_cleanup_free_ char *hostid_from_file = NULL;
 	_cleanup_free_ char *hostid_from_hostnqn = NULL;
 
-	if (!hostid)
-		return;
-
-	hostid_from_file = nvmf_hostid_from_file();
-	if (hostid_from_file && strcmp(hostid_from_file, hostid)) {
-		if (verbose)
-			fprintf(stderr,
-				"warning: use generated hostid instead of hostid file\n");
-	}
-
-	if (!hostnqn)
+	if (!hostnqn || !hostid)
 		return;
 
 	hostid_from_hostnqn = nvmf_hostid_from_hostnqn(hostnqn);
@@ -665,6 +654,34 @@ void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn, unsi
 			fprintf(stderr,
 				"warning: use hostid which does not match uuid in hostnqn\n");
 	}
+}
+
+void nvmf_set_hostid_and_hostnqn(char **hostid, char **hostnqn)
+{
+	char *hid = *hostid;
+	char *hnqn = *hostnqn;
+
+	if (!hid)
+		hid = nvmf_hostid_from_file();
+	if (!hnqn)
+		hnqn = nvmf_hostnqn_from_file();
+
+	if (!hid) {
+		if (hnqn) {
+			hid = nvmf_hostid_from_hostnqn(hnqn);
+			if (!hid)
+				hid = nvmf_hostid_generate();
+		} else {
+			hid = nvmf_hostid_generate();
+			hnqn = nvmf_hostnqn_generate_from_hostid(hid);
+		}
+	}
+
+	if (!hnqn)
+		hnqn = nvmf_hostnqn_generate_from_hostid(hid);
+
+	*hostid = hid;
+	*hostnqn = hnqn;
 }
 
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
@@ -746,16 +763,13 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 
 	hostnqn_arg = hostnqn;
 	hostid_arg = hostid;
-	if (!hostnqn)
-		hostnqn = hnqn = nvmf_hostnqn_from_file();
-	if (!hostnqn) {
-		hostnqn = hnqn = nvmf_hostnqn_generate();
-		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
-	}
-	if (!hostid)
-		hostid = hid = nvmf_hostid_from_file();
-	if (!hostid && hostnqn)
-		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
+
+	nvmf_set_hostid_and_hostnqn(&hostid, &hostnqn);
+	if (!hostid_arg)
+		hid = hostid;
+	if (!hostnqn_arg)
+		hnqn = hostnqn;
+
 	nvmf_check_hostid_and_hostnqn(hostid, hostnqn, verbose);
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
@@ -905,6 +919,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	enum nvme_print_flags flags;
 	struct nvme_fabrics_config cfg = { 0 };
 	char *format = "normal";
+	char *hostnqn_arg, *hostid_arg;
 
 
 	NVMF_ARGS(opts, cfg,
@@ -972,16 +987,15 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_read_config(r, config_file);
 	nvme_read_volatile_config(r);
 
-	if (!hostnqn)
-		hostnqn = hnqn = nvmf_hostnqn_from_file();
-	if (!hostnqn) {
-		hostnqn = hnqn = nvmf_hostnqn_generate();
-		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
-	}
-	if (!hostid)
-		hostid = hid = nvmf_hostid_from_file();
-	if (!hostid && hostnqn)
-		hostid = hid = nvmf_hostid_from_hostnqn(hostnqn);
+	hostnqn_arg = hostnqn;
+	hostid_arg = hostid;
+
+	nvmf_set_hostid_and_hostnqn(&hostid, &hostnqn);
+	if (!hostid_arg)
+		hid = hostid;
+	if (!hostnqn_arg)
+		hnqn = hostnqn;
+
 	nvmf_check_hostid_and_hostnqn(hostid, hostnqn, verbose);
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
