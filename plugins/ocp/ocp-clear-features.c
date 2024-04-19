@@ -18,7 +18,7 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 	__u32 result = 0;
 	__u32 clear = 1 << 31;
 	struct nvme_dev *dev;
-	int uuid_index = 0;
+	__u8 uuid_index = 0;
 	bool uuid = true;
 	int err;
 
