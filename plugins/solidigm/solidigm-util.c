@@ -10,7 +10,7 @@
 
 __u8 solidigm_get_vu_uuid_index(struct nvme_dev *dev)
 {
-	int ocp_uuid_index = 0;
+	__u8 ocp_uuid_index = 0;
 
 	if (ocp_get_uuid_index(dev, &ocp_uuid_index) == 0)
 		if (ocp_uuid_index == 2)

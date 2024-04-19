@@ -162,7 +162,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 	if (err)
 		return err;
 
-	int uuid_index = 0;
+	__u8 uuid_index = 0;
 
 	/*
 	 * Best effort attempt at uuid. Otherwise, assume no index (i.e. 0)
