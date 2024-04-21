@@ -8226,7 +8226,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		return err;
 
 	if (cfg.size) {
-		sec_buf = nvme_alloc(sizeof(*sec_buf));
+		sec_buf = nvme_alloc(cfg.size);
 		if (!sec_buf)
 			return -ENOMEM;
 	}
