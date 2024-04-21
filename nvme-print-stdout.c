@@ -1198,6 +1198,8 @@ static void stdout_registers_csts_shst(__u8 shst)
 
 static void stdout_registers_csts(__u32 csts)
 {
+	printf("\tShutdown Type                   (ST): %s\n",
+	       NVME_CSTS_ST(csts) ? "Subsystem" : "Controller");
 	printf("\tProcessing Paused               (PP): %s\n", NVME_CSTS_PP(csts) ? "Yes" : "No");
 	printf("\tNVM Subsystem Reset Occurred (NSSRO): %s\n",
 	       NVME_CSTS_NSSRO(csts) ? "Yes" : "No");
