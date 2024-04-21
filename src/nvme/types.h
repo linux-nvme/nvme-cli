@@ -343,11 +343,13 @@ enum nvme_cc {
  * @NVME_CSTS_SHST_SHIFT:	Shift amount to get the shutdown status
  * @NVME_CSTS_NSSRO_SHIFT:	Shift amount to get the NVM subsystem reset occurred
  * @NVME_CSTS_PP_SHIFT:		Shift amount to get the processing paused
+ * @NVME_CSTS_ST_SHIFT:		Shift amount to get the shutdown type
  * @NVME_CSTS_RDY_MASK:		Mask to get the ready
  * @NVME_CSTS_CFS_MASK:		Mask to get the controller fatal status
  * @NVME_CSTS_SHST_MASK:	Mask to get the shutdown status
  * @NVME_CSTS_NSSRO_MASK:	Mask to get the NVM subsystem reset occurred
  * @NVME_CSTS_PP_MASK:		Mask to get the processing paused
+ * @NVME_CSTS_ST_MASK:		Mask to get the shutdown type
  * @NVME_CSTS_SHST_NORMAL:	Normal operation
  * @NVME_CSTS_SHST_OCCUR:	Shutdown processing occurring
  * @NVME_CSTS_SHST_CMPLT:	Shutdown processing complete
@@ -359,11 +361,13 @@ enum nvme_csts {
 	NVME_CSTS_SHST_SHIFT	= 2,
 	NVME_CSTS_NSSRO_SHIFT	= 4,
 	NVME_CSTS_PP_SHIFT	= 5,
+	NVME_CSTS_ST_SHIFT	= 6,
 	NVME_CSTS_RDY_MASK	= 0x1,
 	NVME_CSTS_CFS_MASK	= 0x1,
 	NVME_CSTS_SHST_MASK	= 0x3,
 	NVME_CSTS_NSSRO_MASK	= 0x1,
 	NVME_CSTS_PP_MASK	= 0x1,
+	NVME_CSTS_ST_MASK	= 0x1,
 	NVME_CSTS_SHST_NORMAL	= 0,
 	NVME_CSTS_SHST_OCCUR	= 1,
 	NVME_CSTS_SHST_CMPLT	= 2,
@@ -375,6 +379,7 @@ enum nvme_csts {
 #define NVME_CSTS_SHST(csts)	NVME_GET(csts, CSTS_SHST)
 #define NVME_CSTS_NSSRO(csts)	NVME_GET(csts, CSTS_NSSRO)
 #define NVME_CSTS_PP(csts)	NVME_GET(csts, CSTS_PP)
+#define NVME_CSTS_ST(csts)	NVME_GET(csts, CSTS_ST)
 
 enum nvme_aqa {
 	NVME_AQA_ASQS_SHIFT	= 0,
