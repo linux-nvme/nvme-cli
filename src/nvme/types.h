@@ -336,6 +336,23 @@ enum nvme_cc {
 #define NVME_CC_IOCQES(cc)	NVME_GET(cc, CC_IOCQES)
 #define NVME_CC_CRIME(cc)	NVME_GET(cc, CC_CRIME)
 
+/**
+ * enum nvme_csts - This field indicates the controller status register
+ * @NVME_CSTS_RDY_SHIFT:	Shift amount to get the ready
+ * @NVME_CSTS_CFS_SHIFT:	Shift amount to get the controller fatal status
+ * @NVME_CSTS_SHST_SHIFT:	Shift amount to get the shutdown status
+ * @NVME_CSTS_NSSRO_SHIFT:	Shift amount to get the NVM subsystem reset occurred
+ * @NVME_CSTS_PP_SHIFT:		Shift amount to get the processing paused
+ * @NVME_CSTS_RDY_MASK:		Mask to get the ready
+ * @NVME_CSTS_CFS_MASK:		Mask to get the controller fatal status
+ * @NVME_CSTS_SHST_MASK:	Mask to get the shutdown status
+ * @NVME_CSTS_NSSRO_MASK:	Mask to get the NVM subsystem reset occurred
+ * @NVME_CSTS_PP_MASK:		Mask to get the processing paused
+ * @NVME_CSTS_SHST_NORMAL:	Normal operation
+ * @NVME_CSTS_SHST_OCCUR:	Shutdown processing occurring
+ * @NVME_CSTS_SHST_CMPLT:	Shutdown processing complete
+ * @NVME_CSTS_SHN_MASK:		Deprecated mask to get the shutdown status
+ */
 enum nvme_csts {
 	NVME_CSTS_RDY_SHIFT	= 0,
 	NVME_CSTS_CFS_SHIFT	= 1,
