@@ -4884,7 +4884,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 	struct config cfg = {
 		.fw         = "",
-		.xfer       = 4096,
+		.xfer       = 0,
 		.offset     = 0,
 		.progress   = false,
 		.ignore_ovr = false,
