@@ -913,7 +913,9 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	while (data_remaining) {
 		data_written = write(output, data_ptr, data_remaining);
 		if (data_written < 0) {
-			data_remaining = data_written;
+			err = -errno;
+			nvme_show_error("ERROR: %s: : write failed with error : %s",
+					__func__, strerror(errno));
 			break;
 		} else if (data_written <= data_remaining) {
 			data_remaining -= data_written;
@@ -922,6 +924,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 			/* Unexpected overwrite */
 			fprintf(stderr, "Failure: Unexpected telemetry log overwrite - data_remaining = 0x%x, data_written = 0x%x\n",
 					data_remaining, data_written);
+			err = -1;
 			break;
 		}
 	}
