@@ -4872,7 +4872,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	int err;
 	struct stat sb;
 	void *fw_buf;
-	struct nvme_id_ctrl ctrl = { 0 };
+	_cleanup_free_ struct nvme_id_ctrl *ctrl = nvme_alloc(sizeof(*ctrl));
 
 	struct config {
 		char	*fw;
@@ -4896,6 +4896,9 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		  OPT_UINT("offset",     'O', &cfg.offset,     offset),
 		  OPT_FLAG("progress",   'p', &cfg.progress,   progress),
 		  OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr));
+
+	if (!ctrl)
+		return -ENOMEM;
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4921,19 +4924,19 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	if (cfg.xfer == 0) {
-		err = nvme_cli_identify_ctrl(dev, &ctrl);
+		err = nvme_cli_identify_ctrl(dev, ctrl);
 		if (err) {
 			nvme_show_error("identify-ctrl: %s", nvme_strerror(errno));
 			return err;
 		}
-		if (ctrl.fwug == 0 || ctrl.fwug == 0xff)
+		if (ctrl->fwug == 0 || ctrl->fwug == 0xff)
 			cfg.xfer = 4096;
 		else
-			cfg.xfer = ctrl.fwug * 4096;
+			cfg.xfer = ctrl->fwug * 4096;
 	} else if (cfg.xfer % 4096)
 		cfg.xfer = 4096;
 
-	if (ctrl.fwug && ctrl.fwug != 0xff && fw_size % cfg.xfer)
+	if (ctrl->fwug && ctrl->fwug != 0xff && fw_size % cfg.xfer)
 		nvme_show_error("WARNING: firmware file size %u not conform to FWUG alignment %lu",
 				fw_size, cfg.xfer);
 
