@@ -43,4 +43,12 @@ static inline void cleanup_nvme_root(nvme_root_t *r)
 }
 #define _cleanup_nvme_root_ __cleanup__(cleanup_nvme_root)
 
+static inline void free_uri(struct nvme_fabrics_uri **uri)
+{
+	if (*uri)
+		nvme_free_uri(*uri);
+}
+
+#define _cleanup_uri_ __cleanup__(free_uri)
+
 #endif
