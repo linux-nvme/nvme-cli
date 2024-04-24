@@ -4872,7 +4872,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	int err;
 	struct stat sb;
 	void *fw_buf;
-	struct nvme_id_ctrl ctrl;
+	struct nvme_id_ctrl ctrl = { 0 };
 
 	struct config {
 		char	*fw;
@@ -4884,7 +4884,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 	struct config cfg = {
 		.fw         = "",
-		.xfer       = 4096,
+		.xfer       = 0,
 		.offset     = 0,
 		.progress   = false,
 		.ignore_ovr = false,
@@ -4932,6 +4932,10 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 			cfg.xfer = ctrl.fwug * 4096;
 	} else if (cfg.xfer % 4096)
 		cfg.xfer = 4096;
+
+	if (ctrl.fwug && ctrl.fwug != 0xff && fw_size % cfg.xfer)
+		nvme_show_error("WARNING: firmware file size %u not conform to FWUG alignment %lu",
+				fw_size, cfg.xfer);
 
 	fw_buf = nvme_alloc_huge(fw_size, &mh);
 	if (!fw_buf)
@@ -8222,7 +8226,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		return err;
 
 	if (cfg.size) {
-		sec_buf = nvme_alloc(sizeof(*sec_buf));
+		sec_buf = nvme_alloc(cfg.size);
 		if (!sec_buf)
 			return -ENOMEM;
 	}

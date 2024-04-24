@@ -11,6 +11,18 @@ PartOf=nvmf-connect.target
 Requires=nvmf-connect.target
 
 [Service]
+ProtectSystem=full
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+RestrictRealtime=true
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+RestrictAddressFamilies=AF_INET AF_INET6
 Type=simple
 Environment="CONNECT_ARGS=%i"
 ExecStart=/bin/sh -c "@SBINDIR@/nvme connect-all --context=autoconnect --quiet `/bin/echo -e '${CONNECT_ARGS}'`"

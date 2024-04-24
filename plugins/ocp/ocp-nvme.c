@@ -705,7 +705,7 @@ static int eol_plp_failure_mode_set(struct nvme_dev *dev, const __u32 nsid,
 {
 	__u32 result;
 	int err;
-	int uuid_index = 0;
+	__u8 uuid_index = 0;
 
 	if (uuid) {
 		/* OCP 2.0 requires UUID index support */
@@ -2066,7 +2066,7 @@ static int ocp_set_telemetry_profile(struct nvme_dev *dev, __u8 tps)
 {
 	__u32 result;
 	int err;
-	int uuid_index = 0;
+	__u8 uuid_index = 0;
 
 	/* OCP 2.0 requires UUID index support */
 	err = ocp_get_uuid_index(dev, &uuid_index);
@@ -2152,7 +2152,7 @@ static int set_dssd_power_state(struct nvme_dev *dev, const __u32 nsid,
 {
 	__u32 result;
 	int err;
-	int uuid_index = 0;
+	__u8 uuid_index = 0;
 
 	if (uuid) {
 		/* OCP 2.0 requires UUID index support */
@@ -2255,7 +2255,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	struct nvme_dev *dev;
 	int err;
 	__u32 result;
-	int uuid_index = 0;
+	__u8 uuid_index = 0;
 
 	struct config {
 		__le16 plp_health_interval;
@@ -2395,7 +2395,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *cm
 	struct nvme_dev *dev;
 	int err;
 	__u32 result;
-	int uuid_index = 0;
+	__u8 uuid_index = 0;
 
 	struct config {
 		bool epn;
