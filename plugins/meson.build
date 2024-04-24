@@ -26,6 +26,7 @@ if json_c_dep.found()
     'plugins/wdc/wdc-utils.c',
     'plugins/ymtc/ymtc-nvme.c',
     'plugins/zns/zns.c',
+    'plugins/ssstc/ssstc-nvme.c',
   ]
   subdir('solidigm')
   subdir('ocp')
