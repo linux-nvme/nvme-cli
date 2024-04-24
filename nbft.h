@@ -15,5 +15,5 @@ void free_nbfts(struct list_head *nbft_list);
 extern int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 			      char *hostnqn_sys, char *hostid_sys,
 			      const char *desc, bool connect,
-			      const struct nvme_fabrics_config *cfg, char *nbft_path,
+			      struct nvme_fabrics_config *cfg, char *nbft_path,
 			      enum nvme_print_flags flags, unsigned int verbose);
