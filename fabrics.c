@@ -195,9 +195,9 @@ static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	return c;
 }
 
-static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
-					struct nvme_fabrics_config *cfg,
-					struct tr_config *trcfg)
+nvme_ctrl_t nvmf_create_discover_ctrl(nvme_root_t r, nvme_host_t h,
+				      struct nvme_fabrics_config *cfg,
+				       struct tr_config *trcfg)
 {
 	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
 	nvme_ctrl_t c;
@@ -378,8 +378,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 	return 0;
 }
 
-static char *get_default_trsvcid(const char *transport,
-				 bool discovery_ctrl)
+char *nvmf_get_default_trsvcid(const char *transport, bool discovery_ctrl)
 {
 	if (!transport)
 		return NULL;
@@ -465,7 +464,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			goto next;
 
 		if (!trsvcid)
-			trsvcid = get_default_trsvcid(transport, true);
+			trsvcid = nvmf_get_default_trsvcid(transport, true);
 
 		struct tr_config trcfg = {
 			.subsysnqn	= subsysnqn,
@@ -485,7 +484,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			}
 		}
 
-		c = create_discover_ctrl(r, h, &cfg, &trcfg);
+		c = nvmf_create_discover_ctrl(r, h, &cfg, &trcfg);
 		if (!c)
 			goto next;
 
@@ -549,7 +548,8 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 
 			trsvcid = nvme_ctrl_get_trsvcid(c);
 			if (!trsvcid || !strcmp(trsvcid, ""))
-				trsvcid = get_default_trsvcid(transport, true);
+				trsvcid = nvmf_get_default_trsvcid(transport,
+								   true);
 
 			if (force)
 				subsysnqn = nvme_ctrl_get_subsysnqn(c);
@@ -579,7 +579,7 @@ static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 				}
 			}
 
-			cn = create_discover_ctrl(r, h, &cfg, &trcfg);
+			cn = nvmf_create_discover_ctrl(r, h, &cfg, &trcfg);
 			if (!cn)
 				continue;
 
@@ -806,7 +806,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 
 	if (!trsvcid)
-		trsvcid = get_default_trsvcid(transport, true);
+		trsvcid = nvmf_get_default_trsvcid(transport, true);
 
 	struct tr_config trcfg = {
 		.subsysnqn	= subsysnqn,
@@ -876,7 +876,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
-		c = create_discover_ctrl(r, h, &cfg, &trcfg);
+		c = nvmf_create_discover_ctrl(r, h, &cfg, &trcfg);
 		if (!c) {
 			if (errno != ENVME_CONNECT_IGNORED)
 				fprintf(stderr,
@@ -1005,7 +1005,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (hostkey)
 		nvme_host_set_dhchap_key(h, hostkey);
 	if (!trsvcid)
-		trsvcid = get_default_trsvcid(transport, false);
+		trsvcid = nvmf_get_default_trsvcid(transport, false);
 
 	struct tr_config trcfg = {
 		.subsysnqn	= subsysnqn,
