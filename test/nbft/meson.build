@@ -20,7 +20,8 @@ tables = [
     'NBFT-static-ipv6',
     'NBFT-Dell.PowerEdge.R760',
     'NBFT-Dell.PowerEdge.R660-fw1.5.5-single',
-    'NBFT-Dell.PowerEdge.R660-fw1.5.5-mpath+discovery'
+    'NBFT-Dell.PowerEdge.R660-fw1.5.5-mpath+discovery',
+    'NBFT-mpath+disc-ipv4+6_half'
 ]
 
 tables_bad = [
