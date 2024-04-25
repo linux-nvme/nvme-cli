@@ -335,6 +335,15 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 			for (i = 0; i < (*ss)->num_hfis; i++) {
 				hfi = (*ss)->hfis[i];
 
+				/* Skip discovery NQN records */
+				if (strcmp((*ss)->subsys_nqn, NVME_DISC_SUBSYS_NAME) == 0) {
+					if (verbose >= 1)
+						fprintf(stderr,
+							"SSNS %d points to well-known discovery NQN, skipping\n",
+							(*ss)->index);
+					continue;
+				}
+
 				host_traddr = NULL;
 				if (!cfg->host_traddr &&
 				    !strncmp((*ss)->transport, "tcp", 3))
