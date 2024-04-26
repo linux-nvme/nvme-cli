@@ -29,7 +29,7 @@
 static nvme_root_t root;
 
 void __attribute__((format(printf, 4, 5)))
-__nvme_msg(nvme_root_t r, int lvl,
+__nvme_msg(nvme_root_t r, int level,
 	   const char *func, const char *format, ...)
 {
 	FILE *fp = stderr;
@@ -56,9 +56,9 @@ __nvme_msg(nvme_root_t r, int lvl,
 	if (r)
 		fp = r->fp;
 
-	if (r && lvl > r->log_level)
+	if (r && level > r->log_level)
 		return;
-	if (!r && lvl > DEFAULT_LOGLEVEL)
+	if (!r && level > DEFAULT_LOGLEVEL)
 		return;
 
 	if (r && r->log_timestamp) {
