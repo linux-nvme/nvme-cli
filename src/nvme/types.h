@@ -513,6 +513,13 @@ enum nvme_cmbsts {
 
 #define NVME_CMBSTS_CBAI(cmbsts)	NVME_GET(cmbsts, CMBSTS_CBAI)
 
+/**
+ * enum nvme_unit - Defined buffer size and write throughput granularity units
+ * @NVME_UNIT_B:	Bytes or Bytes/second
+ * @NVME_UNIT_1K:	1 KiB or 1 KiB/second
+ * @NVME_UNIT_1M:	1 MiB or 1 MiB/second
+ * @NVME_UNIT_1G:	1 GiB or 1 GiB/second
+ */
 enum nvme_unit {
 	NVME_UNIT_B	= 0,
 	NVME_UNIT_1K	= 1,
@@ -520,6 +527,19 @@ enum nvme_unit {
 	NVME_UNIT_1G	= 3,
 };
 
+/**
+ * enum nvme_cmbebs - This field indicates the controller memory buffer elasticity buffer size
+ * @NVME_CMBEBS_CMBSZU_SHIFT:	Shift amount to get the CMB elasticity buffer size units
+ * @NVME_CMBEBS_RBB_SHIFT:	Shift amount to get the read bypass behavior
+ * @NVME_CMBEBS_CMBWBZ_SHIFT:	Shift amount to get the CMB elasiticity buffer size base
+ * @NVME_CMBEBS_CMBSZU_MASK:	Mask to get the CMB elasticity buffer size units
+ * @NVME_CMBEBS_RBB_MASK:	Mask to get the read bypass behavior
+ * @NVME_CMBEBS_CMBWBZ_MASK:	Mask to get the CMB elasiticity buffer size base
+ * @NVME_CMBEBS_CMBSZU_B:	Bytes granularity
+ * @NVME_CMBEBS_CMBSZU_1K:	1 KiB granularity
+ * @NVME_CMBEBS_CMBSZU_1M:	1 MiB granularity
+ * @NVME_CMBEBS_CMBSZU_1G:	1 GiB granularity
+ */
 enum nvme_cmbebs {
 	NVME_CMBEBS_CMBSZU_SHIFT	= 0,
 	NVME_CMBEBS_RBB_SHIFT		= 4,
@@ -537,6 +557,17 @@ enum nvme_cmbebs {
 #define NVME_CMBEBS_RBB(cmbebs)		NVME_GET(cmbebs, CMBEBS_RBB)
 #define NVME_CMBEBS_CMBWBZ(cmbebs)	NVME_GET(cmbebs, CMBEBS_CMBWBZ)
 
+/**
+ * enum nvme_cmbswtp - This field indicates the controller memory buffer sustained write throughput
+ * @NVME_CMBSWTP_CMBSWTU_SHIFT:	Shift amount to get the CMB sustained write throughput units
+ * @NVME_CMBSWTP_CMBSWTV_SHIFT:	Shift amount to get the CMB sustained write throughput
+ * @NVME_CMBSWTP_CMBSWTU_MASK:	Mask to get the CMB sustained write throughput units
+ * @NVME_CMBSWTP_CMBSWTV_MASK:	Mask to get the CMB sustained write throughput
+ * @NVME_CMBSWTP_CMBSWTU_B:	Bytes/second granularity
+ * @NVME_CMBSWTP_CMBSWTU_1K:	1 KiB/second granularity
+ * @NVME_CMBSWTP_CMBSWTU_1M:	1 MiB/second granularity
+ * @NVME_CMBSWTP_CMBSWTU_1G:	1 GiB/second granularity
+ */
 enum nvme_cmbswtp {
 	NVME_CMBSWTP_CMBSWTU_SHIFT	= 0,
 	NVME_CMBSWTP_CMBSWTV_SHIFT	= 8,
@@ -677,6 +708,15 @@ static const __u64 NVME_PMRMSC_CBA_MASK = 0xfffffffffffffull;
 #define NVME_PMRMSC_CMSE(pmrmsc)	NVME_GET(pmrmsc, PMRMSC_CMSE)
 #define NVME_PMRMSC_CBA(pmrmsc)		NVME_GET(pmrmsc, PMRMSC_CBA)
 
+/**
+ * enum nvme_flbas - This field indicates the formatted LBA size
+ * @NVME_FLBAS_LOWER_SHIFT:	Shift amount to get the format index least significant 4 bits
+ * @NVME_FLBAS_META_EXT_SHIFT:	Shift amount to get the metadata transferred
+ * @NVME_FLBAS_HIGHER_SHIFT:	Shift amount to get the format index most significant 2 bits
+ * @NVME_FLBAS_LOWER_MASK:	Mask to get the format index least significant 4 bits
+ * @NVME_FLBAS_META_EXT_MASK:	Mask to get the metadata transferred
+ * @NVME_FLBAS_HIGHER_MASK:	Mask to get the format index most significant 2 bits
+ */
 enum nvme_flbas {
 	NVME_FLBAS_LOWER_SHIFT		= 0,
 	NVME_FLBAS_META_EXT_SHIFT	= 4,
@@ -1136,6 +1176,19 @@ struct nvme_id_ctrl {
 	__u8			vs[1024];
 };
 
+/**
+ * enum nvme_cmic - This field indicates the controller multi-path I/O and NS sharing capabilities
+ * @NVME_CMIC_MULTI_PORT_SHIFT:		Shift amount to get the NVM subsystem port
+ * @NVME_CMIC_MULTI_CTRL_SHIFT:		Shift amount to get the controllers
+ * @NVME_CMIC_MULTI_SRIOV_SHIFT:	Shift amount to get the SR-IOV virtual function
+ * @NVME_CMIC_MULTI_ANA_SHIFT:		Shift amount to get the asymmetric namespace access reporting
+ * @NVME_CMIC_MULTI_RSVD_SHIFT:		Shift amount to get the reserved
+ * @NVME_CMIC_MULTI_PORT_MASK:		Mask to get the NVM subsystem port
+ * @NVME_CMIC_MULTI_CTRL_MASK:		Mask to get the controllers
+ * @NVME_CMIC_MULTI_SRIOV_MASK:		Mask to get the SR-IOV virtual function
+ * @NVME_CMIC_MULTI_ANA_MASK:		Mask to get the asymmetric namespace access reporting
+ * @NVME_CMIC_MULTI_RSVD_MASK:		Mask to get the reserved
+ */
 enum nvme_cmic {
 	NVME_CMIC_MULTI_PORT_SHIFT	= 0,
 	NVME_CMIC_MULTI_CTRL_SHIFT	= 1,
