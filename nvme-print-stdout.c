@@ -3199,9 +3199,9 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 	stdout_zns_id_ns_recommended_limit(ns->rrl1, human, "rrl1");
 	stdout_zns_id_ns_recommended_limit(ns->rrl2, human, "rrl2");
 	stdout_zns_id_ns_recommended_limit(ns->rrl3, human, "rrl3");
-	stdout_zns_id_ns_recommended_limit(ns->frl,  human, "frl1");
-	stdout_zns_id_ns_recommended_limit(ns->frl,  human, "frl2");
-	stdout_zns_id_ns_recommended_limit(ns->frl,  human, "frl3");
+	stdout_zns_id_ns_recommended_limit(ns->frl1,  human, "frl1");
+	stdout_zns_id_ns_recommended_limit(ns->frl2,  human, "frl2");
+	stdout_zns_id_ns_recommended_limit(ns->frl3,  human, "frl3");
 
 	printf("numzrwa : %#x\n", le32_to_cpu(ns->numzrwa));
 	printf("zrwafg  : %u\n", le16_to_cpu(ns->zrwafg));
