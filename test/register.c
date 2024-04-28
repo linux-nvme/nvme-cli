@@ -79,10 +79,13 @@ void nvme_print_registers(void *regs)
 	printf("  %-8s : %llx\n", "NSSRC", NVME_CAP_NSSRC(cap));
 	printf("  %-8s : %llx\n", "CSS", NVME_CAP_CSS(cap));
 	printf("  %-8s : %llx\n", "BPS", NVME_CAP_BPS(cap));
+	printf("  %-8s : %llx\n", "CPS", NVME_CAP_CPS(cap));
 	printf("  %-8s : %llx\n", "MPSMIN", NVME_CAP_MPSMIN(cap));
 	printf("  %-8s : %llx\n", "MPSMAX", NVME_CAP_MPSMAX(cap));
-	printf("  %-8s : %llx\n", "CMBS", NVME_CAP_CMBS(cap));
 	printf("  %-8s : %llx\n", "PMRS", NVME_CAP_PMRS(cap));
+	printf("  %-8s : %llx\n", "CMBS", NVME_CAP_CMBS(cap));
+	printf("  %-8s : %llx\n", "NSSS", NVME_CAP_NSSS(cap));
+	printf("  %-8s : %llx\n", "CRMS", NVME_CAP_CRMS(cap));
 
 	printf("%-10s : %x\n", "VS", vs);
 	printf("  %-8s : %x\n", "MJR", NVME_VS_TER(vs));
@@ -107,6 +110,7 @@ void nvme_print_registers(void *regs)
 	printf("  %-8s : %x\n", "SHST", NVME_CSTS_SHST(csts));
 	printf("  %-8s : %x\n", "NSSRO", NVME_CSTS_NSSRO(csts));
 	printf("  %-8s : %x\n", "PP", NVME_CSTS_PP(csts));
+	printf("  %-8s : %x\n", "ST", NVME_CSTS_ST(csts));
 
 	printf("%-10s : %x\n", "NSSR", nssr);
 
