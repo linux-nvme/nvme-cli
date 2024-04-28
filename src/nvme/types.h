@@ -230,6 +230,42 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
 	}
 }
 
+/**
+ * enum nvme_cap - This field indicates the controller capabilities register
+ * @NVME_CAP_MQES_SHIFT:	Shift amount to get the maximum queue entries supported
+ * @NVME_CAP_CQR_SHIFT:		Shift amount to get the contiguous queues required
+ * @NVME_CAP_AMS_SHIFT:		Shift amount to get the arbitration mechanism supported
+ * @NVME_CAP_TO_SHIFT:		Shift amount to get the timeout
+ * @NVME_CAP_DSTRD_SHIFT:	Shift amount to get the doorbell stride
+ * @NVME_CAP_NSSRC_SHIFT:	Shift amount to get the NVM subsystem reset supported
+ * @NVME_CAP_CSS_SHIFT:		Shift amount to get the command sets supported
+ * @NVME_CAP_BPS_SHIFT:		Shift amount to get the boot partition support
+ * @NVME_CAP_MPSMIN_SHIFT:	Shift amount to get the memory page size minimum
+ * @NVME_CAP_MPSMAX_SHIFT:	Shift amount to get the memory page size maximum
+ * @NVME_CAP_PMRS_SHIFT:	Shift amount to get the persistent memory region supported
+ * @NVME_CAP_CMBS_SHIFT:	Shift amount to get the controller memory buffer supported
+ * @NVME_CAP_CRMS_SHIFT:	Shift amount to get the controller ready modes supported
+ * @NVME_CAP_MQES_MASK:		Mask to get the maximum queue entries supported
+ * @NVME_CAP_CQR_MASK:		Mask to get the contiguous queues required
+ * @NVME_CAP_AMS_MASK:		Mask to get the arbitration mechanism supported
+ * @NVME_CAP_TO_MASK:		Mask to get the timeout
+ * @NVME_CAP_DSTRD_MASK:	Mask to get the doorbell stride
+ * @NVME_CAP_NSSRC_MASK:	Mask to get the NVM subsystem reset supported
+ * @NVME_CAP_CSS_MASK:		Mask to get the command sets supported
+ * @NVME_CAP_BPS_MASK:		Mask to get the boot partition support
+ * @NVME_CAP_MPSMIN_MASK:	Mask to get the memory page size minimum
+ * @NVME_CAP_MPSMAX_MASK:	Mask to get the memory page size maximum
+ * @NVME_CAP_PMRS_MASK:		Mask to get the persistent memory region supported
+ * @NVME_CAP_CMBS_MASK:		Mask to get the controller memory buffer supported
+ * @NVME_CAP_CRMS_MASK:		Mask to get the controller ready modes supported
+ * @NVME_CAP_AMS_WRR:		Weighted round robin with urgent priority class
+ * @NVME_CAP_AMS_VS:		Vendor specific
+ * @NVME_CAP_CSS_NVM:		NVM command set or a discovery controller
+ * @NVME_CAP_CSS_CSI:		Controller supports one or more I/O command sets
+ * @NVME_CAP_CSS_ADMIN:		No I/O command set is supported
+ * @NVME_CAP_CRWMS:		Controller ready with media support
+ * @NVME_CAP_CRIMS:		Controller ready independent of media support
+ */
 enum nvme_cap {
 	NVME_CAP_MQES_SHIFT		= 0,
 	NVME_CAP_CQR_SHIFT		= 16,
