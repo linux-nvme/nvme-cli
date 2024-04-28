@@ -240,10 +240,12 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_NSSRC_SHIFT:	Shift amount to get the NVM subsystem reset supported
  * @NVME_CAP_CSS_SHIFT:		Shift amount to get the command sets supported
  * @NVME_CAP_BPS_SHIFT:		Shift amount to get the boot partition support
+ * @NVME_CAP_CPS_SHIFT:		Shift amount to get the controller power scope
  * @NVME_CAP_MPSMIN_SHIFT:	Shift amount to get the memory page size minimum
  * @NVME_CAP_MPSMAX_SHIFT:	Shift amount to get the memory page size maximum
  * @NVME_CAP_PMRS_SHIFT:	Shift amount to get the persistent memory region supported
  * @NVME_CAP_CMBS_SHIFT:	Shift amount to get the controller memory buffer supported
+ * @NVME_CAP_NSSS_SHIFT:	Shift amount to get the NVM subsystem shutdown supported
  * @NVME_CAP_CRMS_SHIFT:	Shift amount to get the controller ready modes supported
  * @NVME_CAP_MQES_MASK:		Mask to get the maximum queue entries supported
  * @NVME_CAP_CQR_MASK:		Mask to get the contiguous queues required
@@ -253,16 +255,22 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
  * @NVME_CAP_NSSRC_MASK:	Mask to get the NVM subsystem reset supported
  * @NVME_CAP_CSS_MASK:		Mask to get the command sets supported
  * @NVME_CAP_BPS_MASK:		Mask to get the boot partition support
+ * @NVME_CAP_CPS_MASK:		Mask to get the controller power scope
  * @NVME_CAP_MPSMIN_MASK:	Mask to get the memory page size minimum
  * @NVME_CAP_MPSMAX_MASK:	Mask to get the memory page size maximum
  * @NVME_CAP_PMRS_MASK:		Mask to get the persistent memory region supported
  * @NVME_CAP_CMBS_MASK:		Mask to get the controller memory buffer supported
+ * @NVME_CAP_NSSS_MASK:		Mask to get the NVM subsystem shutdown supported
  * @NVME_CAP_CRMS_MASK:		Mask to get the controller ready modes supported
  * @NVME_CAP_AMS_WRR:		Weighted round robin with urgent priority class
  * @NVME_CAP_AMS_VS:		Vendor specific
  * @NVME_CAP_CSS_NVM:		NVM command set or a discovery controller
  * @NVME_CAP_CSS_CSI:		Controller supports one or more I/O command sets
  * @NVME_CAP_CSS_ADMIN:		No I/O command set is supported
+ * @NVME_CAP_CPS_NONE:		Not reported
+ * @NVME_CAP_CPS_CTRL:		Controller scope
+ * @NVME_CAP_CPS_DOMAIN:	Domain scope
+ * @NVME_CAP_CPS_NVMS:		NVM subsystem scope
  * @NVME_CAP_CRWMS:		Controller ready with media support
  * @NVME_CAP_CRIMS:		Controller ready independent of media support
  */
@@ -275,10 +283,12 @@ enum nvme_cap {
 	NVME_CAP_NSSRC_SHIFT		= 36,
 	NVME_CAP_CSS_SHIFT		= 37,
 	NVME_CAP_BPS_SHIFT		= 45,
+	NVME_CAP_CPS_SHIFT		= 46,
 	NVME_CAP_MPSMIN_SHIFT		= 48,
 	NVME_CAP_MPSMAX_SHIFT		= 52,
 	NVME_CAP_PMRS_SHIFT		= 56,
 	NVME_CAP_CMBS_SHIFT		= 57,
+	NVME_CAP_NSSS_SHIFT		= 58,
 	NVME_CAP_CRMS_SHIFT		= 59,
 	NVME_CAP_MQES_MASK		= 0xffff,
 	NVME_CAP_CQR_MASK		= 0x1,
@@ -288,16 +298,22 @@ enum nvme_cap {
 	NVME_CAP_NSSRC_MASK		= 0x1,
 	NVME_CAP_CSS_MASK		= 0xff,
 	NVME_CAP_BPS_MASK		= 0x1,
+	NVME_CAP_CPS_MASK		= 0x3,
 	NVME_CAP_MPSMIN_MASK		= 0xf,
 	NVME_CAP_MPSMAX_MASK		= 0xf,
 	NVME_CAP_PMRS_MASK		= 0x1,
 	NVME_CAP_CMBS_MASK		= 0x1,
+	NVME_CAP_NSSS_MASK		= 0x1,
 	NVME_CAP_CRMS_MASK		= 0x3,
 	NVME_CAP_AMS_WRR		= 1 << 0,
 	NVME_CAP_AMS_VS			= 1 << 1,
 	NVME_CAP_CSS_NVM		= 1 << 0,
 	NVME_CAP_CSS_CSI		= 1 << 6,
 	NVME_CAP_CSS_ADMIN		= 1 << 7,
+	NVME_CAP_CPS_NONE		= 0,
+	NVME_CAP_CPS_CTRL		= 1,
+	NVME_CAP_CPS_DOMAIN		= 2,
+	NVME_CAP_CPS_NVMS		= 3,
 	NVME_CAP_CRWMS			= 1 << 0,
 	NVME_CAP_CRIMS			= 1 << 1,
 };
@@ -310,10 +326,12 @@ enum nvme_cap {
 #define NVME_CAP_NSSRC(cap)	NVME_GET(cap, CAP_NSSRC)
 #define NVME_CAP_CSS(cap)	NVME_GET(cap, CAP_CSS)
 #define NVME_CAP_BPS(cap)	NVME_GET(cap, CAP_BPS)
+#define NVME_CAP_CPS(cap)	NVME_GET(cap, CAP_CPS)
 #define NVME_CAP_MPSMIN(cap)	NVME_GET(cap, CAP_MPSMIN)
 #define NVME_CAP_MPSMAX(cap)	NVME_GET(cap, CAP_MPSMAX)
 #define NVME_CAP_PMRS(cap)	NVME_GET(cap, CAP_PMRS)
 #define NVME_CAP_CMBS(cap)	NVME_GET(cap, CAP_CMBS)
+#define NVME_CAP_NSSS(cap)	NVME_GET(cap, CAP_NSSS)
 #define NVME_CAP_CRMS(cap)	NVME_GET(cap, CAP_CRMS)
 
 enum nvme_vs {
