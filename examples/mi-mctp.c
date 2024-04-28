@@ -677,8 +677,8 @@ int main(int argc, char **argv)
 	nvme_root_t root;
 	nvme_mi_ep_t ep;
 	bool dbus = false, usage = true;
-	uint8_t eid;
-	int rc = 0, net;
+	uint8_t eid = 0;
+	int rc = 0, net = 0;
 
 	if (argc >= 2 && strcmp(argv[1], "dbus") == 0) {
 		usage = false;
