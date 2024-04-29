@@ -1868,7 +1868,7 @@ static void json_lba_status(struct nvme_lba_status *list,
 		sprintf(json_str, "LSD entry %d", idx);
 		obj_add_array(r, json_str, lsde);
 		e = &list->descs[idx];
-		sprintf(json_str, "0x%016"PRIu64"", le64_to_cpu(e->dslba));
+		sprintf(json_str, "0x%016"PRIx64"", le64_to_cpu(e->dslba));
 		obj_add_str(lsde, "DSLBA", json_str);
 		sprintf(json_str, "0x%08x", le32_to_cpu(e->nlb));
 		obj_add_str(lsde, "NLB", json_str);
