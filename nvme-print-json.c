@@ -2193,7 +2193,7 @@ static void json_supported_cap_config_log(
 				array_add_obj(set_list, set);
 			}
 			chan_desc = (struct nvme_end_grp_chan_desc *)
-			    (cap_log->cap_config_desc[i].egcd[j].nvmsetid[0] * sizeof(__u16) * egsets);
+			    &cap_log->cap_config_desc[i].egcd[j].nvmsetid[egsets];
 			egchans = le16_to_cpu(chan_desc->egchans);
 			obj_add_uint(endurance, "egchans", le16_to_cpu(chan_desc->egchans));
 			chan_list = json_create_array();
