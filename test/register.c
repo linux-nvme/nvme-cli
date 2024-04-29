@@ -166,7 +166,7 @@ void nvme_print_registers(void *regs)
 	printf("  %-8s : %x\n", "WDS", NVME_PMRCAP_WDS(pmrcap));
 	printf("  %-8s : %x\n", "BIR", NVME_PMRCAP_BIR(pmrcap));
 	printf("  %-8s : %x\n", "PMRTU", NVME_PMRCAP_PMRTU(pmrcap));
-	printf("  %-8s : %x\n", "PMRWMB", NVME_PMRCAP_PMRWMB(pmrcap));
+	printf("  %-8s : %x\n", "PMRWBM", NVME_PMRCAP_PMRWBM(pmrcap));
 	printf("  %-8s : %x\n", "PMRTO", NVME_PMRCAP_PMRTO(pmrcap));
 	printf("  %-8s : %x\n", "CMSS", NVME_PMRCAP_CMSS(pmrcap));
 

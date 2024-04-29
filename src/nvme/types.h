@@ -646,21 +646,44 @@ enum nvme_crto {
 #define NVME_CRTO_CRIMT(crto)	NVME_GET(crto, CRTO_CRIMT)
 #define NVME_CRTO_CRWMT(crto)	NVME_GET(crto, CRTO_CRWMT)
 
+/**
+ * enum nvme_pmrcap - This field indicates the persistent memory region capabilities
+ * @NVME_PMRCAP_RDS_SHIFT:	Shift amount to get the read data support
+ * @NVME_PMRCAP_WDS_SHIFT:	Shift amount to get the write data support
+ * @NVME_PMRCAP_BIR_SHIFT:	Shift amount to get the base indicator register
+ * @NVME_PMRCAP_PMRTU_SHIFT:	Shift amount to get the persistent memory region time units
+ * @NVME_PMRCAP_PMRWBM_SHIFT:	Shift amount to get the persistent memory region write barrier mechanisms
+ * @NVME_PMRCAP_PMRTO_SHIFT:	Shift amount to get the persistent memory region timeout
+ * @NVME_PMRCAP_CMSS_SHIFT:	Shift amount to get the controller memory space supported
+ * @NVME_PMRCAP_PMRWMB_SHIFT:	Deprecated shift amount to get the persistent memory region write barrier mechanisms
+ * @NVME_PMRCAP_RDS_MASK:	Mask to get the read data support
+ * @NVME_PMRCAP_WDS_MASK:	Mask to get the write data support
+ * @NVME_PMRCAP_BIR_MASK:	Mask to get the base indicator register
+ * @NVME_PMRCAP_PMRTU_MASK:	Mask to get the persistent memory region time units
+ * @NVME_PMRCAP_PMRWBM_MASK:	Mask to get the persistent memory region write barrier mechanisms
+ * @NVME_PMRCAP_PMRTO_MASK:	Mask to get the persistent memory region timeout
+ * @NVME_PMRCAP_CMSS_MASK:	Mask to get the controller memory space supported
+ * @NVME_PMRCAP_PMRWMB_MASK:	Deprecated mask to get the persistent memory region write barrier mechanisms
+ * @NVME_PMRCAP_PMRTU_500MS:	500 milliseconds
+ * @NVME_PMRCAP_PMRTU_60S:	minutes
+ */
 enum nvme_pmrcap {
 	NVME_PMRCAP_RDS_SHIFT		= 3,
 	NVME_PMRCAP_WDS_SHIFT		= 4,
 	NVME_PMRCAP_BIR_SHIFT		= 5,
 	NVME_PMRCAP_PMRTU_SHIFT		= 8,
-	NVME_PMRCAP_PMRWMB_SHIFT	= 10,
+	NVME_PMRCAP_PMRWBM_SHIFT	= 10,
 	NVME_PMRCAP_PMRTO_SHIFT		= 16,
 	NVME_PMRCAP_CMSS_SHIFT		= 24,
+	NVME_PMRCAP_PMRWMB_SHIFT	= NVME_PMRCAP_PMRWBM_SHIFT, /* Deprecated */
 	NVME_PMRCAP_RDS_MASK		= 0x1,
 	NVME_PMRCAP_WDS_MASK		= 0x1,
 	NVME_PMRCAP_BIR_MASK		= 0x7,
 	NVME_PMRCAP_PMRTU_MASK		= 0x3,
-	NVME_PMRCAP_PMRWMB_MASK		= 0xf,
+	NVME_PMRCAP_PMRWBM_MASK		= 0xf,
 	NVME_PMRCAP_PMRTO_MASK		= 0xff,
 	NVME_PMRCAP_CMSS_MASK		= 0x1,
+	NVME_PMRCAP_PMRWMB_MASK		= NVME_PMRCAP_PMRWBM_MASK, /* Deprecated */
 	NVME_PMRCAP_PMRTU_500MS		= 0,
 	NVME_PMRCAP_PMRTU_60S		= 1,
 };
@@ -669,9 +692,10 @@ enum nvme_pmrcap {
 #define NVME_PMRCAP_WDS(pmrcap)		NVME_GET(pmrcap, PMRCAP_WDS)
 #define NVME_PMRCAP_BIR(pmrcap)		NVME_GET(pmrcap, PMRCAP_BIR)
 #define NVME_PMRCAP_PMRTU(pmrcap)	NVME_GET(pmrcap, PMRCAP_PMRTU)
-#define NVME_PMRCAP_PMRWMB(pmrcap)	NVME_GET(pmrcap, PMRCAP_PMRWMB)
+#define NVME_PMRCAP_PMRWBM(pmrcap)	NVME_GET(pmrcap, PMRCAP_PMRWBM)
 #define NVME_PMRCAP_PMRTO(pmrcap)	NVME_GET(pmrcap, PMRCAP_PMRTO)
 #define NVME_PMRCAP_CMSS(pmrcap)	NVME_GET(pmrcap, PMRCAP_CMSS)
+#define NVME_PMRCAP_PMRWMB(pmrcap)	NVME_GET(pmrcap, PMRCAP_PMRWMB) /* Deprecated */
 
 enum nvme_pmrctl {
 	NVME_PMRCTL_EN_SHIFT	= 0,
