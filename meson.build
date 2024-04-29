@@ -160,7 +160,7 @@ conf.set10(
         name: 'linux/sed-opal.h'
 
     ),
-    description: 'Is linux/sed-opa.h include-able?'
+    description: 'Is linux/sed-opal.h include-able?'
 )
 conf.set10(
     'HAVE_KEY_TYPE',
