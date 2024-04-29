@@ -1185,61 +1185,64 @@ static void json_registers_pmrcap(uint32_t pmrcap, struct json_object *r)
 	obj_add_uint_x(r, "pmrcap", pmrcap);
 
 	obj_add_str(r, "Controller Memory Space Supported (CMSS)",
-	       ((pmrcap & 0x01000000) >> 24) ? "Supported" : "Not supported");
-	obj_add_uint_x(r, "Persistent Memory Region Timeout (PMRTO)", (pmrcap & 0xff0000) >> 16);
+		    NVME_PMRCAP_CMSS(pmrcap) ? "Supported" : "Not supported");
+	obj_add_uint_x(r, "Persistent Memory Region Timeout (PMRTO)", NVME_PMRCAP_PMRTO(pmrcap));
 	obj_add_uint_x(r, "Persistent Memory Region Write Barrier Mechanisms (PMRWBM)",
-			(pmrcap & 0x3c00) >> 10);
+		       NVME_PMRCAP_PMRWBM(pmrcap));
 	obj_add_str(r, "Persistent Memory Region Time Units (PMRTU)",
-		     (pmrcap & 0x300) >> 8 ? "minutes" : "500 milliseconds");
-	obj_add_uint_x(r, "Base Indicator Register (BIR)", (pmrcap & 0xe0) >> 5);
-	obj_add_str(r, "Write Data Support (WDS)", pmrcap & 0x10 ? "Supported" : "Not supported");
-	obj_add_str(r, "Read Data Support (RDS)", pmrcap & 8 ? "Supported" : "Not supported");
+		    NVME_PMRCAP_PMRTU(pmrcap) ? "minutes" : "500 milliseconds");
+	obj_add_uint_x(r, "Base Indicator Register (BIR)", NVME_PMRCAP_BIR(pmrcap));
+	obj_add_str(r, "Write Data Support (WDS)",
+		    NVME_PMRCAP_WDS(pmrcap) ? "Supported" : "Not supported");
+	obj_add_str(r, "Read Data Support (RDS)",
+		    NVME_PMRCAP_RDS(pmrcap) ? "Supported" : "Not supported");
 }
 
 static void json_registers_pmrctl(uint32_t pmrctl, struct json_object *r)
 {
 	obj_add_uint_x(r, "pmrctl", pmrctl);
 
-	obj_add_str(r, "Enable (EN)", pmrctl & 1 ? "Ready" : "Disabled");
+	obj_add_str(r, "Enable (EN)", NVME_PMRCTL_EN(pmrctl) ? "Ready" : "Disabled");
 }
 
 static void json_registers_pmrsts(uint32_t pmrsts, bool ready, struct json_object *r)
 {
 	obj_add_uint_x(r, "pmrsts", pmrsts);
 
-	obj_add_uint_x(r, "Controller Base Address Invalid (CBAI)", (pmrsts & 0x1000) >> 12);
+	obj_add_uint_x(r, "Controller Base Address Invalid (CBAI)", NVME_PMRSTS_CBAI(pmrsts));
 	obj_add_str(r, "Health Status (HSTS)",
-		    nvme_register_pmr_hsts_to_string((pmrsts & 0xe00) >> 9));
+		    nvme_register_pmr_hsts_to_string(NVME_PMRSTS_HSTS(pmrsts)));
 	obj_add_str(r, "Not Ready (NRDY)",
-		    !(pmrsts & 0x100) && ready ? "Ready" : "Not ready");
-	obj_add_uint_x(r, "Error (ERR)", pmrsts & 0xff);
+		    !NVME_PMRSTS_NRDY(pmrsts) && ready ? "Ready" : "Not ready");
+	obj_add_uint_x(r, "Error (ERR)", NVME_PMRSTS_ERR(pmrsts));
 }
 
 static void json_registers_pmrebs(uint32_t pmrebs, struct json_object *r)
 {
 	obj_add_uint_x(r, "pmrebs", pmrebs);
 
-	obj_add_uint_x(r, "PMR Elasticity Buffer Size Base (PMRWBZ)", (pmrebs & 0xffffff00) >> 8);
-	obj_add_str(r, "Read Bypass Behavior", pmrebs & 0x10 ? "Shall" : "May");
+	obj_add_uint_x(r, "PMR Elasticity Buffer Size Base (PMRWBZ)", NVME_PMREBS_PMRWBZ(pmrebs));
+	obj_add_str(r, "Read Bypass Behavior", NVME_PMREBS_RBB(pmrebs) ? "Shall" : "May");
 	obj_add_str(r, "PMR Elasticity Buffer Size Units (PMRSZU)",
-		    nvme_register_unit_to_string(pmrebs & 0xf));
+		    nvme_register_unit_to_string(NVME_PMREBS_PMRSZU(pmrebs)));
 }
 
 static void json_registers_pmrswtp(uint32_t pmrswtp, struct json_object *r)
 {
 	obj_add_uint_x(r, "pmrswtp", pmrswtp);
 
-	obj_add_uint_x(r, "PMR Sustained Write Throughput (PMRSWTV)", (pmrswtp & 0xffffff00) >> 8);
+	obj_add_uint_x(r, "PMR Sustained Write Throughput (PMRSWTV)",
+		       NVME_PMRSWTP_PMRSWTV(pmrswtp));
 	obj_add_key(r, "PMR Sustained Write Throughput Units (PMRSWTU)", "%s/second",
-		    nvme_register_unit_to_string(pmrswtp & 0xf));
+		    nvme_register_unit_to_string(NVME_PMRSWTP_PMRSWTU(pmrswtp)));
 }
 
 static void json_registers_pmrmscl(uint32_t pmrmscl, struct json_object *r)
 {
 	obj_add_uint_nx(r, "pmrmscl", pmrmscl);
 
-	obj_add_uint_nx(r, "Controller Base Address (CBA)", (pmrmscl & 0xfffff000) >> 12);
-	obj_add_uint_nx(r, "Controller Memory Space Enable (CMSE)", (pmrmscl & 2) >> 1);
+	obj_add_uint_nx(r, "Controller Base Address (CBA)", (uint32_t)NVME_PMRMSC_CBA(pmrmscl));
+	obj_add_uint_nx(r, "Controller Memory Space Enable (CMSE)", NVME_PMRMSC_CMSE(pmrmscl));
 }
 
 static void json_registers_pmrmscu(uint32_t pmrmscu, struct json_object *r)
