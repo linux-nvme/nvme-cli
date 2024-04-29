@@ -1379,7 +1379,7 @@ static void stdout_registers_pmrcap(__u32 pmrcap)
 	printf("\tPersistent Memory Region Timeout                   (PMRTO): %x\n",
 	       NVME_PMRCAP_PMRTO(pmrcap));
 	printf("\tPersistent Memory Region Write Barrier Mechanisms (PMRWBM): %x\n",
-	       NVME_PMRCAP_PMRWMB(pmrcap));
+	       NVME_PMRCAP_PMRWBM(pmrcap));
 	printf("\tPersistent Memory Region Time Units                (PMRTU): ");
 	printf("PMR time unit is %s\n", NVME_PMRCAP_PMRTU(pmrcap) ? "minutes" : "500 milliseconds");
 	printf("\tBase Indicator Register                              (BIR): %x\n",
