@@ -336,16 +336,10 @@ _nvme () {
 			(vs-internal-log)
 				local _vs_internal_log
 				_vs_internal_log=(
-				--type':Log type: ALL,
-                        CONTROLLERINITTELEMETRY,
-                        HOSTINITTELEMETRY,
-                        HOSTINITTELEMETRYNOGEN, NLOG,
-                        ASSERT, EVENT. Defaults to ALL.'
+				--type':Log type: ALL, CIT, HIT, NLOG, ASSERT, EVENT. Defaults to ALL.'
 				-t':alias for --type'
-				--namespace-id':Namespace to get logs from.'
-				-n':alias for --namespace-id'
-				--dir-prefix':Output dir prefix; defaults to device serial number.'
-				-p':alias for --dir-prefix'
+				--dir-name':Output directory; defaults to current working directory.'
+				-d':alias for --dir-name'
 				--verbose':To print out verbose info.'
 				-v':alias for --verbose'
 				)
