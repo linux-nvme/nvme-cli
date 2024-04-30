@@ -1690,6 +1690,12 @@ static void json_pel_set_feature(void *pevent_log_info, __u32 offset,
 	}
 }
 
+static void json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
+				   struct json_object *valid_attrs)
+{
+	obj_d(valid_attrs, "create", pevent_log_info + offset, 512, 16, 1);
+}
+
 static void json_pel_thermal_excursion(void *pevent_log_info, __u32 offset,
 				       struct json_object *valid_attrs)
 {
@@ -1768,6 +1774,9 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
 			json_pel_set_feature(pevent_log_info, offset, valid_attrs);
+			break;
+		case NVME_PEL_TELEMETRY_CRT:
+			json_pel_telemetry_crt(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			json_pel_thermal_excursion(pevent_log_info, offset, valid_attrs);
