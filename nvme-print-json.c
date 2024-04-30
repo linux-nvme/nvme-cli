@@ -36,6 +36,9 @@ static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
 static struct json_object *json_r = NULL;
 
+static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
+				     unsigned char *buf);
+
 static void d_json(unsigned char *buf, int len, int width, int group, struct json_object *array)
 {
 	int i;
@@ -1668,6 +1671,25 @@ static void json_pel_sanitize_completion(void *pevent_log_info, __u32 offset,
 	obj_add_uint(valid_attrs, "cmpln_info", le16_to_cpu(sanitize_cmpln_event->cmpln_info));
 }
 
+static void json_pel_set_feature(void *pevent_log_info, __u32 offset,
+				 struct json_object *valid_attrs)
+{
+	struct nvme_set_feature_event *set_feat_event = pevent_log_info + offset;
+	int fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), FEATURES_CDW10_FID);
+	int cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
+	int dword_cnt = NVME_SET_FEAT_EVENT_DW_COUNT(set_feat_event->layout);
+	unsigned char *mem_buf;
+
+	obj_add_uint_02x(valid_attrs, "feature", fid);
+	obj_add_str(valid_attrs, "name", nvme_feature_to_string(fid));
+	obj_add_uint_0nx(valid_attrs, "value", cdw11, 8);
+
+	if (NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout)) {
+		mem_buf = (unsigned char *)(set_feat_event + 4 + dword_cnt * 4);
+		json_feature_show_fields(fid, cdw11, mem_buf);
+	}
+}
+
 static void json_pel_thermal_excursion(void *pevent_log_info, __u32 offset,
 				       struct json_object *valid_attrs)
 {
@@ -1743,6 +1765,9 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			break;
 		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
 			json_pel_sanitize_completion(pevent_log_info, offset, valid_attrs);
+			break;
+		case NVME_PEL_SET_FEATURE_EVENT:
+			json_pel_set_feature(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			json_pel_thermal_excursion(pevent_log_info, offset, valid_attrs);
