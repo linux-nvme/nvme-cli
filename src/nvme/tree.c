@@ -2455,7 +2455,7 @@ static int nvme_ns_init(const char *path, struct nvme_ns *ns)
 	struct sysfs_attr_table base[] = {
 		{ &ns->nsid,      nvme_strtou32,  true, "nsid" },
 		{ &size,          nvme_strtou64,  true, "size" },
-		{ &ns->lba_size,  nvme_strtou64,  true, "queue/logical_block_size" },
+		{ &ns->lba_size,  nvme_strtou32,  true, "queue/logical_block_size" },
 		{ ns->eui64,      nvme_strtoeuid, false, "eui" },
 		{ ns->nguid,      nvme_strtouuid, false, "nguid" },
 		{ ns->uuid,       nvme_strtouuid, false, "uuid" }
