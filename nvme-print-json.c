@@ -57,6 +57,15 @@ static void d_json(unsigned char *buf, int len, int width, int group, struct jso
 	}
 }
 
+static void obj_d(struct json_object *o, const char *k, unsigned char *buf, int len, int width,
+		  int group)
+{
+	struct json_object *data = json_create_array();
+
+	d_json(buf, len, width, group, data);
+	obj_add_array(o, k, data);
+}
+
 static void obj_add_uint_x(struct json_object *o, const char *k, __u32 v)
 {
 	char str[STR_LEN];
@@ -3781,11 +3790,9 @@ void json_d(unsigned char *buf, int len, int width, int group)
 {
 	struct json_object *r = json_r ? json_r : json_create_object();
 	char json_str[STR_LEN];
-	struct json_object *data = json_create_array();
 
 	sprintf(json_str, "data: buf=%p len=%d width=%d group=%d", buf, len, width, group);
-	d_json(buf, len, width, group, data);
-	obj_add_array(r, json_str, data);
+	obj_d(r, json_str, buf, len, width, group);
 
 	obj_print(r);
 }
