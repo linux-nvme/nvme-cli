@@ -1917,7 +1917,7 @@ static inline int nvme_mi_admin_get_log_predictable_lat_event(nvme_mi_ctrl_t ctr
  * the asymmetric namespace access information for ANA Groups that contain
  * namespaces that are attached to the controller processing the command.
  *
- * See &struct nvme_ana_rsp_hdr for the definition of the returned structure.
+ * See &struct nvme_ana_log for the definition of the returned structure.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.

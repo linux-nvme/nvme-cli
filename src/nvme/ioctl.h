@@ -1865,7 +1865,7 @@ static inline int nvme_get_log_fdp_events(int fd, __u16 egid, bool host_events, 
  * the asymmetric namespace access information for ANA Groups that contain
  * namespaces that are attached to the controller processing the command.
  *
- * See &struct nvme_ana_rsp_hdr for the definition of the returned structure.
+ * See &struct nvme_ana_log for the definition of the returned structure.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
