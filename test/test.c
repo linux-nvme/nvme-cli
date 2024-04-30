@@ -48,7 +48,7 @@ static int test_ctrl(nvme_ctrl_t c)
 	struct nvme_self_test_log st = { 0 };
 	struct nvme_telemetry_log *telem = (void *)buf;
 	struct nvme_endurance_group_log eglog = { 0 };
-	struct nvme_ana_group_desc *analog = (void *)buf;
+	struct nvme_ana_log *analog = (void *)buf;
 	struct nvme_resv_notification_log resvnotify = { 0 };
 	struct nvme_sanitize_log_page sanlog = { 0 };
 	struct nvme_id_uuid_list uuid = { 0 };

@@ -1900,13 +1900,13 @@ static inline int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
  * @len:	The allocated length of the log page
  * @log:	User address to store the ana group log
  *
- * See &struct nvme_ana_group_desc for the definition of the returned structure.
+ * See &struct nvme_ana_log for the definition of the returned structure.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_ana_groups(int fd, bool rae, __u32 len,
-			    struct nvme_ana_group_desc *log)
+			    struct nvme_ana_log *log)
 {
 	return nvme_get_log_ana(fd, NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY, rae, 0,
 				len, log);
