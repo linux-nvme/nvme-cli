@@ -934,6 +934,133 @@ int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
 	return nvme_mi_admin_get_log_page(ctrl, 4096, args);
 }
 
+static int read_ana_chunk(nvme_mi_ctrl_t ctrl, enum nvme_log_ana_lsp lsp, bool rae,
+			  __u8 *log, __u8 **read, __u8 *to_read, __u8 *log_end)
+{
+	if (to_read > log_end) {
+		errno = ENOSPC;
+		return -1;
+	}
+
+	while (*read < to_read) {
+		__u32 len = min(log_end - *read, NVME_LOG_PAGE_PDU_SIZE);
+		int ret;
+
+		ret = nvme_mi_admin_get_log_ana(ctrl, lsp, rae,
+						*read - log, len, *read);
+		if (ret)
+			return ret;
+
+		*read += len;
+	}
+	return 0;
+}
+
+static int try_read_ana(nvme_mi_ctrl_t ctrl, enum nvme_log_ana_lsp lsp, bool rae,
+			struct nvme_ana_log *log, __u8 *log_end,
+			__u8 *read, __u8 **to_read, bool *may_retry)
+{
+	__u16 ngrps = le16_to_cpu(log->ngrps);
+
+	while (ngrps--) {
+		__u8 *group = *to_read;
+		int ret;
+		__le32 nnsids;
+
+		*to_read += sizeof(*log->descs);
+		ret = read_ana_chunk(ctrl, lsp, rae,
+				     (__u8 *)log, &read, *to_read, log_end);
+		if (ret) {
+			/*
+			 * If the provided buffer isn't long enough,
+			 * the log page may have changed while reading it
+			 * and the computed length was inaccurate.
+			 * Have the caller check chgcnt and retry.
+			 */
+			*may_retry = errno == ENOSPC;
+			return ret;
+		}
+
+		/*
+		 * struct nvme_ana_group_desc has 8-byte alignment
+		 * but the group pointer is only 4-byte aligned.
+		 * Don't dereference the misaligned pointer.
+		 */
+		memcpy(&nnsids,
+		       group + offsetof(struct nvme_ana_group_desc, nnsids),
+		       sizeof(nnsids));
+		*to_read += le32_to_cpu(nnsids) * sizeof(__le32);
+		ret = read_ana_chunk(ctrl, lsp, rae,
+				     (__u8 *)log, &read, *to_read, log_end);
+		if (ret) {
+			*may_retry = errno == ENOSPC;
+			return ret;
+		}
+	}
+
+	*may_retry = true;
+	return 0;
+}
+
+int nvme_mi_admin_get_ana_log_atomic(nvme_mi_ctrl_t ctrl, bool rgo, bool rae,
+				     unsigned int retries,
+				     struct nvme_ana_log *log, __u32 *len)
+{
+	const enum nvme_log_ana_lsp lsp =
+		rgo ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY : 0;
+	/* Get Log Page can only fetch multiples of dwords */
+	__u8 * const log_end = (__u8 *)log + (*len & -4);
+	__u8 *read = (__u8 *)log;
+	__u8 *to_read;
+	int ret;
+
+	if (!retries) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	to_read = (__u8 *)log->descs;
+	ret = read_ana_chunk(ctrl, lsp, rae,
+			     (__u8 *)log, &read, to_read, log_end);
+	if (ret)
+		return ret;
+
+	do {
+		bool may_retry = false;
+		int saved_ret;
+		int saved_errno;
+		__le64 chgcnt;
+
+		saved_ret = try_read_ana(ctrl, lsp, rae, log, log_end,
+					 read, &to_read, &may_retry);
+		/*
+		 * If the log page was read with multiple Get Log Page commands,
+		 * chgcnt must be checked afterwards to ensure atomicity
+		 */
+		*len = to_read - (__u8 *)log;
+		if (*len <= NVME_LOG_PAGE_PDU_SIZE || !may_retry)
+			return saved_ret;
+
+		saved_errno = errno;
+		chgcnt = log->chgcnt;
+		read = (__u8 *)log;
+		to_read = (__u8 *)log->descs;
+		ret = read_ana_chunk(ctrl, lsp, rae,
+				     (__u8 *)log, &read, to_read, log_end);
+		if (ret)
+			return ret;
+
+		if (log->chgcnt == chgcnt) {
+			/* Log hasn't changed; return try_read_ana() result */
+			errno = saved_errno;
+			return saved_ret;
+		}
+	} while (--retries);
+
+	errno = EAGAIN;
+	return -1;
+}
+
 int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
 				struct nvme_security_send_args *args)
 {
