@@ -111,8 +111,9 @@ void end_mock_cmds(void)
 	      "got timeout_ms %" PRIu32 ", expected %" PRIu32, \
 	      (cmd)->timeout_ms, (mock_cmd)->timeout_ms); \
 	(cmd)->result = (mock_cmd)->result; \
-	if ((mock_cmd)->out_data) { \
-		memcpy(data, (mock_cmd)->out_data, data_len); \
+	const void *out_data = (mock_cmd)->out_data; \
+	if (out_data) { \
+		memcpy(data, out_data, (mock_cmd)->out_data_len ?: data_len); \
 	} \
 })
 

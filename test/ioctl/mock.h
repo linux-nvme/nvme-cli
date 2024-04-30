@@ -26,7 +26,9 @@
  * @cdw14: the expected `cdw14` passed to ioctl()
  * @cdw15: the expected `cdw15` passed to ioctl()
  * @timeout_ms: the expected `timeout_ms` passed to ioctl()
- * @out_data: if not NULL, `data_len` bytes to copy to the caller's `addr`
+ * @out_data: if not NULL, bytes to copy to the caller's `addr`
+ * @out_data_len: length of `out_data` buffer to return.
+ *                If 0, `data_len` is used instead.
  * @result: copied to the caller's `result`.
  *       If `result` doesn't fit in a u32, the ioctl() must be the 64-bit one.
  * @err: If negative, ioctl() returns -1 and sets `errno` to `-err`.
@@ -50,6 +52,7 @@ struct mock_cmd {
 	uint32_t cdw15;
 	uint32_t timeout_ms;
 	const void *out_data;
+	uint32_t out_data_len;
 	uint64_t result;
 	int err;
 };
