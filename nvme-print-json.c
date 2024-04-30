@@ -73,12 +73,17 @@ static void obj_add_uint_0x(struct json_object *o, const char *k, __u32 v)
 	obj_add_str(o, k, str);
 }
 
-static void obj_add_uint_02x(struct json_object *o, const char *k, __u32 v)
+static void obj_add_uint_0nx(struct json_object *o, const char *k, __u32 v, int width)
 {
 	char str[STR_LEN];
 
 	sprintf(str, "0x%02x", v);
 	obj_add_str(o, k, str);
+}
+
+static void obj_add_uint_02x(struct json_object *o, const char *k, __u32 v)
+{
+	obj_add_uint_0nx(o, k, v, 2);
 }
 
 static void obj_add_uint_nx(struct json_object *o, const char *k, __u32 v)
