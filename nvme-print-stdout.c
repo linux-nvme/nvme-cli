@@ -487,8 +487,8 @@ static void stdout_persistent_event_log(void *pevent_log_info,
 			fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), FEATURES_CDW10_FID);
 			cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
 
-			printf("Set Feature ID  :%#02x (%s),  value:%#08x\n", fid,
-				nvme_feature_to_string(fid), cdw11);
+			printf("Set Feature ID  :%#0*x (%s),  value:%#0*x\n", fid ? 4 : 2, fid,
+			       nvme_feature_to_string(fid), cdw11 ? 10 : 8, cdw11);
 			if (NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout)) {
 				mem_buf = (unsigned char *)(set_feat_event + 4 + dword_cnt * 4);
 				stdout_feature_show_fields(fid, cdw11, mem_buf);
@@ -1513,8 +1513,8 @@ static void stdout_ctrl_register_human(int offset, uint64_t value, bool support)
 		stdout_registers_pmrmscu(value);
 		break;
 	default:
-		printf("unknown register: %#04x (%s), value: %#"PRIx64"\n",
-		       offset, nvme_register_to_string(offset), value);
+		printf("unknown register: %#0*x (%s), value: %#"PRIx64"\n",
+		       offset ? 6 : 4, offset, nvme_register_to_string(offset), value);
 		break;
 	}
 }
@@ -1531,7 +1531,7 @@ static void stdout_ctrl_register_common(int offset, uint64_t value, bool fabrics
 		return;
 	}
 
-	printf("%s: %#04x (%s), value: %#"PRIx64"\n", type, offset,
+	printf("%s: %#0*x (%s), value: %#"PRIx64"\n", type, offset ? 6 : 4, offset,
 	       name, value);
 }
 
@@ -3623,9 +3623,9 @@ static void stdout_fw_log(struct nvme_firmware_slot *fw_log,
 	for (i = 0; i < 7; i++) {
 		if (fw_log->frs[i][0]) {
 			frs = (__le64 *)&fw_log->frs[i];
-			printf("frs%d : %#016"PRIx64" (%s)\n", i + 1,
-				le64_to_cpu(*frs),
-				util_fw_to_string(fw_log->frs[i]));
+			printf("frs%d : %#0*"PRIx64" (%s)\n", i + 1,
+			       le64_to_cpu(*frs) ? 18 : 16, le64_to_cpu(*frs),
+			       util_fw_to_string(fw_log->frs[i]));
 		}
 	}
 }
@@ -4342,7 +4342,7 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 		strncpy(val, (char *)desc->val, min(sizeof(val) - 1, len));
 
 		printf("\tElement[%-3d]:\n", i);
-		printf("\t\tType	    : %#02x (%s)\n", desc->type,
+		printf("\t\tType	    : %#0*x (%s)\n", desc->type ? 4 : 2, desc->type,
 		       nvme_host_metadata_type_to_string(fid, desc->type));
 		printf("\t\tRevision : %d\n", desc->rev);
 		printf("\t\tLength   : %d\n", len);
@@ -4591,9 +4591,10 @@ static void stdout_lba_status(struct nvme_lba_status *list,
 	for (idx = 0; idx < list->nlsd; idx++) {
 		struct nvme_lba_status_desc *e = &list->descs[idx];
 
-		printf("{ DSLBA: %#016"PRIx64", NLB: %#08x, Status: %#02x }\n",
-				le64_to_cpu(e->dslba), le32_to_cpu(e->nlb),
-				e->status);
+		printf("{ DSLBA: %#0*"PRIx64", NLB: %#0*x, Status: %#0*x }\n",
+		       le64_to_cpu(e->dslba) ? 18 : 16, le64_to_cpu(e->dslba),
+		       le32_to_cpu(e->nlb) ? 10 : 8, le32_to_cpu(e->nlb),
+		       e->status ? 4 : 2, e->status);
 	}
 }
 
@@ -5058,8 +5059,8 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 				nvmf_qptype_str(e->tsas.rdma.qptype));
 			printf("rdma_cms:    %s\n",
 				nvmf_cms_str(e->tsas.rdma.cms));
-			printf("rdma_pkey: %#04x\n",
-				le16_to_cpu(e->tsas.rdma.pkey));
+			printf("rdma_pkey: %#0*x\n", le16_to_cpu(e->tsas.rdma.pkey) ? 6 : 4,
+			       le16_to_cpu(e->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
 			printf("sectype: %s\n",
