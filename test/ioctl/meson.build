@@ -13,6 +13,16 @@ mock_ioctl_env = environment()
 mock_ioctl_env.append('LD_PRELOAD', mock_ioctl.full_path())
 mock_ioctl_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
 
+ana = executable(
+    'test-ana',
+    'ana.c',
+    dependencies: libnvme_dep,
+    include_directories: [incdir, internal_incdir],
+    link_with: mock_ioctl,
+)
+
+test('ana', ana, env: mock_ioctl_env)
+
 discovery = executable(
     'test-discovery',
     'discovery.c',
