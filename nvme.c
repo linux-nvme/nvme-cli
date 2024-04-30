@@ -592,10 +592,10 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
-	_cleanup_free_ void *ana_log = NULL;
-	size_t ana_log_len;
+	_cleanup_free_ struct nvme_ana_log *ana_log = NULL;
+	size_t max_ana_log_len;
+	__u32 ana_log_len;
 	enum nvme_print_flags flags;
-	enum nvme_log_ana_lsp lsp;
 	int err = -1;
 
 	struct config {
@@ -630,15 +630,19 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		return err;
 	}
 
-	ana_log_len = nvme_get_ana_log_len_from_id_ctrl(ctrl, cfg.groups);
+	max_ana_log_len = nvme_get_ana_log_len_from_id_ctrl(ctrl, cfg.groups);
+	ana_log_len = max_ana_log_len;
+	if (ana_log_len < max_ana_log_len) {
+		nvme_show_error("ANA log length %zu too large", max_ana_log_len);
+		return -ENOMEM;
+	}
+
 	ana_log = nvme_alloc(ana_log_len);
 	if (!ana_log)
 		return -ENOMEM;
 
-	lsp = cfg.groups ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY :
-		NVME_LOG_ANA_LSP_RGO_NAMESPACES;
-
-	err = nvme_cli_get_log_ana(dev, lsp, true, 0, ana_log_len, ana_log);
+	err = nvme_cli_get_ana_log_atomic(dev, cfg.groups, true, 10,
+					  ana_log, &ana_log_len);
 	if (!err)
 		nvme_show_ana_log(ana_log, dev->name, ana_log_len, flags);
 	else if (err > 0)
