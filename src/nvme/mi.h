@@ -1938,7 +1938,7 @@ static inline int nvme_mi_admin_get_log_ana(nvme_mi_ctrl_t ctrl,
 		.lsi = NVME_LOG_LSI_NONE,
 		.lsp = (__u8)lsp,
 		.uuidx = NVME_UUID_NONE,
-		.rae = false,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_mi_admin_get_log(ctrl, &args);

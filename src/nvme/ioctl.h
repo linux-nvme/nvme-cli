@@ -1887,7 +1887,7 @@ static inline int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
 		.lsi = NVME_LOG_LSI_NONE,
 		.lsp = (__u8)lsp,
 		.uuidx = NVME_UUID_NONE,
-		.rae = false,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
