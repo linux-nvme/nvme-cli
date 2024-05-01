@@ -1230,6 +1230,16 @@ static void stdout_registers_aqa(__u32 aqa)
 	printf("\tAdmin Submission Queue Size (ASQS): %u\n\n", NVME_AQA_ASQS(aqa) + 1);
 }
 
+static void stdout_registers_asq(uint64_t asq)
+{
+	printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n", (uint64_t)NVME_ASQ_ASQB(asq));
+}
+
+static void stdout_registers_acq(uint64_t acq)
+{
+	printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n", (uint64_t)NVME_ACQ_ACQB(acq));
+}
+
 static void stdout_registers_cmbloc(__u32 cmbloc, bool support)
 {
 	static const char * const enforced[] = { "Enforced", "Not Enforced" };
@@ -1324,7 +1334,8 @@ static void stdout_registers_bprsel(__u32 bprsel)
 
 static void stdout_registers_bpmbl(uint64_t bpmbl)
 {
-	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n", bpmbl);
+	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n",
+	       (uint64_t)NVME_BPMBL_BMBBA(bpmbl));
 }
 
 static void stdout_registers_cmbmsc(uint64_t cmbmsc)
@@ -1456,10 +1467,10 @@ static void stdout_ctrl_register_human(int offset, uint64_t value, bool support)
 		stdout_registers_aqa(value);
 		break;
 	case NVME_REG_ASQ:
-		printf("\tAdmin Submission Queue Base (ASQB): %#"PRIx64"\n\n", value);
+		stdout_registers_asq(value);
 		break;
 	case NVME_REG_ACQ:
-		printf("\tAdmin Completion Queue Base (ACQB): %#"PRIx64"\n\n", value);
+		stdout_registers_acq(value);
 		break;
 	case NVME_REG_CMBLOC:
 		stdout_registers_cmbloc(value, support);
