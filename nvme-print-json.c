@@ -16,7 +16,6 @@
 #define BUF_LEN 320
 #define VAL_LEN 4096
 #define BYTE_TO_BIT(byte) ((byte) * 8)
-#define POWER_OF_TWO(exponent) (1 << (exponent))
 #define MS_TO_SEC(time) ((time) / 1000)
 #define MS500_TO_MS(time) ((time) * 500)
 #define MS500_TO_SEC(time) (MS_TO_SEC(MS500_TO_MS(time)))

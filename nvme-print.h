@@ -16,6 +16,8 @@ typedef struct nvme_effects_log_node {
 #define nvme_show_error(msg, ...) nvme_show_message(true, msg, ##__VA_ARGS__)
 #define nvme_show_result(msg, ...) nvme_show_message(false, msg, ##__VA_ARGS__)
 
+#define POWER_OF_TWO(exponent) (1 << (exponent))
+
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 
