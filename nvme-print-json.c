@@ -1035,8 +1035,8 @@ static void json_registers_crto(__u32 crto, struct json_object *r)
 static void json_registers_aqa(uint32_t aqa, struct json_object *r)
 {
 	obj_add_uint_x(r, "aqa", aqa);
-	obj_add_uint(r, "Admin Completion Queue Size (ACQS)", ((aqa & 0xfff0000) >> 16) + 1);
-	obj_add_uint(r, "Admin Submission Queue Size (ASQS)", (aqa & 0xfff) + 1);
+	obj_add_uint(r, "Admin Completion Queue Size (ACQS)", NVME_AQA_ACQS(aqa) + 1);
+	obj_add_uint(r, "Admin Submission Queue Size (ASQS)", NVME_AQA_ASQS(aqa) + 1);
 }
 
 static void json_registers_asq(uint64_t asq, struct json_object *r)
