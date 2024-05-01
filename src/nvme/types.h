@@ -334,6 +334,15 @@ enum nvme_cap {
 #define NVME_CAP_NSSS(cap)	NVME_GET(cap, CAP_NSSS)
 #define NVME_CAP_CRMS(cap)	NVME_GET(cap, CAP_CRMS)
 
+/**
+ * enum nvme_vs - This field indicates the version
+ * @NVME_VS_TER_SHIFT:	Shift amount to get the tertiary version
+ * @NVME_VS_MNR_SHIFT:	Shift amount to get the minor version
+ * @NVME_VS_MJR_SHIFT:	Shift amount to get the major version
+ * @NVME_VS_TER_MASK:	Mask to get the tertiary version
+ * @NVME_VS_MNR_MASK:	Mask to get the minor version
+ * @NVME_VS_MJR_MASK:	Mask to get the major version
+ */
 enum nvme_vs {
 	NVME_VS_TER_SHIFT		= 0,
 	NVME_VS_MNR_SHIFT		= 8,
@@ -351,6 +360,36 @@ enum nvme_vs {
 #define NVME_MINOR(ver)		NVME_VS_MNR(ver)
 #define NVME_TERTIARY(ver)	NVME_VS_TER(ver)
 
+/**
+ * enum nvme_cc - This field indicates the controller configuration
+ * @NVME_CC_EN_SHIFT:		Shift amount to get the enable
+ * @NVME_CC_CSS_SHIFT:		Shift amount to get the I/O command set selected
+ * @NVME_CC_MPS_SHIFT:		Shift amount to get the memory page size
+ * @NVME_CC_AMS_SHIFT:		Shift amount to get the arbitration mechanism selected
+ * @NVME_CC_SHN_SHIFT:		Shift amount to get the shutdown notification
+ * @NVME_CC_IOSQES_SHIFT:	Shift amount to get the I/O submission queue entry size
+ * @NVME_CC_IOCQES_SHIFT:	Shift amount to get the I/O completion queue entry size
+ * @NVME_CC_CRIME_SHIFT:	Shift amount to get the controller ready independent of media enable
+ * @NVME_CC_EN_MASK:		Mask to get the enable
+ * @NVME_CC_CSS_MASK:		Mask to get the I/O command set selected
+ * @NVME_CC_MPS_MASK:		Mask to get the memory page size
+ * @NVME_CC_AMS_MASK:		Mask to get the arbitration mechanism selected
+ * @NVME_CC_SHN_MASK:		Mask to get the shutdown notification
+ * @NVME_CC_CRIME_MASK:		Mask to get the I/O submission queue entry size
+ * @NVME_CC_IOSQES_MASK:	Mask to get the I/O completion queue entry size
+ * @NVME_CC_IOCQES_MASK:	Mask to get the controller ready independent of media enable
+ * @NVME_CC_CSS_NVM:		NVM command set
+ * @NVME_CC_CSS_CSI:		All supported I/O command sets
+ * @NVME_CC_CSS_ADMIN:		Admin command set only
+ * @NVME_CC_AMS_RR:		Round robin
+ * @NVME_CC_AMS_WRRU:		Weighted round robin with urgent priority class
+ * @NVME_CC_AMS_VS:		Vendor specific
+ * @NVME_CC_SHN_NONE:		No notification; no effect
+ * @NVME_CC_SHN_NORMAL:		Normal shutdown notification
+ * @NVME_CC_SHN_ABRUPT:		Abrupt shutdown notification
+ * @NVME_CC_CRWME:		Controller ready with media enable
+ * @NVME_CC_CRIME:		Controller ready independent of media enable
+ */
 enum nvme_cc {
 	NVME_CC_EN_SHIFT	= 0,
 	NVME_CC_CSS_SHIFT	= 4,
@@ -435,6 +474,13 @@ enum nvme_csts {
 #define NVME_CSTS_PP(csts)	NVME_GET(csts, CSTS_PP)
 #define NVME_CSTS_ST(csts)	NVME_GET(csts, CSTS_ST)
 
+/**
+ * enum nvme_aqa - This field indicates the admin queue attributes
+ * @NVME_AQA_ASQS_SHIFT:	Shift amount to get the admin submission queue size
+ * @NVME_AQA_ACQS_SHIFT:	Shift amount to get the admin completion queue size
+ * @NVME_AQA_ASQS_MASK:		Mask to get the admin submission queue size
+ * @NVME_AQA_ACQS_MASK:		Mask to get the admin completion queue size
+ */
 enum nvme_aqa {
 	NVME_AQA_ASQS_SHIFT	= 0,
 	NVME_AQA_ACQS_SHIFT	= 16,
@@ -445,6 +491,25 @@ enum nvme_aqa {
 #define NVME_AQA_ASQS(aqa)	NVME_GET(aqa, AQA_ASQS)
 #define NVME_AQA_ACQS(aqa)	NVME_GET(aqa, AQA_ACQS)
 
+/**
+ * enum nvme_cmbloc - This field indicates the controller memory buffer location
+ * @NVME_CMBLOC_BIR_SHIFT:	Shift amount to get the base indicator register
+ * @NVME_CMBLOC_CQMMS_SHIFT:	Shift amount to get the CMB queue mixed memory support
+ * @NVME_CMBLOC_CQPDS_SHIFT:	Shift amount to get the CMB queue physically discontiguous support
+ * @NVME_CMBLOC_CDPLMS_SHIFT:	Shift amount to get the CMB data pointer mixed locations support
+ * @NVME_CMBLOC_CDPCILS_SHIFT:	Shift amount to get the CMB data pointer and command independent locations support
+ * @NVME_CMBLOC_CDMMMS_SHIFT:	Shift amount to get the CMB data metadata mixed memory support
+ * @NVME_CMBLOC_CQDA_SHIFT:	Shift amount to get the CMB queue dword alignment
+ * @NVME_CMBLOC_OFST_SHIFT:	Shift amount to get the offset
+ * @NVME_CMBLOC_BIR_MASK:	Mask to get the base indicator register
+ * @NVME_CMBLOC_CQMMS_MASK:	Mask to get the CMB queue mixed memory support
+ * @NVME_CMBLOC_CQPDS_MASK:	Mask to get the CMB queue physically discontiguous support
+ * @NVME_CMBLOC_CDPLMS_MASK:	Mask to get the CMB data pointer mixed locations support
+ * @NVME_CMBLOC_CDPCILS_MASK:	Mask to get the CMB data pointer and command independent locations support
+ * @NVME_CMBLOC_CDMMMS_MASK:	Mask to get the CMB data metadata mixed memory support
+ * @NVME_CMBLOC_CQDA_MASK:	Mask to get the CMB queue dword alignment
+ * @NVME_CMBLOC_OFST_MASK:	Mask to get the offset
+ */
 enum nvme_cmbloc {
 	NVME_CMBLOC_BIR_SHIFT		= 0,
 	NVME_CMBLOC_CQMMS_SHIFT		= 3,
@@ -473,6 +538,30 @@ enum nvme_cmbloc {
 #define NVME_CMBLOC_CQDA(cmbloc)	NVME_GET(cmbloc, CMBLOC_CQDA)
 #define NVME_CMBLOC_OFST(cmbloc)	NVME_GET(cmbloc, CMBLOC_OFST)
 
+/**
+ * enum nvme_cmbsz - This field indicates the controller memory buffer size
+ * @NVME_CMBSZ_SQS_SHIFT:	Shift amount to get the submission queue support
+ * @NVME_CMBSZ_CQS_SHIFT:	Shift amount to get the completion queue support
+ * @NVME_CMBSZ_LISTS_SHIFT:	Shift amount to get the PLP SGL list support
+ * @NVME_CMBSZ_RDS_SHIFT:	Shift amount to get the read data support
+ * @NVME_CMBSZ_WDS_SHIFT:	Shift amount to get the write data support
+ * @NVME_CMBSZ_SZU_SHIFT:	Shift amount to get the size units
+ * @NVME_CMBSZ_SZ_SHIFT:	Shift amount to get the size
+ * @NVME_CMBSZ_SQS_MASK:	Mask to get the submission queue support
+ * @NVME_CMBSZ_CQS_MASK:	Mask to get the completion queue support
+ * @NVME_CMBSZ_LISTS_MASK:	Mask to get the PLP SGL list support
+ * @NVME_CMBSZ_RDS_MASK:	Mask to get the read data support
+ * @NVME_CMBSZ_WDS_MASK:	Mask to get the write data support
+ * @NVME_CMBSZ_SZU_MASK:	Mask to get the size units
+ * @NVME_CMBSZ_SZ_MASK:		Mask to get the size
+ * @NVME_CMBSZ_SZU_4K:		4 KiB
+ * @NVME_CMBSZ_SZU_64K:		64 KiB
+ * @NVME_CMBSZ_SZU_1M:		1 MiB
+ * @NVME_CMBSZ_SZU_16M:		16 MiB
+ * @NVME_CMBSZ_SZU_256M:	256 MiB
+ * @NVME_CMBSZ_SZU_4G:		4 GiB
+ * @NVME_CMBSZ_SZU_64G:		64 GiB
+ */
 enum nvme_cmbsz {
 	NVME_CMBSZ_SQS_SHIFT	= 0,
 	NVME_CMBSZ_CQS_SHIFT	= 1,
@@ -517,6 +606,19 @@ static inline __u64 nvme_cmb_size(__u32 cmbsz)
 		(1ULL << (12 + 4 * NVME_CMBSZ_SZU(cmbsz)));
 }
 
+/**
+ * enum nvme_bpinfo - This field indicates the boot partition information
+ * @NVME_BPINFO_BPSZ_SHIFT:		Shift amount to get the boot partition size
+ * @NVME_BPINFO_BRS_SHIFT:		Shift amount to get the boot read status
+ * @NVME_BPINFO_ABPID_SHIFT:		Shift amount to get the active boot partition ID
+ * @NVME_BPINFO_BPSZ_MASK:		Mask to get the boot partition size
+ * @NVME_BPINFO_BRS_MASK:		Mask to get the boot read status
+ * @NVME_BPINFO_ABPID_MASK:		Mask to get the active boot partition ID
+ * @NVME_BPINFO_BRS_NONE:		No boot partition read operation requested
+ * @NVME_BPINFO_BRS_READ_IN_PROGRESS:	Boot partition read in progress
+ * @NVME_BPINFO_BRS_READ_SUCCESS:	Boot partition read completed successfully
+ * @NVME_BPINFO_BRS_READ_ERROR:		Error completing boot partition read
+ */
 enum nvme_bpinfo {
 	NVME_BPINFO_BPSZ_SHIFT			= 0,
 	NVME_BPINFO_BRS_SHIFT			= 24,
@@ -534,6 +636,15 @@ enum nvme_bpinfo {
 #define NVME_BPINFO_BRS(bpinfo)		NVME_GET(bpinfo, BPINFO_BRS)
 #define NVME_BPINFO_ABPID(bpinfo)	NVME_GET(bpinfo, BPINFO_ABPID)
 
+/**
+ * enum nvme_bprsel - This field indicates the boot partition read select
+ * @NVME_BPRSEL_BPRSZ_SHIFT:	Shift amount to get the boot partition read size
+ * @NVME_BPRSEL_BPROF_SHIFT:	Shift amount to get the boot partition read offset
+ * @NVME_BPRSEL_BPID_SHIFT:	Shift amount to get the boot partition identifier
+ * @NVME_BPRSEL_BPRSZ_MASK:	Mask to get the boot partition read size
+ * @NVME_BPRSEL_BPROF_MASK:	Mask to get the boot partition read offset
+ * @NVME_BPRSEL_BPID_MASK:	Mask to get the boot partition identifier
+ */
 enum nvme_bprsel {
 	NVME_BPRSEL_BPRSZ_SHIFT		= 0,
 	NVME_BPRSEL_BPROF_SHIFT		= 10,
@@ -547,6 +658,14 @@ enum nvme_bprsel {
 #define NVME_BPRSEL_BPROF(bprsel)	NVME_GET(bprsel, BPRSEL_BPROF)
 #define NVME_BPRSEL_BPID(bprsel)	NVME_GET(bprsel, BPRSEL_BPID)
 
+/**
+ * enum nvme_cmbmsc - This field indicates the controller memory buffer memory space control
+ * @NVME_CMBMSC_CRE_SHIFT:	Shift amount to get the capabilities registers enabled
+ * @NVME_CMBMSC_CMSE_SHIFT:	Shift amount to get the controller memory space enable
+ * @NVME_CMBMSC_CBA_SHIFT:	Shift amount to get the controller base address
+ * @NVME_CMBMSC_CRE_MASK:	Mask to get the capabilities registers enabled
+ * @NVME_CMBMSC_CMSE_MASK:	Mask to get the controller memory space enable
+ */
 enum nvme_cmbmsc {
 	NVME_CMBMSC_CRE_SHIFT		= 0,
 	NVME_CMBMSC_CMSE_SHIFT		= 1,
@@ -560,6 +679,11 @@ static const __u64 NVME_CMBMSC_CBA_MASK = 0xfffffffffffffull;
 #define NVME_CMBMSC_CMSE(cmbmsc)	NVME_GET(cmbmsc, CMBMSC_CMSE)
 #define NVME_CMBMSC_CBA(cmbmsc)		NVME_GET(cmbmsc, CMBMSC_CBA)
 
+/**
+ * enum nvme_cmbsts - This field indicates the controller memory buffer status
+ * @NVME_CMBSTS_CBAI_SHIFT:	Shift amount to get the controller base address invalid
+ * @NVME_CMBSTS_CBAI_MASK:	Mask to get the controller base address invalid
+ */
 enum nvme_cmbsts {
 	NVME_CMBSTS_CBAI_SHIFT	= 0,
 	NVME_CMBSTS_CBAI_MASK	= 0x1,
@@ -636,6 +760,13 @@ enum nvme_cmbswtp {
 #define NVME_CMBSWTP_CMBSWTU(cmbswtp)	NVME_GET(cmbswtp, CMBSWTP_CMBSWTU)
 #define NVME_CMBSWTP_CMBSWTV(cmbswtp)	NVME_GET(cmbswtp, CMBSWTP_CMBSWTV)
 
+/**
+ * enum nvme_crto - This field indicates the controller ready timeouts
+ * @NVME_CRTO_CRWMT_SHIFT:	Shift amount to get the  controller ready with media timeout
+ * @NVME_CRTO_CRIMT_SHIFT:	Shift amount to get the controller ready independent of media timeout
+ * @NVME_CRTO_CRWMT_MASK:	Mask to get the controller ready with media timeout
+ * @NVME_CRTO_CRIMT_MASK:	Mask to get the controller ready independent of media timeout
+ */
 enum nvme_crto {
 	NVME_CRTO_CRWMT_SHIFT	= 0,
 	NVME_CRTO_CRIMT_SHIFT	= 16,
@@ -697,6 +828,11 @@ enum nvme_pmrcap {
 #define NVME_PMRCAP_CMSS(pmrcap)	NVME_GET(pmrcap, PMRCAP_CMSS)
 #define NVME_PMRCAP_PMRWMB(pmrcap)	NVME_GET(pmrcap, PMRCAP_PMRWMB) /* Deprecated */
 
+/**
+ * enum nvme_pmrctl - This field indicates the persistent memory region control
+ * @NVME_PMRCTL_EN_SHIFT:	Shift amount to get the enable
+ * @NVME_PMRCTL_EN_MASK:	Mask to get the enable
+ */
 enum nvme_pmrctl {
 	NVME_PMRCTL_EN_SHIFT	= 0,
 	NVME_PMRCTL_EN_MASK	= 0x1,
@@ -704,6 +840,17 @@ enum nvme_pmrctl {
 
 #define NVME_PMRCTL_EN(pmrctl)		NVME_GET(pmrctl, PMRCTL_EN)
 
+/**
+ * enum nvme_pmrsts - This field indicates the persistent memory region status
+ * @NVME_PMRSTS_ERR_SHIFT:	Shift amount to get the error
+ * @NVME_PMRSTS_NRDY_SHIFT:	Shift amount to get the not ready
+ * @NVME_PMRSTS_HSTS_SHIFT:	Shift amount to get the health status
+ * @NVME_PMRSTS_CBAI_SHIFT:	Shift amount to get the controller base address invalid
+ * @NVME_PMRSTS_ERR_MASK:	Mask to get the error
+ * @NVME_PMRSTS_NRDY_MASK:	Mask to get the not ready
+ * @NVME_PMRSTS_HSTS_MASK:	Mask to get the health status
+ * @NVME_PMRSTS_CBAI_MASK:	Mask to get the controller base address invalid
+ */
 enum nvme_pmrsts {
 	NVME_PMRSTS_ERR_SHIFT		= 0,
 	NVME_PMRSTS_NRDY_SHIFT		= 8,
@@ -720,6 +867,19 @@ enum nvme_pmrsts {
 #define NVME_PMRSTS_HSTS(pmrsts)	NVME_GET(pmrsts, PMRSTS_HSTS)
 #define NVME_PMRSTS_CBAI(pmrsts)	NVME_GET(pmrsts, PMRSTS_CBAI)
 
+/**
+ * enum nvme_pmrebs - This field indicates the persistent memory region elasticity buffer size
+ * @NVME_PMREBS_PMRSZU_SHIFT:	Shift amount to get the PMR elasticity buffer size units
+ * @NVME_PMREBS_RBB_SHIFT:	Shift amount to get the read bypass behavior
+ * @NVME_PMREBS_PMRWBZ_SHIFT:	Shift amount to get the PMR elasticity buffer size base
+ * @NVME_PMREBS_PMRSZU_MASK:	Mask to get the PMR elasticity buffer size units
+ * @NVME_PMREBS_RBB_MASK:	Mask to get the read bypass behavior
+ * @NVME_PMREBS_PMRWBZ_MASK:	Mask to get the PMR elasticity buffer size base
+ * @NVME_PMREBS_PMRSZU_B:	Bytes
+ * @NVME_PMREBS_PMRSZU_1K:	1 KiB
+ * @NVME_PMREBS_PMRSZU_1M:	1 MiB
+ * @NVME_PMREBS_PMRSZU_1G:	1 GiB
+ */
 enum nvme_pmrebs {
 	NVME_PMREBS_PMRSZU_SHIFT	= 0,
 	NVME_PMREBS_RBB_SHIFT		= 4,
@@ -750,6 +910,17 @@ static inline __u64 nvme_pmr_size(__u32 pmrebs)
 		(1ULL << (10 * NVME_PMREBS_PMRSZU(pmrebs)));
 }
 
+/**
+ * enum nvme_pmrswtp - This field indicates the persistent memory region sustained write throughput
+ * @NVME_PMRSWTP_PMRSWTU_SHIFT:	Shift amount to get the PMR sustained write throughput units
+ * @NVME_PMRSWTP_PMRSWTV_SHIFT:	Shift amount to get the PMR sustained write throughput
+ * @NVME_PMRSWTP_PMRSWTU_MASK:	Mask to get the PMR sustained write throughput units
+ * @NVME_PMRSWTP_PMRSWTV_MASK:	Mask to get the PMR sustained write throughput
+ * @NVME_PMRSWTP_PMRSWTU_BPS:	Bytes per second
+ * @NVME_PMRSWTP_PMRSWTU_KBPS:	1 KiB / s
+ * @NVME_PMRSWTP_PMRSWTU_MBPS:	1 MiB / s
+ * @NVME_PMRSWTP_PMRSWTU_GBPS:	1 GiB / s
+ */
 enum nvme_pmrswtp {
 	NVME_PMRSWTP_PMRSWTU_SHIFT	= 0,
 	NVME_PMRSWTP_PMRSWTV_SHIFT	= 8,
@@ -776,6 +947,12 @@ static inline __u64 nvme_pmr_throughput(__u32 pmrswtp)
 		(1ULL << (10 * NVME_PMRSWTP_PMRSWTU(pmrswtp)));
 }
 
+/**
+ * enum nvme_pmrmsc - This field indicates the persistent memory region memory space control
+ * @NVME_PMRMSC_CMSE_SHIFT:	Shift amount to get the controller memory space enable
+ * @NVME_PMRMSC_CBA_SHIFT:	Shift amount to get the controller base address
+ * @NVME_PMRMSC_CMSE_MASK:	Mask to get the controller memory space enable
+ */
 enum nvme_pmrmsc {
 	NVME_PMRMSC_CMSE_SHIFT	= 1,
 	NVME_PMRMSC_CBA_SHIFT	= 12,
