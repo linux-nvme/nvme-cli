@@ -1118,7 +1118,8 @@ static void stdout_registers_cap(struct nvme_bar_cap *cap)
 
 static void stdout_registers_version(__u32 vs)
 {
-	printf("\tNVMe specification %d.%d\n\n", NVME_MAJOR(vs), NVME_MINOR(vs));
+	printf("\tNVMe specification %d.%d.%d\n\n", NVME_MAJOR(vs), NVME_MINOR(vs),
+	       NVME_TERTIARY(vs));
 }
 
 static void stdout_registers_cc_ams(__u8 ams)
