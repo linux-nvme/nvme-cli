@@ -492,6 +492,28 @@ enum nvme_aqa {
 #define NVME_AQA_ACQS(aqa)	NVME_GET(aqa, AQA_ACQS)
 
 /**
+ * enum nvme_asq - This field indicates the admin submission queue base address
+ * @NVME_ASQ_ASQB_SHIFT:	Shift amount to get the admin submission queue base
+ */
+enum nvme_asq {
+	NVME_ASQ_ASQB_SHIFT		= 12,
+};
+static const __u64 NVME_ASQ_ASQB_MASK = 0xfffffffffffffull;
+
+#define NVME_ASQ_ASQB(asq)		NVME_GET(asq, ASQ_ASQB)
+
+/**
+ * enum nvme_acq - This field indicates the admin completion queue base address
+ * @NVME_ACQ_ACQB_SHIFT:	Shift amount to get the admin completion queue base
+ */
+enum nvme_acq {
+	NVME_ACQ_ACQB_SHIFT		= 12,
+};
+static const __u64 NVME_ACQ_ACQB_MASK = 0xfffffffffffffull;
+
+#define NVME_ACQ_ACQB(acq)		NVME_GET(acq, ACQ_ACQB)
+
+/**
  * enum nvme_cmbloc - This field indicates the controller memory buffer location
  * @NVME_CMBLOC_BIR_SHIFT:	Shift amount to get the base indicator register
  * @NVME_CMBLOC_CQMMS_SHIFT:	Shift amount to get the CMB queue mixed memory support
@@ -657,6 +679,17 @@ enum nvme_bprsel {
 #define NVME_BPRSEL_BPRSZ(bprsel)	NVME_GET(bprsel, BPRSEL_BPRSZ)
 #define NVME_BPRSEL_BPROF(bprsel)	NVME_GET(bprsel, BPRSEL_BPROF)
 #define NVME_BPRSEL_BPID(bprsel)	NVME_GET(bprsel, BPRSEL_BPID)
+
+/**
+ * enum nvme_bpmbl - This field indicates the boot partition memory buffer location
+ * @NVME_BPMBL_BMBBA_SHIFT:	Shift amount to get the boot partition memory buffer base address
+ */
+enum nvme_bpmbl {
+	NVME_BPMBL_BMBBA_SHIFT		= 12,
+};
+static const __u64 NVME_BPMBL_BMBBA_MASK = 0xfffffffffffffull;
+
+#define NVME_BPMBL_BMBBA(bpmbl)		NVME_GET(bpmbl, BPMBL_BMBBA)
 
 /**
  * enum nvme_cmbmsc - This field indicates the controller memory buffer memory space control
