@@ -1952,8 +1952,8 @@ static void json_boot_part_log(void *bp_log, const char *devname,
 	struct json_object *r = json_create_object();
 
 	obj_add_uint(r, "count", hdr->lid);
-	obj_add_uint(r, "abpid", (le32_to_cpu(hdr->bpinfo) >> 31) & 0x1);
-	obj_add_uint(r, "bpsz", le32_to_cpu(hdr->bpinfo) & 0x7fff);
+	obj_add_uint(r, "abpid", NVME_BOOT_PARTITION_INFO_ABPID(le32_to_cpu(hdr->bpinfo)));
+	obj_add_uint(r, "bpsz", NVME_BOOT_PARTITION_INFO_BPSZ(le32_to_cpu(hdr->bpinfo)));
 
 	json_print(r);
 }
