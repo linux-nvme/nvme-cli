@@ -264,12 +264,6 @@ int nvme_cli_get_log_ana(struct nvme_dev *dev,
 	return do_admin_op(get_log_ana, dev, lsp, rae, offset, len, log);
 }
 
-int nvme_cli_get_log_ana_groups(struct nvme_dev *dev, bool rae, __u32 len,
-				struct nvme_ana_group_desc *log)
-{
-	return do_admin_op(get_log_ana_groups, dev, rae, len, log);
-}
-
 int nvme_cli_get_log_lba_status(struct nvme_dev *dev, bool rae,
 				__u64 offset, __u32 len, void *log)
 {
