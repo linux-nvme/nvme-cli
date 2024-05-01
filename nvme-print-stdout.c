@@ -1165,12 +1165,14 @@ static void stdout_registers_cc(__u32 cc)
 	printf("\tController Ready Independent of Media Enable (CRIME): %s\n",
 		NVME_CC_CRIME(cc) ? "Enabled" : "Disabled");
 
-	printf("\tI/O Completion Queue Entry Size (IOCQES): %u bytes\n", 1 << NVME_CC_IOCQES(cc));
-	printf("\tI/O Submission Queue Entry Size (IOSQES): %u bytes\n", 1 << NVME_CC_IOSQES(cc));
+	printf("\tI/O Completion Queue Entry Size (IOCQES): %u bytes\n",
+	       POWER_OF_TWO(NVME_CC_IOCQES(cc)));
+	printf("\tI/O Submission Queue Entry Size (IOSQES): %u bytes\n",
+	       POWER_OF_TWO(NVME_CC_IOSQES(cc)));
 	stdout_registers_cc_shn(NVME_CC_SHN(cc));
 	stdout_registers_cc_ams(NVME_CC_AMS(cc));
 	printf("\tMemory Page Size                   (MPS): %u bytes\n",
-	       1 << (12 + NVME_CC_MPS(cc)));
+	       POWER_OF_TWO(12 + NVME_CC_MPS(cc)));
 	printf("\tI/O Command Set Selected           (CSS): %s\n",
 	       NVME_CC_CSS(cc) == NVME_CC_CSS_NVM ? "NVM Command Set" :
 	       NVME_CC_CSS(cc) == NVME_CC_CSS_CSI ? "All supported I/O Command Sets" :
