@@ -981,13 +981,13 @@ static void json_registers_csts_shst(__u8 shst, struct json_object *r)
 	char json_str[STR_LEN];
 
 	switch (shst) {
-	case 0:
+	case NVME_CSTS_SHST_NORMAL:
 		sprintf(json_str, "Normal operation (no shutdown has been requested)");
 		break;
-	case 1:
+	case NVME_CSTS_SHST_OCCUR:
 		sprintf(json_str, "Shutdown processing occurring");
 		break;
-	case 2:
+	case NVME_CSTS_SHST_CMPLT:
 		sprintf(json_str, "Shutdown processing complete");
 		break;
 	default:
@@ -1002,13 +1002,15 @@ static void json_registers_csts(__u32 csts, struct json_object *r)
 {
 	obj_add_uint_x(r, "csts", csts);
 
-	obj_add_str(r, "Processing Paused (PP)", csts & 0x20 ? "Yes" : "No");
-	obj_add_str(r, "NVM Subsystem Reset Occurred (NSSRO)", csts & 0x10 ? "Yes" : "No");
+	obj_add_str(r, "Shutdown Type (ST)", NVME_CSTS_ST(csts) ? "Subsystem" : "Controller");
+	obj_add_str(r, "Processing Paused (PP)", NVME_CSTS_PP(csts) ? "Yes" : "No");
+	obj_add_str(r, "NVM Subsystem Reset Occurred (NSSRO)",
+		    NVME_CSTS_NSSRO(csts) ? "Yes" : "No");
 
-	json_registers_csts_shst((csts & 0xc) >> 2, r);
+	json_registers_csts_shst(NVME_CSTS_SHST(csts), r);
 
-	obj_add_str(r, "Controller Fatal Status (CFS)", csts & 2 ? "True" : "False");
-	obj_add_str(r, "Ready (RDY)", csts & 1 ? "Yes" : "No");
+	obj_add_str(r, "Controller Fatal Status (CFS)", NVME_CSTS_CFS(csts) ? "True" : "False");
+	obj_add_str(r, "Ready (RDY)", NVME_CSTS_RDY(csts) ? "Yes" : "No");
 }
 
 static void json_registers_nssr(__u32 nssr, struct json_object *r)
