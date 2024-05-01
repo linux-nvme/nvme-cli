@@ -926,13 +926,13 @@ static void json_registers_cc_ams(__u8 ams, struct json_object *r)
 	char json_str[STR_LEN];
 
 	switch (ams) {
-	case 0:
+	case NVME_CC_AMS_RR:
 		sprintf(json_str, "Round Robin");
 		break;
-	case 1:
+	case NVME_CC_AMS_WRRU:
 		sprintf(json_str, "Weighted Round Robin with Urgent Priority Class");
 		break;
-	case 7:
+	case NVME_CC_AMS_VS:
 		sprintf(json_str, "Vendor Specific");
 		break;
 	default:
@@ -948,13 +948,13 @@ static void json_registers_cc_shn(__u8 shn, struct json_object *r)
 	char json_str[STR_LEN];
 
 	switch (shn) {
-	case 0:
+	case NVME_CC_SHN_NONE:
 		sprintf(json_str, "No notification; no effect");
 		break;
-	case 1:
+	case NVME_CC_SHN_NORMAL:
 		sprintf(json_str, "Normal shutdown notification");
 		break;
-	case 2:
+	case NVME_CC_SHN_ABRUPT:
 		sprintf(json_str, "Abrupt shutdown notification");
 		break;
 	default:
@@ -975,22 +975,23 @@ static void json_registers_cc(__u32 cc, struct json_object *r)
 	obj_add_str(r, "Controller Ready Independent of Media Enable (CRIME)",
 		     NVME_CC_CRIME(cc) ? "Enabled" : "Disabled");
 
-	sprintf(json_str, "%u bytes", POWER_OF_TWO(NVME_GET(cc, CC_IOCQES)));
+	sprintf(json_str, "%u bytes", POWER_OF_TWO(NVME_CC_IOCQES(cc)));
 	obj_add_str(r, "I/O Completion Queue Entry Size (IOCQES): ", json_str);
 
-	sprintf(json_str, "%u bytes", POWER_OF_TWO(NVME_GET(cc, CC_IOSQES)));
+	sprintf(json_str, "%u bytes", POWER_OF_TWO(NVME_CC_IOSQES(cc)));
 	obj_add_str(r, "I/O Submission Queue Entry Size (IOSQES)", json_str);
 
-	json_registers_cc_shn((cc & 0xc000) >> NVME_CC_SHN_SHIFT, r);
-	json_registers_cc_ams((cc & 0x3800) >> NVME_CC_AMS_SHIFT, r);
+	json_registers_cc_shn(NVME_CC_SHN(cc), r);
+	json_registers_cc_ams(NVME_CC_AMS(cc), r);
 
-	sprintf(json_str, "%u bytes", POWER_OF_TWO(12 + NVME_GET(cc, CC_MPS)));
+	sprintf(json_str, "%u bytes", POWER_OF_TWO(12 + NVME_CC_MPS(cc)));
 	obj_add_str(r, "Memory Page Size (MPS)", json_str);
 
-	obj_add_str(r, "I/O Command Set Selected (CSS)", (cc & 0x70) == 0x00 ? "NVM Command Set" :
-		     (cc & 0x70) == 0x60 ? "All supported I/O Command Sets" :
-		     (cc & 0x70) == 0x70 ? "Admin Command Set only" : "Reserved");
-	obj_add_str(r, "Enable (EN)", cc & 1 ? "Yes" : "No");
+	obj_add_str(r, "I/O Command Set Selected (CSS)",
+		    NVME_CC_CSS(cc) == NVME_CC_CSS_NVM ? "NVM Command Set" :
+		    NVME_CC_CSS(cc) == NVME_CC_CSS_CSI ? "All supported I/O Command Sets" :
+		    NVME_CC_CSS(cc) == NVME_CC_CSS_ADMIN ? "Admin Command Set only" : "Reserved");
+	obj_add_str(r, "Enable (EN)", NVME_CC_EN(cc) ? "Yes" : "No");
 }
 
 static void json_registers_csts_shst(__u8 shst, struct json_object *r)
