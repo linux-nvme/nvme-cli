@@ -903,7 +903,7 @@ static void json_registers_version(__u32 vs, struct json_object *r)
 	sprintf(json_str, "%x", vs);
 	obj_add_str(r, "Version", json_str);
 
-	sprintf(json_str, "%d.%d", (vs & 0xffff0000) >> 16, (vs & 0x0000ff00) >> 8);
+	sprintf(json_str, "%d.%d", NVME_MAJOR(vs), NVME_MINOR(vs));
 	obj_add_str(r, "NVMe specification", json_str);
 }
 
