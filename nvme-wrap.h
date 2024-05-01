@@ -92,8 +92,6 @@ int nvme_cli_get_log_predictable_lat_event(struct nvme_dev *dev, bool rae,
 int nvme_cli_get_log_ana(struct nvme_dev *dev,
 			 enum nvme_log_ana_lsp lsp, bool rae,
 			 __u64 offset, __u32 len, void *log);
-int nvme_cli_get_log_ana_groups(struct nvme_dev *dev, bool rae, __u32 len,
-				struct nvme_ana_group_desc *log);
 int nvme_cli_get_log_lba_status(struct nvme_dev *dev, bool rae,
 				__u64 offset, __u32 len, void *log);
 int nvme_cli_get_log_endurance_grp_evt(struct nvme_dev *dev, bool rae,
