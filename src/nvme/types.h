@@ -7496,6 +7496,7 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:	Supported Capacity Configuration Lis
  * @NVME_LOG_LID_FID_SUPPORTED_EFFECTS:		Feature Identifiers Supported and Effects
  * @NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS:	NVMe-MI Commands Supported and Effects
+ * @NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN:		Command and Feature Lockdown
  * @NVME_LOG_LID_BOOT_PARTITION:		Boot Partition
  * @NVME_LOG_LID_PHY_RX_EOM:			Physical Interface Receiver Eye Opening Measurement
  * @NVME_LOG_LID_FDP_CONFIGS:			FDP Configurations
@@ -7528,6 +7529,7 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST			= 0x11,
 	NVME_LOG_LID_FID_SUPPORTED_EFFECTS			= 0x12,
 	NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS			= 0x13,
+	NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN			= 0x14,
 	NVME_LOG_LID_BOOT_PARTITION				= 0x15,
 	NVME_LOG_LID_PHY_RX_EOM					= 0x19,
 	NVME_LOG_LID_FDP_CONFIGS				= 0x20,
