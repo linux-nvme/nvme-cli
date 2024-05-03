@@ -750,11 +750,11 @@ nvme-get-feature(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme get-feature</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--cdw11=&lt;cdw11&gt;]
+                        [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;]
                         [--uuid-index=&lt;uuid-index&gt; | -U &lt;uuid_index&gt;]
                         [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
                         [--sel=&lt;select&gt; | -s &lt;select&gt;]
-                        [--raw-binary | -b]
+                        [--raw-binary | -b] [--cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt;]
                         [--human-readable | -H]
                         [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
@@ -875,6 +875,9 @@ cellspacing="0" cellpadding="4">
         Range Type
 </p>
 </dd>
+<dt class="hdlist1">
+-c &lt;cdw11&gt;
+</dt>
 <dt class="hdlist1">
 --cdw11=&lt;cdw11&gt;
 </dt>
@@ -1001,7 +1004,7 @@ format:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-02-14 10:43:42 CET
+ 2024-05-03 14:47:34 CEST
 </div>
 </div>
 </body>

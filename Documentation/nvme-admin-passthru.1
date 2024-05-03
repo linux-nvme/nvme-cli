@@ -2,12 +2,12 @@
 .\"     Title: nvme-admin-passthru
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/14/2024
+.\"      Date: 05/03/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ADMIN\-PASSTHR" "1" "02/14/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-ADMIN\-PASSTHR" "1" "05/03/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,10 +35,10 @@ nvme-admin-passthru \- Submit an arbitrary admin command, return results
 \fInvme\-admin\-passthru\fR <device> [\-\-opcode=<opcode> | \-O <opcode>]
                         [\-\-flags=<flags> | \-f <flags>] [\-rsvd=<rsvd> | \-R <rsvd>]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-\-cdw2=<cdw2> | \-2 <cdw2>]
-                        [\-\-cdw3=<cdw3> | \-3 <cdw3>] [\-\-cdw10=<cdw10> | \-4 <cdw4>]
-                        [\-\-cdw11=<cdw11> | \-5 <cdw5>] [\-\-cdw12=<cdw12> | \-6 <cdw6>]
-                        [\-\-cdw13=<cdw13> | \-7 <cdw7>] [\-\-cdw14=<cdw14> | \-8 <cdw8>]
-                        [\-\-cdw15=<cdw15> | \-9 <cdw9>]
+                        [\-\-cdw3=<cdw3> | \-3 <cdw3>] [\-\-cdw10=<cdw10> | \-4 <cdw10>]
+                        [\-\-cdw11=<cdw11> | \-5 <cdw11>] [\-\-cdw12=<cdw12> | \-6 <cdw12>]
+                        [\-\-cdw13=<cdw13> | \-7 <cdw13>] [\-\-cdw14=<cdw14> | \-8 <cdw14>]
+                        [\-\-cdw15=<cdw15> | \-9 <cdw15>]
                         [\-\-data\-len=<data\-len> | \-l <data\-len>]
                         [\-\-metadata\-len=<len> | \-m <len>]
                         [\-\-input\-file=<file> | \-i <file>]

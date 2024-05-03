@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-feature
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 02/14/2024
+.\"      Date: 05/03/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-FEATURE" "1" "02/14/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-FEATURE" "1" "05/03/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,11 +33,11 @@ nvme-get-feature \- Gets an NVMe feature, returns applicable results
 .sp
 .nf
 \fInvme get\-feature\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-feature\-id=<fid> | \-f <fid>] [\-\-cdw11=<cdw11>]
+                        [\-\-feature\-id=<fid> | \-f <fid>]
                         [\-\-uuid\-index=<uuid\-index> | \-U <uuid_index>]
                         [\-\-data\-len=<data\-len> | \-l <data\-len>]
                         [\-\-sel=<select> | \-s <select>]
-                        [\-\-raw\-binary | \-b]
+                        [\-\-raw\-binary | \-b] [\-\-cdw11=<cdw11> | \-c <cdw11>]
                         [\-\-human\-readable | \-H]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
@@ -115,7 +115,7 @@ UUID Index of the feature
 The data length for the buffer returned for this feature\&. Most known features do not use this value\&. The exception is LBA Range Type
 .RE
 .PP
-\-\-cdw11=<cdw11>
+\-c <cdw11>, \-\-cdw11=<cdw11>
 .RS 4
 The value for command dword 11, if applicable\&.
 .RE
