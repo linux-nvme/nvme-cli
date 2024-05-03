@@ -166,7 +166,7 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, size_t max_
 
 	struct nvme_telemetry_log *telem;
 	enum nvme_cmd_get_log_lid lid;
-	_cleanup_free_ void *log;
+	_cleanup_free_ void *log = NULL;
 	void *tmp;
 	int err;
 	size_t dalb;
