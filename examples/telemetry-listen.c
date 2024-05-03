@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <libnvme.h>
+#include <sys/stat.h>
 
 #include <ccan/endian/endian.h>
 
