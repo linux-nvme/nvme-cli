@@ -712,6 +712,7 @@ const char *nvme_log_to_string(__u8 lid)
 	case NVME_LOG_LID_ENDURANCE_GRP_EVT:		return "Endurance Group Event Aggregate";
 	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:	return "Feature Identifiers Supported and Effects";
 	case NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS:	return "NVMe-MI Commands Supported and Effects";
+	case NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN:	return "Command and Feature Lockdown";
 	case NVME_LOG_LID_BOOT_PARTITION:		return "Boot Partition";
 	case NVME_LOG_LID_FDP_CONFIGS:			return "FDP Configurations";
 	case NVME_LOG_LID_FDP_RUH_USAGE:		return "Reclaim Unit Handle Usage";
