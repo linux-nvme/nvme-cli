@@ -1,0 +1,66 @@
+.TH "libnvme" 9 "enum nvme_pmrebs" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_pmrebs \- This field indicates the persistent memory region elasticity buffer size
+.SH SYNOPSIS
+enum nvme_pmrebs {
+.br
+.BI "    NVME_PMREBS_PMRSZU_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_RBB_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_PMRWBZ_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_PMRSZU_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_RBB_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_PMRWBZ_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_PMRSZU_B"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_PMRSZU_1K"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_PMRSZU_1M"
+, 
+.br
+.br
+.BI "    NVME_PMREBS_PMRSZU_1G"
+
+};
+.SH Constants
+.IP "NVME_PMREBS_PMRSZU_SHIFT" 12
+Shift amount to get the PMR elasticity buffer size units
+.IP "NVME_PMREBS_RBB_SHIFT" 12
+Shift amount to get the read bypass behavior
+.IP "NVME_PMREBS_PMRWBZ_SHIFT" 12
+Shift amount to get the PMR elasticity buffer size base
+.IP "NVME_PMREBS_PMRSZU_MASK" 12
+Mask to get the PMR elasticity buffer size units
+.IP "NVME_PMREBS_RBB_MASK" 12
+Mask to get the read bypass behavior
+.IP "NVME_PMREBS_PMRWBZ_MASK" 12
+Mask to get the PMR elasticity buffer size base
+.IP "NVME_PMREBS_PMRSZU_B" 12
+Bytes
+.IP "NVME_PMREBS_PMRSZU_1K" 12
+1 KiB
+.IP "NVME_PMREBS_PMRSZU_1M" 12
+1 MiB
+.IP "NVME_PMREBS_PMRSZU_1G" 12
+1 GiB

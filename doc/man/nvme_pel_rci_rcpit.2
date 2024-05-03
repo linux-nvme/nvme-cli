@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_pel_rci_rcpit" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_pel_rci_rcpit \- Persistent Event Log Reporting Context - Port Identifier Type
+.SH SYNOPSIS
+enum nvme_pel_rci_rcpit {
+.br
+.BI "    NVME_PEL_RCI_RCPIT_NOT_EXIST"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RCPIT_EST_PORT"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RCPIT_EST_ME"
+
+};
+.SH Constants
+.IP "NVME_PEL_RCI_RCPIT_NOT_EXIST" 12
+Does not already exist
+.IP "NVME_PEL_RCI_RCPIT_EST_PORT" 12
+Established by an NVM subsystem port
+.IP "NVME_PEL_RCI_RCPIT_EST_ME" 12
+Established by a Management Endpoint

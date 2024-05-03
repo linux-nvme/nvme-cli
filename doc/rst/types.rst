@@ -296,6 +296,486 @@ Location) register is not supported by fabrics, but it can be checked here.
 true if given offset is 64bit register, otherwise it returns false.
 
 
+
+
+.. c:enum:: nvme_cap
+
+   This field indicates the controller capabilities register
+
+**Constants**
+
+``NVME_CAP_MQES_SHIFT``
+  Shift amount to get the maximum queue entries supported
+
+``NVME_CAP_CQR_SHIFT``
+  Shift amount to get the contiguous queues required
+
+``NVME_CAP_AMS_SHIFT``
+  Shift amount to get the arbitration mechanism supported
+
+``NVME_CAP_TO_SHIFT``
+  Shift amount to get the timeout
+
+``NVME_CAP_DSTRD_SHIFT``
+  Shift amount to get the doorbell stride
+
+``NVME_CAP_NSSRC_SHIFT``
+  Shift amount to get the NVM subsystem reset supported
+
+``NVME_CAP_CSS_SHIFT``
+  Shift amount to get the command sets supported
+
+``NVME_CAP_BPS_SHIFT``
+  Shift amount to get the boot partition support
+
+``NVME_CAP_CPS_SHIFT``
+  Shift amount to get the controller power scope
+
+``NVME_CAP_MPSMIN_SHIFT``
+  Shift amount to get the memory page size minimum
+
+``NVME_CAP_MPSMAX_SHIFT``
+  Shift amount to get the memory page size maximum
+
+``NVME_CAP_PMRS_SHIFT``
+  Shift amount to get the persistent memory region supported
+
+``NVME_CAP_CMBS_SHIFT``
+  Shift amount to get the controller memory buffer supported
+
+``NVME_CAP_NSSS_SHIFT``
+  Shift amount to get the NVM subsystem shutdown supported
+
+``NVME_CAP_CRMS_SHIFT``
+  Shift amount to get the controller ready modes supported
+
+``NVME_CAP_MQES_MASK``
+  Mask to get the maximum queue entries supported
+
+``NVME_CAP_CQR_MASK``
+  Mask to get the contiguous queues required
+
+``NVME_CAP_AMS_MASK``
+  Mask to get the arbitration mechanism supported
+
+``NVME_CAP_TO_MASK``
+  Mask to get the timeout
+
+``NVME_CAP_DSTRD_MASK``
+  Mask to get the doorbell stride
+
+``NVME_CAP_NSSRC_MASK``
+  Mask to get the NVM subsystem reset supported
+
+``NVME_CAP_CSS_MASK``
+  Mask to get the command sets supported
+
+``NVME_CAP_BPS_MASK``
+  Mask to get the boot partition support
+
+``NVME_CAP_CPS_MASK``
+  Mask to get the controller power scope
+
+``NVME_CAP_MPSMIN_MASK``
+  Mask to get the memory page size minimum
+
+``NVME_CAP_MPSMAX_MASK``
+  Mask to get the memory page size maximum
+
+``NVME_CAP_PMRS_MASK``
+  Mask to get the persistent memory region supported
+
+``NVME_CAP_CMBS_MASK``
+  Mask to get the controller memory buffer supported
+
+``NVME_CAP_NSSS_MASK``
+  Mask to get the NVM subsystem shutdown supported
+
+``NVME_CAP_CRMS_MASK``
+  Mask to get the controller ready modes supported
+
+``NVME_CAP_AMS_WRR``
+  Weighted round robin with urgent priority class
+
+``NVME_CAP_AMS_VS``
+  Vendor specific
+
+``NVME_CAP_CSS_NVM``
+  NVM command set or a discovery controller
+
+``NVME_CAP_CSS_CSI``
+  Controller supports one or more I/O command sets
+
+``NVME_CAP_CSS_ADMIN``
+  No I/O command set is supported
+
+``NVME_CAP_CPS_NONE``
+  Not reported
+
+``NVME_CAP_CPS_CTRL``
+  Controller scope
+
+``NVME_CAP_CPS_DOMAIN``
+  Domain scope
+
+``NVME_CAP_CPS_NVMS``
+  NVM subsystem scope
+
+``NVME_CAP_CRWMS``
+  Controller ready with media support
+
+``NVME_CAP_CRIMS``
+  Controller ready independent of media support
+
+
+
+
+.. c:enum:: nvme_vs
+
+   This field indicates the version
+
+**Constants**
+
+``NVME_VS_TER_SHIFT``
+  Shift amount to get the tertiary version
+
+``NVME_VS_MNR_SHIFT``
+  Shift amount to get the minor version
+
+``NVME_VS_MJR_SHIFT``
+  Shift amount to get the major version
+
+``NVME_VS_TER_MASK``
+  Mask to get the tertiary version
+
+``NVME_VS_MNR_MASK``
+  Mask to get the minor version
+
+``NVME_VS_MJR_MASK``
+  Mask to get the major version
+
+
+
+
+.. c:enum:: nvme_cc
+
+   This field indicates the controller configuration
+
+**Constants**
+
+``NVME_CC_EN_SHIFT``
+  Shift amount to get the enable
+
+``NVME_CC_CSS_SHIFT``
+  Shift amount to get the I/O command set selected
+
+``NVME_CC_MPS_SHIFT``
+  Shift amount to get the memory page size
+
+``NVME_CC_AMS_SHIFT``
+  Shift amount to get the arbitration mechanism selected
+
+``NVME_CC_SHN_SHIFT``
+  Shift amount to get the shutdown notification
+
+``NVME_CC_IOSQES_SHIFT``
+  Shift amount to get the I/O submission queue entry size
+
+``NVME_CC_IOCQES_SHIFT``
+  Shift amount to get the I/O completion queue entry size
+
+``NVME_CC_CRIME_SHIFT``
+  Shift amount to get the controller ready independent of media enable
+
+``NVME_CC_EN_MASK``
+  Mask to get the enable
+
+``NVME_CC_CSS_MASK``
+  Mask to get the I/O command set selected
+
+``NVME_CC_MPS_MASK``
+  Mask to get the memory page size
+
+``NVME_CC_AMS_MASK``
+  Mask to get the arbitration mechanism selected
+
+``NVME_CC_SHN_MASK``
+  Mask to get the shutdown notification
+
+``NVME_CC_CRIME_MASK``
+  Mask to get the I/O submission queue entry size
+
+``NVME_CC_IOSQES_MASK``
+  Mask to get the I/O completion queue entry size
+
+``NVME_CC_IOCQES_MASK``
+  Mask to get the controller ready independent of media enable
+
+``NVME_CC_CSS_NVM``
+  NVM command set
+
+``NVME_CC_CSS_CSI``
+  All supported I/O command sets
+
+``NVME_CC_CSS_ADMIN``
+  Admin command set only
+
+``NVME_CC_AMS_RR``
+  Round robin
+
+``NVME_CC_AMS_WRRU``
+  Weighted round robin with urgent priority class
+
+``NVME_CC_AMS_VS``
+  Vendor specific
+
+``NVME_CC_SHN_NONE``
+  No notification; no effect
+
+``NVME_CC_SHN_NORMAL``
+  Normal shutdown notification
+
+``NVME_CC_SHN_ABRUPT``
+  Abrupt shutdown notification
+
+``NVME_CC_CRWME``
+  Controller ready with media enable
+
+``NVME_CC_CRIME``
+  Controller ready independent of media enable
+
+
+
+
+.. c:enum:: nvme_csts
+
+   This field indicates the controller status register
+
+**Constants**
+
+``NVME_CSTS_RDY_SHIFT``
+  Shift amount to get the ready
+
+``NVME_CSTS_CFS_SHIFT``
+  Shift amount to get the controller fatal status
+
+``NVME_CSTS_SHST_SHIFT``
+  Shift amount to get the shutdown status
+
+``NVME_CSTS_NSSRO_SHIFT``
+  Shift amount to get the NVM subsystem reset occurred
+
+``NVME_CSTS_PP_SHIFT``
+  Shift amount to get the processing paused
+
+``NVME_CSTS_ST_SHIFT``
+  Shift amount to get the shutdown type
+
+``NVME_CSTS_RDY_MASK``
+  Mask to get the ready
+
+``NVME_CSTS_CFS_MASK``
+  Mask to get the controller fatal status
+
+``NVME_CSTS_SHST_MASK``
+  Mask to get the shutdown status
+
+``NVME_CSTS_NSSRO_MASK``
+  Mask to get the NVM subsystem reset occurred
+
+``NVME_CSTS_PP_MASK``
+  Mask to get the processing paused
+
+``NVME_CSTS_ST_MASK``
+  Mask to get the shutdown type
+
+``NVME_CSTS_SHST_NORMAL``
+  Normal operation
+
+``NVME_CSTS_SHST_OCCUR``
+  Shutdown processing occurring
+
+``NVME_CSTS_SHST_CMPLT``
+  Shutdown processing complete
+
+``NVME_CSTS_SHN_MASK``
+  Deprecated mask to get the shutdown status
+
+
+
+
+.. c:enum:: nvme_aqa
+
+   This field indicates the admin queue attributes
+
+**Constants**
+
+``NVME_AQA_ASQS_SHIFT``
+  Shift amount to get the admin submission queue size
+
+``NVME_AQA_ACQS_SHIFT``
+  Shift amount to get the admin completion queue size
+
+``NVME_AQA_ASQS_MASK``
+  Mask to get the admin submission queue size
+
+``NVME_AQA_ACQS_MASK``
+  Mask to get the admin completion queue size
+
+
+
+
+.. c:enum:: nvme_asq
+
+   This field indicates the admin submission queue base address
+
+**Constants**
+
+``NVME_ASQ_ASQB_SHIFT``
+  Shift amount to get the admin submission queue base
+
+
+
+
+.. c:enum:: nvme_acq
+
+   This field indicates the admin completion queue base address
+
+**Constants**
+
+``NVME_ACQ_ACQB_SHIFT``
+  Shift amount to get the admin completion queue base
+
+
+
+
+.. c:enum:: nvme_cmbloc
+
+   This field indicates the controller memory buffer location
+
+**Constants**
+
+``NVME_CMBLOC_BIR_SHIFT``
+  Shift amount to get the base indicator register
+
+``NVME_CMBLOC_CQMMS_SHIFT``
+  Shift amount to get the CMB queue mixed memory support
+
+``NVME_CMBLOC_CQPDS_SHIFT``
+  Shift amount to get the CMB queue physically discontiguous support
+
+``NVME_CMBLOC_CDPLMS_SHIFT``
+  Shift amount to get the CMB data pointer mixed locations support
+
+``NVME_CMBLOC_CDPCILS_SHIFT``
+  Shift amount to get the CMB data pointer and command independent locations support
+
+``NVME_CMBLOC_CDMMMS_SHIFT``
+  Shift amount to get the CMB data metadata mixed memory support
+
+``NVME_CMBLOC_CQDA_SHIFT``
+  Shift amount to get the CMB queue dword alignment
+
+``NVME_CMBLOC_OFST_SHIFT``
+  Shift amount to get the offset
+
+``NVME_CMBLOC_BIR_MASK``
+  Mask to get the base indicator register
+
+``NVME_CMBLOC_CQMMS_MASK``
+  Mask to get the CMB queue mixed memory support
+
+``NVME_CMBLOC_CQPDS_MASK``
+  Mask to get the CMB queue physically discontiguous support
+
+``NVME_CMBLOC_CDPLMS_MASK``
+  Mask to get the CMB data pointer mixed locations support
+
+``NVME_CMBLOC_CDPCILS_MASK``
+  Mask to get the CMB data pointer and command independent locations support
+
+``NVME_CMBLOC_CDMMMS_MASK``
+  Mask to get the CMB data metadata mixed memory support
+
+``NVME_CMBLOC_CQDA_MASK``
+  Mask to get the CMB queue dword alignment
+
+``NVME_CMBLOC_OFST_MASK``
+  Mask to get the offset
+
+
+
+
+.. c:enum:: nvme_cmbsz
+
+   This field indicates the controller memory buffer size
+
+**Constants**
+
+``NVME_CMBSZ_SQS_SHIFT``
+  Shift amount to get the submission queue support
+
+``NVME_CMBSZ_CQS_SHIFT``
+  Shift amount to get the completion queue support
+
+``NVME_CMBSZ_LISTS_SHIFT``
+  Shift amount to get the PLP SGL list support
+
+``NVME_CMBSZ_RDS_SHIFT``
+  Shift amount to get the read data support
+
+``NVME_CMBSZ_WDS_SHIFT``
+  Shift amount to get the write data support
+
+``NVME_CMBSZ_SZU_SHIFT``
+  Shift amount to get the size units
+
+``NVME_CMBSZ_SZ_SHIFT``
+  Shift amount to get the size
+
+``NVME_CMBSZ_SQS_MASK``
+  Mask to get the submission queue support
+
+``NVME_CMBSZ_CQS_MASK``
+  Mask to get the completion queue support
+
+``NVME_CMBSZ_LISTS_MASK``
+  Mask to get the PLP SGL list support
+
+``NVME_CMBSZ_RDS_MASK``
+  Mask to get the read data support
+
+``NVME_CMBSZ_WDS_MASK``
+  Mask to get the write data support
+
+``NVME_CMBSZ_SZU_MASK``
+  Mask to get the size units
+
+``NVME_CMBSZ_SZ_MASK``
+  Mask to get the size
+
+``NVME_CMBSZ_SZU_4K``
+  4 KiB
+
+``NVME_CMBSZ_SZU_64K``
+  64 KiB
+
+``NVME_CMBSZ_SZU_1M``
+  1 MiB
+
+``NVME_CMBSZ_SZU_16M``
+  16 MiB
+
+``NVME_CMBSZ_SZU_256M``
+  256 MiB
+
+``NVME_CMBSZ_SZU_4G``
+  4 GiB
+
+``NVME_CMBSZ_SZU_64G``
+  64 GiB
+
+
 .. c:function:: __u64 nvme_cmb_size (__u32 cmbsz)
 
    Calculate size of the controller memory buffer
@@ -308,6 +788,387 @@ true if given offset is 64bit register, otherwise it returns false.
 **Return**
 
 size of controller memory buffer in bytes
+
+
+
+
+.. c:enum:: nvme_bpinfo
+
+   This field indicates the boot partition information
+
+**Constants**
+
+``NVME_BPINFO_BPSZ_SHIFT``
+  Shift amount to get the boot partition size
+
+``NVME_BPINFO_BRS_SHIFT``
+  Shift amount to get the boot read status
+
+``NVME_BPINFO_ABPID_SHIFT``
+  Shift amount to get the active boot partition ID
+
+``NVME_BPINFO_BPSZ_MASK``
+  Mask to get the boot partition size
+
+``NVME_BPINFO_BRS_MASK``
+  Mask to get the boot read status
+
+``NVME_BPINFO_ABPID_MASK``
+  Mask to get the active boot partition ID
+
+``NVME_BPINFO_BRS_NONE``
+  No boot partition read operation requested
+
+``NVME_BPINFO_BRS_READ_IN_PROGRESS``
+  Boot partition read in progress
+
+``NVME_BPINFO_BRS_READ_SUCCESS``
+  Boot partition read completed successfully
+
+``NVME_BPINFO_BRS_READ_ERROR``
+  Error completing boot partition read
+
+
+
+
+.. c:enum:: nvme_bprsel
+
+   This field indicates the boot partition read select
+
+**Constants**
+
+``NVME_BPRSEL_BPRSZ_SHIFT``
+  Shift amount to get the boot partition read size
+
+``NVME_BPRSEL_BPROF_SHIFT``
+  Shift amount to get the boot partition read offset
+
+``NVME_BPRSEL_BPID_SHIFT``
+  Shift amount to get the boot partition identifier
+
+``NVME_BPRSEL_BPRSZ_MASK``
+  Mask to get the boot partition read size
+
+``NVME_BPRSEL_BPROF_MASK``
+  Mask to get the boot partition read offset
+
+``NVME_BPRSEL_BPID_MASK``
+  Mask to get the boot partition identifier
+
+
+
+
+.. c:enum:: nvme_bpmbl
+
+   This field indicates the boot partition memory buffer location
+
+**Constants**
+
+``NVME_BPMBL_BMBBA_SHIFT``
+  Shift amount to get the boot partition memory buffer base address
+
+
+
+
+.. c:enum:: nvme_cmbmsc
+
+   This field indicates the controller memory buffer memory space control
+
+**Constants**
+
+``NVME_CMBMSC_CRE_SHIFT``
+  Shift amount to get the capabilities registers enabled
+
+``NVME_CMBMSC_CMSE_SHIFT``
+  Shift amount to get the controller memory space enable
+
+``NVME_CMBMSC_CBA_SHIFT``
+  Shift amount to get the controller base address
+
+``NVME_CMBMSC_CRE_MASK``
+  Mask to get the capabilities registers enabled
+
+``NVME_CMBMSC_CMSE_MASK``
+  Mask to get the controller memory space enable
+
+
+
+
+.. c:enum:: nvme_cmbsts
+
+   This field indicates the controller memory buffer status
+
+**Constants**
+
+``NVME_CMBSTS_CBAI_SHIFT``
+  Shift amount to get the controller base address invalid
+
+``NVME_CMBSTS_CBAI_MASK``
+  Mask to get the controller base address invalid
+
+
+
+
+.. c:enum:: nvme_unit
+
+   Defined buffer size and write throughput granularity units
+
+**Constants**
+
+``NVME_UNIT_B``
+  Bytes or Bytes/second
+
+``NVME_UNIT_1K``
+  1 KiB or 1 KiB/second
+
+``NVME_UNIT_1M``
+  1 MiB or 1 MiB/second
+
+``NVME_UNIT_1G``
+  1 GiB or 1 GiB/second
+
+
+
+
+.. c:enum:: nvme_cmbebs
+
+   This field indicates the controller memory buffer elasticity buffer size
+
+**Constants**
+
+``NVME_CMBEBS_CMBSZU_SHIFT``
+  Shift amount to get the CMB elasticity buffer size units
+
+``NVME_CMBEBS_RBB_SHIFT``
+  Shift amount to get the read bypass behavior
+
+``NVME_CMBEBS_CMBWBZ_SHIFT``
+  Shift amount to get the CMB elasiticity buffer size base
+
+``NVME_CMBEBS_CMBSZU_MASK``
+  Mask to get the CMB elasticity buffer size units
+
+``NVME_CMBEBS_RBB_MASK``
+  Mask to get the read bypass behavior
+
+``NVME_CMBEBS_CMBWBZ_MASK``
+  Mask to get the CMB elasiticity buffer size base
+
+``NVME_CMBEBS_CMBSZU_B``
+  Bytes granularity
+
+``NVME_CMBEBS_CMBSZU_1K``
+  1 KiB granularity
+
+``NVME_CMBEBS_CMBSZU_1M``
+  1 MiB granularity
+
+``NVME_CMBEBS_CMBSZU_1G``
+  1 GiB granularity
+
+
+
+
+.. c:enum:: nvme_cmbswtp
+
+   This field indicates the controller memory buffer sustained write throughput
+
+**Constants**
+
+``NVME_CMBSWTP_CMBSWTU_SHIFT``
+  Shift amount to get the CMB sustained write throughput units
+
+``NVME_CMBSWTP_CMBSWTV_SHIFT``
+  Shift amount to get the CMB sustained write throughput
+
+``NVME_CMBSWTP_CMBSWTU_MASK``
+  Mask to get the CMB sustained write throughput units
+
+``NVME_CMBSWTP_CMBSWTV_MASK``
+  Mask to get the CMB sustained write throughput
+
+``NVME_CMBSWTP_CMBSWTU_B``
+  Bytes/second granularity
+
+``NVME_CMBSWTP_CMBSWTU_1K``
+  1 KiB/second granularity
+
+``NVME_CMBSWTP_CMBSWTU_1M``
+  1 MiB/second granularity
+
+``NVME_CMBSWTP_CMBSWTU_1G``
+  1 GiB/second granularity
+
+
+
+
+.. c:enum:: nvme_crto
+
+   This field indicates the controller ready timeouts
+
+**Constants**
+
+``NVME_CRTO_CRWMT_SHIFT``
+  Shift amount to get the  controller ready with media timeout
+
+``NVME_CRTO_CRIMT_SHIFT``
+  Shift amount to get the controller ready independent of media timeout
+
+``NVME_CRTO_CRWMT_MASK``
+  Mask to get the controller ready with media timeout
+
+``NVME_CRTO_CRIMT_MASK``
+  Mask to get the controller ready independent of media timeout
+
+
+
+
+.. c:enum:: nvme_pmrcap
+
+   This field indicates the persistent memory region capabilities
+
+**Constants**
+
+``NVME_PMRCAP_RDS_SHIFT``
+  Shift amount to get the read data support
+
+``NVME_PMRCAP_WDS_SHIFT``
+  Shift amount to get the write data support
+
+``NVME_PMRCAP_BIR_SHIFT``
+  Shift amount to get the base indicator register
+
+``NVME_PMRCAP_PMRTU_SHIFT``
+  Shift amount to get the persistent memory region time units
+
+``NVME_PMRCAP_PMRWBM_SHIFT``
+  Shift amount to get the persistent memory region write barrier mechanisms
+
+``NVME_PMRCAP_PMRTO_SHIFT``
+  Shift amount to get the persistent memory region timeout
+
+``NVME_PMRCAP_CMSS_SHIFT``
+  Shift amount to get the controller memory space supported
+
+``NVME_PMRCAP_PMRWMB_SHIFT``
+  Deprecated shift amount to get the persistent memory region write barrier mechanisms
+
+``NVME_PMRCAP_RDS_MASK``
+  Mask to get the read data support
+
+``NVME_PMRCAP_WDS_MASK``
+  Mask to get the write data support
+
+``NVME_PMRCAP_BIR_MASK``
+  Mask to get the base indicator register
+
+``NVME_PMRCAP_PMRTU_MASK``
+  Mask to get the persistent memory region time units
+
+``NVME_PMRCAP_PMRWBM_MASK``
+  Mask to get the persistent memory region write barrier mechanisms
+
+``NVME_PMRCAP_PMRTO_MASK``
+  Mask to get the persistent memory region timeout
+
+``NVME_PMRCAP_CMSS_MASK``
+  Mask to get the controller memory space supported
+
+``NVME_PMRCAP_PMRWMB_MASK``
+  Deprecated mask to get the persistent memory region write barrier mechanisms
+
+``NVME_PMRCAP_PMRTU_500MS``
+  500 milliseconds
+
+``NVME_PMRCAP_PMRTU_60S``
+  minutes
+
+
+
+
+.. c:enum:: nvme_pmrctl
+
+   This field indicates the persistent memory region control
+
+**Constants**
+
+``NVME_PMRCTL_EN_SHIFT``
+  Shift amount to get the enable
+
+``NVME_PMRCTL_EN_MASK``
+  Mask to get the enable
+
+
+
+
+.. c:enum:: nvme_pmrsts
+
+   This field indicates the persistent memory region status
+
+**Constants**
+
+``NVME_PMRSTS_ERR_SHIFT``
+  Shift amount to get the error
+
+``NVME_PMRSTS_NRDY_SHIFT``
+  Shift amount to get the not ready
+
+``NVME_PMRSTS_HSTS_SHIFT``
+  Shift amount to get the health status
+
+``NVME_PMRSTS_CBAI_SHIFT``
+  Shift amount to get the controller base address invalid
+
+``NVME_PMRSTS_ERR_MASK``
+  Mask to get the error
+
+``NVME_PMRSTS_NRDY_MASK``
+  Mask to get the not ready
+
+``NVME_PMRSTS_HSTS_MASK``
+  Mask to get the health status
+
+``NVME_PMRSTS_CBAI_MASK``
+  Mask to get the controller base address invalid
+
+
+
+
+.. c:enum:: nvme_pmrebs
+
+   This field indicates the persistent memory region elasticity buffer size
+
+**Constants**
+
+``NVME_PMREBS_PMRSZU_SHIFT``
+  Shift amount to get the PMR elasticity buffer size units
+
+``NVME_PMREBS_RBB_SHIFT``
+  Shift amount to get the read bypass behavior
+
+``NVME_PMREBS_PMRWBZ_SHIFT``
+  Shift amount to get the PMR elasticity buffer size base
+
+``NVME_PMREBS_PMRSZU_MASK``
+  Mask to get the PMR elasticity buffer size units
+
+``NVME_PMREBS_RBB_MASK``
+  Mask to get the read bypass behavior
+
+``NVME_PMREBS_PMRWBZ_MASK``
+  Mask to get the PMR elasticity buffer size base
+
+``NVME_PMREBS_PMRSZU_B``
+  Bytes
+
+``NVME_PMREBS_PMRSZU_1K``
+  1 KiB
+
+``NVME_PMREBS_PMRSZU_1M``
+  1 MiB
+
+``NVME_PMREBS_PMRSZU_1G``
+  1 GiB
 
 
 .. c:function:: __u64 nvme_pmr_size (__u32 pmrebs)
@@ -324,6 +1185,39 @@ size of controller memory buffer in bytes
 size of controller persistent memory buffer in bytes
 
 
+
+
+.. c:enum:: nvme_pmrswtp
+
+   This field indicates the persistent memory region sustained write throughput
+
+**Constants**
+
+``NVME_PMRSWTP_PMRSWTU_SHIFT``
+  Shift amount to get the PMR sustained write throughput units
+
+``NVME_PMRSWTP_PMRSWTV_SHIFT``
+  Shift amount to get the PMR sustained write throughput
+
+``NVME_PMRSWTP_PMRSWTU_MASK``
+  Mask to get the PMR sustained write throughput units
+
+``NVME_PMRSWTP_PMRSWTV_MASK``
+  Mask to get the PMR sustained write throughput
+
+``NVME_PMRSWTP_PMRSWTU_BPS``
+  Bytes per second
+
+``NVME_PMRSWTP_PMRSWTU_KBPS``
+  1 KiB / s
+
+``NVME_PMRSWTP_PMRSWTU_MBPS``
+  1 MiB / s
+
+``NVME_PMRSWTP_PMRSWTU_GBPS``
+  1 GiB / s
+
+
 .. c:function:: __u64 nvme_pmr_throughput (__u32 pmrswtp)
 
    Calculate throughput of persistent memory buffer
@@ -336,6 +1230,51 @@ size of controller persistent memory buffer in bytes
 **Return**
 
 throughput of controller persistent memory buffer in bytes/second
+
+
+
+
+.. c:enum:: nvme_pmrmsc
+
+   This field indicates the persistent memory region memory space control
+
+**Constants**
+
+``NVME_PMRMSC_CMSE_SHIFT``
+  Shift amount to get the controller memory space enable
+
+``NVME_PMRMSC_CBA_SHIFT``
+  Shift amount to get the controller base address
+
+``NVME_PMRMSC_CMSE_MASK``
+  Mask to get the controller memory space enable
+
+
+
+
+.. c:enum:: nvme_flbas
+
+   This field indicates the formatted LBA size
+
+**Constants**
+
+``NVME_FLBAS_LOWER_SHIFT``
+  Shift amount to get the format index least significant 4 bits
+
+``NVME_FLBAS_META_EXT_SHIFT``
+  Shift amount to get the metadata transferred
+
+``NVME_FLBAS_HIGHER_SHIFT``
+  Shift amount to get the format index most significant 2 bits
+
+``NVME_FLBAS_LOWER_MASK``
+  Mask to get the format index least significant 4 bits
+
+``NVME_FLBAS_META_EXT_MASK``
+  Mask to get the metadata transferred
+
+``NVME_FLBAS_HIGHER_MASK``
+  Mask to get the format index most significant 2 bits
 
 
 
@@ -1038,6 +1977,45 @@ power scale value
 ``vs``
   Vendor Specific
 
+
+
+
+
+.. c:enum:: nvme_cmic
+
+   This field indicates the controller multi-path I/O and NS sharing capabilities
+
+**Constants**
+
+``NVME_CMIC_MULTI_PORT_SHIFT``
+  Shift amount to get the NVM subsystem port
+
+``NVME_CMIC_MULTI_CTRL_SHIFT``
+  Shift amount to get the controllers
+
+``NVME_CMIC_MULTI_SRIOV_SHIFT``
+  Shift amount to get the SR-IOV virtual function
+
+``NVME_CMIC_MULTI_ANA_SHIFT``
+  Shift amount to get the asymmetric namespace access reporting
+
+``NVME_CMIC_MULTI_RSVD_SHIFT``
+  Shift amount to get the reserved
+
+``NVME_CMIC_MULTI_PORT_MASK``
+  Mask to get the NVM subsystem port
+
+``NVME_CMIC_MULTI_CTRL_MASK``
+  Mask to get the controllers
+
+``NVME_CMIC_MULTI_SRIOV_MASK``
+  Mask to get the SR-IOV virtual function
+
+``NVME_CMIC_MULTI_ANA_MASK``
+  Mask to get the asymmetric namespace access reporting
+
+``NVME_CMIC_MULTI_RSVD_MASK``
+  Mask to get the reserved
 
 
 
@@ -4682,6 +5660,65 @@ bytes, in size. This log captures the controller’s internal state.
 
 
 
+.. c:enum:: nvme_pel_rci
+
+   This field indicates the persistent event log reporting context
+
+**Constants**
+
+``NVME_PEL_RCI_RCPID_SHIFT``
+  Shift amount to get the reporting context port identifier
+  from the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_RCI_RCPIT_SHIFT``
+  Shift amount to get the reporting context port identifier
+  type from the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_RCI_RCE_SHIFT``
+  Shift amount to get the reporting context exists
+  from the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_RCI_RSVD_SHIFT``
+  Shift amount to get the reserved reporting context
+  from the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_RCI_RCPID_MASK``
+  Mask to get the reporting context port identifier from
+  the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_RCI_RCPIT_MASK``
+  Mask to get the reporting context port identifier type from
+  the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_RCI_RCE_MASK``
+  Mask to get the reporting context exists from
+  the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_RCI_RSVD_MASK``
+  Mask to get the reserved reporting context from
+  the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+
+
+
+.. c:enum:: nvme_pel_rci_rcpit
+
+   Persistent Event Log Reporting Context - Port Identifier Type
+
+**Constants**
+
+``NVME_PEL_RCI_RCPIT_NOT_EXIST``
+  Does not already exist
+
+``NVME_PEL_RCI_RCPIT_EST_PORT``
+  Established by an NVM subsystem port
+
+``NVME_PEL_RCI_RCPIT_EST_ME``
+  Established by a Management Endpoint
+
+
+
+
 .. c:struct:: nvme_persistent_event_entry
 
    Persistent Event
@@ -4783,6 +5820,52 @@ bytes, in size. This log captures the controller’s internal state.
 
 ``NVME_PEL_THERMAL_EXCURSION_EVENT``
   Thermal Excursion Event
+
+
+
+
+.. c:enum:: nvme_pel_ehai
+
+   This field indicates the persistent event header additional information
+
+**Constants**
+
+``NVME_PEL_EHAI_PIT_SHIFT``
+  Shift amount to get the reporting context port identifier
+  from the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_EHAI_RSVD_SHIFT``
+  Shift amount to get the reserved reporting context
+  from the :c:type:`struct nvme_persistent_event_log <nvme_persistent_event_log>`.rci field.
+
+``NVME_PEL_EHAI_PIT_MASK``
+  Mask to get the reporting context port identifier from
+  the :c:type:`struct nvme_st_result <nvme_st_result>`.dsts field.
+
+``NVME_PEL_EHAI_RSVD_MASK``
+  Mask to get the reserved reporting context from
+  the :c:type:`struct nvme_st_result <nvme_st_result>`.dsts field.
+
+
+
+
+.. c:enum:: nvme_pel_ehai_pit
+
+   Persistent Event Header Additional Information - Port Identifier Type
+
+**Constants**
+
+``NVME_PEL_EHAI_PIT_NOT_REPORTED``
+  PIT not reported and PELPID does not apply
+
+``NVME_PEL_EHAI_PIT_NSS_PORT``
+  NVM subsystem port
+
+``NVME_PEL_EHAI_PIT_NMI_PORT``
+  NVMe-MI port
+
+``NVME_PEL_EHAI_PIT_NOT_ASSOCIATED``
+  Event not associated with any port and PELPID does not apply
 
 
 
@@ -5186,6 +6269,39 @@ bytes, in size. This log captures the controller’s internal state.
 
 
 
+.. c:enum:: nvme_set_feat_event_layout
+
+   This field indicates the set feature event layout
+
+**Constants**
+
+``NVME_SET_FEAT_EVENT_DW_COUNT_SHIFT``
+  Shift amount to get the Dword count from the
+  :c:type:`struct nvme_set_feature_event <nvme_set_feature_event>`.layout field.
+
+``NVME_SET_FEAT_EVENT_CC_DW0_SHIFT``
+  Shift amount to get the logged command completion Dword 0
+  from the :c:type:`struct nvme_set_feature_event <nvme_set_feature_event>`.layout field.
+
+``NVME_SET_FEAT_EVENT_MB_COUNT_SHIFT``
+  Shift amount to get the memory buffer count from
+  the :c:type:`struct nvme_set_feature_event <nvme_set_feature_event>`.layout field.
+
+``NVME_SET_FEAT_EVENT_DW_COUNT_MASK``
+  Mask to get the Dword count from the :c:type:`struct
+  nvme_set_feature_event <nvme_set_feature_event>`.layout field.
+
+``NVME_SET_FEAT_EVENT_CC_DW0_MASK``
+  Mask to get the logged command completion Dword 0 from
+  the :c:type:`struct nvme_set_feature_event <nvme_set_feature_event>`.layout field.
+
+``NVME_SET_FEAT_EVENT_MB_COUNT_MASK``
+  Mask to get the memory buffer count from the :c:type:`struct
+  nvme_set_feature_event <nvme_set_feature_event>`.layout field.
+
+
+
+
 .. c:struct:: nvme_thermal_exc_event
 
    Thermal Excursion Event Data
@@ -5542,6 +6658,31 @@ bytes, in size. This log captures the controller’s internal state.
 
 
 
+.. c:enum:: nvme_boot_partition_info
+
+   This field indicates the boot partition information
+
+**Constants**
+
+``NVME_BOOT_PARTITION_INFO_BPSZ_SHIFT``
+  Shift amount to get the boot partition size from
+  the :c:type:`struct nvme_boot_partition <nvme_boot_partition>`.bpinfo field.
+
+``NVME_BOOT_PARTITION_INFO_ABPID_SHIFT``
+  Shift amount to get the active boot partition ID
+  from the :c:type:`struct nvme_boot_partition <nvme_boot_partition>`.bpinfo field.
+
+``NVME_BOOT_PARTITION_INFO_BPSZ_MASK``
+  Mask to get the boot partition size from the
+  :c:type:`struct nvme_boot_partition <nvme_boot_partition>`.bpinfo field.
+
+``NVME_BOOT_PARTITION_INFO_ABPID_MASK``
+  Mask to get the active boot partition ID from the
+  :c:type:`struct nvme_boot_partition <nvme_boot_partition>`.bpinfo field.
+
+
+
+
 .. c:struct:: nvme_eom_lane_desc
 
    EOM Lane Descriptor
@@ -5716,17 +6857,50 @@ bytes, in size. This log captures the controller’s internal state.
 
 
 
-.. c:enum:: nvme_eom_optional_data
+.. c:enum:: nvme_eom_optional_data_present
 
    EOM Optional Data Present Fields
 
 **Constants**
 
-``NVME_EOM_EYE_DATA_PRESENT``
-  Eye Data Present
+``NVME_EOM_ODP_PEFP_SHIFT``
+  Shift amount to get the printable eye field present
+  from the :c:type:`struct nvme_phy_rx_eom_log <nvme_phy_rx_eom_log>`.odp field.
+
+``NVME_EOM_ODP_EDFP_SHIFT``
+  Shift amount to get the eye data field present
+  from the :c:type:`struct nvme_phy_rx_eom_log <nvme_phy_rx_eom_log>`.odp field.
+
+``NVME_EOM_ODP_RSVD_SHIFT``
+  Shift amount to get the reserved optional data present
+  from the :c:type:`struct nvme_phy_rx_eom_log <nvme_phy_rx_eom_log>`.odp field.
+
+``NVME_EOM_ODP_PEFP_MASK``
+  Mask to get the printable eye field present
+  from the :c:type:`struct nvme_phy_rx_eom_log <nvme_phy_rx_eom_log>`.odp field.
+
+``NVME_EOM_ODP_EDFP_MASK``
+  Mask to get the eye data field present
+  from the :c:type:`struct nvme_phy_rx_eom_log <nvme_phy_rx_eom_log>`.odp field.
+
+``NVME_EOM_ODP_RSVD_MASK``
+  Mask to get the reserved data present
+  from the :c:type:`struct nvme_phy_rx_eom_log <nvme_phy_rx_eom_log>`.odp field.
+
+
+
+
+.. c:enum:: nvme_eom_optional_data
+
+   EOM Optional Data Present Fields (Deprecated)
+
+**Constants**
 
 ``NVME_EOM_PRINTABLE_EYE_PRESENT``
   Printable Eye Present
+
+``NVME_EOM_EYE_DATA_PRESENT``
+  Eye Data Present
 
 
 
@@ -10913,6 +12087,9 @@ true if **status** is of the specified type and value
 
 ``NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS``
   NVMe-MI Commands Supported and Effects
+
+``NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN``
+  Command and Feature Lockdown
 
 ``NVME_LOG_LID_BOOT_PARTITION``
   Boot Partition

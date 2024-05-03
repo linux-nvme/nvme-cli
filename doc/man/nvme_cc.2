@@ -1,0 +1,168 @@
+.TH "libnvme" 9 "enum nvme_cc" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_cc \- This field indicates the controller configuration
+.SH SYNOPSIS
+enum nvme_cc {
+.br
+.BI "    NVME_CC_EN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CC_CSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CC_MPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CC_AMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CC_SHN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CC_IOSQES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CC_IOCQES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CC_CRIME_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CC_EN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CC_CSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CC_MPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CC_AMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CC_SHN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CC_CRIME_MASK"
+, 
+.br
+.br
+.BI "    NVME_CC_IOSQES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CC_IOCQES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CC_CSS_NVM"
+, 
+.br
+.br
+.BI "    NVME_CC_CSS_CSI"
+, 
+.br
+.br
+.BI "    NVME_CC_CSS_ADMIN"
+, 
+.br
+.br
+.BI "    NVME_CC_AMS_RR"
+, 
+.br
+.br
+.BI "    NVME_CC_AMS_WRRU"
+, 
+.br
+.br
+.BI "    NVME_CC_AMS_VS"
+, 
+.br
+.br
+.BI "    NVME_CC_SHN_NONE"
+, 
+.br
+.br
+.BI "    NVME_CC_SHN_NORMAL"
+, 
+.br
+.br
+.BI "    NVME_CC_SHN_ABRUPT"
+, 
+.br
+.br
+.BI "    NVME_CC_CRWME"
+, 
+.br
+.br
+.BI "    NVME_CC_CRIME"
+
+};
+.SH Constants
+.IP "NVME_CC_EN_SHIFT" 12
+Shift amount to get the enable
+.IP "NVME_CC_CSS_SHIFT" 12
+Shift amount to get the I/O command set selected
+.IP "NVME_CC_MPS_SHIFT" 12
+Shift amount to get the memory page size
+.IP "NVME_CC_AMS_SHIFT" 12
+Shift amount to get the arbitration mechanism selected
+.IP "NVME_CC_SHN_SHIFT" 12
+Shift amount to get the shutdown notification
+.IP "NVME_CC_IOSQES_SHIFT" 12
+Shift amount to get the I/O submission queue entry size
+.IP "NVME_CC_IOCQES_SHIFT" 12
+Shift amount to get the I/O completion queue entry size
+.IP "NVME_CC_CRIME_SHIFT" 12
+Shift amount to get the controller ready independent of media enable
+.IP "NVME_CC_EN_MASK" 12
+Mask to get the enable
+.IP "NVME_CC_CSS_MASK" 12
+Mask to get the I/O command set selected
+.IP "NVME_CC_MPS_MASK" 12
+Mask to get the memory page size
+.IP "NVME_CC_AMS_MASK" 12
+Mask to get the arbitration mechanism selected
+.IP "NVME_CC_SHN_MASK" 12
+Mask to get the shutdown notification
+.IP "NVME_CC_CRIME_MASK" 12
+Mask to get the I/O submission queue entry size
+.IP "NVME_CC_IOSQES_MASK" 12
+Mask to get the I/O completion queue entry size
+.IP "NVME_CC_IOCQES_MASK" 12
+Mask to get the controller ready independent of media enable
+.IP "NVME_CC_CSS_NVM" 12
+NVM command set
+.IP "NVME_CC_CSS_CSI" 12
+All supported I/O command sets
+.IP "NVME_CC_CSS_ADMIN" 12
+Admin command set only
+.IP "NVME_CC_AMS_RR" 12
+Round robin
+.IP "NVME_CC_AMS_WRRU" 12
+Weighted round robin with urgent priority class
+.IP "NVME_CC_AMS_VS" 12
+Vendor specific
+.IP "NVME_CC_SHN_NONE" 12
+No notification; no effect
+.IP "NVME_CC_SHN_NORMAL" 12
+Normal shutdown notification
+.IP "NVME_CC_SHN_ABRUPT" 12
+Abrupt shutdown notification
+.IP "NVME_CC_CRWME" 12
+Controller ready with media enable
+.IP "NVME_CC_CRIME" 12
+Controller ready independent of media enable

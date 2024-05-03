@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_set_feat_event_layout" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_set_feat_event_layout \- This field indicates the set feature event layout
+.SH SYNOPSIS
+enum nvme_set_feat_event_layout {
+.br
+.BI "    NVME_SET_FEAT_EVENT_DW_COUNT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SET_FEAT_EVENT_CC_DW0_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SET_FEAT_EVENT_MB_COUNT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SET_FEAT_EVENT_DW_COUNT_MASK"
+, 
+.br
+.br
+.BI "    NVME_SET_FEAT_EVENT_CC_DW0_MASK"
+, 
+.br
+.br
+.BI "    NVME_SET_FEAT_EVENT_MB_COUNT_MASK"
+
+};
+.SH Constants
+.IP "NVME_SET_FEAT_EVENT_DW_COUNT_SHIFT" 12
+Shift amount to get the Dword count from the
+\fIstruct nvme_set_feature_event\fP.layout field.
+.IP "NVME_SET_FEAT_EVENT_CC_DW0_SHIFT" 12
+Shift amount to get the logged command completion Dword 0
+from the \fIstruct nvme_set_feature_event\fP.layout field.
+.IP "NVME_SET_FEAT_EVENT_MB_COUNT_SHIFT" 12
+Shift amount to get the memory buffer count from
+the \fIstruct nvme_set_feature_event\fP.layout field.
+.IP "NVME_SET_FEAT_EVENT_DW_COUNT_MASK" 12
+Mask to get the Dword count from the \fIstruct
+nvme_set_feature_event\fP.layout field.
+.IP "NVME_SET_FEAT_EVENT_CC_DW0_MASK" 12
+Mask to get the logged command completion Dword 0 from
+the \fIstruct nvme_set_feature_event\fP.layout field.
+.IP "NVME_SET_FEAT_EVENT_MB_COUNT_MASK" 12
+Mask to get the memory buffer count from the \fIstruct
+nvme_set_feature_event\fP.layout field.

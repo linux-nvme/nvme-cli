@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_crto" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_crto \- This field indicates the controller ready timeouts
+.SH SYNOPSIS
+enum nvme_crto {
+.br
+.BI "    NVME_CRTO_CRWMT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CRTO_CRIMT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CRTO_CRWMT_MASK"
+, 
+.br
+.br
+.BI "    NVME_CRTO_CRIMT_MASK"
+
+};
+.SH Constants
+.IP "NVME_CRTO_CRWMT_SHIFT" 12
+Shift amount to get the  controller ready with media timeout
+.IP "NVME_CRTO_CRIMT_SHIFT" 12
+Shift amount to get the controller ready independent of media timeout
+.IP "NVME_CRTO_CRWMT_MASK" 12
+Mask to get the controller ready with media timeout
+.IP "NVME_CRTO_CRIMT_MASK" 12
+Mask to get the controller ready independent of media timeout

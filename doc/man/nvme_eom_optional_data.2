@@ -1,18 +1,18 @@
-.TH "libnvme" 9 "enum nvme_eom_optional_data" "February 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_eom_optional_data" "May 2024" "API Manual" LINUX
 .SH NAME
-enum nvme_eom_optional_data \- EOM Optional Data Present Fields
+enum nvme_eom_optional_data \- EOM Optional Data Present Fields (Deprecated)
 .SH SYNOPSIS
 enum nvme_eom_optional_data {
 .br
-.BI "    NVME_EOM_EYE_DATA_PRESENT"
+.BI "    NVME_EOM_PRINTABLE_EYE_PRESENT"
 , 
 .br
 .br
-.BI "    NVME_EOM_PRINTABLE_EYE_PRESENT"
+.BI "    NVME_EOM_EYE_DATA_PRESENT"
 
 };
 .SH Constants
-.IP "NVME_EOM_EYE_DATA_PRESENT" 12
-Eye Data Present
 .IP "NVME_EOM_PRINTABLE_EYE_PRESENT" 12
 Printable Eye Present
+.IP "NVME_EOM_EYE_DATA_PRESENT" 12
+Eye Data Present

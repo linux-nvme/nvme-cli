@@ -1,0 +1,132 @@
+.TH "libnvme" 9 "enum nvme_cmbsz" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_cmbsz \- This field indicates the controller memory buffer size
+.SH SYNOPSIS
+enum nvme_cmbsz {
+.br
+.BI "    NVME_CMBSZ_SQS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_CQS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_LISTS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_RDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_WDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZ_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SQS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_CQS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_LISTS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_RDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_WDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZ_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_4K"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_64K"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_1M"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_16M"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_256M"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_4G"
+, 
+.br
+.br
+.BI "    NVME_CMBSZ_SZU_64G"
+
+};
+.SH Constants
+.IP "NVME_CMBSZ_SQS_SHIFT" 12
+Shift amount to get the submission queue support
+.IP "NVME_CMBSZ_CQS_SHIFT" 12
+Shift amount to get the completion queue support
+.IP "NVME_CMBSZ_LISTS_SHIFT" 12
+Shift amount to get the PLP SGL list support
+.IP "NVME_CMBSZ_RDS_SHIFT" 12
+Shift amount to get the read data support
+.IP "NVME_CMBSZ_WDS_SHIFT" 12
+Shift amount to get the write data support
+.IP "NVME_CMBSZ_SZU_SHIFT" 12
+Shift amount to get the size units
+.IP "NVME_CMBSZ_SZ_SHIFT" 12
+Shift amount to get the size
+.IP "NVME_CMBSZ_SQS_MASK" 12
+Mask to get the submission queue support
+.IP "NVME_CMBSZ_CQS_MASK" 12
+Mask to get the completion queue support
+.IP "NVME_CMBSZ_LISTS_MASK" 12
+Mask to get the PLP SGL list support
+.IP "NVME_CMBSZ_RDS_MASK" 12
+Mask to get the read data support
+.IP "NVME_CMBSZ_WDS_MASK" 12
+Mask to get the write data support
+.IP "NVME_CMBSZ_SZU_MASK" 12
+Mask to get the size units
+.IP "NVME_CMBSZ_SZ_MASK" 12
+Mask to get the size
+.IP "NVME_CMBSZ_SZU_4K" 12
+4 KiB
+.IP "NVME_CMBSZ_SZU_64K" 12
+64 KiB
+.IP "NVME_CMBSZ_SZU_1M" 12
+1 MiB
+.IP "NVME_CMBSZ_SZU_16M" 12
+16 MiB
+.IP "NVME_CMBSZ_SZU_256M" 12
+256 MiB
+.IP "NVME_CMBSZ_SZU_4G" 12
+4 GiB
+.IP "NVME_CMBSZ_SZU_64G" 12
+64 GiB

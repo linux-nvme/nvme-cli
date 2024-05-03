@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_unit" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_unit \- Defined buffer size and write throughput granularity units
+.SH SYNOPSIS
+enum nvme_unit {
+.br
+.BI "    NVME_UNIT_B"
+, 
+.br
+.br
+.BI "    NVME_UNIT_1K"
+, 
+.br
+.br
+.BI "    NVME_UNIT_1M"
+, 
+.br
+.br
+.BI "    NVME_UNIT_1G"
+
+};
+.SH Constants
+.IP "NVME_UNIT_B" 12
+Bytes or Bytes/second
+.IP "NVME_UNIT_1K" 12
+1 KiB or 1 KiB/second
+.IP "NVME_UNIT_1M" 12
+1 MiB or 1 MiB/second
+.IP "NVME_UNIT_1G" 12
+1 GiB or 1 GiB/second

@@ -1,0 +1,102 @@
+.TH "libnvme" 9 "enum nvme_csts" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_csts \- This field indicates the controller status register
+.SH SYNOPSIS
+enum nvme_csts {
+.br
+.BI "    NVME_CSTS_RDY_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CSTS_CFS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CSTS_SHST_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CSTS_NSSRO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CSTS_PP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CSTS_ST_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CSTS_RDY_MASK"
+, 
+.br
+.br
+.BI "    NVME_CSTS_CFS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CSTS_SHST_MASK"
+, 
+.br
+.br
+.BI "    NVME_CSTS_NSSRO_MASK"
+, 
+.br
+.br
+.BI "    NVME_CSTS_PP_MASK"
+, 
+.br
+.br
+.BI "    NVME_CSTS_ST_MASK"
+, 
+.br
+.br
+.BI "    NVME_CSTS_SHST_NORMAL"
+, 
+.br
+.br
+.BI "    NVME_CSTS_SHST_OCCUR"
+, 
+.br
+.br
+.BI "    NVME_CSTS_SHST_CMPLT"
+, 
+.br
+.br
+.BI "    NVME_CSTS_SHN_MASK"
+
+};
+.SH Constants
+.IP "NVME_CSTS_RDY_SHIFT" 12
+Shift amount to get the ready
+.IP "NVME_CSTS_CFS_SHIFT" 12
+Shift amount to get the controller fatal status
+.IP "NVME_CSTS_SHST_SHIFT" 12
+Shift amount to get the shutdown status
+.IP "NVME_CSTS_NSSRO_SHIFT" 12
+Shift amount to get the NVM subsystem reset occurred
+.IP "NVME_CSTS_PP_SHIFT" 12
+Shift amount to get the processing paused
+.IP "NVME_CSTS_ST_SHIFT" 12
+Shift amount to get the shutdown type
+.IP "NVME_CSTS_RDY_MASK" 12
+Mask to get the ready
+.IP "NVME_CSTS_CFS_MASK" 12
+Mask to get the controller fatal status
+.IP "NVME_CSTS_SHST_MASK" 12
+Mask to get the shutdown status
+.IP "NVME_CSTS_NSSRO_MASK" 12
+Mask to get the NVM subsystem reset occurred
+.IP "NVME_CSTS_PP_MASK" 12
+Mask to get the processing paused
+.IP "NVME_CSTS_ST_MASK" 12
+Mask to get the shutdown type
+.IP "NVME_CSTS_SHST_NORMAL" 12
+Normal operation
+.IP "NVME_CSTS_SHST_OCCUR" 12
+Shutdown processing occurring
+.IP "NVME_CSTS_SHST_CMPLT" 12
+Shutdown processing complete
+.IP "NVME_CSTS_SHN_MASK" 12
+Deprecated mask to get the shutdown status

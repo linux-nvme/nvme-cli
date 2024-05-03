@@ -1,0 +1,66 @@
+.TH "libnvme" 9 "enum nvme_bpinfo" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_bpinfo \- This field indicates the boot partition information
+.SH SYNOPSIS
+enum nvme_bpinfo {
+.br
+.BI "    NVME_BPINFO_BPSZ_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_BRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_ABPID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_BPSZ_MASK"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_BRS_MASK"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_ABPID_MASK"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_BRS_NONE"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_BRS_READ_IN_PROGRESS"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_BRS_READ_SUCCESS"
+, 
+.br
+.br
+.BI "    NVME_BPINFO_BRS_READ_ERROR"
+
+};
+.SH Constants
+.IP "NVME_BPINFO_BPSZ_SHIFT" 12
+Shift amount to get the boot partition size
+.IP "NVME_BPINFO_BRS_SHIFT" 12
+Shift amount to get the boot read status
+.IP "NVME_BPINFO_ABPID_SHIFT" 12
+Shift amount to get the active boot partition ID
+.IP "NVME_BPINFO_BPSZ_MASK" 12
+Mask to get the boot partition size
+.IP "NVME_BPINFO_BRS_MASK" 12
+Mask to get the boot read status
+.IP "NVME_BPINFO_ABPID_MASK" 12
+Mask to get the active boot partition ID
+.IP "NVME_BPINFO_BRS_NONE" 12
+No boot partition read operation requested
+.IP "NVME_BPINFO_BRS_READ_IN_PROGRESS" 12
+Boot partition read in progress
+.IP "NVME_BPINFO_BRS_READ_SUCCESS" 12
+Boot partition read completed successfully
+.IP "NVME_BPINFO_BRS_READ_ERROR" 12
+Error completing boot partition read

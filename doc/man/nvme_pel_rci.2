@@ -1,0 +1,62 @@
+.TH "libnvme" 9 "enum nvme_pel_rci" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_pel_rci \- This field indicates the persistent event log reporting context
+.SH SYNOPSIS
+enum nvme_pel_rci {
+.br
+.BI "    NVME_PEL_RCI_RCPID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RCPIT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RCE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RSVD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RCPID_MASK"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RCPIT_MASK"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RCE_MASK"
+, 
+.br
+.br
+.BI "    NVME_PEL_RCI_RSVD_MASK"
+
+};
+.SH Constants
+.IP "NVME_PEL_RCI_RCPID_SHIFT" 12
+Shift amount to get the reporting context port identifier
+from the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_RCI_RCPIT_SHIFT" 12
+Shift amount to get the reporting context port identifier
+type from the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_RCI_RCE_SHIFT" 12
+Shift amount to get the reporting context exists
+from the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_RCI_RSVD_SHIFT" 12
+Shift amount to get the reserved reporting context
+from the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_RCI_RCPID_MASK" 12
+Mask to get the reporting context port identifier from
+the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_RCI_RCPIT_MASK" 12
+Mask to get the reporting context port identifier type from
+the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_RCI_RCE_MASK" 12
+Mask to get the reporting context exists from
+the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_RCI_RSVD_MASK" 12
+Mask to get the reserved reporting context from
+the \fIstruct nvme_persistent_event_log\fP.rci field.

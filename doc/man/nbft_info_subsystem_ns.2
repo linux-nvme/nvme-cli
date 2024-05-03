@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nbft_info_subsystem_ns" "February 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nbft_info_subsystem_ns" "May 2024" "API Manual" LINUX
 .SH NAME
 struct nbft_info_subsystem_ns \- Subsystem Namespace (SSNS) info
 .SH SYNOPSIS
@@ -39,6 +39,10 @@ struct nbft_info_subsystem_ns {
 .BI "    int asqsz;"
 .br
 .BI "    char *dhcp_root_path_string;"
+.br
+.BI "    bool discovered;"
+.br
+.BI "    bool unavailable;"
 .br
 .BI "
 };
@@ -92,3 +96,9 @@ Descriptor) or 0 if not supported.
 .IP "dhcp_root_path_string" 12
 DHCP Root Path Override string (SSNS Extended
 Information Descriptor).
+.IP "discovered" 12
+Indicates that this namespace was acquired
+through discovery.
+.IP "unavailable" 12
+Namespace is unavailable as indicated by
+the pre-OS driver.

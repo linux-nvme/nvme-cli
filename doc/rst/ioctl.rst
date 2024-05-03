@@ -4218,6 +4218,34 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: int nvme_ns_mgmt_delete_timeout (int fd, __u32 nsid, __u32 timeout)
+
+   Delete a non attached namespace with timeout
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u32 nsid``
+  Namespace identifier to delete
+
+``__u32 timeout``
+  Override the default timeout to this value in milliseconds;
+  set to 0 to use the system default.
+
+**Description**
+
+It is recommended that a namespace being deleted is not attached to any
+controller. Use the nvme_ns_detach_ctrls() first if the namespace is still
+attached.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_ns_mgmt_delete (int fd, __u32 nsid)
 
    Delete a non attached namespace
@@ -5199,29 +5227,5 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-.. c:function:: void nvme_set_debug (bool debug)
-
-   Set NVMe command debugging output
-
-**Parameters**
-
-``bool debug``
-  true to enable or false to disable
-
-
-.. c:function:: bool nvme_get_debug (void)
-
-   Get NVMe command debugging output
-
-**Parameters**
-
-``void``
-  no arguments
-
-**Return**
-
-false if disabled or true if enabled.
 
 

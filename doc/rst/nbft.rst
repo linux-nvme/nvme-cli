@@ -1,3 +1,12 @@
+.. _nbft.h:
+
+**nbft.h**
+
+
+NVM Express Boot Specification, Revision 1.0
+
+Note: this API is currently unstable, subject to further additions.
+
 
 
 .. c:enum:: nbft_desc_type
@@ -1716,6 +1725,8 @@
     int controller_id;
     int asqsz;
     char *dhcp_root_path_string;
+    bool discovered;
+    bool unavailable;
   };
 
 **Members**
@@ -1784,6 +1795,14 @@
 ``dhcp_root_path_string``
   DHCP Root Path Override string (SSNS Extended
   Information Descriptor).
+
+``discovered``
+  Indicates that this namespace was acquired
+  through discovery.
+
+``unavailable``
+  Namespace is unavailable as indicated by
+  the pre-OS driver.
 
 
 

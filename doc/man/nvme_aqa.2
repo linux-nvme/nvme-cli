@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_aqa" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_aqa \- This field indicates the admin queue attributes
+.SH SYNOPSIS
+enum nvme_aqa {
+.br
+.BI "    NVME_AQA_ASQS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_AQA_ACQS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_AQA_ASQS_MASK"
+, 
+.br
+.br
+.BI "    NVME_AQA_ACQS_MASK"
+
+};
+.SH Constants
+.IP "NVME_AQA_ASQS_SHIFT" 12
+Shift amount to get the admin submission queue size
+.IP "NVME_AQA_ACQS_SHIFT" 12
+Shift amount to get the admin completion queue size
+.IP "NVME_AQA_ASQS_MASK" 12
+Mask to get the admin submission queue size
+.IP "NVME_AQA_ACQS_MASK" 12
+Mask to get the admin completion queue size

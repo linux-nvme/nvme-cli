@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_fabrics_config" "February 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_fabrics_config" "May 2024" "API Manual" LINUX
 .SH NAME
 struct nvme_fabrics_config \- Defines all linux nvme fabrics initiator options
 .SH SYNOPSIS
@@ -26,9 +26,9 @@ struct nvme_fabrics_config {
 .br
 .BI "    int tos;"
 .br
-.BI "    int keyring;"
+.BI "    long keyring;"
 .br
-.BI "    int tls_key;"
+.BI "    long tls_key;"
 .br
 .BI "    bool duplicate_connect;"
 .br

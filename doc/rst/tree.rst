@@ -1729,6 +1729,20 @@ Host interface name of **c** (if present)
 DH-HMAC-CHAP host key or NULL if not set
 
 
+.. c:function:: const char * nvme_ctrl_get_cntlid (nvme_ctrl_t c)
+
+   Controller id
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller to be checked
+
+**Return**
+
+Controller id of **c**
+
+
 .. c:function:: void nvme_ctrl_set_dhchap_host_key (nvme_ctrl_t c, const char *key)
 
    Set host key

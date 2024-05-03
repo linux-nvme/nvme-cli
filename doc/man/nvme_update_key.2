@@ -1,0 +1,28 @@
+.TH "nvme_update_key" 9 "nvme_update_key" "May 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_update_key \- Update key raw data
+.SH SYNOPSIS
+.B "long" nvme_update_key
+.BI "(long keyring_id "  ","
+.BI "const char *key_type "  ","
+.BI "const char *identity "  ","
+.BI "unsigned char *key_data "  ","
+.BI "int key_len "  ");"
+.SH ARGUMENTS
+.IP "keyring_id" 12
+Id of the keyring holding key_id
+.IP "key_type" 12
+Type of the key to insert
+.IP "identity" 12
+Key identity string
+.IP "key_data" 12
+Raw data of the key
+.IP "key_len" 12
+Length of \fIkey_data\fP
+.SH "DESCRIPTION"
+Links the keyring specified by \fIkeyring_id\fP into the session
+keyring and updates the key reference by \fIidentity\fP with \fIkey_data\fP.
+The old key with identity \fIidentity\fP will be revoked to make it
+inaccessible.
+.SH "RETURN"
+Key id of the new key or 0 with errno set otherwise.

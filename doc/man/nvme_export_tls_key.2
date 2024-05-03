@@ -1,0 +1,19 @@
+.TH "nvme_export_tls_key" 9 "nvme_export_tls_key" "May 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_export_tls_key \- Export a TLS key
+.SH SYNOPSIS
+.B "char *" nvme_export_tls_key
+.BI "(const unsigned char *key_data "  ","
+.BI "int key_len "  ");"
+.SH ARGUMENTS
+.IP "key_data" 12
+Raw data of the key
+.IP "key_len" 12
+Length of \fIkey_data\fP
+.SH "DESCRIPTION"
+Returns \fIkey_data\fP in the PSK Interchange format as defined in section
+3.6.1.5 of the NVMe TCP Transport specification.
+.SH "RETURN"
+The string containing the TLS identity or NULL with errno set
+on error. It is the responsibility of the caller to free the returned
+string.

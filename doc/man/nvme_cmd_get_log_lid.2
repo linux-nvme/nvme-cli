@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_cmd_get_log_lid" "February 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_cmd_get_log_lid" "May 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_cmd_get_log_lid \- Get Log Page -Log Page Identifiers
 .SH SYNOPSIS
@@ -84,6 +84,10 @@ enum nvme_cmd_get_log_lid {
 , 
 .br
 .br
+.BI "    NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN"
+, 
+.br
+.br
 .BI "    NVME_LOG_LID_BOOT_PARTITION"
 , 
 .br
@@ -164,6 +168,8 @@ Supported Capacity Configuration Lis
 Feature Identifiers Supported and Effects
 .IP "NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS" 12
 NVMe-MI Commands Supported and Effects
+.IP "NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN" 12
+Command and Feature Lockdown
 .IP "NVME_LOG_LID_BOOT_PARTITION" 12
 Boot Partition
 .IP "NVME_LOG_LID_PHY_RX_EOM" 12

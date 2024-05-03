@@ -1,0 +1,54 @@
+.TH "libnvme" 9 "enum nvme_cmbswtp" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_cmbswtp \- This field indicates the controller memory buffer sustained write throughput
+.SH SYNOPSIS
+enum nvme_cmbswtp {
+.br
+.BI "    NVME_CMBSWTP_CMBSWTU_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSWTP_CMBSWTV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBSWTP_CMBSWTU_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSWTP_CMBSWTV_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBSWTP_CMBSWTU_B"
+, 
+.br
+.br
+.BI "    NVME_CMBSWTP_CMBSWTU_1K"
+, 
+.br
+.br
+.BI "    NVME_CMBSWTP_CMBSWTU_1M"
+, 
+.br
+.br
+.BI "    NVME_CMBSWTP_CMBSWTU_1G"
+
+};
+.SH Constants
+.IP "NVME_CMBSWTP_CMBSWTU_SHIFT" 12
+Shift amount to get the CMB sustained write throughput units
+.IP "NVME_CMBSWTP_CMBSWTV_SHIFT" 12
+Shift amount to get the CMB sustained write throughput
+.IP "NVME_CMBSWTP_CMBSWTU_MASK" 12
+Mask to get the CMB sustained write throughput units
+.IP "NVME_CMBSWTP_CMBSWTV_MASK" 12
+Mask to get the CMB sustained write throughput
+.IP "NVME_CMBSWTP_CMBSWTU_B" 12
+Bytes/second granularity
+.IP "NVME_CMBSWTP_CMBSWTU_1K" 12
+1 KiB/second granularity
+.IP "NVME_CMBSWTP_CMBSWTU_1M" 12
+1 MiB/second granularity
+.IP "NVME_CMBSWTP_CMBSWTU_1G" 12
+1 GiB/second granularity

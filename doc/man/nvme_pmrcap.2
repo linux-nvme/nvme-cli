@@ -1,0 +1,114 @@
+.TH "libnvme" 9 "enum nvme_pmrcap" "May 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_pmrcap \- This field indicates the persistent memory region capabilities
+.SH SYNOPSIS
+enum nvme_pmrcap {
+.br
+.BI "    NVME_PMRCAP_RDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_WDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_BIR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRTU_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRWBM_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRTO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_CMSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRWMB_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_RDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_WDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_BIR_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRTU_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRWBM_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRTO_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_CMSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRWMB_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRTU_500MS"
+, 
+.br
+.br
+.BI "    NVME_PMRCAP_PMRTU_60S"
+
+};
+.SH Constants
+.IP "NVME_PMRCAP_RDS_SHIFT" 12
+Shift amount to get the read data support
+.IP "NVME_PMRCAP_WDS_SHIFT" 12
+Shift amount to get the write data support
+.IP "NVME_PMRCAP_BIR_SHIFT" 12
+Shift amount to get the base indicator register
+.IP "NVME_PMRCAP_PMRTU_SHIFT" 12
+Shift amount to get the persistent memory region time units
+.IP "NVME_PMRCAP_PMRWBM_SHIFT" 12
+Shift amount to get the persistent memory region write barrier mechanisms
+.IP "NVME_PMRCAP_PMRTO_SHIFT" 12
+Shift amount to get the persistent memory region timeout
+.IP "NVME_PMRCAP_CMSS_SHIFT" 12
+Shift amount to get the controller memory space supported
+.IP "NVME_PMRCAP_PMRWMB_SHIFT" 12
+Deprecated shift amount to get the persistent memory region write barrier mechanisms
+.IP "NVME_PMRCAP_RDS_MASK" 12
+Mask to get the read data support
+.IP "NVME_PMRCAP_WDS_MASK" 12
+Mask to get the write data support
+.IP "NVME_PMRCAP_BIR_MASK" 12
+Mask to get the base indicator register
+.IP "NVME_PMRCAP_PMRTU_MASK" 12
+Mask to get the persistent memory region time units
+.IP "NVME_PMRCAP_PMRWBM_MASK" 12
+Mask to get the persistent memory region write barrier mechanisms
+.IP "NVME_PMRCAP_PMRTO_MASK" 12
+Mask to get the persistent memory region timeout
+.IP "NVME_PMRCAP_CMSS_MASK" 12
+Mask to get the controller memory space supported
+.IP "NVME_PMRCAP_PMRWMB_MASK" 12
+Deprecated mask to get the persistent memory region write barrier mechanisms
+.IP "NVME_PMRCAP_PMRTU_500MS" 12
+500 milliseconds
+.IP "NVME_PMRCAP_PMRTU_60S" 12
+minutes
