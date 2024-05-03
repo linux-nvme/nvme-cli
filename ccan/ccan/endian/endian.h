@@ -104,8 +104,10 @@ static inline uint64_t bswap_64(uint64_t val)
 #endif
 
 /* Needed for Glibc like endiness check */
+#ifndef __LITTLE_ENDIAN
 #define	__LITTLE_ENDIAN	1234
 #define	__BIG_ENDIAN	4321
+#endif
 
 /* Sanity check the defines.  We don't handle weird endianness. */
 #if !HAVE_LITTLE_ENDIAN && !HAVE_BIG_ENDIAN
