@@ -1513,10 +1513,10 @@ unsigned char *nvme_import_tls_key(const char *encoded_key, int *key_len,
 		return NULL;
 	}
 	crc = crc32(crc, decoded_key, decoded_len);
-	key_crc = ((u_int32_t)decoded_key[decoded_len]) |
-		((u_int32_t)decoded_key[decoded_len + 1] << 8) |
-		((u_int32_t)decoded_key[decoded_len + 2] << 16) |
-		((u_int32_t)decoded_key[decoded_len + 3] << 24);
+	key_crc = ((uint32_t)decoded_key[decoded_len]) |
+		((uint32_t)decoded_key[decoded_len + 1] << 8) |
+		((uint32_t)decoded_key[decoded_len + 2] << 16) |
+		((uint32_t)decoded_key[decoded_len + 3] << 24);
 	if (key_crc != crc) {
 		nvme_msg(NULL, LOG_ERR, "CRC mismatch (key %08x, crc %08x)",
 			 key_crc, crc);
