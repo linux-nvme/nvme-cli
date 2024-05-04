@@ -34,6 +34,7 @@
 #include <inttypes.h>
 #include <locale.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -9075,8 +9076,8 @@ static int check_dhchap_key(int argc, char **argv, struct command *command, stru
 
 	unsigned char decoded_key[128];
 	unsigned int decoded_len;
-	u_int32_t crc = crc32(0L, NULL, 0);
-	u_int32_t key_crc;
+	uint32_t crc = crc32(0L, NULL, 0);
+	uint32_t key_crc;
 	int err = 0, hmac;
 	struct config {
 		char	*key;
@@ -9144,10 +9145,10 @@ static int check_dhchap_key(int argc, char **argv, struct command *command, stru
 		return -EINVAL;
 	}
 	crc = crc32(crc, decoded_key, decoded_len);
-	key_crc = ((u_int32_t)decoded_key[decoded_len]) |
-		   ((u_int32_t)decoded_key[decoded_len + 1] << 8) |
-		   ((u_int32_t)decoded_key[decoded_len + 2] << 16) |
-		   ((u_int32_t)decoded_key[decoded_len + 3] << 24);
+	key_crc = ((uint32_t)decoded_key[decoded_len]) |
+		   ((uint32_t)decoded_key[decoded_len + 1] << 8) |
+		   ((uint32_t)decoded_key[decoded_len + 2] << 16) |
+		   ((uint32_t)decoded_key[decoded_len + 3] << 24);
 	if (key_crc != crc) {
 		nvme_show_error("CRC mismatch (key %08x, crc %08x)", key_crc, crc);
 		return -EINVAL;
