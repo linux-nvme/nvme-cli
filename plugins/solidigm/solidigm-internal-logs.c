@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include <linux/limits.h>
 #include <time.h>
 
 #include "common.h"
@@ -638,25 +637,35 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 
 	if (log_count > 0) {
 		int ret_cmd;
-		char cmd[ARG_MAX];
+		char *cmd;
 		char *quiet = cfg.verbose ? "" : " -q";
 
 		snprintf(zip_name, sizeof(zip_name), "%s.zip", unique_folder);
-		snprintf(cmd, sizeof(cmd), "cd \"%s\" && zip -MM -r \"../%s\" ./* %s", cfg.out_dir,
-			 zip_name, quiet);
+		if (asprintf(&cmd, "cd \"%s\" && zip -MM -r \"../%s\" ./* %s", cfg.out_dir,
+			     zip_name, quiet) < 0) {
+			err = errno;
+			perror("Can't allocate string for zip command");
+			goto out;
+		}
 		printf("Compressing logs to %s\n", zip_name);
 		ret_cmd = system(cmd);
 		if (ret_cmd)
 			perror(cmd);
 		else {
 			output_path = zip_name;
-			snprintf(cmd, sizeof(cmd), "rm -rf %s", cfg.out_dir);
-			printf("Removing %s\n", cfg.out_dir);
+			free(cmd);
+			if (asprintf(&cmd, "rm -rf %s", cfg.out_dir) < 0) {
+				err = errno;
+				perror("Can't allocate string for cleanup");
+				goto out;
+			}
 			if (system(cmd) != 0)
 				perror("Failed removing logs folder");
 		}
+		free(cmd);
 	}
 
+out:
 	if (log_count == 0) {
 		if (err > 0)
 			nvme_show_status(err);
