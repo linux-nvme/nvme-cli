@@ -53,14 +53,14 @@ struct vsc_smart_log {
 	unsigned int low_pwr_cnt;
 	unsigned int wa;
 	unsigned int ps3_entry_cnt;
-	u_char highest_temp[4];
+	unsigned char highest_temp[4];
 	unsigned int weight_ec;
 	unsigned int slc_cap_mb;
 	unsigned long long nand_page_write_cnt;
 	unsigned int program_error_cnt;
 	unsigned int erase_error_cnt;
-	u_char flash_type;
-	u_char reserved2[3];
+	unsigned char flash_type;
+	unsigned char reserved2[3];
 	unsigned int hs_crc_err_cnt;
 	unsigned int ddr_ecc_err_cnt;
 	unsigned int reserved3[44];
