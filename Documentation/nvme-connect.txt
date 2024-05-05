@@ -144,6 +144,8 @@ OPTIONS
 -l <#>::
 --ctrl-loss-tmo=<#>::
 	Overrides the default controller loss timeout period (in seconds).
+	This is the maximum time the kernel will retry a connection, where each
+	retry will be issued after 'reconnect-delay' seconds.
 
 -T <#>::
 --tos=<#>::
