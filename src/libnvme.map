@@ -1,4 +1,9 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
+LIBNVME_1.10 {
+	global:
+		nvme_init_default_logging;
+};
+
 LIBNVME_1.9 {
 	global:
 		nvme_ctrl_get_cntlid;

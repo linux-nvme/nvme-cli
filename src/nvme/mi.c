@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
@@ -41,18 +42,32 @@ static bool nvme_mi_probe_enabled_default(void)
  */
 nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
 {
-	struct nvme_root *r = calloc(1, sizeof(*r));
+	struct nvme_root *r;
+	int fd;
 
+	r = calloc(1, sizeof(*r));
 	if (!r) {
+		errno = ENOMEM;
 		return NULL;
 	}
-	r->log_level = log_level;
-	r->fp = stderr;
+
+	if (fp) {
+		fd = fileno(fp);
+		if (fd < 0) {
+			free(r);
+			return NULL;
+		}
+	} else
+		fd = STDERR_FILENO;
+
+	r->log.fd = fd;
+	r->log.level = log_level;
+
 	r->mi_probe_enabled = nvme_mi_probe_enabled_default();
-	if (fp)
-		r->fp = fp;
+
 	list_head_init(&r->hosts);
 	list_head_init(&r->endpoints);
+
 	return r;
 }
 

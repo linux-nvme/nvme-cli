@@ -160,15 +160,19 @@ struct nvme_fabric_options {
 	bool trsvcid;
 };
 
+struct nvme_log {
+	int fd;
+	int level;
+	bool pid;
+	bool timestamp;
+};
+
 struct nvme_root {
 	char *config_file;
 	char *application;
 	struct list_head hosts;
 	struct list_head endpoints; /* MI endpoints */
-	FILE *fp;
-	int log_level;
-	bool log_pid;
-	bool log_timestamp;
+	struct nvme_log log;
 	bool modified;
 	bool mi_probe_enabled;
 	struct nvme_fabric_options *options;

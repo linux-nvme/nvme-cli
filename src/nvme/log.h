@@ -36,6 +36,18 @@
 void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp);
 
 /**
+ * nvme_init_default_logging() - Initialize default (fallback) logging
+ * @fp:		File descriptor for logging messages
+ * @lvl:	Logging level to set
+ * @log_pid:	Boolean to enable logging of the PID
+ * @log_tstamp:	Boolean to enable logging of the timestamp
+ *
+ * Sets the default logging settings for the library in case the root object
+ * is absent.
+ */
+void nvme_init_default_logging(FILE *fp, int lvl, bool log_pid, bool log_tstamp);
+
+/**
  * nvme_get_logging_level() - Get current logging level
  * @r:		nvme_root_t context
  * @log_pid:	Pointer to store a current value of logging of
@@ -59,24 +71,27 @@ int nvme_get_logging_level(nvme_root_t r, bool *log_pid, bool *log_tstamp);
  * will be set as well. This means the global root object is always pointing to
  * the latest created root object. Note the first @nvme_free_tree call will reset
  * the global root object.
+ *
+ * This function is deprecated. Use nvme_init_default_logging or/and
+ * nvme_init_logging instead.
  */
-void nvme_set_root(nvme_root_t r);
+void nvme_set_root(nvme_root_t r) __attribute__((deprecated));
 
 /**
  * nvme_set_debug - Set NVMe command debugging output
  * @debug:	true to enable or false to disable
  *
- * Don't use it, it's debricated.
+ * This function is deprecated. Use nvme_init_default_logging instead.
  */
-void nvme_set_debug(bool debug);
+void nvme_set_debug(bool debug) __attribute__((deprecated));
 
 /**
  * nvme_get_debug - Get NVMe command debugging output
  *
- * Don't use it, it's debricated.
+ * This function is deprecated. Use nvme_get_logging_level instead.
  *
  * Return: false if disabled or true if enabled.
  */
-bool nvme_get_debug(void);
+bool nvme_get_debug(void) __attribute__((deprecated));
 
 #endif /* _LOG_H */

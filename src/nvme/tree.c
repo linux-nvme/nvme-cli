@@ -187,19 +187,30 @@ int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f, void *f_args)
 
 nvme_root_t nvme_create_root(FILE *fp, int log_level)
 {
-	struct nvme_root *r = calloc(1, sizeof(*r));
+	struct nvme_root *r;
+	int fd;
 
+	r = calloc(1, sizeof(*r));
 	if (!r) {
 		errno = ENOMEM;
 		return NULL;
 	}
-	r->log_level = log_level;
-	r->fp = stderr;
-	if (fp)
-		r->fp = fp;
+
+	if (fp) {
+		fd = fileno(fp);
+		if (fd < 0) {
+			free(r);
+			return NULL;
+		}
+	} else
+		fd = STDERR_FILENO;
+
+	r->log.fd = fd;
+	r->log.level = log_level;
+
 	list_head_init(&r->hosts);
 	list_head_init(&r->endpoints);
-	nvme_set_root(r);
+
 	return r;
 }
 
@@ -368,7 +379,6 @@ void nvme_free_tree(nvme_root_t r)
 		free(r->config_file);
 	if (r->application)
 		free(r->application);
-	nvme_set_root(NULL);
 	free(r);
 }
 
