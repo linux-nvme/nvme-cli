@@ -22,6 +22,7 @@
 #include "solidigm-util.h"
 
 #define DWORD_SIZE 4
+#define LOG_FILE_PERMISSION 0644
 
 enum log_type {
 	NLOG = 0,
@@ -129,6 +130,15 @@ struct config {
 	bool verbose;
 };
 
+struct ilog {
+	struct nvme_dev *dev;
+	struct config *cfg;
+	int count;
+	struct nvme_id_ctrl id_ctrl;
+	enum nvme_telemetry_da max_da;
+	__u32 max_tx;
+};
+
 static void print_nlog_header(__u8 *buffer)
 {
 	struct nlog_dump_header_common *nlog_header = (struct nlog_dump_header_common *) buffer;
@@ -219,11 +229,11 @@ static int get_serial_number(char *str, int fd)
 	return err;
 }
 
-static int dump_assert_logs(struct nvme_dev *dev, struct config cfg)
+static int ilog_dump_assert_logs(struct ilog *ilog)
 {
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	__u8 head_buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	char file_path[PATH_MAX];
+	char file_path[PATH_MAX] = {0};
 	char file_name[] = "AssertLog.bin";
 	struct assert_dump_header *ad = (struct assert_dump_header *) head_buf;
 	struct nvme_passthru_cmd cmd = {
@@ -235,13 +245,13 @@ static int dump_assert_logs(struct nvme_dev *dev, struct config cfg)
 	};
 	int output, err;
 
-	err = read_header(&cmd, dev_fd(dev));
+	err = read_header(&cmd, dev_fd(ilog->dev));
 	if (err)
 		return err;
 
 	snprintf(file_path, sizeof(file_path), "%.*s/%s",
-		 (int) (sizeof(file_path) - sizeof(file_name) - 1), cfg.out_dir, file_name);
-	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		 (int) (sizeof(file_path) - sizeof(file_name) - 1), ilog->cfg->out_dir, file_name);
+	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
 	err = write_header((__u8 *)ad, output, ad->header.header_size * DWORD_SIZE);
@@ -252,7 +262,7 @@ static int dump_assert_logs(struct nvme_dev *dev, struct config cfg)
 	}
 	cmd.addr = (unsigned long)(void *)buf;
 
-	if (cfg.verbose) {
+	if (ilog->cfg->verbose) {
 		printf("Assert Log, cores: %d log size: %d header size: %d\n", ad->header.numcores,
 		       ad->header.log_size * DWORD_SIZE, ad->header.header_size * DWORD_SIZE);
 		for (__u32 i = 0; i < ad->header.numcores; i++)
@@ -263,24 +273,23 @@ static int dump_assert_logs(struct nvme_dev *dev, struct config cfg)
 		if (!ad->core[i].assertvalid)
 			continue;
 		cmd.cdw13 = ad->core[i].coreoffset;
-		err = cmd_dump_repeat(&cmd, ad->core[i].assertsize,
-				output,
-				dev_fd(dev), false);
+		err = cmd_dump_repeat(&cmd, ad->core[i].assertsize, output,
+				      dev_fd(ilog->dev), false);
 		if (err) {
 			close(output);
 			return err;
 		}
 	}
 	close(output);
-	printf("Successfully wrote log to %s\n", file_path);
+	printf("Successfully wrote Assert to %s\n", file_path);
 	return err;
 }
 
-static int dump_event_logs(struct nvme_dev *dev, struct config cfg)
+static int ilog_dump_event_logs(struct ilog *ilog)
 {
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	__u8 head_buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	char file_path[PATH_MAX];
+	char file_path[PATH_MAX] = {0};
 	struct event_dump_header *ehdr = (struct event_dump_header *) head_buf;
 	struct nvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
@@ -292,11 +301,11 @@ static int dump_event_logs(struct nvme_dev *dev, struct config cfg)
 	int output;
 	int core_num, err;
 
-	err = read_header(&cmd, dev_fd(dev));
+	err = read_header(&cmd, dev_fd(ilog->dev));
 	if (err)
 		return err;
-	snprintf(file_path, sizeof(file_path), "%s/EventLog.bin", cfg.out_dir);
-	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	snprintf(file_path, sizeof(file_path) - 1, "%s/EventLog.bin", ilog->cfg->out_dir);
+	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
 	err = write_header(head_buf, output, INTERNAL_LOG_MAX_BYTE_TRANSFER);
@@ -309,11 +318,11 @@ static int dump_event_logs(struct nvme_dev *dev, struct config cfg)
 	}
 	cmd.addr = (unsigned long)(void *)buf;
 
-	if (cfg.verbose)
+	if (ilog->cfg->verbose)
 		printf("Event Log, cores: %d log size: %d\n", core_num, ehdr->header.log_size * 4);
 
 	for (__u32 j = 0; j < core_num; j++) {
-		if (cfg.verbose) {
+		if (ilog->cfg->verbose) {
 			for (int k = 0 ; k < 16; k++) {
 				printf("core: %d event: %d ", j, k);
 				printf("validity: %d ", ehdr->edumps[j].eventIdValidity[k]);
@@ -322,14 +331,14 @@ static int dump_event_logs(struct nvme_dev *dev, struct config cfg)
 		}
 		cmd.cdw13 = ehdr->edumps[j].coreoffset;
 		err = cmd_dump_repeat(&cmd, ehdr->edumps[j].coresize,
-				output, dev_fd(dev), false);
+				output, dev_fd(ilog->dev), false);
 		if (err) {
 			close(output);
 			return err;
 		}
 	}
 	close(output);
-	printf("Successfully wrote log to %s\n", file_path);
+	printf("Successfully wrote Events to %s\n", file_path);
 	return err;
 }
 
@@ -349,12 +358,12 @@ static size_t get_nlog_header_size(struct nlog_dump_header_common *nlog_header)
 }
 
 /* dumps nlogs from specified core or all cores when core = -1 */
-static int dump_nlogs(struct nvme_dev *dev, struct config cfg, int core)
+static int ilog_dump_nlogs(struct ilog *ilog, int core)
 {
 	int err = 0;
 	__u32 count, core_num;
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	char file_path[PATH_MAX];
+	char file_path[PATH_MAX] = {0};
 	struct nlog_dump_header_common *nlog_header = (struct nlog_dump_header_common *)buf;
 	struct nvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
@@ -382,7 +391,7 @@ static int dump_nlogs(struct nvme_dev *dev, struct config cfg, int core)
 		do {
 			cmd.cdw13 = 0;
 			cmd.cdw12 = log_select.raw;
-			err = read_header(&cmd, dev_fd(dev));
+			err = read_header(&cmd, dev_fd(ilog->dev));
 			if (err) {
 				if (is_open)
 					close(output);
@@ -391,9 +400,10 @@ static int dump_nlogs(struct nvme_dev *dev, struct config cfg, int core)
 			count = nlog_header->totalnlogs;
 			core_num = core < 0 ? nlog_header->corecount : 0;
 			if (!header_size) {
-				snprintf(file_path, sizeof(file_path), "%s/NLog.bin",
-					 cfg.out_dir);
-				output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				snprintf(file_path, sizeof(file_path) - 1, "%s/NLog.bin",
+					 ilog->cfg->out_dir);
+				output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC,
+					      LOG_FILE_PERMISSION);
 				if (output < 0)
 					return -errno;
 				header_size = get_nlog_header_size(nlog_header);
@@ -402,11 +412,11 @@ static int dump_nlogs(struct nvme_dev *dev, struct config cfg, int core)
 			err = write_header(buf, output, header_size);
 			if (err)
 				break;
-			if (cfg.verbose)
+			if (ilog->cfg->verbose)
 				print_nlog_header(buf);
 			cmd.cdw13 = 0x400;
 			err = cmd_dump_repeat(&cmd, nlog_header->nlogbytesize / 4,
-					output, dev_fd(dev), true);
+					output, dev_fd(ilog->dev), true);
 			if (err)
 				break;
 		} while (++log_select.selectNlog < count);
@@ -415,44 +425,142 @@ static int dump_nlogs(struct nvme_dev *dev, struct config cfg, int core)
 	} while (++log_select.selectCore < core_num);
 	if (is_open) {
 		close(output);
-		printf("Successfully wrote log to %s\n", file_path);
+		printf("Successfully wrote Nlog to %s\n", file_path);
 	}
 	return err;
 }
 
-static int dump_telemetry(struct nvme_dev *dev, struct config cfg, enum log_type ttype)
+int ensure_dir(const char *parent_dir_name, const char *name)
 {
-	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
-	size_t log_size = 0;
-	int err = 0;
-	__u8 *buffer = NULL;
-	size_t bytes_remaining = 0;
-	enum nvme_telemetry_da da;
-	size_t max_data_tx;
-	char file_path[PATH_MAX];
-	char *file_name;
-	char *log_descr;
+	char file_path[PATH_MAX] = {0};
 	struct stat sb;
-	struct nvme_feat_host_behavior prev = {0};
-	bool host_behavior_changed = false;
-	_cleanup_file_ int output = -1;
 
-	err = nvme_get_telemetry_max(dev_fd(dev), &da, &max_data_tx);
+	snprintf(file_path, sizeof(file_path) - 1, "%s/%s", parent_dir_name, name);
+	if (!(stat(file_path, &sb) == 0 && S_ISDIR(sb.st_mode))) {
+		if (mkdir(file_path, 777) != 0) {
+			perror(file_path);
+			return -errno;
+		}
+	}
+	return 0;
+}
+
+struct log {
+	__u8 id;
+	const char *desc;
+	size_t buffer_size;
+	__u8 *buffer;
+};
+
+static int log_save(struct log *log, const char *parent_dir_name, const char *subdir_name,
+		    const char *file_name, __u8 *buffer, size_t buf_size)
+{
+	_cleanup_file_ int output = -1;
+	char file_path[PATH_MAX] = {0};
+	size_t bytes_remaining = 0;
+	int err = 0;
+
+	ensure_dir(parent_dir_name, subdir_name);
+
+	snprintf(file_path, sizeof(file_path) - 1, "%s/%s/%s", parent_dir_name, subdir_name,
+		 file_name);
+	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
+	if (output < 0)
+		return -errno;
+
+	bytes_remaining = buf_size;
+
+	while (bytes_remaining) {
+		ssize_t bytes_written = write(output, buffer, bytes_remaining);
+
+		if (bytes_written < 0) {
+			err = -errno;
+			goto log_save_close_output;
+		}
+
+		bytes_remaining -= bytes_written;
+		buffer += bytes_written;
+	}
+	printf("Successfully wrote %s to %s\n", log->desc, file_path);
+
+log_save_close_output:
+	close(output);
+	return err;
+}
+
+static int ilog_dump_identify_page(struct ilog *ilog, struct log *cns, __u32 nsid)
+{
+	__u8 data[NVME_IDENTIFY_DATA_SIZE];
+	__u8 *buff = cns->buffer ? cns->buffer : data;
+	char filename[sizeof(
+		"cntid_XXXXX_cns_XXX_nsid_XXXXXXXXXX_nvmsetid_XXXXX_csi_XXX.bin")] = {0};
+	int err = nvme_identify_cns_nsid(dev_fd(ilog->dev), cns->id, nsid, buff);
+
 	if (err)
 		return err;
 
-	if (max_data_tx > DRIVER_MAX_TX_256K)
-		max_data_tx = DRIVER_MAX_TX_256K;
+	snprintf(filename, sizeof(filename) - 1, "cntid_0_cns_%d_nsid_%d_nvmsetid_0_csi_0.bin",
+		 cns->id, nsid);
+	return log_save(cns, ilog->cfg->out_dir, "identify", filename, buff, sizeof(data));
+}
+
+static int ilog_ensure_dump_id_ctrl(struct ilog *ilog)
+{
+	static bool first = true;
+	static int err;
+	struct log idctrl = {NVME_IDENTIFY_CNS_CTRL, "Id Controller Data", sizeof(ilog->id_ctrl),
+		(__u8 *) &ilog->id_ctrl};
+
+	if (!first)
+		return err;
+
+	first = false;
+	err = ilog_dump_identify_page(ilog, &idctrl, 0);
+
+	if (err)
+		return err;
+
+	ilog->count++;
+
+	if (ilog->id_ctrl.lpa & 0x8)
+		ilog->max_da = NVME_TELEMETRY_DA_3;
+	if (ilog->id_ctrl.lpa & 0x40)
+		ilog->max_da = NVME_TELEMETRY_DA_4;
+
+	/* assuming CAP.MPSMIN is zero minimum Memory Page Size is at least 4096 bytes */
+	ilog->max_tx = (1 << ilog->id_ctrl.mdts) * NVME_LOG_PAGE_PDU_SIZE;
+	if (ilog->max_tx > DRIVER_MAX_TX_256K)
+		ilog->max_tx = DRIVER_MAX_TX_256K;
+
+	return err;
+}
+
+static int ilog_dump_telemetry(struct ilog *ilog, enum log_type ttype)
+{
+	int err = 0;
+	enum nvme_telemetry_da da;
+	size_t max_data_tx;
+	const char *file_name;
+	struct nvme_feat_host_behavior prev = {0};
+	bool host_behavior_changed = false;
+	struct log log = {0};
+
+	err = ilog_ensure_dump_id_ctrl(ilog);
+	if (err)
+		return err;
+
+	da = ilog->max_da;
+	max_data_tx = ilog->max_tx;
 
 	if (da == 4) {
 		__u32 result;
-		int err = nvme_get_features_host_behavior(dev_fd(dev), 0, &prev, &result);
+		int err = nvme_get_features_host_behavior(dev_fd(ilog->dev), 0, &prev, &result);
 
 		if (!err && !prev.etdas) {
 			struct nvme_feat_host_behavior da4_enable = prev;
 
 			da4_enable.etdas = 1;
-			nvme_set_features_host_behavior(dev_fd(dev), 0, &da4_enable);
+			nvme_set_features_host_behavior(dev_fd(ilog->dev), 0, &da4_enable);
 			host_behavior_changed = true;
 		}
 	}
@@ -460,57 +568,233 @@ static int dump_telemetry(struct nvme_dev *dev, struct config cfg, enum log_type
 	switch (ttype) {
 	case HIT:
 		file_name = "lid_0x07_lsp_0x01_lsi_0x0000.bin";
-		log_descr = "Host Initiated";
-		err = nvme_get_telemetry_log(dev_fd(dev), true, false, false, max_data_tx, da,
-					     &log, &log_size);
+		log.desc = "Host Initiated Telemetry";
+		err = nvme_get_telemetry_log(dev_fd(ilog->dev), true, false, false, max_data_tx, da,
+					    (struct nvme_telemetry_log **) &log.buffer,
+					    &log.buffer_size);
 		break;
 	case CIT:
 		file_name = "lid_0x08_lsp_0x00_lsi_0x0000.bin";
-		log_descr = "Controller Initiated";
-		err = nvme_get_telemetry_log(dev_fd(dev), false, true, true, max_data_tx, da, &log,
-					     &log_size);
+		log.desc = "Controller Initiated Telemetry";
+		err = nvme_get_telemetry_log(dev_fd(ilog->dev), false, true, true, max_data_tx, da,
+					    (struct nvme_telemetry_log **) &log.buffer,
+					     &log.buffer_size);
 		break;
 	default:
 		return -EINVAL;
 	}
 
 	if (host_behavior_changed)
-		nvme_set_features_host_behavior(dev_fd(dev), 0, &prev);
+		nvme_set_features_host_behavior(dev_fd(ilog->dev), 0, &prev);
 
 	if (err)
 		return err;
 
-	snprintf(file_path, sizeof(file_path), "%s/log_pages", cfg.out_dir);
-	if (!(stat(file_path, &sb) == 0 && S_ISDIR(sb.st_mode))) {
-		if (mkdir(file_path, 777) != 0) {
-			perror(file_path);
-			return -errno;
-		}
+	err = log_save(&log, ilog->cfg->out_dir, "log_pages", file_name, log.buffer,
+		       log.buffer_size);
+	return err;
+}
+
+static int ilog_dump_identify_pages(struct ilog *ilog)
+{
+	struct nvme_ns_list ns_list;
+	__u32 j = 0;
+	struct log identify_base_list[] = {
+		{NVME_IDENTIFY_CNS_NS_ACTIVE_LIST, "Id Active Namespace ID list",
+		 sizeof(ns_list), (__u8 *) &ns_list},
+		{NVME_IDENTIFY_CNS_NVMSET_LIST, "Id NVM Set List"},
+		{NVME_IDENTIFY_CNS_CSI_CTRL, "Id I/O Command Set specific"},
+		{NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST, "Id Allocated Namespace ID list"},
+		{NVME_IDENTIFY_CNS_CTRL_LIST, "Id Controller List"}
+	};
+	struct log identify_ns_required_list[] = {
+		{NVME_IDENTIFY_CNS_NS, "Id Namespace data"},
+		{NVME_IDENTIFY_CNS_NS_DESC_LIST, "Id Namespace Id Descriptor list"},
+		{NVME_IDENTIFY_CNS_CSI_NS, "Id Namespace ID I/O Command Set specific"},
+		{NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
+		 "I/O Command Set Independent Identify Namespace Data"},
+		{NVME_IDENTIFY_CNS_ALLOCATED_NS, "Id Namespace data "},
+		{NVME_IDENTIFY_CNS_NS_CTRL_LIST, "Id Namespace Id Controller List"},
+	};
+
+	ilog_ensure_dump_id_ctrl(ilog);
+
+	for (int i = 0; i < ARRAY_SIZE(identify_base_list); i++) {
+		int err = ilog_dump_identify_page(ilog, &identify_base_list[i], 0);
+
+		if (err == 0)
+			ilog->count++;
 	}
 
-	snprintf(file_path, sizeof(file_path), "%s/log_pages/%s", cfg.out_dir, file_name);
-	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (output < 0)
-		return -errno;
+	while (ns_list.ns[j]) {
+		for (int i = 0; i < ARRAY_SIZE(identify_ns_required_list); i++) {
+			int err = ilog_dump_identify_page(ilog, &identify_ns_required_list[i],
+						     ns_list.ns[j]);
 
-	bytes_remaining = log_size;
-	buffer = (__u8 *)log;
-
-	while (bytes_remaining) {
-		ssize_t bytes_written = write(output, buffer, bytes_remaining);
-
-		if (bytes_written < 0) {
-			err = -errno;
-			goto tele_close_output;
+			if (err == 0)
+				ilog->count++;
 		}
-
-		bytes_remaining -= bytes_written;
-		buffer += bytes_written;
+		j++;
 	}
-	printf("Successfully wrote %s Telemetry log to %s\n", log_descr, file_path);
 
-tele_close_output:
-	close(output);
+	return 0;
+}
+
+static int ilog_dump_log_page(struct ilog *ilog, struct log *lp, __u32 nsid)
+{
+	__u8 *buff = lp->buffer;
+	char filename[sizeof("lid_0xXX_lsp_0xXX_lsi_0xXXXX.bin")] = {0};
+	int err;
+
+	if (!lp->buffer_size)
+		return -EINVAL;
+	if (!buff) {
+		buff = nvme_alloc(lp->buffer_size);
+		if (!buff)
+			return -ENOMEM;
+	}
+	err = nvme_get_nsid_log(dev_fd(ilog->dev), 0, lp->id, 0, lp->buffer_size, buff);
+	if (err)
+		return err;
+
+	snprintf(filename, sizeof(filename), "lid_0x%02x_lsp_0x00_lsi_0x0000.bin",
+		 lp->id);
+	return log_save(lp, ilog->cfg->out_dir, "log_pages", filename, buff, lp->buffer_size);
+}
+
+static int ilog_dump_no_lsp_log_pages(struct ilog *ilog)
+{
+	struct lba_status_info {
+		__u32 lslplen;
+		__u32 nlslne;
+		__u32 estulb;
+		__u16 rsvd;
+		__u16 lsgc;
+	} lba_status = {};
+	__u64 num_entries = 0;
+	struct log log_page_dependent_list[] = {
+		{NVME_LOG_LID_LBA_STATUS},
+		{NVME_LOG_LID_ENDURANCE_GRP_EVT},
+	};
+	struct log log_page_base_list[] = {
+		{NVME_LOG_LID_SUPPORTED_LOG_PAGES, NULL, sizeof(struct nvme_supported_log_pages)},
+		{NVME_LOG_LID_ERROR, NULL,
+		 (ilog->id_ctrl.elpe + 1) * sizeof(struct nvme_error_log_page)},
+		{NVME_LOG_LID_SMART, NULL, sizeof(struct nvme_smart_log)},
+		{NVME_LOG_LID_FW_SLOT, NULL, sizeof(struct nvme_firmware_slot)},
+		{NVME_LOG_LID_CHANGED_NS, NULL, sizeof(struct nvme_ns_list)},
+		{NVME_LOG_LID_CMD_EFFECTS, NULL, sizeof(struct nvme_cmd_effects_log)},
+		{NVME_LOG_LID_DEVICE_SELF_TEST, NULL, sizeof(struct nvme_self_test_log)},
+		{NVME_LOG_LID_LBA_STATUS, NULL, sizeof(lba_status), (__u8 *) &lba_status},
+		{NVME_LOG_LID_ENDURANCE_GRP_EVT, NULL, sizeof(num_entries), (__u8 *) &num_entries},
+		{NVME_LOG_LID_FID_SUPPORTED_EFFECTS, NULL,
+		 sizeof(struct nvme_fid_supported_effects_log)},
+		{NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS, NULL,
+		 sizeof(struct nvme_mi_cmd_supported_effects_log)},
+		{NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN, NULL, 512},
+		{NVME_LOG_LID_PHY_RX_EOM, NULL, 512},
+		{NVME_LOG_LID_SANITIZE, NULL, sizeof(struct nvme_sanitize_log_page)},
+		{0xC0, "OCP or VU SMART / Health Information Extended",  512},
+		{0xC1, "OCP Error Recovery or VU Latency Reads",  512},
+		{0xC2, "OCP Firmware Activation History or VU Latency Writes",  4096},
+		{0xC3, "OCP Latency Monitor",  512},
+		{0xC4, "OCP Device Capabilities or VU Endurance Manager Statistics",  4096},
+		{0xC5, "OCP Unsupported Requirements or VU Tempeture Statistics",  4096},
+		{0xC7, "OCP TCG Configuration", 512},
+		{0xCA, "SMART Attributes", 512},
+		{0xd5, "Tempeture Statistics", 512},
+		{0xfe, "Latency Outlier",  8192},
+	};
+
+	for (int i = 0; i < ARRAY_SIZE(log_page_base_list); i++) {
+		log_page_base_list[i].desc = log_page_base_list[i].desc ?
+			log_page_base_list[i].desc :
+			nvme_log_to_string(log_page_base_list[i].id);
+		if (!ilog_dump_log_page(ilog, &log_page_base_list[i], 0))
+			ilog->count++;
+	}
+
+	/* if needed, patch logs based on retrieved log size */
+	if (lba_status.lslplen > sizeof(lba_status))
+		log_page_dependent_list[0].buffer_size = lba_status.lslplen;
+	if (num_entries)
+		log_page_dependent_list[1].buffer_size = sizeof(num_entries) +
+			(num_entries * sizeof(__u16));
+
+	for (int i = 0; i < ARRAY_SIZE(log_page_dependent_list); i++) {
+		log_page_dependent_list[i].desc = log_page_dependent_list[i].desc ?
+			log_page_dependent_list[i].desc :
+			nvme_log_to_string(log_page_dependent_list[i].id);
+		ilog_dump_log_page(ilog, &log_page_dependent_list[i], 0);
+	}
+
+	return 0;
+}
+
+static int ilog_dump_pel(struct ilog *ilog)
+{
+	struct log lp = {
+		NVME_LOG_LID_PERSISTENT_EVENT,
+		nvme_log_to_string(NVME_LOG_LID_PERSISTENT_EVENT)
+	};
+	void *pevent_log_full;
+	int err;
+	struct nvme_get_log_args args;
+
+	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
+
+	_cleanup_huge_ struct nvme_mem_huge mh = {0};
+
+	err = nvme_get_log_persistent_event(dev_fd(ilog->dev), NVME_PEVENT_LOG_RELEASE_CTX,
+					    sizeof(*pevent), pevent);
+	if (err)
+		return err;
+
+
+	pevent = nvme_alloc(sizeof(*pevent));
+	if (!pevent)
+		return -ENOMEM;
+
+	err = nvme_get_log_persistent_event(dev_fd(ilog->dev), NVME_PEVENT_LOG_EST_CTX_AND_READ,
+					    sizeof(*pevent), pevent);
+	if (err)
+		return err;
+
+	lp.buffer_size = le64_to_cpu(pevent->tll);
+
+	pevent_log_full = nvme_alloc_huge(lp.buffer_size, &mh);
+	if (!pevent_log_full)
+		return -ENOMEM;
+
+	err = nvme_get_log_persistent_event(dev_fd(ilog->dev), NVME_PEVENT_LOG_READ,
+						lp.buffer_size, pevent_log_full);
+	args = (struct nvme_get_log_args) {
+		.lpo = 0,
+		.result = NULL,
+		.log = pevent_log_full,
+		.args_size = sizeof(args),
+		.fd = dev_fd(ilog->dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_PERSISTENT_EVENT,
+		.len = lp.buffer_size,
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_PEVENT_LOG_READ,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	err = nvme_get_log_page(dev_fd(ilog->dev), ilog->max_tx, &args);
+	if (err)
+		return err;
+
+	err = log_save(&lp, ilog->cfg->out_dir, "log_pages", "lid_0x0d_lsp_0x00_lsi_0x0000.bin",
+		       pevent_log_full, lp.buffer_size);
+
+	nvme_get_log_persistent_event(dev_fd(ilog->dev), NVME_PEVENT_LOG_RELEASE_CTX,
+				      sizeof(*pevent), pevent);
+
 	return err;
 }
 
@@ -519,12 +803,12 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 {
 	char sn_prefix[sizeof(((struct nvme_id_ctrl *)0)->sn)+1];
 	char date_str[sizeof("-YYYYMMDDHHMMSS")];
-	char full_folder[PATH_MAX];
-	char unique_folder[sizeof(sn_prefix)+sizeof(date_str)-1];
+	char full_folder[PATH_MAX] = {0};
+	char unique_folder[sizeof(sn_prefix)+sizeof(date_str)-1] = {0};
 	char *initial_folder;
-	char zip_name[PATH_MAX];
+	char zip_name[PATH_MAX] = {0};
 	char *output_path;
-	int log_count = 0;
+	struct ilog ilog = {0};
 	int err;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	enum log_type log_type = ALL;
@@ -552,6 +836,8 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
+	ilog.dev = dev;
+	ilog.cfg = &cfg;
 
 	for (char *p = cfg.type; *p; ++p)
 		*p = toupper(*p);
@@ -590,8 +876,8 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 	current_time = time(NULL);
 	strftime(date_str, sizeof(date_str), "-%Y%m%d%H%M%S", localtime(&current_time));
 	snprintf(unique_folder, sizeof(unique_folder), "%s%s", sn_prefix, date_str);
-	snprintf(full_folder, sizeof(full_folder), "%s/%s", cfg.out_dir, unique_folder);
-	if (mkdir(full_folder, 0777) != 0) {
+	snprintf(full_folder, sizeof(full_folder) - 1, "%s/%s", cfg.out_dir, unique_folder);
+	if (mkdir(full_folder, 0755) !=  0) {
 		perror("mkdir");
 		return -errno;
 	}
@@ -600,47 +886,60 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 
 	/* Retrieve first logs that records actions to retrieve other logs */
 	if (log_type == ALL || log_type == HIT) {
-		err = dump_telemetry(dev, cfg, HIT);
+		err = ilog_dump_telemetry(&ilog, HIT);
 		if (err == 0)
-			log_count++;
+			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Host Initiated Telemetry");
 	}
 	if (log_type == ALL || log_type == NLOG) {
-		err = dump_nlogs(dev, cfg, -1);
+		err = ilog_dump_nlogs(&ilog, -1);
 		if (err == 0)
-			log_count++;
+			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Nlog");
 	}
 	if (log_type == ALL || log_type == CIT) {
-		err = dump_telemetry(dev, cfg, CIT);
+		err = ilog_dump_telemetry(&ilog, CIT);
 		if (err == 0)
-			log_count++;
+			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Controller Initiated Telemetry");
 	}
 	if (log_type == ALL || log_type == ASSERTLOG) {
-		err = dump_assert_logs(dev, cfg);
+		err = ilog_dump_assert_logs(&ilog);
 		if (err == 0)
-			log_count++;
+			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Assert log");
 	}
 	if (log_type == ALL || log_type == EVENTLOG) {
-		err = dump_event_logs(dev, cfg);
+		err = ilog_dump_event_logs(&ilog);
 		if (err == 0)
-			log_count++;
+			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Event log");
 	}
+	if (log_type == ALL) {
+		err = ilog_dump_identify_pages(&ilog);
+		if (err < 0)
+			perror("Error retrieving Identify pages");
 
-	if (log_count > 0) {
+		err = ilog_dump_pel(&ilog);
+		if (err < 0)
+			perror("Error retrieving Persistent Event Log page");
+
+		err = ilog_dump_no_lsp_log_pages(&ilog);
+		if (err < 0)
+			perror("Error retrieving no LSP Log pages");
+	}
+
+	if (ilog.count > 0) {
 		int ret_cmd;
 		char *cmd;
 		char *quiet = cfg.verbose ? "" : " -q";
 
-		snprintf(zip_name, sizeof(zip_name), "%s.zip", unique_folder);
+		snprintf(zip_name, sizeof(zip_name) - 1, "%s.zip", unique_folder);
 		if (asprintf(&cmd, "cd \"%s\" && zip -MM -r \"../%s\" ./* %s", cfg.out_dir,
 			     zip_name, quiet) < 0) {
 			err = errno;
@@ -666,12 +965,12 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 	}
 
 out:
-	if (log_count == 0) {
+	if (ilog.count == 0) {
 		if (err > 0)
 			nvme_show_status(err);
 
-	} else if ((log_count > 1) || cfg.verbose)
-		printf("Total: %d log files in %s/%s\n", log_count, initial_folder, output_path);
+	} else if ((ilog.count > 1) || cfg.verbose)
+		printf("Total: %d log files in %s/%s\n", ilog.count, initial_folder, output_path);
 
 	return err;
 }
