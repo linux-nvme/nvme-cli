@@ -1455,6 +1455,9 @@ plugin_ocp_opts () {
 		"set-dssd-power-state-feature")
 		opts+=" --power-state= -p --no-uuid -n --save -s"
 			;;
+		"get-dssd-power-state-feature")
+		opts+=" --sel= -S --all -a --no-uuid -n"
+			;;
 		"telemetry-string-log")
 		opts+=" --output-file= -o"
 			;;
@@ -1464,7 +1467,7 @@ plugin_ocp_opts () {
 		"set-dssd-async-event-config")
 		opts+=" --enable-panic-notices -e --save -s"
 			;;
-		"get-dssd-power-state-feature")
+		"get-dssd-async-event-config")
 		opts+=" --sel= -S"
 			;;
 		"help")
@@ -1542,9 +1545,9 @@ _nvme_subcmds () {
 			clear-fw-activate-history eol-plp-failure-mode \
 			clear-pcie-correctable-error-counters \
 			vs-fw-activate-history device-capability-log \
-			set-dssd-power-state-feature telemetry-string-log \
-			set-telemetry-profile set-dssd-async-event-config \
-			get-dssd-async-event-config"
+			set-dssd-power-state-feature get-dssd-power-state-feature \
+			telemetry-string-log set-telemetry-profile \
+			set-dssd-async-event-config get-dssd-async-event-config"
 	)
 
 	# Associative array mapping plugins to corresponding option completions

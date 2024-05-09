@@ -2241,6 +2241,106 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *c
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+/// DSSD Power State (Feature Identifier C7h) Get Feature
+
+static int get_dssd_power_state(struct nvme_dev *dev, const __u32 nsid,
+				const __u8 fid, __u8 sel, bool uuid)
+{
+	__u32 result;
+	int err;
+	__u8 uuid_index = 0;
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &uuid_index);
+		if (err || !uuid_index) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
+
+	struct nvme_get_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= dev_fd(dev),
+		.fid		= fid,
+		.nsid		= nsid,
+		.sel		= sel,
+		.cdw11		= 0,
+		.uuidx		= uuid_index,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
+	err = nvme_get_features(&args);
+	if (!err) {
+		printf("get-feature:0xC7 %s value: %#08x\n", nvme_select_to_string(sel), result);
+
+		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+			nvme_show_select_result(fid, result);
+	} else {
+		nvme_show_error("Could not get feature: 0xC7 with sel: %d\n", sel);
+	}
+
+	return err;
+}
+
+static int get_dssd_power_state_feature(int argc, char **argv, struct command *cmd,
+										struct plugin *plugin)
+{
+	const char *desc = "Define DSSD Power State (Feature Identifier C7h) Get Feature.";
+	const char *all = "Print out all 3 values at once - Current, Default, and Saved";
+	const char *sel = "[0-3]: current/default/saved/supported/";
+	const __u32 nsid = 0;
+	const __u8 fid = 0xC7;
+	struct nvme_dev *dev;
+	int i, err;
+
+	struct config {
+		__u8 sel;
+		bool all;
+	};
+
+	struct config cfg = {
+		.sel = 0,
+		.all = false,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("sel", 'S', &cfg.sel, sel),
+		OPT_FLAG("all", 'a', NULL, all),
+		OPT_FLAG("no-uuid", 'n', NULL,
+			 "Skip UUID index search (UUID index not required for OCP 1.0)"),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "all")) {
+		for (i = 0; i < 3; i++) {
+			err = get_dssd_power_state(dev, nsid, fid, i,
+							!argconfig_parse_seen(opts, "no-uuid"));
+			if (err)
+				break;
+		}
+	} else if (argconfig_parse_seen(opts, "sel"))
+		err = get_dssd_power_state(dev, nsid, fid, cfg.sel,
+					       !argconfig_parse_seen(opts, "no-uuid"));
+	else
+		nvme_show_error("Required to have --sel as an argument, or pass the --all flag.");
+
+	dev_close(dev);
+
+	return err;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// plp_health_check_interval
 
 static int set_plp_health_check_interval(int argc, char **argv, struct command *cmd,
