@@ -9758,8 +9758,16 @@ int main(int argc, char **argv)
 	setlocale(LC_ALL, "");
 
 	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
-	if (err == -ENOTTY)
+	switch (err) {
+	case -ENOTTY:
 		general_help(&builtin);
+		break;
+	case -ENOMEM:
+		fprintf(stderr, "alloc: %s", strerror(ENOMEM));
+		break;
+	default:
+		break;
+	}
 
 	return err ? 1 : 0;
 }
