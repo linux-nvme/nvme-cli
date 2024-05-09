@@ -8248,6 +8248,7 @@ enum nvme_data_tfr {
  * @nvme_cmd_resv_acquire:	Reservation Acquire
  * @nvme_cmd_io_mgmt_recv:	I/O Management Receive
  * @nvme_cmd_resv_release:	Reservation Release
+ * @nvme_cmd_cancel:		Cancel
  * @nvme_cmd_copy:		Copy
  * @nvme_cmd_io_mgmt_send:	I/O Management Send
  * @nvme_zns_cmd_mgmt_send:	Zone Management Send
@@ -8268,6 +8269,7 @@ enum nvme_io_opcode {
 	nvme_cmd_resv_acquire	= 0x11,
 	nvme_cmd_io_mgmt_recv	= 0x12,
 	nvme_cmd_resv_release	= 0x15,
+	nvme_cmd_cancel		= 0x18,
 	nvme_cmd_copy		= 0x19,
 	nvme_cmd_io_mgmt_send	= 0x1d,
 	nvme_zns_cmd_mgmt_send	= 0x79,
