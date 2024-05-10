@@ -10,18 +10,18 @@ NAME          := nvme
 BUILD-DIR     := .build
 
 ${BUILD-DIR}:
-	meson $@
+	meson setup $@
 	@echo "Configuration located in: $@"
 	@echo "-------------------------------------------------------"
 
 .PHONY: ${NAME}
 ${NAME}: ${BUILD-DIR}
-	ninja -C ${BUILD-DIR}
+	meson compile -C ${BUILD-DIR}
 
 .PHONY: clean
 clean:
 ifneq ("$(wildcard ${BUILD-DIR})","")
-	ninja -C ${BUILD-DIR} -t $@
+	meson compile --clean -C ${BUILD-DIR}
 endif
 
 .PHONY: purge
