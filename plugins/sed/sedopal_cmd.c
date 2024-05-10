@@ -251,8 +251,21 @@ int sedopal_cmd_lock(int fd)
  */
 int sedopal_cmd_unlock(int fd)
 {
+	int rc;
 
-	return sedopal_lock_unlock(fd, OPAL_RW);
+	rc = sedopal_lock_unlock(fd, OPAL_RW);
+
+	/*
+	 * If the unlock was successful, force a re-read of the
+	 * partition table. Return rc of unlock operation.
+	 */
+	if (rc == 0) {
+		if (ioctl(fd, BLKRRPART, 0) != 0)
+			fprintf(stderr,
+				"Warning: failed re-reading partition\n");
+	}
+
+	return rc;
 }
 
 /*
@@ -275,18 +288,6 @@ int sedopal_lock_unlock(int fd, int lock_state)
 	if (rc != 0)
 		fprintf(stderr,
 			"Error: failed locking or unlocking - %d\n", rc);
-
-	/*
-	 * If the unlock was successful, force a re-read of the
-	 * partition table.
-	 */
-	if (rc == 0) {
-		rc = ioctl(fd, BLKRRPART, 0);
-		if (rc != 0)
-			fprintf(stderr,
-				"Error: failed re-reading partition\n");
-	}
-
 	return rc;
 }
 
