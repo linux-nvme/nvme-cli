@@ -1475,8 +1475,8 @@ static int get_persistent_event_log(int argc, char **argv,
 		"processing this persistent log page command.";
 	const char *log_len = "number of bytes to retrieve";
 
-	_cleanup_free_ struct nvme_persistent_event_log *pevent_collected = NULL;
 	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
+	struct nvme_persistent_event_log *pevent_collected = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	enum nvme_print_flags flags;
