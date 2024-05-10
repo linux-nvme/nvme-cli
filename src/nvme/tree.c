@@ -1601,8 +1601,8 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			       const char *host_iface, const char *trsvcid,
 			       const char *subsysnqn, nvme_ctrl_t p)
 {
+	_cleanup_candidate_ struct candidate_args candidate = {};
 	struct nvme_ctrl *c, *matching_c = NULL;
-	_cleanup_candidate_ struct candidate_args candidate;
 	ctrl_match_t ctrl_match;
 
 	/* Init candidate and get the matching function to use */
@@ -1625,8 +1625,8 @@ bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
 			    const char *subsysnqn, const char *host_traddr,
 			    const char *host_iface)
 {
+	_cleanup_candidate_ struct candidate_args candidate = {};
 	ctrl_match_t ctrl_match;
-	_cleanup_candidate_ struct candidate_args candidate;
 
 	/* Init candidate and get the matching function to use */
 	ctrl_match = _candidate_init(&candidate, transport, traddr, trsvcid,

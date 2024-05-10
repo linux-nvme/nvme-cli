@@ -296,8 +296,8 @@ int nvme_get_new_host_telemetry(int fd, struct nvme_telemetry_log **log,
 
 int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log)
 {
+	_cleanup_free_ struct nvme_lba_status_log *buf = NULL;
 	__u32 size;
-	_cleanup_free_ struct nvme_lba_status_log *buf;
 	void *tmp;
 	int err;
 	struct nvme_get_log_args args = {
