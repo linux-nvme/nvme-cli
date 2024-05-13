@@ -119,6 +119,19 @@ static struct test_data test_data[] = {
 	  "nvme", "aa:bb::cc", .proto = "rdma", .port = 12345,
 	  .user = "u[aa:bb::cc]", .path = { "p1", "x" },
 	  .query = "q=val", .frag = "fr" },
+	{ "nvme://ex%5Cmp%3Ae",  "nvme", "ex\\mp:e" },
+	{ "nvme://ex%5Cmp%3Ae.com/", "nvme", "ex\\mp:e.com" },
+	{ "nvme://u%24er@ex%5Cmp%3Ae.com/", "nvme", "ex\\mp:e.com",
+	  .user = "u$er" },
+	{ "nvme+tcp://ex%5Cmp%3Ae.com:1234",
+	  "nvme", "ex\\mp:e.com", .proto = "tcp", .port = 1234 },
+	{ "nvme+tcp://ex%5Cmp%3Ae.com:1234/p1/ex%3Camp%3Ele/p3",
+	  "nvme", "ex\\mp:e.com", .proto = "tcp", .port = 1234,
+	  .path = { "p1", "ex<amp>le", "p3", NULL } },
+	{ "nvme+tcp://ex%5Cmp%3Ae.com:1234/p1/%3C%3E/p3?q%5E%24ry#fr%26gm%23nt",
+	  "nvme", "ex\\mp:e.com", .proto = "tcp", .port = 1234,
+	  .path = { "p1", "<>", "p3", NULL }, .query = "q^$ry",
+	  .frag = "fr&gm#nt" },
 };
 
 const char *test_data_bad[] = {

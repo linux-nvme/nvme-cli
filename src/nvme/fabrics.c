@@ -1704,12 +1704,41 @@ int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
 	return nvmf_dim(c, tas, NVMF_TRTYPE_TCP, nvme_get_adrfam(c), "", NULL, result);
 }
 
+#define IS_XDIGIT(c) ((c >= '0' && c <= '9') || \
+		      (c >= 'A' && c <= 'F') || \
+		      (c >= 'a' && c <= 'f'))
+#define XDIGIT_VAL(c) ((c >= '0' && c <= '9') ? c - '0' : ( \
+		       (c >= 'A' && c <= 'F') ? c - 'A' + 10 : c - 'a' + 10))
+
+/* returns newly allocated string */
+static char *unescape_uri(const char *str, int len)
+{
+	char *dst;
+	int l;
+	int i, j;
+
+	l = len > 0 ? len : strlen(str);
+	dst = malloc(l + 1);
+	for (i = 0, j = 0; i < l; i++, j++) {
+		if (str[i] == '%' && i + 2 < l &&
+		    IS_XDIGIT(str[i + 1]) && IS_XDIGIT(str[i + 2])) {
+			dst[j] = (XDIGIT_VAL(str[i + 1]) << 4) +
+				  XDIGIT_VAL(str[i + 2]);
+			i += 2;
+		} else
+			dst[j] = str[i];
+	}
+	dst[j] = '\0';
+	return dst;
+}
+
 struct nvme_fabrics_uri *nvme_parse_uri(const char *str)
 {
 	struct nvme_fabrics_uri *uri;
 	_cleanup_free_ char *scheme = NULL;
 	_cleanup_free_ char *authority = NULL;
 	_cleanup_free_ char *path = NULL;
+	_cleanup_free_ char *h = NULL;
 	const char *host;
 	int i;
 
@@ -1725,8 +1754,6 @@ struct nvme_fabrics_uri *nvme_parse_uri(const char *str)
 	 *  NVME<+PROTOCOL>://<DISCOVERY CONTROLLER ADDRESS>[:DISCOVERY-
 	 *  -CONTROLLER PORT]/NQN.2014-08.ORG.NVMEXPRESS.DISCOVERY/<NID>
 	 */
-
-	/* TODO: unescape? */
 
 	uri = calloc(1, sizeof(struct nvme_fabrics_uri));
 	if (!uri)
@@ -1750,20 +1777,22 @@ struct nvme_fabrics_uri *nvme_parse_uri(const char *str)
 	host = strrchr(authority, '@');
 	if (host) {
 		host++;
-		uri->userinfo = strndup(authority, host - authority);
+		uri->userinfo = unescape_uri(authority, host - authority);
 	} else
 		host = authority;
 
 	/* try matching IPv6 address first */
 	if (sscanf(host, "[%m[^]]]:%d",
-		   &uri->host, &uri->port) < 1)
+		   &uri->host, &uri->port) < 1) {
 		/* treat it as IPv4/hostname */
 		if (sscanf(host, "%m[^:]:%d",
-			   &uri->host, &uri->port) < 1) {
+			   &h, &uri->port) < 1) {
 			nvme_free_uri(uri);
 			errno = EINVAL;
 			return NULL;
 		}
+		uri->host = unescape_uri(h, 0);
+	}
 
 	/* split path into elements */
 	if (path) {
@@ -1772,13 +1801,13 @@ struct nvme_fabrics_uri *nvme_parse_uri(const char *str)
 		/* separate the fragment */
 		e = strrchr(path, '#');
 		if (e) {
-			uri->fragment = strdup(e + 1);
+			uri->fragment = unescape_uri(e + 1, 0);
 			*e = '\0';
 		}
 		/* separate the query string */
 		e = strrchr(path, '?');
 		if (e) {
-			uri->query = strdup(e + 1);
+			uri->query = unescape_uri(e + 1, 0);
 			*e = '\0';
 		}
 
@@ -1791,11 +1820,11 @@ struct nvme_fabrics_uri *nvme_parse_uri(const char *str)
 		i = 0;
 		elem = strtok_r(path, "/", &e);
 		if (elem)
-			uri->path_segments[i++] = strdup(elem);
+			uri->path_segments[i++] = unescape_uri(elem, 0);
 		while (elem && strlen(elem)) {
 			elem = strtok_r(NULL, "/", &e);
 			if (elem)
-				uri->path_segments[i++] = strdup(elem);
+				uri->path_segments[i++] = unescape_uri(elem, 0);
 		}
 	}
 
