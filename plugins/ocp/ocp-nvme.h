@@ -11,9 +11,10 @@
 #if !defined(OCP_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define OCP_NVME
 
+#define OCP_PLUGIN_VERSION   "1.17.0"
 #include "cmd.h"
 
-PLUGIN(NAME("ocp", "OCP cloud SSD extensions", NVME_VERSION),
+PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("smart-add-log", "Retrieve extended SMART Information", smart_add_log)
 		ENTRY("latency-monitor-log", "Get Latency Monitor Log Page", ocp_latency_monitor_log)
