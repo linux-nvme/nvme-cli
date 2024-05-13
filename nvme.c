@@ -5019,11 +5019,11 @@ static void fw_commit_print_mud(struct nvme_dev *dev, __u32 result)
 
 	if (result & 0x1)
 		printf("Detected an overlapping firmware/boot partition image update command\n"
-		       "sequence due to processing a command from a Management Endpoint");
+		       "sequence due to processing a command from an Admin SQ on a controller\n");
 
 	if (result >> 1 & 0x1)
 		printf("Detected an overlapping firmware/boot partition image update command\n"
-		       "sequence due to processing a command from an Admin SQ on a controller");
+		       "sequence due to processing a command from a Management Endpoint\n");
 }
 
 static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *plugin)
