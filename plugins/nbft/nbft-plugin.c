@@ -535,7 +535,6 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 	int ret;
 	bool show_subsys = false, show_hfi = false, show_discovery = false;
 	unsigned int verbose = 0;
-	nvme_root_t r;
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("output-format", 'o', &format, "Output format: normal|json"),
@@ -552,13 +551,11 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 		return ret;
 
 	log_level = map_log_level(verbose, false /* quiet */);
+	nvme_init_default_logging(stderr, log_level, false, false);
 
 	ret = validate_output_format(format, &flags);
 	if (ret < 0)
 		return ret;
-
-	/* initialize libnvme logging */
-	r = nvme_create_root(stderr, log_level);
 
 	if (!(show_subsys || show_hfi || show_discovery))
 		show_subsys = show_hfi = show_discovery = true;
@@ -572,6 +569,5 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 			ret = json_show_nbfts(&nbft_list, show_subsys, show_hfi, show_discovery);
 		free_nbfts(&nbft_list);
 	}
-	nvme_free_tree(r);
 	return ret;
 }
