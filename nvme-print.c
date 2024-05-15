@@ -101,6 +101,7 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_cmd_resv_report:	return "Reservation Report";
 		case nvme_cmd_resv_acquire:	return "Reservation Acquire";
 		case nvme_cmd_resv_release:	return "Reservation Release";
+		case nvme_cmd_cancel:		return "Cancel";
 		case nvme_cmd_verify:		return "Verify";
 		case nvme_cmd_copy:		return "Copy";
 		case nvme_zns_cmd_mgmt_send:	return "Zone Management Send";
