@@ -3062,8 +3062,11 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 {
 	int i, verbose = stdout_print_ops.flags & VERBOSE;
 	__u32 elbaf;
+	__u8 lbaf;
 	int pif, sts;
 	char *in_use = "(in use)";
+
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lbaf);
 
 	if (!cap_only) {
 		printf("NVMe NVM Identify Namespace %d:\n", nsid);
@@ -3086,10 +3089,10 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 				i, pif == 3 ? "Reserved" :
 					pif == 2 ? "64b Guard" :
 					pif == 1 ? "32b Guard" : "16b Guard",
-					pif, sts, i == (ns->flbas & 0xf) ? in_use : "");
+					pif, sts, i == lbaf ? in_use : "");
 		else
 			printf("elbaf %2d : pif:%d sts:%-2d %s\n", i,
-				pif, sts, i == (ns->flbas & 0xf) ? in_use : "");
+				pif, sts, i == lbaf ? in_use : "");
 	}
 }
 
