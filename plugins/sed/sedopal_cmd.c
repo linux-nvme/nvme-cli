@@ -398,6 +398,14 @@ int sedopal_cmd_revert(int fd)
 		revert_lsp.__pad = 0;
 
 		rc = ioctl(fd, IOC_OPAL_REVERT_LSP, &revert_lsp);
+		if (rc == 0) {
+			/*
+			 * TPER must also be reverted.
+			 */
+			rc = ioctl(fd, IOC_OPAL_REVERT_TPR, &revert_lsp.key);
+			if (rc != 0)
+				fprintf(stderr, "Error: revert TPR - %d\n", rc);
+		}
 #else
 		rc = -EOPNOTSUPP;
 #endif
