@@ -393,6 +393,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 		for (dd = entry->nbft->discovery_list; dd && *dd; dd++) {
 			nvme_ctrl_t c;
 			bool linked = false;
+			bool persistent = false;
 			_cleanup_uri_ struct nvme_fabrics_uri *uri = NULL;
 			_cleanup_free_ char *trsvcid = NULL;
 
@@ -437,12 +438,19 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 				.trsvcid	= trsvcid,
 			};
 
-			c = nvmf_create_discover_ctrl(r, h, cfg, &trcfg);
-			if (!c && errno == ENVME_CONNECT_ADDRNOTAVAIL &&
-			    !strcmp(trcfg.transport, "tcp") &&
-			    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
-				trcfg.host_traddr = NULL;
+			/* Lookup existing discovery controller */
+			c = lookup_ctrl(h, &trcfg);
+			if (c && nvme_ctrl_get_name(c))
+				persistent = true;
+
+			if (!c) {
 				c = nvmf_create_discover_ctrl(r, h, cfg, &trcfg);
+				if (!c && errno == ENVME_CONNECT_ADDRNOTAVAIL &&
+				    !strcmp(trcfg.transport, "tcp") &&
+				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
+					trcfg.host_traddr = NULL;
+					c = nvmf_create_discover_ctrl(r, h, cfg, &trcfg);
+				}
 			}
 
 			if (!c) {
@@ -457,7 +465,8 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 
 			ret = do_discover(*dd, r, h, c, cfg, &trcfg,
 					  flags, verbose);
-			nvme_disconnect_ctrl(c);
+			if (!persistent)
+				nvme_disconnect_ctrl(c);
 			nvme_free_ctrl(c);
 			if (ret == -ENOMEM)
 				goto out_free;
