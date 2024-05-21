@@ -64,9 +64,9 @@ void show_ssstc_add_smart_log_jsn(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
 	struct json_object *root, *entry_stats, *dev_stats, *multi;
-	__uint16_t wear_level_min = 0;
-	__uint16_t wear_level_max = 0;
-	__uint16_t wear_level_avg = 0;
+	uint16_t wear_level_min = 0;
+	uint16_t wear_level_max = 0;
+	uint16_t wear_level_avg = 0;
 	uint64_t raw_val = 0;
 
 	root = json_create_object();
