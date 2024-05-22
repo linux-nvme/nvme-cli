@@ -717,7 +717,10 @@ static int get_log_telemetry_ctrl(struct nvme_dev *dev, bool rae, size_t size,
 	err = nvme_cli_get_log_telemetry_ctrl(dev, rae, 0, size, log);
 	if (err) {
 		free(log);
-		return -errno;
+		if (errno)
+			return -errno;
+		else
+			return err;
 	}
 
 	*buf = log;
@@ -737,7 +740,10 @@ static int get_log_telemetry_host(struct nvme_dev *dev, size_t size,
 	err = nvme_cli_get_log_telemetry_host(dev, 0, size, log);
 	if (err) {
 		free(log);
-		return -errno;
+		if (errno)
+			return -errno;
+		else
+			return err;
 	}
 
 	*buf = log;
@@ -757,8 +763,12 @@ static int __create_telemetry_log_host(struct nvme_dev *dev,
 		return -ENOMEM;
 
 	err = nvme_cli_get_log_create_telemetry_host(dev, log);
-	if (err)
-		return -errno;
+	if (err) {
+		if (errno)
+			return -errno;
+		else
+			return err;
+	}
 
 	err = parse_telemetry_da(dev, da, log, size);
 	if (err)
