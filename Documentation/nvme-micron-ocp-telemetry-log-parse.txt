@@ -1,0 +1,88 @@
+nvme-micron-ocp-telemetry-log-parse
+===================================
+
+NAME
+----
+nvme-micron-ocp-telemetry-log-parse - Parses OCP Telemetry DA1 and DA2 logs.
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron ocp-telemetry-log-parse' <device>
+			[--telemetry-log=<file> | -l <file>]
+			[--string-log=<file> | -s <file>]
+			[--output-file=<file> | -o <file>]
+			[--format=<fmt> | -f <fmt>]
+
+DESCRIPTION
+-----------
+For the given NVMe device, parses the telemetry log and string log
+(in binary format) and provides the parsed data in json and normal text formats.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1).
+
+This will only work on Micron devices of model numbers 51Bx. Support for new
+devices may be added subsequently. Results for any other device are undefined.
+
+OPTIONS
+-------
+-l <file>::
+--telemetry-log=<file>::
+	This option will allow the users to specify input telemetry-log file name.
+
+-o <file>::
+--string-log=<file>::
+	This option will allow the users to specify input string-log file name.
+
+-o <file>::
+--output-file=<file>::
+	This option will allow the users to specify the output file name.
+
+-f <fmt>::
+--format=<fmt>::
+	Set the reporting format to 'normal', 'json'. Only one output format can be
+	used at a time.
+
+EXAMPLES
+--------
+* Parse nvme_host_telemetry_log.bin with nvmelog_ocp_c9.bin and output parsed
+json data into nvme_cli_telemetry_host.json
++
+------------
+# sudo ./nvme micron ocp-telemetry-log-parse --format=json
+ --string-log="nvmelog_ocp_c9.bin" --telemetry-log="nvme_host_telemetry_log.bin"
+ --output-file=nvme_cli_telemetry_host.json /dev/nvme0
+------------
+
+* Parse nvme_host_telemetry_log.bin with nvmelog_ocp_c9.bin and output parsed
+text data into nvme_cli_telemetry_host_normal.txt
++
+------------
+# sudo ./nvme micron ocp-telemetry-log-parse --format=normal
+ --string-log="nvmelog_ocp_c9.bin" --telemetry-log="nvme_host_telemetry_log.bin"
+ --output-file=nvme_cli_telemetry_host_normal.txt /dev/nvme0
+------------
+
+* Parse nvme_host_telemetry_log.bin with nvmelog_ocp_c9.bin and redirect parsed
+json data into nvme_cli_telemetry_host_console.json
++
+------------
+#  sudo ./nvme micron ocp-telemetry-log-parse --format=json
+ --string-log="nvmelog_ocp_c9.bin" --telemetry-log="nvme_host_telemetry_log.bin"
+ > nvme_cli_telemetry_host_console.txt /dev/nvme0
+------------
+
+* Parse nvme_host_telemetry_log.bin with nvmelog_ocp_c9.bin and redirect parsed
+text data into nvme_cli_telemetry_host_console.json
++
+------------
+# sudo ./nvme micron ocp-telemetry-log-parse --format=normal
+ --string-log="nvmelog_ocp_c9.bin" --telemetry-log="nvme_host_telemetry_log.bin"
+ > nvme_cli_telemetry_host_console.txt /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

@@ -46,6 +46,9 @@ linknvme:nvme-micron-smart-add-log[1]::
 linknvme:nvme-micron-temperature-stats[1]::
 	Retrieves temperature information of given micron device
 
+linknvme:nvme-micron-ocp-telemetry-log-parse[1]::
+	Parse OCP Telemetry DA1 and DA2 logs.
+
 linknvme:nvme-netapp-ontapdevices[1]::
 	Display information about ONTAP devices
 

@@ -889,6 +889,10 @@ plugin_micron_opts () {
 		"vs-smbus-option")
 		opts+=" --option= -o --value= -v --save= -s"
 			;;
+		"ocp-telemetry-log-parse")
+		opts+=" --format= -f --telemetry-log= -l --string-log= -s \
+			--output-file= -o"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1529,7 +1533,7 @@ _nvme_subcmds () {
 			vs-drive-info plugin-version cloud-SSD-plugin-version \
 			log-page-directory vs-fw-activate-history \
 			vs-error-reason-identifier vs-smart-add-log \
-			clear-fw-activate-history vs-smbus-option"
+			clear-fw-activate-history vs-smbus-option ocp-telemetry-log-parse"
 		[seagate]="vs-temperature-stats vs-log-page-sup \
 			vs-smart-add-log vs-pcie-stats clear-pcie-correctable-errors \
 			get-host-tele get-ctrl-tele vs-internal-log \
