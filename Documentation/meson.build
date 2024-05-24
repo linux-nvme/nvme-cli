@@ -80,6 +80,7 @@ adoc_sources = [
   'nvme-micron-selective-download',
   'nvme-micron-smart-add-log',
   'nvme-micron-temperature-stats',
+  'nvme-micron-ocp-telemetry-log-parse',
   'nvme-netapp-ontapdevices',
   'nvme-netapp-smdevices',
   'nvme-ns-descs',

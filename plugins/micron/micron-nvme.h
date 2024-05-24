@@ -1,4 +1,11 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (c) Micron, Inc 2024.
+ *
+ * @file: micron-nvme.h
+ * @brief: This module contains all the constructs needed for micron nvme-cli plugin.
+ * @authors:Chaithanya Shoba <ashoba@micron.com>,
+ */
 #undef CMD_INC_FILE
 #define CMD_INC_FILE plugins/micron/micron-nvme
 
@@ -28,6 +35,8 @@ PLUGIN(NAME("micron", "Micron vendor specific extensions", NVME_VERSION),
 		ENTRY("vs-smart-add-log", "Retrieve extended SMART data", micron_ocp_smart_health_logs)
 		ENTRY("clear-fw-activate-history", "Clear FW activation history", micron_clr_fw_activation_history)
 		ENTRY("vs-smbus-option", "Enable/Disable SMBUS on the drive", micron_smbus_option)
+		ENTRY("ocp-telemetry-log-parse", "Parse OCP Telemetry DA1 and DA2 logs",
+			micron_ocp_telemetry_log_parse)
 	)
 );
 

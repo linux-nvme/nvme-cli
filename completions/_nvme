@@ -111,6 +111,7 @@ _nvme () {
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
+	'micron:Micron plug-in extensions'
 	'help:print brief descriptions of all nvme commands'
 	'json:dump output in json format'
 	)
@@ -515,6 +516,29 @@ _nvme () {
 				;;
 			esac
 			;;
+		(*)
+			_files
+			;;
+		esac
+			;;
+		(micron)
+			case ${words[2]} in
+			(ocp-telemetry-log-parse)
+				local _ocp-telemetry-log-parse
+				_ocp-telemetry-log-parse=(
+				/dev/nvme':supply a device to use (required)'
+				--output-file=':Output file name with path'
+				-o':alias for --output-file'
+				--telemetry-log=':Telemetry log binary'
+				-l':alias for --telemetry-log'
+				--string-log=':String log binary'
+				-s':alias for --string-log'
+				--format':Output format: normal|json'
+				-f':alias for --format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme micron ocp-telemetry-log-parse" _ocp-telemetry-log-parse
+				;;
 		(*)
 			_files
 			;;
@@ -2525,6 +2549,34 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme solidigm options" _solidigm
+			;;
+		(micron)
+			local micron
+			_micron=(
+			select-download':Selective Firmware Download'
+			vs-temperature-stats':Retrieve Micron temperature statistics'
+			vs-pcie-stats':Retrieve Micron PCIe error stats'
+			clear-pcie-correctable-errors':Clear correctable PCIe errors'
+			vs-internal-log':Retrieve Micron logs'
+			vs-telemetry-controller-option':Enable/Disable controller telemetry log generation'
+			vs-nand-stats':Retrieve NAND Stats'
+			vs-smart-ext-log':Retrieve extended SMART logs'
+			vs-drive-info':Retrieve Drive information'
+			plugin-version':Display plugin version info'
+			cloud-SSD-plugin-version':Display plugin version info'
+			log-page-directory':Retrieve log page directory'
+			vs-fw-activate-history':Display FW activation history'
+			latency-tracking':Latency monitoring feature control'
+			latency-stats':Latency information for tracked commands'
+			latency-logs':Latency log details tracked by drive'
+			vs-smart-add-log':Retrieve extended SMART data'
+			clear-fw-activate-history':Clear FW activation history'
+			vs-smbus-option':Enable/Disable SMBUS on the drive'
+			ocp-telemetry-log-parse':Parse OCP Telemetry DA1 and DA2 logs'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme micron options" _micron
 			;;
 		(help)
 			local _h
