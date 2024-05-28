@@ -623,8 +623,7 @@ static void stdout_fid_support_effects_log(struct nvme_fid_supported_effects_log
 				fid_effect);
 			if (human)
 				stdout_fid_support_effects_log_human(fid_effect);
-			else
-				printf("\n");
+			printf("\n");
 		}
 	}
 }
@@ -666,8 +665,7 @@ static void stdout_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effec
 					mi_cmd_effect);
 			if (human)
 				stdout_mi_cmd_support_effects_log_human(mi_cmd_effect);
-			else
-				printf("\n");
+			printf("\n");
 		}
 	}
 }
