@@ -2339,6 +2339,19 @@ enum nvme_nvm_id_ns_elbaf {
 };
 
 /**
+ * enum nvme_nvm_id_ns_pif - This field indicates the type of the Protection
+ *			     Information Format
+ * @NVME_NVM_PIF_16B_GUARD:	16-bit Guard Protection Information Format
+ * @NVME_NVM_PIF_32B_GUARD:	32-bit Guard Protection Information Format
+ * @NVME_NVM_PIF_64B_GUARD:	64-bit Guard Protection Information Format
+ */
+enum nvme_nvm_id_ns_pif {
+	NVME_NVM_PIF_16B_GUARD		= 0,
+	NVME_NVM_PIF_32B_GUARD		= 1,
+	NVME_NVM_PIF_64B_GUARD		= 2,
+};
+
+/**
  * enum nvme_id_ns_mc - This field indicates the capabilities for metadata.
  * @NVME_NS_MC_EXTENDED: If set, indicates the namespace supports the metadata
  *			 being transferred as part of a separate buffer that is

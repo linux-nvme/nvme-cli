@@ -1674,13 +1674,11 @@ static int nvme_set_var_size_tags(__u32 *cmd_dw2, __u32 *cmd_dw3, __u32 *cmd_dw1
 	beint64_t be_storage_tag = cpu_to_be64(storage_tag);
 
 	switch (pif) {
-	/* 16b Protection Information */
-	case 0:
+	case NVME_NVM_PIF_16B_GUARD:
 		cdw14 = be_reftag & 0xffffffff;
 		cdw14 |= ((be_storage_tag << (32 - sts)) & 0xffffffff);
 		break;
-	/* 32b Protection Information */
-	case 1:
+	case NVME_NVM_PIF_32B_GUARD:
 		cdw14 = be_reftag & 0xffffffff;
 		cdw3 = be_reftag >> 32;
 		cdw14 |= ((be_storage_tag << (80 - sts)) & 0xffff0000);
@@ -1690,8 +1688,7 @@ static int nvme_set_var_size_tags(__u32 *cmd_dw2, __u32 *cmd_dw3, __u32 *cmd_dw1
 			cdw3 |= ((be_storage_tag << (48 - sts)) & 0xffffffff);
 		cdw2 = (be_storage_tag >> (sts - 16)) & 0xffff;
 		break;
-	/* 64b Protection Information */
-	case 2:
+	case NVME_NVM_PIF_64B_GUARD:
 		cdw14 = be_reftag & 0xffffffff;
 		cdw3 = (be_reftag >> 32) & 0xffff;
 		cdw14 |= ((be_storage_tag << (48 - sts)) & 0xffffffff);
