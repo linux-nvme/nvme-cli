@@ -143,6 +143,20 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 	struct nvme_mi_ctrl *ctrl;
 	int rc;
 
+	/* Ensure the probe occurs at most once. This isn't just to mitigate doubling
+	 * a linear stream of commands, it also terminates recursion via the
+	 * nvme_mi_submit() call issued by nvme_mi_admin_identify_partial() below.
+	 */
+	if (ep->quirks_probed)
+		return;
+
+	/* Mark ep->quirks as valid. Note that for the purpose of quirk probing,
+	 * the quirk probe itself cannot rely on quirks, and so the fact that none are
+	 * yet set is desirable. The request that triggered nvme_mi_submit() will have
+	 * an initialised ep->quirks when we return from the root probe call.
+	 */
+	ep->quirks_probed = true;
+
 	if (!ep->root->mi_probe_enabled)
 		return;
 
@@ -265,6 +279,7 @@ struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 
 	list_node_init(&ep->root_entry);
 	ep->root = root;
+	ep->quirks_probed = false;
 	ep->controllers_scanned = false;
 	ep->timeout = default_timeout;
 	ep->mprt_max = 0;
@@ -427,6 +442,8 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 		errno = EINVAL;
 		return -1;
 	}
+
+	nvme_mi_ep_probe(ep);
 
 	if (ep->transport->mic_enabled)
 		nvme_mi_calc_req_mic(req);

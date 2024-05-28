@@ -115,6 +115,9 @@ nvme_mi_ep_t nvme_mi_open_test(nvme_root_t root)
 	ep = nvme_mi_init_ep(root);
 	assert(ep);
 
+	/* preempt the quirk probe to avoid clutter */
+	ep->quirks_probed = true;
+
 	tpd = malloc(sizeof(*tpd));
 	assert(tpd);
 
@@ -1856,6 +1859,55 @@ static void test_admin_get_log_split(struct nvme_mi_ep *ep)
 	assert(ldata.n == 3);
 }
 
+static int test_endpoint_quirk_probe_cb_stage2(struct nvme_mi_ep *ep,
+						struct nvme_mi_req *req,
+						struct nvme_mi_resp *resp,
+						void *data)
+{
+	return test_read_mi_data_cb(ep, req, resp, data);
+}
+
+static int test_endpoint_quirk_probe_cb_stage1(struct nvme_mi_ep *ep,
+						struct nvme_mi_req *req,
+						struct nvme_mi_resp *resp,
+						void *data)
+{
+	struct nvme_mi_admin_req_hdr *admin_req;
+	__u8 ror, mt;
+
+	assert(req->hdr->type == NVME_MI_MSGTYPE_NVME);
+
+	ror = req->hdr->nmp >> 7;
+	mt = req->hdr->nmp >> 3 & 0x7;
+	assert(ror == NVME_MI_ROR_REQ);
+	assert(mt == NVME_MI_MT_ADMIN);
+
+	assert(req->hdr_len == sizeof(struct nvme_mi_admin_req_hdr));
+
+	admin_req = (struct nvme_mi_admin_req_hdr *)req->hdr;
+	assert(admin_req->opcode == nvme_admin_identify);
+	assert(le32_to_cpu(admin_req->doff) == 0);
+	assert(le32_to_cpu(admin_req->dlen) == offsetof(struct nvme_id_ctrl, rab));
+
+	test_set_transport_callback(ep, test_endpoint_quirk_probe_cb_stage2, data);
+
+	return 0;
+}
+
+static void test_endpoint_quirk_probe(struct nvme_mi_ep *ep)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	/* force the probe to occur */
+	ep->quirks_probed = false;
+
+	test_set_transport_callback(ep, test_endpoint_quirk_probe_cb_stage1, NULL);
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -1897,6 +1949,7 @@ struct test {
 	DEFINE_TEST(admin_format_nvm),
 	DEFINE_TEST(admin_sanitize_nvm),
 	DEFINE_TEST(admin_get_log_split),
+	DEFINE_TEST(endpoint_quirk_probe),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
