@@ -1670,32 +1670,30 @@ static int nvme_set_var_size_tags(__u32 *cmd_dw2, __u32 *cmd_dw3, __u32 *cmd_dw1
 		__u8 pif, __u8 sts, __u64 reftag, __u64 storage_tag)
 {
 	__u32 cdw2 = 0, cdw3 = 0, cdw14;
-	beint64_t be_reftag = cpu_to_be64(reftag);
-	beint64_t be_storage_tag = cpu_to_be64(storage_tag);
 
 	switch (pif) {
 	case NVME_NVM_PIF_16B_GUARD:
-		cdw14 = be_reftag & 0xffffffff;
-		cdw14 |= ((be_storage_tag << (32 - sts)) & 0xffffffff);
+		cdw14 = reftag & 0xffffffff;
+		cdw14 |= ((storage_tag << (32 - sts)) & 0xffffffff);
 		break;
 	case NVME_NVM_PIF_32B_GUARD:
-		cdw14 = be_reftag & 0xffffffff;
-		cdw3 = be_reftag >> 32;
-		cdw14 |= ((be_storage_tag << (80 - sts)) & 0xffff0000);
+		cdw14 = reftag & 0xffffffff;
+		cdw3 = reftag >> 32;
+		cdw14 |= ((storage_tag << (80 - sts)) & 0xffff0000);
 		if (sts >= 48)
-			cdw3 |= ((be_storage_tag >> (sts - 48)) & 0xffffffff);
+			cdw3 |= ((storage_tag >> (sts - 48)) & 0xffffffff);
 		else
-			cdw3 |= ((be_storage_tag << (48 - sts)) & 0xffffffff);
-		cdw2 = (be_storage_tag >> (sts - 16)) & 0xffff;
+			cdw3 |= ((storage_tag << (48 - sts)) & 0xffffffff);
+		cdw2 = (storage_tag >> (sts - 16)) & 0xffff;
 		break;
 	case NVME_NVM_PIF_64B_GUARD:
-		cdw14 = be_reftag & 0xffffffff;
-		cdw3 = (be_reftag >> 32) & 0xffff;
-		cdw14 |= ((be_storage_tag << (48 - sts)) & 0xffffffff);
+		cdw14 = reftag & 0xffffffff;
+		cdw3 = (reftag >> 32) & 0xffff;
+		cdw14 |= ((storage_tag << (48 - sts)) & 0xffffffff);
 		if (sts >= 16)
-			cdw3 |= ((be_storage_tag >> (sts - 16)) & 0xffff);
+			cdw3 |= ((storage_tag >> (sts - 16)) & 0xffff);
 		else
-			cdw3 |= ((be_storage_tag << (16 - sts)) & 0xffff);
+			cdw3 |= ((storage_tag << (16 - sts)) & 0xffff);
 		break;
 	default:
 		perror("Unsupported Protection Information Format");
@@ -1703,9 +1701,9 @@ static int nvme_set_var_size_tags(__u32 *cmd_dw2, __u32 *cmd_dw3, __u32 *cmd_dw1
 		return -1;
 	}
 
-	*cmd_dw2 = cdw2;
-	*cmd_dw3 = cdw3;
-	*cmd_dw14 = cdw14;
+	*cmd_dw2 = cpu_to_be32(cdw2);
+	*cmd_dw3 = cpu_to_be32(cdw3);
+	*cmd_dw14 = cpu_to_be32(cdw14);
 	return 0;
 }
 
