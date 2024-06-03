@@ -1713,7 +1713,8 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
 	__u32 rsvd20 = (ctratt >> 20);
 	__u32 fdps = (ctratt >> 19) & 0x1;
-	__u32 rsvd16 = (ctratt >> 16) & 0x7;
+	__u32 rsvd17 = (ctratt >> 17) & 0x3;
+	__u32 mem = (ctratt >> 16) & 0x1;
 	__u32 elbas = (ctratt >> 15) & 0x1;
 	__u32 delnvmset = (ctratt >> 14) & 0x1;
 	__u32 delegrp = (ctratt >> 13) & 0x1;
@@ -1735,8 +1736,10 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 		printf(" [31:20] : %#x\tReserved\n", rsvd20);
 	printf("  [19:19] : %#x\tFlexible Data Placement %sSupported\n",
 		fdps, fdps ? "" : "Not ");
-	if (rsvd16)
-		printf("  [18:16] : %#x\tReserved\n", rsvd16);
+	if (rsvd17)
+		printf("  [18:17] : %#x\tReserved\n", rsvd17);
+	printf("  [16:16] : %#x\tMDTS and Size Limits Exclude Metadata %sSupported\n",
+		mem, mem ? "" : "Not ");
 	printf("  [15:15] : %#x\tExtended LBA Formats %sSupported\n",
 		elbas, elbas ? "" : "Not ");
 	printf("  [14:14] : %#x\tDelete NVM Set %sSupported\n",
