@@ -21,6 +21,7 @@
 #include "solidigm-temp-stats.h"
 #include "solidigm-get-drive-info.h"
 #include "solidigm-ocp-version.h"
+#include "solidigm-workload-tracker.h"
 
 #include "plugins/ocp/ocp-clear-features.h"
 #include "plugins/ocp/ocp-smart-extended-log.h"
@@ -106,4 +107,10 @@ static int get_cloud_SSDplugin_version(int argc, char **argv, struct command *cm
 				       struct plugin *plugin)
 {
 	return sldgm_ocp_version(argc, argv, cmd, plugin);
+}
+
+static int get_workload_tracker(int argc, char **argv, struct command *cmd,
+				      struct plugin *plugin)
+{
+	return sldgm_get_workload_tracker(argc, argv, cmd, plugin);
 }
