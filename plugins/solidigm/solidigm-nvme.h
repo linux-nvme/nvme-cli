@@ -13,7 +13,7 @@
 
 #include "cmd.h"
 
-#define SOLIDIGM_PLUGIN_VERSION "1.5"
+#define SOLIDIGM_PLUGIN_VERSION "1.6"
 
 PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_VERSION),
 	COMMAND_LIST(
@@ -32,6 +32,8 @@ PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_V
 		ENTRY("temp-stats", "Retrieve Temperature Statistics log", get_temp_stats_log)
 		ENTRY("vs-drive-info", "Retrieve drive information", get_drive_info)
 		ENTRY("cloud-SSDplugin-version", "Prints plug-in OCP version", get_cloud_SSDplugin_version)
+		ENTRY("workload-tracker", "Real Time capture Workload Tracker samples",
+		      get_workload_tracker)
 	)
 );
 

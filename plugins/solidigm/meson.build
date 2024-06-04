@@ -11,6 +11,7 @@ sources += [
   'plugins/solidigm/solidigm-temp-stats.c',
   'plugins/solidigm/solidigm-get-drive-info.c',
   'plugins/solidigm/solidigm-ocp-version.c',
+  'plugins/solidigm/solidigm-workload-tracker.c',
 ]
 subdir('solidigm-telemetry')
 
