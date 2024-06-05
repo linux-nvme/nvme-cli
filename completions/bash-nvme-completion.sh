@@ -1470,6 +1470,9 @@ plugin_ocp_opts () {
 		"get-dssd-async-event-config")
 		opts+=" --sel= -S"
 			;;
+		"tcg-configuration-log")
+		opts+=" --output-file= -o"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
