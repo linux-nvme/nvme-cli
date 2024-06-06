@@ -63,6 +63,14 @@ void nvme_root_set_application(nvme_root_t r, const char *a);
 const char *nvme_root_get_application(nvme_root_t r);
 
 /**
+ * nvme_root_skip_namespaces - Skip namespace scanning
+ * @r:	&nvme_root_t object
+ *
+ * Sets a flag to skip namespaces during scanning.
+ */
+void nvme_root_skip_namespaces(nvme_root_t r);
+
+/**
  * nvme_root_release_fds - Close all opened file descriptors in the tree
  * @r:	&nvme_root_t object
  *

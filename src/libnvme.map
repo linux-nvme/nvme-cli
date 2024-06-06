@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_1.10 {
 	global:
+		nvme_free_uri;
 		nvme_init_default_logging;
 		nvme_parse_uri;
-		nvme_free_uri;
+		nvme_root_skip_namespaces;
 		nvmf_hostid_generate;
 		nvmf_hostnqn_generate_from_hostid;
 };

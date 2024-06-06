@@ -175,6 +175,7 @@ struct nvme_root {
 	struct nvme_log log;
 	bool modified;
 	bool mi_probe_enabled;
+	bool create_only;
 	struct nvme_fabric_options *options;
 };
 
