@@ -93,9 +93,9 @@ cryptographically. This is accomplished by deleting the encryption key.
 --pil=<pil>::
 	Protection Information Location: If set to ‘1’ and protection
 	information is enabled, then protection information is transferred
-	as the first eight bytes of metadata. If cleared to ‘0’ and
+	as the first bytes of metadata. If cleared to ‘0’ and
 	protection information is enabled, then protection information
-	is transferred as the last eight bytes of metadata. Defaults to 0.
+	is transferred as the last bytes of metadata. Defaults to 0.
 
 -i <pi>::
 --pi=<pi>::

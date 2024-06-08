@@ -6083,7 +6083,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		"Can also be used to change LBAF to change the namespaces reported physical block format.";
 	const char *lbaf = "LBA format to apply (required)";
 	const char *ses = "[0-2]: secure erase";
-	const char *pil = "[0-1]: protection info location last/first 8 bytes of metadata";
+	const char *pil = "[0-1]: protection info location last/first bytes of metadata";
 	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
