@@ -21,6 +21,7 @@ usage() {
     echo "  cross               use cross toolchain to build"
     echo "  coverage            build coverage report"
     echo "  appimage            build AppImage target"
+    echo "  distro              build libnvme and nvme-cli separately"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -203,6 +204,51 @@ build_muon() {
 test_muon() {
     ninja="${SAMU}" "${MUON}" -C "${BUILDDIR}" test
     ldd "${BUILDDIR}/nvme" 2>&1 | grep 'not a dynamic executable' || exit 1
+}
+
+_install_libnvme() {
+    local libnvme_ref=$(sed -n "s/revision = \([0-9a-z]\+\)/\1/p" subprojects/libnvme.wrap)
+    local LBUILDDIR="${BUILDDIR}/.build-libnvme"
+
+    mkdir -p "${BUILDDIR}/libnvme"
+
+    pushd "${BUILDDIR}/libnvme"
+    git init
+    git remote add origin https://github.com/linux-nvme/libnvme.git
+    git fetch origin ${libnvme_ref}
+    git reset --hard FETCH_HEAD
+
+    CC="${CC}" "${MESON}" setup                 \
+        --prefix="${BUILDDIR}/usr"              \
+        --buildtype="${BUILDTYPE}"              \
+        "${LBUILDDIR}"
+
+    "${MESON}" compile                          \
+        -C "${LBUILDDIR}"
+
+    "${MESON}" install                          \
+        -C "${LBUILDDIR}"
+
+    popd || exit 1
+}
+
+config_meson_distro() {
+    _install_libnvme
+
+    PKG_CONFIG_PATH="${BUILDDIR}/usr/lib64/pkgconfig" \
+    CC="${CC}" ${MESON} setup                   \
+        --prefix="${BUILDDIR}/usr"              \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        "${BUILDDIR}"
+}
+
+build_meson_distro() {
+    build_meson
+}
+
+test_meson_distro() {
+    test_meson
 }
 
 if [[ "${BUILDTOOL}" == "muon" ]]; then
