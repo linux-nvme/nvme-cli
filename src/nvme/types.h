@@ -2332,10 +2332,13 @@ enum nvme_id_ns_flbas {
  *				the variable-sized storage tag/reference tag fields
  * @NVME_NVM_ELBAF_PIF_MASK:	Mask to get the protection information format for
  *				the extended LBA format.
+ * @NVME_NVM_ELBAF_QPIF_MASK:	Mask to get the Qualified Protection Information
+ *				Format.
  */
 enum nvme_nvm_id_ns_elbaf {
 	NVME_NVM_ELBAF_STS_MASK		= 127 << 0,
 	NVME_NVM_ELBAF_PIF_MASK		= 3 << 7,
+	NVME_NVM_ELBAF_QPIF_MASK	= 15 << 9,
 };
 
 /**
@@ -2344,11 +2347,16 @@ enum nvme_nvm_id_ns_elbaf {
  * @NVME_NVM_PIF_16B_GUARD:	16-bit Guard Protection Information Format
  * @NVME_NVM_PIF_32B_GUARD:	32-bit Guard Protection Information Format
  * @NVME_NVM_PIF_64B_GUARD:	64-bit Guard Protection Information Format
+ * @NVME_NVM_PIF_QTYPE:		If Qualified Protection Information Format Supports
+ *				and Protection Information Format is set to 3, then
+ *				protection information format is taken from Qualified
+ *				Protection Information Format field.
  */
 enum nvme_nvm_id_ns_pif {
 	NVME_NVM_PIF_16B_GUARD		= 0,
 	NVME_NVM_PIF_32B_GUARD		= 1,
 	NVME_NVM_PIF_64B_GUARD		= 2,
+	NVME_NVM_PIF_QTYPE		= 3,
 };
 
 /**
@@ -2712,14 +2720,16 @@ struct nvme_id_ctrl_nvm {
  * struct nvme_nvm_id_ns - NVME Command Set I/O Command Set Specific Identify Namespace Data Structure
  * @lbstm:	Logical Block Storage Tag Mask
  * @pic:	Protection Information Capabilities
- * @rsvd9:	Reserved
+ * @pifa:	Protection Information Format Attribute
+ * @rsvd10:	Reserved
  * @elbaf:	List of Extended LBA Format Support
  * @rsvd268:	Reserved
  */
 struct nvme_nvm_id_ns {
 	__le64	lbstm;
 	__u8	pic;
-	__u8	rsvd9[3];
+	__u8	pifa;
+	__u8	rsvd10[2];
 	__le32	elbaf[64];
 	__u8	rsvd268[3828];
 };
