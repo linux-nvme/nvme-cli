@@ -1,10 +1,9 @@
-unsupported-reqs-log
-====================
+nvme-ocp-unsupported-reqs-log(1)
+================================
 
 NAME
 ----
-unsupported-reqs-log - Retrieves unsupported requirements log page of given OCP
-compliant device
+nvme-ocp-unsupported-reqs-log - Retrieves unsupported requirements log page of given OCP compliant device
 
 SYNOPSIS
 --------
