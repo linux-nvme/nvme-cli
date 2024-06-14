@@ -12,9 +12,6 @@ copyright = '2020, Keith Busch'
 author = 'Keith Busch <kbusch@kernel.org>'
 master_doc = 'index'
 
-release = '@VERSION@'
-
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
