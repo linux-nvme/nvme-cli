@@ -3056,6 +3056,20 @@ static void stdout_nvm_id_ns_pic(__u8 pic)
 	printf("\n");
 }
 
+static char *pif_to_string(__u8 pif)
+{
+	switch (pif) {
+	case NVME_NVM_PIF_16B_GUARD:
+		return "16b Guard";
+	case NVME_NVM_PIF_32B_GUARD:
+		return "32b Guard";
+	case NVME_NVM_PIF_64B_GUARD:
+		return "64b Guard";
+	default:
+		return "Reserved";
+	}
+}
+
 static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 			     struct nvme_id_ns *ns, unsigned int lba_index,
 			     bool cap_only)
@@ -3086,10 +3100,7 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 		if (verbose)
 			printf("Extended LBA Format %2d : Protection Information Format: "
 				"%s(%d) - Storage Tag Size (MSB): %-2d %s\n",
-				i, pif == 3 ? "Reserved" :
-					pif == 2 ? "64b Guard" :
-					pif == 1 ? "32b Guard" : "16b Guard",
-					pif, sts, i == lbaf ? in_use : "");
+				i, pif_to_string(pif), pif, sts, i == lbaf ? in_use : "");
 		else
 			printf("elbaf %2d : pif:%d sts:%-2d %s\n", i,
 				pif, sts, i == lbaf ? in_use : "");
