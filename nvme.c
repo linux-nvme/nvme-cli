@@ -6830,15 +6830,15 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 	}
 
 	switch (pif) {
-	case 0:
+	case NVME_NVM_PIF_16B_GUARD:
 		if (ref_tag >= (1LL << (32 - sts)))
 			result = 1;
 		break;
-	case 1:
+	case NVME_NVM_PIF_32B_GUARD:
 		if (sts > 16 && ref_tag >= (1LL << (80 - sts)))
 			result = 1;
 		break;
-	case 2:
+	case NVME_NVM_PIF_64B_GUARD:
 		if (sts > 0 && ref_tag >= (1LL << (48 - sts)))
 			result = 1;
 		break;
