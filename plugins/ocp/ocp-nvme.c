@@ -946,7 +946,7 @@ static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
 										int tele_type)
 {
 	if (da1) {
-		unsigned int i = 0;
+		int i = 0;
 		if (tele_type == TELEMETRY_TYPE_HOST)
 			printf("============ Telemetry Host Data area 1 ============\n");
 		else
@@ -974,7 +974,7 @@ static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
 		printf("Data Area 2 Statistic Size         : 0x%x\n", le16_to_cpu(da1->da2_stat_size));
 		for (i = 0; i < 32; i++)
 			printf("reserved5         : 0x%x\n", da1->reserved5[i]);
-		for (i = 0; i < 17; i++){
+		for (i = 0; i < 16; i++) {
 			printf("Event FIFO %d Data Area         : 0x%x\n", i, da1->event_fifo_da[i]);
 			printf("Event FIFO %d Start         : %"PRIu64"\n", i, le64_to_cpu(da1->event_fifo_start[i]));
 			printf("Event FIFO %d Size         : %"PRIu64"\n", i, le64_to_cpu(da1->event_fifo_size[i]));
