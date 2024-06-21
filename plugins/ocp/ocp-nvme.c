@@ -832,29 +832,28 @@ struct telemetry_initiated_log {
 };
 
 struct telemetry_data_area_1 {
-	__le16 major_version;
-	__le16 minor_version;
-	__u8  reserved1[4];
+	__le16  major_version;
+	__le16  minor_version;
+	__u8    reserved1[4];
 	__le64	timestamp;
 	__u8    log_page_guid[16];
 	__u8    no_of_tps_supp;
 	__u8    tps;
-	__u8  reserved2[6];
-	__le16  sls;
-	__u8  reserved3[8];
-	__le16 fw_revision;
-	__u8  reserved4[32];
-	__le16  da1_stat_start;
-	__le16  da1_stat_size;
-	__le16  da2_stat_start;
-	__le16  da2_stat_size;
-	__u8  reserved5[32];
+	__u8    reserved2[6];
+	__le64  sls;
+	__u8    reserved3[8];
+	__u8    fw_revision[8];
+	__u8    reserved4[32];
+	__le64  da1_stat_start;
+	__le64  da1_stat_size;
+	__le64  da2_stat_start;
+	__le64  da2_stat_size;
+	__u8    reserved5[32];
 	__u8    event_fifo_da[16];
-	__le64	event_fifo_start[16];
-	__le64	event_fifo_size[16];
-	__u8  reserved6[80];
-	__u8  smart_health_info[512];
-	__u8  smart_health_info_extended[512];
+	__le64  event_fifo_ofst_sz[32];
+	__u8    reserved6[80];
+	__u8    smart_health_info[512];
+	__u8    smart_health_info_extended[512];
 };
 static void get_serial_number(struct nvme_id_ctrl *ctrl, char *sn)
 {
@@ -893,6 +892,7 @@ static int get_telemetry_header(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
 static void print_telemetry_header(struct telemetry_initiated_log *logheader,
 		int tele_type)
 {
+
 	if (logheader) {
 		unsigned int i = 0, j = 0;
 
@@ -923,8 +923,8 @@ static void print_telemetry_header(struct telemetry_initiated_log *logheader,
 	}
 }
 static int get_telemetry_data(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
-							  __u32 data_len, void *data, __u8 nLSP, __u8 nRAE,
-							  __u64 offset)
+							  __le64 data_len, void *data, __u8 nLSP, __u8 nRAE,
+							  __le64 offset)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode = nvme_admin_get_log_page,
@@ -935,6 +935,7 @@ static int get_telemetry_data(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
 	__u32 numd = (data_len >> 2) - 1;
 	__u16 numdu = numd >> 16;
 	__u16 numdl = numd & 0xffff;
+
 	cmd.cdw10 = tele_type | (nLSP & 0x0F) << 8 | (nRAE & 0x01) << 15 | (numdl & 0xFFFF) << 16;
 	cmd.cdw11 = numdu;
 	cmd.cdw12 = offset;
@@ -942,45 +943,97 @@ static int get_telemetry_data(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
 	cmd.cdw14 = 0;
 	return nvme_submit_admin_passthru(dev_fd(dev), &cmd, NULL);
 }
-static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
-										int tele_type)
+static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1, int tele_type, __le64 *eve_fifo_ofs_sz)
 {
 	if (da1) {
-		int i = 0;
+		__u32 i = 0;
 		if (tele_type == TELEMETRY_TYPE_HOST)
 			printf("============ Telemetry Host Data area 1 ============\n");
 		else
 			printf("========= Telemetry Controller Data area 1 =========\n");
 		printf("Major Version         : 0x%x\n", le16_to_cpu(da1->major_version));
 		printf("Minor Version         : 0x%x\n", le16_to_cpu(da1->minor_version));
+		printf("reserved1         :0x");
 		for (i = 0; i < 4; i++)
-			printf("reserved1         : 0x%x\n", da1->reserved1[i]);
+			printf("%x", da1->reserved1[i]);
+		printf("\n");
 		printf("Timestamp         : %"PRIu64"\n", le64_to_cpu(da1->timestamp));
-		for (i = 15; i >= 0; i--)
-			printf("%x", da1->log_page_guid[i]);
+
+		printf("Log Page GUID         :0x");
+		for (int j = 15; j >= 0; j--)
+			printf("%x", da1->log_page_guid[j]);
+		printf("\n");
+
 		printf("Number Telemetry Profiles Supported         : 0x%x\n", da1->no_of_tps_supp);
 		printf("Telemetry Profile Selected (TPS)         : 0x%x\n", da1->tps);
+		printf("reserved2         :0x");
 		for (i = 0; i < 6; i++)
-			printf("reserved2         : 0x%x\n", da1->reserved2[i]);
-		printf("Telemetry String Log Size (SLS)         : 0x%x\n", le16_to_cpu(da1->sls));
+			printf("%x", da1->reserved2[i]);
+		printf("\n");
+		printf("Telemetry String Log Size (SLS)         : 0x%lx\n", le64_to_cpu(da1->sls));
+		printf("reserved3         :0x");
 		for (i = 0; i < 8; i++)
-			printf("reserved3         : 0x%x\n", da1->reserved3[i]);
-		printf("Firmware Revision         : 0x%x\n", le16_to_cpu(da1->fw_revision));
+			printf("%x", da1->reserved3[i]);
+		printf("\n");
+
+		printf("Firmware Revision         : 0x");
+		for (i = 0; i < 8; i++)
+			printf("%c", (char) da1->fw_revision[i]);
+		printf("\n");
+		printf("reserved4         :0x");
 		for (i = 0; i < 32; i++)
-			printf("reserved4         : 0x%x\n", da1->reserved4[i]);
-		printf("Data Area 1 Statistic Start         : 0x%x\n", le16_to_cpu(da1->da1_stat_start));
-		printf("Data Area 1 Statistic Size         : 0x%x\n", le16_to_cpu(da1->da1_stat_size));
-		printf("Data Area 2 Statistic Start         : 0x%x\n", le16_to_cpu(da1->da2_stat_start));
-		printf("Data Area 2 Statistic Size         : 0x%x\n", le16_to_cpu(da1->da2_stat_size));
+			printf("%x", da1->reserved4[i]);
+		printf("\n");
+		printf("Data Area 1 Statistic Start         : 0x%lx\n", le64_to_cpu(da1->da1_stat_start));
+		printf("Data Area 1 Statistic Size         : 0x%lx\n", le64_to_cpu(da1->da1_stat_size));
+		printf("Data Area 2 Statistic Start         : 0x%lx\n", le64_to_cpu(da1->da2_stat_start));
+		printf("Data Area 2 Statistic Size         : 0x%lx\n", le64_to_cpu(da1->da2_stat_size));
+		printf("reserved5         :0x");
 		for (i = 0; i < 32; i++)
-			printf("reserved5         : 0x%x\n", da1->reserved5[i]);
-		for (i = 0; i < 16; i++) {
+			printf("%x", da1->reserved5[i]);
+		printf("\n");
+		for (i = 0; i < 16; i++)
 			printf("Event FIFO %d Data Area         : 0x%x\n", i, da1->event_fifo_da[i]);
-			printf("Event FIFO %d Start         : %"PRIu64"\n", i, le64_to_cpu(da1->event_fifo_start[i]));
-			printf("Event FIFO %d Size         : %"PRIu64"\n", i, le64_to_cpu(da1->event_fifo_size[i]));
-		}
+
+		printf("Event FIFO 1 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[0]));
+		printf("Event FIFO 1 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[1]));
+		printf("Event FIFO 2 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[2]));
+		printf("Event FIFO 2 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[3]));
+		printf("Event FIFO 3 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[4]));
+		printf("Event FIFO 3 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[5]));
+		printf("Event FIFO 4 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[6]));
+		printf("Event FIFO 4 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[7]));
+		printf("Event FIFO 5 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[8]));
+		printf("Event FIFO 5 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[9]));
+		printf("Event FIFO 6 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[10]));
+		printf("Event FIFO 6 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[11]));
+		printf("Event FIFO 7 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[12]));
+		printf("Event FIFO 7 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[13]));
+		printf("Event FIFO 8 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[14]));
+		printf("Event FIFO 8 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[15]));
+		printf("Event FIFO 9 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[16]));
+		printf("Event FIFO 9 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[17]));
+		printf("Event FIFO 10 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[18]));
+		printf("Event FIFO 10 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[19]));
+		printf("Event FIFO 11 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[20]));
+		printf("Event FIFO 11 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[21]));
+		printf("Event FIFO 12 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[22]));
+		printf("Event FIFO 12 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[23]));
+		printf("Event FIFO 13 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[24]));
+		printf("Event FIFO 13 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[25]));
+		printf("Event FIFO 14 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[26]));
+		printf("Event FIFO 14 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[27]));
+		printf("Event FIFO 15 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[28]));
+		printf("Event FIFO 15 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[29]));
+		printf("Event FIFO 16 Start         : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[30]));
+		printf("Event FIFO 16 Size          : %"PRIu64"\n", le64_to_cpu(da1->event_fifo_ofst_sz[31]));
+
+		eve_fifo_ofs_sz = da1->event_fifo_ofst_sz;
+
+		printf("reserved6         :0x");
 		for (i = 0; i < 80; i++)
-			printf("reserved6         : 0x%x\n", da1->reserved6[i]);
+			printf("%x", da1->reserved6[i]);
+		printf("\n");
 		for (i = 0; i < 512; i++){
 			printf("SMART / Health Information         : 0x%x\n", da1->smart_health_info[i]);
 			printf("SMART / Health Information Extended         : 0x%x\n", da1->smart_health_info_extended[i]);
@@ -992,70 +1045,132 @@ static void print_telemetry_da1_stat(__u8 *da1_stat, int tele_type, __u16 buf_si
 {
 	if (da1_stat) {
 		unsigned int i = 0;
+		__u16 sds = 0;
+		__u8 * ssd_buff;
 		if (tele_type == TELEMETRY_TYPE_HOST)
 			printf("============ Telemetry Host Data area 1 Statistics ============\n");
 		else
 			printf("========= Telemetry Controller Data area 1 Statistics =========\n");
-		while((i + 8) < buf_size) {
-			printf("Statistics Identifier         : 0x%x\n", (da1_stat[i] | da1_stat[i+1] << 8));
+		while(i < buf_size) {
+			printf("Statistics Identifier         : 0x%x\n", ((da1_stat[i]) | (da1_stat[i+1] << 8)));
 			printf("Statistics info         : 0x%x\n", da1_stat[i+2]);
 			printf("NS info         : 0x%x\n", da1_stat[i+3]);
-			printf("Statistic Data Size         : 0x%x\n", (da1_stat[i+4] | da1_stat[i+5] << 8));
-			printf("Reserved         : 0x%x\n", (da1_stat[i+6] | da1_stat[i+7] << 8));
-			i = 8 + ((da1_stat[i+4] | da1_stat[i+5] << 8) * 4);
+			printf("Statistic Data Size         : 0x%x\n", ((da1_stat[i+4]) | (da1_stat[i+5] << 8)));
+			printf("Reserved         : 0x%x\n", ((da1_stat[i+6]) | (da1_stat[i+7] << 8)));
+			sds = ((da1_stat[i+4]) | ((da1_stat[i+5]) << 8));
+			ssd_buff = (__u8 *)malloc(sds * 4);
+			memset(ssd_buff, 0, sds * 4);
+			i = i + 8;
+			memcpy(ssd_buff, &da1_stat[i], sds * 4);
+			printf("Statistic Specific Data         :0x");
+			for(__u32 j = 0; j < (sds * 4); j++)
+				printf("%x", ssd_buff[j]);
+			printf("\n");
+			i = (i + (sds * 4));
+			free(ssd_buff);
 		}
 		printf("===============================================\n\n");
 	}
 }
-static void print_telemetry_da1_fifo(__u8 *da1_fifo, int tele_type, __u16 buf_size)
+static void print_telemetry_da1_fifo(__u8 *da1_fifo, int tele_type, __le64 buf_size)
 {
 	if (da1_fifo) {
 		unsigned int i = 0;
+		__u8 * esd_buf;
+		__u8 eds = 0;
 		if (tele_type == TELEMETRY_TYPE_HOST)
 			printf("============ Telemetry Host Data area 1 FIFO ============\n");
 		else
 			printf("========= Telemetry Controller Data area 1 FIFO =========\n");
-		while((i + 4) < buf_size) {
+		while(i < buf_size) {
 			printf("Debug Event Class Type         : 0x%x\n", da1_fifo[i]);
-			printf("Event ID         : 0x%x\n", (da1_fifo[i+1] | da1_fifo[i+2] << 8));
-			printf("Event Data Size         : 0x%x\n", da1_fifo[3]);
-			i = 4 + ((da1_fifo[3]) * 4);
+			printf("Event ID         : 0x%x\n", (da1_fifo[i+1] | (da1_fifo[i+2] << 8)));
+			printf("Event Data Size         : 0x%x\n", da1_fifo[i + 3]);
+			eds = (__u8)da1_fifo[i + 3];
+
+			if (eds != 0) {
+				esd_buf = (__u8 *)malloc(eds << 2);
+				i = i + 4;
+				memset(esd_buf, 0, eds << 2);
+				memcpy(esd_buf, &da1_fifo[i], eds << 2);
+				printf("Event Specific Data : 0x");
+				for (__u16 j = 0; j < (eds << 2); j++)
+					printf("%x", da1_fifo[j]);
+				printf("\n");
+				i = i + (eds << 2);
+				free(esd_buf);
+			}
+			else{
+				i = i + 4;
+			}
 		}
 		printf("===============================================\n\n");
 	}
 }
+
 static void print_telemetry_da2_stat(__u8 *da1_stat, int tele_type, __u16 buf_size)
 {
 	if (da1_stat) {
 		unsigned int i = 0;
+		__u16 sds = 0;
+		__u8 * ssd_buff;
 		if (tele_type == TELEMETRY_TYPE_HOST)
-			printf("============ Telemetry Host Data area 1 Statistics ============\n");
+			printf("============ Telemetry Host Data area 2 Statistics ============\n");
 		else
-			printf("========= Telemetry Controller Data area 1 Statistics =========\n");
-		while((i + 8) < buf_size) {
-			printf("Statistics Identifier         : 0x%x\n", (da1_stat[i] | da1_stat[i+1] << 8));
+			printf("========= Telemetry Controller Data area 2 Statistics =========\n");
+		while(i < buf_size) {
+			printf("Statistics Identifier         : 0x%x\n", ((da1_stat[i]) | (da1_stat[i+1] << 8)));
 			printf("Statistics info         : 0x%x\n", da1_stat[i+2]);
 			printf("NS info         : 0x%x\n", da1_stat[i+3]);
-			printf("Statistic Data Size         : 0x%x\n", (da1_stat[i+4] | da1_stat[i+5] << 8));
-			printf("Reserved         : 0x%x\n", (da1_stat[i+6] | da1_stat[i+7] << 8));
-			i = 8 + ((da1_stat[i+4] | da1_stat[i+5] << 8) * 4);
+			printf("Statistic Data Size         : 0x%x\n", ((da1_stat[i+4]) | (da1_stat[i+5] << 8)));
+			printf("Reserved         : 0x%x\n", ((da1_stat[i+6]) | (da1_stat[i+7] << 8)));
+			sds = ((da1_stat[i+4]) | ((da1_stat[i+5]) << 8));
+			ssd_buff = (__u8 *)malloc(sds * 4);
+			memset(ssd_buff, 0, sds * 4);
+			i = i + 8;
+			memcpy(ssd_buff, &da1_stat[i], sds * 4);
+			printf("Statistic Specific Data         :0x");
+			for(__u32 j = 0; j < (sds * 4); j++)
+				printf("%x", ssd_buff[j]);
+			printf("\n");
+			i = (i + (sds * 4));
+			free(ssd_buff);
 		}
 		printf("===============================================\n\n");
 	}
 }
-static void print_telemetry_da2_fifo(__u8 *da1_fifo, int tele_type, __u16 buf_size)
+
+static void print_telemetry_da2_fifo(__u8 *da1_fifo, int tele_type, __le64 buf_size)
 {
 	if (da1_fifo) {
 		unsigned int i = 0;
+		__u8 * esd_buf;
+		__u8 eds = 0;
 		if (tele_type == TELEMETRY_TYPE_HOST)
-			printf("============ Telemetry Host Data area 1 Statistics ============\n");
+			printf("============ Telemetry Host Data area 2 FIFO ============\n");
 		else
-			printf("========= Telemetry Controller Data area 1 Statistics =========\n");
-		while((i + 4) < buf_size) {
+			printf("========= Telemetry Controller Data area 2 FIFO =========\n");
+		while(i < buf_size) {
 			printf("Debug Event Class Type         : 0x%x\n", da1_fifo[i]);
-			printf("Event ID         : 0x%x\n", (da1_fifo[i+1] | da1_fifo[i+2] << 8));
-			printf("Event Data Size         : 0x%x\n", da1_fifo[3]);
-			i = 4 + ((da1_fifo[3]) * 4);
+			printf("Event ID         : 0x%x\n", (da1_fifo[i+1] | (da1_fifo[i+2] << 8)));
+			printf("Event Data Size         : 0x%x\n", da1_fifo[i + 3]);
+			eds = (__u8)da1_fifo[i + 3];
+
+			if (eds != 0) {
+				esd_buf = (__u8 *)malloc(eds << 2);
+				i = i + 4;
+				memset(esd_buf, 0, eds << 2);
+				memcpy(esd_buf, &da1_fifo[i], eds << 2);
+				printf("Event Specific Data : 0x");
+				for (__u16 j = 0; j < (eds << 2); j++)
+					printf("%x", da1_fifo[j]);
+				printf("\n");
+				i = i + (eds << 2);
+				free(esd_buf);
+			}
+			else{
+				i = i + 4;
+			}
 		}
 		printf("===============================================\n\n");
 	}
@@ -1146,15 +1261,17 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 			      enum TELEMETRY_TYPE tele_type, int data_area, bool header_print)
 {
 	__u32 err = 0, nsid = 0;
-	__u8 lsp = 0, rae = 0;
-	unsigned int i = 0;
-	char data[TELEMETRY_TRANSFER_SIZE] = { 0 };
+	__le64 da1_sz = 512, m_512_sz = 0, da1_off = 0, m_512_off = 0, diff = 0, temp_sz = 0, temp_ofst = 0;
+	__u8 lsp = 0, rae = 0, flag = 0 , count = 0;
+	__u8 data[TELEMETRY_HEADER_SIZE] = { 0 };
+	__le64 eve_fifo_ofs_sz[32] = {0,};
 	char data1[1536] = { 0 };
 	char *featurename = 0;
 	struct telemetry_initiated_log *logheader = (struct telemetry_initiated_log *)data;
 	struct telemetry_data_area_1 *da1 = (struct telemetry_data_area_1 *)data1;
 	__u64 offset = 0, size = 0;
 	char dumpname[FILE_NAME_SIZE] = { 0 };
+	char *da1_fifo = 0;
 
 	if (tele_type == TELEMETRY_TYPE_HOST_0) {
 		featurename = "Host(0)";
@@ -1176,47 +1293,222 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 				(void *)data, lsp, rae);
 	if (err)
 		return err;
+	logheader = (struct telemetry_initiated_log *)data;
 
 	if (header_print)
 		print_telemetry_header(logheader, tele_type);
+
 	err = get_telemetry_data(dev, nsid, tele_type, 1536,
 				(void *)data1, lsp, rae, 512);
 	if (err)
 		return err;
-	print_telemetry_data_area_1(da1, tele_type);
-	char *da1_stat = calloc((da1->da1_stat_size * 4), sizeof(char));
-	err = get_telemetry_data(dev, nsid, tele_type, (da1->da1_stat_size) * 4,
-				(void *)da1_stat, lsp, rae, (da1->da1_stat_start) * 4);
-	if (err)
-		return err;
-	print_telemetry_da1_stat((void *)da1_stat, tele_type, (da1->da1_stat_size) * 4);
-	for (i = 0; i < 17 ; i++){
-		if (da1->event_fifo_da[i] == 1){
-			char *da1_fifo = calloc((da1->event_fifo_size[i]) * 4, sizeof(char));
-			err = get_telemetry_data(dev, nsid, tele_type, (da1->event_fifo_size[i]) * 4,
-				(void *)da1_stat, lsp, rae, (da1->event_fifo_start[i]) * 4);
-			if (err)
-				return err;
-			print_telemetry_da1_fifo((void *)da1_fifo, tele_type, (da1->event_fifo_size[i]) * 4);
+	da1 = (struct telemetry_data_area_1 *)data1;
+	print_telemetry_data_area_1(da1, tele_type, eve_fifo_ofs_sz);
+
+	if (da1->da1_stat_size != 0) {
+		diff = 0;
+		da1_sz = (da1->da1_stat_size) * 4;
+		m_512_sz = (da1->da1_stat_size) * 4;
+		da1_off = (da1->da1_stat_start) * 4;
+		m_512_off = (da1->da1_stat_start) * 4;
+		temp_sz = (da1->da1_stat_size) * 4;
+		temp_ofst = (da1->da1_stat_start) * 4;
+		flag = 0;
+
+		if ((da1_off % 512) > 0) {
+			m_512_off = (__le64) ((da1_off / 512));
+			da1_off = m_512_off * 512;
+			diff = temp_ofst - da1_off;
+			flag = 1;
 		}
-	}
-	char *da2_stat = calloc((da1->da2_stat_size * 4), sizeof(char));
-	err = get_telemetry_data(dev, nsid, tele_type, (da1->da2_stat_size) * 4,
-				(void *)da2_stat, lsp, rae, (da1->da2_stat_start) * 4);
-	if (err)
-		return err;
-	print_telemetry_da2_stat((void *)da2_stat, tele_type, (da1->da2_stat_size) * 4);
-	for (i = 0; i < 17 ; i++){
-		if (da1->event_fifo_da[i] == 2){
-			char *da1_fifo = calloc((da1->event_fifo_size[i]) * 4, sizeof(char));
-			err = get_telemetry_data(dev, nsid, tele_type, (da1->event_fifo_size[i]) * 4,
-				(void *)da1_stat, lsp, rae, (da1->event_fifo_start[i]) * 4);
-			if (err)
-				return err;
-			print_telemetry_da2_fifo((void *)da1_fifo, tele_type, (da1->event_fifo_size[i]) * 4);
+
+		if (da1_sz < 512)
+			da1_sz = 512;
+		else if ((da1_sz % 512) > 0) {
+			if (flag == 0) {
+				m_512_sz = (__le64) ((da1_sz / 512) + 1);
+				da1_sz = m_512_sz * 512;
+			}
+
+			else {
+				if (diff < 512)
+					diff = 1;
+				else
+					diff = (diff / 512) * 512;
+
+				m_512_sz = (__le64) ((da1_sz / 512) + 1 + diff + 1);
+				da1_sz = m_512_sz * 512;
+			}
 		}
+
+		char *da1_stat = (char *) calloc(da1_sz, sizeof(char));
+
+		err = get_telemetry_data(dev, nsid, tele_type, da1_sz,
+					(void *)da1_stat, lsp, rae, da1_off);
+		if (err)
+			return err;
+		print_telemetry_da1_stat((void *) (da1_stat  + (temp_ofst - da1_off)), tele_type, da1->da1_stat_size * 4);
 	}
 
+	memcpy(eve_fifo_ofs_sz, da1->event_fifo_ofst_sz, 8 * 32);
+	count = 0;
+	for (int k = 0; k < 32; k = k + 2) {
+		if (da1->event_fifo_da[count] == 1 && eve_fifo_ofs_sz[k + 1] != 0) {
+			diff = 0;
+			da1_sz = (eve_fifo_ofs_sz[k + 1]) * 4;
+			m_512_sz = (eve_fifo_ofs_sz[k + 1]) * 4;
+			da1_off = (eve_fifo_ofs_sz[k]) * 4;
+			m_512_off = (eve_fifo_ofs_sz[k]) * 4;
+			temp_sz = (eve_fifo_ofs_sz[k + 1]) * 4;
+			temp_ofst = (eve_fifo_ofs_sz[k]) * 4;
+			flag = 0;
+
+			if ((da1_off % 512) > 0) {
+				m_512_off = (__le64) ((da1_off / 512));
+				da1_off = m_512_off * 512;
+				diff = temp_ofst - da1_off;
+				flag = 1;
+			}
+
+			if (da1_sz < 512)
+				da1_sz = 512;
+			else if ((da1_sz % 512) > 0) {
+				if (flag == 0) {
+					m_512_sz = (__le64) ((da1_sz / 512) + 1);
+					da1_sz = m_512_sz * 512;
+				}
+
+				else {
+					if (diff < 512)
+						diff = 1;
+					else
+						diff = (diff / 512) * 512;
+
+					m_512_sz = (__le64) ((da1_sz / 512) + 1 + diff + 1);
+					da1_sz = m_512_sz * 512;
+				}
+			}
+
+			da1_fifo = calloc(da1_sz, sizeof(char));
+
+			err = get_telemetry_data(dev, nsid, tele_type, da1_sz,
+				(void *)da1_fifo, lsp, rae, da1_off);
+			if (err)
+				return err;
+
+			print_telemetry_da1_fifo((void *)(da1_fifo + (temp_ofst - da1_off)), tele_type, temp_sz);
+			free(da1_fifo);
+		}
+		count = count + 1;
+	}
+
+	if (da1->da2_stat_size != 0) {
+		da1_off = (da1->da2_stat_start) * 4;
+		temp_ofst = (da1->da2_stat_start) * 4;
+		da1_sz = (da1->da2_stat_size) * 4;
+		diff = 0;
+		flag = 0;
+
+		if (da1->da2_stat_start == 0) {
+			da1_off = 512 + (logheader->DataArea1LastBlock * 512);
+			temp_ofst = 512 + (le16_to_cpu(logheader->DataArea1LastBlock) * 512);
+			if ((da1_off % 512) == 0) {
+				m_512_off = (__le64) (((da1_off) / 512));
+				da1_off = m_512_off * 512;
+				diff = temp_ofst - da1_off;
+				flag = 1;
+			}
+		}
+
+		else {
+
+			if (((da1_off * 4) % 512) > 0) {
+				m_512_off = (__le64) ((((da1->da2_stat_start) * 4) / 512));
+				da1_off = m_512_off * 512;
+				diff = ((da1->da2_stat_start) * 4) - da1_off;
+				flag = 1;
+			}
+		}
+
+		if (da1_sz < 512)
+			da1_sz = 512;
+		else if ((da1_sz % 512) > 0) {
+			if (flag == 0) {
+				m_512_sz = (__le64) ((da1->da2_stat_size / 512) + 1);
+				da1_sz = m_512_sz * 512;
+			}
+			else {
+				if (diff < 512)
+					diff = 1;
+				else
+					diff = (diff / 512) * 512;
+				m_512_sz = (__le64) ((da1->da2_stat_size / 512) + 1 + diff + 1);
+				da1_sz = m_512_sz * 512;
+			}
+		}
+		char *da2_stat = calloc(da1_sz, sizeof(char));
+		err = get_telemetry_data(dev, nsid, tele_type, da1_sz,
+					(void *)da2_stat, lsp, rae, da1_off);
+		if (err)
+			return err;
+
+
+		print_telemetry_da2_stat((void *) (da2_stat  + (temp_ofst - da1_off)), tele_type, (da1->da2_stat_size) * 4);
+	}
+
+	count = 0;
+	for (int k = 0; k < 32; k = k + 2) {
+		if (da1->event_fifo_da[count] == 2 && eve_fifo_ofs_sz[k + 1] != 0) {
+			diff = 0;
+			da1_sz = (eve_fifo_ofs_sz[k + 1]) * 4;
+			m_512_sz = (eve_fifo_ofs_sz[k + 1]) * 4;
+			da1_off = (eve_fifo_ofs_sz[k]) * 4;
+			m_512_off = (eve_fifo_ofs_sz[k]) * 4;
+			temp_sz = (eve_fifo_ofs_sz[k + 1]) * 4;
+			temp_ofst = (eve_fifo_ofs_sz[k]) * 4;
+			flag = 0;
+
+			if ((da1_off % 512) > 0) {
+				m_512_off = (__le64) ((da1_off / 512));
+				da1_off = m_512_off * 512;
+				diff = temp_ofst - da1_off;
+				flag = 1;
+			}
+
+			if (da1_sz < 512)
+				da1_sz = 512;
+			else if ((da1_sz % 512) > 0) {
+				if (flag == 0) {
+					m_512_sz = (__le64) ((da1_sz / 512) + 1);
+					da1_sz = m_512_sz * 512;
+				}
+
+				else {
+					if (diff < 512)
+						diff = 1;
+					else
+						diff = (diff / 512) * 512;
+
+					m_512_sz = (__le64) ((da1_sz / 512) + 1 + diff + 1);
+					da1_sz = m_512_sz * 512;
+				}
+			}
+
+			da1_fifo = calloc(da1_sz, sizeof(char));
+
+			err = get_telemetry_data(dev, nsid, tele_type, da1_sz,
+				(void *)da1_fifo, lsp, rae, da1_off);
+			if (err)
+				return err;
+
+			print_telemetry_da2_fifo((void *)(da1_fifo + (temp_ofst - da1_off)), tele_type, temp_sz);
+			free(da1_fifo);
+		}
+		count = count + 1;
+	}
+
+
+	printf("------------------------------FIFO End---------------------------\n");
 	switch (data_area) {
 	case 1:
 		offset  = TELEMETRY_HEADER_SIZE;
@@ -1406,7 +1698,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 
 	printf("telemetry-log done.\n");
 
-return err;
+	return err;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
