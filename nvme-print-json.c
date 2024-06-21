@@ -3048,15 +3048,17 @@ static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
 		obj_add_uint64(r, "lbstm", le64_to_cpu(nvm_ns->lbstm));
 
 	obj_add_int(r, "pic", nvm_ns->pic);
+	obj_add_int(r, "pifa", nvm_ns->pifa);
 
 	obj_add_array(r, "elbafs", elbafs);
 
-	for (i = 0; i <= ns->nlbaf; i++) {
+	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
 		struct json_object *elbaf = json_create_object();
 		unsigned int elbaf_val = le32_to_cpu(nvm_ns->elbaf[i]);
 
 		obj_add_uint(elbaf, "sts", elbaf_val & 0x7F);
 		obj_add_uint(elbaf, "pif", (elbaf_val >> 7) & 0x3);
+		obj_add_uint(elbaf, "qpif", (elbaf_val >> 9) & 0xF);
 
 		array_add_obj(elbafs, elbaf);
 	}
