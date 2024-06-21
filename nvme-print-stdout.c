@@ -3041,22 +3041,40 @@ static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 
 static void stdout_nvm_id_ns_pic(__u8 pic)
 {
-	__u8 rsvd = (pic & 0xF8) >> 3;
-	__u8 stcrs = (pic & 0x3) >> 2;
+	__u8 rsvd = (pic & 0xF0) >> 4;
+	__u8 qpifs = (pic & 0x8) >> 3;
+	__u8 stcrs = (pic & 0x4) >> 2;
 	__u8 pic_16bpistm = (pic & 0x2) >> 1;
 	__u8 pic_16bpists = pic & 0x1;
 
 	if (rsvd)
-		printf("  [7:3] : %#x\tReserved\n", rsvd);
-	printf("  [2:2] : %#x\tStorage Tag Check Read Support\n", stcrs);
+		printf("  [7:4] : %#x\tReserved\n", rsvd);
+	printf("  [3:3] : %#x\tQualified Protection Information Format %sSupported\n",
+		qpifs, qpifs ? "" : "Not ");
+	printf("  [2:2] : %#x\tStorage Tag Check Read %sSupported\n",
+		stcrs, stcrs ? "" : "Not ");
 	printf("  [1:1] : %#x\t16b Guard Protection Information Storage Tag Mask\n",
 		pic_16bpistm);
-	printf("  [0:0] : %#x\t16b Guard Protection Information Storage Tag Support\n",
-		pic_16bpists);
+	printf("  [0:0] : %#x\t16b Guard Protection Information Storage Tag %sSupported\n",
+		pic_16bpists, pic_16bpists ? "" : "Not ");
 	printf("\n");
 }
 
-static char *pif_to_string(__u8 pif)
+static void stdout_nvm_id_ns_pifa(__u8 pifa)
+{
+	__u8 rsvd = (pifa & 0xF8) >> 3;
+	__u8 stmla = pifa & 0x7;
+
+	if (rsvd)
+		printf("  [7:3] : %#x\tReserved\n", rsvd);
+	printf("  [2:0] : %#x\tStorage Tag Masking Level Attribute : %s\n", stmla,
+		stmla == 0 ? "Bit Granularity Masking" :
+		stmla == 1 ? "Byte Granularity Masking" :
+		stmla == 2 ? "Masking Not Supported" : "Reserved");
+	printf("\n");
+}
+
+static char *pif_to_string(__u8 pif, bool qpifs, bool pif_field)
 {
 	switch (pif) {
 	case NVME_NVM_PIF_16B_GUARD:
@@ -3065,6 +3083,9 @@ static char *pif_to_string(__u8 pif)
 		return "32b Guard";
 	case NVME_NVM_PIF_64B_GUARD:
 		return "64b Guard";
+	case NVME_NVM_PIF_QTYPE:
+		if (pif_field && qpifs)
+			return "Qualified Type";
 	default:
 		return "Reserved";
 	}
@@ -3075,9 +3096,10 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 			     bool cap_only)
 {
 	int i, verbose = stdout_print_ops.flags & VERBOSE;
+	bool qpifs = (nvm_ns->pic & 0x8) >> 3;
 	__u32 elbaf;
 	__u8 lbaf;
-	int pif, sts;
+	int pif, sts, qpif;
 	char *in_use = "(in use)";
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lbaf);
@@ -3092,18 +3114,23 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	printf("pic   : %#x\n", nvm_ns->pic);
 	if (verbose)
 		stdout_nvm_id_ns_pic(nvm_ns->pic);
+	printf("pifa  : %#x\n", nvm_ns->pifa);
+	if (verbose)
+		stdout_nvm_id_ns_pifa(nvm_ns->pifa);
 
 	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
 		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
+		qpif = (elbaf >> 9) & 0xF;
 		pif = (elbaf >> 7) & 0x3;
 		sts = elbaf & 0x7f;
 		if (verbose)
-			printf("Extended LBA Format %2d : Protection Information Format: "
-				"%s(%d) - Storage Tag Size (MSB): %-2d %s\n",
-				i, pif_to_string(pif), pif, sts, i == lbaf ? in_use : "");
+			printf("Extended LBA Format %2d : Qualified Protection Information Format: "
+				"%s(%d) - Protection Information Format: %s(%d) - Storage Tag Size "
+				"(MSB): %-2d %s\n", i, pif_to_string(qpif, qpifs, false), qpif,
+				pif_to_string(pif, qpifs, true), pif, sts, i == lbaf ? in_use : "");
 		else
-			printf("elbaf %2d : pif:%d sts:%-2d %s\n", i,
-				pif, sts, i == lbaf ? in_use : "");
+			printf("elbaf %2d : qpif:%d pif:%d sts:%-2d %s\n", i,
+				qpif, pif, sts, i == lbaf ? in_use : "");
 	}
 }
 
