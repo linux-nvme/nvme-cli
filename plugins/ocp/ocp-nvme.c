@@ -1100,7 +1100,7 @@ static void print_telemetry_da1_fifo(__u8 *da1_fifo, int tele_type, __le64 buf_s
 				memset(esd_buf, 0, eds << 2);
 				memcpy(esd_buf, &da1_fifo[i], eds << 2);
 				printf("Event Specific Data : 0x");
-				for (__u16 j = 0; j < (eds << 2); j++)
+				for (__u16 j = 0; j < (eds * 4); j++)
 					printf("%x", da1_fifo[j]);
 				printf("\n");
 				i = i + (eds << 2);
@@ -1168,7 +1168,7 @@ static void print_telemetry_da2_fifo(__u8 *da1_fifo, int tele_type, __le64 buf_s
 				memset(esd_buf, 0, eds << 2);
 				memcpy(esd_buf, &da1_fifo[i], eds << 2);
 				printf("Event Specific Data : 0x");
-				for (__u16 j = 0; j < (eds << 2); j++)
+				for (__u16 j = 0; j < (eds * 4); j++)
 					printf("%x", da1_fifo[j]);
 				printf("\n");
 				i = i + (eds << 2);
