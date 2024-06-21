@@ -923,8 +923,8 @@ static void print_telemetry_header(struct telemetry_initiated_log *logheader,
 	}
 }
 static int get_telemetry_data(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
-							  __le64 data_len, void *data, __u8 nLSP, __u8 nRAE,
-							  __le64 offset)
+								__le64 data_len, void *data, __u8 nLSP,
+								__u8 nRAE, __le64 offset)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode = nvme_admin_get_log_page,
@@ -943,7 +943,9 @@ static int get_telemetry_data(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
 	cmd.cdw14 = 0;
 	return nvme_submit_admin_passthru(dev_fd(dev), &cmd, NULL);
 }
-static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1, int tele_type, __le64 *eve_fifo_ofs_sz)
+static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
+										int tele_type,
+										__le64 *eve_fifo_ofs_sz)
 {
 	if (da1) {
 		__u32 i = 0;
@@ -984,10 +986,14 @@ static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1, int t
 		for (i = 0; i < 32; i++)
 			printf("%x", da1->reserved4[i]);
 		printf("\n");
-		printf("Data Area 1 Statistic Start         : 0x%lx\n", le64_to_cpu(da1->da1_stat_start));
-		printf("Data Area 1 Statistic Size         : 0x%lx\n", le64_to_cpu(da1->da1_stat_size));
-		printf("Data Area 2 Statistic Start         : 0x%lx\n", le64_to_cpu(da1->da2_stat_start));
-		printf("Data Area 2 Statistic Size         : 0x%lx\n", le64_to_cpu(da1->da2_stat_size));
+		printf("Data Area 1 Statistic Start         : 0x%lx\n",
+								le64_to_cpu(da1->da1_stat_start));
+		printf("Data Area 1 Statistic Size         : 0x%lx\n",
+								le64_to_cpu(da1->da1_stat_size));
+		printf("Data Area 2 Statistic Start         : 0x%lx\n",
+								le64_to_cpu(da1->da2_stat_start));
+		printf("Data Area 2 Statistic Size         : 0x%lx\n",
+								le64_to_cpu(da1->da2_stat_size));
 		printf("reserved5         :0x");
 		for (i = 0; i < 32; i++)
 			printf("%x", da1->reserved5[i]);
