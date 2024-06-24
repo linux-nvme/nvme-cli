@@ -144,6 +144,7 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 	else
 		obj_add_str(o, "Result", "Could not allocate string");
 
+	va_end(ap);
 	free(value);
 }
 
@@ -162,6 +163,7 @@ static void obj_add_key(struct json_object *o, const char *k, const char *v, ...
 	else
 		obj_add_str(o, k, "Could not allocate string");
 
+	va_end(ap);
 	free(value);
 }
 
