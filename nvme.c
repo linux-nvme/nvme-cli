@@ -630,11 +630,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		return err;
 	}
 
-	ana_log_len = sizeof(struct nvme_ana_log) +
-		le32_to_cpu(ctrl->nanagrpid) * sizeof(struct nvme_ana_group_desc);
-	if (!(ctrl->anacap & (1 << 6)))
-		ana_log_len += le32_to_cpu(ctrl->mnan) * sizeof(__le32);
-
+	ana_log_len = nvme_get_ana_log_len_from_id_ctrl(ctrl, cfg.groups);
 	ana_log = nvme_alloc(ana_log_len);
 	if (!ana_log)
 		return -ENOMEM;
