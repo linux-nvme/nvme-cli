@@ -386,6 +386,16 @@ int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
 				  NVME_DEFAULT_IOCTL_TIMEOUT);
 }
 
+size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
+					 bool rgo)
+{
+	__u32 nanagrpid = le32_to_cpu(id_ctrl->nanagrpid);
+	size_t size = sizeof(struct nvme_ana_log) +
+		nanagrpid * sizeof(struct nvme_ana_group_desc);
+
+	return rgo ? size : size + le32_to_cpu(id_ctrl->mnan) * sizeof(__le32);
+}
+
 int nvme_get_ana_log_len(int fd, size_t *analen)
 {
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
@@ -400,9 +410,7 @@ int nvme_get_ana_log_len(int fd, size_t *analen)
 	if (ret)
 		return ret;
 
-	*analen = sizeof(struct nvme_ana_log) +
-		le32_to_cpu(ctrl->nanagrpid) * sizeof(struct nvme_ana_group_desc) +
-		le32_to_cpu(ctrl->mnan) * sizeof(__le32);
+	*analen = nvme_get_ana_log_len_from_id_ctrl(ctrl, false);
 	return 0;
 }
 

@@ -3,6 +3,7 @@ LIBNVME_1.10 {
 	global:
 		nvme_free_uri;
 		nvme_get_ana_log_atomic;
+		nvme_get_ana_log_len_from_id_ctrl;
 		nvme_init_default_logging;
 		nvme_parse_uri;
 		nvme_root_skip_namespaces;

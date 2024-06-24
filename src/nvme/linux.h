@@ -129,6 +129,16 @@ int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
 
 /**
+ * nvme_get_ana_log_len_from_id_ctrl() - Retrieve maximum possible ANA log size
+ * @id_ctrl:	Controller identify data
+ * @rgo:	If true, return maximum log page size without NSIDs
+ *
+ * Return: A byte limit on the size of the controller's ANA log page
+ */
+size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
+					 bool rgo);
+
+/**
  * nvme_get_ana_log_len() - Retrieve size of the current ANA log
  * @fd:		File descriptor of nvme device
  * @analen:	Pointer to where the length will be set on success
