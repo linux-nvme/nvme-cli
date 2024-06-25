@@ -1144,7 +1144,7 @@ void *__nvme_realloc(void *p, size_t len)
 
 	void *result = __nvme_alloc(len);
 
-	if (p) {
+	if (p && result) {
 		memcpy(result, p, min(old_len, len));
 		free(p);
 	}
