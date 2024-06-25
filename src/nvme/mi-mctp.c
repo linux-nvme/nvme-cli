@@ -593,7 +593,7 @@ static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
 	bool have_eid = false, have_net = false, have_nvmemi = false;
 	mctp_eid_t eid;
 	int net;
-	int rc;
+	int rc = 0;
 
 	/* for each property */
 	for (;;) {
