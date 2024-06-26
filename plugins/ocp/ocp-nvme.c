@@ -2796,100 +2796,83 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 
 	printf("  FIFO 1 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo1[j], log_data->fifo1[j]);
-	}
 
 	printf("  FIFO 2 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo2[j], log_data->fifo2[j]);
-	}
 
 	printf("  FIFO 3 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo3[j], log_data->fifo3[j]);
-	}
 
 	printf("  FIFO 4 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
-
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo4[j], log_data->fifo4[j]);
-	}
 
 	printf("  FIFO 5 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo5[j], log_data->fifo5[j]);
-	}
 
 	printf("  FIFO 6 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo6[j], log_data->fifo6[j]);
-	}
 
 	printf("  FIFO 7 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo7[j], log_data->fifo7[j]);
-	}
 
 	printf("  FIFO 8 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo8[j], log_data->fifo8[j]);
-	}
 
 	printf("  FIFO 9 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo9[j], log_data->fifo9[j]);
-	}
 
 	printf("  FIFO 10 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo10[j], log_data->fifo10[j]);
-	}
 
 	printf("  FIFO 11 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo11[j], log_data->fifo11[j]);
-	}
 
 	printf("  FIFO 12 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo12[j], log_data->fifo12[j]);
-	}
 
 	printf("  FIFO 13 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo13[j], log_data->fifo13[j]);
-	}
 
 	printf("  FIFO 14 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo14[j], log_data->fifo14[j]);
-	}
 
 	printf("  FIFO 15 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo15[j], log_data->fifo16[j]);
-	}
 
 	printf("  FIFO 16 ASCII String\n");
 	printf("   index    value    ascii_val\n");
-	for (j = 0; j < 16; j++) {
+	for (j = 0; j < 16; j++)
 		printf("  %d       %d        %c    \n", j, log_data->fifo16[j], log_data->fifo16[j]);
-	}
 
 	printf("  Reserved                                        : ");
 	for (j = 0; j < 48; j++)
@@ -2898,8 +2881,9 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 
 
 	if (log_data->sitsz != 0) {
-		memcpy(stat_id_str_table_arr, (__u8*)log_data_buf +
-		stat_id_str_table_ofst, (log_data->sitsz * 4));
+		memcpy(stat_id_str_table_arr,
+		(__u8*)log_data_buf + stat_id_str_table_ofst,
+		(log_data->sitsz * 4));
 		printf("  Statistics Identifier String Table\n");
 		for (j = 0; j < stat_id_index; j++) {
 			printf("   Vendor Specific Statistic Identifier : 0x%x\n",
@@ -2910,7 +2894,7 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 			stat_id_str_table_arr[j].ascii_id_len);
 			printf("   ASCII ID offset                      : 0x%lx\n",
 			le64_to_cpu(stat_id_str_table_arr[j].ascii_id_ofst));
-			printf("   Reserved                             : 0x%d\n",
+			printf("   Reserved                             : 0x%x\n",
 			stat_id_str_table_arr[j].reserved2);
 		}
 	}
@@ -2929,7 +2913,7 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 			event_id_str_table_arr[j].ascii_id_len);
 			printf("   ASCII ID offset          : 0x%lx\n",
 			le64_to_cpu(event_id_str_table_arr[j].ascii_id_ofst));
-			printf("   Reserved                 : 0x%d\n",
+			printf("   Reserved                 : 0x%x\n",
 			event_id_str_table_arr[j].reserved2);
 
 		}
@@ -2948,7 +2932,7 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 			vu_event_id_str_table_arr[j].ascii_id_len);
 			printf("   ASCII ID offset          : 0x%lx\n",
 			le64_to_cpu(vu_event_id_str_table_arr[j].ascii_id_ofst));
-			printf("   Reserved                 : 0x%d\n",
+			printf("   Reserved                 : 0x%x\n",
 			vu_event_id_str_table_arr[j].reserved);
 
 		}
@@ -2958,8 +2942,8 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 		printf("  ASCII Table\n");
 		printf("   Byte    Data_Byte    ASCII_Character\n");
 		for (j = 0; j < ascii_table_index; j++) {
-			printf("    %lld        %d             %c        \n",
-			ascii_table_ofst+j, log_data_buf[ascii_table_ofst + j],
+			printf("    %lld        %d             %c        \n", ascii_table_ofst+j,
+			log_data_buf[ascii_table_ofst + j],
 			(char)log_data_buf[ascii_table_ofst + j]);
 		}
 	}
