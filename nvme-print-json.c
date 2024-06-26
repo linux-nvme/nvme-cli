@@ -269,10 +269,11 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		obj_add_int(r, "nsattr", ns->nsattr);
 		obj_add_int(r, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 
-		if (ns->nsfeat & 0x10) {
+		if (ns->nsfeat & 0x30) {
 			obj_add_int(r, "npwg", le16_to_cpu(ns->npwg));
 			obj_add_int(r, "npwa", le16_to_cpu(ns->npwa));
-			obj_add_int(r, "npdg", le16_to_cpu(ns->npdg));
+			if (ns->nsfeat & 0x10)
+				obj_add_int(r, "npdg", le16_to_cpu(ns->npdg));
 			obj_add_int(r, "npda", le16_to_cpu(ns->npda));
 			obj_add_int(r, "nows", le16_to_cpu(ns->nows));
 		}
@@ -3063,6 +3064,8 @@ static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
 
 		array_add_obj(elbafs, elbaf);
 	}
+	if (ns->nsfeat & 0x20)
+		obj_add_int(r, "npdgl", le32_to_cpu(nvm_ns->npdgl));
 
 	json_print(r);
 }

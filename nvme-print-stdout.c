@@ -2345,17 +2345,18 @@ static void stdout_id_ctrl_ofcs(__le16 ofcs)
 
 static void stdout_id_ns_nsfeat(__u8 nsfeat)
 {
-	__u8 rsvd = (nsfeat & 0xE0) >> 5;
-	__u8 ioopt = (nsfeat & 0x10) >> 4;
+	__u8 rsvd = (nsfeat & 0xC0) >> 6;
+	__u8 optperf = (nsfeat & 0x30) >> 4;
 	__u8 uidreuse = (nsfeat & 0x8) >> 3;
 	__u8 dulbe = (nsfeat & 0x4) >> 2;
 	__u8 na = (nsfeat & 0x2) >> 1;
 	__u8 thin = nsfeat & 0x1;
 
 	if (rsvd)
-		printf("  [7:5] : %#x\tReserved\n", rsvd);
-	printf("  [4:4] : %#x\tNPWG, NPWA, NPDG, NPDA, and NOWS are %sSupported\n",
-		ioopt, ioopt ? "" : "Not ");
+		printf("  [7:6] : %#x\tReserved\n", rsvd);
+	printf("  [5:4] : %#x\tNPWG, NPWA, %s%sNPDA, and NOWS are %sSupported\n",
+		optperf, ((optperf & 0x1) || (!optperf)) ? "NPDG, " : "",
+		((optperf & 0x2) || (!optperf)) ? "NPDGL, " : "", optperf ? "" : "Not ");
 	printf("  [3:3] : %#x\tNGUID and EUI64 fields if non-zero, %sReused\n",
 		uidreuse, uidreuse ? "Never " : "");
 	printf("  [2:2] : %#x\tDeallocated or Unwritten Logical Block error %sSupported\n",
@@ -2588,10 +2589,11 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
 		printf("nvmcap  : %s\n",
 			uint128_t_to_l10n_string(le128_to_cpu(ns->nvmcap)));
-		if (ns->nsfeat & 0x10) {
+		if (ns->nsfeat & 0x30) {
 			printf("npwg    : %u\n", le16_to_cpu(ns->npwg));
 			printf("npwa    : %u\n", le16_to_cpu(ns->npwa));
-			printf("npdg    : %u\n", le16_to_cpu(ns->npdg));
+			if (ns->nsfeat & 0x10)
+				printf("npdg    : %u\n", le16_to_cpu(ns->npdg));
 			printf("npda    : %u\n", le16_to_cpu(ns->npda));
 			printf("nows    : %u\n", le16_to_cpu(ns->nows));
 		}
@@ -3135,6 +3137,8 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 			printf("elbaf %2d : qpif:%d pif:%d sts:%-2d %s\n", i,
 				qpif, pif, sts, i == lbaf ? in_use : "");
 	}
+	if (ns->nsfeat & 0x20)
+		printf("npdgl : %#x\n", le32_to_cpu(nvm_ns->npdgl));
 }
 
 static void stdout_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
