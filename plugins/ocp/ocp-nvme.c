@@ -2882,7 +2882,7 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 
 	if (log_data->sitsz != 0) {
 		memcpy(stat_id_str_table_arr,
-		(__u8*)log_data_buf + stat_id_str_table_ofst,
+		(__u8 *)log_data_buf + stat_id_str_table_ofst,
 		(log_data->sitsz * 4));
 		printf("  Statistics Identifier String Table\n");
 		for (j = 0; j < stat_id_index; j++) {
@@ -2901,7 +2901,7 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 
 
 	if (log_data->estsz != 0) {
-		memcpy(event_id_str_table_arr, (__u8*)log_data_buf +
+		memcpy(event_id_str_table_arr, (__u8 *)log_data_buf +
 		event_str_table_ofst, (log_data->estsz * 4));
 		printf("  Event Identifier String Table Entry\n");
 		for (j = 0; j < eve_id_index; j++) {
@@ -2920,7 +2920,7 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 	}
 
 	if (log_data->vu_eve_st_sz != 0) {
-		memcpy(vu_event_id_str_table_arr, (__u8*)log_data_buf +
+		memcpy(vu_event_id_str_table_arr, (__u8 *)log_data_buf +
 		vu_event_str_table_ofst, (log_data->vu_eve_st_sz * 4));
 		printf("  VU Event Identifier String Table Entry\n");
 		for (j = 0; j < vu_eve_index; j++) {
@@ -2941,11 +2941,10 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 	if (log_data->asctsz != 0) {
 		printf("  ASCII Table\n");
 		printf("   Byte    Data_Byte    ASCII_Character\n");
-		for (j = 0; j < ascii_table_index; j++) {
-			printf("    %lld        %d             %c        \n", ascii_table_ofst+j,
-			log_data_buf[ascii_table_ofst + j],
+		for (j = 0; j < ascii_table_index; j++)
+			printf("    %lld        %d             %c        \n",
+			ascii_table_ofst+j, log_data_buf[ascii_table_ofst + j],
 			(char)log_data_buf[ascii_table_ofst + j]);
-		}
 	}
 
 	return 0;
