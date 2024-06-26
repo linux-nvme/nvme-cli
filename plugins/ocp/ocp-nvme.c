@@ -1139,7 +1139,7 @@ static void print_telemetry_da2_stat(__u8 *da1_stat, int tele_type, __u16 buf_si
 			i = i + 8;
 			memcpy(ssd_buff, &da1_stat[i], sds * 4);
 			printf("Statistic Specific Data         :0x");
-			for ( __u32 j = 0; j < (sds * 4); j++)
+			for (__u32 j = 0; j < (sds * 4); j++)
 				printf("%x", ssd_buff[j]);
 			printf("\n");
 			i = (i + (sds * 4));
