@@ -6854,13 +6854,25 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 	return result;
 }
 
+static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns, __u8 *pif, __u8 *sts)
+{
+	__u8 lba_index;
+	__u32 elbaf;
+
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
+	elbaf = le32_to_cpu(nvm_ns->elbaf[lba_index]);
+	*sts = elbaf & NVME_NVM_ELBAF_STS_MASK;
+	*pif = (elbaf & NVME_NVM_ELBAF_PIF_MASK) >> 7;
+	if (*pif == NVME_NVM_PIF_QTYPE && (nvm_ns->pic & 0x8))
+		*pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
+}
+
 static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	__u8 lba_index, sts = 0, pif = 0;
-	__u32 elbaf = 0;
+	__u8 sts = 0, pif = 0;
 	__u16 control = 0;
 	int err;
 
@@ -6971,12 +6983,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 
 	err = nvme_identify_ns_csi(dev_fd(dev), cfg.namespace_id, 0, NVME_CSI_NVM, nvm_ns);
 	if (!err) {
-		nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
-		elbaf = le32_to_cpu(nvm_ns->elbaf[lba_index]);
-		sts = elbaf & NVME_NVM_ELBAF_STS_MASK;
-		pif = (elbaf & NVME_NVM_ELBAF_PIF_MASK) >> 7;
-		if (pif == NVME_NVM_PIF_QTYPE && (nvm_ns->pic & 0x8))
-			pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
+		get_pif_sts(ns, nvm_ns, &pif, &sts);
 	}
 
 	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
@@ -7702,7 +7709,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	int flags;
 	int mode = 0644;
 	__u16 control = 0, nblocks = 0;
-	__u32 dsmgmt = 0, elbaf = 0;
+	__u32 dsmgmt = 0;
 	unsigned int logical_block_size = 0;
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
@@ -7933,11 +7940,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (cfg.metadata_size) {
 		err = nvme_identify_ns_csi(dev_fd(dev), 1, 0, NVME_CSI_NVM, nvm_ns);
 		if (!err) {
-			elbaf = le32_to_cpu(nvm_ns->elbaf[lba_index]);
-			sts = elbaf & NVME_NVM_ELBAF_STS_MASK;
-			pif = (elbaf & NVME_NVM_ELBAF_PIF_MASK) >> 7;
-			if (pif == NVME_NVM_PIF_QTYPE && (nvm_ns->pic & 0x8))
-				pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
+			get_pif_sts(ns, nvm_ns, &pif, &sts);
 		}
 
 		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;
@@ -8075,9 +8078,8 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	__u8 lba_index, sts = 0, pif = 0;
+	__u8 sts = 0, pif = 0;
 	__u16 control = 0;
-	__u32 elbaf = 0;
 	int err;
 
 	const char *desc = "Verify specified logical blocks on the given device.";
@@ -8170,12 +8172,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	err = nvme_identify_ns_csi(dev_fd(dev), cfg.namespace_id, 0,
 				   NVME_CSI_NVM, nvm_ns);
 	if (!err) {
-		nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
-		elbaf = le32_to_cpu(nvm_ns->elbaf[lba_index]);
-		sts = elbaf & NVME_NVM_ELBAF_STS_MASK;
-		pif = (elbaf & NVME_NVM_ELBAF_PIF_MASK) >> 7;
-		if (pif == NVME_NVM_PIF_QTYPE && (nvm_ns->pic & 0x8))
-			pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
+		get_pif_sts(ns, nvm_ns, &pif, &sts);
 	}
 
 	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
