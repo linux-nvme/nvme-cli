@@ -149,24 +149,47 @@ void nvme_show_predictable_latency_event_agg_log(
 		   pea_log, log_entries, size, devname);
 }
 
-const char *nvme_pel_event_to_string(int type)
+static const char *pel_event_to_string(int type)
 {
 	switch (type) {
-	case NVME_PEL_SMART_HEALTH_EVENT:	return "SMART/Health Log Snapshot Event(0x1)";
-	case NVME_PEL_FW_COMMIT_EVENT:	return "Firmware Commit Event(0x2)";
-	case NVME_PEL_TIMESTAMP_EVENT:	return "Timestamp Change Event(0x3)";
-	case NVME_PEL_POWER_ON_RESET_EVENT:	return "Power-on or Reset Event(0x4)";
-	case NVME_PEL_NSS_HW_ERROR_EVENT:	return "NVM Subsystem Hardware Error Event(0x5)";
-	case NVME_PEL_CHANGE_NS_EVENT:	return "Change Namespace Event(0x6)";
-	case NVME_PEL_FORMAT_START_EVENT:	return "Format NVM Start Event(0x7)";
-	case NVME_PEL_FORMAT_COMPLETION_EVENT:	return "Format NVM Completion Event(0x8)";
-	case NVME_PEL_SANITIZE_START_EVENT:	return "Sanitize Start Event(0x9)";
-	case NVME_PEL_SANITIZE_COMPLETION_EVENT:	return "Sanitize Completion Event(0xa)";
-	case NVME_PEL_SET_FEATURE_EVENT:	return "Set Feature Event(0xb)";
-	case NVME_PEL_TELEMETRY_CRT:		return "Set Telemetry CRT  Event(0xc)";
-	case NVME_PEL_THERMAL_EXCURSION_EVENT:	return "Thermal Excursion Event(0xd)";
-	default:			return NULL;
+	case NVME_PEL_SMART_HEALTH_EVENT:
+		return "SMART/Health Log Snapshot Event";
+	case NVME_PEL_FW_COMMIT_EVENT:
+		return "Firmware Commit Event";
+	case NVME_PEL_TIMESTAMP_EVENT:
+		return "Timestamp Change Event";
+	case NVME_PEL_POWER_ON_RESET_EVENT:
+		return "Power-on or Reset Event";
+	case NVME_PEL_NSS_HW_ERROR_EVENT:
+		return "NVM Subsystem Hardware Error Event";
+	case NVME_PEL_CHANGE_NS_EVENT:
+		return "Change Namespace Event";
+	case NVME_PEL_FORMAT_START_EVENT:
+		return "Format NVM Start Event";
+	case NVME_PEL_FORMAT_COMPLETION_EVENT:
+		return "Format NVM Completion Event";
+	case NVME_PEL_SANITIZE_START_EVENT:
+		return "Sanitize Start Event";
+	case NVME_PEL_SANITIZE_COMPLETION_EVENT:
+		return "Sanitize Completion Event";
+	case NVME_PEL_SET_FEATURE_EVENT:
+		return "Set Feature Event";
+	case NVME_PEL_TELEMETRY_CRT:
+		return "Set Telemetry CRT Event";
+	case NVME_PEL_THERMAL_EXCURSION_EVENT:
+		return "Thermal Excursion Event";
+	default:
+		return "Reserved Event";
 	}
+}
+
+const char *nvme_pel_event_to_string(int type)
+{
+	static char str[STR_LEN];
+
+	sprintf(str, "%s(%#x)", pel_event_to_string(type), type);
+
+	return str;
 }
 
 const char *nvme_nss_hw_error_to_string(__u16 error_code)

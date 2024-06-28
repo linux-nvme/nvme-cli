@@ -11,7 +11,6 @@
 #include "common.h"
 
 #define ERROR_MSG_LEN 100
-#define STR_LEN 100
 #define NAME_LEN 128
 #define BUF_LEN 320
 #define VAL_LEN 4096
