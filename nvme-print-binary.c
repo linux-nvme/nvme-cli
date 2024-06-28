@@ -253,7 +253,7 @@ static void binary_endurance_log(struct nvme_endurance_group_log *endurance_log,
 }
 
 static void binary_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
-	 const char *devname)
+			     const char *devname)
 {
 	d_raw((unsigned char *)smart, sizeof(*smart));
 }
