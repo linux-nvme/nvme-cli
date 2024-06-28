@@ -18,6 +18,8 @@ typedef struct nvme_effects_log_node {
 
 #define POWER_OF_TWO(exponent) (1 << (exponent))
 
+#define STR_LEN 100
+
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 
