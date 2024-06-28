@@ -163,8 +163,8 @@ void nvme_show_supported_log(struct nvme_supported_log_pages *support,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 	const char *devname, enum nvme_print_flags flags);
-void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
-	const char *devname, enum nvme_print_flags flags);
+void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname,
+			 enum nvme_print_flags flags);
 void nvme_show_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 		       size_t len, enum nvme_print_flags flags);
 void nvme_show_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,
