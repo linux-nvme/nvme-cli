@@ -149,7 +149,7 @@ nvme_list_opts () {
 			;;
 		"smart-log")
 		opts+=" --namespace-id= -n --raw-binary -b \
-			--output-format= -o"
+			--output-format= -o --verbose -v --fahrenheit -f"
 			;;
 		"ana-log")
 		opts+=" --output-format -o"
