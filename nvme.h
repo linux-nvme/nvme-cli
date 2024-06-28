@@ -33,11 +33,12 @@
 #include "util/cleanup.h"
 
 enum nvme_print_flags {
-	NORMAL	= 0,
-	VERBOSE	= 1 << 0,	/* verbosely decode complex values for humans */
-	JSON	= 1 << 1,	/* display in json format */
-	VS	= 1 << 2,	/* hex dump vendor specific data areas */
-	BINARY	= 1 << 3,	/* binary dump raw bytes */
+	NORMAL		= 0,
+	VERBOSE		= 1 << 0,	/* verbosely decode complex values for humans */
+	JSON		= 1 << 1,	/* display in json format */
+	VS		= 1 << 2,	/* hex dump vendor specific data areas */
+	BINARY		= 1 << 3,	/* binary dump raw bytes */
+	FAHRENHEIT	= 1 << 4,	/* show temperatures in degrees fahrenheit */
 };
 
 enum nvme_cli_topo_ranking {

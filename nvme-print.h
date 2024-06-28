@@ -322,4 +322,5 @@ void nvme_show_finish(void);
 bool nvme_is_fabrics_reg(int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);
 bool nvme_registers_pmrctl_ready(__u32 pmrctl);
+const char *nvme_degrees_string(long t, bool fahrenheit);
 #endif /* NVME_PRINT_H */

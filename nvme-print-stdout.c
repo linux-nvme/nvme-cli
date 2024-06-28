@@ -3881,6 +3881,7 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	__u16 temperature = smart->temperature[1] << 8 | smart->temperature[0];
 	int i;
 	bool human = stdout_print_ops.flags & VERBOSE;
+	bool fahrenheit = !!(stdout_print_ops.flags & FAHRENHEIT);
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 	printf("critical_warning			: %#x\n",
@@ -3895,8 +3896,8 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		printf("      Persistent Mem. RO[5]          : %d\n", (smart->critical_warning & 0x20) >> 5);
 	}
 
-	printf("temperature				: %ld °C (%u K)\n",
-		kelvin_to_celsius(temperature), temperature);
+	printf("temperature				: %s (%u K)\n",
+	       nvme_degrees_string(temperature, fahrenheit), temperature);
 	printf("available_spare				: %u%%\n",
 		smart->avail_spare);
 	printf("available_spare_threshold		: %u%%\n",
@@ -3933,13 +3934,12 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		le32_to_cpu(smart->warning_temp_time));
 	printf("Critical Composite Temperature Time	: %u\n",
 		le32_to_cpu(smart->critical_comp_time));
-	for (i = 0; i < 8; i++) {
-		__s32 temp = le16_to_cpu(smart->temp_sensor[i]);
-
-		if (temp == 0)
+	for (i = 0; i < ARRAY_SIZE(smart->temp_sensor); i++) {
+		temperature = le16_to_cpu(smart->temp_sensor[i]);
+		if (!temperature)
 			continue;
-		printf("Temperature Sensor %d           : %ld °C (%u K)\n",
-		       i + 1, kelvin_to_celsius(temp), temp);
+		printf("Temperature Sensor %d			: %s (%u K)\n", i + 1,
+		       nvme_degrees_string(temperature, fahrenheit), temperature);
 	}
 	printf("Thermal Management T1 Trans Count	: %u\n",
 		le32_to_cpu(smart->thm_temp1_trans_count));
