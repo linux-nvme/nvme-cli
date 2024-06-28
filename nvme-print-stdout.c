@@ -162,9 +162,7 @@ static void nvme_resources_free(struct nvme_resources *res)
 static void stdout_feature_show_fields(enum nvme_features_id fid,
 				       unsigned int result,
 				       unsigned char *buf);
-static void stdout_smart_log(struct nvme_smart_log *smart,
-			     unsigned int nsid,
-			     const char *devname);
+static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 
 static void stdout_predictable_latency_per_nvmset(
 		struct nvme_nvmset_predictable_lat_log *plpns_log,
@@ -3875,8 +3873,7 @@ static void stdout_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	       uint128_t_to_l10n_string(le128_to_cpu(endurance_log->unalloc_end_grp_cap)));
 }
 
-static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
-			     const char *devname)
+static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname)
 {
 	__u16 temperature = smart->temperature[1] << 8 | smart->temperature[0];
 	int i;
@@ -3884,56 +3881,56 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	bool fahrenheit = !!(stdout_print_ops.flags & FAHRENHEIT);
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
-	printf("critical_warning			: %#x\n",
-		smart->critical_warning);
+	printf("critical_warning			: %#x\n", smart->critical_warning);
 
 	if (human) {
-		printf("      Available Spare[0]             : %d\n", smart->critical_warning & 0x01);
-		printf("      Temp. Threshold[1]             : %d\n", (smart->critical_warning & 0x02) >> 1);
-		printf("      NVM subsystem Reliability[2]   : %d\n", (smart->critical_warning & 0x04) >> 2);
-		printf("      Read-only[3]                   : %d\n", (smart->critical_warning & 0x08) >> 3);
-		printf("      Volatile mem. backup failed[4] : %d\n", (smart->critical_warning & 0x10) >> 4);
-		printf("      Persistent Mem. RO[5]          : %d\n", (smart->critical_warning & 0x20) >> 5);
+		printf("      Available Spare[0]             : %d\n",
+		       smart->critical_warning & 0x01);
+		printf("      Temp. Threshold[1]             : %d\n",
+		       (smart->critical_warning & 0x02) >> 1);
+		printf("      NVM subsystem Reliability[2]   : %d\n",
+		       (smart->critical_warning & 0x04) >> 2);
+		printf("      Read-only[3]                   : %d\n",
+		       (smart->critical_warning & 0x08) >> 3);
+		printf("      Volatile mem. backup failed[4] : %d\n",
+		       (smart->critical_warning & 0x10) >> 4);
+		printf("      Persistent Mem. RO[5]          : %d\n",
+		       (smart->critical_warning & 0x20) >> 5);
 	}
 
 	printf("temperature				: %s (%u K)\n",
 	       nvme_degrees_string(temperature, fahrenheit), temperature);
-	printf("available_spare				: %u%%\n",
-		smart->avail_spare);
-	printf("available_spare_threshold		: %u%%\n",
-		smart->spare_thresh);
-	printf("percentage_used				: %u%%\n",
-		smart->percent_used);
-	printf("endurance group critical warning summary: %#x\n",
-		smart->endu_grp_crit_warn_sumry);
+	printf("available_spare				: %u%%\n", smart->avail_spare);
+	printf("available_spare_threshold		: %u%%\n", smart->spare_thresh);
+	printf("percentage_used				: %u%%\n", smart->percent_used);
+	printf("endurance group critical warning summary: %#x\n", smart->endu_grp_crit_warn_sumry);
 	printf("Data Units Read				: %s (%s)\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->data_units_read)),
-		uint128_t_to_si_string(le128_to_cpu(smart->data_units_read),
-				       1000 * 512));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->data_units_read)),
+	       uint128_t_to_si_string(le128_to_cpu(smart->data_units_read), 1000 * 512));
 	printf("Data Units Written			: %s (%s)\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->data_units_written)),
-		uint128_t_to_si_string(le128_to_cpu(smart->data_units_written),
-				       1000 * 512));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->data_units_written)),
+	       uint128_t_to_si_string(le128_to_cpu(smart->data_units_written), 1000 * 512));
 	printf("host_read_commands			: %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->host_reads)));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->host_reads)));
 	printf("host_write_commands			: %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->host_writes)));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->host_writes)));
 	printf("controller_busy_time			: %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->ctrl_busy_time)));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->ctrl_busy_time)));
 	printf("power_cycles				: %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->power_cycles)));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->power_cycles)));
 	printf("power_on_hours				: %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->power_on_hours)));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->power_on_hours)));
 	printf("unsafe_shutdowns			: %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->unsafe_shutdowns)));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->unsafe_shutdowns)));
 	printf("media_errors				: %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->media_errors)));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->media_errors)));
 	printf("num_err_log_entries			: %s\n",
-		uint128_t_to_l10n_string(le128_to_cpu(smart->num_err_log_entries)));
+	       uint128_t_to_l10n_string(le128_to_cpu(smart->num_err_log_entries)));
 	printf("Warning Temperature Time		: %u\n",
-		le32_to_cpu(smart->warning_temp_time));
+	       le32_to_cpu(smart->warning_temp_time));
 	printf("Critical Composite Temperature Time	: %u\n",
-		le32_to_cpu(smart->critical_comp_time));
+	       le32_to_cpu(smart->critical_comp_time));
+
 	for (i = 0; i < ARRAY_SIZE(smart->temp_sensor); i++) {
 		temperature = le16_to_cpu(smart->temp_sensor[i]);
 		if (!temperature)
@@ -3941,14 +3938,15 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		printf("Temperature Sensor %d			: %s (%u K)\n", i + 1,
 		       nvme_degrees_string(temperature, fahrenheit), temperature);
 	}
+
 	printf("Thermal Management T1 Trans Count	: %u\n",
-		le32_to_cpu(smart->thm_temp1_trans_count));
+	       le32_to_cpu(smart->thm_temp1_trans_count));
 	printf("Thermal Management T2 Trans Count	: %u\n",
-		le32_to_cpu(smart->thm_temp2_trans_count));
+	       le32_to_cpu(smart->thm_temp2_trans_count));
 	printf("Thermal Management T1 Total Time	: %u\n",
-		le32_to_cpu(smart->thm_temp1_total_time));
+	       le32_to_cpu(smart->thm_temp1_total_time));
 	printf("Thermal Management T2 Total Time	: %u\n",
-		le32_to_cpu(smart->thm_temp2_total_time));
+	       le32_to_cpu(smart->thm_temp2_total_time));
 }
 
 static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
