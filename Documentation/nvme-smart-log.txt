@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme smart-log' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--raw-binary | -b]
+			[--raw-binary | -b] [--fahrenheit | -f]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
@@ -37,6 +37,10 @@ OPTIONS
 -b::
 --raw-binary::
 	Print the raw SMART log buffer to stdout.
+
+-f::
+--fahrenheit::
+	Print the temperatures in degrees fahrenheit.
 
 -o <fmt>::
 --output-format=<fmt>::
