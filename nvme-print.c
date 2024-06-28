@@ -767,6 +767,20 @@ void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	nvme_print(endurance_log, flags, endurance_log, group_id, devname);
 }
 
+const char *nvme_degrees_string(long t, bool fahrenheit)
+{
+	static char str[STR_LEN];
+	long val = kelvin_to_celsius(t);
+
+	if (fahrenheit)
+		val = kelvin_to_fahrenheit(t);
+
+	sprintf(str, "%ld °%s", val, fahrenheit ? "F" : "C");
+
+
+	return str;
+}
+
 void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 			 const char *devname, enum nvme_print_flags flags)
 {

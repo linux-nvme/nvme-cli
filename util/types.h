@@ -16,6 +16,16 @@ static inline long kelvin_to_celsius(long t)
 	return t + ABSOLUTE_ZERO_CELSIUS;
 }
 
+static inline long celsius_to_fahrenheit(long t)
+{
+	return t * 9 / 5 + 32;
+}
+
+static inline long kelvin_to_fahrenheit(long t)
+{
+	return celsius_to_fahrenheit(kelvin_to_celsius(t));
+}
+
 /* uint128_t is not always available, define our own. */
 union nvme_uint128 {
         __u8  bytes[16];

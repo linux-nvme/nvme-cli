@@ -216,6 +216,7 @@ static const char *doper = "directive operation";
 static const char *dry = "show command instead of sending";
 static const char *dspec_w_dtype = "directive specification associated with directive type";
 static const char *dtype = "directive type";
+static const char *fahrenheit = "show temperatures in degrees fahrenheit";
 static const char *force_unit_access = "force device to commit data before command completes";
 static const char *human_readable_directive = "show directive in readable format";
 static const char *human_readable_identify = "show identify in readable format";
@@ -549,6 +550,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		__u32	namespace_id;
 		bool	raw_binary;
 		bool	human_readable;
+		bool	fahrenheit;
 	};
 
 	struct config cfg = {
@@ -560,7 +562,8 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_output),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info),
+		  OPT_FLAG("fahrenheit",     'f', &cfg.fahrenheit,     fahrenheit));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -577,6 +580,9 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 
 	if (cfg.human_readable)
 		flags |= VERBOSE;
+
+	if (cfg.fahrenheit)
+		flags |= FAHRENHEIT;
 
 	smart_log = nvme_alloc(sizeof(*smart_log));
 	if (!smart_log)
