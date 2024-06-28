@@ -9435,6 +9435,47 @@ static void __scan_tls_key(long keyring_id, long key_id,
 	fprintf(fd, "%s %s\n", desc, encoded_key);
 }
 
+static int import_key(const char *keyring, FILE *fd)
+{
+	long keyring_id;
+	char tls_str[512];
+	char *tls_key;
+	unsigned char *psk;
+	unsigned int hmac;
+	int linenum = -1, key_len;
+
+	keyring_id = nvme_lookup_keyring(keyring);
+	if (!keyring_id) {
+		nvme_show_error("Invalid keyring '%s'", keyring);
+		return -ENOKEY;
+	}
+
+	while (fgets(tls_str, 512, fd)) {
+		linenum++;
+		tls_key = strrchr(tls_str, ' ');
+		if (!tls_key) {
+			nvme_show_error("Parse error in line %d",
+					linenum);
+			continue;
+		}
+		*tls_key = '\0';
+		tls_key++;
+		tls_key[strcspn(tls_key, "\n")] = 0;
+		psk = nvme_import_tls_key(tls_key, &key_len, &hmac);
+		if (!psk) {
+			nvme_show_error("Failed to import key in line %d",
+					linenum);
+			continue;
+		}
+		nvme_update_key(keyring_id, "psk", tls_str,
+				psk, key_len);
+		free(psk);
+	}
+
+	return 0;
+}
+
+
 static int tls_key(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Manipulation of TLS keys.\n";
@@ -9501,40 +9542,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 	} else if (cfg.export) {
 		nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
 	} else if (cfg.import) {
-		long keyring_id;
-		char tls_str[512];
-		char *tls_key;
-		unsigned char *psk;
-		unsigned int hmac;
-		int linenum = -1, key_len;
-
-		keyring_id = nvme_lookup_keyring(cfg.keyring);
-		if (!keyring_id) {
-			nvme_show_error("Invalid keyring '%s'", cfg.keyring);
-			return -ENOKEY;
-		}
-
-		while (fgets(tls_str, 512, fd)) {
-			linenum++;
-			tls_key = strrchr(tls_str, ' ');
-			if (!tls_key) {
-				nvme_show_error("Parse error in line %d",
-						linenum);
-				continue;
-			}
-			*tls_key = '\0';
-			tls_key++;
-			tls_key[strcspn(tls_key, "\n")] = 0;
-			psk = nvme_import_tls_key(tls_key, &key_len, &hmac);
-			if (!psk) {
-				nvme_show_error("Failed to import key in line %d",
-						linenum);
-				continue;
-			}
-			nvme_update_key(keyring_id, "psk", tls_str,
-					psk, key_len);
-			free(psk);
-		}
+		import_key(cfg.keyring, fd);
 	} else {
 		nvme_show_error("Must specify either --import or --export");
 		err = -EINVAL;
