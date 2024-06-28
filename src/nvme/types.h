@@ -3870,6 +3870,8 @@ struct nvme_persistent_event_entry {
  * @NVME_PEL_SET_FEATURE_EVENT:		Set Feature Event
  * @NVME_PEL_TELEMETRY_CRT:		Telemetry Log Create Event
  * @NVME_PEL_THERMAL_EXCURSION_EVENT:	Thermal Excursion Event
+ * @NVME_PEL_VENDOR_SPECIFIC_EVENT:	Vendor Specific Event
+ * @NVME_PEL_TCG_DEFINED_EVENT:		TCG Defined Event
  */
 enum nvme_persistent_event_types {
 	NVME_PEL_SMART_HEALTH_EVENT		= 0x01,
@@ -3885,6 +3887,8 @@ enum nvme_persistent_event_types {
 	NVME_PEL_SET_FEATURE_EVENT		= 0x0b,
 	NVME_PEL_TELEMETRY_CRT			= 0x0c,
 	NVME_PEL_THERMAL_EXCURSION_EVENT	= 0x0d,
+	NVME_PEL_VENDOR_SPECIFIC_EVENT		= 0xde,
+	NVME_PEL_TCG_DEFINED_EVENT		= 0xdf,
 };
 
 /**
