@@ -212,7 +212,7 @@ void nvme_show_supported_cap_config_log(struct nvme_supported_cap_config_list_lo
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags);
 void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, enum nvme_print_flags flags);
 void nvme_show_single_property(int offset, uint64_t prop, enum nvme_print_flags flags);
-void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags);
+void nvme_show_id_ns_descs(void *data, unsigned int nsid, enum nvme_print_flags flags);
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	enum nvme_print_flags flags);
 void nvme_show_list_items(nvme_root_t t, enum nvme_print_flags flags);

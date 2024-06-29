@@ -515,7 +515,7 @@ void nvme_show_cmd_set_independent_id_ns(
 	nvme_print(id_independent_id_ns, flags, ns, nsid);
 }
 
-void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags)
+void nvme_show_id_ns_descs(void *data, unsigned int nsid, enum nvme_print_flags flags)
 {
 	nvme_print(id_ns_descs, flags, data, nsid);
 }
