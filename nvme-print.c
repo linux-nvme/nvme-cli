@@ -813,8 +813,10 @@ const char *nvme_degrees_string(long t)
 	if (fahrenheit)
 		val = kelvin_to_fahrenheit(t);
 
-	sprintf(str, "%ld °%s", val, fahrenheit ? "F" : "C");
-
+	if (nvme_is_output_format_json())
+		sprintf(str, "%ld %s", val, fahrenheit ? "Fahrenheit" : "Celsius");
+	else
+		sprintf(str, "%ld °%s", val, fahrenheit ? "F" : "C");
 
 	return str;
 }
