@@ -3320,7 +3320,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	NVME_ARGS(opts);
 
 	err = parse_args(argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	devname = NULL;
@@ -3378,7 +3378,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	NVME_ARGS(opts);
 
 	err = parse_args(argc, argv, desc, opts);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = validate_output_format(nvme_cfg.output_format, &flags);
