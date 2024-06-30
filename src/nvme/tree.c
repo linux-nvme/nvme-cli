@@ -377,7 +377,11 @@ void nvme_free_tree(nvme_root_t r)
 {
 	struct nvme_host *h, *_h;
 
-	free(r->options);
+	if (!r)
+		return;
+
+	if (r->options)
+		free(r->options);
 	nvme_for_each_host_safe(r, h, _h)
 		__nvme_free_host(h);
 	if (r->config_file)
