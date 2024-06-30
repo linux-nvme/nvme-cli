@@ -3297,7 +3297,7 @@ static void json_feature_show_fields_temp_thresh(struct json_object *r, unsigned
 	obj_add_uint(r, "Threshold Temperature Select (TMPSEL)", field);
 	obj_add_str(r, "TMPSEL description", nvme_feature_temp_sel_to_string(field));
 
-	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result & 0xffff));
+	sprintf(json_str, "%s", nvme_degrees_string(result & 0xffff));
 	obj_add_str(r, "Temperature Threshold (TMPTH)", json_str);
 
 	sprintf(json_str, "%u K", result & 0xffff);
@@ -3467,13 +3467,13 @@ static void json_feature_show_fields_hctm(struct json_object *r, unsigned int re
 	sprintf(json_str, "%u K", result >> 16);
 	obj_add_str(r, "Thermal Management Temperature 1 (TMT1)", json_str);
 
-	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result >> 16));
+	sprintf(json_str, "%s", nvme_degrees_string(result >> 16));
 	obj_add_str(r, "TMT1 celsius", json_str);
 
 	sprintf(json_str, "%u K", result & 0xffff);
 	obj_add_str(r, "Thermal Management Temperature 2", json_str);
 
-	sprintf(json_str, "%ld Celsius", kelvin_to_celsius(result & 0xffff));
+	sprintf(json_str, "%s", nvme_degrees_string(result & 0xffff));
 	obj_add_str(r, "TMT2 celsius", json_str);
 }
 
