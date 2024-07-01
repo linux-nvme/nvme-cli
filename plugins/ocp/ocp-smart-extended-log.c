@@ -252,7 +252,7 @@ static void ocp_print_C0_log_json(void *data)
 
 static int get_c0_log_page(int fd, char *format)
 {
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u8 *data;
 	int i;
 	int ret;

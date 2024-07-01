@@ -197,7 +197,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	    "Get Solidigm vendor specific smart log (optionally, for the specified namespace), and show it.";
 	const int solidigm_vu_smart_log_id = 0xCA;
 	struct vu_smart_log smart_log_payload;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_dev *dev;
 	int err;
 	__u8 uuid_index;

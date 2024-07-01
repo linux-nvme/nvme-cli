@@ -489,9 +489,9 @@ int open_exclusive(struct nvme_dev **dev, int argc, char **argv,
 	return get_dev(dev, argc, argv, flags);
 }
 
-int validate_output_format(const char *format, enum nvme_print_flags *flags)
+int validate_output_format(const char *format, nvme_print_flags_t *flags)
 {
-	enum nvme_print_flags f;
+	nvme_print_flags_t f;
 
 	if (!format)
 		return -EINVAL;
@@ -512,7 +512,7 @@ int validate_output_format(const char *format, enum nvme_print_flags *flags)
 
 bool nvme_is_output_format_json(void)
 {
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 
 	if (validate_output_format(nvme_cfg.output_format, &flags))
 		return false;
@@ -543,7 +543,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	_cleanup_free_ struct nvme_smart_log *smart_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	const char *namespace = "(optional) desired namespace";
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -613,7 +613,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	_cleanup_free_ struct nvme_ana_log *ana_log = NULL;
 	size_t max_ana_log_len;
 	__u32 ana_log_len;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -986,7 +986,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 
 	_cleanup_free_ struct nvme_endurance_group_log *endurance_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -1059,7 +1059,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	void *bar = NULL;
 
 	int err = -1;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 
 	struct config {
 		bool	human_readable;
@@ -1149,7 +1149,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 
 	_cleanup_free_ struct nvme_supported_log_pages *supports = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	NVME_ARGS(opts);
@@ -1193,7 +1193,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	_cleanup_free_ struct nvme_error_log_page *err_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	struct nvme_id_ctrl ctrl;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -1261,7 +1261,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 
 	_cleanup_free_ struct nvme_firmware_slot *fw_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -1310,7 +1310,7 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 
 	_cleanup_free_ struct nvme_ns_list *changed_ns_list_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -1364,7 +1364,7 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 
 	_cleanup_free_ struct nvme_nvmset_predictable_lat_log *plpns_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -1422,7 +1422,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_free_ void *pea_log = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	__u32 log_size;
 	int err;
 
@@ -1508,7 +1508,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	struct nvme_persistent_event_log *pevent_collected = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	void *pevent_log_info;
 	int err;
 
@@ -1624,7 +1624,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_free_ void *endurance_log = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	__u32 log_size;
 	int err;
 
@@ -1705,7 +1705,7 @@ static int get_lba_status_log(int argc, char **argv,
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *lba_status = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	__u32 lslplen;
 	int err;
 
@@ -1765,7 +1765,7 @@ static int get_resv_notif_log(int argc, char **argv,
 
 	_cleanup_free_ struct nvme_resv_notification_log *resv = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	NVME_ARGS(opts);
@@ -1806,7 +1806,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_boot_partition *boot = NULL;
 	_cleanup_free_ __u8 *bp_log = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 	_cleanup_file_ int output = -1;
 	__u32 bpsz = 0;
@@ -1900,7 +1900,7 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *cmd,
 	const char *controller = "Target Controller ID.";
 	_cleanup_free_ struct nvme_phy_rx_eom_log *phy_rx_eom_log = NULL;
 	size_t phy_rx_eom_log_len;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err = -1;
 	__u8 lsp_tmp;
@@ -1990,7 +1990,7 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
 
 	_cleanup_free_ struct nvme_media_unit_stat_log *mus = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -2042,7 +2042,7 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 
 	_cleanup_free_ struct nvme_supported_cap_config_list_log *cap_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -2399,7 +2399,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 
 	_cleanup_free_ struct nvme_sanitize_log_page *sanitize_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -2457,7 +2457,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 
 	_cleanup_free_ struct nvme_fid_supported_effects_log *fid_support_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -2506,7 +2506,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 
 	_cleanup_free_ struct nvme_mi_cmd_supported_effects_log *mi_cmd_support_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -2556,7 +2556,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	_cleanup_free_ struct nvme_ctrl_list *cntlist = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -2612,7 +2612,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	_cleanup_free_ struct nvme_ns_list *ns_list = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -2685,7 +2685,7 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -2740,7 +2740,7 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 
 	_cleanup_free_ struct nvme_id_endurance_group_list *endgrp_list = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -3310,7 +3310,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	const char *desc = "Retrieve information for subsystems";
 	nvme_scan_filter_t filter = NULL;
 	char *devname;
@@ -3371,7 +3371,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	int err = 0;
 
@@ -3419,7 +3419,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -3487,7 +3487,7 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 
 	_cleanup_free_ struct nvme_id_ctrl_nvm *ctrl_nvm = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	NVME_ARGS(opts);
@@ -3527,7 +3527,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 	_cleanup_free_ struct nvme_nvm_id_ns *id_ns = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -3601,7 +3601,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -3666,7 +3666,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *nsdescs = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -3733,7 +3733,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -3814,7 +3814,7 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *cmd,
 
 	_cleanup_free_ struct nvme_id_independent_id_ns *ns = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -3882,7 +3882,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 
 	_cleanup_free_ struct nvme_id_ns_granularity_list *granularity_list = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	NVME_ARGS(opts);
@@ -3922,7 +3922,7 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 
 	_cleanup_free_ struct nvme_id_nvmset_list *nvmset = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -3971,7 +3971,7 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	_cleanup_free_ struct nvme_id_uuid_list *uuid_list = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -4071,7 +4071,7 @@ static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *
 
 	_cleanup_free_ struct nvme_id_domain_list *id_domain = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -4214,7 +4214,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 
 	_cleanup_free_ struct nvme_primary_ctrl_cap *caps = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -4269,7 +4269,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 
 	_cleanup_free_ struct nvme_secondary_ctrl_list *sc_list = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -4527,7 +4527,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 
 	_cleanup_free_ struct nvme_self_test_log *log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -5418,7 +5418,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	    "show info in readable format in case of output_format == normal";
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	bool fabrics = false;
 	void *bar;
 	int err;
@@ -5618,7 +5618,7 @@ bool nvme_is_ctrl_reg(int offset)
 }
 
 static bool get_register_offset(void *bar, bool fabrics, struct get_reg_config *cfg,
-				enum nvme_print_flags flags)
+				nvme_print_flags_t flags)
 {
 	bool offset_matched = cfg->offset >= 0;
 	int offset;
@@ -5665,7 +5665,7 @@ static int get_register(int argc, char **argv, struct command *cmd, struct plugi
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	bool fabrics = false;
 
 	void *bar;
@@ -7630,7 +7630,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 
 	_cleanup_free_ struct nvme_resv_status *status = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int err, size;
 
 	struct config {
@@ -8319,7 +8319,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *buf = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	unsigned long buf_len;
 	int err;
 
@@ -8466,7 +8466,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	const char *desc = "Read directive parameters of the specified directive type.";
 	const char *nsr = "namespace stream requested";
 
-	enum nvme_print_flags flags = NORMAL;
+	nvme_print_flags_t flags = NORMAL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *buf = NULL;
 	__u32 result;
@@ -9542,7 +9542,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 {
 	const char *desc = "Show the topology\n";
 	const char *ranking = "Ranking order: namespace|ctrl";
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	enum nvme_cli_topo_ranking rank;
 	int err;

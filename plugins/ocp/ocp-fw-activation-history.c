@@ -207,7 +207,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 	}
 
 	if (!err) {
-		enum nvme_print_flags print_flag;
+		nvme_print_flags_t print_flag;
 
 		err = validate_output_format(format, &print_flag);
 		if (err < 0) {

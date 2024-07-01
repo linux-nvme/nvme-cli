@@ -296,7 +296,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	struct huawei_list_item *list_items;
 	unsigned int i, n, ret;
 	unsigned int huawei_num = 0;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	const char *desc = "Retrieve basic information for the given huawei device";
 	struct config {
 		char *output_format;

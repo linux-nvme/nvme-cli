@@ -5216,7 +5216,7 @@ static struct print_ops stdout_print_ops = {
 	.show_error_status		= stdout_error_status,
 };
 
-struct print_ops *nvme_get_stdout_print_ops(enum nvme_print_flags flags)
+struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags)
 {
 	stdout_print_ops.flags = flags;
 	return &stdout_print_ops;

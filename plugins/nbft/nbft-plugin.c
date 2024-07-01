@@ -531,7 +531,7 @@ int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 	struct list_head nbft_list;
 	char *format = "normal";
 	char *nbft_path = NBFT_SYSFS_PATH;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int ret;
 	bool show_subsys = false, show_hfi = false, show_discovery = false;
 	unsigned int verbose = 0;

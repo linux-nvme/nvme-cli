@@ -45,7 +45,7 @@ struct latency_tracker {
 	int fd;
 	__u8 uuid_index;
 	struct config cfg;
-	enum nvme_print_flags print_flags;
+	nvme_print_flags_t print_flags;
 	struct latency_statistics stats;
 	struct json_object *bucket_list;
 	__u32 bucket_list_size;

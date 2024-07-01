@@ -114,7 +114,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 			   "the given device and report information about the specified\n"
 			   "controller in various formats.";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_zns_id_ctrl ctrl;
 	struct nvme_dev *dev;
 	int err = -1;
@@ -160,7 +160,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	const char *vendor_specific = "dump binary vendor fields";
 	const char *human_readable = "show identify in readable format";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_zns_id_ns ns;
 	struct nvme_id_ns id_ns;
 	struct nvme_dev *dev;
@@ -732,7 +732,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	const char *partial = "Zone Receive Action Specific Features(Partial Report)";
 	const char *data_len = "length of data in bytes";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_dev *dev;
 	void *data = NULL;
 	int err = -1;
@@ -830,7 +830,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	const char *part = "set to use the partial report";
 	const char *verbose = "show report zones verbosity";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	int zdes = 0, err = -1;
 	struct nvme_dev *dev;
 	__u32 report_size;
@@ -1222,7 +1222,7 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 	const char *rae = "retain an asynchronous event";
 
 	struct nvme_zns_changed_zone_log log;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_dev *dev;
 	int err = -1;
 
