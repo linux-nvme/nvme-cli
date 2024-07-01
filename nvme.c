@@ -9527,6 +9527,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 			}
 			*tls_key = '\0';
 			tls_key++;
+			tls_key[strcspn(tls_key, "\n")] = 0;
 			psk = nvme_import_tls_key(tls_key, &key_len, &hmac);
 			if (!psk) {
 				nvme_show_error("Failed to import key in line %d",
