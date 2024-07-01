@@ -144,6 +144,7 @@ adoc_sources = [
   'nvme-subsystem-reset',
   'nvme-supported-log-pages',
   'nvme-telemetry-log',
+  'nvme-tls-key',
   'nvme-toshiba-clear-pcie-correctable-errors',
   'nvme-toshiba-vs-internal-log',
   'nvme-toshiba-vs-smart-add-log',
