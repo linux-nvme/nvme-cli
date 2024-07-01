@@ -6,6 +6,7 @@ LIBNVME_1.10 {
 		nvme_get_ana_log_len_from_id_ctrl;
 		nvme_init_default_logging;
 		nvme_parse_uri;
+		nvme_revoke_tls_key;
 		nvme_root_skip_namespaces;
 		nvmf_hostid_generate;
 		nvmf_hostnqn_generate_from_hostid;

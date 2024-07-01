@@ -1363,6 +1363,24 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 	return key;
 }
 
+long nvme_revoke_tls_key(const char *keyring, const char *key_type,
+			 const char *identity)
+{
+	key_serial_t keyring_id;
+	long key;
+
+	keyring_id = nvme_lookup_keyring(keyring);
+	if (keyring_id == 0) {
+		errno = ENOKEY;
+		return 0;
+	}
+
+	key = keyctl_search(keyring_id, key_type, identity, 0);
+	if (key < 0)
+		return -1;
+
+	return keyctl_revoke(key);
+}
 #else
 long nvme_lookup_keyring(const char *keyring)
 {
@@ -1421,6 +1439,15 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 				   const char *hostnqn, const char *subsysnqn,
 				   int version, int hmac,
 				   unsigned char *configured_key, int key_len)
+{
+	nvme_msg(NULL, LOG_ERR, "key operations not supported; "
+		 "recompile with keyutils support.\n");
+	errno = ENOTSUP;
+	return -1;
+}
+
+long nvme_revoke_tls_key(const char *keyring, const char *key_type,
+			 const char *identity)
 {
 	nvme_msg(NULL, LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");

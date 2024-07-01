@@ -412,6 +412,17 @@ char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
 				     unsigned char *configured_key, int key_len);
 
 /**
+ * nvme_revoke_tls_key() - Revoke TLS key from keyring
+ * @keyring:    Keyring to use
+ * @key_type:    Type of the key to revoke
+ * @identity:    Key identity string
+ *
+ * Return: 0 on success or on failure -1 with errno set.
+ */
+long nvme_revoke_tls_key(const char *keyring, const char *key_type,
+			 const char *identity);
+
+/**
  * nvme_export_tls_key() - Export a TLS key
  * @key_data:	Raw data of the key
  * @key_len:	Length of @key_data
