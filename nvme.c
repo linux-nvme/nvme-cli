@@ -9480,9 +9480,10 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 	const char *keyfile = "File for list of keys.";
 	const char *import = "Import all keys into the keyring.";
 	const char *export = "Export all keys from the keyring.";
+	const char *remove = "Remove key from the keyring.";
 
 	FILE *fd;
-	int err = 0;
+	int cnt, err = 0;
 
 	struct config {
 		char		*keyring;
@@ -9490,6 +9491,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		char		*keyfile;
 		bool		import;
 		bool		export;
+		char		*remove;
 	};
 
 	struct config cfg = {
@@ -9498,6 +9500,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		.keyfile	= NULL,
 		.import		= false,
 		.export		= false,
+		.remove		= NULL,
 	};
 
 	NVME_ARGS(opts,
@@ -9505,7 +9508,8 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
 		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
 		  OPT_FLAG("import",	'i', &cfg.import,	import),
-		  OPT_FLAG("export",	'e', &cfg.export,	export));
+		  OPT_FLAG("export",	'e', &cfg.export,	export),
+		  OPT_STR("remove",	'r', &cfg.remove,	remove));
 
 	err = argconfig_parse(argc, argv, desc, opts);
 	if (err)
@@ -9532,17 +9536,25 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 			fd = stdout;
 	}
 
-	if (cfg.export && cfg.import) {
-		nvme_show_error("Cannot specify both --import and --export");
+	cnt = 0;
+	if (cfg.export) cnt++;
+	if (cfg.import) cnt++;
+	if (cfg.remove) cnt++;
+
+	if (cnt != 1) {
+		nvme_show_error("Must specify either --import, --export or --remove");
 		err = -EINVAL;
 		goto out;
-	} else if (cfg.export) {
-		nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
+	}
+
+	if (cfg.export) {
+		err = nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
 	} else if (cfg.import) {
-		import_key(cfg.keyring, fd);
+		err = import_key(cfg.keyring, fd);
 	} else {
-		nvme_show_error("Must specify either --import or --export");
-		err = -EINVAL;
+		err = nvme_remove_tls_key(cfg.keyring, cfg.keytype, cfg.remove);
+		if (err < 0)
+			nvme_show_error("Failed to remove key: %s", strerror(errno));
 	}
 
 out:
