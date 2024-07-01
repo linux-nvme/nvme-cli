@@ -9477,14 +9477,25 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		return err;
 
 	if (cfg.keyfile) {
-		fd = fopen(cfg.keyfile, "r");
+		const char *mode;
+
+		if (cfg.import)
+			mode = "r";
+		else
+			mode = "w";
+
+		fd = fopen(cfg.keyfile, mode);
 		if (!fd) {
 			nvme_show_error("Cannot open keyfile %s, error %d\n",
 					cfg.keyfile, errno);
 			return -errno;
 		}
-	} else
-		fd = stdin;
+	} else {
+		if (cfg.import)
+			fd = freopen(NULL, "r", stdin);
+		else
+			fd = freopen(NULL, "w", stdout);
+	}
 
 	if (cfg.export && cfg.import) {
 		nvme_show_error("Cannot specify both --import and --export");
