@@ -4739,7 +4739,7 @@ static struct print_ops json_print_ops = {
 	.show_error_status		= json_output_error_status,
 };
 
-struct print_ops *nvme_get_json_print_ops(enum nvme_print_flags flags)
+struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags)
 {
 	json_print_ops.flags = flags;
 	return &json_print_ops;

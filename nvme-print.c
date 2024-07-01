@@ -25,7 +25,7 @@
 #define nvme_print_output_format(name, ...)			\
 	nvme_print(name, nvme_is_output_format_json() ? JSON : NORMAL, ##__VA_ARGS__);
 
-static struct print_ops *nvme_print_ops(enum nvme_print_flags flags)
+static struct print_ops *nvme_print_ops(nvme_print_flags_t flags)
 {
 	struct print_ops *ops = NULL;
 
@@ -134,7 +134,7 @@ const char *nvme_sstat_status_to_string(__u16 status)
 void nvme_show_predictable_latency_per_nvmset(
 	struct nvme_nvmset_predictable_lat_log *plpns_log,
 	__u16 nvmset_id, const char *devname,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(predictable_latency_per_nvmset, flags,
 		   plpns_log, nvmset_id, devname);
@@ -143,7 +143,7 @@ void nvme_show_predictable_latency_per_nvmset(
 void nvme_show_predictable_latency_event_agg_log(
 	struct nvme_aggregate_predictable_lat_event *pea_log,
 	__u64 log_entries, __u32 size, const char *devname,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(predictable_latency_event_agg_log, flags,
 		   pea_log, log_entries, size, devname);
@@ -228,7 +228,7 @@ const char *nvme_nss_hw_error_to_string(__u16 error_code)
 
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(persistent_event_log, flags,
 		   pevent_log_info, action, size, devname);
@@ -237,14 +237,14 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 void nvme_show_endurance_group_event_agg_log(
 	struct nvme_aggregate_predictable_lat_event *endurance_log,
 	__u64 log_entries, __u32 size, const char *devname,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(endurance_group_event_agg_log, flags,
 		   endurance_log, log_entries, size, devname);
 }
 
 void nvme_show_lba_status_log(void *lba_status, __u32 size,
-	const char *devname, enum nvme_print_flags flags)
+	const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(lba_status_log, flags, lba_status, size, devname);
 }
@@ -261,56 +261,56 @@ const char *nvme_resv_notif_to_string(__u8 type)
 }
 
 void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
-	const char *devname, enum nvme_print_flags flags)
+	const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(resv_notification_log, flags, resv, devname);
 }
 
 void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fid_log,
-	const char *devname, enum nvme_print_flags flags)
+	const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(fid_supported_effects_log, flags, fid_log, devname);
 }
 
 void nvme_show_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log,
-	const char *devname, enum nvme_print_flags flags)
+	const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(mi_cmd_support_effects_log, flags,
 		   mi_cmd_log, devname);
 }
 
 void nvme_show_boot_part_log(void *bp_log, const char *devname,
-	__u32 size, enum nvme_print_flags flags)
+	__u32 size, nvme_print_flags_t flags)
 {
 	nvme_print(boot_part_log, flags, bp_log, devname, size);
 }
 
 void nvme_show_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(phy_rx_eom_log, flags, log, controller);
 }
 
 void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
-				   enum nvme_print_flags flags)
+				   nvme_print_flags_t flags)
 {
 	nvme_print(media_unit_stat_log, flags, mus_log);
 }
 
 void nvme_show_fdp_configs(struct nvme_fdp_config_log *log, size_t len,
-		enum nvme_print_flags flags)
+		nvme_print_flags_t flags)
 {
 	nvme_print(fdp_config_log, flags, log, len);
 }
 
 void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
-		enum nvme_print_flags flags)
+		nvme_print_flags_t flags)
 {
 	nvme_print(fdp_usage_log, flags,log, len);
 }
 
 void nvme_show_fdp_stats(struct nvme_fdp_stats_log *log,
-		enum nvme_print_flags flags)
+		nvme_print_flags_t flags)
 {
 	nvme_print(fdp_stats_log, flags, log);
 }
@@ -330,26 +330,26 @@ const char *nvme_fdp_event_to_string(enum nvme_fdp_event_type event)
 }
 
 void nvme_show_fdp_events(struct nvme_fdp_events_log *log,
-		enum nvme_print_flags flags)
+		nvme_print_flags_t flags)
 {
 	nvme_print(fdp_event_log, flags, log);
 }
 
 void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
-		enum nvme_print_flags flags)
+		nvme_print_flags_t flags)
 {
 	nvme_print(fdp_ruh_status, flags, status, len);
 }
 
 void nvme_show_supported_cap_config_log(
 	struct nvme_supported_cap_config_list_log *cap,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(supported_cap_config_list_log, flags, cap);
 }
 
 void nvme_show_subsystem_list(nvme_root_t r, bool show_ana,
-			      enum nvme_print_flags flags)
+			      nvme_print_flags_t flags)
 {
 	nvme_print(print_nvme_subsystem_list, flags, r, show_ana);
 }
@@ -424,7 +424,7 @@ bool nvme_registers_pmrctl_ready(__u32 pmrctl)
 	return NVME_PMRCTL_EN(pmrctl);
 }
 
-void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, enum nvme_print_flags flags)
+void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, nvme_print_flags_t flags)
 {
 	uint64_t value;
 
@@ -442,12 +442,12 @@ void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, enum nvme_prin
 	nvme_print(ctrl_register, flags, offset, value);
 }
 
-void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags)
+void nvme_show_ctrl_registers(void *bar, bool fabrics, nvme_print_flags_t flags)
 {
 	nvme_print(ctrl_registers, flags, bar, fabrics);
 }
 
-void nvme_show_single_property(int offset, uint64_t value64, enum nvme_print_flags flags)
+void nvme_show_single_property(int offset, uint64_t value64, nvme_print_flags_t flags)
 {
 	nvme_print(single_property, flags, offset, value64);
 }
@@ -496,13 +496,13 @@ void nvme_show_error_status(int status, const char *msg, ...)
 	va_end(ap);
 }
 
-void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, enum nvme_print_flags flags)
+void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags)
 {
 	nvme_print(id_ctrl_rpmbs, flags, ctrl_rpmbs);
 }
 
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
-		unsigned int lba_index, bool cap_only, enum nvme_print_flags flags)
+		unsigned int lba_index, bool cap_only, nvme_print_flags_t flags)
 {
 	nvme_print(id_ns, flags, ns, nsid, lba_index, cap_only);
 }
@@ -510,67 +510,67 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 void nvme_show_cmd_set_independent_id_ns(
 	struct nvme_id_independent_id_ns *ns, unsigned int nsid,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(id_independent_id_ns, flags, ns, nsid);
 }
 
-void nvme_show_id_ns_descs(void *data, unsigned int nsid, enum nvme_print_flags flags)
+void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t flags)
 {
 	nvme_print(id_ns_descs, flags, data, nsid);
 }
 
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, nvme_print_flags_t flags,
 			void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	nvme_print(id_ctrl, flags, ctrl, vendor_show);
 }
 
 void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(id_ctrl_nvm, flags, ctrl_nvm);
 }
 
 void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 						struct nvme_id_ns *ns, unsigned int lba_index,
-						bool cap_only, enum nvme_print_flags flags)
+						bool cap_only, nvme_print_flags_t flags)
 {
 	nvme_print(nvm_id_ns, flags, nvm_ns, nsid, ns, lba_index, cap_only);
 }
 
 void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl,
-			   enum nvme_print_flags flags)
+			   nvme_print_flags_t flags)
 {
 	nvme_print(zns_id_ctrl, flags, ctrl);
 }
 
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 			 struct nvme_id_ns *id_ns,
-			 enum nvme_print_flags flags)
+			 nvme_print_flags_t flags)
 {
 	nvme_print(zns_id_ns, flags, ns, id_ns);
 }
 
-void nvme_show_list_ns(struct nvme_ns_list *ns_list, enum nvme_print_flags flags)
+void nvme_show_list_ns(struct nvme_ns_list *ns_list, nvme_print_flags_t flags)
 {
 	nvme_print(ns_list, flags, ns_list);
 }
 
 void nvme_zns_start_zone_list(__u64 nr_zones, struct json_object **zone_list,
-			      enum nvme_print_flags flags)
+			      nvme_print_flags_t flags)
 {
 	nvme_print(zns_start_zone_list, flags, nr_zones, zone_list);
 }
 
 void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
-			   enum nvme_print_flags flags)
+			   nvme_print_flags_t flags)
 {
 	nvme_print(zns_changed_zone_log, flags, log);
 }
 
 void nvme_zns_finish_zone_list(__u64 nr_zones, struct json_object *zone_list,
-			       enum nvme_print_flags flags)
+			       nvme_print_flags_t flags)
 {
 	nvme_print(zns_finish_zone_list, flags, nr_zones, zone_list);
 }
@@ -610,33 +610,33 @@ const char *nvme_zone_state_to_string(__u8 state)
 void nvme_show_zns_report_zones(void *report, __u32 descs,
 				__u8 ext_size, __u32 report_size,
 				struct json_object *zone_list,
-				enum nvme_print_flags flags)
+				nvme_print_flags_t flags)
 {
 	nvme_print(zns_report_zones, flags,
 		   report, descs, ext_size, report_size, zone_list);
 }
 
 void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(ctrl_list, flags, ctrl_list);
 }
 
 void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(id_nvmset_list, flags, nvmset, nvmset_id);
 }
 
 void nvme_show_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps,
-				enum nvme_print_flags flags)
+				nvme_print_flags_t flags)
 {
 	nvme_print(primary_ctrl_cap, flags, caps);
 }
 
 void nvme_show_list_secondary_ctrl(
 	const struct nvme_secondary_ctrl_list *sc_list,
-	__u32 count, enum nvme_print_flags flags)
+	__u32 count, nvme_print_flags_t flags)
 {
 	__u16 num = sc_list->num;
 	__u32 entries = min(num, count);
@@ -645,30 +645,30 @@ void nvme_show_list_secondary_ctrl(
 }
 
 void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(id_ns_granularity_list, flags, glist);
 }
 
 void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
-				enum nvme_print_flags flags)
+				nvme_print_flags_t flags)
 {
 	nvme_print(id_uuid_list, flags, uuid_list);
 }
 
 void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(id_domain_list, flags, id_dom);
 }
 
 void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list,
-	enum nvme_print_flags flags)
+	nvme_print_flags_t flags)
 {
 	nvme_print(endurance_group_list, flags, endgrp_list);
 }
 
-void nvme_show_id_iocs(struct nvme_id_iocs *iocs, enum nvme_print_flags flags)
+void nvme_show_id_iocs(struct nvme_id_iocs *iocs, nvme_print_flags_t flags)
 {
 	nvme_print(id_iocs, flags, iocs);
 }
@@ -687,32 +687,32 @@ const char *nvme_trtype_to_string(__u8 trtype)
 }
 
 void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
-			 const char *devname, enum nvme_print_flags flags)
+			 const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(error_log, flags, err_log, entries, devname);
 }
 
 void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
-			   bool eds, enum nvme_print_flags flags)
+			   bool eds, nvme_print_flags_t flags)
 {
 	nvme_print(resv_report, flags, status, bytes, eds);
 }
 
 void nvme_show_fw_log(struct nvme_firmware_slot *fw_log,
-	const char *devname, enum nvme_print_flags flags)
+	const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(fw_log, flags, fw_log, devname);
 }
 
 void nvme_show_changed_ns_list_log(struct nvme_ns_list *log,
 				   const char *devname,
-				   enum nvme_print_flags flags)
+				   nvme_print_flags_t flags)
 {
 	nvme_print(ns_list_log, flags, log, devname);
 }
 
 void nvme_print_effects_log_pages(struct list_head *list,
-				  enum nvme_print_flags flags)
+				  nvme_print_flags_t flags)
 {
 	nvme_print(effects_log_list, flags, list);
 }
@@ -755,14 +755,14 @@ const char *nvme_log_to_string(__u8 lid)
 }
 
 void nvme_show_supported_log(struct nvme_supported_log_pages *support_log,
-	const char *devname, enum nvme_print_flags flags)
+	const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(supported_log_pages, flags, support_log, devname);
 }
 
 void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 			     __u16 group_id, const char *devname,
-			     enum nvme_print_flags flags)
+			     nvme_print_flags_t flags)
 {
 	nvme_print(endurance_log, flags, endurance_log, group_id, devname);
 }
@@ -782,25 +782,25 @@ const char *nvme_degrees_string(long t, bool fahrenheit)
 }
 
 void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
-			 const char *devname, enum nvme_print_flags flags)
+			 const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(smart_log, flags, smart, nsid, devname);
 }
 
 void nvme_show_ana_log(struct nvme_ana_log *ana_log, const char *devname,
-		       size_t len, enum nvme_print_flags flags)
+		       size_t len, nvme_print_flags_t flags)
 {
 	nvme_print(ana_log, flags, ana_log, devname, len);
 }
 
 void nvme_show_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,
-				__u32 size, const char *devname, enum nvme_print_flags flags)
+				__u32 size, const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(self_test_log, flags, self_test, dst_entries, size, devname);
 }
 
 void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
-			    const char *devname, enum nvme_print_flags flags)
+			    const char *devname, nvme_print_flags_t flags)
 {
 	nvme_print(sanitize_log_page, flags, sanitize, devname);
 }
@@ -953,7 +953,7 @@ const char *nvme_feature_lba_type_to_string(__u8 type)
 }
 
 void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges,
-			 enum nvme_print_flags flags)
+			 nvme_print_flags_t flags)
 {
 	nvme_print(lba_range, flags, lbrt, nr_ranges);
 }
@@ -1010,7 +1010,7 @@ const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state)
 }
 
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
-			 void *buf, __u32 len, enum nvme_print_flags flags)
+			 void *buf, __u32 len, nvme_print_flags_t flags)
 {
 	nvme_print(directive, flags, type, oper, spec, nsid, result, buf, len);
 }
@@ -1200,7 +1200,7 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 }
 
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
-			  enum nvme_print_flags flags)
+			  nvme_print_flags_t flags)
 {
 	nvme_print(lba_status, flags, list, len);
 }
@@ -1254,14 +1254,14 @@ void nvme_show_list_item(nvme_ns_t n)
 	nvme_print(list_item, NORMAL, n);
 }
 
-void nvme_show_list_items(nvme_root_t r, enum nvme_print_flags flags)
+void nvme_show_list_items(nvme_root_t r, nvme_print_flags_t flags)
 {
 	nvme_print(list_items, flags, r);
 }
 
 void nvme_show_topology(nvme_root_t r,
 			enum nvme_cli_topo_ranking ranking,
-			enum nvme_print_flags flags)
+			nvme_print_flags_t flags)
 {
 	if (ranking == NVME_CLI_TOPO_NAMESPACE)
 		nvme_print(topology_namespace, flags, r);
@@ -1297,12 +1297,12 @@ void nvme_show_perror(const char *msg)
 }
 
 void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
-			     enum nvme_print_flags flags)
+			     nvme_print_flags_t flags)
 {
 	nvme_print(discovery_log, flags, log, numrec);
 }
 
-void nvme_show_connect_msg(nvme_ctrl_t c, enum nvme_print_flags flags)
+void nvme_show_connect_msg(nvme_ctrl_t c, nvme_print_flags_t flags)
 {
 	nvme_print(connect_msg, flags, c);
 }

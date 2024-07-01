@@ -110,7 +110,7 @@ static int do_connect(nvme_root_t r,
 		      struct nbft_info_subsystem_ns *ss,
 		      struct tr_config *trcfg,
 		      struct nvme_fabrics_config *cfg,
-		      enum nvme_print_flags flags,
+		      nvme_print_flags_t flags,
 		      unsigned int verbose)
 {
 	nvme_ctrl_t c;
@@ -184,7 +184,7 @@ static int do_discover(struct nbft_info_discovery *dd,
 		       nvme_ctrl_t c,
 		       struct nvme_fabrics_config *defcfg,
 		       struct tr_config *deftrcfg,
-		       enum nvme_print_flags flags,
+		       nvme_print_flags_t flags,
 		       unsigned int verbose)
 {
 	struct nvmf_discovery_log *log = NULL;
@@ -286,7 +286,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 		       char *hostnqn_sys, char *hostid_sys,
 		       const char *desc, bool connect,
 		       struct nvme_fabrics_config *cfg, char *nbft_path,
-		       enum nvme_print_flags flags, unsigned int verbose)
+		       nvme_print_flags_t flags, unsigned int verbose)
 {
 	char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
 	nvme_host_t h;

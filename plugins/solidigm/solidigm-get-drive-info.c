@@ -16,7 +16,7 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc = "Get drive HW information";
 	const char *FTL_unit_size_str = "FTL_unit_size";
 	char *output_format = "normal";
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	nvme_root_t r;
 	nvme_ctrl_t c;
 	nvme_ns_t n;

@@ -25,7 +25,7 @@ static int fdp_configs(int argc, char **argv, struct command *cmd,
 	const char *human_readable = "show log in readable format";
 	const char *raw = "use binary output";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_dev *dev;
 	struct nvme_fdp_config_log hdr;
 	void *log = NULL;
@@ -107,7 +107,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *egid = "Endurance group identifier";
 	const char *raw = "use binary output";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_dev *dev;
 	struct nvme_fdp_ruhu_log hdr;
 	size_t len;
@@ -180,7 +180,7 @@ static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *egid = "Endurance group identifier";
 	const char *raw = "use binary output";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_dev *dev;
 	struct nvme_fdp_stats_log stats;
 	int err;
@@ -238,7 +238,7 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *host_events = "Get host events";
 	const char *raw = "use binary output";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_dev *dev;
 	struct nvme_fdp_events_log events;
 	int err;
@@ -299,7 +299,7 @@ static int fdp_status(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *namespace_id = "Namespace identifier";
 	const char *raw = "use binary output";
 
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_dev *dev;
 	struct nvme_fdp_ruh_status hdr;
 	size_t len;

@@ -397,7 +397,7 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 static int get_c3_log_page(struct nvme_dev *dev, char *format)
 {
 	struct ssd_latency_monitor_log *log_data;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
 	int i;
@@ -1511,7 +1511,7 @@ static void ocp_print_c5_log_binary(struct unsupported_requirement_log *log_data
 
 static int get_c5_log_page(struct nvme_dev *dev, char *format)
 {
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
 	int i;
@@ -1738,7 +1738,7 @@ static void ocp_print_c1_log_binary(struct ocp_error_recovery_log_page *log_data
 static int get_c1_log_page(struct nvme_dev *dev, char *format)
 {
 	struct ocp_error_recovery_log_page *log_data;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
 	int i, j;
@@ -1954,7 +1954,7 @@ static void ocp_print_c4_log_binary(struct ocp_device_capabilities_log_page *log
 static int get_c4_log_page(struct nvme_dev *dev, char *format)
 {
 	struct ocp_device_capabilities_log_page *log_data;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
 	int i, j;
@@ -3143,7 +3143,7 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 	int ret = 0;
 	__u8 *header_data;
 	struct telemetry_str_log_format *log_data;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u8 *full_log_buf_data = NULL;
 	__le64 stat_id_str_table_ofst = 0;
 	__le64 event_str_table_ofst = 0;
@@ -3435,7 +3435,7 @@ static void ocp_print_c7_log_binary(struct tcg_configuration_log *log_data)
 
 static int get_c7_log_page(struct nvme_dev *dev, char *format)
 {
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
 	int i;

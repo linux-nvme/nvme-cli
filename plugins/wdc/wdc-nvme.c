@@ -6998,7 +6998,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 			       __u32 namespace_id)
 {
 	uint32_t device_id, read_vendor_id;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
 	__u8 log_id;
@@ -7296,7 +7296,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 {
 	uint32_t read_device_id, read_vendor_id;
 	struct wdc_ssd_ca_perf_stats *perf;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u32 cust_id;
 	__u8 *data;
 	int ret;
@@ -7427,7 +7427,7 @@ static int wdc_get_c1_log_page(nvme_root_t r, struct nvme_dev *dev,
 	struct wdc_log_page_subpage_header *sph;
 	struct wdc_ssd_perf_stats *perf;
 	struct wdc_log_page_header *l;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int total_subpages;
 	int skip_cnt = 4;
 	__u8 *data;
@@ -7484,7 +7484,7 @@ static int wdc_get_c1_log_page(nvme_root_t r, struct nvme_dev *dev,
 static int wdc_get_c3_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
 	struct wdc_ssd_latency_monitor_log *log_data;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u8 *data;
 	int ret;
 	int i;
@@ -7556,7 +7556,7 @@ out:
 static int wdc_get_ocp_c1_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
 	struct wdc_ocp_c1_error_recovery_log *log_data;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u8 *data;
 	int ret;
 	int i;
@@ -7627,7 +7627,7 @@ out:
 static int wdc_get_ocp_c4_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
 	struct wdc_ocp_C4_dev_cap_log *log_data;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u8 *data;
 	int ret;
 	int i;
@@ -7697,7 +7697,7 @@ out:
 static int wdc_get_ocp_c5_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
 	struct wdc_ocp_C5_unsupported_reqs *log_data;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
 	int i;
@@ -7767,7 +7767,7 @@ out:
 static int wdc_get_d0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format)
 {
 	struct wdc_ssd_d0_smart_log *perf;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret = 0;
 	__u8 *data;
 
@@ -8049,7 +8049,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	const char *log_page_version = "Log Page Version: 0 = vendor, 1 = WDC";
 	const char *log_page_mask = "Log Page Mask, comma separated list: 0xC0, 0xC1, 0xCA, 0xD0";
 	const char *namespace_id = "desired namespace id";
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	struct nvme_dev *dev;
 	nvme_root_t r;
 	int ret = 0;
@@ -8219,7 +8219,7 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
 {
 	const char *desc = "Retrieve Cloud Log Smart/Health Information";
 	const char *namespace_id = "desired namespace id";
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u64 capabilities = 0;
 	struct nvme_dev *dev;
 	nvme_root_t r;
@@ -8290,7 +8290,7 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
 {
 	const char *desc = "Retrieve Hardware Revision Log Information";
 	const char *namespace_id = "desired namespace id";
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u64 capabilities = 0;
 	struct nvme_dev *dev;
 	int ret;
@@ -8375,7 +8375,7 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
 	const char *desc = "Retrieve Device Write Amplication Factor";
 	const char *namespace_id = "desired namespace id";
 	struct nvme_smart_log smart_log;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	struct nvme_dev *dev;
 	__u8 *data;
 	nvme_root_t r;
@@ -8932,7 +8932,7 @@ static int wdc_get_fw_act_history(nvme_root_t r, struct nvme_dev *dev,
 				  char *format)
 {
 	struct wdc_fw_act_history_log_hdr *fw_act_history_hdr;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
 
@@ -9016,7 +9016,7 @@ static int wdc_get_fw_act_history_C2(nvme_root_t r, struct nvme_dev *dev,
 	__u32 tot_entries = 0, num_entries = 0;
 	__u32 vendor_id = 0, device_id = 0;
 	__u32 cust_id = 0;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	__u8 *data;
 	int ret;
 	bool c2GuidMatch = false;
@@ -10498,7 +10498,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve Log Page Directory.";
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	struct nvme_dev *dev;
 	int ret = 0;
 	nvme_root_t r;
@@ -11158,7 +11158,7 @@ static void wdc_print_pcie_stats_json(struct wdc_vs_pcie_stats *pcie_stats)
 
 static int wdc_do_vs_nand_stats_sn810_2(struct nvme_dev *dev, char *format)
 {
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	uint8_t *data = NULL;
 	int ret;
 
@@ -11197,7 +11197,7 @@ out:
 
 static int wdc_do_vs_nand_stats(struct nvme_dev *dev, char *format)
 {
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	uint8_t *output = NULL;
 	__u16 version = 0;
 	int ret;
@@ -11321,7 +11321,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve PCIE statistics.";
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	struct nvme_dev *dev;
 	nvme_root_t r;
 	int ret;
@@ -11396,7 +11396,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send a vs-drive-info command.";
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	nvme_root_t r;
 	uint64_t capabilities = 0;
 	struct nvme_dev *dev;
@@ -11663,7 +11663,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	const char *desc = "Send a vs-temperature-stats command.";
 	struct nvme_smart_log smart_log;
 	struct nvme_id_ctrl id_ctrl;
-	enum nvme_print_flags fmt;
+	nvme_print_flags_t fmt;
 	struct nvme_dev *dev;
 	nvme_root_t r;
 	uint64_t capabilities = 0;

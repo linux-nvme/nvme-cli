@@ -241,7 +241,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 	}
 
 	if (!err) {
-		enum nvme_print_flags print_flag;
+		nvme_print_flags_t print_flag;
 
 		err = validate_output_format(format, &print_flag);
 		if (err < 0) {

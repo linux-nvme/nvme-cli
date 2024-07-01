@@ -41,6 +41,8 @@ enum nvme_print_flags {
 	FAHRENHEIT	= 1 << 4,	/* show temperatures in degrees fahrenheit */
 };
 
+typedef uint32_t nvme_print_flags_t;
+
 enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_NAMESPACE,
 	NVME_CLI_TOPO_CTRL,
@@ -109,7 +111,7 @@ static inline DEFINE_CLEANUP_FUNC(
 
 extern const char *output_format;
 
-int validate_output_format(const char *format, enum nvme_print_flags *flags);
+int validate_output_format(const char *format, nvme_print_flags_t *flags);
 bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));

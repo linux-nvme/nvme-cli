@@ -261,7 +261,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 
 static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 		      char *raw, bool connect, bool persistent,
-		      enum nvme_print_flags flags)
+		      nvme_print_flags_t flags)
 {
 	struct nvmf_discovery_log *log = NULL;
 	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
@@ -407,7 +407,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 	int argc, ret = 0;
 	unsigned int verbose = 0;
 	FILE *f;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	char *format = "normal";
 	struct nvme_fabrics_config cfg;
 	bool force = false;
@@ -505,7 +505,7 @@ out:
 static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 					  const char *desc, bool connect,
 					  const struct nvme_fabrics_config *defcfg,
-					  enum nvme_print_flags flags,
+					  nvme_print_flags_t flags,
 					  bool force)
 {
 	const char *transport, *traddr, *host_traddr, *host_iface, *trsvcid, *subsysnqn;
@@ -693,7 +693,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	char *config_file = PATH_NVMF_CONFIG;
 	char *hnqn = NULL, *hid = NULL;
 	char *context = NULL;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	nvme_root_t r;
 	nvme_host_t h;
 	nvme_ctrl_t c = NULL;
@@ -917,7 +917,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	int ret;
-	enum nvme_print_flags flags;
+	nvme_print_flags_t flags;
 	struct nvme_fabrics_config cfg = { 0 };
 	char *format = "normal";
 	char *hostnqn_arg, *hostid_arg;
