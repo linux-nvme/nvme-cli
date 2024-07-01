@@ -602,9 +602,28 @@ static int rpmb_program_auth_key(int fd, unsigned char target,
 		goto out;
 	}
 
-	/* send request and read the result first */
-	rsp = rpmb_read_request(fd, req, req_size, rsp_size);
-	if (rsp == NULL || rsp->result != 0) {
+	/* send the request and get response */
+	err = send_rpmb_req(fd, req->target, req_size, req);
+	if (err) {
+		fprintf(stderr, "RPMB request 0x%04x for 0x%x, err: %d\n", req->type, req->target,
+			err);
+		goto out;
+	}
+
+	/* send the request to get the result and then request to get the response */
+	rsp = (struct rpmb_data_frame_t *)calloc(rsp_size, 1);
+	if (!rsp) {
+		fprintf(stderr, "failed to allocate response buffer memory\n");
+		err = -ENOMEM;
+		goto out;
+	}
+
+	rsp->target = req->target;
+	rsp->type = RPMB_REQ_READ_RESULT;
+	err = send_rpmb_req(fd, req->target, rsp_size, rsp);
+	if (err || rsp->result) {
+		fprintf(stderr, "Program auth key read result 0x%x, error = 0x%x\n", rsp->result,
+			err);
 		goto out;
 	}
 
