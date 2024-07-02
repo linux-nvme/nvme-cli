@@ -3711,7 +3711,7 @@ free_buf:
 
 static int dump_internal_logs(struct nvme_dev *dev, char *dir_name, int verbose)
 {
-	char file_path[128];
+	char file_path[PATH_MAX];
 	void *telemetry_log;
 	const size_t bs = 512;
 	struct nvme_telemetry_log *hdr;
