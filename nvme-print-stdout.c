@@ -1046,6 +1046,18 @@ static void stdout_subsystem_ctrls(nvme_subsystem_t s)
 	}
 }
 
+static void stdout_subsys_config(nvme_subsystem_t s)
+{
+	int len = strlen(nvme_subsystem_get_name(s));
+
+	printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
+	       nvme_subsystem_get_nqn(s));
+	printf("%*s   hostnqn=%s\n", len, " ",
+	       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
+	printf("%*s   iopolicy=%s\n", len, " ",
+	       nvme_subsystem_get_iopolicy(s));
+}
+
 static void stdout_subsystem(nvme_root_t r, bool show_ana)
 {
 	nvme_host_t h;
@@ -1055,18 +1067,11 @@ static void stdout_subsystem(nvme_root_t r, bool show_ana)
 		nvme_subsystem_t s;
 
 		nvme_for_each_subsystem(h, s) {
-			int len = strlen(nvme_subsystem_get_name(s));
-
 			if (!first)
 				printf("\n");
 			first = false;
 
-			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
-			printf("%*s   hostnqn=%s\n", len, " ",
-			       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
-			printf("%*s   iopolicy=%s\n", len, " ",
-			       nvme_subsystem_get_iopolicy(s));
+			stdout_subsys_config(s);
 			printf("\\\n");
 
 			if (!show_ana || !stdout_subsystem_multipath(s))
@@ -5041,18 +5046,11 @@ static void stdout_simple_topology(nvme_root_t r,
 
 	nvme_for_each_host(r, h) {
 		nvme_for_each_subsystem(h, s) {
-			int len = strlen(nvme_subsystem_get_name(s));
-
 			if (!first)
 				printf("\n");
 			first = false;
 
-			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
-			printf("%*s   hostnqn=%s\n", len, " ",
-			       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
-			printf("%*s   iopolicy=%s\n", len, " ",
-			       nvme_subsystem_get_iopolicy(s));
+			stdout_subsys_config(s);
 			printf("\\\n");
 
 			if (nvme_is_multipath(s))
