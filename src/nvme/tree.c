@@ -117,16 +117,99 @@ static void cleanup_dirents(struct dirents *ents)
 
 #define _cleanup_dirents_ __cleanup__(cleanup_dirents)
 
+static char *nvme_hostid_from_hostnqn(const char *hostnqn)
+{
+	const char *uuid;
+
+	uuid = strstr(hostnqn, "uuid:");
+	if (!uuid)
+		return NULL;
+
+	return strdup(uuid + strlen("uuid:"));
+}
+
+int nvme_host_get_ids(nvme_root_t r,
+		      char *hostnqn_arg, char *hostid_arg,
+		      char **hostnqn, char **hostid)
+{
+	_cleanup_free_ char *nqn = NULL;
+	_cleanup_free_ char *hid = NULL;
+	_cleanup_free_ char *hnqn = NULL;
+	nvme_host_t h;
+
+	/* command line argumments */
+	if (hostid_arg)
+		hid = strdup(hostid_arg);
+	if (hostnqn_arg)
+		hnqn = strdup(hostnqn_arg);
+
+	/* JSON config: assume the first entry is the default host */
+	h = nvme_first_host(r);
+	if (h) {
+		if (!hid)
+			hid = strdup(nvme_host_get_hostid(h));
+		if (!hnqn)
+			hnqn = strdup(nvme_host_get_hostnqn(h));
+	}
+
+	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
+	if (!hid)
+		hid = nvmf_hostid_from_file();
+	if (!hnqn)
+		hnqn = nvmf_hostnqn_from_file();
+
+	/* incomplete configuration, thus derive hostid from hostnqn */
+	if (!hid && hnqn)
+		hid = nvme_hostid_from_hostnqn(hnqn);
+
+	/*
+	 * fallback to use either DMI information or device-tree. If all
+	 * fails generate one
+	 */
+	if (!hid) {
+		hid = nvmf_hostid_generate();
+		if (!hid) {
+			errno = -ENOMEM;
+			return -1;
+		}
+
+		nvme_msg(r, LOG_DEBUG,
+			 "warning: using auto generated hostid and hostnqn\n");
+	}
+
+	/* incomplete configuration, thus derive hostnqn from hostid */
+	if (!hnqn) {
+		hnqn = nvmf_hostnqn_generate_from_hostid(hid);
+		if (!hnqn) {
+			errno = -ENOMEM;
+			return -1;
+		}
+	}
+
+	/* sanity checks */
+	nqn = nvme_hostid_from_hostnqn(hnqn);
+	if (nqn && strcmp(nqn, hid)) {
+		nvme_msg(r, LOG_DEBUG,
+			 "warning: use hostid '%s' which does not match uuid in hostnqn '%s'\n",
+			 hid, hnqn);
+	}
+
+	*hostid = hid;
+	*hostnqn = hnqn;
+	hid = NULL;
+	hnqn = NULL;
+
+	return 0;
+}
+
 nvme_host_t nvme_default_host(nvme_root_t r)
 {
-	struct nvme_host *h;
 	_cleanup_free_ char *hostnqn = NULL;
 	_cleanup_free_ char *hostid = NULL;
+	struct nvme_host *h;
 
-	hostnqn = nvmf_hostnqn_from_file();
-	if (!hostnqn)
-		hostnqn = nvmf_hostnqn_generate();
-	hostid = nvmf_hostid_from_file();
+	if (nvme_host_get_ids(r, NULL, NULL, &hostnqn, &hostid))
+		return NULL;
 
 	h = nvme_lookup_host(r, hostnqn, hostid);
 
