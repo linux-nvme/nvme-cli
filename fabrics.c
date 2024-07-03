@@ -690,7 +690,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	char *hnqn = NULL, *hid = NULL;
 	char *context = NULL;
 	nvme_print_flags_t flags;
-	nvme_root_t r;
+	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	nvme_host_t h;
 	nvme_ctrl_t c = NULL;
 	unsigned int verbose = 0;
@@ -749,7 +749,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		if (errno != ENOENT)
 			fprintf(stderr, "Failed to scan topology: %s\n",
 				nvme_strerror(errno));
-		nvme_free_tree(r);
 		return ret;
 	}
 
@@ -894,7 +893,6 @@ out_free:
 	free(hid);
 	if (dump_config)
 		nvme_dump_config(r);
-	nvme_free_tree(r);
 
 	return ret;
 }
@@ -909,7 +907,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *config_file = PATH_NVMF_CONFIG;
 	char *context = NULL;
 	unsigned int verbose = 0;
-	nvme_root_t r;
+	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	int ret;
@@ -979,7 +977,6 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		if (errno != ENOENT)
 			fprintf(stderr, "Failed to scan topology: %s\n",
 				nvme_strerror(errno));
-		nvme_free_tree(r);
 		return ret;
 	}
 	nvme_read_config(r, config_file);
@@ -1046,7 +1043,6 @@ out_free:
 	free(hid);
 	if (dump_config)
 		nvme_dump_config(r);
-	nvme_free_tree(r);
 	return -errno;
 }
 
