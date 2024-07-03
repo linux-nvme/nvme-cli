@@ -627,71 +627,14 @@ static int nvme_read_volatile_config(nvme_root_t r)
 	return ret;
 }
 
-char *nvmf_hostid_from_hostnqn(const char *hostnqn)
-{
-	const char *uuid;
-
-	if (!hostnqn)
-		return NULL;
-
-	uuid = strstr(hostnqn, "uuid:");
-	if (!uuid)
-		return NULL;
-
-	return strdup(uuid + strlen("uuid:"));
-}
-
-void nvmf_check_hostid_and_hostnqn(const char *hostid, const char *hostnqn, unsigned int verbose)
-{
-	_cleanup_free_ char *hostid_from_hostnqn = NULL;
-
-	if (!hostnqn || !hostid)
-		return;
-
-	hostid_from_hostnqn = nvmf_hostid_from_hostnqn(hostnqn);
-	if (hostid_from_hostnqn && strcmp(hostid_from_hostnqn, hostid)) {
-		if (verbose)
-			fprintf(stderr,
-				"warning: use hostid which does not match uuid in hostnqn\n");
-	}
-}
-
-void nvmf_set_hostid_and_hostnqn(char **hostid, char **hostnqn)
-{
-	char *hid = *hostid;
-	char *hnqn = *hostnqn;
-
-	if (!hid)
-		hid = nvmf_hostid_from_file();
-	if (!hnqn)
-		hnqn = nvmf_hostnqn_from_file();
-
-	if (!hid) {
-		if (hnqn) {
-			hid = nvmf_hostid_from_hostnqn(hnqn);
-			if (!hid)
-				hid = nvmf_hostid_generate();
-		} else {
-			hid = nvmf_hostid_generate();
-			hnqn = nvmf_hostnqn_generate_from_hostid(hid);
-		}
-	}
-
-	if (!hnqn)
-		hnqn = nvmf_hostnqn_generate_from_hostid(hid);
-
-	*hostid = hid;
-	*hostnqn = hnqn;
-}
-
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL;
-	char *hostnqn_arg, *hostid_arg;
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
-	char *hnqn = NULL, *hid = NULL;
+	_cleanup_free_ char *hnqn = NULL;
+	_cleanup_free_ char *hid = NULL;
 	char *context = NULL;
 	nvme_print_flags_t flags;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
@@ -761,21 +704,16 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (!nvme_read_volatile_config(r))
 		json_config = true;
 
-	hostnqn_arg = hostnqn;
-	hostid_arg = hostid;
+	ret = nvme_host_get_ids(r, hostnqn, hostid, &hnqn, &hid);
+	if (ret < 0)
+		return -errno;
 
-	nvmf_set_hostid_and_hostnqn(&hostid, &hostnqn);
-	if (!hostid_arg)
-		hid = hostid;
-	if (!hostnqn_arg)
-		hnqn = hostnqn;
-
-	nvmf_check_hostid_and_hostnqn(hostid, hostnqn, verbose);
-	h = nvme_lookup_host(r, hostnqn, hostid);
+	h = nvme_lookup_host(r, hnqn, hid);
 	if (!h) {
 		ret = ENOMEM;
 		goto out_free;
 	}
+
 	if (device) {
 		if (!strcmp(device, "none"))
 			device = NULL;
@@ -787,8 +725,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 
 	if (!device && !transport && !traddr) {
 		if (!nonbft)
-			discover_from_nbft(r, hostnqn_arg, hostid_arg,
-					   hostnqn, hostid, desc, connect,
+			discover_from_nbft(r, hostnqn, hostid,
+					   hnqn, hid, desc, connect,
 					   &cfg, nbft_path, flags, verbose);
 
 		if (nbft)
@@ -893,8 +831,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	nvme_free_ctrl(c);
 
 out_free:
-	free(hnqn);
-	free(hid);
 	if (dump_config)
 		nvme_dump_config(r);
 
@@ -907,7 +843,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *transport = NULL, *traddr = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
 	char *hostkey = NULL, *ctrlkey = NULL;
-	char *hnqn = NULL, *hid = NULL;
+	_cleanup_free_ char *hnqn = NULL;
+	_cleanup_free_ char *hid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	char *context = NULL;
 	unsigned int verbose = 0;
@@ -918,7 +855,6 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_print_flags_t flags;
 	struct nvme_fabrics_config cfg = { 0 };
 	char *format = "normal";
-	char *hostnqn_arg, *hostid_arg;
 
 
 	NVMF_ARGS(opts, cfg,
@@ -986,17 +922,11 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_read_config(r, config_file);
 	nvme_read_volatile_config(r);
 
-	hostnqn_arg = hostnqn;
-	hostid_arg = hostid;
+	ret = nvme_host_get_ids(r, hostnqn, hostid, &hnqn, &hid);
+	if (ret < 0)
+		return -errno;
 
-	nvmf_set_hostid_and_hostnqn(&hostid, &hostnqn);
-	if (!hostid_arg)
-		hid = hostid;
-	if (!hostnqn_arg)
-		hnqn = hostnqn;
-
-	nvmf_check_hostid_and_hostnqn(hostid, hostnqn, verbose);
-	h = nvme_lookup_host(r, hostnqn, hostid);
+	h = nvme_lookup_host(r, hnqn, hid);
 	if (!h) {
 		errno = ENOMEM;
 		goto out_free;
@@ -1043,8 +973,6 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	}
 
 out_free:
-	free(hnqn);
-	free(hid);
 	if (dump_config)
 		nvme_dump_config(r);
 	return -errno;
