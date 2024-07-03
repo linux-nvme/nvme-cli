@@ -19,7 +19,7 @@
 
 static inline uint32_t mmio_read32(void *addr)
 {
-	leint32_t *p = addr;
+	const volatile leint32_t *p = addr;
 
 	return le32_to_cpu(*p);
 }
@@ -38,7 +38,7 @@ static inline uint64_t mmio_read64(void *addr)
 
 static inline void mmio_write32(void *addr, uint32_t value)
 {
-	leint32_t *p = addr;
+	volatile leint32_t *p = addr;
 
 	*p = cpu_to_le32(value);
 }
