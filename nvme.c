@@ -880,7 +880,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 
 	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	_cleanup_file_ int output = -1;
+	_cleanup_fd_ int output = -1;
 	int err = 0;
 	size_t total_size;
 	__u8 *data_ptr = NULL;
@@ -1808,7 +1808,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 	_cleanup_free_ __u8 *bp_log = NULL;
 	nvme_print_flags_t flags;
 	int err = -1;
-	_cleanup_file_ int output = -1;
+	_cleanup_fd_ int output = -1;
 	__u32 bpsz = 0;
 
 	struct config {
@@ -2183,7 +2183,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *buf = NULL;
 	int err = -1;
-	_cleanup_file_ int dfd = -1;
+	_cleanup_fd_ int dfd = -1;
 
 	struct config {
 		__u16 mos;
@@ -4903,7 +4903,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	_cleanup_file_ int fw_fd = -1;
+	_cleanup_fd_ int fw_fd = -1;
 	unsigned int fw_size, pos;
 	int err;
 	struct stat sb;
@@ -6374,7 +6374,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *buf = NULL;
-	_cleanup_file_ int ffd = STDIN_FILENO;
+	_cleanup_fd_ int ffd = STDIN_FILENO;
 	int err;
 	__u32 result;
 
@@ -6524,7 +6524,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *sec_buf = NULL;
-	_cleanup_file_ int sec_fd = -1;
+	_cleanup_fd_ int sec_fd = -1;
 	unsigned int sec_size;
 	int err;
 
@@ -6633,7 +6633,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	_cleanup_free_ void *buf = NULL;
 	__u32 result;
 	__u32 dw12 = 0;
-	_cleanup_file_ int ffd = STDIN_FILENO;
+	_cleanup_fd_ int ffd = STDIN_FILENO;
 	int err;
 
 	struct config {
@@ -7720,7 +7720,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	void *buffer;
 	_cleanup_free_ void *mbuffer = NULL;
 	int err = 0;
-	_cleanup_file_ int dfd = -1, mfd = -1;
+	_cleanup_fd_ int dfd = -1, mfd = -1;
 	int flags;
 	int mode = 0644;
 	__u16 control = 0, nblocks = 0;
@@ -8728,7 +8728,7 @@ static int passthru(int argc, char **argv, bool admin,
 
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	_cleanup_file_ int dfd = -1, mfd = -1;
+	_cleanup_fd_ int dfd = -1, mfd = -1;
 	int flags;
 	int mode = 0644;
 	void *data = NULL;
@@ -9663,7 +9663,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	void *data = NULL;
 	int err = 0;
 	bool send;
-	_cleanup_file_ int fd = -1;
+	_cleanup_fd_ int fd = -1;
 	int flags;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
