@@ -207,7 +207,7 @@ static void write_file(unsigned char *data, size_t len, const char *dir,
 			  const char *file, const char *msg)
 {
 	char temp_folder[PATH_MAX] = { 0 };
-	FILE *fp = NULL;
+	_cleanup_file_ FILE *fp = NULL;
 
 	if (dir != NULL)
 		sprintf(temp_folder, "%s/%s", dir, file);
@@ -219,7 +219,6 @@ static void write_file(unsigned char *data, size_t len, const char *dir,
 			fprintf(stderr, "Failed to write %s data to %s\n",
 				 msg ? msg : "", temp_folder);
 		}
-		fclose(fp);
 	} else  {
 		fprintf(stderr, "Failed to open %s file to write %s\n",
 			temp_folder, msg ? msg : "");
