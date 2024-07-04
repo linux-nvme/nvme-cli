@@ -97,6 +97,7 @@ _nvme () {
 	'disconnect-all:disconnect from all connected NVMeoF subsystems'
 	'gen-hostnqn:generate a host NVMe Qualified Name'
 	'show-hostnqn:show the host NQN configured for the system'
+	'tls-key:manipulate NVMeoF TLS PSK'
 	'dir-receive:read directive parameters of the specified directive type'
 	'dir-send:set directive parameters of the specified directive type'
 	'virt-mgmt:submit a Virtualization Management command'
@@ -2194,6 +2195,28 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme show-hostnqn options" _show_hostnqn
 			;;
+		(tls-key)
+			local _tls_key
+  			_tls_key=(
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--keyring=':name for keyring'
+			-r':alias for --keyring'
+			--keytype=':type for the key'
+			-t':alias for --keytype'
+			--keyfile='filename for reading/writing keys from'
+			-f':alias for --keyfile'
+			--import'import all keys into keyring'
+			-i':alias for --import'
+			--export'export all keys from keyring'
+			-e':alias for --export'
+			--revoke='revoke key from keyring'
+			-r':alias for --revoke'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme tls-key options" _tls_key
 		(dir-receive)
 			local _dir_receive
 			_dir_receive=(
@@ -2546,8 +2569,8 @@ _nvme () {
 			effects-log endurance-log device-self-test self-test-log set-property
 			get-property write-zeroes write-uncor verify sanitize sanitize-log reset
 			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
-			dim disconnect disconnect-all gen-hostnqn show-hostnqn dir-receive dir-send
-			virt-mgmt rpmb version ocp solidigm
+			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
+			dir-send virt-mgmt rpmb version ocp solidigm
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h

@@ -427,6 +427,11 @@ nvme_list_opts () {
 		"show-hostnqn")
 		opts+=$NO_OPTS
 			;;
+		"tls-key")
+		opts+=" --output-format= -o --verbose -v --keyring= -k \
+			--keytype= -k --keyfile= -f --import -i \
+			--export -e --revoke= -r"
+			;;
 		"dir-receive")
 		opts+=" --namespace-id= -n --data-len= -l --raw-binary -b \
 			--dir-type= -D --dir-spec= -S --dir-oper= -O \
@@ -1603,7 +1608,7 @@ _nvme_subcmds () {
 		sanitize sanitize-log reset subsystem-reset \
 		ns-rescan show-regs discover connect-all \
 		connect disconnect disconnect-all gen-hostnqn \
-		show-hostnqn dir-receive dir-send virt-mgmt \
+		show-hostnqn tls-key dir-receive dir-send virt-mgmt \
 		rpmb boot-part-log fid-support-effects-log \
 		supported-log-pages lockdown media-unit-stat-log \
 		supported-cap-config-log dim show-topology list-endgrp \
