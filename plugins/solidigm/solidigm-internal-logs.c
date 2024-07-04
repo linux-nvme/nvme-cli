@@ -455,7 +455,7 @@ struct log {
 static int log_save(struct log *log, const char *parent_dir_name, const char *subdir_name,
 		    const char *file_name, __u8 *buffer, size_t buf_size)
 {
-	_cleanup_file_ int output = -1;
+	_cleanup_fd_ int output = -1;
 	char file_path[PATH_MAX] = {0};
 	size_t bytes_remaining = 0;
 	int err = 0;
