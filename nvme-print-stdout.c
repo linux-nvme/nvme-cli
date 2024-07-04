@@ -3883,7 +3883,6 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 	__u16 temperature = smart->temperature[1] << 8 | smart->temperature[0];
 	int i;
 	bool human = stdout_print_ops.flags & VERBOSE;
-	bool fahrenheit = !!(stdout_print_ops.flags & FAHRENHEIT);
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 	printf("critical_warning			: %#x\n", smart->critical_warning);
@@ -3904,7 +3903,7 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 	}
 
 	printf("temperature				: %s (%u K)\n",
-	       nvme_degrees_string(temperature, fahrenheit), temperature);
+	       nvme_degrees_string(temperature), temperature);
 	printf("available_spare				: %u%%\n", smart->avail_spare);
 	printf("available_spare_threshold		: %u%%\n", smart->spare_thresh);
 	printf("percentage_used				: %u%%\n", smart->percent_used);
@@ -3941,7 +3940,7 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 		if (!temperature)
 			continue;
 		printf("Temperature Sensor %d			: %s (%u K)\n", i + 1,
-		       nvme_degrees_string(temperature, fahrenheit), temperature);
+		       nvme_degrees_string(temperature), temperature);
 	}
 
 	printf("Thermal Management T1 Trans Count	: %u\n",

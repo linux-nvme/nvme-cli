@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <locale.h>
 
 #include "nvme.h"
 #include "libnvme.h"
@@ -767,10 +768,47 @@ void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	nvme_print(endurance_log, flags, endurance_log, group_id, devname);
 }
 
-const char *nvme_degrees_string(long t, bool fahrenheit)
+static bool is_fahrenheit_country(const char *country)
+{
+	static const char * const countries[] = {
+		"AQ", "AS", "BS", "BZ", "CY", "FM", "GU", "KN", "KY", "LR",
+		"MH", "MP", "MS", "PR", "PW", "TC", "US", "VG", "VI"
+	};
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(countries); i++) {
+		if (!strcmp(country, countries[i]))
+			return true;
+	}
+
+	return false;
+}
+
+static bool is_temperature_fahrenheit(void)
+{
+	const char *locale, *underscore;
+	char country[3] = { 0 };
+
+	setlocale(LC_ALL, "");
+	locale = setlocale(LC_ALL, NULL);
+
+	if (!locale || strlen(locale) < 2)
+		return false;
+
+	underscore = strchr(locale, '_');
+	if (underscore && strlen(underscore) >= 3)
+		locale = underscore + 1;
+
+	memcpy(country, locale, 2);
+
+	return is_fahrenheit_country(country);
+}
+
+const char *nvme_degrees_string(long t)
 {
 	static char str[STR_LEN];
 	long val = kelvin_to_celsius(t);
+	bool fahrenheit = is_temperature_fahrenheit();
 
 	if (fahrenheit)
 		val = kelvin_to_fahrenheit(t);
