@@ -406,7 +406,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 	char *ptr, **argv, *p, line[4096];
 	int argc, ret = 0;
 	unsigned int verbose = 0;
-	FILE *f;
+	_cleanup_file_ FILE *f = NULL;
 	nvme_print_flags_t flags;
 	char *format = "normal";
 	struct nvme_fabrics_config cfg;
@@ -431,15 +431,12 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 	f = fopen(PATH_NVMF_DISC, "r");
 	if (f == NULL) {
 		fprintf(stderr, "No params given and no %s\n", PATH_NVMF_DISC);
-		errno = ENOENT;
-		return -1;
+		return -ENOENT;
 	}
 
 	argv = calloc(MAX_DISC_ARGS, sizeof(char *));
-	if (!argv) {
-		ret = -1;
-		goto out;
-	}
+	if (!argv)
+		return -1;
 
 	argv[0] = "discover";
 	memset(line, 0, sizeof(line));
@@ -497,8 +494,7 @@ next:
 		memset(&cfg, 0, sizeof(cfg));
 	}
 	free(argv);
-out:
-	fclose(f);
+
 	return ret;
 }
 
