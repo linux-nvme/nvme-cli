@@ -9446,7 +9446,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 	const char *import = "Import all keys into the keyring.";
 	const char *export = "Export all keys from the keyring.";
 
-	FILE *fd;
+	_cleanup_file_ FILE *fd = NULL;
 	int err = 0;
 
 	struct config {
@@ -9499,7 +9499,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 
 	if (cfg.export && cfg.import) {
 		nvme_show_error("Cannot specify both --import and --export");
-		err = -EINVAL;
+		return -EINVAL;
 	} else if (cfg.export) {
 		nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
 	} else if (cfg.import) {
@@ -9513,8 +9513,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		keyring_id = nvme_lookup_keyring(cfg.keyring);
 		if (!keyring_id) {
 			nvme_show_error("Invalid keyring '%s'", cfg.keyring);
-			err = -ENOKEY;
-			goto out;
+			return -ENOKEY;
 		}
 
 		while (fgets(tls_str, 512, fd)) {
@@ -9542,10 +9541,6 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		nvme_show_error("Must specify either --import or --export");
 		err = -EINVAL;
 	}
-
-out:
-	if (cfg.keyfile)
-		fclose(fd);
 
 	return err;
 }
