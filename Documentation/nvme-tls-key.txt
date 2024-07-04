@@ -41,7 +41,7 @@ OPTIONS
 	Type of the key for resulting TLS key.
 	Default is 'psk'.
 
--k <file>::
+-f <file>::
 --keyfile=<file>::
 	File to read the keys from or write the keys to instead of
 	stdin / stdout.
