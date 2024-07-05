@@ -998,8 +998,6 @@ _nvme () {
 			-b':alias to --raw-binary'
 			--verbose':show infos verbosely'
 			-v':alias to --verbose'
-			--fahrenheit'show temperatures in degrees fahrenheit'
-			-f':alias to --fahrenheit'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme smart-log options" _smartlog
