@@ -502,91 +502,106 @@ next:
 	return ret;
 }
 
+static int _discover_from_json_config_file(nvme_root_t r, nvme_host_t h, nvme_subsystem_t s,
+					   nvme_ctrl_t c, const char *desc, bool connect,
+					  const struct nvme_fabrics_config *defcfg,
+					  nvme_print_flags_t flags,
+					  bool force)
+{
+	const char *transport, *traddr, *host_traddr;
+	const char *host_iface, *trsvcid, *subsysnqn;
+	struct nvme_fabrics_config cfg;
+	nvme_ctrl_t cn;
+	int ret = 0;
+
+	transport = nvme_ctrl_get_transport(c);
+	traddr = nvme_ctrl_get_traddr(c);
+	host_traddr = nvme_ctrl_get_host_traddr(c);
+	host_iface = nvme_ctrl_get_host_iface(c);
+
+	if (!transport && !traddr)
+		return 0;
+
+	/* ignore none fabric transports */
+	if (strcmp(transport, "tcp") &&
+	    strcmp(transport, "rdma") &&
+	    strcmp(transport, "fc"))
+		return 0;
+
+	/* ignore if no host_traddr for fc */
+	if (!strcmp(transport, "fc")) {
+		if (!host_traddr) {
+			fprintf(stderr, "host_traddr required for fc\n");
+			return 0;
+		}
+	}
+
+	/* ignore if host_iface set for any transport other than tcp */
+	if (!strcmp(transport, "rdma") || !strcmp(transport, "fc")) {
+		if (host_iface) {
+			fprintf(stderr,
+				"host_iface not permitted for rdma or fc\n");
+			return 0;
+		}
+	}
+
+	trsvcid = nvme_ctrl_get_trsvcid(c);
+	if (!trsvcid || !strcmp(trsvcid, ""))
+		trsvcid = nvmf_get_default_trsvcid(transport, true);
+
+	if (force)
+		subsysnqn = nvme_ctrl_get_subsysnqn(c);
+	else
+		subsysnqn = NVME_DISC_SUBSYS_NAME;
+
+	if (nvme_ctrl_is_persistent(c))
+		persistent = true;
+
+	memcpy(&cfg, defcfg, sizeof(cfg));
+
+	struct tr_config trcfg = {
+		.subsysnqn = subsysnqn,
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+	};
+
+	if (!force) {
+		cn = lookup_ctrl(h, &trcfg);
+		if (cn) {
+			__discover(cn, &cfg, raw, connect, true, flags);
+			return 0;
+		}
+	}
+
+	cn = nvmf_create_discover_ctrl(r, h, &cfg, &trcfg);
+	if (!cn)
+		return 0;
+
+	__discover(cn, &cfg, raw, connect, persistent, flags);
+	if (!(persistent || is_persistent_discovery_ctrl(h, cn)))
+		ret = nvme_disconnect_ctrl(cn);
+	nvme_free_ctrl(cn);
+
+	return ret;
+}
+
 static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 					  const char *desc, bool connect,
 					  const struct nvme_fabrics_config *defcfg,
 					  nvme_print_flags_t flags,
 					  bool force)
 {
-	const char *transport, *traddr, *host_traddr, *host_iface, *trsvcid, *subsysnqn;
 	nvme_subsystem_t s;
-	nvme_ctrl_t c, cn;
-	struct nvme_fabrics_config cfg;
+	nvme_ctrl_t c;
 	int ret = 0;
 
 	nvme_for_each_subsystem(h, s) {
 		nvme_subsystem_for_each_ctrl(s, c) {
-			transport = nvme_ctrl_get_transport(c);
-			traddr = nvme_ctrl_get_traddr(c);
-			host_traddr = nvme_ctrl_get_host_traddr(c);
-			host_iface = nvme_ctrl_get_host_iface(c);
-
-			if (!transport && !traddr)
-				continue;
-
-			/* ignore none fabric transports */
-			if (strcmp(transport, "tcp") &&
-			    strcmp(transport, "rdma") &&
-			    strcmp(transport, "fc"))
-				continue;
-
-			/* ignore if no host_traddr for fc */
-			if (!strcmp(transport, "fc")) {
-				if (!host_traddr) {
-					fprintf(stderr, "host_traddr required for fc\n");
-					continue;
-				}
-			}
-
-			/* ignore if host_iface set for any transport other than tcp */
-			if (!strcmp(transport, "rdma") || !strcmp(transport, "fc")) {
-				if (host_iface) {
-					fprintf(stderr, "host_iface not permitted for rdma or fc\n");
-					continue;
-				}
-			}
-
-			trsvcid = nvme_ctrl_get_trsvcid(c);
-			if (!trsvcid || !strcmp(trsvcid, ""))
-				trsvcid = nvmf_get_default_trsvcid(transport,
-								   true);
-
-			if (force)
-				subsysnqn = nvme_ctrl_get_subsysnqn(c);
-			else
-				subsysnqn = NVME_DISC_SUBSYS_NAME;
-
-			if (nvme_ctrl_is_persistent(c))
-				persistent = true;
-
-			memcpy(&cfg, defcfg, sizeof(cfg));
-
-			struct tr_config trcfg = {
-				.subsysnqn	= subsysnqn,
-				.transport	= transport,
-				.traddr		= traddr,
-				.host_traddr	= host_traddr,
-				.host_iface	= host_iface,
-				.trsvcid	= trsvcid,
-			};
-
-			if (!force) {
-				cn = lookup_ctrl(h, &trcfg);
-				if (cn) {
-					__discover(cn, &cfg, raw, connect,
-						   true, flags);
-					continue;
-				}
-			}
-
-			cn = nvmf_create_discover_ctrl(r, h, &cfg, &trcfg);
-			if (!cn)
-				continue;
-
-			__discover(cn, &cfg, raw, connect, persistent, flags);
-			if (!(persistent || is_persistent_discovery_ctrl(h, cn)))
-				ret = nvme_disconnect_ctrl(cn);
-			nvme_free_ctrl(cn);
+			ret = _discover_from_json_config_file(r, h, s, c, desc,
+					      connect, defcfg, flags, force);
 		}
 	}
 
