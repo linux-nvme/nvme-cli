@@ -4642,8 +4642,8 @@ static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
 	int err_def = 0;
 	__u32 result;
 	__u32 result_def;
-	void *buf = NULL;
-	void *buf_def = NULL;
+	_cleanup_free_ void *buf = NULL;
+	_cleanup_free_ void *buf_def = NULL;
 
 	if (changed)
 		cfg.sel = 0;
@@ -4661,9 +4661,6 @@ static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
 	if (err || !changed || err_def || result != result_def ||
 	    (buf && buf_def && !strcmp(buf, buf_def)))
 		get_feature_id_print(cfg, err, result, buf);
-
-	free(buf);
-	free(buf_def);
 
 	return err;
 }
