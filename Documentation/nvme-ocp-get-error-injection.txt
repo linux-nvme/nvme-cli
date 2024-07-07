@@ -1,0 +1,57 @@
+nvme-ocp-get-error-injection(1)
+===============================
+
+NAME
+----
+nvme-ocp-get-error-injection - Return set of error injection
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp get-error-injection' <device> [--no-uuid | -n]
+			[--sel=<select> | -s <select>]
+
+DESCRIPTION
+-----------
+Return set of error injection.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
+
+-s <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
++
+[]
+|==================
+|Select|Description
+|0|Current
+|1|Default
+|2|Saved
+|3|Supported capabilities
+|4-7|Reserved
+|==================
+
+EXAMPLES
+--------
+* Has the program issue a get-error-injection to retrieve the 0xC0 get features.
++
+------------
+# nvme ocp get-error-injection /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
