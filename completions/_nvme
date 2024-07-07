@@ -317,6 +317,18 @@ _nvme () {
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp tcg-configuration-log options" _ocp_tcg_configuration_log
 				;;
+			(get-error-injection)
+				local _get_error_injection
+				_get_error_injection=(
+				/dev/nvme':supply a device to use (required)'
+				--sel=':0-3: current/default/saved/supported/changed:'
+				-s':alias for --sel'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp get-error-injection options" _get_error_injection
+				;;
 			(*)
 				_files
 				;;
@@ -2547,6 +2559,7 @@ _nvme () {
 			telemetry-string-log':Retrieve Telemetry string Log Page'
 			set-telemetry-profile':Set Telemetry Profile'
 			tcg-configuration-log':tcg configuration log'
+			get-error-injection':get error injection'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme ocp options" _ocp

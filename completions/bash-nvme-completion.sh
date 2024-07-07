@@ -1487,6 +1487,9 @@ plugin_ocp_opts () {
 		"tcg-configuration-log")
 		opts+=" --output-file= -o"
 			;;
+		"get-error-injection")
+		opts+=" --sel= -s --no-uuid -n"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1564,7 +1567,8 @@ _nvme_subcmds () {
 			vs-fw-activate-history device-capability-log \
 			set-dssd-power-state-feature get-dssd-power-state-feature \
 			telemetry-string-log set-telemetry-profile \
-			set-dssd-async-event-config get-dssd-async-event-config"
+			set-dssd-async-event-config get-dssd-async-event-config \
+			get-error-injection"
 	)
 
 	# Associative array mapping plugins to corresponding option completions
