@@ -163,26 +163,6 @@ struct set_reg_config {
 	__u32 pmrmscu;
 };
 
-struct nvme_config {
-	char *output_format;
-	int verbose;
-	__u32 timeout;
-};
-
-#define NVME_ARGS(n, ...)                                                              \
-	struct argconfig_commandline_options n[] = {                                   \
-		OPT_INCR("verbose",      'v', &nvme_cfg.verbose,       verbose),       \
-		OPT_FMT("output-format", 'o', &nvme_cfg.output_format, output_format), \
-		##__VA_ARGS__,                                                         \
-		/*                                                                     \
-		 * the ordering of the arguments matters, as the argument parser uses  \
-		 * the first match, thus any command which defines -t shorthand will   \
-		 * match first.                                                        \
-		 */                                                                    \
-		OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout),       \
-		OPT_END()                                                              \
-	}
-
 static const char nvme_version_string[] = NVME_VERSION;
 
 static struct plugin builtin = {
@@ -205,6 +185,9 @@ static struct program nvme = {
 };
 
 const char *output_format = "Output format: normal|json|binary";
+const char *timeout = "timeout value, in milliseconds";
+const char *verbose = "Increase output verbosity";
+
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
 static const char *block_count = "number of blocks (zeroes based) on device to access";
@@ -247,10 +230,8 @@ static const char *secp = "security protocol (cf. SPC-4)";
 static const char *spsp = "security-protocol-specific (cf. SPC-4)";
 static const char *start_block = "64-bit LBA of first block to access";
 static const char *storage_tag = "storage tag for end-to-end PI";
-static const char *timeout = "timeout value, in milliseconds";
 static const char *uuid_index = "UUID index";
 static const char *uuid_index_specify = "specify uuid index";
-static const char *verbose = "Increase output verbosity";
 static const char dash[51] = {[0 ... 49] = '=', '\0'};
 static const char space[51] = {[0 ... 49] = ' ', '\0'};
 static const char *offset = "offset of the requested register";
@@ -270,7 +251,7 @@ static const char *pmrctl = "PMRCTL=0xe04 register offset";
 static const char *pmrmscl = "PMRMSCL=0xe14 register offset";
 static const char *pmrmscu = "PMRMSCU=0xe18 register offset";
 
-static struct nvme_config nvme_cfg = {
+struct nvme_config nvme_cfg = {
 	.output_format = "normal",
 };
 
