@@ -665,8 +665,8 @@ static const char *eol_plp_failure_mode_to_string(__u8 mode)
 	return "Reserved";
 }
 
-static int eol_plp_failure_mode_get(struct nvme_dev *dev, const __u32 nsid,
-				    const __u8 fid, __u8 sel)
+static int eol_plp_failure_mode_get(struct nvme_dev *dev, const __u32 nsid, const __u8 fid,
+				    __u8 sel, bool uuid)
 {
 	__u32 result;
 	int err;
@@ -684,6 +684,15 @@ static int eol_plp_failure_mode_get(struct nvme_dev *dev, const __u32 nsid,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= &result,
 	};
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &args.uuidx);
+		if (err || !args.uuidx) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
 
 	err = nvme_get_features(&args);
 	if (!err) {
@@ -793,7 +802,8 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 					       cfg.save,
 					       !argconfig_parse_seen(opts, "no-uuid"));
 	else
-		err = eol_plp_failure_mode_get(dev, nsid, fid, cfg.sel);
+		err = eol_plp_failure_mode_get(dev, nsid, fid, cfg.sel,
+					       !argconfig_parse_seen(opts, "no-uuid"));
 
 	dev_close(dev);
 
