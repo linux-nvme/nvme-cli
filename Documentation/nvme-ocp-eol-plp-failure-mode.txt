@@ -11,7 +11,7 @@ SYNOPSIS
 [verse]
 'nvme ocp eol-plp-failure-mode' <device> [--mode=<mode> | -m <mode>]
 			[--no-uuid | -n] [--save | -s]
-			[--sel=<select> | -s <select>]
+			[--sel=<select> | -S <select>]
 
 DESCRIPTION
 -----------
