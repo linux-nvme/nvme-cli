@@ -23,6 +23,7 @@
 #include "linux/types.h"
 #include "util/types.h"
 #include "nvme-print.h"
+#include "nvme-wrap.h"
 
 #include "ocp-smart-extended-log.h"
 #include "ocp-clear-features.h"
@@ -112,6 +113,82 @@ struct __packed feature_latency_monitor {
 	__u8  latency_monitor_feature_enable;
 	__u8  reserved[4083];
 };
+
+struct erri_entry {
+	union {
+		__u8 flags;
+		struct {
+			__u8 enable:1;
+			__u8 single:1;
+			__u8 rsvd2:6;
+		};
+	};
+	__u8 rsvd1;
+	__le16 type;
+	union {
+		__u8 specific[28];
+		struct {
+			__le16 nrtdp;
+			__u8 rsvd4[26];
+		};
+	};
+};
+
+#define ERRI_ENTRIES_MAX 127
+
+enum erri_type {
+	ERRI_TYPE_CPU_CTRL_HANG = 1,
+	ERRI_TYPE_NAND_HANG,
+	ERRI_TYPE_PLP_DEFECT,
+	ERRI_TYPE_LOGICAL_FIRMWARE_ERROR,
+	ERRI_TYPE_DRAM_CORRUPT_CRIT,
+	ERRI_TYPE_DRAM_CORRUPT_NON_CRIT,
+	ERRI_TYPE_NAND_CORRUPT,
+	ERRI_TYPE_SRAM_CORRUPT,
+	ERRI_TYPE_HW_MALFUNCTION,
+	ERRI_TYPE_NO_MORE_NAND_SPARES,
+	ERRI_TYPE_INCOMPLETE_SHUTDOWN,
+};
+
+const char *erri_type_to_string(__le16 type)
+{
+	switch (type) {
+	case ERRI_TYPE_CPU_CTRL_HANG:
+		return "CPU/controller hang";
+	case ERRI_TYPE_NAND_HANG:
+		return "NAND hang";
+	case ERRI_TYPE_PLP_DEFECT:
+		return "PLP defect";
+	case ERRI_TYPE_LOGICAL_FIRMWARE_ERROR:
+		return "logical firmware error";
+	case ERRI_TYPE_DRAM_CORRUPT_CRIT:
+		return "DRAM corruption critical path";
+	case ERRI_TYPE_DRAM_CORRUPT_NON_CRIT:
+		return "DRAM corruption non-critical path";
+	case ERRI_TYPE_NAND_CORRUPT:
+		return "NAND corruption";
+	case ERRI_TYPE_SRAM_CORRUPT:
+		return "SRAM corruption";
+	case ERRI_TYPE_HW_MALFUNCTION:
+		return "HW malfunction";
+	case ERRI_TYPE_NO_MORE_NAND_SPARES:
+		return "no more NAND spares available";
+	case ERRI_TYPE_INCOMPLETE_SHUTDOWN:
+		return "incomplete shutdown";
+	default:
+		break;
+	}
+
+	return "unknown";
+}
+
+struct erri_get_cq_entry {
+	__u32 nume:7;
+	__u32 rsvd7:25;
+};
+
+static const char *sel = "[0-3]: current/default/saved/supported";
+static const char *no_uuid = "Skip UUID index search (UUID index not required for OCP 1.0)";
 
 static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 				   struct ssd_latency_monitor_log *log_data)
@@ -725,7 +802,6 @@ static int eol_plp_failure_mode_set(struct nvme_dev *dev, const __u32 nsid,
 			return err;
 		}
 	}
-
 
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
@@ -3767,4 +3843,83 @@ static int fw_activation_history_log(int argc, char **argv, struct command *cmd,
 				     struct plugin *plugin)
 {
 	return ocp_fw_activation_history_log(argc, argv, cmd, plugin);
+}
+
+static int error_injection_get(struct nvme_dev *dev, const __u8 sel, bool uuid)
+{
+	struct erri_get_cq_entry cq_entry;
+	int err;
+	int i;
+	const __u8 fid = 0xc0;
+
+	_cleanup_free_ struct erri_entry *entry = NULL;
+
+	struct nvme_get_features_args args = {
+		.result = (__u32 *)&cq_entry,
+		.data = entry,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.sel = sel,
+		.data_len = sizeof(*entry) * ERRI_ENTRIES_MAX,
+		.fid = fid,
+	};
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &args.uuidx);
+		if (err || !args.uuidx) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
+
+	entry = nvme_alloc(args.data_len);
+	if (!entry) {
+		nvme_show_error("malloc: %s", strerror(errno));
+		return -errno;
+	}
+
+	err = nvme_cli_get_features(dev, &args);
+	if (!err) {
+		nvme_show_result("Number of Error Injecttions (feature: %#0*x): %#0*x (%s: %d)",
+				 fid ? 4 : 2, fid, cq_entry.nume ? 10 : 8, cq_entry.nume,
+				 nvme_select_to_string(sel), cq_entry.nume);
+		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+			nvme_show_select_result(fid, *args.result);
+		for (i = 0; i < cq_entry.nume; i++) {
+			printf("Entry: %d, Flags: %x (%s%s), Type: %x (%s), NRTDP: %d\n", i,
+			       entry->flags, entry->enable ? "Enabled" : "Disabled",
+			       entry->single ? ", Single instance" : "", entry->type,
+			       erri_type_to_string(entry->type), entry->nrtdp);
+		}
+	} else {
+		nvme_show_error("Could not get feature: %#0*x.", fid ? 4 : 2, fid);
+	}
+
+	return err;
+}
+
+static int get_error_injection(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Return set of error injection";
+	int err;
+	struct config {
+		__u8 sel;
+	};
+	struct config cfg = { 0 };
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("sel", 's', &cfg.sel, sel),
+		OPT_FLAG("no-uuid", 'n', NULL, no_uuid),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	return error_injection_get(dev, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"));
 }
