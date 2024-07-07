@@ -775,14 +775,12 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 		.sel = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_BYTE("mode", 'm', &cfg.mode, mode),
-		OPT_FLAG("save", 's', &cfg.save, save),
-		OPT_BYTE("sel", 'S', &cfg.sel, sel),
-		OPT_FLAG("no-uuid", 'n', NULL,
-			 "Skip UUID index search (UUID index not required for OCP 1.0)"),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		  OPT_BYTE("mode", 'm', &cfg.mode, mode),
+		  OPT_FLAG("save", 's', &cfg.save, save),
+		  OPT_BYTE("sel", 'S', &cfg.sel, sel),
+		  OPT_FLAG("no-uuid", 'n', NULL,
+			   "Skip UUID index search (UUID index not required for OCP 1.0)"));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
