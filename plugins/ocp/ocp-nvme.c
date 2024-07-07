@@ -187,8 +187,19 @@ struct erri_get_cq_entry {
 	__u32 rsvd7:25;
 };
 
+struct erri_config {
+	char *file;
+	__u8 number;
+	__u16 type;
+	__u16 nrtdp;
+};
+
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *no_uuid = "Skip UUID index search (UUID index not required for OCP 1.0)";
+const char *data = "Error injection data structure entries";
+const char *number = "Number of valid error injection data entries";
+static const char *type = "Error injection type";
+static const char *nrtdp = "Number of reads to trigger device panic";
 
 static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 				   struct ssd_latency_monitor_log *log_data)
@@ -4038,4 +4049,99 @@ static int get_error_injection(int argc, char **argv, struct command *cmd, struc
 		return err;
 
 	return error_injection_get(dev, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"));
+}
+
+static int error_injection_set(struct nvme_dev *dev, struct erri_config *cfg, bool uuid)
+{
+	int err;
+	__u32 result;
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = 0xc0,
+		.cdw11 = cfg->number,
+		.data_len = cfg->number * sizeof(struct erri_entry),
+		.timeout = nvme_cfg.timeout,
+		.result = &result,
+	};
+
+	_cleanup_fd_ int ffd = -1;
+
+	_cleanup_free_ struct erri_entry *entry = NULL;
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &args.uuidx);
+		if (err || !args.uuidx) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
+
+	entry = nvme_alloc(args.data_len);
+	if (!entry) {
+		nvme_show_error("malloc: %s", strerror(errno));
+		return -errno;
+	}
+
+	if (cfg->file && strlen(cfg->file)) {
+		ffd = open(cfg->file, O_RDONLY);
+		if (ffd < 0) {
+			nvme_show_error("Failed to open file %s: %s", cfg->file, strerror(errno));
+			return -EINVAL;
+		}
+		err = read(ffd, entry, args.data_len);
+		if (err < 0) {
+			nvme_show_error("failed to read data buffer from input file: %s",
+					strerror(errno));
+			return -errno;
+		}
+	} else {
+		entry->enable = 1;
+		entry->single = 1;
+		entry->type = cfg->type;
+		entry->nrtdp = cfg->nrtdp;
+	}
+
+	args.data = entry;
+
+	err = nvme_set_features(&args);
+	if (err) {
+		if (err < 0)
+			nvme_show_error("set-error-injection: %s", nvme_strerror(errno));
+		else if (err > 0)
+			nvme_show_status(err);
+		return err;
+	}
+
+	printf("set-error-injection, data: %s, number: %d, uuid: %d, type: %d, nrtdp: %d\n",
+	       cfg->file, cfg->number, args.uuidx, cfg->type, cfg->nrtdp);
+	if (args.data)
+		d(args.data, args.data_len, 16, 1);
+
+	return 0;
+}
+
+static int set_error_injection(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Inject error conditions";
+	int err;
+	struct erri_config cfg = {
+		.number = 1,
+	};
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	NVME_ARGS(opts,
+		  OPT_FILE("data", 'd', &cfg.file, data),
+		  OPT_BYTE("number", 'n', &cfg.number, number),
+		  OPT_FLAG("no-uuid", 'N', NULL, no_uuid),
+		  OPT_SHRT("type", 't', &cfg.type, type),
+		  OPT_SHRT("nrtdp", 'r', &cfg.nrtdp, nrtdp));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	return error_injection_set(dev, &cfg, !argconfig_parse_seen(opts, "no-uuid"));
 }
