@@ -766,7 +766,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 			   "No argument prints current mode.";
 	const char *mode = "[0-3]: default/rom/wtm/normal";
 	const char *save = "Specifies that the controller shall save the attribute";
-	const char *sel = "[0-3,8]: current/default/saved/supported/changed";
+	const char *sel = "[0-3]: current/default/saved/supported";
 	const __u32 nsid = 0;
 	const __u8 fid = 0xc2;
 	struct nvme_dev *dev;
