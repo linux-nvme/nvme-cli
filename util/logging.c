@@ -92,15 +92,14 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	struct timeval end;
 	int err;
 
-	if (log_level >= LOG_INFO)
+	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
 
 	err = ioctl(fd, ioctl_cmd, cmd);
 
-	if (log_level >= LOG_INFO) {
+	if (log_level >= LOG_DEBUG) {
 		gettimeofday(&end, NULL);
-		if (log_level >= LOG_DEBUG)
-			nvme_show_command(cmd, err);
+		nvme_show_command(cmd, err);
 		nvme_show_latency(start, end);
 	}
 
@@ -118,16 +117,15 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 	struct timeval end;
 	int err;
 
-	if (log_level >= LOG_INFO)
+	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
 
 
 	err = ioctl(fd, ioctl_cmd, cmd);
 
-	if (log_level >= LOG_INFO) {
+	if (log_level >= LOG_DEBUG) {
 		gettimeofday(&end, NULL);
-		if (log_level >= LOG_DEBUG)
-			nvme_show_command64(cmd, err);
+		nvme_show_command64(cmd, err);
 		nvme_show_latency(start, end);
 	}
 
