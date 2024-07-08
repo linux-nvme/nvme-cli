@@ -2928,10 +2928,10 @@ static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	__u32 nsid = 1;
+	__u8 lbaf;
 	unsigned int remainder;
 	char *endptr;
 	int err = -EINVAL;
-	int i;
 	int lbas;
 
 	struct nvme_identify_args args = {
@@ -2997,8 +2997,8 @@ static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
 		return err;
 	}
 
-	i = flbas & NVME_NS_FLBAS_LOWER_MASK;
-	lbas = (1 << ns->lbaf[i].ds) + ns->lbaf[i].ms;
+	nvme_id_ns_flbas_to_lbaf_inuse(flbas, &lbaf);
+	lbas = (1 << ns->lbaf[lbaf].ds) + ns->lbaf[lbaf].ms;
 
 	if (suffix_si_parse(val, &endptr, (uint64_t *)num)) {
 		nvme_show_error("Expected long suffixed integer argument for '%s-si' but got '%s'!",
