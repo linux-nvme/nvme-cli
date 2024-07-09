@@ -588,20 +588,44 @@ static int _discover_from_json_config_file(nvme_root_t r, nvme_host_t h, nvme_su
 	return ret;
 }
 
-static int discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
-					  const char *desc, bool connect,
+static int discover_from_json_config_file(nvme_root_t r, const char *hostnqn,
+					  const char *hostid, const char *desc,
+					  bool connect,
 					  const struct nvme_fabrics_config *defcfg,
 					  nvme_print_flags_t flags,
 					  bool force)
 {
+	const char *hnqn, *hid;
+	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
-	int ret = 0;
+	int ret = 0, err;
 
-	nvme_for_each_subsystem(h, s) {
-		nvme_subsystem_for_each_ctrl(s, c) {
-			ret = _discover_from_json_config_file(r, h, s, c, desc,
-					      connect, defcfg, flags, force);
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			hnqn = nvme_host_get_hostnqn(h);
+			if (hostnqn && hnqn && strcmp(hostnqn, hnqn))
+				continue;
+			hid = nvme_host_get_hostid(h);
+			if (hostid && hid && strcmp(hostid, hid))
+				continue;
+
+			nvme_subsystem_for_each_ctrl(s, c) {
+				err = _discover_from_json_config_file(
+					r, h, s, c, desc, connect, defcfg,
+					flags, force);
+
+				if (err) {
+					fprintf(stderr,
+						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
+						nvme_host_get_hostnqn(h),
+						nvme_subsystem_get_name(s),
+						nvme_ctrl_get_address(c));
+
+					if (!ret)
+						ret = err;
+				}
+			}
 		}
 	}
 
@@ -749,8 +773,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			goto out_free;
 
 		if (json_config)
-			ret = discover_from_json_config_file(r, h, desc,
-							     connect, &cfg,
+			ret = discover_from_json_config_file(r, hostnqn, hostid,
+							     desc, connect, &cfg,
 							     flags, force);
 		if (ret || access(PATH_NVMF_DISC, F_OK))
 			goto out_free;
