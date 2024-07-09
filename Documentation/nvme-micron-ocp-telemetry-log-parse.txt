@@ -1,5 +1,5 @@
-nvme-micron-ocp-telemetry-log-parse
-===================================
+nvme-micron-ocp-telemetry-log-parse(1)
+======================================
 
 NAME
 ----
