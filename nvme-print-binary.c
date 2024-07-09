@@ -297,6 +297,16 @@ static void binary_discovery_log(struct nvmf_discovery_log *log, int numrec)
 	      numrec * sizeof(struct nvmf_disc_log_entry));
 }
 
+static void binary_effects_log_pages(struct list_head *list)
+{
+	nvme_effects_log_node_t *node = NULL;
+
+	list_for_each(list, node, node) {
+		d_raw((unsigned char *)&node->csi, sizeof(node->csi));
+		d_raw((unsigned char *)&node->effects, sizeof(node->effects));
+	}
+}
+
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= binary_ana_log,
@@ -306,7 +316,7 @@ static struct print_ops binary_print_ops = {
 	.ctrl_registers			= binary_ctrl_registers,
 	.directive			= binary_directive,
 	.discovery_log			= binary_discovery_log,
-	.effects_log_list		= NULL,
+	.effects_log_list		= binary_effects_log_pages,
 	.endurance_group_event_agg_log	= binary_endurance_group_event_agg_log,
 	.endurance_group_list		= NULL,
 	.endurance_log			= binary_endurance_log,
