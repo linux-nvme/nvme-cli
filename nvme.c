@@ -9540,9 +9540,12 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		nvme_show_error("Cannot specify both --import and --export");
 		return -EINVAL;
 	} else if (cfg.export) {
-		nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
+		err = nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
+		if (err)
+			nvme_show_error("Export of TLS keys failed with '%s'",
+				nvme_strerror(errno));
 	} else if (cfg.import) {
-		import_key(cfg.keyring, fd);
+		err = import_key(cfg.keyring, fd);
 	} else {
 		nvme_show_error("Must specify either --import or --export");
 		err = -EINVAL;
