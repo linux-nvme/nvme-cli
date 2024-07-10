@@ -1,0 +1,26 @@
+---
+name: docs
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - Documentation/**
+  pull_request:
+    branches: [master]
+    paths:
+      - Documentation/**
+
+  workflow_dispatch:
+
+jobs:
+  build-docs:
+    name: build documentation
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/igaw/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: |
+          scripts/build.sh docs
