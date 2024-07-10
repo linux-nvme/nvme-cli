@@ -339,6 +339,9 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	const char *transport, *value;
 
 	transport = nvme_ctrl_get_transport(c);
+	if (!strcmp(transport, "pcie"))
+		return;
+
 	json_object_object_add(port_obj, "transport",
 			       json_object_new_string(transport));
 	value = nvme_ctrl_get_traddr(c);
@@ -432,11 +435,13 @@ static void json_update_subsys(struct json_object *subsys_array,
 	nvme_subsystem_for_each_ctrl(s, c) {
 		json_update_port(port_array, c);
 	}
-	if (json_object_array_length(port_array))
+	if (json_object_array_length(port_array)) {
 		json_object_object_add(subsys_obj, "ports", port_array);
-	else
+		json_object_array_add(subsys_array, subsys_obj);
+	} else {
 		json_object_put(port_array);
-	json_object_array_add(subsys_array, subsys_obj);
+		json_object_put(subsys_obj);
+	}
 }
 
 int json_update_config(nvme_root_t r, const char *config_file)
@@ -476,12 +481,14 @@ int json_update_config(nvme_root_t r, const char *config_file)
 		nvme_for_each_subsystem(h, s) {
 			json_update_subsys(subsys_array, s);
 		}
-		if (json_object_array_length(subsys_array))
+		if (json_object_array_length(subsys_array)) {
 			json_object_object_add(host_obj, "subsystems",
-						    subsys_array);
-		else
+					       subsys_array);
+			json_object_array_add(json_root, host_obj);
+		} else {
 			json_object_put(subsys_array);
-		json_object_array_add(json_root, host_obj);
+			json_object_put(host_obj);
+		}
 	}
 	if (!config_file) {
 		ret = json_object_to_fd(1, json_root, JSON_C_TO_STRING_PRETTY);
