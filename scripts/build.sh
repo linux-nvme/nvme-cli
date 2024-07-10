@@ -22,6 +22,7 @@ usage() {
     echo "  coverage            build coverage report"
     echo "  appimage            build AppImage target"
     echo "  distro              build libnvme and nvme-cli separately"
+    echo "  docs                build documentation"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -112,6 +113,15 @@ config_meson_appimage() {
         --buildtype="${BUILDTYPE}"              \
         --force-fallback-for=libnvme            \
         --prefix=/usr                           \
+        -Dlibnvme:werror=false                  \
+        "${BUILDDIR}"
+}
+
+config_meson_docs() {
+    CC="${CC}" "${MESON}" setup                 \
+        -Ddocs=all                              \
+        -Ddocs-build=true                       \
+        --force-fallback-for=libnvme            \
         -Dlibnvme:werror=false                  \
         "${BUILDDIR}"
 }
