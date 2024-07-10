@@ -557,7 +557,7 @@ struct nvme_subsystem *nvme_alloc_subsystem(struct nvme_host *h,
 	list_head_init(&s->ctrls);
 	list_head_init(&s->namespaces);
 	list_node_init(&s->entry);
-	list_add(&h->subsystems, &s->entry);
+	list_add_tail(&h->subsystems, &s->entry);
 	h->r->modified = true;
 	return s;
 }
@@ -641,7 +641,7 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
 	h->r = r;
-	list_add(&r->hosts, &h->entry);
+	list_add_tail(&r->hosts, &h->entry);
 	r->modified = true;
 
 	return h;
@@ -831,7 +831,7 @@ static void nvme_subsystem_set_path_ns(nvme_subsystem_t s, nvme_path_t p)
 	sprintf(n_name, "nvme%dn%d", i, nsid);
 	nvme_subsystem_for_each_ns(s, n) {
 		if (!strcmp(n_name, nvme_ns_get_name(n))) {
-			list_add(&n->paths, &p->nentry);
+			list_add_tail(&n->paths, &p->nentry);
 			p->n = n;
 		}
 	}
@@ -877,7 +877,7 @@ static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name)
 	list_node_init(&p->nentry);
 	nvme_subsystem_set_path_ns(c->s, p);
 	list_node_init(&p->entry);
-	list_add(&c->paths, &p->entry);
+	list_add_tail(&c->paths, &p->entry);
 	return 0;
 }
 
@@ -1680,7 +1680,7 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			     host_traddr, host_iface, trsvcid);
 	if (c) {
 		c->s = s;
-		list_add(&s->ctrls, &c->entry);
+		list_add_tail(&s->ctrls, &c->entry);
 		s->h->r->modified = true;
 	}
 	return c;
@@ -1896,7 +1896,7 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
 		c->discovery_ctrl = true;
 	c->s = s;
-	list_add(&s->ctrls, &c->entry);
+	list_add_tail(&s->ctrls, &c->entry);
 	return ret;
 }
 
@@ -2670,7 +2670,7 @@ static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 	}
 	n->s = c->s;
 	n->c = c;
-	list_add(&c->namespaces, &n->entry);
+	list_add_tail(&c->namespaces, &n->entry);
 	return 0;
 }
 
@@ -2693,7 +2693,7 @@ static void nvme_subsystem_set_ns_path(nvme_subsystem_t s, nvme_ns_t n)
 			if (ret != 3)
 				continue;
 			if (ns_ctrl == p_subsys && ns_nsid == p_nsid) {
-				list_add(&n->paths, &p->nentry);
+				list_add_tail(&n->paths, &p->nentry);
 				p->n = n;
 			}
 		}
@@ -2731,7 +2731,7 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 		__nvme_free_ns(_n);
 	}
 	n->s = s;
-	list_add(&s->namespaces, &n->entry);
+	list_add_tail(&s->namespaces, &n->entry);
 	nvme_subsystem_set_ns_path(s, n);
 	return 0;
 }
