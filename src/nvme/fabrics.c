@@ -1402,8 +1402,11 @@ char *nvmf_hostnqn_from_file()
 {
 	char *hostnqn = getenv("LIBNVME_HOSTNQN");
 
-	if (hostnqn)
+	if (hostnqn) {
+		if (!strcmp(hostnqn, ""))
+			return NULL;
 		return strdup(hostnqn);
+	}
 
 	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
 }
@@ -1412,8 +1415,11 @@ char *nvmf_hostid_from_file()
 {
 	char *hostid = getenv("LIBNVME_HOSTID");
 
-	if (hostid)
+	if (hostid) {
+		if (!strcmp(hostid, ""))
+			return NULL;
 		return strdup(hostid);
+	}
 
 	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
 }
