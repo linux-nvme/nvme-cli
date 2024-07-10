@@ -35,4 +35,25 @@ if diff.found()
             depends : config_dump,
         )
     endforeach
+
+    test_hostnqn_order = executable(
+        'test-hostnqn-order',
+        ['hostnqn-order.c'],
+        dependencies: libnvme_dep,
+        include_directories: [incdir],
+    )
+
+    test(
+        'hostnqn-order',
+        config_diff,
+        args : [
+            meson.current_build_dir(),
+            test_hostnqn_order.full_path(),
+            files('data/hostnqn-order.tar.xz'),
+            files('data/hostnqn-order.json'),
+            files('data/hostnqn-order.out'),
+        ],
+        depends : test_hostnqn_order,
+    )
+
 endif
