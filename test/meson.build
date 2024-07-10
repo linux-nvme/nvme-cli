@@ -109,4 +109,5 @@ subdir('nbft')
 
 if json_c_dep.found()
     subdir('sysfs')
+    subdir('config')
 endif
