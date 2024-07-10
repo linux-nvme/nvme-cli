@@ -7,30 +7,30 @@
 
 diff = find_program('diff', required : false)
 if diff.found()
-    sysfs_tree_print = executable(
-        'sysfs-tree-print',
-        ['sysfs.c'],
+    tree_dump = executable(
+        'test-tree-dump',
+        ['tree-dump.c'],
         dependencies: libnvme_dep,
         include_directories: [incdir],
     )
 
-    sysfs_files= [
-        'nvme-sysfs-tw-carbon-6.8.0-rc1+'
+    tree_data = [
+        'tree-pcie',
     ]
 
-    sysfs_tree_diff = find_program('sysfs-tree-diff.sh')
+    tree_diff = find_program('tree-diff.sh')
 
-    foreach t_file : sysfs_files
+    foreach t_file : tree_data
         test(
-            'sysfs',
-            sysfs_tree_diff,
+            t_file,
+            tree_diff,
             args : [
                 meson.current_build_dir(),
-                sysfs_tree_print.full_path(),
+                tree_dump.full_path(),
                 files('data'/t_file + '.tar.xz'),
                 files('data'/t_file + '.out'),
             ],
-            depends : sysfs_tree_print,
+            depends : tree_dump,
         )
     endforeach
 endif

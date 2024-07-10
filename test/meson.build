@@ -108,5 +108,5 @@ subdir('ioctl')
 subdir('nbft')
 
 if json_c_dep.found()
-  subdir('sysfs')
+    subdir('sysfs')
 endif
