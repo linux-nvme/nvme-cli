@@ -21,6 +21,7 @@ usage() {
     echo "                      and build them as shared libaries"
     echo "  cross               use cross toolchain to build"
     echo "  coverage            build coverage report"
+    echo "  docs                build documentation"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -107,6 +108,13 @@ config_meson_coverage() {
         --wrap-mode=nofallback                  \
         -Dlibdbus=enabled                       \
         -Db_coverage=true                       \
+        "${BUILDDIR}"
+}
+
+config_meson_docs() {
+    CC="${CC}" "${MESON}" setup                 \
+        -Ddocs=all                              \
+        -Ddocs-build=true                       \
         "${BUILDDIR}"
 }
 
