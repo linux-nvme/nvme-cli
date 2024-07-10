@@ -16,6 +16,7 @@ if diff.found()
 
     config_data = [
         'config-pcie',
+        'config-pcie-with-tcp-config',
     ]
 
     config_diff = find_program('config-diff.sh')
