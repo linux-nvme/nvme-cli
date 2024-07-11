@@ -27,7 +27,7 @@ SYNOPSIS
 			[--keep-alive-tmo=<#> | -k <#>]
 			[--reconnect-delay=<#> | -c <#>]
 			[--ctrl-loss-tmo=<#> | -l <#>]
-			[--duplicate-connect | -D] [--disable-sqflow | -d]
+			[--duplicate-connect | -D] [--disable-sqflow ]
 			[--hdr-digest | -g] [--data-digest | -G]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
@@ -168,7 +168,6 @@ OPTIONS
 	Allows duplicated connections between same transport host and subsystem
 	port.
 
--d::
 --disable-sqflow::
 	Disables SQ flow control to omit head doorbell update for submission
 	queues when sending nvme completions.

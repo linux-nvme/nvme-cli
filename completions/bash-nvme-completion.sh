@@ -409,7 +409,7 @@ nvme_list_opts () {
 			--nr-poll-queues= -P --queue-size= -Q \
 			--keep-alive-tmo= -k --reconnect-delay= -r \
 			--ctrl-loss-tmo= -l --fast-io-fail-tmo= -f \
-			--tos= -T --duplicate-connect -D --disable-sqflow -d\
+			--tos= -T --duplicate-connect -D --disable-sqflow \
 			--hdr-digest -g --data-digest -G --output-format= -o"
 			;;
 		"dim")
