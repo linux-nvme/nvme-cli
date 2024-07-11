@@ -667,6 +667,15 @@ static int nvme_read_volatile_config(nvme_root_t r)
 	return ret;
 }
 
+static int nvme_read_config_checked(nvme_root_t r, const char *filename)
+{
+	if (!access(filename, F_OK))
+		return -ENOENT;
+	if (nvme_read_config(r, filename))
+		return -errno;
+	return 0;
+}
+
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
@@ -731,7 +740,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (context)
 		nvme_root_set_application(r, context);
 
-	if (!nvme_read_config(r, config_file))
+	if (!nvme_read_config_checked(r, config_file))
 		json_config = true;
 	if (!nvme_read_volatile_config(r))
 		json_config = true;
