@@ -27,7 +27,7 @@ SYNOPSIS
 			[--nr-poll-queues=<#> | -P <#>]
 			[--queue-size=<#> | -Q <#>] [--keyring=<#>]
 			[--tls_key=<#>] [--hdr-digest | -g] [--data-digest | -G]
-			[--persistent | -p] [--quiet | -S] [--tls] [--concat]
+			[--persistent | -p] [--quiet] [--tls] [--concat]
 			[--dump-config | -O] [--output-format=<fmt> | -o <fmt>]
 			[--force] [--nbft] [--no-nbft] [--nbft-path=<STR>]
 			[--context=<STR>]
@@ -209,7 +209,6 @@ OPTIONS
 --concat::
 	Enable secure concatenation (TCP).
 
--S::
 --quiet::
 	Suppress already connected errors.
 
