@@ -690,6 +690,12 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 	if (context)
 		nvme_root_set_application(r, context);
+
+	if (!nvme_read_config(r, config_file))
+		json_config = true;
+	if (!nvme_read_volatile_config(r))
+		json_config = true;
+
 	nvme_root_skip_namespaces(r);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
@@ -698,11 +704,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 				nvme_strerror(errno));
 		return ret;
 	}
-
-	if (!nvme_read_config(r, config_file))
-		json_config = true;
-	if (!nvme_read_volatile_config(r))
-		json_config = true;
 
 	ret = nvme_host_get_ids(r, hostnqn, hostid, &hnqn, &hid);
 	if (ret < 0)
@@ -911,6 +912,10 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	}
 	if (context)
 		nvme_root_set_application(r, context);
+
+	nvme_read_config(r, config_file);
+	nvme_read_volatile_config(r);
+
 	nvme_root_skip_namespaces(r);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
@@ -919,8 +924,6 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 				nvme_strerror(errno));
 		return ret;
 	}
-	nvme_read_config(r, config_file);
-	nvme_read_volatile_config(r);
 
 	ret = nvme_host_get_ids(r, hostnqn, hostid, &hnqn, &hid);
 	if (ret < 0)
@@ -1206,6 +1209,9 @@ int nvmf_config(const char *desc, int argc, char **argv)
 			nvme_strerror(errno));
 		return -errno;
 	}
+
+	nvme_read_config(r, config_file);
+
 	if (scan_tree) {
 		nvme_root_skip_namespaces(r);
 		ret = nvme_scan_topology(r, NULL, NULL);
@@ -1217,7 +1223,6 @@ int nvmf_config(const char *desc, int argc, char **argv)
 			return ret;
 		}
 	}
-	nvme_read_config(r, config_file);
 
 	if (modify_config) {
 		nvme_host_t h;
