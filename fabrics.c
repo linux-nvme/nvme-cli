@@ -115,7 +115,7 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_INT("keyring",              0, &c.keyring,            nvmf_keyring),         \
 		OPT_INT("tls_key",              0, &c.tls_key,            nvmf_tls_key),         \
 		OPT_FLAG("duplicate-connect", 'D', &c.duplicate_connect,  nvmf_dup_connect),     \
-		OPT_FLAG("disable-sqflow",    'd', &c.disable_sqflow,     nvmf_disable_sqflow),  \
+		OPT_FLAG("disable-sqflow",      0, &c.disable_sqflow,     nvmf_disable_sqflow),  \
 		OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),      \
 		OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest),     \
 		OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls),             \
