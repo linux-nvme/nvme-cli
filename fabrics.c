@@ -421,7 +421,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		  OPT_FMT("output-format", 'o', &format,     output_format),
 		  OPT_FILE("raw",          'r', &raw,        "save raw output to file"),
 		  OPT_FLAG("persistent",   'p', &persistent, "persistent discovery connection"),
-		  OPT_FLAG("quiet",        'S', &quiet,      "suppress already connected errors"),
+		  OPT_FLAG("quiet",          0, &quiet,      "suppress already connected errors"),
 		  OPT_INCR("verbose",      'v', &verbose,    "Increase logging verbosity"),
 		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
 
@@ -704,7 +704,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		  OPT_FMT("output-format", 'o', &format,              output_format),
 		  OPT_FILE("raw",          'r', &raw,                 "save raw output to file"),
 		  OPT_FLAG("persistent",   'p', &persistent,          "persistent discovery connection"),
-		  OPT_FLAG("quiet",        'S', &quiet,               "suppress already connected errors"),
+		  OPT_FLAG("quiet",          0, &quiet,               "suppress already connected errors"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_INCR("verbose",      'v', &verbose,             "Increase logging verbosity"),
 		  OPT_FLAG("dump-config",  'O', &dump_config,         "Dump configuration file to stdout"),
