@@ -365,11 +365,15 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 					nvme_free_ctrl(child);
 				}
 			} else if (errno == ENVME_CONNECT_ALREADY && !quiet) {
-				char *traddr = log->entries[i].traddr;
+				const char *subnqn = log->entries[i].subnqn;
+				const char *trtype = nvmf_trtype_str(log->entries[i].trtype);
+				const char *traddr = log->entries[i].traddr;
+				const char *trsvcid = log->entries[i].trsvcid;
 
 				fprintf(stderr,
-					"traddr=%s is already connected\n",
-					traddr);
+					"already connected to hostnqn=%s,nqn=%s,transport=%s,traddr=%s,trsvcid=%s\n",
+					nvme_host_get_hostnqn(h), subnqn,
+					trtype, traddr, trsvcid);
 			}
 		}
 	}
