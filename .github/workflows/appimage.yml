@@ -17,6 +17,13 @@ jobs:
       image: ghcr.io/igaw/linux-nvme/debian:latest
     steps:
      - uses: actions/checkout@v4
+       with:
+         fetch-depth: 0
+     - name: fixup permissions
+       env:
+         GITHUB_WORKSPACE: ${{ github.workspace }}
+       run: |
+         git config --global --add safe.directory "${GITHUB_WORKSPACE}"
      - name: build
        run: |
          scripts/build.sh appimage
