@@ -23,6 +23,7 @@ usage() {
     echo "  appimage            build AppImage target"
     echo "  distro              build libnvme and nvme-cli separately"
     echo "  docs                build documentation"
+    echo "  static              build a static binary"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -123,6 +124,16 @@ config_meson_docs() {
         -Ddocs-build=true                       \
         --force-fallback-for=libnvme            \
         -Dlibnvme:werror=false                  \
+        "${BUILDDIR}"
+}
+
+config_meson_static() {
+    CC="${CC}" "${MESON}" setup                 \
+        --buildtype=release                     \
+        --default-library=static                \
+        --wrap-mode=forcefallback               \
+        -Dc_link_args="-static"                 \
+        -Dlibnvme:keyutils=disabled             \
         "${BUILDDIR}"
 }
 
