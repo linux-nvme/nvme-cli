@@ -352,7 +352,8 @@ if meson.version().version_compare('>=0.53.0')
     }
     summary(dep_dict, section: 'Dependencies')
     conf_dict = {
-        'pdc enabled':       get_option('pdc-enabled')
+        'git version':       conf.get('GIT_VERSION'),
+        'pdc enabled':       get_option('pdc-enabled'),
     }
     summary(conf_dict, section: 'Configuration')
 endif
