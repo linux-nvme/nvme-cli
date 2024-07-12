@@ -7691,7 +7691,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	_cleanup_free_ void *mbuffer = NULL;
 	int err = 0;
 	_cleanup_fd_ int dfd = -1, mfd = -1;
-	int flags;
+	int flags, pi_size;
 	int mode = 0644;
 	__u16 control = 0, nblocks = 0;
 	__u32 dsmgmt = 0;
@@ -7887,13 +7887,23 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	logical_block_size = 1 << ns->lbaf[lba_index].ds;
 	ms = ns->lbaf[lba_index].ms;
+
+	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
+	if (!nvm_ns)
+		return -ENOMEM;
+
+	err = nvme_identify_ns_csi(dev_fd(dev), cfg.namespace_id, 0, NVME_CSI_NVM, nvm_ns);
+	if (!err)
+		get_pif_sts(ns, nvm_ns, &pif, &sts);
+
+	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
 	if (NVME_FLBAS_META_EXT(ns->flbas)) {
 		/*
-		 * No meta data is transferred for PRACT=1 and MD=8:
+		 * No meta data is transferred for PRACT=1 and MD=PI size:
 		 *   5.2.2.1 Protection Information and Write Commands
 		 *   5.2.2.2 Protection Information and Read Commands
 		 */
-		if (!((cfg.prinfo & 0x8) != 0 && ms == 8))
+		if (!((cfg.prinfo & 0x8) != 0 && ms == pi_size))
 			logical_block_size += ms;
 	}
 
@@ -7918,16 +7928,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (!buffer)
 		return -ENOMEM;
 
-	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
-	if (!nvm_ns)
-		return -ENOMEM;
-
 	if (cfg.metadata_size) {
-		err = nvme_identify_ns_csi(dev_fd(dev), 1, 0, NVME_CSI_NVM, nvm_ns);
-		if (!err) {
-			get_pif_sts(ns, nvm_ns, &pif, &sts);
-		}
-
 		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;
 		if (ms && cfg.metadata_size < mbuffer_size)
 			nvme_show_error("Rounding metadata size to fit block count (%lld bytes)",
