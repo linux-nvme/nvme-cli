@@ -8,8 +8,8 @@ if want_docs != 'false'
   if want_docs_build
     kernel_doc = find_program(top_source_dir + 'scripts/kernel-doc')
 
-    conf = configuration_data()
-    conf.set('SYSCONFDIR', sysconfdir)
+    rst_conf = configuration_data()
+    rst_conf.set('SYSCONFDIR', sysconfdir)
 
     if want_docs == 'all' or want_docs == 'rst' or want_docs == 'html'
       foreach apif : api_files
@@ -17,7 +17,7 @@ if want_docs != 'false'
         subst = configure_file(
             input: afile,
             output: '@BASENAME@.subst',
-            configuration: conf)
+            configuration: rst_conf)
         rst = custom_target(
           apif.underscorify() + '_rst',
           input: subst,
