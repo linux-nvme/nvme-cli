@@ -46,7 +46,7 @@ conf = configuration_data()
 
 version_tag = get_option('version-tag')
 if version_tag != ''
-        conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
+    conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
 else
     r = run_command('scripts/meson-vcs-tag.sh',
                     meson.current_source_dir(),
@@ -306,4 +306,8 @@ if meson.version().version_compare('>=0.53.0')
         'Python 3':          py3_dep.found(),
     }
     summary(dep_dict, section: 'Dependencies')
+    conf_dict = {
+        'git version':       conf.get('GIT_VERSION'),
+    }
+    summary(conf_dict, section: 'Configuration')
 endif
