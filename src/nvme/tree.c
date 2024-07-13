@@ -300,6 +300,7 @@ nvme_root_t nvme_create_root(FILE *fp, int log_level)
 int nvme_read_config(nvme_root_t r, const char *config_file)
 {
 	int err = -1;
+	int tmp;
 
 	if (!r || !config_file) {
 		errno = ENODEV;
@@ -311,13 +312,17 @@ int nvme_read_config(nvme_root_t r, const char *config_file)
 		errno = ENOMEM;
 		return err;
 	}
+
+	tmp = errno;
 	err = json_read_config(r, config_file);
 	/*
 	 * The json configuration file is optional,
 	 * so ignore errors when opening the file.
 	 */
-	if (err < 0 && errno != EPROTO)
-		err = 0;
+	if (err < 0 && errno != EPROTO) {
+		errno = tmp;
+		return 0;
+	}
 
 	return err;
 }
