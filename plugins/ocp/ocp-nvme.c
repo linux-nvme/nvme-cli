@@ -218,7 +218,7 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 	printf("  Active Threshold D                 %d ms\n",
 	       C3_ACTIVE_THRESHOLD_INCREMENT *
 	       le16_to_cpu(log_data->active_threshold_d+1));
-	printf("  Active Latency Configuration       0x%x \n",
+	printf("  Active Latency Configuration       0x%x\n",
 	       le16_to_cpu(log_data->active_latency_config));
 	printf("  Active Latency Minimum Window      %d ms\n",
 	       C3_MINIMUM_WINDOW_INCREMENT *
@@ -889,6 +889,13 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 /// Telemetry Log
+//global buffers
+static __le64 total_log_page_sz;
+static struct telemetry_str_log_format *log_data;
+
+__u8 *ptelemetry_buffer;
+__u8 *pstring_buffer;
+__u8 *pC9_string_buffer;
 
 static void get_serial_number(struct nvme_id_ctrl *ctrl, char *sn)
 {
@@ -953,6 +960,7 @@ static int get_telemetry_data(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
 	__u32 numd = (data_len >> 2) - 1;
 	__u16 numdu = numd >> 16;
 	__u16 numdl = numd & 0xffff;
+
 	cmd.cdw10 = tele_type |
 			(nLSP & 0x0F) << 8 |
 			(nRAE & 0x01) << 15 |
@@ -968,6 +976,7 @@ static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
 {
 	if (da1) {
 		int i = 0;
+
 		if (tele_type == TELEMETRY_TYPE_HOST)
 			printf("============ Telemetry Host Data area 1 ============\n");
 		else
@@ -1035,7 +1044,7 @@ static void print_telemetry_da_stat(struct telemetry_stats_desc *da_stat,
 		else
 			printf("========= Telemetry Controller Data Area %d Statistics =========\n",
 				data_area);
-		while((i + 8) < buf_size) {
+		while ((i + 8) < buf_size) {
 			print_stats_desc(next_da_stat);
 			i += 8 + ((next_da_stat->size) * 4);
 			next_da_stat = (struct telemetry_stats_desc *)((__u64)da_stat + i);
@@ -1064,7 +1073,7 @@ static void print_telemetry_da_fifo(struct telemetry_event_desc *da_fifo,
 				da, index);
 
 
-		while((i + 4) < buf_size) {
+		while ((i + 4) < buf_size) {
 			/* Print Event Data */
 			print_telemetry_fifo_event(next_da_fifo->class, /* Event class type */
 				next_da_fifo->id,                           /* Event ID         */
@@ -1464,43 +1473,286 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 	return err;
 }
 
+static int get_telemetry_log_page_data(struct nvme_dev *dev, int tele_type)
+{
+	char file_path[PATH_MAX];
+	void *telemetry_log;
+	const size_t bs = 512;
+	struct nvme_telemetry_log *hdr;
+	size_t full_size, offset = bs;
+	int err, fd;
+
+	if ((tele_type == TELEMETRY_TYPE_HOST_0) || (tele_type == TELEMETRY_TYPE_HOST_1))
+		tele_type = TELEMETRY_TYPE_HOST;
+
+	int log_id = (tele_type == TELEMETRY_TYPE_HOST ? NVME_LOG_LID_TELEMETRY_HOST :
+			NVME_LOG_LID_TELEMETRY_CTRL);
+
+	hdr = malloc(bs);
+	telemetry_log = malloc(bs);
+	if (!hdr || !telemetry_log) {
+		fprintf(stderr, "Failed to allocate %zu bytes for log: %s\n",
+			bs, strerror(errno));
+		err = -ENOMEM;
+		goto exit_status;
+	}
+	memset(hdr, 0, bs);
+
+	sprintf(file_path, DEFAULT_TELEMETRY_BIN);
+	fd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	if (fd < 0) {
+		fprintf(stderr, "Failed to open output file %s: %s!\n",
+			file_path, strerror(errno));
+		err = fd;
+		goto exit_status;
+	}
+
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = hdr,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = log_id,
+		.len = bs,
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_TELEM_HOST_LSP_CREATE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = true,
+		.ot = false,
+	};
+
+	err = nvme_get_log(&args);
+	if (err < 0)
+		nvme_show_error("Failed to fetch the log from drive.\n");
+	else if (err > 0) {
+		nvme_show_status(err);
+		nvme_show_error("Failed to fetch telemetry-header. Error:%d.\n", err);
+		goto close_fd;
+	}
+
+	err = write(fd, (void *)hdr, bs);
+	if (err != bs) {
+		nvme_show_error("Failed to write data to file.\n");
+		goto close_fd;
+	}
+
+	full_size = (le16_to_cpu(hdr->dalb3) * bs) + offset;
+
+	while (offset != full_size) {
+		args.log = telemetry_log;
+		args.lpo = offset;
+		args.lsp = NVME_LOG_LSP_NONE;
+		err = nvme_get_log(&args);
+		if (err < 0) {
+			nvme_show_error("Failed to fetch the log from drive.\n");
+			break;
+		} else if (err > 0) {
+			nvme_show_error("Failed to fetch telemetry-log.\n");
+			nvme_show_status(err);
+			break;
+		}
+
+		err = write(fd, (void *)telemetry_log, bs);
+		if (err != bs) {
+			nvme_show_error("Failed to write data to file.\n");
+			break;
+		}
+		err = 0;
+		offset += bs;
+	}
+
+close_fd:
+	close(fd);
+exit_status:
+	free(hdr);
+	free(telemetry_log);
+
+	return err;
+}
+
+static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_bin)
+{
+	int ret = 0, fd;
+	__u8 *header_data;
+	struct telemetry_str_log_format *log_data;
+	__le64 stat_id_str_table_ofst = 0;
+	__le64 event_str_table_ofst = 0;
+	__le64 vu_event_str_table_ofst = 0;
+	__le64 ascii_table_ofst = 0;
+	char file_path[PATH_MAX];
+
+	header_data = (__u8 *)malloc(sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
+	if (!header_data) {
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		return -1;
+	}
+	memset(header_data, 0, sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
+
+	ret = nvme_get_log_simple(dev_fd(dev), C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
+				  C9_TELEMETRY_STR_LOG_LEN, header_data);
+
+	if (!ret) {
+		log_data = (struct telemetry_str_log_format *)header_data;
+		if (print_data) {
+			printf("Statistics Identifier String Table Size = %lld\n",
+			       log_data->sitsz);
+			printf("Event String Table Size = %lld\n", log_data->estsz);
+			printf("VU Event String Table Size = %lld\n", log_data->vu_eve_st_sz);
+			printf("ASCII Table Size = %lld\n", log_data->asctsz);
+		}
+
+		//Calculating the offset for dynamic fields.
+
+		stat_id_str_table_ofst = log_data->sits * 4;
+		event_str_table_ofst = log_data->ests * 4;
+		vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
+		ascii_table_ofst = log_data->ascts * 4;
+		total_log_page_sz = C9_TELEMETRY_STR_LOG_LEN +
+		(log_data->sitsz * 4) + (log_data->estsz * 4) +
+		(log_data->vu_eve_st_sz * 4) + (log_data->asctsz * 4);
+
+		if (print_data) {
+			printf("stat_id_str_table_ofst = %lld\n", stat_id_str_table_ofst);
+			printf("event_str_table_ofst = %lld\n", event_str_table_ofst);
+			printf("vu_event_str_table_ofst = %lld\n", vu_event_str_table_ofst);
+			printf("ascii_table_ofst = %lld\n", ascii_table_ofst);
+			printf("total_log_page_sz = %lld\n", total_log_page_sz);
+		}
+
+		pC9_string_buffer = (__u8 *)malloc(sizeof(__u8) * total_log_page_sz);
+		if (!pC9_string_buffer) {
+			fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+			return -1;
+		}
+		memset(pC9_string_buffer, 0, sizeof(__u8) * total_log_page_sz);
+
+		ret = nvme_get_log_simple(dev_fd(dev), C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
+					  total_log_page_sz, pC9_string_buffer);
+	} else
+		fprintf(stderr, "ERROR : OCP : Unable to read C9 data.\n");
+
+	if (save_bin) {
+		sprintf(file_path, DEFAULT_STRING_BIN);
+		fd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		if (fd < 0) {
+			fprintf(stderr, "Failed to open output file %s: %s!\n",
+				file_path, strerror(errno));
+			goto exit_status;
+		}
+
+		ret = write(fd, (void *)pC9_string_buffer, total_log_page_sz);
+		if (ret != total_log_page_sz)
+			fprintf(stderr, "Failed to flush all data to file!\n");
+
+		close(fd);
+	}
+
+exit_status:
+	free(header_data);
+	return 0;
+}
+
+int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
+{
+	int status = 0;
+	long telemetry_buffer_size = 0;
+	long string_buffer_size = 0;
+	enum nvme_print_flags fmt;
+	unsigned char log_id;
+
+	if (options->telemetry_log) {
+		if (strstr((const char *)options->telemetry_log, "bin")) {
+			// Read the data from the telemetry binary file
+			ptelemetry_buffer =
+				read_binary_file(NULL, (const char *)options->telemetry_log,
+						 &telemetry_buffer_size, 1);
+			if (ptelemetry_buffer == NULL) {
+				nvme_show_error("Failed to read telemetry-log.\n");
+				return -1;
+			}
+		}
+	} else {
+		nvme_show_error("telemetry-log is empty.\n");
+		return -1;
+	}
+
+	log_id = ptelemetry_buffer[0];
+	if ((log_id != NVME_LOG_LID_TELEMETRY_HOST) && (log_id != NVME_LOG_LID_TELEMETRY_CTRL)) {
+		nvme_show_error("Invalid LogPageId [0x%02X]\n", log_id);
+		return -1;
+	}
+
+	if (options->string_log) {
+		// Read the data from the string binary file
+		if (strstr((const char *)options->string_log, "bin")) {
+			pstring_buffer = read_binary_file(NULL, (const char *)options->string_log,
+							  &string_buffer_size, 1);
+			if (pstring_buffer == NULL) {
+				nvme_show_error("Failed to read string-log.\n");
+				return -1;
+			}
+		}
+	} else {
+		nvme_show_error("string-log is empty.\n");
+		return -1;
+	}
+
+	status = validate_output_format(options->output_format, &fmt);
+	if (status < 0) {
+		nvme_show_error("Invalid output format\n");
+		return status;
+	}
+
+	switch (fmt) {
+	case NORMAL:
+		print_ocp_telemetry_normal(options);
+		break;
+	case JSON:
+		print_ocp_telemetry_json(options);
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
 static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 			      struct plugin *plugin)
 {
-	struct nvme_dev *dev;
-	int err = 0;
-	const char *desc = "Retrieve and save telemetry log.";
-	const char *type = "Telemetry Type; 'host[Create bit]' or 'controller'";
-	const char *area = "Telemetry Data Area; 1 or 3";
-	const char *file = "Output file name with path;\n"
+	const char *desc = "Retrieve and parse OCP Telemetry log.";
+	const char *telemetry_log = "Telemetry log binary;\n 'host.bin' or 'controller.bin'";
+	const char *string_log = "String log binary; 'C9.bin'";
+	const char *output_file = "Output file name with path;\n"
 			"e.g. '-o ./path/name'\n'-o ./path1/path2/';\n"
 			"If requested path does not exist, the directory will be newly created.";
+	const char *output_format = "output format normal|json";
+	const char *data_area = "Telemetry Data Area; 1 or 2;\n"
+			"e.g. '-a 1 for Data Area 1.'\n'-a 2 for Data Areas 1 and 2.';\n";
+	const char *telemetry_type = "Telemetry Type; 'host' or 'controller'";
 
+	struct nvme_dev *dev;
+	int err = 0;
 	__u32  nsid = NVME_NSID_ALL;
 	struct stat nvme_stat;
 	char sn[21] = {0,};
 	struct nvme_id_ctrl ctrl;
 	bool is_support_telemetry_controller;
-
+	struct ocp_telemetry_parse_options opt;
 	int tele_type = 0;
 	int tele_area = 0;
 
-	struct config {
-		char *type;
-		int area;
-		char *file;
-	};
-
-	struct config cfg = {
-		.type = NULL,
-		.area = 0,
-		.file = NULL,
-	};
-
 	OPT_ARGS(opts) = {
-		OPT_STR("telemetry_type", 't', &cfg.type, type),
-		OPT_INT("telemetry_data_area", 'a', &cfg.area, area),
-		OPT_FILE("output-file", 'o', &cfg.file, file),
+		OPT_STR("telemetry-log", 'l', &opt.telemetry_log, telemetry_log),
+		OPT_STR("string-log", 's', &opt.string_log, string_log),
+		OPT_FILE("output-file", 'o', &opt.output_file, output_file),
+		OPT_FMT("output-format", 'f', &opt.output_format, output_format),
+		OPT_INT("data-area", 'a', &opt.data_area, data_area),
+		OPT_STR("telemetry-type", 't', &opt.telemetry_type, telemetry_type),
 		OPT_END()
 	};
 
@@ -1526,36 +1778,84 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 
 	is_support_telemetry_controller = ((ctrl.lpa & 0x8) >> 3);
 
-	if (!cfg.type && !cfg.area) {
-		tele_type = TELEMETRY_TYPE_NONE;
-		tele_area = 0;
-	} else if (cfg.type && cfg.area) {
-		if (!strcmp(cfg.type, "host0"))
-			tele_type = TELEMETRY_TYPE_HOST_0;
-		else if (!strcmp(cfg.type, "host1"))
-			tele_type = TELEMETRY_TYPE_HOST_1;
-		else if	(!strcmp(cfg.type, "controller"))
-			tele_type = TELEMETRY_TYPE_CONTROLLER;
-
-		tele_area = cfg.area;
-
-		if ((tele_area != 1 && tele_area != 3) ||
-			(tele_type == TELEMETRY_TYPE_CONTROLLER && tele_area != 3)) {
-			printf("\nUnsupported parameters entered.\n");
-			printf("Possible combinations; {'host0',1}, {'host0',3}, {'host1',1}, {'host1',3}, {'controller',3}\n");
-			return err;
-		}
-	} else {
-		printf("\nShould provide these all; 'telemetry_type' and 'telemetry_data_area'\n");
-		return err;
+	if (!opt.data_area) {
+		nvme_show_result("Missing data-area. Using default data area 1.\n");
+		opt.data_area = DATA_AREA_1;//Default data area 1
+	} else if (opt.data_area != 1 && opt.data_area != 2) {
+		nvme_show_result("Invalid data-area specified. Please specify 1 or 2.\n");
+		goto out;
 	}
 
-	if (tele_type == TELEMETRY_TYPE_NONE) {
+	tele_area = opt.data_area;
+
+	if (opt.telemetry_type) {
+		if (!strcmp(opt.telemetry_type, "host0"))
+			tele_type = TELEMETRY_TYPE_HOST_0;
+		else if (!strcmp(opt.telemetry_type, "host1"))
+			tele_type = TELEMETRY_TYPE_HOST_1;
+		else if (!strcmp(opt.telemetry_type, "host"))
+			tele_type = TELEMETRY_TYPE_HOST;
+		else if (!strcmp(opt.telemetry_type, "controller"))
+			tele_type = TELEMETRY_TYPE_CONTROLLER;
+		else {
+			nvme_show_error("telemetry-type should be host or controller.\n");
+			goto out;
+		}
+	} else {
+		tele_type = TELEMETRY_TYPE_HOST; //Default Type - Host
+		nvme_show_result("Missing telemetry-type. Using default - host.\n");
+	}
+
+	if (!opt.telemetry_log) {
+		nvme_show_result("\nMissing telemetry-log. Fetching from drive...\n");
+		err = get_telemetry_log_page_data(dev, tele_type);//Pull Telemetry log
+		if (err) {
+			nvme_show_error("Failed to fetch telemetry-log from the drive.\n");
+			goto out;
+		}
+		nvme_show_result("telemetry.bin generated. Proceeding with next steps.\n");
+		opt.telemetry_log = DEFAULT_TELEMETRY_BIN;
+	}
+
+	if (!opt.string_log) {
+		nvme_show_result("Missing string-log. Fetching from drive...\n");
+		err = get_c9_log_page_data(dev, 0, 1); //Pull String log
+		if (err) {
+			nvme_show_error("Failed to fetch string-log from the drive.\n");
+			goto out;
+		}
+		nvme_show_result("string.bin generated. Proceeding with next steps.\n");
+		opt.string_log = DEFAULT_STRING_BIN;
+	}
+
+	if (!opt.output_format) {
+		nvme_show_result("Missing format. Using default format - JSON.\n");
+		opt.output_format = DEFAULT_OUTPUT_FORMAT_JSON;
+	}
+
+	switch (tele_type) {
+	case TELEMETRY_TYPE_HOST: {
+		printf("Extracting Telemetry Host Dump (Data Area %d)...\n", tele_area);
+		err = parse_ocp_telemetry_log(&opt);
+		if (err)
+			nvme_show_result("Status:(%x)\n", err);
+	}
+	break;
+	case TELEMETRY_TYPE_CONTROLLER: {
+		printf("Extracting Telemetry Controller Dump (Data Area %d)...\n", tele_area);
+		if (is_support_telemetry_controller == true) {
+			err = parse_ocp_telemetry_log(&opt);
+			if (err)
+				nvme_show_result("Status:(%x)\n", err);
+		}
+	}
+	break;
+	case TELEMETRY_TYPE_NONE: {
 		printf("\n-------------------------------------------------------------\n");
 		/* Host 0 (lsp == 0) must be executed before Host 1 (lsp == 1). */
 		printf("\nExtracting Telemetry Host 0 Dump (Data Area 1)...\n");
 
-		err = get_telemetry_dump(dev, cfg.file, sn,
+		err = get_telemetry_dump(dev, opt.output_file, sn,
 				TELEMETRY_TYPE_HOST_0, 1, true);
 		if (err)
 			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
@@ -1564,7 +1864,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 
 		printf("\nExtracting Telemetry Host 0 Dump (Data Area 3)...\n");
 
-		err = get_telemetry_dump(dev, cfg.file, sn,
+		err = get_telemetry_dump(dev, opt.output_file, sn,
 				TELEMETRY_TYPE_HOST_0, 3, false);
 		if (err)
 			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
@@ -1573,7 +1873,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 
 		printf("\nExtracting Telemetry Host 1 Dump (Data Area 1)...\n");
 
-		err = get_telemetry_dump(dev, cfg.file, sn,
+		err = get_telemetry_dump(dev, opt.output_file, sn,
 				TELEMETRY_TYPE_HOST_1, 1, true);
 		if (err)
 			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
@@ -1582,7 +1882,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 
 		printf("\nExtracting Telemetry Host 1 Dump (Data Area 3)...\n");
 
-		err = get_telemetry_dump(dev, cfg.file, sn,
+		err = get_telemetry_dump(dev, opt.output_file, sn,
 				TELEMETRY_TYPE_HOST_1, 3, false);
 		if (err)
 			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
@@ -1592,32 +1892,31 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 		printf("\nExtracting Telemetry Controller Dump (Data Area 3)...\n");
 
 		if (is_support_telemetry_controller == true) {
-			err = get_telemetry_dump(dev, cfg.file, sn,
+			err = get_telemetry_dump(dev, opt.output_file, sn,
 					TELEMETRY_TYPE_CONTROLLER, 3, true);
 			if (err)
 				fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
 		}
 
 		printf("\n-------------------------------------------------------------\n");
-	} else if (tele_type == TELEMETRY_TYPE_CONTROLLER) {
-		printf("Extracting Telemetry Controller Dump (Data Area %d)...\n", tele_area);
-
-		if (is_support_telemetry_controller == true) {
-			err = get_telemetry_dump(dev, cfg.file, sn, tele_type, tele_area, true);
-			if (err)
-				fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
-		}
-	} else {
+	}
+	break;
+	case TELEMETRY_TYPE_HOST_0:
+	case TELEMETRY_TYPE_HOST_1:
+	default: {
 		printf("Extracting Telemetry Host(%d) Dump (Data Area %d)...\n",
 				(tele_type == TELEMETRY_TYPE_HOST_0) ? 0 : 1, tele_area);
 
-		err = get_telemetry_dump(dev, cfg.file, sn, tele_type, tele_area, true);
+		err = get_telemetry_dump(dev, opt.output_file, sn, tele_type, tele_area, true);
 		if (err)
 			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
 	}
+	break;
+	}
 
-	printf("telemetry-log done.\n");
-
+	printf("ocp internal-log command completed.\n");
+out:
+	dev_close(dev);
 	return err;
 }
 
@@ -2829,139 +3128,12 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *cm
 ///////////////////////////////////////////////////////////////////////////////
 /// Telemetry String Log Format Log Page (LID : C9h)
 
-/* C9 Telemetry String Log Format Log Page */
-#define C9_GUID_LENGTH                           16
-#define C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE    0xC9
-#define C9_TELEMETRY_STR_LOG_LEN                 432
-#define C9_TELEMETRY_STR_LOG_SIST_OFST           431
-
-/**
- * struct telemetry_str_log_format - Telemetry String Log Format
- * @log_page_version:          indicates the version of the mapping this log page uses 
- *                             Shall be set to 01h.
- * @reserved1:                 Reserved.
- * @log_page_guid:             Shall be set to B13A83691A8F408B9EA495940057AA44h.
- * @sls:                       Shall be set to the number of DWORDS in the String Log.
- * @reserved2:                 reserved.
- * @sits:                      shall be set to the number of DWORDS in the Statistics 
- *                             Identifier String Table
- * @ests:                      Shall be set to the number of DWORDS from byte 0 of this 
- *                             log page to the start of the Event String Table
- * @estsz:                     shall be set to the number of DWORDS in the Event String Table
- * @vu_eve_sts:                Shall be set to the number of DWORDS from byte 0 of this 
- *                             log page to the start of the VU Event String Table
- * @vu_eve_st_sz:              shall be set to the number of DWORDS in the VU Event String Table
- * @ascts:                     the number of DWORDS from byte 0 of this log page until the ASCII Table Starts.
- * @asctsz:                    the number of DWORDS in the ASCII Table
- * @fifo1:                     FIFO 0 ASCII String
- * @fifo2:                     FIFO 1 ASCII String
- * @fifo3:                     FIFO 2 ASCII String 
- * @fifo4:                     FIFO 3 ASCII String
- * @fif05:                     FIFO 4 ASCII String
- * @fifo6:                     FIFO 5 ASCII String
- * @fifo7:                     FIFO 6 ASCII String
- * @fifo8:                     FIFO 7 ASCII String
- * @fifo9:                     FIFO 8 ASCII String 
- * @fifo10:                    FIFO 9 ASCII String
- * @fif011:                    FIFO 10 ASCII String
- * @fif012:                    FIFO 11 ASCII String
- * @fifo13:                    FIFO 12 ASCII String
- * @fif014:                    FIFO 13 ASCII String
- * @fif015:                    FIFO 14 ASCII String
- * @fif016:                    FIFO 15 ASCII String
- * @reserved3:                 reserved
- */
-struct __attribute__((__packed__)) telemetry_str_log_format {
-	__u8    log_page_version;
-	__u8    reserved1[15];
-	__u8    log_page_guid[C9_GUID_LENGTH];
-	__le64  sls;
-	__u8    reserved2[24];
-	__le64  sits;
-	__le64  sitsz;
-	__le64  ests;
-	__le64  estsz;
-	__le64  vu_eve_sts;
-	__le64  vu_eve_st_sz;
-	__le64  ascts;
-	__le64  asctsz;
-	__u8    fifo1[16];
-	__u8    fifo2[16];
-	__u8    fifo3[16];
-	__u8    fifo4[16];
-	__u8    fifo5[16];
-	__u8    fifo6[16];
-	__u8    fifo7[16];
-	__u8    fifo8[16];
-	__u8    fifo9[16];
-	__u8    fifo10[16];
-	__u8    fifo11[16];
-	__u8    fifo12[16];
-	__u8    fifo13[16];
-	__u8    fifo14[16];
-	__u8    fifo15[16];
-	__u8    fifo16[16];
-	__u8    reserved3[48];
-};
-
-/*
- * struct statistics_id_str_table_entry - Statistics Identifier String Table Entry
- * @vs_si:                    Shall be set the Vendor Unique Statistic Identifier number.
- * @reserved1:                Reserved
- * @ascii_id_len:             Shall be set the number of ASCII Characters that are valid.
- * @ascii_id_ofst:            Shall be set to the offset from DWORD 0/Byte 0 of the Start 
- *                            of the ASCII Table to the first character of the string for 
- *                            this Statistic Identifier string..
- * @reserved2                 reserved
- */
-struct __attribute__((__packed__)) statistics_id_str_table_entry {
-	__le16  vs_si;
-	__u8    reserved1;
-	__u8    ascii_id_len;
-	__le64  ascii_id_ofst;
-	__le32  reserved2;
-};
-
-/*
- * struct event_id_str_table_entry - Event Identifier String Table Entry
- * @deb_eve_class:            Shall be set the Debug Class.
- * @ei:                       Shall be set to the Event Identifier
- * @ascii_id_len:             Shall be set the number of ASCII Characters that are valid.
- * @ascii_id_ofst:            This is the offset from DWORD 0/ Byte 0 of the start of the
- *                            ASCII table to the ASCII data for this identifier
- * @reserved2                 reserved
- */
-struct __attribute__((__packed__)) event_id_str_table_entry {
-	__u8      deb_eve_class;
-	__le16    ei;
-	__u8      ascii_id_len;
-	__le64    ascii_id_ofst;
-	__le32    reserved2;
-};
-
-/*
- * struct vu_event_id_str_table_entry - VU Event Identifier String Table Entry
- * @deb_eve_class:            Shall be set the Debug Class.
- * @vu_ei:                    Shall be set to the VU Event Identifier
- * @ascii_id_len:             Shall be set the number of ASCII Characters that are valid.
- * @ascii_id_ofst:            This is the offset from DWORD 0/ Byte 0 of the start of the 
- *                            ASCII table to the ASCII data for this identifier
- * @reserved                  reserved
- */
-struct __attribute__((__packed__)) vu_event_id_str_table_entry {
-	__u8      deb_eve_class;
-	__le16    vu_ei;
-	__u8      ascii_id_len;
-	__le64    ascii_id_ofst;
-	__le32    reserved;
-};
-
 /* Function declaration for Telemetry String Log Format (LID:C9h) */
 static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *cmd,
 					struct plugin *plugin);
 
 
-static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u8 *log_data_buf)
+static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data, __u8 *log_data_buf)
 {
 	//calculating the index value for array
 	__le64 stat_id_index = (log_data->sitsz * 4) / 16;
@@ -3162,7 +3334,7 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data,__u
 	return 0;
 }
 
-static int ocp_print_C9_log_json(struct telemetry_str_log_format *log_data,__u8 *log_data_buf)
+static int ocp_print_C9_log_json(struct telemetry_str_log_format *log_data, __u8 *log_data_buf)
 {
 	struct json_object *root = json_create_object();
 	char res_arr[48];
@@ -3401,23 +3573,17 @@ static int ocp_print_C9_log_json(struct telemetry_str_log_format *log_data,__u8 
 	return 0;
 }
 
-static void ocp_print_c9_log_binary(__u8 *log_data_buf,int total_log_page_size)
+static void ocp_print_c9_log_binary(__u8 *log_data_buf, int total_log_page_size)
 {
 	return d_raw((unsigned char *)log_data_buf, total_log_page_size);
 }
 
 static int get_c9_log_page(struct nvme_dev *dev, char *format)
 {
+
 	int ret = 0;
-	__u8 *header_data;
-	struct telemetry_str_log_format *log_data;
+
 	nvme_print_flags_t fmt;
-	__u8 *full_log_buf_data = NULL;
-	__le64 stat_id_str_table_ofst = 0;
-	__le64 event_str_table_ofst = 0;
-	__le64 vu_event_str_table_ofst = 0;
-	__le64 ascii_table_ofst = 0;
-	__le64 total_log_page_sz = 0;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -3425,75 +3591,25 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 		return ret;
 	}
 
-	header_data = (__u8 *)malloc(sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
-	if (!header_data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
-		return -1;
-	}
-	memset(header_data, 0, sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
-
-	ret = nvme_get_log_simple(dev_fd(dev), C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
-				  C9_TELEMETRY_STR_LOG_LEN, header_data);
+	get_c9_log_page_data(dev, 1, 0);
 
 	if (!ret) {
-		log_data = (struct telemetry_str_log_format *)header_data;
-		printf("Statistics Identifier String Table Size = %lld\n",log_data->sitsz);
-		printf("Event String Table Size = %lld\n",log_data->estsz);
-		printf("VU Event String Table Size = %lld\n",log_data->vu_eve_st_sz);
-		printf("ASCII Table Size = %lld\n",log_data->asctsz);
-
-		//Calculating the offset for dynamic fields.
-
-		stat_id_str_table_ofst = log_data->sits * 4;
-		event_str_table_ofst = log_data->ests * 4;
-		vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
-		ascii_table_ofst = log_data->ascts * 4;
-		total_log_page_sz = C9_TELEMETRY_STR_LOG_LEN +
-		(log_data->sitsz * 4) + (log_data->estsz * 4) +
-		(log_data->vu_eve_st_sz * 4) + (log_data->asctsz * 4);
-
-
-
-		printf("stat_id_str_table_ofst = %lld\n",stat_id_str_table_ofst);
-		printf("event_str_table_ofst = %lld\n",event_str_table_ofst);
-		printf("vu_event_str_table_ofst = %lld\n",vu_event_str_table_ofst);
-		printf("ascii_table_ofst = %lld\n",ascii_table_ofst);
-		printf("total_log_page_sz = %lld\n",total_log_page_sz);
-
-		full_log_buf_data = (__u8 *)malloc(sizeof(__u8) * total_log_page_sz);
-		if (!full_log_buf_data) {
-			fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
-			return -1;
+		switch (fmt) {
+		case NORMAL:
+			ocp_print_C9_log_normal(log_data, pC9_string_buffer);
+			break;
+		case JSON:
+			ocp_print_C9_log_json(log_data, pC9_string_buffer);
+			break;
+		case BINARY:
+			ocp_print_c9_log_binary(pC9_string_buffer, total_log_page_sz);
+			break;
+		default:
+			fprintf(stderr, "unhandled output format\n");
+			break;
 		}
-		memset(full_log_buf_data, 0, sizeof(__u8) * total_log_page_sz);
-
-		ret = nvme_get_log_simple(dev_fd(dev), C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
-					  total_log_page_sz, full_log_buf_data);
-
-		if (!ret) {
-			switch (fmt) {
-			case NORMAL:
-				ocp_print_C9_log_normal(log_data,full_log_buf_data);
-				break;
-			case JSON:
-				ocp_print_C9_log_json(log_data,full_log_buf_data);
-				break;
-			case BINARY:
-				ocp_print_c9_log_binary(full_log_buf_data,total_log_page_sz);
-				break;
-			default:
-				fprintf(stderr, "unhandled output format\n");
-				break;
-			}
-		} else{
-			fprintf(stderr, "ERROR : OCP : Unable to read C9 data from buffer\n");
-		}
-	} else {
+	} else
 		fprintf(stderr, "ERROR : OCP : Unable to read C9 data from buffer\n");
-	}
-
-	free(header_data);
-	free(full_log_buf_data);
 
 	return ret;
 }

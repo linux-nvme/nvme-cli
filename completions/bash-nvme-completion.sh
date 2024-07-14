@@ -889,10 +889,6 @@ plugin_micron_opts () {
 		"vs-smbus-option")
 		opts+=" --option= -o --value= -v --save= -s"
 			;;
-		"ocp-telemetry-log-parse")
-		opts+=" --format= -f --telemetry-log= -l --string-log= -s \
-			--output-file= -o"
-			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1448,8 +1444,9 @@ plugin_ocp_opts () {
 			--latency_monitor_feature_enable= -e"
 			;;
 		"internal-log")
-		opts+=" --telemetry_type= -t --telemetry_data_area= -a \
-			--output-file= -o"
+		opts+=" --telemetry-log= -l --string-log= -s \
+			--output-file= -o --output-format= -f \
+			--data-area= -a --telemetry-type= -t"
 			;;
 		"clear-fw-activate-history")
 		opts+=" --no-uuid -n"

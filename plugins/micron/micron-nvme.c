@@ -7,7 +7,27 @@
  * @authors:Chaithanya Shoba <ashoba@micron.com>,
  */
 
-#include "micron-ocp-telemetry.h"
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <time.h>
+#include <string.h>
+#include <libgen.h>
+#include <stddef.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include "common.h"
+#include "nvme.h"
+#include "libnvme.h"
+#include <limits.h>
+#include "linux/types.h"
+#include "nvme-print.h"
+#include "util/cleanup.h"
+#include "util/utils.h"
 
 #define CREATE_CMD
 #include "micron-nvme.h"
@@ -1183,7 +1203,7 @@ static void init_d0_log_page(__u8 *buf, __u8 nsze)
 }
 
 /* Smart Health Log information as per OCP spec M51CX models */
-struct micron_vs_logpage ocp_c0_log_page[] = {
+struct request_data ocp_c0_log_page[] = {
 	{ "Physical Media Units Written", 16},
 	{ "Physical Media Units Read", 16 },
 	{ "Raw Bad User NAND Block Count", 6},
@@ -1317,7 +1337,7 @@ static void print_smart_cloud_health_log(__u8 *buf, bool is_json)
 					    logPages);
 	}
 
-	print_micron_vs_logs(buf, ocp_c0_log_page, field_count, stats, 0, NULL);
+	generic_structure_parser(buf, ocp_c0_log_page, field_count, stats, 0, NULL);
 
 	if (is_json) {
 		json_array_add_value_object(logPages, stats);
@@ -1342,7 +1362,7 @@ static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json, 
 					    logPages);
 	}
 
-	print_micron_vs_logs(buf, fb_log_page, field_count, stats, spec, NULL);
+	generic_structure_parser(buf, fb_log_page, field_count, stats, spec, NULL);
 
 	/* print last three entries from D0 log page */
 	if (buf2) {
@@ -1496,7 +1516,7 @@ static void print_ext_smart_logs_e1(__u8 *buf, bool is_json)
 		printf("SMART Extended Log:0xE1\n");
 	}
 
-	print_micron_vs_logs(buf, e1_log_page, field_count, stats, 0, NULL);
+	generic_structure_parser(buf, e1_log_page, field_count, stats, 0, NULL);
 
 	if (is_json) {
 		json_array_add_value_object(logPages, stats);
@@ -3272,49 +3292,5 @@ static int micron_logpage_dir(int argc, char **argv, struct command *cmd,
 		printf("%02Xh    : %s\n", log_list[i].log_id, log_list[i].desc);
 	}
 
-	return err;
-}
-
-static int micron_ocp_telemetry_log_parse(int argc, char **argv,
-					  struct command *cmd, struct plugin *plugin)
-{
-	const char *desc = "Parse OCP Telemetry DA1 and DA2 logs.";
-	const char *output_fmt = "output format normal|json";
-	const char *telemetry_log = "Telemetry log binary;\n 'host.bin' or 'controller.bin'";
-	const char *string_log = "String log binary; 'C9.bin'";
-	const char *output_file = "Output file name with path;\n"
-			"e.g. '-o ./path/name'\n'-o ./path1/path2/';\n"
-			"If requested path doesn't exist, the file will be newly created.";
-	enum eDriveModel eModel = UNKNOWN_MODEL;
-	int err = 0;
-	struct nvme_dev *dev;
-	struct ocp_telemetry_parse_options opt;
-
-	OPT_ARGS(opts) = {
-		OPT_STR("telemetry-log", 'l', &opt.telemetry_log, telemetry_log),
-		OPT_STR("string-log", 's', &opt.string_log, string_log),
-		OPT_FILE("output-file", 'o', &opt.output_file, output_file),
-		OPT_FMT("format", 'f', &opt.output_fmt, output_fmt),
-		OPT_END()
-	};
-
-	err = micron_parse_options(&dev, argc, argv, desc, opts, &eModel);
-	if (err < 0)
-		return -1;
-
-	if (!opt.telemetry_log) {
-		nvme_show_result("\nMissing telemetry-log.\n");
-		return -1;
-	} else if (!opt.string_log) {
-		nvme_show_result("\nMissing string-log. Skipping adding string data.\n");
-	} else if (!opt.output_fmt) {
-		nvme_show_result("\nMissing format. Using default format - JSON.\n");
-	}
-
-	err = parse_ocp_telemetry_log(&opt);
-
-	dev_close(dev);
-	if (err != 0)
-		nvme_show_status(err);
 	return err;
 }
