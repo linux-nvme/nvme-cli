@@ -35,8 +35,6 @@ PLUGIN(NAME("micron", "Micron vendor specific extensions", NVME_VERSION),
 		ENTRY("vs-smart-add-log", "Retrieve extended SMART data", micron_ocp_smart_health_logs)
 		ENTRY("clear-fw-activate-history", "Clear FW activation history", micron_clr_fw_activation_history)
 		ENTRY("vs-smbus-option", "Enable/Disable SMBUS on the drive", micron_smbus_option)
-		ENTRY("ocp-telemetry-log-parse", "Parse OCP Telemetry DA1 and DA2 logs",
-			micron_ocp_telemetry_log_parse)
 	)
 );
 

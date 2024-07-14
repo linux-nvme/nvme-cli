@@ -8,6 +8,7 @@ sources += [
   'util/mem.c',
   'util/suffix.c',
   'util/types.c',
+  'util/utils.c'
 ]
 
 if json_c_dep.found()

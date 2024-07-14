@@ -3,8 +3,7 @@
  * Copyright (c) Micron, Inc 2024.
  *
  * @file: micron-utils.h
- * @brief: This module contains all the utilities needed for micron nvme plugin
- *         and other micron modules.
+ * @brief: This module contains all the utilities needed for other modules.
  * @author: Chaithanya Shoba <ashoba@micron.com>
  */
 
@@ -29,11 +28,11 @@
 #include "nvme-print.h"
 #include "util/cleanup.h"
 
-/* OCP and Vendor specific log data format */
-struct __packed micron_vs_logpage {
+/*Request data format*/
+struct __packed request_data {
 	char *field;
-	int  size; /* FB client spec version 1.0 sizes - M5410 models */
-	int  size2; /* FB client spec version 0.7 sizes - M5407 models */
+	int  size;
+	int  size2;
 };
 
 enum field_size {
@@ -81,7 +80,7 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path, long 
 				int retry_count);
 
 /**
- * @brief prints Micron VS log pages
+ * @brief prints generic structure parser
  *
  * @param buf, input raw log data
  * @param log_page, input format of the data
@@ -92,7 +91,7 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path, long 
  *
  * @return 0 success
  */
-void print_micron_vs_logs(__u8 *buf, struct micron_vs_logpage *log_page, int field_count,
+void generic_structure_parser(__u8 *buf, struct request_data *req_data, int field_count,
 			  struct json_object *stats, __u8 spec, FILE *fp);
 
 /**
