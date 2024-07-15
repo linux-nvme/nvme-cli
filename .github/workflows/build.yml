@@ -44,7 +44,7 @@ jobs:
       - name: enable foreign arch
         uses: dbhi/qus/action@main
       - name: compile and run unit tests
-        uses: mosteo-actions/docker-run@v1
+        uses: mosteo-actions/docker-run@v2
         with:
           image: ghcr.io/igaw/linux-nvme/ubuntu-cross-${{ matrix.arch }}:latest
           guest-dir: /build
