@@ -142,19 +142,6 @@ static int argconfig_error(char *type, const char *opt, const char *arg)
 	return -EINVAL;
 }
 
-int argconfig_parse_byte(const char *opt, const char *str, unsigned char *val)
-{
-	char *endptr;
-	unsigned long tmp = strtoul(str, &endptr, 0);
-
-	if (errno || tmp >= 1 << 8 || str == endptr)
-		return argconfig_error("byte", opt, str);
-
-	*val = tmp;
-
-	return 0;
-}
-
 static int argconfig_parse_type(struct argconfig_commandline_options *s, struct option *option,
 				int index)
 {
@@ -173,9 +160,15 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		if (errno || optarg == endptr)
 			ret = argconfig_error("integer", option[index].name, optarg);
 		break;
-	case CFG_BYTE:
-		ret = argconfig_parse_byte(option[index].name, optarg, (uint8_t *)value);
+	case CFG_BYTE: {
+		unsigned long tmp = strtoul(optarg, &endptr, 0);
+
+		if (errno || tmp >= 1 << 8 || optarg == endptr)
+			ret = argconfig_error("byte", option[index].name, optarg);
+		else
+			*((uint8_t *)value) = tmp;
 		break;
+	}
 	case CFG_SHORT: {
 		unsigned long tmp = strtoul(optarg, &endptr, 0);
 
