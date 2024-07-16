@@ -372,133 +372,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	return ret;
 }
 
-int argconfig_parse_comma_sep_array(char *string, int *val, unsigned int max_length)
-{
-	int ret = 0;
-	unsigned long v;
-	char *tmp;
-	char *p;
-
-	if (is_null_or_empty(string))
-		return 0;
-
-	tmp = strtok(string, ",");
-	if (!tmp)
-		return 0;
-
-	v = strtoul(tmp, &p, 0);
-	if (*p != 0)
-		return -1;
-	if (v > UINT_MAX) {
-		fprintf(stderr, "%s out of range\n", tmp);
-		return -1;
-	}
-	val[ret] = v;
-
-	ret++;
-	while (1) {
-		tmp = strtok(NULL, ",");
-
-		if (tmp == NULL)
-			return ret;
-
-		if (ret >= max_length)
-			return -1;
-
-		v = strtoul(tmp, &p, 0);
-		if (*p != 0)
-			return -1;
-		if (v > UINT_MAX) {
-			fprintf(stderr, "%s out of range\n", tmp);
-			return -1;
-		}
-		val[ret] = v;
-		ret++;
-	}
-}
-
-int argconfig_parse_comma_sep_array_short(char *string, unsigned short *val,
-					  unsigned int max_length)
-{
-	int ret = 0;
-	unsigned long v;
-	char *tmp;
-	char *p;
-
-	if (is_null_or_empty(string))
-		return 0;
-
-	tmp = strtok(string, ",");
-	if (!tmp)
-		return 0;
-
-	v = strtoul(tmp, &p, 0);
-	if (*p != 0)
-		return -1;
-	if (v > UINT16_MAX) {
-		fprintf(stderr, "%s out of range\n", tmp);
-		return -1;
-	}
-	val[ret] = v;
-	ret++;
-
-	while (1) {
-		tmp = strtok(NULL, ",");
-		if (tmp == NULL)
-			return ret;
-
-		if (ret >= max_length)
-			return -1;
-
-		v = strtoul(tmp, &p, 0);
-		if (*p != 0)
-			return -1;
-		if (v > UINT16_MAX) {
-			fprintf(stderr, "%s out of range\n", tmp);
-			return -1;
-		}
-		val[ret] = v;
-		ret++;
-	}
-}
-
-int argconfig_parse_comma_sep_array_long(char *string, unsigned long long *val,
-					 unsigned int max_length)
-{
-	int ret = 0;
-	char *tmp;
-	char *p;
-
-	if (is_null_or_empty(string))
-		return 0;
-
-	tmp = strtok(string, ",");
-	if (tmp == NULL)
-		return 0;
-
-	val[ret] = strtoll(tmp, &p, 0);
-	if (*p != 0)
-		return -1;
-	ret++;
-	while (1) {
-		tmp = strtok(NULL, ",");
-
-		if (tmp == NULL)
-			return ret;
-
-		if (ret >= max_length)
-			return -1;
-
-		val[ret] = strtoll(tmp, &p, 0);
-		if (*p != 0)
-			return -1;
-		ret++;
-	}
-}
-
-#define DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(size)		\
-int argconfig_parse_comma_sep_array_u##size(char *string,		\
-					    __u##size *val,		\
+#define DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(name, ret_t, ret_max) \
+int argconfig_parse_comma_sep_array ## name(char *string,		\
+					    ret_t *val,			\
 					    unsigned int max_length)	\
 {									\
 	int ret = 0;							\
@@ -510,39 +386,34 @@ int argconfig_parse_comma_sep_array_u##size(char *string,		\
 		return 0;						\
 									\
 	tmp = strtok(string, ",");					\
-	if (!tmp)							\
-		return 0;						\
 									\
-	v = strtoumax(tmp, &p, 0);					\
-	if (*p != 0)							\
-		return -1;						\
-	if (v > UINT##size##_MAX) {					\
-		fprintf(stderr, "%s out of range\n", tmp);		\
-		return -1;						\
-	}								\
-	val[ret] = v;							\
-									\
-	ret++;								\
-	while (1) {							\
-		tmp = strtok(NULL, ",");				\
-									\
-		if (tmp == NULL)					\
-			return ret;					\
-									\
+	while (tmp) {							\
 		if (ret >= max_length)					\
 			return -1;					\
 									\
 		v = strtoumax(tmp, &p, 0);				\
 		if (*p != 0)						\
 			return -1;					\
-		if (v > UINT##size##_MAX) {				\
+		if (v > ret_max) {					\
 			fprintf(stderr, "%s out of range\n", tmp);	\
 			return -1;					\
 		}							\
 		val[ret] = v;						\
 		ret++;							\
+									\
+		tmp = strtok(NULL, ",");				\
 	}								\
+									\
+	return ret;							\
 }
+
+DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(, int, UINT_MAX)
+DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(_short, unsigned short, UINT16_MAX)
+DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(_long, unsigned long long, ULLONG_MAX)
+
+#define DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(size) \
+	DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(_u ## size, __u ## size, \
+						    UINT ## size ## _MAX)
 
 DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(16);
 DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(32);
