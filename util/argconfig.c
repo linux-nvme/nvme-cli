@@ -44,6 +44,11 @@
 #include <stdbool.h>
 #include <locale.h>
 
+static bool is_null_or_empty(const char *s)
+{
+	return !s || !*s;
+}
+
 static const char *append_usage_str = "";
 
 void argconfig_append_usage(const char *str)
@@ -320,7 +325,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			if (s->argument_type == optional_argument)
 				short_opts[short_index++] = ':';
 		}
-		if (s->option && strlen(s->option)) {
+		if (!is_null_or_empty(s->option)) {
 			long_opts[option_index].name = s->option;
 			long_opts[option_index].has_arg = s->argument_type;
 		}
@@ -374,7 +379,7 @@ int argconfig_parse_comma_sep_array(char *string, int *val, unsigned int max_len
 	char *tmp;
 	char *p;
 
-	if (!string || !strlen(string))
+	if (is_null_or_empty(string))
 		return 0;
 
 	tmp = strtok(string, ",");
@@ -420,7 +425,7 @@ int argconfig_parse_comma_sep_array_short(char *string, unsigned short *val,
 	char *tmp;
 	char *p;
 
-	if (!string || !strlen(string))
+	if (is_null_or_empty(string))
 		return 0;
 
 	tmp = strtok(string, ",");
@@ -464,7 +469,7 @@ int argconfig_parse_comma_sep_array_long(char *string, unsigned long long *val,
 	char *tmp;
 	char *p;
 
-	if (!string || !strlen(string))
+	if (is_null_or_empty(string))
 		return 0;
 
 	tmp = strtok(string, ",");
@@ -501,7 +506,7 @@ int argconfig_parse_comma_sep_array_u##size(char *string,		\
 	char *tmp;							\
 	char *p;							\
 									\
-	if (!string || !strlen(string))				\
+	if (is_null_or_empty(string))					\
 		return 0;						\
 									\
 	tmp = strtok(string, ",");					\
