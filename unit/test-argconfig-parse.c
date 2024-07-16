@@ -28,6 +28,7 @@ union val {
 	char *file;
 	char *list;
 	char *str;
+	__u8 val;
 };
 
 struct toval_test {
@@ -73,6 +74,7 @@ struct cfg {
 	char *file;
 	char *list;
 	char *str;
+	__u8 val;
 };
 
 static struct cfg cfg;
@@ -105,6 +107,17 @@ static struct toval_test toval_tests[] = {
 	VAL_TEST("--file=file", file, "file", false, 0),
 	VAL_TEST("--list=list", list, "list", false, 0),
 	VAL_TEST("--str=str", str, "str", false, 0),
+	VAL_TEST("--val=", val, 0, true, -EINVAL),
+	VAL_TEST("--val=o", val, 1, true, 0),
+	VAL_TEST("--val=t", val, 0, true, -EINVAL),
+	VAL_TEST("--val=tw", val, 2, true, 0),
+	VAL_TEST("--val=two", val, 2, true, 0),
+	VAL_TEST("--val=twoo", val, 0, true, -EINVAL),
+	VAL_TEST("--val=th", val, 3, true, 0),
+	VAL_TEST("--val=three", val, 3, true, 0),
+	VAL_TEST("--val=threed", val, 0, true, -EINVAL),
+	VAL_TEST("--val=123", val, 123, true, 0),
+	VAL_TEST("--val=1234", val, 0, true, -EINVAL),
 };
 
 void toval_test(struct toval_test *test)
@@ -112,6 +125,13 @@ void toval_test(struct toval_test *test)
 	const char *desc = "Test argconfig parse";
 	int ret;
 	char *argv[] = { "test-argconfig", test->arg };
+
+	OPT_VALS(opt_vals) = {
+		VAL_BYTE("one", 1),
+		VAL_BYTE("two", 2),
+		VAL_BYTE("three", 3),
+		VAL_END()
+	};
 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("flag",'f', &cfg.flag, "flag"),
@@ -128,6 +148,7 @@ void toval_test(struct toval_test *test)
 		OPT_FILE("file", 'L', &cfg.file, "file"),
 		OPT_LIST("list", 'T', &cfg.list, "list"),
 		OPT_STR("str", 'r', &cfg.str, "str"),
+		OPT_BYTE("val", 'v', &cfg.val, "val", opt_vals),
 		OPT_END()
 	};
 
