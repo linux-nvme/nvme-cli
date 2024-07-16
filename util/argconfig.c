@@ -132,7 +132,7 @@ void argconfig_print_help(const char *program_desc,
 		return;
 
 	fprintf(stderr, "\n\033[1mOptions:\033[0m\n");
-	for (; s && s->option; s++)
+	for (; s->option; s++)
 		show_option(s);
 }
 
