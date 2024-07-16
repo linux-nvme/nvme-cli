@@ -212,25 +212,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s)
 	return ret;
 }
 
-static int argconfig_get_val_len(struct argconfig_opt_val *opt_val, const char *str)
-{
-	struct argconfig_opt_val *v;
-	int len;
-	int match;
-
-	for (len = 1; len <= strlen(str); len++) {
-		match = 0;
-		for (v = opt_val; v && v->str; v++) {
-			if (!strncasecmp(str, v->str, len))
-				match++;
-		}
-		if (match == 1)
-			break;
-	}
-
-	return len;
-}
-
 static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val *opt_val, void *val)
 {
 	switch (type) {
@@ -267,23 +248,34 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 	}
 }
 
-static int argconfig_parse_val(struct argconfig_commandline_options *s)
+static struct argconfig_opt_val *
+argconfig_match_val(struct argconfig_commandline_options *s, const char *str)
 {
-	const char *str = optarg;
-	void *val = s->default_value;
-	int len = strlen(optarg);
-	struct argconfig_opt_val *v;
-	int val_len;
+	size_t len = strlen(str);
+	struct argconfig_opt_val *v, *match = NULL;
 
-	for (v = s->opt_val; v && v->str; v++) {
-		val_len = argconfig_get_val_len(s->opt_val, v->str);
-		if (strncasecmp(str, v->str, len > val_len ? len : val_len))
+	for (v = s->opt_val; v->str; v++) {
+		if (strncasecmp(str, v->str, len))
 			continue;
-		argconfig_set_opt_val(v->type, &v->val, val);
-		return 0;
+
+		if (match)
+			return NULL; /* multiple matches; input is ambiguous */
+
+		match = v;
 	}
 
-	return argconfig_parse_type(s);
+	return match;
+}
+
+static int argconfig_parse_val(struct argconfig_commandline_options *s)
+{
+	struct argconfig_opt_val *v = argconfig_match_val(s, optarg);
+
+	if (!v)
+		return argconfig_parse_type(s);
+
+	argconfig_set_opt_val(v->type, &v->val, s->default_value);
+	return 0;
 }
 
 static bool argconfig_check_human_readable(struct argconfig_commandline_options *s)
