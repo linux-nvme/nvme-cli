@@ -249,12 +249,12 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 }
 
 static struct argconfig_opt_val *
-argconfig_match_val(struct argconfig_commandline_options *s, const char *str)
+argconfig_match_val(struct argconfig_opt_val *v, const char *str)
 {
 	size_t len = strlen(str);
-	struct argconfig_opt_val *v, *match = NULL;
+	struct argconfig_opt_val *match = NULL;
 
-	for (v = s->opt_val; v->str; v++) {
+	for (; v->str; v++) {
 		if (strncasecmp(str, v->str, len))
 			continue;
 
@@ -269,8 +269,10 @@ argconfig_match_val(struct argconfig_commandline_options *s, const char *str)
 
 static int argconfig_parse_val(struct argconfig_commandline_options *s)
 {
-	struct argconfig_opt_val *v = argconfig_match_val(s, optarg);
+	struct argconfig_opt_val *v = s->opt_val;
 
+	if (v)
+		v = argconfig_match_val(v, optarg);
 	if (!v)
 		return argconfig_parse_type(s);
 
@@ -354,10 +356,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		if (!s->default_value)
 			continue;
 
-		if (s->opt_val)
-			ret = argconfig_parse_val(s);
-		else
-			ret = argconfig_parse_type(s);
+		ret = argconfig_parse_val(s);
 		if (ret)
 			break;
 	}
