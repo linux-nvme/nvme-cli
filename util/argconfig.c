@@ -142,8 +142,7 @@ static int argconfig_error(char *type, const char *opt, const char *arg)
 	return -EINVAL;
 }
 
-static int argconfig_parse_type(struct argconfig_commandline_options *s, struct option *option,
-				int index)
+static int argconfig_parse_type(struct argconfig_commandline_options *s)
 {
 	void *value = s->default_value;
 	char *endptr;
@@ -158,13 +157,13 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	case CFG_INT:
 		*(int *)value = strtol(optarg, &endptr, 0);
 		if (errno || optarg == endptr)
-			ret = argconfig_error("integer", option[index].name, optarg);
+			ret = argconfig_error("integer", s->option, optarg);
 		break;
 	case CFG_BYTE: {
 		unsigned long tmp = strtoul(optarg, &endptr, 0);
 
 		if (errno || tmp >= 1 << 8 || optarg == endptr)
-			ret = argconfig_error("byte", option[index].name, optarg);
+			ret = argconfig_error("byte", s->option, optarg);
 		else
 			*(uint8_t *)value = tmp;
 		break;
@@ -173,7 +172,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		unsigned long tmp = strtoul(optarg, &endptr, 0);
 
 		if (errno || tmp >= 1 << 16 || optarg == endptr)
-			ret = argconfig_error("short", option[index].name, optarg);
+			ret = argconfig_error("short", s->option, optarg);
 		else
 			*(uint16_t *)value = tmp;
 		break;
@@ -182,7 +181,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		uint32_t tmp = strtoul(optarg, &endptr, 0);
 
 		if (errno || optarg == endptr)
-			ret = argconfig_error("word", option[index].name, optarg);
+			ret = argconfig_error("word", s->option, optarg);
 		else
 			*(uint32_t *)value = tmp;
 		break;
@@ -193,17 +192,17 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	case CFG_LONG:
 		*(unsigned long *)value = strtoul(optarg, &endptr, 0);
 		if (errno || optarg == endptr)
-			ret = argconfig_error("long integer", option[index].name, optarg);
+			ret = argconfig_error("long integer", s->option, optarg);
 		break;
 	case CFG_LONG_SUFFIX:
 		ret = suffix_binary_parse(optarg, &endptr, (uint64_t *)value);
 		if (ret)
-			argconfig_error("long suffixed integer", option[index].name, optarg);
+			argconfig_error("long suffixed integer", s->option, optarg);
 		break;
 	case CFG_DOUBLE:
 		*(double *)value = strtod(optarg, &endptr);
 		if (errno || optarg == endptr)
-			ret = argconfig_error("float", option[index].name, optarg);
+			ret = argconfig_error("float", s->option, optarg);
 		break;
 	case CFG_FLAG:
 		*(bool *)value = true;
@@ -268,8 +267,7 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 	}
 }
 
-static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
-			       int index)
+static int argconfig_parse_val(struct argconfig_commandline_options *s)
 {
 	const char *str = optarg;
 	void *val = s->default_value;
@@ -285,7 +283,7 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s, struct o
 		return 0;
 	}
 
-	return argconfig_parse_type(s, option, index);
+	return argconfig_parse_type(s);
 }
 
 static bool argconfig_check_human_readable(struct argconfig_commandline_options *s)
@@ -365,9 +363,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			continue;
 
 		if (s->opt_val)
-			ret = argconfig_parse_val(s, long_opts, option_index);
+			ret = argconfig_parse_val(s);
 		else
-			ret = argconfig_parse_type(s, long_opts, option_index);
+			ret = argconfig_parse_type(s);
 		if (ret)
 			break;
 	}
