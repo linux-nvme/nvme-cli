@@ -208,8 +208,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	case CFG_FLAG:
 		*(bool *)value = true;
 		break;
-	default:
-		break;
 	}
 
 	return ret;
@@ -266,8 +264,6 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 		break;
 	case CFG_STRING:
 		*(char **)val = opt_val->string;
-		break;
-	default:
 		break;
 	}
 }
