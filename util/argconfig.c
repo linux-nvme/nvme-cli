@@ -153,10 +153,10 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 
 	switch (s->config_type) {
 	case CFG_STRING:
-		*((char **)value) = optarg;
+		*(char **)value = optarg;
 		break;
 	case CFG_INT:
-		*((int *)value) = strtol(optarg, &endptr, 0);
+		*(int *)value = strtol(optarg, &endptr, 0);
 		if (errno || optarg == endptr)
 			ret = argconfig_error("integer", option[index].name, optarg);
 		break;
@@ -166,7 +166,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		if (errno || tmp >= 1 << 8 || optarg == endptr)
 			ret = argconfig_error("byte", option[index].name, optarg);
 		else
-			*((uint8_t *)value) = tmp;
+			*(uint8_t *)value = tmp;
 		break;
 	}
 	case CFG_SHORT: {
@@ -175,7 +175,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		if (errno || tmp >= 1 << 16 || optarg == endptr)
 			ret = argconfig_error("short", option[index].name, optarg);
 		else
-			*((uint16_t *)value) = tmp;
+			*(uint16_t *)value = tmp;
 		break;
 	}
 	case CFG_POSITIVE: {
@@ -184,14 +184,14 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 		if (errno || optarg == endptr)
 			ret = argconfig_error("word", option[index].name, optarg);
 		else
-			*((uint32_t *)value) = tmp;
+			*(uint32_t *)value = tmp;
 		break;
 	}
 	case CFG_INCREMENT:
-		*((int *)value) += 1;
+		*(int *)value += 1;
 		break;
 	case CFG_LONG:
-		*((unsigned long *)value) = strtoul(optarg, &endptr, 0);
+		*(unsigned long *)value = strtoul(optarg, &endptr, 0);
 		if (errno || optarg == endptr)
 			ret = argconfig_error("long integer", option[index].name, optarg);
 		break;
@@ -201,12 +201,12 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 			argconfig_error("long suffixed integer", option[index].name, optarg);
 		break;
 	case CFG_DOUBLE:
-		*((double *)value) = strtod(optarg, &endptr);
+		*(double *)value = strtod(optarg, &endptr);
 		if (errno || optarg == endptr)
 			ret = argconfig_error("float", option[index].name, optarg);
 		break;
 	case CFG_FLAG:
-		*((bool *)value) = true;
+		*(bool *)value = true;
 		break;
 	default:
 		break;
