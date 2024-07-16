@@ -240,7 +240,7 @@ static int argconfig_get_val_len(struct argconfig_opt_val *opt_val, const char *
 	return len;
 }
 
-static int argconfig_set_opt_val(enum argconfig_types type, union argconfig_val *opt_val, void *val)
+static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val *opt_val, void *val)
 {
 	switch (type) {
 	case CFG_FLAG:
@@ -276,8 +276,6 @@ static int argconfig_set_opt_val(enum argconfig_types type, union argconfig_val 
 	default:
 		break;
 	}
-
-	return 0;
 }
 
 static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
@@ -293,7 +291,8 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s, struct o
 		val_len = argconfig_get_val_len(s->opt_val, v->str);
 		if (strncasecmp(str, v->str, len > val_len ? len : val_len))
 			continue;
-		return argconfig_set_opt_val(v->type, &v->val, val);
+		argconfig_set_opt_val(v->type, &v->val, val);
+		return 0;
 	}
 
 	return argconfig_parse_type(s, option, index);
