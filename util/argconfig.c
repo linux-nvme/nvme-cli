@@ -316,7 +316,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		return -errno;
 	}
 
-	for (s = options; s->option && option_index < options_count; s++) {
+	for (s = options; s->option; s++) {
 		if (s->short_option) {
 			short_opts[short_index++] = s->short_option;
 			if (s->argument_type == required_argument ||
