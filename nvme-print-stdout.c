@@ -1714,7 +1714,8 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
 	__u32 rsvd20 = (ctratt >> 20);
 	__u32 fdps = (ctratt >> 19) & 0x1;
-	__u32 rsvd17 = (ctratt >> 17) & 0x3;
+	__u32 rsvd18 = (ctratt >> 18) & 0x1;
+	__u32 hmbr = (ctratt >> 17) & 0x1;
 	__u32 mem = (ctratt >> 16) & 0x1;
 	__u32 elbas = (ctratt >> 15) & 0x1;
 	__u32 delnvmset = (ctratt >> 14) & 0x1;
@@ -1737,8 +1738,10 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 		printf(" [31:20] : %#x\tReserved\n", rsvd20);
 	printf("  [19:19] : %#x\tFlexible Data Placement %sSupported\n",
 		fdps, fdps ? "" : "Not ");
-	if (rsvd17)
-		printf("  [18:17] : %#x\tReserved\n", rsvd17);
+	if (rsvd18)
+		printf("  [18:18] : %#x\tReserved\n", rsvd18);
+	printf("  [17:17] : %#x\tHMB Restrict Non-Operational Power State Access %sSupported\n",
+		hmbr, hmbr ? "" : "Not ");
 	printf("  [16:16] : %#x\tMDTS and Size Limits Exclude Metadata %sSupported\n",
 		mem, mem ? "" : "Not ");
 	printf("  [15:15] : %#x\tExtended LBA Formats %sSupported\n",
@@ -4511,6 +4514,10 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		break;
 	case NVME_FEAT_FID_HOST_MEM_BUF:
 		printf("\tEnable Host Memory (EHM): %s\n", (result & 0x00000001) ? "Enabled" : "Disabled");
+		printf("\tHost Memory Non-operational Access Restriction Enable (HMNARE): %s\n",
+				(result & 0x00000004) ? "True" : "False");
+		printf("\tHost Memory Non-operational Access Restricted (HMNAR): %s\n",
+				(result & 0x00000008) ? "True" : "False");
 		if (buf)
 			stdout_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf);
 		break;

@@ -3425,6 +3425,10 @@ static void json_feature_show_fields_host_mem_buf(struct json_object *r, unsigne
 						  unsigned char *buf)
 {
 	obj_add_str(r, "Enable Host Memory (EHM)", result & 1 ? "Enabled" : "Disabled");
+	obj_add_str(r, "Host Memory Non-operational Access Restriction Enable (HMNARE)",
+			(result & 0x00000004) ? "True" : "False");
+	obj_add_str(r, "Host Memory Non-operational Access Restricted (HMNAR)",
+			(result & 0x00000008) ? "True" : "False");
 
 	if (buf)
 		json_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf, r);
