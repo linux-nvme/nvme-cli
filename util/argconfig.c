@@ -170,11 +170,6 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s, struct 
 	case CFG_STRING:
 		*((char **)value) = optarg;
 		break;
-	case CFG_SIZE:
-		*((size_t *)value) = strtol(optarg, &endptr, 0);
-		if (errno || optarg == endptr)
-			ret = argconfig_error("integer", option[index].name, optarg);
-		break;
 	case CFG_INT:
 		*((int *)value) = strtol(optarg, &endptr, 0);
 		if (errno || optarg == endptr)
