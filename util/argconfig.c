@@ -303,8 +303,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	for (s = options; s->option; s++)
 		options_count++;
 
-	long_opts = calloc(1, sizeof(struct option) * (options_count + 3));
-	short_opts = calloc(1, sizeof(*short_opts) * (options_count * 3 + 5));
+	long_opts = calloc(options_count + 2, sizeof(struct option));
+	short_opts = calloc(options_count * 3 + 3, sizeof(*short_opts));
 
 	if (!long_opts || !short_opts) {
 		fprintf(stderr, "failed to allocate memory for opts: %s\n", strerror(errno));
