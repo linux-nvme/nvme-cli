@@ -30,6 +30,7 @@
  */
 
 #include "argconfig.h"
+#include "cleanup.h"
 #include "suffix.h"
 
 #include <errno.h>
@@ -311,8 +312,8 @@ static bool argconfig_check_human_readable(struct argconfig_commandline_options 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
-	char *short_opts;
-	struct option *long_opts;
+	_cleanup_free_ char *short_opts = NULL;
+	_cleanup_free_ struct option *long_opts = NULL;
 	struct argconfig_commandline_options *s;
 	int c, option_index = 0, short_index = 0, options_count = 0;
 	int ret = 0;
@@ -326,8 +327,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 
 	if (!long_opts || !short_opts) {
 		fprintf(stderr, "failed to allocate memory for opts: %s\n", strerror(errno));
-		ret = -errno;
-		goto out;
+		return -errno;
 	}
 
 	for (s = options; s->option && option_index < options_count; s++) {
@@ -386,9 +386,6 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	if (!argconfig_check_human_readable(options))
 		setlocale(LC_ALL, "C");
 
-out:
-	free(short_opts);
-	free(long_opts);
 	return ret;
 }
 
