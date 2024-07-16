@@ -1571,6 +1571,7 @@ enum nvme_id_ctrl_oaes {
  * @NVME_CTRL_CTRATT_DEL_NVM_SETS: Delete NVM Sets supported
  * @NVME_CTRL_CTRATT_ELBAS: Extended LBA Formats supported
  * @NVME_CTRL_CTRATT_MEM: MDTS and Size Limits Exclude Metadata supported
+ * @NVME_CTRL_CTRATT_HMBR: HMB Restrict Non-Operational Power State Access
  * @NVME_CTRL_CTRATT_FDPS: Flexible Data Placement supported
  */
 enum nvme_id_ctrl_ctratt {
@@ -1591,6 +1592,7 @@ enum nvme_id_ctrl_ctratt {
 	NVME_CTRL_CTRATT_DEL_NVM_SETS		= 1 << 14,
 	NVME_CTRL_CTRATT_ELBAS			= 1 << 15,
 	NVME_CTRL_CTRATT_MEM			= 1 << 16,
+	NVME_CTRL_CTRATT_HMBR			= 1 << 17,
 	NVME_CTRL_CTRATT_FDPS			= 1 << 19,
 };
 
