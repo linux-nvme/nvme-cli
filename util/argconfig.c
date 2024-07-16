@@ -145,7 +145,7 @@ static int argconfig_error(char *type, const char *opt, const char *arg)
 static int argconfig_parse_type(struct argconfig_commandline_options *s, struct option *option,
 				int index)
 {
-	void *value = (void *)(char *)s->default_value;
+	void *value = s->default_value;
 	char *endptr;
 	int ret = 0;
 
