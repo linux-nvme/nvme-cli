@@ -38,8 +38,7 @@ static inline void cleanup_fd(int *fd)
 
 static inline void cleanup_nvme_root(nvme_root_t *r)
 {
-	if (r)
-		nvme_free_tree(*r);
+	nvme_free_tree(*r);
 }
 #define _cleanup_nvme_root_ __cleanup__(cleanup_nvme_root)
 
