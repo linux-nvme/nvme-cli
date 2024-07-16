@@ -45,9 +45,6 @@
 
 static const char *append_usage_str = "";
 
-static int argconfig_parse_val(struct argconfig_commandline_options *s, struct option *option,
-			       int index);
-
 void argconfig_append_usage(const char *str)
 {
 	append_usage_str = str;
