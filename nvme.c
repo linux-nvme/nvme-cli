@@ -2804,9 +2804,9 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, struct command *cmd)
 {
 	_cleanup_free_ struct nvme_ctrl_list *cntlist = NULL;
-	_cleanup_free_ __u16 *ctrlist = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	int err, num, i, list[2048];
+	int err, num;
+	__u16 list[NVME_ID_CTRL_LIST_MAX];
 
 	const char *namespace_id = "namespace to attach";
 	const char *cont = "optional comma-sep controller id list";
@@ -2834,7 +2834,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		return -EINVAL;
 	}
 
-	num = argconfig_parse_comma_sep_array(cfg.cntlist, list, 2047);
+	num = argconfig_parse_comma_sep_array_u16(cfg.cntlist,
+						  list, ARRAY_SIZE(list));
 	if (!num)
 		fprintf(stderr, "warning: empty controller-id list will result in no actual change in namespace attachment\n");
 
@@ -2847,14 +2848,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	if (!cntlist)
 		return -ENOMEM;
 
-	ctrlist = nvme_alloc(sizeof(*ctrlist) * 2048);
-	if (!ctrlist)
-		return -ENOMEM;
-
-	for (i = 0; i < num; i++)
-		ctrlist[i] = (__u16)list[i];
-
-	nvme_init_ctrl_list(cntlist, num, ctrlist);
+	nvme_init_ctrl_list(cntlist, num, list);
 
 	if (attach)
 		err = nvme_cli_ns_attach_ctrls(dev, cfg.namespace_id,
