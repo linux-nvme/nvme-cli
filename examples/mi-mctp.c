@@ -241,6 +241,104 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 	return 0;
 }
 
+int do_control_primitive(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	int rc = 0;
+	char *action = NULL;
+	uint8_t opcode = 0xff;
+	uint16_t cpsr;
+
+	static const struct {
+		const char *name;
+		uint8_t opcode;
+	} control_actions[] = {
+		{ "pause", nvme_mi_control_opcode_pause },
+		{ "resume", nvme_mi_control_opcode_resume },
+		{ "abort", nvme_mi_control_opcode_abort },
+		{ "get-state", nvme_mi_control_opcode_get_state },
+		{ "replay", nvme_mi_control_opcode_replay },
+	};
+
+	static const char * const slot_state[] = {
+		"Idle",
+		"Receive",
+		"Process",
+		"Transmit",
+	};
+
+	static const char * const cpas_state[] = {
+		"Command aborted after processing completed or no command to abort",
+		"Command aborted before processing began",
+		"Command processing partially completed",
+		"Reserved",
+	};
+
+	if (argc < 2) {
+		fprintf(stderr, "no opcode specified\n");
+		return -1;
+	}
+
+	action = argv[1];
+
+	for (int i = 0; i < ARRAY_SIZE(control_actions); i++) {
+		if (!strcmp(action, control_actions[i].name)) {
+			opcode = control_actions[i].opcode;
+			break;
+		}
+	}
+
+	if (opcode == 0xff) {
+		fprintf(stderr, "invalid action specified: %s\n", action);
+		return -1;
+	}
+
+	rc = nvme_mi_control(ep, opcode, 0, &cpsr); /* cpsp reserved in example */
+	if (rc) {
+		warn("can't perform primitive control command");
+		return -1;
+	}
+
+	printf("NVMe control primitive\n");
+	switch (opcode) {
+	case nvme_mi_control_opcode_pause:
+		printf(" Pause : cspr is %#x\n", cpsr);
+		printf("  Pause Flag Status Slot 0: %s\n", (cpsr & (1 << 0)) ? "Yes" : "No");
+		printf("  Pause Flag Status Slot 1: %s\n", (cpsr & (1 << 1)) ? "Yes" : "No");
+		break;
+	case nvme_mi_control_opcode_resume:
+		printf(" Resume : cspr is %#x\n", cpsr);
+		break;
+	case nvme_mi_control_opcode_abort:
+		printf(" Abort : cspr is %#x\n", cpsr);
+		printf("  Command Aborted Status: %s\n", cpas_state[cpsr & 0x3]);
+		break;
+	case nvme_mi_control_opcode_get_state:
+		printf(" Get State : cspr is %#x\n", cpsr);
+		printf("  Slot Command Servicing State: %s\n", slot_state[cpsr & 0x3]);
+		printf("  Bad Message Integrity Check: %s\n", (cpsr & (1 << 4)) ? "Yes" : "No");
+		printf("  Timeout Waiting for a Packet: %s\n", (cpsr & (1 << 5)) ? "Yes" : "No");
+		printf("  Unsupported Transmission Unit: %s\n", (cpsr & (1 << 6)) ? "Yes" : "No");
+		printf("  Bad Header Version: %s\n", (cpsr & (1 << 7)) ? "Yes" : "No");
+		printf("  Unknown Destination ID: %s\n", (cpsr & (1 << 8)) ? "Yes" : "No");
+		printf("  Incorrect Transmission Unit: %s\n", (cpsr & (1 << 9)) ? "Yes" : "No");
+		printf("  Unexpected Middle or End of Packet: %s\n", (cpsr & (1 << 10)) ? "Yes" : "No");
+		printf("  Out-of-Sequence Packet Sequence Number: %s\n", (cpsr & (1 << 11)) ? "Yes" : "No");
+		printf("  Bad, Unexpected, or Expired Message Tag: %s\n", (cpsr & (1 << 12)) ? "Yes" : "No");
+		printf("  Bad Packet or Other Physical Layer: %s\n", (cpsr & (1 << 13)) ? "Yes" : "No");
+		printf("  NVM Subsystem Reset Occurred: %s\n", (cpsr & (1 << 14)) ? "Yes" : "No");
+		printf("  Pause Flag: %s\n", (cpsr & (1 << 15)) ? "Yes" : "No");
+		break;
+	case nvme_mi_control_opcode_replay:
+		printf(" Replay : cspr is %#x\n", cpsr);
+		break;
+	default:
+		/* unreachable */
+		break;
+	}
+
+	return 0;
+}
+
 void fhexdump(FILE *fp, const unsigned char *buf, int len)
 {
 	const int row_len = 16;
@@ -630,6 +728,7 @@ enum action {
 	ACTION_SECURITY_INFO,
 	ACTION_CONFIG_GET,
 	ACTION_CONFIG_SET,
+	ACTION_CONTROL_PRIMITIVE,
 };
 
 static int do_action_endpoint(enum action action, nvme_mi_ep_t ep, int argc, char** argv)
@@ -660,6 +759,9 @@ static int do_action_endpoint(enum action action, nvme_mi_ep_t ep, int argc, cha
 		break;
 	case ACTION_CONFIG_SET:
 		rc = do_config_set(ep, argc, argv);
+		break;
+	case ACTION_CONTROL_PRIMITIVE:
+		rc = do_control_primitive(ep, argc, argv);
 		break;
 	default:
 		/* This shouldn't be possible, as we should be covering all
@@ -707,6 +809,7 @@ int main(int argc, char **argv)
 			"  security-info <controller-id>\n"
 			"  get-config [port]\n"
 			"  set-config <port> <type> <val>\n"
+			"  control-primitive [action(abort|pause|resume|get-state|replay)]\n"
 			"\n"
 			"  'dbus' target will query D-Bus for known MCTP endpoints\n"
 			);
@@ -736,6 +839,8 @@ int main(int argc, char **argv)
 			action = ACTION_CONFIG_GET;
 		} else if (!strcmp(action_str, "set-config")) {
 			action = ACTION_CONFIG_SET;
+		} else if (!strcmp(action_str, "control-primitive")) {
+			action = ACTION_CONTROL_PRIMITIVE;
 		} else {
 			fprintf(stderr, "invalid action '%s'\n", action_str);
 			return EXIT_FAILURE;
