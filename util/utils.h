@@ -2,31 +2,13 @@
 /*
  * Copyright (c) Micron, Inc 2024.
  *
- * @file: micron-utils.h
+ * @file: utils.h
  * @brief: This module contains all the utilities needed for other modules.
  * @author: Chaithanya Shoba <ashoba@micron.com>
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <time.h>
-#include <string.h>
-#include <libgen.h>
-#include <stddef.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "common.h"
-#include "nvme.h"
-#include "libnvme.h"
-#include <limits.h>
-#include "linux/types.h"
 #include "nvme-print.h"
-#include "util/cleanup.h"
 
 /*Request data format*/
 struct __packed request_data {
