@@ -8,6 +8,8 @@
  */
 
 #include "utils.h"
+#include "types.h"
+#include "json.h"
 
 int hex_to_int(char c)
 {

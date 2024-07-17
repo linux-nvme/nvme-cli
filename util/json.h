@@ -56,6 +56,8 @@ uint64_t util_json_object_get_uint64(struct json_object *obj);
 
 struct json_object;
 
+#define json_object_add_value_string(o, k, v)
+
 #endif
 
 #endif
