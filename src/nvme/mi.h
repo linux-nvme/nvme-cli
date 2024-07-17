@@ -368,6 +368,52 @@ struct nvme_mi_admin_resp_hdr {
 } __attribute__((packed));
 
 /**
+ * enum nvme_mi_control_opcode - Operation code for Control Primitives.
+ * @nvme_mi_control_opcode_pause: Suspend response transmission/timeout
+ * @nvme_mi_control_opcode_resume: Resume from a paused condition
+ * @nvme_mi_control_opcode_abort: Re-initialize a Command Slot to the Idle state
+ * @nvme_mi_control_opcode_get_state: Get the state of a Command Slot
+ * @nvme_mi_control_opcode_replay: Retransmit the Response Message
+ */
+enum nvme_mi_control_opcode {
+	nvme_mi_control_opcode_pause			= 0x00,
+	nvme_mi_control_opcode_resume			= 0x01,
+	nvme_mi_control_opcode_abort			= 0x02,
+	nvme_mi_control_opcode_get_state	= 0x03,
+	nvme_mi_control_opcode_replay			= 0x04,
+};
+
+/**
+ * struct nvme_mi_control_req - The Control Primitive request.
+ * @hdr: Generic MI message header
+ * @opcode: Control Primitive Opcodes (using &enum nvme_mi_control_opcode)
+ * @tag: flag - Opaque value passed from request to response
+ * @cpsp: Control Primitive Specific Parameter
+ *
+ */
+struct nvme_mi_control_req {
+	struct nvme_mi_msg_hdr hdr;
+	__u8	opcode;
+	__u8	tag;
+	__le16	cpsp;
+} __attribute((packed));
+
+/** struct nvme_mi_control_resp - The Control Primitive response.
+ * @hdr: Generic MI message header
+ * @status: Generic response code, non-zero on failure
+ * @tag: flag - Opaque value passed from request to response
+ * @cpsr: Control Primitive Specific Response
+ *
+ */
+
+struct nvme_mi_control_resp {
+	struct nvme_mi_msg_hdr hdr;
+	__u8	status;
+	__u8	tag;
+	__le16	cpsr;
+} __attribute((packed));
+
+/**
  * nvme_mi_status_to_string() - return a string representation of the MI
  * status.
  * @status: MI response status
@@ -1074,6 +1120,24 @@ static inline int nvme_mi_admin_identify(nvme_mi_ctrl_t ctrl,
 	return nvme_mi_admin_identify_partial(ctrl, args,
 					      0, NVME_IDENTIFY_DATA_SIZE);
 }
+
+/**
+ * nvme_mi_control() - Perform a Control Primitive command
+ * @ep: endpoint for MI communication
+ * @opcode: Control Primitive opcode (using &enum nvme_mi_control_opcode)
+ * @cpsp: Control Primitive Specific Parameter
+ * @result_cpsr: Optional field to return the result from the CPSR field
+ *
+ * Perform a Control Primitive command, using the opcode specified in @opcode
+ * Stores the result from the CPSR field in @result_cpsr if set.
+ *
+ * Return: 0 on success, non-zero on failure
+ *
+ * See: &enum nvme_mi_control_opcode
+ *
+ */
+int nvme_mi_control(nvme_mi_ep_t ep, __u8 opcode,
+		    __u16 cpsp, __u16 *result_cpsr);
 
 /**
  * nvme_mi_admin_identify_cns_nsid() - Perform an Admin identify command using

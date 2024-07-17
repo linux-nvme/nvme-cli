@@ -529,6 +529,31 @@ static void nvme_mi_admin_init_resp(struct nvme_mi_resp *resp,
 	resp->hdr_len = sizeof(*hdr);
 }
 
+static void nvme_mi_control_init_req(struct nvme_mi_req *req,
+				    struct nvme_mi_control_req *control_req,
+				    __u8 opcode, __u16 cpsp)
+{
+	memset(req, 0, sizeof(*req));
+	memset(control_req, 0, sizeof(*control_req));
+
+	control_req->hdr.type = NVME_MI_MSGTYPE_NVME;
+	control_req->hdr.nmp = (NVME_MI_ROR_REQ << 7) |
+		(NVME_MI_MT_CONTROL << 3); /* we always use command slot 0 */
+	control_req->opcode = opcode;
+	control_req->cpsp = cpu_to_le16(cpsp);
+
+	req->hdr = &control_req->hdr;
+	req->hdr_len = sizeof(*control_req);
+}
+
+static void nvme_mi_control_init_resp(struct nvme_mi_resp *resp,
+				    struct nvme_mi_control_resp *control_resp)
+{
+	memset(resp, 0, sizeof(*resp));
+	resp->hdr = &control_resp->hdr;
+	resp->hdr_len = sizeof(*control_resp);
+}
+
 static int nvme_mi_admin_parse_status(struct nvme_mi_resp *resp, __u32 *result)
 {
 	struct nvme_mi_admin_resp_hdr *admin_hdr;
@@ -578,6 +603,26 @@ static int nvme_mi_admin_parse_status(struct nvme_mi_resp *resp, __u32 *result)
 		*result = nvme_result;
 
 	return nvme_status;
+}
+
+static int nvme_mi_control_parse_status(struct nvme_mi_resp *resp, __u16 *cpsr)
+{
+	struct nvme_mi_control_resp *control_resp;
+
+	if (resp->hdr_len < sizeof(*control_resp)) {
+		errno = -EPROTO;
+		return -1;
+	}
+	control_resp = (struct nvme_mi_control_resp *)resp->hdr;
+
+	if (control_resp->status)
+		return control_resp->status |
+			(NVME_STATUS_TYPE_MI << NVME_STATUS_TYPE_SHIFT);
+
+	if (cpsr)
+		*cpsr = le16_to_cpu(control_resp->cpsr);
+
+	return control_resp->status;
 }
 
 int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
@@ -808,6 +853,29 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 		errno = EPROTO;
 		return -1;
 	}
+
+	return 0;
+}
+
+int nvme_mi_control(nvme_mi_ep_t ep, __u8 opcode,
+		    __u16 cpsp, __u16 *result_cpsr)
+{
+	struct nvme_mi_control_resp control_resp;
+	struct nvme_mi_control_req control_req;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc = 0;
+
+	nvme_mi_control_init_req(&req, &control_req, opcode, cpsp);
+	nvme_mi_control_init_resp(&resp, &control_resp);
+
+	rc = nvme_mi_submit(ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	rc = nvme_mi_control_parse_status(&resp, result_cpsr);
+	if (rc)
+		return rc;
 
 	return 0;
 }
