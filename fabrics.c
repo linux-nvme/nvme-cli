@@ -738,9 +738,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	nvme_root_skip_namespaces(r);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		if (errno != ENOENT)
-			fprintf(stderr, "Failed to scan topology: %s\n",
-				nvme_strerror(errno));
+		fprintf(stderr, "Failed to scan topology: %s\n",
+			nvme_strerror(errno));
 		return ret;
 	}
 
@@ -958,9 +957,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_root_skip_namespaces(r);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		if (errno != ENOENT)
-			fprintf(stderr, "Failed to scan topology: %s\n",
-				nvme_strerror(errno));
+		fprintf(stderr, "Failed to scan topology: %s\n",
+			nvme_strerror(errno));
 		return ret;
 	}
 
@@ -1107,9 +1105,8 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	nvme_root_skip_namespaces(r);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		if (errno != ENOENT)
-			fprintf(stderr, "Failed to scan topology: %s\n",
-				nvme_strerror(errno));
+		fprintf(stderr, "Failed to scan topology: %s\n",
+			nvme_strerror(errno));
 		nvme_free_tree(r);
 		return ret;
 	}
@@ -1255,9 +1252,8 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		nvme_root_skip_namespaces(r);
 		ret = nvme_scan_topology(r, NULL, NULL);
 		if (ret < 0) {
-			if (errno != ENOENT)
-				fprintf(stderr, "Failed to scan topology: %s\n",
-					nvme_strerror(errno));
+			fprintf(stderr, "Failed to scan topology: %s\n",
+				nvme_strerror(errno));
 			nvme_free_tree(r);
 			return ret;
 		}
@@ -1409,9 +1405,8 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 	nvme_root_skip_namespaces(r);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		if (errno != ENOENT)
-			fprintf(stderr, "Failed to scan topology: %s\n",
-				nvme_strerror(errno));
+		fprintf(stderr, "Failed to scan topology: %s\n",
+			nvme_strerror(errno));
 		nvme_free_tree(r);
 		return ret;
 	}
