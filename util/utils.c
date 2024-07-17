@@ -187,7 +187,7 @@ void process_field_size_8(int offset, char *sfield, __u8 *buf, char *datastr)
 
 		lval_lo = *((__u64 *)(&buf[offset]));
 
-		sprintf(buffer, "%lx", __builtin_bswap64(lval_lo));
+		sprintf(buffer, "%"PRIx64, __builtin_bswap64(lval_lo));
 		sprintf(datastr, "%s", hex_to_ascii(buffer));
 	} else if (strstr(sfield, "Timestamp")) {
 		char ts_buf[128];
