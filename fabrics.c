@@ -502,7 +502,7 @@ next:
 	return ret;
 }
 
-static int _discover_from_json_config_file(nvme_root_t r, nvme_host_t h, nvme_subsystem_t s,
+static int _discover_from_json_config_file(nvme_root_t r, nvme_host_t h,
 					   nvme_ctrl_t c, const char *desc, bool connect,
 					  const struct nvme_fabrics_config *defcfg,
 					  nvme_print_flags_t flags,
@@ -612,7 +612,7 @@ static int discover_from_json_config_file(nvme_root_t r, const char *hostnqn,
 
 			nvme_subsystem_for_each_ctrl(s, c) {
 				err = _discover_from_json_config_file(
-					r, h, s, c, desc, connect, defcfg,
+					r, h, c, desc, connect, defcfg,
 					flags, force);
 
 				if (err) {
