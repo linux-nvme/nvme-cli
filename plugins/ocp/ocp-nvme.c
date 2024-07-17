@@ -341,7 +341,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 		.active_latency_minimum_window = 0xA,
 		.debug_log_trigger_enable = 0,
 		.discard_debug_log = 0,
-		.latency_monitor_feature_enable = 0x7,
+		.latency_monitor_feature_enable = 0x1,
 	};
 
 	OPT_ARGS(opts) = {
