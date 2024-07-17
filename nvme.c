@@ -2071,7 +2071,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ void *buf = NULL;
 	int err = -1;
-	_cleanup_fd_ int dfd = -1;
+	_cleanup_fd_ int dfd = STDIN_FILENO;
 
 	struct config {
 		__u16 mos;
@@ -2116,8 +2116,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 			nvme_show_perror(cfg.file);
 			return -errno;
 		}
-	} else
-		dfd = dup(STDIN_FILENO);
+	}
 
 	err = read(dfd, buf, cfg.data_len);
 	if (err < 0) {
