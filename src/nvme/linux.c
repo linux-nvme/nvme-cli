@@ -18,7 +18,6 @@
 #include <unistd.h>
 
 #ifdef CONFIG_OPENSSL
-#include <openssl/engine.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/kdf.h>
@@ -738,9 +737,6 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 	const char hmac_seed[] = "NVMe-over-Fabrics";
 	_cleanup_hmac_ctx_ HMAC_CTX *hmac_ctx = NULL;
 	const EVP_MD *md;
-
-	ENGINE_load_builtin_engines();
-	ENGINE_register_all_complete();
 
 	hmac_ctx = HMAC_CTX_new();
 	if (!hmac_ctx) {
