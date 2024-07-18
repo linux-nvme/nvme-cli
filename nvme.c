@@ -6264,8 +6264,8 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	struct nvme_format_nvm_args args = {
 		.args_size	= sizeof(args),
 		.nsid		= cfg.namespace_id,
-		.lbafu		= (cfg.lbaf & NVME_NS_FLBAS_HIGHER_MASK) >> 4,
-		.lbaf		= cfg.lbaf & NVME_NS_FLBAS_LOWER_MASK,
+		.lbafu		= (cfg.lbaf >> 4) & 0x3,
+		.lbaf		= cfg.lbaf & 0xf,
 		.mset		= cfg.ms,
 		.pi		= cfg.pi,
 		.pil		= cfg.pil,
