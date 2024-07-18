@@ -417,13 +417,14 @@ static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags)
 		return ret;
 
 	devname = argv[optind];
+	errno = ENXIO;
 
 	if (!strncmp(devname, "mctp:", strlen("mctp:")))
 		ret = open_dev_mi_mctp(dev, devname);
 	else
 		ret = open_dev_direct(dev, devname, flags);
 
-	return ret != 0 ? -errno : 0;
+	return ret ? -errno : 0;
 }
 
 static int parse_args(int argc, char *argv[], const char *desc,
