@@ -6415,7 +6415,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		 * should use the buffer method if the value exceeds this
 		 * length.
 		 */
-		if (cfg.feature_id == NVME_FEAT_FID_TIMESTAMP && cfg.value) {
+		if (cfg.feature_id == NVME_FEAT_FID_TIMESTAMP &&
+		    argconfig_parse_seen(opts, "value")) {
 			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
 		} else {
 			if (strlen(cfg.file))
