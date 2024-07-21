@@ -1,0 +1,79 @@
+nvme-ocp-set-error-injection(1)
+===============================
+
+NAME
+----
+nvme-ocp-set-error-injection - Inject error conditions
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp set-error-injection' <device> [--data=<file> | -d <file>]
+			[--number=<num> | -n <num>] [--no-uuid | -N]
+			[--type=<type> | -t <type>] [--nrtdp=<num> | -r <num>]
+			[--verbose | -v] [--output-format=<fmt> | -o <fmt>]
+			[--timeout=<timeout>]
+
+DESCRIPTION
+-----------
+Inject error conditions.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-d <file>::
+--data=<file>::
+	Error injection data structure entries
+
+-n <num>::
+--number=<num>::
+	Number of valid error injection data entries
+
+-N::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
+
+-t <type>::
+--type=<type>::
+	Error injection type
+
+-r <num>::
+--nrtdp=<num>::
+	Number of reads to trigger device panic
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+* Has the program issue a set-error-injection with the 2 entries data file.
++
+------------
+# nvme ocp set-error-injection /dev/nvme0 -d data.bin -n 2
+------------
+
+* Has the program issue a set-error-injection with the 5 reads trigger NAND hang.
++
+------------
+# nvme ocp set-error-injection /dev/nvme0 -t 2 -r 5
+------------
+
+NVME
+----
+Part of the nvme-user suite.
