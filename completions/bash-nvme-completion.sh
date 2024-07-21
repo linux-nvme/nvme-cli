@@ -1487,6 +1487,10 @@ plugin_ocp_opts () {
 		"get-error-injection")
 		opts+=" --sel= -s --no-uuid -n"
 			;;
+		"set-error-injection")
+		opts+=" --data= -d --number= -n --no-uuid -N --type= -t \
+			--nrtdp= -r --verbose -v --output-format -o --timeout="
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1565,7 +1569,7 @@ _nvme_subcmds () {
 			set-dssd-power-state-feature get-dssd-power-state-feature \
 			telemetry-string-log set-telemetry-profile \
 			set-dssd-async-event-config get-dssd-async-event-config \
-			get-error-injection"
+			get-error-injection set-error-injection"
 	)
 
 	# Associative array mapping plugins to corresponding option completions
