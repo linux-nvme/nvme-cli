@@ -551,22 +551,18 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 	return -1;
 }
 
-static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
-			    int version, int hmac, char *identity,
-			    unsigned char *retained, size_t key_len)
+static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
+			     int version, int hmac,
+			     unsigned char *retained, size_t key_len,
+			     char *digest, size_t digest_len)
 {
-	if (version != 0) {
-		nvme_msg(NULL, LOG_ERR, "NVMe TLS 2.0 is not supported; "
-			 "recompile with OpenSSL support.\n");
-		errno = ENOTSUP;
-		return -1;
-	}
-	sprintf(identity, "NVMe0R%02d %s %s",
-		hmac, hostnqn, subsysnqn);
-	return strlen(identity);
+	nvme_msg(NULL, LOG_ERR, "NVMe TLS 2.0 is not supported; "
+		 "recompile with OpenSSL support.\n");
+	errno = ENOTSUP;
+	return -1;
 }
 
-static int derive_tls_key(int hmac, const char *identity,
+static int derive_tls_key(int version, int hmac, const char *context,
 			  unsigned char *retained,
 			  unsigned char *psk, size_t key_len)
 {
@@ -662,7 +658,7 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 	return key_len;
 }
 
-static int derive_tls_key(int hmac, const char *identity,
+static int derive_tls_key(int version, int hmac, const char *context,
 			  unsigned char *retained,
 			  unsigned char *psk, size_t key_len)
 {
@@ -710,9 +706,20 @@ static int derive_tls_key(int hmac, const char *identity,
 		errno = ENOKEY;
 		return -1;
 	}
+	if (version == 1) {
+		char hash_str[4];
+
+		sprintf(hash_str, "%02d ", hmac);
+		if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
+				(const unsigned char *)hash_str,
+				strlen(hash_str)) <= 0) {
+			errno = ENOKEY;
+			return -1;
+		}
+	}
 	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)identity,
-			strlen(identity)) <= 0) {
+			(const unsigned char *)context,
+			strlen(context)) <= 0) {
 		errno = ENOKEY;
 		return -1;
 	}
@@ -792,27 +799,17 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 	return 0;
 }
 
-static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
-			    int version, int hmac, char *identity,
-			    unsigned char *retained, size_t key_len)
+static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
+			     int version, int hmac,
+			     unsigned char *retained, size_t key_len,
+			     char *digest, size_t digest_len)
 {
 	static const char hmac_seed[] = "NVMe-over-Fabrics";
 	size_t hmac_len;
 	const EVP_MD *md = select_hmac(hmac, &hmac_len);
 	_cleanup_hmac_ctx_ HMAC_CTX *hmac_ctx = NULL;
 	_cleanup_free_ unsigned char *psk_ctx = NULL;
-	_cleanup_free_ char *enc_ctx = NULL;
 	size_t len;
-
-	if (version == 0) {
-		sprintf(identity, "NVMe%01dR%02d %s %s",
-			version, hmac, hostnqn, subsysnqn);
-		return strlen(identity);
-	}
-	if (version > 1) {
-		errno = EINVAL;
-		return -1;
-	}
 
 	hmac_ctx = HMAC_CTX_new();
 	if (!hmac_ctx) {
@@ -860,17 +857,19 @@ static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 		errno = ENOKEY;
 		return -1;
 	}
-	enc_ctx = malloc(key_len * 2);
-	memset(enc_ctx, 0, key_len * 2);
-	len = base64_encode(psk_ctx, key_len, enc_ctx);
+	if (key_len * 2 > digest_len) {
+		errno = EINVAL;
+		return -1;
+	}
+	memset(digest, 0, digest_len);
+	len = base64_encode(psk_ctx, key_len, digest);
 	if (len < 0) {
 		errno = ENOKEY;
 		return len;
 	}
-	sprintf(identity, "NVMe%01dR%02d %s %s %s",
-		version, hmac, hostnqn, subsysnqn, enc_ctx);
-	return strlen(identity);
+	return strlen(digest);
 }
+
 #endif /* !CONFIG_OPENSSL_1 */
 
 #ifdef CONFIG_OPENSSL_3
@@ -965,9 +964,10 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 	return 0;
 }
 
-static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
-			    int version, int hmac, char *identity,
-			    unsigned char *retained, size_t key_len)
+static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
+			     int version, int hmac,
+			     unsigned char *retained, size_t key_len,
+			     char *digest, size_t digest_len)
 {
 	static const char hmac_seed[] = "NVMe-over-Fabrics";
 	size_t hmac_len;
@@ -976,20 +976,9 @@ static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 	_cleanup_evp_mac_ctx_ EVP_MAC_CTX *mac_ctx = NULL;
 	_cleanup_evp_mac_ EVP_MAC *mac = NULL;
 	char *progq = NULL;
-	char *digest = NULL;
+	char *dig = NULL;
 	_cleanup_free_ unsigned char *psk_ctx = NULL;
-	_cleanup_free_ char *enc_ctx = NULL;
 	size_t len;
-
-	if (version == 0) {
-		sprintf(identity, "NVMe%01dR%02d %s %s",
-			version, hmac, hostnqn, subsysnqn);
-		return strlen(identity);
-	}
-	if (version > 1) {
-		errno = EINVAL;
-		return -1;
-	}
 
 	lib_ctx = OSSL_LIB_CTX_new();
 	if (!lib_ctx) {
@@ -1009,19 +998,19 @@ static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 	}
 	switch (hmac) {
 	case NVME_HMAC_ALG_SHA2_256:
-		digest = OSSL_DIGEST_NAME_SHA2_256;
+		dig = OSSL_DIGEST_NAME_SHA2_256;
 		break;
 	case NVME_HMAC_ALG_SHA2_384:
-		digest = OSSL_DIGEST_NAME_SHA2_384;
+		dig = OSSL_DIGEST_NAME_SHA2_384;
 		break;
 	default:
 		errno = EINVAL;
 		break;
 	}
-	if (!digest)
+	if (!dig)
 		return -1;
 	*p++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
-						digest, 0);
+						dig, 0);
 	*p = OSSL_PARAM_construct_end();
 
 	psk_ctx = malloc(key_len);
@@ -1065,18 +1054,38 @@ static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 		errno = EMSGSIZE;
 		return -1;
 	}
-	enc_ctx = malloc(hmac_len * 2);
-	memset(enc_ctx, 0, hmac_len * 2);
-	len = base64_encode(psk_ctx, hmac_len, enc_ctx);
+	if (hmac_len * 2 > digest_len) {
+		errno = EINVAL;
+		return -1;
+	}
+	memset(digest, 0, digest_len);
+	len = base64_encode(psk_ctx, hmac_len, digest);
 	if (len < 0) {
 		errno = ENOKEY;
 		return len;
 	}
-	sprintf(identity, "NVMe%01dR%02d %s %s %s",
-		version, hmac, hostnqn, subsysnqn, enc_ctx);
-	return strlen(identity);
+	return strlen(digest);
 }
 #endif /* !CONFIG_OPENSSL_3 */
+
+static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
+			    int version, int hmac, char *digest,
+			    char *identity)
+{
+	if (version == 0) {
+		sprintf(identity, "NVMe%01dR%02d %s %s",
+			version, hmac, hostnqn, subsysnqn);
+		return strlen(identity);
+	}
+	if (version > 1) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	sprintf(identity, "NVMe%01dR%02d %s %s %s",
+		version, hmac, hostnqn, subsysnqn, digest);
+	return strlen(identity);
+}
 
 static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
 			    char *identity, int version,
@@ -1084,6 +1093,8 @@ static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
 			    unsigned char *psk, int key_len)
 {
 	_cleanup_free_ unsigned char *retained = NULL;
+	_cleanup_free_ char *digest = NULL;
+	char *context = identity;
 	int ret = -1;
 
 	if (!hostnqn || !subsysnqn || !identity || !psk) {
@@ -1099,11 +1110,28 @@ static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
 	ret = derive_retained_key(hmac, hostnqn, configured, retained, key_len);
 	if (ret < 0)
 		return ret;
+
+	if (version == 1) {
+		size_t digest_len = 2 * key_len;
+
+		digest = malloc(digest_len);
+		if (!digest) {
+			errno = ENOMEM;
+			return -1;
+		}
+		ret = derive_psk_digest(hostnqn, subsysnqn, version, hmac,
+					retained, key_len,
+					digest, digest_len);
+		if (ret)
+			return ret;
+		context = digest;
+	}
 	ret = gen_tls_identity(hostnqn, subsysnqn, version, hmac,
-			       identity, retained, key_len);
+			       digest, identity);
 	if (ret < 0)
 		return ret;
-	return derive_tls_key(hmac, identity, retained, psk, key_len);
+	return derive_tls_key(version, hmac, context, retained,
+			      psk, key_len);
 }
 
 static size_t nvme_identity_len(int hmac, int version, const char *hostnqn,
