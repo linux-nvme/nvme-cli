@@ -4427,40 +4427,40 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 				       unsigned int result,
 				       unsigned char *buf)
 {
-	__u8 field;
 	uint64_t ull;
+	struct feature_fields *fields = (struct feature_fields *)&result;
 
 	switch (fid) {
 	case NVME_FEAT_FID_ARBITRATION:
-		printf("\tHigh Priority Weight   (HPW): %u\n", ((result & 0xff000000) >> 24) + 1);
-		printf("\tMedium Priority Weight (MPW): %u\n", ((result & 0x00ff0000) >> 16) + 1);
-		printf("\tLow Priority Weight    (LPW): %u\n", ((result & 0x0000ff00) >> 8) + 1);
+		printf("\tHigh Priority Weight   (HPW): %u\n", fields->arbitration.hpw + 1);
+		printf("\tMedium Priority Weight (MPW): %u\n", fields->arbitration.mpw + 1);
+		printf("\tLow Priority Weight    (LPW): %u\n", fields->arbitration.lpw + 1);
 		printf("\tArbitration Burst       (AB): ");
-		if ((result & 0x00000007) == 7)
+		if (fields->arbitration.ab == 7)
 			printf("No limit\n");
 		else
-			printf("%u\n",  1 << (result & 0x00000007));
+			printf("%u\n",  1 << fields->arbitration.ab);
 		break;
 	case NVME_FEAT_FID_POWER_MGMT:
-		field = (result & 0x000000E0) >> 5;
-		printf("\tWorkload Hint (WH): %u - %s\n", field, nvme_feature_wl_hints_to_string(field));
-		printf("\tPower State   (PS): %u\n", result & 0x0000001f);
+		printf("\tWorkload Hint (WH): %u - %s\n", fields->power_management.wh,
+		       nvme_feature_wl_hints_to_string(fields->power_management.wh));
+		printf("\tPower State   (PS): %u\n", fields->power_management.ps);
 		break;
 	case NVME_FEAT_FID_LBA_RANGE:
-		field = result & 0x0000003f;
-		printf("\tNumber of LBA Ranges (NUM): %u\n", field + 1);
+		printf("\tNumber of LBA Ranges (NUM): %u\n", fields->lba_range_type.num + 1);
 		if (buf)
-			stdout_lba_range((struct nvme_lba_range_type *)buf, field);
+			stdout_lba_range((struct nvme_lba_range_type *)buf,
+					 fields->lba_range_type.num);
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
-		field = (result & 0x00300000) >> 20;
-		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field,
-			nvme_feature_temp_type_to_string(field));
-		field = (result & 0x000f0000) >> 16;
+		printf("\tThreshold Type Select         (THSEL): %u - %s\n",
+		       fields->temp_thresh.thsel,
+		       nvme_feature_temp_type_to_string(fields->temp_thresh.thsel));
 		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n",
-		       field, nvme_feature_temp_sel_to_string(field));
+		       fields->temp_thresh.tmpsel,
+		       nvme_feature_temp_sel_to_string(fields->temp_thresh.tmpsel));
 		printf("\tTemperature Threshold         (TMPTH): %s (%u K)\n",
-		       nvme_degrees_string(result & 0x0000ffff), result & 0x0000ffff);
+		       nvme_degrees_string(fields->temp_thresh.tmpth), fields->temp_thresh.tmpth);
 		break;
 	case NVME_FEAT_FID_ERR_RECOVERY:
 		printf("\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n",
