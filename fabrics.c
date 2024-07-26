@@ -1106,6 +1106,14 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	nvme_root_skip_namespaces(r);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
+		/*
+		 * Do not report an error when the modules are not
+		 * loaded, this allows the user to unconditionally call
+		 * disconnect.
+		 */
+		if (errno == ENOENT)
+			return 0;
+
 		fprintf(stderr, "Failed to scan topology: %s\n",
 			nvme_strerror(errno));
 		return -errno;
@@ -1174,9 +1182,16 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 	nvme_root_skip_namespaces(r);
 	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
-		if (errno != ENOENT)
-			fprintf(stderr, "Failed to scan topology: %s\n",
-				nvme_strerror(errno));
+		/*
+		 * Do not report an error when the modules are not
+		 * loaded, this allows the user to unconditionally call
+		 * disconnect.
+		 */
+		if (errno == ENOENT)
+			return 0;
+
+		fprintf(stderr, "Failed to scan topology: %s\n",
+			nvme_strerror(errno));
 		return -errno;
 	}
 
