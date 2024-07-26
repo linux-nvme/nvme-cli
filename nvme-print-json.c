@@ -3649,11 +3649,12 @@ static void json_feature_show_fields_fdp(struct json_object *r, unsigned int res
 static void json_feature_show_fields_fdp_events(struct json_object *r, unsigned int result,
 						unsigned char *buf)
 {
-	unsigned int i;
+	unsigned int i, num;
 	struct nvme_fdp_supported_event_desc *d;
 	char json_str[STR_LEN];
+	num = (result & 0x00ff0000) >> 16;
 
-	for (i = 0; i < result; i++) {
+	for (i = 0; i < num; i++) {
 		d = &((struct nvme_fdp_supported_event_desc *)buf)[i];
 		sprintf(json_str, "%s", d->evta & 0x1 ? "Enabled" : "Not enabled");
 		obj_add_str(r, nvme_fdp_event_to_string(d->evt), json_str);

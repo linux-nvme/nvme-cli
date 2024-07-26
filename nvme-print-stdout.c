@@ -4619,7 +4619,8 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 				(result >> 8) & 0xf);
 		break;
 	case NVME_FEAT_FID_FDP_EVENTS:
-		for (unsigned int i = 0; i < result; i++) {
+		field = (result & 0x00ff0000) >> 16;
+		for (unsigned int i = 0; i < field; i++) {
 			struct nvme_fdp_supported_event_desc *d;
 
 			d = &((struct nvme_fdp_supported_event_desc *)buf)[i];
