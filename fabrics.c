@@ -45,6 +45,7 @@
 #include "nbft.h"
 #include "nvme-print.h"
 #include "fabrics.h"
+#include "util/cleanup.h"
 #include "util/logging.h"
 
 #define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
@@ -1064,7 +1065,7 @@ static void nvmf_disconnect_nqn(nvme_root_t r, char *nqn)
 int nvmf_disconnect(const char *desc, int argc, char **argv)
 {
 	const char *device = "nvme device handle";
-	nvme_root_t r;
+	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	nvme_ctrl_t c;
 	char *p;
 	int ret;
@@ -1107,8 +1108,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
 			nvme_strerror(errno));
-		nvme_free_tree(r);
-		return ret;
+		return -errno;
 	}
 
 	if (cfg.nqn)
@@ -1125,7 +1125,6 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 			if (!c) {
 				fprintf(stderr,
 					"Did not find device %s\n", p);
-				nvme_free_tree(r);
 				return -errno;
 			}
 			ret = nvme_disconnect_ctrl(c);
@@ -1135,16 +1134,15 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 					p, nvme_strerror(errno));
 		}
 	}
-	nvme_free_tree(r);
 
 	return 0;
 }
 
 int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 {
+	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	nvme_host_t h;
 	nvme_subsystem_t s;
-	nvme_root_t r;
 	nvme_ctrl_t c;
 	int ret;
 
@@ -1179,8 +1177,7 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 		if (errno != ENOENT)
 			fprintf(stderr, "Failed to scan topology: %s\n",
 				nvme_strerror(errno));
-		nvme_free_tree(r);
-		return ret;
+		return -errno;
 	}
 
 	nvme_for_each_host(r, h) {
@@ -1200,7 +1197,6 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 			}
 		}
 	}
-	nvme_free_tree(r);
 
 	return 0;
 }
@@ -1210,11 +1206,12 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	char *subsysnqn = NULL;
 	char *transport = NULL, *traddr = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
-	char *hnqn = NULL, *hid = NULL;
+	_cleanup_free_ char *hnqn = NULL;
+	_cleanup_free_ char *hid = NULL;
 	char *hostkey = NULL, *ctrlkey = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	unsigned int verbose = 0;
-	nvme_root_t r;
+	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	int ret;
 	struct nvme_fabrics_config cfg;
 	bool scan_tree = false, modify_config = false, update_config = false;
@@ -1254,8 +1251,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		if (ret < 0) {
 			fprintf(stderr, "Failed to scan topology: %s\n",
 				nvme_strerror(errno));
-			nvme_free_tree(r);
-			return ret;
+			return -errno;
 		}
 	}
 
@@ -1284,7 +1280,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		if (!h) {
 			fprintf(stderr, "Failed to lookup host '%s': %s\n",
 				hostnqn, nvme_strerror(errno));
-			goto out;
+			return -errno;
 		}
 		if (hostkey)
 			nvme_host_set_dhchap_key(h, hostkey);
@@ -1292,7 +1288,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		if (!s) {
 			fprintf(stderr, "Failed to lookup subsystem '%s': %s\n",
 				subsysnqn, nvme_strerror(errno));
-			goto out;
+			return -errno;
 		}
 		c = nvme_lookup_ctrl(s, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface,
@@ -1300,7 +1296,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		if (!c) {
 			fprintf(stderr, "Failed to lookup controller: %s\n",
 				nvme_strerror(errno));
-			goto out;
+			return -errno;
 		}
 		nvmf_update_config(c, &cfg);
 		if (ctrlkey)
@@ -1313,13 +1309,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	if (dump_config)
 		nvme_dump_config(r);
 
-out:
-	if (hid)
-		free(hid);
-	if (hnqn)
-		free(hnqn);
-	nvme_free_tree(r);
-	return -errno;
+	return 0;
 }
 
 static void dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
@@ -1347,8 +1337,8 @@ static void dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name
 
 int nvmf_dim(const char *desc, int argc, char **argv)
 {
+	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	enum nvmf_dim_tas tas;
-	nvme_root_t r;
 	nvme_ctrl_t c;
 	char *p;
 	int ret;
@@ -1407,8 +1397,7 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
 			nvme_strerror(errno));
-		nvme_free_tree(r);
-		return ret;
+		return -errno;
 	}
 
 	if (cfg.nqn) {
@@ -1448,8 +1437,6 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 			dim_operation(c, tas, p);
 		}
 	}
-
-	nvme_free_tree(r);
 
 	return 0;
 }
