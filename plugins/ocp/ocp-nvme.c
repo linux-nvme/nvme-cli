@@ -902,6 +902,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 /// Telemetry Log
 //global buffers
 static __le64 total_log_page_sz;
+static __u8 *header_data;
 static struct telemetry_str_log_format *log_data;
 
 __u8 *ptelemetry_buffer;
@@ -1588,8 +1589,6 @@ exit_status:
 static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_bin)
 {
 	int ret = 0, fd;
-	__u8 *header_data;
-	struct telemetry_str_log_format *log_data;
 	__le64 stat_id_str_table_ofst = 0;
 	__le64 event_str_table_ofst = 0;
 	__le64 vu_event_str_table_ofst = 0;
@@ -1663,7 +1662,6 @@ static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_b
 	}
 
 exit_status:
-	free(header_data);
 	return 0;
 }
 
@@ -3621,7 +3619,7 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 		}
 	} else
 		fprintf(stderr, "ERROR : OCP : Unable to read C9 data from buffer\n");
-
+	free(header_data);
 	return ret;
 }
 
