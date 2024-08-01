@@ -2711,13 +2711,13 @@ struct nvme_ns_list {
  * @rsvd16:	reserved
  */
 struct nvme_id_ctrl_nvm {
-	__u8     vsl;
-	__u8     wzsl;
-	__u8     wusl;
-	__u8     dmrl;
-	__le32   dmrsl;
-	__le64   dmsl;
-	__u8     rsvd16[4080];
+	__u8	vsl;
+	__u8	wzsl;
+	__u8	wusl;
+	__u8	dmrl;
+	__le32	dmrsl;
+	__le64	dmsl;
+	__u8	rsvd16[4080];
 };
 
 /**
