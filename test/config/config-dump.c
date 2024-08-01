@@ -44,9 +44,9 @@ out:
 
 int main(int argc, char *argv[])
 {
-	bool pass = true;
+	bool pass;
 
-	config_dump(argv[1]);
+	pass = config_dump(argv[1]);
 	fflush(stdout);
 
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
