@@ -2708,7 +2708,9 @@ struct nvme_ns_list {
  * @dmrl:	Dataset Management Ranges Limit
  * @dmrsl:	Dataset Management Range Size Limit
  * @dmsl:	Dataset Management Size Limit
- * @rsvd16:	reserved
+ * @rsvd16:	Reserved
+ * @aocs:	Admin Optional Command Support
+ * @rsvd20:	Reserved
  */
 struct nvme_id_ctrl_nvm {
 	__u8	vsl;
@@ -2717,7 +2719,9 @@ struct nvme_id_ctrl_nvm {
 	__u8	dmrl;
 	__le32	dmrsl;
 	__le64	dmsl;
-	__u8	rsvd16[4080];
+	__u8	rsvd16[2];
+	__le16	aocs;
+	__u8	rsvd20[4076];
 };
 
 /**
@@ -2729,6 +2733,8 @@ struct nvme_id_ctrl_nvm {
  * @elbaf:	List of Extended LBA Format Support
  * @npdgl:	Namespace Preferred Deallocate Granularity Large
  * @rsvd272:	Reserved
+ * @tlbaag:	Tracked LBA Allocation Granularity
+ * @rsvd296:	Reserved
  */
 struct nvme_nvm_id_ns {
 	__le64	lbstm;
@@ -2737,7 +2743,9 @@ struct nvme_nvm_id_ns {
 	__u8	rsvd10[2];
 	__le32	elbaf[64];
 	__le32	npdgl;
-	__u8	rsvd272[3824];
+	__u8	rsvd272[20];
+	__le32	tlbaag;
+	__u8	rsvd296[3800];
 };
 
 /**
@@ -4171,14 +4179,18 @@ struct nvme_lbas_ns_element {
 };
 
 /**
- * enum nvme_lba_status_atype - Potentially Unrecoverable LBAs
- * @NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED:	Potentially Unrecoverable LBAs
- * @NVME_LBA_STATUS_ATYPE_SCAN_TRACKED:		Potentially Unrecoverable LBAs
- *						associated with physical storage
+ * enum nvme_lba_status_atype - Action type the controller uses to return LBA status
+ * @NVME_LBA_STATUS_ATYPE_ALLOCATED:		Return tracked allocated LBAs status
+ * @NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED:	Perform scan and return Untracked and
+ * 						Tracked Potentially Unrecoverable LBAs
+ * 						status
+ * @NVME_LBA_STATUS_ATYPE_TRACKED:		Return Tracked Potentially Unrecoverable
+ * 						LBAs associated with physical storage
  */
 enum nvme_lba_status_atype {
-	NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED			= 0x10,
-	NVME_LBA_STATUS_ATYPE_SCAN_TRACKED			= 0x11,
+	NVME_LBA_STATUS_ATYPE_ALLOCATED		= 0x2,
+	NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED	= 0x10,
+	NVME_LBA_STATUS_ATYPE_TRACKED		= 0x11,
 };
 
 /**
