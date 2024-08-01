@@ -1455,7 +1455,6 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 				fprintf(stderr,
 					"Did not find device %s: %s\n",
 					p, nvme_strerror(errno));
-				nvme_free_tree(r);
 				return -errno;
 			}
 			dim_operation(c, tas, p);
