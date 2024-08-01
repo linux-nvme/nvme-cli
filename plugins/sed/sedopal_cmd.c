@@ -474,7 +474,7 @@ void sedopal_print_locking_features(uint8_t features)
 int sedopal_cmd_discover(int fd)
 {
 #ifdef IOC_OPAL_DISCOVERY
-	int rc;
+	int rc, feat_length;
 	bool sedopal_locking_supported = false;
 	struct opal_discovery discover;
 	struct level_0_discovery_header *dh;
@@ -509,6 +509,7 @@ int sedopal_cmd_discover(int fd)
 	 */
 	while (feat < feat_end) {
 		code = be16toh(feat->code);
+		feat_length = feat->length + 4 /* hdr */;
 		switch (code) {
 		case OPAL_FEATURE_CODE_LOCKING:
 			locking_flags = feat->feature;
@@ -520,7 +521,7 @@ int sedopal_cmd_discover(int fd)
 			break;
 		}
 
-		feat++;
+		feat = (struct level_0_discovery_features *)((char *)feat + feat_length);
 	}
 
 	rc = 0;
