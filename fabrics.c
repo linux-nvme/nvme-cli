@@ -899,7 +899,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	unsigned int verbose = 0;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	nvme_host_t h;
-	nvme_ctrl_t c;
+	_cleanup_nvme_ctrl_ nvme_ctrl_t c = NULL;
 	int ret;
 	nvme_print_flags_t flags;
 	struct nvme_fabrics_config cfg = { 0 };
