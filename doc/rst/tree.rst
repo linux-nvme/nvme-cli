@@ -53,6 +53,20 @@ Sets the managing application string for **r**.
 Returns the managing application string for **r** or NULL if not set.
 
 
+.. c:function:: void nvme_root_skip_namespaces (nvme_root_t r)
+
+   Skip namespace scanning
+
+**Parameters**
+
+``nvme_root_t r``
+  :c:type:`nvme_root_t` object
+
+**Description**
+
+Sets a flag to skip namespaces during scanning.
+
+
 .. c:function:: void nvme_root_release_fds (nvme_root_t r)
 
    Close all opened file descriptors in the tree
@@ -229,12 +243,60 @@ true if PDC is enabled for **h**, else false
 
 **Description**
 
-Initializes the default host object based on the values in
-/etc/nvme/hostnqn and /etc/nvme/hostid and attaches it to **r**.
+Initializes the default host object based on the hostnqn/hostid
+values returned by nvme_host_get_ids() and attaches it to **r**.
 
 **Return**
 
 :c:type:`nvme_host_t` object
+
+
+.. c:function:: int nvme_host_get_ids (nvme_root_t r, char *hostnqn_arg, char *hostid_arg, char **hostnqn, char **hostid)
+
+   Retrieve host ids from various sources
+
+**Parameters**
+
+``nvme_root_t r``
+  :c:type:`nvme_root_t` object
+
+``char *hostnqn_arg``
+  Input hostnqn (command line) argument
+
+``char *hostid_arg``
+  Input hostid (command line) argument
+
+``char **hostnqn``
+  Output hostnqn
+
+``char **hostid``
+  Output hostid
+
+**Description**
+
+nvme_host_get_ids figures out which hostnqn/hostid is to be used.
+There are several sources where this information can be retrieved.
+
+The order is:
+
+ - Start with informartion from DMI or device-tree
+ - Override hostnqn and hostid from /etc/nvme files
+ - Override hostnqn or hostid with values from JSON
+   configuration file. The first host entry in the file is
+   considered the default host.
+ - Override hostnqn or hostid with values from the command line
+   (**hostnqn_arg**, **hostid_arg**).
+
+ If the IDs are still NULL after the lookup algorithm, the function
+ will generate random IDs.
+
+ The function also verifies that hostnqn and hostid matches. The Linux
+ NVMe implementation expects a 1:1 matching between the IDs.
+
+**Return**
+
+0 on success (**hostnqn** and **hostid** contain valid strings
+ which the caller needs to free), -1 otherwise and errno is set.
 
 
 .. c:function:: nvme_subsystem_t nvme_first_subsystem (nvme_host_t h)

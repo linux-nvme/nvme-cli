@@ -1,0 +1,21 @@
+.TH "nvme_init_default_logging" 9 "nvme_init_default_logging" "August 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_default_logging \- Initialize default (fallback) logging
+.SH SYNOPSIS
+.B "void" nvme_init_default_logging
+.BI "(FILE *fp "  ","
+.BI "int lvl "  ","
+.BI "bool log_pid "  ","
+.BI "bool log_tstamp "  ");"
+.SH ARGUMENTS
+.IP "fp" 12
+File descriptor for logging messages
+.IP "lvl" 12
+Logging level to set
+.IP "log_pid" 12
+Boolean to enable logging of the PID
+.IP "log_tstamp" 12
+Boolean to enable logging of the timestamp
+.SH "DESCRIPTION"
+Sets the default logging settings for the library in case the root object
+is absent.

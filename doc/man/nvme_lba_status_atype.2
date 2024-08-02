@@ -1,19 +1,27 @@
-.TH "libnvme" 9 "enum nvme_lba_status_atype" "May 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_lba_status_atype" "August 2024" "API Manual" LINUX
 .SH NAME
-enum nvme_lba_status_atype \- Potentially Unrecoverable LBAs
+enum nvme_lba_status_atype \- Action type the controller uses to return LBA status
 .SH SYNOPSIS
 enum nvme_lba_status_atype {
+.br
+.BI "    NVME_LBA_STATUS_ATYPE_ALLOCATED"
+, 
+.br
 .br
 .BI "    NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED"
 , 
 .br
 .br
-.BI "    NVME_LBA_STATUS_ATYPE_SCAN_TRACKED"
+.BI "    NVME_LBA_STATUS_ATYPE_TRACKED"
 
 };
 .SH Constants
+.IP "NVME_LBA_STATUS_ATYPE_ALLOCATED" 12
+Return tracked allocated LBAs status
 .IP "NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED" 12
-Potentially Unrecoverable LBAs
-.IP "NVME_LBA_STATUS_ATYPE_SCAN_TRACKED" 12
-Potentially Unrecoverable LBAs
-associated with physical storage
+Perform scan and return Untracked and
+Tracked Potentially Unrecoverable LBAs
+status
+.IP "NVME_LBA_STATUS_ATYPE_TRACKED" 12
+Return Tracked Potentially Unrecoverable
+LBAs associated with physical storage

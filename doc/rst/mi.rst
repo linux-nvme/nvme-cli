@@ -2459,7 +2459,7 @@ This log consists of a header describing the log and descriptors containing
 the asymmetric namespace access information for ANA Groups that contain
 namespaces that are attached to the controller processing the command.
 
-See :c:type:`struct nvme_ana_rsp_hdr <nvme_ana_rsp_hdr>` for the definition of the returned structure.
+See :c:type:`struct nvme_ana_log <nvme_ana_log>` for the definition of the returned structure.
 
 **Return**
 
@@ -2493,6 +2493,46 @@ See :c:type:`struct nvme_ana_group_desc <nvme_ana_group_desc>` for the definitio
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_ana_log_atomic (nvme_mi_ctrl_t ctrl, bool rgo, bool rae, unsigned int retries, struct nvme_ana_log *log, __u32 *len)
+
+   Retrieve Asymmetric Namespace Access log page atomically
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rgo``
+  Whether to retrieve ANA groups only (no NSIDs)
+
+``bool rae``
+  Whether to retain asynchronous events
+
+``unsigned int retries``
+  The maximum number of times to retry on log page changes
+
+``struct nvme_ana_log *log``
+  Pointer to a buffer to receive the ANA log page
+
+``__u32 *len``
+  Input: the length of the log page buffer.
+  Output: the actual length of the ANA log page.
+
+**Description**
+
+See :c:type:`struct nvme_ana_log <nvme_ana_log>` for the definition of the returned structure.
+
+**Return**
+
+If successful, returns 0 and sets *len to the actual log page length.
+If unsuccessful, returns the nvme command status if a response was received
+(see :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+Sets errno = EINVAL if retries == 0.
+Sets errno = EAGAIN if unable to read the log page atomically
+because chgcnt changed during each of the retries attempts.
+Sets errno = ENOSPC if the full log page does not fit in the provided buffer.
 
 
 .. c:function:: int nvme_mi_admin_get_log_lba_status (nvme_mi_ctrl_t ctrl, bool rae, __u64 offset, __u32 len, void *log)

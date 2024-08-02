@@ -28,6 +28,30 @@ logging functions
 Sets the default logging variables for the library.
 
 
+.. c:function:: void nvme_init_default_logging (FILE *fp, int lvl, bool log_pid, bool log_tstamp)
+
+   Initialize default (fallback) logging
+
+**Parameters**
+
+``FILE *fp``
+  File descriptor for logging messages
+
+``int lvl``
+  Logging level to set
+
+``bool log_pid``
+  Boolean to enable logging of the PID
+
+``bool log_tstamp``
+  Boolean to enable logging of the timestamp
+
+**Description**
+
+Sets the default logging settings for the library in case the root object
+is absent.
+
+
 .. c:function:: int nvme_get_logging_level (nvme_root_t r, bool *log_pid, bool *log_tstamp)
 
    Get current logging level
@@ -72,6 +96,9 @@ will be set as well. This means the global root object is always pointing to
 the latest created root object. Note the first **nvme_free_tree** call will reset
 the global root object.
 
+This function is deprecated. Use nvme_init_default_logging or/and
+nvme_init_logging instead.
+
 
 .. c:function:: void nvme_set_debug (bool debug)
 
@@ -84,7 +111,7 @@ the global root object.
 
 **Description**
 
-Don't use it, it's debricated.
+This function is deprecated. Use nvme_init_default_logging instead.
 
 
 .. c:function:: bool nvme_get_debug (void)
@@ -99,7 +126,7 @@ Don't use it, it's debricated.
 **Description**
 
 
-Don't use it, it's debricated.
+This function is deprecated. Use nvme_get_logging_level instead.
 
 **Return**
 

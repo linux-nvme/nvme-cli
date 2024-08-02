@@ -1,0 +1,9 @@
+.TH "nvmf_hostid_generate" 9 "nvmf_hostid_generate" "August 2024" "libnvme API manual" LINUX
+.SH NAME
+nvmf_hostid_generate \- Generate a machine specific host identifier
+.SH SYNOPSIS
+.B "char *" nvmf_hostid_generate
+.SH ARGUMENTS
+.SH "RETURN"
+On success, an identifier string based on the machine identifier to
+be used as NVMe Host Identifier, or NULL on failure.

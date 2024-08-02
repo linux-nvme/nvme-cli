@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_fabrics_uri" "August 2024" "API Manual" LINUX
+.SH NAME
+struct nvme_fabrics_uri \- Parsed URI structure
+.SH SYNOPSIS
+struct nvme_fabrics_uri {
+.br
+.BI "    char *scheme;"
+.br
+.BI "    char *protocol;"
+.br
+.BI "    char *userinfo;"
+.br
+.BI "    char *host;"
+.br
+.BI "    int port;"
+.br
+.BI "    char **path_segments;"
+.br
+.BI "    char *query;"
+.br
+.BI "    char *fragment;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "scheme" 12
+Scheme name (typically 'nvme')
+.IP "protocol" 12
+Optional protocol/transport (e.g. 'tcp')
+.IP "userinfo" 12
+Optional user information component of the URI authority
+.IP "host" 12
+Host transport address
+.IP "port" 12
+The port subcomponent or 0 if not specified
+.IP "path_segments" 12
+NULL-terminated array of path segments
+.IP "query" 12
+Optional query string component (separated by '?')
+.IP "fragment" 12
+Optional fragment identifier component (separated by '#')

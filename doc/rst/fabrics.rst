@@ -98,6 +98,55 @@ Fabrics-specific definitions.
 
 
 
+
+
+.. c:struct:: nvme_fabrics_uri
+
+   Parsed URI structure
+
+**Definition**
+
+::
+
+  struct nvme_fabrics_uri {
+    char *scheme;
+    char *protocol;
+    char *userinfo;
+    char *host;
+    int port;
+    char **path_segments;
+    char *query;
+    char *fragment;
+  };
+
+**Members**
+
+``scheme``
+  Scheme name (typically 'nvme')
+
+``protocol``
+  Optional protocol/transport (e.g. 'tcp')
+
+``userinfo``
+  Optional user information component of the URI authority
+
+``host``
+  Host transport address
+
+``port``
+  The port subcomponent or 0 if not specified
+
+``path_segments``
+  NULL-terminated array of path segments
+
+``query``
+  Optional query string component (separated by '?')
+
+``fragment``
+  Optional fragment identifier component (separated by '#')
+
+
+
 .. c:function:: const char * nvmf_trtype_str (__u8 trtype)
 
    Decode TRTYPE field
@@ -434,6 +483,38 @@ An nvm namespace qualified name string based on the machine
 identifier, or NULL if not successful.
 
 
+.. c:function:: char * nvmf_hostnqn_generate_from_hostid (char *hostid)
+
+   Generate a host nqn from host identifier
+
+**Parameters**
+
+``char *hostid``
+  Host identifier
+
+**Description**
+
+If **hostid** is NULL, the function generates it based on the machine
+identifier.
+
+**Return**
+
+On success, an NVMe Qualified Name for host identification. This
+name is based on the given host identifier. On failure, NULL.
+
+
+.. c:function:: char * nvmf_hostid_generate ()
+
+   Generate a machine specific host identifier
+
+**Parameters**
+
+**Return**
+
+On success, an identifier string based on the machine identifier to
+be used as NVMe Host Identifier, or NULL on failure.
+
+
 .. c:function:: char * nvmf_hostnqn_from_file ()
 
    Reads the host nvm qualified name from the config default location
@@ -541,5 +622,41 @@ tasks are supported: register, deregister, and registration update.
 **Return**
 
 0 on success; on failure -1 is returned and errno is set
+
+
+.. c:function:: struct nvme_fabrics_uri * nvme_parse_uri (const char *str)
+
+   Parse the URI string
+
+**Parameters**
+
+``const char *str``
+  URI string
+
+**Description**
+
+Parse the URI string as defined in the NVM Express Boot Specification.
+Supported URI elements looks as follows:
+
+  nvme+tcp://user**host**:port/subsys_nqn/nid?query=val#fragment
+
+**Return**
+
+:c:type:`nvme_fabrics_uri` structure on success; NULL on failure with errno
+set.
+
+
+.. c:function:: void nvme_free_uri (struct nvme_fabrics_uri *uri)
+
+   Free the URI structure
+
+**Parameters**
+
+``struct nvme_fabrics_uri *uri``
+  :c:type:`nvme_fabrics_uri` structure
+
+**Description**
+
+Free an :c:type:`nvme_fabrics_uri` structure.
 
 

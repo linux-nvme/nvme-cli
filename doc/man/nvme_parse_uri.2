@@ -1,0 +1,17 @@
+.TH "nvme_parse_uri" 9 "nvme_parse_uri" "August 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_parse_uri \- Parse the URI string
+.SH SYNOPSIS
+.B "struct nvme_fabrics_uri *" nvme_parse_uri
+.BI "(const char *str "  ");"
+.SH ARGUMENTS
+.IP "str" 12
+URI string
+.SH "DESCRIPTION"
+Parse the URI string as defined in the NVM Express Boot Specification.
+Supported URI elements looks as follows:
+
+nvme+tcp://user\fIhost\fP:port/subsys_nqn/nid?query=val#fragment
+.SH "RETURN"
+\fInvme_fabrics_uri\fP structure on success; NULL on failure with errno
+set.

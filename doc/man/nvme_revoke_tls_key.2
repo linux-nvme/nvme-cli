@@ -1,0 +1,17 @@
+.TH "nvme_revoke_tls_key" 9 "nvme_revoke_tls_key" "August 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_revoke_tls_key \- Revoke TLS key from keyring
+.SH SYNOPSIS
+.B "long" nvme_revoke_tls_key
+.BI "(const char *keyring "  ","
+.BI "const char *key_type "  ","
+.BI "const char *identity "  ");"
+.SH ARGUMENTS
+.IP "keyring" 12
+Keyring to use
+.IP "key_type" 12
+Type of the key to revoke
+.IP "identity" 12
+Key identity string
+.SH "RETURN"
+0 on success or on failure -1 with errno set.

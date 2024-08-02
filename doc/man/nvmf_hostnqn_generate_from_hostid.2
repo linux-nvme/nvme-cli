@@ -1,0 +1,15 @@
+.TH "nvmf_hostnqn_generate_from_hostid" 9 "nvmf_hostnqn_generate_from_hostid" "August 2024" "libnvme API manual" LINUX
+.SH NAME
+nvmf_hostnqn_generate_from_hostid \- Generate a host nqn from host identifier
+.SH SYNOPSIS
+.B "char *" nvmf_hostnqn_generate_from_hostid
+.BI "(char *hostid "  ");"
+.SH ARGUMENTS
+.IP "hostid" 12
+Host identifier
+.SH "DESCRIPTION"
+If \fIhostid\fP is NULL, the function generates it based on the machine
+identifier.
+.SH "RETURN"
+On success, an NVMe Qualified Name for host identification. This
+name is based on the given host identifier. On failure, NULL.

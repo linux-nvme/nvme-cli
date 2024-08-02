@@ -205,6 +205,23 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: size_t nvme_get_ana_log_len_from_id_ctrl (const struct nvme_id_ctrl *id_ctrl, bool rgo)
+
+   Retrieve maximum possible ANA log size
+
+**Parameters**
+
+``const struct nvme_id_ctrl *id_ctrl``
+  Controller identify data
+
+``bool rgo``
+  If true, return maximum log page size without NSIDs
+
+**Return**
+
+A byte limit on the size of the controller's ANA log page
+
+
 .. c:function:: int nvme_get_ana_log_len (int fd, size_t *analen)
 
    Retrieve size of the current ANA log
@@ -697,6 +714,26 @@ generate the corresponding TLs identity.
 
 The string containing the TLS identity. It is the responsibility
 of the caller to free the returned string.
+
+
+.. c:function:: long nvme_revoke_tls_key (const char *keyring, const char *key_type, const char *identity)
+
+   Revoke TLS key from keyring
+
+**Parameters**
+
+``const char *keyring``
+  Keyring to use
+
+``const char *key_type``
+  Type of the key to revoke
+
+``const char *identity``
+  Key identity string
+
+**Return**
+
+0 on success or on failure -1 with errno set.
 
 
 .. c:function:: char * nvme_export_tls_key (const unsigned char *key_data, int key_len)

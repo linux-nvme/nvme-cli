@@ -1,0 +1,35 @@
+.TH "nvme_mi_admin_get_ana_log_atomic" 9 "nvme_mi_admin_get_ana_log_atomic" "August 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_ana_log_atomic \- Retrieve Asymmetric Namespace Access log page atomically
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_ana_log_atomic
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "bool rgo "  ","
+.BI "bool rae "  ","
+.BI "unsigned int retries "  ","
+.BI "struct nvme_ana_log *log "  ","
+.BI "__u32 *len "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "rgo" 12
+Whether to retrieve ANA groups only (no NSIDs)
+.IP "rae" 12
+Whether to retain asynchronous events
+.IP "retries" 12
+The maximum number of times to retry on log page changes
+.IP "log" 12
+Pointer to a buffer to receive the ANA log page
+.IP "len" 12
+Input: the length of the log page buffer.
+Output: the actual length of the ANA log page.
+.SH "DESCRIPTION"
+See \fIstruct nvme_ana_log\fP for the definition of the returned structure.
+.SH "RETURN"
+If successful, returns 0 and sets *len to the actual log page length.
+If unsuccessful, returns the nvme command status if a response was received
+(see \fIenum nvme_status_field\fP) or -1 with errno set otherwise.
+Sets errno = EINVAL if retries == 0.
+Sets errno = EAGAIN if unable to read the log page atomically
+because chgcnt changed during each of the retries attempts.
+Sets errno = ENOSPC if the full log page does not fit in the provided buffer.

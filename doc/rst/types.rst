@@ -2148,6 +2148,12 @@ power scale value
 ``NVME_CTRL_CTRATT_ELBAS``
   Extended LBA Formats supported
 
+``NVME_CTRL_CTRATT_MEM``
+  MDTS and Size Limits Exclude Metadata supported
+
+``NVME_CTRL_CTRATT_HMBR``
+  HMB Restrict Non-Operational Power State Access
+
 ``NVME_CTRL_CTRATT_FDPS``
   Flexible Data Placement supported
 
@@ -3162,6 +3168,34 @@ power scale value
   Mask to get the protection information format for
   the extended LBA format.
 
+``NVME_NVM_ELBAF_QPIF_MASK``
+  Mask to get the Qualified Protection Information
+  Format.
+
+
+
+
+.. c:enum:: nvme_nvm_id_ns_pif
+
+   This field indicates the type of the Protection Information Format
+
+**Constants**
+
+``NVME_NVM_PIF_16B_GUARD``
+  16-bit Guard Protection Information Format
+
+``NVME_NVM_PIF_32B_GUARD``
+  32-bit Guard Protection Information Format
+
+``NVME_NVM_PIF_64B_GUARD``
+  64-bit Guard Protection Information Format
+
+``NVME_NVM_PIF_QTYPE``
+  If Qualified Protection Information Format Supports
+  and Protection Information Format is set to 3, then
+  protection information format is taken from Qualified
+  Protection Information Format field.
+
 
 
 
@@ -3759,7 +3793,9 @@ power scale value
     __u8 dmrl;
     __le32 dmrsl;
     __le64 dmsl;
-    __u8 rsvd16[4080];
+    __u8 rsvd16[2];
+    __le16 aocs;
+    __u8 rsvd20[4076];
   };
 
 **Members**
@@ -3783,7 +3819,13 @@ power scale value
   Dataset Management Size Limit
 
 ``rsvd16``
-  reserved
+  Reserved
+
+``aocs``
+  Admin Optional Command Support
+
+``rsvd20``
+  Reserved
 
 
 
@@ -3800,9 +3842,13 @@ power scale value
   struct nvme_nvm_id_ns {
     __le64 lbstm;
     __u8 pic;
-    __u8 rsvd9[3];
+    __u8 pifa;
+    __u8 rsvd10[2];
     __le32 elbaf[64];
-    __u8 rsvd268[3828];
+    __le32 npdgl;
+    __u8 rsvd272[20];
+    __le32 tlbaag;
+    __u8 rsvd296[3800];
   };
 
 **Members**
@@ -3813,13 +3859,25 @@ power scale value
 ``pic``
   Protection Information Capabilities
 
-``rsvd9``
+``pifa``
+  Protection Information Format Attribute
+
+``rsvd10``
   Reserved
 
 ``elbaf``
   List of Extended LBA Format Support
 
-``rsvd268``
+``npdgl``
+  Namespace Preferred Deallocate Granularity Large
+
+``rsvd272``
+  Reserved
+
+``tlbaag``
+  Tracked LBA Allocation Granularity
+
+``rsvd296``
   Reserved
 
 
@@ -5821,6 +5879,12 @@ bytes, in size. This log captures the controller’s internal state.
 ``NVME_PEL_THERMAL_EXCURSION_EVENT``
   Thermal Excursion Event
 
+``NVME_PEL_VENDOR_SPECIFIC_EVENT``
+  Vendor Specific Event
+
+``NVME_PEL_TCG_DEFINED_EVENT``
+  TCG Defined Event
+
 
 
 
@@ -6395,16 +6459,21 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:enum:: nvme_lba_status_atype
 
-   Potentially Unrecoverable LBAs
+   Action type the controller uses to return LBA status
 
 **Constants**
 
-``NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED``
-  Potentially Unrecoverable LBAs
+``NVME_LBA_STATUS_ATYPE_ALLOCATED``
+  Return tracked allocated LBAs status
 
-``NVME_LBA_STATUS_ATYPE_SCAN_TRACKED``
-  Potentially Unrecoverable LBAs
-  associated with physical storage
+``NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED``
+  Perform scan and return Untracked and
+  Tracked Potentially Unrecoverable LBAs
+  status
+
+``NVME_LBA_STATUS_ATYPE_TRACKED``
+  Return Tracked Potentially Unrecoverable
+  LBAs associated with physical storage
 
 
 
@@ -13060,6 +13129,9 @@ true if **status** is of the specified type and value
 
 ``nvme_cmd_resv_release``
   Reservation Release
+
+``nvme_cmd_cancel``
+  Cancel
 
 ``nvme_cmd_copy``
   Copy

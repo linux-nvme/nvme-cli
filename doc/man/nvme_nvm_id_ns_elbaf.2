@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_nvm_id_ns_elbaf" "May 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_nvm_id_ns_elbaf" "August 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_nvm_id_ns_elbaf \- This field indicates the extended LBA format
 .SH SYNOPSIS
@@ -9,6 +9,10 @@ enum nvme_nvm_id_ns_elbaf {
 .br
 .br
 .BI "    NVME_NVM_ELBAF_PIF_MASK"
+, 
+.br
+.br
+.BI "    NVME_NVM_ELBAF_QPIF_MASK"
 
 };
 .SH Constants
@@ -18,3 +22,6 @@ the variable-sized storage tag/reference tag fields
 .IP "NVME_NVM_ELBAF_PIF_MASK" 12
 Mask to get the protection information format for
 the extended LBA format.
+.IP "NVME_NVM_ELBAF_QPIF_MASK" 12
+Mask to get the Qualified Protection Information
+Format.

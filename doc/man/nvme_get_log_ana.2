@@ -1,4 +1,4 @@
-.TH "nvme_get_log_ana" 9 "nvme_get_log_ana" "May 2024" "libnvme API manual" LINUX
+.TH "nvme_get_log_ana" 9 "nvme_get_log_ana" "August 2024" "libnvme API manual" LINUX
 .SH NAME
 nvme_get_log_ana \- Retrieve Asymmetric Namespace Access log page
 .SH SYNOPSIS
@@ -27,7 +27,7 @@ This log consists of a header describing the log and descriptors containing
 the asymmetric namespace access information for ANA Groups that contain
 namespaces that are attached to the controller processing the command.
 
-See \fIstruct nvme_ana_rsp_hdr\fP for the definition of the returned structure.
+See \fIstruct nvme_ana_log\fP for the definition of the returned structure.
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

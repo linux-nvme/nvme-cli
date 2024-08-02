@@ -1,0 +1,33 @@
+.TH "libnvme" 9 "enum nvme_nvm_id_ns_pif" "August 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_nvm_id_ns_pif \- This field indicates the type of the Protection Information Format
+.SH SYNOPSIS
+enum nvme_nvm_id_ns_pif {
+.br
+.BI "    NVME_NVM_PIF_16B_GUARD"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIF_32B_GUARD"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIF_64B_GUARD"
+, 
+.br
+.br
+.BI "    NVME_NVM_PIF_QTYPE"
+
+};
+.SH Constants
+.IP "NVME_NVM_PIF_16B_GUARD" 12
+16-bit Guard Protection Information Format
+.IP "NVME_NVM_PIF_32B_GUARD" 12
+32-bit Guard Protection Information Format
+.IP "NVME_NVM_PIF_64B_GUARD" 12
+64-bit Guard Protection Information Format
+.IP "NVME_NVM_PIF_QTYPE" 12
+If Qualified Protection Information Format Supports
+and Protection Information Format is set to 3, then
+protection information format is taken from Qualified
+Protection Information Format field.

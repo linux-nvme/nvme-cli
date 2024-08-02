@@ -1,0 +1,14 @@
+.TH "nvme_get_ana_log_len_from_id_ctrl" 9 "nvme_get_ana_log_len_from_id_ctrl" "August 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_ana_log_len_from_id_ctrl \- Retrieve maximum possible ANA log size
+.SH SYNOPSIS
+.B "size_t" nvme_get_ana_log_len_from_id_ctrl
+.BI "(const struct nvme_id_ctrl *id_ctrl "  ","
+.BI "bool rgo "  ");"
+.SH ARGUMENTS
+.IP "id_ctrl" 12
+Controller identify data
+.IP "rgo" 12
+If true, return maximum log page size without NSIDs
+.SH "RETURN"
+A byte limit on the size of the controller's ANA log page

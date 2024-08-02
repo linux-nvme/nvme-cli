@@ -1,4 +1,4 @@
-.TH "nvme_default_host" 9 "nvme_default_host" "May 2024" "libnvme API manual" LINUX
+.TH "nvme_default_host" 9 "nvme_default_host" "August 2024" "libnvme API manual" LINUX
 .SH NAME
 nvme_default_host \- Initializes the default host
 .SH SYNOPSIS
@@ -8,7 +8,7 @@ nvme_default_host \- Initializes the default host
 .IP "r" 12
 \fInvme_root_t\fP object
 .SH "DESCRIPTION"
-Initializes the default host object based on the values in
-/etc/nvme/hostnqn and /etc/nvme/hostid and attaches it to \fIr\fP.
+Initializes the default host object based on the hostnqn/hostid
+values returned by \fBnvme_host_get_ids\fP and attaches it to \fIr\fP.
 .SH "RETURN"
 \fInvme_host_t\fP object

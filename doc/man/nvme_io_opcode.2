@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_io_opcode" "May 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_io_opcode" "August 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_io_opcode \- Opcodes for I/O Commands
 .SH SYNOPSIS
@@ -56,6 +56,10 @@ enum nvme_io_opcode {
 , 
 .br
 .br
+.BI "    nvme_cmd_cancel"
+, 
+.br
+.br
 .BI "    nvme_cmd_copy"
 , 
 .br
@@ -102,6 +106,8 @@ Reservation Acquire
 I/O Management Receive
 .IP "nvme_cmd_resv_release" 12
 Reservation Release
+.IP "nvme_cmd_cancel" 12
+Cancel
 .IP "nvme_cmd_copy" 12
 Copy
 .IP "nvme_cmd_io_mgmt_send" 12
