@@ -123,6 +123,7 @@ config_meson_docs() {
         -Ddocs=all                              \
         -Ddocs-build=true                       \
         --force-fallback-for=libnvme            \
+        --prefix=/tmp/usr                       \
         -Dlibnvme:werror=false                  \
         "${BUILDDIR}"
 }
@@ -154,7 +155,12 @@ test_meson_coverage() {
 }
 
 install_meson_appimage() {
-    "${MESON}" install                             \
+    "${MESON}" install                          \
+        -C "${BUILDDIR}"
+}
+
+install_meson_docs() {
+    "${MESON}" install                          \
         -C "${BUILDDIR}"
 }
 
