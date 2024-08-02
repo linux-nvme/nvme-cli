@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/03/2024
+.\"      Date: 08/02/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "05/03/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "08/02/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,7 +51,7 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
                         [\-\-nr\-poll\-queues=<#> | \-P <#>]
                         [\-\-queue\-size=<#> | \-Q <#>] [\-\-keyring=<#>]
                         [\-\-tls_key=<#>] [\-\-hdr\-digest | \-g] [\-\-data\-digest | \-G]
-                        [\-\-persistent | \-p] [\-\-tls] [\-\-concat] [\-\-quiet | \-S]
+                        [\-\-persistent | \-p] [\-\-tls] [\-\-concat] [\-\-quiet]
                         [\-\-dump\-config | \-O] [\-\-nbft] [\-\-no\-nbft]
                         [\-\-nbft\-path=<STR>] [\-\-context=<STR>]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
@@ -234,7 +234,7 @@ Enable TLS encryption (TCP)\&.
 Enable secure concatenation (TCP)\&.
 .RE
 .PP
-\-S, \-\-quiet
+\-\-quiet
 .RS 4
 Suppress error messages\&.
 .RE

@@ -756,7 +756,8 @@ nvme-dsm(1) Manual Page
                         [--ad=&lt;deallocate&gt; | -d &lt;deallocate&gt;]
                         [--idw=&lt;write&gt; | -w &lt;write&gt;] [--idr=&lt;read&gt; | -r &lt;read&gt;]
                         [--cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt;]
-                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -898,6 +899,17 @@ any settings from the flags may have provided.</p></div>
         Increase the information detail in the output.
 </p>
 </dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -918,7 +930,7 @@ any settings from the flags may have provided.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-05-03 16:03:16 CEST
+ 2024-08-02 09:57:44 CEST
 </div>
 </div>
 </body>

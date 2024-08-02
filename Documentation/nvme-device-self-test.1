@@ -2,12 +2,12 @@
 .\"     Title: nvme-device-self-test
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/03/2024
+.\"      Date: 08/02/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DEVICE\-SELF\-" "1" "05/03/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-DEVICE\-SELF\-" "1" "08/02/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,6 +35,7 @@ nvme-device-self-test \- Perform the necessary tests to observe the performance 
 \fInvme device\-self\-test\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
                         [\-\-self\-test\-code=<NUM> | \-s <NUM>] [\-\-wait | \-w]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -72,6 +73,11 @@ or
 \-v, \-\-verbose
 .RS 4
 Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

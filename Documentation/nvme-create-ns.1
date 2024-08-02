@@ -2,12 +2,12 @@
 .\"     Title: nvme-create-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/03/2024
+.\"      Date: 08/02/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "05/03/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-CREATE\-NS" "1" "08/02/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -168,6 +168,11 @@ or
 \-v, \-\-verbose
 .RS 4
 Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value 120,000\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -768,7 +768,7 @@ nvme-connect(1) Manual Page
                         [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]
                         [--ctrl-loss-tmo=&lt;#&gt; | -l &lt;#&gt;] [--tos=&lt;#&gt; | -T &lt;#&gt;]
                         [--keyring=&lt;#&gt;] [--tls_key=&lt;#&gt;]
-                        [--duplicate-connect | -D] [--disable-sqflow | -d]
+                        [--duplicate-connect | -D] [--disable-sqflow ]
                         [--hdr-digest | -g] [--data-digest | -G] [--tls]
                         [--concat] [--dump-config | -O] [--application=&lt;id&gt;]
                         [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
@@ -1039,6 +1039,8 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default controller loss timeout period (in seconds).
+        This is the maximum time the kernel will retry a connection, where each
+        retry will be issued after <em>reconnect-delay</em> seconds.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1080,9 +1082,6 @@ cellspacing="0" cellpadding="4">
         port.
 </p>
 </dd>
-<dt class="hdlist1">
--d
-</dt>
 <dt class="hdlist1">
 --disable-sqflow
 </dt>
@@ -1219,7 +1218,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-05-03 16:03:16 CEST
+ 2024-08-02 09:57:44 CEST
 </div>
 </div>
 </body>

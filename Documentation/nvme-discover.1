@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/03/2024
+.\"      Date: 08/02/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "05/03/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "08/02/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,7 +51,7 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                         [\-\-nr\-poll\-queues=<#> | \-P <#>]
                         [\-\-queue\-size=<#> | \-Q <#>] [\-\-keyring=<#>]
                         [\-\-tls_key=<#>] [\-\-hdr\-digest | \-g] [\-\-data\-digest | \-G]
-                        [\-\-persistent | \-p] [\-\-quiet | \-S] [\-\-tls] [\-\-concat]
+                        [\-\-persistent | \-p] [\-\-quiet] [\-\-tls] [\-\-concat]
                         [\-\-dump\-config | \-O] [\-\-output\-format=<fmt> | \-o <fmt>]
                         [\-\-force] [\-\-nbft] [\-\-no\-nbft] [\-\-nbft\-path=<STR>]
                         [\-\-context=<STR>]
@@ -240,7 +240,7 @@ Enable TLS encryption (TCP)\&.
 Enable secure concatenation (TCP)\&.
 .RE
 .PP
-\-S, \-\-quiet
+\-\-quiet
 .RS 4
 Suppress already connected errors\&.
 .RE

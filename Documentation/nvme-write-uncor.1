@@ -2,12 +2,12 @@
 .\"     Title: nvme-uncor
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/03/2024
+.\"      Date: 08/02/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-UNCOR" "1" "05/03/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-UNCOR" "1" "08/02/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,6 +38,7 @@ nvme-write-uncor \- Send an NVMe write uncorrectable command, return results
                         [\-\-dir\-type=<dtype> | \-T <dtype>]
                         [\-\-dir\-spec=<dspec> | \-S <dspec>]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -81,6 +82,11 @@ or
 \-v, \-\-verbose
 .RS 4
 Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

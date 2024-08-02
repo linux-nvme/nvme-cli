@@ -1,0 +1,177 @@
+'\" t
+.\"     Title: nvme-ocp-internal-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 08/02/2024
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-OCP\-INTERNAL\" "1" "08/02/2024" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-ocp-internal-log \- Conditionally retrieves 07h Telemetry Host\-Initiated log, C9h OCP Strings Log from an NVMe device or from user\-specified file path\&. Takes retrieved logs and decodes into human\-readable output format specified by user\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme ocp internal\-log\fR <device>
+                        [\-\-telemetry\-log=<file> | \-l <file>]
+                        [\-\-string\-log=<file> | \-s <file>]
+                        [\-\-output\-file=<file> | \-o <file>]
+                        [\-\-output\-format=<fmt> | \-f <fmt>]
+                        [\-\-data\-area=<da> | \-a <da>]
+                        [\-\-telemetry\-type=<type> | \-t <type>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Conditionally retrieves 07h Telemetry Host\-Initiated log, C9h OCP Strings Log from an NVMe device or from user\-specified file path\&. Takes retrieved logs and decodes (or) parses into human\-readable output format specified by user\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+This will only work on OCP compliant devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-l <file>, \-\-telemetry\-log=<file>
+.RS 4
+File name to existing Telemetry Host\-Initiated raw binary data to be used\&. If no path is specified, a live retrieval of payload on <device> will be performed\&.
+.RE
+.PP
+\-s <file>, \-\-string\-log=<file>
+.RS 4
+File name to existing OCP String Log raw binary data to be used\&. If no path is specified, a live retrieval of payload on <device> will be performed\&.
+.RE
+.PP
+\-o <file>, \-\-output\-file=<file>
+.RS 4
+Filepath name to where human\-readable output data will be saved to\&.
+.RE
+.PP
+\-f <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR\&. Only one output format can be used at a time, the default value is
+\fIjson\fR\&.
+.RE
+.PP
+\-a <da>, \-\-data\-area=<da>
+.RS 4
+Retrieves the specific data area requested\&. Valid inputs are 1,2\&. If this option is not specified, the default value is 1\&.
+.RE
+.PP
+\-t <type>, \-\-telemetry\-type=<type>
+.RS 4
+If set to 1, controller shall capture the Telemetry Host\-Initiated data representing the internal state of the controller at the time the associated Get Log Page command is processed\&. If cleared to 0, controller shall not update this data\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve in both OCP String Log and Telemetry Host\-Initiated Log from device\&. Decode default data\-area(s) in default format and output to console\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp internal\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve Telemetry Host\-Initiated data, reads in the OCP String Log locally\&. Decode default data\-area(s) in default format\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp internal\-log /dev/nvme0 \-\-string\-log=ocp_string_log\&.bin
+ \-\-output\-file=output_file\&.json
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve OCP String Log, reads in the Telemetry Host\-Initiated Log locally\&. Decode data\-areas 1 and 2, and output in json format\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp internal\-log /dev/nvme0 \-\-telemetry\-log=host_telemetry\&.bin
+ \-\-output\-format=json \-\-output\-file=output_file\&.json \-\-data\-area=2
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Reads in both OCP String Log and Telemetry Host\-Initiated Log locally\&. Decode data\-areas 1 and 2, and output in normal text format\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp internal\-log /dev/nvme0 \-\-string\-log=ocp_string_log\&.bin
+ \-\-telemetry\-log=host_telemetry\&.bin \-\-output\-format=normal
+ \-\-output\-file=output_file\&.txt \-\-data\-area=2
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

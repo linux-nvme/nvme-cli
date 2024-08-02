@@ -1,0 +1,86 @@
+'\" t
+.\"     Title: nvme-ocp-set-plp-health-check-interval
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 08/02/2024
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-OCP\-SET\-PLP\" "1" "08/02/2024" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-ocp-set-plp-health-check-interval \- Define and set PLP health check interval
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme ocp set\-plp\-health\-check\-interval\fR <device> [\-\-plp_health_interval=<plp_health_interval> | \-p <plp_health_interval>] [\-\-save | \-s] [\-\-no\-uuid | \-n]
+.fi
+.SH "DESCRIPTION"
+.sp
+Define Set PLP health check interval\&. No argument prints current mode\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1)\&.
+.sp
+This will only work on OCP compliant devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-p <plp_health_interval>, \-\-plp_health_interval=<plp_health_interval>
+.RS 4
+Set the plp health check interval [31:16]
+.RE
+.PP
+\-n, \-\-no\-uuid
+.RS 4
+Do not try to automatically detect UUID index for this command (required for old OCP 1\&.0 support)
+.RE
+.PP
+\-s, \-\-save
+.RS 4
+Save the attribute so that it persists through all power states and resets\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue a set\-plp\-health\-check\-interval to retrieve the 0xC6 set features\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp eol\-plp\-failure\-mode /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

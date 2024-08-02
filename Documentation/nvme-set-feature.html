@@ -755,7 +755,8 @@ nvme-set-feature(1) Manual Page
                         [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
                         [--data=&lt;data-file&gt; | -d &lt;data-file&gt;] [--save | -s]
                         [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
-                        [--cdw12=&lt;cdw12&gt; | -c &lt;cdw12&gt;]</pre>
+                        [--cdw12=&lt;cdw12&gt; | -c &lt;cdw12&gt;]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -894,6 +895,17 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
         The value for command dword 12, if applicable.
 </p>
 </dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -934,7 +946,7 @@ Sets the host id to the ascii string.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-05-03 16:03:17 CEST
+ 2024-08-02 09:57:44 CEST
 </div>
 </div>
 </body>

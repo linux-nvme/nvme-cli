@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-release
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/03/2024
+.\"      Date: 08/02/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-RELEASE" "1" "05/03/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-RELEASE" "1" "08/02/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,7 @@ nvme-resv-release \- Release an nvme reservation
                         [\-\-rtype=<rtype> | \-t <rtype>]
                         [\-\-rrela=<rrela> | \-a <rrela>] [\-\-iekey | \-i]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -170,6 +171,11 @@ or
 \-v, \-\-verbose
 .RS 4
 Increase the information detail in the output\&.
+.RE
+.PP
+\-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

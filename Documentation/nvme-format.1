@@ -2,12 +2,12 @@
 .\"     Title: nvme-format
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/03/2024
+.\"      Date: 08/02/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FORMAT" "1" "05/03/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-FORMAT" "1" "08/02/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -108,7 +108,7 @@ T}
 .PP
 \-p <pil>, \-\-pil=<pil>
 .RS 4
-Protection Information Location: If set to \(oq1\(cq and protection information is enabled, then protection information is transferred as the first eight bytes of metadata\&. If cleared to \(oq0\(cq and protection information is enabled, then protection information is transferred as the last eight bytes of metadata\&. Defaults to 0\&.
+Protection Information Location: If set to \(oq1\(cq and protection information is enabled, then protection information is transferred as the first bytes of metadata\&. If cleared to \(oq0\(cq and protection information is enabled, then protection information is transferred as the last bytes of metadata\&. Defaults to 0\&.
 .RE
 .PP
 \-i <pi>, \-\-pi=<pi>
@@ -173,7 +173,7 @@ Just send the command immediately without warning of the implications\&.
 .PP
 \-t <timeout>, \-\-timeout=<timeout>
 .RS 4
-Override default timeout value\&. In milliseconds\&.
+Override default timeout value 600,000\&. In milliseconds\&.
 .RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
