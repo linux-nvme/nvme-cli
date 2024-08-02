@@ -103,7 +103,7 @@ adoc_sources = [
   'nvme-ocp-set-telemetry-profile',
   'nvme-ocp-smart-add-log',
   'nvme-ocp-telemetry-string-log-page',
-  'nvme-ocp-unsupported-reqs-log-pages',
+  'nvme-ocp-unsupported-reqs-log',
   'nvme-ocp-internal-log',
   'nvme-persistent-event-log',
   'nvme-pred-lat-event-agg-log',
