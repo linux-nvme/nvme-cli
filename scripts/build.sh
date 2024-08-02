@@ -115,6 +115,7 @@ config_meson_docs() {
     CC="${CC}" "${MESON}" setup                 \
         -Ddocs=all                              \
         -Ddocs-build=true                       \
+        --prefix=/tmp/usr                       \
         "${BUILDDIR}"
 }
 
@@ -198,6 +199,11 @@ test_muon() {
     ninja="${SAMU}" "${MUON}" -C "${BUILDDIR}" test
 }
 
+install_meson_docs() {
+    "${MESON}" install                          \
+        -C "${BUILDDIR}"
+}
+
 if [[ "${BUILDTOOL}" == "muon" ]]; then
     SAMU="$(which samu 2> /dev/null)" || true
     if [[ -z "${SAMU}" ]]; then
@@ -220,3 +226,4 @@ rm -rf "${BUILDDIR}"
 config_"${BUILDTOOL}"_"${CONFIG}"
 fn_exists "build_${BUILDTOOL}_${CONFIG}" && "build_${BUILDTOOL}_${CONFIG}" || build_"${BUILDTOOL}"
 fn_exists "test_${BUILDTOOL}_${CONFIG}" && "test_${BUILDTOOL}_${CONFIG}" || test_"${BUILDTOOL}"
+fn_exists "install_${BUILDTOOL}_${CONFIG}" && "install_${BUILDTOOL}_${CONFIG}" || true;
