@@ -3301,6 +3301,7 @@ struct nvme_cmd_effects_log {
  * @NVME_CMD_EFFECTS_NCC:	Namespace Capability Change
  * @NVME_CMD_EFFECTS_NIC:	Namespace Inventory Change
  * @NVME_CMD_EFFECTS_CCC:	Controller Capability Change
+ * @NVME_CMD_EFFECTS_CSER_MASK:	Command Submission and Execution Relaxations
  * @NVME_CMD_EFFECTS_CSE_MASK:	Command Submission and Execution
  * @NVME_CMD_EFFECTS_UUID_SEL:	UUID Selection Supported
  */
@@ -3310,7 +3311,8 @@ enum nvme_cmd_effects {
 	NVME_CMD_EFFECTS_NCC		= 1 << 2,
 	NVME_CMD_EFFECTS_NIC		= 1 << 3,
 	NVME_CMD_EFFECTS_CCC		= 1 << 4,
-	NVME_CMD_EFFECTS_CSE_MASK	= 3 << 16,
+	NVME_CMD_EFFECTS_CSER_MASK	= 3 << 14,
+	NVME_CMD_EFFECTS_CSE_MASK	= 7 << 16,
 	NVME_CMD_EFFECTS_UUID_SEL	= 1 << 19,
 };
 
