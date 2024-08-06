@@ -3744,6 +3744,13 @@ static void stdout_effects_log_human(FILE *stream, __u32 effect)
 	fprintf(stream, "  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
 	fprintf(stream, "  USS%s", (effect & NVME_CMD_EFFECTS_UUID_SEL) ? set : clr);
 
+	if ((effect & NVME_CMD_EFFECTS_CSER_MASK) >> 14 == 0)
+		fprintf(stream, "  No CSER defined\n");
+	else if ((effect & NVME_CMD_EFFECTS_CSER_MASK) >> 14 == 1)
+		fprintf(stream, "  No admin command for any namespace\n");
+	else
+		fprintf(stream, "  Reserved CSER\n");
+
 	if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 0)
 		fprintf(stream, "  No command restriction\n");
 	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 1)
