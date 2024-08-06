@@ -1122,7 +1122,7 @@ static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
 		ret = derive_psk_digest(hostnqn, subsysnqn, version, hmac,
 					retained, key_len,
 					digest, digest_len);
-		if (ret)
+		if (ret < 0)
 			return ret;
 		context = digest;
 	}
