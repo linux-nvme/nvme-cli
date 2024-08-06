@@ -3,6 +3,7 @@
 if json_c_dep.found()
   sources += [
     'plugins/amzn/amzn-nvme.c',
+    'plugins/dapustor/dapustor-nvme.c',
     'plugins/dell/dell-nvme.c',
     'plugins/dera/dera-nvme.c',
     'plugins/fdp/fdp.c',
