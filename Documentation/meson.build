@@ -14,6 +14,7 @@ adoc_sources = [
   'nvme-connect-all',
   'nvme-copy',
   'nvme-create-ns',
+  'nvme-dapustor-smart-log-add',
   'nvme-delete-ns',
   'nvme-dera-stat',
   'nvme-detach-ns',
