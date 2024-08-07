@@ -332,7 +332,7 @@ static void show_dapustor_ext_add_smart_log_jsn(struct nvme_extended_additional_
 
 static void show_dapustor_smart_log_jsn(struct nvme_additional_smart_log *smart,
 					struct nvme_extended_additional_smart_log *ext_smart,
-					unsigned int nsid, const char *devname)
+					unsigned int nsid, const char *devname, bool has_ext)
 {
 	struct json_object *root, *dev_stats;
 
@@ -341,7 +341,8 @@ static void show_dapustor_smart_log_jsn(struct nvme_additional_smart_log *smart,
 
 	dev_stats = json_create_object();
 	show_dapustor_add_smart_log_jsn(smart, dev_stats);
-	show_dapustor_ext_add_smart_log_jsn(ext_smart, dev_stats);
+	if (has_ext)
+		show_dapustor_ext_add_smart_log_jsn(ext_smart, dev_stats);
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
@@ -470,19 +471,21 @@ static void show_dapustor_ext_add_smart_log(struct nvme_extended_additional_smar
 
 static void show_dapustor_smart_log(struct nvme_additional_smart_log *smart,
 				    struct nvme_extended_additional_smart_log *ext_smart,
-				    unsigned int nsid, const char *devname)
+				    unsigned int nsid, const char *devname, bool has_ext)
 {
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
 		devname, nsid);
 	printf("key                               normalized raw\n");
 	show_dapustor_add_smart_log(smart);
-	show_dapustor_ext_add_smart_log(ext_smart);
+	if (has_ext)
+		show_dapustor_ext_add_smart_log(ext_smart);
 }
 
 static int dapustor_additional_smart_log_data(
 		int dev_fd,
 		struct nvme_additional_smart_log *smart_log,
-		struct nvme_extended_additional_smart_log *ext_smart_log)
+		struct nvme_extended_additional_smart_log *ext_smart_log,
+		bool *has_ext)
 {
 	int err;
 
@@ -492,9 +495,8 @@ static int dapustor_additional_smart_log_data(
 		return err;
 	}
 	err = nvme_get_log_simple(dev_fd, 0xcb, sizeof(*ext_smart_log), ext_smart_log);
-	if (err)
-		nvme_show_status(err);
-	return err;
+	*has_ext = !err;
+	return 0;
 }
 
 static int dapustor_additional_smart_log(int argc, char **argv, struct command *cmd,
@@ -509,6 +511,7 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 	struct nvme_extended_additional_smart_log ext_smart_log;
 	struct nvme_dev *dev;
 	int err;
+	bool has_ext = false;
 
 	struct config {
 		uint32_t namespace_id;
@@ -531,14 +534,14 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 	if (err)
 		return err;
 
-	err = dapustor_additional_smart_log_data(dev_fd(dev), &smart_log, &ext_smart_log);
+	err = dapustor_additional_smart_log_data(dev_fd(dev), &smart_log, &ext_smart_log, &has_ext);
 	if (!err) {
 		if (cfg.json)
 			show_dapustor_smart_log_jsn(&smart_log, &ext_smart_log,
-						    cfg.namespace_id, dev->name);
+						    cfg.namespace_id, dev->name, has_ext);
 		else if (!cfg.raw_binary)
 			show_dapustor_smart_log(&smart_log, &ext_smart_log,
-						cfg.namespace_id, dev->name);
+						cfg.namespace_id, dev->name, has_ext);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}

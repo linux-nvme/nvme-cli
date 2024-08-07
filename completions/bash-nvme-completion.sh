@@ -1228,6 +1228,38 @@ plugin_transcend_opts () {
 	return 0
 }
 
+plugin_dapustor_opts () {
+	local opts=""
+	local compargs=""
+
+	local nonopt_args=0
+	for (( i=0; i < ${#words[@]}-1; i++ )); do
+		if [[ ${words[i]} != -* ]]; then
+			let nonopt_args+=1
+		fi
+	done
+
+	if [ $nonopt_args -eq 3 ]; then
+		opts="/dev/nvme* "
+	fi
+
+	opts+=" "
+
+	case "$1" in
+		"smart-log-add")
+		opts+=" --namespace-id= -n --raw-binary -b \
+			--json -j"
+			;;
+		"help")
+		opts+=$NO_OPTS
+			;;
+	esac
+
+	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+
+	return 0
+}
+
 plugin_zns_opts () {
 	local opts=""
 	local compargs=""
@@ -1554,6 +1586,7 @@ _nvme_subcmds () {
 			vs-drive-info cloud-SSDplugin-version market-log \
 			smart-log-add temp-stats version help"
 		[transcend]="healthvalue badblock"
+		[dapustor]="smart-log-add"
 		[zns]="id-ctrl id-ns zone-mgmt-recv \
 			zone-mgmt-send report-zones close-zone \
 			finish-zone open-zone reset-zone offline-zone \
@@ -1588,6 +1621,7 @@ _nvme_subcmds () {
 		[sfx]="plugin_sfx_opts"
 		[solidigm]="plugin_solidigm_opts"
 		[transcend]="plugin_transcend_opts"
+		[dapustor]="plugin_dapustor_opts"
 		[zns]="plugin_zns_opts"
 		[nvidia]="plugin_nvidia_opts"
 		[ymtc]="plugin_ymtc_opts"

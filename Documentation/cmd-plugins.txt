@@ -204,3 +204,6 @@ linknvme:nvme-zns-zrwa-flush-zone[1]::
 
 linknvme:nvme-inspur-nvme-vendor-log[1]::
 	NVMe Inspur Device Vendor log page request
+
+linknvme:nvme-dapustor-smart-log-add[1]::
+	NVMe DapuStor Additional SMART log page
