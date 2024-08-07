@@ -3467,6 +3467,9 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 		return err;
 	}
 
+	if (argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
 	ctrl_nvm = nvme_alloc(sizeof(*ctrl_nvm));
 	if (!ctrl_nvm)
 		return -ENOMEM;

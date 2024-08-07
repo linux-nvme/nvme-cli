@@ -3053,8 +3053,22 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	}
 }
 
+static void stdout_id_ctrl_nvm_aocs(__u16 aocs)
+{
+	__u16 rsvd = (aocs & 0xfffe) >> 1;
+	__u8 ralbas = aocs & 0x1;
+
+	if (rsvd)
+		printf("  [15:1] : %#x\tReserved\n", rsvd);
+	printf("  [0:0] : %#x\tReporting Allocated LBA %sSupported\n", ralbas,
+		ralbas ? "" : "Not ");
+	printf("\n");
+}
+
 static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 {
+	int verbose = stdout_print_ops.flags & VERBOSE;
+
 	printf("NVMe Identify Controller NVM:\n");
 	printf("vsl    : %u\n", ctrl_nvm->vsl);
 	printf("wzsl   : %u\n", ctrl_nvm->wzsl);
@@ -3062,6 +3076,9 @@ static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	printf("dmrl   : %u\n", ctrl_nvm->dmrl);
 	printf("dmrsl  : %u\n", le32_to_cpu(ctrl_nvm->dmrsl));
 	printf("dmsl   : %"PRIu64"\n", le64_to_cpu(ctrl_nvm->dmsl));
+	printf("aocs   : %u\n", le16_to_cpu(ctrl_nvm->aocs));
+	if (verbose)
+		stdout_id_ctrl_nvm_aocs(le16_to_cpu(ctrl_nvm->aocs));
 }
 
 static void stdout_nvm_id_ns_pic(__u8 pic)
@@ -3159,6 +3176,7 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	}
 	if (ns->nsfeat & 0x20)
 		printf("npdgl : %#x\n", le32_to_cpu(nvm_ns->npdgl));
+	printf("tlbaag: %#x\n", le32_to_cpu(nvm_ns->tlbaag));
 }
 
 static void stdout_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
