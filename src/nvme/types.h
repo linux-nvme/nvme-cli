@@ -1293,7 +1293,8 @@ struct nvme_id_psd {
  * @rsvd358:   Reserved
  * @megcap:    Max Endurance Group Capacity indicates the maximum capacity
  *	       of a single Endurance Group.
- * @rsvd384:   Reserved
+ * @tmpthha:   Temperature Threshold Hysteresis Attributes
+ * @rsvd385:   Reserved
  * @sqes:      Submission Queue Entry Size, see &enum nvme_id_ctrl_sqes.
  * @cqes:      Completion Queue Entry Size, see &enum nvme_id_ctrl_cqes.
  * @maxcmd:    Maximum Outstanding Commands indicates the maximum number of
@@ -1426,7 +1427,8 @@ struct nvme_id_ctrl {
 	__le16			domainid;
 	__u8			rsvd358[10];
 	__u8			megcap[16];
-	__u8			rsvd384[128];
+	__u8			tmpthha;
+	__u8			rsvd385[127];
 	__u8			sqes;
 	__u8			cqes;
 	__le16			maxcmd;
