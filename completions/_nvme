@@ -113,6 +113,7 @@ _nvme () {
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
 	'micron:Micron plug-in extensions'
+	'dapustor:DapuStor plug-in extensions'
 	'help:print brief descriptions of all nvme commands'
 	'json:dump output in json format'
 	)
@@ -542,6 +543,26 @@ _nvme () {
 				)
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp set-telemetry-profile options" _ocp_set_telemetry_profile_feature
+				;;
+			(*)
+				_files
+				;;
+			esac
+			;;
+		(dapustor)
+			case ${words[2]} in
+			(smart-log-add)
+				local _smart_log_add
+				_smart_log_add=(
+				--namespace-id':(optional) desired namespace'
+				-n':alias for --namespace-id'
+				--output-format':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--raw-binary':dump log in binary format'
+				-b':alias of --raw-binary'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme dapustor smart-log-add options" _smart_log_add
 				;;
 			(*)
 				_files
@@ -2618,6 +2639,16 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme micron options" _micron
 			;;
+		(dapustor)
+			local _dapustor
+			_dapustor=(
+			smart-log-add':Retrieve DapuStor SMART Log'
+			version':Shows the program version'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme dapustor options" _dapustor
+			;;
 		(help)
 			local _h
 			_h=( id-ctrl id-ns list-ns id-iocs create-ns delete-ns attach-ns detach-ns
@@ -2635,7 +2666,7 @@ _nvme () {
 			get-property write-zeroes write-uncor verify sanitize sanitize-log reset
 			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
 			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
-			dir-send virt-mgmt rpmb version ocp solidigm
+			dir-send virt-mgmt rpmb version ocp solidigm dapustor
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
