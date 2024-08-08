@@ -86,6 +86,7 @@
 #define WDC_NVME_SN560_DEV_ID_3				0x2714
 #define WDC_NVME_SN861_DEV_ID				0x2750
 #define WDC_NVME_SN861_DEV_ID_1				0x2751
+#define WDC_NVME_SN861_DEV_ID_2				0x2752
 
 /* This id's are no longer supported, delete ?? */
 #define WDC_NVME_SN550_DEV_ID				0x2708
@@ -1530,7 +1531,8 @@ static int wdc_get_vendor_id(struct nvme_dev *dev, uint32_t *vendor_id)
 static bool wdc_is_sn861(__u32 device_id)
 {
 	if ((device_id == WDC_NVME_SN861_DEV_ID) ||
-	    (device_id == WDC_NVME_SN861_DEV_ID_1))
+	    (device_id == WDC_NVME_SN861_DEV_ID_1) ||
+	    (device_id == WDC_NVME_SN861_DEV_ID_2))
 		return true;
 	else
 		return false;
@@ -1872,6 +1874,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 
 		case WDC_NVME_SN861_DEV_ID:
 		case WDC_NVME_SN861_DEV_ID_1:
+		case WDC_NVME_SN861_DEV_ID_2:
 			capabilities |= (WDC_DRIVE_CAP_C0_LOG_PAGE |
 				WDC_DRIVE_CAP_C3_LOG_PAGE |
 				WDC_DRIVE_CAP_CA_LOG_PAGE |
@@ -11429,6 +11432,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 			break;
 		case WDC_NVME_SN861_DEV_ID:
 		case WDC_NVME_SN861_DEV_ID_1:
+		case WDC_NVME_SN861_DEV_ID_2:
 			data_len = sizeof(info);
 			num_dwords = data_len / 4;
 			if (data_len % 4 != 0)
