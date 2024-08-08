@@ -5193,6 +5193,22 @@ struct nvme_lba_status {
 };
 
 /**
+ * enum nvme_lba_status_cmpc - Get LBA Status Command Completion Condition
+ * @NVME_LBA_STATUS_CMPC_NO_CMPC:	No indication of the completion condition
+ * @NVME_LBA_STATUS_CMPC_INCOMPLETE:	Command completed, but additional LBA Status
+ *					Descriptor Entries are available to transfer
+ *					or scan did not complete (if ATYPE = 10h)
+ * @NVME_LBA_STATUS_CMPC_COMPLETE:	Completed the specified action over the number
+ *					of LBAs specified in the Range Length field and
+ *					transferred all available LBA Status Descriptors
+ */
+enum nvme_lba_status_cmpc {
+	NVME_LBA_STATUS_CMPC_NO_CMPC	= 0x0,
+	NVME_LBA_STATUS_CMPC_INCOMPLETE	= 0x1,
+	NVME_LBA_STATUS_CMPC_COMPLETE	= 0x2,
+};
+
+/**
  * struct nvme_feat_auto_pst - Autonomous Power State Transition
  * @apst_entry: See &enum nvme_apst_entry
  */
