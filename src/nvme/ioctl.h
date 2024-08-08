@@ -2350,7 +2350,7 @@ static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
 		.cdw15 = 0,
 		.data_len = data_len,
 		.save = save,
-		.uuidx = 0,
+		.uuidx = NVME_UUID_NONE,
 		.fid = fid,
 	};
 	return nvme_set_features(&args);
