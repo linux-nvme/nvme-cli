@@ -4685,15 +4685,18 @@ static void stdout_lba_status(struct nvme_lba_status *list,
 	printf("Completion Condition(CMPC): %u\n", list->cmpc);
 
 	switch (list->cmpc) {
-	case 1:
-		printf("\tCompleted due to transferring the amount of data"\
-			" specified in the MNDW field\n");
+	case NVME_LBA_STATUS_CMPC_NO_CMPC:
+		printf("\tNo indication of the completion condition\n");
 		break;
-	case 2:
-		printf("\tCompleted due to having performed the action\n"\
-			"\tspecified in the Action Type field over the\n"\
-			"\tnumber of logical blocks specified in the\n"\
-			"\tRange Length field\n");
+	case NVME_LBA_STATUS_CMPC_INCOMPLETE:
+		printf("\tCompleted transferring the amount of data specified in the\n"\
+			"\tMNDW field. But, additional LBA Status Descriptor Entries are\n"\
+			"\tavailable to transfer or scan did not complete (if ATYPE = 10h)\n");
+		break;
+	case NVME_LBA_STATUS_CMPC_COMPLETE:
+		printf("\tCompleted the specified action over the number of LBAs specified\n"\
+			"\tin the Range Length field and transferred all available LBA Status\n"\
+			"\tDescriptor Entries\n");
 		break;
 	default:
 		break;
