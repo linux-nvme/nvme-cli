@@ -1853,13 +1853,20 @@ static void json_lba_status(struct nvme_lba_status *list,
 	obj_add_uint(r, "Completion Condition (CMPC)", list->cmpc);
 
 	switch (list->cmpc) {
-	case 1:
-		obj_add_str(r, "cmpc-definition",
-		    "Completed due to transferring the amount of data specified in the MNDW field");
+	case NVME_LBA_STATUS_CMPC_NO_CMPC:
+		obj_add_str(r, "cmpc-definition", "No indication of the completion condition");
 		break;
-	case 2:
+	case NVME_LBA_STATUS_CMPC_INCOMPLETE:
 		obj_add_str(r, "cmpc-definition",
-		    "Completed due to having performed the action specified in the Action Type field over the number of logical blocks specified in the Range Length field");
+			"Completed transferring the amount of data specified in the"\
+			"MNDW field. But, additional LBA Status Descriptor Entries are"\
+			"available to transfer or scan did not complete (if ATYPE = 10h)");
+		break;
+	case NVME_LBA_STATUS_CMPC_COMPLETE:
+		obj_add_str(r, "cmpc-definition",
+			"Completed the specified action over the number of LBAs specified"\
+			"in the Range Length field and transferred all available LBA Status"\
+			"Descriptor Entries");
 		break;
 	default:
 		break;
