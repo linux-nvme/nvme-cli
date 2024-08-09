@@ -129,6 +129,33 @@ struct nvme_bar_cap {
 	__u8	rsvd61:3;
 };
 
+struct feature_fields {
+	union {
+		struct {
+			__u32 ab:3;
+			__u32 rsvd3:5;
+			__u32 lpw:8;
+			__u32 mpw:8;
+			__u32 hpw:8;
+		} arbitration;
+		struct {
+			__u32 ps:5;
+			__u32 wh:3;
+			__u32 rsvd8:24;
+		} power_management;
+		struct {
+			__u32 num:6;
+			__u32 rsvd6:26;
+		} lba_range_type;
+		struct {
+			__u32 tmpth:16;
+			__u32 tmpsel:4;
+			__u32 thsel:2;
+			__u32 rsvd22:10;
+		} temp_thresh;
+	};
+};
+
 #ifdef CONFIG_JSONC
 
 struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags);
