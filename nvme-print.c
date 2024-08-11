@@ -789,8 +789,8 @@ static bool is_temperature_fahrenheit(void)
 	const char *locale, *underscore;
 	char country[3] = { 0 };
 
-	setlocale(LC_ALL, "");
-	locale = setlocale(LC_ALL, NULL);
+	setlocale(LC_MEASUREMENT, "");
+	locale = setlocale(LC_MEASUREMENT, NULL);
 
 	if (!locale || strlen(locale) < 2)
 		return false;
