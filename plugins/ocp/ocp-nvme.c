@@ -990,6 +990,7 @@ static int get_telemetry_data(struct nvme_dev *dev, __u32 ns, __u8 tele_type,
 	cmd.cdw14 = 0;
 	return nvme_submit_admin_passthru(dev_fd(dev), &cmd, NULL);
 }
+
 static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
 										int tele_type)
 {
@@ -1075,13 +1076,13 @@ static void print_telemetry_da_stat(struct telemetry_stats_desc *da_stat,
 	}
 }
 static void print_telemetry_da_fifo(struct telemetry_event_desc *da_fifo,
-		__le64 buf_size,
+		__u64 buf_size,
 		int tele_type,
 		int da,
 		int index)
 {
 	if (da_fifo) {
-		unsigned int i = 0;
+		__u64 i = 0;
 		struct telemetry_event_desc *next_da_fifo = da_fifo;
 
 		if (tele_type == TELEMETRY_TYPE_HOST)
@@ -1091,8 +1092,11 @@ static void print_telemetry_da_fifo(struct telemetry_event_desc *da_fifo,
 			printf("====== Telemetry Controller Data area %d Event FIFO %d ======\n",
 				da, index);
 
-
 		while ((i + 4) < buf_size) {
+			/* break if last entry  */
+			if (next_da_fifo->class == 0)
+				break;
+
 			/* Print Event Data */
 			print_telemetry_fifo_event(next_da_fifo->class, /* Event class type */
 				next_da_fifo->id,                           /* Event ID         */
@@ -1190,7 +1194,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 			      enum TELEMETRY_TYPE tele_type, int data_area, bool header_print)
 {
 	__u32 err = 0, nsid = 0;
-	__le64 da1_sz = 512, m_512_sz = 0, da1_off = 0, m_512_off = 0, diff = 0,
+	__u64 da1_sz = 512, m_512_sz = 0, da1_off = 0, m_512_off = 0, diff = 0,
 		temp_sz = 0, temp_ofst = 0;
 	__u8 lsp = 0, rae = 0, flag = 0;
 	__u8 data[TELEMETRY_HEADER_SIZE] = { 0 };
@@ -1242,16 +1246,16 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 	/* Print the Data Area 1 Stats */
 	if (da1->da1_stat_size != 0) {
 		diff = 0;
-		da1_sz = (da1->da1_stat_size) * 4;
-		m_512_sz = (da1->da1_stat_size) * 4;
-		da1_off = (da1->da1_stat_start) * 4;
-		m_512_off = (da1->da1_stat_start) * 4;
-		temp_sz = (da1->da1_stat_size) * 4;
-		temp_ofst = (da1->da1_stat_start) * 4;
+		da1_sz = le64_to_cpu(da1->da1_stat_size) * 4;
+		m_512_sz = le64_to_cpu(da1->da1_stat_size) * 4;
+		da1_off = le64_to_cpu(da1->da1_stat_start) * 4;
+		m_512_off = le64_to_cpu(da1->da1_stat_start) * 4;
+		temp_sz = le64_to_cpu(da1->da1_stat_size) * 4;
+		temp_ofst = le64_to_cpu(da1->da1_stat_start) * 4;
 		flag = 0;
 
 		if ((da1_off % 512) > 0) {
-			m_512_off = (__le64) ((da1_off / 512));
+			m_512_off = (da1_off / 512);
 			da1_off = m_512_off * 512;
 			diff = temp_ofst - da1_off;
 			flag = 1;
@@ -1261,7 +1265,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 			da1_sz = 512;
 		else if ((da1_sz % 512) > 0) {
 			if (flag == 0) {
-				m_512_sz = (__le64) ((da1_sz / 512) + 1);
+				m_512_sz = (da1_sz / 512) + 1;
 				da1_sz = m_512_sz * 512;
 			} else {
 				if (diff < 512)
@@ -1269,7 +1273,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 				else
 					diff = (diff / 512) * 512;
 
-				m_512_sz = (__le64) ((da1_sz / 512) + 1 + diff + 1);
+				m_512_sz = (da1_sz / 512) + 1 + diff + 1;
 				da1_sz = m_512_sz * 512;
 			}
 		}
@@ -1284,23 +1288,23 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 		}
 
 		print_telemetry_da_stat((void *)(da1_stat + (temp_ofst - da1_off)),
-				tele_type, (da1->da1_stat_size) * 4, 1);
+				tele_type, le64_to_cpu(da1->da1_stat_size) * 4, 1);
 	}
 
 	/* Print the Data Area 1 Event FIFO's */
 	for (i = 0; i < 16 ; i++) {
 		if ((da1->event_fifo_da[i] == 1) && (da1->event_fifos[i].size != 0)) {
 			diff = 0;
-			da1_sz = da1->event_fifos[i].size * 4;
-			m_512_sz = da1->event_fifos[i].size * 4;
-			da1_off = da1->event_fifos[i].start * 4;
-			m_512_off = da1->event_fifos[i].start * 4;
-			temp_sz = da1->event_fifos[i].size * 4;
-			temp_ofst = da1->event_fifos[i].start * 4;
+			da1_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
+			m_512_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
+			da1_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
+			m_512_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
+			temp_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
+			temp_ofst = le64_to_cpu(da1->event_fifos[i].start) * 4;
 			flag = 0;
 
 			if ((da1_off % 512) > 0) {
-				m_512_off = (__le64) ((da1_off / 512));
+				m_512_off = ((da1_off / 512));
 				da1_off = m_512_off * 512;
 				diff = temp_ofst - da1_off;
 				flag = 1;
@@ -1310,7 +1314,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 				da1_sz = 512;
 			else if ((da1_sz % 512) > 0) {
 				if (flag == 0) {
-					m_512_sz = (__le64) ((da1_sz / 512) + 1);
+					m_512_sz = (da1_sz / 512) + 1;
 					da1_sz = m_512_sz * 512;
 				} else {
 					if (diff < 512)
@@ -1318,15 +1322,17 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 					else
 						diff = (diff / 512) * 512;
 
-					m_512_sz = (__le64) ((da1_sz / 512) + 1 + diff + 1);
+					m_512_sz = (da1_sz / 512) + 1 + diff + 1;
 					da1_sz = m_512_sz * 512;
 				}
 			}
 
 			char *da1_fifo = calloc(da1_sz, sizeof(char));
 
+			printf("Get DA 1 FIFO addr: %p, offset 0x%llx\n",
+					da1_fifo, da1_off);
 			err = get_telemetry_data(dev, nsid, tele_type,
-					(da1->event_fifos[i].size) * 4,
+					le64_to_cpu(da1->event_fifos[i].size) * 4,
 					(void *)da1_fifo, lsp, rae, da1_off);
 			if (err) {
 				printf("get_telemetry_data da1 event fifos failed, err: %d.\n",
@@ -1336,24 +1342,24 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 			print_telemetry_da_fifo((void *)(da1_fifo + (temp_ofst - da1_off)),
 					temp_sz,
 					tele_type,
-					da1->event_fifo_da[i],
+					le64_to_cpu(da1->event_fifo_da[i]),
 					i);
 		}
 	}
 
 	/* Print the Data Area 2 Stats */
 	if (da1->da2_stat_size != 0) {
-		da1_off = (da1->da2_stat_start) * 4;
-		temp_ofst = (da1->da2_stat_start) * 4;
-		da1_sz = (da1->da2_stat_size) * 4;
+		da1_off = le64_to_cpu(da1->da2_stat_start) * 4;
+		temp_ofst = le64_to_cpu(da1->da2_stat_start) * 4;
+		da1_sz = le64_to_cpu(da1->da2_stat_size) * 4;
 		diff = 0;
 		flag = 0;
 
 		if (da1->da2_stat_start == 0) {
-			da1_off = 512 + (logheader->DataArea1LastBlock * 512);
+			da1_off = 512 + (le16_to_cpu(logheader->DataArea1LastBlock) * 512);
 			temp_ofst = 512 + (le16_to_cpu(logheader->DataArea1LastBlock) * 512);
 			if ((da1_off % 512) == 0) {
-				m_512_off = (__le64) (((da1_off) / 512));
+				m_512_off = ((da1_off) / 512);
 				da1_off = m_512_off * 512;
 				diff = temp_ofst - da1_off;
 				flag = 1;
@@ -1361,9 +1367,9 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 		} else {
 
 			if (((da1_off * 4) % 512) > 0) {
-				m_512_off = (__le64) ((((da1->da2_stat_start) * 4) / 512));
+				m_512_off =  ((le64_to_cpu(da1->da2_stat_start) * 4) / 512);
 				da1_off = m_512_off * 512;
-				diff = ((da1->da2_stat_start) * 4) - da1_off;
+				diff = (le64_to_cpu(da1->da2_stat_start) * 4) - da1_off;
 				flag = 1;
 			}
 		}
@@ -1372,14 +1378,14 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 			da1_sz = 512;
 		else if ((da1_sz % 512) > 0) {
 			if (flag == 0) {
-				m_512_sz = (__le64) ((da1->da2_stat_size / 512) + 1);
+				m_512_sz = (le64_to_cpu(da1->da2_stat_size) / 512) + 1;
 				da1_sz = m_512_sz * 512;
 			} else {
 				if (diff < 512)
 					diff = 1;
 				else
 					diff = (diff / 512) * 512;
-				m_512_sz = (__le64) ((da1->da2_stat_size / 512) + 1 + diff + 1);
+				m_512_sz =  (le64_to_cpu(da1->da2_stat_size) / 512) + 1 + diff + 1;
 				da1_sz = m_512_sz * 512;
 			}
 		}
@@ -1395,7 +1401,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 
 		print_telemetry_da_stat((void *)(da2_stat + (temp_ofst - da1_off)),
 			tele_type,
-			(da1->da2_stat_size) * 4,
+			le64_to_cpu(da1->da2_stat_size) * 4,
 			2);
 	}
 
@@ -1403,16 +1409,16 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 	for (i = 0; i < 16 ; i++) {
 		if ((da1->event_fifo_da[i] == 2) && (da1->event_fifos[i].size != 0)) {
 			diff = 0;
-			da1_sz = da1->event_fifos[i].size * 4;
-			m_512_sz = da1->event_fifos[i].size * 4;
-			da1_off = da1->event_fifos[i].start * 4;
-			m_512_off = da1->event_fifos[i].start * 4;
-			temp_sz = da1->event_fifos[i].size * 4;
-			temp_ofst = da1->event_fifos[i].start * 4;
+			da1_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
+			m_512_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
+			da1_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
+			m_512_off = le64_to_cpu(da1->event_fifos[i].start) * 4;
+			temp_sz = le64_to_cpu(da1->event_fifos[i].size) * 4;
+			temp_ofst = le64_to_cpu(da1->event_fifos[i].start) * 4;
 			flag = 0;
 
 			if ((da1_off % 512) > 0) {
-				m_512_off = (__le64) ((da1_off / 512));
+				m_512_off = ((da1_off / 512));
 				da1_off = m_512_off * 512;
 				diff = temp_ofst - da1_off;
 				flag = 1;
@@ -1422,7 +1428,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 				da1_sz = 512;
 			else if ((da1_sz % 512) > 0) {
 				if (flag == 0) {
-					m_512_sz = (__le64) ((da1_sz / 512) + 1);
+					m_512_sz = (da1_sz / 512) + 1;
 					da1_sz = m_512_sz * 512;
 				}
 
@@ -1432,7 +1438,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 					else
 						diff = (diff / 512) * 512;
 
-					m_512_sz = (__le64) ((da1_sz / 512) + 1 + diff + 1);
+					m_512_sz = (da1_sz / 512) + 1 + diff + 1;
 					da1_sz = m_512_sz * 512;
 				}
 			}
@@ -1440,7 +1446,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 			char *da1_fifo = calloc(da1_sz, sizeof(char));
 
 			err = get_telemetry_data(dev, nsid, tele_type,
-					(da1->event_fifos[i].size) * 4,
+					le64_to_cpu(da1->event_fifos[i].size) * 4,
 					(void *)da1_fifo, lsp, rae, da1_off);
 			if (err) {
 				printf("get_telemetry_data da2 event fifos failed, err: %d.\n",
@@ -1450,7 +1456,7 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 			print_telemetry_da_fifo((void *)(da1_fifo + (temp_ofst - da1_off)),
 					temp_sz,
 					tele_type,
-					da1->event_fifo_da[i],
+					le64_to_cpu(da1->event_fifo_da[i]),
 					i);
 		}
 	}
@@ -1818,6 +1824,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 		}
 	} else {
 		tele_type = TELEMETRY_TYPE_HOST; //Default Type - Host
+		opt.telemetry_type = "host";
 		nvme_show_result("Missing telemetry-type. Using default - host.\n");
 	}
 

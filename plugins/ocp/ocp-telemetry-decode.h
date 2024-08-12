@@ -382,7 +382,7 @@ struct telemetry_stats_desc {
 	__u8 data[];
 };
 
-struct telemetry_event_desc {
+struct __packed telemetry_event_desc {
 	__u8 class;
 	__le16 id;
 	__u8 size;
@@ -428,6 +428,7 @@ struct telemetry_data_area_1 {
 #define MAX_NUM_FIFOS                 16
 #define DA1_OFFSET                    512
 #define DEFAULT_ASCII_STRING_SIZE     16
+#define SIZE_OF_VU_EVENT_ID           2
 
 #define DEFAULT_TELEMETRY_BIN "telemetry.bin"
 #define DEFAULT_STRING_BIN "string.bin"
@@ -856,30 +857,28 @@ struct __packed nvme_ocp_telemetry_event_descriptor
 struct __packed nvme_ocp_time_stamp_dbg_evt_class_format
 {
 	__u8 time_stamp[DATA_SIZE_8];             // Bytes 11:4
-	__le16 vu_event_identifier;               // Bytes 13:12
 };
 
 struct __packed nvme_ocp_pcie_dbg_evt_class_format
 {
 	__u8 pCIeDebugEventData[DATA_SIZE_4];     // Bytes 7:4
-	__le16 vu_event_identifier;               // Bytes 9:8
 };
 
 struct __packed nvme_ocp_nvme_dbg_evt_class_format
 {
 	__u8 nvmeDebugEventData[DATA_SIZE_8];     // Bytes 11:4
-	__le16 vu_event_identifier;               // Bytes 13:12
-};
-
-struct __packed nvme_ocp_common_dbg_evt_class_format
-{
-	__le16 vu_event_identifier;    // Bytes 5:4
 };
 
 struct __packed nvme_ocp_media_wear_dbg_evt_class_format
 {
 	__u8 currentMediaWear[DATA_SIZE_12];         // Bytes 15:4
-	__le16 vu_event_identifier;                  // Bytes 17:16
+
+};
+
+struct __packed nvme_ocp_common_dbg_evt_class_vu_data
+{
+	__le16 vu_event_identifier;         // Bytes 5:4
+	__u8 data[];                        // Bytes N:6
 };
 
 struct __packed nvme_ocp_statistic_snapshot_evt_class_format
