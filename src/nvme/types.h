@@ -2734,7 +2734,11 @@ struct nvme_id_ctrl_nvm {
  * @rsvd10:	Reserved
  * @elbaf:	List of Extended LBA Format Support
  * @npdgl:	Namespace Preferred Deallocate Granularity Large
- * @rsvd272:	Reserved
+ * @nprg:	Namespace Preferred Read Granularity
+ * @npra:	Namespace Preferred Read Alignment
+ * @nors:	Namespace Optimal Read Size
+ * @npdal:	Namespace Preferred Deallocate Alignment Large
+ * @lbapss:	LBA Format Placement Shard Size
  * @tlbaag:	Tracked LBA Allocation Granularity
  * @rsvd296:	Reserved
  */
@@ -2745,7 +2749,11 @@ struct nvme_nvm_id_ns {
 	__u8	rsvd10[2];
 	__le32	elbaf[64];
 	__le32	npdgl;
-	__u8	rsvd272[20];
+	__le32	nprg;
+	__le32	npra;
+	__le32	nors;
+	__le32	npdal;
+	__le32	lbapss;
 	__le32	tlbaag;
 	__u8	rsvd296[3800];
 };
