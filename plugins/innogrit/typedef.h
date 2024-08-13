@@ -1,15 +1,18 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#define SIZE_4K		4096
-#define SIZE_16K	16384
+#define IG_SUCCESS    (0)
+#define IG_UNSUPPORT  (-1)
+#define IG_ERROR      (-2)
 
-#define NVME_VSC_GET_EVENT_LOG		0xC2
-#define NVME_VSC_CLEAN_EVENT_LOG	0xD8
-#define NVME_VSC_GET			0xE6
-#define VSC_FN_GET_CDUMP		0x08
-#define EVLOG_SIG			0x65766C67
-#define IGVSC_SIG			0x69677673
-#define SRB_SIGNATURE			0x544952474F4E4E49ULL
-#define XCLEAN_LINE			"\033[K"
+#define NVME_VSC_GET_EVENT_LOG  0xC2
+#define NVME_VSC_GET            0xE6
+#define NVME_VSC_TYPE1_GET      0xFE
+#define VSC_FN_GET_CDUMP        0x08
+#define IGVSC_SIG               0x69677673
+#define EVLOG_SIG               0x65766C67
+#define SRB_SIGNATURE           0x544952474F4E4E49ULL
+
+#define XCLEAN_LINE	            "\033[K"
+#define SIZE_MB		            0x100000
 
 struct evlg_flush_hdr {
 	unsigned int signature;
@@ -27,45 +30,33 @@ struct eventlog {
 	unsigned int param[7];
 };
 
-struct eventlog_addindex {
-	unsigned int ms;
-	unsigned int param[7];
-	unsigned int iindex;
+struct drvinfo_t {
+	unsigned char  signature;
+	unsigned char  fw_base;
+	unsigned short socid;
+	unsigned char  soc_ver[4];
+	unsigned char  loader_version[8];
+	unsigned char  nand_devids[6];
+	unsigned char  ddr_type;
+	unsigned char  ddr_size;
+	unsigned char  rsvd1[8];
+	unsigned char  origin_fw_name[8];
+	unsigned long long nand_type;
+	unsigned int   board_type[5];
+	unsigned short soc_type;
+	unsigned char  build_mode;
+	unsigned char  rsvd2;
+	unsigned int   ftl_build_num;
+	unsigned short soc_reg;
+	unsigned char  rsvd3[2];
+	unsigned int   cur_cpu_clk;
+	unsigned int   cur_nf_clk;
+	unsigned char  nand_geo[4];
+	unsigned int   fw_d2h_info_bit;
+	unsigned int   spi_flash_id;
+	unsigned char  rom_version[8];
+	unsigned char  rsvd4[404];
 };
-
-#pragma pack(push)
-#pragma pack(1)
-struct vsc_smart_log {
-	unsigned short defect_cnt;
-	unsigned short slc_spb_cnt;
-	unsigned int slc_total_ec_cnt;
-	unsigned int slc_max_ec_cnt;
-	unsigned int slc_min_ec_cnt;
-	unsigned int slc_avg_ec_cnt;
-	unsigned int total_ec_cnt;
-	unsigned int max_ec_cnt;
-	unsigned int min_ec_cnt;
-	unsigned int avg_ec_cnt;
-	unsigned int mrd_rr_good_cnt;
-	unsigned int ard_rr_good_cnt;
-	unsigned int preset_cnt;
-	unsigned int nvme_reset_cnt;
-	unsigned int low_pwr_cnt;
-	unsigned int wa;
-	unsigned int ps3_entry_cnt;
-	unsigned char highest_temp[4];
-	unsigned int weight_ec;
-	unsigned int slc_cap_mb;
-	unsigned long long nand_page_write_cnt;
-	unsigned int program_error_cnt;
-	unsigned int erase_error_cnt;
-	unsigned char flash_type;
-	unsigned char reserved2[3];
-	unsigned int hs_crc_err_cnt;
-	unsigned int ddr_ecc_err_cnt;
-	unsigned int reserved3[44];
-};
-#pragma pack(pop)
 
 struct cdump_pack {
 	unsigned int ilenth;
