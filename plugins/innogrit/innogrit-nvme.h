@@ -9,8 +9,7 @@
 
 PLUGIN(NAME("innogrit", "innogrit vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
-		ENTRY("smart-log-add", "Retrieve innogrit SMART Log, show it", innogrit_smart_log_additional)
-		ENTRY("get-eventlog",  "get event log", innogrit_vsc_geteventlog)
+		ENTRY("get-eventlog",  "get event log", innogrit_geteventlog)
 		ENTRY("get-cdump",     "get cdump data", innogrit_vsc_getcdump)
 	)
 );
