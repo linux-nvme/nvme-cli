@@ -1684,7 +1684,8 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 	__u32 disc = (oaes >> 31) & 0x1;
 	__u32 rsvd0 = (oaes & 0x70000000) >> 28;
 	__u32 zicn = (oaes & 0x08000000) >> 27;
-	__u32 rsvd1 = (oaes & 0x07FF0000) >> 16;
+	__u32 rsvd1 = (oaes & 0x7fe0000) >> 17;
+	__u32 tthr = (oaes & 0x10000) >> 16;
 	__u32 normal_shn = (oaes >> 15) & 0x1;
 	__u32 egealpcn = (oaes & 0x4000) >> 14;
 	__u32 lbasin = (oaes & 0x2000) >> 13;
@@ -1702,7 +1703,9 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 	printf("  [27:27] : %#x\tZone Descriptor Changed Notices %sSupported\n",
 			zicn, zicn ? "" : "Not ");
 	if (rsvd1)
-		printf("  [26:16] : %#x\tReserved\n", rsvd1);
+		printf("  [26:17] : %#x\tReserved\n", rsvd1);
+	printf("  [16:16] : %#x\tTemperature Threshold Hysteresis Recovery %sSupported\n",
+		tthr, tthr ? "" : "Not ");
 	printf("  [15:15] : %#x\tNormal NSS Shutdown Event %sSupported\n",
 			normal_shn, normal_shn ? "" : "Not ");
 	printf("  [14:14] : %#x\tEndurance Group Event Aggregate Log Page"\
@@ -2115,6 +2118,18 @@ static void stdout_id_ctrl_anacap(__u8 anacap)
 			ana_nonopt, ana_nonopt ? "" : "Not ");
 	printf("  [0:0] : %#x\tANA Optimized state %sSupported\n",
 			ana_opt, ana_opt ? "" : "Not ");
+	printf("\n");
+}
+
+static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
+{
+	__u8 rsvd3 = (tmpthha & 0xf8) >> 3;
+	__u8 tmpthmh = tmpthha & 0x7;
+
+	if (rsvd3)
+		printf("  [7:3] : %#x\tReserved\n", rsvd3);
+	printf("  [2:0] : %#x\tTemperature Threshold Maximum Hysteresis\n",
+		tmpthmh);
 	printf("\n");
 }
 
@@ -2992,6 +3007,9 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	printf("domainid  : %d\n", le16_to_cpu(ctrl->domainid));
 	printf("megcap    : %s\n",
 		uint128_t_to_l10n_string(le128_to_cpu(ctrl->megcap)));
+	printf("tmpthha   : %#x\n", ctrl->tmpthha);
+	if (human)
+		stdout_id_ctrl_tmpthha(ctrl->tmpthha);
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		stdout_id_ctrl_sqes(ctrl->sqes);
@@ -4495,13 +4513,16 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			stdout_lba_range((struct nvme_lba_range_type *)buf, field);
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
+		field = (result & 0x1c00000) >> 22;
+		printf("\tTemperature Threshold Hysteresis(TMPTHH): %s (%u K)\n",
+			nvme_degrees_string(field), field);
 		field = (result & 0x00300000) >> 20;
-		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field,
+		printf("\tThreshold Type Select            (THSEL): %u - %s\n", field,
 			nvme_feature_temp_type_to_string(field));
 		field = (result & 0x000f0000) >> 16;
-		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n",
+		printf("\tThreshold Temperature Select    (TMPSEL): %u - %s\n",
 		       field, nvme_feature_temp_sel_to_string(field));
-		printf("\tTemperature Threshold         (TMPTH): %s (%u K)\n",
+		printf("\tTemperature Threshold            (TMPTH): %s (%u K)\n",
 		       nvme_degrees_string(result & 0x0000ffff), result & 0x0000ffff);
 		break;
 	case NVME_FEAT_FID_ERR_RECOVERY:
