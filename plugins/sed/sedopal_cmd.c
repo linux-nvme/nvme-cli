@@ -134,7 +134,7 @@ int sedopal_set_key(struct opal_key *key)
 		key->key_type = OPAL_INCLUDED;
 #endif
 		key->key_len = strlen(pass);
-		memcpy(key->key, pass, key->key_len);
+		memcpy(key->key, pass, key->key_len + 1);
 
 		/*
 		 * If getting a new key, ask for it to be re-entered
@@ -446,9 +446,23 @@ int sedopal_cmd_password(int fd)
 	if (sedopal_set_key(&new_pw.new_user_pw.opal_key) != 0)
 		return -EINVAL;
 
+	/*
+	 * set admin1 password
+	 */
 	rc = ioctl(fd, IOC_OPAL_SET_PW, &new_pw);
-	if (rc != 0)
+	if (rc != 0) {
 		fprintf(stderr, "Error: failed setting password - %d\n", rc);
+		return rc;
+	}
+
+#ifdef IOC_OPAL_SET_SID_PW
+	/*
+	 * set sid password
+	 */
+	rc = ioctl(fd, IOC_OPAL_SET_SID_PW, &new_pw);
+	if (rc != 0)
+		fprintf(stderr, "Error: failed setting SID password - %d\n", rc);
+#endif
 
 	return rc;
 }
