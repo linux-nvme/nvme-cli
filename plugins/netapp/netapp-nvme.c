@@ -470,6 +470,8 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 		return 0;
 	}
 
+	memset(nsdescs, 0, 0x1000);
+
 	err = nvme_identify_ns_descs(fd, item->nsid, nsdescs);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
