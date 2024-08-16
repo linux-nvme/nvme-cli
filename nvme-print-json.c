@@ -400,6 +400,7 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	obj_add_uint(r, "pels", le32_to_cpu(ctrl->pels));
 	obj_add_int(r, "domainid", le16_to_cpu(ctrl->domainid));
 	obj_add_uint128(r, "megcap", megcap);
+	obj_add_int(r, "tmpthha", ctrl->tmpthha);
 	obj_add_int(r, "sqes", ctrl->sqes);
 	obj_add_int(r, "cqes", ctrl->cqes);
 	obj_add_int(r, "maxcmd", le16_to_cpu(ctrl->maxcmd));
@@ -3298,9 +3299,17 @@ static void json_feature_show_fields_lba_range(struct json_object *r, __u8 field
 
 static void json_feature_show_fields_temp_thresh(struct json_object *r, unsigned int result)
 {
-	__u8 field = (result & 0x300000) >> 20;
 	char json_str[STR_LEN];
+	__u8 field;
 
+	field = (result & 0x1c00000) >> 22;
+	sprintf(json_str, "%s", nvme_degrees_string(field));
+	obj_add_str(r, "Temperature Threshold Hysteresis (TMPTHH)", json_str);
+
+	sprintf(json_str, "%u K", field);
+	obj_add_str(r, "TMPTHH kelvin", json_str);
+
+	field = (result & 0x300000) >> 20;
 	obj_add_uint(r, "Threshold Type Select (THSEL)", field);
 	obj_add_str(r, "THSEL description", nvme_feature_temp_type_to_string(field));
 
