@@ -316,8 +316,47 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 	}
 }
 
-static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
+static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 		int count, int format)
+{
+	char vsname[ONTAP_LABEL_LEN] = " ";
+	char nspath[ONTAP_NS_PATHLEN] = " ";
+	unsigned long long lba;
+	char size[128];
+	char uuid_str[37] = " ";
+	int i;
+
+	char *formatstr = NULL;
+	char basestr[] =
+		"%s, Vserver %s, Namespace Path %s, NSID %d, UUID %s, %s\n";
+	char columnstr[] = "%-16s %-25s %-50s %-4d %-38s %-9s\n";
+
+	if (format == NNORMAL)
+		formatstr = basestr;
+	else if (format == NCOLUMN) {
+		printf("%-16s %-25s %-50s %-4s %-38s %-9s\n",
+			"Device", "Vserver", "Namespace Path",
+			"NSID", "UUID", "Size");
+		printf("%-16s %-25s %-50s %-4s %-38s %-9s\n",
+			"----------------", "-------------------------",
+			"--------------------------------------------------",
+			"----", "--------------------------------------",
+			"---------");
+		formatstr = columnstr;
+	}
+
+	for (i = 0; i < count; i++) {
+		netapp_get_ns_size(size, &lba, &devices[i].ns);
+		nvme_uuid_to_string(devices[i].uuid, uuid_str);
+		netapp_get_ontap_labels(vsname, nspath, devices[i].log_data);
+
+		printf(formatstr, devices[i].dev, vsname, nspath,
+				devices[i].nsid, uuid_str, size);
+	}
+}
+
+static void netapp_ontapdevices_print_json(struct ontapdevice_info *devices,
+		int count)
 {
 	struct json_object *root = NULL;
 	struct json_object *json_devices = NULL;
@@ -328,52 +367,26 @@ static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
 	char uuid_str[37] = " ";
 	int i;
 
-	char basestr[] = "%s, Vserver %s, Namespace Path %s, NSID %d, UUID %s, %s\n";
-	char columnstr[] = "%-16s %-25s %-50s %-4d %-38s %-9s\n";
-
-	/* default to 'normal' output format */
-	char *formatstr = basestr;
-
-	if (format == NCOLUMN) {
-		/* change output string and print column headers */
-		formatstr = columnstr;
-		printf("%-16s %-25s %-50s %-4s %-38s %-9s\n",
-				"Device", "Vserver", "Namespace Path",
-				"NSID", "UUID", "Size");
-		printf("%-16s %-25s %-50s %-4s %-38s %-9s\n",
-				"----------------", "-------------------------",
-				"--------------------------------------------------",
-				"----", "--------------------------------------",
-				"---------");
-	} else if (format == NJSON) {
-		/* prepare for json output */
-		root = json_create_object();
-		json_devices = json_create_array();
-	}
+	/* prepare for the json output */
+	root = json_create_object();
+	json_devices = json_create_array();
 
 	for (i = 0; i < count; i++) {
-
 		netapp_get_ns_size(size, &lba, &devices[i].ns);
 		nvme_uuid_to_string(devices[i].uuid, uuid_str);
 		netapp_get_ontap_labels(vsname, nspath, devices[i].log_data);
 
-		if (format == NJSON) {
-			netapp_ontapdevice_json(json_devices, devices[i].dev,
-					vsname, nspath, devices[i].nsid,
-					uuid_str, size, lba,
-					le64_to_cpu(devices[i].ns.nsze));
-		} else
-			printf(formatstr, devices[i].dev, vsname, nspath,
-					devices[i].nsid, uuid_str, size);
+		netapp_ontapdevice_json(json_devices, devices[i].dev,
+				vsname, nspath, devices[i].nsid,
+				uuid_str, size, lba,
+				le64_to_cpu(devices[i].ns.nsze));
 	}
 
-	if (format == NJSON) {
-		/* complete the json output */
-		json_object_add_value_array(root, "ONTAPdevices", json_devices);
-		json_print_object(root, NULL);
-		printf("\n");
-		json_free_object(root);
-	}
+	/* complete the json output */
+	json_object_add_value_array(root, "ONTAPdevices", json_devices);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
 }
 
 static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
@@ -666,8 +679,14 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 		close(fd);
 	}
 
-	if (num_ontapdevices)
-		netapp_ontapdevices_print(ontapdevices, num_ontapdevices, fmt);
+	if (num_ontapdevices) {
+		if (fmt == NNORMAL || fmt == NCOLUMN)
+			netapp_ontapdevices_print_regular(ontapdevices,
+					num_ontapdevices, fmt);
+		else if (fmt == NJSON)
+			netapp_ontapdevices_print_json(ontapdevices,
+					num_ontapdevices);
+	}
 
 	for (i = 0; i < num; i++)
 		free(devices[i]);
