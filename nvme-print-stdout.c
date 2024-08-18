@@ -1071,10 +1071,13 @@ static void stdout_subsys_config(nvme_subsystem_t s)
 	       nvme_subsystem_get_nqn(s));
 	printf("%*s   hostnqn=%s\n", len, " ",
 	       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
-	printf("%*s   iopolicy=%s\n", len, " ",
-	       nvme_subsystem_get_iopolicy(s));
-	printf("%*s   type=%s\n", len, " ",
-	       nvme_subsystem_get_type(s));
+
+	if (stdout_print_ops.flags & VERBOSE) {
+		printf("%*s   iopolicy=%s\n", len, " ",
+			nvme_subsystem_get_iopolicy(s));
+		printf("%*s   type=%s\n", len, " ",
+			nvme_subsystem_get_type(s));
+	}
 }
 
 static void stdout_subsystem(nvme_root_t r, bool show_ana)
