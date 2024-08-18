@@ -2465,6 +2465,7 @@ static void json_print_nvme_subsystem_list(nvme_root_t r, bool show_ana)
 			obj_add_str(subsystem_attrs, "Name", nvme_subsystem_get_name(s));
 			obj_add_str(subsystem_attrs, "NQN", nvme_subsystem_get_nqn(s));
 			obj_add_str(subsystem_attrs, "IOPolicy", nvme_subsystem_get_iopolicy(s));
+			obj_add_str(subsystem_attrs, "Type", nvme_subsystem_get_type(s));
 
 			array_add_obj(subsystems, subsystem_attrs);
 			paths = json_create_array();
@@ -4351,6 +4352,7 @@ static void json_simple_topology(nvme_root_t r)
 			obj_add_str(subsystem_attrs, "Name", nvme_subsystem_get_name(s));
 			obj_add_str(subsystem_attrs, "NQN", nvme_subsystem_get_nqn(s));
 			obj_add_str(subsystem_attrs, "IOPolicy", nvme_subsystem_get_iopolicy(s));
+			obj_add_str(subsystem_attrs, "Type", nvme_subsystem_get_type(s));
 
 			array_add_obj(subsystems, subsystem_attrs);
 			namespaces = json_create_array();
