@@ -1057,7 +1057,7 @@ void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 res
 
 const char *nvme_plm_window_to_string(__u32 plm)
 {
-	switch (plm & 0x7) {
+	switch (NVME_FEAT_PLMW_WS(plm)) {
 	case 1:
 		return "Deterministic Window (DTWIN)";
 	case 2:
