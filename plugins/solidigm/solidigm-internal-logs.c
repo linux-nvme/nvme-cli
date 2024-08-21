@@ -4,6 +4,7 @@
  *
  * Authors: leonardo.da.cunha@solidigm.com
  * shankaralingegowda.singonahalli@solidigm.com
+ * haro.panosyan@solidigm.com
  */
 
 #include <fcntl.h>
@@ -597,14 +598,17 @@ static int ilog_dump_telemetry(struct ilog *ilog, enum log_type ttype)
 
 static int ilog_dump_identify_pages(struct ilog *ilog)
 {
-	struct nvme_ns_list ns_list;
+	struct nvme_ns_list ns_attached_list;
+	struct nvme_ns_list ns_allocated_list;
 	__u32 j = 0;
+
 	struct log identify_base_list[] = {
 		{NVME_IDENTIFY_CNS_NS_ACTIVE_LIST, "Id Active Namespace ID list",
-		 sizeof(ns_list), (__u8 *) &ns_list},
+		 sizeof(ns_attached_list), (__u8 *) &ns_attached_list},
 		{NVME_IDENTIFY_CNS_NVMSET_LIST, "Id NVM Set List"},
 		{NVME_IDENTIFY_CNS_CSI_CTRL, "Id I/O Command Set specific"},
-		{NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST, "Id Allocated Namespace ID list"},
+		{NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST, "Id Allocated Namespace ID list",
+		sizeof(ns_allocated_list), (__u8 *) &ns_allocated_list},
 		{NVME_IDENTIFY_CNS_CTRL_LIST, "Id Controller List"}
 	};
 	struct log identify_ns_required_list[] = {
@@ -613,9 +617,11 @@ static int ilog_dump_identify_pages(struct ilog *ilog)
 		{NVME_IDENTIFY_CNS_CSI_NS, "Id Namespace ID I/O Command Set specific"},
 		{NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
 		 "I/O Command Set Independent Identify Namespace Data"},
-		{NVME_IDENTIFY_CNS_ALLOCATED_NS, "Id Namespace data "},
 		{NVME_IDENTIFY_CNS_NS_CTRL_LIST, "Id Namespace Id Controller List"},
 	};
+
+	struct log allocated = {NVME_IDENTIFY_CNS_ALLOCATED_NS, "Allocated Namespace Data",
+				NVME_IDENTIFY_DATA_SIZE, NULL};
 
 	ilog_ensure_dump_id_ctrl(ilog);
 
@@ -626,14 +632,23 @@ static int ilog_dump_identify_pages(struct ilog *ilog)
 			ilog->count++;
 	}
 
-	while (ns_list.ns[j]) {
+	while (ns_attached_list.ns[j]) {
 		for (int i = 0; i < ARRAY_SIZE(identify_ns_required_list); i++) {
 			int err = ilog_dump_identify_page(ilog, &identify_ns_required_list[i],
-						     ns_list.ns[j]);
+							  ns_attached_list.ns[j]);
 
 			if (err == 0)
 				ilog->count++;
 		}
+		j++;
+	}
+
+	j = 0;
+	while (ns_allocated_list.ns[j]) {
+		int err = ilog_dump_identify_page(ilog, &allocated, ns_allocated_list.ns[j]);
+
+		if (err == 0)
+			ilog->count++;
 		j++;
 	}
 
