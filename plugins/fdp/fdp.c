@@ -57,7 +57,7 @@ static int fdp_configs(int argc, char **argv, struct command *cmd,
 		return err;
 
 	err = validate_output_format(cfg.output_format, &flags);
-	if (flags < 0)
+	if (err < 0)
 		goto out;
 
 	if (cfg.raw_binary)
@@ -138,7 +138,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 		return err;
 
 	err = validate_output_format(cfg.output_format, &flags);
-	if (flags < 0)
+	if (err < 0)
 		goto out;
 
 	if (cfg.raw_binary)
@@ -209,7 +209,7 @@ static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *
 		return err;
 
 	err = validate_output_format(cfg.output_format, &flags);
-	if (flags < 0)
+	if (err < 0)
 		goto out;
 
 	if (cfg.raw_binary)
@@ -270,7 +270,7 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 		return err;
 
 	err = validate_output_format(cfg.output_format, &flags);
-	if (flags < 0)
+	if (err < 0)
 		goto out;
 
 	if (cfg.raw_binary)
@@ -329,7 +329,7 @@ static int fdp_status(int argc, char **argv, struct command *cmd, struct plugin 
 		return err;
 
 	err = validate_output_format(cfg.output_format, &flags);
-	if (flags < 0)
+	if (err < 0)
 		goto out;
 
 	if (cfg.raw_binary)
