@@ -3872,6 +3872,10 @@ static void stdout_effects_log_page(enum nvme_csi csi,
 		printf("NVM Command Set Log Page\n");
 		printf("%-.80s\n", dash);
 		break;
+	case NVME_CSI_KV:
+		printf("KV Command Set Log Page\n");
+		printf("%-.80s\n", dash);
+		break;
 	case NVME_CSI_ZNS:
 		printf("ZNS Command Set Log Page\n");
 		printf("%-.80s\n", dash);
