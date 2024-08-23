@@ -3199,6 +3199,12 @@ static void stdout_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
 	}
 	if (ns->nsfeat & 0x20)
 		printf("npdgl : %#x\n", le32_to_cpu(nvm_ns->npdgl));
+
+	printf("nprg  : %#x\n", le32_to_cpu(nvm_ns->nprg));
+	printf("npra  : %#x\n", le32_to_cpu(nvm_ns->npra));
+	printf("nors  : %#x\n", le32_to_cpu(nvm_ns->nors));
+	printf("npdal : %#x\n", le32_to_cpu(nvm_ns->npdal));
+	printf("lbapss: %#x\n", le32_to_cpu(nvm_ns->lbapss));
 	printf("tlbaag: %#x\n", le32_to_cpu(nvm_ns->tlbaag));
 }
 

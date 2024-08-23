@@ -3081,6 +3081,12 @@ static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
 	}
 	if (ns->nsfeat & 0x20)
 		obj_add_int(r, "npdgl", le32_to_cpu(nvm_ns->npdgl));
+
+	obj_add_uint(r, "nprg", le32_to_cpu(nvm_ns->nprg));
+	obj_add_uint(r, "npra", le32_to_cpu(nvm_ns->npra));
+	obj_add_uint(r, "nors", le32_to_cpu(nvm_ns->nors));
+	obj_add_uint(r, "npdal", le32_to_cpu(nvm_ns->npdal));
+	obj_add_uint(r, "lbapss", le32_to_cpu(nvm_ns->lbapss));
 	obj_add_uint(r, "tlbaag", le32_to_cpu(nvm_ns->tlbaag));
 
 	json_print(r);
