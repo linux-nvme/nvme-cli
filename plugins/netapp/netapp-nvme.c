@@ -658,7 +658,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 	int num, i, fd, ret, fmt;
 	struct ontapdevice_info *ontapdevices;
 	char path[264];
-	char *devname = NULL;
+	char *devicename = NULL, *devname = NULL;
 	int num_ontapdevices = 0;
 
 	struct config {
@@ -684,8 +684,10 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 		return -EINVAL;
 	}
 
-	if (optind < argc)
-		devname = basename(argv[optind++]);
+	if (optind < argc) {
+		devicename = argv[optind++];
+		devname = basename(devicename);
+	}
 
 	if (devname) {
 		int subsys_num, nsid;
@@ -694,6 +696,14 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 			fprintf(stderr, "Invalid device name %s\n", devname);
 			return -EINVAL;
 		}
+
+		fd = open(devicename, O_RDONLY);
+		if (fd < 0) {
+			fprintf(stderr, "Unable to open %s: %s\n", devicename,
+					strerror(errno));
+			return -ENOENT;
+		}
+		close(fd);
 	}
 
 	num = scandir(dev_path, &devices, netapp_nvme_filter, alphasort);
