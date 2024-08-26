@@ -3873,7 +3873,7 @@ static void stdout_effects_log_page(enum nvme_csi csi,
 		break;
 	default:
 		printf("Unknown Command Set Log Page\n");
-		printf("%-.80s\n", dash);
+		printf("%-.80s\n", dash); 
 		break;
 	}
 
