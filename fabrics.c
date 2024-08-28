@@ -669,8 +669,8 @@ static int nvme_read_volatile_config(nvme_root_t r)
 
 static int nvme_read_config_checked(nvme_root_t r, const char *filename)
 {
-	if (!access(filename, F_OK))
-		return -ENOENT;
+	if (access(filename, F_OK))
+		return -errno;
 	if (nvme_read_config(r, filename))
 		return -errno;
 	return 0;
