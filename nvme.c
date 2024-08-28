@@ -5354,6 +5354,10 @@ static void *mmap_registers(struct nvme_dev *dev, bool writable)
 		prot |= PROT_WRITE;
 
 	sprintf(path, "/sys/class/nvme/%s/device/resource0", dev->name);
+
+	if (access(path, F_OK))
+		return NULL;
+
 	fd = open(path, writable ? O_RDWR : O_RDONLY);
 	if (fd < 0) {
 		if (log_level >= LOG_INFO)
