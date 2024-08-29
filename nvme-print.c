@@ -678,11 +678,11 @@ const char *nvme_trtype_to_string(__u8 trtype)
 {
 	switch (trtype) {
 	case 0: return "The transport type is not indicated or the error "\
-		"is not transport related.";
-	case 1: return "RDMA Transport error.";
-	case 2: return "Fibre Channel Transport error.";
-	case 3: return "TCP Transport error.";
-	case 254: return "Intra-host Transport error.";
+		"is not transport related";
+	case 1: return "RDMA Transport error";
+	case 2: return "Fibre Channel Transport error";
+	case 3: return "TCP Transport error";
+	case 254: return "Intra-host Transport error";
 	default: return "Reserved";
 	};
 }
