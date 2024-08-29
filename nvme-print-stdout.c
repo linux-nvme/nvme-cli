@@ -3662,7 +3662,7 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 			le64_to_cpu(err_log[i].error_count));
 		printf("sqid		: %d\n", err_log[i].sqid);
 		printf("cmdid		: %#x\n", err_log[i].cmdid);
-		printf("status_field	: %#x(%s)\n", status,
+		printf("status_field	: %#x (%s)\n", status,
 			nvme_status_to_string(status, false));
 		printf("phase_tag	: %#x\n",
 			le16_to_cpu(err_log[i].status_field & 0x1));
@@ -3672,7 +3672,7 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 			le64_to_cpu(err_log[i].lba));
 		printf("nsid		: %#x\n", err_log[i].nsid);
 		printf("vs		: %d\n", err_log[i].vs);
-		printf("trtype		: %s\n",
+		printf("trtype		: %#x (%s)\n", err_log[i].trtype,
 			nvme_trtype_to_string(err_log[i].trtype));
 		printf("csi		: %d\n", err_log[i].csi);
 		printf("opcode		: %#x\n", err_log[i].opcode);
