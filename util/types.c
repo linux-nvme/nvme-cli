@@ -48,7 +48,7 @@ uint64_t int48_to_long(__u8 *data)
 	return result;
 }
 
-static long double uint128_t_to_double(nvme_uint128_t data)
+long double uint128_t_to_double(nvme_uint128_t data)
 {
 	long double result = 0;
 	int i;
