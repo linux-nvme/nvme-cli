@@ -5319,3 +5319,16 @@ struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags)
 	stdout_print_ops.flags = flags;
 	return &stdout_print_ops;
 }
+
+void print_array(char *name, __u8 *data, int size)
+{
+	int i;
+
+	if (!name || !data || !size)
+		return;
+
+	printf("%s: 0x", name);
+	for (i = 0; i < size; i++)
+		printf("%02X", data[size - i - 1]);
+	printf("\n");
+}
