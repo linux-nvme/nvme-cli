@@ -4414,7 +4414,7 @@ static const char *hwcomp_id_to_string(__u32 id)
 	return "Reserved";
 }
 
-static void print_hwcomp_log_normal(struct hwcomp_log *log)
+static void print_hwcomp_log_normal(struct hwcomp_log *log, __u32 id)
 {
 	size_t date_lot_code_offset = sizeof(struct hwcomp_desc);
 	struct hwcomp_desc *desc;
@@ -4440,15 +4440,19 @@ static void print_hwcomp_log_normal(struct hwcomp_log *log)
 		add_info_size = le64_to_cpu(desc->add_info_size) * sizeof(__le32);
 		add_info = add_info_size ? date_lot_code ? date_lot_code + date_lot_size :
 		    (__u8 *)desc + date_lot_code_offset : NULL;
-		printf("  Component: %s\n", hwcomp_id_to_string(le32_to_cpu(desc->id)));
-		printf("    Date/Lot Size: 0x%llx\n", date_lot_size);
-		printf("    Additional Information Size: 0x%llx\n", add_info_size);
-		printf("    Identifier: 0x%08x\n", le32_to_cpu(desc->id));
-		printf("    Manufacture: 0x%016lx\n", le64_to_cpu(desc->mfg));
-		printf("    Revision: 0x%016lx\n", le64_to_cpu(desc->rev));
-		printf("    Manufacture Code: 0x%016lx\n", le64_to_cpu(desc->mfg_code));
-		print_array("    Date/Lot Code", date_lot_code, date_lot_size);
-		print_array("    Additional Information", add_info, add_info_size);
+
+		if (!id || id == le32_to_cpu(desc->id)) {
+			printf("  Component: %s\n", hwcomp_id_to_string(le32_to_cpu(desc->id)));
+			printf("    Date/Lot Size: 0x%llx\n", date_lot_size);
+			printf("    Additional Information Size: 0x%llx\n", add_info_size);
+			printf("    Identifier: 0x%08x\n", le32_to_cpu(desc->id));
+			printf("    Manufacture: 0x%016lx\n", le64_to_cpu(desc->mfg));
+			printf("    Revision: 0x%016lx\n", le64_to_cpu(desc->rev));
+			printf("    Manufacture Code: 0x%016lx\n", le64_to_cpu(desc->mfg_code));
+			print_array("    Date/Lot Code", date_lot_code, date_lot_size);
+			print_array("    Additional Information", add_info, add_info_size);
+		}
+
 		desc_size = date_lot_code_offset + date_lot_size + add_info_size;
 		desc = (struct hwcomp_desc *)((__u8 *)desc + desc_size);
 		log_size -= desc_size;
@@ -4513,7 +4517,7 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	return ret;
 }
 
-static int get_hwcomp_log(struct nvme_dev *dev)
+static int get_hwcomp_log(struct nvme_dev *dev, __u32 id)
 {
 	_cleanup_free_ __u8 *desc = NULL;
 
@@ -4538,7 +4542,7 @@ static int get_hwcomp_log(struct nvme_dev *dev)
 
 	switch (fmt) {
 	case NORMAL:
-		print_hwcomp_log_normal(&log);
+		print_hwcomp_log_normal(&log, id);
 		break;
 	case BINARY:
 		print_hwcomp_log_binary(&log);
@@ -4556,14 +4560,34 @@ static int ocp_hwcomp_log(int argc, char **argv, struct command *cmd, struct plu
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int ret = 0;
 	const char *desc = "retrieve hardware component log";
+	struct config {
+		__u32 id;
+	} cfg = { 0 };
+	const char *id_desc = "component identifier";
 
-	NVME_ARGS(opts);
+	OPT_VALS(id) = {
+		VAL_LONG("asic", HWCOMP_ID_ASIC),
+		VAL_LONG("nand", HWCOMP_ID_NAND),
+		VAL_LONG("dram", HWCOMP_ID_DRAM),
+		VAL_LONG("pmic", HWCOMP_ID_PMIC),
+		VAL_LONG("pcb", HWCOMP_ID_PCB),
+		VAL_LONG("cap", HWCOMP_ID_CAP),
+		VAL_LONG("reg", HWCOMP_ID_REG),
+		VAL_LONG("case", HWCOMP_ID_CASE),
+		VAL_LONG("sn", HWCOMP_ID_SN),
+		VAL_LONG("country", HWCOMP_ID_COUNTRY),
+		VAL_LONG("hw-rev", HWCOMP_ID_HW_REV),
+		VAL_LONG("vendor", HWCOMP_ID_VENDOR),
+		VAL_END()
+	};
+
+	NVME_ARGS(opts, OPT_LONG("comp-id", 'i', &cfg.id, id_desc, id));
 
 	ret = parse_and_open(&dev, argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	ret = get_hwcomp_log(dev);
+	ret = get_hwcomp_log(dev, cfg.id);
 	if (ret)
 		fprintf(stderr, "error: ocp: failed to get hwcomp log: %02X, ret: %d\n", LID_HWCOMP,
 			ret);
