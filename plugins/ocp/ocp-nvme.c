@@ -3600,8 +3600,7 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 		return ret;
 	}
 
-	get_c9_log_page_data(dev, 1, 0);
-
+	ret = get_c9_log_page_data(dev, 1, 0);
 	if (!ret) {
 		switch (fmt) {
 		case NORMAL:
