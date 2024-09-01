@@ -1588,12 +1588,14 @@ exit_status:
 
 static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_bin)
 {
-	int ret = 0, fd;
+	int ret = 0;
 	__le64 stat_id_str_table_ofst = 0;
 	__le64 event_str_table_ofst = 0;
 	__le64 vu_event_str_table_ofst = 0;
 	__le64 ascii_table_ofst = 0;
 	char file_path[PATH_MAX];
+
+	_cleanup_fd_ int fd = STDIN_FILENO;
 
 	header_data = (__u8 *)malloc(sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
 	if (!header_data) {
@@ -1642,26 +1644,24 @@ static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_b
 
 		ret = nvme_get_log_simple(dev_fd(dev), C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
 					  total_log_page_sz, pC9_string_buffer);
-	} else
+	} else {
 		fprintf(stderr, "ERROR : OCP : Unable to read C9 data.\n");
+	}
 
 	if (save_bin) {
 		sprintf(file_path, DEFAULT_STRING_BIN);
 		fd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd < 0) {
-			fprintf(stderr, "Failed to open output file %s: %s!\n",
-				file_path, strerror(errno));
-			goto exit_status;
+			fprintf(stderr, "Failed to open output file %s: %s!\n", file_path,
+				strerror(errno));
+			return fd;
 		}
 
 		ret = write(fd, (void *)pC9_string_buffer, total_log_page_sz);
 		if (ret != total_log_page_sz)
 			fprintf(stderr, "Failed to flush all data to file!\n");
-
-		close(fd);
 	}
 
-exit_status:
 	return 0;
 }
 
