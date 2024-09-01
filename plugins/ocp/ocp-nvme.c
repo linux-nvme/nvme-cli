@@ -912,6 +912,7 @@ __u8 *pC9_string_buffer;
 static void get_serial_number(struct nvme_id_ctrl *ctrl, char *sn)
 {
 	int i;
+
 	/* Remove trailing spaces from the name */
 	for (i = 0; i < sizeof(ctrl->sn); i++) {
 		if (ctrl->sn[i] == ' ')
@@ -920,8 +921,7 @@ static void get_serial_number(struct nvme_id_ctrl *ctrl, char *sn)
 	}
 }
 
-static void print_telemetry_header(struct telemetry_initiated_log *logheader,
-		int tele_type)
+static void print_telemetry_header(struct telemetry_initiated_log *logheader, int tele_type)
 {
 	if (logheader) {
 		unsigned int i = 0, j = 0;
@@ -1610,22 +1610,21 @@ static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_b
 	if (!ret) {
 		log_data = (struct telemetry_str_log_format *)header_data;
 		if (print_data) {
-			printf("Statistics Identifier String Table Size = %lld\n",
-			       log_data->sitsz);
+			printf("Statistics Identifier String Table Size = %lld\n", log_data->sitsz);
 			printf("Event String Table Size = %lld\n", log_data->estsz);
 			printf("VU Event String Table Size = %lld\n", log_data->vu_eve_st_sz);
 			printf("ASCII Table Size = %lld\n", log_data->asctsz);
 		}
 
-		//Calculating the offset for dynamic fields.
+		/* Calculating the offset for dynamic fields. */
 
 		stat_id_str_table_ofst = log_data->sits * 4;
 		event_str_table_ofst = log_data->ests * 4;
 		vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
 		ascii_table_ofst = log_data->ascts * 4;
 		total_log_page_sz = C9_TELEMETRY_STR_LOG_LEN +
-		(log_data->sitsz * 4) + (log_data->estsz * 4) +
-		(log_data->vu_eve_st_sz * 4) + (log_data->asctsz * 4);
+		    (log_data->sitsz * 4) + (log_data->estsz * 4) +
+		    (log_data->vu_eve_st_sz * 4) + (log_data->asctsz * 4);
 
 		if (print_data) {
 			printf("stat_id_str_table_ofst = %lld\n", stat_id_str_table_ofst);
@@ -3589,9 +3588,7 @@ static void ocp_print_c9_log_binary(__u8 *log_data_buf, int total_log_page_size)
 
 static int get_c9_log_page(struct nvme_dev *dev, char *format)
 {
-
 	int ret = 0;
-
 	nvme_print_flags_t fmt;
 
 	ret = validate_output_format(format, &fmt);
@@ -3616,8 +3613,10 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 			fprintf(stderr, "unhandled output format\n");
 			break;
 		}
-	} else
+	} else {
 		fprintf(stderr, "ERROR : OCP : Unable to read C9 data from buffer\n");
+	}
+
 	free(header_data);
 	return ret;
 }
