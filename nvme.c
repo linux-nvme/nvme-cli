@@ -9276,7 +9276,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 					cfg.keytype, cfg.hostnqn,
 					cfg.subsysnqn, cfg.identity,
 					cfg.hmac, raw_secret, key_len);
-		if (tls_key < 0) {
+		if (tls_key <= 0) {
 			nvme_show_error("Failed to insert key, error %d", errno);
 			return -errno;
 		}
@@ -9369,7 +9369,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 					cfg.keytype, cfg.hostnqn,
 					cfg.subsysnqn, cfg.identity,
 					hmac, decoded_key, decoded_len);
-		if (tls_key < 0) {
+		if (tls_key <= 0) {
 			nvme_show_error("Failed to insert key, error %d", errno);
 			return -errno;
 		}
