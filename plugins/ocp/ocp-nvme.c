@@ -3142,7 +3142,7 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *c
 					struct plugin *plugin);
 
 
-static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data, __u8 *log_data_buf)
+static int ocp_print_c9_log_normal(struct telemetry_str_log_format *log_data, __u8 *log_data_buf)
 {
 	//calculating the index value for array
 	__le64 stat_id_index = (log_data->sitsz * 4) / 16;
@@ -3343,7 +3343,7 @@ static int ocp_print_C9_log_normal(struct telemetry_str_log_format *log_data, __
 	return 0;
 }
 
-static int ocp_print_C9_log_json(struct telemetry_str_log_format *log_data, __u8 *log_data_buf)
+static int ocp_print_c9_log_json(struct telemetry_str_log_format *log_data, __u8 *log_data_buf)
 {
 	struct json_object *root = json_create_object();
 	char res_arr[48];
@@ -3604,10 +3604,10 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 	if (!ret) {
 		switch (fmt) {
 		case NORMAL:
-			ocp_print_C9_log_normal(log_data, pC9_string_buffer);
+			ocp_print_c9_log_normal(log_data, pC9_string_buffer);
 			break;
 		case JSON:
-			ocp_print_C9_log_json(log_data, pC9_string_buffer);
+			ocp_print_c9_log_json(log_data, pC9_string_buffer);
 			break;
 		case BINARY:
 			ocp_print_c9_log_binary(pC9_string_buffer, total_log_page_sz);
