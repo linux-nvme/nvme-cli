@@ -459,7 +459,6 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 	_cleanup_fd_ int output = -1;
 	char file_path[PATH_MAX] = {0};
 	size_t bytes_remaining = 0;
-	int err = 0;
 
 	ensure_dir(parent_dir_name, subdir_name);
 
@@ -474,19 +473,14 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 	while (bytes_remaining) {
 		ssize_t bytes_written = write(output, buffer, bytes_remaining);
 
-		if (bytes_written < 0) {
-			err = -errno;
-			goto log_save_close_output;
-		}
+		if (bytes_written < 0)
+			return -errno;
 
 		bytes_remaining -= bytes_written;
 		buffer += bytes_written;
 	}
 	printf("Successfully wrote %s to %s\n", log->desc, file_path);
-
-log_save_close_output:
-	close(output);
-	return err;
+	return 0;
 }
 
 static int ilog_dump_identify_page(struct ilog *ilog, struct log *cns, __u32 nsid)
