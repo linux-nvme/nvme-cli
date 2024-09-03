@@ -2152,6 +2152,8 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 #define C1_ERROR_RECOVERY_OPCODE            0xC1
 #define C1_ERROR_RECOVERY_VERSION           0x0002
 #define C1_GUID_LENGTH                      16
+#define C1_PREV_PANIC_IDS_LENGTH            4
+
 static __u8 error_recovery_guid[C1_GUID_LENGTH] = {
 	0x44, 0xd9, 0x31, 0x21,
 	0xfe, 0x30, 0x34, 0xae,
@@ -2173,6 +2175,8 @@ static __u8 error_recovery_guid[C1_GUID_LENGTH] = {
  * @vendor_specific_command_timeout:	Vendor Specific Command Timeout
  * @device_recover_action_2:		Device Recovery Action 2
  * @device_recover_action_2_timeout:	Device Recovery Action 2 Timeout
+ * @panic_count:			Panic Count
+ * @prev_panic_id:			Previous Panic IDs
  * @reserved2:				Reserved
  * @log_page_version:			Log Page Version
  * @log_page_guid:			Log Page GUID
@@ -2190,7 +2194,9 @@ struct __packed ocp_error_recovery_log_page {
 	__u8    vendor_specific_command_timeout;         /* 1 byte       - 0x1C */
 	__u8    device_recover_action_2;                 /* 1 byte       - 0x1D */
 	__u8    device_recover_action_2_timeout;         /* 1 byte       - 0x1E */
-	__u8    reserved2[0x1cf];                        /* 463 bytes    - 0x1F - 0x1ED */
+	__u8    panic_count;                             /* 1 byte       - 0x1F */
+	__le64  prev_panic_id[C1_PREV_PANIC_IDS_LENGTH]; /* 32 bytes     - 0x20 - 0x3F */
+	__u8    reserved2[0x1ae];                        /* 430 bytes    - 0x40 - 0x1ED */
 	__le16  log_page_version;                        /* 2 bytes      - 0x1EE - 0x1EF */
 	__u8    log_page_guid[0x10];                     /* 16 bytes     - 0x1F0 - 0x1FF */
 };
@@ -2217,8 +2223,13 @@ static void ocp_print_c1_log_normal(struct ocp_error_recovery_log_page *log_data
 	printf("  Vendor Specific Command Timeout   : 0x%x\n", log_data->vendor_specific_command_timeout);
 	printf("  Device Recovery Action 2          : 0x%x\n", log_data->device_recover_action_2);
 	printf("  Device Recovery Action 2 Timeout  : 0x%x\n", log_data->device_recover_action_2_timeout);
+	printf("  Panic Count                       : 0x%x\n", log_data->panic_count);
+	printf("  Previous Panic IDs:");
+	for (i = 0; i < C1_PREV_PANIC_IDS_LENGTH; i++)
+		printf("%s Panic ID N-%d : 0x%lx\n", i ? "                     " : "", i + 1,
+		       le64_to_cpu(log_data->prev_panic_id[i]));
 	printf("  Log Page Version                  : 0x%x\n", le16_to_cpu(log_data->log_page_version));
-	printf("  Log page GUID			    : 0x");
+	printf("  Log page GUID                     : 0x");
 	for (i = C1_GUID_LENGTH - 1; i >= 0; i--)
 		printf("%x", log_data->log_page_guid[i]);
 	printf("\n");
