@@ -1181,6 +1181,13 @@ plugin_solidigm_opts () {
 		"temp-stats")
 		opts+=" --raw-binary -b"
 			;;
+		"workload-tracker")
+		opts+=" --enable -e --disable -d --sample-time= -s \
+		--type= -t --run-time= -r --flush-freq= -f \
+		--wall-clock -w --trigger-field= -T \
+		--trigger-threshold= -V --trigger-on-delta -D \
+		--trigger-on-latency -L --verbose -v"
+			;;
 		"version")
 		opts+=$NO_OPTS
 			;;
@@ -1588,7 +1595,7 @@ _nvme_subcmds () {
 			clear-pcie-correctable-errors parse-telemetry-log \
 			clear-fw-activate-history vs-fw-activate-history log-page-directory \
 			vs-drive-info cloud-SSDplugin-version market-log \
-			smart-log-add temp-stats version help"
+			smart-log-add temp-stats workload-tracker version help"
 		[transcend]="healthvalue badblock"
 		[dapustor]="smart-log-add"
 		[zns]="id-ctrl id-ns zone-mgmt-recv \
