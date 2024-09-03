@@ -52,7 +52,8 @@ enum {
 	SCAO_ICS	= 112,	/* Incomplete shutdowns */
 	SCAO_PFB	= 120,	/* Percent free blocks */
 	SCAO_CPH	= 128,	/* Capacitor health */
-	SCAO_NEV	= 130,  /* NVMe Errata Version */
+	SCAO_NBEV	= 130,  /* NVMe Base Errata Version */
+	SCAO_NCSEV	= 131,  /* NVMe Command Set Errata Version */
 	SCAO_UIO	= 136,	/* Unaligned I/O */
 	SCAO_SVN	= 144,	/* Security Version Number */
 	SCAO_NUSE	= 152,	/* NUSE - Namespace utilization */
@@ -60,6 +61,7 @@ enum {
 	SCAO_EEST	= 176,	/* Endurance estimate */
 	SCAO_PLRC	= 192,	/* PCIe Link Retraining Count */
 	SCAO_PSCC	= 200,	/* Power State Change Count */
+	SCAO_LPFR	= 208,	/* Lowest Permitted Firmware Revision */
 	SCAO_LPV	= 494,	/* Log page version */
 	SCAO_LPG	= 496,	/* Log page GUID */
 };
@@ -115,6 +117,10 @@ static void ocp_print_C0_log_normal(void *data)
 	       (__u8)log_data[SCAO_PFB]);
 	printf("  Capacitor health				%"PRIu16"\n",
 	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
+	printf("  NVMe base errata version			%c\n",
+	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
+	printf("  NVMe command set errata version		%c\n",
+	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
 	printf("  Unaligned I/O					%"PRIu64"\n",
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UIO]));
 	printf("  Security Version Number			%"PRIu64"\n",
@@ -130,7 +136,17 @@ static void ocp_print_C0_log_normal(void *data)
 	printf("  Log page GUID					0x");
 	printf("%"PRIx64"%"PRIx64"\n", (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
-	if (smart_log_ver > 2) {
+	switch (smart_log_ver) {
+	case 0 ... 1:
+		break;
+	default:
+	case 4:
+		printf("  NVMe Command Set Errata Version               %d\n",
+		       (__u8)log_data[SCAO_NCSEV]);
+		printf("  Lowest Permitted Firmware Revision            %"PRIu64"\n",
+		       le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
+		fallthrough;
+	case 2 ... 3:
 		printf("  Errata Version Field                          %d\n",
 		       (__u8)log_data[SCAO_EVF]);
 		printf("  Point Version Field                           %"PRIu16"\n",
@@ -139,11 +155,11 @@ static void ocp_print_C0_log_normal(void *data)
 		       le16_to_cpu(*(uint16_t *)&log_data[SCAO_MIVF]));
 		printf("  Major Version Field                           %d\n",
 		       (__u8)log_data[SCAO_MAVF]);
-		printf("  NVMe Errata Version				%d\n",
-		       (__u8)log_data[SCAO_NEV]);
-		printf("  PCIe Link Retraining Count			%"PRIu64"\n",
+		printf("  NVMe Base Errata Version                      %d\n",
+		       (__u8)log_data[SCAO_NBEV]);
+		printf("  PCIe Link Retraining Count                    %"PRIu64"\n",
 		       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
-		printf("  Power State Change Count			%"PRIu64"\n",
+		printf("  Power State Change Count                      %"PRIu64"\n",
 		       le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
 	}
 	printf("\n");
@@ -229,7 +245,17 @@ static void ocp_print_C0_log_json(void *data)
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 
-	if (smart_log_ver > 2) {
+	switch (smart_log_ver) {
+	case 0 ... 1:
+		break;
+	default:
+	case 4:
+		json_object_add_value_uint(root, "NVMe Command Set Errata Version",
+					   (__u8)log_data[SCAO_NCSEV]);
+		json_object_add_value_uint(root, "Lowest Permitted Firmware Revision",
+					   le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
+		fallthrough;
+	case 2 ... 3:
 		json_object_add_value_uint(root, "Errata Version Field",
 					   (__u8)log_data[SCAO_EVF]);
 		json_object_add_value_uint(root, "Point Version Field",
@@ -238,8 +264,8 @@ static void ocp_print_C0_log_json(void *data)
 					   le16_to_cpu(*(uint16_t *)&log_data[SCAO_MIVF]));
 		json_object_add_value_uint(root, "Major Version Field",
 					   (__u8)log_data[SCAO_MAVF]);
-		json_object_add_value_uint(root, "NVMe Errata Version",
-					   (__u8)log_data[SCAO_NEV]);
+		json_object_add_value_uint(root, "NVMe Base Errata Version",
+					   (__u8)log_data[SCAO_NBEV]);
 		json_object_add_value_uint(root, "PCIe Link Retraining Count",
 					   (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
 		json_object_add_value_uint(root, "Power State Change Count",
