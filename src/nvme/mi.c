@@ -634,6 +634,7 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 {
 	struct nvme_mi_resp resp;
 	struct nvme_mi_req req;
+	__u32 dlen, doff;
 	int rc;
 
 	/* length/offset checks. The common _submit() API will do further
@@ -692,8 +693,17 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 
 	/* limit the response size, specify offset */
 	admin_req->flags = 0x3;
-	admin_req->dlen = cpu_to_le32(resp.data_len & 0xffffffff);
-	admin_req->doff = cpu_to_le32(resp_data_offset & 0xffffffff);
+
+	/* dlen and doff have different interpretations depending on the data direction */
+	if (req_data_size) {
+		dlen = req_data_size & 0xffffffff;
+		doff = 0;
+	} else {
+		dlen = *resp_data_size & 0xffffffff;
+		doff = resp_data_offset & 0xffffffff;
+	}
+	admin_req->dlen = cpu_to_le32(dlen);
+	admin_req->doff = cpu_to_le32(doff);
 
 	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
 	if (rc)
