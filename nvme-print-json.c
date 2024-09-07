@@ -132,8 +132,9 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 {
 	va_list ap;
 
+	_cleanup_free_ char *value = NULL;
+
 	va_start(ap, v);
-	char *value;
 
 	if (vasprintf(&value, v, ap) < 0)
 		value = NULL;
@@ -144,15 +145,15 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 		obj_add_str(o, "Result", "Could not allocate string");
 
 	va_end(ap);
-	free(value);
 }
 
 static void obj_add_key(struct json_object *o, const char *k, const char *v, ...)
 {
 	va_list ap;
 
+	_cleanup_free_ char *value = NULL;
+
 	va_start(ap, v);
-	char *value;
 
 	if (vasprintf(&value, v, ap) < 0)
 		value = NULL;
@@ -163,7 +164,6 @@ static void obj_add_key(struct json_object *o, const char *k, const char *v, ...
 		obj_add_str(o, k, "Could not allocate string");
 
 	va_end(ap);
-	free(value);
 }
 
 static struct json_object *obj_create_array_obj(struct json_object *o, const char *k)
@@ -2085,9 +2085,10 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 
 static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller)
 {
-	char **allocated_eyes = NULL;
 	int i;
 	struct json_object *r = json_create_object();
+
+	_cleanup_free_ char **allocated_eyes = NULL;
 
 	obj_add_uint(r, "lid", log->lid);
 	obj_add_uint(r, "eomip", log->eomip);
@@ -2121,7 +2122,6 @@ static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controlle
 			if (allocated_eyes[i])
 				free(allocated_eyes[i]);
 		}
-		free(allocated_eyes);
 	}
 
 	json_print(r);
@@ -4613,17 +4613,16 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 {
 	struct json_object *r;
 	char json_str[STR_LEN];
-	char *value;
 	int val;
 	int type;
+
+	_cleanup_free_ char *value = NULL;
 
 	if (vasprintf(&value, msg, ap) < 0)
 		value = NULL;
 
 	sprintf(json_str, "Error: %s", value ? value : "Could not allocate string");
 	r = obj_create(json_str);
-
-	free(value);
 
 	if (status < 0) {
 		obj_add_str(r, "error", nvme_strerror(errno));
@@ -4656,14 +4655,13 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 static void json_output_message(bool error, const char *msg, va_list ap)
 {
 	struct json_object *r = json_r ? json_r : json_create_object();
-	char *value;
+
+	_cleanup_free_ char *value = NULL;
 
 	if (vasprintf(&value, msg, ap) < 0)
 		value = NULL;
 
 	obj_add_str(r, error ? "error" : "result", value ? value : "Could not allocate string");
-
-	free(value);
 
 	obj_print(r);
 }
@@ -4671,7 +4669,8 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 static void json_output_perror(const char *msg)
 {
 	struct json_object *r = json_create_object();
-	char *error;
+
+	_cleanup_free_ char *error = NULL;
 
 	if (asprintf(&error, "%s: %s", msg, strerror(errno)) < 0)
 		error = NULL;
@@ -4682,8 +4681,6 @@ static void json_output_perror(const char *msg)
 		obj_add_str(r, "error", "Could not allocate string");
 
 	json_output_object(r);
-
-	free(error);
 }
 
 void json_show_init(void)
