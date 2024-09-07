@@ -1523,6 +1523,10 @@ plugin_ocp_opts () {
 		opts+=" --data= -d --number= -n --no-uuid -N --type= -t \
 			--nrtdp= -r --verbose -v --output-format -o --timeout="
 			;;
+		"hardware-component-log")
+		opts+=" --comp-id= -i --list -l --verbose -v \
+			--output-format -o --timeout= -t"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1602,7 +1606,8 @@ _nvme_subcmds () {
 			set-dssd-power-state-feature get-dssd-power-state-feature \
 			telemetry-string-log set-telemetry-profile \
 			set-dssd-async-event-config get-dssd-async-event-config \
-			get-error-injection set-error-injection"
+			get-error-injection set-error-injection \
+			hardware-component-log"
 	)
 
 	# Associative array mapping plugins to corresponding option completions
