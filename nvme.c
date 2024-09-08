@@ -4553,7 +4553,7 @@ static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
 		cfg->cdw11 |= 0xff << 16;
 	}
 
-	if (cfg->sel == 3)
+	if (cfg->sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 		cfg->data_len = 0;
 
 	if (cfg->data_len) {
@@ -4592,7 +4592,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 	if (!err) {
 		if (!cfg.raw_binary || !buf) {
 			nvme_feature_show(cfg.feature_id, cfg.sel, result);
-			if (cfg.sel == 3)
+			if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 				nvme_show_select_result(cfg.feature_id, result);
 			else if (cfg.human_readable)
 				nvme_feature_show_fields(cfg.feature_id, result,
