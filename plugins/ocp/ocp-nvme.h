@@ -38,6 +38,8 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 		ENTRY("tcg-configuration-log", "Retrieve TCG Configuration Log Page", ocp_tcg_configuration_log)
 		ENTRY("get-error-injection", "Return set of error injection", get_error_injection)
 		ENTRY("set-error-injection", "Inject error conditions", set_error_injection)
+		ENTRY("get-enable-ieee1667-silo", "return set of enable IEEE1667 silo",
+		      get_enable_ieee1667_silo)
 	)
 );
 

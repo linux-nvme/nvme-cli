@@ -194,6 +194,11 @@ struct erri_config {
 	__u16 nrtdp;
 };
 
+struct ieee1667_get_cq_entry {
+	__u32 enabled:3;
+	__u32 rsvd3:29;
+};
+
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *no_uuid = "Skip UUID index search (UUID index not required for OCP 1.0)";
 const char *data = "Error injection data structure entries";
@@ -4142,4 +4147,68 @@ static int set_error_injection(int argc, char **argv, struct command *cmd, struc
 		return err;
 
 	return error_injection_set(dev, &cfg, !argconfig_parse_seen(opts, "no-uuid"));
+}
+
+static int enable_ieee1667_silo_get(struct nvme_dev *dev, const __u8 sel, bool uuid)
+{
+	struct ieee1667_get_cq_entry cq_entry;
+	int err;
+	const __u8 fid = 0xc4;
+
+	struct nvme_get_features_args args = {
+		.result = (__u32 *)&cq_entry,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.sel = sel,
+		.fid = fid,
+	};
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &args.uuidx);
+		if (err || !args.uuidx) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
+
+	err = nvme_cli_get_features(dev, &args);
+	if (!err) {
+		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+			nvme_show_select_result(fid, *args.result);
+		else
+			nvme_show_result("IEEE1667 Sifo Enabled (feature: 0x%02x): 0x%0x (%s: %s)",
+					 fid, cq_entry.enabled, nvme_select_to_string(sel),
+					 cq_entry.enabled ? "enabled" : "disabled");
+	} else {
+		nvme_show_error("Could not get feature: 0x%02x.", fid);
+	}
+
+	return err;
+}
+
+static int get_enable_ieee1667_silo(int argc, char **argv, struct command *cmd,
+				    struct plugin *plugin)
+{
+	const char *desc = "return set of enable IEEE1667 silo";
+	int err;
+	struct config {
+		__u8 sel;
+	};
+	struct config cfg = { 0 };
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("sel", 's', &cfg.sel, sel),
+		OPT_FLAG("no-uuid", 'n', NULL, no_uuid),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	return enable_ieee1667_silo_get(dev, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"));
 }
