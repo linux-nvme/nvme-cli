@@ -20,6 +20,8 @@ typedef struct nvme_effects_log_node {
 
 #define STR_LEN 100
 
+#define obj_add_str json_object_add_value_string
+
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 
@@ -324,4 +326,12 @@ bool nvme_registers_cmbloc_support(__u32 cmbsz);
 bool nvme_registers_pmrctl_ready(__u32 pmrctl);
 const char *nvme_degrees_string(long t);
 void print_array(char *name, __u8 *data, int size);
+void obj_add_uint_02x(struct json_object *o, const char *k, __u32 v);
+void json_print(struct json_object *r);
+void obj_add_uint_0x(struct json_object *o, const char *k, __u32 v);
+void obj_add_byte_array(struct json_object *o, const char *k, unsigned char *buf, int len);
+void obj_add_nprix64(struct json_object *o, const char *k, uint64_t v);
+struct json_object *obj_create_array_obj(struct json_object *o, const char *k);
+void obj_add_uint_0nx(struct json_object *o, const char *k, __u32 v, int width);
+void obj_add_0nprix64(struct json_object *o, const char *k, uint64_t v, int width);
 #endif /* NVME_PRINT_H */
