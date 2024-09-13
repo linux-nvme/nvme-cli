@@ -1887,7 +1887,7 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 			       const char *name)
 {
 	DIR *d;
-	char *host_key, *tls_psk;
+	char *host_key, *ctrl_key, *tls_psk;
 
 	d = opendir(path);
 	if (!d) {
@@ -1921,11 +1921,16 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 		c->dhchap_key = host_key;
 	}
 
-	c->dhchap_ctrl_key = nvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
-	if (c->dhchap_ctrl_key && !strcmp(c->dhchap_ctrl_key, "none")) {
-		free(c->dhchap_ctrl_key);
-		c->dhchap_ctrl_key = NULL;
+	ctrl_key = nvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
+	if (ctrl_key && !strcmp(ctrl_key, "none")) {
+		free(ctrl_key);
+		ctrl_key = NULL;
 	}
+	if (ctrl_key) {
+		nvme_ctrl_set_dhchap_key(c, NULL);
+		c->dhchap_ctrl_key = ctrl_key;
+	}
+
 	tls_psk = nvme_get_ctrl_attr(c, "tls_key");
 	if (tls_psk) {
 		char *endptr;
@@ -1936,6 +1941,7 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 			c->cfg.tls = true;
 		}
 	}
+
 	c->cntrltype = nvme_get_ctrl_attr(c, "cntrltype");
 	c->cntlid = nvme_get_ctrl_attr(c, "cntlid");
 	c->dctype = nvme_get_ctrl_attr(c, "dctype");
