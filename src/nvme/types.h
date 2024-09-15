@@ -46,6 +46,16 @@
 	(((__u32)(value) & NVME_##name##_MASK) << NVME_##name##_SHIFT)
 
 /**
+ * NVME_CHECK() - check value to compare field value
+ * @value: The value to be checked
+ * @name: The name of the sub-field within an nvme value
+ * @check: The sub-field value to check
+ *
+ * Returns: The result of compare the value and the sub-field value
+ */
+#define NVME_CHECK(value, name, check) ((value) == NVME_##name##_##check)
+
+/**
  * enum nvme_constants - A place to stash various constant nvme values
  * @NVME_NSID_ALL:		A broadcast value that is used to specify all
  *				namespaces
