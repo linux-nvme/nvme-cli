@@ -4622,17 +4622,17 @@ static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
 	_cleanup_free_ void *buf_def = NULL;
 
 	if (changed)
-		cfg.sel = 0;
+		cfg.sel = NVME_GET_FEATURES_SEL_CURRENT;
 
 	err = get_feature_id(dev, &cfg, &buf, &result);
 
 	if (!err && changed) {
-		cfg.sel = 1;
+		cfg.sel = NVME_GET_FEATURES_SEL_DEFAULT;
 		err_def = get_feature_id(dev, &cfg, &buf_def, &result_def);
 	}
 
 	if (changed)
-		cfg.sel = 8;
+		cfg.sel = NVME_GET_FEATURES_SEL_CHANGED;
 
 	if (err || !changed || err_def || result != result_def ||
 	    (buf && buf_def && !strcmp(buf, buf_def)))
@@ -4651,7 +4651,7 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 	int status = 0;
 	enum nvme_status_type type = NVME_STATUS_TYPE_NVME;
 
-	if (cfg.sel == 8)
+	if (cfg.sel == NVME_GET_FEATURES_SEL_CHANGED)
 		changed = true;
 
 	if (cfg.feature_id)
@@ -4701,7 +4701,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	struct feat_cfg cfg = {
 		.feature_id	= 0,
 		.namespace_id	= 0,
-		.sel		= 0,
+		.sel		= NVME_GET_FEATURES_SEL_CURRENT,
 		.data_len	= 0,
 		.raw_binary	= false,
 		.cdw11		= 0,
@@ -4734,7 +4734,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		}
 	}
 
-	if (cfg.sel > 8) {
+	if (cfg.sel > NVME_GET_FEATURES_SEL_CHANGED) {
 		nvme_show_error("invalid 'select' param:%d", cfg.sel);
 		return -EINVAL;
 	}
