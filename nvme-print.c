@@ -962,13 +962,20 @@ const char *nvme_register_to_string(int reg)
 const char *nvme_select_to_string(int sel)
 {
 	switch (sel) {
-	case 0:  return "Current";
-	case 1:  return "Default";
-	case 2:  return "Saved";
-	case 3:  return "Supported capabilities";
-	case 8:  return "Changed";
-	default: return "Reserved";
+	case NVME_GET_FEATURES_SEL_CURRENT:
+		return "Current";
+	case NVME_GET_FEATURES_SEL_DEFAULT:
+		return "Default";
+	case NVME_GET_FEATURES_SEL_SAVED:
+		return "Saved";
+	case NVME_GET_FEATURES_SEL_SUPPORTED:
+		return "Supported capabilities";
+	case NVME_GET_FEATURES_SEL_CHANGED:
+		return "Changed";
+	default:
+		break;
 	}
+	return "Reserved";
 }
 
 void nvme_show_select_result(enum nvme_features_id fid, __u32 result)
