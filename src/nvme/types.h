@@ -56,6 +56,14 @@
 #define NVME_CHECK(value, name, check) ((value) == NVME_##name##_##check)
 
 /**
+ * NVME_VAL() - get mask value shifted
+ * @name: The name of the sub-field within an nvme value
+ *
+ * Returns: The mask value shifted
+ */
+#define NVME_VAL(name) (NVME_##name##_MASK << NVME_##name##_SHIFT)
+
+/**
  * enum nvme_constants - A place to stash various constant nvme values
  * @NVME_NSID_ALL:		A broadcast value that is used to specify all
  *				namespaces
