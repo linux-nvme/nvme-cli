@@ -22,6 +22,7 @@
 #include "plugin.h"
 #include "linux/types.h"
 #include "util/types.h"
+#include "util/logging.h"
 #include "nvme-print.h"
 #include "nvme-wrap.h"
 
@@ -33,6 +34,59 @@
 #define CREATE_CMD
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
+
+#define LID_HWCOMP 0xc6
+#define HWCOMP_RSVD2_LEN 14
+#define GUID_LEN 16
+#define HWCOMP_SIZE_LEN 16
+#define HWCOMP_RSVD48_LEN 16
+
+struct __packed hwcomp_desc {
+	__le64 date_lot_size;
+	__le64 add_info_size;
+	__le32 id;
+	__le64 mfg;
+	__le64 rev;
+	__le64 mfg_code;
+};
+
+struct __packed hwcomp_log {
+	__le16 ver;
+	__u8 rsvd2[HWCOMP_RSVD2_LEN];
+	__u8 guid[GUID_LEN];
+	__u8 size[HWCOMP_SIZE_LEN];
+	__u8 rsvd48[HWCOMP_RSVD48_LEN];
+	struct hwcomp_desc *desc;
+};
+
+enum hwcomp_id {
+	HWCOMP_ID_RSVD,
+	HWCOMP_ID_ASIC,
+	HWCOMP_ID_NAND,
+	HWCOMP_ID_DRAM,
+	HWCOMP_ID_PMIC,
+	HWCOMP_ID_PCB,
+	HWCOMP_ID_CAP,
+	HWCOMP_ID_REG,
+	HWCOMP_ID_CASE,
+	HWCOMP_ID_SN,
+	HWCOMP_ID_COUNTRY,
+	HWCOMP_ID_HW_REV,
+	HWCOMP_ID_VENDOR = 0x8000,
+	HWCOMP_ID_MAX = 0xffff,
+};
+
+#define print_info_array(...) \
+	do { \
+		if (log_level >= LOG_INFO) \
+			print_array(__VA_ARGS__); \
+	} while (false)
+
+#define print_info_error(...) \
+	do { \
+		if (log_level >= LOG_INFO) \
+			fprintf(stderr, __VA_ARGS__); \
+	} while (false)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -3921,7 +3975,6 @@ out:
 	return ret;
 }
 
-
 static int ocp_tcg_configuration_log(int argc, char **argv, struct command *cmd,
 					    struct plugin *plugin)
 {
@@ -4220,4 +4273,188 @@ static int get_enable_ieee1667_silo(int argc, char **argv, struct command *cmd,
 		return err;
 
 	return enable_ieee1667_silo_get(dev, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"));
+}
+
+static const char *hwcomp_id_to_string(__u32 id)
+{
+	switch (id) {
+	case HWCOMP_ID_ASIC:
+		return "Controller ASIC component";
+	case HWCOMP_ID_NAND:
+		return "NAND Component";
+	case HWCOMP_ID_DRAM:
+		return "DRAM Component";
+	case HWCOMP_ID_PMIC:
+		return "PMIC Component";
+	case HWCOMP_ID_PCB:
+		return "PCB Component";
+	case HWCOMP_ID_CAP:
+		return "capacitor component";
+	case HWCOMP_ID_REG:
+		return "registor component";
+	case HWCOMP_ID_CASE:
+		return "case component";
+	case HWCOMP_ID_SN:
+		return "Device Serial Number";
+	case HWCOMP_ID_COUNTRY:
+		return "Country of Origin";
+	case HWCOMP_ID_HW_REV:
+		return "Global Device Hardware Revision";
+	case HWCOMP_ID_VENDOR ... HWCOMP_ID_MAX:
+		return "Vendor Unique Component";
+	case HWCOMP_ID_RSVD:
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
+static void print_hwcomp_log_normal(struct hwcomp_log *log)
+{
+	size_t date_lot_code_offset = sizeof(struct hwcomp_desc);
+	struct hwcomp_desc *desc;
+	__u64 date_lot_size;
+	__u64 add_info_size;
+	__u8 *add_info;
+	__u8 *date_lot_code;
+	__u64 desc_size;
+
+	long double log_size = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32);
+
+	printf("Log Identifier: %02Xh\n", LID_HWCOMP);
+	printf("Log Page Version: 0x%x\n", le16_to_cpu(log->ver));
+	print_array("Reserved2", log->rsvd2, ARRAY_SIZE(log->rsvd2));
+	print_array("Log page GUID", log->guid, ARRAY_SIZE(log->guid));
+	printf("Hardware Component Log Size: 0x%llx\n", (unsigned long long)log_size);
+	print_array("Reserved48", log->rsvd48, ARRAY_SIZE(log->rsvd48));
+	printf("Component Descriptions\n");
+	desc = log->desc;
+	while (log_size > 0) {
+		date_lot_size = le64_to_cpu(desc->date_lot_size) * sizeof(__le32);
+		date_lot_code = date_lot_size ? (__u8 *)desc + date_lot_code_offset : NULL;
+		add_info_size = le64_to_cpu(desc->add_info_size) * sizeof(__le32);
+		add_info = add_info_size ? date_lot_code ? date_lot_code + date_lot_size :
+		    (__u8 *)desc + date_lot_code_offset : NULL;
+		printf("  Component: %s\n", hwcomp_id_to_string(le32_to_cpu(desc->id)));
+		printf("    Date/Lot Size: 0x%llx\n", date_lot_size);
+		printf("    Additional Information Size: 0x%llx\n", add_info_size);
+		printf("    Identifier: 0x%08x\n", le32_to_cpu(desc->id));
+		printf("    Manufacture: 0x%016lx\n", le64_to_cpu(desc->mfg));
+		printf("    Revision: 0x%016lx\n", le64_to_cpu(desc->rev));
+		printf("    Manufacture Code: 0x%016lx\n", le64_to_cpu(desc->mfg_code));
+		print_array("    Date/Lot Code", date_lot_code, date_lot_size);
+		print_array("    Additional Information", add_info, add_info_size);
+		desc_size = date_lot_code_offset + date_lot_size + add_info_size;
+		desc = (struct hwcomp_desc *)((__u8 *)desc + desc_size);
+		log_size -= desc_size;
+	}
+}
+
+static void print_hwcomp_log_binary(struct hwcomp_log *log)
+{
+	long double desc_len = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32);
+
+	d_raw((unsigned char *)log, offsetof(struct hwcomp_log, desc) + desc_len);
+}
+
+static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
+{
+	int ret = 0;
+	size_t desc_offset = offsetof(struct hwcomp_log, desc);
+	struct nvme_get_log_args args = {
+		.lpo = desc_offset,
+		.log = log->desc,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = LID_HWCOMP,
+		.nsid = NVME_NSID_ALL,
+	};
+
+	ret = nvme_get_log_simple(dev_fd(dev), LID_HWCOMP, desc_offset, log);
+	if (ret) {
+		print_info_error("error: ocp: failed to get log simple (hwcomp: %02X, ret: %d)\n",
+				 LID_HWCOMP, ret);
+		return ret;
+	}
+
+	print_info("id: %02Xh\n", LID_HWCOMP);
+	print_info("version: %04Xh\n", log->ver);
+	print_info_array("guid", log->guid, ARRAY_SIZE(log->guid));
+	print_info("size: %s\n", uint128_t_to_string(le128_to_cpu(log->size)));
+
+	args.len = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32);
+	log->desc = calloc(1, args.len);
+	if (!log->desc) {
+		fprintf(stderr, "error: ocp: calloc: %s\n", strerror(errno));
+		return -1;
+	}
+
+	ret = nvme_get_log_page(dev_fd(dev), NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (ret) {
+		print_info_error("error: ocp: failed to get log page (hwcomp: %02X, ret: %d)\n",
+				 LID_HWCOMP, ret);
+		return ret;
+	}
+
+	return ret;
+}
+
+static int get_hwcomp_log(struct nvme_dev *dev)
+{
+	_cleanup_free_ __u8 *desc = NULL;
+
+	int ret;
+	nvme_print_flags_t fmt;
+	struct hwcomp_log log = {
+		.desc = (struct hwcomp_desc *)desc,
+	};
+
+	ret = validate_output_format(nvme_cfg.output_format, &fmt);
+	if (ret < 0) {
+		fprintf(stderr, "error: ocp: invalid output format\n");
+		return ret;
+	}
+
+	ret = get_hwcomp_log_data(dev, &log);
+	if (ret) {
+		print_info_error("error: ocp: failed get hwcomp log: %02X data, ret: %d\n",
+				 LID_HWCOMP, ret);
+		return ret;
+	}
+
+	switch (fmt) {
+	case NORMAL:
+		print_hwcomp_log_normal(&log);
+		break;
+	case BINARY:
+		print_hwcomp_log_binary(&log);
+		break;
+	default:
+		fprintf(stderr, "unhandled output format\n");
+		break;
+	}
+
+	return 0;
+}
+
+static int ocp_hwcomp_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int ret = 0;
+	const char *desc = "retrieve hardware component log";
+
+	NVME_ARGS(opts);
+
+	ret = parse_and_open(&dev, argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	ret = get_hwcomp_log(dev);
+	if (ret)
+		fprintf(stderr, "error: ocp: failed to get hwcomp log: %02X, ret: %d\n", LID_HWCOMP,
+			ret);
+
+	return ret;
 }

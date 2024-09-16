@@ -40,6 +40,7 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 		ENTRY("set-error-injection", "Inject error conditions", set_error_injection)
 		ENTRY("get-enable-ieee1667-silo", "return set of enable IEEE1667 silo",
 		      get_enable_ieee1667_silo)
+		ENTRY("hardware-component-log", "retrieve hardware component log", ocp_hwcomp_log)
 	)
 );
 
