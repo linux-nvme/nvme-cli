@@ -1992,6 +1992,14 @@ enum nvme_id_ctrl_fuses {
 /**
  * enum nvme_id_ctrl_fna - This field indicates attributes for the Format NVM
  *			   command.
+ * @NVME_CTRL_FNA_FMT_ALL_NS_SHIFT:   Shift amount to get the format applied to all namespaces
+ * @NVME_CTRL_FNA_SEC_ALL_NS_SHIFT:   Shift amount to get the secure erase applied to all namespaces
+ * @NVME_CTRL_FNA_CES_SHIFT:          Shift amount to get the cryptographic erase supported
+ * @NVME_CTRL_FNA_NSID_ALL_F_SHIFT:   Shift amount to get the format supported an NSID FFFFFFFFh
+ * @NVME_CTRL_FNA_FMT_ALL_NS_MASK:    Mask to get the format applied to all namespaces
+ * @NVME_CTRL_FNA_SEC_ALL_NS_MASK:    Mask to get the secure erase applied to all namespaces
+ * @NVME_CTRL_FNA_CES_MASK:           Mask to get the cryptographic erase supported
+ * @NVME_CTRL_FNA_NSID_ALL_F_MASK:    Mask to get the format supported an NSID FFFFFFFFh
  * @NVME_CTRL_FNA_FMT_ALL_NAMESPACES: If set, then all namespaces in an NVM
  *				      subsystem shall be configured with the
  *				      same attributes and a format (excluding
@@ -2016,11 +2024,24 @@ enum nvme_id_ctrl_fuses {
  *				      FFFFFFFFh.
  */
 enum nvme_id_ctrl_fna {
-	NVME_CTRL_FNA_FMT_ALL_NAMESPACES	= 1 << 0,
-	NVME_CTRL_FNA_SEC_ALL_NAMESPACES	= 1 << 1,
-	NVME_CTRL_FNA_CRYPTO_ERASE		= 1 << 2,
-	NVME_CTRL_FNA_NSID_FFFFFFFF		= 1 << 3,
+	NVME_CTRL_FNA_FMT_ALL_NS_SHIFT		= 0,
+	NVME_CTRL_FNA_SEC_ALL_NS_SHIFT		= 1,
+	NVME_CTRL_FNA_CES_SHIFT			= 2,
+	NVME_CTRL_FNA_NSID_ALL_F_SHIFT		= 3,
+	NVME_CTRL_FNA_FMT_ALL_NS_MASK		= 0x1,
+	NVME_CTRL_FNA_SEC_ALL_NS_MASK		= 0x1,
+	NVME_CTRL_FNA_CES_MASK			= 0x1,
+	NVME_CTRL_FNA_NSID_ALL_F_MASK		= 0x1,
+	NVME_CTRL_FNA_FMT_ALL_NAMESPACES	= NVME_VAL(CTRL_FNA_FMT_ALL_NS),
+	NVME_CTRL_FNA_SEC_ALL_NAMESPACES	= NVME_VAL(CTRL_FNA_SEC_ALL_NS),
+	NVME_CTRL_FNA_CRYPTO_ERASE		= NVME_VAL(CTRL_FNA_CES),
+	NVME_CTRL_FNA_NSID_FFFFFFFF		= NVME_VAL(CTRL_FNA_NSID_ALL_F),
 };
+
+#define NVME_CTRL_FNA_FMT_ALL_NS(fna)	NVME_GET(fna, CTRL_FNA_FMT_ALL_NS)
+#define NVME_CTRL_FNA_SEC_ALL_NS(fna)	NVME_GET(fna, CTRL_FNA_SEC_ALL_NS)
+#define NVME_CTRL_FNA_CES(fna)		NVME_GET(fna, CTRL_FNA_CES)
+#define NVME_CTRL_FNA_NSID_ALL_F(fna)	NVME_GET(fna, CTRL_FNA_NSID_ALL_F)
 
 /**
  * enum nvme_id_ctrl_vwc - Volatile write cache
