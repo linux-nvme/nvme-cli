@@ -6169,7 +6169,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		return -errno;
 	}
 
-	if ((ctrl->fna & 1) == 1) {
+	if (ctrl->fna & NVME_CTRL_FNA_FMT_ALL_NAMESPACES) {
 		/*
 		 * FNA bit 0 set to 1: all namespaces ... shall be configured with the same
 		 * attributes and a format (excluding secure erase) of any namespace results in a
