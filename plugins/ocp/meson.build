@@ -5,5 +5,6 @@ sources += [
   'plugins/ocp/ocp-smart-extended-log.c',
   'plugins/ocp/ocp-fw-activation-history.c',
   'plugins/ocp/ocp-telemetry-decode.c',
+  'plugins/ocp/ocp-hardware-component-log.c',
 ]
 
