@@ -2217,10 +2217,10 @@ static void stdout_id_ctrl_fuses(__le16 ctrl_fuses)
 static void stdout_id_ctrl_fna(__u8 fna)
 {
 	__u8 rsvd = (fna & 0xF0) >> 4;
-	__u8 bcnsid = (fna & 0x8) >> 3;
-	__u8 cese = (fna & 0x4) >> 2;
-	__u8 cens = (fna & 0x2) >> 1;
-	__u8 fmns = fna & 0x1;
+	__u8 bcnsid = (fna & NVME_CTRL_FNA_NSID_FFFFFFFF) >> 3;
+	__u8 cese = (fna & NVME_CTRL_FNA_CRYPTO_ERASE) >> 2;
+	__u8 cens = (fna & NVME_CTRL_FNA_SEC_ALL_NAMESPACES) >> 1;
+	__u8 fmns = fna & NVME_CTRL_FNA_FMT_ALL_NAMESPACES;
 
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
