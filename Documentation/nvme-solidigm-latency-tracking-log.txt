@@ -1,0 +1,79 @@
+nvme-solidigm-latency-tracking-log(1)
+=====================================
+
+NAME
+----
+nvme-solidigm-latency-tracking-log - Enable/Retrieve Latency tracking Log
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm latency-tracking-log' <device> [--enable | -e] [--disable | -d]
+                                              [--read | -r] [--write | -w]
+                                              [--type <value> | -t <value>]
+                                              [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+Enables, disables, or retrieves the Solidigm latency tracking log for the
+given NVMe device. This log provides detailed information about I/O latencies.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-e::
+--enable::
+	Enable latency tracking before retrieving the log.
+
+-d::
+--disable::
+	Disable latency tracking after retrieving the log.
+
+-r::
+--read::
+	Retrieve read latency statistics (default if neither --read nor --write is specified).
+
+-w::
+--write::
+	Retrieve write latency statistics.
+
+-t <value>::
+--type <value>::
+	Specify the log type to retrieve. Valid values depend on the device's capabilities.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or 'binary'. Only one
+	output format can be used at a time.
+
+EXAMPLES
+--------
+* Enable latency tracking and retrieve the read latency log:
++
+------------
+# nvme solidigm latency-tracking-log /dev/nvme0 --enable --read
+------------
+
+* Retrieve the write latency log in JSON format:
++
+------------
+# nvme solidigm latency-tracking-log /dev/nvme0 --write -o json
+------------
+
+* Disable latency tracking after retrieving the log:
++
+------------
+# nvme solidigm latency-tracking-log /dev/nvme0 --disable
+------------
+
+* Specify a log type when retrieving latency statistics:
++
+------------
+# nvme solidigm latency-tracking-log /dev/nvme0 --type 1 --read
+------------
+
+NVME
+----
+Part of the nvme-user suite

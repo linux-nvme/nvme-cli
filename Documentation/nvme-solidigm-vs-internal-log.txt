@@ -1,0 +1,59 @@
+nvme-solidigm-vs-internal-log(1)
+================================
+
+NAME
+----
+nvme-solidigm-vs-internal-log - Retrieve Debug log binaries
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm vs-internal-log' <device> [--log-type=<type> | -t <type>]
+                                          [--output-dir=<dir> | -d <dir>]
+                                          [--verbose | -v]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieves the Solidigm vendor-specific internal
+debug log binaries and saves them to the specified output directory.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-t <type>::
+--log-type=<type>::
+    Specify the type of log to retrieve. Valid options are ALL, CIT, HIT, NLOG, ASSERT, and EVENT. Defaults to ALL.
+
+-d <dir>::
+--output-dir=<dir>::
+    Specify the output directory for the log files. Defaults to the current working directory.
+
+-v::
+--verbose::
+    Enable verbose output for additional information during the log retrieval process.
+
+EXAMPLES
+--------
+* Retrieve all internal logs and save them to the current directory:
++
+------------
+# nvme solidigm vs-internal-log /dev/nvme0
+------------
+
+* Retrieve a specific log type and save it to a custom directory:
++
+------------
+# nvme solidigm vs-internal-log /dev/nvme0 -t NLOG -d /tmp/logs
+------------
+
+* Retrieve logs with verbose output:
++
+------------
+# nvme solidigm vs-internal-log /dev/nvme0 -v
+------------
+
+NVME
+----
+Part of the nvme-user suite

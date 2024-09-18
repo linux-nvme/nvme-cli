@@ -1,0 +1,29 @@
+nvme-solidigm-cloud-SSDplugin-version(1)
+========================================
+
+NAME
+----
+nvme-solidigm-cloud-SSDplugin-version - Prints plug-in OCP version
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm cloud-SSDplugin-version'
+
+DESCRIPTION
+-----------
+Displays the OCP (Open Compute Project) version of the Solidigm cloud SSD plugin.
+
+EXAMPLES
+--------
+* Display the OCP plugin version:
++
+------------
+# nvme solidigm cloud-SSDplugin-version
+------------
+
+NVME
+----
+Part of the nvme-user suite
+
+

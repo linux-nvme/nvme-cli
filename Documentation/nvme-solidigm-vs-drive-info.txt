@@ -1,0 +1,45 @@
+nvme-solidigm-vs-drive-info(1)
+==============================
+
+NAME
+----
+nvme-solidigm-vs-drive-info - Retrieve drive information
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm vs-drive-info' <device> [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+Retrieves and displays vendor-specific drive information for the given Solidigm
+NVMe device. This command provides additional details about the drive that may
+not be available through standard NVMe commands.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal' or 'json'. Only one output format
+	can be used at a time.
+
+EXAMPLES
+--------
+* Retrieve and display the drive information:
++
+------------
+# nvme solidigm vs-drive-info /dev/nvme0
+------------
+
+* Retrieve the drive information in JSON format:
++
+------------
+# nvme solidigm vs-drive-info /dev/nvme0 -o json
+------------
+
+NVME
+----
+Part of the nvme-user suite
