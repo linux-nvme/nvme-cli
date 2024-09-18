@@ -339,7 +339,6 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	size_t desc_offset = offsetof(struct hwcomp_log, desc);
 	struct nvme_get_log_args args = {
 		.lpo = desc_offset,
-		.log = log->desc,
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -369,6 +368,8 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 		fprintf(stderr, "error: ocp: calloc: %s\n", strerror(errno));
 		return -1;
 	}
+
+	args.log = log->desc,
 
 #ifdef HWCOMP_DUMMY
 	memcpy(log->desc, &hwcomp_dummy[desc_offset], args.len);
