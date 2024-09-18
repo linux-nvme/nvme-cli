@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #include "common.h"
+#include "util/types.h"
 #include "util/logging.h"
 #include "nvme-print.h"
 
