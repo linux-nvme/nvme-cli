@@ -1,0 +1,39 @@
+nvme-solidigm-vs-smart-add-log(1)
+=================================
+
+NAME
+----
+nvme-solidigm-vs-smart-add-log - Get SMART / health extended log
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm vs-smart-add-log' <device> [OPTIONS]
+
+DESCRIPTION
+-----------
+This command retrieves the SMART / health extended log for Solidigm NVMe devices. It redirects to the OCP plug-in for compatibility.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal' or 'json'. Only one output format can be used at a time. Default is normal.
+
+EXAMPLES
+--------
+* Print the SMART / health extended log in normal format:
++
+------------
+# nvme solidigm vs-smart-add-log /dev/nvme0
+------------
+
+* Print the SMART / health extended log in JSON format:
++
+------------
+# nvme solidigm vs-smart-add-log /dev/nvme0 -o json
+------------
+
+NVME
+----
+Part of the nvme-cli suite
