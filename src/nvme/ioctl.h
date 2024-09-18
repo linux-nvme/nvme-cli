@@ -2313,6 +2313,38 @@ static inline int nvme_get_log_persistent_event(int fd,
 }
 
 /**
+ * nvme_get_log_lockdown() - Retrieve lockdown Log
+ * @fd:			File descriptor of nvme device
+ * @cnscp:		Contents and Scope of Command and Feature Identifier Lists
+ * @lockdown_log:	Buffer to store the lockdown log
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_get_log_lockdown(int fd,
+			__u8 cnscp, struct nvme_lockdown_log *lockdown_log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = lockdown_log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN,
+		.len = sizeof(*lockdown_log),
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = cnscp,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+}
+
+/**
  * nvme_set_features() - Set a feature attribute
  * @args:	&struct nvme_set_features_args argument structure
  *

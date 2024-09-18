@@ -2433,6 +2433,36 @@ static inline int nvme_mi_admin_get_log_persistent_event(nvme_mi_ctrl_t ctrl,
 }
 
 /**
+ * nvme_mi_admin_get_log_lockdown() - Retrieve lockdown Log
+ * @ctrl:		Controller to query
+ * @cnscp:		Contents and Scope of Command and Feature Identifier Lists
+ * @lockdown_log:	Buffer to store the lockdown log
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_mi_admin_get_log_lockdown(nvme_mi_ctrl_t ctrl,
+			__u8 cnscp, struct nvme_lockdown_log *lockdown_log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = lockdown_log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN,
+		.len = sizeof(*lockdown_log),
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = cnscp,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
  * nvme_mi_admin_security_send() - Perform a Security Send command on a
  * controller.
  * @ctrl: Controller to send command to

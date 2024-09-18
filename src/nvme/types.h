@@ -4763,6 +4763,20 @@ struct nvme_supported_cap_config_list_log {
 };
 
 /**
+ * struct nvme_lockdown_log - Command and Feature Lockdown Log
+ * @cfila:	Contents of the Command and Feature Identifier List field in the log page.
+ * @rsvd1:	Reserved
+ * @lngth:	Length of Command and Feature Identifier List field
+ * @cfil:	Command and Feature Identifier List
+ */
+struct nvme_lockdown_log {
+	__u8	cfila;
+	__u8	rsvd1[2];
+	__u8	lngth;
+	__u8	cfil[508];
+};
+
+/**
  * struct nvme_resv_notification_log - Reservation Notification Log
  * @lpc:	Log Page Count
  * @rnlpt:	See &enum nvme_resv_notify_rnlpt.
@@ -5060,6 +5074,46 @@ enum nvme_fdp_config_fdpa {
 	NVME_FDP_CONFIG_FDPA_FDPVWC_MASK = 0x1,
 	NVME_FDP_CONFIG_FDPA_VALID_SHIFT = 7,
 	NVME_FDP_CONFIG_FDPA_VALID_MASK = 0x1,
+};
+
+/**
+ * enum nvme_lockdown_log_scope - lockdown log page scope attributes
+ * @NVME_LOCKDOWN_ADMIN_CMD:		Scope value for Admin commandS
+ * @NVME_LOCKDOWN_FEATURE_ID:		Scope value for Feature ID
+ * @NVME_LOCKDOWN_MI_CMD_SET:		Scope value for Management Interface commands
+ * @NVME_LOCKDOWN_PCI_CMD_SET:		Scope value for PCI commands
+ */
+enum nvme_lockdown_log_scope {
+	NVME_LOCKDOWN_ADMIN_CMD		= 0x0,
+	NVME_LOCKDOWN_FEATURE_ID	= 0x2,
+	NVME_LOCKDOWN_MI_CMD_SET	= 0x3,
+	NVME_LOCKDOWN_PCI_CMD_SET	= 0x4,
+};
+
+/**
+ * enum nvme_lockdown_log_contents - lockdown log page content attributes
+ * @NVME_LOCKDOWN_SUPPORTED_CMD:		Content value for Supported commands
+ * @NVME_LOCKDOWN_PROHIBITED_CMD:		Content value for prohibited commands
+ * @NVME_LOCKDOWN_PROHIBITED_OUTOFBAND_CMD:	Content value for prohibited side band commands
+ */
+enum nvme_lockdown_log_contents {
+	NVME_LOCKDOWN_SUPPORTED_CMD		= 0x0,
+	NVME_LOCKDOWN_PROHIBITED_CMD		= 0x1,
+	NVME_LOCKDOWN_PROHIBITED_OUTOFBAND_CMD	= 0x2,
+};
+
+/**
+ * enum nvme_lockdown_scope_contents - Lockdown Log shift and mask
+ * @NVME_LOCKDOWN_SS_SHIFT:	Lockdown log scope select Shift
+ * @NVME_LOCKDOWN_SS_MASK:	Lockdown log scope select Mask
+ * @NVME_LOCKDOWN_CS_SHIFT:	Lockdown log contents Shift
+ * @NVME_LOCKDOWN_CS_MASK:	Lockdown log contents Mask
+ */
+enum nvme_lockdown_scope_contents {
+	NVME_LOCKDOWN_SS_SHIFT	= 0,
+	NVME_LOCKDOWN_SS_MASK	= 0xf,
+	NVME_LOCKDOWN_CS_SHIFT	= 4,
+	NVME_LOCKDOWN_CS_MASK	= 0x3,
 };
 
 /**
