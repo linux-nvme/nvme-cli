@@ -92,8 +92,6 @@ struct nvme_config {
 		OPT_END()                                                              \
 	}
 
-#define NVME_GET_FEATURES_SEL_CHANGED 8
-
 static inline int __dev_fd(struct nvme_dev *dev, const char *func, int line)
 {
 	if (dev->type != NVME_DEV_DIRECT) {
