@@ -1686,19 +1686,19 @@ static void stdout_id_ctrl_cmic(__u8 cmic)
 static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 {
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
-	__u32 disc = (oaes >> 31) & 0x1;
+	__u32 disc = (oaes & NVME_CTRL_OAES_DL) >> 31;
 	__u32 rsvd0 = (oaes & 0x70000000) >> 28;
-	__u32 zicn = (oaes & 0x08000000) >> 27;
+	__u32 zicn = (oaes & NVME_CTRL_OAES_ZD) >> 27;
 	__u32 rsvd1 = (oaes & 0x7fe0000) >> 17;
 	__u32 tthr = (oaes & 0x10000) >> 16;
-	__u32 normal_shn = (oaes >> 15) & 0x1;
-	__u32 egealpcn = (oaes & 0x4000) >> 14;
-	__u32 lbasin = (oaes & 0x2000) >> 13;
-	__u32 plealcn = (oaes & 0x1000) >> 12;
-	__u32 anacn = (oaes & 0x800) >> 11;
+	__u32 normal_shn = (oaes & NVME_CTRL_OAES_NS) >> 15;
+	__u32 egealpcn = (oaes & NVME_CTRL_OAES_EGE) >> 14;
+	__u32 lbasin = (oaes & NVME_CTRL_OAES_LBAS) >> 13;
+	__u32 plealcn = (oaes & NVME_CTRL_OAES_PLEA) >> 12;
+	__u32 anacn = (oaes & NVME_CTRL_OAES_ANA) >> 11;
 	__u32 rsvd2 = (oaes >> 10) & 0x1;
-	__u32 fan = (oaes & 0x200) >> 9;
-	__u32 nace = (oaes & 0x100) >> 8;
+	__u32 fan = (oaes & NVME_CTRL_OAES_FA) >> 9;
+	__u32 nace = (oaes & NVME_CTRL_OAES_NA) >> 8;
 	__u32 rsvd3 = oaes & 0xFF;
 
 	printf("  [31:31] : %#x\tDiscovery Log Change Notice %sSupported\n",
