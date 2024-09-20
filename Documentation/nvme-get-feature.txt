@@ -14,7 +14,7 @@ SYNOPSIS
 			[--data-len=<data-len> | -l <data-len>]
 			[--sel=<select> | -s <select>]
 			[--raw-binary | -b] [--cdw11=<cdw11> | -c <cdw11>]
-			[--human-readable | -H]
+			[--human-readable | -H] [--changed | -C]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 			[--timeout=<timeout> | -t <timeout>]
 
@@ -83,6 +83,10 @@ OPTIONS
 --human-readable::
 	This option will parse and format many of the bit fields
 	into human-readable formats.
+
+-C::
+--changed::
+	This option will show feature changed.
 
 -o <fmt>::
 --output-format=<fmt>::
