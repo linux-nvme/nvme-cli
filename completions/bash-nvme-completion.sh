@@ -205,7 +205,7 @@ nvme_list_opts () {
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \
 			--data-len= -l --cdw11= --c -uuid-index= -U --raw-binary -b \
-			--human-readable -H --timeout= -t"
+			--human-readable -H --timeout= -t --changed -C"
 			;;
 		"device-self-test")
 		opts+=" --namespace-id= -n --self-test-code= -s --timeout= -t"
