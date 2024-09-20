@@ -1197,6 +1197,10 @@ _nvme () {
 			-b':alias to --raw-binary'
 			--timeout=':value for timeout'
 			-t':alias of --timeout'
+			--human-readable':show feature in readable format'
+			-H':alias of --human-readable'
+			--changed':show feature changed'
+			-C':alias of --changed'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-feature options" _getf
