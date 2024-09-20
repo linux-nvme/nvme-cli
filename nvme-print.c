@@ -970,8 +970,6 @@ const char *nvme_select_to_string(int sel)
 		return "Saved";
 	case NVME_GET_FEATURES_SEL_SUPPORTED:
 		return "Supported capabilities";
-	case NVME_GET_FEATURES_SEL_CHANGED:
-		return "Changed";
 	default:
 		break;
 	}

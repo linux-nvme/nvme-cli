@@ -76,10 +76,11 @@ struct feat_cfg {
 	enum nvme_get_features_sel sel;
 	__u32 cdw11;
 	__u32 cdw12;
-	__u8  uuid_index;
+	__u8 uuid_index;
 	__u32 data_len;
-	bool  raw_binary;
-	bool  human_readable;
+	bool raw_binary;
+	bool human_readable;
+	bool changed;
 };
 
 struct passthru_config {
@@ -4583,8 +4584,7 @@ static int filter_out_flags(int status)
 			 NVME_GET(NVME_SC_MASK, SC));
 }
 
-static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
-				 void *buf)
+static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result, void *buf)
 {
 	int status = filter_out_flags(err);
 	enum nvme_status_type type = NVME_STATUS_TYPE_NVME;
@@ -4595,8 +4595,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 			if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 				nvme_show_select_result(cfg.feature_id, result);
 			else if (cfg.human_readable)
-				nvme_feature_show_fields(cfg.feature_id, result,
-							 buf);
+				nvme_feature_show_fields(cfg.feature_id, result, buf);
 			else if (buf)
 				d(buf, cfg.data_len, 16, 1);
 		} else if (buf) {
@@ -4604,15 +4603,14 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 		}
 	} else if (err > 0) {
 		if (!nvme_status_equals(status, type, NVME_SC_INVALID_FIELD) &&
-		    !nvme_status_equals(status,  type, NVME_SC_INVALID_NS))
+		    !nvme_status_equals(status, type, NVME_SC_INVALID_NS))
 			nvme_show_status(err);
 	} else {
 		nvme_show_error("get-feature: %s", nvme_strerror(errno));
 	}
 }
 
-static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
-				  bool changed)
+static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg)
 {
 	int err;
 	int err_def = 0;
@@ -4621,20 +4619,17 @@ static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
 	_cleanup_free_ void *buf = NULL;
 	_cleanup_free_ void *buf_def = NULL;
 
-	if (changed)
+	if (cfg.changed)
 		cfg.sel = NVME_GET_FEATURES_SEL_CURRENT;
 
 	err = get_feature_id(dev, &cfg, &buf, &result);
 
-	if (!err && changed) {
+	if (!err && cfg.changed) {
 		cfg.sel = NVME_GET_FEATURES_SEL_DEFAULT;
 		err_def = get_feature_id(dev, &cfg, &buf_def, &result_def);
 	}
 
-	if (changed)
-		cfg.sel = NVME_GET_FEATURES_SEL_CHANGED;
-
-	if (err || !changed || err_def || result != result_def ||
+	if (err || !cfg.changed || err_def || result != result_def ||
 	    (buf && buf_def && !strcmp(buf, buf_def)))
 		get_feature_id_print(cfg, err, result, buf);
 
@@ -4647,19 +4642,15 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 	int i;
 	int feat_max = 0x100;
 	int feat_num = 0;
-	bool changed = false;
 	int status = 0;
 	enum nvme_status_type type = NVME_STATUS_TYPE_NVME;
-
-	if (cfg.sel == NVME_GET_FEATURES_SEL_CHANGED)
-		changed = true;
 
 	if (cfg.feature_id)
 		feat_max = cfg.feature_id + 1;
 
 	for (i = cfg.feature_id; i < feat_max; i++, feat_num++) {
 		cfg.feature_id = i;
-		err = get_feature_id_changed(dev, cfg, changed);
+		err = get_feature_id_changed(dev, cfg);
 		if (!err)
 			continue;
 		status = filter_out_flags(err);
@@ -4691,9 +4682,10 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		"change saveable Features.";
 	const char *raw = "show feature in binary format";
 	const char *feature_id = "feature identifier";
-	const char *sel = "[0-3,8]: current/default/saved/supported/changed";
+	const char *sel = "[0-3]: current/default/saved/supported";
 	const char *cdw11 = "feature specific dword 11";
 	const char *human_readable = "show feature in readable format";
+	const char *changed = "show feature changed";
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
@@ -4717,7 +4709,8 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
 		  OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
 		  OPT_BYTE("uuid-index",     'U', &cfg.uuid_index,     uuid_index_specify),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
+		  OPT_FLAG("changed",        'C', &cfg.changed,        changed));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -4734,7 +4727,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		}
 	}
 
-	if (cfg.sel > NVME_GET_FEATURES_SEL_CHANGED) {
+	if (cfg.sel > NVME_GET_FEATURES_SEL_SUPPORTED) {
 		nvme_show_error("invalid 'select' param:%d", cfg.sel);
 		return -EINVAL;
 	}
