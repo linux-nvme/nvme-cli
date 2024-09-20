@@ -30,8 +30,9 @@ if json_c_dep.found()
     'plugins/ssstc/ssstc-nvme.c',
   ]
   subdir('solidigm')
-  subdir('ocp')
   if conf.get('HAVE_SED_OPAL') != 0
     subdir('sed')
   endif
 endif
+
+subdir('ocp')
