@@ -1555,6 +1555,7 @@ enum nvme_id_ctrl_cmic {
  * @NVME_CTRL_OAES_EGE: Endurance Group Events Aggregate Log Change
  *			Notices event supported
  * @NVME_CTRL_OAES_NS: Normal NVM Subsystem Shutdown event supported
+ * @NVME_CTRL_OAES_TTHR: Temperature Threshold Hysteresis Recovery event supported
  * @NVME_CTRL_OAES_ZD: Zone Descriptor Change Notifications supported
  * @NVME_CTRL_OAES_DL: Discover Log Page Change Notifications supported
  */
@@ -1566,6 +1567,7 @@ enum nvme_id_ctrl_oaes {
 	NVME_CTRL_OAES_LBAS			= 1 << 13,
 	NVME_CTRL_OAES_EGE			= 1 << 14,
 	NVME_CTRL_OAES_NS			= 1 << 15,
+	NVME_CTRL_OAES_TTHR			= 1 << 16,
 	NVME_CTRL_OAES_ZD			= 1 << 27,
 	NVME_CTRL_OAES_DL			= 1 << 31,
 };
