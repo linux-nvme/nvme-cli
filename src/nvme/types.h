@@ -1546,31 +1546,88 @@ enum nvme_id_ctrl_cmic {
 
 /**
  * enum nvme_id_ctrl_oaes - Optional Asynchronous Events Supported
+ * @NVME_CTRL_OAES_NA_SHIFT: Shift amount to get the Namespace Attribute Notices event supported
+ * @NVME_CTRL_OAES_FA_SHIFT: Shift amount to get the Firmware Activation Notices event supported
+ * @NVME_CTRL_OAES_ANA_SHIFT: Shift amount to get the ANA Change Notices supported
+ * @NVME_CTRL_OAES_PLEA_SHIFT: Shift amount to get the Predictable Latency Event Aggregate Log
+ *                             Change Notices event supported
+ * @NVME_CTRL_OAES_LBAS_SHIFT: Shift amount to get the LBA Status Information Notices event
+ *                             supported
+ * @NVME_CTRL_OAES_EGE_SHIFT: Shift amount to get the Endurance Group Events Aggregate Log Change
+ *                            Notices event supported
+ * @NVME_CTRL_OAES_NS_SHIFT: Shift amount to get the Normal NVM Subsystem Shutdown event supported
+ * @NVME_CTRL_OAES_TTH_SHIFT: Shift amount to get the Temperature Threshold Hysteresis Recovery
+ *                            event supported
+ * @NVME_CTRL_OAES_ZD_SHIFT: Shift amount to get the Zone Descriptor Change Notifications supported
+ * @NVME_CTRL_OAES_DL_SHIFT: Shift amount to get the Discover Log Page Change Notifications
+ *                           supported
+ * @NVME_CTRL_OAES_NA_MASK: Mask to get the Namespace Attribute Notices event supported
+ * @NVME_CTRL_OAES_FA_MASK: Mask to get the Firmware Activation Notices event supported
+ * @NVME_CTRL_OAES_ANA_MASK: Mask to get the ANA Change Notices supported
+ * @NVME_CTRL_OAES_PLEA_MASK: Mask to get the Predictable Latency Event Aggregate Log Change Notices
+ *                            event supported
+ * @NVME_CTRL_OAES_LBAS_MASK: Mask to get the LBA Status Information Notices event supported
+ * @NVME_CTRL_OAES_EGE_MASK: Mask to get the Endurance Group Events Aggregate Log Change Notices
+ *                           event supported
+ * @NVME_CTRL_OAES_NS_MASK: Mask to get the Normal NVM Subsystem Shutdown event supported
+ * @NVME_CTRL_OAES_TTH_MASK: Mask to get the Temperature Threshold Hysteresis Recovery event
+ *                           supported
+ * @NVME_CTRL_OAES_ZD_MASK: Mask to get the Zone Descriptor Change Notifications supported
+ * @NVME_CTRL_OAES_DL_MASK: Mask to get the Discover Log Page Change Notifications supported
  * @NVME_CTRL_OAES_NA: Namespace Attribute Notices event supported
  * @NVME_CTRL_OAES_FA: Firmware Activation Notices event supported
  * @NVME_CTRL_OAES_ANA: ANA Change Notices supported
- * @NVME_CTRL_OAES_PLEA: Predictable Latency Event Aggregate Log
- *			 Change Notices event supported
+ * @NVME_CTRL_OAES_PLEA: Predictable Latency Event Aggregate Log Change Notices event supported
  * @NVME_CTRL_OAES_LBAS: LBA Status Information Notices event supported
- * @NVME_CTRL_OAES_EGE: Endurance Group Events Aggregate Log Change
- *			Notices event supported
+ * @NVME_CTRL_OAES_EGE: Endurance Group Events Aggregate Log Change Notices event supported
  * @NVME_CTRL_OAES_NS: Normal NVM Subsystem Shutdown event supported
- * @NVME_CTRL_OAES_TTHR: Temperature Threshold Hysteresis Recovery event supported
+ * @NVME_CTRL_OAES_TTH: Temperature Threshold Hysteresis Recovery event supported
  * @NVME_CTRL_OAES_ZD: Zone Descriptor Change Notifications supported
  * @NVME_CTRL_OAES_DL: Discover Log Page Change Notifications supported
  */
 enum nvme_id_ctrl_oaes {
-	NVME_CTRL_OAES_NA			= 1 << 8,
-	NVME_CTRL_OAES_FA			= 1 << 9,
-	NVME_CTRL_OAES_ANA			= 1 << 11,
-	NVME_CTRL_OAES_PLEA			= 1 << 12,
-	NVME_CTRL_OAES_LBAS			= 1 << 13,
-	NVME_CTRL_OAES_EGE			= 1 << 14,
-	NVME_CTRL_OAES_NS			= 1 << 15,
-	NVME_CTRL_OAES_TTHR			= 1 << 16,
-	NVME_CTRL_OAES_ZD			= 1 << 27,
-	NVME_CTRL_OAES_DL			= 1 << 31,
+	NVME_CTRL_OAES_NA_SHIFT		= 8,
+	NVME_CTRL_OAES_FA_SHIFT		= 9,
+	NVME_CTRL_OAES_ANA_SHIFT	= 11,
+	NVME_CTRL_OAES_PLEA_SHIFT	= 12,
+	NVME_CTRL_OAES_LBAS_SHIFT	= 13,
+	NVME_CTRL_OAES_EGE_SHIFT	= 14,
+	NVME_CTRL_OAES_NS_SHIFT		= 15,
+	NVME_CTRL_OAES_TTH_SHIFT	= 16,
+	NVME_CTRL_OAES_ZD_SHIFT		= 27,
+	NVME_CTRL_OAES_DL_SHIFT		= 31,
+	NVME_CTRL_OAES_NA_MASK		= 0x1,
+	NVME_CTRL_OAES_FA_MASK		= 0x1,
+	NVME_CTRL_OAES_ANA_MASK		= 0x1,
+	NVME_CTRL_OAES_PLEA_MASK	= 0x1,
+	NVME_CTRL_OAES_LBAS_MASK	= 0x1,
+	NVME_CTRL_OAES_EGE_MASK		= 0x1,
+	NVME_CTRL_OAES_NS_MASK		= 0x1,
+	NVME_CTRL_OAES_TTH_MASK		= 0x1,
+	NVME_CTRL_OAES_ZD_MASK		= 0x1,
+	NVME_CTRL_OAES_DL_MASK		= 0x1,
+	NVME_CTRL_OAES_NA		= NVME_VAL(CTRL_OAES_NA),
+	NVME_CTRL_OAES_FA		= NVME_VAL(CTRL_OAES_FA),
+	NVME_CTRL_OAES_ANA		= NVME_VAL(CTRL_OAES_ANA),
+	NVME_CTRL_OAES_PLEA		= NVME_VAL(CTRL_OAES_PLEA),
+	NVME_CTRL_OAES_LBAS		= NVME_VAL(CTRL_OAES_LBAS),
+	NVME_CTRL_OAES_EGE		= NVME_VAL(CTRL_OAES_EGE),
+	NVME_CTRL_OAES_NS		= NVME_VAL(CTRL_OAES_NS),
+	NVME_CTRL_OAES_TTH		= NVME_VAL(CTRL_OAES_TTH),
+	NVME_CTRL_OAES_ZD		= NVME_VAL(CTRL_OAES_ZD),
+	NVME_CTRL_OAES_DL		= NVME_VAL(CTRL_OAES_DL),
 };
+
+#define NVME_CTRL_OAES_NAN(oaes)	NVME_GET(oaes, CTRL_OAES_NA)
+#define NVME_CTRL_OAES_FAN(oaes)	NVME_GET(oaes, CTRL_OAES_FA)
+#define NVME_CTRL_OAES_ANACN(oaes)	NVME_GET(oaes, CTRL_OAES_ANA)
+#define NVME_CTRL_OAES_PLEALCN(oaes)	NVME_GET(oaes, CTRL_OAES_PLEA)
+#define NVME_CTRL_OAES_LBASIAN(oaes)	NVME_GET(oaes, CTRL_OAES_LBAS)
+#define NVME_CTRL_OAES_EGEALPCN(oaes)	NVME_GET(oaes, CTRL_OAES_EGE)
+#define NVME_CTRL_OAES_NNVMSS(oaes)	NVME_GET(oaes, CTRL_OAES_NS)
+#define NVME_CTRL_OAES_TTHR(oaes)	NVME_GET(oaes, CTRL_OAES_TTH)
+#define NVME_CTRL_OAES_ZDCN(oaes)	NVME_GET(oaes, CTRL_OAES_ZD)
+#define NVME_CTRL_OAES_DLPCN(oaes)	NVME_GET(oaes, CTRL_OAES_DL)
 
 /**
  * enum nvme_id_ctrl_ctratt - Controller attributes
