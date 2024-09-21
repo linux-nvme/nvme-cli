@@ -3664,8 +3664,7 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 		printf("cmdid		: %#x\n", err_log[i].cmdid);
 		printf("status_field	: %#x (%s)\n", status,
 			nvme_status_to_string(status, false));
-		printf("phase_tag	: %#x\n",
-			le16_to_cpu(err_log[i].status_field & 0x1));
+		printf("phase_tag	: %#x\n", le16_to_cpu(err_log[i].status_field) & 0x1);
 		printf("parm_err_loc	: %#x\n",
 			err_log[i].parm_error_location);
 		printf("lba		: %#"PRIx64"\n",
