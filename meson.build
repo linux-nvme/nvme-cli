@@ -254,6 +254,7 @@ udev_files = [
   '70-nvmf-autoconnect.rules',
   '70-nvmf-keys.rules',
   '71-nvmf-netapp.rules',
+  '71-nvmf-vastdata.rules',
 ]
 
 foreach file : udev_files
