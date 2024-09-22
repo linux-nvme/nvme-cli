@@ -2966,7 +2966,7 @@ static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
 	}
 
 	nvme_id_ns_flbas_to_lbaf_inuse(flbas, &lbaf);
-	lbas = (1 << ns->lbaf[lbaf].ds) + ns->lbaf[lbaf].ms;
+	lbas = (1 << ns->lbaf[lbaf].ds) + le16_to_cpu(ns->lbaf[lbaf].ms);
 
 	if (suffix_si_parse(val, &endptr, (uint64_t *)num)) {
 		nvme_show_error("Expected long suffixed integer argument for '%s-si' but got '%s'!",
@@ -7693,7 +7693,8 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
-	__u8 lba_index, ms = 0, sts = 0, pif = 0;
+	__u8 lba_index, sts = 0, pif = 0;
+	__u16 ms;
 
 	const char *start_block_addr = "64-bit addr of first block to access";
 	const char *data_size = "size of data in bytes";
@@ -7878,7 +7879,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	logical_block_size = 1 << ns->lbaf[lba_index].ds;
-	ms = ns->lbaf[lba_index].ms;
+	ms = le16_to_cpu(ns->lbaf[lba_index].ms);
 
 	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
 	if (!nvm_ns)
