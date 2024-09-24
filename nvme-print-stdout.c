@@ -3768,8 +3768,10 @@ static void stdout_changed_ns_list_log(struct nvme_ns_list *log,
 	if (log->ns[0] != cpu_to_le32(NVME_NSID_ALL)) {
 		for (i = 0; i < NVME_ID_NS_LIST_MAX; i++) {
 			nsid = le32_to_cpu(log->ns[i]);
-			if (nsid == 0)
+			if (nsid == 0) {
+				printf("no ns changed\n");
 				break;
+			}
 
 			printf("[%4u]:%#x\n", i, nsid);
 		}
