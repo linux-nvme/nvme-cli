@@ -1182,6 +1182,30 @@ static void json_registers_cmbsts(uint32_t cmbsts, struct json_object *r)
 	obj_add_uint_x(r, "Controller Base Address Invalid (CBAI)", cmbsts & 1);
 }
 
+static void json_registers_cmbebs(uint32_t cmbebs, struct json_object *r)
+{
+	char buffer[BUF_LEN];
+
+	obj_add_uint_nx(r, "cmbebs", cmbebs);
+
+	obj_add_uint_nx(r, "CMB Elasticity Buffer Size Base (CMBWBZ)", cmbebs >> 8);
+	sprintf(buffer, "%s", cmbebs & 0x10 ? "shall" : "may");
+	obj_add_str(r, "CMB Read Bypass Behavior (CMBRBB)", buffer);
+	obj_add_str(r, "CMB Elasticity Buffer Size Units (CMBSZU)",
+			nvme_register_unit_to_string(cmbebs & 0xf));
+}
+
+static void json_registers_cmbswtp(uint32_t cmbswtp, struct json_object *r)
+{
+	char str[STR_LEN];
+
+	obj_add_uint_nx(r, "cmbswtp", cmbswtp);
+
+	obj_add_uint_nx(r, "CMB Sustained Write Throughput (CMBSWTV)", cmbswtp >> 8);
+	sprintf(str, "%s/second", nvme_register_unit_to_string(cmbswtp & 0xf));
+	obj_add_str(r, "CMB Sustained Write Throughput Units (CMBSWTU)", str);
+}
+
 static void json_registers_pmrcap(uint32_t pmrcap, struct json_object *r)
 {
 	obj_add_uint_x(r, "pmrcap", pmrcap);
@@ -2682,6 +2706,26 @@ static void json_ctrl_registers_cmbsts(void *bar, struct json_object *r)
 		obj_add_int(r, "cmbsts", cmbsts);
 }
 
+static void json_ctrl_registers_cmbebs(void *bar, struct json_object *r)
+{
+	uint32_t cmbebs = mmio_read32(bar + NVME_REG_CMBEBS);
+
+	if (human())
+		json_registers_cmbebs(cmbebs, obj_create_array_obj(r, "cmbebs"));
+	else
+		obj_add_int(r, "cmbebs", cmbebs);
+}
+
+static void json_ctrl_registers_cmbswtp(void *bar, struct json_object *r)
+{
+	uint32_t cmbswtp = mmio_read32(bar + NVME_REG_CMBSWTP);
+
+	if (human())
+		json_registers_cmbswtp(cmbswtp, obj_create_array_obj(r, "cmbswtp"));
+	else
+		obj_add_int(r, "cmbswtp", cmbswtp);
+}
+
 static void json_ctrl_registers_pmrcap(void *bar, struct json_object *r)
 {
 	uint32_t pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
@@ -2780,6 +2824,8 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_ctrl_registers_bpmbl(bar, r);
 	json_ctrl_registers_cmbmsc(bar, r);
 	json_ctrl_registers_cmbsts(bar, r);
+	json_ctrl_registers_cmbebs(bar, r);
+	json_ctrl_registers_cmbswtp(bar, r);
 	json_ctrl_registers_pmrcap(bar, r);
 	json_ctrl_registers_pmrctl(bar, r);
 	json_ctrl_registers_pmrsts(bar, r);
@@ -2789,30 +2835,6 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_ctrl_registers_pmrmscu(bar, r);
 
 	json_print(r);
-}
-
-static void json_registers_cmbebs(__u32 cmbebs, struct json_object *r)
-{
-	char buffer[BUF_LEN];
-
-	obj_add_uint_nx(r, "cmbebs", cmbebs);
-
-	obj_add_uint_nx(r, "CMB Elasticity Buffer Size Base (CMBWBZ)", cmbebs >> 8);
-	sprintf(buffer, "%s", cmbebs & 0x10 ? "shall" : "may");
-	obj_add_str(r, "Read Bypass Behavior", buffer);
-	obj_add_str(r, "CMB Elasticity Buffer Size Units (CMBSZU)",
-		    nvme_register_unit_to_string(cmbebs & 0xf));
-}
-
-static void json_registers_cmbswtp(__u32 cmbswtp, struct json_object *r)
-{
-	char str[STR_LEN];
-
-	obj_add_uint_nx(r, "cmbswtp", cmbswtp);
-
-	obj_add_uint_nx(r, "CMB Sustained Write Throughput (CMBSWTV)", cmbswtp >> 8);
-	sprintf(str, "%s", nvme_register_unit_to_string(cmbswtp & 0xf));
-	obj_add_str(r, "CMB Sustained Write Throughput Units (CMBSWTU)", str);
 }
 
 static void json_ctrl_register_human(int offset, uint64_t value, struct json_object *r)
