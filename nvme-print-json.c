@@ -2812,8 +2812,6 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_ctrl_registers_cc(bar, r);
 	json_ctrl_registers_csts(bar, r);
 	json_ctrl_registers_nssr(bar, r);
-	json_ctrl_registers_nssd(bar, r);
-	json_ctrl_registers_crto(bar, r);
 	json_ctrl_registers_aqa(bar, r);
 	json_ctrl_registers_asq(bar, r);
 	json_ctrl_registers_acq(bar, r);
@@ -2826,6 +2824,8 @@ static void json_ctrl_registers(void *bar, bool fabrics)
 	json_ctrl_registers_cmbsts(bar, r);
 	json_ctrl_registers_cmbebs(bar, r);
 	json_ctrl_registers_cmbswtp(bar, r);
+	json_ctrl_registers_nssd(bar, r);
+	json_ctrl_registers_crto(bar, r);
 	json_ctrl_registers_pmrcap(bar, r);
 	json_ctrl_registers_pmrctl(bar, r);
 	json_ctrl_registers_pmrsts(bar, r);
