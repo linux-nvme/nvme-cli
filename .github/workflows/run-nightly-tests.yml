@@ -1,0 +1,93 @@
+---
+name: run-nightly-tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 01 * * *'
+
+jobs:
+  nightly-tests:
+    runs-on: nvme-nvm
+    steps:
+      - name: Output kernel version
+        run: |
+          uname -a
+      - name: Clean up test device
+        run: |
+          #BDEV0 is an environment variable of the self-hosted runner instance
+          #that contains a valid nvme ctrl name which is capable of the nvm
+          #command set.
+          CONTROLLER=$(echo /dev/${BDEV0} | sed 's/n[0-9]*$//')
+          sudo nvme delete-ns $CONTROLLER -n 0xffffffff
+          sudo nvme format $CONTROLLER -n 0xffffffff -l 0 -f
+          SIZE=$(sudo nvme id-ctrl $CONTROLLER --output-format=json | jq -r '{tnvmcap} | .[]' | awk '{print $1/512}')
+          sudo nvme create-ns -s $SIZE -c $SIZE -f 0 -d 0 --csi=0 $CONTROLLER
+          sudo nvme attach-ns $CONTROLLER -n 1 -c 0
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+          meson gcc pkg-config git libjson-c-dev libssl-dev libkeyutils-dev \
+          libdbus-1-dev libpython3-dev pipx python3-dev swig xz-utils
+          pipx ensurepath
+          sudo PIPX_BIN_DIR=/usr/local/bin pipx install nose2
+          sudo PIPX_BIN_DIR=/usr/local/bin pipx install flake8
+          sudo PIPX_BIN_DIR=/usr/local/bin pipx install mypy
+          sudo PIPX_BIN_DIR=/usr/local/bin pipx install autopep8
+          sudo PIPX_BIN_DIR=/usr/local/bin pipx install isort
+      - name: Build and install nvme-cli
+        run: |
+          scripts/build.sh -b release -c gcc
+          sudo meson install -C .build-ci
+          sudo ldconfig /usr/local/lib64
+      - name: Overwrite test config
+        run: |
+          CONTROLLER=$(echo /dev/${BDEV0} | sed 's/n[0-9]*$//')
+          cat > tests/config.json << EOF
+          {
+            "controller" : "$CONTROLLER",
+            "ns1": "/dev/${BDEV0}",
+            "log_dir": "tests/nvmetests/"
+          }
+          EOF
+      - name: Run on device tests
+        run: |
+          sudo nose2 --verbose --start-dir tests \
+          nvme_attach_detach_ns_test \
+          nvme_compare_test \
+          nvme_copy_test \
+          nvme_create_max_ns_test \
+          nvme_ctrl_reset_test \
+          nvme_dsm_test \
+          nvme_error_log_test \
+          nvme_flush_test \
+          nvme_format_test \
+          nvme_fw_log_test \
+          nvme_get_features_test \
+          nvme_get_lba_status_test \
+          nvme_id_ctrl_test \
+          nvme_id_ns_test \
+          nvme_lba_status_log_test \
+          nvme_read_write_test \
+          nvme_smart_log_test \
+          nvme_verify_test \
+          nvme_writeuncor_test \
+          nvme_writezeros_test
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs files
+          path: |
+            ./tests/nvmetests/**/*.log
+      - name: Clean up test device
+        if: always()
+        run: |
+          CONTROLLER=$(echo /dev/${BDEV0} | sed 's/n[0-9]*$//')
+          sudo nvme delete-ns $CONTROLLER -n 0xffffffff
+          sudo nvme format $CONTROLLER -n 0xffffffff -l 0 -f
+          SIZE=$(sudo nvme id-ctrl $CONTROLLER --output-format=json | jq -r '{tnvmcap} | .[]' | awk '{print $1/512}')
+          sudo nvme create-ns -s $SIZE -c $SIZE -f 0 -d 0 --csi=0 $CONTROLLER
+          sudo nvme attach-ns $CONTROLLER -n 1 -c 0
