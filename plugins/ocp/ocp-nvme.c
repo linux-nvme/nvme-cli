@@ -539,11 +539,11 @@ static int get_c3_log_page(struct nvme_dev *dev, char *format)
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C3 Log Page data\n");
 				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", lat_mon_guid[j]);
+					fprintf(stderr, "%02x", lat_mon_guid[j]);
 
 				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
 				fprintf(stderr, "\n");
 
 				ret = -1;
@@ -1994,7 +1994,7 @@ static int ocp_print_C5_log_normal(struct nvme_dev *dev,
 	printf("  Log Page Version			: 0x%x\n", le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID				: 0x");
 	for (j = C5_GUID_LENGTH - 1; j >= 0; j--)
-		printf("%x", log_data->log_page_guid[j]);
+		printf("%02x", log_data->log_page_guid[j]);
 	printf("\n");
 
 	return 0;
@@ -2079,10 +2079,10 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C5 Log Page data\n");
 				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", unsupported_req_guid[j]);
+					fprintf(stderr, "%02x", unsupported_req_guid[j]);
 				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
 				fprintf(stderr, "\n");
 
 				ret = -1;
@@ -2233,7 +2233,7 @@ static void ocp_print_c1_log_normal(struct ocp_error_recovery_log_page *log_data
 	printf("  Log Page Version                  : 0x%x\n", le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID                     : 0x");
 	for (i = C1_GUID_LENGTH - 1; i >= 0; i--)
-		printf("%x", log_data->log_page_guid[i]);
+		printf("%02x", log_data->log_page_guid[i]);
 	printf("\n");
 }
 
@@ -2314,10 +2314,10 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C1 Log Page data\n");
 				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", error_recovery_guid[j]);
+					fprintf(stderr, "%02x", error_recovery_guid[j]);
 				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
 				fprintf(stderr, "\n");
 
 				ret = -1;
@@ -2451,7 +2451,7 @@ static void ocp_print_c4_log_normal(struct ocp_device_capabilities_log_page *log
 	printf("  Log Page Version						: 0x%x\n", le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID							: 0x");
 	for (i = C4_GUID_LENGTH - 1; i >= 0; i--)
-		printf("%x", log_data->log_page_guid[i]);
+		printf("%02x", log_data->log_page_guid[i]);
 	printf("\n");
 }
 
@@ -2530,10 +2530,10 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C4 Log Page data\n");
 				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", dev_cap_req_guid[j]);
+					fprintf(stderr, "%02x", dev_cap_req_guid[j]);
 				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
 				fprintf(stderr, "\n");
 
 				ret = -1;
@@ -3185,7 +3185,7 @@ static int ocp_print_c9_log_normal(struct telemetry_str_log_format *log_data, __
 
 	printf("  Log page GUID                                   : 0x");
 	for (j = C9_GUID_LENGTH - 1; j >= 0; j--)
-		printf("%x", log_data->log_page_guid[j]);
+		printf("%02x", log_data->log_page_guid[j]);
 	printf("\n");
 
 	printf("  Telemetry String Log Size                       : 0x%lx\n", le64_to_cpu(log_data->sls));
@@ -3784,7 +3784,7 @@ static int ocp_print_C7_log_normal(struct nvme_dev *dev,
 	printf("  Log Page Version                                       : 0x%x\n", le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID                                          : 0x");
 	for (j = C7_GUID_LENGTH - 1; j >= 0; j--)
-		printf("%x", log_data->log_page_guid[j]);
+		printf("%02x", log_data->log_page_guid[j]);
 	printf("\n");
 
 	return 0;
@@ -3890,10 +3890,10 @@ static int get_c7_log_page(struct nvme_dev *dev, char *format)
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C7 Log Page data\n");
 				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", tcg_configuration_guid[j]);
+					fprintf(stderr, "%02x", tcg_configuration_guid[j]);
 				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
 				fprintf(stderr, "\n");
 
 				ret = -1;
