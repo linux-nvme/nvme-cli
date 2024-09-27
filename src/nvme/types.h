@@ -1360,6 +1360,39 @@ struct nvme_id_psd {
  *	       total number of outstanding I/O commands across all I/O queues
  *	       on the controller for optimal operation.
  * @rsvd568:   Reserved
+ * @cmmrtd:    Controller Maximum Memory Range Tracking Descriptors indicates
+ *             the maximum number of Memory Range Tracking Descriptors the
+ *             controller supports.
+ * @nmmrtd:    NVM Subsystem Maximum Memory Range Tracking Descriptors
+ *             indicates the maximum number of Memory Range Tracking Descriptors
+ *             the NVM subsystem supports.
+ * @minmrtg:   Minimum Memory Range Tracking Granularity indicates the minimum
+ *             value supported in the Requested Memory Range Tracking
+ *             Granularity (RMRTG) field of the Track Memory Ranges data
+ *             structure.
+ * @maxmrtg:   Maximum Memory Range Tracking Granularity indicates the maximum
+ *             value supported in the Requested Memory Range Tracking
+ *             Granularity (RMRTG) field of the Track Memory Ranges data
+ *             structure.
+ * @trattr:    Tracking Attributes indicates supported attributes for the
+ *             Track Send command and Track Receive command.
+ * @rsvd577:   Reserved
+ * @mcudmq:    Maximum Controller User Data Migration Queues indicates the
+ *             maximum number of User Data Migration Queues supported by the
+ *             controller.
+ * @mnsudmq:   Maximum NVM Subsystem User Data Migration Queues indicates the
+ *             maximum number of User Data Migration Queues supported by the NVM
+ *             subsystem.
+ * @mcmr:      Maximum CDQ Memory Ranges indicates the maximum number of
+ *             memory ranges allowed to be specified by the PRP1 field of a
+ *             Controller Data Queue command.
+ * @nmcmr:     NVM Subsystem Maximum CDQ Memory Ranges indicates the maximum
+ *             number of memory ranges for all Controller Data Queues in the
+ *             NVM subsystem.
+ * @mcdqpc:    Maximum Controller Data Queue PRP Count indicates the maximum
+ *             number of PRPs allowed to be specified in the PRP list in the
+ *             Controller Data Queue command.
+ * @rsvd588:   Reserved
  * @subnqn:    NVM Subsystem NVMe Qualified Name, UTF-8 null terminated string
  * @rsvd1024:  Reserved
  * @ioccsz:    I/O Queue Command Capsule Supported Size, defines the maximum
@@ -1466,7 +1499,19 @@ struct nvme_id_ctrl {
 	__u8			maxdna[16];
 	__le32			maxcna;
 	__le32			oaqd;
-	__u8			rsvd568[200];
+	__u8			rsvd568[2];
+	__u16			cmmrtd;
+	__u16			nmmrtd;
+	__u8			minmrtg;
+	__u8			maxmrtg;
+	__u8			trattr;
+	__u8			rsvd577;
+	__u16			mcudmq;
+	__u16			mnsudmq;
+	__u16			mcmr;
+	__u16			nmcmr;
+	__u16			mcdqpc;
+	__u8			rsvd588[180];
 	char			subnqn[NVME_NQN_LENGTH];
 	__u8			rsvd1024[768];
 
@@ -7082,6 +7127,20 @@ struct nvme_mi_vpd_hdr {
  *				      Originator field does not match the
  *				      Host NQN used by the DDC to connect
  *				      to the CDC.
+ * @NVME_SC_INVALID_CONTROLER_DATA_QUEUE: This error indicates that the
+ *				      specified Controller Data Queue
+ *				      Identifier is invalid for the controller
+ *				      processing the command.
+ * @NVME_SC_NOT_ENOUGH_RESOURCES:     This error indicates that there is not
+ *				      enough resources in the controller to
+ *				      process the command.
+ * @NVME_SC_CONTROLLER_SUSPENDED:     The operation requested is not allowed if
+ *				      the specified controller is suspended.
+ * @NVME_SC_CONTROLLER_NOT_SUSPENDED: The operation requested is not allowed if
+ *				      the specified controller is not
+ *				      suspended.
+ * @NVME_SC_CONTROLLER_DATA_QUEUE_FULL: The controller detected that a
+ *				      Controller Data Queue became full.
  * @NVME_SC_BAD_ATTRIBUTES:	      Conflicting Dataset Management Attributes
  * @NVME_SC_INVALID_PI:		      Invalid Protection Information
  * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
@@ -7338,6 +7397,15 @@ enum nvme_status_field {
 	NVME_SC_INSUFFICIENT_DISC_RES		= 0x32,
 	NVME_SC_REQSTD_FUNCTION_DISABLED	= 0x33,
 	NVME_SC_ZONEGRP_ORIGINATOR_INVLD	= 0x34,
+
+	/*
+	 * Command Set Specific - Live Migration
+	 */
+	NVME_SC_INVALID_CONTROLER_DATA_QUEUE	= 0x37,
+	NVME_SC_NOT_ENOUGH_RESOURCES		= 0x38,
+	NVME_SC_CONTROLLER_SUSPENDED		= 0x39,
+	NVME_SC_CONTROLLER_NOT_SUSPENDED	= 0x3A,
+	NVME_SC_CONTROLLER_DATA_QUEUE_FULL	= 0x3B,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:
@@ -7617,6 +7685,9 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE:	I/O Command Set specific ID Namespace
  *						Data Structure for Allocated Namespace ID
  * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE:	Base Specification 2.0a section 5.17.2.21
+ * @NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS:	Supported Controller State Formats
+ *							identifying the supported NVMe Controller
+ *							State data structures
  */
 enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_NS					= 0x00,
@@ -7643,6 +7714,7 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST			= 0x1A,
 	NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE		= 0x1B,
 	NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE			= 0x1C,
+	NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS		= 0x20,
 };
 
 /**

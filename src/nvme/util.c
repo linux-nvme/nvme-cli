@@ -286,6 +286,11 @@ static const char * const cmd_spec_status[] = {
 	[NVME_SC_INSUFFICIENT_DISC_RES]		  = "Discovery Info entries exceed Discovery Controller's capacity",
 	[NVME_SC_REQSTD_FUNCTION_DISABLED]        = "Fabric Zoning is not enabled on the CDC",
 	[NVME_SC_ZONEGRP_ORIGINATOR_INVLD]        = "The NQN contained in the ZoneGroup Originator field does not match the Host NQN used by the DDC to connect to the CDC",
+	[NVME_SC_INVALID_CONTROLER_DATA_QUEUE]	  = "Invalid Controller Data Queue",
+	[NVME_SC_NOT_ENOUGH_RESOURCES]		  = "Not Enough Resources",
+	[NVME_SC_CONTROLLER_SUSPENDED]		  = "Controller Suspended: Operation failed because the controller is currently in a suspended state",
+	[NVME_SC_CONTROLLER_NOT_SUSPENDED]	  = "Controller Not Suspended: Operation failed because the controller is not in a suspended state",
+	[NVME_SC_CONTROLLER_DATA_QUEUE_FULL]	  = "Controller Data Queue Full",
 };
 
 static const char * const nvm_status[] = {
