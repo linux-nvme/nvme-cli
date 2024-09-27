@@ -4,6 +4,7 @@
 #include "nvme-print.h"
 #include "ocp-print.h"
 #include "ocp-hardware-component-log.h"
+#include "ocp-fw-activation-history.h"
 
 static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_object *r)
 {
@@ -75,8 +76,64 @@ static void json_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	json_print(r);
 }
 
+static void json_fw_activation_history(const struct fw_activation_history *fw_history)
+{
+	struct json_object *root = json_create_object();
+
+	json_object_add_value_uint(root, "log identifier", fw_history->log_id);
+	json_object_add_value_uint(root, "valid entries", le32_to_cpu(fw_history->valid_entries));
+
+	struct json_object *entries = json_create_array();
+
+	for (int index = 0; index < fw_history->valid_entries; index++) {
+		const struct fw_activation_history_entry *entry = &fw_history->entries[index];
+		struct json_object *entry_obj = json_create_object();
+
+		json_object_add_value_uint(entry_obj, "version number", entry->ver_num);
+		json_object_add_value_uint(entry_obj, "entry length", entry->entry_length);
+		json_object_add_value_uint(entry_obj, "activation count",
+					   le16_to_cpu(entry->activation_count));
+		json_object_add_value_uint64(entry_obj, "timestamp",
+				(0x0000FFFFFFFFFFFF & le64_to_cpu(entry->timestamp)));
+		json_object_add_value_uint(entry_obj, "power cycle count",
+					   le64_to_cpu(entry->power_cycle_count));
+
+		struct json_object *fw = json_object_new_string_len(entry->previous_fw,
+								    sizeof(entry->previous_fw));
+
+		json_object_add_value_object(entry_obj, "previous firmware", fw);
+
+		fw = json_object_new_string_len(entry->new_fw, sizeof(entry->new_fw));
+
+		json_object_add_value_object(entry_obj, "new firmware", fw);
+		json_object_add_value_uint(entry_obj, "slot number", entry->slot_number);
+		json_object_add_value_uint(entry_obj, "commit action type", entry->commit_action);
+		json_object_add_value_uint(entry_obj, "result", le16_to_cpu(entry->result));
+
+		json_array_add_value_object(entries, entry_obj);
+	}
+
+	json_object_add_value_array(root, "entries", entries);
+
+	json_object_add_value_uint(root, "log page version",
+				   le16_to_cpu(fw_history->log_page_version));
+
+	char guid[2 * sizeof(fw_history->log_page_guid) + 3] = { 0 };
+
+	sprintf(guid, "0x%"PRIx64"%"PRIx64"",
+		le64_to_cpu(fw_history->log_page_guid[1]),
+		le64_to_cpu(fw_history->log_page_guid[0]));
+	json_object_add_value_string(root, "log page guid", guid);
+
+	json_print_object(root, NULL);
+	json_free_object(root);
+
+	printf("\n");
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
+	.fw_act_history = json_fw_activation_history,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)

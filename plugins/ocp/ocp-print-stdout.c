@@ -4,6 +4,7 @@
 #include "nvme-print.h"
 #include "ocp-print.h"
 #include "ocp-hardware-component-log.h"
+#include "ocp-fw-activation-history.h"
 
 static void print_hwcomp_desc(struct hwcomp_desc_entry *e, bool list, int num)
 {
@@ -51,8 +52,49 @@ static void stdout_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	}
 }
 
+static void stdout_fw_activation_history(const struct fw_activation_history *fw_history)
+{
+	printf("Firmware History Log:\n");
+
+	printf("  %-26s%d\n", "log identifier:", fw_history->log_id);
+	printf("  %-26s%d\n", "valid entries:", le32_to_cpu(fw_history->valid_entries));
+
+	printf("  entries:\n");
+
+	for (int index = 0; index < fw_history->valid_entries; index++) {
+		const struct fw_activation_history_entry *entry = &fw_history->entries[index];
+
+		printf("    entry[%d]:\n", le32_to_cpu(index));
+		printf("      %-22s%d\n", "version number:", entry->ver_num);
+		printf("      %-22s%d\n", "entry length:", entry->entry_length);
+		printf("      %-22s%d\n", "activation count:",
+		       le16_to_cpu(entry->activation_count));
+		printf("      %-22s%"PRIu64"\n", "timestamp:",
+				(0x0000FFFFFFFFFFFF & le64_to_cpu(entry->timestamp)));
+		printf("      %-22s%"PRIu64"\n", "power cycle count:",
+		       le64_to_cpu(entry->power_cycle_count));
+		printf("      %-22s%.*s\n", "previous firmware:", (int)sizeof(entry->previous_fw),
+		       entry->previous_fw);
+		printf("      %-22s%.*s\n", "new firmware:", (int)sizeof(entry->new_fw),
+		       entry->new_fw);
+		printf("      %-22s%d\n", "slot number:", entry->slot_number);
+		printf("      %-22s%d\n", "commit action type:", entry->commit_action);
+		printf("      %-22s%d\n", "result:",  le16_to_cpu(entry->result));
+	}
+
+	printf("  %-26s%d\n", "log page version:",
+	       le16_to_cpu(fw_history->log_page_version));
+
+	printf("  %-26s0x%"PRIx64"%"PRIx64"\n", "log page guid:",
+	       le64_to_cpu(fw_history->log_page_guid[1]),
+	       le64_to_cpu(fw_history->log_page_guid[0]));
+
+	printf("\n");
+}
+
 static struct ocp_print_ops stdout_print_ops = {
 	.hwcomp_log = stdout_hwcomp_log,
+	.fw_act_history = stdout_fw_activation_history,
 };
 
 struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)

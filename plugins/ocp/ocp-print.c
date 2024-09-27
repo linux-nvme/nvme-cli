@@ -29,3 +29,7 @@ void ocp_show_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list, nvme_print
 	ocp_print(hwcomp_log, flags, log, id, list);
 }
 
+void ocp_fw_act_history(const struct fw_activation_history *fw_history, nvme_print_flags_t flags)
+{
+	ocp_print(fw_act_history, flags, fw_history);
+}
