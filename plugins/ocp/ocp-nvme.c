@@ -1775,6 +1775,9 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd,
 	if (err)
 		return err;
 
+	if (opt.telemetry_type == 0)
+		opt.telemetry_type = "host";
+
 	err = fstat(dev_fd(dev), &nvme_stat);
 	if (err < 0)
 		return err;
