@@ -5,6 +5,7 @@
 #include "ocp-print.h"
 #include "ocp-hardware-component-log.h"
 #include "ocp-fw-activation-history.h"
+#include "ocp-smart-extended-log.h"
 
 static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_object *r)
 {
@@ -131,9 +132,122 @@ static void json_fw_activation_history(const struct fw_activation_history *fw_hi
 	printf("\n");
 }
 
+static void json_smart_extended_log(void *data)
+{
+	struct json_object *root;
+	struct json_object *pmuw;
+	struct json_object *pmur;
+	uint16_t smart_log_ver = 0;
+	__u8 *log_data = data;
+	char guid[40];
+
+	root = json_create_object();
+	pmuw = json_create_object();
+	pmur = json_create_object();
+
+	json_object_add_value_uint64(pmuw, "hi",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW + 8] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_uint64(pmuw, "lo",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_object(root, "Physical media units written", pmuw);
+	json_object_add_value_uint64(pmur, "hi",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_uint64(pmur, "lo",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_object(root, "Physical media units read", pmur);
+	json_object_add_value_uint64(root, "Bad user nand blocks - Raw",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
+	json_object_add_value_uint(root, "Bad user nand blocks - Normalized",
+		(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BUNBN]));
+	json_object_add_value_uint64(root, "Bad system nand blocks - Raw",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BSNBR] & 0x0000FFFFFFFFFFFF));
+	json_object_add_value_uint(root, "Bad system nand blocks - Normalized",
+		(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BSNBN]));
+	json_object_add_value_uint64(root, "XOR recovery count",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_XRC]));
+	json_object_add_value_uint64(root, "Uncorrectable read error count",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UREC]));
+	json_object_add_value_uint64(root, "Soft ecc error count",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SEEC]));
+	json_object_add_value_uint(root, "End to end detected errors",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EEDC]));
+	json_object_add_value_uint(root, "End to end corrected errors",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
+	json_object_add_value_uint(root, "System data percent used",
+		(__u8)log_data[SCAO_SDPU]);
+	json_object_add_value_uint64(root, "Refresh counts",
+		(uint64_t)(le64_to_cpu(*(uint64_t *)&log_data[SCAO_RFSC]) & 0x00FFFFFFFFFFFFFF));
+	json_object_add_value_uint(root, "Max User data erase counts",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MXUDEC]));
+	json_object_add_value_uint(root, "Min User data erase counts",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MNUDEC]));
+	json_object_add_value_uint(root, "Number of Thermal throttling events",
+		(__u8)log_data[SCAO_NTTE]);
+	json_object_add_value_uint(root, "Current throttling status",
+		(__u8)log_data[SCAO_CTS]);
+	json_object_add_value_uint64(root, "PCIe correctable error count",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PCEC]));
+	json_object_add_value_uint(root, "Incomplete shutdowns",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_ICS]));
+	json_object_add_value_uint(root, "Percent free blocks",
+		(__u8)log_data[SCAO_PFB]);
+	json_object_add_value_uint(root, "Capacitor health",
+		(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
+	json_object_add_value_uint64(root, "Unaligned I/O",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UIO]));
+	json_object_add_value_uint64(root, "Security Version Number",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
+	json_object_add_value_uint64(root, "NUSE - Namespace utilization",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
+	json_object_add_value_uint128(root, "PLP start count",
+		le128_to_cpu(&log_data[SCAO_PSC]));
+	json_object_add_value_uint128(root, "Endurance estimate",
+		le128_to_cpu(&log_data[SCAO_EEST]));
+	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
+
+	json_object_add_value_uint(root, "Log page version", smart_log_ver);
+
+	memset((void *)guid, 0, 40);
+	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
+	json_object_add_value_string(root, "Log page GUID", guid);
+
+	switch (smart_log_ver) {
+	case 0 ... 1:
+		break;
+	default:
+	case 4:
+		json_object_add_value_uint(root, "NVMe Command Set Errata Version",
+					   (__u8)log_data[SCAO_NCSEV]);
+		json_object_add_value_uint(root, "Lowest Permitted Firmware Revision",
+					   le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
+		fallthrough;
+	case 2 ... 3:
+		json_object_add_value_uint(root, "Errata Version Field",
+					   (__u8)log_data[SCAO_EVF]);
+		json_object_add_value_uint(root, "Point Version Field",
+					   le16_to_cpu(*(uint16_t *)&log_data[SCAO_PVF]));
+		json_object_add_value_uint(root, "Minor Version Field",
+					   le16_to_cpu(*(uint16_t *)&log_data[SCAO_MIVF]));
+		json_object_add_value_uint(root, "Major Version Field",
+					   (__u8)log_data[SCAO_MAVF]);
+		json_object_add_value_uint(root, "NVMe Base Errata Version",
+					   (__u8)log_data[SCAO_NBEV]);
+		json_object_add_value_uint(root, "PCIe Link Retraining Count",
+					   le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
+		json_object_add_value_uint(root, "Power State Change Count",
+					   le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
+	}
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
+	.smart_extended_log = json_smart_extended_log,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)
