@@ -128,7 +128,8 @@ struct nvme_bar_cap {
 	__u8	nsss:1;
 	__u8	crwms:1;
 	__u8	crims:1;
-	__u8	rsvd61:3;
+	__u8	nsses:1;
+	__u8	rsvd62:2;
 };
 
 #ifdef CONFIG_JSONC
