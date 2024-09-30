@@ -1109,6 +1109,8 @@ static void stdout_subsystem_list(nvme_root_t r, bool show_ana)
 
 static void stdout_registers_cap(struct nvme_bar_cap *cap)
 {
+	printf("\tNVM Subsystem Shutdown Enhancements Supported (NSSES): %s\n",
+		cap->nsses ? "Supported" : "Not Supported");
 	printf("\tController Ready With Media Support (CRWMS): %s\n",
 	       cap->crwms ? "Supported" : "Not Supported");
 	printf("\tController Ready Independent of Media Support (CRIMS): %s\n",

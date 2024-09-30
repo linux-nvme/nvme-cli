@@ -853,6 +853,8 @@ static void json_registers_cap(struct nvme_bar_cap *cap, struct json_object *r)
 	sprintf(json_str, "%"PRIx64"", *(uint64_t *)cap);
 	obj_add_str(r, "cap", json_str);
 
+	obj_add_str(r, "NVM Subsystem Shutdown Enhancements Supported (NSSES)",
+			cap->nsses ? "Supported" : "Not supported");
 	obj_add_str(r, "Controller Ready With Media Support (CRWMS)",
 		     cap->crwms ? "Supported" : "Not supported");
 	obj_add_str(r, "Controller Ready Independent of Media Support (CRIMS)",
