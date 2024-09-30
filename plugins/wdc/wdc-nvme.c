@@ -88,6 +88,7 @@
 #define WDC_NVME_SN861_DEV_ID				0x2750
 #define WDC_NVME_SN861_DEV_ID_1				0x2751
 #define WDC_NVME_SN861_DEV_ID_2				0x2752
+#define WDC_NVME_SNTMP_DEV_ID				0x2761
 
 /* This id's are no longer supported, delete ?? */
 #define WDC_NVME_SN550_DEV_ID				0x2708
@@ -1877,6 +1878,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case WDC_NVME_SN861_DEV_ID:
 		case WDC_NVME_SN861_DEV_ID_1:
 		case WDC_NVME_SN861_DEV_ID_2:
+		case WDC_NVME_SNTMP_DEV_ID:
 			capabilities |= (WDC_DRIVE_CAP_C0_LOG_PAGE |
 				WDC_DRIVE_CAP_C3_LOG_PAGE |
 				WDC_DRIVE_CAP_CA_LOG_PAGE |
@@ -11318,6 +11320,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 		case WDC_NVME_SN550_DEV_ID:
 		case WDC_NVME_ZN350_DEV_ID:
 		case WDC_NVME_ZN350_DEV_ID_1:
+		case WDC_NVME_SNTMP_DEV_ID:
 			ret = wdc_do_drive_info(dev, &result);
 
 			if (!ret) {
