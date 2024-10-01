@@ -137,7 +137,6 @@ struct ilog {
 	int count;
 	struct nvme_id_ctrl id_ctrl;
 	enum nvme_telemetry_da max_da;
-	__u32 max_tx;
 };
 
 static void print_nlog_header(__u8 *buffer)
@@ -522,11 +521,6 @@ static int ilog_ensure_dump_id_ctrl(struct ilog *ilog)
 	if (ilog->id_ctrl.lpa & 0x40)
 		ilog->max_da = NVME_TELEMETRY_DA_4;
 
-	/* assuming CAP.MPSMIN is zero minimum Memory Page Size is at least 4096 bytes */
-	ilog->max_tx = (1 << ilog->id_ctrl.mdts) * NVME_LOG_PAGE_PDU_SIZE;
-	if (ilog->max_tx > DRIVER_MAX_TX_256K)
-		ilog->max_tx = DRIVER_MAX_TX_256K;
-
 	return err;
 }
 
@@ -534,7 +528,7 @@ static int ilog_dump_telemetry(struct ilog *ilog, enum log_type ttype)
 {
 	int err = 0;
 	enum nvme_telemetry_da da;
-	size_t max_data_tx;
+	size_t mdts;
 	const char *file_name;
 	struct nvme_feat_host_behavior prev = {0};
 	bool host_behavior_changed = false;
@@ -545,7 +539,7 @@ static int ilog_dump_telemetry(struct ilog *ilog, enum log_type ttype)
 		return err;
 
 	da = ilog->max_da;
-	max_data_tx = ilog->max_tx;
+	mdts = ilog->id_ctrl.mdts;
 
 	if (da == 4) {
 		__u32 result;
@@ -564,16 +558,16 @@ static int ilog_dump_telemetry(struct ilog *ilog, enum log_type ttype)
 	case HIT:
 		file_name = "lid_0x07_lsp_0x01_lsi_0x0000.bin";
 		log.desc = "Host Initiated Telemetry";
-		err = nvme_get_telemetry_log(dev_fd(ilog->dev), true, false, false, max_data_tx, da,
-					    (struct nvme_telemetry_log **) &log.buffer,
-					    &log.buffer_size);
+		err = sldgm_dynamic_telemetry(dev_fd(ilog->dev), true, false, false, mdts,
+					      da, (struct nvme_telemetry_log **) &log.buffer,
+					      &log.buffer_size);
 		break;
 	case CIT:
 		file_name = "lid_0x08_lsp_0x00_lsi_0x0000.bin";
 		log.desc = "Controller Initiated Telemetry";
-		err = nvme_get_telemetry_log(dev_fd(ilog->dev), false, true, true, max_data_tx, da,
-					    (struct nvme_telemetry_log **) &log.buffer,
-					     &log.buffer_size);
+		err = sldgm_dynamic_telemetry(dev_fd(ilog->dev), false, true, true, mdts,
+					      da, (struct nvme_telemetry_log **) &log.buffer,
+					      &log.buffer_size);
 		break;
 	default:
 		return -EINVAL;
@@ -749,6 +743,7 @@ static int ilog_dump_pel(struct ilog *ilog)
 	void *pevent_log_full;
 	int err;
 	struct nvme_get_log_args args;
+	size_t max_data_tx;
 
 	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
 
@@ -794,7 +789,13 @@ static int ilog_dump_pel(struct ilog *ilog)
 		.rae = false,
 		.ot = false,
 	};
-	err = nvme_get_log_page(dev_fd(ilog->dev), ilog->max_tx, &args);
+
+	max_data_tx = (1 << ilog->id_ctrl.mdts) * NVME_LOG_PAGE_PDU_SIZE;
+	do {
+		err = nvme_get_log_page(dev_fd(ilog->dev), max_data_tx, &args);
+		max_data_tx /= 2;
+	} while (err == -EPERM && max_data_tx >= NVME_LOG_PAGE_PDU_SIZE);
+
 	if (err)
 		return err;
 
