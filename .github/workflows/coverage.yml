@@ -11,7 +11,7 @@ jobs:
     name: code coverage
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/igaw/linux-nvme/debian.python:latest
+      image: ghcr.io/linux-nvme/debian.python:latest
     steps:
       - uses: actions/checkout@v4
       - name: build
