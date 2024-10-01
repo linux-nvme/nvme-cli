@@ -144,6 +144,8 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 
 	if (!cfg.is_input_file) {
 		size_t max_data_tx;
+		size_t power2;
+		__u8 mdts = 0;
 
 		err = nvme_get_telemetry_max(dev_fd(dev), NULL, &max_data_tx);
 		if (err < 0) {
@@ -155,11 +157,14 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 			SOLIDIGM_LOG_WARNING("Failed to acquire identify ctrl %d!", err);
 			goto close_fd;
 		}
-		if (max_data_tx > DRIVER_MAX_TX_256K)
-			max_data_tx = DRIVER_MAX_TX_256K;
+		power2 = max_data_tx / NVME_LOG_PAGE_PDU_SIZE;
+		while (power2 && !(1 & power2)) {
+			power2 >>= 1;
+			mdts++;
+		}
 
-		err = nvme_get_telemetry_log(dev_fd(dev), cfg.host_gen, cfg.ctrl_init, true,
-					     max_data_tx, cfg.data_area, &tl.log, &tl.log_size);
+		err = sldgm_dynamic_telemetry(dev_fd(dev), cfg.host_gen, cfg.ctrl_init, true,
+					      mdts, cfg.data_area, &tl.log, &tl.log_size);
 		if (err < 0) {
 			SOLIDIGM_LOG_WARNING("get-telemetry-log: %s",
 					     nvme_strerror(errno));
