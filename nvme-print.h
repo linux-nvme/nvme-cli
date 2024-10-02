@@ -322,6 +322,7 @@ void nvme_show_error_status(int status, const char *msg, ...);
 void nvme_show_init(void);
 void nvme_show_finish(void);
 bool nvme_is_fabrics_reg(int offset);
+bool nvme_is_fabrics_optional_reg(int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);
 bool nvme_registers_pmrctl_ready(__u32 pmrctl);
 const char *nvme_degrees_string(long t);
