@@ -406,7 +406,18 @@ bool nvme_is_fabrics_reg(int offset)
 	case NVME_REG_CC:
 	case NVME_REG_CSTS:
 	case NVME_REG_NSSR:
-	case NVME_REG_CRTO:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool nvme_is_fabrics_optional_reg(int offset)
+{
+	switch (offset) {
+	case NVME_REG_NSSR:
 		return true;
 	default:
 		break;

@@ -5285,6 +5285,11 @@ static int nvme_get_single_property(int fd, struct get_reg_config *cfg, __u64 *v
 	if (!err)
 		return 0;
 
+	if (cfg->fabrics && nvme_is_fabrics_optional_reg(cfg->offset)) {
+		*value = -1;
+		return 0;
+	}
+
 	if (!cfg->fabrics &&
 	    nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
 		*value = -1;
@@ -5316,6 +5321,9 @@ static int nvme_get_properties(int fd, void **pbar, struct get_reg_config *cfg)
 	memset(bar, 0xff, size);
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;
 	     offset += is_64bit ? sizeof(uint64_t) : sizeof(uint32_t)) {
+		if (!nvme_is_fabrics_reg(offset))
+			continue;
+
 		cfg->offset = offset;
 		err = nvme_get_single_property(fd, cfg, &value);
 		if (err)
@@ -5380,12 +5388,12 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	nvme_print_flags_t flags;
-	bool fabrics = false;
 	void *bar;
 	int err;
 
 	struct get_reg_config cfg = {
 		.human_readable	= false,
+		.fabrics = false,
 	};
 
 	NVME_ARGS(opts,
@@ -5406,14 +5414,14 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	bar = mmap_registers(dev, false);
 	if (!bar) {
+		cfg.fabrics = true;
 		err = nvme_get_properties(dev_fd(dev), &bar, &cfg);
 		if (err)
 			return err;
-		fabrics = true;
 	}
 
-	nvme_show_ctrl_registers(bar, fabrics, flags);
-	if (fabrics)
+	nvme_show_ctrl_registers(bar, cfg.fabrics, flags);
+	if (cfg.fabrics)
 		free(bar);
 	else
 		munmap(bar, getpagesize());
