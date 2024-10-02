@@ -141,6 +141,10 @@
 #define WDC_NVME_SN810_DEV_ID				0x5011
 #define WDC_NVME_SN820CL_DEV_ID				0x5037
 
+#define WDC_NVME_SN5100S_DEV_ID_1			0x5061
+#define WDC_NVME_SN5100S_DEV_ID_2			0x5062
+#define WDC_NVME_SN5100S_DEV_ID_3			0x5063
+
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
 #define WDC_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
 #define WDC_DRIVE_CAP_C1_LOG_PAGE			0x0000000000000004
@@ -1976,6 +1980,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case WDC_NVME_SN7100_DEV_ID_3:
 			fallthrough;
 		case WDC_NVME_SN8000S_DEV_ID:
+			fallthrough;
+		case WDC_NVME_SN5100S_DEV_ID_1:
+			fallthrough;
+		case WDC_NVME_SN5100S_DEV_ID_2:
+			fallthrough;
+		case WDC_NVME_SN5100S_DEV_ID_3:
 			fallthrough;
 		case WDC_NVME_SN740_DEV_ID:
 		case WDC_NVME_SN740_DEV_ID_1:
