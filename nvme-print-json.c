@@ -3072,6 +3072,15 @@ static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	obj_add_uint64(r, "dmsl", le64_to_cpu(ctrl_nvm->dmsl));
 	obj_add_uint(r, "aocs", le16_to_cpu(ctrl_nvm->aocs));
 
+	if (json_print_ops.flags & VERBOSE) {
+		__u16 rsvd = (ctrl_nvm->aocs & 0xfffe) >> 1;
+		__u8 ralbas = ctrl_nvm->aocs & 0x1;
+
+		if (rsvd)
+			obj_add_uint(r, "[15:1]: Reserved", rsvd);
+		obj_add_uint(r, "[0:0]: Reporting Allocated LBA Supported", ralbas);
+	}
+
 	json_print(r);
 }
 
