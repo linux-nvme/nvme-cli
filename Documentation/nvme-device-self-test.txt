@@ -22,6 +22,8 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
 On success, the corresponding test is initiated.
 
+The results of this test can be queried via 'nvme self-test-log <device>'.
+
 OPTIONS
 -------
 -n <NUM>::
