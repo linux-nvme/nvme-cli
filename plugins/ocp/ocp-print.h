@@ -16,6 +16,8 @@ struct ocp_print_ops {
 	void (*c5_log)(struct nvme_dev *dev, struct unsupported_requirement_log *log_data);
 	void (*c1_log)(struct ocp_error_recovery_log_page *log_data);
 	void (*c4_log)(struct ocp_device_capabilities_log_page *log_data);
+	void (*c9_log)(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
+		       int total_log_page_size);
 	nvme_print_flags_t flags;
 };
 
@@ -41,4 +43,6 @@ void ocp_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_da
 		nvme_print_flags_t flags);
 void ocp_c1_log(struct ocp_error_recovery_log_page *log_data, nvme_print_flags_t flags);
 void ocp_c4_log(struct ocp_device_capabilities_log_page *log_data, nvme_print_flags_t flags);
+void ocp_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
+		int total_log_page_size, nvme_print_flags_t flags);
 #endif /* OCP_PRINT_H */
