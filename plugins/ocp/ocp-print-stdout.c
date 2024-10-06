@@ -650,6 +650,69 @@ static int stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_da
 	return 0;
 }
 
+static int stdout_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_data)
+{
+	int j;
+
+	printf("TCG Configuration C7 Log Page Data-\n");
+
+	printf("  State                                                  : 0x%x\n",
+	       log_data->state);
+	printf("  Reserved1                                              : 0x");
+	for (j = 0; j < 3; j++)
+		printf("%d", log_data->rsvd1[j]);
+	printf("\n");
+	printf("  Locking SP Activation Count                            : 0x%x\n",
+	       log_data->locking_sp_act_count);
+	printf("  Tper Revert Count                                      : 0x%x\n",
+	       log_data->type_rev_count);
+	printf("  Locking SP Revert Count                                : 0x%x\n",
+	       log_data->locking_sp_rev_count);
+	printf("  Number of Locking Objects                              : 0x%x\n",
+	       log_data->no_of_locking_obj);
+	printf("  Number of Single User Mode Locking Objects             : 0x%x\n",
+	       log_data->no_of_single_um_locking_obj);
+	printf("  Number of Range Provisioned Locking Objects            : 0x%x\n",
+	       log_data->no_of_range_prov_locking_obj);
+	printf("  Number of Namespace Provisioned Locking Objects        : 0x%x\n",
+	       log_data->no_of_ns_prov_locking_obj);
+	printf("  Number of Read Locked Locking Objects                  : 0x%x\n",
+	       log_data->no_of_read_lock_locking_obj);
+	printf("  Number of Write Locked Locking Objects                 : 0x%x\n",
+	       log_data->no_of_write_lock_locking_obj);
+	printf("  Number of Read Unlocked Locking Objects                : 0x%x\n",
+	       log_data->no_of_read_unlock_locking_obj);
+	printf("  Number of Write Unlocked Locking Objects               : 0x%x\n",
+	       log_data->no_of_write_unlock_locking_obj);
+	printf("  Reserved2                                              : 0x%x\n",
+	       log_data->rsvd2);
+
+	printf("  SID Authentication Try Count                           : 0x%x\n",
+	       le32_to_cpu(log_data->sid_auth_try_count));
+	printf("  SID Authentication Try Limit                           : 0x%x\n",
+	       le32_to_cpu(log_data->sid_auth_try_limit));
+	printf("  Programmatic TCG Reset Count                           : 0x%x\n",
+	       le32_to_cpu(log_data->pro_tcg_rc));
+	printf("  Programmatic Reset Lock Count                          : 0x%x\n",
+	       le32_to_cpu(log_data->pro_rlc));
+	printf("  TCG Error Count                                        : 0x%x\n",
+	       le32_to_cpu(log_data->tcg_ec));
+
+	printf("  Reserved3                                              : 0x");
+	for (j = 0; j < 458; j++)
+		printf("%d", log_data->rsvd3[j]);
+	printf("\n");
+
+	printf("  Log Page Version                                       : 0x%x\n",
+	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID                                          : 0x");
+	for (j = C7_GUID_LENGTH - 1; j >= 0; j--)
+		printf("%02x", log_data->log_page_guid[j]);
+	printf("\n");
+
+	return 0;
+}
+
 static struct ocp_print_ops stdout_print_ops = {
 	.hwcomp_log = stdout_hwcomp_log,
 	.fw_act_history = stdout_fw_activation_history,
@@ -660,6 +723,7 @@ static struct ocp_print_ops stdout_print_ops = {
 	.c1_log = stdout_c1_log,
 	.c4_log = stdout_c4_log,
 	.c9_log = (void *)stdout_c9_log,
+	.c7_log = (void *)stdout_c7_log,
 };
 
 struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)

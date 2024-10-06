@@ -766,6 +766,73 @@ static int json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data
 	return 0;
 }
 
+static void json_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_data)
+{
+	int j;
+	struct json_object *root;
+	char guid_buf[C7_GUID_LENGTH];
+	char *guid = guid_buf;
+	char res_arr[458];
+	char *res = res_arr;
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "State", le16_to_cpu(log_data->state));
+	memset((__u8 *)res, 0, 3);
+	for (j = 0; j < 3; j++)
+		res += sprintf(res, "%d", log_data->rsvd1[j]);
+	json_object_add_value_string(root, "Reserved1", res_arr);
+	json_object_add_value_int(root, "Locking SP Activation Count",
+				  le16_to_cpu(log_data->locking_sp_act_count));
+	json_object_add_value_int(root, "Tper Revert Count",
+				  le16_to_cpu(log_data->locking_sp_rev_count));
+	json_object_add_value_int(root, "Number of Locking Objects",
+				  le16_to_cpu(log_data->no_of_locking_obj));
+	json_object_add_value_int(root, "Number of Single User Mode Locking Objects",
+				  le16_to_cpu(log_data->no_of_single_um_locking_obj));
+	json_object_add_value_int(root, "Number of Range Provisioned Locking Objects",
+				  le16_to_cpu(log_data->no_of_range_prov_locking_obj));
+	json_object_add_value_int(root, "Number of Namespace Provisioned Locking Objects",
+				  le16_to_cpu(log_data->no_of_ns_prov_locking_obj));
+	json_object_add_value_int(root, "Number of Read Locked Locking Objects",
+				  le16_to_cpu(log_data->no_of_read_lock_locking_obj));
+	json_object_add_value_int(root, "Number of Write Locked Locking Objects",
+				  le16_to_cpu(log_data->no_of_write_lock_locking_obj));
+	json_object_add_value_int(root, "Number of Read Unlocked Locking Objects",
+				  le16_to_cpu(log_data->no_of_read_unlock_locking_obj));
+	json_object_add_value_int(root, "Number of Write Unlocked Locking Objects",
+				  le16_to_cpu(log_data->no_of_write_unlock_locking_obj));
+	json_object_add_value_int(root, "Reserved2", le16_to_cpu(log_data->rsvd2));
+
+	json_object_add_value_int(root, "SID Authentication Try Count",
+				  le16_to_cpu(log_data->sid_auth_try_count));
+	json_object_add_value_int(root, "SID Authentication Try Limit",
+				  le16_to_cpu(log_data->sid_auth_try_limit));
+	json_object_add_value_int(root, "Programmatic TCG Reset Count",
+				  le16_to_cpu(log_data->pro_tcg_rc));
+	json_object_add_value_int(root, "Programmatic Reset Lock Count",
+				  le16_to_cpu(log_data->pro_rlc));
+	json_object_add_value_int(root, "TCG Error Count", le16_to_cpu(log_data->tcg_ec));
+
+	memset((__u8 *)res, 0, 458);
+	for (j = 0; j < 458; j++)
+		res += sprintf(res, "%d", log_data->rsvd3[j]);
+	json_object_add_value_string(root, "Reserved3", res_arr);
+
+	json_object_add_value_int(root, "Log Page Version",
+				  le16_to_cpu(log_data->log_page_version));
+
+	memset((void *)guid, 0, C7_GUID_LENGTH);
+	for (j = C7_GUID_LENGTH - 1; j >= 0; j--)
+		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
+	json_object_add_value_string(root, "Log page GUID", guid_buf);
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
@@ -776,6 +843,7 @@ static struct ocp_print_ops json_print_ops = {
 	.c1_log = json_c1_log,
 	.c4_log = json_c4_log,
 	.c9_log = (void *)json_c9_log,
+	.c7_log = json_c7_log,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)

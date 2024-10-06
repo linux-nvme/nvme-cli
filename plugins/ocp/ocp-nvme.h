@@ -195,4 +195,56 @@ struct __packed ocp_device_capabilities_log_page {
 	__le16  log_page_version;
 	__u8    log_page_guid[16];
 };
+
+#define C7_GUID_LENGTH                     16
+
+/*
+ * struct tcg_configuration_log - TCG Configuration Log Page Structure
+ * @state:                            state
+ * @rsvd1:                            Reserved1
+ * @locking_sp_act_count:             Locking SP Activation Count
+ * @type_rev_count:                   Tper Revert Count
+ * @locking_sp_rev_count:             Locking SP Revert Count.
+ * @no_of_locking_obj:                Number of Locking Objects
+ * @no_of_single_um_locking_obj:      Number of Single User Mode Locking Objects
+ * @no_of_range_prov_locking_obj:     Number of Range Provisioned Locking Objects
+ * @no_of_ns_prov_locking_obj:        Number of Namespace Provisioned Locking Objects
+ * @no_of_read_lock_locking_obj:      Number of Read Locked Locking Objects
+ * @no_of_write_lock_locking_obj:     Number of Write Locked Locking Objects
+ * @no_of_read_unlock_locking_obj:    Number of Read Unlocked Locking Objects
+ * @no_of_read_unlock_locking_obj:    Number of Write Unlocked Locking Objects
+ * @rsvd2:                            Reserved2
+ * @sid_auth_try_count:               SID Authentication Try Count
+ * @sid_auth_try_limit:               SID Authentication Try Limit
+ * @pro_tcg_rc:                       Programmatic TCG Reset Count
+ * @pro_rlc:                          Programmatic Reset Lock Count
+ * @tcg_ec:                           TCG Error Count
+ * @rsvd3:                            Reserved3
+ * @log_page_version:                 Log Page Version
+ */
+struct __packed tcg_configuration_log {
+	__u8    state;
+	__u8    rsvd1[3];
+	__u8    locking_sp_act_count;
+	__u8    type_rev_count;
+	__u8    locking_sp_rev_count;
+	__u8    no_of_locking_obj;
+	__u8    no_of_single_um_locking_obj;
+	__u8    no_of_range_prov_locking_obj;
+	__u8    no_of_ns_prov_locking_obj;
+	__u8    no_of_read_lock_locking_obj;
+	__u8    no_of_write_lock_locking_obj;
+	__u8    no_of_read_unlock_locking_obj;
+	__u8    no_of_write_unlock_locking_obj;
+	__u8    rsvd2;
+	__u32   sid_auth_try_count;
+	__u32   sid_auth_try_limit;
+	__u32   pro_tcg_rc;
+	__u32   pro_rlc;
+	__u32   tcg_ec;
+	__u8    rsvd3[458];
+	__le16  log_page_version;
+	__u8    log_page_guid[C7_GUID_LENGTH];
+
+};
 #endif /* OCP_NVME_H */
