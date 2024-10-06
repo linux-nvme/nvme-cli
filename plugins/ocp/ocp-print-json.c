@@ -6,6 +6,7 @@
 #include "ocp-hardware-component-log.h"
 #include "ocp-fw-activation-history.h"
 #include "ocp-smart-extended-log.h"
+#include "ocp-telemetry-decode.h"
 
 static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_object *r)
 {
@@ -244,10 +245,16 @@ static void json_smart_extended_log(void *data)
 	json_free_object(root);
 }
 
+static void json_telemetry_log(struct ocp_telemetry_parse_options *options)
+{
+	print_ocp_telemetry_json(options);
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
 	.smart_extended_log = json_smart_extended_log,
+	.telemetry_log = json_telemetry_log,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)

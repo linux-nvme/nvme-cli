@@ -3,6 +3,8 @@
  *
  * Authors: Jeff Lien <jeff.lien@wdc.com>,
  */
+#ifndef OCP_TELEMETRY_DECODE_H
+#define OCP_TELEMETRY_DECODE_H
 
 #include "nvme.h"
 #include "nvme-print.h"
@@ -1225,3 +1227,4 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
 void parse_media_wear_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
 			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
 			    struct json_object *pevent_fifos_object, FILE *fp);
+#endif /* OCP_TELEMETRY_DECODE_H */
