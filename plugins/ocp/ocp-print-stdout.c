@@ -330,12 +330,36 @@ static int stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *l
 	return 0;
 }
 
+static int stdout_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_data)
+{
+	int j;
+
+	printf("Unsupported Requirement-C5 Log Page Data-\n");
+
+	printf("  Number Unsupported Req IDs		: 0x%x\n",
+	       le16_to_cpu(log_data->unsupported_count));
+
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++)
+		printf("  Unsupported Requirement List %d	: %s\n", j,
+		       log_data->unsupported_req_list[j]);
+
+	printf("  Log Page Version			: 0x%x\n",
+	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID				: 0x");
+	for (j = C5_GUID_LENGTH - 1; j >= 0; j--)
+		printf("%02x", log_data->log_page_guid[j]);
+	printf("\n");
+
+	return 0;
+}
+
 static struct ocp_print_ops stdout_print_ops = {
 	.hwcomp_log = stdout_hwcomp_log,
 	.fw_act_history = stdout_fw_activation_history,
 	.smart_extended_log = stdout_smart_extended_log,
 	.telemetry_log = stdout_telemetry_log,
 	.c3_log = (void *)stdout_c3_log,
+	.c5_log = (void *)stdout_c5_log,
 };
 
 struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)

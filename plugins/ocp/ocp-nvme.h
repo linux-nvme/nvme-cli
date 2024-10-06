@@ -97,4 +97,26 @@ struct __packed ssd_latency_monitor_log {
 #define READ		3
 #define WRITE		2
 #define TRIM		1
+
+#define C5_GUID_LENGTH                     16
+#define C5_NUM_UNSUPPORTED_REQ_ENTRIES     253
+
+/*
+ * struct unsupported_requirement_log - unsupported requirement list
+ * @unsupported_count:        Number of Unsupported Requirement IDs
+ * @rsvd1:                    Reserved
+ * @unsupported_req_list:     Unsupported Requirements lists up to 253.
+ * @rsvd2:                    Reserved
+ * @log_page_version:         indicates the version of the mapping this log page uses.
+ *                            Shall be set to 0001h
+ * @log_page_guid:            Shall be set to C7BB98B7D0324863BB2C23990E9C722Fh.
+ */
+struct __packed unsupported_requirement_log {
+	__le16  unsupported_count;
+	__u8    rsvd1[14];
+	__u8    unsupported_req_list[C5_NUM_UNSUPPORTED_REQ_ENTRIES][16];
+	__u8    rsvd2[14];
+	__le16  log_page_version;
+	__u8    log_page_guid[C5_GUID_LENGTH];
+};
 #endif /* OCP_NVME_H */

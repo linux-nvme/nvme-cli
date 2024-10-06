@@ -407,12 +407,47 @@ static void json_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *lo
 	json_free_object(root);
 }
 
+static void json_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_data)
+{
+	int j;
+	struct json_object *root;
+	char unsup_req_list_str[40];
+	char guid_buf[C5_GUID_LENGTH];
+	char *guid = guid_buf;
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "Number Unsupported Req IDs",
+				  le16_to_cpu(log_data->unsupported_count));
+
+	memset((void *)unsup_req_list_str, 0, 40);
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
+		sprintf((char *)unsup_req_list_str, "Unsupported Requirement List %d", j);
+		json_object_add_value_string(root, unsup_req_list_str,
+					     (char *)log_data->unsupported_req_list[j]);
+	}
+
+	json_object_add_value_int(root, "Log Page Version",
+				  le16_to_cpu(log_data->log_page_version));
+
+	memset((void *)guid, 0, C5_GUID_LENGTH);
+	for (j = C5_GUID_LENGTH - 1; j >= 0; j--)
+		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
+	json_object_add_value_string(root, "Log page GUID", guid_buf);
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
 	.smart_extended_log = json_smart_extended_log,
 	.telemetry_log = json_telemetry_log,
 	.c3_log = json_c3_log,
+	.c5_log = json_c5_log,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)

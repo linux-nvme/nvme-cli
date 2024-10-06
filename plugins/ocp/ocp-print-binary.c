@@ -12,8 +12,14 @@ static void binary_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	d_raw((unsigned char *)log, offsetof(struct hwcomp_log, desc) + desc_len);
 }
 
+static void binary_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_data)
+{
+	d_raw((unsigned char *)log_data, sizeof(*log_data));
+}
+
 static struct ocp_print_ops binary_print_ops = {
 	.hwcomp_log = binary_hwcomp_log,
+	.c5_log = binary_c5_log,
 };
 
 struct ocp_print_ops *ocp_get_binary_print_ops(nvme_print_flags_t flags)
