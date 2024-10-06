@@ -62,3 +62,8 @@ void ocp_c1_log(struct ocp_error_recovery_log_page *log_data, nvme_print_flags_t
 {
 	ocp_print(c1_log, flags, log_data);
 }
+
+void ocp_c4_log(struct ocp_device_capabilities_log_page *log_data, nvme_print_flags_t flags)
+{
+	ocp_print(c4_log, flags, log_data);
+}

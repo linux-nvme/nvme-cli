@@ -482,6 +482,44 @@ static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
 	json_free_object(root);
 }
 
+static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
+{
+	struct json_object *root = json_create_object();
+	char guid[64];
+	int i;
+
+	json_object_add_value_int(root, "PCI Express Ports", le16_to_cpu(log_data->pcie_exp_port));
+	json_object_add_value_int(root, "OOB Management Support",
+				  le16_to_cpu(log_data->oob_management_support));
+	json_object_add_value_int(root, "Write Zeroes Command Support",
+				  le16_to_cpu(log_data->wz_cmd_support));
+	json_object_add_value_int(root, "Sanitize Command Support",
+				  le16_to_cpu(log_data->sanitize_cmd_support));
+	json_object_add_value_int(root, "Dataset Management Command Support",
+				  le16_to_cpu(log_data->dsm_cmd_support));
+	json_object_add_value_int(root, "Write Uncorrectable Command Support",
+				  le16_to_cpu(log_data->wu_cmd_support));
+	json_object_add_value_int(root, "Fused Operation Support",
+				  le16_to_cpu(log_data->fused_operation_support));
+	json_object_add_value_int(root, "Minimum Valid DSSD Power State",
+				  le16_to_cpu(log_data->min_valid_dssd_pwr_state));
+	for (i = 0; i <= 127; i++)
+		json_object_add_value_int(root, "DSSD Power State Descriptors",
+					  log_data->dssd_pwr_state_desc[i]);
+	json_object_add_value_int(root, "Log Page Version",
+				  le16_to_cpu(log_data->log_page_version));
+
+	memset((void *)guid, 0, 64);
+	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	json_object_add_value_string(root, "Log page GUID", guid);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
@@ -490,6 +528,7 @@ static struct ocp_print_ops json_print_ops = {
 	.c3_log = json_c3_log,
 	.c5_log = json_c5_log,
 	.c1_log = json_c1_log,
+	.c4_log = json_c4_log,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)

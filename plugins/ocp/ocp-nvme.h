@@ -162,4 +162,37 @@ struct __packed ocp_error_recovery_log_page {
 	__le16  log_page_version;                        /* 2 bytes      - 0x1EE - 0x1EF */
 	__u8    log_page_guid[0x10];                     /* 16 bytes     - 0x1F0 - 0x1FF */
 };
+
+#define C4_GUID_LENGTH				16
+
+/**
+ * struct ocp_device_capabilities_log_page -	Device Capability Log page
+ * @pcie_exp_port:						PCI Express Ports
+ * @oob_management_support:				OOB Management Support
+ * @wz_cmd_support:						Write Zeroes Command Support
+ * @sanitize_cmd_support:				Sanitize Command Support
+ * @dsm_cmd_support:					Dataset Management Command Support
+ * @wu_cmd_support:						Write Uncorrectable Command Support
+ * @fused_operation_support:			Fused Operation Support
+ * @min_valid_dssd_pwr_state:			Minimum Valid DSSD Power State
+ * @dssd_pwr_state_desc:				DSSD Power State Descriptors
+ * @vendor_specific_command_timeout:	Vendor Specific Command Timeout
+ * @reserved:							Reserved
+ * @log_page_version:					Log Page Version
+ * @log_page_guid:						Log Page GUID
+ */
+struct __packed ocp_device_capabilities_log_page {
+	__le16  pcie_exp_port;
+	__le16  oob_management_support;
+	__le16  wz_cmd_support;
+	__le16  sanitize_cmd_support;
+	__le16  dsm_cmd_support;
+	__le16  wu_cmd_support;
+	__le16  fused_operation_support;
+	__le16  min_valid_dssd_pwr_state;
+	__u8    dssd_pwr_state_desc[128];
+	__u8    reserved[3934];
+	__le16  log_page_version;
+	__u8    log_page_guid[16];
+};
 #endif /* OCP_NVME_H */
