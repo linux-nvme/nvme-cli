@@ -353,6 +353,43 @@ static int stdout_c5_log(struct nvme_dev *dev, struct unsupported_requirement_lo
 	return 0;
 }
 
+static void stdout_c1_log(struct ocp_error_recovery_log_page *log_data)
+{
+	int i;
+
+	printf("  Error Recovery/C1 Log Page Data\n");
+	printf("  Panic Reset Wait Time             : 0x%x\n",
+	       le16_to_cpu(log_data->panic_reset_wait_time));
+	printf("  Panic Reset Action                : 0x%x\n", log_data->panic_reset_action);
+	printf("  Device Recovery Action 1          : 0x%x\n", log_data->device_recover_action_1);
+	printf("  Panic ID                          : 0x%x\n", le32_to_cpu(log_data->panic_id));
+	printf("  Device Capabilities               : 0x%x\n",
+	       le32_to_cpu(log_data->device_capabilities));
+	printf("  Vendor Specific Recovery Opcode   : 0x%x\n",
+	       log_data->vendor_specific_recovery_opcode);
+	printf("  Vendor Specific Command CDW12     : 0x%x\n",
+	       le32_to_cpu(log_data->vendor_specific_command_cdw12));
+	printf("  Vendor Specific Command CDW13     : 0x%x\n",
+	       le32_to_cpu(log_data->vendor_specific_command_cdw13));
+	printf("  Vendor Specific Command Timeout   : 0x%x\n",
+	       log_data->vendor_specific_command_timeout);
+	printf("  Device Recovery Action 2          : 0x%x\n",
+	       log_data->device_recover_action_2);
+	printf("  Device Recovery Action 2 Timeout  : 0x%x\n",
+	       log_data->device_recover_action_2_timeout);
+	printf("  Panic Count                       : 0x%x\n", log_data->panic_count);
+	printf("  Previous Panic IDs:");
+	for (i = 0; i < C1_PREV_PANIC_IDS_LENGTH; i++)
+		printf("%s Panic ID N-%d : 0x%"PRIx64"\n", i ? "                     " : "", i + 1,
+		       le64_to_cpu(log_data->prev_panic_id[i]));
+	printf("  Log Page Version                  : 0x%x\n",
+	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID                     : 0x");
+	for (i = C1_GUID_LENGTH - 1; i >= 0; i--)
+		printf("%02x", log_data->log_page_guid[i]);
+	printf("\n");
+}
+
 static struct ocp_print_ops stdout_print_ops = {
 	.hwcomp_log = stdout_hwcomp_log,
 	.fw_act_history = stdout_fw_activation_history,
@@ -360,6 +397,7 @@ static struct ocp_print_ops stdout_print_ops = {
 	.telemetry_log = stdout_telemetry_log,
 	.c3_log = (void *)stdout_c3_log,
 	.c5_log = (void *)stdout_c5_log,
+	.c1_log = stdout_c1_log,
 };
 
 struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)
