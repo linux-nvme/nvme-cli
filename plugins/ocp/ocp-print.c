@@ -38,3 +38,8 @@ void ocp_smart_extended_log(void *data, nvme_print_flags_t flags)
 {
 	ocp_print(smart_extended_log, flags, data);
 }
+
+void ocp_show_telemetry_log(struct ocp_telemetry_parse_options *options, nvme_print_flags_t flags)
+{
+	ocp_print(telemetry_log, flags, options);
+}

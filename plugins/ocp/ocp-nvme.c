@@ -31,6 +31,7 @@
 #include "ocp-fw-activation-history.h"
 #include "ocp-telemetry-decode.h"
 #include "ocp-hardware-component-log.h"
+#include "ocp-print.h"
 
 #define CREATE_CMD
 #include "ocp-nvme.h"
@@ -1742,16 +1743,7 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 		return status;
 	}
 
-	switch (fmt) {
-	case NORMAL:
-		print_ocp_telemetry_normal(options);
-		break;
-	case JSON:
-		print_ocp_telemetry_json(options);
-		break;
-	default:
-		break;
-	}
+	ocp_show_telemetry_log(options, fmt);
 
 	return 0;
 }
