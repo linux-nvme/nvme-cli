@@ -8,6 +8,8 @@
 		struct ocp_print_ops *ops = ocp_print_ops(flags); \
 		if (ops && ops->name) \
 			ops->name(__VA_ARGS__); \
+		else \
+			fprintf(stderr, "unhandled output format\n"); \
 	} while (false)
 
 static struct ocp_print_ops *ocp_print_ops(nvme_print_flags_t flags)
@@ -42,4 +44,10 @@ void ocp_smart_extended_log(void *data, nvme_print_flags_t flags)
 void ocp_show_telemetry_log(struct ocp_telemetry_parse_options *options, nvme_print_flags_t flags)
 {
 	ocp_print(telemetry_log, flags, options);
+}
+
+void ocp_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data,
+		nvme_print_flags_t flags)
+{
+	ocp_print(c3_log, flags, dev, log_data);
 }

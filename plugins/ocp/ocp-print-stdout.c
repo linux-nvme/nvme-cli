@@ -7,6 +7,7 @@
 #include "ocp-fw-activation-history.h"
 #include "ocp-smart-extended-log.h"
 #include "ocp-telemetry-decode.h"
+#include "ocp-nvme.h"
 
 static void print_hwcomp_desc(struct hwcomp_desc_entry *e, bool list, int num)
 {
@@ -200,11 +201,141 @@ static void stdout_telemetry_log(struct ocp_telemetry_parse_options *options)
 #endif /* CONFIG_JSONC */
 }
 
+static int stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data)
+{
+	char ts_buf[128];
+	int i, j;
+
+	printf("-Latency Monitor/C3 Log Page Data-\n");
+	printf("  Controller   :  %s\n", dev->name);
+	printf("  Feature Status                     0x%x\n",
+	       log_data->feature_status);
+	printf("  Active Bucket Timer                %d min\n",
+	       C3_ACTIVE_BUCKET_TIMER_INCREMENT *
+	       le16_to_cpu(log_data->active_bucket_timer));
+	printf("  Active Bucket Timer Threshold      %d min\n",
+	       C3_ACTIVE_BUCKET_TIMER_INCREMENT *
+	       le16_to_cpu(log_data->active_bucket_timer_threshold));
+	printf("  Active Threshold A                 %d ms\n",
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
+	       le16_to_cpu(log_data->active_threshold_a+1));
+	printf("  Active Threshold B                 %d ms\n",
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
+	       le16_to_cpu(log_data->active_threshold_b+1));
+	printf("  Active Threshold C                 %d ms\n",
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
+	       le16_to_cpu(log_data->active_threshold_c+1));
+	printf("  Active Threshold D                 %d ms\n",
+	       C3_ACTIVE_THRESHOLD_INCREMENT *
+	       le16_to_cpu(log_data->active_threshold_d+1));
+	printf("  Active Latency Configuration       0x%x\n",
+	       le16_to_cpu(log_data->active_latency_config));
+	printf("  Active Latency Minimum Window      %d ms\n",
+	       C3_MINIMUM_WINDOW_INCREMENT *
+	       le16_to_cpu(log_data->active_latency_min_window));
+	printf("  Active Latency Stamp Units         %d\n",
+	       le16_to_cpu(log_data->active_latency_stamp_units));
+	printf("  Static Latency Stamp Units         %d\n",
+	       le16_to_cpu(log_data->static_latency_stamp_units));
+	printf("  Debug Log Trigger Enable           %d\n",
+	       le16_to_cpu(log_data->debug_log_trigger_enable));
+	printf("  Debug Log Measured Latency         %d\n",
+	       le16_to_cpu(log_data->debug_log_measured_latency));
+	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1) {
+		printf("  Debug Log Latency Time Stamp       N/A\n");
+	} else {
+		convert_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
+		printf("  Debug Log Latency Time Stamp       %s\n", ts_buf);
+	}
+	printf("  Debug Log Pointer                  %d\n",
+	       le16_to_cpu(log_data->debug_log_ptr));
+	printf("  Debug Counter Trigger Source       %d\n",
+	       le16_to_cpu(log_data->debug_log_counter_trigger));
+	printf("  Debug Log Stamp Units              %d\n",
+	       le16_to_cpu(log_data->debug_log_stamp_units));
+	printf("  Log Page Version                   %d\n",
+	       le16_to_cpu(log_data->log_page_version));
+
+	char guid[(C3_GUID_LENGTH * 2) + 1];
+	char *ptr = &guid[0];
+
+	for (i = C3_GUID_LENGTH - 1; i >= 0; i--)
+		ptr += sprintf(ptr, "%02X", log_data->log_page_guid[i]);
+
+	printf("  Log Page GUID                      %s\n", guid);
+	printf("\n");
+
+	printf("%64s%92s%119s\n", "Read", "Write", "Deallocate/Trim");
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Active Bucket Counter: Bucket %d    %27d     %27d     %27d\n",
+		       i,
+		       le32_to_cpu(log_data->active_bucket_counter[i][READ]),
+		       le32_to_cpu(log_data->active_bucket_counter[i][WRITE]),
+		       le32_to_cpu(log_data->active_bucket_counter[i][TRIM]));
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Active Latency Time Stamp: Bucket %d    ", i);
+		for (j = 2; j >= 0; j--) {
+			if (le64_to_cpu(log_data->active_latency_timestamp[3-i][j]) == -1) {
+				printf("                    N/A         ");
+			} else {
+				convert_ts(le64_to_cpu(log_data->active_latency_timestamp[3-i][j]),
+					   ts_buf);
+				printf("%s     ", ts_buf);
+			}
+		}
+		printf("\n");
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Active Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms\n",
+		       i,
+		       le16_to_cpu(log_data->active_measured_latency[3-i][READ-1]),
+		       le16_to_cpu(log_data->active_measured_latency[3-i][WRITE-1]),
+		       le16_to_cpu(log_data->active_measured_latency[3-i][TRIM-1]));
+	}
+
+	printf("\n");
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Static Bucket Counter: Bucket %d    %27d     %27d     %27d\n",
+		       i,
+		       le32_to_cpu(log_data->static_bucket_counter[i][READ]),
+		       le32_to_cpu(log_data->static_bucket_counter[i][WRITE]),
+		       le32_to_cpu(log_data->static_bucket_counter[i][TRIM]));
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Static Latency Time Stamp: Bucket %d    ", i);
+		for (j = 2; j >= 0; j--) {
+			if (le64_to_cpu(log_data->static_latency_timestamp[3-i][j]) == -1) {
+				printf("                    N/A         ");
+			} else {
+				convert_ts(le64_to_cpu(log_data->static_latency_timestamp[3-i][j]),
+					   ts_buf);
+				printf("%s     ", ts_buf);
+			}
+		}
+		printf("\n");
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		printf("  Static Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms\n",
+		       i,
+		       le16_to_cpu(log_data->static_measured_latency[3-i][READ-1]),
+		       le16_to_cpu(log_data->static_measured_latency[3-i][WRITE-1]),
+		       le16_to_cpu(log_data->static_measured_latency[3-i][TRIM-1]));
+	}
+
+	return 0;
+}
+
 static struct ocp_print_ops stdout_print_ops = {
 	.hwcomp_log = stdout_hwcomp_log,
 	.fw_act_history = stdout_fw_activation_history,
 	.smart_extended_log = stdout_smart_extended_log,
 	.telemetry_log = stdout_telemetry_log,
+	.c3_log = (void *)stdout_c3_log,
 };
 
 struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)
