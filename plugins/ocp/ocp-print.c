@@ -73,3 +73,9 @@ void ocp_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
 {
 	ocp_print(c9_log, flags, log_data, log_data_buf, total_log_page_size);
 }
+
+void ocp_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_data,
+		nvme_print_flags_t flags)
+{
+	ocp_print(c7_log, flags, dev, log_data);
+}

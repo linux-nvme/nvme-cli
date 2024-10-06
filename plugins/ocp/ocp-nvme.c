@@ -2532,7 +2532,6 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *c
 /// TCG Configuration Log Page (LID : C7h)
 
 /* C7 TCG Configuration Log Page */
-#define C7_GUID_LENGTH                     16
 #define C7_TCG_CONFIGURATION_LEN           512
 #define C7_TCG_CONFIGURATION_OPCODE        0xC7
 
@@ -2543,161 +2542,9 @@ static __u8 tcg_configuration_guid[C7_GUID_LENGTH] = {
 	0x9D, 0x2A, 0xE0, 0x54
 };
 
-/*
- * struct tcg_configuration_log - TCG Configuration Log Page Structure
- * @state:                            state
- * @rsvd1:                            Reserved1
- * @locking_sp_act_count:             Locking SP Activation Count
- * @type_rev_count:                   Tper Revert Count
- * @locking_sp_rev_count:             Locking SP Revert Count.
- * @no_of_locking_obj:                Number of Locking Objects
- * @no_of_single_um_locking_obj:      Number of Single User Mode Locking Objects
- * @no_of_range_prov_locking_obj:     Number of Range Provisioned Locking Objects
- * @no_of_ns_prov_locking_obj:        Number of Namespace Provisioned Locking Objects
- * @no_of_read_lock_locking_obj:      Number of Read Locked Locking Objects
- * @no_of_write_lock_locking_obj:     Number of Write Locked Locking Objects
- * @no_of_read_unlock_locking_obj:    Number of Read Unlocked Locking Objects
- * @no_of_read_unlock_locking_obj:    Number of Write Unlocked Locking Objects
- * @rsvd2:                            Reserved2
- * @sid_auth_try_count:               SID Authentication Try Count
- * @sid_auth_try_limit:               SID Authentication Try Limit
- * @pro_tcg_rc:                       Programmatic TCG Reset Count
- * @pro_rlc:                          Programmatic Reset Lock Count
- * @tcg_ec:                           TCG Error Count
- * @rsvd3:                            Reserved3
- * @log_page_version:                 Log Page Version
- */
-struct __packed tcg_configuration_log {
-	__u8    state;
-	__u8    rsvd1[3];
-	__u8    locking_sp_act_count;
-	__u8    type_rev_count;
-	__u8    locking_sp_rev_count;
-	__u8    no_of_locking_obj;
-	__u8    no_of_single_um_locking_obj;
-	__u8    no_of_range_prov_locking_obj;
-	__u8    no_of_ns_prov_locking_obj;
-	__u8    no_of_read_lock_locking_obj;
-	__u8    no_of_write_lock_locking_obj;
-	__u8    no_of_read_unlock_locking_obj;
-	__u8    no_of_write_unlock_locking_obj;
-	__u8    rsvd2;
-	__u32   sid_auth_try_count;
-	__u32   sid_auth_try_limit;
-	__u32   pro_tcg_rc;
-	__u32   pro_rlc;
-	__u32   tcg_ec;
-	__u8    rsvd3[458];
-	__le16  log_page_version;
-	__u8    log_page_guid[C7_GUID_LENGTH];
-
-};
-
 /* Function declaration for TCG Configuration log page (LID:C7h) */
 static int ocp_tcg_configuration_log(int argc, char **argv, struct command *cmd,
 					    struct plugin *plugin);
-
-static int ocp_print_C7_log_normal(struct nvme_dev *dev,
-				   struct tcg_configuration_log *log_data)
-{
-	int j;
-
-	printf("TCG Configuration C7 Log Page Data-\n");
-
-	printf("  State                                                  : 0x%x\n", log_data->state);
-	printf("  Reserved1                                              : 0x");
-	for (j = 0; j < 3; j++)
-		printf("%d", log_data->rsvd1[j]);
-	printf("\n");
-	printf("  Locking SP Activation Count                            : 0x%x\n", log_data->locking_sp_act_count);
-	printf("  Tper Revert Count                                      : 0x%x\n", log_data->type_rev_count);
-	printf("  Locking SP Revert Count                                : 0x%x\n", log_data->locking_sp_rev_count);
-	printf("  Number of Locking Objects                              : 0x%x\n", log_data->no_of_locking_obj);
-	printf("  Number of Single User Mode Locking Objects             : 0x%x\n", log_data->no_of_single_um_locking_obj);
-	printf("  Number of Range Provisioned Locking Objects            : 0x%x\n", log_data->no_of_range_prov_locking_obj);
-	printf("  Number of Namespace Provisioned Locking Objects        : 0x%x\n", log_data->no_of_ns_prov_locking_obj);
-	printf("  Number of Read Locked Locking Objects                  : 0x%x\n", log_data->no_of_read_lock_locking_obj);
-	printf("  Number of Write Locked Locking Objects                 : 0x%x\n", log_data->no_of_write_lock_locking_obj);
-	printf("  Number of Read Unlocked Locking Objects                : 0x%x\n", log_data->no_of_read_unlock_locking_obj);
-	printf("  Number of Write Unlocked Locking Objects               : 0x%x\n", log_data->no_of_write_unlock_locking_obj);
-	printf("  Reserved2                                              : 0x%x\n", log_data->rsvd2);
-
-	printf("  SID Authentication Try Count                           : 0x%x\n", le32_to_cpu(log_data->sid_auth_try_count));
-	printf("  SID Authentication Try Limit                           : 0x%x\n", le32_to_cpu(log_data->sid_auth_try_limit));
-	printf("  Programmatic TCG Reset Count                           : 0x%x\n", le32_to_cpu(log_data->pro_tcg_rc));
-	printf("  Programmatic Reset Lock Count                          : 0x%x\n", le32_to_cpu(log_data->pro_rlc));
-	printf("  TCG Error Count                                        : 0x%x\n", le32_to_cpu(log_data->tcg_ec));
-
-	printf("  Reserved3                                              : 0x");
-	for (j = 0; j < 458; j++)
-		printf("%d", log_data->rsvd3[j]);
-	printf("\n");
-
-	printf("  Log Page Version                                       : 0x%x\n", le16_to_cpu(log_data->log_page_version));
-	printf("  Log page GUID                                          : 0x");
-	for (j = C7_GUID_LENGTH - 1; j >= 0; j--)
-		printf("%02x", log_data->log_page_guid[j]);
-	printf("\n");
-
-	return 0;
-}
-
-static void ocp_print_C7_log_json(struct tcg_configuration_log *log_data)
-{
-	int j;
-	struct json_object *root;
-	char guid_buf[C7_GUID_LENGTH];
-	char *guid = guid_buf;
-	char res_arr[458];
-	char *res = res_arr;
-
-	root = json_create_object();
-
-	json_object_add_value_int(root, "State", le16_to_cpu(log_data->state));
-	memset((__u8 *)res, 0, 3);
-	for (j = 0; j < 3; j++)
-		res += sprintf(res, "%d", log_data->rsvd1[j]);
-	json_object_add_value_string(root, "Reserved1", res_arr);
-	json_object_add_value_int(root, "Locking SP Activation Count", le16_to_cpu(log_data->locking_sp_act_count));
-	json_object_add_value_int(root, "Tper Revert Count", le16_to_cpu(log_data->locking_sp_rev_count));
-	json_object_add_value_int(root, "Number of Locking Objects", le16_to_cpu(log_data->no_of_locking_obj));
-	json_object_add_value_int(root, "Number of Single User Mode Locking Objects", le16_to_cpu(log_data->no_of_single_um_locking_obj));
-	json_object_add_value_int(root, "Number of Range Provisioned Locking Objects", le16_to_cpu(log_data->no_of_range_prov_locking_obj));
-	json_object_add_value_int(root, "Number of Namespace Provisioned Locking Objects", le16_to_cpu(log_data->no_of_ns_prov_locking_obj));
-	json_object_add_value_int(root, "Number of Read Locked Locking Objects", le16_to_cpu(log_data->no_of_read_lock_locking_obj));
-	json_object_add_value_int(root, "Number of Write Locked Locking Objects", le16_to_cpu(log_data->no_of_write_lock_locking_obj));
-	json_object_add_value_int(root, "Number of Read Unlocked Locking Objects", le16_to_cpu(log_data->no_of_read_unlock_locking_obj));
-	json_object_add_value_int(root, "Number of Write Unlocked Locking Objects", le16_to_cpu(log_data->no_of_write_unlock_locking_obj));
-	json_object_add_value_int(root, "Reserved2", le16_to_cpu(log_data->rsvd2));
-
-	json_object_add_value_int(root, "SID Authentication Try Count", le16_to_cpu(log_data->sid_auth_try_count));
-	json_object_add_value_int(root, "SID Authentication Try Limit", le16_to_cpu(log_data->sid_auth_try_limit));
-	json_object_add_value_int(root, "Programmatic TCG Reset Count", le16_to_cpu(log_data->pro_tcg_rc));
-	json_object_add_value_int(root, "Programmatic Reset Lock Count", le16_to_cpu(log_data->pro_rlc));
-	json_object_add_value_int(root, "TCG Error Count", le16_to_cpu(log_data->tcg_ec));
-
-	memset((__u8 *)res, 0, 458);
-	for (j = 0; j < 458; j++)
-		res += sprintf(res, "%d", log_data->rsvd3[j]);
-	json_object_add_value_string(root, "Reserved3", res_arr);
-
-	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
-
-	memset((void *)guid, 0, C7_GUID_LENGTH);
-	for (j = C7_GUID_LENGTH - 1; j >= 0; j--)
-		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
-	json_object_add_value_string(root, "Log page GUID", guid_buf);
-
-	json_print_object(root, NULL);
-	printf("\n");
-
-	json_free_object(root);
-}
-
-static void ocp_print_c7_log_binary(struct tcg_configuration_log *log_data)
-{
-	return d_raw((unsigned char *)log_data, sizeof(*log_data));
-}
 
 static int get_c7_log_page(struct nvme_dev *dev, char *format)
 {
@@ -2745,20 +2592,7 @@ static int get_c7_log_page(struct nvme_dev *dev, char *format)
 				goto out;
 			}
 		}
-
-		switch (fmt) {
-		case NORMAL:
-			ocp_print_C7_log_normal(dev, log_data);
-			break;
-		case JSON:
-			ocp_print_C7_log_json(log_data);
-			break;
-		case BINARY:
-			ocp_print_c7_log_binary(log_data);
-			break;
-		default:
-			break;
-		}
+		ocp_c7_log(dev, log_data, fmt);
 	} else {
 		fprintf(stderr, "ERROR : OCP : Unable to read C7 data from buffer\n");
 	}
