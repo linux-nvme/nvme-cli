@@ -6,6 +6,7 @@
 #include "ocp-hardware-component-log.h"
 #include "ocp-fw-activation-history.h"
 #include "ocp-smart-extended-log.h"
+#include "ocp-telemetry-decode.h"
 
 static void print_hwcomp_desc(struct hwcomp_desc_entry *e, bool list, int num)
 {
@@ -192,10 +193,18 @@ static void stdout_smart_extended_log(void *data)
 	printf("\n");
 }
 
+static void stdout_telemetry_log(struct ocp_telemetry_parse_options *options)
+{
+#ifdef CONFIG_JSONC
+	print_ocp_telemetry_normal(options);
+#endif /* CONFIG_JSONC */
+}
+
 static struct ocp_print_ops stdout_print_ops = {
 	.hwcomp_log = stdout_hwcomp_log,
 	.fw_act_history = stdout_fw_activation_history,
 	.smart_extended_log = stdout_smart_extended_log,
+	.telemetry_log = stdout_telemetry_log,
 };
 
 struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)
