@@ -520,6 +520,252 @@ static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
 	json_free_object(root);
 }
 
+static int json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
+		       int total_log_page_size)
+{
+	struct json_object *root = json_create_object();
+	char res_arr[48];
+	char *res = res_arr;
+	char guid_buf[C9_GUID_LENGTH];
+	char *guid = guid_buf;
+	char fifo_arr[16];
+	char *fifo = fifo_arr;
+	char buf[128];
+	//calculating the index value for array
+	__le64 stat_id_index = (log_data->sitsz * 4) / 16;
+	__le64 eve_id_index = (log_data->estsz * 4) / 16;
+	__le64 vu_eve_index = (log_data->vu_eve_st_sz * 4) / 16;
+	__le64 ascii_table_index = (log_data->asctsz * 4);
+	//Calculating the offset for dynamic fields.
+	__le64 stat_id_str_table_ofst = log_data->sits * 4;
+	__le64 event_str_table_ofst = log_data->ests * 4;
+	__le64 vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
+	__le64 ascii_table_ofst = log_data->ascts * 4;
+	struct statistics_id_str_table_entry stat_id_str_table_arr[stat_id_index];
+	struct event_id_str_table_entry event_id_str_table_arr[eve_id_index];
+	struct vu_event_id_str_table_entry vu_event_id_str_table_arr[vu_eve_index];
+	__u8 ascii_table_info_arr[ascii_table_index];
+	char ascii_buf[ascii_table_index];
+	char *ascii = ascii_buf;
+	int j;
+
+	json_object_add_value_int(root, "Log Page Version",
+				  le16_to_cpu(log_data->log_page_version));
+
+	memset((__u8 *)res, 0, 15);
+	for (j = 0; j < 15; j++)
+		res += sprintf(res, "%d", log_data->reserved1[j]);
+	json_object_add_value_string(root, "Reserved", res_arr);
+
+	memset((void *)guid, 0, C9_GUID_LENGTH);
+	for (j = C9_GUID_LENGTH - 1; j >= 0; j--)
+		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
+	json_object_add_value_string(root, "Log page GUID", guid_buf);
+
+	json_object_add_value_int(root, "Telemetry String Log Size", le64_to_cpu(log_data->sls));
+
+	memset((__u8 *)res, 0, 24);
+	for (j = 0; j < 24; j++)
+		res += sprintf(res, "%d", log_data->reserved2[j]);
+	json_object_add_value_string(root, "Reserved", res_arr);
+
+	json_object_add_value_int(root, "Statistics Identifier String Table Start",
+				  le64_to_cpu(log_data->sits));
+	json_object_add_value_int(root, "Event String Table Start", le64_to_cpu(log_data->ests));
+	json_object_add_value_int(root, "Event String Table Size", le64_to_cpu(log_data->estsz));
+	json_object_add_value_int(root, "VU Event String Table Start",
+				  le64_to_cpu(log_data->vu_eve_sts));
+	json_object_add_value_int(root, "VU Event String Table Size",
+				  le64_to_cpu(log_data->vu_eve_st_sz));
+	json_object_add_value_int(root, "ASCII Table Start",
+				  le64_to_cpu(log_data->ascts));
+	json_object_add_value_int(root, "ASCII Table Size",
+				  le64_to_cpu(log_data->asctsz));
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo1[j]);
+	json_object_add_value_string(root, "FIFO 1 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo2[j]);
+	json_object_add_value_string(root, "FIFO 2 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo3[j]);
+	json_object_add_value_string(root, "FIFO 3 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo4[j]);
+	json_object_add_value_string(root, "FIFO 4 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo5[j]);
+	json_object_add_value_string(root, "FIFO 5 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo6[j]);
+	json_object_add_value_string(root, "FIFO 6 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo7[j]);
+	json_object_add_value_string(root, "FIFO 7 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo8[j]);
+	json_object_add_value_string(root, "FIFO 8 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo9[j]);
+	json_object_add_value_string(root, "FIFO 9 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo10[j]);
+	json_object_add_value_string(root, "FIFO 10 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo11[j]);
+	json_object_add_value_string(root, "FIFO 11 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo12[j]);
+	json_object_add_value_string(root, "FIFO 12 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo13[j]);
+	json_object_add_value_string(root, "FIFO 13 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo14[j]);
+	json_object_add_value_string(root, "FIFO 14 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo15[j]);
+	json_object_add_value_string(root, "FIFO 15 ASCII String", fifo_arr);
+
+	memset((void *)fifo, 0, 16);
+	for (j = 0; j < 16; j++)
+		fifo += sprintf(fifo, "%c", log_data->fifo16[j]);
+	json_object_add_value_string(root, "FIFO 16 ASCII String", fifo_arr);
+
+	memset((__u8 *)res, 0, 48);
+	for (j = 0; j < 48; j++)
+		res += sprintf(res, "%d", log_data->reserved3[j]);
+	json_object_add_value_string(root, "Reserved", res_arr);
+
+	if (log_data->sitsz != 0) {
+
+		memcpy(stat_id_str_table_arr,
+		(__u8 *)log_data_buf + stat_id_str_table_ofst,
+		(log_data->sitsz * 4));
+		struct json_object *stat_table = json_create_object();
+
+		for (j = 0; j < stat_id_index; j++) {
+			struct json_object *entry = json_create_object();
+
+			json_object_add_value_uint(entry, "Vendor Specific Statistic Identifier",
+			le16_to_cpu(stat_id_str_table_arr[j].vs_si));
+			json_object_add_value_uint(entry, "Reserved",
+			le64_to_cpu(stat_id_str_table_arr[j].reserved1));
+			json_object_add_value_uint(entry, "ASCII ID Length",
+			le64_to_cpu(stat_id_str_table_arr[j].ascii_id_len));
+			json_object_add_value_uint(entry, "ASCII ID offset",
+			le64_to_cpu(stat_id_str_table_arr[j].ascii_id_ofst));
+			json_object_add_value_uint(entry, "Reserved2",
+			le64_to_cpu(stat_id_str_table_arr[j].reserved2));
+			sprintf(buf, "Statistics Identifier String Table %d", j);
+			json_object_add_value_object(stat_table, buf, entry);
+		}
+
+		json_object_add_value_object(root,
+		"Statistics Identifier String Table", stat_table);
+	}
+
+	if (log_data->estsz != 0) {
+		struct json_object *eve_table = json_create_object();
+
+		memcpy(event_id_str_table_arr,
+		(__u8 *)log_data_buf + event_str_table_ofst,
+		(log_data->estsz * 4));
+		for (j = 0; j < eve_id_index; j++) {
+			struct json_object *entry = json_create_object();
+
+			json_object_add_value_int(entry, "Debug Event Class",
+			le16_to_cpu(event_id_str_table_arr[j].deb_eve_class));
+			json_object_add_value_int(entry, "Event Identifier",
+			le16_to_cpu(event_id_str_table_arr[j].ei));
+			json_object_add_value_int(entry, "ASCII ID Length",
+			le64_to_cpu(event_id_str_table_arr[j].ascii_id_len));
+			json_object_add_value_int(entry, "ASCII ID offset",
+			le64_to_cpu(event_id_str_table_arr[j].ascii_id_ofst));
+			json_object_add_value_int(entry, "Reserved",
+			le64_to_cpu(event_id_str_table_arr[j].reserved2));
+			sprintf(buf, "Event Identifier String Table Entry %d", j);
+			json_object_add_value_object(eve_table, buf, entry);
+		}
+		json_object_add_value_object(root,
+		"Event Identifier String Table Entry",
+		eve_table);
+	}
+
+	if (log_data->vu_eve_st_sz != 0) {
+		struct json_object *vu_eve_table = json_create_object();
+
+		memcpy(vu_event_id_str_table_arr,
+		(__u8 *)log_data_buf + vu_event_str_table_ofst,
+		(log_data->vu_eve_st_sz * 4));
+		for (j = 0; j < vu_eve_index; j++) {
+			struct json_object *entry = json_create_object();
+
+			json_object_add_value_int(entry, "Debug Event Class",
+			le16_to_cpu(vu_event_id_str_table_arr[j].deb_eve_class));
+			json_object_add_value_int(entry, "VU Event Identifier",
+			le16_to_cpu(vu_event_id_str_table_arr[j].vu_ei));
+			json_object_add_value_int(entry, "ASCII ID Length",
+			le64_to_cpu(vu_event_id_str_table_arr[j].ascii_id_len));
+			json_object_add_value_int(entry, "ASCII ID offset",
+			le64_to_cpu(vu_event_id_str_table_arr[j].ascii_id_ofst));
+			json_object_add_value_int(entry, "Reserved",
+			le64_to_cpu(vu_event_id_str_table_arr[j].reserved));
+			sprintf(buf, "VU Event Identifier String Table Entry %d", j);
+			json_object_add_value_object(vu_eve_table, buf, entry);
+		}
+		json_object_add_value_object(root,
+		"VU Event Identifier String Table Entry",
+		vu_eve_table);
+	}
+
+	if (log_data->asctsz != 0) {
+		memcpy(ascii_table_info_arr,
+		(__u8 *)log_data_buf + ascii_table_ofst,
+		(log_data->asctsz * 4));
+		memset((void *)ascii, 0, ascii_table_index);
+		for (j = 0; j < ascii_table_index; j++)
+			ascii += sprintf(ascii, "%c", ascii_table_info_arr[j]);
+		json_object_add_value_string(root, "ASCII Table", ascii_buf);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+
+	return 0;
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
@@ -529,6 +775,7 @@ static struct ocp_print_ops json_print_ops = {
 	.c5_log = json_c5_log,
 	.c1_log = json_c1_log,
 	.c4_log = json_c4_log,
+	.c9_log = (void *)json_c9_log,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)

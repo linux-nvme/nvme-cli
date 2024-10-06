@@ -67,3 +67,9 @@ void ocp_c4_log(struct ocp_device_capabilities_log_page *log_data, nvme_print_fl
 {
 	ocp_print(c4_log, flags, log_data);
 }
+
+void ocp_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
+		int total_log_page_size, nvme_print_flags_t flags)
+{
+	ocp_print(c9_log, flags, log_data, log_data_buf, total_log_page_size);
+}
