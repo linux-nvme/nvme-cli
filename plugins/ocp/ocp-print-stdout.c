@@ -500,141 +500,125 @@ static int stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_da
 	printf("  FIFO 4 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo4[j],
-		       log_data->fifo4[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo4[j], log_data->fifo4[j]);
 
 	printf("  FIFO 5 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo5[j],
-		       log_data->fifo5[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo5[j], log_data->fifo5[j]);
 
 	printf("  FIFO 6 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo6[j],
-		       log_data->fifo6[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo6[j], log_data->fifo6[j]);
 
 	printf("  FIFO 7 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo7[j],
-		       log_data->fifo7[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo7[j], log_data->fifo7[j]);
 
 	printf("  FIFO 8 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo8[j],
-		       log_data->fifo8[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo8[j], log_data->fifo8[j]);
 
 	printf("  FIFO 9 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo9[j],
-		       log_data->fifo9[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo9[j], log_data->fifo9[j]);
 
 	printf("  FIFO 10 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo10[j],
-		       log_data->fifo10[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo10[j], log_data->fifo10[j]);
 
 	printf("  FIFO 11 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j, log_data->fifo11[j],
-		       log_data->fifo11[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo11[j], log_data->fifo11[j]);
 
 	printf("  FIFO 12 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j,
-		       log_data->fifo12[j], log_data->fifo12[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo12[j], log_data->fifo12[j]);
 
 	printf("  FIFO 13 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j,
-		       log_data->fifo13[j], log_data->fifo13[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo13[j], log_data->fifo13[j]);
 
 	printf("  FIFO 14 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j,
-		       log_data->fifo14[j], log_data->fifo14[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo14[j], log_data->fifo14[j]);
 
 	printf("  FIFO 15 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j,
-		       log_data->fifo15[j], log_data->fifo16[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo15[j], log_data->fifo16[j]);
 
 	printf("  FIFO 16 ASCII String\n");
 	printf("   index    value    ascii_val\n");
 	for (j = 0; j < 16; j++)
-		printf("  %d       %d        %c\n", j,
-		       log_data->fifo16[j], log_data->fifo16[j]);
+		printf("  %d       %d        %c\n", j, log_data->fifo16[j], log_data->fifo16[j]);
 
 	printf("  Reserved                                        : ");
 	for (j = 0; j < 48; j++)
 		printf("%d", log_data->reserved3[j]);
 	printf("\n");
 
-
 	if (log_data->sitsz != 0) {
-		memcpy(stat_id_str_table_arr,
-		(__u8 *)log_data_buf + stat_id_str_table_ofst,
-		(log_data->sitsz * 4));
+		memcpy(stat_id_str_table_arr, (__u8 *)log_data_buf + stat_id_str_table_ofst,
+		       (log_data->sitsz * 4));
 		printf("  Statistics Identifier String Table\n");
 		for (j = 0; j < stat_id_index; j++) {
 			printf("   Vendor Specific Statistic Identifier : 0x%x\n",
-			le16_to_cpu(stat_id_str_table_arr[j].vs_si));
+			       le16_to_cpu(stat_id_str_table_arr[j].vs_si));
 			printf("   Reserved                             : 0x%x\n",
-			stat_id_str_table_arr[j].reserved1);
+			       stat_id_str_table_arr[j].reserved1);
 			printf("   ASCII ID Length                      : 0x%x\n",
-			stat_id_str_table_arr[j].ascii_id_len);
+			       stat_id_str_table_arr[j].ascii_id_len);
 			printf("   ASCII ID offset                      : 0x%"PRIx64"\n",
 			       le64_to_cpu(stat_id_str_table_arr[j].ascii_id_ofst));
 			printf("   Reserved                             : 0x%x\n",
-			stat_id_str_table_arr[j].reserved2);
+			       stat_id_str_table_arr[j].reserved2);
 		}
 	}
 
 	if (log_data->estsz != 0) {
-		memcpy(event_id_str_table_arr, (__u8 *)log_data_buf +
-		event_str_table_ofst, (log_data->estsz * 4));
+		memcpy(event_id_str_table_arr, (__u8 *)log_data_buf + event_str_table_ofst,
+		       (log_data->estsz * 4));
 		printf("  Event Identifier String Table Entry\n");
 		for (j = 0; j < eve_id_index; j++) {
 			printf("   Debug Event Class        : 0x%x\n",
-			event_id_str_table_arr[j].deb_eve_class);
+			       event_id_str_table_arr[j].deb_eve_class);
 			printf("   Event Identifier         : 0x%x\n",
-			le16_to_cpu(event_id_str_table_arr[j].ei));
+			       le16_to_cpu(event_id_str_table_arr[j].ei));
 			printf("   ASCII ID Length          : 0x%x\n",
-			event_id_str_table_arr[j].ascii_id_len);
+			       event_id_str_table_arr[j].ascii_id_len);
 			printf("   ASCII ID offset          : 0x%"PRIx64"\n",
 			       le64_to_cpu(event_id_str_table_arr[j].ascii_id_ofst));
 			printf("   Reserved                 : 0x%x\n",
-			event_id_str_table_arr[j].reserved2);
+			       event_id_str_table_arr[j].reserved2);
 
 		}
 	}
 
 	if (log_data->vu_eve_st_sz != 0) {
-		memcpy(vu_event_id_str_table_arr, (__u8 *)log_data_buf +
-		vu_event_str_table_ofst, (log_data->vu_eve_st_sz * 4));
+		memcpy(vu_event_id_str_table_arr, (__u8 *)log_data_buf + vu_event_str_table_ofst,
+		       (log_data->vu_eve_st_sz * 4));
 		printf("  VU Event Identifier String Table Entry\n");
 		for (j = 0; j < vu_eve_index; j++) {
 			printf("   Debug Event Class        : 0x%x\n",
-			vu_event_id_str_table_arr[j].deb_eve_class);
+			       vu_event_id_str_table_arr[j].deb_eve_class);
 			printf("   VU Event Identifier      : 0x%x\n",
-			le16_to_cpu(vu_event_id_str_table_arr[j].vu_ei));
+			       le16_to_cpu(vu_event_id_str_table_arr[j].vu_ei));
 			printf("   ASCII ID Length          : 0x%x\n",
-			vu_event_id_str_table_arr[j].ascii_id_len);
+			       vu_event_id_str_table_arr[j].ascii_id_len);
 			printf("   ASCII ID offset          : 0x%"PRIx64"\n",
 			       le64_to_cpu(vu_event_id_str_table_arr[j].ascii_id_ofst));
 			printf("   Reserved                 : 0x%x\n",
-			vu_event_id_str_table_arr[j].reserved);
-
+			       vu_event_id_str_table_arr[j].reserved);
 		}
 	}
 
@@ -642,9 +626,10 @@ static int stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_da
 		printf("  ASCII Table\n");
 		printf("   Byte    Data_Byte    ASCII_Character\n");
 		for (j = 0; j < ascii_table_index; j++)
-			printf("    %lld        %d             %c\n",
-			ascii_table_ofst+j, log_data_buf[ascii_table_ofst + j],
-			(char)log_data_buf[ascii_table_ofst + j]);
+			printf("    %"PRIu64"        %d             %c\n",
+			       le64_to_cpu(ascii_table_ofst + j),
+			       log_data_buf[ascii_table_ofst + j],
+			       (char)log_data_buf[ascii_table_ofst + j]);
 	}
 
 	return 0;
