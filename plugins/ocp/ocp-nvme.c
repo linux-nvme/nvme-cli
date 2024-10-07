@@ -87,8 +87,9 @@ struct __packed ssd_latency_monitor_log {
 	__le64	static_latency_timestamp[4][3];	/* 0x130 - 0x18F */
 	__le16	static_measured_latency[4][3];	/* 0x190 - 0x1A7 */
 	__le16	static_latency_stamp_units;	/* 0x1A8 */
-	__u8	rsvd4[0x16];			/* 0x1AA */
+	__u8	rsvd4[0x0A];			/* 0x1AA */
 
+	__u8	latency_monitor_debug_log_size[0x0C]; /* 0x1B4 */
 	__le16	debug_log_trigger_enable;	/* 0x1C0 */
 	__le16	debug_log_measured_latency;	/* 0x1C2 */
 	__le64	debug_log_latency_stamp;	/* 0x1C4 */
@@ -212,6 +213,7 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 {
 	char ts_buf[128];
 	int i, j;
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 
 	printf("-Latency Monitor/C3 Log Page Data-\n");
 	printf("  Controller   :  %s\n", dev->name);
@@ -244,6 +246,15 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 	       le16_to_cpu(log_data->active_latency_stamp_units));
 	printf("  Static Latency Stamp Units         %d\n",
 	       le16_to_cpu(log_data->static_latency_stamp_units));
+	if (log_page_version >= 0x4) {
+		printf("    Debug Telemetry Log Size         0x");
+		for (i = ARRAY_SIZE(log_data->latency_monitor_debug_log_size) - 1;
+			i > 0 && (log_data->latency_monitor_debug_log_size[i] == 0); i--)
+			;
+		while (i >= 0)
+			printf("%02x", log_data->latency_monitor_debug_log_size[i--]);
+		printf("\n");
+	}
 	printf("  Debug Log Trigger Enable           %d\n",
 	       le16_to_cpu(log_data->debug_log_trigger_enable));
 	printf("  Debug Log Measured Latency         %d\n",
@@ -260,8 +271,7 @@ static int ocp_print_C3_log_normal(struct nvme_dev *dev,
 	       le16_to_cpu(log_data->debug_log_counter_trigger));
 	printf("  Debug Log Stamp Units              %d\n",
 	       le16_to_cpu(log_data->debug_log_stamp_units));
-	printf("  Log Page Version                   %d\n",
-	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log Page Version                   %d\n", log_page_version);
 
 	char guid[(C3_GUID_LENGTH * 2) + 1];
 	char *ptr = &guid[0];
@@ -342,6 +352,7 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 	char buf[128];
 	int i, j;
 	char *operation[3] = {"Trim", "Write", "Read"};
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 
 	root = json_create_object();
 
@@ -456,6 +467,19 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 
 	json_object_add_value_uint(root, "Static Latency Stamp Units",
 		le16_to_cpu(log_data->static_latency_stamp_units));
+	if (log_page_version >= 0x4) {
+		strcpy(buf, "0x");
+		for (i = ARRAY_SIZE(log_data->latency_monitor_debug_log_size) - 1;
+			i > 0 && (log_data->latency_monitor_debug_log_size[i] == 0); i--)
+			;
+		while (i >= 0) {
+			char hex_string[3];
+
+			sprintf(hex_string, "%02x", log_data->latency_monitor_debug_log_size[i--]);
+			strcat(buf, hex_string);
+		}
+		json_object_add_value_string(root, "Debug Telemetry Log Size", buf);
+	}
 	json_object_add_value_uint(root, "Debug Log Trigger Enable",
 		le16_to_cpu(log_data->debug_log_trigger_enable));
 	json_object_add_value_uint(root, "Debug Log Measured Latency",
@@ -472,8 +496,7 @@ static void ocp_print_C3_log_json(struct ssd_latency_monitor_log *log_data)
 		le16_to_cpu(log_data->debug_log_counter_trigger));
 	json_object_add_value_uint(root, "Debug Log Stamp Units",
 		le16_to_cpu(log_data->debug_log_stamp_units));
-	json_object_add_value_uint(root, "Log Page Version",
-		le16_to_cpu(log_data->log_page_version));
+	json_object_add_value_uint(root, "Log Page Version", log_page_version);
 
 	char guid[(C3_GUID_LENGTH * 2) + 1];
 	char *ptr = &guid[0];
