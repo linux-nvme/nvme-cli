@@ -44,7 +44,6 @@
 
 #define C3_LATENCY_MON_LOG_BUF_LEN		0x200
 #define C3_LATENCY_MON_OPCODE			0xC3
-#define C3_LATENCY_MON_VERSION			0x0001
 #define C3_GUID_LENGTH				16
 #define NVME_FEAT_OCP_LATENCY_MONITOR		0xC5
 
@@ -519,14 +518,6 @@ static int get_c3_log_page(struct nvme_dev *dev, char *format)
 
 	if (!ret) {
 		log_data = (struct ssd_latency_monitor_log *)data;
-
-		/* check log page version */
-		if (log_data->log_page_version != C3_LATENCY_MON_VERSION) {
-			fprintf(stderr,
-				"ERROR : OCP : invalid latency monitor version\n");
-			ret = -1;
-			goto out;
-		}
 
 		/*
 		 * check log page guid
@@ -1956,7 +1947,6 @@ out:
 #define C5_GUID_LENGTH                     16
 #define C5_UNSUPPORTED_REQS_LEN            4096
 #define C5_UNSUPPORTED_REQS_OPCODE         0xC5
-#define C5_UNSUPPORTED_REQS_LOG_VERSION    0x1
 #define C5_NUM_UNSUPPORTED_REQ_ENTRIES     253
 
 static __u8 unsupported_req_guid[C5_GUID_LENGTH] = {
@@ -2073,13 +2063,6 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 	if (!ret) {
 		log_data = (struct unsupported_requirement_log *)data;
 
-		/* check log page version */
-		if (log_data->log_page_version != C5_UNSUPPORTED_REQS_LOG_VERSION) {
-			fprintf(stderr, "ERROR : OCP : invalid unsupported requirement version\n");
-			ret = -1;
-			goto out;
-		}
-
 		/*
 		 * check log page guid
 		 * Verify GUID matches
@@ -2162,7 +2145,6 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 
 #define C1_ERROR_RECOVERY_LOG_BUF_LEN       0x200
 #define C1_ERROR_RECOVERY_OPCODE            0xC1
-#define C1_ERROR_RECOVERY_VERSION           0x0002
 #define C1_GUID_LENGTH                      16
 #define C1_PREV_PANIC_IDS_LENGTH            4
 
@@ -2308,13 +2290,6 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 	if (!ret) {
 		log_data = (struct ocp_error_recovery_log_page *)data;
 
-		/* check log page version */
-		if (log_data->log_page_version != C1_ERROR_RECOVERY_VERSION) {
-			fprintf(stderr, "ERROR : OCP : invalid error recovery log page version\n");
-			ret = -1;
-			goto out;
-		}
-
 		/*
 		 * check log page guid
 		 * Verify GUID matches
@@ -2395,7 +2370,6 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *cmd, st
 
 #define C4_DEV_CAP_REQ_LEN			0x1000
 #define C4_DEV_CAP_REQ_OPCODE		0xC4
-#define C4_DEV_CAP_REQ_VERSION		0x0001
 #define C4_GUID_LENGTH				16
 static __u8 dev_cap_req_guid[C4_GUID_LENGTH] = {
 	0x97, 0x42, 0x05, 0x0d,
@@ -2523,13 +2497,6 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 
 	if (!ret) {
 		log_data = (struct ocp_device_capabilities_log_page *)data;
-
-		/* check log page version */
-		if (log_data->log_page_version != C4_DEV_CAP_REQ_VERSION) {
-			fprintf(stderr, "ERROR : OCP : invalid device capabilities log page version\n");
-			ret = -1;
-			goto out;
-		}
 
 		/*
 		 * check log page guid
@@ -3692,7 +3659,6 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *c
 #define C7_GUID_LENGTH                     16
 #define C7_TCG_CONFIGURATION_LEN           512
 #define C7_TCG_CONFIGURATION_OPCODE        0xC7
-#define C7_TCG_CONFIGURATION_LOG_VERSION   0x1
 
 static __u8 tcg_configuration_guid[C7_GUID_LENGTH] = {
 	0x06, 0x40, 0x24, 0xBD,
@@ -3883,13 +3849,6 @@ static int get_c7_log_page(struct nvme_dev *dev, char *format)
 				  C7_TCG_CONFIGURATION_LEN, data);
 	if (!ret) {
 		log_data = (struct tcg_configuration_log *)data;
-
-		/* check log page version */
-		if (log_data->log_page_version != C7_TCG_CONFIGURATION_LOG_VERSION) {
-			fprintf(stderr, "ERROR : OCP : invalid TCG Configuration Log Page version\n");
-			ret = -1;
-			goto out;
-		}
 
 		/*
 		 * check log page guid
