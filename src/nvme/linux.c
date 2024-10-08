@@ -1499,21 +1499,44 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 					     configured_key, key_len);
 }
 
-char *nvme_export_tls_key(const unsigned char *key_data, int key_len)
+/*
+ * PSK Interchange Format
+ * NVMeTLSkey-<v>:<xx>:<s>:
+ *
+ * x: version as one ASCII char
+ * yy: hmac encoded as two ASCII chars
+ *     00: no transform ('configured PSK')
+ *     01: SHA-256
+ *     02: SHA-384
+ * s:  32 or 48 bytes binary followed by a CRC-32 of the configured PSK
+ *     (4 bytes) encoded as base64
+ */
+char *nvme_export_tls_key_versioned(unsigned char version, unsigned char hmac,
+				    const unsigned char *key_data,
+				    size_t key_len)
 {
 	unsigned int raw_len, encoded_len, len;
 	unsigned long crc = crc32(0L, NULL, 0);
 	unsigned char raw_secret[52];
 	char *encoded_key;
 
-	if (key_len == 32) {
-		raw_len = 32;
-	} else if (key_len == 48) {
-		raw_len = 48;
-	} else {
-		errno = EINVAL;
-		return NULL;
+	switch (hmac) {
+	case NVME_HMAC_ALG_NONE:
+		if (key_len != 32 && key_len != 48)
+			goto err_inval;
+		break;
+	case NVME_HMAC_ALG_SHA2_256:
+		if (key_len != 32)
+			goto err_inval;
+		break;
+	case NVME_HMAC_ALG_SHA2_384:
+		if (key_len != 48)
+			goto err_inval;
+		break;
+	default:
+		goto err_inval;
 	}
+	raw_len = key_len;
 
 	memcpy(raw_secret, key_data, raw_len);
 	crc = crc32(crc, raw_secret, raw_len);
@@ -1529,48 +1552,75 @@ char *nvme_export_tls_key(const unsigned char *key_data, int key_len)
 		return NULL;
 	}
 	memset(encoded_key, 0, encoded_len);
-	len = sprintf(encoded_key, "NVMeTLSkey-1:%02x:",
-		      key_len == 32 ? 1 : 2);
+	len = sprintf(encoded_key, "NVMeTLSkey-%x:%02x:", version, hmac);
 	len += base64_encode(raw_secret, raw_len, encoded_key + len);
 	encoded_key[len++] = ':';
 	encoded_key[len++] = '\0';
 
 	return encoded_key;
+
+err_inval:
+	errno = EINVAL;
+	return NULL;
+
 }
 
-unsigned char *nvme_import_tls_key(const char *encoded_key, int *key_len,
-				   unsigned int *hmac)
+char *nvme_export_tls_key(const unsigned char *key_data, int key_len)
+{
+	unsigned char hmac;
+
+	if (key_len == 32)
+		hmac = NVME_HMAC_ALG_SHA2_256;
+	else
+		hmac = NVME_HMAC_ALG_SHA2_384;
+
+	return nvme_export_tls_key_versioned(1, hmac, key_data, key_len);
+}
+
+unsigned char *nvme_import_tls_key_versioned(const char *encoded_key,
+					     unsigned char *version,
+					     unsigned char *hmac,
+					     size_t *key_len)
 {
 	unsigned char decoded_key[128], *key_data;
 	unsigned int crc = crc32(0L, NULL, 0);
 	unsigned int key_crc;
-	int err, decoded_len;
+	int err, _version, _hmac, decoded_len;
+	size_t len;
 
-	if (sscanf(encoded_key, "NVMeTLSkey-1:%02x:*s", &err) != 1) {
+	if (sscanf(encoded_key, "NVMeTLSkey-%d:%02x:*s",
+		   &_version, &_hmac) != 2) {
 		errno = EINVAL;
 		return NULL;
 	}
-	switch (err) {
-	case 1:
-		if (strlen(encoded_key) != 65) {
-			errno = EINVAL;
-			return NULL;
-		}
+
+	if (_version != 1) {
+		errno = EINVAL;
+		return NULL;
+	}
+	*version = _version;
+
+	len = strlen(encoded_key);
+	switch (_hmac) {
+	case NVME_HMAC_ALG_NONE:
+		if (len != 65 && len != 89)
+			goto err_inval;
 		break;
-	case 2:
-		if (strlen(encoded_key) != 89) {
-			errno = EINVAL;
-			return NULL;
-		}
+	case NVME_HMAC_ALG_SHA2_256:
+		if (len != 65)
+			goto err_inval;
+		break;
+	case NVME_HMAC_ALG_SHA2_384:
+		if (len != 89)
+			goto err_inval;
 		break;
 	default:
 		errno = EINVAL;
 		return NULL;
 	}
+	*hmac = _hmac;
 
-	*hmac = err;
-	err = base64_decode(encoded_key + 16, strlen(encoded_key) - 17,
-			    decoded_key);
+	err = base64_decode(encoded_key + 16, len - 17, decoded_key);
 	if (err < 0) {
 		errno = ENOKEY;
 		return NULL;
@@ -1602,4 +1652,25 @@ unsigned char *nvme_import_tls_key(const char *encoded_key, int *key_len,
 
 	*key_len = decoded_len;
 	return key_data;
+
+err_inval:
+	errno = EINVAL;
+	return NULL;
+}
+
+unsigned char *nvme_import_tls_key(const char *encoded_key, int *key_len,
+				   unsigned int *hmac)
+{
+	unsigned char version, _hmac;
+	unsigned char *psk;
+	size_t len;
+
+	psk = nvme_import_tls_key_versioned(encoded_key, &version,
+					    &_hmac, &len);
+	if (!psk)
+		return NULL;
+
+	*hmac = _hmac;
+	*key_len = len;
+	return psk;
 }

@@ -1,4 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
+LIBNVME_1.11 {
+	global:
+		nvme_export_tls_key_versioned;
+		nvme_import_tls_key_versioned;
+};
+
+
 LIBNVME_1.10 {
 	global:
 		nvme_free_uri;
