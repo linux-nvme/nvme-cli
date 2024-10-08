@@ -133,6 +133,80 @@ out:
 	free(psk);
 }
 
+static void export_versioned_test(struct test_data *test)
+{
+	char *psk;
+
+	if (test->version != 1)
+		return;
+
+	printf("test nvme_export_tls_key_versioned hmac %d %s\n",
+	       test->hmac, test->exported_psk);
+
+	psk = nvme_export_tls_key_versioned(test->version, test->hmac,
+					    test->configured_psk,
+					    test->psk_length);
+	if (!psk) {
+		test_rc = 1;
+		printf("ERROR: nvme_export_tls_key_versioned() failed with %d\n",
+		       errno);
+		return;
+	}
+
+	check_str(test->exported_psk, psk);
+
+	free(psk);
+}
+
+static void import_versioned_test(struct test_data *test)
+{
+	unsigned char *psk;
+	unsigned char version;
+	unsigned char hmac;
+	size_t psk_length;
+
+	if (test->version != 1)
+		return;
+
+	printf("test nvme_import_tls_key_versioned hmac %d %s\n",
+	       test->hmac, test->exported_psk);
+
+	psk = nvme_import_tls_key_versioned(test->exported_psk, &version,
+					    &hmac, &psk_length);
+	if (!psk) {
+		test_rc = 1;
+		printf("ERROR: nvme_import_tls_key_versioned() failed with %d\n",
+		       errno);
+		return;
+	}
+
+	if (test->version != version) {
+		test_rc = 1;
+		printf("ERROR: version parsing failed\n");
+		goto out;
+	}
+
+	if (test->hmac != hmac) {
+		test_rc = 1;
+		printf("ERROR: hmac parsing failed\n");
+		goto out;
+	}
+
+	if (test->psk_length != psk_length) {
+		test_rc = 1;
+		printf("ERROR: length parsing failed\n");
+		goto out;
+	}
+
+	if (memcmp(test->configured_psk, psk, psk_length)) {
+		test_rc = 1;
+		printf("ERROR: parsing psk failed\n");
+	}
+
+out:
+	free(psk);
+}
+
 int main(void)
 {
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++)
@@ -140,6 +214,12 @@ int main(void)
 
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++)
 		import_test(&test_data[i]);
+
+	for (int i = 0; i < ARRAY_SIZE(test_data); i++)
+		export_versioned_test(&test_data[i]);
+
+	for (int i = 0; i < ARRAY_SIZE(test_data); i++)
+		import_versioned_test(&test_data[i]);
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
