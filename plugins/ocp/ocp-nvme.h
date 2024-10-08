@@ -47,3 +47,204 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 #endif
 
 #include "define_cmd.h"
+
+#ifndef OCP_NVME_H
+#define OCP_NVME_H
+struct __packed ssd_latency_monitor_log {
+	__u8	feature_status;			/* 0x00 */
+	__u8	rsvd1;				/* 0x01 */
+	__le16	active_bucket_timer;		/* 0x02 */
+	__le16	active_bucket_timer_threshold;	/* 0x04 */
+	__u8	active_threshold_a;		/* 0x06 */
+	__u8	active_threshold_b;		/* 0x07 */
+	__u8	active_threshold_c;		/* 0x08 */
+	__u8	active_threshold_d;		/* 0x09 */
+	__le16	active_latency_config;		/* 0x0A */
+	__u8	active_latency_min_window;	/* 0x0C */
+	__u8	rsvd2[0x13];			/* 0x0D */
+
+	__le32	active_bucket_counter[4][4];	/* 0x20 - 0x5F */
+	__le64	active_latency_timestamp[4][3];	/* 0x60 - 0xBF */
+	__le16	active_measured_latency[4][3];	/* 0xC0 - 0xD7 */
+	__le16	active_latency_stamp_units;	/* 0xD8 */
+	__u8	rsvd3[0x16];			/* 0xDA */
+
+	__le32	static_bucket_counter[4][4];	/* 0x0F0 - 0x12F */
+	__le64	static_latency_timestamp[4][3];	/* 0x130 - 0x18F */
+	__le16	static_measured_latency[4][3];	/* 0x190 - 0x1A7 */
+	__le16	static_latency_stamp_units;	/* 0x1A8 */
+	__u8	rsvd4[0x16];			/* 0x1AA */
+
+	__le16	debug_log_trigger_enable;	/* 0x1C0 */
+	__le16	debug_log_measured_latency;	/* 0x1C2 */
+	__le64	debug_log_latency_stamp;	/* 0x1C4 */
+	__le16	debug_log_ptr;			/* 0x1CC */
+	__le16	debug_log_counter_trigger;	/* 0x1CE */
+	__u8	debug_log_stamp_units;		/* 0x1D0 */
+	__u8	rsvd5[0x1D];			/* 0x1D1 */
+
+	__le16	log_page_version;		/* 0x1EE */
+	__u8	log_page_guid[0x10];		/* 0x1F0 */
+};
+
+#define C3_GUID_LENGTH				16
+
+#define C3_ACTIVE_BUCKET_TIMER_INCREMENT	5
+#define C3_ACTIVE_THRESHOLD_INCREMENT		5
+#define C3_MINIMUM_WINDOW_INCREMENT		100
+#define C3_BUCKET_NUM				4
+
+#define READ		3
+#define WRITE		2
+#define TRIM		1
+
+#define C5_GUID_LENGTH                     16
+#define C5_NUM_UNSUPPORTED_REQ_ENTRIES     253
+
+/*
+ * struct unsupported_requirement_log - unsupported requirement list
+ * @unsupported_count:        Number of Unsupported Requirement IDs
+ * @rsvd1:                    Reserved
+ * @unsupported_req_list:     Unsupported Requirements lists up to 253.
+ * @rsvd2:                    Reserved
+ * @log_page_version:         indicates the version of the mapping this log page uses.
+ *                            Shall be set to 0001h
+ * @log_page_guid:            Shall be set to C7BB98B7D0324863BB2C23990E9C722Fh.
+ */
+struct __packed unsupported_requirement_log {
+	__le16  unsupported_count;
+	__u8    rsvd1[14];
+	__u8    unsupported_req_list[C5_NUM_UNSUPPORTED_REQ_ENTRIES][16];
+	__u8    rsvd2[14];
+	__le16  log_page_version;
+	__u8    log_page_guid[C5_GUID_LENGTH];
+};
+
+#define C1_GUID_LENGTH                      16
+#define C1_PREV_PANIC_IDS_LENGTH            4
+
+/**
+ * struct ocp_error_recovery_log_page -	Error Recovery Log Page
+ * @panic_reset_wait_time:		Panic Reset Wait Time
+ * @panic_reset_action:			Panic Reset Action
+ * @device_recover_action_1:		Device Recovery Action 1
+ * @panic_id:				Panic ID
+ * @device_capabilities:		Device Capabilities
+ * @vendor_specific_recovery_opcode:	Vendor Specific Recovery Opcode
+ * @reserved:				Reserved
+ * @vendor_specific_command_cdw12:	Vendor Specific Command CDW12
+ * @vendor_specific_command_cdw13:	Vendor Specific Command CDW13
+ * @vendor_specific_command_timeout:	Vendor Specific Command Timeout
+ * @device_recover_action_2:		Device Recovery Action 2
+ * @device_recover_action_2_timeout:	Device Recovery Action 2 Timeout
+ * @panic_count:			Panic Count
+ * @prev_panic_id:			Previous Panic IDs
+ * @reserved2:				Reserved
+ * @log_page_version:			Log Page Version
+ * @log_page_guid:			Log Page GUID
+ */
+struct __packed ocp_error_recovery_log_page {
+	__le16  panic_reset_wait_time;                   /* 2 bytes      - 0x00 - 0x01 */
+	__u8    panic_reset_action;                      /* 1 byte       - 0x02 */
+	__u8    device_recover_action_1;                 /* 1 byte       - 0x03 */
+	__le64  panic_id;                                /* 8 bytes      - 0x04 - 0x0B */
+	__le32  device_capabilities;                     /* 4 bytes      - 0x0C - 0x0F */
+	__u8    vendor_specific_recovery_opcode;         /* 1 byte       - 0x10 */
+	__u8    reserved[0x3];                           /* 3 bytes      - 0x11 - 0x13 */
+	__le32  vendor_specific_command_cdw12;           /* 4 bytes      - 0x14 - 0x17 */
+	__le32  vendor_specific_command_cdw13;           /* 4 bytes      - 0x18 - 0x1B */
+	__u8    vendor_specific_command_timeout;         /* 1 byte       - 0x1C */
+	__u8    device_recover_action_2;                 /* 1 byte       - 0x1D */
+	__u8    device_recover_action_2_timeout;         /* 1 byte       - 0x1E */
+	__u8    panic_count;                             /* 1 byte       - 0x1F */
+	__le64  prev_panic_id[C1_PREV_PANIC_IDS_LENGTH]; /* 32 bytes     - 0x20 - 0x3F */
+	__u8    reserved2[0x1ae];                        /* 430 bytes    - 0x40 - 0x1ED */
+	__le16  log_page_version;                        /* 2 bytes      - 0x1EE - 0x1EF */
+	__u8    log_page_guid[0x10];                     /* 16 bytes     - 0x1F0 - 0x1FF */
+};
+
+#define C4_GUID_LENGTH				16
+
+/**
+ * struct ocp_device_capabilities_log_page -	Device Capability Log page
+ * @pcie_exp_port:						PCI Express Ports
+ * @oob_management_support:				OOB Management Support
+ * @wz_cmd_support:						Write Zeroes Command Support
+ * @sanitize_cmd_support:				Sanitize Command Support
+ * @dsm_cmd_support:					Dataset Management Command Support
+ * @wu_cmd_support:						Write Uncorrectable Command Support
+ * @fused_operation_support:			Fused Operation Support
+ * @min_valid_dssd_pwr_state:			Minimum Valid DSSD Power State
+ * @dssd_pwr_state_desc:				DSSD Power State Descriptors
+ * @vendor_specific_command_timeout:	Vendor Specific Command Timeout
+ * @reserved:							Reserved
+ * @log_page_version:					Log Page Version
+ * @log_page_guid:						Log Page GUID
+ */
+struct __packed ocp_device_capabilities_log_page {
+	__le16  pcie_exp_port;
+	__le16  oob_management_support;
+	__le16  wz_cmd_support;
+	__le16  sanitize_cmd_support;
+	__le16  dsm_cmd_support;
+	__le16  wu_cmd_support;
+	__le16  fused_operation_support;
+	__le16  min_valid_dssd_pwr_state;
+	__u8    dssd_pwr_state_desc[128];
+	__u8    reserved[3934];
+	__le16  log_page_version;
+	__u8    log_page_guid[16];
+};
+
+#define C7_GUID_LENGTH                     16
+
+/*
+ * struct tcg_configuration_log - TCG Configuration Log Page Structure
+ * @state:                            state
+ * @rsvd1:                            Reserved1
+ * @locking_sp_act_count:             Locking SP Activation Count
+ * @type_rev_count:                   Tper Revert Count
+ * @locking_sp_rev_count:             Locking SP Revert Count.
+ * @no_of_locking_obj:                Number of Locking Objects
+ * @no_of_single_um_locking_obj:      Number of Single User Mode Locking Objects
+ * @no_of_range_prov_locking_obj:     Number of Range Provisioned Locking Objects
+ * @no_of_ns_prov_locking_obj:        Number of Namespace Provisioned Locking Objects
+ * @no_of_read_lock_locking_obj:      Number of Read Locked Locking Objects
+ * @no_of_write_lock_locking_obj:     Number of Write Locked Locking Objects
+ * @no_of_read_unlock_locking_obj:    Number of Read Unlocked Locking Objects
+ * @no_of_read_unlock_locking_obj:    Number of Write Unlocked Locking Objects
+ * @rsvd2:                            Reserved2
+ * @sid_auth_try_count:               SID Authentication Try Count
+ * @sid_auth_try_limit:               SID Authentication Try Limit
+ * @pro_tcg_rc:                       Programmatic TCG Reset Count
+ * @pro_rlc:                          Programmatic Reset Lock Count
+ * @tcg_ec:                           TCG Error Count
+ * @rsvd3:                            Reserved3
+ * @log_page_version:                 Log Page Version
+ */
+struct __packed tcg_configuration_log {
+	__u8    state;
+	__u8    rsvd1[3];
+	__u8    locking_sp_act_count;
+	__u8    type_rev_count;
+	__u8    locking_sp_rev_count;
+	__u8    no_of_locking_obj;
+	__u8    no_of_single_um_locking_obj;
+	__u8    no_of_range_prov_locking_obj;
+	__u8    no_of_ns_prov_locking_obj;
+	__u8    no_of_read_lock_locking_obj;
+	__u8    no_of_write_lock_locking_obj;
+	__u8    no_of_read_unlock_locking_obj;
+	__u8    no_of_write_unlock_locking_obj;
+	__u8    rsvd2;
+	__u32   sid_auth_try_count;
+	__u32   sid_auth_try_limit;
+	__u32   pro_tcg_rc;
+	__u32   pro_rlc;
+	__u32   tcg_ec;
+	__u8    rsvd3[458];
+	__le16  log_page_version;
+	__u8    log_page_guid[C7_GUID_LENGTH];
+
+};
+#endif /* OCP_NVME_H */
