@@ -104,6 +104,15 @@ if conf.get('HAVE_NETDB')
     test('util', test_util)
 endif
 
+psk = executable(
+    'test-psk',
+    ['psk.c'],
+    dependencies: libnvme_dep,
+    include_directories: [incdir, internal_incdir]
+)
+
+test('psk', psk)
+
 subdir('ioctl')
 subdir('nbft')
 
