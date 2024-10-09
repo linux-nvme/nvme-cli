@@ -600,9 +600,9 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 			       unsigned char *retained,
 			       size_t key_len)
 {
-	const EVP_MD *md;
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ctx = NULL;
 	uint16_t length = key_len & 0xFFFF;
+	const EVP_MD *md;
 	size_t hmac_len;
 
 	md = select_hmac(hmac, &hmac_len);
@@ -662,10 +662,10 @@ static int derive_tls_key(int version, int hmac, const char *context,
 			  unsigned char *retained,
 			  unsigned char *psk, size_t key_len)
 {
-	const EVP_MD *md;
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ctx = NULL;
-	size_t hmac_len;
 	uint16_t length = key_len & 0xFFFF;
+	const EVP_MD *md;
+	size_t hmac_len;
 
 	md = select_hmac(hmac, &hmac_len);
 	if (!md || hmac_len > key_len) {
@@ -805,10 +805,10 @@ static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
 			     char *digest, size_t digest_len)
 {
 	static const char hmac_seed[] = "NVMe-over-Fabrics";
-	size_t hmac_len;
 	const EVP_MD *md = select_hmac(hmac, &hmac_len);
 	_cleanup_hmac_ctx_ HMAC_CTX *hmac_ctx = NULL;
 	_cleanup_free_ unsigned char *psk_ctx = NULL;
+	size_t hmac_len;
 	size_t len;
 
 	hmac_ctx = HMAC_CTX_new();
@@ -886,10 +886,10 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 			unsigned char *key)
 {
 	const char hmac_seed[] = "NVMe-over-Fabrics";
-	OSSL_PARAM params[2], *p = params;
 	_cleanup_ossl_lib_ctx_ OSSL_LIB_CTX *lib_ctx = NULL;
 	_cleanup_evp_mac_ctx_ EVP_MAC_CTX *mac_ctx = NULL;
 	_cleanup_evp_mac_ EVP_MAC *mac = NULL;
+	OSSL_PARAM params[2], *p = params;
 	char *progq = NULL;
 	char *digest;
 	size_t len;
@@ -970,14 +970,14 @@ static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
 			     char *digest, size_t digest_len)
 {
 	static const char hmac_seed[] = "NVMe-over-Fabrics";
-	size_t hmac_len;
-	OSSL_PARAM params[2], *p = params;
 	_cleanup_ossl_lib_ctx_ OSSL_LIB_CTX *lib_ctx = NULL;
 	_cleanup_evp_mac_ctx_ EVP_MAC_CTX *mac_ctx = NULL;
+	_cleanup_free_ unsigned char *psk_ctx = NULL;
 	_cleanup_evp_mac_ EVP_MAC *mac = NULL;
+	OSSL_PARAM params[2], *p = params;
+	size_t hmac_len;
 	char *progq = NULL;
 	char *dig = NULL;
-	_cleanup_free_ unsigned char *psk_ctx = NULL;
 	size_t len;
 
 	lib_ctx = OSSL_LIB_CTX_new();
@@ -1160,9 +1160,9 @@ char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
 				     int version, int hmac,
 				     unsigned char *configured_key, int key_len)
 {
+	_cleanup_free_ unsigned char *psk = NULL;
 	char *identity;
 	size_t identity_len;
-	_cleanup_free_ unsigned char *psk = NULL;
 	int ret = -1;
 
 	identity_len = nvme_identity_len(hmac, version, hostnqn, subsysnqn);
@@ -1342,10 +1342,10 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 				   int version, int hmac,
 				   unsigned char *configured_key, int key_len)
 {
-	key_serial_t keyring_id, key;
-	_cleanup_free_ char *identity = NULL;
-	size_t identity_len;
 	_cleanup_free_ unsigned char *psk = NULL;
+	_cleanup_free_ char *identity = NULL;
+	key_serial_t keyring_id, key;
+	size_t identity_len;
 	int ret;
 
 	keyring_id = nvme_lookup_keyring(keyring);
@@ -1491,10 +1491,10 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
 
 char *nvme_export_tls_key(const unsigned char *key_data, int key_len)
 {
-	unsigned char raw_secret[52];
-	char *encoded_key;
 	unsigned int raw_len, encoded_len, len;
 	unsigned long crc = crc32(0L, NULL, 0);
+	unsigned char raw_secret[52];
+	char *encoded_key;
 
 	if (key_len == 32) {
 		raw_len = 32;
