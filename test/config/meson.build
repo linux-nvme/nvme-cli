@@ -7,6 +7,10 @@
 
 diff = find_program('diff', required : false)
 if diff.found()
+
+  srcdir = meson.current_source_dir()
+  builddir = meson.current_build_dir()
+
     config_dump = executable(
         'test-config-dump',
         ['config-dump.c'],
@@ -26,11 +30,11 @@ if diff.found()
             t_file,
             config_diff,
             args : [
-                meson.current_build_dir(),
                 config_dump.full_path(),
-                files('data'/t_file + '.tar.xz'),
-                files('data'/t_file + '.json'),
-                files('data'/t_file + '.out'),
+                builddir,
+                srcdir + '/data/' + t_file + '.out',
+                '--sysfs-tar', srcdir + '/data/' + t_file + '.tar.xz',
+                '--config-json', srcdir +   '/data/' + t_file + '.json',
             ],
             depends : config_dump,
         )
@@ -47,11 +51,11 @@ if diff.found()
         'hostnqn-order',
         config_diff,
         args : [
-            meson.current_build_dir(),
             test_hostnqn_order.full_path(),
-            files('data/hostnqn-order.tar.xz'),
-            files('data/hostnqn-order.json'),
-            files('data/hostnqn-order.out'),
+            builddir,
+            srcdir + '/data/hostnqn-order.out',
+            '--sysfs-tar', srcdir + '/data/hostnqn-order.tar.xz',
+            '--config-json', srcdir + '/data/hostnqn-order.json',
         ],
         depends : test_hostnqn_order,
     )
