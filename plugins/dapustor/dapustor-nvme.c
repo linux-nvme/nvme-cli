@@ -312,16 +312,16 @@ static void show_dapustor_ext_add_smart_log_jsn(struct nvme_extended_additional_
 	json_object_add_value_object(dev_stats, "temp_since_born", entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->temp_since_born.norm);
+	json_object_add_value_int(entry_stats, "normalized", smart->temp_since_bootup.norm);
 	multi = json_create_object();
 	json_object_add_value_int(multi, "min",
-				  le16_to_cpu(smart->temp_since_born.temperature.min));
+				  le16_to_cpu(smart->temp_since_bootup.temperature.min));
 	json_object_add_value_int(multi, "max",
-				  le16_to_cpu(smart->temp_since_born.temperature.max));
+				  le16_to_cpu(smart->temp_since_bootup.temperature.max));
 	json_object_add_value_int(multi, "cur",
-				  le16_to_cpu(smart->temp_since_born.temperature.cur));
+				  le16_to_cpu(smart->temp_since_bootup.temperature.cur));
 	json_object_add_value_object(entry_stats, "raw", multi);
-	json_object_add_value_object(dev_stats, "temp_since_born", entry_stats);
+	json_object_add_value_object(dev_stats, "temp_since_bootup", entry_stats);
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->inflight_write_io_cmd.norm);
@@ -542,8 +542,11 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 		else if (!cfg.raw_binary)
 			show_dapustor_smart_log(&smart_log, &ext_smart_log,
 						cfg.namespace_id, dev->name, has_ext);
-		else
+		else {
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
+			if (has_ext)
+				d_raw((unsigned char *)&ext_smart_log, sizeof(ext_smart_log));
+		}
 	}
 	dev_close(dev);
 	return err;
