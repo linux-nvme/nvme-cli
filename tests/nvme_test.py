@@ -439,7 +439,7 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        pattern = re.compile("^ Entry\[[ ]*[0-9]+\]")
+        pattern = re.compile(r"^ Entry\[[ ]*[0-9]+\]")
         error_log_cmd = "nvme error-log " + self.ctrl
         proc = subprocess.Popen(error_log_cmd,
                                 shell=True,
