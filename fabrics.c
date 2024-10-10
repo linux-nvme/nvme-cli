@@ -94,6 +94,7 @@ static const char *nvmf_context		= "execution context identification string";
 
 #define NVMF_ARGS(n, c, ...)                                                                     \
 	struct argconfig_commandline_options n[] = {                                             \
+		__VA_ARGS__,                                                                     \
 		OPT_STRING("transport",       't', "STR", &transport,     nvmf_tport),           \
 		OPT_STRING("nqn",             'n', "STR", &subsysnqn,     nvmf_nqn),             \
 		OPT_STRING("traddr",          'a', "STR", &traddr,        nvmf_traddr),          \
@@ -120,7 +121,6 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest),     \
 		OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls),             \
 		OPT_FLAG("concat",              0, &c.concat,             nvmf_concat),          \
-		__VA_ARGS__,                                                                     \
 		OPT_END()                                                                        \
 	}
 
@@ -904,15 +904,18 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_print_flags_t flags;
 	struct nvme_fabrics_config cfg = { 0 };
 	char *format = "normal";
-
+	char *keyring = NULL;
+	char *tls_key = NULL;
 
 	NVMF_ARGS(opts, cfg,
 		  OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,      nvmf_ctrlkey),
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_INCR("verbose",              'v', &verbose,             "Increase logging verbosity"),
-		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"),
-		  OPT_FMT("output-format",         'o', &format,       "Output format: normal|json"),
-		  OPT_STRING("context",              0, "STR", &context,  nvmf_context));
+		  OPT_FLAG("dump-config",          'O', &dump_config,         "Dump JSON configuration to stdout"),
+		  OPT_FMT("output-format",         'o', &format,              "Output format: normal|json"),
+		  OPT_STRING("context",              0, "STR", &context,      nvmf_context),
+		  OPT_STR("keyring",                 0, &keyring,             "Keyring to store the TLS key, name or keyring id"),
+		  OPT_STR("tls_key",                 0, &tls_key,             "TLS key in PSK Interchagne format or key store id"));
 
 	nvmf_default_config(&cfg);
 
@@ -1008,8 +1011,29 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		errno = ENOMEM;
 		goto out_free;
 	}
+
 	if (ctrlkey)
 		nvme_ctrl_set_dhchap_key(c, ctrlkey);
+
+	if (keyring) {
+		char *endptr;
+		long id = strtol(keyring, &endptr, 0);
+
+		if (endptr != keyring)
+			cfg.keyring = id;
+		else
+			nvme_ctrl_set_keyring(c, keyring);
+	}
+
+	if (tls_key) {
+		char *endptr;
+		long id = strtol(tls_key, &endptr, 0);
+
+		if (endptr != tls_key)
+			cfg.tls_key = id;
+		else
+			nvme_ctrl_set_tls_key(c, tls_key);
+	}
 
 	errno = 0;
 	ret = nvmf_add_ctrl(h, c, &cfg);
