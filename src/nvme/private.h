@@ -300,4 +300,6 @@ void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 #define SECTOR_SIZE	512
 #define SECTOR_SHIFT	9
 
+int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
+				   long *keyring_id, long *key_id);
 #endif /* _LIBNVME_PRIVATE_H */

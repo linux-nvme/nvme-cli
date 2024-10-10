@@ -25,62 +25,10 @@
 #define JSON_UPDATE_BOOL_OPTION(c, k, a, o)				\
 	if (!strcmp(# a, k ) && !c->a) c->a = json_object_get_boolean(o);
 
-static void json_import_nvme_tls_key(nvme_ctrl_t c, const char *keyring_str,
-				     const char *encoded_key)
-{
-	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
-	const char *hostnqn = nvme_host_get_hostnqn(c->s->h);
-	const char *subsysnqn = nvme_ctrl_get_subsysnqn(c);
-	int key_len;
-	unsigned int hmac;
-	long key_id;
-	_cleanup_free_ unsigned char *key_data = NULL;
-
-	if (!hostnqn || !subsysnqn) {
-		nvme_msg(NULL, LOG_ERR, "Invalid NQNs (%s, %s)\n",
-			 hostnqn, subsysnqn);
-		return;
-	}
-	key_data = nvme_import_tls_key(encoded_key, &key_len, &hmac);
-	if (!key_data) {
-		nvme_msg(NULL, LOG_ERR, "Failed to decode TLS Key '%s'\n",
-			encoded_key);
-		return;
-	}
-	key_id = nvme_insert_tls_key_versioned(keyring_str, "psk",
-					       hostnqn, subsysnqn,
-					       0, hmac, key_data, key_len);
-	if (key_id <= 0)
-		nvme_msg(NULL, LOG_ERR, "Failed to insert TLS KEY, error %d\n",
-			 errno);
-	else {
-		cfg->tls_key = key_id;
-		cfg->tls = true;
-	}
-}
-
-static void json_export_nvme_tls_key(long keyring_id, long tls_key,
-				     struct json_object *obj)
-{
-	int key_len;
-	_cleanup_free_ unsigned char *key_data = NULL;
-
-	key_data = nvme_read_key(keyring_id, tls_key, &key_len);
-	if (key_data) {
-		_cleanup_free_ char *tls_str = NULL;
-
-		tls_str = nvme_export_tls_key(key_data, key_len);
-		if (tls_str)
-			json_object_object_add(obj, "tls_key",
-					       json_object_new_string(tls_str));
-	}
-}
-
 static void json_update_attributes(nvme_ctrl_t c,
 				   struct json_object *ctrl_obj)
 {
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
-	const char *keyring_str = NULL, *encoded_key = NULL;
 
 	json_object_object_foreach(ctrl_obj, key_str, val_obj) {
 		JSON_UPDATE_INT_OPTION(cfg, key_str,
@@ -120,31 +68,18 @@ static void json_update_attributes(nvme_ctrl_t c,
 		if (!strcmp("discovery", key_str) &&
 		    !nvme_ctrl_is_discovery_ctrl(c))
 			nvme_ctrl_set_discovery_ctrl(c, true);
-		/*
-		 * The JSON configuration holds the keyring description
-		 * which needs to be converted into the keyring serial number.
-		 */
-		if (!strcmp("keyring", key_str) && cfg->keyring == 0) {
-			long keyring;
-
-			keyring_str = json_object_get_string(val_obj);
-			keyring = nvme_lookup_keyring(keyring_str);
-			if (keyring) {
-				cfg->keyring = keyring;
-				nvme_set_keyring(cfg->keyring);
-			}
+		if (!strcmp("keyring", key_str))
+			nvme_ctrl_set_keyring(c,
+				json_object_get_string(val_obj));
+		if (!strcmp("tls_key_identity", key_str)) {
+			nvme_ctrl_set_tls_key_identity(c,
+				json_object_get_string(val_obj));
 		}
-		if (!strcmp("tls_key", key_str) && cfg->tls_key == 0)
-			encoded_key = json_object_get_string(val_obj);
+		if (!strcmp("tls_key", key_str)) {
+			nvme_ctrl_set_tls_key(c,
+				json_object_get_string(val_obj));
+		}
 	}
-
-	/*
-	 * We might need the keyring information from the above loop,
-	 * so we can only import the TLS key once all entries are
-	 * processed.
-	 */
-	if (encoded_key)
-		json_import_nvme_tls_key(c, keyring_str, encoded_key);
 }
 
 static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
@@ -181,6 +116,19 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 	attr_obj = json_object_object_get(port_obj, "dhchap_ctrl_key");
 	if (attr_obj)
 		nvme_ctrl_set_dhchap_key(c, json_object_get_string(attr_obj));
+	attr_obj = json_object_object_get(port_obj, "keyring");
+	if (attr_obj)
+		nvme_ctrl_set_keyring(c, json_object_get_string(attr_obj));
+	attr_obj = json_object_object_get(port_obj, "tls_key_identity");
+	if (attr_obj) {
+		nvme_ctrl_set_tls_key_identity(c,
+			json_object_get_string(attr_obj));
+	}
+	attr_obj = json_object_object_get(port_obj, "tls_key");
+	if (attr_obj) {
+		nvme_ctrl_set_tls_key(c,
+			json_object_get_string(attr_obj));
+	}
 }
 
 static void json_parse_subsys(nvme_host_t h, struct json_object *subsys_obj)
@@ -368,6 +316,19 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	if (value)
 		json_object_object_add(port_obj, "dhchap_ctrl_key",
 				       json_object_new_string(value));
+	JSON_BOOL_OPTION(cfg, port_obj, tls);
+	value = nvme_ctrl_get_keyring(c);
+	if (value)
+		json_object_object_add(port_obj, "keyring",
+				       json_object_new_string(value));
+	value = nvme_ctrl_get_tls_key_identity(c);
+	if (value)
+		json_object_object_add(port_obj, "tls_key_identity",
+				       json_object_new_string(value));
+	value = nvme_ctrl_get_tls_key(c);
+	if (value)
+		json_object_object_add(port_obj, "tls_key",
+				       json_object_new_string(value));
 	JSON_INT_OPTION(cfg, port_obj, nr_io_queues, 0);
 	JSON_INT_OPTION(cfg, port_obj, nr_write_queues, 0);
 	JSON_INT_OPTION(cfg, port_obj, nr_poll_queues, 0);
@@ -384,7 +345,6 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_BOOL_OPTION(cfg, port_obj, disable_sqflow);
 	JSON_BOOL_OPTION(cfg, port_obj, hdr_digest);
 	JSON_BOOL_OPTION(cfg, port_obj, data_digest);
-	JSON_BOOL_OPTION(cfg, port_obj, tls);
 	JSON_BOOL_OPTION(cfg, port_obj, concat);
 	if (nvme_ctrl_is_persistent(c))
 		json_object_object_add(port_obj, "persistent",
@@ -392,23 +352,6 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	if (nvme_ctrl_is_discovery_ctrl(c))
 		json_object_object_add(port_obj, "discovery",
 				       json_object_new_boolean(true));
-	/*
-	 * Store the keyring description in the JSON config file.
-	 */
-	if (cfg->keyring) {
-		_cleanup_free_ char *desc =
-			nvme_describe_key_serial(cfg->keyring);
-
-		if (desc) {
-			json_object_object_add(port_obj, "keyring",
-					       json_object_new_string(desc));
-		}
-	}
-	/*
-	 * Store the TLS key in PSK interchange format
-	 */
-	if (cfg->tls_key)
-		json_export_nvme_tls_key(cfg->keyring, cfg->tls_key, port_obj);
 
 	json_object_array_add(ctrl_array, port_obj);
 }
@@ -564,9 +507,18 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 	if (!strcmp(transport, "tcp")) {
 		JSON_BOOL_OPTION(cfg, ctrl_obj, tls);
 
-		if (cfg->tls_key)
-			json_export_nvme_tls_key(cfg->keyring, cfg->tls_key,
-						 ctrl_obj);
+		value = nvme_ctrl_get_keyring(c);
+		if (value)
+			json_object_object_add(ctrl_obj, "keyring",
+					       json_object_new_string(value));
+		value = nvme_ctrl_get_tls_key_identity(c);
+		if (value)
+			json_object_object_add(ctrl_obj, "tls_key_identity",
+					       json_object_new_string(value));
+		value = nvme_ctrl_get_tls_key(c);
+		if (value)
+			json_object_object_add(ctrl_obj, "tls_key",
+					       json_object_new_string(value));
 	}
 	JSON_BOOL_OPTION(cfg, ctrl_obj, concat);
 	if (nvme_ctrl_is_persistent(c))

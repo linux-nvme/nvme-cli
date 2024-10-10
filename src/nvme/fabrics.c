@@ -552,6 +552,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	const char *hostnqn, *hostid, *hostkey, *ctrlkey;
 	bool discover = false, discovery_nqn = false;
 	nvme_root_t r = h->r;
+	long keyring_id = 0;
+	long key_id = 0;
+	int ret;
 
 	if (!transport) {
 		nvme_msg(h->r, LOG_ERR, "need a transport (-t) argument\n");
@@ -573,19 +576,37 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 		errno = ENOMEM;
 		return -1;
 	}
+
 	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME)) {
 		nvme_ctrl_set_discovery_ctrl(c, true);
 		nvme_ctrl_set_unique_discovery_ctrl(c, false);
 		discovery_nqn = true;
 	}
+
 	if (nvme_ctrl_is_discovery_ctrl(c))
 		discover = true;
+
 	hostnqn = nvme_host_get_hostnqn(h);
 	hostid = nvme_host_get_hostid(h);
 	hostkey = nvme_host_get_dhchap_key(h);
 	if (!hostkey)
 		hostkey = nvme_ctrl_get_dhchap_host_key(c);
+
 	ctrlkey = nvme_ctrl_get_dhchap_key(c);
+
+	ret = __nvme_import_keys_from_config(h, c, &keyring_id, &key_id);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
+
+	if (key_id == 0) {
+		if (cfg->tls_configured_key)
+			key_id = cfg->tls_configured_key;
+		else
+			key_id = cfg->tls_key;
+	}
+
 	if (add_argument(r, argstr, transport, transport) ||
 	    add_argument(r, argstr, traddr,
 			 nvme_ctrl_get_traddr(c)) ||
@@ -627,9 +648,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 			      cfg->fast_io_fail_tmo, false)) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(r, argstr, tos, cfg->tos, true)) ||
-	    add_int_argument(r, argstr, keyring, cfg->keyring, false) ||
+	    add_int_argument(r, argstr, keyring, keyring_id, false) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_int_argument(r, argstr, tls_key, cfg->tls_key, false)) ||
+	     add_int_argument(r, argstr, tls_key, key_id, false)) ||
 	    add_bool_argument(r, argstr, duplicate_connect,
 			      cfg->duplicate_connect) ||
 	    add_bool_argument(r, argstr, disable_sqflow,
