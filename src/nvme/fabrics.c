@@ -864,6 +864,15 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 			key = nvme_ctrl_get_dhchap_key(fc);
 			if (key)
 				nvme_ctrl_set_dhchap_key(c, key);
+			key = nvme_ctrl_get_keyring(fc);
+			if (key)
+				nvme_ctrl_set_keyring(c, key);
+			key = nvme_ctrl_get_tls_key_identity(fc);
+			if (key)
+				nvme_ctrl_set_tls_key_identity(c, key);
+			key = nvme_ctrl_get_tls_key(fc);
+			if (key)
+				nvme_ctrl_set_tls_key(c, key);
 		}
 
 	}

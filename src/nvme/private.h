@@ -85,6 +85,9 @@ struct nvme_ctrl {
 	char *trsvcid;
 	char *dhchap_key;
 	char *dhchap_ctrl_key;
+	char *keyring;
+	char *tls_key_identity;
+	char *tls_key;
 	char *cntrltype;
 	char *cntlid;
 	char *dctype;

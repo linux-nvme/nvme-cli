@@ -37,6 +37,7 @@
  * @tos:		Type of service
  * @keyring:		Keyring to store and lookup keys
  * @tls_key:		TLS PSK for the connection
+ * @tls_configured_key: TLS PSK for connect command for the connection
  * @duplicate_connect:	Allow multiple connections to the same target
  * @disable_sqflow:	Disable controller sq flow control
  * @hdr_digest:		Generate/verify header digest (TCP)
@@ -58,6 +59,7 @@ struct nvme_fabrics_config {
 	int tos;
 	long keyring;
 	long tls_key;
+	long tls_configured_key;
 
 	bool duplicate_connect;
 	bool disable_sqflow;

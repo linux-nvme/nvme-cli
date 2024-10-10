@@ -1,6 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_1.11 {
 	global:
+		nvme_ctrl_get_keyring;
+		nvme_ctrl_get_tls_key;
+		nvme_ctrl_get_tls_key_identity;
+		nvme_ctrl_set_keyring;
+		nvme_ctrl_set_tls_key;
+		nvme_ctrl_set_tls_key_identity;
 		nvme_export_tls_key_versioned;
 		nvme_import_tls_key_versioned;
 };

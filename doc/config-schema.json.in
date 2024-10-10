@@ -102,8 +102,12 @@
 		    "description": "Keyring for TLS key lookup",
 		    "type": "string"
 		},
+		"tls_key_identity": {
+		    "description": "PSK identity for the TLS PSK (tls_key)",
+		    "type": "string"
+		},
 		"tls_key": {
-		    "description": "TLS key for the connection",
+		    "description": "TLS PSK in PSK interchange format",
 		    "type": "string"
 		},
 		"nr_io_queues": {
