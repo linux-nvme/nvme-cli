@@ -511,6 +511,7 @@ struct nvme_get_property_args {
  * @owpass:	Overwrite pass count
  * @oipbp:	Set to overwrite invert pattern between passes
  * @nodas:	Set to not deallocate blocks after sanitizing
+ * @emvs:	Set to enter media verification state
  */
 struct nvme_sanitize_nvm_args {
 	__u32 *result;
@@ -523,6 +524,7 @@ struct nvme_sanitize_nvm_args {
 	__u8 owpass;
 	bool oipbp;
 	bool nodas;
+	bool emvs;
 };
 
 /**

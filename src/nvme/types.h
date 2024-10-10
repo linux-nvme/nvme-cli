@@ -8257,12 +8257,14 @@ enum nvme_directive_send_identify_endir {
  * @NVME_SANITIZE_SANACT_START_BLOCK_ERASE:  Start a Block Erase sanitize operation.
  * @NVME_SANITIZE_SANACT_START_OVERWRITE:    Start an Overwrite sanitize operation.
  * @NVME_SANITIZE_SANACT_START_CRYPTO_ERASE: Start a Crypto Erase sanitize operation.
+ * @NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF:   Exit Media Verification State
  */
 enum nvme_sanitize_sanact {
 	NVME_SANITIZE_SANACT_EXIT_FAILURE			= 1,
 	NVME_SANITIZE_SANACT_START_BLOCK_ERASE			= 2,
 	NVME_SANITIZE_SANACT_START_OVERWRITE			= 3,
 	NVME_SANITIZE_SANACT_START_CRYPTO_ERASE			= 4,
+	NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF			= 5,
 };
 
 /**

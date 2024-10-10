@@ -1641,12 +1641,25 @@ int nvme_get_property(struct nvme_get_property_args *args)
 
 int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args)
 {
-	__u32 cdw10 = NVME_SET(args->sanact, SANITIZE_CDW10_SANACT) |
-			NVME_SET(!!args->ause, SANITIZE_CDW10_AUSE) |
-			NVME_SET(args->owpass, SANITIZE_CDW10_OWPASS) |
-			NVME_SET(!!args->oipbp, SANITIZE_CDW10_OIPBP) |
-			NVME_SET(!!args->nodas, SANITIZE_CDW10_NODAS);
-	__u32 cdw11 = args->ovrpat;
+	const size_t size_v1 = sizeof_args(struct nvme_sanitize_nvm_args, nodas, __u64);
+	const size_t size_v2 = sizeof_args(struct nvme_sanitize_nvm_args, emvs, __u64);
+	__u32 cdw10, cdw11;
+
+	if (args->args_size < size_v1 || args->args_size > size_v2) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	cdw10 = NVME_SET(args->sanact, SANITIZE_CDW10_SANACT) |
+		NVME_SET(!!args->ause, SANITIZE_CDW10_AUSE) |
+		NVME_SET(args->owpass, SANITIZE_CDW10_OWPASS) |
+		NVME_SET(!!args->oipbp, SANITIZE_CDW10_OIPBP) |
+		NVME_SET(!!args->nodas, SANITIZE_CDW10_NODAS);
+
+	if (args->args_size == size_v2)
+		cdw10 |= NVME_SET(!!args->emvs, SANITIZE_CDW10_EMVS);
+
+	cdw11 = args->ovrpat;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_sanitize_nvm,
@@ -1655,10 +1668,6 @@ int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args)) {
-		errno = EINVAL;
-		return -1;
-	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
