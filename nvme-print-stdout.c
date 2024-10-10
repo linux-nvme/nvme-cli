@@ -2070,10 +2070,11 @@ static void stdout_id_ctrl_mxtmt(__le16 mxtmt)
 static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 {
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
-	__u32 rsvd = (sanicap & 0x1FFFFFF8) >> 3;
-	__u32 owr = (sanicap & 0x4) >> 2;
-	__u32 ber = (sanicap & 0x2) >> 1;
-	__u32 cer = sanicap & 0x1;
+	__u32 rsvd4 = (sanicap & 0x1FFFFFF0) >> 4;
+	__u32 vers = (sanicap & 0x8) >> 3;
+	__u32 ows = (sanicap & 0x4) >> 2;
+	__u32 bes = (sanicap & 0x2) >> 1;
+	__u32 ces = sanicap & 0x1;
 	__u32 ndi = (sanicap & 0x20000000) >> 29;
 	__u32 nodmmas = (sanicap & 0xC0000000) >> 30;
 
@@ -2087,14 +2088,16 @@ static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 	printf("  [31:30] : %#x\t%s\n", nodmmas, modifies_media[nodmmas]);
 	printf("  [29:29] : %#x\tNo-Deallocate After Sanitize bit in Sanitize command %sSupported\n",
 		ndi, ndi ? "Not " : "");
-	if (rsvd)
-		printf("  [28:3] : %#x\tReserved\n", rsvd);
-	printf("    [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
-		owr, owr ? "" : "Not ");
-	printf("    [1:1] : %#x\tBlock Erase Sanitize Operation %sSupported\n",
-		ber, ber ? "" : "Not ");
-	printf("    [0:0] : %#x\tCrypto Erase Sanitize Operation %sSupported\n",
-		cer, cer ? "" : "Not ");
+	if (rsvd4)
+		printf("  [28:4] : %#x\tReserved\n", rsvd4);
+	printf("  [3:3] : %#x\tMedia Verification and Post-Verification Deallocation state %sSupported\n",
+		vers, vers ? "" : "Not ");
+	printf("  [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
+		ows, ows ? "" : "Not ");
+	printf("  [1:1] : %#x\tBlock Erase Sanitize Operation %sSupported\n",
+		bes, bes ? "" : "Not ");
+	printf("  [0:0] : %#x\tCrypto Erase Sanitize Operation %sSupported\n",
+		ces, ces ? "" : "Not ");
 	printf("\n");
 }
 
