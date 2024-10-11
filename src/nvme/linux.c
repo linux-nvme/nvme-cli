@@ -1203,11 +1203,21 @@ long nvme_lookup_keyring(const char *keyring)
 
 char *nvme_describe_key_serial(long key_id)
 {
-	char *desc;
+	_cleanup_free_ char *str = NULL;
+	char *last;
 
-	if (keyctl_describe_alloc(key_id, &desc) < 0)
-		desc = NULL;
-	return desc;
+	if (keyctl_describe_alloc(key_id, &str) < 0)
+		return NULL;
+
+	last = strrchr(str, ';');
+	if (!last)
+		return NULL;
+
+	last++;
+	if (strlen(last) == 0)
+		return NULL;
+
+	return strdup(last);
 }
 
 long nvme_lookup_key(const char *type, const char *identity)
