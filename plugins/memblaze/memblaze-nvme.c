@@ -1521,7 +1521,7 @@ static void smart_log_add_v3_print(struct smart_log_add_item_10 *item, int item_
 		[0xab] = {0,  "program_fail_count"               },
 		[0xac] = {1,  "erase_fail_count"                 },
 		[0xad] = {2,  "wear_leveling_count"              },
-		[0xb8] = {3,  "ext_e2e_err_count"                },
+		[0xdf] = {3,  "ext_e2e_err_count"                },
 		[0xc7] = {4,  "crc_err_count"                    },
 		[0xf4] = {5,  "nand_bytes_written"               },
 		[0xf5] = {6,  "host_bytes_written"               },
