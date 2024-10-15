@@ -54,6 +54,10 @@ class TestNVMeCreateMaxNS(TestNVMe):
         self.flbas = 0
         self.nsze = int(self.get_ncap() /
                         self.get_format() / self.get_max_ns())
+        # Make sure that we have enough capacity for each ns.
+        # Creating a ns might allocate more bits (NVMCAP) than specified by
+        # nsze and ncap.
+        self.nsze = int(self.nsze / 2)
         self.ncap = self.nsze
         self.setup_log_dir(self.__class__.__name__)
         self.max_ns = self.get_max_ns()
@@ -75,11 +79,12 @@ class TestNVMeCreateMaxNS(TestNVMe):
                                                      self.flbas,
                                                      self.dps), 0)
         self.attach_ns(self.ctrl_id, self.default_nsid)
-        super.tearDown()
+        super().tearDown()
 
     def test_attach_detach_ns(self):
         """ Testcase main """
-        for nsid in range(1, self.max_ns):
+        print(f"##### Testing max_ns: {self.max_ns}")
+        for nsid in range(1, self.max_ns + 1):
             print("##### Creating " + str(nsid))
             err = self.create_and_validate_ns(nsid,
                                               self.nsze,
@@ -90,9 +95,9 @@ class TestNVMeCreateMaxNS(TestNVMe):
             print("##### Attaching " + str(nsid))
             self.assertEqual(self.attach_ns(self.ctrl_id, nsid), 0)
             print("##### Running IOs in " + str(nsid))
-            self.run_ns_io(nsid, 0)
+            self.run_ns_io(nsid, 9, 1)
 
-        for nsid in range(1, self.max_ns):
+        for nsid in range(1, self.max_ns + 1):
             print("##### Detaching " + str(nsid))
             self.assertEqual(self.detach_ns(self.ctrl_id, nsid), 0)
             print("#### Deleting " + str(nsid))
