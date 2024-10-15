@@ -500,7 +500,7 @@ class TestNVMe(unittest.TestCase):
 
         return 0 if err_log_entry_count == entry_count else 1
 
-    def run_ns_io(self, nsid, lbads):
+    def run_ns_io(self, nsid, lbads, count=10):
         """ Wrapper to run ios on namespace under test.
             - Args:
                 - lbads : LBA Data size supported in power of 2 format.
@@ -510,14 +510,14 @@ class TestNVMe(unittest.TestCase):
         block_size = mmap.PAGESIZE if int(lbads) < 9 else 2 ** int(lbads)
         ns_path = self.ctrl + "n" + str(nsid)
         io_cmd = "dd if=" + ns_path + " of=/dev/null" + " bs=" + \
-                 str(block_size) + " count=10 > /dev/null 2>&1"
+                 str(block_size) + " count=" + str(count) + " > /dev/null 2>&1"
         print(io_cmd)
         run_io = subprocess.Popen(io_cmd, shell=True, stdout=subprocess.PIPE,
                                   encoding='utf-8')
         run_io_result = run_io.communicate()[1]
         self.assertEqual(run_io_result, None)
         io_cmd = "dd if=/dev/zero of=" + ns_path + " bs=" + \
-                 str(block_size) + " count=10 > /dev/null 2>&1"
+                 str(block_size) + " count=" + str(count) + " > /dev/null 2>&1"
         print(io_cmd)
         run_io = subprocess.Popen(io_cmd, shell=True, stdout=subprocess.PIPE,
                                   encoding='utf-8')
