@@ -36,6 +36,7 @@ class TestNVMeCopy(TestNVMe):
         super().setUp()
         print("\nSetting up test...")
         self.ocfs = self.get_ocfs()
+        self.host_behavior_data = None
         cross_namespace_copy = self.ocfs & 0xc
         if cross_namespace_copy:
             # get host behavior support data

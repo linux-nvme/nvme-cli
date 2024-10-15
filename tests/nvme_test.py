@@ -260,6 +260,25 @@ class TestNVMe(unittest.TestCase):
         print(ncap)
         return int(ncap)
 
+    def get_id_ctrl_field_value(self, field):
+        """ Wrapper for extracting id-ctrl field values
+            - Args:
+                - None
+            - Returns:
+                - Filed value of the given field
+        """
+        id_ctrl_cmd = f"nvme id-ctrl {self.ctrl} --output-format=json"
+        proc = subprocess.Popen(id_ctrl_cmd,
+                                shell=True,
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
+        err = proc.wait()
+        self.assertEqual(err, 0, "ERROR : reading id-ctrl failed")
+        json_output = json.loads(proc.stdout.read())
+        self.assertTrue(field in json_output,
+                        f"ERROR : reading field '{field}' failed")
+        return str(json_output[field])
+
     def get_ocfs(self):
         """ Wrapper for extracting optional copy formats supported
             - Args:
@@ -267,11 +286,7 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - Optional Copy Formats Supported
         """
-        pattern = re.compile(r'^ocfs\s*: 0x[0-9a-fA-F]+$')
-        output = subprocess.check_output(["nvme", "id-ctrl", self.ctrl], encoding='utf-8')
-        ocfs_line = next(line for line in output.splitlines() if pattern.match(line))
-        ocfs = ocfs_line.split(":")[1].strip()
-        return int(ocfs, 16)
+        return int(self.get_id_ctrl_field_value("ocfs"), 16)
 
     def get_format(self):
         """ Wrapper for extracting format.
