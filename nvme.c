@@ -9503,7 +9503,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 
 		fd = fopen(cfg.keyfile, mode);
 		if (!fd) {
-			nvme_show_error("Cannot open keyfile %s, error %d\n",
+			nvme_show_error("Cannot open keyfile %s, error %d",
 					cfg.keyfile, errno);
 			return -errno;
 		}
