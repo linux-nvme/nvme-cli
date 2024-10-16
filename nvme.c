@@ -9503,7 +9503,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 
 		fd = fopen(cfg.keyfile, mode);
 		if (!fd) {
-			nvme_show_error("Cannot open keyfile %s, error %d\n",
+			nvme_show_error("Cannot open keyfile %s, error %d",
 					cfg.keyfile, errno);
 			return -errno;
 		}
@@ -9523,17 +9523,43 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		nvme_show_error("Must specify either --import, --export or --revoke");
 		return -EINVAL;
 	} else if (cfg.export) {
+		if (!cfg.keyfile) {
+			nvme_show_error("No keyfile option specified");
+			return -EINVAL;
+		}
+
 		err = nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
-		if (err)
+		if (err < 0) {
 			nvme_show_error("Export of TLS keys failed with '%s'",
 				nvme_strerror(errno));
+			return err;
+		}
+
+		fprintf(stderr, "exporting to %s\n", cfg.keyfile);
+		return 0;
 	} else if (cfg.import) {
+		if (!cfg.keyfile) {
+			nvme_show_error("No keyfile option specified");
+			return -EINVAL;
+		}
+
 		err = import_key(cfg.keyring, fd);
+		if (err) {
+			nvme_show_error("Import of TLS keys failed with '%s'",
+					nvme_strerror(errno));
+			return err;
+		}
+
+		fprintf(stderr, "importing from %s\n", cfg.keyfile);
 	} else {
 		err = nvme_revoke_tls_key(cfg.keyring, cfg.keytype, cfg.revoke);
-		if (err)
+		if (err) {
 			nvme_show_error("Failed to revoke key '%s'",
 					nvme_strerror(errno));
+			return err;
+		}
+
+		fprintf(stderr, "revoking key\n");
 	}
 
 	return err;
