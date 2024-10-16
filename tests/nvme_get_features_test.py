@@ -94,6 +94,8 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         else:
             get_feat_cmd = "nvme get-feature " + self.ctrl + \
                            " --feature-id=" + str(feature_id) + " -H"
+            if str(feature_id) == "0x05":
+                get_feat_cmd += f" --namespace-id={self.default_nsid}"
             proc = subprocess.Popen(get_feat_cmd,
                                     shell=True,
                                     stdout=subprocess.PIPE,
