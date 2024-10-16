@@ -1481,6 +1481,79 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 
 	return 0;
 }
+
+static char *__nvme_export_key(long keyring, long key_id, char **identity)
+{
+	_cleanup_free_ unsigned char *key = NULL;
+	int len, ver, hmac;
+	char type, *desc, *encoded_key;
+
+	key = nvme_read_key(keyring, key_id, &len);
+	if (!key) {
+		/*
+		 * Accessing the keyring is a priveleged opartion, thus it
+		 * might fail for a normal user, this is not an error.
+		 */
+		return NULL;
+	}
+
+	desc = nvme_describe_key_serial(key_id);
+	if (!desc) {
+		/*
+		 * Revoked keys don't return a description, thus ignore
+		 * them.
+		 */
+		return NULL;
+	}
+
+	if (sscanf(desc, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3)
+		return NULL;
+
+	encoded_key = nvme_export_tls_key_versioned(ver, hmac, key, len);
+	if (!encoded_key)
+		return NULL;
+
+	if (identity)
+		*identity = desc;
+	return encoded_key;
+}
+
+static void export_keys_to_config(nvme_ctrl_t c)
+{
+	char *identity = NULL, *encoded_key;
+
+	if (!c->cfg.tls)
+		return;
+	/*
+	 * Do not update the configuration blindly. The user could have
+	 * provided configuration, but they keys are not loaded into
+	 * keystore yet.
+	 */
+
+	encoded_key =
+	    __nvme_export_key(c->cfg.keyring, c->cfg.tls_key, &identity);
+	if (identity) {
+		nvme_ctrl_set_tls_key_identity(c, identity);
+		free(identity);
+	}
+	if (encoded_key) {
+		nvme_ctrl_set_tls_key(c, encoded_key);
+		free(encoded_key);
+	}
+}
+
+int __nvme_export_keys_to_config(nvme_root_t r)
+{
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+
+	nvme_for_each_host(r, h)
+		nvme_for_each_subsystem(h, s)
+			nvme_subsystem_for_each_ctrl(s, c)
+				export_keys_to_config(c);
+	return 0;
+}
 #else
 long nvme_lookup_keyring(const char *keyring)
 {
@@ -1558,8 +1631,11 @@ long nvme_revoke_tls_key(const char *keyring, const char *key_type,
 int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 				   long *keyring_id, long *key_id)
 {
-	nvme_msg(h->r, LOG_ERR, "key operations not supported; "
-		 "recompile with keyutils support.\n");
+	return -ENOTSUP;
+}
+
+int __nvme_export_keys_to_config(nvme_root_t r)
+{
 	return -ENOTSUP;
 }
 #endif

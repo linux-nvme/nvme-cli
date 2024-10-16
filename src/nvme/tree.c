@@ -346,6 +346,20 @@ int nvme_update_config(nvme_root_t r)
 
 int nvme_dump_config(nvme_root_t r)
 {
+	int err;
+
+	err = __nvme_export_keys_to_config(r);
+	if (err) {
+		if (err == -ENOTSUP) {
+			nvme_msg(r, LOG_NOTICE,
+				 "exporting keys to the configuration failed because keysutils is missing\n");
+		} else {
+			nvme_msg(r, LOG_ERR,
+				 "exporting keys to the configuration failed with %s\n",
+				 nvme_errno_to_string(err));
+		}
+	}
+
 	return json_update_config(r, NULL);
 }
 
