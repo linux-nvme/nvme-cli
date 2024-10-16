@@ -1960,18 +1960,38 @@ static void nvme_read_sysfs_dhchap(nvme_root_t r, nvme_ctrl_t c)
 
 static void nvme_read_sysfs_tls(nvme_root_t r, nvme_ctrl_t c)
 {
-	char *tls_psk;
+	char *endptr;
+	long key_id;
+	char *key, *keyring;
 
-	tls_psk = nvme_get_ctrl_attr(c, "tls_key");
-	if (tls_psk) {
-		char *endptr;
-		long key_id = strtol(tls_psk, &endptr, 16);
-
-		if (endptr != tls_psk) {
-			c->cfg.tls_key = key_id;
-			c->cfg.tls = true;
-		}
+	key = nvme_get_ctrl_attr(c, "tls_key");
+	if (!key) {
+		/* tls_key is only present if --tls has been used. */
+		return;
 	}
+	c->cfg.tls = true;
+
+	keyring = nvme_get_ctrl_attr(c, "tls_keyring");
+	nvme_ctrl_set_keyring(c, keyring);
+	free(keyring);
+
+	/* the sysfs entry is not prefixing the id but it's in hex */
+	key_id = strtol(key, &endptr, 16);
+	if (endptr != key)
+		c->cfg.tls_key = key_id;
+
+	free(key);
+
+	key = nvme_get_ctrl_attr(c, "tls_configured_key");
+	if (!key)
+		return;
+
+	/* the sysfs entry is not prefixing the id but it's in hex */
+	key_id = strtol(key, &endptr, 16);
+	if (endptr != key)
+		c->cfg.tls_configured_key = key_id;
+
+	free(key);
 }
 
 static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
