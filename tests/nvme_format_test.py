@@ -37,6 +37,7 @@ Namespace Format testcase :-
            - Delete Namespace.
 """
 
+import math
 import subprocess
 import time
 
@@ -63,10 +64,14 @@ class TestNVMeFormatCmd(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeFormatCmd """
         super().setUp()
-        self.dps = 0                 # ns data protection settings
-        self.flbas = 0               # ns formattes logical block settings
-        self.nsze = 0x1400000        # ns size
-        self.ncap = 0x1400000        # ns capacity
+        self.dps = 0
+        self.flbas = 0
+        # Assuming run_ns_io with 4KiB * 10 writes.
+        # Calculating minimum required ncap for this workload
+        (ds, _) = self.get_lba_format_size()
+        ncap = int(math.ceil((4096*10)/ds))
+        self.ncap = ncap
+        self.nsze = ncap
         self.ctrl_id = self.get_ctrl_id()
         self.lba_format_list = []
         self.ms_list = []
