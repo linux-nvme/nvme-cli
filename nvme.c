@@ -9553,9 +9553,13 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		fprintf(stderr, "importing from %s\n", cfg.keyfile);
 	} else {
 		err = nvme_revoke_tls_key(cfg.keyring, cfg.keytype, cfg.revoke);
-		if (err)
+		if (err) {
 			nvme_show_error("Failed to revoke key '%s'",
 					nvme_strerror(errno));
+			return err;
+		}
+
+		fprintf(stderr, "revoking key\n");
 	}
 
 	return err;
