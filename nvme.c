@@ -9523,10 +9523,20 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		nvme_show_error("Must specify either --import, --export or --revoke");
 		return -EINVAL;
 	} else if (cfg.export) {
+		if (!cfg.keyfile) {
+			nvme_show_error("No keyfile option specified");
+			return -EINVAL;
+		}
+
 		err = nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
-		if (err)
+		if (err < 0) {
 			nvme_show_error("Export of TLS keys failed with '%s'",
 				nvme_strerror(errno));
+			return err;
+		}
+
+		fprintf(stderr, "exporting to %s\n", cfg.keyfile);
+		return 0;
 	} else if (cfg.import) {
 		err = import_key(cfg.keyring, fd);
 	} else {
