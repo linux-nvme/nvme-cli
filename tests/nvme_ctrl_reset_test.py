@@ -46,3 +46,5 @@ class TestNVMeCtrlReset(TestNVMe):
     def test_ctrl_reset(self):
         """ Testcase main """
         self.assertEqual(self.ctrl_reset(), 0)
+        # Check if sqs and cqs are setup again and I/O operations are possible
+        self.run_ns_io(self.default_nsid, 0, 10)
