@@ -9538,7 +9538,19 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		fprintf(stderr, "exporting to %s\n", cfg.keyfile);
 		return 0;
 	} else if (cfg.import) {
+		if (!cfg.keyfile) {
+			nvme_show_error("No keyfile option specified");
+			return -EINVAL;
+		}
+
 		err = import_key(cfg.keyring, fd);
+		if (err) {
+			nvme_show_error("Import of TLS keys failed with '%s'",
+					nvme_strerror(errno));
+			return err;
+		}
+
+		fprintf(stderr, "importing from %s\n", cfg.keyfile);
 	} else {
 		err = nvme_revoke_tls_key(cfg.keyring, cfg.keytype, cfg.revoke);
 		if (err)
