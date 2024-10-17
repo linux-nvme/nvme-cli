@@ -45,9 +45,20 @@ class TestNVMeCompareCmd(TestNVMeIO):
               - test_log_dir : directory for logs, temp files.
     """
 
+    def compare_cmd_supported(self):
+        """ Wrapper for extracting optional NVM 'compare' command support
+            - Args:
+                - None
+            - Returns:
+                - True if 'compare' is supported, otherwise False
+        """
+        return int(self.get_id_ctrl_field_value("oncs"), 16) & (1 << 0)
+
     def setUp(self):
         """ Pre Section for TestNVMeCompareCmd """
         super().setUp()
+        if not self.compare_cmd_supported():
+            self.skipTest("because: Optional NVM Command 'Compare' (NVMCMPS) not supported")
         self.data_size = 1024
         self.start_block = 1023
         self.setup_log_dir(self.__class__.__name__)
