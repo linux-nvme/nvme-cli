@@ -435,25 +435,8 @@ class TestNVMe(unittest.TestCase):
                                 encoding='utf-8')
         err = proc.wait()
         self.assertEqual(err, 0, "ERROR : nvme smart log failed")
-
-        for line in proc.stdout:
-            if "data_units_read" in line:
-                data_units_read = \
-                    line.replace(",", "", 1)
-            if "data_units_written" in line:
-                data_units_written = \
-                    line.replace(",", "", 1)
-            if "host_read_commands" in line:
-                host_read_commands = \
-                    line.replace(",", "", 1)
-            if "host_write_commands" in line:
-                host_write_commands = \
-                    line.replace(",", "", 1)
-
-        print("data_units_read " + data_units_read)
-        print("data_units_written " + data_units_written)
-        print("host_read_commands " + host_read_commands)
-        print("host_write_commands " + host_write_commands)
+        smart_log_output = proc.communicate()[0]
+        print(f"{smart_log_output}")
         return err
 
     def get_id_ctrl(self, vendor=False):
