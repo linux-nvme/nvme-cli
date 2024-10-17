@@ -466,7 +466,7 @@ class TestNVMe(unittest.TestCase):
         if not vendor:
             id_ctrl_cmd = "nvme id-ctrl " + self.ctrl
         else:
-            id_ctrl_cmd = "nvme id-ctrl -v " + self.ctrl
+            id_ctrl_cmd = "nvme id-ctrl --vendor-specific " + self.ctrl
         print(id_ctrl_cmd)
         proc = subprocess.Popen(id_ctrl_cmd,
                                 shell=True,
