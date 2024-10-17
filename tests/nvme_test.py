@@ -208,6 +208,15 @@ class TestNVMe(unittest.TestCase):
         print(max_ns)
         return int(max_ns)
 
+    def get_lba_status_supported(self):
+        """ Check if 'Get LBA Status' command is supported by the device
+            - Args:
+                - None
+            - Returns:
+                - True if 'Get LBA Status' command is supported, otherwise False
+        """
+        return int(self.get_id_ctrl_field_value("oacs"), 16) & (1 << 9)
+
     def get_lba_format_size(self):
         """ Wrapper for extracting lba format size of the given flbas
             - Args:
