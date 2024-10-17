@@ -1429,17 +1429,44 @@ long nvme_revoke_tls_key(const char *keyring, const char *key_type,
 	return keyctl_revoke(key);
 }
 
+static int __nvme_insert_tls_key(long keyring_id,
+				 const char *hostnqn, const char *subsysnqn,
+				 const char *identity, const char *key)
+{
+	_cleanup_free_ unsigned char *key_data = NULL;
+	unsigned char version;
+	unsigned char hmac;
+	size_t key_len;
+
+	key_data = nvme_import_tls_key_versioned(key, &version,
+						 &hmac, &key_len);
+	if (!key_data)
+		return -EINVAL;
+
+	if (hmac == NVME_HMAC_ALG_NONE || !identity) {
+		/*
+		 * This is a configured key (hmac 0) or we don't know the
+		 * identity and so the assumtion is it is also a
+		 * configured key. Derive a new key and load the newly
+		 * created key into the keystore.
+		 */
+		return __nvme_insert_tls_key_versioned(keyring_id, "psk",
+						       hostnqn, subsysnqn,
+						       version, hmac,
+						       key_data, key_len);
+	}
+
+	return nvme_update_key(keyring_id, "psk", identity,
+			       key_data, key_len);
+}
+
 int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 				   long *keyring_id, long *key_id)
 {
 	const char *hostnqn = nvme_host_get_hostnqn(h);
 	const char *subsysnqn = nvme_ctrl_get_subsysnqn(c);
-	const char *keyring, *key;
-	_cleanup_free_ unsigned char *key_data = NULL;
-	unsigned char version;
-	unsigned char hmac;
-	size_t key_len;
-	long id;
+	const char *keyring, *key, *identity;
+	long kr_id, id = 0;
 
 	if (!hostnqn || !subsysnqn) {
 		nvme_msg(h->r, LOG_ERR, "Invalid NQNs (%s, %s)\n",
@@ -1449,34 +1476,42 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 
 	keyring = nvme_ctrl_get_keyring(c);
 	if (keyring)
-		id = nvme_lookup_keyring(keyring);
+		kr_id = nvme_lookup_keyring(keyring);
 	else
-		id = c->cfg.keyring;
+		kr_id = c->cfg.keyring;
 
-	if (nvme_set_keyring(id) < 0) {
+	/*
+	 * Fallback to the default keyring. Note this will also add the
+	 * keyring to connect command line and to the JSON config output.
+	 * That means we are explicitly selecting the keyring.
+	 */
+	if (!kr_id)
+		kr_id = nvme_lookup_keyring(".nvme");
+
+	if (nvme_set_keyring(kr_id) < 0) {
 		nvme_msg(h->r, LOG_ERR, "Failed to set keyring\n");
 		return -errno;
 	}
-	*keyring_id = id;
 
 	key = nvme_ctrl_get_tls_key(c);
-	key_data = nvme_import_tls_key_versioned(key, &version,
-						 &hmac, &key_len);
-	if (!key_data) {
-		nvme_msg(h->r, LOG_ERR, "Failed to decode TLS Key '%s'\n",
-			 key);
-		return -1;
-	}
+	if (!key)
+		return 0;
 
-	id = __nvme_insert_tls_key_versioned(*keyring_id, "psk",
-					     hostnqn, subsysnqn,
-					     version, hmac, key_data, key_len);
+	identity = nvme_ctrl_get_tls_key_identity(c);
+	if (identity)
+		id = nvme_lookup_key("psk", identity);
+
+	if (!id)
+		id = __nvme_insert_tls_key(kr_id, hostnqn,
+					   subsysnqn, identity, key);
+
 	if (id <= 0) {
 		nvme_msg(h->r, LOG_ERR, "Failed to insert TLS KEY, error %d\n",
 			 errno);
 		return -errno;
 	}
 
+	*keyring_id = kr_id;
 	*key_id = id;
 
 	return 0;
