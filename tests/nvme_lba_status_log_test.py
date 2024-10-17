@@ -26,6 +26,8 @@ class TestNVMeLbaStatLogCmd(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeLbaStatLogCmd. """
         super().setUp()
+        if not self.get_lba_status_supported():
+            self.skipTest("because: Optional Admin Command 'Get LBA Status' (OACS->GLSS) not supported")
         self.setup_log_dir(self.__class__.__name__)
 
     def tearDown(self):
