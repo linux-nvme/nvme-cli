@@ -525,6 +525,11 @@ char *nvme_get_path_attr(nvme_path_t p, const char *attr)
 }
 
 #ifndef CONFIG_OPENSSL
+static unsigned char default_hmac(size_t key_len)
+{
+	return NVME_HMAC_ALG_NONE;
+}
+
 int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 			unsigned int key_len, unsigned char *secret,
 			unsigned char *key)
@@ -552,7 +557,7 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 }
 
 static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
-			     int version, int hmac,
+			     int version, int cipher,
 			     unsigned char *retained, size_t key_len,
 			     char *digest, size_t digest_len)
 {
@@ -562,7 +567,7 @@ static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
 	return -1;
 }
 
-static int derive_tls_key(int version, int hmac, const char *context,
+static int derive_tls_key(int version, int cipher, const char *context,
 			  unsigned char *retained,
 			  unsigned char *psk, size_t key_len)
 {
@@ -572,20 +577,41 @@ static int derive_tls_key(int version, int hmac, const char *context,
 	return -1;
 }
 #else /* CONFIG_OPENSSL */
-static const EVP_MD *select_hmac(int hmac, size_t *key_len)
+static unsigned char default_hmac(size_t key_len)
+{
+	unsigned char hmac = NVME_HMAC_ALG_NONE;
+
+	switch (key_len) {
+	case 32:
+		hmac = NVME_HMAC_ALG_SHA2_256;
+		break;
+	case 48:
+		hmac = NVME_HMAC_ALG_SHA2_384;
+		break;
+	case 64:
+		hmac = NVME_HMAC_ALG_SHA2_512;
+		break;
+	default:
+		break;
+	}
+	return hmac;
+}
+
+static const EVP_MD *select_hmac(int hmac, size_t *hmac_len)
 {
 	const EVP_MD *md = NULL;
 
 	switch (hmac) {
 	case NVME_HMAC_ALG_SHA2_256:
 		md = EVP_sha256();
-		*key_len = 32;
+		*hmac_len = 32;
 		break;
 	case NVME_HMAC_ALG_SHA2_384:
 		md = EVP_sha384();
-		*key_len = 48;
+		*hmac_len = 48;
 		break;
 	default:
+		*hmac_len = 0;
 		break;
 	}
 	return md;
@@ -595,8 +621,36 @@ static DEFINE_CLEANUP_FUNC(
 	cleanup_evp_pkey_ctx, EVP_PKEY_CTX *, EVP_PKEY_CTX_free)
 #define _cleanup_evp_pkey_ctx_ __cleanup__(cleanup_evp_pkey_ctx)
 
+/*
+ * derive_retained_key()
+ *
+ * Derive a retained key according to NVMe TCP Transport specification:
+ *
+ * The retained PSK is derived from the configured PSK. The configured PSK
+ * shall be destroyed as soon as the retained PSK is generated and stored.
+ * Each NVMe/TCP entity shall support:
+ * 1) transforming the configured PSK into a retained PSK before it is stored
+ *    by the NVMe/TCP entity for repeated use with another NVMe/TCP entity; and
+ * 2) using the configured PSK as a retained PSK.
+ *
+ * The method to derive a retained PSK from a configured PSK shall be using
+ * the HKDF-Extract and HKDF-Expand-Label operations (refer to RFC 5869 and
+ * RFC 8446):
+ * 1. PRK = HKDF-Extract(0, Configured PSK); and
+ * 2. Retained PSK = HKDF-Expand-Label(PRK, “HostNQN”, NQNh,
+ *                                     Length(Configured PSK)),
+ * where NQNh is the NQN of the host.
+ *
+ * 'hmac' indicates the hash function to be used to transform the configured
+ * PSK in a retained PSK, encoded as follows:
+ *
+ * - 0 indicates no transform (i.e., the configured PSK is used as a
+ *   retained PSK)
+ * - 1 indicates SHA-256
+ * - 2 indicates SHA-384
+ */
 static int derive_retained_key(int hmac, const char *hostnqn,
-			       unsigned char *generated,
+			       unsigned char *configured,
 			       unsigned char *retained,
 			       size_t key_len)
 {
@@ -605,8 +659,13 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 	const EVP_MD *md;
 	size_t hmac_len;
 
+	if (hmac == NVME_HMAC_ALG_NONE) {
+		memcpy(retained, configured, key_len);
+		return key_len;
+	}
+
 	md = select_hmac(hmac, &hmac_len);
-	if (!md || hmac_len > key_len) {
+	if (!md || !hmac_len) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -625,7 +684,7 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 		errno = ENOKEY;
 		return -1;
 	}
-	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, generated, key_len) <= 0) {
+	if (EVP_PKEY_CTX_set1_hkdf_key(ctx, configured, key_len) <= 0) {
 		errno = ENOKEY;
 		return -1;
 	}
@@ -658,8 +717,30 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 	return key_len;
 }
 
-static int derive_tls_key(int version, int hmac, const char *context,
-			  unsigned char *retained,
+/*
+ * derive_tls_key()
+ *
+ * Derive a TLS PSK from a retained PSK.
+ *
+ * The TLS PSK shall be derived as follows from an input PSK (i.e., either
+ * a retained PSK or a generated PSK) and a PSK identity using the HKDF-Extract
+ * and HKDF-Expand-Label operations (refer to RFC 5869 and RFC 8446) where the
+ * hash function is the one specified by the hash specifier of the PSK identity:
+ * 1. PRK = HKDF-Extract(0, Input PSK); and
+ * 2. TLS PSK = HKDF-Expand-Label(PRK, “nvme-tls-psk”, PskIdentity, L),
+ * where PskIdentity is the PSK identity and L is the output size in bytes of
+ * the hash function (i.e., 32 for SHA-256 and 48 for SHA-384).
+ *
+ * Note that this is _not_ the hash value as specified by the configured key,
+ * but rather the hash function of the cipher suite associated with the
+ * PSK:
+ * - 1 indicates SHA-245 (for the TLS_AES_128_GCM_SHA256 cipher suite)
+ * - 2 indicates SHA-384 (for the TLS_AES_256_GCM_SHA384 cipher suite)
+ *
+ * and the value '0' is invalid here.
+ */
+static int derive_tls_key(int version, unsigned char cipher,
+			  const char *context, unsigned char *retained,
 			  unsigned char *psk, size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ctx = NULL;
@@ -667,8 +748,8 @@ static int derive_tls_key(int version, int hmac, const char *context,
 	const EVP_MD *md;
 	size_t hmac_len;
 
-	md = select_hmac(hmac, &hmac_len);
-	if (!md || hmac_len > key_len) {
+	md = select_hmac(cipher, &hmac_len);
+	if (!md || !hmac_len) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -707,9 +788,9 @@ static int derive_tls_key(int version, int hmac, const char *context,
 		return -1;
 	}
 	if (version == 1) {
-		char hash_str[4];
+		char hash_str[5];
 
-		sprintf(hash_str, "%02d ", hmac);
+		sprintf(hash_str, "%02d ", cipher);
 		if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
 				(const unsigned char *)hash_str,
 				strlen(hash_str)) <= 0) {
@@ -816,7 +897,8 @@ static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
 		errno = ENOMEM;
 		return -1;
 	}
-	if (!md) {
+	md = select_hmac(cipher, &hmac_len);
+	if (!md || !hmac_len) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -965,7 +1047,7 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 }
 
 static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
-			     int version, int hmac,
+			     int version, int cipher,
 			     unsigned char *retained, size_t key_len,
 			     char *digest, size_t digest_len)
 {
@@ -996,7 +1078,7 @@ static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
 		errno = ENOMEM;
 		return -1;
 	}
-	switch (hmac) {
+	switch (cipher) {
 	case NVME_HMAC_ALG_SHA2_256:
 		dig = OSSL_DIGEST_NAME_SHA2_256;
 		break;
@@ -1069,12 +1151,12 @@ static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
 #endif /* !CONFIG_OPENSSL_3 */
 
 static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
-			    int version, int hmac, char *digest,
+			    int version, int cipher, char *digest,
 			    char *identity)
 {
 	if (version == 0) {
 		sprintf(identity, "NVMe%01dR%02d %s %s",
-			version, hmac, hostnqn, subsysnqn);
+			version, cipher, hostnqn, subsysnqn);
 		return strlen(identity);
 	}
 	if (version > 1) {
@@ -1083,7 +1165,7 @@ static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 	}
 
 	sprintf(identity, "NVMe%01dR%02d %s %s %s",
-		version, hmac, hostnqn, subsysnqn, digest);
+		version, cipher, hostnqn, subsysnqn, digest);
 	return strlen(identity);
 }
 
@@ -1095,6 +1177,7 @@ static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
 	_cleanup_free_ unsigned char *retained = NULL;
 	_cleanup_free_ char *digest = NULL;
 	char *context = identity;
+	unsigned char cipher;
 	int ret = -1;
 
 	if (!hostnqn || !subsysnqn || !identity || !psk) {
@@ -1111,6 +1194,11 @@ static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
 	if (ret < 0)
 		return ret;
 
+	if (hmac == NVME_HMAC_ALG_NONE)
+		cipher = default_hmac(key_len);
+	else
+		cipher = hmac;
+
 	if (version == 1) {
 		size_t digest_len = 2 * key_len;
 
@@ -1119,18 +1207,18 @@ static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
 			errno = ENOMEM;
 			return -1;
 		}
-		ret = derive_psk_digest(hostnqn, subsysnqn, version, hmac,
+		ret = derive_psk_digest(hostnqn, subsysnqn, version, cipher,
 					retained, key_len,
 					digest, digest_len);
 		if (ret < 0)
 			return ret;
 		context = digest;
 	}
-	ret = gen_tls_identity(hostnqn, subsysnqn, version, hmac,
+	ret = gen_tls_identity(hostnqn, subsysnqn, version, cipher,
 			       digest, identity);
 	if (ret < 0)
 		return ret;
-	return derive_tls_key(version, hmac, context, retained,
+	return derive_tls_key(version, cipher, context, retained,
 			      psk, key_len);
 }
 
