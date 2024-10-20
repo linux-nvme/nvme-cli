@@ -390,6 +390,39 @@ static void stdout_c1_log(struct ocp_error_recovery_log_page *log_data)
 	printf("\n");
 }
 
+static void stdout_c4_log(struct ocp_device_capabilities_log_page *log_data)
+{
+	int i;
+
+	printf("  Device Capability/C4 Log Page Data\n");
+	printf("  PCI Express Ports						: 0x%x\n",
+	       le16_to_cpu(log_data->pcie_exp_port));
+	printf("  OOB Management Support				: 0x%x\n",
+	       le16_to_cpu(log_data->oob_management_support));
+	printf("  Write Zeroes Command Support			: 0x%x\n",
+	       le16_to_cpu(log_data->wz_cmd_support));
+	printf("  Sanitize Command Support				: 0x%x\n",
+	       le16_to_cpu(log_data->sanitize_cmd_support));
+	printf("  Dataset Management Command Support	: 0x%x\n",
+	       le16_to_cpu(log_data->dsm_cmd_support));
+	printf("  Write Uncorrectable Command Support	: 0x%x\n",
+	       le16_to_cpu(log_data->wu_cmd_support));
+	printf("  Fused Operation Support				: 0x%x\n",
+	       le16_to_cpu(log_data->fused_operation_support));
+	printf("  Minimum Valid DSSD Power State		: 0x%x\n",
+	       le16_to_cpu(log_data->min_valid_dssd_pwr_state));
+	printf("  DSSD Power State Descriptors					: 0x");
+	for (i = 0; i <= 127; i++)
+		printf("%x", log_data->dssd_pwr_state_desc[i]);
+	printf("\n");
+	printf("  Log Page Version						: 0x%x\n",
+	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID							: 0x");
+	for (i = C4_GUID_LENGTH - 1; i >= 0; i--)
+		printf("%02x", log_data->log_page_guid[i]);
+	printf("\n");
+}
+
 static struct ocp_print_ops stdout_print_ops = {
 	.hwcomp_log = stdout_hwcomp_log,
 	.fw_act_history = stdout_fw_activation_history,
@@ -398,6 +431,7 @@ static struct ocp_print_ops stdout_print_ops = {
 	.c3_log = (void *)stdout_c3_log,
 	.c5_log = (void *)stdout_c5_log,
 	.c1_log = stdout_c1_log,
+	.c4_log = stdout_c4_log,
 };
 
 struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)
