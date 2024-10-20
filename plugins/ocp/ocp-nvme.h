@@ -47,3 +47,54 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 #endif
 
 #include "define_cmd.h"
+
+#ifndef OCP_NVME_H
+#define OCP_NVME_H
+struct __packed ssd_latency_monitor_log {
+	__u8	feature_status;			/* 0x00 */
+	__u8	rsvd1;				/* 0x01 */
+	__le16	active_bucket_timer;		/* 0x02 */
+	__le16	active_bucket_timer_threshold;	/* 0x04 */
+	__u8	active_threshold_a;		/* 0x06 */
+	__u8	active_threshold_b;		/* 0x07 */
+	__u8	active_threshold_c;		/* 0x08 */
+	__u8	active_threshold_d;		/* 0x09 */
+	__le16	active_latency_config;		/* 0x0A */
+	__u8	active_latency_min_window;	/* 0x0C */
+	__u8	rsvd2[0x13];			/* 0x0D */
+
+	__le32	active_bucket_counter[4][4];	/* 0x20 - 0x5F */
+	__le64	active_latency_timestamp[4][3];	/* 0x60 - 0xBF */
+	__le16	active_measured_latency[4][3];	/* 0xC0 - 0xD7 */
+	__le16	active_latency_stamp_units;	/* 0xD8 */
+	__u8	rsvd3[0x16];			/* 0xDA */
+
+	__le32	static_bucket_counter[4][4];	/* 0x0F0 - 0x12F */
+	__le64	static_latency_timestamp[4][3];	/* 0x130 - 0x18F */
+	__le16	static_measured_latency[4][3];	/* 0x190 - 0x1A7 */
+	__le16	static_latency_stamp_units;	/* 0x1A8 */
+	__u8	rsvd4[0x16];			/* 0x1AA */
+
+	__le16	debug_log_trigger_enable;	/* 0x1C0 */
+	__le16	debug_log_measured_latency;	/* 0x1C2 */
+	__le64	debug_log_latency_stamp;	/* 0x1C4 */
+	__le16	debug_log_ptr;			/* 0x1CC */
+	__le16	debug_log_counter_trigger;	/* 0x1CE */
+	__u8	debug_log_stamp_units;		/* 0x1D0 */
+	__u8	rsvd5[0x1D];			/* 0x1D1 */
+
+	__le16	log_page_version;		/* 0x1EE */
+	__u8	log_page_guid[0x10];		/* 0x1F0 */
+};
+
+#define C3_GUID_LENGTH				16
+
+#define C3_ACTIVE_BUCKET_TIMER_INCREMENT	5
+#define C3_ACTIVE_THRESHOLD_INCREMENT		5
+#define C3_MINIMUM_WINDOW_INCREMENT		100
+#define C3_BUCKET_NUM				4
+
+#define READ		3
+#define WRITE		2
+#define TRIM		1
+#endif /* OCP_NVME_H */
