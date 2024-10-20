@@ -14,6 +14,7 @@ struct ocp_print_ops {
 	void (*telemetry_log)(struct ocp_telemetry_parse_options *options);
 	void (*c3_log)(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data);
 	void (*c5_log)(struct nvme_dev *dev, struct unsupported_requirement_log *log_data);
+	void (*c1_log)(struct ocp_error_recovery_log_page *log_data);
 	nvme_print_flags_t flags;
 };
 
@@ -37,4 +38,5 @@ void ocp_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data,
 		nvme_print_flags_t flags);
 void ocp_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_data,
 		nvme_print_flags_t flags);
+void ocp_c1_log(struct ocp_error_recovery_log_page *log_data, nvme_print_flags_t flags);
 #endif /* OCP_PRINT_H */

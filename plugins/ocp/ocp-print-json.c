@@ -441,6 +441,47 @@ static void json_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log
 	json_free_object(root);
 }
 
+static void json_c1_log(struct ocp_error_recovery_log_page *log_data)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+	char guid[64];
+
+	json_object_add_value_int(root, "Panic Reset Wait Time",
+				  le16_to_cpu(log_data->panic_reset_wait_time));
+	json_object_add_value_int(root, "Panic Reset Action", log_data->panic_reset_action);
+	json_object_add_value_int(root, "Device Recovery Action 1",
+				  log_data->device_recover_action_1);
+	json_object_add_value_int(root, "Panic ID", le32_to_cpu(log_data->panic_id));
+	json_object_add_value_int(root, "Device Capabilities",
+				  le32_to_cpu(log_data->device_capabilities));
+	json_object_add_value_int(root, "Vendor Specific Recovery Opcode",
+				  log_data->vendor_specific_recovery_opcode);
+	json_object_add_value_int(root, "Vendor Specific Command CDW12",
+				  le32_to_cpu(log_data->vendor_specific_command_cdw12));
+	json_object_add_value_int(root, "Vendor Specific Command CDW13",
+				  le32_to_cpu(log_data->vendor_specific_command_cdw13));
+	json_object_add_value_int(root, "Vendor Specific Command Timeout",
+				  log_data->vendor_specific_command_timeout);
+	json_object_add_value_int(root, "Device Recovery Action 2",
+				  log_data->device_recover_action_2);
+	json_object_add_value_int(root, "Device Recovery Action 2 Timeout",
+				  log_data->device_recover_action_2_timeout);
+	json_object_add_value_int(root, "Log Page Version",
+				  le16_to_cpu(log_data->log_page_version));
+
+	memset((void *)guid, 0, 64);
+	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	json_object_add_value_string(root, "Log page GUID", guid);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
@@ -448,6 +489,7 @@ static struct ocp_print_ops json_print_ops = {
 	.telemetry_log = json_telemetry_log,
 	.c3_log = json_c3_log,
 	.c5_log = json_c5_log,
+	.c1_log = json_c1_log,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)
