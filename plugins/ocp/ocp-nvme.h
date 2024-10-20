@@ -119,4 +119,47 @@ struct __packed unsupported_requirement_log {
 	__le16  log_page_version;
 	__u8    log_page_guid[C5_GUID_LENGTH];
 };
+
+#define C1_GUID_LENGTH                      16
+#define C1_PREV_PANIC_IDS_LENGTH            4
+
+/**
+ * struct ocp_error_recovery_log_page -	Error Recovery Log Page
+ * @panic_reset_wait_time:		Panic Reset Wait Time
+ * @panic_reset_action:			Panic Reset Action
+ * @device_recover_action_1:		Device Recovery Action 1
+ * @panic_id:				Panic ID
+ * @device_capabilities:		Device Capabilities
+ * @vendor_specific_recovery_opcode:	Vendor Specific Recovery Opcode
+ * @reserved:				Reserved
+ * @vendor_specific_command_cdw12:	Vendor Specific Command CDW12
+ * @vendor_specific_command_cdw13:	Vendor Specific Command CDW13
+ * @vendor_specific_command_timeout:	Vendor Specific Command Timeout
+ * @device_recover_action_2:		Device Recovery Action 2
+ * @device_recover_action_2_timeout:	Device Recovery Action 2 Timeout
+ * @panic_count:			Panic Count
+ * @prev_panic_id:			Previous Panic IDs
+ * @reserved2:				Reserved
+ * @log_page_version:			Log Page Version
+ * @log_page_guid:			Log Page GUID
+ */
+struct __packed ocp_error_recovery_log_page {
+	__le16  panic_reset_wait_time;                   /* 2 bytes      - 0x00 - 0x01 */
+	__u8    panic_reset_action;                      /* 1 byte       - 0x02 */
+	__u8    device_recover_action_1;                 /* 1 byte       - 0x03 */
+	__le64  panic_id;                                /* 8 bytes      - 0x04 - 0x0B */
+	__le32  device_capabilities;                     /* 4 bytes      - 0x0C - 0x0F */
+	__u8    vendor_specific_recovery_opcode;         /* 1 byte       - 0x10 */
+	__u8    reserved[0x3];                           /* 3 bytes      - 0x11 - 0x13 */
+	__le32  vendor_specific_command_cdw12;           /* 4 bytes      - 0x14 - 0x17 */
+	__le32  vendor_specific_command_cdw13;           /* 4 bytes      - 0x18 - 0x1B */
+	__u8    vendor_specific_command_timeout;         /* 1 byte       - 0x1C */
+	__u8    device_recover_action_2;                 /* 1 byte       - 0x1D */
+	__u8    device_recover_action_2_timeout;         /* 1 byte       - 0x1E */
+	__u8    panic_count;                             /* 1 byte       - 0x1F */
+	__le64  prev_panic_id[C1_PREV_PANIC_IDS_LENGTH]; /* 32 bytes     - 0x20 - 0x3F */
+	__u8    reserved2[0x1ae];                        /* 430 bytes    - 0x40 - 0x1ED */
+	__le16  log_page_version;                        /* 2 bytes      - 0x1EE - 0x1EF */
+	__u8    log_page_guid[0x10];                     /* 16 bytes     - 0x1F0 - 0x1FF */
+};
 #endif /* OCP_NVME_H */

@@ -57,3 +57,8 @@ void ocp_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_da
 {
 	ocp_print(c5_log, flags, dev, log_data);
 }
+
+void ocp_c1_log(struct ocp_error_recovery_log_page *log_data, nvme_print_flags_t flags)
+{
+	ocp_print(c1_log, flags, log_data);
+}
