@@ -1596,10 +1596,8 @@ out:
 /// Unsupported Requirement Log Page (LID : C5h)
 
 /* C5 Unsupported Requirement Log Page */
-#define C5_GUID_LENGTH                     16
 #define C5_UNSUPPORTED_REQS_LEN            4096
 #define C5_UNSUPPORTED_REQS_OPCODE         0xC5
-#define C5_NUM_UNSUPPORTED_REQ_ENTRIES     253
 
 static __u8 unsupported_req_guid[C5_GUID_LENGTH] = {
 	0x2F, 0x72, 0x9C, 0x0E,
@@ -1608,85 +1606,9 @@ static __u8 unsupported_req_guid[C5_GUID_LENGTH] = {
 	0xB7, 0x98, 0xBB, 0xC7
 };
 
-/*
- * struct unsupported_requirement_log - unsupported requirement list
- * @unsupported_count:        Number of Unsupported Requirement IDs
- * @rsvd1:                    Reserved
- * @unsupported_req_list:     Unsupported Requirements lists upto 253.
- * @rsvd2:                    Reserved
- * @log_page_version:         indicates the version of the mapping this log page uses.
- *                            Shall be set to 0001h
- * @log_page_guid:            Shall be set to C7BB98B7D0324863BB2C23990E9C722Fh.
- */
-struct __packed unsupported_requirement_log {
-	__le16  unsupported_count;
-	__u8    rsvd1[14];
-	__u8    unsupported_req_list[C5_NUM_UNSUPPORTED_REQ_ENTRIES][16];
-	__u8    rsvd2[14];
-	__le16  log_page_version;
-	__u8    log_page_guid[C5_GUID_LENGTH];
-};
-
 /* Function declaration for unsupported requirement log page (LID:C5h) */
 static int ocp_unsupported_requirements_log(int argc, char **argv, struct command *cmd,
 					    struct plugin *plugin);
-
-static int ocp_print_C5_log_normal(struct nvme_dev *dev,
-				   struct unsupported_requirement_log *log_data)
-{
-	int j;
-
-	printf("Unsupported Requirement-C5 Log Page Data-\n");
-
-	printf("  Number Unsupported Req IDs		: 0x%x\n", le16_to_cpu(log_data->unsupported_count));
-
-	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++)
-		printf("  Unsupported Requirement List %d	: %s\n", j, log_data->unsupported_req_list[j]);
-
-	printf("  Log Page Version			: 0x%x\n", le16_to_cpu(log_data->log_page_version));
-	printf("  Log page GUID				: 0x");
-	for (j = C5_GUID_LENGTH - 1; j >= 0; j--)
-		printf("%02x", log_data->log_page_guid[j]);
-	printf("\n");
-
-	return 0;
-}
-
-static void ocp_print_C5_log_json(struct unsupported_requirement_log *log_data)
-{
-	int j;
-	struct json_object *root;
-	char unsup_req_list_str[40];
-	char guid_buf[C5_GUID_LENGTH];
-	char *guid = guid_buf;
-
-	root = json_create_object();
-
-	json_object_add_value_int(root, "Number Unsupported Req IDs", le16_to_cpu(log_data->unsupported_count));
-
-	memset((void *)unsup_req_list_str, 0, 40);
-	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
-		sprintf((char *)unsup_req_list_str, "Unsupported Requirement List %d", j);
-		json_object_add_value_string(root, unsup_req_list_str, (char *)log_data->unsupported_req_list[j]);
-	}
-
-	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
-
-	memset((void *)guid, 0, C5_GUID_LENGTH);
-	for (j = C5_GUID_LENGTH - 1; j >= 0; j--)
-		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
-	json_object_add_value_string(root, "Log page GUID", guid_buf);
-
-	json_print_object(root, NULL);
-	printf("\n");
-
-	json_free_object(root);
-}
-
-static void ocp_print_c5_log_binary(struct unsupported_requirement_log *log_data)
-{
-	return d_raw((unsigned char *)log_data, sizeof(*log_data));
-}
 
 static int get_c5_log_page(struct nvme_dev *dev, char *format)
 {
@@ -1734,20 +1656,7 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 				goto out;
 			}
 		}
-
-		switch (fmt) {
-		case NORMAL:
-			ocp_print_C5_log_normal(dev, log_data);
-			break;
-		case JSON:
-			ocp_print_C5_log_json(log_data);
-			break;
-		case BINARY:
-			ocp_print_c5_log_binary(log_data);
-			break;
-		default:
-			break;
-		}
+		ocp_c5_log(dev, log_data, fmt);
 	} else {
 		fprintf(stderr, "ERROR : OCP : Unable to read C3 data from buffer\n");
 	}
