@@ -7,6 +7,7 @@
 #include "ocp-fw-activation-history.h"
 #include "ocp-smart-extended-log.h"
 #include "ocp-telemetry-decode.h"
+#include "ocp-nvme.h"
 
 static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_object *r)
 {
@@ -250,11 +251,168 @@ static void json_telemetry_log(struct ocp_telemetry_parse_options *options)
 	print_ocp_telemetry_json(options);
 }
 
+static void json_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data)
+{
+	struct json_object *root;
+	char ts_buf[128];
+	char buf[128];
+	int i, j;
+	char *operation[3] = {"Trim", "Write", "Read"};
+
+	root = json_create_object();
+
+	json_object_add_value_uint(root, "Feature Status",
+		log_data->feature_status);
+	json_object_add_value_uint(root, "Active Bucket Timer",
+		C3_ACTIVE_BUCKET_TIMER_INCREMENT *
+		le16_to_cpu(log_data->active_bucket_timer));
+	json_object_add_value_uint(root, "Active Bucket Timer Threshold",
+		C3_ACTIVE_BUCKET_TIMER_INCREMENT *
+		le16_to_cpu(log_data->active_bucket_timer_threshold));
+	json_object_add_value_uint(root, "Active Threshold A",
+		C3_ACTIVE_THRESHOLD_INCREMENT *
+		le16_to_cpu(log_data->active_threshold_a + 1));
+	json_object_add_value_uint(root, "Active Threshold B",
+		C3_ACTIVE_THRESHOLD_INCREMENT *
+		le16_to_cpu(log_data->active_threshold_b + 1));
+	json_object_add_value_uint(root, "Active Threshold C",
+		C3_ACTIVE_THRESHOLD_INCREMENT *
+		le16_to_cpu(log_data->active_threshold_c + 1));
+	json_object_add_value_uint(root, "Active Threshold D",
+		C3_ACTIVE_THRESHOLD_INCREMENT *
+		le16_to_cpu(log_data->active_threshold_d + 1));
+	json_object_add_value_uint(root, "Active Latency Configuration",
+		le16_to_cpu(log_data->active_latency_config));
+	json_object_add_value_uint(root, "Active Latency Minimum Window",
+		C3_MINIMUM_WINDOW_INCREMENT *
+		le16_to_cpu(log_data->active_latency_min_window));
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		struct json_object *bucket;
+
+		bucket = json_create_object();
+		sprintf(buf, "Active Bucket Counter: Bucket %d", i);
+		for (j = 2; j >= 0; j--) {
+			json_object_add_value_uint(bucket, operation[j],
+				le32_to_cpu(log_data->active_bucket_counter[i][j+1]));
+		}
+		json_object_add_value_object(root, buf, bucket);
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		struct json_object *bucket;
+
+		bucket = json_create_object();
+		sprintf(buf, "Active Latency Time Stamp: Bucket %d", i);
+		for (j = 2; j >= 0; j--) {
+			if (le64_to_cpu(log_data->active_latency_timestamp[3-i][j]) == -1) {
+				json_object_add_value_string(bucket, operation[j], "NA");
+			} else {
+				convert_ts(le64_to_cpu(log_data->active_latency_timestamp[3-i][j]),
+					   ts_buf);
+				json_object_add_value_string(bucket, operation[j], ts_buf);
+			}
+		}
+		json_object_add_value_object(root, buf, bucket);
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		struct json_object *bucket;
+
+		bucket = json_create_object();
+		sprintf(buf, "Active Measured Latency: Bucket %d", i);
+		for (j = 2; j >= 0; j--) {
+			json_object_add_value_uint(bucket, operation[j],
+				le16_to_cpu(log_data->active_measured_latency[3-i][j]));
+		}
+		json_object_add_value_object(root, buf, bucket);
+	}
+
+	json_object_add_value_uint(root, "Active Latency Stamp Units",
+		le16_to_cpu(log_data->active_latency_stamp_units));
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		struct json_object *bucket;
+
+		bucket = json_create_object();
+		sprintf(buf, "Static Bucket Counter: Bucket %d", i);
+		for (j = 2; j >= 0; j--) {
+			json_object_add_value_uint(bucket, operation[j],
+				le32_to_cpu(log_data->static_bucket_counter[i][j+1]));
+		}
+		json_object_add_value_object(root, buf, bucket);
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		struct json_object *bucket;
+
+		bucket = json_create_object();
+		sprintf(buf, "Static Latency Time Stamp: Bucket %d", i);
+		for (j = 2; j >= 0; j--) {
+			if (le64_to_cpu(log_data->static_latency_timestamp[3-i][j]) == -1) {
+				json_object_add_value_string(bucket, operation[j], "NA");
+			} else {
+				convert_ts(le64_to_cpu(log_data->static_latency_timestamp[3-i][j]),
+					   ts_buf);
+				json_object_add_value_string(bucket, operation[j], ts_buf);
+			}
+		}
+		json_object_add_value_object(root, buf, bucket);
+	}
+
+	for (i = 0; i < C3_BUCKET_NUM; i++) {
+		struct json_object *bucket;
+
+		bucket = json_create_object();
+		sprintf(buf, "Static Measured Latency: Bucket %d", i);
+		for (j = 2; j >= 0; j--) {
+			json_object_add_value_uint(bucket, operation[j],
+				le16_to_cpu(log_data->static_measured_latency[3-i][j]));
+		}
+		json_object_add_value_object(root, buf, bucket);
+	}
+
+	json_object_add_value_uint(root, "Static Latency Stamp Units",
+		le16_to_cpu(log_data->static_latency_stamp_units));
+	json_object_add_value_uint(root, "Debug Log Trigger Enable",
+		le16_to_cpu(log_data->debug_log_trigger_enable));
+	json_object_add_value_uint(root, "Debug Log Measured Latency",
+		le16_to_cpu(log_data->debug_log_measured_latency));
+	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1) {
+		json_object_add_value_string(root, "Debug Log Latency Time Stamp", "NA");
+	} else {
+		convert_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
+		json_object_add_value_string(root, "Debug Log Latency Time Stamp", ts_buf);
+	}
+	json_object_add_value_uint(root, "Debug Log Pointer",
+		le16_to_cpu(log_data->debug_log_ptr));
+	json_object_add_value_uint(root, "Debug Counter Trigger Source",
+		le16_to_cpu(log_data->debug_log_counter_trigger));
+	json_object_add_value_uint(root, "Debug Log Stamp Units",
+		le16_to_cpu(log_data->debug_log_stamp_units));
+	json_object_add_value_uint(root, "Log Page Version",
+		le16_to_cpu(log_data->log_page_version));
+
+	char guid[(C3_GUID_LENGTH * 2) + 1];
+	char *ptr = &guid[0];
+
+	for (i = C3_GUID_LENGTH - 1; i >= 0; i--)
+		ptr += sprintf(ptr, "%02X", log_data->log_page_guid[i]);
+
+	json_object_add_value_string(root, "Log Page GUID", guid);
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
 	.smart_extended_log = json_smart_extended_log,
 	.telemetry_log = json_telemetry_log,
+	.c3_log = json_c3_log,
 };
 
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)
