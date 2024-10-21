@@ -1134,10 +1134,10 @@ static int derive_nvme_keys(const char *hostnqn, const char *subsysnqn,
 			      psk, key_len);
 }
 
-static size_t nvme_identity_len(int hmac, int version, const char *hostnqn,
-				const char *subsysnqn)
+static ssize_t nvme_identity_len(int hmac, int version, const char *hostnqn,
+				 const char *subsysnqn)
 {
-	size_t len;
+	ssize_t len;
 
 	if (!hostnqn || !subsysnqn) {
 		errno = EINVAL;
@@ -1162,7 +1162,7 @@ char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
 {
 	_cleanup_free_ unsigned char *psk = NULL;
 	char *identity;
-	size_t identity_len;
+	ssize_t identity_len;
 	int ret = -1;
 
 	identity_len = nvme_identity_len(hmac, version, hostnqn, subsysnqn);
@@ -1345,7 +1345,7 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 	_cleanup_free_ unsigned char *psk = NULL;
 	_cleanup_free_ char *identity = NULL;
 	key_serial_t keyring_id, key;
-	size_t identity_len;
+	ssize_t identity_len;
 	int ret;
 
 	keyring_id = nvme_lookup_keyring(keyring);
