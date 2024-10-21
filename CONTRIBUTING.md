@@ -19,6 +19,28 @@ Please feel free to use the github forums to ask for comments & questions on
 your code before submitting a pull request.  The NVMe CLI project uses the
 common *fork and merge* workflow used by most GitHub-hosted projects.
 
+#### Commit conventions
+
+The project follows the Linux kernel mailing list workflow,
+thus commit messages should be structured like this:
+```
+<feature|plugin|subject>: <commit message>
+
+<description of the feature>
+
+Signed-off-by: My Name/alias <email@address.foo>
+```
+
+Example:
+
+```
+doc: added commit conventions to contribution guidelines
+
+Show new contributors the project's commit guidelines
+
+Signed-off-by: John Doe <j.doe@address.foo>
+```
+
 ### Bug Reports
 
 Bugs for the NVM Library project are tracked in our [GitHub Issues Database](https://github.com/linux-nvme/nvme-cli/issues).
