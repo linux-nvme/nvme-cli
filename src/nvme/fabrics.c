@@ -309,6 +309,22 @@ static int __add_bool_argument(char **argstr, char *tok, bool arg)
 	return 0;
 }
 
+static int __add_hex_argument(char **argstr, char *tok, int arg, bool allow_zero)
+{
+	char *nstr;
+
+	if (arg < 0 || (!arg && !allow_zero))
+		return 0;
+	if (asprintf(&nstr, "%s,%s=0x%08x", *argstr, tok, arg) < 0) {
+		errno = ENOMEM;
+		return -1;
+	}
+	free(*argstr);
+	*argstr = nstr;
+
+	return 0;
+}
+
 static int __add_int_argument(char **argstr, char *tok, int arg, bool allow_zero)
 {
 	char *nstr;
@@ -370,6 +386,23 @@ static int __nvmf_supported_options(nvme_root_t r);
 		ret = __add_bool_argument(argstr,			\
 					  stringify(tok),		\
 					  arg);				\
+	} else {							\
+		nvme_msg(r, LOG_DEBUG,					\
+			 "option \"%s\" ignored\n",			\
+			 stringify(tok));				\
+		ret = 0;						\
+	}								\
+	ret;								\
+})
+
+#define add_hex_argument(r, argstr, tok, arg, allow_zero)		\
+({									\
+	int ret;							\
+	if (nvmf_check_option(r, tok)) {				\
+		ret = __add_hex_argument(argstr,			\
+					stringify(tok),			\
+					arg,				\
+					allow_zero);			\
 	} else {							\
 		nvme_msg(r, LOG_DEBUG,					\
 			 "option \"%s\" ignored\n",			\
@@ -648,9 +681,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 			      cfg->fast_io_fail_tmo, false)) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(r, argstr, tos, cfg->tos, true)) ||
-	    add_int_argument(r, argstr, keyring, keyring_id, false) ||
+	    add_hex_argument(r, argstr, keyring, keyring_id, false) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_int_argument(r, argstr, tls_key, key_id, false)) ||
+	     add_hex_argument(r, argstr, tls_key, key_id, false)) ||
 	    add_bool_argument(r, argstr, duplicate_connect,
 			      cfg->duplicate_connect) ||
 	    add_bool_argument(r, argstr, disable_sqflow,
