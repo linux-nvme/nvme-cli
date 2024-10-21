@@ -224,6 +224,17 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		  const struct nvme_fabrics_config *cfg);
 
 /**
+ * nvmf_connect_ctrl() - Connect a controller
+ * @c:		Controller to be connected
+ *
+ * Issues a 'connect' command to the NVMe-oF controller.
+ * @c must be initialized and not connected to the topology.
+ *
+ * Return: 0 on success; on failure errno is set and -1 is returned.
+ */
+int nvmf_connect_ctrl(nvme_ctrl_t c);
+
+/**
  * nvmf_get_discovery_log() - Return the discovery log page
  * @c:			Discovery controller to use
  * @logp:		Pointer to the log page to be returned

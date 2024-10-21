@@ -979,6 +979,24 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	return nvme_init_ctrl(h, c, ret);
 }
 
+int nvmf_connect_ctrl(nvme_ctrl_t c)
+{
+	_cleanup_free_ char *argstr = NULL;
+	int ret;
+
+	ret = build_options(c->s->h, c, &argstr);
+	if (ret)
+		return ret;
+
+	ret = __nvmf_add_ctrl(c->s->h->r, argstr);
+	if (ret < 0) {
+		errno = -ret;
+		return -1;
+	}
+
+	return 0;
+}
+
 nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 				    struct nvmf_disc_log_entry *e,
 				    const struct nvme_fabrics_config *cfg,

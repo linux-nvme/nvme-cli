@@ -9,6 +9,7 @@ LIBNVME_1.11 {
 		nvme_ctrl_set_tls_key_identity;
 		nvme_export_tls_key_versioned;
 		nvme_import_tls_key_versioned;
+		nvmf_connect_ctrl;
 };
 
 
