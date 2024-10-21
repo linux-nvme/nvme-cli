@@ -363,7 +363,7 @@ static int __nvmf_supported_options(nvme_root_t r);
 	!__nvmf_supported_options(r) && (r)->options->tok;		\
 })
 
-#define add_bool_argument(o, argstr, tok, arg)				\
+#define add_bool_argument(r, argstr, tok, arg)				\
 ({									\
 	int ret;							\
 	if (nvmf_check_option(r, tok)) {				\
@@ -379,7 +379,7 @@ static int __nvmf_supported_options(nvme_root_t r);
 	ret;								\
 })
 
-#define add_int_argument(o, argstr, tok, arg, allow_zero) \
+#define add_int_argument(r, argstr, tok, arg, allow_zero)		\
 ({									\
 	int ret;							\
 	if (nvmf_check_option(r, tok)) {				\
@@ -396,7 +396,7 @@ static int __nvmf_supported_options(nvme_root_t r);
 	ret;								\
 })
 
-#define add_int_or_minus_one_argument(o, argstr, tok, arg)		\
+#define add_int_or_minus_one_argument(r, argstr, tok, arg)		\
 ({									\
 	int ret;							\
 	if (nvmf_check_option(r, tok)) {				\
