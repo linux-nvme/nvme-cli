@@ -281,7 +281,6 @@ sources = [
   'nvme-wrap.c',
   'plugin.c',
   'libnvme-wrap.c',
-  'plugins/transcend/transcend-nvme.c'
 ]
 if json_c_dep.found()
     sources += [
