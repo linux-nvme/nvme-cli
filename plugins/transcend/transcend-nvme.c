@@ -88,8 +88,7 @@ static int getHealthValue(int argc, char **argv, struct command *cmd, struct plu
 
 		if (percent_used > 100 || percent_used < 0) {
 			printf("0%%\n");
-		}
-		else {
+		} else {
 			healthvalue = 100 - percent_used;
 			printf("%d%%\n", healthvalue);
 		}
@@ -200,8 +199,7 @@ static int getPLPHealth(int argc, char **argv, struct command *cmd, struct plugi
 	if (result) {
 		printf("\nThis device is not support.\n");
 		return -1;
-	}
-	else {
+	} else {
 		char modelName[40];
 		const char *model_str_byte;
 		model_str_byte = format_char_array((char *)modelName, sizeof(modelName), dataID, sizeof(dataID));
@@ -215,8 +213,7 @@ static int getPLPHealth(int argc, char **argv, struct command *cmd, struct plugi
 	if (txtPLPHealth >= 0) {
 		plpHealth_percentage = txtPLPHealth;
 		printf("Capacitor health for PLP: %d%%\n", plpHealth_percentage);
-	}
-	else {
+	} else {
 		unsigned char data[512];
 		struct nvme_passthru_cmd nvmecmd;
 
@@ -230,8 +227,7 @@ static int getPLPHealth(int argc, char **argv, struct command *cmd, struct plugi
 		if (result) {
 			printf("\nGet PLP Health Fail.\n");
 			return PLP_ERROR_NO_MATCH;
-		}
-		else {
+		} else {
 			int tDis = (int)(data[4 + 3] << 24) + (int)(data[4 + 2] << 16) + (int)(data[4 + 1] << 8) + (int)(data[4]);
 			int vDis1 = (int)(data[0]);
 			int vDis2 = (int)(data[1]);
@@ -240,19 +236,16 @@ static int getPLPHealth(int argc, char **argv, struct command *cmd, struct plugi
 
 				if (vDis1 - vDis2 != 0) {
 					normalHealth = (iDis * tDis) / (vDis1 - vDis2);
-				}
-				else {
+				} else {
 					normalHealth = 0;
 				}
 				if (normalHealth >= 0) {
 					if (fullValue - normalHealth >= 0) {
 						plpHealth_percentage = (normalHealth / fullValue) * 100;
-					}
-					else {
+					} else {
 						plpHealth_percentage = 100;
 					}
-				}
-				else {
+				} else {
 					plpHealth_percentage = 0;
 				}
 				printf("Capacitor health for PLP: %d%%\n", plpHealth_percentage);
@@ -314,8 +307,7 @@ int readUsefulPLPValue(const char *device)
 		token = strtok(NULL, "#");
 		ret = atoi(token);
 		return ret;
-	}
-	else {
+	} else {
 		return PLP_ERROR_DATA_EXPIRED;
 	}
 }
@@ -355,8 +347,7 @@ void recordPLPValue(const char *device, int value, bool isReplace)
 		{
 			if (strncmp(str, device, strlen(device)) == 0) {
 				fprintf(fileout, "%s\n", line);
-			}
-			else {
+			} else {
 				fprintf(fileout, "%s", str);
 			}
 		}
@@ -365,12 +356,10 @@ void recordPLPValue(const char *device, int value, bool isReplace)
 
 		if (remove(logFilePath) == 0) {
 			rename(tempFilePath, logFilePath);
-		}
-		else {
+		} else {
 			remove(tempFilePath);
 		}
-	}
-	else {
+	} else {
 		FILE *out = fopen(logFilePath, "a");
 		if (out == NULL) {
 			perror("Error opening file");
