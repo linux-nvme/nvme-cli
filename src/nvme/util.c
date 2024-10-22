@@ -626,6 +626,7 @@ static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_CONNREFUSED] = "connection refused",
 	[ENVME_CONNECT_ADDRNOTAVAIL] = "cannot assign requested address",
 	[ENVME_CONNECT_IGNORED] = "connection ignored",
+	[ENVME_CONNECT_NOKEY] = "pre-shared TLS key is missing"
 };
 
 const char *nvme_errno_to_string(int status)

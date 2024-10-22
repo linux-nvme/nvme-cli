@@ -831,6 +831,8 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 			return -ENVME_CONNECT_CONNREFUSED;
 		case EADDRNOTAVAIL:
 			return -ENVME_CONNECT_ADDRNOTAVAIL;
+		case ENOKEY:
+			return -ENVME_CONNECT_NOKEY;
 		default:
 			return -ENVME_CONNECT_WRITE;
 		}
