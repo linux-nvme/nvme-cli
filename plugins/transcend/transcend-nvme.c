@@ -33,8 +33,7 @@ static const __u32 DW10_ID = 0x01;
 static const int iDis = 20;
 static const double fullValue = 170;
 
-enum PLPErrorCode
-{
+enum PLPErrorCode {
 	PLP_ERROR_NO_MATCH = -1,
 	PLP_ERROR_DATA_EXPIRED = -2
 };
@@ -58,7 +57,7 @@ const char *string_list[] = {
 	"SSD420P",
 	"MSA470P",
 	"MSA452P"};
-const int list_size = sizeof(string_list) / sizeof(string_list[0]);
+const int list_size = ARRAY_SIZE(string_list) / sizeof(string_list[0]);
 
 static int getPLPHealth(int argc, char **argv, struct command *cmd, struct plugin *plugin);
 static int readUsefulPLPValue(const char *device);
