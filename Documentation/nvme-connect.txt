@@ -26,7 +26,8 @@ SYNOPSIS
 			[--keep-alive-tmo=<#> | -k <#>]
 			[--reconnect-delay=<#> | -c <#>]
 			[--ctrl-loss-tmo=<#> | -l <#>] [--tos=<#> | -T <#>]
-			[--keyring=<#>] [--tls_key=<#>]
+			[--keyring=<keyring>] [--tls-key=<tls-key>]
+			[--tls-key-identity=<identity>]
 			[--duplicate-connect | -D] [--disable-sqflow ]
 			[--hdr-digest | -g] [--data-digest | -G] [--tls]
 			[--concat] [--dump-config | -O] [--application=<id>]
@@ -151,11 +152,22 @@ OPTIONS
 --tos=<#>::
 	Type of service for the connection (TCP)
 
---keyring=<#>::
-	Keyring for TLS key lookup.
+--keyring=<keyring>::
+	Keyring for TLS key lookup, either the key id or the keyring name.
 
---tls_key=<#>::
-	TLS key for the connection (TCP).
+--tls-key=<tls-key>::
+	TLS key for the connection (TCP), either the TLS key in
+	interchange format or the key id. It's strongly recommended not
+	to provide the TLS key via the comamnd line due to security
+	concerns. Instead in production situation, the key should be
+	loaded into the keystore with 'nvme tls --import' and only the
+	'--tls' options used. The kernel will select the matching key.
+
+--tls-key-identity=<identity>::
+	The identity used for the tls-key. If none is provided the
+	tls-key provided via the comamnd line is considered a
+	configuration key and a derive key will be loaded into the
+	keyring.
 
 -D::
 --duplicate-connect::
