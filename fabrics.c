@@ -886,6 +886,55 @@ out_free:
 	return ret;
 }
 
+static int nvme_connect_config(nvme_root_t r, const char *hostnqn, const char *hostid,
+			       const struct nvme_fabrics_config *cfg)
+{
+	const char *hnqn, *hid;
+	const char *transport;
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c, _c;
+	int ret = 0, err;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			hnqn = nvme_host_get_hostnqn(h);
+			if (hostnqn && hnqn && strcmp(hostnqn, hnqn))
+				continue;
+			hid = nvme_host_get_hostid(h);
+			if (hostid && hid && strcmp(hostid, hid))
+				continue;
+
+			nvme_subsystem_for_each_ctrl_safe(s, c, _c) {
+				transport = nvme_ctrl_get_transport(c);
+
+				/* ignore none fabric transports */
+				if (strcmp(transport, "tcp") &&
+				    strcmp(transport, "rdma") &&
+				    strcmp(transport, "fc"))
+					continue;
+
+				err = nvmf_connect_ctrl(c);
+				if (err) {
+					if (errno == ENVME_CONNECT_ALREADY)
+						continue;
+
+					fprintf(stderr,
+						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
+						nvme_host_get_hostnqn(h),
+						nvme_subsystem_get_name(s),
+						nvme_ctrl_get_address(c));
+
+					if (!ret)
+						ret = err;
+				}
+			}
+		}
+	}
+
+	return ret;
+}
+
 int nvmf_connect(const char *desc, int argc, char **argv)
 {
 	char *subsysnqn = NULL;
@@ -894,7 +943,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *hostkey = NULL, *ctrlkey = NULL;
 	_cleanup_free_ char *hnqn = NULL;
 	_cleanup_free_ char *hid = NULL;
-	char *config_file = PATH_NVMF_CONFIG;
+	char *config_file = NULL;
 	char *context = NULL;
 	unsigned int verbose = 0;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
@@ -926,6 +975,9 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		return ret;
 	}
 
+	if (config_file && strcmp(config_file, "none"))
+		goto do_connect;
+
 	if (!subsysnqn) {
 		fprintf(stderr,
 			"required argument [--nqn | -n] not specified\n");
@@ -947,9 +999,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		}
 	}
 
-	if (!strcmp(config_file, "none"))
-		config_file = NULL;
-
+do_connect:
 	log_level = map_log_level(verbose, quiet);
 
 	r = nvme_create_root(stderr, log_level);
@@ -985,6 +1035,9 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		nvme_host_set_dhchap_key(h, hostkey);
 	if (!trsvcid)
 		trsvcid = nvmf_get_default_trsvcid(transport, false);
+
+	if (config_file)
+		return nvme_connect_config(r, hostnqn, hostid, &cfg);
 
 	struct tr_config trcfg = {
 		.subsysnqn	= subsysnqn,
