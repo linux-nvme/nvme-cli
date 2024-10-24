@@ -9480,6 +9480,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 	const char *revoke = "Revoke key from the keyring.";
 
 	_cleanup_file_ FILE *fd = NULL;
+	mode_t old_umask = 0;
 	int cnt, err = 0;
 
 	struct config {
@@ -9519,6 +9520,8 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 			mode = "r";
 		else
 			mode = "w";
+
+		old_umask = umask(0);
 
 		fd = fopen(cfg.keyfile, mode);
 		if (!fd) {
@@ -9573,6 +9576,11 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 
 		if (argconfig_parse_seen(opts, "verbose"))
 			printf("revoking key\n");
+	}
+
+	if (old_umask != 0 && fd) {
+		umask(old_umask);
+		chmod(cfg.keyfile, 0600);
 	}
 
 	return err;
