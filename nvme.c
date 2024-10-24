@@ -9481,6 +9481,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 
 	_cleanup_file_ FILE *fd = NULL;
 	int cnt, err = 0;
+	mode_t old_umask;
 
 	struct config {
 		char		*keyring;
@@ -9520,6 +9521,8 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		else
 			mode = "w";
 
+		old_umask = umask(0);
+
 		fd = fopen(cfg.keyfile, mode);
 		if (!fd) {
 			nvme_show_error("Cannot open keyfile %s, error %d\n",
@@ -9553,6 +9556,11 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 		if (err)
 			nvme_show_error("Failed to revoke key '%s'",
 					nvme_strerror(errno));
+	}
+
+	if (fd) {
+		umask(old_umask);
+		chmod(cfg.keyfile, S_IRUSR | S_IWUSR);
 	}
 
 	return err;
