@@ -5173,11 +5173,13 @@ static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *
 static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send a sanitize command.";
+	const char *emvs_desc = "Enter media verification state.";
 	const char *no_dealloc_desc = "No deallocate after sanitize.";
 	const char *oipbp_desc = "Overwrite invert pattern between passes.";
 	const char *owpass_desc = "Overwrite pass count.";
 	const char *ause_desc = "Allow unrestricted sanitize exit.";
-	const char *sanact_desc = "Sanitize action: 1 = Exit failure mode, 2 = Start block erase, 3 = Start overwrite, 4 = Start crypto erase";
+	const char *sanact_desc = "Sanitize action: 1 = Exit failure mode, 2 = Start block erase,"
+				"3 = Start overwrite, 4 = Start crypto erase, 5 = Exit media verification";
 	const char *ovrpat_desc = "Overwrite pattern.";
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
@@ -5190,6 +5192,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		bool	ause;
 		__u8	sanact;
 		__u32	ovrpat;
+		bool	emvs;
 	};
 
 	struct config cfg = {
@@ -5199,6 +5202,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		.ause		= false,
 		.sanact		= 0,
 		.ovrpat		= 0,
+		.emvs		= false,
 	};
 
 	OPT_VALS(sanact) = {
@@ -5206,6 +5210,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		VAL_BYTE("start-block-erase", NVME_SANITIZE_SANACT_START_BLOCK_ERASE),
 		VAL_BYTE("start-overwrite", NVME_SANITIZE_SANACT_START_OVERWRITE),
 		VAL_BYTE("start-crypto-erase", NVME_SANITIZE_SANACT_START_CRYPTO_ERASE),
+		VAL_BYTE("exit-media-verification", NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF),
 		VAL_END()
 	};
 
@@ -5215,7 +5220,8 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		  OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
 		  OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
 		  OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc, sanact),
-		  OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc));
+		  OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
+		  OPT_FLAG("emvs",       'e', &cfg.emvs,       emvs_desc));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -5226,15 +5232,19 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	case NVME_SANITIZE_SANACT_START_BLOCK_ERASE:
 	case NVME_SANITIZE_SANACT_START_OVERWRITE:
 	case NVME_SANITIZE_SANACT_START_CRYPTO_ERASE:
+	case NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF:
 		break;
 	default:
 		nvme_show_error("Invalid Sanitize Action");
 		return -EINVAL;
 	}
 
-	if (cfg.sanact == NVME_SANITIZE_SANACT_EXIT_FAILURE) {
-		if (cfg.ause || cfg.no_dealloc) {
+	if (cfg.ause || cfg.no_dealloc) {
+		if (cfg.sanact == NVME_SANITIZE_SANACT_EXIT_FAILURE) {
 			nvme_show_error("SANACT is Exit Failure Mode");
+			return -EINVAL;
+		} else if (cfg.sanact == NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF) {
+			nvme_show_error("SANACT is Exit Media Verification State");
 			return -EINVAL;
 		}
 	}
@@ -5260,7 +5270,9 @@ static int sanitize_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		.nodas		= cfg.no_dealloc,
 		.ovrpat		= cfg.ovrpat,
 		.result		= NULL,
+		.emvs		= cfg.emvs,
 	};
+
 	err = nvme_cli_sanitize_nvm(dev, &args);
 	if (err < 0)
 		nvme_show_error("sanitize: %s", nvme_strerror(errno));
