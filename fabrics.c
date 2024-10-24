@@ -81,8 +81,10 @@ static const char *nvmf_reconnect_delay	= "reconnect timeout period in seconds";
 static const char *nvmf_ctrl_loss_tmo	= "controller loss timeout period in seconds";
 static const char *nvmf_fast_io_fail_tmo = "fast I/O fail timeout (default off)";
 static const char *nvmf_tos		= "type of service";
-static const char *nvmf_keyring		= "Keyring for TLS key lookup";
-static const char *nvmf_tls_key		= "TLS key to use";
+static const char *nvmf_keyring		= "Keyring for TLS key lookup (key id or keyring name)";
+static const char *nvmf_tls_key		= "TLS key to use (key id or key in interchange format)";
+static const char *nvmf_tls_key_legacy	= "TLS key to use (key id)";
+static const char *nvmf_tls_key_identity = "TLS key identity";
 static const char *nvmf_dup_connect	= "allow duplicate connections between same transport host and subsystem port";
 static const char *nvmf_disable_sqflow	= "disable controller sq flow control (default false)";
 static const char *nvmf_hdr_digest	= "enable transport protocol header digest (TCP transport)";
@@ -103,6 +105,9 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_STRING("hostnqn",         'q', "STR", &hostnqn,       nvmf_hostnqn),         \
 		OPT_STRING("hostid",          'I', "STR", &hostid,        nvmf_hostid),          \
 		OPT_STRING("dhchap-secret",   'S', "STR", &hostkey,       nvmf_hostkey),         \
+		OPT_STRING("keyring",          0,  "STR", &keyring,       nvmf_keyring),         \
+		OPT_STRING("tls-key",          0,  "STR", &tls_key,       nvmf_tls_key),         \
+		OPT_STRING("tls-key-identity", 0,  "STR", &tls_key_identity, nvmf_tls_key_identity), \
 		OPT_INT("nr-io-queues",       'i', &c.nr_io_queues,       nvmf_nr_io_queues),    \
 		OPT_INT("nr-write-queues",    'W', &c.nr_write_queues,    nvmf_nr_write_queues), \
 		OPT_INT("nr-poll-queues",     'P', &c.nr_poll_queues,     nvmf_nr_poll_queues),  \
@@ -112,8 +117,7 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_INT("ctrl-loss-tmo",      'l', &c.ctrl_loss_tmo,      nvmf_ctrl_loss_tmo),   \
 		OPT_INT("fast_io_fail_tmo",   'F', &c.fast_io_fail_tmo,   nvmf_fast_io_fail_tmo),\
 		OPT_INT("tos",                'T', &c.tos,                nvmf_tos),             \
-		OPT_INT("keyring",              0, &c.keyring,            nvmf_keyring),         \
-		OPT_INT("tls_key",              0, &c.tls_key,            nvmf_tls_key),         \
+		OPT_INT("tls_key",              0, &c.tls_key,            nvmf_tls_key_legacy),  \
 		OPT_FLAG("duplicate-connect", 'D', &c.duplicate_connect,  nvmf_dup_connect),     \
 		OPT_FLAG("disable-sqflow",      0, &c.disable_sqflow,     nvmf_disable_sqflow),  \
 		OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),      \
@@ -407,7 +411,8 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 {
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL;
-	char *subsysnqn = NULL;
+	char *subsysnqn = NULL, *keyring = NULL, *tls_key = NULL;
+	char *tls_key_identity = NULL;
 	char *ptr, **argv, *p, line[4096];
 	int argc, ret = 0;
 	unsigned int verbose = 0;
@@ -681,6 +686,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL;
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
+	char *keyring = NULL, *tls_key = NULL;
+	char *tls_key_identity = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	_cleanup_free_ char *hnqn = NULL;
 	_cleanup_free_ char *hid = NULL;
@@ -886,15 +893,93 @@ out_free:
 	return ret;
 }
 
+static int nvme_connect_config(nvme_root_t r, const char *hostnqn, const char *hostid,
+			       const struct nvme_fabrics_config *cfg)
+{
+	const char *hnqn, *hid;
+	const char *transport;
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c, _c;
+	int ret = 0, err;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			hnqn = nvme_host_get_hostnqn(h);
+			if (hostnqn && hnqn && strcmp(hostnqn, hnqn))
+				continue;
+			hid = nvme_host_get_hostid(h);
+			if (hostid && hid && strcmp(hostid, hid))
+				continue;
+
+			nvme_subsystem_for_each_ctrl_safe(s, c, _c) {
+				transport = nvme_ctrl_get_transport(c);
+
+				/* ignore none fabric transports */
+				if (strcmp(transport, "tcp") &&
+				    strcmp(transport, "rdma") &&
+				    strcmp(transport, "fc"))
+					continue;
+
+				err = nvmf_connect_ctrl(c);
+				if (err) {
+					if (errno == ENVME_CONNECT_ALREADY)
+						continue;
+
+					fprintf(stderr,
+						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
+						nvme_host_get_hostnqn(h),
+						nvme_subsystem_get_name(s),
+						nvme_ctrl_get_address(c));
+
+					if (!ret)
+						ret = err;
+				}
+			}
+		}
+	}
+
+	return ret;
+}
+
+static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
+				const char *tls_key_identity,
+				struct nvme_fabrics_config *cfg, nvme_ctrl_t c)
+{
+	if (keyring) {
+		char *endptr;
+		long id = strtol(keyring, &endptr, 0);
+
+		if (endptr != keyring)
+			cfg->keyring = id;
+		else
+			nvme_ctrl_set_keyring(c, keyring);
+	}
+
+	if (tls_key_identity)
+		nvme_ctrl_set_tls_key_identity(c, tls_key_identity);
+
+	if (tls_key) {
+		char *endptr;
+		long id = strtol(tls_key, &endptr, 0);
+
+		if (endptr != tls_key)
+			cfg->tls_key = id;
+		else
+			nvme_ctrl_set_tls_key(c, tls_key);
+	}
+}
+
 int nvmf_connect(const char *desc, int argc, char **argv)
 {
 	char *subsysnqn = NULL;
 	char *transport = NULL, *traddr = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
-	char *hostkey = NULL, *ctrlkey = NULL;
+	char *hostkey = NULL, *ctrlkey = NULL, *keyring = NULL;
+	char *tls_key = NULL, *tls_key_identity = NULL;
 	_cleanup_free_ char *hnqn = NULL;
 	_cleanup_free_ char *hid = NULL;
-	char *config_file = PATH_NVMF_CONFIG;
+	char *config_file = NULL;
 	char *context = NULL;
 	unsigned int verbose = 0;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
@@ -904,7 +989,6 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_print_flags_t flags;
 	struct nvme_fabrics_config cfg = { 0 };
 	char *format = "normal";
-
 
 	NVMF_ARGS(opts, cfg,
 		  OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,      nvmf_ctrlkey),
@@ -925,6 +1009,9 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		nvme_show_error("Invalid output format");
 		return ret;
 	}
+
+	if (config_file && strcmp(config_file, "none"))
+		goto do_connect;
 
 	if (!subsysnqn) {
 		fprintf(stderr,
@@ -947,9 +1034,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		}
 	}
 
-	if (!strcmp(config_file, "none"))
-		config_file = NULL;
-
+do_connect:
 	log_level = map_log_level(verbose, quiet);
 
 	r = nvme_create_root(stderr, log_level);
@@ -986,6 +1071,9 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (!trsvcid)
 		trsvcid = nvmf_get_default_trsvcid(transport, false);
 
+	if (config_file)
+		return nvme_connect_config(r, hostnqn, hostid, &cfg);
+
 	struct tr_config trcfg = {
 		.subsysnqn	= subsysnqn,
 		.transport	= transport,
@@ -1008,8 +1096,11 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		errno = ENOMEM;
 		goto out_free;
 	}
+
 	if (ctrlkey)
 		nvme_ctrl_set_dhchap_key(c, ctrlkey);
+
+	nvme_parse_tls_args(keyring, tls_key, tls_key_identity, &cfg, c);
 
 	errno = 0;
 	ret = nvmf_add_ctrl(h, c, &cfg);
@@ -1233,6 +1324,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	_cleanup_free_ char *hnqn = NULL;
 	_cleanup_free_ char *hid = NULL;
 	char *hostkey = NULL, *ctrlkey = NULL;
+	char *keyring = NULL, *tls_key = NULL, *tls_key_identity = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	unsigned int verbose = 0;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
@@ -1322,9 +1414,11 @@ int nvmf_config(const char *desc, int argc, char **argv)
 				nvme_strerror(errno));
 			return -errno;
 		}
-		nvmf_update_config(c, &cfg);
 		if (ctrlkey)
 			nvme_ctrl_set_dhchap_key(c, ctrlkey);
+		nvme_parse_tls_args(keyring, tls_key, tls_key_identity, &cfg, c);
+
+		nvmf_update_config(c, &cfg);
 	}
 
 	if (update_config)
