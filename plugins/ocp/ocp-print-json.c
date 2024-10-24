@@ -520,8 +520,8 @@ static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
 	json_free_object(root);
 }
 
-static int json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
-		       int total_log_page_size)
+static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
+			int total_log_page_size)
 {
 	struct json_object *root = json_create_object();
 	char res_arr[48];
@@ -762,8 +762,6 @@ static int json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
-
-	return 0;
 }
 
 static void json_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_data)
@@ -842,7 +840,7 @@ static struct ocp_print_ops json_print_ops = {
 	.c5_log = json_c5_log,
 	.c1_log = json_c1_log,
 	.c4_log = json_c4_log,
-	.c9_log = (void *)json_c9_log,
+	.c9_log = json_c9_log,
 	.c7_log = json_c7_log,
 };
 

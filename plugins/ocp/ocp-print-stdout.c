@@ -201,7 +201,7 @@ static void stdout_telemetry_log(struct ocp_telemetry_parse_options *options)
 #endif /* CONFIG_JSONC */
 }
 
-static int stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data)
+static void stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data)
 {
 	char ts_buf[128];
 	int i, j;
@@ -326,11 +326,9 @@ static int stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *l
 		       le16_to_cpu(log_data->static_measured_latency[3-i][WRITE-1]),
 		       le16_to_cpu(log_data->static_measured_latency[3-i][TRIM-1]));
 	}
-
-	return 0;
 }
 
-static int stdout_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_data)
+static void stdout_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_data)
 {
 	int j;
 
@@ -349,8 +347,6 @@ static int stdout_c5_log(struct nvme_dev *dev, struct unsupported_requirement_lo
 	for (j = C5_GUID_LENGTH - 1; j >= 0; j--)
 		printf("%02x", log_data->log_page_guid[j]);
 	printf("\n");
-
-	return 0;
 }
 
 static void stdout_c1_log(struct ocp_error_recovery_log_page *log_data)
@@ -423,8 +419,8 @@ static void stdout_c4_log(struct ocp_device_capabilities_log_page *log_data)
 	printf("\n");
 }
 
-static int stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
-			 int total_log_page_size)
+static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
+			  int total_log_page_size)
 {
 	//calculating the index value for array
 	__le64 stat_id_index = (log_data->sitsz * 4) / 16;
@@ -631,11 +627,9 @@ static int stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_da
 			       log_data_buf[ascii_table_ofst + j],
 			       (char)log_data_buf[ascii_table_ofst + j]);
 	}
-
-	return 0;
 }
 
-static int stdout_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_data)
+static void stdout_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_data)
 {
 	int j;
 
@@ -694,8 +688,6 @@ static int stdout_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log
 	for (j = C7_GUID_LENGTH - 1; j >= 0; j--)
 		printf("%02x", log_data->log_page_guid[j]);
 	printf("\n");
-
-	return 0;
 }
 
 static struct ocp_print_ops stdout_print_ops = {
@@ -703,12 +695,12 @@ static struct ocp_print_ops stdout_print_ops = {
 	.fw_act_history = stdout_fw_activation_history,
 	.smart_extended_log = stdout_smart_extended_log,
 	.telemetry_log = stdout_telemetry_log,
-	.c3_log = (void *)stdout_c3_log,
-	.c5_log = (void *)stdout_c5_log,
+	.c3_log = stdout_c3_log,
+	.c5_log = stdout_c5_log,
 	.c1_log = stdout_c1_log,
 	.c4_log = stdout_c4_log,
-	.c9_log = (void *)stdout_c9_log,
-	.c7_log = (void *)stdout_c7_log,
+	.c9_log = stdout_c9_log,
+	.c7_log = stdout_c7_log,
 };
 
 struct ocp_print_ops *ocp_get_stdout_print_ops(nvme_print_flags_t flags)
