@@ -9175,6 +9175,75 @@ static int check_dhchap_key(int argc, char **argv, struct command *command, stru
 	return 0;
 }
 
+static int append_keyfile(const char *keyring, long id, const char *keyfile)
+{
+	_cleanup_free_ unsigned char *key_data = NULL;
+	_cleanup_free_ char *exported_key = NULL;
+	_cleanup_free_ char *identity = NULL;
+	_cleanup_file_ FILE *fd = NULL;
+	int err, ver, hmac, key_len;
+	mode_t old_umask;
+	long kr_id;
+	char type;
+
+	kr_id = nvme_lookup_keyring(keyring);
+	if (kr_id <= 0) {
+		nvme_show_error("Failed to lookup keyring '%s', %s",
+				keyring, strerror(errno));
+		return -errno;
+	}
+
+	identity = nvme_describe_key_serial(id);
+	if (!identity) {
+		nvme_show_error("Failed to get identity info, %s",
+			strerror(errno));
+		return -errno;
+	}
+
+	if (sscanf(identity, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3) {
+		nvme_show_error("Failed to parse identity\n");
+		return -EINVAL;
+	}
+
+	key_data = nvme_read_key(kr_id, id, &key_len);
+	if (!key_data) {
+		nvme_show_error("Failed to read back derive TLS PSK, %s",
+			strerror(errno));
+		return -errno;
+	}
+
+	exported_key = nvme_export_tls_key_versioned(ver, hmac,
+						     key_data, key_len);
+	if (!exported_key) {
+		nvme_show_error("Failed to export key, %s",
+			strerror(errno));
+		return -errno;
+	}
+
+	old_umask = umask(0);
+
+	fd = fopen(keyfile, "a");
+	if (!fd) {
+		nvme_show_error("Failed to open '%s', %s",
+				keyfile, strerror(errno));
+		err = -errno;
+		goto out;
+	}
+
+	err = fprintf(fd, "%s %s\n", identity, exported_key);
+	if (err < 0) {
+		nvme_show_error("Failed to append key to '%', %s",
+				keyfile, strerror(errno));
+		err = -errno;
+	}
+
+out:
+	chmod(keyfile, 0600);
+	umask(old_umask);
+
+	return err;
+}
+
 static int gen_tls_key(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Generate a TLS key in NVMe PSK Interchange format.";
@@ -9187,6 +9256,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	const char *keyring = "Keyring for the retained key.";
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
+	const char *keyfile = "Update key file with the derive TLS PSK.";
 
 	_cleanup_free_ unsigned char *raw_secret = NULL;
 	_cleanup_free_ char *encoded_key = NULL;
@@ -9201,6 +9271,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		char		*hostnqn;
 		char		*subsysnqn;
 		char		*secret;
+		char		*keyfile;
 		unsigned char	hmac;
 		unsigned char	version;
 		bool		insert;
@@ -9212,6 +9283,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		.hostnqn	= NULL,
 		.subsysnqn	= NULL,
 		.secret		= NULL,
+		.keyfile	= NULL,
 		.hmac		= 1,
 		.version	= 0,
 		.insert		= false,
@@ -9223,6 +9295,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
 		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
 		  OPT_STR("secret",	's', &cfg.secret,	secret),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
 		  OPT_BYTE("hmac",	'm', &cfg.hmac,		hmac),
 		  OPT_BYTE("identity",	'I', &cfg.version,	version),
 		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
@@ -9296,7 +9369,14 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		}
 
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
+
+		if (cfg.keyfile) {
+			err = append_keyfile(cfg.keyring, tls_key, cfg.keyfile);
+			if (err)
+				return err;
+		}
 	}
+
 	return 0;
 }
 
