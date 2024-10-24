@@ -252,6 +252,7 @@ endforeach
 udev_files = [
   '65-persistent-net-nbft.rules',
   '70-nvmf-autoconnect.rules',
+  '70-nvmf-keys.rules',
   '71-nvmf-netapp.rules',
 ]
 
