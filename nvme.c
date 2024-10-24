@@ -9411,11 +9411,18 @@ static void __scan_tls_key(long keyring_id, long key_id,
 	_cleanup_free_ const unsigned char *key_data = NULL;
 	_cleanup_free_ char *encoded_key = NULL;
 	int key_len;
+	int ver, hmac;
+	char type;
 
 	key_data = nvme_read_key(keyring_id, key_id, &key_len);
 	if (!key_data)
 		return;
-	encoded_key = nvme_export_tls_key(key_data, key_len);
+
+	if (sscanf(desc, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3)
+		return;
+
+	encoded_key = nvme_export_tls_key_versioned(ver, hmac,
+						    key_data, key_len);
 	if (!encoded_key)
 		return;
 	fprintf(fd, "%s %s\n", desc, encoded_key);
