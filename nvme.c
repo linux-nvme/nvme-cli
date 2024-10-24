@@ -9187,6 +9187,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	const char *keyring = "Keyring for the retained key.";
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
+	const char *keyfile = "Update key file with the derive TLS PSK.";
 
 	_cleanup_free_ unsigned char *raw_secret = NULL;
 	_cleanup_free_ char *encoded_key = NULL;
@@ -9201,6 +9202,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		char		*hostnqn;
 		char		*subsysnqn;
 		char		*secret;
+		char		*keyfile;
 		unsigned char	hmac;
 		unsigned char	version;
 		bool		insert;
@@ -9212,6 +9214,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		.hostnqn	= NULL,
 		.subsysnqn	= NULL,
 		.secret		= NULL,
+		.keyfile	= NULL,
 		.hmac		= 1,
 		.version	= 0,
 		.insert		= false,
@@ -9223,6 +9226,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
 		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
 		  OPT_STR("secret",	's', &cfg.secret,	secret),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
 		  OPT_BYTE("hmac",	'm', &cfg.hmac,		hmac),
 		  OPT_BYTE("identity",	'I', &cfg.version,	version),
 		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
@@ -9297,6 +9301,66 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
 	}
+	if (tls_key && cfg.keyfile) {
+		_cleanup_free_ unsigned char *key_data = NULL;
+		_cleanup_free_ char *exported_key = NULL;
+		_cleanup_free_ char *identity = NULL;
+		_cleanup_file_ FILE *fd = NULL;
+		mode_t old_umask;
+		int key_len;
+		long kr_id;
+
+		kr_id = nvme_lookup_keyring(cfg.keyring);
+		if (kr_id <= 0) {
+			nvme_show_error("Failed to lookup keyring '%s'",
+					cfg.keyring);
+			return -errno;
+		}
+
+		key_data = nvme_read_key(kr_id, tls_key, &key_len);
+		if (!key_data) {
+			nvme_show_error("Failed to read back derive TLS PSK");
+			return -errno;
+		}
+
+		exported_key = nvme_export_tls_key_versioned(cfg.version, cfg.hmac,
+							     key_data, key_len);
+		if (!exported_key) {
+			nvme_show_error("Failed to export key");
+			return -errno;
+		}
+
+		identity = nvme_describe_key_serial(tls_key);
+		if (!identity) {
+			nvme_show_error("Failed to get identity info");
+			return -errno;
+		}
+
+		old_umask = umask(0);
+
+		fd = fopen(cfg.keyfile, "a");
+		if (!fd) {
+			nvme_show_error("Failed to open '%s', %s",
+				cfg.keyfile, strerror(errno));
+			err = -errno;
+			goto out;
+		}
+
+		err = fprintf(fd, "%s %s\n", identity, exported_key);
+		if (err < 0) {
+			nvme_show_error("Failed to append key to '%', %s",
+					cfg.keyfile, strerror(errno));
+			err = -errno;
+		}
+
+	out:
+		chmod(cfg.keyfile, S_IRUSR | S_IWUSR);
+		umask(old_umask);
+
+		if (err)
+			return err;
+	}
+
 	return 0;
 }
 
