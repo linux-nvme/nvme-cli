@@ -2870,7 +2870,9 @@ struct nvme_ns_list {
  * @dmsl:	Dataset Management Size Limit
  * @rsvd16:	Reserved
  * @aocs:	Admin Optional Command Support
- * @rsvd20:	Reserved
+ * @ver:	Version
+ * @lbamqf:	LBA Migration Queue Format
+ * @rsvd25:	Reserved
  */
 struct nvme_id_ctrl_nvm {
 	__u8	vsl;
@@ -2881,7 +2883,9 @@ struct nvme_id_ctrl_nvm {
 	__le64	dmsl;
 	__u8	rsvd16[2];
 	__le16	aocs;
-	__u8	rsvd20[4076];
+	__le32	ver;
+	__u8	lbamqf;
+	__u8	rsvd25[4071];
 };
 
 /**
