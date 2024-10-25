@@ -280,7 +280,7 @@ struct request_data ocp_header_in_da1[] = {
 	{ "Minor Version", 2 },
 	{ "Reserved1", 4 },
 	{ "Timestamp", 8 },
-	{ "Log page GUID", 16 },
+	{ "Log page GUID", GUID_LEN },
 	{ "Number Telemetry Profiles Supported", 1 },
 	{ "Telemetry Profile Selected", 1 },
 	{ "Reserved2", 6 },
@@ -419,7 +419,7 @@ struct request_data smart_extended[] = {
 	{ "Lowest Permitted Firmware Revision", 8 },
 	{ "Reserved4", 278 },
 	{ "Log Page Version", 2 },
-	{ "Log page GUID", 16 }
+	{ "Log page GUID", GUID_LEN }
 };
 
 #ifdef CONFIG_JSONC

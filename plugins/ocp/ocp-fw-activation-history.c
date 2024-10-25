@@ -16,7 +16,7 @@
 #include "ocp-utils.h"
 #include "ocp-print.h"
 
-static const unsigned char ocp_fw_activation_history_guid[16] = {
+static const unsigned char ocp_fw_activation_history_guid[GUID_LEN] = {
 	0x6D, 0x79, 0x9a, 0x76,
 	0xb4, 0xda, 0xf6, 0xa3,
 	0xe2, 0x4d, 0xb2, 0x8a,
