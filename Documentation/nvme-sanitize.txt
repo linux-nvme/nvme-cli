@@ -12,7 +12,7 @@ SYNOPSIS
 			[--owpass=<overwrite-pass-count> | -n <overwrite-pass-count>]
 			[--ause | -u] [--sanact=<action> | -a <action>]
 			[--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
-			[--force]
+			[--emvs | -e] [--force]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
@@ -73,6 +73,7 @@ OPTIONS
 |0x02 \| 'start-block-erase'| Start a Block Erase sanitize operation
 |0x03 \| 'start-overwrite'| Start an Overwrite sanitize operation
 |0x04 \| 'start-crypto-erase'| Start a Crypto Erase sanitize operation
+|0x05 \| 'exit-media-verification'| Exit Media Verification State
 |=================
 
 -p <overwrite-pattern>::
@@ -82,6 +83,15 @@ OPTIONS
 	Command Dword 10 is set to 011b (i.e., Overwrite). This field
 	specifies a 32-bit pattern that is used for the Overwrite
 	sanitize operation.
+
+-e::
+--emvs::
+	Enter Media Verification State:
+	If set, then the Media Verification state shall be entered if sanitize
+	processing completes successfully. If cleared, then this bit shall have
+	no effect. If SANACT field does not specify starting a sanitize operation
+	(i.e., is set to any value other than 010b, 011b, or 100b), then this bit
+	shall be ignored by the controller.
 
 --force::
 	Ignore namespace is currently busy and performed the operation
