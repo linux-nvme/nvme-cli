@@ -4,13 +4,13 @@
  */
 #include "cmd.h"
 #include "common.h"
+#include "ocp-nvme.h"
 
 #ifndef OCP_HARDWARE_COMPONENT_LOG_H
 #define OCP_HARDWARE_COMPONENT_LOG_H
 
 #define LID_HWCOMP 0xc6
 #define HWCOMP_RSVD2_LEN 14
-#define GUID_LEN 16
 #define HWCOMP_SIZE_LEN 16
 #define HWCOMP_RSVD48_LEN 16
 

@@ -87,7 +87,7 @@ struct __packed ssd_latency_monitor_log {
 	__u8	log_page_guid[0x10];		/* 0x1F0 */
 };
 
-#define C3_GUID_LENGTH				16
+#define GUID_LEN 16
 
 #define C3_ACTIVE_BUCKET_TIMER_INCREMENT	5
 #define C3_ACTIVE_THRESHOLD_INCREMENT		5
@@ -98,7 +98,6 @@ struct __packed ssd_latency_monitor_log {
 #define WRITE		2
 #define TRIM		1
 
-#define C5_GUID_LENGTH                     16
 #define C5_NUM_UNSUPPORTED_REQ_ENTRIES     253
 
 /*
@@ -117,10 +116,9 @@ struct __packed unsupported_requirement_log {
 	__u8    unsupported_req_list[C5_NUM_UNSUPPORTED_REQ_ENTRIES][16];
 	__u8    rsvd2[14];
 	__le16  log_page_version;
-	__u8    log_page_guid[C5_GUID_LENGTH];
+	__u8    log_page_guid[GUID_LEN];
 };
 
-#define C1_GUID_LENGTH                      16
 #define C1_PREV_PANIC_IDS_LENGTH            4
 
 /**
@@ -160,10 +158,8 @@ struct __packed ocp_error_recovery_log_page {
 	__le64  prev_panic_id[C1_PREV_PANIC_IDS_LENGTH]; /* 32 bytes     - 0x20 - 0x3F */
 	__u8    reserved2[0x1ae];                        /* 430 bytes    - 0x40 - 0x1ED */
 	__le16  log_page_version;                        /* 2 bytes      - 0x1EE - 0x1EF */
-	__u8    log_page_guid[0x10];                     /* 16 bytes     - 0x1F0 - 0x1FF */
+	__u8    log_page_guid[GUID_LEN];                 /* 16 bytes     - 0x1F0 - 0x1FF */
 };
-
-#define C4_GUID_LENGTH				16
 
 /**
  * struct ocp_device_capabilities_log_page -	Device Capability Log page
@@ -193,10 +189,8 @@ struct __packed ocp_device_capabilities_log_page {
 	__u8    dssd_pwr_state_desc[128];
 	__u8    reserved[3934];
 	__le16  log_page_version;
-	__u8    log_page_guid[16];
+	__u8    log_page_guid[GUID_LEN];
 };
-
-#define C7_GUID_LENGTH                     16
 
 /*
  * struct tcg_configuration_log - TCG Configuration Log Page Structure
@@ -244,7 +238,7 @@ struct __packed tcg_configuration_log {
 	__u32   tcg_ec;
 	__u8    rsvd3[458];
 	__le16  log_page_version;
-	__u8    log_page_guid[C7_GUID_LENGTH];
+	__u8    log_page_guid[GUID_LEN];
 
 };
 #endif /* OCP_NVME_H */

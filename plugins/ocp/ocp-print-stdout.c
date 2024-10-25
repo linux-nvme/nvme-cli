@@ -256,10 +256,10 @@ static void stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *
 	printf("  Log Page Version                   %d\n",
 	       le16_to_cpu(log_data->log_page_version));
 
-	char guid[(C3_GUID_LENGTH * 2) + 1];
+	char guid[(GUID_LEN * 2) + 1];
 	char *ptr = &guid[0];
 
-	for (i = C3_GUID_LENGTH - 1; i >= 0; i--)
+	for (i = GUID_LEN - 1; i >= 0; i--)
 		ptr += sprintf(ptr, "%02X", log_data->log_page_guid[i]);
 
 	printf("  Log Page GUID                      %s\n", guid);
@@ -344,7 +344,7 @@ static void stdout_c5_log(struct nvme_dev *dev, struct unsupported_requirement_l
 	printf("  Log Page Version			: 0x%x\n",
 	       le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID				: 0x");
-	for (j = C5_GUID_LENGTH - 1; j >= 0; j--)
+	for (j = GUID_LEN - 1; j >= 0; j--)
 		printf("%02x", log_data->log_page_guid[j]);
 	printf("\n");
 }
@@ -381,7 +381,7 @@ static void stdout_c1_log(struct ocp_error_recovery_log_page *log_data)
 	printf("  Log Page Version                  : 0x%x\n",
 	       le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID                     : 0x");
-	for (i = C1_GUID_LENGTH - 1; i >= 0; i--)
+	for (i = GUID_LEN - 1; i >= 0; i--)
 		printf("%02x", log_data->log_page_guid[i]);
 	printf("\n");
 }
@@ -414,7 +414,7 @@ static void stdout_c4_log(struct ocp_device_capabilities_log_page *log_data)
 	printf("  Log Page Version						: 0x%x\n",
 	       le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID							: 0x");
-	for (i = C4_GUID_LENGTH - 1; i >= 0; i--)
+	for (i = GUID_LEN - 1; i >= 0; i--)
 		printf("%02x", log_data->log_page_guid[i]);
 	printf("\n");
 }
@@ -446,7 +446,7 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 	printf("\n");
 
 	printf("  Log page GUID                                   : 0x");
-	for (j = C9_GUID_LENGTH - 1; j >= 0; j--)
+	for (j = GUID_LEN - 1; j >= 0; j--)
 		printf("%02x", log_data->log_page_guid[j]);
 	printf("\n");
 
@@ -685,7 +685,7 @@ static void stdout_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *lo
 	printf("  Log Page Version                                       : 0x%x\n",
 	       le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID                                          : 0x");
-	for (j = C7_GUID_LENGTH - 1; j >= 0; j--)
+	for (j = GUID_LEN - 1; j >= 0; j--)
 		printf("%02x", log_data->log_page_guid[j]);
 	printf("\n");
 }

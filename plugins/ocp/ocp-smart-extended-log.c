@@ -18,9 +18,8 @@
 /* C0 SCAO Log Page */
 #define C0_SMART_CLOUD_ATTR_LEN			0x200
 #define C0_SMART_CLOUD_ATTR_OPCODE		0xC0
-#define C0_GUID_LENGTH				16
 
-static __u8 scao_guid[C0_GUID_LENGTH] = {
+static __u8 scao_guid[GUID_LEN] = {
 	0xC5, 0xAF, 0x10, 0x28,
 	0xEA, 0xBF, 0xF2, 0xA4,
 	0x9C, 0x4F, 0x6F, 0x7C,
