@@ -16,6 +16,7 @@ SYNOPSIS
 			[--identity=<id-vers> | -I <id-vers>]
 			[--secret=<secret> | -s <secret>]
 			[--insert | -i]
+			[--keyfile=<keyfile> | -f <keyfile>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
@@ -80,6 +81,11 @@ OPTIONS
 --insert::
 	Insert the resulting TLS key into the keyring without printing out
 	the key in PSK interchange format.
+
+-f <keyfile>
+--keyfile=<keyfile>
+	Append the resulting TLS key to keyfile. This command line option is
+	depending on --insert.
 
 -o <fmt>::
 --output-format=<fmt>::
