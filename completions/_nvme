@@ -1525,10 +1525,12 @@ _nvme () {
 			-n':alias of --owpass'
 			--ause':Allow unrestricted sanitize exit'
 			-u':alias of --ause'
-			--sanact=':Sanitize action: 1 = Exit failure mode, 2 = Start block erase, 3 = Start overwrite, 4 = Start crypto erase'
+			--sanact=':Sanitize action: 1 = Exit failure mode, 2 = Start block erase, 3 = Start overwrite, 4 = Start crypto erase, 5 = Exit media verification'
 			-a':alias of --sanact'
 			--ovrpat=':Overwrite pattern'
 			-p':alias of --ovrpat'
+			--emvs=':Enter media verification state'
+			-e':alias of --emvs'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme sanitize options" _sanitize

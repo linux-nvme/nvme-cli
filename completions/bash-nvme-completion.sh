@@ -356,10 +356,11 @@ nvme_list_opts () {
 			;;
 		"sanitize")
 		opts+=" --no-dealloc -d --oipbp -i --owpass= -n \
-			--ause -u --sanact= -a --ovrpat= -p"
+			--ause -u --sanact= -a --ovrpat= -p --emvs= -e"
 		case $opt in
 			--sanact|-a)
-			vals+=" exit-failure start-block-erase start-overwrite start-crypto-erase"
+			vals+=" exit-failure start-block-erase start-overwrite \
+				start-crypto-erase exit-media-verification"
 				;;
 		esac
 			;;
