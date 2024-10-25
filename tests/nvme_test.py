@@ -70,6 +70,30 @@ class TestNVMe(unittest.TestCase):
         """ Post Section for TestNVMe. """
         if self.clear_log_dir is True:
             shutil.rmtree(self.log_dir, ignore_errors=True)
+        self.create_and_attach_default_ns()
+
+    def create_and_attach_default_ns(self):
+        """ Creates a default namespace with the full capacity of the ctrls NVM
+            - Args:
+                - None
+            - Returns:
+                - None
+        """
+        self.dps = 0
+        self.flbas = 0
+        (ds, ms) = self.get_lba_format_size()
+        ncap = int(self.get_ncap() / (ds+ms))
+        self.nsze = ncap
+        self.ncap = ncap
+        self.ctrl_id = self.get_ctrl_id()
+        self.delete_all_ns()
+        err = self.create_and_validate_ns(self.default_nsid,
+                                          self.nsze,
+                                          self.ncap,
+                                          self.flbas,
+                                          self.dps)
+        self.assertEqual(err, 0)
+        self.assertEqual(self.attach_ns(self.ctrl_id, self.default_nsid), 0)
 
     def validate_pci_device(self):
         """ Validate underlying device belongs to pci subsystem.
