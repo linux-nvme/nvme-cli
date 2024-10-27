@@ -752,7 +752,8 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 		else if (fmt == NJSON)
 			netapp_smdevices_print_json(smdevices,
 					num_smdevices, devname);
-	}
+	} else
+		fprintf(stderr, "No smdevices detected\n");
 
 	for (i = 0; i < num; i++)
 		free(devices[i]);
