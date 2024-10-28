@@ -57,17 +57,17 @@ static __u8 lat_mon_guid[GUID_LEN] = {
 #define RESERVED	0
 
 struct __packed feature_latency_monitor {
-	__u16 active_bucket_timer_threshold;
-	__u8  active_threshold_a;
-	__u8  active_threshold_b;
-	__u8  active_threshold_c;
-	__u8  active_threshold_d;
-	__u16 active_latency_config;
-	__u8  active_latency_minimum_window;
-	__u16 debug_log_trigger_enable;
-	__u8  discard_debug_log;
-	__u8  latency_monitor_feature_enable;
-	__u8  reserved[4083];
+	__le16 active_bucket_timer_threshold;
+	__u8 active_threshold_a;
+	__u8 active_threshold_b;
+	__u8 active_threshold_c;
+	__u8 active_threshold_d;
+	__le16 active_latency_config;
+	__u8 active_latency_minimum_window;
+	__le16 debug_log_trigger_enable;
+	__u8 discard_debug_log;
+	__u8 latency_monitor_feature_enable;
+	__u8 reserved[4083];
 };
 
 struct erri_entry {
@@ -265,7 +265,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 	int err = -1;
 	struct nvme_dev *dev;
 	__u32 result;
-	struct feature_latency_monitor buf = {0,};
+	struct feature_latency_monitor buf = { 0 };
 	__u32  nsid = NVME_NSID_ALL;
 	struct stat nvme_stat;
 	struct nvme_id_ctrl ctrl;
@@ -342,16 +342,14 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 	if (err)
 		return err;
 
-	memset(&buf, 0, sizeof(struct feature_latency_monitor));
-
-	buf.active_bucket_timer_threshold = cfg.active_bucket_timer_threshold;
+	buf.active_bucket_timer_threshold = cpu_to_le16(cfg.active_bucket_timer_threshold);
 	buf.active_threshold_a = cfg.active_threshold_a;
 	buf.active_threshold_b = cfg.active_threshold_b;
 	buf.active_threshold_c = cfg.active_threshold_c;
 	buf.active_threshold_d = cfg.active_threshold_d;
-	buf.active_latency_config = cfg.active_latency_config;
+	buf.active_latency_config = cpu_to_le16(cfg.active_latency_config);
 	buf.active_latency_minimum_window = cfg.active_latency_minimum_window;
-	buf.debug_log_trigger_enable = cfg.debug_log_trigger_enable;
+	buf.debug_log_trigger_enable = cpu_to_le16(cfg.debug_log_trigger_enable);
 	buf.discard_debug_log = cfg.discard_debug_log;
 	buf.latency_monitor_feature_enable = cfg.latency_monitor_feature_enable;
 
@@ -373,14 +371,16 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 		perror("set-feature");
 	} else if (!err) {
 		printf("NVME_FEAT_OCP_LATENCY_MONITOR: 0x%02x\n", NVME_FEAT_OCP_LATENCY_MONITOR);
-		printf("active bucket timer threshold: 0x%x\n", buf.active_bucket_timer_threshold);
+		printf("active bucket timer threshold: 0x%x\n",
+		       le16_to_cpu(buf.active_bucket_timer_threshold));
 		printf("active threshold a: 0x%x\n", buf.active_threshold_a);
 		printf("active threshold b: 0x%x\n", buf.active_threshold_b);
 		printf("active threshold c: 0x%x\n", buf.active_threshold_c);
 		printf("active threshold d: 0x%x\n", buf.active_threshold_d);
-		printf("active latency config: 0x%x\n", buf.active_latency_config);
+		printf("active latency config: 0x%x\n", le16_to_cpu(buf.active_latency_config));
 		printf("active latency minimum window: 0x%x\n", buf.active_latency_minimum_window);
-		printf("debug log trigger enable: 0x%x\n", buf.debug_log_trigger_enable);
+		printf("debug log trigger enable: 0x%x\n",
+		       le16_to_cpu(buf.debug_log_trigger_enable));
 		printf("discard debug log: 0x%x\n", buf.discard_debug_log);
 		printf("latency monitor feature enable: 0x%x\n", buf.latency_monitor_feature_enable);
 	} else if (err > 0) {
