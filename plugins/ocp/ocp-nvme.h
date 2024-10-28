@@ -231,11 +231,11 @@ struct __packed tcg_configuration_log {
 	__u8    no_of_read_unlock_locking_obj;
 	__u8    no_of_write_unlock_locking_obj;
 	__u8    rsvd2;
-	__u32   sid_auth_try_count;
-	__u32   sid_auth_try_limit;
-	__u32   pro_tcg_rc;
-	__u32   pro_rlc;
-	__u32   tcg_ec;
+	__le32  sid_auth_try_count;
+	__le32  sid_auth_try_limit;
+	__le32  pro_tcg_rc;
+	__le32  pro_rlc;
+	__le32  tcg_ec;
 	__u8    rsvd3[458];
 	__le16  log_page_version;
 	__u8    log_page_guid[GUID_LEN];

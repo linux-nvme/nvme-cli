@@ -775,42 +775,42 @@ static void json_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_
 
 	root = json_create_object();
 
-	json_object_add_value_int(root, "State", le16_to_cpu(log_data->state));
+	json_object_add_value_int(root, "State", log_data->state);
 	memset((__u8 *)res, 0, 3);
 	for (j = 0; j < 3; j++)
 		res += sprintf(res, "%d", log_data->rsvd1[j]);
 	json_object_add_value_string(root, "Reserved1", res_arr);
 	json_object_add_value_int(root, "Locking SP Activation Count",
-				  le16_to_cpu(log_data->locking_sp_act_count));
+				  log_data->locking_sp_act_count);
 	json_object_add_value_int(root, "Tper Revert Count",
-				  le16_to_cpu(log_data->locking_sp_rev_count));
+				  log_data->locking_sp_rev_count);
 	json_object_add_value_int(root, "Number of Locking Objects",
-				  le16_to_cpu(log_data->no_of_locking_obj));
+				  log_data->no_of_locking_obj);
 	json_object_add_value_int(root, "Number of Single User Mode Locking Objects",
-				  le16_to_cpu(log_data->no_of_single_um_locking_obj));
+				  log_data->no_of_single_um_locking_obj);
 	json_object_add_value_int(root, "Number of Range Provisioned Locking Objects",
-				  le16_to_cpu(log_data->no_of_range_prov_locking_obj));
+				  log_data->no_of_range_prov_locking_obj);
 	json_object_add_value_int(root, "Number of Namespace Provisioned Locking Objects",
-				  le16_to_cpu(log_data->no_of_ns_prov_locking_obj));
+				  log_data->no_of_ns_prov_locking_obj);
 	json_object_add_value_int(root, "Number of Read Locked Locking Objects",
-				  le16_to_cpu(log_data->no_of_read_lock_locking_obj));
+				  log_data->no_of_read_lock_locking_obj);
 	json_object_add_value_int(root, "Number of Write Locked Locking Objects",
-				  le16_to_cpu(log_data->no_of_write_lock_locking_obj));
+				  log_data->no_of_write_lock_locking_obj);
 	json_object_add_value_int(root, "Number of Read Unlocked Locking Objects",
-				  le16_to_cpu(log_data->no_of_read_unlock_locking_obj));
+				  log_data->no_of_read_unlock_locking_obj);
 	json_object_add_value_int(root, "Number of Write Unlocked Locking Objects",
-				  le16_to_cpu(log_data->no_of_write_unlock_locking_obj));
-	json_object_add_value_int(root, "Reserved2", le16_to_cpu(log_data->rsvd2));
+				  log_data->no_of_write_unlock_locking_obj);
+	json_object_add_value_int(root, "Reserved2", log_data->rsvd2);
 
 	json_object_add_value_int(root, "SID Authentication Try Count",
-				  le16_to_cpu(log_data->sid_auth_try_count));
+				  le32_to_cpu(log_data->sid_auth_try_count));
 	json_object_add_value_int(root, "SID Authentication Try Limit",
-				  le16_to_cpu(log_data->sid_auth_try_limit));
+				  le32_to_cpu(log_data->sid_auth_try_limit));
 	json_object_add_value_int(root, "Programmatic TCG Reset Count",
-				  le16_to_cpu(log_data->pro_tcg_rc));
+				  le32_to_cpu(log_data->pro_tcg_rc));
 	json_object_add_value_int(root, "Programmatic Reset Lock Count",
-				  le16_to_cpu(log_data->pro_rlc));
-	json_object_add_value_int(root, "TCG Error Count", le16_to_cpu(log_data->tcg_ec));
+				  le32_to_cpu(log_data->pro_rlc));
+	json_object_add_value_int(root, "TCG Error Count", le32_to_cpu(log_data->tcg_ec));
 
 	memset((__u8 *)res, 0, 458);
 	for (j = 0; j < 458; j++)
