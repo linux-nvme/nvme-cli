@@ -179,6 +179,8 @@ static const char *pel_event_to_string(int type)
 		return "Set Telemetry CRT Event";
 	case NVME_PEL_THERMAL_EXCURSION_EVENT:
 		return "Thermal Excursion Event";
+	case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
+		return "Sanitize Media Verification Event";
 	case NVME_PEL_VENDOR_SPECIFIC_EVENT:
 		return "Vendor Specific Event";
 	case NVME_PEL_TCG_DEFINED_EVENT:
