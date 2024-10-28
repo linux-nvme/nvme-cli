@@ -88,7 +88,7 @@ static void json_fw_activation_history(const struct fw_activation_history *fw_hi
 
 	struct json_object *entries = json_create_array();
 
-	for (int index = 0; index < fw_history->valid_entries; index++) {
+	for (int index = 0; index < le32_to_cpu(fw_history->valid_entries); index++) {
 		const struct fw_activation_history_entry *entry = &fw_history->entries[index];
 		struct json_object *entry_obj = json_create_object();
 

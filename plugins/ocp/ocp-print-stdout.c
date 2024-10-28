@@ -64,10 +64,10 @@ static void stdout_fw_activation_history(const struct fw_activation_history *fw_
 
 	printf("  entries:\n");
 
-	for (int index = 0; index < fw_history->valid_entries; index++) {
+	for (int index = 0; index < le32_to_cpu(fw_history->valid_entries); index++) {
 		const struct fw_activation_history_entry *entry = &fw_history->entries[index];
 
-		printf("    entry[%d]:\n", le32_to_cpu(index));
+		printf("    entry[%d]:\n", index);
 		printf("      %-22s%d\n", "version number:", entry->ver_num);
 		printf("      %-22s%d\n", "entry length:", entry->entry_length);
 		printf("      %-22s%d\n", "activation count:",
