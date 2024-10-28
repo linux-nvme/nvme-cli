@@ -302,6 +302,5 @@ void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 
 int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 				   long *keyring_id, long *key_id);
-int __nvme_export_keys_to_config(nvme_root_t r);
 
 #endif /* _LIBNVME_PRIVATE_H */
