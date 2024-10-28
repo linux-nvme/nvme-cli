@@ -518,6 +518,9 @@ static void stdout_persistent_event_log(void *pevent_log_info,
 			printf("Over Temperature: %u\n", thermal_exc_event->over_temp);
 			printf("Threshold: %u\n", thermal_exc_event->threshold);
 			break;
+		case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
+			printf("Sanitize Media Verification Event\n");
+			break;
 		default:
 			printf("Reserved Event\n\n");
 			break;
