@@ -434,11 +434,14 @@ int json_update_config(nvme_root_t r, const char *config_file)
 		}
 	}
 	if (!config_file) {
-		ret = json_object_to_fd(1, json_root, JSON_C_TO_STRING_PRETTY);
+		ret = json_object_to_fd(1, json_root,
+					JSON_C_TO_STRING_PRETTY |
+					JSON_C_TO_STRING_NOSLASHESCAPE);
 		printf("\n");
 	} else
 		ret = json_object_to_file_ext(config_file, json_root,
-					      JSON_C_TO_STRING_PRETTY);
+					      JSON_C_TO_STRING_PRETTY |
+					      JSON_C_TO_STRING_NOSLASHESCAPE);
 	if (ret < 0) {
 		nvme_msg(r, LOG_ERR, "Failed to write to %s, %s\n",
 			 config_file ? "stdout" : config_file,
@@ -592,7 +595,9 @@ int json_dump_tree(nvme_root_t r)
 	}
 	json_object_object_add(json_root, "hosts", host_array);
 
-	ret = json_object_to_fd(r->log.fd, json_root, JSON_C_TO_STRING_PRETTY);
+	ret = json_object_to_fd(r->log.fd, json_root,
+				JSON_C_TO_STRING_PRETTY |
+				JSON_C_TO_STRING_NOSLASHESCAPE);
 	if (ret < 0) {
 		nvme_msg(r, LOG_ERR, "Failed to write, %s\n",
 			 json_util_get_last_err());
