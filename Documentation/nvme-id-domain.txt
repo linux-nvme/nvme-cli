@@ -8,7 +8,7 @@ nvme-id-domain - Send NVMe Identify Domain List, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme id-domain' <device> [--dom-id=<domian_id> | -d <domian_id>]
+'nvme id-domain' <device> [--dom-id=<domain_id> | -d <domain_id>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
@@ -21,8 +21,8 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
 OPTIONS
 -------
--d <domian_id>::
---dom-id=<domian_id>::
+-d <domain_id>::
+--dom-id=<domain_id>::
 	Retrieve the identify domain list data structure for the given
 	domain id. If this value is not given, domain id will be 0xffff.
 
