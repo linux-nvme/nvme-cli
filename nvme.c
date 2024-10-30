@@ -9235,6 +9235,8 @@ static int append_keyfile(const char *keyring, long id, const char *keyfile)
 		nvme_show_error("Failed to append key to '%', %s",
 				keyfile, strerror(errno));
 		err = -errno;
+	} else {
+		err = 0;
 	}
 
 out:
