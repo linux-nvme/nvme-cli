@@ -9392,6 +9392,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	const char *keyring = "Keyring for the retained key.";
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
+	const char *keyfile = "Update key file with the derive TLS PSK.";
 
 	_cleanup_free_ unsigned char *decoded_key = NULL;
 	_cleanup_free_ char *hnqn = NULL;
@@ -9404,6 +9405,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		char		*hostnqn;
 		char		*subsysnqn;
 		char		*keydata;
+		char		*keyfile;
 		unsigned char	identity;
 		bool		insert;
 	};
@@ -9414,6 +9416,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		.hostnqn	= NULL,
 		.subsysnqn	= NULL,
 		.keydata	= NULL,
+		.keyfile	= NULL,
 		.identity	= 0,
 		.insert		= false,
 	};
@@ -9424,6 +9427,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
 		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
 		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
 		  OPT_BYTE("identity",	'I', &cfg.identity,	identity),
 		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
 
@@ -9470,6 +9474,12 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 			return -errno;
 		}
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
+
+		if (cfg.keyfile) {
+			err = append_keyfile(cfg.keyring, tls_key, cfg.keyfile);
+			if (err)
+				return err;
+		}
 	} else {
 		_cleanup_free_ char *tls_id = NULL;
 
