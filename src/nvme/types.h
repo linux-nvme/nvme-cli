@@ -4895,7 +4895,15 @@ enum nvme_resv_notify_rnlpt {
  *		to be completed in the background when the Sanitize command that
  *		started that operation is completed. A value of FFFFFFFFh indicates
  *		that no time period is reported.
- * @rsvd32:	Reserved
+ * @etpvds:	Estimated Time For Post-Verification Deallocation State: indicates the
+ *		number of seconds required to deallocate all media allocated for user data
+ *		after exiting the Media Verification state (i.e., the time difference between
+ *		entering and exiting the Post-Verification Deallocation state), if that state
+ *		is entered as part of the sanitize operation. A value of FFFFFFFFh indicates
+ *		that no time period is reported.
+ * @ssi:	Sanitize State Information: indicate the state of the Sanitize Operation
+ *		State Machine.
+ * @rsvd37:	Reserved
  */
 struct nvme_sanitize_log_page {
 	__le16	sprog;
@@ -4907,7 +4915,9 @@ struct nvme_sanitize_log_page {
 	__le32	etond;
 	__le32	etbend;
 	__le32	etcend;
-	__u8	rsvd32[480];
+	__le32	etpvds;
+	__u8	ssi;
+	__u8	rsvd37[475];
 };
 
 /**
@@ -4951,6 +4961,10 @@ struct nvme_sanitize_log_page {
  *					 the NVM subsystem has never been sanitized;
  *					 or since the most recent successful sanitize
  *					 operation.
+ * @NVME_SANITIZE_SSTAT_MVCNCLD_SHIFT:	Shift amount to get the value of Media Verification
+ *					Canceled bit of Sanitize status field.
+ * @NVME_SANITIZE_SSTAT_MVCNCLD_MASK:	Mask to get the value of Media Verification Canceled
+ *					bit of Sanitize status field.
  */
 enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_STATUS_SHIFT		= 0,
@@ -4965,6 +4979,59 @@ enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT	= 8,
 	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_MASK	= 0x1,
 	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED		= 1 << NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT,
+	NVME_SANITIZE_SSTAT_MVCNCLD_SHIFT		= 9,
+	NVME_SANITIZE_SSTAT_MVCNCLD_MASK		= 0x1,
+};
+
+/**
+ * enum nvme_sanitize_ssi - Sanitize State Information (SSI)
+ * @NVME_SANITIZE_SSI_SANS_SHIFT:		Shift amount to get the value of Sanitize State
+ *						from Sanitize State Information (SSI) field.
+ * @NVME_SANITIZE_SSI_SANS_MASK:		Mask to get the value of Sanitize State from
+ *						Sanitize State Information (SSI) field.
+ * @NVME_SANITIZE_SSI_FAILS_SHIFT:		Shift amount to get the value of Failure State
+ *						from Sanitize State Information (SSI) field.
+ * @NVME_SANITIZE_SSI_FAILS_MASK:		Mask to get the value of Failure State from
+ *						Sanitize State Information (SSI) field.
+ * @NVME_SANITIZE_SSI_IDLE:			No sanitize operation is in process.
+ * @NVME_SANITIZE_SSI_RESTRICT_PROCESSING:	The Sanitize operation is in Restricted Processing
+ *						State.
+ * @NVME_SANITIZE_SSI_RESTRICT_FAILURE:		The Sanitize operation is in Restricted Failure
+ *						State. This state is entered if sanitize processing
+ *						was performed in the Restricted Processing state and
+ *						sanitize processing failed or a failure occurred
+ *						during deallocation of media allocated for user data
+ *						in the Post-Verification Deallocation state.
+ * @NVME_SANITIZE_SSI_UNRESTRICT_PROCESSING:	The Sanitize operation is in Unrestricted Processing
+ *						State.
+ * @NVME_SANITIZE_SSI_UNRESTRICT_FAILURE:	The Sanitize operation is in Unrestricted Failure
+ *						State. This state is entered if sanitize processing
+ *						was performed in the Unrestricted Processing state
+ *						and sanitize processing failed or a failure occurred
+ *						during deallocation of media allocated for user data
+ *						in the Post-Verification.
+ * @NVME_SANITIZE_SSI_MEDIA_VERIFICATION:	The Sanitize operation is in Media Verification
+ *						State. In this state, the sanitize processing
+ *						completed successfully, and all media allocated for
+ *						user data in the sanitization target is readable by
+ *						the host for purposes of verifying sanitization.
+ * @NVME_SANITIZE_SSI_POST_VERIF_DEALLOC:	The Sanitize operation is in Post-Verification
+ *						Deallocation State. In this state, the controller
+ *						shall deallocate all media allocated for user data
+ *						in the sanitization target.
+ */
+enum nvme_sanitize_ssi {
+	NVME_SANITIZE_SSI_SANS_SHIFT		= 0,
+	NVME_SANITIZE_SSI_SANS_MASK		= 0xf,
+	NVME_SANITIZE_SSI_FAILS_SHIFT		= 4,
+	NVME_SANITIZE_SSI_FAILS_MASK		= 0xf,
+	NVME_SANITIZE_SSI_IDLE			= 0,
+	NVME_SANITIZE_SSI_RESTRICT_PROCESSING	= 1,
+	NVME_SANITIZE_SSI_RESTRICT_FAILURE	= 2,
+	NVME_SANITIZE_SSI_UNRESTRICT_PROCESSING	= 3,
+	NVME_SANITIZE_SSI_UNRESTRICT_FAILURE	= 4,
+	NVME_SANITIZE_SSI_MEDIA_VERIFICATION	= 5,
+	NVME_SANITIZE_SSI_POST_VERIF_DEALLOC	= 6,
 };
 
 /**
