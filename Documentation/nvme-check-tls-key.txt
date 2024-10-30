@@ -16,6 +16,7 @@ SYNOPSIS
 			[--output-format=<fmt> | -o <fmt>]
 			[--identity=<id-vers> | -I <id-vers>]
 			[--insert | -i ]
+			[--keyfile=<keyfile> | -f <keyfile>]
 			[--verbose | -v]
 
 DESCRIPTION
@@ -60,6 +61,11 @@ OPTIONS
 -i:
 --insert:
 	Insert the derived 'retained' key in the keyring.
+
+-f <keyfile>
+--keyfile=<keyfile>
+	Append the resulting TLS key to keyfile. This command line option is
+	depending on --insert.
 
 -o <fmt>::
 --output-format=<fmt>::
