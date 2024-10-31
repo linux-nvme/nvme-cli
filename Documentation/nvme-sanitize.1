@@ -2,12 +2,12 @@
 .\"     Title: nvme-sanitize
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/05/2024
+.\"      Date: 10/31/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SANITIZE" "1" "08/05/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-SANITIZE" "1" "10/31/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,7 +36,7 @@ nvme-sanitize \- Send NVMe Sanitize Command, return result
                         [\-\-owpass=<overwrite\-pass\-count> | \-n <overwrite\-pass\-count>]
                         [\-\-ause | \-u] [\-\-sanact=<action> | \-a <action>]
                         [\-\-ovrpat=<overwrite\-pattern> | \-p <overwrite\-pattern>]
-                        [\-\-force]
+                        [\-\-emvs | \-e] [\-\-force]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
@@ -78,6 +78,7 @@ lt lt
 lt lt
 lt lt
 lt lt
+lt lt
 lt lt.
 T{
 Value
@@ -113,6 +114,12 @@ T{
 T}:T{
 Start a Crypto Erase sanitize operation
 T}
+T{
+0x05 |
+\fIexit\-media\-verification\fR
+T}:T{
+Exit Media Verification State
+T}
 .TE
 .sp 1
 .RE
@@ -120,6 +127,11 @@ T}
 \-p <overwrite\-pattern>, \-\-ovrpat=<overwrite\-pattern>
 .RS 4
 Overwrite Pattern: This field is ignored unless the Sanitize Action field in Command Dword 10 is set to 011b (i\&.e\&., Overwrite)\&. This field specifies a 32\-bit pattern that is used for the Overwrite sanitize operation\&.
+.RE
+.PP
+\-e, \-\-emvs
+.RS 4
+Enter Media Verification State: If set, then the Media Verification state shall be entered if sanitize processing completes successfully\&. If cleared, then this bit shall have no effect\&. If SANACT field does not specify starting a sanitize operation (i\&.e\&., is set to any value other than 010b, 011b, or 100b), then this bit shall be ignored by the controller\&.
 .RE
 .PP
 \-\-force

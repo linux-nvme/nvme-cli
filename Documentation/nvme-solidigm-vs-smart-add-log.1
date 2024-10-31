@@ -1,0 +1,94 @@
+'\" t
+.\"     Title: nvme-solidigm-vs-smart-add-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/31/2024
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SOLIDIGM\-VS\-" "1" "10/31/2024" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-solidigm-vs-smart-add-log \- Get SMART / health extended log
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme solidigm vs\-smart\-add\-log\fR <device> [OPTIONS]
+.fi
+.SH "DESCRIPTION"
+.sp
+This command retrieves the SMART / health extended log for Solidigm NVMe devices\&. It redirects to the OCP plug\-in for compatibility\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR
+or
+\fIjson\fR\&. Only one output format can be used at a time\&. Default is normal\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the SMART / health extended log in normal format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm vs\-smart\-add\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the SMART / health extended log in JSON format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm vs\-smart\-add\-log /dev/nvme0 \-o json
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-cli suite

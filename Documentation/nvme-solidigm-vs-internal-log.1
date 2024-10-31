@@ -1,0 +1,126 @@
+'\" t
+.\"     Title: nvme-solidigm-vs-internal-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/31/2024
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SOLIDIGM\-VS\-" "1" "10/31/2024" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-solidigm-vs-internal-log \- Retrieve Debug log binaries
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme solidigm vs\-internal\-log\fR <device> [\-\-log\-type=<type> | \-t <type>]
+                                          [\-\-output\-dir=<dir> | \-d <dir>]
+                                          [\-\-verbose | \-v]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, retrieves the Solidigm vendor\-specific internal debug log binaries and saves them to the specified output directory\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.SH "OPTIONS"
+.PP
+\-t <type>, \-\-log\-type=<type>
+.RS 4
+Specify the type of log to retrieve\&. Valid options are ALL, CIT, HIT, NLOG, ASSERT, and EVENT\&. Defaults to ALL\&.
+.RE
+.PP
+\-d <dir>, \-\-output\-dir=<dir>
+.RS 4
+Specify the output directory for the log files\&. Defaults to the current working directory\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Enable verbose output for additional information during the log retrieval process\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve all internal logs and save them to the current directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm vs\-internal\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve a specific log type and save it to a custom directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm vs\-internal\-log /dev/nvme0 \-t NLOG \-d /tmp/logs
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve logs with verbose output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm vs\-internal\-log /dev/nvme0 \-v
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

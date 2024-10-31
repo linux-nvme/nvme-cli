@@ -2,12 +2,12 @@
 .\"     Title: nvme-device-self-test
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/05/2024
+.\"      Date: 10/31/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DEVICE\-SELF\-" "1" "08/05/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-DEVICE\-SELF\-" "1" "10/31/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -44,6 +44,8 @@ Initiates the required test based on the user input\&.
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
 On success, the corresponding test is initiated\&.
+.sp
+The results of this test can be queried via \fInvme self\-test\-log <device>\fR\&.
 .SH "OPTIONS"
 .PP
 \-n <NUM>, \-\-namespace\-id=<NUM>

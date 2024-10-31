@@ -1,0 +1,93 @@
+'\" t
+.\"     Title: nvme-solidigm-temp-stats
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/31/2024
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SOLIDIGM\-TEMP" "1" "10/31/2024" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-solidigm-temp-stats \- Retrieve Temperature Statistics log
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme solidigm temp\-stats\fR <device> [\-\-raw\-binary | \-b]
+.fi
+.SH "DESCRIPTION"
+.sp
+Retrieves and displays the Temperature Statistics log for the given Solidigm NVMe device\&. This log provides detailed temperature\-related information\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.SH "OPTIONS"
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+Dump output in binary format\&. This option will display the raw data instead of interpreting it\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve and display the temperature statistics log:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm temp\-stats /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve the temperature statistics log in raw binary format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm temp\-stats /dev/nvme0 \-\-raw\-binary
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

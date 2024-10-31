@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 10.2.0" />
+<meta name="generator" content="AsciiDoc 10.2.1" />
 <title>nvme-sanitize(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -753,7 +753,7 @@ nvme-sanitize(1) Manual Page
                         [--owpass=&lt;overwrite-pass-count&gt; | -n &lt;overwrite-pass-count&gt;]
                         [--ause | -u] [--sanact=&lt;action&gt; | -a &lt;action&gt;]
                         [--ovrpat=&lt;overwrite-pattern&gt; | -p &lt;overwrite-pattern&gt;]
-                        [--force]
+                        [--emvs | -e] [--force]
                         [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
@@ -877,6 +877,10 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">0x04 | <em>start-crypto-erase</em></p></td>
 <td align="left" valign="top"><p class="table">Start a Crypto Erase sanitize operation</p></td>
 </tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x05 | <em>exit-media-verification</em></p></td>
+<td align="left" valign="top"><p class="table">Exit Media Verification State</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -894,6 +898,22 @@ cellspacing="0" cellpadding="4">
         Command Dword 10 is set to 011b (i.e., Overwrite). This field
         specifies a 32-bit pattern that is used for the Overwrite
         sanitize operation.
+</p>
+</dd>
+<dt class="hdlist1">
+-e
+</dt>
+<dt class="hdlist1">
+--emvs
+</dt>
+<dd>
+<p>
+        Enter Media Verification State:
+        If set, then the Media Verification state shall be entered if sanitize
+        processing completes successfully. If cleared, then this bit shall have
+        no effect. If SANACT field does not specify starting a sanitize operation
+        (i.e., is set to any value other than 010b, 011b, or 100b), then this bit
+        shall be ignored by the controller.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -960,7 +980,7 @@ Has the program issue Sanitize Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-08-05 15:42:22 CEST
+ 2024-10-31 10:38:40 CET
 </div>
 </div>
 </body>

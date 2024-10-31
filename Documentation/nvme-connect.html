@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 10.2.0" />
+<meta name="generator" content="AsciiDoc 10.2.1" />
 <title>nvme-connect(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -767,7 +767,8 @@ nvme-connect(1) Manual Page
                         [--keep-alive-tmo=&lt;#&gt; | -k &lt;#&gt;]
                         [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]
                         [--ctrl-loss-tmo=&lt;#&gt; | -l &lt;#&gt;] [--tos=&lt;#&gt; | -T &lt;#&gt;]
-                        [--keyring=&lt;#&gt;] [--tls_key=&lt;#&gt;]
+                        [--keyring=&lt;keyring&gt;] [--tls-key=&lt;tls-key&gt;]
+                        [--tls-key-identity=&lt;identity&gt;]
                         [--duplicate-connect | -D] [--disable-sqflow ]
                         [--hdr-digest | -g] [--data-digest | -G] [--tls]
                         [--concat] [--dump-config | -O] [--application=&lt;id&gt;]
@@ -1055,19 +1056,35 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
---keyring=&lt;#&gt;
+--keyring=&lt;keyring&gt;
 </dt>
 <dd>
 <p>
-        Keyring for TLS key lookup.
+        Keyring for TLS key lookup, either the key id or the keyring name.
 </p>
 </dd>
 <dt class="hdlist1">
---tls_key=&lt;#&gt;
+--tls-key=&lt;tls-key&gt;
 </dt>
 <dd>
 <p>
-        TLS key for the connection (TCP).
+        TLS key for the connection (TCP), either the TLS key in
+        interchange format or the key id. It&#8217;s strongly recommended not
+        to provide the TLS key via the comamnd line due to security
+        concerns. Instead in production situation, the key should be
+        loaded into the keystore with <em>nvme tls --import</em> and only the
+        <em>--tls</em> options used. The kernel will select the matching key.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls-key-identity=&lt;identity&gt;
+</dt>
+<dd>
+<p>
+        The identity used for the tls-key. If none is provided the
+        tls-key provided via the comamnd line is considered a
+        configuration key and a derive key will be loaded into the
+        keyring.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1218,7 +1235,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-08-05 15:42:22 CEST
+ 2024-10-31 10:38:40 CET
 </div>
 </div>
 </body>

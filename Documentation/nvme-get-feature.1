@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-feature
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/05/2024
+.\"      Date: 10/31/2024
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-FEATURE" "1" "08/05/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-FEATURE" "1" "10/31/2024" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,7 +38,7 @@ nvme-get-feature \- Gets an NVMe feature, returns applicable results
                         [\-\-data\-len=<data\-len> | \-l <data\-len>]
                         [\-\-sel=<select> | \-s <select>]
                         [\-\-raw\-binary | \-b] [\-\-cdw11=<cdw11> | \-c <cdw11>]
-                        [\-\-human\-readable | \-H]
+                        [\-\-human\-readable | \-H] [\-\-changed | \-C]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
                         [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
@@ -129,6 +129,11 @@ Print the raw feature buffer to stdout if the feature returns a structure\&.
 \-H, \-\-human\-readable
 .RS 4
 This option will parse and format many of the bit fields into human\-readable formats\&.
+.RE
+.PP
+\-C, \-\-changed
+.RS 4
+This option will show feature changed\&.
 .RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>

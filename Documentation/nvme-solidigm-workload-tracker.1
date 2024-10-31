@@ -1,0 +1,221 @@
+'\" t
+.\"     Title: nvme-solidigm-workload-tracker
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/31/2024
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SOLIDIGM\-WORK" "1" "10/31/2024" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-solidigm-workload-tracker \- Real\-time capture of Workload Tracker samples
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme solidigm workload\-tracker\fR <device> [\-\-enable | \-e] [\-\-disable | \-d]
+                                      [\-\-sample\-time=<time> | \-s <time>]
+                                      [\-\-type=<type> | \-t <type>]
+                                      [\-\-run\-time=<seconds> | \-r <seconds>]
+                                      [\-\-flush\-freq=<count> | \-f <count>]
+                                      [\-\-wall\-clock | \-w]
+                                      [\-\-trigger\-field=<field> | \-T <field>]
+                                      [\-\-trigger\-threshold=<value> | \-V <value>]
+                                      [\-\-trigger\-on\-delta | \-D]
+                                      [\-\-trigger\-on\-latency | \-L]
+                                      [\-\-verbose | \-v]
+.fi
+.SH "DESCRIPTION"
+.sp
+Captures and displays real\-time workload tracker samples for the given Solidigm NVMe device\&. This command allows for monitoring and analysis of the device\(cqs workload characteristics\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.SH "OPTIONS"
+.PP
+\-e, \-\-enable
+.RS 4
+Enable the workload tracker before capturing samples\&.
+.RE
+.PP
+\-d, \-\-disable
+.RS 4
+Disable the workload tracker after capturing samples\&.
+.RE
+.PP
+\-s <time>, \-\-sample\-time=<time>
+.RS 4
+Set the sample interval\&. Valid values are: default, 1ms, 5ms, 10ms, 50ms, 100ms, 500ms, 1s, 5s, 10s, 30s, 1m, 5m, 10m, 30m, 1h\&.
+.RE
+.PP
+\-t <type>, \-\-type=<type>
+.RS 4
+Set the tracker type\&. Valid types are: Base, CmdQ, Pattern, RandSeq, Throttle, Power, Defrag\&.
+.RE
+.PP
+\-r <seconds>, \-\-run\-time=<seconds>
+.RS 4
+Limit runtime capture time in seconds\&.
+.RE
+.PP
+\-f <count>, \-\-flush\-freq=<count>
+.RS 4
+Number of samples (1 to 126) to wait before extracting data\&. Default is 100 samples\&.
+.RE
+.PP
+\-w, \-\-wall\-clock
+.RS 4
+Log current wall timestamp when entry was retrieved\&.
+.RE
+.PP
+\-T <field>, \-\-trigger\-field=<field>
+.RS 4
+Field name to stop trigger on\&.
+.RE
+.PP
+\-V <value>, \-\-trigger\-threshold=<value>
+.RS 4
+Field value to trigger stop sampling\&.
+.RE
+.PP
+\-D, \-\-trigger\-on\-delta
+.RS 4
+Trigger on delta to stop sampling\&.
+.RE
+.PP
+\-L, \-\-trigger\-on\-latency
+.RS 4
+Use latency tracker to trigger stop sampling\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase logging verbosity\&. Can be used multiple times\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Enable the workload tracker and capture samples:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm workload\-tracker /dev/nvme0 \-\-enable
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Capture workload tracker samples with a 1ms interval for 60 seconds:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm workload\-tracker /dev/nvme0 \-\-enable \-\-sample\-time=1ms \-\-run\-time=60
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Disable the workload tracker:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm workload\-tracker /dev/nvme0 \-\-disable
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Enable the workload tracker and capture samples with a specific sample time and type:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm workload\-tracker /dev/nvme0 \-\-enable \-\-sample\-time=1ms \-\-type=Base
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Capture Power tracker samples with a 10\-second interval for 5 minutes:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm workload\-tracker /dev/nvme0 \-\-enable \-\-type=Power \-\-sample\-time=10s \-\-run\-time=300
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

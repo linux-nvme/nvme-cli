@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 10.2.0" />
+<meta name="generator" content="AsciiDoc 10.2.1" />
 <title>nvme-get-feature(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -755,7 +755,7 @@ nvme-get-feature(1) Manual Page
                         [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
                         [--sel=&lt;select&gt; | -s &lt;select&gt;]
                         [--raw-binary | -b] [--cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt;]
-                        [--human-readable | -H]
+                        [--human-readable | -H] [--changed | -C]
                         [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
                         [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
@@ -912,6 +912,17 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+-C
+</dt>
+<dt class="hdlist1">
+--changed
+</dt>
+<dd>
+<p>
+        This option will show feature changed.
+</p>
+</dd>
+<dt class="hdlist1">
 -o &lt;fmt&gt;
 </dt>
 <dt class="hdlist1">
@@ -1016,7 +1027,7 @@ format:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-08-05 15:42:22 CEST
+ 2024-10-31 10:38:40 CET
 </div>
 </div>
 </body>

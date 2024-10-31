@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 10.2.0" />
+<meta name="generator" content="AsciiDoc 10.2.1" />
 <title>nvme-device-self-test(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -764,6 +764,7 @@ nvme-device-self-test(1) Manual Page
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
 <div class="paragraph"><p>On success, the corresponding test is initiated.</p></div>
+<div class="paragraph"><p>The results of this test can be queried via <em>nvme self-test-log &lt;device&gt;</em>.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -884,7 +885,7 @@ Abort the device self-test operation in the namespace-id 1:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-08-05 15:42:22 CEST
+ 2024-10-31 10:38:40 CET
 </div>
 </div>
 </body>
