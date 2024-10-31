@@ -1908,6 +1908,103 @@ static void test_endpoint_quirk_probe(struct nvme_mi_ep *ep)
 	assert(rc == 0);
 }
 
+struct req_dlen_doff_data {
+	enum {
+		DATA_DIR_IN,
+		DATA_DIR_OUT,
+	} direction;
+	unsigned int req_len;
+	unsigned int resp_len;
+	unsigned int exp_doff;
+};
+
+static int test_admin_dlen_doff_cb(struct nvme_mi_ep *ep,
+			      struct nvme_mi_req *req,
+			      struct nvme_mi_resp *resp,
+			      void *data)
+{
+	struct req_dlen_doff_data *args = data;
+	__u8 *hdr = (__u8 *)req->hdr;
+	__u32 dlen, doff;
+
+	dlen = hdr[35] << 24 | hdr[34] << 16 | hdr[33] << 8 | hdr[32];
+	doff = hdr[39] << 24 | hdr[38] << 16 | hdr[37] << 8 | hdr[36];
+
+	if (args->direction == DATA_DIR_OUT) {
+		assert(dlen == args->req_len);
+		assert(dlen == req->data_len);
+		assert(doff == 0);
+	} else {
+		assert(dlen == args->resp_len);
+		assert(dlen == resp->data_len);
+		assert(doff == args->exp_doff);
+	}
+
+	/* minimal valid response */
+	hdr = (__u8 *)resp->hdr;
+	hdr[4] = 0x00; /* status: success */
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+/* Check dlen value on admin_xfer requests that include data. */
+static void test_admin_dlen_doff_req(struct nvme_mi_ep *ep)
+{
+	struct {
+		struct nvme_mi_admin_req_hdr	hdr;
+		unsigned char			data[4096];
+	} admin_req = { 0 };
+	struct nvme_mi_admin_resp_hdr admin_resp = { 0 };
+	struct req_dlen_doff_data data = { 0 };
+	size_t resp_sz = 0;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	data.direction = DATA_DIR_OUT;
+	data.req_len = sizeof(admin_req.data);
+
+	test_set_transport_callback(ep, test_admin_dlen_doff_cb, &data);
+
+	ctrl = nvme_mi_init_ctrl(ep, 0);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_xfer(ctrl, &admin_req.hdr, sizeof(admin_req.data),
+				&admin_resp, 0, &resp_sz);
+
+	assert(!rc);
+};
+
+/* Check dlen value on admin_xfer requests that return data in their response.
+ */
+static void test_admin_dlen_doff_resp(struct nvme_mi_ep *ep)
+{
+	struct {
+		struct nvme_mi_admin_resp_hdr	hdr;
+		unsigned char			data[4096];
+	} admin_resp = { 0 };
+	struct nvme_mi_admin_req_hdr admin_req = { 0 };
+	struct req_dlen_doff_data data = { 0 };
+	nvme_mi_ctrl_t ctrl;
+	size_t resp_sz;
+	int rc;
+
+	data.direction = DATA_DIR_IN;
+	data.resp_len = sizeof(admin_resp.data);
+	resp_sz = sizeof(admin_resp.data);
+
+	test_set_transport_callback(ep, test_admin_dlen_doff_cb, &data);
+
+	ctrl = nvme_mi_init_ctrl(ep, 0);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_xfer(ctrl, &admin_req, 0, &admin_resp.hdr, 0,
+				&resp_sz);
+
+	assert(!rc);
+};
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -1950,6 +2047,8 @@ struct test {
 	DEFINE_TEST(admin_sanitize_nvm),
 	DEFINE_TEST(admin_get_log_split),
 	DEFINE_TEST(endpoint_quirk_probe),
+	DEFINE_TEST(admin_dlen_doff_req),
+	DEFINE_TEST(admin_dlen_doff_resp),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
