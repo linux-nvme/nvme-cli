@@ -881,14 +881,14 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 }
 
 static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
-			     int version, int hmac,
+			     int version, int cipher,
 			     unsigned char *retained, size_t key_len,
 			     char *digest, size_t digest_len)
 {
 	static const char hmac_seed[] = "NVMe-over-Fabrics";
-	const EVP_MD *md = select_hmac(hmac, &hmac_len);
 	_cleanup_hmac_ctx_ HMAC_CTX *hmac_ctx = NULL;
 	_cleanup_free_ unsigned char *psk_ctx = NULL;
+	const EVP_MD *md;
 	size_t hmac_len;
 	size_t len;
 
