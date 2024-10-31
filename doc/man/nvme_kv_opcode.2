@@ -1,0 +1,66 @@
+.TH "libnvme" 9 "enum nvme_kv_opcode" "October 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_kv_opcode \- Opcodes for KV Commands
+.SH SYNOPSIS
+enum nvme_kv_opcode {
+.br
+.BI "    nvme_kv_cmd_flush"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_store"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_retrieve"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_list"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_resv_register"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_resv_report"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_delete"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_resv_acquire"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_exist"
+, 
+.br
+.br
+.BI "    nvme_kv_cmd_resv_release"
+
+};
+.SH Constants
+.IP "nvme_kv_cmd_flush" 12
+Flush
+.IP "nvme_kv_cmd_store" 12
+Store
+.IP "nvme_kv_cmd_retrieve" 12
+Retrieve
+.IP "nvme_kv_cmd_list" 12
+List
+.IP "nvme_kv_cmd_resv_register" 12
+Reservation Register
+.IP "nvme_kv_cmd_resv_report" 12
+Reservation Report
+.IP "nvme_kv_cmd_delete" 12
+Delete
+.IP "nvme_kv_cmd_resv_acquire" 12
+Reservation Acquire
+.IP "nvme_kv_cmd_exist" 12
+Exist
+.IP "nvme_kv_cmd_resv_release" 12
+Reservation Release

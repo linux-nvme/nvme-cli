@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_lockdown_log_scope" "October 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_lockdown_log_scope \- lockdown log page scope attributes
+.SH SYNOPSIS
+enum nvme_lockdown_log_scope {
+.br
+.BI "    NVME_LOCKDOWN_ADMIN_CMD"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_FEATURE_ID"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_MI_CMD_SET"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_PCI_CMD_SET"
+
+};
+.SH Constants
+.IP "NVME_LOCKDOWN_ADMIN_CMD" 12
+Scope value for Admin commandS
+.IP "NVME_LOCKDOWN_FEATURE_ID" 12
+Scope value for Feature ID
+.IP "NVME_LOCKDOWN_MI_CMD_SET" 12
+Scope value for Management Interface commands
+.IP "NVME_LOCKDOWN_PCI_CMD_SET" 12
+Scope value for PCI commands

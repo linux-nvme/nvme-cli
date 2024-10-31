@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_cmd_effects" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_cmd_effects" "October 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_cmd_effects \- Commands Supported and Effects
 .SH SYNOPSIS
@@ -24,6 +24,10 @@ enum nvme_cmd_effects {
 , 
 .br
 .br
+.BI "    NVME_CMD_EFFECTS_CSER_MASK"
+, 
+.br
+.br
 .BI "    NVME_CMD_EFFECTS_CSE_MASK"
 , 
 .br
@@ -42,6 +46,8 @@ Namespace Capability Change
 Namespace Inventory Change
 .IP "NVME_CMD_EFFECTS_CCC" 12
 Controller Capability Change
+.IP "NVME_CMD_EFFECTS_CSER_MASK" 12
+Command Submission and Execution Relaxations
 .IP "NVME_CMD_EFFECTS_CSE_MASK" 12
 Command Submission and Execution
 .IP "NVME_CMD_EFFECTS_UUID_SEL" 12

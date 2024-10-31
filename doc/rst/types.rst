@@ -49,6 +49,44 @@ The 'name' field from 'value'
 The 'name' field from 'value'
 
 
+.. c:macro:: NVME_CHECK
+
+``NVME_CHECK (value, name, check)``
+
+   check value to compare field value
+
+**Parameters**
+
+``value``
+  The value to be checked
+
+``name``
+  The name of the sub-field within an nvme value
+
+``check``
+  The sub-field value to check
+
+**Return**
+
+The result of compare the value and the sub-field value
+
+
+.. c:macro:: NVME_VAL
+
+``NVME_VAL (name)``
+
+   get mask value shifted
+
+**Parameters**
+
+``name``
+  The name of the sub-field within an nvme value
+
+**Return**
+
+The mask value shifted
+
+
 
 
 .. c:enum:: nvme_constants
@@ -1536,7 +1574,8 @@ power scale value
     __le16 domainid;
     __u8 rsvd358[10];
     __u8 megcap[16];
-    __u8 rsvd384[128];
+    __u8 tmpthha;
+    __u8 rsvd385[127];
     __u8 sqes;
     __u8 cqes;
     __le16 maxcmd;
@@ -1556,7 +1595,19 @@ power scale value
     __u8 maxdna[16];
     __le32 maxcna;
     __le32 oaqd;
-    __u8 rsvd568[200];
+    __u8 rsvd568[2];
+    __u16 cmmrtd;
+    __u16 nmmrtd;
+    __u8 minmrtg;
+    __u8 maxmrtg;
+    __u8 trattr;
+    __u8 rsvd577;
+    __u16 mcudmq;
+    __u16 mnsudmq;
+    __u16 mcmr;
+    __u16 nmcmr;
+    __u16 mcdqpc;
+    __u8 rsvd588[180];
     char subnqn[NVME_NQN_LENGTH];
     __u8 rsvd1024[768];
     __le32 ioccsz;
@@ -1843,7 +1894,10 @@ power scale value
   Max Endurance Group Capacity indicates the maximum capacity
   of a single Endurance Group.
 
-``rsvd384``
+``tmpthha``
+  Temperature Threshold Hysteresis Attributes
+
+``rsvd385``
   Reserved
 
 ``sqes``
@@ -1931,6 +1985,63 @@ power scale value
   on the controller for optimal operation.
 
 ``rsvd568``
+  Reserved
+
+``cmmrtd``
+  Controller Maximum Memory Range Tracking Descriptors indicates
+  the maximum number of Memory Range Tracking Descriptors the
+  controller supports.
+
+``nmmrtd``
+  NVM Subsystem Maximum Memory Range Tracking Descriptors
+  indicates the maximum number of Memory Range Tracking Descriptors
+  the NVM subsystem supports.
+
+``minmrtg``
+  Minimum Memory Range Tracking Granularity indicates the minimum
+  value supported in the Requested Memory Range Tracking
+  Granularity (RMRTG) field of the Track Memory Ranges data
+  structure.
+
+``maxmrtg``
+  Maximum Memory Range Tracking Granularity indicates the maximum
+  value supported in the Requested Memory Range Tracking
+  Granularity (RMRTG) field of the Track Memory Ranges data
+  structure.
+
+``trattr``
+  Tracking Attributes indicates supported attributes for the
+  Track Send command and Track Receive command.
+
+``rsvd577``
+  Reserved
+
+``mcudmq``
+  Maximum Controller User Data Migration Queues indicates the
+  maximum number of User Data Migration Queues supported by the
+  controller.
+
+``mnsudmq``
+  Maximum NVM Subsystem User Data Migration Queues indicates the
+  maximum number of User Data Migration Queues supported by the NVM
+  subsystem.
+
+``mcmr``
+  Maximum CDQ Memory Ranges indicates the maximum number of
+  memory ranges allowed to be specified by the PRP1 field of a
+  Controller Data Queue command.
+
+``nmcmr``
+  NVM Subsystem Maximum CDQ Memory Ranges indicates the maximum
+  number of memory ranges for all Controller Data Queues in the
+  NVM subsystem.
+
+``mcdqpc``
+  Maximum Controller Data Queue PRP Count indicates the maximum
+  number of PRPs allowed to be specified in the PRP list in the
+  Controller Data Queue command.
+
+``rsvd588``
   Reserved
 
 ``subnqn``
@@ -2060,6 +2171,87 @@ power scale value
 
 **Constants**
 
+``NVME_CTRL_OAES_NA_SHIFT``
+  Shift amount to get the Namespace Attribute Notices event supported
+
+``NVME_CTRL_OAES_FA_SHIFT``
+  Shift amount to get the Firmware Activation Notices event supported
+
+``NVME_CTRL_OAES_ANA_SHIFT``
+  Shift amount to get the ANA Change Notices supported
+
+``NVME_CTRL_OAES_PLEA_SHIFT``
+  Shift amount to get the Predictable Latency Event Aggregate Log
+  Change Notices event supported
+
+``NVME_CTRL_OAES_LBAS_SHIFT``
+  Shift amount to get the LBA Status Information Notices event
+  supported
+
+``NVME_CTRL_OAES_EGE_SHIFT``
+  Shift amount to get the Endurance Group Events Aggregate Log Change
+  Notices event supported
+
+``NVME_CTRL_OAES_NS_SHIFT``
+  Shift amount to get the Normal NVM Subsystem Shutdown event supported
+
+``NVME_CTRL_OAES_TTH_SHIFT``
+  Shift amount to get the Temperature Threshold Hysteresis Recovery
+  event supported
+
+``NVME_CTRL_OAES_RGCNS_SHIFT``
+  Shift amount to get the Reachability Groups Change Notices supported
+
+``NVME_CTRL_OAES_ANSAN_SHIFT``
+  Shift amount to get the Allocated Namespace Attribute Notices
+  supported
+
+``NVME_CTRL_OAES_ZD_SHIFT``
+  Shift amount to get the Zone Descriptor Change Notifications supported
+
+``NVME_CTRL_OAES_DL_SHIFT``
+  Shift amount to get the Discover Log Page Change Notifications
+  supported
+
+``NVME_CTRL_OAES_NA_MASK``
+  Mask to get the Namespace Attribute Notices event supported
+
+``NVME_CTRL_OAES_FA_MASK``
+  Mask to get the Firmware Activation Notices event supported
+
+``NVME_CTRL_OAES_ANA_MASK``
+  Mask to get the ANA Change Notices supported
+
+``NVME_CTRL_OAES_PLEA_MASK``
+  Mask to get the Predictable Latency Event Aggregate Log Change Notices
+  event supported
+
+``NVME_CTRL_OAES_LBAS_MASK``
+  Mask to get the LBA Status Information Notices event supported
+
+``NVME_CTRL_OAES_EGE_MASK``
+  Mask to get the Endurance Group Events Aggregate Log Change Notices
+  event supported
+
+``NVME_CTRL_OAES_NS_MASK``
+  Mask to get the Normal NVM Subsystem Shutdown event supported
+
+``NVME_CTRL_OAES_TTH_MASK``
+  Mask to get the Temperature Threshold Hysteresis Recovery event
+  supported
+
+``NVME_CTRL_OAES_RGCNS_MASK``
+  Mask to get the Reachability Groups Change Notices supported
+
+``NVME_CTRL_OAES_ANSAN_MASK``
+  Mask to get the Allocated Namespace Attribute Notices supported
+
+``NVME_CTRL_OAES_ZD_MASK``
+  Mask to get the Zone Descriptor Change Notifications supported
+
+``NVME_CTRL_OAES_DL_MASK``
+  Mask to get the Discover Log Page Change Notifications supported
+
 ``NVME_CTRL_OAES_NA``
   Namespace Attribute Notices event supported
 
@@ -2070,18 +2262,25 @@ power scale value
   ANA Change Notices supported
 
 ``NVME_CTRL_OAES_PLEA``
-  Predictable Latency Event Aggregate Log
-  Change Notices event supported
+  Predictable Latency Event Aggregate Log Change Notices event supported
 
 ``NVME_CTRL_OAES_LBAS``
   LBA Status Information Notices event supported
 
 ``NVME_CTRL_OAES_EGE``
-  Endurance Group Events Aggregate Log Change
-  Notices event supported
+  Endurance Group Events Aggregate Log Change Notices event supported
 
 ``NVME_CTRL_OAES_NS``
   Normal NVM Subsystem Shutdown event supported
+
+``NVME_CTRL_OAES_TTH``
+  Temperature Threshold Hysteresis Recovery event supported
+
+``NVME_CTRL_OAES_RGCNS``
+  Reachability Groups Change Notices supported
+
+``NVME_CTRL_OAES_ANSAN``
+  Allocated Namespace Attribute Notices supported
 
 ``NVME_CTRL_OAES_ZD``
   Zone Descriptor Change Notifications supported
@@ -2644,6 +2843,30 @@ power scale value
    This field indicates attributes for the Format NVM command.
 
 **Constants**
+
+``NVME_CTRL_FNA_FMT_ALL_NS_SHIFT``
+  Shift amount to get the format applied to all namespaces
+
+``NVME_CTRL_FNA_SEC_ALL_NS_SHIFT``
+  Shift amount to get the secure erase applied to all namespaces
+
+``NVME_CTRL_FNA_CES_SHIFT``
+  Shift amount to get the cryptographic erase supported
+
+``NVME_CTRL_FNA_NSID_ALL_F_SHIFT``
+  Shift amount to get the format supported an NSID FFFFFFFFh
+
+``NVME_CTRL_FNA_FMT_ALL_NS_MASK``
+  Mask to get the format applied to all namespaces
+
+``NVME_CTRL_FNA_SEC_ALL_NS_MASK``
+  Mask to get the secure erase applied to all namespaces
+
+``NVME_CTRL_FNA_CES_MASK``
+  Mask to get the cryptographic erase supported
+
+``NVME_CTRL_FNA_NSID_ALL_F_MASK``
+  Mask to get the format supported an NSID FFFFFFFFh
 
 ``NVME_CTRL_FNA_FMT_ALL_NAMESPACES``
   If set, then all namespaces in an NVM
@@ -3795,7 +4018,9 @@ power scale value
     __le64 dmsl;
     __u8 rsvd16[2];
     __le16 aocs;
-    __u8 rsvd20[4076];
+    __le32 ver;
+    __u8 lbamqf;
+    __u8 rsvd25[4071];
   };
 
 **Members**
@@ -3824,7 +4049,13 @@ power scale value
 ``aocs``
   Admin Optional Command Support
 
-``rsvd20``
+``ver``
+  Version
+
+``lbamqf``
+  LBA Migration Queue Format
+
+``rsvd25``
   Reserved
 
 
@@ -3846,7 +4077,11 @@ power scale value
     __u8 rsvd10[2];
     __le32 elbaf[64];
     __le32 npdgl;
-    __u8 rsvd272[20];
+    __le32 nprg;
+    __le32 npra;
+    __le32 nors;
+    __le32 npdal;
+    __le32 lbapss;
     __le32 tlbaag;
     __u8 rsvd296[3800];
   };
@@ -3871,8 +4106,20 @@ power scale value
 ``npdgl``
   Namespace Preferred Deallocate Granularity Large
 
-``rsvd272``
-  Reserved
+``nprg``
+  Namespace Preferred Read Granularity
+
+``npra``
+  Namespace Preferred Read Alignment
+
+``nors``
+  Namespace Optimal Read Size
+
+``npdal``
+  Namespace Preferred Deallocate Alignment Large
+
+``lbapss``
+  LBA Format Placement Shard Size
 
 ``tlbaag``
   Tracked LBA Allocation Granularity
@@ -4853,6 +5100,9 @@ Supported Log Pages (Log Identifier 00h)
 
 ``NVME_CMD_EFFECTS_CCC``
   Controller Capability Change
+
+``NVME_CMD_EFFECTS_CSER_MASK``
+  Command Submission and Execution Relaxations
 
 ``NVME_CMD_EFFECTS_CSE_MASK``
   Command Submission and Execution
@@ -5878,6 +6128,9 @@ bytes, in size. This log captures the controller’s internal state.
 
 ``NVME_PEL_THERMAL_EXCURSION_EVENT``
   Thermal Excursion Event
+
+``NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT``
+  Sanitize Media Verification Event
 
 ``NVME_PEL_VENDOR_SPECIFIC_EVENT``
   Vendor Specific Event
@@ -7289,6 +7542,39 @@ bytes, in size. This log captures the controller’s internal state.
 
 
 
+.. c:struct:: nvme_lockdown_log
+
+   Command and Feature Lockdown Log
+
+**Definition**
+
+::
+
+  struct nvme_lockdown_log {
+    __u8 cfila;
+    __u8 rsvd1[2];
+    __u8 lngth;
+    __u8 cfil[508];
+  };
+
+**Members**
+
+``cfila``
+  Contents of the Command and Feature Identifier List field in the log page.
+
+``rsvd1``
+  Reserved
+
+``lngth``
+  Length of Command and Feature Identifier List field
+
+``cfil``
+  Command and Feature Identifier List
+
+
+
+
+
 .. c:struct:: nvme_resv_notification_log
 
    Reservation Notification Log
@@ -7369,7 +7655,9 @@ bytes, in size. This log captures the controller’s internal state.
     __le32 etond;
     __le32 etbend;
     __le32 etcend;
-    __u8 rsvd32[480];
+    __le32 etpvds;
+    __u8 ssi;
+    __u8 rsvd37[475];
   };
 
 **Members**
@@ -7456,7 +7744,19 @@ bytes, in size. This log captures the controller’s internal state.
   started that operation is completed. A value of FFFFFFFFh indicates
   that no time period is reported.
 
-``rsvd32``
+``etpvds``
+  Estimated Time For Post-Verification Deallocation State: indicates the
+  number of seconds required to deallocate all media allocated for user data
+  after exiting the Media Verification state (i.e., the time difference between
+  entering and exiting the Post-Verification Deallocation state), if that state
+  is entered as part of the sanitize operation. A value of FFFFFFFFh indicates
+  that no time period is reported.
+
+``ssi``
+  Sanitize State Information: indicate the state of the Sanitize Operation
+  State Machine.
+
+``rsvd37``
   Reserved
 
 
@@ -7531,6 +7831,79 @@ bytes, in size. This log captures the controller’s internal state.
   the NVM subsystem has never been sanitized;
   or since the most recent successful sanitize
   operation.
+
+``NVME_SANITIZE_SSTAT_MVCNCLD_SHIFT``
+  Shift amount to get the value of Media Verification
+  Canceled bit of Sanitize status field.
+
+``NVME_SANITIZE_SSTAT_MVCNCLD_MASK``
+  Mask to get the value of Media Verification Canceled
+  bit of Sanitize status field.
+
+
+
+
+.. c:enum:: nvme_sanitize_ssi
+
+   Sanitize State Information (SSI)
+
+**Constants**
+
+``NVME_SANITIZE_SSI_SANS_SHIFT``
+  Shift amount to get the value of Sanitize State
+  from Sanitize State Information (SSI) field.
+
+``NVME_SANITIZE_SSI_SANS_MASK``
+  Mask to get the value of Sanitize State from
+  Sanitize State Information (SSI) field.
+
+``NVME_SANITIZE_SSI_FAILS_SHIFT``
+  Shift amount to get the value of Failure State
+  from Sanitize State Information (SSI) field.
+
+``NVME_SANITIZE_SSI_FAILS_MASK``
+  Mask to get the value of Failure State from
+  Sanitize State Information (SSI) field.
+
+``NVME_SANITIZE_SSI_IDLE``
+  No sanitize operation is in process.
+
+``NVME_SANITIZE_SSI_RESTRICT_PROCESSING``
+  The Sanitize operation is in Restricted Processing
+  State.
+
+``NVME_SANITIZE_SSI_RESTRICT_FAILURE``
+  The Sanitize operation is in Restricted Failure
+  State. This state is entered if sanitize processing
+  was performed in the Restricted Processing state and
+  sanitize processing failed or a failure occurred
+  during deallocation of media allocated for user data
+  in the Post-Verification Deallocation state.
+
+``NVME_SANITIZE_SSI_UNRESTRICT_PROCESSING``
+  The Sanitize operation is in Unrestricted Processing
+  State.
+
+``NVME_SANITIZE_SSI_UNRESTRICT_FAILURE``
+  The Sanitize operation is in Unrestricted Failure
+  State. This state is entered if sanitize processing
+  was performed in the Unrestricted Processing state
+  and sanitize processing failed or a failure occurred
+  during deallocation of media allocated for user data
+  in the Post-Verification.
+
+``NVME_SANITIZE_SSI_MEDIA_VERIFICATION``
+  The Sanitize operation is in Media Verification
+  State. In this state, the sanitize processing
+  completed successfully, and all media allocated for
+  user data in the sanitization target is readable by
+  the host for purposes of verifying sanitization.
+
+``NVME_SANITIZE_SSI_POST_VERIF_DEALLOC``
+  The Sanitize operation is in Post-Verification
+  Deallocation State. In this state, the controller
+  shall deallocate all media allocated for user data
+  in the sanitization target.
 
 
 
@@ -7774,6 +8147,66 @@ bytes, in size. This log captures the controller’s internal state.
 
 ``NVME_FDP_CONFIG_FDPA_VALID_MASK``
   FDP Configuration Valid Mask
+
+
+
+
+.. c:enum:: nvme_lockdown_log_scope
+
+   lockdown log page scope attributes
+
+**Constants**
+
+``NVME_LOCKDOWN_ADMIN_CMD``
+  Scope value for Admin commandS
+
+``NVME_LOCKDOWN_FEATURE_ID``
+  Scope value for Feature ID
+
+``NVME_LOCKDOWN_MI_CMD_SET``
+  Scope value for Management Interface commands
+
+``NVME_LOCKDOWN_PCI_CMD_SET``
+  Scope value for PCI commands
+
+
+
+
+.. c:enum:: nvme_lockdown_log_contents
+
+   lockdown log page content attributes
+
+**Constants**
+
+``NVME_LOCKDOWN_SUPPORTED_CMD``
+  Content value for Supported commands
+
+``NVME_LOCKDOWN_PROHIBITED_CMD``
+  Content value for prohibited commands
+
+``NVME_LOCKDOWN_PROHIBITED_OUTOFBAND_CMD``
+  Content value for prohibited side band commands
+
+
+
+
+.. c:enum:: nvme_lockdown_scope_contents
+
+   Lockdown Log shift and mask
+
+**Constants**
+
+``NVME_LOCKDOWN_SS_SHIFT``
+  Lockdown log scope select Shift
+
+``NVME_LOCKDOWN_SS_MASK``
+  Lockdown log scope select Mask
+
+``NVME_LOCKDOWN_CS_SHIFT``
+  Lockdown log contents Shift
+
+``NVME_LOCKDOWN_CS_MASK``
+  Lockdown log contents Mask
 
 
 
@@ -8369,6 +8802,28 @@ bytes, in size. This log captures the controller’s internal state.
 ``descs``
   LBA status descriptor Entry
 
+
+
+
+
+.. c:enum:: nvme_lba_status_cmpc
+
+   Get LBA Status Command Completion Condition
+
+**Constants**
+
+``NVME_LBA_STATUS_CMPC_NO_CMPC``
+  No indication of the completion condition
+
+``NVME_LBA_STATUS_CMPC_INCOMPLETE``
+  Command completed, but additional LBA Status
+  Descriptor Entries are available to transfer
+  or scan did not complete (if ATYPE = 10h)
+
+``NVME_LBA_STATUS_CMPC_COMPLETE``
+  Completed the specified action over the number
+  of LBAs specified in the Range Length field and
+  transferred all available LBA Status Descriptors
 
 
 
@@ -11550,6 +12005,30 @@ entries are of a variable lengths (TEL), TEL is always a multiple of
   Host NQN used by the DDC to connect
   to the CDC.
 
+``NVME_SC_INVALID_CONTROLER_DATA_QUEUE``
+  This error indicates that the
+  specified Controller Data Queue
+  Identifier is invalid for the controller
+  processing the command.
+
+``NVME_SC_NOT_ENOUGH_RESOURCES``
+  This error indicates that there is not
+  enough resources in the controller to
+  process the command.
+
+``NVME_SC_CONTROLLER_SUSPENDED``
+  The operation requested is not allowed if
+  the specified controller is suspended.
+
+``NVME_SC_CONTROLLER_NOT_SUSPENDED``
+  The operation requested is not allowed if
+  the specified controller is not
+  suspended.
+
+``NVME_SC_CONTROLLER_DATA_QUEUE_FULL``
+  The controller detected that a
+  Controller Data Queue became full.
+
 ``NVME_SC_BAD_ATTRIBUTES``
   Conflicting Dataset Management Attributes
 
@@ -12088,6 +12567,11 @@ true if **status** is of the specified type and value
 ``NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE``
   Base Specification 2.0a section 5.17.2.21
 
+``NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS``
+  Supported Controller State Formats
+  identifying the supported NVMe Controller
+  State data structures
+
 
 
 
@@ -12163,8 +12647,26 @@ true if **status** is of the specified type and value
 ``NVME_LOG_LID_BOOT_PARTITION``
   Boot Partition
 
+``NVME_LOG_LID_ROTATIONAL_MEDIA_INFO``
+  Rotational Media Information
+
+``NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS``
+  Dispersed Namespace Participating NVM Subsystems
+
+``NVME_LOG_LID_MGMT_ADDR_LIST``
+  Management Address List
+
 ``NVME_LOG_LID_PHY_RX_EOM``
   Physical Interface Receiver Eye Opening Measurement
+
+``NVME_LOG_LID_REACHABILITY_GROUPS``
+  Reachability Groups
+
+``NVME_LOG_LID_REACHABILITY_ASSOCIATIONS``
+  Reachability Associations
+
+``NVME_LOG_LID_CHANGED_ALLOC_NS_LIST``
+  Changed Allocated Namespace List
 
 ``NVME_LOG_LID_FDP_CONFIGS``
   FDP Configurations
@@ -12180,6 +12682,15 @@ true if **status** is of the specified type and value
 
 ``NVME_LOG_LID_DISCOVER``
   Discovery
+
+``NVME_LOG_LID_HOST_DISCOVER``
+  Host Discovery
+
+``NVME_LOG_LID_AVE_DISCOVER``
+  AVE Discovery
+
+``NVME_LOG_LID_PULL_MODEL_DDC_REQ``
+  Pull Model DDC Request
 
 ``NVME_LOG_LID_RESERVATION``
   Reservation Notification
@@ -12782,6 +13293,9 @@ true if **status** is of the specified type and value
 ``NVME_SANITIZE_SANACT_START_CRYPTO_ERASE``
   Start a Crypto Erase sanitize operation.
 
+``NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF``
+  Exit Media Verification State
+
 
 
 
@@ -13147,6 +13661,45 @@ true if **status** is of the specified type and value
 
 ``nvme_zns_cmd_append``
   Zone Append
+
+
+
+
+.. c:enum:: nvme_kv_opcode
+
+   Opcodes for KV Commands
+
+**Constants**
+
+``nvme_kv_cmd_flush``
+  Flush
+
+``nvme_kv_cmd_store``
+  Store
+
+``nvme_kv_cmd_retrieve``
+  Retrieve
+
+``nvme_kv_cmd_list``
+  List
+
+``nvme_kv_cmd_resv_register``
+  Reservation Register
+
+``nvme_kv_cmd_resv_report``
+  Reservation Report
+
+``nvme_kv_cmd_delete``
+  Delete
+
+``nvme_kv_cmd_resv_acquire``
+  Reservation Acquire
+
+``nvme_kv_cmd_exist``
+  Exist
+
+``nvme_kv_cmd_resv_release``
+  Reservation Release
 
 
 

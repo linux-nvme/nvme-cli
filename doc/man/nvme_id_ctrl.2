@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_id_ctrl" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_ctrl" "October 2024" "API Manual" LINUX
 .SH NAME
 struct nvme_id_ctrl \- Identify Controller data structure
 .SH SYNOPSIS
@@ -130,7 +130,9 @@ struct nvme_id_ctrl {
 .br
 .BI "    __u8 megcap[16];"
 .br
-.BI "    __u8 rsvd384[128];"
+.BI "    __u8 tmpthha;"
+.br
+.BI "    __u8 rsvd385[127];"
 .br
 .BI "    __u8 sqes;"
 .br
@@ -170,7 +172,31 @@ struct nvme_id_ctrl {
 .br
 .BI "    __le32 oaqd;"
 .br
-.BI "    __u8 rsvd568[200];"
+.BI "    __u8 rsvd568[2];"
+.br
+.BI "    __u16 cmmrtd;"
+.br
+.BI "    __u16 nmmrtd;"
+.br
+.BI "    __u8 minmrtg;"
+.br
+.BI "    __u8 maxmrtg;"
+.br
+.BI "    __u8 trattr;"
+.br
+.BI "    __u8 rsvd577;"
+.br
+.BI "    __u16 mcudmq;"
+.br
+.BI "    __u16 mnsudmq;"
+.br
+.BI "    __u16 mcmr;"
+.br
+.BI "    __u16 nmcmr;"
+.br
+.BI "    __u16 mcdqpc;"
+.br
+.BI "    __u8 rsvd588[180];"
 .br
 .BI "    char subnqn[NVME_NQN_LENGTH];"
 .br
@@ -408,7 +434,9 @@ Reserved
 .IP "megcap" 12
 Max Endurance Group Capacity indicates the maximum capacity
 of a single Endurance Group.
-.IP "rsvd384" 12
+.IP "tmpthha" 12
+Temperature Threshold Hysteresis Attributes
+.IP "rsvd385" 12
 Reserved
 .IP "sqes" 12
 Submission Queue Entry Size, see \fIenum nvme_id_ctrl_sqes\fP.
@@ -476,6 +504,51 @@ Optimal Aggregated Queue Depth indicates the recommended maximum
 total number of outstanding I/O commands across all I/O queues
 on the controller for optimal operation.
 .IP "rsvd568" 12
+Reserved
+.IP "cmmrtd" 12
+Controller Maximum Memory Range Tracking Descriptors indicates
+the maximum number of Memory Range Tracking Descriptors the
+controller supports.
+.IP "nmmrtd" 12
+NVM Subsystem Maximum Memory Range Tracking Descriptors
+indicates the maximum number of Memory Range Tracking Descriptors
+the NVM subsystem supports.
+.IP "minmrtg" 12
+Minimum Memory Range Tracking Granularity indicates the minimum
+value supported in the Requested Memory Range Tracking
+Granularity (RMRTG) field of the Track Memory Ranges data
+structure.
+.IP "maxmrtg" 12
+Maximum Memory Range Tracking Granularity indicates the maximum
+value supported in the Requested Memory Range Tracking
+Granularity (RMRTG) field of the Track Memory Ranges data
+structure.
+.IP "trattr" 12
+Tracking Attributes indicates supported attributes for the
+Track Send command and Track Receive command.
+.IP "rsvd577" 12
+Reserved
+.IP "mcudmq" 12
+Maximum Controller User Data Migration Queues indicates the
+maximum number of User Data Migration Queues supported by the
+controller.
+.IP "mnsudmq" 12
+Maximum NVM Subsystem User Data Migration Queues indicates the
+maximum number of User Data Migration Queues supported by the NVM
+subsystem.
+.IP "mcmr" 12
+Maximum CDQ Memory Ranges indicates the maximum number of
+memory ranges allowed to be specified by the PRP1 field of a
+Controller Data Queue command.
+.IP "nmcmr" 12
+NVM Subsystem Maximum CDQ Memory Ranges indicates the maximum
+number of memory ranges for all Controller Data Queues in the
+NVM subsystem.
+.IP "mcdqpc" 12
+Maximum Controller Data Queue PRP Count indicates the maximum
+number of PRPs allowed to be specified in the PRP list in the
+Controller Data Queue command.
+.IP "rsvd588" 12
 Reserved
 .IP "subnqn" 12
 NVM Subsystem NVMe Qualified Name, UTF-8 null terminated string

@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_mi_control_req" "October 2024" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_control_req \- The Control Primitive request.
+.SH SYNOPSIS
+struct nvme_mi_control_req {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    __u8 opcode;"
+.br
+.BI "    __u8 tag;"
+.br
+.BI "    __le16 cpsp;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+Generic MI message header
+.IP "opcode" 12
+Control Primitive Opcodes (using \fIenum nvme_mi_control_opcode\fP)
+.IP "tag" 12
+flag - Opaque value passed from request to response
+.IP "cpsp" 12
+Control Primitive Specific Parameter

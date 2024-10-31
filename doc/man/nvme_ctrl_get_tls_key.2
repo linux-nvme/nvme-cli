@@ -1,0 +1,11 @@
+.TH "nvme_ctrl_get_tls_key" 9 "nvme_ctrl_get_tls_key" "October 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_tls_key \- Return Derive TLS PSK
+.SH SYNOPSIS
+.B "const char *" nvme_ctrl_get_tls_key
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to be used for the lookup
+.SH "RETURN"
+Key in PSK interchange format or NULL if not set

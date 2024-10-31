@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_sanitize_sanact" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_sanitize_sanact" "October 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_sanitize_sanact \- Sanitize Action
 .SH SYNOPSIS
@@ -17,6 +17,10 @@ enum nvme_sanitize_sanact {
 .br
 .br
 .BI "    NVME_SANITIZE_SANACT_START_CRYPTO_ERASE"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF"
 
 };
 .SH Constants
@@ -28,3 +32,5 @@ Start a Block Erase sanitize operation.
 Start an Overwrite sanitize operation.
 .IP "NVME_SANITIZE_SANACT_START_CRYPTO_ERASE" 12
 Start a Crypto Erase sanitize operation.
+.IP "NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF" 12
+Exit Media Verification State

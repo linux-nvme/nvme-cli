@@ -1,0 +1,25 @@
+.TH "nvme_mi_control" 9 "nvme_mi_control" "October 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_control \- Perform a Control Primitive command
+.SH SYNOPSIS
+.B "int" nvme_mi_control
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "__u8 opcode "  ","
+.BI "__u16 cpsp "  ","
+.BI "__u16 *result_cpsr "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint for MI communication
+.IP "opcode" 12
+Control Primitive opcode (using \fIenum nvme_mi_control_opcode\fP)
+.IP "cpsp" 12
+Control Primitive Specific Parameter
+.IP "result_cpsr" 12
+Optional field to return the result from the CPSR field
+.SH "DESCRIPTION"
+Perform a Control Primitive command, using the opcode specified in \fIopcode\fP
+Stores the result from the CPSR field in \fIresult_cpsr\fP if set.
+
+See: \fIenum nvme_mi_control_opcode\fP
+.SH "RETURN"
+0 on success, non-zero on failure

@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_fabrics_config" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_fabrics_config" "October 2024" "API Manual" LINUX
 .SH NAME
 struct nvme_fabrics_config \- Defines all linux nvme fabrics initiator options
 .SH SYNOPSIS
@@ -29,6 +29,8 @@ struct nvme_fabrics_config {
 .BI "    long keyring;"
 .br
 .BI "    long tls_key;"
+.br
+.BI "    long tls_configured_key;"
 .br
 .BI "    bool duplicate_connect;"
 .br
@@ -73,6 +75,8 @@ Type of service
 Keyring to store and lookup keys
 .IP "tls_key" 12
 TLS PSK for the connection
+.IP "tls_configured_key" 12
+TLS PSK for connect command for the connection
 .IP "duplicate_connect" 12
 Allow multiple connections to the same target
 .IP "disable_sqflow" 12

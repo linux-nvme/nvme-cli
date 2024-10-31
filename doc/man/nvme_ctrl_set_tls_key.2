@@ -1,0 +1,12 @@
+.TH "nvme_ctrl_set_tls_key" 9 "nvme_ctrl_set_tls_key" "October 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_set_tls_key \- Set Derive TLS PSK
+.SH SYNOPSIS
+.B "void" nvme_ctrl_set_tls_key
+.BI "(nvme_ctrl_t c "  ","
+.BI "const char *key "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller for which the key should be set
+.IP "key" 12
+Key in interchange format or NULL to clear existing key

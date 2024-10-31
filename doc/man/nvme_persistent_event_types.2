@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_persistent_event_types" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_persistent_event_types" "October 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_persistent_event_types \- Persistent event log events
 .SH SYNOPSIS
@@ -56,6 +56,10 @@ enum nvme_persistent_event_types {
 , 
 .br
 .br
+.BI "    NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT"
+, 
+.br
+.br
 .BI "    NVME_PEL_VENDOR_SPECIFIC_EVENT"
 , 
 .br
@@ -90,6 +94,8 @@ Set Feature Event
 Telemetry Log Create Event
 .IP "NVME_PEL_THERMAL_EXCURSION_EVENT" 12
 Thermal Excursion Event
+.IP "NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT" 12
+Sanitize Media Verification Event
 .IP "NVME_PEL_VENDOR_SPECIFIC_EVENT" 12
 Vendor Specific Event
 .IP "NVME_PEL_TCG_DEFINED_EVENT" 12

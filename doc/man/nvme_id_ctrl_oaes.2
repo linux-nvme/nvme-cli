@@ -1,8 +1,104 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_oaes" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_oaes" "October 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_oaes \- Optional Asynchronous Events Supported
 .SH SYNOPSIS
 enum nvme_id_ctrl_oaes {
+.br
+.BI "    NVME_CTRL_OAES_NA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_FA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_PLEA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LBAS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_EGE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_TTH_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RGCNS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANSAN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ZD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_DL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_FA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_PLEA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LBAS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_EGE_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_TTH_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RGCNS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANSAN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ZD_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_DL_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_OAES_NA"
 , 
@@ -32,6 +128,18 @@ enum nvme_id_ctrl_oaes {
 , 
 .br
 .br
+.BI "    NVME_CTRL_OAES_TTH"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_RGCNS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANSAN"
+, 
+.br
+.br
 .BI "    NVME_CTRL_OAES_ZD"
 , 
 .br
@@ -40,6 +148,63 @@ enum nvme_id_ctrl_oaes {
 
 };
 .SH Constants
+.IP "NVME_CTRL_OAES_NA_SHIFT" 12
+Shift amount to get the Namespace Attribute Notices event supported
+.IP "NVME_CTRL_OAES_FA_SHIFT" 12
+Shift amount to get the Firmware Activation Notices event supported
+.IP "NVME_CTRL_OAES_ANA_SHIFT" 12
+Shift amount to get the ANA Change Notices supported
+.IP "NVME_CTRL_OAES_PLEA_SHIFT" 12
+Shift amount to get the Predictable Latency Event Aggregate Log
+Change Notices event supported
+.IP "NVME_CTRL_OAES_LBAS_SHIFT" 12
+Shift amount to get the LBA Status Information Notices event
+supported
+.IP "NVME_CTRL_OAES_EGE_SHIFT" 12
+Shift amount to get the Endurance Group Events Aggregate Log Change
+Notices event supported
+.IP "NVME_CTRL_OAES_NS_SHIFT" 12
+Shift amount to get the Normal NVM Subsystem Shutdown event supported
+.IP "NVME_CTRL_OAES_TTH_SHIFT" 12
+Shift amount to get the Temperature Threshold Hysteresis Recovery
+event supported
+.IP "NVME_CTRL_OAES_RGCNS_SHIFT" 12
+Shift amount to get the Reachability Groups Change Notices supported
+.IP "NVME_CTRL_OAES_ANSAN_SHIFT" 12
+Shift amount to get the Allocated Namespace Attribute Notices
+supported
+.IP "NVME_CTRL_OAES_ZD_SHIFT" 12
+Shift amount to get the Zone Descriptor Change Notifications supported
+.IP "NVME_CTRL_OAES_DL_SHIFT" 12
+Shift amount to get the Discover Log Page Change Notifications
+supported
+.IP "NVME_CTRL_OAES_NA_MASK" 12
+Mask to get the Namespace Attribute Notices event supported
+.IP "NVME_CTRL_OAES_FA_MASK" 12
+Mask to get the Firmware Activation Notices event supported
+.IP "NVME_CTRL_OAES_ANA_MASK" 12
+Mask to get the ANA Change Notices supported
+.IP "NVME_CTRL_OAES_PLEA_MASK" 12
+Mask to get the Predictable Latency Event Aggregate Log Change Notices
+event supported
+.IP "NVME_CTRL_OAES_LBAS_MASK" 12
+Mask to get the LBA Status Information Notices event supported
+.IP "NVME_CTRL_OAES_EGE_MASK" 12
+Mask to get the Endurance Group Events Aggregate Log Change Notices
+event supported
+.IP "NVME_CTRL_OAES_NS_MASK" 12
+Mask to get the Normal NVM Subsystem Shutdown event supported
+.IP "NVME_CTRL_OAES_TTH_MASK" 12
+Mask to get the Temperature Threshold Hysteresis Recovery event
+supported
+.IP "NVME_CTRL_OAES_RGCNS_MASK" 12
+Mask to get the Reachability Groups Change Notices supported
+.IP "NVME_CTRL_OAES_ANSAN_MASK" 12
+Mask to get the Allocated Namespace Attribute Notices supported
+.IP "NVME_CTRL_OAES_ZD_MASK" 12
+Mask to get the Zone Descriptor Change Notifications supported
+.IP "NVME_CTRL_OAES_DL_MASK" 12
+Mask to get the Discover Log Page Change Notifications supported
 .IP "NVME_CTRL_OAES_NA" 12
 Namespace Attribute Notices event supported
 .IP "NVME_CTRL_OAES_FA" 12
@@ -47,15 +212,19 @@ Firmware Activation Notices event supported
 .IP "NVME_CTRL_OAES_ANA" 12
 ANA Change Notices supported
 .IP "NVME_CTRL_OAES_PLEA" 12
-Predictable Latency Event Aggregate Log
-Change Notices event supported
+Predictable Latency Event Aggregate Log Change Notices event supported
 .IP "NVME_CTRL_OAES_LBAS" 12
 LBA Status Information Notices event supported
 .IP "NVME_CTRL_OAES_EGE" 12
-Endurance Group Events Aggregate Log Change
-Notices event supported
+Endurance Group Events Aggregate Log Change Notices event supported
 .IP "NVME_CTRL_OAES_NS" 12
 Normal NVM Subsystem Shutdown event supported
+.IP "NVME_CTRL_OAES_TTH" 12
+Temperature Threshold Hysteresis Recovery event supported
+.IP "NVME_CTRL_OAES_RGCNS" 12
+Reachability Groups Change Notices supported
+.IP "NVME_CTRL_OAES_ANSAN" 12
+Allocated Namespace Attribute Notices supported
 .IP "NVME_CTRL_OAES_ZD" 12
 Zone Descriptor Change Notifications supported
 .IP "NVME_CTRL_OAES_DL" 12

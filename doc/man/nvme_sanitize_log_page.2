@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_sanitize_log_page" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_sanitize_log_page" "October 2024" "API Manual" LINUX
 .SH NAME
 struct nvme_sanitize_log_page \- Sanitize Status (Log Identifier 81h)
 .SH SYNOPSIS
@@ -22,7 +22,11 @@ struct nvme_sanitize_log_page {
 .br
 .BI "    __le32 etcend;"
 .br
-.BI "    __u8 rsvd32[480];"
+.BI "    __le32 etpvds;"
+.br
+.BI "    __u8 ssi;"
+.br
+.BI "    __u8 rsvd37[475];"
 .br
 .BI "
 };
@@ -102,5 +106,15 @@ A value of 0h indicates that the sanitize operation is expected
 to be completed in the background when the Sanitize command that
 started that operation is completed. A value of FFFFFFFFh indicates
 that no time period is reported.
-.IP "rsvd32" 12
+.IP "etpvds" 12
+Estimated Time For Post-Verification Deallocation State: indicates the
+number of seconds required to deallocate all media allocated for user data
+after exiting the Media Verification state (i.e., the time difference between
+entering and exiting the Post-Verification Deallocation state), if that state
+is entered as part of the sanitize operation. A value of FFFFFFFFh indicates
+that no time period is reported.
+.IP "ssi" 12
+Sanitize State Information: indicate the state of the Sanitize Operation
+State Machine.
+.IP "rsvd37" 12
 Reserved

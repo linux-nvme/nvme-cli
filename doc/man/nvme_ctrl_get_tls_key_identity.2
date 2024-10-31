@@ -1,0 +1,11 @@
+.TH "nvme_ctrl_get_tls_key_identity" 9 "nvme_ctrl_get_tls_key_identity" "October 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_tls_key_identity \- Return Derive TLS Identity
+.SH SYNOPSIS
+.B "const char *" nvme_ctrl_get_tls_key_identity
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to be used for the lookup
+.SH "RETURN"
+Derive TLS Identity or NULL if not set

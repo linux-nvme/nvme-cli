@@ -1,0 +1,28 @@
+.TH "libnvme" 9 "enum nvme_lba_status_cmpc" "October 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_lba_status_cmpc \- Get LBA Status Command Completion Condition
+.SH SYNOPSIS
+enum nvme_lba_status_cmpc {
+.br
+.BI "    NVME_LBA_STATUS_CMPC_NO_CMPC"
+, 
+.br
+.br
+.BI "    NVME_LBA_STATUS_CMPC_INCOMPLETE"
+, 
+.br
+.br
+.BI "    NVME_LBA_STATUS_CMPC_COMPLETE"
+
+};
+.SH Constants
+.IP "NVME_LBA_STATUS_CMPC_NO_CMPC" 12
+No indication of the completion condition
+.IP "NVME_LBA_STATUS_CMPC_INCOMPLETE" 12
+Command completed, but additional LBA Status
+Descriptor Entries are available to transfer
+or scan did not complete (if ATYPE = 10h)
+.IP "NVME_LBA_STATUS_CMPC_COMPLETE" 12
+Completed the specified action over the number
+of LBAs specified in the Range Length field and
+transferred all available LBA Status Descriptors

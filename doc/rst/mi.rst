@@ -578,6 +578,63 @@ This is the generic response format with the three doublewords of completion
 queue data, plus optional response data.
 
 
+
+
+.. c:enum:: nvme_mi_control_opcode
+
+   Operation code for Control Primitives.
+
+**Constants**
+
+``nvme_mi_control_opcode_pause``
+  Suspend response transmission/timeout
+
+``nvme_mi_control_opcode_resume``
+  Resume from a paused condition
+
+``nvme_mi_control_opcode_abort``
+  Re-initialize a Command Slot to the Idle state
+
+``nvme_mi_control_opcode_get_state``
+  Get the state of a Command Slot
+
+``nvme_mi_control_opcode_replay``
+  Retransmit the Response Message
+
+
+
+
+.. c:struct:: nvme_mi_control_req
+
+   The Control Primitive request.
+
+**Definition**
+
+::
+
+  struct nvme_mi_control_req {
+    struct nvme_mi_msg_hdr hdr;
+    __u8 opcode;
+    __u8 tag;
+    __le16 cpsp;
+  };
+
+**Members**
+
+``hdr``
+  Generic MI message header
+
+``opcode``
+  Control Primitive Opcodes (using :c:type:`enum nvme_mi_control_opcode <nvme_mi_control_opcode>`)
+
+``tag``
+  flag - Opaque value passed from request to response
+
+``cpsp``
+  Control Primitive Specific Parameter
+
+
+
 .. c:function:: const char * nvme_mi_status_to_string (int status)
 
    return a string representation of the MI status.
@@ -1615,6 +1672,36 @@ See: :c:type:`struct nvme_identify_args <nvme_identify_args>`
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_control (nvme_mi_ep_t ep, __u8 opcode, __u16 cpsp, __u16 *result_cpsr)
+
+   Perform a Control Primitive command
+
+**Parameters**
+
+``nvme_mi_ep_t ep``
+  endpoint for MI communication
+
+``__u8 opcode``
+  Control Primitive opcode (using :c:type:`enum nvme_mi_control_opcode <nvme_mi_control_opcode>`)
+
+``__u16 cpsp``
+  Control Primitive Specific Parameter
+
+``__u16 *result_cpsr``
+  Optional field to return the result from the CPSR field
+
+**Description**
+
+Perform a Control Primitive command, using the opcode specified in **opcode**
+Stores the result from the CPSR field in **result_cpsr** if set.
+
+See: :c:type:`enum nvme_mi_control_opcode <nvme_mi_control_opcode>`
+
+**Return**
+
+0 on success, non-zero on failure
 
 
 .. c:function:: int nvme_mi_admin_identify_cns_nsid (nvme_mi_ctrl_t ctrl, enum nvme_identify_cns cns, __u32 nsid, void *data)
@@ -2853,6 +2940,27 @@ The nvme command status if a response was received (see
 
 ``void *pevent_log``
   User address to store the persistent event log
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_lockdown (nvme_mi_ctrl_t ctrl, __u8 cnscp, struct nvme_lockdown_log *lockdown_log)
+
+   Retrieve lockdown Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u8 cnscp``
+  Contents and Scope of Command and Feature Identifier Lists
+
+``struct nvme_lockdown_log *lockdown_log``
+  Buffer to store the lockdown log
 
 **Return**
 

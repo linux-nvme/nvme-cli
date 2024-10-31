@@ -1,0 +1,14 @@
+.TH "nvmf_connect_ctrl" 9 "nvmf_connect_ctrl" "October 2024" "libnvme API manual" LINUX
+.SH NAME
+nvmf_connect_ctrl \- Connect a controller
+.SH SYNOPSIS
+.B "int" nvmf_connect_ctrl
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to be connected
+.SH "DESCRIPTION"
+Issues a 'connect' command to the NVMe-oF controller.
+\fIc\fP must be initialized and not connected to the topology.
+.SH "RETURN"
+0 on success; on failure errno is set and -1 is returned.

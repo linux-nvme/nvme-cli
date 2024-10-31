@@ -1,8 +1,40 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_fna" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_fna" "October 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_fna \- This field indicates attributes for the Format NVM command.
 .SH SYNOPSIS
 enum nvme_id_ctrl_fna {
+.br
+.BI "    NVME_CTRL_FNA_FMT_ALL_NS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_SEC_ALL_NS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_CES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_NSID_ALL_F_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_FMT_ALL_NS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_SEC_ALL_NS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_CES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_NSID_ALL_F_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_FNA_FMT_ALL_NAMESPACES"
 , 
@@ -20,6 +52,22 @@ enum nvme_id_ctrl_fna {
 
 };
 .SH Constants
+.IP "NVME_CTRL_FNA_FMT_ALL_NS_SHIFT" 12
+Shift amount to get the format applied to all namespaces
+.IP "NVME_CTRL_FNA_SEC_ALL_NS_SHIFT" 12
+Shift amount to get the secure erase applied to all namespaces
+.IP "NVME_CTRL_FNA_CES_SHIFT" 12
+Shift amount to get the cryptographic erase supported
+.IP "NVME_CTRL_FNA_NSID_ALL_F_SHIFT" 12
+Shift amount to get the format supported an NSID FFFFFFFFh
+.IP "NVME_CTRL_FNA_FMT_ALL_NS_MASK" 12
+Mask to get the format applied to all namespaces
+.IP "NVME_CTRL_FNA_SEC_ALL_NS_MASK" 12
+Mask to get the secure erase applied to all namespaces
+.IP "NVME_CTRL_FNA_CES_MASK" 12
+Mask to get the cryptographic erase supported
+.IP "NVME_CTRL_FNA_NSID_ALL_F_MASK" 12
+Mask to get the format supported an NSID FFFFFFFFh
 .IP "NVME_CTRL_FNA_FMT_ALL_NAMESPACES" 12
 If set, then all namespaces in an NVM
 subsystem shall be configured with the

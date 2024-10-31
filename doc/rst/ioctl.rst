@@ -2423,6 +2423,27 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: int nvme_get_log_lockdown (int fd, __u8 cnscp, struct nvme_lockdown_log *lockdown_log)
+
+   Retrieve lockdown Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u8 cnscp``
+  Contents and Scope of Command and Feature Identifier Lists
+
+``struct nvme_lockdown_log *lockdown_log``
+  Buffer to store the lockdown log
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_set_features (struct nvme_set_features_args *args)
 
    Set a feature attribute

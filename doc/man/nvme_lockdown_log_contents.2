@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_lockdown_log_contents" "October 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_lockdown_log_contents \- lockdown log page content attributes
+.SH SYNOPSIS
+enum nvme_lockdown_log_contents {
+.br
+.BI "    NVME_LOCKDOWN_SUPPORTED_CMD"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_PROHIBITED_CMD"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_PROHIBITED_OUTOFBAND_CMD"
+
+};
+.SH Constants
+.IP "NVME_LOCKDOWN_SUPPORTED_CMD" 12
+Content value for Supported commands
+.IP "NVME_LOCKDOWN_PROHIBITED_CMD" 12
+Content value for prohibited commands
+.IP "NVME_LOCKDOWN_PROHIBITED_OUTOFBAND_CMD" 12
+Content value for prohibited side band commands

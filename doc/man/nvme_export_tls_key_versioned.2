@@ -1,0 +1,26 @@
+.TH "nvme_export_tls_key_versioned" 9 "nvme_export_tls_key_versioned" "October 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_export_tls_key_versioned \- Export a TLS pre-shared key
+.SH SYNOPSIS
+.B "char *" nvme_export_tls_key_versioned
+.BI "(unsigned char version "  ","
+.BI "unsigned char hmac "  ","
+.BI "const unsigned char *key_data "  ","
+.BI "size_t key_len "  ");"
+.SH ARGUMENTS
+.IP "version" 12
+Indicated the representation of the TLS PSK
+.IP "hmac" 12
+HMAC algorithm used to transfor the configured PSK
+in a retained PSK
+.IP "key_data" 12
+Raw data of the key
+.IP "key_len" 12
+Length of \fIkey_data\fP
+.SH "DESCRIPTION"
+Returns \fIkey_data\fP in the PSK Interchange format as defined in section
+3.6.1.5 of the NVMe TCP Transport specification.
+.SH "RETURN"
+The string containing the TLS identity or NULL with errno set
+on error. It is the responsibility of the caller to free the returned
+string.

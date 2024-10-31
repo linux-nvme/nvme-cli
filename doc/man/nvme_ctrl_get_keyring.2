@@ -1,0 +1,11 @@
+.TH "nvme_ctrl_get_keyring" 9 "nvme_ctrl_get_keyring" "October 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_keyring \- Return keyring
+.SH SYNOPSIS
+.B "const char *" nvme_ctrl_get_keyring
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to be used for the lookup
+.SH "RETURN"
+Keyring or NULL if not set

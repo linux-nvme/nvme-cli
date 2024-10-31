@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_sanitize_sstat" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_sanitize_sstat" "October 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_sanitize_sstat \- Sanitize Status (SSTAT)
 .SH SYNOPSIS
@@ -49,6 +49,14 @@ enum nvme_sanitize_sstat {
 .br
 .br
 .BI "    NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_MVCNCLD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_MVCNCLD_MASK"
 
 };
 .SH Constants
@@ -103,3 +111,9 @@ been enabled since being manufactured and
 the NVM subsystem has never been sanitized;
 or since the most recent successful sanitize
 operation.
+.IP "NVME_SANITIZE_SSTAT_MVCNCLD_SHIFT" 12
+Shift amount to get the value of Media Verification
+Canceled bit of Sanitize status field.
+.IP "NVME_SANITIZE_SSTAT_MVCNCLD_MASK" 12
+Mask to get the value of Media Verification Canceled
+bit of Sanitize status field.

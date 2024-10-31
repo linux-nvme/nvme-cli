@@ -1,0 +1,95 @@
+.TH "libnvme" 9 "enum nvme_sanitize_ssi" "October 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_sanitize_ssi \- Sanitize State Information (SSI)
+.SH SYNOPSIS
+enum nvme_sanitize_ssi {
+.br
+.BI "    NVME_SANITIZE_SSI_SANS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_SANS_MASK"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_FAILS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_FAILS_MASK"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_IDLE"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_RESTRICT_PROCESSING"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_RESTRICT_FAILURE"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_UNRESTRICT_PROCESSING"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_UNRESTRICT_FAILURE"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_MEDIA_VERIFICATION"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSI_POST_VERIF_DEALLOC"
+
+};
+.SH Constants
+.IP "NVME_SANITIZE_SSI_SANS_SHIFT" 12
+Shift amount to get the value of Sanitize State
+from Sanitize State Information (SSI) field.
+.IP "NVME_SANITIZE_SSI_SANS_MASK" 12
+Mask to get the value of Sanitize State from
+Sanitize State Information (SSI) field.
+.IP "NVME_SANITIZE_SSI_FAILS_SHIFT" 12
+Shift amount to get the value of Failure State
+from Sanitize State Information (SSI) field.
+.IP "NVME_SANITIZE_SSI_FAILS_MASK" 12
+Mask to get the value of Failure State from
+Sanitize State Information (SSI) field.
+.IP "NVME_SANITIZE_SSI_IDLE" 12
+No sanitize operation is in process.
+.IP "NVME_SANITIZE_SSI_RESTRICT_PROCESSING" 12
+The Sanitize operation is in Restricted Processing
+State.
+.IP "NVME_SANITIZE_SSI_RESTRICT_FAILURE" 12
+The Sanitize operation is in Restricted Failure
+State. This state is entered if sanitize processing
+was performed in the Restricted Processing state and
+sanitize processing failed or a failure occurred
+during deallocation of media allocated for user data
+in the Post-Verification Deallocation state.
+.IP "NVME_SANITIZE_SSI_UNRESTRICT_PROCESSING" 12
+The Sanitize operation is in Unrestricted Processing
+State.
+.IP "NVME_SANITIZE_SSI_UNRESTRICT_FAILURE" 12
+The Sanitize operation is in Unrestricted Failure
+State. This state is entered if sanitize processing
+was performed in the Unrestricted Processing state
+and sanitize processing failed or a failure occurred
+during deallocation of media allocated for user data
+in the Post-Verification.
+.IP "NVME_SANITIZE_SSI_MEDIA_VERIFICATION" 12
+The Sanitize operation is in Media Verification
+State. In this state, the sanitize processing
+completed successfully, and all media allocated for
+user data in the sanitization target is readable by
+the host for purposes of verifying sanitization.
+.IP "NVME_SANITIZE_SSI_POST_VERIF_DEALLOC" 12
+The Sanitize operation is in Post-Verification
+Deallocation State. In this state, the controller
+shall deallocate all media allocated for user data
+in the sanitization target.

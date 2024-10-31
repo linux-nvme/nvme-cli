@@ -29,6 +29,7 @@ Fabrics-specific definitions.
     int tos;
     long keyring;
     long tls_key;
+    long tls_configured_key;
     bool duplicate_connect;
     bool disable_sqflow;
     bool hdr_digest;
@@ -77,6 +78,9 @@ Fabrics-specific definitions.
 
 ``tls_key``
   TLS PSK for the connection
+
+``tls_configured_key``
+  TLS PSK for connect command for the connection
 
 ``duplicate_connect``
   Allow multiple connections to the same target
@@ -369,6 +373,25 @@ all non-default values from **cfg** will overwrite the values in **c**.
 
 Issues a 'connect' command to the NVMe-oF controller and inserts **c**
 into the topology using **h** as parent.
+**c** must be initialized and not connected to the topology.
+
+**Return**
+
+0 on success; on failure errno is set and -1 is returned.
+
+
+.. c:function:: int nvmf_connect_ctrl (nvme_ctrl_t c)
+
+   Connect a controller
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller to be connected
+
+**Description**
+
+Issues a 'connect' command to the NVMe-oF controller.
 **c** must be initialized and not connected to the topology.
 
 **Return**

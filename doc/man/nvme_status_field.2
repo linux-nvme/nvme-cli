@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_status_field" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_status_field" "October 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_status_field \- Defines all parts of the nvme status field: status code, status code type, and additional flags.
 .SH SYNOPSIS
@@ -413,6 +413,26 @@ enum nvme_status_field {
 .br
 .br
 .BI "    NVME_SC_ZONEGRP_ORIGINATOR_INVLD"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_CONTROLER_DATA_QUEUE"
+, 
+.br
+.br
+.BI "    NVME_SC_NOT_ENOUGH_RESOURCES"
+, 
+.br
+.br
+.BI "    NVME_SC_CONTROLLER_SUSPENDED"
+, 
+.br
+.br
+.BI "    NVME_SC_CONTROLLER_NOT_SUSPENDED"
+, 
+.br
+.br
+.BI "    NVME_SC_CONTROLLER_DATA_QUEUE_FULL"
 , 
 .br
 .br
@@ -1035,6 +1055,25 @@ The NQN contained in the ZoneGroup
 Originator field does not match the
 Host NQN used by the DDC to connect
 to the CDC.
+.IP "NVME_SC_INVALID_CONTROLER_DATA_QUEUE" 12
+This error indicates that the
+specified Controller Data Queue
+Identifier is invalid for the controller
+processing the command.
+.IP "NVME_SC_NOT_ENOUGH_RESOURCES" 12
+This error indicates that there is not
+enough resources in the controller to
+process the command.
+.IP "NVME_SC_CONTROLLER_SUSPENDED" 12
+The operation requested is not allowed if
+the specified controller is suspended.
+.IP "NVME_SC_CONTROLLER_NOT_SUSPENDED" 12
+The operation requested is not allowed if
+the specified controller is not
+suspended.
+.IP "NVME_SC_CONTROLLER_DATA_QUEUE_FULL" 12
+The controller detected that a
+Controller Data Queue became full.
 .IP "NVME_SC_BAD_ATTRIBUTES" 12
 Conflicting Dataset Management Attributes
 .IP "NVME_SC_INVALID_PI" 12

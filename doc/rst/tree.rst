@@ -1845,6 +1845,87 @@ DH-HMAC-CHAP controller key or NULL if not set
   DH-HMAC-CHAP Key to set or NULL to clear existing key
 
 
+.. c:function:: const char * nvme_ctrl_get_keyring (nvme_ctrl_t c)
+
+   Return keyring
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller to be used for the lookup
+
+**Return**
+
+Keyring or NULL if not set
+
+
+.. c:function:: void nvme_ctrl_set_keyring (nvme_ctrl_t c, const char *keyring)
+
+   Set keyring
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller for which the keyring should be set
+
+``const char *keyring``
+  Keyring name
+
+
+.. c:function:: const char * nvme_ctrl_get_tls_key_identity (nvme_ctrl_t c)
+
+   Return Derive TLS Identity
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller to be used for the lookup
+
+**Return**
+
+Derive TLS Identity or NULL if not set
+
+
+.. c:function:: void nvme_ctrl_set_tls_key_identity (nvme_ctrl_t c, const char *identity)
+
+   Set Derive TLS Identity
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller for which the key should be set
+
+``const char *identity``
+  Derive TLS identity or NULL to clear existing key
+
+
+.. c:function:: const char * nvme_ctrl_get_tls_key (nvme_ctrl_t c)
+
+   Return Derive TLS PSK
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller to be used for the lookup
+
+**Return**
+
+Key in PSK interchange format or NULL if not set
+
+
+.. c:function:: void nvme_ctrl_set_tls_key (nvme_ctrl_t c, const char *key)
+
+   Set Derive TLS PSK
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  Controller for which the key should be set
+
+``const char *key``
+  Key in interchange format or NULL to clear existing key
+
+
 .. c:function:: struct nvme_fabrics_config * nvme_ctrl_get_config (nvme_ctrl_t c)
 
    Fabrics configuration of a controller

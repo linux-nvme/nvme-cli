@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_lockdown_scope_contents" "October 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_lockdown_scope_contents \- Lockdown Log shift and mask
+.SH SYNOPSIS
+enum nvme_lockdown_scope_contents {
+.br
+.BI "    NVME_LOCKDOWN_SS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_SS_MASK"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_CS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LOCKDOWN_CS_MASK"
+
+};
+.SH Constants
+.IP "NVME_LOCKDOWN_SS_SHIFT" 12
+Lockdown log scope select Shift
+.IP "NVME_LOCKDOWN_SS_MASK" 12
+Lockdown log scope select Mask
+.IP "NVME_LOCKDOWN_CS_SHIFT" 12
+Lockdown log contents Shift
+.IP "NVME_LOCKDOWN_CS_MASK" 12
+Lockdown log contents Mask

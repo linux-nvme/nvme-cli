@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_lockdown_log" "October 2024" "API Manual" LINUX
+.SH NAME
+struct nvme_lockdown_log \- Command and Feature Lockdown Log
+.SH SYNOPSIS
+struct nvme_lockdown_log {
+.br
+.BI "    __u8 cfila;"
+.br
+.BI "    __u8 rsvd1[2];"
+.br
+.BI "    __u8 lngth;"
+.br
+.BI "    __u8 cfil[508];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cfila" 12
+Contents of the Command and Feature Identifier List field in the log page.
+.IP "rsvd1" 12
+Reserved
+.IP "lngth" 12
+Length of Command and Feature Identifier List field
+.IP "cfil" 12
+Command and Feature Identifier List

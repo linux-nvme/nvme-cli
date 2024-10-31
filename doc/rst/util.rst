@@ -73,6 +73,9 @@ libnvme utility functions
 ``ENVME_CONNECT_IGNORED``
   connect attempt is ignored due to configuration
 
+``ENVME_CONNECT_NOKEY``
+  the TLS key is missing
+
 
 .. c:function:: __u8 nvme_status_to_errno (int status, bool fabrics)
 

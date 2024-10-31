@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_mi_control_opcode" "October 2024" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_control_opcode \- Operation code for Control Primitives.
+.SH SYNOPSIS
+enum nvme_mi_control_opcode {
+.br
+.BI "    nvme_mi_control_opcode_pause"
+, 
+.br
+.br
+.BI "    nvme_mi_control_opcode_resume"
+, 
+.br
+.br
+.BI "    nvme_mi_control_opcode_abort"
+, 
+.br
+.br
+.BI "    nvme_mi_control_opcode_get_state"
+, 
+.br
+.br
+.BI "    nvme_mi_control_opcode_replay"
+
+};
+.SH Constants
+.IP "nvme_mi_control_opcode_pause" 12
+Suspend response transmission/timeout
+.IP "nvme_mi_control_opcode_resume" 12
+Resume from a paused condition
+.IP "nvme_mi_control_opcode_abort" 12
+Re-initialize a Command Slot to the Idle state
+.IP "nvme_mi_control_opcode_get_state" 12
+Get the state of a Command Slot
+.IP "nvme_mi_control_opcode_replay" 12
+Retransmit the Response Message

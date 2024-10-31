@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_id_ctrl_nvm" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_ctrl_nvm" "October 2024" "API Manual" LINUX
 .SH NAME
 struct nvme_id_ctrl_nvm \- I/O Command Set Specific Identify Controller data structure
 .SH SYNOPSIS
@@ -20,7 +20,11 @@ struct nvme_id_ctrl_nvm {
 .br
 .BI "    __le16 aocs;"
 .br
-.BI "    __u8 rsvd20[4076];"
+.BI "    __le32 ver;"
+.br
+.BI "    __u8 lbamqf;"
+.br
+.BI "    __u8 rsvd25[4071];"
 .br
 .BI "
 };
@@ -43,5 +47,9 @@ Dataset Management Size Limit
 Reserved
 .IP "aocs" 12
 Admin Optional Command Support
-.IP "rsvd20" 12
+.IP "ver" 12
+Version
+.IP "lbamqf" 12
+LBA Migration Queue Format
+.IP "rsvd25" 12
 Reserved

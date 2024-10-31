@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_connect_err" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_connect_err" "October 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_connect_err \- nvme connect error codes
 .SH SYNOPSIS
@@ -81,6 +81,10 @@ enum nvme_connect_err {
 .br
 .br
 .BI "    ENVME_CONNECT_IGNORED"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_NOKEY"
 
 };
 .SH Constants
@@ -124,3 +128,5 @@ connection refused
 cannot assign requested address
 .IP "ENVME_CONNECT_IGNORED" 12
 connect attempt is ignored due to configuration
+.IP "ENVME_CONNECT_NOKEY" 12
+the TLS key is missing

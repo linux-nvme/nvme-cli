@@ -1,0 +1,12 @@
+.TH "nvme_ctrl_set_keyring" 9 "nvme_ctrl_set_keyring" "October 2024" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_set_keyring \- Set keyring
+.SH SYNOPSIS
+.B "void" nvme_ctrl_set_keyring
+.BI "(nvme_ctrl_t c "  ","
+.BI "const char *keyring "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller for which the keyring should be set
+.IP "keyring" 12
+Keyring name

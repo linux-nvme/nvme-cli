@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_nvm_id_ns" "August 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_nvm_id_ns" "October 2024" "API Manual" LINUX
 .SH NAME
 struct nvme_nvm_id_ns \- NVME Command Set I/O Command Set Specific Identify Namespace Data Structure
 .SH SYNOPSIS
@@ -16,7 +16,15 @@ struct nvme_nvm_id_ns {
 .br
 .BI "    __le32 npdgl;"
 .br
-.BI "    __u8 rsvd272[20];"
+.BI "    __le32 nprg;"
+.br
+.BI "    __le32 npra;"
+.br
+.BI "    __le32 nors;"
+.br
+.BI "    __le32 npdal;"
+.br
+.BI "    __le32 lbapss;"
 .br
 .BI "    __le32 tlbaag;"
 .br
@@ -39,8 +47,16 @@ Reserved
 List of Extended LBA Format Support
 .IP "npdgl" 12
 Namespace Preferred Deallocate Granularity Large
-.IP "rsvd272" 12
-Reserved
+.IP "nprg" 12
+Namespace Preferred Read Granularity
+.IP "npra" 12
+Namespace Preferred Read Alignment
+.IP "nors" 12
+Namespace Optimal Read Size
+.IP "npdal" 12
+Namespace Preferred Deallocate Alignment Large
+.IP "lbapss" 12
+LBA Format Placement Shard Size
 .IP "tlbaag" 12
 Tracked LBA Allocation Granularity
 .IP "rsvd296" 12
