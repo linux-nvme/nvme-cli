@@ -1681,7 +1681,10 @@ long nvme_revoke_tls_key(const char *keyring, const char *key_type,
 int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 				   long *keyring_id, long *key_id)
 {
-	return -ENOTSUP;
+	*keyring_id = 0;
+	*key_id = 0;
+
+	return 0;
 }
 #endif
 
