@@ -5,8 +5,6 @@
 #if !defined(TRANSCEND_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define TRANSCEND_NVME
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-
 #include "cmd.h"
  
 

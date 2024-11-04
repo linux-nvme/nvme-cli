@@ -12,6 +12,7 @@
 #include "libnvme.h"
 #include "plugin.h"
 #include "transcend-nvme.h"
+#include "common.h"
 
 #define CREATE_CMD
 
@@ -33,17 +34,17 @@ static const int i_dis = 20;
 static const double full_value = 170;
 
 enum plp_error_code {
-    PLP_ERROR_NO_MATCH = -1,
-    PLP_ERROR_DATA_EXPIRED = -2
+	PLP_ERROR_NO_MATCH = -1,
+	PLP_ERROR_DATA_EXPIRED  = -2
 };
 
-const char *string_list[] = {
+static const char *string_list[] = {
     "UTE210T",   "MTE712P",   "MTE560P",   "MTE662P", "MTE662P-I", "MTS970P",
     "MTS952P",   "MTS952P-I", "MTS570P",   "MTS400P", "SSD910T",   "SSD470P",
     "SSD470P-I", "SSD452P",   "SSD452P-I", "SSD420P", "MSA470P",   "MSA452P"
 };
 
-const int list_size = ARRAY_SIZE(string_list);
+static const int list_size = ARRAY_SIZE(string_list);
 
 static int get_plp_health(int argc, char **argv, struct command *cmd, struct plugin *plugin);
 static int read_useful_plp_value(const char *device);
@@ -116,7 +117,7 @@ static int get_bad_block(int argc, char **argv, struct command *cmd, struct plug
     return result;
 }
 
-const char *format_char_array(char *str, int str_size, unsigned char *chr, int chr_size)
+static const char *format_char_array(char *str, int str_size, unsigned char *chr, int chr_size)
 {
     int b = 0;
     int n = 0;
@@ -250,7 +251,7 @@ static int get_plp_health(int argc, char **argv, struct command *cmd, struct plu
     return result;
 }
 
-int read_useful_plp_value(const char *device)
+static int read_useful_plp_value(const char *device)
 {
     FILE *file;
     char log_file_path[256];
@@ -297,7 +298,7 @@ int read_useful_plp_value(const char *device)
     }
 }
 
-void record_plp_value(const char *device, int value, bool is_replace)
+static void record_plp_value(const char *device, int value, bool is_replace)
 {
     char log_file_path[256];
     strncpy(log_file_path, PLP_RECORD_PATH, sizeof(log_file_path) - 1);
