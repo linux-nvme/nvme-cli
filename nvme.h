@@ -79,18 +79,21 @@ struct nvme_config {
 	__u32 timeout;
 };
 
+#define NVME_OPT(n, ...) \
+	struct argconfig_commandline_options n[] = { \
+		__VA_ARGS__, \
+		OPT_END()\
+	}
+
 /*
  * the ordering of the arguments matters, as the argument parser uses the first match, thus any
- * command which defines -t shorthand will match first.
+ * command which defines -v, -o and -t shorthand will match first.
  */
-#define NVME_ARGS(n, ...)                                                              \
-	struct argconfig_commandline_options n[] = {                                   \
-		OPT_INCR("verbose",      'v', &nvme_cfg.verbose,       verbose),       \
-		OPT_FMT("output-format", 'o', &nvme_cfg.output_format, output_format), \
-		##__VA_ARGS__,                                                         \
-		OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout),       \
-		OPT_END()                                                              \
-	}
+#define NVME_ARGS(n, ...) \
+	NVME_OPT(n, ##__VA_ARGS__, \
+		 OPT_INCR("verbose",      'v', &nvme_cfg.verbose,       verbose), \
+		 OPT_FMT("output-format", 'o', &nvme_cfg.output_format, output_format), \
+		 OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout))
 
 static inline int __dev_fd(struct nvme_dev *dev, const char *func, int line)
 {
