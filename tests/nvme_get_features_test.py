@@ -81,9 +81,9 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         """
         if str(feature_id) == "0x09":
             for vector in range(self.vector_list_len):
-                get_feat_cmd = "nvme get-feature " + self.ctrl + \
-                               " --feature-id=" + str(feature_id) + \
-                               " --cdw11=" + str(vector) + " -H"
+                get_feat_cmd = f"{self.nvme_bin} get-feature {self.ctrl} " + \
+                    f"--feature-id={str(feature_id)} " + \
+                    f"--cdw11={str(vector)} --human-readable"
                 proc = subprocess.Popen(get_feat_cmd,
                                         shell=True,
                                         stdout=subprocess.PIPE,
@@ -92,8 +92,8 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                 print(feature_output)
                 self.assertEqual(proc.wait(), 0)
         else:
-            get_feat_cmd = "nvme get-feature " + self.ctrl + \
-                           " --feature-id=" + str(feature_id) + " -H"
+            get_feat_cmd = f"{self.nvme_bin} get-feature {self.ctrl} " + \
+                f"--feature-id={str(feature_id)} --human-readable"
             if str(feature_id) == "0x05":
                 get_feat_cmd += f" --namespace-id={self.default_nsid}"
             proc = subprocess.Popen(get_feat_cmd,

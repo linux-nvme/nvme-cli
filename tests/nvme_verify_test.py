@@ -44,10 +44,10 @@ class TestNVMeVerify(TestNVMe):
             - Returns:
                 - return code for nvme verify command.
         """
-        verify_cmd = "nvme verify " + self.ctrl + \
-                     " --namespace-id=" + str(self.namespace) + \
-                     " --start-block=" + str(self.start_block) + \
-                     " --block-count=" + str(self.block_count)
+        verify_cmd = f"{self.nvme_bin} verify {self.ctrl} " + \
+            f"--namespace-id={str(self.namespace)} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)}"
         return self.exec_cmd(verify_cmd)
 
     def test_verify(self):

@@ -40,7 +40,7 @@ class TestNVMeCtrlReset(TestNVMe):
             - Returns:
                 - return code for nvme controller reset.
         """
-        ctrl_reset_cmd = "nvme reset " + self.ctrl
+        ctrl_reset_cmd = f"{self.nvme_bin} reset {self.ctrl}"
         return self.exec_cmd(ctrl_reset_cmd)
 
     def test_ctrl_reset(self):

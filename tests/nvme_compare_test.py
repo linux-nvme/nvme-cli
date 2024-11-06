@@ -78,10 +78,10 @@ class TestNVMeCompareCmd(TestNVMeIO):
            - Returns:
                - return code of the nvme compare command.
         """
-        compare_cmd = "nvme compare " + self.ns1 + " --start-block=" + \
-                      str(self.start_block) + " --block-count=" + \
-                      str(self.block_count) + " --data-size=" + \
-                      str(self.data_size) + " --data=" + cmp_file
+        compare_cmd = f"{self.nvme_bin} compare {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)} " + \
+            f"--data-size={str(self.data_size)} --data={cmp_file}"
         return self.exec_cmd(compare_cmd)
 
     def test_nvme_compare(self):

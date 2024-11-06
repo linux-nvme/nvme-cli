@@ -46,7 +46,7 @@ class TestNVMeLbaStatLogCmd(TestNVMe):
                 - 0 on success, error code on failure.
         """
         err = 0
-        lba_stat_log_cmd = "nvme lba-status-log " + self.ctrl
+        lba_stat_log_cmd = f"{self.nvme_bin} lba-status-log {self.ctrl}"
         proc = subprocess.Popen(lba_stat_log_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,

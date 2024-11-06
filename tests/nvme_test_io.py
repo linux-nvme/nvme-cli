@@ -77,10 +77,10 @@ class TestNVMeIO(TestNVMe):
             - Returns:
                 - return code for nvme write command.
         """
-        write_cmd = "nvme write " + self.ns1 + " --start-block=" + \
-                    str(self.start_block) + " --block-count=" + \
-                    str(self.block_count) + " --data-size=" + \
-                    str(self.data_size) + " --data=" + self.write_file
+        write_cmd = f"{self.nvme_bin} write {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)} " + \
+            f"--data-size={str(self.data_size)} --data={self.write_file}"
         return self.exec_cmd(write_cmd)
 
     def nvme_read(self):
@@ -90,9 +90,9 @@ class TestNVMeIO(TestNVMe):
             - Returns:
                 - return code for nvme read command.
         """
-        read_cmd = "nvme read " + self.ns1 + " --start-block=" + \
-                   str(self.start_block) + " --block-count=" + \
-                   str(self.block_count) + " --data-size=" + \
-                   str(self.data_size) + " --data=" + self.read_file
+        read_cmd = f"{self.nvme_bin} read {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)} " + \
+            f"--data-size={str(self.data_size)} --data={self.read_file}"
         print(read_cmd)
         return self.exec_cmd(read_cmd)

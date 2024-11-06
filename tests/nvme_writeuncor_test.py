@@ -63,9 +63,9 @@ class TestNVMeUncor(TestNVMeIO):
             - Returns:
                 - return code of nvme write uncorrectable command.
         """
-        write_uncor_cmd = "nvme write-uncor " + self.ns1 + \
-                          " --start-block=" + str(self.start_block) + \
-                          " --block-count=" + str(self.block_count)
+        write_uncor_cmd = f"{self.nvme_bin} write-uncor {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)}"
         return self.exec_cmd(write_uncor_cmd)
 
     def test_write_uncor(self):

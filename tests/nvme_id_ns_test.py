@@ -61,7 +61,8 @@ class TestNVMeIdentifyNamespace(TestNVMe):
                 - 0 on success, error code on failure.
         """
         err = 0
-        id_ns_cmd = "nvme id-ns " + self.ctrl + "n" + str(nsid)
+        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+            f"--namespace-id={str(nsid)}"
         proc = subprocess.Popen(id_ns_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,

@@ -71,9 +71,9 @@ class TestNVMeWriteZeros(TestNVMeIO):
             - Returns:
                 - return code for nvme write command.
         """
-        write_zeroes_cmd = "nvme write-zeroes " + self.ns1 + \
-                           " --start-block=" + str(self.start_block) + \
-                           " --block-count=" + str(self.block_count)
+        write_zeroes_cmd = f"{self.nvme_bin} write-zeroes {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)}"
         return self.exec_cmd(write_zeroes_cmd)
 
     def validate_write_read(self):
