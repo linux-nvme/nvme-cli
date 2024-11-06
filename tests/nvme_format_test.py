@@ -106,23 +106,24 @@ class TestNVMeFormatCmd(TestNVMe):
                                                      self.dps), 0)
         self.assertEqual(self.attach_ns(self.ctrl_id, self.default_nsid), 0)
         # read lbaf information
-        id_ns = "nvme id-ns " + self.ctrl + \
-                " -n1 | grep ^lbaf | awk '{print $2}' | tr -s \"\\n\" \" \""
+        id_ns = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+            f"--namespace-id={self.default_nsid} " + \
+            "| grep ^lbaf | awk '{print $2}' | tr -s \"\\n\" \" \""
         proc = subprocess.Popen(id_ns, shell=True, stdout=subprocess.PIPE,
                                 encoding='utf-8')
         self.lba_format_list = proc.stdout.read().strip().split(" ")
         if proc.wait() == 0:
             # read lbads information
-            id_ns = "nvme id-ns " + self.ctrl + \
-                    " -n1 | grep ^lbaf | awk '{print $5}'" + \
-                    " | cut -f 2 -d ':' | tr -s \"\\n\" \" \""
+            id_ns = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+                f"--namespace-id={self.default_nsid} " + \
+                "| grep ^lbaf | awk '{print $5}' | cut -f 2 -d ':' | tr -s \"\\n\" \" \""
             proc = subprocess.Popen(id_ns, shell=True, stdout=subprocess.PIPE,
                                     encoding='utf-8')
             self.lbads_list = proc.stdout.read().strip().split(" ")
             # read metadata information
-            id_ns = "nvme id-ns " + self.ctrl + \
-                    " -n1 | grep ^lbaf | awk '{print $4}'" + \
-                    " | cut -f 2 -d ':' | tr -s \"\\n\" \" \""
+            id_ns = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+                f"--namespace-id={self.default_nsid} " + \
+                "| grep ^lbaf | awk '{print $4}' | cut -f 2 -d ':' | tr -s \"\\n\" \" \""
             proc = subprocess.Popen(id_ns, shell=True, stdout=subprocess.PIPE,
                                     encoding='utf-8')
             self.ms_list = proc.stdout.read().strip().split(" ")

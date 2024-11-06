@@ -58,6 +58,7 @@ class TestNVMe(unittest.TestCase):
         self.ctrl = "XXX"
         self.ns1 = "XXX"
         self.test_log_dir = "XXX"
+        self.nvme_bin = "nvme"
         self.do_validate_pci_device = True
         self.default_nsid = 0x1
         self.config_file = 'tests/config.json'
@@ -119,7 +120,10 @@ class TestNVMe(unittest.TestCase):
             self.ctrl = config['controller']
             self.ns1 = config['ns1']
             self.log_dir = config['log_dir']
-            self.do_validate_pci_device = config.get('do_validate_pci_device', self.do_validate_pci_device)
+            self.nvme_bin = config.get('nvme_bin', self.nvme_bin)
+            print(f"\nUsing nvme binary '{self.nvme_bin}'")
+            self.do_validate_pci_device = config.get(
+                'do_validate_pci_device', self.do_validate_pci_device)
             self.clear_log_dir = False
 
             if self.clear_log_dir is True:
@@ -154,7 +158,7 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - None
         """
-        nvme_reset_cmd = "nvme reset " + self.ctrl
+        nvme_reset_cmd = f"{self.nvme_bin} reset {self.ctrl}"
         err = subprocess.call(nvme_reset_cmd,
                               shell=True,
                               stdout=subprocess.PIPE,
@@ -177,7 +181,8 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - controller id.
         """
-        get_ctrl_id = f"nvme list-ctrl {self.ctrl} --output-format=json"
+        get_ctrl_id = f"{self.nvme_bin} list-ctrl {self.ctrl} " + \
+            "--output-format=json"
         proc = subprocess.Popen(get_ctrl_id,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -197,7 +202,7 @@ class TestNVMe(unittest.TestCase):
                 - List of the namespaces.
         """
         ns_list = []
-        ns_list_cmd = "nvme list-ns " + self.ctrl
+        ns_list_cmd = f"{self.nvme_bin} list-ns {self.ctrl}"
         proc = subprocess.Popen(ns_list_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -217,7 +222,7 @@ class TestNVMe(unittest.TestCase):
         """
         pattern = re.compile("^nn[ ]+: [0-9]", re.IGNORECASE)
         max_ns = -1
-        max_ns_cmd = "nvme id-ctrl " + self.ctrl
+        max_ns_cmd = f"{self.nvme_bin} id-ctrl {self.ctrl}"
         proc = subprocess.Popen(max_ns_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -248,7 +253,8 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - lba format size as a tuple of (data_size, metadata_size) in bytes.
         """
-        nvme_id_ns_cmd = f"nvme id-ns {self.ns1} --output-format=json"
+        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+            "--output-format=json"
         proc = subprocess.Popen(nvme_id_ns_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -278,7 +284,7 @@ class TestNVMe(unittest.TestCase):
         """
         pattern = re.compile("^tnvmcap[ ]+: [0-9]", re.IGNORECASE)
         ncap = -1
-        ncap_cmd = "nvme id-ctrl " + self.ctrl
+        ncap_cmd = f"{self.nvme_bin} id-ctrl {self.ctrl}"
         proc = subprocess.Popen(ncap_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -300,7 +306,8 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - Filed value of the given field
         """
-        id_ctrl_cmd = f"nvme id-ctrl {self.ctrl} --output-format=json"
+        id_ctrl_cmd = f"{self.nvme_bin} id-ctrl {self.ctrl} " + \
+            "--output-format=json"
         proc = subprocess.Popen(id_ctrl_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -330,7 +337,8 @@ class TestNVMe(unittest.TestCase):
         """
         # defaulting to 4K
         nvm_format = 4096
-        nvm_format_cmd = "nvme id-ns " + self.ctrl + " -n1"
+        nvm_format_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+            f"--namespace-id={self.default_nsid}"
         proc = subprocess.Popen(nvm_format_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -351,9 +359,10 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - None
         """
-        delete_ns_cmd = "nvme delete-ns " + self.ctrl + " -n 0xFFFFFFFF"
+        delete_ns_cmd = f"{self.nvme_bin} delete-ns {self.ctrl} " + \
+            "--namespace-id=0xFFFFFFFF"
         self.assertEqual(self.exec_cmd(delete_ns_cmd), 0)
-        list_ns_cmd = "nvme list-ns " + self.ctrl + " --all | wc -l"
+        list_ns_cmd = f"{self.nvme_bin} list-ns {self.ctrl} --all | wc -l"
         proc = subprocess.Popen(list_ns_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -371,9 +380,9 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - return code of the nvme create namespace command.
         """
-        create_ns_cmd = "nvme create-ns " + self.ctrl + " --nsze=" + \
-                        str(nsze) + " --ncap=" + str(ncap) + \
-                        " --flbas=" + str(flbas) + " --dps=" + str(dps)
+        create_ns_cmd = f"{self.nvme_bin} create-ns {self.ctrl} " + \
+            f"--nsze={str(nsze)} --ncap={str(ncap)} --flbas={str(flbas)} " + \
+            f"--dps={str(dps)}"
         return self.exec_cmd(create_ns_cmd)
 
     def create_and_validate_ns(self, nsid, nsze, ncap, flbas, dps):
@@ -390,7 +399,8 @@ class TestNVMe(unittest.TestCase):
         err = self.create_ns(nsze, ncap, flbas, dps)
         if err == 0:
             time.sleep(2)
-            id_ns_cmd = "nvme id-ns " + self.ctrl + " -n " + str(nsid)
+            id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+                f"--namespace-id={str(nsid)}"
             err = subprocess.call(id_ns_cmd,
                                   shell=True,
                                   stdout=subprocess.PIPE,
@@ -405,9 +415,8 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        attach_ns_cmd = "nvme attach-ns " + self.ctrl + \
-                        " --namespace-id=" + str(ns_id) + \
-                        " --controllers=" + ctrl_id
+        attach_ns_cmd = f"{self.nvme_bin} attach-ns {self.ctrl} " + \
+            f"--namespace-id={str(ns_id)} --controllers={ctrl_id}"
         err = subprocess.call(attach_ns_cmd,
                               shell=True,
                               stdout=subprocess.PIPE,
@@ -429,9 +438,8 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        detach_ns_cmd = "nvme detach-ns " + self.ctrl + \
-                        " --namespace-id=" + str(nsid) + \
-                        " --controllers=" + ctrl_id
+        detach_ns_cmd = f"{self.nvme_bin} detach-ns {self.ctrl} " + \
+            f"--namespace-id={str(nsid)} --controllers={ctrl_id}"
         return subprocess.call(detach_ns_cmd,
                                shell=True,
                                stdout=subprocess.PIPE,
@@ -445,7 +453,8 @@ class TestNVMe(unittest.TestCase):
                 - 0 on success, 1 on failure.
         """
         # delete the namespace
-        delete_ns_cmd = "nvme delete-ns " + self.ctrl + " -n " + str(nsid)
+        delete_ns_cmd = f"{self.nvme_bin} delete-ns {self.ctrl} " + \
+            f"--namespace-id={str(nsid)}"
         err = subprocess.call(delete_ns_cmd,
                               shell=True,
                               stdout=subprocess.PIPE,
@@ -460,7 +469,8 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        smart_log_cmd = "nvme smart-log " + self.ctrl + " -n " + str(nsid)
+        smart_log_cmd = f"{self.nvme_bin} smart-log {self.ctrl} " + \
+            f"--namespace-id={str(nsid)}"
         print(smart_log_cmd)
         proc = subprocess.Popen(smart_log_cmd,
                                 shell=True,
@@ -480,9 +490,10 @@ class TestNVMe(unittest.TestCase):
               - 0 on success, error code on failure.
         """
         if not vendor:
-            id_ctrl_cmd = "nvme id-ctrl " + self.ctrl
+            id_ctrl_cmd = f"{self.nvme_bin} id-ctrl {self.ctrl}"
         else:
-            id_ctrl_cmd = "nvme id-ctrl --vendor-specific " + self.ctrl
+            id_ctrl_cmd = f"{self.nvme_bin} id-ctrl " +\
+                f"--vendor-specific {self.ctrl}"
         print(id_ctrl_cmd)
         proc = subprocess.Popen(id_ctrl_cmd,
                                 shell=True,
@@ -500,7 +511,7 @@ class TestNVMe(unittest.TestCase):
                 - 0 on success, error code on failure.
         """
         pattern = re.compile(r"^ Entry\[[ ]*[0-9]+\]")
-        error_log_cmd = "nvme error-log " + self.ctrl
+        error_log_cmd = f"{self.nvme_bin} error-log {self.ctrl}"
         proc = subprocess.Popen(error_log_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
@@ -547,7 +558,7 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - value for key requested.
         """
-        id_ctrl = "nvme id-ctrl " + self.ctrl
+        id_ctrl = f"{self.nvme_bin} id-ctrl {self.ctrl}"
         print("\n" + id_ctrl)
         proc = subprocess.Popen(id_ctrl,
                                 shell=True,
