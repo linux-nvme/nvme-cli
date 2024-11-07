@@ -10,6 +10,7 @@
 PLUGIN(NAME("amzn", "Amazon vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
+		ENTRY("stats", "Get EBS volume stats", get_stats)
 	)
 );
 
