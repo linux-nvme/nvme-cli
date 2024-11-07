@@ -4187,23 +4187,21 @@ static void stdout_sanitize_log_sprog(__u32 sprog)
 static void stdout_sanitize_log_sstat(__u16 status)
 {
 	const char *str = nvme_sstat_status_to_string(status);
+	__u16 gde;
 
-	printf("\t[2:0]\t%s\n", str);
-	str = "Number of completed passes if most recent operation was overwrite";
-	printf("\t[7:3]\t%s:\t%u\n", str,
-		(status >> NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT) &
-			NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK);
+	printf("  [2:0] : Sanitize Operation Status  : %#x\t%s\n",
+		NVME_GET(status, SANITIZE_SSTAT_STATUS), str);
+	printf("  [7:3] : Overwrite Passes Completed : %u\n",
+		NVME_GET(status, SANITIZE_SSTAT_COMPLETED_PASSES));
 
-	printf("\t  [8]\t");
-	if (status & NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED)
-		str = "Global Data Erased set: no NS LB in the NVM subsystem "\
-			"has been written to and no PMR in the NVM subsystem "\
-			"has been enabled";
+	gde = NVME_GET(status, SANITIZE_SSTAT_GLOBAL_DATA_ERASED);
+	if (gde)
+		str = "No user data has been written in the NVM subsystem and"\
+		       " no PMR has been enabled in the NVM subsystem";
 	else
-		str = "Global Data Erased cleared: a NS LB in the NVM "\
-			"subsystem has been written to or a PMR in the NVM "\
-			"subsystem has been enabled";
-	printf("%s\n", str);
+		str = "User data has been written in the NVM subsystem or"\
+		       " PMR has been enabled in the NVM subsystem";
+	printf("  [8:8] : Global Data Erased         : %#x\t%s\n", gde, str);
 }
 
 static void stdout_estimate_sanitize_time(const char *text, uint32_t value)

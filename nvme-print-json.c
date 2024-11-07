@@ -1375,19 +1375,16 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	struct json_object *r = json_create_object();
 	struct json_object *dev = json_create_object();
 	struct json_object *sstat = json_create_object();
+	__u16 status = le16_to_cpu(sanitize_log->sstat);
 	const char *status_str;
 	char str[128];
-	__u16 status = le16_to_cpu(sanitize_log->sstat);
 
 	obj_add_int(dev, "sprog", le16_to_cpu(sanitize_log->sprog));
-	obj_add_int(sstat, "global_erased", (status & NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED) >> 8);
-	obj_add_int(sstat, "no_cmplted_passes",
-		    (status >> NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT) &
-		    NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK);
+	obj_add_int(sstat, "global_erased", NVME_GET(status, SANITIZE_SSTAT_GLOBAL_DATA_ERASED));
+	obj_add_int(sstat, "no_cmplted_passes", NVME_GET(status, SANITIZE_SSTAT_COMPLETED_PASSES));
 
 	status_str = nvme_sstat_status_to_string(status);
-	sprintf(str, "(%d) %s", status & NVME_SANITIZE_SSTAT_STATUS_MASK,
-		status_str);
+	sprintf(str, "(%d) %s", NVME_GET(status, SANITIZE_SSTAT_STATUS), status_str);
 	obj_add_str(sstat, "status", str);
 
 	obj_add_obj(dev, "sstat", sstat);
