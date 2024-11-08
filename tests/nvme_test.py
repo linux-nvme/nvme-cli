@@ -30,7 +30,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import time
 import unittest
 
 from nvme_test_logger import TestNVMeLogger
@@ -165,14 +164,12 @@ class TestNVMe(unittest.TestCase):
                               stdout=subprocess.PIPE,
                               encoding='utf-8')
         self.assertEqual(err, 0, "ERROR : nvme reset failed")
-        time.sleep(5)
         rescan_cmd = "echo 1 > /sys/bus/pci/rescan"
         proc = subprocess.Popen(rescan_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 encoding='utf-8')
-        time.sleep(5)
         self.assertEqual(proc.wait(), 0, "ERROR : pci rescan failed")
 
     def get_ctrl_id(self):
@@ -385,7 +382,6 @@ class TestNVMe(unittest.TestCase):
         """
         err = self.create_ns(nsze, ncap, flbas, dps)
         if err == 0:
-            time.sleep(2)
             id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
                 f"--namespace-id={str(nsid)}"
             err = subprocess.call(id_ns_cmd,
@@ -408,11 +404,9 @@ class TestNVMe(unittest.TestCase):
                               shell=True,
                               stdout=subprocess.PIPE,
                               encoding='utf-8')
-        time.sleep(5)
         if err == 0:
             # enumerate new namespace block device
             self.nvme_reset_ctrl()
-            time.sleep(5)
             # check if new namespace block device exists
             err = 0 if stat.S_ISBLK(os.stat(self.ns1).st_mode) else 1
         return err

@@ -40,7 +40,6 @@ Namespace Format testcase :-
 import json
 import math
 import subprocess
-import time
 
 from nvme_test import TestNVMe
 
@@ -76,7 +75,6 @@ class TestNVMeFormatCmd(TestNVMe):
         self.test_log_dir = self.log_dir + "/" + self.__class__.__name__
         self.setup_log_dir(self.__class__.__name__)
         self.delete_all_ns()
-        time.sleep(1)
 
     def tearDown(self):
         """
