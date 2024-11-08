@@ -1545,6 +1545,62 @@ plugin_ocp_opts () {
 	return 0
 }
 
+plugin_lm_opts() {
+	local opts=""
+	local compargs=""
+
+	local nonopt_args=0
+	for (( i=0; i < ${#words[@]}-1; i++ )); do
+		if [[ ${words[i]} != -* ]]; then
+			let nonopt_args+=1
+		fi
+	done
+
+	if [ $nonopt_args -eq 3 ]; then
+		opts="/dev/nvme* "
+	fi
+
+	opts+=" "
+
+	case "$1" in
+		"create-cdq")
+		opts+=" --cntlid= -c --size= -s --queue-type= -q \
+			--consent"
+			;;
+		"delete-cdq")
+		opts+=" --cdqid= -C"
+			;;
+		"track-send")
+		opts+=" --cdqid= -C --select= -s --mos= -m \
+			--start --stop"
+			;;
+		"migration-send")
+		opts+=" --cntlid= -c --select= -s -suspend-type= -t \
+			--delete --seq-ind= -S --uuid-index= -U \
+			--version-index= -V --offset= -o --numd= -n \
+			--input-file -f"
+			;;
+		"migration-recv")
+		opts+=" --cntlid= -c --uuid-index= -U --version-index= -V \
+			--offset= -o --numd= -n --output-file= \
+			--human-readable -H"
+			;;
+		"set-cdq")
+		opts+=" --cdqid= -C --hp= -H --tp= -T"
+			;;
+		"get-cq")
+		opts+=" --cdqid= -C --output-format= -o"
+			;;
+		"help")
+		opts+=$NO_OPTS
+			;;
+	esac
+
+	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+
+	return 0
+}
+
 _nvme_subcmds () {
 	local cur prev words cword
 	_init_completion || return
@@ -1616,6 +1672,8 @@ _nvme_subcmds () {
 			set-dssd-async-event-config get-dssd-async-event-config \
 			get-error-injection set-error-injection \
 			hardware-component-log"
+		[lm]="create-cdq delete-cdq track-send migration-recv migration-send \
+			set-cdq get-cq"
 	)
 
 	# Associative array mapping plugins to corresponding option completions
@@ -1640,6 +1698,7 @@ _nvme_subcmds () {
 		[ymtc]="plugin_ymtc_opts"
 		[inspur]="plugin_inspur_opts"
 		[ocp]="plugin_ocp_opts"
+		[lm]="plugin_lm_opts"
 	)
 
 	# Top level commands

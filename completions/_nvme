@@ -114,6 +114,7 @@ _nvme () {
 	'solidigm:Solidigm plug-in extensions'
 	'micron:Micron plug-in extensions'
 	'dapustor:DapuStor plug-in extensions'
+	'lm:Live Migration plug-in extensions'
 	'help:print brief descriptions of all nvme commands'
 	'json:dump output in json format'
 	)
@@ -614,6 +615,118 @@ _nvme () {
 				;;
 			(*)
 				_files
+				;;
+			esac
+			;;
+		(lm)
+			case ${words[2]} in
+			(create-cdq)
+				local _create_cdq
+				_create_cdq=(
+				--cntlid':controller id'
+				-c':alias for --cntlid'
+				--size':size of cdq in dwords'
+				-s':alias for --size'
+				--queue-type':queue type'
+				-q':alias for --queue-type'
+				--consent':(optional) consent to this not working as desired'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme lm create-cdq options" _create_cdq
+				;;
+			(delete-cdq)
+				local _delete_cdq
+				_delete_cdq=(
+				--cdqid=':controller data queue id'
+				-C':alias for --cdqid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme lm delete-cdq options" _delete_cdq
+				;;
+			(track-send)
+				local _track_send
+				_track_send=(
+				--cdqid=':controller data queue id'
+				-C':alias for --cdqid'
+				--select':select'
+				-s':alias for --select'
+				--mos':management operation'
+				-m':alias for --mos'
+				--start':(optional) start logging'
+				--stop':(optional) stop logging'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme lm track-send options" _track_send
+				;;
+			(migration-send)
+				local _migration_send
+				_migration_send=(
+				--cntlid=':controller id'
+				-c':alias for --cntlid'
+				--select=':select'
+				-s':alias for --select'
+				--suspend-type=':suspend type'
+				-t':alias for --suspend-type'
+				--delete=':(optional) delete cdq'
+				--seq-ind=':(optional) sequence index'
+				-S':alias for --seq-ind'
+				--uuid-index=':(optional) uuid index'
+				-U':alias for --uuid-index'
+				--version-index=':(optional) version index'
+				-V':alias for --version-index'
+				--offset=':(optional) offset'
+				-O':alias for --offset'
+				--numd=':number of dwords'
+				-n':alias for --numd'
+				--input-file=':input file'
+				-f':alias for --input-file'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme lm migration-send options" _migration_send
+				;;
+			(migration-recv)
+				local _migration_recv
+				_migration_recv=(
+				--cntlid=':controller id'
+				-c':alias for --cntlid'
+				--uuid-index=':(optional) uuid index'
+				-U':alias for --uuid-index'
+				--version-index=':(optional) version index'
+				-V':alias for --version-index'
+				--offset=':(optional) offset'
+				-o':alias for --offset'
+				--numd=':number of dwords'
+				-n':alias for --numd'
+				--output-file=':output file'
+				-f':alias for --output-file'
+				--human-readable=':show infos in human readable format'
+				-H':alias of --human-readable'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme lm migration-recv options" _migration_recv
+				;;
+			(set-cdq)
+				local _set_cdq
+				_set_cdq=(
+				--cdqid=':controller data queue id'
+				--hp=':head pointer'
+				-H':alias for --hp'
+				--tp=':(optional) tail pointer'
+				-T':alias for --tp'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme lm set-cdq options" _set_cdq
+				;;
+			(get-cdq)
+				local _get_cdq
+				_get_cqq=(
+				--cdqid=':controller data queue id'
+				-C':alias for --cdqid'
+				--output-format=':output format'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme get-cdq options" _get_cdq
 				;;
 			esac
 			;;
@@ -2705,6 +2818,21 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme dapustor options" _dapustor
 			;;
+		(lm)
+			local _lm
+			_lm=(
+			create-cdq':Create Controller Data Queue'
+			delete-cdq':Delete Controller Data Queue'
+			track-send':Track Send'
+			migration-recv':Migration Receive'
+			migration-send':Migration Send'
+			get-cdq':Get Controller Data Queue Feature'
+			set-cdq':Set Controller Data Queue Feature'
+			version':Shows the program version'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme lm options" _lm
 		(help)
 			local _h
 			_h=( id-ctrl id-ns list-ns id-iocs create-ns delete-ns attach-ns detach-ns
@@ -2722,7 +2850,7 @@ _nvme () {
 			get-property write-zeroes write-uncor verify sanitize sanitize-log reset
 			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
 			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
-			dir-send virt-mgmt rpmb version ocp solidigm dapustor
+			dir-send virt-mgmt rpmb version ocp solidigm dapustor lm
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h

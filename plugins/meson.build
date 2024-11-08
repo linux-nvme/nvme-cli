@@ -11,6 +11,7 @@ if json_c_dep.found()
     'plugins/innogrit/innogrit-nvme.c',
     'plugins/inspur/inspur-nvme.c',
     'plugins/intel/intel-nvme.c',
+    'plugins/lm/lm-nvme.c',
     'plugins/memblaze/memblaze-nvme.c',
     'plugins/micron/micron-nvme.c',
     'plugins/nbft/nbft-plugin.c',
