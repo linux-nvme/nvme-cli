@@ -29,8 +29,6 @@ NVMe Namespace Management Testcase:-
     5. Delete all Namespaces.
 """
 
-import time
-
 from nvme_test import TestNVMe
 
 
@@ -63,7 +61,6 @@ class TestNVMeCreateMaxNS(TestNVMe):
         self.max_ns = self.get_max_ns()
         self.ctrl_id = self.get_ctrl_id()
         self.delete_all_ns()
-        time.sleep(1)
 
     def tearDown(self):
         """
