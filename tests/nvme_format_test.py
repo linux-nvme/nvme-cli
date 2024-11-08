@@ -122,6 +122,7 @@ class TestNVMeFormatCmd(TestNVMe):
         # extract the supported format information.
         self.attach_detach_primary_ns()
 
+        print("##### Testing lba formats:")
         # iterate through all supported format
         for flbas, lba_format in enumerate(self.lba_format_list):
             ds = lba_format['ds']

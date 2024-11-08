@@ -34,7 +34,6 @@ class TestNVMeCopy(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeCopy """
         super().setUp()
-        print("\nSetting up test...")
         self.ocfs = self.get_ocfs()
         self.host_behavior_data = None
         cross_namespace_copy = self.ocfs & 0xc
@@ -78,7 +77,6 @@ class TestNVMeCopy(TestNVMe):
 
     def tearDown(self):
         """ Post Section for TestNVMeCopy """
-        print("Tearing down test...")
         if self.host_behavior_data:
             # restore saved host behavior support data
             set_features_cmd = f"{self.nvme_bin} set-feature {self.ctrl} " + \
@@ -117,12 +115,10 @@ class TestNVMeCopy(TestNVMe):
         if "sopts" in kwargs:
             copy_cmd += f" --sopts={kwargs['sopts']}"
         # run and assert success
-        print("Running command:", copy_cmd)
         self.assertEqual(self.exec_cmd(copy_cmd), 0)
 
     def test_copy(self):
         """ Testcase main """
-        print("Running test...")
         self.copy(0, 1, 2, descriptor_format=0)
         self.copy(0, 1, 2, descriptor_format=1)
         self.copy(0, 1, 2, descriptor_format=2, snsids=self.ns1_nsid)
