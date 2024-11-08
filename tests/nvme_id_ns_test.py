@@ -42,7 +42,7 @@ class TestNVMeIdentifyNamespace(TestNVMe):
         """ Pre Section for TestNVMeIdentifyNamespace. """
         super().setUp()
         self.setup_log_dir(self.__class__.__name__)
-        self.ns_list = self.get_ns_list()
+        self.nsid_list = self.get_nsid_list()
 
     def tearDown(self):
         """
@@ -81,7 +81,7 @@ class TestNVMeIdentifyNamespace(TestNVMe):
                 - 0 on success, error code on failure.
         """
         err = 0
-        for namespace in self.ns_list:
+        for namespace in self.nsid_list:
             err = self.get_id_ns(str(namespace))
         return err
 

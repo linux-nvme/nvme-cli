@@ -76,14 +76,14 @@ class TestNVMeSmartLogCmd(TestNVMe):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        ns_list = self.get_ns_list()
-        for nsid in range(0, len(ns_list)):
-            self.get_smart_log_ns(ns_list[nsid])
+        nsid_list = self.get_nsid_list()
+        for nsid in nsid_list:
+            self.get_smart_log_ns(nsid)
         return 0
 
     def test_smart_log(self):
         """ Testcase main """
         self.assertEqual(self.get_smart_log_ctrl(), 0)
-        smlp = self.supp_check_id_ctrl("lpa")
+        smlp = int(self.get_id_ctrl_field_value("lpa"), 16)
         if smlp & 0x1:
             self.assertEqual(self.get_smart_log_all_ns(), 0)
