@@ -797,6 +797,10 @@ static bool is_fahrenheit_country(const char *country)
 	return false;
 }
 
+#ifndef LC_MEASUREMENT
+#define LC_MEASUREMENT LC_ALL
+#endif
+
 static bool is_temperature_fahrenheit(void)
 {
 	const char *locale, *underscore;
