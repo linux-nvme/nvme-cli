@@ -9,39 +9,25 @@ on:
 jobs:
   nightly-tests:
     runs-on: nvme-nvm
+    container:
+      image: ghcr.io/linux-nvme/debian.python:latest
+      #Expose all devices to the container through the `privileged` flag.
+      #
+      #BDEV0 is an environment variable of the self-hosted runner instance
+      #that contains a valid nvme ctrl name which is capable of the nvm
+      #command set.
+      options: '--privileged -e BDEV0'
     steps:
       - name: Output kernel version
         run: |
           uname -a
-      - name: Clean up test device
-        run: |
-          #BDEV0 is an environment variable of the self-hosted runner instance
-          #that contains a valid nvme ctrl name which is capable of the nvm
-          #command set.
-          CONTROLLER=$(echo /dev/${BDEV0} | sed 's/n[0-9]*$//')
-          sudo nvme delete-ns $CONTROLLER -n 0xffffffff
-          sudo nvme format $CONTROLLER -n 0xffffffff -l 0 -f
-          SIZE=$(sudo nvme id-ctrl $CONTROLLER --output-format=json | jq -r '{tnvmcap} | .[]' | awk '{print $1/512}')
-          sudo nvme create-ns -s $SIZE -c $SIZE -f 0 -d 0 --csi=0 $CONTROLLER
-          sudo nvme attach-ns $CONTROLLER -n 1 -c 0
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y \
-          meson gcc pkg-config git libjson-c-dev libssl-dev libkeyutils-dev \
-          libdbus-1-dev libpython3-dev pipx python3-dev swig xz-utils
-          pipx ensurepath
-          sudo PIPX_BIN_DIR=/usr/local/bin pipx install nose2
-          sudo PIPX_BIN_DIR=/usr/local/bin pipx install flake8
-          sudo PIPX_BIN_DIR=/usr/local/bin pipx install mypy
-          sudo PIPX_BIN_DIR=/usr/local/bin pipx install autopep8
-          sudo PIPX_BIN_DIR=/usr/local/bin pipx install isort
+          PIPX_BIN_DIR=/usr/local/bin pipx install nose2 --force
       - name: Build and install nvme-cli
         run: |
           scripts/build.sh -b release -c gcc
-          sudo meson install -C .build-ci
-          sudo ldconfig /usr/local/lib64
       - name: Overwrite test config
         run: |
           CONTROLLER=$(echo /dev/${BDEV0} | sed 's/n[0-9]*$//')
@@ -49,12 +35,14 @@ jobs:
           {
             "controller" : "$CONTROLLER",
             "ns1": "/dev/${BDEV0}",
-            "log_dir": "tests/nvmetests/"
+            "log_dir": "tests/nvmetests/",
+            "nvme_bin": "$(pwd)/.build-ci/nvme"
           }
           EOF
+          cat tests/config.json
       - name: Run on device tests
         run: |
-          sudo nose2 --verbose --start-dir tests \
+          nose2 --verbose --start-dir tests \
           nvme_attach_detach_ns_test \
           nvme_compare_test \
           nvme_copy_test \
@@ -79,15 +67,6 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: logs files
+          name: nvme-cli-test-logs
           path: |
             ./tests/nvmetests/**/*.log
-      - name: Clean up test device
-        if: always()
-        run: |
-          CONTROLLER=$(echo /dev/${BDEV0} | sed 's/n[0-9]*$//')
-          sudo nvme delete-ns $CONTROLLER -n 0xffffffff
-          sudo nvme format $CONTROLLER -n 0xffffffff -l 0 -f
-          SIZE=$(sudo nvme id-ctrl $CONTROLLER --output-format=json | jq -r '{tnvmcap} | .[]' | awk '{print $1/512}')
-          sudo nvme create-ns -s $SIZE -c $SIZE -f 0 -d 0 --csi=0 $CONTROLLER
-          sudo nvme attach-ns $CONTROLLER -n 1 -c 0
