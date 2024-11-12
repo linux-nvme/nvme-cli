@@ -8,7 +8,7 @@ nvme-netapp-ontapdevices - Display information about ONTAP devices
 SYNOPSIS
 --------
 [verse]
-'nvme netapp ontapdevices' [--output-format=<fmt> | -o <fmt>]
+'nvme netapp ontapdevices' [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -21,6 +21,10 @@ OPTIONS
 --output-format=<fmt>::
 	Set the reporting format to 'normal' (default), 'column', or
 	'json'. Only one output format can be used at a time.
+
+-v::
+--verbose::
+	Display additional information of ONTAP devices on the host.
 
 EXAMPLES
 --------
