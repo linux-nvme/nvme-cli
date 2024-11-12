@@ -73,8 +73,9 @@ struct __packed ssd_latency_monitor_log {
 	__le64	static_latency_timestamp[4][3];	/* 0x130 - 0x18F */
 	__le16	static_measured_latency[4][3];	/* 0x190 - 0x1A7 */
 	__le16	static_latency_stamp_units;	/* 0x1A8 */
-	__u8	rsvd4[0x16];			/* 0x1AA */
+	__u8	rsvd4[0x0A];			/* 0x1AA */
 
+	__u8	latency_monitor_debug_log_size[0x0C]; /* 0x1B4 */
 	__le16	debug_log_trigger_enable;	/* 0x1C0 */
 	__le16	debug_log_measured_latency;	/* 0x1C2 */
 	__le64	debug_log_latency_stamp;	/* 0x1C4 */
