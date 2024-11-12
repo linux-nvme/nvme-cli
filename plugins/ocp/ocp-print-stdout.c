@@ -205,6 +205,7 @@ static void stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *
 {
 	char ts_buf[128];
 	int i, j;
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 
 	printf("-Latency Monitor/C3 Log Page Data-\n");
 	printf("  Controller   :  %s\n", dev->name);
@@ -237,6 +238,17 @@ static void stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *
 	       le16_to_cpu(log_data->active_latency_stamp_units));
 	printf("  Static Latency Stamp Units         %d\n",
 	       le16_to_cpu(log_data->static_latency_stamp_units));
+
+	if (log_page_version >= 0x4) {
+		printf("    Debug Telemetry Log Size         0x");
+		for (i = ARRAY_SIZE(log_data->latency_monitor_debug_log_size) - 1;
+			i > 0 && (log_data->latency_monitor_debug_log_size[i] == 0); i--)
+			;
+		while (i >= 0)
+			printf("%02x", log_data->latency_monitor_debug_log_size[i--]);
+		printf("\n");
+	}
+
 	printf("  Debug Log Trigger Enable           %d\n",
 	       le16_to_cpu(log_data->debug_log_trigger_enable));
 	printf("  Debug Log Measured Latency         %d\n",
@@ -253,8 +265,7 @@ static void stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *
 	       le16_to_cpu(log_data->debug_log_counter_trigger));
 	printf("  Debug Log Stamp Units              %d\n",
 	       le16_to_cpu(log_data->debug_log_stamp_units));
-	printf("  Log Page Version                   %d\n",
-	       le16_to_cpu(log_data->log_page_version));
+	printf("  Log Page Version                   %d\n", log_page_version);
 
 	char guid[(GUID_LEN * 2) + 1];
 	char *ptr = &guid[0];
