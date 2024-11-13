@@ -4460,6 +4460,7 @@ struct nvme_eg_event_aggregate_log {
  * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_ENDGRP:	Endurance Group Scope
  * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN:	Domain Scope
  * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS:	NVM Subsystem Scope
+ * @NVME_FID_SUPPORTED_EFFECTS_CDQSCP:		Controller Data Queue
  */
 enum nvme_fid_supported_effects {
 	NVME_FID_SUPPORTED_EFFECTS_FSUPP	= 1 << 0,
@@ -4476,6 +4477,7 @@ enum nvme_fid_supported_effects {
 	NVME_FID_SUPPORTED_EFFECTS_SCOPE_ENDGRP	= 1 << 3,
 	NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN	= 1 << 4,
 	NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS	= 1 << 5,
+	NVME_FID_SUPPORTED_EFFECTS_CDQSCP	= 1 << 6,
 };
 
 /**
@@ -6012,6 +6014,8 @@ struct nvme_host_mem_buf_attrs {
  * @NVME_AER_ERROR:	Error event
  * @NVME_AER_SMART:	SMART / Health Status event
  * @NVME_AER_NOTICE:	Notice event
+ * @NVME_AER_IMMEDIATE:	Immediate
+ * @NVME_AER_ONESHOT:	One-Shot
  * @NVME_AER_CSS:	NVM Command Set Specific events
  * @NVME_AER_VS:	Vendor Specific event
  */
@@ -6019,6 +6023,8 @@ enum nvme_ae_type {
 	NVME_AER_ERROR				= 0,
 	NVME_AER_SMART				= 1,
 	NVME_AER_NOTICE				= 2,
+	NVME_AER_IMMEDIATE			= 3,
+	NVME_AER_ONESHOT			= 4,
 	NVME_AER_CSS				= 6,
 	NVME_AER_VS				= 7,
 };
@@ -7790,6 +7796,11 @@ static inline __u32 nvme_status_equals(int status, enum nvme_status_type type,
  * @nvme_admin_fabric_zoning_lookup:	Fabric Zoning Lookup
  * @nvme_admin_fabric_zoning_send:	Fabric Zoning Send
  * @nvme_admin_dbbuf:			Doorbell Buffer Config
+ * @nvme_admin_track_send:		Track Send
+ * @nvme_admin_track_receive:		Track Receive
+ * @nvme_admin_migration_send:		Migration Send
+ * @nvme_admin_migration_receive:	Migration Receive
+ * @nvme_admin_ctrl_data_queue:		Controller Data Queue
  * @nvme_admin_fabrics:			Fabrics Commands
  * @nvme_admin_format_nvm:		Format NVM
  * @nvme_admin_security_send:		Security Send
@@ -7826,6 +7837,11 @@ enum nvme_admin_opcode {
 	nvme_admin_lockdown		= 0x24,
 	nvme_admin_fabric_zoning_lookup	= 0x25,
 	nvme_admin_fabric_zoning_send	= 0x29,
+	nvme_admin_track_send		= 0x3d,
+	nvme_admin_track_receive	= 0x3e,
+	nvme_admin_migration_send	= 0x41,
+	nvme_admin_migration_receive	= 0x42,
+	nvme_admin_ctrl_data_queue	= 0x45,
 	nvme_admin_dbbuf		= 0x7c,
 	nvme_admin_fabrics		= 0x7f,
 	nvme_admin_format_nvm		= 0x80,
@@ -8022,6 +8038,7 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_SPINUP_CONTROL:	Spinup Control
  * @NVME_FEAT_FID_FDP:			Flexible Data Placement
  * @NVME_FEAT_FID_FDP_EVENTS:		FDP Events
+ * @NVME_FEAT_FID_CTRL_DATA_QUEUE:	Controller Data Queue
  * @NVME_FEAT_FID_ENH_CTRL_METADATA:	Enhanced Controller Metadata
  * @NVME_FEAT_FID_CTRL_METADATA:	Controller Metadata
  * @NVME_FEAT_FID_NS_METADATA:		Namespace Metadata
@@ -8060,6 +8077,7 @@ enum nvme_features_id {
 	NVME_FEAT_FID_SPINUP_CONTROL				= 0x1a,
 	NVME_FEAT_FID_FDP					= 0x1d,
 	NVME_FEAT_FID_FDP_EVENTS				= 0x1e,
+	NVME_FEAT_FID_CTRL_DATA_QUEUE				= 0x21,
 	NVME_FEAT_FID_ENH_CTRL_METADATA				= 0x7d,
 	NVME_FEAT_FID_CTRL_METADATA				= 0x7e,
 	NVME_FEAT_FID_NS_METADATA				= 0x7f,
@@ -9056,4 +9074,390 @@ struct nvme_ns_mgmt_host_sw_specified {
 };
 #endif /* SWIG */
 
+/**
+ * enum nvme_lm_cdq_fields - Controller Data Queue command fields
+ *
+ * @NVME_LM_CDQ_MOS_SHIFT:		Shift to set Management Operation Specific (MOS) field
+ * @NVME_LM_CDQ_MOS_MASK:		Mask to set MOS field
+ * @NVME_LM_CDQ_SEL_SHIFT:		Shift to set Select (SEL) field
+ * @NVME_LM_CDQ_SEL_MASK:		Mask to set SEL field
+ * @NVME_LM_SEL_CREATE_CDQ:		Create CDQ select option
+ * @NVME_LM_SEL_DELETE_CDQ:		Delete CDQ select option
+ * @NVME_LM_QT_SHIFT:			Shift amount to set Queue Type (QT) field relative to MOS
+ * @NVME_LM_QT_MASK:			Mask to set QT field relative to MOS
+ * @NVME_LM_QT_USER_DATA_MIGRATION_QUEUE: User Data Migration Queue type
+ * @NVME_LM_CREATE_CDQ_PC:		Physically Contiguous (PC)
+ * @NVME_LM_CREATE_CDQ_CNTLID_SHIFT:	Shift amount to set CNTLID field relative to MOS
+ * @NVME_LM_CREATE_CDQ_CNTLID_MASK:	Mask to set CNTLID field relative to MOS
+ * @NVME_LM_DELETE_CDQ_CDQID_SHIFT:	Shift amount to set CDQID field for deletion
+ * @NVME_LM_DELETE_CDQ_CDQID_MASK:	Mask to set CDQID field for deletion
+ * @NVME_LM_CREATE_CDQ_CDQID_SHIFT:	Shift amount to get CDQID field from Create response in
+ *					completion dword0
+ * @NVME_LM_CREATE_CDQ_CDQID_MASK:	Mask to get CNTLID field from Create response in
+ *					completion dword0
+ */
+enum nvme_lm_cdq_fields {
+	NVME_LM_CDQ_MOS_SHIFT			= 16,
+	NVME_LM_CDQ_MOS_MASK			= 0xffff,
+	NVME_LM_CDQ_SEL_SHIFT			= 0,
+	NVME_LM_CDQ_SEL_MASK			= 0xff,
+	NVME_LM_SEL_CREATE_CDQ			= 0,
+	NVME_LM_SEL_DELETE_CDQ			= 1,
+
+	/* Controller Data Queue - Create CDQ */
+	NVME_LM_QT_SHIFT			= 0,
+	NVME_LM_QT_MASK				= 0xff,
+	NVME_LM_QT_USER_DATA_MIGRATION_QUEUE	= 0,
+	NVME_LM_CREATE_CDQ_PC			= 1,
+	NVME_LM_CREATE_CDQ_CNTLID_SHIFT		= 0,
+	NVME_LM_CREATE_CDQ_CNTLID_MASK		= 0xffff,
+
+	/* Controller Data Queue - Delete CDQ */
+	NVME_LM_DELETE_CDQ_CDQID_SHIFT		= 0,
+	NVME_LM_DELETE_CDQ_CDQID_MASK		= 0xffff,
+
+	/* Controller Data Queue - Create CDQ - Completion Queue Entry Dword 0 */
+	NVME_LM_CREATE_CDQ_CDQID_SHIFT		= 0,
+	NVME_LM_CREATE_CDQ_CDQID_MASK		= 0xffff,
+};
+
+/**
+ * enum nvme_lm_track_send_fields - Track Send command fields
+ *
+ * @NVME_LM_TRACK_SEND_MOS_SHIFT:	Shift to set Management Operation Specific (MOS) field
+ * @NVME_LM_TRACK_SEND_MOS_MASK:	Mask to set MOS field
+ * @NVME_LM_TRACK_SEND_SEL_SHIFT:	Shift to set Select (SEL) field
+ * @NVME_LM_TRACK_SEND_SEL_MASK:	Mask to set SEL field
+ * @NVME_LM_SEL_LOG_USER_DATA_CHANGES:	Log User Data Changes select option
+ * @NVME_LM_SEL_TRACK_MEMORY_CHANGES:	Track Memory Changes select option
+ * @NVME_LM_LACT_SHIFT:			Shift to set Logging Action (LACT) relative to MOS
+ * @NVME_LM_LACT_MASK:			Mask to set LACT relative to MOS
+ * @NVME_LM_LACT_STOP_LOGGING:		The controller shall stop logging user data changes to
+ *					namespaces attached to the controller associated with the
+ *					User Data Migration Queue specified in the CDQ ID.
+ * @NVME_LM_LACT_START_LOGGING:		The controller shall start logging user data changes to
+ *					namespaces attached to the controller associated with the
+ *					User Data Migration Queue into that User Data Migration
+ *					Queue where those user data changes are caused by the
+ *					controller associated with that User Data Migration Queue
+ *					processing commands.
+ */
+enum nvme_lm_track_send_fields {
+	NVME_LM_TRACK_SEND_MOS_SHIFT		= 16,
+	NVME_LM_TRACK_SEND_MOS_MASK		= 0xffff,
+	NVME_LM_TRACK_SEND_SEL_SHIFT		= 0,
+	NVME_LM_TRACK_SEND_SEL_MASK		= 0xff,
+	NVME_LM_SEL_LOG_USER_DATA_CHANGES	= 0,
+	NVME_LM_SEL_TRACK_MEMORY_CHANGES	= 1,
+
+	/* Track Send - Log User Data Changes */
+	NVME_LM_LACT_SHIFT			= 0,
+	NVME_LM_LACT_MASK			= 0xf,
+	NVME_LM_LACT_STOP_LOGGING		= 0,
+	NVME_LM_LACT_START_LOGGING		= 1,
+};
+
+/**
+ * enum nvme_lm_migration_send_fields - Migration Send command fields
+ *
+ * @NVME_LM_MIGRATION_SEND_MOS_SHIFT:		Shift to set Management Operation Specific (MOS)
+ *						field
+ * @NVME_LM_MIGRATION_SEND_MOS_MASK:		Mask to set MOS field
+ * @NVME_LM_MIGRATION_SEND_SEL_SHIFT:		Shift amount to set Select (SEL) field
+ * @NVME_LM_MIGRATION_SEND_SEL_MASK:		Mask to set SEL field
+ * @NVME_LM_SEL_SUSPEND:			Migration Send - Suspend
+ * @NVME_LM_SEL_RESUME:				Migration Send - Resume
+ * @NVME_LM_SEL_SET_CONTROLLER_STATE:		Migration Send - Set Controller State
+ * @NVME_LM_MIGRATION_SEND_UIDX_SHIFT:		Shift to set UUID Index (UIDX)
+ * @NVME_LM_MIGRATION_SEND_UIDX_MASK:		Mask to set UIDX
+ * @NVME_LM_DUDMQ:				Delete User Data Migration Queue
+ * @NVME_LM_STYPE_SHIFT:			Shift amount to set Suspend Type (STYPE)
+ * @NVME_LM_STYPE_MASK:				Mask to set STYPE
+ * @NVME_LM_STYPE_SUSPEND_NOTIFICATION:		Suspend Notification - The specified controller is
+ *						going to be suspended in the future with a
+ *						subsequent Migration Send command
+ * @NVME_LM_STYPE_SUSPEND:			Suspend - Suspend the controller
+ * @NVME_LM_SUSPEND_CNTLID_SHIFT:		Shift amount to set Controller ID (CNTLID) when SEL
+ *						is Suspend
+ * @NVME_LM_SUSPEND_CNTLID_MASK:		Mask to set CNTLID with SEL Suspend
+ * @NVME_LM_RESUME_CNTLID_SHIFT:		Shift amount to set Controller ID (CNTLID) when SEL
+ *						is Resume
+ * @NVME_LM_RESUME_CNTLID_MASK:			Mask to set CNTLID when SEL is Resume
+ * @NVME_LM_SEQIND_SHIFT:			Shift amount to set Sequence Indicator (SEQIND)
+ *						field relative to MOS
+ * @NVME_LM_SEQIND_MASK:			Mask to set SEQIND field relative to MOS
+ * @NVME_LM_SEQIND_NOT_FIRST_NOT_LAST:		This command is not the first or last of a sequence
+ *						of two or more Migration Send commands with this
+ *						management operation used to transfer the controller
+ *						state from host to controller
+ * @NVME_LM_SEQIND_FIRST:			This command is the first of a sequence of two or
+ *						more Migration Send commands
+ * @NVME_LM_SEQIND_LAST:			This command is the last command of a sequence of
+ *						two or more Migration Send commands
+ * @NVME_LM_SEQIND_ENTIRE:			This Migration Send command is the only command and
+ *						contains the entire controller state for this
+ *						management operation
+ * @NVME_LM_SET_CONTROLLER_STATE_CSUUIDI_SHIFT:	Shift amount to set Controller State UUID Index
+ *						(CSUUIDI)
+ * @NVME_LM_SET_CONTROLLER_STATE_CSUUIDI_MASK:	Mask to set CSUUIDI
+ * @NVME_LM_SET_CONTROLLER_STATE_CSVI_SHIFT:	Shift amount to set Controller State Version Index
+ *						(CSVI)
+ * @NVME_LM_SET_CONTROLLER_STATE_CSVI_MASK:	Mask to set CSVI
+ * @NVME_LM_SET_CONTROLLER_STATE_CNTLID_SHIFT:	Shift amount to set Controller ID (CNTLID) when SEL
+ *						is Set Controller State
+ * @NVME_LM_SET_CONTROLLER_STATE_CNTLID_MASK:	Mask to set CNTLID when SEL is Set Controller State
+ */
+enum nvme_lm_migration_send_fields {
+	NVME_LM_MIGRATION_SEND_MOS_SHIFT		= 16,
+	NVME_LM_MIGRATION_SEND_MOS_MASK			= 0xffff,
+	NVME_LM_MIGRATION_SEND_SEL_SHIFT		= 0,
+	NVME_LM_MIGRATION_SEND_SEL_MASK			= 0xff,
+	NVME_LM_SEL_SUSPEND				= 0,
+	NVME_LM_SEL_RESUME				= 1,
+	NVME_LM_SEL_SET_CONTROLLER_STATE		= 2,
+	NVME_LM_MIGRATION_SEND_UIDX_SHIFT		= 0,
+	NVME_LM_MIGRATION_SEND_UIDX_MASK		= 0x7f,
+
+	/* Migration Send - Suspend */
+	NVME_LM_DUDMQ					= 1 << 31,
+	NVME_LM_STYPE_SHIFT				= 16,
+	NVME_LM_STYPE_MASK				= 0xff,
+	NVME_LM_STYPE_SUSPEND_NOTIFICATION		= 0,
+	NVME_LM_STYPE_SUSPEND				= 1,
+	NVME_LM_SUSPEND_CNTLID_SHIFT			= 0,
+	NVME_LM_SUSPEND_CNTLID_MASK			= 0Xffff,
+
+	/* Migration Send - Resume */
+	NVME_LM_RESUME_CNTLID_SHIFT			= 0,
+	NVME_LM_RESUME_CNTLID_MASK			= 0xffff,
+
+	/* Migration Send - Set Controller State */
+	NVME_LM_SEQIND_SHIFT				= 16,
+	NVME_LM_SEQIND_MASK				= 0xf,
+	NVME_LM_SEQIND_NOT_FIRST_NOT_LAST		= 0,
+	NVME_LM_SEQIND_FIRST				= 1,
+	NVME_LM_SEQIND_LAST				= 2,
+	NVME_LM_SEQIND_ENTIRE				= 3,
+	NVME_LM_SET_CONTROLLER_STATE_CSUUIDI_SHIFT	= 24,
+	NVME_LM_SET_CONTROLLER_STATE_CSUUIDI_MASK	= 0xff,
+	NVME_LM_SET_CONTROLLER_STATE_CSVI_SHIFT		= 16,
+	NVME_LM_SET_CONTROLLER_STATE_CSVI_MASK		= 0xff,
+	NVME_LM_SET_CONTROLLER_STATE_CNTLID_SHIFT	= 0,
+	NVME_LM_SET_CONTROLLER_STATE_CNTLID_MASK	= 0xffff,
+};
+
+/**
+ * enum nvme_lm_migration_recv_fields - Migration Receive command fields
+ *
+ * @NVME_LM_MIGRATION_RECV_MOS_SHIFT:		Shift amount to set Management Specific Operation
+ *						(MOS) field
+ * @NVME_LM_MIGRATION_RECV_MOS_MASK:		Mask to set MOS field
+ * @NVME_LM_MIGRATION_RECV_SEL_SHIFT:		Shift amount to set Select (SEL) field
+ * @NVME_LM_MIGRATION_RECV_SEL_MASK:		Mask to set SEL field
+ * @NVME_LM_SEL_GET_CONTROLLER_STATE:		Get Controller State select option
+ * @NVME_LM_MIGRATION_RECV_UIDX_SHIFT:		Shift to set UUID Index (UIDX)
+ * @NVME_LM_MIGRATION_RECV_UIDX_MASK:		Mask to set UIDX
+ * @NVME_LM_GET_CONTROLLER_STATE_CSVI_SHIFT:	Shift amount to set Controller State Version Index
+ *						(CSVI) relative to MOS
+ * @NVME_LM_GET_CONTROLLER_STATE_CSVI_MASK:	Mask to set CSVI relative to MOS
+ * @NVME_LM_GET_CONTROLLER_STATE_CSUIDXP_SHIFT:	Shift amount to set Controller State UUID Index
+ *						Parameter (CSUIDXP)
+ * @NVME_LM_GET_CONTROLLER_STATE_CSUIDXP_MASK:	Mask to set CSUIDXP
+ * @NVME_LM_GET_CONTROLLER_STATE_CSUUIDI_SHIFT:	Shift amount to set Controller State UUID Index
+ *						(CSUUIDI)
+ * @NVME_LM_GET_CONTROLLER_STATE_CSUUIDI_MASK:	Mask to set CSUUIDI
+ * @NVME_LM_GET_CONTROLLER_STATE_CNTLID_SHIFT:	Shift amount to set Controller ID (CNTLID)
+ * @NVME_LM_GET_CONTROLLER_STATE_CNTLID_MASK:	Mask to set CNTLID
+ * @NVME_LM_GET_CONTROLLER_STATE_CSUP:		Controller Suspended
+ */
+enum nvme_lm_migration_recv_fields {
+	NVME_LM_MIGRATION_RECV_MOS_SHIFT		= 16,
+	NVME_LM_MIGRATION_RECV_MOS_MASK			= 0xffff,
+	NVME_LM_MIGRATION_RECV_SEL_SHIFT		= 0,
+	NVME_LM_MIGRATION_RECV_SEL_MASK			= 0xff,
+	NVME_LM_SEL_GET_CONTROLLER_STATE		= 0,
+	NVME_LM_MIGRATION_RECV_UIDX_SHIFT		= 0,
+	NVME_LM_MIGRATION_RECV_UIDX_MASK		= 0x7f,
+
+	/* Migration Receive - Get Controller State */
+	NVME_LM_GET_CONTROLLER_STATE_CSVI_SHIFT		= 0,
+	NVME_LM_GET_CONTROLLER_STATE_CSVI_MASK		= 0xff,
+	NVME_LM_GET_CONTROLLER_STATE_CSUIDXP_SHIFT	= 24,
+	NVME_LM_GET_CONTROLLER_STATE_CSUIDXP_MASK	= 0xff,
+	NVME_LM_GET_CONTROLLER_STATE_CSUUIDI_SHIFT	= 16,
+	NVME_LM_GET_CONTROLLER_STATE_CSUUIDI_MASK	= 0xff,
+	NVME_LM_GET_CONTROLLER_STATE_CNTLID_SHIFT	= 0,
+	NVME_LM_GET_CONTROLLER_STATE_CNTLID_MASK	= 0xffff,
+
+	/* Migration Receive - Get Controller State - Completion Queue Entry Dword 0 */
+	NVME_LM_GET_CONTROLLER_STATE_CSUP		= 1 << 0,
+};
+
+/**
+ * struct nvme_lm_io_submission_queue_data - I/O Submission Queue data structure. Fields related to
+ * the contents of Create I/O Submission Queue command that created an I/O Submission Queue.
+ *
+ * @iosqprp1:	I/O Submission PRP Entry 1 (IOSQPRP1)
+ * @iosqqsize:	I/O Submission Queue Size (IOSQQSIZE)
+ * @iosqqid:	I/O Submission Queue Identifier (IOSQQID)
+ * @iosqcqid:	I/O Completion Queue Identifier (IOSQCQID)
+ * @iosqa:	I/O Submission Queue Attributes (IOSQA)
+ * @iosqhp:	I/O Submission Queue Head Pointer (IOSQHP)
+ * @iosqtp:	I/O Submission Queue Tail Pointer (IOSQTP)
+ * @rsvd20:	Reserved
+ */
+struct nvme_lm_io_submission_queue_data {
+	__u64 iosqprp1;
+	__u16 iosqqsize;
+	__u16 iosqqid;
+	__u16 iosqcqid;
+	__u16 iosqa;
+	__u16 iosqhp;
+	__u16 iosqtp;
+	__u8  rsvd20[4];
+};
+
+/**
+ * struct nvme_lm_io_completion_queue_data - I/O Completion Queue data structure. Fields related to
+ * the contents of Create I/O Completion Queue command that created an I/O Completion Queue.
+ *
+ * @iocqprp1:	I/O Completion Queue PRP Entry 1 (IOCQPRP1)
+ * @iocqqsize:	I/O Completion Queue Size (IOCQQSIZE)
+ * @iocqqid:	I/O Completion Queue Identifier (IOCQQID)
+ * @iocqhp:	I/O Completion Queue Head Pointer (IOCQHP)
+ * @iocqtp:	I/O Completion Queue Tail Pointer (IOCQTP)
+ * @iocqa:	I/O Completion Queue Attributes (IOCQA)
+ * @rsvd20:	Reserved
+ */
+struct nvme_lm_io_completion_queue_data {
+	__u64 iocqprp1;
+	__u16 iocqqsize;
+	__u16 iocqqid;
+	__u16 iocqhp;
+	__u16 iocqtp;
+	__u32 iocqa;
+	__u8  rsvd20[4];
+};
+
+/**
+ * struct nvme_lm_nvme_controller_state_data_header - Controller State data structure header
+ *
+ * @ver:   The version of this data structure.
+ * @niosq: The number of I/O Submission Queues contained in this data structure.
+ * @niocq: The number of I/O Completion Queues contained in this data structure.
+ * @rsvd6: Reserved
+ */
+struct nvme_lm_nvme_controller_state_data_header {
+	__u16 ver;
+	__u16 niosq;
+	__u16 niocq;
+	__u16 rsvd6;
+};
+
+/**
+ * struct nvme_lm_nvme_controller_state_data - NVMe Controller State data structure describes the
+ * state of a NVMe Controller's I/O Submission and I/O Completion queues
+ *
+ * @hdr: Header
+ * @sqs: I/O Submission Queue list
+ * @cqs: I/O Completion Queue list
+ */
+struct nvme_lm_nvme_controller_state_data {
+	struct nvme_lm_nvme_controller_state_data_header hdr;
+	union {
+		struct nvme_lm_io_submission_queue_data sqs[0];
+		struct nvme_lm_io_completion_queue_data cqs[0];
+	};
+};
+
+/**
+ * struct nvme_lm_controller_state_data_header - Controller State data header structure describes
+ * the contents of the Controller State data
+ *
+ * @ver:     Version of this data structure
+ * @csattr:  Controller state attributes
+ * @rsvd3:   Reserved
+ * @nvmecss: NVMe Controller state size in dwords
+ * @vss:     Vendor specific size in dowrds
+ */
+struct nvme_lm_controller_state_data_header {
+	__u16 ver;
+	__u8  csattr;
+	__u8  rsvd3[13];
+	__u8  nvmecss[16];
+	__u8  vss[16];
+};
+
+/**
+ * struct nvme_lm_controller_state_data - Controller State data structure contains data on the
+ * controller's state.
+ *
+ * @hdr:  Header
+ * @data: Data
+ */
+struct nvme_lm_controller_state_data {
+	struct nvme_lm_controller_state_data_header hdr;
+	struct nvme_lm_nvme_controller_state_data   data;
+};
+
+/**
+ * enum nvme_lm_queue_attributes - I/O Submission and I/O Completion Queue Attributes
+ *
+ * @NVME_LM_IOSQPC_MASK:	Mask to get the Physically Contiguous (PC) bit for this I/O
+ *				submission queue.
+ * @NVME_LM_IOSQPC_SHIFT:	Shift to get the PC bit for this I/O submission queue
+ * @NVME_LM_IOSQPRIO_MASK:	Mask to get the Priority for this I/O submission queue.
+ * @NVME_LM_IOSQPRIO_SHIFT:	Shift to get the Priority for this I/O submission queue.
+ * @NVME_LM_IOCQPC_MASK:	Mask to get the Physicaly Contiguous (PC) bit for this I/O
+ *				completion queue.
+ * @NVME_LM_IOCQPC_SHIFT:	Shift to get the PC bit for this I/O completion queue.
+ * @NVME_LM_IOCQIEN_MASK:	Mask to get the Interrupts Enabled bit for this I/O completion
+ *				queue
+ * @NVME_LM_IOCQIEN_SHIFT:	Shift to get the Interrupts Enabled bit for this I/O completion
+ * @NVME_LM_S0PT_MASK:		Mask to get the value of the Phase Tag bit for Slot 0 of this I/O
+ *				completion queue.
+ * @NVME_LM_S0PT_SHIFT:		Shift to get the value of the Phase Tag bit for Slot 0 of this I/O
+ *				completion queue.
+ * @NVME_LM_IOCQIV_MASK:	Mask to get the Interrupt Vector (IV) for this I/O completion
+ *				queue.
+ * @NVME_LM_IOCQIV_SHIFT:	Shift to get the IV for this I/O completion queue.
+ */
+enum nvme_lm_queue_attributes {
+	/* I/O Submission Queue */
+	NVME_LM_IOSQPC_MASK	= 0x1,
+	NVME_LM_IOSQPC_SHIFT	= 0,
+	NVME_LM_IOSQPRIO_MASK	= 0x3,
+	NVME_LM_IOSQPRIO_SHIFT	= 1,
+	/* I/O Completion Queue */
+	NVME_LM_IOCQPC_MASK	= 0x1,
+	NVME_LM_IOCQPC_SHIFT	= 0,
+	NVME_LM_IOCQIEN_MASK	= 0x1,
+	NVME_LM_IOCQIEN_SHIFT	= 1,
+	NVME_LM_S0PT_MASK	= 0x1,
+	NVME_LM_S0PT_SHIFT	= 2,
+	NVME_LM_IOCQIV_MASK	= 0xffff,
+	NVME_LM_IOCQIV_SHIFT	= 16,
+};
+
+/**
+ * enum nvme_lm_ctrl_data_queue_fid - Controller Data Queue - Set Feature
+ *
+ * @NVME_LM_CTRL_DATA_QUEUE_ETPT_MASK:	Mask to set Enable Tail Pointer Trigger (ETPT)
+ * @NVME_LM_CTRL_DATA_QUEUE_ETPT_SHIFT: Shift to set ETPT
+ */
+enum nvme_lm_ctrl_data_queue_fid {
+	NVME_LM_CTRL_DATA_QUEUE_ETPT_MASK	= 0x1,
+	NVME_LM_CTRL_DATA_QUEUE_ETPT_SHIFT	= 31,
+};
+
+/**
+ * struct nvme_lm_ctrl_data_queue_fid_data - Get Controller Data Queue feature data
+ *
+ * @hp:		Head Pointer
+ * @tpt:	Tail Pointer Trigger
+ */
+struct nvme_lm_ctrl_data_queue_fid_data {
+	__u32 hp;
+	__u32 tpt;
+};
 #endif /* _LIBNVME_TYPES_H */

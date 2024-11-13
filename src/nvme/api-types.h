@@ -962,4 +962,140 @@ struct nvme_dim_args {
 	__u8	tas;
 };
 
+/**
+ * struct nvme_lm_cdq_args - Arguments for Controller Data Queue (CDQ) command
+ * @result:	Set on completion to the command's CQE DWORD 0 controller response
+ * @data:	Pointer to data
+ * @args_size:	Length of structure
+ * @fd:		File descriptor of nvme device
+ * @timeout:	Timeout in ms
+ * @cntlid:	Controller ID: This field specifies the ID of the controller to be used by the
+ *		specified Select (SEL) field.
+ * @cdqid:	Controller Data Queue ID (CDQID): This field specifies the ID of the CDQ to be used
+ *		for the specified Select (SEL) field.
+ * @sel:	Select (SEL): This field specifies the type of management operation to perform.
+ * @sz:		Size of CDQ in dwords
+ * @qt:		Queue Type (QT): This field specifies the type of queue to create
+ */
+struct nvme_lm_cdq_args {
+	__u32	*result;
+	void	*data;
+	int	args_size;
+	int	fd;
+	__u32	timeout;
+	__u16	cntlid;
+	__u16	cdqid;
+	__u8	sel;
+	__u8	sz;
+	__u8	qt;
+};
+
+/**
+ * struct nvme_lm_track_send_args - Arguments for the Track Send command
+ * @result:	Set on completion to the command's CQE DWORD 0 controller response
+ * @args_size:	Length of structure
+ * @fd:		File descriptor of nvme device
+ * @timeout:	Timeout in ms
+ * @cdqid:	Controller Data Queue ID (CDQID): This field specifies the ID of the CDQ to be used
+ *		for the logging action
+ * @sel:	Select (SEL): This field specifies the type of management operation to perform
+ * @lact:	Logging Action (LACT): This field specifies the type of logging action to perform
+ */
+struct nvme_lm_track_send_args {
+	__u32	*result;
+	int	args_size;
+	int	fd;
+	__u32	timeout;
+	__u16	cdqid;
+	__u8	sel;
+	__u8	lact;
+};
+
+/**
+ * struct nvme_lm_migration_send_args - Arguments for the Migration Send command
+ * @offset:	Offset: This field specifies the offset, in bytes, within the data available to be
+ *		returned and specifies the starting point for that data for what is actually
+ *		returned to the host.
+ * @result:	Set on completion to the command's CQE DWORD 0 controller response
+ * @data:	Pointer to data
+ * @args_size:	Length of structure
+ * @fd:		File descriptor of nvme device
+ * @timeout:	Timeout in ms
+ * @numd:	Number of Dwords (NUMD): This field specifies the number of dwords being transferred
+ * @cntlid:	Controller ID: This field specifies the identifier of the controller to which the
+ *		operation is performed.
+ * @csuuidi:	Controller State UUID Index (CSUUIDI): A non-zero value in this field specifies the
+ *		index to a specific entry in the Vendor Specific Controller State UUID Supported.
+ *		list of the Supported Controller State Formats data structure.
+ * @sel:	Select (SEL): This field specifies the type of management operation to perform.
+ * @uidx:	UUID Index (UIDX): If this field is set to a non-zero value, then the value of this
+ *		field is the index of a UUID in the UUID List (refer to Figure 320) that is used by
+ *		the command.
+ * @stype:	Suspend Type (STYPE): This field specifies the type of suspend.
+ * @seqind:	Sequence Identifier (SEQIND): This field identified the sequences of this Migration
+ *		Send command in relation to other Migration Send commands.
+ * @csvi:	Controller State Version Index (CSVI): A non-zero value in this field specifies the
+ *		index to a specific entry in the NVMe Controller State Version list of the Supported
+ *		Controller State Formats data structure.
+ * @dudmq:	Delete User Data Migration Queue (DUDMQ): If set, the migration queue is deleted
+ *		is deleted as part of the Suspend operation. If cleared, it is retained.
+ */
+struct nvme_lm_migration_send_args {
+	__u64	offset;
+	__u32	*result;
+	void	*data;
+	int	args_size;
+	int	fd;
+	__u32	timeout;
+	__u32	numd;
+	__u16	cntlid;
+	__u16	csuuidi;
+	__u8	sel;
+	__u8	uidx;
+	__u8	stype;
+	__u8	seqind;
+	__u8	csvi;
+	bool	dudmq;
+};
+
+/**
+ * struct nvme_lm_migration_recv_args - Arguments for the Migration Receive command
+ * @offset:	Offset: This field specifies the offset, in bytes, within the data available to be
+ *		returned and specifies the starting point for that data for what is actually
+ *		returned to the host.
+ * @result:	Set on completion to the command's CQE DWORD 0 controller response
+ * @data:	Pointer to data
+ * @args_size:	Length of structure
+ * @fd:		File descriptor of nvme device
+ * @timeout:	Timeout in ms
+ * @numdl:	Number of Dwords Lower (NMUDL): This field specifies the number of dwords to return.
+ * @cntlid:	Controller ID: This field specifies the identifier of the controller to which the
+ *		operation is performed.
+ * @csuuidi:	Controller State UUID Index (CSUUIDI): A non-zero value in this field specifies the
+ *		index to a specific entry in the Vendor Specific Controller State UUID Supported.
+ *		list of the Supported Controller State Formats data structure.
+ * @sel:	Select (SEL): This field specifies the type of management operation to perform
+ * @uidx:	UUID Index (UIDX): If this field is set to a non-zero value, then the value of this
+ *		field is the index of a UUID in the UUID List (refer to Figure 320) that is used by
+ *		the command.
+ * @csvi:	Controller State Version Index (CSVI): A non-zero value in this field specifies the
+ *		index to a specific entry in the NVMe Controller State Version list of the Supported
+ *		Controller State Formats data structure.
+ */
+struct nvme_lm_migration_recv_args {
+	__u64	offset;
+	__u32	*result;
+	void	*data;
+	int	args_size;
+	int	fd;
+	__u32	timeout;
+	__u32	numd;
+	__u16	cntlid;
+	__u16	csuuidi;
+	__u8	sel;
+	__u8	uidx;
+	__u8	csvi;
+	__u8	csuidxp;
+};
+
 #endif /* _LIBNVME_API_TYPES_H */
