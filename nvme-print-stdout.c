@@ -1691,29 +1691,38 @@ static void stdout_id_ctrl_cmic(__u8 cmic)
 static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 {
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
-	__u32 disc = (oaes & NVME_CTRL_OAES_DL) >> 31;
-	__u32 rsvd0 = (oaes & 0x70000000) >> 28;
-	__u32 zicn = (oaes & NVME_CTRL_OAES_ZD) >> 27;
-	__u32 rsvd1 = (oaes & 0x7fe0000) >> 17;
-	__u32 tthr = (oaes & 0x10000) >> 16;
+	__u32 dlpcn = (oaes & NVME_CTRL_OAES_DL) >> 31;
+	__u32 rsvd28 = (oaes & 0x70000000) >> 28;
+	__u32 zdcn = (oaes & NVME_CTRL_OAES_ZD) >> 27;
+	__u32 rsvd20 = (oaes & 0x7fe0000) >> 20;
+	__u32 ansan = (oaes & NVME_CTRL_OAES_ANSAN) >> 19;
+	__u32 rsvd18 = (oaes >> 18) & 0x1;
+	__u32 rgcns = (oaes & NVME_CTRL_OAES_RGCNS) >> 17;
+	__u32 tthr = (oaes & NVME_CTRL_OAES_TTH) >> 16;
 	__u32 normal_shn = (oaes & NVME_CTRL_OAES_NS) >> 15;
 	__u32 egealpcn = (oaes & NVME_CTRL_OAES_EGE) >> 14;
 	__u32 lbasin = (oaes & NVME_CTRL_OAES_LBAS) >> 13;
 	__u32 plealcn = (oaes & NVME_CTRL_OAES_PLEA) >> 12;
 	__u32 anacn = (oaes & NVME_CTRL_OAES_ANA) >> 11;
-	__u32 rsvd2 = (oaes >> 10) & 0x1;
+	__u32 rsvd10 = (oaes >> 10) & 0x1;
 	__u32 fan = (oaes & NVME_CTRL_OAES_FA) >> 9;
 	__u32 nace = (oaes & NVME_CTRL_OAES_NA) >> 8;
-	__u32 rsvd3 = oaes & 0xFF;
+	__u32 rsvd0 = oaes & 0xFF;
 
 	printf("  [31:31] : %#x\tDiscovery Log Change Notice %sSupported\n",
-			disc, disc ? "" : "Not ");
-	if (rsvd0)
-		printf("  [30:28] : %#x\tReserved\n", rsvd0);
+			dlpcn, dlpcn ? "" : "Not ");
+	if (rsvd28)
+		printf("  [30:28] : %#x\tReserved\n", rsvd28);
 	printf("  [27:27] : %#x\tZone Descriptor Changed Notices %sSupported\n",
-			zicn, zicn ? "" : "Not ");
-	if (rsvd1)
-		printf("  [26:17] : %#x\tReserved\n", rsvd1);
+			zdcn, zdcn ? "" : "Not ");
+	if (rsvd20)
+		printf("  [26:20] : %#x\tReserved\n", rsvd20);
+	printf("  [19:19] : %#x\tAllocated Namespace Attribute Notices %sSupported\n",
+			ansan, ansan ? "" : "Not ");
+	if (rsvd18)
+		printf("  [18:18] : %#x\tReserved\n", rsvd18);
+	printf("  [17:17] : %#x\tReachability Groups Change Notices %sSupported\n",
+			rgcns, rgcns ? "" : "Not ");
 	printf("  [16:16] : %#x\tTemperature Threshold Hysteresis Recovery %sSupported\n",
 		tthr, tthr ? "" : "Not ");
 	printf("  [15:15] : %#x\tNormal NSS Shutdown Event %sSupported\n",
@@ -1728,14 +1737,14 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 			plealcn, plealcn ? "" : "Not ");
 	printf("  [11:11] : %#x\tAsymmetric Namespace Access Change Notices"\
 			" %sSupported\n", anacn, anacn ? "" : "Not ");
-	if (rsvd2)
-		printf("  [10:10] : %#x\tReserved\n", rsvd2);
+	if (rsvd10)
+		printf("  [10:10] : %#x\tReserved\n", rsvd10);
 	printf("  [9:9] : %#x\tFirmware Activation Notices %sSupported\n",
 		fan, fan ? "" : "Not ");
 	printf("  [8:8] : %#x\tNamespace Attribute Changed Event %sSupported\n",
 		nace, nace ? "" : "Not ");
-	if (rsvd3)
-		printf("  [7:0] : %#x\tReserved\n", rsvd3);
+	if (rsvd0)
+		printf("  [7:0] : %#x\tReserved\n", rsvd0);
 	printf("\n");
 }
 
