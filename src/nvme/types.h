@@ -1711,6 +1711,7 @@ enum nvme_id_ctrl_oaes {
  * @NVME_CTRL_CTRATT_ELBAS: Extended LBA Formats supported
  * @NVME_CTRL_CTRATT_MEM: MDTS and Size Limits Exclude Metadata supported
  * @NVME_CTRL_CTRATT_HMBR: HMB Restrict Non-Operational Power State Access
+ * @NVME_CTRL_CTRATT_RHII: Reservations and Host Identifier Interaction
  * @NVME_CTRL_CTRATT_FDPS: Flexible Data Placement supported
  */
 enum nvme_id_ctrl_ctratt {
@@ -1732,6 +1733,7 @@ enum nvme_id_ctrl_ctratt {
 	NVME_CTRL_CTRATT_ELBAS			= 1 << 15,
 	NVME_CTRL_CTRATT_MEM			= 1 << 16,
 	NVME_CTRL_CTRATT_HMBR			= 1 << 17,
+	NVME_CTRL_CTRATT_RHII			= 1 << 18,
 	NVME_CTRL_CTRATT_FDPS			= 1 << 19,
 };
 
