@@ -2163,3 +2163,174 @@ int nvme_dim_send(struct nvme_dim_args *args)
 
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
+
+
+int nvme_lm_cdq(struct nvme_lm_cdq_args *args)
+{
+	__u32 cdw10 = NVME_SET(args->sel, LM_CDQ_SEL) |
+		      NVME_SET(args->mos, LM_CDQ_MOS);
+	__u32 cdw11 = 0, data_len = 0;
+	int err;
+
+	if (args->sel == NVME_LM_SEL_CREATE_CDQ) {
+		cdw11 = NVME_SET(args->cntlid, LM_CREATE_CDQ_CNTLID) |
+			NVME_LM_CREATE_CDQ_PC;
+		data_len = args->sz << 2;
+	} else if (args->sel == NVME_LM_SEL_DELETE_CDQ) {
+		cdw11 = NVME_SET(args->cdqid, LM_DELETE_CDQ_CDQID);
+	}
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode = nvme_admin_ctrl_data_queue,
+		.cdw10 = cdw10,
+		.cdw11 = cdw11,
+		.cdw12 = args->sz,
+		.addr = (__u64)(uintptr_t)args->data,
+		.data_len = data_len,
+		.timeout_ms = args->timeout,
+	};
+
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	err = nvme_submit_admin_passthru(args->fd, &cmd, args->result);
+
+	if (!err)
+		args->cdqid = NVME_GET(cmd.result, LM_CREATE_CDQ_CDQID);
+
+	return err;
+}
+
+int nvme_lm_track_send(struct nvme_lm_track_send_args *args)
+{
+	__u32 cdw10 = NVME_SET(args->sel, LM_TRACK_SEND_SEL) |
+		      NVME_SET(args->mos, LM_TRACK_SEND_MOS);
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode = nvme_admin_track_send,
+		.cdw10 = cdw10,
+		.cdw11 = args->cdqid,
+		.timeout_ms = args->timeout,
+	};
+
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
+}
+
+int nvme_lm_migration_send(struct nvme_lm_migration_send_args *args)
+{
+	__u32 cdw10 = NVME_SET(args->sel, LM_MIGRATION_SEND_SEL) |
+		      NVME_SET(args->mos, LM_MIGRATION_SEND_MOS);
+	__u32 cdw11 = 0;
+
+	if (args->sel == NVME_LM_SEL_SUSPEND) {
+		cdw11 = NVME_SET(args->stype, LM_STYPE) |
+			NVME_SET(args->cntlid, LM_SUSPEND_CNTLID);
+		if (args->dudmq)
+			cdw11 |= NVME_LM_DUDMQ;
+	} else if (args->sel == NVME_LM_SEL_RESUME) {
+		cdw11 = NVME_SET(args->cntlid, LM_RESUME_CNTLID);
+	} else if (args->sel == NVME_LM_SEL_SET_CONTROLLER_STATE) {
+		cdw11 = NVME_SET(args->csuuidi, LM_SET_CONTROLLER_STATE_CSUUIDI) |
+			NVME_SET(args->csvi, LM_SET_CONTROLLER_STATE_CSVI) |
+			NVME_SET(args->cntlid, LM_SET_CONTROLLER_STATE_CNTLID);
+	}
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode = nvme_admin_migration_send,
+		.cdw10 = cdw10,
+		.cdw11 = cdw11,
+		.cdw12 = (__u32)args->offset,
+		.cdw13 = (__u32)(args->offset >> 32),
+		.cdw14 = NVME_SET(args->uidx, LM_MIGRATION_SEND_UIDX),
+		.cdw15 = args->numd,
+		.addr = (__u64)(uintptr_t)args->data,
+		.data_len = args->numd << 2,
+		.timeout_ms = args->timeout,
+	};
+
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
+}
+
+int nvme_lm_migration_recv(struct nvme_lm_migration_recv_args *args)
+{
+	__u32 cdw10 = NVME_SET(args->sel, LM_MIGRATION_RECV_SEL) |
+		      NVME_SET(args->mos, LM_MIGRATION_RECV_MOS);
+	__u32 cdw11 = 0, data_len = 0;
+
+	if (args->sel == NVME_LM_SEL_GET_CONTROLLER_STATE) {
+		cdw11 = NVME_SET(args->csuidxp, LM_GET_CONTROLLER_STATE_CSUIDXP) |
+			NVME_SET(args->csuuidi, LM_GET_CONTROLLER_STATE_CSUUIDI) |
+			NVME_SET(args->cntlid, LM_GET_CONTROLLER_STATE_CNTLID);
+		data_len = (args->numd + 1 /*0's based*/) << 2;
+	}
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode = nvme_admin_migration_receive,
+		.cdw10 = cdw10,
+		.cdw11 = cdw11,
+		.cdw12 = (__u32)args->offset,
+		.cdw13 = (__u32)(args->offset >> 32),
+		.cdw14 = NVME_SET(args->uidx, LM_MIGRATION_RECV_UIDX),
+		.cdw15 = args->numd,
+		.addr = (__u64)(uintptr_t)args->data,
+		.data_len = data_len,
+		.timeout_ms = args->timeout,
+	};
+
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
+}
+
+int nvme_lm_set_features_ctrl_data_queue(int fd, __u16 cdqid, __u32 hp, __u32 tpt, bool etpt,
+					 __u32 *result)
+{
+	struct nvme_set_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= NVME_FEAT_FID_CTRL_DATA_QUEUE,
+		.nsid		= NVME_NSID_NONE,
+		.cdw11		= cdqid | NVME_SET(tpt, LM_CTRL_DATA_QUEUE_ETPT),
+		.cdw12		= hp,
+		.cdw13		= tpt,
+		.save		= false,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= result,
+	};
+
+	return nvme_set_features(&args);
+}
+
+int nvme_lm_get_features_ctrl_data_queue(int fd, __u16 cdqid,
+					 struct nvme_lm_ctrl_data_queue_fid_data *data,
+					 __u32 *result)
+{
+	struct nvme_get_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= NVME_FEAT_FID_CTRL_DATA_QUEUE,
+		.nsid		= NVME_NSID_NONE,
+		.cdw11		= cdqid,
+		.data		= data,
+		.data_len	= sizeof(*data),
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= result,
+	};
+
+	return nvme_get_features(&args);
+}

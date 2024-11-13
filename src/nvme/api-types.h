@@ -969,13 +969,13 @@ struct nvme_dim_args {
  * @args_size:	Length of structure
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
- * @cntlid:	Controller ID: This field specifies the ID of the controller to be used by the
- *		specified Select (SEL) field.
- * @cdqid:	Controller Data Queue ID (CDQID): This field specifies the ID of the CDQ to be used
- *		for the specified Select (SEL) field.
+ * @mos:	Management Operation Specific (MOS): This field is specific to the SEL type
+ * @cntlid:	Controller ID: For Create CDQ, specifies the target migratable controller
+ * @cdqid:	Controller Data Queue ID (CDQID): For Create CDQ, this field is the CDQID created
+ *		by the controller if no error is present. For Delete CDQ, this field is the CDQID
+ *		to delete.
  * @sel:	Select (SEL): This field specifies the type of management operation to perform.
- * @sz:		Size of CDQ in dwords
- * @qt:		Queue Type (QT): This field specifies the type of queue to create
+ * @sz:		For Create CDQ, specifies the size of CDQ, in dwords
  */
 struct nvme_lm_cdq_args {
 	__u32	*result;
@@ -983,11 +983,11 @@ struct nvme_lm_cdq_args {
 	int	args_size;
 	int	fd;
 	__u32	timeout;
+	__u16	mos;
 	__u16	cntlid;
 	__u16	cdqid;
 	__u8	sel;
 	__u8	sz;
-	__u8	qt;
 };
 
 /**
@@ -996,19 +996,18 @@ struct nvme_lm_cdq_args {
  * @args_size:	Length of structure
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
- * @cdqid:	Controller Data Queue ID (CDQID): This field specifies the ID of the CDQ to be used
- *		for the logging action
+ * @mos:	Management Operation Specific (MOS): This field is specific to the SEL type
+ * @cdqid:	Controller Data Queue ID (CDQID)
  * @sel:	Select (SEL): This field specifies the type of management operation to perform
- * @lact:	Logging Action (LACT): This field specifies the type of logging action to perform
  */
 struct nvme_lm_track_send_args {
 	__u32	*result;
 	int	args_size;
 	int	fd;
 	__u32	timeout;
+	__u16	mos;
 	__u16	cdqid;
 	__u8	sel;
-	__u8	lact;
 };
 
 /**
@@ -1022,6 +1021,7 @@ struct nvme_lm_track_send_args {
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @numd:	Number of Dwords (NUMD): This field specifies the number of dwords being transferred
+ * @mos:	Management Operation Specific (MOS): This field is specific to the SEL type
  * @cntlid:	Controller ID: This field specifies the identifier of the controller to which the
  *		operation is performed.
  * @csuuidi:	Controller State UUID Index (CSUUIDI): A non-zero value in this field specifies the
@@ -1048,6 +1048,7 @@ struct nvme_lm_migration_send_args {
 	int	fd;
 	__u32	timeout;
 	__u32	numd;
+	__u16	mos;
 	__u16	cntlid;
 	__u16	csuuidi;
 	__u8	sel;
@@ -1068,7 +1069,9 @@ struct nvme_lm_migration_send_args {
  * @args_size:	Length of structure
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
- * @numdl:	Number of Dwords Lower (NMUDL): This field specifies the number of dwords to return.
+ * @numd:	Number of Dwords (NUMD): This field specifies the number of dwords to return. This
+ *		is a 0's based value.
+ * @mos:	Management Operation Specific (MOS): This field is specific to the SEL type
  * @cntlid:	Controller ID: This field specifies the identifier of the controller to which the
  *		operation is performed.
  * @csuuidi:	Controller State UUID Index (CSUUIDI): A non-zero value in this field specifies the
@@ -1078,9 +1081,7 @@ struct nvme_lm_migration_send_args {
  * @uidx:	UUID Index (UIDX): If this field is set to a non-zero value, then the value of this
  *		field is the index of a UUID in the UUID List (refer to Figure 320) that is used by
  *		the command.
- * @csvi:	Controller State Version Index (CSVI): A non-zero value in this field specifies the
- *		index to a specific entry in the NVMe Controller State Version list of the Supported
- *		Controller State Formats data structure.
+ * @csuidxp:	Controller State UUID Index Parameter (CSUIDXP): This field is vendor specific.
  */
 struct nvme_lm_migration_recv_args {
 	__u64	offset;
@@ -1090,11 +1091,11 @@ struct nvme_lm_migration_recv_args {
 	int	fd;
 	__u32	timeout;
 	__u32	numd;
+	__u16	mos;
 	__u16	cntlid;
 	__u16	csuuidi;
 	__u8	sel;
 	__u8	uidx;
-	__u8	csvi;
 	__u8	csuidxp;
 };
 

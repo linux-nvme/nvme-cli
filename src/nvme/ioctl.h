@@ -4258,4 +4258,68 @@ int nvme_zns_append(struct nvme_zns_append_args *args);
  */
 int nvme_dim_send(struct nvme_dim_args *args);
 
+/**
+ * nvme_lm_cdq() - Controller Data Queue - Controller Data Queue command
+ * @args:	&struct nvme_lm_cdq_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.)
+ */
+int nvme_lm_cdq(struct nvme_lm_cdq_args *args);
+
+/**
+ * nvme_lm_track_send() - Track Send command
+ * @args:	&struct nvme_lm_track_send_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_lm_track_send(struct nvme_lm_track_send_args *args);
+
+/**
+ * nvme_lm_migration_send() - Migration Send command
+ * @args:	&struct nvme_lm_migration_send_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_lm_migration_send(struct nvme_lm_migration_send_args *args);
+
+/**
+ * nvme_lm_migration_recv - Migration Receive command
+ * @args:	&struct nvme_lm_migration_rev_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_lm_migration_recv(struct nvme_lm_migration_recv_args *args);
+
+/**
+ * nvme_lm_set_features_ctrl_data_queue - Set Controller Datea Queue feature
+ * @fd:		File descriptor of nvme device
+ * @cdqid:	Controller Data Queue ID (CDQID)
+ * @hp:		Head Pointer
+ * @tpt:	Tail Pointer Trigger
+ * @etpt:	Enable Tail Pointer Trigger
+ * @result:	The command completions result from CQE dword0
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_lm_set_features_ctrl_data_queue(int fd, __u16 cdqid, __u32 hp, __u32 tpt, bool etpt,
+					 __u32 *result);
+
+/**
+ * nvme_lm_get_features_ctrl_data_queue - Get Controller Data Queue feature
+ * @fd:		File descriptor of nvme device
+ * @cdqid:	Controller Data Queue ID (CDQID)
+ * @data:	Get Controller Data Queue feature data
+ * @result:	The command completions result from CQE dword0
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_lm_get_features_ctrl_data_queue(int fd, __u16 cdqid,
+					 struct nvme_lm_ctrl_data_queue_fid_data *data,
+					 __u32 *result);
 #endif /* _LIBNVME_IOCTL_H */
