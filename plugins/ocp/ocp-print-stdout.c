@@ -33,6 +33,7 @@ static void stdout_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	struct hwcomp_desc_entry e = { log->desc };
 
 	long double log_size = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32);
+	size_t desc_offset = offsetof(struct hwcomp_log, desc);
 
 	printf("Log Identifier: 0x%02xh\n", LID_HWCOMP);
 	printf("Log Page Version: 0x%x\n", le16_to_cpu(log->ver));
@@ -41,7 +42,7 @@ static void stdout_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	printf("Hardware Component Log Size: 0x%"PRIx64"\n", (uint64_t)log_size);
 	print_array("Reserved48", log->rsvd48, ARRAY_SIZE(log->rsvd48));
 	printf("Component Descriptions\n");
-	while (log_size - offsetof(struct __packed hwcomp_log, desc) > 0) {
+	while (log_size - desc_offset > 0) {
 		e.date_lot_size = le64_to_cpu(e.desc->date_lot_size) * sizeof(__le32);
 		e.date_lot_code = e.date_lot_size ? (__u8 *)e.desc + date_lot_code_offset : NULL;
 		e.add_info_size = le64_to_cpu(e.desc->add_info_size) * sizeof(__le32);
