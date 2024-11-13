@@ -1743,33 +1743,33 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 {
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
 	__u32 rsvd20 = (ctratt >> 20);
-	__u32 fdps = (ctratt >> 19) & 0x1;
-	__u32 rsvd18 = (ctratt >> 18) & 0x1;
-	__u32 hmbr = (ctratt >> 17) & 0x1;
-	__u32 mem = (ctratt >> 16) & 0x1;
-	__u32 elbas = (ctratt >> 15) & 0x1;
-	__u32 delnvmset = (ctratt >> 14) & 0x1;
-	__u32 delegrp = (ctratt >> 13) & 0x1;
-	__u32 vcap = (ctratt >> 12) & 0x1;
-	__u32 fcap = (ctratt >> 11) & 0x1;
-	__u32 mds = (ctratt >> 10) & 0x1;
-	__u32 hostid128 = (ctratt & NVME_CTRL_CTRATT_128_ID) >> 0;
-	__u32 psp = (ctratt & NVME_CTRL_CTRATT_NON_OP_PSP) >> 1;
-	__u32 sets = (ctratt & NVME_CTRL_CTRATT_NVM_SETS) >> 2;
-	__u32 rrl = (ctratt & NVME_CTRL_CTRATT_READ_RECV_LVLS) >> 3;
-	__u32 eg = (ctratt & NVME_CTRL_CTRATT_ENDURANCE_GROUPS) >> 4;
-	__u32 iod = (ctratt & NVME_CTRL_CTRATT_PREDICTABLE_LAT) >> 5;
-	__u32 tbkas = (ctratt & NVME_CTRL_CTRATT_TBKAS) >> 6;
-	__u32 ng = (ctratt & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) >> 7;
+	__u32 fdps = (ctratt & NVME_CTRL_CTRATT_FDPS) >> 19;
+	__u32 rhii = (ctratt & NVME_CTRL_CTRATT_RHII) >> 18;
+	__u32 hmbr = (ctratt & NVME_CTRL_CTRATT_HMBR) >> 17;
+	__u32 mem = (ctratt & NVME_CTRL_CTRATT_MEM) >> 16;
+	__u32 elbas = (ctratt & NVME_CTRL_CTRATT_ELBAS) >> 15;
+	__u32 dnvms = (ctratt & NVME_CTRL_CTRATT_DEL_NVM_SETS) >> 14;
+	__u32 deg = (ctratt & NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS) >> 13;
+	__u32 vcm = (ctratt & NVME_CTRL_CTRATT_VARIABLE_CAP) >> 12;
+	__u32 fcm = (ctratt & NVME_CTRL_CTRATT_FIXED_CAP) >> 11;
+	__u32 mds = (ctratt & NVME_CTRL_CTRATT_MDS) >> 10;
+	__u32 ulist = (ctratt & NVME_CTRL_CTRATT_UUID_LIST) >> 9;
 	__u32 sqa = (ctratt & NVME_CTRL_CTRATT_SQ_ASSOCIATIONS) >> 8;
-	__u32 uuidlist = (ctratt & NVME_CTRL_CTRATT_UUID_LIST) >> 9;
+	__u32 ng = (ctratt & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) >> 7;
+	__u32 tbkas = (ctratt & NVME_CTRL_CTRATT_TBKAS) >> 6;
+	__u32 plm = (ctratt & NVME_CTRL_CTRATT_PREDICTABLE_LAT) >> 5;
+	__u32 egs = (ctratt & NVME_CTRL_CTRATT_ENDURANCE_GROUPS) >> 4;
+	__u32 rrlvls = (ctratt & NVME_CTRL_CTRATT_READ_RECV_LVLS) >> 3;
+	__u32 nsets = (ctratt & NVME_CTRL_CTRATT_NVM_SETS) >> 2;
+	__u32 nopspm = (ctratt & NVME_CTRL_CTRATT_NON_OP_PSP) >> 1;
+	__u32 hids = (ctratt & NVME_CTRL_CTRATT_128_ID) >> 0;
 
 	if (rsvd20)
 		printf(" [31:20] : %#x\tReserved\n", rsvd20);
 	printf("  [19:19] : %#x\tFlexible Data Placement %sSupported\n",
 		fdps, fdps ? "" : "Not ");
-	if (rsvd18)
-		printf("  [18:18] : %#x\tReserved\n", rsvd18);
+	printf("  [18:18] : %#x\tReservations and Host Identifier Interaction %sSupported\n",
+		rhii, rhii ? "" : "Not ");
 	printf("  [17:17] : %#x\tHMB Restrict Non-Operational Power State Access %sSupported\n",
 		hmbr, hmbr ? "" : "Not ");
 	printf("  [16:16] : %#x\tMDTS and Size Limits Exclude Metadata %sSupported\n",
@@ -1777,17 +1777,17 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	printf("  [15:15] : %#x\tExtended LBA Formats %sSupported\n",
 		elbas, elbas ? "" : "Not ");
 	printf("  [14:14] : %#x\tDelete NVM Set %sSupported\n",
-		delnvmset, delnvmset ? "" : "Not ");
+		dnvms, dnvms ? "" : "Not ");
 	printf("  [13:13] : %#x\tDelete Endurance Group %sSupported\n",
-		delegrp, delegrp ? "" : "Not ");
+		deg, deg ? "" : "Not ");
 	printf("  [12:12] : %#x\tVariable Capacity Management %sSupported\n",
-		vcap, vcap ? "" : "Not ");
+		vcm, vcm ? "" : "Not ");
 	printf("  [11:11] : %#x\tFixed Capacity Management %sSupported\n",
-		fcap, fcap ? "" : "Not ");
+		fcm, fcm ? "" : "Not ");
 	printf("  [10:10] : %#x\tMulti Domain Subsystem %sSupported\n",
 		mds, mds ? "" : "Not ");
 	printf("  [9:9] : %#x\tUUID List %sSupported\n",
-		uuidlist, uuidlist ? "" : "Not ");
+		ulist, ulist ? "" : "Not ");
 	printf("  [8:8] : %#x\tSQ Associations %sSupported\n",
 		sqa, sqa ? "" : "Not ");
 	printf("  [7:7] : %#x\tNamespace Granularity %sSupported\n",
@@ -1795,17 +1795,17 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	printf("  [6:6] : %#x\tTraffic Based Keep Alive %sSupported\n",
 		tbkas, tbkas ? "" : "Not ");
 	printf("  [5:5] : %#x\tPredictable Latency Mode %sSupported\n",
-		iod, iod ? "" : "Not ");
+		plm, plm ? "" : "Not ");
 	printf("  [4:4] : %#x\tEndurance Groups %sSupported\n",
-		eg, eg ? "" : "Not ");
+		egs, egs ? "" : "Not ");
 	printf("  [3:3] : %#x\tRead Recovery Levels %sSupported\n",
-		rrl, rrl ? "" : "Not ");
+		rrlvls, rrlvls ? "" : "Not ");
 	printf("  [2:2] : %#x\tNVM Sets %sSupported\n",
-		sets, sets ? "" : "Not ");
+		nsets, nsets ? "" : "Not ");
 	printf("  [1:1] : %#x\tNon-Operational Power State Permissive %sSupported\n",
-		psp, psp ? "" : "Not ");
+		nopspm, nopspm ? "" : "Not ");
 	printf("  [0:0] : %#x\t128-bit Host Identifier %sSupported\n",
-		hostid128, hostid128 ? "" : "Not ");
+		hids, hids ? "" : "Not ");
 	printf("\n");
 }
 
