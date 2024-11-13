@@ -41,6 +41,7 @@ static void stdout_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	printf("Hardware Component Log Size: 0x%"PRIx64"\n", (uint64_t)log_size);
 	print_array("Reserved48", log->rsvd48, ARRAY_SIZE(log->rsvd48));
 	printf("Component Descriptions\n");
+	log_size -= offsetof(struct hwcomp_log, desc);
 	while (log_size > 0) {
 		e.date_lot_size = le64_to_cpu(e.desc->date_lot_size) * sizeof(__le32);
 		e.date_lot_code = e.date_lot_size ? (__u8 *)e.desc + date_lot_code_offset : NULL;

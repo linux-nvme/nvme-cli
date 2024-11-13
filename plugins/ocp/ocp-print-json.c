@@ -73,7 +73,7 @@ static void json_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	obj_add_byte_array(r, "Log page GUID", log->guid, ARRAY_SIZE(log->guid));
 	obj_add_nprix64(r, "Hardware Component Log Size", (unsigned long long)log_size);
 	obj_add_byte_array(r, "Reserved48", log->rsvd48, ARRAY_SIZE(log->rsvd48));
-	print_hwcomp_descs_json(log->desc, log_size, id, list,
+	print_hwcomp_descs_json(log->desc, log_size - offsetof(struct hwcomp_log, desc), id, list,
 				obj_create_array_obj(r, "Component Descriptions"));
 
 	json_print(r);
