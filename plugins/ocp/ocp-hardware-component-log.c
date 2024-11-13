@@ -193,7 +193,8 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	print_info_array("guid", log->guid, ARRAY_SIZE(log->guid));
 	print_info("size: %s\n", uint128_t_to_string(le128_to_cpu(log->size)));
 
-	args.len = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32);
+	args.len = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32) -
+		offsetof(struct __packed hwcomp_log, desc);
 	log->desc = calloc(1, args.len);
 	if (!log->desc) {
 		fprintf(stderr, "error: ocp: calloc: %s\n", strerror(errno));
