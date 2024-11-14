@@ -1375,16 +1375,22 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	struct json_object *r = json_create_object();
 	struct json_object *dev = json_create_object();
 	struct json_object *sstat = json_create_object();
-	__u16 status = le16_to_cpu(sanitize_log->sstat);
+	struct json_object *ssi = json_create_object();
 	const char *status_str;
+	__u16 status, sos;
+	__u8 fails, sans;
 	char str[128];
 
+	status = le16_to_cpu(sanitize_log->sstat);
+
 	obj_add_int(dev, "sprog", le16_to_cpu(sanitize_log->sprog));
+	obj_add_int(sstat, "media_verification_canceled", NVME_GET(status, SANITIZE_SSTAT_MVCNCLD));
 	obj_add_int(sstat, "global_erased", NVME_GET(status, SANITIZE_SSTAT_GLOBAL_DATA_ERASED));
 	obj_add_int(sstat, "no_cmplted_passes", NVME_GET(status, SANITIZE_SSTAT_COMPLETED_PASSES));
 
+	sos = NVME_GET(status, SANITIZE_SSTAT_STATUS);
 	status_str = nvme_sstat_status_to_string(status);
-	sprintf(str, "(%d) %s", NVME_GET(status, SANITIZE_SSTAT_STATUS), status_str);
+	sprintf(str, "(%d) %s", sos, status_str);
 	obj_add_str(sstat, "status", str);
 
 	obj_add_obj(dev, "sstat", sstat);
@@ -1395,7 +1401,21 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	obj_add_uint(dev, "time_over_write_no_dealloc", le32_to_cpu(sanitize_log->etond));
 	obj_add_uint(dev, "time_block_erase_no_dealloc", le32_to_cpu(sanitize_log->etbend));
 	obj_add_uint(dev, "time_crypto_erase_no_dealloc", le32_to_cpu(sanitize_log->etcend));
+	obj_add_uint(dev, "time_post_verification_dealloc", le32_to_cpu(sanitize_log->etpvds));
 
+	sans = NVME_GET(sanitize_log->ssi, SANITIZE_SSI_SANS);
+	status_str = nvme_ssi_state_to_string(sans);
+	sprintf(str, "(%d) %s", sans, status_str);
+	obj_add_str(ssi, "sanitize_state", str);
+
+	if (sos == NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED) {
+		fails = NVME_GET(sanitize_log->ssi, SANITIZE_SSI_FAILS);
+		status_str = nvme_ssi_state_to_string(fails);
+		sprintf(str, "(%d) %s", fails, status_str);
+		obj_add_str(ssi, "failure_state", str);
+	}
+
+	obj_add_obj(dev, "sanitize_state_information", ssi);
 	obj_add_obj(r, devname, dev);
 
 	json_print(r);

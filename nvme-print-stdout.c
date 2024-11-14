@@ -4187,7 +4187,7 @@ static void stdout_sanitize_log_sprog(__u32 sprog)
 static void stdout_sanitize_log_sstat(__u16 status)
 {
 	const char *str = nvme_sstat_status_to_string(status);
-	__u16 gde;
+	__u16 gde, mvcncld;
 
 	printf("  [2:0] : Sanitize Operation Status  : %#x\t%s\n",
 		NVME_GET(status, SANITIZE_SSTAT_STATUS), str);
@@ -4202,12 +4202,34 @@ static void stdout_sanitize_log_sstat(__u16 status)
 		str = "User data has been written in the NVM subsystem or"\
 		       " PMR has been enabled in the NVM subsystem";
 	printf("  [8:8] : Global Data Erased         : %#x\t%s\n", gde, str);
+
+	mvcncld = NVME_GET(status, SANITIZE_SSTAT_MVCNCLD);
+	printf("  [9:9] : Media Verification Canceled: %#x\t%scanceled\n",
+		mvcncld, mvcncld ? "" : "Not ");
+	printf("\n");
 }
 
 static void stdout_estimate_sanitize_time(const char *text, uint32_t value)
 {
 	printf("%s:  %u%s\n", text, value,
 		value == 0xffffffff ? " (No time period reported)" : "");
+}
+
+static void stdout_sanitize_log_ssi(__u8 ssi, __u16 status)
+{
+	__u8 sans, fails;
+	const char *str;
+
+	sans = NVME_GET(ssi, SANITIZE_SSI_SANS);
+	str = nvme_ssi_state_to_string(sans);
+	printf("  [3:0] : Sanitize State : %#x\t%s\n", sans, str);
+
+	if (status == NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED) {
+		fails = NVME_GET(ssi, SANITIZE_SSI_FAILS);
+		str = nvme_ssi_state_to_string(fails);
+		printf("  [7:4] : Failure State  : %#x\t%s\n", fails, str);
+	}
+	printf("\n");
 }
 
 static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
@@ -4243,6 +4265,12 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		le32_to_cpu(sanitize->etbend));
 	stdout_estimate_sanitize_time("Estimated Time For Crypto Erase (No-Deallocate)",
 		le32_to_cpu(sanitize->etcend));
+	stdout_estimate_sanitize_time("Estimated Time For Post-Verification Deallocation",
+		le32_to_cpu(sanitize->etpvds));
+
+	printf("Sanitize State Information               (SSI) : %#x\n", sanitize->ssi);
+	if (human)
+		stdout_sanitize_log_ssi(sanitize->ssi, status);
 }
 
 static void stdout_select_result(enum nvme_features_id fid, __u32 result)
