@@ -1517,9 +1517,9 @@ long nvme_revoke_tls_key(const char *keyring, const char *key_type,
 	return keyctl_revoke(key);
 }
 
-static int __nvme_insert_tls_key(long keyring_id,
-				 const char *hostnqn, const char *subsysnqn,
-				 const char *identity, const char *key)
+static long __nvme_insert_tls_key(long keyring_id,
+				  const char *hostnqn, const char *subsysnqn,
+				  const char *identity, const char *key)
 {
 	_cleanup_free_ unsigned char *key_data = NULL;
 	unsigned char version;
@@ -1554,7 +1554,7 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 	const char *hostnqn = nvme_host_get_hostnqn(h);
 	const char *subsysnqn = nvme_ctrl_get_subsysnqn(c);
 	const char *keyring, *key, *identity;
-	long kr_id, id = 0;
+	long kr_id = 0, id = 0;
 
 	if (!hostnqn || !subsysnqn) {
 		nvme_msg(h->r, LOG_ERR, "Invalid NQNs (%s, %s)\n",
@@ -1562,10 +1562,17 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 		return -EINVAL;
 	}
 
+	/* If we don't have a key avoid all keyring operations */
+	key = nvme_ctrl_get_tls_key(c);
+	if (!key)
+		goto out;
+
 	keyring = nvme_ctrl_get_keyring(c);
-	if (keyring)
+	if (keyring) {
 		kr_id = nvme_lookup_keyring(keyring);
-	else
+		if (kr_id == 0)
+			return -errno;
+	} else
 		kr_id = c->cfg.keyring;
 
 	/*
@@ -1573,17 +1580,16 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 	 * keyring to connect command line and to the JSON config output.
 	 * That means we are explicitly selecting the keyring.
 	 */
-	if (!kr_id)
+	if (!kr_id) {
 		kr_id = nvme_lookup_keyring(".nvme");
+		if (kr_id == 0)
+			return -errno;
+	}
 
 	if (nvme_set_keyring(kr_id) < 0) {
 		nvme_msg(h->r, LOG_ERR, "Failed to set keyring\n");
 		return -errno;
 	}
-
-	key = nvme_ctrl_get_tls_key(c);
-	if (!key)
-		return 0;
 
 	identity = nvme_ctrl_get_tls_key_identity(c);
 	if (identity)
@@ -1599,6 +1605,7 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 		return -errno;
 	}
 
+out:
 	*keyring_id = kr_id;
 	*key_id = id;
 
