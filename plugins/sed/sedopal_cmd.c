@@ -35,6 +35,11 @@ bool sedopal_destructive_revert;
 bool sedopal_psid_revert;
 
 /*
+ * Lock read-only
+ */
+bool sedopal_lock_ro;
+
+/*
  * Map method status codes to error text
  */
 static const char * const sedopal_errors[] = {
@@ -206,7 +211,8 @@ int sedopal_cmd_initialize(int fd)
 	lr_setup.range_start = 0;
 	lr_setup.range_length = 0;
 	lr_setup.RLE = true;
-	lr_setup.WLE = true;
+	if (!sedopal_lock_ro)
+		lr_setup.WLE = true;
 
 	lr_setup.session.opal_key = key;
 	lr_setup.session.sum = 0;

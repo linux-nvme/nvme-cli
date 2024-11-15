@@ -23,6 +23,12 @@ OPT_ARGS(no_opts) = {
 	OPT_END()
 };
 
+OPT_ARGS(init_opts) = {
+	OPT_FLAG("read-only", 'r', &sedopal_lock_ro,
+		 "Set locking range to read-only"),
+	OPT_END()
+};
+
 OPT_ARGS(key_opts) = {
 	OPT_FLAG("ask-key", 'k', &sedopal_ask_key,
 			"prompt for SED authentication key"),
@@ -84,7 +90,7 @@ static int sed_opal_initialize(int argc, char **argv, struct command *cmd,
 	const char *desc = "Initialize a SED device for locking";
 	struct nvme_dev *dev;
 
-	err = sed_opal_open_device(&dev, argc, argv, desc, no_opts);
+	err = sed_opal_open_device(&dev, argc, argv, desc, init_opts);
 	if (err)
 		return err;
 
