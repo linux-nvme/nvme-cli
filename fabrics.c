@@ -1430,7 +1430,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	return 0;
 }
 
-static void dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
+static int dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
 {
 	static const char * const task[] = {
 		[NVMF_DIM_TAS_REGISTER]   = "register",
@@ -1451,6 +1451,8 @@ static void dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name
 		fprintf(stderr, "%s DIM %s command error. Result:0x%04x, Status:0x%04x - %s\n",
 			name, t, result, status, nvme_status_to_string(status, false));
 	}
+
+	return nvme_status_to_errno(status, true);
 }
 
 int nvmf_dim(const char *desc, int argc, char **argv)
@@ -1530,9 +1532,8 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 				nvme_for_each_subsystem(h, s) {
 					if (strcmp(nvme_subsystem_get_nqn(s), p))
 						continue;
-					nvme_subsystem_for_each_ctrl(s, c) {
-						dim_operation(c, tas, p);
-					}
+					nvme_subsystem_for_each_ctrl(s, c)
+						ret = dim_operation(c, tas, p);
 				}
 			}
 		}
@@ -1551,9 +1552,9 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 					p, nvme_strerror(errno));
 				return -errno;
 			}
-			dim_operation(c, tas, p);
+			ret = dim_operation(c, tas, p);
 		}
 	}
 
-	return 0;
+	return ret;
 }
