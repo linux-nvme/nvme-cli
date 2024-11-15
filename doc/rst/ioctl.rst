@@ -7,7 +7,7 @@ Linux NVMe ioctl interface functions
 
 
 
-.. c:struct:: nvme_passthru_cmd
+.. c:type:: struct nvme_passthru_cmd
 
    nvme passthrough command structure
 
@@ -96,7 +96,7 @@ Linux NVMe ioctl interface functions
 
 
 
-.. c:struct:: nvme_passthru_cmd64
+.. c:type:: struct nvme_passthru_cmd64
 
    64-bit nvme passthrough command structure
 
@@ -189,7 +189,7 @@ Linux NVMe ioctl interface functions
 
 
 
-.. c:struct:: nvme_uring_cmd
+.. c:type:: struct nvme_uring_cmd
 
    nvme uring command structure
 
@@ -276,9 +276,7 @@ Linux NVMe ioctl interface functions
 
 
 
-.. c:macro:: sizeof_args
-
-``sizeof_args (type, member, align)``
+.. c:function:: sizeof_args (type, member, align)
 
    Helper function used to determine structure sizes
 

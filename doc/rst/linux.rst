@@ -34,7 +34,7 @@ The nvme command status if a response was received (see
 
 
 
-.. c:enum:: nvme_telemetry_da
+.. c:type:: enum nvme_telemetry_da
 
    Telemetry Log Data Area
 
@@ -352,7 +352,7 @@ errno set otherwise.
 
 
 
-.. c:enum:: nvme_hmac_alg
+.. c:type:: enum nvme_hmac_alg
 
    HMAC algorithm
 
@@ -541,7 +541,7 @@ inaccessible.
 Key id of the new key or 0 with errno set otherwise.
 
 
-.. c:macro:: nvme_scan_tls_keys_cb_t
+.. c:type:: nvme_scan_tls_keys_cb_t
 
    **Typedef**: Callback for iterating TLS keys
 

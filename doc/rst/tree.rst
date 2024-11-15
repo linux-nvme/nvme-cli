@@ -694,9 +694,7 @@ First :c:type:`nvme_ns_t` object of an **s** iterator
 Next :c:type:`nvme_ns_t` object of an **s** iterator
 
 
-.. c:macro:: nvme_for_each_host_safe
-
-``nvme_for_each_host_safe (r, h, _h)``
+.. c:function:: nvme_for_each_host_safe (r, h, _h)
 
    Traverse host list
 
@@ -712,9 +710,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   Temporary :c:type:`nvme_host_t` object
 
 
-.. c:macro:: nvme_for_each_host
-
-``nvme_for_each_host (r, h)``
+.. c:function:: nvme_for_each_host (r, h)
 
    Traverse host list
 
@@ -727,9 +723,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_host_t` object
 
 
-.. c:macro:: nvme_for_each_subsystem_safe
-
-``nvme_for_each_subsystem_safe (h, s, _s)``
+.. c:function:: nvme_for_each_subsystem_safe (h, s, _s)
 
    Traverse subsystems
 
@@ -745,9 +739,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   Temporary :c:type:`nvme_subsystem_t` object
 
 
-.. c:macro:: nvme_for_each_subsystem
-
-``nvme_for_each_subsystem (h, s)``
+.. c:function:: nvme_for_each_subsystem (h, s)
 
    Traverse subsystems
 
@@ -760,9 +752,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_subsystem_t` object
 
 
-.. c:macro:: nvme_subsystem_for_each_ctrl_safe
-
-``nvme_subsystem_for_each_ctrl_safe (s, c, _c)``
+.. c:function:: nvme_subsystem_for_each_ctrl_safe (s, c, _c)
 
    Traverse controllers
 
@@ -778,9 +768,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_ctrl_t_node` to use as temporary storage
 
 
-.. c:macro:: nvme_subsystem_for_each_ctrl
-
-``nvme_subsystem_for_each_ctrl (s, c)``
+.. c:function:: nvme_subsystem_for_each_ctrl (s, c)
 
    Traverse controllers
 
@@ -793,9 +781,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   Controller instance
 
 
-.. c:macro:: nvme_ctrl_for_each_ns_safe
-
-``nvme_ctrl_for_each_ns_safe (c, n, _n)``
+.. c:function:: nvme_ctrl_for_each_ns_safe (c, n, _n)
 
    Traverse namespaces
 
@@ -811,9 +797,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_ns_t_node` to use as temporary storage
 
 
-.. c:macro:: nvme_ctrl_for_each_ns
-
-``nvme_ctrl_for_each_ns (c, n)``
+.. c:function:: nvme_ctrl_for_each_ns (c, n)
 
    Traverse namespaces
 
@@ -826,9 +810,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_ns_t` object
 
 
-.. c:macro:: nvme_ctrl_for_each_path_safe
-
-``nvme_ctrl_for_each_path_safe (c, p, _p)``
+.. c:function:: nvme_ctrl_for_each_path_safe (c, p, _p)
 
    Traverse paths
 
@@ -844,9 +826,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_path_t_node` to use as temporary storage
 
 
-.. c:macro:: nvme_ctrl_for_each_path
-
-``nvme_ctrl_for_each_path (c, p)``
+.. c:function:: nvme_ctrl_for_each_path (c, p)
 
    Traverse paths
 
@@ -859,9 +839,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_path_t` object
 
 
-.. c:macro:: nvme_subsystem_for_each_ns_safe
-
-``nvme_subsystem_for_each_ns_safe (s, n, _n)``
+.. c:function:: nvme_subsystem_for_each_ns_safe (s, n, _n)
 
    Traverse namespaces
 
@@ -877,9 +855,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_ns_t_node` to use as temporary storage
 
 
-.. c:macro:: nvme_subsystem_for_each_ns
-
-``nvme_subsystem_for_each_ns (s, n)``
+.. c:function:: nvme_subsystem_for_each_ns (s, n)
 
    Traverse namespaces
 
@@ -892,9 +868,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_ns_t` object
 
 
-.. c:macro:: nvme_namespace_for_each_path_safe
-
-``nvme_namespace_for_each_path_safe (n, p, _p)``
+.. c:function:: nvme_namespace_for_each_path_safe (n, p, _p)
 
    Traverse paths
 
@@ -910,9 +884,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_path_t_node` to use as temporary storage
 
 
-.. c:macro:: nvme_namespace_for_each_path
-
-``nvme_namespace_for_each_path (n, p)``
+.. c:function:: nvme_namespace_for_each_path (n, p)
 
    Traverse paths
 

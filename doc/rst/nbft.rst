@@ -9,7 +9,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_desc_type
+.. c:type:: enum nbft_desc_type
 
    NBFT Elements - Descriptor Types (Figure 5)
 
@@ -56,7 +56,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_trtype
+.. c:type:: enum nbft_trtype
 
    NBFT Interface Transport Types (Figure 7)
 
@@ -68,7 +68,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_heap_obj
+.. c:type:: struct nbft_heap_obj
 
    NBFT Header Driver Signature
 
@@ -94,7 +94,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_header
+.. c:type:: struct nbft_header
 
    NBFT Table - Header (Figure 8)
 
@@ -193,7 +193,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_control
+.. c:type:: struct nbft_control
 
    NBFT Table - Control Descriptor (Figure 8)
 
@@ -368,7 +368,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_control_flags
+.. c:type:: enum nbft_control_flags
 
    Control Descriptor Flags
 
@@ -380,7 +380,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_host
+.. c:type:: struct nbft_host
 
    Host Descriptor (Figure 9)
 
@@ -422,7 +422,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_host_flags
+.. c:type:: enum nbft_host_flags
 
    Host Flags
 
@@ -479,7 +479,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_hfi
+.. c:type:: struct nbft_hfi
 
    Host Fabric Interface (HFI) Descriptor (Figure 11)
 
@@ -529,7 +529,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_hfi_flags
+.. c:type:: enum nbft_hfi_flags
 
    HFI Descriptor Flags
 
@@ -542,7 +542,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_hfi_info_tcp
+.. c:type:: struct nbft_hfi_info_tcp
 
    HFI Transport Info Descriptor - NVMe/TCP (Figure 13)
 
@@ -685,7 +685,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_hfi_info_tcp_flags
+.. c:type:: enum nbft_hfi_info_tcp_flags
 
    HFI Transport Flags
 
@@ -714,7 +714,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_ssns
+.. c:type:: struct nbft_ssns
 
    Subsystem Namespace (SSNS) Descriptor (Figure 15)
 
@@ -879,7 +879,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_ssns_flags
+.. c:type:: enum nbft_ssns_flags
 
    Subsystem and Namespace Specific Flags Field (Figure 16)
 
@@ -970,7 +970,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_ssns_trflags
+.. c:type:: enum nbft_ssns_trflags
 
    SSNS Transport Specific Flags Field (Figure 17)
 
@@ -1008,7 +1008,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_ssns_ext_info
+.. c:type:: struct nbft_ssns_ext_info
 
    Subsystem and Namespace Extended Information Descriptor (Figure 19)
 
@@ -1069,7 +1069,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_ssns_ext_info_flags
+.. c:type:: enum nbft_ssns_ext_info_flags
 
    Subsystem and Namespace Extended Information Descriptor Flags
 
@@ -1091,7 +1091,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_security
+.. c:type:: struct nbft_security
 
    Security Profile Descriptor (Figure 21)
 
@@ -1195,7 +1195,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_security_flags
+.. c:type:: enum nbft_security_flags
 
    Security Profile Descriptor Flags (Figure 22)
 
@@ -1317,7 +1317,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_security_secret_type
+.. c:type:: enum nbft_security_secret_type
 
    Security Profile Descriptor Secret Type
 
@@ -1333,7 +1333,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_discovery
+.. c:type:: struct nbft_discovery
 
    Discovery Descriptor (Figure 24)
 
@@ -1410,7 +1410,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_discovery_flags
+.. c:type:: enum nbft_discovery_flags
 
    Discovery Descriptor Flags
 
@@ -1424,7 +1424,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_info_primary_admin_host_flag
+.. c:type:: enum nbft_info_primary_admin_host_flag
 
    Primary Administrative Host Descriptor Flags
 
@@ -1454,7 +1454,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_info_host
+.. c:type:: struct nbft_info_host
 
    Host Descriptor
 
@@ -1496,7 +1496,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_info_hfi_info_tcp
+.. c:type:: struct nbft_info_hfi_info_tcp
 
    HFI Transport Info Descriptor - NVMe/TCP
 
@@ -1585,7 +1585,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_info_hfi
+.. c:type:: struct nbft_info_hfi
 
    Host Fabric Interface (HFI) Descriptor
 
@@ -1615,7 +1615,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_info_discovery
+.. c:type:: struct nbft_info_discovery
 
    Discovery Descriptor
 
@@ -1655,7 +1655,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_info_security
+.. c:type:: struct nbft_info_security
 
    Security Profile Descriptor
 
@@ -1677,7 +1677,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:enum:: nbft_info_nid_type
+.. c:type:: enum nbft_info_nid_type
 
    Namespace Identifier Type (NIDT)
 
@@ -1698,7 +1698,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_info_subsystem_ns
+.. c:type:: struct nbft_info_subsystem_ns
 
    Subsystem Namespace (SSNS) info
 
@@ -1808,7 +1808,7 @@ Note: this API is currently unstable, subject to further additions.
 
 
 
-.. c:struct:: nbft_info
+.. c:type:: struct nbft_info
 
    The parsed NBFT table data.
 

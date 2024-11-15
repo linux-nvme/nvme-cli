@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_ctratt" "October 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_ctratt" "November 2024" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_ctratt \- Controller attributes
 .SH SYNOPSIS
@@ -76,6 +76,10 @@ enum nvme_id_ctrl_ctratt {
 , 
 .br
 .br
+.BI "    NVME_CTRL_CTRATT_RHII"
+, 
+.br
+.br
 .BI "    NVME_CTRL_CTRATT_FDPS"
 
 };
@@ -118,5 +122,7 @@ Extended LBA Formats supported
 MDTS and Size Limits Exclude Metadata supported
 .IP "NVME_CTRL_CTRATT_HMBR" 12
 HMB Restrict Non-Operational Power State Access
+.IP "NVME_CTRL_CTRATT_RHII" 12
+Reservations and Host Identifier Interaction
 .IP "NVME_CTRL_CTRATT_FDPS" 12
 Flexible Data Placement supported

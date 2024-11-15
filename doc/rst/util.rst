@@ -7,7 +7,7 @@ libnvme utility functions
 
 
 
-.. c:enum:: nvme_connect_err
+.. c:type:: enum nvme_connect_err
 
    nvme connect error codes
 
@@ -487,9 +487,7 @@ If **s** starts with **prefix**, then return a pointer within **s** at
 the first character after the matched **prefix**. NULL otherwise.
 
 
-.. c:macro:: round_up
-
-``round_up (val, mult)``
+.. c:function:: round_up (val, mult)
 
    Round a value **val** to the next multiple specified by **mult**.
 
@@ -572,7 +570,7 @@ Pointer to the next element in the array.
 
 
 
-.. c:enum:: nvme_version
+.. c:type:: enum nvme_version
 
    Selector for version to be returned by **nvme_get_version**
 
