@@ -627,17 +627,19 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 
 	ctrlkey = nvme_ctrl_get_dhchap_key(c);
 
-	ret = __nvme_import_keys_from_config(h, c, &keyring_id, &key_id);
-	if (ret) {
-		errno = -ret;
-		return -1;
-	}
+	if (cfg->tls) {
+		ret = __nvme_import_keys_from_config(h, c, &keyring_id, &key_id);
+		if (ret) {
+			errno = -ret;
+			return -1;
+		}
 
-	if (key_id == 0) {
-		if (cfg->tls_configured_key)
-			key_id = cfg->tls_configured_key;
-		else
-			key_id = cfg->tls_key;
+		if (key_id == 0) {
+			if (cfg->tls_configured_key)
+				key_id = cfg->tls_configured_key;
+			else
+				key_id = cfg->tls_key;
+		}
 	}
 
 	if (add_argument(r, argstr, transport, transport) ||
