@@ -7,9 +7,11 @@
 
 static void binary_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 {
-	long double desc_len = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32);
+	long double desc_len = uint128_t_to_double(le128_to_cpu(log->size));
+	if (log->ver == 1)
+		desc_len *= sizeof(__le32);
 
-	d_raw((unsigned char *)log, offsetof(struct hwcomp_log, desc) + desc_len);
+	d_raw((unsigned char *)log, desc_len);
 }
 
 static void binary_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_data)
