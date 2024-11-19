@@ -154,6 +154,8 @@ const char *hwcomp_id_to_string(__u32 id)
 		return "Country of Origin";
 	case HWCOMP_ID_HW_REV:
 		return "Global Device Hardware Revision";
+	case HWCOMP_ID_BORN_ON_DATE:
+		return "Born on Date";
 	case HWCOMP_ID_VENDOR ... HWCOMP_ID_MAX:
 		return "Vendor Unique Component";
 	case HWCOMP_ID_RSVD:
@@ -193,7 +195,12 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	print_info_array("guid", log->guid, ARRAY_SIZE(log->guid));
 	print_info("size: %s\n", uint128_t_to_string(le128_to_cpu(log->size)));
 
-	args.len = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32) - desc_offset;
+	if (log->ver > 1)
+		args.len = uint128_t_to_double(le128_to_cpu(log->size)) - desc_offset;
+	else
+		args.len = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32)
+			- desc_offset;
+
 	log->desc = calloc(1, args.len);
 	if (!log->desc) {
 		fprintf(stderr, "error: ocp: calloc: %s\n", strerror(errno));
@@ -268,6 +275,7 @@ int ocp_hwcomp_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		VAL_LONG("sn", HWCOMP_ID_SN),
 		VAL_LONG("country", HWCOMP_ID_COUNTRY),
 		VAL_LONG("hw-rev", HWCOMP_ID_HW_REV),
+		VAL_LONG("born-on-date", HWCOMP_ID_BORN_ON_DATE),
 		VAL_LONG("vendor", HWCOMP_ID_VENDOR),
 		VAL_END()
 	};

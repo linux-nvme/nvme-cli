@@ -32,7 +32,9 @@ static void stdout_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	int num = 1;
 	struct hwcomp_desc_entry e = { log->desc };
 
-	long double log_size = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32);
+	long double log_size = uint128_t_to_double(le128_to_cpu(log->size));
+	if (log->ver == 1)
+		log_size *= sizeof(__le32);
 
 	printf("Log Identifier: 0x%02xh\n", LID_HWCOMP);
 	printf("Log Page Version: 0x%x\n", le16_to_cpu(log->ver));
