@@ -104,6 +104,17 @@ enum erri_type {
 	ERRI_TYPE_HW_MALFUNCTION,
 	ERRI_TYPE_NO_MORE_NAND_SPARES,
 	ERRI_TYPE_INCOMPLETE_SHUTDOWN,
+	ERRI_TYPE_METADATA_CORRUPTION,
+	ERRI_TYPE_CRITICAL_GC,
+	ERRI_TYPE_LATENCY_SPIKE,
+	ERRI_TYPE_IO_CMD_FAILURE,
+	ERRI_TYPE_IO_CMD_TIMEOUT,
+	ERRI_TYPE_ADMIN_CMD_FAILURE,
+	ERRI_TYPE_ADMIN_CMD_TIMEOUT,
+	ERRI_TYPE_THERMAL_THROTTLE_ENGAGED,
+	ERRI_TYPE_THERMAL_THROTTLE_DISENGAGED,
+	ERRI_TYPE_CRITICAL_TEMPERATURE_EVENT,
+	ERRI_TYPE_DIE_OFFLINE,
 };
 
 const char *erri_type_to_string(__le16 type)
@@ -131,6 +142,28 @@ const char *erri_type_to_string(__le16 type)
 		return "no more NAND spares available";
 	case ERRI_TYPE_INCOMPLETE_SHUTDOWN:
 		return "incomplete shutdown";
+	case ERRI_TYPE_METADATA_CORRUPTION:
+		return "Metadata Corruption";
+	case ERRI_TYPE_CRITICAL_GC:
+		return "Critical Garbage Collection";
+	case ERRI_TYPE_LATENCY_SPIKE:
+		return "Latency Spike";
+	case ERRI_TYPE_IO_CMD_FAILURE:
+		return "I/O command failure";
+	case ERRI_TYPE_IO_CMD_TIMEOUT:
+		return "I/O command timeout";
+	case ERRI_TYPE_ADMIN_CMD_FAILURE:
+		return "Admin command failure";
+	case ERRI_TYPE_ADMIN_CMD_TIMEOUT:
+		return "Admin command timeout";
+	case ERRI_TYPE_THERMAL_THROTTLE_ENGAGED:
+		return "Thermal Throttle Engaged";
+	case ERRI_TYPE_THERMAL_THROTTLE_DISENGAGED:
+		return "Thermal Throttle Disengaged";
+	case ERRI_TYPE_CRITICAL_TEMPERATURE_EVENT:
+		return "Critical Temperature Event";
+	case ERRI_TYPE_DIE_OFFLINE:
+		return "Die Offline";
 	default:
 		break;
 	}
