@@ -136,7 +136,7 @@ static void json_fw_activation_history(const struct fw_activation_history *fw_hi
 	printf("\n");
 }
 
-static void json_smart_extended_log(void *data)
+static void json_smart_extended_log_v1(void *data)
 {
 	struct json_object *root;
 	struct json_object *pmuw;
@@ -248,6 +248,129 @@ static void json_smart_extended_log(void *data)
 	json_free_object(root);
 }
 
+static void json_smart_extended_log_v2(void *data)
+{
+	struct json_object *root;
+	struct json_object *pmuw;
+	struct json_object *pmur;
+	uint16_t smart_log_ver = 0;
+	__u8 *log_data = data;
+	char guid[40];
+
+	root = json_create_object();
+	pmuw = json_create_object();
+	pmur = json_create_object();
+
+	json_object_add_value_uint64(pmuw, "hi",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW + 8] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_uint64(pmuw, "lo",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_object(root, "physical_media_units_written", pmuw);
+	json_object_add_value_uint64(pmur, "hi",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_uint64(pmur, "lo",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_object(root, "physical_media_units_read", pmur);
+	json_object_add_value_uint64(root, "bad_user_nand_blocks_raw",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
+	json_object_add_value_uint(root, "bad_user_nand_blocks_normalized",
+		(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BUNBN]));
+	json_object_add_value_uint64(root, "bad_system_nand_blocks_raw",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BSNBR] & 0x0000FFFFFFFFFFFF));
+	json_object_add_value_uint(root, "bad_system_nand_blocks_normalized",
+		(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BSNBN]));
+	json_object_add_value_uint64(root, "xor_recovery_count",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_XRC]));
+	json_object_add_value_uint64(root, "uncorrectable_read_errors",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UREC]));
+	json_object_add_value_uint64(root, "soft_ecc_error_count",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SEEC]));
+	json_object_add_value_uint(root, "end_to_end_detected_errors",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EEDC]));
+	json_object_add_value_uint(root, "end_to_end_corrected_errors",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
+	json_object_add_value_uint(root, "system_data_percent_used",
+		(__u8)log_data[SCAO_SDPU]);
+	json_object_add_value_uint64(root, "refresh_count",
+		(uint64_t)(le64_to_cpu(*(uint64_t *)&log_data[SCAO_RFSC]) & 0x00FFFFFFFFFFFFFF));
+	json_object_add_value_uint(root, "max_user_data_erase_count",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MXUDEC]));
+	json_object_add_value_uint(root, "min_user_data_erase_count",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MNUDEC]));
+	json_object_add_value_uint(root, "thermal_throttling_events",
+		(__u8)log_data[SCAO_NTTE]);
+	json_object_add_value_uint(root, "current_throttling_status",
+		(__u8)log_data[SCAO_CTS]);
+	json_object_add_value_uint64(root, "pcie_correctable_errors",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PCEC]));
+	json_object_add_value_uint(root, "incomplete_shutdowns",
+		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_ICS]));
+	json_object_add_value_uint(root, "percent_free_blocks",
+		(__u8)log_data[SCAO_PFB]);
+	json_object_add_value_uint(root, "capacitor_health",
+		(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
+	json_object_add_value_uint64(root, "unaligned_io",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UIO]));
+	json_object_add_value_uint64(root, "security_version_number",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
+	json_object_add_value_uint64(root, "nuse_namespace_utilization",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
+	json_object_add_value_uint128(root, "plp_start_count",
+		le128_to_cpu(&log_data[SCAO_PSC]));
+	json_object_add_value_uint128(root, "endurance_estimate",
+		le128_to_cpu(&log_data[SCAO_EEST]));
+	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
+
+	json_object_add_value_uint(root, "log_page_version", smart_log_ver);
+
+	memset((void *)guid, 0, 40);
+	sprintf((char *)guid, "0x%"PRIx64"%"PRIx64"",
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
+	json_object_add_value_string(root, "log_page_guid", guid);
+
+	switch (smart_log_ver) {
+	case 0 ... 1:
+		break;
+	default:
+	case 4:
+		json_object_add_value_uint(root, "nvme_command_set_errata_version",
+					   (__u8)log_data[SCAO_NCSEV]);
+		json_object_add_value_uint(root, "lowest_permitted_firmware_revision",
+					   le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
+		fallthrough;
+	case 2 ... 3:
+		json_object_add_value_uint(root, "errata_version_field",
+					   (__u8)log_data[SCAO_EVF]);
+		json_object_add_value_uint(root, "point_version_field",
+					   le16_to_cpu(*(uint16_t *)&log_data[SCAO_PVF]));
+		json_object_add_value_uint(root, "minor_version_field",
+					   le16_to_cpu(*(uint16_t *)&log_data[SCAO_MIVF]));
+		json_object_add_value_uint(root, "major_version_field",
+					   (__u8)log_data[SCAO_MAVF]);
+		json_object_add_value_uint(root, "nvme_base_errata_version",
+					   (__u8)log_data[SCAO_NBEV]);
+		json_object_add_value_uint(root, "pcie_link_retraining_count",
+					   le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
+		json_object_add_value_uint(root, "power_state_change_count",
+					   le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
+	}
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+static void json_smart_extended_log(void *data, unsigned int version)
+{
+	switch (version) {
+	default:
+	case 1:
+		json_smart_extended_log_v1(data);
+		break;
+	case 2:
+		json_smart_extended_log_v2(data);
+	}
+}
 static void json_telemetry_log(struct ocp_telemetry_parse_options *options)
 {
 	print_ocp_telemetry_json(options);

@@ -27,7 +27,8 @@ static __u8 scao_guid[GUID_LEN] = {
 	0xC9, 0x14, 0xD5, 0xAF
 };
 
-static int get_c0_log_page(struct nvme_dev *dev, char *format)
+static int get_c0_log_page(struct nvme_dev *dev, char *format,
+			   unsigned int format_version)
 {
 	nvme_print_flags_t fmt;
 	__u8 *data;
@@ -86,7 +87,7 @@ static int get_c0_log_page(struct nvme_dev *dev, char *format)
 		}
 
 		/* print the data */
-		ocp_smart_extended_log(data, fmt);
+		ocp_smart_extended_log(data, format_version, fmt);
 	} else {
 		fprintf(stderr, "ERROR : OCP : Unable to read C0 data from buffer\n");
 	}
@@ -105,14 +106,17 @@ int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
 
 	struct config {
 		char *output_format;
+		unsigned int output_format_version;
 	};
 
 	struct config cfg = {
 		.output_format = "normal",
+		.output_format_version = 1,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("output-format", 'o', &cfg.output_format, "output Format: normal|json"),
+		OPT_UINT("output-format-version", 0, &cfg.output_format_version, "output Format version: 1|2"),
 		OPT_END()
 	};
 
@@ -120,7 +124,8 @@ int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
 	if (ret)
 		return ret;
 
-	ret = get_c0_log_page(dev, cfg.output_format);
+	ret = get_c0_log_page(dev, cfg.output_format,
+			      cfg.output_format_version);
 	if (ret)
 		fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
 			ret);
