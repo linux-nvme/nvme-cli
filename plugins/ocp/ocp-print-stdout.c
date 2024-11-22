@@ -98,7 +98,7 @@ static void stdout_fw_activation_history(const struct fw_activation_history *fw_
 	printf("\n");
 }
 
-static void stdout_smart_extended_log(void *data)
+static void stdout_smart_extended_log(void *data, unsigned int version)
 {
 	uint16_t smart_log_ver = 0;
 	__u8 *log_data = data;
