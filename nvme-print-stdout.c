@@ -3105,6 +3105,29 @@ static void stdout_id_ctrl_nvm_aocs(__u16 aocs)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_nvm_ver(__u32 ver)
+{
+	printf("  NVM command set specification: %d.%d.%d\n\n", NVME_MAJOR(ver), NVME_MINOR(ver),
+	       NVME_TERTIARY(ver));
+}
+
+static void stdout_id_ctrl_nvm_lbamqf(__u8 lbamqf)
+{
+	printf("  0x%x: ", lbamqf);
+
+	switch (lbamqf) {
+	case NVME_ID_CTRL_NVM_LBAMQF_TYPE_0:
+		printf("LBA Migration Queue Entry Type 0\n\n");
+		break;
+	case NVME_ID_CTRL_NVM_LBAMQF_VENDOR_MIN ... NVME_ID_CTRL_NVM_LBAMQF_VENDOR_MAX:
+		printf("Vendor Specific\n\n");
+		break;
+	default:
+		printf("Reserved\n\n");
+		break;
+	}
+}
+
 static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 {
 	int verbose = stdout_print_ops.flags & VERBOSE;
@@ -3119,6 +3142,12 @@ static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	printf("aocs   : %u\n", le16_to_cpu(ctrl_nvm->aocs));
 	if (verbose)
 		stdout_id_ctrl_nvm_aocs(le16_to_cpu(ctrl_nvm->aocs));
+	printf("ver    : 0x%x\n", le32_to_cpu(ctrl_nvm->ver));
+	if (verbose)
+		stdout_id_ctrl_nvm_ver(le32_to_cpu(ctrl_nvm->ver));
+	printf("lbamqf : %u\n", ctrl_nvm->lbamqf);
+	if (verbose)
+		stdout_id_ctrl_nvm_lbamqf(ctrl_nvm->lbamqf);
 }
 
 static void stdout_nvm_id_ns_pic(__u8 pic)
