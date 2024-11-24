@@ -2863,6 +2863,18 @@ struct nvme_ns_list {
 };
 
 /**
+ * enum nvme_id_ctrl_nvm_lbamqf - LBA Migration Queue Format
+ * @NVME_ID_CTRL_NVM_LBAMQF_TYPE_0:
+ * @NVME_ID_CTRL_NVM_LBAMQF_VENDOR_MIN:
+ * @NVME_ID_CTRL_NVM_LBAMQF_VENDOR_MAX:
+ */
+enum nvme_id_ctrl_nvm_lbamqf {
+	NVME_ID_CTRL_NVM_LBAMQF_TYPE_0		= 0x0,
+	NVME_ID_CTRL_NVM_LBAMQF_VENDOR_MIN	= 0xc0,
+	NVME_ID_CTRL_NVM_LBAMQF_VENDOR_MAX	= 0xff,
+};
+
+/**
  * struct nvme_id_ctrl_nvm - I/O Command Set Specific Identify Controller data structure
  * @vsl:	Verify Size Limit
  * @wzsl:	Write Zeroes Size Limit
