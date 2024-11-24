@@ -11,6 +11,7 @@
 #include "nvme-print.h"
 #include "ocp-hardware-component-log.h"
 #include "ocp-print.h"
+#include "ocp-utils.h"
 
 //#define HWCOMP_DUMMY
 
@@ -171,21 +172,23 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	int ret = 0;
 	size_t desc_offset = offsetof(struct hwcomp_log, desc);
 	struct nvme_get_log_args args = {
-		.lpo = desc_offset,
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = LID_HWCOMP,
 		.nsid = NVME_NSID_ALL,
+		.log = log,
+		.len = desc_offset,
 	};
+
+	ocp_get_uuid_index(dev, &args.uuidx);
 
 #ifdef HWCOMP_DUMMY
 	memcpy(log, hwcomp_dummy, desc_offset);
 #else /* HWCOMP_DUMMY */
-	ret = nvme_get_log_simple(dev_fd(dev), LID_HWCOMP, desc_offset, log);
+	ret = nvme_get_log_page(dev_fd(dev), NVME_LOG_PAGE_PDU_SIZE, &args);
 	if (ret) {
-		print_info_error("error: ocp: failed to get log simple (hwcomp: %02X, ret: %d)\n",
-				 LID_HWCOMP, ret);
+		print_info_error("error: ocp: failed to get hwcomp log size (ret: %d)\n", ret);
 		return ret;
 	}
 #endif /* HWCOMP_DUMMY */
@@ -208,6 +211,7 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	}
 
 	args.log = log->desc,
+	args.lpo = desc_offset,
 
 #ifdef HWCOMP_DUMMY
 	memcpy(log->desc, &hwcomp_dummy[desc_offset], args.len);
