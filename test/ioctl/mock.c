@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <dlfcn.h>
 
 #include "../../src/nvme/ioctl.h"
 #include "util.h"
@@ -118,18 +119,20 @@ void end_mock_cmds(void)
 })
 
 #ifdef HAVE_GLIBC_IOCTL
+typedef int (*ioctl_func_t)(int, unsigned long, void *);
 int ioctl(int fd, unsigned long request, ...)
 #else
+typedef int (*ioctl_func_t)(int, int, void *);
 int ioctl(int fd, int request, ...)
 #endif
 {
+	ioctl_func_t real_ioctl = NULL;
 	struct mock_cmds *mock_cmds;
 	bool result64;
 	const struct mock_cmd *mock_cmd;
 	va_list args;
 	void *cmd;
 
-	check(fd == mock_fd, "got fd %d, expected %d", fd, mock_fd);
 	switch (request) {
 	case NVME_IOCTL_ADMIN_CMD:
 		mock_cmds = &mock_admin_cmds;
@@ -148,16 +151,24 @@ int ioctl(int fd, int request, ...)
 		result64 = true;
 		break;
 	default:
-		fail("unexpected %s %lu", __func__, (unsigned long) request);
+		real_ioctl = dlsym(RTLD_NEXT, "ioctl");
+		if (!real_ioctl)
+			fail("Error: dlsym failed to find original ioctl\n");
 	}
+
+	va_start(args, request);
+	cmd = va_arg(args, void *);
+	va_end(args);
+
+	if (real_ioctl)
+		return real_ioctl(fd, request, cmd);
+
+	check(fd == mock_fd, "got fd %d, expected %d", fd, mock_fd);
 	check(mock_cmds->remaining_cmds,
 	      "unexpected %s command", mock_cmds->name);
 	mock_cmd = mock_cmds->cmds++;
 	mock_cmds->remaining_cmds--;
 
-	va_start(args, request);
-	cmd = va_arg(args, void *);
-	va_end(args);
 	if (result64) {
 		execute_ioctl((struct nvme_passthru_cmd64 *)cmd, mock_cmd);
 	} else {
