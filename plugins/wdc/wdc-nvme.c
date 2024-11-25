@@ -2181,6 +2181,163 @@ static int wdc_create_log_file(char *file, __u8 *drive_log_data,
 	return 0;
 }
 
+bool wdc_validate_dev_mng_log(void *data)
+{
+	__u32 remaining_len = 0;
+	__u32 log_length = 0;
+	__u32 log_entry_size = 0;
+	__u32 log_entry_id = 0;
+	__u32 offset = 0;
+	bool valid_log = false;
+	struct wdc_c2_log_subpage_header *p_next_log_entry = NULL;
+	struct wdc_c2_log_page_header *hdr_ptr = (struct wdc_c2_log_page_header *)data;
+
+	log_length = le32_to_cpu(hdr_ptr->length);
+	/* Ensure log data is large enough for common header */
+	if (log_length < sizeof(struct wdc_c2_log_page_header)) {
+		fprintf(stderr,
+		    "ERROR: %s: log smaller than header. log_len: 0x%x  HdrSize: %"PRIxPTR"\n",
+		    __func__, log_length, sizeof(struct wdc_c2_log_page_header));
+		return valid_log;
+	}
+
+	/* Get pointer to first log Entry */
+	offset = sizeof(struct wdc_c2_log_page_header);
+	p_next_log_entry = (struct wdc_c2_log_subpage_header *)(((__u8 *)data) + offset);
+	remaining_len = log_length - offset;
+
+	/* Proceed only if there is at least enough data to read an entry header */
+	while (remaining_len >= sizeof(struct wdc_c2_log_subpage_header)) {
+		/* Get size of the next entry */
+		log_entry_size = le32_to_cpu(p_next_log_entry->length);
+		log_entry_id = le32_to_cpu(p_next_log_entry->entry_id);
+		/*
+		 * If log entry size is 0 or the log entry goes past the end
+		 * of the data, we must be at the end of the data
+		 */
+		if (!log_entry_size || log_entry_size > remaining_len) {
+			fprintf(stderr, "ERROR: WDC: %s: Detected unaligned end of the data. ",
+				__func__);
+			fprintf(stderr, "Data Offset: 0x%x Entry Size: 0x%x, ",
+				offset, log_entry_size);
+			fprintf(stderr, "Remaining Log Length: 0x%x Entry Id: 0x%x\n",
+				remaining_len, log_entry_id);
+
+			/* Force the loop to end */
+			remaining_len = 0;
+		} else if (!log_entry_id || log_entry_id > 200) {
+			/* Invalid entry - fail the search */
+			fprintf(stderr, "ERROR: WDC: %s: Invalid entry found at offset: 0x%x ",
+				__func__, offset);
+			fprintf(stderr, "Entry Size: 0x%x, Remaining Log Length: 0x%x ",
+				log_entry_size, remaining_len);
+			fprintf(stderr, "Entry Id: 0x%x\n", log_entry_id);
+
+			/* Force the loop to end */
+			remaining_len = 0;
+			valid_log = false;
+		} else {
+			/* A valid log has at least one entry and no invalid entries */
+			valid_log = true;
+			remaining_len -= log_entry_size;
+			if (remaining_len > 0) {
+				/* Increment the offset counter */
+				offset += log_entry_size;
+				/* Get the next entry */
+				p_next_log_entry =
+				(struct wdc_c2_log_subpage_header *)(((__u8 *)data) + offset);
+			}
+		}
+	}
+
+	return valid_log;
+}
+
+bool wdc_parse_dev_mng_log_entry(void *data, __u32 entry_id,
+				 struct wdc_c2_log_subpage_header **log_entry)
+{
+	__u32 remaining_len = 0;
+	__u32 log_length = 0;
+	__u32 log_entry_size = 0;
+	__u32 log_entry_id = 0;
+	__u32 offset = 0;
+	bool found = false;
+	struct wdc_c2_log_subpage_header *p_next_log_entry = NULL;
+	struct wdc_c2_log_page_header *hdr_ptr = (struct wdc_c2_log_page_header *)data;
+
+	log_length = le32_to_cpu(hdr_ptr->length);
+	/* Ensure log data is large enough for common header */
+	if (log_length < sizeof(struct wdc_c2_log_page_header)) {
+		fprintf(stderr,
+		    "ERROR: %s: log smaller than header. log_len: 0x%x  HdrSize: %"PRIxPTR"\n",
+		    __func__, log_length, sizeof(struct wdc_c2_log_page_header));
+		return found;
+	}
+
+	/* Get pointer to first log Entry */
+	offset = sizeof(struct wdc_c2_log_page_header);
+	p_next_log_entry = (struct wdc_c2_log_subpage_header *)(((__u8 *)data) + offset);
+	remaining_len = log_length - offset;
+
+	if (!log_entry) {
+		fprintf(stderr, "ERROR: WDC - %s: No log entry pointer.\n", __func__);
+		return found;
+	}
+	*log_entry = NULL;
+
+	/* Proceed only if there is at least enough data to read an entry header */
+	while (remaining_len >= sizeof(struct wdc_c2_log_subpage_header)) {
+		/* Get size of the next entry */
+		log_entry_size = le32_to_cpu(p_next_log_entry->length);
+		log_entry_id = le32_to_cpu(p_next_log_entry->entry_id);
+
+		/*
+		 * If log entry size is 0 or the log entry goes past the end
+		 * of the data, we must be at the end of the data
+		 */
+		if (!log_entry_size || log_entry_size > remaining_len) {
+			fprintf(stderr, "ERROR: WDC: %s: Detected unaligned end of the data. ",
+				__func__);
+			fprintf(stderr, "Data Offset: 0x%x Entry Size: 0x%x, ",
+				offset, log_entry_size);
+			fprintf(stderr, "Remaining Log Length: 0x%x Entry Id: 0x%x\n",
+				remaining_len, log_entry_id);
+
+			/* Force the loop to end */
+			remaining_len = 0;
+		} else if (!log_entry_id || log_entry_id > 200) {
+			/* Invalid entry - fail the search */
+			fprintf(stderr, "ERROR: WDC: %s: Invalid entry found at offset: 0x%x ",
+				__func__, offset);
+			fprintf(stderr, "Entry Size: 0x%x, Remaining Log Length: 0x%x ",
+				log_entry_size, remaining_len);
+			fprintf(stderr, "Entry Id: 0x%x\n", log_entry_id);
+
+			/* Force the loop to end */
+			remaining_len = 0;
+		} else {
+			if (log_entry_id == entry_id) {
+				found = true;
+				*log_entry = p_next_log_entry;
+				remaining_len = 0;
+			} else {
+				remaining_len -= log_entry_size;
+			}
+
+			if (remaining_len > 0) {
+				/* Increment the offset counter */
+				offset += log_entry_size;
+
+				/* Get the next entry */
+				p_next_log_entry =
+				(struct wdc_c2_log_subpage_header *)(((__u8 *)data) + offset);
+			}
+		}
+	}
+
+	return found;
+}
+
 bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 			       struct wdc_c2_log_page_header *p_log_hdr,
 			       struct wdc_c2_log_subpage_header **p_p_found_log_entry)
@@ -2188,9 +2345,10 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 	__u32 remaining_len = 0;
 	__u32 log_entry_hdr_size = sizeof(struct wdc_c2_log_subpage_header) - 1;
 	__u32 log_entry_size = 0;
+	__u32 log_entry_id = 0;
 	__u32 size = 0;
 	bool valid_log;
-	__u32 current_data_offset = 0;
+	__u32 offset = 0;
 	struct wdc_c2_log_subpage_header *p_next_log_entry = NULL;
 
 	if (!*p_p_found_log_entry) {
@@ -2210,8 +2368,8 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 
 	/* Get pointer to first log Entry */
 	size = sizeof(struct wdc_c2_log_page_header);
-	current_data_offset = size;
-	p_next_log_entry = (struct wdc_c2_log_subpage_header *)((__u8 *)p_log_hdr + current_data_offset);
+	offset = size;
+	p_next_log_entry = (struct wdc_c2_log_subpage_header *)(((__u8 *)p_log_hdr) + offset);
 	remaining_len = log_length - size;
 	valid_log = false;
 
@@ -2225,7 +2383,8 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 	/* Proceed only if there is at least enough data to read an entry header */
 	while (remaining_len >= log_entry_hdr_size) {
 		/* Get size of the next entry */
-		log_entry_size = p_next_log_entry->length;
+		log_entry_size = le32_to_cpu(p_next_log_entry->length);
+		log_entry_id = le32_to_cpu(p_next_log_entry->entry_id);
 
 		/*
 		 * If log entry size is 0 or the log entry goes past the end
@@ -2235,19 +2394,19 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 			fprintf(stderr, "ERROR: WDC: %s: Detected unaligned end of the data. ",
 				__func__);
 			fprintf(stderr, "Data Offset: 0x%x Entry Size: 0x%x, ",
-				current_data_offset, log_entry_size);
+				offset, log_entry_size);
 			fprintf(stderr, "Remaining Log Length: 0x%x Entry Id: 0x%x\n",
-				remaining_len, p_next_log_entry->entry_id);
+				remaining_len, log_entry_id);
 
 			/* Force the loop to end */
 			remaining_len = 0;
-		} else if (!p_next_log_entry->entry_id || p_next_log_entry->entry_id > 200) {
+		} else if (!log_entry_id || log_entry_id > 200) {
 			/* Invalid entry - fail the search */
 			fprintf(stderr, "ERROR: WDC: %s: Invalid entry found at offset: 0x%x ",
-				__func__, current_data_offset);
+				__func__, offset);
 			fprintf(stderr, "Entry Size: 0x%x, Remaining Log Length: 0x%x ",
 				log_entry_size, remaining_len);
-			fprintf(stderr, "Entry Id: 0x%x\n", p_next_log_entry->entry_id);
+			fprintf(stderr, "Entry Id: 0x%x\n", log_entry_id);
 
 			/* Force the loop to end */
 			remaining_len = 0;
@@ -2258,7 +2417,7 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 		} else {
 			/* Structure must have at least one valid entry to be considered valid */
 			valid_log = true;
-			if (p_next_log_entry->entry_id == entry_id)
+			if (log_entry_id == entry_id)
 				/* A potential match. */
 				*p_p_found_log_entry = p_next_log_entry;
 
@@ -2266,15 +2425,119 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 
 			if (remaining_len > 0) {
 				/* Increment the offset counter */
-				current_data_offset += log_entry_size;
+				offset += log_entry_size;
 
 				/* Get the next entry */
-				p_next_log_entry = (struct wdc_c2_log_subpage_header *)(((__u8 *)p_log_hdr) + current_data_offset);
+				p_next_log_entry =
+				(struct wdc_c2_log_subpage_header *)(((__u8 *)p_log_hdr) + offset);
 			}
 		}
 	}
 
 	return valid_log;
+}
+
+static bool get_dev_mgmt_log_page_data(struct nvme_dev *dev, void **log_data,
+				       __u8 uuid_ix)
+{
+	void *data;
+	struct wdc_c2_log_page_header *hdr_ptr;
+	__u32 length = 0;
+	int ret = 0;
+	bool valid = false;
+
+	data = (__u8 *)malloc(sizeof(__u8) * WDC_C2_LOG_BUF_LEN);
+	if (!data) {
+		fprintf(stderr, "ERROR: WDC: malloc: %s\n", strerror(errno));
+		return false;
+	}
+
+	memset(data, 0, sizeof(__u8) * WDC_C2_LOG_BUF_LEN);
+
+	/* get the log page length */
+	struct nvme_get_log_args args_len = {
+		.args_size	= sizeof(args_len),
+		.fd		= dev_fd(dev),
+		.lid		= WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
+		.nsid		= 0xFFFFFFFF,
+		.lpo		= 0,
+		.lsp		= NVME_LOG_LSP_NONE,
+		.lsi		= 0,
+		.rae		= false,
+		.uuidx		= uuid_ix,
+		.csi		= NVME_CSI_NVM,
+		.ot		= false,
+		.len		= WDC_C2_LOG_BUF_LEN,
+		.log		= data,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	ret = nvme_get_log(&args_len);
+	if (ret) {
+		fprintf(stderr,
+			"ERROR: WDC: Unable to get 0x%x Log Page with uuid %d, ret = 0x%x\n",
+			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID, uuid_ix, ret);
+		goto end;
+	}
+
+	hdr_ptr = (struct wdc_c2_log_page_header *)data;
+	length = le32_to_cpu(hdr_ptr->length);
+
+	if (length > WDC_C2_LOG_BUF_LEN) {
+		/* Log page buffer too small for actual data */
+		free(data);
+		data = calloc(length, sizeof(__u8));
+		if (!data) {
+			fprintf(stderr, "ERROR: WDC: malloc: %s\n", strerror(errno));
+			goto end;
+		}
+
+		/* get the log page data with the increased length */
+		struct nvme_get_log_args args_data = {
+			.args_size	= sizeof(args_data),
+			.fd		= dev_fd(dev),
+			.lid		= WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
+			.nsid		= 0xFFFFFFFF,
+			.lpo		= 0,
+			.lsp		= NVME_LOG_LSP_NONE,
+			.lsi		= 0,
+			.rae		= false,
+			.uuidx		= uuid_ix,
+			.csi		= NVME_CSI_NVM,
+			.ot		= false,
+			.len		= length,
+			.log		= data,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
+		};
+		ret = nvme_get_log(&args_data);
+
+		if (ret) {
+			fprintf(stderr,
+				"ERROR: WDC: Unable to read 0x%x Log with uuid %d, ret = 0x%x\n",
+				WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID, uuid_ix, ret);
+			goto end;
+		}
+	}
+
+	valid = wdc_validate_dev_mng_log(data);
+	if (valid) {
+		/* Ensure size of log data matches length in log header */
+		*log_data = calloc(length, sizeof(__u8));
+		if (!*log_data) {
+			fprintf(stderr, "ERROR: WDC: calloc: %s\n", strerror(errno));
+			valid = false;
+			goto end;
+		}
+		memcpy((void *)*log_data, data, length);
+	} else {
+		fprintf(stderr, "ERROR: WDC: C2 log page not found with uuid index %d\n",
+			uuid_ix);
+	}
+
+end:
+	free(data);
+	return valid;
 }
 
 static bool get_dev_mgmt_log_page_lid_data(struct nvme_dev *dev,
@@ -2384,6 +2647,78 @@ static bool get_dev_mgmt_log_page_lid_data(struct nvme_dev *dev,
 
 end:
 	free(data);
+	return found;
+}
+
+static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
+				void **data)
+{
+	bool found = false;
+	*data = NULL;
+	__u32 device_id = 0, vendor_id = 0;
+	bool uuid_present = false;
+	int index = 0, uuid_index = 0;
+	struct nvme_id_uuid_list uuid_list;
+
+	/* The wdc_get_pci_ids function could fail when drives are connected
+	 * via a PCIe switch.  Therefore, the return code is intentionally
+	 * being ignored.  The device_id and vendor_id variables have been
+	 * initialized to 0 so the code can continue on without issue for
+	 * both cases: wdc_get_pci_ids successful or failed.
+	 */
+	wdc_get_pci_ids(r, dev, &device_id, &vendor_id);
+
+	typedef struct nvme_id_uuid_list_entry *uuid_list_entry;
+
+	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
+	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
+		uuid_list_entry uuid_list_entry_ptr = (uuid_list_entry)&uuid_list.entry[0];
+
+		while (index <= NVME_ID_UUID_LIST_MAX &&
+		       !wdc_UuidEqual(uuid_list_entry_ptr, (uuid_list_entry)UUID_END)) {
+
+			if (wdc_UuidEqual(uuid_list_entry_ptr,
+					  (uuid_list_entry)WDC_UUID)) {
+				uuid_present = true;
+				break;
+			} else if (wdc_UuidEqual(uuid_list_entry_ptr,
+						 (uuid_list_entry)WDC_UUID_SN640_3) &&
+				   wdc_is_sn640_3(device_id)) {
+				uuid_present = true;
+				break;
+			}
+			index++;
+			uuid_list_entry_ptr = (uuid_list_entry)&uuid_list.entry[index];
+		}
+		if (uuid_present)
+			uuid_index = index + 1;
+	}
+
+	if (uuid_present) {
+		/* use the uuid index found above */
+		found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
+	} else {
+		if (!uuid_index && needs_c2_log_page_check(device_id)) {
+			/* In certain devices that don't support UUID lists, there are multiple
+			 * definitions of the C2 logpage. In those cases, the code
+			 * needs to try two UUID indexes and use an identification algorithm
+			 * to determine which is returning the correct log page data.
+			 */
+			uuid_index = 1;
+		}
+
+		found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
+
+		if (!found) {
+			/* not found with uuid = 1 try with uuid = 0 */
+			uuid_index = 0;
+			fprintf(stderr, "Not found, requesting log page with uuid_index %d\n",
+					uuid_index);
+
+			found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
+		}
+	}
+
 	return found;
 }
 
@@ -2499,6 +2834,22 @@ static bool wdc_nvme_check_supported_log_page(nvme_root_t r, struct nvme_dev *de
 	}
 
 	return found;
+}
+
+static bool wdc_nvme_parse_dev_status_log_entry(void *log_data, __u32 *ret_data,
+						__u32 entry_id)
+{
+	struct wdc_c2_log_subpage_header *entry_data = NULL;
+
+	if (wdc_parse_dev_mng_log_entry(log_data, entry_id, &entry_data)) {
+		if (entry_data) {
+			*ret_data = le32_to_cpu(entry_data->data);
+			return true;
+		}
+	}
+
+	*ret_data = 0;
+	return false;
 }
 
 static bool wdc_nvme_get_dev_status_log_data(nvme_root_t r, struct nvme_dev *dev, __le32 *ret_data,
@@ -8625,12 +8976,13 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	struct nvme_dev *dev;
 	int ret = 0;
 	nvme_root_t r;
-	__le32 system_eol_state;
-	__le32 user_eol_state;
-	__le32 format_corrupt_reason = cpu_to_le32(0xFFFFFFFF);
-	__le32 eol_status;
-	__le32 assert_status = cpu_to_le32(0xFFFFFFFF);
-	__le32 thermal_status = cpu_to_le32(0xFFFFFFFF);
+	void *dev_mng_log = NULL;
+	__u32 system_eol_state;
+	__u32 user_eol_state;
+	__u32 format_corrupt_reason = 0xFFFFFFFF;
+	__u32 eol_status;
+	__u32 assert_status = 0xFFFFFFFF;
+	__u32 thermal_status = 0xFFFFFFFF;
 	__u64 capabilities = 0;
 
 	OPT_ARGS(opts) = {
@@ -8657,35 +9009,41 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 		goto out;
 	}
 
+	if (!get_dev_mgment_data(r, dev, &dev_mng_log)) {
+		fprintf(stderr, "ERROR: WDC: 0xC2 Log Page not found\n");
+		ret = -1;
+		goto out;
+	}
+
 	/* Get the assert dump present status */
-	if (!wdc_nvme_get_dev_status_log_data(r, dev, &assert_status,
+	if (!wdc_nvme_parse_dev_status_log_entry(dev_mng_log, &assert_status,
 			WDC_C2_ASSERT_DUMP_PRESENT_ID))
 		fprintf(stderr, "ERROR: WDC: Get Assert Status Failed\n");
 
 	/* Get the thermal throttling status */
-	if (!wdc_nvme_get_dev_status_log_data(r, dev, &thermal_status,
+	if (!wdc_nvme_parse_dev_status_log_entry(dev_mng_log, &thermal_status,
 			WDC_C2_THERMAL_THROTTLE_STATUS_ID))
 		fprintf(stderr, "ERROR: WDC: Get Thermal Throttling Status Failed\n");
 
 	/* Get EOL status */
-	if (!wdc_nvme_get_dev_status_log_data(r, dev, &eol_status,
+	if (!wdc_nvme_parse_dev_status_log_entry(dev_mng_log, &eol_status,
 			WDC_C2_USER_EOL_STATUS_ID)) {
 		fprintf(stderr, "ERROR: WDC: Get User EOL Status Failed\n");
 		eol_status = cpu_to_le32(-1);
 	}
 
 	/* Get Customer EOL state */
-	if (!wdc_nvme_get_dev_status_log_data(r, dev, &user_eol_state,
+	if (!wdc_nvme_parse_dev_status_log_entry(dev_mng_log, &user_eol_state,
 			WDC_C2_USER_EOL_STATE_ID))
 		fprintf(stderr, "ERROR: WDC: Get User EOL State Failed\n");
 
 	/* Get System EOL state*/
-	if (!wdc_nvme_get_dev_status_log_data(r, dev, &system_eol_state,
+	if (!wdc_nvme_parse_dev_status_log_entry(dev_mng_log, &system_eol_state,
 			WDC_C2_SYSTEM_EOL_STATE_ID))
 		fprintf(stderr, "ERROR: WDC: Get System EOL State Failed\n");
 
 	/* Get format corrupt reason*/
-	if (!wdc_nvme_get_dev_status_log_data(r, dev, &format_corrupt_reason,
+	if (!wdc_nvme_parse_dev_status_log_entry(dev_mng_log, &format_corrupt_reason,
 			WDC_C2_FORMAT_CORRUPT_REASON_ID))
 		fprintf(stderr, "ERROR: WDC: Get Format Corrupt Reason Failed\n");
 
@@ -8732,6 +9090,7 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	else
 		printf("  Format Corrupt Reason:	        Unknown : 0x%08x\n", le32_to_cpu(format_corrupt_reason));
 
+	free(dev_mng_log);
 out:
 	nvme_free_tree(r);
 	dev_close(dev);
