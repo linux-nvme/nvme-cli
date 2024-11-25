@@ -61,6 +61,7 @@ class TestNVMe(unittest.TestCase):
         self.nvme_bin = "nvme"
         self.do_validate_pci_device = True
         self.default_nsid = 0x1
+        self.flbas = 0
         self.config_file = 'tests/config.json'
 
         self.load_config()
@@ -521,7 +522,8 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - None
         """
-        block_size = mmap.PAGESIZE if int(lbads) < 9 else 2 ** int(lbads)
+        (ds, _) = self.get_lba_format_size()
+        block_size = ds if int(lbads) < 9 else 2 ** int(lbads)
         ns_path = self.ctrl + "n" + str(nsid)
         io_cmd = "dd if=" + ns_path + " of=/dev/null" + " bs=" + \
                  str(block_size) + " count=" + str(count) + " > /dev/null 2>&1"
