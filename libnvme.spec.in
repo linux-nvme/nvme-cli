@@ -21,6 +21,8 @@ Provides: libnvme.so.1
 This package provides header files to include and libraries to link with
 for Linux-native nvme device maangement.
 
+%define _prefix @PREFIX@
+
 %prep
 %autosetup -c
 

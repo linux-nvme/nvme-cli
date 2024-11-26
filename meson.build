@@ -264,6 +264,7 @@ substs = configuration_data()
 substs.set('NAME',    meson.project_name())
 substs.set('VERSION', meson.project_version())
 substs.set('LICENSE', meson.project_license()[0])
+substs.set('PREFIX', prefixdir)
 configure_file(
     input:         'libnvme.spec.in',
     output:        'libnvme.spec',
