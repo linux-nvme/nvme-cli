@@ -2085,6 +2085,15 @@ enum nvme_id_ctrl_cqes {
  * @NVME_CTRL_ONCS_ALL_FAST_COPY:	If set, then all copy operations for
  *					the Copy command are fast copy
  *					operations.
+ * @NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE: If MAXWZD bit set, then the maximum data
+ *					size for Write Zeroes command depends on the
+ *					value of the Deallocate bit in the Write Zeroes
+ *					command and the value in the WZDSL field in the
+ *					I/O Command Set specific Identify Controller
+ *					data structure.
+ * @NVME_CTRL_ONCS_NAMESPACE_ZEROES:	If NSZS bit set, then the controller supports
+ *					the Namespace Zeroes (NSZ) bit in the NVM
+ *					Command Set Write Zeroes command.
  */
 enum nvme_id_ctrl_oncs {
 	NVME_CTRL_ONCS_COMPARE			= 1 << 0,
@@ -2098,6 +2107,8 @@ enum nvme_id_ctrl_oncs {
 	NVME_CTRL_ONCS_COPY			= 1 << 8,
 	NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY	= 1 << 9,
 	NVME_CTRL_ONCS_ALL_FAST_COPY		= 1 << 10,
+	NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE	= 1 << 11,
+	NVME_CTRL_ONCS_NAMESPACE_ZEROES		= 1 << 12,
 };
 
 /**
@@ -8725,6 +8736,7 @@ enum nvme_kv_opcode {
 /**
  * enum nvme_io_control_flags - I/O control flags
  * @NVME_IO_DTYPE_STREAMS:	Directive Type Streams
+ * @NVME_IO_NSZ:		Namespace Zeroes
  * @NVME_IO_STC:		Storage Tag Check
  * @NVME_IO_DEAC:		Deallocate
  * @NVME_IO_ZNS_APPEND_PIREMAP:	Protection Information Remap
@@ -8737,6 +8749,7 @@ enum nvme_kv_opcode {
  */
 enum nvme_io_control_flags {
 	NVME_IO_DTYPE_STREAMS		= 1 << 4,
+	NVME_IO_NSZ			= 1 << 7,
 	NVME_IO_STC			= 1 << 8,
 	NVME_IO_DEAC			= 1 << 9,
 	NVME_IO_ZNS_APPEND_PIREMAP	= 1 << 9,
