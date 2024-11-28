@@ -875,7 +875,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		.host_gen	= 1,
 		.ctrl_init	= false,
 		.data_area	= 3,
-		.rae		= true,
+		.rae		= false,
 	};
 
 	NVME_ARGS(opts,
