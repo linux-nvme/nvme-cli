@@ -215,6 +215,12 @@ static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *
 	if (cfg.raw_binary)
 		flags = BINARY;
 
+	if (!cfg.egid) {
+		fprintf(stderr, "endurance group identifier required\n");
+		err = -EINVAL;
+		goto out;
+	}
+
 	memset(&stats, 0x0, sizeof(stats));
 
 	err = nvme_get_log_fdp_stats(dev->direct.fd, cfg.egid, 0, sizeof(stats), &stats);
@@ -275,6 +281,12 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 
 	if (cfg.raw_binary)
 		flags = BINARY;
+
+	if (!cfg.egid) {
+		fprintf(stderr, "endurance group identifier required\n");
+		err = -EINVAL;
+		goto out;
+	}
 
 	memset(&events, 0x0, sizeof(events));
 
