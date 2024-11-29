@@ -276,6 +276,8 @@ static void netapp_ontapdevice_json(struct json_object *devices, char *devname,
 		unsigned long long nsze, unsigned long long nuse)
 {
 	struct json_object *device_attrs;
+	unsigned long long ns_size = nsze * lba;
+	unsigned long long used_size = nuse * lba;
 
 	device_attrs = json_create_object();
 	json_object_add_value_string(device_attrs, "Device", devname);
@@ -283,9 +285,9 @@ static void netapp_ontapdevice_json(struct json_object *devices, char *devname,
 	json_object_add_value_string(device_attrs, "Namespace_Path", nspath);
 	json_object_add_value_int(device_attrs, "NSID", nsid);
 	json_object_add_value_string(device_attrs, "UUID", uuid);
-	json_object_add_value_uint64(device_attrs, "LBA_Data_Size", lba);
-	json_object_add_value_uint64(device_attrs, "Namespace_Size", nsze);
-	json_object_add_value_uint64(device_attrs, "UsedBytes", nuse);
+	json_object_add_value_uint64(device_attrs, "LBA_Size", lba);
+	json_object_add_value_uint64(device_attrs, "Namespace_Size", ns_size);
+	json_object_add_value_uint64(device_attrs, "UsedBytes", used_size);
 	json_object_add_value_string(device_attrs, "Version", version);
 
 	json_array_add_value_object(devices, device_attrs);
