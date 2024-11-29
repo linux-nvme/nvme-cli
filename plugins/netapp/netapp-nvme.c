@@ -146,10 +146,11 @@ static void netapp_get_ns_attrs(char *size, char *used, char *blk_size,
 
 	sprintf(blk_size, "%u%sB", (unsigned int)addr, l_suffix);
 
-	/* get the ontap version */
+	/* get the firmware version */
 	int i, max = sizeof(ctrl->fr);
 
-	memcpy(version, ctrl->fr, sizeof(ctrl->fr));
+	memcpy(version, ctrl->fr, max);
+	version[max] = '\0';
 	/* strip trailing whitespaces */
 	for (i = max - 1; i >= 0 && version[i] == ' '; i--)
 		version[i] = '\0';
@@ -455,7 +456,7 @@ static void netapp_ontapdevices_print_verbose(struct ontapdevice_info *devices,
 	char nspath[ONTAP_NS_PATHLEN] = " ";
 	unsigned long long lba;
 	char size[128], used[128];
-	char blk_size[128], version[8];
+	char blk_size[128], version[9];
 	char uuid_str[37] = " ";
 	int i;
 
@@ -571,7 +572,7 @@ static void netapp_ontapdevices_print_json(struct ontapdevice_info *devices,
 	char nspath[ONTAP_NS_PATHLEN] = " ";
 	unsigned long long lba;
 	char size[128], used[128];
-	char blk_size[128], version[8];
+	char blk_size[128], version[9];
 	char uuid_str[37] = " ";
 	int i;
 
