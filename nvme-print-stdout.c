@@ -3911,12 +3911,34 @@ static void stdout_support_log_human(__u32 support, __u8 lid)
 {
 	const char *set = "supported";
 	const char *clr = "not supported";
+	__u16 lidsp = support >> 16;
 
 	printf("  LSUPP is %s\n", (support & 0x1) ? set : clr);
 	printf("  IOS is %s\n", ((support >> 0x1) & 0x1) ? set : clr);
-	if (lid == NVME_LOG_LID_PERSISTENT_EVENT) {
+
+	switch (lid) {
+	case NVME_LOG_LID_TELEMETRY_HOST:
+		printf("  Maximum Created Data Area is %s\n",
+			(lidsp & 0x1) ? set : clr);
+		break;
+	case NVME_LOG_LID_PERSISTENT_EVENT:
 		printf("  Establish Context and Read 512 Bytes of Header is %s\n",
-			((support >> 0x16) & 0x1) ? set : clr);
+			(lidsp & 0x1) ? set : clr);
+		break;
+	case NVME_LOG_LID_DISCOVER:
+		printf("  Extended Discovery Log Page Entry is %s\n",
+			(lidsp & 0x1) ? set : clr);
+		printf("  Port Local Entries Only is %s\n",
+			(lidsp & 0x2) ? set : clr);
+		printf("  All NVM Subsystem Entries is %s\n",
+			(lidsp & 0x4) ? set : clr);
+		break;
+	case NVME_LOG_LID_HOST_DISCOVER:
+		printf("  All Host Entries is %s\n",
+			(lidsp & 0x1) ? set : clr);
+		break;
+	default:
+		break;
 	}
 }
 
