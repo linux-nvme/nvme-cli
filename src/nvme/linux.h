@@ -35,20 +35,6 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf);
 
 /**
- * enum nvme_telemetry_da - Telemetry Log Data Area
- * @NVME_TELEMETRY_DA_1:	Data Area 1
- * @NVME_TELEMETRY_DA_2:	Data Area 2
- * @NVME_TELEMETRY_DA_3:	Data Area 3
- * @NVME_TELEMETRY_DA_4:	Data Area 4
- */
-enum nvme_telemetry_da {
-	NVME_TELEMETRY_DA_1	= 1,
-	NVME_TELEMETRY_DA_2	= 2,
-	NVME_TELEMETRY_DA_3	= 3,
-	NVME_TELEMETRY_DA_4	= 4,
-};
-
-/**
  * nvme_get_telemetry_max() - Get telemetry limits
  * @fd:		File descriptor of nvme device
  * @da:		On success return max supported data area

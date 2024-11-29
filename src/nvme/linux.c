@@ -197,7 +197,7 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, size_t max_
 	} else {
 		lid = NVME_LOG_LID_TELEMETRY_HOST;
 		if (create)
-			err = nvme_get_log_create_telemetry_host(fd, log);
+			err = nvme_get_log_create_telemetry_host_mcda(fd, da, log);
 		else
 			err = nvme_get_log_telemetry_host(fd, 0, xfer, log);
 	}

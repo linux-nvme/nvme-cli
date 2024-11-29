@@ -3711,19 +3711,21 @@ enum nvme_cmd_get_log_telemetry_host_lsp {
  * @rsvd1:     Reserved
  * @ieee:      IEEE OUI Identifier is the Organization Unique Identifier (OUI)
  *	       for the controller vendor that is able to interpret the data.
- * @dalb1:     Telemetry Controller-Initiated Data Area 1 Last Block is
+ * @dalb1:     Telemetry Host/Controller Initiated Data Area 1 Last Block is
  *	       the value of the last block in this area.
- * @dalb2:     Telemetry Controller-Initiated Data Area 1 Last Block is
+ * @dalb2:     Telemetry Host/Controller Initiated Data Area 1 Last Block is
  *	       the value of the last block in this area.
- * @dalb3:     Telemetry Controller-Initiated Data Area 1 Last Block is
+ * @dalb3:     Telemetry Host/ControllerInitiated Data Area 1 Last Block is
  *	       the value of the last block in this area.
  * @rsvd14:    Reserved
- * @dalb4:     Telemetry Controller-Initiated Data Area 4 Last Block is
+ * @dalb4:     Telemetry Host/Controller Initiated Data Area 4 Last Block is
  *	       the value of the last block in this area.
  * @rsvd20:    Reserved
+ * @ths:       Telemetry Host-Initiated Scope
  * @hostdgn:   Telemetry Host-Initiated Data Generation Number is a
  *	       value that is incremented each time the host initiates a
- *	       capture of its internal controller state in the controller .
+ *	       capture of its internal controller state in the controller.
+ * @tcs:       Telemetry Controller-Initiated Scope
  * @ctrlavail: Telemetry Controller-Initiated Data Available, if cleared,
  *	       then the controller telemetry log does not contain saved
  *	       internal controller state. If this field is set to 1h, the
@@ -3751,8 +3753,12 @@ struct nvme_telemetry_log {
 	__le16	dalb3;
 	__u8	rsvd14[2];
 	__le32	dalb4;
-	__u8	rsvd20[361];
-	__u8	hostdgn;
+	__u8	rsvd20[360];
+	__u8	ths;
+	union { // [381]
+		__u8	hostdgn;
+		__u8	tcs;
+	};
 	__u8	ctrlavail;
 	__u8	ctrldgn;
 	__u8	rsnident[128];
