@@ -193,11 +193,10 @@ tools_build_muon() {
 
     CC="${CC}" CFLAGS="${CFLAGS} -std=c99" ninja="${SAMU}" ./bootstrap.sh stage1
 
-    CC="${CC}" ninja="${SAMU}" stage1/muon setup        \
-        -Dprefix="${TOOLDIR}"                           \
-        -Ddocs=disabled                                 \
-        -Dsamurai=disabled                              \
-        -Dbestline=disabled                             \
+    CC="${CC}" ninja="${SAMU}" stage1/muon-bootstrap setup    \
+        -Dprefix="${TOOLDIR}"                                 \
+        -Ddocs=disabled                                       \
+        -Dsamurai=disabled                                    \
         "${TOOLDIR}/build-muon"
     "${SAMU}" -C "${TOOLDIR}/build-muon"
     MUON="${BUILDDIR}/build-tools/.build-muon/muon"
