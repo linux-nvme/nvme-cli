@@ -246,6 +246,12 @@ conf.set(
     ),
     description: 'Is ioctl the glibc interface (rather than POSIX)'
 )
+dl_dep = dependency('dl', required: false)
+conf.set(
+    'HAVE_LIBC_DLSYM',
+    cc.has_function('dlsym', dependencies: dl_dep),
+    description: 'Is dlsym function present',
+)
 
 if cc.has_function_attribute('fallthrough')
   conf.set('fallthrough', '__attribute__((__fallthrough__))')

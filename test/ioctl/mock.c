@@ -151,9 +151,13 @@ int ioctl(int fd, int request, ...)
 		result64 = true;
 		break;
 	default:
+#if HAVE_LIBC_LDSYM
 		real_ioctl = dlsym(RTLD_NEXT, "ioctl");
 		if (!real_ioctl)
 			fail("Error: dlsym failed to find original ioctl\n");
+#else
+		fail("Error: unhandled ioctl\n");
+#endif
 	}
 
 	va_start(args, request);

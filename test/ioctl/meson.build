@@ -1,6 +1,7 @@
 mock_ioctl = library(
     'mock-ioctl',
     ['mock.c', 'util.c'],
+    dependencies: [dl_dep]
 )
 
 # Add mock-ioctl to the LD_PRELOAD path so it overrides libc.
