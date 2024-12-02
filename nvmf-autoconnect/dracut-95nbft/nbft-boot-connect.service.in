@@ -16,6 +16,11 @@ Before=dracut-initqueue.service
 [Service]
 RestrictAddressFamilies=AF_INET AF_INET6
 Type=oneshot
+# Connection attempt recovery
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=0
+StartLimitBurst=0
 ExecStart=/usr/sbin/nvme connect-all --nbft
 
 [Install]
