@@ -806,6 +806,7 @@ static void json_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_
 	char *guid = guid_buf;
 	char res_arr[458];
 	char *res = res_arr;
+	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 
 	root = json_create_object();
 
@@ -834,7 +835,7 @@ static void json_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_
 				  log_data->no_of_read_unlock_locking_obj);
 	json_object_add_value_int(root, "Number of Write Unlocked Locking Objects",
 				  log_data->no_of_write_unlock_locking_obj);
-	json_object_add_value_int(root, "Reserved2", log_data->rsvd2);
+	json_object_add_value_int(root, "Reserved2", log_data->rsvd15);
 
 	json_object_add_value_int(root, "SID Authentication Try Count",
 				  le32_to_cpu(log_data->sid_auth_try_count));
@@ -847,12 +848,20 @@ static void json_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_
 	json_object_add_value_int(root, "TCG Error Count", le32_to_cpu(log_data->tcg_ec));
 
 	memset((__u8 *)res, 0, 458);
-	for (j = 0; j < 458; j++)
-		res += sprintf(res, "%d", log_data->rsvd3[j]);
+	if (log_page_version == 1) {
+		res += sprintf(res, "%d%d", *(__u8 *)&log_data->no_of_ns_prov_locking_obj_ext,
+			*((__u8 *)&log_data->no_of_ns_prov_locking_obj_ext + 1));
+	} else {
+		json_object_add_value_int(root,
+			"Number of Namespace Provisioned Locking Objects Extended",
+			log_data->no_of_ns_prov_locking_obj_ext);
+	}
+
+	for (j = 0; j < 456; j++)
+		res += sprintf(res, "%d", log_data->rsvd38[j]);
 	json_object_add_value_string(root, "Reserved3", res_arr);
 
-	json_object_add_value_int(root, "Log Page Version",
-				  le16_to_cpu(log_data->log_page_version));
+	json_object_add_value_int(root, "Log Page Version", log_page_version);
 
 	memset((void *)guid, 0, GUID_LEN);
 	for (j = GUID_LEN - 1; j >= 0; j--)
