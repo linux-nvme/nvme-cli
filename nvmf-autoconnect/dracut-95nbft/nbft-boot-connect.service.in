@@ -1,0 +1,22 @@
+# This unit parses the ACPI NBFT table and performs actual NVMe/TCP connections
+[Unit]
+# Prevent deadlock by avoiding systemd adding dependencies
+# on unreachable targets.
+DefaultDependencies=no
+# Specify 'rd.nvmf.nonbft' to disable NBFT boot
+ConditionKernelCommandLine=!rd.nvmf.nonbft
+ConditionPathExistsGlob=/sys/firmware/acpi/tables/NBFT*
+Wants=modprobe@nvme_fabrics.service
+After=modprobe@nvme_fabrics.service
+Wants=network-online.target
+After=network-online.target
+Before=remote-fs-pre.target
+Before=dracut-initqueue.service
+
+[Service]
+RestrictAddressFamilies=AF_INET AF_INET6
+Type=oneshot
+ExecStart=/usr/sbin/nvme connect-all --nbft
+
+[Install]
+WantedBy=sysinit.target
