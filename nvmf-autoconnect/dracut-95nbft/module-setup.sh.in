@@ -1,0 +1,50 @@
+#!/usr/bin/bash
+
+has_nbft() {
+    local f found=
+    for f in /sys/firmware/acpi/tables/NBFT*; do
+        [ -f "$f" ] || continue
+        found=1
+        break
+    done
+    [[ $found ]]
+}
+
+# called by dracut
+check() {
+    require_binaries nvme || return 1
+
+    [[ $hostonly ]] || [[ $mount_needs ]] && {
+        if ! has_nbft; then
+            echo "No ACPI NBFT tables present in the system"
+            return 255
+        fi
+    }
+    return 0
+}
+
+# called by dracut
+depends() {
+    echo bash rootfs-block network
+    return 0
+}
+
+# called by dracut
+installkernel() {
+    hostonly="" instmods nvme_tcp nvme_fabrics 8021q
+}
+
+# called by dracut
+install() {
+    inst_multiple nvme
+
+    # TODO: /etc/nvme/hostnqn
+
+    inst_multiple "$systemdsystemunitdir"/modprobe@.service
+    for i in \
+        nbft-boot-pre.service \
+        nbft-boot-connect.service; do
+        inst_simple "${moddir}/$i" "${systemdsystemunitdir}/$i"
+        $SYSTEMCTL -q --root "$initdir" enable $i
+    done
+}

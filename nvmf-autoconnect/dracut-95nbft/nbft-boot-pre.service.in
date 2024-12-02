@@ -1,0 +1,20 @@
+# This unit checks for the ACPI NBFT table presence and tells
+# dracut to activate networking.
+[Unit]
+DefaultDependencies=no
+# Specify 'rd.nvmf.nonbft' to disable NBFT boot
+ConditionKernelCommandLine=!rd.nvmf.nonbft
+ConditionPathExistsGlob=/sys/firmware/acpi/tables/NBFT*
+Before=dracut-cmdline.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/bin/mkdir -p /etc/systemd/network
+# generate udev link files
+ExecStart=/usr/sbin/nvme nbft gen-udev-link-files /etc/systemd/network/
+# tell dracut to start the network
+ExecStart=bash -c 'echo rd.neednet=1 > /etc/cmdline.d/95nbft-args.conf'
+
+[Install]
+WantedBy=sysinit.target

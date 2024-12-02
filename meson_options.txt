@@ -18,6 +18,12 @@ option(
   description : 'directory for dracut rules files'
 )
 option(
+  'dracutmodulesdir',
+  type : 'string',
+  value : 'lib/dracut/modules.d/',
+  description : 'dracut modules directory'
+)
+option(
   'htmldir',
   type : 'string',
   value : '',
@@ -69,4 +75,16 @@ option(
   'version-tag',
   type : 'string',
   description : 'override the git version string'
+)
+option(
+  'dracut-module',
+  type : 'boolean',
+  value : false,
+  description : 'Enable the 95nbft dracut module'
+)
+option(
+  'networkmanagerdir',
+  type : 'string',
+  value : 'lib/NetworkManager/',
+  description : 'NetworkManager lib directory'
 )
