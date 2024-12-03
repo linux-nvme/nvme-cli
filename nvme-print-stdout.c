@@ -1139,7 +1139,7 @@ static void stdout_registers_cap(struct nvme_bar_cap *cap)
 	printf("\tDoorbell Stride                   (DSTRD): %u bytes\n", 1 << (2 + cap->dstrd));
 	printf("\tTimeout                              (TO): %u ms\n", cap->to * 500);
 	printf("\tArbitration Mechanism Supported     (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
-	       cap->ams & 0x02 ? "Supported" : "Not supported");
+	       cap->ams & 0x01 ? "Supported" : "Not supported");
 	printf("\tContiguous Queues Required          (CQR): %s\n", cap->cqr ? "Yes" : "No");
 	printf("\tMaximum Queue Entries Supported    (MQES): %u\n\n", cap->mqes + 1);
 }
