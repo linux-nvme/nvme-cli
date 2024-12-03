@@ -300,7 +300,8 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 	char array_label[ARRAY_LABEL_LEN / 2 + 1];
 	char volume_label[VOLUME_LABEL_LEN / 2 + 1];
 	char nguid_str[33];
-	__u8 lba_index;
+	unsigned long long lba;
+	char size[128];
 
 	char *formatstr = NULL;
 	char basestr[] =
@@ -325,15 +326,7 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 	for (i = 0; i < count; i++) {
 		if (devname && !strcmp(devname, basename(devices[i].dev))) {
 			/* found the device, fetch info for that alone */
-			nvme_id_ns_flbas_to_lbaf_inuse(devices[i].ns.flbas,
-					&lba_index);
-			unsigned long long lba = 1ULL <<
-				devices[i].ns.lbaf[lba_index].ds;
-			double nsze = le64_to_cpu(devices[i].ns.nsze) * lba;
-			const char *s_suffix = suffix_si_get(&nsze);
-			char size[128];
-
-			sprintf(size, "%.2f%sB", nsze, s_suffix);
+			netapp_get_ns_size(size, &lba, &devices[i].ns);
 			netapp_convert_string(array_label,
 					(char *)&devices[i].ctrl.vs[20],
 					ARRAY_LABEL_LEN / 2);
@@ -353,14 +346,7 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 
 	for (i = 0; i < count; i++) {
 		/* fetch info for all devices */
-		nvme_id_ns_flbas_to_lbaf_inuse(devices[i].ns.flbas, &lba_index);
-		unsigned long long lba = 1ULL <<
-			devices[i].ns.lbaf[lba_index].ds;
-		double nsze = le64_to_cpu(devices[i].ns.nsze) * lba;
-		const char *s_suffix = suffix_si_get(&nsze);
-		char size[128];
-
-		sprintf(size, "%.2f%sB", nsze, s_suffix);
+		netapp_get_ns_size(size, &lba, &devices[i].ns);
 		netapp_convert_string(array_label,
 				(char *)&devices[i].ctrl.vs[20],
 				ARRAY_LABEL_LEN / 2);
@@ -384,7 +370,8 @@ static void netapp_smdevices_print_json(struct smdevice_info *devices,
 	char array_label[ARRAY_LABEL_LEN / 2 + 1];
 	char volume_label[VOLUME_LABEL_LEN / 2 + 1];
 	char nguid_str[33];
-	__u8 lba_index;
+	unsigned long long lba;
+	char size[128];
 
 	/* prepare for the json output */
 	root = json_create_object();
@@ -393,15 +380,7 @@ static void netapp_smdevices_print_json(struct smdevice_info *devices,
 	for (i = 0; i < count; i++) {
 		if (devname && !strcmp(devname, basename(devices[i].dev))) {
 			/* found the device, fetch info for that alone */
-			nvme_id_ns_flbas_to_lbaf_inuse(devices[i].ns.flbas,
-					&lba_index);
-			unsigned long long lba = 1ULL <<
-				devices[i].ns.lbaf[lba_index].ds;
-			double nsze = le64_to_cpu(devices[i].ns.nsze) * lba;
-			const char *s_suffix = suffix_si_get(&nsze);
-			char size[128];
-
-			sprintf(size, "%.2f%sB", nsze, s_suffix);
+			netapp_get_ns_size(size, &lba, &devices[i].ns);
 			netapp_convert_string(array_label,
 					(char *)&devices[i].ctrl.vs[20],
 					ARRAY_LABEL_LEN / 2);
@@ -421,14 +400,7 @@ static void netapp_smdevices_print_json(struct smdevice_info *devices,
 
 	for (i = 0; i < count; i++) {
 		/* fetch info for all devices */
-		nvme_id_ns_flbas_to_lbaf_inuse(devices[i].ns.flbas, &lba_index);
-		unsigned long long lba = 1ULL <<
-			devices[i].ns.lbaf[lba_index].ds;
-		double nsze = le64_to_cpu(devices[i].ns.nsze) * lba;
-		const char *s_suffix = suffix_si_get(&nsze);
-		char size[128];
-
-		sprintf(size, "%.2f%sB", nsze, s_suffix);
+		netapp_get_ns_size(size, &lba, &devices[i].ns);
 		netapp_convert_string(array_label,
 				(char *)&devices[i].ctrl.vs[20],
 				ARRAY_LABEL_LEN / 2);
