@@ -1760,14 +1760,16 @@ static inline int nvme_mi_admin_get_log_device_self_test(nvme_mi_ctrl_t ctrl,
 }
 
 /**
- * nvme_mi_admin_get_log_create_telemetry_host() - Create host telemetry log
+ * nvme_mi_admin_get_log_create_telemetry_host_mcda() - Create host telemetry log
  * @ctrl: Controller to query
+ * @mcda: Maximum Created Data Area
  * @log: Userspace address of the log payload
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_mi_admin_get_log_create_telemetry_host(nvme_mi_ctrl_t ctrl,
+static inline int nvme_mi_admin_get_log_create_telemetry_host_mcda(nvme_mi_ctrl_t ctrl,
+							      enum nvme_telemetry_da mcda,
 							      struct nvme_telemetry_log *log)
 {
 	struct nvme_get_log_args args = {
@@ -1780,12 +1782,26 @@ static inline int nvme_mi_admin_get_log_create_telemetry_host(nvme_mi_ctrl_t ctr
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_TELEM_HOST_LSP_CREATE,
+		.lsp = (__u8)((mcda << 1) | NVME_LOG_TELEM_HOST_LSP_CREATE),
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
 		.ot = false,
 	};
 	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_create_telemetry_host() - Create host telemetry log
+ * @ctrl: Controller to query
+ * @log: Userspace address of the log payload
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_mi_admin_get_log_create_telemetry_host(nvme_mi_ctrl_t ctrl,
+							      struct nvme_telemetry_log *log)
+{
+	return nvme_mi_admin_get_log_create_telemetry_host_mcda(ctrl, NVME_TELEMETRY_DA_CTRL_DETERMINE, log);
 }
 
 /**

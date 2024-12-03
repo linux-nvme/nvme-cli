@@ -3704,6 +3704,22 @@ enum nvme_cmd_get_log_telemetry_host_lsp {
 };
 
 /**
+ * enum nvme_telemetry_da - Telemetry Log Data Area
+ * @NVME_TELEMETRY_DA_CTRL_DETERMINE:
+ * @NVME_TELEMETRY_DA_1:		Data Area 1
+ * @NVME_TELEMETRY_DA_2:		Data Area 2
+ * @NVME_TELEMETRY_DA_3:		Data Area 3
+ * @NVME_TELEMETRY_DA_4:		Data Area 4
+ */
+enum nvme_telemetry_da {
+	NVME_TELEMETRY_DA_CTRL_DETERMINE	= 0,
+	NVME_TELEMETRY_DA_1			= 1,
+	NVME_TELEMETRY_DA_2			= 2,
+	NVME_TELEMETRY_DA_3			= 3,
+	NVME_TELEMETRY_DA_4			= 4,
+};
+
+/**
  * struct nvme_telemetry_log - Retrieve internal data specific to the
  *			       manufacturer.
  * @lpi:       Log Identifier, either %NVME_LOG_LID_TELEMETRY_HOST or

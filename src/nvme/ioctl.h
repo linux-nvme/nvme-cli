@@ -1526,22 +1526,6 @@ static inline int nvme_get_log_device_self_test(int fd,
 }
 
 /**
- * enum nvme_telemetry_da - Telemetry Log Data Area
- * @NVME_TELEMETRY_DA_CTRL_DETERMINE:
- * @NVME_TELEMETRY_DA_1:		Data Area 1
- * @NVME_TELEMETRY_DA_2:		Data Area 2
- * @NVME_TELEMETRY_DA_3:		Data Area 3
- * @NVME_TELEMETRY_DA_4:		Data Area 4
- */
-enum nvme_telemetry_da {
-	NVME_TELEMETRY_DA_CTRL_DETERMINE	= 0,
-	NVME_TELEMETRY_DA_1			= 1,
-	NVME_TELEMETRY_DA_2			= 2,
-	NVME_TELEMETRY_DA_3			= 3,
-	NVME_TELEMETRY_DA_4			= 4,
-};
-
-/**
  * nvme_get_log_create_telemetry_host_mcda() - Create host telemetry log
  * @fd:		File descriptor of nvme device
  * @mcda:	Maximum Created Data Area
