@@ -282,6 +282,7 @@ static int do_discover(struct nbft_info_discovery *dd,
 	return 0;
 }
 
+/* returns negative errno values */
 int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 		       char *hostnqn_sys, char *hostid_sys,
 		       const char *desc, bool connect,
@@ -290,7 +291,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 {
 	char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
 	nvme_host_t h;
-	int ret, i;
+	int ret, rr, i;
 	struct list_head nbft_list;
 	struct nbft_file_entry *entry = NULL;
 	struct nbft_info_subsystem_ns **ss;
@@ -298,7 +299,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 	struct nbft_info_discovery **dd;
 
 	if (!connect)
-		/* to do: print discovery-type info from NBFT tables */
+		/* TODO: print discovery-type info from NBFT tables */
 		return 0;
 
 	list_head_init(&nbft_list);
@@ -306,6 +307,8 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 	if (ret) {
 		if (ret != -ENOENT)
 			nvme_show_perror("Failed to access ACPI tables directory");
+		else
+			ret = 0;  /* nothing to connect */
 		goto out_free;
 	}
 
@@ -327,8 +330,10 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 		}
 
 		h = nvme_lookup_host(r, hostnqn, hostid);
-		if (!h)
+		if (!h) {
+			ret = -ENOENT;
 			goto out_free;
+		}
 
 		/* Subsystem Namespace Descriptor List */
 		for (ss = entry->nbft->subsystem_ns_list; ss && *ss; ss++)
@@ -358,34 +363,37 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 					.trsvcid	= (*ss)->trsvcid,
 				};
 
-				ret = do_connect(r, h, NULL, *ss, &trcfg,
-						 cfg, flags, verbose);
+				rr = do_connect(r, h, NULL, *ss, &trcfg,
+						cfg, flags, verbose);
 
 				/*
 				 * With TCP/DHCP, it can happen that the OS
 				 * obtains a different local IP address than the
 				 * firmware had. Retry without host_traddr.
 				 */
-				if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
+				if (rr == -ENVME_CONNECT_ADDRNOTAVAIL &&
 				    !strcmp(trcfg.transport, "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
 					trcfg.host_traddr = NULL;
 
-					ret = do_connect(r, h, NULL, *ss, &trcfg,
-							 cfg, flags, verbose);
+					rr = do_connect(r, h, NULL, *ss, &trcfg,
+							cfg, flags, verbose);
 
-					if (ret == 0 && verbose >= 1)
+					if (rr == 0 && verbose >= 1)
 						fprintf(stderr,
 							"SSNS %d: connect with host_traddr=\"%s\" failed, success after omitting host_traddr\n",
 							(*ss)->index,
 							host_traddr);
 				}
 
-				if (ret)
+				if (rr) {
 					fprintf(stderr, "SSNS %d: no controller found\n",
 						(*ss)->index);
+					/* report an error */
+					ret = rr;
+				}
 
-				if (ret == -ENOMEM)
+				if (rr == -ENOMEM)
 					goto out_free;
 			}
 
@@ -423,7 +431,7 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 				host_traddr = hfi->tcp_info.ipaddr;
 			if (uri->port > 0) {
 				if (asprintf(&trsvcid, "%d", uri->port) < 0) {
-					errno = ENOMEM;
+					ret = -ENOMEM;
 					goto out_free;
 				}
 			} else
@@ -458,21 +466,25 @@ int discover_from_nbft(nvme_root_t r, char *hostnqn_arg, char *hostid_arg,
 					"Discovery Descriptor %d: failed to add discovery controller: %s\n",
 					(*dd)->index,
 					nvme_strerror(errno));
-				if (errno == ENOMEM)
+				if (errno == ENOMEM) {
+					ret = -ENOMEM;
 					goto out_free;
+				}
 				continue;
 			}
 
-			ret = do_discover(*dd, r, h, c, cfg, &trcfg,
-					  flags, verbose);
+			rr = do_discover(*dd, r, h, c, cfg, &trcfg,
+					 flags, verbose);
 			if (!persistent)
 				nvme_disconnect_ctrl(c);
 			nvme_free_ctrl(c);
-			if (ret == -ENOMEM)
+			if (rr == -ENOMEM) {
+				ret = rr;
 				goto out_free;
+			}
 		}
 	}
 out_free:
 	free_nbfts(&nbft_list);
-	return errno;
+	return ret;
 }
