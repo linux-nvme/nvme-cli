@@ -14,6 +14,7 @@
 #include "common.h"
 #include "nvme-print.h"
 #include "ocp-print.h"
+#include "ocp-utils.h"
 
 /* C0 SCAO Log Page */
 #define C0_SMART_CLOUD_ATTR_LEN			0x200
@@ -26,12 +27,20 @@ static __u8 scao_guid[GUID_LEN] = {
 	0xC9, 0x14, 0xD5, 0xAF
 };
 
-static int get_c0_log_page(int fd, char *format)
+static int get_c0_log_page(struct nvme_dev *dev, char *format)
 {
 	nvme_print_flags_t fmt;
 	__u8 *data;
 	int i;
 	int ret;
+	int fd = dev_fd(dev);
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = C0_SMART_CLOUD_ATTR_OPCODE,
+		.nsid = NVME_NSID_ALL,
+		.len = C0_SMART_CLOUD_ATTR_LEN,
+	};
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -46,8 +55,9 @@ static int get_c0_log_page(int fd, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
 
-	ret = nvme_get_log_simple(fd, C0_SMART_CLOUD_ATTR_OPCODE,
-		C0_SMART_CLOUD_ATTR_LEN, data);
+	args.log = data;
+	ocp_get_uuid_index(dev, &args.uuidx);
+	ret = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -110,7 +120,7 @@ int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
 	if (ret)
 		return ret;
 
-	ret = get_c0_log_page(dev_fd(dev), cfg.output_format);
+	ret = get_c0_log_page(dev, cfg.output_format);
 	if (ret)
 		fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
 			ret);
