@@ -8,7 +8,7 @@ nvme-netapp-smdevices - Display information for each NVMe path to an E-Series vo
 SYNOPSIS
 --------
 [verse]
-'nvme netapp smdevices' [--output-format=<fmt> | -o <fmt>]
+'nvme netapp smdevices' [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -22,6 +22,10 @@ OPTIONS
 --output-format=<fmt>::
               Set the reporting format to 'normal' (default), 'column', or
               'json'. Only one output format can be used at a time.
+
+-v::
+--verbose::
+	      Display additional information of E-Series devices on the host.
 
 EXAMPLES
 --------
