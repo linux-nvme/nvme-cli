@@ -2502,7 +2502,11 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 		return ret;
 	}
 
-	ret = get_c9_log_page_data(dev, 1, 0);
+	if (fmt == BINARY)
+		ret = get_c9_log_page_data(dev, 0, 1);
+	else
+		ret = get_c9_log_page_data(dev, 0, 0);
+
 	if (!ret) {
 		ocp_c9_log(log_data, pC9_string_buffer, total_log_page_sz, fmt);
 	} else {
@@ -2529,7 +2533,8 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *c
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, "output Format: normal|json"),
+		OPT_FMT("output-format", 'o', &cfg.output_format,
+				"output Format:normal|json|binary"),
 		OPT_END()
 	};
 
