@@ -569,7 +569,7 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	json_object_add_value_int(root, "Log Page Version",
 				  le16_to_cpu(log_data->log_page_version));
 
-	memset((__u8 *)res, 0, 15);
+	memset((__u8 *)res, 0, 48);
 	for (j = 0; j < 15; j++)
 		res += sprintf(res, "%d", log_data->reserved1[j]);
 	json_object_add_value_string(root, "Reserved", res_arr);
@@ -581,7 +581,8 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 
 	json_object_add_value_int(root, "Telemetry String Log Size", le64_to_cpu(log_data->sls));
 
-	memset((__u8 *)res, 0, 24);
+	res = res_arr;
+	memset((__u8 *)res, 0, 48);
 	for (j = 0; j < 24; j++)
 		res += sprintf(res, "%d", log_data->reserved2[j]);
 	json_object_add_value_string(root, "Reserved", res_arr);
@@ -604,81 +605,97 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 		fifo += sprintf(fifo, "%c", log_data->fifo1[j]);
 	json_object_add_value_string(root, "FIFO 1 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo2[j]);
 	json_object_add_value_string(root, "FIFO 2 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo3[j]);
 	json_object_add_value_string(root, "FIFO 3 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo4[j]);
 	json_object_add_value_string(root, "FIFO 4 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo5[j]);
 	json_object_add_value_string(root, "FIFO 5 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo6[j]);
 	json_object_add_value_string(root, "FIFO 6 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo7[j]);
 	json_object_add_value_string(root, "FIFO 7 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo8[j]);
 	json_object_add_value_string(root, "FIFO 8 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo9[j]);
 	json_object_add_value_string(root, "FIFO 9 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo10[j]);
 	json_object_add_value_string(root, "FIFO 10 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo11[j]);
 	json_object_add_value_string(root, "FIFO 11 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo12[j]);
 	json_object_add_value_string(root, "FIFO 12 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo13[j]);
 	json_object_add_value_string(root, "FIFO 13 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo14[j]);
 	json_object_add_value_string(root, "FIFO 14 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo15[j]);
 	json_object_add_value_string(root, "FIFO 15 ASCII String", fifo_arr);
 
+	fifo = fifo_arr;
 	memset((void *)fifo, 0, 16);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo16[j]);
 	json_object_add_value_string(root, "FIFO 16 ASCII String", fifo_arr);
 
+	res = res_arr;
 	memset((__u8 *)res, 0, 48);
 	for (j = 0; j < 48; j++)
 		res += sprintf(res, "%d", log_data->reserved3[j]);
