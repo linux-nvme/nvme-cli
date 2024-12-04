@@ -2178,7 +2178,9 @@ static void stdout_id_ctrl_cqes(__u8 cqes)
 static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 {
 	__u16 oncs = le16_to_cpu(ctrl_oncs);
-	__u16 rsvd = oncs >> 11;
+	__u16 rsvd13 = oncs >> 13;
+	bool nszs = !!(oncs & NVME_CTRL_ONCS_NAMESPACE_ZEROES);
+	bool maxwzd = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE);
 	bool afc  = !!(oncs & NVME_CTRL_ONCS_ALL_FAST_COPY);
 	bool csa  = !!(oncs & NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY);
 	bool copy = !!(oncs & NVME_CTRL_ONCS_COPY);
@@ -2191,8 +2193,12 @@ static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 	bool wunc = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
 	bool cmp  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
 
-	if (rsvd)
-		printf(" [15:11] : %#x\tReserved\n", rsvd);
+	if (rsvd13)
+		printf("  [15:13] : %#x\tReserved\n", rsvd13);
+	printf("  [12:12] : %#x\tNamespace Zeroes %sSupported\n",
+		nszs, nszs ? "" : "Not ");
+	printf("  [11:11] : %#x\tMaximum Write Zeroes with Deallocate %sSupported\n",
+		maxwzd, maxwzd ? "" : "Not ");
 	printf("  [10:10] : %#x\tAll Fast Copy %sSupported\n",
 		afc, afc ? "" : "Not ");
 	printf("  [9:9] : %#x\tCopy Single Atomicity %sSupported\n",
