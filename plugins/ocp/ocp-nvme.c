@@ -832,6 +832,8 @@ static int extract_dump_get_log(struct nvme_dev *dev, char *featurename, char *f
 			.ot = false,
 		};
 
+		ocp_get_uuid_index(dev, &args.uuidx);
+
 		err = nvme_get_log(&args);
 		if (err) {
 			if (i > 0)
@@ -1217,6 +1219,8 @@ static int get_telemetry_log_page_data(struct nvme_dev *dev, int tele_type)
 		.rae = true,
 		.ot = false,
 	};
+
+	ocp_get_uuid_index(dev, &args.uuidx);
 
 	err = nvme_get_log(&args);
 	if (err < 0)
