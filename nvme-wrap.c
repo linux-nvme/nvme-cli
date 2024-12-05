@@ -221,10 +221,11 @@ int nvme_cli_get_log_device_self_test(struct nvme_dev *dev,
 	return do_admin_op(get_log_device_self_test, dev, log);
 }
 
-int nvme_cli_get_log_create_telemetry_host(struct nvme_dev *dev,
+int nvme_cli_get_log_create_telemetry_host_mcda(struct nvme_dev *dev,
+					   enum nvme_telemetry_da mcda,
 					   struct nvme_telemetry_log *log)
 {
-	return do_admin_op(get_log_create_telemetry_host, dev, log);
+	return do_admin_op(get_log_create_telemetry_host_mcda, dev, mcda, log);
 }
 
 int nvme_cli_get_log_telemetry_host(struct nvme_dev *dev, __u64 offset,
