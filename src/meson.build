@@ -35,6 +35,7 @@ deps = [
     json_c_dep,
     openssl_dep,
     keyutils_dep,
+    liburing_dep,
 ]
 
 mi_deps = [

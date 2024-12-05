@@ -68,6 +68,13 @@ else
 endif
 conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c required?')
 
+if get_option('liburing').disabled()
+    liburing_dep = dependency('', required: false)
+else
+    liburing_dep = dependency('liburing', version: '>=2.2', required: get_option('liburing'))
+endif
+conf.set('CONFIG_LIBURING', liburing_dep.found(), description: 'Is liburing available?')
+
 if get_option('openssl').disabled()
   openssl_dep = dependency('', required: false)
 else
@@ -311,6 +318,7 @@ if meson.version().version_compare('>=0.53.0')
         'keyutitls':         keyutils_dep.found(),
         'libdbus':           libdbus_dep.found(),
         'Python 3':          py3_dep.found(),
+        'liburing':          liburing_dep.found(),
     }
     summary(dep_dict, section: 'Dependencies')
     conf_dict = {
