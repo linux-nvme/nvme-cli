@@ -350,11 +350,15 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	obj_add_uint(r, "oaes", le32_to_cpu(ctrl->oaes));
 	obj_add_uint(r, "ctratt", le32_to_cpu(ctrl->ctratt));
 	obj_add_int(r, "rrls", le16_to_cpu(ctrl->rrls));
+	obj_add_int(r, "bpcap", ctrl->bpcap);
+	obj_add_uint(r, "nssl", le32_to_cpu(ctrl->nssl));
+	obj_add_int(r, "plsi", ctrl->plsi);
 	obj_add_int(r, "cntrltype", ctrl->cntrltype);
 	obj_add_str(r, "fguid", util_uuid_to_string(ctrl->fguid));
 	obj_add_int(r, "crdt1", le16_to_cpu(ctrl->crdt1));
 	obj_add_int(r, "crdt2", le16_to_cpu(ctrl->crdt2));
 	obj_add_int(r, "crdt3", le16_to_cpu(ctrl->crdt3));
+	obj_add_int(r, "crcap", ctrl->crcap);
 	obj_add_int(r, "nvmsr", ctrl->nvmsr);
 	obj_add_int(r, "vwci", ctrl->vwci);
 	obj_add_int(r, "mec", ctrl->mec);
@@ -393,8 +397,11 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	obj_add_uint(r, "nanagrpid", le32_to_cpu(ctrl->nanagrpid));
 	obj_add_uint(r, "pels", le32_to_cpu(ctrl->pels));
 	obj_add_int(r, "domainid", le16_to_cpu(ctrl->domainid));
+	obj_add_int(r, "kpioc", ctrl->kpioc);
+	obj_add_int(r, "mptfawr", le16_to_cpu(ctrl->mptfawr));
 	obj_add_uint128(r, "megcap", megcap);
 	obj_add_int(r, "tmpthha", ctrl->tmpthha);
+	obj_add_int(r, "cqt", le16_to_cpu(ctrl->cqt));
 	obj_add_int(r, "sqes", ctrl->sqes);
 	obj_add_int(r, "cqes", ctrl->cqes);
 	obj_add_int(r, "maxcmd", le16_to_cpu(ctrl->maxcmd));
@@ -414,6 +421,18 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	obj_add_uint128(r, "maxdna", maxdna);
 	obj_add_uint(r, "maxcna", le32_to_cpu(ctrl->maxcna));
 	obj_add_uint(r, "oaqd", le32_to_cpu(ctrl->oaqd));
+	obj_add_int(r, "rhiri", ctrl->rhiri);
+	obj_add_int(r, "hirt", ctrl->hirt);
+	obj_add_int(r, "cmmrtd", le16_to_cpu(ctrl->cmmrtd));
+	obj_add_int(r, "nmmrtd", le16_to_cpu(ctrl->nmmrtd));
+	obj_add_int(r, "minmrtg", ctrl->minmrtg);
+	obj_add_int(r, "maxmrtg", ctrl->maxmrtg);
+	obj_add_int(r, "trattr", ctrl->trattr);
+	obj_add_int(r, "mcudmq", le16_to_cpu(ctrl->mcudmq));
+	obj_add_int(r, "mnsudmq", le16_to_cpu(ctrl->mnsudmq));
+	obj_add_int(r, "mcmr", le16_to_cpu(ctrl->mcmr));
+	obj_add_int(r, "nmcmr", le16_to_cpu(ctrl->nmcmr));
+	obj_add_int(r, "mcdqpc", le16_to_cpu(ctrl->mcdqpc));
 
 	if (strlen(subnqn))
 		obj_add_str(r, "subnqn", subnqn);
