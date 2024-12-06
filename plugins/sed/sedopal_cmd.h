@@ -17,6 +17,7 @@ extern bool sedopal_ask_key;
 extern bool sedopal_ask_new_key;
 extern bool sedopal_destructive_revert;
 extern bool sedopal_psid_revert;
+extern bool sedopal_lock_ro;
 
 /*
  * Sub-commands supported by the sedopal command
