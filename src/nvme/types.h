@@ -1541,17 +1541,17 @@ struct nvme_id_ctrl {
 	__le32			oaqd;
 	__u8			rhiri;
 	__u8			hirt;
-	__u16			cmmrtd;
-	__u16			nmmrtd;
+	__le16			cmmrtd;
+	__le16			nmmrtd;
 	__u8			minmrtg;
 	__u8			maxmrtg;
 	__u8			trattr;
 	__u8			rsvd577;
-	__u16			mcudmq;
-	__u16			mnsudmq;
-	__u16			mcmr;
-	__u16			nmcmr;
-	__u16			mcdqpc;
+	__le16			mcudmq;
+	__le16			mnsudmq;
+	__le16			mcmr;
+	__le16			nmcmr;
+	__le16			mcdqpc;
 	__u8			rsvd588[180];
 	char			subnqn[NVME_NQN_LENGTH];
 	__u8			rsvd1024[768];
@@ -5871,7 +5871,7 @@ struct nvme_feat_host_behavior {
 	__u8 etdas;
 	__u8 lbafee;
 	__u8 rsvd3;
-        __u16 cdfe;
+	__le16 cdfe;
 	__u8 rsvd6[506];
 };
 
