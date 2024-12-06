@@ -3700,7 +3700,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		}
 	}
 
-	nsdescs = nvme_alloc(sizeof(*nsdescs));
+	nsdescs = nvme_alloc(NVME_IDENTIFY_DATA_SIZE);
 	if (!nsdescs)
 		return -ENOMEM;
 
