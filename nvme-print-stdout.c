@@ -1818,6 +1818,59 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_bpcap(__u8 ctrl_bpcap)
+{
+	__u8 rsvd3 = (ctrl_bpcap >> 3);
+	__u8 sfbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_SFBPWPS);
+	__u8 rpmbbpwps = NVME_GET(ctrl_bpcap, CTRL_BACAP_RPMBBPWPS);
+	static const char * const rpmbbpwps_def[] = {
+		"Support Not Specified",
+		"Not Supported",
+		"Supported"
+	};
+
+	if (rsvd3)
+		printf(" [7:3] : %#x\tReserved\n", rsvd3);
+
+	printf("  [2:2] : %#x\tSet Features Boot Partition Write Protection %sSupported\n",
+		sfbpwps, sfbpwps ? "" : "Not ");
+	printf("  [1:0] : %#x\tRPMB Boot Partition Write Protection %s\n",
+		rpmbbpwps, rpmbbpwps_def[rpmbbpwps]);
+	printf("\n");
+}
+
+static void stdout_id_ctrl_plsi(__u8 ctrl_plsi)
+{
+	__u8 rsvd2 = (ctrl_plsi >> 2);
+	__u8 plsfq = NVME_GET(ctrl_plsi, CTRL_PLSI_PLSFQ);
+	__u8 plsepf = NVME_GET(ctrl_plsi, CTRL_PLSI_PLSEPF);
+
+	if (rsvd2)
+		printf(" [7:2] : %#x\tReserved\n", rsvd2);
+
+	printf("  [1:1] : %#x\tPower Loss Signaling with Forced Quiescence %sSupported\n",
+		plsfq, plsfq ? "" : "Not ");
+	printf("  [0:0] : %#x\tPower Loss Signaling with Emergency Power Fail %sSupported\n",
+		plsepf, plsepf ? "" : "Not ");
+	printf("\n");
+}
+
+static void stdout_id_ctrl_crcap(__u8 ctrl_crcap)
+{
+	__u8 rsvd2 = (ctrl_crcap >> 2);
+	__u8 rgidc = NVME_GET(ctrl_crcap, CTRL_CRCAP_RGIDC);
+	__u8 rrsup = NVME_GET(ctrl_crcap, CTRL_CRCAP_RRSUP);
+
+	if (rsvd2)
+		printf(" [7:2] : %#x\tReserved\n", rsvd2);
+
+	printf("  [1:1] : %#x\tRGRPID %s while the namespace is attached to any controller.\n",
+		rgidc, rgidc ? "does not change" : "may change");
+	printf("  [0:0] : %#x\tReachability Reporting %sSupported\n",
+		rrsup, rrsup ? "" : "Not ");
+	printf("\n");
+}
+
 static void stdout_id_ctrl_cntrltype(__u8 cntrltype)
 {
 	__u8 rsvd = (cntrltype & 0xFC) >> 2;
@@ -2143,6 +2196,22 @@ static void stdout_id_ctrl_anacap(__u8 anacap)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_kpioc(__u8 ctrl_kpioc)
+{
+	__u8 rsvd2 = (ctrl_kpioc >> 2);
+	__u8 kpiosc = NVME_GET(ctrl_kpioc, CTRL_KPIOC_KPIOSC);
+	__u8 kpios = NVME_GET(ctrl_kpioc, CTRL_KPIOC_KPIOS);
+
+	if (rsvd2)
+		printf(" [7:2] : %#x\tReserved\n", rsvd2);
+
+	printf("  [1:1] : %#x\tKey Per I/O capability %s to all namespaces\n",
+		kpiosc, kpiosc ? "applies" : "Not apply");
+	printf("  [0:0] : %#x\tKey Per I/O capability %sSupported\n",
+		kpios, kpios ? "" : "Not ");
+	printf("\n");
+}
+
 static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
 {
 	__u8 rsvd3 = (tmpthha & 0xf8) >> 3;
@@ -2378,6 +2447,24 @@ static void stdout_id_ctrl_sgls(__le32 ctrl_sgls)
 			" No Dword alignment required.\n", sglsp);
 	else
 		printf(" [1:0]  : %#x\tScatter-Gather Lists Not Supported\n", sglsp);
+	printf("\n");
+}
+
+static void stdout_id_ctrl_trattr(__u8 ctrl_trattr)
+{
+	__u8 rsvd3 = (ctrl_trattr >> 3);
+	__u8 mrtll = NVME_GET(ctrl_trattr, CTRL_TRATTR_MRTLL);
+	__u8 tudcs = NVME_GET(ctrl_trattr, CTRL_TRATTR_TUDCS);
+	__u8 thmcs = NVME_GET(ctrl_trattr, CTRL_TRATTR_THMCS);
+
+	if (rsvd3)
+		printf(" [7:3] : %#x\tReserved\n", rsvd3);
+
+	printf("  [2:2] : %#x\tMemory Range Tracking Length Limit\n", mrtll);
+	printf("  [1:1] : %#x\tTracking User Data Changes %sSupported\n",
+		tudcs, tudcs ? "" : "Not ");
+	printf("  [0:0] : %#x\tTrack Host Memory Changes %sSupported\n",
+		thmcs, thmcs ? "" : "Not ");
 	printf("\n");
 }
 
@@ -2945,6 +3032,13 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	if (human)
 		stdout_id_ctrl_ctratt(ctrl->ctratt);
 	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
+	printf("bpcap     : %#x\n", le16_to_cpu(ctrl->bpcap));
+	if (human)
+		stdout_id_ctrl_bpcap(ctrl->bpcap);
+	printf("nssl      : %#x\n", le32_to_cpu(ctrl->nssl));
+	printf("plsi      : %u\n", ctrl->plsi);
+	if (human)
+		stdout_id_ctrl_plsi(ctrl->plsi);
 	printf("cntrltype : %d\n", ctrl->cntrltype);
 	if (human)
 		stdout_id_ctrl_cntrltype(ctrl->cntrltype);
@@ -2952,6 +3046,9 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
+	printf("crcap     : %u\n", ctrl->crcap);
+	if (human)
+		stdout_id_ctrl_crcap(ctrl->crcap);
 	printf("nvmsr     : %u\n", ctrl->nvmsr);
 	if (human)
 		stdout_id_ctrl_nvmsr(ctrl->nvmsr);
@@ -3033,11 +3130,16 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	printf("nanagrpid : %u\n", le32_to_cpu(ctrl->nanagrpid));
 	printf("pels      : %u\n", le32_to_cpu(ctrl->pels));
 	printf("domainid  : %d\n", le16_to_cpu(ctrl->domainid));
+	printf("kpioc     : %u\n", ctrl->kpioc);
+	if (human)
+		stdout_id_ctrl_kpioc(ctrl->kpioc);
+	printf("mptfawr   : %d\n", le16_to_cpu(ctrl->mptfawr));
 	printf("megcap    : %s\n",
 		uint128_t_to_l10n_string(le128_to_cpu(ctrl->megcap)));
 	printf("tmpthha   : %#x\n", ctrl->tmpthha);
 	if (human)
 		stdout_id_ctrl_tmpthha(ctrl->tmpthha);
+	printf("cqt       : %d\n", le16_to_cpu(ctrl->cqt));
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		stdout_id_ctrl_sqes(ctrl->sqes);
@@ -3078,6 +3180,20 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 		uint128_t_to_l10n_string(le128_to_cpu(ctrl->maxdna)));
 	printf("maxcna    : %u\n", le32_to_cpu(ctrl->maxcna));
 	printf("oaqd      : %u\n", le32_to_cpu(ctrl->oaqd));
+	printf("rhiri     : %d\n", ctrl->rhiri);
+	printf("hirt      : %d\n", ctrl->hirt);
+	printf("cmmrtd    : %d\n", le16_to_cpu(ctrl->cmmrtd));
+	printf("nmmrtd    : %d\n", le16_to_cpu(ctrl->nmmrtd));
+	printf("minmrtg   : %d\n", ctrl->minmrtg);
+	printf("maxmrtg   : %d\n", ctrl->maxmrtg);
+	printf("trattr    : %d\n", ctrl->trattr);
+	if (human)
+		stdout_id_ctrl_trattr(ctrl->trattr);
+	printf("mcudmq    : %d\n", le16_to_cpu(ctrl->mcudmq));
+	printf("mnsudmq   : %d\n", le16_to_cpu(ctrl->mnsudmq));
+	printf("mcmr      : %d\n", le16_to_cpu(ctrl->mcmr));
+	printf("nmcmr     : %d\n", le16_to_cpu(ctrl->nmcmr));
+	printf("mcdqpc    : %d\n", le16_to_cpu(ctrl->mcdqpc));
 	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
 	printf("ioccsz    : %u\n", le32_to_cpu(ctrl->ioccsz));
 	printf("iorcsz    : %u\n", le32_to_cpu(ctrl->iorcsz));
