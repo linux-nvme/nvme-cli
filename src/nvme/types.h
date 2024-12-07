@@ -1404,8 +1404,8 @@ struct nvme_id_psd {
  *             value supported in the Requested Memory Range Tracking
  *             Granularity (RMRTG) field of the Track Memory Ranges data
  *             structure.
- * @trattr:    Tracking Attributes indicates supported attributes for the
- *             Track Send command and Track Receive command.
+ * @trattr:    Tracking Attributes indicates supported attributes for the Track Send
+ *             command and Track Receive command. see &enum nvme_id_ctrl_trattr
  * @rsvd577:   Reserved
  * @mcudmq:    Maximum Controller User Data Migration Queues indicates the
  *             maximum number of User Data Migration Queues supported by the
@@ -2372,6 +2372,30 @@ enum nvme_id_ctrl_sgls {
 	NVME_CTRL_SGLS_MPTR_SGL			= 1 << 19,
 	NVME_CTRL_SGLS_OFFSET			= 1 << 20,
 	NVME_CTRL_SGLS_TPORT			= 1 << 21,
+};
+
+/**
+ * enum nvme_id_ctrl_trattr - Tracking Attributes
+ * @NVME_CTRL_TRATTR_THMCS_SHIFT:	Shift amount to get the Track Host Memory Changes Support
+ *					from the &struct nvme_id_ctrl.trattr field.
+ * @NVME_CTRL_TRATTR_TUDCS_SHIFT:	Shift amount to get the Track User Data Changes Support
+ *					from the &struct nvme_id_ctrl.trattr field.
+ * @NVME_CTRL_TRATTR_MRTLL_SHIFT:	Shift amount to get the Memory Range Tracking Length Limit
+ *					from the &struct nvme_id_ctrl.trattr field.
+ * @NVME_CTRL_TRATTR_THMCS_MASK:	Mask to get the Track Host Memory Changes Support
+ *					from the &struct nvme_id_ctrl.trattr field.
+ * @NVME_CTRL_TRATTR_TUDCS_MASK:	Mask to get the Track User Data Changes Support
+ *					from the &struct nvme_id_ctrl.trattr field.
+ * @NVME_CTRL_TRATTR_MRTLL_MASK:	Mask to get the Memory Range Tracking Length Limit
+ *					from the &struct nvme_id_ctrl.trattr field.
+ */
+enum nvme_id_ctrl_trattr {
+	NVME_CTRL_TRATTR_THMCS_SHIFT	= 0,
+	NVME_CTRL_TRATTR_TUDCS_SHIFT	= 1,
+	NVME_CTRL_TRATTR_MRTLL_SHIFT	= 2,
+	NVME_CTRL_TRATTR_THMCS_MASK	= 0x1,
+	NVME_CTRL_TRATTR_TUDCS_MASK	= 0x1,
+	NVME_CTRL_TRATTR_MRTLL_MASK	= 0x1,
 };
 
 /**
