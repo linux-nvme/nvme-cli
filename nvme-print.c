@@ -901,6 +901,7 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_WRITE_PROTECT:	return "Namespace Write Protect";
 	case NVME_FEAT_FID_FDP:		return "Flexible Direct Placement";
 	case NVME_FEAT_FID_FDP_EVENTS:	return "Flexible Direct Placement Events";
+	case NVME_FEAT_FID_CTRL_DATA_QUEUE:	return "Controller Data Queue";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
