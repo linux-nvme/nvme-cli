@@ -6900,6 +6900,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	__u8 sts = 0, pif = 0;
 	__u16 control = 0;
+	__u32 result = 0;
 	int err;
 
 	const char *desc =
@@ -6909,6 +6910,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	const char *storage_tag_check =
 	    "This bit specifies the Storage Tag field shall be checked as\n"
 	    "part of end-to-end data protection processing";
+	const char *nsz = "Clear all logical blocks to zero in the entire namespace";
 
 	struct config {
 		__u32	namespace_id;
@@ -6925,23 +6927,25 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		__u64	storage_tag;
 		bool	storage_tag_check;
 		__u16	dspec;
+		bool	nsz;
 	};
 
 	struct config cfg = {
 		.namespace_id		= 0,
 		.start_block		= 0,
 		.block_count		= 0,
-		.dtype				= 0,
-		.deac				= false,
+		.dtype			= 0,
+		.deac			= false,
 		.limited_retry		= false,
 		.force_unit_access	= false,
-		.prinfo				= 0,
-		.ref_tag			= 0,
+		.prinfo			= 0,
+		.ref_tag		= 0,
 		.app_tag_mask		= 0,
-		.app_tag			= 0,
+		.app_tag		= 0,
 		.storage_tag		= 0,
 		.storage_tag_check	= false,
-		.dspec				= 0,
+		.dspec			= 0,
+		.nsz			= false,
 	};
 
 	NVME_ARGS(opts,
@@ -6958,7 +6962,8 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		  OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		  OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
 		  OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
-		  OPT_SHRT("dir-spec",          'D', &cfg.dspec,             dspec_w_dtype));
+		  OPT_SHRT("dir-spec",          'D', &cfg.dspec,             dspec_w_dtype),
+		  OPT_FLAG("namespace-zeroes",  'Z', &cfg.nsz,               nsz));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -6967,7 +6972,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	if (cfg.prinfo > 0xf)
 		return -EINVAL;
 
-	if (cfg.dtype > 0xf) {
+	if (cfg.dtype > 0x7) {
 		nvme_show_error("Invalid directive type, %x", cfg.dtype);
 		return -EINVAL;
 	}
@@ -6981,6 +6986,8 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		control |= NVME_IO_DEAC;
 	if (cfg.storage_tag_check)
 		control |= NVME_IO_STC;
+	if (cfg.nsz)
+		control |= NVME_IO_NSZ;
 	control |= (cfg.dtype << 4);
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(dev_fd(dev), &cfg.namespace_id);
@@ -7017,7 +7024,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 
 	struct nvme_io_args args = {
 		.args_size	= sizeof(args),
-		.fd			= dev_fd(dev),
+		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.start_block,
 		.nlb		= cfg.block_count,
@@ -7030,15 +7037,22 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		.storage_tag	= cfg.storage_tag,
 		.dspec		= cfg.dspec,
 		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
+		.result		= &result,
 	};
 	err = nvme_write_zeros(&args);
 	if (err < 0)
 		nvme_show_error("write-zeroes: %s", nvme_strerror(errno));
 	else if (err != 0)
 		nvme_show_status(err);
-	else
+	else {
 		printf("NVME Write Zeroes Success\n");
+		if (cfg.nsz && argconfig_parse_seen(opts, "verbose")) {
+			if (result & 0x1)
+				printf("All logical blocks in the entire namespace cleared to zero\n");
+			else
+				printf("%d logical blocks cleared to zero\n", cfg.block_count);
+		}
+	}
 
 	return err;
 }
