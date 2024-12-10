@@ -2502,10 +2502,7 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 		return ret;
 	}
 
-	if (fmt == BINARY)
-		ret = get_c9_log_page_data(dev, 0, 1);
-	else
-		ret = get_c9_log_page_data(dev, 0, 0);
+	ret = get_c9_log_page_data(dev, 0, 0);
 
 	if (!ret) {
 		ocp_c9_log(log_data, pC9_string_buffer, total_log_page_sz, fmt);
