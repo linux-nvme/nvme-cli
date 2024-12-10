@@ -216,8 +216,8 @@ static int get_c3_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C3_LATENCY_MON_OPCODE,
-		C3_LATENCY_MON_LOG_BUF_LEN, data);
+	ret = ocp_get_log_simple(dev, C3_LATENCY_MON_OPCODE, C3_LATENCY_MON_LOG_BUF_LEN,
+				 data);
 
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret, false), ret);
@@ -1285,8 +1285,8 @@ static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_b
 	}
 	memset(header_data, 0, sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
-				  C9_TELEMETRY_STR_LOG_LEN, header_data);
+	ret = ocp_get_log_simple(dev, C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
+				 C9_TELEMETRY_STR_LOG_LEN, header_data);
 
 	if (!ret) {
 		log_data = (struct telemetry_str_log_format *)header_data;
@@ -1328,8 +1328,8 @@ static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_b
 		}
 		memset(pC9_string_buffer, 0, sizeof(__u8) * total_log_page_sz);
 
-		ret = nvme_get_log_simple(dev_fd(dev), C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
-					  total_log_page_sz, pC9_string_buffer);
+		ret = ocp_get_log_simple(dev, C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
+					 total_log_page_sz, pC9_string_buffer);
 	} else {
 		fprintf(stderr, "ERROR : OCP : Unable to read C9 data.\n");
 	}
@@ -1653,8 +1653,7 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C5_UNSUPPORTED_REQS_OPCODE,
-				  C5_UNSUPPORTED_REQS_LEN, data);
+	ret = ocp_get_log_simple(dev, C5_UNSUPPORTED_REQS_OPCODE, C5_UNSUPPORTED_REQS_LEN, data);
 	if (!ret) {
 		log_data = (struct unsupported_requirement_log *)data;
 
@@ -1759,7 +1758,8 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C1_ERROR_RECOVERY_OPCODE, C1_ERROR_RECOVERY_LOG_BUF_LEN, data);
+	ret = ocp_get_log_simple(dev, C1_ERROR_RECOVERY_OPCODE, C1_ERROR_RECOVERY_LOG_BUF_LEN,
+				 data);
 
 	if (!ret) {
 		log_data = (struct ocp_error_recovery_log_page *)data;
@@ -1862,7 +1862,7 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C4_DEV_CAP_REQ_OPCODE, C4_DEV_CAP_REQ_LEN, data);
+	ret = ocp_get_log_simple(dev, C4_DEV_CAP_REQ_OPCODE, C4_DEV_CAP_REQ_LEN, data);
 
 	if (!ret) {
 		log_data = (struct ocp_device_capabilities_log_page *)data;
@@ -2594,8 +2594,7 @@ static int get_c7_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), C7_TCG_CONFIGURATION_OPCODE,
-				  C7_TCG_CONFIGURATION_LEN, data);
+	ret = ocp_get_log_simple(dev, C7_TCG_CONFIGURATION_OPCODE, C7_TCG_CONFIGURATION_LEN, data);
 	if (!ret) {
 		log_data = (struct tcg_configuration_log *)data;
 
