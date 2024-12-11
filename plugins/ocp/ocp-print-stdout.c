@@ -177,9 +177,9 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log)
 		printf("  Errata Version Field                          %d\n",
 			log->dssd_errata_version);
 		printf("  Point Version Field                           %"PRIu16"\n",
-			le16_to_cpu(log->dssd_point_version));
+			le16_to_cpu(*(uint16_t *)&log->dssd_point_version));
 		printf("  Minor Version Field                           %"PRIu16"\n",
-			le16_to_cpu(log->dssd_minor_version));
+			le16_to_cpu(*(uint16_t *)&log->dssd_minor_version));
 		printf("  Major Version Field                           %d\n",
 			log->dssd_major_version);
 		printf("  NVMe Base Errata Version                      %d\n",
