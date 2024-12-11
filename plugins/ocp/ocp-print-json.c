@@ -230,9 +230,9 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 		json_object_add_value_uint(root, "Errata Version Field",
 						log->dssd_errata_version);
 		json_object_add_value_uint(root, "Point Version Field",
-						le16_to_cpu(log->dssd_point_version));
+						le16_to_cpu(*(uint16_t *)&log->dssd_point_version));
 		json_object_add_value_uint(root, "Minor Version Field",
-						le16_to_cpu(log->dssd_minor_version));
+						le16_to_cpu(*(uint16_t *)&log->dssd_minor_version));
 		json_object_add_value_uint(root, "Major Version Field",
 						log->dssd_major_version);
 		json_object_add_value_uint(root, "NVMe Base Errata Version",
@@ -341,9 +341,9 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 		json_object_add_value_uint(root, "errata_version_field",
 						log->dssd_errata_version);
 		json_object_add_value_uint(root, "point_version_field",
-						le16_to_cpu(log->dssd_point_version));
+						le16_to_cpu(*(uint16_t *)&log->dssd_point_version));
 		json_object_add_value_uint(root, "minor_version_field",
-						le16_to_cpu(log->dssd_minor_version));
+						le16_to_cpu(*(uint16_t *)&log->dssd_minor_version));
 		json_object_add_value_uint(root, "major_version_field",
 						log->dssd_major_version);
 		json_object_add_value_uint(root, "nvme_base_errata_version",
