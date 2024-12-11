@@ -1599,6 +1599,72 @@ static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 	return 0;
 }
 
+int nvme_mi_mi_xfer(nvme_mi_ep_t ep,
+		       struct nvme_mi_mi_req_hdr *mi_req,
+		       size_t req_data_size,
+		       struct nvme_mi_mi_resp_hdr *mi_resp,
+		       size_t *resp_data_size)
+{
+	int rc;
+	struct nvme_mi_req req;
+	struct nvme_mi_resp resp;
+
+	/* There is nothing in the spec to define this limit but going with the limits
+	 * from the admin message types for DLEN seems like a reasonable starting point
+	 * to check for coding errors
+	 */
+	const size_t mi_data_xfer_size_limit = 4096;
+
+	/* length/offset checks. The common _submit() API will do further
+	 * checking on the message lengths too, so these are kept specific
+	 * to the requirements of the particular command set
+	 */
+
+	if (*resp_data_size > mi_data_xfer_size_limit) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* request and response lengths & offset must be aligned */
+	if ((req_data_size & 0x3) ||
+	    (*resp_data_size & 0x3)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* bidirectional not permitted */
+	if (req_data_size && *resp_data_size) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	mi_req->hdr.type = NVME_MI_MSGTYPE_NVME;
+	mi_req->hdr.nmp = (NVME_MI_ROR_REQ << 7) |
+				(NVME_MI_MT_MI << 3);
+
+	memset(&req, 0, sizeof(req));
+	req.hdr = &mi_req->hdr;
+	req.hdr_len = sizeof(*mi_req);
+	req.data = mi_req + 1;
+	req.data_len = req_data_size;
+
+	nvme_mi_calc_req_mic(&req);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &mi_resp->hdr;
+	resp.hdr_len = sizeof(*mi_resp);
+	resp.data = mi_resp + 1;
+	resp.data_len = *resp_data_size;
+
+	rc = nvme_mi_submit(ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	*resp_data_size = resp.data_len;
+
+	return 0;
+}
+
 int nvme_mi_mi_read_mi_data_subsys(nvme_mi_ep_t ep,
 				   struct nvme_mi_read_nvm_ss_info *s)
 {

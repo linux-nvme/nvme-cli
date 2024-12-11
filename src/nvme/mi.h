@@ -730,6 +730,36 @@ char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep);
 /* MI Command API: nvme_mi_mi_ prefix */
 
 /**
+ * nvme_mi_mi_xfer() -  Raw mi transfer interface.
+ * @ep: endpoint to send the MI command to
+ * @mi_req: request data
+ * @req_data_size: size of request data payload
+ * @mi_resp: buffer for response data
+ * @resp_data_size: size of response data buffer, updated to received size
+ *
+ * Performs an arbitrary NVMe MI command, using the provided request data,
+ * in @mi_req. The size of the request data *payload* is specified in
+ * @req_data_size - this does not include the standard header length (so a
+ * header-only request would have a size of 0). Note that the Management
+ * Request Doublewords are considered part of the header data.
+ *
+ * On success, response data is stored in @mi_resp, which has an optional
+ * appended payload buffer of @resp_data_size bytes. The actual payload
+ * size transferred will be stored in @resp_data_size. This size does not
+ * include the MI response header, so 0 represents no payload.
+ *
+ * See: &struct nvme_mi_mi_req_hdr and &struct nvme_mi_mi_resp_hdr.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
+ */
+int nvme_mi_mi_xfer(nvme_mi_ep_t ep,
+		       struct nvme_mi_mi_req_hdr *mi_req,
+		       size_t req_data_size,
+		       struct nvme_mi_mi_resp_hdr *mi_resp,
+		       size_t *resp_data_size);
+
+/**
  * nvme_mi_mi_read_mi_data_subsys() - Perform a Read MI Data Structure command,
  * retrieving subsystem data.
  * @ep: endpoint for MI communication

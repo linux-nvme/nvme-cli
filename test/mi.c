@@ -566,8 +566,8 @@ static void test_admin_err_nvme_resp(nvme_mi_ep_t ep)
 		| NVME_SC_DNR));
 }
 
-/* invalid Admin command transfers */
-static int test_admin_invalid_formats_cb(struct nvme_mi_ep *ep,
+/* invalid command transfers */
+static int test_rejected_command_cb(struct nvme_mi_ep *ep,
 					 struct nvme_mi_req *req,
 					 struct nvme_mi_resp *resp,
 					 void *data)
@@ -588,7 +588,7 @@ static void test_admin_invalid_formats(nvme_mi_ep_t ep)
 	size_t len;
 	int rc;
 
-	test_set_transport_callback(ep, test_admin_invalid_formats_cb, NULL);
+	test_set_transport_callback(ep, test_rejected_command_cb, NULL);
 
 	ctrl = nvme_mi_init_ctrl(ep, 1);
 	assert(ctrl);
@@ -626,6 +626,44 @@ static void test_admin_invalid_formats(nvme_mi_ep_t ep)
 	/* req and resp payloads */
 	len = 4;
 	rc = nvme_mi_admin_xfer(ctrl, &req.hdr, 4, &resp, 0, &len);
+	assert(rc != 0);
+}
+
+static void test_mi_invalid_formats(nvme_mi_ep_t ep)
+{
+	struct {
+		struct nvme_mi_mi_req_hdr hdr;
+		uint8_t data[4];
+	} req = { 0 };
+	struct nvme_mi_mi_resp_hdr resp = { 0 };
+	nvme_mi_ctrl_t ctrl;
+	size_t len;
+	int rc;
+
+	test_set_transport_callback(ep, test_rejected_command_cb, NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	/* unaligned req size */
+	len = 0;
+
+	rc = nvme_mi_mi_xfer(ep, &req.hdr, 1, &resp, &len);
+	assert(rc != 0);
+
+	/* unaligned resp size */
+	len = 1;
+	rc = nvme_mi_mi_xfer(ep, &req.hdr, 0, &resp, &len);
+	assert(rc != 0);
+
+	/* resp too large */
+	len = 4096 + 4;
+	rc = nvme_mi_mi_xfer(ep, &req.hdr, 0, &resp, &len);
+	assert(rc != 0);
+
+	/* req and resp payloads */
+	len = 4;
+	rc = nvme_mi_mi_xfer(ep, &req.hdr, 4, &resp, &len);
 	assert(rc != 0);
 }
 
@@ -2049,6 +2087,7 @@ struct test {
 	DEFINE_TEST(endpoint_quirk_probe),
 	DEFINE_TEST(admin_dlen_doff_req),
 	DEFINE_TEST(admin_dlen_doff_resp),
+	DEFINE_TEST(mi_invalid_formats),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)

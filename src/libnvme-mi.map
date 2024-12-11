@@ -1,3 +1,8 @@
+LIBNVME_MI_1_12 {
+	global:
+		nvme_mi_mi_xfer;
+};
+
 LIBNVME_MI_1_11 {
 	global:
 		nvme_mi_control;
