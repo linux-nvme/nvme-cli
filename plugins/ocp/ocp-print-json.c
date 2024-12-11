@@ -144,6 +144,7 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 	struct json_object *pmuw;
 	struct json_object *pmur;
 	uint16_t smart_log_ver = 0;
+	uint16_t dssd_version = 0;
 	char guid[40];
 
 	root = json_create_object();
@@ -231,10 +232,12 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 	case 2 ... 3:
 		json_object_add_value_uint(root, "Errata Version Field",
 						log->dssd_errata_version);
+		memcpy(&dssd_version, log->dssd_point_version, sizeof(dssd_version));
 		json_object_add_value_uint(root, "Point Version Field",
-						le16_to_cpu(log->dssd_point_version));
+						le16_to_cpu(dssd_version));
+		memcpy(&dssd_version, log->dssd_minor_version, sizeof(dssd_version));
 		json_object_add_value_uint(root, "Minor Version Field",
-						le16_to_cpu(log->dssd_minor_version));
+						le16_to_cpu(dssd_version));
 		json_object_add_value_uint(root, "Major Version Field",
 						log->dssd_major_version);
 		json_object_add_value_uint(root, "NVMe Base Errata Version",
@@ -255,6 +258,7 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 	struct json_object *pmuw;
 	struct json_object *pmur;
 	uint16_t smart_log_ver = 0;
+	uint16_t dssd_version = 0;
 	char guid[40];
 
 	root = json_create_object();
@@ -342,10 +346,12 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 	case 2 ... 3:
 		json_object_add_value_uint(root, "errata_version_field",
 						log->dssd_errata_version);
+		memcpy(&dssd_version, log->dssd_point_version, sizeof(dssd_version));
 		json_object_add_value_uint(root, "point_version_field",
-						le16_to_cpu(log->dssd_point_version));
+						le16_to_cpu(dssd_version));
+		memcpy(&dssd_version, log->dssd_minor_version, sizeof(dssd_version));
 		json_object_add_value_uint(root, "minor_version_field",
-						le16_to_cpu(log->dssd_minor_version));
+						le16_to_cpu(dssd_version));
 		json_object_add_value_uint(root, "major_version_field",
 						log->dssd_major_version);
 		json_object_add_value_uint(root, "nvme_base_errata_version",
