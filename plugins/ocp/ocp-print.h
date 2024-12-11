@@ -37,7 +37,8 @@ static inline struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t fl
 
 void ocp_show_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list, nvme_print_flags_t flags);
 void ocp_fw_act_history(const struct fw_activation_history *fw_history, nvme_print_flags_t flags);
-void ocp_smart_extended_log(void *data, unsigned int version, nvme_print_flags_t flags);
+void ocp_smart_extended_log(struct ocp_smart_extended_log *log, unsigned int version,
+		nvme_print_flags_t flags);
 void ocp_show_telemetry_log(struct ocp_telemetry_parse_options *options, nvme_print_flags_t flags);
 void ocp_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data,
 		nvme_print_flags_t flags);

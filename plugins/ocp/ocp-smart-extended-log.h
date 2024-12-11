@@ -58,7 +58,7 @@ struct plugin;
  * @log_page_version:			Log page version
  * @log_page_guid:			Log page GUID
  */
-struct __packed ocp_smart_extended_log {
+struct ocp_smart_extended_log {
 	__u8   physical_media_units_written[16];	/* [15:0] */
 	__u8   physical_media_units_read[16];		/* [31:16] */
 	__u8   bad_user_nand_blocks_raw[6];		/* [37:32] */
@@ -77,8 +77,8 @@ struct __packed ocp_smart_extended_log {
 	__u8   thermal_throttling_event_count;		/* [96] */
 	__u8   thermal_throttling_current_status;	/* [97] */
 	__u8   dssd_errata_version;			/* [98] */
-	__le16 dssd_point_version;			/* [100:99] */
-	__le16 dssd_minor_version;			/* [102:101] */
+	__u8   dssd_point_version[2];			/* [100:99] */
+	__u8   dssd_minor_version[2];			/* [102:101] */
 	__u8   dssd_major_version;			/* [103] */
 	__le64 pcie_correctable_err_count;		/* [111:104] */
 	__le32 incomplete_shoutdowns;			/* [115:112] */
