@@ -1933,8 +1933,9 @@ static void stdout_id_ctrl_mec(__u8 mec)
 static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xF800) >> 11;
-	__u16 lock = (oacs >> 10) & 0x1;
+	__u16 rsvd = (oacs & 0xF000) >> 12;
+	__u16 hmlms = (oacs & 0x800) >> 11;
+	__u16 lock = (oacs & 0x400) >> 10;
 	__u16 glbas = (oacs & 0x200) >> 9;
 	__u16 dbc = (oacs & 0x100) >> 8;
 	__u16 vir = (oacs & 0x80) >> 7;
@@ -1947,7 +1948,9 @@ static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 	__u16 sec = oacs & 0x1;
 
 	if (rsvd)
-		printf(" [15:11] : %#x\tReserved\n", rsvd);
+		printf(" [15:12] : %#x\tReserved\n", rsvd);
+	printf("  [11:11] : %#x\tHost Managed Live Migration %sSupported\n",
+		hmlms, hmlms ? "" : "Not ");
 	printf("  [10:10] : %#x\tLockdown Command and Feature %sSupported\n",
 		lock, lock ? "" : "Not ");
 	printf("  [9:9] : %#x\tGet LBA Status Capability %sSupported\n",
