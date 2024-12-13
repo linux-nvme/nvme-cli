@@ -181,7 +181,7 @@ _nvme () {
 				local _internal_log
 				_internal_log=(
 				/dev/nvme':supply a device to use (required)'
-				--telemetry-type=':Telemetry Type; host or controller generated'
+				--telemetry-type=':Telemetry Type; host, host0, host1 or controller generated'
 				-t':alias for --telemetry-type'
 				--data-area=':Telemetry Data Area; 1 or 2'
 				-a':alias for --data-area'

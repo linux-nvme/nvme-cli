@@ -1418,7 +1418,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	const char *output_format = "output format normal|json";
 	const char *data_area = "Telemetry Data Area; 1 or 2;\n"
 			"e.g. '-a 1 for Data Area 1.'\n'-a 2 for Data Areas 1 and 2.';\n";
-	const char *telemetry_type = "Telemetry Type; 'host' or 'controller'";
+	const char *telemetry_type = "Telemetry Type; 'host', 'host0', 'host1' or 'controller'";
 
 	struct nvme_dev *dev;
 	int err = 0;
@@ -1486,7 +1486,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		else if (!strcmp(opt.telemetry_type, "controller"))
 			tele_type = TELEMETRY_TYPE_CONTROLLER;
 		else {
-			nvme_show_error("telemetry-type should be host or controller.\n");
+			nvme_show_error(
+			    "telemetry-type should be host, host0, host1 or controller.\n");
 			goto out;
 		}
 	} else {
