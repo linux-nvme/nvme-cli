@@ -25,9 +25,9 @@
 
 #include <dbus/dbus.h>
 
-#define MCTP_DBUS_NAME "xyz.openbmc_project.MCTP"
-#define MCTP_DBUS_PATH "/xyz/openbmc_project/mctp"
-#define MCTP_DBUS_EP_IFACE "au.com.CodeConstruct.MCTP.Endpoint"
+#define MCTP_DBUS_NAME "au.com.codeconstruct.MCTP1"
+#define MCTP_DBUS_PATH "/au/com/codeconstruct/mctp1"
+#define MCTP_DBUS_EP_IFACE "au.com.codeconstruct.MCTP.Endpoint1"
 
 static int parse_mctp(const char *devstr, unsigned int *net, uint8_t *eid)
 {
@@ -87,7 +87,8 @@ int set_local_mtu(DBusConnection *bus, unsigned int net, uint8_t eid,
 	char *ep_path;
 	int rc;
 
-	rc = asprintf(&ep_path, "%s/%u/%hhu", MCTP_DBUS_PATH, net, eid);
+	rc = asprintf(&ep_path, "%s/networks/%u/endpoints/%hhu", MCTP_DBUS_PATH,
+                  net, eid);
 	if (rc < 0) {
 		warn("Failed to create dbus path");
 		return -1;

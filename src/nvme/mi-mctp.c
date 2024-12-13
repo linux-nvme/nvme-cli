@@ -26,8 +26,8 @@
 #ifdef CONFIG_DBUS
 #include <dbus/dbus.h>
 
-#define MCTP_DBUS_PATH "/xyz/openbmc_project/mctp"
-#define MCTP_DBUS_IFACE "xyz.openbmc_project.MCTP"
+#define MCTP_DBUS_PATH "/au/com/codeconstruct/mctp1"
+#define MCTP_DBUS_IFACE "au.com.codeconstruct.MCTP1"
 #define MCTP_DBUS_IFACE_ENDPOINT "xyz.openbmc_project.MCTP.Endpoint"
 #endif
 
