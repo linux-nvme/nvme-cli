@@ -1537,60 +1537,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 				nvme_show_result("Status:(%x)\n", err);
 		}
 		break;
-	case TELEMETRY_TYPE_NONE:
-		printf("\n-------------------------------------------------------------\n");
-		/* Host 0 (lsp == 0) must be executed before Host 1 (lsp == 1). */
-		printf("\nExtracting Telemetry Host 0 Dump (Data Area 1)...\n");
-
-		err = get_telemetry_dump(dev, opt.output_file, sn,
-				TELEMETRY_TYPE_HOST_0, 1, true);
-		if (err)
-			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false),
-				err);
-
-		printf("\n-------------------------------------------------------------\n");
-
-		printf("\nExtracting Telemetry Host 0 Dump (Data Area 3)...\n");
-
-		err = get_telemetry_dump(dev, opt.output_file, sn,
-				TELEMETRY_TYPE_HOST_0, 3, false);
-		if (err)
-			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false),
-				err);
-
-		printf("\n-------------------------------------------------------------\n");
-
-		printf("\nExtracting Telemetry Host 1 Dump (Data Area 1)...\n");
-
-		err = get_telemetry_dump(dev, opt.output_file, sn,
-				TELEMETRY_TYPE_HOST_1, 1, true);
-		if (err)
-			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false),
-				err);
-
-		printf("\n-------------------------------------------------------------\n");
-
-		printf("\nExtracting Telemetry Host 1 Dump (Data Area 3)...\n");
-
-		err = get_telemetry_dump(dev, opt.output_file, sn,
-				TELEMETRY_TYPE_HOST_1, 3, false);
-		if (err)
-			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false),
-				err);
-
-		printf("\n-------------------------------------------------------------\n");
-
-		printf("\nExtracting Telemetry Controller Dump (Data Area 3)...\n");
-
-		if (is_support_telemetry_controller == true) {
-			err = get_telemetry_dump(dev, opt.output_file, sn,
-					TELEMETRY_TYPE_CONTROLLER, 3, true);
-			if (err)
-				fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false), err);
-		}
-
-		printf("\n-------------------------------------------------------------\n");
-		break;
 	case TELEMETRY_TYPE_HOST_0:
 	case TELEMETRY_TYPE_HOST_1:
 	default:

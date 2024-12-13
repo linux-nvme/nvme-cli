@@ -353,7 +353,6 @@ static const char * const telemetry_media_wear_event_id_str[] = {
 #define FILE_NAME_SIZE 2048
 
 enum TELEMETRY_TYPE {
-	TELEMETRY_TYPE_NONE       = 0,
 	TELEMETRY_TYPE_HOST       = 7,
 	TELEMETRY_TYPE_CONTROLLER = 8,
 	TELEMETRY_TYPE_HOST_0     = 9,
