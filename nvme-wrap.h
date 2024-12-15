@@ -49,6 +49,7 @@ int nvme_cli_sanitize_nvm(struct nvme_dev *dev,
 int nvme_cli_get_features(struct nvme_dev *dev,
 			  struct nvme_get_features_args *args);
 
+int nvme_cli_set_features(struct nvme_dev *dev, struct nvme_set_features_args *args);
 
 int nvme_cli_get_log(struct nvme_dev *dev, struct nvme_get_log_args *args);
 int nvme_cli_get_log_page(struct nvme_dev *dev,
