@@ -32,6 +32,7 @@
 #include "ocp-telemetry-decode.h"
 #include "ocp-hardware-component-log.h"
 #include "ocp-print.h"
+#include "ocp-types.h"
 
 #define CREATE_CMD
 #include "ocp-nvme.h"
@@ -194,6 +195,8 @@ const char *data = "Error injection data structure entries";
 const char *number = "Number of valid error injection data entries";
 static const char *type = "Error injection type";
 static const char *nrtdp = "Number of reads to trigger device panic";
+static const char *save = "Specifies that the controller shall save the attribute";
+static const char *enable_ieee1667_silo = "enable IEEE1667 silo";
 
 static int get_c3_log_page(struct nvme_dev *dev, char *format)
 {
@@ -544,8 +547,6 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 	const char *desc = "Define EOL or PLP circuitry failure mode.\n"
 			   "No argument prints current mode.";
 	const char *mode = "[0-3]: default/rom/wtm/normal";
-	const char *save = "Specifies that the controller shall save the attribute";
-	const char *sel = "[0-3]: current/default/saved/supported";
 	const __u32 nsid = 0;
 	const __u8 fid = 0xc2;
 	struct nvme_dev *dev;
@@ -2242,7 +2243,6 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 {
 
 	const char *desc = "Define Issue Get Feature command (FID : 0xC6) PLP Health Check Interval";
-	const char *sel = "[0-3,8]: current/default/saved/supported/changed";
 	const __u32 nsid = 0;
 	const __u8 fid = 0xc6;
 	struct nvme_dev *dev;
@@ -2873,6 +2873,70 @@ static int get_enable_ieee1667_silo(int argc, char **argv, struct command *cmd,
 		return err;
 
 	return enable_ieee1667_silo_get(dev, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"));
+}
+
+static int enable_ieee1667_silo_set(struct nvme_dev *dev,
+				    struct argconfig_commandline_options *opts)
+{
+	struct ieee1667_get_cq_entry cq_entry;
+	int err;
+	const __u8 fid = 0xc4;
+	bool enable = argconfig_parse_seen(opts, "enable");
+
+	struct nvme_set_features_args args = {
+		.result = (__u32 *)&cq_entry,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.cdw11 = OCP_SET(enable, ENABLE_IEEE1667_SILO),
+		.save = argconfig_parse_seen(opts, "save"),
+		.fid = fid,
+	};
+
+	if (!argconfig_parse_seen(opts, "no-uuid")) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &args.uuidx);
+		if (err || !args.uuidx) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
+
+	err = nvme_cli_set_features(dev, &args);
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror(enable_ieee1667_silo);
+		fprintf(stderr, "Command failed while parsing.\n");
+	} else {
+		enable = OCP_GET(args.cdw11, ENABLE_IEEE1667_SILO);
+		nvme_show_result("Successfully set enable (feature: 0x%02x): %d (%s: %s).", fid,
+				 enable, args.save ? "Save" : "Not save",
+				 enable ? "Enabled" : "Disabled");
+	}
+
+	return err;
+}
+
+static int set_enable_ieee1667_silo(int argc, char **argv, struct command *cmd,
+				    struct plugin *plugin)
+{
+	int err;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("enable", 'e', NULL, no_uuid),
+		OPT_FLAG("save", 's', NULL, save),
+		OPT_FLAG("no-uuid", 'n', NULL, no_uuid),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, enable_ieee1667_silo, opts);
+	if (err)
+		return err;
+
+	return enable_ieee1667_silo_set(dev, opts);
 }
 
 static int hwcomp_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
