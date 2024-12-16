@@ -334,7 +334,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	int err;
 
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 	};
 
 	OPT_ARGS(opts) = {
@@ -660,7 +660,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 		return -1;
 	}
 
-	err = get_bb_table(dev_fd(dev), 0xffffffff, data_buf, buf_size);
+	err = get_bb_table(dev_fd(dev), NVME_NSID_ALL, data_buf, buf_size);
 	if (err < 0) {
 		perror("get-bad-block");
 	} else if (err) {
@@ -711,7 +711,7 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return err;
 
-	if (nvme_query_cap(dev_fd(dev), 0xffffffff, sizeof(ctx), &ctx)) {
+	if (nvme_query_cap(dev_fd(dev), NVME_NSID_ALL, sizeof(ctx), &ctx)) {
 		perror("sfx-query-cap");
 		err = -1;
 	}
@@ -735,7 +735,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	__u64 provisioned_cap_4k = 0;
 	int extend = 0;
 
-	if (nvme_query_cap(fd, 0xffffffff, sizeof(freespace_ctx), &freespace_ctx))
+	if (nvme_query_cap(fd, NVME_NSID_ALL, sizeof(freespace_ctx), &freespace_ctx))
 		return -1;
 
 	/*
@@ -861,7 +861,7 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 		return 0;
 	}
 
-	err = nvme_change_cap(dev_fd(dev), 0xffffffff, cap_in_4k);
+	err = nvme_change_cap(dev_fd(dev), NVME_NSID_ALL, cap_in_4k);
 	if (err < 0) {
 		perror("sfx-change-cap");
 	} else if (err) {
@@ -976,7 +976,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	}
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value) {
-		if (cfg.namespace_id != 0xffffffff) {
+		if (cfg.namespace_id != NVME_NSID_ALL) {
 			err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id,
 					       &ns);
 			if (err) {
@@ -1370,7 +1370,7 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *cmd, struct pl
 	};
 	struct config cfg = {
 		.file = NULL,
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 		.storage_medium = 0,
 		.parse = false,
 		.output = NULL,
@@ -1498,7 +1498,7 @@ static int sfx_expand_cap(int argc, char **argv, struct command *cmd, struct plu
 		__u32 units;
 	};
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 		.lbaf = 0,
 		.units = 0,
 	};
@@ -1516,7 +1516,7 @@ static int sfx_expand_cap(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		goto ret;
 
-	if (cfg.namespace_id == 0xffffffff) {
+	if (cfg.namespace_id == NVME_NSID_ALL) {
 		if (S_ISCHR(dev->direct.stat.st_mode)) {
 			fprintf(stderr, "namespace_id or blk device required\n");
 			err = EINVAL;
