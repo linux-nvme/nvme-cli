@@ -103,7 +103,7 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	struct json_object *root, *entry_stats, *dev_stats, *multi;
 
 	root = json_create_object();
-	json_object_add_value_string(root, "Intel Smart log", devname);
+	json_object_add_value_string(root, "ScaleFlux Smart log", devname);
 
 	dev_stats = json_create_object();
 
@@ -232,7 +232,7 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
-	printf("/n");
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -577,7 +577,7 @@ static int get_bb_table(int fd, __u32 nsid, unsigned char *buf, __u64 size)
 /**
  * @brief display bb table
  *
- * @param bd_table		buffer that contain bb table dumped from drvier
+ * @param bd_table		buffer that contain bb table dumped from driver
  * @param table_size	buffer size (BYTES), should at least has 8 bytes for mf_bb_count and grown_bb_count
  */
 static void bd_table_show(unsigned char *bd_table, __u64 table_size)
@@ -732,7 +732,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	struct sysinfo s_info;
 	__u64 mem_need = 0;
 	__u64 cur_in_4k = 0;
-	__u64 provisoned_cap_4k = 0;
+	__u64 provisioned_cap_4k = 0;
 	int extend = 0;
 
 	if (nvme_query_cap(fd, 0xffffffff, sizeof(freespace_ctx), &freespace_ctx))
@@ -741,13 +741,13 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	/*
 	 * capacity illegal check
 	 */
-	provisoned_cap_4k = freespace_ctx.phy_space >>
+	provisioned_cap_4k = freespace_ctx.phy_space >>
 			    (SFX_PAGE_SHIFT - SECTOR_SHIFT);
-	if (trg_in_4k < provisoned_cap_4k ||
-	    trg_in_4k > ((__u64)provisoned_cap_4k * 4)) {
+	if (trg_in_4k < provisioned_cap_4k ||
+	    trg_in_4k > ((__u64)provisioned_cap_4k * 4)) {
 		fprintf(stderr,
 			"WARNING: Only support 1.0~4.0 x provisioned capacity!\n");
-		if (trg_in_4k < provisoned_cap_4k)
+		if (trg_in_4k < provisioned_cap_4k)
 			fprintf(stderr,
 				"WARNING: The target capacity is less than 1.0 x provisioned capacity!\n");
 		else
@@ -755,7 +755,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 				"WARNING: The target capacity is larger than 4.0 x provisioned capacity!\n");
 		return -1;
 	}
-	if (trg_in_4k > ((__u64)provisoned_cap_4k*4)) {
+	if (trg_in_4k > ((__u64)provisioned_cap_4k*4)) {
 		fprintf(stderr, "WARNING: the target capacity is too large\n");
 		return -1;
 	}
