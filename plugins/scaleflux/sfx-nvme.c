@@ -22,6 +22,7 @@
 #include "nvme-wrap.h"
 #include "nvme-print.h"
 #include "util/cleanup.h"
+#include "util/types.h"
 
 #define CREATE_CMD
 #include "sfx-nvme.h"
@@ -33,14 +34,17 @@
 #define SFX_GET_FREESPACE			_IOWR('N', 0x240, struct sfx_freespace_ctx)
 #define NVME_IOCTL_CLR_CARD			_IO('N', 0x47)
 
+//See IDEMA LBA1-03
 #define IDEMA_CAP(exp_GB)			(((__u64)exp_GB - 50ULL) * 1953504ULL + 97696368ULL)
-#define IDEMA_CAP2GB(exp_sector)		(((__u64)exp_sector - 97696368ULL) / 1953504ULL + 50ULL)
+#define IDEMA_CAP2GB(exp_sector)	(((__u64)exp_sector - 97696368ULL) / 1953504ULL + 50ULL)
+#define IDEMA_CAP2GB_LDS(exp_sector)	(((__u64)exp_sector - 12212046ULL) / 244188ULL + 50ULL)
 
 #define VANDA_MAJOR_IDX		0
 #define VANDA_MINOR_IDX		0
 
 #define MYRTLE_MAJOR_IDX        4
 #define MYRTLE_MINOR_IDX        1
+
 
 
 int nvme_query_cap(int fd, __u32 nsid, __u32 data_len, void *data)
@@ -1543,6 +1547,524 @@ static int sfx_expand_cap(int argc, char **argv, struct command *cmd, struct plu
 		goto close_dev;
 
 	printf("%s: Success, create nsid:%d\n", cmd->name, cfg.namespace_id);
+
+close_dev:
+	dev_close(dev);
+ret:
+	return err;
+}
+
+static int sfx_status(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc				= "Get ScaleFlux specific status information and print it";
+	const char *json_desc			= "Print output in JSON format, otherwise human readable";
+	struct nvme_dev *dev;
+	struct nvme_id_ctrl id_ctrl = { 0 };
+	struct extended_health_info_myrtle sfx_smart = { 0 };
+	struct nvme_smart_log smart_log = { 0 };
+	struct nvme_additional_smart_log additional_smart_log = { 0 };
+	struct sfx_freespace_ctx sfx_freespace = { 0 };
+	struct nvme_get_features_args get_feat_args = { 0 };
+	unsigned int get_feat_result, pcie_correctable, pcie_fatal, pcie_nonfatal;
+	unsigned long long capacity;
+	bool capacity_valid = false;
+	int err, fd, len, sector_size;
+	char pci_vid[7], pci_did[7], pci_ssvid[7], link_speed[20], link_width[5], link_string[40];
+	char path[512], numa_node[5], vendor[10], form_factor[15], temperature[10], io_speed[15];
+	char chr_dev[8], serial_number[21], model_number[41], firmware_revision[9], pcie_status[9];
+	struct json_object *root, *dev_stats, *link_stats, *crit_stats;
+	double write_amp;
+
+	struct config {
+		bool json;
+	};
+	struct config cfg = {
+		.json = false
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("json-print",	    'j',	&cfg.json,	json_desc),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+
+	if (err)
+		goto ret;
+
+	//Calculate formatted capacity, not concerned with errors, we may have a char device
+	memset(&path, 0, 512);
+	snprintf(path, 512, "/dev/%s", dev->name);
+	fd = open(path, O_RDONLY | O_NONBLOCK);
+	if (fd >= 0) {
+		err = ioctl(fd, BLKSSZGET, &sector_size);
+		if (!err)
+			err = ioctl(fd, BLKGETSIZE64, &capacity);
+		capacity_valid = (!err);
+	}
+
+	if (capacity_valid && sector_size == 512)
+		capacity = IDEMA_CAP2GB(capacity/sector_size);
+	else if (capacity_valid &&  sector_size == 4096)
+		capacity = IDEMA_CAP2GB_LDS(capacity/sector_size);
+	else
+		capacity = capacity / (1000 * 1000 * 1000); //B --> GB
+
+	memset(&chr_dev, 0, 8);
+	strcpy(chr_dev, dev->name);
+	for (len = 2; len < 8; len++) {
+		if (chr_dev[len] == 'n')
+			chr_dev[len] = '\0';
+	}
+
+	// Populate PCIe VID/DID/SS_VID, link speed/width, and NUMA node from /sys/
+	snprintf(path, 512, "/sys/class/nvme/%s/device/vendor", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open PCIe VID in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+	memset(&pci_vid, 0, 7);
+	len = read(fd, pci_vid, 6);
+	if (len < 1) {
+		perror("Could not read PCIe VID in /sys/");
+		close(fd);
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+
+	snprintf(path, 512, "/sys/class/nvme/%s/device/device", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open PCIe DID in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+	memset(&pci_did, 0, 7);
+	len = read(fd, pci_did, 6);
+	if (len < 1) {
+		perror("Could not read PCIe DID in /sys/");
+		close(fd);
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+
+	if (strncmp("0xcc53", pci_vid, 6) == 0)
+		strncpy(vendor, "ScaleFlux", 10);
+	else if (strncmp("0x1dfd", pci_vid, 6) == 0)
+		strncpy(vendor, "DIGISTOR", 10);
+	else {
+		fprintf(stderr, "Please use on a ScaleFlux device\n");
+		err = -1;
+		goto close_dev;
+	}
+
+	snprintf(path, 512, "/sys/class/nvme/%s/device/subsystem_vendor", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open PCIe Subsystem Vendor ID in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+	memset(&pci_ssvid, 0, 7);
+	len = read(fd, pci_ssvid, 6);
+	if (len < 1) {
+		perror("could not read PCIe Subsystem Vendor ID in /sys/");
+		close(fd);
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+
+	snprintf(path, 512, "/sys/class/nvme/%s/device/current_link_speed", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open link speed in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+	memset(&link_speed, 0, 20);
+	len = read(fd, link_speed, 20);
+	if (len < 1) {
+		perror("Could not read link speed in /sys/");
+		close(fd);
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+	// Ending string before "PCIe" and newline
+	for (len = 0; (len+2) < 20 && link_speed[len+2] != '\0'; ++len) {
+		if (link_speed[len] == '/' && link_speed[len+1] == 's')
+			link_speed[len+2] = '\0';
+	}
+
+	snprintf(path, 512, "/sys/class/nvme/%s/device/current_link_width", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open link width in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+	memset(&link_width, 0, 5);
+	len = read(fd, link_width, 5);
+	if (len < 1) {
+		perror("Could not read link width in /sys/");
+		close(fd);
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+	// Ending string before newline
+	for (len = 0; (len) < 5 ; ++len) {
+		if (link_width[len] == '\n')
+			link_width[len] = '\0';
+	}
+
+	snprintf(link_string, 40, "Speed %s, Width x%s", link_speed, link_width);
+
+	snprintf(path, 512, "/sys/class/nvme/%s/device/numa_node", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open NUMA node in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+	memset(&numa_node, 0, 5);
+	len = read(fd, numa_node, 5);
+	if (len < 1) {
+		perror("Could not read NUMA node in /sys/");
+		close(fd);
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+
+	for (len = 0; len < 5; ++len) {
+		if (numa_node[len] == '\n')
+			numa_node[len] =  '\0';
+	}
+
+	//Populate PCIe AER errors from /sys/
+	snprintf(path, 512, "/sys/class/nvme/%s/device/aer_dev_correctable", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open PCIe AER Correctable errors in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+	len = read(fd, path, 512);
+	if (len < 1) {
+		perror("Could not read PCIe AER Correctable errors in /sys/");
+		close(fd);
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+	len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_COR %d", &pcie_correctable);
+	len = 1;
+	if (len < 1 || len == EOF) {
+		perror("Could not parse PCIe AER Correctable errors in /sys/");
+		err = -1;
+		goto close_dev;
+	}
+
+	snprintf(path, 512, "/sys/class/nvme/%s/device/aer_dev_nonfatal", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open PCIe AER Non-Fatal errors in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+
+	len = read(fd, path, 512);
+	if (len < 1) {
+		perror("Could not read PCIe AER Non-Fatal errors in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+	len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_NONFATAL %d", &pcie_nonfatal);
+	if (len < 1) {
+		perror("Could not parse PCIe AER Non-Fatal errors in /sys/");
+		err = -1;
+		goto close_dev;
+	}
+
+	snprintf(path, 512, "/sys/class/nvme/%s/device/aer_dev_fatal", chr_dev);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Could not open PCIe AER Fatal errors in /sys/");
+		err = errno;
+		goto close_dev;
+	}
+
+	len = read(fd, path, 512);
+	if (len < 1) {
+		perror("Could not read PCIe AER Fatal errors in /sys/");
+		close(fd);
+		err = errno;
+		goto close_dev;
+	}
+	close(fd);
+	len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_FATAL %d", &pcie_fatal);
+	if (len < 1) {
+		perror("Could not parse PCIe AER Fatal errors in /sys/");
+		close(fd);
+		err = -1;
+		goto close_dev;
+	}
+
+	snprintf(pcie_status, 9, "%s", (pcie_fatal != 0 || pcie_nonfatal != 0 || pcie_correctable != 0) ? "Warning":"Good");
+
+	//Populate id-ctrl
+	err = nvme_identify_ctrl(dev_fd(dev), &id_ctrl);
+	if (err) {
+		fprintf(stderr, "Unable to read nvme_identify_ctrl() error code:%x\n", err);
+		goto close_dev;
+	}
+	//Re-format specific fields so they can be safely treated as strings later
+	serial_number[20] = '\0';
+	memcpy(serial_number, id_ctrl.sn, 20);
+	model_number[40] = '\0';
+	memcpy(model_number, id_ctrl.mn, 40);
+	firmware_revision[8] = '\0';
+	memcpy(firmware_revision, id_ctrl.fr, 8);
+
+	//Populate SMART log (0x02)
+	err = nvme_cli_get_log_smart(dev, NVME_NSID_ALL, false, &smart_log);
+	if (err < 0) {
+		perror("Could not read SMART log (0x02)");
+		err = errno;
+		goto close_dev;
+	} else if (err > 0) {
+		nvme_show_status(err);
+		goto close_dev;
+	}
+
+	snprintf(temperature, 10, "%li", kelvin_to_celsius(smart_log.temperature[1]<<8 | smart_log.temperature[0]));
+
+	//Populate SFX Extended Health log (0xC2) or if PCIe DID ==0x20 (Quince) use 0xD2
+	if (strncmp("0x0020", pci_did, 6) == 0)
+		err = nvme_get_log_simple(dev_fd(dev), SFX_LOG_EXTENDED_HEALTH_ALT, sizeof(sfx_smart), (void *)&sfx_smart);
+	else
+		err = nvme_get_log_simple(dev_fd(dev), SFX_LOG_EXTENDED_HEALTH, sizeof(sfx_smart), (void *)&sfx_smart);
+	if (err < 0) {
+		perror("Could not read ScaleFlux SMART log");
+		err = errno;
+		goto close_dev;
+	} else if (err > 0) {
+		nvme_show_status(err);
+		goto close_dev;
+	}
+
+	//Make sure the OPN can be printed safely
+	sfx_smart.opn[10] = '\0';
+
+	switch (sfx_smart.opn[3]) {
+	case 'P':
+		snprintf(form_factor, 15, "%s", "AIC");
+		break;
+	case 'U':
+		snprintf(form_factor, 15, "%s", (sfx_smart.opn[4] == '8')?"U.3":"U.2");
+		break;
+	case 'E':
+		snprintf(form_factor, 15, "%s", "E1.S");
+		break;
+	default:
+		snprintf(form_factor, 15, "%s", "Incorrect OPN");
+	}
+
+	//Populate Additional SMART log (0xCA)
+	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, NVME_NSID_ALL, sizeof(struct nvme_additional_smart_log), (void *)&additional_smart_log);
+	if (err < 0) {
+		perror("Could not read ScaleFlux SMART log");
+		err = errno;
+		goto close_dev;
+	} else if (err > 0) {
+		nvme_show_status(err);
+		goto close_dev;
+	}
+
+	//OK with the '-nan' if host_bytes_written is zero
+	write_amp = int48_to_long(additional_smart_log.nand_bytes_written.raw)/(1.0 * int48_to_long(additional_smart_log.host_bytes_written.raw));
+
+	//Get SFX freespace information
+	err = nvme_query_cap(dev_fd(dev), NVME_NSID_ALL, sizeof(sfx_freespace), &sfx_freespace);
+	if (err < 0) {
+		perror("Could not query freespace information (0xD6)");
+		err = errno;
+		goto close_dev;
+	} else if (err > 0) {
+		nvme_show_status(err);
+		goto close_dev;
+	}
+
+	//Parse IO Speed information
+	memset(&io_speed, 0, 15);
+	switch (sfx_smart.io_speed) {
+	case '1':
+		if (strncmp("0x0020", pci_did, 6))
+			strncpy(io_speed, "2.5MB/s", 15);
+		else
+			strncpy(io_speed, "10MB/s", 15);
+		break;
+	case '2':
+		if (strncmp("0x0020", pci_did, 6))
+			strncpy(io_speed, "128KB/s", 15);
+		else
+			strncpy(io_speed, "512KB/s", 15);
+		break;
+	case '3':
+		strncpy(io_speed, "Write Reject", 15);
+		break;
+	default:
+		strncpy(io_speed, "Normal", 15);
+	}
+
+	if (sfx_smart.comp_ratio < 100)
+		sfx_smart.comp_ratio = 100;
+	else if (sfx_smart.comp_ratio > 800)
+		sfx_smart.comp_ratio = 800;
+
+	//Get status of atomic write feature
+	get_feat_args.args_size	= sizeof(get_feat_args);
+	get_feat_args.fid		= 0x0A;
+	get_feat_args.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT;
+	get_feat_args.result	= &get_feat_result;
+	err =  nvme_cli_get_features(dev, &get_feat_args);
+	if (err < 0) {
+		perror("Could not get feature (0x0A)");
+		err = errno;
+		goto close_dev;
+	} else if (err > 0) {
+		nvme_show_status(err);
+		goto close_dev;
+	}
+
+	if (cfg.json) {
+		root = json_create_object();
+		json_object_add_value_string(root, "ScaleFlux Status", dev->name);
+
+		dev_stats = json_create_object();
+		link_stats = json_create_object();
+		crit_stats = json_create_object();
+
+		json_object_add_value_string(dev_stats, "PCIe Vendor ID", pci_vid);
+		json_object_add_value_string(dev_stats, "PCIe Subsystem Vendor ID", pci_ssvid);
+		json_object_add_value_string(dev_stats, "Manufacturer", vendor);
+		json_object_add_value_string(dev_stats, "Model", model_number);
+		json_object_add_value_string(dev_stats, "Serial Number", serial_number);
+		json_object_add_value_string(dev_stats, "OPN", (char *)sfx_smart.opn);
+		json_object_add_value_string(dev_stats, "Drive Type", form_factor);
+		json_object_add_value_string(dev_stats, "Firmware Revision", firmware_revision);
+		json_object_add_value_string(dev_stats, "Temperature [C]", temperature);
+		json_object_add_value_uint(dev_stats, "Power Consumption [mW]", sfx_smart.power_mw_consumption);
+		json_object_add_value_uint(dev_stats, "Atomic Write Mode", (get_feat_result));
+		json_object_add_value_int(dev_stats, "Percentage Used", smart_log.percent_used);
+		json_object_add_value_string(dev_stats, "Data Read", uint128_t_to_si_string(le128_to_cpu(smart_log.data_units_read), 1000 * 512));
+		json_object_add_value_string(dev_stats, "Data Written", uint128_t_to_si_string(le128_to_cpu(smart_log.data_units_written), 1000 * 512));
+		json_object_add_value_int(dev_stats, "Correctable Error Count", sfx_smart.pcie_rx_correct_errs);
+		json_object_add_value_int(dev_stats, "Uncorrectable Error Count", sfx_smart.pcie_rx_uncorrect_errs);
+		json_object_add_value_string(link_stats, "PCIe Link Width", link_width);
+		json_object_add_value_string(link_stats, "PCIe Link Speed", link_speed);
+		json_object_add_value_int(link_stats, "PCIe Link Fatal Errors", pcie_fatal);
+		json_object_add_value_int(link_stats, "PCIe Link Non-Fatal Errors", pcie_nonfatal);
+		json_object_add_value_int(link_stats, "PCIe Link Correctable Errors", pcie_correctable);
+		json_object_add_value_string(link_stats, "PCIe Device Status", pcie_status);
+		json_object_add_value_object(dev_stats, "PCIe Link Status",	link_stats);
+		if (sfx_smart.friendly_changecap_support) {
+			json_object_add_value_int(dev_stats, "Current Formatted Capacity [GB]", sfx_smart.cur_formatted_capability);
+			json_object_add_value_int(dev_stats, "Max Formatted Capacity [GB]", sfx_smart.max_formatted_capability);
+			json_object_add_value_int(dev_stats, "Extendible Capacity LBA count", sfx_smart.extendible_cap_lbacount);
+		} else if (capacity_valid)
+			json_object_add_value_int(dev_stats, "Formatted  Capacity [GB]",	capacity);
+
+		json_object_add_value_int(dev_stats, "Provisioned Capacity [GB]",	IDEMA_CAP2GB(sfx_smart.total_physical_capability));
+		json_object_add_value_int(dev_stats, "Compression Ratio", sfx_smart.comp_ratio);
+		json_object_add_value_int(dev_stats, "Physical Used Ratio",	sfx_smart.physical_usage_ratio);
+		json_object_add_value_int(dev_stats, "Free Physical Space [GB]", IDEMA_CAP2GB(sfx_smart.free_physical_capability));
+		json_object_add_value_int(dev_stats, "Firmware RSA Verification",	(sfx_smart.otp_rsa_en));
+		json_object_add_value_string(dev_stats, "IO Speed",	io_speed);
+		json_object_add_value_string(dev_stats,	"NUMA Node", numa_node);
+		json_object_add_value_int(dev_stats, "Indirection Unit [kiB]",			(4*sfx_freespace.map_unit));
+		json_object_add_value_double(dev_stats, "Lifetime WAF", write_amp);
+
+		json_object_add_value_int(crit_stats, "Thermal Throttling On", (sfx_smart.temp_throttle_info));
+		json_object_add_value_int(crit_stats, "Backup Capacitor Status Bad", (smart_log.critical_warning & 0x10));
+		json_object_add_value_int(crit_stats, "Bad block exceeds threshold", (smart_log.critical_warning & 0x01));
+		json_object_add_value_int(crit_stats, "Media Error", (smart_log.critical_warning & 0x04));
+		json_object_add_value_int(crit_stats, "Read only mode", (smart_log.critical_warning & 0x08));
+		json_object_add_value_int(crit_stats, "Power Failure Data Loss", (sfx_smart.sfx_critical_warning & SFX_CRIT_PWR_FAIL_DATA_LOSS));
+		json_object_add_value_int(crit_stats, "Exceed physical capacity limitation", (sfx_smart.sfx_critical_warning & SFX_CRIT_OVER_CAP));
+		json_object_add_value_int(crit_stats, "Read/Write lock mode", (sfx_smart.sfx_critical_warning & SFX_CRIT_RW_LOCK));
+
+		json_object_add_value_object(dev_stats, "Critical Warning(s)", crit_stats);
+
+		json_object_add_value_object(root, "Device stats", dev_stats);
+
+		json_print_object(root, NULL);
+		printf("\n");
+		json_free_object(root);
+
+	} else {
+		// Re-using path variable to hold critical warning text
+		//    order is to match sfx-status, done here to include color
+		memset(path, 0, 512);
+		len = snprintf(path, 512, FMT_RED "\n%s%s%s%s%s%s%s%s" FMT_RESET, \
+		(sfx_smart.temp_throttle_info)			? "\tThermal Throttling On\n"				: "", \
+		(smart_log.critical_warning		& 0x10)	? "\tBackup Capacitor Status Bad\n"			: "", \
+		(smart_log.critical_warning		& 0x01)	? "\tBad block exceeds threshold\n"			: "", \
+		(smart_log.critical_warning		& 0x04)	? "\tMedia Error\n"							: "", \
+		(smart_log.critical_warning		& 0x08)	? "\tRead only mode\n"						: "", \
+		(sfx_smart.sfx_critical_warning & SFX_CRIT_PWR_FAIL_DATA_LOSS)	? "\tPower Failure Data Loss\n"				: "", \
+		(sfx_smart.sfx_critical_warning & SFX_CRIT_OVER_CAP)	? "\tExceed physical capacity limitation\n" : "", \
+		(sfx_smart.sfx_critical_warning & SFX_CRIT_RW_LOCK)	? "\tRead/Write lock mode\n"				: "" \
+		);
+		if (len < 11)
+			strcpy(path, "None");
+
+		printf("%-35s%s%s\n",	"ScaleFlux Drive:",					"/dev/", dev->name);
+		printf("%-35s%s\n",		"PCIe Vendor ID:",				pci_vid);
+		printf("%-35s%s\n",		"PCIe Subsystem Vendor ID:",	pci_ssvid);
+		printf("%-35s%s\n",		"Manufacturer:",				vendor);
+		printf("%-35s%.*s\n",	"Model:", 40,					model_number);
+		printf("%-35s%.*s\n",	"Serial Number:", 20,			serial_number);
+		printf("%-35s%.*s\n",	"OPN:", 32,						sfx_smart.opn);
+		printf("%-35s%s\n",		"Drive Type:",					form_factor);
+		printf("%-35s%.*s\n",	"Firmware Revision:", 8,		firmware_revision);
+		printf("%-35s%s C\n",	"Temperature:",					temperature);
+		printf("%-35s%i mW\n",	"Power Consumption:",			sfx_smart.power_mw_consumption);
+		printf("%-35s%s\n",		"Atomic Write mode:",			(get_feat_result)?"Off":"On");
+		printf("%-35s%u%%\n",	"Percentage Used:",				smart_log.percent_used);
+		printf("%-35s%s\n",		"Host Data Read:",					uint128_t_to_si_string( le128_to_cpu( \
+																	smart_log.data_units_read), 1000 * 512));
+		printf("%-35s%s\n",		"Host Data Written:",				uint128_t_to_si_string(le128_to_cpu( \
+																	smart_log.data_units_written), 1000 * 512));
+																	write_amp = int48_to_long(additional_smart_log.nand_bytes_written.raw)/(1.0 * int48_to_long(additional_smart_log.host_bytes_written.raw));
+		printf("%-35s%i\n",		"Correctable Error Cnt:",		sfx_smart.pcie_rx_correct_errs);
+		printf("%-35s%i\n",		"Uncorrectable Error Cnt:",		sfx_smart.pcie_rx_uncorrect_errs);
+		printf("%-35s%s\n",		"PCIe Link Status:",			link_string);
+		printf("%-35s%s\n",		"PCIe Device Status:",			pcie_status);
+		if (sfx_smart.friendly_changecap_support) {
+			printf("%-35s%llu GB\n", "Current Formatted Capacity:",	sfx_smart.cur_formatted_capability);
+			printf("%-35s%llu GB\n", "Max Formatted Capacity:",		sfx_smart.max_formatted_capability);
+			printf("%-35s%llu\n",	"Extendible Capacity LBA count:",	sfx_smart.extendible_cap_lbacount);
+		} else if (capacity_valid)
+			printf("%-35s%llu GB\n", "Formatted  Capacity:",	capacity);
+		printf("%-35s%llu GB\n",	"Provisioned Capacity:",	IDEMA_CAP2GB(sfx_smart.total_physical_capability));
+		printf("%-35s%u%%\n",	"Compression Ratio:",			sfx_smart.comp_ratio);
+		printf("%-35s%u%%\n",	"Physical Used Ratio:",			sfx_smart.physical_usage_ratio);
+		printf("%-35s%llu GB\n",	"Free Physical Space:",		IDEMA_CAP2GB(sfx_smart.free_physical_capability));
+		printf("%-35s%s\n",		"Firmware Verification:",					(sfx_smart.otp_rsa_en) ? "On":"Off");
+		printf("%-35s%s\n",		"IO Speed:",					io_speed);
+		printf("%-35s%s\n",		"NUMA Node:",					numa_node);
+		printf("%-35s%lluK\n",	"Indirection Unit:",			(4*sfx_freespace.map_unit));
+		printf("%-35s%.2f\n",	"Lifetime WAF:",				write_amp);
+		printf("%-35s%s\n",		"Critical Warning(s):",			path);
+	}
 
 close_dev:
 	dev_close(dev);
