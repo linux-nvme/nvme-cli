@@ -188,3 +188,9 @@ int ioctl(int fd, int request, ...)
 
 	return mock_cmd->err;
 }
+
+/* mock io_uring_get_probe, just fail */
+struct io_uring_probe *io_uring_get_probe(void)
+{
+	return 0;
+}
