@@ -108,8 +108,8 @@ static void amzn_print_latency_histogram(struct amzn_latency_histogram *hist)
 	for (int b = 0; b < hist->num_bins && b < 64; b++) {
 		struct amzn_latency_histogram_bin *bin = &hist->bins[b];
 
-		printf("[%-8llu - %-8llu] => %-8u\n",
-		       bin->lower, bin->upper, bin->count);
+		printf("[%-8"PRIu64" - %-8"PRIu64"] => %-8u\n",
+		       (uint64_t)bin->lower, (uint64_t)bin->upper, bin->count);
 	}
 
 	printf("=================================\n\n");
@@ -174,27 +174,27 @@ static void amzn_print_json_stats(struct amzn_latency_log_page *log)
 static void amzn_print_normal_stats(struct amzn_latency_log_page *log)
 {
 	printf("Total Ops:\n");
-	printf("  Read: %llu\n", log->total_read_ops);
-	printf("  Write: %llu\n", log->total_write_ops);
+	printf("  Read: %"PRIu64"\n", (uint64_t)log->total_read_ops);
+	printf("  Write: %"PRIu64"\n", (uint64_t)log->total_write_ops);
 	printf("Total Bytes:\n");
-	printf("  Read: %llu\n", log->total_read_bytes);
-	printf("  Write: %llu\n", log->total_write_bytes);
+	printf("  Read: %"PRIu64"\n", (uint64_t)log->total_read_bytes);
+	printf("  Write: %"PRIu64"\n", (uint64_t)log->total_write_bytes);
 	printf("Total Time (us):\n");
-	printf("  Read: %llu\n", log->total_read_time);
-	printf("  Write: %llu\n\n", log->total_write_time);
+	printf("  Read: %"PRIu64"\n", (uint64_t)log->total_read_time);
+	printf("  Write: %"PRIu64"\n\n", (uint64_t)log->total_write_time);
 
 	printf("EBS Volume Performance Exceeded (us):\n");
-	printf("  IOPS: %llu\n", log->ebs_volume_performance_exceeded_iops);
-	printf("  Throughput: %llu\n\n",
-	       log->ebs_volume_performance_exceeded_tp);
+	printf("  IOPS: %"PRIu64"\n", (uint64_t)log->ebs_volume_performance_exceeded_iops);
+	printf("  Throughput: %"PRIu64"\n\n",
+	       (uint64_t)log->ebs_volume_performance_exceeded_tp);
 	printf("EC2 Instance EBS Performance Exceeded (us):\n");
-	printf("  IOPS: %llu\n",
-	       log->ec2_instance_ebs_performance_exceeded_iops);
-	printf("  Throughput: %llu\n\n",
-	       log->ec2_instance_ebs_performance_exceeded_tp);
+	printf("  IOPS: %"PRIu64"\n",
+	       (uint64_t)log->ec2_instance_ebs_performance_exceeded_iops);
+	printf("  Throughput: %"PRIu64"\n\n",
+	       (uint64_t)log->ec2_instance_ebs_performance_exceeded_tp);
 
-	printf("Queue Length (point in time): %llu\n\n",
-	       log->volume_queue_length);
+	printf("Queue Length (point in time): %"PRIu64"\n\n",
+	       (uint64_t)log->volume_queue_length);
 
 	printf("Read IO Latency Histogram\n");
 	amzn_print_latency_histogram(&log->read_io_latency_histogram);
