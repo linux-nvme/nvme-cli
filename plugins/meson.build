@@ -2,7 +2,6 @@
 
 if json_c_dep.found()
   sources += [
-    'plugins/amzn/amzn-nvme.c',
     'plugins/dapustor/dapustor-nvme.c',
     'plugins/dell/dell-nvme.c',
     'plugins/fdp/fdp.c',
@@ -23,6 +22,7 @@ if json_c_dep.found()
 endif
 
 sources += [
+  'plugins/amzn/amzn-nvme.c',
   'plugins/dera/dera-nvme.c',
   'plugins/innogrit/innogrit-nvme.c',
   'plugins/inspur/inspur-nvme.c',

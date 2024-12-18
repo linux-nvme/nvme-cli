@@ -10,6 +10,7 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "amzn-nvme.h"
@@ -17,11 +18,13 @@
 #define AMZN_NVME_STATS_LOGPAGE_ID 0xD0
 #define AMZN_NVME_STATS_MAGIC 0x3C23B510
 
+#ifdef CONFIG_JSONC
 #define array_add_obj json_array_add_value_object
 #define obj_add_array json_object_add_value_array
 #define obj_add_obj json_object_add_value_object
 #define obj_add_uint json_object_add_value_uint
 #define obj_add_uint64 json_object_add_value_uint64
+#endif /* CONFIG_JSONC */
 
 struct nvme_vu_id_ctrl_field {
 	__u8			bdev[32];
@@ -105,13 +108,14 @@ static void amzn_print_latency_histogram(struct amzn_latency_histogram *hist)
 	for (int b = 0; b < hist->num_bins && b < 64; b++) {
 		struct amzn_latency_histogram_bin *bin = &hist->bins[b];
 
-		printf("[%-8llu - %-8llu] => %-8u\n",
-		       bin->lower, bin->upper, bin->count);
+		printf("[%-8"PRIu64" - %-8"PRIu64"] => %-8u\n",
+		       (uint64_t)bin->lower, (uint64_t)bin->upper, bin->count);
 	}
 
 	printf("=================================\n\n");
 }
 
+#ifdef CONFIG_JSONC
 static void amzn_json_add_histogram(struct json_object *root,
 				    struct amzn_latency_histogram *hist)
 {
@@ -165,31 +169,32 @@ static void amzn_print_json_stats(struct amzn_latency_log_page *log)
 
 	json_free_object(root);
 }
+#endif /* CONFIG_JSONC */
 
 static void amzn_print_normal_stats(struct amzn_latency_log_page *log)
 {
 	printf("Total Ops:\n");
-	printf("  Read: %llu\n", log->total_read_ops);
-	printf("  Write: %llu\n", log->total_write_ops);
+	printf("  Read: %"PRIu64"\n", (uint64_t)log->total_read_ops);
+	printf("  Write: %"PRIu64"\n", (uint64_t)log->total_write_ops);
 	printf("Total Bytes:\n");
-	printf("  Read: %llu\n", log->total_read_bytes);
-	printf("  Write: %llu\n", log->total_write_bytes);
+	printf("  Read: %"PRIu64"\n", (uint64_t)log->total_read_bytes);
+	printf("  Write: %"PRIu64"\n", (uint64_t)log->total_write_bytes);
 	printf("Total Time (us):\n");
-	printf("  Read: %llu\n", log->total_read_time);
-	printf("  Write: %llu\n\n", log->total_write_time);
+	printf("  Read: %"PRIu64"\n", (uint64_t)log->total_read_time);
+	printf("  Write: %"PRIu64"\n\n", (uint64_t)log->total_write_time);
 
 	printf("EBS Volume Performance Exceeded (us):\n");
-	printf("  IOPS: %llu\n", log->ebs_volume_performance_exceeded_iops);
-	printf("  Throughput: %llu\n\n",
-	       log->ebs_volume_performance_exceeded_tp);
+	printf("  IOPS: %"PRIu64"\n", (uint64_t)log->ebs_volume_performance_exceeded_iops);
+	printf("  Throughput: %"PRIu64"\n\n",
+	       (uint64_t)log->ebs_volume_performance_exceeded_tp);
 	printf("EC2 Instance EBS Performance Exceeded (us):\n");
-	printf("  IOPS: %llu\n",
-	       log->ec2_instance_ebs_performance_exceeded_iops);
-	printf("  Throughput: %llu\n\n",
-	       log->ec2_instance_ebs_performance_exceeded_tp);
+	printf("  IOPS: %"PRIu64"\n",
+	       (uint64_t)log->ec2_instance_ebs_performance_exceeded_iops);
+	printf("  Throughput: %"PRIu64"\n\n",
+	       (uint64_t)log->ec2_instance_ebs_performance_exceeded_tp);
 
-	printf("Queue Length (point in time): %llu\n\n",
-	       log->volume_queue_length);
+	printf("Queue Length (point in time): %"PRIu64"\n\n",
+	       (uint64_t)log->volume_queue_length);
 
 	printf("Read IO Latency Histogram\n");
 	amzn_print_latency_histogram(&log->read_io_latency_histogram);
@@ -205,6 +210,8 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 	struct nvme_dev *dev;
 	struct amzn_latency_log_page log = { 0 };
 	int rc;
+	nvme_print_flags_t flags;
+	int err;
 
 	struct config {
 		char *output_format;
@@ -253,9 +260,17 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 		return -ENOTSUP;
 	}
 
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+#ifdef CONFIG_JSONC
 	if (!strcmp(cfg.output_format, "json"))
 		amzn_print_json_stats(&log);
 	else
+#endif /* CONFIG_JSONC */
 		amzn_print_normal_stats(&log);
 
 	return 0;
