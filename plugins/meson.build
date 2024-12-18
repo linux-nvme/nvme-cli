@@ -36,6 +36,7 @@ sources += [
   ]
 
 subdir('ocp')
+subdir('lm')
 
 if conf.get('HAVE_SED_OPAL') != 0
   subdir('sed')
