@@ -19,7 +19,7 @@ SYNOPSIS
 			[--storage-tag<storage-tag> | -S <storage-tag>]
 			[--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
 			[--dir-type=<dtype> | -T <dtype>]
-			[--dir-spec=<dspec> | -D <dspec>]
+			[--dir-spec=<dspec> | -D <dspec>] [--namespace-zeroes | -Z]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 			[--timeout=<timeout> | -t <timeout>]
 
@@ -97,6 +97,9 @@ metadata is passes.
 -D <dspec>::
 --dir-spec=<dspec>::
 	Directive specific
+-Z::
+--namespace-zeroes::
+	If set, then the controller clear all logical blocks to zero in the entire namespace.
 
 -o <fmt>::
 --output-format=<fmt>::

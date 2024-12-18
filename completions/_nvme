@@ -1455,6 +1455,8 @@ _nvme () {
 			-C':alias of --storage-tag-check'
 			--dir-spec=':directive specific'
 			-D':alias of --dir-spec'
+			--namespace-zeroes':If set, then the controller clear all logical blocks to zero in the entire namespace'
+			-Z':alias of --namespace-zeroes'
 			--timeout=':value for timeout'
 			-t':alias of --timeout'
 			)

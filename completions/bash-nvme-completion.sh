@@ -340,7 +340,8 @@ nvme_list_opts () {
 			--force-unit-access -f --prinfo= -p --ref-tag= -r \
 			--app-tag-mask= -m --app-tag= -a \
 			--storage-tag= -S --storage-tag-check -C \
-			--dir-type= -T --dir-spec= -S --timeout= -t"
+			--dir-type= -T --dir-spec= -S --namespace-zeroes -Z \
+			--timeout= -t"
 			;;
 		"write-uncor")
 		opts+=" --namespace-id= -n --start-block= -s \
@@ -1660,7 +1661,7 @@ _nvme_subcmds () {
 		security-send security-recv get-lba-status \
 		resv-acquire resv-register resv-release \
 		resv-report dsm copy flush compare read \
-		write write-zeros write-uncor verify \
+		write write-zeroes write-uncor verify \
 		sanitize sanitize-log reset subsystem-reset \
 		ns-rescan show-regs discover connect-all \
 		connect disconnect disconnect-all gen-hostnqn \
