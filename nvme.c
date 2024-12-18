@@ -185,7 +185,11 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
+#ifdef CONFIG_JSONC
 const char *output_format = "Output format: normal|json|binary";
+#else /* CONFIG_JSONC */
+const char *output_format = "Output format: normal|binary";
+#endif /* CONFIG_JSONC */
 const char *timeout = "timeout value, in milliseconds";
 const char *verbose = "Increase output verbosity";
 
@@ -480,8 +484,10 @@ int validate_output_format(const char *format, nvme_print_flags_t *flags)
 
 	if (!strcmp(format, "normal"))
 		f = NORMAL;
+#ifdef CONFIG_JSONC
 	else if (!strcmp(format, "json"))
 		f = JSON;
+#endif /* CONFIG_JSONC */
 	else if (!strcmp(format, "binary"))
 		f = BINARY;
 	else
