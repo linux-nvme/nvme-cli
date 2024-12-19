@@ -737,10 +737,13 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd,
 	struct format cfg = {
 		.fmt = "normal",
 	};
+#ifdef CONFIG_JSONC
 	bool is_json = false;
 	struct json_object *root;
 	struct json_object *logPages;
+#endif /* CONFIG_JSONC */
 	struct nvme_dev *dev;
+	nvme_print_flags_t flags;
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("format", 'f', &cfg.fmt, fmt),
@@ -753,8 +756,16 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd,
 		return -1;
 	}
 
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+#ifdef CONFIG_JSONC
 	if (!strcmp(cfg.fmt, "json"))
 		is_json = true;
+#endif /* CONFIG_JSONC */
 
 	err = nvme_get_log_smart(dev_fd(dev), 0xffffffff, false, &smart_log);
 	if (!err) {
@@ -764,6 +775,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd,
 			tempSensors[i] = le16_to_cpu(smart_log.temp_sensor[i]);
 			tempSensors[i] = tempSensors[i] ? tempSensors[i] - 273 : 0;
 		}
+#ifdef CONFIG_JSONC
 		if (is_json) {
 			struct json_object *stats = json_create_object();
 			char tempstr[64] = { 0 };
@@ -786,11 +798,14 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd,
 			printf("\n");
 			json_free_object(root);
 		} else {
+#endif /* CONFIG_JSONC */
 			printf("Micron temperature information:\n");
 			printf("%-10s : %u C\n", "Current Composite Temperature", temperature);
 			for (i = 0; i < SensorCount && tempSensors[i]; i++)
 				printf("%-10s%d : %u C\n", "Temperature Sensor #", i + 1, tempSensors[i]);
+#ifdef CONFIG_JSONC
 		}
+#endif /* CONFIG_JSONC */
 	}
 	dev_close(dev);
 	return err;
@@ -812,7 +827,9 @@ static int micron_pcie_stats(int argc, char **argv,
 	struct nvme_passthru_cmd admin_cmd = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	char *res;
+#ifdef CONFIG_JSONC
 	bool is_json = true;
+#endif /* CONFIG_JSONC */
 	bool counters = false;
 	struct format {
 		char *fmt;
@@ -840,6 +857,7 @@ static int micron_pcie_stats(int argc, char **argv,
 		__u16 ecrc_error;
 		__u16 unsupported_request_error;
 	} pcie_error_counters = { 0 };
+	nvme_print_flags_t flags;
 
 	struct {
 		char *err;
@@ -905,8 +923,16 @@ static int micron_pcie_stats(int argc, char **argv,
 		goto out;
 	}
 
+	err = validate_output_format(cfg.fmt, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+#ifdef CONFIG_JSONC
 	if (!strcmp(cfg.fmt, "normal"))
 		is_json = false;
+#endif /* CONFIG_JSONC */
 
 	if (eModel == M5407) {
 		admin_cmd.opcode = 0xD6;
@@ -987,6 +1013,7 @@ static int micron_pcie_stats(int argc, char **argv,
 	uncorrectable_errors = (__u32)strtol(uncorrectable, NULL, 16);
 
 print_stats:
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		struct json_object *root = json_create_object();
 		struct json_object *pcieErrors = json_create_array();
@@ -1009,6 +1036,9 @@ print_stats:
 		printf("\n");
 		json_free_object(root);
 	} else if (counters == true) {
+#else /* CONFIG_JSONC */
+	if (counters == true) {
+#endif /* CONFIG_JSONC */
 		__u8 *pcounter = (__u8 *)&pcie_error_counters;
 
 		for (i = 0; i < ARRAY_SIZE(pcie_correctable_errors); i++)
@@ -1324,11 +1354,14 @@ fb_log_page[] = {
 
 static void print_smart_cloud_health_log(__u8 *buf, bool is_json)
 {
+#ifdef CONFIG_JSONC
 	struct json_object *root;
 	struct json_object *logPages;
+#endif /* CONFIG_JSONC */
 	struct json_object *stats = NULL;
 	int field_count = ARRAY_SIZE(ocp_c0_log_page);
 
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		root = json_create_object();
 		stats = json_create_object();
@@ -1336,24 +1369,30 @@ static void print_smart_cloud_health_log(__u8 *buf, bool is_json)
 		json_object_add_value_array(root, "OCP SMART Cloud Health Log: 0xC0",
 					    logPages);
 	}
+#endif /* CONFIG_JSONC */
 
 	generic_structure_parser(buf, ocp_c0_log_page, field_count, stats, 0, NULL);
 
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		json_array_add_value_object(logPages, stats);
 		json_print_object(root, NULL);
 		printf("\n");
 		json_free_object(root);
 	}
+#endif /* CONFIG_JSONC */
 }
 
 static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json, __u8 spec)
 {
+#ifdef CONFIG_JSONC
 	struct json_object *root;
 	struct json_object *logPages;
+#endif /* CONFIG_JSONC */
 	struct json_object *stats = NULL;
 	int field_count = ARRAY_SIZE(fb_log_page);
 
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		root = json_create_object();
 		stats = json_create_object();
@@ -1361,6 +1400,7 @@ static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json, 
 		json_object_add_value_array(root, "Extended Smart Log Page : 0xFB",
 					    logPages);
 	}
+#endif /* CONFIG_JSONC */
 
 	generic_structure_parser(buf, fb_log_page, field_count, stats, spec, NULL);
 
@@ -1368,29 +1408,36 @@ static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json, 
 	if (buf2) {
 		init_d0_log_page(buf2, nsze);
 
+#ifdef CONFIG_JSONC
 		if (is_json) {
 			for (int i = 0; i < 7; i++)
 				json_object_add_value_string(stats,
 						 d0_log_page[i].field,
 						 d0_log_page[i].datastr);
 		} else {
+#endif /* CONFIG_JSONC */
 			for (int i = 0; i < 7; i++)
 				printf("%-40s : %s\n", d0_log_page[i].field, d0_log_page[i].datastr);
+#ifdef CONFIG_JSONC
 		}
+#endif /* CONFIG_JSONC */
 	}
 
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		json_array_add_value_object(logPages, stats);
 		json_print_object(root, NULL);
 		printf("\n");
 		json_free_object(root);
 	}
+#endif /* CONFIG_JSONC */
 }
 
 static void print_nand_stats_d0(__u8 *buf, __u8 oacs, bool is_json)
 {
 	init_d0_log_page(buf, oacs);
 
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		struct json_object *root = json_create_object();
 		struct json_object *stats = json_create_object();
@@ -1410,9 +1457,12 @@ static void print_nand_stats_d0(__u8 *buf, __u8 oacs, bool is_json)
 		printf("\n");
 		json_free_object(root);
 	} else {
+#endif /* CONFIG_JSONC */
 		for (int i = 0; i < 7; i++)
 			printf("%-40s : %s\n", d0_log_page[i].field, d0_log_page[i].datastr);
+#ifdef CONFIG_JSONC
 	}
+#endif /* CONFIG_JSONC */
 }
 
 static bool nsze_from_oacs; /* read nsze for now from idd[4059] */
@@ -1502,28 +1552,36 @@ out:
 
 static void print_ext_smart_logs_e1(__u8 *buf, bool is_json)
 {
+#ifdef CONFIG_JSONC
 	struct json_object *root;
 	struct json_object *logPages;
+#endif /* CONFIG_JSONC */
 	struct json_object *stats = NULL;
 	int field_count = ARRAY_SIZE(e1_log_page);
 
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		root = json_create_object();
 		stats = json_create_object();
 		logPages = json_create_array();
 		json_object_add_value_array(root, "SMART Extended Log:0xE1", logPages);
 	} else {
+#endif /* CONFIG_JSONC */
 		printf("SMART Extended Log:0xE1\n");
+#ifdef CONFIG_JSONC
 	}
+#endif /* CONFIG_JSONC */
 
 	generic_structure_parser(buf, e1_log_page, field_count, stats, 0, NULL);
 
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		json_array_add_value_object(logPages, stats);
 		json_print_object(root, NULL);
 		printf("\n");
 		json_free_object(root);
 	}
+#endif /* CONFIG_JSONC */
 }
 
 static int micron_smart_ext_log(int argc, char **argv,
@@ -1546,12 +1604,20 @@ static int micron_smart_ext_log(int argc, char **argv,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt),
 		OPT_END()
 	};
+	nvme_print_flags_t flags;
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err) {
 		printf("\nDevice not found\n");
 		return -1;
 	}
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
 	if (!strcmp(cfg.fmt, "normal"))
 		is_json = false;
 
@@ -1949,13 +2015,16 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 		unsigned char bs_ver_minor;
 	} dinfo = { 0 };
 	enum eDriveModel model = UNKNOWN_MODEL;
+#ifdef CONFIG_JSONC
 	bool is_json = false;
 	struct json_object *root, *driveInfo;
+#endif /* CONFIG_JSONC */
 	struct nvme_dev *dev;
 	struct format {
 		char *fmt;
 	};
 	int err = 0;
+	nvme_print_flags_t flags;
 
 	const char *fmt = "output format normal";
 	struct format cfg = {
@@ -1977,8 +2046,16 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 		return -1;
 	}
 
+	err = validate_output_format(cfg.fmt, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+#ifdef CONFIG_JSONC
 	if (!strcmp(cfg.fmt, "json"))
 		is_json = true;
+#endif /* CONFIG_JSONC */
 
 	if (model == M5407) {
 		admin_cmd.opcode = 0xD4,
@@ -2003,6 +2080,7 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 		dinfo.ftl_unit_size = ctrl.vs[822];
 	}
 
+#ifdef CONFIG_JSONC
 	if (is_json) {
 		struct json_object *pinfo = json_create_object();
 		char tempstr[64] = { 0 };
@@ -2028,6 +2106,7 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 		printf("\n");
 		json_free_object(root);
 	} else {
+#endif /* CONFIG_JSONC */
 		printf("Drive Hardware Version: %u.%u\n",
 				dinfo.hw_ver_major, dinfo.hw_ver_minor);
 
@@ -2037,7 +2116,9 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 		if (dinfo.bs_ver_major || dinfo.bs_ver_minor)
 			printf("Boot  Spec.Version: %u.%u\n",
 			       dinfo.bs_ver_major, dinfo.bs_ver_minor);
+#ifdef CONFIG_JSONC
 	}
+#endif /* CONFIG_JSONC */
 
 	dev_close(dev);
 	return 0;
