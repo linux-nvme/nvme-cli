@@ -96,6 +96,7 @@ struct nvme_extended_additional_smart_log {
 	struct nvme_additional_smart_log_item	inflight_write_io_cmd;
 };
 
+#ifdef CONFIG_JSONC
 static void show_dapustor_add_smart_log_jsn(struct nvme_additional_smart_log *smart,
 					    struct json_object *dev_stats)
 {
@@ -348,6 +349,9 @@ static void show_dapustor_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_print_object(root, NULL);
 	json_free_object(root);
 }
+#else /* CONFIG_JSONC */
+#define show_dapustor_smart_log_jsn(smart, ext_smart, nsid,  devname, has_ext)
+#endif /* CONFIG_JSONC */
 
 static void show_dapustor_add_smart_log(struct nvme_additional_smart_log *smart)
 {
@@ -505,7 +509,9 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 	const char *desc = "Get DapuStor vendor specific additional smart log, and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "Dump output in binary format";
+#ifdef CONFIG_JSONC
 	const char *json = "Dump output in json format";
+#endif /* CONFIG_JSONC */
 
 	struct nvme_additional_smart_log smart_log;
 	struct nvme_extended_additional_smart_log ext_smart_log;
@@ -526,7 +532,9 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+#ifdef CONFIG_JSONC
 		OPT_FLAG("json",         'j', &cfg.json,         json),
+#endif /* CONFIG_JSONC */
 		OPT_END()
 	};
 
