@@ -117,6 +117,7 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 	return 0;
 }
 
+#ifdef CONFIG_JSONC
 static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 {
 	fmt_sz = snprintf(formatter, fmt_sz, "%-*.*s", (int)tofmtsz, (int)tofmtsz, tofmt);
@@ -177,6 +178,7 @@ static void huawei_json_print_list_items(struct huawei_list_item *list_items,
 	printf("\n");
 	json_free_object(root);
 }
+#endif /* CONFIG_JSONC */
 
 static void huawei_print_list_head(struct huawei_list_element_len element_len)
 {
@@ -351,9 +353,11 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	}
 
 	if (huawei_num > 0) {
+#ifdef CONFIG_JSONC
 		if (fmt == JSON)
 			huawei_json_print_list_items(list_items, huawei_num);
 		else
+#endif /* CONFIG_JSONC */
 			huawei_print_list_items(list_items, huawei_num);
 	}
 out_free_list_items:
