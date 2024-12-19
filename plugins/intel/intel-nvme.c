@@ -74,6 +74,7 @@ struct nvme_vu_id_ctrl_field { /* CDR MR5 */
 	__u8			mic_fw[4];
 };
 
+#ifdef CONFIG_JSONC
 static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 	char *health, char *bl, char *ww, char *mic_bl, char *mic_fw,
 	struct json_object *root)
@@ -89,6 +90,9 @@ static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 	json_object_add_value_string(root, "mic_bl", mic_bl);
 	json_object_add_value_string(root, "mic_fw", mic_fw);
 }
+#else /* CONFIG_JSONC */
+#define json_intel_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root)
+#endif /* CONFIG_JSONC */
 
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
@@ -134,6 +138,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 	return __id_ctrl(argc, argv, cmd, plugin, intel_id_ctrl);
 }
 
+#ifdef CONFIG_JSONC
 static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
@@ -256,6 +261,9 @@ static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_print_object(root, NULL);
 	json_free_object(root);
 }
+#else /* CONFIG_JSONC */
+#define show_intel_smart_log_jsn(smart, nsid, devname)
+#endif /* CONFIG_JSONC */
 
 static char *id_to_key(__u8 id)
 {
@@ -336,7 +344,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	    "Get Intel vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "Dump output in binary format";
+#ifdef CONFIG_JSONC
 	const char *json = "Dump output in json format";
+#endif /* CONFIG_JSONC */
 
 	struct nvme_additional_smart_log smart_log;
 	struct nvme_dev *dev;
@@ -355,7 +365,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+#ifdef CONFIG_JSONC
 		OPT_FLAG("json",         'j', &cfg.json,         json),
+#endif /* CONFIG_JSONC */
 		OPT_END()
 	};
 
@@ -683,6 +695,7 @@ static int lat_stats_log_scale(int i)
  *     "type" : "write" or "read",
  *     "values" : {
  */
+#ifdef CONFIG_JSONC
 static void lat_stats_make_json_root(
 	struct json_object *root, struct json_object *bucket_list,
 	int write)
@@ -814,6 +827,7 @@ static void json_lat_stats_4_0(struct intel_lat_stats *stats,
 	json_print_object(root, NULL);
 	json_free_object(root);
 }
+#endif /* CONFIG_JSONC */
 
 static void show_lat_stats_3_0(struct intel_lat_stats *stats)
 {
@@ -844,6 +858,7 @@ static void show_lat_stats_4_0(struct intel_lat_stats *stats)
 	}
 }
 
+#ifdef CONFIG_JSONC
 static void json_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 {
 	int i;
@@ -892,6 +907,7 @@ static void json_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 	json_free_object(root);
 
 }
+#endif /* CONFIG_JSONC */
 
 static void show_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 {
@@ -925,6 +941,7 @@ static void show_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 
 }
 
+#ifdef CONFIG_JSONC
 static void json_lat_stats(int write)
 {
 	switch (media_version[MEDIA_MAJOR_IDX]) {
@@ -965,6 +982,9 @@ static void json_lat_stats(int write)
 	}
 	printf("\n");
 }
+#else /* CONFIG_JSONC */
+#define json_lat_stats(write)
+#endif /* CONFIG_JSONC */
 
 static void print_dash_separator(int count)
 {
@@ -1032,7 +1052,9 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
 	const char *raw = "Dump output in binary format";
+#ifdef CONFIG_JSONC
 	const char *json = "Dump output in json format";
+#endif /* CONFIG_JSONC */
 	const char *write = "Get write statistics (read default)";
 
 	struct config {
@@ -1047,7 +1069,9 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("write",	'w', &cfg.write,	write),
 		OPT_FLAG("raw-binary",	'b', &cfg.raw_binary,	raw),
+#ifdef CONFIG_JSONC
 		OPT_FLAG("json",	'j', &cfg.json,		json),
+#endif /* CONFIG_JSONC */
 		OPT_END()
 	};
 
