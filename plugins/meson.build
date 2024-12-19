@@ -2,7 +2,6 @@
 
 if json_c_dep.found()
   sources += [
-    'plugins/huawei/huawei-nvme.c',
     'plugins/intel/intel-nvme.c',
     'plugins/micron/micron-nvme.c',
     'plugins/nbft/nbft-plugin.c',
@@ -24,6 +23,7 @@ sources += [
   'plugins/dell/dell-nvme.c',
   'plugins/dera/dera-nvme.c',
   'plugins/fdp/fdp.c',
+  'plugins/huawei/huawei-nvme.c',
   'plugins/innogrit/innogrit-nvme.c',
   'plugins/inspur/inspur-nvme.c',
   'plugins/memblaze/memblaze-nvme.c',
