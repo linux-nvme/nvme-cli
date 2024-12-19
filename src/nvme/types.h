@@ -2060,11 +2060,26 @@ enum nvme_id_ctrl_rpmbs {
  * enum nvme_id_ctrl_dsto - Flags indicating the optional Device Self-test
  *			    command or operation behaviors supported by the
  *			    controller or NVM subsystem.
- * @NVME_CTRL_DSTO_ONE_DST: If set,  then the NVM subsystem supports only one
- *			    device self-test operation in progress at a time.
+ * @NVME_CTRL_DSTO_SDSO_SHIFT:	Shift amount to get the value of Single Device Self-test
+ *				Operation from Device Self-test Options field.
+ * @NVME_CTRL_DSTO_HIRS_SHIFT:	Shift amount to get the value of  Host-Initiated Refresh
+ *				Support from Device Self-test Options field.
+ * @NVME_CTRL_DSTO_SDSO_MASK:	Mask to get the value of Single Device Self-test Operation
+ * @NVME_CTRL_DSTO_HIRS_MASK:	Mask to get the value of Host-Initiated Refresh Support
+ * @NVME_CTRL_DSTO_ONE_DST:	If set, then the NVM subsystem supports only one device
+ *				self-test operation in progress at a time. If cleared,
+ *				then the NVM subsystem supports one device self-test
+ *				operation per controller at a time.
+ * @NVME_CTRL_DSTO_HIRS:	If set, then the controller supports the Host-Initiated
+ *				Refresh capability.
  */
 enum nvme_id_ctrl_dsto {
-	NVME_CTRL_DSTO_ONE_DST			= 1 << 0,
+	NVME_CTRL_DSTO_SDSO_SHIFT		= 0,
+	NVME_CTRL_DSTO_HIRS_SHIFT		= 1,
+	NVME_CTRL_DSTO_SDSO_MASK		= 0x1,
+	NVME_CTRL_DSTO_HIRS_MASK		= 0x1,
+	NVME_CTRL_DSTO_ONE_DST			= NVME_VAL(CTRL_DSTO_SDSO),
+	NVME_CTRL_DSTO_HIRS			= NVME_VAL(CTRL_DSTO_HIRS),
 };
 
 /**
@@ -3760,6 +3775,7 @@ enum nvme_status_result {
  * @NVME_ST_CODE_RESERVED: Reserved.
  * @NVME_ST_CODE_SHORT:	   Short device self-test operation.
  * @NVME_ST_CODE_EXTENDED: Extended device self-test operation.
+ * @NVME_ST_CODE_HOST_INIT:Host-Initiated Refresh operation.
  * @NVME_ST_CODE_VS:	   Vendor specific.
  * @NVME_ST_CODE_ABORT:	   Abort device self-test operation.
  * @NVME_ST_CODE_SHIFT:	   Shift amount to get the code value from the
@@ -3769,6 +3785,7 @@ enum nvme_st_code {
 	NVME_ST_CODE_RESERVED		= 0x0,
 	NVME_ST_CODE_SHORT		= 0x1,
 	NVME_ST_CODE_EXTENDED		= 0x2,
+	NVME_ST_CODE_HOST_INIT		= 0x3,
 	NVME_ST_CODE_VS			= 0xe,
 	NVME_ST_CODE_ABORT		= 0xf,
 	NVME_ST_CODE_SHIFT		= 4,
@@ -8647,12 +8664,14 @@ enum nvme_sanitize_sanact {
  * enum nvme_dst_stc - Action taken by the Device Self-test command
  * @NVME_DST_STC_SHORT:	 Start a short device self-test operation
  * @NVME_DST_STC_LONG:	 Start an extended device self-test operation
+ * @NVME_DST_STC_HOST_INIT:Start a Host-Initiated Refresh operation
  * @NVME_DST_STC_VS:	 Start a vendor specific device self-test operation
  * @NVME_DST_STC_ABORT:	 Abort device self-test operation
  */
 enum nvme_dst_stc {
 	NVME_DST_STC_SHORT					= 0x1,
 	NVME_DST_STC_LONG					= 0x2,
+	NVME_DST_STC_HOST_INIT					= 0x3,
 	NVME_DST_STC_VS						= 0xe,
 	NVME_DST_STC_ABORT					= 0xf,
 };
