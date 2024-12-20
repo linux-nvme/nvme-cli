@@ -2,7 +2,6 @@
 
 if json_c_dep.found()
   sources += [
-    'plugins/nbft/nbft-plugin.c',
     'plugins/netapp/netapp-nvme.c',
     'plugins/nvidia/nvidia-nvme.c',
     'plugins/scaleflux/sfx-nvme.c',
@@ -27,6 +26,7 @@ sources += [
   'plugins/intel/intel-nvme.c',
   'plugins/memblaze/memblaze-nvme.c',
   'plugins/micron/micron-nvme.c',
+  'plugins/nbft/nbft-plugin.c',
   'plugins/shannon/shannon-nvme.c',
   'plugins/toshiba/toshiba-nvme.c',
   'plugins/transcend/transcend-nvme.c',
