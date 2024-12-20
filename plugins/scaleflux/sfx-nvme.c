@@ -2049,19 +2049,26 @@ static int sfx_status(int argc, char **argv, struct command *cmd, struct plugin 
 		printf("%-35s%s\n",		"PCIe Link Status:",			link_string);
 		printf("%-35s%s\n",		"PCIe Device Status:",			pcie_status);
 		if (sfx_smart.friendly_changecap_support) {
-			printf("%-35s%llu GB\n", "Current Formatted Capacity:",	sfx_smart.cur_formatted_capability);
-			printf("%-35s%llu GB\n", "Max Formatted Capacity:",		sfx_smart.max_formatted_capability);
-			printf("%-35s%llu\n",	"Extendible Capacity LBA count:",	sfx_smart.extendible_cap_lbacount);
-		} else if (capacity_valid)
-			printf("%-35s%llu GB\n", "Formatted  Capacity:",	capacity);
-		printf("%-35s%llu GB\n",	"Provisioned Capacity:",	IDEMA_CAP2GB(sfx_smart.total_physical_capability));
+			printf("%-35s%"PRIu64" GB\n", "Current Formatted Capacity:",
+			       (uint64_t)sfx_smart.cur_formatted_capability);
+			printf("%-35s%"PRIu64" GB\n", "Max Formatted Capacity:",
+			       (uint64_t)sfx_smart.max_formatted_capability);
+			printf("%-35s%"PRIu64"\n", "Extendible Capacity LBA count:",
+			       (uint64_t)sfx_smart.extendible_cap_lbacount);
+		} else if (capacity_valid) {
+			printf("%-35s%"PRIu64" GB\n", "Formatted  Capacity:", (uint64_t)capacity);
+		}
+		printf("%-35s%"PRIu64" GB\n", "Provisioned Capacity:",
+		       (uint64_t)IDEMA_CAP2GB(sfx_smart.total_physical_capability));
 		printf("%-35s%u%%\n",	"Compression Ratio:",			sfx_smart.comp_ratio);
 		printf("%-35s%u%%\n",	"Physical Used Ratio:",			sfx_smart.physical_usage_ratio);
-		printf("%-35s%llu GB\n",	"Free Physical Space:",		IDEMA_CAP2GB(sfx_smart.free_physical_capability));
+		printf("%-35s%"PRIu64" GB\n", "Free Physical Space:",
+		       (uint64_t)IDEMA_CAP2GB(sfx_smart.free_physical_capability));
 		printf("%-35s%s\n",		"Firmware Verification:",					(sfx_smart.otp_rsa_en) ? "On":"Off");
 		printf("%-35s%s\n",		"IO Speed:",					io_speed);
 		printf("%-35s%s\n",		"NUMA Node:",					numa_node);
-		printf("%-35s%lluK\n",	"Indirection Unit:",			(4*sfx_freespace.map_unit));
+		printf("%-35s%"PRIu64"K\n", "Indirection Unit:",
+		       (uint64_t)(4*sfx_freespace.map_unit));
 		printf("%-35s%.2f\n",	"Lifetime WAF:",				write_amp);
 		printf("%-35s%s\n",		"Critical Warning(s):",			path);
 	}
