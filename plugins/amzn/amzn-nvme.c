@@ -18,13 +18,11 @@
 #define AMZN_NVME_STATS_LOGPAGE_ID 0xD0
 #define AMZN_NVME_STATS_MAGIC 0x3C23B510
 
-#ifdef CONFIG_JSONC
 #define array_add_obj json_array_add_value_object
 #define obj_add_array json_object_add_value_array
 #define obj_add_obj json_object_add_value_object
 #define obj_add_uint json_object_add_value_uint
 #define obj_add_uint64 json_object_add_value_uint64
-#endif /* CONFIG_JSONC */
 
 struct nvme_vu_id_ctrl_field {
 	__u8			bdev[32];
@@ -169,6 +167,8 @@ static void amzn_print_json_stats(struct amzn_latency_log_page *log)
 
 	json_free_object(root);
 }
+#else /* CONFIG_JSONC */
+#define amzn_print_json_stats(log)
 #endif /* CONFIG_JSONC */
 
 static void amzn_print_normal_stats(struct amzn_latency_log_page *log)
@@ -266,11 +266,9 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 		return err;
 	}
 
-#ifdef CONFIG_JSONC
-	if (!strcmp(cfg.output_format, "json"))
+	if (flags & JSON)
 		amzn_print_json_stats(&log);
 	else
-#endif /* CONFIG_JSONC */
 		amzn_print_normal_stats(&log);
 
 	return 0;
