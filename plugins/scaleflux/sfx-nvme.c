@@ -101,6 +101,7 @@ int nvme_sfx_get_features(int fd, __u32 nsid, __u32 fid, __u32 *result)
 	return err;
 }
 
+#ifdef CONFIG_JSONC
 static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
@@ -239,6 +240,9 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	printf("\n");
 	json_free_object(root);
 }
+#else /* CONFIG_JSONC */
+#define show_sfx_smart_log_jsn(smart, nsid, devname)
+#endif /* CONFIG_JSONC */
 
 static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
@@ -328,7 +332,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	    "Get ScaleFlux vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
+#ifdef CONFIG_JSONC
 	const char *json = "Dump output in json format";
+#endif /* CONFIG_JSONC */
 	struct nvme_dev *dev;
 	struct config {
 		__u32 namespace_id;
@@ -347,7 +353,6 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		OPT_FLAG_JSON("json",	 'j', &cfg.json,	 json),
 		OPT_END()
 	};
-
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
