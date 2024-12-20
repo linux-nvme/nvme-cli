@@ -51,13 +51,16 @@ struct json_object *util_json_object_new_uint128(nvme_uint128_t val);
 struct json_object *util_json_object_new_uint128(nvme_uint128_t val);
 
 uint64_t util_json_object_get_uint64(struct json_object *obj);
-
-#else /* !CONFIG_JSONC */
-
+#else /* CONFIG_JSONC */
 struct json_object;
 
 #define json_object_add_value_string(o, k, v)
-
-#endif
-
-#endif
+#define json_create_object(o) NULL
+#define json_free_object(o) ((void)(o))
+#define json_object_add_value_uint(o, k, v)
+#define json_object_add_value_int(o, k, v)
+#define json_print_object(o, u)
+#define json_object_add_value_double(o, k, v)
+#define json_object_add_value_object(o, k, v) ((void)(v))
+#endif /* CONFIG_JSONC */
+#endif /* __JSON__H */
