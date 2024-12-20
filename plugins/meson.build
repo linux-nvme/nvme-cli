@@ -2,7 +2,6 @@
 
 if json_c_dep.found()
   sources += [
-    'plugins/nvidia/nvidia-nvme.c',
     'plugins/scaleflux/sfx-nvme.c',
     'plugins/seagate/seagate-nvme.c',
     'plugins/solidigm/solidigm-nvme.c',
@@ -27,6 +26,7 @@ sources += [
   'plugins/micron/micron-nvme.c',
   'plugins/nbft/nbft-plugin.c',
   'plugins/netapp/netapp-nvme.c',
+  'plugins/nvidia/nvidia-nvme.c',
   'plugins/shannon/shannon-nvme.c',
   'plugins/toshiba/toshiba-nvme.c',
   'plugins/transcend/transcend-nvme.c',
