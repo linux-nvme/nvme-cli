@@ -458,6 +458,12 @@ struct telemetry_data_area_1 {
 #define STR_STATISTICS_DATA_SIZE "Statistic Data Size"
 #define STR_RESERVED "Reserved"
 #define STR_STATISTICS_SPECIFIC_DATA "Statistic Specific Data"
+#define STR_STATISTICS_WORST_DIE_PERCENT "Worst die % of bad blocks"
+#define STR_STATISTICS_WORST_DIE_RAW "Worst die raw number of bad blocks"
+#define STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT "Worst NAND channel % of bad blocks"
+#define STR_STATISTICS_WORST_NAND_CHANNEL_RAW "Worst NAND channel number of bad blocks"
+#define STR_STATISTICS_BEST_NAND_CHANNEL_PERCENT "Best NAND channel % of bad blocks"
+#define STR_STATISTICS_BEST_NAND_CHANNEL_RAW "Best NAND channel number of bad blocks"
 #define STR_CLASS_SPECIFIC_DATA "Class Specific Data"
 #define STR_DBG_EVENT_CLASS_TYPE "Debug Event Class type"
 #define STR_EVENT_IDENTIFIER "Event Identifier"
@@ -494,6 +500,47 @@ enum ocp_telemetry_string_tables {
 	EVENT_STRING,
 	VU_EVENT_STRING
 };
+
+/**
+ * enum ocp_telemetry_statistics_identifiers - OCP Statistics Identifiers
+ */
+enum ocp_telemetry_statistic_identifiers {
+	STATISTICS_RESERVED_ID = 0x00,
+	OUTSTANDING_ADMIN_CMDS_ID = 0x01,
+	HOST_WRTIE_BANDWIDTH_ID = 0x02,
+	GW_WRITE_BANDWITH_ID = 0x03,
+	ACTIVE_NAMESPACES_ID = 0x04,
+	INTERNAL_WRITE_WORKLOAD_ID = 0x05,
+	INTERNAL_READ_WORKLOAD_ID = 0x06,
+	INTERNAL_WRITE_QUEUE_DEPTH_ID = 0x07,
+	INTERNAL_READ_QUEUE_DEPTH_ID = 0x08,
+	PENDING_TRIM_LBA_COUNT_ID = 0x09,
+	HOST_TRIM_LBA_REQUEST_COUNT_ID = 0x0A,
+	CURRENT_NVME_POWER_STATE_ID = 0x0B,
+	CURRENT_DSSD_POWER_STATE_ID = 0x0C,
+	PROGRAM_FAIL_COUNT_ID = 0x0D,
+	ERASE_FAIL_COUNT_ID = 0x0E,
+	READ_DISTURB_WRITES_ID = 0x0F,
+
+	RETENTION_WRITES_ID = 0x10,
+	WEAR_LEVELING_WRITES_ID = 0x11,
+	READ_RECOVERY_WRITES_ID = 0x12,
+	GC_WRITES_ID = 0x13,
+	SRAM_CORRECTABLE_COUNT_ID = 0x14,
+	DRAM_CORRECTABLE_COUNT_ID = 0x15,
+	SRAM_UNCORRECTABLE_COUNT_ID = 0x16,
+	DRAM_UNCORRECTABLE_COUNT_ID = 0x17,
+	DATA_INTEGRITY_ERROR_COUNT_ID = 0x18,
+	READ_RETRY_ERROR_COUNT_ID = 0x19,
+	PERST_EVENTS_COUNT_ID = 0x1A,
+	MAX_DIE_BAD_BLOCK_ID = 0x1B,
+	MAX_NAND_CHANNEL_BAD_BLOCK_ID = 0x1C,
+	MIN_NAND_CHANNEL_BAD_BLOCK_ID = 0x1D,
+
+	//RESERVED = 7FFFh-1Eh,
+	//VENDOR_UNIQUE_CLASS_TYPE = FFFFh-8000h,
+};
+
 
 /**
  * enum ocp_telemetry_debug_event_class_types - OCP Debug Event Class types
