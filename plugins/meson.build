@@ -2,7 +2,6 @@
 
 if json_c_dep.found()
   sources += [
-    'plugins/netapp/netapp-nvme.c',
     'plugins/nvidia/nvidia-nvme.c',
     'plugins/scaleflux/sfx-nvme.c',
     'plugins/seagate/seagate-nvme.c',
@@ -27,13 +26,14 @@ sources += [
   'plugins/memblaze/memblaze-nvme.c',
   'plugins/micron/micron-nvme.c',
   'plugins/nbft/nbft-plugin.c',
+  'plugins/netapp/netapp-nvme.c',
   'plugins/shannon/shannon-nvme.c',
   'plugins/toshiba/toshiba-nvme.c',
   'plugins/transcend/transcend-nvme.c',
   'plugins/virtium/virtium-nvme.c',
   'plugins/ymtc/ymtc-nvme.c',
   'plugins/zns/zns.c',
-  ]
+]
 
 subdir('ocp')
 subdir('lm')
