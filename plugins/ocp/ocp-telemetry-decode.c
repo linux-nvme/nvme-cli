@@ -1204,9 +1204,14 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 		    struct json_object *pstats_array, FILE *fp)
 {
 	if (pstatistic_entry == NULL) {
-		nvme_show_error("Input buffer was NULL");
+		nvme_show_error("Statistics Input buffer was NULL");
 		return -1;
 	}
+
+	if (pstatistic_entry->statistic_id == STATISTICS_RESERVED_ID)
+		/* End of statistics entries, return -1 to stop processing the buffer */
+		return -1;
+
 
 	unsigned int data_size = pstatistic_entry->statistic_data_size * SIZE_OF_DWORD;
 	__u8 *pdata = (__u8 *)pstatistic_entry +
@@ -1236,8 +1241,33 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 			pstatistic_entry->statistic_data_size);
 		json_add_formatted_u32_str(pstatistics_object, STR_RESERVED,
 			pstatistic_entry->reserved);
-		json_add_formatted_var_size_str(pstatistics_object, STR_STATISTICS_SPECIFIC_DATA,
-			pdata, data_size);
+		if (pstatistic_entry->statistic_id == MAX_DIE_BAD_BLOCK_ID) {
+			json_add_formatted_u32_str(pstatistics_object,
+					STR_STATISTICS_WORST_DIE_PERCENT,
+					pdata[0]);
+			json_add_formatted_u32_str(pstatistics_object,
+					STR_STATISTICS_WORST_DIE_RAW,
+					*(__u16 *)&pdata[2]);
+		} else if (pstatistic_entry->statistic_id == MAX_NAND_CHANNEL_BAD_BLOCK_ID) {
+			json_add_formatted_u32_str(pstatistics_object,
+					STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT,
+					pdata[0]);
+			json_add_formatted_u32_str(pstatistics_object,
+					STR_STATISTICS_WORST_NAND_CHANNEL_RAW,
+					*(__u16 *)&pdata[2]);
+		} else if (pstatistic_entry->statistic_id == MIN_NAND_CHANNEL_BAD_BLOCK_ID) {
+			json_add_formatted_u32_str(pstatistics_object,
+					STR_STATISTICS_BEST_NAND_CHANNEL_PERCENT,
+					pdata[0]);
+			json_add_formatted_u32_str(pstatistics_object,
+					STR_STATISTICS_BEST_NAND_CHANNEL_RAW,
+					*(__u16 *)&pdata[2]);
+		} else {
+			json_add_formatted_var_size_str(pstatistics_object,
+					STR_STATISTICS_SPECIFIC_DATA,
+					pdata,
+					data_size);
+		}
 
 		if (pstatistics_object != NULL)
 			json_array_add_value_object(pstats_array, pstatistics_object);
@@ -1257,8 +1287,33 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 			fprintf(fp, "%s: 0x%x\n", STR_STATISTICS_DATA_SIZE,
 				pstatistic_entry->statistic_data_size);
 			fprintf(fp, "%s: 0x%x\n", STR_RESERVED, pstatistic_entry->reserved);
-			print_formatted_var_size_str(STR_STATISTICS_SPECIFIC_DATA, pdata,
-				data_size, fp);
+			if (pstatistic_entry->statistic_id == MAX_DIE_BAD_BLOCK_ID) {
+				fprintf(fp, "%s: 0x%02x\n", STR_STATISTICS_WORST_DIE_PERCENT,
+						pdata[0]);
+				fprintf(fp, "%s: 0x%04x\n", STR_STATISTICS_WORST_DIE_RAW,
+						*(__u16 *)&pdata[2]);
+			} else if (pstatistic_entry->statistic_id ==
+					MAX_NAND_CHANNEL_BAD_BLOCK_ID) {
+				fprintf(fp, "%s: 0x%02x\n",
+						STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT,
+						pdata[0]);
+				fprintf(fp, "%s: 0x%04x\n",
+						STR_STATISTICS_WORST_NAND_CHANNEL_RAW,
+						*(__u16 *)&pdata[2]);
+			} else if (pstatistic_entry->statistic_id ==
+					MIN_NAND_CHANNEL_BAD_BLOCK_ID) {
+				fprintf(fp, "%s: 0x%02x\n",
+						STR_STATISTICS_BEST_NAND_CHANNEL_PERCENT,
+						pdata[0]);
+				fprintf(fp, "%s: 0x%04x\n",
+						STR_STATISTICS_BEST_NAND_CHANNEL_RAW,
+						*(__u16 *)&pdata[2]);
+			} else {
+				print_formatted_var_size_str(STR_STATISTICS_SPECIFIC_DATA,
+						pdata,
+						data_size,
+						fp);
+			}
 			fprintf(fp, STR_LINE2);
 		} else {
 			printf("%s: 0x%x\n", STR_STATISTICS_IDENTIFIER,
@@ -1275,8 +1330,33 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 			printf("%s: 0x%x\n", STR_STATISTICS_DATA_SIZE,
 			       pstatistic_entry->statistic_data_size);
 			printf("%s: 0x%x\n", STR_RESERVED, pstatistic_entry->reserved);
-			print_formatted_var_size_str(STR_STATISTICS_SPECIFIC_DATA, pdata,
-						data_size, fp);
+			if (pstatistic_entry->statistic_id == MAX_DIE_BAD_BLOCK_ID) {
+				printf("%s: 0x%02x\n", STR_STATISTICS_WORST_DIE_PERCENT,
+						pdata[0]);
+				printf("%s: 0x%04x\n", STR_STATISTICS_WORST_DIE_RAW,
+						*(__u16 *)&pdata[2]);
+			} else if (pstatistic_entry->statistic_id ==
+					MAX_NAND_CHANNEL_BAD_BLOCK_ID) {
+				printf("%s: 0x%02x\n",
+						STR_STATISTICS_WORST_NAND_CHANNEL_PERCENT,
+						pdata[0]);
+				printf("%s: 0x%04x\n",
+						STR_STATISTICS_WORST_NAND_CHANNEL_RAW,
+						*(__u16 *)&pdata[2]);
+			} else if (pstatistic_entry->statistic_id ==
+					MIN_NAND_CHANNEL_BAD_BLOCK_ID) {
+				printf("%s: 0x%02x\n",
+						STR_STATISTICS_BEST_NAND_CHANNEL_PERCENT,
+						pdata[0]);
+				printf("%s: 0x%04x\n",
+						STR_STATISTICS_BEST_NAND_CHANNEL_RAW,
+						*(__u16 *)&pdata[2]);
+			} else {
+				print_formatted_var_size_str(STR_STATISTICS_SPECIFIC_DATA,
+						pdata,
+						data_size,
+						fp);
+			}
 			printf(STR_LINE2);
 		}
 	}
@@ -1297,6 +1377,7 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	__u32 stats_da_1_start_dw = 0, stats_da_1_size_dw = 0;
 	__u32 stats_da_2_start_dw = 0, stats_da_2_size_dw = 0;
 	__u8 *pstats_offset = NULL;
+	int parse_rc = 0;
 
 	if (poffsets->data_area == 1) {
 		__u32 stats_da_1_start = *(__u32 *)(pda1_ocp_header_offset +
@@ -1336,7 +1417,11 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 			(struct nvme_ocp_telemetry_statistic_descriptor *)
 			(pstats_offset + offset_to_move);
 
-		parse_statistic(pstatistic_entry, pstats_array, fp);
+		parse_rc = parse_statistic(pstatistic_entry, pstats_array, fp);
+		if (parse_rc < 0)
+			/* end of stats entries or null pointer, so break */
+			break;
+
 		offset_to_move += (pstatistic_entry->statistic_data_size * SIZE_OF_DWORD +
 			stat_des_size);
 	}
