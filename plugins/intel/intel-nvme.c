@@ -365,9 +365,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-#ifdef CONFIG_JSONC
-		OPT_FLAG("json",         'j', &cfg.json,         json),
-#endif /* CONFIG_JSONC */
+		OPT_FLAG_JSON("json",    'j', &cfg.json,         json),
 		OPT_END()
 	};
 
@@ -1069,9 +1067,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("write",	'w', &cfg.write,	write),
 		OPT_FLAG("raw-binary",	'b', &cfg.raw_binary,	raw),
-#ifdef CONFIG_JSONC
-		OPT_FLAG("json",	'j', &cfg.json,		json),
-#endif /* CONFIG_JSONC */
+		OPT_FLAG_JSON("json",	'j', &cfg.json,		json),
 		OPT_END()
 	};
 

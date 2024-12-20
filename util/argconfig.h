@@ -96,6 +96,12 @@ enum argconfig_types {
 #define OPT_LIST(l, s, v, d, ...) OPT_STRING(l, s, "LIST", v, d, __VA_ARGS__)
 #define OPT_STR(l, s, v, d, ...) OPT_STRING(l, s, "STRING", v, d, __VA_ARGS__)
 
+#ifdef CONFIG_JSONC
+#define OPT_FLAG_JSON(l, s, v, d, ...) OPT_FLAG(l, s, v, d, __VA_ARGS__)
+#else /* CONFIG_JSONC */
+#define OPT_FLAG_JSON(l, s, v, d, ...) OPT_END()
+#endif /* CONFIG_JSONC */
+
 #define OPT_VALS(n) \
 	struct argconfig_opt_val n[]
 

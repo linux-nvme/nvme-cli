@@ -402,7 +402,7 @@ int ssstc_get_add_smart_log(int argc, char **argv, struct command *cmd, struct p
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_FLAG("json",         'j', &cfg.json,         json),
+		OPT_FLAG_JSON("json",    'j', &cfg.json,         json),
 		OPT_END()
 	};
 
