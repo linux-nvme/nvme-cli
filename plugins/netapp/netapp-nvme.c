@@ -248,6 +248,7 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	}
 }
 
+#ifdef CONFIG_JSONC
 static void netapp_smdevice_json(struct json_object *devices, char *devname,
 		char *arrayname, char *volname, int nsid, char *nguid,
 		char *ctrl, char *astate, char *version, unsigned long long lba,
@@ -293,6 +294,7 @@ static void netapp_ontapdevice_json(struct json_object *devices, char *devname,
 
 	json_array_add_value_object(devices, device_attrs);
 }
+#endif /* CONFIG_JSONC */
 
 static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
 		int count, int format, const char *devname)
@@ -440,6 +442,7 @@ static void netapp_smdevices_print_regular(struct smdevice_info *devices,
 	}
 }
 
+#ifdef CONFIG_JSONC
 static void netapp_smdevices_print_json(struct smdevice_info *devices,
 		int count, const char *devname)
 {
@@ -508,6 +511,9 @@ out:
 	printf("\n");
 	json_free_object(root);
 }
+#else /* CONFIG_JSONC */
+#define netapp_smdevices_print_json(devices, count, devname)
+#endif /* CONFIG_JSONC */
 
 static void netapp_ontapdevices_print_verbose(struct ontapdevice_info *devices,
 		int count, int format, const char *devname)
@@ -623,6 +629,7 @@ static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 	}
 }
 
+#ifdef CONFIG_JSONC
 static void netapp_ontapdevices_print_json(struct ontapdevice_info *devices,
 		int count, const char *devname)
 {
@@ -679,6 +686,9 @@ out:
 	printf("\n");
 	json_free_object(root);
 }
+#else /* CONFIG_JSONC */
+#define netapp_ontapdevices_print_json(devices, count, devname)
+#endif /* CONFIG_JSONC */
 
 static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
 {
@@ -829,8 +839,10 @@ static int netapp_output_format(char *format)
 		return -EINVAL;
 	if (!strcmp(format, "normal"))
 		return NNORMAL;
+#ifdef CONFIG_JSONC
 	if (!strcmp(format, "json"))
 		return NJSON;
+#endif /* CONFIG_JSONC */
 	if (!strcmp(format, "column"))
 		return NCOLUMN;
 	return -EINVAL;
