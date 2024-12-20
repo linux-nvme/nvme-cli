@@ -1,13 +1,13 @@
 [wrap-file]
-directory = json-c-0.17
-source_url = https://s3.amazonaws.com/json-c_releases/releases/json-c-0.17.tar.gz
-source_filename = json-c-0.17.tar.gz
-source_hash = 7550914d58fb63b2c3546f3ccfbe11f1c094147bd31a69dcd23714d7956159e6
-patch_filename = json-c_0.17-2_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/json-c_0.17-2/get_patch
-patch_hash = c1a9a7e2ea6bed89a59e13a5684be25899a5a510963154c4450c5a492b8f3984
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/json-c_0.17-2/json-c-0.17.tar.gz
-wrapdb_version = 0.17-2
+directory = json-c-0.18
+source_url = https://s3.amazonaws.com/json-c_releases/releases/json-c-0.18.tar.gz
+source_filename = json-c-0.18.tar.gz
+source_hash = 876ab046479166b869afc6896d288183bbc0e5843f141200c677b3e8dfb11724
+patch_filename = json-c_0.18-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/json-c_0.18-1/get_patch
+patch_hash = c9d2c0449a9686755445cd18d7cff597f21e418e11a786441de7b8947ff43798
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/json-c_0.18-1/json-c-0.18.tar.gz
+wrapdb_version = 0.18-1
 
 [provide]
 json-c = json_c_dep
