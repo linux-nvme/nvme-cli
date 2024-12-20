@@ -18,6 +18,7 @@ PLUGIN(NAME("sfx", "ScaleFlux vendor specific extensions", NVME_VERSION),
 		ENTRY("get-feature", "Get a feature", sfx_get_feature)
 		ENTRY("dump-evtlog", "dump evtlog into file and parse warning & error log", sfx_dump_evtlog)
 		ENTRY("expand-cap", "expand the last namespace capacity lossless", sfx_expand_cap)
+		ENTRY("status", "Retrieve the ScaleFlux status output, show it", sfx_status)
 	)
 );
 
