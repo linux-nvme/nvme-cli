@@ -333,13 +333,20 @@ __attribute__((constructor))
 static void nvme_uring_cmd_probe()
 {
 	struct io_uring_probe *probe = io_uring_get_probe();
-	if (NULL != probe && io_uring_opcode_supported(probe, IORING_OP_URING_CMD))
-		io_uring_kernel_support = IO_URING_AVAILABLE;
+
+	if (!probe)
+		return;
+
+	if (!io_uring_opcode_supported(probe, IORING_OP_URING_CMD))
+		return;
+
+	io_uring_kernel_support = IO_URING_AVAILABLE;
 }
 
 static int nvme_uring_cmd_setup(struct io_uring *ring)
 {
-	return io_uring_queue_init(NVME_URING_ENTRIES, ring, IORING_SETUP_SQE128 | IORING_SETUP_CQE32);
+	return io_uring_queue_init(NVME_URING_ENTRIES, ring,
+				   IORING_SETUP_SQE128 | IORING_SETUP_CQE32);
 }
 
 static void nvme_uring_cmd_exit(struct io_uring *ring)
@@ -349,6 +356,10 @@ static void nvme_uring_cmd_exit(struct io_uring *ring)
 
 static int nvme_uring_cmd_admin_passthru_async(struct io_uring *ring, struct nvme_get_log_args *args)
 {
+	struct io_uring_sqe *sqe;
+	struct nvme_uring_cmd *cmd;
+	int ret;
+
 	__u32 numd = (args->len >> 2) - 1;
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
 
@@ -369,12 +380,11 @@ static int nvme_uring_cmd_admin_passthru_async(struct io_uring *ring, struct nvm
 		return -1;
 	}
 
-	struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
+	sqe = io_uring_get_sqe(ring);
 	if (!sqe)
 		return -1;
 
-	struct nvme_uring_cmd *cmd = (void *)&sqe->cmd;
-
+	cmd = (void *)&sqe->cmd;
 	cmd->opcode        = nvme_admin_get_log_page,
 	cmd->nsid          = args->nsid,
 	cmd->addr          = (__u64)(uintptr_t)args->log,
@@ -390,25 +400,30 @@ static int nvme_uring_cmd_admin_passthru_async(struct io_uring *ring, struct nvm
 	sqe->opcode = IORING_OP_URING_CMD;
 	sqe->cmd_op = NVME_URING_CMD_ADMIN;
 
-	int ret = io_uring_submit(ring);
+	ret = io_uring_submit(ring);
 	if (ret < 0) {
 		errno = -ret;
 		return -1;
 	}
+
 	return 0;
 }
 
 static int nvme_uring_cmd_wait_complete(struct io_uring *ring, int n)
 {
 	struct io_uring_cqe *cqe;
-	for (int i = 0; i < n; i++) {
-		int ret = io_uring_wait_cqe(ring, &cqe);
+	int i, ret;
+
+	for (i = 0; i < n; i++) {
+		ret = io_uring_wait_cqe(ring, &cqe);
 		if (ret) {
 			errno = -ret;
 			return -1;
 		}
+
 		io_uring_cqe_seen(ring, cqe);
 	}
+
 	return n;
 }
 #endif
@@ -426,9 +441,9 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 #ifdef CONFIG_LIBURING
 	int n = 0;
 	struct io_uring ring;
+
 	if (io_uring_kernel_support == IO_URING_AVAILABLE) {
-		ret = nvme_uring_cmd_setup(&ring);
-		if (ret)
+		if (nvme_uring_cmd_setup(&ring))
 			return -1;
 	}
 #endif
