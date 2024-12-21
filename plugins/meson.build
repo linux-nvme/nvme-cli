@@ -3,7 +3,6 @@
 if json_c_dep.found()
   sources += [
     'plugins/solidigm/solidigm-nvme.c',
-    'plugins/ssstc/ssstc-nvme.c',
     'plugins/wdc/wdc-nvme.c',
     'plugins/wdc/wdc-utils.c',
   ]
@@ -28,6 +27,7 @@ sources += [
   'plugins/scaleflux/sfx-nvme.c',
   'plugins/seagate/seagate-nvme.c',
   'plugins/shannon/shannon-nvme.c',
+  'plugins/ssstc/ssstc-nvme.c',
   'plugins/toshiba/toshiba-nvme.c',
   'plugins/transcend/transcend-nvme.c',
   'plugins/virtium/virtium-nvme.c',
