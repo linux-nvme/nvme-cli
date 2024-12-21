@@ -67,5 +67,6 @@ struct json_object;
 #define json_object_add_value_object(o, k, v) ((void)(v))
 #define json_array_add_value_object(o, k) ((void)(k))
 #define json_print_object(o, u) ((void)(o))
+#define json_object_array_add(o, k) ((void)(k))
 #endif /* CONFIG_JSONC */
 #endif /* __JSON__H */
