@@ -9,7 +9,6 @@
 /* Wrappers around json-c's API */
 
 #define json_create_object(o) json_object_new_object(o)
-#define json_create_array(a) json_object_new_array(a)
 #define json_free_object(o) json_object_put(o)
 #define json_free_array(a) json_object_put(a)
 #define json_object_add_value_uint(o, k, v) \
@@ -56,7 +55,6 @@ struct json_object;
 
 #define json_object_add_value_string(o, k, v)
 #define json_create_object(o) NULL
-#define json_create_array(a) NULL
 #define json_free_object(o) ((void)(o))
 #define json_object_add_value_uint(o, k, v) ((void)(v))
 #define json_object_add_value_int(o, k, v) ((void)(v))
@@ -67,6 +65,9 @@ struct json_object;
 #define json_object_add_value_object(o, k, v) ((void)(v))
 #define json_array_add_value_object(o, k) ((void)(k))
 #define json_print_object(o, u) ((void)(o))
+#define json_object_new_array(a) NULL
 #define json_object_array_add(o, k) ((void)(k))
 #endif /* CONFIG_JSONC */
+#define json_create_array(a) json_object_new_array(a)
+
 #endif /* __JSON__H */
