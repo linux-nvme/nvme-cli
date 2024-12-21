@@ -1078,6 +1078,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	int index;
 	const char *desc = "Retrieve Seagate Temperature Stats information for the given device ";
 	const char *output_format = "output in binary format";
+	nvme_print_flags_t flags;
 	unsigned int temperature = 0, PcbTemp = 0, SocTemp = 0, scCurrentTemp = 0, scMaxTemp = 0;
 	unsigned long long maxTemperature = 0, MaxSocTemp = 0;
 	struct nvme_dev *dev;
@@ -1100,7 +1101,13 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		return -1;
 	}
 
-	if (strcmp(cfg.output_format, "json"))
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (flags & NORMAL)
 		printf("Seagate Temperature Stats Information :\n");
 	/*STEP-1 : Get Current Temperature from SMART */
 	err = nvme_get_log_smart(dev_fd(dev), 0xffffffff, false, &smart_log);
@@ -1111,7 +1118,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		PcbTemp = PcbTemp ? PcbTemp - 273 : 0;
 		SocTemp = le16_to_cpu(smart_log.temp_sensor[1]);
 		SocTemp = SocTemp ? SocTemp - 273 : 0;
-		if (strcmp(cfg.output_format, "json")) {
+		if (flags & NORMAL) {
 			printf("%-20s : %u C\n", "Current Temperature", temperature);
 			printf("%-20s : %u C\n", "Current PCB Temperature", PcbTemp);
 			printf("%-20s : %u C\n", "Current SOC Temperature", SocTemp);
@@ -1126,14 +1133,14 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 			if (ExtdSMARTInfo.vendorData[index].AttributeNumber == VS_ATTR_ID_MAX_LIFE_TEMPERATURE) {
 				maxTemperature = smart_attribute_vs(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index]);
 				maxTemperature = maxTemperature ? maxTemperature - 273 : 0;
-				if (strcmp(cfg.output_format, "json"))
+				if (flags & NORMAL)
 					printf("%-20s : %d C\n", "Highest Temperature", (unsigned int)maxTemperature);
 			}
 
 			if (ExtdSMARTInfo.vendorData[index].AttributeNumber == VS_ATTR_ID_MAX_SOC_LIFE_TEMPERATURE) {
 				MaxSocTemp = smart_attribute_vs(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index]);
 				MaxSocTemp = MaxSocTemp ? MaxSocTemp - 273 : 0;
-				if (strcmp(cfg.output_format, "json"))
+				if (flags & NORMAL)
 					printf("%-20s : %d C\n", "Max SOC Temperature", (unsigned int)MaxSocTemp);
 			}
 		}
@@ -1155,7 +1162,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		printf("%-20s : %d C\n", "Super-cap Max Temperature", scMaxTemp);
 	}
 
-	if (!strcmp(cfg.output_format, "json"))
+	if (flags & JSON)
 		json_temp_stats(temperature, PcbTemp, SocTemp, maxTemperature, MaxSocTemp, cf_err, scCurrentTemp, scMaxTemp);
 
 	dev_close(dev);
@@ -1248,6 +1255,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	const char *desc = "Retrieve Seagate PCIe error counters for the given device ";
 	const char *output_format = "output in binary format";
 	int err;
+	nvme_print_flags_t flags;
 	struct config {
 		char *output_format;
 	};
@@ -1267,13 +1275,19 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 		return -1;
 	}
 
-	if (strcmp(cfg.output_format, "json"))
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (flags & NORMAL)
 		printf("Seagate PCIe error counters Information :\n");
 
 	err = nvme_get_log_simple(dev_fd(dev), 0xCB,
 				  sizeof(pcieErrorLog), &pcieErrorLog);
 	if (!err) {
-		if (strcmp(cfg.output_format, "json"))
+		if (flags & NORMAL)
 			print_vs_pcie_error_log(pcieErrorLog);
 		else
 			json_vs_pcie_error_log(pcieErrorLog);
@@ -1386,6 +1400,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 	const char *desc = "Retrieve FW Activate History for Seagate device ";
 	const char *output_format = "output in binary format";
 	int err;
+	nvme_print_flags_t flags;
 	struct config {
 		char *output_format;
 	};
@@ -1405,16 +1420,21 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 		return -1;
 	}
 
-	if (strcmp(cfg.output_format, "json"))
+	err = validate_output_format(cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (flags & NORMAL)
 		printf("Seagate FW Activation History Information :\n");
 
 	err = nvme_get_log_simple(dev_fd(dev), 0xC2, sizeof(fwActivHis), &fwActivHis);
 	if (!err) {
-		if (strcmp(cfg.output_format, "json"))
+		if (flags & NORMAL)
 			print_stx_vs_fw_activate_history(fwActivHis);
 		else
 			json_stx_vs_fw_activate_history(fwActivHis);
-
 	} else if (err > 0) {
 		nvme_show_status(err);
 	}
