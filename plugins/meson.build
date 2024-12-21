@@ -3,8 +3,6 @@
 if json_c_dep.found()
   sources += [
     'plugins/solidigm/solidigm-nvme.c',
-    'plugins/wdc/wdc-nvme.c',
-    'plugins/wdc/wdc-utils.c',
   ]
   subdir('solidigm')
 endif
@@ -31,6 +29,8 @@ sources += [
   'plugins/toshiba/toshiba-nvme.c',
   'plugins/transcend/transcend-nvme.c',
   'plugins/virtium/virtium-nvme.c',
+  'plugins/wdc/wdc-nvme.c',
+  'plugins/wdc/wdc-utils.c',
   'plugins/ymtc/ymtc-nvme.c',
   'plugins/zns/zns.c',
 ]
