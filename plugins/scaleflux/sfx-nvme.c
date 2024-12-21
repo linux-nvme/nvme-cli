@@ -101,6 +101,7 @@ int nvme_sfx_get_features(int fd, __u32 nsid, __u32 fid, __u32 *result)
 	return err;
 }
 
+#ifdef CONFIG_JSONC
 static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
@@ -239,6 +240,9 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	printf("\n");
 	json_free_object(root);
 }
+#else /* CONFIG_JSONC */
+#define show_sfx_smart_log_jsn(smart, nsid, devname)
+#endif /* CONFIG_JSONC */
 
 static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
@@ -328,7 +332,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	    "Get ScaleFlux vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
+#ifdef CONFIG_JSONC
 	const char *json = "Dump output in json format";
+#endif /* CONFIG_JSONC */
 	struct nvme_dev *dev;
 	struct config {
 		__u32 namespace_id;
@@ -347,7 +353,6 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		OPT_FLAG_JSON("json",	 'j', &cfg.json,	 json),
 		OPT_END()
 	};
-
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2049,19 +2054,26 @@ static int sfx_status(int argc, char **argv, struct command *cmd, struct plugin 
 		printf("%-35s%s\n",		"PCIe Link Status:",			link_string);
 		printf("%-35s%s\n",		"PCIe Device Status:",			pcie_status);
 		if (sfx_smart.friendly_changecap_support) {
-			printf("%-35s%llu GB\n", "Current Formatted Capacity:",	sfx_smart.cur_formatted_capability);
-			printf("%-35s%llu GB\n", "Max Formatted Capacity:",		sfx_smart.max_formatted_capability);
-			printf("%-35s%llu\n",	"Extendible Capacity LBA count:",	sfx_smart.extendible_cap_lbacount);
-		} else if (capacity_valid)
-			printf("%-35s%llu GB\n", "Formatted  Capacity:",	capacity);
-		printf("%-35s%llu GB\n",	"Provisioned Capacity:",	IDEMA_CAP2GB(sfx_smart.total_physical_capability));
+			printf("%-35s%"PRIu64" GB\n", "Current Formatted Capacity:",
+			       (uint64_t)sfx_smart.cur_formatted_capability);
+			printf("%-35s%"PRIu64" GB\n", "Max Formatted Capacity:",
+			       (uint64_t)sfx_smart.max_formatted_capability);
+			printf("%-35s%"PRIu64"\n", "Extendible Capacity LBA count:",
+			       (uint64_t)sfx_smart.extendible_cap_lbacount);
+		} else if (capacity_valid) {
+			printf("%-35s%"PRIu64" GB\n", "Formatted  Capacity:", (uint64_t)capacity);
+		}
+		printf("%-35s%"PRIu64" GB\n", "Provisioned Capacity:",
+		       (uint64_t)IDEMA_CAP2GB(sfx_smart.total_physical_capability));
 		printf("%-35s%u%%\n",	"Compression Ratio:",			sfx_smart.comp_ratio);
 		printf("%-35s%u%%\n",	"Physical Used Ratio:",			sfx_smart.physical_usage_ratio);
-		printf("%-35s%llu GB\n",	"Free Physical Space:",		IDEMA_CAP2GB(sfx_smart.free_physical_capability));
+		printf("%-35s%"PRIu64" GB\n", "Free Physical Space:",
+		       (uint64_t)IDEMA_CAP2GB(sfx_smart.free_physical_capability));
 		printf("%-35s%s\n",		"Firmware Verification:",					(sfx_smart.otp_rsa_en) ? "On":"Off");
 		printf("%-35s%s\n",		"IO Speed:",					io_speed);
 		printf("%-35s%s\n",		"NUMA Node:",					numa_node);
-		printf("%-35s%lluK\n",	"Indirection Unit:",			(4*sfx_freespace.map_unit));
+		printf("%-35s%"PRIu64"K\n", "Indirection Unit:",
+		       (uint64_t)(4*sfx_freespace.map_unit));
 		printf("%-35s%.2f\n",	"Lifetime WAF:",				write_amp);
 		printf("%-35s%s\n",		"Critical Warning(s):",			path);
 	}

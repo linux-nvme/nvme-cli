@@ -96,7 +96,6 @@ struct nvme_extended_additional_smart_log {
 	struct nvme_additional_smart_log_item	inflight_write_io_cmd;
 };
 
-#ifdef CONFIG_JSONC
 static void show_dapustor_add_smart_log_jsn(struct nvme_additional_smart_log *smart,
 					    struct json_object *dev_stats)
 {
@@ -349,9 +348,6 @@ static void show_dapustor_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_print_object(root, NULL);
 	json_free_object(root);
 }
-#else /* CONFIG_JSONC */
-#define show_dapustor_smart_log_jsn(smart, ext_smart, nsid,  devname, has_ext)
-#endif /* CONFIG_JSONC */
 
 static void show_dapustor_add_smart_log(struct nvme_additional_smart_log *smart)
 {

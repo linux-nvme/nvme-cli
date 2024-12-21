@@ -383,7 +383,9 @@ int ssstc_get_add_smart_log(int argc, char **argv, struct command *cmd, struct p
 		"(optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "Dump output in binary format";
+#ifdef CONFIG_JSONC
 	const char *json = "Dump output in json format";
+#endif /* CONFIG_JSONC */
 
 	struct nvme_additional_smart_log smart_log_add;
 	struct nvme_dev *dev;

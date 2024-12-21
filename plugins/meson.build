@@ -2,12 +2,7 @@
 
 if json_c_dep.found()
   sources += [
-    'plugins/scaleflux/sfx-nvme.c',
-    'plugins/seagate/seagate-nvme.c',
     'plugins/solidigm/solidigm-nvme.c',
-    'plugins/ssstc/ssstc-nvme.c',
-    'plugins/wdc/wdc-nvme.c',
-    'plugins/wdc/wdc-utils.c',
   ]
   subdir('solidigm')
 endif
@@ -27,10 +22,15 @@ sources += [
   'plugins/nbft/nbft-plugin.c',
   'plugins/netapp/netapp-nvme.c',
   'plugins/nvidia/nvidia-nvme.c',
+  'plugins/scaleflux/sfx-nvme.c',
+  'plugins/seagate/seagate-nvme.c',
   'plugins/shannon/shannon-nvme.c',
+  'plugins/ssstc/ssstc-nvme.c',
   'plugins/toshiba/toshiba-nvme.c',
   'plugins/transcend/transcend-nvme.c',
   'plugins/virtium/virtium-nvme.c',
+  'plugins/wdc/wdc-nvme.c',
+  'plugins/wdc/wdc-utils.c',
   'plugins/ymtc/ymtc-nvme.c',
   'plugins/zns/zns.c',
 ]
