@@ -61,6 +61,7 @@ struct json_object;
 #define json_object_add_value_uint64(o, k, v) ((void)(v))
 #define json_object_add_value_uint128(o, k, v)
 #define json_object_add_value_double(o, k, v)
+#define json_object_add_value_float(o, k, v)
 #define json_object_add_value_array(o, k, v) ((void)(v))
 #define json_object_add_value_object(o, k, v) ((void)(v))
 #define json_array_add_value_object(o, k) ((void)(k))
