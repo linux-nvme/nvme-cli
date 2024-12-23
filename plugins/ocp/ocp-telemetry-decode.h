@@ -1174,7 +1174,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options);
  *
  * @return 0 success
  */
-int get_static_id_ascii_string(int identifier, char *description);
+int get_statistic_id_ascii_string(int identifier, char *description);
 
 /**
  * @brief gets event id ascii string
