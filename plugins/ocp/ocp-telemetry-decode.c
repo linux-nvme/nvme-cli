@@ -489,9 +489,9 @@ int get_telemetry_das_offset_and_size(
 	return 0;
 }
 
-int get_static_id_ascii_string(int identifier, char *description)
+int get_statistic_id_ascii_string(int identifier, char *description)
 {
-	if (pstring_buffer == NULL)
+	if (!pstring_buffer || !description)
 		return -1;
 
 	struct nvme_ocp_telemetry_string_header *pocp_ts_header =
@@ -522,14 +522,15 @@ int get_static_id_ascii_string(int identifier, char *description)
 			memcpy(description, pdescription,
 			       peach_statistic_entry->ascii_id_length + 1);
 
-			// If ASCII string isn't found, see in our internal Map
-			// for 2.5 Spec defined strings (id < 0x1D).
-			if ((description == NULL) && (identifier < 0x1D))
-				memcpy(description,
-				       statistic_identifiers_map[identifier].description,
-				       peach_statistic_entry->ascii_id_length + 1);
 			return 0;
 		}
+	}
+
+	// If ASCII string isn't found, see in our internal Map
+	// for 2.5 Spec defined strings
+	if (identifier <= 0x1D) {
+		strcpy(description, statistic_identifiers_map[identifier].description);
+		return 0;
 	}
 
 	return -1;
@@ -629,10 +630,10 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
 	}
 
 	if (string_table == STATISTICS_IDENTIFIER_STRING)
-		get_static_id_ascii_string(identifier, description);
-	else if (string_table == EVENT_STRING)
+		get_statistic_id_ascii_string(identifier, description);
+	else if (string_table == EVENT_STRING && debug_event_class < 0x80)
 		get_event_id_ascii_string(identifier, debug_event_class, description);
-	else if (string_table == VU_EVENT_STRING)
+	else if (string_table == VU_EVENT_STRING || debug_event_class >= 0x80)
 		get_vu_event_id_ascii_string(identifier, debug_event_class, description);
 
 	return 0;
