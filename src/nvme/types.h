@@ -1145,7 +1145,13 @@ enum nvme_psd_workload {
  *	   Bits 2-0: Active Power Workload(APW) indicates the workload
  *	   used to calculate maximum power for this power state.
  *	   See &enum nvme_psd_workload for decoding this field.
- * @rsvd23: Reserved
+ * @epfrt: Emergency power fail recovery time
+ * @fqvt:  Forced quiescence vault time
+ * @epfvt: Emergency power fail vault time
+ * @epfr_fqv_ts: Bits 7-4: Forced quiescence vault time scale
+ *		 Bits 3-0: Emergency power fail recovery time scale
+ * @epfvts: Bits 3-0: Emergency power fail vault time scale
+ * @rsvd28: Reserved
  */
 struct nvme_id_psd {
 	__le16			mp;
@@ -1162,7 +1168,12 @@ struct nvme_id_psd {
 	__u8			rsvd19;
 	__le16			actp;
 	__u8			apws;
-	__u8			rsvd23[9];
+	__u8			epfrt;
+	__u8			fqvt;
+	__u8			epfvt;
+	__u8			epfr_fqv_ts;
+	__u8			epfvts;
+	__u8			rsvd28[4];
 };
 
 /**
