@@ -9477,14 +9477,14 @@ enum nvme_lm_migration_recv_fields {
  * @rsvd20:	Reserved
  */
 struct nvme_lm_io_submission_queue_data {
-	__u64 iosqprp1;
-	__u16 iosqqsize;
-	__u16 iosqqid;
-	__u16 iosqcqid;
-	__u16 iosqa;
-	__u16 iosqhp;
-	__u16 iosqtp;
-	__u8  rsvd20[4];
+	__le64 iosqprp1;
+	__le16 iosqqsize;
+	__le16 iosqqid;
+	__le16 iosqcqid;
+	__le16 iosqa;
+	__le16 iosqhp;
+	__le16 iosqtp;
+	__u8   rsvd20[4];
 };
 
 /**
@@ -9500,13 +9500,13 @@ struct nvme_lm_io_submission_queue_data {
  * @rsvd20:	Reserved
  */
 struct nvme_lm_io_completion_queue_data {
-	__u64 iocqprp1;
-	__u16 iocqqsize;
-	__u16 iocqqid;
-	__u16 iocqhp;
-	__u16 iocqtp;
-	__u32 iocqa;
-	__u8  rsvd20[4];
+	__le64 iocqprp1;
+	__le16 iocqqsize;
+	__le16 iocqqid;
+	__le16 iocqhp;
+	__le16 iocqtp;
+	__le32 iocqa;
+	__u8   rsvd20[4];
 };
 
 /**
@@ -9518,10 +9518,10 @@ struct nvme_lm_io_completion_queue_data {
  * @rsvd6: Reserved
  */
 struct nvme_lm_nvme_controller_state_data_header {
-	__u16 ver;
-	__u16 niosq;
-	__u16 niocq;
-	__u16 rsvd6;
+	__le16 ver;
+	__le16 niosq;
+	__le16 niocq;
+	__le16 rsvd6;
 };
 
 /**
@@ -9551,11 +9551,11 @@ struct nvme_lm_nvme_controller_state_data {
  * @vss:     Vendor specific size in dowrds
  */
 struct nvme_lm_controller_state_data_header {
-	__u16 ver;
-	__u8  csattr;
-	__u8  rsvd3[13];
-	__u8  nvmecss[16];
-	__u8  vss[16];
+	__le16 ver;
+	__u8   csattr;
+	__u8   rsvd3[13];
+	__u8   nvmecss[16];
+	__u8   vss[16];
 };
 
 /**
@@ -9627,7 +9627,7 @@ enum nvme_lm_ctrl_data_queue_fid {
  * @tpt:	Tail Pointer Trigger
  */
 struct nvme_lm_ctrl_data_queue_fid_data {
-	__u32 hp;
-	__u32 tpt;
+	__le32 hp;
+	__le32 tpt;
 };
 #endif /* _LIBNVME_TYPES_H */
