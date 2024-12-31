@@ -13,7 +13,7 @@
 
 #include "cmd.h"
 
-#define SOLIDIGM_PLUGIN_VERSION "1.8"
+#define SOLIDIGM_PLUGIN_VERSION "1.9"
 
 PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_VERSION),
 	COMMAND_LIST(
