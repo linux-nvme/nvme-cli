@@ -450,8 +450,9 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 		struct json_object *psd = json_create_object();
 
 		obj_add_int(psd, "max_power", le16_to_cpu(ctrl->psd[i].mp));
-		obj_add_int(psd, "max_power_scale", ctrl->psd[i].flags & 0x1);
-		obj_add_int(psd, "non-operational_state", (ctrl->psd[i].flags & 2) >> 1);
+		obj_add_int(psd, "max_power_scale", ctrl->psd[i].flags & NVME_PSD_FLAGS_MXPS);
+		obj_add_int(psd, "non-operational_state",
+			    !!(ctrl->psd[i].flags & NVME_PSD_FLAGS_NOPS));
 		obj_add_uint(psd, "entry_lat", le32_to_cpu(ctrl->psd[i].enlat));
 		obj_add_uint(psd, "exit_lat", le32_to_cpu(ctrl->psd[i].exlat));
 		obj_add_int(psd, "read_tput", ctrl->psd[i].rrt);
