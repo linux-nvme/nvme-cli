@@ -1156,42 +1156,43 @@ static void json_registers_bpinfo(uint32_t bpinfo, struct json_object *r)
 {
 	obj_add_uint_x(r, "bpinfo", bpinfo);
 
-	obj_add_uint(r, "Active Boot Partition ID (ABPID)", (bpinfo & 0x80000000) >> 31);
-	json_registers_bpinfo_brs((bpinfo & 0x3000000) >> 24, r);
-	obj_add_uint(r, "Boot Partition Size (BPSZ)", bpinfo & 0x7fff);
+	obj_add_uint(r, "Active Boot Partition ID (ABPID)", NVME_BPINFO_ABPID(bpinfo));
+	json_registers_bpinfo_brs(NVME_BPINFO_BRS(bpinfo), r);
+	obj_add_uint(r, "Boot Partition Size (BPSZ)", NVME_BPINFO_BPSZ(bpinfo));
 }
 
 static void json_registers_bprsel(uint32_t bprsel, struct json_object *r)
 {
 	obj_add_uint_x(r, "bprsel", bprsel);
 
-	obj_add_uint(r, "Boot Partition Identifier (BPID)", (bprsel & 0x80000000) >> 31);
-	obj_add_uint_x(r, "Boot Partition Read Offset (BPROF)", (bprsel & 0x3ffffc00) >> 10);
-	obj_add_uint_x(r, "Boot Partition Read Size (BPRSZ)", bprsel & 0x3ff);
+	obj_add_uint(r, "Boot Partition Identifier (BPID)", NVME_BPRSEL_BPID(bprsel));
+	obj_add_uint_x(r, "Boot Partition Read Offset (BPROF)", NVME_BPRSEL_BPROF(bprsel));
+	obj_add_uint_x(r, "Boot Partition Read Size (BPRSZ)", NVME_BPRSEL_BPRSZ(bprsel));
 }
 
 static void json_registers_bpmbl(uint64_t bpmbl, struct json_object *r)
 {
 	obj_add_prix64(r, "bpmbl", bpmbl);
 
-	obj_add_prix64(r, "Boot Partition Memory Buffer Base Address (BMBBA)", bpmbl);
+	obj_add_prix64(r, "Boot Partition Memory Buffer Base Address (BMBBA)",
+		       (uint64_t)NVME_BPMBL_BMBBA(bpmbl));
 }
 
 static void json_registers_cmbmsc(uint64_t cmbmsc, struct json_object *r)
 {
 	obj_add_prix64(r, "cmbmsc", cmbmsc);
 
-	obj_add_prix64(r, "Controller Base Address (CBA)", (cmbmsc & 0xfffffffffffff000) >> 12);
-	obj_add_prix64(r, "Controller Memory Space Enable (CMSE)", (cmbmsc & 2) >> 1);
+	obj_add_prix64(r, "Controller Base Address (CBA)", (uint64_t)NVME_CMBMSC_CBA(cmbmsc));
+	obj_add_prix64(r, "Controller Memory Space Enable (CMSE)", NVME_CMBMSC_CMSE(cmbmsc));
 	obj_add_str(r, "Capabilities Registers Enabled (CRE)",
-		     cmbmsc & 1 ? "Enabled" : "Not enabled");
+		    NVME_CMBMSC_CRE(cmbmsc) ? "Enabled" : "Not enabled");
 }
 
 static void json_registers_cmbsts(uint32_t cmbsts, struct json_object *r)
 {
 	obj_add_uint_x(r, "cmbsts", cmbsts);
 
-	obj_add_uint_x(r, "Controller Base Address Invalid (CBAI)", cmbsts & 1);
+	obj_add_uint_x(r, "Controller Base Address Invalid (CBAI)", NVME_CMBSTS_CBAI(cmbsts));
 }
 
 static void json_registers_cmbebs(uint32_t cmbebs, struct json_object *r)
@@ -1200,11 +1201,11 @@ static void json_registers_cmbebs(uint32_t cmbebs, struct json_object *r)
 
 	obj_add_uint_nx(r, "cmbebs", cmbebs);
 
-	obj_add_uint_nx(r, "CMB Elasticity Buffer Size Base (CMBWBZ)", cmbebs >> 8);
-	sprintf(buffer, "%s", cmbebs & 0x10 ? "shall" : "may");
+	obj_add_uint_nx(r, "CMB Elasticity Buffer Size Base (CMBWBZ)", NVME_CMBEBS_CMBWBZ(cmbebs));
+	sprintf(buffer, "%s", NVME_CMBEBS_RBB(cmbebs) ? "shall" : "may");
 	obj_add_str(r, "CMB Read Bypass Behavior (CMBRBB)", buffer);
 	obj_add_str(r, "CMB Elasticity Buffer Size Units (CMBSZU)",
-			nvme_register_unit_to_string(cmbebs & 0xf));
+		    nvme_register_unit_to_string(NVME_CMBEBS_CMBSZU(cmbebs)));
 }
 
 static void json_registers_cmbswtp(uint32_t cmbswtp, struct json_object *r)
@@ -1213,8 +1214,9 @@ static void json_registers_cmbswtp(uint32_t cmbswtp, struct json_object *r)
 
 	obj_add_uint_nx(r, "cmbswtp", cmbswtp);
 
-	obj_add_uint_nx(r, "CMB Sustained Write Throughput (CMBSWTV)", cmbswtp >> 8);
-	sprintf(str, "%s/second", nvme_register_unit_to_string(cmbswtp & 0xf));
+	obj_add_uint_nx(r, "CMB Sustained Write Throughput (CMBSWTV)",
+			NVME_CMBSWTP_CMBSWTV(cmbswtp));
+	sprintf(str, "%s/second", nvme_register_unit_to_string(NVME_CMBSWTP_CMBSWTU(cmbswtp)));
 	obj_add_str(r, "CMB Sustained Write Throughput Units (CMBSWTU)", str);
 }
 
