@@ -3403,6 +3403,23 @@ enum nvme_err_pel {
 };
 
 /**
+ * enum nvme_err_status_field - This field indicates the error information log entry status field
+ * @NVME_ERR_SF_PHASE_TAG_SHIFT:	Shift amount to get the phase tag
+ * @NVME_ERR_SF_STATUS_FIELD_SHIFT:	Shift amount to get the status field
+ * @NVME_ERR_SF_PHASE_TAG_MASK:		Mask to get the phase tag
+ * @NVME_ERR_SF_STATUS_FIELD_MASK:	Mask to get the status field
+ */
+enum nvme_err_status_field {
+	NVME_ERR_SF_PHASE_TAG_SHIFT	= 0,
+	NVME_ERR_SF_STATUS_FIELD_SHIFT	= 1,
+	NVME_ERR_SF_PHASE_TAG_MASK	= 1,
+	NVME_ERR_SF_STATUS_FIELD_MASK	= 0x7fff,
+};
+
+#define NVME_ERR_SF_PHASE_TAG(status_field)	NVME_GET(status_field, ERR_SF_PHASE_TAG)
+#define NVME_ERR_SF_STATUS_FIELD(status_field)	NVME_GET(status_field, ERR_SF_STATUS_FIELD)
+
+/**
  * struct nvme_smart_log - SMART / Health Information Log (Log Identifier 02h)
  * @critical_warning:	   This field indicates critical warnings for the state
  *			   of the controller. Critical warnings may result in an
