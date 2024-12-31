@@ -233,7 +233,7 @@ static int ilog_dump_assert_logs(struct ilog *ilog)
 {
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	__u8 head_buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	char file_path[PATH_MAX] = {0};
+	_cleanup_free_ char *file_path = NULL;
 	char file_name[] = "AssertLog.bin";
 	struct assert_dump_header *ad = (struct assert_dump_header *) head_buf;
 	struct nvme_passthru_cmd cmd = {
@@ -249,8 +249,10 @@ static int ilog_dump_assert_logs(struct ilog *ilog)
 	if (err)
 		return err;
 
-	snprintf(file_path, sizeof(file_path), "%.*s/%s",
-		 (int) (sizeof(file_path) - sizeof(file_name) - 1), ilog->cfg->out_dir, file_name);
+	if (asprintf(&file_path, "%.*s/%s",
+		 (int) (sizeof(file_path) - sizeof(file_name) - 1),
+		 ilog->cfg->out_dir, file_name) < 0)
+		return -errno;
 	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
@@ -289,7 +291,7 @@ static int ilog_dump_event_logs(struct ilog *ilog)
 {
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	__u8 head_buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	char file_path[PATH_MAX] = {0};
+	_cleanup_free_ char *file_path = NULL;
 	struct event_dump_header *ehdr = (struct event_dump_header *) head_buf;
 	struct nvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
@@ -304,7 +306,8 @@ static int ilog_dump_event_logs(struct ilog *ilog)
 	err = read_header(&cmd, dev_fd(ilog->dev));
 	if (err)
 		return err;
-	snprintf(file_path, sizeof(file_path) - 1, "%s/EventLog.bin", ilog->cfg->out_dir);
+	if (asprintf(&file_path, "%s/EventLog.bin", ilog->cfg->out_dir))
+		return -errno;
 	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
@@ -363,7 +366,7 @@ static int ilog_dump_nlogs(struct ilog *ilog, int core)
 	int err = 0;
 	__u32 count, core_num;
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	char file_path[PATH_MAX] = {0};
+	_cleanup_free_ char *file_path = NULL;
 	struct nlog_dump_header_common *nlog_header = (struct nlog_dump_header_common *)buf;
 	struct nvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
@@ -400,11 +403,12 @@ static int ilog_dump_nlogs(struct ilog *ilog, int core)
 			count = nlog_header->totalnlogs;
 			core_num = core < 0 ? nlog_header->corecount : 0;
 			if (!header_size) {
-				snprintf(file_path, sizeof(file_path) - 1, "%s/NLog.bin",
-					 ilog->cfg->out_dir);
-				output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC,
-					      LOG_FILE_PERMISSION);
-				if (output < 0)
+				if (asprintf(&file_path, "%s/NLog.bin", ilog->cfg->out_dir) >= 0) {
+					output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC,
+							LOG_FILE_PERMISSION);
+					if (output < 0)
+						return -errno;
+				} else
 					return -errno;
 				header_size = get_nlog_header_size(nlog_header);
 				is_open = true;
@@ -416,7 +420,7 @@ static int ilog_dump_nlogs(struct ilog *ilog, int core)
 				print_nlog_header(buf);
 			cmd.cdw13 = 0x400;
 			err = cmd_dump_repeat(&cmd, nlog_header->nlogbytesize / 4,
-					output, dev_fd(ilog->dev), true);
+				output, dev_fd(ilog->dev), true);
 			if (err)
 				break;
 		} while (++log_select.selectNlog < count);
@@ -432,16 +436,19 @@ static int ilog_dump_nlogs(struct ilog *ilog, int core)
 
 int ensure_dir(const char *parent_dir_name, const char *name)
 {
-	char file_path[PATH_MAX] = {0};
+	_cleanup_free_ char *file_path = NULL;
 	struct stat sb;
 
-	snprintf(file_path, sizeof(file_path) - 1, "%s/%s", parent_dir_name, name);
+	if (asprintf(&file_path, "%s/%s", parent_dir_name, name) < 0)
+		return -errno;
+
 	if (!(stat(file_path, &sb) == 0 && S_ISDIR(sb.st_mode))) {
 		if (mkdir(file_path, 777) != 0) {
 			perror(file_path);
 			return -errno;
 		}
 	}
+
 	return 0;
 }
 
@@ -456,13 +463,14 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 		    const char *file_name, __u8 *buffer, size_t buf_size)
 {
 	_cleanup_fd_ int output = -1;
-	char file_path[PATH_MAX] = {0};
+	_cleanup_free_ char *file_path = NULL;
 	size_t bytes_remaining = 0;
 
 	ensure_dir(parent_dir_name, subdir_name);
 
-	snprintf(file_path, sizeof(file_path) - 1, "%s/%s/%s", parent_dir_name, subdir_name,
-		 file_name);
+	if (asprintf(&file_path, "%s/%s/%s", parent_dir_name, subdir_name, file_name) < 0)
+		return -errno;
+
 	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
@@ -486,15 +494,15 @@ static int ilog_dump_identify_page(struct ilog *ilog, struct log *cns, __u32 nsi
 {
 	__u8 data[NVME_IDENTIFY_DATA_SIZE];
 	__u8 *buff = cns->buffer ? cns->buffer : data;
-	char filename[sizeof(
-		"cntid_XXXXX_cns_XXX_nsid_XXXXXXXXXX_nvmsetid_XXXXX_csi_XXX.bin")] = {0};
+	_cleanup_free_ char *filename = NULL;
 	int err = nvme_identify_cns_nsid(dev_fd(ilog->dev), cns->id, nsid, buff);
 
 	if (err)
 		return err;
 
-	snprintf(filename, sizeof(filename) - 1, "cntid_0_cns_%d_nsid_%d_nvmsetid_0_csi_0.bin",
-		 cns->id, nsid);
+	if (asprintf(&filename, "cntid_0_cns_%d_nsid_%d_nvmsetid_0_csi_0.bin", cns->id, nsid) < 0)
+		return -errno;
+
 	return log_save(cns, ilog->cfg->out_dir, "identify", filename, buff, sizeof(data));
 }
 
@@ -646,9 +654,9 @@ static int ilog_dump_identify_pages(struct ilog *ilog)
 static int ilog_dump_log_page(struct ilog *ilog, struct log *lp, __u32 nsid)
 {
 	__u8 *buff = lp->buffer;
-	char filename[sizeof("lid_0xXX_lsp_0xXX_lsi_0xXXXX.bin")] = {0};
-	int err;
+	_cleanup_free_ char *filename = NULL;
 
+	int err;
 	if (!lp->buffer_size)
 		return -EINVAL;
 	if (!buff) {
@@ -660,8 +668,9 @@ static int ilog_dump_log_page(struct ilog *ilog, struct log *lp, __u32 nsid)
 	if (err)
 		return err;
 
-	snprintf(filename, sizeof(filename), "lid_0x%02x_lsp_0x00_lsi_0x0000.bin",
-		 lp->id);
+	if (asprintf(&filename, "lid_0x%02x_lsp_0x00_lsi_0x0000.bin", lp->id) < 0)
+		return -errno;
+
 	return log_save(lp, ilog->cfg->out_dir, "log_pages", filename, buff, lp->buffer_size);
 }
 
@@ -813,10 +822,11 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 {
 	char sn_prefix[sizeof(((struct nvme_id_ctrl *)0)->sn)+1];
 	char date_str[sizeof("-YYYYMMDDHHMMSS")];
-	char full_folder[PATH_MAX] = {0};
-	char unique_folder[sizeof(sn_prefix)+sizeof(date_str)-1] = {0};
+	_cleanup_free_ char *full_folder = NULL;
+	_cleanup_free_ char *unique_folder = NULL;
+	_cleanup_free_ char *zip_name = NULL;
+
 	char *initial_folder;
-	char zip_name[PATH_MAX] = {0};
 	char *output_path;
 	struct ilog ilog = {0};
 	int err;
@@ -885,12 +895,16 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 
 	current_time = time(NULL);
 	strftime(date_str, sizeof(date_str), "-%Y%m%d%H%M%S", localtime(&current_time));
-	snprintf(unique_folder, sizeof(unique_folder), "%s%s", sn_prefix, date_str);
-	snprintf(full_folder, sizeof(full_folder) - 1, "%s/%s", cfg.out_dir, unique_folder);
+	if (asprintf(&unique_folder, "%s%s", sn_prefix, date_str) < 0)
+		return -errno;
+	if (asprintf(&full_folder, "%s/%s", cfg.out_dir, unique_folder) < 0)
+		return -errno;
+
 	if (mkdir(full_folder, 0755) !=  0) {
 		perror("mkdir");
 		return -errno;
 	}
+
 	cfg.out_dir = full_folder;
 	output_path = full_folder;
 
@@ -946,10 +960,12 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 
 	if (ilog.count > 0) {
 		int ret_cmd;
-		char *cmd;
+		_cleanup_free_ char *cmd = NULL;
 		char *quiet = cfg.verbose ? "" : " -q";
 
-		snprintf(zip_name, sizeof(zip_name) - 1, "%s.zip", unique_folder);
+		if (asprintf(&zip_name, "%s.zip", unique_folder) < 0)
+			return -errno;
+
 		if (asprintf(&cmd, "cd \"%s\" && zip -MM -r \"../%s\" ./* %s", cfg.out_dir,
 			     zip_name, quiet) < 0) {
 			err = errno;
@@ -962,7 +978,6 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 			perror(cmd);
 		else {
 			output_path = zip_name;
-			free(cmd);
 			if (asprintf(&cmd, "rm -rf %s", cfg.out_dir) < 0) {
 				err = errno;
 				perror("Can't allocate string for cleanup");
@@ -971,7 +986,6 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 			if (system(cmd) != 0)
 				perror("Failed removing logs folder");
 		}
-		free(cmd);
 	}
 
 out:
