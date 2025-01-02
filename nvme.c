@@ -4610,8 +4610,7 @@ static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
 
 static int filter_out_flags(int status)
 {
-	return status & (NVME_GET(NVME_SCT_MASK, SCT) |
-			 NVME_GET(NVME_SC_MASK, SC));
+	return status & (NVME_VAL(SCT) | NVME_VAL(SC));
 }
 
 static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result, void *buf)
