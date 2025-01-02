@@ -61,7 +61,7 @@ const char *solidigm_config_get_nlog_obj_name(const struct json_object *config, 
 	if (!json_object_object_get_ex(nlog_names, hex_header, &obj_name))
 		return NULL;
 	name = json_object_get_string(obj_name);
-	if (strncmp(NLOG_OBJ_PREFIX, name, strlen(NLOG_OBJ_PREFIX)))
+	if ((!name) || (strncmp(NLOG_OBJ_PREFIX, name, strlen(NLOG_OBJ_PREFIX))))
 		return NULL;
 
 	return &name[strlen(OBJ_NAME_PREFIX)];
