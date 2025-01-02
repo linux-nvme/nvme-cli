@@ -279,7 +279,7 @@ static void stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *
 	printf("  Log Page GUID                      %s\n", guid);
 	printf("\n");
 
-	printf("%64s%92s%119s\n", "Read", "Write", "Deallocate/Trim");
+	printf("%64s     %27s     %27s\n", "Read", "Write", "Deallocate/Trim");
 	for (i = 0; i < C3_BUCKET_NUM; i++) {
 		printf("  Active Bucket Counter: Bucket %d    %27d     %27d     %27d\n",
 		       i,
