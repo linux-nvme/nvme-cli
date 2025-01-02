@@ -253,7 +253,7 @@ static void stdout_persistent_event_log_fdp_events(unsigned int cdw11,
 	unsigned int num = (cdw11 >> 16) & 0xff;
 
 	for (unsigned int i = 0; i < num; i++) {
-		printf("\t%-53s: %sEnabled\n", nvme_fdp_event_to_string(buf[0]),
+		printf("\t%-53s: %sEnabled\n", nvme_fdp_event_to_string(buf[i]),
 				cdw12 & 0x1 ? "" : "Not ");
 	}
 }
