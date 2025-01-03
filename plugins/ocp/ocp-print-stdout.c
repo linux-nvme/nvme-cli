@@ -111,11 +111,11 @@ static void stdout_smart_extended_log(void *data, unsigned int version)
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8]),
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR]));
 	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
+	       int48_to_long(&log_data[SCAO_BUNBR]));
 	printf("  Bad user nand blocks - Normalized		%d\n",
 	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BUNBN]));
 	printf("  Bad system nand blocks - Raw			%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BSNBR] & 0x0000FFFFFFFFFFFF));
+	       int48_to_long(&log_data[SCAO_BSNBR]));
 	printf("  Bad system nand blocks - Normalized		%d\n",
 	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BSNBN]));
 	printf("  XOR recovery count				%"PRIu64"\n",
