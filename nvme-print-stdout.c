@@ -257,6 +257,187 @@ static void stdout_persistent_event_log_fdp_events(unsigned int cdw11, unsigned 
 	}
 }
 
+static void pel_header(struct nvme_persistent_event_log *pevent_log_head, int human)
+{
+	printf("Log Identifier: %u\n", pevent_log_head->lid);
+	printf("Total Number of Events: %u\n", le32_to_cpu(pevent_log_head->tnev));
+	printf("Total Log Length : %"PRIu64"\n", le64_to_cpu(pevent_log_head->tll));
+	printf("Log Revision: %u\n", pevent_log_head->rv);
+	printf("Log Header Length: %u\n", pevent_log_head->lhl);
+	printf("Timestamp: %"PRIu64"\n", le64_to_cpu(pevent_log_head->ts));
+	printf("Power On Hours (POH): %s",
+	       uint128_t_to_l10n_string(le128_to_cpu(pevent_log_head->poh)));
+	printf("Power Cycle Count: %"PRIu64"\n", le64_to_cpu(pevent_log_head->pcc));
+	printf("PCI Vendor ID (VID): %u\n", le16_to_cpu(pevent_log_head->vid));
+	printf("PCI Subsystem Vendor ID (SSVID): %u\n", le16_to_cpu(pevent_log_head->ssvid));
+	printf("Serial Number (SN): %-.*s\n", (int)sizeof(pevent_log_head->sn),
+	       pevent_log_head->sn);
+	printf("Model Number (MN): %-.*s\n", (int)sizeof(pevent_log_head->mn), pevent_log_head->mn);
+	printf("NVM Subsystem NVMe Qualified Name (SUBNQN): %-.*s\n",
+	       (int)sizeof(pevent_log_head->subnqn), pevent_log_head->subnqn);
+	printf("Generation Number: %u\n", le16_to_cpu(pevent_log_head->gen_number));
+	printf("Reporting Context Information (RCI): %u\n", le32_to_cpu(pevent_log_head->rci));
+
+	if (human)
+		stdout_persistent_event_log_rci(pevent_log_head->rci);
+
+	printf("Supported Events Bitmap:\n");
+	for (int i = 0; i < 32; i++) {
+		if (!pevent_log_head->seb[i])
+			continue;
+		stdout_add_bitmap(i, pevent_log_head->seb[i]);
+	}
+}
+
+static void pel_event_header(int i, struct nvme_persistent_event_entry *pevent_entry_head,
+			     int human)
+{
+	printf("Event Number: %u\n", i);
+	printf("Event Type: %s\n", nvme_pel_event_to_string(pevent_entry_head->etype));
+	printf("Event Type Revision: %u\n", pevent_entry_head->etype_rev);
+	printf("Event Header Length: %u\n", pevent_entry_head->ehl);
+	printf("Event Header Additional Info: %u\n", pevent_entry_head->ehai);
+
+	if (human)
+		stdout_persistent_event_entry_ehai(pevent_entry_head->ehai);
+
+	printf("Controller Identifier: %u\n", le16_to_cpu(pevent_entry_head->cntlid));
+	printf("Event Timestamp: %"PRIu64"\n", le64_to_cpu(pevent_entry_head->ets));
+	printf("Port Identifier: %u\n", le16_to_cpu(pevent_entry_head->pelpid));
+	printf("Vendor Specific Information Length: %u\n", le16_to_cpu(pevent_entry_head->vsil));
+	printf("Event Length: %u\n", le16_to_cpu(pevent_entry_head->el));
+}
+
+static void pel_smart_health_event(void *pevent_log_info, __u32 offset, const char *devname)
+{
+	struct nvme_smart_log *smart_event = pevent_log_info + offset;
+
+	printf("Smart Health Event Entry:\n");
+	stdout_smart_log(smart_event, NVME_NSID_ALL, devname);
+}
+
+static void pel_fw_commit_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_fw_commit_event *fw_commit_event = pevent_log_info + offset;
+
+	printf("FW Commit Event Entry:\n");
+	printf("Old Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(fw_commit_event->old_fw_rev),
+	       util_fw_to_string((char *)&fw_commit_event->old_fw_rev));
+	printf("New Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(fw_commit_event->new_fw_rev),
+	       util_fw_to_string((char *)&fw_commit_event->new_fw_rev));
+	printf("FW Commit Action: %u\n", fw_commit_event->fw_commit_action);
+	printf("FW Slot: %u\n", fw_commit_event->fw_slot);
+	printf("Status Code Type for Firmware Commit Command: %u\n", fw_commit_event->sct_fw);
+	printf("Status Returned for Firmware Commit Command: %u\n", fw_commit_event->sc_fw);
+	printf("Vendor Assigned Firmware Commit Result Code: %u\n",
+	       le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
+}
+
+static void pel_timestamp_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_time_stamp_change_event *ts_change_event = pevent_log_info + offset;
+
+	printf("Time Stamp Change Event Entry:\n");
+	printf("Previous Timestamp: %"PRIu64"\n", le64_to_cpu(ts_change_event->previous_timestamp));
+	printf("Milliseconds Since Reset: %"PRIu64"\n",
+	       le64_to_cpu(ts_change_event->ml_secs_since_reset));
+}
+
+static void pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
+				     struct nvme_persistent_event_entry *pevent_entry_head)
+{
+	__u64 *fw_rev;
+	__u32 por_info_len = le16_to_cpu(pevent_entry_head->el) -
+			     le16_to_cpu(pevent_entry_head->vsil) - sizeof(*fw_rev);
+	struct nvme_power_on_reset_info_list *por_event;
+	__u32 por_info_list = por_info_len / sizeof(*por_event);
+
+	printf("Power On Reset Event Entry:\n");
+	fw_rev = pevent_log_info + offset;
+	printf("Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(*fw_rev),
+	       util_fw_to_string((char *)fw_rev));
+	printf("Reset Information List:\n");
+
+	for (int i = 0; i < por_info_list; i++) {
+		por_event = pevent_log_info + offset + sizeof(*fw_rev) + i * sizeof(*por_event);
+		printf("Controller ID: %u\n", le16_to_cpu(por_event->cid));
+		printf("Firmware Activation: %u\n", por_event->fw_act);
+		printf("Operation in Progress: %u\n", por_event->op_in_prog);
+		printf("Controller Power Cycle: %u\n", le32_to_cpu(por_event->ctrl_power_cycle));
+		printf("Power on milliseconds: %"PRIu64"\n",
+		       le64_to_cpu(por_event->power_on_ml_seconds));
+		printf("Controller Timestamp: %"PRIu64"\n",
+		       le64_to_cpu(por_event->ctrl_time_stamp));
+	}
+}
+
+static void pel_nss_hw_error_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_nss_hw_err_event *nss_hw_err_event = pevent_log_info + offset;
+
+	printf("NVM Subsystem Hardware Error Event Code Entry: %u, %s\n",
+	       le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code),
+	       nvme_nss_hw_error_to_string(nss_hw_err_event->nss_hw_err_event_code));
+}
+
+static void pel_change_ns_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_change_ns_event *ns_event = pevent_log_info + offset;
+
+	printf("Change Namespace Event Entry:\n");
+	printf("Namespace Management CDW10: %u\n", le32_to_cpu(ns_event->nsmgt_cdw10));
+	printf("Namespace Size: %"PRIu64"\n", le64_to_cpu(ns_event->nsze));
+	printf("Namespace Capacity: %"PRIu64"\n", le64_to_cpu(ns_event->nscap));
+	printf("Formatted LBA Size: %u\n", ns_event->flbas);
+	printf("End-to-end Data Protection Type Settings: %u\n", ns_event->dps);
+	printf("Namespace Multi-path I/O and Namespace Sharing Capabilities: %u\n", ns_event->nmic);
+	printf("ANA Group Identifier: %u\n", le32_to_cpu(ns_event->ana_grp_id));
+	printf("NVM Set Identifier: %u\n", le16_to_cpu(ns_event->nvmset_id));
+	printf("Namespace ID: %u\n", le32_to_cpu(ns_event->nsid));
+}
+
+static void pel_format_start_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_format_nvm_start_event *format_start_event = pevent_log_info + offset;
+
+	printf("Format NVM Start Event Entry:\n");
+	printf("Namespace Identifier: %u\n", le32_to_cpu(format_start_event->nsid));
+	printf("Format NVM Attributes: %u\n", format_start_event->fna);
+	printf("Format NVM CDW10: %u\n", le32_to_cpu(format_start_event->format_nvm_cdw10));
+}
+
+static void pel_format_completion_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_format_nvm_compln_event *format_cmpln_event = pevent_log_info + offset;
+
+	printf("Format NVM Completion Event Entry:\n");
+	printf("Namespace Identifier: %u\n", le32_to_cpu(format_cmpln_event->nsid));
+	printf("Smallest Format Progress Indicator: %u\n", format_cmpln_event->smallest_fpi);
+	printf("Format NVM Status: %u\n", format_cmpln_event->format_nvm_status);
+	printf("Completion Information: %u\n", le16_to_cpu(format_cmpln_event->compln_info));
+	printf("Status Field: %u\n", le32_to_cpu(format_cmpln_event->status_field));
+}
+
+static void pel_sanitize_start_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_sanitize_start_event *sanitize_start_event = pevent_log_info + offset;
+
+	printf("Sanitize Start Event Entry:\n");
+	printf("SANICAP: %u\n", sanitize_start_event->sani_cap);
+	printf("Sanitize CDW10: %u\n", le32_to_cpu(sanitize_start_event->sani_cdw10));
+	printf("Sanitize CDW11: %u\n", le32_to_cpu(sanitize_start_event->sani_cdw11));
+}
+
+static void pel_sanitize_completion_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_sanitize_compln_event *sanitize_cmpln_event = pevent_log_info + offset;
+
+	printf("Sanitize Completion Event Entry:\n");
+	printf("Sanitize Progress: %u\n", le16_to_cpu(sanitize_cmpln_event->sani_prog));
+	printf("Sanitize Status: %u\n", le16_to_cpu(sanitize_cmpln_event->sani_status));
+	printf("Completion Information: %u\n", le16_to_cpu(sanitize_cmpln_event->cmpln_info));
+}
+
 static void pel_set_feature_event(void *pevent_log_info, __u32 offset)
 {
 	int fid, cdw11, cdw12, dword_cnt;
@@ -283,76 +464,37 @@ static void pel_set_feature_event(void *pevent_log_info, __u32 offset)
 	}
 }
 
-static void stdout_persistent_event_log(void *pevent_log_info,
-					__u8 action, __u32 size,
+static void pel_thermal_excursion_event(void *pevent_log_info, __u32 offset)
+{
+	struct nvme_thermal_exc_event *thermal_exc_event = pevent_log_info + offset;
+
+	printf("Thermal Excursion Event Entry:\n");
+	printf("Over Temperature: %u\n", thermal_exc_event->over_temp);
+	printf("Threshold: %u\n", thermal_exc_event->threshold);
+}
+
+static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u32 size,
 					const char *devname)
 {
-	__u32 offset, por_info_len, por_info_list;
-	__u64 *fw_rev;
-	struct nvme_smart_log *smart_event;
-	struct nvme_fw_commit_event *fw_commit_event;
-	struct nvme_time_stamp_change_event *ts_change_event;
-	struct nvme_power_on_reset_info_list *por_event;
-	struct nvme_nss_hw_err_event *nss_hw_err_event;
-	struct nvme_change_ns_event	*ns_event;
-	struct nvme_format_nvm_start_event *format_start_event;
-	struct nvme_format_nvm_compln_event *format_cmpln_event;
-	struct nvme_sanitize_start_event *sanitize_start_event;
-	struct nvme_sanitize_compln_event *sanitize_cmpln_event;
-	struct nvme_thermal_exc_event *thermal_exc_event;
 	struct nvme_persistent_event_log *pevent_log_head;
+	__u32 offset = sizeof(*pevent_log_head);
 	struct nvme_persistent_event_entry *pevent_entry_head;
-
 	int human = stdout_print_ops.flags & VERBOSE;
-
-	offset = sizeof(*pevent_log_head);
 
 	printf("Persistent Event Log for device: %s\n", devname);
 	printf("Action for Persistent Event Log: %u\n", action);
-	if (size >= offset) {
-		pevent_log_head = pevent_log_info;
-		printf("Log Identifier: %u\n", pevent_log_head->lid);
-		printf("Total Number of Events: %u\n",
-			le32_to_cpu(pevent_log_head->tnev));
-		printf("Total Log Length : %"PRIu64"\n",
-			le64_to_cpu(pevent_log_head->tll));
-		printf("Log Revision: %u\n", pevent_log_head->rv);
-		printf("Log Header Length: %u\n", pevent_log_head->lhl);
-		printf("Timestamp: %"PRIu64"\n",
-			le64_to_cpu(pevent_log_head->ts));
-		printf("Power On Hours (POH): %s",
-			uint128_t_to_l10n_string(le128_to_cpu(pevent_log_head->poh)));
-		printf("Power Cycle Count: %"PRIu64"\n",
-			le64_to_cpu(pevent_log_head->pcc));
-		printf("PCI Vendor ID (VID): %u\n",
-			le16_to_cpu(pevent_log_head->vid));
-		printf("PCI Subsystem Vendor ID (SSVID): %u\n",
-			le16_to_cpu(pevent_log_head->ssvid));
-		printf("Serial Number (SN): %-.*s\n",
-			(int)sizeof(pevent_log_head->sn), pevent_log_head->sn);
-		printf("Model Number (MN): %-.*s\n",
-			(int)sizeof(pevent_log_head->mn), pevent_log_head->mn);
-		printf("NVM Subsystem NVMe Qualified Name (SUBNQN): %-.*s\n",
-			(int)sizeof(pevent_log_head->subnqn),
-			pevent_log_head->subnqn);
-		printf("Generation Number: %u\n",
-			le16_to_cpu(pevent_log_head->gen_number));
-		printf("Reporting Context Information (RCI): %u\n",
-			le32_to_cpu(pevent_log_head->rci));
-		if (human)
-			stdout_persistent_event_log_rci(pevent_log_head->rci);
-		printf("Supported Events Bitmap:\n");
-		for (int i = 0; i < 32; i++) {
-			if (pevent_log_head->seb[i] == 0)
-				continue;
-			stdout_add_bitmap(i, pevent_log_head->seb[i]);
-		}
-	} else {
+
+	if (size < offset) {
 		printf("No log data can be shown with this log len at least " \
-			"512 bytes is required or can be 0 to read the complete "\
-			"log page after context established\n");
+		       "512 bytes is required or can be 0 to read the complete " \
+		       "log page after context established\n");
 		return;
 	}
+
+	pevent_log_head = pevent_log_info;
+
+	pel_header(pevent_log_head, human);
+
 	printf("\n");
 	printf("\nPersistent Event Entries:\n");
 	for (int i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
@@ -364,153 +506,41 @@ static void stdout_persistent_event_log(void *pevent_log_info,
 		if ((offset + pevent_entry_head->ehl + 3 +
 			le16_to_cpu(pevent_entry_head->el)) >= size)
 			break;
-		printf("Event Number: %u\n", i);
-		printf("Event Type: %s\n", nvme_pel_event_to_string(pevent_entry_head->etype));
-		printf("Event Type Revision: %u\n", pevent_entry_head->etype_rev);
-		printf("Event Header Length: %u\n", pevent_entry_head->ehl);
-		printf("Event Header Additional Info: %u\n", pevent_entry_head->ehai);
-		if (human)
-			stdout_persistent_event_entry_ehai(pevent_entry_head->ehai);
-		printf("Controller Identifier: %u\n",
-			le16_to_cpu(pevent_entry_head->cntlid));
-		printf("Event Timestamp: %"PRIu64"\n",
-			le64_to_cpu(pevent_entry_head->ets));
-		printf("Port Identifier: %u\n",
-			le16_to_cpu(pevent_entry_head->pelpid));
-		printf("Vendor Specific Information Length: %u\n",
-			le16_to_cpu(pevent_entry_head->vsil));
-		printf("Event Length: %u\n", le16_to_cpu(pevent_entry_head->el));
+
+		pel_event_header(i, pevent_entry_head, human);
 
 		offset += pevent_entry_head->ehl + 3;
 
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
-			smart_event = pevent_log_info + offset;
-			printf("Smart Health Event Entry:\n");
-			stdout_smart_log(smart_event, NVME_NSID_ALL, devname);
+			pel_smart_health_event(pevent_log_info, offset, devname);
 			break;
 		case NVME_PEL_FW_COMMIT_EVENT:
-			fw_commit_event = pevent_log_info + offset;
-			printf("FW Commit Event Entry:\n");
-			printf("Old Firmware Revision: %"PRIu64" (%s)\n",
-				le64_to_cpu(fw_commit_event->old_fw_rev),
-				util_fw_to_string((char *)&fw_commit_event->old_fw_rev));
-			printf("New Firmware Revision: %"PRIu64" (%s)\n",
-				le64_to_cpu(fw_commit_event->new_fw_rev),
-				util_fw_to_string((char *)&fw_commit_event->new_fw_rev));
-			printf("FW Commit Action: %u\n",
-				fw_commit_event->fw_commit_action);
-			printf("FW Slot: %u\n", fw_commit_event->fw_slot);
-			printf("Status Code Type for Firmware Commit Command: %u\n",
-				fw_commit_event->sct_fw);
-			printf("Status Returned for Firmware Commit Command: %u\n",
-				fw_commit_event->sc_fw);
-			printf("Vendor Assigned Firmware Commit Result Code: %u\n",
-				le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
+			pel_fw_commit_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_TIMESTAMP_EVENT:
-			ts_change_event = pevent_log_info + offset;
-			printf("Time Stamp Change Event Entry:\n");
-			printf("Previous Timestamp: %"PRIu64"\n",
-				le64_to_cpu(ts_change_event->previous_timestamp));
-			printf("Milliseconds Since Reset: %"PRIu64"\n",
-				le64_to_cpu(ts_change_event->ml_secs_since_reset));
+			pel_timestamp_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_POWER_ON_RESET_EVENT:
-			por_info_len = (le16_to_cpu(pevent_entry_head->el) -
-				le16_to_cpu(pevent_entry_head->vsil) - sizeof(*fw_rev));
-
-			por_info_list = por_info_len / sizeof(*por_event);
-
-			printf("Power On Reset Event Entry:\n");
-			fw_rev = pevent_log_info + offset;
-			printf("Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(*fw_rev),
-				util_fw_to_string((char *)fw_rev));
-			printf("Reset Information List:\n");
-
-			for (int i = 0; i < por_info_list; i++) {
-				por_event = pevent_log_info + offset +
-					sizeof(*fw_rev) + i * sizeof(*por_event);
-				printf("Controller ID: %u\n", le16_to_cpu(por_event->cid));
-				printf("Firmware Activation: %u\n",
-					por_event->fw_act);
-				printf("Operation in Progress: %u\n",
-					por_event->op_in_prog);
-				printf("Controller Power Cycle: %u\n",
-					le32_to_cpu(por_event->ctrl_power_cycle));
-				printf("Power on milliseconds: %"PRIu64"\n",
-					le64_to_cpu(por_event->power_on_ml_seconds));
-				printf("Controller Timestamp: %"PRIu64"\n",
-					le64_to_cpu(por_event->ctrl_time_stamp));
-			}
+			pel_power_on_reset_event(pevent_log_info, offset, pevent_entry_head);
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
-			nss_hw_err_event = pevent_log_info + offset;
-			printf("NVM Subsystem Hardware Error Event Code Entry: %u, %s\n",
-				le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code),
-				nvme_nss_hw_error_to_string(nss_hw_err_event->nss_hw_err_event_code));
+			pel_nss_hw_error_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_CHANGE_NS_EVENT:
-			ns_event = pevent_log_info + offset;
-			printf("Change Namespace Event Entry:\n");
-			printf("Namespace Management CDW10: %u\n",
-				le32_to_cpu(ns_event->nsmgt_cdw10));
-			printf("Namespace Size: %"PRIu64"\n",
-				le64_to_cpu(ns_event->nsze));
-			printf("Namespace Capacity: %"PRIu64"\n",
-				le64_to_cpu(ns_event->nscap));
-			printf("Formatted LBA Size: %u\n", ns_event->flbas);
-			printf("End-to-end Data Protection Type Settings: %u\n",
-				ns_event->dps);
-			printf("Namespace Multi-path I/O and Namespace Sharing" \
-				" Capabilities: %u\n", ns_event->nmic);
-			printf("ANA Group Identifier: %u\n",
-				le32_to_cpu(ns_event->ana_grp_id));
-			printf("NVM Set Identifier: %u\n", le16_to_cpu(ns_event->nvmset_id));
-			printf("Namespace ID: %u\n", le32_to_cpu(ns_event->nsid));
+			pel_change_ns_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_FORMAT_START_EVENT:
-			format_start_event = pevent_log_info + offset;
-			printf("Format NVM Start Event Entry:\n");
-			printf("Namespace Identifier: %u\n",
-				le32_to_cpu(format_start_event->nsid));
-			printf("Format NVM Attributes: %u\n",
-				format_start_event->fna);
-			printf("Format NVM CDW10: %u\n",
-				le32_to_cpu(format_start_event->format_nvm_cdw10));
+			pel_format_start_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_FORMAT_COMPLETION_EVENT:
-			format_cmpln_event = pevent_log_info + offset;
-			printf("Format NVM Completion Event Entry:\n");
-			printf("Namespace Identifier: %u\n",
-				le32_to_cpu(format_cmpln_event->nsid));
-			printf("Smallest Format Progress Indicator: %u\n",
-				format_cmpln_event->smallest_fpi);
-			printf("Format NVM Status: %u\n",
-				format_cmpln_event->format_nvm_status);
-			printf("Completion Information: %u\n",
-				le16_to_cpu(format_cmpln_event->compln_info));
-			printf("Status Field: %u\n",
-				le32_to_cpu(format_cmpln_event->status_field));
+			pel_format_completion_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_SANITIZE_START_EVENT:
-			sanitize_start_event = pevent_log_info + offset;
-			printf("Sanitize Start Event Entry:\n");
-			printf("SANICAP: %u\n", sanitize_start_event->sani_cap);
-			printf("Sanitize CDW10: %u\n",
-				le32_to_cpu(sanitize_start_event->sani_cdw10));
-			printf("Sanitize CDW11: %u\n",
-				le32_to_cpu(sanitize_start_event->sani_cdw11));
+			pel_sanitize_start_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
-			sanitize_cmpln_event = pevent_log_info + offset;
-			printf("Sanitize Completion Event Entry:\n");
-			printf("Sanitize Progress: %u\n",
-				le16_to_cpu(sanitize_cmpln_event->sani_prog));
-			printf("Sanitize Status: %u\n",
-				le16_to_cpu(sanitize_cmpln_event->sani_status));
-			printf("Completion Information: %u\n",
-				le16_to_cpu(sanitize_cmpln_event->cmpln_info));
+			pel_sanitize_completion_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
 			pel_set_feature_event(pevent_log_info, offset);
@@ -519,10 +549,7 @@ static void stdout_persistent_event_log(void *pevent_log_info,
 			d(pevent_log_info + offset, 512, 16, 1);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
-			thermal_exc_event = pevent_log_info + offset;
-			printf("Thermal Excursion Event Entry:\n");
-			printf("Over Temperature: %u\n", thermal_exc_event->over_temp);
-			printf("Threshold: %u\n", thermal_exc_event->threshold);
+			pel_thermal_excursion_event(pevent_log_info, offset);
 			break;
 		case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
 			printf("Sanitize Media Verification Event\n");
