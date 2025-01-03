@@ -246,15 +246,14 @@ static void stdout_add_bitmap(int i, __u8 seb)
 	}
 }
 
-static void stdout_persistent_event_log_fdp_events(unsigned int cdw11,
-						   unsigned int cdw12,
+static void stdout_persistent_event_log_fdp_events(unsigned int cdw11, unsigned int cdw12,
 						   unsigned char *buf)
 {
-	unsigned int num = (cdw11 >> 16) & 0xff;
+	unsigned int num = NVME_GET(cdw11, FEAT_FDPE_NOET);
 
 	for (unsigned int i = 0; i < num; i++) {
 		printf("\t%-53s: %sEnabled\n", nvme_fdp_event_to_string(buf[i]),
-				cdw12 & 0x1 ? "" : "Not ");
+		       NVME_GET(cdw12, FDP_SUPP_EVENT_ENABLED) ? "" : "Not ");
 	}
 }
 
@@ -497,16 +496,17 @@ static void stdout_persistent_event_log(void *pevent_log_info,
 			fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), FEATURES_CDW10_FID);
 			cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
 
-			printf("Set Feature ID  :%#02x (%s),  value:%#08x\n", fid,
-				nvme_feature_to_string(fid), cdw11);
+			printf("Set Feature ID: 0x%02x (%s), value: 0x%08x\n", fid,
+			       nvme_feature_to_string(fid), cdw11);
 			if (NVME_SET_FEAT_EVENT_MB_COUNT(set_feat_event->layout)) {
 				mem_buf = (unsigned char *)set_feat_event + 4 + dword_cnt * 4;
 				if (fid == NVME_FEAT_FID_FDP_EVENTS) {
 					cdw12 = le32_to_cpu(set_feat_event->cdw_mem[2]);
 					stdout_persistent_event_log_fdp_events(cdw11, cdw12,
 									       mem_buf);
-				} else
+				} else {
 					stdout_feature_show_fields(fid, cdw11, mem_buf);
+				}
 			}
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
