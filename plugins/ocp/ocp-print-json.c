@@ -11,15 +11,16 @@
 
 static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_object *r)
 {
-	obj_add_str(r, "Description", hwcomp_id_to_string(le32_to_cpu(e->desc->id)));
-	obj_add_nprix64(r, "Date/Lot Size", e->date_lot_size);
-	obj_add_nprix64(r, "Additional Information Size", e->add_info_size);
-	obj_add_uint_0nx(r, "Identifier", le32_to_cpu(e->desc->id), 8);
-	obj_add_0nprix64(r, "Manufacture", le64_to_cpu(e->desc->mfg), 16);
-	obj_add_0nprix64(r, "Revision", le64_to_cpu(e->desc->rev), 16);
-	obj_add_0nprix64(r, "Manufacture Code", le64_to_cpu(e->desc->mfg_code), 16);
-	obj_add_byte_array(r, "Date/Lot Code", e->date_lot_code, e->date_lot_size);
-	obj_add_byte_array(r, "Additional Information", e->add_info, e->add_info_size);
+	json_object_add_value_string(r, "Description",
+				     hwcomp_id_to_string(le32_to_cpu(e->desc->id)));
+	json_object_add_nprix64(r, "Date/Lot Size", e->date_lot_size);
+	json_object_add_nprix64(r, "Additional Information Size", e->add_info_size);
+	json_object_add_uint_0nx(r, "Identifier", le32_to_cpu(e->desc->id), 8);
+	json_object_add_0nprix64(r, "Manufacture", le64_to_cpu(e->desc->mfg), 16);
+	json_object_add_0nprix64(r, "Revision", le64_to_cpu(e->desc->rev), 16);
+	json_object_add_0nprix64(r, "Manufacture Code", le64_to_cpu(e->desc->mfg_code), 16);
+	json_object_add_byte_array(r, "Date/Lot Code", e->date_lot_code, e->date_lot_size);
+	json_object_add_byte_array(r, "Additional Information", e->add_info, e->add_info_size);
 }
 
 static void print_hwcomp_desc_list_json(struct json_object *r, struct hwcomp_desc_entry *e,
@@ -31,7 +32,8 @@ static void print_hwcomp_desc_list_json(struct json_object *r, struct hwcomp_des
 		return;
 
 	if (list) {
-		obj_add_str(r, k, hwcomp_id_to_string(le32_to_cpu(e->desc->id)));
+		json_object_add_value_string(r, k,
+					     hwcomp_id_to_string(le32_to_cpu(e->desc->id)));
 		return;
 	}
 
@@ -69,12 +71,12 @@ static void json_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	if (log->ver == 1)
 		log_size *= sizeof(__le32);
 
-	obj_add_uint_02x(r, "Log Identifier", LID_HWCOMP);
-	obj_add_uint_0x(r, "Log Page Version", le16_to_cpu(log->ver));
-	obj_add_byte_array(r, "Reserved2", log->rsvd2, ARRAY_SIZE(log->rsvd2));
-	obj_add_byte_array(r, "Log page GUID", log->guid, ARRAY_SIZE(log->guid));
-	obj_add_nprix64(r, "Hardware Component Log Size", (unsigned long long)log_size);
-	obj_add_byte_array(r, "Reserved48", log->rsvd48, ARRAY_SIZE(log->rsvd48));
+	json_object_add_uint_02x(r, "Log Identifier", LID_HWCOMP);
+	json_object_add_uint_0x(r, "Log Page Version", le16_to_cpu(log->ver));
+	json_object_add_byte_array(r, "Reserved2", log->rsvd2, ARRAY_SIZE(log->rsvd2));
+	json_object_add_byte_array(r, "Log page GUID", log->guid, ARRAY_SIZE(log->guid));
+	json_object_add_nprix64(r, "Hardware Component Log Size", (unsigned long long)log_size);
+	json_object_add_byte_array(r, "Reserved48", log->rsvd48, ARRAY_SIZE(log->rsvd48));
 	print_hwcomp_descs_json(log->desc, log_size - offsetof(struct hwcomp_log, desc), id, list,
 				obj_create_array_obj(r, "Component Descriptions"));
 
