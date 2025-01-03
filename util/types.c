@@ -5,6 +5,7 @@
 #include <string.h>
 #include <locale.h>
 #include <time.h>
+#include <limits.h>
 
 #include <ccan/endian/endian.h>
 
@@ -36,16 +37,28 @@ long double int128_to_double(__u8 *data)
 	return result;
 }
 
-uint64_t int48_to_long(const __u8 *data)
+static uint64_t int_to_long(int bits, const __u8 *data)
 {
 	int i;
 	uint64_t result = 0;
+	int bytes = (bits + CHAR_BIT - 1) / CHAR_BIT;
 
-	for (i = 0; i < 6; i++) {
-		result *= 256;
-		result += data[5 - i];
+	for (i = 0; i < bytes; i++) {
+		result <<= CHAR_BIT;
+		result += data[bytes - 1 - i];
 	}
+
 	return result;
+}
+
+uint64_t int48_to_long(const __u8 *data)
+{
+	return int_to_long(48, data);
+}
+
+uint64_t int56_to_long(const __u8 *data)
+{
+	return int_to_long(56, data);
 }
 
 long double uint128_t_to_double(nvme_uint128_t data)

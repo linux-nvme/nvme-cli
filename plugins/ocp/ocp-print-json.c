@@ -181,8 +181,7 @@ static void json_smart_extended_log_v1(void *data)
 		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
 	json_object_add_value_uint(root, "System data percent used",
 		(__u8)log_data[SCAO_SDPU]);
-	json_object_add_value_uint64(root, "Refresh counts",
-		(uint64_t)(le64_to_cpu(*(uint64_t *)&log_data[SCAO_RFSC]) & 0x00FFFFFFFFFFFFFF));
+	json_object_add_value_uint64(root, "Refresh counts", int56_to_long(&log_data[SCAO_RFSC]));
 	json_object_add_value_uint(root, "Max User data erase counts",
 		(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MXUDEC]));
 	json_object_add_value_uint(root, "Min User data erase counts",
