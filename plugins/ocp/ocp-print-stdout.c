@@ -36,7 +36,7 @@ static void stdout_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	if (log->ver == 1)
 		log_size *= sizeof(__le32);
 
-	printf("Log Identifier: 0x%02xh\n", LID_HWCOMP);
+	printf("Log Identifier: 0x%02xh\n", OCP_LID_HWCOMP);
 	printf("Log Page Version: 0x%x\n", le16_to_cpu(log->ver));
 	print_array("Reserved2", log->rsvd2, ARRAY_SIZE(log->rsvd2));
 	print_array("Log page GUID", log->guid, ARRAY_SIZE(log->guid));

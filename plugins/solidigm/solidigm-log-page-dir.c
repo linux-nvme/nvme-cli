@@ -14,6 +14,7 @@
 #include "common.h"
 #include "nvme-print.h"
 
+#include "plugins/ocp/ocp-nvme.h"
 #include "plugins/ocp/ocp-utils.h"
 #include "solidigm-util.h"
 

@@ -71,7 +71,7 @@ static void json_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	if (log->ver == 1)
 		log_size *= sizeof(__le32);
 
-	json_object_add_uint_02x(r, "Log Identifier", LID_HWCOMP);
+	json_object_add_uint_02x(r, "Log Identifier", OCP_LID_HWCOMP);
 	json_object_add_uint_0x(r, "Log Page Version", le16_to_cpu(log->ver));
 	json_object_add_byte_array(r, "Reserved2", log->rsvd2, ARRAY_SIZE(log->rsvd2));
 	json_object_add_byte_array(r, "Log page GUID", log->guid, ARRAY_SIZE(log->guid));

@@ -4,7 +4,6 @@
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
-
 #include "nvme.h"
 
 /*
@@ -31,4 +30,4 @@ int ocp_get_uuid_index(struct nvme_dev *dev, __u8 *index);
  */
 int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index);
 
-int ocp_get_log_simple(struct nvme_dev *dev, enum nvme_cmd_get_log_lid lid, __u32 len, void *log);
+int ocp_get_log_simple(struct nvme_dev *dev, enum ocp_dssd_log_id lid, __u32 len, void *log);

@@ -45,8 +45,6 @@
 /// Latency Monitor Log
 
 #define C3_LATENCY_MON_LOG_BUF_LEN		0x200
-#define C3_LATENCY_MON_OPCODE			0xC3
-#define NVME_FEAT_OCP_LATENCY_MONITOR		0xC5
 
 static __u8 lat_mon_guid[GUID_LEN] = {
 	0x92, 0x7a, 0xc0, 0x8c,
@@ -219,8 +217,7 @@ static int get_c3_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 
-	ret = ocp_get_log_simple(dev, C3_LATENCY_MON_OPCODE, C3_LATENCY_MON_LOG_BUF_LEN,
-				 data);
+	ret = ocp_get_log_simple(dev, OCP_LID_LMLOG, C3_LATENCY_MON_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret, false), ret);
@@ -392,7 +389,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.fid = NVME_FEAT_OCP_LATENCY_MONITOR,
+		.fid = OCP_FID_LM,
 		.nsid = 0,
 		.cdw12 = 0,
 		.save = 1,
@@ -406,7 +403,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 	if (err < 0) {
 		perror("set-feature");
 	} else if (!err) {
-		printf("NVME_FEAT_OCP_LATENCY_MONITOR: 0x%02x\n", NVME_FEAT_OCP_LATENCY_MONITOR);
+		printf("NVME_FEAT_OCP_LATENCY_MONITOR: 0x%02x\n", OCP_FID_LM);
 		printf("active bucket timer threshold: 0x%x\n",
 		       le16_to_cpu(buf.active_bucket_timer_threshold));
 		printf("active threshold a: 0x%x\n", buf.active_threshold_a);
@@ -548,7 +545,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 			   "No argument prints current mode.";
 	const char *mode = "[0-3]: default/rom/wtm/normal";
 	const __u32 nsid = 0;
-	const __u8 fid = 0xc2;
+	const __u8 fid = OCP_FID_ROWTM;
 	struct nvme_dev *dev;
 	int err;
 
@@ -1286,8 +1283,7 @@ static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_b
 	}
 	memset(header_data, 0, sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
 
-	ret = ocp_get_log_simple(dev, C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
-				 C9_TELEMETRY_STR_LOG_LEN, header_data);
+	ret = ocp_get_log_simple(dev, OCP_LID_TELSLG, C9_TELEMETRY_STR_LOG_LEN, header_data);
 
 	if (!ret) {
 		log_data = (struct telemetry_str_log_format *)header_data;
@@ -1329,8 +1325,7 @@ static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_b
 		}
 		memset(pC9_string_buffer, 0, sizeof(__u8) * total_log_page_sz);
 
-		ret = ocp_get_log_simple(dev, C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE,
-					 total_log_page_sz, pC9_string_buffer);
+		ret = ocp_get_log_simple(dev, OCP_LID_TELSLG, total_log_page_sz, pC9_string_buffer);
 	} else {
 		fprintf(stderr, "ERROR : OCP : Unable to read C9 data.\n");
 	}
@@ -1566,7 +1561,6 @@ out:
 
 /* C5 Unsupported Requirement Log Page */
 #define C5_UNSUPPORTED_REQS_LEN            4096
-#define C5_UNSUPPORTED_REQS_OPCODE         0xC5
 
 static __u8 unsupported_req_guid[GUID_LEN] = {
 	0x2F, 0x72, 0x9C, 0x0E,
@@ -1601,7 +1595,7 @@ static int get_c5_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
 
-	ret = ocp_get_log_simple(dev, C5_UNSUPPORTED_REQS_OPCODE, C5_UNSUPPORTED_REQS_LEN, data);
+	ret = ocp_get_log_simple(dev, OCP_LID_URLP, C5_UNSUPPORTED_REQS_LEN, data);
 	if (!ret) {
 		log_data = (struct unsupported_requirement_log *)data;
 
@@ -1673,7 +1667,6 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 /// Error Recovery Log Page(0xC1)
 
 #define C1_ERROR_RECOVERY_LOG_BUF_LEN       0x200
-#define C1_ERROR_RECOVERY_OPCODE            0xC1
 
 static __u8 error_recovery_guid[GUID_LEN] = {
 	0x44, 0xd9, 0x31, 0x21,
@@ -1706,8 +1699,7 @@ static int get_c1_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
 
-	ret = ocp_get_log_simple(dev, C1_ERROR_RECOVERY_OPCODE, C1_ERROR_RECOVERY_LOG_BUF_LEN,
-				 data);
+	ret = ocp_get_log_simple(dev, OCP_LID_EREC, C1_ERROR_RECOVERY_LOG_BUF_LEN, data);
 
 	if (!ret) {
 		log_data = (struct ocp_error_recovery_log_page *)data;
@@ -1778,7 +1770,6 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *cmd, st
 /// Device Capabilities (Log Identifier C4h) Requirements
 
 #define C4_DEV_CAP_REQ_LEN			0x1000
-#define C4_DEV_CAP_REQ_OPCODE		0xC4
 static __u8 dev_cap_req_guid[GUID_LEN] = {
 	0x97, 0x42, 0x05, 0x0d,
 	0xd1, 0xe1, 0xc9, 0x98,
@@ -1810,7 +1801,7 @@ static int get_c4_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
 
-	ret = ocp_get_log_simple(dev, C4_DEV_CAP_REQ_OPCODE, C4_DEV_CAP_REQ_LEN, data);
+	ret = ocp_get_log_simple(dev, OCP_LID_DCLP, C4_DEV_CAP_REQ_LEN, data);
 
 	if (!ret) {
 		log_data = (struct ocp_device_capabilities_log_page *)data;
@@ -1896,7 +1887,7 @@ static int ocp_set_telemetry_profile(struct nvme_dev *dev, __u8 tps)
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.fid = 0xC8,
+		.fid = OCP_FID_TEL_CFG,
 		.nsid = 0xFFFFFFFF,
 		.cdw11 = tps,
 		.cdw12 = 0,
@@ -2019,7 +2010,6 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *c
 	const char *power_state = "DSSD Power State to set in watts";
 	const char *save = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	const __u8 fid = 0xC7;
 	struct nvme_dev *dev;
 	int err;
 
@@ -2046,9 +2036,8 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *c
 		return err;
 
 	if (argconfig_parse_seen(opts, "power-state"))
-		err = set_dssd_power_state(dev, nsid, fid, cfg.power_state,
-					       cfg.save,
-					       !argconfig_parse_seen(opts, "no-uuid"));
+		err = set_dssd_power_state(dev, nsid, OCP_FID_DSSDPS, cfg.power_state, cfg.save,
+					   !argconfig_parse_seen(opts, "no-uuid"));
 
 	dev_close(dev);
 
@@ -2111,7 +2100,7 @@ static int get_dssd_power_state_feature(int argc, char **argv, struct command *c
 	const char *all = "Print out all 3 values at once - Current, Default, and Saved";
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const __u32 nsid = 0;
-	const __u8 fid = 0xC7;
+	const __u8 fid = OCP_FID_DSSDPS;
 	struct nvme_dev *dev;
 	int i, err;
 
@@ -2169,7 +2158,6 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	const char *plp_health_interval = "[31:16]:PLP Health Check Interval";
 	const char *save = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	const __u8 fid = 0xc6;
 	struct nvme_dev *dev;
 	int err;
 	__u32 result;
@@ -2211,7 +2199,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.fid = fid,
+		.fid = OCP_FID_PLPI,
 		.nsid = nsid,
 		.cdw11 = cfg.plp_health_interval << 16,
 		.cdw12 = 0,
@@ -2270,7 +2258,7 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 	struct nvme_get_features_args args = {
 		.args_size  = sizeof(args),
 		.fd         = dev_fd(dev),
-		.fid        = fid,
+		.fid        = OCP_FID_PLPI,
 		.nsid       = nsid,
 		.sel        = cfg.sel,
 		.cdw11      = 0,
@@ -2308,7 +2296,6 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *cm
 	const char *epn = "[0]:Enable Panic Notices";
 	const char *save = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	const __u8 fid = 0xc9;
 	struct nvme_dev *dev;
 	int err;
 	__u32 result;
@@ -2344,7 +2331,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *cm
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.fid = fid,
+		.fid = OCP_FID_DAEC,
 		.nsid = nsid,
 		.cdw11 = cfg.epn ? 1 : 0,
 		.cdw12 = 0,
@@ -2378,7 +2365,7 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *cm
 	const char *desc = "Issue Get Feature command (FID : 0xC9) DSSD Async Event Config";
 	const char *sel = "[0-3]: current/default/saved/supported";
 	const __u32 nsid = 0;
-	const __u8 fid = 0xc9;
+	const __u8 fid = OCP_FID_DAEC;
 	struct nvme_dev *dev;
 	__u32 result;
 	int err;
@@ -2506,7 +2493,6 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *c
 
 /* C7 TCG Configuration Log Page */
 #define C7_TCG_CONFIGURATION_LEN           512
-#define C7_TCG_CONFIGURATION_OPCODE        0xC7
 
 static __u8 tcg_configuration_guid[GUID_LEN] = {
 	0x06, 0x40, 0x24, 0xBD,
@@ -2541,7 +2527,7 @@ static int get_c7_log_page(struct nvme_dev *dev, char *format)
 	}
 	memset(data, 0, sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
 
-	ret = ocp_get_log_simple(dev, C7_TCG_CONFIGURATION_OPCODE, C7_TCG_CONFIGURATION_LEN, data);
+	ret = ocp_get_log_simple(dev, OCP_LID_TCGL, C7_TCG_CONFIGURATION_LEN, data);
 	if (!ret) {
 		log_data = (struct tcg_configuration_log *)data;
 
@@ -2641,7 +2627,7 @@ static int error_injection_get(struct nvme_dev *dev, const __u8 sel, bool uuid)
 	struct erri_get_cq_entry cq_entry;
 	int err;
 	int i;
-	const __u8 fid = 0xc0;
+	const __u8 fid = OCP_FID_ERRI;
 
 	_cleanup_free_ struct erri_entry *entry = NULL;
 
@@ -2722,7 +2708,7 @@ static int error_injection_set(struct nvme_dev *dev, struct erri_config *cfg, bo
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.fid = 0xc0,
+		.fid = OCP_FID_ERRI,
 		.cdw11 = cfg->number,
 		.data_len = cfg->number * sizeof(struct erri_entry),
 		.timeout = nvme_cfg.timeout,
@@ -2814,7 +2800,7 @@ static int enable_ieee1667_silo_get(struct nvme_dev *dev, const __u8 sel, bool u
 {
 	struct ieee1667_get_cq_entry cq_entry;
 	int err;
-	const __u8 fid = 0xc4;
+	const __u8 fid = OCP_FID_1667;
 
 	struct nvme_get_features_args args = {
 		.result = (__u32 *)&cq_entry,
@@ -2879,7 +2865,7 @@ static int enable_ieee1667_silo_set(struct nvme_dev *dev,
 {
 	struct ieee1667_get_cq_entry cq_entry;
 	int err;
-	const __u8 fid = 0xc4;
+	const __u8 fid = OCP_FID_1667;
 	bool enable = argconfig_parse_seen(opts, "enable");
 
 	struct nvme_set_features_args args = {
