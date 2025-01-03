@@ -36,9 +36,10 @@ void ocp_fw_act_history(const struct fw_activation_history *fw_history, nvme_pri
 	ocp_print(fw_act_history, flags, fw_history);
 }
 
-void ocp_smart_extended_log(void *data, unsigned int version, nvme_print_flags_t flags)
+void ocp_smart_extended_log(struct ocp_smart_extended_log *log, unsigned int version,
+		nvme_print_flags_t flags)
 {
-	ocp_print(smart_extended_log, flags, data, version);
+	ocp_print(smart_extended_log, flags, log, version);
 }
 
 void ocp_show_telemetry_log(struct ocp_telemetry_parse_options *options, nvme_print_flags_t flags)
