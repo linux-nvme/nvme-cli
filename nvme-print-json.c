@@ -28,6 +28,13 @@
 #define obj_add_uint json_object_add_value_uint
 #define obj_add_uint128 json_object_add_value_uint128
 #define obj_add_uint64 json_object_add_value_uint64
+#define obj_add_str json_object_add_value_string
+#define obj_add_uint_02x json_object_add_uint_02x
+#define obj_add_uint_0x json_object_add_uint_0x
+#define obj_add_byte_array json_object_add_byte_array
+#define obj_add_nprix64 json_object_add_nprix64
+#define obj_add_uint_0nx json_object_add_uint_0nx
+#define obj_add_0nprix64 json_object_add_0nprix64
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
@@ -74,40 +81,11 @@ static void obj_add_uint_x(struct json_object *o, const char *k, __u32 v)
 	obj_add_str(o, k, str);
 }
 
-void obj_add_uint_0x(struct json_object *o, const char *k, __u32 v)
-{
-	char str[STR_LEN];
-
-	sprintf(str, "0x%x", v);
-	obj_add_str(o, k, str);
-}
-
-void obj_add_uint_0nx(struct json_object *o, const char *k, __u32 v, int width)
-{
-	char str[STR_LEN];
-
-	sprintf(str, "0x%0*x", width, v);
-	obj_add_str(o, k, str);
-}
-
-void obj_add_uint_02x(struct json_object *o, const char *k, __u32 v)
-{
-	obj_add_uint_0nx(o, k, v, 2);
-}
-
 static void obj_add_uint_nx(struct json_object *o, const char *k, __u32 v)
 {
 	char str[STR_LEN];
 
 	sprintf(str, "%#x", v);
-	obj_add_str(o, k, str);
-}
-
-void obj_add_nprix64(struct json_object *o, const char *k, uint64_t v)
-{
-	char str[STR_LEN];
-
-	sprintf(str, "%#"PRIx64"", v);
 	obj_add_str(o, k, str);
 }
 
@@ -4694,37 +4672,4 @@ struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags)
 {
 	json_print_ops.flags = flags;
 	return &json_print_ops;
-}
-
-void obj_add_byte_array(struct json_object *o, const char *k, unsigned char *buf, int len)
-{
-	int i;
-
-	_cleanup_free_ char *value = NULL;
-
-	if (!buf || !len) {
-		obj_add_str(o, k, "No information provided");
-		return;
-	}
-
-	value = calloc(1, (len + 1) * 2 + 1);
-
-	if (!value) {
-		obj_add_str(o, k, "Could not allocate string");
-		return;
-	}
-
-	sprintf(value, "0x");
-	for (i = 1; i <= len; i++)
-		sprintf(&value[i * 2], "%02x", buf[len - i]);
-
-	obj_add_str(o, k, value);
-}
-
-void obj_add_0nprix64(struct json_object *o, const char *k, uint64_t v, int width)
-{
-	char str[STR_LEN];
-
-	sprintf(str, "0x%0*"PRIx64"", width, v);
-	obj_add_str(o, k, str);
 }
