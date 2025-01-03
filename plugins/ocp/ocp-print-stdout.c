@@ -131,7 +131,7 @@ static void stdout_smart_extended_log(void *data, unsigned int version)
 	printf("  System data percent used			%d\n",
 	       (__u8)log_data[SCAO_SDPU]);
 	printf("  Refresh counts				%"PRIu64"\n",
-	       (uint64_t)(le64_to_cpu(*(uint64_t *)&log_data[SCAO_RFSC]) & 0x00FFFFFFFFFFFFFF));
+	       int56_to_long(&log_data[SCAO_RFSC]));
 	printf("  Max User data erase counts			%"PRIu32"\n",
 	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MXUDEC]));
 	printf("  Min User data erase counts			%"PRIu32"\n",
