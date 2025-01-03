@@ -152,14 +152,14 @@ static void json_smart_extended_log_v1(void *data)
 	pmur = json_create_object();
 
 	json_object_add_value_uint64(pmuw, "hi",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW + 8] & 0xFFFFFFFFFFFFFFFF));
+				     (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW + 8]));
 	json_object_add_value_uint64(pmuw, "lo",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
+				     (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW]));
 	json_object_add_value_object(root, "Physical media units written", pmuw);
 	json_object_add_value_uint64(pmur, "hi",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8] & 0xFFFFFFFFFFFFFFFF));
+				     (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8]));
 	json_object_add_value_uint64(pmur, "lo",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
+				     (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR]));
 	json_object_add_value_object(root, "Physical media units read", pmur);
 	json_object_add_value_uint64(root, "Bad user nand blocks - Raw",
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));

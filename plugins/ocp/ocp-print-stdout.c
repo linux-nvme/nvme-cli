@@ -105,11 +105,11 @@ static void stdout_smart_extended_log(void *data, unsigned int version)
 	printf("SMART Cloud Attributes :-\n");
 
 	printf("  Physical media units written -		%"PRIu64" %"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW + 8] & 0xFFFFFFFFFFFFFFFF),
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
+	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW + 8]),
+	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW]));
 	printf("  Physical media units read    -		%"PRIu64" %"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8] & 0xFFFFFFFFFFFFFFFF),
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
+	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8]),
+	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR]));
 	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
 	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	printf("  Bad user nand blocks - Normalized		%d\n",
