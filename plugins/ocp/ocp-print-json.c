@@ -162,11 +162,11 @@ static void json_smart_extended_log_v1(void *data)
 				     (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR]));
 	json_object_add_value_object(root, "Physical media units read", pmur);
 	json_object_add_value_uint64(root, "Bad user nand blocks - Raw",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
+				     int48_to_long(&log_data[SCAO_BUNBR]));
 	json_object_add_value_uint(root, "Bad user nand blocks - Normalized",
 		(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BUNBN]));
 	json_object_add_value_uint64(root, "Bad system nand blocks - Raw",
-		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BSNBR] & 0x0000FFFFFFFFFFFF));
+				     int48_to_long(&log_data[SCAO_BSNBR]));
 	json_object_add_value_uint(root, "Bad system nand blocks - Normalized",
 		(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BSNBN]));
 	json_object_add_value_uint64(root, "XOR recovery count",
