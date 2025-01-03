@@ -18,7 +18,6 @@
 
 /* C0 SCAO Log Page */
 #define C0_SMART_CLOUD_ATTR_LEN			0x200
-#define C0_SMART_CLOUD_ATTR_OPCODE		0xC0
 
 static __u8 scao_guid[GUID_LEN] = {
 	0xC5, 0xAF, 0x10, 0x28,
@@ -38,7 +37,7 @@ static int get_c0_log_page(struct nvme_dev *dev, char *format,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = C0_SMART_CLOUD_ATTR_OPCODE,
+		.lid = (enum nvme_cmd_get_log_lid)OCP_LID_SMART,
 		.nsid = NVME_NSID_ALL,
 		.len = C0_SMART_CLOUD_ATTR_LEN,
 	};

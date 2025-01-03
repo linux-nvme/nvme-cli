@@ -437,7 +437,6 @@ struct telemetry_data_area_1 {
 #define DEFAULT_OUTPUT_FORMAT_JSON "json"
 
 /* C9 Telemetry String Log Format Log Page */
-#define C9_TELEMETRY_STRING_LOG_ENABLE_OPCODE    0xC9
 #define C9_TELEMETRY_STR_LOG_LEN                 432
 #define C9_TELEMETRY_STR_LOG_SIST_OFST           431
 

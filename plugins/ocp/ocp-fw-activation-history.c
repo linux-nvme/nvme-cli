@@ -13,6 +13,7 @@
 #include "common.h"
 #include "nvme-print.h"
 
+#include "ocp-nvme.h"
 #include "ocp-utils.h"
 #include "ocp-print.h"
 
@@ -26,7 +27,6 @@ static const unsigned char ocp_fw_activation_history_guid[GUID_LEN] = {
 int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 				  struct plugin *plugin)
 {
-	const __u8 log_id = 0xC2;
 	const char *description = "Retrieves the OCP firmware activation history log.";
 
 	char *format = "normal";
@@ -59,7 +59,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = log_id,
+		.lid = (enum nvme_cmd_get_log_lid)OCP_LID_FAHL_OBSOLETE,
 		.len = sizeof(fw_history),
 		.nsid = NVME_NSID_ALL,
 		.csi = NVME_CSI_NVM,

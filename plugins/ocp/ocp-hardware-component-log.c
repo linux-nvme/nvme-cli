@@ -171,11 +171,14 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 {
 	int ret = 0;
 	size_t desc_offset = offsetof(struct hwcomp_log, desc);
+	long double log_bytes;
+	nvme_uint128_t log_size;
+
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = LID_HWCOMP,
+		.lid = (enum nvme_cmd_get_log_lid)OCP_LID_HWCOMP,
 		.nsid = NVME_NSID_ALL,
 		.log = log,
 		.len = desc_offset,
@@ -193,16 +196,25 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	}
 #endif /* HWCOMP_DUMMY */
 
-	print_info("id: %02Xh\n", LID_HWCOMP);
+	log_size = le128_to_cpu(log->size);
+
+	print_info("id: %02Xh\n", OCP_LID_HWCOMP);
 	print_info("version: %04Xh\n", log->ver);
 	print_info_array("guid", log->guid, ARRAY_SIZE(log->guid));
-	print_info("size: %s\n", uint128_t_to_string(le128_to_cpu(log->size)));
+	print_info("size: %s\n", uint128_t_to_string(log_size));
 
-	if (log->ver > 1)
-		args.len = uint128_t_to_double(le128_to_cpu(log->size)) - desc_offset;
-	else
-		args.len = uint128_t_to_double(le128_to_cpu(log->size)) * sizeof(__le32)
-			- desc_offset;
+	log_bytes = uint128_t_to_double(log_size);
+	if (log->ver == 1)
+		log_bytes *= sizeof(__le32);
+
+	if (log_bytes <= desc_offset) {
+		print_info_error("error: ocp: invalid hwcomp log size bytes: %.0Lf\n", log_bytes);
+		return -EINVAL;
+	}
+
+	args.len = log_bytes - desc_offset;
+
+	print_info("args.len: %u\n", args.len);
 
 	log->desc = calloc(1, args.len);
 	if (!log->desc) {
@@ -219,7 +231,7 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	ret = nvme_get_log_page(dev_fd(dev), NVME_LOG_PAGE_PDU_SIZE, &args);
 	if (ret) {
 		print_info_error("error: ocp: failed to get log page (hwcomp: %02X, ret: %d)\n",
-				 LID_HWCOMP, ret);
+				 OCP_LID_HWCOMP, ret);
 		return ret;
 	}
 #endif /* HWCOMP_DUMMY */
@@ -246,7 +258,7 @@ static int get_hwcomp_log(struct nvme_dev *dev, __u32 id, bool list)
 	ret = get_hwcomp_log_data(dev, &log);
 	if (ret) {
 		print_info_error("error: ocp: failed get hwcomp log: %02X data, ret: %d\n",
-				 LID_HWCOMP, ret);
+				 OCP_LID_HWCOMP, ret);
 		return ret;
 	}
 
@@ -293,8 +305,8 @@ int ocp_hwcomp_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	ret = get_hwcomp_log(dev, cfg.id, cfg.list);
 	if (ret)
-		fprintf(stderr, "error: ocp: failed to get hwcomp log: %02X, ret: %d\n", LID_HWCOMP,
-			ret);
+		fprintf(stderr, "error: ocp: failed to get hwcomp log: %02X, ret: %d\n",
+			OCP_LID_HWCOMP, ret);
 
 	return ret;
 }

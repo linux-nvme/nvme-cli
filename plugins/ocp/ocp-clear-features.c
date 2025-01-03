@@ -7,11 +7,10 @@
  */
 
 #include <unistd.h>
+#include "util/types.h"
+#include "ocp-nvme.h"
 #include "ocp-utils.h"
 #include "nvme-print.h"
-
-static const __u8 OCP_FID_CLEAR_FW_ACTIVATION_HISTORY = 0xC1;
-static const __u8 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS = 0xC3;
 
 static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8 fid)
 {
@@ -80,14 +79,13 @@ int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd, stru
 {
 	const char *desc = "OCP Clear Firmware Update History";
 
-	return ocp_clear_feature(argc, argv, desc, OCP_FID_CLEAR_FW_ACTIVATION_HISTORY);
+	return ocp_clear_feature(argc, argv, desc, OCP_FID_CFUH);
 }
 
 int ocp_clear_pcie_correctable_errors(int argc, char **argv, struct command *cmd,
-					     struct plugin *plugin)
+				      struct plugin *plugin)
 {
 	const char *desc = "OCP Clear PCIe Correctable Error Counters";
 
-	return ocp_clear_feature(argc, argv, desc,
-				 OCP_FID_CLEAR_PCIE_CORRECTABLE_ERROR_COUNTERS);
+	return ocp_clear_feature(argc, argv, desc, OCP_FID_CPCIE);
 }
