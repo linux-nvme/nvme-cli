@@ -36,7 +36,7 @@ typedef union nvme_uint128 nvme_uint128_t;
 
 nvme_uint128_t le128_to_cpu(__u8 *data);
 long double int128_to_double(__u8 *data);
-uint64_t int48_to_long(__u8 *data);
+uint64_t int48_to_long(const __u8 *data);
 
 char *uint128_t_to_string(nvme_uint128_t val);
 char *uint128_t_to_l10n_string(nvme_uint128_t val);

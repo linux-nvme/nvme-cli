@@ -4,6 +4,7 @@
  *
  * Authors: karl.dedow@solidigm.com
  */
+#include <libnvme.h>
 #include "common.h"
 #include "linux/types.h"
 
@@ -18,7 +19,7 @@ struct __packed fw_activation_history_entry {
 	__u8 entry_length;
 	__le16 reserved1;
 	__le16 activation_count;
-	__le64 timestamp;
+	struct nvme_timestamp ts;
 	__le64 reserved2;
 	__le64 power_cycle_count;
 	char previous_fw[8];

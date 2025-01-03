@@ -36,7 +36,7 @@ long double int128_to_double(__u8 *data)
 	return result;
 }
 
-uint64_t int48_to_long(__u8 *data)
+uint64_t int48_to_long(const __u8 *data)
 {
 	int i;
 	uint64_t result = 0;
