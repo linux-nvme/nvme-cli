@@ -75,8 +75,7 @@ static void stdout_fw_activation_history(const struct fw_activation_history *fw_
 		printf("      %-22s%d\n", "entry length:", entry->entry_length);
 		printf("      %-22s%d\n", "activation count:",
 		       le16_to_cpu(entry->activation_count));
-		printf("      %-22s%"PRIu64"\n", "timestamp:",
-				(0x0000FFFFFFFFFFFF & le64_to_cpu(entry->timestamp)));
+		printf("      %-22s%"PRIu64"\n", "timestamp:", int48_to_long(entry->ts.timestamp));
 		printf("      %-22s%"PRIu64"\n", "power cycle count:",
 		       le64_to_cpu(entry->power_cycle_count));
 		printf("      %-22s%.*s\n", "previous firmware:", (int)sizeof(entry->previous_fw),

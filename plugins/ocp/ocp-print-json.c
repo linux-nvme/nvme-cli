@@ -101,7 +101,7 @@ static void json_fw_activation_history(const struct fw_activation_history *fw_hi
 		json_object_add_value_uint(entry_obj, "activation count",
 					   le16_to_cpu(entry->activation_count));
 		json_object_add_value_uint64(entry_obj, "timestamp",
-				(0x0000FFFFFFFFFFFF & le64_to_cpu(entry->timestamp)));
+					     int48_to_long(entry->ts.timestamp));
 		json_object_add_value_uint(entry_obj, "power cycle count",
 					   le64_to_cpu(entry->power_cycle_count));
 
