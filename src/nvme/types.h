@@ -6958,6 +6958,56 @@ struct nvme_host_discover_log {
 };
 
 /**
+ * struct nvme_ave_tr_record - AVE Transport Record
+ * @aveadrfam:	AVE Address Family
+ * @rsvd1:	Reserved
+ * @avetrsvcid:	AVE Transport Service Identifier
+ * @avetraddr:	AVE Transport Address
+ */
+struct nvme_ave_tr_record {
+	__u8	aveadrfam;
+	__u8	rsvd1;
+	__le16	avetrsvcid;
+	__u8	avetraddr[16];
+};
+
+/**
+ * struct nvme_ave_discover_log_entry - AVE Discovery Log Entry
+ * @tel:	Total Entry Length
+ * @avenqn:	AVE NQN
+ * @numatr:	Number of AVE Transport Records
+ * @rsvd229:	Reserved
+ * @atr:	AVE Transport Record List
+ */
+struct nvme_ave_discover_log_entry {
+	__le32				tel;
+	char				avenqn[224];
+	__u8				numatr;
+	__u8				rsvd229[3];
+	struct nvme_ave_tr_record	atr[];
+};
+
+/**
+ * struct nvme_ave_discover_log - AVE Discovery Log
+ * @genctr:	Generation Counter
+ * @numrec:	Number of Records
+ * @recfmt:	Record Format
+ * @rsvd18:	Reserved
+ * @tadlpl:	Total AVE Discovery Log Page Length
+ * @rsvd24:	Reserved
+ * @adlpe:	AVE Discovery Log Page Entry List
+ */
+struct nvme_ave_discover_log {
+	__le64					genctr;
+	__le64					numrec;
+	__le16					recfmt;
+	__u8					rsvd18[2];
+	__le32					tadlpl;
+	__u8					rsvd24[1000];
+	struct nvme_ave_discover_log_entry	adlpe[];
+};
+
+/**
  * struct nvme_mi_read_nvm_ss_info - NVM Subsystem Information Data Structure
  * @nump:	Number of Ports
  * @mjr:	NVMe-MI Major Version Number
