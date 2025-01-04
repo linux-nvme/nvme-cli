@@ -4790,6 +4790,21 @@ struct nvme_rotational_media_info_log {
 };
 
 /**
+ * struct nvme_dispersed_ns_participating_nss_log - Dispersed Namespace Participating NVM Subsystems
+ * Log
+ * @genctr:		Generation Counter
+ * @numpsub:		Number of Participating NVM Subsystems
+ * @rsvd16:		Reserved
+ * @participating_nss:	Participating NVM Subsystem Entry
+ */
+struct nvme_dispersed_ns_participating_nss_log {
+	__le64	genctr;
+	__le64	numpsub;
+	__u8	rsvd16[240];
+	__u8	participating_nss[];
+};
+
+/**
  * struct nvme_eom_lane_desc - EOM Lane Descriptor
  * @rsvd0:	Reserved
  * @mstatus:	Measurement Status

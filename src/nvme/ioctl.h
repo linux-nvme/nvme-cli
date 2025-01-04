@@ -2136,6 +2136,24 @@ static inline int nvme_get_log_rotational_media_info(int fd, __u16 endgid, __u32
 }
 
 /**
+ * nvme_get_log_dispersed_ns_participating_nss() - Retrieve Dispersed Namespace Participating NVM
+ * Subsystems Log
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace Identifier
+ * @len:	The allocated length of the log page
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_dispersed_ns_participating_nss(int fd, __u32 nsid, __u32 len,
+	struct nvme_dispersed_ns_participating_nss_log *log)
+{
+	return nvme_get_nsid_log(fd, false, NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS, nsid, len,
+				 log);
+}
+
+/**
  * nvme_get_log_phy_rx_eom() - Retrieve Physical Interface Receiver Eye Opening Measurement Log
  * @fd:		File descriptor of nvme device
  * @lsp:	Log specific, controls action and measurement quality
