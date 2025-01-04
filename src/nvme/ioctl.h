@@ -1370,6 +1370,30 @@ static inline int nvme_get_nsid_log(int fd, bool rae,
 	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
 }
 
+static inline int nvme_get_endgid_log(int fd, bool rae, enum nvme_cmd_get_log_lid lid, __u16 endgid,
+				    __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = lid,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = endgid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_LOG_LSP_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+}
+
 static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
 				      __u32 len, void *log)
 {
