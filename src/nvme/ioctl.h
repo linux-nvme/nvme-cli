@@ -2274,6 +2274,23 @@ static inline int nvme_get_log_reachability_associations(int fd, bool rao, bool 
 }
 
 /**
+ * nvme_get_log_changed_alloc_ns_list() - Retrieve Changed Allocated Namespace List Log
+ * @fd:		File descriptor of nvme device
+ * @rae:	Retain asynchronous events
+ * @len:	The allocated length of the log page
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_changed_alloc_ns_list(int fd, bool rae, __u32 len,
+						     struct nvme_ns_list *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_CHANGED_ALLOC_NS_LIST, NVME_NSID_ALL, len,
+				 log);
+}
+
+/**
  * nvme_get_log_discovery() - Retrieve Discovery log page
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
