@@ -6906,6 +6906,58 @@ struct nvmf_connect_data {
 };
 
 /**
+ * struct nvme_host_ext_discover_log - Host Extended Discovery Log
+ * @trtype:	Transport Type
+ * @adrfam:	Address Family
+ * @rsvd2:	Reserved
+ * @eflags:	Entry Flags
+ * @rsvd12:	Reserved
+ * @hostnqn:	Host NVMe Qualified Name
+ * @traddr:	Transport Address
+ * @tsas:	Transport Specific Address Subtype
+ * @tel:	Total Entry Length
+ * @numexat:	Number of Extended Attributes
+ * @rsvd1030:	Reserved
+ * @exat:	Extended Attributes List
+ */
+struct nvme_host_ext_discover_log {
+	__u8			trtype;
+	__u8			adrfam;
+	__u8			rsvd2[8];
+	__le16			eflags;
+	__u8			rsvd12[244];
+	char			hostnqn[NVME_NQN_LENGTH];
+	char			traddr[NVMF_TRADDR_SIZE];
+	union nvmf_tsas		tsas;
+	__le32			tel;
+	__le16			numexat;
+	__u8			rsvd1030[2];
+	struct nvmf_ext_attr	exat[];
+};
+
+/**
+ * struct nvme_host_discover_log - Host Discovery Log
+ * @genctr:	Generation Counter
+ * @numrec:	Number of Records
+ * @recfmt:	Record Format
+ * @hdlpf:	Host Discovery Log Page Flags
+ * @rsvd19:	Reserved
+ * @thdlpl:	Total Host Discovery Log Page Length
+ * @rsvd24:	Reserved
+ * @hedlpe:	Host Extended Discovery Log Page Entry List
+ */
+struct nvme_host_discover_log {
+	__le64					genctr;
+	__le64					numrec;
+	__le16					recfmt;
+	__u8					hdlpf;
+	__u8					rsvd19;
+	__le32					thdlpl;
+	__u8					rsvd24[1000];
+	struct nvme_host_ext_discover_log	hedlpe[];
+};
+
+/**
  * struct nvme_mi_read_nvm_ss_info - NVM Subsystem Information Data Structure
  * @nump:	Number of Ports
  * @mjr:	NVMe-MI Major Version Number

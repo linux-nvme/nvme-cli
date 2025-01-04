@@ -2328,6 +2328,41 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
 }
 
 /**
+ * nvme_get_log_host_discover() - Retrieve Host Discovery Log
+ * @fd:		File descriptor of nvme device
+ * @allhoste:	All host entries
+ * @rae:	Retain asynchronous events
+ * @len:	The allocated length of the log page
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_host_discover(int fd, bool allhoste, bool rae, __u32 len,
+					     struct nvme_host_discover_log *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_HOST_DISCOVER,
+		.len = len,
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = allhoste,
+		.uuidx = NVME_LOG_LSP_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+}
+
+/**
  * nvme_get_log_media_unit_stat() - Retrieve Media Unit Status
  * @fd:		File descriptor of nvme device
  * @domid:	Domain Identifier selection, if supported
