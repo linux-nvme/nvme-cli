@@ -4987,6 +4987,38 @@ struct nvme_reachability_groups_log {
 };
 
 /**
+ * struct nvme_reachability_association_desc - Reachability Association Descriptor
+ * @rasid:	Reachability Association ID
+ * @nrid:	Number of RGID Values
+ * @chngc:	Change Count
+ * @rac:	Reachability Association Characteristics
+ * @rsvd17:	Reserved
+ * @ngid:	Reachability Group Identifier List
+ */
+struct nvme_reachability_association_desc {
+	__le32	rasid;
+	__le32	nrid;
+	__le64	chngc;
+	__u8	rac;
+	__u8	rsvd17[15];
+	__le32	ngid[];
+};
+
+/**
+ * struct nvme_reachability_associations_log - Reachability Associations Log
+ * @chngc:	Change Count
+ * @nrad:	Number of Reachability Association Descriptors
+ * @rsvd10:	Reserved
+ * @rad:	Reachability Association Descriptor List
+ */
+struct nvme_reachability_associations_log {
+	__le64						chngc;
+	__le16						nrad;
+	__u8						rsvd10[6];
+	struct nvme_reachability_association_desc	rad[];
+};
+
+/**
  * struct nvme_media_unit_stat_desc - Media Unit Status Descriptor
  * @muid:	  Media Unit Identifier
  * @domainid:	  Domain Identifier
