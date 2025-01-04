@@ -2379,6 +2379,22 @@ static inline int nvme_get_log_ave_discover(int fd, bool rae, __u32 len,
 }
 
 /**
+ * nvme_get_log_pull_model_ddc_req() - Retrieve Pull Model DDC Request Log
+ * @fd:		File descriptor of nvme device
+ * @rae:	Retain asynchronous events
+ * @len:	The allocated length of the log page
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_pull_model_ddc_req(int fd, bool rae, __u32 len,
+						  struct nvme_pull_model_ddc_req_log *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_PULL_MODEL_DDC_REQ, NVME_NSID_ALL, len, log);
+}
+
+/**
  * nvme_get_log_media_unit_stat() - Retrieve Media Unit Status
  * @fd:		File descriptor of nvme device
  * @domid:	Domain Identifier selection, if supported

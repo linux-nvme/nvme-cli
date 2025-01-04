@@ -7008,6 +7008,20 @@ struct nvme_ave_discover_log {
 };
 
 /**
+ * struct nvme_pull_model_ddc_req_log - Pull Model DDC Request Log
+ * @ori:	Operation Request Identifier
+ * @rsvd1:	Reserved
+ * @tpdrpl:	Total Pull Model DDC Request Log Page Length
+ * @osp:	Operation Specific Parameters
+ */
+struct nvme_pull_model_ddc_req_log {
+	__u8	ori;
+	__u8	rsvd1[3];
+	__le32	tpdrpl;
+	__u8	osp[];
+};
+
+/**
  * struct nvme_mi_read_nvm_ss_info - NVM Subsystem Information Data Structure
  * @nump:	Number of Ports
  * @mjr:	NVMe-MI Major Version Number
