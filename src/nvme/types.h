@@ -4766,6 +4766,30 @@ enum nvme_boot_partition_info {
 #define NVME_BOOT_PARTITION_INFO_ABPID(bpinfo)	NVME_GET(bpinfo, BOOT_PARTITION_INFO_ABPID)
 
 /**
+ * struct nvme_rotational_media_info_log - Rotational Media Information Log
+ * @endgid:	Endurance Group Identifier
+ * @numa:	Number of Actuators
+ * @nrs:	Nominal Rotational Speed
+ * @rsvd6:	Reserved
+ * @spinc:	Spinup Count
+ * @fspinc:	Failed Spinup Count
+ * @ldc:	Load Count
+ * @fldc:	Failed Load Count
+ * @rsvd24:	Reserved
+ */
+struct nvme_rotational_media_info_log {
+	__le16	endgid;
+	__le16	numa;
+	__le16	nrs;
+	__u8	rsvd6[2];
+	__le32	spinc;
+	__le32	fspinc;
+	__le32	ldc;
+	__le32	fldc;
+	__u8	rsvd24[488];
+};
+
+/**
  * struct nvme_eom_lane_desc - EOM Lane Descriptor
  * @rsvd0:	Reserved
  * @mstatus:	Measurement Status

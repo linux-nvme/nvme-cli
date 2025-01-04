@@ -2120,6 +2120,22 @@ static inline int nvme_get_log_boot_partition(int fd, bool rae,
 }
 
 /**
+ * nvme_get_log_rotational_media_info() - Retrieve Rotational Media Information Log
+ * @fd:		File descriptor of nvme device
+ * @endgid:	Endurance Group Identifier
+ * @len:	The allocated length of the log page
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_rotational_media_info(int fd, __u16 endgid, __u32 len,
+						     struct nvme_rotational_media_info_log *log)
+{
+	return nvme_get_endgid_log(fd, false, NVME_LOG_LID_ROTATIONAL_MEDIA_INFO, endgid, len, log);
+}
+
+/**
  * nvme_get_log_phy_rx_eom() - Retrieve Physical Interface Receiver Eye Opening Measurement Log
  * @fd:		File descriptor of nvme device
  * @lsp:	Log specific, controls action and measurement quality
