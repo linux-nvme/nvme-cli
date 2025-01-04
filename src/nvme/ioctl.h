@@ -2154,6 +2154,21 @@ static inline int nvme_get_log_dispersed_ns_participating_nss(int fd, __u32 nsid
 }
 
 /**
+ * nvme_get_log_mgmt_addr_list() - Retrieve Management Address List Log
+ * @fd:		File descriptor of nvme device
+ * @len:	The allocated length of the log page
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_mgmt_addr_list(int fd, __u32 len,
+					      struct nvme_mgmt_addr_list_log *log)
+{
+	return nvme_get_log_simple(fd, NVME_LOG_LID_MGMT_ADDR_LIST, len, log);
+}
+
+/**
  * nvme_get_log_phy_rx_eom() - Retrieve Physical Interface Receiver Eye Opening Measurement Log
  * @fd:		File descriptor of nvme device
  * @lsp:	Log specific, controls action and measurement quality

@@ -4805,6 +4805,26 @@ struct nvme_dispersed_ns_participating_nss_log {
 };
 
 /**
+ * struct nvme_mgmt_addr_desc - Management Address Descriptor
+ * @mat:	Management Address Type
+ * @rsvd1:	Reserved
+ * @madrs:	Management Address
+ */
+struct nvme_mgmt_addr_desc {
+	__u8	mat;
+	__u8	rsvd1[3];
+	__u8	madrs[508];
+};
+
+/**
+ * struct nvme_mgmt_addr_list_log - Management Address List Log
+ * @mad:	Management Address Descriptor
+ */
+struct nvme_mgmt_addr_list_log {
+	struct nvme_mgmt_addr_desc	mad[8];
+};
+
+/**
  * struct nvme_eom_lane_desc - EOM Lane Descriptor
  * @rsvd0:	Reserved
  * @mstatus:	Measurement Status
