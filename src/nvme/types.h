@@ -4957,6 +4957,36 @@ enum nvme_phy_rx_eom_progress {
 };
 
 /**
+ * struct nvme_reachability_group_desc - Reachability Group Descriptor
+ * @rgid:	Reachability Group ID
+ * @nnid:	Number of NSID Values
+ * @chngc:	Change Count
+ * @rsvd16:	Reserved
+ * @nsid:	Namespace Identifier List
+ */
+struct nvme_reachability_group_desc {
+	__le32	rgid;
+	__le32	nnid;
+	__le64	chngc;
+	__u8	rsvd16[16];
+	__le32	nsid[];
+};
+
+/**
+ * struct nvme_reachability_groups_log - Reachability Groups Log
+ * @chngc:	Change Count
+ * @nrgd:	Number of Reachability Group Descriptors
+ * @rsvd10:	Reserved
+ * @rgd:	Reachability Group Descriptor List
+ */
+struct nvme_reachability_groups_log {
+	__le64					chngc;
+	__le16					nrgd;
+	__u8					rsvd10[6];
+	struct nvme_reachability_group_desc	rgd[];
+};
+
+/**
  * struct nvme_media_unit_stat_desc - Media Unit Status Descriptor
  * @muid:	  Media Unit Identifier
  * @domainid:	  Domain Identifier

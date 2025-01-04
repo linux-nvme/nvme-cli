@@ -2204,6 +2204,41 @@ static inline int nvme_get_log_phy_rx_eom(int fd, __u8 lsp, __u16 controller,
 }
 
 /**
+ * nvme_get_log_reachability_groups() - Retrieve Reachability Groups Log
+ * @fd:		File descriptor of nvme device
+ * @rgo:	Return groups only
+ * @rae:	Retain asynchronous events
+ * @len:	The allocated length of the log page
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_reachability_groups(int fd, __u32 len, bool rgo, bool rae,
+						   struct nvme_reachability_groups_log *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_REACHABILITY_GROUPS,
+		.len = len,
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = rgo,
+		.uuidx = NVME_LOG_LSP_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+
+	return nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &args);
+}
+
+/**
  * nvme_get_log_discovery() - Retrieve Discovery log page
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
