@@ -8228,13 +8228,19 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_PLM_WINDOW:		Predictable Latency Mode Window
  * @NVME_FEAT_FID_LBA_STS_INTERVAL:	LBA Status Information Report Interval
  * @NVME_FEAT_FID_HOST_BEHAVIOR:	Host Behavior Support
- * @NVME_FEAT_FID_SANITIZE:		Endurance Group Event Configuration
+ * @NVME_FEAT_FID_SANITIZE:		Sanitize Config
  * @NVME_FEAT_FID_ENDURANCE_EVT_CFG:	Endurance Group Event Configuration
  * @NVME_FEAT_FID_IOCS_PROFILE:		I/O Command Set Profile
  * @NVME_FEAT_FID_SPINUP_CONTROL:	Spinup Control
+ * @NVME_FEAT_FID_POWER_LOSS_SIGNAL:	Power Loss Signaling Config
+ * @NVME_FEAT_FID_PERF_CHARACTERISTICS:	Performance Characteristics
  * @NVME_FEAT_FID_FDP:			Flexible Data Placement
  * @NVME_FEAT_FID_FDP_EVENTS:		FDP Events
+ * @NVME_FEAT_FID_NS_ADMIN_LABEL:	Namespace Admin Label
+ * @NVME_FEAT_FID_KEY_VALUE:		Key Value Configuration
  * @NVME_FEAT_FID_CTRL_DATA_QUEUE:	Controller Data Queue
+ * @NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR:	Embedded Management Controller Address
+ * @NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR:	Host Management Agent Address
  * @NVME_FEAT_FID_ENH_CTRL_METADATA:	Enhanced Controller Metadata
  * @NVME_FEAT_FID_CTRL_METADATA:	Controller Metadata
  * @NVME_FEAT_FID_NS_METADATA:		Namespace Metadata
@@ -8243,6 +8249,7 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_RESV_MASK:		Reservation Notification Mask
  * @NVME_FEAT_FID_RESV_PERSIST:		Reservation Persistence
  * @NVME_FEAT_FID_WRITE_PROTECT:	Namespace Write Protection Config
+ * @NVME_FEAT_FID_BP_WRITE_PROTECT:	Boot Partition Write Protection Config
  */
 enum nvme_features_id {
 	NVME_FEAT_FID_ARBITRATION				= 0x01,
@@ -8269,11 +8276,17 @@ enum nvme_features_id {
 	NVME_FEAT_FID_HOST_BEHAVIOR				= 0x16,
 	NVME_FEAT_FID_SANITIZE					= 0x17,
 	NVME_FEAT_FID_ENDURANCE_EVT_CFG				= 0x18,
-	NVME_FEAT_FID_IOCS_PROFILE				= 0x19, /* XXX: Placeholder until assigned */
+	NVME_FEAT_FID_IOCS_PROFILE				= 0x19,
 	NVME_FEAT_FID_SPINUP_CONTROL				= 0x1a,
+	NVME_FEAT_FID_POWER_LOSS_SIGNAL				= 0x1b,
+	NVME_FEAT_FID_PERF_CHARACTERISTICS			= 0x1c,
 	NVME_FEAT_FID_FDP					= 0x1d,
 	NVME_FEAT_FID_FDP_EVENTS				= 0x1e,
+	NVME_FEAT_FID_NS_ADMIN_LABEL				= 0x1f,
+	NVME_FEAT_FID_KEY_VALUE					= 0x20,
 	NVME_FEAT_FID_CTRL_DATA_QUEUE				= 0x21,
+	NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR			= 0x78,
+	NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR			= 0x79,
 	NVME_FEAT_FID_ENH_CTRL_METADATA				= 0x7d,
 	NVME_FEAT_FID_CTRL_METADATA				= 0x7e,
 	NVME_FEAT_FID_NS_METADATA				= 0x7f,
@@ -8282,6 +8295,7 @@ enum nvme_features_id {
 	NVME_FEAT_FID_RESV_MASK					= 0x82,
 	NVME_FEAT_FID_RESV_PERSIST				= 0x83,
 	NVME_FEAT_FID_WRITE_PROTECT				= 0x84,
+	NVME_FEAT_FID_BP_WRITE_PROTECT				= 0x85,
 };
 
 /**
