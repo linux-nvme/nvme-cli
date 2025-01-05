@@ -7990,19 +7990,28 @@ static inline __u32 nvme_status_equals(int status, enum nvme_status_type type,
  * @nvme_admin_fabric_zoning_recv:	Fabric Zoning Receive
  * @nvme_admin_lockdown:		Lockdown
  * @nvme_admin_fabric_zoning_lookup:	Fabric Zoning Lookup
+ * @nvme_admin_clear_export_nvm_res:	Clear Exported NVM Resource Configuration
  * @nvme_admin_fabric_zoning_send:	Fabric Zoning Send
- * @nvme_admin_dbbuf:			Doorbell Buffer Config
+ * @nvme_admin_create_export_nvms:	Create Exported NVM Subsystem
+ * @nvme_admin_manage_export_nvms:	Manage Exported NVM Subsystem
+ * @nvme_admin_manage_export_ns:	Manage Exported Namespace
+ * @nvme_admin_manage_export_port:	Manage Exported Port
+ * @nvme_admin_send_disc_log_page:	Send Discovery Log Page
  * @nvme_admin_track_send:		Track Send
  * @nvme_admin_track_receive:		Track Receive
  * @nvme_admin_migration_send:		Migration Send
  * @nvme_admin_migration_receive:	Migration Receive
  * @nvme_admin_ctrl_data_queue:		Controller Data Queue
+ * @nvme_admin_dbbuf:			Doorbell Buffer Config
  * @nvme_admin_fabrics:			Fabrics Commands
  * @nvme_admin_format_nvm:		Format NVM
  * @nvme_admin_security_send:		Security Send
  * @nvme_admin_security_recv:		Security Receive
  * @nvme_admin_sanitize_nvm:		Sanitize
+ * @nvme_admin_load_program:		Load Program
  * @nvme_admin_get_lba_status:		Get LBA Status
+ * @nvme_admin_program_act_mgmt:	Program Activation Management
+ * @nvme_admin_mem_range_set_mgmt:	Memory Range Set Management
  */
 enum nvme_admin_opcode {
 	nvme_admin_delete_sq		= 0x00,
@@ -8032,7 +8041,13 @@ enum nvme_admin_opcode {
 	nvme_admin_fabric_zoning_recv	= 0x22,
 	nvme_admin_lockdown		= 0x24,
 	nvme_admin_fabric_zoning_lookup	= 0x25,
+	nvme_admin_clear_export_nvm_res	= 0x28,
 	nvme_admin_fabric_zoning_send	= 0x29,
+	nvme_admin_create_export_nvms	= 0x2a,
+	nvme_admin_manage_export_nvms	= 0x2d,
+	nvme_admin_manage_export_ns	= 0x31,
+	nvme_admin_manage_export_port	= 0x35,
+	nvme_admin_send_disc_log_page	= 0x39,
 	nvme_admin_track_send		= 0x3d,
 	nvme_admin_track_receive	= 0x3e,
 	nvme_admin_migration_send	= 0x41,
@@ -8044,7 +8059,10 @@ enum nvme_admin_opcode {
 	nvme_admin_security_send	= 0x81,
 	nvme_admin_security_recv	= 0x82,
 	nvme_admin_sanitize_nvm		= 0x84,
+	nvme_admin_load_program		= 0x85,
 	nvme_admin_get_lba_status	= 0x86,
+	nvme_admin_program_act_mgmt	= 0x88,
+	nvme_admin_mem_range_set_mgmt	= 0x89,
 };
 
 /**
