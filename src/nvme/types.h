@@ -8103,7 +8103,11 @@ enum nvme_admin_opcode {
  *						ID list
  * @NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE:	I/O Command Set specific ID Namespace
  *						Data Structure for Allocated Namespace ID
- * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE:	Base Specification 2.0a section 5.17.2.21
+ * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE:	I/O Command Set data structure
+ * @NVME_IDENTIFY_CNS_UNDERLYING_NS_LIST:	Get Underlying Namespace List
+ * @NVME_IDENTIFY_CNS_PORTS_LIST:		Get Ports List
+ * @NVME_IDENTIFY_CNS_IOCS_IND_ID_ALLOC_NS:	I/O Command Set Independent Identify Namespace data
+ *						structure for the specified allocated NSID
  * @NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS:	Supported Controller State Formats
  *							identifying the supported NVMe Controller
  *							State data structures
@@ -8133,6 +8137,9 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST			= 0x1A,
 	NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE		= 0x1B,
 	NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE			= 0x1C,
+	NVME_IDENTIFY_CNS_UNDERLYING_NS_LIST			= 0x1D,
+	NVME_IDENTIFY_CNS_PORTS_LIST				= 0x1E,
+	NVME_IDENTIFY_CNS_IOCS_IND_ID_ALLOC_NS			= 0x1F,
 	NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS		= 0x20,
 };
 
