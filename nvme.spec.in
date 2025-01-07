@@ -32,6 +32,7 @@ touch %{buildroot}@SYSCONFDIR@/nvme/hostid
 %ghost @SYSCONFDIR@/nvme/config.json
 @UDEVRULESDIR@/65-persistent-net-nbft.rules
 @UDEVRULESDIR@/70-nvmf-autoconnect.rules
+@UDEVRULESDIR@/70-nvmf-keys.rules
 @UDEVRULESDIR@/71-nvmf-netapp.rules
 @DRACUTRILESDIR@/70-nvmf-autoconnect.conf
 @SYSTEMDDIR@/nvmf-connect@.service
