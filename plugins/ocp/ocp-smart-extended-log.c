@@ -30,7 +30,7 @@ static int get_c0_log_page(struct nvme_dev *dev, char *format,
 			   unsigned int format_version)
 {
 	nvme_print_flags_t fmt;
-	__u8 *data;
+	struct ocp_smart_extended_log *data;
 	int i;
 	int ret;
 	int fd = dev_fd(dev);
@@ -67,7 +67,7 @@ static int get_c0_log_page(struct nvme_dev *dev, char *format,
 		/* check log page guid */
 		/* Verify GUID matches */
 		for (i = 0; i < 16; i++) {
-			if (scao_guid[i] != data[SCAO_LPG + i])	{
+			if (scao_guid[i] != data->log_page_guid[i]) {
 				int j;
 
 				fprintf(stderr, "ERROR : OCP : Unknown GUID in C0 Log Page data\n");
@@ -77,7 +77,7 @@ static int get_c0_log_page(struct nvme_dev *dev, char *format,
 
 				fprintf(stderr, "\nERROR : OCP : Actual GUID:    0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", data[SCAO_LPG + j]);
+					fprintf(stderr, "%x", data->log_page_guid[j]);
 				fprintf(stderr, "\n");
 
 				ret = -1;
