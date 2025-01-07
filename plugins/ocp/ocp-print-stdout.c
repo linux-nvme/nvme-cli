@@ -97,101 +97,96 @@ static void stdout_fw_activation_history(const struct fw_activation_history *fw_
 	printf("\n");
 }
 
-static void stdout_smart_extended_log(void *data, unsigned int version)
+static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsigned int version)
 {
 	uint16_t smart_log_ver = 0;
-	__u8 *log_data = data;
 
 	printf("SMART Cloud Attributes :-\n");
 
 	printf("  Physical media units written -		%"PRIu64" %"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW + 8]),
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW]));
+		le64_to_cpu(*(uint64_t *)&log->physical_media_units_written[8]),
+		le64_to_cpu(*(uint64_t *)&log->physical_media_units_written));
 	printf("  Physical media units read    -		%"PRIu64" %"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR + 8]),
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR]));
+		le64_to_cpu(*(uint64_t *)&log->physical_media_units_read[8]),
+		le64_to_cpu(*(uint64_t *)&log->physical_media_units_read));
 	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
-	       int48_to_long(&log_data[SCAO_BUNBR]));
+		int48_to_long(log->bad_user_nand_blocks_raw));
 	printf("  Bad user nand blocks - Normalized		%d\n",
-	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BUNBN]));
+		le16_to_cpu(log->bad_user_nand_blocks_normalized));
 	printf("  Bad system nand blocks - Raw			%"PRIu64"\n",
-	       int48_to_long(&log_data[SCAO_BSNBR]));
+		int48_to_long(log->bad_system_nand_blocks_raw));
 	printf("  Bad system nand blocks - Normalized		%d\n",
-	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BSNBN]));
+		le16_to_cpu(log->bad_system_nand_blocks_normalized));
 	printf("  XOR recovery count				%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_XRC]));
+		le64_to_cpu(log->xor_recovery_count));
 	printf("  Uncorrectable read error count		%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UREC]));
+		le64_to_cpu(log->uncorrectable_read_err_count));
 	printf("  Soft ecc error count				%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SEEC]));
+		le64_to_cpu(log->soft_ecc_err_count));
 	printf("  End to end detected errors			%"PRIu32"\n",
-	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EEDC]));
+		le32_to_cpu(log->end_to_end_detected_err));
 	printf("  End to end corrected errors			%"PRIu32"\n",
-	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
+		le32_to_cpu(log->end_to_end_corrected_err));
 	printf("  System data percent used			%d\n",
-	       (__u8)log_data[SCAO_SDPU]);
+		log->system_data_used_percent);
 	printf("  Refresh counts				%"PRIu64"\n",
-	       int56_to_long(&log_data[SCAO_RFSC]));
+		int56_to_long(log->refresh_counts));
 	printf("  Max User data erase counts			%"PRIu32"\n",
-	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MXUDEC]));
+		le32_to_cpu(log->user_data_erase_count_max));
 	printf("  Min User data erase counts			%"PRIu32"\n",
-	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MNUDEC]));
+		le32_to_cpu(log->user_data_erase_count_min));
 	printf("  Number of Thermal throttling events		%d\n",
-	       (__u8)log_data[SCAO_NTTE]);
+		log->thermal_throttling_event_count);
 	printf("  Current throttling status			0x%x\n",
-	       (__u8)log_data[SCAO_CTS]);
+		log->thermal_throttling_current_status);
 	printf("  PCIe correctable error count			%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PCEC]));
+		le64_to_cpu(log->pcie_correctable_err_count));
 	printf("  Incomplete shutdowns				%"PRIu32"\n",
-	       (uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_ICS]));
+		le32_to_cpu(log->incomplete_shoutdowns));
 	printf("  Percent free blocks				%d\n",
-	       (__u8)log_data[SCAO_PFB]);
+		log->percent_free_blocks);
 	printf("  Capacitor health				%"PRIu16"\n",
-	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
-	printf("  NVMe base errata version			%c\n",
-	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
-	printf("  NVMe command set errata version		%c\n",
-	       (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
+		le16_to_cpu(log->capacitor_health));
 	printf("  Unaligned I/O					%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UIO]));
+		le64_to_cpu(log->unaligned_io));
 	printf("  Security Version Number			%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
+		le64_to_cpu(log->security_version));
 	printf("  NUSE - Namespace utilization			%"PRIu64"\n",
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
+		le64_to_cpu(log->total_nuse));
 	printf("  PLP start count				%s\n",
-	       uint128_t_to_string(le128_to_cpu(&log_data[SCAO_PSC])));
+		uint128_t_to_string(le128_to_cpu(log->plp_start_count)));
 	printf("  Endurance estimate				%s\n",
-	       uint128_t_to_string(le128_to_cpu(&log_data[SCAO_EEST])));
-	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
+		uint128_t_to_string(le128_to_cpu(log->endurance_estimate)));
+	smart_log_ver = le16_to_cpu(log->log_page_version);
 	printf("  Log page version				%"PRIu16"\n", smart_log_ver);
 	printf("  Log page GUID					0x");
-	printf("%"PRIx64"%"PRIx64"\n", (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
-	       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
+	printf("%"PRIx64"%"PRIx64"\n", le64_to_cpu(*(uint64_t *)&log->log_page_guid[8]),
+		le64_to_cpu(*(uint64_t *)&log->log_page_guid));
 	switch (smart_log_ver) {
 	case 0 ... 1:
 		break;
 	default:
 	case 4:
 		printf("  NVMe Command Set Errata Version               %d\n",
-		       (__u8)log_data[SCAO_NCSEV]);
+			log->nvme_cmdset_errata_version);
 		printf("  Lowest Permitted Firmware Revision            %"PRIu64"\n",
-		       le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
+			le64_to_cpu(log->lowest_permitted_fw_rev));
 		fallthrough;
 	case 2 ... 3:
 		printf("  Errata Version Field                          %d\n",
-		       (__u8)log_data[SCAO_EVF]);
+			log->dssd_errata_version);
 		printf("  Point Version Field                           %"PRIu16"\n",
-		       le16_to_cpu(*(uint16_t *)&log_data[SCAO_PVF]));
+			le16_to_cpu(log->dssd_point_version));
 		printf("  Minor Version Field                           %"PRIu16"\n",
-		       le16_to_cpu(*(uint16_t *)&log_data[SCAO_MIVF]));
+			le16_to_cpu(log->dssd_minor_version));
 		printf("  Major Version Field                           %d\n",
-		       (__u8)log_data[SCAO_MAVF]);
+			log->dssd_major_version);
 		printf("  NVMe Base Errata Version                      %d\n",
-		       (__u8)log_data[SCAO_NBEV]);
+			log->nvme_base_errata_version);
 		printf("  PCIe Link Retraining Count                    %"PRIu64"\n",
-		       (uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
+			le64_to_cpu(log->pcie_link_retaining_count));
 		printf("  Power State Change Count                      %"PRIu64"\n",
-		       le64_to_cpu(*(uint64_t *)&log_data[SCAO_PSCC]));
+			le64_to_cpu(log->power_state_change_count));
 	}
 	printf("\n");
 }
