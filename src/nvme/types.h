@@ -5763,6 +5763,8 @@ struct nvme_fdp_events_log {
 
 /**
  * struct nvme_feat_fdp_events_cdw11 - FDP Events Feature Command Dword 11
+ * Deprecated: doesn't support this struct.
+ * Use NVME_FEAT_FDPE_*** definitions instead.
  * @phndl:	Placement Handle
  * @noet:	Number of FDP Event Types
  * @rsvd24:	Reserved
@@ -5771,7 +5773,7 @@ struct nvme_feat_fdp_events_cdw11 {
 	__le16 phndl;
 	__u8  noet;
 	__u8  rsvd24;
-};
+} __attribute__((deprecated));
 
 /**
  * enum nvme_fdp_supported_event_attributes - Supported FDP Event Attributes
@@ -8644,6 +8646,10 @@ enum nvme_features_id {
  * @NVME_FEAT_EG_ENDGID_MASK:
  * @NVME_FEAT_EG_EGCW_SHIFT:
  * @NVME_FEAT_EG_EGCW_MASK:
+ * @NVME_FEAT_FDPE_PHNDL_SHIFT:
+ * @NVME_FEAT_FDPE_PHNDL_MASK:
+ * @NVME_FEAT_FDPE_NOET_SHIFT:
+ * @NVME_FEAT_FDPE_NOET_MASK:
  * @NVME_FEAT_SPM_PBSLC_SHIFT:
  * @NVME_FEAT_SPM_PBSLC_MASK:
  * @NVME_FEAT_HOSTID_EXHID_SHIFT:
@@ -8750,6 +8756,10 @@ enum nvme_feat {
 	NVME_FEAT_EG_ENDGID_MASK	= 0xffff,
 	NVME_FEAT_EG_EGCW_SHIFT		= 16,
 	NVME_FEAT_EG_EGCW_MASK		= 0xff,
+	NVME_FEAT_FDPE_PHNDL_SHIFT	= 0,
+	NVME_FEAT_FDPE_PHNDL_MASK	= 0xffff,
+	NVME_FEAT_FDPE_NOET_SHIFT	= 16,
+	NVME_FEAT_FDPE_NOET_MASK	= 0xff,
 	NVME_FEAT_SPM_PBSLC_SHIFT	= 0,
 	NVME_FEAT_SPM_PBSLC_MASK	= 0xff,
 	NVME_FEAT_HOSTID_EXHID_SHIFT	= 0,
