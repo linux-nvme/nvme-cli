@@ -145,7 +145,10 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 	struct json_object *pmur;
 	uint16_t smart_log_ver = 0;
 	uint16_t dssd_version = 0;
+	int i = 0;
 	char guid[40];
+	char ascii_arr[65];
+	char *ascii = ascii_arr;
 
 	root = json_create_object();
 	pmuw = json_create_object();
@@ -228,6 +231,49 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 						log->nvme_cmdset_errata_version);
 		json_object_add_value_uint(root, "Lowest Permitted Firmware Revision",
 						le64_to_cpu(log->lowest_permitted_fw_rev));
+		json_object_add_value_uint(root, "NVMe Over Pcie Errata Version",
+						log->nvme_over_pcie_errate_version);
+		json_object_add_value_uint(root, "NVMe Mi Errata Version",
+						log->nvme_mi_errata_version);
+		json_object_add_value_uint(root, "Total media dies",
+						le16_to_cpu(log->total_media_dies));
+		json_object_add_value_uint(root, "Total die failure tolerance",
+						le16_to_cpu(log->total_die_failure_tolerance));
+		json_object_add_value_uint(root, "Max temperature recorded",
+						le16_to_cpu(log->max_temperature_recorded));
+		json_object_add_value_uint64(root, "Nand avg erase count",
+						le64_to_cpu(log->nand_avg_erase_count));
+		json_object_add_value_uint(root, "Command timeouts",
+						le32_to_cpu(log->command_timeouts));
+		json_object_add_value_uint(root, "Sys area program fail count raw",
+						le32_to_cpu(log->sys_area_program_fail_count_raw));
+		json_object_add_value_uint(root, "Sys area program fail count noralized",
+						log->sys_area_program_fail_count_normalized);
+		json_object_add_value_uint(root, "Sys area uncorrectable read count raw",
+						le32_to_cpu(log->sys_area_uncorr_read_count_raw));
+		json_object_add_value_uint(root, "Sys area uncorrectable read count noralized",
+						log->sys_area_uncorr_read_count_normalized);
+		json_object_add_value_uint(root, "Sys area erase fail count raw",
+						le32_to_cpu(log->sys_area_erase_fail_count_raw));
+		json_object_add_value_uint(root, "Sys area erase fail count noralized",
+						log->sys_area_erase_fail_count_normalized);
+		json_object_add_value_uint(root, "Max peak power capability",
+						le16_to_cpu(log->max_peak_power_capability));
+		json_object_add_value_uint(root, "Current max avg power",
+						le16_to_cpu(log->current_max_avg_power));
+		json_object_add_value_uint64(root, "Lifetime power consumed",
+						int48_to_long(log->lifetime_power_consumed));
+		memset((void *)ascii, 0, 65);
+		for (i = 0; i < 8; i++)
+			ascii += sprintf(ascii, "%c", log->dssd_firmware_revision[i]);
+		json_object_add_value_string(root, "Dssd firmware revision", ascii_arr);
+		json_object_add_value_string(root, "Dssd firmware build UUID",
+						util_uuid_to_string(log->dssd_firmware_build_uuid));
+		ascii = ascii_arr;
+		memset((void *)ascii, 0, 65);
+		for (i = 0; i < 64; i++)
+			ascii += sprintf(ascii, "%c", log->dssd_firmware_build_label[i]);
+		json_object_add_value_string(root, "Dssd firmware build label", ascii_arr);
 		fallthrough;
 	case 2 ... 3:
 		json_object_add_value_uint(root, "Errata Version Field",
@@ -257,9 +303,12 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 	struct json_object *root;
 	struct json_object *pmuw;
 	struct json_object *pmur;
+	int i = 0;
 	uint16_t smart_log_ver = 0;
 	uint16_t dssd_version = 0;
 	char guid[40];
+	char ascii_arr[65];
+	char *ascii = ascii_arr;
 
 	root = json_create_object();
 	pmuw = json_create_object();
@@ -342,6 +391,49 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 						log->nvme_cmdset_errata_version);
 		json_object_add_value_uint(root, "lowest_permitted_firmware_revision",
 						le64_to_cpu(log->lowest_permitted_fw_rev));
+		json_object_add_value_uint(root, "nvme_over_pcie_errata_version",
+						log->nvme_over_pcie_errate_version);
+		json_object_add_value_uint(root, "nvme_mi_errata_version",
+						log->nvme_mi_errata_version);
+		json_object_add_value_uint(root, "total_media_dies",
+						le16_to_cpu(log->total_media_dies));
+		json_object_add_value_uint(root, "total_die_failure_tolerance",
+						le16_to_cpu(log->total_die_failure_tolerance));
+		json_object_add_value_uint(root, "max_temperature_recorded",
+						le16_to_cpu(log->max_temperature_recorded));
+		json_object_add_value_uint64(root, "nand_avg_erase_count",
+						le64_to_cpu(log->nand_avg_erase_count));
+		json_object_add_value_uint(root, "command_timeouts",
+						le32_to_cpu(log->command_timeouts));
+		json_object_add_value_uint(root, "sys_area_program_fail_count_raw",
+						le32_to_cpu(log->sys_area_program_fail_count_raw));
+		json_object_add_value_uint(root, "sys_area_program_fail_count_noralized",
+						log->sys_area_program_fail_count_normalized);
+		json_object_add_value_uint(root, "sys_area_uncorrectable_read_count_raw",
+						le32_to_cpu(log->sys_area_uncorr_read_count_raw));
+		json_object_add_value_uint(root, "sys_area_uncorrectable_read_count_noralized",
+						log->sys_area_uncorr_read_count_normalized);
+		json_object_add_value_uint(root, "sys_area_erase_fail_count_raw",
+						le32_to_cpu(log->sys_area_erase_fail_count_raw));
+		json_object_add_value_uint(root, "sys_area_erase_fail_count_noralized",
+						log->sys_area_erase_fail_count_normalized);
+		json_object_add_value_uint(root, "max_peak_power_capability",
+						le16_to_cpu(log->max_peak_power_capability));
+		json_object_add_value_uint(root, "current_max_avg_power",
+						le16_to_cpu(log->current_max_avg_power));
+		json_object_add_value_uint64(root, "lifetime_power_consumed",
+						int48_to_long(log->lifetime_power_consumed));
+		memset((void *)ascii, 0, 65);
+		for (i = 0; i < 8; i++)
+			ascii += sprintf(ascii, "%c", log->dssd_firmware_revision[i]);
+		json_object_add_value_string(root, "dssd_firmware_revision", ascii_arr);
+		json_object_add_value_string(root, "dssd_firmware_build_uuid",
+						util_uuid_to_string(log->dssd_firmware_build_uuid));
+		ascii = ascii_arr;
+		memset((void *)ascii, 0, 65);
+		for (i = 0; i < 64; i++)
+			ascii += sprintf(ascii, "%c", log->dssd_firmware_build_label[i]);
+		json_object_add_value_string(root, "dssd_firmware_build_label", ascii_arr);
 		fallthrough;
 	case 2 ... 3:
 		json_object_add_value_uint(root, "errata_version_field",

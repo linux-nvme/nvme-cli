@@ -101,6 +101,7 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 {
 	uint16_t smart_log_ver = 0;
 	uint16_t dssd_version = 0;
+	int i = 0;
 
 	printf("SMART Cloud Attributes :-\n");
 
@@ -172,6 +173,50 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 			log->nvme_cmdset_errata_version);
 		printf("  Lowest Permitted Firmware Revision            %"PRIu64"\n",
 			le64_to_cpu(log->lowest_permitted_fw_rev));
+		printf("  NVMe Over Pcie Errata Version			%d\n",
+			log->nvme_over_pcie_errate_version);
+		printf("  NVMe Mi Errata Version			%d\n",
+			log->nvme_mi_errata_version);
+		printf("  Total media dies				%"PRIu16"\n",
+			le16_to_cpu(log->total_media_dies));
+		printf("  Total die failure tolerance			%"PRIu16"\n",
+			le16_to_cpu(log->total_die_failure_tolerance));
+		printf("  Media dies offline				%"PRIu16"\n",
+			le16_to_cpu(log->media_dies_offline));
+		printf("  Max temperature recorded			%d\n",
+			le16_to_cpu(log->max_temperature_recorded));
+		printf("  Nand avg erase count				%"PRIu64"\n",
+			le64_to_cpu(log->nand_avg_erase_count));
+		printf("  Command timeouts				%"PRIu32"\n",
+			le32_to_cpu(log->command_timeouts));
+		printf("  Sys area program fail count raw		%"PRIu32"\n",
+			le32_to_cpu(log->sys_area_program_fail_count_raw));
+		printf("  Sys area program fail count noralized		%d\n",
+			le32_to_cpu(log->sys_area_program_fail_count_normalized));
+		printf("  Sys area uncorrectable read count raw		%"PRIu32"\n",
+			le32_to_cpu(log->sys_area_uncorr_read_count_raw));
+		printf("  Sys area uncorrectable read count noralized	%d\n",
+			le32_to_cpu(log->sys_area_uncorr_read_count_normalized));
+		printf("  Sys area erase fail count raw			%"PRIu32"\n",
+			le32_to_cpu(log->sys_area_erase_fail_count_raw));
+		printf("  Sys area erase fail count noralized		%d\n",
+			le32_to_cpu(log->sys_area_erase_fail_count_normalized));
+		printf("  Max peak power capability			%"PRIu16"\n",
+			le16_to_cpu(log->max_peak_power_capability));
+		printf("  Current max avg power				%"PRIu16"\n",
+			le16_to_cpu(log->current_max_avg_power));
+		printf("  Lifetime power consumed			%"PRIu64"\n",
+			int48_to_long(log->lifetime_power_consumed));
+		printf("  Dssd firmware revision			");
+		for (i = 0; i < sizeof(log->dssd_firmware_revision); i++)
+			printf("%c", log->dssd_firmware_revision[i]);
+		printf("\n");
+		printf("  Dssd firmware build UUID			%s\n",
+			util_uuid_to_string(log->dssd_firmware_build_uuid));
+		printf("  Dssd firmware build label			");
+		for (i = 0; i < sizeof(log->dssd_firmware_build_label); i++)
+			printf("%c", log->dssd_firmware_build_label[i]);
+		printf("\n");
 		fallthrough;
 	case 2 ... 3:
 		printf("  Errata Version Field                          %d\n",
