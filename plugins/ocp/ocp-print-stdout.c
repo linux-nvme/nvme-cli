@@ -184,7 +184,7 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 		printf("  Media dies offline				%"PRIu16"\n",
 			le16_to_cpu(log->media_dies_offline));
 		printf("  Max temperature recorded			%d\n",
-			le16_to_cpu(log->max_temperature_recorded));
+			log->max_temperature_recorded);
 		printf("  Nand avg erase count				%"PRIu64"\n",
 			le64_to_cpu(log->nand_avg_erase_count));
 		printf("  Command timeouts				%"PRIu32"\n",
