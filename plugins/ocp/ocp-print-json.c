@@ -239,8 +239,10 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 						le16_to_cpu(log->total_media_dies));
 		json_object_add_value_uint(root, "Total die failure tolerance",
 						le16_to_cpu(log->total_die_failure_tolerance));
+		json_object_add_value_uint(root, "Media dies offline",
+						le16_to_cpu(log->media_dies_offline));
 		json_object_add_value_uint(root, "Max temperature recorded",
-						le16_to_cpu(log->max_temperature_recorded));
+						log->max_temperature_recorded);
 		json_object_add_value_uint64(root, "Nand avg erase count",
 						le64_to_cpu(log->nand_avg_erase_count));
 		json_object_add_value_uint(root, "Command timeouts",
@@ -399,8 +401,10 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 						le16_to_cpu(log->total_media_dies));
 		json_object_add_value_uint(root, "total_die_failure_tolerance",
 						le16_to_cpu(log->total_die_failure_tolerance));
+		json_object_add_value_uint(root, "media_dies_offline",
+						le16_to_cpu(log->media_dies_offline));
 		json_object_add_value_uint(root, "max_temperature_recorded",
-						le16_to_cpu(log->max_temperature_recorded));
+						log->max_temperature_recorded);
 		json_object_add_value_uint64(root, "nand_avg_erase_count",
 						le64_to_cpu(log->nand_avg_erase_count));
 		json_object_add_value_uint(root, "command_timeouts",
