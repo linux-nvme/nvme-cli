@@ -4341,6 +4341,9 @@ static void stdout_self_test_result(struct nvme_st_result *res)
 		case NVME_ST_CODE_EXTENDED:
 			printf(" Extended device self-test operation");
 			break;
+		case NVME_ST_CODE_HOST_INIT:
+			printf(" Host-Initiated Refresh operation");
+			break;
 		case NVME_ST_CODE_VS:
 			printf(" Vendor specific");
 			break;
