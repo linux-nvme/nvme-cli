@@ -82,12 +82,34 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_admin_virtual_mgmt:	return "Virtualization Management";
 		case nvme_admin_nvme_mi_send:	return "NVMe-MI Send";
 		case nvme_admin_nvme_mi_recv:	return "NVMe-MI Receive";
+		case nvme_admin_capacity_mgmt:	return "Capacity Management";
+		case nvme_admin_discovery_info_mgmt:return "Discovery Information Management (DIM)";
+		case nvme_admin_fabric_zoning_recv:return "Fabric Zoning Receive";
+		case nvme_admin_lockdown:	return "Lockdown";
+		case nvme_admin_fabric_zoning_lookup:return "Fabric Zoning Lookup";
+		case nvme_admin_clear_export_nvm_res:
+						return "Clear Exported NVM Resource Configuration";
+		case nvme_admin_fabric_zoning_send:return "Fabric Zoning Send";
+		case nvme_admin_create_export_nvms:return "Create Exported NVM Subsystem";
+		case nvme_admin_manage_export_nvms:return "Manage Exported NVM Subsystem";
+		case nvme_admin_manage_export_ns:return "Manage Exported Namespace";
+		case nvme_admin_manage_export_port:return "Manage Exported Port";
+		case nvme_admin_send_disc_log_page:return "Send Discovery Log Page";
+		case nvme_admin_track_send:	return "Track Send";
+		case nvme_admin_track_receive:	return "Track Receive";
+		case nvme_admin_migration_send:	return "Migration Send";
+		case nvme_admin_migration_receive:return "Migration Receive";
+		case nvme_admin_ctrl_data_queue:return "Controller Data Queue";
 		case nvme_admin_dbbuf:		return "Doorbell Buffer Config";
+		case nvme_admin_fabrics:	return "Fabrics Commands";
 		case nvme_admin_format_nvm:	return "Format NVM";
 		case nvme_admin_security_send:	return "Security Send";
 		case nvme_admin_security_recv:	return "Security Receive";
 		case nvme_admin_sanitize_nvm:	return "Sanitize";
+		case nvme_admin_load_program:	return "Load Program";
 		case nvme_admin_get_lba_status:	return "Get LBA Status";
+		case nvme_admin_program_act_mgmt:return "Program Activation Management";
+		case nvme_admin_mem_range_set_mgmt:return "Memory Range Set Management";
 		}
 	} else {
 		switch (opcode) {
