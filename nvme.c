@@ -4429,6 +4429,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		"0h Show current state of device self-test operation\n"
 		"1h Start a short device self-test operation\n"
 		"2h Start a extended device self-test operation\n"
+		"3h Start a Host-Initiated Refresh operation\n"
 		"eh Start a vendor specific device self-test operation\n"
 		"fh Abort the device self-test operation";
 	const char *wait = "Wait for the test to finish";
@@ -4501,6 +4502,8 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 			printf("Extended Device self-test started\n");
 		else if (cfg.stc == NVME_ST_CODE_SHORT)
 			printf("Short Device self-test started\n");
+		else if (cfg.stc == NVME_ST_CODE_HOST_INIT)
+			printf("Host-Initiated Refresh started\n");
 
 		if (cfg.wait && cfg.stc != NVME_ST_CODE_ABORT)
 			err = wait_self_test(dev);
