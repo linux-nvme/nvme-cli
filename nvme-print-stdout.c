@@ -2141,6 +2141,22 @@ void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_dsto(__u8 dsto)
+{
+	__u8 rsvd2 = (dsto & 0xfc) >> 2;
+	__u8 hirs = (dsto & 0x2) >> 1;
+	__u8 sdso = dsto & 0x1;
+
+	if (rsvd2)
+		printf("  [7:2] : %#x\tReserved\n", rsvd2);
+	printf("  [1:1] : %#x\tHost-Initiated Refresh capability %sSupported\n",
+		hirs, hirs ? "" : "Not ");
+	printf("  [0:0] : %#x\tNVM subsystem supports %s at a time\n", sdso,
+		sdso ? "only one device self-test operation in progress" :
+		"one device self-test operation per controller");
+	printf("\n");
+}
+
 static void stdout_id_ctrl_hctma(__le16 ctrl_hctma)
 {
 	__u16 hctma = le16_to_cpu(ctrl_hctma);
@@ -3140,6 +3156,8 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 		stdout_id_ctrl_rpmbs(ctrl->rpmbs);
 	printf("edstt     : %d\n", le16_to_cpu(ctrl->edstt));
 	printf("dsto      : %d\n", ctrl->dsto);
+	if (human)
+		stdout_id_ctrl_dsto(ctrl->dsto);
 	printf("fwug      : %d\n", ctrl->fwug);
 	printf("kas       : %d\n", le16_to_cpu(ctrl->kas));
 	printf("hctma     : %#x\n", le16_to_cpu(ctrl->hctma));
