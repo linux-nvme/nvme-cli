@@ -9208,6 +9208,7 @@ enum nvme_data_tfr {
  * @nvme_zns_cmd_mgmt_send:	Zone Management Send
  * @nvme_zns_cmd_mgmt_recv:	Zone Management Receive
  * @nvme_zns_cmd_append:	Zone Append
+ * @nvme_cmd_fabric:		Fabric Commands
  */
 enum nvme_io_opcode {
 	nvme_cmd_flush		= 0x00,
@@ -9229,6 +9230,7 @@ enum nvme_io_opcode {
 	nvme_zns_cmd_mgmt_send	= 0x79,
 	nvme_zns_cmd_mgmt_recv	= 0x7a,
 	nvme_zns_cmd_append	= 0x7d,
+	nvme_cmd_fabric		= 0x7f,
 };
 
 /**
