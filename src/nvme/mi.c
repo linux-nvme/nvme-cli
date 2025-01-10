@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
+#include <ccan/ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
 #include "log.h"
@@ -1021,7 +1022,7 @@ static int read_ana_chunk(nvme_mi_ctrl_t ctrl, enum nvme_log_ana_lsp lsp, bool r
 	}
 
 	while (*read < to_read) {
-		__u32 len = min(log_end - *read, NVME_LOG_PAGE_PDU_SIZE);
+		__u32 len = min_t(__u32, log_end - *read, NVME_LOG_PAGE_PDU_SIZE);
 		int ret;
 
 		ret = nvme_mi_admin_get_log_ana(ctrl, lsp, rae,

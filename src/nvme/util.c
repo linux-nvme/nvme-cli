@@ -22,6 +22,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#include <ccan/ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
 #include "cleanup.h"

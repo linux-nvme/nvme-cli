@@ -23,6 +23,7 @@
 #include <sys/time.h>
 
 #include <ccan/build_assert/build_assert.h>
+#include <ccan/ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
 #include "ioctl.h"
@@ -503,7 +504,7 @@ static int read_ana_chunk(int fd, enum nvme_log_ana_lsp lsp, bool rae,
 	}
 
 	while (*read < to_read) {
-		__u32 len = min(log_end - *read, NVME_LOG_PAGE_PDU_SIZE);
+		__u32 len = min_t(__u32, log_end - *read, NVME_LOG_PAGE_PDU_SIZE);
 		int ret;
 
 		ret = nvme_get_log_ana(fd, lsp, rae, *read - log, len, *read);

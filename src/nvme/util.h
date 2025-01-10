@@ -560,8 +560,6 @@ char *kv_keymatch(const char *kv, const char *key);
  */
 char *startswith(const char *s, const char *prefix);
 
-#define min(x, y) ((x) > (y) ? (y) : (x))
-
 #define __round_mask(val, mult) ((__typeof__(val))((mult)-1))
 
 /**
