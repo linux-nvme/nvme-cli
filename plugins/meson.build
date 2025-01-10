@@ -22,6 +22,8 @@ sources += [
   'plugins/nbft/nbft-plugin.c',
   'plugins/netapp/netapp-nvme.c',
   'plugins/nvidia/nvidia-nvme.c',
+  'plugins/sandisk/sandisk-nvme.c',
+  'plugins/sandisk/sandisk-utils.c',
   'plugins/scaleflux/sfx-nvme.c',
   'plugins/seagate/seagate-nvme.c',
   'plugins/shannon/shannon-nvme.c',
