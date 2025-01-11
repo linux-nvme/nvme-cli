@@ -3020,6 +3020,27 @@ static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
 	}
 }
 
+static void print_psd_time(const char *desc, __u8 time, __u8 ts)
+{
+	int width = 12 + strlen(desc);
+	char value[STR_LEN] = { 0 };
+
+	switch (time) {
+	case 0:
+		snprintf(value, sizeof(value), "-");
+		break;
+	case 1 ... 99:
+		snprintf(value, sizeof(value), "%d (unit: %s)", time,
+			 nvme_time_scale_to_string(ts));
+		break;
+	default:
+		snprintf(value, sizeof(value), "reserved");
+		break;
+	}
+
+	printf("%*s: %s\n", width, desc, value);
+}
+
 static void stdout_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 {
 	int i;
@@ -3051,7 +3072,12 @@ static void stdout_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 		printf("\n            active_power_workload:");
 		print_psd_workload(ctrl->psd[i].apws);
 		printf("\n");
-
+		print_psd_time("emergency power fail recovery time", ctrl->psd[i].epfrt,
+			       ctrl->psd[i].epfr_fqv_ts & 0xf);
+		print_psd_time("forced quiescence vault time", ctrl->psd[i].fqvt,
+			       ctrl->psd[i].epfr_fqv_ts >> 4);
+		print_psd_time("emergency power fail vault time", ctrl->psd[i].epfvt,
+			       ctrl->psd[i].epfvts & 0xf);
 	}
 }
 

@@ -311,6 +311,7 @@ const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state);
 const char *nvme_pel_rci_rcpit_to_string(enum nvme_pel_rci_rcpit rcpit);
 const char *nvme_pel_ehai_pit_to_string(enum nvme_pel_ehai_pit pit);
 const char *nvme_ssi_state_to_string(__u8 state);
+const char *nvme_time_scale_to_string(__u8 ts);
 
 void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len);
