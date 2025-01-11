@@ -11,6 +11,8 @@
 
 #define ABSOLUTE_ZERO_CELSIUS -273
 
+#define STR_LEN 100
+
 static inline long kelvin_to_celsius(long t)
 {
 	return t + ABSOLUTE_ZERO_CELSIUS;

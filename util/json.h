@@ -72,8 +72,6 @@ struct json_object;
 #define json_object_add_value_array(o, k, v) json_object_object_add(o, k, v)
 #define json_object_add_value_object(o, k, v) json_object_object_add(o, k, v)
 
-#define STR_LEN 100
-
 void json_object_add_uint_02x(struct json_object *o, const char *k, __u32 v);
 void json_object_add_uint_0x(struct json_object *o, const char *k, __u32 v);
 void json_object_add_byte_array(struct json_object *o, const char *k, unsigned char *buf, int len);
