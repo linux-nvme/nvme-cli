@@ -1313,6 +1313,42 @@ const char *nvme_register_symbol_to_string(int offset)
 	return "unknown";
 }
 
+const char *nvme_time_scale_to_string(__u8 ts)
+{
+	switch (ts) {
+	case 0:
+		return "1 microsecond";
+	case 1:
+		return "10 microseconds";
+	case 2:
+		return "100 microseconds";
+	case 3:
+		return "1 millisecond";
+	case 4:
+		return "10 milliseconds";
+	case 5:
+		return "100 milliseconds";
+	case 6:
+		return "1 second";
+	case 7:
+		return "10 seconds";
+	case 8:
+		return "100 seconds";
+	case 9:
+		return "1,000 seconds";
+	case 0xa:
+		return "10,000 seconds";
+	case 0xb:
+		return "100,000 seconds";
+	case 0xc:
+		return "1,000,000 seconds";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);
