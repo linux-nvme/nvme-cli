@@ -1050,8 +1050,8 @@ enum nvme_flbas {
  *			 does not process I/O commands in this power state.
  */
 enum nvme_psd_flags {
-	 NVME_PSD_FLAGS_MXPS		= 1 << 0,
-	 NVME_PSD_FLAGS_NOPS		= 1 << 1,
+	NVME_PSD_FLAGS_MXPS		= 1 << 0,
+	NVME_PSD_FLAGS_NOPS		= 1 << 1,
 };
 
 /**
@@ -1063,9 +1063,9 @@ enum nvme_psd_flags {
  * @NVME_PSD_PS_10_MILLI_WATT:	0.01 watt scale
  */
 enum nvme_psd_ps {
-	 NVME_PSD_PS_NOT_REPORTED	= 0,
-	 NVME_PSD_PS_100_MICRO_WATT	= 1,
-	 NVME_PSD_PS_10_MILLI_WATT	= 2,
+	NVME_PSD_PS_NOT_REPORTED	= 0,
+	NVME_PSD_PS_100_MICRO_WATT	= 1,
+	NVME_PSD_PS_10_MILLI_WATT	= 2,
 };
 
 /**
@@ -1100,9 +1100,9 @@ static inline unsigned int nvme_psd_power_scale(__u8 ps)
  *			 times during the workload.
  */
 enum nvme_psd_workload {
-	 NVME_PSD_WORKLOAD_NP	= 0,
-	 NVME_PSD_WORKLOAD_1	= 1,
-	 NVME_PSD_WORKLOAD_2	= 2,
+	NVME_PSD_WORKLOAD_NP	= 0,
+	NVME_PSD_WORKLOAD_1	= 1,
+	NVME_PSD_WORKLOAD_2	= 2,
 };
 
 /**
