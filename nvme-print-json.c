@@ -442,6 +442,12 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 		obj_add_int(psd, "active_power", le16_to_cpu(ctrl->psd[i].actp));
 		obj_add_int(psd, "active_power_work", ctrl->psd[i].apws & 7);
 		obj_add_int(psd, "active_scale", nvme_psd_power_scale(ctrl->psd[i].apws));
+		obj_add_int(psd, "emerg_power_fail_recover_time", ctrl->psd[i].epfrt);
+		obj_add_int(psd, "emerg_power_fail_recover_scale", ctrl->psd[i].epfr_fqv_ts & 0xf);
+		obj_add_int(psd, "force_quiesce_vault_time", ctrl->psd[i].fqvt);
+		obj_add_int(psd, "force_quiesce_vault_scale", ctrl->psd[i].epfr_fqv_ts >> 4);
+		obj_add_int(psd, "emerg_power_fail_vault_time", ctrl->psd[i].epfvt);
+		obj_add_int(psd, "emerg_power_fail_vault_scale", ctrl->psd[i].epfvts & 0xf);
 
 		array_add_obj(psds, psd);
 	}
