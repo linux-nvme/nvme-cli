@@ -4971,6 +4971,10 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 	case NVME_FEAT_FID_SPINUP_CONTROL:
 		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
 		break;
+	case NVME_FEAT_FID_POWER_LOSS_SIGNAL:
+		printf("\tPower Loss Signaling Mode (PLSM): %s\n",
+		       nvme_pls_mode_to_string(NVME_GET(result, FEAT_PLS_MODE)));
+		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
 	case NVME_FEAT_FID_NS_METADATA:

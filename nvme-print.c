@@ -1349,6 +1349,22 @@ const char *nvme_time_scale_to_string(__u8 ts)
 	return "Reserved";
 }
 
+const char *nvme_pls_mode_to_string(__u8 mode)
+{
+	switch (mode) {
+	case 0:
+		return "not enabled";
+	case 1:
+		return "enabled with Emergency Power Fail";
+	case 2:
+		return "enabled with Forced Quiescence";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);
