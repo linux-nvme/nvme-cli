@@ -3518,6 +3518,12 @@ static void json_feature_show_fields_spinup_control(struct json_object *r, unsig
 	obj_add_str(r, "Spinup control feature Enabled", result & 1 ? "True" : "False");
 }
 
+static void json_feature_show_fields_power_loss_signal(struct json_object *r, unsigned int result)
+{
+	obj_add_str(r, "Power Loss Signaling Mode (PLSM)",
+		    nvme_pls_mode_to_string(NVME_GET(result, FEAT_PLS_MODE)));
+}
+
 static void json_host_metadata(struct json_object *r, enum nvme_features_id fid,
 			       struct nvme_host_metadata *data)
 {
@@ -3727,6 +3733,9 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_SPINUP_CONTROL:
 		json_feature_show_fields_spinup_control(r, result);
+		break;
+	case NVME_FEAT_FID_POWER_LOSS_SIGNAL:
+		json_feature_show_fields_power_loss_signal(r, result);
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
