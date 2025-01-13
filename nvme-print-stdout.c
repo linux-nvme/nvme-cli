@@ -5535,6 +5535,33 @@ static void stdout_connect_msg(nvme_ctrl_t c)
 	printf("connecting to device: %s\n", nvme_ctrl_get_name(c));
 }
 
+static void stdout_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
+{
+	int i;
+	bool reserved = true;
+
+	printf("Management Address List:\n");
+	for (i = 0; i < ARRAY_SIZE(ma_list->mad); i++) {
+		switch (ma_list->mad[i].mat) {
+		case 1:
+		case 2:
+			printf("Descriptor: %d, Type: %d (%s), Address: %s\n", i,
+			       ma_list->mad[i].mat,
+			       ma_list->mad[i].mat == 1 ? "NVM subsystem management agent" :
+			       "fabric interface manager", ma_list->mad[i].madrs);
+			reserved = false;
+			break;
+		case 0xff:
+			goto out;
+		default:
+			break;
+		}
+	}
+out:
+	if (reserved)
+		printf("All management address descriptors reserved\n");
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -5602,6 +5629,7 @@ static struct print_ops stdout_print_ops = {
 	.d				= stdout_d,
 	.show_init			= NULL,
 	.show_finish			= NULL,
+	.mgmt_addr_list_log		= stdout_mgmt_addr_list_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,

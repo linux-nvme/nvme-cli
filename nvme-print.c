@@ -1476,3 +1476,8 @@ void nvme_show_finish(void)
 {
 	nvme_print_output_format(show_finish);
 }
+
+void nvme_show_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list, nvme_print_flags_t flags)
+{
+	nvme_print(mgmt_addr_list_log, flags, ma_list);
+}

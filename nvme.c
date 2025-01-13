@@ -9962,6 +9962,43 @@ static int nmi_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	return nvme_mi(argc, argv, nvme_admin_nvme_mi_send, desc);
 }
 
+static int get_mgmt_addr_list_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Management Address List Log, show it";
+	nvme_print_flags_t flags;
+	int err = -1;
+
+	_cleanup_free_ struct nvme_mgmt_addr_list_log *ma_log = NULL;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	NVME_ARGS(opts);
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	ma_log = nvme_alloc(sizeof(*ma_log));
+	if (!ma_log)
+		return -ENOMEM;
+
+	err = nvme_cli_get_log_mgmt_addr_list(dev, sizeof(*ma_log), ma_log);
+	if (!err)
+		nvme_show_mgmt_addr_list_log(ma_log, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		nvme_show_perror("management address list log");
+
+	return err;
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;
