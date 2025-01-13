@@ -366,7 +366,7 @@ _nvme () {
 				--comp-id=':component identifier'
 				-i':alias for --comp-id'
 				--list':list component descriptions'
-				-v':alias for --list'
+				-l':alias for --list'
 				--verbose':Increase the information detail in the output.'
 				-v':alias for --verbose'
 				--output-format=':Output format: normal|json|binary'
