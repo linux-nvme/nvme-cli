@@ -4591,6 +4591,44 @@ void json_show_finish(void)
 	json_r = NULL;
 }
 
+static void json_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
+{
+	int i;
+	bool reserved = true;
+	struct json_object *r = json_create_object();
+	struct json_object *mad;
+	struct json_object *mat;
+	char json_str[STR_LEN];
+
+	for (i = 0; i < ARRAY_SIZE(ma_list->mad); i++) {
+		switch (ma_list->mad[i].mat) {
+		case 1:
+		case 2:
+			mad = json_create_object();
+			mat = json_create_object();
+			obj_add_str(mat, "definition", ma_list->mad[i].mat == 1 ?
+				    "NVM subsystem management agent" : "fabric interface manager");
+			snprintf(json_str, sizeof(json_str), "type: %d", ma_list->mad[i].mat);
+			obj_add_obj(mad, json_str, mat);
+			obj_add_str(mad, "address", (const char *)ma_list->mad[i].madrs);
+			snprintf(json_str, sizeof(json_str), "descriptor: %d", i);
+			obj_add_obj(r, json_str, mad);
+			reserved = false;
+			break;
+		case 0xff:
+			goto out;
+		default:
+			break;
+		}
+	}
+
+out:
+	if (reserved)
+		obj_add_str(r, "list", "All management address descriptors reserved");
+
+	json_print(r);
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -4658,6 +4696,7 @@ static struct print_ops json_print_ops = {
 	.d				= json_d,
 	.show_init			= json_show_init,
 	.show_finish			= json_show_finish,
+	.mgmt_addr_list_log		= json_mgmt_addr_list_log,
 
 	/* libnvme tree print functions */
 	.list_item			= json_list_item,
