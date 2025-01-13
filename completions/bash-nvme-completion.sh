@@ -479,6 +479,9 @@ nvme_list_opts () {
 			--pmrmscu= --output-format= -o --verbose= -v \
 			--timeout= -t"
 			;;
+		"mgmt-addr-list-log")
+		opts+=" --verbose -v --output-format= -o --timeout= -t"
+			;;
 		"version")
 		opts+=$NO_OPTS
 			;;
@@ -1669,7 +1672,7 @@ _nvme_subcmds () {
 		rpmb boot-part-log fid-support-effects-log \
 		supported-log-pages lockdown media-unit-stat-log \
 		supported-cap-config-log dim show-topology list-endgrp \
-		nvme-mi-recv nvme-mi-send get-reg set-reg"
+		nvme-mi-recv nvme-mi-send get-reg set-reg mgmt-addr-list-log"
 
 	# Add plugins:
 	for plugin in "${!_plugin_subcmds[@]}"; do

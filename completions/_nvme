@@ -2613,6 +2613,20 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-reg options" _io_mgmt_send
 			;;
+		(mgmt-addr-list-log)
+			local _mal_log
+			_caplog=(
+			/dev/nvme':supply a device to use (required)'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme mgmt-addr-list-log" _mal_log
+			;;
 		(version)
 			local _version
 			_version=(
@@ -2724,7 +2738,7 @@ _nvme () {
 			get-property write-zeroes write-uncor verify sanitize sanitize-log reset
 			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
 			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
-			dir-send virt-mgmt rpmb version ocp solidigm dapustor
+			dir-send virt-mgmt rpmb version ocp solidigm dapustor mgmt-addr-list-log
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
