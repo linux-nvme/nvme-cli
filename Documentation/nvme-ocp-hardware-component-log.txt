@@ -68,13 +68,13 @@ OPTIONS
 
 EXAMPLES
 --------
-* Has the program issue a set-error-injection
+* Has the program issue a ocp hardware-component-log
 +
 ------------
 # nvme ocp hardware-component-log /dev/nvme0
 ------------
 
-* Has the program issue a set-error-injection with the asic component list.
+* Has the program issue a ocp hardware-component-log with asic component list
 +
 ------------
 # nvme ocp hardware-component-log /dev/nvme0 -i asic -l
