@@ -146,4 +146,7 @@ int nvme_cli_security_send(struct nvme_dev *dev,
 int nvme_cli_security_receive(struct nvme_dev *dev,
 			      struct nvme_security_receive_args* args);
 
+int nvme_cli_get_log_mgmt_addr_list(struct nvme_dev *dev, __u32 len,
+				    struct nvme_mgmt_addr_list_log *ma_list);
+
 #endif /* _NVME_WRAP_H */

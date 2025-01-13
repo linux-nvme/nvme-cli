@@ -430,3 +430,9 @@ int nvme_cli_security_receive(struct nvme_dev *dev,
 
 	return -ENODEV;
 }
+
+int nvme_cli_get_log_mgmt_addr_list(struct nvme_dev *dev, __u32 len,
+				    struct nvme_mgmt_addr_list_log *ma_list)
+{
+	return do_admin_op(get_log_mgmt_addr_list, dev, len, ma_list);
+}

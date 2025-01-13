@@ -88,6 +88,7 @@ struct print_ops {
 	void (*d)(unsigned char *buf, int len, int width, int group);
 	void (*show_init)(void);
 	void (*show_finish)(void);
+	void (*mgmt_addr_list_log)(struct nvme_mgmt_addr_list_log *ma_log);
 
 	/* libnvme tree print functions */
 	void (*list_item)(nvme_ns_t n);
@@ -328,4 +329,6 @@ const char *nvme_degrees_string(long t);
 void print_array(char *name, __u8 *data, int size);
 void json_print(struct json_object *r);
 struct json_object *obj_create_array_obj(struct json_object *o, const char *k);
+void nvme_show_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list,
+				  nvme_print_flags_t flags);
 #endif /* NVME_PRINT_H */
