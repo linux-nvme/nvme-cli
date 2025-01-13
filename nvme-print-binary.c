@@ -307,6 +307,11 @@ static void binary_effects_log_pages(struct list_head *list)
 	}
 }
 
+static void binary_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list)
+{
+	d_raw((unsigned char *)ma_list, sizeof(*ma_list));
+}
+
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= binary_ana_log,
@@ -373,6 +378,7 @@ static struct print_ops binary_print_ops = {
 	.d				= NULL,
 	.show_init			= NULL,
 	.show_finish			= NULL,
+	.mgmt_addr_list_log		= binary_mgmt_addr_list_log,
 
 	/* libnvme tree print functions */
 	.list_item			= NULL,
