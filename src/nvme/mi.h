@@ -2242,6 +2242,21 @@ static inline int nvme_mi_admin_get_log_boot_partition(nvme_mi_ctrl_t ctrl,
 }
 
 /**
+ * nvme_mi_admin_get_log_mgmt_addr_list() - Retrieve Management Address List Log
+ * @ctrl:	Controller to query
+ * @len:	The allocated length of the log page
+ * @log:	User address to store the log page
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_mi_admin_get_log_mgmt_addr_list(nvme_mi_ctrl_t ctrl, __u32 len,
+						       struct nvme_mgmt_addr_list_log *log)
+{
+	return nvme_mi_admin_get_log_simple(ctrl, NVME_LOG_LID_MGMT_ADDR_LIST, len, log);
+}
+
+/**
  * nvme_mi_admin_get_log_phy_rx_eom() - Retrieve Physical Interface Receiver Eye Opening Measurement Log
  * @ctrl:	Controller to query
  * @lsp:	Log specific, controls action and measurement quality
