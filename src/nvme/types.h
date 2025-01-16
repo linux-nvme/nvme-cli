@@ -2554,12 +2554,16 @@ enum nvme_lbaf_rp {
  * @msrc:     Maximum Source Range Count indicates the maximum number of Source
  *	  Range entries that may be used to specify source data in a Copy
  *	  command. This is a 0’s based value.
- * @rsvd81:   Reserved
+ * @kpios:    Key Per I/O Status indicates namespace Key Per I/O capability status.
  * @nulbaf:   Number of Unique Capability LBA Formats defines the number of
  *	  supported user data size and metadata size combinations supported
  *	  by the namespace that may not share the same capabilities. LBA
  *	  formats shall be allocated in order and packed sequentially.
  * @rsvd83:   Reserved
+ * @kpiodaag: Key Per I/O Data Access Alignment and Granularity indicates the
+ *	      alignment and granularity in logical blocks that is required
+ *	      for commands that support a KPIOTAG value in the CETYPE field.
+ * @rsvd88:   Reserved
  * @anagrpid: ANA Group Identifier indicates the ANA Group Identifier of the
  *	      ANA group of which the namespace is a member.
  * @rsvd96:   Reserved
@@ -2611,9 +2615,11 @@ struct nvme_id_ns {
 	__le16			mssrl;
 	__le32			mcl;
 	__u8			msrc;
-	__u8			rsvd81;
+	__u8			kpios;
 	__u8			nulbaf;
-	__u8			rsvd83[9];
+	__u8			rsvd83;
+	__le32			kpiodaag;
+	__u8			rsvd88[4];
 	__le32			anagrpid;
 	__u8			rsvd96[3];
 	__u8			nsattr;
