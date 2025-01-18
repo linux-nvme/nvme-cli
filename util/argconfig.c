@@ -429,3 +429,16 @@ bool argconfig_parse_seen(struct argconfig_commandline_options *s,
 
 	return false;
 }
+
+void *argconfig_get_value(struct argconfig_commandline_options *s, const char *option)
+{
+	for (; s && s->option; s++) {
+		if (!strcmp(s->option, option)) {
+			if (s->seen)
+				return s->default_value;
+			break;
+		}
+	}
+
+	return NULL;
+}
