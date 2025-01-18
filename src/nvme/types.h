@@ -1935,6 +1935,30 @@ enum nvme_id_ctrl_mec {
  * enum nvme_id_ctrl_oacs - Flags indicating the optional Admin commands and
  *			    features supported by the controller, see
  *			    &struct nvme_id_ctrl.oacs.
+ * @NVME_CTRL_OACS_SSRS_SHIFT: Shift amount to get the Security Send Receive supported
+ * @NVME_CTRL_OACS_FNVMS_SHIFT:Shift amount to get the Format NVM supported
+ * @NVME_CTRL_OACS_FWDS_SHIFT: Shift amount to get the Firmware Download supported
+ * @NVME_CTRL_OACS_NMS_SHIFT:  Shift amount to get the Namespace Management supported
+ * @NVME_CTRL_OACS_DSTS_SHIFT: Shift amount to get the Device Self-test supported
+ * @NVME_CTRL_OACS_DIRS_SHIFT: Shift amount to get the Directives supported
+ * @NVME_CTRL_OACS_NSRS_SHIFT: Shift amount to get the NVMe-MI Send Receive supported
+ * @NVME_CTRL_OACS_VMS_SHIFT:  Shift amount to get the Virtualization Management supported
+ * @NVME_CTRL_OACS_DBCS_SHIFT: Shift amount to get the Doorbell Buffer Config supported
+ * @NVME_CTRL_OACS_GLSS_SHIFT: Shift amount to get the Get LBA Status supported
+ * @NVME_CTRL_OACS_CFLS_SHIFT: Shift amount to get the Command and Feature Lockdown supported
+ * @NVME_CTRL_OACS_HMLMS_SHIFT:Shift amount to get the Host Managed Live Migration support
+ * @NVME_CTRL_OACS_SSRS_MASK:  Mask to get the Security Send Receive supported
+ * @NVME_CTRL_OACS_FNVMS_MASK: Mask to get the Format NVM supported
+ * @NVME_CTRL_OACS_FWDS_MASK:  Mask to get the Firmware Download supported
+ * @NVME_CTRL_OACS_NMS_MASK:   Mask to get the Namespace Management supported
+ * @NVME_CTRL_OACS_DSTS_MASK:  Mask to get the Device Self-test supported
+ * @NVME_CTRL_OACS_DIRS_MASK:  Mask to get the Directives supported
+ * @NVME_CTRL_OACS_NSRS_MASK:  Mask to get the NVMe-MI Send Receive supported
+ * @NVME_CTRL_OACS_VMS_MASK:   Mask to get the Virtualization Management supported
+ * @NVME_CTRL_OACS_DBCS_MASK:  Mask to get the Doorbell Buffer Config supported
+ * @NVME_CTRL_OACS_GLSS_MASK:  Mask to get the Get LBA Status supported
+ * @NVME_CTRL_OACS_CFLS_MASK:  Mask to get the Command and Feature Lockdown supported
+ * @NVME_CTRL_OACS_HMLMS_MASK: Mask to get the Host Managed Live Migration support
  * @NVME_CTRL_OACS_SECURITY:   If set, then the controller supports the
  *			       Security Send and Security Receive commands.
  * @NVME_CTRL_OACS_FORMAT:     If set then the controller supports the Format
@@ -1956,22 +1980,62 @@ enum nvme_id_ctrl_mec {
  *			       Doorbell Buffer Config command.
  * @NVME_CTRL_OACS_LBA_STATUS: If set, then the controller supports the Get LBA
  *			       Status capability.
- * @NVME_CTRL_OACS_CMD_FEAT_LD: If set, then the controller supports the command
- *				and feature lockdown capability.
+ * @NVME_CTRL_OACS_CMD_FEAT_LD:If set, then the controller supports the command
+ *			       and feature lockdown capability.
+ * @NVME_CTRL_OACS_HMLM:       If set, then the controller supports the command
+ *			       and Host Managed Live Migration capability.
  */
 enum nvme_id_ctrl_oacs {
-	NVME_CTRL_OACS_SECURITY			= 1 << 0,
-	NVME_CTRL_OACS_FORMAT			= 1 << 1,
-	NVME_CTRL_OACS_FW			= 1 << 2,
-	NVME_CTRL_OACS_NS_MGMT			= 1 << 3,
-	NVME_CTRL_OACS_SELF_TEST		= 1 << 4,
-	NVME_CTRL_OACS_DIRECTIVES		= 1 << 5,
-	NVME_CTRL_OACS_NVME_MI			= 1 << 6,
-	NVME_CTRL_OACS_VIRT_MGMT		= 1 << 7,
-	NVME_CTRL_OACS_DBBUF_CFG		= 1 << 8,
-	NVME_CTRL_OACS_LBA_STATUS		= 1 << 9,
-	NVME_CTRL_OACS_CMD_FEAT_LD		= 1 << 10,
+	NVME_CTRL_OACS_SSRS_SHIFT		= 0,
+	NVME_CTRL_OACS_FNVMS_SHIFT		= 1,
+	NVME_CTRL_OACS_FWDS_SHIFT		= 2,
+	NVME_CTRL_OACS_NMS_SHIFT		= 3,
+	NVME_CTRL_OACS_DSTS_SHIFT		= 4,
+	NVME_CTRL_OACS_DIRS_SHIFT		= 5,
+	NVME_CTRL_OACS_NSRS_SHIFT		= 6,
+	NVME_CTRL_OACS_VMS_SHIFT		= 7,
+	NVME_CTRL_OACS_DBCS_SHIFT		= 8,
+	NVME_CTRL_OACS_GLSS_SHIFT		= 9,
+	NVME_CTRL_OACS_CFLS_SHIFT		= 10,
+	NVME_CTRL_OACS_HMLMS_SHIFT		= 11,
+	NVME_CTRL_OACS_SSRS_MASK		= 1,
+	NVME_CTRL_OACS_FNVMS_MASK		= 1,
+	NVME_CTRL_OACS_FWDS_MASK		= 1,
+	NVME_CTRL_OACS_NMS_MASK			= 1,
+	NVME_CTRL_OACS_DSTS_MASK		= 1,
+	NVME_CTRL_OACS_DIRS_MASK		= 1,
+	NVME_CTRL_OACS_NSRS_MASK		= 1,
+	NVME_CTRL_OACS_VMS_MASK			= 1,
+	NVME_CTRL_OACS_DBCS_MASK		= 1,
+	NVME_CTRL_OACS_GLSS_MASK		= 1,
+	NVME_CTRL_OACS_CFLS_MASK		= 1,
+	NVME_CTRL_OACS_HMLMS_MASK		= 1,
+	NVME_CTRL_OACS_SECURITY			= NVME_VAL(CTRL_OACS_SSRS),
+	NVME_CTRL_OACS_FORMAT			= NVME_VAL(CTRL_OACS_FNVMS),
+	NVME_CTRL_OACS_FW			= NVME_VAL(CTRL_OACS_FWDS),
+	NVME_CTRL_OACS_NS_MGMT			= NVME_VAL(CTRL_OACS_NMS),
+	NVME_CTRL_OACS_SELF_TEST		= NVME_VAL(CTRL_OACS_DSTS),
+	NVME_CTRL_OACS_DIRECTIVES		= NVME_VAL(CTRL_OACS_DIRS),
+	NVME_CTRL_OACS_NVME_MI			= NVME_VAL(CTRL_OACS_NSRS),
+	NVME_CTRL_OACS_VIRT_MGMT		= NVME_VAL(CTRL_OACS_VMS),
+	NVME_CTRL_OACS_DBBUF_CFG		= NVME_VAL(CTRL_OACS_DBCS),
+	NVME_CTRL_OACS_LBA_STATUS		= NVME_VAL(CTRL_OACS_GLSS),
+	NVME_CTRL_OACS_CMD_FEAT_LD		= NVME_VAL(CTRL_OACS_CFLS),
+	NVME_CTRL_OACS_HMLM			= NVME_VAL(CTRL_OACS_HMLMS),
 };
+
+#define NVME_CTRL_OACS_SSRS(oacs)	NVME_GET(CTRL_OACS_SSRS)
+#define NVME_CTRL_OACS_FNVMS(oacs)	NVME_GET(CTRL_OACS_FNVMS)
+#define NVME_CTRL_OACS_FWDS(oacs)	NVME_GET(CTRL_OACS_FWDS)
+#define NVME_CTRL_OACS_NMS_M(oacs)	NVME_GET(CTRL_OACS_NMS)
+#define NVME_CTRL_OACS_DSTS(oacs)	NVME_GET(CTRL_OACS_DSTS)
+#define NVME_CTRL_OACS_DIRS(oacs)	NVME_GET(CTRL_OACS_DIRS)
+#define NVME_CTRL_OACS_NSRS(oacs)	NVME_GET(CTRL_OACS_NSRS)
+#define NVME_CTRL_OACS_VMS_M(oacs)	NVME_GET(CTRL_OACS_VMS)
+#define NVME_CTRL_OACS_DBCS(oacs)	NVME_GET(CTRL_OACS_DBCS)
+#define NVME_CTRL_OACS_GLSS(oacs)	NVME_GET(CTRL_OACS_GLSS)
+#define NVME_CTRL_OACS_CFLS(oacs)	NVME_GET(CTRL_OACS_CFLS)
+#define NVME_CTRL_OACS_HMLMS(oacs)	NVME_GET(CTRL_OACS_HMLMS)
 
 /**
  * enum nvme_id_ctrl_frmw - Flags and values indicates capabilities regarding
