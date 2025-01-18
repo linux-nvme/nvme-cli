@@ -1968,17 +1968,17 @@ static void stdout_id_ctrl_oacs(__le16 ctrl_oacs)
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
 	__u16 rsvd = (oacs & 0xF000) >> 12;
 	__u16 hmlms = (oacs & 0x800) >> 11;
-	__u16 lock = (oacs & 0x400) >> 10;
-	__u16 glbas = (oacs & 0x200) >> 9;
-	__u16 dbc = (oacs & 0x100) >> 8;
-	__u16 vir = (oacs & 0x80) >> 7;
-	__u16 nmi = (oacs & 0x40) >> 6;
-	__u16 dir = (oacs & 0x20) >> 5;
-	__u16 sft = (oacs & 0x10) >> 4;
-	__u16 nsm = (oacs & 0x8) >> 3;
-	__u16 fwc = (oacs & 0x4) >> 2;
-	__u16 fmt = (oacs & 0x2) >> 1;
-	__u16 sec = oacs & 0x1;
+	__u16 lock = (oacs & NVME_CTRL_OACS_CMD_FEAT_LD) >> 10;
+	__u16 glbas = (oacs & NVME_CTRL_OACS_LBA_STATUS) >> 9;
+	__u16 dbc = (oacs & NVME_CTRL_OACS_DBBUF_CFG) >> 8;
+	__u16 vir = (oacs & NVME_CTRL_OACS_VIRT_MGMT) >> 7;
+	__u16 nmi = (oacs & NVME_CTRL_OACS_NVME_MI) >> 6;
+	__u16 dir = (oacs & NVME_CTRL_OACS_DIRECTIVES) >> 5;
+	__u16 sft = (oacs & NVME_CTRL_OACS_SELF_TEST) >> 4;
+	__u16 nsm = (oacs & NVME_CTRL_OACS_NS_MGMT) >> 3;
+	__u16 fwc = (oacs & NVME_CTRL_OACS_FW) >> 2;
+	__u16 fmt = (oacs & NVME_CTRL_OACS_FORMAT) >> 1;
+	__u16 sec = oacs & NVME_CTRL_OACS_SECURITY;
 
 	if (rsvd)
 		printf(" [15:12] : %#x\tReserved\n", rsvd);
