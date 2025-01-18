@@ -2783,6 +2783,32 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
+static void ns_mgmt_show_error(struct nvme_dev *dev, int err, const char *cmd)
+{
+	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+
+	if (err < 0) {
+		nvme_show_error("%s namespace: %s", cmd, nvme_strerror(errno));
+		return;
+	}
+
+	nvme_show_init();
+
+	nvme_show_status(err);
+
+	ctrl = nvme_alloc(sizeof(*ctrl));
+	if (!ctrl)
+		return;
+
+	err = nvme_cli_identify_ctrl(dev, ctrl);
+	if (!err) {
+		if (!(le16_to_cpu(ctrl->oacs) & NVME_CTRL_OACS_NS_MGMT))
+			nvme_show_result("NS management and attachment not supported");
+	}
+
+	nvme_show_finish();
+}
+
 static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Delete the given namespace by "
@@ -2824,10 +2850,8 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	err = nvme_cli_ns_mgmt_delete(dev, cfg.namespace_id, nvme_cfg.timeout);
 	if (!err)
 		printf("%s: Success, deleted nsid:%d\n", cmd->name, cfg.namespace_id);
-	else if (err > 0)
-		nvme_show_status(err);
 	else
-		nvme_show_error("delete namespace: %s", nvme_strerror(errno));
+		ns_mgmt_show_error(dev, err, "delete");
 
 	return err;
 }
@@ -2890,10 +2914,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 
 	if (!err)
 		printf("%s: Success, nsid:%d\n", cmd->name, cfg.namespace_id);
-	else if (err > 0)
-		nvme_show_status(err);
 	else
-		nvme_show_perror(attach ? "attach namespace" : "detach namespace");
+		ns_mgmt_show_error(dev, err, attach ? "attach" : "detach");
 
 	return err;
 }
@@ -3261,10 +3283,8 @@ parse_lba:
 	err = nvme_cli_ns_mgmt_create(dev, data, &nsid, nvme_cfg.timeout, cfg.csi);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
-	else if (err > 0)
-		nvme_show_status(err);
 	else
-		nvme_show_error("create namespace: %s", nvme_strerror(errno));
+		ns_mgmt_show_error(dev, err, "create");
 
 	return err;
 }
