@@ -7435,6 +7435,23 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	return err;
 }
 
+static void io_cmd_show_error(struct nvme_dev *dev, int err, const char *cmd)
+{
+	if (err > 0) {
+		nvme_show_status(err);
+		return;
+	}
+
+	nvme_show_init();
+
+	nvme_show_error("%s: %s", cmd, nvme_strerror(errno));
+
+	if (is_chardev(dev))
+		nvme_show_result("char device provided but blkdev is needed, e.g. /dev/nvme0n1");
+
+	nvme_show_finish();
+}
+
 static int flush_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Commit data and metadata associated with\n"
@@ -7470,10 +7487,8 @@ static int flush_cmd(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	err = nvme_flush(dev_fd(dev), cfg.namespace_id);
-	if (err < 0)
-		nvme_show_error("flush: %s", nvme_strerror(errno));
-	else if (err != 0)
-		nvme_show_status(err);
+	if (err)
+		io_cmd_show_error(dev, err, "flush");
 	else
 		printf("NVMe Flush: success\n");
 
