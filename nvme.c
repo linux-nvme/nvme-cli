@@ -8153,10 +8153,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
-	if (err < 0) {
-		nvme_show_error("submit-io: %s", nvme_strerror(errno));
-	} else if (err) {
-		nvme_show_status(err);
+
+	if (err) {
+		io_cmd_show_error(dev, err, "submit-io");
 	} else {
 		if (!(opcode & 1) && write(dfd, (void *)buffer, buffer_size) < 0) {
 			nvme_show_error("write: %s: failed to write buffer to output file",
