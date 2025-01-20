@@ -3140,7 +3140,8 @@ enum nvme_id_ctrl_nvm_lbamqf {
  * @dmrl:	Dataset Management Ranges Limit
  * @dmrsl:	Dataset Management Range Size Limit
  * @dmsl:	Dataset Management Size Limit
- * @rsvd16:	Reserved
+ * @kpiocap:	Key Per I/O Capabilities
+ * @wzdsl:	Write Zeroes With Deallocate Size Limit
  * @aocs:	Admin Optional Command Support
  * @ver:	Version
  * @lbamqf:	LBA Migration Queue Format
@@ -3153,7 +3154,8 @@ struct nvme_id_ctrl_nvm {
 	__u8	dmrl;
 	__le32	dmrsl;
 	__le64	dmsl;
-	__u8	rsvd16[2];
+	__u8	kpiocap;
+	__u8	wzdsl;
 	__le16	aocs;
 	__le32	ver;
 	__u8	lbamqf;
