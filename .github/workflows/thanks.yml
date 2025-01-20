@@ -1,3 +1,4 @@
+---
 name: Comment on Merged PR
 
 on:
@@ -9,6 +10,9 @@ jobs:
   comment-on-merge:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
 
     steps:
       - name: Comment on merged PR
@@ -18,7 +22,7 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const comment = 'Thanks for your contribution!';
 
-            await github.issues.createComment({
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
