@@ -238,8 +238,6 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		obj_add_int(r, "nabspf", le16_to_cpu(ns->nabspf));
 		obj_add_int(r, "noiob", le16_to_cpu(ns->noiob));
 		obj_add_uint128(r, "nvmcap", nvmcap);
-		obj_add_int(r, "nsattr", ns->nsattr);
-		obj_add_int(r, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 
 		if (ns->nsfeat & 0x30) {
 			obj_add_int(r, "npwg", le16_to_cpu(ns->npwg));
@@ -253,12 +251,16 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		obj_add_int(r, "mssrl", le16_to_cpu(ns->mssrl));
 		obj_add_uint(r, "mcl", le32_to_cpu(ns->mcl));
 		obj_add_int(r, "msrc", ns->msrc);
+		obj_add_uint(r, "kpios", ns->kpios);
 	}
 
 	obj_add_int(r, "nulbaf", ns->nulbaf);
 
 	if (!cap_only) {
+		obj_add_uint(r, "kpiodaag", le32_to_cpu(ns->kpiodaag));
 		obj_add_uint(r, "anagrpid", le32_to_cpu(ns->anagrpid));
+		obj_add_int(r, "nsattr", ns->nsattr);
+		obj_add_int(r, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 		obj_add_int(r, "endgid", le16_to_cpu(ns->endgid));
 
 		memset(eui64, 0, sizeof(eui64_buf));
@@ -271,8 +273,8 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		for (i = 0; i < sizeof(ns->nguid); i++)
 			nguid += sprintf(nguid, "%02x", ns->nguid[i]);
 
-		obj_add_str(r, "eui64", eui64_buf);
 		obj_add_str(r, "nguid", nguid_buf);
+		obj_add_str(r, "eui64", eui64_buf);
 	}
 
 	obj_add_array(r, "lbafs", lbafs);

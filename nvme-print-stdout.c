@@ -2547,15 +2547,18 @@ static void stdout_id_ctrl_ofcs(__le16 ofcs)
 
 static void stdout_id_ns_nsfeat(__u8 nsfeat)
 {
-	__u8 rsvd = (nsfeat & 0xC0) >> 6;
+	__u8 optrperf = (nsfeat & 0x80) >> 7;
+	__u8 mam = (nsfeat & 0x40) >> 6;
 	__u8 optperf = (nsfeat & 0x30) >> 4;
 	__u8 uidreuse = (nsfeat & 0x8) >> 3;
 	__u8 dulbe = (nsfeat & 0x4) >> 2;
 	__u8 na = (nsfeat & 0x2) >> 1;
 	__u8 thin = nsfeat & 0x1;
 
-	if (rsvd)
-		printf("  [7:6] : %#x\tReserved\n", rsvd);
+	printf("  [7:7] : %#x\tNPRG, NPRA and NORS are %sSupported\n",
+		optrperf, optrperf ? "" : "Not ");
+	printf("  [6:6] : %#x\t%s Atomicity Mode applies to write operations\n",
+		mam, mam ? "Multiple" : "Single");
 	printf("  [5:4] : %#x\tNPWG, NPWA, %s%sNPDA, and NOWS are %sSupported\n",
 		optperf, ((optperf & 0x1) || (!optperf)) ? "NPDG, " : "",
 		((optperf & 0x2) || (!optperf)) ? "NPDGL, " : "", optperf ? "" : "Not ");
@@ -2647,13 +2650,16 @@ static void stdout_id_ns_dps(__u8 dps)
 
 static void stdout_id_ns_nmic(__u8 nmic)
 {
-	__u8 rsvd = (nmic & 0xFE) >> 1;
-	__u8 mp = nmic & 0x1;
+	__u8 rsvd = (nmic & 0xfc) >> 2;
+	__u8 disns = (nmic & 0x2) >> 1;
+	__u8 shrns = nmic & 0x1;
 
 	if (rsvd)
-		printf("  [7:1] : %#x\tReserved\n", rsvd);
+		printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\tNamespace is %sa Dispersed Namespace\n",
+		disns, disns ? "" : "Not ");
 	printf("  [0:0] : %#x\tNamespace Multipath %sCapable\n",
-		mp, mp ? "" : "Not ");
+		shrns, shrns ? "" : "Not ");
 	printf("\n");
 }
 
@@ -2732,6 +2738,21 @@ static void stdout_id_ns_dlfeat(__u8 dlfeat)
 	printf("\n");
 }
 
+static void stdout_id_ns_kpios(__u8 kpios)
+{
+	__u8 rsvd = (kpios & 0xfc) >> 2;
+	__u8 kpiosns = (kpios & 0x2) >> 1;
+	__u8 kpioens = kpios & 0x1;
+
+	if (rsvd)
+		printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\tKey Per I/O Capability %sSupported\n",
+		kpiosns, kpiosns ? "" : "Not ");
+	printf("  [0:0] : %#x\tKey Per I/O Capability %s\n", kpioens,
+		kpioens ? "Enabled" : "Disabled");
+	printf("\n");
+}
+
 static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 			 unsigned int lba_index, bool cap_only)
 {
@@ -2802,11 +2823,17 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
 		printf("mcl     : %u\n", le32_to_cpu(ns->mcl));
 		printf("msrc    : %u\n", ns->msrc);
+		printf("kpios   : %u\n", ns->kpios);
+		if (human)
+			stdout_id_ns_kpios(ns->kpios);
 	}
 	printf("nulbaf  : %u\n", ns->nulbaf);
 	if (!cap_only) {
+		printf("kpiodaag: %u\n", le32_to_cpu(ns->kpiodaag));
 		printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
 		printf("nsattr	: %u\n", ns->nsattr);
+		if (human)
+			stdout_id_ns_nsattr(ns->nsattr);
 		printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
 		printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
 
