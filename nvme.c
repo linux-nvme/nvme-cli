@@ -7740,6 +7740,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	const char *eds = "request extended data structure";
 
 	_cleanup_free_ struct nvme_resv_status *status = NULL;
+	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	nvme_print_flags_t flags;
 	int err, size;
@@ -7791,6 +7792,19 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		cfg.numd = 3;
 
 	size = (cfg.numd + 1) << 2;
+
+	ctrl = nvme_alloc(sizeof(*ctrl));
+	if (!ctrl)
+		return -ENOMEM;
+
+	err = nvme_cli_identify_ctrl(dev, ctrl);
+	if (err) {
+		nvme_show_error("identify-ctrl: %s", nvme_strerror(errno));
+		return -errno;
+	}
+
+	if (ctrl->ctratt & NVME_CTRL_CTRATT_128_ID)
+		cfg.eds = true;
 
 	status = nvme_alloc(size);
 	if (!status)
