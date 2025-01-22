@@ -454,11 +454,11 @@ static int check_arg_dev(int argc, char **argv)
 }
 
 static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags,
-		   struct argconfig_commandline_options *opts)
+		   struct argconfig_commandline_options *opts, bool blkdev)
 {
 	char *devname;
 	int ret;
-	__u32 nsid = get_nsid(opts);
+	__u32 nsid = blkdev ? get_nsid(opts) : NVME_NSID_NONE;
 
 	ret = check_arg_dev(argc, argv);
 	if (ret)
@@ -490,9 +490,8 @@ static int parse_args(int argc, char *argv[], const char *desc,
 	return 0;
 }
 
-int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
-		   const char *desc,
-		   struct argconfig_commandline_options *opts)
+static int parse_and_open_dev(struct nvme_dev **dev, int argc, char **argv, const char *desc,
+			      struct argconfig_commandline_options *opts, bool blkdev)
 {
 	int ret;
 
@@ -500,22 +499,28 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ret = get_dev(dev, argc, argv, O_RDONLY, opts);
+	ret = get_dev(dev, argc, argv, O_RDONLY, opts, blkdev);
 	if (ret < 0)
 		argconfig_print_help(desc, opts);
 
 	return ret;
 }
 
-int open_exclusive(struct nvme_dev **dev, int argc, char **argv,
-		   int ignore_exclusive, struct argconfig_commandline_options *opts)
+int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *desc,
+		   struct argconfig_commandline_options *opts)
+{
+	return parse_and_open_dev(dev, argc, argv, desc, opts, false);
+}
+
+int open_exclusive(struct nvme_dev **dev, int argc, char **argv, int ignore_exclusive,
+		   struct argconfig_commandline_options *opts, bool blkdev)
 {
 	int flags = O_RDONLY;
 
 	if (!ignore_exclusive)
 		flags |= O_EXCL;
 
-	return get_dev(dev, argc, argv, flags, opts);
+	return get_dev(dev, argc, argv, flags, opts, blkdev);
 }
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags)
@@ -2167,7 +2172,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *cmd, struct plugi
 		  OPT_FILE("data",          'd', &cfg.file,           data),
 		  OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -2251,7 +2256,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugi
 		  OPT_FILE("data",          'd', &cfg.file,           data),
 		  OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -6245,7 +6250,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err)
 		return err;
 
-	err = open_exclusive(&dev, argc, argv, cfg.force, opts);
+	err = open_exclusive(&dev, argc, argv, cfg.force, opts, false);
 	if (err) {
 		if (errno == EBUSY) {
 			fprintf(stderr, "Failed to open %s.\n", basename(argv[optind]));
@@ -6878,7 +6883,7 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		  OPT_BYTE("dir-type",      'T', &cfg.dtype,        dtype),
 		  OPT_SHRT("dir-spec",      'S', &cfg.dspec,        dspec_w_dtype));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7036,7 +7041,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		  OPT_SHRT("dir-spec",          'D', &cfg.dspec,             dspec_w_dtype),
 		  OPT_FLAG("namespace-zeroes",  'Z', &cfg.nsz,               nsz));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7182,7 +7187,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		  OPT_FLAG("idr",          'r', &cfg.idr,          idr),
 		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7343,7 +7348,7 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 		  OPT_SHRT("dir-spec",               'S', &cfg.dspec,		d_dspec),
 		  OPT_BYTE("format",                 'F', &cfg.format,		d_format));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7474,7 +7479,7 @@ static int flush_cmd(int argc, char **argv, struct command *cmd, struct plugin *
 	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7534,7 +7539,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		  OPT_BYTE("racqa",        'a', &cfg.racqa,        racqa),
 		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7610,7 +7615,7 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		  OPT_BYTE("cptpl",        'p', &cfg.cptpl,        cptpl),
 		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7692,7 +7697,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		  OPT_BYTE("rrela",        'a', &cfg.rrela,        rrela),
 		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7764,7 +7769,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		  OPT_FLAG("eds",           'e', &cfg.eds,            eds),
 		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_dump));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -7934,14 +7939,14 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_FLAG("force",               0, &cfg.force,             force));
 
 	if (opcode != nvme_cmd_write) {
-		err = parse_and_open(&dev, argc, argv, desc, opts);
+		err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 		if (err)
 			return err;
 	} else {
 		err = parse_args(argc, argv, desc, opts);
 		if (err)
 			return err;
-		err = open_exclusive(&dev, argc, argv, cfg.force, opts);
+		err = open_exclusive(&dev, argc, argv, cfg.force, opts, true);
 		if (err) {
 			if (errno == EBUSY) {
 				fprintf(stderr, "Failed to open %s.\n", basename(argv[optind]));
@@ -8257,7 +8262,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		  OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
 		  OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, true);
 	if (err)
 		return err;
 
@@ -8902,7 +8907,7 @@ static int passthru(int argc, char **argv, bool admin,
 		  OPT_FLAG("write",        'w', &cfg.write,        wr),
 		  OPT_FLAG("latency",      'T', &cfg.latency,      latency));
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open_dev(&dev, argc, argv, desc, opts, !admin);
 	if (err)
 		return err;
 
