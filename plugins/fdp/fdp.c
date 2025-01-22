@@ -551,3 +551,99 @@ out:
 
 	return err;
 }
+
+static int fdp_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Show, enable or disable FDP configuration";
+	const char *enable_conf_idx = "FDP configuration index to enable";
+	const char *endurance_group = "Endurance group ID";
+	const char *disable = "Disable current FDP configuration";
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int err = -1;
+	__u32 result;
+	bool enabling_conf_idx = false;
+	struct nvme_set_features_args setf_args = {
+		.args_size	= sizeof(setf_args),
+		.fd		= -1,
+		.fid		= NVME_FEAT_FID_FDP,
+		.save		= 1,
+		.nsid		= NVME_NSID_ALL,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+	};
+
+	struct config {
+		bool disable;
+		__u8 fdpcidx;
+		__u16 endgid;
+	};
+
+	struct config cfg = {
+		.disable = false,
+		.fdpcidx = 0,
+		.endgid = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SHRT("endgrp-id", 'e', &cfg.endgid, endurance_group),
+		OPT_BYTE("enable-conf-idx", 'c', &cfg.fdpcidx, enable_conf_idx),
+		OPT_FLAG("disable", 'd', &cfg.disable, disable),
+		OPT_INCR("verbose",      'v', &nvme_cfg.verbose, verbose),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	enabling_conf_idx = argconfig_parse_seen(opts, "enable-conf-idx");
+	if (enabling_conf_idx && cfg.disable) {
+		nvme_show_error("Cannot enable and disable at the same time");
+		return -EINVAL;
+	}
+
+	if (!enabling_conf_idx && !cfg.disable) {
+		struct nvme_get_features_args getf_args = {
+			.args_size	= sizeof(getf_args),
+			.fd		= dev_fd(dev),
+			.fid		= NVME_FEAT_FID_FDP,
+			.nsid		= NVME_NSID_ALL,
+			.sel		= NVME_GET_FEATURES_SEL_CURRENT,
+			.cdw11		= cfg.endgid,
+			.uuidx		= 0,
+			.data_len	= 0,
+			.data		= NULL,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= &result,
+		};
+
+		nvme_show_result("Endurance Group                               : %d", cfg.endgid);
+
+		err = nvme_get_features(&getf_args);
+		if (err) {
+			nvme_show_status(err);
+			return err;
+		}
+
+		nvme_show_result("Flexible Direct Placement Enable (FDPE)       : %s",
+				(result & 0x1) ? "Yes" : "No");
+		nvme_show_result("Flexible Direct Placement Configuration Index : %u",
+				(result >> 8) & 0xf);
+		return err;
+	}
+
+	setf_args.fd		= dev_fd(dev);
+	setf_args.cdw11		= cfg.endgid;
+	setf_args.cdw12		= cfg.fdpcidx << 8 | (!cfg.disable);
+
+	err = nvme_set_features(&setf_args);
+	if (err) {
+		nvme_show_status(err);
+		return err;
+	}
+	nvme_show_result("Success %s Endurance Group: %d, FDP configuration index: %d",
+	       (cfg.disable) ? "disabling" : "enabling", cfg.endgid, cfg.fdpcidx);
+	return err;
+}
