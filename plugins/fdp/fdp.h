@@ -15,7 +15,8 @@ PLUGIN(NAME("fdp", "Manage Flexible Data Placement enabled devices", NVME_VERSIO
 		ENTRY("events", "List events affecting reclaim units and media usage", fdp_events)
 		ENTRY("status", "Show reclaim unit handle status", fdp_status)
 		ENTRY("update", "Update a reclaim unit handle", fdp_update)
-		ENTRY("set-events", "Enabled or disable events", fdp_set_events)
+		ENTRY("set-events", "Enable or disable events", fdp_set_events)
+		ENTRY("feature", "Show, enable or disable FDP configuration", fdp_feature)
 	)
 );
 
