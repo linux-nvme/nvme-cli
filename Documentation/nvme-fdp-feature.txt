@@ -1,0 +1,56 @@
+nvme-fdp-feature(1)
+===================
+
+NAME
+----
+nvme-fdp-feature - Show or change Flexible Data Placement (FDP) Feature
+
+SYNOPSIS
+--------
+[verse]
+'nvme fdp' <device> [--endgrp-id=<NUM> | -e <NUM>]
+                [--enable-conf-idx=<NUM> | -c <NUM>]
+                [--disable | -d]
+                [--verbose | -v]
+
+DESCRIPTION
+-----------
+For the NVMe device given, configure and manage the Flexible Data Placement (FDP) feature.
+
+This command can be used to either show the current FDP feature configuration or change it.
+
+ If no `--enable-conf-idx` or `--disable` options are provided, the current configuration is
+displayed.
+
+If the `--enable-conf-idx` or `--disable` options are provided, configuration is changed
+accordingly. Device may refuse the change if there is a namespace.
+
+The <device> parameter is mandatory and must be a NVMe character device (ex: /dev/nvme0)
+
+OPTIONS
+-------
+-e <NUM>::
+--endgrp-id=<NUM>::
+    Specify the endurance group ID. This option is mandatory if device supports endurance groups.
+
+-c <NUM>::
+--enable-conf-idx=<NUM>::
+    Enable FDP feature with the specified configuration. The configuration index matches position
+    listed by nvme-fdp-config(1).
+
+-d::
+--disable::
+    Disable the current FDP feature configuration.
+
+-v::
+--verbose::
+    Increase verbosity of the output.
+
+SEE ALSO
+--------
+nvme-list-endgrp(1)
+nvme-fdp-config(1)
+
+NVME
+----
+Part of nvme-cli

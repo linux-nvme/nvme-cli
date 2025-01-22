@@ -32,6 +32,7 @@ adoc_sources = [
   'nvme-error-log',
   'nvme-fdp-configs',
   'nvme-fdp-events',
+  'nvme-fdp-feature',
   'nvme-fdp-set-events',
   'nvme-fdp-stats',
   'nvme-fdp-status',
