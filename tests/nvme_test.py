@@ -371,7 +371,7 @@ class TestNVMe(unittest.TestCase):
         """
         create_ns_cmd = f"{self.nvme_bin} create-ns {self.ctrl} " + \
             f"--nsze={str(nsze)} --ncap={str(ncap)} --flbas={str(flbas)} " + \
-            f"--dps={str(dps)}"
+            f"--dps={str(dps)} --verbose"
         return self.exec_cmd(create_ns_cmd)
 
     def create_and_validate_ns(self, nsid, nsze, ncap, flbas, dps):
@@ -408,7 +408,7 @@ class TestNVMe(unittest.TestCase):
                 - 0 on success, error code on failure.
         """
         attach_ns_cmd = f"{self.nvme_bin} attach-ns {self.ctrl} " + \
-            f"--namespace-id={str(nsid)} --controllers={ctrl_id}"
+            f"--namespace-id={str(nsid)} --controllers={ctrl_id} --verbose"
         err = subprocess.call(attach_ns_cmd,
                               shell=True,
                               stdout=subprocess.DEVNULL)
@@ -428,7 +428,7 @@ class TestNVMe(unittest.TestCase):
                 - 0 on success, error code on failure.
         """
         detach_ns_cmd = f"{self.nvme_bin} detach-ns {self.ctrl} " + \
-            f"--namespace-id={str(nsid)} --controllers={ctrl_id}"
+            f"--namespace-id={str(nsid)} --controllers={ctrl_id} --verbose"
         return subprocess.call(detach_ns_cmd,
                                shell=True,
                                stdout=subprocess.DEVNULL)
@@ -442,7 +442,7 @@ class TestNVMe(unittest.TestCase):
         """
         # delete the namespace
         delete_ns_cmd = f"{self.nvme_bin} delete-ns {self.ctrl} " + \
-            f"--namespace-id={str(nsid)}"
+            f"--namespace-id={str(nsid)} --verbose"
         err = subprocess.call(delete_ns_cmd,
                               shell=True,
                               stdout=subprocess.DEVNULL)
