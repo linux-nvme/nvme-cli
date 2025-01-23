@@ -394,7 +394,7 @@ class TestNVMe(unittest.TestCase):
                                   stdout=subprocess.DEVNULL)
         return err
 
-    def attach_ns(self, ctrl_id, ns_id):
+    def attach_ns(self, ctrl_id, nsid):
         """ Wrapper for attaching the namespace.
             - Args:
                 - ctrl_id : controller id to which namespace to be attached.
@@ -403,7 +403,7 @@ class TestNVMe(unittest.TestCase):
                 - 0 on success, error code on failure.
         """
         attach_ns_cmd = f"{self.nvme_bin} attach-ns {self.ctrl} " + \
-            f"--namespace-id={str(ns_id)} --controllers={ctrl_id}"
+            f"--namespace-id={str(nsid)} --controllers={ctrl_id}"
         err = subprocess.call(attach_ns_cmd,
                               shell=True,
                               stdout=subprocess.DEVNULL)
@@ -411,7 +411,7 @@ class TestNVMe(unittest.TestCase):
             # enumerate new namespace block device
             self.nvme_reset_ctrl()
             # check if new namespace block device exists
-            err = 0 if stat.S_ISBLK(os.stat(self.ns1).st_mode) else 1
+            err = 0 if stat.S_ISBLK(os.stat(self.ctrl + "n"  + str(nsid)).st_mode) else 1
         return err
 
     def detach_ns(self, ctrl_id, nsid):
