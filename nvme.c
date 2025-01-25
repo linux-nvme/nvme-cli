@@ -8167,10 +8167,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
-	if (err < 0) {
-		nvme_show_error("submit-io: %s", nvme_strerror(errno));
-	} else if (err) {
-		nvme_show_status(err);
+
+	if (err) {
+		io_cmd_show_error(dev, err, "submit-io");
 	} else {
 		if (!(opcode & 1) && write(dfd, (void *)buffer, buffer_size) < 0) {
 			nvme_show_error("write: %s: failed to write buffer to output file",
@@ -8830,6 +8829,22 @@ static void passthru_print_read_output(struct passthru_config cfg, void *data, i
 	}
 }
 
+static void admin_cmd_show_error(struct nvme_dev *dev, int err, const char *cmd)
+{
+	if (err < 0)
+		nvme_show_error("%s: %s", cmd, nvme_strerror(errno));
+	else
+		nvme_show_status(err);
+}
+
+static void passthru_show_error(struct nvme_dev *dev, int err, bool admin, const char *cmd)
+{
+	if (admin)
+		admin_cmd_show_error(dev, err, cmd);
+	else
+		io_cmd_show_error(dev, err, cmd);
+}
+
 static int passthru(int argc, char **argv, bool admin,
 		const char *desc, struct command *cmd)
 {
@@ -9034,11 +9049,9 @@ static int passthru(int argc, char **argv, bool admin,
 		       strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
 		       elapsed_utime(start_time, end_time));
 
-	if (err < 0) {
-		nvme_show_error("%s: %s", __func__, nvme_strerror(errno));
-	} else if (err) {
-		nvme_show_status(err);
-	} else  {
+	if (err) {
+		passthru_show_error(dev, err, admin, __func__);
+	} else {
 		fprintf(stderr, "%s Command %s is Success and result: 0x%08x\n", admin ? "Admin" : "IO",
 			strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific", result);
 		if (cfg.read)
