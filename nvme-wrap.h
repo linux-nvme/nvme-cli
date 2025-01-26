@@ -149,4 +149,7 @@ int nvme_cli_security_receive(struct nvme_dev *dev,
 int nvme_cli_get_log_mgmt_addr_list(struct nvme_dev *dev, __u32 len,
 				    struct nvme_mgmt_addr_list_log *ma_list);
 
+int nvme_cli_get_log_rotational_media_info(struct nvme_dev *dev, __u16 endgid, __u32 len,
+					   struct nvme_rotational_media_info_log *info);
+
 #endif /* _NVME_WRAP_H */
