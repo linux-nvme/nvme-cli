@@ -482,6 +482,10 @@ nvme_list_opts () {
 		"mgmt-addr-list-log")
 		opts+=" --verbose -v --output-format= -o --timeout= -t"
 			;;
+		"changed-alloc-cns-list-log")
+		opts+=" --output-format= -o --raw-binary -b  --verbose -v \
+			--timeout= -t"
+			;;
 		"version")
 		opts+=$NO_OPTS
 			;;
@@ -1672,7 +1676,8 @@ _nvme_subcmds () {
 		rpmb boot-part-log fid-support-effects-log \
 		supported-log-pages lockdown media-unit-stat-log \
 		supported-cap-config-log dim show-topology list-endgrp \
-		nvme-mi-recv nvme-mi-send get-reg set-reg mgmt-addr-list-log"
+		nvme-mi-recv nvme-mi-send get-reg set-reg mgmt-addr-list-log \
+		changed-alloc-ns-list-log"
 
 	# Add plugins:
 	for plugin in "${!_plugin_subcmds[@]}"; do
