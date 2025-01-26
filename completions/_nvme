@@ -110,6 +110,7 @@ _nvme () {
 	'set-reg:write and show the defined NVMe controller register'
 	'io-mgmt-recv:send an I/O management receive command'
 	'io-mgmt-send:send an I/O management send command'
+	'mgmt-addr-list-log:retrieve management address list log'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
