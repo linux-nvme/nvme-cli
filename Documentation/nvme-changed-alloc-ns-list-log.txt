@@ -1,0 +1,67 @@
+nvme-changed-alloc-ns-list-log(1)
+=================================
+
+NAME
+----
+nvme-changed-alloc-ns-list-log - Send NVMe Changed Allocated Namespace List
+log page request, returns result and log.
+
+SYNOPSIS
+--------
+[verse]
+'nvme changed-alloc-ns-list-log' <device> [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout>]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Changed Allocated Namespace List log page from an NVMe
+device and provides the returned structure.
+
+The <device> parameter is mandatory and must be a NVMe character device
+(ex: /dev/nvme0).
+
+On success, the returned Changed Allocated Namespace List log structure may
+be returned in one of several ways depending on the option flags; the
+structure may parsed by the program and printed in a readable format or
+the raw buffer may be printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Print the raw Changed Namespace List log buffer to stdout.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+* Print the Changed Allocated Namespace List Log page in a human readable format:
++
+------------
+# nvme changed-alloc-ns-list-log /dev/nvme0
+------------
++
+
+* Print the raw Changed Allocated Namespace List log to a file:
++
+------------
+# nvme changed-alloc-ns-list-log /dev/nvme0 --raw-binary > log.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite
