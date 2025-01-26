@@ -4638,6 +4638,21 @@ out:
 	json_print(r);
 }
 
+static void json_rotational_media_info_log(struct nvme_rotational_media_info_log *info)
+{
+	struct json_object *r = json_create_object();
+
+	obj_add_uint(r, "endgid", le16_to_cpu(info->endgid));
+	obj_add_uint(r, "numa", le16_to_cpu(info->numa));
+	obj_add_uint(r, "nrs", le16_to_cpu(info->nrs));
+	obj_add_uint(r, "spinc", le32_to_cpu(info->spinc));
+	obj_add_uint(r, "fspinc", le32_to_cpu(info->fspinc));
+	obj_add_uint(r, "ldc", le32_to_cpu(info->ldc));
+	obj_add_uint(r, "fldc", le32_to_cpu(info->fldc));
+
+	json_print(r);
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -4706,6 +4721,7 @@ static struct print_ops json_print_ops = {
 	.show_init			= json_show_init,
 	.show_finish			= json_show_finish,
 	.mgmt_addr_list_log		= json_mgmt_addr_list_log,
+	.rotational_media_info_log	= json_rotational_media_info_log,
 
 	/* libnvme tree print functions */
 	.list_item			= json_list_item,

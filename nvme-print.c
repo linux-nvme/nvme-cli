@@ -1497,3 +1497,9 @@ void nvme_show_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list, nvme_
 {
 	nvme_print(mgmt_addr_list_log, flags, ma_list);
 }
+
+void nvme_show_rotational_media_info_log(struct nvme_rotational_media_info_log *info,
+					 nvme_print_flags_t flags)
+{
+	nvme_print(rotational_media_info_log, flags, info);
+}

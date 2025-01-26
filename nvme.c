@@ -204,6 +204,7 @@ static const char *doper = "directive operation";
 static const char *dry = "show command instead of sending";
 static const char *dspec_w_dtype = "directive specification associated with directive type";
 static const char *dtype = "directive type";
+static const char *endgid = "Endurance Group Identifier (ENDGID)";
 static const char *force_unit_access = "force device to commit data before command completes";
 static const char *human_readable_directive = "show directive in readable format";
 static const char *human_readable_identify = "show identify in readable format";
@@ -3096,7 +3097,6 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *nmic = "multipath and sharing capabilities (NMIC)";
 	const char *anagrpid = "ANA Group Identifier (ANAGRPID)";
 	const char *nvmsetid = "NVM Set Identifier (NVMSETID)";
-	const char *endgid = "Endurance Group Identifier (ENDGID)";
 	const char *csi = "command set identifier (CSI)";
 	const char *lbstm = "logical block storage tag mask (LBSTM)";
 	const char *nphndls = "Number of Placement Handles (NPHNDLS)";
@@ -10087,6 +10087,53 @@ static int get_mgmt_addr_list_log(int argc, char **argv, struct command *cmd, st
 		nvme_show_status(err);
 	else
 		nvme_show_perror("management address list log");
+
+	return err;
+}
+
+static int get_rotational_media_info_log(int argc, char **argv, struct command *cmd,
+					 struct plugin *plugin)
+{
+	const char *desc = "Retrieve Rotational Media Information Log, show it";
+	nvme_print_flags_t flags;
+	int err = -1;
+
+	_cleanup_free_ struct nvme_rotational_media_info_log *info = NULL;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	struct config {
+		__u16 endgid;
+	};
+
+	struct config cfg = {
+		.endgid = 0,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_UINT("endg-id", 'e', &cfg.endgid, endgid));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	info = nvme_alloc(sizeof(*info));
+	if (!info)
+		return -ENOMEM;
+
+	err = nvme_cli_get_log_rotational_media_info(dev, cfg.endgid, sizeof(*info), info);
+	if (!err)
+		nvme_show_rotational_media_info_log(info, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		nvme_show_perror("rotational media info log");
 
 	return err;
 }

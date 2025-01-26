@@ -59,6 +59,7 @@ COMMAND_LIST(
 	ENTRY("media-unit-stat-log", "Retrieve the configuration and wear of media units, show it", get_media_unit_stat_log)
 	ENTRY("supported-cap-config-log", "Retrieve the list of Supported Capacity Configuration Descriptors", get_supp_cap_config_log)
 	ENTRY("mgmt-addr-list-log", "Retrieve Management Address List Log, show it", get_mgmt_addr_list_log)
+	ENTRY("rotational-media-info-log", "Retrieve Rotational Media Information Log, show it", get_rotational_media_info_log)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("get-property", "Get a property and show the resulting value", get_property)

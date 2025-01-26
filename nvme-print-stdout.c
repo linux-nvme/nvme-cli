@@ -5566,6 +5566,17 @@ out:
 		printf("All management address descriptors reserved\n");
 }
 
+static void stdout_rotational_media_info_log(struct nvme_rotational_media_info_log *info)
+{
+	printf("endgid: %u\n", le16_to_cpu(info->endgid));
+	printf("numa: %u\n", le16_to_cpu(info->numa));
+	printf("nrs: %u\n", le16_to_cpu(info->nrs));
+	printf("spinc: %u\n", le32_to_cpu(info->spinc));
+	printf("fspinc: %u\n", le32_to_cpu(info->fspinc));
+	printf("ldc: %u\n", le32_to_cpu(info->ldc));
+	printf("fldc: %u\n", le32_to_cpu(info->fldc));
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -5634,6 +5645,7 @@ static struct print_ops stdout_print_ops = {
 	.show_init			= NULL,
 	.show_finish			= NULL,
 	.mgmt_addr_list_log		= stdout_mgmt_addr_list_log,
+	.rotational_media_info_log	= stdout_rotational_media_info_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,
