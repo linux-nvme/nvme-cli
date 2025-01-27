@@ -1189,6 +1189,11 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
+	if (cfg.nqn && cfg.device) {
+		fprintf(stderr,
+			"Both device name [--device | -d] and NQN [--nqn | -n] are specified\n");
+		return -EINVAL;
+	}
 	if (!cfg.nqn && !cfg.device) {
 		fprintf(stderr,
 			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
