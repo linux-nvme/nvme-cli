@@ -1665,8 +1665,8 @@ static inline int nvme_mi_admin_get_log_error(nvme_mi_ctrl_t ctrl,
 					      struct nvme_error_log_page *err_log)
 {
 	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_ERROR,
-				 NVME_NSID_ALL, sizeof(*err_log) * nr_entries,
-				 err_log);
+					  NVME_NSID_ALL, sizeof(*err_log) * nr_entries,
+					  err_log);
 }
 
 /**
@@ -1691,7 +1691,7 @@ static inline int nvme_mi_admin_get_log_smart(nvme_mi_ctrl_t ctrl, __u32 nsid,
 					      struct nvme_smart_log *smart_log)
 {
 	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_SMART,
-				 nsid, sizeof(*smart_log), smart_log);
+					  nsid, sizeof(*smart_log), smart_log);
 }
 
 /**
@@ -1711,7 +1711,7 @@ static inline int nvme_mi_admin_get_log_fw_slot(nvme_mi_ctrl_t ctrl, bool rae,
 			struct nvme_firmware_slot *fw_log)
 {
 	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_FW_SLOT,
-				 NVME_NSID_ALL, sizeof(*fw_log), fw_log);
+					  NVME_NSID_ALL, sizeof(*fw_log), fw_log);
 }
 
 /**
@@ -1732,7 +1732,7 @@ static inline int nvme_mi_admin_get_log_changed_ns_list(nvme_mi_ctrl_t ctrl,
 							struct nvme_ns_list *ns_log)
 {
 	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_CHANGED_NS,
-				 NVME_NSID_ALL, sizeof(*ns_log), ns_log);
+					  NVME_NSID_ALL, sizeof(*ns_log), ns_log);
 }
 
 /**
@@ -1799,8 +1799,8 @@ static inline int nvme_mi_admin_get_log_device_self_test(nvme_mi_ctrl_t ctrl,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_mi_admin_get_log_create_telemetry_host_mcda(nvme_mi_ctrl_t ctrl,
-							      enum nvme_telemetry_da mcda,
-							      struct nvme_telemetry_log *log)
+								   enum nvme_telemetry_da mcda,
+								   struct nvme_telemetry_log *log)
 {
 	struct nvme_get_log_args args = {
 		.lpo = 0,
@@ -2203,7 +2203,7 @@ static inline int nvme_mi_admin_get_log_mi_cmd_supported_effects(nvme_mi_ctrl_t 
 								 struct nvme_mi_cmd_supported_effects_log *log)
 {
 	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS,
-				 NVME_NSID_NONE, sizeof(*log), log);
+					  NVME_NSID_NONE, sizeof(*log), log);
 }
 
 /**
