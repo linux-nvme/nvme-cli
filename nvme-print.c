@@ -740,11 +740,10 @@ void nvme_show_fw_log(struct nvme_firmware_slot *fw_log,
 	nvme_print(fw_log, flags, fw_log, devname);
 }
 
-void nvme_show_changed_ns_list_log(struct nvme_ns_list *log,
-				   const char *devname,
-				   nvme_print_flags_t flags)
+void nvme_show_changed_ns_list_log(struct nvme_ns_list *log, const char *devname,
+				   nvme_print_flags_t flags, bool alloc)
 {
-	nvme_print(ns_list_log, flags, log, devname);
+	nvme_print(ns_list_log, flags, log, devname, alloc);
 }
 
 void nvme_print_effects_log_pages(struct list_head *list,

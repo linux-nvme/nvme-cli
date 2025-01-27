@@ -214,6 +214,12 @@ int nvme_cli_get_log_changed_ns_list(struct nvme_dev *dev, bool rae,
 	return do_admin_op(get_log_changed_ns_list, dev, rae, ns_log);
 }
 
+int nvme_cli_get_log_changed_alloc_ns_list(struct nvme_dev *dev, bool rae, __u32 len,
+					   struct nvme_ns_list *ns_log)
+{
+	return do_admin_op(get_log_changed_alloc_ns_list, dev, rae, len, ns_log);
+}
+
 int nvme_cli_get_log_cmd_effects(struct nvme_dev *dev, enum nvme_csi csi,
 				 struct nvme_cmd_effects_log *effects_log)
 {
