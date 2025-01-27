@@ -58,7 +58,7 @@ struct print_ops {
 	void (*media_unit_stat_log)(struct nvme_media_unit_stat_log *mus);
 	void (*mi_cmd_support_effects_log)(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log, const char *devname);
 	void (*ns_list)(struct nvme_ns_list *ns_list);
-	void (*ns_list_log)(struct nvme_ns_list *log, const char *devname);
+	void (*ns_list_log)(struct nvme_ns_list *log, const char *devname, bool alloc);
 	void (*nvm_id_ns)(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid, struct nvme_id_ns *ns, unsigned int lba_index, bool cap_only);
 	void (*persistent_event_log)(void *pevent_log_info, __u8 action, __u32 size, const char *devname);
 	void (*predictable_latency_event_agg_log)(struct nvme_aggregate_predictable_lat_event *pea_log, __u64 log_entries, __u32 size, const char *devname);
@@ -174,8 +174,8 @@ void nvme_show_fw_log(struct nvme_firmware_slot *fw_log, const char *devname,
 	nvme_print_flags_t flags);
 void nvme_print_effects_log_pages(struct list_head *list,
 				  nvme_print_flags_t flags);
-void nvme_show_changed_ns_list_log(struct nvme_ns_list *log,
-	const char *devname, nvme_print_flags_t flags);
+void nvme_show_changed_ns_list_log(struct nvme_ns_list *log, const char *devname,
+				   nvme_print_flags_t flags, bool alloc);
 void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	__u16 group_id, const char *devname, nvme_print_flags_t flags);
 void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,

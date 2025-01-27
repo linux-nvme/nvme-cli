@@ -4034,8 +4034,7 @@ static void stdout_fw_log(struct nvme_firmware_slot *fw_log,
 	}
 }
 
-static void stdout_changed_ns_list_log(struct nvme_ns_list *log,
-				       const char *devname)
+static void stdout_changed_ns_list_log(struct nvme_ns_list *log, const char *devname, bool alloc)
 {
 	__u32 nsid;
 	int i;

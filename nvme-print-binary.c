@@ -233,8 +233,7 @@ static void binary_fw_log(struct nvme_firmware_slot *fw_log,
 	d_raw((unsigned char *)fw_log, sizeof(*fw_log));
 }
 
-static void binary_changed_ns_list_log(struct nvme_ns_list *log,
-				   const char *devname)
+static void binary_changed_ns_list_log(struct nvme_ns_list *log, const char *devname, bool alloc)
 {
 	d_raw((unsigned char *)log, sizeof(*log));
 }

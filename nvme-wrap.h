@@ -72,6 +72,8 @@ int nvme_cli_get_log_fw_slot(struct nvme_dev *dev, bool rae,
 			     struct nvme_firmware_slot *fw_log);
 int nvme_cli_get_log_changed_ns_list(struct nvme_dev *dev, bool rae,
 				     struct nvme_ns_list *ns_log);
+int nvme_cli_get_log_changed_alloc_ns_list(struct nvme_dev *dev, bool rae, __u32 len,
+					   struct nvme_ns_list *ns_log);
 int nvme_cli_get_log_cmd_effects(struct nvme_dev *dev, enum nvme_csi csi,
 				 struct nvme_cmd_effects_log *effects_log);
 int nvme_cli_get_log_device_self_test(struct nvme_dev *dev,

@@ -1354,10 +1354,9 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	return err;
 }
 
-static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_changed_ns_list_log(int argc, char **argv, bool alloc)
 {
-	const char *desc = "Retrieve Changed Namespaces log for the given device "
-		"in either decoded format (default) or binary.";
+	_cleanup_free_ char *desc = NULL;
 
 	_cleanup_free_ struct nvme_ns_list *changed_ns_list_log = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
@@ -1374,6 +1373,11 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_output));
+
+	if (asprintf(&desc, "Retrieve Changed %s Namespaces log for the given device %s",
+		     alloc ? "Allocated" : "Attached",
+		     "in either decoded format (default) or binary.") < 0)
+		desc = NULL;
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -1392,17 +1396,34 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 	if (!changed_ns_list_log)
 		return -ENOMEM;
 
-	err = nvme_cli_get_log_changed_ns_list(dev, true,
-					       changed_ns_list_log);
+	if (alloc)
+		err = nvme_cli_get_log_changed_alloc_ns_list(dev, true,
+							     sizeof(*changed_ns_list_log),
+							     changed_ns_list_log);
+	else
+		err = nvme_cli_get_log_changed_ns_list(dev, true,
+						       changed_ns_list_log);
 	if (!err)
-		nvme_show_changed_ns_list_log(changed_ns_list_log,
-					      dev->name, flags);
+		nvme_show_changed_ns_list_log(changed_ns_list_log, dev->name, flags, alloc);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		nvme_show_error("changed ns list log: %s", nvme_strerror(errno));
+		nvme_show_error("changed %s ns list log: %s", alloc ? "allocated" : "attached",
+				nvme_strerror(errno));
 
 	return err;
+}
+
+static int get_changed_attach_ns_list_log(int argc, char **argv, struct command *cmd,
+					  struct plugin *plugin)
+{
+	return get_changed_ns_list_log(argc, argv, false);
+}
+
+static int get_changed_alloc_ns_list_log(int argc, char **argv, struct command *cmd,
+					 struct plugin *plugin)
+{
+	return get_changed_ns_list_log(argc, argv, true);
 }
 
 static int get_pred_lat_per_nvmset_log(int argc, char **argv,
