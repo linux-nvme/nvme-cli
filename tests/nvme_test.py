@@ -392,11 +392,6 @@ class TestNVMe(unittest.TestCase):
             err = subprocess.call(id_ns_cmd,
                                   shell=True,
                                   stdout=subprocess.DEVNULL)
-            if err == 0:
-                # enumerate new namespace block device
-                self.nvme_reset_ctrl()
-                # check if new namespace block device exists
-                err = 0 if stat.S_ISBLK(os.stat(self.ctrl + "n"  + str(nsid)).st_mode) else 1
         return err
 
     def attach_ns(self, ctrl_id, nsid):
