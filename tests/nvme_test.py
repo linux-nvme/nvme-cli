@@ -31,6 +31,7 @@ import stat
 import subprocess
 import sys
 import unittest
+import time
 
 from nvme_test_logger import TestNVMeLogger
 
@@ -407,12 +408,18 @@ class TestNVMe(unittest.TestCase):
         err = subprocess.call(attach_ns_cmd,
                               shell=True,
                               stdout=subprocess.DEVNULL)
-        if err == 0:
-            # enumerate new namespace block device
-            self.nvme_reset_ctrl()
-            # check if new namespace block device exists
-            err = 0 if stat.S_ISBLK(os.stat(self.ctrl + "n"  + str(nsid)).st_mode) else 1
-        return err
+        if err != 0:
+            return err
+
+        # Try to find block device for 5 seconds
+        device_path = f"{self.ctrl}n{str(nsid)}"
+        stop_time = time.time() + 5
+        while time.time() < stop_time:
+            if os.path.exists(device_path) and stat.S_ISBLK(os.stat(device_path).st_mode):
+                return 0
+            time.sleep(0.1)
+
+        return 1
 
     def detach_ns(self, ctrl_id, nsid):
         """ Wrapper for detaching the namespace.
