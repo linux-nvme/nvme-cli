@@ -89,6 +89,7 @@ _nvme () {
 	'lockdown:submit a lockdown command'
 	'media-unit-stat-log:retrieve media unit status log pages details'
 	'supported-cap-config-log:retrieve the list of Supported Capacity Configuration Descriptors'
+	'rotational-media-info-log:retrieve rotational media information log'
 	'discover:send Get Log Page request to Discovery Controller'
 	'connect-all:discover NVMeoF subsystems and connect to them'
 	'connect:connect to NVMeoF subsystem'
@@ -2627,6 +2628,22 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme mgmt-addr-list-log" _mal_log
 			;;
+		(rotational-media-info-log)
+			local _rmi_log
+			_caplog=(
+			/dev/nvme':supply a device to use (required)'
+			--endg-id=':Endurance Group Identifier'
+			-e':alias of --endg-id'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme rotational-media-info-log" _rmi_log
+			;;
 		(version)
 			local _version
 			_version=(
@@ -2739,6 +2756,7 @@ _nvme () {
 			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
 			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
 			dir-send virt-mgmt rpmb version ocp solidigm dapustor mgmt-addr-list-log
+			rotational-media-info-log
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
