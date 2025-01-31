@@ -42,6 +42,13 @@ OPT_ARGS(revert_opts) = {
 	OPT_END()
 };
 
+OPT_ARGS(lock_opts) = {
+	OPT_FLAG("read-only", 'r', &sedopal_lock_ro,
+		 "Set locking range to read-only"),
+	OPT_FLAG("ask-key", 'k', &sedopal_ask_key,
+			"prompt for SED authentication key"),
+	OPT_END()
+};
 
 /*
  * Open the NVMe device specified on the command line. It must be the
@@ -130,7 +137,7 @@ static int sed_opal_lock(int argc, char **argv, struct command *cmd,
 	const char *desc = "Lock a SED device";
 	struct nvme_dev *dev;
 
-	err = sed_opal_open_device(&dev, argc, argv, desc, key_opts);
+	err = sed_opal_open_device(&dev, argc, argv, desc, lock_opts);
 	if (err)
 		return err;
 
@@ -150,7 +157,7 @@ static int sed_opal_unlock(int argc, char **argv, struct command *cmd,
 	const char *desc = "Unlock a SED device";
 	struct nvme_dev *dev;
 
-	err = sed_opal_open_device(&dev, argc, argv, desc, key_opts);
+	err = sed_opal_open_device(&dev, argc, argv, desc, lock_opts);
 	if (err)
 		return err;
 

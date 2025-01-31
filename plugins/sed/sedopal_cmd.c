@@ -248,8 +248,12 @@ int sedopal_cmd_initialize(int fd)
  */
 int sedopal_cmd_lock(int fd)
 {
+	int lock_state = OPAL_LK;
 
-	return sedopal_lock_unlock(fd, OPAL_LK);
+	if (sedopal_lock_ro)
+		lock_state = OPAL_RO;
+
+	return sedopal_lock_unlock(fd, lock_state);
 }
 
 /*
@@ -258,8 +262,12 @@ int sedopal_cmd_lock(int fd)
 int sedopal_cmd_unlock(int fd)
 {
 	int rc;
+	int lock_state = OPAL_RW;
 
-	rc = sedopal_lock_unlock(fd, OPAL_RW);
+	if (sedopal_lock_ro)
+		lock_state = OPAL_RO;
+
+	rc = sedopal_lock_unlock(fd, lock_state);
 
 	/*
 	 * If the unlock was successful, force a re-read of the
