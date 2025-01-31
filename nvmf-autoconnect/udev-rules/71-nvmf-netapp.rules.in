@@ -1,5 +1,5 @@
-# Enable round-robin for NetApp ONTAP and NetApp E-Series
-ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="NetApp ONTAP Controller", ATTR{iopolicy}="round-robin"
+# Set appropriate iopolicy for NetApp ONTAP and NetApp E-Series
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="NetApp ONTAP Controller", ATTR{iopolicy}="queue-depth"
 ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="NetApp E-Series", ATTR{iopolicy}="round-robin"
 
 # Set ctrl_loss_tmo to -1 for NetApp ONTAP NVMe/TCP
