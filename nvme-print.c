@@ -1502,3 +1502,9 @@ void nvme_show_rotational_media_info_log(struct nvme_rotational_media_info_log *
 {
 	nvme_print(rotational_media_info_log, flags, info);
 }
+
+void nvme_show_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log,
+				     nvme_print_flags_t flags)
+{
+	nvme_print(dispersed_ns_psub_log, flags, log);
+}

@@ -90,6 +90,7 @@ struct print_ops {
 	void (*show_finish)(void);
 	void (*mgmt_addr_list_log)(struct nvme_mgmt_addr_list_log *ma_log);
 	void (*rotational_media_info_log)(struct nvme_rotational_media_info_log *info);
+	void (*dispersed_ns_psub_log)(struct nvme_dispersed_ns_participating_nss_log *log);
 
 	/* libnvme tree print functions */
 	void (*list_item)(nvme_ns_t n);
@@ -335,4 +336,6 @@ void nvme_show_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list,
 				  nvme_print_flags_t flags);
 void nvme_show_rotational_media_info_log(struct nvme_rotational_media_info_log *info,
 					 nvme_print_flags_t flags);
+void nvme_show_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log,
+				     nvme_print_flags_t flags);
 #endif /* NVME_PRINT_H */

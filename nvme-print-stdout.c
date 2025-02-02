@@ -5603,6 +5603,18 @@ static void stdout_rotational_media_info_log(struct nvme_rotational_media_info_l
 	printf("fldc: %u\n", le32_to_cpu(info->fldc));
 }
 
+static void stdout_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log)
+{
+	__u64 numpsub = le64_to_cpu(log->numpsub);
+	__u64 i;
+
+	printf("genctr: %"PRIu64"\n", le64_to_cpu(log->genctr));
+	printf("numpsub: %"PRIu64"\n", (uint64_t)numpsub);
+	for (i = 0; i < numpsub; i++)
+		printf("participating_nss %"PRIu64": %-.*s\n", (uint64_t)i, NVME_NQN_LENGTH,
+		       &log->participating_nss[i * NVME_NQN_LENGTH]);
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -5672,6 +5684,7 @@ static struct print_ops stdout_print_ops = {
 	.show_finish			= NULL,
 	.mgmt_addr_list_log		= stdout_mgmt_addr_list_log,
 	.rotational_media_info_log	= stdout_rotational_media_info_log,
+	.dispersed_ns_psub_log		= stdout_dispersed_ns_psub_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,
