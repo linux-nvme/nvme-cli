@@ -316,6 +316,11 @@ static void binary_rotational_media_info_log(struct nvme_rotational_media_info_l
 	d_raw((unsigned char *)info, sizeof(*info));
 }
 
+static void binary_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log)
+{
+	d_raw((unsigned char *)log, sizeof(*log));
+}
+
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= binary_ana_log,
@@ -384,6 +389,7 @@ static struct print_ops binary_print_ops = {
 	.show_finish			= NULL,
 	.mgmt_addr_list_log		= binary_mgmt_addr_list_log,
 	.rotational_media_info_log	= binary_rotational_media_info_log,
+	.dispersed_ns_psub_log		= binary_dispersed_ns_psub_log,
 
 	/* libnvme tree print functions */
 	.list_item			= NULL,

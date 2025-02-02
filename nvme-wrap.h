@@ -154,4 +154,7 @@ int nvme_cli_get_log_mgmt_addr_list(struct nvme_dev *dev, __u32 len,
 int nvme_cli_get_log_rotational_media_info(struct nvme_dev *dev, __u16 endgid, __u32 len,
 					   struct nvme_rotational_media_info_log *info);
 
+int nvme_cli_get_log_dispersed_ns_participating_nss(struct nvme_dev *dev, __u32 nsid, __u32 len,
+	struct nvme_dispersed_ns_participating_nss_log *log);
+
 #endif /* _NVME_WRAP_H */

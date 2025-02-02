@@ -4657,6 +4657,26 @@ static void json_rotational_media_info_log(struct nvme_rotational_media_info_log
 	json_print(r);
 }
 
+static void json_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log)
+{
+	struct json_object *r = json_create_object();
+	__u64 numpsub = le64_to_cpu(log->numpsub);
+	__u64 i;
+	char json_str[STR_LEN];
+	char psub[NVME_NQN_LENGTH + 1];
+
+	obj_add_uint64(r, "genctr", le64_to_cpu(log->genctr));
+	obj_add_uint64(r, "numpsub", numpsub);
+	for (i = 0; i < numpsub; i++) {
+		snprintf(json_str, sizeof(json_str), "participating_nss %"PRIu64"", (uint64_t)i);
+		snprintf(psub, sizeof(psub), "%-.*s", NVME_NQN_LENGTH,
+			 &log->participating_nss[i * NVME_NQN_LENGTH]);
+		obj_add_str(r, json_str, psub);
+	}
+
+	json_print(r);
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -4726,6 +4746,7 @@ static struct print_ops json_print_ops = {
 	.show_finish			= json_show_finish,
 	.mgmt_addr_list_log		= json_mgmt_addr_list_log,
 	.rotational_media_info_log	= json_rotational_media_info_log,
+	.dispersed_ns_psub_log		= json_dispersed_ns_psub_log,
 
 	/* libnvme tree print functions */
 	.list_item			= json_list_item,

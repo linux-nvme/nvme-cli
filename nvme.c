@@ -10165,6 +10165,94 @@ static int get_rotational_media_info_log(int argc, char **argv, struct command *
 	return err;
 }
 
+static int get_dispersed_ns_psub(struct nvme_dev *dev, __u32 nsid,
+				 struct nvme_dispersed_ns_participating_nss_log **logp)
+{
+	int err;
+	__u64 header_len = sizeof(**logp);
+	__u64 psub_list_len;
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS,
+		.nsid = nsid,
+		.lpo = header_len,
+	};
+	struct nvme_dispersed_ns_participating_nss_log *log = nvme_alloc(header_len);
+
+	if (!log)
+		return -ENOMEM;
+
+	err = nvme_cli_get_log_dispersed_ns_participating_nss(dev, nsid, header_len, log);
+	if (err)
+		goto err_free;
+
+	psub_list_len = le64_to_cpu(log->numpsub) * NVME_NQN_LENGTH;
+
+	log = nvme_realloc(log, header_len + psub_list_len);
+	if (!log) {
+		err = -ENOMEM;
+		goto err_free;
+	}
+
+	args.log = log->participating_nss,
+	args.len = psub_list_len;
+
+	err = nvme_cli_get_log_page(dev, NVME_LOG_PAGE_PDU_SIZE, &args);
+	if (err)
+		goto err_free;
+
+	*logp = log;
+	return 0;
+
+err_free:
+	free(log);
+	return err;
+}
+
+static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct command *cmd,
+						  struct plugin *plugin)
+{
+	const char *desc = "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it";
+	nvme_print_flags_t flags;
+	int err;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	_cleanup_free_ struct nvme_dispersed_ns_participating_nss_log *log = NULL;
+
+	struct config {
+		__u32 namespace_id;
+	};
+
+	struct config cfg = {
+		.namespace_id = 1,
+	};
+
+	NVME_ARGS(opts, OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	err = get_dispersed_ns_psub(dev, cfg.namespace_id, &log);
+	if (!err)
+		nvme_show_dispersed_ns_psub_log(log, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		nvme_show_perror("dispersed ns participating nss log");
+
+	return err;
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;
