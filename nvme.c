@@ -2829,26 +2829,37 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static void ns_mgmt_show_error(struct nvme_dev *dev, int err, const char *cmd)
+static bool is_ns_mgmt_support(struct nvme_dev *dev)
 {
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+	int err;
 
+	_cleanup_free_ struct nvme_id_ctrl *ctrl = nvme_alloc(sizeof(*ctrl));
+
+	if (ctrl)
+		return false;
+
+	err = nvme_cli_identify_ctrl(dev, ctrl);
+	if (err)
+		return false;
+
+	return le16_to_cpu(ctrl->oacs) & NVME_CTRL_OACS_NS_MGMT;
+}
+
+static void ns_mgmt_show_status(struct nvme_dev *dev, int err, char *cmd, __u32 nsid)
+{
 	if (err < 0) {
-		nvme_show_error("%s namespace: %s", cmd, nvme_strerror(errno));
+		nvme_show_error("%s: %s", cmd, nvme_strerror(errno));
 		return;
 	}
 
 	nvme_show_init();
 
-	nvme_show_status(err);
-
-	ctrl = nvme_alloc(sizeof(*ctrl));
-	if (!ctrl)
-		return;
-
-	err = nvme_cli_identify_ctrl(dev, ctrl);
 	if (!err) {
-		if (!(le16_to_cpu(ctrl->oacs) & NVME_CTRL_OACS_NS_MGMT))
+		nvme_show_key_value(cmd, "success");
+		nvme_show_key_value("nsid", "%d", nsid);
+	} else {
+		nvme_show_status(err);
+		if (!is_ns_mgmt_support(dev))
 			nvme_show_result("NS management and attachment not supported");
 	}
 
@@ -2901,10 +2912,7 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	err = nvme_cli_ns_mgmt_delete(dev, cfg.namespace_id, nvme_cfg.timeout);
-	if (!err)
-		printf("%s: Success, deleted nsid:%d\n", cmd->name, cfg.namespace_id);
-	else
-		ns_mgmt_show_error(dev, err, "delete");
+	ns_mgmt_show_status(dev, err, cmd->name, cfg.namespace_id);
 
 	return err;
 }
@@ -2986,10 +2994,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		err = nvme_cli_ns_detach_ctrls(dev, cfg.namespace_id,
 					       cntlist);
 
-	if (!err)
-		printf("%s: Success, nsid:%d\n", cmd->name, cfg.namespace_id);
-	else
-		ns_mgmt_show_error(dev, err, attach ? "attach" : "detach");
+	ns_mgmt_show_status(dev, err, cmd->name, cfg.namespace_id);
 
 	return err;
 }
@@ -3369,10 +3374,7 @@ parse_lba:
 		data->phndl[i] = cpu_to_le16(phndl[i]);
 
 	err = nvme_cli_ns_mgmt_create(dev, data, &nsid, nvme_cfg.timeout, cfg.csi);
-	if (!err)
-		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
-	else
-		ns_mgmt_show_error(dev, err, "create");
+	ns_mgmt_show_status(dev, err, cmd->name, nsid);
 
 	return err;
 }
