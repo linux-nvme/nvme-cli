@@ -5705,6 +5705,16 @@ static void stdout_perror(const char *msg, va_list ap)
 	perror(error);
 }
 
+static void stdout_key_value(const char *key, const char *val, va_list ap)
+{
+	_cleanup_free_ char *value = NULL;
+
+	if (vasprintf(&value, val, ap) < 0)
+		value = NULL;
+
+	printf("%s: %s\n", key, value ? value : "Could not allocate string");
+}
+
 static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 {
 	int i;
@@ -6052,6 +6062,7 @@ static struct print_ops stdout_print_ops = {
 	.show_perror			= stdout_perror,
 	.show_status			= stdout_status,
 	.show_error_status		= stdout_error_status,
+	.show_key_value			= stdout_key_value,
 };
 
 struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags)

@@ -4900,6 +4900,20 @@ static void json_output_perror(const char *msg, va_list ap)
 	json_output_object(r);
 }
 
+static void json_output_key_value(const char *key, const char *val, va_list ap)
+{
+	struct json_object *r = json_r ? json_r : json_create_object();
+
+	_cleanup_free_ char *value = NULL;
+
+	if (vasprintf(&value, val, ap) < 0)
+		value = NULL;
+
+	obj_add_str(r, key, value ? value : "Could not allocate string");
+
+	obj_print(r);
+}
+
 void json_show_init(void)
 {
 	json_r = json_create_object();
@@ -5264,6 +5278,7 @@ static struct print_ops json_print_ops = {
 	.show_perror			= json_output_perror,
 	.show_status			= json_output_status,
 	.show_error_status		= json_output_error_status,
+	.show_key_value			= json_output_key_value,
 };
 
 struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags)

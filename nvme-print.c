@@ -1586,6 +1586,22 @@ void nvme_show_perror(const char *msg, ...)
 	va_end(ap);
 }
 
+void nvme_show_key_value(const char *key, const char *val, ...)
+{
+	struct print_ops *ops = nvme_print_ops(NORMAL);
+	va_list ap;
+
+	va_start(ap, val);
+
+	if (nvme_is_output_format_json())
+		ops = nvme_print_ops(JSON);
+
+	if (ops && ops->show_key_value)
+		ops->show_key_value(key, val, ap);
+
+	va_end(ap);
+}
+
 void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
 			     nvme_print_flags_t flags)
 {

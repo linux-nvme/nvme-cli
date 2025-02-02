@@ -111,6 +111,7 @@ struct print_ops {
 	void (*show_perror)(const char *msg, va_list ap);
 	void (*show_status)(int status);
 	void (*show_error_status)(int status, const char *msg, va_list ap);
+	void (*show_key_value)(const char *key, const char *val, va_list ap);
 
 	nvme_print_flags_t flags;
 };
@@ -334,6 +335,7 @@ void nvme_show_perror(const char *msg, ...);
 void nvme_show_error_status(int status, const char *msg, ...);
 void nvme_show_init(void);
 void nvme_show_finish(void);
+void nvme_show_key_value(const char *key, const char *value, ...);
 bool nvme_is_fabrics_reg(int offset);
 bool nvme_is_fabrics_optional_reg(int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);
