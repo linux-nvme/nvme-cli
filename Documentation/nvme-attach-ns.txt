@@ -18,11 +18,14 @@ For the NVMe device given, sends the nvme namespace attach command for
 the provided namespace identifier, attaching to the provided list of
 controller identifiers.
 
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0) but
+not a namespace block device (ex: /dev/nvme0n1).
+
 OPTIONS
 -------
 -n <nsid>::
 --namespace-id=<nsid>::
-	The namespace identifier to attach.
+	The namespace identifier to attach but not attached already.
 
 -c <ctrl-list,>::
 -controllers=<ctrl-list,>::
