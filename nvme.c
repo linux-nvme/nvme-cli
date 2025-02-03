@@ -2928,6 +2928,12 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	if (err)
 		return err;
 
+	if (is_blkdev(dev)) {
+		nvme_show_error("%s: a block device opened (dev: %s, nsid: %d)", cmd->name,
+				dev->name, cfg.namespace_id);
+		return -EINVAL;
+	}
+
 	if (!cfg.namespace_id) {
 		nvme_show_error("%s: namespace-id parameter required", cmd->name);
 		return -EINVAL;
