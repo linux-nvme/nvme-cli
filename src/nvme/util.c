@@ -53,6 +53,10 @@ static inline __u8 nvme_generic_status_to_errno(__u16 status)
 	case NVME_SC_PRP_INVALID_OFFSET:
 	case NVME_SC_CMB_INVALID_USE:
 	case NVME_SC_KAT_INVALID:
+	case NVME_SC_INVALID_KEY_TAG:
+	case NVME_SC_INCORRECT_KEY:
+	case NVME_SC_INVALID_VALUE_SIZE:
+	case NVME_SC_INVALID_KEY_SIZE:
 		return EINVAL;
 	case NVME_SC_CMDID_CONFLICT:
 		return EADDRINUSE;
@@ -228,11 +232,20 @@ static const char * const generic_status[] = {
 	[NVME_SC_TRAN_TPORT_ERROR]		  = "Transient Transport Error: A transient transport error was detected",
 	[NVME_SC_PROHIBITED_BY_CMD_AND_FEAT]	  = "Command Prohibited by Command and Feature Lockdown: The command was aborted due to command execution being prohibited by the Command and Feature Lockdown",
 	[NVME_SC_ADMIN_CMD_MEDIA_NOT_READY]	  = "Admin Command Media Not Ready: The Admin command requires access to media and the media is not ready",
+	[NVME_SC_INVALID_KEY_TAG]		  = "The command was aborted due to an invalid KEYTAG field value",
+	[NVME_SC_HOST_DISPERSED_NS_NOT_ENABLED]	  = "The command is prohibited while the Host Disperesed Namespace Support (HDISNS) field is not set to 1h in the Host Behavior Support feature",
+	[NVME_SC_HOST_ID_NOT_INITIALIZED]	  = "Host Identifier Not Initialized",
+	[NVME_SC_INCORRECT_KEY]			  = "The command was aborted due to the key associated with the KEYTAG field being incorrect",
 	[NVME_SC_LBA_RANGE]			  = "LBA Out of Range: The command references an LBA that exceeds the size of the namespace",
 	[NVME_SC_CAP_EXCEEDED]			  = "Capacity Exceeded: Execution of the command has caused the capacity of the namespace to be exceeded",
 	[NVME_SC_NS_NOT_READY]			  = "Namespace Not Ready: The namespace is not ready to be accessed",
 	[NVME_SC_RESERVATION_CONFLICT]		  = "Reservation Conflict: The command was aborted due to a conflict with a reservation held on the accessed namespace",
 	[NVME_SC_FORMAT_IN_PROGRESS]		  = "Format In Progress: A Format NVM command is in progress on the namespace",
+	[NVME_SC_INVALID_VALUE_SIZE]		  = "The value size is not valid",
+	[NVME_SC_INVALID_KEY_SIZE]		  = "The KV key size is not valid",
+	[NVME_SC_KV_KEY_NOT_EXISTS]		  = "The Store If Key Exists (SIKE) bit is set to '1' in the Store Option field and the KV key does not exists",
+	[NVME_SC_UNRECOVERED_ERROR]		  = "There was an unrecovered error when reading from the medium",
+	[NVME_SC_KEY_EXISTS]			  = "The Store If No Key Exists (SINKE) bit is set to '1' in the Store Option field and the KV key exists",
 };
 
 static const char * const cmd_spec_status[] = {

@@ -7649,6 +7649,14 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_ADMIN_CMD_MEDIA_NOT_READY: Admin Command Media Not Ready: The Admin
  *				      command requires access to media and
  *				      the media is not ready.
+ * @NVME_SC_INVALID_KEY_TAG:	      The command was aborted due to an invalid KEYTAG
+ *				      field value.
+ * @NVME_SC_HOST_DISPERSED_NS_NOT_ENABLED: The command is prohibited while the
+ *				      Host Disperesed Namespace Support (HDISNS) field is not
+ *				      set to 1h in the Host Behavior Support feature.
+ * @NVME_SC_HOST_ID_NOT_INITIALIZED:  Host Identifier Not Initialized.
+ * @NVME_SC_INCORRECT_KEY:	      The command was aborted due to the key associated
+ *				      with the KEYTAG field being incorrect.
  * @NVME_SC_FDP_DISABLED:	      Command is not allowed when
  *				      Flexible Data Placement is disabled.
  * @NVME_SC_INVALID_PLACEMENT_HANDLE_LIST: The Placement Handle List is invalid
@@ -7672,6 +7680,15 @@ struct nvme_mi_vpd_hdr {
  *				      namespace.
  * @NVME_SC_FORMAT_IN_PROGRESS:	      Format In Progress: A Format NVM command
  *				      is in progress on the namespace.
+ * @NVME_SC_INVALID_VALUE_SIZE:	      The value size is not valid.
+ * @NVME_SC_INVALID_KEY_SIZE:	      The KV key size is not valid.
+ * @NVME_SC_KV_KEY_NOT_EXISTS:	      The Store If Key Exists (SIKE) bit is set to
+ *				      '1' in the Store Option field and the KV key does not
+ *				      exists.
+ * @NVME_SC_UNRECOVERED_ERROR:	      There was an unrecovered error when reading
+ *				      from the meidum.
+ * @NVME_SC_KEY_EXISTS:		      The Store If No Key Exists (SINKE) bit is set to '1'
+ *				      in the Store Option field and the KV key exists.
  * @NVME_SC_CQ_INVALID:		      Completion Queue Invalid: The Completion
  *				      Queue identifier specified in the command
  *				      does not exist.
@@ -8029,6 +8046,10 @@ enum nvme_status_field {
 	NVME_SC_TRAN_TPORT_ERROR		= 0x22,
 	NVME_SC_PROHIBITED_BY_CMD_AND_FEAT	= 0x23,
 	NVME_SC_ADMIN_CMD_MEDIA_NOT_READY	= 0x24,
+	NVME_SC_INVALID_KEY_TAG			= 0x25,
+	NVME_SC_HOST_DISPERSED_NS_NOT_ENABLED	= 0x26,
+	NVME_SC_HOST_ID_NOT_INITIALIZED		= 0x27,
+	NVME_SC_INCORRECT_KEY			= 0x28,
 	NVME_SC_FDP_DISABLED			= 0x29,
 	NVME_SC_INVALID_PLACEMENT_HANDLE_LIST	= 0x2A,
 	NVME_SC_LBA_RANGE			= 0x80,
@@ -8036,6 +8057,11 @@ enum nvme_status_field {
 	NVME_SC_NS_NOT_READY			= 0x82,
 	NVME_SC_RESERVATION_CONFLICT		= 0x83,
 	NVME_SC_FORMAT_IN_PROGRESS		= 0x84,
+	NVME_SC_INVALID_VALUE_SIZE		= 0x85,
+	NVME_SC_INVALID_KEY_SIZE		= 0x86,
+	NVME_SC_KV_KEY_NOT_EXISTS		= 0x87,
+	NVME_SC_UNRECOVERED_ERROR		= 0x88,
+	NVME_SC_KEY_EXISTS			= 0x89,
 
 	/*
 	 * Command Specific Status Codes:
