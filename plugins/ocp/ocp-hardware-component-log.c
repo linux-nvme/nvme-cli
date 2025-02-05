@@ -219,7 +219,7 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	log->desc = calloc(1, args.len);
 	if (!log->desc) {
 		fprintf(stderr, "error: ocp: calloc: %s\n", strerror(errno));
-		return -1;
+		return -errno;
 	}
 
 	args.log = log->desc,
@@ -232,6 +232,7 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 	if (ret) {
 		print_info_error("error: ocp: failed to get log page (hwcomp: %02X, ret: %d)\n",
 				 OCP_LID_HWCOMP, ret);
+		free(log->desc);
 		return ret;
 	}
 #endif /* HWCOMP_DUMMY */
@@ -241,12 +242,10 @@ static int get_hwcomp_log_data(struct nvme_dev *dev, struct hwcomp_log *log)
 
 static int get_hwcomp_log(struct nvme_dev *dev, __u32 id, bool list)
 {
-	_cleanup_free_ __u8 *desc = NULL;
-
 	int ret;
 	nvme_print_flags_t fmt;
 	struct hwcomp_log log = {
-		.desc = (struct hwcomp_desc *)desc,
+		.desc = NULL,
 	};
 
 	ret = validate_output_format(nvme_cfg.output_format, &fmt);
@@ -263,6 +262,8 @@ static int get_hwcomp_log(struct nvme_dev *dev, __u32 id, bool list)
 	}
 
 	ocp_show_hwcomp_log(&log, id, list, fmt);
+
+	free(log.desc);
 
 	return 0;
 }
