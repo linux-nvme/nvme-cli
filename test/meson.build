@@ -23,6 +23,17 @@ if cxx_available
         dependencies: libnvme_dep,
         include_directories: [incdir, internal_incdir]
     )
+
+    test('cpp-dump', cpp)
+
+    misc = executable(
+        'test-misc',
+        ['misc.cc'],
+        dependencies: libnvme_dep,
+        include_directories: [incdir, internal_incdir]
+    )
+    test('cpp-misc', misc)
+
 endif
 
 register = executable(
