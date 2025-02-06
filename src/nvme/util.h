@@ -337,6 +337,16 @@ static inline void nvme_feature_decode_write_atomicity(__u32 value, bool *dn)
 #define NVME_FEAT_AE_PLA(v)		NVME_GET(v, FEAT_AE_PLA)
 #define NVME_FEAT_AE_LBAS(v)		NVME_GET(v, FEAT_AE_LBAS)
 #define NVME_FEAT_AE_EGA(v)		NVME_GET(v, FEAT_AE_EGA)
+#define NVME_FEAT_AE_NNSSHDN(v)		NVME_GET(v, FEAT_AE_NNSSHDN)
+#define NVME_FEAT_AE_TTHRY(v)		NVME_GET(v, FEAT_AE_TTHRY)
+#define NVME_FEAT_AE_RASSN(v)		NVME_GET(v, FEAT_AE_RASSN)
+#define NVME_FEAT_AE_RGRP0(v)		NVME_GET(v, FEAT_AE_RGRP0)
+#define NVME_FEAT_AE_ANSAN(v)		NVME_GET(v, FEAT_AE_ANSAN)
+#define NVME_FEAT_AE_ZDCN(v)		NVME_GET(v, FEAT_AE_ZDCN)
+#define NVME_FEAT_AE_PMDRLPCN(v)	NVME_GET(v, FEAT_AE_PMDRLPCN)
+#define NVME_FEAT_AE_ADLPCN(v)		NVME_GET(v, FEAT_AE_ADLPCN)
+#define NVME_FEAT_AE_HDLPCN(v)		NVME_GET(v, FEAT_AE_HDLPCN)
+#define NVME_FEAT_AE_DLPCN(v)		NVME_GET(v, FEAT_AE_DLPCN)
 
 static inline void nvme_feature_decode_async_event_config(__u32 value,
 			  __u8 *smart, bool *nan, bool *fw, bool *telem,
