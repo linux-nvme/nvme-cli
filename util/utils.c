@@ -138,7 +138,7 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp)
 {
-	char description_str[256] = "";
+	char description_str[1024] = "";
 	char temp_buffer[3] = { 0 };
 
 	for (size_t i = 0; i < data_size; ++i) {
@@ -146,10 +146,10 @@ void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t dat
 		strcat(description_str, temp_buffer);
 	}
 
-	if (fp)
-		fprintf(fp, "%s: %s\n", msg, description_str);
-	else
-		printf("%s: %s\n", msg, description_str);
+	if (!fp)
+		fp = stdout;
+
+	fprintf(fp, "%s: %s\n", msg, description_str);
 }
 
 void process_field_size_16(int offset, char *sfield, __u8 *buf, char *datastr)
