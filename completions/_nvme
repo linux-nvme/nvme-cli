@@ -111,6 +111,7 @@ _nvme () {
 	'io-mgmt-recv:send an I/O management receive command'
 	'io-mgmt-send:send an I/O management send command'
 	'mgmt-addr-list-log:retrieve management address list log'
+	'changed-ns-list-log:retrieve changed allocated namespaces log'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
@@ -2639,11 +2640,22 @@ _nvme () {
 			-v':alias for --verbose'
 			--output-format=':Output format: normal|json|binary'
 			-o ':alias for --output-format'
+			_describe -t commands "nvme rotational-media-info-log" _rmi_log
+		(changed-alloc-ns-list-log)
+			local _changed_alloc_ns_list_log
+			_changed_alloc_ns_list_log=(
+			/dev/nvme':supply a device to use (required)'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
 			--timeout=':value for timeout'
 			-t ':alias for --timeout'
 			)
 			_arguments '*:: :->subcmds'
-			_describe -t commands "nvme rotational-media-info-log" _rmi_log
+			_describe -t commands "nvme changed-alloc-ns-list-log options" _changed_alloc_ns_list_log
 			;;
 		(version)
 			local _version
@@ -2757,7 +2769,7 @@ _nvme () {
 			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
 			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
 			dir-send virt-mgmt rpmb version ocp solidigm dapustor mgmt-addr-list-log
-			rotational-media-info-log
+			rotational-media-info-log changed-alloc-ns-list-log
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
