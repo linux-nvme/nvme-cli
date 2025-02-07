@@ -300,48 +300,7 @@ static bool is_blkdev(struct nvme_dev *dev)
 	return S_ISBLK(dev->direct.stat.st_mode);
 }
 
-static bool is_nvme_dev(char *dev)
-{
-	int instance;
-	int head_instance;
-
-	return sscanf(basename(dev), "nvme%dn%d", &instance, &head_instance) == 1;
-}
-
-static __u32 get_nsid(struct argconfig_commandline_options *opts)
-{
-	__u32 *nsid = argconfig_get_value(opts, "namespace-id");
-
-	if (nsid && *nsid != NVME_NSID_ALL)
-		return *nsid;
-
-	return NVME_NSID_NONE;
-}
-
-static int open_blkdev_direct(char *dev, int flags, __u32 nsid)
-{
-	_cleanup_free_ char *blkdev = NULL;
-	int fd = -1;
-
-	if (is_nvme_dev(dev) && nsid) {
-		if (asprintf(&blkdev, "%sn%d", dev, nsid) < 0)
-			blkdev = NULL;
-	}
-
-	if (blkdev) {
-		fd = open(blkdev, flags);
-		print_debug("blkdev: %s, fd: %d\n", blkdev, fd);
-	}
-
-	if (fd < 0) {
-		fd = open(dev, flags);
-		print_debug("dev: %s, fd: %d\n", dev, fd);
-	}
-
-	return fd;
-}
-
-static int open_dev_direct(struct nvme_dev **devp, char *devstr, int flags, __u32 nsid)
+static int open_dev_direct(struct nvme_dev **devp, char *devstr, int flags)
 {
 	struct nvme_dev *dev;
 	int err;
@@ -352,7 +311,7 @@ static int open_dev_direct(struct nvme_dev **devp, char *devstr, int flags, __u3
 
 	dev->type = NVME_DEV_DIRECT;
 	dev->name = basename(devstr);
-	err = open_blkdev_direct(devstr, flags, nsid);
+	err = open(devstr, flags);
 	if (err < 0) {
 		nvme_show_perror(devstr);
 		goto err_free;
@@ -454,12 +413,10 @@ static int check_arg_dev(int argc, char **argv)
 	return 0;
 }
 
-static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags,
-		   struct argconfig_commandline_options *opts)
+static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags)
 {
 	char *devname;
 	int ret;
-	__u32 nsid = get_nsid(opts);
 
 	ret = check_arg_dev(argc, argv);
 	if (ret)
@@ -471,7 +428,7 @@ static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags,
 	if (!strncmp(devname, "mctp:", strlen("mctp:")))
 		ret = open_dev_mi_mctp(dev, devname);
 	else
-		ret = open_dev_direct(dev, devname, flags, nsid);
+		ret = open_dev_direct(dev, devname, flags);
 
 	return ret ? -errno : 0;
 }
@@ -501,7 +458,7 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ret = get_dev(dev, argc, argv, O_RDONLY, opts);
+	ret = get_dev(dev, argc, argv, O_RDONLY);
 	if (ret < 0)
 		argconfig_print_help(desc, opts);
 
@@ -509,14 +466,14 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv,
 }
 
 int open_exclusive(struct nvme_dev **dev, int argc, char **argv,
-		   int ignore_exclusive, struct argconfig_commandline_options *opts)
+		   int ignore_exclusive)
 {
 	int flags = O_RDONLY;
 
 	if (!ignore_exclusive)
 		flags |= O_EXCL;
 
-	return get_dev(dev, argc, argv, flags, opts);
+	return get_dev(dev, argc, argv, flags);
 }
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags)
@@ -6275,7 +6232,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err)
 		return err;
 
-	err = open_exclusive(&dev, argc, argv, cfg.force, opts);
+	err = open_exclusive(&dev, argc, argv, cfg.force);
 	if (err) {
 		if (errno == EBUSY) {
 			fprintf(stderr, "Failed to open %s.\n", basename(argv[optind]));
@@ -7970,7 +7927,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		err = parse_args(argc, argv, desc, opts);
 		if (err)
 			return err;
-		err = open_exclusive(&dev, argc, argv, cfg.force, opts);
+		err = open_exclusive(&dev, argc, argv, cfg.force);
 		if (err) {
 			if (errno == EBUSY) {
 				fprintf(stderr, "Failed to open %s.\n", basename(argv[optind]));
