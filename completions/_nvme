@@ -2591,7 +2591,7 @@ _nvme () {
 			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
-			_describe -t commands "nvme set-reg options" _io_mgmt_recv
+			_describe -t commands "nvme io-mgmt-recv-reg options" _io_mgmt_recv
 			;;
 		(io-mgmt-send)
 			local _io_mgmt_send
@@ -2615,7 +2615,7 @@ _nvme () {
 			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
-			_describe -t commands "nvme set-reg options" _io_mgmt_send
+			_describe -t commands "nvme io-mgmt-send options" _io_mgmt_send
 			;;
 		(mgmt-addr-list-log)
 			local _mal_log

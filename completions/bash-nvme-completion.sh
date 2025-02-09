@@ -465,7 +465,7 @@ nvme_list_opts () {
 			--nmimt= -m --nmd0= -0 --nmd1= -1 --input-file= -i"
 			;;
 		"get-reg")
-		opts+=" --offset, -O --human-readable -H --cap --vs --cmbloc \
+		opts+=" --offset= -O --human-readable -H --cap --vs --cmbloc \
 			--cmbsz --bpinfo --cmbsts --cmbebs --cmbswtp --crto \
 			--pmrcap --pmrsts --pmrebs --pmrswtp --intms --intmc \
 			--cc --csts --nssr --aqa --asq --acq --bprsel --bpmbl \
@@ -473,10 +473,20 @@ nvme_list_opts () {
 			--output-format -o --verbose -v --timeout= -t"
 			;;
 		"set-reg")
-		opts+=" --offset, -O --value= -V --mmio32 -m --intms= --intmc= \
+		opts+=" --offset= -O --value= -V --mmio32 -m --intms= --intmc= \
 			--cc= --csts= --nssr= --aqa= --asq= --acq= --bprsel= \
 			--bpmbl= --cmbmsc= --nssd= --pmrctl= --pmrmscl= \
-			--pmrmscu= --output-format= -o --verbose= -v \
+			--pmrmscu= --output-format= -o --verbose -v \
+			--timeout= -t"
+			;;
+		"io-mgmt-recv")
+		opts+=" --namespace-id= -n --mos= -s --mo= -m --data= -d \
+			--data-len= -l --output-format= -o --verbose -v \
+			--timeout= -t"
+			;;
+		"io-mgmt-send")
+		opts+=" --namespace-id= -n --mos= -s --mo= -m --data= -d \
+			--data-len= -l --output-format= -o --verbose -v \
 			--timeout= -t"
 			;;
 		"mgmt-addr-list-log")
@@ -1686,7 +1696,7 @@ _nvme_subcmds () {
 		supported-cap-config-log dim show-topology list-endgrp \
 		nvme-mi-recv nvme-mi-send get-reg set-reg mgmt-addr-list-log \
 		rotational-media-info-log changed-alloc-ns-list-log \
-		dispersed-ns-participating-nss-log"
+		io-mgmt-recv io-mgmt-send dispersed-ns-participating-nss-log"
 
 	# Add plugins:
 	for plugin in "${!_plugin_subcmds[@]}"; do
