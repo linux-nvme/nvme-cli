@@ -2545,6 +2545,16 @@ static void stdout_id_ctrl_ofcs(__le16 ofcs)
 
 }
 
+static void stdout_id_ns_size(uint64_t nsze, uint64_t ncap, uint64_t nuse)
+{
+	printf("nsze    : %#"PRIx64"\tTotal size in logical blocks\n",
+			le64_to_cpu(nsze));
+	printf("ncap    : %#"PRIx64"\tMaximum size in logical blocks\n",
+			le64_to_cpu(ncap));
+	printf("nuse    : %#"PRIx64"\tCurrent size in logical blocks\n",
+			le64_to_cpu(nuse));
+}
+
 static void stdout_id_ns_nsfeat(__u8 nsfeat)
 {
 	__u8 optrperf = (nsfeat & 0x80) >> 7;
@@ -2764,9 +2774,15 @@ static void stdout_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 	if (!cap_only) {
 		printf("NVME Identify Namespace %d:\n", nsid);
-		printf("nsze    : %#"PRIx64"\n", le64_to_cpu(ns->nsze));
-		printf("ncap    : %#"PRIx64"\n", le64_to_cpu(ns->ncap));
-		printf("nuse    : %#"PRIx64"\n", le64_to_cpu(ns->nuse));
+
+		if (human)
+			stdout_id_ns_size(ns->nsze, ns->ncap, ns->nuse);
+		else {
+			printf("nsze    : %#"PRIx64"\n", le64_to_cpu(ns->nsze));
+			printf("ncap    : %#"PRIx64"\n", le64_to_cpu(ns->ncap));
+			printf("nuse    : %#"PRIx64"\n", le64_to_cpu(ns->nuse));
+		}
+
 		printf("nsfeat  : %#x\n", ns->nsfeat);
 		if (human)
 			stdout_id_ns_nsfeat(ns->nsfeat);
