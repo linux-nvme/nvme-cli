@@ -2716,6 +2716,9 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		return -EINVAL;
 	}
 
+	if (argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
 	ns_list = nvme_alloc(sizeof(*ns_list));
 	if (!ns_list)
 		return -ENOMEM;

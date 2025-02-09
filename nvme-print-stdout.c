@@ -3640,11 +3640,18 @@ static void stdout_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 static void stdout_list_ns(struct nvme_ns_list *ns_list)
 {
-	int i;
+	int i, verbose = stdout_print_ops.flags & VERBOSE;
 
+	printf("NVME Namespace List:\n");
 	for (i = 0; i < 1024; i++) {
-		if (ns_list->ns[i])
-			printf("[%4u]:%#x\n", i, le32_to_cpu(ns_list->ns[i]));
+		if (ns_list->ns[i]) {
+			if (verbose)
+				printf("Identifier %4u: NSID %#x\n",
+						i, le32_to_cpu(ns_list->ns[i]));
+			else
+				printf("[%4u]:%#x\n",
+						i, le32_to_cpu(ns_list->ns[i]));
+		}
 	}
 }
 
