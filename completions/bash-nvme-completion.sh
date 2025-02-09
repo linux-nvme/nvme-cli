@@ -490,6 +490,10 @@ nvme_list_opts () {
 		opts+=" --output-format= -o --raw-binary -b  --verbose -v \
 			--timeout= -t"
 			;;
+		"dispersed-ns-participating-nss-log")
+		opts+=" --namespace-id= -n --verbose -v --output-format= -o \
+			--timeout= -t"
+			;;
 		"version")
 		opts+=$NO_OPTS
 			;;
@@ -1681,7 +1685,8 @@ _nvme_subcmds () {
 		supported-log-pages lockdown media-unit-stat-log \
 		supported-cap-config-log dim show-topology list-endgrp \
 		nvme-mi-recv nvme-mi-send get-reg set-reg mgmt-addr-list-log \
-		rotational-media-info-log changed-alloc-ns-list-log"
+		rotational-media-info-log changed-alloc-ns-list-log \
+		dispersed-ns-participating-nss-log"
 
 	# Add plugins:
 	for plugin in "${!_plugin_subcmds[@]}"; do
