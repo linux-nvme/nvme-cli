@@ -62,6 +62,7 @@ COMMAND_LIST(
 	ENTRY("rotational-media-info-log", "Retrieve Rotational Media Information Log, show it", get_rotational_media_info_log)
 	ENTRY("changed-alloc-ns-list-log", "Retrieve Changed Allocated Namespace List, show it", get_changed_alloc_ns_list_log)
 	ENTRY("dispersed-ns-participating-nss-log", "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it", get_dispersed_ns_participating_nss_log)
+	ENTRY("reachability-groups-log", "Retrieve Reachability Groups Log, show it", get_reachability_groups_log)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("get-property", "Get a property and show the resulting value", get_property)
