@@ -157,4 +157,6 @@ int nvme_cli_get_log_rotational_media_info(struct nvme_dev *dev, __u16 endgid, _
 int nvme_cli_get_log_dispersed_ns_participating_nss(struct nvme_dev *dev, __u32 nsid, __u32 len,
 	struct nvme_dispersed_ns_participating_nss_log *log);
 
+int nvme_cli_get_log_reachability_groups(struct nvme_dev *dev, bool rgo, bool rae, __u32 len,
+					 struct nvme_reachability_groups_log *log);
 #endif /* _NVME_WRAP_H */

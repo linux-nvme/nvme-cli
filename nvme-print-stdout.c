@@ -5638,6 +5638,23 @@ static void stdout_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_
 		       &log->participating_nss[i * NVME_NQN_LENGTH]);
 }
 
+static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log)
+{
+	__u16 i;
+	__u32 j;
+
+	printf("chngc: %"PRIu64"\n", le64_to_cpu(log->chngc));
+	printf("nrgd: %u\n", le16_to_cpu(log->nrgd));
+
+	for (i = 0; i < le16_to_cpu(log->nrgd); i++) {
+		printf("rgid: %u\n", le32_to_cpu(log->rgd[i].rgid));
+		printf("nnid: %u\n", le32_to_cpu(log->rgd[i].nnid));
+		printf("chngc: %"PRIu64"\n", le64_to_cpu(log->rgd[i].chngc));
+		for (j = 0; j < le32_to_cpu(log->rgd[i].nnid); j++)
+			printf("nsid%u: %u\n", j, le32_to_cpu(log->rgd[i].nsid[j]));
+	}
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -5708,6 +5725,7 @@ static struct print_ops stdout_print_ops = {
 	.mgmt_addr_list_log		= stdout_mgmt_addr_list_log,
 	.rotational_media_info_log	= stdout_rotational_media_info_log,
 	.dispersed_ns_psub_log		= stdout_dispersed_ns_psub_log,
+	.reachability_groups_log	= stdout_reachability_groups_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,

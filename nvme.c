@@ -10256,6 +10256,130 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 	return err;
 }
 
+static int get_log_offset(struct nvme_dev *dev, struct nvme_get_log_args *args, __u64 *offset,
+			  __u32 len, void **log)
+{
+	args->lpo = *offset,
+	args->log = *log + *offset,
+	args->len = len;
+	*offset += args->len;
+	*log = nvme_realloc(*log, *offset);
+	if (!*log)
+		return -ENOMEM;
+	return nvme_cli_get_log_page(dev, NVME_LOG_PAGE_PDU_SIZE, args);
+}
+
+static int get_reachability_group_desc(struct nvme_dev *dev, struct nvme_get_log_args *args,
+				       __u64 offset, struct nvme_reachability_groups_log **logp)
+{
+	int err;
+	struct nvme_reachability_groups_log *log = *logp;
+	__u16 i;
+	__u32 len;
+
+	for (i = 0; i < le16_to_cpu(log->nrgd); i++) {
+		len = sizeof(*log->rgd);
+		err = get_log_offset(dev, args, &offset, len, (void **)&log);
+		if (err)
+			goto err_free;
+		len = le32_to_cpu(log->rgd[i].nnid) * sizeof(*log->rgd[i].nsid);
+		err = get_log_offset(dev, args, &offset, len, (void **)&log);
+		if (err)
+			goto err_free;
+	}
+
+	*logp = log;
+	return 0;
+
+err_free:
+	free(log);
+	*logp = NULL;
+	return err;
+}
+
+static int get_reachability_groups(struct nvme_dev *dev, bool rgo, bool rae,
+				   struct nvme_reachability_groups_log **logp)
+{
+	int err;
+	struct nvme_reachability_groups_log *log;
+	__u64 log_len = sizeof(*log);
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_REACHABILITY_GROUPS,
+		.nsid = NVME_NSID_ALL,
+		.lsp = rgo,
+		.rae = rae,
+	};
+
+	log = nvme_alloc(log_len);
+	if (!log)
+		return -ENOMEM;
+
+	err = nvme_cli_get_log_reachability_groups(dev, rgo, rae, log_len, log);
+	if (err)
+		goto err_free;
+
+	err = get_reachability_group_desc(dev, &args, log_len, &log);
+	if (err)
+		goto err_free;
+
+	*logp = log;
+	return 0;
+
+err_free:
+	free(log);
+	return err;
+}
+
+static int get_reachability_groups_log(int argc, char **argv, struct command *cmd,
+				       struct plugin *plugin)
+{
+	const char *desc = "Retrieve Reachability Groups Log, show it";
+	const char *rgo = "Return Groups Only";
+	nvme_print_flags_t flags;
+	int err;
+
+	_cleanup_free_ struct nvme_reachability_groups_log *log = NULL;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	struct config {
+		bool rgo;
+		bool rae;
+	};
+
+	struct config cfg = {
+		.rgo = false,
+		.rae = false,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_FLAG("groups-only", 'g', &cfg.rgo, rgo),
+		  OPT_FLAG("rae", 'r', &cfg.rae, rae));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	err = get_reachability_groups(dev, cfg.rgo, cfg.rae, &log);
+	if (!err)
+		nvme_show_reachability_groups_log(log, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		nvme_show_perror("rotational media info log");
+
+	return err;
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;

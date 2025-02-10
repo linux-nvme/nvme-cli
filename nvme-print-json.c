@@ -4677,6 +4677,30 @@ static void json_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_ns
 	json_print(r);
 }
 
+static void json_reachability_groups_log(struct nvme_reachability_groups_log *log)
+{
+	struct json_object *r = json_create_object();
+	__u16 i;
+	__u32 j;
+	char json_str[STR_LEN];
+	struct json_object *rgd;
+
+	obj_add_uint64(r, "chngc", le64_to_cpu(log->chngc));
+	obj_add_uint(r, "nrgd", le16_to_cpu(log->nrgd));
+
+	for (i = 0; i < le16_to_cpu(log->nrgd); i++) {
+		snprintf(json_str, sizeof(json_str), "rgid: %u", le32_to_cpu(log->rgd[i].rgid));
+		rgd = json_create_object();
+		obj_add_uint(rgd, "nnid", le32_to_cpu(log->rgd[i].nnid));
+		obj_add_uint64(rgd, "chngc", le64_to_cpu(log->rgd[i].chngc));
+		for (j = 0; j < le32_to_cpu(log->rgd[i].nnid); j++)
+			obj_add_uint(rgd, "nnid", le32_to_cpu(log->rgd[i].nsid[j]));
+		obj_add_obj(r, json_str, rgd);
+	}
+
+	json_print(r);
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -4747,6 +4771,7 @@ static struct print_ops json_print_ops = {
 	.mgmt_addr_list_log		= json_mgmt_addr_list_log,
 	.rotational_media_info_log	= json_rotational_media_info_log,
 	.dispersed_ns_psub_log		= json_dispersed_ns_psub_log,
+	.reachability_groups_log	= json_reachability_groups_log,
 
 	/* libnvme tree print functions */
 	.list_item			= json_list_item,
