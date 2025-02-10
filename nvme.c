@@ -330,12 +330,12 @@ static int open_blkdev_direct(char *dev, int flags, __u32 nsid)
 
 	if (blkdev) {
 		fd = open(blkdev, flags);
-		print_info("blkdev: %s, fd: %d\n", blkdev, fd);
+		print_debug("blkdev: %s, fd: %d\n", blkdev, fd);
 	}
 
 	if (fd < 0) {
 		fd = open(dev, flags);
-		print_info("dev: %s, fd: %d\n", dev, fd);
+		print_debug("dev: %s, fd: %d\n", dev, fd);
 	}
 
 	return fd;
