@@ -440,5 +440,8 @@ int nvme_cli_get_log_mgmt_addr_list(struct nvme_dev *dev, __u32 len,
 int nvme_cli_get_log_rotational_media_info(struct nvme_dev *dev, __u16 endgid, __u32 len,
 					   struct nvme_rotational_media_info_log *info)
 {
-	return do_admin_op(get_log_rotational_media_info, dev, endgid, len, info);
+	if (dev->type == NVME_DEV_DIRECT)
+		return nvme_get_log_rotational_media_info(dev->direct.fd, endgid, len, info);
+
+	return -ENODEV;
 }
