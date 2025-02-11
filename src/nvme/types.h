@@ -5065,7 +5065,7 @@ struct nvme_reachability_groups_log {
  * @chngc:	Change Count
  * @rac:	Reachability Association Characteristics
  * @rsvd17:	Reserved
- * @ngid:	Reachability Group Identifier List
+ * @rgid:	Reachability Group Identifier List
  */
 struct nvme_reachability_association_desc {
 	__le32	rasid;
@@ -5073,7 +5073,7 @@ struct nvme_reachability_association_desc {
 	__le64	chngc;
 	__u8	rac;
 	__u8	rsvd17[15];
-	__le32	ngid[];
+	__le32	rgid[];
 };
 
 /**
