@@ -113,6 +113,7 @@ _nvme () {
 	'mgmt-addr-list-log:retrieve management address list log'
 	'changed-ns-list-log:retrieve changed allocated namespaces log'
 	'dispersed-ns-participating-nss-log:retrieve dispersed namespace participating NVM subsystems log'
+	'reachability-groups-log:retrieve reachability groups log'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
@@ -2673,6 +2674,24 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme dispersed-ns-participating-nss-log" _dns_psub_log
+			;;
+		(reachability-groups-log)
+			local _rg_log
+			_caplog=(
+			/dev/nvme':supply a device to use (required)'
+			--groups-only':Return Groups Only'
+			-g':alias for --groups-only'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme reachability-groups-log" _rg_log
 			;;
 		(version)
 			local _version
