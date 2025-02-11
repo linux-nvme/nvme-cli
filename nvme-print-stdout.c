@@ -5655,6 +5655,24 @@ static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *
 	}
 }
 
+static void stdout_reachability_associations_log(struct nvme_reachability_associations_log *log)
+{
+	__u16 i;
+	__u32 j;
+
+	printf("chngc: %"PRIu64"\n", le64_to_cpu(log->chngc));
+	printf("nrad: %u\n", le16_to_cpu(log->nrad));
+
+	for (i = 0; i < le16_to_cpu(log->nrad); i++) {
+		printf("rasid: %u\n", le32_to_cpu(log->rad[i].rasid));
+		printf("nrid: %u\n", le32_to_cpu(log->rad[i].nrid));
+		printf("chngc: %"PRIu64"\n", le64_to_cpu(log->rad[i].chngc));
+		printf("rac: %u\n", log->rad[i].rac);
+		for (j = 0; j < le32_to_cpu(log->rad[i].nrid); j++)
+			printf("rgid%u: %u\n", j, le32_to_cpu(log->rad[i].rgid[j]));
+	}
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -5726,6 +5744,7 @@ static struct print_ops stdout_print_ops = {
 	.rotational_media_info_log	= stdout_rotational_media_info_log,
 	.dispersed_ns_psub_log		= stdout_dispersed_ns_psub_log,
 	.reachability_groups_log	= stdout_reachability_groups_log,
+	.reachability_associations_log	= stdout_reachability_associations_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,

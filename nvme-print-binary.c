@@ -326,6 +326,11 @@ static void binary_reachability_groups_log(struct nvme_reachability_groups_log *
 	d_raw((unsigned char *)log, sizeof(*log));
 }
 
+static void binary_reachability_associations_log(struct nvme_reachability_associations_log *log)
+{
+	d_raw((unsigned char *)log, sizeof(*log));
+}
+
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= binary_ana_log,
@@ -396,6 +401,7 @@ static struct print_ops binary_print_ops = {
 	.rotational_media_info_log	= binary_rotational_media_info_log,
 	.dispersed_ns_psub_log		= binary_dispersed_ns_psub_log,
 	.reachability_groups_log	= binary_reachability_groups_log,
+	.reachability_associations_log	= binary_reachability_associations_log,
 
 	/* libnvme tree print functions */
 	.list_item			= NULL,

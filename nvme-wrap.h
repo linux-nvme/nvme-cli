@@ -159,4 +159,7 @@ int nvme_cli_get_log_dispersed_ns_participating_nss(struct nvme_dev *dev, __u32 
 
 int nvme_cli_get_log_reachability_groups(struct nvme_dev *dev, bool rgo, bool rae, __u32 len,
 					 struct nvme_reachability_groups_log *log);
+
+int nvme_cli_get_log_reachability_associations(struct nvme_dev *dev, bool rgo, bool rae, __u32 len,
+					       struct nvme_reachability_associations_log *log);
 #endif /* _NVME_WRAP_H */
