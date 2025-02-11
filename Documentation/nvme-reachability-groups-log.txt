@@ -1,0 +1,56 @@
+nvme-reachability-groups-log(1)
+===============================
+
+NAME
+----
+nvme-reachability-groups-log - Retrieve Reachability Groups Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme reachability-groups-log' <device> [--groups-only | -g] [--rae | -r]
+			[--verbose | -v] [--output-format=<fmt> | -o <fmt>]
+			[--timeout=<timeout>]
+
+DESCRIPTION
+-----------
+Retrieve Reachability Groups Log, show it
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-g::
+--groups-only::
+	Return Groups Only.
+
+-r::
+--rae::
+	Retain an Asynchronous Event.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+* Has the program issue a reachability-groups-log
++
+------------
+# nvme reachability-groups-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
