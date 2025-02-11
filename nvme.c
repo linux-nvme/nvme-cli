@@ -4666,9 +4666,11 @@ static int filter_out_flags(int status)
 	return status & (NVME_VAL(SCT) | NVME_VAL(SC));
 }
 
-static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result, void *buf)
+static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
+		void *buf, nvme_print_flags_t flags)
 {
 	int status = filter_out_flags(err);
+	int verbose = flags & VERBOSE;
 	enum nvme_status_type type = NVME_STATUS_TYPE_NVME;
 
 	if (!err) {
@@ -4676,7 +4678,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result, voi
 			nvme_feature_show(cfg.feature_id, cfg.sel, result);
 			if (NVME_CHECK(cfg.sel, GET_FEATURES_SEL, SUPPORTED))
 				nvme_show_select_result(cfg.feature_id, result);
-			else if (cfg.human_readable)
+			else if (verbose)
 				nvme_feature_show_fields(cfg.feature_id, result, buf);
 			else if (buf)
 				d(buf, cfg.data_len, 16, 1);
@@ -4692,7 +4694,8 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result, voi
 	}
 }
 
-static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg)
+static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
+		nvme_print_flags_t flags)
 {
 	int err;
 	int err_def = 0;
@@ -4713,12 +4716,13 @@ static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg)
 
 	if (err || !cfg.changed || err_def || result != result_def ||
 	    (buf && buf_def && !strcmp(buf, buf_def)))
-		get_feature_id_print(cfg, err, result, buf);
+		get_feature_id_print(cfg, err, result, buf, flags);
 
 	return err;
 }
 
-static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
+static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg,
+		nvme_print_flags_t flags)
 {
 	int err = 0;
 	int i;
@@ -4732,7 +4736,7 @@ static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 
 	for (i = cfg.feature_id; i < feat_max; i++, feat_num++) {
 		cfg.feature_id = i;
-		err = get_feature_id_changed(dev, cfg);
+		err = get_feature_id_changed(dev, cfg, flags);
 		if (!err)
 			continue;
 		status = filter_out_flags(err);
@@ -4768,6 +4772,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	const char *cdw11 = "feature specific dword 11";
 	const char *human_readable = "show feature in readable format";
 	const char *changed = "show feature changed";
+	nvme_print_flags_t flags = NORMAL;
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
@@ -4819,9 +4824,12 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		return -1;
 	}
 
+	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
 	nvme_show_init();
 
-	err = get_feature_ids(dev, cfg);
+	err = get_feature_ids(dev, cfg, flags);
 
 	nvme_show_finish();
 
