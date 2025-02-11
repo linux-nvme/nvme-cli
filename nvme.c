@@ -10317,7 +10317,7 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *cm
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		nvme_show_perror("rotational media info log");
+		nvme_show_perror("reachability groups log");
 
 	return err;
 }
