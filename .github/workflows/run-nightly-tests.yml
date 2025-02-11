@@ -16,7 +16,7 @@ jobs:
       #BDEV0 is an environment variable of the self-hosted runner instance
       #that contains a valid nvme ctrl name which is capable of the nvm
       #command set.
-      options: '--privileged -e BDEV0'
+      options: '--privileged -v "/dev":"/dev":z -e BDEV0'
     steps:
       - name: Output kernel version
         run: |
