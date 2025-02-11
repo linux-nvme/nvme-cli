@@ -10334,6 +10334,118 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *cm
 	return err;
 }
 
+static int get_reachability_association_desc(struct nvme_dev *dev, struct nvme_get_log_args *args,
+					     __u64 offset,
+					     struct nvme_reachability_associations_log **logp)
+{
+	int err;
+	struct nvme_reachability_associations_log *log = *logp;
+	__u16 i;
+	__u32 len;
+
+	for (i = 0; i < le16_to_cpu(log->nrad); i++) {
+		len = sizeof(*log->rad);
+		err = get_log_offset(dev, args, &offset, len, (void **)&log);
+		if (err)
+			goto err_free;
+		len = le32_to_cpu(log->rad[i].nrid) * sizeof(*log->rad[i].rgid);
+		err = get_log_offset(dev, args, &offset, len, (void **)&log);
+		if (err)
+			goto err_free;
+	}
+
+	*logp = log;
+	return 0;
+
+err_free:
+	free(log);
+	*logp = NULL;
+	return err;
+}
+
+static int get_reachability_associations(struct nvme_dev *dev, bool rao, bool rae,
+					 struct nvme_reachability_associations_log **logp)
+{
+	int err;
+	struct nvme_reachability_associations_log *log;
+	__u64 log_len = sizeof(*log);
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_REACHABILITY_ASSOCIATIONS,
+		.nsid = NVME_NSID_ALL,
+		.lsp = rao,
+		.rae = rae,
+	};
+
+	log = nvme_alloc(log_len);
+	if (!log)
+		return -ENOMEM;
+
+	err = nvme_cli_get_log_reachability_associations(dev, rao, rae, log_len, log);
+	if (err)
+		goto err_free;
+
+	err = get_reachability_association_desc(dev, &args, log_len, &log);
+	if (err)
+		goto err_free;
+
+	*logp = log;
+	return 0;
+
+err_free:
+	free(log);
+	return err;
+}
+
+static int get_reachability_associations_log(int argc, char **argv, struct command *cmd,
+					     struct plugin *plugin)
+{
+	const char *desc = "Retrieve Reachability Associations Log, show it";
+	const char *rao = "Return Associations Only";
+	nvme_print_flags_t flags;
+	int err;
+
+	_cleanup_free_ struct nvme_reachability_associations_log *log = NULL;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	struct config {
+		bool rao;
+		bool rae;
+	};
+
+	struct config cfg = {
+		.rao = false,
+		.rae = false,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_FLAG("associations-only", 'a', &cfg.rao, rao),
+		  OPT_FLAG("rae", 'r', &cfg.rae, rae));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	err = get_reachability_associations(dev, cfg.rao, cfg.rae, &log);
+	if (!err)
+		nvme_show_reachability_associations_log(log, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		nvme_show_perror("reachability associations log");
+
+	return err;
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;
