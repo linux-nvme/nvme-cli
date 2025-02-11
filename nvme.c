@@ -6107,6 +6107,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	__u64 value;
 	int err;
+	nvme_print_flags_t flags = NORMAL;
 
 	struct get_reg_config cfg = {
 		.offset		= -1,
@@ -6127,9 +6128,12 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		return -EINVAL;
 	}
 
+	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
 	err = nvme_get_single_property(dev_fd(dev), &cfg, &value);
 	if (!err)
-		nvme_show_single_property(cfg.offset, value, cfg.human_readable);
+		nvme_show_single_property(cfg.offset, value, flags);
 
 	return err;
 }
