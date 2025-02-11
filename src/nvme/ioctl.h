@@ -2214,7 +2214,7 @@ static inline int nvme_get_log_phy_rx_eom(int fd, __u8 lsp, __u16 controller,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise
  */
-static inline int nvme_get_log_reachability_groups(int fd, __u32 len, bool rgo, bool rae,
+static inline int nvme_get_log_reachability_groups(int fd, bool rgo, bool rae, __u32 len,
 						   struct nvme_reachability_groups_log *log)
 {
 	struct nvme_get_log_args args = {
