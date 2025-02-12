@@ -461,5 +461,5 @@ int nvme_cli_get_log_dispersed_ns_participating_nss(struct nvme_dev *dev, __u32 
 int nvme_cli_get_log_reachability_groups(struct nvme_dev *dev, bool rgo, bool rae, __u32 len,
 					 struct nvme_reachability_groups_log *log)
 {
-	return do_admin_op(get_log_reachability_groups, dev, len, rgo, rae, log);
+	return do_admin_op(get_log_reachability_groups, dev, rgo, rae, len, log);
 }
