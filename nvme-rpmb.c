@@ -629,9 +629,10 @@ static int rpmb_program_auth_key(int fd, unsigned char target,
 	/* reuse response buffer */
 	memset(rsp, 0, rsp_size);
 	err = recv_rpmb_rsp(fd, req->target, rsp_size, rsp);
-	if (err != 0) {
+	if (err != 0)
+		fprintf(stderr, "Program Key recv error = 0x%x\n", err);
+	else
 		err = check_rpmb_response(req, rsp, "Failed to Program Key");
-	}
 out:
 	free(req);
 	free(rsp);
