@@ -2380,9 +2380,8 @@ static inline int nvme_mi_admin_get_log_phy_rx_eom(nvme_mi_ctrl_t ctrl,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise
  */
-static inline int nvme_mi_admin_get_log_reachability_groups(nvme_mi_ctrl_t ctrl, __u32 len,
-							    bool rgo, bool rae,
-							    struct nvme_reachability_groups_log *log)
+static inline int nvme_mi_admin_get_log_reachability_groups(nvme_mi_ctrl_t ctrl, bool rgo, bool rae,
+	__u32 len, struct nvme_reachability_groups_log *log)
 {
 	struct nvme_get_log_args args = {
 		.lpo = 0,
