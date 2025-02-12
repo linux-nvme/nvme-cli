@@ -6126,15 +6126,15 @@ struct nvme_plm_config {
  * @acre:	Advanced Command Retry Enable
  * @etdas:	Extended Telemetry Data Area 4 Supported
  * @lbafee:	LBA Format Extension Enable
- * @rsvd3:	Reserved
- * @cdfe:       Copy Descriptor Formats Enable
+ * @hdisns:	Host Dispersed Namespace Support
+ * @cdfe:	Copy Descriptor Formats Enable
  * @rsvd6:	Reserved
  */
 struct nvme_feat_host_behavior {
 	__u8 acre;
 	__u8 etdas;
 	__u8 lbafee;
-	__u8 rsvd3;
+	__u8 hdisns;
 	__le16 cdfe;
 	__u8 rsvd6[506];
 };
