@@ -314,31 +314,6 @@ class TestNVMe(unittest.TestCase):
         """
         return int(self.get_id_ctrl_field_value("ocfs"), 16)
 
-    def get_format(self):
-        """ Wrapper for extracting format.
-            - Args:
-                - None
-            - Returns:
-                - maximum format of namespace.
-        """
-        # defaulting to 4K
-        nvm_format = 4096
-        nvm_format_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
-            f"--namespace-id={self.default_nsid}"
-        proc = subprocess.Popen(nvm_format_cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
-        err = proc.wait()
-        self.assertEqual(err, 0, "ERROR : reading nvm capacity failed")
-
-        # Not using json output here because parsing flbas makes this less
-        # readable as the format index is split into lower and upper bits
-        for line in proc.stdout:
-            if "in use" in line:
-                nvm_format = 2 ** int(line.split(":")[3].split()[0])
-        return int(nvm_format)
-
     def delete_all_ns(self):
         """ Wrapper for deleting all the namespaces.
             - Args:

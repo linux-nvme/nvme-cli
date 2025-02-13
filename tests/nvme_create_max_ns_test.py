@@ -50,8 +50,9 @@ class TestNVMeCreateMaxNS(TestNVMe):
         super().setUp()
         self.dps = 0
         self.flbas = 0
+        (ds, ms) = self.get_lba_format_size()
         self.nsze = int(self.get_ncap() /
-                        self.get_format() / self.get_max_ns())
+                        (ds + ms) / self.get_max_ns())
         # Make sure that we have enough capacity for each ns.
         # Creating a ns might allocate more bits (NVMCAP) than specified by
         # nsze and ncap.
