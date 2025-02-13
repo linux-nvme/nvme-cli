@@ -67,6 +67,7 @@ class TestNVMe(unittest.TestCase):
         self.load_config()
         if self.do_validate_pci_device:
             self.validate_pci_device()
+        self.create_and_attach_default_ns()
         print(f"\nsetup: ctrl: {self.ctrl}, ns1: {self.ns1}, default_nsid: {self.default_nsid}, flbas: {self.flbas}\n")
 
     def tearDown(self):
