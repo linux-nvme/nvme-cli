@@ -1,0 +1,38 @@
+nvme-sndk-clear-assert-dump(1)
+==============================
+
+NAME
+----
+nvme-sndk-clear-assert-dump - Clears the assert dump (if present).
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk clear-assert-dump' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the sndk vendor unique clear assert
+dump command.
+
+The <device> parameter is mandatory and must be the NVMe character
+device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this feature.
+The command will not be executed on devices that don't support it.
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Clears the assert dump (if present):
++
+------------
+# nvme sndk clear-assert-dump /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

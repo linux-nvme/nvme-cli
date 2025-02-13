@@ -1,0 +1,33 @@
+nvme-sndk-cloud-boot-SSD-version(1)
+===================================
+
+NAME
+----
+nvme-sndk-cloud-boot-SSD-version - Display sndk plugin Cloud Boot SSD Version
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk cloud-boot-SSD-version' <device>
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, this command displays the current Cloud Hyperscale
+Boot Version (if supported by the device).
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+EXAMPLES
+--------
+* Displays the cloud boot ssd version for the device:
++
+------------
+# nvme sndk cloud-boot-SSD-version /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

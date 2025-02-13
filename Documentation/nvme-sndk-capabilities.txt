@@ -1,0 +1,32 @@
+nvme-sndk-capabilities(1)
+=========================
+
+NAME
+----
+nvme-sndk-capabilities - Display sndk device command capabilities
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk capabilities' <device>
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, displays list of commands and support status.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+EXAMPLES
+--------
+* Displays the capabilities for the device:
++
+------------
+# nvme sndk capabilities /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

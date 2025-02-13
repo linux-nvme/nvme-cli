@@ -1,0 +1,45 @@
+nvme-sndk-vs-pcie-stats(1)
+==========================
+
+NAME
+----
+nvme-sndk-vs-pcie-stats - Send the NVMe sndk vs-pcie-stats command, return
+result
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk vs-pcie-stats' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, send the unique sndk vs-pcie-stats command and
+return the pcie statistics data.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', or
+	'json'. Only one output format can be used at a time.
+	Default is normal.
+
+EXAMPLES
+--------
+* Has the program issue sndk vs-pcie-stats command :
++
+------------
+# nvme sndk vs-pcie-stats /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

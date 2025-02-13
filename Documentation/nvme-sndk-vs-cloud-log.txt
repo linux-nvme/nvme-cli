@@ -1,0 +1,52 @@
+nvme-sndk-vs-cloud-log(1)
+=========================
+
+NAME
+----
+nvme-sndk-vs-cloud-log - Send NVMe sndk vs-cloud-log Vendor Unique Command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk vs-cloud-log' <device> [--output-format=<normal|json> -o <normal|json>]
+			[--namespace-id=<nsid> | -n <nsid>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send a Vendor Unique sndk vs-cloud-log command and
+provide the smart/health log.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on Sandisk devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', or
+	'json'. Only one output format can be used at a time.
+	Default is normal.
+
+-n <nsid>::
+--namespace-id=<nsid>::
+	Sets the command's nsid value to the given nsid. Defaults to
+	0xffffffff if not given. This option may not affect anything
+	depending on the log page, which may or may not be specific to
+	a namespace.
+
+EXAMPLES
+--------
+* Has the program issue sndk vs-cloud-log Vendor Unique Command :
++
+------------
+# nvme sndk vs-cloud-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

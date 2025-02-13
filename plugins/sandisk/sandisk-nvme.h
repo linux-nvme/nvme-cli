@@ -8,7 +8,7 @@
 #define SANDISK_PLUGIN_VERSION   "2.12.0"
 #include "cmd.h"
 
-PLUGIN(NAME("sandisk", "Sandisk vendor specific extensions", SANDISK_PLUGIN_VERSION),
+PLUGIN(NAME("sndk", "Sandisk vendor specific extensions", SANDISK_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("vs-internal-log", "Sandisk Internal Firmware Log",
 			sndk_vs_internal_fw_log)
