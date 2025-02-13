@@ -24,10 +24,12 @@ mandir     = join_paths(prefixdir, get_option('mandir'))
 sbindir    = join_paths(prefixdir, get_option('sbindir'))
 sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
 
-udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
-dracutrulesdir = join_paths(prefixdir, get_option('dracutrulesdir'))
-systemddir     = join_paths(prefixdir, get_option('systemddir'))
-rundir         = join_paths(prefixdir, get_option('rundir'))
+udevrulesdir      = join_paths(prefixdir, get_option('udevrulesdir'))
+dracutrulesdir    = join_paths(prefixdir, get_option('dracutrulesdir'))
+dracutmodulesdir  = join_paths(prefixdir, get_option('dracutmodulesdir'))
+systemddir        = join_paths(prefixdir, get_option('systemddir'))
+rundir            = join_paths(prefixdir, get_option('rundir'))
+networkmanagerdir = join_paths(prefixdir, get_option('networkmanagerdir'))
 
 ###############################################################################
 conf = configuration_data()
@@ -199,7 +201,8 @@ substs.set('NAME',    meson.project_name())
 substs.set('VERSION', meson.project_version())
 substs.set('LICENSE', meson.project_license()[0])
 substs.set('UDEVRULESDIR', udevrulesdir)
-substs.set('DRACUTRILESDIR', dracutrulesdir)
+substs.set('DRACUTRULESDIR', dracutrulesdir)
+substs.set('DRACUTMODULESDIR', dracutmodulesdir)
 substs.set('REQUIRES', requires)
 substs.set('DATADIR', datadir)
 substs.set('MANDIR', mandir)
@@ -207,6 +210,7 @@ substs.set('RUNDIR', rundir)
 substs.set('SBINDIR', sbindir)
 substs.set('SYSCONFDIR', sysconfdir)
 substs.set('SYSTEMDDIR', systemddir)
+substs.set('NETWORKMANAGERDIR', networkmanagerdir)
 substs.set('SYSTEMCTL', get_option('systemctl'))
 
 configure_file(
@@ -221,17 +225,58 @@ disc = configure_file(
   configuration: substs,
 )
 
-dracut_files = [
+dracut_conf_files = [
   '70-nvmf-autoconnect.conf',
 ]
 
-foreach file : dracut_files
+foreach file : dracut_conf_files
   configure_file(
     input: 'nvmf-autoconnect/dracut-conf/' + file + '.in',
     output: file,
     configuration: substs,
   )
 endforeach
+
+want_dracut_module = get_option('dracut-module')
+if want_dracut_module
+  dracut_nbft_files = [
+    'module-setup.sh',
+    'nbft-boot-pre.service',
+    'nbft-boot-connect.service'
+  ]
+
+  foreach file : dracut_nbft_files
+    configure_file(
+      input: 'nvmf-autoconnect/dracut-95nbft/' + file + '.in',
+      output: file,
+      configuration: substs,
+    )
+  endforeach
+
+  networkmanager_conf_files = [
+    '95-nvme-nbft-no-ignore-carrier.conf'
+  ]
+
+  foreach file : networkmanager_conf_files
+    configure_file(
+      input: 'nvmf-autoconnect/NetworkManager/' + file + '.in',
+      output: file,
+      configuration: substs,
+    )
+  endforeach
+
+  networkmanager_dispatcher_files = [
+    '99-nvme-nbft-connect.sh'
+  ]
+
+  foreach file : networkmanager_dispatcher_files
+    configure_file(
+      input: 'nvmf-autoconnect/NetworkManager/' + file + '.in',
+      output: file,
+      configuration: substs,
+    )
+  endforeach
+endif
 
 systemd_files = [
   'nvmefc-boot-connections.service',
@@ -315,10 +360,27 @@ install_data('completions/bash-nvme-completion.sh',
 install_data('completions/_nvme',
              install_dir: datadir + '/zsh/site-functions')
 
-foreach file : dracut_files
+foreach file : dracut_conf_files
   install_data(meson.current_build_dir() + '/' + file,
                install_dir: dracutrulesdir)
 endforeach
+
+if want_dracut_module
+  foreach file : dracut_nbft_files
+    install_data(meson.current_build_dir() + '/' + file,
+                 install_dir: dracutmodulesdir + '95nbft/')
+  endforeach
+
+  foreach file : networkmanager_conf_files
+    install_data(meson.current_build_dir() + '/' + file,
+                 install_dir: networkmanagerdir + 'conf.d/')
+  endforeach
+
+  foreach file : networkmanager_dispatcher_files
+    install_data(meson.current_build_dir() + '/' + file,
+                 install_dir: networkmanagerdir + 'dispatcher.d/')
+  endforeach
+endif
 
 foreach file : systemd_files
   install_data(meson.current_build_dir() + '/' + file,
@@ -343,8 +405,10 @@ if meson.version().version_compare('>=0.53.0')
         'mandir':            mandir,
         'udevrulesdir':      udevrulesdir,
         'dracutrulesdir':    dracutrulesdir,
+        'dracutmodulesdir':  dracutmodulesdir,
         'rundir':            rundir,
         'systemddir':        systemddir,
+        'networkmanagerdir': networkmanagerdir,
         'build location':    meson.current_build_dir(),
     }
     summary(path_dict, section: 'Paths')
@@ -353,8 +417,9 @@ if meson.version().version_compare('>=0.53.0')
     }
     summary(dep_dict, section: 'Dependencies')
     conf_dict = {
-        'git version':       conf.get('GIT_VERSION'),
-        'pdc enabled':       get_option('pdc-enabled'),
+        'git version':           conf.get('GIT_VERSION'),
+        'pdc enabled':           get_option('pdc-enabled'),
+        'dracut module enabled': want_dracut_module
     }
     summary(conf_dict, section: 'Configuration')
 endif
