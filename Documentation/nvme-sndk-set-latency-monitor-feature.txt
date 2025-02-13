@@ -1,0 +1,118 @@
+nvme-sndk-set-latency-monitor-feature(1)
+========================================
+
+NAME
+----
+nvme-sndk-set-latency-monitor-feature - Set NVMe sndk latency monitor feature options
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk set-latency-monitor-feature' <device>
+			[--active_bucket_timer_threshold=<NUM> | -t <NUM>]
+			[--active_threshold_a=<NUM> | -a <NUM>]
+			[--active_threshold_b=<NUM> | -b <NUM>]
+			[--active_threshold_c=<NUM> | -c <NUM>]
+			[--active_threshold_d=<NUM> | -d <NUM>]
+			[--active_latency_config=<NUM> | -f <NUM>]
+			[--active_latency_minimum_window=<NUM> | -w <NUM>]
+			[--debug_log_trigger_enable=<NUM> | -r <NUM>]
+			[--discard_debug_log=<NUM> | -l <NUM>]
+			[--latency_monitor_feature_enable=<NUM> | -e <NUM>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, this command set the
+latency monitor feature options (if supported by the device).
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+Setting results can be checked with 'get-latency-monitor-log' command.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-t <NUM>::
+--active_bucket_timer_threshold=<NUM>::
+	The value that loads the Active Bucket Timer Threshold; default value is 07E0h.
+
+-a <NUM>::
+--active_threshold_a=<NUM>::
+	The value that loads into the Active Threshold A; default value is 05h.
+
+-b <NUM>::
+--active_threshold_b=<NUM>::
+	The value that loads into the Active Threshold B; default value is 13h.
+
+-c <NUM>::
+--active_threshold_c=<NUM>::
+	The value that loads into the Active Threshold C; default value is 1Eh.
+
+-d <NUM>::
+--active_threshold_d=<NUM>::
+	The value that loads into the Active Threshold D; default value is 2Eh.
+
+-f <NUM>::
+--active_latency_config=<NUM>::
+	The value that loads into the Active Latency Configuration. This
+	configures how both the Active Latency Stamp, and the Active Measured
+	Latency Fields are updated on a per I/O command (Read, Write, Deallocate)
+	counter basis; default value is 0FFFh.
+
+-w <NUM>::
+--active_latency_minimum_window=<NUM>::
+	The value that loads into the Active Latency Minimum Window; default value is 0Ah.
+
+-r <NUM>::
+--debug_log_trigger_enable=<NUM>::
+	The value that loads into the Debug Log Trigger Enable; When set to 1b
+	the first time the bucket/counter combination is incremented a debug log
+	is triggered. When cleared to 0b a debug log will not be triggered when
+	the bucket/counter combination is incremented.
+
+-l <NUM>::
+--discard_debug_log=<NUM>::
+	Discard Debug Log. When cleared to 00h the debug log, if it exists, will
+	not be cleared. When set to 01h the debug log will be discarded so
+	another log can be triggered. All the fields in the Set Features Data
+	structure are valid. When set to 02h the debug log will be discarded so
+	another log can be triggered. None of the other fields of the Set
+	Features Data structure are valid.
+
+-e <NUM>::
+--latency_monitor_feature_enable=<NUM>::
+	Latency Monitor Feature Enable; When set to 01h the Latency Monitor
+	Feature is enabled. When cleared to 00h the Latency Monitor Feature is
+	disabled.
+
+EXAMPLES
+--------
+* Set NVMe sndk latency monitor feature options enabled with default value values:
++
+------------
+# nvme sndk set-latency-monitor-feature /dev/nvme0 -e 1
+------------
+* Set NVMe sndk latency monitor feature options disabled with default value values:
++
+------------
+# nvme sndk set-latency-monitor-feature /dev/nvme0 -e 0
+------------
+* Set NVMe sndk latency monitor feature options enabled with specific values:
++
+------------
+# nvme sndk set-latency-monitor-feature /dev/nvme0 --active_bucket_timer_threshold=1 \
+            --active_threshold_a=0x0 \
+            --active_threshold_b=0x1 \
+            --active_threshold_c=0x2 \
+            --active_threshold_d=0x3 \
+            --active_latency_config=0xfff \
+            --active_latency_minimum_window=0 \
+            --debug_log_trigger_enable=0 \
+            --discard_debug_log=0 \
+            --latency_monitor_feature_enable=0x1
+------------
+
+NVME
+----
+Part of the nvme-user suite.

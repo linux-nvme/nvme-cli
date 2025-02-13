@@ -1,0 +1,42 @@
+nvme-sndk-get-latency-monitor-log(1)
+====================================
+
+NAME
+----
+nvme-sndk-get-latency-monitor-log - Display latency monitor log page data in human readable format
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk get-latency-monitor-log' <device> [--output-format=<normal|json> -o <normal|json>]
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, latency monitor log page data.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this log page.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal' or 'json'. Only one output format
+	can be used at a time. The default is normal.
+
+EXAMPLES
+--------
+* Displays the get latency monitor log for the device:
++
+------------
+# nvme sndk get-latency-monitor-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

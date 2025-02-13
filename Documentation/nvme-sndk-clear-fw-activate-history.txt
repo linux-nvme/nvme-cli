@@ -1,0 +1,37 @@
+nvme-sndk-clear-fw-activate-history(1)
+======================================
+
+NAME
+----
+nvme-sndk-clear-fw-activate-history - Clears the firmware activate history table.
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk clear-fw-activate-history' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the sndk vendor unique clear fw activate
+history command.
+
+The <device> parameter is mandatory and must be the NVMe character device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this feature.
+Results for any other device are undefined.
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Clears the firmware activate history table:
++
+------------
+# nvme sndk clear-fw-activate-history /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

@@ -55,6 +55,87 @@ linknvme:nvme-netapp-ontapdevices[1]::
 linknvme:nvme-netapp-smdevices[1]::
 	Display information for each NVMe path to an E-Series volume
 
+linknvme:nvme-sndk-capabilities[1]::
+	Display Sandisk plugin command capabilities
+
+linknvme:nvme-sndk-clear-assert-dump[1]::
+	Clears the assert dump (if present)
+
+linknvme:nvme-sndk-clear-fw-activate-history[1]::
+	Clears the firmware activate history table
+
+linknvme:nvme-sndk-clear-pcie-correctable-errors[1]::
+	Clears the pcie correctable errors returned in the smart-log-add command
+
+linknvme:nvme-sndk-cloud-SSD-plugin-version[1]::
+	Display Sandisk plugin Cloud SSD Plugin Version
+
+linknvme:nvme-sndk-cloud-boot-SSD-version[1]::
+	Display Sandisk Cloud Boot SSD Version
+
+linknvme:nvme-sndk-drive-resize[1]::
+	Send NVMe Sandisk Resize Vendor Unique Command
+
+linknvme:nvme-sndk-get-drive-status[1]::
+	Send the NVMe Sandisk get-drive-status command
+
+linknvme:nvme-sndk-get-dev-capabilities-log[1]::
+	Display device capabilities og page data in human readable format
+
+linknvme:nvme-sndk-get-error-recovery-log[1]::
+	Display error recovery log page data in human readable format
+
+linknvme:nvme-sndk-get-latency-monitor-log[1]::
+	Display latency monitor log page data in human readable format
+
+linknvme:nvme-sndk-get-unsupported-reqs-log[1]::
+	Display unsupported requirements log page data in human readable format
+
+linknvme:nvme-sndk-log-page-directory[1]::
+	Retrieves the list of Log IDs supported by the drive
+
+linknvme:nvme-sndk-namespace-resize[1]::
+	Resizes the device's namespace
+
+linknvme:nvme-sndk-set-latency-monitor-feature[1]::
+	Set Latency Monitor feature
+
+linknvme:nvme-sndk-vs-cloud-log[1]::
+	Display the cloud log page
+
+linknvme:nvme-sndk-vs-device-waf[1]::
+	Display calculated device Write Amplication Factor
+
+linknvme:nvme-sndk-vs-drive-info[1]::
+	Send the NVMe Sandisk vs-drive-info command
+
+linknvme:nvme-sndk-vs-error-reason-identifier[1]::
+	Retrieve Sandisk device's telemetry log error reason identifier field
+
+linknvme:nvme-sndk-vs-fw-activate-history[1]::
+	Execute NVMe Sandisk vs-fw-activate-history Vendor Unique Command
+
+linknvme:nvme-sndk-vs-hw-rev-log[1]::
+	Display hardware revision log page
+
+linknvme:nvme-sndk-vs-internal-log[1]::
+	Retrieve Sandisk device's internal firmware log and save to file
+
+linknvme:nvme-sndk-vs-nand-stats[1]::
+	Send NVMe Sandisk vs-nand-stats Vendor Unique Command
+
+linknvme:nvme-sndk-vs-pcie-stats[1]::
+	Send the NVMe Sandisk vs-pcie-stats command
+
+linknvme:nvme-sndk-vs-smart-add-log[1]::
+	Send NVMe Sandisk smart add log Vendor Unique Command
+
+linknvme:nvme-sndk-vs-telemetry-controller-option[1]::
+	Disable/Enable the controller initiated option of the telemetry log page
+
+linknvme:nvme-sndk-vs-temperature-stats[1]::
+	Display temperature-related statistics
+
 linknvme:nvme-toshiba-clear-pcie-correctable-errors[1]::
 	Reset the PCIe correctable errors count to zero
 

@@ -1,0 +1,48 @@
+nvme-sndk-get-unsupported-reqs-log(1)
+=====================================
+
+NAME
+----
+nvme-sndk-get-unsupported-reqs-log - Send NVMe sndk get-unsupported-reqs-log
+plugin command, return parsed log output
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk get-unsupported-reqs-log' <device> [--output-format=<normal|json>
+-o <normal|json>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send a sndk plugin get-unsupported-reqs-log command
+and output the unsupported requirements log data. The --output-format option
+will format the output as specified.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this log page.
+Results for any other device are undefined.
+
+On success it returns the parsed unsupported requirements log page data, error
+code otherwise.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', or
+	'json'. Only one output format can be used at a time.
+	Default is normal.
+
+EXAMPLES
+--------
+* Has the program issue sndk get-unsupported-reqs-log plugin command :
++
+------------
+# nvme sndk get-unsupported-reqs-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
