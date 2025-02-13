@@ -48,6 +48,83 @@ enum TELEMETRY_STATISTIC_ID {
 	TELEMETRY_STAT_ID_MAXDBB	= 0x1B, /* Max Die Bad Block  */
 	TELEMETRY_STAT_ID_MAXCBB	= 0x1C, /* Max NAND Channel Bad Block  */
 	TELEMETRY_STAT_ID_MINCBB	= 0x1D, /* Min NAND Channel Bad Block  */
+	TELEMETRY_STAT_ID_PMUW		= 0x1E, /* Physical Media Units Written  */
+	TELEMETRY_STAT_ID_PMUR		= 0x1F, /* Physical Media Units Read  */
+	TELEMETRY_STAT_ID_BUNB		= 0x20, /* Bad User NAND Blocks  */
+	TELEMETRY_STAT_ID_BSNB		= 0x21, /* Bad System NAND Blocks  */
+	TELEMETRY_STAT_ID_XORRC		= 0x22, /* XOR Recovery Count  */
+	TELEMETRY_STAT_ID_UNREC		= 0x23, /* Uncorrectable Read Error Count  */
+	TELEMETRY_STAT_ID_SECCEC	= 0x24, /* Soft ECC Error Count  */
+	TELEMETRY_STAT_ID_ETOECC	= 0x25, /* End To End Correction Counts  */
+	TELEMETRY_STAT_ID_SDU		= 0x26, /* System Data % Used  */
+	TELEMETRY_STAT_ID_RC		= 0x27, /* Refresh Count  */
+	TELEMETRY_STAT_ID_UDEC		= 0x28, /* User Data Erase Counts  */
+	TELEMETRY_STAT_ID_TTSC		= 0x29, /* Thremal Throttling Status and Count  */
+	TELEMETRY_STAT_ID_DSSDSV	= 0x2A, /* DSSD Specification Version  */
+	TELEMETRY_STAT_ID_PCIECEC	= 0x2B, /* PCIe Correctable Error Count  */
+	TELEMETRY_STAT_ID_IS		= 0x2C, /* Incomplete Shutdown  */
+	TELEMETRY_STAT_ID_FB		= 0x2D, /* % Free Block  */
+	TELEMETRY_STAT_ID_CH		= 0x2E, /* Capacitor Health  */
+	TELEMETRY_STAT_ID_NVMEBEV	= 0x2F, /* NVM Express Base Errata Version  */
+	TELEMETRY_STAT_ID_NVMCSEV	= 0x30, /* NVM Command Set Errata Version  */
+	TELEMETRY_STAT_ID_NVMEMIEV	= 0x31, /* NVM Exp Mgmt Interface Err Version  */
+	TELEMETRY_STAT_ID_UIO		= 0x32, /* Unaligned IO  */
+	TELEMETRY_STAT_ID_SVN		= 0x33, /* Security Version Number  */
+	TELEMETRY_STAT_ID_TNUSE		= 0x34, /* Total NUSE  */
+	TELEMETRY_STAT_ID_PLPSC		= 0x35, /* PLP Start Count  */
+	TELEMETRY_STAT_ID_EE		= 0x36, /* Endurance Estimate  */
+	TELEMETRY_STAT_ID_PCIELRC	= 0x37, /* PCIe Link Retraining Count  */
+	TELEMETRY_STAT_ID_PSCC		= 0x38, /* Power State Change Count  */
+	TELEMETRY_STAT_ID_LPFR		= 0x39, /* Lowest Permitted Firmware Revision  */
+	TELEMETRY_STAT_ID_LPV		= 0x3A, /* Log Page Version  */
+	TELEMETRY_STAT_ID_MDO		= 0x3B, /* Media Dies Offline  */
+	TELEMETRY_STAT_ID_MTR		= 0x3C, /* Max Temperature Recorded  */
+	TELEMETRY_STAT_ID_NAEC		= 0x3D, /* Nand Avg Erase Count  */
+	TELEMETRY_STAT_ID_CT		= 0x3E, /* Command Timeout  */
+	TELEMETRY_STAT_ID_SAPFC		= 0x3F, /* System Area Program Fail Count  */
+	TELEMETRY_STAT_ID_SARFC		= 0x40, /* System Area Read Fail Count  */
+	TELEMETRY_STAT_ID_SAEFC		= 0x41, /* System Area Erase Fail Count  */
+	TELEMETRY_STAT_ID_MPPC		= 0x42, /* Max Peak Power Capability  */
+	TELEMETRY_STAT_ID_CMAP		= 0x43, /* Current Max Average Power  */
+	TELEMETRY_STAT_ID_LPC		= 0x44, /* Lifetime Power Consumed  */
+	TELEMETRY_STAT_ID_PAC		= 0x45, /* Panic Asset Count  */
+	TELEMETRY_STAT_ID_DBT		= 0x46, /* Device Busy Time  */
+	TELEMETRY_STAT_ID_CW		= 0x47, /* Critical Warning  */
+	TELEMETRY_STAT_ID_COMTEMP	= 0x48, /* Composite Temperature  */
+	TELEMETRY_STAT_ID_AS		= 0x49, /* Available Spare  */
+	TELEMETRY_STAT_ID_AST		= 0x4A, /* Available Spare Threshold  */
+	TELEMETRY_STAT_ID_PU		= 0x4B, /* Percentage Used  */
+	TELEMETRY_STAT_ID_EGCWS		= 0x4C, /* Endurance Gp CW Summary  */
+	TELEMETRY_STAT_ID_DUR		= 0x4D, /* Data Units Read  */
+	TELEMETRY_STAT_ID_DUW		= 0x4E, /* Data Units Written  */
+	TELEMETRY_STAT_ID_HRC		= 0x4F, /* Host Read Commands  */
+	TELEMETRY_STAT_ID_HWC		= 0x50, /* Host Write Commands  */
+	TELEMETRY_STAT_ID_CBT		= 0x51, /* Controller Busy Time  */
+	TELEMETRY_STAT_ID_PC		= 0x52, /* Power Cycles  */
+	TELEMETRY_STAT_ID_POH		= 0x53, /* Power On Hours  */
+	TELEMETRY_STAT_ID_US		= 0x54, /* Unsafe Shutdowns  */
+	TELEMETRY_STAT_ID_MDIE		= 0x55, /* Media and Data Integrity Er  */
+	TELEMETRY_STAT_ID_NEILE		= 0x56, /* No of Error Info Entries  */
+	TELEMETRY_STAT_ID_WCTT		= 0x57, /* Warning Composite Temp Time  */
+	TELEMETRY_STAT_ID_CCTT		= 0x58, /* Critical Comp Temp Time  */
+	TELEMETRY_STAT_ID_TS1		= 0x59, /* Temperature Sensor 1  */
+	TELEMETRY_STAT_ID_TS2		= 0x5A, /* Temperature Sensor 2  */
+	TELEMETRY_STAT_ID_TS3		= 0x5B, /* Temperature Sensor 3  */
+	TELEMETRY_STAT_ID_TS4		= 0x5C, /* Temperature Sensor 4  */
+	TELEMETRY_STAT_ID_TS5		= 0x5D, /* Temperature Sensor 5  */
+	TELEMETRY_STAT_ID_TS6		= 0x5E, /* Temperature Sensor 6  */
+	TELEMETRY_STAT_ID_TS7		= 0x5F, /* Temperature Sensor 7  */
+	TELEMETRY_STAT_ID_TS8		= 0x60, /* Temperature Sensor 8  */
+	TELEMETRY_STAT_ID_TMT1TC	= 0x61, /* Thermal Mgmt Temp1 TC  */
+	TELEMETRY_STAT_ID_TMT2TC	= 0x62, /* Thermal Mgmt Temp2 TC  */
+	TELEMETRY_STAT_ID_TTTMT1	= 0x63, /* Total Time TMT1  */
+	TELEMETRY_STAT_ID_TTTMT2	= 0x64, /* Total Time TMT2  */
+	TELEMETRY_STAT_ID_EEE		= 0x65, /* Endurance Estimate  */
+	TELEMETRY_STAT_ID_EDUR		= 0x66, /* Endurance Data Units Read  */
+	TELEMETRY_STAT_ID_EDUW		= 0x67, /* Endurance Data Units Written  */
+	TELEMETRY_STAT_ID_EMUW		= 0x68, /* Endurance Media Units Written  */
+	TELEMETRY_STAT_ID_ENEILE	= 0x69, /* Endurance No Of Err Info Log Entries  */
+
 };
 
 static const char * const telemetry_stat_id_str[] = {
@@ -80,50 +157,128 @@ static const char * const telemetry_stat_id_str[] = {
 	[TELEMETRY_STAT_ID_MAXDBB]	= "Max Die Bad Block",
 	[TELEMETRY_STAT_ID_MAXCBB]	= "Max NAND Channel Bad Block",
 	[TELEMETRY_STAT_ID_MINCBB]	= "Min NAND Channel Bad Block",
+	[TELEMETRY_STAT_ID_PMUW]	 = "Physical Media Units Written",
+	[TELEMETRY_STAT_ID_PMUR]	 = "Physical Media Units Read",
+	[TELEMETRY_STAT_ID_BUNB]	 = "Bad User NAND Blocks",
+	[TELEMETRY_STAT_ID_BSNB]	 = "Bad System NAND Blocks",
+	[TELEMETRY_STAT_ID_XORRC]	 = "XOR Recovery Count",
+	[TELEMETRY_STAT_ID_UNREC]	 = "Uncorrectable Read Error Count",
+	[TELEMETRY_STAT_ID_SECCEC]	 = "Soft ECC Error Count",
+	[TELEMETRY_STAT_ID_ETOECC]	 = "End To End Correction Counts",
+	[TELEMETRY_STAT_ID_SDU]		 = "System Data Used",
+	[TELEMETRY_STAT_ID_RC]		 = "Refresh Count",
+	[TELEMETRY_STAT_ID_UDEC]	 = "User Data Erase Counts",
+	[TELEMETRY_STAT_ID_TTSC]	 = "Thremal Throttling Status and Count",
+	[TELEMETRY_STAT_ID_DSSDSV]	 = "DSSD Specification Version",
+	[TELEMETRY_STAT_ID_PCIECEC]	 = "PCIe Correctable Error Count",
+	[TELEMETRY_STAT_ID_IS]		 = "Incomplete Shutdown",
+	[TELEMETRY_STAT_ID_FB]		 = "Free Block",
+	[TELEMETRY_STAT_ID_CH]		 = "Capacitor Health",
+	[TELEMETRY_STAT_ID_NVMEBEV]	 = "NVM Express Base Errata Version",
+	[TELEMETRY_STAT_ID_NVMCSEV]	 = "NVM Command Set Errata Version",
+	[TELEMETRY_STAT_ID_NVMEMIEV] = "NVM Express Management Interface Errata Version",
+	[TELEMETRY_STAT_ID_UIO]		 = "Unaligned IO",
+	[TELEMETRY_STAT_ID_SVN]		 = "Security Version Number",
+	[TELEMETRY_STAT_ID_TNUSE]	 = "Total NUSE",
+	[TELEMETRY_STAT_ID_PLPSC]	 = "PLP Start Count",
+	[TELEMETRY_STAT_ID_EE]		 = "Endurance Estimate",
+	[TELEMETRY_STAT_ID_PCIELRC]	 = "PCIe Link Retraining Count",
+	[TELEMETRY_STAT_ID_PSCC]	 = "Power State Change Count",
+	[TELEMETRY_STAT_ID_LPFR]	 = "Lowest Permitted Firmware Revision",
+	[TELEMETRY_STAT_ID_LPV]		 = "Log Page Version",
+	[TELEMETRY_STAT_ID_MDO]		 = "Media Dies Offline",
+	[TELEMETRY_STAT_ID_MTR]		 = "Max Temperature Recorded",
+	[TELEMETRY_STAT_ID_NAEC]	 = "Nand Avg Erase Count",
+	[TELEMETRY_STAT_ID_CT]		 = "Command Timeout",
+	[TELEMETRY_STAT_ID_SAPFC]	 = "System Area Program Fail Count",
+	[TELEMETRY_STAT_ID_SARFC]	 = "System Area Read Fail Count",
+	[TELEMETRY_STAT_ID_SAEFC]	 = "System Area Erase Fail Count",
+	[TELEMETRY_STAT_ID_MPPC]	 = "Max Peak Power Capability",
+	[TELEMETRY_STAT_ID_CMAP]	 = "Current Max Average Power",
+	[TELEMETRY_STAT_ID_LPC]		 = "Lifetime Power Consumed",
+	[TELEMETRY_STAT_ID_PAC]		 = "Panic Asset Count",
+	[TELEMETRY_STAT_ID_DBT]		 = "Device Busy Time",
+	[TELEMETRY_STAT_ID_CW]		 = "Critical Warning",
+	[TELEMETRY_STAT_ID_COMTEMP]	 = "Composite Temperature",
+	[TELEMETRY_STAT_ID_AS]		 = "Available Spare",
+	[TELEMETRY_STAT_ID_AST]		 = "Available Spare Threshold",
+	[TELEMETRY_STAT_ID_PU]		 = "Percentage Used",
+	[TELEMETRY_STAT_ID_EGCWS]	 = "Endurance Gp CW Summary",
+	[TELEMETRY_STAT_ID_DUR]		 = "Data Units Read",
+	[TELEMETRY_STAT_ID_DUW]		 = "Data Units Written",
+	[TELEMETRY_STAT_ID_HRC]		 = "Host Read Commands",
+	[TELEMETRY_STAT_ID_HWC]		 = "Host Write Commands",
+	[TELEMETRY_STAT_ID_CBT]		 = "Controller Busy Time",
+	[TELEMETRY_STAT_ID_PC]		 = "Power Cycles",
+	[TELEMETRY_STAT_ID_POH]		 = "Power On Hours",
+	[TELEMETRY_STAT_ID_US]		 = "Unsafe Shutdowns",
+	[TELEMETRY_STAT_ID_MDIE]	 = "Media and Data Integrity Er",
+	[TELEMETRY_STAT_ID_NEILE]	 = "No of Error Info Entries",
+	[TELEMETRY_STAT_ID_WCTT]	 = "Warning Composite Temp Time",
+	[TELEMETRY_STAT_ID_CCTT]	 = "Critical Comp Temp Time",
+	[TELEMETRY_STAT_ID_TS1]		 = "Temperature Sensor 1",
+	[TELEMETRY_STAT_ID_TS2]		 = "Temperature Sensor 2",
+	[TELEMETRY_STAT_ID_TS3]		 = "Temperature Sensor 3",
+	[TELEMETRY_STAT_ID_TS4]		 = "Temperature Sensor 4",
+	[TELEMETRY_STAT_ID_TS5]		 = "Temperature Sensor 5",
+	[TELEMETRY_STAT_ID_TS6]		 = "Temperature Sensor 6",
+	[TELEMETRY_STAT_ID_TS7]		 = "Temperature Sensor 7",
+	[TELEMETRY_STAT_ID_TS8]		 = "Temperature Sensor 8",
+	[TELEMETRY_STAT_ID_TMT1TC]	 = "Thermal Mgmt Temp1 TC",
+	[TELEMETRY_STAT_ID_TMT2TC]	 = "Thermal Mgmt Temp2 TC",
+	[TELEMETRY_STAT_ID_TTTMT1]	 = "Total Time TMT1",
+	[TELEMETRY_STAT_ID_TTTMT2]	 = "Total Time TMT2",
+	[TELEMETRY_STAT_ID_EEE]		 = "Endurance Estimate",
+	[TELEMETRY_STAT_ID_EDUR]	 = "Endurance Data Units Read",
+	[TELEMETRY_STAT_ID_EDUW]	 = "Endurance Data Units Written",
+	[TELEMETRY_STAT_ID_EMUW]	 = "Endurance Media Units Written",
+	[TELEMETRY_STAT_ID_ENEILE]	 = "Endurance No Of Err Info Log Entries",
 };
 
 /*****************************************************************************
  * Telemetry FIFO Event Class ID's and Strings
  *****************************************************************************/
 enum TELEMETRY_EVENT_CLASS_TYPE {
-	TELEMETRY_TIMESTAMP_CLASS      = 0x1,
-	TELEMETRY_PCIE_CLASS           = 0x2,
-	TELEMETRY_NVME_CLASS           = 0x3,
-	TELEMETRY_RESET_CLASS          = 0x4,
-	TELEMETRY_BOOT_SEQ_CLASS       = 0x5,
-	TELEMETRY_FW_ASSERT_CLASS      = 0x6,
-	TELEMETRY_TEMPERATURE_CLASS    = 0x7,
-	TELEMETRY_MEDIA_DBG_CLASS      = 0x8,
-	TELEMETRY_MEDIA_WEAR_CLASS     = 0x9,
-	TELEMETRY_STAT_SNAPSHOT_CLASS  = 0xA,
+	TELEMETRY_TIMESTAMP_CLASS           = 0x1,
+	TELEMETRY_PCIE_CLASS                = 0x2,
+	TELEMETRY_NVME_CLASS                = 0x3,
+	TELEMETRY_RESET_CLASS               = 0x4,
+	TELEMETRY_BOOT_SEQ_CLASS            = 0x5,
+	TELEMETRY_FW_ASSERT_CLASS           = 0x6,
+	TELEMETRY_TEMPERATURE_CLASS         = 0x7,
+	TELEMETRY_MEDIA_DBG_CLASS           = 0x8,
+	TELEMETRY_MEDIA_WEAR_CLASS          = 0x9,
+	TELEMETRY_STAT_SNAPSHOT_CLASS       = 0xA,
+	TELEMETRY_VIRTUAL_FIFO_EVENT_CLASS  = 0xB,
 };
 
 static const char * const telemetry_event_class_str[] = {
-	[TELEMETRY_TIMESTAMP_CLASS]		= "Timestamp Class",
-	[TELEMETRY_PCIE_CLASS]			= "PCIe Class",
-	[TELEMETRY_NVME_CLASS]			= "NVMe Class",
-	[TELEMETRY_RESET_CLASS]			= "Reset Class",
-	[TELEMETRY_BOOT_SEQ_CLASS]		= "Boot Sequence Class",
-	[TELEMETRY_FW_ASSERT_CLASS]		= "FW Assert Class",
-	[TELEMETRY_TEMPERATURE_CLASS]	= "Temperature Class",
-	[TELEMETRY_MEDIA_DBG_CLASS]		= "Media Debug Class",
-	[TELEMETRY_MEDIA_WEAR_CLASS]	= "Media Wear Class",
-	[TELEMETRY_STAT_SNAPSHOT_CLASS]	= "Statistic Snapshot Class",
+	[TELEMETRY_TIMESTAMP_CLASS]          = "Timestamp Class",
+	[TELEMETRY_PCIE_CLASS]               = "PCIe Class",
+	[TELEMETRY_NVME_CLASS]               = "NVMe Class",
+	[TELEMETRY_RESET_CLASS]              = "Reset Class",
+	[TELEMETRY_BOOT_SEQ_CLASS]           = "Boot Sequence Class",
+	[TELEMETRY_FW_ASSERT_CLASS]          = "FW Assert Class",
+	[TELEMETRY_TEMPERATURE_CLASS]        = "Temperature Class",
+	[TELEMETRY_MEDIA_DBG_CLASS]          = "Media Debug Class",
+	[TELEMETRY_MEDIA_WEAR_CLASS]         = "Media Wear Class",
+	[TELEMETRY_STAT_SNAPSHOT_CLASS]      = "Statistic Snapshot Class",
+	[TELEMETRY_VIRTUAL_FIFO_EVENT_CLASS] = "Virtual FIFO Event Class",
 };
 
 /*****************************************************************************
  * Telemetry Timestamp Class (01h) Event ID's and Strings
  *****************************************************************************/
 enum TELEMETRY_TIMESTAMP_EVENT_ID {
-	TIMESTAMP_HOST_CMD_ISSUED      = 0x0000,
-	TIMESTAMP_SNAPSHOT             = 0x0001,
-	TIMESTAMP_POWER_ON_HOURS       = 0x0002,
+	TIMESTAMP_FEATURE_HOST_ISSUED    = 0x0000,
+	TIMESTAMP_FW_INTIATED_SNAPSHOT   = 0x0001,
+	TIMESTAMP_OBSOLETE               = 0x0002,
 };
 
 static const char * const telemetry_timestamp_event_id_str[] = {
-	[TIMESTAMP_HOST_CMD_ISSUED]		= "Timestamp Host Cmd Issued",
-	[TIMESTAMP_SNAPSHOT]			= "Timestamp Snapshot",
-	[TIMESTAMP_POWER_ON_HOURS]		= "Timestamp Power on Hours",
+	[TIMESTAMP_FEATURE_HOST_ISSUED]		= "Host Issued Timestamp Set Feature Cmd",
+	[TIMESTAMP_FW_INTIATED_SNAPSHOT]	= "Fw Initiated Timestamp Snapshot",
+	[TIMESTAMP_OBSOLETE]                = "TimeStamp Obsolete",
 };
 
 /*****************************************************************************
@@ -217,6 +372,8 @@ enum TELEMETRY_NVME_EVENT_ID {
 	CC_REGISTER_CHANGED				= 0x000B,
 	CSTS_REGISTER_CHANGED			= 0x000C,
 	DELETE_IO_QUEUE_PROCESSED		= 0x000D,
+	OOB_COMMAND	                    = 0x000E,
+	OOB_AER_EVENT_MSG_TRANS			= 0x000F
 };
 
 static const char * const telemetry_nvme_event_id_str[] = {
@@ -226,14 +383,16 @@ static const char * const telemetry_nvme_event_id_str[] = {
 	[CSTS_RDY_1_TO_0]				= "CSTS.RDY Transitions from 1 to 0",
 	[NVME_EVENT_ID_RESERVED]		= "Reserved NVMe Event ID",
 	[CREATE_IO_QUEUE_PROCESSED]		= "Create IO SQ or CQ Command Processed",
-	[ADMIN_QUEUE_CMD_PROCESSED]		= "Other Admin Queue Command Processed",
+	[ADMIN_QUEUE_CMD_PROCESSED]		= "Inb-Admin Que Cmd Proc other than Cr IO SQ/CQ",
 	[ADMIN_QUEUE_NONZERO_STATUS]	= "Admin Command Returned Non-zero Status",
 	[IO_QUEUE_NONZERO_STATUS]		= "IO Command Returned Non-zero Status",
 	[CSTS_CFS_0_TO_1]				= "CSTS.CFS Transitions from 0 to 1",
 	[ADMIN_QUEUE_BASE_WRITTEN]		= "Admin SQ or CQ Base Address Written",
 	[CC_REGISTER_CHANGED]			= "CC Register Changed",
-	[CSTS_REGISTER_CHANGED]			= "CTS Register Changed",
+	[CSTS_REGISTER_CHANGED]			= "CSTS Register Changed",
 	[DELETE_IO_QUEUE_PROCESSED]		= "Delete IO SQ or CQ Command Processed",
+	[OOB_COMMAND]			        = "Out of Band Command Process",
+	[OOB_AER_EVENT_MSG_TRANS]		= "Out of Band AER Event Msg Transition"
 };
 
 /*****************************************************************************
@@ -292,7 +451,7 @@ static const char * const telemetry_fw_assert_event_id_str[] = {
 	[ASSERT_BACKGROUND_CODE]		= "Assert in Background Services Code",
 	[FTL_REBUILD_FAILED]			= "FTL Rebuild Failed",
 	[FTL_DATA_MISMATCH]				= "FTL Data Mismatch",
-	[ASSERT_OTHER_CODE]				= "FTL Other Code",
+	[ASSERT_OTHER_CODE]		        = "Assert in Other Code",
 };
 
 /*****************************************************************************
@@ -342,6 +501,19 @@ static const char * const telemetry_media_wear_event_id_str[] = {
 	[MEDIA_WEAR]					= "Media Wear",
 };
 
+/*****************************************************************************
+ * Telemetry Virtual FIFO (0Bh) Event ID's and Strings
+ *****************************************************************************/
+enum TELEMETRY_VIRTUAL_FIFO_EVENT_ID {
+	VIRTUAL_FIFO_START			= 0x0000,
+	VIRTUAL_FIFO_END			= 0x0002,
+};
+
+static const char * const telemetry_virtual_fifo_event_id_str[] = {
+	[VIRTUAL_FIFO_START]			= "Virtual FIFO Start",
+	[VIRTUAL_FIFO_END]				= "Virtual FIFO End",
+};
+
 
 /*****************************************************************************
  * Telemetry Data Structures
@@ -380,7 +552,7 @@ struct telemetry_stats_desc {
 	__u8 info;
 	__u8 ns_info;
 	__le16 size;
-	__le16 rsvd1;
+	__le16 nsid;
 	__u8 data[];
 };
 
@@ -1062,6 +1234,10 @@ static inline const char *telemetry_media_debug_event_id_to_string(int event_id)
 static inline const char *telemetry_media_wear_event_id_to_string(int event_id)
 {
 	return ARGSTR(telemetry_media_wear_event_id_str, event_id);
+}
+static inline const char *telemetry_virtual_fifo_event_id_to_string(int event_id)
+{
+	return ARGSTR(telemetry_virtual_fifo_event_id_str, event_id);
 }
 
 /**
