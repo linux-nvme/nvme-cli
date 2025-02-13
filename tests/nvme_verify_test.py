@@ -13,7 +13,7 @@ NVMe Verify Testcase:-
 
 """
 
-from nvme_test import TestNVMe
+from nvme_test import TestNVMe, to_decimal
 
 
 class TestNVMeVerify(TestNVMe):
@@ -25,9 +25,21 @@ class TestNVMeVerify(TestNVMe):
               - test_log_dir : directory for logs, temp files.
     """
 
+    def verify_cmd_supported(self):
+        """ Wrapper for extracting optional NVM 'verify' command support
+            - Args:
+                - None
+            - Returns:
+                - True if 'verify' is supported, otherwise False
+        """
+        return to_decimal(self.get_id_ctrl_field_value("oncs")) & (1 << 7)
+
     def setUp(self):
         """ Pre Section for TestNVMeVerify """
         super().setUp()
+        if not self.verify_cmd_supported():
+            self.skipTest(
+                "because: Optional NVM Command 'Verify' (NVMVFYS) not supported")
         self.start_block = 0
         self.block_count = 0
         self.namespace = 1
