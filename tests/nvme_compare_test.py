@@ -30,6 +30,7 @@ NVMe Compare Command Testcase:-
 
 """
 
+from nvme_test import to_decimal
 from nvme_test_io import TestNVMeIO
 
 
@@ -52,7 +53,7 @@ class TestNVMeCompareCmd(TestNVMeIO):
             - Returns:
                 - True if 'compare' is supported, otherwise False
         """
-        return int(self.get_id_ctrl_field_value("oncs"), 16) & (1 << 0)
+        return to_decimal(self.get_id_ctrl_field_value("oncs")) & (1 << 0)
 
     def setUp(self):
         """ Pre Section for TestNVMeCompareCmd """

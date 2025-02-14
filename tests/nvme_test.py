@@ -36,6 +36,16 @@ import time
 from nvme_test_logger import TestNVMeLogger
 
 
+def to_decimal(value):
+    """ Wrapper for converting numbers to base 10 decimal
+        - Args:
+            - value: A number in any common base
+        - Returns:
+            - Decimal integer
+    """
+    return int(str(value), 0)
+
+
 class TestNVMe(unittest.TestCase):
 
     """
@@ -246,7 +256,7 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - True if 'Get LBA Status' command is supported, otherwise False
         """
-        return int(self.get_id_ctrl_field_value("oacs"), 16) & (1 << 9)
+        return to_decimal(self.get_id_ctrl_field_value("oacs")) & (1 << 9)
 
     def get_lba_format_size(self):
         """ Wrapper for extracting lba format size of the given flbas
@@ -284,7 +294,7 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - Total NVM capacity.
         """
-        return int(self.get_id_ctrl_field_value("tnvmcap"))
+        return to_decimal(self.get_id_ctrl_field_value("tnvmcap"))
 
     def get_id_ctrl_field_value(self, field):
         """ Wrapper for extracting id-ctrl field values
@@ -313,7 +323,7 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - Optional Copy Formats Supported
         """
-        return int(self.get_id_ctrl_field_value("ocfs"), 16)
+        return to_decimal(self.get_id_ctrl_field_value("ocfs"))
 
     def delete_all_ns(self):
         """ Wrapper for deleting all the namespaces.
