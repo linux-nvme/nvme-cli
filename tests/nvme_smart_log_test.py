@@ -27,7 +27,7 @@ NVMe Smart Log Verification Testcase:-
 
 """
 
-from nvme_test import TestNVMe
+from nvme_test import TestNVMe, to_decimal
 
 
 class TestNVMeSmartLogCmd(TestNVMe):
@@ -84,6 +84,6 @@ class TestNVMeSmartLogCmd(TestNVMe):
     def test_smart_log(self):
         """ Testcase main """
         self.assertEqual(self.get_smart_log_ctrl(), 0)
-        smlp = int(self.get_id_ctrl_field_value("lpa"), 16)
+        smlp = to_decimal(self.get_id_ctrl_field_value("lpa"))
         if smlp & 0x1:
             self.assertEqual(self.get_smart_log_all_ns(), 0)
