@@ -4,9 +4,12 @@
 #include <errno.h>
 #include <time.h>
 
+#include <ccan/ccan/compiler/compiler.h>
+
 #include "nvme-print.h"
 
 #include "util/json.h"
+#include "util/logging.h"
 #include "nvme.h"
 #include "common.h"
 
@@ -4705,7 +4708,8 @@ static void json_reachability_groups_log(struct nvme_reachability_groups_log *lo
 	json_print(r);
 }
 
-static void json_reachability_associations_log(struct nvme_reachability_associations_log *log)
+static void json_reachability_associations_log(struct nvme_reachability_associations_log *log,
+					       __u64 len UNUSED)
 {
 	struct json_object *r = json_create_object();
 	__u16 i;

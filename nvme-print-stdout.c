@@ -18,6 +18,7 @@
 #include "nvme-models.h"
 #include "util/suffix.h"
 #include "util/types.h"
+#include "util/logging.h"
 #include "common.h"
 
 static const uint8_t zero_uuid[16] = { 0 };
@@ -5673,11 +5674,13 @@ static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *
 	}
 }
 
-static void stdout_reachability_associations_log(struct nvme_reachability_associations_log *log)
+static void stdout_reachability_associations_log(struct nvme_reachability_associations_log *log,
+						 __u64 len)
 {
 	__u16 i;
 	__u32 j;
 
+	print_debug("len: %"PRIu64"\n", (uint64_t)len);
 	printf("chngc: %"PRIu64"\n", le64_to_cpu(log->chngc));
 	printf("nrad: %u\n", le16_to_cpu(log->nrad));
 
