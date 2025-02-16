@@ -2,6 +2,7 @@
 
 #include "nvme-print.h"
 #include "util/logging.h"
+#include "common.h"
 
 static struct print_ops binary_print_ops;
 
@@ -319,7 +320,7 @@ static void binary_rotational_media_info_log(struct nvme_rotational_media_info_l
 
 static void binary_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_log *log)
 {
-	d_raw((unsigned char *)log, sizeof(*log));
+	d_raw((unsigned char *)log, sizeof(*log) + le64_to_cpu(log->numpsub) * NVME_NQN_LENGTH);
 }
 
 static void binary_reachability_groups_log(struct nvme_reachability_groups_log *log, __u64 len)
