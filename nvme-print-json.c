@@ -4684,7 +4684,7 @@ static void json_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_ns
 	json_print(r);
 }
 
-static void json_reachability_groups_log(struct nvme_reachability_groups_log *log)
+static void json_reachability_groups_log(struct nvme_reachability_groups_log *log, __u64 len UNUSED)
 {
 	struct json_object *r = json_create_object();
 	__u16 i;

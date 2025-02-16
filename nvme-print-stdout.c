@@ -5657,11 +5657,12 @@ static void stdout_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_
 		       &log->participating_nss[i * NVME_NQN_LENGTH]);
 }
 
-static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log)
+static void stdout_reachability_groups_log(struct nvme_reachability_groups_log *log, __u64 len)
 {
 	__u16 i;
 	__u32 j;
 
+	print_debug("len: %"PRIu64"\n", (uint64_t)len);
 	printf("chngc: %"PRIu64"\n", le64_to_cpu(log->chngc));
 	printf("nrgd: %u\n", le16_to_cpu(log->nrgd));
 

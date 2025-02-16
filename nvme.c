@@ -10390,7 +10390,7 @@ static int get_log_offset(struct nvme_dev *dev, struct nvme_get_log_args *args, 
 }
 
 static int get_reachability_group_desc(struct nvme_dev *dev, struct nvme_get_log_args *args,
-				       __u64 offset, struct nvme_reachability_groups_log **logp)
+				       __u64 *offset, struct nvme_reachability_groups_log **logp)
 {
 	int err;
 	struct nvme_reachability_groups_log *log = *logp;
@@ -10399,11 +10399,11 @@ static int get_reachability_group_desc(struct nvme_dev *dev, struct nvme_get_log
 
 	for (i = 0; i < le16_to_cpu(log->nrgd); i++) {
 		len = sizeof(*log->rgd);
-		err = get_log_offset(dev, args, &offset, len, (void **)&log);
+		err = get_log_offset(dev, args, offset, len, (void **)&log);
 		if (err)
 			goto err_free;
 		len = le32_to_cpu(log->rgd[i].nnid) * sizeof(*log->rgd[i].nsid);
-		err = get_log_offset(dev, args, &offset, len, (void **)&log);
+		err = get_log_offset(dev, args, offset, len, (void **)&log);
 		if (err)
 			goto err_free;
 	}
@@ -10418,7 +10418,8 @@ err_free:
 }
 
 static int get_reachability_groups(struct nvme_dev *dev, bool rgo, bool rae,
-				   struct nvme_reachability_groups_log **logp)
+				   struct nvme_reachability_groups_log **logp,
+				   __u64 *lenp)
 {
 	int err;
 	struct nvme_reachability_groups_log *log;
@@ -10441,11 +10442,12 @@ static int get_reachability_groups(struct nvme_dev *dev, bool rgo, bool rae,
 	if (err)
 		goto err_free;
 
-	err = get_reachability_group_desc(dev, &args, log_len, &log);
+	err = get_reachability_group_desc(dev, &args, &log_len, &log);
 	if (err)
 		goto err_free;
 
 	*logp = log;
+	*lenp = log_len;
 	return 0;
 
 err_free:
@@ -10460,6 +10462,7 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *cm
 	const char *rgo = "Return Groups Only";
 	nvme_print_flags_t flags;
 	int err;
+	__u64 len = 0;
 
 	_cleanup_free_ struct nvme_reachability_groups_log *log = NULL;
 
@@ -10489,9 +10492,9 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *cm
 		return err;
 	}
 
-	err = get_reachability_groups(dev, cfg.rgo, cfg.rae, &log);
+	err = get_reachability_groups(dev, cfg.rgo, cfg.rae, &log, &len);
 	if (!err)
-		nvme_show_reachability_groups_log(log, flags);
+		nvme_show_reachability_groups_log(log, len, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
