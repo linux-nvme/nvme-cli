@@ -65,14 +65,12 @@ static void binary_boot_part_log(void *bp_log, const char *devname,
 	d_raw((unsigned char *)bp_log, size);
 }
 
-static void binary_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log,
-	__u16 controller)
+static void binary_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controller)
 {
-	size_t len;
+	size_t len = le16_to_cpu(log->hsize);
+
 	if (log->eomip == NVME_PHY_RX_EOM_COMPLETED)
-		len = log->hsize + log->dsize * log->nd;
-	else
-		len = log->hsize;
+		len += (size_t)le32_to_cpu(log->dsize) * le16_to_cpu(log->nd);
 
 	d_raw((unsigned char *)log, len);
 }
