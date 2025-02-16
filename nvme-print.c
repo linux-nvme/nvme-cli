@@ -1510,9 +1510,9 @@ void nvme_show_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_nss_
 }
 
 void nvme_show_reachability_groups_log(struct nvme_reachability_groups_log *log,
-				       nvme_print_flags_t flags)
+				       __u64 len, nvme_print_flags_t flags)
 {
-	nvme_print(reachability_groups_log, flags, log);
+	nvme_print(reachability_groups_log, flags, log, len);
 }
 
 void nvme_show_reachability_associations_log(struct nvme_reachability_associations_log *log,

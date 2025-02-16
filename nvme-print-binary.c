@@ -322,9 +322,9 @@ static void binary_dispersed_ns_psub_log(struct nvme_dispersed_ns_participating_
 	d_raw((unsigned char *)log, sizeof(*log));
 }
 
-static void binary_reachability_groups_log(struct nvme_reachability_groups_log *log)
+static void binary_reachability_groups_log(struct nvme_reachability_groups_log *log, __u64 len)
 {
-	d_raw((unsigned char *)log, sizeof(*log));
+	d_raw((unsigned char *)log, len);
 }
 
 static void binary_reachability_associations_log(struct nvme_reachability_associations_log *log,
