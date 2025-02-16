@@ -1516,7 +1516,7 @@ void nvme_show_reachability_groups_log(struct nvme_reachability_groups_log *log,
 }
 
 void nvme_show_reachability_associations_log(struct nvme_reachability_associations_log *log,
-					     nvme_print_flags_t flags)
+					     __u64 len, nvme_print_flags_t flags)
 {
-	nvme_print(reachability_associations_log, flags, log);
+	nvme_print(reachability_associations_log, flags, log, len);
 }

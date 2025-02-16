@@ -10501,7 +10501,7 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *cm
 }
 
 static int get_reachability_association_desc(struct nvme_dev *dev, struct nvme_get_log_args *args,
-					     __u64 offset,
+					     __u64 *offset,
 					     struct nvme_reachability_associations_log **logp)
 {
 	int err;
@@ -10511,11 +10511,11 @@ static int get_reachability_association_desc(struct nvme_dev *dev, struct nvme_g
 
 	for (i = 0; i < le16_to_cpu(log->nrad); i++) {
 		len = sizeof(*log->rad);
-		err = get_log_offset(dev, args, &offset, len, (void **)&log);
+		err = get_log_offset(dev, args, offset, len, (void **)&log);
 		if (err)
 			goto err_free;
 		len = le32_to_cpu(log->rad[i].nrid) * sizeof(*log->rad[i].rgid);
-		err = get_log_offset(dev, args, &offset, len, (void **)&log);
+		err = get_log_offset(dev, args, offset, len, (void **)&log);
 		if (err)
 			goto err_free;
 	}
@@ -10530,7 +10530,8 @@ err_free:
 }
 
 static int get_reachability_associations(struct nvme_dev *dev, bool rao, bool rae,
-					 struct nvme_reachability_associations_log **logp)
+					 struct nvme_reachability_associations_log **logp,
+					 __u64 *lenp)
 {
 	int err;
 	struct nvme_reachability_associations_log *log;
@@ -10553,11 +10554,12 @@ static int get_reachability_associations(struct nvme_dev *dev, bool rao, bool ra
 	if (err)
 		goto err_free;
 
-	err = get_reachability_association_desc(dev, &args, log_len, &log);
+	err = get_reachability_association_desc(dev, &args, &log_len, &log);
 	if (err)
 		goto err_free;
 
 	*logp = log;
+	*lenp = log_len;
 	return 0;
 
 err_free:
@@ -10572,6 +10574,7 @@ static int get_reachability_associations_log(int argc, char **argv, struct comma
 	const char *rao = "Return Associations Only";
 	nvme_print_flags_t flags;
 	int err;
+	__u64 len = 0;
 
 	_cleanup_free_ struct nvme_reachability_associations_log *log = NULL;
 
@@ -10601,9 +10604,9 @@ static int get_reachability_associations_log(int argc, char **argv, struct comma
 		return err;
 	}
 
-	err = get_reachability_associations(dev, cfg.rao, cfg.rae, &log);
+	err = get_reachability_associations(dev, cfg.rao, cfg.rae, &log, &len);
 	if (!err)
-		nvme_show_reachability_associations_log(log, flags);
+		nvme_show_reachability_associations_log(log, len, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else

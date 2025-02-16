@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 
 #include "nvme-print.h"
+#include "util/logging.h"
 
 static struct print_ops binary_print_ops;
 
@@ -326,9 +327,10 @@ static void binary_reachability_groups_log(struct nvme_reachability_groups_log *
 	d_raw((unsigned char *)log, sizeof(*log));
 }
 
-static void binary_reachability_associations_log(struct nvme_reachability_associations_log *log)
+static void binary_reachability_associations_log(struct nvme_reachability_associations_log *log,
+						 __u64 len)
 {
-	d_raw((unsigned char *)log, sizeof(*log));
+	d_raw((unsigned char *)log, len);
 }
 
 static struct print_ops binary_print_ops = {
