@@ -127,8 +127,10 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 
 	capacity = le64_to_cpu(smart->raw_ns.nsze) * lba;
 
-	snprintf(tempbuff, sizeof(tempbuff), "log;%s;%lu;%s;%s;%-.*s;", smart->raw_ctrl.sn, smart->time_stamp, smart->path,
-		smart->raw_ctrl.mn, (int)sizeof(smart->raw_ctrl.fr), smart->raw_ctrl.fr);
+	snprintf(tempbuff, sizeof(tempbuff), "log;%s;%llu;%s;%s;%-.*s;", smart->raw_ctrl.sn,
+		 (unsigned long long)smart->time_stamp, smart->path,
+		 smart->raw_ctrl.mn, (int)sizeof(smart->raw_ctrl.fr),
+		 smart->raw_ctrl.fr);
 	strcpy(text, tempbuff);
 	snprintf(tempbuff, sizeof(tempbuff), "Capacity;%lf;", capacity / 1000000000);
 	strcat(text, tempbuff);
