@@ -512,7 +512,7 @@ int sedopal_cmd_discover(int fd)
 	uint8_t locking_flags = 0;
 	char buf[4096];
 
-	discover.data = (__u64)buf;
+	discover.data = (uintptr_t)buf;
 	discover.size = sizeof(buf);
 
 	rc = ioctl(fd, IOC_OPAL_DISCOVERY, &discover);
