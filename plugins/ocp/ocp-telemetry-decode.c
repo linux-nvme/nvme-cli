@@ -39,6 +39,7 @@ void print_stats_desc(struct telemetry_stats_desc *stat_desc)
 	printf("Statistics info               : 0x%x\n", stat_desc->info);
 	printf("NS info                       : 0x%x\n", stat_desc->ns_info);
 	printf("Statistic Data Size           : 0x%x\n", le16_to_cpu(stat_data_sz));
+	printf("Namespace ID[15:0]            : 0x%x\n", stat_desc->nsid);
 
 	if (stat_data_sz > 0) {
 		printf("%s  : 0x",
@@ -109,13 +110,18 @@ void print_telemetry_fifo_event(__u8 class_type,
 		if ((id == ADMIN_QUEUE_NONZERO_STATUS) ||
 			(id == IO_QUEUE_NONZERO_STATUS)) {
 			printf("  Cmd Op Code   : 0x%02x\n", data[0]);
-			__u16 status = *(__u16 *)&data[1];
-			__u16 cmd_id = *(__u16 *)&data[3];
-			__u16 sq_id = *(__u16 *)&data[5];
+			__u16 status;
+			__u16 cmd_id;
+			__u16 sq_id;
+
+			memcpy(&status, &data[1], sizeof(status));
+			memcpy(&cmd_id, &data[3], sizeof(cmd_id));
+			memcpy(&sq_id, &data[5], sizeof(sq_id));
 
 			printf("  Status Code   : 0x%04x\n", le16_to_cpu(status));
 			printf("  Cmd ID        : 0x%04x\n", le16_to_cpu(cmd_id));
 			printf("  SQ ID         : 0x%04x\n", le16_to_cpu(sq_id));
+			printf("  LID,FID,Other Cmd Reserved         : 0x%02x\n", data[7]);
 		} else if (id == CC_REGISTER_CHANGED) {
 			__u32 cc_reg_data = *(__u32 *)data;
 
@@ -126,6 +132,20 @@ void print_telemetry_fifo_event(__u8 class_type,
 
 			printf("  CSTS Reg Data : 0x%08x\n",
 					le32_to_cpu(csts_reg_data));
+		} else if (id == OOB_COMMAND) {
+			printf("  Cmd Op Code   : 0x%02x\n", data[0]);
+			__u16 status;
+			memcpy(&status, &data[1], sizeof(status));
+
+			printf("  Admin Cmd Status   : 0x%04x\n", le16_to_cpu(status));
+			printf("  NVMe MI SC         : 0x%02x\n", data[3]);
+			printf("  Byte1 Req Msg      : 0x%02x\n", data[4]);
+			printf("  Byte2 Req Msg      : 0x%02x\n", data[5]);
+		} else if (id == OOB_AER_EVENT_MSG_TRANS) {
+			__u64 aem = *(__u64 *)data;
+
+			printf("  AEM   : 0x%016"PRIx64"\n",
+					le64_to_cpu(aem));
 		}
 		if (size > 8)
 			print_vu_event_data((size-8), (__u8 *)&data[8]);
@@ -168,7 +188,7 @@ void print_telemetry_fifo_event(__u8 class_type,
 
 	case TELEMETRY_MEDIA_WEAR_CLASS:
 		printf("  Event ID          : 0x%04x %s\n",
-			id, telemetry_media_debug_event_id_to_string(id));
+			id, telemetry_media_wear_event_id_to_string(id));
 		__u32 host_tb_written = *(__u32 *)&data[0];
 		__u32 media_tb_written = *(__u32 *)&data[4];
 		__u32 media_tb_erased = *(__u32 *)&data[8];
@@ -188,6 +208,16 @@ void print_telemetry_fifo_event(__u8 class_type,
 		printf("  Statistic ID      : 0x%02x %s\n",
 			id, telemetry_stat_id_to_string(id));
 		print_stats_desc((struct telemetry_stats_desc *)data);
+		break;
+
+	case TELEMETRY_VIRTUAL_FIFO_EVENT_CLASS:
+		printf("  Event ID : 0x%04x %s\n",
+			id, telemetry_virtual_fifo_event_id_to_string(id));
+
+		__u16 vu_event_id = *(__u16 *)data;
+
+		printf("  VU Virtual FIFO Event ID   : 0x%02x\n", le16_to_cpu(vu_event_id));
+		printf("\n");
 		break;
 
 	default:
