@@ -79,36 +79,23 @@ if get_option('openssl').disabled()
   openssl_dep = dependency('', required: false)
 else
   openssl_dep = dependency('openssl',
-                           version: '>=1.1.0',
+                           version: '>=3.0.0',
                            required: get_option('openssl'),
                            fallback : ['openssl', 'libssl_dep'])
-
-  if openssl_dep.found()
-    if openssl_dep.version().version_compare('<2.0.0')
-      api_version = 1
+endif
+if openssl_dep.found()
+  # Test for LibreSSL v3.x with incomplete OpenSSL v3 APIs
+  if openssl_dep.type_name() != 'internal'
+    is_libressl = cc.has_header_symbol('openssl/opensslv.h',
+                                       'LIBRESSL_VERSION_NUMBER',
+                                       dependencies: openssl_dep)
+    has_header = cc.has_header('openssl/core_names.h',
+                               dependencies: openssl_dep)
+    if is_libressl and not has_header
+      openssl_dep = dependency('', required: false)
     endif
-
-    if openssl_dep.version().version_compare('>=3.0.0')
-      api_version = 3
-    endif
-
-    # Test for LibreSSL v3.x with incomplete OpenSSL v3 APIs
-    if openssl_dep.type_name() != 'internal'
-      is_libressl = cc.has_header_symbol('openssl/opensslv.h',
-                                         'LIBRESSL_VERSION_NUMBER',
-                                         dependencies: openssl_dep)
-      has_header = cc.has_header('openssl/core_names.h',
-                                 dependencies: openssl_dep)
-      if is_libressl and not has_header
-        api_version = 1
-      endif
-    endif
-
-    conf.set('CONFIG_OPENSSL_@0@'.format(api_version), true,
-             description: 'OpenSSL/LibreSSL API version @0@'.format(api_version))
   endif
 endif
-
 conf.set('CONFIG_OPENSSL', openssl_dep.found(),
          description: 'Is OpenSSL/LibreSSL available?')
 

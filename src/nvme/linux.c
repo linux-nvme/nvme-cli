@@ -21,11 +21,8 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/kdf.h>
-
-#ifdef CONFIG_OPENSSL_3
 #include <openssl/core_names.h>
 #include <openssl/params.h>
-#endif
 #endif
 
 #ifdef CONFIG_KEYUTILS
@@ -812,149 +809,7 @@ static int derive_tls_key(int version, unsigned char cipher,
 
 	return key_len;
 }
-#endif /* CONFIG_OPENSSL */
 
-#ifdef CONFIG_OPENSSL_1
-static DEFINE_CLEANUP_FUNC(cleanup_hmac_ctx, HMAC_CTX *, HMAC_CTX_free)
-#define _cleanup_hmac_ctx_ __cleanup__(cleanup_hmac_ctx)
-
-int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
-			unsigned int key_len, unsigned char *secret,
-			unsigned char *key)
-{
-	const char hmac_seed[] = "NVMe-over-Fabrics";
-	_cleanup_hmac_ctx_ HMAC_CTX *hmac_ctx = NULL;
-	const EVP_MD *md;
-
-	hmac_ctx = HMAC_CTX_new();
-	if (!hmac_ctx) {
-		errno = ENOMEM;
-		return -1;
-	}
-
-	switch (hmac) {
-	case NVME_HMAC_ALG_NONE:
-		memcpy(key, secret, key_len);
-		return 0;
-	case NVME_HMAC_ALG_SHA2_256:
-		md = EVP_sha256();
-		break;
-	case NVME_HMAC_ALG_SHA2_384:
-		md = EVP_sha384();
-		break;
-	case NVME_HMAC_ALG_SHA2_512:
-		md = EVP_sha512();
-		break;
-	default:
-		errno = EINVAL;
-		return -1;
-	}
-
-	if (!md) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	if (!HMAC_Init_ex(hmac_ctx, secret, key_len, md, NULL)) {
-		errno = ENOMEM;
-		return -1;
-	}
-
-	if (!HMAC_Update(hmac_ctx, (unsigned char *)hostnqn,
-			 strlen(hostnqn))) {
-		errno = ENOKEY;
-		return -1;
-	}
-
-	if (!HMAC_Update(hmac_ctx, (unsigned char *)hmac_seed,
-			 strlen(hmac_seed))) {
-		errno = ENOKEY;
-		return -1;
-	}
-
-	if (!HMAC_Final(hmac_ctx, key, &key_len)) {
-		errno = ENOKEY;
-		return -1;
-	}
-
-	return 0;
-}
-
-static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
-			     int version, int cipher,
-			     unsigned char *retained, size_t key_len,
-			     char *digest, size_t digest_len)
-{
-	static const char hmac_seed[] = "NVMe-over-Fabrics";
-	_cleanup_hmac_ctx_ HMAC_CTX *hmac_ctx = NULL;
-	_cleanup_free_ unsigned char *psk_ctx = NULL;
-	const EVP_MD *md;
-	size_t hmac_len;
-	size_t len;
-
-	hmac_ctx = HMAC_CTX_new();
-	if (!hmac_ctx) {
-		errno = ENOMEM;
-		return -1;
-	}
-	md = select_hmac(cipher, &hmac_len);
-	if (!md || !hmac_len) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	psk_ctx = malloc(key_len);
-	if (!psk_ctx) {
-		errno = ENOMEM;
-		return -1;
-	}
-	if (!HMAC_Init_ex(hmac_ctx, retained, key_len, md, NULL)) {
-		errno = ENOMEM;
-		return -1;
-	}
-	if (!HMAC_Update(hmac_ctx, (unsigned char *)hostnqn,
-			 strlen(hostnqn))) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (!HMAC_Update(hmac_ctx, (unsigned char *)" ", 1)) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (!HMAC_Update(hmac_ctx, (unsigned char *)subsysnqn,
-			 strlen(subsysnqn))) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (!HMAC_Update(hmac_ctx, (unsigned char *)" ", 1)) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (!HMAC_Update(hmac_ctx, (unsigned char *)hmac_seed,
-			 strlen(hmac_seed))) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (!HMAC_Final(hmac_ctx, psk_ctx, (unsigned int *)&key_len)) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (key_len * 2 > digest_len) {
-		errno = EINVAL;
-		return -1;
-	}
-	memset(digest, 0, digest_len);
-	len = base64_encode(psk_ctx, key_len, digest);
-	if (len < 0) {
-		errno = ENOKEY;
-		return len;
-	}
-	return strlen(digest);
-}
-
-#endif /* !CONFIG_OPENSSL_1 */
-
-#ifdef CONFIG_OPENSSL_3
 static DEFINE_CLEANUP_FUNC(
 	cleanup_ossl_lib_ctx, OSSL_LIB_CTX *, OSSL_LIB_CTX_free)
 #define _cleanup_ossl_lib_ctx_ __cleanup__(cleanup_ossl_lib_ctx)
@@ -1148,7 +1003,7 @@ static int derive_psk_digest(const char *hostnqn, const char *subsysnqn,
 	}
 	return strlen(digest);
 }
-#endif /* !CONFIG_OPENSSL_3 */
+#endif /* !CONFIG_OPENSSL */
 
 static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 			    int version, int cipher, char *digest,
