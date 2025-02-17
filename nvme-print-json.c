@@ -2971,6 +2971,8 @@ static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 {
 	struct json_object *r = json_create_object();
+	__u16 rsvd = (ctrl_nvm->aocs & 0xfffe) >> 1;
+	__u8 ralbas = ctrl_nvm->aocs & 0x1;
 
 	obj_add_uint(r, "vsl", ctrl_nvm->vsl);
 	obj_add_uint(r, "wzsl", ctrl_nvm->wzsl);
@@ -2978,14 +2980,16 @@ static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	obj_add_uint(r, "dmrl", ctrl_nvm->dmrl);
 	obj_add_uint(r, "dmrsl", le32_to_cpu(ctrl_nvm->dmrsl));
 	obj_add_uint64(r, "dmsl", le64_to_cpu(ctrl_nvm->dmsl));
+	obj_add_uint(r, "kpiocap", ctrl_nvm->kpiocap);
+	obj_add_uint(r, "wzdsl", ctrl_nvm->wzdsl);
 	obj_add_uint(r, "aocs", le16_to_cpu(ctrl_nvm->aocs));
-
-	__u16 rsvd = (ctrl_nvm->aocs & 0xfffe) >> 1;
-	__u8 ralbas = ctrl_nvm->aocs & 0x1;
 
 	if (rsvd)
 		obj_add_uint(r, "[15:1]: Reserved", rsvd);
 	obj_add_uint(r, "[0:0]: Reporting Allocated LBA Supported", ralbas);
+
+	obj_add_uint(r, "ver", le32_to_cpu(ctrl_nvm->ver));
+	obj_add_uint(r, "lbamqf", ctrl_nvm->lbamqf);
 
 	json_print(r);
 }
