@@ -467,5 +467,5 @@ int nvme_cli_get_log_reachability_groups(struct nvme_dev *dev, bool rgo, bool ra
 int nvme_cli_get_log_reachability_associations(struct nvme_dev *dev, bool rao, bool rae, __u32 len,
 					       struct nvme_reachability_associations_log *log)
 {
-	return do_admin_op(get_log_reachability_associations, dev, len, rao, rae, log);
+	return do_admin_op(get_log_reachability_associations, dev, rao, rae, len, log);
 }
