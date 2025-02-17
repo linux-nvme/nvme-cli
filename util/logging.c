@@ -81,8 +81,9 @@ static void nvme_show_command64(struct nvme_passthru_cmd64 *cmd, int err)
 
 static void nvme_show_latency(struct timeval start, struct timeval end)
 {
-	printf("latency      : %lu us\n",
-	       (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec));
+	printf("latency      : %llu us\n",
+	       (unsigned long long)((end.tv_sec - start.tv_sec) * 1000000 +
+				    (end.tv_usec - start.tv_usec)));
 }
 
 int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
