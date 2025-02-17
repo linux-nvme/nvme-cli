@@ -3338,6 +3338,20 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	}
 }
 
+static void stdout_id_ctrl_nvm_kpiocap(__u8 kpiocap)
+{
+	__u8 rsvd2 = (kpiocap & 0xfc) >> 2;
+	__u8 kpiosc = (kpiocap & 0x2) >> 1;
+	__u8 kpios = kpiocap & 0x1;
+
+	if (rsvd2)
+		printf("  [7:2] : %#x\tReserved\n", rsvd2);
+	printf("  [1:1] : %#x\tKey Per I/O capability enabled and disabled %s in the"
+		"NVM subsystem\n", kpiosc, kpiosc ? "all namespaces" : "each namespace");
+	printf("  [0:0] : %#x\tKey Per I/O capability %sSupported\n", kpios,
+		kpios ? "" : "Not ");
+}
+
 static void stdout_id_ctrl_nvm_aocs(__u16 aocs)
 {
 	__u16 rsvd = (aocs & 0xfffe) >> 1;
@@ -3384,6 +3398,10 @@ static void stdout_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	printf("dmrl   : %u\n", ctrl_nvm->dmrl);
 	printf("dmrsl  : %u\n", le32_to_cpu(ctrl_nvm->dmrsl));
 	printf("dmsl   : %"PRIu64"\n", le64_to_cpu(ctrl_nvm->dmsl));
+	printf("kpiocap: %u\n", ctrl_nvm->kpiocap);
+	if (verbose)
+		stdout_id_ctrl_nvm_kpiocap(ctrl_nvm->kpiocap);
+	printf("wzdsl  : %u\n", ctrl_nvm->wzdsl);
 	printf("aocs   : %u\n", le16_to_cpu(ctrl_nvm->aocs));
 	if (verbose)
 		stdout_id_ctrl_nvm_aocs(le16_to_cpu(ctrl_nvm->aocs));
