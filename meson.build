@@ -31,7 +31,7 @@ endif
 
 ################################################################################
 cc = meson.get_compiler('c')
-cxx_available = add_languages('cpp', required: false)
+cxx_available = add_languages('cpp', required: false, native: false)
 
 prefixdir  = get_option('prefix')
 libdir     = join_paths(prefixdir, get_option('libdir'))
