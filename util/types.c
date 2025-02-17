@@ -179,7 +179,7 @@ int convert_ts(time_t time, char *ts_buf)
 	gmtime_r((const time_t *)&time_human, &time_info);
 
 	strftime(buf, sizeof(buf), "%Y-%m-%dD|%H:%M:%S", &time_info);
-	sprintf(ts_buf, "%s:%03ld", buf, time_ms);
+	sprintf(ts_buf, "%s:%03llu", buf, (unsigned long long)time_ms);
 
 	return 0;
 }
