@@ -9,6 +9,9 @@ While this module is currently built around dracut, the amount of dracut
 involvement in this module is kept to a required minimum with the intention
 of supporting more initramfs frameworks (like `mkosi`) in the future.
 
+This is achieved by splitting the framework-specific directives into systemd
+unit dropins while keeping the main unit files generic.
+
 Related nvme-cli meson configure options:
 * `-Ddracut-module` (default=false) - enables the 95nbft dracut module
 * `-Ddracutmodulesdir` (default=`$prefix/lib/dracut/modules.d/`)

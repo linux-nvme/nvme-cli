@@ -41,10 +41,16 @@ install() {
     # TODO: /etc/nvme/hostnqn
 
     inst_multiple "$systemdsystemunitdir"/modprobe@.service
+
+    inst_simple "$moddir/nbft-boot-pre-dracut.conf" \
+                "$systemdsystemunitdir/nbft-boot-pre.service.d/nbft-boot-pre-dracut.conf"
+    inst_simple "$moddir/nbft-boot-connect-dracut.conf" \
+                "$systemdsystemunitdir/nbft-boot-connect.service.d/nbft-boot-connect-dracut.conf"
+
     for i in \
         nbft-boot-pre.service \
         nbft-boot-connect.service; do
-        inst_simple "${moddir}/$i" "${systemdsystemunitdir}/$i"
+        inst_multiple "${systemdsystemunitdir}/$i"
         $SYSTEMCTL -q --root "$initdir" enable $i
     done
 }
