@@ -1,0 +1,6 @@
+[Unit]
+Before=dracut-cmdline.service
+
+[Service]
+# Tell dracut to start networking
+ExecStart=bash -c 'echo rd.neednet=1 > @SYSCONFDIR@/cmdline.d/95nbft-args.conf'

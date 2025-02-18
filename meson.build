@@ -237,12 +237,25 @@ foreach file : dracut_conf_files
   )
 endforeach
 
+systemd_files = [
+  'nvmefc-boot-connections.service',
+  'nvmf-autoconnect.service',
+  'nvmf-connect-nbft.service',
+  'nvmf-connect.target',
+  'nvmf-connect@.service',
+]
+
 want_dracut_module = get_option('dracut-module')
 if want_dracut_module
-  dracut_nbft_files = [
-    'module-setup.sh',
+  systemd_files += [
     'nbft-boot-pre.service',
     'nbft-boot-connect.service'
+  ]
+
+  dracut_nbft_files = [
+    'module-setup.sh',
+    'nbft-boot-pre-dracut.conf',
+    'nbft-boot-connect-dracut.conf'
   ]
 
   foreach file : dracut_nbft_files
@@ -277,14 +290,6 @@ if want_dracut_module
     )
   endforeach
 endif
-
-systemd_files = [
-  'nvmefc-boot-connections.service',
-  'nvmf-autoconnect.service',
-  'nvmf-connect-nbft.service',
-  'nvmf-connect.target',
-  'nvmf-connect@.service',
-]
 
 foreach file : systemd_files
   configure_file(
