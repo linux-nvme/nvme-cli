@@ -1236,6 +1236,41 @@ plugin_solidigm_opts () {
 	return 0
 }
 
+plugin_fdp_opts () {
+	local opts=""
+	local compargs=""
+
+	local nonopt_args=0
+	for (( i=0; i < ${#words[@]}-1; i++ )); do
+		if [[ ${words[i]} != -* ]]; then
+			let nonopt_args+=1
+		fi
+	done
+
+	if [ $nonopt_args -eq 3 ]; then
+		opts="/dev/nvme* "
+	fi
+
+	opts+=" "
+
+	case "$1" in
+		"feature")
+		opts+=" --endgrp-id= -e --enable-conf-idx= -c \
+		--disable -d --verbose -v"
+			;;
+		"version")
+		opts+=$NO_OPTS
+			;;
+		"help")
+		opts+=$NO_OPTS
+			;;
+	esac
+
+	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+
+	return 0
+}
+
 plugin_transcend_opts () {
 	local opts=""
 	local compargs=""
@@ -1631,6 +1666,7 @@ _nvme_subcmds () {
 			clear-fw-activate-history vs-fw-activate-history log-page-directory \
 			vs-drive-info cloud-SSDplugin-version market-log \
 			smart-log-add temp-stats workload-tracker version help"
+		[fdp]="feature version help"
 		[transcend]="healthvalue badblock"
 		[dapustor]="smart-log-add"
 		[zns]="id-ctrl id-ns zone-mgmt-recv \
@@ -1667,6 +1703,7 @@ _nvme_subcmds () {
 		[dera]="plugin_dera_opts"
 		[sfx]="plugin_sfx_opts"
 		[solidigm]="plugin_solidigm_opts"
+		[fdp]="plugin_fdp_opts"
 		[transcend]="plugin_transcend_opts"
 		[dapustor]="plugin_dapustor_opts"
 		[zns]="plugin_zns_opts"

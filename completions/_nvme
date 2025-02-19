@@ -118,6 +118,7 @@ _nvme () {
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
+	'fdp:FDP plug-in extensions'
 	'micron:Micron plug-in extensions'
 	'dapustor:DapuStor plug-in extensions'
 	'help:print brief descriptions of all nvme commands'
@@ -597,6 +598,28 @@ _nvme () {
 				)
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme solidigm workload-tracker options" _workload_tracker
+				;;
+			(*)
+				_files
+				;;
+			esac
+			;;
+		(fdp)
+			case ${words[2]} in
+			(feature)
+				local _feature
+				_feature=(
+				--endgrp-id=':Endurance group ID'
+				-e':alias for --endgrp-id'
+				--enable-conf-idx=':FDP configuration index to enable'
+				-c':alias for --enable-conf-idx'
+				--disable=':Disable current FDP configuration'
+				-d':alias for --disable'
+				--verbose=':Increase output verbosity'
+				-v':alias for --verbose'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme fdp feature options" _feature
 				;;
 			(*)
 				_files
@@ -2643,7 +2666,10 @@ _nvme () {
 			-v':alias for --verbose'
 			--output-format=':Output format: normal|json|binary'
 			-o ':alias for --output-format'
+			)
+			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme rotational-media-info-log" _rmi_log
+			;;
 		(changed-alloc-ns-list-log)
 			local _changed_alloc_ns_list_log
 			_changed_alloc_ns_list_log=(
@@ -2768,6 +2794,16 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme solidigm options" _solidigm
 			;;
+		(fdp)
+			local _fdp
+			_fdp=(
+			feature':Show, enable or disable FDP configuration'
+			version':Shows the plug-in version'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme fdp options" _fdp
+			;;
 		(micron)
 			local micron
 			_micron=(
@@ -2824,7 +2860,7 @@ _nvme () {
 			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
 			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
 			dir-send virt-mgmt rpmb version ocp solidigm dapustor mgmt-addr-list-log
-			rotational-media-info-log changed-alloc-ns-list-log
+			rotational-media-info-log changed-alloc-ns-list-log fdp
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
