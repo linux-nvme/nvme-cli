@@ -1,0 +1,18 @@
+# This unit checks for the ACPI NBFT table presence and sets up
+# defined network interfaces
+
+[Unit]
+DefaultDependencies=no
+# Specify 'rd.nvmf.nonbft' to disable NBFT boot
+ConditionKernelCommandLine=!rd.nvmf.nonbft
+ConditionPathExistsGlob=/sys/firmware/acpi/tables/NBFT*
+Before=systemd-udevd.service
+
+[Service]
+Type=oneshot
+ExecStartPre=-/usr/bin/mkdir -p /etc/systemd/network
+# generate udev link files
+ExecStart=/usr/sbin/nvme nbft gen-udev-link-files /etc/systemd/network/
+
+[Install]
+WantedBy=sysinit.target
