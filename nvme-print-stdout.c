@@ -5020,10 +5020,14 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			       host_behavior->etdas ? "True" : "False");
 			printf("\tLBA Format Extension Enable (LBAFEE): %s\n",
 			       host_behavior->lbafee ? "True" : "False");
-			printf("\tCopy Descriptor Format 2h Enabled (CDFE): %s\n",
+			printf("\tHost Dispersed Namespace Support (HDISNS) : %s\n",
+			       host_behavior->hdisns ? "Enabled" : "Disabled");
+			printf("\tCopy Descriptor Format 2h Enabled (CDF2E) : %s\n",
 			       host_behavior->cdfe & (1 << 2) ? "True" : "False");
-			printf("\tCopy Descriptor Format 3h Enabled (CDFE): %s\n",
+			printf("\tCopy Descriptor Format 3h Enabled (CDF3E) : %s\n",
 			       host_behavior->cdfe & (1 << 3) ? "True" : "False");
+			printf("\tCopy Descriptor Format 4h Enabled (CDF4E) : %s\n",
+			       host_behavior->cdfe & (1 << 4) ? "True" : "False");
 		}
 		break;
 	case NVME_FEAT_FID_SANITIZE:

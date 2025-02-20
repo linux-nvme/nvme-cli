@@ -3504,8 +3504,25 @@ static void json_feature_show_fields_lba_sts_interval(struct json_object *r, uns
 
 static void json_feature_show_fields_host_behavior(struct json_object *r, unsigned char *buf)
 {
-	if (buf)
+	if (buf) {
+		struct nvme_feat_host_behavior *host = (struct nvme_feat_host_behavior *)buf;
+
 		obj_add_str(r, "Host Behavior Support", buf[0] & 0x1 ? "True" : "False");
+		obj_add_str(r, "Advanced Command Retry Enable (ACRE)", host->acre ?
+			    "True" : "False");
+		obj_add_str(r, "Extended Telemetry Data Area 4 Supported (ETDAS)", host->etdas ?
+			    "True" : "False");
+		obj_add_str(r, "LBA Format Extension Enable (LBAFEE)", host->lbafee ?
+			    "True" : "False");
+		obj_add_str(r, "Host Dispersed Namespace Support (HDISNS)", host->hdisns ?
+			    "Enabled" : "Disabled");
+		obj_add_str(r, "Copy Descriptor Format 2h Enable (CDF2E)", host->cdfe & (1 << 2) ?
+			    "True" : "False");
+		obj_add_str(r, "Copy Descriptor Format 3h Enable (CDF3E)", host->cdfe & (1 << 3) ?
+			    "True" : "False");
+		obj_add_str(r, "Copy Descriptor Format 4h Enable (CDF4E)", host->cdfe & (1 << 4) ?
+			    "True" : "False");
+	}
 }
 
 static void json_feature_show_fields_sanitize(struct json_object *r, unsigned int result)
