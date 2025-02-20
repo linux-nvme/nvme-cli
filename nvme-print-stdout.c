@@ -5034,7 +5034,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tEndurance Group Critical Warnings  : %u\n", NVME_FEAT_EG_EGCW(result));
 		break;
 	case NVME_FEAT_FID_IOCS_PROFILE:
-		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True" : "False");
+		printf("\tI/O Command Set Profile: %u\n", NVME_GET(result, FEAT_IOCSP_IOCSCI));
 		break;
 	case NVME_FEAT_FID_SPINUP_CONTROL:
 		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
