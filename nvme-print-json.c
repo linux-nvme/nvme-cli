@@ -4734,6 +4734,76 @@ static void json_reachability_associations_log(struct nvme_reachability_associat
 	json_print(r);
 }
 
+static void json_host_discovery_log(struct nvme_host_discover_log *log)
+{
+	struct json_object *r = json_create_object();
+	__u32 i;
+	__u16 j;
+	struct nvme_host_ext_discover_log *hedlpe;
+	struct nvmf_ext_attr *exat;
+	__u32 thdlpl = le32_to_cpu(log->thdlpl);
+	__u32 tel;
+	__u16 numexat;
+	char json_str[STR_LEN];
+	struct json_object *hedlpe_o;
+	struct json_object *tsas_o;
+	struct json_object *exat_o;
+	int n = 0;
+
+	obj_add_uint64(r, "genctr", le64_to_cpu(log->genctr));
+	obj_add_uint64(r, "numrec", le64_to_cpu(log->numrec));
+	obj_add_uint(r, "recfmt", le16_to_cpu(log->recfmt));
+	obj_add_uint_02x(r, "hdlpf", log->hdlpf);
+	obj_add_uint(r, "thdlpl", thdlpl);
+
+	for (i = sizeof(*log); i < le32_to_cpu(log->thdlpl); i += tel) {
+		hedlpe_o = json_create_object();
+		hedlpe = (void *)log + i;
+		tel = le32_to_cpu(hedlpe->tel);
+		numexat = le16_to_cpu(hedlpe->numexat);
+		obj_add_str(hedlpe_o, "trtype", nvmf_trtype_str(hedlpe->trtype));
+		obj_add_str(hedlpe_o, "adrfam",
+			    strlen(hedlpe->traddr) ? nvmf_adrfam_str(hedlpe->adrfam) : "");
+		obj_add_str(hedlpe_o, "eflags", nvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
+		obj_add_str(hedlpe_o, "hostnqn", hedlpe->hostnqn);
+		obj_add_str(hedlpe_o, "traddr", hedlpe->traddr);
+		tsas_o = json_create_object();
+		switch (hedlpe->trtype) {
+		case NVMF_TRTYPE_RDMA:
+			obj_add_str(tsas_o, "prtype", nvmf_prtype_str(hedlpe->tsas.rdma.prtype));
+			obj_add_str(tsas_o, "qptype", nvmf_qptype_str(hedlpe->tsas.rdma.qptype));
+			obj_add_str(tsas_o, "cms", nvmf_cms_str(hedlpe->tsas.rdma.cms));
+			obj_add_uint_0nx(tsas_o, "pkey", le16_to_cpu(hedlpe->tsas.rdma.pkey), 4);
+			break;
+		case NVMF_TRTYPE_TCP:
+			obj_add_str(tsas_o, "sectype", nvmf_sectype_str(hedlpe->tsas.tcp.sectype));
+			break;
+		default:
+			obj_d(tsas_o, "common", (unsigned char *)hedlpe->tsas.common,
+			      sizeof(hedlpe->tsas.common), 16, 1);
+			break;
+		}
+		obj_add_obj(hedlpe_o, "tsas", tsas_o);
+		obj_add_uint(hedlpe_o, "tel", tel);
+		obj_add_uint(hedlpe_o, "numexat", numexat);
+
+		exat = hedlpe->exat;
+		for (j = 0; j < numexat; j++) {
+			exat_o = json_create_object();
+			snprintf(json_str, sizeof(json_str), "exat: %d", j);
+			obj_add_uint(exat_o, "exattype", le16_to_cpu(exat->exattype));
+			obj_add_uint(exat_o, "exatlen", le16_to_cpu(exat->exatlen));
+			printf(":\n");
+			obj_d(exat_o, "exatval", (unsigned char *)exat->exatval,
+			      le16_to_cpu(exat->exatlen), 16, 1);
+			obj_add_obj(hedlpe_o, json_str, exat_o);
+			exat = nvmf_exat_ptr_next(exat);
+		}
+		snprintf(json_str, sizeof(json_str), "hedlpe: %d", n++);
+		obj_add_obj(r, json_str, hedlpe_o);
+	}
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -4806,6 +4876,7 @@ static struct print_ops json_print_ops = {
 	.dispersed_ns_psub_log		= json_dispersed_ns_psub_log,
 	.reachability_groups_log	= json_reachability_groups_log,
 	.reachability_associations_log	= json_reachability_associations_log,
+	.host_discovery_log		= json_host_discovery_log,
 
 	/* libnvme tree print functions */
 	.list_item			= json_list_item,

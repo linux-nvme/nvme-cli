@@ -5695,6 +5695,66 @@ static void stdout_reachability_associations_log(struct nvme_reachability_associ
 	}
 }
 
+static void stdout_host_discovery_log(struct nvme_host_discover_log *log)
+{
+	__u32 i;
+	__u16 j;
+	struct nvme_host_ext_discover_log *hedlpe;
+	struct nvmf_ext_attr *exat;
+	__u32 thdlpl = le32_to_cpu(log->thdlpl);
+	__u32 tel;
+	__u16 numexat;
+	int n = 0;
+
+	printf("genctr: %"PRIu64"\n", le64_to_cpu(log->genctr));
+	printf("numrec: %"PRIu64"\n", le64_to_cpu(log->numrec));
+	printf("recfmt: %u\n", le16_to_cpu(log->recfmt));
+	printf("hdlpf: %02x\n", log->hdlpf);
+	printf("thdlpl: %u\n", thdlpl);
+
+	for (i = sizeof(*log); i < le32_to_cpu(log->thdlpl); i += tel) {
+		printf("hedlpe: %d\n", n++);
+		hedlpe = (void *)log + i;
+		tel = le32_to_cpu(hedlpe->tel);
+		numexat = le16_to_cpu(hedlpe->numexat);
+		printf("trtype: %s\n", nvmf_trtype_str(hedlpe->trtype));
+		printf("adrfam: %s\n",
+		       strlen(hedlpe->traddr) ? nvmf_adrfam_str(hedlpe->adrfam) : "");
+		printf("eflags: %s\n", nvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
+		printf("hostnqn: %s\n", hedlpe->hostnqn);
+		printf("traddr: %s\n", hedlpe->traddr);
+		printf("tsas: ");
+		switch (hedlpe->trtype) {
+		case NVMF_TRTYPE_RDMA:
+			printf("prtype: %s, qptype: %s, cms: %s, pkey: 0x%04x\n",
+			       nvmf_prtype_str(hedlpe->tsas.rdma.prtype),
+			       nvmf_qptype_str(hedlpe->tsas.rdma.qptype),
+			       nvmf_cms_str(hedlpe->tsas.rdma.cms),
+			       le16_to_cpu(hedlpe->tsas.rdma.pkey));
+			break;
+		case NVMF_TRTYPE_TCP:
+			printf("sectype: %s\n", nvmf_sectype_str(hedlpe->tsas.tcp.sectype));
+			break;
+		default:
+			printf("common:\n");
+			d((unsigned char *)hedlpe->tsas.common, sizeof(hedlpe->tsas.common), 16, 1);
+			break;
+		}
+		printf("tel: %u\n", tel);
+		printf("numexat: %u\n", numexat);
+
+		exat = hedlpe->exat;
+		for (j = 0; j < numexat; j++) {
+			printf("exat: %d\n", j);
+			printf("exattype: %u\n", le16_to_cpu(exat->exattype));
+			printf("exatlen: %u\n", le16_to_cpu(exat->exatlen));
+			printf("exatval:\n");
+			d((unsigned char *)exat->exatval, le16_to_cpu(exat->exatlen), 16, 1);
+			exat = nvmf_exat_ptr_next(exat);
+		}
+	}
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -5767,6 +5827,7 @@ static struct print_ops stdout_print_ops = {
 	.dispersed_ns_psub_log		= stdout_dispersed_ns_psub_log,
 	.reachability_groups_log	= stdout_reachability_groups_log,
 	.reachability_associations_log	= stdout_reachability_associations_log,
+	.host_discovery_log		= stdout_host_discovery_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,
