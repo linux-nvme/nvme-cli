@@ -64,6 +64,7 @@ COMMAND_LIST(
 	ENTRY("dispersed-ns-participating-nss-log", "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it", get_dispersed_ns_participating_nss_log)
 	ENTRY("reachability-groups-log", "Retrieve Reachability Groups Log, show it", get_reachability_groups_log)
 	ENTRY("reachability-associations-log", "Retrieve Reachability Associations Log, show it", get_reachability_associations_log)
+	ENTRY("host-discovery-log", "Retrieve Host Discovery Log, show it", get_host_discovery_log)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("get-property", "Get a property and show the resulting value", get_property)
