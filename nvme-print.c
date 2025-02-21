@@ -1520,3 +1520,8 @@ void nvme_show_reachability_associations_log(struct nvme_reachability_associatio
 {
 	nvme_print(reachability_associations_log, flags, log, len);
 }
+
+void nvme_show_host_discovery_log(struct nvme_host_discover_log *log, nvme_print_flags_t flags)
+{
+	nvme_print(host_discovery_log, flags, log);
+}

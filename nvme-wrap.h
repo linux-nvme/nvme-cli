@@ -162,4 +162,7 @@ int nvme_cli_get_log_reachability_groups(struct nvme_dev *dev, bool rgo, bool ra
 
 int nvme_cli_get_log_reachability_associations(struct nvme_dev *dev, bool rgo, bool rae, __u32 len,
 					       struct nvme_reachability_associations_log *log);
+
+int nvme_cli_get_log_host_discovery(struct nvme_dev *dev, bool allhoste, bool rae, __u32 len,
+				    struct nvme_host_discover_log *log);
 #endif /* _NVME_WRAP_H */

@@ -469,3 +469,9 @@ int nvme_cli_get_log_reachability_associations(struct nvme_dev *dev, bool rao, b
 {
 	return do_admin_op(get_log_reachability_associations, dev, rao, rae, len, log);
 }
+
+int nvme_cli_get_log_host_discovery(struct nvme_dev *dev, bool allhoste, bool rae, __u32 len,
+				    struct nvme_host_discover_log *log)
+{
+	return do_admin_op(get_log_host_discover, dev, allhoste, rae, len, log);
+}
