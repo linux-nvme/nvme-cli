@@ -512,6 +512,10 @@ nvme_list_opts () {
 		opts+=" --associations-only -a --rae -r --verbose -v \
 			--output-format= -o --timeout= -t"
 			;;
+		"host-discovery-log")
+		opts+=" --all-host-entries -a --rae -r --verbose -v \
+			--output-format= -o --timeout= -t"
+			;;
 		"version")
 		opts+=$NO_OPTS
 			;;
@@ -1742,7 +1746,8 @@ _nvme_subcmds () {
 		nvme-mi-recv nvme-mi-send get-reg set-reg mgmt-addr-list-log \
 		rotational-media-info-log changed-alloc-ns-list-log \
 		io-mgmt-recv io-mgmt-send dispersed-ns-participating-nss-log \
-		reachability-groups-log reachability-associations-log"
+		reachability-groups-log reachability-associations-log \
+		host-discovery-log"
 
 	# Add plugins:
 	for plugin in "${!_plugin_subcmds[@]}"; do
