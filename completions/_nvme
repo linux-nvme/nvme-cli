@@ -115,6 +115,7 @@ _nvme () {
 	'dispersed-ns-participating-nss-log:retrieve dispersed namespace participating NVM subsystems log'
 	'reachability-groups-log:retrieve reachability groups log'
 	'reachability-associations-log:retrieve reachability associations log'
+	'host-discovery-log:retrieve host discovery log'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
@@ -2737,6 +2738,24 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme reachability-associationsroups-log" _ra_log
+			;;
+		(host-discovery-log)
+			local _hd_log
+			_hd_log=(
+			/dev/nvme':supply a device to use (required)'
+			--all-host-entries':All Host Entries'
+			-a':alias for --all-host-entries'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme host-discovery-log" _hd_log
 			;;
 		(version)
 			local _version
