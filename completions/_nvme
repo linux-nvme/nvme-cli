@@ -2644,7 +2644,7 @@ _nvme () {
 			;;
 		(mgmt-addr-list-log)
 			local _mal_log
-			_caplog=(
+			_mal_log=(
 			/dev/nvme':supply a device to use (required)'
 			--verbose':Increase the information detail in the output.'
 			-v':alias for --verbose'
@@ -2658,7 +2658,7 @@ _nvme () {
 			;;
 		(rotational-media-info-log)
 			local _rmi_log
-			_caplog=(
+			_rmi_log=(
 			/dev/nvme':supply a device to use (required)'
 			--endg-id=':Endurance Group Identifier'
 			-e':alias of --endg-id'
@@ -2688,7 +2688,7 @@ _nvme () {
 			;;
 		(dispersed-ns-participating-nss-log)
 			local _dns_psub_log
-			_caplog=(
+			_dns_psub_log=(
 			/dev/nvme':supply a device to use (required)'
 			--namespace-id=':show infos for namespace <nsid>'
 			-n':alias of --namespace-id'
@@ -2704,7 +2704,7 @@ _nvme () {
 			;;
 		(reachability-groups-log)
 			local _rg_log
-			_caplog=(
+			_rg_log=(
 			/dev/nvme':supply a device to use (required)'
 			--groups-only':Return Groups Only'
 			-g':alias for --groups-only'
@@ -2722,7 +2722,7 @@ _nvme () {
 			;;
 		(reachability-associations-log)
 			local _ra_log
-			_caplog=(
+			_ra_log=(
 			/dev/nvme':supply a device to use (required)'
 			--associations-only':Return Associations Only'
 			-a':alias for --associations-only'
