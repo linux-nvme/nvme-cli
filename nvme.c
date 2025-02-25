@@ -3001,7 +3001,7 @@ static int detach_ns(int argc, char **argv, struct command *cmd, struct plugin *
 }
 
 static int parse_lba_num_si(struct nvme_dev *dev, const char *opt,
-			    const char *val, __u8 flbas, __u64 *num, __u32 align)
+			    const char *val, __u8 flbas, __u64 *num, __u64 align)
 {
 	_cleanup_free_ struct nvme_ns_list *ns_list = NULL;
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
@@ -3134,8 +3134,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	uint16_t phndl[128] = { 0, };
 	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
 	_cleanup_free_ struct nvme_id_ns_granularity_list *gr_list = NULL;
-	__u32 align_nsze = 1 << 20; /* Default 1 MiB */
-	__u32 align_ncap = align_nsze;
+	__u64 align_nsze = 1 << 20; /* Default 1 MiB */
+	__u64 align_ncap = align_nsze;
 	nvme_print_flags_t flags;
 
 	struct config {
@@ -3284,7 +3284,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			int index = cfg.flbas;
 
 			/* FIXME: add a proper bitmask to libnvme */
-			if (!(gr_list->attributes & 1)) {
+			if (!(le32_to_cpu(gr_list->attributes) & 1)) {
 				/* Only the first descriptor is valid */
 				index = 0;
 			} else if (index > gr_list->num_descriptors) {
@@ -3296,10 +3296,18 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			}
 			desc = &gr_list->entry[index];
 
-			if (desc->nszegran && desc->nszegran < align_nsze)
-				align_nsze = desc->nszegran;
-			if (desc->ncapgran && desc->ncapgran < align_ncap)
-				align_ncap = desc->ncapgran;
+			if (desc->nszegran) {
+				print_info("enforce nsze alignment to %"PRIx64
+					   " because of namespace granularity requirements\n",
+					   le64_to_cpu(desc->nszegran));
+				align_nsze = le64_to_cpu(desc->nszegran);
+			}
+			if (desc->ncapgran) {
+				print_info("enforce ncap alignment to %"PRIx64
+					   " because of namespace granularity requirements\n",
+					   le64_to_cpu(desc->ncapgran));
+				align_ncap = le64_to_cpu(desc->ncapgran);
+			}
 		}
 	}
 
