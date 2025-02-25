@@ -10,9 +10,9 @@ Before=systemd-udevd.service
 
 [Service]
 Type=oneshot
-ExecStartPre=-/usr/bin/mkdir -p /etc/systemd/network
+ExecStartPre=-/bin/mkdir -p @SYSCONFDIR@/systemd/network
 # generate udev link files
-ExecStart=/usr/sbin/nvme nbft gen-udev-link-files /etc/systemd/network/
+ExecStart=@SBINDIR@/nvme nbft gen-udev-link-files @SYSCONFDIR@/systemd/network/
 
 [Install]
 WantedBy=sysinit.target

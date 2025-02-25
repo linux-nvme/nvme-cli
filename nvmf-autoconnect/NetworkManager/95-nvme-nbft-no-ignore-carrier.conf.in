@@ -3,7 +3,7 @@
 # For NVMe/TCP connections that provide namespaces containing rootfs
 # it is crucial to react on carrier events and reconnect any missing
 # NVMe/TCP connections as defined in the ACPI NBFT table. A custom
-# /usr/lib/NetworkManager/dispatcher.d/99-nvme-nbft-connect.sh hook
+# @NETWORKMANAGERDIR@dispatcher.d/99-nvme-nbft-connect.sh hook
 # will respawn nvmf-connect-nbft.service on such occasion.
 #
 # This file acts as an override to any config directives that disable

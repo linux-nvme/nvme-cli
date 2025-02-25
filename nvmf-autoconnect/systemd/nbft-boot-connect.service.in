@@ -21,7 +21,7 @@ Restart=on-failure
 RestartSec=10
 StartLimitIntervalSec=0
 StartLimitBurst=0
-ExecStart=/usr/sbin/nvme connect-all --nbft
+ExecStart=@SBINDIR@/nvme connect-all --nbft
 
 [Install]
 WantedBy=sysinit.target
