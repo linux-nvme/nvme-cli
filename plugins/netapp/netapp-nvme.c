@@ -988,7 +988,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 
 	num = scandir(dev_path, &devices, netapp_nvme_filter, alphasort);
 	if (num <= 0) {
-		fprintf(stderr, "No NVMe devices detected\n");
+		fprintf(stderr, "No ontapdevices detected\n");
 		return num;
 	}
 
