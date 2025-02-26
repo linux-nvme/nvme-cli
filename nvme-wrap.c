@@ -475,3 +475,9 @@ int nvme_cli_get_log_host_discovery(struct nvme_dev *dev, bool allhoste, bool ra
 {
 	return do_admin_op(get_log_host_discover, dev, allhoste, rae, len, log);
 }
+
+int nvme_cli_get_log_ave_discovery(struct nvme_dev *dev, bool rae, __u32 len,
+				   struct nvme_ave_discover_log *log)
+{
+	return do_admin_op(get_log_ave_discover, dev, rae, len, log);
+}

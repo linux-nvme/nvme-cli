@@ -10710,6 +10710,84 @@ static int get_host_discovery_log(int argc, char **argv, struct command *cmd, st
 	return err;
 }
 
+static int get_ave_discovery(struct nvme_dev *dev, bool rae,
+			     struct nvme_ave_discover_log **logp)
+{
+	int err;
+	struct nvme_ave_discover_log *log;
+	__u64 log_len = sizeof(*log);
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_HOST_DISCOVER,
+		.nsid = NVME_NSID_ALL,
+		.rae = rae,
+	};
+
+	log = nvme_alloc(log_len);
+	if (!log)
+		return -ENOMEM;
+
+	err = nvme_cli_get_log_ave_discovery(dev, rae, log_len, log);
+	if (err)
+		goto err_free;
+
+	log_len = le32_to_cpu(log->tadlpl);
+	err = get_log_offset(dev, &args, &log_len, le32_to_cpu(log->tadlpl) - log_len,
+			     (void **)&log);
+	if (err)
+		goto err_free;
+
+	*logp = log;
+	return 0;
+
+err_free:
+	free(log);
+	return err;
+}
+
+static int get_ave_discovery_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve AVE Discovery Log, show it";
+	nvme_print_flags_t flags;
+	int err;
+
+	_cleanup_free_ struct nvme_ave_discover_log *log = NULL;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	struct config {
+		bool rae;
+	};
+
+	struct config cfg = {
+		.rae = false,
+	};
+
+	NVME_ARGS(opts, OPT_FLAG("rae", 'r', &cfg.rae, rae));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	err = get_ave_discovery(dev, cfg.rae, &log);
+	if (!err)
+		nvme_show_ave_discovery_log(log, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		nvme_show_perror("ave discovery log");
+
+	return err;
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;
