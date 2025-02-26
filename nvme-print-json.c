@@ -4810,7 +4810,6 @@ static void json_host_discovery_log(struct nvme_host_discover_log *log)
 			snprintf(json_str, sizeof(json_str), "exat: %d", j);
 			obj_add_uint(exat_o, "exattype", le16_to_cpu(exat->exattype));
 			obj_add_uint(exat_o, "exatlen", le16_to_cpu(exat->exatlen));
-			printf(":\n");
 			obj_d(exat_o, "exatval", (unsigned char *)exat->exatval,
 			      le16_to_cpu(exat->exatlen), 16, 1);
 			obj_add_obj(hedlpe_o, json_str, exat_o);
