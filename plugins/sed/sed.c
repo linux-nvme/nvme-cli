@@ -50,6 +50,14 @@ OPT_ARGS(lock_opts) = {
 	OPT_END()
 };
 
+OPT_ARGS(discovery_opts) = {
+	OPT_FLAG("verbose", 'v', &sedopal_discovery_verbose,
+		"Print extended discovery information"),
+	OPT_FLAG("udev", 'u', &sedopal_discovery_udev,
+		"Print locking information in form suitable for udev rules"),
+	OPT_END()
+};
+
 /*
  * Open the NVMe device specified on the command line. It must be the
  * NVMe block device (e.g. /dev/nvme0n1).
@@ -80,7 +88,7 @@ static int sed_opal_discover(int argc, char **argv, struct command *cmd,
 	const char *desc = "Query SED device and display locking features";
 	struct nvme_dev *dev;
 
-	err = sed_opal_open_device(&dev, argc, argv, desc, no_opts);
+	err = sed_opal_open_device(&dev, argc, argv, desc, discovery_opts);
 	if (err)
 		return err;
 

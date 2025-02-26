@@ -40,6 +40,36 @@ bool sedopal_psid_revert;
 bool sedopal_lock_ro;
 
 /*
+ * Verbose discovery
+ */
+bool sedopal_discovery_verbose;
+
+/*
+ * discovery with udev output
+ */
+bool sedopal_discovery_udev;
+
+struct sedopal_feature_parser {
+	uint32_t	features;
+	void		*tper_desc;
+	void		*locking_desc;
+	void		*geometry_reporting_desc;
+	void		*opalv1_desc;
+	void		*single_user_mode_desc;
+	void		*datastore_desc;
+	void		*opalv2_desc;
+	void		*opalite_desc;
+	void		*pyrite_v1_desc;
+	void		*pyrite_v2_desc;
+	void		*ruby_desc;
+	void		*locking_lba_desc;
+	void		*block_sid_auth_desc;
+	void		*config_ns_desc;
+	void		*data_removal_desc;
+	void		*ns_geometry_desc;
+};
+
+/*
  * Map method status codes to error text
  */
 static const char * const sedopal_errors[] = {
@@ -484,15 +514,447 @@ int sedopal_cmd_password(int fd)
 /*
  * Print the state of locking features.
  */
-void sedopal_print_locking_features(uint8_t features)
+void sedopal_print_locking_features(void *data)
 {
-	printf("Locking Features:\n");
-	printf("\tLocking Supported:         %s\n",
-		(features & OPAL_FEATURE_LOCKING_SUPPORTED) ? "Yes" : "No");
-	printf("\tLocking Feature Enabled:   %s\n",
-		(features & OPAL_FEATURE_LOCKING_ENABLED) ? "Yes" : "No");
-	printf("\tLocked:                    %s\n",
-		(features & OPAL_FEATURE_LOCKED) ? "Yes" : "No");
+	struct locking_desc *ld = (struct locking_desc *)data;
+	uint8_t features = ld->features;
+
+	if (!sedopal_discovery_udev) {
+		printf("Locking Features:\n");
+		printf("\tLocking Supported               : %s\n",
+			(features & OPAL_FEATURE_LOCKING_SUPPORTED) ?
+			"yes" : "no");
+		printf("\tLocking Feature Enabled         : %s\n",
+			(features & OPAL_FEATURE_LOCKING_ENABLED) ?
+			"yes" : "no");
+		printf("\tLocked                          : %s\n",
+			(features & OPAL_FEATURE_LOCKED) ? "yes" : "no");
+		printf("\tMedia Encryption                : %s\n",
+			(features & OPAL_FEATURE_MEDIA_ENCRYPT) ? "yes" : "no");
+		printf("\tMBR Enabled                     : %s\n",
+			(features & OPAL_FEATURE_MBR_ENABLED) ? "yes" : "no");
+		printf("\tMBR Done                        : %s\n",
+			(features & OPAL_FEATURE_MBR_DONE) ? "yes" : "no");
+	} else {
+		printf("DEV_SED_LOCKED=%s\n",
+			(features & OPAL_FEATURE_LOCKING_ENABLED) ?
+			"ENABLED" : "DISABLED");
+		printf("DEV_SED_LOCKING=%s\n",
+			(features & OPAL_FEATURE_LOCKING_ENABLED) ?
+			"ENABLED" : "DISABLED");
+		printf("DEV_SED_LOCKING_SUPP=%s\n",
+			(features & OPAL_FEATURE_LOCKING_SUPPORTED) ?
+			"ENABLED" : "DISABLED");
+		printf("DEV_SED_LOCKING_LOCKED=%s\n",
+			(features & OPAL_FEATURE_LOCKED) ?
+			"ENABLED" : "DISABLED");
+	}
+}
+
+/*
+ * Print the TPer feature.
+ */
+void sedopal_print_tper(void *data)
+{
+	struct tper_desc *td = (struct tper_desc *)data;
+
+	printf("\nSED TPER:\n");
+	printf("\tSync Supported                  : %s\n",
+		(td->feature & TPER_FEATURE_SYNC) ? "yes" : "no");
+	printf("\tAsync Supported                 : %s\n",
+		(td->feature & TPER_FEATURE_ASYNC) ? "yes" : "no");
+	printf("\tACK/NAK Supported               : %s\n",
+		(td->feature & TPER_FEATURE_ACKNAK) ? "yes" : "no");
+	printf("\tBuffer Management Supported     : %s\n",
+		(td->feature & TPER_FEATURE_BUF_MGMT) ? "yes" : "no");
+	printf("\tStreaming Supported             : %s\n",
+		(td->feature & TPER_FEATURE_STREAMING) ? "yes" : "no");
+	printf("\tComID Management Supported      : %s\n",
+		(td->feature & TPER_FEATURE_COMID_MGMT) ? "yes" : "no");
+}
+
+/*
+ * Print the Geometry feature.
+ */
+void sedopal_print_geometry(void *data)
+{
+	struct geometry_reporting_desc *gd;
+
+	gd = (struct geometry_reporting_desc *)data;
+
+	printf("\nSED Geometry:\n");
+	printf("\tAlignment Required              : %s\n",
+		(gd->align & GEOMETRY_ALIGNMENT_REQUIRED) ? "yes" : "no");
+	printf("\tLogical Block Size              : %u\n",
+		be32toh(gd->logical_block_size));
+	printf("\tAlignment Granularity           : %llx\n",
+		(unsigned long long)(be64toh(gd->alignment_granularity)));
+	printf("\tLowest Aligned LBA              : %llx\n",
+		(unsigned long long)(be64toh(gd->lowest_aligned_lba)));
+}
+
+/*
+ * Print the opal v1 feature.
+ */
+void sedopal_print_opal_v1(void *data)
+{
+	struct opalv1_desc *v1d = (struct opalv1_desc *)data;
+
+	printf("\nSED OPAL V1.0:\n");
+	printf("\tBase Comid                      : %d\n",
+		be16toh(v1d->base_comid));
+	printf("\tNumber of Comids                : %d\n",
+		be16toh(v1d->num_comids));
+}
+
+/*
+ * Print the opal v2 feature.
+ */
+void sedopal_print_opal_v2(void *data)
+{
+	struct opalv2_desc *v2d = (struct opalv2_desc *)data;
+
+	printf("\nSED OPAL V2.0:\n");
+	printf("\tRange Crossing                  : %d\n",
+		!(v2d->flags & OPAL_V2_RANGE_CROSSING));
+	printf("\tBase Comid                      : %d\n",
+		be16toh(v2d->base_comid));
+	printf("\tNumber of Comids                : %d\n",
+		be16toh(v2d->num_comids));
+	printf("\tNumber of Admin Authorities     : %d\n",
+		be16toh(v2d->num_locking_sp_admin_auth));
+	printf("\tNumber of User Authorities      : %d\n",
+		be16toh(v2d->num_locking_sp_user_auth));
+	printf("\tInit pin                        : %d\n",
+		v2d->initial_cpin_sid_ind);
+	printf("\tRevert pin                      : %d\n",
+		v2d->initial_cpin_sid_revert);
+}
+
+/*
+ * Print the ruby feature.
+ */
+void sedopal_print_ruby(void *data)
+{
+	struct ruby_desc *rd = (struct ruby_desc *)data;
+
+	printf("\nRuby:\n");
+	printf("\tRange Crossing                  : %d\n",
+		!(rd->flags & RUBY_RANGE_CROSSING));
+	printf("\tBase Comid                      : %d\n",
+		be16toh(rd->base_comid));
+	printf("\tNumber of Comids                : %d\n",
+		be16toh(rd->num_comids));
+	printf("\tNumber of Admin Authorities     : %d\n",
+		be16toh(rd->num_locking_sp_admin_auth));
+	printf("\tNumber of User Authorities      : %d\n",
+		be16toh(rd->num_locking_sp_user_auth));
+	printf("\tInit pin                        : %d\n",
+		rd->initial_cpin_sid_ind);
+	printf("\tRevert pin                      : %d\n",
+		rd->initial_cpin_sid_revert);
+}
+
+/*
+ * Print the opalite feature.
+ */
+void sedopal_print_opalite(void *data)
+{
+	struct opalite_desc *old = (struct opalite_desc *)data;
+
+	printf("\nSED Opalite:\n");
+	printf("\tBase Comid                      : %d\n",
+		be16toh(old->base_comid));
+	printf("\tNumber of Comids                : %d\n",
+		be16toh(old->num_comids));
+	printf("\tInit pin                        : %d\n",
+		old->initial_cpin_sid_ind);
+	printf("\tRevert pin                      : %d\n",
+		old->initial_cpin_sid_revert);
+}
+
+/*
+ * Print the pyrite v1 feature.
+ */
+void sedopal_print_pyrite_v1(void *data)
+{
+	struct pyrite_v1_desc *p1d = (struct pyrite_v1_desc *)data;
+
+	printf("\nPyrite V1:\n");
+	printf("\tBase Comid                      : %d\n",
+		be16toh(p1d->base_comid));
+	printf("\tNumber of Comids                : %d\n",
+		be16toh(p1d->num_comids));
+	printf("\tInit pin                        : %d\n",
+		p1d->initial_cpin_sid_ind);
+	printf("\tRevert pin                      : %d\n",
+		p1d->initial_cpin_sid_revert);
+}
+
+/*
+ * Print the pyrite v2 feature.
+ */
+void sedopal_print_pyrite_v2(void *data)
+{
+	struct pyrite_v2_desc *p2d = (struct pyrite_v2_desc *)data;
+
+	printf("\nPyrite V2:\n");
+	printf("\tBase Comid                      : %d\n",
+		be16toh(p2d->base_comid));
+	printf("\tNumber of Comids                : %d\n",
+		be16toh(p2d->num_comids));
+	printf("\tInit pin                        : %d\n",
+		p2d->initial_cpin_sid_ind);
+	printf("\tRevert pin                      : %d\n",
+		p2d->initial_cpin_sid_revert);
+}
+
+/*
+ * Print the single user mode feature.
+ */
+void sedopal_print_sum(void *data)
+{
+	struct single_user_mode_desc *sumd;
+
+	sumd = (struct single_user_mode_desc *)data;
+
+	printf("\nSingle User Mode (SUM):\n");
+	printf("\tNumber of Locking Objects       : %u\n",
+		be32toh(sumd->num_locking_objects));
+	printf("\tAny Locking Objects in SUM?     : %s\n",
+		(sumd->flags & SUM_FEATURE_ANY) ? "yes" : "no");
+	printf("\tAll Locking Objects in SUM?     : %s\n",
+		(sumd->flags & SUM_FEATURE_ALL) ? "yes" : "no");
+	printf("\tUser Authority of Objects       : %s\n",
+		(sumd->flags & SUM_FEATURE_POLICY) ? "yes" : "no");
+}
+
+/*
+ * Print the data store table feature.
+ */
+void sedopal_print_datastore(void *data)
+{
+	struct datastore_desc *dsd = (struct datastore_desc *)data;
+
+	printf("\nData Store Table:\n");
+	printf("\tNumber of Tables Supported      : %u\n",
+		be16toh(dsd->max_tables));
+	printf("\tMax Size of Tables              : %u\n",
+		be32toh(dsd->max_table_size));
+	printf("\tTable Size Alignment            : %u\n",
+		be32toh(dsd->table_alignment));
+}
+
+/*
+ * Print the block SID authentication feature.
+ */
+void sedopal_print_sid_auth(void *data)
+{
+	struct block_sid_auth_desc *sid_auth_d;
+
+	sid_auth_d = (struct block_sid_auth_desc *)data;
+
+	printf("\nSED Block SID Authentication:\n");
+	printf("\tSID value equal MSID            : %s\n",
+		(sid_auth_d->states & BLOCK_SID_VALUE_STATE) ? "yes" : "no");
+	printf("\tSID auth blocked                : %s\n",
+		(sid_auth_d->states & BLOCK_SID_BLOCKED_STATE) ? "yes" : "no");
+	printf("\tHW reset selected               : %s\n",
+		(sid_auth_d->hw_reset & BLOCK_SID_HW_RESET) ? "yes" : "no");
+}
+
+/*
+ * Print the Locking LBA Ranges Control feature
+ */
+void sedopal_print_locking_lba(void *data)
+{
+	/*
+	 * There currently isn't any definition of the level 0 content
+	 * of this feature, so defer any printing.
+	 */
+}
+
+/*
+ * Print the configurable namespace locking feature.
+ */
+void sedopal_print_config_ns(void *data)
+{
+	struct config_ns_desc *nsd = (struct config_ns_desc *)data;
+
+	printf("\nSED Configurable Namespace Locking:\n");
+	printf("\tNon-global Locking Support      : %s\n",
+		(nsd->flags & CONFIG_NS_RANGE_C) ? "yes" : "no");
+	printf("\tNon-global Lock objects exist   : %s\n",
+		(nsd->flags & CONFIG_NS_RANGE_P) ? "yes" : "no");
+	printf("\tMaximum Key Count               : %d\n",
+		be32toh(nsd->max_key_count));
+	printf("\tUnused Key Count                : %d\n",
+		be32toh(nsd->unused_key_count));
+}
+
+/*
+ * Print the data removal mechanism feature.
+ */
+void sedopal_print_data_removal(void *data)
+{
+	struct data_removal_desc *drd = (struct data_removal_desc *)data;
+
+	printf("\nSED Data Removal Mechanism:\n");
+	printf("\tRemoval Operation Processing    : %s\n",
+		(drd->flags & DATA_REMOVAL_OPER_PROCESSING) ? "yes" : "no");
+	printf("\tRemoval Operation Interrupted   : %s\n",
+		(drd->flags & DATA_REMOVAL_OPER_INTERRUPTED) ? "yes" : "no");
+	printf("\tData Removal Mechanism          : %x\n",
+		drd->removal_mechanism);
+	printf("\tData Removal Format             : %x\n",
+		drd->format);
+	printf("\tData Removal Time (Bit 0)       : %x\n",
+		be16toh(drd->time_mechanism_bit0));
+	printf("\tData Removal Time (Bit 1)       : %x\n",
+		be16toh(drd->time_mechanism_bit1));
+	printf("\tData Removal Time (Bit 2)       : %x\n",
+		be16toh(drd->time_mechanism_bit2));
+	printf("\tData Removal Time (Bit 5)       : %x\n",
+		be16toh(drd->time_mechanism_bit5));
+}
+
+/*
+ * Print the namespace geometry feature.
+ */
+void sedopal_print_ns_geometry(void *data)
+{
+	struct ns_geometry_desc *nsgd = (struct ns_geometry_desc *)data;
+
+	printf("\nSED Namespace Geometry:\n");
+	printf("\tAlignment Required              : %s\n",
+		(nsgd->align & NS_GEOMETRY_ALIGNMENT_REQUIRED) ? "yes" : "no");
+	printf("\tLogical Block Size              : %x\n",
+		be32toh(nsgd->logical_block_size));
+	printf("\tAlignment Granularity           : %llx\n",
+		(unsigned long long)(be64toh(nsgd->alignment_granularity)));
+	printf("\tLowest Aligned LBA              : %llx\n",
+		(unsigned long long)(be64toh(nsgd->lowest_aligned_lba)));
+}
+
+void sedopal_parse_features(struct level_0_discovery_features *feat,
+		struct sedopal_feature_parser *sfp)
+{
+	uint16_t code = be16toh(feat->code);
+
+	switch (code) {
+	case OPAL_FEATURE_CODE_LOCKING:
+		sfp->features |= OPAL_FEATURE_LOCKING;
+		sfp->locking_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_OPALV1:
+		sfp->features |= OPAL_FEATURE_OPALV1;
+		sfp->opalv1_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_OPALV2:
+		sfp->features |= OPAL_FEATURE_OPALV2;
+		sfp->opalv2_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_TPER:
+		sfp->features |= OPAL_FEATURE_TPER;
+		sfp->tper_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_GEOMETRY:
+		sfp->features |= OPAL_FEATURE_GEOMETRY;
+		sfp->geometry_reporting_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_SINGLE_USER_MODE:
+		sfp->features |= OPAL_FEATURE_SINGLE_USER_MODE;
+		sfp->single_user_mode_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_DATA_STORE:
+		sfp->features |= OPAL_FEATURE_DATA_STORE;
+		sfp->datastore_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_OPALITE:
+		sfp->features |= OPAL_FEATURE_OPALITE;
+		sfp->opalite_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_PYRITE_V1:
+		sfp->features |= OPAL_FEATURE_PYRITE_V1;
+		sfp->pyrite_v1_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_PYRITE_V2:
+		sfp->features |= OPAL_FEATURE_PYRITE_V2;
+		sfp->pyrite_v2_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_RUBY:
+		sfp->features |= OPAL_FEATURE_RUBY;
+		sfp->ruby_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_LOCKING_LBA:
+		sfp->features |= OPAL_FEATURE_LOCKING_LBA;
+		sfp->locking_lba_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_BLOCK_SID_AUTH:
+		sfp->features |= OPAL_FEATURE_BLOCK_SID_AUTH;
+		sfp->block_sid_auth_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_CONFIG_NS_LOCKING:
+		sfp->features |= OPAL_FEATURE_CONFIG_NS_LOCKING;
+		sfp->config_ns_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_DATA_REMOVAL:
+		sfp->features |= OPAL_FEATURE_DATA_REMOVAL;
+		sfp->data_removal_desc = (void *)(feat + 1);
+		break;
+	case OPAL_FEATURE_CODE_NS_GEOMETRY:
+		sfp->features |= OPAL_FEATURE_NS_GEOMETRY;
+		sfp->ns_geometry_desc = (void *)(feat + 1);
+		break;
+
+	default:
+		break;
+	}
+}
+
+void sedopal_print_features(struct sedopal_feature_parser *sfp)
+{
+	if (sfp->features & OPAL_FEATURE_OPALV1)
+		sedopal_print_opal_v1(sfp->opalv1_desc);
+
+	if (sfp->features & OPAL_FEATURE_OPALV2)
+		sedopal_print_opal_v2(sfp->opalv2_desc);
+
+	if (sfp->features & OPAL_FEATURE_TPER)
+		sedopal_print_tper(sfp->tper_desc);
+
+	if (sfp->features & OPAL_FEATURE_GEOMETRY)
+		sedopal_print_geometry(sfp->geometry_reporting_desc);
+
+	if (sfp->features & OPAL_FEATURE_OPALITE)
+		sedopal_print_opalite(sfp->opalite_desc);
+
+	if (sfp->features & OPAL_FEATURE_SINGLE_USER_MODE)
+		sedopal_print_sum(sfp->single_user_mode_desc);
+
+	if (sfp->features & OPAL_FEATURE_DATA_STORE)
+		sedopal_print_datastore(sfp->datastore_desc);
+
+	if (sfp->features & OPAL_FEATURE_BLOCK_SID_AUTH)
+		sedopal_print_sid_auth(sfp->block_sid_auth_desc);
+
+	if (sfp->features & OPAL_FEATURE_RUBY)
+		sedopal_print_ruby(sfp->ruby_desc);
+
+	if (sfp->features & OPAL_FEATURE_PYRITE_V1)
+		sedopal_print_pyrite_v1(sfp->pyrite_v1_desc);
+
+	if (sfp->features & OPAL_FEATURE_PYRITE_V2)
+		sedopal_print_pyrite_v2(sfp->pyrite_v2_desc);
+
+	if (sfp->features & OPAL_FEATURE_LOCKING_LBA)
+		sedopal_print_locking_lba(sfp->locking_lba_desc);
+
+	if (sfp->features & OPAL_FEATURE_CONFIG_NS_LOCKING)
+		sedopal_print_config_ns(sfp->config_ns_desc);
+
+	if (sfp->features & OPAL_FEATURE_NS_GEOMETRY)
+		sedopal_print_ns_geometry(sfp->ns_geometry_desc);
 }
 
 /*
@@ -503,14 +965,12 @@ int sedopal_cmd_discover(int fd)
 {
 #ifdef IOC_OPAL_DISCOVERY
 	int rc, feat_length;
-	bool sedopal_locking_supported = false;
 	struct opal_discovery discover;
 	struct level_0_discovery_header *dh;
 	struct level_0_discovery_features *feat;
 	struct level_0_discovery_features *feat_end;
-	uint16_t code;
-	uint8_t locking_flags = 0;
 	char buf[4096];
+	struct sedopal_feature_parser sfp = {};
 
 	discover.data = (uintptr_t)buf;
 	discover.size = sizeof(buf);
@@ -536,28 +996,24 @@ int sedopal_cmd_discover(int fd)
 	 * iterate through all the features that were returned
 	 */
 	while (feat < feat_end) {
-		code = be16toh(feat->code);
+		sedopal_parse_features(feat, &sfp);
 		feat_length = feat->length + 4 /* hdr */;
-		switch (code) {
-		case OPAL_FEATURE_CODE_LOCKING:
-			locking_flags = feat->feature;
-			break;
-		case OPAL_FEATURE_CODE_OPALV2:
-			sedopal_locking_supported = true;
-			break;
-		default:
-			break;
-		}
-
-		feat = (struct level_0_discovery_features *)((char *)feat + feat_length);
+		feat = (struct level_0_discovery_features *)
+			((char *)feat + feat_length);
 	}
 
 	rc = 0;
-	if (!sedopal_locking_supported) {
+	if (!(sfp.features & OPAL_SED_LOCKING_SUPPORT)) {
 		fprintf(stderr, "Error: device does not support SED Opal\n");
 		rc = -1;
 	} else
-		sedopal_print_locking_features(locking_flags);
+		sedopal_print_locking_features(sfp.locking_desc);
+
+	if (!sedopal_discovery_verbose)
+		return rc;
+
+	sedopal_print_features(&sfp);
+
 
 	return rc;
 #else /* IOC_OPAL_DISCOVERY */
