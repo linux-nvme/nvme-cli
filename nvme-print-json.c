@@ -3,7 +3,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <time.h>
-
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <ccan/ccan/compiler/compiler.h>
 
 #include "nvme-print.h"
@@ -4820,6 +4822,65 @@ static void json_host_discovery_log(struct nvme_host_discover_log *log)
 	}
 }
 
+static void obj_add_traddr(struct json_object *o, const char *k, __u8 adrfam, __u8 *traddr)
+{
+	int af = AF_INET;
+	socklen_t size = INET_ADDRSTRLEN;
+	char dst[INET6_ADDRSTRLEN];
+
+	if (adrfam == NVMF_ADDR_FAMILY_IP6) {
+		af = AF_INET6;
+		size = INET6_ADDRSTRLEN;
+	}
+
+	if (inet_ntop(af, nvmf_adrfam_str(adrfam), dst, size))
+		obj_add_str(o, k, dst);
+}
+
+static void json_ave_discovery_log(struct nvme_ave_discover_log *log)
+{
+	struct json_object *r = json_create_object();
+	__u32 i;
+	__u8 j;
+	struct nvme_ave_discover_log_entry *adlpe;
+	struct nvme_ave_tr_record *atr;
+	__u32 tadlpl = le32_to_cpu(log->tadlpl);
+	__u32 tel;
+	__u8 numatr;
+	int n = 0;
+	char json_str[STR_LEN];
+	struct json_object *adlpe_o;
+	struct json_object *atr_o;
+
+	obj_add_uint64(r, "genctr", le64_to_cpu(log->genctr));
+	obj_add_uint64(r, "numrec", le64_to_cpu(log->numrec));
+	obj_add_uint(r, "recfmt", le16_to_cpu(log->recfmt));
+	obj_add_uint(r, "thdlpl", tadlpl);
+
+	for (i = sizeof(*log); i < le32_to_cpu(log->tadlpl); i += tel) {
+		adlpe_o = json_create_object();
+		adlpe = (void *)log + i;
+		tel = le32_to_cpu(adlpe->tel);
+		numatr = adlpe->numatr;
+		obj_add_uint(adlpe_o, "tel", tel);
+		obj_add_str(adlpe_o, "avenqn", adlpe->avenqn);
+		obj_add_uint(adlpe_o, "numatr", numatr);
+
+		atr = adlpe->atr;
+		for (j = 0; j < numatr; j++) {
+			atr_o = json_create_object();
+			snprintf(json_str, sizeof(json_str), "atr: %d", j);
+			obj_add_str(atr_o, "aveadrfam", nvmf_adrfam_str(atr->aveadrfam));
+			obj_add_uint(atr_o, "avetrsvcid", le16_to_cpu(atr->avetrsvcid));
+			obj_add_traddr(atr_o, "avetraddr", atr->aveadrfam, atr->avetraddr);
+			obj_add_obj(adlpe_o, json_str, atr_o);
+			atr++;
+		}
+		snprintf(json_str, sizeof(json_str), "adlpe: %d", n++);
+		obj_add_obj(r, json_str, adlpe_o);
+	}
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -4893,6 +4954,7 @@ static struct print_ops json_print_ops = {
 	.reachability_groups_log	= json_reachability_groups_log,
 	.reachability_associations_log	= json_reachability_associations_log,
 	.host_discovery_log		= json_host_discovery_log,
+	.ave_discovery_log		= json_ave_discovery_log,
 
 	/* libnvme tree print functions */
 	.list_item			= json_list_item,

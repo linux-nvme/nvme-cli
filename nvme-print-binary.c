@@ -337,6 +337,11 @@ static void binary_host_discovery_log(struct nvme_host_discover_log *log)
 	d_raw((unsigned char *)log, le32_to_cpu(log->thdlpl));
 }
 
+static void binary_ave_discovery_log(struct nvme_ave_discover_log *log)
+{
+	d_raw((unsigned char *)log, le32_to_cpu(log->tadlpl));
+}
+
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= binary_ana_log,
@@ -409,6 +414,7 @@ static struct print_ops binary_print_ops = {
 	.reachability_groups_log	= binary_reachability_groups_log,
 	.reachability_associations_log	= binary_reachability_associations_log,
 	.host_discovery_log		= binary_host_discovery_log,
+	.ave_discovery_log		= binary_ave_discovery_log,
 
 	/* libnvme tree print functions */
 	.list_item			= NULL,

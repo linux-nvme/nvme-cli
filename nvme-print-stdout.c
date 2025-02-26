@@ -6,7 +6,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/stat.h>
-
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <ccan/ccan/strset/strset.h>
 #include <ccan/ccan/htable/htable_type.h>
 #include <ccan/ccan/htable/htable.h>
@@ -5759,6 +5761,57 @@ static void stdout_host_discovery_log(struct nvme_host_discover_log *log)
 	}
 }
 
+static void print_traddr(char *field, __u8 adrfam, __u8 *traddr)
+{
+	int af = AF_INET;
+	socklen_t size = INET_ADDRSTRLEN;
+	char dst[INET6_ADDRSTRLEN];
+
+	if (adrfam == NVMF_ADDR_FAMILY_IP6) {
+		af = AF_INET6;
+		size = INET6_ADDRSTRLEN;
+	}
+
+	if (inet_ntop(af, nvmf_adrfam_str(adrfam), dst, size))
+		printf("%s: %s\n", field, dst);
+}
+
+static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log)
+{
+	__u32 i;
+	__u8 j;
+	struct nvme_ave_discover_log_entry *adlpe;
+	struct nvme_ave_tr_record *atr;
+	__u32 tadlpl = le32_to_cpu(log->tadlpl);
+	__u32 tel;
+	__u8 numatr;
+	int n = 0;
+
+	printf("genctr: %"PRIu64"\n", le64_to_cpu(log->genctr));
+	printf("numrec: %"PRIu64"\n", le64_to_cpu(log->numrec));
+	printf("recfmt: %u\n", le16_to_cpu(log->recfmt));
+	printf("tadlpl: %u\n", tadlpl);
+
+	for (i = sizeof(*log); i < le32_to_cpu(log->tadlpl); i += tel) {
+		printf("adlpe: %d\n", n++);
+		adlpe = (void *)log + i;
+		tel = le32_to_cpu(adlpe->tel);
+		numatr = adlpe->numatr;
+		printf("tel: %u\n", tel);
+		printf("avenqn: %s\n", adlpe->avenqn);
+		printf("numatr: %u\n", numatr);
+
+		atr = adlpe->atr;
+		for (j = 0; j < numatr; j++) {
+			printf("atr: %d\n", j);
+			printf("aveadrfam: %s\n", nvmf_adrfam_str(atr->aveadrfam));
+			printf("avetrsvcid: %u\n", le16_to_cpu(atr->avetrsvcid));
+			print_traddr("avetraddr", atr->aveadrfam, atr->avetraddr);
+			atr++;
+		}
+	}
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -5832,6 +5885,7 @@ static struct print_ops stdout_print_ops = {
 	.reachability_groups_log	= stdout_reachability_groups_log,
 	.reachability_associations_log	= stdout_reachability_associations_log,
 	.host_discovery_log		= stdout_host_discovery_log,
+	.ave_discovery_log		= stdout_ave_discovery_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,

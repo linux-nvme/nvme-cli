@@ -1525,3 +1525,8 @@ void nvme_show_host_discovery_log(struct nvme_host_discover_log *log, nvme_print
 {
 	nvme_print(host_discovery_log, flags, log);
 }
+
+void nvme_show_ave_discovery_log(struct nvme_ave_discover_log *log, nvme_print_flags_t flags)
+{
+	nvme_print(ave_discovery_log, flags, log);
+}
