@@ -3345,6 +3345,36 @@ struct nvme_id_iocs {
 };
 
 /**
+ * enum nvme_id_iocs_iocsc - This field indicates the Identify I/O Command Set Data Structure
+ * @NVME_IOCS_IOCSC_NVMCS_SHIFT:	Shift amount to get the value of NVM Command Set
+ * @NVME_IOCS_IOCSC_NVMCS_MASK:		Mask to get the value of NVM Command Set
+ * @NVME_IOCS_IOCSC_KVCS_SHIFT:		Shift amount to get the value of Key Value Command Set
+ * @NVME_IOCS_IOCSC_KVCS_MASK:		Mask to get the value of Key Value Command Set
+ * @NVME_IOCS_IOCSC_ZNSCS_SHIFT:	Shift amount to get the value of Zoned Namespace Command
+ *					Set
+ * @NVME_IOCS_IOCSC_ZNSCS_MASK:		Mask to get the value of Zoned Namespace Command Set
+ * @NVME_IOCS_IOCSC_SLMCS_SHIFT:	Shift amount to get the value of Subsystem Local Memory
+ *					Command Set
+ * @NVME_IOCS_IOCSC_SLMCS_MASK:		Mask to get the value of Subsystem Local Memory Command Set
+ * @NVME_IOCS_IOCSC_CPNCS_SHIFT:	Shift amount to get the value of Computational Programs
+ *					Namespace Command Set
+ * @NVME_IOCS_IOCSC_CPNCS_MASK:         Mask to get the value of Computational Programs Namespace
+ *					Command Set
+ */
+enum nvme_id_iocs_iocsc {
+	NVME_IOCS_IOCSC_NVMCS_SHIFT	= 0,
+	NVME_IOCS_IOCSC_NVMCS_MASK	= 0x1,
+	NVME_IOCS_IOCSC_KVCS_SHIFT	= 1,
+	NVME_IOCS_IOCSC_KVCS_MASK	= 0x1,
+	NVME_IOCS_IOCSC_ZNSCS_SHIFT	= 2,
+	NVME_IOCS_IOCSC_ZNSCS_MASK	= 0x1,
+	NVME_IOCS_IOCSC_SLMCS_SHIFT	= 3,
+	NVME_IOCS_IOCSC_SLMCS_MASK	= 0x1,
+	NVME_IOCS_IOCSC_CPNCS_SHIFT	= 4,
+	NVME_IOCS_IOCSC_CPNCS_MASK	= 0x1,
+};
+
+/**
  * struct nvme_id_domain_attr - Domain Attributes Entry
  * @dom_id:		Domain Identifier
  * @rsvd2:		Reserved
