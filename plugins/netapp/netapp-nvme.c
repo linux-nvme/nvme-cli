@@ -878,7 +878,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 
 	num = scandir(dev_path, &devices, netapp_nvme_filter, alphasort);
 	if (num <= 0) {
-		fprintf(stderr, "No NVMe devices detected\n");
+		fprintf(stderr, "No smdevices detected\n");
 		return num;
 	}
 
