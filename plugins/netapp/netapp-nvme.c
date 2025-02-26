@@ -523,8 +523,8 @@ static void netapp_ontapdevices_print_verbose(struct ontapdevice_info *devices,
 
 	char *formatstr = NULL;
 	char basestr[] =
-		"%s, Vserver %s, Path %s, NSID %d, UUID %s, Size %s, "
-		"Used %s, Format %s, Version %s\n";
+		"%s, Vserver %s, Namespace Path %s, NSID %d, UUID %s, "
+		"Size %s, Used %s, Format %s, Version %s\n";
 	char columnstr[] = "%-16s %-25s %-50s %-4d %-38s %-9s %-9s %-9s %-9s\n";
 
 	if (format == NNORMAL)
