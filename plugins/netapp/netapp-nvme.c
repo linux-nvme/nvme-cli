@@ -307,7 +307,8 @@ static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
 
 	char *formatstr = NULL;
 	char basestr[] =
-		"%s, Array %s, Vol %s, NSID %d, ID %s, Ctrl %c, %s, %s, %s, %s\n";
+		"%s, Array Name %s, Volume Name %s, NSID %d, Volume ID %s, "
+		"Controller %c, Access State %s, Size %s, Format %s, Version %s\n";
 	char columnstr[] =
 		"%-16s %-30s %-30s %4d %32s  %c   %-12s %-9s %-9s %-9s\n";
 
