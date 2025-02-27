@@ -1,8 +1,21 @@
+mock_conf = configuration_data()
+
+mock_conf.set(
+    'HAVE_GLIBC_IOCTL',
+    cc.compiles(
+        '''#include <sys/ioctl.h>
+        int ioctl(int fd, unsigned long request, ...);
+        ''',
+        name: 'ioctl has glibc-style prototype'
+    ),
+    description: 'Is ioctl the glibc interface (rather than POSIX)'
+)
+
 mock_ioctl = library(
     'mock-ioctl',
     ['mock.c', 'util.c'],
-    dependencies: [dl_dep]
-)
+    dependencies: [dl_dep],
+    c_args: ['-DHAVE_GLIBC_IOCTL=' + (mock_conf.get('HAVE_GLIBC_IOCTL') ? '1' : '0')])
 
 # Add mock-ioctl to the LD_PRELOAD path so it overrides libc.
 # Append to LD_PRELOAD so existing libraries, e.g. libasan, are kept.

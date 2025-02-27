@@ -21,10 +21,4 @@ config_dep = declare_dependency(
   sources: config_h)
 
 config_h_path = meson.current_build_dir() / 'config.h'
-
-add_project_arguments(
-    [
-        '-include', config_h_path,
-    ],
-    language : 'c',
-)
+config_h_arg =  [ '-include', config_h_path ]

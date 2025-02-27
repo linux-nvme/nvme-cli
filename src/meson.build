@@ -55,6 +55,7 @@ libnvme = library(
     link_args: ['-Wl,--version-script=' + version_script_arg],
     dependencies: deps,
     link_depends: mapfile,
+    c_args: config_h_arg,
     include_directories: [incdir, internal_incdir],
     install: true,
     link_with: libccan,
@@ -81,6 +82,7 @@ libnvme_mi = library(
     'nvme-mi', # produces libnvme-mi.so
     mi_sources,
     version: library_version,
+    c_args: config_h_arg,
     link_args: ['-Wl,--version-script=' + mi_version_script_arg],
     dependencies: mi_deps,
     link_depends: mi_mapfile,
@@ -100,6 +102,7 @@ libnvme_mi_test = library(
     'nvme-mi-test', # produces libnvme-mi-test.so
     mi_sources,
     dependencies: mi_deps,
+    c_args: config_h_arg,
     include_directories: [incdir, internal_incdir],
     install: false,
     link_with: libccan,

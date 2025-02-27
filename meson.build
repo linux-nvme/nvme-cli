@@ -230,16 +230,6 @@ conf.set(
     ),
     description: 'Is network address and service translation available'
 )
-conf.set(
-    'HAVE_GLIBC_IOCTL',
-    cc.compiles(
-        '''#include <sys/ioctl.h>
-        int ioctl(int fd, unsigned long request, ...);
-        ''',
-        name: 'ioctl has glibc-style prototype'
-    ),
-    description: 'Is ioctl the glibc interface (rather than POSIX)'
-)
 dl_dep = dependency('dl', required: false)
 conf.set(
     'HAVE_LIBC_DLSYM',
