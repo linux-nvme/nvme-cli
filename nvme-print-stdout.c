@@ -3954,14 +3954,38 @@ static void stdout_endurance_group_list(struct nvme_id_endurance_group_list *end
 		printf("[%4u]:%#x\n", i, le16_to_cpu(endgrp_list->identifier[i]));
 }
 
+static void stdout_id_iocs_iocsc(__u64 iocsc)
+{
+	__u8 cpncs = NVME_GET(iocsc, IOCS_IOCSC_CPNCS);
+	__u8 slmcs = NVME_GET(iocsc, IOCS_IOCSC_SLMCS);
+	__u8 znscs = NVME_GET(iocsc, IOCS_IOCSC_ZNSCS);
+	__u8 kvcs = NVME_GET(iocsc, IOCS_IOCSC_KVCS);
+	__u8 nvmcs = NVME_GET(iocsc, IOCS_IOCSC_NVMCS);
+
+	printf("  [4:4] : %#x\tComputational Programs Namespace Command Set %sSelected\n",
+		cpncs, cpncs ? "" : "Not ");
+	printf("  [3:3] : %#x\tSubsystem Local Memory Command Set %sSelected\n", slmcs,
+		slmcs ? "" : "Not ");
+	printf("  [2:2] : %#x\tZoned Namespace Command Set %sSelected\n", znscs,
+		znscs ? "" : "Not ");
+	printf("  [1:1] : %#x\tKey Value Command Set %sSelected\n", kvcs, kvcs ? "" : "Not ");
+	printf("  [0:0] : %#x\tNVM Command Set %sSelected\n", nvmcs, nvmcs ? "" : "Not ");
+	printf("\n");
+}
+
 static void stdout_id_iocs(struct nvme_id_iocs *iocs)
 {
+	bool human = stdout_print_ops.flags & VERBOSE;
 	__u16 i;
 
-	for (i = 0; i < ARRAY_SIZE(iocs->iocsc); i++)
-		if (iocs->iocsc[i])
+	for (i = 0; i < ARRAY_SIZE(iocs->iocsc); i++) {
+		if (iocs->iocsc[i]) {
 			printf("I/O Command Set Combination[%u]:%"PRIx64"\n", i,
 				(uint64_t)le64_to_cpu(iocs->iocsc[i]));
+			if (human)
+				stdout_id_iocs_iocsc(le64_to_cpu(iocs->iocsc[i]));
+		}
+	}
 }
 
 static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
