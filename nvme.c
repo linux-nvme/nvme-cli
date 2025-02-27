@@ -4120,8 +4120,8 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	_cleanup_free_ struct nvme_id_iocs *iocs = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
-	int err;
 	nvme_print_flags_t flags;
+	int err;
 
 	struct config {
 		__u16	cntid;
@@ -4144,6 +4144,9 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 		return err;
 	}
 
+	if (argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
 	iocs = nvme_alloc(sizeof(*iocs));
 	if (!iocs)
 		return -ENOMEM;
@@ -4151,7 +4154,7 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 	err = nvme_identify_iocs(dev_fd(dev), cfg.cntid, iocs);
 	if (!err) {
 		printf("NVMe Identify I/O Command Set:\n");
-		nvme_show_id_iocs(iocs, 0);
+		nvme_show_id_iocs(iocs, flags);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {

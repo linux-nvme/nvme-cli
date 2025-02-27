@@ -186,9 +186,27 @@ static void obj_print(struct json_object *o)
 		json_print(o);
 }
 
+static void json_id_iocs_iocsc(struct json_object *obj_iocsc, __u64 iocsc)
+{
+	__u8 cpncs = NVME_GET(iocsc, IOCS_IOCSC_CPNCS);
+	__u8 slmcs = NVME_GET(iocsc, IOCS_IOCSC_SLMCS);
+	__u8 znscs = NVME_GET(iocsc, IOCS_IOCSC_ZNSCS);
+	__u8 kvcs = NVME_GET(iocsc, IOCS_IOCSC_KVCS);
+	__u8 nvmcs = NVME_GET(iocsc, IOCS_IOCSC_NVMCS);
+
+	obj_add_str(obj_iocsc, "Computational Programs Namespace Command Set", cpncs ?
+		    "Selected" : "Not selected");
+	obj_add_str(obj_iocsc, "Subsystem Local Memory Command Set", slmcs ?
+		    "Selected" : "Not selected");
+	obj_add_str(obj_iocsc, "Zoned Namespace Command Set", znscs ? "Selected" : "Not selected");
+	obj_add_str(obj_iocsc, "Key Value Command Set", kvcs ? "Selected" : "Not selected");
+	obj_add_str(obj_iocsc, "NVM Command Set", nvmcs ? "Selected" : "Not selected");
+}
+
 static void json_id_iocs(struct nvme_id_iocs *iocs)
 {
 	struct json_object *r = json_create_object();
+	struct json_object *obj_iocsc;
 	char json_str[STR_LEN];
 	__u16 i;
 
@@ -196,6 +214,11 @@ static void json_id_iocs(struct nvme_id_iocs *iocs)
 		if (iocs->iocsc[i]) {
 			sprintf(json_str, "I/O Command Set Combination[%u]", i);
 			obj_add_uint64(r, json_str, le64_to_cpu(iocs->iocsc[i]));
+
+			obj_iocsc = json_create_object();
+			sprintf(json_str, "IOCSC%u", i);
+			json_id_iocs_iocsc(obj_iocsc, le64_to_cpu(iocs->iocsc[i]));
+			obj_add_obj(r, json_str, obj_iocsc);
 		}
 	}
 
