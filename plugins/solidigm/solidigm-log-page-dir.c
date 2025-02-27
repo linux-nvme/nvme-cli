@@ -110,10 +110,12 @@ static struct lid_dir *get_solidigm_lids(struct nvme_supported_log_pages *suppor
 	solidigm_dir.lid[0xDD].str = "VU Marketing Description Log Page";
 	solidigm_dir.lid[0xEF].str = "Performance Rating and LBA Access Histogram";
 	solidigm_dir.lid[0xF2].str = "Get Power Usage Log Page";
+	solidigm_dir.lid[0xF4].str = "Nand Statistics Log Page";
+	solidigm_dir.lid[0xF5].str = "Nand Defects Count Log Page";
 	solidigm_dir.lid[0xF6].str = "Vt Histo Get Log Page";
 	solidigm_dir.lid[0xF9].str = "Workload Tracker Get Log Page";
 	solidigm_dir.lid[0xFD].str = "Garbage Control Collection  Log Page";
-	solidigm_dir.lid[0xFE].str = "Latency Outlier Log Page";
+	solidigm_dir.lid[0xFE].str = "Latency Outlier / SK SMART Log Page";
 
 	update_vendor_lid_supported(supported, &solidigm_dir);
 
@@ -131,6 +133,9 @@ static struct lid_dir *get_ocp_lids(struct nvme_supported_log_pages *supported)
 	ocp_dir.lid[0xC3].str = "OCP Latency Monitor";
 	ocp_dir.lid[0xC4].str = "OCP Device Capabilities";
 	ocp_dir.lid[0xC5].str = "OCP Unsupported Requirements";
+	ocp_dir.lid[0xC6].str = "OCP Hardware Component";
+	ocp_dir.lid[0xC7].str = "OCP TCG Configuration";
+	ocp_dir.lid[0xC9].str = "OCP Telemetry String Log";
 
 	update_vendor_lid_supported(supported, &ocp_dir);
 
@@ -188,10 +193,11 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 {
 	const int NO_UUID_INDEX = 0;
 	const char *description = "Retrieves list of supported log pages for each UUID index.";
-	char *format = "normal";
 
 	OPT_ARGS(options) = {
-		OPT_FMT("output-format", 'o', &format, "output format : normal | json"),
+		OPT_FMT("output-format", 'o', &nvme_cfg.output_format,
+			"output format : normal | json"),
+		OPT_INCR("verbose", 'v', &nvme_cfg.verbose, verbose),
 		OPT_END()
 	};
 
@@ -244,9 +250,10 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *c
 	if (!err) {
 		nvme_print_flags_t print_flag;
 
-		err = validate_output_format(format, &print_flag);
-		if (err < 0) {
-			fprintf(stderr, "Error: Invalid output format specified: %s.\n", format);
+		err = validate_output_format(nvme_cfg.output_format, &print_flag);
+		if (err) {
+			nvme_show_error("Error: Invalid output format specified: %s.\n",
+					nvme_cfg.output_format);
 			return err;
 		}
 
