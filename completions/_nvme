@@ -116,6 +116,7 @@ _nvme () {
 	'reachability-groups-log:retrieve reachability groups log'
 	'reachability-associations-log:retrieve reachability associations log'
 	'host-discovery-log:retrieve host discovery log'
+	'ave-discovery-log:retrieve ave discovery log'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
@@ -2756,6 +2757,22 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme host-discovery-log" _hd_log
+			;;
+		(ave-discovery-log)
+			local _ad_log
+			_ad_log=(
+			/dev/nvme':supply a device to use (required)'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme ave-discovery-log" _ad_log
 			;;
 		(version)
 			local _version
