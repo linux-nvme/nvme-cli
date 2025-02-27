@@ -41,6 +41,19 @@ struct __packed nvme_additional_smart_log_item {
 	__u8			_rp;
 };
 
+struct __packed smart_ref_clk {
+	__u8 id;
+	__u8 _kp[2];
+	__u8 normalized;
+	__le16 gainCount0;
+	__le16 lossCount0;
+	__le16 gainCount1;
+	__le16 lossCount1;
+};
+
+_Static_assert(sizeof(struct nvme_additional_smart_log_item) == sizeof(struct smart_ref_clk),
+	"Size mismatch for smart_ref_clk");
+
 #define VU_SMART_PAGE_SIZE 512
 #define VU_SMART_MAX_ITEMS (VU_SMART_PAGE_SIZE / sizeof(struct nvme_additional_smart_log_item))
 struct vu_smart_log {
@@ -113,6 +126,8 @@ static char *id_to_name(__u8 id)
 
 static void smart_log_item_print(struct nvme_additional_smart_log_item *item)
 {
+	struct smart_ref_clk *pll_item = (struct smart_ref_clk *)item;
+
 	if (!item->id)
 		return;
 
@@ -131,6 +146,14 @@ static void smart_log_item_print(struct nvme_additional_smart_log_item *item)
 			item->thermal_throttle.pct,
 			le32_to_cpu(item->thermal_throttle.count));
 		return;
+	case 0xF3:
+		printf("gain0: %u, loss0: %u, gain1: %u, loss1: %u, legacy:%lu\n",
+			le16_to_cpu(pll_item->gainCount0),
+			le16_to_cpu(pll_item->lossCount0),
+			le16_to_cpu(pll_item->gainCount1),
+			le16_to_cpu(pll_item->lossCount1),
+			int48_to_long(item->raw));
+		return;
 	default:
 		printf("%"PRIu64"\n", int48_to_long(item->raw));
 	}
@@ -138,6 +161,7 @@ static void smart_log_item_print(struct nvme_additional_smart_log_item *item)
 
 static void smart_log_item_add_json(struct nvme_additional_smart_log_item *item, struct json_object *dev_stats)
 {
+	struct smart_ref_clk *pll_item = (struct smart_ref_clk *)item;
 	struct json_object *entry_stats = json_create_object();
 
 	if (!item->id)
@@ -154,6 +178,13 @@ static void smart_log_item_add_json(struct nvme_additional_smart_log_item *item,
 	case 0xEA:
 		json_object_add_value_int(entry_stats, "percentage", item->thermal_throttle.pct);
 		json_object_add_value_int(entry_stats, "count", le32_to_cpu(item->thermal_throttle.count));
+		break;
+	case 0xF3:
+		json_object_add_value_int(entry_stats, "gain0", le16_to_cpu(pll_item->gainCount0));
+		json_object_add_value_int(entry_stats, "loss0", le16_to_cpu(pll_item->lossCount0));
+		json_object_add_value_int(entry_stats, "gain1", le16_to_cpu(pll_item->gainCount1));
+		json_object_add_value_int(entry_stats, "loss1", le16_to_cpu(pll_item->lossCount1));
+		json_object_add_value_int(entry_stats, "legacy", int48_to_long(item->raw));
 		break;
 	default:
 		json_object_add_value_int(entry_stats, "raw", int48_to_long(item->raw));
@@ -198,7 +229,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	const int solidigm_vu_smart_log_id = 0xCA;
 	struct vu_smart_log smart_log_payload;
 	nvme_print_flags_t flags;
-	struct nvme_dev *dev;
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
 	__u8 uuid_index;
 
@@ -215,6 +246,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   "(optional) desired namespace"),
 		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_INCR("verbose",        'v', &nvme_cfg.verbose, verbose),
 		OPT_END()
 	};
 
@@ -263,9 +295,6 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		nvme_show_status(err);
 	}
 
-	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
-	dev_close(dev);
 	return err;
 }
 
