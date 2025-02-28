@@ -1997,7 +1997,7 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 		return err;
 
 	if (model == UNKNOWN_MODEL) {
-		fprintf(stderr, "ERROR : Unsupported drive for vs-drive-info cmd");
+		fprintf(stderr, "ERROR : Unsupported drive for vs-drive-info cmd\n");
 		dev_close(dev);
 		return -1;
 	}
