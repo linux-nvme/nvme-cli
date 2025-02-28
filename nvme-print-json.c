@@ -4904,6 +4904,17 @@ static void json_ave_discovery_log(struct nvme_ave_discover_log *log)
 	}
 }
 
+static void json_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)
+{
+	struct json_object *r = json_create_object();
+	__u32 tpdrpl = le32_to_cpu(log->tpdrpl);
+	__u32 osp_len = tpdrpl - offsetof(struct nvme_pull_model_ddc_req_log, osp);
+
+	obj_add_uint(r, "ori", log->ori);
+	printf("tpdrpl: %u\n", tpdrpl);
+	obj_d(r, "osp", (unsigned char *)log->osp, osp_len, 16, 1);
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -4978,6 +4989,7 @@ static struct print_ops json_print_ops = {
 	.reachability_associations_log	= json_reachability_associations_log,
 	.host_discovery_log		= json_host_discovery_log,
 	.ave_discovery_log		= json_ave_discovery_log,
+	.pull_model_ddc_req_log		= json_pull_model_ddc_req_log,
 
 	/* libnvme tree print functions */
 	.list_item			= json_list_item,

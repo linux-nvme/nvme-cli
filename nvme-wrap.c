@@ -481,3 +481,9 @@ int nvme_cli_get_log_ave_discovery(struct nvme_dev *dev, bool rae, __u32 len,
 {
 	return do_admin_op(get_log_ave_discover, dev, rae, len, log);
 }
+
+int nvme_cli_get_log_pull_model_ddc_req(struct nvme_dev *dev, bool rae, __u32 len,
+					struct nvme_pull_model_ddc_req_log *log)
+{
+	return do_admin_op(get_log_pull_model_ddc_req, dev, rae, len, log);
+}

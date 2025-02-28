@@ -96,6 +96,7 @@ struct print_ops {
 					      __u64 len);
 	void (*host_discovery_log)(struct nvme_host_discover_log *log);
 	void (*ave_discovery_log)(struct nvme_ave_discover_log *log);
+	void (*pull_model_ddc_req_log)(struct nvme_pull_model_ddc_req_log *log);
 
 	/* libnvme tree print functions */
 	void (*list_item)(nvme_ns_t n);
@@ -349,4 +350,6 @@ void nvme_show_reachability_associations_log(struct nvme_reachability_associatio
 					     __u64 len, nvme_print_flags_t flags);
 void nvme_show_host_discovery_log(struct nvme_host_discover_log *log, nvme_print_flags_t flags);
 void nvme_show_ave_discovery_log(struct nvme_ave_discover_log *log, nvme_print_flags_t flags);
+void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
+				      nvme_print_flags_t flags);
 #endif /* NVME_PRINT_H */

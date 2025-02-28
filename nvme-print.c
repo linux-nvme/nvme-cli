@@ -1530,3 +1530,9 @@ void nvme_show_ave_discovery_log(struct nvme_ave_discover_log *log, nvme_print_f
 {
 	nvme_print(ave_discovery_log, flags, log);
 }
+
+void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
+				      nvme_print_flags_t flags)
+{
+	nvme_print(pull_model_ddc_req_log, flags, log);
+}
