@@ -168,4 +168,7 @@ int nvme_cli_get_log_host_discovery(struct nvme_dev *dev, bool allhoste, bool ra
 
 int nvme_cli_get_log_ave_discovery(struct nvme_dev *dev, bool rae, __u32 len,
 				   struct nvme_ave_discover_log *log);
+
+int nvme_cli_get_log_pull_model_ddc_req(struct nvme_dev *dev, bool rae, __u32 len,
+					struct nvme_pull_model_ddc_req_log *log);
 #endif /* _NVME_WRAP_H */
