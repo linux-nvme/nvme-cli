@@ -10713,8 +10713,7 @@ static int get_host_discovery_log(int argc, char **argv, struct command *cmd, st
 	return err;
 }
 
-static int get_ave_discovery(struct nvme_dev *dev, bool rae,
-			     struct nvme_ave_discover_log **logp)
+static int get_ave_discovery(struct nvme_dev *dev, bool rae, struct nvme_ave_discover_log **logp)
 {
 	int err;
 	struct nvme_ave_discover_log *log;
@@ -10723,7 +10722,7 @@ static int get_ave_discovery(struct nvme_dev *dev, bool rae,
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_HOST_DISCOVER,
+		.lid = NVME_LOG_LID_AVE_DISCOVER,
 		.nsid = NVME_NSID_ALL,
 		.rae = rae,
 	};
