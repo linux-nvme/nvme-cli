@@ -5836,6 +5836,17 @@ static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log)
 	}
 }
 
+static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)
+{
+	__u32 tpdrpl = le32_to_cpu(log->tpdrpl);
+	__u32 osp_len = tpdrpl - offsetof(struct nvme_pull_model_ddc_req_log, osp);
+
+	printf("ori: %u\n", log->ori);
+	printf("tpdrpl: %u\n", tpdrpl);
+	printf("osp:\n");
+	d((unsigned char *)log->osp, osp_len, 16, 1);
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -5910,6 +5921,7 @@ static struct print_ops stdout_print_ops = {
 	.reachability_associations_log	= stdout_reachability_associations_log,
 	.host_discovery_log		= stdout_host_discovery_log,
 	.ave_discovery_log		= stdout_ave_discovery_log,
+	.pull_model_ddc_req_log		= stdout_pull_model_ddc_req_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,
