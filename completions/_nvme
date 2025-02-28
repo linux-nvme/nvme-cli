@@ -117,6 +117,7 @@ _nvme () {
 	'reachability-associations-log:retrieve reachability associations log'
 	'host-discovery-log:retrieve host discovery log'
 	'ave-discovery-log:retrieve ave discovery log'
+	'pull-model-ddr-req-log:retrieve pull model ddr req log'
 	'version:show the program version'
 	'ocp:OCP cloud SSD extensions'
 	'solidigm:Solidigm plug-in extensions'
@@ -2773,6 +2774,22 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme ave-discovery-log" _ad_log
+			;;
+		(pull-model-ddr-req-log)
+			local _pmdr_log
+			_pmdr_log=(
+			/dev/nvme':supply a device to use (required)'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme pull-model-ddr-req-log" _pmdr_log
 			;;
 		(version)
 			local _version
