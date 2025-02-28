@@ -207,3 +207,36 @@ linknvme:nvme-inspur-nvme-vendor-log[1]::
 
 linknvme:nvme-dapustor-smart-log-add[1]::
 	NVMe DapuStor Additional SMART log page
+
+linknvme:nvme-solidigm-id-ctrl[1]::
+	Solidigm - NVMe Identify Controller
+
+linknvme:nvme-solidigm-smart-log-add[1]::
+	Retrieve Solidigm SMART Log
+
+linknvme:nvme-solidigm-vs-internal-log[1]::
+	Retrieve Debug log binaries
+
+linknvme:nvme-solidigm-garbage-collect-log[1]::
+	Retrieve Garbage Collection Log
+
+linknvme:nvme-solidigm-market-log[1]::
+	Retrieve Market Log
+
+linknvme:nvme-solidigm-latency-tracking-log[1]::
+	Enable/Retrieve Latency tracking Log
+
+linknvme:nvme-solidigm-parse-telemetry-log[1]::
+	Parse Telemetry Log binary
+
+linknvme:nvme-solidigm-log-page-directory[1]::
+	Retrieve log page directory
+
+linknvme:nvme-solidigm-temp-stats[1]::
+	Retrieve Temperature Statistics log
+
+linknvme:nvme-solidigm-vs-drive-info[1]::
+	Retrieve drive information
+
+linknvme:nvme-solidigm-workload-tracker[1]::
+	Real Time capture Workload Tracker samples
