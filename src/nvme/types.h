@@ -151,11 +151,15 @@ enum nvme_constants {
  * @NVME_CSI_NVM:	NVM Command Set Indicator
  * @NVME_CSI_KV:	Key Value Command Set
  * @NVME_CSI_ZNS:	Zoned Namespace Command Set
+ * @NVME_CSI_SLM:	Subsystem Local Memory Command Set
+ * @NVME_CSI_CP:	Computational Programs Command Set
  */
 enum nvme_csi {
 	NVME_CSI_NVM			= 0,
 	NVME_CSI_KV			= 1,
 	NVME_CSI_ZNS			= 2,
+	NVME_CSI_SLM			= 3,
+	NVME_CSI_CP			= 4,
 };
 
 /**
