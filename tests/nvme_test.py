@@ -354,12 +354,13 @@ class TestNVMe(unittest.TestCase):
                 - flbas : new namespace format.
                 - dps : new namespace data protection information.
             - Returns:
-                - return code of the nvme create namespace command.
+                - Popen object of the nvme create namespace command.
         """
         create_ns_cmd = f"{self.nvme_bin} create-ns {self.ctrl} " + \
             f"--nsze={str(nsze)} --ncap={str(ncap)} --flbas={str(flbas)} " + \
-            f"--dps={str(dps)} --verbose"
-        return self.exec_cmd(create_ns_cmd)
+            f"--dps={str(dps)} --verbose --output-format=json"
+        return subprocess.Popen(create_ns_cmd, shell=True,
+                                stdout=subprocess.PIPE, encoding='utf-8')
 
     def create_and_validate_ns(self, nsid, nsze, ncap, flbas, dps):
         """ Wrapper for creating and validating a namespace.
@@ -372,8 +373,12 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - return 0 on success, error code on failure.
         """
-        err = self.create_ns(nsze, ncap, flbas, dps)
+        proc = self.create_ns(nsze, ncap, flbas, dps)
+        err = proc.wait()
         if err == 0:
+            json_output = json.loads(proc.stdout.read())
+            self.assertEqual(int(json_output['nsid']), nsid,
+                             "ERROR : create namespace failed")
             id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
                 f"--namespace-id={str(nsid)}"
             err = subprocess.call(id_ns_cmd,
