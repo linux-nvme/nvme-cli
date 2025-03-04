@@ -243,6 +243,20 @@ struct nvme_mi_transport {
 	void (*close)(struct nvme_mi_ep *ep);
 	int (*desc_ep)(struct nvme_mi_ep *ep, char *buf, size_t len);
 	int (*check_timeout)(struct nvme_mi_ep *ep, unsigned int timeout);
+	int (*aem_fd)(struct nvme_mi_ep *ep);
+	int (*aem_read)(struct nvme_mi_ep *ep,
+			  struct nvme_mi_resp *resp);
+	int (*aem_purge)(struct nvme_mi_ep *ep);
+};
+
+struct nvme_mi_aem_ctx {
+	struct nvme_mi_aem_occ_list_hdr *occ_header;
+	struct nvme_mi_aem_occ_data *list_start;
+	struct nvme_mi_aem_occ_data *list_current;
+	int list_current_index;
+	struct nvme_mi_aem_config callbacks;
+	int last_generation_num;
+	struct nvme_mi_event event;
 };
 
 /* quirks */
@@ -276,6 +290,8 @@ struct nvme_mi_ep {
 	unsigned int inter_command_us;
 	struct timespec last_resp_time;
 	bool last_resp_time_valid;
+
+	struct nvme_mi_aem_ctx *aem_ctx;
 };
 
 struct nvme_mi_ctrl {
@@ -295,7 +311,8 @@ __u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len);
  * in the shared lib */;
 struct mctp_ioc_tag_ctl;
 struct __mi_mctp_socket_ops {
-	int (*socket)(int, int, int);
+	int (*msg_socket)(void);
+	int (*aem_socket)(__u8 eid, unsigned int network);
 	ssize_t (*sendmsg)(int, const struct msghdr *, int);
 	ssize_t (*recvmsg)(int, struct msghdr *, int);
 	int (*poll)(struct pollfd *, nfds_t, int);

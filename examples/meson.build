@@ -47,6 +47,13 @@ executable(
     include_directories: [incdir, internal_incdir]
 )
 
+executable(
+    'mi-mctp-ae',
+    ['mi-mctp-ae.c'],
+    dependencies: libnvme_mi_dep,
+    include_directories: [incdir, internal_incdir]
+)
+
 if libdbus_dep.found()
     executable(
         'mi-conf',

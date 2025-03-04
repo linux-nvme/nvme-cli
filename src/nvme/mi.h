@@ -107,6 +107,7 @@
  * @NVME_MI_MT_MI: NVMe-MI command
  * @NVME_MI_MT_ADMIN: NVMe Admin command
  * @NVME_MI_MT_PCIE: PCIe command
+ * @NVME_MI_MT_AE: Asynchronous Event
  *
  * Used as byte 1 of both request and response messages (NMIMT bits of NMP
  * byte). Not to be confused with the MCTP message type in byte 0.
@@ -116,6 +117,7 @@ enum nvme_mi_message_type {
 	NVME_MI_MT_MI = 1,
 	NVME_MI_MT_ADMIN = 2,
 	NVME_MI_MT_PCIE = 4,
+	NVME_MI_MT_AE = 5,
 };
 
 /**
@@ -281,7 +283,7 @@ enum nvme_mi_dtyp {
  *                                       status poll. Only for Set ops.
  * @NVME_MI_CONFIG_MCTP_MTU: MCTP maximum transmission unit size of port
  *                           specified in dw 0
- *
+ * @NVME_MI_CONFIG_AE: Asynchronous Events configuration
  * Configuration parameters for the MI Get/Set Configuration commands.
  *
  * See &nvme_mi_mi_config_get() and &nvme_mi_config_set().
@@ -290,6 +292,7 @@ enum nvme_mi_config_id {
 	NVME_MI_CONFIG_SMBUS_FREQ = 0x1,
 	NVME_MI_CONFIG_HEALTH_STATUS_CHANGE = 0x2,
 	NVME_MI_CONFIG_MCTP_MTU = 0x3,
+	NVME_MI_CONFIG_AE = 0x4,
 };
 
 /**
@@ -306,6 +309,229 @@ enum nvme_mi_config_smbus_freq {
 	NVME_MI_CONFIG_SMBUS_FREQ_400kHz = 0x2,
 	NVME_MI_CONFIG_SMBUS_FREQ_1MHz = 0x3,
 };
+
+/* Asynchronous Event Message definitions*/
+
+/**
+ * struct nvme_mi_aem_supported_list_header - Asynchronous Event Supported List Header.
+ * @numaes: Number of AE supported data structures that follow the header
+ * @aeslver: AE Supported List Version
+ * @aest: AE Supported list length (including this header)
+ * @aeslhl: AE Supported list header length
+ *
+ * This header preceeds a number, (&numaes), of AE supported data structures
+ */
+struct nvme_mi_aem_supported_list_header {
+	__u8 numaes;
+	__u8 aeslver;//Should be zero
+	__le16 aest;
+	__u8 aeslhl; //Should be 5
+} __attribute__((packed));
+
+/**
+ * struct nvme_mi_aem_supported_item - AE Supported List Item
+ * @aesl: AE supported list item length
+ * @aesi: AE supported info
+ *
+ * Following this header should be hdr.numaes entries of
+ * nvme_mi_aem_supported_item structures
+ */
+struct nvme_mi_aem_supported_item {
+	__u8 aesl;//Length of this item.  Set to 3
+	__le16 aesi;
+} __attribute__((packed));
+
+/**
+ * nvme_mi_aem_aesi_get_aese() - return aese from aesi field
+ * @aesi: aesi field from @nvme_mi_aem_supported_item
+ *
+ * Returns: A bool representing the aese value
+ */
+bool nvme_mi_aem_aesi_get_aese(__le16 aesi);
+
+/**
+ * nvme_mi_aem_aesi_get_aesid() - return aesid from aesi field
+ * @aesi: aesi field from @nvme_mi_aem_supported_item
+ *
+ * Returns: aesid value
+ */
+__u8 nvme_mi_aem_aesi_get_aesid(__le16 aesi);
+
+/**
+ * nvme_mi_aem_aesi_set_aesid() - set aesid in the aesi field
+ * @item: Pointer to @nvme_mi_aem_supported_item to update the aesi field
+ * @aesid: aesid value to use
+ */
+void nvme_mi_aem_aesi_set_aesid(struct nvme_mi_aem_supported_item *item, __u8 aesid);
+
+/**
+ * nvme_mi_aem_aesi_set_aee() - set aee in the aesi field
+ * @item: Pointer to @nvme_mi_aem_supported_item to update the aesi field
+ * @enabled: aee value to use
+ */
+void nvme_mi_aem_aesi_set_aee(struct nvme_mi_aem_supported_item *item, bool enabled);
+
+/**
+ * struct nvme_mi_aem_supported_list - AE Supported List received with GET CONFIG Asynchronous Event
+ * @hdr: AE supported list header
+ *
+ * Following this header should be hdr.numaes entries of
+ * nvme_mi_aem_supported_item structures
+ */
+struct nvme_mi_aem_supported_list {
+	struct nvme_mi_aem_supported_list_header hdr;
+} __attribute__((packed));
+
+/**
+ * struct nvme_mi_aem_enable_item - AE Enabled item entry
+ * @aeel: AE Enable Length (length of this structure which is 3)
+ * @aeei: AE Enable Info
+ *
+ */
+struct nvme_mi_aem_enable_item {
+	__u8 aeel;
+	__le16 aeei;
+} __attribute__((packed));
+
+/**
+ * nvme_mi_aem_aeei_get_aee() - return aee from aeei field
+ * @aeei: aeei field from @nvme_mi_aem_enable_item
+ *
+ * Returns: aee value
+ */
+bool nvme_mi_aem_aeei_get_aee(__le16 aeei);
+
+/**
+ * nvme_mi_aem_aeei_get_aeeid() - return aeeid from aeei field
+ * @aeei: aeei field from @nvme_mi_aem_enable_item
+ *
+ * Returns: aeeid value
+ */
+__u8 nvme_mi_aem_aeei_get_aeeid(__le16 aeei);
+
+/**
+ * nvme_mi_aem_aeei_set_aeeid() - set aeeid in the aeei field
+ * @item: Pointer to @nvme_mi_aem_enable_item to update the aeei field
+ * @aeeid: aeeid value to use
+ */
+void nvme_mi_aem_aeei_set_aeeid(struct nvme_mi_aem_enable_item *item, __u8 aeeid);
+
+/**
+ * nvme_mi_aem_aeei_set_aee() - set aee in the aeei field
+ * @item: Pointer to @nvme_mi_aem_enable_item to update the aee field
+ * @enabled: aee value to use
+ */
+void nvme_mi_aem_aeei_set_aee(struct nvme_mi_aem_enable_item *item, bool enabled);
+
+/**
+ * struct nvme_mi_aem_enable_list_header - AE Enable list header
+ * @numaee: Number of AE enable items following the header
+ * @aeelver: Version of the AE enable list (zero)
+ * @aeetl: Total length of the AE enable list including header and items
+ * @aeelhl: Header length of this header (5)
+ */
+struct nvme_mi_aem_enable_list_header {
+	__u8 numaee;
+	__u8 aeelver;
+	__le16 aeetl;
+	__u8 aeelhl;
+} __attribute__((packed));
+
+/**
+ * struct nvme_mi_aem_enable_list - AE enable list sent with SET CONFIG Asyncronous Event
+ * @hdr: AE enable list header
+ *
+ * Following this header should be hdr.numaee entries of nvme_mi_aem_enable_item structures
+ */
+struct nvme_mi_aem_enable_list {
+	struct nvme_mi_aem_enable_list_header hdr;
+} __attribute__((packed));
+
+/**
+ * struct nvme_mi_aem_occ_data - AEM Message definition.
+ * @aelhlen: AE Occurrence Header Length
+ * @aeosil: AE Occurrence Specific Info Length
+ * @aeovsil: AE Occurrence Vendor Specific Info Length
+ * @aeoui: AE Occurrence Unique ID made up of other subfields
+ *
+ * A single entry of ae occurrence data that comes with an nvme_aem_msg.
+ * Following this structure is variable length AEOSI (occurrence specific
+ * info) and variable length AEVSI (vendor specific info).  The length of
+ * AEOSI is specified by aeosil and the length of AEVSI is specified by
+ * AEVSI.  Neither field is mandatory and shall be omitted if their length
+ * parameter is set to zero.
+ */
+struct nvme_mi_aem_occ_data {
+	__u8 aelhlen;
+	__u8 aeosil;
+	__u8 aeovsil;
+	struct {
+		__u8 aeoi;
+		__le32 aeocidi;
+		__u8 aessi;
+	} __attribute__((packed)) aeoui;
+} __attribute__((packed));
+
+/**
+ * struct nvme_mi_aem_occ_list_hdr - AE occurrence list header
+ * @numaeo: Number of AE Occurrence Data Structures
+ * @aelver: AE Occurrence List Version Number
+ * @aeolli: AE Occurrence List Length Info (AEOLLI)
+ * @aeolhl: AE Occurrence List Header Length (shall be set to 7)
+ * @aemti: AEM Transmission Info
+ *
+ * The header for the occurrence list.  numaeo defines how many
+ * nvme_mi_aem_occ_data structures (including variable payaloads) are included.
+ * Following this header is each of the numaeo occurrence data structures.
+ */
+struct nvme_mi_aem_occ_list_hdr {
+	__u8 numaeo;
+	__u8 aelver;
+	__u8 aeolli[3];//24-bits
+	__u8 aeolhl;
+	__u8 aemti;
+} __attribute__((packed));
+
+/**
+ * nvme_mi_aem_aemti_get_aemgn() - return aemgn from aemti field
+ * @aemti: aemti field from @nvme_mi_aem_occ_list_hdr
+ *
+ * Returns: aemgn value
+ */
+__u8 nvme_mi_aem_aemti_get_aemgn(__u8 aemti);
+
+/**
+ * nvme_mi_aem_aeolli_get_aeoltl() - return aeoltl from aeolli field
+ * @aeolli: Pointer to 3 byte aeolli field from @nvme_mi_aem_occ_list_hdr
+ *
+ * Returns: aeoltl value
+ */
+__u32 nvme_mi_aem_aeolli_get_aeoltl(__u8 *aeolli);
+
+/**
+ * nvme_mi_aem_aeolli_set_aeoltl() - set aeoltl in the aeolli field
+ * @hdr:Pointer to @nvme_mi_aem_occ_list_hdr to set the aeolli field
+ * @aeoltl: aeoltl value to use
+ */
+void nvme_mi_aem_aeolli_set_aeoltl(struct nvme_mi_aem_occ_list_hdr *hdr, __u32 aeoltl);
+
+/**
+ * struct nvme_mi_aem_msg - AEM Message definition.
+ * @hdr: the general response message header
+ * @occ_list_hdr: ae occurrence list header.
+ *
+ * Every ae message will start with one of these.  The occ_list_hder wil define
+ * information about how many ae occ data entries are included.  Each entry is
+ * defined by the nvme_mi_aem_occ_data structure which will follow the
+ * occ_list_hdr.  Each nvme_mi_aem_occ_data structure has a fixed length header
+ * but a variable length payload ude to occurrence specific and vendor specific
+ * info.  For this reason, do not index the nvme_mi_ae_occ data structures by
+ * array or fixed offset.
+ */
+struct nvme_mi_aem_msg {
+	struct nvme_mi_msg_hdr hdr;
+	struct nvme_mi_aem_occ_list_hdr occ_list_hdr;
+} __attribute__((packed));
 
 /* Admin command definitions */
 
@@ -645,6 +871,14 @@ nvme_mi_ctrl_t nvme_mi_next_ctrl(nvme_mi_ep_t ep, nvme_mi_ctrl_t c);
  * See &nvme_mi_close
  */
 nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, uint8_t eid);
+
+/**
+ * nvme_mi_aem_open() - Prepare an existing endpoint to receive AEMs
+ * @ep: Endpoint to configure for AEMs
+ *
+ * Return: 0 if success, -1 otherwise
+ */
+int nvme_mi_aem_open(nvme_mi_ep_t ep);
 
 /**
  * nvme_mi_close() - Close an endpoint connection and release resources,
@@ -1028,6 +1262,80 @@ static inline int nvme_mi_mi_config_set_mctp_mtu(nvme_mi_ep_t ep, __u8 port,
 	__u32 dw0 = port << 24 | NVME_MI_CONFIG_MCTP_MTU;
 
 	return nvme_mi_mi_config_set(ep, dw0, mtu);
+}
+
+
+/**
+ * nvme_mi_mi_config_get_async_event - get configuration: Asynchronous Event
+ * @ep: endpoint for MI communication
+ * @aeelver: Asynchronous Event Enable List Version Number
+ * @list: AE Supported list header and list contents
+ * @list_num_bytes: number of bytes in the list header and contents buffer.
+ * This will be populated with returned size of list and contents if successful.
+ *
+ * Performs a MI Configuration Get, to query the current enable Asynchronous
+ * Events.  On success, populates @aeelver and the @list with current info,
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
+ */
+int nvme_mi_mi_config_get_async_event(nvme_mi_ep_t ep,
+				__u8 *aeelver,
+				struct nvme_mi_aem_supported_list *list,
+				size_t *list_num_bytes);
+
+/**
+ * nvme_mi_mi_config_set_async_event - set configuration: Asynchronous Event
+ * @ep: endpoint for MI communication
+ * @envfa: Enable SR-IOV Virtual Functions AE
+ * @empfa: Enable SR-IOV Physical Functions AE
+ * @encfa: Enable PCI Functions AE.
+ * @aemd: AEM Delay Interval (for Sync only)
+ * @aerd: AEM Retry Delay (for Sync only; time in 100s of ms)
+ * @enable_list: nvme_mi_aem_enable_listucture containing header and items
+ * of events to be enabled or disabled.  This is taken as a delta change
+ * from the current configuration.
+ * @enable_list_size: Size of the enable_list including header and data.
+ * Meant to catch overrun issues.
+ * @occ_list: Pointer to populate with the occurrence list (header and data)
+ * @occ_list_size: Total size of provided occ_list buffer.  Will be updated
+ * with received size if successful
+ *
+ * Performs a MI Configuration Set, to ACK (sent after an AEM) or Sync (at anytime to enable
+ * or disable Asynchronous Events).
+ *
+ * On success, populates @occ_list.  See TP6035a for details on how occ_list is populated in
+ * ACK versus Sync conditions
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise..
+ */
+int nvme_mi_mi_config_set_async_event(nvme_mi_ep_t ep,
+				bool envfa,
+				bool empfa,
+				bool encfa,
+				__u8 aemd,
+				__u8 aerd,
+				struct nvme_mi_aem_enable_list *enable_list,
+				size_t enable_list_size,
+				struct nvme_mi_aem_occ_list_hdr *occ_list,
+				size_t *occ_list_size);
+
+static inline int nvme_mi_aem_ack(nvme_mi_ep_t ep,
+				struct nvme_mi_aem_occ_list_hdr *occ_list,
+				size_t *occ_list_size)
+{
+	//An AEM Ack is defined as a SET CONFIG AE with no AE enable items
+	struct nvme_mi_aem_enable_list list = {0};
+
+	list.hdr.aeelhl = sizeof(struct nvme_mi_aem_enable_list_header);
+	list.hdr.aeelver = 0;
+	list.hdr.aeetl = sizeof(struct nvme_mi_aem_enable_list_header);
+	list.hdr.numaee = 0;
+
+	return nvme_mi_mi_config_set_async_event(ep, false, false, false, 0, 0,
+						&list, sizeof(list), occ_list,
+						occ_list_size);
 }
 
 /* Admin channel functions */
@@ -3095,5 +3403,160 @@ int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
  */
 int nvme_mi_admin_sanitize_nvm(nvme_mi_ctrl_t ctrl,
 			       struct nvme_sanitize_nvm_args *args);
+
+/**
+ * enum nvme_mi_aem_handler_next_action - Next action for the AEM state machine handler
+ * @NVME_MI_AEM_HNA_ACK: Send an ack for the AEM
+ * @NVME_MI_AEM_HNA_NONE: No further action
+ *
+ * Used as return value for the AE callback generated when calling nvme_mi_aem_process
+ */
+enum nvme_mi_aem_handler_next_action {
+	NVME_MI_AEM_HNA_ACK,
+	NVME_MI_AEM_HNA_NONE,
+};
+
+/**
+ * struct nvme_mi_event - AE event information structure
+ * @aeoi: Event identifier
+ * @aessi: Event occurrence scope info
+ * @aeocidi: Event occurrence scope ID info
+ * @spec_info: Specific info buffer
+ * @spec_info_len: Length of specific info buffer
+ * @vend_spec_info: Vendor specific info buffer
+ * @vend_spec_info_len: Length of vendor specific info buffer
+ *
+ * Application callbacks for nvme_mi_aem_process will be able to call
+ * nvme_mi_aem_get_next_event which will return a pointer to such an identifier
+ * for the next event the application should parse
+ */
+struct nvme_mi_event {
+	uint8_t aeoi;
+	uint8_t aessi;
+	uint32_t aeocidi;
+	void *spec_info;
+	size_t spec_info_len;
+	void *vend_spec_info;
+	size_t vend_spec_info_len;
+};
+
+/**
+ * nvme_mi_aem_get_next_event() - Get details for the next event to parse
+ * @ep: The endpoint with the event
+ *
+ * When inside a aem_handler, call this and a returned struct pointer
+ * will provide details of event information.  Will return NULL when end of parsing is occurred.
+ * spec_info and vend_spec_info must be copied to persist as they will not be valid
+ * after the handler_next_action has returned.
+ *
+ * Return: Pointer no next nvme_mi_event or NULL if this is the last one
+ */
+struct nvme_mi_event *nvme_mi_aem_get_next_event(nvme_mi_ep_t ep);
+
+struct nvme_mi_aem_enabled_map {
+	bool enabled[256];
+};
+
+/**
+ * struct nvme_mi_aem_config - Provided for nvme_mi_aem_enable
+ * @aem_handler: Callback function for application processing of events
+ * @enabled_map: Map indicating which AE should be enabled on the endpoint
+ * @envfa: Enable SR-IOV virtual functions AE
+ * @empfa: Enable SR-IOV physical functions AE
+ * @encfa: Enable PCIe functions AE
+ * @aemd: AEM Delay (time in seconds from when event happens to AEM being batched and sent)
+ * @aerd: AEM Retry Delay (time in 100s of ms between AEM retries from the endpoint)
+ *
+ * Application callbacks for nvme_mi_aem_process will be able to call
+ * nvme_mi_aem_get_next_event which will return a pointer to such an identifier
+ * for the next event the application should parse
+ */
+struct nvme_mi_aem_config {
+	/*
+	 * This is called from inside nvme_mi_process when a payload has been validated and
+	 * can be parsed.  The application may call nvme_mi_aem_get_next_event from inside
+	 *  the callback to parse event data.
+	 */
+	enum nvme_mi_aem_handler_next_action (*aem_handler)(
+							nvme_mi_ep_t ep,
+							size_t num_events,
+							void *userdata);
+
+	struct nvme_mi_aem_enabled_map enabled_map;
+
+	bool envfa;
+	bool empfa;
+	bool encfa;
+	__u8 aemd;
+	__u8 aerd;
+};
+
+/**
+ * nvme_mi_aem_get_fd() - Returns the pollable fd for AEM data available
+ * @ep: The endpoint being monitored for asynchronous data
+ *
+ * This populated structure can be polled from the application to understand if
+ * a call to nvme_mi_aem_process() is required (when a poll returns > 0).
+ *
+ * Return: The fd value or -1 if error
+ */
+int nvme_mi_aem_get_fd(nvme_mi_ep_t ep);
+
+/**
+ * nvme_mi_aem_enable() - Enable AE on the provided endpoint
+ * @ep: Endpoint to enable AEs
+ * @config: AE configuraiton including which events are enabled and the callback function
+ * @userdata: Application provided context pointer for callback function
+ *
+ * This function is called to enable AE on the endpoint.  Endpoint will provide initial state
+ * (if any) of enabled AEs and application can parse those via the aem_handler fn pointer in
+ * callbacks.  Thes can be obtained in the callback by calling nvme_mi_aem_get_next_event().
+ *
+ * Application should poll the fd that can be obtained from nvme_mi_aem_get_fd and then call
+ * nvme_mi_aem_process() when poll() indicates data available.
+ *
+ * A call to nvme_mi_aem_process() will grab AEM data and call the aem_handler fn pointer.
+ * At this point the application can call nvme_mi_aem_get_next_event() to get information for
+ * each triggered event.
+ *
+ * Return: 0 is a success, nonzero is an error and errno may be read for further details
+ */
+int nvme_mi_aem_enable(nvme_mi_ep_t ep,
+	struct nvme_mi_aem_config *config,
+	void *userdata);
+
+
+/**
+ * nvme_mi_aem_get_enabled() - Return information on which AEs are enabled
+ * @ep: Endpoint to check enabled status
+ * @enabled: nvme_mi_aem_enabled_map indexed by AE event ID of enabled state
+ *
+ * Return: 0 is a success, nonzero is an error and errno may be read for further details
+ */
+int nvme_mi_aem_get_enabled(nvme_mi_ep_t ep,
+	struct nvme_mi_aem_enabled_map *enabled);
+
+/**
+ * nvme_mi_aem_disable() - Disable AE on the provided endpoint
+ * @ep: Endpoint to disable AEs
+ *
+ * Return: 0 is a success, nonzero is an error and errno may be read for further details
+ */
+int nvme_mi_aem_disable(nvme_mi_ep_t ep);
+
+/**
+ * nvme_mi_aem_process() - Process AEM on the provided endpoint
+ * @ep: Endpoint to process
+ * @userdata: Application provided context pointer for callback function
+ *
+ * Call this if poll() indicates data is available on the fd provided by nvme_mi_aem_get_fd()
+ *
+ * This will call the fn pointer, aem_handler, provided with nvme_mi_aem_config and the
+ * application can call nvme_mi_aem_get_next_event() from within this callback to get
+ * aem event data.  The callback function should return NVME_MI_AEM_HNA_ACK for normal operation.
+ *
+ * Return: 0 is a success, nonzero is an error and errno may be read for further details
+ */
+int nvme_mi_aem_process(nvme_mi_ep_t ep, void *userdata);
 
 #endif /* _LIBNVME_MI_MI_H */

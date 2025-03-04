@@ -95,6 +95,10 @@ static const struct nvme_mi_transport test_transport = {
 	.submit = test_transport_submit,
 	.close = test_transport_close,
 	.desc_ep = test_transport_desc_ep,
+	//The following aren't actually used by the test_transport
+	.aem_fd = NULL,
+	.aem_purge = NULL,
+	.aem_read = NULL,
 };
 
 static void test_set_transport_callback(nvme_mi_ep_t ep, test_submit_cb cb,

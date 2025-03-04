@@ -1,6 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_MI_UNRELEASED {
 	global:
+		nvme_mi_aem_disable;
+		nvme_mi_aem_enable;
+		nvme_mi_aem_get_enabled;
+		nvme_mi_aem_get_fd;
+		nvme_mi_aem_get_next_event;
+		nvme_mi_aem_process;
 		nvme_mi_set_csi;
 		nvme_mi_submit_entry;
 		nvme_mi_submit_exit;
