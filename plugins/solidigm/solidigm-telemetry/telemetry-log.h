@@ -11,6 +11,7 @@
 #include "libnvme.h"
 #include "util/json.h"
 #include <assert.h>
+#include <stdbool.h>
 
 #if !defined __cplusplus
 #define static_assert _Static_assert
@@ -26,6 +27,7 @@ struct telemetry_log {
 	size_t log_size;
 	struct json_object *root;
 	struct json_object *configuration;
+	bool is_ocp;
 };
 
 #endif /* _SOLIDIGM_TELEMETRY_LOG_H */

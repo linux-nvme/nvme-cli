@@ -10,14 +10,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "ccan/ilog/ilog.h"
-
 #define LOG_ENTRY_HEADER_SIZE 1
 #define LOG_ENTRY_TIMESTAMP_SIZE 2
 #define LOG_ENTRY_NUM_ARGS_MAX 8
+#define LOG_ENTRY_NUM_ARGS_MASK 0xF
 #define LOG_ENTRY_MAX_SIZE (LOG_ENTRY_HEADER_SIZE + LOG_ENTRY_TIMESTAMP_SIZE + \
 			    LOG_ENTRY_NUM_ARGS_MAX)
-#define NUM_ARGS_MASK ((1 << ((int)STATIC_ILOG_32(LOG_ENTRY_NUM_ARGS_MAX))) - 1)
 #define MAX_HEADER_MISMATCH_TRACK 10
 
 static int formats_find(struct json_object *formats, uint32_t val, struct json_object **format)
@@ -41,13 +39,13 @@ static uint32_t nlog_get_events(const uint32_t *nlog, const uint32_t nlog_size, 
 	uint32_t tail_count = 0;
 
 	for (int i = nlog_size - start_offset - 1; i >= -start_offset; i--) {
-		struct json_object *format;
+		struct json_object *format = NULL;
 		uint32_t header = nlog_get_pos(nlog, nlog_size, i);
 		uint32_t num_data;
 
 		if (header == 0 || !formats_find(formats, header, &format)) {
 			if (event_count > 0) {
-				//check if fould circular buffer tail
+				//check if found circular buffer tail
 				if (i != (last_bad_header_pos - 1)) {
 					if (tail_mismatches &&
 					    (tail_count < MAX_HEADER_MISMATCH_TRACK))
@@ -58,7 +56,7 @@ static uint32_t nlog_get_events(const uint32_t *nlog, const uint32_t nlog_size, 
 			}
 			continue;
 		}
-		num_data = header & NUM_ARGS_MASK;
+		num_data = header & LOG_ENTRY_NUM_ARGS_MASK;
 		if (events) {
 			struct json_object *event = json_object_new_array();
 			struct json_object *param = json_object_new_array();

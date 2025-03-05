@@ -83,6 +83,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struc
 		OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
 		OPT_FILE("config-file",     'j', &cfg.cfg_file, cfile),
 		OPT_FLAG("source-file",     's', &cfg.is_input_file, sfile),
+		OPT_INCR("verbose",      'v', &nvme_cfg.verbose, verbose),
 		OPT_END()
 	};
 
