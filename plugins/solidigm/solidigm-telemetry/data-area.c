@@ -18,6 +18,23 @@
 
 #define MAX_WARNING_SIZE 1024
 #define MAX_ARRAY_RANK 16
+#define NLOG_HEADER_ID 101
+
+
+static void reverse_string(char *buff, size_t len)
+{
+	char *start = buff;
+	char *end = buff + len - 1;
+	char temp;
+
+	while (end > start) {
+		temp = *end;
+		*end = *start;
+		*start = temp;
+		start++;
+		end--;
+	}
+}
 
 static bool telemetry_log_get_value(const struct telemetry_log *tl,
 				    uint64_t offset_bit, uint32_t size_bit,
@@ -418,6 +435,13 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 									header->Token);
 			if (!nlog_name)
 				continue;
+
+			// NLOGs have different parser from other Telemetry objects
+			has_struct = solidigm_config_get_struct_by_token_version(tl->configuration,
+				NLOG_HEADER_ID,
+				header->versionMajor,
+				header->versionMinor,
+				&structure_definition);
 		}
 		struct json_object *tele_obj_item = json_create_object();
 
@@ -443,14 +467,51 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 			telemetry_log_structure_parse(tl, structure_definition,
 						BITS_IN_BYTE * object_file_offset,
 						parsed_struct, toc_item);
-		} else if (nlog_formats) {
+		}
+		// NLOGs have different parser from other Telemetry objects
+		if (nlog_name) {
+			if (has_struct) {
+				struct json_object *header_sizeBits = NULL;
+				struct json_object *header_nlogSelect = NULL;
+				struct json_object *header_nlogName = NULL;
+
+				if (json_object_object_get_ex(structure_definition, "sizeBit",
+							      &header_sizeBits))
+					header_offset = json_object_get_int(header_sizeBits) /
+							BITS_IN_BYTE;
+				// Overwrite nlogName with correct type
+				if (json_object_object_get_ex(parsed_struct, "nlogSelect",
+				    &header_nlogSelect) &&
+				    json_object_object_get_ex(header_nlogSelect, "nlogName",
+				    &header_nlogName)) {
+					int nlogName = json_object_get_int(header_nlogName);
+					char *name = (char *)&nlogName;
+
+					reverse_string(name, sizeof(uint32_t));
+					json_object_object_add(header_nlogSelect, "nlogName",
+						json_object_new_string_len(name,
+									   sizeof(uint32_t)));
+				}
+			}
+			// Overwrite the object name
 			json_object_object_add(toc_item, "objName",
 					       json_object_new_string(nlog_name));
-			telemetry_log_nlog_parse(tl, nlog_formats, object_file_offset,
+
+			telemetry_log_nlog_parse(tl, nlog_formats,
+						 object_file_offset + header_offset,
 						 toc->items[i].ContentSizeBytes - header_offset,
 						 parsed_struct, toc_item);
 		}
 	}
+}
+
+void solidigm_telemetry_log_da1_check_ocp(struct telemetry_log *tl)
+{
+	const uint64_t ocp_telemetry_uuid[] = {0xBC73719D87E64EFA, 0xBA560A9C3043424C};
+	const uint64_t *log_uuid = (uint64_t *) &tl->log->data_area[16];
+
+	tl->is_ocp = tl->log_size >= (&tl->log->data_area[32] - (uint8_t *) tl->log) &&
+		log_uuid[0] == ocp_telemetry_uuid[0] && log_uuid[1] == ocp_telemetry_uuid[1];
 }
 
 int solidigm_telemetry_log_data_areas_parse(struct telemetry_log *tl,
@@ -459,13 +520,19 @@ int solidigm_telemetry_log_data_areas_parse(struct telemetry_log *tl,
 	struct json_object *tele_obj_array = json_create_array();
 	struct json_object *toc_array = json_create_array();
 
+	solidigm_telemetry_log_da1_check_ocp(tl);
 	solidigm_telemetry_log_header_parse(tl);
 	solidigm_telemetry_log_cod_parse(tl);
 	if (tl->configuration) {
+		enum nvme_telemetry_da first_da = NVME_TELEMETRY_DA_1;
+
+		if (tl->is_ocp)
+			first_da = NVME_TELEMETRY_DA_3;
+
 		json_object_add_value_array(tl->root, "tableOfContents", toc_array);
 		json_object_add_value_array(tl->root, "telemetryObjects", tele_obj_array);
 
-		for (enum nvme_telemetry_da da = NVME_TELEMETRY_DA_1; da <= last_da; da++)
+		for (enum nvme_telemetry_da da = first_da; da <= last_da; da++)
 			telemetry_log_data_area_toc_parse(tl, da, toc_array, tele_obj_array);
 	}
 	return 0;

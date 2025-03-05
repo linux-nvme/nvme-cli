@@ -57,6 +57,28 @@ struct reason_indentifier_1_2 {
 static_assert(sizeof(const struct reason_indentifier_1_2) ==
 	      MEMBER_SIZE(struct nvme_telemetry_log, rsnident),
 	      "Size mismatch for reason_indentifier_1_2");
+
+struct reason_identifier_ocp_2_5 {
+	char errorId[64];
+	char fileId[8];
+	uint16_t lineNum;
+	union {
+		struct {
+			uint8_t validLineNum:1;
+			uint8_t validFileId:1;
+			uint8_t validErrorId:1;
+			uint8_t validVuExtension:1;
+			uint8_t reservedBits:4;
+		};
+		uint8_t raw;
+	} validFlags;
+	uint8_t reserved[21];
+	uint8_t vuExtension[32];
+};
+static_assert(sizeof(const struct reason_identifier_ocp_2_5) ==
+	      MEMBER_SIZE(struct nvme_telemetry_log, rsnident),
+	      "Size mismatch for reason_identifier_ocp_2_5");
+
 #pragma pack(pop, reason_indentifier)
 
 static void telemetry_log_reason_id_parse1_0_ext(const struct telemetry_log *tl,
@@ -153,6 +175,43 @@ static void telemetry_log_reason_id_parse1_2_ext(const struct telemetry_log *tl,
 		json_object_array_add(dp_reserved, val);
 	}
 }
+static void telemetry_log_reason_id_parse_ocp_2_5(const struct telemetry_log *tl,
+						 struct json_object *reason_id)
+{
+	const struct reason_identifier_ocp_2_5 *ri;
+	struct json_object *reserved;
+	struct json_object *vu_extension;
+
+	ri = (struct reason_identifier_ocp_2_5 *) tl->log->rsnident;
+
+	json_object_object_add(reason_id, "errorId",
+			       json_object_new_string_len(ri->errorId,
+							  sizeof(ri->errorId)));
+	json_object_object_add(reason_id, "fileId",
+			       json_object_new_string_len(ri->fileId,
+							  sizeof(ri->fileId)));
+	json_object_add_value_uint(reason_id, "lineNum", le16_to_cpu(ri->lineNum));
+	json_object_add_value_uint(reason_id, "validLineNum", ri->validFlags.validLineNum);
+	json_object_add_value_uint(reason_id, "validFileId", ri->validFlags.validFileId);
+	json_object_add_value_uint(reason_id, "validErrorId", ri->validFlags.validErrorId);
+	json_object_add_value_uint(reason_id, "validVuExtension", ri->validFlags.validVuExtension);
+
+	reserved = json_create_array();
+	json_object_add_value_array(reason_id, "reserved", reserved);
+	for (int i = 0; i < sizeof(ri->reserved); i++) {
+		struct json_object *val = json_object_new_int(ri->reserved[i]);
+
+		json_object_array_add(reserved, val);
+	}
+
+	vu_extension = json_create_array();
+	json_object_add_value_array(reason_id, "vuExtension", vu_extension);
+	for (int i = 0; i < sizeof(ri->vuExtension); i++) {
+		struct json_object *val = json_object_new_int(ri->vuExtension[i]);
+
+		json_object_array_add(vu_extension, val);
+	}
+}
 
 static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *tl, struct json_object *reason_id)
 {
@@ -161,12 +220,18 @@ static void solidigm_telemetry_log_reason_id_parse(const struct telemetry_log *t
 	uint16_t version_major = le16_to_cpu(ri1_0->versionMajor);
 	uint16_t version_minor = le16_to_cpu(ri1_0->versionMinor);
 
+	if (tl->is_ocp) {
+		telemetry_log_reason_id_parse_ocp_2_5(tl, reason_id);
+		return;
+	}
+
 	json_object_add_value_uint(reason_id, "versionMajor", version_major);
 	json_object_add_value_uint(reason_id, "versionMinor", version_minor);
 	json_object_add_value_uint(reason_id, "reasonCode", le32_to_cpu(ri1_0->reasonCode));
 	json_object_add_value_object(reason_id, "driveStatus",
 				     json_object_new_string_len(ri1_0->DriveStatus,
 								sizeof(ri1_0->DriveStatus)));
+
 	if (version_major == 1) {
 		switch (version_minor) {
 		case 0:
@@ -211,6 +276,7 @@ bool solidigm_telemetry_log_header_parse(const struct telemetry_log *tl)
 	json_object_add_value_uint(header, "dataArea1LastBlock", log->dalb1);
 	json_object_add_value_uint(header, "dataArea2LastBlock", log->dalb2);
 	json_object_add_value_uint(header, "dataArea3LastBlock", log->dalb3);
+	json_object_add_value_uint(header, "dataArea4LastBlock", log->dalb4);
 	json_object_add_value_uint(header, "hostInitiatedDataGeneration", log->hostdgn);
 	json_object_add_value_uint(header, "controllerInitiatedDataAvailable", log->ctrlavail);
 	json_object_add_value_uint(header, "controllerInitiatedDataGeneration", log->ctrldgn);
