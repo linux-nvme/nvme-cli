@@ -3353,24 +3353,36 @@ static void json_feature_show_fields_write_atomic(struct json_object *r, unsigne
 
 static void json_feature_show_fields_async_event(struct json_object *r, unsigned int result)
 {
-	obj_add_str(r, "Discovery Log Page Change Notices", (result & 0x80000000) >> 31 ?
-		     "Send async event" : "Do not send async event");
-	obj_add_str(r, "Endurance Group Event Aggregate Log Change Notices", (result & 0x4000) >> 14 ?
-		     "Send async event" : "Do not send async event");
-	obj_add_str(r, "LBA Status Information Notices", (result & 0x2000) >> 13 ?
-		     "Send async event" : "Do not send async event");
+	const char *async = "Send async event";
+	const char *no_async = "Do not send async event";
+
+	obj_add_str(r, "Discovery Log Page Change Notices", NVME_FEAT_AE_DLPCN(result) ?
+			async : no_async);
+	obj_add_str(r, "Host Discovery Log Page Change Notification", NVME_FEAT_AE_HDLPCN(result) ?
+			async : no_async);
+	obj_add_str(r, "AVE Discovery Log Page Change Notification", NVME_FEAT_AE_ADLPCN(result) ?
+			async : no_async);
+	obj_add_str(r, "Pull Model DDC Request Log Page Change Notification",
+			NVME_FEAT_AE_PMDRLPCN(result) ? async : no_async);
+	obj_add_str(r, "Zone Descriptor Changed Notices", NVME_FEAT_AE_ZDCN(result) ?
+			async : no_async);
+	obj_add_str(r, "Reachability Group", NVME_FEAT_AE_RGRP0(result) ? async : no_async);
+	obj_add_str(r, "Reachability Association", NVME_FEAT_AE_RASSN(result) ? async : no_async);
+	obj_add_str(r, "Normal NVM Subsystem Shutdown", NVME_FEAT_AE_NNSSHDN(result) ?
+			async : no_async);
+	obj_add_str(r, "Endurance Group Event Aggregate Log Change Notices",
+			NVME_FEAT_AE_EGA(result) ? async : no_async);
+	obj_add_str(r, "LBA Status Information Notices", NVME_FEAT_AE_LBAS(result) ?
+			async : no_async);
 	obj_add_str(r, "Predictable Latency Event Aggregate Log Change Notices",
-		     (result & 0x1000) >> 12 ? "Send async event" : "Do not send async event");
-	obj_add_str(r, "Asymmetric Namespace Access Change Notices", (result & 0x800) >> 11 ?
-		     "Send async event" : "Do not send async event");
-	obj_add_str(r, "Telemetry Log Notices", (result & 0x400) >> 10 ? "Send async event" :
-		     "Do not send async event");
-	obj_add_str(r, "Firmware Activation Notices", (result & 0x200) >> 9 ? "Send async event" :
-		     "Do not send async event");
-	obj_add_str(r, "Namespace Attribute Notices", (result & 0x100) >> 8 ? "Send async event" :
-		     "Do not send async event");
-	obj_add_str(r, "SMART / Health Critical Warnings", result & 0xff ? "Send async event" :
-		     "Do not send async event");
+			NVME_FEAT_AE_PLA(result) ? async : no_async);
+	obj_add_str(r, "Asymmetric Namespace Access Change Notices", NVME_FEAT_AE_ANA(result) ?
+			async : no_async);
+	obj_add_str(r, "Telemetry Log Notices", NVME_FEAT_AE_TELEM(result) ? async : no_async);
+	obj_add_str(r, "Firmware Activation Notices", NVME_FEAT_AE_FW(result) ? async : no_async);
+	obj_add_str(r, "Namespace Attribute Notices", NVME_FEAT_AE_NAN(result) ? async : no_async);
+	obj_add_str(r, "SMART / Health Critical Warnings", NVME_FEAT_AE_SMART(result) ?
+			async : no_async);
 }
 
 static void json_auto_pst(struct nvme_feat_auto_pst *apst, struct json_object *r)
