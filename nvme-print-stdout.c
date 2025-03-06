@@ -4898,6 +4898,8 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 				       unsigned int result,
 				       unsigned char *buf)
 {
+	const char *async = "Send async event";
+	const char *no_async = "Do not send async event";
 	__u8 field;
 	uint64_t ull;
 
@@ -4968,23 +4970,41 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		break;
 	case NVME_FEAT_FID_ASYNC_EVENT:
 		printf("\tDiscovery Log Page Change Notices                         : %s\n",
-			((result & 0x80000000) >> 31) ? "Send async event" : "Do not send async event");
+			NVME_FEAT_AE_DLPCN(result) ? async : no_async);
+		printf("\tHost Discovery Log Page Change Notification               : %s\n",
+			NVME_FEAT_AE_HDLPCN(result) ? async : no_async);
+		printf("\tAVE Discovery Log Page Change Notification                : %s\n",
+			NVME_FEAT_AE_ADLPCN(result) ? async : no_async);
+		printf("\tPull Model DDC Request Log Page Change Notification       : %s\n",
+			NVME_FEAT_AE_PMDRLPCN(result) ? async : no_async);
+		printf("\tZone Descriptor Changed Notices                           : %s\n",
+			NVME_FEAT_AE_ZDCN(result) ? async : no_async);
+		printf("\tAllocated Namespace Attribute Notices                     : %s\n",
+			NVME_FEAT_AE_ANSAN(result) ? async : no_async);
+		printf("\tReachability Group                                        : %s\n",
+			NVME_FEAT_AE_RGRP0(result) ? async : no_async);
+		printf("\tReachability Association                                  : %s\n",
+			NVME_FEAT_AE_RASSN(result) ? async : no_async);
+		printf("\tTemperature Threshold Hysteresis Recovery                 : %s\n",
+			NVME_FEAT_AE_TTHRY(result) ? async : no_async);
+		printf("\tNormal NVM Subsystem Shutdown                             : %s\n",
+			NVME_FEAT_AE_NNSSHDN(result) ? async : no_async);
 		printf("\tEndurance Group Event Aggregate Log Change Notices        : %s\n",
-		       NVME_FEAT_AE_EGA(result) ? "Send async event" : "Do not send async event");
+		       NVME_FEAT_AE_EGA(result) ? async : no_async);
 		printf("\tLBA Status Information Notices                            : %s\n",
-		       NVME_FEAT_AE_LBAS(result) ? "Send async event" : "Do not send async event");
+		       NVME_FEAT_AE_LBAS(result) ? async : no_async);
 		printf("\tPredictable Latency Event Aggregate Log Change Notices    : %s\n",
-		       NVME_FEAT_AE_PLA(result) ? "Send async event" : "Do not send async event");
+		       NVME_FEAT_AE_PLA(result) ? async : no_async);
 		printf("\tAsymmetric Namespace Access Change Notices                : %s\n",
-		       NVME_FEAT_AE_ANA(result) ? "Send async event" : "Do not send async event");
+		       NVME_FEAT_AE_ANA(result) ? async : no_async);
 		printf("\tTelemetry Log Notices                                     : %s\n",
-		       NVME_FEAT_AE_TELEM(result) ? "Send async event" : "Do not send async event");
+		       NVME_FEAT_AE_TELEM(result) ? async : no_async);
 		printf("\tFirmware Activation Notices                               : %s\n",
-		       NVME_FEAT_AE_FW(result) ? "Send async event" : "Do not send async event");
+		       NVME_FEAT_AE_FW(result) ? async : no_async);
 		printf("\tNamespace Attribute Notices                               : %s\n",
-		       NVME_FEAT_AE_NAN(result) ? "Send async event" : "Do not send async event");
+		       NVME_FEAT_AE_NAN(result) ? async : no_async);
 		printf("\tSMART / Health Critical Warnings                          : %s\n",
-		       NVME_FEAT_AE_SMART(result) ? "Send async event" : "Do not send async event");
+		       NVME_FEAT_AE_SMART(result) ? async : no_async);
 		break;
 	case NVME_FEAT_FID_AUTO_PST:
 		printf("\tAutonomous Power State Transition Enable (APSTE): %s\n",
