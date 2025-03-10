@@ -110,7 +110,7 @@ static int sed_opal_initialize(int argc, char **argv, struct command *cmd,
 		return err;
 
 	err = sedopal_cmd_initialize(dev->direct.fd);
-	if (err != 0)
+	if ((err != 0) && (err != -EOPNOTSUPP))
 		fprintf(stderr, "initialize: SED error -  %s\n",
 				sedopal_error_to_text(err));
 
@@ -130,7 +130,7 @@ static int sed_opal_revert(int argc, char **argv, struct command *cmd,
 		return err;
 
 	err = sedopal_cmd_revert(dev->direct.fd);
-	if (err != 0)
+	if ((err != 0) && (err != -EOPNOTSUPP))
 		fprintf(stderr, "revert: SED error -  %s\n",
 				sedopal_error_to_text(err));
 
@@ -150,7 +150,7 @@ static int sed_opal_lock(int argc, char **argv, struct command *cmd,
 		return err;
 
 	err = sedopal_cmd_lock(dev->direct.fd);
-	if (err != 0)
+	if ((err != 0) && (err != -EOPNOTSUPP))
 		fprintf(stderr, "lock: SED error -  %s\n",
 				sedopal_error_to_text(err));
 
@@ -170,7 +170,7 @@ static int sed_opal_unlock(int argc, char **argv, struct command *cmd,
 		return err;
 
 	err = sedopal_cmd_unlock(dev->direct.fd);
-	if (err != 0)
+	if ((err != 0) && (err != -EOPNOTSUPP))
 		fprintf(stderr, "unlock: SED error -  %s\n",
 				sedopal_error_to_text(err));
 

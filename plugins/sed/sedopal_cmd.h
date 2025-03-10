@@ -54,5 +54,6 @@ int sedopal_cmd_discover(int fd);
 int sedopal_open_nvme_device(char *device);
 int sedopal_lock_unlock(int fd, int lock_state);
 const char *sedopal_error_to_text(int code);
+int sedopal_locking_state(int fd);
 
 #endif /* _SED_OPAL_CMD_H */
