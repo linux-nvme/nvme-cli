@@ -49,6 +49,11 @@ bool sedopal_discovery_verbose;
  */
 bool sedopal_discovery_udev;
 
+/*
+ * level 0 discovery buffer
+ */
+char level0_discovery_buf[4096];
+
 struct sedopal_feature_parser {
 	uint32_t	features;
 	void		*tper_desc;
@@ -205,6 +210,15 @@ int sedopal_cmd_initialize(int fd)
 	struct opal_lr_act lr_act = {};
 	struct opal_user_lr_setup lr_setup = {};
 	struct opal_new_pw new_pw = {};
+	uint8_t locking_state;
+
+	locking_state = sedopal_locking_state(fd);
+
+	if (locking_state & OPAL_FEATURE_LOCKING_ENABLED) {
+		fprintf(stderr,
+			"Error: cannot initialize an initialized drive\n");
+		return -EOPNOTSUPP;
+	}
 
 	sedopal_ask_key = true;
 	sedopal_ask_new_key = true;
@@ -319,6 +333,15 @@ int sedopal_lock_unlock(int fd, int lock_state)
 {
 	int rc;
 	struct opal_lock_unlock opal_lu = {};
+	uint8_t locking_state;
+
+	locking_state = sedopal_locking_state(fd);
+
+	if (!(locking_state & OPAL_FEATURE_LOCKING_ENABLED)) {
+		fprintf(stderr,
+			"Error: cannot lock/unlock an uninitialized drive\n");
+		return -EOPNOTSUPP;
+	}
 
 	rc = sedopal_set_key(&opal_lu.session.opal_key);
 	if (rc != 0)
@@ -433,6 +456,21 @@ int sedopal_cmd_revert(int fd)
 	} else {
 #ifdef IOC_OPAL_REVERT_LSP
 		struct opal_revert_lsp revert_lsp;
+		uint8_t locking_state;
+
+		locking_state = sedopal_locking_state(fd);
+
+		if (!(locking_state & OPAL_FEATURE_LOCKING_ENABLED)) {
+			fprintf(stderr,
+				"Error: can't revert an uninitialized drive\n");
+			return -EOPNOTSUPP;
+		}
+
+		if (locking_state & OPAL_FEATURE_LOCKED) {
+			fprintf(stderr,
+				"Error: cannot revert drive while locked\n");
+			return -EOPNOTSUPP;
+		}
 
 		rc = sedopal_set_key(&revert_lsp.key);
 		if (rc != 0)
@@ -958,22 +996,18 @@ void sedopal_print_features(struct sedopal_feature_parser *sfp)
 }
 
 /*
- * Query a drive to determine if it's SED Opal capable and
- * it's current locking status.
+ * Query a drive to retrieve it's level 0 features.
  */
-int sedopal_cmd_discover(int fd)
+int sedopal_discover_device(int fd, struct level_0_discovery_features **feat,
+		struct level_0_discovery_features **feat_end)
 {
 #ifdef IOC_OPAL_DISCOVERY
-	int rc, feat_length;
+	int rc;
 	struct opal_discovery discover;
 	struct level_0_discovery_header *dh;
-	struct level_0_discovery_features *feat;
-	struct level_0_discovery_features *feat_end;
-	char buf[4096];
-	struct sedopal_feature_parser sfp = {};
 
-	discover.data = (uintptr_t)buf;
-	discover.size = sizeof(buf);
+	discover.data = (uintptr_t)level0_discovery_buf;
+	discover.size = sizeof(level0_discovery_buf);
 
 	rc = ioctl(fd, IOC_OPAL_DISCOVERY, &discover);
 	if (rc < 0) {
@@ -987,10 +1021,33 @@ int sedopal_cmd_discover(int fd)
 	 *
 	 * TCG Opal Specification v2.0.2 section 3.1.1
 	 */
-	dh = (struct level_0_discovery_header *)buf;
-	feat = (struct level_0_discovery_features *)(dh + 1);
-	feat_end = (struct level_0_discovery_features *)
-		(buf + be32toh(dh->parameter_length));
+	dh = (struct level_0_discovery_header *)level0_discovery_buf;
+	*feat = (struct level_0_discovery_features *)(dh + 1);
+	*feat_end = (struct level_0_discovery_features *)
+		(level0_discovery_buf + be32toh(dh->parameter_length));
+
+	return 0
+		;
+#else /* IOC_OPAL_DISCOVERY */
+	fprintf(stderr, "ERROR : NVMe device discovery is not supported\n");
+	return -EOPNOTSUPP;
+#endif
+}
+
+/*
+ * Query a drive to determine if it's SED Opal capable and
+ * it's current locking status.
+ */
+int sedopal_cmd_discover(int fd)
+{
+	int rc, feat_length;
+	struct level_0_discovery_features *feat;
+	struct level_0_discovery_features *feat_end;
+	struct sedopal_feature_parser sfp = {};
+
+	rc = sedopal_discover_device(fd, &feat, &feat_end);
+	if (rc != 0)
+		return rc;
 
 	/*
 	 * iterate through all the features that were returned
@@ -1016,8 +1073,37 @@ int sedopal_cmd_discover(int fd)
 
 
 	return rc;
-#else /* IOC_OPAL_DISCOVERY */
-	fprintf(stderr, "ERROR : NVMe device discovery is not supported\n");
-	return -EOPNOTSUPP;
-#endif
+}
+
+/*
+ * Query a drive to determine its locking state
+ */
+int sedopal_locking_state(int fd)
+{
+	int rc, feat_length;
+	struct level_0_discovery_features *feat;
+	struct level_0_discovery_features *feat_end;
+
+	rc = sedopal_discover_device(fd, &feat, &feat_end);
+	if (rc != 0)
+		return rc;
+
+	/*
+	 * iterate through all the features that were returned
+	 */
+	while (feat < feat_end) {
+		uint16_t code = be16toh(feat->code);
+
+		if (code == OPAL_FEATURE_CODE_LOCKING) {
+			struct locking_desc *ld = (struct locking_desc *) (feat + 1);
+
+			return ld->features;
+		}
+
+		feat_length = feat->length + 4 /* hdr */;
+		feat = (struct level_0_discovery_features *)
+			((char *)feat + feat_length);
+	}
+
+	return 0;
 }
