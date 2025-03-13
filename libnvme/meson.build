@@ -62,9 +62,9 @@ if build_python_bindings
     # Set the PYTHONPATH so that we can run the 
     # tests directly from the build directory.
     test_env = environment()
-    test_env.append('MALLOC_PERTURB_', '0')
-    test_env.append('PYTHONPATH', join_paths(meson.current_build_dir(), '..'))
-    test_env.append('PYTHONMALLOC', 'malloc')
+    test_env.set('MALLOC_PERTURB_', '90')
+    test_env.prepend('PYTHONPATH', join_paths(meson.current_build_dir(), '..'))
+    test_env.set('PYTHONMALLOC', 'malloc')
 
     # Test section
     test('python-import-libnvme', python3, args: ['-c', 'from libnvme import nvme'], env: test_env, depends: pynvme_clib)

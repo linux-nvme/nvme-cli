@@ -357,6 +357,9 @@ struct nvme_subsystem {
 };
 
 struct nvme_ctrl {
+	%immutable name;
+	%immutable subsystem;
+	%immutable state;
 	%immutable sysfs_dir;
 	%immutable address;
 	%immutable firmware;
@@ -369,34 +372,67 @@ struct nvme_ctrl {
 	%immutable subsysnqn;
 	%immutable traddr;
 	%immutable trsvcid;
-	%immutable dhchap_host_key;
-	%immutable dhchap_key;
 	%immutable cntrltype;
+	%immutable cntlid;
 	%immutable dctype;
-	%immutable discovery_ctrl;
+	%immutable phy_slot;
 	%immutable discovered;
-	%immutable persistent;
-	char *sysfs_dir;
-	char *address;
-	char *firmware;
-	char *model;
-	char *numa_node;
-	char *queue_count;
-	char *serial;
-	char *sqsize;
-	char *transport;
-	char *subsysnqn;
-	char *traddr;
-	char *trsvcid;
+
+	const char *cntrltype;  // Do not put in %extend because there's no getter method in libnvme.map
+	const char *dctype;     // Do not put in %extend because there's no getter method in libnvme.map
+	const bool discovered;  // Do not put in %extend because there's no getter method in libnvme.map
+
 	%extend {
-		char *dhchap_host_key:
-		char *dhchap_key;
+		/**
+		 * By putting these attributes in an %extend block, we're
+		 * forcing SWIG to invoke getter/setter methods instead of
+		 * accessing the members directly.
+		 *
+		 * For example, SWIG will generate code like this:
+		 *    name = nvme_ctrl_name_get(ctrl)
+		 *
+		 * instead of that:
+		 *    name = ctrl->name
+		 */
+		const char *name;
+		const char *state;
+		const char *sysfs_dir;
+		const char *address;
+		const char *firmware;
+		const char *model;
+		const char *numa_node;
+		const char *queue_count;
+		const char *serial;
+		const char *sqsize;
+		const char *transport;
+		const char *subsysnqn;
+		const char *traddr;
+		const char *trsvcid;
+		const char *cntlid;
+		const char *phy_slot;
+
+		bool unique_discovery_ctrl;
+		bool discovery_ctrl;
+		bool persistent;
+
+		char *keyring;
+		char *tls_key_identity;
+		char *tls_key;
+
+		/**
+		 * We are remapping the following members of the C code's
+		 * nvme_ctrl_t to different names in Python. Here's the mapping:
+		 *
+		 * C code                 Python (SWIG)
+		 * =====================  =====================
+		 * ctrl->s                ctrl->subsystem
+		 * ctrl->dhchap_key       ctrl->dhchap_host_key
+		 * ctrl->dhchap_ctrl_key  ctrl->dhchap_key
+		 */
+		struct nvme_subsystem *subsystem; // Maps to "s" in the C code
+		char *dhchap_host_key;            // Maps to "dhchap_key" in the C code
+		char *dhchap_key;                 // Maps to "dhchap_ctrl_key" in the C code
 	}
-	char *cntrltype;
-	char *dctype;
-	bool discovery_ctrl;
-	bool discovered;
-	bool persistent;
 };
 
 struct nvme_ns {
@@ -634,9 +670,13 @@ struct nvme_ns {
 		nvme_free_ctrl($self);
 	}
 
-	void discovery_ctrl_set(bool discovery) {
-		nvme_ctrl_set_discovery_ctrl($self, discovery);
-	}
+	%pythoncode %{
+	def discovery_ctrl_set(self, discovery: bool):
+	    r"""DEPRECATED METHOD: Use property setter instead (e.g. ctrl.discovery_ctrl = True)"""
+	    import warnings
+	    warnings.warn("Use property setter instead (e.g. ctrl_obj.discovery_ctrl = True)", DeprecationWarning, stacklevel=2)
+	    return _nvme.ctrl_discovery_ctrl_set(self, discovery)
+	%}
 
 	bool init(struct nvme_host *h, int instance) {
 		return nvme_init_ctrl(h, $self, instance) == 0;
@@ -665,9 +705,13 @@ struct nvme_ns {
 	bool connected() {
 		return nvme_ctrl_get_name($self) != NULL;
 	}
-	void persistent_set(bool persistent) {
-		nvme_ctrl_set_persistent($self, persistent);
-	}
+	%pythoncode %{
+	def persistent_set(self, persistent: bool):
+	    r"""DEPRECATED METHOD: Use property setter instead (e.g. ctrl.persistent = True)"""
+	    import warnings
+	    warnings.warn("Use property setter instead (e.g. ctrl_obj.persistent = True)", DeprecationWarning, stacklevel=2)
+	    return _nvme.ctrl_persistent_set(self, persistent)
+	%}
 	void rescan() {
 		nvme_rescan_ctrl($self);
 	}
@@ -760,15 +804,22 @@ struct nvme_ns {
 	struct nvme_ns* namespaces() {
 		return nvme_ctrl_first_ns($self);
 	}
-	%immutable name;
-	const char *name;
-	%immutable subsystem;
-	struct nvme_subsystem *subsystem;
-	%immutable state;
-	const char *state;
 }
 
 %{
+	/**********************************************************************
+	 * SWIG automatically generates getter and setter methods using
+	 * the syntax: [class]_[member]_[get|set]. These need to be mapped
+	 * to the matching methods in libnvme (i.e. those that are defined
+	 * publicly in libnvme.map). Typically, we get the following mapping:
+	 *
+	 * SWIG                       libnvme.map
+	 * ======================     =======================
+	 * nvme_ctrl_[member]_get  -> nvme_ctrl_get_[member]
+	 * nvme_ctrl_[member]_set  -> nvme_ctrl_set_[member]
+	 *
+	 */
+
 	const char *nvme_ctrl_name_get(struct nvme_ctrl *c) {
 		return nvme_ctrl_get_name(c);
 	}
@@ -787,7 +838,108 @@ struct nvme_ns {
 	const char *nvme_ctrl_dhchap_host_key_get(struct nvme_ctrl *c) {
 		return nvme_ctrl_get_dhchap_host_key(c);
 	}
-%};
+	void nvme_ctrl_dhchap_host_key_set(struct nvme_ctrl *c, const char *key) {
+		nvme_ctrl_set_dhchap_host_key(c, key);
+	}
+
+	const char *nvme_ctrl_cntlid_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_cntlid(c);
+	}
+
+	bool nvme_ctrl_persistent_get(struct nvme_ctrl *c) {
+		return nvme_ctrl_is_persistent(c);
+	}
+	void nvme_ctrl_persistent_set(struct nvme_ctrl *c, bool persistent) {
+		nvme_ctrl_set_persistent(c, persistent);
+	}
+
+	const char *nvme_ctrl_phy_slot_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_phy_slot(c);
+	}
+
+	const char *nvme_ctrl_trsvcid_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_trsvcid(c);
+	}
+
+	const char *nvme_ctrl_traddr_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_traddr(c);
+	}
+
+	const char *nvme_ctrl_subsysnqn_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_subsysnqn(c);
+	}
+
+	const char *nvme_ctrl_transport_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_transport(c);
+	}
+
+	const char *nvme_ctrl_sqsize_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_sqsize(c);
+	}
+
+	const char *nvme_ctrl_serial_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_serial(c);
+	}
+
+	const char *nvme_ctrl_queue_count_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_queue_count(c);
+	}
+
+	const char *nvme_ctrl_numa_node_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_numa_node(c);
+	}
+
+	const char *nvme_ctrl_model_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_model(c);
+	}
+
+	const char *nvme_ctrl_firmware_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_firmware(c);
+	}
+
+	const char *nvme_ctrl_address_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_address(c);
+	}
+
+	const char *nvme_ctrl_sysfs_dir_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_sysfs_dir(c);
+	}
+
+	bool nvme_ctrl_discovery_ctrl_get(struct nvme_ctrl *c) {
+		return nvme_ctrl_is_discovery_ctrl(c);
+	}
+	void nvme_ctrl_discovery_ctrl_set(struct nvme_ctrl *c, bool discovery) {
+		nvme_ctrl_set_discovery_ctrl(c, discovery);
+	}
+
+	bool nvme_ctrl_unique_discovery_ctrl_get(nvme_ctrl_t c) {
+		return nvme_ctrl_is_unique_discovery_ctrl(c);
+	}
+	void nvme_ctrl_unique_discovery_ctrl_set(nvme_ctrl_t c, bool unique) {
+		nvme_ctrl_set_unique_discovery_ctrl(c, unique);
+	}
+
+	const char *nvme_ctrl_keyring_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_keyring(c);
+	}
+	void nvme_ctrl_keyring_set(nvme_ctrl_t c, const char *keyring) {
+		nvme_ctrl_set_keyring(c, keyring);
+	}
+
+	const char *nvme_ctrl_tls_key_identity_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_tls_key_identity(c);
+	}
+	void nvme_ctrl_tls_key_identity_set(nvme_ctrl_t c, const char *identity) {
+		nvme_ctrl_set_tls_key_identity(c, identity);
+	}
+
+	const char *nvme_ctrl_tls_key_get(nvme_ctrl_t c) {
+		return nvme_ctrl_get_tls_key(c);
+	}
+	void nvme_ctrl_tls_key_set(nvme_ctrl_t c, const char *key) {
+		nvme_ctrl_set_tls_key(c, key);
+	}
+%}
 
 %pythonappend nvme_ns::nvme_ns(struct nvme_subsystem *s,
 			       unsigned int nsid) {
