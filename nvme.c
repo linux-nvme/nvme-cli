@@ -5555,6 +5555,7 @@ static int nvme_get_properties(int fd, void **pbar, struct get_reg_config *cfg)
 static void *mmap_registers(struct nvme_dev *dev, bool writable)
 {
 	char path[512];
+	char link_path[512] = {0};
 	void *membase;
 	int fd;
 	int prot = PROT_READ;
@@ -5562,7 +5563,16 @@ static void *mmap_registers(struct nvme_dev *dev, bool writable)
 	if (writable)
 		prot |= PROT_WRITE;
 
-	sprintf(path, "/sys/class/nvme/%s/device/resource0", dev->name);
+	if (is_blkdev(dev)) {
+		sprintf(path, "/sys/block/%s/device", dev->name);
+		if (readlink(path, link_path, sizeof(link_path)) != -1) {
+			sprintf(path, "/sys/class/nvme/%s/device/resource0",
+					basename(link_path));
+		}
+	} else {
+		sprintf(path, "/sys/class/nvme/%s/device/resource0", dev->name);
+	}
+
 	fd = open(path, writable ? O_RDWR : O_RDONLY);
 	if (fd < 0) {
 		if (log_level >= LOG_INFO)
