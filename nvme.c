@@ -1113,7 +1113,10 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 
 	if (cfg.csi < 0) {
 		__u64 cap;
-
+		if (is_blkdev(dev)) {
+			nvme_show_error("Block device isn't allowed without csi");
+			return -EINVAL;
+		}
 		bar = mmap_registers(dev, false);
 
 		if (bar) {
@@ -5611,6 +5614,11 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return err;
 
+	if (is_blkdev(dev)) {
+		nvme_show_error("Only character device is allowed");
+		return -EINVAL;
+	}
+
 	err = validate_output_format(nvme_cfg.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
@@ -5886,6 +5894,11 @@ static int get_register(int argc, char **argv, struct command *cmd, struct plugi
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	if (is_blkdev(dev)) {
+		nvme_show_error("Only character device is allowed");
+		return -EINVAL;
+	}
 
 	err = validate_output_format(nvme_cfg.output_format, &flags);
 	if (err < 0) {
@@ -6190,6 +6203,11 @@ static int set_register(int argc, char **argv, struct command *cmd, struct plugi
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	if (is_blkdev(dev)) {
+		nvme_show_error("Only character device is allowed");
+		return -EINVAL;
+	}
 
 	bar = mmap_registers(dev, true);
 
