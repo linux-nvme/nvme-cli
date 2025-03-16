@@ -22,6 +22,9 @@ DESCRIPTION
 -----------
 Read and show the defined NVMe controller register.
 
+The <device> parameter is mandatory and must be the nvme admin character
+device (ex: /dev/nvme0).
+
 OPTIONS
 -------
 -O <offset>::
