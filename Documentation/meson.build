@@ -222,6 +222,12 @@ adoc_sources = [
   'nvme-zns-zone-append',
   'nvme-zns-zone-mgmt-recv',
   'nvme-zns-zone-mgmt-send',
+  'nvme-sed-discover',
+  'nvme-sed-initialize',
+  'nvme-sed-lock',
+  'nvme-sed-password',
+  'nvme-sed-revert',
+  'nvme-sed-unlock',
 ]
 
 adoc_includes = [

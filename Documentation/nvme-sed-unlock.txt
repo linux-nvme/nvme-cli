@@ -1,0 +1,34 @@
+nvme-sed-unlock(1)
+==================
+
+NAME
+----
+nvme-sed-unlock - Unlock a SED Opal Device
+
+SYNOPSIS
+--------
+[verse]
+'nvme sed unlock' [--read-only | -r] [--ask-key | -k]  <device>
+
+DESCRIPTION
+-----------
+Unlock the given NVMe device.
+
+OPTIONS
+-------
+-r::
+--read-only::
+	Set locking range to read-only.
+
+-k::
+--ask-key::
+	Prompt for SED authentication key.
+
+
+EXAMPLES
+--------
+nvme sed unlock /dev/nvme5n1
+
+NVME
+----
+Part of nvme-cli

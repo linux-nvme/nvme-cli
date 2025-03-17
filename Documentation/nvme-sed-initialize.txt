@@ -1,0 +1,30 @@
+nvme-sed-initialize(1)
+======================
+
+NAME
+----
+nvme-sed-initialize - Initialize a SED Opal Device for locking
+
+SYNOPSIS
+--------
+[verse]
+'nvme sed initialize' [ --read-only, -r ]  <device>
+
+DESCRIPTION
+-----------
+Initialize the NVMe device given to allow SED Opal locking.
+
+OPTIONS
+-------
+-r::
+--read-only::
+	Set locking range to read-only.
+
+EXAMPLES
+--------
+nvme sed initialize /dev/nvme5n1
+
+
+NVME
+----
+Part of nvme-cli
