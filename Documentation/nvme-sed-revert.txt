@@ -1,0 +1,35 @@
+nvme-sed-revert(1)
+==================
+
+NAME
+----
+nvme-sed-revert - Revert a SED Opal Device from locking
+
+SYNOPSIS
+--------
+[verse]
+'nvme sed revert' [ --destructive, -e ] [ --psid, -p ] <device>
+
+DESCRIPTION
+-----------
+Revert the NVMe device given from its locking state.
+
+OPTIONS
+-------
+-e::
+--destructive::
+	Revert drive destructively (data erased).
+
+-p::
+--psid::
+	Destructively revert drive using its PSID.
+
+
+EXAMPLES
+--------
+nvme sed revert /dev/nvme5n1
+
+
+NVME
+----
+Part of nvme-cli

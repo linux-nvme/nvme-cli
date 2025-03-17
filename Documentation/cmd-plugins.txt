@@ -240,3 +240,21 @@ linknvme:nvme-solidigm-vs-drive-info[1]::
 
 linknvme:nvme-solidigm-workload-tracker[1]::
 	Real Time capture Workload Tracker samples
+
+linknvme:nvme-sed-discover[1]::
+	Discover SED Opal Locking Features
+
+linknvme:nvme-sed-initialize[1]::
+	Initialize a SED Opal Device for locking
+
+linknvme:nvme-sed-revert[1]::
+	Revert a SED Opal Device from locking
+
+linknvme:nvme-sed-lock[1]::
+	Lock a SED Opal Device
+
+linknvme:nvme-sed-unlock[1]::
+	Unlock a SED Opal Device
+
+linknvme:nvme-sed-password[1]::
+	Change the SED Opal Device password
