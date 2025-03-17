@@ -2,12 +2,12 @@
 .\"     Title: nvme-create-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/31/2024
+.\"      Date: 03/17/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "10/31/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-CREATE\-NS" "1" "03/17/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -123,12 +123,12 @@ Target block size the new namespace should be formatted as\&. Potential FLBAS va
 .PP
 \-S, \-\-nsze\-si
 .RS 4
-The namespace size (NSZE) in standard SI units (aligned on 1Mib boundaries, unless the controller recommends a smaller value)\&. The value SI suffixed is divided by the namespace LBA size to set as NSZE\&. If the value not suffixed it is set as same with the nsze option\&.
+The namespace size (NSZE) in standard SI units (aligned on 1Mib boundaries, unless the controller recommends a different value, see namespace granularity)\&. The value SI suffixed is divided by the namespace LBA size to set as NSZE\&. If the value not suffixed it is set as same with the nsze option\&.
 .RE
 .PP
 \-C, \-\-ncap\-si
 .RS 4
-The namespace capacity (NCAP) in standard SI units (aligned on 1Mib boundaries, unless the controller recommends a smaller value)\&. The value SI suffixed is divided by the namespace LBA size to set as NCAP\&. If the value not suffixed it is set as same with the ncap option\&.
+The namespace capacity (NCAP) in standard SI units (aligned on 1Mib boundaries, unless the controller recommends a different value, see namespace granularity)\&. The value SI suffixed is divided by the namespace LBA size to set as NCAP\&. If the value not suffixed it is set as same with the ncap option\&.
 .RE
 .PP
 \-z, \-\-azr

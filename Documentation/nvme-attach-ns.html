@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 10.2.1" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-attach-ns(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -762,6 +762,8 @@ nvme-attach-ns(1) Manual Page
 <div class="paragraph"><p>For the NVMe device given, sends the nvme namespace attach command for
 the provided namespace identifier, attaching to the provided list of
 controller identifiers.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0) but
+not a namespace block device (ex: /dev/nvme0n1).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -776,7 +778,7 @@ controller identifiers.</p></div>
 </dt>
 <dd>
 <p>
-        The namespace identifier to attach.
+        The namespace identifier to attach but not attached already.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -841,7 +843,7 @@ controller identifiers.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-10-31 10:38:40 CET
+ 2025-03-17 10:39:49 CET
 </div>
 </div>
 </body>

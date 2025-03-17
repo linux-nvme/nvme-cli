@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 10.2.1" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-ocp-smart-add-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -749,7 +749,7 @@ nvme-ocp-smart-add-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme ocp smart-add-log</em> &lt;device&gt; [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme ocp smart-add-log</em> &lt;device&gt; [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--output-format-version=&lt;version&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -763,6 +763,9 @@ provide the additional smart log.</p></div>
 device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).</p></div>
 <div class="paragraph"><p>This will only work on OCP compliant devices supporting this feature.
 Results for any other device are undefined.</p></div>
+<div class="paragraph"><p>EXPERIMENTAL. The --output-format-version can be set to 2 to generate field names
+for the outputs that are easier to process via scripts. Note this is
+experimental and the field names are subject to change.</p></div>
 <div class="paragraph"><p>On success it returns 0, error code otherwise.</p></div>
 </div>
 </div>
@@ -780,6 +783,15 @@ Results for any other device are undefined.</p></div>
 <p>
         Set the reporting format to <em>normal</em> or <em>json</em>. Only one output format
         can be used at a time. The default is normal.
+</p>
+</dd>
+<dt class="hdlist1">
+--output-format-version=&lt;version&gt;
+</dt>
+<dd>
+<p>
+        Set the field labels in the reporting format to either <em>1</em>
+        (the original) or <em>2</em>. The default is 1. Note this is experimental.
 </p>
 </dd>
 </dl></div>
@@ -812,7 +824,7 @@ Has the program issue a smart-add-log command to retrieve the 0xC0 log page.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2024-10-31 10:38:40 CET
+ 2025-03-17 10:39:49 CET
 </div>
 </div>
 </body>

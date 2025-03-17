@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-smart-add-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/31/2024
+.\"      Date: 03/17/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-SMART\-AD" "1" "10/31/2024" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-SMART\-AD" "1" "03/17/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-ocp-smart-add-log \- Retrieves Extended SMART information of given OCP comp
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme ocp smart\-add\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
+\fInvme ocp smart\-add\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-output\-format\-version=<version>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -41,6 +41,8 @@ For the NVMe device given, send a smart\-add\-log command and provide the additi
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1)\&.
 .sp
 This will only work on OCP compliant devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+EXPERIMENTAL\&. The \-\-output\-format\-version can be set to 2 to generate field names for the outputs that are easier to process via scripts\&. Note this is experimental and the field names are subject to change\&.
 .sp
 On success it returns 0, error code otherwise\&.
 .SH "OPTIONS"
@@ -51,6 +53,14 @@ Set the reporting format to
 \fInormal\fR
 or
 \fIjson\fR\&. Only one output format can be used at a time\&. The default is normal\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Set the field labels in the reporting format to either
+\fI1\fR
+(the original) or
+\fI2\fR\&. The default is 1\&. Note this is experimental\&.
 .RE
 .SH "EXAMPLES"
 .sp
