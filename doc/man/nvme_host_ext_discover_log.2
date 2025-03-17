@@ -1,0 +1,59 @@
+.TH "libnvme" 9 "struct nvme_host_ext_discover_log" "March 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_host_ext_discover_log \- Host Extended Discovery Log
+.SH SYNOPSIS
+struct nvme_host_ext_discover_log {
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 adrfam;"
+.br
+.BI "    __u8 rsvd2[8];"
+.br
+.BI "    __le16 eflags;"
+.br
+.BI "    __u8 rsvd12[244];"
+.br
+.BI "    char hostnqn[NVME_NQN_LENGTH];"
+.br
+.BI "    char traddr[NVMF_TRADDR_SIZE];"
+.br
+.BI "    union nvmf_tsas         tsas;"
+.br
+.BI "    __le32 tel;"
+.br
+.BI "    __le16 numexat;"
+.br
+.BI "    __u8 rsvd1030[2];"
+.br
+.BI "    struct nvmf_ext_attr    exat[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "trtype" 12
+Transport Type
+.IP "adrfam" 12
+Address Family
+.IP "rsvd2" 12
+Reserved
+.IP "eflags" 12
+Entry Flags
+.IP "rsvd12" 12
+Reserved
+.IP "hostnqn" 12
+Host NVMe Qualified Name
+.IP "traddr" 12
+Transport Address
+.IP "tsas" 12
+Transport Specific Address Subtype
+.IP "tel" 12
+Total Entry Length
+.IP "numexat" 12
+Number of Extended Attributes
+.IP "rsvd1030" 12
+Reserved
+.IP "exat" 12
+Extended Attributes List

@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_lm_nvme_controller_state_data_header" "March 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_nvme_controller_state_data_header \- Controller State data structure header
+.SH SYNOPSIS
+struct nvme_lm_nvme_controller_state_data_header {
+.br
+.BI "    __le16 ver;"
+.br
+.BI "    __le16 niosq;"
+.br
+.BI "    __le16 niocq;"
+.br
+.BI "    __le16 rsvd6;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ver" 12
+The version of this data structure.
+.IP "niosq" 12
+The number of I/O Submission Queues contained in this data structure.
+.IP "niocq" 12
+The number of I/O Completion Queues contained in this data structure.
+.IP "rsvd6" 12
+Reserved

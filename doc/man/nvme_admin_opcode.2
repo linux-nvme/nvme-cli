@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_admin_opcode" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_admin_opcode" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_admin_opcode \- Known NVMe admin opcodes
 .SH SYNOPSIS
@@ -112,7 +112,51 @@ enum nvme_admin_opcode {
 , 
 .br
 .br
+.BI "    nvme_admin_clear_export_nvm_res"
+, 
+.br
+.br
 .BI "    nvme_admin_fabric_zoning_send"
+, 
+.br
+.br
+.BI "    nvme_admin_create_export_nvms"
+, 
+.br
+.br
+.BI "    nvme_admin_manage_export_nvms"
+, 
+.br
+.br
+.BI "    nvme_admin_manage_export_ns"
+, 
+.br
+.br
+.BI "    nvme_admin_manage_export_port"
+, 
+.br
+.br
+.BI "    nvme_admin_send_disc_log_page"
+, 
+.br
+.br
+.BI "    nvme_admin_track_send"
+, 
+.br
+.br
+.BI "    nvme_admin_track_receive"
+, 
+.br
+.br
+.BI "    nvme_admin_migration_send"
+, 
+.br
+.br
+.BI "    nvme_admin_migration_receive"
+, 
+.br
+.br
+.BI "    nvme_admin_ctrl_data_queue"
 , 
 .br
 .br
@@ -140,7 +184,19 @@ enum nvme_admin_opcode {
 , 
 .br
 .br
+.BI "    nvme_admin_load_program"
+, 
+.br
+.br
 .BI "    nvme_admin_get_lba_status"
+, 
+.br
+.br
+.BI "    nvme_admin_program_act_mgmt"
+, 
+.br
+.br
+.BI "    nvme_admin_mem_range_set_mgmt"
 
 };
 .SH Constants
@@ -198,8 +254,30 @@ Fabric Zoning Receive
 Lockdown
 .IP "nvme_admin_fabric_zoning_lookup" 12
 Fabric Zoning Lookup
+.IP "nvme_admin_clear_export_nvm_res" 12
+Clear Exported NVM Resource Configuration
 .IP "nvme_admin_fabric_zoning_send" 12
 Fabric Zoning Send
+.IP "nvme_admin_create_export_nvms" 12
+Create Exported NVM Subsystem
+.IP "nvme_admin_manage_export_nvms" 12
+Manage Exported NVM Subsystem
+.IP "nvme_admin_manage_export_ns" 12
+Manage Exported Namespace
+.IP "nvme_admin_manage_export_port" 12
+Manage Exported Port
+.IP "nvme_admin_send_disc_log_page" 12
+Send Discovery Log Page
+.IP "nvme_admin_track_send" 12
+Track Send
+.IP "nvme_admin_track_receive" 12
+Track Receive
+.IP "nvme_admin_migration_send" 12
+Migration Send
+.IP "nvme_admin_migration_receive" 12
+Migration Receive
+.IP "nvme_admin_ctrl_data_queue" 12
+Controller Data Queue
 .IP "nvme_admin_dbbuf" 12
 Doorbell Buffer Config
 .IP "nvme_admin_fabrics" 12
@@ -212,5 +290,11 @@ Security Send
 Security Receive
 .IP "nvme_admin_sanitize_nvm" 12
 Sanitize
+.IP "nvme_admin_load_program" 12
+Load Program
 .IP "nvme_admin_get_lba_status" 12
 Get LBA Status
+.IP "nvme_admin_program_act_mgmt" 12
+Program Activation Management
+.IP "nvme_admin_mem_range_set_mgmt" 12
+Memory Range Set Management

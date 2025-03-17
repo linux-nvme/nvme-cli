@@ -1,8 +1,104 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_oacs" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_oacs" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_oacs \- Flags indicating the optional Admin commands and features supported by the controller, see &struct nvme_id_ctrl.oacs.
 .SH SYNOPSIS
 enum nvme_id_ctrl_oacs {
+.br
+.BI "    NVME_CTRL_OACS_SSRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_FNVMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_FWDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_NMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_DSTS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_DIRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_NSRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_VMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_DBCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_GLSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_CFLS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_HMLMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_SSRS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_FNVMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_FWDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_NMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_DSTS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_DIRS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_NSRS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_VMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_DBCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_GLSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_CFLS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_HMLMS_MASK"
+, 
+.br
 .br
 .BI "    NVME_CTRL_OACS_SECURITY"
 , 
@@ -45,9 +141,61 @@ enum nvme_id_ctrl_oacs {
 .br
 .br
 .BI "    NVME_CTRL_OACS_CMD_FEAT_LD"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_HMLM"
 
 };
 .SH Constants
+.IP "NVME_CTRL_OACS_SSRS_SHIFT" 12
+Shift amount to get the Security Send Receive supported
+.IP "NVME_CTRL_OACS_FNVMS_SHIFT" 12
+Shift amount to get the Format NVM supported
+.IP "NVME_CTRL_OACS_FWDS_SHIFT" 12
+Shift amount to get the Firmware Download supported
+.IP "NVME_CTRL_OACS_NMS_SHIFT" 12
+Shift amount to get the Namespace Management supported
+.IP "NVME_CTRL_OACS_DSTS_SHIFT" 12
+Shift amount to get the Device Self-test supported
+.IP "NVME_CTRL_OACS_DIRS_SHIFT" 12
+Shift amount to get the Directives supported
+.IP "NVME_CTRL_OACS_NSRS_SHIFT" 12
+Shift amount to get the NVMe-MI Send Receive supported
+.IP "NVME_CTRL_OACS_VMS_SHIFT" 12
+Shift amount to get the Virtualization Management supported
+.IP "NVME_CTRL_OACS_DBCS_SHIFT" 12
+Shift amount to get the Doorbell Buffer Config supported
+.IP "NVME_CTRL_OACS_GLSS_SHIFT" 12
+Shift amount to get the Get LBA Status supported
+.IP "NVME_CTRL_OACS_CFLS_SHIFT" 12
+Shift amount to get the Command and Feature Lockdown supported
+.IP "NVME_CTRL_OACS_HMLMS_SHIFT" 12
+Shift amount to get the Host Managed Live Migration support
+.IP "NVME_CTRL_OACS_SSRS_MASK" 12
+Mask to get the Security Send Receive supported
+.IP "NVME_CTRL_OACS_FNVMS_MASK" 12
+Mask to get the Format NVM supported
+.IP "NVME_CTRL_OACS_FWDS_MASK" 12
+Mask to get the Firmware Download supported
+.IP "NVME_CTRL_OACS_NMS_MASK" 12
+Mask to get the Namespace Management supported
+.IP "NVME_CTRL_OACS_DSTS_MASK" 12
+Mask to get the Device Self-test supported
+.IP "NVME_CTRL_OACS_DIRS_MASK" 12
+Mask to get the Directives supported
+.IP "NVME_CTRL_OACS_NSRS_MASK" 12
+Mask to get the NVMe-MI Send Receive supported
+.IP "NVME_CTRL_OACS_VMS_MASK" 12
+Mask to get the Virtualization Management supported
+.IP "NVME_CTRL_OACS_DBCS_MASK" 12
+Mask to get the Doorbell Buffer Config supported
+.IP "NVME_CTRL_OACS_GLSS_MASK" 12
+Mask to get the Get LBA Status supported
+.IP "NVME_CTRL_OACS_CFLS_MASK" 12
+Mask to get the Command and Feature Lockdown supported
+.IP "NVME_CTRL_OACS_HMLMS_MASK" 12
+Mask to get the Host Managed Live Migration support
 .IP "NVME_CTRL_OACS_SECURITY" 12
 If set, then the controller supports the
 Security Send and Security Receive commands.
@@ -82,3 +230,6 @@ Status capability.
 .IP "NVME_CTRL_OACS_CMD_FEAT_LD" 12
 If set, then the controller supports the command
 and feature lockdown capability.
+.IP "NVME_CTRL_OACS_HMLM" 12
+If set, then the controller supports the command
+and Host Managed Live Migration capability.

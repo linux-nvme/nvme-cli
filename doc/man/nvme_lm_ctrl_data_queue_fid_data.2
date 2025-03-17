@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_lm_ctrl_data_queue_fid_data" "March 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_ctrl_data_queue_fid_data \- Get Controller Data Queue feature data
+.SH SYNOPSIS
+struct nvme_lm_ctrl_data_queue_fid_data {
+.br
+.BI "    __le32 hp;"
+.br
+.BI "    __le32 tpt;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hp" 12
+Head Pointer
+.IP "tpt" 12
+Tail Pointer Trigger

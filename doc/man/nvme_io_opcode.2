@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_io_opcode" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_io_opcode" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_io_opcode \- Opcodes for I/O Commands
 .SH SYNOPSIS
@@ -77,6 +77,10 @@ enum nvme_io_opcode {
 .br
 .br
 .BI "    nvme_zns_cmd_append"
+, 
+.br
+.br
+.BI "    nvme_cmd_fabric"
 
 };
 .SH Constants
@@ -118,3 +122,5 @@ Zone Management Send
 Zone Management Receive
 .IP "nvme_zns_cmd_append" 12
 Zone Append
+.IP "nvme_cmd_fabric" 12
+Fabric Commands

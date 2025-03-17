@@ -1,0 +1,202 @@
+.TH "libnvme" 9 "enum nvme_lm_migration_send_fields" "March 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_lm_migration_send_fields \- Migration Send command fields
+.SH SYNOPSIS
+enum nvme_lm_migration_send_fields {
+.br
+.BI "    NVME_LM_MIGRATION_SEND_MOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_SEND_MOS_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_SEND_SEL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_SEND_SEL_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_SUSPEND"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_RESUME"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_SET_CONTROLLER_STATE"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_SEND_UIDX_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_SEND_UIDX_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_DUDMQ"
+, 
+.br
+.br
+.BI "    NVME_LM_STYPE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_STYPE_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_STYPE_SUSPEND_NOTIFICATION"
+, 
+.br
+.br
+.BI "    NVME_LM_STYPE_SUSPEND"
+, 
+.br
+.br
+.BI "    NVME_LM_SUSPEND_CNTLID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_SUSPEND_CNTLID_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_RESUME_CNTLID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_RESUME_CNTLID_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SEQIND_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_SEQIND_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SEQIND_NOT_FIRST_NOT_LAST"
+, 
+.br
+.br
+.BI "    NVME_LM_SEQIND_FIRST"
+, 
+.br
+.br
+.BI "    NVME_LM_SEQIND_LAST"
+, 
+.br
+.br
+.BI "    NVME_LM_SEQIND_ENTIRE"
+, 
+.br
+.br
+.BI "    NVME_LM_SET_CONTROLLER_STATE_CSUUIDI_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_SET_CONTROLLER_STATE_CSUUIDI_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SET_CONTROLLER_STATE_CSVI_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_SET_CONTROLLER_STATE_CSVI_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SET_CONTROLLER_STATE_CNTLID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_SET_CONTROLLER_STATE_CNTLID_MASK"
+
+};
+.SH Constants
+.IP "NVME_LM_MIGRATION_SEND_MOS_SHIFT" 12
+Shift to set Management Operation Specific (MOS)
+field
+.IP "NVME_LM_MIGRATION_SEND_MOS_MASK" 12
+Mask to set MOS field
+.IP "NVME_LM_MIGRATION_SEND_SEL_SHIFT" 12
+Shift amount to set Select (SEL) field
+.IP "NVME_LM_MIGRATION_SEND_SEL_MASK" 12
+Mask to set SEL field
+.IP "NVME_LM_SEL_SUSPEND" 12
+Migration Send - Suspend
+.IP "NVME_LM_SEL_RESUME" 12
+Migration Send - Resume
+.IP "NVME_LM_SEL_SET_CONTROLLER_STATE" 12
+Migration Send - Set Controller State
+.IP "NVME_LM_MIGRATION_SEND_UIDX_SHIFT" 12
+Shift to set UUID Index (UIDX)
+.IP "NVME_LM_MIGRATION_SEND_UIDX_MASK" 12
+Mask to set UIDX
+.IP "NVME_LM_DUDMQ" 12
+Delete User Data Migration Queue
+.IP "NVME_LM_STYPE_SHIFT" 12
+Shift amount to set Suspend Type (STYPE)
+.IP "NVME_LM_STYPE_MASK" 12
+Mask to set STYPE
+.IP "NVME_LM_STYPE_SUSPEND_NOTIFICATION" 12
+Suspend Notification - The specified controller is
+going to be suspended in the future with a
+subsequent Migration Send command
+.IP "NVME_LM_STYPE_SUSPEND" 12
+Suspend - Suspend the controller
+.IP "NVME_LM_SUSPEND_CNTLID_SHIFT" 12
+Shift amount to set Controller ID (CNTLID) when SEL
+is Suspend
+.IP "NVME_LM_SUSPEND_CNTLID_MASK" 12
+Mask to set CNTLID with SEL Suspend
+.IP "NVME_LM_RESUME_CNTLID_SHIFT" 12
+Shift amount to set Controller ID (CNTLID) when SEL
+is Resume
+.IP "NVME_LM_RESUME_CNTLID_MASK" 12
+Mask to set CNTLID when SEL is Resume
+.IP "NVME_LM_SEQIND_SHIFT" 12
+Shift amount to set Sequence Indicator (SEQIND)
+field relative to MOS
+.IP "NVME_LM_SEQIND_MASK" 12
+Mask to set SEQIND field relative to MOS
+.IP "NVME_LM_SEQIND_NOT_FIRST_NOT_LAST" 12
+This command is not the first or last of a sequence
+of two or more Migration Send commands with this
+management operation used to transfer the controller
+state from host to controller
+.IP "NVME_LM_SEQIND_FIRST" 12
+This command is the first of a sequence of two or
+more Migration Send commands
+.IP "NVME_LM_SEQIND_LAST" 12
+This command is the last command of a sequence of
+two or more Migration Send commands
+.IP "NVME_LM_SEQIND_ENTIRE" 12
+This Migration Send command is the only command and
+contains the entire controller state for this
+management operation
+.IP "NVME_LM_SET_CONTROLLER_STATE_CSUUIDI_SHIFT" 12
+Shift amount to set Controller State UUID Index
+(CSUUIDI)
+.IP "NVME_LM_SET_CONTROLLER_STATE_CSUUIDI_MASK" 12
+Mask to set CSUUIDI
+.IP "NVME_LM_SET_CONTROLLER_STATE_CSVI_SHIFT" 12
+Shift amount to set Controller State Version Index
+(CSVI)
+.IP "NVME_LM_SET_CONTROLLER_STATE_CSVI_MASK" 12
+Mask to set CSVI
+.IP "NVME_LM_SET_CONTROLLER_STATE_CNTLID_SHIFT" 12
+Shift amount to set Controller ID (CNTLID) when SEL
+is Set Controller State
+.IP "NVME_LM_SET_CONTROLLER_STATE_CNTLID_MASK" 12
+Mask to set CNTLID when SEL is Set Controller State

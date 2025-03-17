@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_trattr" "March 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_trattr \- Tracking Attributes
+.SH SYNOPSIS
+enum nvme_id_ctrl_trattr {
+.br
+.BI "    NVME_CTRL_TRATTR_THMCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_TRATTR_TUDCS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_TRATTR_MRTLL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_TRATTR_THMCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_TRATTR_TUDCS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_TRATTR_MRTLL_MASK"
+
+};
+.SH Constants
+.IP "NVME_CTRL_TRATTR_THMCS_SHIFT" 12
+Shift amount to get the Track Host Memory Changes Support
+from the \fIstruct nvme_id_ctrl\fP.trattr field.
+.IP "NVME_CTRL_TRATTR_TUDCS_SHIFT" 12
+Shift amount to get the Track User Data Changes Support
+from the \fIstruct nvme_id_ctrl\fP.trattr field.
+.IP "NVME_CTRL_TRATTR_MRTLL_SHIFT" 12
+Shift amount to get the Memory Range Tracking Length Limit
+from the \fIstruct nvme_id_ctrl\fP.trattr field.
+.IP "NVME_CTRL_TRATTR_THMCS_MASK" 12
+Mask to get the Track Host Memory Changes Support
+from the \fIstruct nvme_id_ctrl\fP.trattr field.
+.IP "NVME_CTRL_TRATTR_TUDCS_MASK" 12
+Mask to get the Track User Data Changes Support
+from the \fIstruct nvme_id_ctrl\fP.trattr field.
+.IP "NVME_CTRL_TRATTR_MRTLL_MASK" 12
+Mask to get the Memory Range Tracking Length Limit
+from the \fIstruct nvme_id_ctrl\fP.trattr field.

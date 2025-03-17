@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_dst_stc" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_dst_stc" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_dst_stc \- Action taken by the Device Self-test command
 .SH SYNOPSIS
@@ -9,6 +9,10 @@ enum nvme_dst_stc {
 .br
 .br
 .BI "    NVME_DST_STC_LONG"
+, 
+.br
+.br
+.BI "    NVME_DST_STC_HOST_INIT"
 , 
 .br
 .br
@@ -24,6 +28,8 @@ enum nvme_dst_stc {
 Start a short device self-test operation
 .IP "NVME_DST_STC_LONG" 12
 Start an extended device self-test operation
+.IP "NVME_DST_STC_HOST_INIT" 12
+Start a Host-Initiated Refresh operation
 .IP "NVME_DST_STC_VS" 12
 Start a vendor specific device self-test operation
 .IP "NVME_DST_STC_ABORT" 12

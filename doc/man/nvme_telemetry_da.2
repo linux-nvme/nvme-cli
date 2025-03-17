@@ -1,8 +1,12 @@
-.TH "libnvme" 9 "enum nvme_telemetry_da" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_telemetry_da" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_telemetry_da \- Telemetry Log Data Area
 .SH SYNOPSIS
 enum nvme_telemetry_da {
+.br
+.BI "    NVME_TELEMETRY_DA_CTRL_DETERMINE"
+, 
+.br
 .br
 .BI "    NVME_TELEMETRY_DA_1"
 , 
@@ -20,6 +24,8 @@ enum nvme_telemetry_da {
 
 };
 .SH Constants
+.IP "NVME_TELEMETRY_DA_CTRL_DETERMINE" 12
+The controller determines the data areas to be created
 .IP "NVME_TELEMETRY_DA_1" 12
 Data Area 1
 .IP "NVME_TELEMETRY_DA_2" 12

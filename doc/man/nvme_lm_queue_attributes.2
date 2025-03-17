@@ -1,0 +1,84 @@
+.TH "libnvme" 9 "enum nvme_lm_queue_attributes" "March 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_lm_queue_attributes \- I/O Submission and I/O Completion Queue Attributes
+.SH SYNOPSIS
+enum nvme_lm_queue_attributes {
+.br
+.BI "    NVME_LM_IOSQPC_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_IOSQPC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_IOSQPRIO_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_IOSQPRIO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_IOCQPC_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_IOCQPC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_IOCQIEN_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_IOCQIEN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_S0PT_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_S0PT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_IOCQIV_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_IOCQIV_SHIFT"
+
+};
+.SH Constants
+.IP "NVME_LM_IOSQPC_MASK" 12
+Mask to get the Physically Contiguous (PC) bit for this I/O
+submission queue.
+.IP "NVME_LM_IOSQPC_SHIFT" 12
+Shift to get the PC bit for this I/O submission queue
+.IP "NVME_LM_IOSQPRIO_MASK" 12
+Mask to get the Priority for this I/O submission queue.
+.IP "NVME_LM_IOSQPRIO_SHIFT" 12
+Shift to get the Priority for this I/O submission queue.
+.IP "NVME_LM_IOCQPC_MASK" 12
+Mask to get the Physicaly Contiguous (PC) bit for this I/O
+completion queue.
+.IP "NVME_LM_IOCQPC_SHIFT" 12
+Shift to get the PC bit for this I/O completion queue.
+.IP "NVME_LM_IOCQIEN_MASK" 12
+Mask to get the Interrupts Enabled bit for this I/O completion
+queue
+.IP "NVME_LM_IOCQIEN_SHIFT" 12
+Shift to get the Interrupts Enabled bit for this I/O completion
+.IP "NVME_LM_S0PT_MASK" 12
+Mask to get the value of the Phase Tag bit for Slot 0 of this I/O
+completion queue.
+.IP "NVME_LM_S0PT_SHIFT" 12
+Shift to get the value of the Phase Tag bit for Slot 0 of this I/O
+completion queue.
+.IP "NVME_LM_IOCQIV_MASK" 12
+Mask to get the Interrupt Vector (IV) for this I/O completion
+queue.
+.IP "NVME_LM_IOCQIV_SHIFT" 12
+Shift to get the IV for this I/O completion queue.

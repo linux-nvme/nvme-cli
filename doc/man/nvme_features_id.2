@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_features_id" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_features_id" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_features_id \- Features - Feature Identifiers
 .SH SYNOPSIS
@@ -108,11 +108,39 @@ enum nvme_features_id {
 , 
 .br
 .br
+.BI "    NVME_FEAT_FID_POWER_LOSS_SIGNAL"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_PERF_CHARACTERISTICS"
+, 
+.br
+.br
 .BI "    NVME_FEAT_FID_FDP"
 , 
 .br
 .br
 .BI "    NVME_FEAT_FID_FDP_EVENTS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_NS_ADMIN_LABEL"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_KEY_VALUE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_CTRL_DATA_QUEUE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR"
 , 
 .br
 .br
@@ -145,6 +173,10 @@ enum nvme_features_id {
 .br
 .br
 .BI "    NVME_FEAT_FID_WRITE_PROTECT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_BP_WRITE_PROTECT"
 
 };
 .SH Constants
@@ -193,17 +225,31 @@ LBA Status Information Report Interval
 .IP "NVME_FEAT_FID_HOST_BEHAVIOR" 12
 Host Behavior Support
 .IP "NVME_FEAT_FID_SANITIZE" 12
-Endurance Group Event Configuration
+Sanitize Config
 .IP "NVME_FEAT_FID_ENDURANCE_EVT_CFG" 12
 Endurance Group Event Configuration
 .IP "NVME_FEAT_FID_IOCS_PROFILE" 12
 I/O Command Set Profile
 .IP "NVME_FEAT_FID_SPINUP_CONTROL" 12
 Spinup Control
+.IP "NVME_FEAT_FID_POWER_LOSS_SIGNAL" 12
+Power Loss Signaling Config
+.IP "NVME_FEAT_FID_PERF_CHARACTERISTICS" 12
+Performance Characteristics
 .IP "NVME_FEAT_FID_FDP" 12
 Flexible Data Placement
 .IP "NVME_FEAT_FID_FDP_EVENTS" 12
 FDP Events
+.IP "NVME_FEAT_FID_NS_ADMIN_LABEL" 12
+Namespace Admin Label
+.IP "NVME_FEAT_FID_KEY_VALUE" 12
+Key Value Configuration
+.IP "NVME_FEAT_FID_CTRL_DATA_QUEUE" 12
+Controller Data Queue
+.IP "NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR" 12
+Embedded Management Controller Address
+.IP "NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR" 12
+Host Management Agent Address
 .IP "NVME_FEAT_FID_ENH_CTRL_METADATA" 12
 Enhanced Controller Metadata
 .IP "NVME_FEAT_FID_CTRL_METADATA" 12
@@ -220,3 +266,5 @@ Reservation Notification Mask
 Reservation Persistence
 .IP "NVME_FEAT_FID_WRITE_PROTECT" 12
 Namespace Write Protection Config
+.IP "NVME_FEAT_FID_BP_WRITE_PROTECT" 12
+Boot Partition Write Protection Config

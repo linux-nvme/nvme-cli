@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_id_ctrl" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_ctrl" "March 2025" "API Manual" LINUX
 .SH NAME
 struct nvme_id_ctrl \- Identify Controller data structure
 .SH SYNOPSIS
@@ -36,7 +36,15 @@ struct nvme_id_ctrl {
 .br
 .BI "    __le16 rrls;"
 .br
-.BI "    __u8 rsvd102[9];"
+.BI "    __u8 bpcap;"
+.br
+.BI "    __u8 rsvd103;"
+.br
+.BI "    __le32 nssl;"
+.br
+.BI "    __u8 rsvd108[2];"
+.br
+.BI "    __u8 plsi;"
 .br
 .BI "    __u8 cntrltype;"
 .br
@@ -48,7 +56,9 @@ struct nvme_id_ctrl {
 .br
 .BI "    __le16 crdt3;"
 .br
-.BI "    __u8 rsvd134[119];"
+.BI "    __u8 crcap;"
+.br
+.BI "    __u8 rsvd135[118];"
 .br
 .BI "    __u8 nvmsr;"
 .br
@@ -126,13 +136,23 @@ struct nvme_id_ctrl {
 .br
 .BI "    __le16 domainid;"
 .br
-.BI "    __u8 rsvd358[10];"
+.BI "    __u8 kpioc;"
+.br
+.BI "    __u8 rsvd359;"
+.br
+.BI "    __le16 mptfawr;"
+.br
+.BI "    __u8 rsvd362[6];"
 .br
 .BI "    __u8 megcap[16];"
 .br
 .BI "    __u8 tmpthha;"
 .br
-.BI "    __u8 rsvd385[127];"
+.BI "    __u8 rsvd385;"
+.br
+.BI "    __le16 cqt;"
+.br
+.BI "    __u8 rsvd388[124];"
 .br
 .BI "    __u8 sqes;"
 .br
@@ -172,11 +192,13 @@ struct nvme_id_ctrl {
 .br
 .BI "    __le32 oaqd;"
 .br
-.BI "    __u8 rsvd568[2];"
+.BI "    __u8 rhiri;"
 .br
-.BI "    __u16 cmmrtd;"
+.BI "    __u8 hirt;"
 .br
-.BI "    __u16 nmmrtd;"
+.BI "    __le16 cmmrtd;"
+.br
+.BI "    __le16 nmmrtd;"
 .br
 .BI "    __u8 minmrtg;"
 .br
@@ -186,15 +208,15 @@ struct nvme_id_ctrl {
 .br
 .BI "    __u8 rsvd577;"
 .br
-.BI "    __u16 mcudmq;"
+.BI "    __le16 mcudmq;"
 .br
-.BI "    __u16 mnsudmq;"
+.BI "    __le16 mnsudmq;"
 .br
-.BI "    __u16 mcmr;"
+.BI "    __le16 mcmr;"
 .br
-.BI "    __u16 nmcmr;"
+.BI "    __le16 nmcmr;"
 .br
-.BI "    __u16 mcdqpc;"
+.BI "    __le16 mcdqpc;"
 .br
 .BI "    __u8 rsvd588[180];"
 .br
@@ -272,8 +294,18 @@ Controller Attributes, see \fIenum\fP nvme_id_ctrl_ctratt.
 Read Recovery Levels. If a bit is set, then the corresponding
 Read Recovery Level is supported. If a bit is cleared, then the
 corresponding Read Recovery Level is not supported.
-.IP "rsvd102" 12
+.IP "bpcap" 12
+Boot Partition Capabilities, see \fIenum nvme_id_ctrl_bpcap\fP.
+.IP "rsvd103" 12
 Reserved
+.IP "nssl" 12
+NVM Subsystem Shutdown Latency (NSSL). This field indicates the
+typical latency in microseconds for an NVM Subsystem Shutdown to
+complete.
+.IP "rsvd108" 12
+Reserved
+.IP "plsi" 12
+Power Loss Signaling Information (PLSI), see \fIenum nvme_id_ctrl_plsi\fP
 .IP "cntrltype" 12
 Controller Type, see \fIenum nvme_id_ctrl_cntrltype\fP
 .IP "fguid" 12
@@ -288,7 +320,10 @@ field is 2
 .IP "crdt3" 12
 Controller Retry Delay time in 100 millisecond units if CQE CRD
 field is 3
-.IP "rsvd134" 12
+.IP "crcap" 12
+Controller Reachability Capabilities (CRCAP), see
+\fIenum nvme_id_ctrl_crcap\fP
+.IP "rsvd135" 12
 Reserved
 .IP "nvmsr" 12
 NVM Subsystem Report, see \fIenum nvme_id_ctrl_nvmsr\fP
@@ -429,7 +464,17 @@ for the Persistent Event Log.
 .IP "domainid" 12
 Domain Identifier indicates the identifier of the domain
 that contains this controller.
-.IP "rsvd358" 12
+.IP "kpioc" 12
+Key Per I/O Capabilities (KPIOC), see \fIenum nvme_id_ctrl_kpioc\fP
+.IP "rsvd359" 12
+Reserved
+.IP "mptfawr" 12
+Maximum Processing Time for Firmware Activation Without Reset
+(MPTFAWR). This field shall indicate the estimated maximum time
+in 100 ms units required by the controller to process a Firmware
+Commit command that specifies a value of 011b in the Commit
+Action field
+.IP "rsvd362" 12
 Reserved
 .IP "megcap" 12
 Max Endurance Group Capacity indicates the maximum capacity
@@ -437,6 +482,13 @@ of a single Endurance Group.
 .IP "tmpthha" 12
 Temperature Threshold Hysteresis Attributes
 .IP "rsvd385" 12
+Reserved
+.IP "cqt" 12
+Command Quiesce Time (CQT). his field indicates the expected
+worst-case time in 1 millisecond units for the controller to
+quiesce all outstanding commands after a Keep Alive Timeout or
+other communication loss.
+.IP "rsvd388" 12
 Reserved
 .IP "sqes" 12
 Submission Queue Entry Size, see \fIenum nvme_id_ctrl_sqes\fP.
@@ -503,8 +555,19 @@ this I/O controller.
 Optimal Aggregated Queue Depth indicates the recommended maximum
 total number of outstanding I/O commands across all I/O queues
 on the controller for optimal operation.
-.IP "rsvd568" 12
-Reserved
+.IP "rhiri" 12
+Recommended Host-Initiated Refresh Interval (RHIRI). If the
+Host-Initiated Refresh capability is supported, then this field
+indicates the recommended time interval in days from last power
+down to the time at which the host should initiate the
+Host-Initiated Refresh operation. If this field is cleared to
+0h, then this field is not reported.
+.IP "hirt" 12
+Host-Initiated Refresh Time (HIRT). If the Host-Initiated
+Refresh capability is supported, then this field indicates the
+nominal amount of time in minutes that the controller takes to
+complete the Host-Initiated Refresh operation. If this field is
+cleared to 0h, then this field is not reported.
 .IP "cmmrtd" 12
 Controller Maximum Memory Range Tracking Descriptors indicates
 the maximum number of Memory Range Tracking Descriptors the
@@ -524,8 +587,8 @@ value supported in the Requested Memory Range Tracking
 Granularity (RMRTG) field of the Track Memory Ranges data
 structure.
 .IP "trattr" 12
-Tracking Attributes indicates supported attributes for the
-Track Send command and Track Receive command.
+Tracking Attributes indicates supported attributes for the Track Send
+command and Track Receive command. see \fIenum nvme_id_ctrl_trattr\fP
 .IP "rsvd577" 12
 Reserved
 .IP "mcudmq" 12

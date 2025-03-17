@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_id_ctrl_nvm" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_ctrl_nvm" "March 2025" "API Manual" LINUX
 .SH NAME
 struct nvme_id_ctrl_nvm \- I/O Command Set Specific Identify Controller data structure
 .SH SYNOPSIS
@@ -16,7 +16,9 @@ struct nvme_id_ctrl_nvm {
 .br
 .BI "    __le64 dmsl;"
 .br
-.BI "    __u8 rsvd16[2];"
+.BI "    __u8 kpiocap;"
+.br
+.BI "    __u8 wzdsl;"
 .br
 .BI "    __le16 aocs;"
 .br
@@ -43,8 +45,10 @@ Dataset Management Ranges Limit
 Dataset Management Range Size Limit
 .IP "dmsl" 12
 Dataset Management Size Limit
-.IP "rsvd16" 12
-Reserved
+.IP "kpiocap" 12
+Key Per I/O Capabilities
+.IP "wzdsl" 12
+Write Zeroes With Deallocate Size Limit
 .IP "aocs" 12
 Admin Optional Command Support
 .IP "ver" 12

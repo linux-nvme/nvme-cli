@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_id_ns" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_ns" "March 2025" "API Manual" LINUX
 .SH NAME
 struct nvme_id_ns \- Identify Namespace data structure
 .SH SYNOPSIS
@@ -62,11 +62,15 @@ struct nvme_id_ns {
 .br
 .BI "    __u8 msrc;"
 .br
-.BI "    __u8 rsvd81;"
+.BI "    __u8 kpios;"
 .br
 .BI "    __u8 nulbaf;"
 .br
-.BI "    __u8 rsvd83[9];"
+.BI "    __u8 rsvd83;"
+.br
+.BI "    __le32 kpiodaag;"
+.br
+.BI "    __u8 rsvd88[4];"
 .br
 .BI "    __le32 anagrpid;"
 .br
@@ -193,14 +197,20 @@ blocks that may be specified in a Copy command.
 Maximum Source Range Count indicates the maximum number of Source
 Range entries that may be used to specify source data in a Copy
 command. This is a 0’s based value.
-.IP "rsvd81" 12
-Reserved
+.IP "kpios" 12
+Key Per I/O Status indicates namespace Key Per I/O capability status.
 .IP "nulbaf" 12
 Number of Unique Capability LBA Formats defines the number of
 supported user data size and metadata size combinations supported
 by the namespace that may not share the same capabilities. LBA
 formats shall be allocated in order and packed sequentially.
 .IP "rsvd83" 12
+Reserved
+.IP "kpiodaag" 12
+Key Per I/O Data Access Alignment and Granularity indicates the
+alignment and granularity in logical blocks that is required
+for commands that support a KPIOTAG value in the CETYPE field.
+.IP "rsvd88" 12
 Reserved
 .IP "anagrpid" 12
 ANA Group Identifier indicates the ANA Group Identifier of the

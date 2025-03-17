@@ -73,7 +73,9 @@ are:
 with a couple of accommodations for older spec types, particularly NVMe-MI
 1.1, where possible.
 
-.. c:function:: NVME_MI_MSGTYPE_NVME ()
+.. c:macro:: NVME_MI_MSGTYPE_NVME
+
+``NVME_MI_MSGTYPE_NVME ()``
 
    MCTP message type for NVMe-MI messages.
 
@@ -89,7 +91,7 @@ bit (0x80) set.
 
 
 
-.. c:type:: enum nvme_mi_message_type
+.. c:enum:: nvme_mi_message_type
 
    NVMe-MI message type field.
 
@@ -115,7 +117,7 @@ byte). Not to be confused with the MCTP message type in byte 0.
 
 
 
-.. c:type:: enum nvme_mi_ror
+.. c:enum:: nvme_mi_ror
 
    Request or response field.
 
@@ -130,7 +132,7 @@ byte). Not to be confused with the MCTP message type in byte 0.
 
 
 
-.. c:type:: enum nvme_mi_resp_status
+.. c:enum:: nvme_mi_resp_status
 
    values for the response status field
 
@@ -196,7 +198,7 @@ byte). Not to be confused with the MCTP message type in byte 0.
 
 
 
-.. c:type:: struct nvme_mi_msg_hdr
+.. c:struct:: nvme_mi_msg_hdr
 
    General MI message header.
 
@@ -234,7 +236,7 @@ section 3.1. This is used for all message types, MI and Admin.
 
 
 
-.. c:type:: struct nvme_mi_msg_resp
+.. c:struct:: nvme_mi_msg_resp
 
    Generic response type.
 
@@ -268,7 +270,7 @@ will define parts of the reserved data, and may add further fields.
 
 
 
-.. c:type:: enum nvme_mi_mi_opcode
+.. c:enum:: nvme_mi_mi_opcode
 
    Operation code for supported NVMe-MI commands.
 
@@ -289,7 +291,7 @@ will define parts of the reserved data, and may add further fields.
 
 
 
-.. c:type:: struct nvme_mi_mi_req_hdr
+.. c:struct:: nvme_mi_mi_req_hdr
 
    MI request message header.
 
@@ -329,7 +331,7 @@ Wire format for MI request message headers, defined in section 5 of NVMe-MI.
 
 
 
-.. c:type:: struct nvme_mi_mi_resp_hdr
+.. c:struct:: nvme_mi_mi_resp_hdr
 
    MI response message header.
 
@@ -362,7 +364,7 @@ Wire format for MI response message header, defined in section 5 of NVMe-MI.
 
 
 
-.. c:type:: enum nvme_mi_dtyp
+.. c:enum:: nvme_mi_dtyp
 
    Data Structure Type field.
 
@@ -394,7 +396,7 @@ indicate the particular structure to query from the endpoint.
 
 
 
-.. c:type:: enum nvme_mi_config_id
+.. c:enum:: nvme_mi_config_id
 
    NVMe-MI Configuration identifier.
 
@@ -421,7 +423,7 @@ See :c:type:`nvme_mi_mi_config_get`() and :c:type:`nvme_mi_config_set`().
 
 
 
-.. c:type:: enum nvme_mi_config_smbus_freq
+.. c:enum:: nvme_mi_config_smbus_freq
 
    SMBus/I2C frequency values
 
@@ -444,7 +446,7 @@ Values used in the SMBus Frequency device configuration. See
 
 
 
-.. c:type:: struct nvme_mi_admin_req_hdr
+.. c:struct:: nvme_mi_admin_req_hdr
 
    Admin command request header.
 
@@ -534,7 +536,7 @@ NVMe-MI.
 
 
 
-.. c:type:: struct nvme_mi_admin_resp_hdr
+.. c:struct:: nvme_mi_admin_resp_hdr
 
    Admin command response header.
 
@@ -578,7 +580,7 @@ queue data, plus optional response data.
 
 
 
-.. c:type:: enum nvme_mi_control_opcode
+.. c:enum:: nvme_mi_control_opcode
 
    Operation code for Control Primitives.
 
@@ -602,7 +604,7 @@ queue data, plus optional response data.
 
 
 
-.. c:type:: struct nvme_mi_control_req
+.. c:struct:: nvme_mi_control_req
 
    The Control Primitive request.
 
@@ -711,7 +713,7 @@ endpoint to determine model-specific details.
 
 
 
-.. c:type:: typedef nvme_mi_ep_t
+.. c:type:: nvme_mi_ep_t
 
    MI Endpoint object.
 
@@ -770,7 +772,9 @@ next endpoint MI endpoint object after **e** under this root, or NULL
 See: :c:type:`nvme_mi_first_endpoint`, :c:type:`nvme_mi_for_each_endpoint`
 
 
-.. c:function:: nvme_mi_for_each_endpoint (m, e)
+.. c:macro:: nvme_mi_for_each_endpoint
+
+``nvme_mi_for_each_endpoint (m, e)``
 
    Iterator for NVMe-MI endpoints.
 
@@ -783,7 +787,9 @@ See: :c:type:`nvme_mi_first_endpoint`, :c:type:`nvme_mi_for_each_endpoint`
   :c:type:`nvme_mi_ep_t` object, set on each iteration
 
 
-.. c:function:: nvme_mi_for_each_endpoint_safe (m, e, _e)
+.. c:macro:: nvme_mi_for_each_endpoint_safe
+
+``nvme_mi_for_each_endpoint_safe (m, e, _e)``
 
    Iterator for NVMe-MI endpoints, allowing deletion during traversal
 
@@ -853,7 +859,7 @@ Returns the current timeout value, in milliseconds, for this endpoint.
 
 
 
-.. c:type:: typedef nvme_mi_ctrl_t
+.. c:type:: nvme_mi_ctrl_t
 
    NVMe-MI Controller object.
 
@@ -904,7 +910,9 @@ next MI controller object after **c** under this endpoint, or NULL
 See: :c:type:`nvme_mi_first_ctrl`, :c:type:`nvme_mi_for_each_ctrl`
 
 
-.. c:function:: nvme_mi_for_each_ctrl (ep, c)
+.. c:macro:: nvme_mi_for_each_ctrl
+
+``nvme_mi_for_each_ctrl (ep, c)``
 
    Iterator for NVMe-MI controllers.
 
@@ -925,7 +933,9 @@ call :c:type:`nvme_mi_scan_ep`() to scan for the controllers first.
 See: :c:type:`nvme_mi_scan_ep`()
 
 
-.. c:function:: nvme_mi_for_each_ctrl_safe (ep, c, _c)
+.. c:macro:: nvme_mi_for_each_ctrl_safe
+
+``nvme_mi_for_each_ctrl_safe (ep, c, _c)``
 
    Iterator for NVMe-MI controllers, allowing deletion during traversal
 
@@ -1116,6 +1126,48 @@ caller is responsible for free()-ing the string.
 
 a newly-allocated string containing the endpoint description, or
         NULL on failure.
+
+
+.. c:function:: int nvme_mi_mi_xfer (nvme_mi_ep_t ep, struct nvme_mi_mi_req_hdr *mi_req, size_t req_data_size, struct nvme_mi_mi_resp_hdr *mi_resp, size_t *resp_data_size)
+
+   Raw mi transfer interface.
+
+**Parameters**
+
+``nvme_mi_ep_t ep``
+  endpoint to send the MI command to
+
+``struct nvme_mi_mi_req_hdr *mi_req``
+  request data
+
+``size_t req_data_size``
+  size of request data payload
+
+``struct nvme_mi_mi_resp_hdr *mi_resp``
+  buffer for response data
+
+``size_t *resp_data_size``
+  size of response data buffer, updated to received size
+
+**Description**
+
+Performs an arbitrary NVMe MI command, using the provided request data,
+in **mi_req**. The size of the request data *payload* is specified in
+**req_data_size** - this does not include the standard header length (so a
+header-only request would have a size of 0). Note that the Management
+Request Doublewords are considered part of the header data.
+
+On success, response data is stored in **mi_resp**, which has an optional
+appended payload buffer of **resp_data_size** bytes. The actual payload
+size transferred will be stored in **resp_data_size**. This size does not
+include the MI response header, so 0 represents no payload.
+
+See: :c:type:`struct nvme_mi_mi_req_hdr <nvme_mi_mi_req_hdr>` and :c:type:`struct nvme_mi_mi_resp_hdr <nvme_mi_mi_resp_hdr>`.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise..
 
 
 .. c:function:: int nvme_mi_mi_read_mi_data_subsys (nvme_mi_ep_t ep, struct nvme_mi_read_nvm_ss_info *s)
@@ -2132,6 +2184,43 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: int nvme_mi_admin_get_endgid_log (nvme_mi_ctrl_t ctrl, bool rae, enum nvme_cmd_get_log_lid lid, __u16 endgid, __u32 len, void *log)
+
+   Helper for Get Endurance Group ID Log Page functions
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain Asynchronous Events
+
+``enum nvme_cmd_get_log_lid lid``
+  Log identifier
+
+``__u16 endgid``
+  Endurance Group ID
+
+``__u32 len``
+  length of log buffer
+
+``void *log``
+  pointer for resulting log data
+
+**Description**
+
+Performs a Get Log Page Admin command for a specific log ID **lid** and
+endurance group ID **endgid**. Log data is expected to be **len** bytes, and is stored
+in **log** on success. The **rae** flag is passed as-is to the Get Log Page
+command, and is specific to the Log Page requested.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_mi_admin_get_log_simple (nvme_mi_ctrl_t ctrl, enum nvme_cmd_get_log_lid lid, __u32 len, void *log)
 
    Helper for Get Log Page functions with no NSID or RAE requirements
@@ -2342,6 +2431,27 @@ The nvme command status if a response was received (see
 The log page indicates the status of an in progress self test and the
 percent complete of that operation, and the results of the previous 20
 self-test operations.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_create_telemetry_host_mcda (nvme_mi_ctrl_t ctrl, enum nvme_telemetry_da mcda, struct nvme_telemetry_log *log)
+
+   Create host telemetry log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``enum nvme_telemetry_da mcda``
+  Maximum Created Data Area
+
+``struct nvme_telemetry_log *log``
+  Userspace address of the log payload
 
 **Return**
 
@@ -2736,6 +2846,75 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: int nvme_mi_admin_get_log_rotational_media_info (nvme_mi_ctrl_t ctrl, __u16 endgid, __u32 len, struct nvme_rotational_media_info_log *log)
+
+   Retrieve Rotational Media Information Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u16 endgid``
+  Endurance Group Identifier
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_rotational_media_info_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_mi_admin_get_log_dispersed_ns_participating_nss (nvme_mi_ctrl_t ctrl, __u32 nsid, __u32 len, struct nvme_dispersed_ns_participating_nss_log *log)
+
+   Retrieve Dispersed Namespace Participating NVM Subsystems Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u32 nsid``
+  Namespace Identifier
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_dispersed_ns_participating_nss_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_mi_admin_get_log_mgmt_addr_list (nvme_mi_ctrl_t ctrl, __u32 len, struct nvme_mgmt_addr_list_log *log)
+
+   Retrieve Management Address List Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_mgmt_addr_list_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
 .. c:function:: int nvme_mi_admin_get_log_phy_rx_eom (nvme_mi_ctrl_t ctrl, __u8 lsp, __u16 controller, __u32 len, struct nvme_phy_rx_eom_log *log)
 
    Retrieve Physical Interface Receiver Eye Opening Measurement Log
@@ -2756,6 +2935,84 @@ The nvme command status if a response was received (see
   struct nvme_phy_rx_eom_log
 
 ``struct nvme_phy_rx_eom_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_mi_admin_get_log_reachability_groups (nvme_mi_ctrl_t ctrl, bool rgo, bool rae, __u32 len, struct nvme_reachability_groups_log *log)
+
+   Retrieve Reachability Groups Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rgo``
+  Return groups only
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_reachability_groups_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_mi_admin_get_log_reachability_associations (nvme_mi_ctrl_t ctrl, bool rao, bool rae, __u32 len, struct nvme_reachability_associations_log *log)
+
+   Retrieve Reachability Associations Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rao``
+  Return associations only
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_reachability_associations_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_mi_admin_get_log_changed_alloc_ns_list (nvme_mi_ctrl_t ctrl, bool rae, __u32 len, struct nvme_ns_list *log)
+
+   Retrieve Changed Allocated Namespace List Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_ns_list *log``
   User address to store the log page
 
 **Return**
@@ -2794,6 +3051,81 @@ records.
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_log_host_discover (nvme_mi_ctrl_t ctrl, bool allhoste, bool rae, __u32 len, struct nvme_host_discover_log *log)
+
+   Retrieve Host Discovery Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool allhoste``
+  All host entries
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_host_discover_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_mi_admin_get_log_ave_discover (nvme_mi_ctrl_t ctrl, bool rae, __u32 len, struct nvme_ave_discover_log *log)
+
+   Retrieve AVE Discovery Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_ave_discover_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_mi_admin_get_log_pull_model_ddc_req (nvme_mi_ctrl_t ctrl, bool rae, __u32 len, struct nvme_pull_model_ddc_req_log *log)
+
+   Retrieve Pull Model DDC Request Log
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to query
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_pull_model_ddc_req_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
 
 
 .. c:function:: int nvme_mi_admin_get_log_media_unit_stat (nvme_mi_ctrl_t ctrl, __u16 domid, struct nvme_media_unit_stat_log *mus)

@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_ave_discover_log_entry" "March 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_ave_discover_log_entry \- AVE Discovery Log Entry
+.SH SYNOPSIS
+struct nvme_ave_discover_log_entry {
+.br
+.BI "    __le32 tel;"
+.br
+.BI "    char avenqn[224];"
+.br
+.BI "    __u8 numatr;"
+.br
+.BI "    __u8 rsvd229[3];"
+.br
+.BI "    struct nvme_ave_tr_record       atr[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "tel" 12
+Total Entry Length
+.IP "avenqn" 12
+AVE NQN
+.IP "numatr" 12
+Number of AVE Transport Records
+.IP "rsvd229" 12
+Reserved
+.IP "atr" 12
+AVE Transport Record List

@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_csi" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_csi" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_csi \- Defined command set indicators
 .SH SYNOPSIS
@@ -13,6 +13,14 @@ enum nvme_csi {
 .br
 .br
 .BI "    NVME_CSI_ZNS"
+, 
+.br
+.br
+.BI "    NVME_CSI_SLM"
+, 
+.br
+.br
+.BI "    NVME_CSI_CP"
 
 };
 .SH Constants
@@ -22,3 +30,7 @@ NVM Command Set Indicator
 Key Value Command Set
 .IP "NVME_CSI_ZNS" 12
 Zoned Namespace Command Set
+.IP "NVME_CSI_SLM" 12
+Subsystem Local Memory Command Set
+.IP "NVME_CSI_CP" 12
+Computational Programs Command Set

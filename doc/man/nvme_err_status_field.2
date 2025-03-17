@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_err_status_field" "March 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_err_status_field \- This field indicates the error information log entry status field
+.SH SYNOPSIS
+enum nvme_err_status_field {
+.br
+.BI "    NVME_ERR_SF_PHASE_TAG_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ERR_SF_STATUS_FIELD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_ERR_SF_PHASE_TAG_MASK"
+, 
+.br
+.br
+.BI "    NVME_ERR_SF_STATUS_FIELD_MASK"
+
+};
+.SH Constants
+.IP "NVME_ERR_SF_PHASE_TAG_SHIFT" 12
+Shift amount to get the phase tag
+.IP "NVME_ERR_SF_STATUS_FIELD_SHIFT" 12
+Shift amount to get the status field
+.IP "NVME_ERR_SF_PHASE_TAG_MASK" 12
+Mask to get the phase tag
+.IP "NVME_ERR_SF_STATUS_FIELD_MASK" 12
+Mask to get the status field

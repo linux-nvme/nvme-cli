@@ -1,0 +1,73 @@
+.TH "libnvme" 9 "enum nvme_lm_track_send_fields" "March 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_lm_track_send_fields \- Track Send command fields
+.SH SYNOPSIS
+enum nvme_lm_track_send_fields {
+.br
+.BI "    NVME_LM_TRACK_SEND_MOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_TRACK_SEND_MOS_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_TRACK_SEND_SEL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_TRACK_SEND_SEL_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_LOG_USER_DATA_CHANGES"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_TRACK_MEMORY_CHANGES"
+, 
+.br
+.br
+.BI "    NVME_LM_LACT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_LACT_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_LACT_STOP_LOGGING"
+, 
+.br
+.br
+.BI "    NVME_LM_LACT_START_LOGGING"
+
+};
+.SH Constants
+.IP "NVME_LM_TRACK_SEND_MOS_SHIFT" 12
+Shift to set Management Operation Specific (MOS) field
+.IP "NVME_LM_TRACK_SEND_MOS_MASK" 12
+Mask to set MOS field
+.IP "NVME_LM_TRACK_SEND_SEL_SHIFT" 12
+Shift to set Select (SEL) field
+.IP "NVME_LM_TRACK_SEND_SEL_MASK" 12
+Mask to set SEL field
+.IP "NVME_LM_SEL_LOG_USER_DATA_CHANGES" 12
+Log User Data Changes select option
+.IP "NVME_LM_SEL_TRACK_MEMORY_CHANGES" 12
+Track Memory Changes select option
+.IP "NVME_LM_LACT_SHIFT" 12
+Shift to set Logging Action (LACT) relative to MOS
+.IP "NVME_LM_LACT_MASK" 12
+Mask to set LACT relative to MOS
+.IP "NVME_LM_LACT_STOP_LOGGING" 12
+The controller shall stop logging user data changes to
+namespaces attached to the controller associated with the
+User Data Migration Queue specified in the CDQ ID.
+.IP "NVME_LM_LACT_START_LOGGING" 12
+The controller shall start logging user data changes to
+namespaces attached to the controller associated with the
+User Data Migration Queue into that User Data Migration
+Queue where those user data changes are caused by the
+controller associated with that User Data Migration Queue
+processing commands.

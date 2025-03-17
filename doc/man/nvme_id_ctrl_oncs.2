@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_oncs" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_oncs" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_oncs \- This field indicates the optional NVM commands and features supported by the controller.
 .SH SYNOPSIS
@@ -45,6 +45,14 @@ enum nvme_id_ctrl_oncs {
 .br
 .br
 .BI "    NVME_CTRL_ONCS_ALL_FAST_COPY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_NAMESPACE_ZEROES"
 
 };
 .SH Constants
@@ -88,3 +96,14 @@ a write command apply.
 If set, then all copy operations for
 the Copy command are fast copy
 operations.
+.IP "NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE" 12
+If MAXWZD bit set, then the maximum data
+size for Write Zeroes command depends on the
+value of the Deallocate bit in the Write Zeroes
+command and the value in the WZDSL field in the
+I/O Command Set specific Identify Controller
+data structure.
+.IP "NVME_CTRL_ONCS_NAMESPACE_ZEROES" 12
+If NSZS bit set, then the controller supports
+the Namespace Zeroes (NSZ) bit in the NVM
+Command Set Write Zeroes command.

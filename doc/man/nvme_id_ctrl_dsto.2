@@ -1,13 +1,48 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_dsto" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_dsto" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_dsto \- Flags indicating the optional Device Self-test command or operation behaviors supported by the controller or NVM subsystem.
 .SH SYNOPSIS
 enum nvme_id_ctrl_dsto {
 .br
+.BI "    NVME_CTRL_DSTO_SDSO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_DSTO_HIRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_DSTO_SDSO_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_DSTO_HIRS_MASK"
+, 
+.br
+.br
 .BI "    NVME_CTRL_DSTO_ONE_DST"
+, 
+.br
+.br
+.BI "    NVME_CTRL_DSTO_HIRS"
 
 };
 .SH Constants
+.IP "NVME_CTRL_DSTO_SDSO_SHIFT" 12
+Shift amount to get the value of Single Device Self-test
+Operation from Device Self-test Options field.
+.IP "NVME_CTRL_DSTO_HIRS_SHIFT" 12
+Shift amount to get the value of  Host-Initiated Refresh
+Support from Device Self-test Options field.
+.IP "NVME_CTRL_DSTO_SDSO_MASK" 12
+Mask to get the value of Single Device Self-test Operation
+.IP "NVME_CTRL_DSTO_HIRS_MASK" 12
+Mask to get the value of Host-Initiated Refresh Support
 .IP "NVME_CTRL_DSTO_ONE_DST" 12
-If set,  then the NVM subsystem supports only one
-device self-test operation in progress at a time.
+If set, then the NVM subsystem supports only one device
+self-test operation in progress at a time. If cleared,
+then the NVM subsystem supports one device self-test
+operation per controller at a time.
+.IP "NVME_CTRL_DSTO_HIRS" 12
+If set, then the controller supports the Host-Initiated
+Refresh capability.

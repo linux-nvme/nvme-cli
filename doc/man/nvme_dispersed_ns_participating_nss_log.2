@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_dispersed_ns_participating_nss_log" "March 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_dispersed_ns_participating_nss_log \- Dispersed Namespace Participating NVM Subsystems Log
+.SH SYNOPSIS
+struct nvme_dispersed_ns_participating_nss_log {
+.br
+.BI "    __le64 genctr;"
+.br
+.BI "    __le64 numpsub;"
+.br
+.BI "    __u8 rsvd16[240];"
+.br
+.BI "    __u8 participating_nss[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "genctr" 12
+Generation Counter
+.IP "numpsub" 12
+Number of Participating NVM Subsystems
+.IP "rsvd16" 12
+Reserved
+.IP "participating_nss" 12
+Participating NVM Subsystem Entry

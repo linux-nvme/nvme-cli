@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_identify_cns" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_identify_cns" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_identify_cns \- Identify - CNS Values
 .SH SYNOPSIS
@@ -100,6 +100,18 @@ enum nvme_identify_cns {
 , 
 .br
 .br
+.BI "    NVME_IDENTIFY_CNS_UNDERLYING_NS_LIST"
+, 
+.br
+.br
+.BI "    NVME_IDENTIFY_CNS_PORTS_LIST"
+, 
+.br
+.br
+.BI "    NVME_IDENTIFY_CNS_IOCS_IND_ID_ALLOC_NS"
+, 
+.br
+.br
 .BI "    NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS"
 
 };
@@ -164,7 +176,14 @@ ID list
 I/O Command Set specific ID Namespace
 Data Structure for Allocated Namespace ID
 .IP "NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE" 12
-Base Specification 2.0a section 5.17.2.21
+I/O Command Set data structure
+.IP "NVME_IDENTIFY_CNS_UNDERLYING_NS_LIST" 12
+Get Underlying Namespace List
+.IP "NVME_IDENTIFY_CNS_PORTS_LIST" 12
+Get Ports List
+.IP "NVME_IDENTIFY_CNS_IOCS_IND_ID_ALLOC_NS" 12
+I/O Command Set Independent Identify Namespace data
+structure for the specified allocated NSID
 .IP "NVME_IDENTIFY_CNS_SUPPORTED_CTRL_STATE_FORMATS" 12
 Supported Controller State Formats
 identifying the supported NVMe Controller

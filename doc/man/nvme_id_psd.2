@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_id_psd" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_psd" "March 2025" "API Manual" LINUX
 .SH NAME
 struct nvme_id_psd \- Power Management data structure
 .SH SYNOPSIS
@@ -32,7 +32,17 @@ struct nvme_id_psd {
 .br
 .BI "    __u8 apws;"
 .br
-.BI "    __u8 rsvd23[9];"
+.BI "    __u8 epfrt;"
+.br
+.BI "    __u8 fqvt;"
+.br
+.BI "    __u8 epfvt;"
+.br
+.BI "    __u8 epfr_fqv_ts;"
+.br
+.BI "    __u8 epfvts;"
+.br
+.BI "    __u8 rsvd28[4];"
 .br
 .BI "
 };
@@ -91,5 +101,16 @@ nvme_id_psd\fP.actp, see \fIenum nvme_psd_ps\fP for decoding this value.
 Bits 2-0: Active Power Workload(APW) indicates the workload
 used to calculate maximum power for this power state.
 See \fIenum nvme_psd_workload\fP for decoding this field.
-.IP "rsvd23" 12
+.IP "epfrt" 12
+Emergency power fail recovery time
+.IP "fqvt" 12
+Forced quiescence vault time
+.IP "epfvt" 12
+Emergency power fail vault time
+.IP "epfr_fqv_ts" 12
+Bits 7-4: Forced quiescence vault time scale
+Bits 3-0: Emergency power fail recovery time scale
+.IP "epfvts" 12
+Bits 3-0: Emergency power fail vault time scale
+.IP "rsvd28" 12
 Reserved

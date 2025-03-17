@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_st_code" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_st_code" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_st_code \- Self-test Code value
 .SH SYNOPSIS
@@ -13,6 +13,10 @@ enum nvme_st_code {
 .br
 .br
 .BI "    NVME_ST_CODE_EXTENDED"
+, 
+.br
+.br
+.BI "    NVME_ST_CODE_HOST_INIT"
 , 
 .br
 .br
@@ -34,6 +38,8 @@ Reserved.
 Short device self-test operation.
 .IP "NVME_ST_CODE_EXTENDED" 12
 Extended device self-test operation.
+.IP "NVME_ST_CODE_HOST_INIT" 12
+Host-Initiated Refresh operation.
 .IP "NVME_ST_CODE_VS" 12
 Vendor specific.
 .IP "NVME_ST_CODE_ABORT" 12

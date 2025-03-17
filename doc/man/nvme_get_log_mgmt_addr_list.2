@@ -1,0 +1,18 @@
+.TH "nvme_get_log_mgmt_addr_list" 9 "nvme_get_log_mgmt_addr_list" "March 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_log_mgmt_addr_list \- Retrieve Management Address List Log
+.SH SYNOPSIS
+.B "int" nvme_get_log_mgmt_addr_list
+.BI "(int fd "  ","
+.BI "__u32 len "  ","
+.BI "struct nvme_mgmt_addr_list_log *log "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "len" 12
+The allocated length of the log page
+.IP "log" 12
+User address to store the log page
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise

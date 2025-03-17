@@ -7,7 +7,7 @@ Linux NVMe ioctl interface functions
 
 
 
-.. c:type:: struct nvme_passthru_cmd
+.. c:struct:: nvme_passthru_cmd
 
    nvme passthrough command structure
 
@@ -96,7 +96,7 @@ Linux NVMe ioctl interface functions
 
 
 
-.. c:type:: struct nvme_passthru_cmd64
+.. c:struct:: nvme_passthru_cmd64
 
    64-bit nvme passthrough command structure
 
@@ -189,7 +189,7 @@ Linux NVMe ioctl interface functions
 
 
 
-.. c:type:: struct nvme_uring_cmd
+.. c:struct:: nvme_uring_cmd
 
    nvme uring command structure
 
@@ -276,7 +276,9 @@ Linux NVMe ioctl interface functions
 
 
 
-.. c:function:: sizeof_args (type, member, align)
+.. c:macro:: sizeof_args
+
+``sizeof_args (type, member, align)``
 
    Helper function used to determine structure sizes
 
@@ -1742,6 +1744,27 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: int nvme_get_log_create_telemetry_host_mcda (int fd, enum nvme_telemetry_da mcda, struct nvme_telemetry_log *log)
+
+   Create host telemetry log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``enum nvme_telemetry_da mcda``
+  Maximum Created Data Area
+
+``struct nvme_telemetry_log *log``
+  Userspace address of the log payload
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_get_log_create_telemetry_host (int fd, struct nvme_telemetry_log *log)
 
    Create host telemetry log
@@ -2220,6 +2243,75 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
 
 
+.. c:function:: int nvme_get_log_rotational_media_info (int fd, __u16 endgid, __u32 len, struct nvme_rotational_media_info_log *log)
+
+   Retrieve Rotational Media Information Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u16 endgid``
+  Endurance Group Identifier
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_rotational_media_info_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_get_log_dispersed_ns_participating_nss (int fd, __u32 nsid, __u32 len, struct nvme_dispersed_ns_participating_nss_log *log)
+
+   Retrieve Dispersed Namespace Participating NVM Subsystems Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u32 nsid``
+  Namespace Identifier
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_dispersed_ns_participating_nss_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_get_log_mgmt_addr_list (int fd, __u32 len, struct nvme_mgmt_addr_list_log *log)
+
+   Retrieve Management Address List Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_mgmt_addr_list_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
 .. c:function:: int nvme_get_log_phy_rx_eom (int fd, __u8 lsp, __u16 controller, __u32 len, struct nvme_phy_rx_eom_log *log)
 
    Retrieve Physical Interface Receiver Eye Opening Measurement Log
@@ -2240,6 +2332,84 @@ The nvme command status if a response was received (see
   struct nvme_phy_rx_eom_log
 
 ``struct nvme_phy_rx_eom_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_get_log_reachability_groups (int fd, bool rgo, bool rae, __u32 len, struct nvme_reachability_groups_log *log)
+
+   Retrieve Reachability Groups Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool rgo``
+  Return groups only
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_reachability_groups_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_get_log_reachability_associations (int fd, bool rao, bool rae, __u32 len, struct nvme_reachability_associations_log *log)
+
+   Retrieve Reachability Associations Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool rao``
+  Return associations only
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_reachability_associations_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_get_log_changed_alloc_ns_list (int fd, bool rae, __u32 len, struct nvme_ns_list *log)
+
+   Retrieve Changed Allocated Namespace List Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_ns_list *log``
   User address to store the log page
 
 **Return**
@@ -2278,6 +2448,81 @@ records.
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_log_host_discover (int fd, bool allhoste, bool rae, __u32 len, struct nvme_host_discover_log *log)
+
+   Retrieve Host Discovery Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool allhoste``
+  All host entries
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_host_discover_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_get_log_ave_discover (int fd, bool rae, __u32 len, struct nvme_ave_discover_log *log)
+
+   Retrieve AVE Discovery Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_ave_discover_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
+
+.. c:function:: int nvme_get_log_pull_model_ddc_req (int fd, bool rae, __u32 len, struct nvme_pull_model_ddc_req_log *log)
+
+   Retrieve Pull Model DDC Request Log
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool rae``
+  Retain asynchronous events
+
+``__u32 len``
+  The allocated length of the log page
+
+``struct nvme_pull_model_ddc_req_log *log``
+  User address to store the log page
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
 
 
 .. c:function:: int nvme_get_log_media_unit_stat (int fd, __u16 domid, struct nvme_media_unit_stat_log *mus)
@@ -5281,6 +5526,120 @@ The nvme command status if a response was received (see
 
 ``struct nvme_dim_args *args``
   :c:type:`struct nvme_dim_args <nvme_dim_args>` argument structure
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_lm_cdq (struct nvme_lm_cdq_args *args)
+
+   Controller Data Queue - Controller Data Queue command
+
+**Parameters**
+
+``struct nvme_lm_cdq_args *args``
+  :c:type:`struct nvme_lm_cdq_args <nvme_lm_cdq_args>` argument structure
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.)
+
+
+.. c:function:: int nvme_lm_track_send (struct nvme_lm_track_send_args *args)
+
+   Track Send command
+
+**Parameters**
+
+``struct nvme_lm_track_send_args *args``
+  :c:type:`struct nvme_lm_track_send_args <nvme_lm_track_send_args>` argument structure
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_lm_migration_send (struct nvme_lm_migration_send_args *args)
+
+   Migration Send command
+
+**Parameters**
+
+``struct nvme_lm_migration_send_args *args``
+  :c:type:`struct nvme_lm_migration_send_args <nvme_lm_migration_send_args>` argument structure
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_lm_migration_recv (struct nvme_lm_migration_recv_args *args)
+
+   Migration Receive command
+
+**Parameters**
+
+``struct nvme_lm_migration_recv_args *args``
+  :c:type:`struct nvme_lm_migration_rev_args <nvme_lm_migration_rev_args>` argument structure
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_lm_set_features_ctrl_data_queue (int fd, __u16 cdqid, __u32 hp, __u32 tpt, bool etpt, __u32 *result)
+
+   Set Controller Datea Queue feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u16 cdqid``
+  Controller Data Queue ID (CDQID)
+
+``__u32 hp``
+  Head Pointer
+
+``__u32 tpt``
+  Tail Pointer Trigger
+
+``bool etpt``
+  Enable Tail Pointer Trigger
+
+``__u32 *result``
+  The command completions result from CQE dword0
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_lm_get_features_ctrl_data_queue (int fd, __u16 cdqid, struct nvme_lm_ctrl_data_queue_fid_data *data, __u32 *result)
+
+   Get Controller Data Queue feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u16 cdqid``
+  Controller Data Queue ID (CDQID)
+
+``struct nvme_lm_ctrl_data_queue_fid_data *data``
+  Get Controller Data Queue feature data
+
+``__u32 *result``
+  The command completions result from CQE dword0
 
 **Return**
 

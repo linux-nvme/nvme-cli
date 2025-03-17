@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_status_field" "November 2024" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_status_field" "March 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_status_field \- Defines all parts of the nvme status field: status code, status code type, and additional flags.
 .SH SYNOPSIS
@@ -184,6 +184,22 @@ enum nvme_status_field {
 , 
 .br
 .br
+.BI "    NVME_SC_INVALID_KEY_TAG"
+, 
+.br
+.br
+.BI "    NVME_SC_HOST_DISPERSED_NS_NOT_ENABLED"
+, 
+.br
+.br
+.BI "    NVME_SC_HOST_ID_NOT_INITIALIZED"
+, 
+.br
+.br
+.BI "    NVME_SC_INCORRECT_KEY"
+, 
+.br
+.br
 .BI "    NVME_SC_FDP_DISABLED"
 , 
 .br
@@ -209,6 +225,26 @@ enum nvme_status_field {
 .br
 .br
 .BI "    NVME_SC_FORMAT_IN_PROGRESS"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_VALUE_SIZE"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_KEY_SIZE"
+, 
+.br
+.br
+.BI "    NVME_SC_KV_KEY_NOT_EXISTS"
+, 
+.br
+.br
+.BI "    NVME_SC_UNRECOVERED_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_KEY_EXISTS"
 , 
 .br
 .br
@@ -817,6 +853,18 @@ the Command and Feature Lockdown.
 Admin Command Media Not Ready: The Admin
 command requires access to media and
 the media is not ready.
+.IP "NVME_SC_INVALID_KEY_TAG" 12
+The command was aborted due to an invalid KEYTAG
+field value.
+.IP "NVME_SC_HOST_DISPERSED_NS_NOT_ENABLED" 12
+The command is prohibited while the
+Host Disperesed Namespace Support (HDISNS) field is not
+set to 1h in the Host Behavior Support feature.
+.IP "NVME_SC_HOST_ID_NOT_INITIALIZED" 12
+Host Identifier Not Initialized.
+.IP "NVME_SC_INCORRECT_KEY" 12
+The command was aborted due to the key associated
+with the KEYTAG field being incorrect.
 .IP "NVME_SC_FDP_DISABLED" 12
 Command is not allowed when
 Flexible Data Placement is disabled.
@@ -847,6 +895,20 @@ namespace.
 .IP "NVME_SC_FORMAT_IN_PROGRESS" 12
 Format In Progress: A Format NVM command
 is in progress on the namespace.
+.IP "NVME_SC_INVALID_VALUE_SIZE" 12
+The value size is not valid.
+.IP "NVME_SC_INVALID_KEY_SIZE" 12
+The KV key size is not valid.
+.IP "NVME_SC_KV_KEY_NOT_EXISTS" 12
+The Store If Key Exists (SIKE) bit is set to
+'1' in the Store Option field and the KV key does not
+exists.
+.IP "NVME_SC_UNRECOVERED_ERROR" 12
+There was an unrecovered error when reading
+from the meidum.
+.IP "NVME_SC_KEY_EXISTS" 12
+The Store If No Key Exists (SINKE) bit is set to '1'
+in the Store Option field and the KV key exists.
 .IP "NVME_SC_CQ_INVALID" 12
 Completion Queue Invalid: The Completion
 Queue identifier specified in the command

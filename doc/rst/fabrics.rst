@@ -7,7 +7,7 @@ Fabrics-specific definitions.
 
 
 
-.. c:type:: struct nvme_fabrics_config
+.. c:struct:: nvme_fabrics_config
 
    Defines all linux nvme fabrics initiator options
 
@@ -104,7 +104,7 @@ Fabrics-specific definitions.
 
 
 
-.. c:type:: struct nvme_fabrics_uri
+.. c:struct:: nvme_fabrics_uri
 
    Parsed URI structure
 
@@ -430,7 +430,7 @@ Consider using nvmf_get_discovery_wargs() instead.
 
 
 
-.. c:type:: struct nvme_get_discovery_args
+.. c:struct:: nvme_get_discovery_args
 
    Arguments for nvmf_get_discovery_wargs()
 

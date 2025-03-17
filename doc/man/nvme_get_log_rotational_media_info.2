@@ -1,0 +1,21 @@
+.TH "nvme_get_log_rotational_media_info" 9 "nvme_get_log_rotational_media_info" "March 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_log_rotational_media_info \- Retrieve Rotational Media Information Log
+.SH SYNOPSIS
+.B "int" nvme_get_log_rotational_media_info
+.BI "(int fd "  ","
+.BI "__u16 endgid "  ","
+.BI "__u32 len "  ","
+.BI "struct nvme_rotational_media_info_log *log "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "endgid" 12
+Endurance Group Identifier
+.IP "len" 12
+The allocated length of the log page
+.IP "log" 12
+User address to store the log page
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise

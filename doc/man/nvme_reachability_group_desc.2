@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_reachability_group_desc" "March 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_reachability_group_desc \- Reachability Group Descriptor
+.SH SYNOPSIS
+struct nvme_reachability_group_desc {
+.br
+.BI "    __le32 rgid;"
+.br
+.BI "    __le32 nnid;"
+.br
+.BI "    __le64 chngc;"
+.br
+.BI "    __u8 rsvd16[16];"
+.br
+.BI "    __le32 nsid[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rgid" 12
+Reachability Group ID
+.IP "nnid" 12
+Number of NSID Values
+.IP "chngc" 12
+Change Count
+.IP "rsvd16" 12
+Reserved
+.IP "nsid" 12
+Namespace Identifier List

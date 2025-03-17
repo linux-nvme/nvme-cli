@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_plsi" "March 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_plsi \- Power Loss Signaling Information
+.SH SYNOPSIS
+enum nvme_id_ctrl_plsi {
+.br
+.BI "    NVME_CTRL_PLSI_PLSEPF_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_PLSI_PLSFQ_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_PLSI_PLSEPF_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_PLSI_PLSFQ_MASK"
+
+};
+.SH Constants
+.IP "NVME_CTRL_PLSI_PLSEPF_SHIFT" 12
+Shift amount to get the PLS Emergency Power Fail from the
+\fIstruct nvme_id_ctrl\fP.plsi field.
+.IP "NVME_CTRL_PLSI_PLSFQ_SHIFT" 12
+Shift amount to get the PLS Forced Quiescence from the
+\fIstruct nvme_id_ctrl\fP.plsi field.
+.IP "NVME_CTRL_PLSI_PLSEPF_MASK" 12
+Mask to get the PLS Emergency Power Fail from the
+\fIstruct nvme_id_ctrl\fP.plsi field.
+.IP "NVME_CTRL_PLSI_PLSFQ_MASK" 12
+Mask to get the PLS Forced Quiescence from the
+\fIstruct nvme_id_ctrl\fP.plsi field.

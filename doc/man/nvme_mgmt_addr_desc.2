@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_mgmt_addr_desc" "March 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mgmt_addr_desc \- Management Address Descriptor
+.SH SYNOPSIS
+struct nvme_mgmt_addr_desc {
+.br
+.BI "    __u8 mat;"
+.br
+.BI "    __u8 rsvd1[3];"
+.br
+.BI "    __u8 madrs[508];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "mat" 12
+Management Address Type
+.IP "rsvd1" 12
+Reserved
+.IP "madrs" 12
+Management Address

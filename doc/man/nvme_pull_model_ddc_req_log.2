@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_pull_model_ddc_req_log" "March 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_pull_model_ddc_req_log \- Pull Model DDC Request Log
+.SH SYNOPSIS
+struct nvme_pull_model_ddc_req_log {
+.br
+.BI "    __u8 ori;"
+.br
+.BI "    __u8 rsvd1[3];"
+.br
+.BI "    __le32 tpdrpl;"
+.br
+.BI "    __u8 osp[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ori" 12
+Operation Request Identifier
+.IP "rsvd1" 12
+Reserved
+.IP "tpdrpl" 12
+Total Pull Model DDC Request Log Page Length
+.IP "osp" 12
+Operation Specific Parameters

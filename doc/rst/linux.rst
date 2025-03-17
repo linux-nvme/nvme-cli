@@ -32,27 +32,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:type:: enum nvme_telemetry_da
-
-   Telemetry Log Data Area
-
-**Constants**
-
-``NVME_TELEMETRY_DA_1``
-  Data Area 1
-
-``NVME_TELEMETRY_DA_2``
-  Data Area 2
-
-``NVME_TELEMETRY_DA_3``
-  Data Area 3
-
-``NVME_TELEMETRY_DA_4``
-  Data Area 4
-
-
 .. c:function:: int nvme_get_telemetry_max (int fd, enum nvme_telemetry_da *da, size_t *max_data_tx)
 
    Get telemetry limits
@@ -352,7 +331,7 @@ errno set otherwise.
 
 
 
-.. c:type:: enum nvme_hmac_alg
+.. c:enum:: nvme_hmac_alg
 
    HMAC algorithm
 
@@ -541,7 +520,7 @@ inaccessible.
 Key id of the new key or 0 with errno set otherwise.
 
 
-.. c:type:: nvme_scan_tls_keys_cb_t
+.. c:macro:: nvme_scan_tls_keys_cb_t
 
    **Typedef**: Callback for iterating TLS keys
 
