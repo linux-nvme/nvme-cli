@@ -435,6 +435,7 @@ static struct print_ops binary_print_ops = {
 	.show_perror			= NULL,
 	.show_status			= NULL,
 	.show_error_status		= NULL,
+	.show_key_value			= NULL,
 };
 
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags)
