@@ -1027,16 +1027,21 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 		if (pevent_descriptor->debug_event_class_type == RESERVED_CLASS_TYPE)
 			break;
 
-		if (pevent_descriptor != NULL && pevent_descriptor->event_data_size >= 0) {
+		__u8 *pevent_specific_data = NULL;
+		__u16 event_id = 0;
+		char description_str[256] = "";
+		unsigned int data_size = 0;
+
+		if (pevent_descriptor != NULL &&
+			pevent_descriptor->event_data_size >= 0 &&
+			pevent_descriptor->debug_event_class_type !=
+				STATISTIC_SNAPSHOT_CLASS_TYPE) {
+			event_des_size = sizeof(struct nvme_ocp_telemetry_event_descriptor);
 			/* Data is present in the form of DWORDS,
 			 * So multiplying with sizeof(DWORD)
 			 */
-			unsigned int data_size = pevent_descriptor->event_data_size *
+			data_size = pevent_descriptor->event_data_size *
 							SIZE_OF_DWORD;
-
-			__u8 *pevent_specific_data = NULL;
-			__u16 event_id = 0;
-			char description_str[256] = "";
 
 			if (pevent_descriptor != NULL && pevent_descriptor->event_data_size > 0)
 				pevent_specific_data = (__u8 *)pevent_descriptor + event_des_size;
@@ -1128,18 +1133,6 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					pevent_fifos_object,
 					fp);
 				break;
-			case STATISTIC_SNAPSHOT_CLASS_TYPE: {
-				struct nvme_ocp_statistic_snapshot_evt_class_format
-				*pStaticSnapshotEvent =
-					(struct nvme_ocp_statistic_snapshot_evt_class_format *)
-					pevent_specific_data;
-				struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_entry =
-					(struct nvme_ocp_telemetry_statistic_descriptor *)
-					(&pStaticSnapshotEvent->statisticDescriptorData);
-
-				parse_statistic(pstatistic_entry, pevent_descriptor_obj, fp);
-				break;
-			}
 			case RESERVED_CLASS_TYPE:
 			default:
 				break;
@@ -1154,11 +1147,67 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				else
 					printf(STR_LINE2);
 			}
-		} else
-			break;
+		} else if ((pevent_descriptor != NULL) &&
+			(pevent_descriptor->debug_event_class_type ==
+				STATISTIC_SNAPSHOT_CLASS_TYPE)) {
+			parse_ocp_telemetry_string_log(0, event_id,
+				pevent_descriptor->debug_event_class_type, EVENT_STRING,
+				description_str);
 
-		offset_to_move += (pevent_descriptor->event_data_size * SIZE_OF_DWORD +
-			event_des_size);
+			struct json_object *pevent_descriptor_obj =
+				((pevent_fifos_object != NULL) ? json_create_object() : NULL);
+
+			if (pevent_descriptor_obj != NULL) {
+				json_add_formatted_u32_str(pevent_descriptor_obj,
+					STR_DBG_EVENT_CLASS_TYPE,
+					pevent_descriptor->debug_event_class_type);
+				json_object_add_value_string(pevent_descriptor_obj,
+					STR_EVENT_STRING, description_str);
+			} else {
+				if (fp) {
+					fprintf(fp, "%s: 0x%x\n", STR_DBG_EVENT_CLASS_TYPE,
+						pevent_descriptor->debug_event_class_type);
+					fprintf(fp, "%s: %s\n", STR_EVENT_STRING, description_str);
+				} else {
+					printf("%s: 0x%x\n", STR_DBG_EVENT_CLASS_TYPE,
+					   pevent_descriptor->debug_event_class_type);
+					printf("%s: %s\n", STR_EVENT_STRING, description_str);
+				}
+			}
+
+			struct nvme_ocp_statistic_snapshot_evt_class_format
+				*pStaticSnapshotEvent =
+					(struct nvme_ocp_statistic_snapshot_evt_class_format *)
+					pevent_descriptor;
+
+			event_des_size =
+				sizeof(struct nvme_ocp_statistic_snapshot_evt_class_format);
+			data_size =
+				(le16_to_cpu((unsigned int)pStaticSnapshotEvent->stat_data_size) *
+					SIZE_OF_DWORD);
+
+			if (pStaticSnapshotEvent != NULL &&
+				pStaticSnapshotEvent->stat_data_size > 0) {
+				__u8 *pstatistic_entry =
+					(__u8 *)pStaticSnapshotEvent +
+					sizeof(struct nvme_ocp_telemetry_event_descriptor);
+
+				parse_statistic(
+					(struct nvme_ocp_telemetry_statistic_descriptor *)
+						pstatistic_entry,
+					pevent_descriptor_obj,
+					fp);
+			}
+		} else {
+			if (fp)
+				fprintf(fp, "Unknown or null event class %p\n", pevent_descriptor);
+			else
+				printf("Unknown or null event class %p\n", pevent_descriptor);
+
+			break;
+		}
+
+		offset_to_move += (data_size + event_des_size);
 	}
 
 	if (pevent_fifos_object != NULL && pevent_fifo_array != NULL)
@@ -1243,10 +1292,9 @@ int parse_statistic(struct nvme_ocp_telemetry_statistic_descriptor *pstatistic_e
 		return -1;
 	}
 
-	if (pstatistic_entry->statistic_id == STATISTICS_RESERVED_ID)
+	if (le16_to_cpu(pstatistic_entry->statistic_id) == STATISTICS_RESERVED_ID)
 		/* End of statistics entries, return -1 to stop processing the buffer */
 		return -1;
-
 
 	unsigned int data_size = pstatistic_entry->statistic_data_size * SIZE_OF_DWORD;
 	__u8 *pdata = (__u8 *)pstatistic_entry +

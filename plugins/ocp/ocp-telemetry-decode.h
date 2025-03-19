@@ -1102,7 +1102,13 @@ struct __packed nvme_ocp_common_dbg_evt_class_vu_data
 
 struct __packed nvme_ocp_statistic_snapshot_evt_class_format
 {
-	struct nvme_ocp_telemetry_statistic_descriptor statisticDescriptorData; // Bytes 11:10
+	__u8 debug_event_class_type;    // Byte  0
+	__u8 reserved1[3];              // Bytes 3:1
+	__le16 stat_id;                 // Bytes 5:4
+	__u8 stat_info;                 // Byte  6
+	__u8 namespace_info;            // Byte  7
+	__le16 stat_data_size;          // Bytes 9:8
+	__le16 nsid;                    // Bytes 11:10
 };
 
 struct __packed nvme_ocp_statistics_identifier_string_table
