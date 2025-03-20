@@ -1,4 +1,9 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
+LIBNVME_1.13 {
+	global:
+		nvme_subsystem_get_model;
+};
+
 LIBNVME_1.12 {
 	global:
 		nvme_lm_cdq;
