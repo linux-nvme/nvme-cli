@@ -532,6 +532,11 @@ const char *nvme_subsystem_get_model(nvme_subsystem_t s)
 	return s->model;
 }
 
+const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s)
+{
+	return s->firmware;
+}
+
 nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 {
 	return list_top(&s->ctrls, struct nvme_ctrl, entry);
