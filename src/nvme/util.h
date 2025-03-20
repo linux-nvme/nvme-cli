@@ -646,9 +646,6 @@ enum nvme_version {
  */
 const char *nvme_get_version(enum nvme_version type);
 
-#define NVME_UUID_LEN_STRING	37  /* 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
-#define NVME_UUID_LEN		16
-
 /**
  * nvme_uuid_to_string - Return string represenation of encoded UUID
  * @uuid:	Binary encoded input UUID
