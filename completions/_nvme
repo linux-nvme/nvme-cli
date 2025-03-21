@@ -509,9 +509,7 @@ _nvme () {
 				-d':alias for --data-area'
 				--config-file':JSON configuration file'
 				-j':alias for --config-file'
-				--source-file':data source <device> is binary
-				 file containing log dump instead
-				 of block or character device'
+				--source-file':binary file containing log dump to parse'
 				-s':alias for --source-file'
 				)
 				_arguments '*:: :->subcmds'
