@@ -162,8 +162,7 @@ static void nvme_resources_free(struct nvme_resources *res)
 	htable_subsys_clear(&res->ht_s);
 }
 
-static void stdout_feature_show_fields(enum nvme_features_id fid,
-				       unsigned int result,
+static void stdout_feature_show_fields(enum nvme_features_id fid, __u32 cdw11, unsigned int result,
 				       unsigned char *buf);
 static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 
@@ -463,7 +462,7 @@ static void pel_set_feature_event(void *pevent_log_info, __u32 offset)
 		cdw12 = le32_to_cpu(set_feat_event->cdw_mem[2]);
 		stdout_persistent_event_log_fdp_events(cdw11, cdw12, mem_buf);
 	} else {
-		stdout_feature_show_fields(fid, cdw11, mem_buf);
+		stdout_feature_show_fields(fid, cdw11, cdw11, mem_buf);
 	}
 }
 
@@ -4864,6 +4863,67 @@ static void stdout_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwintt));
 }
 
+static void stdout_perfc_std_attr(struct nvme_std_perf_attr *std_perf)
+{
+	printf("\tRandom 4 KiB average read latency (R4KARL): %s\n",
+	       nvme_perf_lat_to_string(std_perf->r4karl));
+}
+
+static void stdout_perfc_attr_id_list(struct nvme_perf_attr_id_list *id_list)
+{
+	int i;
+
+	printf("\tAttribute Type (ATTRTYP): %s\n",
+	       nvme_perf_attr_type_to_string(NVME_GET(id_list->attrtyp, FEAT_PERFC_ATTRTYP)));
+	printf("\tMaximum Saveable Vendor Specific Performance Attributes (MSVSPA): %u\n",
+	       id_list->msvspa);
+	printf("\tUnused Saveable Vendor Specific Performance Attributes (USVSPA): %u\n",
+	       id_list->usvspa);
+	for (i = 0; i < ARRAY_SIZE(id_list->id_list); i++)
+		printf("\tPerformance Attribute %Xh Identifier (PA%XHI): %s\n", i, i,
+		       util_uuid_to_string(id_list->id_list[i].id));
+}
+
+static void stdout_perfc_vs_attr(struct nvme_vs_perf_attr *vs_perf)
+{
+	printf("\tPerformance Attribute Identifier (PAID): %s\n",
+	       memcmp(vs_perf->paid.id, zero_uuid, sizeof(zero_uuid)) ?
+	       util_uuid_to_string(vs_perf->paid.id) : "Unused");
+	printf("\tAttribute Length (ATTRL): %u\n", le16_to_cpu(vs_perf->attrl));
+	printf("\tVendor Specific (VS)\n");
+	d((unsigned char *)vs_perf->vs, le16_to_cpu(vs_perf->attrl), 16, 1);
+}
+
+static void stdout_perf_characteristics(__u32 cdw11, unsigned char *buf)
+{
+	struct nvme_perf_characteristics *attr = (struct nvme_perf_characteristics *)buf;
+	__u8 attri;
+	bool rvspa;
+
+	nvme_feature_decode_perf_characteristics(cdw11, &attri, &rvspa);
+
+	printf("\tAttribute Index (ATTRI): %s\n", nvme_attr_index_to_string(attri));
+	printf("\tRevert Vendor Specific Performance Attribute (RVSPA): %s\n",
+	       rvspa ? "Deleted" : "Not deleted");
+
+	if (!attr)
+		return;
+
+	switch (attri) {
+	case 0:
+		stdout_perfc_std_attr(attr->std_perf);
+		break;
+	case 0xc0:
+		stdout_perfc_attr_id_list(attr->id_list);
+		break;
+	case 0xc1 ... 0xff:
+		stdout_perfc_vs_attr(attr->vs_perf);
+		break;
+	default:
+		break;
+	}
+}
+
 static void stdout_host_metadata(enum nvme_features_id fid,
 				 struct nvme_host_metadata *data)
 {
@@ -4894,8 +4954,7 @@ static void stdout_feature_show(enum nvme_features_id fid, int sel, unsigned int
 	       nvme_feature_to_string(fid), nvme_select_to_string(sel), result ? 10 : 8, result);
 }
 
-static void stdout_feature_show_fields(enum nvme_features_id fid,
-				       unsigned int result,
+static void stdout_feature_show_fields(enum nvme_features_id fid, __u32 cdw11, unsigned int result,
 				       unsigned char *buf)
 {
 	const char *async = "Send async event";
@@ -5093,6 +5152,8 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tPower Loss Signaling Mode (PLSM): %s\n",
 		       nvme_pls_mode_to_string(NVME_GET(result, FEAT_PLS_MODE)));
 		break;
+	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
+		stdout_perf_characteristics(cdw11, buf);
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
 	case NVME_FEAT_FID_NS_METADATA:

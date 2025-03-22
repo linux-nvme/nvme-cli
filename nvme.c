@@ -4749,7 +4749,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 			if (NVME_CHECK(cfg.sel, GET_FEATURES_SEL, SUPPORTED))
 				nvme_show_select_result(cfg.feature_id, result);
 			else if (verbose || !strcmp(nvme_cfg.output_format, "json"))
-				nvme_feature_show_fields(cfg.feature_id, result, buf);
+				nvme_feature_show_fields(cfg.feature_id, cfg.cdw11, result, buf);
 			else if (buf)
 				d(buf, cfg.data_len, 16, 1);
 		} else if (buf) {

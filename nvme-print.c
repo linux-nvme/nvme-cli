@@ -1364,14 +1364,105 @@ const char *nvme_pls_mode_to_string(__u8 mode)
 	return "Reserved";
 }
 
+const char *nvme_attr_index_to_string(__u8 index)
+{
+	switch (index) {
+	case 0:
+		return "Standard Performance Attribute 00h";
+	case 0xc0:
+		return "Performance Attribute Identifier List";
+	case 0xc1 ... 0xff:
+		return "Vendor Specific Performance Attribute";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
+const char *nvme_perf_lat_to_string(__u8 lat)
+{
+	switch (lat) {
+	case 0:
+		return "Not Reported";
+	case 1:
+		return "Greater than or equal to 100 seconds";
+	case 2:
+		return "Greater than or equal to 50 seconds and less than 100 seconds";
+	case 3:
+		return "Greater than or equal to 10 seconds and less than 50 seconds";
+	case 4:
+		return "Greater than or equal to 5 seconds and less than 10 seconds";
+	case 5:
+		return "Greater than or equal to 1 second and less than 5 seconds";
+	case 6:
+		return "Greater than or equal to 500 milliseconds and less than 1 second";
+	case 7:
+		return "Greater than or equal to 100 milliseconds and less than 500 milliseconds";
+	case 8:
+		return "Greater than or equal to 50 milliseconds and less than 100 milliseconds";
+	case 9:
+		return "Greater than or equal to 10 milliseconds and less than 50 milliseconds";
+	case 0xa:
+		return "Greater than or equal to 5 milliseconds and less than 10 milliseconds";
+	case 0xb:
+		return "Greater than or equal to 1 millisecond and less than 5 milliseconds";
+	case 0xc:
+		return "Greater than or equal to 500 microseconds and less than 1 millisecond";
+	case 0xd:
+		return "Greater than or equal to 100 microseconds and less than 500 microseconds";
+	case 0xe:
+		return "Greater than or equal to 50 microseconds and less than 100 microseconds";
+	case 0xf:
+		return "Greater than or equal to 10 microseconds and less than 50 microseconds";
+	case 0x10:
+		return "Greater than or equal to 5 microseconds and less than 10 microseconds";
+	case 0x11:
+		return "Greater than or equal to 1 microsecond and less than 5 microseconds";
+	case 0x12:
+		return "Greater than or equal to 500 nanoseconds and less than 1 microsecond";
+	case 0x13:
+		return "Greater than or equal to 100 nanoseconds and less than 500 nanoseconds";
+	case 0x14:
+		return "Greater than or equal to 50 nanoseconds and less than 100 nanoseconds";
+	case 0x15:
+		return "Greater than or equal to 10 nanoseconds and less than 50 nanoseconds";
+	case 0x16:
+		return "Greater than or equal to 5 nanoseconds and less than 10 nanoseconds";
+	case 0x17:
+		return "Greater than or equal to 1 nanosecond and less than 5 nanoseconds";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
+const char *nvme_perf_attr_type_to_string(__u8 type)
+{
+	switch (type) {
+	case 0:
+		return "Current attribute";
+	case 1:
+		return "Default attribute";
+	case 2:
+		return "Saved attribute";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);
 }
 
-void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf)
+void nvme_feature_show_fields(enum nvme_features_id fid, __u32 cdw11, unsigned int result,
+			      unsigned char *buf)
 {
-	nvme_print(show_feature_fields, NORMAL, fid, result, buf);
+	nvme_print(show_feature_fields, NORMAL, fid, cdw11, result, buf);
 }
 
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
