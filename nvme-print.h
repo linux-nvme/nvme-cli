@@ -81,7 +81,7 @@ struct print_ops {
 	void (*zns_id_ns)(struct nvme_zns_id_ns *ns, struct nvme_id_ns *id_ns);
 	void (*zns_report_zones)(void *report, __u32 descs, __u8 ext_size, __u32 report_size, struct json_object *zone_list);
 	void (*show_feature)(enum nvme_features_id fid, int sel, unsigned int result);
-	void (*show_feature_fields)(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
+	void (*show_feature_fields)(enum nvme_features_id fid, __u32 cdw11, unsigned int result, unsigned char *buf);
 	void (*id_ctrl_rpmbs)(__le32 ctrl_rpmbs);
 	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
 	void (*lba_status_info)(__u32 result);
@@ -249,7 +249,8 @@ void nvme_show_topology(nvme_root_t t,
 			nvme_print_flags_t flags);
 
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result);
-void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
+void nvme_feature_show_fields(enum nvme_features_id fid, __u32 cdw11, unsigned int result,
+			      unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 	void *buf, __u32 len, nvme_print_flags_t flags);
 void nvme_show_select_result(enum nvme_features_id fid, __u32 result);
@@ -322,6 +323,9 @@ const char *nvme_pel_ehai_pit_to_string(enum nvme_pel_ehai_pit pit);
 const char *nvme_ssi_state_to_string(__u8 state);
 const char *nvme_time_scale_to_string(__u8 ts);
 const char *nvme_pls_mode_to_string(__u8 mode);
+const char *nvme_attr_index_to_string(__u8 index);
+const char *nvme_perf_lat_to_string(__u8 lat);
+const char *nvme_perf_attr_type_to_string(__u8 type);
 
 void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len);
