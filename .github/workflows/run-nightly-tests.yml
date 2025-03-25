@@ -7,15 +7,28 @@ on:
     - cron: '0 01 * * *'
 
 jobs:
-  nightly-tests:
-    runs-on: nvme-nvm
+  request-kernel-version:
     if: github.repository == 'linux-nvme/nvme-cli'
+    runs-on: ubuntu-latest
+    steps:
+      #We don't have to build the kernel here, as we have a cron job running on
+      #the k8s cluster that builds this target nightly.
+      - name: Request nightly Linus' master tree kernel build for the next job
+        run: |
+          echo "KERNEL_VERSION=linus-master" >> $GITHUB_ENV
+      - name: Notifying the next job to pick up the correct kernel tag
+        run: |
+          echo "${KERNEL_VERSION}"
+  nightly-tests:
+    if: github.repository == 'linux-nvme/nvme-cli'
+    runs-on: arc-vm-runner-set
+    needs: request-kernel-version
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
       #Expose all devices to the container through the `privileged` flag.
       #
       #BDEV0 is an environment variable of the self-hosted runner instance
-      #that contains a valid nvme ctrl name which is capable of the nvm
+      #that contains a valid nvme namespace which is capable of the nvm
       #command set.
       options: '--privileged -v "/dev":"/dev":z -e BDEV0'
     steps:
@@ -31,11 +44,11 @@ jobs:
           scripts/build.sh -b release -c gcc
       - name: Overwrite test config
         run: |
-          CONTROLLER=$(echo /dev/${BDEV0} | sed 's/n[0-9]*$//')
+          CONTROLLER=$(echo ${BDEV0} | sed 's/n[0-9]*$//')
           cat > tests/config.json << EOF
           {
             "controller" : "$CONTROLLER",
-            "ns1": "/dev/${BDEV0}",
+            "ns1": "${BDEV0}",
             "log_dir": "tests/nvmetests/",
             "nvme_bin": "$(pwd)/.build-ci/nvme"
           }
