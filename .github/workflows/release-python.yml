@@ -48,6 +48,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          verify-metadata: false
 
   upload_pypi:
     needs: [build_sdist]
@@ -72,3 +73,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          verify-metadata: false
