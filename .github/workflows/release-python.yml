@@ -11,6 +11,10 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build_sdist:
     name: Build source distribution
