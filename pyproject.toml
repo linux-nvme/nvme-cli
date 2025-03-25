@@ -11,12 +11,9 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+description="Provides library functions for accessing and managing nvme devices on a Linux system."
 description-file="README.md"
 home-page = "https://github.com/linux-nvme/libnvme"
 license="LGPL-2.1-or-later"
