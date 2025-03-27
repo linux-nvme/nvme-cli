@@ -19,7 +19,7 @@
 #define nvme_print(name, flags, ...)				\
 	do {							\
 		struct print_ops *ops = nvme_print_ops(flags);	\
-		if (ops && ops->name)				\
+		if (ops && ops->name && !nvme_cfg.dry_run)	\
 			ops->name(__VA_ARGS__);			\
 	} while (false)
 
