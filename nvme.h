@@ -78,6 +78,7 @@ struct nvme_config {
 	char *output_format;
 	int verbose;
 	__u32 timeout;
+	bool dry_run;
 };
 
 /*
@@ -90,6 +91,7 @@ struct nvme_config {
 		OPT_FMT("output-format", 'o', &nvme_cfg.output_format, output_format), \
 		##__VA_ARGS__,                                                         \
 		OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout),       \
+		OPT_FLAG("dry-run",        0, &nvme_cfg.dry_run,       dry_run),       \
 		OPT_END()                                                              \
 	}
 
@@ -131,6 +133,7 @@ static inline DEFINE_CLEANUP_FUNC(
 extern const char *output_format;
 extern const char *timeout;
 extern const char *verbose;
+extern const char *dry_run;
 extern struct nvme_config nvme_cfg;
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags);

@@ -102,7 +102,6 @@ struct passthru_config {
 	char	*metadata;
 	bool	raw_binary;
 	bool	show_command;
-	bool	dry_run;
 	bool	read;
 	bool	write;
 	__u8	prefill;
@@ -192,6 +191,7 @@ const char *output_format = "Output format: normal|binary";
 #endif /* CONFIG_JSONC */
 const char *timeout = "timeout value, in milliseconds";
 const char *verbose = "Increase output verbosity";
+const char *dry_run = "show command instead of sending";
 
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
@@ -201,7 +201,6 @@ static const char *csi = "command set identifier";
 static const char *buf_len = "buffer len (if) data is sent or received";
 static const char *domainid = "Domain Identifier";
 static const char *doper = "directive operation";
-static const char *dry = "show command instead of sending";
 static const char *dspec_w_dtype = "directive specification associated with directive type";
 static const char *dtype = "directive type";
 static const char *endgid = "Endurance Group Identifier (ENDGID)";
@@ -444,6 +443,8 @@ static int parse_args(int argc, char *argv[], const char *desc,
 
 	log_level = map_log_level(nvme_cfg.verbose, false);
 	nvme_init_default_logging(stderr, log_level, false, false);
+
+	set_dry_run(nvme_cfg.dry_run);
 
 	return 0;
 }
@@ -8060,7 +8061,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		__u16	dspec;
 		__u8	dsmgmt;
 		bool	show;
-		bool	dry_run;
 		bool	latency;
 		bool	force;
 	};
@@ -8085,7 +8085,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.dspec			= 0,
 		.dsmgmt			= 0,
 		.show			= false,
-		.dry_run		= false,
 		.latency		= false,
 		.force			= false,
 	};
@@ -8110,7 +8109,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
 		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
 		  OPT_FLAG("show-command",      'V', &cfg.show,              show),
-		  OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
+		  OPT_FLAG("dry-run",           'w', &nvme_cfg.dry_run,      dry_run),
 		  OPT_FLAG("latency",           't', &cfg.latency,           latency),
 		  OPT_FLAG("force",               0, &cfg.force,             force));
 
@@ -8286,7 +8285,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		}
 	}
 
-	if (cfg.show || cfg.dry_run) {
+	if (cfg.show || nvme_cfg.dry_run) {
 		printf("opcode       : %02x\n", opcode);
 		printf("nsid         : %02x\n", cfg.namespace_id);
 		printf("flags        : %02x\n", 0);
@@ -8304,7 +8303,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		printf("pif             : %02x\n", pif);
 		printf("sts             : %02x\n", sts);
 	}
-	if (cfg.dry_run)
+	if (nvme_cfg.dry_run)
 		return 0;
 
 	struct nvme_io_args args = {
@@ -9069,7 +9068,6 @@ static int passthru(int argc, char **argv, bool admin,
 		.metadata	= "",
 		.raw_binary	= false,
 		.show_command	= false,
-		.dry_run	= false,
 		.read		= false,
 		.write		= false,
 		.latency	= false,
@@ -9095,7 +9093,7 @@ static int passthru(int argc, char **argv, bool admin,
 		  OPT_FILE("metadata",     'M', &cfg.metadata,     metadata),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump),
 		  OPT_FLAG("show-command", 's', &cfg.show_command, show),
-		  OPT_FLAG("dry-run",      'd', &cfg.dry_run,      dry),
+		  OPT_FLAG("dry-run",      'd', &nvme_cfg.dry_run, dry_run),
 		  OPT_FLAG("read",         'r', &cfg.read,         re),
 		  OPT_FLAG("write",        'w', &cfg.write,        wr),
 		  OPT_FLAG("latency",      'T', &cfg.latency,      latency));
@@ -9172,7 +9170,7 @@ static int passthru(int argc, char **argv, bool admin,
 		}
 	}
 
-	if (cfg.show_command || cfg.dry_run) {
+	if (cfg.show_command || nvme_cfg.dry_run) {
 		printf("opcode       : %02x\n", cfg.opcode);
 		printf("flags        : %02x\n", cfg.flags);
 		printf("rsvd1        : %04x\n", cfg.rsvd);
@@ -9191,7 +9189,7 @@ static int passthru(int argc, char **argv, bool admin,
 		printf("cdw15        : %08x\n", cfg.cdw15);
 		printf("timeout_ms   : %08x\n", nvme_cfg.timeout);
 	}
-	if (cfg.dry_run)
+	if (nvme_cfg.dry_run)
 		return 0;
 
 	gettimeofday(&start_time, NULL);

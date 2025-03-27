@@ -13,6 +13,7 @@
 #include "logging.h"
 
 int log_level;
+static bool dry_run;
 
 int map_log_level(int verbose, bool quiet)
 {
@@ -42,6 +43,11 @@ int map_log_level(int verbose, bool quiet)
 		log_level = LOG_ERR;
 
 	return log_level;
+}
+
+void set_dry_run(bool enable)
+{
+	dry_run = enable;
 }
 
 static void nvme_show_common(struct nvme_passthru_cmd *cmd)
@@ -93,6 +99,11 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	struct timeval end;
 	int err;
 
+	if (dry_run) {
+		nvme_show_common(cmd);
+		return 0;
+	}
+
 	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
 
@@ -116,11 +127,15 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 {
 	struct timeval start;
 	struct timeval end;
-	int err;
+	int err = 0;
+
+	if (dry_run) {
+		nvme_show_common((struct nvme_passthru_cmd *)cmd);
+		return 0;
+	}
 
 	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
-
 
 	err = ioctl(fd, ioctl_cmd, cmd);
 
