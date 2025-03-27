@@ -14,11 +14,14 @@ COMMAND_LIST(
 	ENTRY("ave-discovery-log", "Retrieve AVE Discovery Log, show it", get_ave_discovery_log)
 	ENTRY("boot-part-log", "Retrieve Boot Partition Log, show it", get_boot_part_log)
 	ENTRY("capacity-mgmt", "Submit Capacity Management Command, return results", capacity_mgmt)
-	ENTRY("changed-alloc-ns-list-log", "Retrieve Changed Allocated Namespace List, show it", get_changed_alloc_ns_list_log)
-	ENTRY("changed-ns-list-log", "Retrieve Changed Attached Namespace List, show it", get_changed_attach_ns_list_log)
+	ENTRY("changed-alloc-ns-list-log", "Retrieve Changed Allocated Namespace List, show it",
+	      get_changed_alloc_ns_list_log)
+	ENTRY("changed-ns-list-log", "Retrieve Changed Attached Namespace List, show it",
+	      get_changed_attach_ns_list_log)
 	ENTRY("check-dhchap-key", "Validate NVMeoF DH-HMAC-CHAP host key", check_dhchap_key)
 	ENTRY("check-tls-key", "Validate NVMeoF TLS PSK", check_tls_key)
-	ENTRY("cmdset-ind-id-ns", "I/O Command Set Independent Identify Namespace", cmd_set_independent_id_ns)
+	ENTRY("cmdset-ind-id-ns", "I/O Command Set Independent Identify Namespace",
+	      cmd_set_independent_id_ns)
 	ENTRY("compare", "Submit a Compare command, return results", compare)
 	ENTRY("config", "Configuration of NVMeoF subsystems", config_cmd)
 	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd)
@@ -27,23 +30,32 @@ COMMAND_LIST(
 	ENTRY("create-ns", "Creates a namespace with the provided parameters", create_ns)
 	ENTRY("delete-ns", "Deletes a namespace from the controller", delete_ns)
 	ENTRY("detach-ns", "Detaches a namespace from requested controller(s)", detach_ns)
-	ENTRY("device-self-test", "Perform the necessary tests to observe the performance", device_self_test)
-	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd) \
+	ENTRY("device-self-test", "Perform the necessary tests to observe the performance",
+	      device_self_test)
+	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller",
+	      dim_cmd)
 	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
 	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd)
-	ENTRY("disconnect-all", "Disconnect from all connected NVMeoF subsystems", disconnect_all_cmd)
+	ENTRY("disconnect-all", "Disconnect from all connected NVMeoF subsystems",
+	      disconnect_all_cmd)
 	ENTRY("discover", "Discover NVMeoF subsystems", discover_cmd)
-	ENTRY("dispersed-ns-participating-nss-log", "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it", get_dispersed_ns_participating_nss_log)
+	ENTRY("dispersed-ns-participating-nss-log",
+	      "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it",
+	      get_dispersed_ns_participating_nss_log)
 	ENTRY("dsm", "Submit a Data Set Management command, return results", dsm)
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)
-	ENTRY("endurance-event-agg-log", "Retrieve Endurance Group Event Aggregate Log, show it", get_endurance_event_agg_log)
+	ENTRY("endurance-event-agg-log", "Retrieve Endurance Group Event Aggregate Log, show it",
+	      get_endurance_event_agg_log)
 	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
 	ENTRY("error-log", "Retrieve Error Log, show it", get_error_log)
-	ENTRY("fid-support-effects-log", "Retrieve FID Support and Effects log and show it", get_fid_support_effects_log)
+	ENTRY("fid-support-effects-log", "Retrieve FID Support and Effects log and show it",
+	      get_fid_support_effects_log)
 	ENTRY("flush", "Submit a Flush command, return results", flush_cmd)
 	ENTRY("format", "Format namespace with new block format", format_cmd)
-	ENTRY("fw-commit", "Verify and commit firmware to a specific slot (fw-activate in old version < 1.2)", fw_commit, "fw-activate")
+	ENTRY("fw-commit",
+	      "Verify and commit firmware to a specific slot (fw-activate in old version < 1.2)",
+	      fw_commit, "fw-activate")
 	ENTRY("fw-download", "Download new firmware", fw_download)
 	ENTRY("fw-log", "Retrieve FW Log, show it", get_fw_log)
 	ENTRY("gen-dhchap-key", "Generate NVMeoF DH-HMAC-CHAP host key", gen_dhchap_key)
@@ -60,8 +72,12 @@ COMMAND_LIST(
 	ENTRY("id-domain", "Send NVMe Identify Domain List, display structure", id_domain)
 	ENTRY("id-iocs", "Send NVMe Identify I/O Command Set, display structure", id_iocs)
 	ENTRY("id-ns", "Send NVMe Identify Namespace, display structure", id_ns)
-	ENTRY("id-ns-granularity", "Send NVMe Identify Namespace Granularity List, display structure", id_ns_granularity)
-	ENTRY("id-ns-lba-format", "Send NVMe Identify Namespace for the specified LBA Format index, display structure", id_ns_lba_format)
+	ENTRY("id-ns-granularity",
+	      "Send NVMe Identify Namespace Granularity List, display structure",
+	      id_ns_granularity)
+	ENTRY("id-ns-lba-format",
+	      "Send NVMe Identify Namespace for the specified LBA Format index, display structure",
+	      id_ns_lba_format)
 	ENTRY("id-nvmset", "Send NVMe Identify NVM Set List, display structure", id_nvmset)
 	ENTRY("id-uuid", "Send NVMe Identify UUID List, display structure", id_uuid)
 	ENTRY("io-mgmt-recv", "I/O Management Receive", io_mgmt_recv)
@@ -70,37 +86,58 @@ COMMAND_LIST(
 	ENTRY("lba-status-log", "Retrieve LBA Status Information Log, show it", get_lba_status_log)
 	ENTRY("list", "List all NVMe devices and namespaces on machine", list)
 	ENTRY("list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl)
-	ENTRY("list-endgrp", "Send NVMe Identify Endurance Group List, display structure", id_endurance_grp_list)
+	ENTRY("list-endgrp", "Send NVMe Identify Endurance Group List, display structure",
+	      id_endurance_grp_list)
 	ENTRY("list-ns", "Send NVMe Identify List, display structure", list_ns)
-	ENTRY("list-secondary", "List Secondary Controllers associated with a Primary Controller", list_secondary_ctrl)
+	ENTRY("list-secondary", "List Secondary Controllers associated with a Primary Controller",
+	      list_secondary_ctrl)
 	ENTRY("list-subsys", "List nvme subsystems", list_subsys)
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
-	ENTRY("media-unit-stat-log", "Retrieve the configuration and wear of media units, show it", get_media_unit_stat_log)
-	ENTRY("mgmt-addr-list-log", "Retrieve Management Address List Log, show it", get_mgmt_addr_list_log)
-	ENTRY("mi-cmd-support-effects-log", "Retrieve MI Command Support and Effects log and show it", get_mi_cmd_support_effects_log)
+	ENTRY("media-unit-stat-log", "Retrieve the configuration and wear of media units, show it",
+	      get_media_unit_stat_log)
+	ENTRY("mgmt-addr-list-log", "Retrieve Management Address List Log, show it",
+	      get_mgmt_addr_list_log)
+	ENTRY("mi-cmd-support-effects-log",
+	      "Retrieve MI Command Support and Effects log and show it",
+	      get_mi_cmd_support_effects_log)
 	ENTRY("ns-descs", "Send NVMe Namespace Descriptor List, display structure", ns_descs)
 	ENTRY("ns-rescan", "Rescans the NVME namespaces", ns_rescan)
 	ENTRY("nvme-mi-recv", "Submit a NVMe-MI Receive command, return results", nmi_recv)
 	ENTRY("nvme-mi-send", "Submit a NVMe-MI Send command, return results", nmi_send)
-	ENTRY("nvm-id-ctrl", "Send NVMe Identify Controller NVM Command Set, display structure", nvm_id_ctrl)
-	ENTRY("nvm-id-ns", "Send NVMe Identify Namespace NVM Command Set, display structure", nvm_id_ns)
-	ENTRY("nvm-id-ns-lba-format", "Send NVMe Identify Namespace NVM Command Set for the specified LBA Format index, display structure", nvm_id_ns_lba_format)
-	ENTRY("persistent-event-log", "Retrieve Persistent Event Log, show it", get_persistent_event_log)
-	ENTRY("phy-rx-eom-log", "Retrieve Physical Interface Receiver Eye Opening Measurement, show it", get_phy_rx_eom_log)
-	ENTRY("predictable-lat-log", "Retrieve Predictable Latency per Nvmset Log, show it", get_pred_lat_per_nvmset_log)
-	ENTRY("pred-lat-event-agg-log", "Retrieve Predictable Latency Event Aggregate Log, show it", get_pred_lat_event_agg_log)
-	ENTRY("primary-ctrl-caps", "Send NVMe Identify Primary Controller Capabilities", primary_ctrl_caps)
-	ENTRY("pull-model-ddc-req-log", "Retrieve Pull Model DDC Request Log, show it", get_pull_model_ddc_req_log)
-	ENTRY("reachability-associations-log", "Retrieve Reachability Associations Log, show it", get_reachability_associations_log)
-	ENTRY("reachability-groups-log", "Retrieve Reachability Groups Log, show it", get_reachability_groups_log)
+	ENTRY("nvm-id-ctrl", "Send NVMe Identify Controller NVM Command Set, display structure",
+	      nvm_id_ctrl)
+	ENTRY("nvm-id-ns", "Send NVMe Identify Namespace NVM Command Set, display structure",
+	      nvm_id_ns)
+	ENTRY("nvm-id-ns-lba-format",
+	      "Send NVMe Identify Namespace NVM Command Set for the specified LBA Format index, display structure",
+	      nvm_id_ns_lba_format)
+	ENTRY("persistent-event-log", "Retrieve Persistent Event Log, show it",
+	      get_persistent_event_log)
+	ENTRY("phy-rx-eom-log",
+	      "Retrieve Physical Interface Receiver Eye Opening Measurement, show it",
+	      get_phy_rx_eom_log)
+	ENTRY("predictable-lat-log", "Retrieve Predictable Latency per Nvmset Log, show it",
+	      get_pred_lat_per_nvmset_log)
+	ENTRY("pred-lat-event-agg-log", "Retrieve Predictable Latency Event Aggregate Log, show it",
+	      get_pred_lat_event_agg_log)
+	ENTRY("primary-ctrl-caps", "Send NVMe Identify Primary Controller Capabilities",
+	      primary_ctrl_caps)
+	ENTRY("pull-model-ddc-req-log", "Retrieve Pull Model DDC Request Log, show it",
+	      get_pull_model_ddc_req_log)
+	ENTRY("reachability-associations-log", "Retrieve Reachability Associations Log, show it",
+	      get_reachability_associations_log)
+	ENTRY("reachability-groups-log", "Retrieve Reachability Groups Log, show it",
+	      get_reachability_groups_log)
 	ENTRY("read", "Submit a read command, return results", read_cmd)
 	ENTRY("reset", "Resets the controller", reset)
 	ENTRY("resv-acquire", "Submit a Reservation Acquire, return results", resv_acquire)
-	ENTRY("resv-notif-log", "Retrieve Reservation Notification Log, show it", get_resv_notif_log)
+	ENTRY("resv-notif-log", "Retrieve Reservation Notification Log, show it",
+	      get_resv_notif_log)
 	ENTRY("resv-register", "Submit a Reservation Register, return results", resv_register)
 	ENTRY("resv-release", "Submit a Reservation Release, return results", resv_release)
 	ENTRY("resv-report", "Submit a Reservation Report, return results", resv_report)
-	ENTRY("rotational-media-info-log", "Retrieve Rotational Media Information Log, show it", get_rotational_media_info_log)
+	ENTRY("rotational-media-info-log", "Retrieve Rotational Media Information Log, show it",
+	      get_rotational_media_info_log)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
 	ENTRY("sanitize", "Submit a sanitize command", sanitize_cmd)
 	ENTRY("sanitize-log", "Retrieve sanitize log, show it", sanitize_log)
@@ -111,16 +148,22 @@ COMMAND_LIST(
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("set-reg", "Set a register and show the resulting value", set_register)
 	ENTRY("show-hostnqn", "Show NVMeoF host NQN", show_hostnqn_cmd)
-	ENTRY("show-regs", "Shows the controller registers or properties. Requires character device", show_registers)
-	ENTRY("show-topology", "Show the topology", show_topology_cmd) \
+	ENTRY("show-regs",
+	      "Shows the controller registers or properties. Requires character device",
+	      show_registers)
+	ENTRY("show-topology", "Show the topology", show_topology_cmd)
 	ENTRY("smart-log", "Retrieve SMART Log, show it", get_smart_log)
 	ENTRY("subsystem-reset", "Resets the subsystem", subsystem_reset)
-	ENTRY("supported-cap-config-log", "Retrieve the list of Supported Capacity Configuration Descriptors", get_supp_cap_config_log)
-	ENTRY("supported-log-pages", "Retrieve the Supported Log pages details, show it", get_supported_log_pages)
+	ENTRY("supported-cap-config-log",
+	      "Retrieve the list of Supported Capacity Configuration Descriptors",
+	      get_supp_cap_config_log)
+	ENTRY("supported-log-pages", "Retrieve the Supported Log pages details, show it",
+	      get_supported_log_pages)
 	ENTRY("telemetry-log", "Retrieve FW Telemetry log write to file", get_telemetry_log)
 	ENTRY("tls-key", "Manipulate NVMeoF TLS PSK", tls_key)
 	ENTRY("verify", "Submit a verify command, return results", verify_cmd)
-	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller", virtual_mgmt)
+	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller",
+	      virtual_mgmt)
 	ENTRY("write", "Submit a write command, return results", write_cmd)
 	ENTRY("write-uncor", "Submit a write uncorrectable command, return results", write_uncor)
 	ENTRY("write-zeroes", "Submit a write zeroes command, return results", write_zeroes)
