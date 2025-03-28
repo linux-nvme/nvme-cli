@@ -27,6 +27,9 @@ jobs:
       - name: Allow workspace
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      - name: Update python dependencies
+        run: pip install -U packaging
+
       - name: Build sdist
         run: pipx run build --sdist
 
@@ -48,7 +51,6 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
-          verify-metadata: false
 
   upload_pypi:
     needs: [build_sdist]
