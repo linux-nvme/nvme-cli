@@ -521,6 +521,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *command, str
 		.csuuidi = cfg.csuuidi,
 		.offset = cfg.offset,
 		.cntlid = cfg.cntlid,
+		.numd = cfg.numd,
 		.data = data,
 		.result = &result,
 	};
