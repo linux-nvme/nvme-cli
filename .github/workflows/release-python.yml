@@ -22,13 +22,16 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
+      - name: Install Python (if missing)
+        run: apt-get update && apt-get install -y python3 python3-pip
+
+      - name: Update python dependencies
+        run: pip install -U packaging
+
       - uses: actions/checkout@v4
 
       - name: Allow workspace
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-      - name: Update python dependencies
-        run: pip install -U packaging
 
       - name: Build sdist
         run: pipx run build --sdist
