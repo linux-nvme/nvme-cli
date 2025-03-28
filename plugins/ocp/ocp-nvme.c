@@ -1465,8 +1465,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	if (!opt.data_area) {
 		nvme_show_result("Missing data-area. Using default data area 1.\n");
 		opt.data_area = DATA_AREA_1;//Default data area 1
-	} else if (opt.data_area != 1 && opt.data_area != 2) {
-		nvme_show_result("Invalid data-area specified. Please specify 1 or 2.\n");
+	} else if ((opt.data_area < DATA_AREA_1) || (opt.data_area > DATA_AREA_4)) {
+		nvme_show_result("Invalid data-area specified. Please specify 1-4.\n");
 		goto out;
 	}
 

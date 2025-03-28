@@ -980,9 +980,10 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 
 	int status = 0;
 	unsigned int event_fifo_number = fifo_num + 1;
-	char *description = (char *)malloc((40 + 1) * sizeof(char));
+	const size_t desc_size = sizeof(char) * (40 + 1);
+	char *description = (char *)malloc(desc_size);
 
-	memset(description, 0, sizeof(40));
+	memset(description, 0, desc_size);
 
 	status =
 		parse_ocp_telemetry_string_log(event_fifo_number, 0, 0, EVENT_STRING, description);
@@ -1202,9 +1203,9 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 				(event_fifo[fifo_no].event_fifo_size  * SIZE_OF_DWORD);
 			__u8 *pfifo_start = NULL;
 
-			if (event_fifo[fifo_no].event_fifo_da == 1)
+			if (event_fifo[fifo_no].event_fifo_da == DATA_AREA_1)
 				pfifo_start = pda1_header_offset + fifo_offset;
-			else if (event_fifo[fifo_no].event_fifo_da == 2)
+			else if (event_fifo[fifo_no].event_fifo_da == DATA_AREA_2)
 				pfifo_start = pda2_offset + fifo_offset;
 			else {
 				nvme_show_error("Unsupported Data Area:[%d]", poffsets->data_area);
@@ -1222,7 +1223,7 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 	}
 
 	if (pevent_fifos_object != NULL && root != NULL) {
-		const char *data_area = (poffsets->data_area == 1 ? STR_DA_1_EVENT_FIFO_INFO :
+		const char *data_area = (poffsets->data_area == DATA_AREA_1 ? STR_DA_1_EVENT_FIFO_INFO :
 					STR_DA_2_EVENT_FIFO_INFO);
 
 		json_object_add_value_array(root, data_area, pevent_fifos_object);
@@ -1410,7 +1411,7 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 	__u8 *pstats_offset = NULL;
 	int parse_rc = 0;
 
-	if (poffsets->data_area == 1) {
+	if (poffsets->data_area == DATA_AREA_1) {
 		__u32 stats_da_1_start = *(__u32 *)(pda1_ocp_header_offset +
 			offsetof(struct nvme_ocp_header_in_da1, da1_statistic_start));
 		__u32 stats_da_1_size = *(__u32 *)(pda1_ocp_header_offset +
@@ -1422,7 +1423,7 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 
 		pstats_offset = pda1_ocp_header_offset + stats_da_1_start_dw;
 		statistics_size = stats_da_1_size_dw;
-	} else if (poffsets->data_area == 2) {
+	} else if (poffsets->data_area == DATA_AREA_2) {
 		__u32 stats_da_2_start = *(__u32 *)(pda1_ocp_header_offset +
 			offsetof(struct nvme_ocp_header_in_da1, da2_statistic_start));
 		__u32 stats_da_2_size = *(__u32 *)(pda1_ocp_header_offset +
@@ -1459,7 +1460,7 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 
 	if (root != NULL && pstats_array != NULL) {
 		const char *pdata_area =
-			(poffsets->data_area == 1 ? STR_DA_1_STATS : STR_DA_2_STATS);
+			(poffsets->data_area == DATA_AREA_1 ? STR_DA_1_STATS : STR_DA_2_STATS);
 
 		json_object_add_value_array(root, pdata_area, pstats_array);
 	}
@@ -1509,7 +1510,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			//Set DA to 1 and get offsets
 			struct nvme_ocp_telemetry_offsets offsets = { 0 };
 
-			offsets.data_area = 1;// Default DA - DA1
+			offsets.data_area = DATA_AREA_1;// Default DA - DA1
 
 			struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
 				(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
@@ -1562,8 +1563,8 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			}
 
 			//Set the DA to 2
-			if (options->data_area == 2) {
-				offsets.data_area = 2;
+			if (options->data_area >= DATA_AREA_2) {
+				offsets.data_area = DATA_AREA_2;
 				fprintf(fp, STR_LINE);
 				fprintf(fp, "%s\n", STR_DA_2_STATS);
 				fprintf(fp, STR_LINE);
@@ -1622,7 +1623,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 		//Set DA to 1 and get offsets
 		struct nvme_ocp_telemetry_offsets offsets = { 0 };
 
-		offsets.data_area = 1;
+		offsets.data_area = DATA_AREA_1;
 
 		struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
 			(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
@@ -1671,8 +1672,8 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 		}
 
 		//Set the DA to 2
-		if (options->data_area == 2) {
-			offsets.data_area = 2;
+		if (options->data_area >= DATA_AREA_2) {
+			offsets.data_area = DATA_AREA_2;
 			printf(STR_LINE);
 			printf("%s\n", STR_DA_2_STATS);
 			printf(STR_LINE);
@@ -1730,7 +1731,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	struct nvme_ocp_telemetry_offsets offsets = { 0 };
 
 	//Set DA to 1 and get offsets
-	offsets.data_area = 1;
+	offsets.data_area = DATA_AREA_1;
 	struct nvme_ocp_telemetry_common_header *ptelemetry_common_header =
 		(struct nvme_ocp_telemetry_common_header *) ptelemetry_buffer;
 
@@ -1776,9 +1777,9 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 		return -1;
 	}
 
-	if (options->data_area == 2) {
+	if (options->data_area >= DATA_AREA_2) {
 		//Set the DA to 2
-		offsets.data_area = 2;
+		offsets.data_area = DATA_AREA_2;
 		//Data Area 2 Statistics
 		status = parse_statistics(root, &offsets, NULL);
 		if (status != 0) {
