@@ -1,9 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 if json_c_dep.found()
-  sources += [
-    'plugins/solidigm/solidigm-nvme.c',
-  ]
   subdir('solidigm')
 endif
 
