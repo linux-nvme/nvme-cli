@@ -1,9 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-if json_c_dep.found()
-  subdir('solidigm')
-endif
-
 sources += [
   'plugins/amzn/amzn-nvme.c',
   'plugins/dapustor/dapustor-nvme.c',
@@ -32,9 +28,13 @@ sources += [
   'plugins/zns/zns.c',
 ]
 
-subdir('ocp')
 subdir('lm')
+subdir('ocp')
 
 if conf.get('HAVE_SED_OPAL') != 0
   subdir('sed')
+endif
+
+if json_c_dep.found()
+  subdir('solidigm')
 endif
