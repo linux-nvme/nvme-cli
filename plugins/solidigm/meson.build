@@ -1,4 +1,5 @@
 sources += [
+  'plugins/solidigm/solidigm-nvme.c',
   'plugins/solidigm/solidigm-id-ctrl.c',
   'plugins/solidigm/solidigm-util.c',
   'plugins/solidigm/solidigm-smart.c',
