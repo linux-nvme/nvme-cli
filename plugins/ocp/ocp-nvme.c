@@ -565,8 +565,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *cmd,
 		  OPT_BYTE("mode", 'm', &cfg.mode, mode),
 		  OPT_FLAG("save", 's', &cfg.save, save),
 		  OPT_BYTE("sel", 'S', &cfg.sel, sel),
-		  OPT_FLAG("no-uuid", 'n', NULL,
-			   "Skip UUID index search (UUID index not required for OCP 1.0)"));
+		  OPT_FLAG("no-uuid", 'n', NULL, no_uuid));
 
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
@@ -2026,8 +2025,7 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *c
 	OPT_ARGS(opts) = {
 		OPT_BYTE("power-state", 'p', &cfg.power_state, power_state),
 		OPT_FLAG("save", 's', &cfg.save, save),
-		OPT_FLAG("no-uuid", 'n', NULL,
-			 "Skip UUID index search (UUID index not required for OCP 1.0)"),
+		OPT_FLAG("no-uuid", 'n', NULL, no_uuid),
 		OPT_END()
 	};
 
@@ -2117,8 +2115,7 @@ static int get_dssd_power_state_feature(int argc, char **argv, struct command *c
 	OPT_ARGS(opts) = {
 		OPT_BYTE("sel", 'S', &cfg.sel, sel),
 		OPT_FLAG("all", 'a', NULL, all),
-		OPT_FLAG("no-uuid", 'n', NULL,
-			 "Skip UUID index search (UUID index not required for OCP 1.0)"),
+		OPT_FLAG("no-uuid", 'n', NULL, no_uuid),
 		OPT_END()
 	};
 
@@ -2176,8 +2173,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	OPT_ARGS(opts) = {
 		OPT_BYTE("plp_health_interval", 'p', &cfg.plp_health_interval, plp_health_interval),
 		OPT_FLAG("save", 's', &cfg.save, save),
-		OPT_FLAG("no-uuid", 'n', NULL,
-			"Skip UUID index search (UUID index not required for OCP 1.0)"),
+		OPT_FLAG("no-uuid", 'n', NULL, no_uuid),
 		OPT_END()
 	};
 
