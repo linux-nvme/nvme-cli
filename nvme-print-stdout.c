@@ -5609,7 +5609,7 @@ static void stdout_perror(const char *msg, va_list ap)
 	_cleanup_free_ char *error = NULL;
 
 	if (vasprintf(&error, msg, ap) < 0)
-		error = "Could not allocate string";
+		error = alloc_error;
 
 	perror(error);
 }

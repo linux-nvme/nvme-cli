@@ -26,6 +26,8 @@
 #define nvme_print_output_format(name, ...)			\
 	nvme_print(name, nvme_is_output_format_json() ? JSON : NORMAL, ##__VA_ARGS__);
 
+char *alloc_error = "Could not allocate string";
+
 static struct print_ops *nvme_print_ops(nvme_print_flags_t flags)
 {
 	struct print_ops *ops = NULL;

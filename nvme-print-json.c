@@ -119,7 +119,7 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 	va_start(ap, v);
 
 	if (vasprintf(&value, v, ap) < 0)
-		value = "Could not allocate string";
+		value = alloc_error;
 
 	obj_add_str(o, "Result", value);
 
@@ -135,7 +135,7 @@ static void obj_add_key(struct json_object *o, const char *k, const char *v, ...
 	va_start(ap, v);
 
 	if (vasprintf(&value, v, ap) < 0)
-		value = "Could not allocate string";
+		value = alloc_error;
 
 	obj_add_str(o, k, value);
 
@@ -4582,7 +4582,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 	_cleanup_free_ char *value = NULL;
 
 	if (vasprintf(&value, msg, ap) < 0)
-		value = "Could not allocate string";
+		value = alloc_error;
 
 	sprintf(json_str, "Error: %s", value);
 	r = obj_create(json_str);
@@ -4622,7 +4622,7 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 	_cleanup_free_ char *value = NULL;
 
 	if (vasprintf(&value, msg, ap) < 0)
-		value = "Could not allocate string";
+		value = alloc_error;
 
 	obj_add_str(r, error ? "error" : "result", value);
 
@@ -4636,7 +4636,7 @@ static void json_output_perror(const char *msg, va_list ap)
 	_cleanup_free_ char *error = NULL;
 
 	if (vasprintf(&error, msg, ap) < 0)
-		error = "Could not allocate string";
+		error = alloc_error;
 
 	obj_add_key(r, "error", "%s: %s", error, strerror(errno));
 
