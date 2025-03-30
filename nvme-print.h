@@ -108,7 +108,7 @@ struct print_ops {
 	/* status and error messages */
 	void (*connect_msg)(nvme_ctrl_t c);
 	void (*show_message)(bool error, const char *msg, va_list ap);
-	void (*show_perror)(const char *msg);
+	void (*show_perror)(const char *msg, va_list ap);
 	void (*show_status)(int status);
 	void (*show_error_status)(int status, const char *msg, va_list ap);
 
@@ -326,7 +326,7 @@ const char *nvme_pls_mode_to_string(__u8 mode);
 void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_show_message(bool error, const char *msg, ...);
-void nvme_show_perror(const char *msg);
+void nvme_show_perror(const char *msg, ...);
 void nvme_show_error_status(int status, const char *msg, ...);
 void nvme_show_init(void);
 void nvme_show_finish(void);

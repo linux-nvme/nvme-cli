@@ -5604,9 +5604,14 @@ static void stdout_message(bool error, const char *msg, va_list ap)
 	fprintf(error ? stderr : stdout, "\n");
 }
 
-static void stdout_perror(const char *msg)
+static void stdout_perror(const char *msg, va_list ap)
 {
-	perror(msg);
+	_cleanup_free_ char *error = NULL;
+
+	if (vasprintf(&error, msg, ap) < 0)
+		error = "Could not allocate string";
+
+	perror(error);
 }
 
 static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)

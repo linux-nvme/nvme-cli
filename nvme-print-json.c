@@ -4629,16 +4629,16 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 	obj_print(r);
 }
 
-static void json_output_perror(const char *msg)
+static void json_output_perror(const char *msg, va_list ap)
 {
 	struct json_object *r = json_create_object();
 
 	_cleanup_free_ char *error = NULL;
 
-	if (asprintf(&error, "%s: %s", msg, strerror(errno)) < 0)
+	if (vasprintf(&error, msg, ap) < 0)
 		error = "Could not allocate string";
 
-	obj_add_str(r, "error", error);
+	obj_add_key(r, "error", "%s: %s", error, strerror(errno));
 
 	json_output_object(r);
 }

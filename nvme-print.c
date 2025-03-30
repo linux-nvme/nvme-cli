@@ -1460,15 +1460,20 @@ void nvme_show_message(bool error, const char *msg, ...)
 	va_end(ap);
 }
 
-void nvme_show_perror(const char *msg)
+void nvme_show_perror(const char *msg, ...)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
+	va_list ap;
+
+	va_start(ap, msg);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
 	if (ops && ops->show_perror)
-		ops->show_perror(msg);
+		ops->show_perror(msg, ap);
+
+	va_end(ap);
 }
 
 void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
