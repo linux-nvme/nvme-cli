@@ -464,8 +464,11 @@ void json_add_formatted_u32_str(struct json_object *pobject, const char *msg, un
 void json_add_formatted_var_size_str(struct json_object *pobject, const char *msg, __u8 *pdata,
 	unsigned int data_size)
 {
-	char description_str[256] = "";
+	char *description_str = NULL;
 	char temp_buffer[3] = { 0 };
+
+	/* Allocate 2 chars for each value in the data + 2 bytes for the null terminator */
+	description_str = (char *) calloc(1, data_size*2 + 2);
 
 	for (size_t i = 0; i < data_size; ++i) {
 		sprintf(temp_buffer, "%02X", pdata[i]);
@@ -473,6 +476,7 @@ void json_add_formatted_var_size_str(struct json_object *pobject, const char *ms
 	}
 
 	json_object_add_value_string(pobject, msg, description_str);
+	free(description_str);
 }
 #endif /* CONFIG_JSONC */
 

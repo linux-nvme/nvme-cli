@@ -138,8 +138,11 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp)
 {
-	char description_str[1024] = "";
+	char *description_str = NULL;
 	char temp_buffer[3] = { 0 };
+
+	/* Allocate 2 chars for each value in the data + 2 bytes for the null terminator */
+	description_str = (char *) calloc(1, data_size*2 + 2);
 
 	for (size_t i = 0; i < data_size; ++i) {
 		sprintf(temp_buffer, "%02X", pdata[i]);
@@ -150,6 +153,7 @@ void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t dat
 		fp = stdout;
 
 	fprintf(fp, "%s: %s\n", msg, description_str);
+	free(description_str);
 }
 
 void process_field_size_16(int offset, char *sfield, __u8 *buf, char *datastr)
