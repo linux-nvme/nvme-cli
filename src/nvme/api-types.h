@@ -14,7 +14,8 @@
 #define _LIBNVME_API_TYPES_H
 
 #include <stdbool.h>
-#include "types.h"
+
+#include <nvme/types.h>
 
 /*
  * _args struct definitions. These are used by both the ioctl-based and

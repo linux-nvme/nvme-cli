@@ -11,7 +11,7 @@
 
 #include <ifaddrs.h>
 
-#include "types.h"
+#include <nvme/types.h>
 
 /**
  * DOC: util.h

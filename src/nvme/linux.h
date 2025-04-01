@@ -11,8 +11,8 @@
 
 #include <stddef.h>
 
-#include "ioctl.h"
-#include "types.h"
+#include <nvme/ioctl.h>
+#include <nvme/types.h>
 
 /**
  * DOC: linux.h

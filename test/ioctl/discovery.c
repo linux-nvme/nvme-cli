@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#include <libnvme.h>
-
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
-#include "../../src/nvme/private.h"
+#include <libnvme.h>
+#include <nvme/private.h>
+
 #include "mock.h"
 #include "util.h"
 

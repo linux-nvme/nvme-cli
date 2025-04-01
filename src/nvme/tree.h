@@ -17,8 +17,8 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#include "ioctl.h"
-#include "util.h"
+#include <nvme/ioctl.h>
+#include <nvme/util.h>
 
 /**
  * DOC: tree.h

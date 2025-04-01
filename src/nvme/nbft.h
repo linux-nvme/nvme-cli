@@ -10,7 +10,8 @@
 #define _NBFT_H
 
 #include <sys/types.h>
-#include "util.h"
+
+#include <nvme/util.h>
 
 /**
  * DOC: nbft.h

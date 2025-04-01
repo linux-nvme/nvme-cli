@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#include <libnvme.h>
-
 #include <errno.h>
 #include <stdlib.h>
+
+#include <libnvme.h>
 
 #include "mock.h"
 #include "util.h"

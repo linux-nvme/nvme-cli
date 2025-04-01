@@ -87,8 +87,8 @@
 #include <endian.h>
 #include <stdint.h>
 
-#include "types.h"
-#include "tree.h"
+#include <nvme/types.h>
+#include <nvme/tree.h>
 
 /**
  * NVME_MI_MSGTYPE_NVME - MCTP message type for NVMe-MI messages.

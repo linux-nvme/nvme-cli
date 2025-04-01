@@ -9,7 +9,7 @@
 #include <syslog.h>
 
 /* for nvme_root_t */
-#include "tree.h"
+#include <nvme/tree.h>
 
 #ifndef MAX_LOGLEVEL
 #  define MAX_LOGLEVEL LOG_DEBUG

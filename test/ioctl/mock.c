@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#include "mock.h"
-
 #include <errno.h>
 #include <inttypes.h>
 #include <stdarg.h>
@@ -9,7 +7,9 @@
 #include <sys/ioctl.h>
 #include <dlfcn.h>
 
-#include "../../src/nvme/ioctl.h"
+#include <nvme/ioctl.h>
+
+#include "mock.h"
 #include "util.h"
 
 struct mock_cmds {

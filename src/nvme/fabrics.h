@@ -11,7 +11,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "tree.h"
+
+#include <nvme/tree.h>
 
 /**
  * DOC: fabrics.h

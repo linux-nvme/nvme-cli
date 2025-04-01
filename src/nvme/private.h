@@ -13,9 +13,8 @@
 #include <poll.h>
 #include <sys/socket.h>
 
-#include "fabrics.h"
-#include "mi.h"
-
+#include <nvme/fabrics.h>
+#include <nvme/mi.h>
 
 const char *nvme_subsys_sysfs_dir(void);
 const char *nvme_ctrl_sysfs_dir(void);

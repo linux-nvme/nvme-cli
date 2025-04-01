@@ -10,7 +10,8 @@
 #define _LIBNVME_FILTERS_H
 
 #include <dirent.h>
-#include "tree.h"
+
+#include <nvme/tree.h>
 
 /**
  * DOC: filters.h

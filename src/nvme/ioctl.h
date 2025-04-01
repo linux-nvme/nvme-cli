@@ -12,8 +12,9 @@
 
 #include <stddef.h>
 #include <sys/ioctl.h>
-#include "types.h"
-#include "api-types.h"
+
+#include <nvme/types.h>
+#include <nvme/api-types.h>
 
 /*
  * We can not always count on the kernel UAPI being installed. Use the same
