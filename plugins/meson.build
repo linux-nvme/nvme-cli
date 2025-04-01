@@ -30,6 +30,7 @@ sources += [
   'plugins/zns/zns.c',
 ]
 
+subdir('feat')
 subdir('lm')
 subdir('ocp')
 
