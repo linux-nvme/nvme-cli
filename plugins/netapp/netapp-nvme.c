@@ -611,21 +611,23 @@ static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 	unsigned long long lba;
 	char size[128];
 	char uuid_str[37] = " ";
+	char subnqn[257], subsysname[65];
 	int i;
 
 	char *formatstr = NULL;
 	char basestr[] =
-		"%s, Vserver %s, Namespace Path %s, NSID %d, UUID %s, %s\n";
-	char columnstr[] = "%-16s %-25s %-50s %-4d %-38s %-9s\n";
+		"%s, Vserver %s, Subsystem %s, Namespace Path %s, NSID %d, UUID %s, %s\n";
+	char columnstr[] = "%-16s %-25s %-25s %-50s %-4d %-38s %-9s\n";
 
 	if (format == NNORMAL)
 		formatstr = basestr;
 	else if (format == NCOLUMN) {
-		printf("%-16s %-25s %-50s %-4s %-38s %-9s\n",
-			"Device", "Vserver", "Namespace Path",
+		printf("%-16s %-25s %-25s %-50s %-4s %-38s %-9s\n",
+			"Device", "Vserver", "Subsystem", "Namespace Path",
 			"NSID", "UUID", "Size");
-		printf("%-16s %-25s %-50s %-4s %-38s %-9s\n",
+		printf("%-16s %-25s %-25s %-50s %-4s %-38s %-9s\n",
 			"----------------", "-------------------------",
+			"-------------------------",
 			"--------------------------------------------------",
 			"----", "--------------------------------------",
 			"---------");
@@ -639,9 +641,11 @@ static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 			nvme_uuid_to_string(devices[i].uuid, uuid_str);
 			netapp_get_ontap_labels(vsname, nspath,
 					devices[i].log_data);
+			ontap_get_subsysname(subnqn, subsysname,
+					&devices[i].ctrl);
 
-			printf(formatstr, devices[i].dev, vsname, nspath,
-					devices[i].nsid, uuid_str, size);
+			printf(formatstr, devices[i].dev, vsname, subsysname,
+					nspath, devices[i].nsid, uuid_str, size);
 			return;
 		}
 	}
@@ -651,9 +655,10 @@ static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 		netapp_get_ns_size(size, &lba, &devices[i].ns);
 		nvme_uuid_to_string(devices[i].uuid, uuid_str);
 		netapp_get_ontap_labels(vsname, nspath, devices[i].log_data);
+		ontap_get_subsysname(subnqn, subsysname, &devices[i].ctrl);
 
-		printf(formatstr, devices[i].dev, vsname, nspath,
-				devices[i].nsid, uuid_str, size);
+		printf(formatstr, devices[i].dev, vsname, subsysname,
+				nspath, devices[i].nsid, uuid_str, size);
 	}
 }
 
