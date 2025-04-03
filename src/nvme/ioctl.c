@@ -400,6 +400,7 @@ static int nvme_uring_cmd_admin_passthru_async(struct io_uring *ring, struct nvm
 	sqe->fd = args->fd;
 	sqe->opcode = IORING_OP_URING_CMD;
 	sqe->cmd_op = NVME_URING_CMD_ADMIN;
+	sqe->user_data = (__u64)(uintptr_t)args;
 
 	ret = io_uring_submit(ring);
 	if (ret < 0) {
@@ -412,8 +413,9 @@ static int nvme_uring_cmd_admin_passthru_async(struct io_uring *ring, struct nvm
 
 static int nvme_uring_cmd_wait_complete(struct io_uring *ring, int n)
 {
+	struct nvme_get_log_args *args;
 	struct io_uring_cqe *cqe;
-	int i, ret;
+	int i, ret = 0;
 
 	for (i = 0; i < n; i++) {
 		ret = io_uring_wait_cqe(ring, &cqe);
@@ -422,10 +424,18 @@ static int nvme_uring_cmd_wait_complete(struct io_uring *ring, int n)
 			return -1;
 		}
 
+		if (cqe->res) {
+			args = (struct nvme_get_log_args *)cqe->user_data;
+			if (args->result)
+				*args->result = cqe->res;
+			ret = cqe->res;
+			break;
+		}
+
 		io_uring_cqe_seen(ring, cqe);
 	}
 
-	return n;
+	return ret;
 }
 #endif
 
@@ -469,11 +479,14 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 #ifdef CONFIG_LIBURING
 		if (io_uring_kernel_support == IO_URING_AVAILABLE) {
 			if (n >= NVME_URING_ENTRIES) {
-				nvme_uring_cmd_wait_complete(&ring, n);
+				ret = nvme_uring_cmd_wait_complete(&ring, n);
 				n = 0;
 			}
 			n += 1;
 			ret = nvme_uring_cmd_admin_passthru_async(&ring, args);
+
+			if (ret)
+				nvme_uring_cmd_exit(&ring);
 		} else
 #endif
 		ret = nvme_get_log(args);
@@ -488,8 +501,8 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 	if (io_uring_kernel_support == IO_URING_AVAILABLE) {
 		ret = nvme_uring_cmd_wait_complete(&ring, n);
 		nvme_uring_cmd_exit(&ring);
-		if (ret < 0)
-			return -1;
+		if (ret)
+			return ret;
 	}
 #endif
 	return 0;
