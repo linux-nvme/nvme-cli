@@ -1933,9 +1933,9 @@ static int nvme_set_var_size_tags(__u32 *cmd_dw2, __u32 *cmd_dw3, __u32 *cmd_dw1
 		return -1;
 	}
 
-	*cmd_dw2 = cpu_to_be32(cdw2);
-	*cmd_dw3 = cpu_to_be32(cdw3);
-	*cmd_dw14 = cpu_to_be32(cdw14);
+	*cmd_dw2 = cdw2;
+	*cmd_dw3 = cdw3;
+	*cmd_dw14 = cdw14;
 	return 0;
 }
 
