@@ -2953,9 +2953,6 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 
 	num = argconfig_parse_comma_sep_array_u16(cfg.cntlist,
 						  list, ARRAY_SIZE(list));
-	if (!num)
-		fprintf(stderr, "warning: empty controller-id list will result in no actual change in namespace attachment\n");
-
 	if (num == -1) {
 		nvme_show_error("%s: controller id list is malformed", cmd->name);
 		return -EINVAL;
@@ -2965,7 +2962,18 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	if (!cntlist)
 		return -ENOMEM;
 
-	nvme_init_ctrl_list(cntlist, num, list);
+	if (argconfig_parse_seen(opts, "controllers")) {
+		nvme_init_ctrl_list(cntlist, num, list);
+	} else {
+		struct nvme_id_ctrl ctrl = { 0 };
+
+		if (nvme_cli_identify_ctrl(dev, &ctrl)) {
+			perror("identify-ctrl");
+			return -errno;
+		}
+		cntlist->num = cpu_to_le16(1);
+		cntlist->identifier[0] = ctrl.cntlid;
+	}
 
 	if (attach)
 		err = nvme_cli_ns_attach_ctrls(dev, cfg.namespace_id,
