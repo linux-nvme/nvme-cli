@@ -2541,6 +2541,8 @@ static void json_print_nvme_subsystem_list(nvme_root_t r, bool show_ana)
 			obj_add_str(subsystem_attrs, "NQN", nvme_subsystem_get_nqn(s));
 
 			if (json_print_ops.flags & VERBOSE) {
+				obj_add_str(subsystem_attrs, "Model",
+						nvme_subsystem_get_model(s));
 				obj_add_str(subsystem_attrs, "IOPolicy",
 						nvme_subsystem_get_iopolicy(s));
 				obj_add_str(subsystem_attrs, "Type",
@@ -4497,6 +4499,8 @@ static void json_simple_topology(nvme_root_t r)
 			obj_add_str(subsystem_attrs, "NQN", nvme_subsystem_get_nqn(s));
 
 			if (json_print_ops.flags & VERBOSE) {
+				obj_add_str(subsystem_attrs, "Model",
+						nvme_subsystem_get_model(s));
 				obj_add_str(subsystem_attrs, "IOPolicy",
 						nvme_subsystem_get_iopolicy(s));
 				obj_add_str(subsystem_attrs, "Type",

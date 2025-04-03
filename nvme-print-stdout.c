@@ -1112,6 +1112,8 @@ static void stdout_subsys_config(nvme_subsystem_t s)
 	       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
 
 	if (stdout_print_ops.flags & VERBOSE) {
+		printf("%*s   model=%s\n", len, " ",
+			nvme_subsystem_get_model(s));
 		printf("%*s   iopolicy=%s\n", len, " ",
 			nvme_subsystem_get_iopolicy(s));
 		printf("%*s   type=%s\n", len, " ",
