@@ -423,6 +423,64 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *cmd, 
 	return err;
 }
 
+static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command *cmd,
+					 struct plugin *plugin)
+{
+
+	const char *desc = "Define Issue Get Feature command (FID : 0xC5) Latency Monitor";
+	const __u8 fid = 0xc5;
+	struct nvme_dev *dev;
+	__u32 result;
+	int err;
+
+	struct config {
+		__u8 sel;
+		__u32 nsid;
+	};
+
+	struct config cfg = {
+		.sel = 0,
+		.nsid = 0;
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("sel", 'S', &cfg.sel, sel),
+		OPT_BYTE("nsid", 'n', &cfg.nsid, nsid),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+
+	struct nvme_get_features_args args = {
+		.args_size  = sizeof(args),
+		.fd         = dev_fd(dev),
+		.fid        = OCP_FID_LM,
+		.nsid       = cfg.nsid,
+		.sel        = cfg.sel,
+		.cdw11      = 0,
+		.uuidx      = 0,
+		.data_len   = 0,
+		.data       = NULL,
+		.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result     = &result,
+	};
+
+	err = nvme_get_features(&args);
+	if (!err) {
+		printf("get-feature:0xC5 %s value: %#08x\n", nvme_select_to_string(cfg.sel), result);
+
+		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+			nvme_show_select_result(fid, result);
+	} else {
+		nvme_show_error("Could not get feature: 0xC5");
+	}
+
+	return err;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
