@@ -3028,7 +3028,11 @@ struct nvme_id_nvmset_list {
  * @nvmsetid:	NVM Set Identifier
  * @endgid:	Endurance Group Identifier
  * @nstat:	Namespace Status
- * @rsvd15:	reserved
+ * @kpios:	Key Per I/O Status
+ * @maxkt:	Maximum Key Tag
+ * @rsvd18:	Reserved
+ * @rgrpid:	Reachability Group Identifier
+ * @rsvd24:	Reserved
  */
 struct nvme_id_independent_id_ns {
 	__u8	nsfeat;
@@ -3041,7 +3045,11 @@ struct nvme_id_independent_id_ns {
 	__le16	nvmsetid;
 	__le16	endgid;
 	__u8	nstat;
-	__u8	rsvd15[4081];
+	__u8	kpios;
+	__le16	maxkt;
+	__u8	rsvd18[2];
+	__le32	rgrpid;
+	__u8	rsvd24[4072];
 };
 
 /**
