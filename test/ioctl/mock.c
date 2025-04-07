@@ -118,7 +118,7 @@ void end_mock_cmds(void)
 	} \
 })
 
-#ifdef HAVE_GLIBC_IOCTL
+#if defined(HAVE_GLIBC_IOCTL) && HAVE_GLIBC_IOCTL == 1
 typedef int (*ioctl_func_t)(int, unsigned long, void *);
 int ioctl(int fd, unsigned long request, ...)
 #else
