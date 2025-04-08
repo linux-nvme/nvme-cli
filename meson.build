@@ -243,6 +243,20 @@ else
   conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
 endif
 
+if cc.has_function('TEMP_FAILURE_RETRY', prefix : '#include <errno.h>')
+  conf.set('TFR', 'TEMP_FAILURE_RETRY')
+else
+  conf.set('TFR(exp)', '''					\
+({								\
+	long int __result = 0; 					\
+	do {							\
+		__result = (long int)(exp);			\
+	} while ((__result == -1) && (errno == EINTR));		\
+	__result;						\
+})
+''')
+endif
+
 ################################################################################
 substs = configuration_data()
 substs.set('NAME',    meson.project_name())
