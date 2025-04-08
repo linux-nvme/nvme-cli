@@ -9990,8 +9990,8 @@ enum nvme_lm_migration_send_fields {
 	NVME_LM_RESUME_CNTLID_MASK			= 0xffff,
 
 	/* Migration Send - Set Controller State */
-	NVME_LM_SEQIND_SHIFT				= 16,
-	NVME_LM_SEQIND_MASK				= 0xf,
+	NVME_LM_SEQIND_SHIFT				= 0,
+	NVME_LM_SEQIND_MASK				= 0x3,
 	NVME_LM_SEQIND_NOT_FIRST_NOT_LAST		= 0,
 	NVME_LM_SEQIND_FIRST				= 1,
 	NVME_LM_SEQIND_LAST				= 2,
