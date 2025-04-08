@@ -280,7 +280,7 @@ static int lm_migration_send(int argc, char **argv, struct command *command, str
 			    "  1h = Suspend";
 	const char *dudmq = "Delete user data migration queue (DUDMQ) as part of suspend operation "
 			     "(CDW11[31])";
-	const char *seqind = "Sequence Indicator (CDW11[17:16])\n"
+	const char *seqind = "Sequence Indicator (CDW10[17:16])\n"
 			     "  0h = Not first not last\n"
 			     "  1h = First in two or more\n"
 			     "  2h = Last in two or more\n"
@@ -394,7 +394,7 @@ static int lm_migration_send(int argc, char **argv, struct command *command, str
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
 		.sel = cfg.sel,
-		.mos = NVME_SET(cfg.seqind, LM_MIGRATION_SEND_MOS),
+		.mos = NVME_SET(cfg.seqind, LM_SEQIND),
 		.cntlid = cfg.cntlid,
 		.csuuidi = cfg.csuuidi,
 		.uidx = cfg.uidx,
