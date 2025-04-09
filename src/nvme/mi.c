@@ -414,10 +414,24 @@ static int nvme_mi_verify_resp_mic(struct nvme_mi_resp *resp)
 	return resp->mic != ~crc;
 }
 
+__attribute__((weak)) void *nvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr,
+						 size_t hdr_len, const void *data, size_t data_len)
+{
+	return NULL;
+}
+
+__attribute__((weak)) void nvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr,
+					       size_t hdr_len, const void *data, size_t data_len,
+					       void *user_data) { }
+
 int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 		   struct nvme_mi_resp *resp)
 {
 	int rc;
+	void *user_data;
+
+	user_data = nvme_mi_submit_entry(req->hdr->type, req->hdr, req->hdr_len, req->data,
+					 req->data_len);
 
 	if (req->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
 		errno = EINVAL;
@@ -501,6 +515,9 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 		errno = EIO;
 		return -1;
 	}
+
+	nvme_mi_submit_exit(resp->hdr->type, resp->hdr, resp->hdr_len, resp->data, resp->data_len,
+			    user_data);
 
 	return 0;
 }
