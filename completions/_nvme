@@ -572,6 +572,8 @@ _nvme () {
 			(workload-tracker)
 				local _workload_tracker
 				_workload_tracker=(
+				'--uuid-index=:specify uuid index'
+				'-U:alias for --uuid-index'
 				--enable':Enable Workload Tracker'
 				-e':alias for --enable'
 				--disable':Disable Workload Tracker'

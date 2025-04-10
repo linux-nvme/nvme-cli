@@ -1229,7 +1229,7 @@ plugin_solidigm_opts () {
 		opts+=" --raw-binary -b"
 			;;
 		"workload-tracker")
-		opts+=" --enable -e --disable -d --sample-time= -s \
+		opts+=" --uuid-index= -U --enable -e --disable -d --sample-time= -s \
 		--type= -t --run-time= -r --flush-freq= -f \
 		--wall-clock -w --trigger-field= -T \
 		--trigger-threshold= -V --trigger-on-delta -D \
