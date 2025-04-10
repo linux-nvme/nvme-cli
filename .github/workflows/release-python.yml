@@ -12,6 +12,8 @@ jobs:
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.10"
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
@@ -31,6 +33,8 @@ jobs:
   upload_test_pypi:
     needs: [build_sdist]
     runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.10"
     environment: pypi
     permissions:
       id-token: write
@@ -41,8 +45,6 @@ jobs:
           path: dist
 
       - name: Publish package to TestPyPI
-        env:
-          PATH: ${{ github.workspace }}/venv/bin:$PATH
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
           repository-url: https://test.pypi.org/legacy/
@@ -50,6 +52,8 @@ jobs:
   upload_pypi:
     needs: [build_sdist]
     runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.10"
     environment: pypi
     permissions:
       id-token: write
