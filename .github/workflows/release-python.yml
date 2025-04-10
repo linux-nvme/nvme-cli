@@ -43,7 +43,7 @@ jobs:
       - name: Publish package to TestPyPI
         env:
           PATH: ${{ github.workspace }}/venv/bin:$PATH
-        uses: pypa/gh-action-pypi-publish@release/v1.12.4
+        uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -70,5 +70,5 @@ jobs:
           path: dist
 
       - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1.12.4
+        uses: pypa/gh-action-pypi-publish@v1.12.4
         if: steps.check-tag.outputs.match == 'true'
