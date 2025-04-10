@@ -6,14 +6,7 @@ on:
     branches: [master]
     tags:
       - '**'
-  pull_request:
-    branches: [master]
-
   workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write
 
 jobs:
   build_sdist:
@@ -38,12 +31,20 @@ jobs:
   upload_test_pypi:
     needs: [build_sdist]
     runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
     steps:
       - name: Install Python (if missing)
-        run: apt-get update && apt-get install -y python3 python3-pip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
 
       - name: Update python dependencies
-        run: python3 -m pip install -U packaging --break-system-packages
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -U packaging
 
       - uses: actions/download-artifact@v4
         with:
@@ -51,6 +52,8 @@ jobs:
           path: dist
 
       - name: Publish package to TestPyPI
+        env:
+          PATH: ${{ github.workspace }}/venv/bin:$PATH
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
@@ -58,13 +61,21 @@ jobs:
   upload_pypi:
     needs: [build_sdist]
     runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
     if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'linux-nvme/libnvme'
     steps:
       - name: Install Python (if missing)
-        run: apt-get update && apt-get install -y python3 python3-pip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
 
       - name: Update python dependencies
-        run: python3 -m pip install -U packaging --break-system-packages
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -U packaging
 
       - name: Check if it is a release tag
         id: check-tag
@@ -72,16 +83,16 @@ jobs:
            if [[ ${{ github.event.ref }} =~ ^refs/tags/v([0-9]+\.[0-9]+)(\.[0-9]+)?(-rc[0-9]+)?$ ]]; then
                echo ::set-output name=match::true
            fi
+
       - name: Download artifiact
         uses: actions/download-artifact@v4
         if: steps.check-tag.outputs.match == 'true'
         with:
           name: artifact
           path: dist
+
       - name: Publish package to PyPI
+        env:
+          PATH: ${{ github.workspace }}/venv/bin:$PATH
         uses: pypa/gh-action-pypi-publish@release/v1
         if: steps.check-tag.outputs.match == 'true'
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          verify-metadata: false
