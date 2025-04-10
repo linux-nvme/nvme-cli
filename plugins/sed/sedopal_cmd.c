@@ -127,11 +127,15 @@ char *sedopal_get_password(char *prompt)
 		return NULL;
 
 	len = strlen(pass);
-	if (len < SEDOPAL_MIN_PASSWORD_LEN)
+	if (len < SEDOPAL_MIN_PASSWORD_LEN) {
+		fprintf(stderr, "Error: password is not long enough\n");
 		return NULL;
+	}
 
-	if (len > SEDOPAL_MAX_PASSWORD_LEN)
+	if (len > SEDOPAL_MAX_PASSWORD_LEN) {
+		fprintf(stderr, "Error: password is too long\n");
 		return NULL;
+	}
 
 	return pass;
 }
@@ -425,8 +429,12 @@ static int sedopal_revert_psid(int fd)
 	rc = sedopal_set_key(&key);
 	if (rc == 0) {
 		rc = ioctl(fd, IOC_OPAL_PSID_REVERT_TPR, &key);
-		if (rc != 0)
-			fprintf(stderr, "PSID_REVERT_TPR rc %d\n", rc);
+		if (rc != 0) {
+			if (rc == EPERM)
+				fprintf(stderr, "Error: incorrect password\n");
+			else
+				fprintf(stderr, "PSID_REVERT_TPR rc %d\n", rc);
+		}
 	}
 
 	return rc;
@@ -457,6 +465,7 @@ int sedopal_cmd_revert(int fd)
 #ifdef IOC_OPAL_REVERT_LSP
 		struct opal_revert_lsp revert_lsp;
 		uint8_t locking_state;
+		char *revert = "LSP";
 
 		locking_state = sedopal_locking_state(fd);
 
@@ -481,6 +490,7 @@ int sedopal_cmd_revert(int fd)
 
 		rc = ioctl(fd, IOC_OPAL_REVERT_LSP, &revert_lsp);
 		if (rc == 0) {
+			revert = "TPER";
 			/*
 			 * TPER must also be reverted.
 			 */
@@ -488,12 +498,20 @@ int sedopal_cmd_revert(int fd)
 			if (rc != 0)
 				fprintf(stderr, "Error: revert TPR - %d\n", rc);
 		}
+
+		if (rc != 0) {
+			if (rc == EPERM)
+				fprintf(stderr, "Error: incorrect password\n");
+			else
+				fprintf(stderr, "Error: revert %s - %d\n",
+					revert, rc);
+		}
 #else
 		rc = -EOPNOTSUPP;
 #endif
 	}
 
-	if (rc != 0)
+	if ((rc != 0) && (rc != EPERM))
 		fprintf(stderr, "Error: failed reverting drive - %d\n", rc);
 
 	return rc;
@@ -533,7 +551,10 @@ int sedopal_cmd_password(int fd)
 	 */
 	rc = ioctl(fd, IOC_OPAL_SET_PW, &new_pw);
 	if (rc != 0) {
-		fprintf(stderr, "Error: failed setting password - %d\n", rc);
+		if (rc == EPERM)
+			fprintf(stderr, "Error: incorrect password\n");
+		else
+			fprintf(stderr, "Error: setting password - %d\n", rc);
 		return rc;
 	}
 
@@ -542,8 +563,12 @@ int sedopal_cmd_password(int fd)
 	 * set sid password
 	 */
 	rc = ioctl(fd, IOC_OPAL_SET_SID_PW, &new_pw);
-	if (rc != 0)
-		fprintf(stderr, "Error: failed setting SID password - %d\n", rc);
+	if (rc != 0) {
+		if (rc == EPERM)
+			fprintf(stderr, "Error: incorrect password\n");
+		else
+			fprintf(stderr, "Error: setting SID pw - %d\n", rc);
+	}
 #endif
 
 	return rc;

@@ -130,7 +130,7 @@ static int sed_opal_revert(int argc, char **argv, struct command *cmd,
 		return err;
 
 	err = sedopal_cmd_revert(dev->direct.fd);
-	if ((err != 0) && (err != -EOPNOTSUPP))
+	if ((err != 0) && (err != -EOPNOTSUPP) && (err != EPERM))
 		fprintf(stderr, "revert: SED error -  %s\n",
 				sedopal_error_to_text(err));
 
@@ -190,7 +190,7 @@ static int sed_opal_password(int argc, char **argv, struct command *cmd,
 		return err;
 
 	err = sedopal_cmd_password(dev->direct.fd);
-	if (err != 0)
+	if ((err != 0) && (err != EPERM))
 		fprintf(stderr, "password: SED error -  %s\n",
 				sedopal_error_to_text(err));
 
