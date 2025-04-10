@@ -2917,11 +2917,20 @@ static void stdout_cmd_set_independent_id_ns_nsfeat(__u8 nsfeat)
 
 static void stdout_cmd_set_independent_id_ns_nstat(__u8 nstat)
 {
-	__u8 rsvd1 = (nstat & 0xfe) >> 1;
+	__u8 rsvd3 = (nstat & 0xf8) >> 3;
+	__u8 ioi = (nstat & 0x6) >> 1;
 	__u8 nrdy = nstat & 0x1;
 
-	if (rsvd1)
-		printf("  [7:1] : %#x\tReserved\n", rsvd1);
+	static const char * const ioi_string[] = {
+		"I/O performance degradation is not reported",
+		"Reserved",
+		"I/O performance is not currently degraded",
+		"I/O performance is currently degraded"
+	};
+
+	if (rsvd3)
+		printf("  [7:3] : %#x\tReserved\n", rsvd3);
+	printf("  [2:1] : %#x\t%s\n", ioi, ioi_string[ioi]);
 	printf("  [0:0] : %#x\tName space is %sready\n",
 		nrdy, nrdy ? "" : "not ");
 	printf("\n");
@@ -2955,6 +2964,11 @@ static void stdout_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *n
 	printf("nstat   : %#x\n", ns->nstat);
 	if (human)
 		stdout_cmd_set_independent_id_ns_nstat(ns->nstat);
+	printf("kpios   : %#x\n", ns->kpios);
+	if (human)
+		stdout_id_ns_kpios(ns->kpios);
+	printf("maxkt   : %#x\n", le16_to_cpu(ns->maxkt));
+	printf("rgrpid  : %#x\n", le32_to_cpu(ns->rgrpid));
 }
 
 static void stdout_id_ns_descs(void *data, unsigned int nsid)

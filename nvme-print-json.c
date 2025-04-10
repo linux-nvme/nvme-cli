@@ -3025,6 +3025,9 @@ static void json_nvme_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns
 	obj_add_int(r, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 	obj_add_int(r, "endgid", le16_to_cpu(ns->endgid));
 	obj_add_int(r, "nstat", ns->nstat);
+	obj_add_int(r, "kpios", ns->kpios);
+	obj_add_int(r, "maxkt", le16_to_cpu(ns->maxkt));
+	obj_add_int(r, "rgrpid", le32_to_cpu(ns->rgrpid));
 
 	json_print(r);
 }
