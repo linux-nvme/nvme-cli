@@ -35,17 +35,6 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - name: Install Python (if missing)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
-
-      - name: Update python dependencies
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -U packaging
-
       - uses: actions/download-artifact@v4
         with:
           name: artifact
@@ -54,7 +43,7 @@ jobs:
       - name: Publish package to TestPyPI
         env:
           PATH: ${{ github.workspace }}/venv/bin:$PATH
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@release/v1.12.4
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -66,17 +55,6 @@ jobs:
       id-token: write
     if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'linux-nvme/libnvme'
     steps:
-      - name: Install Python (if missing)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
-
-      - name: Update python dependencies
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -U packaging
-
       - name: Check if it is a release tag
         id: check-tag
         run: |
@@ -92,7 +70,5 @@ jobs:
           path: dist
 
       - name: Publish package to PyPI
-        env:
-          PATH: ${{ github.workspace }}/venv/bin:$PATH
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@release/v1.12.4
         if: steps.check-tag.outputs.match == 'true'
