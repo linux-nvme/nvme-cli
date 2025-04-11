@@ -25,6 +25,9 @@ jobs:
       - name: Build sdist
         run: pipx run build --sdist
 
+      - name: Validate sdist
+        run: pipx run twine check dist/*.tar.gz
+
       - uses: actions/upload-artifact@v4
         with:
           path: dist/*.tar.gz
