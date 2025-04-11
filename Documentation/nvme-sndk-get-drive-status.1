@@ -1,0 +1,122 @@
+'\" t
+.\"     Title: nvme-sndk-get-drive-status
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 04/11/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SNDK\-GET\-DRI" "1" "04/11/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sndk-get-drive-status \- Send the NVMe sndk get\-drive\-status command, return result
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sndk get\-drive\-status\fR <device>
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, send the unique sndk get\-drive\-status command and provide the additional drive status information\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+This will only work on Sandisk devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OUTPUT EXPLANATION"
+.TS
+allbox tab(:);
+ltB ltB.
+T{
+Field
+T}:T{
+Description
+T}
+.T&
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+.sp
+\fBPercent Life Used\&.\fR
+T}:T{
+.sp
+The percentage of drive function used\&.
+T}
+T{
+.sp
+\fBEOL (End of Life) Status\fR
+T}:T{
+.sp
+The 3 possible states are : Normal, Read Only, or End of Life\&.
+T}
+T{
+.sp
+\fBAssert Dump Status\fR
+T}:T{
+.sp
+The 2 possible states are : Present or Not Present\&.
+T}
+T{
+.sp
+\fBThermal Throttling Status\fR
+T}:T{
+.sp
+The 3 possible states are : Off, On, or Unavailable\&.
+T}
+T{
+.sp
+\fBFormat Corrupt Reason\fR
+T}:T{
+.sp
+The 3 possible states are : Not Corrupted, Corrupt due to FW Assert, or Corrupt for Unknown Reason\&.
+T}
+.TE
+.sp 1
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue sndk get\-drive\-status command :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk get\-drive\-status /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

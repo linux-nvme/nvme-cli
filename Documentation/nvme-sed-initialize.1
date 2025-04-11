@@ -1,0 +1,51 @@
+'\" t
+.\"     Title: nvme-sed-initialize
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 04/11/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SED\-INITIALIZ" "1" "04/11/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sed-initialize \- Initialize a SED Opal Device for locking
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sed initialize\fR [ \-\-read\-only, \-r ]  <device>
+.fi
+.SH "DESCRIPTION"
+.sp
+Initialize the NVMe device given to allow SED Opal locking\&.
+.SH "OPTIONS"
+.PP
+\-r, \-\-read\-only
+.RS 4
+Set locking range to read\-only\&.
+.RE
+.SH "EXAMPLES"
+.sp
+nvme sed initialize /dev/nvme5n1
+.SH "NVME"
+.sp
+Part of nvme\-cli

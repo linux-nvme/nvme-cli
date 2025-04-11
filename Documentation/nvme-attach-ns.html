@@ -789,8 +789,9 @@ not a namespace block device (ex: /dev/nvme0n1).</p></div>
 </dt>
 <dd>
 <p>
-        The comma separated list of controller identifiers to attach
-        the namespace too.
+        The comma separated list of controller identifiers to attach the
+        namespace too. If no list is provided, the namespace will be attached
+        to the &lt;device&gt; controller used for this command.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -824,11 +825,19 @@ not a namespace block device (ex: /dev/nvme0n1).</p></div>
 <div class="sectionbody">
 <div class="literalblock">
 <div class="content">
-<pre><code>Attach namespace to the controller:</code></pre>
+<pre><code>Attach namespace 2 to the controllers with id 0x21 and 0x22:</code></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code># nvme attach-ns /dev/nvme1 -n 0x2 -c 0x21</code></pre>
+<pre><code># nvme attach-ns /dev/nvme1 -n 0x2 -c 0x21,0x22</code></pre>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>Attach namespace 3 to nvme0:</code></pre>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># nvme attach-ns /dev/nvme0 -n 3</code></pre>
 </div></div>
 </div>
 </div>
@@ -843,7 +852,7 @@ not a namespace block device (ex: /dev/nvme0n1).</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-03-17 10:39:49 CET
+ 2025-04-11 13:25:46 CEST
 </div>
 </div>
 </body>

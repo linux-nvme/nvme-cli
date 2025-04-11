@@ -2,12 +2,12 @@
 .\"     Title: nvme-attach-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/17/2025
+.\"      Date: 04/11/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ATTACH\-NS" "1" "03/17/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-ATTACH\-NS" "1" "04/11/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,7 +50,7 @@ The namespace identifier to attach but not attached already\&.
 .PP
 \-c <ctrl\-list,>, \-controllers=<ctrl\-list,>
 .RS 4
-The comma separated list of controller identifiers to attach the namespace too\&.
+The comma separated list of controller identifiers to attach the namespace too\&. If no list is provided, the namespace will be attached to the <device> controller used for this command\&.
 .RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
@@ -72,7 +72,7 @@ Increase the information detail in the output\&.
 .RS 4
 .\}
 .nf
-Attach namespace to the controller:
+Attach namespace 2 to the controllers with id 0x21 and 0x22:
 .fi
 .if n \{\
 .RE
@@ -82,7 +82,27 @@ Attach namespace to the controller:
 .RS 4
 .\}
 .nf
-# nvme attach\-ns /dev/nvme1 \-n 0x2 \-c 0x21
+# nvme attach\-ns /dev/nvme1 \-n 0x2 \-c 0x21,0x22
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Attach namespace 3 to nvme0:
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme attach\-ns /dev/nvme0 \-n 3
 .fi
 .if n \{\
 .RE

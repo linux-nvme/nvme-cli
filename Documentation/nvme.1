@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/17/2025
+.\"      Date: 04/11/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "03/17/2025" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "04/11/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -609,6 +609,141 @@ Display information about ONTAP devices
 Display information for each NVMe path to an E\-Series volume
 .RE
 .PP
+\fBnvme-sndk-capabilities\fR(1)
+.RS 4
+Display Sandisk plugin command capabilities
+.RE
+.PP
+\fBnvme-sndk-clear-assert-dump\fR(1)
+.RS 4
+Clears the assert dump (if present)
+.RE
+.PP
+\fBnvme-sndk-clear-fw-activate-history\fR(1)
+.RS 4
+Clears the firmware activate history table
+.RE
+.PP
+\fBnvme-sndk-clear-pcie-correctable-errors\fR(1)
+.RS 4
+Clears the pcie correctable errors returned in the smart\-log\-add command
+.RE
+.PP
+\fBnvme-sndk-cloud-SSD-plugin-version\fR(1)
+.RS 4
+Display Sandisk plugin Cloud SSD Plugin Version
+.RE
+.PP
+\fBnvme-sndk-cloud-boot-SSD-version\fR(1)
+.RS 4
+Display Sandisk Cloud Boot SSD Version
+.RE
+.PP
+\fBnvme-sndk-drive-resize\fR(1)
+.RS 4
+Send NVMe Sandisk Resize Vendor Unique Command
+.RE
+.PP
+\fBnvme-sndk-get-drive-status\fR(1)
+.RS 4
+Send the NVMe Sandisk get\-drive\-status command
+.RE
+.PP
+\fBnvme-sndk-get-dev-capabilities-log\fR(1)
+.RS 4
+Display device capabilities og page data in human readable format
+.RE
+.PP
+\fBnvme-sndk-get-error-recovery-log\fR(1)
+.RS 4
+Display error recovery log page data in human readable format
+.RE
+.PP
+\fBnvme-sndk-get-latency-monitor-log\fR(1)
+.RS 4
+Display latency monitor log page data in human readable format
+.RE
+.PP
+\fBnvme-sndk-get-unsupported-reqs-log\fR(1)
+.RS 4
+Display unsupported requirements log page data in human readable format
+.RE
+.PP
+\fBnvme-sndk-log-page-directory\fR(1)
+.RS 4
+Retrieves the list of Log IDs supported by the drive
+.RE
+.PP
+\fBnvme-sndk-namespace-resize\fR(1)
+.RS 4
+Resizes the device\(cqs namespace
+.RE
+.PP
+\fBnvme-sndk-set-latency-monitor-feature\fR(1)
+.RS 4
+Set Latency Monitor feature
+.RE
+.PP
+\fBnvme-sndk-vs-cloud-log\fR(1)
+.RS 4
+Display the cloud log page
+.RE
+.PP
+\fBnvme-sndk-vs-device-waf\fR(1)
+.RS 4
+Display calculated device Write Amplication Factor
+.RE
+.PP
+\fBnvme-sndk-vs-drive-info\fR(1)
+.RS 4
+Send the NVMe Sandisk vs\-drive\-info command
+.RE
+.PP
+\fBnvme-sndk-vs-error-reason-identifier\fR(1)
+.RS 4
+Retrieve Sandisk device\(cqs telemetry log error reason identifier field
+.RE
+.PP
+\fBnvme-sndk-vs-fw-activate-history\fR(1)
+.RS 4
+Execute NVMe Sandisk vs\-fw\-activate\-history Vendor Unique Command
+.RE
+.PP
+\fBnvme-sndk-vs-hw-rev-log\fR(1)
+.RS 4
+Display hardware revision log page
+.RE
+.PP
+\fBnvme-sndk-vs-internal-log\fR(1)
+.RS 4
+Retrieve Sandisk device\(cqs internal firmware log and save to file
+.RE
+.PP
+\fBnvme-sndk-vs-nand-stats\fR(1)
+.RS 4
+Send NVMe Sandisk vs\-nand\-stats Vendor Unique Command
+.RE
+.PP
+\fBnvme-sndk-vs-pcie-stats\fR(1)
+.RS 4
+Send the NVMe Sandisk vs\-pcie\-stats command
+.RE
+.PP
+\fBnvme-sndk-vs-smart-add-log\fR(1)
+.RS 4
+Send NVMe Sandisk smart add log Vendor Unique Command
+.RE
+.PP
+\fBnvme-sndk-vs-telemetry-controller-option\fR(1)
+.RS 4
+Disable/Enable the controller initiated option of the telemetry log page
+.RE
+.PP
+\fBnvme-sndk-vs-temperature-stats\fR(1)
+.RS 4
+Display temperature\-related statistics
+.RE
+.PP
 \fBnvme-toshiba-clear-pcie-correctable-errors\fR(1)
 .RS 4
 Reset the PCIe correctable errors count to zero
@@ -917,6 +1052,36 @@ Retrieve drive information
 \fBnvme-solidigm-workload-tracker\fR(1)
 .RS 4
 Real Time capture Workload Tracker samples
+.RE
+.PP
+\fBnvme-sed-discover\fR(1)
+.RS 4
+Discover SED Opal Locking Features
+.RE
+.PP
+\fBnvme-sed-initialize\fR(1)
+.RS 4
+Initialize a SED Opal Device for locking
+.RE
+.PP
+\fBnvme-sed-revert\fR(1)
+.RS 4
+Revert a SED Opal Device from locking
+.RE
+.PP
+\fBnvme-sed-lock\fR(1)
+.RS 4
+Lock a SED Opal Device
+.RE
+.PP
+\fBnvme-sed-unlock\fR(1)
+.RS 4
+Unlock a SED Opal Device
+.RE
+.PP
+\fBnvme-sed-password\fR(1)
+.RS 4
+Change the SED Opal Device password
 .RE
 .SH "RETURNS"
 .sp

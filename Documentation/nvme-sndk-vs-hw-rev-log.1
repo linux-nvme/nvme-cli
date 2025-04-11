@@ -1,0 +1,84 @@
+'\" t
+.\"     Title: nvme-sndk-vs-hw-rev-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 04/11/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SNDK\-VS\-HW\-" "1" "04/11/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sndk-vs-hw-rev-log \- Send NVMe sndk vs\-hw\-rev\-log Vendor Unique Command, return result
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sndk vs\-hw\-rev\-log\fR <device> [\-\-output\-format=<normal|json> | \-o <normal|json>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, retrieves and formats the Vendor Unique sndk hw revision log page\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1)\&.
+.sp
+This will only work on Sandisk devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR, or
+\fIjson\fR\&. Only one output format can be used at a time\&. Default is normal\&.
+.RE
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Sets the command\(cqs nsid value to the given nsid\&. Defaults to 0xffffffff if not given\&. This option may not affect anything depending on the log page, which may or may not be specific to a namespace\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue sndk vs\-hw\-rev\-log plugin Command :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk vs\-hw\-rev\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.
