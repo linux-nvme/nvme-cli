@@ -2287,6 +2287,34 @@ Sets the managing application string for **s**.
 IO policy used by current subsystem
 
 
+.. c:function:: const char * nvme_subsystem_get_model (nvme_subsystem_t s)
+
+   Return the model of subsystem
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  nvme_subsystem_t object
+
+**Return**
+
+Model of the current subsystem
+
+
+.. c:function:: const char * nvme_subsystem_get_fw_rev (nvme_subsystem_t s)
+
+   Return the firmware rev of subsystem
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  nvme_subsystem_t object
+
+**Return**
+
+Firmware revision of the current subsystem
+
+
 .. c:function:: int nvme_scan_topology (nvme_root_t r, nvme_scan_filter_t f, void *f_args)
 
    Scan NVMe topology and apply filter

@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "struct nvme_perf_attr_id_list" "April 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_perf_attr_id_list \- Performance attribute identifier list structure
+.SH SYNOPSIS
+struct nvme_perf_attr_id_list {
+.br
+.BI "    __u8 attrtyp;"
+.br
+.BI "    __u8 msvspa;"
+.br
+.BI "    __u8 usvspa;"
+.br
+.BI "    __u8 rsvd3[13];"
+.br
+.BI "    struct nvme_perf_attr_id id_list[63];"
+.br
+.BI "    __u8 rsvd1024[3072];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "attrtyp" 12
+Bits 7-3: Reserved
+Bits 2-0: Attribute type
+.IP "msvspa" 12
+Maximum saveable vendor specific performance attributes
+.IP "usvspa" 12
+Unused saveable vendor specific performance attributes
+.IP "rsvd3" 12
+Reserved
+.IP "id_list" 12
+Performance attribute identifier list
+.IP "rsvd1024" 12
+Reserved

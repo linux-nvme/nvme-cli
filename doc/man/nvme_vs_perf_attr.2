@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_vs_perf_attr" "April 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_vs_perf_attr \- Vendor specific performance attribute structure
+.SH SYNOPSIS
+struct nvme_vs_perf_attr {
+.br
+.BI "    __u8 paid[16];"
+.br
+.BI "    __u8 rsvd16[14];"
+.br
+.BI "    __le16 attrl;"
+.br
+.BI "    __u8 vs[4064];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "paid" 12
+Performance attribute identifier
+.IP "rsvd16" 12
+Reserved
+.IP "attrl" 12
+Attribute Length
+.IP "vs" 12
+Vendor specific

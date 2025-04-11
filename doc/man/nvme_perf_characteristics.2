@@ -1,0 +1,33 @@
+.TH "libnvme" 9 "struct nvme_perf_characteristics" "April 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_perf_characteristics \- Performance attribute structure
+.SH SYNOPSIS
+struct nvme_perf_characteristics {
+.br
+.BI "    union {"
+.br
+.BI "      struct nvme_std_perf_attr std_perf[0];"
+.br
+.BI "      struct nvme_perf_attr_id_list id_list[0];"
+.br
+.BI "      struct nvme_vs_perf_attr vs_perf[0];"
+.br
+.BI "      __u8 attr_buf[4096];"
+.br
+.BI "    };"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "{unnamed_union}" 12
+anonymous
+.IP "std_perf" 12
+Standard performance attribute
+.IP "id_list" 12
+Performance attribute identifier list
+.IP "vs_perf" 12
+Vendor specific performance attribute
+.IP "attr_buf" 12
+Attribute buffer

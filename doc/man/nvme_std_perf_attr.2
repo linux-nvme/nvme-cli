@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_std_perf_attr" "April 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_std_perf_attr \- Standard performance attribute structure
+.SH SYNOPSIS
+struct nvme_std_perf_attr {
+.br
+.BI "    __u8 rsvd0[4];"
+.br
+.BI "    __u8 r4karl;"
+.br
+.BI "    __u8 rsvd5[4091];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+Reserved
+.IP "r4karl" 12
+Random 4 KiB average read latency
+.IP "rsvd5" 12
+Reserved

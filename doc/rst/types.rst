@@ -4140,7 +4140,11 @@ power scale value
     __le16 nvmsetid;
     __le16 endgid;
     __u8 nstat;
-    __u8 rsvd15[4081];
+    __u8 kpios;
+    __le16 maxkt;
+    __u8 rsvd18[2];
+    __le32 rgrpid;
+    __u8 rsvd24[4072];
   };
 
 **Members**
@@ -4176,8 +4180,20 @@ power scale value
 ``nstat``
   Namespace Status
 
-``rsvd15``
-  reserved
+``kpios``
+  Key Per I/O Status
+
+``maxkt``
+  Maximum Key Tag
+
+``rsvd18``
+  Reserved
+
+``rgrpid``
+  Reachability Group Identifier
+
+``rsvd24``
+  Reserved
 
 
 
@@ -9637,6 +9653,169 @@ bytes, in size. This log captures the controller’s internal state.
 
 
 
+.. c:struct:: nvme_std_perf_attr
+
+   Standard performance attribute structure
+
+**Definition**
+
+::
+
+  struct nvme_std_perf_attr {
+    __u8 rsvd0[4];
+    __u8 r4karl;
+    __u8 rsvd5[4091];
+  };
+
+**Members**
+
+``rsvd0``
+  Reserved
+
+``r4karl``
+  Random 4 KiB average read latency
+
+``rsvd5``
+  Reserved
+
+
+
+
+
+.. c:struct:: nvme_perf_attr_id
+
+   Performance attribute identifier structure
+
+**Definition**
+
+::
+
+  struct nvme_perf_attr_id {
+    __u8 id[NVME_UUID_LEN];
+  };
+
+**Members**
+
+``id``
+  Performance attribute identifier
+
+
+
+
+
+.. c:struct:: nvme_perf_attr_id_list
+
+   Performance attribute identifier list structure
+
+**Definition**
+
+::
+
+  struct nvme_perf_attr_id_list {
+    __u8 attrtyp;
+    __u8 msvspa;
+    __u8 usvspa;
+    __u8 rsvd3[13];
+    struct nvme_perf_attr_id id_list[63];
+    __u8 rsvd1024[3072];
+  };
+
+**Members**
+
+``attrtyp``
+  Bits 7-3: Reserved
+  Bits 2-0: Attribute type
+
+``msvspa``
+  Maximum saveable vendor specific performance attributes
+
+``usvspa``
+  Unused saveable vendor specific performance attributes
+
+``rsvd3``
+  Reserved
+
+``id_list``
+  Performance attribute identifier list
+
+``rsvd1024``
+  Reserved
+
+
+
+
+
+.. c:struct:: nvme_vs_perf_attr
+
+   Vendor specific performance attribute structure
+
+**Definition**
+
+::
+
+  struct nvme_vs_perf_attr {
+    __u8 paid[16];
+    __u8 rsvd16[14];
+    __le16 attrl;
+    __u8 vs[4064];
+  };
+
+**Members**
+
+``paid``
+  Performance attribute identifier
+
+``rsvd16``
+  Reserved
+
+``attrl``
+  Attribute Length
+
+``vs``
+  Vendor specific
+
+
+
+
+
+.. c:struct:: nvme_perf_characteristics
+
+   Performance attribute structure
+
+**Definition**
+
+::
+
+  struct nvme_perf_characteristics {
+    union {
+      struct nvme_std_perf_attr std_perf[0];
+      struct nvme_perf_attr_id_list id_list[0];
+      struct nvme_vs_perf_attr vs_perf[0];
+      __u8 attr_buf[4096];
+    };
+  };
+
+**Members**
+
+``{unnamed_union}``
+  anonymous
+
+``std_perf``
+  Standard performance attribute
+
+``id_list``
+  Performance attribute identifier list
+
+``vs_perf``
+  Vendor specific performance attribute
+
+``attr_buf``
+  Attribute buffer
+
+
+
+
+
 .. c:struct:: nvme_metadata_element_desc
 
    Metadata Element Descriptor
@@ -14224,6 +14403,18 @@ true if **status** is of the specified type and value
 ``NVME_FEAT_PLS_MODE_SHIFT``
 
 ``NVME_FEAT_PLS_MODE_MASK``
+
+``NVME_FEAT_PERFC_ATTRI_SHIFT``
+
+``NVME_FEAT_PERFC_ATTRI_MASK``
+
+``NVME_FEAT_PERFC_RVSPA_SHIFT``
+
+``NVME_FEAT_PERFC_RVSPA_MASK``
+
+``NVME_FEAT_PERFC_ATTRTYP_SHIFT``
+
+``NVME_FEAT_PERFC_ATTRTYP_MASK``
 
 ``NVME_FEAT_FDP_ENABLED_SHIFT``
 
