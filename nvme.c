@@ -8009,7 +8009,6 @@ unsigned long long elapsed_utime(struct timeval start_time,
 
 static int submit_io(int opcode, char *command, const char *desc, int argc, char **argv)
 {
-	struct timeval start_time, end_time;
 	void *buffer;
 	_cleanup_free_ void *mbuffer = NULL;
 	int err = 0;
@@ -8017,7 +8016,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	int flags, pi_size;
 	int mode = 0644;
 	__u16 control = 0, nblocks = 0;
-	__u32 dsmgmt = 0;
 	unsigned int logical_block_size = 0;
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
@@ -8147,7 +8145,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (cfg.prinfo > 0xf)
 		return err;
 
-	dsmgmt = cfg.dsmgmt;
 	control |= (cfg.prinfo << 10);
 	if (cfg.limited_retry)
 		control |= NVME_IO_LR;
@@ -8161,7 +8158,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 			return -EINVAL;
 		}
 		control |= cfg.dtype << 4;
-		dsmgmt |= ((__u32)cfg.dspec) << 16;
 	}
 
 	if (opcode & 1) {
@@ -8285,27 +8281,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		}
 	}
 
-	if (cfg.show || nvme_cfg.dry_run) {
-		printf("opcode       : %02x\n", opcode);
-		printf("nsid         : %02x\n", cfg.namespace_id);
-		printf("flags        : %02x\n", 0);
-		printf("control      : %04x\n", control);
-		printf("nblocks      : %04x\n", nblocks);
-		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)mbuffer);
-		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
-		printf("slba         : %"PRIx64"\n", (uint64_t)cfg.start_block);
-		printf("dsmgmt       : %08x\n", dsmgmt);
-		printf("reftag       : %"PRIx64"\n", (uint64_t)cfg.ref_tag);
-		printf("apptag       : %04x\n", cfg.app_tag);
-		printf("appmask      : %04x\n", cfg.app_tag_mask);
-		printf("storagetagcheck : %04x\n", cfg.storage_tag_check);
-		printf("storagetag      : %"PRIx64"\n", (uint64_t)cfg.storage_tag);
-		printf("pif             : %02x\n", pif);
-		printf("sts             : %02x\n", sts);
-	}
-	if (nvme_cfg.dry_run)
-		return 0;
-
 	struct nvme_io_args args = {
 		.args_size	= sizeof(args),
 		.fd		= dev_fd(dev),
@@ -8329,16 +8304,13 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.timeout	= nvme_cfg.timeout,
 		.result		= NULL,
 	};
-	gettimeofday(&start_time, NULL);
-	err = nvme_io(&args, opcode);
-	gettimeofday(&end_time, NULL);
-	if (cfg.latency)
-		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
+
+	err = nvme_submit_io(&args, opcode, cfg.show, cfg.latency);
 	if (err < 0) {
 		nvme_show_error("submit-io: %s", nvme_strerror(errno));
 	} else if (err) {
 		nvme_show_status(err);
-	} else {
+	} else if (!nvme_cfg.dry_run) {
 		if (!(opcode & 1) && write(dfd, (void *)buffer, buffer_size) < 0) {
 			nvme_show_error("write: %s: failed to write buffer to output file",
 				strerror(errno));

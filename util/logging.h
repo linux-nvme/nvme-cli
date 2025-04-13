@@ -21,5 +21,5 @@ extern int log_level;
 
 int map_log_level(int verbose, bool quiet);
 void set_dry_run(bool enable);
-
+int nvme_submit_io(struct nvme_io_args *args, __u8 opcode, bool show, bool latency);
 #endif // DEBUG_H_

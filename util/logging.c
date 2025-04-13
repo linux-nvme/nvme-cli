@@ -150,3 +150,51 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 
 	return err;
 }
+
+static void nvme_show_io_command(struct nvme_io_args *args, __u8 opcode)
+{
+	__u32 dsmgmt = args->dsm;
+	__u8 dtype = (args->control >> 4) & 0xf;
+
+	if (dtype)
+		dsmgmt |= ((__u32)args->dspec) << 16;
+
+	printf("opcode       : %02x\n", opcode);
+	printf("nsid         : %02x\n", args->nsid);
+	printf("flags        : %02x\n", 0);
+	printf("control      : %04x\n", args->control);
+	printf("nblocks      : %04x\n", args->nlb);
+	printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)args->metadata);
+	printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)args->data);
+	printf("slba         : %"PRIx64"\n", (uint64_t)(uintptr_t)args->slba);
+	printf("dsmgmt       : %08x\n", dsmgmt);
+	printf("reftag       : %"PRIx64"\n", (uint64_t)args->reftag_u64);
+	printf("apptag       : %04x\n", args->apptag);
+	printf("appmask      : %04x\n", args->appmask);
+	printf("storagetagcheck : %04x\n", args->control & NVME_IO_STC ? true : false);
+	printf("storagetag      : %"PRIx64"\n", (uint64_t)args->storage_tag);
+	printf("pif             : %02x\n", args->pif);
+	printf("sts             : %02x\n", args->sts);
+}
+
+int nvme_submit_io(struct nvme_io_args *args, __u8 opcode, bool show, bool latency)
+{
+	struct timeval start_time;
+	struct timeval end_time;
+	int err;
+
+	if (show || dry_run)
+		nvme_show_io_command(args, opcode);
+
+	if (dry_run)
+		return 0;
+
+	gettimeofday(&start_time, NULL);
+	err = nvme_io(args, opcode);
+	gettimeofday(&end_time, NULL);
+
+	if (latency)
+		nvme_show_latency(start_time, end_time);
+
+	return err;
+}
