@@ -10911,14 +10911,14 @@ int main(int argc, char **argv)
 
 	nvme.extensions->parent = &nvme;
 	if (argc < 2) {
-		general_help(&builtin);
+		general_help(&builtin, NULL);
 		return 0;
 	}
 	setlocale(LC_ALL, "");
 
 	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
 	if (err == -ENOTTY)
-		general_help(&builtin);
+		general_help(&builtin, NULL);
 
 	return err ? 1 : 0;
 }
