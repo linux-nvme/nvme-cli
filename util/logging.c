@@ -7,6 +7,7 @@
 #include <sys/syslog.h>
 #include <sys/time.h>
 #include <linux/types.h>
+#include <errno.h>
 
 #include <libnvme.h>
 
@@ -96,7 +97,7 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
 
-	err = ioctl(fd, ioctl_cmd, cmd);
+	err = TFR(ioctl(fd, ioctl_cmd, cmd));
 
 	if (log_level >= LOG_DEBUG) {
 		gettimeofday(&end, NULL);
@@ -122,7 +123,7 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 		gettimeofday(&start, NULL);
 
 
-	err = ioctl(fd, ioctl_cmd, cmd);
+	err = TFR(ioctl(fd, ioctl_cmd, cmd));
 
 	if (log_level >= LOG_DEBUG) {
 		gettimeofday(&end, NULL);
