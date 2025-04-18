@@ -8,7 +8,8 @@ nvme-solidigm-workload-tracker - Real-time capture of Workload Tracker samples
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm workload-tracker' <device> [--enable | -e] [--disable | -d]
+'nvme solidigm workload-tracker' <device> [--uuid-index=<id> | -U <id>]
+                                      [--enable | -e] [--disable | -d]
                                       [--sample-time=<time> | -s <time>]
                                       [--type=<type> | -t <type>]
                                       [--run-time=<seconds> | -r <seconds>]
@@ -31,6 +32,9 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
 OPTIONS
 -------
+-U <id>, --uuid-index=<id>::
+    Specify the UUID index (0-127) for the command.
+
 -e, --enable::
     Enable the workload tracker before capturing samples.
 
