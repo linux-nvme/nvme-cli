@@ -9428,6 +9428,74 @@ enum nvme_feat_nswpcfg_state {
 };
 
 /**
+ * enum nvme_feat_perfc_attri - performance characteristics attribute index
+ * @NVME_FEAT_PERFC_ATTRI_STD:		standard performance attribute
+ * @NVME_FEAT_PERFC_ATTRI_ID_LIST:	performance attribute identifier list
+ * @NVME_FEAT_PERFC_ATTRI_VS_MIN:	vendor specific performance attribute minimum index
+ * @NVME_FEAT_PERFC_ATTRI_VS_MAX:	vendor specific performance attribute maximum index
+ */
+enum nvme_feat_perfc_attri {
+	NVME_FEAT_PERFC_ATTRI_STD	= 0,
+	NVME_FEAT_PERFC_ATTRI_ID_LIST	= 0xc0,
+	NVME_FEAT_PERFC_ATTRI_VS_MIN	= 0xc1,
+	NVME_FEAT_PERFC_ATTRI_VS_MAX	= 0xff,
+};
+
+/**
+ * enum nvme_feat_perfc_r4karl - standard performance attribute random 4 kib average latency
+ * @NVME_FEAT_PERFC_R4KARL_NO_REPORT:	not reported
+ * @NVME_FEAT_PERFC_R4KARL_GE_100_SEC:	greater than or equal to 100 secs
+ * @NVME_FEAT_PERFC_R4KARL_GE_50_SEC:	greater than or equal to 50 secs and less than 100 secs
+ * @NVME_FEAT_PERFC_R4KARL_GE_10_SEC:	greater than or equal to 10 secs and less than 50 secs
+ * @NVME_FEAT_PERFC_R4KARL_GE_5_SEC:	greater than or equal to 5 secs and less than 10 secs
+ * @NVME_FEAT_PERFC_R4KARL_GE_1_SEC:	greater than or equal to 1 sec and less than 5 secs
+ * @NVME_FEAT_PERFC_R4KARL_GE_500_MS:	greater than or equal to 500 msecs and less than 1 sec
+ * @NVME_FEAT_PERFC_R4KARL_GE_100_MS:	greater than or equal to 100 msecs and less than 500 msecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_50_MS:	greater than or equal to 50 msecs and less than 100 msecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_10_MS:	greater than or equal to 10 msecs and less than 50 msecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_5_MS:	greater than or equal to 5 msecs and less than 10 msecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_1_MS:	greater than or equal to 1 msec and less than 5 msecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_500_US:	greater than or equal to 500 usecs and less than 1 msec
+ * @NVME_FEAT_PERFC_R4KARL_GE_100_US:	greater than or equal to 100 usecs and less than 500 usecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_50_US:	greater than or equal to 50 usecs and less than 100 usecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_10_US:	greater than or equal to 10 usecs and less than 50 usecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_5_US:	greater than or equal to 5 usecs and less than 10 usecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_1_US:	greater than or equal to 1 usec and less than 5 usecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_500_NS:	greater than or equal to 500 nsecs and less than 1 usec
+ * @NVME_FEAT_PERFC_R4KARL_GE_100_NS:	greater than or equal to 100 nsecs and less than 500 nsecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_50_NS:	greater than or equal to 50 nsecs and less than 100 nsecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_10_NS:	greater than or equal to 10 nsecs and less than 50 nsecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_5_NS:	greater than or equal to 5 nsecs and less than 10 nsecs
+ * @NVME_FEAT_PERFC_R4KARL_GE_1_NS:	greater than or equal to 1 nsec and less than 5 nsecs
+ */
+enum nvme_feat_perfc_r4karl {
+	NVME_FEAT_PERFC_R4KARL_NO_REPORT	= 0x0,
+	NVME_FEAT_PERFC_R4KARL_GE_100_SEC	= 0x1,
+	NVME_FEAT_PERFC_R4KARL_GE_50_SEC	= 0x2,
+	NVME_FEAT_PERFC_R4KARL_GE_10_SEC	= 0x3,
+	NVME_FEAT_PERFC_R4KARL_GE_5_SEC		= 0x4,
+	NVME_FEAT_PERFC_R4KARL_GE_1_SEC		= 0x5,
+	NVME_FEAT_PERFC_R4KARL_GE_500_MS	= 0x6,
+	NVME_FEAT_PERFC_R4KARL_GE_100_MS	= 0x7,
+	NVME_FEAT_PERFC_R4KARL_GE_50_MS		= 0x8,
+	NVME_FEAT_PERFC_R4KARL_GE_10_MS		= 0x9,
+	NVME_FEAT_PERFC_R4KARL_GE_5_MS		= 0xa,
+	NVME_FEAT_PERFC_R4KARL_GE_1_MS		= 0xb,
+	NVME_FEAT_PERFC_R4KARL_GE_500_US	= 0xc,
+	NVME_FEAT_PERFC_R4KARL_GE_100_US	= 0xd,
+	NVME_FEAT_PERFC_R4KARL_GE_50_US		= 0xe,
+	NVME_FEAT_PERFC_R4KARL_GE_10_US		= 0xf,
+	NVME_FEAT_PERFC_R4KARL_GE_5_US		= 0x10,
+	NVME_FEAT_PERFC_R4KARL_GE_1_US		= 0x11,
+	NVME_FEAT_PERFC_R4KARL_GE_500_NS	= 0x12,
+	NVME_FEAT_PERFC_R4KARL_GE_100_NS	= 0x13,
+	NVME_FEAT_PERFC_R4KARL_GE_50_NS		= 0x14,
+	NVME_FEAT_PERFC_R4KARL_GE_10_NS		= 0x15,
+	NVME_FEAT_PERFC_R4KARL_GE_5_NS		= 0x16,
+	NVME_FEAT_PERFC_R4KARL_GE_1_NS		= 0x17,
+};
+
+/**
  * enum nvme_fctype - Fabrics Command Types
  * @nvme_fabrics_type_property_set:	Property set
  * @nvme_fabrics_type_connect:		Connect
