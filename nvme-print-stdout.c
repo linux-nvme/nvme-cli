@@ -4882,6 +4882,66 @@ static void stdout_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwintt));
 }
 
+static void stdout_feat_perfc_std(struct nvme_std_perf_attr *data)
+{
+	printf("random 4 kib average read latency (R4KARL): %s (0x%02x)\n",
+	       nvme_feature_perfc_r4karl_to_string(data->r4karl), data->r4karl);
+}
+
+static void stdout_feat_perfc_id_list(struct nvme_perf_attr_id_list *data)
+{
+	int i;
+	int attri_vs;
+
+	printf("attribute type (ATTRTYP): %s (0x%02x)\n",
+	       nvme_feature_perfc_attrtyp_to_string(data->attrtyp), data->attrtyp);
+	printf("maximum saveable vendor specific performance attributes (MSVSPA): %d\n",
+	       data->msvspa);
+	printf("unused saveable vendor specific performance attributes (USVSPA): %d\n",
+	       data->usvspa);
+
+	printf("performance attribute identifier list\n");
+	for (i = 0; i < ARRAY_SIZE(data->id_list); i++) {
+		attri_vs = i + NVME_FEAT_PERFC_ATTRI_VS_MIN;
+		printf("performance attribute %02xh identifier (PA%02XHI): %s\n", attri_vs,
+		       attri_vs, util_uuid_to_string(data->id_list[i].id));
+	}
+}
+
+static void stdout_feat_perfc_vs(struct nvme_vs_perf_attr *data)
+{
+	printf("performance attribute identifier (PAID): %s\n", util_uuid_to_string(data->paid));
+	printf("attribute length (ATTRL): %u\n", data->attrl);
+	printf("vendor specific (VS):\n");
+	d((unsigned char *)data->vs, data->attrl, 16, 1);
+}
+
+static void stdout_feat_perfc(enum nvme_features_id fid, unsigned int result,
+			      struct nvme_perf_characteristics *data)
+{
+	__u8 attri;
+	bool rvspa;
+
+	nvme_feature_decode_perf_characteristics(result, &attri, &rvspa);
+
+	printf("attribute index (ATTRI): %s (0x%02x)\n", nvme_feature_perfc_attri_to_string(attri),
+	       attri);
+
+	switch (attri) {
+	case NVME_FEAT_PERFC_ATTRI_STD:
+		stdout_feat_perfc_std(data->std_perf);
+		break;
+	case NVME_FEAT_PERFC_ATTRI_ID_LIST:
+		stdout_feat_perfc_id_list(data->id_list);
+		break;
+	case NVME_FEAT_PERFC_ATTRI_VS_MIN ... NVME_FEAT_PERFC_ATTRI_VS_MAX:
+		stdout_feat_perfc_vs(data->vs_perf);
+		break;
+	default:
+		break;
+	}
+}
+
 static void stdout_host_metadata(enum nvme_features_id fid,
 				 struct nvme_host_metadata *data)
 {
@@ -5110,6 +5170,9 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 	case NVME_FEAT_FID_POWER_LOSS_SIGNAL:
 		printf("\tPower Loss Signaling Mode (PLSM): %s\n",
 		       nvme_pls_mode_to_string(NVME_GET(result, FEAT_PLS_MODE)));
+		break;
+	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
+		stdout_feat_perfc(fid, result, (struct nvme_perf_characteristics *)buf);
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
