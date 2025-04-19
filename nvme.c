@@ -4772,6 +4772,18 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 	}
 }
 
+static bool is_get_feature_result_set(enum nvme_features_id feature_id)
+{
+	switch (feature_id) {
+	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
+		return false;
+	default:
+		break;
+	}
+
+	return true;
+}
+
 static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
 		nvme_print_flags_t flags)
 {
@@ -4791,6 +4803,9 @@ static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
 		cfg.sel = NVME_GET_FEATURES_SEL_DEFAULT;
 		err_def = get_feature_id(dev, &cfg, &buf_def, &result_def);
 	}
+
+	if (!err && !is_get_feature_result_set(cfg.feature_id))
+		result = cfg.cdw11;
 
 	if (err || !cfg.changed || err_def || result != result_def ||
 	    (buf && buf_def && !strcmp(buf, buf_def)))

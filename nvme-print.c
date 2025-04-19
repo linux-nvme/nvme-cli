@@ -1096,6 +1096,96 @@ const char *nvme_feature_temp_sel_to_string(__u8 sel)
 	}
 }
 
+const char *nvme_feature_perfc_attri_to_string(__u8 attri)
+{
+	switch (attri) {
+	case NVME_FEAT_PERFC_ATTRI_STD:
+		return "standard performance attribute";
+	case NVME_FEAT_PERFC_ATTRI_ID_LIST:
+		return "performance attribute identifier list";
+	case NVME_FEAT_PERFC_ATTRI_VS_MIN ... NVME_FEAT_PERFC_ATTRI_VS_MAX:
+		return "vendor specific performance attribute";
+	default:
+		break;
+	}
+
+	return "reserved";
+}
+
+const char *nvme_feature_perfc_r4karl_to_string(__u8 r4karl)
+{
+	switch (r4karl) {
+	case NVME_FEAT_PERFC_R4KARL_NO_REPORT:
+		return "not reported";
+	case NVME_FEAT_PERFC_R4KARL_GE_100_SEC:
+		return "greater than or equal to 100 seconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_50_SEC:
+		return "greater than or equal to 50 seconds and less than 100 seconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_10_SEC:
+		return "greater than or equal to 10 seconds and less than 50 seconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_5_SEC:
+		return "greater than or equal to 5 seconds and less than 10 seconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_1_SEC:
+		return "greater than or equal to 1 second and less than 5 seconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_500_MS:
+		return "greater than or equal to 500 milliseconds and less than 1 second";
+	case NVME_FEAT_PERFC_R4KARL_GE_100_MS:
+		return "greater than or equal to 100 milliseconds and less than 500 milliseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_50_MS:
+		return "greater than or equal to 50 milliseconds and less than 100 milliseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_10_MS:
+		return "greater than or equal to 10 milliseconds and less than 50 milliseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_5_MS:
+		return "greater than or equal to 5 milliseconds and less than 10 milliseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_1_MS:
+		return "greater than or equal to 1 millisecond and less than 5 milliseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_500_US:
+		return "greater than or equal to 500 microseconds and less than 1 millisecond";
+	case NVME_FEAT_PERFC_R4KARL_GE_100_US:
+		return "greater than or equal to 100 microseconds and less than 500 microseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_50_US:
+		return "greater than or equal to 50 microseconds and less than 100 microseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_10_US:
+		return "greater than or equal to 10 microseconds and less than 50 microseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_5_US:
+		return "greater than or equal to 5 microseconds and less than 10 microseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_1_US:
+		return "greater than or equal to 1 microsecond and less than 5 microseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_500_NS:
+		return "greater than or equal to 500 nanoseconds and less than 1 microsecond";
+	case NVME_FEAT_PERFC_R4KARL_GE_100_NS:
+		return "greater than or equal to 100 nanoseconds and less than 500 nanoseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_50_NS:
+		return "greater than or equal to 50 nanoseconds and less than 100 nanoseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_10_NS:
+		return "greater than or equal to 10 nanoseconds and less than 50 nanoseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_5_NS:
+		return "greater than or equal to 5 nanoseconds and less than 10 nanoseconds";
+	case NVME_FEAT_PERFC_R4KARL_GE_1_NS:
+		return "greater than or equal to 1 nanosecond and less than 5 nanoseconds";
+	default:
+		break;
+	}
+
+	return "reserved";
+}
+
+const char *nvme_feature_perfc_attrtyp_to_string(__u8 attrtyp)
+{
+	switch (attrtyp) {
+	case NVME_GET_FEATURES_SEL_CURRENT:
+		return "current attribute";
+	case NVME_GET_FEATURES_SEL_DEFAULT:
+		return "default attribute";
+	case NVME_GET_FEATURES_SEL_SAVED:
+		return "saved attribute";
+	default:
+		break;
+	}
+
+	return "reserved";
+}
+
 const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state)
 {
 	switch (state) {
