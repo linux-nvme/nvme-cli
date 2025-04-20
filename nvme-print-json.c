@@ -3712,6 +3712,72 @@ static void json_feature_show_fields_power_loss_signal(struct json_object *r, un
 		    nvme_pls_mode_to_string(NVME_GET(result, FEAT_PLS_MODE)));
 }
 
+static void json_feat_perfc_std(struct json_object *r, struct nvme_std_perf_attr *data)
+{
+	obj_add_str(r, "random 4 kib average read latency",
+		    nvme_feature_perfc_r4karl_to_string(data->r4karl));
+	obj_add_uint_02x(r, "R4KARL", data->r4karl);
+}
+
+static void json_feat_perfc_id_list(struct json_object *r, struct nvme_perf_attr_id_list *data)
+{
+	int i;
+	int attri_vs;
+	char json_str[STR_LEN];
+	struct json_object *paida = json_create_array();
+	struct json_object *paide;
+
+	obj_add_str(r, "attribute type", nvme_feature_perfc_attrtyp_to_string(data->attrtyp));
+	obj_add_uint_02x(r, "ATTRTYP", data->attrtyp);
+	obj_add_int(r, "maximum saveable vendor specific performance attributes (MSVSPA)",
+		    data->msvspa);
+	obj_add_int(r, "unused saveable vendor specific performance attributes (USVSPA)",
+		    data->usvspa);
+
+	obj_add_array(r, "performance attribute identifier list", paida);
+	for (i = 0; i < ARRAY_SIZE(data->id_list); i++) {
+		paide = json_create_object();
+		array_add_obj(paida, paide);
+		attri_vs = i + NVME_FEAT_PERFC_ATTRI_VS_MIN;
+		sprintf(json_str, "performance attribute %02xh identifier (PA%02XHI)", attri_vs,
+			attri_vs);
+		obj_add_str(paide, json_str, util_uuid_to_string(data->id_list[i].id));
+	}
+}
+
+static void json_feat_perfc_vs(struct json_object *r, struct nvme_vs_perf_attr *data)
+{
+	obj_add_str(r, "performance attribute identifier (PAID)", util_uuid_to_string(data->paid));
+	obj_add_uint(r, "attribute length (ATTRL)", data->attrl);
+	obj_d(r, "vendor specific (VS)", (unsigned char *)data->vs, data->attrl, 16, 1);
+}
+
+static void json_feat_perfc(struct json_object *r, enum nvme_features_id fid, unsigned int result,
+			    struct nvme_perf_characteristics *data)
+{
+	__u8 attri;
+	bool rvspa;
+
+	nvme_feature_decode_perf_characteristics(result, &attri, &rvspa);
+
+	obj_add_str(r, "attribute index", nvme_feature_perfc_attri_to_string(attri));
+	obj_add_uint_02x(r, "ATTRI", attri);
+
+	switch (attri) {
+	case NVME_FEAT_PERFC_ATTRI_STD:
+		json_feat_perfc_std(r, data->std_perf);
+		break;
+	case NVME_FEAT_PERFC_ATTRI_ID_LIST:
+		json_feat_perfc_id_list(r, data->id_list);
+		break;
+	case NVME_FEAT_PERFC_ATTRI_VS_MIN ... NVME_FEAT_PERFC_ATTRI_VS_MAX:
+		json_feat_perfc_vs(r, data->vs_perf);
+		break;
+	default:
+		break;
+	}
+}
+
 static void json_host_metadata(struct json_object *r, enum nvme_features_id fid,
 			       struct nvme_host_metadata *data)
 {
@@ -3924,6 +3990,9 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_POWER_LOSS_SIGNAL:
 		json_feature_show_fields_power_loss_signal(r, result);
+		break;
+	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
+		json_feat_perfc(r, fid, result, (struct nvme_perf_characteristics *)buf);
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
