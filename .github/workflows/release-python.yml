@@ -67,9 +67,9 @@ jobs:
           echo "dev_version=$VERSION" >> $GITHUB_OUTPUT
           echo "Computed dev version: $VERSION"
 
-      - name: Patch version in pyproject.toml
+      - name: Patch version in meson.build
         run: |
-          sed -i "s/^version = .*/version = \"${{ steps.version.outputs.dev_version }}\"/" pyproject.toml
+          sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'${{ steps.version.outputs.dev_version }}\',/" meson.build
 
       - name: Build sdist
         run: |
