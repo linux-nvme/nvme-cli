@@ -46,10 +46,45 @@ jobs:
     permissions:
       id-token: write
     steps:
+      - name: Check out repository (with tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for `git describe`
+
+      - name: Allow workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - uses: actions/download-artifact@v4
         with:
           name: artifact
           path: dist
+
+      - name: Extract sdist for patching
+        run: |
+          mkdir sdist && tar -xzf dist/*.tar.gz -C sdist --strip-components=1
+
+      - name: Compute dev version from git
+        id: version
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          REV=$(git rev-list "$TAG"..HEAD --count)
+          BASE_VERSION="${TAG#v}"
+          VERSION="${BASE_VERSION}.dev${REV}"
+          echo "dev_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Computed dev version: $VERSION"
+
+      - name: Patch version in pyproject.toml
+        run: |
+          sed -i "s/^version = .*/version = \"${{ steps.version.outputs.dev_version }}\"/" sdist/pyproject.toml
+
+      - name: Rebuild sdist with dev version
+        run: |
+          cd sdist
+          pipx run build --sdist
+          mv dist/*.tar.gz ../dist/
+
+      - name: Validate rebuilt sdist
+        run: pipx run twine check dist/*.tar.gz
 
       - name: Publish package to TestPyPI
         uses: pypa/gh-action-pypi-publish@v1.12.4
