@@ -21,6 +21,7 @@ project(
 )
 
 vstr = meson.project_version().split('-rc')[0]
+vstr = vstr.split('.dev')[0]
 vid = vstr.split('.')
 library_version = '.'.join([vid[0], vid[1]])
 if vid.length() == 3
