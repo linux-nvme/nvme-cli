@@ -1,0 +1,35 @@
+name: Cleanup dev versions on TestPyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep-last:
+        description: "How many recent dev releases to keep"
+        required: false
+        default: "5"
+      dry-run:
+        description: "Only simulate the deletion (true/false)"
+        required: false
+        default: "true"
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - name: Install pypi-cleanup
+        run: pip install pypi-cleanup
+
+      - name: Run pypi-cleanup on TestPyPI
+        env:
+          PYPI_USERNAME: __token__
+          PYPI_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: |
+          pypi-cleanup \
+            --username "$PYPI_USERNAME" \
+            --password "$PYPI_PASSWORD" \
+            --repository-url https://test.pypi.org/legacy/ \
+            --project libnvme \
+            --keep ${{ github.event.inputs.keep-last }} \
+            --version-regex '.*\.dev[0-9]+' \
+            $([ "${{ github.event.inputs.dry-run }}" == "true" ] && echo "--dry-run")
