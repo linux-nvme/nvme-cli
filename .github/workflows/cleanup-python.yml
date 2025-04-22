@@ -1,4 +1,4 @@
-name: Cleanup dev versions on TestPyPI
+name: cleanup python
 
 on:
   workflow_dispatch:
@@ -29,7 +29,7 @@ jobs:
             --username "$PYPI_USERNAME" \
             --password "$PYPI_PASSWORD" \
             --repository-url https://test.pypi.org/legacy/ \
-            --project libnvme \
+            --package libnvme \
             --keep ${{ github.event.inputs.keep-last }} \
             --version-regex '.*\.dev[0-9]+' \
             $([ "${{ github.event.inputs.dry-run }}" == "true" ] && echo "--dry-run")
