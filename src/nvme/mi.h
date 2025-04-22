@@ -479,6 +479,16 @@ struct nvme_mi_ep;
 typedef struct nvme_mi_ep * nvme_mi_ep_t;
 
 /**
+ * nvme_mi_set_csi - Assign a CSI to an endpoint.
+ * @ep: Endpoint
+ * @csi: value to use for CSI bit in NMP (0 or 1) for this endpoint
+ *
+ * Return: 0 if successful, -1 otherwise (some endpoints may not support)
+ *
+ */
+int nvme_mi_set_csi(nvme_mi_ep_t ep, uint8_t csi);
+
+/**
  * nvme_mi_first_endpoint - Start endpoint iterator
  * @m: &nvme_root_t object
  *

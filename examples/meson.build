@@ -40,6 +40,13 @@ executable(
     include_directories: [incdir, internal_incdir]
 )
 
+executable(
+    'mi-mctp-csi-test',
+    ['mi-mctp-csi-test.c'],
+    dependencies: libnvme_mi_dep,
+    include_directories: [incdir, internal_incdir]
+)
+
 if libdbus_dep.found()
     executable(
         'mi-conf',

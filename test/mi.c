@@ -734,7 +734,7 @@ static void test_resp_invalid_type(nvme_mi_ep_t ep)
 }
 
 /* test: response with mis-matching command slot */
-static int test_resp_csi_cb(struct nvme_mi_ep *ep,
+static int test_resp_csi_invert_cb(struct nvme_mi_ep *ep,
 			    struct nvme_mi_req *req,
 			    struct nvme_mi_resp *resp,
 			    void *data)
@@ -744,15 +744,54 @@ static int test_resp_csi_cb(struct nvme_mi_ep *ep,
 	return 0;
 }
 
-static void test_resp_csi(nvme_mi_ep_t ep)
+/* test: validation of proper csi setting */
+static int test_resp_csi_check_cb(struct nvme_mi_ep *ep,
+	struct nvme_mi_req *req,
+	struct nvme_mi_resp *resp,
+	void *data)
+{
+	assert((req->hdr->nmp & 1) == (ep->csi & 1));
+	return 0;
+}
+
+/* test: Ensure that csi bit is set properly in the request */
+static void test_resp_csi_request(nvme_mi_ep_t ep)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
 
-	test_set_transport_callback(ep, test_resp_csi_cb, NULL);
+	test_set_transport_callback(ep, test_resp_csi_check_cb, NULL);
 
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	assert(rc != 0);
+
+	nvme_mi_set_csi(ep, 1);//Change CSI
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+
+	nvme_mi_set_csi(ep, 0);//Change CSI
+}
+
+/* test: Ensure that when csi bit set wrong in response,
+ * it results in an error
+ */
+static void test_resp_csi_mismatch(nvme_mi_ep_t ep)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	test_set_transport_callback(ep, test_resp_csi_invert_cb, NULL);
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+
+	nvme_mi_set_csi(ep, 1);//Change CSI
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+
+	nvme_mi_set_csi(ep, 0);//Change CSI
 }
 
 /* test: config get MTU request & response layout, ensure we're handling
@@ -2062,7 +2101,8 @@ struct test {
 	DEFINE_TEST(resp_req),
 	DEFINE_TEST(resp_hdr_small),
 	DEFINE_TEST(resp_invalid_type),
-	DEFINE_TEST(resp_csi),
+	DEFINE_TEST(resp_csi_request),
+	DEFINE_TEST(resp_csi_mismatch),
 	DEFINE_TEST(mi_config_get_mtu),
 	DEFINE_TEST(mi_config_set_freq),
 	DEFINE_TEST(mi_config_set_freq_invalid),

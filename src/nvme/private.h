@@ -253,6 +253,11 @@ struct nvme_mi_transport {
  */
 #define NVME_QUIRK_MIN_INTER_COMMAND_TIME	(1 << 0)
 
+/* Some devices may not support using CSI 1.  Attempting to set an
+ * endpoint to use this with these devices should return an error
+ */
+#define NVME_QUIRK_CSI_1_NOT_SUPPORTED          (1 << 1)
+
 struct nvme_mi_ep {
 	struct nvme_root *root;
 	const struct nvme_mi_transport *transport;
@@ -264,6 +269,8 @@ struct nvme_mi_ep {
 	unsigned int timeout;
 	unsigned int mprt_max;
 	unsigned long quirks;
+
+	__u8 csi;
 
 	/* inter-command delay, for NVME_QUIRK_MIN_INTER_COMMAND_TIME */
 	unsigned int inter_command_us;
