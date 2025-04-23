@@ -524,17 +524,16 @@ enum NVME_FEATURE_IDENTIFIERS {
 };
 
 /*  WDC UUID value */
-const uint8_t WDC_UUID[] = {
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x2d, 0xb9, 0x8c, 0x52, 0x0c, 0x4c,
-	0x5a, 0x15, 0xab, 0xe6, 0x33, 0x29, 0x9a, 0x70, 0xdf, 0xd0
+static const __u8 WDC_UUID[NVME_UUID_LEN] = {
+	0x2d, 0xb9, 0x8c, 0x52, 0x0c, 0x4c, 0x5a, 0x15,
+	0xab, 0xe6, 0x33, 0x29, 0x9a, 0x70, 0xdf, 0xd0
 };
 
+
 /* WDC_UUID value for SN640_3 devices */
-const uint8_t WDC_UUID_SN640_3[] = {
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
-	0x11, 0x11, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22
+static const __u8 WDC_UUID_SN640_3[NVME_UUID_LEN] = {
+	0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
+	0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22
 };
 
 enum WDC_DRIVE_ESSENTIAL_TYPE {
@@ -1582,7 +1581,6 @@ static bool wdc_is_zn350(__u32 device_id)
 	return (device_id == WDC_NVME_ZN350_DEV_ID ||
 		device_id == WDC_NVME_ZN350_DEV_ID_1);
 }
-
 static bool needs_c2_log_page_check(__u32 device_id)
 {
 	if ((wdc_is_sn640(device_id)) ||
@@ -2668,9 +2666,11 @@ static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
 				void **data)
 {
 	bool found = false;
-	*data = NULL;
 	__u32 device_id = 0, vendor_id = 0;
 	int uuid_index = 0;
+	struct nvme_id_uuid_list uuid_list;
+
+	*data = NULL;
 
 	/* The wdc_get_pci_ids function could fail when drives are connected
 	 * via a PCIe switch.  Therefore, the return code is intentionally
@@ -2680,24 +2680,22 @@ static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
 	 */
 	wdc_get_pci_ids(r, dev, &device_id, &vendor_id);
 
-	if ((wdc_FindUuidIndex(dev,
-		(struct nvme_id_uuid_list_entry *)WDC_UUID,
-		(int *)&uuid_index)) ||
-		(wdc_FindUuidIndex(dev,
-		 (struct nvme_id_uuid_list_entry *)WDC_UUID_SN640_3,
-		 (int *)&uuid_index) &&
-		 wdc_is_sn640_3(device_id))) {
-		found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
-	} else {
-		if (!uuid_index && needs_c2_log_page_check(device_id)) {
-			/* In certain devices that don't support UUID lists, there are multiple
-			 * definitions of the C2 logpage. In those cases, the code
-			 * needs to try two UUID indexes and use an identification algorithm
-			 * to determine which is returning the correct log page data.
-			 */
-			uuid_index = 1;
-		}
+	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
+	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
+		uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+		if (uuid_index < 0 && wdc_is_sn640_3(device_id))
+			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
 
+		if (uuid_index > 0)
+			found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
+	} else if (needs_c2_log_page_check(device_id)) {
+		/* In certain devices that don't support UUID lists, there are multiple
+		 * definitions of the C2 logpage. In those cases, the code
+		 * needs to try two UUID indexes and use an identification algorithm
+		 * to determine which is returning the correct log page data.
+		 */
+
+		uuid_index = 1;
 		found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
 
 		if (!found) {
@@ -2717,11 +2715,12 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 				__u8 log_id, void **cbs_data)
 {
 	bool found = false;
-	__u8 uuid_ix = 0;
 	__u8 lid = 0;
-	*cbs_data = NULL;
 	__u32 device_id = 0, vendor_id = 0;
 	int uuid_index = 0;
+	struct nvme_id_uuid_list uuid_list;
+
+	*cbs_data = NULL;
 
 	/* The wdc_get_pci_ids function could fail when drives are connected
 	 * via a PCIe switch.  Therefore, the return code is intentionally
@@ -2733,42 +2732,40 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 
 	lid = WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID;
 
-	if ((wdc_FindUuidIndex(dev,
-		(struct nvme_id_uuid_list_entry *)WDC_UUID,
-		(int *)&uuid_index)) ||
-		(wdc_FindUuidIndex(dev,
-		 (struct nvme_id_uuid_list_entry *)WDC_UUID_SN640_3,
-		 (int *)&uuid_index) &&
-		 wdc_is_sn640_3(device_id))) {
-		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
+	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
+	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
+		uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+		if (uuid_index < 0 && wdc_is_sn640_3(device_id))
+			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+
+		if (uuid_index < 0)
+			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid,
+							       log_id, uuid_index);
+
 	} else if (wdc_is_zn350(device_id)) {
 		uuid_index = 0;
 		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
-	} else {
-		if (!uuid_index && needs_c2_log_page_check(device_id)) {
-			/* In certain devices that don't support UUID lists, there are multiple
-			 * definitions of the C2 logpage. In those cases, the code
-			 * needs to try two UUID indexes and use an identification algorithm
-			 * to determine which is returning the correct log page data.
-			 */
-			uuid_ix = 1;
-		}
-
-		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
-
+	} else if (needs_c2_log_page_check(device_id)) {
+		/* In certain devices that don't support UUID lists, there are multiple
+		 * definitions of the C2 logpage. In those cases, the code
+		 * needs to try two UUID indexes and use an identification algorithm
+		 * to determine which is returning the correct log page data.
+		 */
+		uuid_index = 1;
+		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
 		if (!found) {
 			/* not found with uuid = 1 try with uuid = 0 */
-			uuid_ix = 0;
+			uuid_index = 0;
 			fprintf(stderr, "Not found, requesting log page with uuid_index %d\n",
 					uuid_index);
 
-			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_ix);
+			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id,
+							       uuid_index);
 		}
 	}
 
 	return found;
 }
-
 
 static int wdc_get_supported_log_pages(struct nvme_dev *dev,
 		struct nvme_supported_log_pages *supported,
@@ -9009,7 +9006,6 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	const char *desc = "Get Drive Status.";
 	struct nvme_dev *dev;
 	int ret = 0;
-	bool uuid_found = false;
 	int uuid_index;
 	nvme_root_t r;
 	void *dev_mng_log = NULL;
@@ -9020,6 +9016,7 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	__u32 assert_status = 0xFFFFFFFF;
 	__u32 thermal_status = 0xFFFFFFFF;
 	__u64 capabilities = 0;
+	struct nvme_id_uuid_list uuid_list;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
@@ -9040,12 +9037,12 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	uuid_index = 0;
 
 	/* Find the WDC UUID index  */
-	uuid_found = wdc_FindUuidIndex(dev,
-			(struct nvme_id_uuid_list_entry *)WDC_UUID,
-			(int *)&uuid_index);
+	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
+	if (wdc_CheckUuidListSupport(dev, &uuid_list))
+		uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
 
-	if (!uuid_found)
-		/* WD UUID not found, use default uuid index - 0 */
+	/* WD UUID not found, use default uuid index - 0 */
+	if (uuid_index < 0)
 		uuid_index = 0;
 
 	/* verify the 0xC2 Device Manageability log page is supported */
@@ -10781,7 +10778,6 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 	__u32 device_id, read_vendor_id;
 	bool uuid_supported = false;
 	struct nvme_id_uuid_list uuid_list;
-	bool uuid_found = false;
 
 	struct config {
 		char *output_format;
@@ -10814,7 +10810,6 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 		fprintf(stderr, "ERROR: WDC: unsupported device for this command\n");
 		ret = -1;
 	} else {
-
 		memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 		if (wdc_CheckUuidListSupport(dev, &uuid_list))
 			uuid_supported = true;
@@ -10831,20 +10826,16 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID;
 
 		if (!wdc_is_sn861(device_id)) {
-			/* Find the WDC UUID index  */
-			uuid_found = wdc_FindUuidIndex(dev,
-					(struct nvme_id_uuid_list_entry *)WDC_UUID,
-					(int *)&uuid_index);
+			if (uuid_supported)
+				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
 
-			if (!uuid_found)
-				/* WD UUID not found, use default uuid index - 0 */
+			/* WD UUID not found, use default uuid index - 0 */
+			if (uuid_index < 0)
 				uuid_index = 0;
 
 			/* verify the 0xC2 Device Manageability log page is supported */
-			if (wdc_nvme_check_supported_log_page(r, dev,
-					log_id, uuid_index) == false) {
-				fprintf(stderr,
-					"%s: ERROR: WDC: 0x%x Log Page not supported\n",
+			if (!wdc_nvme_check_supported_log_page(r, dev, log_id, uuid_index)) {
+				fprintf(stderr, "%s: ERROR: WDC: 0x%x Log Page not supported\n",
 					__func__, log_id);
 				ret = -1;
 				goto out;
