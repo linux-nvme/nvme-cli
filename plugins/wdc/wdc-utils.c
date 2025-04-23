@@ -97,7 +97,7 @@ int wdc_UtilsGetTime(PUtilsTimeInfo timeInfo)
 	return WDC_STATUS_SUCCESS;
 }
 
-int wdc_UtilsCreateDir(char *path)
+int wdc_UtilsCreateDir(const char *path)
 {
 	int retStatus;
 	int status = WDC_STATUS_SUCCESS;
@@ -118,7 +118,7 @@ int wdc_UtilsCreateDir(char *path)
 	return status;
 }
 
-int wdc_WriteToFile(char *fileName, char *buffer, unsigned int bufferLen)
+int wdc_WriteToFile(const char *fileName, const char *buffer, unsigned int bufferLen)
 {
 	int          status = WDC_STATUS_SUCCESS;
 	FILE         *file;
@@ -150,7 +150,7 @@ end:
  *          1 if the pcSrc string is lexically higher than pcDst or
  *         -1 if the pcSrc string is lexically lower than pcDst.
  */
-int wdc_UtilsStrCompare(char *pcSrc, char *pcDst)
+int wdc_UtilsStrCompare(const char *pcSrc, const char *pcDst)
 {
 	while ((toupper(*pcSrc) == toupper(*pcDst)) && (*pcSrc != '\0')) {
 		pcSrc++;
