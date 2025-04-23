@@ -29,13 +29,6 @@
 #include "nvme-print.h"
 #include "wdc-utils.h"
 
-/* UUID field with value of 0 indicates end of UUID List*/
-const uint8_t UUID_END[] = {
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
 int wdc_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer, const char *format, ...)
 {
 	int res = 0;
@@ -196,45 +189,3 @@ bool wdc_CheckUuidListSupport(struct nvme_dev *dev, struct nvme_id_uuid_list *uu
 
 	return false;
 }
-
-bool wdc_UuidEqual(struct nvme_id_uuid_list_entry *entry1, struct nvme_id_uuid_list_entry *entry2)
-{
-	return !memcmp(entry1->uuid, entry2->uuid, NVME_UUID_LEN);
-}
-
-bool wdc_FindUuidIndex(struct nvme_dev *dev,
-		struct nvme_id_uuid_list_entry *uuid_entry,
-		int *uuid_index)
-{
-	bool uuid_found = false;
-	int index = 0;
-	struct nvme_id_uuid_list uuid_list;
-
-	*uuid_index = 0;
-
-	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
-	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
-		struct nvme_id_uuid_list_entry *uuid_list_entry_ptr =
-			(struct nvme_id_uuid_list_entry *)&uuid_list.entry[0];
-
-		while (index <= NVME_ID_UUID_LIST_MAX &&
-				!wdc_UuidEqual(uuid_list_entry_ptr,
-					(struct nvme_id_uuid_list_entry *)UUID_END)) {
-
-			if (wdc_UuidEqual(uuid_list_entry_ptr, uuid_entry)) {
-				uuid_found = true;
-				break;
-			}
-
-			index++;
-			uuid_list_entry_ptr =
-				(struct nvme_id_uuid_list_entry *)&uuid_list.entry[index];
-		}
-
-		if (uuid_found)
-			*uuid_index = index + 1;
-	}
-
-	return uuid_found;
-}
-
