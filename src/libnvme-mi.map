@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+LIBNVME_UNRELEASED {
+};
+
 LIBNVME_MI_1_12 {
 	global:
 		nvme_mi_mi_xfer;

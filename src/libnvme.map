@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
+LIBNVME_UNRELEASED {
+};
+
 LIBNVME_1.13 {
 	global:
 		nvme_subsystem_get_fw_rev;
