@@ -1576,6 +1576,12 @@ static bool wdc_is_sn650_e1l(__u32 device_id)
 		return false;
 }
 
+static bool wdc_is_zn350(__u32 device_id)
+{
+	return (device_id == WDC_NVME_ZN350_DEV_ID ||
+		device_id == WDC_NVME_ZN350_DEV_ID_1);
+}
+
 static bool needs_c2_log_page_check(__u32 device_id)
 {
 	if ((wdc_is_sn640(device_id)) ||
@@ -2734,7 +2740,7 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 		 (int *)&uuid_index) &&
 		 wdc_is_sn640_3(device_id))) {
 		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
-	} else if (device_id == WDC_NVME_ZN350_DEV_ID || device_id == WDC_NVME_ZN350_DEV_ID_1) {
+	} else if (wdc_is_zn350(device_id)) {
 		uuid_index = 0;
 		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
 	} else {
@@ -10815,8 +10821,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 
 
 		ret = wdc_get_pci_ids(r, dev, &device_id, &read_vendor_id);
-		log_id = (device_id == WDC_NVME_ZN350_DEV_ID ||
-			  device_id == WDC_NVME_ZN350_DEV_ID_1) ?
+		log_id = wdc_is_zn350(device_id) ?
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID_C8 :
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID;
 
