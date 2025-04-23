@@ -532,6 +532,11 @@ const char *nvme_subsystem_get_model(nvme_subsystem_t s)
 	return s->model;
 }
 
+const char *nvme_subsystem_get_serial(nvme_subsystem_t s)
+{
+	return s->serial;
+}
+
 const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s)
 {
 	return s->firmware;

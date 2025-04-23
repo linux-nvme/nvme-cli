@@ -1355,6 +1355,14 @@ const char *nvme_subsystem_get_iopolicy(nvme_subsystem_t s);
 const char *nvme_subsystem_get_model(nvme_subsystem_t s);
 
 /**
+ * nvme_subsystem_get_serial() - Return the serial number of subsystem
+ * @s:	nvme_subsystem_t object
+ *
+ * Return: Serial number of the current subsystem
+ */
+const char *nvme_subsystem_get_serial(nvme_subsystem_t s);
+
+/**
  * nvme_subsystem_get_fw_rev() - Return the firmware rev of subsystem
  * @s:	nvme_subsystem_t object
  *
