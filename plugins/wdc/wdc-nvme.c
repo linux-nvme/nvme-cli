@@ -923,15 +923,16 @@ struct __packed feature_latency_monitor {
 };
 
 static int wdc_get_serial_name(struct nvme_dev *dev, char *file, size_t len, const char *suffix);
-static int wdc_create_log_file(char *file, __u8 *drive_log_data, __u32 drive_log_length);
+static int wdc_create_log_file(const char *file, const __u8 *drive_log_data,
+			       __u32 drive_log_length);
 static int wdc_do_clear_dump(struct nvme_dev *dev, __u8 opcode, __u32 cdw12);
-static int wdc_do_dump(struct nvme_dev *dev, __u32 opcode, __u32 data_len, __u32 cdw12, char *file,
-		       __u32 xfer_size);
+static int wdc_do_dump(struct nvme_dev *dev, __u32 opcode, __u32 data_len, __u32 cdw12,
+		       const char *file, __u32 xfer_size);
 static int wdc_do_crash_dump(struct nvme_dev *dev, char *file, int type);
-static int wdc_crash_dump(struct nvme_dev *dev, char *file, int type);
+static int wdc_crash_dump(struct nvme_dev *dev, const char *file, int type);
 static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 			      struct plugin *plugin);
-static int wdc_do_drive_log(struct nvme_dev *dev, char *file);
+static int wdc_do_drive_log(struct nvme_dev *dev, const char *file);
 static int wdc_drive_log(int argc, char **argv, struct command *command, struct plugin *plugin);
 static const char *wdc_purge_mon_status_to_string(__u32 status);
 static int wdc_purge(int argc, char **argv, struct command *command, struct plugin *plugin);
@@ -955,7 +956,7 @@ static int wdc_namespace_resize(int argc, char **argv, struct command *command,
 static int wdc_do_namespace_resize(struct nvme_dev *dev, __u32 nsid, __u32 op_option);
 static int wdc_reason_identifier(int argc, char **argv, struct command *command,
 				 struct plugin *plugin);
-static int wdc_do_get_reason_id(struct nvme_dev *dev, char *file, int log_id);
+static int wdc_do_get_reason_id(struct nvme_dev *dev, const char *file, int log_id);
 static int wdc_save_reason_id(struct nvme_dev *dev, __u8 *rsn_ident,  int size);
 static int wdc_clear_reason_id(struct nvme_dev *dev);
 static int wdc_log_page_directory(int argc, char **argv, struct command *command,
@@ -2150,8 +2151,8 @@ static int wdc_get_serial_name(struct nvme_dev *dev, char *file, size_t len,
 	return 0;
 }
 
-static int wdc_create_log_file(char *file, __u8 *drive_log_data,
-		__u32 drive_log_length)
+static int wdc_create_log_file(const char *file, const __u8 *drive_log_data,
+			       __u32 drive_log_length)
 {
 	int fd;
 	int ret;
@@ -3022,7 +3023,7 @@ static __u32 wdc_dump_dui_data_v2(int fd, __u32 dataLen, __u64 offset, __u8 *dum
 }
 
 static int wdc_do_dump(struct nvme_dev *dev, __u32 opcode, __u32 data_len,
-		__u32 cdw12, char *file, __u32 xfer_size)
+		       __u32 cdw12, const char *file, __u32 xfer_size)
 {
 	int ret = 0;
 	__u8 *dump_data;
@@ -3081,7 +3082,7 @@ static int wdc_do_dump(struct nvme_dev *dev, __u32 opcode, __u32 data_len,
 }
 
 static int wdc_do_dump_e6(int fd, __u32 opcode, __u32 data_len,
-		__u32 cdw12, char *file, __u32 xfer_size, __u8 *log_hdr)
+			  __u32 cdw12, char *file, __u32 xfer_size, __u8 *log_hdr)
 {
 	int ret = 0;
 	__u8 *dump_data;
@@ -3155,8 +3156,8 @@ static int wdc_do_dump_e6(int fd, __u32 opcode, __u32 data_len,
 	return ret;
 }
 
-static int wdc_do_cap_telemetry_log(struct nvme_dev *dev, char *file,
-				__u32 bs, int type, int data_area)
+static int wdc_do_cap_telemetry_log(struct nvme_dev *dev, const char *file,
+				    __u32 bs, int type, int data_area)
 {
 	struct nvme_telemetry_log *log;
 	size_t full_size = 0;
@@ -3798,9 +3799,9 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
 	nvme_root_t r;
-	char *desc = "Capture Diagnostics Log.";
-	char *file = "Output file pathname.";
-	char *size = "Data retrieval transfer size.";
+	const char *desc = "Capture Diagnostics Log.";
+	const char *file = "Output file pathname.";
+	const char *size = "Data retrieval transfer size.";
 	__u64 capabilities = 0;
 	char f[PATH_MAX] = {0};
 	struct nvme_dev *dev;
@@ -4091,7 +4092,7 @@ free_buf:
 	return ret;
 }
 
-static int dump_internal_logs(struct nvme_dev *dev, char *dir_name, int verbose)
+static int dump_internal_logs(struct nvme_dev *dev, const char *dir_name, int verbose)
 {
 	char file_path[PATH_MAX];
 	void *telemetry_log;
@@ -4190,14 +4191,17 @@ free_mem:
 static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command,
 				  struct plugin *plugin)
 {
-	char *desc = "Internal Firmware Log.";
-	char *file = "Output file pathname.";
-	char *size = "Data retrieval transfer size.";
-	char *data_area = "Data area to retrieve up to. Currently only supported on the SN340, SN640, SN730, and SN840 devices.";
-	char *file_size = "Output file size.  Currently only supported on the SN340 device.";
-	char *offset = "Output file data offset. Currently only supported on the SN340 device.";
-	char *type = "Telemetry type - NONE, HOST, or CONTROLLER. Currently only supported on the SN530, SN640, SN730, SN740, SN810, SN840 and ZN350 devices.";
-	char *verbose = "Display more debug messages.";
+	const char *desc = "Internal Firmware Log.";
+	const char *file = "Output file pathname.";
+	const char *size = "Data retrieval transfer size.";
+	const char *data_area =
+		"Data area to retrieve up to. Currently only supported on the SN340, SN640, SN730, and SN840 devices.";
+	const char *file_size = "Output file size. Currently only supported on the SN340 device.";
+	const char *offset =
+		"Output file data offset. Currently only supported on the SN340 device.";
+	const char *type =
+		"Telemetry type - NONE, HOST, or CONTROLLER Currently only supported on the SN530, SN640, SN730, SN740, SN810, SN840 and ZN350 devices.";
+	const char *verbose = "Display more debug messages.";
 	char f[PATH_MAX] = {0};
 	char fb[PATH_MAX/2] = {0};
 	char fileSuffix[PATH_MAX] = {0};
@@ -4527,7 +4531,7 @@ static int wdc_do_crash_dump(struct nvme_dev *dev, char *file, int type)
 	return ret;
 }
 
-static int wdc_crash_dump(struct nvme_dev *dev, char *file, int type)
+static int wdc_crash_dump(struct nvme_dev *dev, const char *file, int type)
 {
 	char f[PATH_MAX] = {0};
 	const char *dump_type;
@@ -4549,7 +4553,7 @@ static int wdc_crash_dump(struct nvme_dev *dev, char *file, int type)
 	return ret;
 }
 
-static int wdc_do_drive_log(struct nvme_dev *dev, char *file)
+static int wdc_do_drive_log(struct nvme_dev *dev, const char *file)
 {
 	int ret;
 	__u8 *drive_log_data;
@@ -4694,8 +4698,8 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 static int wdc_get_pfail_dump(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Get Pfail Crash Dump.";
-	char *file = "Output file pathname.";
+	const char *desc = "Get Pfail Crash Dump.";
+	const char *file = "Output file pathname.";
 	__u64 capabilities = 0;
 	struct nvme_dev *dev;
 	struct config {
@@ -5133,7 +5137,7 @@ static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_lo
 {
 	int i, j;
 	char buf[128];
-	char *operation[3] = {"Read", "Write", "Trim"};
+	const char *operation[3] = {"Read", "Write", "Trim"};
 	struct json_object *root = json_create_object();
 
 	json_object_add_value_int(root, "Feature Status", log_data->feature_status);
@@ -5956,7 +5960,7 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries,
 	__u16 oldestEntryIdx = 0, entryIdx = 0;
 	uint64_t timestamp;
 	__u64 timestamp_sec;
-	char *null_fw = "--------";
+	const char *null_fw = "--------";
 
 	memset((void *)time_str, '\0', 100);
 
@@ -8959,7 +8963,7 @@ static int wdc_do_clear_pcie_correctable_errors_fid(int fd)
 static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Clear PCIE Correctable Errors.";
+	const char *desc = "Clear PCIE Correctable Errors.";
 	__u64 capabilities = 0;
 	struct nvme_dev *dev;
 	nvme_root_t r;
@@ -9002,7 +9006,7 @@ out:
 static int wdc_drive_status(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Get Drive Status.";
+	const char *desc = "Get Drive Status.";
 	struct nvme_dev *dev;
 	int ret = 0;
 	bool uuid_found = false;
@@ -9145,7 +9149,7 @@ out:
 static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Clear Assert Dump Present Status.";
+	const char *desc = "Clear Assert Dump Present Status.";
 	struct nvme_dev *dev;
 	int ret = -1;
 	nvme_root_t r;
@@ -9455,7 +9459,7 @@ static int wdc_do_clear_fw_activate_history_fid(int fd)
 static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Clear FW activate history table.";
+	const char *desc = "Clear FW activate history table.";
 	__u64 capabilities = 0;
 	struct nvme_dev *dev;
 	nvme_root_t r;
@@ -9491,10 +9495,10 @@ out:
 static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Disable/Enable Controller Option of the Telemetry Log Page.";
-	char *disable = "Disable controller option of the telemetry log page.";
-	char *enable = "Enable controller option of the telemetry log page.";
-	char *status = "Displays the current state of the controller initiated log page.";
+	const char *desc = "Disable/Enable Controller Option of the Telemetry Log Page.";
+	const char *disable = "Disable controller option of the telemetry log page.";
+	const char *enable = "Enable controller option of the telemetry log page.";
+	const char *status = "Displays the current state of the controller initiated log page.";
 	__u64 capabilities = 0;
 	struct nvme_dev *dev;
 	nvme_root_t r;
@@ -9883,7 +9887,8 @@ end:
 	return ret;
 }
 
-static int wdc_de_get_dump_trace(struct nvme_dev *dev, char *filePath, __u16 binFileNameLen, char *binFileName)
+static int wdc_de_get_dump_trace(struct nvme_dev *dev, const char *filePath, __u16 binFileNameLen,
+				 const char *binFileName)
 {
 	int ret = WDC_STATUS_FAILURE;
 	__u8 *readBuffer = NULL;
@@ -10292,8 +10297,8 @@ static int wdc_do_drive_essentials(nvme_root_t r, struct nvme_dev *dev,
 static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Capture Drive Essentials.";
-	char *dirName = "Output directory pathname.";
+	const char *desc = "Capture Drive Essentials.";
+	const char *dirName = "Output directory pathname.";
 	char d[PATH_MAX] = {0};
 	char k[PATH_MAX] = {0};
 	__u64 capabilities = 0;
@@ -10307,7 +10312,7 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 	};
 
 	struct config cfg = {
-			.dirName = NULL,
+		.dirName = NULL,
 	};
 
 	OPT_ARGS(opts) = {
@@ -10936,7 +10941,7 @@ static int wdc_get_drive_reason_id(struct nvme_dev *dev, char *drive_reason_id, 
 	int ret;
 	int res_len = 0;
 	struct nvme_id_ctrl ctrl;
-	char *reason_id_str = "reason_id";
+	const char *reason_id_str = "reason_id";
 
 	i = sizeof(ctrl.sn) - 1;
 	j = sizeof(ctrl.mn) - 1;
@@ -11056,7 +11061,7 @@ static int wdc_dump_telemetry_hdr(struct nvme_dev *dev, int log_id, struct nvme_
 	return ret;
 }
 
-static int wdc_do_get_reason_id(struct nvme_dev *dev, char *file, int log_id)
+static int wdc_do_get_reason_id(struct nvme_dev *dev, const char *file, int log_id)
 {
 	int ret;
 	struct nvme_telemetry_log *log_hdr;
@@ -12260,10 +12265,10 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv, struct command *com
 
 static int wdc_enc_get_log(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
-	char *desc = "Get Enclosure Log.";
-	char *file = "Output file pathname.";
-	char *size = "Data retrieval transfer size.";
-	char *log = "Enclosure Log Page ID.";
+	const char *desc = "Get Enclosure Log.";
+	const char *file = "Output file pathname.";
+	const char *size = "Data retrieval transfer size.";
+	const char *log = "Enclosure Log Page ID.";
 	struct nvme_dev *dev;
 	FILE *output_fd;
 	int xfer_size = 0;
