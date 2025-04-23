@@ -132,6 +132,42 @@ if [ "$build_doc" = true ]; then
     git commit -s -m "doc: Regenerate all docs for $VERSION"
 fi
 
+declare -A maps
+maps=(
+    [src/libnvme.map]=LIBNVME
+    [src/libnvme-mi.map]=LIBNVME_MI
+)
+
+lib_ver="${ver//./_}"
+
+for map_file in "${!maps[@]}"
+do
+    lib_name=${maps[$map_file]}
+
+    if [ ! -f "${map_file}" ]; then
+       continue
+    fi
+
+    lib_unreleased="${lib_name}_UNRELEASED"
+
+    # Check if UNRELEASED has symbols
+    if ! awk -v lib_unreleased="$lib_unreleased" '
+        $0 ~ "^"lib_unreleased { in_section = 1; next }
+        in_section && $0 ~ /\}/ { exit }
+        in_section && $0 !~ /^[[:space:]]*($|\/|\/\*|\*|#)/ { found = 1; exit }
+        END { exit !found }
+    ' "${map_file}"; then
+        continue
+    fi
+
+    sed -i \
+        -e "s/^${lib_unreleased}\s*{/&\n};\n\n${lib_name}_${lib_ver} {/" \
+        "$map_file"
+
+    git add "${map_file}"
+    echo "${map_file} updated."
+done
+
 # update meson.build
 sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
 if [[ -n "$libnvme_VERSION" ]] && [[ -f subprojects/libnvme.wrap ]]; then
