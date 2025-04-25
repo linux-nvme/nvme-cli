@@ -1531,6 +1531,38 @@ plugin_inspur_opts () {
 	return 0
 }
 
+plugin_mangoboost_opts () {
+	local opts=""
+	local compargs=""
+
+	local nonopt_args=0
+	for (( i=0; i < ${#words[@]}-1; i++ )); do
+		if [[ ${words[i]} != -* ]]; then
+			let nonopt_args+=1
+		fi
+	done
+
+	if [ $nonopt_args -eq 3 ]; then
+		opts="/dev/nvme* "
+	fi
+
+	opts+=" "
+
+	case "$1" in
+		"id-ctrl")
+		opts+=" --raw-binary -b --human-readable -H \
+			--vendor-specific -v --output-format= -o"
+			;;
+		"help")
+		opts+=$NO_OPTS
+			;;
+	esac
+
+	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
+
+	return 0
+}
+
 plugin_ocp_opts () {
 	local opts=""
 	local compargs=""
@@ -1698,6 +1730,7 @@ _nvme_subcmds () {
 			set-dssd-async-event-config get-dssd-async-event-config \
 			get-error-injection set-error-injection \
 			hardware-component-log"
+		[mangoboost]="id-ctrl"
 	)
 
 	# Associative array mapping plugins to corresponding option completions
@@ -1723,6 +1756,7 @@ _nvme_subcmds () {
 		[ymtc]="plugin_ymtc_opts"
 		[inspur]="plugin_inspur_opts"
 		[ocp]="plugin_ocp_opts"
+		[mangoboost]="plugin_mangoboost_opts"
 	)
 
 	# Top level commands
