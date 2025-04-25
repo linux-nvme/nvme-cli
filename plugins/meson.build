@@ -10,6 +10,7 @@ sources += [
   'plugins/innogrit/innogrit-nvme.c',
   'plugins/inspur/inspur-nvme.c',
   'plugins/intel/intel-nvme.c',
+  'plugins/mangoboost/mangoboost-nvme.c',
   'plugins/memblaze/memblaze-nvme.c',
   'plugins/micron/micron-nvme.c',
   'plugins/nbft/nbft-plugin.c',

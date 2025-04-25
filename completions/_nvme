@@ -123,6 +123,7 @@ _nvme () {
 	'solidigm:Solidigm plug-in extensions'
 	'fdp:FDP plug-in extensions'
 	'micron:Micron plug-in extensions'
+	'mangoboost:MangoBoost plug-in extensions'
 	'dapustor:DapuStor plug-in extensions'
 	'help:print brief descriptions of all nvme commands'
 	'json:dump output in json format'
@@ -657,6 +658,30 @@ _nvme () {
 			(*)
 				_files
 				;;
+			esac
+			;;
+                (mangoboost)
+                        case ${words[2]} in
+                        (id-ctrl)
+                                local _id_ctrl
+                                _id_ctrl=(
+                                --verbose':Increase output verbosity'
+                                -v':alias for --verbose'
+                                --output-format':Output format: normal|json|binary'
+                                -o':alias for --output-format'
+                                --vendor-specific':dump binary vendor field'
+                                -V':alias for --vendor-specific'
+                                --raw-binary':show identify in binary format'
+                                -b':alias for --raw-binary'
+                                --human-readable':show identify in readable format'
+                                -H':alias for --human-readable'
+                                )
+                                _arguments '*:: :->subcmds'
+                                _describe -t commands "nvme mangoboost id-ctrl options" _id_ctrl
+                                ;;
+                        (*)
+                                _files
+                                ;;
 			esac
 			;;
 		(*)
@@ -2895,6 +2920,16 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme dapustor options" _dapustor
 			;;
+		(mangoboost)
+			local _mangoboost
+			_mangoboost=(
+			id-ctrl':Send NVMe Identify Controller'
+			version':Shows the program version'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme mangoboost options" _mangoboost
+			;;
 		(help)
 			local _h
 			_h=( id-ctrl id-ns list-ns id-iocs create-ns delete-ns attach-ns detach-ns
@@ -2913,7 +2948,7 @@ _nvme () {
 			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
 			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
 			dir-send virt-mgmt rpmb version ocp solidigm dapustor mgmt-addr-list-log
-			rotational-media-info-log changed-alloc-ns-list-log fdp
+			rotational-media-info-log changed-alloc-ns-list-log fdp mangoboost
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
