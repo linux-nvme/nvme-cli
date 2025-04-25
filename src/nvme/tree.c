@@ -925,6 +925,11 @@ const char *nvme_path_get_ana_state(nvme_path_t p)
 	return p->ana_state;
 }
 
+const char *nvme_path_get_numa_nodes(nvme_path_t p)
+{
+	return p->numa_nodes;
+}
+
 void nvme_free_path(struct nvme_path *p)
 {
 	list_del_init(&p->entry);
@@ -932,6 +937,7 @@ void nvme_free_path(struct nvme_path *p)
 	free(p->name);
 	free(p->sysfs_dir);
 	free(p->ana_state);
+	free(p->numa_nodes);
 	free(p);
 }
 
@@ -966,6 +972,10 @@ static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name)
 	p->ana_state = nvme_get_path_attr(p, "ana_state");
 	if (!p->ana_state)
 		p->ana_state = strdup("optimized");
+
+	p->numa_nodes = nvme_get_path_attr(p, "numa_nodes");
+	if (!p->numa_nodes)
+		p->numa_nodes = strdup("-1");
 
 	grpid = nvme_get_path_attr(p, "ana_grpid");
 	if (grpid) {

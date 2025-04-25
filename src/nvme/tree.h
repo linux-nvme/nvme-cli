@@ -868,6 +868,14 @@ const char *nvme_path_get_sysfs_dir(nvme_path_t p);
 const char *nvme_path_get_ana_state(nvme_path_t p);
 
 /**
+ * nvme_path_get_numa_nodes() - NUMA nodes of an nvme_path_t object
+ * @p : &nvme_path_t object
+ *
+ * Return: NUMA nodes associated to @p
+ */
+const char *nvme_path_get_numa_nodes(nvme_path_t p);
+
+/**
  * nvme_path_get_queue_depth() - Queue depth of an nvme_path_t object
  * @p: &nvme_path_t object
  *

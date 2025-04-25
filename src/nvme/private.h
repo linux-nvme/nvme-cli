@@ -33,6 +33,7 @@ struct nvme_path {
 	char *name;
 	char *sysfs_dir;
 	char *ana_state;
+	char *numa_nodes;
 	int grpid;
 	int queue_depth;
 };
