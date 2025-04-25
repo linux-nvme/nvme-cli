@@ -533,25 +533,97 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 	json_object_array_add(ctrl_array, ctrl_obj);
 }
 
+static unsigned int json_dump_subsys_multipath(nvme_subsystem_t s,
+				struct json_object *ns_array)
+{
+	nvme_ns_t n;
+	nvme_path_t p;
+	unsigned int i = 0;
+
+	nvme_subsystem_for_each_ns(s, n) {
+		struct json_object *ns_obj;
+		struct json_object *path_array;
+
+		ns_obj = json_object_new_object();
+		json_object_object_add(ns_obj, "nsid",
+				json_object_new_int(nvme_ns_get_nsid(n)));
+		json_object_object_add(ns_obj, "name",
+				json_object_new_string(nvme_ns_get_name(n)));
+
+		path_array = json_object_new_array();
+		nvme_namespace_for_each_path(n, p) {
+			struct json_object *path_obj;
+			struct json_object *ctrl_array;
+			nvme_ctrl_t c;
+
+			path_obj = json_object_new_object();
+			json_object_object_add(path_obj, "path",
+				json_object_new_string(nvme_path_get_name(p)));
+			json_object_object_add(path_obj, "ANAState",
+				json_object_new_string(nvme_path_get_ana_state(p)));
+			json_object_object_add(path_obj, "NUMANodes",
+				json_object_new_string(nvme_path_get_numa_nodes(p)));
+			json_object_object_add(path_obj, "qdepth",
+				json_object_new_int(nvme_path_get_queue_depth(p)));
+
+			c = nvme_path_get_ctrl(p);
+			ctrl_array = json_object_new_array();
+			json_dump_ctrl(ctrl_array, c);
+			json_object_object_add(path_obj, "controller", ctrl_array);
+			json_object_array_add(path_array, path_obj);
+		}
+		json_object_object_add(ns_obj, "paths", path_array);
+		json_object_array_add(ns_array, ns_obj);
+		i++;
+	}
+	return i;
+}
+
+static void json_dump_subsys_non_multipath(nvme_subsystem_t s,
+		struct json_object *ns_array)
+{
+	nvme_ctrl_t c;
+	nvme_ns_t n;
+
+	nvme_subsystem_for_each_ctrl(s, c) {
+		nvme_ctrl_for_each_ns(c, n) {
+			struct json_object *ctrl_array;
+			struct json_object *ns_obj;
+
+			ns_obj = json_object_new_object();
+			json_object_object_add(ns_obj, "nsid",
+				json_object_new_int(nvme_ns_get_nsid(n)));
+			json_object_object_add(ns_obj, "name",
+				json_object_new_string(nvme_ns_get_name(n)));
+
+			ctrl_array = json_object_new_array();
+			json_dump_ctrl(ctrl_array, c);
+			json_object_object_add(ns_obj, "controller", ctrl_array);
+
+			json_object_array_add(ns_array, ns_obj);
+		}
+	}
+}
+
 static void json_dump_subsys(struct json_object *subsys_array,
 			       nvme_subsystem_t s)
 {
-	nvme_ctrl_t c;
 	struct json_object *subsys_obj = json_object_new_object();
-	struct json_object *ctrl_array;
+	struct json_object *ns_array;
 
 	json_object_object_add(subsys_obj, "name",
 			       json_object_new_string(nvme_subsystem_get_name(s)));
 	json_object_object_add(subsys_obj, "nqn",
 			       json_object_new_string(nvme_subsystem_get_nqn(s)));
-	ctrl_array = json_object_new_array();
-	nvme_subsystem_for_each_ctrl(s, c) {
-		json_dump_ctrl(ctrl_array, c);
-	}
-	if (json_object_array_length(ctrl_array))
-		json_object_object_add(subsys_obj, "controllers", ctrl_array);
+
+	ns_array = json_object_new_array();
+	if (!json_dump_subsys_multipath(s, ns_array))
+		json_dump_subsys_non_multipath(s, ns_array);
+
+	if (json_object_array_length(ns_array))
+		json_object_object_add(subsys_obj, "namespaces", ns_array);
 	else
-		json_object_put(ctrl_array);
+		json_object_put(ns_array);
 	json_object_array_add(subsys_array, subsys_obj);
 }
 

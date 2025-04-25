@@ -6,23 +6,56 @@
       "subsystems":[
         {
           "name":"nvme-subsys0",
-          "nqn":"nqn.2019-08.org.qemu:subsys1",
-          "controllers":[
+          "nqn":"nqn.1994-11.com.samsung:nvme:PM1743:2.5-inch:S7DFNG0W700063",
+          "namespaces":[
             {
-              "name":"nvme0",
-              "transport":"pcie",
-              "traddr":"0000:0f:00.0"
+              "nsid":1,
+              "name":"nvme0n1",
+              "controller":[
+                {
+                  "name":"nvme0",
+                  "transport":"pcie",
+                  "traddr":"0214:90:00.0"
+                }
+              ]
             }
           ]
         },
         {
           "name":"nvme-subsys1",
-          "nqn":"nqn.2019-08.org.qemu:nvme-0",
-          "controllers":[
+          "nqn":"nqn.1994-11.com.samsung:nvme:PM1735a:2.5-inch:S6RTNE0R900057",
+          "namespaces":[
             {
-              "name":"nvme1",
-              "transport":"pcie",
-              "traddr":"0000:00:05.0"
+              "nsid":1,
+              "name":"nvme1n1",
+              "paths":[
+                {
+                  "path":"nvme1c1n1",
+                  "ANAState":"optimized",
+                  "NUMANodes":"0-1",
+                  "qdepth":0,
+                  "controller":[
+                    {
+                      "name":"nvme1",
+                      "transport":"pcie",
+                      "traddr":"052e:78:00.0"
+                    }
+                  ]
+                },
+                {
+                  "path":"nvme1c2n1",
+                  "ANAState":"optimized",
+                  "NUMANodes":"2-3",
+                  "qdepth":0,
+                  "controller":[
+                    {
+                      "name":"nvme2",
+                      "transport":"pcie",
+                      "traddr":"058e:78:00.0"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
