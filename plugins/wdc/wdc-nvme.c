@@ -537,13 +537,6 @@ const uint8_t WDC_UUID_SN640_3[] = {
 	0x11, 0x11, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22
 };
 
-/* UUID field with value of 0 indicates end of UUID List*/
-const uint8_t UUID_END[] = {
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
 enum WDC_DRIVE_ESSENTIAL_TYPE {
 	WDC_DE_TYPE_IDENTIFY            = 0x1,
 	WDC_DE_TYPE_SMARTATTRIBUTEDUMP  = 0x2,
@@ -943,7 +936,10 @@ static int wdc_drive_log(int argc, char **argv, struct command *command, struct 
 static const char *wdc_purge_mon_status_to_string(__u32 status);
 static int wdc_purge(int argc, char **argv, struct command *command, struct plugin *plugin);
 static int wdc_purge_monitor(int argc, char **argv, struct command *command, struct plugin *plugin);
-static bool wdc_nvme_check_supported_log_page(nvme_root_t r, struct nvme_dev *dev, __u8 log_id);
+static bool wdc_nvme_check_supported_log_page(nvme_root_t r,
+		struct nvme_dev *dev,
+		__u8 log_id,
+		__u8 uuid_index);
 static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct command *command,
 					     struct plugin *plugin);
 static int wdc_do_drive_essentials(nvme_root_t r, struct nvme_dev *dev, char *dir, char *key);
@@ -1699,12 +1695,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE))
+					WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
 
 			/* verify the 0xC1 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_ADD_LOG_OPCODE))
+					WDC_NVME_ADD_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_C1_LOG_PAGE;
 			break;
 
@@ -1722,12 +1718,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE);
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE))
+					WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
 
 			/* verify the 0xD0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_VU_SMART_LOG_OPCODE))
+					WDC_NVME_GET_VU_SMART_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 			break;
 
@@ -1741,7 +1737,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case WDC_NVME_SN660_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID)
+					WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID, 0)
 			    == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
 			}
@@ -1754,32 +1750,32 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 
 			/* verify the 0xC1 (OCP Error Recovery) log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_ERROR_REC_LOG_ID))
+					WDC_ERROR_REC_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_OCP_C1_LOG_PAGE;
 
 			/* verify the 0xC3 (OCP Latency Monitor) log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_LATENCY_MON_LOG_ID))
+					WDC_LATENCY_MON_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
 
 			/* verify the 0xC4 (OCP Device Capabilities) log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_DEV_CAP_LOG_ID))
+					WDC_DEV_CAP_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_OCP_C4_LOG_PAGE;
 
 			/* verify the 0xC5 (OCP Unsupported Requirements) log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_UNSUPPORTED_REQS_LOG_ID))
+					WDC_UNSUPPORTED_REQS_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_OCP_C5_LOG_PAGE;
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE))
+					WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
 
 			/* verify the 0xD0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_VU_SMART_LOG_OPCODE))
+					WDC_NVME_GET_VU_SMART_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 
 			cust_id = wdc_get_fw_cust_id(r, dev);
@@ -1802,7 +1798,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case WDC_NVME_SN860_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_EOL_STATUS_LOG_OPCODE))
+					WDC_NVME_GET_EOL_STATUS_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
 			fallthrough;
 		case WDC_NVME_ZN540_DEV_ID:
@@ -1816,12 +1812,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE))
+					WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
 
 			/* verify the 0xD0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_VU_SMART_LOG_OPCODE))
+					WDC_NVME_GET_VU_SMART_LOG_OPCODE, 0))
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 			break;
 
@@ -1835,23 +1831,27 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case WDC_NVME_SN550_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID))
+					WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
 
 			/* verify the 0xC1 (OCP Error Recovery) log page is supported */
-			if (wdc_nvme_check_supported_log_page(r, dev, WDC_ERROR_REC_LOG_ID))
+			if (wdc_nvme_check_supported_log_page(r, dev,
+					WDC_ERROR_REC_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_OCP_C1_LOG_PAGE;
 
 			/* verify the 0xC3 (OCP Latency Monitor) log page is supported */
-			if (wdc_nvme_check_supported_log_page(r, dev, WDC_LATENCY_MON_LOG_ID))
+			if (wdc_nvme_check_supported_log_page(r, dev,
+					WDC_LATENCY_MON_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
 
 			/* verify the 0xC4 (OCP Device Capabilities) log page is supported */
-			if (wdc_nvme_check_supported_log_page(r, dev, WDC_DEV_CAP_LOG_ID))
+			if (wdc_nvme_check_supported_log_page(r, dev,
+					WDC_DEV_CAP_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_OCP_C4_LOG_PAGE;
 
 			/* verify the 0xC5 (OCP Unsupported Requirements) log page is supported */
-			if (wdc_nvme_check_supported_log_page(r, dev, WDC_UNSUPPORTED_REQS_LOG_ID))
+			if (wdc_nvme_check_supported_log_page(r, dev,
+					WDC_UNSUPPORTED_REQS_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_OCP_C5_LOG_PAGE;
 
 			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
@@ -2050,11 +2050,13 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r,
 			WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP);
 
 		/* verify the 0xCA log page is supported */
-		if (wdc_nvme_check_supported_log_page(r, dev, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
+		if (wdc_nvme_check_supported_log_page(r, dev,
+				WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0) == true)
 			capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
 
 		/* verify the 0xC1 log page is supported */
-		if (wdc_nvme_check_supported_log_page(r, dev, WDC_NVME_ADD_LOG_OPCODE) == true)
+		if (wdc_nvme_check_supported_log_page(r, dev,
+				WDC_NVME_ADD_LOG_OPCODE, 0) == true)
 			capabilities |= WDC_DRIVE_CAP_C1_LOG_PAGE;
 		break;
 	case WDC_NVME_VID_2:
@@ -2063,19 +2065,23 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r,
 			WDC_DRIVE_CAP_RESIZE);
 
 		/* verify the 0xC3 log page is supported */
-		if (wdc_nvme_check_supported_log_page(r, dev, WDC_LATENCY_MON_LOG_ID) == true)
+		if (wdc_nvme_check_supported_log_page(r, dev,
+				WDC_LATENCY_MON_LOG_ID, 0) == true)
 			capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
 
 		/* verify the 0xCB log page is supported */
-		if (wdc_nvme_check_supported_log_page(r, dev, WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID) == true)
+		if (wdc_nvme_check_supported_log_page(r, dev,
+				WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID, 0) == true)
 			capabilities |= WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY;
 
 		/* verify the 0xCA log page is supported */
-		if (wdc_nvme_check_supported_log_page(r, dev, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
+		if (wdc_nvme_check_supported_log_page(r, dev,
+				WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0) == true)
 			capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
 
 		/* verify the 0xD0 log page is supported */
-		if (wdc_nvme_check_supported_log_page(r, dev, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
+		if (wdc_nvme_check_supported_log_page(r, dev,
+				WDC_NVME_GET_VU_SMART_LOG_OPCODE, 0) == true)
 			capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 
 		cust_id = wdc_get_fw_cust_id(r, dev);
@@ -2657,9 +2663,7 @@ static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
 	bool found = false;
 	*data = NULL;
 	__u32 device_id = 0, vendor_id = 0;
-	bool uuid_present = false;
-	int index = 0, uuid_index = 0;
-	struct nvme_id_uuid_list uuid_list;
+	int uuid_index = 0;
 
 	/* The wdc_get_pci_ids function could fail when drives are connected
 	 * via a PCIe switch.  Therefore, the return code is intentionally
@@ -2669,34 +2673,13 @@ static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
 	 */
 	wdc_get_pci_ids(r, dev, &device_id, &vendor_id);
 
-	typedef struct nvme_id_uuid_list_entry *uuid_list_entry;
-
-	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
-	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
-		uuid_list_entry uuid_list_entry_ptr = (uuid_list_entry)&uuid_list.entry[0];
-
-		while (index <= NVME_ID_UUID_LIST_MAX &&
-		       !wdc_UuidEqual(uuid_list_entry_ptr, (uuid_list_entry)UUID_END)) {
-
-			if (wdc_UuidEqual(uuid_list_entry_ptr,
-					  (uuid_list_entry)WDC_UUID)) {
-				uuid_present = true;
-				break;
-			} else if (wdc_UuidEqual(uuid_list_entry_ptr,
-						 (uuid_list_entry)WDC_UUID_SN640_3) &&
-				   wdc_is_sn640_3(device_id)) {
-				uuid_present = true;
-				break;
-			}
-			index++;
-			uuid_list_entry_ptr = (uuid_list_entry)&uuid_list.entry[index];
-		}
-		if (uuid_present)
-			uuid_index = index + 1;
-	}
-
-	if (uuid_present) {
-		/* use the uuid index found above */
+	if ((wdc_FindUuidIndex(dev,
+		(struct nvme_id_uuid_list_entry *)WDC_UUID,
+		(int *)&uuid_index)) ||
+		(wdc_FindUuidIndex(dev,
+		 (struct nvme_id_uuid_list_entry *)WDC_UUID_SN640_3,
+		 (int *)&uuid_index) &&
+		 wdc_is_sn640_3(device_id))) {
 		found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
 	} else {
 		if (!uuid_index && needs_c2_log_page_check(device_id)) {
@@ -2731,9 +2714,7 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 	__u8 lid = 0;
 	*cbs_data = NULL;
 	__u32 device_id = 0, vendor_id = 0;
-	bool uuid_present = false;
-	int index = 0, uuid_index = 0;
-	struct nvme_id_uuid_list uuid_list;
+	int uuid_index = 0;
 
 	/* The wdc_get_pci_ids function could fail when drives are connected
 	 * via a PCIe switch.  Therefore, the return code is intentionally
@@ -2745,34 +2726,13 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 
 	lid = WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID;
 
-	typedef struct nvme_id_uuid_list_entry *uuid_list_entry;
-
-	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
-	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
-		uuid_list_entry uuid_list_entry_ptr = (uuid_list_entry)&uuid_list.entry[0];
-
-		while (index <= NVME_ID_UUID_LIST_MAX &&
-		       !wdc_UuidEqual(uuid_list_entry_ptr, (uuid_list_entry)UUID_END)) {
-
-			if (wdc_UuidEqual(uuid_list_entry_ptr,
-					  (uuid_list_entry)WDC_UUID)) {
-				uuid_present = true;
-				break;
-			} else if (wdc_UuidEqual(uuid_list_entry_ptr,
-						 (uuid_list_entry)WDC_UUID_SN640_3) &&
-				   wdc_is_sn640_3(device_id)) {
-				uuid_present = true;
-				break;
-			}
-			index++;
-			uuid_list_entry_ptr = (uuid_list_entry)&uuid_list.entry[index];
-		}
-		if (uuid_present)
-			uuid_index = index + 1;
-	}
-
-	if (uuid_present) {
-		/* use the uuid index found above */
+	if ((wdc_FindUuidIndex(dev,
+		(struct nvme_id_uuid_list_entry *)WDC_UUID,
+		(int *)&uuid_index)) ||
+		(wdc_FindUuidIndex(dev,
+		 (struct nvme_id_uuid_list_entry *)WDC_UUID_SN640_3,
+		 (int *)&uuid_index) &&
+		 wdc_is_sn640_3(device_id))) {
 		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
 	} else if (device_id == WDC_NVME_ZN350_DEV_ID || device_id == WDC_NVME_ZN350_DEV_ID_1) {
 		uuid_index = 0;
@@ -2802,36 +2762,95 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 	return found;
 }
 
-static bool wdc_nvme_check_supported_log_page(nvme_root_t r, struct nvme_dev *dev, __u8 log_id)
+
+static int wdc_get_supported_log_pages(struct nvme_dev *dev,
+		struct nvme_supported_log_pages *supported,
+		int uuid_index)
+{
+	memset(supported, 0, sizeof(*supported));
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = supported,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_SUPPORTED_LOG_PAGES,
+		.len = sizeof(*supported),
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = 0,
+		.uuidx = uuid_index,
+		.rae = false,
+		.ot = false,
+	};
+
+	return nvme_get_log(&args);
+}
+
+static bool wdc_nvme_check_supported_log_page(nvme_root_t r,
+		struct nvme_dev *dev,
+		__u8 log_id,
+		__u8 uuid_index)
 {
 	int i;
 	bool found = false;
+	int err = -1;
 	struct wdc_c2_cbs_data *cbs_data = NULL;
 
-	if (get_dev_mgment_cbs_data(r, dev, WDC_C2_LOG_PAGES_SUPPORTED_ID, (void *)&cbs_data)) {
-		if (cbs_data) {
-			for (i = 0; i < le32_to_cpu(cbs_data->length); i++) {
-				if (log_id == cbs_data->data[i]) {
-					found = true;
-					break;
+	_cleanup_free_ struct nvme_supported_log_pages *supports = NULL;
+
+	/* Check log page id 0 (supported log pages) first */
+	supports = nvme_alloc(sizeof(*supports));
+	if (!supports)
+		return -ENOMEM;
+
+	err = wdc_get_supported_log_pages(dev,
+			supports,
+			uuid_index);
+
+	if (!err) {
+		/* Check support log page list for support */
+		if (supports->lid_support[log_id])
+			/* Support for Log Page found in supported log pages */
+			found = true;
+	}
+
+	/* if not found in the supported log pages (log id 0),
+	 * check the WDC C2 log page
+	 */
+	if (!found) {
+		if (get_dev_mgment_cbs_data(r,
+				dev,
+				WDC_C2_LOG_PAGES_SUPPORTED_ID,
+				(void *)&cbs_data)) {
+			if (cbs_data) {
+				for (i = 0; i < le32_to_cpu(cbs_data->length); i++) {
+					if (log_id == cbs_data->data[i]) {
+						found = true;
+						break;
+					}
 				}
-			}
 
 #ifdef WDC_NVME_CLI_DEBUG
-			if (!found) {
-				fprintf(stderr, "ERROR: WDC: Log Page 0x%x not supported\n", log_id);
-				fprintf(stderr, "WDC: Supported Log Pages:\n");
-				/* print the supported pages */
-				d((__u8 *)cbs_data->data, le32_to_cpu(cbs_data->length), 16, 1);
-			}
+				if (!found) {
+					fprintf(stderr, "ERROR: WDC: Log Page 0x%x not supported\n",
+						log_id);
+					fprintf(stderr, "WDC: Supported Log Pages:\n");
+					/* print the supported pages */
+					d((__u8 *)cbs_data->data, le32_to_cpu(cbs_data->length),
+						16, 1);
+				}
 #endif
-			free(cbs_data);
+				free(cbs_data);
+			} else {
+				fprintf(stderr, "ERROR: WDC: cbs_data ptr = NULL\n");
+			}
 		} else {
-			fprintf(stderr, "ERROR: WDC: cbs_data ptr = NULL\n");
+			fprintf(stderr, "ERROR: WDC: 0xC2 Log Page entry ID 0x%x not found\n",
+				WDC_C2_LOG_PAGES_SUPPORTED_ID);
 		}
-	} else {
-		fprintf(stderr, "ERROR: WDC: 0xC2 Log Page entry ID 0x%x not found\n",
-			WDC_C2_LOG_PAGES_SUPPORTED_ID);
 	}
 
 	return found;
@@ -7504,7 +7523,8 @@ static int wdc_get_ca_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 	}
 
 	/* verify the 0xCA log page is supported */
-	if (wdc_nvme_check_supported_log_page(r, dev, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == false) {
+	if (wdc_nvme_check_supported_log_page(r, dev,
+			WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0) == false) {
 		fprintf(stderr, "ERROR: WDC: 0xCA Log Page not supported\n");
 		return -1;
 	}
@@ -7924,7 +7944,9 @@ static int wdc_get_ocp_c5_log_page(nvme_root_t r, struct nvme_dev *dev, char *fo
 
 		/* check log page version */
 		if (log_data->log_page_version != WDC_UNSUPPORTED_REQS_LOG_VERSION) {
-			fprintf(stderr, "ERROR: WDC: invalid unsupported requirements log version - %d\n", log_data->log_page_version);
+			fprintf(stderr, "ERROR: WDC: invalid 0xC5 log page version\n");
+			fprintf(stderr, "ERROR: WDC: log page version: %d\n",
+				log_data->log_page_version);
 			ret = -1;
 			goto out;
 		}
@@ -7976,7 +7998,8 @@ static int wdc_get_d0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 	}
 
 	/* verify the 0xD0 log page is supported */
-	if (wdc_nvme_check_supported_log_page(r, dev, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == false) {
+	if (wdc_nvme_check_supported_log_page(r, dev,
+			WDC_NVME_GET_VU_SMART_LOG_OPCODE, 0) == false) {
 		fprintf(stderr, "ERROR: WDC: 0xD0 Log Page not supported\n");
 		return -1;
 	}
@@ -8976,6 +8999,8 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	char *desc = "Get Drive Status.";
 	struct nvme_dev *dev;
 	int ret = 0;
+	bool uuid_found = false;
+	int uuid_index;
 	nvme_root_t r;
 	void *dev_mng_log = NULL;
 	__u32 system_eol_state;
@@ -9002,10 +9027,23 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 		goto out;
 	}
 
+	uuid_index = 0;
+
+	/* Find the WDC UUID index  */
+	uuid_found = wdc_FindUuidIndex(dev,
+			(struct nvme_id_uuid_list_entry *)WDC_UUID,
+			(int *)&uuid_index);
+
+	if (!uuid_found)
+		/* WD UUID not found, use default uuid index - 0 */
+		uuid_index = 0;
+
 	/* verify the 0xC2 Device Manageability log page is supported */
 	if (wdc_nvme_check_supported_log_page(r, dev,
-					      WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID) == false) {
-		fprintf(stderr, "ERROR: WDC: 0xC2 Log Page not supported\n");
+			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
+			uuid_index) == false) {
+		fprintf(stderr, "ERROR: WDC: 0xC2 Log Page not supported, uuid_index: %d\n",
+				uuid_index);
 		ret = -1;
 		goto out;
 	}
@@ -9168,7 +9206,8 @@ static int wdc_get_fw_act_history(nvme_root_t r, struct nvme_dev *dev,
 	}
 
 	/* verify the FW Activate History log page is supported */
-	if (!wdc_nvme_check_supported_log_page(r, dev, WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID)) {
+	if (!wdc_nvme_check_supported_log_page(r, dev,
+			WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID, 0)) {
 		fprintf(stderr, "ERROR: WDC: %d Log Page not supported\n",
 			WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID);
 		return -1;
@@ -10726,11 +10765,12 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 	nvme_root_t r;
 	__u64 capabilities = 0;
 	struct wdc_c2_cbs_data *cbs_data = NULL;
-	int i;
+	int i, uuid_index = 0;
 	__u8 log_id = 0;
 	__u32 device_id, read_vendor_id;
 	bool uuid_supported = false;
 	struct nvme_id_uuid_list uuid_list;
+	bool uuid_found = false;
 
 	struct config {
 		char *output_format;
@@ -10781,8 +10821,18 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID;
 
 		if (!wdc_is_sn861(device_id)) {
+			/* Find the WDC UUID index  */
+			uuid_found = wdc_FindUuidIndex(dev,
+					(struct nvme_id_uuid_list_entry *)WDC_UUID,
+					(int *)&uuid_index);
+
+			if (!uuid_found)
+				/* WD UUID not found, use default uuid index - 0 */
+				uuid_index = 0;
+
 			/* verify the 0xC2 Device Manageability log page is supported */
-			if (wdc_nvme_check_supported_log_page(r, dev, log_id) == false) {
+			if (wdc_nvme_check_supported_log_page(r, dev,
+					log_id, uuid_index) == false) {
 				fprintf(stderr,
 					"%s: ERROR: WDC: 0x%x Log Page not supported\n",
 					__func__, log_id);
@@ -12821,5 +12871,8 @@ bool run_wdc_nvme_check_supported_log_page(nvme_root_t r,
 		struct nvme_dev *dev,
 		__u8 log_id)
 {
-	return wdc_nvme_check_supported_log_page(r, dev, log_id);
+	return wdc_nvme_check_supported_log_page(r,
+			dev,
+			log_id,
+			0);
 }
