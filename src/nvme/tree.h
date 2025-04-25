@@ -868,6 +868,14 @@ const char *nvme_path_get_sysfs_dir(nvme_path_t p);
 const char *nvme_path_get_ana_state(nvme_path_t p);
 
 /**
+ * nvme_path_get_queue_depth() - Queue depth of an nvme_path_t object
+ * @p: &nvme_path_t object
+ *
+ * Return: Queue depth of @p
+ */
+int nvme_path_get_queue_depth(nvme_path_t p);
+
+/**
  * nvme_path_get_ctrl() - Parent controller of an nvme_path_t object
  * @p:	&nvme_path_t object
  *

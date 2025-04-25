@@ -908,6 +908,18 @@ const char *nvme_path_get_name(nvme_path_t p)
 	return p->name;
 }
 
+int nvme_path_get_queue_depth(nvme_path_t p)
+{
+	_cleanup_free_ char *queue_depth = NULL;
+
+	queue_depth = nvme_get_path_attr(p, "queue_depth");
+	if (queue_depth) {
+		sscanf(queue_depth, "%d", &p->queue_depth);
+	}
+
+	return p->queue_depth;
+}
+
 const char *nvme_path_get_ana_state(nvme_path_t p)
 {
 	return p->ana_state;
@@ -926,7 +938,7 @@ void nvme_free_path(struct nvme_path *p)
 static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name)
 {
 	struct nvme_path *p;
-	_cleanup_free_ char *path = NULL, *grpid = NULL;
+	_cleanup_free_ char *path = NULL, *grpid = NULL, *queue_depth = NULL;
 	int ret;
 
 	nvme_msg(r, LOG_DEBUG, "scan controller %s path %s\n",
@@ -958,6 +970,11 @@ static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name)
 	grpid = nvme_get_path_attr(p, "ana_grpid");
 	if (grpid) {
 		sscanf(grpid, "%d", &p->grpid);
+	}
+
+	queue_depth = nvme_get_path_attr(p, "queue_depth");
+	if (queue_depth) {
+		sscanf(queue_depth, "%d", &p->queue_depth);
 	}
 
 	list_node_init(&p->nentry);

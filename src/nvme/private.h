@@ -34,6 +34,7 @@ struct nvme_path {
 	char *sysfs_dir;
 	char *ana_state;
 	int grpid;
+	int queue_depth;
 };
 
 struct nvme_ns_head {
