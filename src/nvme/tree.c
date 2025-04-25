@@ -569,12 +569,12 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 
 nvme_path_t nvme_namespace_first_path(nvme_ns_t ns)
 {
-	return list_top(&ns->paths, struct nvme_path, nentry);
+	return list_top(&ns->head->paths, struct nvme_path, nentry);
 }
 
 nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
 {
-	return p ? list_next(&ns->paths, p, nentry) : NULL;
+	return p ? list_next(&ns->head->paths, p, nentry) : NULL;
 }
 
 static void __nvme_free_ns(struct nvme_ns *n)
@@ -584,6 +584,8 @@ static void __nvme_free_ns(struct nvme_ns *n)
 	free(n->generic_name);
 	free(n->name);
 	free(n->sysfs_dir);
+	free(n->head->sysfs_dir);
+	free(n->head);
 	free(n);
 }
 
@@ -921,25 +923,6 @@ void nvme_free_path(struct nvme_path *p)
 	free(p);
 }
 
-static void nvme_subsystem_set_path_ns(nvme_subsystem_t s, nvme_path_t p)
-{
-	char n_name[32] = { };
-	int i, c, nsid, ret;
-	nvme_ns_t n;
-
-	ret = sscanf(nvme_path_get_name(p), "nvme%dc%dn%d", &i, &c, &nsid);
-	if (ret != 3)
-		return;
-
-	sprintf(n_name, "nvme%dn%d", i, nsid);
-	nvme_subsystem_for_each_ns(s, n) {
-		if (!strcmp(n_name, nvme_ns_get_name(n))) {
-			list_add_tail(&n->paths, &p->nentry);
-			p->n = n;
-		}
-	}
-}
-
 static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name)
 {
 	struct nvme_path *p;
@@ -978,7 +961,6 @@ static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name)
 	}
 
 	list_node_init(&p->nentry);
-	nvme_subsystem_set_path_ns(c->s, p);
 	list_node_init(&p->entry);
 	list_add_tail(&c->paths, &p->entry);
 	return 0;
@@ -2255,8 +2237,8 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 		return NULL;
 
 	path = NULL;
-	nvme_ctrl_scan_namespaces(r, c);
 	nvme_ctrl_scan_paths(r, c);
+	nvme_ctrl_scan_namespaces(r, c);
 	return c;
 }
 
@@ -2326,6 +2308,11 @@ int nvme_ns_get_nsid(nvme_ns_t n)
 const char *nvme_ns_get_sysfs_dir(nvme_ns_t n)
 {
 	return n->sysfs_dir;
+}
+
+const char *nvme_ns_head_get_sysfs_dir(nvme_ns_head_t head)
+{
+	return head->sysfs_dir;
 }
 
 const char *nvme_ns_get_name(nvme_ns_t n)
@@ -2754,7 +2741,11 @@ static void nvme_ns_set_generic_name(struct nvme_ns *n, const char *name)
 
 static nvme_ns_t nvme_ns_open(const char *sys_path, const char *name)
 {
+	int ret;
 	struct nvme_ns *n;
+	struct nvme_ns_head *head;
+	struct stat arg;
+	_cleanup_free_ char *path = NULL;
 
 	n = calloc(1, sizeof(*n));
 	if (!n) {
@@ -2762,6 +2753,32 @@ static nvme_ns_t nvme_ns_open(const char *sys_path, const char *name)
 		return NULL;
 	}
 
+	head = calloc(1, sizeof(*head));
+	if (!head) {
+		errno = ENOMEM;
+		free(n);
+		return NULL;
+	}
+
+	head->n = n;
+	list_head_init(&head->paths);
+	ret = asprintf(&path, "%s/%s", sys_path, "multipath");
+	if (ret < 0) {
+		errno = ENOMEM;
+		goto free_ns_head;
+	}
+	/*
+	 * The sysfs-dir "multipath" is available only when nvme multipath
+	 * is configured and we're running kernel version >= 6.14.
+	 */
+	ret = stat(path, &arg);
+	if (ret == 0) {
+		head->sysfs_dir = path;
+		path = NULL;
+	} else
+		head->sysfs_dir = NULL;
+
+	n->head = head;
 	n->fd = -1;
 	n->name = strdup(name);
 
@@ -2770,15 +2787,17 @@ static nvme_ns_t nvme_ns_open(const char *sys_path, const char *name)
 	if (nvme_ns_init(sys_path, n) != 0)
 		goto free_ns;
 
-	list_head_init(&n->paths);
 	list_node_init(&n->entry);
 
 	nvme_ns_release_fd(n); /* Do not leak fds */
+
 	return n;
 
 free_ns:
 	free(n->generic_name);
 	free(n->name);
+free_ns_head:
+	free(head);
 	free(n);
 	return NULL;
 }
@@ -2841,6 +2860,71 @@ nvme_ns_t nvme_scan_namespace(const char *name)
 	return __nvme_scan_namespace(nvme_ns_sysfs_dir(), name);
 }
 
+
+static void nvme_ns_head_scan_path(nvme_subsystem_t s, nvme_ns_t n, char *name)
+{
+	nvme_ctrl_t c;
+	nvme_path_t p;
+
+	nvme_subsystem_for_each_ctrl(s, c) {
+		nvme_ctrl_for_each_path(c, p) {
+			if (!strcmp(nvme_path_get_name(p), name)) {
+				list_add_tail(&n->head->paths, &p->nentry);
+				p->n = n;
+				return;
+			}
+		}
+	}
+}
+
+static void nvme_subsystem_set_ns_path(nvme_subsystem_t s, nvme_ns_t n)
+{
+	struct nvme_ns_head *head = n->head;
+
+	if (nvme_ns_head_get_sysfs_dir(head)) {
+		struct dirents paths = {};
+		int i;
+
+		/*
+		 * When multipath is configured on kernel version >= 6.15,
+		 * we use multipath sysfs link to get each path of a namespace.
+		 */
+		paths.num = nvme_scan_ns_head_paths(head, &paths.ents);
+
+		for (i = 0; i < paths.num; i++)
+			nvme_ns_head_scan_path(s, n, paths.ents[i]->d_name);
+	} else {
+		nvme_ctrl_t c;
+		nvme_path_t p;
+		int ns_ctrl, ns_nsid, ret;
+
+		/*
+		 * If multipath is not configured or we're running on kernel
+		 * version < 6.15, fallback to the old way.
+		 */
+		ret = sscanf(nvme_ns_get_name(n), "nvme%dn%d",
+				&ns_ctrl, &ns_nsid);
+		if (ret != 2)
+			return;
+
+		nvme_subsystem_for_each_ctrl(s, c) {
+			nvme_ctrl_for_each_path(c, p) {
+				int p_subsys, p_ctrl, p_nsid;
+
+				ret = sscanf(nvme_path_get_name(p),
+					     "nvme%dc%dn%d",
+					     &p_subsys, &p_ctrl, &p_nsid);
+				if (ret != 3)
+					continue;
+				if (ns_ctrl == p_subsys && ns_nsid == p_nsid) {
+					list_add_tail(&head->paths, &p->nentry);
+					p->n = n;
+				}
+			}
+		}
+	}
+}
+
 static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 				    char *name)
 {
@@ -2866,33 +2950,9 @@ static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 	n->s = c->s;
 	n->c = c;
 	list_add_tail(&c->namespaces, &n->entry);
+	nvme_subsystem_set_ns_path(c->s, n);
+
 	return 0;
-}
-
-static void nvme_subsystem_set_ns_path(nvme_subsystem_t s, nvme_ns_t n)
-{
-	nvme_ctrl_t c;
-	nvme_path_t p;
-	int ns_ctrl, ns_nsid, ret;
-
-	ret = sscanf(nvme_ns_get_name(n), "nvme%dn%d", &ns_ctrl, &ns_nsid);
-	if (ret != 2)
-		return;
-
-	nvme_subsystem_for_each_ctrl(s, c) {
-		nvme_ctrl_for_each_path(c, p) {
-			int p_subsys, p_ctrl, p_nsid;
-
-			ret = sscanf(nvme_path_get_name(p), "nvme%dc%dn%d",
-				     &p_subsys, &p_ctrl, &p_nsid);
-			if (ret != 3)
-				continue;
-			if (ns_ctrl == p_subsys && ns_nsid == p_nsid) {
-				list_add_tail(&n->paths, &p->nentry);
-				p->n = n;
-			}
-		}
-	}
 }
 
 static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
@@ -2922,7 +2982,7 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 			list_del_init(&p->nentry);
 			p->n = NULL;
 		}
-		list_head_init(&_n->paths);
+		list_head_init(&_n->head->paths);
 		__nvme_free_ns(_n);
 	}
 	n->s = s;

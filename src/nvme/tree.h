@@ -27,6 +27,7 @@
  */
 
 typedef struct nvme_ns *nvme_ns_t;
+typedef struct nvme_ns_head *nvme_ns_head_t;
 typedef struct nvme_path *nvme_path_t;
 typedef struct nvme_ctrl *nvme_ctrl_t;
 typedef struct nvme_subsystem *nvme_subsystem_t;
@@ -1090,6 +1091,14 @@ void nvme_ctrl_set_dhchap_host_key(nvme_ctrl_t c, const char *key);
  * Return: DH-HMAC-CHAP controller key or NULL if not set
  */
 const char *nvme_ctrl_get_dhchap_key(nvme_ctrl_t c);
+
+/**
+ * nvme_ns_head_get_sysfs_dir() - sysfs dir of namespave head
+ * @head: namespace head instance
+ *
+ * Returns: sysfs directory name of @head
+ */
+const char *nvme_ns_head_get_sysfs_dir(nvme_ns_head_t head);
 
 /**
  * nvme_ctrl_set_dhchap_key() - Set controller key

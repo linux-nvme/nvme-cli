@@ -36,12 +36,19 @@ struct nvme_path {
 	int grpid;
 };
 
+struct nvme_ns_head {
+	struct list_head paths;
+	struct nvme_ns *n;
+
+	char *sysfs_dir;
+};
+
 struct nvme_ns {
 	struct list_node entry;
-	struct list_head paths;
 
 	struct nvme_subsystem *s;
 	struct nvme_ctrl *c;
+	struct nvme_ns_head *head;
 
 	int fd;
 	__u32 nsid;
