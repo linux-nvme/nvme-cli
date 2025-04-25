@@ -77,5 +77,10 @@ int wdc_UtilsStrCompare(char *pcSrc, char *pcDst);
 int wdc_UtilsCreateDir(char *path);
 int wdc_WriteToFile(char *fileName, char *buffer, unsigned int bufferLen);
 void wdc_StrFormat(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz);
-bool wdc_CheckUuidListSupport(struct nvme_dev *dev, struct nvme_id_uuid_list *uuid_list);
-bool wdc_UuidEqual(struct nvme_id_uuid_list_entry *entry1, struct nvme_id_uuid_list_entry *entry2);
+bool wdc_CheckUuidListSupport(struct nvme_dev *dev,
+		struct nvme_id_uuid_list *uuid_list);
+bool wdc_UuidEqual(struct nvme_id_uuid_list_entry *entry1,
+		struct nvme_id_uuid_list_entry *entry2);
+bool wdc_FindUuidIndex(struct nvme_dev *dev,
+		struct nvme_id_uuid_list_entry *uuid_entry,
+		int *uuid_index);
