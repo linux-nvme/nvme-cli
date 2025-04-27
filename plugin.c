@@ -144,6 +144,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	struct command **cmd = plugin->commands;
 	struct command *cr = NULL;
 	bool cr_valid = false;
+	int dash_count = 0;
 
 	if (!argc) {
 		general_help(plugin);
@@ -156,11 +157,14 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 		sprintf(use, "%s %s %s <device> [OPTIONS]", prog->name, plugin->name, str);
 	argconfig_append_usage(use);
 
-	/* translate --help and --version into commands */
-	while (*str == '-')
-		str++;
+	/* translate --help, -h and --version into commands */
+	while (str[dash_count] == '-')
+		dash_count++;
 
-	if (!strcmp(str, "help"))
+	if (dash_count)
+		str += dash_count;
+
+	if (!strcmp(str, "help") || (dash_count == 1 && !strcmp(str, "h")))
 		return help(argc, argv, plugin);
 	if (!strcmp(str, "version"))
 		return version_cmd(plugin);
