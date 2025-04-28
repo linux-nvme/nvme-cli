@@ -42,6 +42,8 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 		      get_enable_ieee1667_silo)
 		ENTRY("set-enable-ieee1667-silo", "enable IEEE1667 silo", set_enable_ieee1667_silo)
 		ENTRY("hardware-component-log", "retrieve hardware component log", hwcomp_log)
+		ENTRY("get-latency-monitor", "Get Latency Monitor Feature",
+		      ocp_get_latency_monitor_feature)
 	)
 );
 
