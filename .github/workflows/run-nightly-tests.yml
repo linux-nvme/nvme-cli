@@ -9,6 +9,7 @@ on:
 jobs:
   nightly-tests:
     runs-on: nvme-nvm
+    if: github.repository == 'linux-nvme/nvme-cli'
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
       #Expose all devices to the container through the `privileged` flag.
