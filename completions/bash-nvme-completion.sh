@@ -1648,6 +1648,10 @@ plugin_ocp_opts () {
 		opts+=" --comp-id= -i --list -l --verbose -v \
 			--output-format -o --timeout= -t"
 			;;
+		"get-latency-monitor")
+		opts+=" --sel= -s \
+			--namespace-id= -n --no-uuid -u"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1729,7 +1733,7 @@ _nvme_subcmds () {
 			telemetry-string-log set-telemetry-profile \
 			set-dssd-async-event-config get-dssd-async-event-config \
 			get-error-injection set-error-injection \
-			hardware-component-log"
+			hardware-component-log get-latency-monitor"
 		[mangoboost]="id-ctrl"
 	)
 
