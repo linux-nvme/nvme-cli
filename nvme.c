@@ -9123,6 +9123,11 @@ static int passthru(int argc, char **argv, bool admin,
 		return err;
 	}
 
+	if (!argconfig_parse_seen(opts, "opcode")) {
+		nvme_show_error("%s: opcode parameter required", cmd->name);
+		return -EINVAL;
+	}
+
 	if (cfg.opcode & 0x01) {
 		cfg.write = true;
 		flags = O_RDONLY;
@@ -10185,6 +10190,11 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	err = parse_and_open(&dev, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	if (!argconfig_parse_seen(opts, "opcode")) {
+		nvme_show_error("%s: opcode parameter required", *argv);
+		return -EINVAL;
+	}
 
 	if (admin_opcode == nvme_admin_nvme_mi_send) {
 		flags = O_RDONLY;
