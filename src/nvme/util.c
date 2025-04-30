@@ -565,6 +565,9 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
 		*len = sizeof(struct nvme_perf_characteristics);
 		break;
+	case NVME_FEAT_FID_FDP_EVENTS:
+		*len = NVME_FEAT_FDPE_NOET_MASK * sizeof(struct nvme_fdp_supported_event_desc);
+		break;
 	default:
 		errno = EINVAL;
 		return -1;
