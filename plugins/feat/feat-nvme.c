@@ -29,18 +29,33 @@ static const char *save = "Specifies that the controller shall save the attribut
 static const char *perfc_feat = "performance characteristics feature";
 static const char *hctm_feat = "host controlled thermal management feature";
 
-static int power_mgmt_get(struct nvme_dev *dev, const __u8 fid, __u8 sel)
+static int feat_get(struct nvme_dev *dev, const __u8 fid, __u32 cdw11, __u8 sel, const char *feat)
 {
 	__u32 result;
 	int err;
+	__u32 len = 0;
+
+	_cleanup_free_ void *buf = NULL;
+
+	if (!NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
+		nvme_get_feature_length(fid, cdw11, &len);
+
+	if (len) {
+		buf = nvme_alloc(len - 1);
+		if (!buf)
+			return -ENOMEM;
+	}
 
 	struct nvme_get_features_args args = {
-		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
-		.fid		= fid,
-		.sel		= sel,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = fid,
+		.sel = sel,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = &result,
+		.cdw11 = cdw11,
+		.data = buf,
+		.data_len = len,
 	};
 
 	err = nvme_get_features(&args);
@@ -48,9 +63,11 @@ static int power_mgmt_get(struct nvme_dev *dev, const __u8 fid, __u8 sel)
 		if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
 			nvme_show_select_result(fid, result);
 		else
-			nvme_feature_show_fields(fid, result, NULL);
+			nvme_feature_show_fields(fid, result, buf);
+	} else if (err > 0) {
+		nvme_show_status(err);
 	} else {
-		nvme_show_error("Get %s", power_mgmt_feat);
+		nvme_show_error("Get %s: %s", feat, nvme_strerror(errno));
 	}
 
 	return err;
@@ -121,41 +138,12 @@ static int feat_power_mgmt(int argc, char **argv, struct command *cmd, struct pl
 	if (argconfig_parse_seen(opts, "ps"))
 		err = power_mgmt_set(dev, fid, cfg.ps, cfg.wh, cfg.save);
 	else
-		err = power_mgmt_get(dev, fid, cfg.sel);
+		err = feat_get(dev, fid, 0, cfg.sel, power_mgmt_feat);
 
 	return err;
 }
 
-static int perfc_get(struct nvme_dev *dev, struct perfc_config *cfg)
-{
-	__u32 result;
-	int err;
-
-	struct nvme_get_features_args args = {
-		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
-		.fid = NVME_FEAT_FID_PERF_CHARACTERISTICS,
-		.cdw11 = NVME_SET(cfg->attri, FEAT_PERFC_ATTRI) |
-			 NVME_SET(cfg->rvspa, FEAT_PERFC_RVSPA),
-		.sel = cfg->sel,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result	 = &result,
-	};
-
-	err = nvme_get_features(&args);
-	if (!err) {
-		if (NVME_CHECK(args.sel, GET_FEATURES_SEL, SUPPORTED))
-			nvme_show_select_result(args.fid, result);
-		else
-			nvme_feature_show_fields(args.fid, result, NULL);
-	} else {
-		nvme_show_error("Get %s", perfc_feat);
-	}
-
-	return err;
-}
-
-static int perfc_set(struct nvme_dev *dev, struct perfc_config *cfg)
+static int perfc_set(struct nvme_dev *dev, __u8 fid, __u32 cdw11, struct perfc_config *cfg)
 {
 	__u32 result;
 	int err;
@@ -169,9 +157,8 @@ static int perfc_set(struct nvme_dev *dev, struct perfc_config *cfg)
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.fid = NVME_FEAT_FID_PERF_CHARACTERISTICS,
-		.cdw11 = NVME_SET(cfg->attri, FEAT_PERFC_ATTRI) |
-			 NVME_SET(cfg->rvspa, FEAT_PERFC_RVSPA),
+		.fid = fid,
+		.cdw11 = cdw11,
 		.save = save,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = &result,
@@ -236,6 +223,8 @@ static int feat_perfc(int argc, char **argv, struct command *cmd, struct plugin 
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	int err;
+	__u8 fid = NVME_FEAT_FID_PERF_CHARACTERISTICS;
+	__u32 cdw11;
 
 	struct perfc_config cfg = { 0 };
 
@@ -254,38 +243,13 @@ static int feat_perfc(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err)
 		return err;
 
+	cdw11 = NVME_SET(cfg.attri, FEAT_PERFC_ATTRI) | NVME_SET(cfg.rvspa, FEAT_PERFC_RVSPA);
+
 	if (argconfig_parse_seen(opts, "rvspa") || argconfig_parse_seen(opts, "r4karl") ||
 	    argconfig_parse_seen(opts, "paid"))
-		err = perfc_set(dev, &cfg);
+		err = perfc_set(dev, fid, cdw11, &cfg);
 	else
-		err = perfc_get(dev, &cfg);
-
-	return err;
-}
-
-static int hctm_get(struct nvme_dev *dev, const __u8 fid, __u8 sel)
-{
-	__u32 result;
-	int err;
-
-	struct nvme_get_features_args args = {
-		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
-		.fid		= fid,
-		.sel		= sel,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-
-	err = nvme_get_features(&args);
-	if (!err) {
-		if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
-			nvme_show_select_result(fid, result);
-		else
-			nvme_feature_show_fields(fid, result, NULL);
-	} else {
-		nvme_show_error("Get %s", hctm_feat);
-	}
+		err = feat_get(dev, fid, cdw11, cfg.sel, perfc_feat);
 
 	return err;
 }
@@ -353,7 +317,7 @@ static int feat_hctm(int argc, char **argv, struct command *cmd, struct plugin *
 	if (argconfig_parse_seen(opts, "tmt1") || argconfig_parse_seen(opts, "tmt2"))
 		err = hctm_set(dev, fid, cfg.tmt1, cfg.tmt2, cfg.save);
 	else
-		err = hctm_get(dev, fid, cfg.sel);
+		err = feat_get(dev, fid, 0, cfg.sel, hctm_feat);
 
 	return err;
 }
