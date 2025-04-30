@@ -12,11 +12,13 @@
 #define FEAT_PLUGIN_VERSION "1.0"
 #define POWER_MGMT_DESC "Get and set power management feature"
 #define PERFC_DESC "Get and set perf characteristics feature"
+#define HCTM_DESC "Get and set host controlled thermal management feature"
 
 PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("power-mgmt", POWER_MGMT_DESC, feat_power_mgmt)
 		ENTRY("perf-characteristics", PERFC_DESC, feat_perfc)
+		ENTRY("hctm", HCTM_DESC, feat_hctm)
 	)
 );
 #endif /* !FEAT_NVME || CMD_HEADER_MULTI_READ */

@@ -8,6 +8,9 @@
 #define CREATE_CMD
 #include "feat-nvme.h"
 
+#define STR(x) #x
+#define TMT(n) "thermal management temperature " STR(n)
+
 struct perfc_config {
 	__u32 namespace_id;
 	__u8 attri;
@@ -24,6 +27,7 @@ static const char *power_mgmt_feat = "power management feature";
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *save = "Specifies that the controller shall save the attribute";
 static const char *perfc_feat = "performance characteristics feature";
+static const char *hctm_feat = "host controlled thermal management feature";
 
 static int power_mgmt_get(struct nvme_dev *dev, const __u8 fid, __u8 sel)
 {
@@ -255,6 +259,101 @@ static int feat_perfc(int argc, char **argv, struct command *cmd, struct plugin 
 		err = perfc_set(dev, &cfg);
 	else
 		err = perfc_get(dev, &cfg);
+
+	return err;
+}
+
+static int hctm_get(struct nvme_dev *dev, const __u8 fid, __u8 sel)
+{
+	__u32 result;
+	int err;
+
+	struct nvme_get_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= dev_fd(dev),
+		.fid		= fid,
+		.sel		= sel,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
+	err = nvme_get_features(&args);
+	if (!err) {
+		if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
+			nvme_show_select_result(fid, result);
+		else
+			nvme_feature_show_fields(fid, result, NULL);
+	} else {
+		nvme_show_error("Get %s", hctm_feat);
+	}
+
+	return err;
+}
+
+static int hctm_set(struct nvme_dev *dev, const __u8 fid, __u16 tmt1, __u16 tmt2, bool save)
+{
+	__u32 result;
+	int err;
+
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = fid,
+		.cdw11 = NVME_SET(tmt1, FEAT_HCTM_TMT1) | NVME_SET(tmt2, FEAT_HCTM_TMT2),
+		.save = save,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = &result,
+	};
+
+	err = nvme_set_features(&args);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", hctm_feat);
+	} else {
+		nvme_show_result("Set %s: 0x%04x (%s)", hctm_feat, args.cdw11,
+				 save ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, args.cdw11, NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_hctm(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const __u8 fid = NVME_FEAT_FID_HCTM;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int err;
+
+	struct config {
+		__u16 tmt1;
+		__u16 tmt2;
+		bool save;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	NVME_ARGS(opts,
+		  OPT_SHRT("tmt1", 't', &cfg.tmt1, TMT(1)),
+		  OPT_SHRT("tmt2", 'T', &cfg.tmt2, TMT(2)),
+		  OPT_FLAG("save", 's', &cfg.save, save),
+		  OPT_BYTE("sel", 'S', &cfg.sel, sel));
+
+	err = parse_and_open(&dev, argc, argv, HCTM_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "tmt1") || argconfig_parse_seen(opts, "tmt2"))
+		err = hctm_set(dev, fid, cfg.tmt1, cfg.tmt2, cfg.save);
+	else
+		err = hctm_get(dev, fid, cfg.sel);
 
 	return err;
 }
