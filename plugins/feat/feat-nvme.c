@@ -4,6 +4,7 @@
 #include "nvme.h"
 #include "plugin.h"
 #include "nvme-print.h"
+#include "common.h"
 
 #define CREATE_CMD
 #include "feat-nvme.h"
@@ -27,6 +28,7 @@ static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *save = "Specifies that the controller shall save the attribute";
 static const char *perfc_feat = "performance characteristics feature";
 static const char *hctm_feat = "host controlled thermal management feature";
+static const char *timestamp_feat = "timestamp feature";
 
 static int feat_get(struct nvme_dev *dev, const __u8 fid, __u32 cdw11, __u8 sel, const char *feat)
 {
@@ -309,6 +311,73 @@ static int feat_hctm(int argc, char **argv, struct command *cmd, struct plugin *
 		err = hctm_set(dev, fid, cfg.tmt1, cfg.tmt2, argconfig_parse_seen(opts, "save"));
 	else
 		err = feat_get(dev, fid, 0, cfg.sel, hctm_feat);
+
+	return err;
+}
+
+static int timestamp_set(struct nvme_dev *dev, const __u8 fid, __u64 tstmp, bool save)
+{
+	__u32 result;
+	int err;
+	struct nvme_timestamp ts;
+	__le64 timestamp = cpu_to_le64(tstmp);
+
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = fid,
+		.save = save,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = &result,
+		.data = &ts,
+		.data_len = sizeof(ts),
+	};
+
+	memcpy(ts.timestamp, &timestamp, sizeof(ts.timestamp));
+
+	err = nvme_set_features(&args);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", timestamp_feat);
+	} else {
+		nvme_show_result("Set %s: (%s)", timestamp_feat, save ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, args.cdw11, args.data);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_timestamp(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const __u8 fid = NVME_FEAT_FID_TIMESTAMP;
+	const char *tstmp = "timestamp";
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int err;
+
+	struct config {
+		__u64 tstmp;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	FEAT_ARGS(opts, OPT_LONG("tstmp", 't', &cfg.tstmp, tstmp));
+
+	err = parse_and_open(&dev, argc, argv, TIMESTAMP_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "tstmp"))
+		err = timestamp_set(dev, fid, cfg.tstmp, argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(dev, fid, 0, cfg.sel, timestamp_feat);
 
 	return err;
 }
