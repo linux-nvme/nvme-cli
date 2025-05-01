@@ -30,6 +30,7 @@ OPTIONS
 -O <opcode>::
 --opcode=<opcode>::
 	The NVMe-MI opcode to send to the device in the command
+	Required argument as this param is mandatory.
 
 -n <nsid>::
 --namespace-id=<nsid>::
