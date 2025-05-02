@@ -2353,15 +2353,27 @@ int nvme_dim_send(struct nvme_dim_args *args)
 
 int nvme_lm_cdq(struct nvme_lm_cdq_args *args)
 {
+	const size_t size_v1 = sizeof_args(struct nvme_lm_cdq_args, sz_u8, __u64);
+	const size_t size_v2 = sizeof_args(struct nvme_lm_cdq_args, sz, __u64);
 	__u32 cdw10 = NVME_SET(args->sel, LM_CDQ_SEL) |
 		      NVME_SET(args->mos, LM_CDQ_MOS);
-	__u32 cdw11 = 0, data_len = 0;
+	__u32 cdw11 = 0, data_len = 0, sz = 0;
 	int err;
+
+	if (args->args_size < size_v1 || args->args_size > size_v2) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (args->args_size == size_v1)
+		sz = args->sz_u8;
+	else
+		sz = args->sz;
 
 	if (args->sel == NVME_LM_SEL_CREATE_CDQ) {
 		cdw11 = NVME_SET(args->cntlid, LM_CREATE_CDQ_CNTLID) |
 			NVME_LM_CREATE_CDQ_PC;
-		data_len = args->sz << 2;
+		data_len = sz << 2;
 	} else if (args->sel == NVME_LM_SEL_DELETE_CDQ) {
 		cdw11 = NVME_SET(args->cdqid, LM_DELETE_CDQ_CDQID);
 	}
@@ -2370,7 +2382,7 @@ int nvme_lm_cdq(struct nvme_lm_cdq_args *args)
 		.opcode = nvme_admin_ctrl_data_queue,
 		.cdw10 = cdw10,
 		.cdw11 = cdw11,
-		.cdw12 = args->sz,
+		.cdw12 = sz,
 		.addr = (__u64)(uintptr_t)args->data,
 		.data_len = data_len,
 		.timeout_ms = args->timeout,

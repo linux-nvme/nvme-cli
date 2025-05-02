@@ -976,7 +976,9 @@ struct nvme_dim_args {
  *		by the controller if no error is present. For Delete CDQ, this field is the CDQID
  *		to delete.
  * @sel:	Select (SEL): This field specifies the type of management operation to perform.
- * @sz:		For Create CDQ, specifies the size of CDQ, in dwords
+ * @sz_u8:	For Create CDQ, specifies the size of CDQ, in dwords - 1 byte
+ * @rsvd1:	Reserved
+ * @sz:		For Create CDQ, specifies the size of CDQ, in dwords - 4 byte
  */
 struct nvme_lm_cdq_args {
 	__u32	*result;
@@ -988,7 +990,9 @@ struct nvme_lm_cdq_args {
 	__u16	cntlid;
 	__u16	cdqid;
 	__u8	sel;
-	__u8	sz;
+	__u8	sz_u8;
+	__u8	rsvd1[4];
+	__u32	sz;
 };
 
 /**
