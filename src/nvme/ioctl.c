@@ -1091,6 +1091,26 @@ int nvme_get_features_temp_thresh(int fd, enum nvme_get_features_sel sel,
 	return __nvme_get_features(fd, NVME_FEAT_FID_TEMP_THRESH, sel, result);
 }
 
+int nvme_get_features_temp_thresh2(int fd, enum nvme_get_features_sel sel, __u8 tmpsel,
+				   enum nvme_feat_tmpthresh_thsel thsel, __u32 *result)
+{
+	struct nvme_get_features_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.fid = NVME_FEAT_FID_TEMP_THRESH,
+		.nsid = NVME_NSID_NONE,
+		.sel = sel,
+		.cdw11 = NVME_SET(tmpsel, FEAT_TT_TMPSEL) | NVME_SET(thsel, FEAT_TT_THSEL),
+		.uuidx = NVME_UUID_NONE,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+
+	return nvme_get_features(&args);
+}
+
 int nvme_get_features_err_recovery(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result)
 {

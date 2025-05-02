@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_UNRELEASED {
 	global:
+		nvme_get_features_temp_thresh2;
 		nvme_set_features_temp_thresh2;
 		nvme_subsystem_get_serial;
 };

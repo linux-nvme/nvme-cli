@@ -3226,6 +3226,20 @@ int nvme_get_features_temp_thresh(int fd, enum nvme_get_features_sel sel,
 				  __u32 *result);
 
 /**
+ * nvme_get_features_temp_thresh2() - Get temperature threshold feature
+ * @fd:		File descriptor of nvme device
+ * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @tmpsel:	Threshold Temperature Select
+ * @thsel:	Threshold Type Select
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_features_temp_thresh2(int fd, enum nvme_get_features_sel sel, __u8 tmpsel,
+				   enum nvme_feat_tmpthresh_thsel thsel, __u32 *result);
+
+/**
  * nvme_get_features_err_recovery() - Get error recovery feature
  *
  * Deprecated: doesn't support specifying a NSID.
