@@ -23,6 +23,15 @@ struct perfc_config {
 	__u8 sel;
 };
 
+struct temp_thresh_config {
+	__u16 tmpth;
+	__u8 tmpsel;
+	__u8 thsel;
+	__u8 tmpthh;
+	bool save;
+	__u8 sel;
+};
+
 static const char *power_mgmt_feat = "power management feature";
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *save = "Specifies that the controller shall save the attribute";
@@ -378,6 +387,84 @@ static int feat_timestamp(int argc, char **argv, struct command *cmd, struct plu
 		err = timestamp_set(dev, fid, cfg.tstmp, argconfig_parse_seen(opts, "save"));
 	else
 		err = feat_get(dev, fid, 0, cfg.sel, timestamp_feat);
+
+	return err;
+}
+
+static int temp_thresh_set(int fd, const __u8 fid, struct argconfig_commandline_options *opts,
+			   struct temp_thresh_config *cfg)
+{
+	__u32 result;
+	int err;
+	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
+	__u16 tmpth;
+	__u8 tmpsel;
+	__u8 thsel;
+	__u8 tmpthh;
+	bool save = argconfig_parse_seen(opts, "save");
+
+	if (save)
+		sel = NVME_GET_FEATURES_SEL_SAVED;
+
+	err = nvme_get_features_temp_thresh2(fd, sel, cfg->tmpsel, cfg->thsel, &result);
+	if (!err) {
+		nvme_feature_decode_temp_threshold(result, &tmpth, &tmpsel, &thsel, &tmpthh);
+		if (!argconfig_parse_seen(opts, "tmpth"))
+			cfg->tmpth = tmpth;
+		if (!argconfig_parse_seen(opts, "tmpthh"))
+			cfg->tmpthh = tmpthh;
+	}
+
+	err = nvme_set_features_temp_thresh2(fd, cfg->tmpth, cfg->tmpsel, cfg->thsel, cfg->tmpthh,
+					     save, &result);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", timestamp_feat);
+	} else {
+		nvme_show_result("Set %s: (%s)", timestamp_feat, save ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, NVME_SET(cfg->tmpth, FEAT_TT_TMPTH) |
+					 NVME_SET(cfg->tmpsel, FEAT_TT_TMPSEL) |
+					 NVME_SET(cfg->thsel, FEAT_TT_THSEL) |
+					 NVME_SET(cfg->tmpthh, FEAT_TT_TMPTHH), NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_temp_thresh(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const __u8 fid = NVME_FEAT_FID_TEMP_THRESH;
+	const char *tmpth = "temperature threshold";
+	const char *tmpsel = "threshold temperature select";
+	const char *thsel = "threshold type select";
+	const char *tmpthh = "temperature threshold hysteresis";
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int err;
+
+	struct temp_thresh_config cfg = { 0 };
+
+	FEAT_ARGS(opts,
+		  OPT_SHRT("tmpth", 'T', &cfg.tmpth, tmpth),
+		  OPT_BYTE("tmpsel", 'm', &cfg.tmpsel, tmpsel),
+		  OPT_BYTE("thsel", 'H', &cfg.thsel, thsel),
+		  OPT_BYTE("tmpthh", 'M', &cfg.tmpthh, tmpthh));
+
+	err = parse_and_open(&dev, argc, argv, TEMP_THRESH_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "tmpth") || argconfig_parse_seen(opts, "tmpthh"))
+		err = temp_thresh_set(dev_fd(dev), fid, opts, &cfg);
+	else
+		err = feat_get(dev, fid, NVME_SET(cfg.tmpsel, FEAT_TT_TMPSEL) |
+			       NVME_SET(cfg.thsel, FEAT_TT_THSEL), cfg.sel, timestamp_feat);
 
 	return err;
 }
