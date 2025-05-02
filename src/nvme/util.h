@@ -263,13 +263,16 @@ static inline void nvme_feature_decode_lba_range(__u32 value, __u8 *num)
 #define NVME_FEAT_TT_TMPTH(v)		NVME_GET(v, FEAT_TT_TMPTH)
 #define NVME_FEAT_TT_TMPSEL(v)		NVME_GET(v, FEAT_TT_TMPSEL)
 #define NVME_FEAT_TT_THSEL(v)		NVME_GET(v, FEAT_TT_THSEL)
+#define NVME_FEAT_TT_TMPTHH(v)		NVME_GET(v, FEAT_TT_TMPTHH)
 
 static inline void nvme_feature_decode_temp_threshold(__u32 value, __u16 *tmpth,
-						      __u8 *tmpsel, __u8 *thsel)
+						      __u8 *tmpsel, __u8 *thsel,
+						      __u8 *tmpthh)
 {
 	*tmpth	= NVME_FEAT_TT_TMPTH(value);
 	*tmpsel	= NVME_FEAT_TT_TMPSEL(value);
 	*thsel	= NVME_FEAT_TT_THSEL(value);
+	*tmpthh	= NVME_FEAT_TT_TMPTHH(value);
 }
 
 #define NVME_FEAT_ER_TLER(v)		NVME_GET(v, FEAT_ERROR_RECOVERY_TLER)

@@ -722,6 +722,19 @@ int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
 				   result);
 }
 
+int nvme_set_features_temp_thresh2(int fd, __u16 tmpth, __u8 tmpsel,
+				   enum nvme_feat_tmpthresh_thsel thsel, __u8 tmpthh,
+				   bool save, __u32 *result)
+{
+	__u32 value = NVME_SET(tmpth, FEAT_TT_TMPTH) |
+			NVME_SET(tmpsel, FEAT_TT_TMPSEL) |
+			NVME_SET(thsel, FEAT_TT_THSEL) |
+			NVME_SET(tmpthh, FEAT_TT_TMPTHH);
+
+	return __nvme_set_features(fd, NVME_FEAT_FID_TEMP_THRESH, value, save,
+				   result);
+}
+
 int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler, bool dulbe,
 				   bool save, __u32 *result)
 {

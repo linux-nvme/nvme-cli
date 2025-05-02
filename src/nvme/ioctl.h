@@ -2722,6 +2722,23 @@ int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
 				  bool save, __u32 *result);
 
 /**
+ * nvme_set_features_temp_thresh2() - Set temperature threshold feature
+ * @fd:		File descriptor of nvme device
+ * @tmpth:	Temperature Threshold
+ * @tmpsel:	Threshold Temperature Select
+ * @thsel:	Threshold Type Select
+ * @tmpthh:	Temperature Threshold Hysteresis
+ * @save:	Save value across power states
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_set_features_temp_thresh2(int fd, __u16 tmpth, __u8 tmpsel,
+				   enum nvme_feat_tmpthresh_thsel thsel, __u8 tmpthh,
+				   bool save, __u32 *result);
+
+/**
  * nvme_set_features_err_recovery() - Set error recovery feature
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
