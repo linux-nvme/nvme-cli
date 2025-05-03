@@ -19,7 +19,6 @@ struct perfc_config {
 	char *paid;
 	__u16 attrl;
 	char *vs_data;
-	bool save;
 	__u8 sel;
 };
 
@@ -102,24 +101,21 @@ static int feat_power_mgmt(int argc, char **argv, struct command *cmd, struct pl
 	struct config {
 		__u8 ps;
 		__u8 wh;
-		bool save;
 		__u8 sel;
 	};
 
 	struct config cfg = { 0 };
 
-	NVME_ARGS(opts,
+	FEAT_ARGS(opts,
 		  OPT_BYTE("ps", 'p', &cfg.ps, ps),
-		  OPT_BYTE("wh", 'w', &cfg.wh, wh),
-		  OPT_FLAG("save", 's', &cfg.save, save),
-		  OPT_BYTE("sel", 'S', &cfg.sel, sel));
+		  OPT_BYTE("wh", 'w', &cfg.wh, wh));
 
 	err = parse_and_open(&dev, argc, argv, POWER_MGMT_DESC, opts);
 	if (err)
 		return err;
 
 	if (argconfig_parse_seen(opts, "ps"))
-		err = power_mgmt_set(dev, fid, cfg.ps, cfg.wh, cfg.save);
+		err = power_mgmt_set(dev, fid, cfg.ps, cfg.wh, argconfig_parse_seen(opts, "save"));
 	else
 		err = power_mgmt_get(dev, fid, cfg.sel);
 
@@ -239,16 +235,14 @@ static int feat_perfc(int argc, char **argv, struct command *cmd, struct plugin 
 
 	struct perfc_config cfg = { 0 };
 
-	NVME_ARGS(opts,
+	FEAT_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_optional),
 		  OPT_BYTE("attri", 'a', &cfg.attri, attri),
 		  OPT_FLAG("rvspa", 'r', &cfg.rvspa, rvspa),
 		  OPT_BYTE("r4karl", 'R', &cfg.r4karl, r4karl),
 		  OPT_STR("paid", 'p', &cfg.paid, paid),
 		  OPT_SHRT("attrl", 'A', &cfg.attrl, attrl),
-		  OPT_FILE("vs-data", 'V', &cfg.vs_data, vs_data),
-		  OPT_FLAG("save", 's', &cfg.save, save),
-		  OPT_BYTE("sel", 'S', &cfg.sel, sel));
+		  OPT_FILE("vs-data", 'V', &cfg.vs_data, vs_data));
 
 	err = parse_and_open(&dev, argc, argv, PERFC_DESC, opts);
 	if (err)
@@ -334,24 +328,21 @@ static int feat_hctm(int argc, char **argv, struct command *cmd, struct plugin *
 	struct config {
 		__u16 tmt1;
 		__u16 tmt2;
-		bool save;
 		__u8 sel;
 	};
 
 	struct config cfg = { 0 };
 
-	NVME_ARGS(opts,
+	FEAT_ARGS(opts,
 		  OPT_SHRT("tmt1", 't', &cfg.tmt1, TMT(1)),
-		  OPT_SHRT("tmt2", 'T', &cfg.tmt2, TMT(2)),
-		  OPT_FLAG("save", 's', &cfg.save, save),
-		  OPT_BYTE("sel", 'S', &cfg.sel, sel));
+		  OPT_SHRT("tmt2", 'T', &cfg.tmt2, TMT(2)));
 
 	err = parse_and_open(&dev, argc, argv, HCTM_DESC, opts);
 	if (err)
 		return err;
 
 	if (argconfig_parse_seen(opts, "tmt1") || argconfig_parse_seen(opts, "tmt2"))
-		err = hctm_set(dev, fid, cfg.tmt1, cfg.tmt2, cfg.save);
+		err = hctm_set(dev, fid, cfg.tmt1, cfg.tmt2, argconfig_parse_seen(opts, "save"));
 	else
 		err = hctm_get(dev, fid, cfg.sel);
 

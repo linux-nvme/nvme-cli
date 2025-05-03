@@ -14,6 +14,10 @@
 #define PERFC_DESC "Get and set perf characteristics feature"
 #define HCTM_DESC "Get and set host controlled thermal management feature"
 
+#define FEAT_ARGS(n, ...)                                              \
+	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
+		  OPT_BYTE("sel", 'S', &cfg.sel, sel))
+
 PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("power-mgmt", POWER_MGMT_DESC, feat_power_mgmt)
