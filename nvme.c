@@ -4707,10 +4707,6 @@ static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
 		nvme_get_feature_length(cfg->feature_id, cfg->cdw11,
 					&cfg->data_len);
 
-	/* check for Extended Host Identifier */
-	if (cfg->feature_id == NVME_FEAT_FID_HOST_ID && (cfg->cdw11 & 0x1))
-		cfg->data_len = 16;
-
 	if (cfg->feature_id == NVME_FEAT_FID_FDP_EVENTS) {
 		cfg->data_len = 0xff * sizeof(__u16);
 		cfg->cdw11 |= 0xff << 16;
