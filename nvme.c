@@ -259,6 +259,7 @@ static const char *pmrmscu = "PMRMSCU=0xe18 register offset";
 
 struct nvme_config nvme_cfg = {
 	.output_format = "normal",
+	.output_format_ver = 1,
 };
 
 static void *mmap_registers(struct nvme_dev *dev, bool writable);
