@@ -79,6 +79,7 @@ struct nvme_config {
 	int verbose;
 	__u32 timeout;
 	bool dry_run;
+	unsigned int output_format_ver;
 };
 
 /*
@@ -92,6 +93,8 @@ struct nvme_config {
 		##__VA_ARGS__,                                                         \
 		OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout),       \
 		OPT_FLAG("dry-run",        0, &nvme_cfg.dry_run,       dry_run),       \
+		OPT_UINT("output-format-version", 0, &nvme_cfg.output_format_ver,      \
+			 "output format version: 1|2"),                                \
 		OPT_END()                                                              \
 	}
 
