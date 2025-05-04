@@ -28,7 +28,6 @@ struct temp_thresh_config {
 	__u8 tmpsel;
 	__u8 thsel;
 	__u8 tmpthh;
-	bool save;
 	__u8 sel;
 };
 
@@ -150,7 +149,8 @@ static int feat_power_mgmt(int argc, char **argv, struct command *cmd, struct pl
 	return err;
 }
 
-static int perfc_set(struct nvme_dev *dev, __u8 fid, __u32 cdw11, struct perfc_config *cfg)
+static int perfc_set(struct nvme_dev *dev, __u8 fid, __u32 cdw11, struct perfc_config *cfg,
+		     bool save)
 {
 	__u32 result;
 	int err;
@@ -252,7 +252,7 @@ static int feat_perfc(int argc, char **argv, struct command *cmd, struct plugin 
 
 	if (argconfig_parse_seen(opts, "rvspa") || argconfig_parse_seen(opts, "r4karl") ||
 	    argconfig_parse_seen(opts, "paid"))
-		err = perfc_set(dev, fid, cdw11, &cfg);
+		err = perfc_set(dev, fid, cdw11, &cfg, argconfig_parse_seen(opts, "save"));
 	else
 		err = feat_get(dev, fid, cdw11, cfg.sel, perfc_feat);
 
