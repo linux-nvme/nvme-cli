@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <inttypes.h>
-
+#include <signal.h>
 #include <stdint.h>
+#include <string.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/syslog.h>
 #include <sys/time.h>
@@ -11,6 +13,7 @@
 #include <libnvme.h>
 
 #include "logging.h"
+#include "sighdl.h"
 
 int log_level;
 static bool dry_run;
@@ -92,6 +95,14 @@ static void nvme_show_latency(struct timeval start, struct timeval end)
 				    (end.tv_usec - start.tv_usec)));
 }
 
+static void nvme_log_retry(int errnum)
+{
+	if (log_level < LOG_DEBUG)
+		return;
+
+	printf("passthru command returned '%s'\n", strerror(errnum));
+}
+
 int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 			 struct nvme_passthru_cmd *cmd, __u32 *result)
 {
@@ -102,8 +113,14 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
 
-	if (!dry_run)
+	if (!dry_run) {
+retry:
 		err = ioctl(fd, ioctl_cmd, cmd);
+		if (err == EAGAIN || (err == EINTR && !nvme_sigint_received)) {
+			nvme_log_retry(err);
+			goto retry;
+		}
+	}
 
 	if (log_level >= LOG_DEBUG) {
 		gettimeofday(&end, NULL);
@@ -128,8 +145,14 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
 
-	if (!dry_run)
+	if (!dry_run) {
+retry:
 		err = ioctl(fd, ioctl_cmd, cmd);
+		if (err == EAGAIN || (err == EINTR && !nvme_sigint_received)) {
+			nvme_log_retry(err);
+			goto retry;
+		}
+	}
 
 	if (log_level >= LOG_DEBUG) {
 		gettimeofday(&end, NULL);
