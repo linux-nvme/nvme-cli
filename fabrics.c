@@ -47,6 +47,7 @@
 #include "fabrics.h"
 #include "util/cleanup.h"
 #include "util/logging.h"
+#include "util/sighdl.h"
 
 #define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
 #define PATH_NVMF_CONFIG	SYSCONFDIR "/nvme/config.json"
@@ -170,6 +171,22 @@ static int set_discovery_kato(struct nvme_fabrics_config *cfg)
 	return tmo;
 }
 
+
+static int nvme_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
+			 struct nvme_fabrics_config *cfg)
+{
+	int ret;
+
+retry:
+	ret = nvmf_add_ctrl(h, c, cfg);
+	if (ret == EAGAIN || (ret == EINTR && !nvme_sigint_received)) {
+		printf("nvmf_add_ctrl returned '%s'\n", strerror(ret));
+		goto retry;
+	}
+
+	return ret;
+}
+
 static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 					  struct nvme_fabrics_config *cfg,
 					  struct tr_config *trcfg)
@@ -189,7 +206,7 @@ static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	tmo = set_discovery_kato(cfg);
 
 	errno = 0;
-	ret = nvmf_add_ctrl(h, c, cfg);
+	ret = nvme_add_ctrl(h, c, cfg);
 
 	cfg->keep_alive_tmo = tmo;
 	if (ret) {
@@ -1103,7 +1120,7 @@ do_connect:
 	nvme_parse_tls_args(keyring, tls_key, tls_key_identity, &cfg, c);
 
 	errno = 0;
-	ret = nvmf_add_ctrl(h, c, &cfg);
+	ret = nvme_add_ctrl(h, c, &cfg);
 	if (ret)
 		fprintf(stderr, "could not add new controller: %s\n",
 			nvme_strerror(errno));
