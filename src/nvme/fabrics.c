@@ -814,7 +814,7 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 
 	nvme_msg(r, LOG_DEBUG, "connect ctrl, '%.*s'\n",
 		 (int)strcspn(argstr,"\n"), argstr);
-	ret = TFR(write(fd, argstr, len));
+	ret = write(fd, argstr, len);
 	if (ret != len) {
 		nvme_msg(r, LOG_INFO, "Failed to write to %s: %s\n",
 			 nvmf_dev, strerror(errno));
