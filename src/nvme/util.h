@@ -502,6 +502,9 @@ static inline void nvme_feature_decode_namespace_write_protect(__u32 value,
 	*wps	= NVME_FEAT_WP_WPS(value);
 }
 
+#define NVME_FEAT_BPWPC_BP0WPS(v)	NVME_GET(v, FEAT_BPWPC_BP0WPS)
+#define NVME_FEAT_BPWPC_BP1WPS(v)	NVME_GET(v, FEAT_BPWPC_BP1WPS)
+
 static inline void nvme_id_ns_flbas_to_lbaf_inuse(__u8 flbas, __u8 *lbaf_inuse)
 {
 	*lbaf_inuse = ((NVME_FLBAS_HIGHER(flbas) << 4) |
