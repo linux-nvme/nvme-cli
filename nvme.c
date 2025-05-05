@@ -65,6 +65,7 @@
 #include "util/argconfig.h"
 #include "util/suffix.h"
 #include "util/logging.h"
+#include "util/sighdl.h"
 #include "fabrics.h"
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -4437,21 +4438,16 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 	return err;
 }
 
-static void intr_self_test(int signum)
-{
-	printf("\nInterrupted device self-test operation by %s\n", strsignal(signum));
-
-	errno = EINTR;
-}
-
 static int sleep_self_test(unsigned int seconds)
 {
-	errno = 0;
+	nvme_sigint_received = false;
 
 	sleep(seconds);
 
-	if (errno)
-		return -errno;
+	if (nvme_sigint_received) {
+		printf("\nInterrupted device self-test operation by SIGINT\n");
+		return -SIGINT;
+	}
 
 	return 0;
 }
@@ -4463,8 +4459,6 @@ static int wait_self_test(struct nvme_dev *dev)
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	int err, i = 0, p = 0, cnt = 0;
 	int wthr;
-
-	signal(SIGINT, intr_self_test);
 
 	ctrl = nvme_alloc(sizeof(*ctrl));
 	if (!ctrl)
@@ -10934,6 +10928,10 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	setlocale(LC_ALL, "");
+
+	err = nvme_install_sigint_handler();
+	if (err)
+		return err;
 
 	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
 	if (err == -ENOTTY)
