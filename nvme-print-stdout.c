@@ -1114,6 +1114,8 @@ static void stdout_subsys_config(nvme_subsystem_t s)
 	if (stdout_print_ops.flags & VERBOSE) {
 		printf("%*s   model=%s\n", len, " ",
 			nvme_subsystem_get_model(s));
+		printf("%*s   serial=%s\n", len, " ",
+			nvme_subsystem_get_serial(s));
 		printf("%*s   firmware=%s\n", len, " ",
 			nvme_subsystem_get_fw_rev(s));
 		printf("%*s   iopolicy=%s\n", len, " ",
