@@ -200,6 +200,7 @@ static const char *block_count = "number of blocks (zeroes based) on device to a
 static const char *crkey = "current reservation key";
 static const char *csi = "command set identifier";
 static const char *buf_len = "buffer len (if) data is sent or received";
+static const char *deprecated = "deprecated; does nothing";
 static const char *domainid = "Domain Identifier";
 static const char *doper = "directive operation";
 static const char *dspec_w_dtype = "directive specification associated with directive type";
@@ -6912,7 +6913,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
 		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
 		  OPT_SHRT("endir",          'e', &cfg.endir,          endir),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, deprecated),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
 		  OPT_FILE("input-file",     'i', &cfg.file,           input));
 
