@@ -179,12 +179,15 @@ static int nvme_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 
 retry:
 	ret = nvmf_add_ctrl(h, c, cfg);
-	if (ret == EAGAIN || (ret == EINTR && !nvme_sigint_received)) {
-		printf("nvmf_add_ctrl returned '%s'\n", strerror(ret));
+	if (!ret)
+		return 0;
+
+	if (errno == EAGAIN || (errno == EINTR && !nvme_sigint_received)) {
+		print_debug("nvmf_add_ctrl returned '%s'\n", strerror(errno));
 		goto retry;
 	}
 
-	return ret;
+	return -errno;
 }
 
 static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
