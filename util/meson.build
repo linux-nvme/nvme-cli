@@ -6,6 +6,7 @@ sources += [
   'util/crc32.c',
   'util/logging.c',
   'util/mem.c',
+  'util/sighdl.c',
   'util/suffix.c',
   'util/types.c',
   'util/utils.c'
