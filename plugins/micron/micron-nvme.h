@@ -35,11 +35,14 @@ PLUGIN(NAME("micron", "Micron vendor specific extensions", NVME_VERSION),
 		ENTRY("vs-smart-add-log", "Retrieve extended SMART data", micron_ocp_smart_health_logs)
 		ENTRY("clear-fw-activate-history", "Clear FW activation history", micron_clr_fw_activation_history)
 		ENTRY("vs-smbus-option", "Enable/Disable SMBUS on the drive", micron_smbus_option)
-		ENTRY("cloud-boot-SSD-version", "Prints HyperScale Boot Version", micron_cloud_boot_SSD_version)
+		ENTRY("cloud-boot-SSD-version", "Prints HyperScale Boot Version", \
+									micron_cloud_boot_SSD_version)
 		ENTRY("vs-device-waf", "Reports SLC and TLC WAF ratio", micron_device_waf)
-		ENTRY("vs-cloud-log", "Retrieve Extended Health Information of Hyperscale NVMe Boot SSD", micron_cloud_log)
+		ENTRY("vs-cloud-log", "Retrieve Extended Health Information of \
+									Hyperscale NVMe Boot SSD", micron_cloud_log)
 		ENTRY("vs-work-load-log", "Retrieve Workload logs", micron_work_load_log)
-		ENTRY("vs-vendor-telemetry-log", "Retrieve Vendor Telemetry logs", micron_vendor_telemetry_log)
+		ENTRY("vs-vendor-telemetry-log", "Retrieve Vendor Telemetry logs", \
+									micron_vendor_telemetry_log)
 	)
 );
 
