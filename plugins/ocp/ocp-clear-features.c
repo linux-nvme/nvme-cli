@@ -75,6 +75,81 @@ close_dev:
 	return err;
 }
 
+int get_ocp_error_counters(int argc, char **argv, struct command *cmd,
+			   struct plugin *plugin)
+{
+	const char *desc = "Define Issue Get Feature cmd (FID: 0xC3) Clear PCIe Corr Err Counters";
+	const char *sel = "[0-3]: current/default/saved/supported/";
+	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
+	const char *no_uuid = "Do not try to automatically detect UUID index";
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	__u32 result;
+	int err;
+	bool uuid;
+	__u8 uuid_index = 0;
+
+	struct config {
+		__u8 sel;
+		__u32 nsid;
+	};
+
+	struct config cfg = {
+		.sel = 0,
+		.nsid = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("sel", 's', &cfg.sel, sel),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid),
+		OPT_FLAG("no-uuid", 'u', NULL, no_uuid),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	uuid = !argconfig_parse_seen(opts, "no-uuid");
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(dev, &uuid_index);
+		if (err || !uuid_index) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
+
+	struct nvme_get_features_args args = {
+		.args_size  = sizeof(args),
+		.fd         = dev_fd(dev),
+		.fid        = OCP_FID_CPCIE,
+		.nsid       = cfg.nsid,
+		.sel        = cfg.sel,
+		.cdw11      = 0,
+		.uuidx      = uuid_index,
+		.data_len   = 0,
+		.data       = NULL,
+		.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result     = &result,
+	};
+
+	err = nvme_get_features(&args);
+	if (!err) {
+		printf("get-feature:0xC3 %s value: %#08x\n",
+		nvme_select_to_string(cfg.sel), result);
+
+		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+			nvme_show_select_result(0xC3, result);
+	} else {
+		nvme_show_error("Could not get feature: 0xC3");
+	}
+
+	return err;
+}
+
 int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "OCP Clear Firmware Update History";
