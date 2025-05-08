@@ -325,6 +325,7 @@ const char *nvme_pel_ehai_pit_to_string(enum nvme_pel_ehai_pit pit);
 const char *nvme_ssi_state_to_string(__u8 state);
 const char *nvme_time_scale_to_string(__u8 ts);
 const char *nvme_pls_mode_to_string(__u8 mode);
+const char *nvme_bpwps_to_string(__u8 bpwps);
 
 void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len);

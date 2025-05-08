@@ -3886,6 +3886,16 @@ static void json_feature_show_fields_fdp_events(struct json_object *r, unsigned 
 	}
 }
 
+static void json_feature_show_fields_bpwp(struct json_object *r, unsigned int result)
+{
+	__u8 field;
+
+	field = NVME_FEAT_BPWPC_BP0WPS(result);
+	obj_add_str(r, "Boot Partition 0 Write Protection State", nvme_bpwps_to_string(field));
+	field = NVME_FEAT_BPWPC_BP1WPS(result);
+	obj_add_str(r, "Boot Partition 1 Write Protection State", nvme_bpwps_to_string(field));
+}
+
 static void json_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	struct json_object *r;
@@ -4021,6 +4031,9 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_FDP_EVENTS:
 		json_feature_show_fields_fdp_events(r, result, buf);
+		break;
+	case NVME_FEAT_FID_BP_WRITE_PROTECT:
+		json_feature_show_fields_bpwp(r, result);
 		break;
 	default:
 		break;

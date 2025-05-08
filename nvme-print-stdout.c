@@ -5224,6 +5224,14 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			       d->evta & 0x1 ? "" : "Not ");
 		}
 		break;
+	case NVME_FEAT_FID_BP_WRITE_PROTECT:
+		field = NVME_FEAT_BPWPC_BP1WPS(result);
+		printf("\tBoot Partition 1 Write Protection State (BP1WPS): %s\n",
+			nvme_bpwps_to_string(field));
+		field = NVME_FEAT_BPWPC_BP0WPS(result);
+		printf("\tBoot Partition 0 Write Protection State (BP0WPS): %s\n",
+			nvme_bpwps_to_string(field));
+		break;
 	default:
 		break;
 	}

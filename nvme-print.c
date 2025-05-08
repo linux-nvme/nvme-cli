@@ -1202,6 +1202,24 @@ const char *nvme_ns_wp_cfg_to_string(enum nvme_ns_write_protect_cfg state)
 	}
 }
 
+const char *nvme_bpwps_to_string(__u8 bpwps)
+{
+	switch (bpwps) {
+	case NVME_FEAT_BPWPS_CHANGE_NOT_REQUESTED:
+		return "Change in state not requested";
+	case NVME_FEAT_BPWPS_WRITE_UNLOCKED:
+		return "Write Unlocked";
+	case NVME_FEAT_BPWPS_WRITE_LOCKED:
+		return "Write Locked";
+	case NVME_FEAT_BPWPS_WRITE_LOCKED_PWR_CYCLE:
+		return "Write Locked Until Power Cycle";
+	case NVME_FEAT_BPWPS_WRITE_PROTECTION_RPMB:
+		return "Write Protection controlled by RPMB";
+	default:
+		return "Reserved";
+	}
+}
+
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 			 void *buf, __u32 len, nvme_print_flags_t flags)
 {
