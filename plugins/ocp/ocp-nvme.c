@@ -2686,6 +2686,12 @@ static int clear_pcie_correctable_error_counters(int argc, char **argv, struct c
 	return ocp_clear_pcie_correctable_errors(argc, argv, cmd, plugin);
 }
 
+static int get_clear_pcie_correctable_error_counters(int argc, char **argv, struct command *cmd,
+						      struct plugin *plugin)
+{
+	return get_ocp_error_counters(argc, argv, cmd, plugin);
+}
+
 static int fw_activation_history_log(int argc, char **argv, struct command *cmd,
 				     struct plugin *plugin)
 {

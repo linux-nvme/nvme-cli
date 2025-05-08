@@ -10,3 +10,6 @@ int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd, stru
 
 int ocp_clear_pcie_correctable_errors(int argc, char **argv, struct command *cmd,
 					     struct plugin *plugin);
+
+int get_ocp_error_counters(int argc, char **argv, struct command *cmd,
+			    struct plugin *plugin);

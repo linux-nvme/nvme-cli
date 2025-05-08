@@ -44,6 +44,8 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 		ENTRY("hardware-component-log", "retrieve hardware component log", hwcomp_log)
 		ENTRY("get-latency-monitor", "Get Latency Monitor Feature",
 		      ocp_get_latency_monitor_feature)
+		ENTRY("get-clear-pcie-correctable-errors", "Clear PCIe correctable error counters",
+		      get_clear_pcie_correctable_error_counters)
 	)
 );
 

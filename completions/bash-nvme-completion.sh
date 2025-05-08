@@ -1652,6 +1652,10 @@ plugin_ocp_opts () {
 		opts+=" --sel= -s \
 			--namespace-id= -n --no-uuid -u"
 			;;
+		"get-clear-pcie-correctable-errors")
+		opts+=" --sel= -s \
+			--namespace-id= -n --no-uuid -u"
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1733,7 +1737,8 @@ _nvme_subcmds () {
 			telemetry-string-log set-telemetry-profile \
 			set-dssd-async-event-config get-dssd-async-event-config \
 			get-error-injection set-error-injection \
-			hardware-component-log get-latency-monitor"
+			hardware-component-log get-latency-monitor \
+			get-clear-pcie-correctable-errors"
 		[mangoboost]="id-ctrl"
 	)
 
