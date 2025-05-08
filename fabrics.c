@@ -178,6 +178,11 @@ static int nvme_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	int ret;
 
 retry:
+	/*
+	 * __create_discover_ctrl and callers depend on errno being set
+	 * in the error case.
+	 */
+	errno = 0;
 	ret = nvmf_add_ctrl(h, c, cfg);
 	if (!ret)
 		return 0;
@@ -208,9 +213,7 @@ static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
 	tmo = set_discovery_kato(cfg);
 
-	errno = 0;
 	ret = nvme_add_ctrl(h, c, cfg);
-
 	cfg->keep_alive_tmo = tmo;
 	if (ret) {
 		nvme_free_ctrl(c);
@@ -1082,10 +1085,8 @@ do_connect:
 		return -errno;
 
 	h = nvme_lookup_host(r, hnqn, hid);
-	if (!h) {
-		errno = ENOMEM;
-		goto out_free;
-	}
+	if (!h)
+		return -ENOMEM;
 	if (hostkey)
 		nvme_host_set_dhchap_key(h, hostkey);
 	if (!trsvcid)
@@ -1106,37 +1107,33 @@ do_connect:
 	c = lookup_ctrl(h, &trcfg);
 	if (c && nvme_ctrl_get_name(c) && !cfg.duplicate_connect) {
 		fprintf(stderr, "already connected\n");
-		errno = EALREADY;
-		goto out_free;
+		return -EALREADY;
 	}
 
 	c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 			     cfg.host_traddr, cfg.host_iface, trsvcid);
-	if (!c) {
-		errno = ENOMEM;
-		goto out_free;
-	}
+	if (!c)
+		return -ENOMEM;
 
 	if (ctrlkey)
 		nvme_ctrl_set_dhchap_key(c, ctrlkey);
 
 	nvme_parse_tls_args(keyring, tls_key, tls_key_identity, &cfg, c);
 
-	errno = 0;
 	ret = nvme_add_ctrl(h, c, &cfg);
-	if (ret)
+	if (ret) {
 		fprintf(stderr, "could not add new controller: %s\n",
-			nvme_strerror(errno));
-	else {
-		errno = 0;
-		if (flags != -EINVAL)
-			nvme_show_connect_msg(c, flags);
+			nvme_strerror(-ret));
+		return ret;
 	}
 
-out_free:
+	/* always print connected device */
+	nvme_show_connect_msg(c, flags);
+
 	if (dump_config)
 		nvme_dump_config(r);
-	return -errno;
+
+	return 0;
 }
 
 static nvme_ctrl_t lookup_nvme_ctrl(nvme_root_t r, const char *name)
