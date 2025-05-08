@@ -116,8 +116,9 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	if (!dry_run) {
 retry:
 		err = ioctl(fd, ioctl_cmd, cmd);
-		if (err == EAGAIN || (err == EINTR && !nvme_sigint_received)) {
-			nvme_log_retry(err);
+		if (err && (errno == EAGAIN ||
+			    (errno == EINTR && !nvme_sigint_received))) {
+			nvme_log_retry(errno);
 			goto retry;
 		}
 	}
@@ -148,8 +149,9 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 	if (!dry_run) {
 retry:
 		err = ioctl(fd, ioctl_cmd, cmd);
-		if (err == EAGAIN || (err == EINTR && !nvme_sigint_received)) {
-			nvme_log_retry(err);
+		if (err && (errno == EAGAIN ||
+			    (errno == EINTR && !nvme_sigint_received))) {
+			nvme_log_retry(errno);
 			goto retry;
 		}
 	}
