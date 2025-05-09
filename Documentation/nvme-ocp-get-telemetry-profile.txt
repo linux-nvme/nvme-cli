@@ -1,0 +1,62 @@
+nvme-ocp-get-telemetry-profile(1)
+=========================================
+
+NAME
+----
+nvme-ocp-get-telemetry-profile - Define and print get-telemetry-profile value
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp get-telemetry-profile' <device> [--sel=<select> | -s <select>]
+			[--namespace-id <nsid> | -n <nsid>] [--no-uuid | -u]
+
+DESCRIPTION
+-----------
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	NSID: Assign the different kind of nsid value(like
+	active, inactive and invalid nsids) and check
+	the get feature command response:
+
+-s <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
++
+[]
+|==================
+|Select|Description
+|0|Current
+|1|Default
+|2|Saved
+|3|Supported capabilities
+|4-7|Reserved
+|==================
+
+-u::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
+
+EXAMPLES
+--------
+* Has the program issue a get-telemetry-profile to retrieve the 0xC8 get features.
++
+------------
+# nvme ocp get-telemetry-profile /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
