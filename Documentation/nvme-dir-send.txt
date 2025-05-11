@@ -31,9 +31,8 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
 On success, the returned directive's parameter structure (if applicable) is
 returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format
-if it is a known structure, displayed in hex, or the raw buffer may be
-printed to stdout for another program to parse.
+structure may parsed by the program and displayed in hex, or the raw buffer
+may be printed to stdout for another program to parse.
 
 OPTIONS
 -------
@@ -85,8 +84,7 @@ OPTIONS
 
 -H::
 --human-readable::
-	Print the decoded receive buffer to stdout if the command returns
-	a structure.
+	deprecated; does nothing so use the --verbose flag instead.
 
 -o <fmt>::
 --output-format=<fmt>::
