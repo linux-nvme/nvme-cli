@@ -11,12 +11,21 @@
 #include <linux/types.h>
 
 #include <libnvme.h>
+#include <libnvme-mi.h>
+
+#include <ccan/endian/endian.h>
 
 #include "logging.h"
 #include "sighdl.h"
 
+struct submit_data {
+	struct timeval start;
+	struct timeval end;
+};
+
 int log_level;
 static bool dry_run;
+static struct submit_data sb;
 
 int map_log_level(int verbose, bool quiet)
 {
@@ -166,4 +175,106 @@ retry:
 		*result = cmd->result;
 
 	return err;
+}
+
+static void nvme_show_req_admin(const struct nvme_mi_admin_req_hdr *hdr, size_t hdr_len,
+				const void *data, size_t data_len)
+{
+	struct nvme_passthru_cmd cmd = {
+		.opcode = hdr->opcode,
+		.flags = hdr->flags,
+		.nsid = le32_to_cpu(hdr->cdw1),
+		.cdw2 = le32_to_cpu(hdr->cdw2),
+		.cdw3 = le32_to_cpu(hdr->cdw3),
+		.addr = (uint64_t)(uintptr_t)data,
+		.data_len = data_len,
+		.cdw10 = le32_to_cpu(hdr->cdw10),
+		.cdw11 = le32_to_cpu(hdr->cdw11),
+		.cdw12 = le32_to_cpu(hdr->cdw12),
+		.cdw13 = le32_to_cpu(hdr->cdw13),
+		.cdw14 = le32_to_cpu(hdr->cdw14),
+		.cdw15 = le32_to_cpu(hdr->cdw15),
+	};
+
+	nvme_show_common(&cmd);
+	printf("doff         : %08x\n", le32_to_cpu(hdr->doff));
+	printf("dlen         : %08x\n", le32_to_cpu(hdr->dlen));
+}
+
+static void nvme_show_req(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
+			  const void *data, size_t data_len)
+{
+	if (type != NVME_MI_MSGTYPE_NVME)
+		return;
+
+	switch (hdr->nmp >> 3 & 0xf) {
+	case NVME_MI_MT_CONTROL:
+		break;
+	case NVME_MI_MT_MI:
+		break;
+	case NVME_MI_MT_ADMIN:
+		nvme_show_req_admin((struct nvme_mi_admin_req_hdr *)hdr, hdr_len, data, data_len);
+		break;
+	case NVME_MI_MT_PCIE:
+		break;
+	case NVME_MI_MT_AE:
+		break;
+	default:
+		break;
+	}
+}
+
+void *nvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
+			   const void *data, size_t data_len)
+{
+	memset(&sb, 0, sizeof(sb));
+
+	if (log_level >= LOG_DEBUG) {
+		nvme_show_req(type, hdr, hdr_len, data, data_len);
+		gettimeofday(&sb.start, NULL);
+	}
+
+	return &sb;
+}
+
+static void nvme_show_resp_admin(const struct nvme_mi_admin_resp_hdr *hdr, size_t hdr_len,
+				 const void *data, size_t data_len)
+{
+	printf("result       : %08x\n", le32_to_cpu(hdr->cdw0));
+	printf("err          : %d\n", hdr->status);
+}
+
+static void nvme_show_resp(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
+			   const void *data, size_t data_len)
+{
+	if (type != NVME_MI_MSGTYPE_NVME)
+		return;
+
+	switch (hdr->nmp >> 3 & 0xf) {
+	case NVME_MI_MT_CONTROL:
+		break;
+	case NVME_MI_MT_MI:
+		break;
+	case NVME_MI_MT_ADMIN:
+		nvme_show_resp_admin((struct nvme_mi_admin_resp_hdr *)hdr, hdr_len, data, data_len);
+		break;
+	case NVME_MI_MT_PCIE:
+		break;
+	case NVME_MI_MT_AE:
+		break;
+	default:
+		break;
+	}
+}
+
+void nvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
+			 const void *data, size_t data_len, void *user_data)
+{
+	struct submit_data *sb = user_data;
+
+	if (log_level >= LOG_DEBUG) {
+		gettimeofday(&sb->end, NULL);
+		nvme_show_resp(type, hdr, hdr_len, data, data_len);
+		nvme_show_latency(sb->start, sb->end);
+	}
 }
