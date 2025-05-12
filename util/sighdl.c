@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include <signal.h>
 #include <errno.h>
+#include <stddef.h>
 
 #include "sighdl.h"
 
