@@ -2572,7 +2572,7 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 
 		if (custId == MICRON_CUST_ID_GG) {
 			if (dinfo.ftl_unit_size) {
-				sprintf(tempstr, "%hhu B", dinfo.ftl_unit_size*1024);
+				sprintf(tempstr, "%hhu B", (unsigned char)dinfo.ftl_unit_size*1024);
 				json_object_add_value_string(pinfo, "FTL_unit_size", tempstr);
 			}
 
@@ -2615,7 +2615,7 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 
 		if (custId == MICRON_CUST_ID_GG) {
 			if (dinfo.ftl_unit_size)
-				printf("FTL_unit_size: %hhu B\n", dinfo.ftl_unit_size*1024);
+				printf("FTL_unit_size: %hhu B\n", (unsigned char)dinfo.ftl_unit_size*1024);
 
 			if (dinfo.bs_ver_major != 0 || dinfo.bs_ver_minor != 0) {
 				printf(
