@@ -195,7 +195,6 @@ tools_build_muon() {
 
     CC="${CC}" ninja="${SAMU}" stage1/muon-bootstrap setup    \
         -Dprefix="${TOOLDIR}"                                 \
-        -Ddocs=disabled                                       \
         -Dsamurai=disabled                                    \
         "${TOOLDIR}/build-muon"
     "${SAMU}" -C "${TOOLDIR}/build-muon"
