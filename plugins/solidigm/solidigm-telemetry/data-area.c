@@ -11,15 +11,55 @@
 #include "data-area.h"
 #include "config.h"
 #include "nlog.h"
+#include "skht.h"
 #include <ctype.h>
 
-#define SIGNED_INT_PREFIX "int"
-#define BITS_IN_BYTE 8
+#define SIGNED_int_PREFIX "int"
+#define SIGNED_INT_PREFIX "INT"
 
 #define MAX_WARNING_SIZE 1024
 #define MAX_ARRAY_RANK 16
 #define NLOG_HEADER_ID 101
 
+static bool uint8_array_to_string(const struct telemetry_log *tl,
+				  uint64_t offset_bit, uint32_t size_bit,
+				  uint32_t array_size,
+				  struct json_object **str_obj)
+{
+	uint32_t offset_byte = (uint32_t)offset_bit / NUM_BITS_IN_BYTE;
+
+	if (size_bit != 8) {
+		*str_obj = json_object_new_string(
+			"Error: Only UINT8 arrays can be converted to strings");
+		return false;
+	}
+
+	if (offset_byte > (tl->log_size - array_size)) {
+		char err_msg[MAX_WARNING_SIZE];
+
+		snprintf(err_msg, MAX_WARNING_SIZE,
+			"String offset greater than binary size (%u > %zu).",
+			offset_byte, tl->log_size);
+		*str_obj = json_object_new_string(err_msg);
+		return false;
+	}
+
+	// Get direct pointer to the UINT8 array in the telemetry log
+	const uint8_t *data_ptr = (const uint8_t *)tl->log + offset_byte;
+
+	// Calculate actual string length (stopping at null terminator if found)
+	size_t actual_length = 0;
+
+	for (actual_length = 0; actual_length < array_size; actual_length++) {
+		if (data_ptr[actual_length] == '\0')
+			break;
+	}
+
+	// Create JSON string directly from the data without intermediate buffer
+	*str_obj = json_object_new_string_len((const char *)data_ptr, actual_length);
+
+	return true;
+}
 
 static void reverse_string(char *buff, size_t len)
 {
@@ -54,23 +94,23 @@ static bool telemetry_log_get_value(const struct telemetry_log *tl,
 
 		return false;
 	}
-	additional_size_byte = (size_bit - 1) ? (size_bit - 1) / BITS_IN_BYTE : 0;
-	offset_byte = (uint32_t)offset_bit / BITS_IN_BYTE;
+	additional_size_byte = (size_bit - 1) ? (size_bit - 1) / NUM_BITS_IN_BYTE : 0;
+	offset_byte = (uint32_t)offset_bit / NUM_BITS_IN_BYTE;
 
 	if (offset_byte > (tl->log_size - additional_size_byte)) {
 		char err_msg[MAX_WARNING_SIZE];
 
 		snprintf(err_msg, MAX_WARNING_SIZE,
-			"Value offset greater than binary size (%u > %zu).",
-			 offset_byte, tl->log_size);
+			"Value offset greater than binary size (%u + %u > %zu).",
+			 offset_byte, additional_size_byte, tl->log_size);
 		*val_obj = json_object_new_string(err_msg);
 
 		return false;
 	}
 
-	offset_bit_from_byte = (uint32_t) (offset_bit - ((uint64_t)offset_byte * BITS_IN_BYTE));
+	offset_bit_from_byte = (uint32_t) (offset_bit - ((uint64_t)offset_byte * NUM_BITS_IN_BYTE));
 
-	if ((size_bit + offset_bit_from_byte) > (sizeof(uint64_t) * BITS_IN_BYTE)) {
+	if ((size_bit + offset_bit_from_byte) > (sizeof(uint64_t) * NUM_BITS_IN_BYTE)) {
 		char err_msg[MAX_WARNING_SIZE];
 
 		snprintf(err_msg, MAX_WARNING_SIZE,
@@ -96,17 +136,19 @@ static bool telemetry_log_get_value(const struct telemetry_log *tl,
 	return true;
 }
 
-static int telemetry_log_structure_parse(const struct telemetry_log *tl,
-					 struct json_object *struct_def,
-					 uint64_t parent_offset_bit,
-					 struct json_object *output,
-					 struct json_object *metadata)
+int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
+				   struct json_object *struct_def,
+				   uint64_t parent_offset_bit,
+				   struct json_object *output,
+				   struct json_object *metadata)
 {
 	struct json_object *obj_arraySizeArray = NULL;
 	struct json_object *obj = NULL;
 	struct json_object *obj_memberList;
 	struct json_object *major_dimension = NULL;
 	struct json_object *sub_output;
+	struct json_object *obj_arraySizeIndicator = NULL;
+	bool force_array = false;
 	bool is_enumeration = false;
 	bool has_member_list;
 	const char *type = "";
@@ -115,7 +157,7 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 	uint64_t offset_bit;
 	uint32_t size_bit;
 	uint64_t linear_array_pos_bit;
-	uint32_t array_size_dimension[MAX_ARRAY_RANK];
+	uint32_t array_size_dimension[MAX_ARRAY_RANK] = { 0 };
 
 	if (!json_object_object_get_ex(struct_def, "name", &obj)) {
 		SOLIDIGM_LOG_WARNING("Warning: Structure definition missing property 'name': %s",
@@ -186,6 +228,26 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 		array_size_dimension[i] = json_object_get_int(dimension);
 		major_dimension = dimension;
 	}
+
+	// Check for arraySizeIndicator property to support dynamic array sizes
+	if (json_object_object_get_ex(struct_def, "arraySizeIndicator", &obj_arraySizeIndicator)) {
+		const char *indicator_name = json_object_get_string(obj_arraySizeIndicator);
+
+		force_array = true; // Force array output even if size is 1
+
+		// Look for the indicator property in the parent object (output)
+		if (indicator_name && output) {
+			struct json_object *parent_prop = NULL;
+
+			if (json_object_object_get_ex(output, indicator_name, &parent_prop)) {
+				// Get the dynamic array size from the parent property
+				uint32_t dynamic_size = json_object_get_int(parent_prop);
+
+				array_size_dimension[0] = dynamic_size;
+			}
+		}
+	}
+
 	if (array_rank > 1) {
 		uint32_t linear_pos_per_index = array_size_dimension[0];
 		uint32_t prev_index_offset_bit = 0;
@@ -214,8 +276,8 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 			offset = parent_offset_bit + prev_index_offset_bit;
 
 			json_object_array_add(dimension_output, sub_array);
-			telemetry_log_structure_parse(tl, struct_def,
-						      offset, sub_array, NULL);
+			sldm_telemetry_structure_parse(tl, struct_def,
+						       offset, sub_array, NULL);
 			prev_index_offset_bit += linear_pos_per_index * size_bit;
 		}
 
@@ -228,7 +290,23 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 	linear_array_pos_bit = 0;
 	sub_output = output;
 
-	if (array_size_dimension[0] > 1) {
+	if (array_size_dimension[0] > 1 || force_array) {
+		// Check if this is a UINT8 array that should be treated as a string
+		if (strcmp(type, "UINT8") == 0 && !force_array) {
+			// Handle UINT8 arrays as strings
+			struct json_object *str_obj = NULL;
+			uint64_t offset = parent_offset_bit + offset_bit;
+
+			if (uint8_array_to_string(tl, offset, size_bit,
+						  array_size_dimension[0], &str_obj)) {
+				json_object_object_add(output, name, str_obj);
+				return 0;
+			}
+
+			// If string conversion failed, fall back to normal array processing
+			json_object_put(str_obj);
+		}
+
 		sub_output = json_create_array();
 		if (json_object_get_type(output) == json_type_array)
 			json_object_array_add(output, sub_output);
@@ -238,13 +316,16 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 
 	for (uint32_t j = 0; j < array_size_dimension[0]; j++) {
 		if (is_enumeration || !has_member_list) {
-			bool is_signed = !strncmp(type, SIGNED_INT_PREFIX, sizeof(SIGNED_INT_PREFIX)-1);
+			bool is_signed = !strncmp(type, SIGNED_int_PREFIX,
+					sizeof(SIGNED_int_PREFIX)-1) ||
+					!strncmp(type, SIGNED_INT_PREFIX,
+					sizeof(SIGNED_INT_PREFIX)-1);
 			struct json_object *val_obj;
 			uint64_t offset;
 
 			offset = parent_offset_bit + offset_bit + linear_array_pos_bit;
 			if (telemetry_log_get_value(tl, offset, size_bit, is_signed, &val_obj)) {
-				if (array_size_dimension[0] > 1)
+				if (array_size_dimension[0] > 1 || force_array)
 					json_object_array_put_idx(sub_output, j, val_obj);
 				else
 					json_object_object_add(sub_output, name, val_obj);
@@ -256,10 +337,10 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 				json_free_object(val_obj);
 			}
 		} else {
-			struct json_object *sub_sub_output = json_create_object();
+			struct json_object *sub_sub_output = json_object_new_object();
 			int num_members;
 
-			if (array_size_dimension[0] > 1)
+			if (array_size_dimension[0] > 1 || force_array)
 				json_object_array_put_idx(sub_output, j, sub_sub_output);
 			else
 				json_object_add_value_object(sub_output, name, sub_sub_output);
@@ -270,8 +351,8 @@ static int telemetry_log_structure_parse(const struct telemetry_log *tl,
 				uint64_t offset;
 
 				offset = parent_offset_bit + offset_bit + linear_array_pos_bit;
-				telemetry_log_structure_parse(tl, member, offset,
-							      sub_sub_output, NULL);
+				sldm_telemetry_structure_parse(tl, member, offset,
+								  sub_sub_output, NULL);
 			}
 		}
 		linear_array_pos_bit += size_bit;
@@ -393,9 +474,13 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 		bool has_struct;
 		const char *nlog_name = NULL;
 		uint32_t header_offset = sizeof(const struct telemetry_object_header);
+		struct json_object *tele_obj_item;
+		struct json_object *parsed_struct;
+		struct json_object *obj_hasTelemObjHdr = NULL;
+		uint64_t object_file_offset;
 
 		if ((char *)&toc->items[i] >
-		    (((char *)toc) + da_size - sizeof(const struct toc_item))) {
+			(((char *)toc) + da_size - sizeof(const struct toc_item))) {
 			SOLIDIGM_LOG_WARNING(
 			    "Warning: Data Area %d, Table of Contents item %d crossed Data Area size.",
 			    da, i);
@@ -409,7 +494,7 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 			continue;
 		}
 
-		toc_item = json_create_object();
+		toc_item = json_object_new_object();
 		json_object_array_add(toc_array, toc_item);
 		json_object_add_value_uint(toc_item, "dataArea", da);
 		json_object_add_value_uint(toc_item, "dataAreaIndex", i);
@@ -443,16 +528,14 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 				header->versionMinor,
 				&structure_definition);
 		}
-		struct json_object *tele_obj_item = json_create_object();
+		tele_obj_item = json_object_new_object();
 
 		json_object_array_add(tele_obj_array, tele_obj_item);
 		json_object_get(toc_item);
 		json_object_add_value_object(tele_obj_item, "metadata", toc_item);
-		struct json_object *parsed_struct = json_create_object();
+		parsed_struct = json_object_new_object();
 
 		json_object_add_value_object(tele_obj_item, "objectData", parsed_struct);
-		struct json_object *obj_hasTelemObjHdr = NULL;
-		uint64_t object_file_offset;
 
 		if (json_object_object_get_ex(structure_definition,
 						"hasTelemObjHdr",
@@ -464,8 +547,8 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 		}
 		object_file_offset = ((uint64_t)da_offset) + obj_offset + header_offset;
 		if (has_struct) {
-			telemetry_log_structure_parse(tl, structure_definition,
-						BITS_IN_BYTE * object_file_offset,
+			sldm_telemetry_structure_parse(tl, structure_definition,
+						NUM_BITS_IN_BYTE * object_file_offset,
 						parsed_struct, toc_item);
 		}
 		// NLOGs have different parser from other Telemetry objects
@@ -478,7 +561,7 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 				if (json_object_object_get_ex(structure_definition, "sizeBit",
 							      &header_sizeBits))
 					header_offset = json_object_get_int(header_sizeBits) /
-							BITS_IN_BYTE;
+							NUM_BITS_IN_BYTE;
 				// Overwrite nlogName with correct type
 				if (json_object_object_get_ex(parsed_struct, "nlogSelect",
 				    &header_nlogSelect) &&
@@ -510,17 +593,18 @@ void solidigm_telemetry_log_da1_check_ocp(struct telemetry_log *tl)
 	const uint64_t ocp_telemetry_uuid[] = {0xBC73719D87E64EFA, 0xBA560A9C3043424C};
 	const uint64_t *log_uuid = (uint64_t *) &tl->log->data_area[16];
 
-	tl->is_ocp = tl->log_size >= (&tl->log->data_area[32] - (uint8_t *) tl->log) &&
+	tl->is_ocp = tl->log_size >= (size_t)(&tl->log->data_area[32] - (uint8_t *) tl->log) &&
 		log_uuid[0] == ocp_telemetry_uuid[0] && log_uuid[1] == ocp_telemetry_uuid[1];
 }
 
 int solidigm_telemetry_log_data_areas_parse(struct telemetry_log *tl,
 					    enum nvme_telemetry_da last_da)
 {
-	struct json_object *tele_obj_array = json_create_array();
-	struct json_object *toc_array = json_create_array();
+	struct json_object *tele_obj_array = NULL;
+	struct json_object *toc_array = NULL;
 
 	solidigm_telemetry_log_da1_check_ocp(tl);
+	sldm_telemetry_da2_check_skhT(tl);
 	solidigm_telemetry_log_header_parse(tl);
 	solidigm_telemetry_log_cod_parse(tl);
 	if (tl->configuration) {
@@ -529,6 +613,17 @@ int solidigm_telemetry_log_data_areas_parse(struct telemetry_log *tl,
 		if (tl->is_ocp)
 			first_da = NVME_TELEMETRY_DA_3;
 
+		if (tl->is_skhT) {
+			if (last_da >= NVME_TELEMETRY_DA_2)
+				sldm_telemetry_skhT_parse(tl);
+			if (last_da >= NVME_TELEMETRY_DA_3)
+				sldm_telemetry_sktT_segment_parse(tl, toc_array,
+									   tele_obj_array);
+			return 0;
+		}
+
+		tele_obj_array = json_create_array();
+		toc_array = json_create_array();
 		json_object_add_value_array(tl->root, "tableOfContents", toc_array);
 		json_object_add_value_array(tl->root, "telemetryObjects", tele_obj_array);
 

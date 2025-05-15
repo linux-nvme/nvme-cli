@@ -9,6 +9,9 @@
 
 #define STR_HEX32_SIZE sizeof("0x00000000")
 
+bool sldm_config_get_struct_by_key_version(const struct json_object *config, char *key,
+					  int version_major, int version_minor,
+					  struct json_object **value);
 bool solidigm_config_get_struct_by_token_version(const struct json_object *obj,
 					  int key, int subkey,
 					  int subsubkey,

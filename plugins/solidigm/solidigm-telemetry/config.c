@@ -27,7 +27,19 @@ static bool config_get_by_version(const struct json_object *obj, int version_maj
 
 	if (!json_object_object_get_ex(obj, str_key, &major_obj))
 		return false;
-	if  (!json_object_object_get_ex(major_obj, str_subkey, value))
+	if (!json_object_object_get_ex(major_obj, str_subkey, value))
+		return false;
+	return value != NULL;
+}
+
+bool sldm_config_get_struct_by_key_version(const struct json_object *config, char *key,
+					  int version_major, int version_minor,
+					  struct json_object **value)
+{
+	struct json_object *token = NULL;
+	if (!json_object_object_get_ex(config, key, &token))
+		return false;
+	if (!config_get_by_version(token, version_major, version_minor, value))
 		return false;
 	return value != NULL;
 }
@@ -36,15 +48,11 @@ bool solidigm_config_get_struct_by_token_version(const struct json_object *confi
 					  int version_major, int version_minor,
 					  struct json_object **value)
 {
-	struct json_object *token = NULL;
 	char str_key[MAX_16BIT_NUM_AS_STRING_SIZE];
 
 	snprintf(str_key, sizeof(str_key), "%d", token_id);
-	if (!json_object_object_get_ex(config, str_key, &token))
-		return false;
-	if  (!config_get_by_version(token, version_major, version_minor, value))
-		return false;
-	return value != NULL;
+	return sldm_config_get_struct_by_key_version(config, str_key,
+						      version_major, version_minor, value);
 }
 
 const char *solidigm_config_get_nlog_obj_name(const struct json_object *config, uint32_t token)
