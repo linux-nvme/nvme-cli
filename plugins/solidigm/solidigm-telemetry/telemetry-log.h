@@ -28,6 +28,7 @@ struct telemetry_log {
 	struct json_object *root;
 	struct json_object *configuration;
 	bool is_ocp;
+	bool is_skhT;
 };
 
 #endif /* _SOLIDIGM_TELEMETRY_LOG_H */
