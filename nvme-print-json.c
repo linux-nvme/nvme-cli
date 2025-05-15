@@ -1836,7 +1836,7 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			break;
 		case NVME_PEL_POWER_ON_RESET_EVENT:
 			json_pel_power_on_reset(pevent_log_info, offset, valid_attrs,
-						pevent_entry_head->el, pevent_entry_head->vsil);
+						pevent_entry_head->vsil, pevent_entry_head->el);
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
 			json_pel_nss_hw_error(pevent_log_info, offset, valid_attrs);
