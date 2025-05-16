@@ -5374,9 +5374,9 @@ static void wdc_print_unsupported_reqs_log_json(struct wdc_ocp_C5_unsupported_re
 
 	json_object_add_value_int(root, "Number Unsupported Req IDs", le16_to_cpu(log_data->unsupported_count));
 
-	char unsup_req_list_str[40];
+	char unsup_req_list_str[41];
 
-	memset((void *)unsup_req_list_str, 0, 40);
+	memset((void *)unsup_req_list_str, 0, 41);
 	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
 		sprintf((char *)unsup_req_list_str, "Unsupported Requirement List %d", j);
 		json_object_add_value_string(root, unsup_req_list_str, (char *)log_data->unsupported_req_list[j]);
