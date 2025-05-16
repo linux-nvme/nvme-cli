@@ -238,6 +238,7 @@ conf.set(
     description: 'Is network address and service translation available'
 )
 
+threads_dep = dependency('threads', required: true)
 dl_dep = dependency('dl', required: false)
 conf.set(
     'HAVE_LIBC_DLSYM',

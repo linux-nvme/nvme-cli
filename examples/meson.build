@@ -43,7 +43,7 @@ executable(
 executable(
     'mi-mctp-csi-test',
     ['mi-mctp-csi-test.c'],
-    dependencies: libnvme_mi_dep,
+    dependencies: [libnvme_mi_dep, threads_dep],
     include_directories: [incdir, internal_incdir]
 )
 
