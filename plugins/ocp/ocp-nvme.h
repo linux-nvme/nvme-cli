@@ -46,6 +46,8 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 		      ocp_get_latency_monitor_feature)
 		ENTRY("get-clear-pcie-correctable-errors", "Clear PCIe correctable error counters",
 		      get_clear_pcie_correctable_error_counters)
+		ENTRY("get-telemetry-profile", "Get Telemetry Profile Feature",
+		      ocp_get_telemetry_profile_feature)
 	)
 );
 
