@@ -14,6 +14,7 @@
 #include "util/logging.h"
 #include "nvme.h"
 #include "common.h"
+#include "libnvme.h"
 
 #define ERROR_MSG_LEN 100
 #define NAME_LEN 128
@@ -40,6 +41,7 @@
 #define obj_add_nprix64 json_object_add_nprix64
 #define obj_add_uint_0nx json_object_add_uint_0nx
 #define obj_add_0nprix64 json_object_add_0nprix64
+#define obj_add_string json_object_add_string
 
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
@@ -224,6 +226,32 @@ static void json_id_iocs(struct nvme_id_iocs *iocs)
 	json_print(r);
 }
 
+static void json_nvme_id_ns_lbaf(struct nvme_id_ns *ns, int i, struct json_object *lbafs)
+{
+	struct json_object *lbaf = json_create_object();
+	__u8 flbas;
+
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
+
+	if (verbose_mode()) {
+		obj_add_int(lbaf, "LBA Format", i);
+		obj_add_string(lbaf, "Metadata Size", "%d bytes", le16_to_cpu(ns->lbaf[i].ms));
+		obj_add_string(lbaf, "Data Size", "%d bytes", 1 << ns->lbaf[i].ds);
+		obj_add_string(lbaf, "Relative Performance", "0x%x %s", ns->lbaf[i].rp,
+			       ns->lbaf[i].rp == 3 ? "Degraded" : ns->lbaf[i].rp == 2 ? "Good" :
+			       ns->lbaf[i].rp == 1 ? "Better" : "Best");
+		obj_add_str(lbaf, "in use", i == flbas ? "yes" : "no");
+	} else {
+		obj_add_int(lbaf, "lbaf", i);
+		obj_add_int(lbaf, "ms", le16_to_cpu(ns->lbaf[i].ms));
+		obj_add_int(lbaf, "ds", ns->lbaf[i].ds);
+		obj_add_int(lbaf, "rp", ns->lbaf[i].rp);
+		obj_add_int(lbaf, "in_use", i == flbas);
+	}
+
+	array_add_obj(lbafs, lbaf);
+}
+
 static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 			    unsigned int lba_index, bool cap_only)
 {
@@ -306,15 +334,8 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 
 	obj_add_array(r, "lbafs", lbafs);
 
-	for (i = 0; i <= ns->nlbaf; i++) {
-		struct json_object *lbaf = json_create_object();
-
-		obj_add_int(lbaf, "ms", le16_to_cpu(ns->lbaf[i].ms));
-		obj_add_int(lbaf, "ds", ns->lbaf[i].ds);
-		obj_add_int(lbaf, "rp", ns->lbaf[i].rp);
-
-		array_add_obj(lbafs, lbaf);
-	}
+	for (i = 0; i <= ns->nlbaf; i++)
+		json_nvme_id_ns_lbaf(ns, i, lbafs);
 
 	d_json(ns->vs, strnlen((const char *)ns->vs, sizeof(ns->vs)), 16, 1, vs);
 	obj_add_array(r, "vs", vs);
