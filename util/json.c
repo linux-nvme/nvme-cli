@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <stdio.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include "json.h"
 #include "types.h"
@@ -134,4 +135,19 @@ void json_object_add_0nprix64(struct json_object *o, const char *k, uint64_t v, 
 
 	sprintf(str, "0x%0*"PRIx64"", width, v);
 	json_object_add_value_string(o, k, str);
+}
+
+void json_object_add_string(struct json_object *o, const char *k, const char *format, ...)
+{
+	_cleanup_free_ char *value = NULL;
+	va_list ap;
+
+	va_start(ap, format);
+
+	if (vasprintf(&value, format, ap) < 0)
+		value = NULL;
+
+	json_object_add_value_string(o, k, value ? value : "Could not allocate string");
+
+	va_end(ap);
 }
