@@ -7601,7 +7601,7 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	else if (err != 0)
 		nvme_show_status(err);
 	else
-		printf("NVMe Copy: success\n");
+		nvme_show_key_value("NVMe Copy", "success");
 
 	return err;
 }
