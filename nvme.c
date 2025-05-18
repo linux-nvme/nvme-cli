@@ -432,6 +432,9 @@ static int get_dev(struct nvme_dev **dev, int argc, char **argv, int flags)
 	else
 		ret = open_dev_direct(dev, devname, flags);
 
+	if (!ret && log_level >= LOG_DEBUG)
+		nvme_show_init();
+
 	return ret ? -errno : 0;
 }
 
@@ -515,6 +518,9 @@ bool nvme_is_output_format_json(void)
 
 void dev_close(struct nvme_dev *dev)
 {
+	if (log_level >= LOG_DEBUG)
+		nvme_show_finish();
+
 	switch (dev->type) {
 	case NVME_DEV_DIRECT:
 		close(dev_fd(dev));
