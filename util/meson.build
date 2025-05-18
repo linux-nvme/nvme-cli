@@ -4,7 +4,6 @@ sources += [
   'util/argconfig.c',
   'util/base64.c',
   'util/crc32.c',
-  'util/logging.c',
   'util/mem.c',
   'util/sighdl.c',
   'util/suffix.c',

@@ -14,7 +14,7 @@
 #include "nvme-print.h"
 
 #include "util/types.h"
-#include "util/logging.h"
+#include "logging.h"
 
 #define NBFT_SYSFS_FILENAME	"NBFT*"
 

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 
 #include "nvme-print.h"
-#include "util/logging.h"
+#include "logging.h"
 #include "common.h"
 
 static struct print_ops binary_print_ops;

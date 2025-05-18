@@ -20,7 +20,7 @@
 #include "nvme-models.h"
 #include "util/suffix.h"
 #include "util/types.h"
-#include "util/logging.h"
+#include "logging.h"
 #include "common.h"
 
 static const uint8_t zero_uuid[16] = { 0 };

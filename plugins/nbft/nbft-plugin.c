@@ -9,7 +9,7 @@
 #include "nvme.h"
 #include "nbft.h"
 #include "fabrics.h"
-#include "util/logging.h"
+#include "logging.h"
 
 #define CREATE_CMD
 #include "nbft-plugin.h"

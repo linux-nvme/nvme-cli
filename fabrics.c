@@ -46,7 +46,7 @@
 #include "nvme-print.h"
 #include "fabrics.h"
 #include "util/cleanup.h"
-#include "util/logging.h"
+#include "logging.h"
 #include "util/sighdl.h"
 
 #define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
