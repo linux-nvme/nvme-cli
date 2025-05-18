@@ -64,7 +64,7 @@
 #include "nvme-wrap.h"
 #include "util/argconfig.h"
 #include "util/suffix.h"
-#include "util/logging.h"
+#include "logging.h"
 #include "util/sighdl.h"
 #include "fabrics.h"
 #define CREATE_CMD
@@ -449,8 +449,6 @@ static int parse_args(int argc, char *argv[], const char *desc,
 
 	log_level = map_log_level(nvme_cfg.verbose, false);
 	nvme_init_default_logging(stderr, log_level, false, false);
-
-	set_dry_run(nvme_cfg.dry_run);
 
 	return 0;
 }

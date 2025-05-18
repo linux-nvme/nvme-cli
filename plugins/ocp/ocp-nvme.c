@@ -22,7 +22,7 @@
 #include "plugin.h"
 #include "linux/types.h"
 #include "util/types.h"
-#include "util/logging.h"
+#include "logging.h"
 #include "nvme-print.h"
 #include "nvme-wrap.h"
 

@@ -7,7 +7,7 @@
 
 #include "common.h"
 #include "util/types.h"
-#include "util/logging.h"
+#include "logging.h"
 #include "nvme-print.h"
 #include "ocp-hardware-component-log.h"
 #include "ocp-print.h"

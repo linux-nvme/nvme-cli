@@ -16,7 +16,8 @@
 #include <ccan/endian/endian.h>
 
 #include "logging.h"
-#include "sighdl.h"
+#include "util/sighdl.h"
+#include "nvme-print.h"
 
 struct submit_data {
 	struct timeval start;
@@ -24,7 +25,6 @@ struct submit_data {
 };
 
 int log_level;
-static bool dry_run;
 static struct submit_data sb;
 
 int map_log_level(int verbose, bool quiet)
@@ -57,51 +57,46 @@ int map_log_level(int verbose, bool quiet)
 	return log_level;
 }
 
-void set_dry_run(bool enable)
-{
-	dry_run = enable;
-}
-
 static void nvme_show_common(struct nvme_passthru_cmd *cmd)
 {
-	printf("opcode       : %02x\n", cmd->opcode);
-	printf("flags        : %02x\n", cmd->flags);
-	printf("rsvd1        : %04x\n", cmd->rsvd1);
-	printf("nsid         : %08x\n", cmd->nsid);
-	printf("cdw2         : %08x\n", cmd->cdw2);
-	printf("cdw3         : %08x\n", cmd->cdw3);
-	printf("data_len     : %08x\n", cmd->data_len);
-	printf("metadata_len : %08x\n", cmd->metadata_len);
-	printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)cmd->addr);
-	printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)cmd->metadata);
-	printf("cdw10        : %08x\n", cmd->cdw10);
-	printf("cdw11        : %08x\n", cmd->cdw11);
-	printf("cdw12        : %08x\n", cmd->cdw12);
-	printf("cdw13        : %08x\n", cmd->cdw13);
-	printf("cdw14        : %08x\n", cmd->cdw14);
-	printf("cdw15        : %08x\n", cmd->cdw15);
-	printf("timeout_ms   : %08x\n", cmd->timeout_ms);
+	nvme_show_key_value("opcode       ", "%02x", cmd->opcode);
+	nvme_show_key_value("flags        ", "%02x", cmd->flags);
+	nvme_show_key_value("rsvd1        ", "%04x", cmd->rsvd1);
+	nvme_show_key_value("nsid         ", "%08x", cmd->nsid);
+	nvme_show_key_value("cdw2         ", "%08x", cmd->cdw2);
+	nvme_show_key_value("cdw3         ", "%08x", cmd->cdw3);
+	nvme_show_key_value("data_len     ", "%08x", cmd->data_len);
+	nvme_show_key_value("metadata_len ", "%08x", cmd->metadata_len);
+	nvme_show_key_value("addr         ", "%"PRIx64"", (uint64_t)(uintptr_t)cmd->addr);
+	nvme_show_key_value("metadata     ", "%"PRIx64"", (uint64_t)(uintptr_t)cmd->metadata);
+	nvme_show_key_value("cdw10        ", "%08x", cmd->cdw10);
+	nvme_show_key_value("cdw11        ", "%08x", cmd->cdw11);
+	nvme_show_key_value("cdw12        ", "%08x", cmd->cdw12);
+	nvme_show_key_value("cdw13        ", "%08x", cmd->cdw13);
+	nvme_show_key_value("cdw14        ", "%08x", cmd->cdw14);
+	nvme_show_key_value("cdw15        ", "%08x", cmd->cdw15);
+	nvme_show_key_value("timeout_ms   ", "%08x", cmd->timeout_ms);
 }
 
 static void nvme_show_command(struct nvme_passthru_cmd *cmd, int err)
 {
 	nvme_show_common(cmd);
-	printf("result       : %08x\n", cmd->result);
-	printf("err          : %d\n", err);
+	nvme_show_key_value("result       ", "%08x", cmd->result);
+	nvme_show_key_value("err          ", "%d", err);
 }
 
 static void nvme_show_command64(struct nvme_passthru_cmd64 *cmd, int err)
 {
 	nvme_show_common((struct nvme_passthru_cmd *)cmd);
-	printf("result       : %"PRIx64"\n", (uint64_t)(uintptr_t)cmd->result);
-	printf("err          : %d\n", err);
+	nvme_show_key_value("result       ", "%"PRIx64"", (uint64_t)(uintptr_t)cmd->result);
+	nvme_show_key_value("err          ", "%d", err);
 }
 
 static void nvme_show_latency(struct timeval start, struct timeval end)
 {
-	printf("latency      : %llu us\n",
-	       (unsigned long long)((end.tv_sec - start.tv_sec) * 1000000 +
-				    (end.tv_usec - start.tv_usec)));
+	nvme_show_key_value("latency      ", "%llu us",
+			    (unsigned long long)((end.tv_sec - start.tv_sec) * 1000000 +
+						 (end.tv_usec - start.tv_usec)));
 }
 
 static void nvme_log_retry(int errnum)
@@ -122,7 +117,7 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
 
-	if (!dry_run) {
+	if (!nvme_cfg.dry_run) {
 retry:
 		err = ioctl(fd, ioctl_cmd, cmd);
 		if (err && (errno == EAGAIN ||
@@ -155,7 +150,7 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 	if (log_level >= LOG_DEBUG)
 		gettimeofday(&start, NULL);
 
-	if (!dry_run) {
+	if (!nvme_cfg.dry_run) {
 retry:
 		err = ioctl(fd, ioctl_cmd, cmd);
 		if (err && (errno == EAGAIN ||
@@ -197,8 +192,8 @@ static void nvme_show_req_admin(const struct nvme_mi_admin_req_hdr *hdr, size_t 
 	};
 
 	nvme_show_common(&cmd);
-	printf("doff         : %08x\n", le32_to_cpu(hdr->doff));
-	printf("dlen         : %08x\n", le32_to_cpu(hdr->dlen));
+	nvme_show_key_value("doff         ", "%08x", le32_to_cpu(hdr->doff));
+	nvme_show_key_value("dlen         ", "%08x", le32_to_cpu(hdr->dlen));
 }
 
 static void nvme_show_req(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,

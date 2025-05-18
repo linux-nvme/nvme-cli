@@ -283,6 +283,7 @@ sources = [
   'nvme-wrap.c',
   'plugin.c',
   'libnvme-wrap.c',
+  'logging.c',
 ]
 if json_c_dep.found()
     sources += [
