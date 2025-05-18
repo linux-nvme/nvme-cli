@@ -46,6 +46,7 @@
 static const uint8_t zero_uuid[16] = { 0 };
 static struct print_ops json_print_ops;
 static struct json_object *json_r;
+static int json_init;
 
 static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,
 				     unsigned char *buf);
@@ -4921,27 +4922,60 @@ static void json_output_perror(const char *msg, va_list ap)
 	json_output_object(r);
 }
 
+static char *trim_white_space(char *str)
+{
+	char *end;
+
+	if (!str)
+		return NULL;
+
+	/* Trim leading space */
+	while (isspace((unsigned char)*str))
+		str++;
+
+	/* All spaces */
+	if (!*str)
+		return str;
+
+	/* Trim trailing space */
+	end = str + strlen(str) - 1;
+	while (end > str && isspace((unsigned char)*end))
+		end--;
+
+	/* Write new null terminator character */
+	end[1] = '\0';
+
+	return str;
+}
+
 static void json_output_key_value(const char *key, const char *val, va_list ap)
 {
 	struct json_object *r = json_r ? json_r : json_create_object();
 
 	_cleanup_free_ char *value = NULL;
+	_cleanup_free_ char *key_trim = trim_white_space(strdup(key));
 
 	if (vasprintf(&value, val, ap) < 0)
 		value = NULL;
 
-	obj_add_str(r, key, value ? value : "Could not allocate string");
+	obj_add_str(r, key_trim ? key_trim : key, value ? value : "Could not allocate string");
 
 	obj_print(r);
 }
 
 void json_show_init(void)
 {
-	json_r = json_create_object();
+	json_init++;
+
+	if (!json_r)
+		json_r = json_create_object();
 }
 
 void json_show_finish(void)
 {
+	if (--json_init)
+		return;
+
 	if (json_r)
 		json_output_object(json_r);
 
