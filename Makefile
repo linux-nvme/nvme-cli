@@ -68,8 +68,12 @@ debug:
 
 .PHONY: static
 static:
-	meson ${BUILD-DIR} --buildtype=release \
-		--default-library=static -Dc_link_args="-static" \
+	meson setup ${BUILD-DIR} --buildtype=release \
 		--wrap-mode=forcefallback \
-		-Dlibnvme:tests=false -Dlibnvme:keyutils=disabled
-	ninja -C ${BUILD-DIR}
+		--default-library=static \
+		-Dc_link_args="-static" \
+		-Dlibnvme:keyutils=disabled \
+		-Dlibnvme:liburing=disabled \
+		-Dlibnvme:python=disabled \
+		-Dlibnvme:openssl=disabled
+	meson compile -C ${BUILD-DIR}
