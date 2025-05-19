@@ -216,9 +216,10 @@ conf.set10(
     description: 'Is linux/mctp.h include-able?'
 )
 
-conf.set(
-    'HAVE_NETDB',
-    cc.links(
+is_static = get_option('default_library') == 'static'
+have_netdb = false
+if not is_static
+  have_netdb = cc.links(
       '''#include <sys/types.h>
          #include <sys/socket.h>
          #include <netdb.h>
@@ -228,9 +229,15 @@ conf.set(
       }
       ''',
       name: 'netdb',
-    ),
+    )
+endif
+
+conf.set(
+    'HAVE_NETDB',
+    have_netdb,
     description: 'Is network address and service translation available'
 )
+
 dl_dep = dependency('dl', required: false)
 conf.set(
     'HAVE_LIBC_DLSYM',
