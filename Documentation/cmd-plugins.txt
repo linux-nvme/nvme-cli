@@ -339,3 +339,6 @@ linknvme:nvme-sed-unlock[1]::
 
 linknvme:nvme-sed-password[1]::
 	Change the SED Opal Device password
+
+linknvme:nvme-mangoboost-id-ctrl[1]::
+	MangoBoost - NVMe Identify Controller

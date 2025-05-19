@@ -255,6 +255,7 @@ adoc_sources = [
   'nvme-sed-password',
   'nvme-sed-revert',
   'nvme-sed-unlock',
+  'nvme-mangoboost-id-ctrl',
 ]
 
 adoc_includes = [
