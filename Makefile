@@ -25,15 +25,12 @@ ${NAME}: ${BUILD-DIR}
 .PHONY: clean
 clean:
 ifneq ("$(wildcard ${BUILD-DIR})","")
-	meson compile --clean -C ${BUILD-DIR}
-endif
-
-.PHONY: purge
-purge:
-ifneq ("$(wildcard ${BUILD-DIR})","")
 	rm -rf ${BUILD-DIR}
 	meson subprojects purge --confirm
 endif
+
+.PHONY: purge
+purge: clean
 
 .PHONY: install
 install: ${NAME}
