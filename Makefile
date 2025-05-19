@@ -55,7 +55,7 @@ test-strict: ${NAME}
 
 .PHONY: rpm
 rpm:
-	meson ${BUILD-DIR} \
+	meson setup ${BUILD-DIR} \
 		-Dudevrulesdir=$(shell rpm --eval '%{_udevrulesdir}') \
 		-Dsystemddir=$(shell rpm --eval '%{_unitdir}') \
 		-Ddocs=man -Ddocs-build=true
@@ -63,8 +63,8 @@ rpm:
 
 .PHONY: debug
 debug:
-	meson ${BUILD-DIR} --buildtype=debug
-	ninja -C ${BUILD-DIR}
+	meson setup ${BUILD-DIR} --buildtype=debug
+	meson compile -C ${BUILD-DIR}
 
 .PHONY: static
 static:
