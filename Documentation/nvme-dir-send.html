@@ -774,9 +774,8 @@ if specific operation needs it.</p></div>
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
 <div class="paragraph"><p>On success, the returned directive&#8217;s parameter structure (if applicable) is
 returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format
-if it is a known structure, displayed in hex, or the raw buffer may be
-printed to stdout for another program to parse.</p></div>
+structure may parsed by the program and displayed in hex, or the raw buffer
+may be printed to stdout for another program to parse.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -918,8 +917,7 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Print the decoded receive buffer to stdout if the command returns
-        a structure.
+        deprecated; does nothing so use the --verbose flag instead.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1014,7 +1012,7 @@ Release stream ID 3 :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-04-11 13:25:46 CEST
+ 2025-05-20 12:19:22 CEST
 </div>
 </div>
 </body>

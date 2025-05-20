@@ -749,7 +749,8 @@ nvme-solidigm-workload-tracker(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme solidigm workload-tracker</em> &lt;device&gt; [--enable | -e] [--disable | -d]
+<pre class="content"><em>nvme solidigm workload-tracker</em> &lt;device&gt; [--uuid-index=&lt;id&gt; | -U &lt;id&gt;]
+                                      [--enable | -e] [--disable | -d]
                                       [--sample-time=&lt;time&gt; | -s &lt;time&gt;]
                                       [--type=&lt;type&gt; | -t &lt;type&gt;]
                                       [--run-time=&lt;seconds&gt; | -r &lt;seconds&gt;]
@@ -778,6 +779,14 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
+<dt class="hdlist1">
+-U &lt;id&gt;, --uuid-index=&lt;id&gt;
+</dt>
+<dd>
+<p>
+    Specify the UUID index (0-127) for the command.
+</p>
+</dd>
 <dt class="hdlist1">
 -e, --enable
 </dt>
@@ -940,7 +949,7 @@ Capture Power tracker samples with a 10-second interval for 5 minutes:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-04-11 13:25:46 CEST
+ 2025-05-20 12:19:22 CEST
 </div>
 </div>
 </body>

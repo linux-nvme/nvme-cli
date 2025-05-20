@@ -2,12 +2,12 @@
 .\"     Title: nvme-dir-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/11/2025
+.\"      Date: 05/20/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DIR\-SEND" "1" "04/11/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-DIR\-SEND" "1" "05/20/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -49,7 +49,7 @@ Submits an NVMe Directive Send admin command and returns the applicable results\
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
-On success, the returned directive\(cqs parameter structure (if applicable) is returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format if it is a known structure, displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
+On success, the returned directive\(cqs parameter structure (if applicable) is returned in one of several ways depending on the option flags; the structure may parsed by the program and displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
@@ -134,7 +134,7 @@ Print the raw receive buffer to stdout if the command returns a structure\&.
 .PP
 \-H, \-\-human\-readable
 .RS 4
-Print the decoded receive buffer to stdout if the command returns a structure\&.
+deprecated; does nothing so use the \-\-verbose flag instead\&.
 .RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>

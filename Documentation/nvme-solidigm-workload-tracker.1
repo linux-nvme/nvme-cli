@@ -2,12 +2,12 @@
 .\"     Title: nvme-solidigm-workload-tracker
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/11/2025
+.\"      Date: 05/20/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SOLIDIGM\-WORK" "1" "04/11/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-SOLIDIGM\-WORK" "1" "05/20/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,8 @@ nvme-solidigm-workload-tracker \- Real\-time capture of Workload Tracker samples
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme solidigm workload\-tracker\fR <device> [\-\-enable | \-e] [\-\-disable | \-d]
+\fInvme solidigm workload\-tracker\fR <device> [\-\-uuid\-index=<id> | \-U <id>]
+                                      [\-\-enable | \-e] [\-\-disable | \-d]
                                       [\-\-sample\-time=<time> | \-s <time>]
                                       [\-\-type=<type> | \-t <type>]
                                       [\-\-run\-time=<seconds> | \-r <seconds>]
@@ -50,6 +51,11 @@ Captures and displays real\-time workload tracker samples for the given Solidigm
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .SH "OPTIONS"
+.PP
+\-U <id>, \-\-uuid\-index=<id>
+.RS 4
+Specify the UUID index (0\-127) for the command\&.
+.RE
 .PP
 \-e, \-\-enable
 .RS 4
