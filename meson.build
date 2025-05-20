@@ -176,6 +176,20 @@ conf.set10(
     ),
     description: 'Does struct opal_key have a key_type field?'
 )
+conf.set(
+    'HAVE_TM_GMTOFF',
+    cc.compiles(
+        '''
+           #include <time.h>
+           int main(void) {
+                struct tm tm;
+                tm.tm_gmtoff = 1;
+           }
+        ''',
+        name: 'tm_gmtoff'
+    ),
+    description: 'Does struct tm have a tm_gmtoff field?'
+)
 
 if cc.has_function_attribute('fallthrough')
   conf.set('fallthrough', '__attribute__((__fallthrough__))')
