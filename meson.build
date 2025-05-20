@@ -282,7 +282,9 @@ subdir('libnvme')
 if get_option('tests')
     subdir('test')
 endif
-subdir('examples')
+if get_option('examples')
+    subdir('examples')
+endif
 subdir('doc')
 
 ################################################################################
