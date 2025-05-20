@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_config" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_config \- Provided for nvme_mi_aem_enable
+.SH SYNOPSIS
+struct nvme_mi_aem_config {
+.br
+.BI "    enum nvme_mi_aem_handler_next_action (*aem_handler)(nvme_mi_ep_t ep,size_t num_events, void *userdata);"
+.br
+.BI "    struct nvme_mi_aem_enabled_map enabled_map;"
+.br
+.BI "    bool envfa;"
+.br
+.BI "    bool empfa;"
+.br
+.BI "    bool encfa;"
+.br
+.BI "    __u8 aemd;"
+.br
+.BI "    __u8 aerd;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "aem_handler" 12
+Callback function for application processing of events
+.IP "enabled_map" 12
+Map indicating which AE should be enabled on the endpoint
+.IP "envfa" 12
+Enable SR-IOV virtual functions AE
+.IP "empfa" 12
+Enable SR-IOV physical functions AE
+.IP "encfa" 12
+Enable PCIe functions AE
+.IP "aemd" 12
+AEM Delay (time in seconds from when event happens to AEM being batched and sent)
+.IP "aerd" 12
+AEM Retry Delay (time in 100s of ms between AEM retries from the endpoint)
+.SH "Description"
+Application callbacks for nvme_mi_aem_process will be able to call
+nvme_mi_aem_get_next_event which will return a pointer to such an identifier
+for the next event the application should parse

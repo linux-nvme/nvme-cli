@@ -14192,6 +14192,10 @@ true if **status** is of the specified type and value
 
 ``NVME_FEAT_TT_THSEL_MASK``
 
+``NVME_FEAT_TT_TMPTHH_SHIFT``
+
+``NVME_FEAT_TT_TMPTHH_MASK``
+
 ``NVME_FEAT_ERROR_RECOVERY_TLER_SHIFT``
 
 ``NVME_FEAT_ERROR_RECOVERY_TLER_MASK``
@@ -14427,6 +14431,14 @@ true if **status** is of the specified type and value
 ``NVME_FEAT_FDP_EVENTS_ENABLE_SHIFT``
 
 ``NVME_FEAT_FDP_EVENTS_ENABLE_MASK``
+
+``NVME_FEAT_BPWPC_BP0WPS_SHIFT``
+
+``NVME_FEAT_BPWPC_BP0WPS_MASK``
+
+``NVME_FEAT_BPWPC_BP1WPS_SHIFT``
+
+``NVME_FEAT_BPWPC_BP1WPS_MASK``
 
 
 
@@ -14943,6 +14955,132 @@ true if **status** is of the specified type and value
 
 ``NVME_FEAT_NS_WRITE_PROTECT_PERMANENT``
   Permanent Write Protect
+
+
+
+
+.. c:enum:: nvme_feat_perfc_attri
+
+   performance characteristics attribute index
+
+**Constants**
+
+``NVME_FEAT_PERFC_ATTRI_STD``
+  standard performance attribute
+
+``NVME_FEAT_PERFC_ATTRI_ID_LIST``
+  performance attribute identifier list
+
+``NVME_FEAT_PERFC_ATTRI_VS_MIN``
+  vendor specific performance attribute minimum index
+
+``NVME_FEAT_PERFC_ATTRI_VS_MAX``
+  vendor specific performance attribute maximum index
+
+
+
+
+.. c:enum:: nvme_feat_perfc_r4karl
+
+   standard performance attribute random 4 kib average latency
+
+**Constants**
+
+``NVME_FEAT_PERFC_R4KARL_NO_REPORT``
+  not reported
+
+``NVME_FEAT_PERFC_R4KARL_GE_100_SEC``
+  greater than or equal to 100 secs
+
+``NVME_FEAT_PERFC_R4KARL_GE_50_SEC``
+  greater than or equal to 50 secs and less than 100 secs
+
+``NVME_FEAT_PERFC_R4KARL_GE_10_SEC``
+  greater than or equal to 10 secs and less than 50 secs
+
+``NVME_FEAT_PERFC_R4KARL_GE_5_SEC``
+  greater than or equal to 5 secs and less than 10 secs
+
+``NVME_FEAT_PERFC_R4KARL_GE_1_SEC``
+  greater than or equal to 1 sec and less than 5 secs
+
+``NVME_FEAT_PERFC_R4KARL_GE_500_MS``
+  greater than or equal to 500 msecs and less than 1 sec
+
+``NVME_FEAT_PERFC_R4KARL_GE_100_MS``
+  greater than or equal to 100 msecs and less than 500 msecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_50_MS``
+  greater than or equal to 50 msecs and less than 100 msecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_10_MS``
+  greater than or equal to 10 msecs and less than 50 msecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_5_MS``
+  greater than or equal to 5 msecs and less than 10 msecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_1_MS``
+  greater than or equal to 1 msec and less than 5 msecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_500_US``
+  greater than or equal to 500 usecs and less than 1 msec
+
+``NVME_FEAT_PERFC_R4KARL_GE_100_US``
+  greater than or equal to 100 usecs and less than 500 usecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_50_US``
+  greater than or equal to 50 usecs and less than 100 usecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_10_US``
+  greater than or equal to 10 usecs and less than 50 usecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_5_US``
+  greater than or equal to 5 usecs and less than 10 usecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_1_US``
+  greater than or equal to 1 usec and less than 5 usecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_500_NS``
+  greater than or equal to 500 nsecs and less than 1 usec
+
+``NVME_FEAT_PERFC_R4KARL_GE_100_NS``
+  greater than or equal to 100 nsecs and less than 500 nsecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_50_NS``
+  greater than or equal to 50 nsecs and less than 100 nsecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_10_NS``
+  greater than or equal to 10 nsecs and less than 50 nsecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_5_NS``
+  greater than or equal to 5 nsecs and less than 10 nsecs
+
+``NVME_FEAT_PERFC_R4KARL_GE_1_NS``
+  greater than or equal to 1 nsec and less than 5 nsecs
+
+
+
+
+.. c:enum:: nvme_feat_bpwp_state
+
+   Boot Partition Write Protection State
+
+**Constants**
+
+``NVME_FEAT_BPWPS_CHANGE_NOT_REQUESTED``
+  Change in state not requested
+
+``NVME_FEAT_BPWPS_WRITE_UNLOCKED``
+  Write Unlocked
+
+``NVME_FEAT_BPWPS_WRITE_LOCKED``
+  Write Locked
+
+``NVME_FEAT_BPWPS_WRITE_LOCKED_PWR_CYCLE``
+  Write Locked Until Power Cycle
+
+``NVME_FEAT_BPWPS_WRITE_PROTECTION_RPMB``
+  Write Protection controlled by RPMB
 
 
 

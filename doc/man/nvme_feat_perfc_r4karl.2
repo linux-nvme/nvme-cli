@@ -1,0 +1,150 @@
+.TH "libnvme" 9 "enum nvme_feat_perfc_r4karl" "May 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_feat_perfc_r4karl \- standard performance attribute random 4 kib average latency
+.SH SYNOPSIS
+enum nvme_feat_perfc_r4karl {
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_NO_REPORT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_100_SEC"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_50_SEC"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_10_SEC"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_5_SEC"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_1_SEC"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_500_MS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_100_MS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_50_MS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_10_MS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_5_MS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_1_MS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_500_US"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_100_US"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_50_US"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_10_US"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_5_US"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_1_US"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_500_NS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_100_NS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_50_NS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_10_NS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_5_NS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_PERFC_R4KARL_GE_1_NS"
+
+};
+.SH Constants
+.IP "NVME_FEAT_PERFC_R4KARL_NO_REPORT" 12
+not reported
+.IP "NVME_FEAT_PERFC_R4KARL_GE_100_SEC" 12
+greater than or equal to 100 secs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_50_SEC" 12
+greater than or equal to 50 secs and less than 100 secs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_10_SEC" 12
+greater than or equal to 10 secs and less than 50 secs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_5_SEC" 12
+greater than or equal to 5 secs and less than 10 secs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_1_SEC" 12
+greater than or equal to 1 sec and less than 5 secs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_500_MS" 12
+greater than or equal to 500 msecs and less than 1 sec
+.IP "NVME_FEAT_PERFC_R4KARL_GE_100_MS" 12
+greater than or equal to 100 msecs and less than 500 msecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_50_MS" 12
+greater than or equal to 50 msecs and less than 100 msecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_10_MS" 12
+greater than or equal to 10 msecs and less than 50 msecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_5_MS" 12
+greater than or equal to 5 msecs and less than 10 msecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_1_MS" 12
+greater than or equal to 1 msec and less than 5 msecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_500_US" 12
+greater than or equal to 500 usecs and less than 1 msec
+.IP "NVME_FEAT_PERFC_R4KARL_GE_100_US" 12
+greater than or equal to 100 usecs and less than 500 usecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_50_US" 12
+greater than or equal to 50 usecs and less than 100 usecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_10_US" 12
+greater than or equal to 10 usecs and less than 50 usecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_5_US" 12
+greater than or equal to 5 usecs and less than 10 usecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_1_US" 12
+greater than or equal to 1 usec and less than 5 usecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_500_NS" 12
+greater than or equal to 500 nsecs and less than 1 usec
+.IP "NVME_FEAT_PERFC_R4KARL_GE_100_NS" 12
+greater than or equal to 100 nsecs and less than 500 nsecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_50_NS" 12
+greater than or equal to 50 nsecs and less than 100 nsecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_10_NS" 12
+greater than or equal to 10 nsecs and less than 50 nsecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_5_NS" 12
+greater than or equal to 5 nsecs and less than 10 nsecs
+.IP "NVME_FEAT_PERFC_R4KARL_GE_1_NS" 12
+greater than or equal to 1 nsec and less than 5 nsecs

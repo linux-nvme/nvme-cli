@@ -1,0 +1,29 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_supported_list_header" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_supported_list_header \- Asynchronous Event Supported List Header.
+.SH SYNOPSIS
+struct nvme_mi_aem_supported_list_header {
+.br
+.BI "    __u8 numaes;"
+.br
+.BI "    __u8 aeslver;"
+.br
+.BI "    __le16 aest;"
+.br
+.BI "    __u8 aeslhl;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "numaes" 12
+Number of AE supported data structures that follow the header
+.IP "aeslver" 12
+AE Supported List Version
+.IP "aest" 12
+AE Supported list length (including this header)
+.IP "aeslhl" 12
+AE Supported list header length
+.SH "Description"
+This header preceeds a number, (\fInumaes\fP), of AE supported data structures

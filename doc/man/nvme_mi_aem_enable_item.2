@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_enable_item" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_enable_item \- AE Enabled item entry
+.SH SYNOPSIS
+struct nvme_mi_aem_enable_item {
+.br
+.BI "    __u8 aeel;"
+.br
+.BI "    __le16 aeei;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "aeel" 12
+AE Enable Length (length of this structure which is 3)
+.IP "aeei" 12
+AE Enable Info

@@ -2888,6 +2888,39 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: int nvme_set_features_temp_thresh2 (int fd, __u16 tmpth, __u8 tmpsel, enum nvme_feat_tmpthresh_thsel thsel, __u8 tmpthh, bool save, __u32 *result)
+
+   Set temperature threshold feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u16 tmpth``
+  Temperature Threshold
+
+``__u8 tmpsel``
+  Threshold Temperature Select
+
+``enum nvme_feat_tmpthresh_thsel thsel``
+  Threshold Type Select
+
+``__u8 tmpthh``
+  Temperature Threshold Hysteresis
+
+``bool save``
+  Save value across power states
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_set_features_err_recovery (int fd, __u32 nsid, __u16 tler, bool dulbe, bool save, __u32 *result)
 
    Set error recovery feature
@@ -3745,6 +3778,33 @@ The nvme command status if a response was received (see
 
 ``enum nvme_get_features_sel sel``
   Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 *result``
+  The command completion result from CQE dword0
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_features_temp_thresh2 (int fd, enum nvme_get_features_sel sel, __u8 tmpsel, enum nvme_feat_tmpthresh_thsel thsel, __u32 *result)
+
+   Get temperature threshold feature
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``enum nvme_get_features_sel sel``
+  Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u8 tmpsel``
+  Threshold Temperature Select
+
+``enum nvme_feat_tmpthresh_thsel thsel``
+  Threshold Type Select
 
 ``__u32 *result``
   The command completion result from CQE dword0

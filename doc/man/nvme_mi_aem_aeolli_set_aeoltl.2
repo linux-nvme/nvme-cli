@@ -1,0 +1,12 @@
+.TH "nvme_mi_aem_aeolli_set_aeoltl" 9 "nvme_mi_aem_aeolli_set_aeoltl" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_aeolli_set_aeoltl \- set aeoltl in the aeolli field
+.SH SYNOPSIS
+.B "void" nvme_mi_aem_aeolli_set_aeoltl
+.BI "(struct nvme_mi_aem_occ_list_hdr *hdr "  ","
+.BI "__u32 aeoltl "  ");"
+.SH ARGUMENTS
+.IP "hdr" 12
+Pointer to \fInvme_mi_aem_occ_list_hdr\fP to set the aeolli field
+.IP "aeoltl" 12
+aeoltl value to use

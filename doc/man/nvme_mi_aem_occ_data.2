@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_occ_data" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_occ_data \- AEM Message definition.
+.SH SYNOPSIS
+struct nvme_mi_aem_occ_data {
+.br
+.BI "    __u8 aelhlen;"
+.br
+.BI "    __u8 aeosil;"
+.br
+.BI "    __u8 aeovsil;"
+.br
+.BI "    struct {"
+.br
+.BI "      __u8 aeoi;"
+.br
+.BI "      __le32 aeocidi;"
+.br
+.BI "      __u8 aessi;"
+.br
+.BI "    } aeoui;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "aelhlen" 12
+AE Occurrence Header Length
+.IP "aeosil" 12
+AE Occurrence Specific Info Length
+.IP "aeovsil" 12
+AE Occurrence Vendor Specific Info Length
+.IP "aeoui" 12
+AE Occurrence Unique ID made up of other subfields
+.SH "Description"
+A single entry of ae occurrence data that comes with an nvme_aem_msg.
+Following this structure is variable length AEOSI (occurrence specific
+info) and variable length AEVSI (vendor specific info).  The length of
+AEOSI is specified by aeosil and the length of AEVSI is specified by
+AEVSI.  Neither field is mandatory and shall be omitted if their length
+parameter is set to zero.

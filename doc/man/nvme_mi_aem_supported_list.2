@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_supported_list" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_supported_list \- AE Supported List received with GET CONFIG Asynchronous Event
+.SH SYNOPSIS
+struct nvme_mi_aem_supported_list {
+.br
+.BI "    struct nvme_mi_aem_supported_list_header hdr;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+AE supported list header
+.SH "Description"
+Following this header should be hdr.numaes entries of
+nvme_mi_aem_supported_item structures

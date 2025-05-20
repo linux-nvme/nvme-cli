@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_msg" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_msg \- AEM Message definition.
+.SH SYNOPSIS
+struct nvme_mi_aem_msg {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    struct nvme_mi_aem_occ_list_hdr occ_list_hdr;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+the general response message header
+.IP "occ_list_hdr" 12
+ae occurrence list header.
+.SH "Description"
+Every ae message will start with one of these.  The occ_list_hder wil define
+information about how many ae occ data entries are included.  Each entry is
+defined by the nvme_mi_aem_occ_data structure which will follow the
+occ_list_hdr.  Each nvme_mi_aem_occ_data structure has a fixed length header
+but a variable length payload ude to occurrence specific and vendor specific
+info.  For this reason, do not index the nvme_mi_ae_occ data structures by
+array or fixed offset.

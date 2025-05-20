@@ -2301,6 +2301,20 @@ IO policy used by current subsystem
 Model of the current subsystem
 
 
+.. c:function:: const char * nvme_subsystem_get_serial (nvme_subsystem_t s)
+
+   Return the serial number of subsystem
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  nvme_subsystem_t object
+
+**Return**
+
+Serial number of the current subsystem
+
+
 .. c:function:: const char * nvme_subsystem_get_fw_rev (nvme_subsystem_t s)
 
    Return the firmware rev of subsystem

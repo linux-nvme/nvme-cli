@@ -1,0 +1,22 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_supported_item" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_supported_item \- AE Supported List Item
+.SH SYNOPSIS
+struct nvme_mi_aem_supported_item {
+.br
+.BI "    __u8 aesl;"
+.br
+.BI "    __le16 aesi;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "aesl" 12
+AE supported list item length
+.IP "aesi" 12
+AE supported info
+.SH "Description"
+Following this header should be hdr.numaes entries of
+nvme_mi_aem_supported_item structures

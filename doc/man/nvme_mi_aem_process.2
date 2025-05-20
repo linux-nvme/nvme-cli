@@ -1,0 +1,20 @@
+.TH "nvme_mi_aem_process" 9 "nvme_mi_aem_process" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_process \- Process AEM on the provided endpoint
+.SH SYNOPSIS
+.B "int" nvme_mi_aem_process
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "void *userdata "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+Endpoint to process
+.IP "userdata" 12
+Application provided context pointer for callback function
+.SH "DESCRIPTION"
+Call this if \fBpoll\fP indicates data is available on the fd provided by \fBnvme_mi_aem_get_fd\fP
+
+This will call the fn pointer, aem_handler, provided with nvme_mi_aem_config and the
+application can call \fBnvme_mi_aem_get_next_event\fP from within this callback to get
+aem event data.  The callback function should return NVME_MI_AEM_HNA_ACK for normal operation.
+.SH "RETURN"
+0 is a success, nonzero is an error and errno may be read for further details

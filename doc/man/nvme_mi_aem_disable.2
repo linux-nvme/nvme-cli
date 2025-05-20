@@ -1,0 +1,11 @@
+.TH "nvme_mi_aem_disable" 9 "nvme_mi_aem_disable" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_disable \- Disable AE on the provided endpoint
+.SH SYNOPSIS
+.B "int" nvme_mi_aem_disable
+.BI "(nvme_mi_ep_t ep "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+Endpoint to disable AEs
+.SH "RETURN"
+0 is a success, nonzero is an error and errno may be read for further details

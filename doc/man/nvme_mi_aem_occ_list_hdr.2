@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_occ_list_hdr" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_occ_list_hdr \- AE occurrence list header
+.SH SYNOPSIS
+struct nvme_mi_aem_occ_list_hdr {
+.br
+.BI "    __u8 numaeo;"
+.br
+.BI "    __u8 aelver;"
+.br
+.BI "    __u8 aeolli[3];"
+.br
+.BI "    __u8 aeolhl;"
+.br
+.BI "    __u8 aemti;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "numaeo" 12
+Number of AE Occurrence Data Structures
+.IP "aelver" 12
+AE Occurrence List Version Number
+.IP "aeolli" 12
+AE Occurrence List Length Info (AEOLLI)
+.IP "aeolhl" 12
+AE Occurrence List Header Length (shall be set to 7)
+.IP "aemti" 12
+AEM Transmission Info
+.SH "Description"
+The header for the occurrence list.  numaeo defines how many
+nvme_mi_aem_occ_data structures (including variable payaloads) are included.
+Following this header is each of the numaeo occurrence data structures.

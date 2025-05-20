@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_feat_bpwp_state" "May 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_feat_bpwp_state \- Boot Partition Write Protection State
+.SH SYNOPSIS
+enum nvme_feat_bpwp_state {
+.br
+.BI "    NVME_FEAT_BPWPS_CHANGE_NOT_REQUESTED"
+, 
+.br
+.br
+.BI "    NVME_FEAT_BPWPS_WRITE_UNLOCKED"
+, 
+.br
+.br
+.BI "    NVME_FEAT_BPWPS_WRITE_LOCKED"
+, 
+.br
+.br
+.BI "    NVME_FEAT_BPWPS_WRITE_LOCKED_PWR_CYCLE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_BPWPS_WRITE_PROTECTION_RPMB"
+
+};
+.SH Constants
+.IP "NVME_FEAT_BPWPS_CHANGE_NOT_REQUESTED" 12
+Change in state not requested
+.IP "NVME_FEAT_BPWPS_WRITE_UNLOCKED" 12
+Write Unlocked
+.IP "NVME_FEAT_BPWPS_WRITE_LOCKED" 12
+Write Locked
+.IP "NVME_FEAT_BPWPS_WRITE_LOCKED_PWR_CYCLE" 12
+Write Locked Until Power Cycle
+.IP "NVME_FEAT_BPWPS_WRITE_PROTECTION_RPMB" 12
+Write Protection controlled by RPMB

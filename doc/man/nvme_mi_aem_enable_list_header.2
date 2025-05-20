@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_enable_list_header" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_enable_list_header \- AE Enable list header
+.SH SYNOPSIS
+struct nvme_mi_aem_enable_list_header {
+.br
+.BI "    __u8 numaee;"
+.br
+.BI "    __u8 aeelver;"
+.br
+.BI "    __le16 aeetl;"
+.br
+.BI "    __u8 aeelhl;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "numaee" 12
+Number of AE enable items following the header
+.IP "aeelver" 12
+Version of the AE enable list (zero)
+.IP "aeetl" 12
+Total length of the AE enable list including header and items
+.IP "aeelhl" 12
+Header length of this header (5)

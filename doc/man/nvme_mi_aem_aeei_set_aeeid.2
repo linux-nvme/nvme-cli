@@ -1,0 +1,12 @@
+.TH "nvme_mi_aem_aeei_set_aeeid" 9 "nvme_mi_aem_aeei_set_aeeid" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_aeei_set_aeeid \- set aeeid in the aeei field
+.SH SYNOPSIS
+.B "void" nvme_mi_aem_aeei_set_aeeid
+.BI "(struct nvme_mi_aem_enable_item *item "  ","
+.BI "__u8 aeeid "  ");"
+.SH ARGUMENTS
+.IP "item" 12
+Pointer to \fInvme_mi_aem_enable_item\fP to update the aeei field
+.IP "aeeid" 12
+aeeid value to use

@@ -1,0 +1,28 @@
+.TH "nvme_mi_aem_enable" 9 "nvme_mi_aem_enable" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_enable \- Enable AE on the provided endpoint
+.SH SYNOPSIS
+.B "int" nvme_mi_aem_enable
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "struct nvme_mi_aem_config *config "  ","
+.BI "void *userdata "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+Endpoint to enable AEs
+.IP "config" 12
+AE configuraiton including which events are enabled and the callback function
+.IP "userdata" 12
+Application provided context pointer for callback function
+.SH "DESCRIPTION"
+This function is called to enable AE on the endpoint.  Endpoint will provide initial state
+(if any) of enabled AEs and application can parse those via the aem_handler fn pointer in
+callbacks.  Thes can be obtained in the callback by calling \fBnvme_mi_aem_get_next_event\fP.
+
+Application should poll the fd that can be obtained from nvme_mi_aem_get_fd and then call
+\fBnvme_mi_aem_process\fP when \fBpoll\fP indicates data available.
+
+A call to \fBnvme_mi_aem_process\fP will grab AEM data and call the aem_handler fn pointer.
+At this point the application can call \fBnvme_mi_aem_get_next_event\fP to get information for
+each triggered event.
+.SH "RETURN"
+0 is a success, nonzero is an error and errno may be read for further details

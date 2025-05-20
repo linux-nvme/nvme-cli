@@ -1,0 +1,14 @@
+.TH "nvme_mi_aem_get_enabled" 9 "nvme_mi_aem_get_enabled" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_get_enabled \- Return information on which AEs are enabled
+.SH SYNOPSIS
+.B "int" nvme_mi_aem_get_enabled
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "struct nvme_mi_aem_enabled_map *enabled "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+Endpoint to check enabled status
+.IP "enabled" 12
+nvme_mi_aem_enabled_map indexed by AE event ID of enabled state
+.SH "RETURN"
+0 is a success, nonzero is an error and errno may be read for further details

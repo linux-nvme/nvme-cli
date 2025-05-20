@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_mi_event" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_event \- AE event information structure
+.SH SYNOPSIS
+struct nvme_mi_event {
+.br
+.BI "    uint8_t aeoi;"
+.br
+.BI "    uint8_t aessi;"
+.br
+.BI "    uint32_t aeocidi;"
+.br
+.BI "    void *spec_info;"
+.br
+.BI "    size_t spec_info_len;"
+.br
+.BI "    void *vend_spec_info;"
+.br
+.BI "    size_t vend_spec_info_len;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "aeoi" 12
+Event identifier
+.IP "aessi" 12
+Event occurrence scope info
+.IP "aeocidi" 12
+Event occurrence scope ID info
+.IP "spec_info" 12
+Specific info buffer
+.IP "spec_info_len" 12
+Length of specific info buffer
+.IP "vend_spec_info" 12
+Vendor specific info buffer
+.IP "vend_spec_info_len" 12
+Length of vendor specific info buffer
+.SH "Description"
+Application callbacks for nvme_mi_aem_process will be able to call
+nvme_mi_aem_get_next_event which will return a pointer to such an identifier
+for the next event the application should parse

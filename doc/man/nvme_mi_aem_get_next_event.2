@@ -1,0 +1,16 @@
+.TH "nvme_mi_aem_get_next_event" 9 "nvme_mi_aem_get_next_event" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_get_next_event \- Get details for the next event to parse
+.SH SYNOPSIS
+.B "struct nvme_mi_event *" nvme_mi_aem_get_next_event
+.BI "(nvme_mi_ep_t ep "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+The endpoint with the event
+.SH "DESCRIPTION"
+When inside a aem_handler, call this and a returned struct pointer
+will provide details of event information.  Will return NULL when end of parsing is occurred.
+spec_info and vend_spec_info must be copied to persist as they will not be valid
+after the handler_next_action has returned.
+.SH "RETURN"
+Pointer no next nvme_mi_event or NULL if this is the last one

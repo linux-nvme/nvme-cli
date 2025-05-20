@@ -1,0 +1,12 @@
+.TH "nvme_mi_aem_aesi_set_aesid" 9 "nvme_mi_aem_aesi_set_aesid" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_aesi_set_aesid \- set aesid in the aesi field
+.SH SYNOPSIS
+.B "void" nvme_mi_aem_aesi_set_aesid
+.BI "(struct nvme_mi_aem_supported_item *item "  ","
+.BI "__u8 aesid "  ");"
+.SH ARGUMENTS
+.IP "item" 12
+Pointer to \fInvme_mi_aem_supported_item\fP to update the aesi field
+.IP "aesid" 12
+aesid value to use

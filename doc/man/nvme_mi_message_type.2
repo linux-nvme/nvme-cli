@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_mi_message_type" "April 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_mi_message_type" "May 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_mi_message_type \- NVMe-MI message type field.
 .SH SYNOPSIS
@@ -17,6 +17,10 @@ enum nvme_mi_message_type {
 .br
 .br
 .BI "    NVME_MI_MT_PCIE"
+, 
+.br
+.br
+.BI "    NVME_MI_MT_AE"
 
 };
 .SH Constants
@@ -28,6 +32,8 @@ NVMe-MI command
 NVMe Admin command
 .IP "NVME_MI_MT_PCIE" 12
 PCIe command
+.IP "NVME_MI_MT_AE" 12
+Asynchronous Event
 .SH "Description"
 Used as byte 1 of both request and response messages (NMIMT bits of NMP
 byte). Not to be confused with the MCTP message type in byte 0.

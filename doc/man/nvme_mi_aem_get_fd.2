@@ -1,0 +1,14 @@
+.TH "nvme_mi_aem_get_fd" 9 "nvme_mi_aem_get_fd" "May 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_aem_get_fd \- Returns the pollable fd for AEM data available
+.SH SYNOPSIS
+.B "int" nvme_mi_aem_get_fd
+.BI "(nvme_mi_ep_t ep "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+The endpoint being monitored for asynchronous data
+.SH "DESCRIPTION"
+This populated structure can be polled from the application to understand if
+a call to \fBnvme_mi_aem_process\fP is required (when a poll returns > 0).
+.SH "RETURN"
+The fd value or -1 if error

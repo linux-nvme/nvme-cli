@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "enum nvme_mi_aem_handler_next_action" "May 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_aem_handler_next_action \- Next action for the AEM state machine handler
+.SH SYNOPSIS
+enum nvme_mi_aem_handler_next_action {
+.br
+.BI "    NVME_MI_AEM_HNA_ACK"
+, 
+.br
+.br
+.BI "    NVME_MI_AEM_HNA_NONE"
+
+};
+.SH Constants
+.IP "NVME_MI_AEM_HNA_ACK" 12
+Send an ack for the AEM
+.IP "NVME_MI_AEM_HNA_NONE" 12
+No further action
+.SH "Description"
+Used as return value for the AE callback generated when calling nvme_mi_aem_process

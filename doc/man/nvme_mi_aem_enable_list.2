@@ -1,0 +1,17 @@
+.TH "libnvme" 9 "struct nvme_mi_aem_enable_list" "May 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_aem_enable_list \- AE enable list sent with SET CONFIG Asyncronous Event
+.SH SYNOPSIS
+struct nvme_mi_aem_enable_list {
+.br
+.BI "    struct nvme_mi_aem_enable_list_header hdr;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+AE enable list header
+.SH "Description"
+Following this header should be hdr.numaee entries of nvme_mi_aem_enable_item structures
