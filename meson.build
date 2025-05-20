@@ -8,7 +8,7 @@
 project(
     'libnvme', ['c'],
     meson_version: '>= 0.62.0',
-    version: '1.13',
+    version: '1.14',
     license: 'LGPL-2.1-or-later',
     default_options: [
         'c_std=gnu99',
