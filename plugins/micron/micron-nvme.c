@@ -181,6 +181,16 @@ static enum eDriveModel GetDriveModel(int idx)
 			break;
 		case 0x51BB:
 		case 0x51BD:
+		case 0x51BC:
+		case 0x51BE:
+		case 0x51BF:
+		case 0x51C8:
+		case 0x51C9:
+		case 0x51CA:
+		case 0x51CB:
+		case 0x51CC:
+		case 0x51CD:
+		case 0x51CE:
 			eModel = M51CY;
 			break;
 		case 0x51C0:
