@@ -509,7 +509,8 @@ void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
 		cntlist->identifier[i] = cpu_to_le16(ctrlist[i]);
 }
 
-int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
+int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+			     __u32 *len)
 {
 	switch (fid) {
 	case NVME_FEAT_FID_LBA_RANGE:
@@ -531,6 +532,10 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 		*len = (cdw11 & 0x1) ? 16 : 8;
 		break;
 	case NVME_FEAT_FID_HOST_MEM_BUF:
+		if (dir == NVME_DATA_TFR_HOST_TO_CTRL) {
+			*len = 0;
+			break;
+		}
 		*len = sizeof(struct nvme_host_mem_buf_attrs);
 		break;
 	case NVME_FEAT_FID_ARBITRATION:
@@ -571,22 +576,6 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 	default:
 		errno = EINVAL;
 		return -1;
-	}
-	return 0;
-}
-
-int nvme_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
-			     __u32 *len)
-{
-	switch (fid) {
-	case NVME_FEAT_FID_HOST_MEM_BUF:
-		if (dir == NVME_DATA_TFR_HOST_TO_CTRL) {
-			*len = 0;
-			break;
-		}
-		fallthrough;
-	default:
-		return nvme_get_feature_length(fid, cdw11, len);
 	}
 	return 0;
 }

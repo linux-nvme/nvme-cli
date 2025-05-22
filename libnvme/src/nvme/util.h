@@ -192,19 +192,6 @@ void nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
  * @fid:   Feature identifier, see &enum nvme_features_id.
  * @cdw11: The cdw11 value may affect the transfer (only known fid is
  *	   %NVME_FEAT_FID_HOST_ID)
- * @len:   On success, set to this features payload length in bytes.
- *
- * Return: 0 on success, -1 with errno set to EINVAL if the function did not
- * recognize &fid.
- */
-int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len);
-
-/**
- * nvme_get_feature_length2() - Retreive the command payload length for a
- *			       specific feature identifier
- * @fid:   Feature identifier, see &enum nvme_features_id.
- * @cdw11: The cdw11 value may affect the transfer (only known fid is
- *	   %NVME_FEAT_FID_HOST_ID)
  * @dir:   Data transfer direction: false - host to controller, true -
  *	   controller to host may affect the transfer (only known fid is
  *	   %NVME_FEAT_FID_HOST_MEM_BUF).
@@ -213,8 +200,8 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len);
  * Return: 0 on success, -1 with errno set to EINVAL if the function did not
  * recognize &fid.
  */
-int nvme_get_feature_length2(int fid, __u32 cdw11, enum nvme_data_tfr dir,
-			     __u32 *len);
+int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+			    __u32 *len);
 
 /**
  * nvme_get_directive_receive_length() - Get directive receive length
