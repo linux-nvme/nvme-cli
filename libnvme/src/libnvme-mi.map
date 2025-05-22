@@ -2,99 +2,63 @@
 LIBNVME_MI_UNRELEASED {
 };
 
-LIBNVME_MI_1_15 {
+LIBNVME_MI_2_0 {
 	global:
+		nvme_mi_admin_admin_passthru;
+		nvme_mi_admin_format_nvm;
+		nvme_mi_admin_fw_commit;
+		nvme_mi_admin_fw_download;
+		nvme_mi_admin_get_ana_log_atomic;
+		nvme_mi_admin_get_features;
 		nvme_mi_admin_get_features_arbitration;
 		nvme_mi_admin_get_features_power_mgmt;
+		nvme_mi_admin_get_log;
+		nvme_mi_admin_identify_partial;
+		nvme_mi_admin_ns_attach;
+		nvme_mi_admin_ns_mgmt;
+		nvme_mi_admin_sanitize_nvm;
+		nvme_mi_admin_security_recv;
+		nvme_mi_admin_security_send;
+		nvme_mi_admin_set_features;
 		nvme_mi_admin_set_features_power_mgmt;
-};
-
-LIBNVME_MI_1_14 {
-	global:
+		nvme_mi_admin_xfer;
 		nvme_mi_aem_disable;
 		nvme_mi_aem_enable;
 		nvme_mi_aem_get_enabled;
 		nvme_mi_aem_get_fd;
 		nvme_mi_aem_get_next_event;
 		nvme_mi_aem_process;
-		nvme_mi_set_csi;
-		nvme_mi_submit_entry;
-		nvme_mi_submit_exit;
-};
-
-LIBNVME_MI_1_12 {
-	global:
-		nvme_mi_mi_xfer;
-};
-
-LIBNVME_MI_1_11 {
-	global:
+		nvme_mi_close;
+		nvme_mi_close_ctrl;
 		nvme_mi_control;
-};
-
-LIBNVME_MI_1_10 {
-	global:
-		nvme_mi_admin_get_ana_log_atomic;
-};
-
-LIBNVME_MI_1_5 {
-	global:
+		nvme_mi_create_root;
 		nvme_mi_ctrl_id;
-};
-
-LIBNVME_MI_1_4 {
-        global:
-                nvme_mi_admin_get_log_page;
-};
-
-LIBNVME_MI_1_3 {
-	global:
-		nvme_mi_admin_admin_passthru;
+		nvme_mi_endpoint_desc;
 		nvme_mi_ep_get_timeout;
 		nvme_mi_ep_set_timeout;
-		nvme_mi_set_probe_enabled;
-};
-
-LIBNVME_MI_1_2 {
-	global:
-		nvme_mi_admin_get_features;
-		nvme_mi_admin_set_features;
-		nvme_mi_admin_ns_mgmt;
-		nvme_mi_admin_ns_attach;
-		nvme_mi_admin_format_nvm;
-		nvme_mi_admin_sanitize_nvm;
-		nvme_mi_admin_fw_download;
-		nvme_mi_admin_fw_commit;
-		nvme_mi_status_to_string;
-};
-
-LIBNVME_MI_1_1 {
-	global:
-		nvme_mi_create_root;
+		nvme_mi_first_ctrl;
+		nvme_mi_first_endpoint;
 		nvme_mi_free_root;
 		nvme_mi_init_ctrl;
-		nvme_mi_close_ctrl;
-		nvme_mi_close;
 		nvme_mi_mi_config_get;
 		nvme_mi_mi_config_set;
-		nvme_mi_mi_read_mi_data_subsys;
-		nvme_mi_mi_read_mi_data_port;
-		nvme_mi_mi_read_mi_data_ctrl_list;
 		nvme_mi_mi_read_mi_data_ctrl;
+		nvme_mi_mi_read_mi_data_ctrl_list;
+		nvme_mi_mi_read_mi_data_port;
+		nvme_mi_mi_read_mi_data_subsys;
 		nvme_mi_mi_subsystem_health_status_poll;
-		nvme_mi_admin_identify_partial;
-		nvme_mi_admin_get_log;
-		nvme_mi_admin_xfer;
-		nvme_mi_admin_security_send;
-		nvme_mi_admin_security_recv;
-		nvme_mi_endpoint_desc;
-		nvme_mi_first_endpoint;
-		nvme_mi_next_endpoint;
-		nvme_mi_first_ctrl;
+		nvme_mi_mi_xfer;
 		nvme_mi_next_ctrl;
+		nvme_mi_next_endpoint;
 		nvme_mi_open_mctp;
-		nvme_mi_scan_mctp;
 		nvme_mi_scan_ep;
+		nvme_mi_scan_mctp;
+		nvme_mi_set_csi;
+		nvme_mi_set_probe_enabled;
+		nvme_mi_status_to_string;
+		nvme_mi_submit_entry;
+		nvme_mi_submit_exit;
+                nvme_mi_admin_get_log_page;
 	local:
 		*;
 };
