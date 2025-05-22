@@ -1714,8 +1714,8 @@ static ctrl_match_t _candidate_init(struct candidate_args *candidate,
 	candidate->trsvcid = trsvcid;
 	candidate->transport = transport;
 	candidate->subsysnqn = subsysnqn;
-	candidate->host_iface = host_iface;
-	candidate->host_traddr = host_traddr;
+	candidate->host_iface = streqcase0(host_iface, "none") ? NULL : host_iface;
+	candidate->host_traddr = streqcase0(host_traddr, "none") ? NULL : host_traddr;
 
 	if (streq0(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		/* Since TP8013, the NQN of discovery controllers can be the
