@@ -21,7 +21,6 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
-#include <bits/pthreadtypes.h>
 
 void fhexdump(FILE *fp, const unsigned char *buf, int len)
 {
