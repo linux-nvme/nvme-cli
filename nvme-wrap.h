@@ -171,4 +171,6 @@ int nvme_cli_get_log_ave_discovery(struct nvme_dev *dev, bool rae, __u32 len,
 
 int nvme_cli_get_log_pull_model_ddc_req(struct nvme_dev *dev, bool rae, __u32 len,
 					struct nvme_pull_model_ddc_req_log *log);
+
+int nvme_cli_abort(struct nvme_dev *dev, struct nvme_abort_args *args);
 #endif /* _NVME_WRAP_H */
