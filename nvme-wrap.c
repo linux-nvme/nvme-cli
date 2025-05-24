@@ -487,3 +487,8 @@ int nvme_cli_get_log_pull_model_ddc_req(struct nvme_dev *dev, bool rae, __u32 le
 {
 	return do_admin_op(get_log_pull_model_ddc_req, dev, rae, len, log);
 }
+
+int nvme_cli_abort(struct nvme_dev *dev, struct nvme_abort_args *args)
+{
+	return do_admin_args_op(abort, dev, args);
+}

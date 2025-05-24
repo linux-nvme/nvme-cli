@@ -206,6 +206,8 @@ static const char *doper = "directive operation";
 static const char *dspec_w_dtype = "directive specification associated with directive type";
 static const char *dtype = "directive type";
 static const char *endgid = "Endurance Group Identifier (ENDGID)";
+static const char *force =
+	"The \"I know what I'm doing\" flag, skip confirmation before sending command";
 static const char *force_unit_access = "force device to commit data before command completes";
 static const char *human_readable_directive = "show directive in readable format";
 static const char *human_readable_identify = "show identify in readable format";
@@ -6348,7 +6350,6 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *bs = "target block size";
-	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
 
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
@@ -10915,6 +10916,81 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *cmd
 		nvme_show_status(err);
 	else
 		nvme_show_perror("pull model ddc req log");
+
+	return err;
+}
+
+static int wait_input(unsigned int sec)
+{
+	fd_set rfds;
+	struct timeval tv;
+
+	FD_ZERO(&rfds);
+	FD_SET(0, &rfds);
+
+	tv.tv_sec = sec;
+	tv.tv_usec = 0;
+
+	return select(1, &rfds, NULL, NULL, &tv);
+}
+
+static int abort_cmd(int argc, char **argv, struct command *cmd,
+		     struct plugin *plugin)
+{
+	const char *desc = "send an abort command to the given device.";
+	const char *sqid = "command SQID to be aborted is associated with";
+	const char *cid = "command identifier of the command to be aborted";
+	int err;
+	nvme_print_flags_t flags;
+	__u32 result;
+	char input;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	struct nvme_abort_args args = {
+		.args_size = sizeof(args),
+		.timeout = nvme_cfg.timeout,
+		.result = &result,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_SHRT("sqid", 's', &args.sqid, sqid),
+		  OPT_SHRT("cid", 'c', &args.cid, cid),
+		  OPT_FLAG("force", 0, NULL, force));
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (!argconfig_parse_seen(opts, "force")) {
+		fprintf(stderr, "do you really want to do this? (y/n): ");
+		err = wait_input(10);
+		if (err == 1)
+			err = scanf("%c", &input);
+		if (err != 1 || input != 'y') {
+			fprintf(stderr, "canceled to abort.\n");
+			return -ECANCELED;
+		}
+	}
+
+	err = nvme_cli_abort(dev, &args);
+	if (!err) {
+		if (NVME_GET(result, ABORT_CQEDW0_IANP))
+			nvme_show_result("Not performed aborting sqid:%d cid:%d", args.sqid,
+					 args.cid);
+		else
+			nvme_show_result("Success aborting sqid:%d cid:%d", args.sqid, args.cid);
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else {
+		nvme_show_perror("abort");
+	}
 
 	return err;
 }
