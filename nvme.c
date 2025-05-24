@@ -2864,7 +2864,7 @@ static void ns_mgmt_show_status(struct nvme_dev *dev, int err, char *cmd, __u32 
 	} else {
 		nvme_show_status(err);
 		if (!is_ns_mgmt_support(dev))
-			nvme_show_result("NS management and attachment not supported");
+			nvme_show_error("NS management and attachment not supported");
 	}
 
 	nvme_show_finish();
