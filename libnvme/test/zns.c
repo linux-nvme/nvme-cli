@@ -9,6 +9,7 @@
 /**
  * Search out for ZNS type namespaces, and if found, report their properties.
  */
+#include "nvme/tree.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -29,7 +30,7 @@ static void show_zns_properties(nvme_ns_t n)
 	if (!zr)
 		return;
 
-	if (nvme_zns_identify_ns(nvme_ns_get_fd(n), nvme_ns_get_nsid(n),
+	if (nvme_zns_identify_ns(nvme_ns_get_transport_handle(n), nvme_ns_get_nsid(n),
 				 &zns_ns)) {
 		fprintf(stderr, "failed to identify zns ns\n");;
 	}
@@ -38,7 +39,7 @@ static void show_zns_properties(nvme_ns_t n)
 		le16_to_cpu(zns_ns.ozcs), le32_to_cpu(zns_ns.mar),
 		le32_to_cpu(zns_ns.mor));
 
-	if (nvme_zns_identify_ctrl(nvme_ns_get_fd(n), &zns_ctrl)) {
+	if (nvme_zns_identify_ctrl(nvme_ns_get_transport_handle(n), &zns_ctrl)) {
 		fprintf(stderr, "failed to identify zns ctrl\n");;
 		free(zr);
 		return;
@@ -46,7 +47,7 @@ static void show_zns_properties(nvme_ns_t n)
 
 	printf("zasl:%u\n", zns_ctrl.zasl);
 
-	if (nvme_zns_report_zones(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), 0,
+	if (nvme_zns_report_zones(nvme_ns_get_transport_handle(n), nvme_ns_get_nsid(n), 0,
 				  NVME_ZNS_ZRAS_REPORT_ALL, false,
 				  true, 0x1000, (void *)zr,
 				  NVME_DEFAULT_IOCTL_TIMEOUT, &result)) {

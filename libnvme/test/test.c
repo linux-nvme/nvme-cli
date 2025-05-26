@@ -15,6 +15,7 @@
  * program exists successfully; an ungraceful exit means a bug exists
  * somewhere.
  */
+#include "nvme/tree.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,8 +40,9 @@ static int test_ctrl(nvme_ctrl_t c)
 	static __u8 buf[0x1000];
 
 	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
-	int ret, temp, fd = nvme_ctrl_get_fd(c);
-	struct nvme_error_log_page error[64]; 
+	struct nvme_transport_handle *hdl = nvme_ctrl_get_transport_handle(c);
+	int ret, temp;
+	struct nvme_error_log_page error[64];
 	struct nvme_smart_log smart = { 0 };
 	struct nvme_firmware_slot fw =  { 0 };
 	struct nvme_ns_list ns_list = { 0 };
@@ -69,7 +71,7 @@ static int test_ctrl(nvme_ctrl_t c)
 		printf("PASSED: Identify controller\n");
 	}
 
-	ret = nvme_get_log_smart(fd, NVME_NSID_ALL, true, &smart);
+	ret = nvme_get_log_smart(hdl, NVME_NSID_ALL, true, &smart);
 	if (ret) {
 		printf("ERROR: no smart log for:%s %#x\n", nvme_ctrl_get_name(c), ret);
 		return ret;
@@ -88,42 +90,42 @@ static int test_ctrl(nvme_ctrl_t c)
 	printf("  sn:%-.20s\n", id.sn);
 	printf("  model:%-.40s\n", id.mn);
 
-	ret = nvme_identify_allocated_ns_list(fd, 0, &ns_list);
+	ret = nvme_identify_allocated_ns_list(hdl, 0, &ns_list);
 	if (!ret)
 		printf("  PASSED: Allocated NS List\n");
 	else
 		printf("  ERROR: Allocated NS List:%x\n", ret);
-	ret = nvme_identify_active_ns_list(fd, 0, &ns_list);
+	ret = nvme_identify_active_ns_list(hdl, 0, &ns_list);
 	if (!ret)
 		printf("  PASSED: Active NS List\n");
 	else
 		printf("  ERROR: Active NS List:%x\n", ret);
-	ret = nvme_identify_ctrl_list(fd, 0, &ctrlist);
+	ret = nvme_identify_ctrl_list(hdl, 0, &ctrlist);
 	if (!ret)
 		printf("  PASSED: Ctrl List\n");
 	else
 		printf("  ERROR: CtrlList:%x\n", ret);
-	ret = nvme_identify_nsid_ctrl_list(fd, 1, 0, &ctrlist);
+	ret = nvme_identify_nsid_ctrl_list(hdl, 1, 0, &ctrlist);
 	if (!ret)
 		printf("  PASSED: NSID Ctrl List\n");
 	else
 		printf("  ERROR: NSID CtrlList:%x\n", ret);
-	ret = nvme_identify_primary_ctrl(fd, 0, &prim);
+	ret = nvme_identify_primary_ctrl(hdl, 0, &prim);
 	if (!ret)
 		printf("  PASSED: Identify Primary\n");
 	else
 		printf("  ERROR: Identify Primary:%x\n", ret);
-	ret = nvme_identify_secondary_ctrl_list(fd, 0, &sec);
+	ret = nvme_identify_secondary_ctrl_list(hdl, 0, &sec);
 	if (!ret)
 		printf("  PASSED: Identify Secondary\n");
 	else
 		printf("  ERROR: Identify Secondary:%x\n", ret);
-	ret = nvme_identify_ns_granularity(fd, &gran);
+	ret = nvme_identify_ns_granularity(hdl, &gran);
 	if (!ret)
 		printf("  PASSED: Identify NS granularity\n");
 	else
 		printf("  ERROR: Identify NS granularity:%x\n", ret);
-	ret = nvme_identify_uuid(fd, &uuid);
+	ret = nvme_identify_uuid(hdl, &uuid);
 	if (!ret)
 		printf("  PASSED: Identify UUID List\n");
 	else
@@ -132,133 +134,133 @@ static int test_ctrl(nvme_ctrl_t c)
 	printf("\nLogs\n");
 	printf("  SMART: Current temperature:%d percent used:%d%%\n", temp,
 		smart.percent_used);
-	ret = nvme_get_log_sanitize(fd, true, &sanlog);
+	ret = nvme_get_log_sanitize(hdl, true, &sanlog);
 	if (!ret)
 		printf("  Sanitize Log:\n");
 	else
 		printf("  ERROR: Sanitize Log:%x\n", ret);
-	ret = nvme_get_log_reservation(fd, true, &resvnotify);
+	ret = nvme_get_log_reservation(hdl, true, &resvnotify);
 	if (!ret)
 		printf("  Reservation Log\n");
 	else
 		printf("  ERROR: Reservation Log:%x\n", ret);
-	ret = nvme_get_log_ana_groups(fd, true, sizeof(buf), analog);
+	ret = nvme_get_log_ana_groups(hdl, true, sizeof(buf), analog);
 	if (!ret)
 		printf("  ANA Groups\n");
 	else
 		printf("  ERROR: ANA Groups:%x\n", ret);
-	ret = nvme_get_log_endurance_group(fd, 0, &eglog);
+	ret = nvme_get_log_endurance_group(hdl, 0, &eglog);
 	if (!ret)
 		printf("  Endurance Group\n");
 	else
 		printf("  ERROR: Endurance Group:%x\n", ret);
-	ret = nvme_get_log_telemetry_ctrl(fd, true, 0, sizeof(buf), telem);
+	ret = nvme_get_log_telemetry_ctrl(hdl, true, 0, sizeof(buf), telem);
 	if (!ret)
 		printf("  Telemetry Controller\n");
 	else
 		printf("  ERROR: Telemetry Controller:%x\n", ret);
-	ret = nvme_get_log_device_self_test(fd, &st);
+	ret = nvme_get_log_device_self_test(hdl, &st);
 	if (!ret)
 		printf("  Device Self Test\n");
 	else
 		printf("  ERROR: Device Self Test:%x\n", ret);
-	ret = nvme_get_log_cmd_effects(fd, NVME_CSI_NVM, &cfx);
+	ret = nvme_get_log_cmd_effects(hdl, NVME_CSI_NVM, &cfx);
 	if (!ret)
 		printf("  Command Effects\n");
 	else
 		printf("  ERROR: Command Effects:%x\n", ret);
-	ret = nvme_get_log_changed_ns_list(fd, true, &ns_list);
+	ret = nvme_get_log_changed_ns_list(hdl, true, &ns_list);
 	if (!ret)
 		printf("  Change NS List\n");
 	else
 		printf("  ERROR: Change NS List:%x\n", ret);
-	ret = nvme_get_log_fw_slot(fd, true, &fw);
+	ret = nvme_get_log_fw_slot(hdl, true, &fw);
 	if (!ret)
 		printf("  FW Slot\n");
 	else
 		printf("  ERROR: FW Slot%x\n", ret);
-	ret = nvme_get_log_error(fd, 64, true, error);
+	ret = nvme_get_log_error(hdl, 64, true, error);
 	if (!ret)
 		printf("  Error Log\n");
 	else
 		printf("  ERROR: Error Log:%x\n", ret);
 	printf("\nFeatures\n");
-	ret = nvme_get_features_arbitration(fd, sel, &result);
+	ret = nvme_get_features_arbitration(hdl, sel, &result);
 	if (!ret)
 		printf("  Arbitration:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Arbitration:%x\n", ret);
-	ret = nvme_get_features_power_mgmt(fd, sel, &result);
+	ret = nvme_get_features_power_mgmt(hdl, sel, &result);
 	if (!ret)
 		printf("  Power Management:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Power Management:%x\n", ret);
-	ret = nvme_get_features_temp_thresh(fd, sel, 0, 0, &result);
+	ret = nvme_get_features_temp_thresh(hdl, sel, 0, 0, &result);
 	if (!ret)
 		printf("  Temperature Threshold:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Temperature Threshold:%x\n", ret);
-	ret = nvme_get_features_volatile_wc(fd, sel, &result);
+	ret = nvme_get_features_volatile_wc(hdl, sel, &result);
 	if (!ret)
 		printf("  Volatile Write Cache:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Volatile Write Cache:%x\n", ret);
-	ret = nvme_get_features_num_queues(fd, sel, &result);
+	ret = nvme_get_features_num_queues(hdl, sel, &result);
 	if (!ret)
 		printf("  Number of Queues:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Number of Queues:%x\n", ret);
-	ret = nvme_get_features_irq_coalesce(fd, sel, &result);
+	ret = nvme_get_features_irq_coalesce(hdl, sel, &result);
 	if (!ret)
 		printf("  IRQ Coalescing:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: IRQ Coalescing:%x\n", ret);
-	ret = nvme_get_features_write_atomic(fd, sel, &result);
+	ret = nvme_get_features_write_atomic(hdl, sel, &result);
 	if (!ret)
 		printf("  Write Atomic:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Write Atomic:%x\n", ret);
-	ret = nvme_get_features_async_event(fd, sel, &result);
+	ret = nvme_get_features_async_event(hdl, sel, &result);
 	if (!ret)
 		printf("  Asycn Event Config:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Asycn Event Config:%x\n", ret);
-	ret = nvme_get_features_hctm(fd, sel, &result);
+	ret = nvme_get_features_hctm(hdl, sel, &result);
 	if (!ret)
 		printf("  HCTM:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: HCTM:%x\n", ret);
-	ret = nvme_get_features_nopsc(fd, sel, &result);
+	ret = nvme_get_features_nopsc(hdl, sel, &result);
 	if (!ret)
 		printf("  NOP Power State Config:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: NOP Power State Configrbitration:%x\n", ret);
-	ret = nvme_get_features_rrl(fd, sel, &result);
+	ret = nvme_get_features_rrl(hdl, sel, &result);
 	if (!ret)
 		printf("  Read Recover Levels:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Read Recover Levels:%x\n", ret);
-	ret = nvme_get_features_lba_sts_interval(fd, sel, &result);
+	ret = nvme_get_features_lba_sts_interval(hdl, sel, &result);
 	if (!ret)
 		printf("  LBA Status Interval:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: LBA Status Interval:%x\n", ret);
-	ret = nvme_get_features_sanitize(fd, sel, &result);
+	ret = nvme_get_features_sanitize(hdl, sel, &result);
 	if (!ret)
 		printf("  Sanitize:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: SW Progress Marker:%x\n", ret);
-	ret = nvme_get_features_sw_progress(fd, sel, &result);
+	ret = nvme_get_features_sw_progress(hdl, sel, &result);
 	if (!ret)
 		printf("  SW Progress Marker:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Sanitize:%x\n", ret);
-	ret = nvme_get_features_resv_mask(fd, sel, 0, &result);
+	ret = nvme_get_features_resv_mask(hdl, sel, 0, &result);
 	if (!ret)
 		printf("  Reservation Mask:%x\n", result);
 	else if (ret > 0)
 		printf("  ERROR: Reservation Mask:%x\n", ret);
-	ret = nvme_get_features_resv_persist(fd, sel, 0, &result);
+	ret = nvme_get_features_resv_persist(hdl, sel, 0, &result);
 	if (!ret)
 		printf("  Reservation Persistence:%x\n", result);
 	else if (ret > 0)
@@ -268,7 +270,8 @@ static int test_ctrl(nvme_ctrl_t c)
 
 static int test_namespace(nvme_ns_t n)
 {
-	int ret, nsid = nvme_ns_get_nsid(n), fd = nvme_ns_get_fd(n);
+	int ret, nsid = nvme_ns_get_nsid(n);
+	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
 	struct nvme_id_ns ns = { 0 }, allocated = { 0 };
 	struct nvme_ns_id_desc *descs;
 	__u32 result = 0;
@@ -283,7 +286,7 @@ static int test_namespace(nvme_ns_t n)
 		nvme_ns_get_name(n), le64_to_cpu(ns.nsze),
 		1 << ns.lbaf[flbas].ds);
 
-	ret = nvme_identify_allocated_ns(fd, nsid, &allocated);
+	ret = nvme_identify_allocated_ns(hdl, nsid, &allocated);
 	if (!ret)
 		printf("  Identify allocated ns\n");
 	else
@@ -292,13 +295,13 @@ static int test_namespace(nvme_ns_t n)
 	if (!descs)
 		return -1;
 
-	ret = nvme_identify_ns_descs(fd, nsid, descs);
+	ret = nvme_identify_ns_descs(hdl, nsid, descs);
 	if (!ret)
 		printf("  Identify NS Descriptors\n");
 	else
 		printf("  ERROR: Identify NS Descriptors:%x\n", ret);
 	free(descs);
-	ret = nvme_get_features_write_protect(fd, nsid,
+	ret = nvme_get_features_write_protect(hdl, nsid,
 		NVME_GET_FEATURES_SEL_CURRENT, &result);
 	if (!ret)
 		printf("  Write Protect:%x\n", result);

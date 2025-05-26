@@ -810,7 +810,7 @@ struct nvme_ns {
 		int ret = 0;
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		    ret = nvme_get_log_supported_log_pages(nvme_ctrl_get_fd($self), rae, &log);
+		    ret = nvme_get_log_supported_log_pages(nvme_ctrl_get_transport_handle($self), rae, &log);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret < 0) {

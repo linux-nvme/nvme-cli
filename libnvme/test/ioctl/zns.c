@@ -12,6 +12,8 @@
 #define TEST_NSID 0x12345678
 #define TEST_SLBA 0xffffffff12345678
 
+static struct nvme_transport_handle *test_hdl;
+
 static void test_zns_append(void)
 {
 	__u8 expected_data[8], data[8] = {};
@@ -21,7 +23,6 @@ static void test_zns_append(void)
 		.result = &result,
 		.data = &data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(data),
 		.nlb = 0xab,
@@ -48,7 +49,7 @@ static void test_zns_append(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_zns_append(&args);
+	err = nvme_zns_append(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "wrong result");
@@ -81,7 +82,7 @@ static void test_zns_report_zones(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_zns_report_zones(TEST_FD, TEST_NSID, TEST_SLBA, opts,
+	err = nvme_zns_report_zones(test_hdl, TEST_NSID, TEST_SLBA, opts,
 				    extended, partial, sizeof(data), &data,
 				    timeout, &result);
 	end_mock_cmds();
@@ -101,7 +102,6 @@ static void test_zns_mgmt_send(void)
 		.result = &result,
 		.data = data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.timeout = timeout,
 		.nsid = TEST_NSID,
 		.zsa = NVME_ZNS_ZSA_OPEN,
@@ -126,7 +126,7 @@ static void test_zns_mgmt_send(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_zns_mgmt_send(&args);
+	err = nvme_zns_mgmt_send(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -169,7 +169,7 @@ static void test_zns_mgmt_recv(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_zns_mgmt_recv(&args);
+	err = nvme_zns_mgmt_recv(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -188,9 +188,16 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
+	struct nvme_global_ctx * ctx =
+		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+
 	set_mock_fd(TEST_FD);
+	test_hdl = nvme_open(ctx, "NVME_TEST_FD");
+
 	RUN_TEST(zns_append);
 	RUN_TEST(zns_report_zones);
 	RUN_TEST(zns_mgmt_send);
 	RUN_TEST(zns_mgmt_recv);
+
+	nvme_free_global_ctx(ctx);
 }

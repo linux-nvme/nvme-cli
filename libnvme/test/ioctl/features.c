@@ -22,6 +22,8 @@
 #define TEST_SEL NVME_GET_FEATURES_SEL_SAVED
 #define TEST_SC NVME_SC_INVALID_FIELD
 
+static struct nvme_transport_handle *test_hdl;
+
 static void test_set_features(void)
 {
 	uint32_t result = 0;
@@ -30,7 +32,6 @@ static void test_set_features(void)
 		.result = &result,
 		.data = data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.timeout = TEST_TIMEOUT,
 		.nsid = TEST_NSID,
 		.cdw11 = TEST_CDW11,
@@ -61,7 +62,7 @@ static void test_set_features(void)
 
 	arbitrary(data, sizeof(data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features(&args);
+	err = nvme_set_features(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -76,7 +77,6 @@ static void test_get_features(void)
 		.result = &result,
 		.data = get_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.timeout = TEST_TIMEOUT,
 		.nsid = TEST_NSID,
 		.sel = TEST_SEL,
@@ -100,7 +100,7 @@ static void test_get_features(void)
 
 	arbitrary(data, sizeof(data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features(&args);
+	err = nvme_get_features(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -126,7 +126,7 @@ static void test_set_features_data(void)
 	arbitrary(data, sizeof(data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_data(
-		TEST_FD, TEST_FID, TEST_NSID, TEST_CDW11, false,
+		test_hdl, TEST_FID, TEST_NSID, TEST_CDW11, false,
 		sizeof(data), data, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
@@ -151,7 +151,7 @@ static void test_get_features_data(void)
 	arbitrary(data, sizeof(data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_data(
-		TEST_FD, TEST_FID, TEST_NSID, sizeof(data), get_data, &result);
+		test_hdl, TEST_FID, TEST_NSID, sizeof(data), get_data, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -174,7 +174,7 @@ static void test_set_features_simple(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_simple(
-		TEST_FD, TEST_FID, TEST_NSID, TEST_CDW11, true, &result);
+		test_hdl, TEST_FID, TEST_NSID, TEST_CDW11, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -193,7 +193,7 @@ static void test_get_features_simple(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_simple(TEST_FD, TEST_FID, TEST_NSID, &result);
+	err = nvme_get_features_simple(test_hdl, TEST_FID, TEST_NSID, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -214,7 +214,7 @@ static void test_set_arbitration(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_arbitration(
-		TEST_FD, AB, LPW, MPW, HPW, false, &result);
+		test_hdl, AB, LPW, MPW, HPW, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -232,7 +232,7 @@ static void test_get_arbitration(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_arbitration(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_arbitration(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -253,7 +253,7 @@ static void test_set_power_mgmt(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_power_mgmt(TEST_FD, PS, WH, true, &result);
+	err = nvme_set_features_power_mgmt(test_hdl, PS, WH, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -271,7 +271,7 @@ static void test_get_power_mgmt(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_power_mgmt(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_power_mgmt(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -297,7 +297,7 @@ static void test_set_lba_range(void)
 	arbitrary(&range_types, sizeof(range_types));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_lba_range(
-		TEST_FD, TEST_NSID, NUM, false, &range_types, &result);
+		test_hdl, TEST_NSID, NUM, false, &range_types, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -321,7 +321,7 @@ static void test_get_lba_range(void)
 	arbitrary(&range_types, sizeof(range_types));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_lba_range(
-		TEST_FD, TEST_SEL, TEST_NSID, &get_range_types, &result);
+		test_hdl, TEST_SEL, TEST_NSID, &get_range_types, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -348,7 +348,7 @@ static void test_set_temp_thresh(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_temp_thresh(
-		TEST_FD, TMPTH, TMPSEL, THSEL, 0, true, &result);
+		test_hdl, TMPTH, TMPSEL, THSEL, 0, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -371,7 +371,7 @@ static void test_get_temp_thresh(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_temp_thresh(TEST_FD, TEST_SEL, 0, 0, &result);
+	err = nvme_get_features_temp_thresh(test_hdl, TEST_SEL, 0, 0, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -394,7 +394,7 @@ static void test_set_err_recovery(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_err_recovery(
-		TEST_FD, TEST_NSID, TLER, true, false, &result);
+		test_hdl, TEST_NSID, TLER, true, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -414,7 +414,7 @@ static void test_get_err_recovery(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_err_recovery(
-		TEST_FD, TEST_SEL, TEST_NSID, &result);
+		test_hdl, TEST_SEL, TEST_NSID, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -434,7 +434,7 @@ static void test_set_volatile_wc(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_volatile_wc(TEST_FD, true, true, &result);
+	err = nvme_set_features_volatile_wc(test_hdl, true, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -453,7 +453,7 @@ static void test_get_volatile_wc(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_volatile_wc(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_volatile_wc(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -471,7 +471,7 @@ static void test_get_num_queues(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_num_queues(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_num_queues(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -492,7 +492,7 @@ static void test_set_irq_coalesce(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_irq_coalesce(
-		TEST_FD, THR, TIME, false, &result);
+		test_hdl, THR, TIME, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -510,7 +510,7 @@ static void test_get_irq_coalesce(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_irq_coalesce(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_irq_coalesce(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -532,7 +532,7 @@ static void test_set_irq_config(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_irq_config(TEST_FD, IV, true, true, &result);
+	err = nvme_set_features_irq_config(test_hdl, IV, true, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -552,7 +552,7 @@ static void test_get_irq_config(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_irq_config(TEST_FD, TEST_SEL, IV, &result);
+	err = nvme_get_features_irq_config(test_hdl, TEST_SEL, IV, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -571,7 +571,7 @@ static void test_set_write_atomic(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_write_atomic(TEST_FD, true, false, &result);
+	err = nvme_set_features_write_atomic(test_hdl, true, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -589,7 +589,7 @@ static void test_get_write_atomic(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_write_atomic(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_write_atomic(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -610,7 +610,7 @@ static void test_set_async_event(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_async_event(TEST_FD, EVENTS, true, &result);
+	err = nvme_set_features_async_event(test_hdl, EVENTS, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -628,7 +628,7 @@ static void test_get_async_event(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_async_event(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_async_event(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -651,7 +651,7 @@ static void test_set_auto_pst(void)
 
 	arbitrary(&apst, sizeof(apst));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_auto_pst(TEST_FD, true, false, &apst, &result);
+	err = nvme_set_features_auto_pst(test_hdl, true, false, &apst, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -673,7 +673,7 @@ static void test_get_auto_pst(void)
 
 	arbitrary(&apst, sizeof(apst));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_auto_pst(TEST_FD, TEST_SEL, &get_apst, &result);
+	err = nvme_get_features_auto_pst(test_hdl, TEST_SEL, &get_apst, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -697,7 +697,7 @@ static void test_get_host_mem_buf(void)
 	arbitrary(&attrs, sizeof(attrs));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_host_mem_buf(
-		TEST_FD, TEST_SEL, &get_attrs, &result);
+		test_hdl, TEST_SEL, &get_attrs, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -724,7 +724,7 @@ static void test_set_timestamp(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_timestamp(TEST_FD, true, timestamp);
+	err = nvme_set_features_timestamp(test_hdl, true, timestamp);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 }
@@ -742,7 +742,7 @@ static void test_get_timestamp(void)
 
 	arbitrary(&ts, sizeof(ts));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_timestamp(TEST_FD, TEST_SEL, &get_ts);
+	err = nvme_get_features_timestamp(test_hdl, TEST_SEL, &get_ts);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	cmp(&get_ts, &ts, sizeof(ts), "incorrect timestamp");
@@ -759,7 +759,7 @@ static void test_get_kato(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_kato(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_kato(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -779,7 +779,7 @@ static void test_set_hctm(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_hctm(TEST_FD, TMT2, TMT1, false, &result);
+	err = nvme_set_features_hctm(test_hdl, TMT2, TMT1, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -797,7 +797,7 @@ static void test_get_hctm(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_hctm(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_hctm(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -817,7 +817,7 @@ static void test_set_nopsc(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_nopsc(TEST_FD, true, true, &result);
+	err = nvme_set_features_nopsc(test_hdl, true, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -835,7 +835,7 @@ static void test_get_nopsc(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_nopsc(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_nopsc(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -857,7 +857,7 @@ static void test_set_rrl(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_rrl(TEST_FD, RRL, NVMSETID, false, &result);
+	err = nvme_set_features_rrl(test_hdl, RRL, NVMSETID, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -876,7 +876,7 @@ static void test_get_rrl(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_rrl(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_rrl(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -903,7 +903,7 @@ static void test_set_plm_config(void)
 	arbitrary(&config, sizeof(config));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_plm_config(
-		TEST_FD, true, NVMSETID, true, &config, &result);
+		test_hdl, true, NVMSETID, true, &config, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -928,7 +928,7 @@ static void test_get_plm_config(void)
 	arbitrary(&config, sizeof(config));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_plm_config(
-		TEST_FD, TEST_SEL, NVMSETID, &get_config, &result);
+		test_hdl, TEST_SEL, NVMSETID, &get_config, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -952,7 +952,7 @@ static void test_set_plm_window(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_plm_window(
-		TEST_FD, SEL, NVMSETID, false, &result);
+		test_hdl, SEL, NVMSETID, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -973,7 +973,7 @@ static void test_get_plm_window(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_plm_window(
-		TEST_FD, TEST_SEL, NVMSETID, &result);
+		test_hdl, TEST_SEL, NVMSETID, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -995,7 +995,7 @@ static void test_set_lba_sts_interval(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_lba_sts_interval(
-		TEST_FD, LSIRI, LSIPI, true, &result);
+		test_hdl, LSIRI, LSIPI, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1013,7 +1013,7 @@ static void test_get_lba_sts_interval(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_lba_sts_interval(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_lba_sts_interval(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1034,7 +1034,7 @@ static void test_set_host_behavior(void)
 
 	arbitrary(&behavior, sizeof(behavior));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_host_behavior(TEST_FD, true, &behavior);
+	err = nvme_set_features_host_behavior(test_hdl, true, &behavior);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 }
@@ -1055,7 +1055,7 @@ static void test_get_host_behavior(void)
 	arbitrary(&behavior, sizeof(behavior));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_host_behavior(
-		TEST_FD, TEST_SEL, &get_behavior, &result);
+		test_hdl, TEST_SEL, &get_behavior, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1075,7 +1075,7 @@ static void test_set_sanitize(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_sanitize(TEST_FD, true, false, &result);
+	err = nvme_set_features_sanitize(test_hdl, true, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1093,7 +1093,7 @@ static void test_get_sanitize(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_sanitize(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_sanitize(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1116,7 +1116,7 @@ static void test_set_endurance_evt_cfg(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_endurance_evt_cfg(
-		TEST_FD, ENDGID, EGWARN, true, &result);
+		test_hdl, ENDGID, EGWARN, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1137,7 +1137,7 @@ static void test_get_endurance_event_cfg(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_endurance_event_cfg(
-		TEST_FD, TEST_SEL, ENDGID, &result);
+		test_hdl, TEST_SEL, ENDGID, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1155,7 +1155,7 @@ static void test_set_iocs_profile(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_iocs_profile(TEST_FD, IOCSI, false);
+	err = nvme_set_features_iocs_profile(test_hdl, IOCSI, false);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 }
@@ -1171,7 +1171,7 @@ static void test_get_iocs_profile(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_iocs_profile(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_iocs_profile(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1192,7 +1192,7 @@ static void test_set_sw_progress(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_sw_progress(TEST_FD, PBSLC, true, &result);
+	err = nvme_set_features_sw_progress(test_hdl, PBSLC, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1210,7 +1210,7 @@ static void test_get_sw_progress(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_sw_progress(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_sw_progress(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1232,7 +1232,7 @@ static void test_set_host_id(void)
 
 	arbitrary(hostid, sizeof(hostid));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_host_id(TEST_FD, false, true, hostid);
+	err = nvme_set_features_host_id(test_hdl, false, true, hostid);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 }
@@ -1252,7 +1252,7 @@ static void test_set_host_id_extended(void)
 
 	arbitrary(hostid, sizeof(hostid));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_host_id(TEST_FD, true, false, hostid);
+	err = nvme_set_features_host_id(test_hdl, true, false, hostid);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 }
@@ -1272,7 +1272,7 @@ static void test_get_host_id(void)
 	arbitrary(hostid, sizeof(hostid));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_host_id(
-		TEST_FD, TEST_SEL, false, sizeof(hostid), get_hostid);
+		test_hdl, TEST_SEL, false, sizeof(hostid), get_hostid);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	cmp(get_hostid, hostid, sizeof(hostid), "incorrect host identifier");
@@ -1294,7 +1294,7 @@ static void test_get_host_id_extended(void)
 	arbitrary(hostid, sizeof(hostid));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_host_id(
-		TEST_FD, TEST_SEL, true, sizeof(hostid), get_hostid);
+		test_hdl, TEST_SEL, true, sizeof(hostid), get_hostid);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	cmp(get_hostid, hostid, sizeof(hostid), "incorrect host identifier");
@@ -1316,7 +1316,7 @@ static void test_set_resv_mask(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_resv_mask(
-		TEST_FD, TEST_NSID, MASK, true, &result);
+		test_hdl, TEST_NSID, MASK, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1336,7 +1336,7 @@ static void test_get_resv_mask(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_resv_mask(
-		TEST_FD, TEST_SEL, TEST_NSID, &result);
+		test_hdl, TEST_SEL, TEST_NSID, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1357,7 +1357,7 @@ static void test_set_resv_persist(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_resv_persist(
-		TEST_FD, TEST_NSID, true, false, &result);
+		test_hdl, TEST_NSID, true, false, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1377,7 +1377,7 @@ static void test_get_resv_persist(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_resv_persist(
-		TEST_FD, TEST_SEL, TEST_NSID, &result);
+		test_hdl, TEST_SEL, TEST_NSID, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1401,7 +1401,7 @@ static void test_set_write_protect(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_write_protect(
-		TEST_FD, TEST_NSID, STATE, true, &result);
+		test_hdl, TEST_NSID, STATE, true, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1421,7 +1421,7 @@ static void test_get_write_protect(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_features_write_protect(
-		TEST_FD, TEST_NSID, TEST_SEL, &result);
+		test_hdl, TEST_NSID, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,
@@ -1447,7 +1447,7 @@ static void test_set_status_code_error(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_features_async_event(TEST_FD, EVENTS, false, &result);
+	err = nvme_set_features_async_event(test_hdl, EVENTS, false, &result);
 	end_mock_cmds();
 	check(err == TEST_SC, "got error %d, expected %d", err, TEST_SC);
 	check(result == TEST_RESULT,
@@ -1470,7 +1470,7 @@ static void test_set_kernel_error(void)
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_features_resv_mask(
-		TEST_FD, TEST_NSID, MASK, false, &result);
+		test_hdl, TEST_NSID, MASK, false, &result);
 	end_mock_cmds();
 	check(err == -1, "got error %d, expected -1", err);
 	check(errno == EIO, "unexpected error %m");
@@ -1494,7 +1494,7 @@ static void test_get_status_code_error(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_kato(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_kato(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == TEST_SC, "got error %d, expected %d", err, TEST_SC);
 	check(result == TEST_RESULT,
@@ -1513,7 +1513,7 @@ static void test_get_kernel_error(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_features_num_queues(TEST_FD, TEST_SEL, &result);
+	err = nvme_get_features_num_queues(test_hdl, TEST_SEL, &result);
 	end_mock_cmds();
 	check(err == -1, "got error %d, expected -1", err);
 	check(errno == EBUSY, "unexpected error %m");
@@ -1537,7 +1537,7 @@ static void test_lm_set_features_ctrl_data_queue(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_set_features_ctrl_data_queue(TEST_FD, TEST_CDQID, hp, tpt,
+	err = nvme_lm_set_features_ctrl_data_queue(test_hdl, TEST_CDQID, hp, tpt,
 						   etpt, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
@@ -1562,7 +1562,7 @@ static void test_lm_get_features_ctrl_data_queue(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_get_features_ctrl_data_queue(TEST_FD, TEST_CDQID, &data,
+	err = nvme_lm_get_features_ctrl_data_queue(test_hdl, TEST_CDQID, &data,
 						   &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
@@ -1583,7 +1583,12 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
+	struct nvme_global_ctx *ctx =
+		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+
 	set_mock_fd(TEST_FD);
+	test_hdl = nvme_open(ctx, "NVME_TEST_FD");
+
 	RUN_TEST(set_features);
 	RUN_TEST(get_features);
 	RUN_TEST(set_features_data);
@@ -1655,4 +1660,6 @@ int main(void)
 	RUN_TEST(get_kernel_error);
 	RUN_TEST(lm_set_features_ctrl_data_queue);
 	RUN_TEST(lm_get_features_ctrl_data_queue);
+
+	nvme_free_global_ctx(ctx);
 }

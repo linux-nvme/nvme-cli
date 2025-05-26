@@ -23,6 +23,20 @@ const char *nvme_slots_sysfs_dir(void);
 const char *nvme_uuid_ibm_filename(void);
 const char *nvme_dmi_entries_dir(void);
 
+struct nvme_log {
+	int fd;
+	int level;
+	bool pid;
+	bool timestamp;
+};
+
+struct nvme_transport_handle {
+	struct nvme_global_ctx *ctx;
+	int fd;
+
+	struct nvme_log *log;
+};
+
 struct nvme_path {
 	struct list_node entry;
 	struct list_node nentry;
@@ -52,7 +66,7 @@ struct nvme_ns {
 	struct nvme_ctrl *c;
 	struct nvme_ns_head *head;
 
-	int fd;
+	struct nvme_transport_handle *hdl;
 	__u32 nsid;
 	char *name;
 	char *generic_name;
@@ -76,7 +90,7 @@ struct nvme_ctrl {
 	struct list_head namespaces;
 	struct nvme_subsystem *s;
 
-	int fd;
+	struct nvme_transport_handle *hdl;
 	char *name;
 	char *sysfs_dir;
 	char *address;
@@ -171,13 +185,6 @@ struct nvme_fabric_options {
 	bool trsvcid;
 };
 
-struct nvme_log {
-	int fd;
-	int level;
-	bool pid;
-	bool timestamp;
-};
-
 struct nvme_global_ctx {
 	char *config_file;
 	char *application;
@@ -197,6 +204,8 @@ int json_read_config(struct nvme_global_ctx *ctx, const char *config_file);
 int json_update_config(struct nvme_global_ctx *ctx, const char *config_file);
 
 int json_dump_tree(struct nvme_global_ctx *ctx);
+
+struct nvme_transport_handle *__nvme_open(struct nvme_global_ctx *ctx, const char *name);
 
 nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			       const char *traddr, const char *host_traddr,

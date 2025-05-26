@@ -10,6 +10,7 @@
 #define _LIBNVME_LINUX_H
 
 #include <stddef.h>
+#include <stdio.h>
 
 #include <nvme/ioctl.h>
 #include <nvme/types.h>
@@ -22,7 +23,7 @@
 
 /**
  * nvme_fw_download_seq() - Firmware download sequence
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @size:	Total size of the firmware image to transfer
  * @xfer:	Maximum size to send with each partial transfer
  * @offset:	Starting offset to send with this firmware download
@@ -31,56 +32,56 @@
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
+int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf);
 
 /**
  * nvme_set_etdas() - Set the Extended Telemetry Data Area 4 Supported bit
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @changed:	boolean to indicate whether or not the host
  *		behavior support feature had been changed
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_set_etdas(int fd, bool *changed);
+int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed);
 
 /**
  * nvme_clear_etdas() - Clear the Extended Telemetry Data Area 4 Supported bit
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @changed:	boolean to indicate whether or not the host
  *		behavior support feature had been changed
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_clear_etdas(int fd, bool *changed);
+int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed);
 
 /**
  * nvme_get_uuid_list - Returns the uuid list (if supported)
- * @fd:	 File descriptor of nvme device
+ * @hdl:	Transport handle
  * @uuid_list:	UUID list returned by identify UUID
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_uuid_list(int fd,
+int nvme_get_uuid_list(struct nvme_transport_handle *hdl,
 		struct nvme_id_uuid_list *uuid_list);
 
 /**
  * nvme_get_telemetry_max() - Get telemetry limits
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @da:		On success return max supported data area
  * @max_data_tx: On success set to max transfer chunk supported by the controller
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_telemetry_max(int fd, enum nvme_telemetry_da *da, size_t *max_data_tx);
+int nvme_get_telemetry_max(struct nvme_transport_handle *hdl, enum nvme_telemetry_da *da, size_t *max_data_tx);
 
 /**
  * nvme_get_telemetry_log() - Get specified telemetry log
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @create:	Generate new host initated telemetry capture
  * @ctrl:	Get controller Initiated log
  * @rae:	Retain asynchronous events
@@ -95,12 +96,12 @@ int nvme_get_telemetry_max(int fd, enum nvme_telemetry_da *da, size_t *max_data_
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, size_t max_data_tx,
+int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create, bool ctrl, bool rae, size_t max_data_tx,
 			   enum nvme_telemetry_da da, struct nvme_telemetry_log **log,
 			   size_t *size);
 /**
  * nvme_get_ctrl_telemetry() - Get controller telemetry log
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @rae:	Retain asynchronous events
  * @log:	On success, set to the value of the allocated and retrieved log.
  * @da:		Log page data area, valid values: &enum nvme_telemetry_da
@@ -112,12 +113,12 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, size_t max_
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log,
+int nvme_get_ctrl_telemetry(struct nvme_transport_handle *hdl, bool rae, struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
 
 /**
  * nvme_get_host_telemetry() - Get host telemetry log
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @log:	On success, set to the value of the allocated and retrieved log.
  * @da:		Log page data area, valid values: &enum nvme_telemetry_da
  * @size:	Ptr to the telemetry log size, so it can be returned
@@ -128,12 +129,12 @@ int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log,
+int nvme_get_host_telemetry(struct nvme_transport_handle *hdl,  struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
 
 /**
  * nvme_get_new_host_telemetry() - Get new host telemetry log
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @log:	On success, set to the value of the allocated and retrieved log.
  * @da:		Log page data area, valid values: &enum nvme_telemetry_da
  * @size:	Ptr to the telemetry log size, so it can be returned
@@ -144,7 +145,7 @@ int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log,
+int nvme_get_new_host_telemetry(struct nvme_transport_handle *hdl,  struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
 
 /**
@@ -159,39 +160,39 @@ size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
 
 /**
  * nvme_get_ana_log_len() - Retrieve size of the current ANA log
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @analen:	Pointer to where the length will be set on success
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_ana_log_len(int fd, size_t *analen);
+int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen);
 
 /**
  * nvme_get_logical_block_size() - Retrieve block size
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @nsid:	Namespace id
  * @blksize:	Pointer to where the block size will be set on success
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize);
+int nvme_get_logical_block_size(struct nvme_transport_handle *hdl, __u32 nsid, int *blksize);
 
 /**
  * nvme_get_lba_status_log() - Retrieve the LBA Status log page
- * @fd:		File descriptor of the nvme device
+ * @hdl:	Transport handle
  * @rae:	Retain asynchronous events
  * @log:	On success, set to the value of the allocated and retrieved log.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log);
+int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct nvme_lba_status_log **log);
 
 /**
  * nvme_namespace_attach_ctrls() - Attach namespace to controller(s)
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @nsid:	Namespace ID to attach
  * @num_ctrls:	Number of controllers in ctrlist
  * @ctrlist:	List of controller IDs to perform the attach action
@@ -199,11 +200,11 @@ int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
+int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
 /**
  * nvme_namespace_detach_ctrls() - Detach namespace from controller(s)
- * @fd:		File descriptor of nvme device
+ * @hdl:	Transport handle
  * @nsid:	Namespace ID to detach
  * @num_ctrls:	Number of controllers in ctrlist
  * @ctrlist:	List of controller IDs to perform the detach action
@@ -211,19 +212,26 @@ int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrl
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
+int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
 /**
  * nvme_open() - Open an nvme controller or namespace device
+ * @ctx:	struct nvme_global_ctx object
  * @name:	The basename of the device to open
  *
  * This will look for the handle in /dev/ and validate the name and filetype
  * match linux conventions.
  *
- * Return: A file descriptor for the device on a successful open, or -1 with
+ * Return: A transport handle for the device on a successful open, or -1 with
  * errno set otherwise.
  */
-int nvme_open(const char *name);
+struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char *name);
+
+/**
+ * nvme_close() - Close transport handle
+ * @hdl:	Transport handle
+ */
+void nvme_close(struct nvme_transport_handle *hdl);
 
 /**
  * enum nvme_hmac_alg - HMAC algorithm
@@ -560,7 +568,7 @@ unsigned char *nvme_import_tls_key_versioned(const char *encoded_key,
 					     size_t *key_len);
 /**
  * nvme_submit_passthru - Low level ioctl wrapper for passthru commands
- * @fd:		File descriptor of the nvme device
+ * @hdl:	Transport handle
  * @ioctl_cmd:	IOCTL command id
  * @cmd:	Passhtru command
  * @result:	Optional field to return the result
@@ -572,12 +580,12 @@ unsigned char *nvme_import_tls_key_versioned(const char *encoded_key,
  * Return: The value from the ioctl system call (see ioctl documentation)
  */
 __attribute__((weak))
-int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
+int nvme_submit_passthru(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
 			 struct nvme_passthru_cmd *cmd, __u32 *result);
 
 /**
  * nvme_submit_passthru64 - Low level ioctl wrapper for passthru commands
- * @fd:		File descriptor of the nvme device
+ * @hdl:	Transport handle
  * @ioctl_cmd:	IOCTL command id
  * @cmd:	Passhtru command
  * @result:	Optional field to return the result
@@ -589,7 +597,7 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
  * Return: The value from the ioctl system call (see ioctl documentation)
  */
 __attribute__((weak))
-int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
+int nvme_submit_passthru64(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
 			   struct nvme_passthru_cmd64 *cmd,
 			   __u64 *result);
 

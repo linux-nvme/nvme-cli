@@ -16,6 +16,7 @@ LIBNVME_2_0 {
 		nvme_admin_passthru64;
 		nvme_admin_passthru;
 		nvme_capacity_mgmt;
+		nvme_close;
 		nvme_copy;
 		nvme_create_ctrl;
 		nvme_create_global_ctx;
@@ -28,7 +29,6 @@ LIBNVME_2_0 {
 		nvme_ctrl_get_config;
 		nvme_ctrl_get_dhchap_host_key;
 		nvme_ctrl_get_dhchap_key;
-		nvme_ctrl_get_fd;
 		nvme_ctrl_get_firmware;
 		nvme_ctrl_get_host_iface;
 		nvme_ctrl_get_host_traddr;
@@ -49,6 +49,7 @@ LIBNVME_2_0 {
 		nvme_ctrl_get_tls_key_identity;
 		nvme_ctrl_get_traddr;
 		nvme_ctrl_get_transport;
+		nvme_ctrl_get_transport_handle;
 		nvme_ctrl_get_trsvcid;
 		nvme_ctrl_identify;
 		nvme_ctrl_is_discovery_ctrl;
@@ -56,7 +57,7 @@ LIBNVME_2_0 {
 		nvme_ctrl_is_unique_discovery_ctrl;
 		nvme_ctrl_next_ns;
 		nvme_ctrl_next_path;
-		nvme_ctrl_release_fd;
+		nvme_ctrl_release_transport_handle;
 		nvme_ctrl_reset;
 		nvme_ctrl_set_dhchap_host_key;
 		nvme_ctrl_set_dhchap_key;
@@ -264,7 +265,6 @@ LIBNVME_2_0 {
 		nvme_ns_get_csi;
 		nvme_ns_get_ctrl;
 		nvme_ns_get_eui64;
-		nvme_ns_get_fd;
 		nvme_ns_get_firmware;
 		nvme_ns_get_generic_name;
 		nvme_ns_get_lba_count;
@@ -278,11 +278,12 @@ LIBNVME_2_0 {
 		nvme_ns_get_serial;
 		nvme_ns_get_subsystem;
 		nvme_ns_get_sysfs_dir;
+		nvme_ns_get_transport_handle;
 		nvme_ns_get_uuid;
 		nvme_ns_identify;
 		nvme_ns_mgmt;
 		nvme_ns_read;
-		nvme_ns_release_fd;
+		nvme_ns_release_transport_handle;
 		nvme_ns_rescan;
 		nvme_ns_verify;
 		nvme_ns_write;

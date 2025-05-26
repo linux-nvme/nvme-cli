@@ -13,13 +13,14 @@
 #define TEST_NSID 0x12345678
 #define TEST_CSI NVME_CSI_KV
 
+static struct nvme_transport_handle *test_hdl;
+
 static void test_format_nvm(void)
 {
 	__u32 result = 0;
 	struct nvme_format_nvm_args args = {
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.mset = NVME_FORMAT_MSET_EXTENDED,
 		.pi = NVME_FORMAT_PI_TYPE2,
@@ -40,7 +41,7 @@ static void test_format_nvm(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_format_nvm(&args);
+	err = nvme_format_nvm(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -54,7 +55,6 @@ static void test_ns_mgmt(void)
 		.result = &result,
 		.ns = NULL,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.sel = NVME_NS_MGMT_SEL_CREATE,
 		.csi = TEST_CSI,
@@ -75,7 +75,7 @@ static void test_ns_mgmt(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_mgmt(&args);
+	err = nvme_ns_mgmt(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -100,7 +100,7 @@ static void test_ns_mgmt_create(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_mgmt_create(TEST_FD, NULL, &result, 0, NVME_CSI_ZNS,
+	err = nvme_ns_mgmt_create(test_hdl, NULL, &result, 0, NVME_CSI_ZNS,
 				  &data);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
@@ -119,7 +119,7 @@ static void test_ns_mgmt_delete(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_mgmt_delete(TEST_FD, TEST_NSID);
+	err = nvme_ns_mgmt_delete(test_hdl, TEST_NSID);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 }
@@ -130,7 +130,6 @@ static void test_get_property(void)
 	struct nvme_get_property_args args = {
 		.value = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.offset = NVME_REG_ACQ,
 	};
 
@@ -147,7 +146,7 @@ static void test_get_property(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_property(&args);
+	err = nvme_get_property(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == expected_result, "returned wrong result");
@@ -161,7 +160,6 @@ static void test_set_property(void)
 		.value = value,
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.offset = NVME_REG_BPMBL,
 	};
 
@@ -177,7 +175,7 @@ static void test_set_property(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_property(&args);
+	err = nvme_set_property(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -191,7 +189,6 @@ static void test_ns_attach(void)
 		.result = &result,
 		.ctrlist = &ctrlist,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
 	};
@@ -208,7 +205,7 @@ static void test_ns_attach(void)
 
 	arbitrary(&expected_ctrlist, sizeof(expected_ctrlist));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_attach(&args);
+	err = nvme_ns_attach(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -232,7 +229,7 @@ static void test_ns_attach_ctrls(void)
 
 	arbitrary(&ctrlist, sizeof(ctrlist));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_attach_ctrls(TEST_FD, TEST_NSID, &ctrlist);
+	err = nvme_ns_attach_ctrls(test_hdl, TEST_NSID, &ctrlist);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 }
@@ -253,7 +250,7 @@ static void test_ns_detach_ctrls(void)
 
 	arbitrary(&ctrlist, sizeof(ctrlist));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_detach_ctrls(TEST_FD, TEST_NSID, &ctrlist);
+	err = nvme_ns_detach_ctrls(test_hdl, TEST_NSID, &ctrlist);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 }
@@ -267,7 +264,6 @@ static void test_fw_download(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.offset = 123,
 		.data_len = sizeof(expected_data),
 	};
@@ -285,7 +281,7 @@ static void test_fw_download(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_fw_download(&args);
+	err = nvme_fw_download(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -298,7 +294,6 @@ static void test_fw_commit(void)
 	struct nvme_fw_commit_args args = {
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.action = NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE,
 		.slot = 0xf,
 		.bpid = true,
@@ -312,7 +307,7 @@ static void test_fw_commit(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_fw_commit(&args);
+	err = nvme_fw_commit(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -352,7 +347,7 @@ static void test_security_send(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_security_send(&args);
+	err = nvme_security_send(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -368,7 +363,6 @@ static void test_security_receive(void)
 		.result = &result,
 		.data = &data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.al = 0xffff,
 		.data_len = sizeof(data),
@@ -392,7 +386,7 @@ static void test_security_receive(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_security_receive(&args);
+	err = nvme_security_receive(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -419,7 +413,6 @@ static void test_get_lba_status(void)
 		.result = &result,
 		.lbas = lbas,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.mndw = ((lba_status_size - 1) >> 2),
 		.atype = 0x11,
@@ -441,7 +434,7 @@ static void test_get_lba_status(void)
 
 	arbitrary(expected_lbas, lba_status_size);
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_lba_status(&args);
+	err = nvme_get_lba_status(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned wrong result");
@@ -457,7 +450,6 @@ static void test_directive_send(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
@@ -481,7 +473,7 @@ static void test_directive_send(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_send(&args);
+	err = nvme_directive_send(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned wrong result");
@@ -508,7 +500,7 @@ static void test_directive_send_id_endir(void)
 	arbitrary(&expected_id, sizeof(expected_id));
 	memcpy(&id, &expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_send_id_endir(TEST_FD, TEST_NSID, true,
+	err = nvme_directive_send_id_endir(test_hdl, TEST_NSID, true,
 					   NVME_DIRECTIVE_DTYPE_STREAMS, &id);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
@@ -529,7 +521,7 @@ static void test_directive_send_stream_release_identifier(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_send_stream_release_identifier(TEST_FD, TEST_NSID,
+	err = nvme_directive_send_stream_release_identifier(test_hdl, TEST_NSID,
 							    stream_id);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
@@ -547,7 +539,7 @@ static void test_directive_send_stream_release_resource(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_send_stream_release_resource(TEST_FD, TEST_NSID);
+	err = nvme_directive_send_stream_release_resource(test_hdl, TEST_NSID);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 }
@@ -561,7 +553,6 @@ static void test_directive_recv(void)
 		.result = &result,
 		.data = &data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
@@ -584,7 +575,7 @@ static void test_directive_recv(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv(&args);
+	err = nvme_directive_recv(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned wrong result");
@@ -609,7 +600,7 @@ static void test_directive_recv_identify_parameters(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv_identify_parameters(TEST_FD, TEST_NSID, &id);
+	err = nvme_directive_recv_identify_parameters(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect id");
@@ -633,7 +624,7 @@ static void test_directive_recv_stream_parameters(void)
 
 	arbitrary(&expected_params, sizeof(expected_params));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv_stream_parameters(TEST_FD, TEST_NSID,
+	err = nvme_directive_recv_stream_parameters(test_hdl, TEST_NSID,
 						    &params);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
@@ -670,7 +661,7 @@ static void test_directive_recv_stream_status(void)
 
 	arbitrary(expected_status, stream_status_size);
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv_stream_status(TEST_FD, TEST_NSID, nr_entries,
+	err = nvme_directive_recv_stream_status(test_hdl, TEST_NSID, nr_entries,
 						status);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
@@ -694,7 +685,7 @@ static void test_directive_recv_stream_allocate(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv_stream_allocate(TEST_FD, TEST_NSID, nsr,
+	err = nvme_directive_recv_stream_allocate(test_hdl, TEST_NSID, nsr,
 						  &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
@@ -708,7 +699,6 @@ static void test_capacity_mgmt(void)
 	struct nvme_capacity_mgmt_args args = {
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.cdw11 = 0x1234,
 		.cdw12 = 0x5678,
 		.element_id = 0x12,
@@ -727,7 +717,7 @@ static void test_capacity_mgmt(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_capacity_mgmt(&args);
+	err = nvme_capacity_mgmt(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == expected_result, "wrong result");
@@ -740,7 +730,6 @@ static void test_lockdown(void)
 	struct nvme_lockdown_args args = {
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.scp = 0x2,
 		.prhbt = !!true,
 		.ifc = 0x1,
@@ -759,7 +748,7 @@ static void test_lockdown(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lockdown(&args);
+	err = nvme_lockdown(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == expected_result, "wrong result");
@@ -772,7 +761,6 @@ static void test_sanitize_nvm(void)
 	struct nvme_sanitize_nvm_args args = {
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.sanact = NVME_SANITIZE_SANACT_START_CRYPTO_ERASE,
 		.ovrpat = 0x101010,
 		.ause = true,
@@ -793,7 +781,7 @@ static void test_sanitize_nvm(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_sanitize_nvm(&args);
+	err = nvme_sanitize_nvm(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == expected_result, "wrong result");
@@ -806,7 +794,6 @@ static void test_dev_self_test(void)
 	struct nvme_dev_self_test_args args = {
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.stc = NVME_DST_STC_ABORT,
 	};
@@ -821,7 +808,7 @@ static void test_dev_self_test(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_dev_self_test(&args);
+	err = nvme_dev_self_test(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == expected_result, "wrong result");
@@ -834,7 +821,6 @@ static void test_virtual_mgmt(void)
 	struct nvme_virtual_mgmt_args args = {
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.act = NVME_VIRT_MGMT_ACT_ASSIGN_SEC_CTRL,
 		.rt = NVME_VIRT_MGMT_RT_VI_RESOURCE,
 		.cntlid = 0x0,
@@ -851,7 +837,7 @@ static void test_virtual_mgmt(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_virtual_mgmt(&args);
+	err = nvme_virtual_mgmt(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == expected_result, "wrong result");
@@ -867,7 +853,7 @@ static void test_flush(void)
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_flush(TEST_FD, TEST_NSID);
+	err = nvme_flush(test_hdl, TEST_NSID);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 }
@@ -883,7 +869,6 @@ static void test_read(void)
 		.result = &result,
 		.data = &data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.reftag = 0xab,
 		.data_len = sizeof(data),
@@ -911,7 +896,7 @@ static void test_read(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_read(&args);
+	err = nvme_read(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -928,7 +913,6 @@ static void test_write(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.reftag = 0xef,
 		.data_len = sizeof(expected_data),
@@ -957,7 +941,7 @@ static void test_write(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_write(&args);
+	err = nvme_write(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -974,7 +958,6 @@ static void test_compare(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.reftag = 0xff,
 		.data_len = sizeof(expected_data),
@@ -1003,7 +986,7 @@ static void test_compare(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_compare(&args);
+	err = nvme_compare(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1020,7 +1003,6 @@ static void test_write_zeros(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.reftag = 0xff,
 		.data_len = sizeof(expected_data),
@@ -1049,7 +1031,7 @@ static void test_write_zeros(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_write_zeros(&args);
+	err = nvme_write_zeros(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1066,7 +1048,6 @@ static void test_write_uncorrectable(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.reftag = 0x0,
 		.data_len = sizeof(expected_data),
@@ -1095,7 +1076,7 @@ static void test_write_uncorrectable(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_write_uncorrectable(&args);
+	err = nvme_write_uncorrectable(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1112,7 +1093,6 @@ static void test_verify(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.reftag = 0xffffffff,
 		.data_len = sizeof(expected_data),
@@ -1141,7 +1121,7 @@ static void test_verify(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_verify(&args);
+	err = nvme_verify(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1162,7 +1142,6 @@ static void test_dsm(void)
 		.result = &result,
 		.dsm = dsm,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.attrs = NVME_DSMGMT_AD,
 		.nr_ranges = nr_ranges,
@@ -1181,7 +1160,7 @@ static void test_dsm(void)
 
 	arbitrary(dsm, dsm_size);
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_dsm(&args);
+	err = nvme_dsm(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1203,7 +1182,6 @@ static void test_copy(void)
 		.result = &result,
 		.copy = copy,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.nr = nr,
 		.format = 0xf,
@@ -1226,7 +1204,7 @@ static void test_copy(void)
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_copy(&args);
+	err = nvme_copy(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1241,7 +1219,6 @@ static void test_resv_acquire(void)
 		.nrkey = 0,
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.rtype = NVME_RESERVATION_RTYPE_EAAR,
 		.racqa = NVME_RESERVATION_RACQA_PREEMPT,
@@ -1262,7 +1239,7 @@ static void test_resv_acquire(void)
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_resv_acquire(&args);
+	err = nvme_resv_acquire(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1277,7 +1254,6 @@ static void test_resv_register(void)
 		.nrkey = 0,
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.rrega = NVME_RESERVATION_RREGA_UNREGISTER_KEY,
 		.cptpl = NVME_RESERVATION_CPTPL_PERSIST,
@@ -1298,7 +1274,7 @@ static void test_resv_register(void)
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_resv_register(&args);
+	err = nvme_resv_register(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1312,7 +1288,6 @@ static void test_resv_release(void)
 		.crkey = 0xffffffffffffffff,
 		.result = &result,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.rtype = NVME_RESERVATION_RTYPE_WE,
 		.rrela = NVME_RESERVATION_RRELA_RELEASE,
@@ -1333,7 +1308,7 @@ static void test_resv_release(void)
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_resv_release(&args);
+	err = nvme_resv_release(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1349,7 +1324,6 @@ static void test_resv_report(void)
 		.result = &result,
 		.report = &status,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.len = sizeof(status),
 		.eds = false,
@@ -1368,7 +1342,7 @@ static void test_resv_report(void)
 
 	arbitrary(&expected_status, sizeof(expected_status));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_resv_report(&args);
+	err = nvme_resv_report(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1381,7 +1355,6 @@ static void test_io_mgmt_recv(void)
 	struct nvme_io_mgmt_recv_args args = {
 		.data = &data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(data),
 		.mos = 0x1,
@@ -1401,7 +1374,7 @@ static void test_io_mgmt_recv(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_io_mgmt_recv(&args);
+	err = nvme_io_mgmt_recv(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -1413,7 +1386,6 @@ static void test_io_mgmt_send(void)
 	struct nvme_io_mgmt_send_args args = {
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_data),
 		.mos = 0x1,
@@ -1433,7 +1405,7 @@ static void test_io_mgmt_send(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_io_mgmt_send(&args);
+	err = nvme_io_mgmt_send(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -1456,7 +1428,7 @@ static void test_fdp_reclaim_unit_handle_status(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_fdp_reclaim_unit_handle_status(TEST_FD, TEST_NSID, data_len,
+	err = nvme_fdp_reclaim_unit_handle_status(test_hdl, TEST_NSID, data_len,
 						  &data);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
@@ -1479,7 +1451,7 @@ static void test_fdp_reclaim_unit_handle_update(void)
 
 	arbitrary(&pids, sizeof(pids));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_fdp_reclaim_unit_handle_update(TEST_FD, TEST_NSID, npids,
+	err = nvme_fdp_reclaim_unit_handle_update(test_hdl, TEST_NSID, npids,
 						  &pids);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
@@ -1493,7 +1465,6 @@ static void test_dim_send(void)
 		.result = 0,
 		.data = &data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.data_len = sizeof(data),
 		.tas = 0xf,
 	};
@@ -1510,7 +1481,7 @@ static void test_dim_send(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_dim_send(&args);
+	err = nvme_dim_send(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1525,7 +1496,6 @@ static void test_lm_cdq(void)
 		.result = 0,
 		.data = &data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.mos = 0x1,
 		.cntlid = 0x2,
 		.cdqid = 0x3,
@@ -1547,7 +1517,7 @@ static void test_lm_cdq(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_cdq(&args);
+	err = nvme_lm_cdq(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1560,7 +1530,6 @@ static void test_lm_track_send(void)
 	struct nvme_lm_track_send_args args = {
 		.result = 0,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.mos = 0x1,
 		.cdqid = 0x3,
 		.sel = NVME_LM_SEL_DELETE_CDQ,
@@ -1575,7 +1544,7 @@ static void test_lm_track_send(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_track_send(&args);
+	err = nvme_lm_track_send(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1590,7 +1559,6 @@ static void test_lm_migration_send(void)
 		.result = 0,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.numd = 8 - 1,
 		.mos = 0x1,
 		.cntlid = 0x2,
@@ -1620,7 +1588,7 @@ static void test_lm_migration_send(void)
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_migration_send(&args);
+	err = nvme_lm_migration_send(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1636,7 +1604,6 @@ static void test_lm_migration_recv(void)
 		.result = 0,
 		.data = &data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.numd = 8 - 1,
 		.mos = 0x1,
 		.cntlid = 0x2,
@@ -1663,7 +1630,7 @@ static void test_lm_migration_recv(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_migration_recv(&args);
+	err = nvme_lm_migration_recv(test_hdl, &args);
 	end_mock_cmds();
 	check(err == 0, "returned error %d, errno %m", err);
 	check(result == 0, "returned result %u", result);
@@ -1682,7 +1649,12 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
+	struct nvme_global_ctx * ctx =
+		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+
 	set_mock_fd(TEST_FD);
+	test_hdl = nvme_open(ctx, "NVME_TEST_FD");
+
 	RUN_TEST(format_nvm);
 	RUN_TEST(ns_mgmt);
 	RUN_TEST(ns_mgmt_create);
@@ -1733,4 +1705,6 @@ int main(void)
 	RUN_TEST(lm_track_send);
 	RUN_TEST(lm_migration_send);
 	RUN_TEST(lm_migration_recv);
+
+	nvme_free_global_ctx(ctx);
 }

@@ -11,6 +11,7 @@
  * is observed with controller telemetry data, read the log and save it to a
  * file in /var/log/ with the device's unique name and epoch timestamp.
  */
+#include "nvme/tree.h"
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -45,7 +46,8 @@ static void save_telemetry(nvme_ctrl_t c)
 	time_t s;
 
 	/* Clear the log (rae == false) at the end to see new telemetry events later */
-	ret = nvme_get_ctrl_telemetry(nvme_ctrl_get_fd(c), false, &log, NVME_TELEMETRY_DA_3, &log_size);
+	ret = nvme_get_ctrl_telemetry(nvme_ctrl_get_transport_handle(c), false, &log,
+				      NVME_TELEMETRY_DA_3, &log_size);
 	if (ret)
 		return;
 

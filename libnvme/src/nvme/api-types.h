@@ -19,6 +19,7 @@
 #include <nvme/types.h>
 
 struct nvme_global_ctx;
+struct nvme_transport_handle;
 
 /**
  * nvme_create_global_ctx() - Initialize global context object
@@ -278,7 +279,6 @@ struct nvme_fw_download_args {
 /**
  * struct nvme_fw_commit_args - Arguments for the NVMe Firmware Commit command
  * @args_size:	Size of &struct nvme_fw_commit_args
- * @fd:		File descriptor of nvme device
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
@@ -288,7 +288,6 @@ struct nvme_fw_download_args {
 struct nvme_fw_commit_args {
 	__u32 *result;
 	int args_size;
-	int fd;
 	__u32 timeout;
 	enum nvme_fw_commit_ca action;
 	__u8 slot;

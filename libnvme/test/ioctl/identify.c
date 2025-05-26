@@ -19,6 +19,8 @@
 #define TEST_FIDX 0xF
 #define TEST_SC NVME_SC_INVALID_FIELD
 
+static struct nvme_transport_handle *test_hdl;
+
 static void test_ns(void)
 {
 	struct nvme_id_ns expected_id, id = {};
@@ -33,7 +35,7 @@ static void test_ns(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_ns(TEST_FD, TEST_NSID, &id);
+	err = nvme_identify_ns(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -52,7 +54,7 @@ static void test_ctrl(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_ctrl(TEST_FD, &id);
+	err = nvme_identify_ctrl(test_hdl, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -72,7 +74,7 @@ static void test_active_ns_list(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_active_ns_list(TEST_FD, TEST_NSID, &id);
+	err = nvme_identify_active_ns_list(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -95,7 +97,7 @@ static void test_ns_descs(void)
 	id = calloc(1, NVME_IDENTIFY_DATA_SIZE);
 	check(id, "memory allocation failed");
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_ns_descs(TEST_FD, TEST_NSID, id);
+	err = nvme_identify_ns_descs(test_hdl, TEST_NSID, id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(id, expected_id, sizeof(expected_id), "incorrect identify data");
@@ -116,7 +118,7 @@ static void test_nvmset_list(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_nvmset_list(TEST_FD, TEST_NVMSETID, &id);
+	err = nvme_identify_nvmset_list(test_hdl, TEST_NVMSETID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -139,7 +141,7 @@ static void test_ns_csi(void)
 
 	arbitrary(expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_ns_csi(TEST_FD, TEST_NSID, TEST_UUID, TEST_CSI, id);
+	err = nvme_identify_ns_csi(test_hdl, TEST_NSID, TEST_UUID, TEST_CSI, id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(id, expected_id, sizeof(id), "incorrect identify data");
@@ -160,7 +162,7 @@ static void test_zns_identify_ns(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_zns_identify_ns(TEST_FD, TEST_NSID, &id);
+	err = nvme_zns_identify_ns(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -180,7 +182,7 @@ static void test_nvm_identify_ctrl(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_nvm_identify_ctrl(TEST_FD, &id);
+	err = nvme_nvm_identify_ctrl(test_hdl, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -200,7 +202,7 @@ static void test_zns_identify_ctrl(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_zns_identify_ctrl(TEST_FD, &id);
+	err = nvme_zns_identify_ctrl(test_hdl, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -222,7 +224,7 @@ static void test_active_ns_list_csi(void)
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_identify_active_ns_list_csi(
-		TEST_FD, TEST_NSID, TEST_CSI, &id);
+		test_hdl, TEST_NSID, TEST_CSI, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -243,7 +245,7 @@ static void test_independent_identify_ns(void)
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	/* That's a mouthful! */
-	err = nvme_identify_independent_identify_ns(TEST_FD, TEST_NSID, &id);
+	err = nvme_identify_independent_identify_ns(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -263,7 +265,7 @@ static void test_allocated_ns_list(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_allocated_ns_list(TEST_FD, TEST_NSID, &id);
+	err = nvme_identify_allocated_ns_list(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -283,7 +285,7 @@ static void test_allocated_ns(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_allocated_ns(TEST_FD, TEST_NSID, &id);
+	err = nvme_identify_allocated_ns(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -304,7 +306,7 @@ static void test_nsid_ctrl_list(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_nsid_ctrl_list(TEST_FD, TEST_NSID, TEST_CNTID, &id);
+	err = nvme_identify_nsid_ctrl_list(test_hdl, TEST_NSID, TEST_CNTID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -324,7 +326,7 @@ static void test_ctrl_list(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_ctrl_list(TEST_FD, TEST_CNTID, &id);
+	err = nvme_identify_ctrl_list(test_hdl, TEST_CNTID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -344,7 +346,7 @@ static void test_primary_ctrl(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_primary_ctrl(TEST_FD, TEST_CNTID, &id);
+	err = nvme_identify_primary_ctrl(test_hdl, TEST_CNTID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -364,7 +366,7 @@ static void test_secondary_ctrl_list(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_secondary_ctrl_list(TEST_FD, TEST_CNTID, &id);
+	err = nvme_identify_secondary_ctrl_list(test_hdl, TEST_CNTID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -383,7 +385,7 @@ static void test_ns_granularity(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_ns_granularity(TEST_FD, &id);
+	err = nvme_identify_ns_granularity(test_hdl, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -402,7 +404,7 @@ static void test_uuid(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_uuid(TEST_FD, &id);
+	err = nvme_identify_uuid(test_hdl, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -422,7 +424,7 @@ static void test_domain_list(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_domain_list(TEST_FD, TEST_DOMID, &id);
+	err = nvme_identify_domain_list(test_hdl, TEST_DOMID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -442,7 +444,7 @@ static void test_endurance_group_list(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_endurance_group_list(TEST_FD, TEST_ENDGID, &id);
+	err = nvme_identify_endurance_group_list(test_hdl, TEST_ENDGID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -464,7 +466,7 @@ static void test_allocated_ns_list_csi(void)
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_identify_allocated_ns_list_csi(
-		TEST_FD, TEST_NSID, TEST_CSI, &id);
+		test_hdl, TEST_NSID, TEST_CSI, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -484,7 +486,7 @@ static void test_iocs(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_iocs(TEST_FD, TEST_CNTID, &id);
+	err = nvme_identify_iocs(test_hdl, TEST_CNTID, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -508,7 +510,7 @@ static void test_status_code_error(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_nvmset_list(TEST_FD, TEST_NVMSETID, &id);
+	err = nvme_identify_nvmset_list(test_hdl, TEST_NVMSETID, &id);
 	end_mock_cmds();
 	check(err == TEST_SC, "got error %d, expected %d", err, TEST_SC);
 }
@@ -526,7 +528,7 @@ static void test_kernel_error(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_identify_ns(TEST_FD, TEST_NSID, &id);
+	err = nvme_identify_ns(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
 	check(err == -1, "got error %d, expected -1", err);
 	check(errno == EIO, "unexpected error %m");
@@ -550,7 +552,7 @@ static void test_identify_ns_csi_user_data_format(void)
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_identify_ns_csi_user_data_format(
-		TEST_FD, TEST_FIDX, TEST_UUID, NVME_CSI_NVM, &id);
+		test_hdl, TEST_FIDX, TEST_UUID, NVME_CSI_NVM, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -573,7 +575,7 @@ static void test_identify_iocs_ns_csi_user_data_format(void)
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_identify_iocs_ns_csi_user_data_format(
-		TEST_FD, TEST_FIDX, TEST_UUID, TEST_CSI, &id);
+		test_hdl, TEST_FIDX, TEST_UUID, TEST_CSI, &id);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -591,7 +593,12 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
+	struct nvme_global_ctx * ctx =
+		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+
 	set_mock_fd(TEST_FD);
+	test_hdl = nvme_open(ctx, "NVME_TEST_FD");
+
 	RUN_TEST(ns);
 	RUN_TEST(ctrl);
 	RUN_TEST(active_ns_list);
@@ -619,4 +626,6 @@ int main(void)
 	RUN_TEST(kernel_error);
 	RUN_TEST(identify_ns_csi_user_data_format);
 	RUN_TEST(identify_iocs_ns_csi_user_data_format);
+
+	nvme_free_global_ctx(ctx);
 }

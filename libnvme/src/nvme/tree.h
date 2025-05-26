@@ -564,26 +564,26 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 		p = nvme_namespace_next_path(n, p))
 
 /**
- * nvme_ns_get_fd() - Get associated file descriptor
+ * nvme_ns_get_transport_handle() - Get associated transport handle
  * @n:	Namespace instance
  *
  * libnvme will open() the file (if not already opened) and keep
- * an internal copy of the file descriptor. Following calls to
- * this API retrieve the internal cached copy of the file
- * descriptor. The file will remain opened and the fd will
+ * an internal copy of the link handle. Following calls to
+ * this API retrieve the internal cached copy of the link
+ * handle. The file will remain opened and the device handle will
  * remain cached until the ns object is deleted or
- * nvme_ns_release_fd() is called.
+ * nvme_ns_release_transport_handle() is called.
  *
- * Return: File descriptor associated with @n or -1
+ * Return: Link handle with @n or NULL
  */
-int nvme_ns_get_fd(nvme_ns_t n);
+struct nvme_transport_handle *nvme_ns_get_transport_handle(nvme_ns_t n);
 
 /**
- * nvme_ns_release_fd() - Close fd and clear fd from ns object
+ * nvme_ns_release_transport_handle() - Free transport handle from ns object
  * @n:	Namespace instance
  *
  */
-void nvme_ns_release_fd(nvme_ns_t n);
+void nvme_ns_release_transport_handle(nvme_ns_t n);
 
 /**
  * nvme_ns_get_nsid() - NSID of a namespace
@@ -882,26 +882,25 @@ nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p);
 nvme_ns_t nvme_path_get_ns(nvme_path_t p);
 
 /**
- * nvme_ctrl_get_fd() - Get associated file descriptor
+ * nvme_ctrl_get_transport_handle() - Get associated transport handle
  * @c:	Controller instance
  *
- * libnvme will open() the file (if not already opened) and keep
- * an internal copy of the file descriptor. Following calls to
- * this API retrieve the internal cached copy of the file
- * descriptor. The file will remain opened and the fd will
- * remain cached until the controller object is deleted or
- * nvme_ctrl_release_fd() is called.
+ * libnvme will open() the device (if not already opened) and keep an
+ * internal copy of the link handle. Following calls to this API retrieve
+ * the internal cached copy of the link handle. The file will remain
+ * opened and the handle will remain cached until the controller object
+ * is deleted or nvme_ctrl_release_transport_handle() is called.
  *
- * Return: File descriptor associated with @c or -1
+ * Return: Link handle associated with @c or NULL
  */
-int nvme_ctrl_get_fd(nvme_ctrl_t c);
+struct nvme_transport_handle *nvme_ctrl_get_transport_handle(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_release_fd() - Close fd and clear fd from controller object
+ * nvme_ctrl_release_transport_handle() - Free transport handle from controller object
  * @c:	Controller instance
  *
  */
-void nvme_ctrl_release_fd(nvme_ctrl_t c);
+void nvme_ctrl_release_transport_handle(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_get_name() - sysfs name of a controller
