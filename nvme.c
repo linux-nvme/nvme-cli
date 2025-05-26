@@ -3460,6 +3460,14 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 
 	if (devname) {
 		int subsys_num;
+		struct stat st;
+		char path[512];
+
+		sprintf(path, "/dev/%s", devname);
+		if (stat(path, &st) != 0) {
+			nvme_show_error("%s does not exist", path);
+			return -EINVAL;
+		}
 
 		if (sscanf(devname, "nvme%dn%d", &subsys_num, &nsid) != 2) {
 			nvme_show_error("Invalid device name %s", devname);
