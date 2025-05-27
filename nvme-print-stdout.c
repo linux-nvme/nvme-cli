@@ -790,6 +790,8 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 
 	for (i = 0; i < log->nd; i++) {
 		struct nvme_eom_lane_desc *desc = p;
+		unsigned char *vsdata = NULL;
+		unsigned int vsdataoffset = 0;
 
 		printf("Measurement Status: %s\n",
 			desc->mstatus ? "Successful" : "Not Successful");
@@ -807,6 +809,18 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 			stdout_eom_printable_eye(desc);
 
 		/* Eye Data field is vendor specific */
+		if (desc->edlen == 0)
+			continue;
+		else {
+			/* Hex dump Vendor Specific Eye Data */
+			vsdata = (unsigned char *)malloc(desc->edlen);
+			vsdataoffset = (desc->nrows * desc->ncols) +
+								sizeof(struct nvme_eom_lane_desc);
+			vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
+			printf("Eye Data:\n");
+			d(vsdata, desc->edlen, 16, 1);
+			printf("\n");
+		}
 
 		p += log->dsize;
 	}
