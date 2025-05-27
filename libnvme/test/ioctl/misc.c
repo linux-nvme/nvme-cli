@@ -322,7 +322,6 @@ static void test_security_send(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.nsid = TEST_NSID,
 		.tl = 0xffff,
 		.data_len = sizeof(expected_data),

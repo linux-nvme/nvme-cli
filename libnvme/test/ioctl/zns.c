@@ -145,7 +145,6 @@ static void test_zns_mgmt_recv(void)
 		.result = &result,
 		.data = data,
 		.args_size = sizeof(args),
-		.fd = TEST_FD,
 		.timeout = timeout,
 		.nsid = TEST_NSID,
 		.zra = NVME_ZNS_ZRA_REPORT_ZONES,
