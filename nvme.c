@@ -564,6 +564,11 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	if (err)
 		return err;
 
+	if (is_blkdev(dev)) {
+		nvme_show_error("Only character device is allowed");
+		return -EINVAL;
+	}
+
 	err = validate_output_format(nvme_cfg.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
