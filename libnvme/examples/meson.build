@@ -36,21 +36,21 @@ executable(
 executable(
     'mi-mctp',
     ['mi-mctp.c'],
-    dependencies: libnvme_mi_dep,
+    dependencies: libnvme_dep,
     include_directories: [incdir, internal_incdir]
 )
 
 executable(
     'mi-mctp-csi-test',
     ['mi-mctp-csi-test.c'],
-    dependencies: [libnvme_mi_dep, threads_dep],
+    dependencies: [libnvme_dep, threads_dep],
     include_directories: [incdir, internal_incdir]
 )
 
 executable(
     'mi-mctp-ae',
     ['mi-mctp-ae.c'],
-    dependencies: libnvme_mi_dep,
+    dependencies: libnvme_dep,
     include_directories: [incdir, internal_incdir]
 )
 
@@ -58,7 +58,7 @@ if libdbus_dep.found()
     executable(
         'mi-conf',
         ['mi-conf.c'],
-        dependencies: [libnvme_mi_dep, libdbus_dep],
+        dependencies: [libnvme_dep, libdbus_dep],
         include_directories: [incdir, internal_incdir]
     )
 endif

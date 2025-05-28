@@ -135,7 +135,6 @@ fi
 declare -A maps
 maps=(
     [src/libnvme.map]=LIBNVME
-    [src/libnvme-mi.map]=LIBNVME_MI
 )
 
 lib_ver="${ver//./_}"

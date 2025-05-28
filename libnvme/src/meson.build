@@ -6,23 +6,19 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 sources = [
-    'nvme/nbft.c',
+    'nvme/base64.c',
+    'nvme/crc32.c',
     'nvme/fabrics.c',
     'nvme/filters.c',
     'nvme/ioctl.c',
     'nvme/linux.c',
     'nvme/log.c',
+    'nvme/mi-mctp.c',
+    'nvme/mi.c',
+    'nvme/nbft.c',
     'nvme/sysfs.c',
     'nvme/tree.c',
     'nvme/util.c',
-    'nvme/base64.c',
-    'nvme/crc32.c'
-]
-
-mi_sources = [
-    'nvme/log.c',
-    'nvme/mi.c',
-    'nvme/mi-mctp.c',
 ]
 
 if json_c_dep.found()
@@ -33,20 +29,15 @@ endif
 
 deps = [
     json_c_dep,
-    openssl_dep,
     keyutils_dep,
-    liburing_dep,
-]
-
-mi_deps = [
     libdbus_dep,
+    liburing_dep,
+    openssl_dep,
 ]
 
 source_dir = meson.current_source_dir()
 mapfile = 'libnvme.map'
 version_script_arg = join_paths(source_dir, mapfile)
-mi_mapfile = 'libnvme-mi.map'
-mi_version_script_arg = join_paths(source_dir, mi_mapfile)
 
 libnvme = library(
     'nvme', # produces libnvme.so
@@ -78,52 +69,30 @@ libnvme_dep = declare_dependency(
     link_with: libnvme,
 )
 
-libnvme_mi = library(
-    'nvme-mi', # produces libnvme-mi.so
-    mi_sources,
-    version: library_version,
-    c_args: config_h_arg,
-    link_args: ['-Wl,--version-script=' + mi_version_script_arg],
-    dependencies: mi_deps,
-    link_depends: mi_mapfile,
-    include_directories: [incdir, internal_incdir],
-    install: true,
-    link_with: libccan,
-)
-
-libnvme_mi_dep = declare_dependency(
-    include_directories: ['.'],
-    link_with: libnvme_mi,
-)
-
 # test library with all symbols visible, to use for MI unit tests. Should
-# match libnvme_mi above, but with no version script, and install: false.
-libnvme_mi_test = library(
-    'nvme-mi-test', # produces libnvme-mi-test.so
-    mi_sources,
-    dependencies: mi_deps,
+# match libnvme above, but with no version script, and install: false.
+libnvme_test = library(
+    'nvme-test', # produces libnvme-test.so
+    sources,
+    dependencies: deps,
     c_args: config_h_arg,
     include_directories: [incdir, internal_incdir],
     install: false,
     link_with: libccan,
 )
 
-libnvme_mi_test_dep = declare_dependency(
+libnvme_test_dep = declare_dependency(
     include_directories: ['.'],
-    link_with: libnvme_mi_test,
-)
-
-pkg.generate(libnvme_mi,
-    filebase: 'libnvme-mi',
-    name: 'libnvme-mi',
-    version: meson.project_version(),
-    description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express) over Management Interface',
-    url: 'http://github.com/linux-nvme/libnvme/',
+    link_with: libnvme_test,
 )
 
 mode = ['rw-r--r--', 0, 0]
-install_headers('libnvme.h', install_mode: mode)
-install_headers('libnvme-mi.h', install_mode: mode)
+install_headers([
+       'libnvme.h',
+       'libnvme-mi.h',
+    ],
+    install_mode: mode,
+)
 install_headers([
         'nvme/api-types.h',
         'nvme/fabrics.h',
