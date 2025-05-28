@@ -452,10 +452,16 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 #ifdef CONFIG_LIBURING
 	int n = 0;
 	struct io_uring ring;
+	struct stat st;
+	bool use_uring = false;
 
 	if (io_uring_kernel_support == IO_URING_AVAILABLE) {
-		if (nvme_uring_cmd_setup(&ring))
-			return -1;
+		if (fstat(fd, &st) == 0 && S_ISCHR(st.st_mode)) {
+			use_uring = true;
+
+			if (nvme_uring_cmd_setup(&ring))
+				return -1;
+		}
 	}
 #endif
 	/*
@@ -477,7 +483,7 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 		args->log = ptr;
 		args->rae = offset + xfer < data_len || retain;
 #ifdef CONFIG_LIBURING
-		if (io_uring_kernel_support == IO_URING_AVAILABLE) {
+		if (io_uring_kernel_support == IO_URING_AVAILABLE && use_uring) {
 			if (n >= NVME_URING_ENTRIES) {
 				ret = nvme_uring_cmd_wait_complete(&ring, n);
 				n = 0;
@@ -498,7 +504,7 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 	} while (offset < data_len);
 
 #ifdef CONFIG_LIBURING
-	if (io_uring_kernel_support == IO_URING_AVAILABLE) {
+	if (io_uring_kernel_support == IO_URING_AVAILABLE && use_uring) {
 		ret = nvme_uring_cmd_wait_complete(&ring, n);
 		nvme_uring_cmd_exit(&ring);
 		if (ret)
