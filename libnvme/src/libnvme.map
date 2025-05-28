@@ -383,6 +383,7 @@ LIBNVME_2_0 {
 		nvme_subsystem_release_fds;
 		nvme_subsystem_reset;
 		nvme_subsystem_set_application;
+		nvme_transport_handle_get_fd;
 		nvme_unlink_ctrl;
 		nvme_update_config;
 		nvme_update_key;

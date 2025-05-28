@@ -234,6 +234,17 @@ struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char 
 void nvme_close(struct nvme_transport_handle *hdl);
 
 /**
+ * nvme_transport_handle_get_fd - Return file descriptor from transport handle
+ * @hdl:	Transport handle
+ *
+ * If the device handle is for a ioctl based device,
+ * nvme_transport_handle_get_fd will return a valid file descriptor.
+ *
+ * Return: File descriptor for an IOCTL based transport handle, otherwise -1.
+ */
+int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl);
+
+/**
  * enum nvme_hmac_alg - HMAC algorithm
  * @NVME_HMAC_ALG_NONE:		No HMAC algorithm
  * @NVME_HMAC_ALG_SHA2_256:	SHA2-256

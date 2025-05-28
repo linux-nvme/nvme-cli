@@ -119,6 +119,11 @@ void nvme_close(struct nvme_transport_handle *hdl)
 	free(hdl);
 }
 
+int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
+{
+	return hdl->fd;
+}
+
 int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf)
 {
