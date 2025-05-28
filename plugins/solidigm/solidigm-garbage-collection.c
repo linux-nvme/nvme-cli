@@ -68,8 +68,9 @@ static void vu_gc_log_show(struct garbage_control_collection_log *payload, const
 int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Get and parse Solidigm vendor specific garbage collection event log.";
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
-	struct nvme_dev *dev;
 	int err;
 	__u8 uuid_index;
 
@@ -86,18 +87,17 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
 	err = validate_output_format(cfg.output_format, &flags);
 	if (err) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
-		dev_close(dev);
 		return -EINVAL;
 	}
 
-	sldgm_get_uuid_index(dev, &uuid_index);
+	sldgm_get_uuid_index(hdl, &uuid_index);
 
 	struct garbage_control_collection_log gc_log;
 	const int solidigm_vu_gc_log_id = 0xfd;
@@ -106,7 +106,6 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		.result = NULL,
 		.log = &gc_log,
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = solidigm_vu_gc_log_id,
 		.len = sizeof(gc_log),
@@ -119,20 +118,17 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		.ot = false,
 	};
 
-	err =  nvme_get_log(&args);
+	err =  nvme_get_log(hdl, &args);
 	if (!err) {
 		if (flags & BINARY)
 			d_raw((unsigned char *)&gc_log, sizeof(gc_log));
 		else if (flags & JSON)
-			vu_gc_log_show_json(&gc_log, dev->name);
+			vu_gc_log_show_json(&gc_log, nvme_transport_handle_get_name(hdl));
 		else
-			vu_gc_log_show(&gc_log, dev->name, uuid_index);
+			vu_gc_log_show(&gc_log, nvme_transport_handle_get_name(hdl), uuid_index);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	}
 
-	/* Redundant close() to make static code analysis happy */
-	close(dev->direct.fd);
-	dev_close(dev);
 	return err;
 }

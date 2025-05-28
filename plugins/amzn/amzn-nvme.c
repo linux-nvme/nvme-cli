@@ -466,12 +466,13 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 		     struct plugin *plugin)
 {
 	const char *desc = "display command latency statistics";
-	struct nvme_dev *dev;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct amzn_latency_log_page log = { 0 };
-	int rc;
 	nvme_print_flags_t flags = 0; // Initialize flags to 0
 	struct nvme_id_ctrl ctrl;
 	bool detail = false;
+	int rc;
 
 	struct config {
 		char *output_format;
@@ -487,11 +488,11 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 		OPT_FLAG("details", 'd', &detail, "Detail IO histogram of each block size ranges"),
 		OPT_END()};
 
-	rc = parse_and_open(&dev, argc, argv, desc, opts);
+	rc = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (rc)
 		return rc;
 
-	if (nvme_identify_ctrl(dev_fd(dev), &ctrl)) {
+	if (nvme_identify_ctrl(hdl, &ctrl)) {
 		fprintf(stderr, "Failed to get identify controller\n");
 		rc = -errno;
 		goto done;
@@ -499,7 +500,6 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
 		.lid = AMZN_NVME_STATS_LOGPAGE_ID,
 		.nsid = 1,
 		.lpo = 0,
@@ -516,10 +516,10 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 
 	if (!strncmp((char *)ctrl.mn, AMZN_NVME_LOCAL_STORAGE_PREFIX,
 		     strlen(AMZN_NVME_LOCAL_STORAGE_PREFIX))) {
-		if (nvme_get_nsid(dev_fd(dev), &args.nsid) < 0) {
+		if (nvme_get_nsid(hdl, &args.nsid) < 0) {
 			struct nvme_id_ctrl test_ctrl;
 
-			if (nvme_identify_ctrl(dev_fd(dev), &test_ctrl) == 0) {
+			if (nvme_identify_ctrl(hdl, &test_ctrl) == 0) {
 				args.nsid = NVME_NSID_ALL;
 			} else {
 				rc = -errno;
@@ -531,7 +531,7 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 		args.len = sizeof(log.base);
 	}
 
-	rc = nvme_get_log(&args);
+	rc = nvme_get_log(hdl, &args);
 	if (rc != 0) {
 		fprintf(stderr, "[ERROR] %s: Failed to get log page, rc = %d\n",
 			__func__, rc);
@@ -557,6 +557,5 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 		amzn_print_normal_stats(&log, detail);
 
 done:
-	dev_close(dev);
 	return rc;
 }

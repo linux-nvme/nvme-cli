@@ -196,7 +196,7 @@ struct workloadLog { // Full WL Log Structure
 #pragma pack(pop)
 
 struct wltracker {
-	int fd;
+	struct nvme_transport_handle *hdl;
 	__u8 uuid_index;
 	struct workloadLog workload_log;
 	size_t poll_count;
@@ -275,13 +275,12 @@ int wltracker_config(struct wltracker *wlt, union WorkloadLogEnable *we)
 {
 	struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
-		.fd		= wlt->fd,
 		.fid		= FID,
 		.cdw11		= we->dword,
 		.uuidx		= wlt->uuid_index,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 	};
-	return nvme_set_features(&args);
+	return nvme_set_features(wlt->hdl, &args);
 }
 
 static int wltracker_show_newer_entries(struct wltracker *wlt)
@@ -299,13 +298,12 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 		.result = NULL,
 		.log	= log,
 		.args_size = sizeof(args),
-		.fd	= wlt->fd,
 		.uuidx	= wlt->uuid_index,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid	= LID,
 		.len	= sizeof(*log),
 	};
-	int err = nvme_get_log(&args);
+	int err = nvme_get_log(wlt->hdl, &args);
 
 	if (err > 0) {
 		nvme_show_status(err);
@@ -358,7 +356,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 			if (!err) {
 				struct workloadLog tl;
 
-				err = nvme_get_log_simple(wlt->fd, LID, sizeof(tl), &tl);
+				err = nvme_get_log_simple(wlt->hdl, LID, sizeof(tl), &tl);
 				tle = tl.timestamp_lastEntry;
 			}
 			if (err) {
@@ -498,15 +496,15 @@ static void join_fields(char *dest, struct field *fields)
 
 int sldgm_get_workload_tracker(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	struct wltracker wlt = {0};
-	union WorkloadLogEnable we = {0};
-
-	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	const char *desc = "Real Time capture Workload Tracker samples";
 	const char *sample_interval = "Sample interval";
 	const char *run_time = "Limit runtime capture time in seconds";
 	const char *flush_frequency =
 		"Samples (1 to 126) to wait for extracting data. Default 100 samples";
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct wltracker wlt = {0};
+	union WorkloadLogEnable we = {0};
 	char type_options[80] = {0};
 	char sample_options[80] = {0};
 	__u64 stop_time_us;
@@ -558,7 +556,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *cmd, struc
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -567,7 +565,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *cmd, struc
 		return -1;
 	}
 
-	wlt.fd = dev_fd(dev);
+	wlt.hdl = hdl;
 
 	if ((cfg.flush_frequency < 1) || (cfg.flush_frequency > MAX_WORKLOAD_LOG_ENTRIES)) {
 		nvme_show_error("Invalid number of samples: %s. Valid values: 1-%d",
@@ -617,13 +615,12 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *cmd, struc
 		we.triggerSynchronous = !cfg.trigger_on_latency;
 		struct nvme_set_features_args args = {
 			.args_size	= sizeof(args),
-			.fd		= wlt.fd,
 			.fid		= 0xf5,
 			.cdw11		= cfg.trigger_treshold,
 			.uuidx		= wlt.uuid_index,
 			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		};
-		err = nvme_set_features(&args);
+		err = nvme_set_features(wlt.hdl, &args);
 		if (err < 0) {
 			nvme_show_error("Trigger Threshold set-feature: %s", nvme_strerror(errno));
 			return err;

@@ -144,14 +144,15 @@ static void json_log_pages_supp(log_page_map *logPageMap)
 }
 
 static int log_pages_supp(int argc, char **argv, struct command *cmd,
-						  struct plugin *plugin)
+			  struct plugin *plugin)
 {
 	int err = 0;
 	__u32 i = 0;
 	log_page_map logPageMap;
 	const char *desc = "Retrieve Seagate Supported Log-Page information for the given device ";
 	const char *output_format = "output in binary format";
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int fmt;
 
 	struct config {
@@ -167,10 +168,10 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-	err = nvme_get_log_simple(dev_fd(dev), 0xc5,
+	err = nvme_get_log_simple(hdl, 0xc5,
 				  sizeof(logPageMap), &logPageMap);
 	if (!err) {
 		if (strcmp(cfg.output_format, "json")) {
@@ -196,7 +197,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 
 	if (err > 0)
 		nvme_show_status(err);
-	dev_close(dev);
+
 	return err;
 }
 
@@ -898,7 +899,8 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 
 	const char *desc = "Retrieve the Firmware Activation History for Seagate NVMe drives";
 	const char *output_format = "output in binary format";
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int err, index = 0;
 	struct config {
 		char *output_format;
@@ -913,7 +915,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
 		printf("\nDevice not found\n");
 		return -1;
@@ -929,7 +931,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	 * to determine drive family.
 	 */
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (!err) {
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
 	} else {
@@ -938,7 +940,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	if (!stx_is_jag_pan(modelNo)) {
-		err = nvme_get_log_simple(dev_fd(dev), 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+		err = nvme_get_log_simple(hdl, 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 		if (!err) {
 			if (strcmp(cfg.output_format, "json")) {
 				printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
@@ -960,7 +962,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 			 * Next get Log Page 0xCF
 			 */
 
-			err = nvme_get_log_simple(dev_fd(dev), 0xCF, sizeof(logPageCF), &logPageCF);
+			err = nvme_get_log_simple(hdl, 0xCF, sizeof(logPageCF), &logPageCF);
 			if (!err) {
 				if (strcmp(cfg.output_format, "json")) {
 					print_smart_log_CF(&logPageCF);
@@ -978,7 +980,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 			nvme_show_status(err);
 		}
 	} else {
-		err = nvme_get_log_simple(dev_fd(dev), 0xC0, sizeof(ehExtSmart), &ehExtSmart);
+		err = nvme_get_log_simple(hdl, 0xC0, sizeof(ehExtSmart), &ehExtSmart);
 
 		if (!err) {
 			if (strcmp(cfg.output_format, "json")) {
@@ -999,7 +1001,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 			nvme_show_status(err);
 	}
 
-	err = nvme_get_log_simple(dev_fd(dev), 0xC4,
+	err = nvme_get_log_simple(hdl, 0xC4,
 				  sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 	if (!err) {
 		if (strcmp(cfg.output_format, "json")) {
@@ -1022,7 +1024,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		 * Next get Log Page 0xCF
 		 */
 
-		err = nvme_get_log_simple(dev_fd(dev), 0xCF,
+		err = nvme_get_log_simple(hdl, 0xCF,
 					  sizeof(logPageCF), &logPageCF);
 		if (!err) {
 			if (strcmp(cfg.output_format, "json")) {
@@ -1040,8 +1042,6 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		nvme_show_status(err);
 	}
 
-	dev_close(dev);
-
 	return err;
 }
 
@@ -1050,8 +1050,9 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 /***************************************
  * Temperature-Stats information
  ***************************************/
-static void json_temp_stats(__u32 temperature, __u32 PcbTemp, __u32 SocTemp, __u32 maxTemperature,
-							__u32 MaxSocTemp, __u32 cf_err, __u32 scCurrentTemp, __u32 scMaxTem)
+static void json_temp_stats(__u32 temperature, __u32 PcbTemp, __u32 SocTemp,
+			    __u32 maxTemperature, __u32 MaxSocTemp,
+			    __u32 cf_err, __u32 scCurrentTemp, __u32 scMaxTem)
 {
 	struct json_object *root = json_create_object();
 
@@ -1081,7 +1082,8 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	nvme_print_flags_t flags;
 	unsigned int temperature = 0, PcbTemp = 0, SocTemp = 0, scCurrentTemp = 0, scMaxTemp = 0;
 	unsigned long long maxTemperature = 0, MaxSocTemp = 0;
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct config {
 		char *output_format;
 	};
@@ -1095,7 +1097,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
 		printf("\nDevice not found\n");
 		return -1;
@@ -1110,7 +1112,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	if (flags & NORMAL)
 		printf("Seagate Temperature Stats Information :\n");
 	/*STEP-1 : Get Current Temperature from SMART */
-	err = nvme_get_log_smart(dev_fd(dev), 0xffffffff, false, &smart_log);
+	err = nvme_get_log_smart(hdl, 0xffffffff, false, &smart_log);
 	if (!err) {
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
 		temperature = temperature ? temperature - 273 : 0;
@@ -1126,7 +1128,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	}
 
 	/* STEP-2 : Get Max temperature form Ext SMART-id 194 */
-	err = nvme_get_log_simple(dev_fd(dev), 0xC4,
+	err = nvme_get_log_simple(hdl, 0xC4,
 				  sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 	if (!err) {
 		for (index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++) {
@@ -1149,7 +1151,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 			nvme_show_status(err);
 	}
 
-	cf_err = nvme_get_log_simple(dev_fd(dev), 0xCF,
+	cf_err = nvme_get_log_simple(hdl, 0xCF,
 					 sizeof(ExtdSMARTInfo), &logPageCF);
 
 	if (!cf_err) {
@@ -1165,7 +1167,6 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	if (flags & JSON)
 		json_temp_stats(temperature, PcbTemp, SocTemp, maxTemperature, MaxSocTemp, cf_err, scCurrentTemp, scMaxTemp);
 
-	dev_close(dev);
 	return err;
 }
 /* EOF Temperature Stats information */
@@ -1173,7 +1174,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 /***************************************
  * PCIe error-log information
  ***************************************/
-static void print_vs_pcie_error_log(pcie_error_log_page  pcieErrorLog)
+static void print_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 {
 	__u32 correctPcieEc = pcieErrorLog.BadDllpErrCnt + pcieErrorLog.BadTlpErrCnt +
 			      pcieErrorLog.RcvrErrCnt + pcieErrorLog.ReplayTOErrCnt +
@@ -1250,7 +1251,8 @@ static void json_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	pcie_error_log_page pcieErrorLog;
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Retrieve Seagate PCIe error counters for the given device ";
 	const char *output_format = "output in binary format";
@@ -1269,7 +1271,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
 		printf("\nDevice not found\n");
 		return -1;
@@ -1284,7 +1286,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	if (flags & NORMAL)
 		printf("Seagate PCIe error counters Information :\n");
 
-	err = nvme_get_log_simple(dev_fd(dev), 0xCB,
+	err = nvme_get_log_simple(hdl, 0xCB,
 				  sizeof(pcieErrorLog), &pcieErrorLog);
 	if (!err) {
 		if (flags & NORMAL)
@@ -1296,7 +1298,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 		nvme_show_status(err);
 	}
 
-	dev_close(dev);
+
 	return err;
 }
 /* EOF PCIE error-log information */
@@ -1395,7 +1397,8 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	stx_fw_activ_history_log_page fwActivHis;
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Retrieve FW Activate History for Seagate device ";
 	const char *output_format = "output in binary format";
@@ -1414,7 +1417,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0) {
 		printf("\nDevice not found\n");
 		return -1;
@@ -1429,7 +1432,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 	if (flags & NORMAL)
 		printf("Seagate FW Activation History Information :\n");
 
-	err = nvme_get_log_simple(dev_fd(dev), 0xC2, sizeof(fwActivHis), &fwActivHis);
+	err = nvme_get_log_simple(hdl, 0xC2, sizeof(fwActivHis), &fwActivHis);
 	if (!err) {
 		if (flags & NORMAL)
 			print_stx_vs_fw_activate_history(fwActivHis);
@@ -1439,7 +1442,6 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 		nvme_show_status(err);
 	}
 
-	dev_close(dev);
 	return err;
 }
 /* EOF FW Activation History log information */
@@ -1450,7 +1452,8 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 	const char *desc = "Clear FW Activation History for the given Seagate device ";
 	const char *save = "specifies that the controller shall save the attribute";
 	int err;
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl;
 	char modelNo[40];
 	__u32 result;
@@ -1468,13 +1471,13 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0) {
 		printf("\nDevice not found\n");
 		return -1;
 	}
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (!err) {
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
 	} else {
@@ -1487,7 +1490,6 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 	} else {
 		struct nvme_set_features_args args = {
 		.args_size  = sizeof(args),
-		.fd         = dev_fd(dev),
 		.fid        = 0xC1,
 		.nsid       = 0,
 		.cdw11      = 0x80000000,
@@ -1500,7 +1502,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 		.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result     = &result,
 	};
-	err = nvme_set_features(&args);
+	err = nvme_set_features(hdl, &args);
 	if (err)
 		fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n",
 			__func__);
@@ -1511,7 +1513,6 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 		return errno;
 	}
 
-	dev_close(dev);
 	return err;
 }
 
@@ -1524,7 +1525,8 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	struct nvme_id_ctrl ctrl;
 	char modelNo[40];
 
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 	__u32 result;
 	int err;
@@ -1542,14 +1544,14 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
 		printf("\nDevice not found\n");
 		return -1;
 	}
 
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (!err) {
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
 	} else {
@@ -1558,11 +1560,10 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	}
 
 	if (!stx_is_jag_pan(modelNo)) {
-		err = nvme_set_features_simple(dev_fd(dev), 0xE1, 0, 0xCB, cfg.save, &result);
+		err = nvme_set_features_simple(hdl, 0xE1, 0, 0xCB, cfg.save, &result);
 	} else {
 		struct nvme_set_features_args args = {
 			.args_size  = sizeof(args),
-			.fd         = dev_fd(dev),
 			.fid        = 0xC3,
 			.nsid       = 0,
 			.cdw11      = 0x80000000,
@@ -1575,19 +1576,18 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 			.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
 			.result     = &result,
 		};
-		err = nvme_set_features(&args);
+		err = nvme_set_features(hdl, &args);
 		if (err)
 			fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n", __func__);
 	}
 
-	err = nvme_set_features_simple(dev_fd(dev), 0xE1, 0, 0xCB, cfg.save, &result);
+	err = nvme_set_features_simple(hdl, 0xE1, 0, 0xCB, cfg.save, &result);
 
 	if (err < 0) {
 		perror("set-feature");
 		return errno;
 	}
 
-	dev_close(dev);
 	return err;
 }
 
@@ -1602,7 +1602,8 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 	const char *raw = "output in raw format";
 	struct nvme_temetry_log_hdr tele_log;
 	int blkCnt, maxBlk = 0, blksToGet;
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	unsigned char  *log;
 	__le64  offset = 0;
 	int err, dump_fd;
@@ -1625,13 +1626,13 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
 	dump_fd = STDOUT_FILENO;
 	cfg.log_id = (cfg.log_id << 8) | 0x07;
-	err = nvme_get_nsid_log(dev_fd(dev), false, cfg.log_id,
+	err = nvme_get_nsid_log(hdl, false, cfg.log_id,
 				cfg.namespace_id,
 				sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
@@ -1640,7 +1641,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		if (!cfg.raw_binary) {
 			printf("Device:%s log-id:%d namespace-id:%#x\n",
-				   dev->name, cfg.log_id,
+				   nvme_transport_handle_get_name(hdl), cfg.log_id,
 				   cfg.namespace_id);
 			printf("Data Block 1 Last Block:%d Data Block 2 Last Block:%d Data Block 3 Last Block:%d\n",
 				   tele_log.tele_data_area1, tele_log.tele_data_area2, tele_log.tele_data_area3);
@@ -1662,7 +1663,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		blksToGet = ((maxBlk - blkCnt) >= TELEMETRY_BLOCKS_TO_READ) ? TELEMETRY_BLOCKS_TO_READ : (maxBlk - blkCnt);
 
 		if (!blksToGet) {
-			dev_close(dev);
+
 			return err;
 		}
 
@@ -1671,7 +1672,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log\n");
-			dev_close(dev);
+
 			return -EINVAL;
 		}
 
@@ -1679,7 +1680,6 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		struct nvme_get_log_args args = {
 			.args_size  = sizeof(args),
-			.fd     = dev_fd(dev),
 			.lid        = cfg.log_id,
 			.nsid       = cfg.namespace_id,
 			.lpo        = offset,
@@ -1694,7 +1694,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 			.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
 			.result     = NULL,
 		};
-		err = nvme_get_log(&args);
+		err = nvme_get_log(hdl, &args);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1715,7 +1715,6 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		free(log);
 	}
 
-	dev_close(dev);
 	return err;
 }
 
@@ -1725,7 +1724,8 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 	    "Capture the Telemetry Controller-Initiated Data in either hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
 	const char *raw = "output in raw format";
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int err, dump_fd;
 	struct nvme_temetry_log_hdr tele_log;
 	__le64  offset = 0;
@@ -1748,14 +1748,14 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
 	dump_fd = STDOUT_FILENO;
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(dev_fd(dev), false, log_id, cfg.namespace_id,
+	err = nvme_get_nsid_log(hdl, false, log_id, cfg.namespace_id,
 				sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
@@ -1763,7 +1763,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		if (!cfg.raw_binary) {
 			printf("Device:%s namespace-id:%#x\n",
-				   dev->name, cfg.namespace_id);
+				   nvme_transport_handle_get_name(hdl), cfg.namespace_id);
 			printf("Data Block 1 Last Block:%d Data Block 2 Last Block:%d Data Block 3 Last Block:%d\n",
 				   tele_log.tele_data_area1, tele_log.tele_data_area2, tele_log.tele_data_area3);
 
@@ -1798,7 +1798,6 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		struct nvme_get_log_args args = {
 			.args_size  = sizeof(args),
-			.fd     = dev_fd(dev),
 			.lid        = log_id,
 			.nsid       = cfg.namespace_id,
 			.lpo        = offset,
@@ -1813,7 +1812,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 			.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
 			.result     = NULL,
 		};
-		err = nvme_get_log(&args);
+		err = nvme_get_log(hdl, &args);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1834,11 +1833,12 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		free(log);
 	}
 
-	dev_close(dev);
+
 	return err;
 }
 
-void seaget_d_raw(unsigned char *buf, int len, int fd)
+void
+seaget_d_raw(unsigned char *buf, int len, int fd)
 {
 	if (write(fd, (void *)buf, len) <= 0)
 		printf("%s: Write Failed\n", __func__);
@@ -1851,7 +1851,8 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 	const char *namespace_id = "desired namespace";
 
 	const char *file = "dump file";
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int err, dump_fd;
 	int flags = O_WRONLY | O_CREAT;
 	int mode = 0664;
@@ -1877,7 +1878,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -1886,13 +1887,12 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		dump_fd = open(cfg.file, flags, mode);
 		if (dump_fd < 0) {
 			perror(cfg.file);
-			dev_close(dev);
 			return -EINVAL;
 		}
 	}
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(dev_fd(dev), false, log_id, cfg.namespace_id,
+	err = nvme_get_nsid_log(hdl, false, log_id, cfg.namespace_id,
 				sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
@@ -1928,7 +1928,6 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		struct nvme_get_log_args args = {
 			.args_size  = sizeof(args),
-			.fd     = dev_fd(dev),
 			.lid        = log_id,
 			.nsid       = cfg.namespace_id,
 			.lpo        = offset,
@@ -1943,7 +1942,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 			.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
 			.result     = NULL,
 		};
-		err = nvme_get_log(&args);
+		err = nvme_get_log(hdl, &args);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1963,7 +1962,6 @@ out:
 	if (strlen(cfg.file))
 		close(dump_fd);
 
-	dev_close(dev);
 	return err;
 }
 

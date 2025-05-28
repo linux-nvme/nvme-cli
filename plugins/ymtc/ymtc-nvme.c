@@ -21,7 +21,7 @@ static void get_ymtc_smart_info(struct nvme_ymtc_smart_log *smart, int index, u8
 	memcpy(raw_val, smart->itemArr[index].rawVal, RAW_SIZE);
 }
 
-static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
+static int show_ymtc_smart_log(struct nvme_transport_handle *hdl, __u32 nsid,
 			       struct nvme_ymtc_smart_log *smart)
 {
 	struct nvme_id_ctrl ctrl;
@@ -39,7 +39,7 @@ static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
 		free(nm);
 		return -1;
 	}
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err) {
 		free(nm);
 		free(raw);
@@ -52,7 +52,7 @@ static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
 
 	/* Table Title */
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
-	       dev->name, nsid);
+	       nvme_transport_handle_get_name(hdl), nsid);
 	/* Column Name*/
 	printf("key                               normalized raw\n");
 	/* 00 SI_VD_PROGRAM_FAIL */
@@ -123,7 +123,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	    "Get Ymtc vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
-	struct nvme_dev *dev;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct config {
 		__u32 namespace_id;
 		bool  raw_binary;
@@ -140,21 +141,20 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
+	err = nvme_get_nsid_log(hdl, false, 0xca, cfg.namespace_id,
 				sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
-			err = show_ymtc_smart_log(dev, cfg.namespace_id, &smart_log);
+			err = show_ymtc_smart_log(hdl, cfg.namespace_id, &smart_log);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
 	if (err > 0)
 		nvme_show_status(err);
 
-	dev_close(dev);
 	return err;
 }

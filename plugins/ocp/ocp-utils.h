@@ -19,7 +19,7 @@ extern const unsigned char ocp_uuid[NVME_UUID_LEN];
  * Return: Zero if nvme device has UUID list identify page, or positive result of get uuid list
  *         or negative POSIX error code otherwise.
  */
-int ocp_get_uuid_index(struct nvme_dev *dev, __u8 *index);
+int ocp_get_uuid_index(struct nvme_transport_handle *hdl, __u8 *index);
 
 /**
  * ocp_find_uuid_index() - Find OCP UUID index in UUID list
@@ -30,4 +30,4 @@ int ocp_get_uuid_index(struct nvme_dev *dev, __u8 *index);
  */
 int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index);
 
-int ocp_get_log_simple(struct nvme_dev *dev, enum ocp_dssd_log_id lid, __u32 len, void *log);
+int ocp_get_log_simple(struct nvme_transport_handle *hdl, enum ocp_dssd_log_id lid, __u32 len, void *log);

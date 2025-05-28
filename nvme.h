@@ -52,30 +52,6 @@ enum nvme_cli_topo_ranking {
 
 #define SYS_NVME "/sys/class/nvme"
 
-enum nvme_dev_type {
-	NVME_DEV_DIRECT,
-	NVME_DEV_MI,
-};
-
-struct nvme_dev {
-	enum nvme_dev_type type;
-	union {
-		struct {
-			int fd;
-			struct stat stat;
-		} direct;
-		struct {
-			nvme_root_t root;
-			nvme_mi_ep_t ep;
-			nvme_mi_ctrl_t ctrl;
-		} mi;
-	};
-
-	const char *name;
-};
-
-#define dev_fd(d) __dev_fd(d, __func__, __LINE__)
-
 struct nvme_config {
 	char *output_format;
 	int verbose;
@@ -103,27 +79,6 @@ struct nvme_config {
 		OPT_END()                                                              \
 	}
 
-static inline int __dev_fd(struct nvme_dev *dev, const char *func, int line)
-{
-	if (dev->type != NVME_DEV_DIRECT) {
-		fprintf(stderr,
-			"warning: %s:%d not a direct transport!\n",
-			func, line);
-		return -1;
-	}
-	return dev->direct.fd;
-}
-
-static inline nvme_mi_ep_t dev_mi_ep(struct nvme_dev *dev)
-{
-	if (dev->type != NVME_DEV_MI) {
-		fprintf(stderr,
-			"warning: not a MI transport!\n");
-		return NULL;
-	}
-	return dev->mi.ep;
-}
-
 static inline bool nvme_is_multipath(nvme_subsystem_t s)
 {
 	nvme_ns_t n;
@@ -139,16 +94,16 @@ static inline bool nvme_is_multipath(nvme_subsystem_t s)
 void register_extension(struct plugin *plugin);
 
 /*
- * parse_and_open - parses arguments and opens the NVMe device, populating @dev
+ * parse_and_open - parses arguments and opens the NVMe device, populating @ctx, @hdl
  */
-int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *desc,
-	struct argconfig_commandline_options *clo);
+int parse_and_open(struct nvme_global_ctx **ctx,
+		struct nvme_transport_handle **hdl, int argc, char **argv,
+		const char *desc, struct argconfig_commandline_options *clo);
 
-void dev_close(struct nvme_dev *dev);
-
+// TODO: unsure if we need a double ptr here
 static inline DEFINE_CLEANUP_FUNC(
-	cleanup_nvme_dev, struct nvme_dev *, dev_close)
-#define _cleanup_nvme_dev_ __cleanup__(cleanup_nvme_dev)
+	cleanup_nvme_transport_handle, struct nvme_transport_handle *, nvme_close)
+#define _cleanup_nvme_transport_handle_ __cleanup__(cleanup_nvme_transport_handle)
 
 extern const char *output_format;
 extern const char *timeout;

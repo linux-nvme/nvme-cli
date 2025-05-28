@@ -246,14 +246,15 @@ static void stdout_telemetry_log(struct ocp_telemetry_parse_options *options)
 #endif /* CONFIG_JSONC */
 }
 
-static void stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *log_data)
+static void stdout_c3_log(struct nvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data)
 {
 	char ts_buf[128];
 	int i, j;
 	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);
 
 	printf("-Latency Monitor/C3 Log Page Data-\n");
-	printf("  Controller   :  %s\n", dev->name);
+	printf("  Controller   :  %s\n",
+	       nvme_transport_handle_get_name(hdl));
 	printf("  Feature Status                     0x%x\n",
 	       log_data->feature_status);
 	printf("  Active Bucket Timer                %d min\n",
@@ -384,7 +385,7 @@ static void stdout_c3_log(struct nvme_dev *dev, struct ssd_latency_monitor_log *
 	}
 }
 
-static void stdout_c5_log(struct nvme_dev *dev, struct unsupported_requirement_log *log_data)
+static void stdout_c5_log(struct nvme_transport_handle *hdl, struct unsupported_requirement_log *log_data)
 {
 	int j;
 
@@ -685,7 +686,7 @@ static void stdout_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 	}
 }
 
-static void stdout_c7_log(struct nvme_dev *dev, struct tcg_configuration_log *log_data)
+static void stdout_c7_log(struct nvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
 {
 	int j;
 	__u16 log_page_version = le16_to_cpu(log_data->log_page_version);

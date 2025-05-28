@@ -11,6 +11,9 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <linux/sed-opal.h>
+
+#include <libnvme.h>
+
 #include "sedopal_spec.h"
 #include "sedopal_cmd.h"
 

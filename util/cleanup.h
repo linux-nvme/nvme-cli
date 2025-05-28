@@ -36,11 +36,11 @@ static inline void cleanup_fd(int *fd)
 }
 #define _cleanup_fd_ __cleanup__(cleanup_fd)
 
-static inline void cleanup_nvme_root(nvme_root_t *r)
+static inline void cleanup_nvme_global_ctx(struct nvme_global_ctx **ctx)
 {
-	nvme_free_tree(*r);
+	nvme_free_global_ctx(*ctx);
 }
-#define _cleanup_nvme_root_ __cleanup__(cleanup_nvme_root)
+#define _cleanup_nvme_global_ctx_ __cleanup__(cleanup_nvme_global_ctx)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_ctrl, nvme_ctrl_t, nvme_free_ctrl)
 #define _cleanup_nvme_ctrl_ __cleanup__(cleanup_nvme_ctrl)

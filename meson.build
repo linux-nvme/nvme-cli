@@ -51,8 +51,6 @@ conf.set('RUNDIR', '"@0@"'.format(rundir))
 # Check for libnvme availability
 libnvme_dep = dependency('libnvme', version: '>=1.16', required: true,
                          fallback : ['libnvme', 'libnvme_dep'])
-libnvme_mi_dep = dependency('libnvme-mi', required: true,
-                         fallback : ['libnvme', 'libnvme_mi_dep'])
 
 # Check for libjson-c availability
 if get_option('json-c').disabled()
@@ -296,7 +294,6 @@ sources = [
   'nvme-print-stdout.c',
   'nvme-print-binary.c',
   'nvme-rpmb.c',
-  'nvme-wrap.c',
   'plugin.c',
   'libnvme-wrap.c',
   'logging.c',
@@ -319,7 +316,7 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libnvme_mi_dep, json_c_dep ],
+  dependencies: [ libnvme_dep, json_c_dep ],
   link_args: '-ldl',
   include_directories: incdir,
   install: true,

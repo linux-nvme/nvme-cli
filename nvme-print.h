@@ -65,7 +65,7 @@ struct print_ops {
 	void (*predictable_latency_event_agg_log)(struct nvme_aggregate_predictable_lat_event *pea_log, __u64 log_entries, __u32 size, const char *devname);
 	void (*predictable_latency_per_nvmset)(struct nvme_nvmset_predictable_lat_log *plpns_log, __u16 nvmset_id, const char *devname);
 	void (*primary_ctrl_cap)(const struct nvme_primary_ctrl_cap *caps);
-	void (*relatives)(nvme_root_t r, const char *name);
+	void (*relatives)(struct nvme_global_ctx *ctx, const char *name);
 	void (*resv_notification_log)(struct nvme_resv_notification_log *resv, const char *devname);
 	void (*resv_report)(struct nvme_resv_status *status, int bytes, bool eds);
 	void (*sanitize_log_page)(struct nvme_sanitize_log_page *sanitize_log, const char *devname);
@@ -103,12 +103,12 @@ struct print_ops {
 
 	/* libnvme tree print functions */
 	void (*list_item)(nvme_ns_t n, struct table *t);
-	void (*list_items)(nvme_root_t t);
-	void (*print_nvme_subsystem_list)(nvme_root_t r, bool show_ana);
-	void (*topology_ctrl)(nvme_root_t r);
-	void (*topology_namespace)(nvme_root_t r);
-	void (*topology_multipath)(nvme_root_t r);
-	void (*topology_tabular)(nvme_root_t r);
+	void (*list_items)(struct nvme_global_ctx *ctx);
+	void (*print_nvme_subsystem_list)(struct nvme_global_ctx *ctx, bool show_ana);
+	void (*topology_ctrl)(struct nvme_global_ctx *ctx);
+	void (*topology_namespace)(struct nvme_global_ctx *ctx);
+	void (*topology_multipath)(struct nvme_global_ctx *ctx);
+	void (*topology_tabular)(struct nvme_global_ctx *ctx);
 
 	/* status and error messages */
 	void (*connect_msg)(nvme_ctrl_t c);
@@ -158,7 +158,7 @@ struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
 
 void nvme_show_status(int status);
 void nvme_show_lba_status_info(__u32 result);
-void nvme_show_relatives(nvme_root_t r, const char *name, nvme_print_flags_t flags);
+void nvme_show_relatives(struct nvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs, nvme_print_flags_t flags);
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, nvme_print_flags_t flags,
@@ -229,8 +229,8 @@ void nvme_show_single_property(int offset, uint64_t prop, nvme_print_flags_t fla
 void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t flags);
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	nvme_print_flags_t flags);
-void nvme_show_list_items(nvme_root_t t, nvme_print_flags_t flags);
-void nvme_show_subsystem_list(nvme_root_t t, bool show_ana,
+void nvme_show_list_items(struct nvme_global_ctx *ctx, nvme_print_flags_t flags);
+void nvme_show_subsystem_list(struct nvme_global_ctx *ctx, bool show_ana,
 			      nvme_print_flags_t flags);
 void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
 	nvme_print_flags_t flags);
@@ -250,10 +250,10 @@ void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_
 	nvme_print_flags_t flags);
 void nvme_show_list_ns(struct nvme_ns_list *ns_list,
 	nvme_print_flags_t flags);
-void nvme_show_topology(nvme_root_t t,
+void nvme_show_topology(struct nvme_global_ctx *ctx,
 			enum nvme_cli_topo_ranking ranking,
 			nvme_print_flags_t flags);
-void nvme_show_topology_tabular(nvme_root_t t, nvme_print_flags_t flags);
+void nvme_show_topology_tabular(struct nvme_global_ctx *ctx, nvme_print_flags_t flags);
 
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result);
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);

@@ -229,7 +229,8 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	const int solidigm_vu_smart_log_id = 0xCA;
 	struct vu_smart_log smart_log_payload;
 	nvme_print_flags_t flags;
-	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int err;
 	__u8 uuid_index;
 
@@ -250,25 +251,23 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		OPT_END()
 	};
 
-	err = parse_and_open(&dev, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
 	err = validate_output_format(cfg.output_format, &flags);
 	if (err < 0) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
-		dev_close(dev);
 		return err;
 	}
 
-	sldgm_get_uuid_index(dev, &uuid_index);
+	sldgm_get_uuid_index(hdl, &uuid_index);
 
 	struct nvme_get_log_args args = {
 		.lpo = 0,
 		.result = NULL,
 		.log = &smart_log_payload,
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = solidigm_vu_smart_log_id,
 		.len = sizeof(smart_log_payload),
@@ -281,16 +280,16 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		.ot = false,
 	};
 
-	err =  nvme_get_log(&args);
+	err =  nvme_get_log(hdl, &args);
 	if (!err) {
 		if (flags & JSON)
 			vu_smart_log_show_json(&smart_log_payload,
-					       cfg.namespace_id, dev->name);
+					       cfg.namespace_id, nvme_transport_handle_get_name(hdl));
 		else if (flags & BINARY)
 			d_raw((unsigned char *)&smart_log_payload, sizeof(smart_log_payload));
 		else
 			vu_smart_log_show(&smart_log_payload, cfg.namespace_id,
-					  dev->name, uuid_index);
+					  nvme_transport_handle_get_name(hdl), uuid_index);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	}

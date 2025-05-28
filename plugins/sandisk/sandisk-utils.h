@@ -296,16 +296,16 @@ struct __packed sndk_fw_act_history_log_format_c2 {
 	__u8		log_page_guid[SNDK_GUID_LENGTH];
 };
 
-int sndk_get_pci_ids(nvme_root_t r,
-		struct nvme_dev *dev,
+int sndk_get_pci_ids(struct nvme_global_ctx *ctx,
+		struct nvme_transport_handle *hdl,
 		uint32_t *device_id,
 		uint32_t *vendor_id);
 
-int sndk_get_vendor_id(struct nvme_dev *dev,
+int sndk_get_vendor_id(struct nvme_transport_handle *hdl,
 		uint32_t *vendor_id);
 
-bool sndk_check_device(nvme_root_t r,
-		struct nvme_dev *dev);
+bool sndk_check_device(struct nvme_global_ctx *ctx,
+		struct nvme_transport_handle *hdl);
 
 void sndk_get_commit_action_bin(__u8 commit_action_type,
 		char *action_bin);
@@ -323,23 +323,23 @@ bool sndk_nvme_parse_dev_status_log_str(void *log_data,
 		char *ret_data,
 		__u32 *ret_data_len);
 
-bool sndk_get_dev_mgment_data(nvme_root_t r,
-		struct nvme_dev *dev,
+bool sndk_get_dev_mgment_data(struct nvme_global_ctx *ctx,
+		struct nvme_transport_handle *hdl,
 		void **data);
 
 bool sndk_validate_dev_mng_log(void *data);
 
-bool sndk_get_dev_mgmt_log_page_data(struct nvme_dev *dev,
+bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		void **log_data,
 		__u8 uuid_ix);
 
-__u64 sndk_get_drive_capabilities(nvme_root_t r,
-		struct nvme_dev *dev);
+__u64 sndk_get_drive_capabilities(struct nvme_global_ctx *ctx,
+		struct nvme_transport_handle *hdl);
 
-__u64 sndk_get_enc_drive_capabilities(nvme_root_t r,
-	    struct nvme_dev *dev);
+__u64 sndk_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
+	    struct nvme_transport_handle *hdl);
 
-int sndk_get_serial_name(struct nvme_dev *dev, char *file, size_t len,
+int sndk_get_serial_name(struct nvme_transport_handle *hdl, char *file, size_t len,
 			 const char *suffix);
 
 void sndk_UtilsGetTime(struct SNDK_UtilsTimeInfo *timeInfo);
@@ -347,4 +347,4 @@ void sndk_UtilsGetTime(struct SNDK_UtilsTimeInfo *timeInfo);
 int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer,
 		       const char *format, ...);
 
-int sndk_check_ctrl_telemetry_option_disabled(struct nvme_dev *dev);
+int sndk_check_ctrl_telemetry_option_disabled(struct nvme_transport_handle *hdl);

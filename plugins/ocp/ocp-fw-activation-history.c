@@ -27,17 +27,18 @@ static const unsigned char ocp_fw_activation_history_guid[GUID_LEN] = {
 int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 				  struct plugin *plugin)
 {
-	const char *description = "Retrieves the OCP firmware activation history log.";
+	const char *desc = "Retrieves the OCP firmware activation history log.";
 
 	char *format = "normal";
 
-	OPT_ARGS(options) = {
+	OPT_ARGS(opts) = {
 		OPT_FMT("output-format", 'o', &format, "output format : normal | json"),
 		OPT_END()
 	};
 
-	struct nvme_dev *dev = NULL;
-	int err = parse_and_open(&dev, argc, argv, description, options);
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	int err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 
 	if (err)
 		return err;
@@ -48,7 +49,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 	 * Best effort attempt at uuid. Otherwise, assume no index (i.e. 0)
 	 * Log GUID check will ensure correctness of returned data
 	 */
-	ocp_get_uuid_index(dev, &uuid_index);
+	ocp_get_uuid_index(hdl, &uuid_index);
 
 	struct fw_activation_history fw_history = { 0 };
 
@@ -57,7 +58,6 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 		.result = NULL,
 		.log = &fw_history,
 		.args_size = sizeof(args),
-		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = (enum nvme_cmd_get_log_lid)OCP_LID_FAHL_OBSOLETE,
 		.len = sizeof(fw_history),
@@ -70,12 +70,10 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
 		.ot = false,
 	};
 
-	err = nvme_get_log(&args);
+	err = nvme_get_log(hdl, &args);
 
 	if (err)
 		nvme_show_status(err);
-
-	dev_close(dev);
 
 	int guid_cmp_res = memcmp(fw_history.log_page_guid, ocp_fw_activation_history_guid,
 				  sizeof(ocp_fw_activation_history_guid));

@@ -724,7 +724,7 @@ out:
 	json_free_object(root);
 }
 
-static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
+static int nvme_get_ontap_c2_log(struct nvme_transport_handle *hdl, __u32 nsid, void *buf, __u32 buflen)
 {
 	struct nvme_passthru_cmd get_log;
 	int err;
@@ -745,7 +745,7 @@ static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
 	get_log.cdw10 |= ONTAP_C2_LOG_NSINFO_LSP << 8;
 	get_log.cdw11 = numdu;
 
-	err = nvme_submit_admin_passthru(fd, &get_log, NULL);
+	err = nvme_submit_admin_passthru(hdl, &get_log, NULL);
 	if (err) {
 		fprintf(stderr, "ioctl error %0x\n", err);
 		return 1;
@@ -754,12 +754,13 @@ static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
 	return 0;
 }
 
-static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
+static int netapp_smdevices_get_info(struct nvme_transport_handle *hdl,
+				     struct smdevice_info *item,
 				     const char *dev)
 {
 	int err;
 
-	err = nvme_identify_ctrl(fd, &item->ctrl);
+	err = nvme_identify_ctrl(hdl, &item->ctrl);
 	if (err) {
 		fprintf(stderr,
 			"Identify Controller failed to %s (%s)\n", dev,
@@ -771,8 +772,8 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 	if (strncmp("NetApp E-Series", item->ctrl.mn, 15) != 0)
 		return 0; /* not the right model of controller */
 
-	err = nvme_get_nsid(fd, &item->nsid);
-	err = nvme_identify_ns(fd, item->nsid, &item->ns);
+	err = nvme_get_nsid(hdl, &item->nsid);
+	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr,
 			"Unable to identify namespace for %s (%s)\n",
@@ -785,13 +786,14 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 	return 1;
 }
 
-static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
-		const char *dev)
+static int netapp_ontapdevices_get_info(struct nvme_transport_handle *hdl,
+					struct ontapdevice_info *item,
+					const char *dev)
 {
 	int err;
 	void *nsdescs;
 
-	err = nvme_identify_ctrl(fd, &item->ctrl);
+	err = nvme_identify_ctrl(hdl, &item->ctrl);
 	if (err) {
 		fprintf(stderr, "Identify Controller failed to %s (%s)\n",
 			dev, err < 0 ? strerror(-err) :
@@ -803,9 +805,9 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 		/* not the right controller model */
 		return 0;
 
-	err = nvme_get_nsid(fd, &item->nsid);
+	err = nvme_get_nsid(hdl, &item->nsid);
 
-	err = nvme_identify_ns(fd, item->nsid, &item->ns);
+	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace for %s (%s)\n",
 			dev, err < 0 ? strerror(-err) :
@@ -820,7 +822,7 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 
 	memset(nsdescs, 0, 0x1000);
 
-	err = nvme_identify_ns_descs(fd, item->nsid, nsdescs);
+	err = nvme_identify_ns_descs(hdl, item->nsid, nsdescs);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
 			dev, err < 0 ? strerror(-err) :
@@ -832,7 +834,7 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 	memcpy(item->uuid, nsdescs + sizeof(struct nvme_ns_id_desc), sizeof(item->uuid));
 	free(nsdescs);
 
-	err = nvme_get_ontap_c2_log(fd, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
+	err = nvme_get_ontap_c2_log(hdl, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get log page data for %s (%s)\n",
 			dev, err < 0 ? strerror(-err) :
@@ -884,16 +886,17 @@ static int netapp_output_format(char *format)
 
 /* handler for 'nvme netapp smdevices' */
 static int netapp_smdevices(int argc, char **argv, struct command *command,
-		struct plugin *plugin)
+			    struct plugin *plugin)
 {
 	const char *desc = "Display information about E-Series volumes.";
-
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 	struct dirent **devices;
-	int num, i, fd, ret, fmt;
+	int num, i, ret, fmt;
 	struct smdevice_info *smdevices;
 	char path[264];
 	char *devname = NULL;
 	int num_smdevices = 0;
+	struct nvme_transport_handle *hdl;
 
 	struct config {
 		bool verbose;
@@ -909,6 +912,9 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|column"),
 		OPT_END()
 	};
+
+	if (!ctx)
+		return -ENOMEM;
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
@@ -955,16 +961,16 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 	for (i = 0; i < num; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev_path,
 			devices[i]->d_name);
-		fd = open(path, O_RDONLY);
-		if (fd < 0) {
+		hdl = nvme_open(ctx, path);
+		if (!hdl) {
 			fprintf(stderr, "Unable to open %s: %s\n", path,
 				strerror(errno));
 			continue;
 		}
 
-		num_smdevices += netapp_smdevices_get_info(fd,
+		num_smdevices += netapp_smdevices_get_info(hdl,
 						&smdevices[num_smdevices], path);
-		close(fd);
+		nvme_close(hdl);
 	}
 
 	if (num_smdevices) {
@@ -993,13 +999,15 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 	const char *desc = "Display information about ONTAP devices.";
 	struct dirent **devices;
-	int num, i, fd, ret, fmt;
+	int num, i, ret, fmt;
 	struct ontapdevice_info *ontapdevices;
 	char path[264];
 	char *devname = NULL;
 	int num_ontapdevices = 0;
+	struct nvme_transport_handle *hdl;
 
 	struct config {
 		bool verbose;
@@ -1015,6 +1023,9 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|column"),
 		OPT_END()
 	};
+
+	if (!ctx)
+		return -ENOMEM;
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
@@ -1061,17 +1072,17 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 	for (i = 0; i < num; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev_path,
 				devices[i]->d_name);
-		fd = open(path, O_RDONLY);
-		if (fd < 0) {
+		hdl = nvme_open(ctx, path);
+		if (!hdl) {
 			fprintf(stderr, "Unable to open %s: %s\n", path,
 					strerror(errno));
 			continue;
 		}
 
-		num_ontapdevices += netapp_ontapdevices_get_info(fd,
+		num_ontapdevices += netapp_ontapdevices_get_info(hdl,
 				&ontapdevices[num_ontapdevices], path);
 
-		close(fd);
+		nvme_close(hdl);
 	}
 
 	if (num_ontapdevices) {
