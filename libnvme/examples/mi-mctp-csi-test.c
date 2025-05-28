@@ -92,7 +92,7 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 		return -1;
 	}
 
-	rc = nvme_mi_admin_get_log(hdl, &args);
+	rc = nvme_get_log(hdl, &args);
 	if (rc) {
 		warn("can't perform Get Log page command");
 		return -1;

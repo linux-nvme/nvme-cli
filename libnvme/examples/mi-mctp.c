@@ -409,7 +409,7 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 		return -1;
 	}
 
-	rc = nvme_mi_admin_get_log(hdl, &args);
+	rc = nvme_get_log(hdl, &args);
 	if (rc) {
 		warn("can't perform Get Log page command");
 		return -1;
@@ -577,7 +577,7 @@ int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 	args.data = &proto_info;
 	args.data_len = sizeof(proto_info);
 
-	rc = nvme_mi_admin_security_recv(hdl, &args);
+	rc = nvme_security_receive(hdl, &args);
 	if (rc) {
 		warnx("can't perform Security Receive command: rc %d", rc);
 		return -1;
