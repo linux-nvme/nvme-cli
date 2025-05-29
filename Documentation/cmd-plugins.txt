@@ -178,6 +178,9 @@ linknvme:nvme-wdc-clear-pcie-correctable-errors[1]::
 linknvme:nvme-wdc-cloud-SSD-plugin-version[1]::
 	Display WDC plugin Cloud SSD Plugin Version
 
+linknvme:nvme-wdc-cu-smart-log[1]::
+	Display WDC plugin Customer Unique Log Page
+
 linknvme:nvme-wdc-drive-essentials[1]::
 	Retrieve WDC device's drive essentials bin files
 
