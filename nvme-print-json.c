@@ -2124,22 +2124,52 @@ static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
 				    struct json_object *r)
 {
 	char *eye = (char *)lane->eye_desc;
-	char *printable = malloc(lane->nrows * lane->ncols + lane->ncols);
+	uint16_t nrows = le16_to_cpu(lane->nrows);
+	uint16_t ncols = le16_to_cpu(lane->ncols);
+
+	if (nrows == 0 || ncols == 0)
+		return NULL;
+
+	// Allocate buffer for full printable string (with newlines)
+	char *printable = malloc(nrows * ncols + nrows + 1); // +1 for null terminator
 	char *printable_start = printable;
-	int i, j;
 
 	if (!printable)
-		goto exit;
+		return NULL;
 
-	for (i = 0; i < lane->nrows; i++) {
-		for (j = 0; j < lane->ncols; j++, printable++)
-			sprintf(printable, "%c", eye[i * lane->ncols + j]);
-		sprintf(printable++, "\n");
+	struct json_object *eye_array = json_create_array();
+
+	if (!eye_array) {
+		free(printable);
+		return NULL;
 	}
 
-	obj_add_str(r, "printable_eye", printable_start);
+	for (int i = 0; i < nrows; i++) {
+		char *row = malloc(ncols + 1);
 
-exit:
+		if (!row) {
+			// Cleanup on failure
+			free(printable_start);
+			return NULL;
+		}
+
+		for (int j = 0; j < ncols; j++) {
+			char ch = eye[i * ncols + j];
+			*printable++ = ch;
+			row[j] = ch;
+		}
+
+		*printable++ = '\n';
+		row[ncols] = '\0';
+
+		array_add_str(eye_array, row);
+		free(row);
+	}
+
+	*printable = '\0';
+
+	obj_add_array(r, "printable_eye", eye_array);
+
 	return printable_start;
 }
 
@@ -2155,6 +2185,8 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 
 	for (i = 0; i < num_descs; i++) {
 		struct nvme_eom_lane_desc *desc = p;
+		unsigned char *vsdata = NULL;
+		unsigned int vsdataoffset = 0;
 		struct json_object *jdesc = json_create_object();
 
 		obj_add_uint(jdesc, "lid", desc->mstatus);
@@ -2169,9 +2201,28 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 		obj_add_uint(jdesc, "edlen", le16_to_cpu(desc->edlen));
 
 		if (NVME_EOM_ODP_PEFP(log->odp))
-			allocated_eyes[i] = json_eom_printable_eye(desc, r);
+			allocated_eyes[i] = json_eom_printable_eye(desc, jdesc);
 
-		/* Eye Data field is vendor specific, doesn't map to JSON */
+		if (desc->edlen == 0)
+			continue;
+
+		/* Hex dump Vendor Specific Eye Data*/
+		vsdataoffset = (le16_to_cpu(desc->nrows) * le16_to_cpu(desc->ncols)) +
+						sizeof(struct nvme_eom_lane_desc);
+		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
+		// 2 hex chars + space per byte
+		_cleanup_free_ char *hexstr = malloc(le16_to_cpu(desc->edlen) * 3 + 1);
+
+		if (!hexstr)
+			return;
+
+		char *hexdata = hexstr;
+
+		for (int offset = 0; offset < le16_to_cpu(desc->edlen); offset++)
+			hexdata += sprintf(hexdata, "%02X ", vsdata[offset]);
+		*(hexdata - 1) = '\0'; // remove trailing space
+
+		obj_add_str(jdesc, "vsdata_hex", hexstr);
 
 		array_add_obj(descs, jdesc);
 
