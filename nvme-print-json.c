@@ -2121,11 +2121,11 @@ static void json_boot_part_log(void *bp_log, const char *devname,
 
 /* Printable Eye string is allocated and returned, caller must free */
 static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
-									struct json_object *r)
+				    struct json_object *r)
 {
 	char *eye = (char *)lane->eye_desc;
-	uint16_t nrows = lane->nrows;
-	uint16_t ncols = lane->ncols;
+	uint16_t nrows = le16_to_cpu(lane->nrows);
+	uint16_t ncols = le16_to_cpu(lane->ncols);
 
 	if (nrows == 0 || ncols == 0)
 		return NULL;
@@ -2139,11 +2139,19 @@ static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
 
 	struct json_object *eye_array = json_create_array();
 
+	if (!eye_array) {
+		free(printable);
+		return NULL;
+	}
+
 	for (int i = 0; i < nrows; i++) {
 		char *row = malloc(ncols + 1);
 
-		if (!row)
-			continue;
+		if (!row) {
+			// Cleanup on failure
+			free(printable_start);
+			return NULL;
+		}
 
 		for (int j = 0; j < ncols; j++) {
 			char ch = eye[i * ncols + j];
@@ -2160,7 +2168,7 @@ static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
 
 	*printable = '\0';
 
-	obj_add_array(r, "printable_eye_rows", eye_array);
+	obj_add_array(r, "printable_eye", eye_array);
 
 	return printable_start;
 }
@@ -2197,26 +2205,25 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 
 		if (desc->edlen == 0)
 			continue;
-		else {
-			/* Hex dump Vendor Specific Eye Data*/
-			vsdata = (unsigned char *)malloc(desc->edlen);
-			vsdataoffset = (desc->nrows * desc->ncols) +
-								sizeof(struct nvme_eom_lane_desc);
-			vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
-			char *hexstr = malloc(desc->edlen * 3 + 1); // 2 hex chars + space per byte
 
-			if (!hexstr)
-				return;
+		/* Hex dump Vendor Specific Eye Data*/
+		vsdataoffset = (le16_to_cpu(desc->nrows) * le16_to_cpu(desc->ncols)) +
+						sizeof(struct nvme_eom_lane_desc);
+		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
+		// 2 hex chars + space per byte
+		_cleanup_free_ char *hexstr = malloc(le16_to_cpu(desc->edlen) * 3 + 1);
 
-			char *p = hexstr;
+		if (!hexstr)
+			return;
 
-			for (int offset = 0; offset < desc->edlen; offset++)
-				p += sprintf(p, "%02X ", vsdata[offset]);
-			*(p - 1) = '\0'; // remove trailing space
+		char *hexdata = hexstr;
 
-			obj_add_str(jdesc, "vsdata_hex", hexstr);
-			free(hexstr);
-		}
+		for (int offset = 0; offset < le16_to_cpu(desc->edlen); offset++)
+			hexdata += sprintf(hexdata, "%02X ", vsdata[offset]);
+		*(hexdata - 1) = '\0'; // remove trailing space
+
+		obj_add_str(jdesc, "vsdata_hex", hexstr);
+
 		array_add_obj(descs, jdesc);
 
 		p += log->dsize;

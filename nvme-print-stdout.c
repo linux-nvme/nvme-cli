@@ -811,16 +811,15 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 		/* Eye Data field is vendor specific */
 		if (desc->edlen == 0)
 			continue;
-		else {
-			/* Hex dump Vendor Specific Eye Data */
-			vsdata = (unsigned char *)malloc(desc->edlen);
-			vsdataoffset = (desc->nrows * desc->ncols) +
-								sizeof(struct nvme_eom_lane_desc);
-			vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
-			printf("Eye Data:\n");
-			d(vsdata, desc->edlen, 16, 1);
-			printf("\n");
-		}
+
+		/* Hex dump Vendor Specific Eye Data */
+		vsdata = malloc(desc->edlen);
+		vsdataoffset = (desc->nrows * desc->ncols) +
+						sizeof(struct nvme_eom_lane_desc);
+		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
+		printf("Eye Data:\n");
+		d(vsdata, desc->edlen, 16, 1);
+		printf("\n");
 
 		p += log->dsize;
 	}
