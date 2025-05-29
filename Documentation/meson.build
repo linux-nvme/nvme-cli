@@ -206,6 +206,7 @@ adoc_sources = [
   'nvme-wdc-clear-pcie-correctable-errors',
   'nvme-wdc-cloud-SSD-plugin-version',
   'nvme-wdc-cloud-boot-SSD-version',
+  'nvme-wdc-cu-smart-log',
   'nvme-wdc-drive-essentials',
   'nvme-wdc-drive-log',
   'nvme-wdc-drive-resize',

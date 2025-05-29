@@ -5,7 +5,7 @@
 #if !defined(WDC_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define WDC_NVME
 
-#define WDC_PLUGIN_VERSION   "2.14.0"
+#define WDC_PLUGIN_VERSION   "2.14.1"
 #include "cmd.h"
 
 PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERSION),
@@ -83,6 +83,9 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERS
 		ENTRY("set-latency-monitor-feature",
 			"WDC set Latency Monitor feature",
 			wdc_set_latency_monitor_feature)
+		ENTRY("cu-smart-log",
+			"WDC Get Customer Unique Smart Log",
+			wdc_cu_smart_log)
 	)
 );
 
