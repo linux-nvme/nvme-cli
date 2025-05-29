@@ -1,0 +1,49 @@
+nvme-wdc-cu-smart-log(1)
+========================
+
+NAME
+----
+nvme-wdc-cu-smart-log - Send NVMe WDC cu-smart-log Vendor Unique Command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc cu-smart-log' <device> [--output-format=<normal|json> -o <normal|json>]
+			[--uuid-index=<uuid-index> | -u <uuid-index>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieves and formats the Vendor Unique WDC 0xCA log page.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', or
+	'json'. Only one output format can be used at a time.
+	Default is normal.
+
+-u <uuid-index>::
+--uuid-index=<uuid-index>::
+	Sets the uuid-index of the log page to be retrieved. Defaults to
+	0 if not given.
+
+EXAMPLES
+--------
+* Has the program issue WDC cu-smart-log plugin Command :
++
+------------
+# nvme wdc cu-smart-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
