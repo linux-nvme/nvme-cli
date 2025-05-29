@@ -776,9 +776,9 @@ static void stdout_eom_printable_eye(struct nvme_eom_lane_desc *lane)
 	char *eye = (char *)lane->eye_desc;
 	int i, j;
 
-	for (i = 0; i < lane->nrows; i++) {
-		for (j = 0; j < lane->ncols; j++)
-			printf("%c", eye[i * lane->ncols + j]);
+	for (i = 0; i < le16_to_cpu(lane->nrows); i++) {
+		for (j = 0; j < le16_to_cpu(lane->ncols); j++)
+			printf("%c", eye[i * le16_to_cpu(lane->ncols) + j]);
 		printf("\n");
 	}
 }
@@ -809,16 +809,16 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 			stdout_eom_printable_eye(desc);
 
 		/* Eye Data field is vendor specific */
-		if (desc->edlen == 0)
+		if (le16_to_cpu(desc->edlen) == 0)
 			continue;
 
 		/* Hex dump Vendor Specific Eye Data */
-		vsdata = malloc(desc->edlen);
-		vsdataoffset = (desc->nrows * desc->ncols) +
+		vsdata = malloc(le16_to_cpu(desc->edlen));
+		vsdataoffset = (le16_to_cpu(desc->nrows) * le16_to_cpu(desc->ncols)) +
 						sizeof(struct nvme_eom_lane_desc);
 		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
 		printf("Eye Data:\n");
-		d(vsdata, desc->edlen, 16, 1);
+		d(vsdata, le16_to_cpu(desc->edlen), 16, 1);
 		printf("\n");
 
 		p += log->dsize;
