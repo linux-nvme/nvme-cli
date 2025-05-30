@@ -76,6 +76,35 @@ struct sockaddr_mctp {
 
 #endif /* !AF_MCTP */
 
+#if !defined(MCTP_TAG_PREALLOC)
+/*Adding this here for users with older build MCTP header
+ *that require SIOCMCTPALLOC/DROP
+ */
+#define MCTP_TAG_PREALLOC	0x10
+
+#define SIOCMCTPALLOCTAG	(SIOCPROTOPRIVATE + 0)
+#define SIOCMCTPDROPTAG		(SIOCPROTOPRIVATE + 1)
+
+/* Deprecated: use mctp_ioc_tag_ctl2 / TAG2 ioctls instead, which defines the
+ * MCTP network ID as part of the allocated tag. Using this assumes the default
+ * net ID for allocated tags, which may not give correct behaviour on system
+ * with multiple networks configured.
+ */
+struct mctp_ioc_tag_ctl {
+	mctp_eid_t	peer_addr;
+
+	/* For SIOCMCTPALLOCTAG: must be passed as zero, kernel will
+	 * populate with the allocated tag value. Returned tag value will
+	 * always have TO and PREALLOC set.
+	 *
+	 * For SIOCMCTPDROPTAG: userspace provides tag value to drop, from
+	 * a prior SIOCMCTPALLOCTAG call (and so must have TO and PREALLOC set).
+	 */
+	__u8		tag;
+	__u16		flags;
+};
+#endif  /* !MCTP_TAG_PREALLOC */
+
 #define MCTP_TYPE_NVME		0x04
 #define MCTP_TYPE_MIC		0x80
 
@@ -149,7 +178,6 @@ void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops)
 }
 static const struct nvme_mi_transport nvme_mi_transport_mctp;
 
-#ifdef SIOCMCTPALLOCTAG
 static __u8 nvme_mi_mctp_tag_alloc(struct nvme_mi_ep *ep)
 {
 	struct nvme_mi_transport_mctp *mctp;
@@ -192,25 +220,6 @@ static void nvme_mi_mctp_tag_drop(struct nvme_mi_ep *ep, __u8 tag)
 
 	ops.ioctl_tag(mctp->sd, SIOCMCTPDROPTAG, &ctl);
 }
-
-#else /*  !defined SIOMCTPTAGALLOC */
-
-static __u8 nvme_mi_mctp_tag_alloc(struct nvme_mi_ep *ep)
-{
-	static bool logged;
-	if (!logged) {
-		nvme_msg(ep->root, LOG_INFO,
-			 "Build does not support explicit tag allocation\n");
-		logged = true;
-	}
-	return MCTP_TAG_OWNER;
-}
-
-static void nvme_mi_mctp_tag_drop(struct nvme_mi_ep *ep, __u8 tag)
-{
-}
-
-#endif /* !defined SIOMCTPTAGALLOC */
 
 struct nvme_mi_msg_resp_mpr {
 	struct nvme_mi_msg_hdr hdr;
