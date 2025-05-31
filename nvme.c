@@ -6335,6 +6335,26 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 	return nvme_set_single_property(dev_fd(dev), cfg.offset, cfg.value);
 }
 
+static void show_relatives(const char *name, nvme_print_flags_t flags)
+{
+	int err = 0;
+
+	_cleanup_nvme_root_ nvme_root_t r = nvme_create_root(stderr, log_level);
+
+	if (!r) {
+		nvme_show_error("Failed to create topology root: %s", nvme_strerror(errno));
+		return;
+	}
+
+	err = nvme_scan_topology(r, NULL, NULL);
+	if (err < 0) {
+		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
+		return;
+	}
+
+	nvme_show_relatives(r, name, flags);
+}
+
 static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Re-format a specified namespace on the\n"
@@ -6356,6 +6376,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	__u8 prev_lbaf = 0;
 	int block_size;
 	int err, i;
+	nvme_print_flags_t flags = NORMAL;
 
 	struct config {
 		__u32	namespace_id;
@@ -6408,6 +6429,12 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		} else {
 			argconfig_print_help(desc, opts);
 		}
+		return err;
+	}
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		return err;
 	}
 
@@ -6523,7 +6550,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		fprintf(stderr, "You are about to format %s, namespace %#x%s.\n",
 			dev->name, cfg.namespace_id,
 			cfg.namespace_id == NVME_NSID_ALL ? "(ALL namespaces)" : "");
-		nvme_show_relatives(dev->name);
+		show_relatives(dev->name, flags);
 		fprintf(stderr,
 			"WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"

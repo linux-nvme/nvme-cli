@@ -15,6 +15,7 @@
 #include "util/suffix.h"
 #include "util/types.h"
 #include "common.h"
+#include "logging.h"
 
 #define nvme_print(name, flags, ...)				\
 	do {							\
@@ -490,9 +491,9 @@ void nvme_show_single_property(int offset, uint64_t value64, nvme_print_flags_t 
 	nvme_print(single_property, flags, offset, value64);
 }
 
-void nvme_show_relatives(const char *name)
+void nvme_show_relatives(nvme_root_t r, const char *name, nvme_print_flags_t flags)
 {
-	/* XXX: TBD */
+	nvme_print(relatives, flags, r, name);
 }
 
 void d(unsigned char *buf, int len, int width, int group)

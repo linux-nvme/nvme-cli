@@ -5973,6 +5973,65 @@ static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *lo
 	d((unsigned char *)log->osp, osp_len, 16, 1);
 }
 
+static void stdout_relatives(nvme_root_t r, const char *name)
+{
+	struct nvme_resources res;
+	struct htable_ns_iter it;
+	bool block = true;
+	bool first = true;
+	nvme_ctrl_t c;
+	nvme_path_t p;
+	nvme_ns_t n;
+	int nsid;
+	int ret;
+	int id;
+
+	ret = sscanf(name, "nvme%dn%d", &id, &nsid);
+
+	switch (ret) {
+	case 1:
+		block = false;
+		break;
+	case 2:
+		break;
+	default:
+		return;
+	}
+
+	nvme_resources_init(r, &res);
+
+	if (block) {
+		fprintf(stderr, "Namespace %s has parent controller(s):", name);
+		for (n = htable_ns_getfirst(&res.ht_n, name, &it); n;
+		     n = htable_ns_getnext(&res.ht_n, name, &it)) {
+			if (nvme_ns_get_ctrl(n)) {
+				fprintf(stderr, "%s", nvme_ctrl_get_name(nvme_ns_get_ctrl(n)));
+				break;
+			}
+			nvme_namespace_for_each_path(n, p) {
+				c = nvme_path_get_ctrl(p);
+				fprintf(stderr, "%s%s", first ? "" : ", ", nvme_ctrl_get_name(c));
+				if (first)
+					first = false;
+			}
+		}
+		fprintf(stderr, "\n\n");
+	} else {
+		c = htable_ctrl_get(&res.ht_c, name);
+		if (c) {
+			fprintf(stderr, "Controller %s has child namespace(s):", name);
+			nvme_ctrl_for_each_ns(c, n) {
+				fprintf(stderr, "%s%s", first ? "" : ", ", nvme_ns_get_name(n));
+				if (first)
+					first = false;
+			}
+			fprintf(stderr, "\n\n");
+		}
+	}
+
+	nvme_resources_free(&res);
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -6016,6 +6075,7 @@ static struct print_ops stdout_print_ops = {
 	.predictable_latency_event_agg_log = stdout_predictable_latency_event_agg_log,
 	.predictable_latency_per_nvmset	= stdout_predictable_latency_per_nvmset,
 	.primary_ctrl_cap		= stdout_primary_ctrl_cap,
+	.relatives			= stdout_relatives,
 	.resv_notification_log		= stdout_resv_notif_log,
 	.resv_report			= stdout_resv_report,
 	.sanitize_log_page		= stdout_sanitize_log,
