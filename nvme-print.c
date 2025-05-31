@@ -15,6 +15,7 @@
 #include "util/suffix.h"
 #include "util/types.h"
 #include "common.h"
+#include "logging.h"
 
 #define nvme_print(name, flags, ...)				\
 	do {							\
@@ -490,9 +491,24 @@ void nvme_show_single_property(int offset, uint64_t value64, nvme_print_flags_t 
 	nvme_print(single_property, flags, offset, value64);
 }
 
-void nvme_show_relatives(const char *name)
+void nvme_show_relatives(const char *name, nvme_print_flags_t flags)
 {
-	/* XXX: TBD */
+	int err = 0;
+
+	_cleanup_nvme_root_ nvme_root_t r = nvme_create_root(stderr, log_level);
+
+	if (!r) {
+		nvme_show_error("Failed to create topology root: %s", nvme_strerror(errno));
+		return;
+	}
+
+	err = nvme_scan_topology(r, NULL, NULL);
+	if (err < 0) {
+		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
+		return;
+	}
+
+	nvme_print(relatives, flags, name, r);
 }
 
 void d(unsigned char *buf, int len, int width, int group)

@@ -6356,6 +6356,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	__u8 prev_lbaf = 0;
 	int block_size;
 	int err, i;
+	nvme_print_flags_t flags = NORMAL;
 
 	struct config {
 		__u32	namespace_id;
@@ -6408,6 +6409,12 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		} else {
 			argconfig_print_help(desc, opts);
 		}
+		return err;
+	}
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
 		return err;
 	}
 
@@ -6523,7 +6530,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		fprintf(stderr, "You are about to format %s, namespace %#x%s.\n",
 			dev->name, cfg.namespace_id,
 			cfg.namespace_id == NVME_NSID_ALL ? "(ALL namespaces)" : "");
-		nvme_show_relatives(dev->name);
+		nvme_show_relatives(dev->name, flags);
 		fprintf(stderr,
 			"WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
