@@ -1423,6 +1423,12 @@ int nvme_mi_admin_get_features_arbitration(nvme_mi_ctrl_t ctrl, enum nvme_get_fe
 	return __nvme_mi_admin_get_features(ctrl, NVME_FEAT_FID_ARBITRATION, sel, result);
 }
 
+int nvme_mi_admin_get_features_power_mgmt(nvme_mi_ctrl_t ctrl, enum nvme_get_features_sel sel,
+					  __u32 *result)
+{
+	return __nvme_mi_admin_get_features(ctrl, NVME_FEAT_FID_POWER_MGMT, sel, result);
+}
+
 int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
 			       struct nvme_set_features_args *args)
 {
@@ -1465,6 +1471,33 @@ int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
 	args->data_len = resp.data_len;
 
 	return 0;
+}
+
+static int __nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl, __u8 fid, __u32 cdw11, bool save,
+					__u32 *result)
+{
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.nsid = NVME_NSID_NONE,
+		.cdw11 = cdw11,
+		.cdw12 = 0,
+		.save = save,
+		.uuidx = NVME_UUID_NONE,
+		.cdw15 = 0,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+	return nvme_mi_admin_set_features(ctrl, &args);
+}
+
+int nvme_mi_admin_set_features_power_mgmt(nvme_mi_ctrl_t ctrl, __u8 ps, __u8 wh, bool save,
+					  __u32 *result)
+{
+	__u32 value = NVME_SET(ps, FEAT_PWRMGMT_PS) | NVME_SET(wh, FEAT_PWRMGMT_WH);
+
+	return __nvme_mi_admin_set_features(ctrl, NVME_FEAT_FID_POWER_MGMT, value, save, result);
 }
 
 int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,

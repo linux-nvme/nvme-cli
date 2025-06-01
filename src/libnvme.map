@@ -2,6 +2,8 @@
 LIBNVME_UNRELEASED {
 	global:
 		nvme_mi_admin_get_features_arbitration;
+		nvme_mi_admin_get_features_power_mgmt;
+		nvme_mi_admin_set_features_power_mgmt;
 };
 
 LIBNVME_1_14 {
