@@ -3138,6 +3138,18 @@ int nvme_mi_admin_get_features(nvme_mi_ctrl_t ctrl,
 			       struct nvme_get_features_args *args);
 
 /**
+ * nvme_mi_admin_get_features_arbitration() - Get arbitration feature
+ * @ctrl: Controller to send command to
+ * @sel: Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @result: The feature data is returned in this argument
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_mi_admin_get_features_arbitration(nvme_mi_ctrl_t ctrl, enum nvme_get_features_sel sel,
+					   __u32 *result);
+
+/**
  * nvme_mi_admin_get_features_data() - Helper function for &nvme_mi_admin_get_features()
  * @ctrl: Controller to send command to
  * @fid: Feature identifier

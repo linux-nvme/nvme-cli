@@ -1398,6 +1398,31 @@ int nvme_mi_admin_get_features(nvme_mi_ctrl_t ctrl,
 	return 0;
 }
 
+static int __nvme_mi_admin_get_features(nvme_mi_ctrl_t ctrl, enum nvme_features_id fid,
+					enum nvme_get_features_sel sel, __u32 *result)
+{
+	struct nvme_get_features_args args = {
+		.args_size = sizeof(args),
+		.fid = fid,
+		.nsid = NVME_NSID_NONE,
+		.sel = sel,
+		.cdw11 = 0,
+		.uuidx = NVME_UUID_NONE,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+
+	return nvme_mi_admin_get_features(ctrl, &args);
+}
+
+int nvme_mi_admin_get_features_arbitration(nvme_mi_ctrl_t ctrl, enum nvme_get_features_sel sel,
+					   __u32 *result)
+{
+	return __nvme_mi_admin_get_features(ctrl, NVME_FEAT_FID_ARBITRATION, sel, result);
+}
+
 int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
 			       struct nvme_set_features_args *args)
 {
