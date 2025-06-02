@@ -15,6 +15,7 @@
 #define HCTM_DESC "Get and set host controlled thermal management feature"
 #define TIMESTAMP_DESC "Get and set timestamp feature"
 #define TEMP_THRESH_DESC "Get and set temperature threshold feature"
+#define ARBITRATION_DESC "Get and set arbitration feature"
 
 #define FEAT_ARGS(n, ...)                                              \
 	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
@@ -27,6 +28,7 @@ PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 		ENTRY("hctm", HCTM_DESC, feat_hctm)
 		ENTRY("timestamp", TIMESTAMP_DESC, feat_timestamp)
 		ENTRY("temp-thresh", TEMP_THRESH_DESC, feat_temp_thresh)
+		ENTRY("arbitration", ARBITRATION_DESC, feat_arbitration)
 	)
 );
 #endif /* !FEAT_NVME || CMD_HEADER_MULTI_READ */

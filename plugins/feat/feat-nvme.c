@@ -31,12 +31,22 @@ struct temp_thresh_config {
 	__u8 sel;
 };
 
+struct arbitration_config {
+	__u8 ab;
+	__u8 lpw;
+	__u8 mpw;
+	__u8 hpw;
+	__u8 sel;
+};
+
 static const char *power_mgmt_feat = "power management feature";
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *save = "Specifies that the controller shall save the attribute";
 static const char *perfc_feat = "performance characteristics feature";
 static const char *hctm_feat = "host controlled thermal management feature";
 static const char *timestamp_feat = "timestamp feature";
+static const char *temp_thresh_feat = "temperature threshold feature";
+static const char *arbitration_feat = "arbitration feature";
 
 static int feat_get(struct nvme_dev *dev, const __u8 fid, __u32 cdw11, __u8 sel, const char *feat)
 {
@@ -68,7 +78,11 @@ static int feat_get(struct nvme_dev *dev, const __u8 fid, __u32 cdw11, __u8 sel,
 	};
 
 	err = nvme_get_features(&args);
+
+	nvme_show_init();
+
 	if (!err) {
+		nvme_feature_show(fid, sel, result);
 		if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
 			nvme_show_select_result(fid, result);
 		else
@@ -78,6 +92,8 @@ static int feat_get(struct nvme_dev *dev, const __u8 fid, __u32 cdw11, __u8 sel,
 	} else {
 		nvme_show_error("Get %s: %s", feat, nvme_strerror(errno));
 	}
+
+	nvme_show_finish();
 
 	return err;
 }
@@ -423,9 +439,9 @@ static int temp_thresh_set(int fd, const __u8 fid, struct argconfig_commandline_
 	if (err > 0) {
 		nvme_show_status(err);
 	} else if (err < 0) {
-		nvme_show_perror("Set %s", timestamp_feat);
+		nvme_show_perror("Set %s", temp_thresh_feat);
 	} else {
-		nvme_show_result("Set %s: (%s)", timestamp_feat, save ? "Save" : "Not save");
+		nvme_show_result("Set %s: (%s)", temp_thresh_feat, save ? "Save" : "Not save");
 		nvme_feature_show_fields(fid, NVME_SET(cfg->tmpth, FEAT_TT_TMPTH) |
 					 NVME_SET(cfg->tmpsel, FEAT_TT_TMPSEL) |
 					 NVME_SET(cfg->thsel, FEAT_TT_THSEL) |
@@ -464,7 +480,83 @@ static int feat_temp_thresh(int argc, char **argv, struct command *cmd, struct p
 		err = temp_thresh_set(dev_fd(dev), fid, opts, &cfg);
 	else
 		err = feat_get(dev, fid, NVME_SET(cfg.tmpsel, FEAT_TT_TMPSEL) |
-			       NVME_SET(cfg.thsel, FEAT_TT_THSEL), cfg.sel, timestamp_feat);
+			       NVME_SET(cfg.thsel, FEAT_TT_THSEL), cfg.sel, temp_thresh_feat);
 
 	return err;
+}
+
+static int arbitration_set(int fd, const __u8 fid, struct argconfig_commandline_options *opts,
+			   struct arbitration_config *cfg)
+{
+	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
+	bool save = argconfig_parse_seen(opts, "save");
+	__u8 ab, lpw, mpw, hpw;
+	__u32 result;
+	int err;
+
+	if (save)
+		sel = NVME_GET_FEATURES_SEL_SAVED;
+
+	err = nvme_get_features_arbitration(fd, sel, &result);
+	if (!err) {
+		nvme_feature_decode_arbitration(result, &ab, &lpw, &mpw, &hpw);
+		if (!argconfig_parse_seen(opts, "ab"))
+			cfg->ab = ab;
+		if (!argconfig_parse_seen(opts, "lpw"))
+			cfg->lpw = lpw;
+		if (!argconfig_parse_seen(opts, "mpw"))
+			cfg->mpw = mpw;
+		if (!argconfig_parse_seen(opts, "hpw"))
+			cfg->hpw = hpw;
+	}
+
+	err = nvme_set_features_arbitration(fd, cfg->ab, cfg->lpw, cfg->mpw, cfg->hpw,
+					     save, &result);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", temp_thresh_feat);
+	} else {
+		nvme_show_result("Set %s: (%s)", arbitration_feat, save ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, NVME_SET(cfg->ab, FEAT_ARBITRATION_BURST) |
+					 NVME_SET(cfg->lpw, FEAT_ARBITRATION_LPW) |
+					 NVME_SET(cfg->mpw, FEAT_ARBITRATION_MPW) |
+					 NVME_SET(cfg->hpw, FEAT_ARBITRATION_HPW), NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_arbitration(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const __u8 fid = NVME_FEAT_FID_ARBITRATION;
+	const char *ab = "arbitration burst";
+	const char *lpw = "low priority weight";
+	const char *mpw = "medium priority weight";
+	const char *hpw = "high priority weight";
+	int err;
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+
+	struct arbitration_config cfg = { 0 };
+
+	FEAT_ARGS(opts,
+		  OPT_BYTE("ab", 'a', &cfg.ab, ab),
+		  OPT_BYTE("lpw", 'l', &cfg.lpw, lpw),
+		  OPT_BYTE("mpw", 'm', &cfg.mpw, mpw),
+		  OPT_BYTE("hpw", 'H', &cfg.hpw, hpw));
+
+	err = parse_and_open(&dev, argc, argv, TEMP_THRESH_DESC, opts);
+	if (err)
+		return err;
+
+	if (argc == 2 || argconfig_parse_seen(opts, "sel"))
+		return feat_get(dev, fid, 0, cfg.sel, "arbitration feature");
+
+	return arbitration_set(dev_fd(dev), fid, opts, &cfg);
 }
