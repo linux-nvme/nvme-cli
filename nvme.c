@@ -3388,33 +3388,24 @@ parse_lba:
 static bool nvme_match_device_filter(nvme_subsystem_t s,
 		nvme_ctrl_t c, nvme_ns_t ns, void *f_args)
 {
-	int ret, instance, nsid, s_num;
 	char *devname = f_args;
+	nvme_ns_t n;
 
-	if (!devname || !strlen(devname))
+	if (ns && !strcmp(devname, nvme_ns_get_name(ns)))
 		return true;
 
-	ret = sscanf(devname, "nvme%dn%d", &instance, &nsid);
-	if (ret != 2)
-		return true;
-
-	if (s) {
-		ret = sscanf(nvme_subsystem_get_name(s), "nvme-subsys%d",
-			     &s_num);
-		if (ret == 1 && s_num == instance)
-			return true;
-	}
 	if (c) {
 		s = nvme_ctrl_get_subsystem(c);
-
-		ret = sscanf(nvme_subsystem_get_name(s), "nvme-subsys%d",
-			     &s_num);
-		if (ret == 1 && s_num == instance)
-			return true;
+		nvme_ctrl_for_each_ns(c, n) {
+			if (!strcmp(devname, nvme_ns_get_name(n)))
+				return true;
+		}
 	}
-	if (ns) {
-		if (!strcmp(devname, nvme_ns_get_name(ns)))
-			return true;
+	if (s) {
+		nvme_subsystem_for_each_ns(s, n) {
+			if (!strcmp(devname, nvme_ns_get_name(n)))
+				return true;
+		}
 	}
 
 	return false;
