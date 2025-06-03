@@ -2558,6 +2558,14 @@ static void json_print_nvme_subsystem_list(nvme_root_t r, bool show_ana)
 			obj_add_str(host_attrs, "HostID", hostid);
 		subsystems = json_create_array();
 		nvme_for_each_subsystem(h, s) {
+			nvme_ctrl_t c;
+			bool no_ctrl = true;
+
+			nvme_subsystem_for_each_ctrl(s, c)
+				no_ctrl = false;
+			if (no_ctrl)
+				continue;
+
 			subsystem_attrs = json_create_object();
 			obj_add_str(subsystem_attrs, "Name", nvme_subsystem_get_name(s));
 			obj_add_str(subsystem_attrs, "NQN", nvme_subsystem_get_nqn(s));
