@@ -65,3 +65,12 @@ identify = executable(
 )
 
 test('identify', identify, env: mock_ioctl_env)
+
+logs = executable(
+    'test-logs',
+    'logs.c',
+    dependencies: libnvme_dep,
+    link_with: mock_ioctl,
+)
+
+test('logs', logs, env: mock_ioctl_env)
