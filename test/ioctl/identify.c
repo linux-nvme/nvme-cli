@@ -16,6 +16,7 @@
 #define TEST_CNTID 0x4321
 #define TEST_DOMID 0xFEDC
 #define TEST_ENDGID 0x0123
+#define TEST_FIDX 0xF
 #define TEST_SC NVME_SC_INVALID_FIELD
 
 static void test_ns(void)
@@ -531,6 +532,53 @@ static void test_kernel_error(void)
 	check(errno == EIO, "unexpected error %m");
 }
 
+static void test_identify_ns_csi_user_data_format(void)
+{
+	struct nvme_id_ns expected_id, id = {};
+	struct mock_cmd mock_admin_cmd = {
+		.opcode = nvme_admin_identify,
+		.nsid = NVME_NSID_NONE,
+		.data_len = sizeof(expected_id),
+		.cdw10 = NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT,
+		//TEST_CSI=NVME_CSI_KV does not implement this command
+		.cdw11 = (TEST_FIDX << 0) | (NVME_CSI_NVM << 24),
+		.cdw14 = TEST_UUID,
+		.out_data = &expected_id,
+	};
+	int err;
+
+	arbitrary(&expected_id, sizeof(expected_id));
+	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	err = nvme_identify_ns_csi_user_data_format(
+		TEST_FD, TEST_FIDX, TEST_UUID, NVME_CSI_NVM, &id);
+	end_mock_cmds();
+	check(err == 0, "identify returned error %d, errno %m", err);
+	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
+}
+
+static void test_identify_iocs_ns_csi_user_data_format(void)
+{
+	struct nvme_id_ns expected_id, id = {};
+	struct mock_cmd mock_admin_cmd = {
+		.opcode = nvme_admin_identify,
+		.nsid = NVME_NSID_NONE,
+		.data_len = sizeof(expected_id),
+		.cdw10 = NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT,
+		.cdw11 = (TEST_FIDX << 0) | (TEST_CSI << 24),
+		.cdw14 = TEST_UUID,
+		.out_data = &expected_id,
+	};
+	int err;
+
+	arbitrary(&expected_id, sizeof(expected_id));
+	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	err = nvme_identify_iocs_ns_csi_user_data_format(
+		TEST_FD, TEST_FIDX, TEST_UUID, TEST_CSI, &id);
+	end_mock_cmds();
+	check(err == 0, "identify returned error %d, errno %m", err);
+	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
+}
+
 static void run_test(const char *test_name, void (*test_fn)(void))
 {
 	printf("Running test %s...", test_name);
@@ -569,4 +617,6 @@ int main(void)
 	RUN_TEST(iocs);
 	RUN_TEST(status_code_error);
 	RUN_TEST(kernel_error);
+	RUN_TEST(identify_ns_csi_user_data_format);
+	RUN_TEST(identify_iocs_ns_csi_user_data_format);
 }
