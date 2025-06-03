@@ -64,6 +64,7 @@ struct print_ops {
 	void (*predictable_latency_event_agg_log)(struct nvme_aggregate_predictable_lat_event *pea_log, __u64 log_entries, __u32 size, const char *devname);
 	void (*predictable_latency_per_nvmset)(struct nvme_nvmset_predictable_lat_log *plpns_log, __u16 nvmset_id, const char *devname);
 	void (*primary_ctrl_cap)(const struct nvme_primary_ctrl_cap *caps);
+	void (*relatives)(nvme_root_t r, const char *name);
 	void (*resv_notification_log)(struct nvme_resv_notification_log *resv, const char *devname);
 	void (*resv_report)(struct nvme_resv_status *status, int bytes, bool eds);
 	void (*sanitize_log_page)(struct nvme_sanitize_log_page *sanitize_log, const char *devname);
@@ -153,7 +154,7 @@ struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
 
 void nvme_show_status(int status);
 void nvme_show_lba_status_info(__u32 result);
-void nvme_show_relatives(const char *name);
+void nvme_show_relatives(nvme_root_t r, const char *name, nvme_print_flags_t flags);
 
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs, nvme_print_flags_t flags);
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, nvme_print_flags_t flags,
