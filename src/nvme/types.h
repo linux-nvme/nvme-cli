@@ -3729,6 +3729,42 @@ struct nvme_smart_log {
 
 /**
  * enum nvme_smart_crit - Critical Warning
+ * @NVME_SMART_CW_ASCBT_SHIFT: Shift amount to get the available spare capacity has fallen
+ *			   below the threshold.
+ * @NVME_SMART_CW_TTC_SHIFT: Shift amount to get the temperature is either greater
+ *			   than or equal to an over temperature threshold; or
+ *			   less than or equal to an under temperature threshold.
+ * @NVME_SMART_CW_NDR_SHIFT: Shift amount to get the NVM subsystem reliability has
+ *			   been degraded due to significant media related errors
+ *			   or any internal error that degrades NVM subsystem
+ *			   reliability.
+ * @NVME_SMART_CW_AMRO_SHIFT: Shift amount to get the all of the media has been placed in read
+ *			   only mode. The controller shall not set this bit if
+ *			   the read-only condition on the media is a result of
+ *			   a change in the write protection state of a namespace.
+ * @NVME_SMART_CW_VMBF_SHIFT: Shift amount to get the  volatile memory backup
+ *			   device has failed. This field is only valid if the
+ *			   controller has a volatile memory backup solution.
+ * @NVME_SMART_CW_PMRRO_SHIFT: Shift amount to get the Persistent Memory Region has become
+ *			   read-only or unreliable.
+ * @NVME_SMART_CW_ASCBT_MASK: If set, then the available spare capacity has fallen
+ *			   below the threshold.
+ * @NVME_SMART_CW_TTC_MASK: Mask to get the temperature is either greater
+ *			   than or equal to an over temperature threshold; or
+ *			   less than or equal to an under temperature threshold.
+ * @NVME_SMART_CW_NDR_MASK: Mask to get the NVM subsystem reliability has
+ *			   been degraded due to significant media related errors
+ *			   or any internal error that degrades NVM subsystem
+ *			   reliability.
+ * @NVME_SMART_CW_AMRO_MASK: Mask to get the all of the media has been placed in read
+ *			   only mode. The controller shall not set this bit if
+ *			   the read-only condition on the media is a result of
+ *			   a change in the write protection state of a namespace.
+ * @NVME_SMART_CW_VMBF_MASK: Mask to get the volatile memory backup
+ *			   device has failed. This field is only valid if the
+ *			   controller has a volatile memory backup solution.
+ * @NVME_SMART_CW_PMRRO_MASK: Mask to get the Persistent Memory Region has become
+ *			   read-only or unreliable.
  * @NVME_SMART_CRIT_SPARE: If set, then the available spare capacity has fallen
  *			   below the threshold.
  * @NVME_SMART_CRIT_TEMPERATURE: If set, then a temperature is either greater
@@ -3749,13 +3785,32 @@ struct nvme_smart_log {
  *			   read-only or unreliable.
  */
 enum nvme_smart_crit {
-	NVME_SMART_CRIT_SPARE		= 1 << 0,
-	NVME_SMART_CRIT_TEMPERATURE	= 1 << 1,
-	NVME_SMART_CRIT_DEGRADED	= 1 << 2,
-	NVME_SMART_CRIT_MEDIA		= 1 << 3,
-	NVME_SMART_CRIT_VOLATILE_MEMORY	= 1 << 4,
-	NVME_SMART_CRIT_PMR_RO		= 1 << 5,
+	NVME_SMART_CW_ASCBT_SHIFT	= 0,
+	NVME_SMART_CW_TTC_SHIFT		= 1,
+	NVME_SMART_CW_NDR_SHIFT		= 2,
+	NVME_SMART_CW_AMRO_SHIFT	= 3,
+	NVME_SMART_CW_VMBF_SHIFT	= 4,
+	NVME_SMART_CW_PMRRO_SHIFT	= 5,
+	NVME_SMART_CW_ASCBT_MASK	= 0x1,
+	NVME_SMART_CW_TTC_MASK		= 0x1,
+	NVME_SMART_CW_NDR_MASK		= 0x1,
+	NVME_SMART_CW_AMRO_MASK		= 0x1,
+	NVME_SMART_CW_VMBF_MASK		= 0x1,
+	NVME_SMART_CW_PMRRO_MASK	= 0x1,
+	NVME_SMART_CRIT_SPARE		= NVME_VAL(SMART_CW_ASCBT),
+	NVME_SMART_CRIT_TEMPERATURE	= NVME_VAL(SMART_CW_TTC),
+	NVME_SMART_CRIT_DEGRADED	= NVME_VAL(SMART_CW_NDR),
+	NVME_SMART_CRIT_MEDIA		= NVME_VAL(SMART_CW_AMRO),
+	NVME_SMART_CRIT_VOLATILE_MEMORY	= NVME_VAL(SMART_CW_VMBF),
+	NVME_SMART_CRIT_PMR_RO		= NVME_VAL(SMART_CW_PMRRO),
 };
+
+#define NVME_SMART_CW_ASCBT(cw)	NVME_GET(cw, SMART_CW_ASCBT),
+#define NVME_SMART_CW_TTC(cw)	NVME_GET(cw, SMART_CW_TTC),
+#define NVME_SMART_CW_NDR(cw)	NVME_GET(cw, SMART_CW_NDR),
+#define NVME_SMART_CW_AMRO(cw)	NVME_GET(cw, SMART_CW_AMRO),
+#define NVME_SMART_CW_VMBF(cw)	NVME_GET(cw, SMART_CW_VMBF),
+#define NVME_SMART_CW_PMRRO(cw)	NVME_GET(cw, SMART_CW_PMRRO),
 
 /**
  * enum nvme_smart_egcw - Endurance Group Critical Warning Summary
@@ -9387,12 +9442,12 @@ enum nvme_feat_tmpthresh_thsel {
  * @NVME_FEATURE_AENCFG_NOTICE_DISCOVERY_CHANGE:
  */
 enum nvme_features_async_event_config_flags {
-	NVME_FEATURE_AENCFG_SMART_CRIT_SPARE			= 1 << 0,
-	NVME_FEATURE_AENCFG_SMART_CRIT_TEMPERATURE		= 1 << 1,
-	NVME_FEATURE_AENCFG_SMART_CRIT_DEGRADED			= 1 << 2,
-	NVME_FEATURE_AENCFG_SMART_CRIT_READ_ONLY		= 1 << 3,
-	NVME_FEATURE_AENCFG_SMART_CRIT_VOLATILE_BACKUP		= 1 << 4,
-	NVME_FEATURE_AENCFG_SMART_CRIT_READ_ONLY_PMR		= 1 << 5,
+	NVME_FEATURE_AENCFG_SMART_CRIT_SPARE			= NVME_SMART_CRIT_SPARE,
+	NVME_FEATURE_AENCFG_SMART_CRIT_TEMPERATURE		= NVME_SMART_CRIT_TEMPERATURE,
+	NVME_FEATURE_AENCFG_SMART_CRIT_DEGRADED			= NVME_SMART_CRIT_DEGRADED,
+	NVME_FEATURE_AENCFG_SMART_CRIT_READ_ONLY		= NVME_SMART_CRIT_MEDIA,
+	NVME_FEATURE_AENCFG_SMART_CRIT_VOLATILE_BACKUP		= NVME_SMART_CRIT_VOLATILE_MEMORY,
+	NVME_FEATURE_AENCFG_SMART_CRIT_READ_ONLY_PMR		= NVME_SMART_CRIT_PMR_RO,
 	NVME_FEATURE_AENCFG_NOTICE_NAMESPACE_ATTRIBUTES		= 1 << 8,
 	NVME_FEATURE_AENCFG_NOTICE_FIRMWARE_ACTIVATION		= 1 << 9,
 	NVME_FEATURE_AENCFG_NOTICE_TELEMETRY_LOG		= 1 << 10,
