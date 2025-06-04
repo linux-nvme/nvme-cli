@@ -4,7 +4,9 @@
  *
  * @file: micron-nvme.c
  * @brief: This module contains all the constructs needed for micron nvme-cli plugin.
- * @authors:Chaithanya Shoba <ashoba@micron.com>,
+ * @authors:Hanumanthu H <hanumanthuh@micron.com>
+ *			Chaithanya Shoba <ashoba@micron.com>
+ *			Sivaprasad Gutha <sivaprasadg@micron.com>
  */
 
 #include <stdio.h>
