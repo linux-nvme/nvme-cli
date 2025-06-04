@@ -5376,26 +5376,34 @@ static void stdout_simple_list(nvme_root_t r)
 
 static void stdout_ns_details(nvme_ns_t n)
 {
-	char usage[128] = { 0 }, format[128] = { 0 };
+	char usage[128] = { 0 }, format[128] = { 0 }, usage_binary[128] = { 0 };
 	char devname[128] = { 0 }, genname[128] = { 0 };
 
 	long long lba = nvme_ns_get_lba_size(n);
 	double nsze = nvme_ns_get_lba_count(n) * lba;
 	double nuse = nvme_ns_get_lba_util(n) * lba;
+	double nsze_binary = nsze, nuse_binary = nuse;
 
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
 	const char *l_suffix = suffix_binary_get(&lba);
 
-	sprintf(usage, "%6.2f %2sB / %6.2f %2sB", nuse, u_suffix, nsze, s_suffix);
+	const char *s_suffix_binary, *u_suffix_binary;
+
+	sprintf(usage, "%6.2f %1sB / %6.2f %1sB", nuse, u_suffix, nsze, s_suffix);
 	sprintf(format, "%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		nvme_ns_get_meta_size(n));
+
+	s_suffix_binary = suffix_dbinary_get(&nsze_binary);
+	u_suffix_binary = suffix_dbinary_get(&nuse_binary);
+	sprintf(usage_binary, "(%7.2f %2sB / %7.2f %2sB)", nuse_binary, u_suffix_binary,
+		nsze_binary, s_suffix_binary);
 
 	nvme_dev_full_path(n, devname, sizeof(devname));
 	nvme_generic_full_path(n, genname, sizeof(genname));
 
-	printf("%-12s %-12s %#-10x %-26s %-16s ", devname,
-		genname, nvme_ns_get_nsid(n), usage, format);
+	printf("%-17s %-17s %#-10x %-21s %-25s %-16s ", devname,
+		genname, nvme_ns_get_nsid(n), usage, usage_binary, format);
 }
 
 static bool stdout_detailed_name(const char *name, void *arg)
@@ -5540,9 +5548,9 @@ static void stdout_detailed_list(nvme_root_t r)
 	strset_iterate(&res.ctrls, stdout_detailed_ctrl, &res);
 	printf("\n");
 
-	printf("%-17s %-17s %-10s %-26s %-16s %-16s\n", "Device", "Generic",
+	printf("%-17s %-17s %-10s %-49s %-16s %-16s\n", "Device", "Generic",
 		"NSID", "Usage", "Format", "Controllers");
-	printf("%-.17s %-.17s %-.10s %-.26s %-.16s %-.16s\n", dash, dash, dash,
+	printf("%-.17s %-.17s %-.10s %-.49s %-.16s %-.16s\n", dash, dash, dash,
 		dash, dash, dash);
 	strset_iterate(&res.namespaces, stdout_detailed_ns, &res);
 
