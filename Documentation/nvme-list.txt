@@ -14,6 +14,7 @@ DESCRIPTION
 -----------
 Scan the sysfs tree for NVM Express devices and return the /dev node
 for those devices as well as some pertinent information about them.
+Namespace usage printed in powers of 1,000 with SI prefixes. (e.g., 1.02  TB)
 
 OPTIONS
 -------
@@ -34,7 +35,31 @@ PCI_IDS_PATH - Full path of pci.ids file in case nvme could not find it in commo
 
 EXAMPLES
 --------
-No examples yet.
+* Has the program issue a list
++
+------------
+# nvme list
+Node                  Generic               SN                   Model                                    Namespace  Usage                      Format           FW Rev
+--------------------- --------------------- -------------------- ---------------------------------------- ---------- -------------------------- ---------------- --------
+/dev/nvme0n1          /dev/ng0n1            BTNH922508PS1P0B     INTEL SSDPEKNW010T8                      0x1          1.02  TB /   1.02  TB    512   B +  0 B   002C
+------------
+
+* Has the program issue a list with verbose
++
+------------
+# nvme list -v
+Subsystem        Subsystem-NQN                                                                                    Controllers
+---------------- ------------------------------------------------------------------------------------------------ ----------------
+nvme-subsys0     nqn.2019-22.com.intel:nvm-subsystem-sn-btnh922508ps1p0b                                          nvme0
+
+Device           Cntlid SN                   MN                                       FR       TxPort Address        Slot   Subsystem    Namespaces
+---------------- ------ -------------------- ---------------------------------------- -------- ------ -------------- ------ ------------ ----------------
+nvme0    1      BTNH922508PS1P0B     INTEL SSDPEKNW010T8                      002C     pcie   0000:0d:00.0          nvme-subsys0 nvme0n1
+
+Device            Generic           NSID       Usage                      Format           Controllers
+----------------- ----------------- ---------- -------------------------- ---------------- ----------------
+/dev/nvme0n1 /dev/ng0n1   0x1          1.02  TB /   1.02  TB    512   B +  0 B   nvme0
+------------
 
 NVME
 ----
