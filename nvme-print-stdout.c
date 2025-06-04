@@ -792,6 +792,9 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 		struct nvme_eom_lane_desc *desc = p;
 		unsigned char *vsdata = NULL;
 		unsigned int vsdataoffset = 0;
+		uint16_t nrows = le16_to_cpu(desc->nrows);
+		uint16_t ncols = le16_to_cpu(desc->ncols);
+		uint16_t edlen = le16_to_cpu(desc->edlen);
 
 		printf("Measurement Status: %s\n",
 			desc->mstatus ? "Successful" : "Not Successful");
@@ -801,24 +804,23 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 		printf("Bottom: %u\n", le16_to_cpu(desc->bottom));
 		printf("Left: %u\n", le16_to_cpu(desc->left));
 		printf("Right: %u\n", le16_to_cpu(desc->right));
-		printf("Number of Rows: %u\n", le16_to_cpu(desc->nrows));
-		printf("Number of Columns: %u\n", le16_to_cpu(desc->ncols));
-		printf("Eye Data Length: %u\n", le16_to_cpu(desc->edlen));
+		printf("Number of Rows: %u\n", nrows);
+		printf("Number of Columns: %u\n", ncols);
+		printf("Eye Data Length: %u\n", desc->edlen);
 
 		if (NVME_EOM_ODP_PEFP(log->odp))
 			stdout_eom_printable_eye(desc);
 
 		/* Eye Data field is vendor specific */
-		if (le16_to_cpu(desc->edlen) == 0)
+		if (edlen == 0)
 			continue;
 
 		/* Hex dump Vendor Specific Eye Data */
-		vsdata = malloc(le16_to_cpu(desc->edlen));
-		vsdataoffset = (le16_to_cpu(desc->nrows) * le16_to_cpu(desc->ncols)) +
-						sizeof(struct nvme_eom_lane_desc);
+		vsdata = malloc(edlen);
+		vsdataoffset = (nrows * ncols) + sizeof(struct nvme_eom_lane_desc);
 		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
 		printf("Eye Data:\n");
-		d(vsdata, le16_to_cpu(desc->edlen), 16, 1);
+		d(vsdata, edlen, 16, 1);
 		printf("\n");
 
 		p += log->dsize;
