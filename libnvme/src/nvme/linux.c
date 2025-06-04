@@ -82,9 +82,15 @@ struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char 
 	}
 	c = ret == 1;
 
-	hdl->fd = __nvme_open_dev(name);
-	if (hdl->fd < 0)
+	hdl->name = strdup(name);
+	if (!hdl->name) {
+		errno = ENOMEM;
 		goto free_handle;
+	}
+
+	hdl->fd = __nvme_open_dev(hdl->name);
+	if (hdl->fd < 0)
+		goto free_name;
 
 	ret = fstat(hdl->fd, &stat);
 	if (ret < 0)
@@ -104,6 +110,8 @@ struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char 
 
 close_fd:
 	close(hdl->fd);
+free_name:
+	free(hdl->name);
 free_handle:
 	free(hdl);
 	return NULL;
@@ -115,6 +123,7 @@ void nvme_close(struct nvme_transport_handle *hdl)
 		return;
 
 	close(hdl->fd);
+	free(hdl->name);
 	free(hdl->log);
 	free(hdl);
 }
@@ -122,6 +131,11 @@ void nvme_close(struct nvme_transport_handle *hdl)
 int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
 {
 	return hdl->fd;
+}
+
+const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl)
+{
+	return hdl->name;
 }
 
 int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xfer, __u32 offset,

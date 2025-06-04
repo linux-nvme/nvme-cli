@@ -32,6 +32,9 @@ struct nvme_log {
 
 struct nvme_transport_handle {
 	struct nvme_global_ctx *ctx;
+	char *name;
+
+	/* direct */
 	int fd;
 
 	struct nvme_log *log;

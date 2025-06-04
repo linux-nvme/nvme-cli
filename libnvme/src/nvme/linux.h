@@ -245,6 +245,14 @@ void nvme_close(struct nvme_transport_handle *hdl);
 int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl);
 
 /**
+ * nvme_transport_handle_get_name - Return name of the device transport handle
+ * @hdl:	Transport handle
+ *
+ * Return: Device file name, otherwise -1.
+ */
+const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl);
+
+/**
  * enum nvme_hmac_alg - HMAC algorithm
  * @NVME_HMAC_ALG_NONE:		No HMAC algorithm
  * @NVME_HMAC_ALG_SHA2_256:	SHA2-256
