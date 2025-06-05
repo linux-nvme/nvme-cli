@@ -59,7 +59,6 @@ struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char 
 {
 	struct nvme_transport_handle *hdl;
 	int ret, id, ns;
-	struct stat stat;
 	bool c;
 
 	hdl = malloc(sizeof(*hdl));
@@ -92,16 +91,16 @@ struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char 
 	if (hdl->fd < 0)
 		goto free_name;
 
-	ret = fstat(hdl->fd, &stat);
+	ret = fstat(hdl->fd, &hdl->stat);
 	if (ret < 0)
 		goto close_fd;
 
 	if (c) {
-		if (!S_ISCHR(stat.st_mode)) {
+		if (!S_ISCHR(hdl->stat.st_mode)) {
 			errno = EINVAL;
 			goto close_fd;
 		}
-	} else if (!S_ISBLK(stat.st_mode)) {
+	} else if (!S_ISBLK(hdl->stat.st_mode)) {
 		errno = EINVAL;
 		goto close_fd;
 	}
@@ -136,6 +135,16 @@ int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
 const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl)
 {
 	return hdl->name;
+}
+
+bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl)
+{
+	return S_ISBLK(hdl->stat.st_mode);
+}
+
+bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl)
+{
+	return S_ISCHR(hdl->stat.st_mode);
 }
 
 int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xfer, __u32 offset,

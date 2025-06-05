@@ -253,6 +253,22 @@ int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl);
 const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl);
 
 /**
+ * nvme_transport_handle_is_blkdev - Check if transport handle is a block device
+ * @hdl:	Transport handle
+ *
+ * Return: Return true if transport handle is a block device, otherwise false.
+ */
+bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl);
+
+/**
+ * nvme_transport_handle_is_chardev - Check if transport handle is a char device
+ * @hdl:	Transport handle
+ *
+ * Return: Return true if transport handle is a char device, otherwise false.
+ */
+bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl);
+
+/**
  * enum nvme_hmac_alg - HMAC algorithm
  * @NVME_HMAC_ALG_NONE:		No HMAC algorithm
  * @NVME_HMAC_ALG_SHA2_256:	SHA2-256

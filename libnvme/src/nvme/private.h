@@ -12,6 +12,7 @@
 #include <ccan/list/list.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 
 #include <nvme/fabrics.h>
 #include <nvme/mi.h>
@@ -36,6 +37,7 @@ struct nvme_transport_handle {
 
 	/* direct */
 	int fd;
+	struct stat stat;
 
 	struct nvme_log *log;
 };
