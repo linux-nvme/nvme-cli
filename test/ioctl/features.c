@@ -15,6 +15,7 @@
 #define TEST_CDW12 0x12121212
 #define TEST_CDW13 0x13131313
 #define TEST_CDW15 0x15151515
+#define TEST_CDQID 0x8765
 #define TEST_UUIDX 0b1001110
 #define TEST_FID 0xFE
 #define TEST_RESULT 0x12345678
@@ -1519,6 +1520,57 @@ static void test_get_kernel_error(void)
 	check(!result, "result unexpectedly set to %" PRIu32, result);
 }
 
+static void test_lm_set_features_ctrl_data_queue(void)
+{
+	__u32 hp = 0x12, tpt = 0x34;
+	bool etpt = true;
+	struct mock_cmd mock_admin_cmd = {
+		.opcode = nvme_admin_set_features,
+		.nsid = NVME_NSID_NONE,
+		.cdw10 = NVME_FEAT_FID_CTRL_DATA_QUEUE,
+		.cdw11 = TEST_CDQID | etpt << 31,
+		.cdw12 = hp,
+		.cdw13 = tpt,
+		.result = TEST_RESULT,
+	};
+	uint32_t result = 0;
+	int err;
+
+	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	err = nvme_lm_set_features_ctrl_data_queue(TEST_FD, TEST_CDQID, hp, tpt,
+						   etpt, &result);
+	end_mock_cmds();
+	check(err == 0, "set features returned error %d, errno %m", err);
+	check(result == TEST_RESULT,
+	      "got result %" PRIu32 ", expected %" PRIu32, result, TEST_RESULT);
+}
+
+static void test_lm_get_features_ctrl_data_queue(void)
+{
+	struct nvme_lm_ctrl_data_queue_fid_data expected_data, data = {};
+	struct mock_cmd mock_admin_cmd = {
+		.opcode = nvme_admin_get_features,
+		.nsid = NVME_NSID_NONE,
+		.cdw10 = NVME_FEAT_FID_CTRL_DATA_QUEUE,
+		.cdw11 = TEST_CDQID,
+		.data_len = sizeof(expected_data),
+		.out_data = &expected_data,
+		.result = TEST_RESULT,
+	};
+	uint32_t result = 0;
+	int err;
+
+	arbitrary(&expected_data, sizeof(expected_data));
+	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	err = nvme_lm_get_features_ctrl_data_queue(TEST_FD, TEST_CDQID, &data,
+						   &result);
+	end_mock_cmds();
+	check(err == 0, "get features returned error %d, errno %m", err);
+	check(result == TEST_RESULT,
+	      "got result %" PRIu32 ", expected %" PRIu32, result, TEST_RESULT);
+	cmp(&data, &expected_data, sizeof(data), "incorrect data");
+}
+
 static void run_test(const char *test_name, void (*test_fn)(void))
 {
 	printf("Running test %s...", test_name);
@@ -1601,4 +1653,6 @@ int main(void)
 	RUN_TEST(set_kernel_error);
 	RUN_TEST(get_status_code_error);
 	RUN_TEST(get_kernel_error);
+	RUN_TEST(lm_set_features_ctrl_data_queue);
+	RUN_TEST(lm_get_features_ctrl_data_queue);
 }
