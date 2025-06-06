@@ -2509,7 +2509,7 @@ int nvme_lm_set_features_ctrl_data_queue(int fd, __u16 cdqid, __u32 hp, __u32 tp
 		.fd		= fd,
 		.fid		= NVME_FEAT_FID_CTRL_DATA_QUEUE,
 		.nsid		= NVME_NSID_NONE,
-		.cdw11		= cdqid | NVME_SET(tpt, LM_CTRL_DATA_QUEUE_ETPT),
+		.cdw11		= cdqid | NVME_SET(etpt, LM_CTRL_DATA_QUEUE_ETPT),
 		.cdw12		= hp,
 		.cdw13		= tpt,
 		.save		= false,
