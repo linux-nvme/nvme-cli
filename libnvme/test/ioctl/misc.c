@@ -264,7 +264,7 @@ static void test_fw_download(void)
 		.result = &result,
 		.data = &expected_data,
 		.args_size = sizeof(args),
-		.offset = 123,
+		.offset = 120,
 		.data_len = sizeof(expected_data),
 	};
 
