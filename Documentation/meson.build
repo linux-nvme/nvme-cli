@@ -150,6 +150,7 @@ adoc_sources = [
   'nvme-sndk-clear-pcie-correctable-errors',
   'nvme-sndk-cloud-SSD-plugin-version',
   'nvme-sndk-cloud-boot-SSD-version',
+  'nvme-sndk-cu-smart-log',
   'nvme-sndk-drive-resize',
   'nvme-sndk-get-drive-status',
   'nvme-sndk-get-dev-capabilities-log',

@@ -113,6 +113,10 @@ int run_wdc_vs_temperature_stats(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin);
 
+int run_wdc_cu_smart_log(int argc, char **argv,
+		struct command *command,
+		struct plugin *plugin);
+
 bool run_wdc_nvme_check_supported_log_page(nvme_root_t r,
 		struct nvme_dev *dev,
 		__u8 log_id);

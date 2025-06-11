@@ -12918,6 +12918,14 @@ int run_wdc_vs_temperature_stats(int argc, char **argv,
 	return wdc_vs_temperature_stats(argc, argv, command, plugin);
 }
 
+int run_wdc_cu_smart_log(int argc, char **argv,
+		struct command *command,
+		struct plugin *plugin)
+{
+	return wdc_cu_smart_log(argc, argv, command, plugin);
+}
+
+
 __u32 run_wdc_get_fw_cust_id(nvme_root_t r, struct nvme_dev *dev)
 {
 	return wdc_get_fw_cust_id(r, dev);
