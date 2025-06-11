@@ -1913,7 +1913,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
 				WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
 				WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
-				/* WDC_DRIVE_CAP_INFO |   Currently not supported by FW  */
+				WDC_DRIVE_CAP_CLEAR_ASSERT |
 				WDC_DRIVE_CAP_CLOUD_SSD_VERSION |
 				WDC_DRIVE_CAP_LOG_PAGE_DIR |
 				WDC_DRIVE_CAP_DRIVE_STATUS |
