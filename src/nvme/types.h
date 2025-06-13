@@ -2955,7 +2955,7 @@ struct nvme_ns_id_desc {
 	__u8	nidl;
 	__le16	rsvd;
 	__u8	nid[];
-};
+} __attribute__((packed));
 
 /**
  * enum nvme_ns_id_desc_nidt - Known namespace identifier types
