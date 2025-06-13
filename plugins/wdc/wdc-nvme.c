@@ -1576,6 +1576,14 @@ static bool wdc_is_sn650_e1l(__u32 device_id)
 		return false;
 }
 
+static bool wdc_is_sn655(__u32 device_id)
+{
+	if (device_id == WDC_NVME_SN655_DEV_ID)
+		return true;
+	else
+		return false;
+}
+
 static bool wdc_is_zn350(__u32 device_id)
 {
 	return (device_id == WDC_NVME_ZN350_DEV_ID ||
@@ -2682,7 +2690,8 @@ static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
 		uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
-		if (uuid_index < 0 && wdc_is_sn640_3(device_id))
+		if (uuid_index < 0 &&
+			(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id)))
 			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
 
 		if (uuid_index > 0)
@@ -2734,10 +2743,12 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
 		uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
-		if (uuid_index < 0 && wdc_is_sn640_3(device_id))
+		if (uuid_index < 0 &&
+			(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id))) {
 			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+		}
 
-		if (uuid_index < 0)
+		if (uuid_index > 0)
 			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid,
 							       log_id, uuid_index);
 
