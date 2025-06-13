@@ -1132,8 +1132,15 @@ static void stdout_subsystem(nvme_root_t r, bool show_ana)
 
 	nvme_for_each_host(r, h) {
 		nvme_subsystem_t s;
+		nvme_ctrl_t c;
+		bool no_ctrl = true;
 
 		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c)
+				no_ctrl = false;
+			if (no_ctrl)
+				continue;
+
 			if (!first)
 				printf("\n");
 			first = false;
