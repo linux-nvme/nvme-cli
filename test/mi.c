@@ -649,25 +649,9 @@ static void test_mi_invalid_formats(nvme_mi_ep_t ep)
 	ctrl = nvme_mi_init_ctrl(ep, 1);
 	assert(ctrl);
 
-	/* unaligned req size */
-	len = 0;
-
-	rc = nvme_mi_mi_xfer(ep, &req.hdr, 1, &resp, &len);
-	assert(rc != 0);
-
-	/* unaligned resp size */
-	len = 1;
-	rc = nvme_mi_mi_xfer(ep, &req.hdr, 0, &resp, &len);
-	assert(rc != 0);
-
 	/* resp too large */
 	len = 4096 + 4;
 	rc = nvme_mi_mi_xfer(ep, &req.hdr, 0, &resp, &len);
-	assert(rc != 0);
-
-	/* req and resp payloads */
-	len = 4;
-	rc = nvme_mi_mi_xfer(ep, &req.hdr, 4, &resp, &len);
 	assert(rc != 0);
 }
 

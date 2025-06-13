@@ -1742,19 +1742,6 @@ int nvme_mi_mi_xfer(nvme_mi_ep_t ep,
 		return -1;
 	}
 
-	/* request and response lengths & offset must be aligned */
-	if ((req_data_size & 0x3) ||
-	    (*resp_data_size & 0x3)) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	/* bidirectional not permitted */
-	if (req_data_size && *resp_data_size) {
-		errno = EINVAL;
-		return -1;
-	}
-
 	mi_req->hdr.type = NVME_MI_MSGTYPE_NVME;
 	mi_req->hdr.nmp = (NVME_MI_ROR_REQ << 7) |
 			  (NVME_MI_MT_MI << 3) |
