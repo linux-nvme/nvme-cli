@@ -73,6 +73,9 @@ linknvme:nvme-sndk-cloud-SSD-plugin-version[1]::
 linknvme:nvme-sndk-cloud-boot-SSD-version[1]::
 	Display Sandisk Cloud Boot SSD Version
 
+linknvme:nvme-sndk-cu-smart-log[1]::
+	Display Sandisk Customer Unique Smart log pagee
+
 linknvme:nvme-sndk-drive-resize[1]::
 	Send NVMe Sandisk Resize Vendor Unique Command
 
@@ -177,6 +180,9 @@ linknvme:nvme-wdc-clear-pcie-correctable-errors[1]::
 
 linknvme:nvme-wdc-cloud-SSD-plugin-version[1]::
 	Display WDC plugin Cloud SSD Plugin Version
+
+linknvme:nvme-wdc-cu-smart-log[1]::
+	Display WDC plugin Customer Unique Log Page
 
 linknvme:nvme-wdc-drive-essentials[1]::
 	Retrieve WDC device's drive essentials bin files

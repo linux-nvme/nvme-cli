@@ -305,3 +305,10 @@ static int sndk_vs_temperature_stats(int argc, char **argv,
 {
 	return run_wdc_vs_temperature_stats(argc, argv, command, plugin);
 }
+
+static int sndk_cu_smart_log(int argc, char **argv,
+		struct command *command,
+		struct plugin *plugin)
+{
+	return run_wdc_cu_smart_log(argc, argv, command, plugin);
+}

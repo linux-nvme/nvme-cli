@@ -1913,7 +1913,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
 				WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
 				WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
-				/* WDC_DRIVE_CAP_INFO |   Currently not supported by FW  */
+				WDC_DRIVE_CAP_CLEAR_ASSERT |
 				WDC_DRIVE_CAP_CLOUD_SSD_VERSION |
 				WDC_DRIVE_CAP_LOG_PAGE_DIR |
 				WDC_DRIVE_CAP_DRIVE_STATUS |
@@ -5524,287 +5524,220 @@ static void wdc_print_bd_ca_log_normal(struct nvme_dev *dev, void *data)
 {
 	struct wdc_bd_ca_log_format *bd_data = (struct wdc_bd_ca_log_format *)data;
 	__u64 *raw;
-	__u16 *word_raw1, *word_raw2, *word_raw3;
-	__u32  *dword_raw;
-	__u8  *byte_raw;
+	__u64 rawSwapped;
+	__u16 *word_raw1 = NULL,
+		*word_raw2 = NULL,
+		*word_raw3 = NULL;
+	__u32  *dword_raw = NULL;
+	__u8  *byte_raw = NULL;
+	bool valid_id = true;
 
-	if (bd_data->field_id == 0x00) {
+	while (valid_id) {
 		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", dev->name,
-		       WDC_DE_GLOBAL_NSID);
-		printf("key                               normalized raw\n");
-		printf("program_fail_count              : %3"PRIu8"%%       %"PRIu64"\n",
-		       bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x01) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("erase_fail_count                : %3"PRIu8"%%       %"PRIu64"\n",
-				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x02) {
-		word_raw1 = (__u16 *)&bd_data->raw_value[1];
-		word_raw2 = (__u16 *)&bd_data->raw_value[3];
-		word_raw3 = (__u16 *)&bd_data->raw_value[5];
-		printf("wear_leveling                   : %3"PRIu8"%%       min: %"PRIu16", max: %"PRIu16", avg: %"PRIu16"\n",
-				bd_data->normalized_value,
-				le16_to_cpu(*word_raw1),
-				le16_to_cpu(*word_raw2),
-				le16_to_cpu(*word_raw3));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x03) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("end_to_end_error_detection_count: %3"PRIu8"%%       %"PRIu64"\n",
-				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x04) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("crc_error_count                 : %3"PRIu8"%%       %"PRIu64"\n",
-			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x05) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("timed_workload_media_wear       : %3"PRIu8"%%       %-.3f%%\n",
-		       bd_data->normalized_value, safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 1024.0));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x06) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("timed_workload_host_reads       : %3"PRIu8"%%       %"PRIu64"%%\n",
-		       bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x07) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("timed_workload_timer            : %3"PRIu8"%%       %"PRIu64"\n",
-		       bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x08) {
-		byte_raw = (__u8 *)&bd_data->raw_value[1];
-		dword_raw = (__u32 *)&bd_data->raw_value[2];
-		printf("thermal_throttle_status         : %3"PRIu8"%%       %"PRIu16"%%, cnt: %"PRIu16"\n",
-		       bd_data->normalized_value, *byte_raw, le32_to_cpu(*dword_raw));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x09) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("retry_buffer_overflow_count     : %3"PRIu8"%%       %"PRIu64"\n",
-		       bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x0A) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("pll_lock_loss_count             : %3"PRIu8"%%       %"PRIu64"\n",
-			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x0B) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("nand_bytes_written              : %3"PRIu8"%%       sectors: %.f\n",
-			   bd_data->normalized_value, safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x0C) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		printf("host_bytes_written              : %3"PRIu8"%%       sectors: %.f\n",
-			   bd_data->normalized_value, safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
-	} else {
-		goto invalid_id;
+		rawSwapped = (le64_to_cpu(*raw)>>8);
+
+		switch (bd_data->field_id) {
+		case 0x0:
+			printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
+					dev->name, WDC_DE_GLOBAL_NSID);
+			printf("key                               normalized raw\n");
+			printf("program_fail_count              : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0x1:
+			printf("erase_fail_count                : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0x2:
+			word_raw1 = (__u16 *)&bd_data->raw_value[1];
+			word_raw2 = (__u16 *)&bd_data->raw_value[3];
+			word_raw3 = (__u16 *)&bd_data->raw_value[5];
+			printf("wear_leveling                   : %3"PRIu8,
+					bd_data->normalized_value);
+			printf("%%       min: %"PRIu16", max: %"PRIu16", avg: %"PRIu16"\n",
+					le16_to_cpu(*word_raw1),
+					le16_to_cpu(*word_raw2),
+					le16_to_cpu(*word_raw3));
+			break;
+		case 0x3:
+			printf("end_to_end_error_detection_count: %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0x4:
+			printf("crc_error_count                 : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0x5:
+			printf("timed_workload_media_wear       : %3"PRIu8"%%       %-.3f%%\n",
+					bd_data->normalized_value,
+					safe_div_fp((rawSwapped), 1024.0));
+			break;
+		case 0x6:
+			printf("timed_workload_host_reads       : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0x7:
+			printf("timed_workload_timer            : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0x8:
+			byte_raw = (__u8 *)&bd_data->raw_value[1];
+			dword_raw = (__u32 *)&bd_data->raw_value[2];
+			printf("thermal_throttle_status         : %3"PRIu8"%%       %"PRIu16,
+					bd_data->normalized_value, *byte_raw);
+			printf("%%, cnt: %"PRIu16"\n", le32_to_cpu(*dword_raw));
+			break;
+		case 0x9:
+			printf("retry_buffer_overflow_count     : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0xA:
+			printf("pll_lock_loss_count             : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0xB:
+			printf("nand_bytes_written              : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			break;
+		case 0xC:
+			printf("host_bytes_written              : %3"PRIu8"%%       %"PRIu64"\n",
+					bd_data->normalized_value, (uint64_t)rawSwapped);
+			/* last entry, break from while loop */
+			valid_id = false;
+			break;
+		default:
+			printf("  Invalid Field ID = %d\n", bd_data->field_id);
+			break;
+		}
+
+		bd_data++;
 	}
 
-	goto done;
-
-invalid_id:
-	printf("  Invalid Field ID = %d\n", bd_data->field_id);
-
-done:
 	return;
-
 }
 
 static void wdc_print_bd_ca_log_json(void *data)
 {
 	struct wdc_bd_ca_log_format *bd_data = (struct wdc_bd_ca_log_format *)data;
-	__u64 *raw;
+	__u64 *raw, rawSwapped;
 	__u16 *word_raw;
 	__u32  *dword_raw;
 	__u8  *byte_raw;
+	bool valid_id = true;
 	struct json_object *root = json_create_object();
 
-	if (bd_data->field_id == 0x00) {
+	while (valid_id) {
 		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "program_fail_count normalized",
-				bd_data->normalized_value);
-		json_object_add_value_int(root, "program_fail_count raw",
-				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x01) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "erase_fail_count normalized",
-				bd_data->normalized_value);
-		json_object_add_value_int(root, "erase_fail_count raw",
-				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x02) {
-		word_raw = (__u16 *)&bd_data->raw_value[1];
-		json_object_add_value_int(root, "wear_leveling normalized",	bd_data->normalized_value);
-		json_object_add_value_int(root, "wear_leveling min", le16_to_cpu(*word_raw));
-		word_raw = (__u16 *)&bd_data->raw_value[3];
-		json_object_add_value_int(root, "wear_leveling max", le16_to_cpu(*word_raw));
-		word_raw = (__u16 *)&bd_data->raw_value[5];
-		json_object_add_value_int(root, "wear_leveling avg", le16_to_cpu(*word_raw));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x03) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "end_to_end_error_detection_count normalized",
-				bd_data->normalized_value);
-		json_object_add_value_int(root, "end_to_end_error_detection_count raw",
-				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x04) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "crc_error_count normalized",
-				bd_data->normalized_value);
-		json_object_add_value_int(root, "crc_error_count raw",
-				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x05) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "timed_workload_media_wear normalized",
-				bd_data->normalized_value);
-		json_object_add_value_double(root, "timed_workload_media_wear raw",
-				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 1024.0));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x06) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "timed_workload_host_reads normalized",
-				bd_data->normalized_value);
-		json_object_add_value_int(root, "timed_workload_host_reads raw",
-				le64_to_cpu(*raw & 0x00000000000000FF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x07) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "timed_workload_timer normalized",
-					  bd_data->normalized_value);
-		json_object_add_value_int(root, "timed_workload_timer",
-					  le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x08) {
-		byte_raw = (__u8 *)&bd_data->raw_value[1];
-		json_object_add_value_int(root, "thermal_throttle_status normalized",
-				bd_data->normalized_value);
-		json_object_add_value_int(root, "thermal_throttle_status", *byte_raw);
-		dword_raw = (__u32 *)&bd_data->raw_value[2];
-		json_object_add_value_int(root, "thermal_throttle_cnt",	le32_to_cpu(*dword_raw));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x09) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "retry_buffer_overflow_count normalized",
-				bd_data->normalized_value);
-		json_object_add_value_int(root, "retry_buffer_overflow_count raw",
-				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x0A) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "pll_lock_loss_count normalized",
-				bd_data->normalized_value);
-		json_object_add_value_int(root, "pll_lock_loss_count raw",
-				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x0B) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "nand_bytes_written normalized",
-				bd_data->normalized_value);
-		json_object_add_value_double(root, "nand_bytes_written raw",
-				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
-	} else {
-		goto invalid_id;
-	}
-	bd_data++;
-	if (bd_data->field_id == 0x0C) {
-		raw = (__u64 *)&bd_data->raw_value[0];
-		json_object_add_value_int(root, "host_bytes_written normalized",
-				bd_data->normalized_value);
-		json_object_add_value_double(root, "host_bytes_written raw",
-				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
-	} else {
-		goto invalid_id;
+		rawSwapped = (le64_to_cpu(*raw)>>8);
+
+		switch (bd_data->field_id) {
+		case 0x0:
+			json_object_add_value_int(root, "program_fail_count normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "program_fail_count raw",
+					rawSwapped);
+			break;
+		case 0x1:
+			json_object_add_value_int(root, "erase_fail_count normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "erase_fail_count raw",
+					rawSwapped);
+			break;
+		case 0x2:
+			word_raw = (__u16 *)&bd_data->raw_value[1];
+			json_object_add_value_int(root, "wear_leveling normalized",
+					bd_data->normalized_value);
+			json_object_add_value_int(root, "wear_leveling min",
+					le16_to_cpu(*word_raw));
+			word_raw = (__u16 *)&bd_data->raw_value[3];
+			json_object_add_value_int(root, "wear_leveling max",
+					le16_to_cpu(*word_raw));
+			word_raw = (__u16 *)&bd_data->raw_value[5];
+			json_object_add_value_int(root, "wear_leveling avg",
+					le16_to_cpu(*word_raw));
+			break;
+		case 0x3:
+			json_object_add_value_int(root,
+					"end_to_end_error_detection_count normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root,
+					"end_to_end_error_detection_count raw",
+					rawSwapped);
+			break;
+		case 0x4:
+			json_object_add_value_int(root, "crc_error_count normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "crc_error_count raw",
+					rawSwapped);
+			break;
+		case 0x5:
+			json_object_add_value_int(root, "timed_workload_media_wear normalized",
+					bd_data->normalized_value);
+			json_object_add_value_double(root, "timed_workload_media_wear raw",
+					safe_div_fp(((uint64_t)rawSwapped), 1024.0));
+			break;
+		case 0x6:
+			json_object_add_value_int(root, "timed_workload_host_reads normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "timed_workload_host_reads raw",
+					rawSwapped);
+			break;
+		case 0x7:
+			json_object_add_value_int(root, "timed_workload_timer normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "timed_workload_timer",
+					rawSwapped);
+			break;
+		case 0x8:
+			byte_raw = (__u8 *)&bd_data->raw_value[1];
+			json_object_add_value_int(root, "thermal_throttle_status normalized",
+					bd_data->normalized_value);
+			json_object_add_value_int(root, "thermal_throttle_status",
+					*byte_raw);
+			dword_raw = (__u32 *)&bd_data->raw_value[2];
+			json_object_add_value_int(root, "thermal_throttle_cnt",
+					le32_to_cpu(*dword_raw));
+			break;
+		case 0x9:
+			json_object_add_value_int(root, "retry_buffer_overflow_count normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "retry_buffer_overflow_count raw",
+					rawSwapped);
+			break;
+		case 0xA:
+			json_object_add_value_int(root, "pll_lock_loss_count normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "pll_lock_loss_count raw",
+					rawSwapped);
+			break;
+		case 0xB:
+			json_object_add_value_int(root, "nand_bytes_written normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "nand_bytes_written raw",
+					rawSwapped);
+			break;
+		case 0xC:
+			json_object_add_value_int(root, "host_bytes_written normalized",
+					bd_data->normalized_value);
+			json_object_add_value_uint64(root, "host_bytes_written raw",
+					rawSwapped);
+
+			/* last entry, break from while loop */
+			valid_id = false;
+			break;
+		default:
+			printf("  Invalid Field ID = %d\n", bd_data->field_id);
+			break;
+		}
+
+		bd_data++;
 	}
 
-	goto done;
-
-invalid_id:
-	printf("  Invalid Field ID = %d\n", bd_data->field_id);
-
-done:
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
 
 	return;
-
 }
 
 static void wdc_print_d0_log_normal(struct wdc_ssd_d0_smart_log *perf)
@@ -8450,6 +8383,128 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		ret = wdc_get_d0_log_page(r, dev, cfg.output_format);
 		if (ret)
 			fprintf(stderr, "ERROR: WDC: Failure reading the D0 Log Page, ret = %d\n", ret);
+	}
+
+out:
+	nvme_free_tree(r);
+	dev_close(dev);
+	return ret;
+}
+
+static int wdc_cu_smart_log(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve customer unique smart log statistics.";
+	const char *uuid_index = "The uuid index to select the correct log page implementation.";
+	struct nvme_dev *dev;
+	nvme_root_t r;
+	int ret = 0;
+	__u64 capabilities = 0;
+	uint32_t read_device_id, read_vendor_id;
+	nvme_print_flags_t fmt;
+	__u8 *data;
+
+	struct config {
+		char *output_format;
+		int uuid_index;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+		.uuid_index = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",      'o', &cfg.output_format,    output_format),
+		OPT_UINT("uuid-index",        'u', &cfg.uuid_index,       uuid_index),
+		OPT_END()
+	};
+
+	ret = parse_and_open(&dev, argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	r = nvme_scan(NULL);
+
+	capabilities = wdc_get_drive_capabilities(r, dev);
+	if (!(capabilities & WDC_DRIVE_CAP_SMART_LOG_MASK)) {
+		fprintf(stderr, "ERROR: WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	if ((capabilities & WDC_DRIVE_CAP_CA_LOG_PAGE) == WDC_DRIVE_CAP_CA_LOG_PAGE) {
+		if (!wdc_check_device(r, dev))
+			return -1;
+
+		ret = validate_output_format(cfg.output_format, &fmt);
+
+		if (ret < 0) {
+			fprintf(stderr, "ERROR: WDC: invalid output format\n");
+			return ret;
+		}
+
+		/* verify the 0xCA log page is supported */
+		if (wdc_nvme_check_supported_log_page(r, dev,
+				WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0) == false) {
+			fprintf(stderr, "ERROR: WDC: 0xCA Log Page not supported\n");
+			return -1;
+		}
+
+		ret = wdc_get_pci_ids(r, dev, &read_device_id, &read_vendor_id);
+
+		switch (read_device_id) {
+		case WDC_NVME_SN861_DEV_ID:
+		case WDC_NVME_SN861_DEV_ID_1:
+			data = (__u8 *)malloc(WDC_BD_CA_LOG_BUF_LEN);
+			if (!data) {
+				fprintf(stderr, "ERROR: WDC: malloc: %s\n", strerror(errno));
+				ret = -1;
+				break;
+			}
+
+			memset(data, 0, sizeof(__u8) * WDC_BD_CA_LOG_BUF_LEN);
+			struct nvme_get_log_args args = {
+				.lpo = 0,
+				.result = NULL,
+				.log = data,
+				.args_size = sizeof(args),
+				.fd = dev_fd(dev),
+				.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+				.lid = WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
+				.len = WDC_BD_CA_LOG_BUF_LEN,
+				.nsid = NVME_NSID_ALL,
+				.csi = NVME_CSI_NVM,
+				.lsi = NVME_LOG_LSI_NONE,
+				.lsp = 0,
+				.uuidx = cfg.uuid_index,
+				.rae = false,
+				.ot = false,
+			};
+
+			/* Get the CA Log Page */
+			ret = nvme_get_log(&args);
+
+			if (strcmp(cfg.output_format, "json"))
+				nvme_show_status(ret);
+
+			if (!ret) {
+				/* parse the data */
+				ret = wdc_print_bd_ca_log(dev, data, fmt);
+			} else {
+				fprintf(stderr, "ERROR: WDC: Unable to read CA Log Page data\n");
+				ret = -1;
+			}
+
+			free(data);
+			break;
+		default:
+			fprintf(stderr, "ERROR: WDC: Command not supported on this device\n");
+			ret = -1;
+		}
+	} else {
+		fprintf(stderr, "ERROR: WDC: CA log page supported on this device\n");
+		ret = -1;
 	}
 
 out:
@@ -12862,6 +12917,14 @@ int run_wdc_vs_temperature_stats(int argc, char **argv,
 {
 	return wdc_vs_temperature_stats(argc, argv, command, plugin);
 }
+
+int run_wdc_cu_smart_log(int argc, char **argv,
+		struct command *command,
+		struct plugin *plugin)
+{
+	return wdc_cu_smart_log(argc, argv, command, plugin);
+}
+
 
 __u32 run_wdc_get_fw_cust_id(nvme_root_t r, struct nvme_dev *dev)
 {

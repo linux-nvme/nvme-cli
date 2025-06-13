@@ -5,7 +5,7 @@
 #if !defined(SANDISK_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define SANDISK_NVME
 
-#define SANDISK_PLUGIN_VERSION   "2.12.0"
+#define SANDISK_PLUGIN_VERSION   "2.14.1"
 #include "cmd.h"
 
 PLUGIN(NAME("sndk", "Sandisk vendor specific extensions", SANDISK_PLUGIN_VERSION),
@@ -73,6 +73,10 @@ PLUGIN(NAME("sndk", "Sandisk vendor specific extensions", SANDISK_PLUGIN_VERSION
 		ENTRY("set-latency-monitor-feature",
 			"Sandisk set Latency Monitor feature",
 			sndk_set_latency_monitor_feature)
+		ENTRY("cu-smart-log",
+			"Sandisk Get Customer Unique Smart Log",
+			sndk_cu_smart_log)
+
 	)
 );
 
