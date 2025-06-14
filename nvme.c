@@ -7468,12 +7468,12 @@ static int copy_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	__u32 elbatms[256] = { 0 };
 	__u32 elbats[256] = { 0 };
 
-	union {
+	_cleanup_free_ union {
 		struct nvme_copy_range f0[256];
 		struct nvme_copy_range_f1 f1[256];
 		struct nvme_copy_range_f2 f2[256];
 		struct nvme_copy_range_f3 f3[256];
-	} *copy;
+	} *copy = NULL;
 
 	struct config {
 		__u32	namespace_id;
