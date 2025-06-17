@@ -172,6 +172,8 @@ static int sndk_capabilities(int argc, char **argv,
 	       capabilities & SNDK_DRIVE_CAP_CLEAR_PCIE_MASK ? "Supported" : "Not Supported");
 	printf("get-drive-status              : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_DRIVE_STATUS ? "Supported" : "Not Supported");
+	printf("clear-assert-dump             : %s\n",
+	       capabilities & SNDK_DRIVE_CAP_CLEAR_ASSERT ? "Supported" : "Not Supported");
 	printf("drive-resize                  : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_RESIZE ? "Supported" : "Not Supported");
 	printf("vs-fw-activate-history        : %s\n",
