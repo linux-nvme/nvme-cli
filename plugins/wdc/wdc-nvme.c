@@ -146,6 +146,7 @@
 #define WDC_NVME_SN5100S_DEV_ID_2			0x5062
 #define WDC_NVME_SN5100S_DEV_ID_3			0x5063
 
+/* Shared flag space with SNDK plugin, should be kept in sync */
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
 #define WDC_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
 #define WDC_DRIVE_CAP_C1_LOG_PAGE			0x0000000000000004
@@ -178,7 +179,6 @@
 #define WDC_DRIVE_CAP_C3_LOG_PAGE			0x0000000020000000
 #define WDC_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION		0x0000000040000000
 #define WDC_DRIVE_CAP_CLOUD_LOG_PAGE			0x0000000080000000
-
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS			0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
 #define WDC_SN730B_CAP_VUC_LOG				0x0000000400000000
@@ -189,6 +189,7 @@
 #define WDC_DRIVE_CAP_OCP_C5_LOG_PAGE			0x0000008000000000
 #define WDC_DRIVE_CAP_DEVICE_WAF			0x0000010000000000
 #define WDC_DRIVE_CAP_SET_LATENCY_MONITOR		0x0000020000000000
+/* Any new capability flags should be added to the SNDK plugin */
 
 #define WDC_DRIVE_CAP_SMART_LOG_MASK			(WDC_DRIVE_CAP_C0_LOG_PAGE | \
 							 WDC_DRIVE_CAP_C1_LOG_PAGE | \
@@ -12950,4 +12951,9 @@ bool run_wdc_nvme_check_supported_log_page(nvme_root_t r,
 			dev,
 			log_id,
 			0);
+}
+
+__u64 run_wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
+{
+	return wdc_get_drive_capabilities(r, dev);
 }
