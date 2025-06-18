@@ -7,80 +7,80 @@ on:
     - cron: '0 01 * * *'
 
 jobs:
-  request-kernel-version:
-    if: github.repository == 'linux-nvme/nvme-cli'
-    runs-on: ubuntu-latest
-    steps:
-      #We don't have to build the kernel here, as we have a cron job running on
-      #the k8s cluster that builds this target nightly.
-      - name: Request nightly Linus' master tree kernel build for the next job
-        run: |
-          echo "KERNEL_VERSION=linus-master" >> $GITHUB_ENV
-      - name: Notifying the next job to pick up the correct kernel tag
-        run: |
-          echo "${KERNEL_VERSION}"
   nightly-tests:
     if: github.repository == 'linux-nvme/nvme-cli'
-    runs-on: arc-vm-runner-set
-    needs: request-kernel-version
-    container:
-      image: ghcr.io/linux-nvme/debian.python:latest
-      #Expose all devices to the container through the `privileged` flag.
-      #
-      #BDEV0 is an environment variable of the self-hosted runner instance
-      #that contains a valid nvme namespace which is capable of the nvm
-      #command set.
-      options: '--privileged -v "/dev":"/dev":z -e BDEV0'
+    runs-on: arc-vm-nvme-cli
     steps:
-      - name: Output kernel version
-        run: |
-          uname -a
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          PIPX_BIN_DIR=/usr/local/bin pipx install nose2 --force
-      - name: Build and install nvme-cli
-        run: |
-          scripts/build.sh -b release -c gcc
-      - name: Overwrite test config
-        run: |
-          CONTROLLER=$(echo ${BDEV0} | sed 's/n[0-9]*$//')
-          cat > tests/config.json << EOF
-          {
-            "controller" : "$CONTROLLER",
-            "ns1": "${BDEV0}",
-            "log_dir": "tests/nvmetests/",
-            "nvme_bin": "$(pwd)/.build-ci/nvme"
-          }
-          EOF
-          cat tests/config.json
-      - name: Run on device tests
-        run: |
-          nose2 --verbose --start-dir tests \
-          nvme_attach_detach_ns_test \
-          nvme_compare_test \
-          nvme_copy_test \
-          nvme_create_max_ns_test \
-          nvme_ctrl_reset_test \
-          nvme_dsm_test \
-          nvme_error_log_test \
-          nvme_flush_test \
-          nvme_format_test \
-          nvme_fw_log_test \
-          nvme_get_features_test \
-          nvme_get_lba_status_test \
-          nvme_id_ctrl_test \
-          nvme_id_ns_test \
-          nvme_lba_status_log_test \
-          nvme_read_write_test \
-          nvme_smart_log_test \
-          nvme_verify_test \
-          nvme_writeuncor_test \
-          nvme_writezeros_test
-      - name: Upload logs
-        uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: nvme-cli-test-logs
-          path: |
-            ./tests/nvmetests/**/*.log
+          repository: "linux-blktests/blktests-ci"
+      #We don't have to build the kernel here, as we have a cron job running on
+      #the k8s cluster that builds the linus-master target nightly.
+      - name: Run in VM
+        uses: ./.github/actions/kubevirt-action
+        with:
+          kernel_version: linus-master
+          vm_artifact_upload_dir: nvme-cli/tests/nvmetests/
+          run_cmds: |
+            #Preventing bash variable expension for the outer cat by using
+            #single quotes around EOF
+            cat > test.sh << 'EOF'
+            #!/bin/bash
+            set -e
+            set -x
+            uname -a
+            PIPX_BIN_DIR=/usr/local/bin pipx install nose2 --force
+            git clone https://github.com/${{ github.repository }} /nvme-cli
+            cd /nvme-cli
+            scripts/build.sh -b release -c gcc
+            CONTROLLER=$(echo "${BDEV0}" | sed 's/n[0-9]*$//')
+            cat > tests/config.json << EOJ
+            {
+              "controller" : "${CONTROLLER}",
+              "ns1": "${BDEV0}",
+              "log_dir": "tests/nvmetests/",
+              "nvme_bin": "/nvme-cli/.build-ci/nvme"
+            }
+            EOJ
+            cat tests/config.json
+
+            nose2 --verbose --start-dir tests \
+            nvme_attach_detach_ns_test \
+            nvme_compare_test \
+            nvme_copy_test \
+            nvme_create_max_ns_test \
+            nvme_ctrl_reset_test \
+            nvme_dsm_test \
+            nvme_error_log_test \
+            nvme_flush_test \
+            nvme_format_test \
+            nvme_fw_log_test \
+            nvme_get_features_test \
+            nvme_get_lba_status_test \
+            nvme_id_ctrl_test \
+            nvme_id_ns_test \
+            nvme_lba_status_log_test \
+            nvme_read_write_test \
+            nvme_smart_log_test \
+            nvme_verify_test \
+            nvme_writeuncor_test \
+            nvme_writezeros_test
+            EOF
+
+            sudo chmod +x test.sh
+
+            #Create shared volume mount point for artifact upload
+            mkdir nvme-cli
+
+            #Expose all devices to the container through the `privileged` flag.
+            #
+            #BDEV0 is an environment variable of the self-hosted runner instance
+            #that contains a valid nvme namespace which is capable of the nvm
+            #command set.
+
+            sudo docker run --privileged \
+            -v "/dev":"/dev":z \
+            -e BDEV0 \
+            -v "${PWD}/test.sh":"/test.sh" \
+            -v "${PWD}/nvme-cli":"/nvme-cli":z \
+            ghcr.io/linux-nvme/debian.python:latest /test.sh
