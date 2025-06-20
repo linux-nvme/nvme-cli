@@ -74,3 +74,12 @@ logs = executable(
 )
 
 test('logs', logs, env: mock_ioctl_env)
+
+zns = executable(
+    'test-zns',
+    'zns.c',
+    dependencies: libnvme_dep,
+    link_with: mock_ioctl,
+)
+
+test('zns', zns, env: mock_ioctl_env)
