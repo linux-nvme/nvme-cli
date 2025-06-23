@@ -5,7 +5,7 @@
 #if !defined(SANDISK_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define SANDISK_NVME
 
-#define SANDISK_PLUGIN_VERSION   "2.14.1"
+#define SANDISK_PLUGIN_VERSION   "3.0.0"
 #include "cmd.h"
 
 PLUGIN(NAME("sndk", "Sandisk vendor specific extensions", SANDISK_PLUGIN_VERSION),

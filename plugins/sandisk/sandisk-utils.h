@@ -139,6 +139,7 @@
 #define SNDK_DRIVE_CAP_OCP_C5_LOG_PAGE			0x0000008000000000
 #define SNDK_DRIVE_CAP_DEVICE_WAF			0x0000010000000000
 #define SNDK_DRIVE_CAP_SET_LATENCY_MONITOR		0x0000020000000000
+#define SNDK_DRIVE_CAP_UDUI				0x0000040000000000
 /* Any new capability flags should be added to the WDC plugin */
 
 #define SNDK_DRIVE_CAP_SMART_LOG_MASK       (SNDK_DRIVE_CAP_C0_LOG_PAGE | \
@@ -150,6 +151,7 @@
 		SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE)
 #define SNDK_DRIVE_CAP_INTERNAL_LOG_MASK    (SNDK_DRIVE_CAP_INTERNAL_LOG | \
 		SNDK_DRIVE_CAP_DUI | \
+		SNDK_DRIVE_CAP_UDUI | \
 		SNDK_DRIVE_CAP_DUI_DATA | \
 		SNDK_DRIVE_CAP_VUC_LOG)
 #define SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_MASK     (SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY | \
@@ -170,6 +172,9 @@
 #define SNDK_NVME_GET_FW_ACT_HISTORY_LOG_ID         0xCB
 #define SNDK_NVME_GET_VU_SMART_LOG_ID               0xD0
 
+/* Vendor defined Feature IDs */
+#define SNDK_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID	0xD2
+
 /* Customer ID's */
 #define SNDK_CUSTOMER_ID_GN             0x0001
 #define SNDK_CUSTOMER_ID_GD             0x0101
@@ -180,6 +185,30 @@
 #define SNDK_CUSTOMER_ID_0x1008         0x1008
 #define SNDK_CUSTOMER_ID_0x1304         0x1304
 #define SNDK_INVALID_CUSTOMER_ID            -1
+
+/* Capture Device Unit Info */
+#define SNDK_NVME_CAP_UDUI_OPCODE			0xFA
+
+/* Telemtery types for vs-internal-log command */
+#define SNDK_TELEMETRY_TYPE_NONE			0x0
+#define SNDK_TELEMETRY_TYPE_HOST			0x1
+#define SNDK_TELEMETRY_TYPE_CONTROLLER			0x2
+
+/* Misc */
+#define SNDK_MAX_PATH_LEN	256
+
+struct SNDK_UtilsTimeInfo {
+	unsigned int year;
+	unsigned int month;
+	unsigned int dayOfWeek;
+	unsigned int dayOfMonth;
+	unsigned int hour;
+	unsigned int minute;
+	unsigned int second;
+	unsigned int msecs;
+	unsigned char isDST; /*0 or 1 */
+	int zone; /* Zone value like +530 or -300 */
+};
 
 int sndk_get_pci_ids(nvme_root_t r,
 		struct nvme_dev *dev,
@@ -198,3 +227,12 @@ __u64 sndk_get_drive_capabilities(nvme_root_t r,
 __u64 sndk_get_enc_drive_capabilities(nvme_root_t r,
 	    struct nvme_dev *dev);
 
+int sndk_get_serial_name(struct nvme_dev *dev, char *file, size_t len,
+			 const char *suffix);
+
+void sndk_UtilsGetTime(struct SNDK_UtilsTimeInfo *timeInfo);
+
+int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer,
+		       const char *format, ...);
+
+int sndk_check_ctrl_telemetry_option_disabled(struct nvme_dev *dev);
