@@ -163,7 +163,7 @@ __u64 sndk_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 					SNDK_DRIVE_CAP_CA_LOG_PAGE |
 					SNDK_DRIVE_CAP_OCP_C4_LOG_PAGE |
 					SNDK_DRIVE_CAP_OCP_C5_LOG_PAGE |
-					SNDK_DRIVE_CAP_DUI |
+					SNDK_DRIVE_CAP_UDUI |
 					SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
 					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE |
 					SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
@@ -186,7 +186,7 @@ __u64 sndk_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case SNDK_NVME_SN7150_DEV_ID_3:
 		case SNDK_NVME_SN7150_DEV_ID_4:
 		case SNDK_NVME_SN7150_DEV_ID_5:
-			capabilities = SNDK_DRIVE_CAP_DUI;
+			capabilities = SNDK_DRIVE_CAP_UDUI;
 			break;
 
 		default:
@@ -267,4 +267,101 @@ __u64 sndk_get_enc_drive_capabilities(nvme_root_t r,
 	return capabilities;
 }
 
+int sndk_get_serial_name(struct nvme_dev *dev, char *file, size_t len,
+				const char *suffix)
+{
+	int i;
+	int ret;
+	int res_len = 0;
+	char orig[PATH_MAX] = {0};
+	struct nvme_id_ctrl ctrl;
+	int ctrl_sn_len = sizeof(ctrl.sn);
 
+	i = sizeof(ctrl.sn) - 1;
+	strncpy(orig, file, PATH_MAX - 1);
+	memset(file, 0, len);
+	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
+	ret = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	if (ret) {
+		fprintf(stderr, "ERROR: SNDK: nvme_identify_ctrl() failed 0x%x\n", ret);
+		return -1;
+	}
+	/* Remove trailing spaces from the name */
+	while (i && ctrl.sn[i] == ' ') {
+		ctrl.sn[i] = '\0';
+		i--;
+	}
+	if (ctrl.sn[sizeof(ctrl.sn) - 1] == '\0')
+		ctrl_sn_len = strlen(ctrl.sn);
+
+	res_len = snprintf(file, len, "%s%.*s%s", orig, ctrl_sn_len, ctrl.sn, suffix);
+	if (len <= res_len) {
+		fprintf(stderr,
+			"ERROR: SNDK: cannot format SN due to unexpected length\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+void sndk_UtilsGetTime(struct SNDK_UtilsTimeInfo *timeInfo)
+{
+	time_t currTime;
+	struct tm currTimeInfo;
+
+	tzset();
+	time(&currTime);
+	localtime_r(&currTime, &currTimeInfo);
+
+	timeInfo->year			=  currTimeInfo.tm_year + 1900;
+	timeInfo->month			=  currTimeInfo.tm_mon + 1;
+	timeInfo->dayOfWeek		=  currTimeInfo.tm_wday;
+	timeInfo->dayOfMonth		=  currTimeInfo.tm_mday;
+	timeInfo->hour			=  currTimeInfo.tm_hour;
+	timeInfo->minute		=  currTimeInfo.tm_min;
+	timeInfo->second		=  currTimeInfo.tm_sec;
+	timeInfo->msecs			=  0;
+	timeInfo->isDST			=  currTimeInfo.tm_isdst;
+#ifdef HAVE_TM_GMTOFF
+	timeInfo->zone			= -currTimeInfo.tm_gmtoff / 60;
+#else /* HAVE_TM_GMTOFF */
+	timeInfo->zone			= -1 * (timezone / 60);
+#endif /* HAVE_TM_GMTOFF */
+}
+
+int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer, const char *format, ...)
+{
+	int res = 0;
+	va_list vArgs;
+
+	va_start(vArgs, format);
+	res = vsnprintf(buffer, sizeOfBuffer, format, vArgs);
+	va_end(vArgs);
+
+	return res;
+}
+
+/* Verify the Controller Initiated Option is enabled */
+int sndk_check_ctrl_telemetry_option_disabled(struct nvme_dev *dev)
+{
+	int err;
+	__u32 result;
+
+	err = nvme_get_features_data(dev_fd(dev),
+		 SNDK_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,
+		 0, 4, NULL, &result);
+	if (!err) {
+		if (result) {
+			fprintf(stderr,
+				"%s: Controller-initiated option telemetry disabled\n",
+				__func__);
+			return -EINVAL;
+		}
+	} else {
+		fprintf(stderr, "ERROR: SNDK: Get telemetry option feature failed.");
+		nvme_show_status(err);
+		return -EPERM;
+	}
+
+	return 0;
+}
