@@ -1794,10 +1794,11 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 
 			cust_id = wdc_get_fw_cust_id(r, dev);
-			if (cust_id == WDC_INVALID_CUSTOMER_ID) {
-				fprintf(stderr, "%s: ERROR: WDC: invalid customer id\n", __func__);
-				return -1;
-			}
+			/* Can still determine some capabilities in this case, but log an error */
+			if (cust_id == WDC_INVALID_CUSTOMER_ID)
+				fprintf(stderr,
+					"%s: ERROR: WDC: invalid customer ID; device ID = %x\n",
+					__func__, read_device_id);
 
 			if ((cust_id == WDC_CUSTOMER_ID_0x1004) || (cust_id == WDC_CUSTOMER_ID_0x1008) ||
 					(cust_id == WDC_CUSTOMER_ID_0x1005) || (cust_id == WDC_CUSTOMER_ID_0x1304))
@@ -1876,10 +1877,11 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 					 WDC_DRIVE_CAP_REASON_ID | WDC_DRIVE_CAP_LOG_PAGE_DIR);
 
 			cust_id = wdc_get_fw_cust_id(r, dev);
-			if (cust_id == WDC_INVALID_CUSTOMER_ID) {
-				fprintf(stderr, "%s: ERROR: WDC: invalid customer id\n", __func__);
-				return -1;
-			}
+			/* Can still determine some capabilities in this case, but log an error */
+			if (cust_id == WDC_INVALID_CUSTOMER_ID)
+				fprintf(stderr,
+					"%s: ERROR: WDC: invalid customer ID; device ID = %x\n",
+					__func__, read_device_id);
 
 			if ((cust_id == WDC_CUSTOMER_ID_0x1004) ||
 			    (cust_id == WDC_CUSTOMER_ID_0x1008) ||
