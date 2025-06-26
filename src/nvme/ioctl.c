@@ -320,6 +320,22 @@ int nvme_get_log(struct nvme_get_log_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
+static bool force_4k;
+
+__attribute__((constructor))
+static void nvme_init_env(void)
+{
+	char *val;
+
+	val = getenv("LIBNVME_FORCE_4K");
+	if (!val)
+		return;
+	if (!strcmp(val, "1") ||
+	    !strcasecmp(val, "true") ||
+	    !strncasecmp(val, "enable", 6))
+		force_4k = true;
+}
+
 #ifdef CONFIG_LIBURING
 enum {
 	IO_URING_NOT_AVAILABLE,
@@ -449,6 +465,9 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 
 	args->fd = fd;
 
+	if (force_4k)
+		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
+
 #ifdef CONFIG_LIBURING
 	int n = 0;
 	struct io_uring ring;
@@ -469,9 +488,13 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 	 * avoids having to check the MDTS value of the controller.
 	 */
 	do {
-		xfer = data_len - offset;
-		if (xfer > xfer_len)
-			xfer  = xfer_len;
+		if (!force_4k) {
+			xfer = data_len - offset;
+			if (xfer > xfer_len)
+				xfer  = xfer_len;
+		} else {
+			xfer = NVME_LOG_PAGE_PDU_SIZE;
+		}
 
 		/*
 		 * Always retain regardless of the RAE parameter until the very
