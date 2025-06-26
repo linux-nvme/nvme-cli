@@ -1404,7 +1404,7 @@ const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s);
  * Scans the NVMe topology and filters out the resulting elements
  * by applying @f.
  *
- * Return: Number of elements scanned
+ * Returns: 0 on success, -1 on failure with errno set.
  */
 int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f, void *f_args);
 
