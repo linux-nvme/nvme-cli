@@ -1626,8 +1626,10 @@ static int get_persistent_event_log(int argc, char **argv,
 		cfg.action = NVME_PEVENT_LOG_READ;
 
 	pevent_log_info = nvme_alloc_huge(cfg.log_len, &mh);
-	if (!pevent_log_info)
+	if (!pevent_log_info) {
+		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;
+	}
 
 	err = nvme_cli_get_log_persistent_event(dev, cfg.action,
 						cfg.log_len, pevent_log_info);
@@ -5127,8 +5129,10 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 				fw_size, cfg.xfer);
 
 	fw_buf = nvme_alloc_huge(fw_size, &mh);
-	if (!fw_buf)
+	if (!fw_buf) {
+		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;
+	}
 
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
 		err = -errno;
@@ -8287,8 +8291,10 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	buffer = nvme_alloc_huge(buffer_size, &mh);
-	if (!buffer)
+	if (!buffer) {
+		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;
+	}
 
 	if (cfg.metadata_size) {
 		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;
@@ -9199,8 +9205,10 @@ static int passthru(int argc, char **argv, bool admin,
 
 	if (cfg.data_len) {
 		data = nvme_alloc_huge(cfg.data_len, &mh);
-		if (!data)
+		if (!data) {
+			nvme_show_error("failed to allocate huge memory");
 			return -ENOMEM;
+		}
 
 		memset(data, cfg.prefill, cfg.data_len);
 		if (!cfg.read && !cfg.write) {
@@ -10241,8 +10249,10 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 
 	if (cfg.data_len) {
 		data = nvme_alloc_huge(cfg.data_len, &mh);
-		if (!data)
+		if (!data) {
+			nvme_show_error("failed to allocate huge memory");
 			return -ENOMEM;
+		}
 
 		if (send) {
 			if (read(fd, data, cfg.data_len) < 0) {
