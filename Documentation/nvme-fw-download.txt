@@ -36,6 +36,20 @@ Download command. It is applied following a reset, where the image to
 apply and the firmware slot it should be committed to is specified with
 the Firmware Commit command (nvme fw-commit <args>).
 
+Note: nvme-cli must allocate a contiguous (linear) memory buffer and map
+the firmware binary into it. To do this, nvme-cli first attempts to
+allocate the buffer using huge TLB pages. If allocation using huge pages
+fails, it falls back to using posix_memalign() combined with madvise(),
+though this is also likely to fail.
+
+To increase the likelihood of success, you may want to pre-allocate a
+number of huge pages before initiating the firmware download:
+
+  echo 20 > /proc/sys/vm/nr_hugepages
+
+For more details, refer to:
+https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt
+
 OPTIONS
 -------
 -f <firmware-file>::
