@@ -2629,7 +2629,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 		return err;
 
 	err = validate_output_format(nvme_cfg.output_format, &flags);
-	if (err < 0) {
+	if (err < 0 || (flags != JSON && flags != NORMAL)) {
 		nvme_show_error("Invalid output format");
 		return err;
 	}
