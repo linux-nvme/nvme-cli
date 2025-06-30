@@ -120,8 +120,9 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	if (!nvme_cfg.dry_run) {
 retry:
 		err = ioctl(fd, ioctl_cmd, cmd);
-		if (err && (errno == EAGAIN ||
-			    (errno == EINTR && !nvme_sigint_received))) {
+		if ((err && (errno == EAGAIN ||
+			     (errno == EINTR && !nvme_sigint_received))) &&
+		    !nvme_cfg.no_retries) {
 			nvme_log_retry(errno);
 			goto retry;
 		}
@@ -153,8 +154,9 @@ int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,
 	if (!nvme_cfg.dry_run) {
 retry:
 		err = ioctl(fd, ioctl_cmd, cmd);
-		if (err && (errno == EAGAIN ||
-			    (errno == EINTR && !nvme_sigint_received))) {
+		if ((err && (errno == EAGAIN ||
+			     (errno == EINTR && !nvme_sigint_received))) &&
+		    !nvme_cfg.no_retries) {
 			nvme_log_retry(errno);
 			goto retry;
 		}
