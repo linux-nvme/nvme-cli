@@ -14,4 +14,4 @@ option('openssl', type : 'feature', value: 'auto', description : 'OpenSSL suppor
 option('libdbus', type : 'feature', value: 'disabled', description : 'libdbus support')
 option('json-c', type : 'feature', value: 'auto', description : 'JSON support')
 option('keyutils', type: 'feature', value: 'auto', description: 'keyutils support')
-option('liburing', type : 'feature', value: 'auto', description : 'liburing support')
+option('liburing', type : 'feature', value: 'disabled', description : 'liburing support')

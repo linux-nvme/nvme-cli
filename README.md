@@ -155,7 +155,7 @@ A few build options can be specified on the command line when invoking meson.
 | libdbus     | auto, enabled, [disabled] | Enables D-Bus dependent features (libnvme-mi: End point discovery), adds build dependency on libdbus |
 | json-c      | [auto], enabled, disabled | (recommended) Enables JSON-C dependend features (e.g. config.json parsing), adds build depdency on json-c |
 | keyutils    | [auto], enabled, disabled | Enables keyutils dependent features (e.g. authentication), adds build dependency on keyutils |
-| liburing    | [auto], enabled, disabled | Enables liburing dependent features (e.g. get log page by uring cmd), adds build depdency on liburing |
+| liburing    | auto, enabled, [disabled] | Enables liburing dependent features (e.g. get log page by uring cmd), adds build depdency on liburing, very questionable feature. Don't enable it |
 
 See the full configuration options with
 
