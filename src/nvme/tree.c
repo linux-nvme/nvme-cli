@@ -2064,10 +2064,29 @@ static void nvme_read_sysfs_tls(nvme_root_t r, nvme_ctrl_t c)
 	free(key);
 }
 
-static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
-			       const char *name)
+static int nvme_reconfigure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
+				 const char *name)
 {
 	DIR *d;
+
+	/*
+	 * It's necesssary to release any resources first because a ctrl
+	 * can be reused.
+	 */
+	nvme_ctrl_release_fd(c);
+	FREE_CTRL_ATTR(c->name);
+	FREE_CTRL_ATTR(c->sysfs_dir);
+	FREE_CTRL_ATTR(c->firmware);
+	FREE_CTRL_ATTR(c->model);
+	FREE_CTRL_ATTR(c->state);
+	FREE_CTRL_ATTR(c->numa_node);
+	FREE_CTRL_ATTR(c->queue_count);
+	FREE_CTRL_ATTR(c->serial);
+	FREE_CTRL_ATTR(c->sqsize);
+	FREE_CTRL_ATTR(c->cntrltype);
+	FREE_CTRL_ATTR(c->cntlid);
+	FREE_CTRL_ATTR(c->dctype);
+	FREE_CTRL_ATTR(c->phy_slot);
 
 	d = opendir(path);
 	if (!d) {
@@ -2078,9 +2097,8 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 	}
 	closedir(d);
 
-	c->fd = -1;
 	c->name = strdup(name);
-	c->sysfs_dir = (char *)path;
+	c->sysfs_dir = strdup(path);
 	c->firmware = nvme_get_ctrl_attr(c, "firmware_rev");
 	c->model = nvme_get_ctrl_attr(c, "model");
 	c->state = nvme_get_ctrl_attr(c, "state");
@@ -2101,10 +2119,8 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 
 int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 {
-	_cleanup_free_ char *subsys_name = NULL;
-	_cleanup_free_ char *name = NULL;
+	_cleanup_free_ char *subsys_name = NULL, *name = NULL, *path = NULL;
 	nvme_subsystem_t s;
-	char *path;
 	int ret;
 
 	ret = asprintf(&name, "nvme%d", instance);
@@ -2118,11 +2134,9 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		return ret;
 	}
 
-	ret = nvme_configure_ctrl(h->r, c, path, name);
-	if (ret < 0) {
-		free(path);
+	ret = nvme_reconfigure_ctrl(h->r, c, path, name);
+	if (ret < 0)
 		return ret;
-	}
 
 	c->address = nvme_get_attr(path, "address");
 	if (!c->address && strcmp(c->transport, "loop")) {
@@ -2153,12 +2167,11 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 static nvme_ctrl_t nvme_ctrl_alloc(nvme_root_t r, nvme_subsystem_t s,
 				   const char *path, const char *name)
 {
-	nvme_ctrl_t c, p;
-	_cleanup_free_ char *addr = NULL, *address = NULL;
-	char *a = NULL, *e = NULL;
-	_cleanup_free_ char *transport = NULL;
-	char *traddr = NULL, *trsvcid = NULL;
+	_cleanup_free_ char *addr = NULL, *address = NULL, *transport = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
+	char *traddr = NULL, *trsvcid = NULL;
+	char *a = NULL, *e = NULL;
+	nvme_ctrl_t c, p;
 	int ret;
 
 	transport = nvme_get_attr(path, "transport");
@@ -2240,22 +2253,22 @@ skip_address:
 		errno = ENODEV;
 		return NULL;
 	}
-	c->address = addr;
-	addr = NULL;
+	FREE_CTRL_ATTR(c->address);
+	c->address = strdup(addr);
 	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
 		c->discovery_ctrl = true;
-	ret = nvme_configure_ctrl(r, c, path, name);
+	ret = nvme_reconfigure_ctrl(r, c, path, name);
 	return (ret < 0) ? NULL : c;
 }
 
 nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 {
+	_cleanup_free_ char *subsysnqn = NULL, *subsysname = NULL;
+	_cleanup_free_ char *hostnqn = NULL, *hostid = NULL;
+	_cleanup_free_ char *path = NULL;
 	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
-	_cleanup_free_ char *path = NULL;
-	_cleanup_free_ char *hostnqn = NULL, *hostid = NULL;
-	_cleanup_free_ char *subsysnqn = NULL, *subsysname = NULL;
 	int ret;
 
 	nvme_msg(r, LOG_DEBUG, "scan controller %s\n", name);
@@ -2309,7 +2322,6 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	if (!c)
 		return NULL;
 
-	path = NULL;
 	nvme_ctrl_scan_paths(r, c);
 	nvme_ctrl_scan_namespaces(r, c);
 	return c;
