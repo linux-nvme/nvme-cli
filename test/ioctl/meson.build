@@ -83,3 +83,12 @@ zns = executable(
 )
 
 test('zns', zns, env: mock_ioctl_env)
+
+misc = executable(
+    'test-misc',
+    'misc.c',
+    dependencies: libnvme_dep,
+    link_with: mock_ioctl,
+)
+
+test('misc', misc, env: mock_ioctl_env)
