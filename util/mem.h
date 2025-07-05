@@ -5,6 +5,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#define CHECK_NULL_PTR(ptr) \
+	do { \
+		if (!ptr) \
+			abort(); \
+	} while (false)
+
 void *nvme_alloc(size_t len);
 void *nvme_realloc(void *p, size_t len);
 

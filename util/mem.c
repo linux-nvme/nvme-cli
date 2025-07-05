@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <malloc.h>
 #include <string.h>
+#include <dlfcn.h>
 #include <sys/mman.h>
 
 #include "mem.h"
@@ -107,3 +108,21 @@ void nvme_free_huge(struct nvme_mem_huge *mh)
 	mh->len = 0;
 	mh->p = NULL;
 }
+
+#ifdef HAVE_WEAK_MALLOC
+void *malloc(size_t size)
+{
+	static void *(*malloc_sym)(size_t size);
+	void *result = NULL;
+
+	if (!malloc_sym)
+		malloc_sym = dlsym(RTLD_NEXT, "malloc");
+
+	if (malloc_sym)
+		result = malloc_sym(size);
+
+	CHECK_NULL_PTR(result);
+
+	return result;
+}
+#endif /* HAVE_WEAK_MALLOC */
