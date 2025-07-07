@@ -16,6 +16,7 @@
 #define TIMESTAMP_DESC "Get and set timestamp feature"
 #define TEMP_THRESH_DESC "Get and set temperature threshold feature"
 #define ARBITRATION_DESC "Get and set arbitration feature"
+#define VOLATILE_WC_DESC "Get and set volatile write cache feature"
 
 #define FEAT_ARGS(n, ...)                                              \
 	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
@@ -29,6 +30,7 @@ PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 		ENTRY("timestamp", TIMESTAMP_DESC, feat_timestamp)
 		ENTRY("temp-thresh", TEMP_THRESH_DESC, feat_temp_thresh)
 		ENTRY("arbitration", ARBITRATION_DESC, feat_arbitration)
+		ENTRY("volatile-wc", VOLATILE_WC_DESC, feat_volatile_wc)
 	)
 );
 #endif /* !FEAT_NVME || CMD_HEADER_MULTI_READ */

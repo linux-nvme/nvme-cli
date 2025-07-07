@@ -47,6 +47,7 @@ static const char *hctm_feat = "host controlled thermal management feature";
 static const char *timestamp_feat = "timestamp feature";
 static const char *temp_thresh_feat = "temperature threshold feature";
 static const char *arbitration_feat = "arbitration feature";
+static const char *volatile_wc_feat = "volatile write cache feature";
 
 static int feat_get(struct nvme_dev *dev, const __u8 fid, __u32 cdw11, __u8 sel, const char *feat)
 {
@@ -559,4 +560,67 @@ static int feat_arbitration(int argc, char **argv, struct command *cmd, struct p
 		return feat_get(dev, fid, 0, cfg.sel, "arbitration feature");
 
 	return arbitration_set(dev_fd(dev), fid, opts, &cfg);
+}
+
+static int volatile_wc_set(struct nvme_dev *dev, const __u8 fid, bool wce, bool save)
+{
+	__u32 result;
+	int err;
+
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.fd = dev_fd(dev),
+		.fid = fid,
+		.cdw11 = NVME_SET(wce, FEAT_VWC_WCE),
+		.save = save,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = &result,
+	};
+
+	err = nvme_set_features(&args);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", volatile_wc_feat);
+	} else {
+		nvme_show_result("Set %s: 0x%04x (%s)", volatile_wc_feat, args.cdw11,
+				 save ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, args.cdw11, NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_volatile_wc(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const __u8 fid = NVME_FEAT_FID_VOLATILE_WC;
+	const char *wce = "volatile write cache enable";
+
+	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	int err;
+
+	struct config {
+		bool wce;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	FEAT_ARGS(opts, OPT_FLAG("wce", 'w', &cfg.wce, wce));
+
+	err = parse_and_open(&dev, argc, argv, VOLATILE_WC_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "wce"))
+		err = volatile_wc_set(dev, fid, cfg.wce, argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(dev, fid, 0, cfg.sel, volatile_wc_feat);
+
+	return err;
 }
