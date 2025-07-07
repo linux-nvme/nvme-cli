@@ -51,7 +51,7 @@ static void print_discover_log(struct nvmf_discovery_log *log)
 int main()
 {
 	struct nvmf_discovery_log *log = NULL;
-	nvme_root_t r;
+	struct nvme_global_ctx *ctx;
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	int ret;
@@ -59,13 +59,13 @@ int main()
 
 	nvmf_default_config(&cfg);
 
-	r = nvme_scan(NULL);
-	h = nvme_default_host(r);
+	ctx = nvme_scan(NULL);
+	h = nvme_default_host(ctx);
 	if (!h) {
 		fprintf(stderr, "Failed to allocated memory\n");
 		return ENOMEM;
 	}
-	c = nvme_create_ctrl(r, NVME_DISC_SUBSYS_NAME, "loop",
+	c = nvme_create_ctrl(ctx, NVME_DISC_SUBSYS_NAME, "loop",
 			     NULL, NULL, NULL, NULL);
 	if (!c) {
 		fprintf(stderr, "Failed to allocate memory\n");
@@ -86,7 +86,7 @@ int main()
 	else
 		print_discover_log(log);
 
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 	free(log);
 	return 0;
 }

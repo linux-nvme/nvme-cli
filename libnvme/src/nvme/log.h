@@ -26,14 +26,14 @@
 
 /**
  * nvme_init_logging() - Initialize logging
- * @r:		nvme_root_t context
+ * @ctx:	struct nvme_global_ctx object
  * @lvl:	Logging level to set
  * @log_pid:	Boolean to enable logging of the PID
  * @log_tstamp:	Boolean to enable logging of the timestamp
  *
  * Sets the default logging variables for the library.
  */
-void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp);
+void nvme_init_logging(struct nvme_global_ctx *ctx, int lvl, bool log_pid, bool log_tstamp);
 
 /**
  * nvme_init_default_logging() - Initialize default (fallback) logging
@@ -49,7 +49,7 @@ void nvme_init_default_logging(FILE *fp, int lvl, bool log_pid, bool log_tstamp)
 
 /**
  * nvme_get_logging_level() - Get current logging level
- * @r:		nvme_root_t context
+ * @ctx:	struct nvme_global_ctx object
  * @log_pid:	Pointer to store a current value of logging of
  *		the PID flag at (optional).
  * @log_tstamp:	Pointer to store a current value of logging of
@@ -59,23 +59,24 @@ void nvme_init_default_logging(FILE *fp, int lvl, bool log_pid, bool log_tstamp)
  *
  * Return: current log level value or DEFAULT_LOGLEVEL if not initialized.
  */
-int nvme_get_logging_level(nvme_root_t r, bool *log_pid, bool *log_tstamp);
+int nvme_get_logging_level(struct nvme_global_ctx *ctx, bool *log_pid, bool *log_tstamp);
 
 /**
- * nvme_set_root() - Set nvme_root_t context
- * @r:		nvme_root_t context
+ * nvme_set_global_ctx() - Set global context
+ * @ctx:		struct nvme_global_ctx object
  *
- * In order to be able to log from code paths where no root object is passed in
- * via the arguments use the the default one which can be set via this call.
- * When creating a new root object with @nvme_create_root the global root object
- * will be set as well. This means the global root object is always pointing to
- * the latest created root object. Note the first @nvme_free_tree call will reset
- * the global root object.
+ * In order to be able to log from code paths where no global context
+ * object is passed in via the arguments use the the default one which
+ * can be set via this call. When creating a new global context object
+ * with @nvme_create_global_ctx the global context object will be set as
+ * well. This means the global context object is always pointing to the
+ * latest created global context object. Note the first
+ * @nvme_free_global_ctx call will reset the global context object.
  *
  * This function is deprecated. Use nvme_init_default_logging or/and
  * nvme_init_logging instead.
  */
-void nvme_set_root(nvme_root_t r) __attribute__((deprecated));
+void nvme_set_global_ctx(struct nvme_global_ctx *ctx) __attribute__((deprecated));
 
 /**
  * nvme_set_debug - Set NVMe command debugging output

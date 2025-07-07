@@ -4,12 +4,12 @@ import sys
 import pprint
 from libnvme import nvme
 
-root = nvme.root()      
-root.log_level('debug') 
+ctx = nvme.global_ctx()      
+ctx.log_level('debug') 
 
-host = nvme.host(root)  
+host = nvme.host(ctx)  
 subsysnqn = nvme.NVME_DISC_SUBSYS_NAME
 transport = 'loop'
 traddr    = '127.0.0.1'
 trsvcid   = '8009'
-ctrl = nvme.ctrl(root, subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid)
+ctrl = nvme.ctrl(ctx, subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid)

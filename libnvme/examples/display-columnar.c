@@ -17,22 +17,21 @@
 static const char dash[101] = {[0 ... 99] = '-'};
 int main()
 {
-	nvme_root_t r;
+	struct nvme_global_ctx *ctx;
 	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 	nvme_path_t p;
 	nvme_ns_t n;
 
-	r = nvme_scan(NULL);
-	if (!r)
+	ctx = nvme_scan(NULL);
+	if (!ctx)
 		return -1;
-
 
 	printf("%-16s %-96s %-.16s\n", "Subsystem", "Subsystem-NQN", "Controllers");
 	printf("%-.16s %-.96s %-.16s\n", dash, dash, dash);
 
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			bool first = true;
 			printf("%-16s %-96s ", nvme_subsystem_get_name(s),
@@ -53,7 +52,7 @@ int main()
 	printf("%-.8s %-.20s %-.40s %-.8s %-.6s %-.14s %-.12s %-.16s\n", dash, dash,
 		dash, dash, dash, dash, dash, dash);
 
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			nvme_subsystem_for_each_ctrl(s, c) {
 				bool first = true;
@@ -87,7 +86,7 @@ int main()
  	printf("%-12s %-8s %-16s %-8s %-16s\n", "Device", "NSID", "Sectors", "Format", "Controllers");
 	printf("%-.12s %-.8s %-.16s %-.8s %-.16s\n", dash, dash, dash, dash, dash);
 
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			nvme_subsystem_for_each_ctrl(s, c) {
 				nvme_ctrl_for_each_ns(c, n)

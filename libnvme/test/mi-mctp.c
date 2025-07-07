@@ -1443,7 +1443,7 @@ static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep,
 
 int main(void)
 {
-	nvme_root_t root;
+	struct nvme_global_ctx *ctx;
 	nvme_mi_ep_t ep;
 	unsigned int i;
 	FILE *fd;
@@ -1452,10 +1452,10 @@ int main(void)
 
 	__nvme_mi_mctp_set_ops(&ops);
 
-	root = nvme_mi_create_root(fd, DEFAULT_LOGLEVEL);
-	assert(root);
+	ctx = nvme_mi_create_global_ctx(fd, DEFAULT_LOGLEVEL);
+	assert(ctx);
 
-	ep = nvme_mi_open_mctp(root, 0, 0);
+	ep = nvme_mi_open_mctp(ctx, 0, 0);
 	assert(ep);
 
 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
@@ -1464,7 +1464,7 @@ int main(void)
 	}
 
 	nvme_mi_close(ep);
-	nvme_mi_free_root(root);
+	nvme_mi_free_global_ctx(ctx);
 
 	test_close_log(fd);
 

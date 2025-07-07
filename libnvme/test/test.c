@@ -317,7 +317,7 @@ static void print_hex(const uint8_t *x, int len)
 
 int main(int argc, char **argv)
 {
-	nvme_root_t r;
+	struct nvme_global_ctx *ctx;
 	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
@@ -327,11 +327,11 @@ int main(int argc, char **argv)
 	const char *nqn_match = "testnqn";
 
 	printf("Test filter for common loop back target\n");
-	r = nvme_create_root(NULL, DEFAULT_LOGLEVEL);
-	if (!r)
+	ctx = nvme_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
+	if (!ctx)
 		return 1;
-	nvme_scan_topology(r, nvme_match_subsysnqn_filter, (void *)nqn_match);
-	nvme_for_each_host(r, h) {
+	nvme_scan_topology(ctx, nvme_match_subsysnqn_filter, (void *)nqn_match);
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
 			       nvme_subsystem_get_nqn(s));
@@ -349,7 +349,7 @@ int main(int argc, char **argv)
 		ctrl = argv[1];
 
 	printf("Test scan specific controller\n");
-	c = nvme_scan_ctrl(r, ctrl);
+	c = nvme_scan_ctrl(ctx, ctrl);
 	if (c) {
 		printf("%s %s %s %s\n", nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
@@ -358,14 +358,14 @@ int main(int argc, char **argv)
 		nvme_free_ctrl(c);
 	}
 	printf("\n");
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 
-	r = nvme_scan(NULL);
-	if (!r)
+	ctx = nvme_scan(NULL);
+	if (!ctx)
 		return -1;
 
 	printf("Test walking the topology\n");
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
 			       nvme_subsystem_get_nqn(s));
@@ -410,7 +410,7 @@ int main(int argc, char **argv)
 	}
 
 	printf("Test identification, logs, and features\n");
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			nvme_subsystem_for_each_ctrl(s, c) {
 				test_ctrl(c);
@@ -426,7 +426,7 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 
 	return 0;
 }

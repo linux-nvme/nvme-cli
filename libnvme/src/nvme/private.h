@@ -127,7 +127,7 @@ struct nvme_subsystem {
 struct nvme_host {
 	struct list_node entry;
 	struct list_head subsystems;
-	struct nvme_root *r;
+	struct nvme_global_ctx *ctx;
 
 	char *hostnqn;
 	char *hostid;
@@ -178,11 +178,11 @@ struct nvme_log {
 	bool timestamp;
 };
 
-struct nvme_root {
+struct nvme_global_ctx {
 	char *config_file;
 	char *application;
-	struct list_head hosts;
 	struct list_head endpoints; /* MI endpoints */
+	struct list_head hosts;
 	struct nvme_log log;
 	bool modified;
 	bool mi_probe_enabled;
@@ -192,11 +192,11 @@ struct nvme_root {
 
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
 
-int json_read_config(nvme_root_t r, const char *config_file);
+int json_read_config(struct nvme_global_ctx *ctx, const char *config_file);
 
-int json_update_config(nvme_root_t r, const char *config_file);
+int json_update_config(struct nvme_global_ctx *ctx, const char *config_file);
 
-int json_dump_tree(nvme_root_t r);
+int json_dump_tree(struct nvme_global_ctx *ctx);
 
 nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			       const char *traddr, const char *host_traddr,
@@ -214,14 +214,14 @@ void *__nvme_realloc(void *p, size_t len);
 #endif
 
 void __attribute__((format(printf, 4, 5)))
-__nvme_msg(nvme_root_t r, int level, const char *func, const char *format, ...);
+__nvme_msg(struct nvme_global_ctx *ctx, int level, const char *func, const char *format, ...);
 
-#define nvme_msg(r, level, format, ...)					\
-	__nvme_msg(r, level, __nvme_log_func, format, ##__VA_ARGS__)
+#define nvme_msg(ctx, level, format, ...)					\
+	__nvme_msg(ctx, level, __nvme_log_func, format, ##__VA_ARGS__)
 
-#define root_from_ctrl(c) ((c)->s && (c)->s->h ? (c)->s->h->r : NULL)
-#define root_from_ns(n) ((n)->s && (n)->s->h ? (n)->s->h->r : \
-			 (n)->c && (n)->c->s && (n)->c->s->h ? (n)->c->s->h->r : \
+#define ctx_from_ctrl(c) ((c)->s && (c)->s->h ? (c)->s->h->ctx : NULL)
+#define ctx_from_ns(n) ((n)->s && (n)->s->h ? (n)->s->h->ctx : \
+			 (n)->c && (n)->c->s && (n)->c->s->h ? (n)->c->s->h->ctx : \
 			 NULL)
 
 /* mi internal headers */
@@ -243,6 +243,7 @@ struct nvme_mi_resp {
 	__u32 mic;
 };
 
+struct nvme_mi_ep;
 struct nvme_mi_transport {
 	const char *name;
 	bool mic_enabled;
@@ -282,7 +283,7 @@ struct nvme_mi_aem_ctx {
 #define NVME_QUIRK_CSI_1_NOT_SUPPORTED          (1 << 1)
 
 struct nvme_mi_ep {
-	struct nvme_root *root;
+	struct nvme_global_ctx *ctx;
 	const struct nvme_mi_transport *transport;
 	void *transport_data;
 	struct list_node root_entry;
@@ -309,7 +310,7 @@ struct nvme_mi_ctrl {
 	struct list_node	ep_entry;
 };
 
-struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_root *root);
+struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_global_ctx *ctx);
 void nvme_mi_ep_probe(struct nvme_mi_ep *ep);
 
 /* for tests, we need to calculate the correct MICs */

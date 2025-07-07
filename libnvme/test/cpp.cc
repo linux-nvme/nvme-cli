@@ -12,18 +12,18 @@
 
 int main()
 {
-	nvme_root_t r;
+	struct nvme_global_ctx *ctx;
 	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 	nvme_path_t p;
 	nvme_ns_t n;
 
-	r = nvme_scan(NULL);
-	if (!r)
+	ctx = nvme_scan(NULL);
+	if (!ctx)
 		return -1;
 
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			std::cout <<  nvme_subsystem_get_name(s)
 				  << " - NQN=" << nvme_subsystem_get_nqn(s)
@@ -61,7 +61,7 @@ int main()
 		}
 	}
 	std::cout << "\n";
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 
 	return 0;
 }

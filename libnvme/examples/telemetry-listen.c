@@ -128,16 +128,16 @@ int main()
 	fd_set fds;
 	int i = 0;
 
+	struct nvme_global_ctx *ctx;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 	nvme_host_t h;
-	nvme_root_t r;
 
-	r = nvme_scan(NULL);
-	if (!r)
+	ctx = nvme_scan(NULL);
+	if (!ctx)
 		return EXIT_FAILURE;
 
-	nvme_for_each_host(r, h)
+	nvme_for_each_host(ctx, h)
 		nvme_for_each_subsystem(h, s)
 			nvme_subsystem_for_each_ctrl(s, c)
 				i++;
@@ -146,7 +146,7 @@ int main()
 	FD_ZERO(&fds);
 	i = 0;
 
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			nvme_subsystem_for_each_ctrl(s, c) {
 				int fd = open_uevent(c);
@@ -162,7 +162,7 @@ int main()
 	}
 
 	wait_events(&fds, e, i);
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 	free(e);
 
 	return EXIT_SUCCESS;

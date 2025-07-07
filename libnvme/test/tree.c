@@ -118,14 +118,14 @@ static bool match_ctrl(struct test_data *d, nvme_ctrl_t c)
 	return pass;
 }
 
-static nvme_root_t create_tree()
+static struct nvme_global_ctx *create_tree()
 {
-	nvme_root_t r;
+	struct nvme_global_ctx *ctx;
 	nvme_host_t h;
 
-	r = nvme_create_root(stdout, LOG_DEBUG);
-	assert(r);
-	h = nvme_default_host(r);
+	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
+	assert(ctx);
+	h = nvme_default_host(ctx);
 	assert(h);
 
 	printf("  ctrls created:\n");
@@ -147,17 +147,17 @@ static nvme_root_t create_tree()
 	}
 	printf("\n");
 
-	return r;
+	return ctx;
 }
 
-static unsigned int count_entries(nvme_root_t r)
+static unsigned int count_entries(struct nvme_global_ctx *ctx)
 {
 	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 	unsigned int i = 0;
 
-	nvme_for_each_host(r, h)
+	nvme_for_each_host(ctx, h)
 		nvme_for_each_subsystem(h, s)
 			nvme_subsystem_for_each_ctrl(s, c)
 				i++;
@@ -222,13 +222,13 @@ static bool default_ctrl_lookup(nvme_subsystem_t s, struct test_data *d)
 	return pass;
 }
 
-static bool ctrl_lookups(nvme_root_t r)
+static bool ctrl_lookups(struct nvme_global_ctx *ctx)
 {
 	nvme_host_t h;
 	nvme_subsystem_t s;
 	bool pass = true;
 
-	h = nvme_first_host(r);
+	h = nvme_first_host(ctx);
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN);
 
 	printf("  lookup controller:\n");
@@ -252,24 +252,24 @@ static bool ctrl_lookups(nvme_root_t r)
 
 static bool test_lookup(void)
 {
-	nvme_root_t r;
+	struct nvme_global_ctx *ctx;
 	bool pass;
 
 	printf("test_lookup:\n");
 
-	r = create_tree();
-	pass = count_entries(r) == ARRAY_SIZE(test_data);
-	pass &= ctrl_lookups(r);
+	ctx = create_tree();
+	pass = count_entries(ctx) == ARRAY_SIZE(test_data);
+	pass &= ctrl_lookups(ctx);
 
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 
 	return pass;
 }
 
 static bool test_src_addr()
 {
+	struct nvme_global_ctx *ctx;
 	bool pass = true;
-	nvme_root_t r;
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	nvme_subsystem_t s;
@@ -278,10 +278,10 @@ static bool test_src_addr()
 	printf("\n"
 	       "test_src_addr:\n");
 
-	r = nvme_create_root(stdout, LOG_DEBUG);
-	assert(r);
+	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
+	assert(ctx);
 
-	h = nvme_default_host(r);
+	h = nvme_default_host(ctx);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN);
@@ -407,7 +407,7 @@ static bool test_src_addr()
 
 	c->address = NULL; /* Needed to avoid freeing non-malloced memory (see above) */
 
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 
 	return pass;
 }
@@ -447,17 +447,17 @@ static bool ctrl_match(const char *tag,
 		       struct ctrl_args *candidate,
 		       bool should_match)
 {
-	nvme_root_t r;
+	struct nvme_global_ctx *ctx;
 	nvme_host_t h;
 	nvme_ctrl_t reference_ctrl; /* Existing controller (from sysfs) */
 	nvme_ctrl_t candidate_ctrl;
 	nvme_ctrl_t found_ctrl;
 	nvme_subsystem_t s;
 
-	r = nvme_create_root(stdout, LOG_INFO);
-	assert(r);
+	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
+	assert(ctx);
 
-	h = nvme_default_host(r);
+	h = nvme_default_host(ctx);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, reference->subsysnqn ? reference->subsysnqn : DEFAULT_SUBSYSNQN);
@@ -524,7 +524,7 @@ static bool ctrl_match(const char *tag,
 	reference_ctrl->name = NULL;
 	reference_ctrl->address = NULL;
 
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 
 	return true;
 }
@@ -1061,16 +1061,16 @@ static bool ctrl_config_match(const char *tag,
 			      struct ctrl_args *candidate,
 			      bool should_match)
 {
+	struct nvme_global_ctx *ctx;
 	bool match;
-	nvme_root_t r;
 	nvme_host_t h;
 	nvme_ctrl_t reference_ctrl; /* Existing controller (from sysfs) */
 	nvme_subsystem_t s;
 
-	r = nvme_create_root(stdout, LOG_INFO);
-	assert(r);
+	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
+	assert(ctx);
 
-	h = nvme_default_host(r);
+	h = nvme_default_host(ctx);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, reference->subsysnqn ? reference->subsysnqn : DEFAULT_SUBSYSNQN);
@@ -1111,7 +1111,7 @@ static bool ctrl_config_match(const char *tag,
 	reference_ctrl->name = NULL;
 	reference_ctrl->address = NULL;
 
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 
 	return true;
 }

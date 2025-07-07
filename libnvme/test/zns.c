@@ -62,17 +62,17 @@ static void show_zns_properties(nvme_ns_t n)
 
 int main()
 {
+	struct nvme_global_ctx *ctx;
 	nvme_subsystem_t s;
-	nvme_root_t r;
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	nvme_ns_t n;
 
-	r = nvme_scan(NULL);
-	if (!r)
+	ctx = nvme_scan(NULL);
+	if (!ctx)
 		return -1;
 
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			nvme_subsystem_for_each_ctrl(s, c) {
 				nvme_ctrl_for_each_ns(c, n) {
@@ -86,5 +86,5 @@ int main()
 			}
 		}
 	}
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 }

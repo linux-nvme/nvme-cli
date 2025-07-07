@@ -78,7 +78,7 @@ enum nvme_mi_aem_handler_next_action aem_handler(nvme_mi_ep_t ep, size_t num_eve
 
 int main(int argc, char **argv)
 {
-	nvme_root_t root;
+	struct nvme_global_ctx *ctx;
 	nvme_mi_ep_t ep;
 	uint8_t eid = 0;
 	int rc = 0, net = 0;
@@ -109,11 +109,11 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	root = nvme_mi_create_root(stderr, DEFAULT_LOGLEVEL);
-	if (!root)
+	ctx = nvme_mi_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	if (!ctx)
 		err(EXIT_FAILURE, "can't create NVMe root");
 
-	ep = nvme_mi_open_mctp(root, net, eid);
+	ep = nvme_mi_open_mctp(ctx, net, eid);
 	if (!ep)
 		err(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
 
@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 	//Cleanup
 	nvme_mi_aem_disable(ep);
 	nvme_mi_close(ep);
-	nvme_mi_free_root(root);
+	nvme_mi_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

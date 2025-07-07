@@ -111,12 +111,12 @@ static void test_set_transport_callback(nvme_mi_ep_t ep, test_submit_cb cb,
 	tpd->submit_cb_data = data;
 }
 
-nvme_mi_ep_t nvme_mi_open_test(nvme_root_t root)
+nvme_mi_ep_t nvme_mi_open_test(struct nvme_global_ctx *ctx)
 {
 	struct test_transport_data *tpd;
 	struct nvme_mi_ep *ep;
 
-	ep = nvme_mi_init_ep(root);
+	ep = nvme_mi_init_ep(ctx);
 	assert(ep);
 
 	/* preempt the quirk probe to avoid clutter */
@@ -134,12 +134,12 @@ nvme_mi_ep_t nvme_mi_open_test(nvme_root_t root)
 	return ep;
 }
 
-unsigned int count_root_eps(nvme_root_t root)
+unsigned int count_root_eps(struct nvme_global_ctx *ctx)
 {
 	unsigned int i = 0;
 	nvme_mi_ep_t ep;
 
-	nvme_mi_for_each_endpoint(root, ep)
+	nvme_mi_for_each_endpoint(ctx, ep)
 		i++;
 
 	return i;
@@ -149,19 +149,19 @@ unsigned int count_root_eps(nvme_root_t root)
  * creation/destruction */
 static void test_endpoint_lifetime(nvme_mi_ep_t ep)
 {
-	nvme_root_t root = ep->root;
+	struct nvme_global_ctx *ctx= ep->ctx;
 	unsigned int count;
 	nvme_mi_ep_t ep2;
 
-	count = count_root_eps(root);
+	count = count_root_eps(ctx);
 	assert(count == 1);
 
-	ep2 = nvme_mi_open_test(root);
-	count = count_root_eps(root);
+	ep2 = nvme_mi_open_test(ctx);
+	count = count_root_eps(ctx);
 	assert(count == 2);
 
 	nvme_mi_close(ep2);
-	count = count_root_eps(root);
+	count = count_root_eps(ctx);
 	assert(count == 1);
 }
 
@@ -2130,17 +2130,17 @@ static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
 
 int main(void)
 {
-	nvme_root_t root;
+	struct nvme_global_ctx *ctx;
 	nvme_mi_ep_t ep;
 	unsigned int i;
 	FILE *fd;
 
 	fd = test_setup_log();
 
-	root = nvme_mi_create_root(fd, DEFAULT_LOGLEVEL);
-	assert(root);
+	ctx = nvme_mi_create_global_ctx(fd, DEFAULT_LOGLEVEL);
+	assert(ctx);
 
-	ep = nvme_mi_open_test(root);
+	ep = nvme_mi_open_test(ctx);
 	assert(ep);
 
 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
@@ -2148,7 +2148,7 @@ int main(void)
 	}
 
 	nvme_mi_close(ep);
-	nvme_mi_free_root(root);
+	nvme_mi_free_global_ctx(ctx);
 
 	test_close_log(fd);
 

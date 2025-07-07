@@ -646,7 +646,7 @@ const char *nvme_errno_to_string(int status)
 }
 
 #ifdef HAVE_NETDB
-char *hostname2traddr(struct nvme_root *r, const char *traddr)
+char *hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr)
 {
 	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
 	char addrstr[NVMF_TRADDR_SIZE];
@@ -656,7 +656,7 @@ char *hostname2traddr(struct nvme_root *r, const char *traddr)
 
 	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
 	if (ret) {
-		nvme_msg(r, LOG_ERR, "failed to resolve host %s info\n",
+		nvme_msg(ctx, LOG_ERR, "failed to resolve host %s info\n",
 			 traddr);
 		return NULL;
 	}
@@ -673,13 +673,13 @@ char *hostname2traddr(struct nvme_root *r, const char *traddr)
 			addrstr, NVMF_TRADDR_SIZE);
 		break;
 	default:
-		nvme_msg(r, LOG_ERR, "unrecognized address family (%d) %s\n",
+		nvme_msg(ctx, LOG_ERR, "unrecognized address family (%d) %s\n",
 			 host_info->ai_family, traddr);
 		goto free_addrinfo;
 	}
 
 	if (!p) {
-		nvme_msg(r, LOG_ERR, "failed to get traddr for %s\n",
+		nvme_msg(ctx, LOG_ERR, "failed to get traddr for %s\n",
 			 traddr);
 		goto free_addrinfo;
 	}
@@ -690,9 +690,9 @@ free_addrinfo:
 	return ret_traddr;
 }
 #else /* HAVE_NETDB */
-char *hostname2traddr(struct nvme_root *r, const char *traddr)
+char *hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr)
 {
-	nvme_msg(NULL, LOG_ERR, "No support for hostname IP address resolution; " \
+	nvme_msg(ctx, LOG_ERR, "No support for hostname IP address resolution; " \
 		"recompile with libnss support.\n");
 
 	errno = -ENOTSUP;

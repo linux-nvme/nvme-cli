@@ -10,7 +10,6 @@
 #ifndef _LIBNVME_TREE_H
 #define _LIBNVME_TREE_H
 
-#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -19,6 +18,7 @@
 
 #include <nvme/ioctl.h>
 #include <nvme/util.h>
+#include <nvme/api-types.h>
 
 /**
  * DOC: tree.h
@@ -32,92 +32,74 @@ typedef struct nvme_path *nvme_path_t;
 typedef struct nvme_ctrl *nvme_ctrl_t;
 typedef struct nvme_subsystem *nvme_subsystem_t;
 typedef struct nvme_host *nvme_host_t;
-typedef struct nvme_root *nvme_root_t;
 
 typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t, nvme_ctrl_t,
 				   nvme_ns_t, void *);
 
 /**
- * nvme_create_root() - Initialize root object
- * @fp:		File descriptor for logging messages
- * @log_level:	Logging level to use
- *
- * Return: Initialized &nvme_root_t object
- */
-nvme_root_t nvme_create_root(FILE *fp, int log_level);
-
-/**
- * nvme_root_set_application - Specify managing application
- * @r:	&nvme_root_t object
+ * nvme_set_application - Specify managing application
+ * @ctx:	struct nvme_global_ctx object
  * @a:	Application string
  *
  * Sets the managing application string for @r.
  */
-void nvme_root_set_application(nvme_root_t r, const char *a);
+void nvme_set_application(struct nvme_global_ctx *ctx, const char *a);
 
 /**
- * nvme_root_get_application - Get managing application
- * @r:	&nvme_root_t object
+ * nvme_get_application - Get managing application
+ * @ctx:	struct nvme_global_ctx object
  *
  * Returns the managing application string for @r or NULL if not set.
  */
-const char *nvme_root_get_application(nvme_root_t r);
+const char *nvme_get_application(struct nvme_global_ctx *ctx);
 
 /**
- * nvme_root_skip_namespaces - Skip namespace scanning
- * @r:	&nvme_root_t object
+ * nvme_skip_namespaces - Skip namespace scanning
+ * @ctx:	struct nvme_global_ctx object
  *
  * Sets a flag to skip namespaces during scanning.
  */
-void nvme_root_skip_namespaces(nvme_root_t r);
+void nvme_skip_namespaces(struct nvme_global_ctx *ctx);
 
 /**
- * nvme_root_release_fds - Close all opened file descriptors in the tree
- * @r:	&nvme_root_t object
+ * nvme_release_fds - Close all opened file descriptors in the tree
+ * @ctx:	struct nvme_global_ctx object
  *
  * Controller and Namespace objects cache the file descriptors
  * of opened nvme devices. This API can be used to close and
  * clear all cached fds in the tree.
  *
  */
-void nvme_root_release_fds(nvme_root_t r);
-
-/**
- * nvme_free_tree() - Free root object
- * @r:	&nvme_root_t object
- *
- * Free an &nvme_root_t object and all attached objects
- */
-void nvme_free_tree(nvme_root_t r);
+void nvme_release_fds(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_first_host() - Start host iterator
- * @r:	&nvme_root_t object
+ * @ctx:	struct nvme_global_ctx object
  *
  * Return: First &nvme_host_t object in an iterator
  */
-nvme_host_t nvme_first_host(nvme_root_t r);
+nvme_host_t nvme_first_host(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_next_host() - Next host iterator
- * @r:	&nvme_root_t object
+ * @ctx:	struct nvme_global_ctx object
  * @h:	Previous &nvme_host_t iterator
  *
  * Return: Next &nvme_host_t object in an iterator
  */
-nvme_host_t nvme_next_host(nvme_root_t r, nvme_host_t h);
+nvme_host_t nvme_next_host(struct nvme_global_ctx *ctx, nvme_host_t h);
 
 /**
- * nvme_host_get_root() - Returns nvme_root_t object
+ * nvme_host_get_global_ctx() - Returns nvme_global_ctx object
  * @h:	&nvme_host_t object
  *
- * Return: &nvme_root_t object from @h
+ * Return: &struct nvme_global_ctx object from @h
  */
-nvme_root_t nvme_host_get_root(nvme_host_t h);
+struct nvme_global_ctx *nvme_host_get_global_ctx(nvme_host_t h);
 
 /**
  * nvme_lookup_host() - Lookup nvme_host_t object
- * @r:		&nvme_root_t object
+ * @ctx:	struct nvme_global_ctx object
  * @hostnqn:	Host NQN
  * @hostid:	Host ID
  *
@@ -126,7 +108,7 @@ nvme_root_t nvme_host_get_root(nvme_host_t h);
  *
  * Return: &nvme_host_t object
  */
-nvme_host_t nvme_lookup_host(nvme_root_t r, const char *hostnqn,
+nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 			     const char *hostid);
 
 /**
@@ -168,19 +150,19 @@ bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback);
 
 /**
  * nvme_default_host() - Initializes the default host
- * @r:	&nvme_root_t object
+ * @ctx:	struct nvme_global_ctx object
  *
  * Initializes the default host object based on the hostnqn/hostid
  * values returned by nvme_host_get_ids() and attaches it to @r.
  *
  * Return: &nvme_host_t object
  */
-nvme_host_t nvme_default_host(nvme_root_t r);
+nvme_host_t nvme_default_host(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_host_get_ids - Retrieve host ids from various sources
  *
- * @r:			&nvme_root_t object
+ * @ctx:		struct nvme_global_ctx object
  * @hostnqn_arg:	Input hostnqn (command line) argument
  * @hostid_arg:		Input hostid (command line) argument
  * @hostnqn:		Output hostnqn
@@ -208,7 +190,7 @@ nvme_host_t nvme_default_host(nvme_root_t r);
  *  Return: 0 on success (@hostnqn and @hostid contain valid strings
  *  which the caller needs to free), -1 otherwise and errno is set.
  */
-int nvme_host_get_ids(nvme_root_t r,
+int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 		      char *hostnqn_arg, char *hostid_arg,
 		      char **hostnqn, char **hostid);
 
@@ -399,7 +381,7 @@ bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
 
 /**
  * nvme_create_ctrl() - Allocate an unconnected NVMe controller
- * @r:			NVMe root element
+ * @ctx:		struct nvme_global_ctx object
  * @subsysnqn:		Subsystem NQN
  * @transport:		Transport type
  * @traddr:		Transport address
@@ -411,7 +393,7 @@ bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
  *
  * Return: Controller instance
  */
-nvme_ctrl_t nvme_create_ctrl(nvme_root_t r,
+nvme_ctrl_t nvme_create_ctrl(struct nvme_global_ctx *ctx,
 			     const char *subsysnqn, const char *transport,
 			     const char *traddr, const char *host_traddr,
 			     const char *host_iface, const char *trsvcid);
@@ -1275,14 +1257,14 @@ int nvme_disconnect_ctrl(nvme_ctrl_t c);
 
 /**
  * nvme_scan_ctrl() - Scan on a controller
- * @r:		nvme_root_t object
+ * @ctx:	struct nvme_global_ctx object
  * @name:	Name of the controller
  *
  * Scans a controller with sysfs name @name and add it to @r.
  *
  * Return: nvme_ctrl_t object
  */
-nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name);
+nvme_ctrl_t nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name);
 
 /**
  * nvme_rescan_ctrl() - Rescan an existing controller
@@ -1397,7 +1379,7 @@ const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s);
 
 /**
  * nvme_scan_topology() - Scan NVMe topology and apply filter
- * @r:	    nvme_root_t object
+ * @ctx:    struct nvme_global_ctx object
  * @f:	    filter to apply
  * @f_args: user-specified argument to @f
  *
@@ -1406,7 +1388,7 @@ const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s);
  *
  * Returns: 0 on success, -1 on failure with errno set.
  */
-int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f, void *f_args);
+int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *f_args);
 
 /**
  * nvme_host_get_hostnqn() - Host NQN of an nvme_host_t object
@@ -1444,13 +1426,13 @@ void nvme_free_host(nvme_host_t h);
  * nvme_scan() - Scan NVMe topology
  * @config_file:	Configuration file
  *
- * Return: nvme_root_t object of found elements
+ * Return: &struct nvme_global_ctx object
  */
-nvme_root_t nvme_scan(const char *config_file);
+struct nvme_global_ctx *nvme_scan(const char *config_file);
 
 /**
  * nvme_read_config() - Read NVMe JSON configuration file
- * @r:			nvme_root_t object
+ * @ctx:		&struct nvme_global_ctx object
  * @config_file:	JSON configuration file
  *
  * Read in the contents of @config_file and merge them with
@@ -1458,47 +1440,47 @@ nvme_root_t nvme_scan(const char *config_file);
  *
  * Returns: 0 on success, -1 on failure with errno set.
  */
-int nvme_read_config(nvme_root_t r, const char *config_file);
+int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file);
 
 /**
  * nvme_refresh_topology() - Refresh nvme_root_t object contents
- * @r:	nvme_root_t object
+ * @ctx:		&struct nvme_global_ctx object
  *
  * Removes all elements in @r and rescans the existing topology.
  */
-void nvme_refresh_topology(nvme_root_t r);
+void nvme_refresh_topology(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_update_config() - Update JSON configuration
- * @r:	nvme_root_t object
+ * @ctx:		&struct nvme_global_ctx object
  *
  * Updates the JSON configuration file with the contents of @r.
  *
  * Return: 0 on success, -1 on failure.
  */
-int nvme_update_config(nvme_root_t r);
+int nvme_update_config(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_dump_config() - Print the JSON configuration
- * @r:	nvme_root_t object
+ * @ctx:		&struct nvme_global_ctx object
  *
  * Prints the current contents of the JSON configuration
  * file to stdout.
  *
  * Return: 0 on success, -1 on failure.
  */
-int nvme_dump_config(nvme_root_t r);
+int nvme_dump_config(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_dump_tree() - Dump internal object tree
- * @r:	nvme_root_t object
+ * @ctx:		&struct nvme_global_ctx object
  *
  * Prints the internal object tree in JSON format
  * to stdout.
  *
  * Return: 0 on success, -1 on failure.
  */
-int nvme_dump_tree(nvme_root_t r);
+int nvme_dump_tree(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_get_attr() - Read sysfs attribute

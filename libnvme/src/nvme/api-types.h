@@ -13,9 +13,29 @@
 #ifndef _LIBNVME_API_TYPES_H
 #define _LIBNVME_API_TYPES_H
 
+#include <stdio.h>
 #include <stdbool.h>
 
 #include <nvme/types.h>
+
+struct nvme_global_ctx;
+
+/**
+ * nvme_create_global_ctx() - Initialize global context object
+ * @fp:		File descriptor for logging messages
+ * @log_level:	Logging level to use
+ *
+ * Return: Initialized &struct nvme_global_ctx object
+ */
+struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level);
+
+/**
+ * nvme_free_global_ctx() - Free global context object
+ * @ctx:	&struct nvme_global_ctx object
+ *
+ * Free an &struct nvme_global_ctx object and all attached objects
+ */
+void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
 
 /*
  * _args struct definitions. These are used by both the ioctl-based and

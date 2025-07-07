@@ -1791,7 +1791,7 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 	long kr_id = 0, id = 0;
 
 	if (!hostnqn || !subsysnqn) {
-		nvme_msg(h->r, LOG_ERR, "Invalid NQNs (%s, %s)\n",
+		nvme_msg(h->ctx, LOG_ERR, "Invalid NQNs (%s, %s)\n",
 			 hostnqn, subsysnqn);
 		return -EINVAL;
 	}
@@ -1821,7 +1821,7 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 	}
 
 	if (nvme_set_keyring(kr_id) < 0) {
-		nvme_msg(h->r, LOG_ERR, "Failed to set keyring\n");
+		nvme_msg(h->ctx, LOG_ERR, "Failed to set keyring\n");
 		return -errno;
 	}
 
@@ -1834,7 +1834,7 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 					   subsysnqn, identity, key);
 
 	if (id <= 0) {
-		nvme_msg(h->r, LOG_ERR, "Failed to insert TLS KEY, error %d\n",
+		nvme_msg(h->ctx, LOG_ERR, "Failed to insert TLS KEY, error %d\n",
 			 errno);
 		return -errno;
 	}

@@ -161,7 +161,7 @@ static void json_parse_subsys(nvme_host_t h, struct json_object *subsys_obj)
 	}
 }
 
-static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
+static void json_parse_host(struct nvme_global_ctx *ctx, struct json_object *host_obj)
 {
 	struct json_object *attr_obj, *subsys_array, *subsys_obj;
 	nvme_host_t h;
@@ -175,7 +175,7 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 	attr_obj = json_object_object_get(host_obj, "hostid");
 	if (attr_obj)
 		hostid = json_object_get_string(attr_obj);
-	h = nvme_lookup_host(r, hostnqn, hostid);
+	h = nvme_lookup_host(ctx, hostnqn, hostid);
 	attr_obj = json_object_object_get(host_obj, "dhchap_key");
 	if (attr_obj)
 		nvme_host_set_dhchap_key(h, json_object_get_string(attr_obj));
@@ -198,7 +198,7 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 static DEFINE_CLEANUP_FUNC(cleanup_tokener, json_tokener *, json_tokener_free)
 #define _cleanup_tokener_ __cleanup__(cleanup_tokener)
 
-static struct json_object *parse_json(nvme_root_t r, int fd)
+static struct json_object *parse_json(struct nvme_global_ctx *ctx, int fd)
 {
 	char buf[JSON_FILE_BUF_SIZE];
 	struct json_object *obj;
@@ -229,31 +229,31 @@ static struct json_object *parse_json(nvme_root_t r, int fd)
 
 	obj = json_tokener_parse_ex(tok, str, len);
 	if (!obj)
-		nvme_msg(r, LOG_DEBUG, "JSON parsing failed: %s\n",
+		nvme_msg(ctx, LOG_DEBUG, "JSON parsing failed: %s\n",
 			 json_util_get_last_err());
 
 	return obj;
 }
 
-int json_read_config(nvme_root_t r, const char *config_file)
+int json_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 {
 	struct json_object *json_root, *host_obj;
 	int fd, h;
 
 	fd = open(config_file, O_RDONLY);
 	if (fd < 0) {
-		nvme_msg(r, LOG_DEBUG, "Error opening %s, %s\n",
+		nvme_msg(ctx, LOG_DEBUG, "Error opening %s, %s\n",
 			 config_file, strerror(errno));
 		return fd;
 	}
-	json_root = parse_json(r, fd);
+	json_root = parse_json(ctx, fd);
 	close(fd);
 	if (!json_root) {
 		errno = EPROTO;
 		return -1;
 	}
 	if (!json_object_is_type(json_root, json_type_array)) {
-		nvme_msg(r, LOG_DEBUG, "Wrong format, expected array\n");
+		nvme_msg(ctx, LOG_DEBUG, "Wrong format, expected array\n");
 		json_object_put(json_root);
 		errno = EPROTO;
 		return -1;
@@ -261,7 +261,7 @@ int json_read_config(nvme_root_t r, const char *config_file)
 	for (h = 0; h < json_object_array_length(json_root); h++) {
 		host_obj = json_object_array_get_idx(json_root, h);
 		if (host_obj)
-			json_parse_host(r, host_obj);
+			json_parse_host(ctx, host_obj);
 	}
 	json_object_put(json_root);
 	return 0;
@@ -389,7 +389,7 @@ static void json_update_subsys(struct json_object *subsys_array,
 	}
 }
 
-int json_update_config(nvme_root_t r, const char *config_file)
+int json_update_config(struct nvme_global_ctx *ctx, const char *config_file)
 {
 	nvme_host_t h;
 	struct json_object *json_root, *host_obj;
@@ -397,7 +397,7 @@ int json_update_config(nvme_root_t r, const char *config_file)
 	int ret = 0;
 
 	json_root = json_object_new_array();
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_subsystem_t s;
 		const char *hostnqn, *hostid, *dhchap_key, *hostsymname;
 
@@ -445,7 +445,7 @@ int json_update_config(nvme_root_t r, const char *config_file)
 					      JSON_C_TO_STRING_PRETTY |
 					      JSON_C_TO_STRING_NOSLASHESCAPE);
 	if (ret < 0) {
-		nvme_msg(r, LOG_ERR, "Failed to write to %s, %s\n",
+		nvme_msg(ctx, LOG_ERR, "Failed to write to %s, %s\n",
 			 config_file ? "stdout" : config_file,
 			 json_util_get_last_err());
 		ret = -1;
@@ -629,7 +629,7 @@ static void json_dump_subsys(struct json_object *subsys_array,
 	json_object_array_add(subsys_array, subsys_obj);
 }
 
-int json_dump_tree(nvme_root_t r)
+int json_dump_tree(struct nvme_global_ctx *ctx)
 {
 	nvme_host_t h;
 	struct json_object *json_root, *host_obj;
@@ -638,7 +638,7 @@ int json_dump_tree(nvme_root_t r)
 
 	json_root = json_object_new_object();
 	host_array = json_object_new_array();
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_subsystem_t s;
 		const char *hostid, *dhchap_key;
 
@@ -669,11 +669,11 @@ int json_dump_tree(nvme_root_t r)
 	}
 	json_object_object_add(json_root, "hosts", host_array);
 
-	ret = json_object_to_fd(r->log.fd, json_root,
+	ret = json_object_to_fd(ctx->log.fd, json_root,
 				JSON_C_TO_STRING_PRETTY |
 				JSON_C_TO_STRING_NOSLASHESCAPE);
 	if (ret < 0) {
-		nvme_msg(r, LOG_ERR, "Failed to write, %s\n",
+		nvme_msg(ctx, LOG_ERR, "Failed to write, %s\n",
 			 json_util_get_last_err());
 		ret = -1;
 		errno = EIO;

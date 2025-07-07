@@ -655,36 +655,36 @@ struct nvme_mi_control_resp {
 const char *nvme_mi_status_to_string(int status);
 
 /**
- * nvme_mi_create_root() - Create top-level MI (root) handle.
+ * nvme_mi_create_global_ctx() - Create top-level MI (ctx) handle.
  * @fp:		File descriptor for logging messages
  * @log_level:	Logging level to use
  *
  * Create the top-level (library) handle for creating subsequent endpoint
- * objects. Similar to nvme_create_root(), but we provide this to allow linking
- * without the core libnvme.
+ * objects. Similar to nvme_create_global_ctx(), but we provide this to
+ * allow linking without the core libnvme.
  *
- * Return: new root object, or NULL on failure.
+ * Return: new nvme_global_ctx object, or NULL on failure.
  *
- * See &nvme_create_root.
+ * See &nvme_create_global_ctx.
  */
-nvme_root_t nvme_mi_create_root(FILE *fp, int log_level);
+struct nvme_global_ctx *nvme_mi_create_global_ctx(FILE *fp, int log_level);
 
 /**
- * nvme_mi_free_root() - Free root object.
- * @root: root to free
+ * nvme_mi_free_global_ctx() - Free nvme_global_ctx object.
+ * @ctx:	&struct nvme_global_ctx object
  */
-void nvme_mi_free_root(nvme_root_t root);
+void nvme_mi_free_global_ctx(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_mi_set_probe_enabled() - enable/disable the probe for new endpoints
- * @root: &nvme_root_t object
+ * @ctx:	&struct nvme_global_ctx object
  * @enabled: whether to probe new endpoints
  *
  * Controls whether newly-created endpoints are probed for quirks on creation.
  * Defaults to enabled, which results in some initial messaging with the
  * endpoint to determine model-specific details.
  */
-void nvme_mi_set_probe_enabled(nvme_root_t root, bool enabled);
+void nvme_mi_set_probe_enabled(struct nvme_global_ctx *ctx, bool enabled);
 
 /* Top level management object: NVMe-MI Management Endpoint */
 struct nvme_mi_ep;
@@ -716,18 +716,18 @@ int nvme_mi_set_csi(nvme_mi_ep_t ep, uint8_t csi);
 
 /**
  * nvme_mi_first_endpoint - Start endpoint iterator
- * @m: &nvme_root_t object
+ * @ctx:	&struct nvme_global_ctx object
  *
  * Return: first MI endpoint object under this root, or NULL if no endpoints
  *         are present.
  *
  * See: &nvme_mi_next_endpoint, &nvme_mi_for_each_endpoint
  */
-nvme_mi_ep_t nvme_mi_first_endpoint(nvme_root_t m);
+nvme_mi_ep_t nvme_mi_first_endpoint(struct nvme_global_ctx *ctx);
 
 /**
  * nvme_mi_next_endpoint - Continue endpoint iterator
- * @m: &nvme_root_t object
+ * @ctx:	&struct nvme_global_ctx object
  * @e: &nvme_mi_ep_t current position of iterator
  *
  * Return: next endpoint MI endpoint object after @e under this root, or NULL
@@ -735,28 +735,28 @@ nvme_mi_ep_t nvme_mi_first_endpoint(nvme_root_t m);
  *
  * See: &nvme_mi_first_endpoint, &nvme_mi_for_each_endpoint
  */
-nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t e);
+nvme_mi_ep_t nvme_mi_next_endpoint(struct nvme_global_ctx *ctx, nvme_mi_ep_t e);
 
 /**
  * nvme_mi_for_each_endpoint - Iterator for NVMe-MI endpoints.
- * @m: &nvme_root_t containing endpoints
+ * @c: &struct nvme_global_ctx object
  * @e: &nvme_mi_ep_t object, set on each iteration
  */
-#define nvme_mi_for_each_endpoint(m, e)			\
-	for (e = nvme_mi_first_endpoint(m); e != NULL;	\
-	     e = nvme_mi_next_endpoint(m, e))
+#define nvme_mi_for_each_endpoint(c, e)			\
+	for (e = nvme_mi_first_endpoint(c); e != NULL;	\
+	     e = nvme_mi_next_endpoint(c, e))
 
 /**
  * nvme_mi_for_each_endpoint_safe - Iterator for NVMe-MI endpoints, allowing
  * deletion during traversal
- * @m: &nvme_root_t containing endpoints
+ * @c: &struct nvme_global_ctx object
  * @e: &nvme_mi_ep_t object, set on each iteration
  * @_e: &nvme_mi_ep_t object used as temporary storage
  */
-#define nvme_mi_for_each_endpoint_safe(m, e, _e)			      \
-	for (e = nvme_mi_first_endpoint(m), _e = nvme_mi_next_endpoint(m, e); \
+#define nvme_mi_for_each_endpoint_safe(c, e, _e)			      \
+	for (e = nvme_mi_first_endpoint(c), _e = nvme_mi_next_endpoint(c, e); \
 	     e != NULL;							      \
-	     e = _e, _e = nvme_mi_next_endpoint(m, e))
+	     e = _e, _e = nvme_mi_next_endpoint(c, e))
 
 /**
  * nvme_mi_ep_set_timeout - set a timeout for NVMe-MI responses
@@ -859,7 +859,7 @@ nvme_mi_ctrl_t nvme_mi_next_ctrl(nvme_mi_ep_t ep, nvme_mi_ctrl_t c);
 
 /**
  * nvme_mi_open_mctp() - Create an endpoint using a MCTP connection.
- * @root: root object to create under
+ * @ctx: &struct nvme_global_ctx object
  * @netid: MCTP network ID on this system
  * @eid: MCTP endpoint ID
  *
@@ -870,7 +870,8 @@ nvme_mi_ctrl_t nvme_mi_next_ctrl(nvme_mi_ep_t ep, nvme_mi_ctrl_t c);
  *
  * See &nvme_mi_close
  */
-nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, uint8_t eid);
+nvme_mi_ep_t nvme_mi_open_mctp(struct nvme_global_ctx *ctx,
+			       unsigned int netid, uint8_t eid);
 
 /**
  * nvme_mi_aem_open() - Prepare an existing endpoint to receive AEMs
@@ -897,10 +898,10 @@ void nvme_mi_close(nvme_mi_ep_t ep);
  * This requires libvnme-mi to be compiled with D-Bus support; if not, this
  * will return NULL.
  *
- * Return: A @nvme_root_t populated with a set of MCTP-connected endpoints,
- *         or NULL on failure
+ * Return: A @struct nvme_global_ctx populated with a set of
+ *         MCTP-connected endpoints, or NULL on failure
  */
-nvme_root_t nvme_mi_scan_mctp(void);
+struct nvme_global_ctx *nvme_mi_scan_mctp(void);
 
 /**
  * nvme_mi_scan_ep - query an endpoint for its NVMe controllers.

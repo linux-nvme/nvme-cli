@@ -775,8 +775,8 @@ static int do_action_endpoint(enum action action, nvme_mi_ep_t ep, int argc, cha
 
 int main(int argc, char **argv)
 {
+	struct nvme_global_ctx *ctx;
 	enum action action;
-	nvme_root_t root;
 	nvme_mi_ep_t ep;
 	bool dbus = false, usage = true;
 	uint8_t eid = 0;
@@ -847,34 +847,34 @@ int main(int argc, char **argv)
 		}
 	}
 	if (dbus) {
-		nvme_root_t root;
+		struct nvme_global_ctx *ctx;
 		int i = 0;
 
-		root = nvme_mi_scan_mctp();
-		if (!root)
+		ctx = nvme_mi_scan_mctp();
+		if (!ctx)
 			errx(EXIT_FAILURE, "can't scan D-Bus entries");
 
-		nvme_mi_for_each_endpoint(root, ep) i++;
+		nvme_mi_for_each_endpoint(ctx, ep) i++;
 		printf("Found %d endpoints in D-Bus:\n", i);
-		nvme_mi_for_each_endpoint(root, ep) {
+		nvme_mi_for_each_endpoint(ctx, ep) {
 			char *desc = nvme_mi_endpoint_desc(ep);
 			printf("%s\n", desc);
 			rc = do_action_endpoint(action, ep, argc, argv);
 			printf("---\n");
 			free(desc);
 		}
-		nvme_mi_free_root(root);
+		nvme_mi_free_global_ctx(ctx);
 	} else {
-		root = nvme_mi_create_root(stderr, DEFAULT_LOGLEVEL);
-		if (!root)
+		ctx = nvme_mi_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+		if (!ctx)
 			err(EXIT_FAILURE, "can't create NVMe root");
 
-		ep = nvme_mi_open_mctp(root, net, eid);
+		ep = nvme_mi_open_mctp(ctx, net, eid);
 		if (!ep)
 			errx(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
 		rc = do_action_endpoint(action, ep, argc, argv);
 		nvme_mi_close(ep);
-		nvme_mi_free_root(root);
+		nvme_mi_free_global_ctx(ctx);
 	}
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;

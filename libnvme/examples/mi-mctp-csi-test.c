@@ -123,16 +123,16 @@ enum action {
 	ACTION_CSI_TEST,
 };
 
-int do_csi_test(nvme_root_t root, int net, __u8 eid,
+int do_csi_test(struct nvme_global_ctx *ctx, int net, __u8 eid,
 		int argc, char **argv)
 {
 	int rc = 0;
 	nvme_mi_ep_t ep1, ep2;
 
-	ep1 = nvme_mi_open_mctp(root, net, eid);
+	ep1 = nvme_mi_open_mctp(ctx, net, eid);
 	if (!ep1)
 		errx(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
-	ep2 = nvme_mi_open_mctp(root, net, eid);
+	ep2 = nvme_mi_open_mctp(ctx, net, eid);
 	if (!ep2)
 		errx(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
 
@@ -176,7 +176,7 @@ int do_csi_test(nvme_root_t root, int net, __u8 eid,
 }
 
 static int do_action_endpoint(enum action action,
-				nvme_root_t root,
+				struct nvme_global_ctx *ctx,
 				int net,
 				uint8_t eid,
 				int argc,
@@ -186,7 +186,7 @@ static int do_action_endpoint(enum action action,
 
 	switch (action) {
 	case ACTION_CSI_TEST:
-		rc = do_csi_test(root, net, eid, argc, argv);
+		rc = do_csi_test(ctx, net, eid, argc, argv);
 		break;
 	default:
 		/* This shouldn't be possible, as we should be covering all
@@ -201,8 +201,8 @@ static int do_action_endpoint(enum action action,
 
 int main(int argc, char **argv)
 {
+	struct nvme_global_ctx *ctx;
 	enum action action;
-	nvme_root_t root;
 	bool usage = true;
 	uint8_t eid = 0;
 	int rc = 0, net = 0;
@@ -238,12 +238,12 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	root = nvme_mi_create_root(stderr, DEFAULT_LOGLEVEL);
-	if (!root)
+	ctx = nvme_mi_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	if (!ctx)
 		err(EXIT_FAILURE, "can't create NVMe root");
 
-	rc = do_action_endpoint(action, root, net, eid, argc, argv);
-	nvme_mi_free_root(root);
+	rc = do_action_endpoint(action, ctx, net, eid, argc, argv);
+	nvme_mi_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

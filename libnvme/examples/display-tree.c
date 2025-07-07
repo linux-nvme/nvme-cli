@@ -16,19 +16,19 @@
 
 int main()
 {
-	nvme_root_t r;
+	struct nvme_global_ctx *ctx;
 	nvme_host_t h;
 	nvme_subsystem_t s, _s;
 	nvme_ctrl_t c, _c;
 	nvme_path_t p, _p;
 	nvme_ns_t n, _n;
 
-	r = nvme_scan(NULL);
-	if (!r)
+	ctx = nvme_scan(NULL);
+	if (!ctx)
 		return -1;
 
 	printf(".\n");
-	nvme_for_each_host(r, h) {
+	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem_safe(h, s, _s) {
 			printf("%c-- %s - NQN=%s\n", _s ? '|' : '`',
 			       nvme_subsystem_get_name(s),
@@ -67,6 +67,6 @@ int main()
 			}
 		}
 	}
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 	return 0;
 }

@@ -5,17 +5,17 @@ import sys
 import pprint
 from libnvme import nvme
 
-root = nvme.root()
-root.log_level('debug')
-print(f'root: {root}')
+ctx = nvme.global_ctx()
+ctx.log_level('debug')
+print(f'ctx: {ctx}')
 
-host = nvme.host(root)
+host = nvme.host(ctx)
 print(f'host: {host}')
 
 ctrls = []
 for i in range(10):
     ctrl = nvme.ctrl(
-        root,
+        ctx,
         subsysnqn=nvme.NVME_DISC_SUBSYS_NAME,
         transport='loop',
     )
@@ -30,7 +30,7 @@ for s in host.subsystems():
 # Deleting objects in the following order would create a segmentation
 # fault if it weren't for the %pythonappend in nvme.i. This test is to
 # make sure garbage collection is not impacted by object deletion order.
-root = None
+ctx = None
 host = None
 
 gc.collect()  # Force garbage collection before controller/subsystem objects get deleted

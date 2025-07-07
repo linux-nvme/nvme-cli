@@ -34,7 +34,7 @@ static struct nvme_log def_log = {
 };
 
 void __attribute__((format(printf, 4, 5)))
-__nvme_msg(nvme_root_t r, int level,
+__nvme_msg(struct nvme_global_ctx *ctx, int level,
 	   const char *func, const char *format, ...)
 {
 	struct nvme_log *l;
@@ -55,8 +55,8 @@ __nvme_msg(nvme_root_t r, int level,
 	_cleanup_free_ char *message = NULL;
 	int idx = 0;
 
-	if (r)
-		l = &r->log;
+	if (ctx)
+		l = &ctx->log;
 	else
 		l = &def_log;
 
@@ -96,19 +96,19 @@ __nvme_msg(nvme_root_t r, int level,
 		message ? message : "<error>");
 }
 
-void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp)
+void nvme_init_logging(struct nvme_global_ctx *ctx, int lvl, bool log_pid, bool log_tstamp)
 {
-	r->log.level = lvl;
-	r->log.pid = log_pid;
-	r->log.timestamp = log_tstamp;
+	ctx->log.level = lvl;
+	ctx->log.pid = log_pid;
+	ctx->log.timestamp = log_tstamp;
 }
 
-int nvme_get_logging_level(nvme_root_t r, bool *log_pid, bool *log_tstamp)
+int nvme_get_logging_level(struct nvme_global_ctx *ctx, bool *log_pid, bool *log_tstamp)
 {
 	struct nvme_log *l;
 
-	if (r)
-		l = &r->log;
+	if (ctx)
+		l = &ctx->log;
 	else
 		l = &def_log;
 
@@ -127,12 +127,12 @@ void nvme_init_default_logging(FILE *fp, int level, bool log_pid, bool log_tstam
 	def_log.timestamp = log_tstamp;
 }
 
-void nvme_set_root(nvme_root_t r)
+void nvme_set_global_ctx(struct nvme_global_ctx *ctx)
 {
-	def_log.fd = r->log.fd;
-	def_log.level = r->log.level;
-	def_log.pid = r->log.pid;
-	def_log.timestamp = r->log.timestamp;
+	def_log.fd = ctx->log.fd;
+	def_log.level = ctx->log.level;
+	def_log.pid = ctx->log.pid;
+	def_log.timestamp = ctx->log.timestamp;
 }
 
 void nvme_set_debug(bool debug)

@@ -13,32 +13,32 @@
 
 static bool config_dump(const char *file)
 {
+	struct nvme_global_ctx *ctx;
 	bool pass = false;
-	nvme_root_t r;
 	int err;
 
-	r = nvme_create_root(stderr, LOG_ERR);
-	if (!r)
+	ctx = nvme_create_global_ctx(stderr, LOG_ERR);
+	if (!ctx)
 		return false;
 
-	err = nvme_scan_topology(r, NULL, NULL);
+	err = nvme_scan_topology(ctx, NULL, NULL);
 	if (err) {
 		if (errno != ENOENT)
 			goto out;
 	}
 
-	err = nvme_read_config(r, file);
+	err = nvme_read_config(ctx, file);
 	if (err)
 		goto out;
 
-	err = nvme_dump_config(r);
+	err = nvme_dump_config(ctx);
 	if (err)
 		goto out;
 
 	pass = true;
 
 out:
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 	return pass;
 }
 

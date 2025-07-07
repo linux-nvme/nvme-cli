@@ -137,11 +137,11 @@ out:
 
 int main(int argc, char **argv)
 {
+	struct nvme_global_ctx *ctx;
 	uint16_t cur_mtu, mtu;
 	DBusConnection *bus;
 	const char *devstr;
 	uint8_t eid, port;
-	nvme_root_t root;
 	unsigned int net;
 	nvme_mi_ep_t ep;
 	DBusError berr;
@@ -157,14 +157,14 @@ int main(int argc, char **argv)
 	if (rc)
 		errx(EXIT_FAILURE, "can't parse MI device string '%s'", devstr);
 
-	root = nvme_mi_create_root(stderr, DEFAULT_LOGLEVEL);
-	if (!root)
-		err(EXIT_FAILURE, "can't create NVMe root");
+	ctx = nvme_mi_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	if (!ctx)
+		err(EXIT_FAILURE, "can't create global context");
 
-	ep = nvme_mi_open_mctp(root, net, eid);
+	ep = nvme_mi_open_mctp(ctx, net, eid);
 	if (!ep) {
 		warnx("can't open MCTP endpoint %d:%d", net, eid);
-		goto out_free_root;
+		goto out_free_ctx;
 	}
 
 	dbus_error_init(&berr);
@@ -218,8 +218,8 @@ out_close_bus:
 out_close_ep:
 	dbus_error_free(&berr);
 	nvme_mi_close(ep);
-out_free_root:
-	nvme_mi_free_root(root);
+out_free_ctx:
+	nvme_mi_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

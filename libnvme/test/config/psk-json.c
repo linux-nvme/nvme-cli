@@ -45,36 +45,36 @@ static bool import_export_key(nvme_ctrl_t c)
 
 static bool psk_json_test(char *file)
 {
+	struct nvme_global_ctx *ctx;
 	bool pass = false;
-	nvme_root_t r;
 	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 	int err;
 
-	r = nvme_create_root(stderr, LOG_ERR);
-	if (!r)
+	ctx = nvme_create_global_ctx(stderr, LOG_ERR);
+	if (!ctx)
 		return false;
 
-	err = nvme_read_config(r, file);
+	err = nvme_read_config(ctx, file);
 	if (err)
 		goto out;
 
 
-	nvme_for_each_host(r, h)
+	nvme_for_each_host(ctx, h)
 		nvme_for_each_subsystem(h, s)
 			nvme_subsystem_for_each_ctrl(s, c)
 				if (!import_export_key(c))
 					goto out;
 
-	err = nvme_dump_config(r);
+	err = nvme_dump_config(ctx);
 	if (err)
 		goto out;
 
 	pass = true;
 
 out:
-	nvme_free_tree(r);
+	nvme_free_global_ctx(ctx);
 	return pass;
 }
 

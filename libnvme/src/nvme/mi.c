@@ -59,13 +59,13 @@ static bool nvme_mi_probe_enabled_default(void)
 /* MI-equivalent of nvme_create_root, but avoids clashing symbol names
  * when linking against both libnvme and libnvme-mi.
  */
-nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
+struct nvme_global_ctx *nvme_mi_create_global_ctx(FILE *fp, int log_level)
 {
-	struct nvme_root *r;
+	struct nvme_global_ctx *ctx;
 	int fd;
 
-	r = calloc(1, sizeof(*r));
-	if (!r) {
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
 		errno = ENOMEM;
 		return NULL;
 	}
@@ -73,36 +73,36 @@ nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
 	if (fp) {
 		fd = fileno(fp);
 		if (fd < 0) {
-			free(r);
+			free(ctx);
 			return NULL;
 		}
 	} else
 		fd = STDERR_FILENO;
 
-	r->log.fd = fd;
-	r->log.level = log_level;
+	ctx->log.fd = fd;
+	ctx->log.level = log_level;
 
-	r->mi_probe_enabled = nvme_mi_probe_enabled_default();
+	ctx->mi_probe_enabled = nvme_mi_probe_enabled_default();
 
-	list_head_init(&r->hosts);
-	list_head_init(&r->endpoints);
+	list_head_init(&ctx->hosts);
+	list_head_init(&ctx->endpoints);
 
-	return r;
+	return ctx;
 }
 
-void nvme_mi_free_root(nvme_root_t root)
+void nvme_mi_free_global_ctx(struct nvme_global_ctx *ctx)
 {
 	nvme_mi_ep_t ep, tmp;
 
-	nvme_mi_for_each_endpoint_safe(root, ep, tmp)
+	nvme_mi_for_each_endpoint_safe(ctx, ep, tmp)
 		nvme_mi_close(ep);
 
-	free(root);
+	free(ctx);
 }
 
-void nvme_mi_set_probe_enabled(nvme_root_t root, bool enabled)
+void nvme_mi_set_probe_enabled(struct nvme_global_ctx *ctx, bool enabled)
 {
-	root->mi_probe_enabled = enabled;
+	ctx->mi_probe_enabled = enabled;
 }
 
 static void nvme_mi_record_resp_time(struct nvme_mi_ep *ep)
@@ -122,7 +122,7 @@ static bool nvme_mi_compare_vid_mn(struct nvme_mi_ep *ep,
 
 	len = strlen(mn);
 	if (len >= sizeof(id->mn)) {
-		nvme_msg(ep->root, LOG_ERR,
+		nvme_msg(ep->ctx, LOG_ERR,
 			 "Internal error: invalid model number for %s\n",
 			 __func__);
 		return false;
@@ -176,7 +176,7 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 	 */
 	ep->quirks_probed = true;
 
-	if (!ep->root->mi_probe_enabled)
+	if (!ep->ctx->mi_probe_enabled)
 		return;
 
 	/* start with no quirks, detect as we go */
@@ -208,7 +208,7 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 	rc = nvme_mi_admin_identify_partial(ctrl, &id_args, 0,
 				    offsetof(struct nvme_id_ctrl, rab));
 	if (rc) {
-		nvme_msg(ep->root, LOG_WARNING,
+		nvme_msg(ep->ctx, LOG_WARNING,
 			 "Identify Controller failed, no quirks applied\n");
 		goto out_close;
 	}
@@ -232,7 +232,7 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 		char tmp[sizeof(id.mn) + 1];
 
 		nvme_mi_format_mn(&id, tmp);
-		nvme_msg(ep->root, LOG_DEBUG,
+		nvme_msg(ep->ctx, LOG_DEBUG,
 			 "device %02x:%s: applying quirks 0x%08lx\n",
 			 id.vid, tmp, ep->quirks);
 	}
@@ -288,7 +288,7 @@ static void nvme_mi_insert_delay(struct nvme_mi_ep *ep)
 	nanosleep(&delay, NULL);
 }
 
-struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
+struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_global_ctx *ctx)
 {
 	struct nvme_mi_ep *ep;
 
@@ -297,14 +297,14 @@ struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 		return NULL;
 
 	list_node_init(&ep->root_entry);
-	ep->root = root;
+	ep->ctx = ctx;
 	ep->quirks_probed = false;
 	ep->controllers_scanned = false;
 	ep->timeout = default_timeout;
 	ep->mprt_max = 0;
 	list_head_init(&ep->controllers);
 
-	list_add(&root->endpoints, &ep->root_entry);
+	list_add(&ctx->endpoints, &ep->root_entry);
 
 	return ep;
 }
@@ -456,14 +456,14 @@ int nvme_mi_async_read(nvme_mi_ep_t ep, struct nvme_mi_resp *resp)
 		resp->data_len = 0;//No data to process
 		return 0;
 	} else if (rc) {
-		nvme_msg(ep->root, LOG_INFO, "transport failure\n");
+		nvme_msg(ep->ctx, LOG_INFO, "transport failure\n");
 		return rc;
 	}
 
 	if (ep->transport->mic_enabled) {
 		rc = nvme_mi_verify_resp_mic(resp);
 		if (rc) {
-			nvme_msg(ep->root, LOG_WARNING, "crc mismatch\n");
+			nvme_msg(ep->ctx, LOG_WARNING, "crc mismatch\n");
 			errno = EBADMSG;
 			return -1;
 		}
@@ -473,28 +473,28 @@ int nvme_mi_async_read(nvme_mi_ep_t ep, struct nvme_mi_resp *resp)
 
 	/* basic response checks */
 	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
-		nvme_msg(ep->root, LOG_DEBUG,
+		nvme_msg(ep->ctx, LOG_DEBUG,
 			 "Bad response header len: %zd\n", resp->hdr_len);
 		errno = EPROTO;
 		return -1;
 	}
 
 	if (resp->hdr->type != NVME_MI_MSGTYPE_NVME) {
-		nvme_msg(ep->root, LOG_DEBUG,
+		nvme_msg(ep->ctx, LOG_DEBUG,
 			 "Invalid message type 0x%02x\n", resp->hdr->type);
 		errno = EPROTO;
 		return -1;
 	}
 
 	if (!(resp->hdr->nmp & ~(NVME_MI_ROR_REQ << 7))) {
-		nvme_msg(ep->root, LOG_DEBUG,
+		nvme_msg(ep->ctx, LOG_DEBUG,
 			 "ROR value in response indicates a response\n");
 		errno = EIO;
 		return -1;
 	}
 
 	if (!(resp->hdr->nmp & (NVME_MI_MT_AE << 3))) {
-		nvme_msg(ep->root, LOG_DEBUG,
+		nvme_msg(ep->ctx, LOG_DEBUG,
 			 "NMIMT does not indicate AEM\n");
 		resp->data_len = 0;//No data to process
 		return 0;
@@ -547,14 +547,14 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 		nvme_mi_record_resp_time(ep);
 
 	if (rc) {
-		nvme_msg(ep->root, LOG_INFO, "transport failure\n");
+		nvme_msg(ep->ctx, LOG_INFO, "transport failure\n");
 		return rc;
 	}
 
 	if (ep->transport->mic_enabled) {
 		rc = nvme_mi_verify_resp_mic(resp);
 		if (rc) {
-			nvme_msg(ep->root, LOG_WARNING, "crc mismatch\n");
+			nvme_msg(ep->ctx, LOG_WARNING, "crc mismatch\n");
 			errno = EBADMSG;
 			return -1;
 		}
@@ -562,28 +562,28 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 
 	/* basic response checks */
 	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
-		nvme_msg(ep->root, LOG_DEBUG,
+		nvme_msg(ep->ctx, LOG_DEBUG,
 			 "Bad response header len: %zd\n", resp->hdr_len);
 		errno = EPROTO;
 		return -1;
 	}
 
 	if (resp->hdr->type != NVME_MI_MSGTYPE_NVME) {
-		nvme_msg(ep->root, LOG_DEBUG,
+		nvme_msg(ep->ctx, LOG_DEBUG,
 			 "Invalid message type 0x%02x\n", resp->hdr->type);
 		errno = EPROTO;
 		return -1;
 	}
 
 	if (!(resp->hdr->nmp & (NVME_MI_ROR_RSP << 7))) {
-		nvme_msg(ep->root, LOG_DEBUG,
+		nvme_msg(ep->ctx, LOG_DEBUG,
 			 "ROR value in response indicates a request\n");
 		errno = EIO;
 		return -1;
 	}
 
 	if ((resp->hdr->nmp & 0x1) != (req->hdr->nmp & 0x1)) {
-		nvme_msg(ep->root, LOG_WARNING,
+		nvme_msg(ep->ctx, LOG_WARNING,
 			 "Command slot mismatch: req %d, resp %d\n",
 			 req->hdr->nmp & 0x1,
 			 resp->hdr->nmp & 0x1);
@@ -864,14 +864,14 @@ int nvme_mi_admin_admin_passthru(nvme_mi_ctrl_t ctrl, __u8 opcode, __u8 flags,
 	bool has_read_data = false;
 
 	if (direction == NVME_DATA_TFR_BIDIRECTIONAL) {
-		nvme_msg(ctrl->ep->root, LOG_ERR,
+		nvme_msg(ctrl->ep->ctx, LOG_ERR,
 			"nvme_mi_admin_admin_passthru doesn't support bidirectional commands\n");
 		errno = EINVAL;
 		return -1;
 	}
 
 	if (data_len > 4096) {
-		nvme_msg(ctrl->ep->root, LOG_ERR,
+		nvme_msg(ctrl->ep->ctx, LOG_ERR,
 			"nvme_mi_admin_admin_passthru doesn't support data_len over 4096 bytes.\n");
 		errno = EINVAL;
 		return -1;
@@ -1841,7 +1841,7 @@ int nvme_mi_mi_read_mi_data_subsys(nvme_mi_ep_t ep,
 		return rc;
 
 	if (len != sizeof(*s)) {
-		nvme_msg(ep->root, LOG_WARNING,
+		nvme_msg(ep->ctx, LOG_WARNING,
 			 "MI read data length mismatch: "
 			 "got %zd bytes, expected %zd\n",
 			 len, sizeof(*s));
@@ -1940,7 +1940,7 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 		return resp_hdr.status;
 
 	if (resp.data_len != sizeof(*sshs)) {
-		nvme_msg(ep->root, LOG_WARNING,
+		nvme_msg(ep->ctx, LOG_WARNING,
 			 "MI Subsystem Health Status length mismatch: "
 			 "got %zd bytes, expected %zd\n",
 			 resp.data_len, sizeof(*sshs));
@@ -2147,14 +2147,14 @@ char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep)
 	return s;
 }
 
-nvme_mi_ep_t nvme_mi_first_endpoint(nvme_root_t m)
+nvme_mi_ep_t nvme_mi_first_endpoint(struct nvme_global_ctx *ctx)
 {
-	return list_top(&m->endpoints, struct nvme_mi_ep, root_entry);
+	return list_top(&ctx->endpoints, struct nvme_mi_ep, root_entry);
 }
 
-nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t ep)
+nvme_mi_ep_t nvme_mi_next_endpoint(struct nvme_global_ctx *ctx, nvme_mi_ep_t ep)
 {
-	return ep ? list_next(&m->endpoints, ep, root_entry) : NULL;
+	return ep ? list_next(&ctx->endpoints, ep, root_entry) : NULL;
 }
 
 nvme_mi_ctrl_t nvme_mi_first_ctrl(nvme_mi_ep_t ep)
