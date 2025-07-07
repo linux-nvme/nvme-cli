@@ -179,7 +179,7 @@ static const char *__copy_id_str(const void *field, size_t size,
 int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 {
 	struct nvme_identify_args id_args = { 0 };
-	struct nvme_mi_ctrl *ctrl;
+	struct nvme_transport_handle *hdl;
 	struct nvme_id_ctrl id;
 	uint16_t ctrl_id;
 	char buf[41];
@@ -201,8 +201,8 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 
 	partial = argc > 2 && !strcmp(argv[2], "--partial");
 
-	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
-	if (!ctrl) {
+	hdl = nvme_mi_init_transport_handle(ep, ctrl_id);
+	if (!hdl) {
 		warn("can't create controller");
 		return -1;
 	}
@@ -220,10 +220,10 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 	 * response.
 	 */
 	if (partial) {
-		rc = nvme_mi_admin_identify_partial(ctrl, &id_args, 0,
+		rc = nvme_mi_admin_identify_partial(hdl, &id_args, 0,
 					    offsetof(struct nvme_id_ctrl, rab));
 	} else {
-		rc = nvme_mi_admin_identify(ctrl, &id_args);
+		rc = nvme_mi_admin_identify(hdl, &id_args);
 	}
 
 	if (rc) {
@@ -374,7 +374,7 @@ void hexdump(const unsigned char *buf, int len)
 int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 {
 	struct nvme_get_log_args args = { 0 };
-	struct nvme_mi_ctrl *ctrl;
+	struct nvme_transport_handle *hdl;
 	uint8_t buf[512];
 	uint16_t ctrl_id;
 	int rc, tmp;
@@ -403,13 +403,13 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 		args.lid = 0x1;
 	}
 
-	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
-	if (!ctrl) {
+	hdl = nvme_mi_init_transport_handle(ep, ctrl_id);
+	if (!hdl) {
 		warn("can't create controller");
 		return -1;
 	}
 
-	rc = nvme_mi_admin_get_log(ctrl, &args);
+	rc = nvme_mi_admin_get_log(hdl, &args);
 	if (rc) {
 		warn("can't perform Get Log page command");
 		return -1;
@@ -425,7 +425,7 @@ int do_admin_raw(nvme_mi_ep_t ep, int argc, char **argv)
 {
 	struct nvme_mi_admin_req_hdr req;
 	struct nvme_mi_admin_resp_hdr *resp;
-	struct nvme_mi_ctrl *ctrl;
+  	struct nvme_transport_handle *hdl;
 	size_t resp_data_len;
 	unsigned long tmp;
 	uint8_t buf[512];
@@ -488,15 +488,15 @@ int do_admin_raw(nvme_mi_ep_t ep, int argc, char **argv)
 	memset(buf, 0, sizeof(buf));
 	resp = (void *)buf;
 
-	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
-	if (!ctrl) {
+	hdl = nvme_mi_init_transport_handle(ep, ctrl_id);
+	if (!hdl) {
 		warn("can't create controller");
 		return -1;
 	}
 
 	resp_data_len = sizeof(buf) - sizeof(*resp);
 
-	rc = nvme_mi_admin_xfer(ctrl, &req, 0, resp, 0, &resp_data_len);
+	rc = nvme_mi_admin_xfer(hdl, &req, 0, resp, 0, &resp_data_len);
 	if (rc) {
 		warn("nvme_admin_xfer failed: %d", rc);
 		return -1;
@@ -543,7 +543,7 @@ static const char *sec_proto_description(uint8_t id)
 int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 {
 	struct nvme_security_receive_args args = { 0 };
-	nvme_mi_ctrl_t ctrl;
+	struct nvme_transport_handle *hdl;
 	int i, rc, n_proto;
 	unsigned long tmp;
 	uint16_t ctrl_id;
@@ -566,8 +566,8 @@ int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 
 	ctrl_id = tmp & 0xffff;
 
-	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
-	if (!ctrl) {
+	hdl = nvme_mi_init_transport_handle(ep, ctrl_id);
+	if (!hdl) {
 		warn("can't create controller");
 		return -1;
 	}
@@ -577,7 +577,7 @@ int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 	args.data = &proto_info;
 	args.data_len = sizeof(proto_info);
 
-	rc = nvme_mi_admin_security_recv(ctrl, &args);
+	rc = nvme_mi_admin_security_recv(hdl, &args);
 	if (rc) {
 		warnx("can't perform Security Receive command: rc %d", rc);
 		return -1;

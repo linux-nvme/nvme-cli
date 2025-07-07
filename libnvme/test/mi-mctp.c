@@ -410,19 +410,19 @@ static void test_mi_resp_unaligned_expected(nvme_mi_ep_t ep,
 
 static void test_admin_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
 {
+	struct nvme_transport_handle *hdl;
 	struct nvme_id_ctrl id;
-	nvme_mi_ctrl_t ctrl;
 	int rc;
 
-	ctrl = nvme_mi_init_ctrl(ep, 1);
-	assert(ctrl);
+	hdl = nvme_mi_init_transport_handle(ep, 1);
+	assert(hdl);
 
 	/* Simple error response, will be shorter than the expected Admin
 	 * command response header. */
 	peer->tx_buf[4] = 0x02; /* internal error */
 	peer->tx_buf_len = 8;
 
-	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	rc = nvme_mi_admin_identify_ctrl(hdl, &id);
 	assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_MI);
 	assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
 }
@@ -435,24 +435,24 @@ static void test_admin_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
  */
 static void test_admin_resp_sizes(nvme_mi_ep_t ep, struct test_peer *peer)
 {
+	struct nvme_transport_handle *hdl;
 	struct nvme_id_ctrl id;
-	nvme_mi_ctrl_t ctrl;
 	unsigned int i;
 	int rc;
 
-	ctrl = nvme_mi_init_ctrl(ep, 1);
-	assert(ctrl);
+	hdl = nvme_mi_init_transport_handle(ep, 1);
+	assert(hdl);
 
 	peer->tx_buf[4] = 0x02; /* internal error */
 
 	for (i = 8; i <= 4096 + 8; i+=4) {
 		peer->tx_buf_len = i;
-		rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+		rc = nvme_mi_admin_identify_ctrl(hdl, &id);
 		assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_MI);
 		assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
 	}
 
-	nvme_mi_close_ctrl(ctrl);
+	nvme_mi_close_transport_handle(hdl);
 }
 
 /* test: timeout value passed to poll */
@@ -556,9 +556,9 @@ static void test_mpr_mi(nvme_mi_ep_t ep, struct test_peer *peer)
 
 static void test_mpr_admin(nvme_mi_ep_t ep, struct test_peer *peer)
 {
+	struct nvme_transport_handle *hdl;
 	struct mpr_tx_info tx_info;
 	struct nvme_id_ctrl id;
-	nvme_mi_ctrl_t ctrl;
 	int rc;
 
 	tx_info.msg_no = 1;
@@ -568,12 +568,12 @@ static void test_mpr_admin(nvme_mi_ep_t ep, struct test_peer *peer)
 	peer->tx_fn = tx_mpr;
 	peer->tx_data = &tx_info;
 
-	ctrl = nvme_mi_init_ctrl(ep, 1);
+	hdl = nvme_mi_init_transport_handle(ep, 1);
 
-	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	rc = nvme_mi_admin_identify_ctrl(hdl, &id);
 	assert(rc == 0);
 
-	nvme_mi_close_ctrl(ctrl);
+	nvme_mi_close_transport_handle(hdl);
 }
 
 /* We have seen drives that send a MPR response as a full Admin message,
@@ -581,9 +581,9 @@ static void test_mpr_admin(nvme_mi_ep_t ep, struct test_peer *peer)
  */
 static void test_mpr_admin_quirked(nvme_mi_ep_t ep, struct test_peer *peer)
 {
+	struct nvme_transport_handle *hdl;
 	struct mpr_tx_info tx_info;
 	struct nvme_id_ctrl id;
-	nvme_mi_ctrl_t ctrl;
 	int rc;
 
 	tx_info.msg_no = 1;
@@ -593,12 +593,12 @@ static void test_mpr_admin_quirked(nvme_mi_ep_t ep, struct test_peer *peer)
 	peer->tx_fn = tx_mpr;
 	peer->tx_data = &tx_info;
 
-	ctrl = nvme_mi_init_ctrl(ep, 1);
+	hdl = nvme_mi_init_transport_handle(ep, 1);
 
-	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	rc = nvme_mi_admin_identify_ctrl(hdl, &id);
 	assert(rc == 0);
 
-	nvme_mi_close_ctrl(ctrl);
+	nvme_mi_close_transport_handle(hdl);
 }
 
 /* helpers for the MPR + poll tests */
