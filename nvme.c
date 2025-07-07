@@ -3501,6 +3501,12 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	}
 	err = nvme_scan_topology(r, NULL, NULL);
 	if (err < 0) {
+		/* Do not report an error when the modules are not loaded */
+		if (errno == ENOENT) {
+			nvme_show_list_items(r, flags);
+			return 0;
+		}
+
 		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
 		return err;
 	}
