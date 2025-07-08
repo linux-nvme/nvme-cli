@@ -41,10 +41,19 @@
 #include "base64.h"
 #include "crc32.h"
 
-static int __nvme_open_dev(const char *name)
+static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl, const char *devname)
 {
 	_cleanup_free_ char *path = NULL;
-	int ret;
+	char *name = basename(devname);
+	int ret, id, ns;
+	bool c;
+
+	hdl->type = NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
+
+	ret = sscanf(name, "nvme%dn%d", &id, &ns);
+	if (ret != 1 && ret != 2)
+		return -EINVAL;
+	c = ret == 1;
 
 	ret = asprintf(&path, "%s/%s", "/dev", name);
 	if (ret < 0) {
@@ -52,16 +61,35 @@ static int __nvme_open_dev(const char *name)
 		return -1;
 	}
 
-	return open(path, O_RDONLY);
+	hdl->fd = open(path, O_RDONLY);
+	if (hdl->fd < 0)
+		return -errno;
+
+	ret = fstat(hdl->fd, &hdl->stat);
+	if (ret < 0)
+		return -errno;
+
+	if (c) {
+		if (!S_ISCHR(hdl->stat.st_mode))
+			return -EINVAL;
+	} else if (!S_ISBLK(hdl->stat.st_mode)) {
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
-struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char *name)
+void __nvme_transport_handle_close_direct(struct nvme_transport_handle *hdl)
+{
+	close(hdl->fd);
+	free(hdl);
+}
+
+struct nvme_transport_handle *__nvme_create_transport_handle(struct nvme_global_ctx *ctx)
 {
 	struct nvme_transport_handle *hdl;
-	int ret, id, ns;
-	bool c;
 
-	hdl = malloc(sizeof(*hdl));
+	hdl = calloc(1, sizeof(*hdl));
 	if (!hdl) {
 		errno = ENOMEM;
 		return NULL;
@@ -69,51 +97,43 @@ struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char 
 
 	hdl->ctx = ctx;
 
+	return hdl;
+}
+
+struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char *name)
+{
+	struct nvme_transport_handle *hdl;
+	int ret;
+
+	hdl = __nvme_create_transport_handle(ctx);
+	if (!hdl)
+		return NULL;
+
+	hdl->name = strdup(name);
+	if (!hdl->name) {
+		free(hdl);
+		errno = -ENOMEM;
+		return NULL;
+	}
+
 	if (!strcmp(name, "NVME_TEST_FD")) {
+		hdl->type = NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 		hdl->fd = 0xFD;
 		return hdl;
 	}
 
-	ret = sscanf(name, "nvme%dn%d", &id, &ns);
-	if (ret != 1 && ret != 2) {
-		errno = EINVAL;
-		goto free_handle;
-	}
-	c = ret == 1;
+	if (!strncmp(name, "mctp:", strlen("mctp:")))
+		ret = __nvme_transport_handle_open_mi(hdl, name);
+	else
+  		ret = __nvme_transport_handle_open_direct(hdl, name);
 
-	hdl->name = strdup(name);
-	if (!hdl->name) {
-		errno = ENOMEM;
-		goto free_handle;
-	}
-
-	hdl->fd = __nvme_open_dev(hdl->name);
-	if (hdl->fd < 0)
-		goto free_name;
-
-	ret = fstat(hdl->fd, &hdl->stat);
-	if (ret < 0)
-		goto close_fd;
-
-	if (c) {
-		if (!S_ISCHR(hdl->stat.st_mode)) {
-			errno = EINVAL;
-			goto close_fd;
-		}
-	} else if (!S_ISBLK(hdl->stat.st_mode)) {
-		errno = EINVAL;
-		goto close_fd;
+	if (ret) {
+		nvme_close(hdl);
+		errno = -ret;
+		return NULL;
 	}
 
 	return hdl;
-
-close_fd:
-	close(hdl->fd);
-free_name:
-	free(hdl->name);
-free_handle:
-	free(hdl);
-	return NULL;
 }
 
 void nvme_close(struct nvme_transport_handle *hdl)
@@ -121,10 +141,19 @@ void nvme_close(struct nvme_transport_handle *hdl)
 	if (!hdl)
 		return;
 
-	close(hdl->fd);
 	free(hdl->name);
-	free(hdl->log);
-	free(hdl);
+
+	switch (hdl->type) {
+	case NVME_TRANSPORT_HANDLE_TYPE_DIRECT:
+		__nvme_transport_handle_close_direct(hdl);
+		break;
+	case NVME_TRANSPORT_HANDLE_TYPE_MI:
+		__nvme_transport_handle_close_mi(hdl);
+		break;
+	case NVME_TRANSPORT_HANDLE_TYPE_UNKNOWN:
+		free(hdl);
+		break;
+	}
 }
 
 int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)

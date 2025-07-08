@@ -19,6 +19,7 @@
 #include <ccan/endian/endian.h>
 
 #include "libnvme-mi.h"
+#include "nvme/linux.h"
 #include "nvme/private.h"
 #include "utils.h"
 
@@ -452,7 +453,7 @@ static void test_admin_resp_sizes(nvme_mi_ep_t ep, struct test_peer *peer)
 		assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
 	}
 
-	nvme_mi_close_transport_handle(hdl);
+	nvme_close(hdl);
 }
 
 /* test: timeout value passed to poll */
@@ -573,7 +574,7 @@ static void test_mpr_admin(nvme_mi_ep_t ep, struct test_peer *peer)
 	rc = nvme_mi_admin_identify_ctrl(hdl, &id);
 	assert(rc == 0);
 
-	nvme_mi_close_transport_handle(hdl);
+	nvme_close(hdl);
 }
 
 /* We have seen drives that send a MPR response as a full Admin message,
@@ -598,7 +599,7 @@ static void test_mpr_admin_quirked(nvme_mi_ep_t ep, struct test_peer *peer)
 	rc = nvme_mi_admin_identify_ctrl(hdl, &id);
 	assert(rc == 0);
 
-	nvme_mi_close_transport_handle(hdl);
+	nvme_close(hdl);
 }
 
 /* helpers for the MPR + poll tests */

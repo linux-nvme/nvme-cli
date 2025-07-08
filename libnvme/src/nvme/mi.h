@@ -934,12 +934,6 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan);
 struct nvme_transport_handle *nvme_mi_init_transport_handle(nvme_mi_ep_t ep, __u16 ctrl_id);
 
 /**
- * nvme_mi_close_transport_handle() - free a transport handle
- * @hdl: transport handle to controller to free
- */
-void nvme_mi_close_transport_handle(struct nvme_transport_handle *hdl);
-
-/**
  * nvme_mi_ctrl_id() - get the ID of a controller
  * @hdl: transport handle to controller to query
  *
@@ -951,7 +945,6 @@ void nvme_mi_close_transport_handle(struct nvme_transport_handle *hdl);
  * Return: the (locally-stored) ID of this controller.
  */
 __u16 nvme_mi_ctrl_id(struct nvme_transport_handle *hdl);
-
 
 /**
  * nvme_mi_endpoint_desc - Get a string describing a MI endpoint.

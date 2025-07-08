@@ -31,8 +31,15 @@ struct nvme_log {
 	bool timestamp;
 };
 
+enum nvme_transport_handle_type {
+	NVME_TRANSPORT_HANDLE_TYPE_UNKNOWN = 0,
+	NVME_TRANSPORT_HANDLE_TYPE_DIRECT,
+	NVME_TRANSPORT_HANDLE_TYPE_MI,
+};
+
 struct nvme_transport_handle {
 	struct nvme_global_ctx *ctx;
+	enum nvme_transport_handle_type type;
 	char *name;
 
 	/* direct */
@@ -216,6 +223,10 @@ int json_update_config(struct nvme_global_ctx *ctx, const char *config_file);
 int json_dump_tree(struct nvme_global_ctx *ctx);
 
 struct nvme_transport_handle *__nvme_open(struct nvme_global_ctx *ctx, const char *name);
+struct nvme_transport_handle *__nvme_create_transport_handle(struct nvme_global_ctx *ctx);
+int __nvme_transport_handle_open_mi(struct nvme_transport_handle *hdl, const char *devname);
+int __nvme_transport_handle_init_mi(struct nvme_transport_handle *hdl);
+void __nvme_transport_handle_close_mi(struct nvme_transport_handle *hdl);
 
 nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			       const char *traddr, const char *host_traddr,
