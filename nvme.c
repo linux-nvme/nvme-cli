@@ -265,6 +265,54 @@ struct nvme_config nvme_cfg = {
 
 static void *mmap_registers(struct nvme_dev *dev, bool writable);
 
+static OPT_VALS(feature_name) = {
+	VAL_BYTE("arbitration", NVME_FEAT_FID_ARBITRATION),
+	VAL_BYTE("power-mgmt", NVME_FEAT_FID_POWER_MGMT),
+	VAL_BYTE("lba-range", NVME_FEAT_FID_LBA_RANGE),
+	VAL_BYTE("temp-thresh", NVME_FEAT_FID_TEMP_THRESH),
+	VAL_BYTE("err-recovery", NVME_FEAT_FID_ERR_RECOVERY),
+	VAL_BYTE("volatile-wc", NVME_FEAT_FID_VOLATILE_WC),
+	VAL_BYTE("num-queues", NVME_FEAT_FID_NUM_QUEUES),
+	VAL_BYTE("irq-coalesce", NVME_FEAT_FID_IRQ_COALESCE),
+	VAL_BYTE("irq-config", NVME_FEAT_FID_IRQ_CONFIG),
+	VAL_BYTE("write-atomic", NVME_FEAT_FID_WRITE_ATOMIC),
+	VAL_BYTE("async-event", NVME_FEAT_FID_ASYNC_EVENT),
+	VAL_BYTE("auto-pst", NVME_FEAT_FID_AUTO_PST),
+	VAL_BYTE("host-mem-buf", NVME_FEAT_FID_HOST_MEM_BUF),
+	VAL_BYTE("timestamp", NVME_FEAT_FID_TIMESTAMP),
+	VAL_BYTE("kato", NVME_FEAT_FID_KATO),
+	VAL_BYTE("hctm", NVME_FEAT_FID_HCTM),
+	VAL_BYTE("nopsc", NVME_FEAT_FID_NOPSC),
+	VAL_BYTE("rrl", NVME_FEAT_FID_RRL),
+	VAL_BYTE("plm-config", NVME_FEAT_FID_PLM_CONFIG),
+	VAL_BYTE("plm-window", NVME_FEAT_FID_PLM_WINDOW),
+	VAL_BYTE("lba-sts-interval", NVME_FEAT_FID_LBA_STS_INTERVAL),
+	VAL_BYTE("host-behavior", NVME_FEAT_FID_HOST_BEHAVIOR),
+	VAL_BYTE("sanitize", NVME_FEAT_FID_SANITIZE),
+	VAL_BYTE("endurance-evt-cfg", NVME_FEAT_FID_ENDURANCE_EVT_CFG),
+	VAL_BYTE("iocs-profile", NVME_FEAT_FID_IOCS_PROFILE),
+	VAL_BYTE("spinup-control", NVME_FEAT_FID_SPINUP_CONTROL),
+	VAL_BYTE("power-loss-signal", NVME_FEAT_FID_POWER_LOSS_SIGNAL),
+	VAL_BYTE("perf-characteristics", NVME_FEAT_FID_PERF_CHARACTERISTICS),
+	VAL_BYTE("fdp", NVME_FEAT_FID_FDP),
+	VAL_BYTE("fdp-events", NVME_FEAT_FID_FDP_EVENTS),
+	VAL_BYTE("ns-admin-label", NVME_FEAT_FID_NS_ADMIN_LABEL),
+	VAL_BYTE("key-value", NVME_FEAT_FID_KEY_VALUE),
+	VAL_BYTE("ctrl-data-queue", NVME_FEAT_FID_CTRL_DATA_QUEUE),
+	VAL_BYTE("emb-mgmt-ctrl-addr", NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR),
+	VAL_BYTE("host-mgmt-agent-addr", NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR),
+	VAL_BYTE("enh-ctrl-metadata", NVME_FEAT_FID_ENH_CTRL_METADATA),
+	VAL_BYTE("ctrl-metadata", NVME_FEAT_FID_CTRL_METADATA),
+	VAL_BYTE("ns-metadata", NVME_FEAT_FID_NS_METADATA),
+	VAL_BYTE("sw-progress", NVME_FEAT_FID_SW_PROGRESS),
+	VAL_BYTE("host-id", NVME_FEAT_FID_HOST_ID),
+	VAL_BYTE("resv-mask", NVME_FEAT_FID_RESV_MASK),
+	VAL_BYTE("resv-persist", NVME_FEAT_FID_RESV_PERSIST),
+	VAL_BYTE("write-protect", NVME_FEAT_FID_WRITE_PROTECT),
+	VAL_BYTE("bp-write-protect", NVME_FEAT_FID_BP_WRITE_PROTECT),
+	VAL_END()
+};
+
 const char *nvme_strerror(int errnum)
 {
 	if (errnum >= ENVME_CONNECT_RESOLVE)
@@ -4874,7 +4922,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id),
+		  OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id, feature_name),
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
 		  OPT_BYTE("sel",            's', &cfg.sel,            sel),
 		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
@@ -6658,7 +6706,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		  OPT_BYTE("feature-id",   'f', &cfg.feature_id,   feature_id),
+		  OPT_BYTE("feature-id",   'f', &cfg.feature_id,   feature_id, feature_name),
 		  OPT_SUFFIX("value",      'V', &cfg.value,        value),
 		  OPT_UINT("cdw12",        'c', &cfg.cdw12,        cdw12),
 		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index_specify),
