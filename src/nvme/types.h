@@ -9997,6 +9997,8 @@ struct nvme_ns_mgmt_host_sw_specified {
  * @NVME_LM_QT_SHIFT:			Shift amount to set Queue Type (QT) field relative to MOS
  * @NVME_LM_QT_MASK:			Mask to set QT field relative to MOS
  * @NVME_LM_QT_USER_DATA_MIGRATION_QUEUE: User Data Migration Queue type
+ * @NVME_LM_CQS_SHIFT:			Shift amount for Create Queue Specific (CQS) field
+ * @NVME_LM_CQS_MASK:			Mask to set CQS field
  * @NVME_LM_CREATE_CDQ_PC:		Physically Contiguous (PC)
  * @NVME_LM_CREATE_CDQ_CNTLID_SHIFT:	Shift amount to set CNTLID field relative to MOS
  * @NVME_LM_CREATE_CDQ_CNTLID_MASK:	Mask to set CNTLID field relative to MOS
@@ -10018,6 +10020,8 @@ enum nvme_lm_cdq_fields {
 	/* Controller Data Queue - Create CDQ */
 	NVME_LM_QT_SHIFT			= 0,
 	NVME_LM_QT_MASK				= 0xff,
+	NVME_LM_CQS_SHIFT			= 16,
+	NVME_LM_CQS_MASK			= 0xffff,
 	NVME_LM_QT_USER_DATA_MIGRATION_QUEUE	= 0,
 	NVME_LM_CREATE_CDQ_PC			= 1,
 	NVME_LM_CREATE_CDQ_CNTLID_SHIFT		= 0,

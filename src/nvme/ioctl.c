@@ -2400,7 +2400,7 @@ int nvme_lm_cdq(struct nvme_lm_cdq_args *args)
 		sz = args->sz;
 
 	if (args->sel == NVME_LM_SEL_CREATE_CDQ) {
-		cdw11 = NVME_SET(args->cntlid, LM_CREATE_CDQ_CNTLID) |
+		cdw11 = NVME_SET(NVME_SET(args->cntlid, LM_CREATE_CDQ_CNTLID), LM_CQS) |
 			NVME_LM_CREATE_CDQ_PC;
 		data_len = sz << 2;
 	} else if (args->sel == NVME_LM_SEL_DELETE_CDQ) {
