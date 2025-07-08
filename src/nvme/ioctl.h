@@ -10,6 +10,7 @@
 #ifndef _LIBNVME_IOCTL_H
 #define _LIBNVME_IOCTL_H
 
+#include <errno.h>
 #include <stddef.h>
 #include <sys/ioctl.h>
 
@@ -4041,6 +4042,11 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
 			unsigned int nr_entries,
 			struct nvme_streams_directive_status *id)
 {
+	if (nr_entries > NVME_STREAM_ID_MAX) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	struct nvme_directive_recv_args args = {
 		.result = NULL,
 		.data = id,
@@ -4051,7 +4057,7 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
 		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
-		.data_len = sizeof(*id),
+		.data_len = (__u32)(sizeof(*id) + nr_entries * sizeof(__le16)),
 		.dspec = 0,
 	};
 

@@ -116,6 +116,7 @@
  * @NVMF_TSAS_SIZE:		Max Transport Specific Address Subtype size
  * @NVME_ZNS_CHANGED_ZONES_MAX: Max number of zones in the changed zones log
  *				page
+ * @NVME_STREAM_ID_MAX:	Max number of stream IDs
  */
 enum nvme_constants {
 	NVME_NSID_ALL				= 0xffffffff,
@@ -147,6 +148,7 @@ enum nvme_constants {
 	NVMF_TRADDR_SIZE			= 256,
 	NVMF_TSAS_SIZE				= 256,
 	NVME_ZNS_CHANGED_ZONES_MAX		= 511,
+	NVME_STREAM_ID_MAX			= 0xffff,
 };
 
 /**
