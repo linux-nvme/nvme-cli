@@ -33,7 +33,8 @@ static __u8 ocp_C2_guid[SNDK_GUID_LENGTH] = {
 	0xE2, 0x4D, 0xB2, 0x8A, 0xAC, 0xF3, 0x1C, 0xD1
 };
 
-static int sndk_do_cap_telemetry_log(struct nvme_transport_handle *hdl,
+static int sndk_do_cap_telemetry_log(struct nvme_global_ctx *ctx,
+				     struct nvme_transport_handle *hdl,
 				     const char *file, __u32 bs, int type,
 				     int data_area)
 {
@@ -47,7 +48,6 @@ static int sndk_do_cap_telemetry_log(struct nvme_transport_handle *hdl,
 	struct nvme_id_ctrl ctrl;
 	__u64 capabilities = 0;
 	bool host_behavior_changed = false;
-	struct nvme_global_ctx *ctx;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	err = nvme_identify_ctrl(hdl, &ctrl);
@@ -61,7 +61,7 @@ static int sndk_do_cap_telemetry_log(struct nvme_transport_handle *hdl,
 		return -EINVAL;
 	}
 
-	err = nvme_scan(NULL, &ctx);
+	err = nvme_scan_topology(ctx, NULL, NULL);
 	if (err)
 		return err;
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
@@ -343,7 +343,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ret = nvme_scan(NULL, &ctx);
+	ret = nvme_scan_topology(ctx, NULL, NULL);
 	if (ret || !sndk_check_device(ctx, hdl))
 		goto out;
 
@@ -427,7 +427,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		if (!telemetry_data_area)
 			telemetry_data_area = 3;
 
-		ret = sndk_do_cap_telemetry_log(hdl, f, xfer_size,
+		ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
 				telemetry_type, telemetry_data_area);
 		goto out;
 	}
@@ -439,7 +439,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 			if (!telemetry_data_area)
 				telemetry_data_area = 3;
 
-			ret = sndk_do_cap_telemetry_log(hdl, f, xfer_size,
+			ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
 					telemetry_type, telemetry_data_area);
 			goto out;
 		} else {
@@ -547,7 +547,7 @@ static int sndk_drive_resize(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ret = nvme_scan(NULL, &ctx);
+	ret = nvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
 		return ret;
 	sndk_check_device(ctx, hdl);
@@ -879,7 +879,7 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
-	int ret = -1;
+	int ret;
 
 	struct config {
 		char *output_format;
@@ -898,7 +898,7 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ret = nvme_scan(NULL, &ctx);
+	ret = nvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
 		return ret;
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
@@ -948,10 +948,10 @@ static int sndk_clear_fw_activate_history(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ret = nvme_scan(NULL, &ctx);
+	ret = nvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
 		return ret;
-	capabilities = sndk_get_drive_capabilities(ctx, hdl);
+ 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
 
 	if (capabilities & SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY) {
 		ret = sndk_do_clear_fw_activate_history_fid(hdl);
@@ -1021,11 +1021,10 @@ static int sndk_capabilities(int argc, char **argv,
 		return ret;
 
 	/* get capabilities */
-	ret = nvme_scan(NULL, &ctx);
-	if (ret)
-		return ret;
+	ret = nvme_scan_topology(ctx, NULL, NULL);
+	if (ret || sndk_check_device(ctx, hdl))
+		return -1;
 
-	sndk_check_device(ctx, hdl);
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
 
 	/* print command and supported status */

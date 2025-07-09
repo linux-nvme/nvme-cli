@@ -102,7 +102,13 @@ static int list(int argc, char **argv, struct command *acmd,
 	};
 	struct table *t = table_init_with_columns(columns, ARRAY_SIZE(columns));
 
-	err = nvme_scan(NULL, &ctx);
+	ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	if (ctx) {
+		fprintf(stderr, "Failed to create root object\n");
+		return -ENOMEM;
+	}
+
+	err = nvme_scan_topology(ctx, NULL, NULL);
 	if (err) {
 		fprintf(stderr, "Failed to scan nvme subsystems\n");
 		return err;
