@@ -931,9 +931,17 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 
 	if (devname) {
 		int subsys_num, nsid;
+		struct stat st;
+		char path[512];
 
 		if (sscanf(devname, "nvme%dn%d", &subsys_num, &nsid) != 2) {
 			fprintf(stderr, "Invalid device name %s\n", devname);
+			return -EINVAL;
+		}
+
+		sprintf(path, "/dev/%s", devname);
+		if (stat(path, &st) != 0) {
+			fprintf(stderr, "%s does not exist\n", path);
 			return -EINVAL;
 		}
 	}
