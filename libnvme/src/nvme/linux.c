@@ -176,6 +176,16 @@ bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl)
 	return S_ISCHR(hdl->stat.st_mode);
 }
 
+bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl)
+{
+	return hdl->type == NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
+}
+
+bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl)
+{
+	return hdl->type == NVME_TRANSPORT_HANDLE_TYPE_MI;
+}
+
 int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf)
 {

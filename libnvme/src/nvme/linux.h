@@ -269,6 +269,24 @@ bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl);
 bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl);
 
 /**
+ * nvme_transport_handle_is_direct - Check if transport handle is using IOCTL interface
+ * @hdl:	Transport handle
+ *
+ * Return: Return true if transport handle is using IOCTL itnerface,
+ * otherwise false.
+ */
+bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl);
+
+/**
+ * nvme_transport_handle_is_mi - Check if transport handle is a using MI interface
+ * @hdl:	Transport handle
+ *
+ * Return: Return true if transport handle is using MI interface,
+ * otherwise false.
+ */
+bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl);
+
+/**
  * enum nvme_hmac_alg - HMAC algorithm
  * @NVME_HMAC_ALG_NONE:		No HMAC algorithm
  * @NVME_HMAC_ALG_SHA2_256:	SHA2-256

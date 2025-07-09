@@ -387,6 +387,8 @@ LIBNVME_2_0 {
 		nvme_transport_handle_get_name;
 		nvme_transport_handle_is_blkdev;
 		nvme_transport_handle_is_chardev;
+		nvme_transport_handle_is_direct;
+		nvme_transport_handle_is_mi;
 		nvme_unlink_ctrl;
 		nvme_update_config;
 		nvme_update_key;
