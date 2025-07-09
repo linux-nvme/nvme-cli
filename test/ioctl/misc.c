@@ -8,15 +8,6 @@
 #include <nvme/ioctl.h>
 #include <nvme/types.h>
 #include <string.h>
-#include <stdlib.h>
-
-#define __cleanup__(fn) __attribute__((cleanup(fn)))
-
-static inline void freep(void *p)
-{
-	free(*(void **)p);
-}
-#define _cleanup_free_ __cleanup__(freep)
 
 #define TEST_FD 0xFD
 #define TEST_NSID 0x12345678
