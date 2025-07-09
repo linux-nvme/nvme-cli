@@ -44,6 +44,55 @@ OPTIONS
 --feature-id=<fid>::
 	The feature id to send with the command. Value provided should
 	be in hex.
++
+[]
+|=================
+|Value|Definition
+|0x01 \| 'arbitration'| Arbitration
+|0x02 \| 'power-mgmt'| Power Management
+|0x03 \| 'lba-range'| LBA Range Type
+|0x04 \| 'temp-thresh'| Temperature Threshold
+|0x05 \| 'err-recovery'| Error Recovery
+|0x06 \| 'volatile-wc'| Volatile Write Cache
+|0x07 \| 'num-queues'| Number of Queues
+|0x08 \| 'irq-coalesce'| Interrupt Coalescing
+|0x09 \| 'irq-config'| Interrupt Vector Configuration
+|0x0a \| 'write-atomic'| Write Atomicity Normal
+|0x0b \| 'async-event'| Asynchronous Event Configuration
+|0x0c \| 'auto-pst'| Autonomous Power State Transition
+|0x0d \| 'host-mem-buf'| Host Memory Buffer
+|0x0e \| 'timestamp'| Timestamp
+|0x0f \| 'kato'| Keep Alive Timer
+|0x10 \| 'hctm'| Host Controlled Thermal Management
+|0x11 \| 'nopsc'| Non-Operational Power State Config
+|0x12 \| 'rrl'| Read Recovery Level Config
+|0x13 \| 'plm-config'| Predictable Latency Mode Config
+|0x14 \| 'plm-window'| Predictable Latency Mode Window
+|0x15 \| 'lba-sts-interval'| LBA Status Information Report Interval
+|0x16 \| 'host-behavior'| Host Behavior Support
+|0x17 \| 'sanitize'| Sanitize Config
+|0x18 \| 'endurance-evt-cfg'| Endurance Group Event Configuration
+|0x19 \| 'iocs-profile'| I/O Command Set Profile
+|0x1a \| 'spinup-control'| Spinup Control
+|0x1b \| 'power-loss-signal'| Power Loss Signaling Config
+|0x1c \| 'perf-characteristics'|Performance Characteristics
+|0x1d \| 'fdp'| Flexible Data Placement
+|0x1e \| 'fdp-events'| FDP Events
+|0x1f \| 'ns-admin-label'| Namespace Admin Label
+|0x20 \| 'key-value'| Key Value Configuration
+|0x21 \| 'ctrl-data-queue'| Controller Data Queue
+|0x78 \| 'emb-mgmt-ctrl-addr'| Embedded Management Controller Address
+|0x79 \| 'host-mgmt-agent-addr'|Host Management Agent Address
+|0x7d \| 'enh-ctrl-metadata'| Enhanced Controller Metadata
+|0x7e \| 'ctrl-metadata'| Controller Metadata
+|0x7f \| 'ns-metadata'| Namespace Metadata
+|0x80 \| 'sw-progress'| Software Progress Marker
+|0x81 \| 'host-id'| Host Identifier
+|0x82 \| 'resv-mask'| Reservation Notification Mask
+|0x83 \| 'resv-persist'| Reservation Persistence
+|0x84 \| 'write-protect'| Namespace Write Protection Config
+|0x85 \| 'bp-write-protect'| Boot Partition Write Protection Config
+|=================
 
 -s <select>::
 --sel=<select>::
