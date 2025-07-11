@@ -248,15 +248,12 @@ int json_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 	}
 	json_root = parse_json(ctx, fd);
 	close(fd);
-	if (!json_root) {
-		errno = EPROTO;
-		return -1;
-	}
+	if (!json_root)
+		return -EPROTO;
 	if (!json_object_is_type(json_root, json_type_array)) {
 		nvme_msg(ctx, LOG_DEBUG, "Wrong format, expected array\n");
 		json_object_put(json_root);
-		errno = EPROTO;
-		return -1;
+		return -EPROTO;
 	}
 	for (h = 0; h < json_object_array_length(json_root); h++) {
 		host_obj = json_object_array_get_idx(json_root, h);
@@ -448,8 +445,7 @@ int json_update_config(struct nvme_global_ctx *ctx, const char *config_file)
 		nvme_msg(ctx, LOG_ERR, "Failed to write to %s, %s\n",
 			 config_file ? "stdout" : config_file,
 			 json_util_get_last_err());
-		ret = -1;
-		errno = EIO;
+		ret = -EIO;
 	}
 	json_object_put(json_root);
 
@@ -675,8 +671,7 @@ int json_dump_tree(struct nvme_global_ctx *ctx)
 	if (ret < 0) {
 		nvme_msg(ctx, LOG_ERR, "Failed to write, %s\n",
 			 json_util_get_last_err());
-		ret = -1;
-		errno = EIO;
+		ret = -EIO;
 	}
 	json_object_put(json_root);
 

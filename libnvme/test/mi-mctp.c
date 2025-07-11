@@ -1174,16 +1174,14 @@ static void test_mi_aem_ep_based_failure_helper(nvme_mi_ep_t ep,
 	case AEM_FC_BAD_OCC_RSP_TOTAL_LEN_SYNC:
 	case AEM_FC_BAD_OCC_RSP_BUFFER_LEN_SYNC:
 		//These all should fail before processing
-		assert(nvme_mi_aem_enable(ep, &config, &fn_data) == -1);
-		assert(errno == EPROTO);
+		assert(nvme_mi_aem_enable(ep, &config, &fn_data) == -EPROTO);
 		break;
 	case AEM_FC_BAD_OCC_RSP_HDR_LEN_AEM:
 	case AEM_FC_BAD_OCC_RSP_TOTAL_LEN_AEM:
 	case AEM_FC_BAD_OCC_RSP_BUFFER_LEN_AEM:
 		//These should fail on the processing
 		assert(nvme_mi_aem_enable(ep, &config, &fn_data) == 0);
-		assert(nvme_mi_aem_process(ep, &fn_data) == -1);
-		assert(errno == EPROTO);
+		assert(nvme_mi_aem_process(ep, &fn_data) == -EPROTO);
 		break;
 	default:
 		assert(false);//Unexpected

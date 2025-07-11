@@ -24,8 +24,7 @@ int main()
 	nvme_path_t p;
 	nvme_ns_t n;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
+	if (nvme_scan(NULL, &ctx))
 		return -1;
 
 	printf("%-16s %-96s %-.16s\n", "Subsystem", "Subsystem-NQN", "Controllers");

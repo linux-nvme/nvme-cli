@@ -51,7 +51,7 @@ static void test_zns_append(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_zns_append(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "wrong result");
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -86,7 +86,7 @@ static void test_zns_report_zones(void)
 				    extended, partial, sizeof(data), &data,
 				    timeout, &result);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -128,7 +128,7 @@ static void test_zns_mgmt_send(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_zns_mgmt_send(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -170,7 +170,7 @@ static void test_zns_mgmt_recv(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_zns_mgmt_recv(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -187,11 +187,12 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
-	struct nvme_global_ctx * ctx =
+	struct nvme_global_ctx *ctx =
 		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	set_mock_fd(TEST_FD);
-	test_hdl = nvme_open(ctx, "NVME_TEST_FD");
+	check(!nvme_open(ctx, "NVME_TEST_FD", &test_hdl),
+	      "opening test link failed");
 
 	RUN_TEST(zns_append);
 	RUN_TEST(zns_report_zones);

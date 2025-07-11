@@ -25,9 +25,9 @@ static void test_no_retries(void)
 	__u32 len = sizeof(log);
 
 	/* max_retries = 0 is nonsensical */
-	check(nvme_get_ana_log_atomic(test_hdl, false, false, 0, &log, &len),
+	check(nvme_get_ana_log_atomic(test_hdl, false, false,
+				      0, &log, &len) == -EINVAL,
 	      "get log page succeeded");
-	check(errno == EINVAL, "unexpected error: %m");
 }
 
 static void test_len_too_short(void)
@@ -36,9 +36,9 @@ static void test_len_too_short(void)
 	__u32 len = sizeof(log) - 1;
 
 	/* Provided buffer doesn't have enough space to read the header */
-	check(nvme_get_ana_log_atomic(test_hdl, false, false, 1, &log, &len),
+	check(nvme_get_ana_log_atomic(test_hdl, false, false,
+				      1, &log, &len) == -ENOSPC,
 	      "get log page succeeded");
-	check(errno == ENOSPC, "unexpected error: %m");
 }
 
 static void test_no_groups(void)
@@ -60,7 +60,7 @@ static void test_no_groups(void)
 	header.ngrps = cpu_to_le16(0);
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	check(!nvme_get_ana_log_atomic(test_hdl, false, false, 1, &log, &len),
-	      "get log page failed: %m");
+	      "get log page failed");
 	end_mock_cmds();
 	cmp(&log, &header, sizeof(header), "incorrect header");
 	check(len == sizeof(header),
@@ -98,7 +98,7 @@ static void test_one_group_rgo(void)
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	check(!nvme_get_ana_log_atomic(test_hdl, true, false, 1, log, &len),
-	      "get log page failed: %m");
+	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
@@ -139,7 +139,7 @@ static void test_one_group_nsids(void)
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	check(!nvme_get_ana_log_atomic(test_hdl, false, false, 1, log, &len),
-	      "get log page failed: %m");
+	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
@@ -180,7 +180,7 @@ static void test_multiple_groups_rgo(void)
 	memcpy(log_page + sizeof(header), groups, sizeof(groups));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	check(!nvme_get_ana_log_atomic(test_hdl, true, true, 1, log, &len),
-	      "get log page failed: %m");
+	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
@@ -246,7 +246,7 @@ static void test_multiple_groups_nsids(void)
 	       nsids3, sizeof(nsids3));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	check(!nvme_get_ana_log_atomic(test_hdl, false, false, 1, log, &len),
-	      "get log page failed: %m");
+	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
@@ -318,7 +318,7 @@ static void test_long_log(void)
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(!nvme_get_ana_log_atomic(test_hdl, false, true, 1, log, &len),
-	      "get log page failed: %m");
+	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
@@ -394,7 +394,7 @@ static void test_chgcnt_change(void)
 	memcpy(log_page2 + sizeof(header2), &group2, sizeof(group2));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(!nvme_get_ana_log_atomic(test_hdl, true, true, 2, log, &len),
-	      "get log page failed: %m");
+	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page2, sizeof(log_page2), "incorrect log page");
 	check(len == sizeof(log_page2),
@@ -476,7 +476,7 @@ static void test_buffer_too_short_chgcnt_change(void)
 	       &nsid2, sizeof(nsid2));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(!nvme_get_ana_log_atomic(test_hdl, false, false, 2, log, &len),
-	      "get log page failed: %m");
+	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page2, sizeof(log_page2), "incorrect log page");
 	check(len == sizeof(log_page2),
@@ -571,10 +571,9 @@ static void test_chgcnt_max_retries(void)
 	memcpy(log_page2 + sizeof(header2) + sizeof(group),
 	       nsids, sizeof(nsids));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvme_get_ana_log_atomic(test_hdl, false, true, 2, log, &len) == -1,
+	check(nvme_get_ana_log_atomic(test_hdl, false, true, 2, log, &len) == -EAGAIN,
 	      "get log page succeeded");
 	end_mock_cmds();
-	check(errno == EAGAIN, "unexpected error: %m");
 	free(log);
 }
 
@@ -612,10 +611,9 @@ static void test_buffer_too_short(void)
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	check(nvme_get_ana_log_atomic(test_hdl, false, true, 2, log, &len) == -1,
+	check(nvme_get_ana_log_atomic(test_hdl, false, true, 2, log, &len) == -ENOSPC,
 	      "get log page succeeded");
 	end_mock_cmds();
-	check(errno == ENOSPC, "unexpected error: %m");
 	free(log);
 }
 
@@ -635,7 +633,8 @@ int main(void)
 		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	set_mock_fd(TEST_FD);
-	test_hdl = nvme_open(ctx, "NVME_TEST_FD");
+	check(!nvme_open(ctx, "NVME_TEST_FD", &test_hdl),
+	      "opening test link failed");
 
 	RUN_TEST(no_retries);
 	RUN_TEST(len_too_short);

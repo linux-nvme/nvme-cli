@@ -23,10 +23,8 @@ static bool command_line(void)
 		return false;
 
 	err = nvme_scan_topology(ctx, NULL, NULL);
-	if (err) {
-		if (errno != ENOENT)
-			goto out;
-	}
+	if (err && err != ENOENT)
+		goto out;
 
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6";
 	hostid = "ce4fee3e-c02c-11ee-8442-830d068a36c6";
@@ -74,10 +72,8 @@ static bool json_config(char *file)
 		goto out;
 
 	err = nvme_scan_topology(ctx, NULL, NULL);
-	if (err) {
-		if (errno != ENOENT)
-			goto out;
-	}
+	if (err && err != ENOENT)
+		goto out;
 
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:2cd2c43b-a90a-45c1-a8cd-86b33ab273b5";
 	hostid = "2cd2c43b-a90a-45c1-a8cd-86b33ab273b5";
@@ -123,10 +119,8 @@ static bool from_file(void)
 		return false;
 
 	err = nvme_scan_topology(ctx, NULL, NULL);
-	if (err) {
-		if (errno != ENOENT)
-			goto out;
-	}
+	if (err && err != ENOENT)
+		goto out;
 
 	err = nvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
 	if (err)

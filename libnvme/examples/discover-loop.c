@@ -59,22 +59,24 @@ int main()
 
 	nvmf_default_config(&cfg);
 
-	ctx = nvme_scan(NULL);
-	h = nvme_default_host(ctx);
-	if (!h) {
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
+	ret = nvme_default_host(ctx, &h);
+	if (ret) {
 		fprintf(stderr, "Failed to allocated memory\n");
-		return ENOMEM;
+		return ret;
 	}
-	c = nvme_create_ctrl(ctx, NVME_DISC_SUBSYS_NAME, "loop",
-			     NULL, NULL, NULL, NULL);
-	if (!c) {
+	ret = nvme_create_ctrl(ctx, NVME_DISC_SUBSYS_NAME, "loop",
+			       NULL, NULL, NULL, NULL, &c);
+	if (ret) {
 		fprintf(stderr, "Failed to allocate memory\n");
 		return ENOMEM;
 	}
 	ret = nvmf_add_ctrl(h, c, &cfg);
-	if (ret < 0) {
+	if (ret) {
 		fprintf(stderr, "no controller found\n");
-		return errno;
+		return ret;
 	}
 
 	ret = nvmf_get_discovery_log(c, &log, 4);

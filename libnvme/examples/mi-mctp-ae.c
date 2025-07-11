@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 	}
 
 	rc = nvme_mi_aem_enable(ep, &aem_config, &data);
-	if (rc && errno == EOPNOTSUPP)
+	if (rc == EOPNOTSUPP)
 		errx(EXIT_FAILURE, "MCTP Peer-Bind is required for AEM");
 	else if (rc)
 		err(EXIT_FAILURE, "Can't enable aem:%d", rc);

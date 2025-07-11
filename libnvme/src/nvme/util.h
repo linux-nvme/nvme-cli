@@ -503,7 +503,7 @@ static inline void nvme_id_ns_flbas_to_lbaf_inuse(__u8 flbas, __u8 *lbaf_inuse)
 
 struct nvme_root;
 
-char *hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr);
+int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr, char **hostname);
 
 /**
  * get_entity_name - Get Entity Name (ENAME).

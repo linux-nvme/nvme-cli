@@ -23,8 +23,7 @@ int main()
 	nvme_path_t p, _p;
 	nvme_ns_t n, _n;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
+	if (nvme_scan(NULL, &ctx))
 		return -1;
 
 	printf(".\n");

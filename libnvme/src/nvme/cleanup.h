@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #define __cleanup__(fn) __attribute__((cleanup(fn)))
 
@@ -37,5 +40,8 @@ static inline void cleanup_fd(int *fd)
 		close(*fd);
 }
 #define _cleanup_fd_ __cleanup__(cleanup_fd)
+
+static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *, freeaddrinfo)
+#define _cleanup_addrinfo_ __cleanup__(cleanup_addrinfo)
 
 #endif

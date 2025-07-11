@@ -74,7 +74,7 @@ static void test_no_entries(nvme_ctrl_t c)
 	struct nvmf_discovery_log *log = NULL;
 
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvmf_get_discovery_log(c, &log, 1) == 0, "discovery failed: %m");
+	check(nvmf_get_discovery_log(c, &log, 1) == 0, "discovery failed");
 	end_mock_cmds();
 	cmp(log, &header, sizeof(header), "incorrect header");
 	free(log);
@@ -118,7 +118,7 @@ static void test_four_entries(nvme_ctrl_t c)
 
 	arbitrary_entries(num_entries, entries, log_entries);
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvmf_get_discovery_log(c, &log, 1) == 0, "discovery failed: %m");
+	check(nvmf_get_discovery_log(c, &log, 1) == 0, "discovery failed");
 	end_mock_cmds();
 	cmp(log, &header, sizeof(header), "incorrect header");
 	cmp(log->entries, entries, sizeof(entries), "incorrect entries");
@@ -177,7 +177,7 @@ static void test_five_entries(nvme_ctrl_t c)
 
 	arbitrary_entries(num_entries, entries, log_entries);
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvmf_get_discovery_log(c, &log, 1) == 0, "discovery failed: %m");
+	check(nvmf_get_discovery_log(c, &log, 1) == 0, "discovery failed");
 	end_mock_cmds();
 	cmp(log, &header, sizeof(header), "incorrect header");
 	cmp(log->entries, entries, sizeof(entries), "incorrect entries");
@@ -245,7 +245,7 @@ static void test_genctr_change(nvme_ctrl_t c)
 	arbitrary(entries1, sizeof(entries1));
 	arbitrary_entries(num_entries2, entries2, log_entries2);
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvmf_get_discovery_log(c, &log, 2) == 0, "discovery failed: %m");
+	check(nvmf_get_discovery_log(c, &log, 2) == 0, "discovery failed");
 	end_mock_cmds();
 	cmp(log, &header2, sizeof(header2), "incorrect header");
 	cmp(log->entries, entries2, sizeof(entries2), "incorrect entries");
@@ -308,9 +308,8 @@ static void test_max_retries(nvme_ctrl_t c)
 
 	arbitrary(&entry, sizeof(entry));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvmf_get_discovery_log(c, &log, 2) == -1, "discovery succeeded");
+	check(nvmf_get_discovery_log(c, &log, 2) == -EAGAIN, "discovery succeeded");
 	end_mock_cmds();
-	check(errno == EAGAIN, "discovery failed: %m");
 	check(!log, "unexpected log page returned");
 }
 
@@ -323,13 +322,13 @@ static void test_header_error(nvme_ctrl_t c)
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
 			       | NVME_LOG_LID_DISCOVER, /* LID */
-			.err = NVME_SC_INVALID_OPCODE,
+			.err = -EAGAIN,
 		},
 	};
 	struct nvmf_discovery_log *log = NULL;
 
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvmf_get_discovery_log(c, &log, 1) == -1, "discovery succeeded");
+	check(nvmf_get_discovery_log(c, &log, 1) == -EAGAIN, "discovery succeeded");
 	end_mock_cmds();
 	check(!log, "unexpected log page returned");
 }
@@ -359,9 +358,8 @@ static void test_entries_error(nvme_ctrl_t c)
 	struct nvmf_discovery_log *log = NULL;
 
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvmf_get_discovery_log(c, &log, 1) == -1, "discovery succeeded");
+	check(nvmf_get_discovery_log(c, &log, 1) == -EIO, "discovery succeeded");
 	end_mock_cmds();
-	check(errno == EIO, "discovery failed: %m");
 	check(!log, "unexpected log page returned");
 }
 
@@ -398,7 +396,7 @@ static void test_genctr_error(nvme_ctrl_t c)
 
 	arbitrary(&entry, sizeof(entry));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvmf_get_discovery_log(c, &log, 1) == -1, "discovery succeeded");
+	check(nvmf_get_discovery_log(c, &log, 1) == NVME_SC_INTERNAL, "discovery succeeded");
 	end_mock_cmds();
 	check(!log, "unexpected log page returned");
 }
@@ -423,7 +421,8 @@ int main(void)
 		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	set_mock_fd(TEST_FD);
-	test_hdl = nvme_open(ctx, "NVME_TEST_FD");
+	check(!nvme_open(ctx, "NVME_TEST_FD", &test_hdl),
+	      "opening test link failed");
 
 	RUN_TEST(no_entries);
 	RUN_TEST(four_entries);

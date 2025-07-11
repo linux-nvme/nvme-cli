@@ -700,8 +700,7 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 	if (raw_nbft_fp == NULL) {
 		nvme_msg(NULL, LOG_ERR, "Failed to open %s: %s\n",
 			 filename, strerror(errno));
-		errno = EINVAL;
-		return 1;
+		return -EINVAL;
 	}
 
 	i = fseek(raw_nbft_fp, 0L, SEEK_END);
@@ -709,8 +708,7 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 		nvme_msg(NULL, LOG_ERR, "Failed to read from %s: %s\n",
 			 filename, strerror(errno));
 		fclose(raw_nbft_fp);
-		errno = EINVAL;
-		return 1;
+		return -EINVAL;
 	}
 
 	raw_nbft_size = ftell(raw_nbft_fp);
@@ -720,8 +718,7 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 	if (!raw_nbft) {
 		nvme_msg(NULL, LOG_ERR, "Failed to allocate memory for NBFT table");
 		fclose(raw_nbft_fp);
-		errno = ENOMEM;
-		return 1;
+		return -ENOMEM;
 	}
 
 	i = fread(raw_nbft, sizeof(*raw_nbft), raw_nbft_size, raw_nbft_fp);
@@ -730,8 +727,7 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 			 filename, strerror(errno));
 		fclose(raw_nbft_fp);
 		free(raw_nbft);
-		errno = EINVAL;
-		return 1;
+		return -EINVAL;
 	}
 	fclose(raw_nbft_fp);
 
@@ -742,8 +738,7 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 	if (!*nbft) {
 		nvme_msg(NULL, LOG_ERR, "Could not allocate memory for NBFT\n");
 		free(raw_nbft);
-		errno = ENOMEM;
-		return 1;
+		return -ENOMEM;
 	}
 
 	(*nbft)->filename = strdup(filename);
@@ -753,8 +748,7 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 	if (parse_raw_nbft(*nbft)) {
 		nvme_msg(NULL, LOG_ERR, "Failed to parse %s\n", filename);
 		nvme_nbft_free(*nbft);
-		errno = EINVAL;
-		return 1;
+		return -EINVAL;
 	}
 	return 0;
 }

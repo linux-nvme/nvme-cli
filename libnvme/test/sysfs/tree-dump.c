@@ -22,10 +22,8 @@ static bool tree_dump(void)
 		return false;
 
 	err = nvme_scan_topology(ctx, NULL, NULL);
-	if (err) {
-		if (errno != ENOENT)
-			goto out;
-	}
+	if (err && err != ENOENT)
+		goto out;
 
 	if (nvme_dump_tree(ctx))
 		goto out;

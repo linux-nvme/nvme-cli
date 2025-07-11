@@ -352,8 +352,7 @@ int main(int argc, char **argv)
 		ctrl = argv[1];
 
 	printf("Test scan specific controller\n");
-	c = nvme_scan_ctrl(ctx, ctrl);
-	if (c) {
+	if (!nvme_scan_ctrl(ctx, ctrl, &c)) {
 		printf("%s %s %s %s\n", nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
 			nvme_ctrl_get_address(c),
@@ -363,8 +362,7 @@ int main(int argc, char **argv)
 	printf("\n");
 	nvme_free_global_ctx(ctx);
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
+	if (nvme_scan(NULL, &ctx))
 		return -1;
 
 	printf("Test walking the topology\n");

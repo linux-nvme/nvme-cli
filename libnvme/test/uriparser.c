@@ -159,8 +159,7 @@ static void test_uriparser(void)
 		int i;
 
 		printf(" '%s'...", d->uri);
-		parsed_data = nvme_parse_uri(d->uri);
-		assert(parsed_data);
+		assert(!nvme_parse_uri(d->uri, &parsed_data));
 
 		assert(strcmp(d->scheme, parsed_data->scheme) == 0);
 		if (d->proto) {
@@ -201,10 +200,10 @@ static void test_uriparser_bad(void)
 {
 	printf("Testing malformed URI strings:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data_bad); i++) {
-		struct nvme_fabrics_uri *parsed_data;
+		struct nvme_fabrics_uri *parsed_data = NULL;
 
 		printf(" '%s'...", test_data_bad[i]);
-		parsed_data = nvme_parse_uri(test_data_bad[i]);
+		assert(nvme_parse_uri(test_data_bad[i], &parsed_data));
 		assert(parsed_data == NULL);
 		printf("   OK\n");
 	}

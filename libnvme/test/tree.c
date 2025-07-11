@@ -125,7 +125,7 @@ static struct nvme_global_ctx *create_tree()
 
 	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
 	assert(ctx);
-	h = nvme_default_host(ctx);
+	nvme_default_host(ctx, &h);
 	assert(h);
 
 	printf("  ctrls created:\n");
@@ -281,7 +281,7 @@ static bool test_src_addr()
 	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
 	assert(ctx);
 
-	h = nvme_default_host(ctx);
+	nvme_default_host(ctx, &h);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN);
@@ -457,7 +457,7 @@ static bool ctrl_match(const char *tag,
 	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
 	assert(ctx);
 
-	h = nvme_default_host(ctx);
+	nvme_default_host(ctx, &h);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, reference->subsysnqn ? reference->subsysnqn : DEFAULT_SUBSYSNQN);
@@ -1070,7 +1070,7 @@ static bool ctrl_config_match(const char *tag,
 	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
 	assert(ctx);
 
-	h = nvme_default_host(ctx);
+	nvme_default_host(ctx, &h);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, reference->subsysnqn ? reference->subsysnqn : DEFAULT_SUBSYSNQN);

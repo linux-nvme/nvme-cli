@@ -29,8 +29,8 @@
  * @offset:	Starting offset to send with this firmware download
  * @buf:	Address of buffer containing all or part of the firmware image.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf);
@@ -74,8 +74,8 @@ int nvme_get_uuid_list(struct nvme_transport_handle *hdl,
  * @da:		On success return max supported data area
  * @max_data_tx: On success set to max transfer chunk supported by the controller
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_telemetry_max(struct nvme_transport_handle *hdl, enum nvme_telemetry_da *da, size_t *max_data_tx);
 
@@ -93,8 +93,8 @@ int nvme_get_telemetry_max(struct nvme_transport_handle *hdl, enum nvme_telemetr
  * The total size allocated can be calculated as:
  *   (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create, bool ctrl, bool rae, size_t max_data_tx,
 			   enum nvme_telemetry_da da, struct nvme_telemetry_log **log,
@@ -110,8 +110,8 @@ int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create, bool 
  * The total size allocated can be calculated as:
  *   (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_ctrl_telemetry(struct nvme_transport_handle *hdl, bool rae, struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
@@ -126,8 +126,8 @@ int nvme_get_ctrl_telemetry(struct nvme_transport_handle *hdl, bool rae, struct 
  * The total size allocated can be calculated as:
  *   (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_host_telemetry(struct nvme_transport_handle *hdl,  struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
@@ -142,8 +142,8 @@ int nvme_get_host_telemetry(struct nvme_transport_handle *hdl,  struct nvme_tele
  * The total size allocated can be calculated as:
  *   (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_new_host_telemetry(struct nvme_transport_handle *hdl,  struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
@@ -163,8 +163,8 @@ size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
  * @hdl:	Transport handle
  * @analen:	Pointer to where the length will be set on success
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen);
 
@@ -174,8 +174,8 @@ int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen);
  * @nsid:	Namespace id
  * @blksize:	Pointer to where the block size will be set on success
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_logical_block_size(struct nvme_transport_handle *hdl, __u32 nsid, int *blksize);
 
@@ -185,8 +185,8 @@ int nvme_get_logical_block_size(struct nvme_transport_handle *hdl, __u32 nsid, i
  * @rae:	Retain asynchronous events
  * @log:	On success, set to the value of the allocated and retrieved log.
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct nvme_lba_status_log **log);
 
@@ -197,8 +197,8 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct 
  * @num_ctrls:	Number of controllers in ctrlist
  * @ctrlist:	List of controller IDs to perform the attach action
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
@@ -209,8 +209,8 @@ int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, _
  * @num_ctrls:	Number of controllers in ctrlist
  * @ctrlist:	List of controller IDs to perform the detach action
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
@@ -218,15 +218,16 @@ int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, _
  * nvme_open() - Open an nvme controller or namespace device
  * @ctx:	struct nvme_global_ctx object
  * @name:	The basename of the device to open
+ * @hdl:	Transport handle to return
  *
  * This will look for the handle in /dev/ and validate the name and filetype
  * match linux conventions.
  *
- * Return: A transport handle for the device on a successful open, or -1 with
- * errno set otherwise.
+ * Return: 0 on success or negative error code otherwise
  */
-struct nvme_transport_handle *nvme_open(struct nvme_global_ctx *ctx, const char *name);
-
+int nvme_open(struct nvme_global_ctx *ctx, const char *name,
+	      struct nvme_transport_handle **hdl);
+                                          
 /**
  * nvme_close() - Close transport handle
  * @hdl:	Transport handle
@@ -309,7 +310,7 @@ enum nvme_hmac_alg {
  * @key:	Generated DH-HMAC-CHAP key
  *
  * Return: If key generation was successful the function returns 0 or
- * -1 with errno set otherwise.
+ * a negative error code otherwise.
  */
 int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 			unsigned int key_len, unsigned char *secret,
@@ -318,13 +319,13 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 /**
  * nvme_lookup_keyring() - Lookup keyring serial number
  * @keyring:    Keyring name
+ * @key:	Key serial number to return
  *
  * Looks up the serial number of the keyring @keyring.
  *
- * Return: The key serial number of the keyring
- * or 0 with errno set otherwise.
+ * Return: 0 on success or negative error code otherwise
  */
-long nvme_lookup_keyring(const char *keyring);
+int nvme_lookup_keyring(const char *keyring, long *key);
 
 /**
  * nvme_describe_key_serial() - Return key description
@@ -340,16 +341,16 @@ char *nvme_describe_key_serial(long key_id);
 
 /**
  * nvme_lookup_key() - Lookup key serial number
- * @type:        Key type
- * @identity:    Key description
+ * @type:	Key type
+ * @identity:	Key description
+ * @key:	Key serial number to return
  *
  * Looks up the serial number of the key @identity
  * with type %type in the current session keyring.
  *
- * Return: The key serial number of the key
- * or 0 with errno set otherwise.
+ * Return: 0 on success or negative error code otherwise
  */
-long nvme_lookup_key(const char *type, const char *identity);
+int nvme_lookup_key(const char *type, const char *identity, long *key);
 
 /**
  * nvme_set_keyring() - Link keyring for lookup
@@ -358,45 +359,46 @@ long nvme_lookup_key(const char *type, const char *identity);
  * Links @keyring_id into the session keyring such that
  * its keys are available for further key lookups.
  *
- * Return: 0 on success, a negative number on error
- * with errno set.
+ * Return: 0 on success or negative error code otherwise
  */
 int nvme_set_keyring(long keyring_id);
 
 /**
  * nvme_read_key() - Read key raw data
- * @keyring_id:     Id of the keyring holding %key_id
- * @key_id:      Key id
- * @len:         Length of the returned data
+ * @keyring_id:		Id of the keyring holding %key_id
+ * @key_id:		Key id
+ * @len:		Length of the returned data
+ * @key:		Key serial to return
  *
  * Links the keyring specified by @keyring_id into the session
  * keyring and reads the payload of the key specified by @key_id.
  * @len holds the size of the returned buffer.
  * If @keyring is 0 the default keyring '.nvme' is used.
  *
- * Return: Pointer to the payload on success,
- * or NULL with errno set otherwise.
+ * Return: 0 on success or negative error code otherwise
  */
-unsigned char *nvme_read_key(long keyring_id, long key_id, int *len);
+int nvme_read_key(long keyring_id, long key_id, int *len,
+		  unsigned char **key);
 
 /**
  * nvme_update_key() - Update key raw data
- * @keyring_id:  Id of the keyring holding %key_id
- * @key_type:    Type of the key to insert
- * @identity:    Key identity string
- * @key_data:    Raw data of the key
- * @key_len:     Length of @key_data
+ * @keyring_id:	Id of the keyring holding %key_id
+ * @key_type:	Type of the key to insert
+ * @identity:	Key identity string
+ * @key_data:	Raw data of the key
+ * @key_len:	Length of @key_data
+ * @key:	Key serial to return
  *
  * Links the keyring specified by @keyring_id into the session
  * keyring and updates the key reference by @identity with @key_data.
  * The old key with identity @identity will be revoked to make it
  * inaccessible.
  *
- * Return: Key id of the new key or 0 with errno set otherwise.
+ * Return: 0 on success or negative error code otherwise
  */
-long nvme_update_key(long keyring_id, const char *key_type,
-		     const char *identity, unsigned char *key_data,
-		     int key_len);
+int nvme_update_key(long keyring_id, const char *key_type,
+		    const char *identity, unsigned char *key_data,
+		    int key_len, long *key);
 
 /**
  * typedef nvme_scan_tls_keys_cb_t - Callback for iterating TLS keys
@@ -423,31 +425,30 @@ typedef void (*nvme_scan_tls_keys_cb_t)(long keyring, long key,
  * form 'NVMe<0|1><R|G>0<1|2> <identity>', otherwise it will be skipped
  * during iteration.
  *
- * Return: Number of keys for which @cb was called, or -1 with errno set
- * on error.
+ * Return: Number of keys for which @cb was called, or negative error code
  */
 int nvme_scan_tls_keys(const char *keyring, nvme_scan_tls_keys_cb_t cb,
 		       void *data);
 
 /**
  * nvme_insert_tls_key() - Derive and insert TLS key
- * @keyring:    Keyring to use
+ * @keyring:	Keyring to use
  * @key_type:	Type of the resulting key
  * @hostnqn:	Host NVMe Qualified Name
  * @subsysnqn:	Subsystem NVMe Qualified Name
  * @hmac:	HMAC algorithm
  * @configured_key:	Configured key data to derive the key from
  * @key_len:	Length of @configured_key
+ * @key:	Key serial to return
  *
  * Derives a 'retained' TLS key as specified in NVMe TCP 1.0a and
  * stores it as type @key_type in the keyring specified by @keyring.
  *
- * Return: The key serial number if the key could be inserted into
- * the keyring or 0 with errno otherwise.
+ * Return: 0 on success or negative error code otherwise
  */
-long nvme_insert_tls_key(const char *keyring, const char *key_type,
+int nvme_insert_tls_key(const char *keyring, const char *key_type,
 			 const char *hostnqn, const char *subsysnqn, int hmac,
-			 unsigned char *configured_key, int key_len);
+			 unsigned char *configured_key, int key_len, long *key);
 
 /**
  * nvme_insert_tls_key_versioned() - Derive and insert TLS key
@@ -459,18 +460,19 @@ long nvme_insert_tls_key(const char *keyring, const char *key_type,
  * @hmac:	HMAC algorithm
  * @configured_key:	Configured key data to derive the key from
  * @key_len:	Length of @configured_key
+ * @key:	Key serial to return
  *
  * Derives a 'retained' TLS key as specified in NVMe TCP 1.0a (if
  * @version s set to '0') or NVMe TP8028 (if @version is set to '1) and
  * stores it as type @key_type in the keyring specified by @keyring.
  *
- * Return: The key serial number if the key could be inserted into
- * the keyring or 0 with errno otherwise.
+ * Return: 0 on success or negative error code otherwise
  */
-long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
-				   const char *hostnqn, const char *subsysnqn,
-				   int version, int hmac,
-				   unsigned char *configured_key, int key_len);
+int nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
+				  const char *hostnqn, const char *subsysnqn,
+				  int version, int hmac,
+				  unsigned char *configured_key, int key_len,
+				  long *key);
 
 /**
  * nvme_insert_tls_key_compat() - Derive and insert TLS key
@@ -482,6 +484,7 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
  * @hmac:	HMAC algorithm
  * @configured_key:	Configured key data to derive the key from
  * @key_len:	Length of @configured_key
+ * @key:	Key serial to return
  *
  * Derives a 'retained' TLS key as specified in NVMe TCP 1.0a (if
  * @version s set to '0') or NVMe TP8028 (if @version is set to '1) and
@@ -493,10 +496,11 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
  * Return: The key serial number if the key could be inserted into
  * the keyring or 0 with errno otherwise.
  */
-long nvme_insert_tls_key_compat(const char *keyring, const char *key_type,
-				const char *hostnqn, const char *subsysnqn,
-				   int version, int hmac,
-				   unsigned char *configured_key, int key_len);
+int nvme_insert_tls_key_compat(const char *keyring, const char *key_type,
+			       const char *hostnqn, const char *subsysnqn,
+			       int version, int hmac,
+			       unsigned char *configured_key, int key_len,
+			       long *key);
 
 /**
  * nvme_generate_tls_key_identity() - Generate the TLS key identity
@@ -506,17 +510,19 @@ long nvme_insert_tls_key_compat(const char *keyring, const char *key_type,
  * @hmac:	HMAC algorithm
  * @configured_key:	Configured key data to derive the key from
  * @key_len:	Length of @configured_key
+ * @identity:	TLS identity to return
  *
  * Derives a 'retained' TLS key as specified in NVMe TCP and
  * generate the corresponding TLs identity.
  *
- * Return: The string containing the TLS identity. It is the responsibility
- * of the caller to free the returned string. On error NULL is returned with
- * errno set.
+ * It is the responsibility of the caller to free the returned string.
+ *
+ * Return: 0 on success or negative error code otherwise
  */
-char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
-				     int version, int hmac,
-				     unsigned char *configured_key, int key_len);
+int nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
+				   int version, int hmac,
+				   unsigned char *configured_key, int key_len,
+				   char **identity);
 
 /**
  * nvme_generate_tls_key_identity_compat() - Generate the TLS key identity
@@ -526,6 +532,7 @@ char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
  * @hmac:	HMAC algorithm
  * @configured_key:	Configured key data to derive the key from
  * @key_len:	Length of @configured_key
+ * @identity:	TLS identity to return
  *
  * Derives a 'retained' TLS key as specified in NVMe TCP and
  * generate the corresponding TLs identity. This version differs
@@ -533,14 +540,15 @@ char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
  * implementation for HKDF-Expand-Label which does not prefix the 'info'
  * and 'label' string with the length.
  *
- * Return: The string containing the TLS identity. It is the responsibility
- * of the caller to free the returned string.
+ * It is the responsibility of the caller to free the returned string.
+ *
+ * Return: 0 on success or negative error code otherwise
  */
-char *nvme_generate_tls_key_identity_compat(const char *hostnqn,
-					    const char *subsysnqn,
-					    int version, int hmac,
-					    unsigned char *configured_key,
-					    int key_len);
+int nvme_generate_tls_key_identity_compat(const char *hostnqn,
+					  const char *subsysnqn,
+					  int version, int hmac,
+					  unsigned char *configured_key,
+					  int key_len, char **identity);
 
 /**
  * nvme_revoke_tls_key() - Revoke TLS key from keyring
@@ -548,24 +556,26 @@ char *nvme_generate_tls_key_identity_compat(const char *hostnqn,
  * @key_type:    Type of the key to revoke
  * @identity:    Key identity string
  *
- * Return: 0 on success or on failure -1 with errno set.
+ * Return: 0 on success or negative error code otherwise
  */
-long nvme_revoke_tls_key(const char *keyring, const char *key_type,
-			 const char *identity);
+int nvme_revoke_tls_key(const char *keyring, const char *key_type,
+			const char *identity);
 
 /**
  * nvme_export_tls_key() - Export a TLS key
  * @key_data:	Raw data of the key
  * @key_len:	Length of @key_data
+ * @identity:	TLS identity
  *
  * Returns @key_data in the PSK Interchange format as defined in section
  * 3.6.1.5 of the NVMe TCP Transport specification.
  *
- * Return: The string containing the TLS identity or NULL with errno set
- * on error. It is the responsibility of the caller to free the returned
+ * It is the responsibility of the caller to free the returned
  * string.
+ *
+ * Return: 0 on success or negative error code otherwise
  */
-char *nvme_export_tls_key(const unsigned char *key_data, int key_len);
+int nvme_export_tls_key(const unsigned char *key_data, int key_len, char **identity);
 
 /**
  * nvme_export_tls_key_versioned() - Export a TLS pre-shared key
@@ -574,32 +584,36 @@ char *nvme_export_tls_key(const unsigned char *key_data, int key_len);
  *		in a retained PSK
  * @key_data:	Raw data of the key
  * @key_len:	Length of @key_data
+ * @identity:	TLS identity to return
  *
  * Returns @key_data in the PSK Interchange format as defined in section
  * 3.6.1.5 of the NVMe TCP Transport specification.
  *
- * Return: The string containing the TLS identity or NULL with errno set
- * on error. It is the responsibility of the caller to free the returned
+ * It is the responsibility of the caller to free the returned
  * string.
+ *
+ * Return: 0 on success or negative error code otherwise
  */
-char *nvme_export_tls_key_versioned(unsigned char version, unsigned char hmac,
-				    const unsigned char *key_data,
-				    size_t key_len);
+int nvme_export_tls_key_versioned(unsigned char version, unsigned char hmac,
+				  const unsigned char *key_data,
+				  size_t key_len, char **identity);
 
 /**
  * nvme_import_tls_key() - Import a TLS key
  * @encoded_key:	TLS key in PSK interchange format
  * @key_len:		Length of the resulting key data
  * @hmac:		HMAC algorithm
+ * @key:		Key serial to return
  *
  * Imports @key_data in the PSK Interchange format as defined in section
  * 3.6.1.5 of the NVMe TCP Transport specification.
  *
- * Return: The raw data of the PSK or NULL with errno set on error. It is
- * the responsibility of the caller to free the returned string.
+ * It is the responsibility of the caller to free the returned string.
+ *
+ * Return: 0 on success or negative error code otherwise
  */
-unsigned char *nvme_import_tls_key(const char *encoded_key, int *key_len,
-				   unsigned int *hmac);
+int nvme_import_tls_key(const char *encoded_key, int *key_len,
+			unsigned int *hmac, unsigned char **key);
 
 /**
  * nvme_import_tls_key_versioned() - Import a TLS key
@@ -608,17 +622,20 @@ unsigned char *nvme_import_tls_key(const char *encoded_key, int *key_len,
  * @hmac:		HMAC algorithm used to transfor the configured
  *			PSK in a retained PSK
  * @key_len:		Length of the resulting key data
+ * @key:		Key serial to return
  *
  * Imports @key_data in the PSK Interchange format as defined in section
  * 3.6.1.5 of the NVMe TCP Transport specification.
  *
- * Return: The raw data of the PSK or NULL with errno set on error. It is
- * the responsibility of the caller to free the returned string.
+ * It is the responsibility of the caller to free the returned string.
+ *
+ * Return: 0 on success or negative error code otherwise
  */
-unsigned char *nvme_import_tls_key_versioned(const char *encoded_key,
-					     unsigned char *version,
-					     unsigned char *hmac,
-					     size_t *key_len);
+int nvme_import_tls_key_versioned(const char *encoded_key,
+				  unsigned char *version,
+				  unsigned char *hmac,
+				  size_t *key_len,
+				  unsigned char **key);
 /**
  * nvme_submit_passthru - Low level ioctl wrapper for passthru commands
  * @hdl:	Transport handle
@@ -630,7 +647,8 @@ unsigned char *nvme_import_tls_key_versioned(const char *encoded_key,
  * exposed as weak symbol so that the user application is able to provide their own
  * implementation of this function with additional debugging or logging code.
  *
- * Return: The value from the ioctl system call (see ioctl documentation)
+ * Return: The value from the ioctl system call (see ioctl documentation) or
+ * a negative error code otherwise.
  */
 __attribute__((weak))
 int nvme_submit_passthru(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
@@ -647,7 +665,8 @@ int nvme_submit_passthru(struct nvme_transport_handle *hdl, unsigned long ioctl_
  * exposed as weak symbol so that the user application is able to provide their own
  * implementation of this function with additional debugging or logging code.
  *
- * Return: The value from the ioctl system call (see ioctl documentation)
+ * Return: The value from the ioctl system call (see ioctl documentation) or
+ * a negative error code otherwise.
  */
 __attribute__((weak))
 int nvme_submit_passthru64(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,

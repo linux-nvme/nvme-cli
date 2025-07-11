@@ -151,13 +151,14 @@ bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback);
 /**
  * nvme_default_host() - Initializes the default host
  * @ctx:	struct nvme_global_ctx object
+ * @h:  &nvme_host_t object to return
  *
  * Initializes the default host object based on the hostnqn/hostid
  * values returned by nvme_host_get_ids() and attaches it to @r.
  *
- * Return: &nvme_host_t object
+ * Return: 0 on success or negative error code otherwise
  */
-nvme_host_t nvme_default_host(struct nvme_global_ctx *ctx);
+int nvme_default_host(struct nvme_global_ctx *ctx, nvme_host_t *h);
 
 /**
  * nvme_host_get_ids - Retrieve host ids from various sources
@@ -188,7 +189,7 @@ nvme_host_t nvme_default_host(struct nvme_global_ctx *ctx);
  *  NVMe implementation expects a 1:1 matching between the IDs.
  *
  *  Return: 0 on success (@hostnqn and @hostid contain valid strings
- *  which the caller needs to free), -1 otherwise and errno is set.
+ *  which the caller needs to free), or negative error code otherwise.
  */
 int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 		      char *hostnqn_arg, char *hostid_arg,
@@ -388,15 +389,17 @@ bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
  * @host_traddr:	Host transport address
  * @host_iface:		Host interface name
  * @trsvcid:		Transport service ID
+ * @c:			@nvme_ctrl_t object to return
  *
  * Creates an unconnected controller to be used for nvme_add_ctrl().
  *
- * Return: Controller instance
+ * Return: 0 on success or negative error code otherwise
  */
-nvme_ctrl_t nvme_create_ctrl(struct nvme_global_ctx *ctx,
-			     const char *subsysnqn, const char *transport,
-			     const char *traddr, const char *host_traddr,
-			     const char *host_iface, const char *trsvcid);
+int nvme_create_ctrl(struct nvme_global_ctx *ctx,
+		     const char *subsysnqn, const char *transport,
+		     const char *traddr, const char *host_traddr,
+		     const char *host_iface, const char *trsvcid,
+		     nvme_ctrl_t *c);
 
 
 /**
@@ -1258,12 +1261,13 @@ int nvme_disconnect_ctrl(nvme_ctrl_t c);
  * nvme_scan_ctrl() - Scan on a controller
  * @ctx:	struct nvme_global_ctx object
  * @name:	Name of the controller
+ * @c:		@nvme_ctrl_t object to return
  *
  * Scans a controller with sysfs name @name and add it to @r.
  *
- * Return: nvme_ctrl_t object
+ * Return: 0 on success or negative error code otherwise
  */
-nvme_ctrl_t nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name);
+int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name, nvme_ctrl_t *c);
 
 /**
  * nvme_rescan_ctrl() - Rescan an existing controller
@@ -1277,7 +1281,7 @@ void nvme_rescan_ctrl(nvme_ctrl_t c);
  * @c:		nvme_ctrl_t object
  * @instance:	Instance number (e.g. 1 for nvme1)
  *
- * Return: The ioctl() return code. Typically 0 on success.
+ * Return: 0 on success or negative error code otherwise
  */
 int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance);
 
@@ -1385,7 +1389,7 @@ const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s);
  * Scans the NVMe topology and filters out the resulting elements
  * by applying @f.
  *
- * Returns: 0 on success, -1 on failure with errno set.
+ * Return: 0 on success, or negative error code otherwise.
  */
 int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *f_args);
 
@@ -1424,10 +1428,11 @@ void nvme_free_host(nvme_host_t h);
 /**
  * nvme_scan() - Scan NVMe topology
  * @config_file:	Configuration file
+ * @ctx:		&nvme_global_ctx object to return
  *
- * Return: &struct nvme_global_ctx object
+ * Return: 0 on success or negative error code otherwise
  */
-struct nvme_global_ctx *nvme_scan(const char *config_file);
+int nvme_scan(const char *config_file, struct nvme_global_ctx **ctx);
 
 /**
  * nvme_read_config() - Read NVMe JSON configuration file
@@ -1437,7 +1442,7 @@ struct nvme_global_ctx *nvme_scan(const char *config_file);
  * Read in the contents of @config_file and merge them with
  * the elements in @r.
  *
- * Returns: 0 on success, -1 on failure with errno set.
+ * Return: 0 on success or negative error code otherwise
  */
 int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file);
 
@@ -1466,7 +1471,7 @@ int nvme_update_config(struct nvme_global_ctx *ctx);
  * Prints the current contents of the JSON configuration
  * file to stdout.
  *
- * Return: 0 on success, -1 on failure.
+ * Return: 0 on success, or negative error code otherwise.
  */
 int nvme_dump_config(struct nvme_global_ctx *ctx);
 
@@ -1477,7 +1482,7 @@ int nvme_dump_config(struct nvme_global_ctx *ctx);
  * Prints the internal object tree in JSON format
  * to stdout.
  *
- * Return: 0 on success, -1 on failure.
+ * Return: 0 on success or negative error code otherwise
  */
 int nvme_dump_tree(struct nvme_global_ctx *ctx);
 
@@ -1486,8 +1491,8 @@ int nvme_dump_tree(struct nvme_global_ctx *ctx);
  * @d:		sysfs directory
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr or %NULL in case of an empty value
- *	   or in case of an error (indicated by non-zero errno code).
+ * Return: String with the contents of @attr or %NULL in case of an empty
+ *         value or error.
  */
 char *nvme_get_attr(const char *d, const char *attr);
 
@@ -1496,8 +1501,8 @@ char *nvme_get_attr(const char *d, const char *attr);
  * @s:		nvme_subsystem_t object
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr or %NULL in case of an empty value
- *	   or in case of an error (indicated by non-zero errno code).
+ * Return: String with the contents of @attr or %NULL in case of an empty
+ *	   value or error.
  */
 char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
 
@@ -1507,7 +1512,7 @@ char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
- *	   or in case of an error (indicated by non-zero errno code).
+ *	   or in case of an error.
  */
 char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
 
@@ -1517,7 +1522,7 @@ char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
- *	   or in case of an error (indicated by non-zero errno code).
+ *	   or in case of an error.
  */
 char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
 
@@ -1549,17 +1554,18 @@ void nvme_subsystem_release_fds(struct nvme_subsystem *s);
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
- *	   or in case of an error (indicated by non-zero errno code).
+ *	   or in case of an error.
  */
 char *nvme_get_path_attr(nvme_path_t p, const char *attr);
 
 /**
  * nvme_scan_namespace() - scan namespace based on sysfs name
  * @name:	sysfs name of the namespace to scan
+ * @ns:		&nvme_ns_t object to return
  *
- * Return: nvme_ns_t object or NULL if not found.
+ * Return: 0 on success or negative error code otherwise
  */
-nvme_ns_t nvme_scan_namespace(const char *name);
+int nvme_scan_namespace(const char *name, nvme_ns_t *ns);
 
 /**
  * nvme_host_get_hostsymname() - Get the host's symbolic name

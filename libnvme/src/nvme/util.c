@@ -180,7 +180,7 @@ __u8 nvme_status_to_errno(int status, bool fabrics)
 	if (!status)
 		return 0;
 	if (status < 0)
-		return errno;
+		return -status;
 
 	sc = nvme_status_code(status);
 	switch (nvme_status_code_type(status)) {
@@ -378,7 +378,7 @@ const char *nvme_status_to_string(int status, bool fabrics)
 	__u16 sc, sct;
 
 	if (status < 0)
-		return strerror(errno);
+		return strerror(-status);
 
 	sc = nvme_status_code(status);
 	sct = nvme_status_code_type(status);
@@ -574,8 +574,7 @@ int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
 		*len = NVME_FEAT_FDPE_NOET_MASK * sizeof(struct nvme_fdp_supported_event_desc);
 		break;
 	default:
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 	return 0;
 }
@@ -590,8 +589,7 @@ int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
 			*len = sizeof(struct nvme_id_directives);
 			return 0;
 		default:
-			errno = EINVAL;
-			return -1;
+			return -EINVAL;
 		}
 	case NVME_DIRECTIVE_DTYPE_STREAMS:
 		switch (doper) {
@@ -605,12 +603,10 @@ int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
 			*len = 0;
 			return 0;
 		default:
-			errno = EINVAL;
-			return -1;
+			return -EINVAL;
 		}
 	default:
-		errno = EINVAL;
-		return -1;
+		return -EINVAL;
 	}
 }
 
@@ -646,19 +642,20 @@ const char *nvme_errno_to_string(int status)
 }
 
 #ifdef HAVE_NETDB
-char *hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr)
+int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr,
+		    char **hostname)
 {
-	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
+	_cleanup_addrinfo_ struct addrinfo *host_info = NULL;
+	struct addrinfo hints = {.ai_family = AF_UNSPEC};
 	char addrstr[NVMF_TRADDR_SIZE];
 	const char *p;
-	char *ret_traddr = NULL;
 	int ret;
 
 	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
 	if (ret) {
 		nvme_msg(ctx, LOG_ERR, "failed to resolve host %s info\n",
 			 traddr);
-		return NULL;
+		return -errno;
 	}
 
 	switch (host_info->ai_family) {
@@ -675,28 +672,27 @@ char *hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr)
 	default:
 		nvme_msg(ctx, LOG_ERR, "unrecognized address family (%d) %s\n",
 			 host_info->ai_family, traddr);
-		goto free_addrinfo;
+		return -EINVAL;
 	}
 
 	if (!p) {
 		nvme_msg(ctx, LOG_ERR, "failed to get traddr for %s\n",
 			 traddr);
-		goto free_addrinfo;
+		return -EIO;
 	}
-	ret_traddr = strdup(addrstr);
+	*hostname = strdup(addrstr);
+	if (!*hostname)
+		return -ENOMEM;
 
-free_addrinfo:
-	freeaddrinfo(host_info);
-	return ret_traddr;
+	return 0;
 }
 #else /* HAVE_NETDB */
-char *hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr)
+int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr, char **hostname)
 {
 	nvme_msg(ctx, LOG_ERR, "No support for hostname IP address resolution; " \
 		"recompile with libnss support.\n");
 
-	errno = -ENOTSUP;
-	return NULL;
+	return -ENOTSUP;
 }
 #endif /* HAVE_NETDB */
 
@@ -972,10 +968,8 @@ int nvme_uuid_find(struct nvme_id_uuid_list *uuid_list, const unsigned char uuid
 {
 	const unsigned char uuid_end[NVME_UUID_LEN] = {0};
 
-	if ((!uuid_list) || (!uuid)) {
-		errno = EINVAL;
-		return -1;
-	}
+	if ((!uuid_list) || (!uuid))
+		return -EINVAL;
 
 	for (int i = 0; i < NVME_ID_UUID_LIST_MAX; i++) {
 		if (memcmp(uuid, &uuid_list->entry[i].uuid, NVME_UUID_LEN) == 0)
@@ -983,8 +977,7 @@ int nvme_uuid_find(struct nvme_id_uuid_list *uuid_list, const unsigned char uuid
 		if (memcmp(uuid_end, &uuid_list->entry[i].uuid, NVME_UUID_LEN) == 0)
 			break;
 	}
-	errno = ENOENT;
-	return -1;
+	return -ENOENT;
 }
 
 #ifdef HAVE_NETDB

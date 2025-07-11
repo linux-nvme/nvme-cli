@@ -22,10 +22,8 @@ static bool config_dump(const char *file)
 		return false;
 
 	err = nvme_scan_topology(ctx, NULL, NULL);
-	if (err) {
-		if (errno != ENOENT)
-			goto out;
-	}
+	if (err < 0 && err != -ENOENT)
+		goto out;
 
 	err = nvme_read_config(ctx, file);
 	if (err)

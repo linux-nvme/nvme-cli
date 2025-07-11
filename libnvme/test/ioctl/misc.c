@@ -43,7 +43,7 @@ static void test_format_nvm(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_format_nvm(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -77,7 +77,7 @@ static void test_ns_mgmt(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_ns_mgmt(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -103,7 +103,7 @@ static void test_ns_mgmt_create(void)
 	err = nvme_ns_mgmt_create(test_hdl, NULL, &result, 0, NVME_CSI_ZNS,
 				  &data);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == TEST_NSID, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -121,7 +121,7 @@ static void test_ns_mgmt_delete(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_ns_mgmt_delete(test_hdl, TEST_NSID);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 }
 
 static void test_get_property(void)
@@ -148,7 +148,7 @@ static void test_get_property(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_property(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "returned wrong result");
 }
 
@@ -177,7 +177,7 @@ static void test_set_property(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_set_property(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -207,7 +207,7 @@ static void test_ns_attach(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_ns_attach(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&expected_ctrlist, &ctrlist, sizeof(expected_ctrlist),
 	    "incorrect data");
@@ -231,7 +231,7 @@ static void test_ns_attach_ctrls(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_ns_attach_ctrls(test_hdl, TEST_NSID, &ctrlist);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 }
 
 static void test_ns_detach_ctrls(void)
@@ -252,7 +252,7 @@ static void test_ns_detach_ctrls(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_ns_detach_ctrls(test_hdl, TEST_NSID, &ctrlist);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 }
 
 static void test_fw_download(void)
@@ -283,7 +283,7 @@ static void test_fw_download(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_fw_download(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -309,7 +309,7 @@ static void test_fw_commit(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_fw_commit(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -348,7 +348,7 @@ static void test_security_send(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_security_send(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -387,7 +387,7 @@ static void test_security_receive(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_security_receive(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -435,7 +435,7 @@ static void test_get_lba_status(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_lba_status(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned wrong result");
 	cmp(lbas, expected_lbas, lba_status_size, "incorrect lbas");
 }
@@ -474,7 +474,7 @@ static void test_directive_send(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_directive_send(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned wrong result");
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -502,7 +502,7 @@ static void test_directive_send_id_endir(void)
 	err = nvme_directive_send_id_endir(test_hdl, TEST_NSID, true,
 					   NVME_DIRECTIVE_DTYPE_STREAMS, &id);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect id");
 }
 
@@ -523,7 +523,7 @@ static void test_directive_send_stream_release_identifier(void)
 	err = nvme_directive_send_stream_release_identifier(test_hdl, TEST_NSID,
 							    stream_id);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 }
 
 static void test_directive_send_stream_release_resource(void)
@@ -540,7 +540,7 @@ static void test_directive_send_stream_release_resource(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_directive_send_stream_release_resource(test_hdl, TEST_NSID);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 }
 
 static void test_directive_recv(void)
@@ -576,7 +576,7 @@ static void test_directive_recv(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_directive_recv(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned wrong result");
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -601,7 +601,7 @@ static void test_directive_recv_identify_parameters(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_directive_recv_identify_parameters(test_hdl, TEST_NSID, &id);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect id");
 }
 
@@ -626,7 +626,7 @@ static void test_directive_recv_stream_parameters(void)
 	err = nvme_directive_recv_stream_parameters(test_hdl, TEST_NSID,
 						    &params);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	cmp(&params, &expected_params, sizeof(params), "incorrect params");
 }
 
@@ -663,7 +663,7 @@ static void test_directive_recv_stream_status(void)
 	err = nvme_directive_recv_stream_status(test_hdl, TEST_NSID, nr_entries,
 						status);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	cmp(status, expected_status, stream_status_size, "incorrect status");
 }
 
@@ -687,7 +687,7 @@ static void test_directive_recv_stream_allocate(void)
 	err = nvme_directive_recv_stream_allocate(test_hdl, TEST_NSID, nsr,
 						  &result);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");
 }
 
@@ -718,7 +718,7 @@ static void test_capacity_mgmt(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_capacity_mgmt(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");
 }
 
@@ -749,7 +749,7 @@ static void test_lockdown(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_lockdown(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");
 }
 
@@ -782,7 +782,7 @@ static void test_sanitize_nvm(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_sanitize_nvm(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");
 }
 
@@ -809,7 +809,7 @@ static void test_dev_self_test(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_dev_self_test(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");
 }
 
@@ -838,7 +838,7 @@ static void test_virtual_mgmt(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_virtual_mgmt(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");
 }
 
@@ -854,7 +854,7 @@ static void test_flush(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_flush(test_hdl, TEST_NSID);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 }
 
 static void test_read(void)
@@ -897,7 +897,7 @@ static void test_read(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_read(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -942,7 +942,7 @@ static void test_write(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_write(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -987,7 +987,7 @@ static void test_compare(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_compare(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1032,7 +1032,7 @@ static void test_write_zeros(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_write_zeros(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1077,7 +1077,7 @@ static void test_write_uncorrectable(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_write_uncorrectable(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1122,7 +1122,7 @@ static void test_verify(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_verify(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1161,7 +1161,7 @@ static void test_dsm(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_dsm(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1205,7 +1205,7 @@ static void test_copy(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_copy(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1240,7 +1240,7 @@ static void test_resv_acquire(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_resv_acquire(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1275,7 +1275,7 @@ static void test_resv_register(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_resv_register(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1309,7 +1309,7 @@ static void test_resv_release(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_resv_release(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1343,7 +1343,7 @@ static void test_resv_report(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_resv_report(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&status, &expected_status, sizeof(status), "incorrect status");
 }
@@ -1375,7 +1375,7 @@ static void test_io_mgmt_recv(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_io_mgmt_recv(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 
@@ -1406,7 +1406,7 @@ static void test_io_mgmt_send(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	err = nvme_io_mgmt_send(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 
@@ -1430,7 +1430,7 @@ static void test_fdp_reclaim_unit_handle_status(void)
 	err = nvme_fdp_reclaim_unit_handle_status(test_hdl, TEST_NSID, data_len,
 						  &data);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 
@@ -1453,7 +1453,7 @@ static void test_fdp_reclaim_unit_handle_update(void)
 	err = nvme_fdp_reclaim_unit_handle_update(test_hdl, TEST_NSID, npids,
 						  &pids);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 }
 
 static void test_dim_send(void)
@@ -1482,7 +1482,7 @@ static void test_dim_send(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_dim_send(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -1518,7 +1518,7 @@ static void test_lm_cdq(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_lm_cdq(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -1545,7 +1545,7 @@ static void test_lm_track_send(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_lm_track_send(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 }
 
@@ -1589,7 +1589,7 @@ static void test_lm_migration_send(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_lm_migration_send(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -1631,7 +1631,7 @@ static void test_lm_migration_recv(void)
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_lm_migration_recv(test_hdl, &args);
 	end_mock_cmds();
-	check(err == 0, "returned error %d, errno %m", err);
+	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -1648,11 +1648,12 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
-	struct nvme_global_ctx * ctx =
+	struct nvme_global_ctx *ctx =
 		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	set_mock_fd(TEST_FD);
-	test_hdl = nvme_open(ctx, "NVME_TEST_FD");
+	check(!nvme_open(ctx, "NVME_TEST_FD", &test_hdl),
+	      "opening test link failed");
 
 	RUN_TEST(format_nvm);
 	RUN_TEST(ns_mgmt);

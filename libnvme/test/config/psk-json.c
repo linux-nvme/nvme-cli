@@ -18,21 +18,23 @@ static bool import_export_key(nvme_ctrl_t c)
 	unsigned char version, hmac, *key;
 	char *encoded_key;
 	size_t len;
+	int ret;
 
-	key = nvme_import_tls_key_versioned(nvme_ctrl_get_tls_key(c),
-					    &version, &hmac, &len);
-	if (!key) {
+	ret = nvme_import_tls_key_versioned(nvme_ctrl_get_tls_key(c),
+					    &version, &hmac, &len, &key);
+	if (ret) {
 		printf("ERROR: nvme_import_tls_key_versioned failed with %d\n",
-		       errno);
+		       ret);
 		return false;
 
 	}
 
-	encoded_key = nvme_export_tls_key_versioned(version, hmac, key, len);
+	ret = nvme_export_tls_key_versioned(version, hmac, key, len,
+					    &encoded_key);
 	free(key);
-	if (!encoded_key) {
+	if (ret) {
 		printf("ERROR: nvme_export_tls_key_versioned failed with %d\n",
-		       errno);
+		       ret);
 		return false;
 	}
 
