@@ -46,6 +46,51 @@ OPTIONS
 -i <log-id>::
 --log-id=<log-id>::
 	Sets the commands requested log-id to <log-id>. Defaults to 0.
++
+[]
+|=================
+|Value|Definition
+|0x00 \| 'supported-log-pages'| Supported Log Pages
+|0x01 \| 'error'| Error Information
+|0x02 \| 'smart'| SMART / Health Information
+|0x03 \| 'fw-slot'| Firmware Slot Information
+|0x04 \| 'changed-ns'| Changed Namespace List
+|0x05 \| 'cmd-effects'| Commands Supported and Effects
+|0x06 \| 'device-self-test'| Device Self-test
+|0x07 \| 'telemetry-host'| Telemetry Host-Initiated
+|0x08 \| 'telemetry-ctrl'| Telemetry Controller-Initiated
+|0x09 \| 'endurance-group'| Endurance Group Information
+|0x0a \| 'predictable-lat-nvmset'| Predictable Latency Per NVM Set
+|0x0b \| 'predictable-lat-agg'| Predictable Latency Event Aggregate
+|0x0c \| 'ana'| Asymmetric Namespace Access
+|0x0d \| 'persistent-event'| Persistent Event Log
+|0x0e \| 'lba-status'| LBA Status Information
+|0x0f \| 'endurance-grp-evt'| Endurance Group Event Aggregate
+|0x10 \| 'media-unit-status'| Media Unit Status
+|0x11 \| 'supported-cap-config-list'| Supported Capacity Configuration Lis
+|0x12 \| 'fid-supported-effects'| Feature Identifiers Supported and Effects
+|0x13 \| 'mi-cmd-supported-effects'| NVMe-MI Commands Supported and Effects
+|0x14 \| 'cmd-and-feat-lockdown'| Command and Feature Lockdown
+|0x15 \| 'boot-partition'| Boot Partition
+|0x16 \| 'rotational-media-info'| Rotational Media Information
+|0x17 \| 'dispersed-ns-participating-ns'| Dispersed Namespace Participating NVM Subsystems
+|0x18 \| 'mgmt-addr-list'| Management Address List
+|0x19 \| 'phy-rx-eom'| Physical Interface Receiver Eye Opening Measurement
+|0x1a \| 'reachability-groups'| Reachability Groups
+|0x1b \| 'reachability-associations'| Reachability Associations
+|0x1c \| 'changed-alloc-ns-list'| Changed Allocated Namespace List
+|0x20 \| 'fdp-configs'| FDP Configurations
+|0x21 \| 'fdp-ruh-usage'| Reclaim Unit Handle Usage
+|0x22 \| 'fdp-stats'| FDP Statistics
+|0x23 \| 'fdp-events'| FDP Events
+|0x70 \| 'discover'| Discovery
+|0x71 \| 'host-discover'| Host Discovery
+|0x72 \| 'ave-discover'| AVE Discovery
+|0x73 \| 'pull-model-ddc-req'| Pull Model DDC Request
+|0x80 \| 'reservation'| Reservation Notification
+|0x81 \| 'sanitize'| Sanitize Status
+|0xbf \| 'zns-changed-zones'| Changed Zone List
+|=================
 
 -a <aen>::
 --aen=<aen>::
