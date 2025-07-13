@@ -1668,3 +1668,8 @@ void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 {
 	nvme_print(pull_model_ddc_req_log, flags, log);
 }
+
+void nvme_show_log(const char *devname, struct nvme_get_log_args *args, nvme_print_flags_t flags)
+{
+	nvme_print(log, flags, devname, args);
+}

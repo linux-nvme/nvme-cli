@@ -98,6 +98,7 @@ struct print_ops {
 	void (*host_discovery_log)(struct nvme_host_discover_log *log);
 	void (*ave_discovery_log)(struct nvme_ave_discover_log *log);
 	void (*pull_model_ddc_req_log)(struct nvme_pull_model_ddc_req_log *log);
+	void (*log)(const char *devname, struct nvme_get_log_args *args);
 
 	/* libnvme tree print functions */
 	void (*list_item)(nvme_ns_t n);
@@ -359,6 +360,7 @@ void nvme_show_host_discovery_log(struct nvme_host_discover_log *log, nvme_print
 void nvme_show_ave_discovery_log(struct nvme_ave_discover_log *log, nvme_print_flags_t flags);
 void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 				      nvme_print_flags_t flags);
+void nvme_show_log(const char *devname, struct nvme_get_log_args *args, nvme_print_flags_t flags);
 
 extern char *alloc_error;
 #endif /* NVME_PRINT_H */
