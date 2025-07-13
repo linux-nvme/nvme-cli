@@ -6048,6 +6048,110 @@ static void stdout_relatives(nvme_root_t r, const char *name)
 	nvme_resources_free(&res);
 }
 
+static void stdout_log(const char *devname, struct nvme_get_log_args *args)
+{
+	switch (args->lid) {
+	case NVME_LOG_LID_SUPPORTED_LOG_PAGES:
+		break;
+	case NVME_LOG_LID_ERROR:
+		stdout_error_log((struct nvme_error_log_page *)args->log,
+				 args->len / sizeof(struct nvme_error_log_page), devname);
+		break;
+	case NVME_LOG_LID_SMART:
+		stdout_smart_log((struct nvme_smart_log *)args->log, args->nsid, devname);
+		break;
+	case NVME_LOG_LID_FW_SLOT:
+		stdout_fw_log((struct nvme_firmware_slot *)args->log, devname);
+		break;
+	case NVME_LOG_LID_CHANGED_NS:
+		stdout_changed_ns_list_log((struct nvme_ns_list *)args->log, devname, false);
+		break;
+	case NVME_LOG_LID_CMD_EFFECTS:
+		break;
+	case NVME_LOG_LID_DEVICE_SELF_TEST:
+		stdout_self_test_log((struct nvme_self_test_log *)args->log,
+				 args->len / sizeof(struct nvme_self_test_log), 0, devname);
+		break;
+	case NVME_LOG_LID_TELEMETRY_HOST:
+		break;
+	case NVME_LOG_LID_TELEMETRY_CTRL:
+		break;
+	case NVME_LOG_LID_ENDURANCE_GROUP:
+		stdout_endurance_log((struct nvme_endurance_group_log *)args->log, args->lsi,
+				     devname);
+		break;
+	case NVME_LOG_LID_PREDICTABLE_LAT_NVMSET:
+		stdout_predictable_latency_per_nvmset(
+		    (struct nvme_nvmset_predictable_lat_log *)args->log, args->lsi, devname);
+		break;
+	case NVME_LOG_LID_PREDICTABLE_LAT_AGG:
+		stdout_predictable_latency_event_agg_log(
+		    (struct nvme_aggregate_predictable_lat_event *)args->log,
+		    args->len > sizeof(__u64) ? (args->len - sizeof(__u64)) / sizeof(__le16) : 0,
+		    args->len, devname);
+		break;
+	case NVME_LOG_LID_ANA:
+		break;
+	case NVME_LOG_LID_PERSISTENT_EVENT:
+		break;
+	case NVME_LOG_LID_LBA_STATUS:
+		break;
+	case NVME_LOG_LID_ENDURANCE_GRP_EVT:
+		break;
+	case NVME_LOG_LID_MEDIA_UNIT_STATUS:
+		break;
+	case NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:
+		break;
+	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:
+		break;
+	case NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS:
+		break;
+	case NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN:
+		break;
+	case NVME_LOG_LID_BOOT_PARTITION:
+		break;
+	case NVME_LOG_LID_ROTATIONAL_MEDIA_INFO:
+		break;
+	case NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS:
+		break;
+	case NVME_LOG_LID_MGMT_ADDR_LIST:
+		break;
+	case NVME_LOG_LID_PHY_RX_EOM:
+		break;
+	case NVME_LOG_LID_REACHABILITY_GROUPS:
+		break;
+	case NVME_LOG_LID_REACHABILITY_ASSOCIATIONS:
+		break;
+	case NVME_LOG_LID_CHANGED_ALLOC_NS_LIST:
+		stdout_changed_ns_list_log((struct nvme_ns_list *)args->log, devname, true);
+		break;
+	case NVME_LOG_LID_FDP_CONFIGS:
+		break;
+	case NVME_LOG_LID_FDP_RUH_USAGE:
+		break;
+	case NVME_LOG_LID_FDP_STATS:
+		break;
+	case NVME_LOG_LID_FDP_EVENTS:
+		break;
+	case NVME_LOG_LID_DISCOVER:
+		break;
+	case NVME_LOG_LID_HOST_DISCOVER:
+		break;
+	case NVME_LOG_LID_AVE_DISCOVER:
+		break;
+	case NVME_LOG_LID_PULL_MODEL_DDC_REQ:
+		break;
+	case NVME_LOG_LID_RESERVATION:
+		break;
+	case NVME_LOG_LID_SANITIZE:
+		break;
+	case NVME_LOG_LID_ZNS_CHANGED_ZONES:
+		break;
+	default:
+		break;
+	}
+}
+
 static struct print_ops stdout_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= stdout_ana_log,
@@ -6124,6 +6228,7 @@ static struct print_ops stdout_print_ops = {
 	.host_discovery_log		= stdout_host_discovery_log,
 	.ave_discovery_log		= stdout_ave_discovery_log,
 	.pull_model_ddc_req_log		= stdout_pull_model_ddc_req_log,
+	.log				= stdout_log,
 
 	/* libnvme tree print functions */
 	.list_item			= stdout_list_item,

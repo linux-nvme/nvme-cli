@@ -2528,6 +2528,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 			printf("Device:%s log-id:%d namespace-id:%#x\n", dev->name, cfg.log_id,
 			       cfg.namespace_id);
 			d(log, cfg.log_len, 16, 1);
+			if (argconfig_parse_seen(opts, "verbose"))
+				nvme_show_log(dev->name, &args, VERBOSE);
 		} else {
 			d_raw((unsigned char *)log, cfg.log_len);
 		}
