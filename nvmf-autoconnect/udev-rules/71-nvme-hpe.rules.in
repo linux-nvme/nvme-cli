@@ -1,0 +1,5 @@
+# Set appropriate iopolicy for HPE Alletra Storage MP
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="HPE Alletra", ATTR{iopolicy}="round-robin"
+
+# Set ctrl_loss_tmo to -1 for HPE Alletra Storage MP NVMe/TCP
+ACTION!="remove", SUBSYSTEM=="nvme", KERNEL=="nvme*", ATTR{transport}=="tcp", ATTR{model}=="HPE Alletra", ATTR{ctrl_loss_tmo}="-1"
