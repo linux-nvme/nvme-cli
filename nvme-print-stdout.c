@@ -6091,10 +6091,13 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 		    args->len, devname);
 		break;
 	case NVME_LOG_LID_ANA:
+		stdout_ana_log((struct nvme_ana_log *)args->log, devname, args->len);
 		break;
 	case NVME_LOG_LID_PERSISTENT_EVENT:
+		stdout_persistent_event_log((void *)args->log, args->lsp, args->len, devname);
 		break;
 	case NVME_LOG_LID_LBA_STATUS:
+		stdout_lba_status_log((void *)args->log, args->len, devname);
 		break;
 	case NVME_LOG_LID_ENDURANCE_GRP_EVT:
 		break;
