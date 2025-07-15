@@ -2021,7 +2021,7 @@ static inline int nvme_get_log_lba_status(int fd, bool rae,
 }
 
 /**
- * nvme_get_log_endurance_grp_evt() - Retrieve Rotational Media Information
+ * nvme_get_log_endurance_grp_evt() - Retrieve Endurance Group Event Aggregate
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
  * @offset:	Offset to the start of the log page
