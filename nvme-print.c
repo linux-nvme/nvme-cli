@@ -263,7 +263,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 }
 
 void nvme_show_endurance_group_event_agg_log(
-	struct nvme_aggregate_predictable_lat_event *endurance_log,
+	struct nvme_aggregate_endurance_group_event *endurance_log,
 	__u64 log_entries, __u32 size, const char *devname,
 	nvme_print_flags_t flags)
 {
