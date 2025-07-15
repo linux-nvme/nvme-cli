@@ -6050,6 +6050,9 @@ static void stdout_relatives(nvme_root_t r, const char *name)
 
 static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 {
+	struct nvme_aggregate_endurance_group_event *end = args->log;
+	struct nvme_supported_cap_config_list_log *cap = args->log;
+
 	switch (args->lid) {
 	case NVME_LOG_LID_SUPPORTED_LOG_PAGES:
 		break;
@@ -6100,10 +6103,13 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 		stdout_lba_status_log((void *)args->log, args->len, devname);
 		break;
 	case NVME_LOG_LID_ENDURANCE_GRP_EVT:
+		stdout_endurance_group_event_agg_log(end, end->num_entries, args->len, devname);
 		break;
 	case NVME_LOG_LID_MEDIA_UNIT_STATUS:
+		stdout_media_unit_stat_log((struct nvme_media_unit_stat_log *)args->log);
 		break;
 	case NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:
+		stdout_supported_cap_config_log(cap);
 		break;
 	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:
 		break;
