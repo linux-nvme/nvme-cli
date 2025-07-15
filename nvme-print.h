@@ -32,7 +32,7 @@ struct print_ops {
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result, void *buf, __u32 len);
 	void (*discovery_log)(struct nvmf_discovery_log *log, int numrec);
 	void (*effects_log_list)(struct list_head *list);
-	void (*endurance_group_event_agg_log)(struct nvme_aggregate_predictable_lat_event *endurance_log, __u64 log_entries, __u32 size, const char *devname);
+	void (*endurance_group_event_agg_log)(struct nvme_aggregate_endurance_group_event *endurance_log, __u64 log_entries, __u32 size, const char *devname);
 	void (*endurance_group_list)(struct nvme_id_endurance_group_list *endgrp_list);
 	void (*endurance_log)(struct nvme_endurance_group_log *endurance_group, __u16 group_id, const char *devname);
 	void (*error_log)(struct nvme_error_log_page *err_log, int entries, const char *devname);
@@ -201,7 +201,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	nvme_print_flags_t flags);
 void nvme_show_endurance_group_event_agg_log(
-	struct nvme_aggregate_predictable_lat_event *endurance_log,
+	struct nvme_aggregate_endurance_group_event *endurance_log,
 	__u64 log_entries, __u32 size, const char *devname,
 	nvme_print_flags_t flags);
 void nvme_show_lba_status_log(void *lba_status, __u32 size,
