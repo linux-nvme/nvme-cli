@@ -776,6 +776,7 @@ static void stdout_eom_printable_eye(struct nvme_eom_lane_desc *lane)
 	char *eye = (char *)lane->eye_desc;
 	int i, j;
 
+	printf("Printable Eye:\n");
 	for (i = 0; i < le16_to_cpu(lane->nrows); i++) {
 		for (j = 0; j < le16_to_cpu(lane->ncols); j++)
 			printf("%c", eye[i * le16_to_cpu(lane->ncols) + j]);
@@ -817,17 +818,11 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 		if (edlen == 0)
 			continue;
 
-		/* Hex dump Vendor Specific Eye Data */
-		vsdata = malloc(edlen);
-		if (!vsdata)
-			return;
-
 		vsdataoffset = (nrows * ncols) + sizeof(struct nvme_eom_lane_desc);
 		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
 		printf("Eye Data:\n");
 		d(vsdata, edlen, 16, 1);
 		printf("\n");
-		free(vsdata);
 
 		p += log->dsize;
 	}
