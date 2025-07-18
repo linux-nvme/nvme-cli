@@ -2533,8 +2533,7 @@ int nvme_mi_aem_disable(nvme_mi_ep_t ep)
 
 	int rc = aem_disable_enabled(ep);
 
-	if (ep->aem_ctx)
-		free(ep->aem_ctx);
+	free(ep->aem_ctx);
 	ep->aem_ctx = NULL;
 
 	return rc;
