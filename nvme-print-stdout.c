@@ -6056,6 +6056,14 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 {
 	struct nvme_aggregate_endurance_group_event *end = args->log;
 	struct nvme_supported_cap_config_list_log *cap = args->log;
+	struct nvme_fid_supported_effects_log *fid_log = args->log;
+	struct nvme_mi_cmd_supported_effects_log *mi_cmd_log = args->log;
+	struct nvme_rotational_media_info_log *info = args->log;
+	struct nvme_dispersed_ns_participating_nss_log *log = args->log;
+	struct nvme_mgmt_addr_list_log *ma_list = args->log;
+	struct nvme_reachability_groups_log *reachability_groups_log = args->log;
+	struct nvme_reachability_associations_log *reachability_associations_log = args->log;
+	struct nvmf_discovery_log *discovery_log = args->log;
 
 	switch (args->lid) {
 	case NVME_LOG_LID_SUPPORTED_LOG_PAGES:
@@ -6116,49 +6124,69 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 		stdout_supported_cap_config_log(cap);
 		break;
 	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:
+		stdout_fid_support_effects_log(fid_log, devname);
 		break;
 	case NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS:
+		stdout_mi_cmd_support_effects_log(mi_cmd_log, devname);
 		break;
 	case NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN:
 		break;
 	case NVME_LOG_LID_BOOT_PARTITION:
+		stdout_boot_part_log(args->log, devname, args->len);
 		break;
 	case NVME_LOG_LID_ROTATIONAL_MEDIA_INFO:
+		stdout_rotational_media_info_log(info);
 		break;
 	case NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS:
+		stdout_dispersed_ns_psub_log(log);
 		break;
 	case NVME_LOG_LID_MGMT_ADDR_LIST:
+		stdout_mgmt_addr_list_log(ma_list);
 		break;
 	case NVME_LOG_LID_PHY_RX_EOM:
+		stdout_phy_rx_eom_log((struct nvme_phy_rx_eom_log *)args->log, args->lsi);
 		break;
 	case NVME_LOG_LID_REACHABILITY_GROUPS:
+		stdout_reachability_groups_log(reachability_groups_log, args->len);
 		break;
 	case NVME_LOG_LID_REACHABILITY_ASSOCIATIONS:
+		stdout_reachability_associations_log(reachability_associations_log, args->len);
 		break;
 	case NVME_LOG_LID_CHANGED_ALLOC_NS_LIST:
 		stdout_changed_ns_list_log((struct nvme_ns_list *)args->log, devname, true);
 		break;
 	case NVME_LOG_LID_FDP_CONFIGS:
+		stdout_fdp_configs((struct nvme_fdp_config_log *)args->log, args->len);
 		break;
 	case NVME_LOG_LID_FDP_RUH_USAGE:
+		stdout_fdp_usage((struct nvme_fdp_ruhu_log *)args->log, args->len);
 		break;
 	case NVME_LOG_LID_FDP_STATS:
+		stdout_fdp_stats((struct nvme_fdp_stats_log *)args->log);
 		break;
 	case NVME_LOG_LID_FDP_EVENTS:
+		stdout_fdp_events((struct nvme_fdp_events_log *)args->log);
 		break;
 	case NVME_LOG_LID_DISCOVER:
+		stdout_discovery_log(discovery_log, le64_to_cpu(discovery_log->numrec));
 		break;
 	case NVME_LOG_LID_HOST_DISCOVER:
+		stdout_host_discovery_log((struct nvme_host_discover_log *)args->log);
 		break;
 	case NVME_LOG_LID_AVE_DISCOVER:
+		stdout_ave_discovery_log((struct nvme_ave_discover_log *)args->log);
 		break;
 	case NVME_LOG_LID_PULL_MODEL_DDC_REQ:
+		stdout_pull_model_ddc_req_log((struct nvme_pull_model_ddc_req_log *)args->log);
 		break;
 	case NVME_LOG_LID_RESERVATION:
+		stdout_resv_notif_log((struct nvme_resv_notification_log *)args->log, devname);
 		break;
 	case NVME_LOG_LID_SANITIZE:
+		stdout_sanitize_log((struct nvme_sanitize_log_page *)args->log, devname);
 		break;
 	case NVME_LOG_LID_ZNS_CHANGED_ZONES:
+		stdout_zns_changed((struct nvme_zns_changed_zone_log *)args->log);
 		break;
 	default:
 		break;
