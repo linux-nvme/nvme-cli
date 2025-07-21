@@ -2698,7 +2698,7 @@ static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
 			(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id)))
 			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
 
-		if (uuid_index > 0)
+		if (uuid_index >= 0)
 			found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
 	} else if (needs_c2_log_page_check(device_id)) {
 		/* In certain devices that don't support UUID lists, there are multiple
@@ -2718,6 +2718,10 @@ static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
 
 			found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
 		}
+	} else {
+		/* Default to uuid-index 0 for cases where UUID lists are not supported */
+		uuid_index = 0;
+		found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
 	}
 
 	return found;
@@ -2752,13 +2756,9 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
 		}
 
-		if (uuid_index > 0)
+		if (uuid_index >= 0)
 			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid,
 							       log_id, uuid_index);
-
-	} else if (wdc_is_zn350(device_id)) {
-		uuid_index = 0;
-		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
 	} else if (needs_c2_log_page_check(device_id)) {
 		/* In certain devices that don't support UUID lists, there are multiple
 		 * definitions of the C2 logpage. In those cases, the code
@@ -2776,6 +2776,10 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id,
 							       uuid_index);
 		}
+	} else {
+		/* Default to uuid-index 0 for cases where UUID lists are not supported */
+		uuid_index = 0;
+		found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid, log_id, uuid_index);
 	}
 
 	return found;
