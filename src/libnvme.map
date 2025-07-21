@@ -3,6 +3,8 @@ LIBNVME_UNRELEASED {
 	global:
 		nvme_set_etdas;
 		nvme_clear_etdas;
+		nvme_insert_tls_key_compat;
+		nvme_generate_tls_key_identity_compat;
 };
 
 LIBNVME_1_14 {
