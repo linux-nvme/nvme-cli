@@ -44,6 +44,7 @@
 #define SNDK_NVME_SN861_DEV_ID_1            0x2751
 #define SNDK_NVME_SN861_DEV_ID_2            0x2752
 #define SNDK_NVME_SNTMP_DEV_ID              0x2761
+#define SNDK_NVME_SNTMP_DEV_ID_1            0x2763
 
 #define SNDK_NVME_SN520_DEV_ID              0x5003
 #define SNDK_NVME_SN520_DEV_ID_1            0x5004
