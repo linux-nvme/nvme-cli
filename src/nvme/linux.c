@@ -619,6 +619,46 @@ static DEFINE_CLEANUP_FUNC(
 #define _cleanup_evp_pkey_ctx_ __cleanup__(cleanup_evp_pkey_ctx)
 
 /*
+ * hkdf_info_printf()
+ *
+ * Helper function to append variable length label and context to an HkdfLabel
+ *
+ * RFC 8446 (TLS 1.3) Section 7.1 defines the HKDF-Expand-Label function as a
+ * specialization of the HKDF-Expand function (RFC 5869), where the info
+ * parameter is structured as an HkdfLabel.
+ *
+ * An HkdfLabel structure includes two variable length vectors (label and
+ * context) which must be preceded by their content length as per RFC 8446
+ * Section 3.4 (and not NUL terminated as per Section 7.1). Additionally,
+ * HkdfLabel.label must begin with "tls13 "
+ *
+ * Returns the number of bytes appended to the HKDF info buffer, or -1 on an
+ * error.
+ */
+__attribute__((format(printf, 2, 3)))
+static int hkdf_info_printf(EVP_PKEY_CTX *ctx, char *fmt, ...)
+{
+	_cleanup_free_ char *str = NULL;
+	va_list myargs;
+	uint8_t len;
+	int ret;
+
+	va_start(myargs, fmt);
+	ret = vasprintf(&str, fmt, myargs);
+	va_end(myargs);
+	if (ret < 0)
+		return ret;
+	if (ret > 255)
+		return -1;
+	len = ret;
+	if (EVP_PKEY_CTX_add1_hkdf_info(ctx, (unsigned char *)&len, 1) <= 0)
+		return -1;
+	if (EVP_PKEY_CTX_add1_hkdf_info(ctx, (unsigned char *)str, len) <= 0)
+		return -1;
+	return (ret + 1);
+}
+
+/*
  * derive_retained_key()
  *
  * Derive a retained key according to NVMe TCP Transport specification:
@@ -652,7 +692,7 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 			       size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ctx = NULL;
-	uint16_t length = key_len & 0xFFFF;
+	uint16_t length = htons(key_len & 0xFFFF);
 	const EVP_MD *md;
 	size_t hmac_len;
 
@@ -690,18 +730,11 @@ static int derive_retained_key(int hmac, const char *hostnqn,
 		errno = ENOKEY;
 		return -1;
 	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)"tls13 ", 6) <= 0) {
+	if (hkdf_info_printf(ctx, "tls13 HostNQN") <= 0) {
 		errno = ENOKEY;
 		return -1;
 	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)"HostNQN", 7) <= 0) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)hostnqn, strlen(hostnqn)) <= 0) {
+	if (hkdf_info_printf(ctx, "%s", hostnqn) <= 0) {
 		errno = ENOKEY;
 		return -1;
 	}
@@ -736,12 +769,13 @@ static int derive_retained_key(int hmac, const char *hostnqn,
  *
  * and the value '0' is invalid here.
  */
+
 static int derive_tls_key(int version, unsigned char cipher,
 			  const char *context, unsigned char *retained,
 			  unsigned char *psk, size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ctx = NULL;
-	uint16_t length = key_len & 0xFFFF;
+	uint16_t length = htons(key_len & 0xFFFF);
 	const EVP_MD *md;
 	size_t hmac_len;
 
@@ -774,30 +808,24 @@ static int derive_tls_key(int version, unsigned char cipher,
 		errno = ENOKEY;
 		return -1;
 	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)"tls13 ", 6) <= 0) {
+	if (hkdf_info_printf(ctx, "tls13 nvme-tls-psk") <= 0) {
 		errno = ENOKEY;
 		return -1;
 	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)"nvme-tls-psk", 12) <= 0) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (version == 1) {
-		char hash_str[5];
-
-		sprintf(hash_str, "%02d ", cipher);
-		if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-				(const unsigned char *)hash_str,
-				strlen(hash_str)) <= 0) {
+	switch (version) {
+	case 0:
+		if (hkdf_info_printf(ctx, "%s", context) <= 0) {
 			errno = ENOKEY;
 			return -1;
 		}
-	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)context,
-			strlen(context)) <= 0) {
+		break;
+	case 1:
+		if (hkdf_info_printf(ctx, "%02d %s", cipher, context) <= 0) {
+			errno = ENOKEY;
+			return -1;
+		}
+		break;
+	default:
 		errno = ENOKEY;
 		return -1;
 	}
