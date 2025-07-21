@@ -5589,18 +5589,6 @@ static void stdout_list_items(nvme_root_t r)
 		stdout_simple_list(r);
 }
 
-static bool nvme_is_multipath(nvme_subsystem_t s)
-{
-	nvme_ns_t n;
-	nvme_path_t p;
-
-	nvme_subsystem_for_each_ns(s, n)
-		nvme_namespace_for_each_path(n, p)
-			return true;
-
-	return false;
-}
-
 static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 						     enum nvme_cli_topo_ranking ranking)
 {

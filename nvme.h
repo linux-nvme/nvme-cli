@@ -122,6 +122,18 @@ static inline nvme_mi_ep_t dev_mi_ep(struct nvme_dev *dev)
 	return dev->mi.ep;
 }
 
+static inline bool nvme_is_multipath(nvme_subsystem_t s)
+{
+	nvme_ns_t n;
+	nvme_path_t p;
+
+	nvme_subsystem_for_each_ns(s, n)
+		nvme_namespace_for_each_path(n, p)
+			return true;
+
+	return false;
+}
+
 void register_extension(struct plugin *plugin);
 
 /*
