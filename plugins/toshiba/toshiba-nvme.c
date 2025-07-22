@@ -118,8 +118,7 @@ static int nvme_get_sct_status(int fd, __u32 device_mask)
 		}
 	}
 end:
-	if (data)
-		free(data);
+	free(data);
 	return err;
 }
 
@@ -321,8 +320,7 @@ static int nvme_get_internal_log(int fd, const char *const filename, bool curren
 end:
 	if (o_fd >= 0)
 		close(o_fd);
-	if (page_data)
-		free(page_data);
+	free(page_data);
 	return err;
 }
 
@@ -416,8 +414,7 @@ static int nvme_get_vendor_log(struct nvme_dev *dev, __u32 namespace_id,
 			d(log, log_len, 16, 1);
 	}
 end:
-	if (log)
-		free(log);
+	free(log);
 	return err;
 }
 

@@ -122,8 +122,7 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s, unsig
 	__u8 *raw = malloc(RAW_SIZE * sizeof(__u8));
 
 	if (!nm) {
-		if (raw)
-			free(raw);
+		free(raw);
 		return;
 	}
 	if (!raw) {
@@ -320,8 +319,7 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
 		__u8 *raw = malloc(RAW_SIZE * sizeof(__u8));
 
 		if (!nm) {
-			if (raw)
-				free(raw);
+			free(raw);
 			return;
 		}
 		if (!raw) {

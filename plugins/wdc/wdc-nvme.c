@@ -7301,8 +7301,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 			ret = -1;
 		}
 
-		if (data)
-			free(data);
+		free(data);
 		break;
 	default:
 		fprintf(stderr, "ERROR: WDC: Unknown device id - 0x%x\n", device_id);
@@ -8590,8 +8589,7 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
 		ret = -1;
 	}
 
-	if (data)
-		free(data);
+	free(data);
 
 out:
 	nvme_free_tree(r);
@@ -8674,8 +8672,7 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
 	}
 
 free_buf:
-	if (data)
-		free(data);
+	free(data);
 
 out:
 	nvme_free_tree(r);
@@ -8758,8 +8755,7 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
 		phys_media_units_written_tlc = int128_to_double(ext_smart_log_ptr->ext_smart_pmuwt);
 		phys_media_units_written_slc = int128_to_double(ext_smart_log_ptr->ext_smart_pmuws);
 
-		if (data)
-			free(data);
+		free(data);
 	} else {
 		fprintf(stderr, "ERROR: WDC %s: get smart cloud log failure\n", __func__);
 		ret = -1;
@@ -9896,8 +9892,7 @@ static int wdc_fetch_log_directory(struct nvme_dev *dev, struct WDC_DE_VU_LOG_DI
 	directory->numOfValidLogEntries = entryId;
 
 end:
-	if (fileDirectory)
-		free(fileDirectory);
+	free(fileDirectory);
 	return ret;
 }
 
@@ -10043,8 +10038,7 @@ static int wdc_de_get_dump_trace(struct nvme_dev *dev, const char *filePath, __u
 			ret);
 	}
 
-	if (readBuffer)
-		free(readBuffer);
+	free(readBuffer);
 
 	return ret;
 }
@@ -11533,8 +11527,7 @@ static int wdc_do_vs_nand_stats_sn810_2(struct nvme_dev *dev, char *format)
 	}
 
 out:
-	if (data)
-		free(data);
+	free(data);
 	return ret;
 }
 
@@ -12313,8 +12306,7 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv, struct command *com
 			ret = -1;
 		}
 
-		if (data)
-			free(data);
+		free(data);
 	} else {
 		fprintf(stderr, "ERROR: WDC: unsupported device for this command\n");
 	}
