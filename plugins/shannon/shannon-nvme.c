@@ -246,8 +246,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	err = nvme_get_features(&args);
 	if (err > 0)
 		nvme_show_status(err);
-	if (buf)
-		free(buf);
+	free(buf);
 	return err;
 }
 
@@ -367,8 +366,7 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		nvme_show_status(err);
 
 free:
-	if (buf)
-		free(buf);
+	free(buf);
 	return err;
 }
 

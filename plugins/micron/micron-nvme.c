@@ -2345,8 +2345,7 @@ static int micron_telemetry_log(int fd, __u8 type, __u8 **data,
 		err = nvme_get_log_telemetry_host(fd, 0, bs, buffer);
 	if (err) {
 		fprintf(stderr, "Failed to get telemetry log header for 0x%X\n", type);
-		if (buffer)
-			free(buffer);
+		free(buffer);
 		return err;
 	}
 
@@ -2359,10 +2358,8 @@ static int micron_telemetry_log(int fd, __u8 type, __u8 **data,
 
 	if (!data_area[da]) {
 		fprintf(stderr, "Requested telemetry data for 0x%X is empty\n", type);
-		if (buffer) {
-			free(buffer);
-			buffer = NULL;
-		}
+		free(buffer);
+		buffer = NULL;
 		return -1;
 	}
 
@@ -2384,8 +2381,7 @@ static int micron_telemetry_log(int fd, __u8 type, __u8 **data,
 		*data = buffer;
 	} else {
 		fprintf(stderr, "Failed to get telemetry data for 0x%x\n", type);
-		if (buffer)
-			free(buffer);
+		free(buffer);
 	}
 
 	return err;
@@ -2410,10 +2406,8 @@ static int GetTelemetryData(int fd, const char *dir)
 			sprintf(msg, "telemetry log: 0x%X", tmap[i].log);
 			WriteData(buffer, logSize, dir, tmap[i].file, msg);
 		}
-		if (buffer) {
-			free(buffer);
-			buffer = NULL;
-		}
+		free(buffer);
+		buffer = NULL;
 		logSize = 0;
 	}
 	return err;
@@ -3733,14 +3727,11 @@ static int GetOcpEnhancedTelemetryLog(int fd, const char *dir, int nLogID)
 			}
 		}
 
-		if (pTelemetryBuffer != NULL) {
-			free(pTelemetryBuffer);
-			pTelemetryBuffer = NULL;
-		}
+		free(pTelemetryBuffer);
+		pTelemetryBuffer = NULL;
 	}
 	// free mem of header, all areas
-	if (pTelemetryDataHeader != NULL)
-		free(pTelemetryDataHeader);
+	free(pTelemetryDataHeader);
 
 	return err;
 }
@@ -4102,10 +4093,8 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 			WriteData(dataBuffer, bSize, strCtrlDirName, aVendorLogs[i].strFileName, msg);
 		}
 
-		if (dataBuffer) {
-			free(dataBuffer);
-			dataBuffer = NULL;
-		}
+		free(dataBuffer);
+		dataBuffer = NULL;
 	}
 
 	err = ZipAndRemoveDir(strMainDirName, cfg.package);

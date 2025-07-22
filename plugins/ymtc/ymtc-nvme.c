@@ -32,8 +32,7 @@ static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
 	u8 *raw = malloc(RAW_SIZE * sizeof(u8));
 
 	if (!nm) {
-		if (raw)
-			free(raw);
+		free(raw);
 		return -1;
 	}
 	if (!raw) {

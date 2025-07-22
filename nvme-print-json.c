@@ -2287,8 +2287,7 @@ static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controlle
 	if (allocated_eyes) {
 		for (i = 0; i < log->nd; i++) {
 			/* Free any Printable Eye strings allocated */
-			if (allocated_eyes[i])
-				free(allocated_eyes[i]);
+			free(allocated_eyes[i]);
 		}
 	}
 
