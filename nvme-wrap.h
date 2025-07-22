@@ -48,8 +48,14 @@ int nvme_cli_sanitize_nvm(struct nvme_dev *dev,
 
 int nvme_cli_get_features(struct nvme_dev *dev,
 			  struct nvme_get_features_args *args);
-
+int nvme_cli_get_features_arbitration(struct nvme_dev *dev, enum nvme_get_features_sel sel,
+				      __u32 *result);
+int nvme_cli_get_features_power_mgmt(struct nvme_dev *dev, enum nvme_get_features_sel sel,
+				     __u32 *result);
 int nvme_cli_set_features(struct nvme_dev *dev, struct nvme_set_features_args *args);
+int nvme_cli_set_features_arbitration(struct nvme_dev *dev, __u8 ab, __u8 lpw, __u8 mpw, __u8 hpw,
+				      bool  save, __u32 *result);
+int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save, __u32 *result);
 
 int nvme_cli_get_log(struct nvme_dev *dev, struct nvme_get_log_args *args);
 int nvme_cli_get_log_page(struct nvme_dev *dev,

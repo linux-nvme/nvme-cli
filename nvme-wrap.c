@@ -119,9 +119,35 @@ int nvme_cli_get_features(struct nvme_dev *dev,
 	return do_admin_args_op(get_features, dev, args);
 }
 
+int nvme_cli_get_features_arbitration(struct nvme_dev *dev, enum nvme_get_features_sel sel,
+				      __u32 *result)
+{
+	return do_admin_op(get_features_arbitration, dev, sel, result);
+}
+
+int nvme_cli_get_features_power_mgmt(struct nvme_dev *dev, enum nvme_get_features_sel sel,
+				     __u32 *result)
+{
+	return do_admin_op(get_features_power_mgmt, dev, sel, result);
+}
+
 int nvme_cli_set_features(struct nvme_dev *dev, struct nvme_set_features_args *args)
 {
 	return do_admin_args_op(set_features, dev, args);
+}
+
+int nvme_cli_set_features_arbitration(struct nvme_dev *dev, __u8 ab, __u8 lpw, __u8 mpw, __u8 hpw,
+				      bool  save, __u32 *result)
+{
+	if (dev->type == NVME_DEV_DIRECT)
+		return nvme_set_features_arbitration(dev_fd(dev), ab, lpw, mpw, hpw, save, result);
+
+	return -ENODEV;
+}
+
+int nvme_cli_features_power_mgmt(struct nvme_dev *dev, __u8 ps, __u8 wh, bool save, __u32 *result)
+{
+	return do_admin_op(set_features_power_mgmt, dev, ps, wh, save, result);
 }
 
 int nvme_cli_ns_mgmt_delete(struct nvme_dev *dev, __u32 nsid, __u32 timeout)
