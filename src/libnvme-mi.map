@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_MI_UNRELEASED {
+	global:
+		nvme_mi_admin_get_features_arbitration;
+		nvme_mi_admin_get_features_power_mgmt;
+		nvme_mi_admin_set_features_power_mgmt;
 };
 
 LIBNVME_MI_1_14 {
