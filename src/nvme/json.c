@@ -287,8 +287,10 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	const char *transport, *value;
 
 	transport = nvme_ctrl_get_transport(c);
-	if (!strcmp(transport, "pcie"))
+	if (!strcmp(transport, "pcie")) {
+		json_object_put(port_obj);
 		return;
+	}
 
 	json_object_object_add(port_obj, "transport",
 			       json_object_new_string(transport));
