@@ -1984,9 +1984,7 @@ static void nvme_read_sysfs_dhchap(nvme_root_t r, nvme_ctrl_t c)
 	char *host_key, *ctrl_key;
 
 	host_key = nvme_get_ctrl_attr(c, "dhchap_secret");
-	if (host_key && c->s && c->s->h && c->s->h->dhchap_key &&
-			(!strcmp(c->s->h->dhchap_key, host_key) ||
-			 !strcmp("none", host_key))) {
+	if (host_key && !strcmp(host_key, "none")) {
 		free(host_key);
 		host_key = NULL;
 	}
