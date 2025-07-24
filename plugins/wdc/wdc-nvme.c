@@ -532,11 +532,16 @@ static const __u8 WDC_UUID[NVME_UUID_LEN] = {
 	0xab, 0xe6, 0x33, 0x29, 0x9a, 0x70, 0xdf, 0xd0
 };
 
-
 /* WDC_UUID value for SN640_3 devices */
 static const __u8 WDC_UUID_SN640_3[NVME_UUID_LEN] = {
 	0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
 	0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22
+};
+
+/*  Sandisk UUID value */
+static const __u8 SNDK_UUID[NVME_UUID_LEN] = {
+	0xde, 0x87, 0xd1, 0xeb, 0x72, 0xc5, 0x58, 0x0b,
+	0xad, 0xd8, 0x3c, 0x29, 0xd1, 0x23, 0x7c, 0x70
 };
 
 enum WDC_DRIVE_ESSENTIAL_TYPE {
@@ -2693,13 +2698,26 @@ static bool get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
 
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
-		uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
-		if (uuid_index < 0 &&
-			(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id)))
-			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+		/* check for the Sandisk UUID first  */
+		uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+
+		if (uuid_index < 0) {
+			/* The Sandisk UUID is not found;
+			 * check for the WDC UUID second.
+			 */
+			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			if (uuid_index < 0 &&
+				(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id)))
+				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+		}
 
 		if (uuid_index >= 0)
 			found = get_dev_mgmt_log_page_data(dev, data, uuid_index);
+		else {
+			fprintf(stderr, "%s: UUID lists are supported but a matching ",
+				__func__);
+			fprintf(stderr, "uuid was not found\n");
+		}
 	} else if (needs_c2_log_page_check(device_id)) {
 		/* In certain devices that don't support UUID lists, there are multiple
 		 * definitions of the C2 logpage. In those cases, the code
@@ -2750,15 +2768,27 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, struct nvme_dev *dev,
 
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
-		uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
-		if (uuid_index < 0 &&
-			(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id))) {
-			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+		/* check for the Sandisk UUID first  */
+		uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+
+		if (uuid_index < 0) {
+			/* The Sandisk UUID is not found;
+			 * check for the WDC UUID second.
+			 */
+			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			if (uuid_index < 0 &&
+				(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id)))
+				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
 		}
 
 		if (uuid_index >= 0)
 			found = get_dev_mgmt_log_page_lid_data(dev, cbs_data, lid,
 							       log_id, uuid_index);
+		else {
+			fprintf(stderr, "%s: UUID lists are supported but a matching ",
+			__func__);
+			fprintf(stderr, "uuid was not found\n");
+		}
 	} else if (needs_c2_log_page_check(device_id)) {
 		/* In certain devices that don't support UUID lists, there are multiple
 		 * definitions of the C2 logpage. In those cases, the code
@@ -9109,8 +9139,16 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 
 	/* Find the WDC UUID index  */
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
-	if (wdc_CheckUuidListSupport(dev, &uuid_list))
-		uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+	if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
+		/* check for the Sandisk UUID first  */
+		uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+
+		if (uuid_index < 0)
+			/* The Sandisk UUID is not found;
+			 * check for the WDC UUID second.
+			 */
+			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+	}
 
 	/* WD UUID not found, use default uuid index - 0 */
 	if (uuid_index < 0)
@@ -10895,8 +10933,16 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID;
 
 		if (!wdc_is_sn861(device_id)) {
-			if (uuid_supported)
-				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			if (uuid_supported) {
+				/* check for the Sandisk UUID first  */
+				uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+
+				if (uuid_index < 0)
+					/* The Sandisk UUID is not found;
+					 * check for the WDC UUID second.
+					 */
+					uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			}
 
 			/* WD UUID not found, use default uuid index - 0 */
 			if (uuid_index < 0)
