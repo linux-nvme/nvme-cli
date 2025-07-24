@@ -72,8 +72,12 @@ static:
 		--wrap-mode=forcefallback \
 		--default-library=static \
 		-Dc_link_args="-static" \
+		-Dlibnvme:default_library=static \
 		-Dlibnvme:keyutils=disabled \
 		-Dlibnvme:liburing=disabled \
 		-Dlibnvme:python=disabled \
-		-Dlibnvme:openssl=disabled
+		-Dlibnvme:openssl=disabled \
+		-Dlibnvme:tests=false \
+		-Dlibnvme:examples=false
+
 	meson compile -C ${BUILD-DIR}
