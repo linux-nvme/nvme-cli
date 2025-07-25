@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-download
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/20/2025
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-DOWNLOAD" "1" "05/20/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-DOWNLOAD" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,6 +45,22 @@ The Firmware Image Download command is used to download all or a portion of the 
 The firmware image may be constructed of multiple pieces that are individually downloaded with separate Firmware Image Download commands\&. Each Firmware Image Download command includes a Dword Offset and Number of Dwords that specify a Dword range\&. The host software shall ensure that firmware pieces do not have Dword ranges that overlap\&. Firmware portions may be submitted out of order to the controller\&.
 .sp
 The new firmware image is not applied as part of the Firmware Image Download command\&. It is applied following a reset, where the image to apply and the firmware slot it should be committed to is specified with the Firmware Commit command (nvme fw\-commit <args>)\&.
+.sp
+Note: nvme\-cli must allocate a contiguous (linear) memory buffer and map the firmware binary into it\&. To do this, nvme\-cli first attempts to allocate the buffer using huge TLB pages\&. If allocation using huge pages fails, it falls back to using posix_memalign() combined with madvise(), though this is also likely to fail\&.
+.sp
+To increase the likelihood of success, you may want to pre\-allocate a number of huge pages before initiating the firmware download:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+echo 20 > /proc/sys/vm/nr_hugepages
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+For more details, refer to: \m[blue]\fBhttps://www\&.kernel\&.org/doc/Documentation/vm/hugetlbpage\&.txt\fR\m[]
 .SH "OPTIONS"
 .PP
 \-f <firmware\-file>, \-\-fw=<firmware\-file>

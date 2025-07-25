@@ -2,12 +2,12 @@
 .\"     Title: nvme-set-feature
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/20/2025
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SET\-FEATURE" "1" "05/20/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-SET\-FEATURE" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -58,6 +58,324 @@ Sets the feature for the given nsid\&. This is optional and most features do not
 \-f <fid>, \-\-feature\-id=<fid>
 .RS 4
 The feature id to send with the command\&. Value provided should be in hex\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0x01 |
+\fIarbitration\fR
+T}:T{
+Arbitration
+T}
+T{
+0x02 |
+\fIpower\-mgmt\fR
+T}:T{
+Power Management
+T}
+T{
+0x03 |
+\fIlba\-range\fR
+T}:T{
+LBA Range Type
+T}
+T{
+0x04 |
+\fItemp\-thresh\fR
+T}:T{
+Temperature Threshold
+T}
+T{
+0x05 |
+\fIerr\-recovery\fR
+T}:T{
+Error Recovery
+T}
+T{
+0x06 |
+\fIvolatile\-wc\fR
+T}:T{
+Volatile Write Cache
+T}
+T{
+0x07 |
+\fInum\-queues\fR
+T}:T{
+Number of Queues
+T}
+T{
+0x08 |
+\fIirq\-coalesce\fR
+T}:T{
+Interrupt Coalescing
+T}
+T{
+0x09 |
+\fIirq\-config\fR
+T}:T{
+Interrupt Vector Configuration
+T}
+T{
+0x0a |
+\fIwrite\-atomic\fR
+T}:T{
+Write Atomicity Normal
+T}
+T{
+0x0b |
+\fIasync\-event\fR
+T}:T{
+Asynchronous Event Configuration
+T}
+T{
+0x0c |
+\fIauto\-pst\fR
+T}:T{
+Autonomous Power State Transition
+T}
+T{
+0x0d |
+\fIhost\-mem\-buf\fR
+T}:T{
+Host Memory Buffer
+T}
+T{
+0x0e |
+\fItimestamp\fR
+T}:T{
+Timestamp
+T}
+T{
+0x0f |
+\fIkato\fR
+T}:T{
+Keep Alive Timer
+T}
+T{
+0x10 |
+\fIhctm\fR
+T}:T{
+Host Controlled Thermal Management
+T}
+T{
+0x11 |
+\fInopsc\fR
+T}:T{
+Non\-Operational Power State Config
+T}
+T{
+0x12 |
+\fIrrl\fR
+T}:T{
+Read Recovery Level Config
+T}
+T{
+0x13 |
+\fIplm\-config\fR
+T}:T{
+Predictable Latency Mode Config
+T}
+T{
+0x14 |
+\fIplm\-window\fR
+T}:T{
+Predictable Latency Mode Window
+T}
+T{
+0x15 |
+\fIlba\-sts\-interval\fR
+T}:T{
+LBA Status Information Report Interval
+T}
+T{
+0x16 |
+\fIhost\-behavior\fR
+T}:T{
+Host Behavior Support
+T}
+T{
+0x17 |
+\fIsanitize\fR
+T}:T{
+Sanitize Config
+T}
+T{
+0x18 |
+\fIendurance\-evt\-cfg\fR
+T}:T{
+Endurance Group Event Configuration
+T}
+T{
+0x19 |
+\fIiocs\-profile\fR
+T}:T{
+I/O Command Set Profile
+T}
+T{
+0x1a |
+\fIspinup\-control\fR
+T}:T{
+Spinup Control
+T}
+T{
+0x1b |
+\fIpower\-loss\-signal\fR
+T}:T{
+Power Loss Signaling Config
+T}
+T{
+0x1c |
+\fIperf\-characteristics\fR
+T}:T{
+Performance Characteristics
+T}
+T{
+0x1d |
+\fIfdp\fR
+T}:T{
+Flexible Data Placement
+T}
+T{
+0x1e |
+\fIfdp\-events\fR
+T}:T{
+FDP Events
+T}
+T{
+0x1f |
+\fIns\-admin\-label\fR
+T}:T{
+Namespace Admin Label
+T}
+T{
+0x20 |
+\fIkey\-value\fR
+T}:T{
+Key Value Configuration
+T}
+T{
+0x21 |
+\fIctrl\-data\-queue\fR
+T}:T{
+Controller Data Queue
+T}
+T{
+0x78 |
+\fIemb\-mgmt\-ctrl\-addr\fR
+T}:T{
+Embedded Management Controller Address
+T}
+T{
+0x79 |
+\fIhost\-mgmt\-agent\-addr\fR
+T}:T{
+Host Management Agent Address
+T}
+T{
+0x7d |
+\fIenh\-ctrl\-metadata\fR
+T}:T{
+Enhanced Controller Metadata
+T}
+T{
+0x7e |
+\fIctrl\-metadata\fR
+T}:T{
+Controller Metadata
+T}
+T{
+0x7f |
+\fIns\-metadata\fR
+T}:T{
+Namespace Metadata
+T}
+T{
+0x80 |
+\fIsw\-progress\fR
+T}:T{
+Software Progress Marker
+T}
+T{
+0x81 |
+\fIhost\-id\fR
+T}:T{
+Host Identifier
+T}
+T{
+0x82 |
+\fIresv\-mask\fR
+T}:T{
+Reservation Notification Mask
+T}
+T{
+0x83 |
+\fIresv\-persist\fR
+T}:T{
+Reservation Persistence
+T}
+T{
+0x84 |
+\fIwrite\-protect\fR
+T}:T{
+Namespace Write Protection Config
+T}
+T{
+0x85 |
+\fIbp\-write\-protect\fR
+T}:T{
+Boot Partition Write Protection Config
+T}
+.TE
+.sp 1
 .RE
 .PP
 \-l <data\-len>, \-\-data\-len=<data\-len>

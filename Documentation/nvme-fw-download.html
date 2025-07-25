@@ -778,6 +778,19 @@ controller.</p></div>
 Download command. It is applied following a reset, where the image to
 apply and the firmware slot it should be committed to is specified with
 the Firmware Commit command (nvme fw-commit &lt;args&gt;).</p></div>
+<div class="paragraph"><p>Note: nvme-cli must allocate a contiguous (linear) memory buffer and map
+the firmware binary into it. To do this, nvme-cli first attempts to
+allocate the buffer using huge TLB pages. If allocation using huge pages
+fails, it falls back to using posix_memalign() combined with madvise(),
+though this is also likely to fail.</p></div>
+<div class="paragraph"><p>To increase the likelihood of success, you may want to pre-allocate a
+number of huge pages before initiating the firmware download:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>echo 20 &gt; /proc/sys/vm/nr_hugepages</code></pre>
+</div></div>
+<div class="paragraph"><p>For more details, refer to:
+<a href="https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt">https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt</a></p></div>
 </div>
 </div>
 <div class="sect1">
@@ -888,7 +901,7 @@ Transfer a firmware size 128KiB at a time:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-05-20 12:19:22 CEST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

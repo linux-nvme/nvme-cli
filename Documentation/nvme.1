@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/20/2025
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "05/20/2025" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -639,6 +639,11 @@ Display Sandisk plugin Cloud SSD Plugin Version
 Display Sandisk Cloud Boot SSD Version
 .RE
 .PP
+\fBnvme-sndk-cu-smart-log\fR(1)
+.RS 4
+Display Sandisk Customer Unique Smart log pagee
+.RE
+.PP
 \fBnvme-sndk-drive-resize\fR(1)
 .RS 4
 Send NVMe Sandisk Resize Vendor Unique Command
@@ -812,6 +817,11 @@ Clears the pcie correctable errors returned in the smart\-log\-add command
 \fBnvme-wdc-cloud-SSD-plugin-version\fR(1)
 .RS 4
 Display WDC plugin Cloud SSD Plugin Version
+.RE
+.PP
+\fBnvme-wdc-cu-smart-log\fR(1)
+.RS 4
+Display WDC plugin Customer Unique Log Page
 .RE
 .PP
 \fBnvme-wdc-drive-essentials\fR(1)
@@ -1082,6 +1092,11 @@ Unlock a SED Opal Device
 \fBnvme-sed-password\fR(1)
 .RS 4
 Change the SED Opal Device password
+.RE
+.PP
+\fBnvme-mangoboost-id-ctrl\fR(1)
+.RS 4
+MangoBoost \- NVMe Identify Controller
 .RE
 .SH "RETURNS"
 .sp

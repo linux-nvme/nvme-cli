@@ -1,0 +1,204 @@
+'\" t
+.\"     Title: nvme-mangoboost-id-ctrl
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-MANGOBOOST\-ID" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-mangoboost-id-ctrl \- Send NVMe Identify Controller, return result and structure
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme mangoboost id\-ctrl\fR <device> [\-\-vendor\-specific | \-V] [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, sends an identify controller command and provides the result and returned structure\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
+.sp
+If having the program decode the output for readability, this version will decode MangoBoost vendor unique portions of the structure\&.
+.SH "OPTIONS"
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+Print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the vendor specific and human readable options\&.
+.RE
+.PP
+\-V, \-\-vendor\-specific
+.RS 4
+In addition to parsing known fields, this option will dump the vendor specific region of the structure in hex with ascii interpretation\&.
+.RE
+.PP
+\-H, \-\-human\-readable
+.RS 4
+This option will parse and format many of the bit fields into human\-readable formats\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program interpret the returned buffer and display the known fields in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme mangoboost id\-ctrl /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+In addition to showing the known fields, has the program to display the vendor unique field:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme mangoboost id\-ctrl /dev/nvme0 \-\-vendor\-specific
+# nvme mangoboost id\-ctrl /dev/nvme0 \-V
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The above will dump the
+\fIvs\fR
+buffer in hex since it doesn\(cqt know how to interpret it\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Have the program return the raw structure in binary:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme mangoboost id\-ctrl /dev/nvme0 \-\-raw\-binary > id_ctrl\&.raw
+# nvme mangoboost id\-ctrl /dev/nvme0 \-b > id_ctrl\&.raw
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+It is probably a bad idea to not redirect stdout when using this mode\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Alternatively you may want to send the data to another program that can parse the raw buffer\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme mangoboost id\-ctrl /dev/nvme0 \-\-raw\-binary | nvme_parse_id_ctrl
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The parse program in the above example can be a program that shows the structure in a way you like\&. The following program is such an example that will parse it and can accept the output through a pipe,
+\*(Aq|\*(Aq, as shown in the above example, or you can
+\*(Aqcat\*(Aq
+a saved output buffer to it\&.
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/* File: nvme_parse_id_ctrl\&.c */
+
+#include <linux/nvme\&.h>
+#include <stdio\&.h>
+#include <unistd\&.h>
+
+int main(int argc, char **argv)
+{
+        unsigned char buf[sizeof(struct nvme_id_ctrl)];
+        struct nvme_id_ctrl *ctrl = (struct nvme_id_ctrl *)buf;
+
+        if (read(STDIN_FILENO, buf, sizeof(buf)))
+                return 1;
+
+        printf("vid   : %#x\en", ctrl\->vid);
+        printf("ssvid : %#x\en", ctrl\->ssvid);
+        return 0;
+}
+.fi
+.if n \{\
+.RE
+.\}
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
