@@ -1,4 +1,4 @@
-.TH "nvme_scan_topology" 9 "nvme_scan_topology" "May 2025" "libnvme API manual" LINUX
+.TH "nvme_scan_topology" 9 "nvme_scan_topology" "July 2025" "libnvme API manual" LINUX
 .SH NAME
 nvme_scan_topology \- Scan NVMe topology and apply filter
 .SH SYNOPSIS
@@ -17,4 +17,4 @@ user-specified argument to \fIf\fP
 Scans the NVMe topology and filters out the resulting elements
 by applying \fIf\fP.
 .SH "RETURN"
-Number of elements scanned
+0 on success, -1 on failure with errno set.

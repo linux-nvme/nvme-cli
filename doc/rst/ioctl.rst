@@ -2148,7 +2148,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_endurance_grp_evt (int fd, bool rae, __u32 offset, __u32 len, void *log)
 
-   Retrieve Rotational Media Information
+   Retrieve Endurance Group Event Aggregate
 
 **Parameters**
 

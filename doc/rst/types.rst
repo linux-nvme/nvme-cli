@@ -201,6 +201,9 @@ The mask value shifted
   Max number of zones in the changed zones log
   page
 
+``NVME_STREAM_ID_MAX``
+  Max number of stream IDs
+
 
 
 
@@ -5419,6 +5422,66 @@ Supported Log Pages (Log Identifier 00h)
    Critical Warning
 
 **Constants**
+
+``NVME_SMART_CW_ASCBT_SHIFT``
+  Shift amount to get the available spare capacity has fallen
+  below the threshold.
+
+``NVME_SMART_CW_TTC_SHIFT``
+  Shift amount to get the temperature is either greater
+  than or equal to an over temperature threshold; or
+  less than or equal to an under temperature threshold.
+
+``NVME_SMART_CW_NDR_SHIFT``
+  Shift amount to get the NVM subsystem reliability has
+  been degraded due to significant media related errors
+  or any internal error that degrades NVM subsystem
+  reliability.
+
+``NVME_SMART_CW_AMRO_SHIFT``
+  Shift amount to get the all of the media has been placed in read
+  only mode. The controller shall not set this bit if
+  the read-only condition on the media is a result of
+  a change in the write protection state of a namespace.
+
+``NVME_SMART_CW_VMBF_SHIFT``
+  Shift amount to get the  volatile memory backup
+  device has failed. This field is only valid if the
+  controller has a volatile memory backup solution.
+
+``NVME_SMART_CW_PMRRO_SHIFT``
+  Shift amount to get the Persistent Memory Region has become
+  read-only or unreliable.
+
+``NVME_SMART_CW_ASCBT_MASK``
+  If set, then the available spare capacity has fallen
+  below the threshold.
+
+``NVME_SMART_CW_TTC_MASK``
+  Mask to get the temperature is either greater
+  than or equal to an over temperature threshold; or
+  less than or equal to an under temperature threshold.
+
+``NVME_SMART_CW_NDR_MASK``
+  Mask to get the NVM subsystem reliability has
+  been degraded due to significant media related errors
+  or any internal error that degrades NVM subsystem
+  reliability.
+
+``NVME_SMART_CW_AMRO_MASK``
+  Mask to get the all of the media has been placed in read
+  only mode. The controller shall not set this bit if
+  the read-only condition on the media is a result of
+  a change in the write protection state of a namespace.
+
+``NVME_SMART_CW_VMBF_MASK``
+  Mask to get the volatile memory backup
+  device has failed. This field is only valid if the
+  controller has a volatile memory backup solution.
+
+``NVME_SMART_CW_PMRRO_MASK``
+  Mask to get the Persistent Memory Region has become
+  read-only or unreliable.
 
 ``NVME_SMART_CRIT_SPARE``
   If set, then the available spare capacity has fallen
@@ -15706,6 +15769,12 @@ true if **status** is of the specified type and value
 
 ``NVME_LM_QT_MASK``
   Mask to set QT field relative to MOS
+
+``NVME_LM_CQS_SHIFT``
+  Shift amount for Create Queue Specific (CQS) field
+
+``NVME_LM_CQS_MASK``
+  Mask to set CQS field
 
 ``NVME_LM_QT_USER_DATA_MIGRATION_QUEUE``
   User Data Migration Queue type

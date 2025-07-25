@@ -3948,6 +3948,48 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: int nvme_mi_admin_get_features_arbitration (nvme_mi_ctrl_t ctrl, enum nvme_get_features_sel sel, __u32 *result)
+
+   Get arbitration feature
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``enum nvme_get_features_sel sel``
+  Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 *result``
+  The feature data is returned in this argument
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_get_features_power_mgmt (nvme_mi_ctrl_t ctrl, enum nvme_get_features_sel sel, __u32 *result)
+
+   Get power management feature
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``enum nvme_get_features_sel sel``
+  Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
+
+``__u32 *result``
+  The feature data is returned in this argument
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_mi_admin_get_features_data (nvme_mi_ctrl_t ctrl, enum nvme_features_id fid, __u32 nsid, __u32 data_len, void *data, __u32 *result)
 
    Helper function for :c:type:`nvme_mi_admin_get_features`()
@@ -4024,6 +4066,33 @@ feature-specific information.
 
 On success, **args->data_len** will be updated with the actual data length
 received.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_mi_admin_set_features_power_mgmt (nvme_mi_ctrl_t ctrl, __u8 ps, __u8 wh, bool save, __u32 *result)
+
+   Set power management feature
+
+**Parameters**
+
+``nvme_mi_ctrl_t ctrl``
+  Controller to send command to
+
+``__u8 ps``
+  Power State
+
+``__u8 wh``
+  Workload Hint
+
+``bool save``
+  Save value across power states
+
+``__u32 *result``
+  The feature data is returned in this argument
 
 **Return**
 

@@ -140,3 +140,20 @@ number of entries in **paths**
 number of entries in **ns**
 
 
+.. c:function:: int nvme_scan_ns_head_paths (nvme_ns_head_t head, struct dirent ***paths)
+
+   Scan for namespace paths
+
+**Parameters**
+
+``nvme_ns_head_t head``
+  Namespace head node to scan
+
+``struct dirent ***paths``
+  Pointer to array of dirents
+
+**Return**
+
+number of entries in **ents**
+
+

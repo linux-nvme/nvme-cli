@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_lm_cdq_fields" "May 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_lm_cdq_fields" "July 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_lm_cdq_fields \- Controller Data Queue command fields
 .SH SYNOPSIS
@@ -33,6 +33,14 @@ enum nvme_lm_cdq_fields {
 .br
 .br
 .BI "    NVME_LM_QT_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_CQS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_CQS_MASK"
 , 
 .br
 .br
@@ -84,6 +92,10 @@ Delete CDQ select option
 Shift amount to set Queue Type (QT) field relative to MOS
 .IP "NVME_LM_QT_MASK" 12
 Mask to set QT field relative to MOS
+.IP "NVME_LM_CQS_SHIFT" 12
+Shift amount for Create Queue Specific (CQS) field
+.IP "NVME_LM_CQS_MASK" 12
+Mask to set CQS field
 .IP "NVME_LM_QT_USER_DATA_MIGRATION_QUEUE" 12
 User Data Migration Queue type
 .IP "NVME_LM_CREATE_CDQ_PC" 12

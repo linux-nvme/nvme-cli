@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_constants" "May 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_constants" "July 2025" "API Manual" LINUX
 .SH NAME
 enum nvme_constants \- A place to stash various constant nvme values
 .SH SYNOPSIS
@@ -117,6 +117,10 @@ enum nvme_constants {
 .br
 .br
 .BI "    NVME_ZNS_CHANGED_ZONES_MAX"
+, 
+.br
+.br
+.BI "    NVME_STREAM_ID_MAX"
 
 };
 .SH Constants
@@ -197,3 +201,5 @@ Max Transport Specific Address Subtype size
 .IP "NVME_ZNS_CHANGED_ZONES_MAX" 12
 Max number of zones in the changed zones log
 page
+.IP "NVME_STREAM_ID_MAX" 12
+Max number of stream IDs
