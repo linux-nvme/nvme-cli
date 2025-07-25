@@ -35,6 +35,28 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf);
 
 /**
+ * nvme_set_etdas() - Set the Extended Telemetry Data Area 4 Supported bit
+ * @fd:		File descriptor of nvme device
+ * @changed:	boolean to indicate whether or not the host
+ *		behavior support feature had been changed
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_set_etdas(int fd, bool *changed);
+
+/**
+ * nvme_clear_etdas() - Clear the Extended Telemetry Data Area 4 Supported bit
+ * @fd:		File descriptor of nvme device
+ * @changed:	boolean to indicate whether or not the host
+ *		behavior support feature had been changed
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_clear_etdas(int fd, bool *changed);
+
+/**
  * nvme_get_telemetry_max() - Get telemetry limits
  * @fd:		File descriptor of nvme device
  * @da:		On success return max supported data area

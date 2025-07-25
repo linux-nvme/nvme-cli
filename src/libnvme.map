@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_UNRELEASED {
+	global:
+		nvme_set_etdas;
+		nvme_clear_etdas;
 };
 
 LIBNVME_1_14 {

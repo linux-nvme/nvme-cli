@@ -121,6 +121,53 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 	return err;
 }
 
+int nvme_set_etdas(int fd, bool *changed)
+{
+	struct nvme_feat_host_behavior da4;
+	int err;
+
+	err = nvme_get_features_host_behavior(fd, 0, &da4, NULL);
+	if (err)
+		return err;
+
+	if (da4.etdas) {
+		*changed = false;
+		return 0;
+	}
+
+	da4.etdas = 1;
+
+	err = nvme_set_features_host_behavior(fd, 0, &da4);
+	if (err)
+		return err;
+
+	*changed = true;
+	return 0;
+}
+
+int nvme_clear_etdas(int fd, bool *changed)
+{
+	struct nvme_feat_host_behavior da4;
+	int err;
+
+	err = nvme_get_features_host_behavior(fd, 0, &da4, NULL);
+	if (err)
+		return err;
+
+	if (!da4.etdas) {
+		*changed = false;
+		return 0;
+	}
+
+	da4.etdas = 0;
+	err = nvme_set_features_host_behavior(fd, 0, &da4);
+	if (err)
+		return err;
+
+	*changed = true;
+	return 0;
+}
+
 int nvme_get_telemetry_max(int fd, enum nvme_telemetry_da *da, size_t *data_tx)
 {
 	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
