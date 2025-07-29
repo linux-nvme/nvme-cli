@@ -13,6 +13,7 @@ usage() {
     echo " -c [gcc]|clang       compiler to use"
     echo " -m [meson]|muon      use meson or muon"
     echo " -t [arm]|ppc64le|s390x  cross compile target"
+    echo " -x                   run test with valgrind"
     echo ""
     echo "configs with meson:"
     echo "  [default]           default settings"
@@ -35,7 +36,9 @@ BUILDTYPE=release
 CROSS_TARGET=arm
 CC=${CC:-"gcc"}
 
-while getopts "b:c:m:t:" o; do
+use_valgrind=0
+
+while getopts "b:c:m:t:x" o; do
     case "${o}" in
         b)
             BUILDTYPE="${OPTARG}"
@@ -48,6 +51,9 @@ while getopts "b:c:m:t:" o; do
             ;;
         t)
             CROSS_TARGET="${OPTARG}"
+            ;;
+        x)
+            use_valgrind=1
             ;;
         *)
             usage
@@ -144,8 +150,17 @@ build_meson() {
 }
 
 test_meson() {
-    "${MESON}" test                             \
-        -C "${BUILDDIR}"
+    local args=(-C "${BUILDDIR}")
+
+    if [ "${use_valgrind:-0}" -eq 1 ]; then
+        if command -v valgrind >/dev/null 2>&1; then
+            args+=(--wrapper valgrind)
+        else
+            echo "Warning: valgrind requested but not found; running without it." >&2
+        fi
+    fi
+
+    "${MESON}" test "${args[@]}"
 }
 
 test_meson_coverage() {
