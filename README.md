@@ -329,7 +329,7 @@ sees the complete file.
 
 ## Testing
 
-For testing purposes a x86_64 AppImage is build from the current HEAD and is
+For testing purposes a x86_64 static build from the current HEAD and is
 available here:
 
-https://monom.org/linux-nvme/upload/AppImage/nvme-cli-latest-x86_64.AppImage
+https://monom.org/linux-nvme/upload/nvme-cli-latest-x86_64

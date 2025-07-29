@@ -71,6 +71,7 @@ static:
 	meson setup ${BUILD-DIR} --buildtype=release \
 		--wrap-mode=forcefallback \
 		--default-library=static \
+		--prefix=/usr \
 		-Dc_link_args="-static" \
 		-Dlibnvme:default_library=static \
 		-Dlibnvme:keyutils=disabled \
