@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: build
         run: |
-          scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }}
+          scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
       - uses: actions/upload-artifact@v4
         name: upload logs
         if: failure()
