@@ -56,8 +56,9 @@ void hexdump(const unsigned char *buf, int len)
 
 int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 {
-	struct nvme_get_log_args args = { 0 };
 	struct nvme_transport_handle *hdl;
+	enum nvme_cmd_get_log_lid lid;
+	struct nvme_passthru_cmd cmd;
 	uint8_t buf[4096];
 	uint16_t ctrl_id;
 	int rc, tmp;
@@ -75,15 +76,11 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 
 	ctrl_id = tmp & 0xffff;
 
-	args.args_size = sizeof(args);
-	args.log = buf;
-	args.len = sizeof(buf);
-
 	if (argc > 2) {
 		tmp = atoi(argv[2]);
-		args.lid = tmp & 0xff;
+		lid = tmp & 0xff;
 	} else {
-		args.lid = 0x1;
+		lid = 0x1;
 	}
 
 	hdl = nvme_mi_init_transport_handle(ep, ctrl_id);
@@ -92,14 +89,16 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 		return -1;
 	}
 
-	rc = nvme_get_log(hdl, &args);
+	nvme_init_get_log(&cmd, NVME_NSID_NONE, lid, NVME_CSI_NVM,
+			  buf, sizeof(buf));
+	rc = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (rc) {
 		warn("can't perform Get Log page command");
 		return -1;
 	}
 
-	printf("Get log page (log id = 0x%02x) data:\n", args.lid);
-	hexdump(buf, args.len);
+	printf("Get log page (log id = 0x%02x) data:\n", lid);
+	hexdump(buf, sizeof(buf));
 
 	return 0;
 }

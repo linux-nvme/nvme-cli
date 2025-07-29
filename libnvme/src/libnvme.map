@@ -140,7 +140,6 @@ LIBNVME_2_0 {
 		nvme_get_host_telemetry;
 		nvme_get_lba_status;
 		nvme_get_log;
-		nvme_get_log_page;
 		nvme_get_logging_level;
 		nvme_get_logical_block_size;
 		nvme_get_new_host_telemetry;

@@ -74,7 +74,8 @@ static int test_ctrl(nvme_ctrl_t c)
 		printf("PASSED: Identify controller\n");
 	}
 
-	ret = nvme_get_log_smart(hdl, NVME_NSID_ALL, true, &smart);
+	nvme_init_get_log_smart(&cmd, NVME_NSID_ALL, &smart);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (ret) {
 		printf("ERROR: no smart log for:%s %#x\n", nvme_ctrl_get_name(c), ret);
 		return ret;
@@ -145,52 +146,62 @@ static int test_ctrl(nvme_ctrl_t c)
 	printf("\nLogs\n");
 	printf("  SMART: Current temperature:%d percent used:%d%%\n", temp,
 		smart.percent_used);
-	ret = nvme_get_log_sanitize(hdl, true, &sanlog);
+	nvme_init_get_log_sanitize(&cmd, &sanlog);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  Sanitize Log:\n");
 	else
 		printf("  ERROR: Sanitize Log:%x\n", ret);
-	ret = nvme_get_log_reservation(hdl, true, &resvnotify);
+	nvme_init_get_log_reservation(&cmd, &resvnotify);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  Reservation Log\n");
 	else
 		printf("  ERROR: Reservation Log:%x\n", ret);
-	ret = nvme_get_log_ana_groups(hdl, true, sizeof(buf), analog);
+	nvme_init_get_log_ana_groups(&cmd, analog, sizeof(buf));
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  ANA Groups\n");
 	else
 		printf("  ERROR: ANA Groups:%x\n", ret);
-	ret = nvme_get_log_endurance_group(hdl, 0, &eglog);
+	nvme_init_get_log_endurance_group(&cmd, 0, &eglog);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  Endurance Group\n");
 	else
 		printf("  ERROR: Endurance Group:%x\n", ret);
-	ret = nvme_get_log_telemetry_ctrl(hdl, true, 0, sizeof(buf), telem);
+	nvme_init_get_log_telemetry_ctrl(&cmd, 0, telem, sizeof(buf));
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  Telemetry Controller\n");
 	else
 		printf("  ERROR: Telemetry Controller:%x\n", ret);
-	ret = nvme_get_log_device_self_test(hdl, &st);
+	nvme_init_get_log_device_self_test(&cmd, &st);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  Device Self Test\n");
 	else
 		printf("  ERROR: Device Self Test:%x\n", ret);
-	ret = nvme_get_log_cmd_effects(hdl, NVME_CSI_NVM, &cfx);
+	nvme_init_get_log_cmd_effects(&cmd, NVME_CSI_NVM, &cfx);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  Command Effects\n");
 	else
 		printf("  ERROR: Command Effects:%x\n", ret);
-	ret = nvme_get_log_changed_ns_list(hdl, true, &ns_list);
+	nvme_init_get_log_changed_alloc_ns(&cmd, &ns_list, sizeof(ns_list));
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  Change NS List\n");
 	else
 		printf("  ERROR: Change NS List:%x\n", ret);
-	ret = nvme_get_log_fw_slot(hdl, true, &fw);
+	nvme_init_get_log_fw_slot(&cmd, &fw);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  FW Slot\n");
 	else
 		printf("  ERROR: FW Slot%x\n", ret);
-	ret = nvme_get_log_error(hdl, 64, true, error);
+	nvme_init_get_log_error(&cmd, 64, error);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!ret)
 		printf("  Error Log\n");
 	else

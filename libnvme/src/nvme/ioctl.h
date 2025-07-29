@@ -1149,637 +1149,992 @@ nvme_init_zns_identify_ctrl(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_get_log() - NVMe Admin Get Log command
+ * nvme_get_log() - Get log page data
  * @hdl:	Transport handle
- * @args:	&struct nvme_get_log_args argument structure
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_get_log(struct nvme_transport_handle *hdl, struct nvme_get_log_args *args);
-
-/**
- * nvme_get_log_page() - Get log page data
- * @hdl:	Transport handle
- * @xfer_len:	Max log transfer size per request to split the total.
- * @args:	&struct nvme_get_log_args argument structure
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_get_log_page(struct nvme_transport_handle *hdl, __u32 xfer_len, struct nvme_get_log_args *args);
-
-static inline int nvme_get_nsid_log(struct nvme_transport_handle *hdl, bool rae,
-			enum nvme_cmd_get_log_lid lid,
-			__u32 nsid, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = lid,
-		.len = len,
-		.nsid = nsid,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-static inline int nvme_get_endgid_log(struct nvme_transport_handle *hdl, bool rae, enum nvme_cmd_get_log_lid lid,
-				      __u16 endgid, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = lid,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = endgid,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_LOG_LSP_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-
-	return nvme_get_log_page(hdl,NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-static inline int nvme_get_log_simple(struct nvme_transport_handle *hdl, enum nvme_cmd_get_log_lid lid,
-				      __u32 len, void *log)
-{
-	return nvme_get_nsid_log(hdl, false, lid, NVME_NSID_ALL, len, log);
-}
-
-/**
- * nvme_get_log_supported_log_pages() - Retrieve nmve supported log pages
- * @hdl:	Transport handle
+ * @cmd:	Passthru command
  * @rae:	Retain asynchronous events
+ * @xfer_len:	Max log transfer size per request to split the total.
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
+ */
+int nvme_get_log(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, bool rae,
+		 __u32 xfer_len, __u32 *result);
+
+/**
+ * nvme_init_get_log() - Initialize passthru command for
+ * NVMe Admin Get Log
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier, if applicable
+ * @lid:	Log Page Identifier, see &enum nvme_cmd_get_log_lid
+ * @csi:	Command set identifier, see &enum nvme_csi for known values
+ * @data:	User space destination address to transfer the data
+ * @len:	Length of provided user buffer to hold the log data in bytes
+ */
+static inline void
+nvme_init_get_log(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_cmd_get_log_lid lid, enum nvme_csi csi,
+		void *data, __u32 len)
+{
+	__u32 numd = (len >> 2) - 1;
+	__u16 numdu = numd >> 16;
+	__u16 numdl = numd & 0xffff;
+	__u32 cdw10 = NVME_FIELD_ENCODE(lid,
+					NVME_LOG_CDW10_LID_SHIFT,
+					NVME_LOG_CDW10_LID_MASK) |
+		      NVME_FIELD_ENCODE(numdl,
+					NVME_LOG_CDW10_NUMDL_SHIFT,
+					NVME_LOG_CDW10_NUMDL_MASK);
+	__u32 cdw11 = NVME_FIELD_ENCODE(numdu,
+					NVME_LOG_CDW11_NUMDU_SHIFT,
+					NVME_LOG_CDW11_NUMDU_MASK);
+	__u32 cdw14 = NVME_FIELD_ENCODE(csi,
+					NVME_LOG_CDW14_CSI_SHIFT,
+					NVME_LOG_CDW14_CSI_MASK);
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode	= nvme_admin_get_log_page;
+	cmd->nsid	= nsid;
+	cmd->cdw10	= cdw10;
+	cmd->cdw11	= cdw11;
+	cmd->cdw14	= cdw14;
+	cmd->data_len	= len;
+	cmd->addr	= (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_get_log_supported_log_pages() -  Initialize passthru command for
+ * Supported Log Pages
+ * @cmd:	Passthru command to use
+ * @csi:	Command set identifier, see &enum nvme_csi for known values
  * @log:	Array of LID supported and Effects data structures
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_SUPPORTED_LOG_PAGES.
  */
-static inline int nvme_get_log_supported_log_pages(struct nvme_transport_handle *hdl, bool rae,
-			struct nvme_supported_log_pages *log)
+static inline void
+nvme_init_get_log_supported_log_pages(struct nvme_passthru_cmd *cmd,
+		enum nvme_csi csi, struct nvme_supported_log_pages *log)
 {
-	return nvme_get_nsid_log(hdl,rae, NVME_LOG_LID_SUPPORTED_LOG_PAGES,
-				 NVME_NSID_ALL, sizeof(*log), log);
+	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_SUPPORTED_LOG_PAGES,
+		csi, log, sizeof(*log));
 }
 
 /**
- * nvme_get_log_error() - Retrieve nvme error log
- * @hdl:	Transport handle
+ * nvme_init_get_log_error() - Initialize passthru command for Error Information
+ * @cmd:	Passthru command to use
  * @nr_entries:	Number of error log entries allocated
- * @rae:	Retain asynchronous events
  * @err_log:	Array of error logs of size 'entries'
  *
- * This log page describes extended error information for a command that
- * completed with error, or may report an error that is not specific to a
- * particular command.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_ERROR.
  */
-static inline int nvme_get_log_error(struct nvme_transport_handle *hdl, unsigned int nr_entries, bool rae,
-				     struct nvme_error_log_page *err_log)
+static inline void
+nvme_init_get_log_error(struct nvme_passthru_cmd *cmd, unsigned int nr_entries,
+		struct nvme_error_log_page *err_log)
 {
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_ERROR,
-				 NVME_NSID_ALL, sizeof(*err_log) * nr_entries,
-				 err_log);
+	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_ERROR,
+		NVME_CSI_NVM, err_log, sizeof(*err_log) * nr_entries);
 }
 
 /**
- * nvme_get_log_smart() - Retrieve nvme smart log
- * @hdl:	Transport handle
+ * nvme_init_get_log_smart() - Initialize passthru command for
+ * SMART / Health Information
+ * @cmd:	Passthru command to use
  * @nsid:	Optional namespace identifier
- * @rae:	Retain asynchronous events
  * @smart_log:	User address to store the smart log
  *
- * This log page provides SMART and general health information. The information
- * provided is over the life of the controller and is retained across power
- * cycles. To request the controller log page, the namespace identifier
- * specified is FFFFFFFFh. The controller may also support requesting the log
- * page on a per namespace basis, as indicated by bit 0 of the LPA field in the
- * Identify Controller data structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_SMART.
  */
-static inline int nvme_get_log_smart(struct nvme_transport_handle *hdl, __u32 nsid, bool rae,
-				     struct nvme_smart_log *smart_log)
+static inline void
+nvme_init_get_log_smart(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		struct nvme_smart_log *smart_log)
 {
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_SMART,
-				 nsid, sizeof(*smart_log), smart_log);
+	nvme_init_get_log(cmd, nsid, NVME_LOG_LID_SMART, NVME_CSI_NVM,
+		smart_log, sizeof(*smart_log));
 }
 
 /**
- * nvme_get_log_fw_slot() - Retrieves the controller firmware log
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
+ * nvme_init_get_log_fw_slot() - Initialize passthru command for
+ * Firmware Slot Information
+ * @cmd:	Passthru command to use
  * @fw_log:	User address to store the log page
  *
- * This log page describes the firmware revision stored in each firmware slot
- * supported. The firmware revision is indicated as an ASCII string. The log
- * page also indicates the active slot number.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_SMART.
  */
-static inline int nvme_get_log_fw_slot(struct nvme_transport_handle *hdl, bool rae,
-			struct nvme_firmware_slot *fw_log)
+static inline void
+nvme_init_get_log_fw_slot(struct nvme_passthru_cmd *cmd,
+		struct nvme_firmware_slot *fw_log)
 {
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_FW_SLOT,
-				 NVME_NSID_ALL, sizeof(*fw_log), fw_log);
+	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_FW_SLOT,
+		NVME_CSI_NVM, fw_log, sizeof(*fw_log));
 }
 
 /**
- * nvme_get_log_changed_ns_list() - Retrieve namespace changed list
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
+ * nvme_init_get_log_changed_ns() - Initialize passthru command for
+ * Changed Attached Namespace List
+ * @cmd:	Passthru command to use
  * @ns_log:	User address to store the log page
  *
- * This log page describes namespaces attached to this controller that have
- * changed since the last time the namespace was identified, been added, or
- * deleted.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_CHANGED_NS.
  */
-static inline int nvme_get_log_changed_ns_list(struct nvme_transport_handle *hdl, bool rae,
+static inline void
+nvme_init_get_log_changed_ns(struct nvme_passthru_cmd *cmd,
 			struct nvme_ns_list *ns_log)
 {
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_CHANGED_NS,
-				 NVME_NSID_ALL, sizeof(*ns_log), ns_log);
+	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_CHANGED_NS,
+		NVME_CSI_NVM, ns_log, sizeof(*ns_log));
 }
 
+
 /**
- * nvme_get_log_cmd_effects() - Retrieve nvme command effects log
- * @hdl:	Transport handle
+ * nvme_init_get_log_cmd_effects() - Initialize passthru command for
+ * Commands Supported and Effects
+ * @cmd:	Passthru command to use
  * @csi:	Command Set Identifier
  * @effects_log:User address to store the effects log
  *
- * This log page describes the commands that the controller supports and the
- * effects of those commands on the state of the NVM subsystem.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_CMD_EFFECTS.
  */
-static inline int nvme_get_log_cmd_effects(struct nvme_transport_handle *hdl, enum nvme_csi csi,
-			struct nvme_cmd_effects_log *effects_log)
+static inline void
+nvme_init_get_log_cmd_effects(struct nvme_passthru_cmd *cmd,
+		enum nvme_csi csi, struct nvme_cmd_effects_log *effects_log)
 {
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = effects_log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_CMD_EFFECTS,
-		.len = sizeof(*effects_log),
-		.nsid = NVME_NSID_ALL,
-		.csi = csi,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_CMD_EFFECTS, csi,
+		 effects_log, sizeof(*effects_log));
 }
 
 /**
- * nvme_get_log_device_self_test() - Retrieve the device self test log
- * @hdl:	Transport handle
+ * nvme_init_get_log_device_self_test() - Initialize passthru command for
+ * Device Self-test
+ * @cmd:	Passthru command to use
  * @log:	Userspace address of the log payload
  *
- * The log page indicates the status of an in progress self test and the
- * percent complete of that operation, and the results of the previous 20
- * self-test operations.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_DEVICE_SELF_TEST.
  */
-static inline int nvme_get_log_device_self_test(struct nvme_transport_handle *hdl,
-			struct nvme_self_test_log *log)
+static inline void
+nvme_init_get_log_device_self_test(struct nvme_passthru_cmd *cmd,
+		struct nvme_self_test_log *log)
 {
-	return nvme_get_nsid_log(hdl, false, NVME_LOG_LID_DEVICE_SELF_TEST,
-				 NVME_NSID_ALL, sizeof(*log), log);
+	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_DEVICE_SELF_TEST,
+		NVME_CSI_NVM, log, sizeof(*log));
 }
 
 /**
- * nvme_get_log_create_telemetry_host_mcda() - Create host telemetry log
- * @hdl:	Transport handle
+ * nvme_init_get_log_telemetry_host() - Initialize passthru command for
+ * Telemetry Host-Initiated
+ * @cmd:	Passthru command to use
+ * @lpo:	Offset into the telemetry data
+ * @log:	User address for log page data
+ * @len:	Length of provided user buffer to hold the log data in bytes
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_TELEMETRY_HOST.
+ */
+static inline void
+nvme_init_get_log_telemetry_host(struct nvme_passthru_cmd *cmd, __u64 lpo,
+		void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_TELEMETRY_HOST,
+		NVME_CSI_NVM, log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE(NVME_LOG_TELEM_HOST_LSP_RETAIN,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+/**
+ * nvme_init_get_log_create_telemetry_host_mcda() - Initialize passthru
+ * command for Create Telemetry Host-Initiated
+ * @cmd:	Passthru command to use
  * @mcda:	Maximum Created Data Area
  * @log:	Userspace address of the log payload
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_TELEMETRY_HOST and
+ * LSP value %NVME_LOG_TELEM_HOST_LSP_CREATE.
  */
-static inline int nvme_get_log_create_telemetry_host_mcda(struct nvme_transport_handle *hdl,
-			enum nvme_telemetry_da mcda,
-			struct nvme_telemetry_log *log)
+static inline void
+nvme_init_get_log_create_telemetry_host_mcda(struct nvme_passthru_cmd *cmd,
+		enum nvme_telemetry_da mcda, struct nvme_telemetry_log *log)
 {
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_TELEMETRY_HOST,
-		.len = sizeof(*log),
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = (__u8)((mcda << 1) | NVME_LOG_TELEM_HOST_LSP_CREATE),
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_TELEMETRY_HOST,
+		NVME_CSI_NVM, log, sizeof(*log));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(
+			mcda << 1 | NVME_LOG_TELEM_HOST_LSP_CREATE,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
 }
 
 /**
- * nvme_get_log_create_telemetry_host() - Create host telemetry log
- * @hdl:	Transport handle
+ * nvme_init_get_log_create_telemetry_host() - Initialize passthru command for
+ * Create Telemetry Host-Initiated
+ * @cmd:	Passthru command to use
  * @log:	Userspace address of the log payload
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_TELEMETRY_HOST and
+ * LSP value %NVME_LOG_TELEM_HOST_LSP_CREATE.
  */
-static inline int nvme_get_log_create_telemetry_host(struct nvme_transport_handle *hdl,
+static inline void
+nvme_init_get_log_create_telemetry_host(struct nvme_passthru_cmd *cmd,
 			struct nvme_telemetry_log *log)
 {
-	return nvme_get_log_create_telemetry_host_mcda(hdl, NVME_TELEMETRY_DA_CTRL_DETERMINE, log);
+	nvme_init_get_log_create_telemetry_host_mcda(cmd,
+		NVME_TELEMETRY_DA_CTRL_DETERMINE, log);
 }
 
 /**
- * nvme_get_log_telemetry_host() - Get Telemetry Host-Initiated log page
- * @hdl:	Transport handle
- * @offset:	Offset into the telemetry data
- * @len:	Length of provided user buffer to hold the log data in bytes
+ * nvme_init_get_log_telemetry_ctrl() - Initialize passthru command for
+ * Telemetry Controller-Initiated
+ * @cmd:	Passthru command to use
+ * @lpo:	Offset into the telemetry data
  * @log:	User address for log page data
- *
- * Retrieves the Telemetry Host-Initiated log page at the requested offset
- * using the previously existing capture.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_telemetry_host(struct nvme_transport_handle *hdl, __u64 offset,
-			__u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_TELEMETRY_HOST,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_TELEM_HOST_LSP_RETAIN,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_telemetry_ctrl() - Get Telemetry Controller-Initiated log page
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @offset:	Offset into the telemetry data
  * @len:	Length of provided user buffer to hold the log data in bytes
- * @log:	User address for log page data
  *
- * Retrieves the Telemetry Controller-Initiated log page at the requested offset
- * using the previously existing capture.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_TELEMETRY_CTRL.
  */
-static inline int nvme_get_log_telemetry_ctrl(struct nvme_transport_handle *hdl, bool rae,
-			__u64 offset, __u32 len, void *log)
+static inline void
+nvme_init_get_log_telemetry_ctrl(struct nvme_passthru_cmd *cmd,
+		__u64 lpo, void *log, __u32 len)
 {
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_TELEMETRY_CTRL,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_TELEMETRY_CTRL,
+		NVME_CSI_NVM, log, len);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
 }
 
 /**
- * nvme_get_log_endurance_group() - Get Endurance Group log
- * @hdl:	Transport handle
+ * nvme_init_get_log_endurance_group() - Initialize passthru command for
+ * Endurance Group Information
+ * @cmd:	Passthru command to use
  * @endgid:	Starting group identifier to return in the list
  * @log:	User address to store the endurance log
  *
- * This log page indicates if an Endurance Group Event has occurred for a
- * particular Endurance Group. If an Endurance Group Event has occurred, the
- * details of the particular event are included in the Endurance Group
- * Information log page for that Endurance Group. An asynchronous event is
- * generated when an entry for an Endurance Group is newly added to this log
- * page.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_ENDURANCE_GROUP.
  */
-static inline int nvme_get_log_endurance_group(struct nvme_transport_handle *hdl, __u16 endgid,
-			struct nvme_endurance_group_log *log)
+static inline void
+nvme_init_get_log_endurance_group(struct nvme_passthru_cmd *cmd, __u16 endgid,
+		struct nvme_endurance_group_log *log)
 {
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_ENDURANCE_GROUP,
-		.len = sizeof(*log),
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = endgid,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_ENDURANCE_GROUP,
+		NVME_CSI_NVM, log, sizeof(*log));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(endgid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
 }
 
 /**
- * nvme_get_log_predictable_lat_nvmset() - Predictable Latency Per NVM Set
- * @hdl:	Transport handle
+ * nvme_init_get_log_predictable_lat_nvmset() - Initialize passthru command for
+ * Predictable Latency Per NVM Set
+ * @cmd:	Passthru command to use
  * @nvmsetid:	NVM set id
  * @log:	User address to store the predictable latency log
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_PREDICTABLE_LAT_NVMSET.
  */
-static inline int nvme_get_log_predictable_lat_nvmset(struct nvme_transport_handle *hdl, __u16 nvmsetid,
-			struct nvme_nvmset_predictable_lat_log *log)
+static inline void
+nvme_init_get_log_predictable_lat_nvmset(struct nvme_passthru_cmd *cmd,
+		__u16 nvmsetid, struct nvme_nvmset_predictable_lat_log *log)
 {
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_PREDICTABLE_LAT_NVMSET,
-		.len = sizeof(*log),
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = nvmsetid,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_PREDICTABLE_LAT_NVMSET, NVME_CSI_NVM,
+		log, sizeof(*log));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(nvmsetid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
 }
 
 /**
- * nvme_get_log_predictable_lat_event() - Retrieve Predictable Latency Event Aggregate Log Page
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @offset:	Offset into the predictable latency event
- * @len:	Length of provided user buffer to hold the log data in bytes
+ * nvme_init_get_log_predictable_lat_event() - Initialize passthru command for
+ * Predictable Latency Event Aggregate
+ * @cmd:	Passthru command to use
+ * @lpo:	Offset into the predictable latency event
  * @log:	User address for log page data
+ * @len:	Length of provided user buffer to hold the log data in bytes
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_PREDICTABLE_LAT_AGG.
  */
-static inline int nvme_get_log_predictable_lat_event(struct nvme_transport_handle *hdl, bool rae,
-			__u32 offset, __u32 len, void *log)
+static inline void
+nvme_init_get_log_predictable_lat_event(struct nvme_passthru_cmd *cmd,
+		__u64 lpo, void *log, __u32 len)
 {
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_PREDICTABLE_LAT_AGG,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_PREDICTABLE_LAT_AGG, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
 }
 
 /**
- * nvme_get_log_fdp_configurations() - Get list of Flexible Data Placement configurations
- * @hdl:	Transport handle
- * @egid:	Endurance group identifier
- * @offset:	Offset into log page
- * @len:	Length (in bytes) of provided user buffer to hold the log data
- * @log:	Log page data buffer
- */
-static inline int nvme_get_log_fdp_configurations(struct nvme_transport_handle *hdl, __u16 egid,
-			__u32 offset, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_FDP_CONFIGS,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = egid,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_get_log(hdl, &args);
-}
-
-/**
- * nvme_get_log_reclaim_unit_handle_usage() - Get reclaim unit handle usage
- * @hdl:	Transport handle
- * @egid:	Endurance group identifier
- * @offset:	Offset into log page
- * @len:	Length (in bytes) of provided user buffer to hold the log data
- * @log:	Log page data buffer
- */
-static inline int nvme_get_log_reclaim_unit_handle_usage(struct nvme_transport_handle *hdl, __u16 egid,
-			__u32 offset, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_FDP_RUH_USAGE,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = egid,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_get_log(hdl, &args);
-}
-
-/**
- * nvme_get_log_fdp_stats() - Get Flexible Data Placement statistics
- * @hdl:	Transport handle
- * @egid:	Endurance group identifier
- * @offset:	Offset into log page
- * @len:	Length (in bytes) of provided user buffer to hold the log data
- * @log:	Log page data buffer
- */
-static inline int nvme_get_log_fdp_stats(struct nvme_transport_handle *hdl, __u16 egid, __u32 offset, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_FDP_STATS,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = egid,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_get_log(hdl, &args);
-}
-
-/**
- * nvme_get_log_fdp_events() - Get Flexible Data Placement events
- * @hdl:	Transport handle
- * @egid:		Endurance group identifier
- * @host_events:	Whether to report host or controller events
- * @offset:		Offset into log page
- * @len:		Length (in bytes) of provided user buffer to hold the log data
- * @log:		Log page data buffer
- */
-static inline int nvme_get_log_fdp_events(struct nvme_transport_handle *hdl, __u16 egid, bool host_events, __u32 offset,
-		__u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_FDP_EVENTS,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = egid,
-		.lsp = (__u8)(host_events ? 0x1 : 0x0),
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_get_log(hdl, &args);
-}
-
-/**
- * nvme_get_log_ana() - Retrieve Asymmetric Namespace Access log page
- * @hdl:	Transport handle
+ * nvme_init_get_log_ana() - Initialize passthru command for
+ * Asymmetric Namespace Access
+ * @cmd:	Passthru command to use
  * @lsp:	Log specific, see &enum nvme_get_log_ana_lsp
- * @rae:	Retain asynchronous events
- * @offset:	Offset to the start of the log page
- * @len:	The allocated length of the log page
+ * @lpo:	Offset to the start of the log page
  * @log:	User address to store the ana log
- *
- * This log consists of a header describing the log and descriptors containing
- * the asymmetric namespace access information for ANA Groups that contain
- * namespaces that are attached to the controller processing the command.
- *
- * See &struct nvme_ana_log for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_ana(struct nvme_transport_handle *hdl, enum nvme_log_ana_lsp lsp, bool rae,
-				   __u64 offset, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_ANA,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = (__u8)lsp,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_ana_groups() - Retrieve Asymmetric Namespace Access groups only log page
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
  * @len:	The allocated length of the log page
- * @log:	User address to store the ana group log
  *
- * See &struct nvme_ana_log for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_ANA.
  */
-static inline int nvme_get_log_ana_groups(struct nvme_transport_handle *hdl, bool rae, __u32 len,
-			    struct nvme_ana_log *log)
+static inline void
+nvme_init_get_log_ana(struct nvme_passthru_cmd *cmd,
+		enum nvme_log_ana_lsp lsp, __u64 lpo, void *log, __u32 len)
 {
-	return nvme_get_log_ana(hdl, NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY, rae, 0,
-				len, log);
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_ANA, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE(lsp,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
 }
 
 /**
- * nvme_get_ana_log_atomic() - Retrieve Asymmetric Namespace Access log page atomically
+ * nvme_init_get_log_ana_groups() - Initialize passthru command for
+ * Asymmetric Namespace Access groups
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the ana group log
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_ANA and LSP value %NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY
+ */
+static inline void
+nvme_init_get_log_ana_groups(struct nvme_passthru_cmd *cmd,
+		struct nvme_ana_log *log, __u32 len)
+{
+	nvme_init_get_log_ana(cmd, NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY,
+		0, log, len);
+}
+
+/**
+ * nvme_init_get_log_persistent_event() - Initialize passthru command for
+ * Persistent Event Log
+ * @cmd:	Passthru command to use
+ * @action:	Action the controller should take during processing this command
+ * @pevent_log:	User address to store the persistent event log
+ * @len:	Size of @pevent_log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_PERSISTENT_EVENT
+ */
+static inline void
+nvme_init_get_log_persistent_event(struct nvme_passthru_cmd *cmd,
+		enum nvme_pevent_log_action action,
+		void *pevent_log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_PERSISTENT_EVENT, NVME_CSI_NVM,
+		pevent_log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE(action,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+}
+
+/**
+ * nvme_init_get_log_lba_status() - Initialize passthru command for
+ * Retrieve LBA Status
+ * @cmd:	Passthru command to use
+ * @lpo:	Offset to the start of the log page
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_LBA_STATUS
+ */
+static inline void
+nvme_init_get_log_lba_status(struct nvme_passthru_cmd *cmd,
+		__u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_LBA_STATUS, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+/**
+ * nvme_init_get_log_endurance_grp_evt() - Initialize passthru command for
+ * Endurance Group Event Aggregate
+ * @cmd:	Passthru command to use
+ * @lpo:	Offset to the start of the log page
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_ENDURANCE_GRP_EVT
+ */
+static inline void
+nvme_init_get_log_endurance_grp_evt(struct nvme_passthru_cmd *cmd,
+		__u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_ENDURANCE_GRP_EVT, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+/**
+ * nvme_init_get_log_media_unit_stat() - Initialize passthru command for
+ * Media Unit Status
+ * @cmd:	Passthru command to use
+ * @domid:	Domain Identifier selection, if supported
+ * @mus:	User address to store the Media Unit statistics log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_MEDIA_UNIT_STATUS
+ */
+static inline void
+nvme_init_get_log_media_unit_stat(struct nvme_passthru_cmd *cmd,
+		__u16 domid, struct nvme_media_unit_stat_log *mus)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_MEDIA_UNIT_STATUS, NVME_CSI_NVM,
+		mus, sizeof(*mus));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(domid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
+}
+
+/**
+ * nvme_init_get_log_support_cap_config_list() - Initialize passthru command for
+ * Supported Capacity Configuration List
+ * @cmd:	Passthru command to use
+ * @domid:	Domain Identifier selection, if supported
+ * @cap:	User address to store supported capabilities config list
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST
+ */
+static inline void
+nvme_init_get_log_support_cap_config_list(struct nvme_passthru_cmd *cmd,
+		__u16 domid, struct nvme_supported_cap_config_list_log *cap)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST, NVME_CSI_NVM,
+		cap, sizeof(*cap));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(domid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
+}
+
+/**
+ * nvme_init_get_log_fid_supported_effects() - Initialize passthru command for
+ * Feature Identifiers Supported and Effects
+ * @cmd:	Passthru command to use
+ * @csi:	Command set identifier, see &enum nvme_csi for known values
+ * @log:	FID Supported and Effects data structure
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_FID_SUPPORTED_EFFECTS
+ */
+static inline void
+nvme_init_get_log_fid_supported_effects(struct nvme_passthru_cmd *cmd,
+		enum nvme_csi csi, struct nvme_fid_supported_effects_log *log)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_FID_SUPPORTED_EFFECTS, csi,
+		log, sizeof(*log));
+}
+
+/**
+ * nvme_init_get_log_mi_cmd_supported_effects() - Initialize passthru command
+ * for MI Commands Supported by the controller
+ * @cmd:	Passthru command to use
+ * @log:	MI Command Supported and Effects data structure
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS
+ */
+static inline void
+nvme_init_get_log_mi_cmd_supported_effects(struct nvme_passthru_cmd *cmd,
+		struct nvme_mi_cmd_supported_effects_log *log)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS, NVME_CSI_NVM,
+		log, sizeof(*log));
+}
+
+/**
+ * nvme_init_get_log_lockdown() - Initialize passthru command for
+ * Command and Feature Lockdown
+ * @cmd:		Passthru command to use
+ * @cnscp:		Contents and Scope of Command and Feature Identifier
+ *			Lists
+ * @lockdown_log:	Buffer to store the lockdown log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN
+ */
+static inline void
+nvme_init_get_log_lockdown(struct nvme_passthru_cmd *cmd,
+		__u8 cnscp, struct nvme_lockdown_log *lockdown_log)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN, NVME_CSI_NVM,
+		lockdown_log, sizeof(*lockdown_log));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cnscp,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+}
+
+/**
+ * nvme_init_get_log_boot_partition() - Initialize passthru command for
+ * Boot Partition
+ * @cmd:	Passthru command to use
+ * @lsp:	The log specified field of LID
+ * @part:	User address to store the log page
+ * @len:	The allocated size, minimum
+ *		struct nvme_boot_partition
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_BOOT_PARTITION
+ */
+static inline void
+nvme_init_get_log_boot_partition(struct nvme_passthru_cmd *cmd,
+		__u8 lsp, struct nvme_boot_partition *part, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_BOOT_PARTITION, NVME_CSI_NVM,
+		part, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE(lsp,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+}
+
+/**
+ * nvme_init_get_log_rotational_media_info() - Initialize passthru command for
+ * Rotational Media Information Log
+ * @cmd:	Passthru command to use
+ * @endgid:	Endurance Group Identifier
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_ROTATIONAL_MEDIA_INFO
+ */
+static inline void
+nvme_init_get_log_rotational_media_info(struct nvme_passthru_cmd *cmd,
+		__u16 endgid, struct nvme_rotational_media_info_log *log,
+		__u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_ROTATIONAL_MEDIA_INFO, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(endgid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
+}
+
+/**
+ * nvme_init_get_log_dispersed_ns_participating_nss() - Initialize passthru
+ * command for Dispersed Namespace Participating NVM Subsystems
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace Identifier
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS
+ */
+static inline void
+nvme_init_get_log_dispersed_ns_participating_nss(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_dispersed_ns_participating_nss_log *log,
+		__u32 len)
+{
+	nvme_init_get_log(cmd, nsid,
+		NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS, NVME_CSI_NVM,
+		log, len);
+}
+
+/**
+ * nvme_init_get_log_mgmt_addr_list() - Initialize passthru command for
+ * Management Address List
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_MGMT_ADDR_LIST
+ */
+static inline void
+nvme_init_get_log_mgmt_addr_list(struct nvme_passthru_cmd *cmd,
+		struct nvme_mgmt_addr_list_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_MGMT_ADDR_LIST, NVME_CSI_NVM,
+		log, len);
+}
+
+/**
+ * nvme_init_get_log_phy_rx_eom() - Initialize passthru command for
+ * Physical Interface Receiver Eye Opening Measurement
+ * @cmd:	Passthru command to use
+ * @lsp:	Log specific, controls action and measurement quality
+ * @controller:	Target controller ID
+ * @log:	User address to store the log page
+ * @len:	The allocated size, minimum
+ *		struct nvme_phy_rx_eom_log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_PHY_RX_EOM
+ */
+static inline void
+nvme_init_get_log_phy_rx_eom(struct nvme_passthru_cmd *cmd,
+		__u8 lsp, __u16 controller, struct nvme_phy_rx_eom_log *log,
+		__u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_PHY_RX_EOM, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE(lsp,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(controller,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
+}
+
+/**
+ * nvme_init_get_log_reachability_groups() - Initialize passthru command for
+ * Retrieve Reachability Groups
+ * @cmd:	Passthru command to use
+ * @rgo:	Return groups only
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_REACHABILITY_GROUPS
+ */
+static inline void
+nvme_init_get_log_reachability_groups(struct nvme_passthru_cmd *cmd,
+		bool rgo, struct nvme_reachability_groups_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_REACHABILITY_GROUPS, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE((__u8)rgo,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+}
+
+/**
+ * nvme_init_get_log_reachability_associations() - Initialize passthru command
+ * for Reachability Associations Log
+ * @cmd:	Passthru command to use
+ * @rao:	Return associations only
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_REACHABILITY_ASSOCIATIONS
+ */
+static inline void
+nvme_init_get_log_reachability_associations(struct nvme_passthru_cmd *cmd,
+		bool rao, struct nvme_reachability_associations_log *log,
+		__u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_REACHABILITY_ASSOCIATIONS, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE((__u8)rao,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+}
+
+/**
+ * nvme_init_get_log_changed_alloc_ns() - Initialize passthru command for
+ * Changed Allocated Namespace List
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_CHANGED_ALLOC_NS
+ */
+static inline void
+nvme_init_get_log_changed_alloc_ns(struct nvme_passthru_cmd *cmd,
+		struct nvme_ns_list *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_CHANGED_ALLOC_NS, NVME_CSI_NVM,
+		log, len);
+}
+
+/**
+ * nvme_init_get_log_fdp_configurations() - Initialize passthru command for
+ * Flexible Data Placement Configurations
+ * @cmd:	Passthru command to use
+ * @egid:	Endurance group identifier
+ * @lpo:	Offset into log page
+ * @log:	Log page data buffer
+ * @len:	Length (in bytes) of provided user buffer to hold the log data
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_FDP_CONFIGS
+ */
+static inline void
+nvme_init_get_log_fdp_configurations(struct nvme_passthru_cmd *cmd,
+		__u16 egid, __u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_FDP_CONFIGS, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(egid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+/**
+ * nvme_init_get_log_reclaim_unit_handle_usage() - Initialize passthru
+ * command for Reclaim Unit Handle Usage
+ * @cmd:	Passthru command to use
+ * @egid:	Endurance group identifier
+ * @lpo:	Offset into log page
+ * @log:	Log page data buffer
+ * @len:	Length (in bytes) of provided user buffer to hold the log data
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_RUH_USAGE
+ */
+static inline void
+nvme_init_get_log_reclaim_unit_handle_usage(struct nvme_passthru_cmd *cmd,
+		__u16 egid, __u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_FDP_RUH_USAGE, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(egid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+/**
+ * nvme_init_get_log_fdp_stats() - Initialize passthru command for
+ * Get Flexible Data Placement Statistics
+ * @cmd:	Passthru command to use
+ * @egid:	Endurance group identifier
+ * @lpo:	Offset into log page
+ * @log:	Log page data buffer
+ * @len:	Length (in bytes) of provided user buffer to hold the log data
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_FDP_STATS
+ */
+static inline
+void nvme_init_get_log_fdp_stats(struct nvme_passthru_cmd *cmd,
+		__u16 egid, __u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_FDP_STATS, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(egid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+/**
+ * nvme_init_get_log_fdp_events() - Initialize passthru command for
+ * Flexible Data Placement Events
+ * @cmd:		Passthru command to use
+ * @host_events:	Whether to report host or controller events
+ * @egid:		Endurance group identifier
+ * @lpo:		Offset into log page
+ * @log:		Log page data buffer
+ * @len:		Length (in bytes) of provided user buffer to hold
+ *			the log data
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_FDP_EVENTS
+ */
+static inline void
+nvme_init_get_log_fdp_events(struct nvme_passthru_cmd *cmd,
+		bool host_events, __u16 egid, __u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_FDP_EVENTS, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE((__u8)(host_events ? 0x1 : 0x0),
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(egid,
+			NVME_LOG_CDW11_LSI_SHIFT,
+			NVME_LOG_CDW11_LSI_MASK);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+
+/**
+ * nvme_init_get_log_discovery() - Initialize passthru command for Discovery
+ * @cmd:	Passthru command to use
+ * @lpo:	Offset of this log to retrieve
+ * @log:	User address to store the discovery log
+ * @len:	The allocated size for this portion of the log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_DISCOVERY
+ */
+static inline void
+nvme_init_get_log_discovery(struct nvme_passthru_cmd *cmd,
+			__u64 lpo, void *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_NONE,
+		NVME_LOG_LID_DISCOVERY, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+/**
+ * nvme_init_get_log_host_discovery() - Initialize passthru command for
+ * Host Discover
+ * @cmd:	Passthru command to use
+ * @allhoste:	All host entries
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_HOST_DISCOVERY
+ */
+static inline void
+nvme_init_get_log_host_discovery(struct nvme_passthru_cmd *cmd,
+		bool allhoste, struct nvme_host_discover_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_HOST_DISCOVERY, NVME_CSI_NVM,
+		log, len);
+	cmd->cdw10 |= NVME_FIELD_ENCODE((__u8)allhoste,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+}
+
+/**
+ * nvme_init_get_log_ave_discovery() - Initialize passthru command for
+ * AVE Discovery
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_AVE_DISCOVERY
+ */
+static inline void
+nvme_init_get_log_ave_discovery(struct nvme_passthru_cmd *cmd,
+		struct nvme_ave_discover_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_AVE_DISCOVERY, NVME_CSI_NVM,
+		log, len);
+}
+
+/**
+ * nvme_init_get_log_pull_model_ddc_req() - Initialize passthru command for
+ * Pull Model DDC Request
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_PULL_MODEL_DDC_REQ
+ */
+static inline void
+nvme_init_get_log_pull_model_ddc_req(struct nvme_passthru_cmd *cmd,
+		struct nvme_pull_model_ddc_req_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_PULL_MODEL_DDC_REQ, NVME_CSI_NVM,
+		log, len);
+}
+
+/**
+ * nvme_init_get_log_reservation() - Initialize passthru command for
+ * Reservation Notification
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the reservation log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_RESERVATION
+ */
+static inline void
+nvme_init_get_log_reservation(struct nvme_passthru_cmd *cmd,
+			struct nvme_resv_notification_log *log)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_RESERVATION, NVME_CSI_NVM,
+		log, sizeof(*log));
+}
+
+/**
+ * nvme_init_get_log_sanitize() - Initialize passthru command for
+ * Sanitize Status
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the sanitize log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_SANITIZE
+ */
+static inline void
+nvme_init_get_log_sanitize(struct nvme_passthru_cmd *cmd,
+		struct nvme_sanitize_log_page *log)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_SANITIZE, NVME_CSI_NVM,
+		log, sizeof(*log));
+}
+
+/**
+ * nvme_init_get_log_zns_changed_zones() - Initialize passthru command for
+ * list of zones that have changed
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @log:	User address to store the changed zone log
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_ZNS_CHANGED_ZONES
+ */
+static inline void
+nvme_init_get_log_zns_changed_zones(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_zns_changed_zone_log *log)
+{
+	nvme_init_get_log(cmd, nsid,
+		NVME_LOG_LID_ZNS_CHANGED_ZONES, NVME_CSI_ZNS,
+		log, sizeof(*log));
+}
+
+/**
+ * nvme_get_ana_log_atomic() - Retrieve Asymmetric Namespace Access
+ * log page atomically
  * @hdl:	Transport handle
- * @rgo:	Whether to retrieve ANA groups only (no NSIDs)
  * @rae:	Whether to retain asynchronous events
- * @retries:	The maximum number of times to retry on log page changes
+ * @rgo:	Whether to retrieve ANA groups only (no NSIDs)
  * @log:	Pointer to a buffer to receive the ANA log page
  * @len:	Input: the length of the log page buffer.
- * 		Output: the actual length of the ANA log page.
+ *		Output: the actual length of the ANA log page.
+ * @retries:	The maximum number of times to retry on log page changes
  *
  * See &struct nvme_ana_log for the definition of the returned structure.
  *
@@ -1791,605 +2146,9 @@ static inline int nvme_get_log_ana_groups(struct nvme_transport_handle *hdl, boo
  * because chgcnt changed during each of the retries attempts.
  * Sets errno = ENOSPC if the full log page does not fit in the provided buffer.
  */
-int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rgo, bool rae, unsigned int retries,
-			    struct nvme_ana_log *log, __u32 *len);
-
-/**
- * nvme_get_log_lba_status() - Retrieve LBA Status
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @offset:	Offset to the start of the log page
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_lba_status(struct nvme_transport_handle *hdl, bool rae,
-			__u64 offset, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_LBA_STATUS,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_endurance_grp_evt() - Retrieve Endurance Group Event Aggregate
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @offset:	Offset to the start of the log page
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_endurance_grp_evt(struct nvme_transport_handle *hdl, bool rae,
-			__u32 offset, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_ENDURANCE_GRP_EVT,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_fid_supported_effects() - Retrieve Feature Identifiers Supported and Effects
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @log:	FID Supported and Effects data structure
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_fid_supported_effects(struct nvme_transport_handle *hdl, bool rae,
-			struct nvme_fid_supported_effects_log *log)
-{
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_FID_SUPPORTED_EFFECTS,
-				 NVME_NSID_NONE, sizeof(*log), log);
-}
-
-/**
- * nvme_get_log_mi_cmd_supported_effects() - displays the MI Commands Supported by the controller
- * @hdl:	Transport handle
- * @rae:    Retain asynchronous events
- * @log:    MI Command Supported and Effects data structure
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_mi_cmd_supported_effects(struct nvme_transport_handle *hdl, bool rae,
-			struct nvme_mi_cmd_supported_effects_log *log)
-{
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS,
-				 NVME_NSID_NONE, sizeof(*log), log);
-}
-
-/**
- * nvme_get_log_boot_partition() - Retrieve Boot Partition
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @lsp:	The log specified field of LID
- * @len:	The allocated size, minimum
- *		struct nvme_boot_partition
- * @part:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_boot_partition(struct nvme_transport_handle *hdl, bool rae,
-			__u8 lsp, __u32 len, struct nvme_boot_partition *part)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = part,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_BOOT_PARTITION,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = lsp,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_rotational_media_info() - Retrieve Rotational Media Information Log
- * @hdl:	Transport handle
- * @endgid:	Endurance Group Identifier
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_rotational_media_info(struct nvme_transport_handle *hdl, __u16 endgid, __u32 len,
-						     struct nvme_rotational_media_info_log *log)
-{
-	return nvme_get_endgid_log(hdl, false, NVME_LOG_LID_ROTATIONAL_MEDIA_INFO, endgid, len, log);
-}
-
-/**
- * nvme_get_log_dispersed_ns_participating_nss() - Retrieve Dispersed Namespace Participating NVM
- * Subsystems Log
- * @hdl:	Transport handle
- * @nsid:	Namespace Identifier
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_dispersed_ns_participating_nss(struct nvme_transport_handle *hdl, __u32 nsid, __u32 len,
-	struct nvme_dispersed_ns_participating_nss_log *log)
-{
-	return nvme_get_nsid_log(hdl, false, NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS, nsid, len,
-				 log);
-}
-
-/**
- * nvme_get_log_mgmt_addr_list() - Retrieve Management Address List Log
- * @hdl:	Transport handle
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_mgmt_addr_list(struct nvme_transport_handle *hdl, __u32 len,
-					      struct nvme_mgmt_addr_list_log *log)
-{
-	return nvme_get_log_simple(hdl, NVME_LOG_LID_MGMT_ADDR_LIST, len, log);
-}
-
-/**
- * nvme_get_log_phy_rx_eom() - Retrieve Physical Interface Receiver Eye Opening Measurement Log
- * @hdl:	Transport handle
- * @lsp:	Log specific, controls action and measurement quality
- * @controller:	Target controller ID
- * @len:	The allocated size, minimum
- *		struct nvme_phy_rx_eom_log
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_phy_rx_eom(struct nvme_transport_handle *hdl, __u8 lsp, __u16 controller,
-				__u32 len, struct nvme_phy_rx_eom_log *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_PHY_RX_EOM,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = controller,
-		.lsp = lsp,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_reachability_groups() - Retrieve Reachability Groups Log
- * @hdl:	Transport handle
- * @rgo:	Return groups only
- * @rae:	Retain asynchronous events
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_reachability_groups(struct nvme_transport_handle *hdl, bool rgo, bool rae, __u32 len,
-						   struct nvme_reachability_groups_log *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_REACHABILITY_GROUPS,
-		.len = len,
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = rgo,
-		.uuidx = NVME_LOG_LSP_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_reachability_associations() - Retrieve Reachability Associations Log
- * @hdl:	Transport handle
- * @rao:	Return associations only
- * @rae:	Retain asynchronous events
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_reachability_associations(struct nvme_transport_handle *hdl, bool rao, bool rae, __u32 len,
-	struct nvme_reachability_associations_log *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_REACHABILITY_ASSOCIATIONS,
-		.len = len,
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = rao,
-		.uuidx = NVME_LOG_LSP_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_changed_alloc_ns_list() - Retrieve Changed Allocated Namespace List Log
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_changed_alloc_ns_list(struct nvme_transport_handle *hdl, bool rae, __u32 len,
-						     struct nvme_ns_list *log)
-{
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_CHANGED_ALLOC_NS_LIST, NVME_NSID_ALL, len,
-				 log);
-}
-
-/**
- * nvme_get_log_discovery() - Retrieve Discovery log page
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @offset:	Offset of this log to retrieve
- * @len:	The allocated size for this portion of the log
- * @log:	User address to store the discovery log
- *
- * Supported only by fabrics discovery controllers, returning discovery
- * records.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_discovery(struct nvme_transport_handle *hdl, bool rae,
-			__u32 offset, __u32 len, void *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = offset,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_DISCOVER,
-		.len = len,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_host_discover() - Retrieve Host Discovery Log
- * @hdl:	Transport handle
- * @allhoste:	All host entries
- * @rae:	Retain asynchronous events
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_host_discover(struct nvme_transport_handle *hdl, bool allhoste, bool rae, __u32 len,
-					     struct nvme_host_discover_log *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_HOST_DISCOVER,
-		.len = len,
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = allhoste,
-		.uuidx = NVME_LOG_LSP_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_ave_discover() - Retrieve AVE Discovery Log
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_ave_discover(struct nvme_transport_handle *hdl, bool rae, __u32 len,
-					    struct nvme_ave_discover_log *log)
-{
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_AVE_DISCOVER, NVME_NSID_ALL, len, log);
-}
-
-/**
- * nvme_get_log_pull_model_ddc_req() - Retrieve Pull Model DDC Request Log
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @len:	The allocated length of the log page
- * @log:	User address to store the log page
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_pull_model_ddc_req(struct nvme_transport_handle *hdl, bool rae, __u32 len,
-						  struct nvme_pull_model_ddc_req_log *log)
-{
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_PULL_MODEL_DDC_REQ, NVME_NSID_ALL, len, log);
-}
-
-/**
- * nvme_get_log_media_unit_stat() - Retrieve Media Unit Status
- * @hdl:	Transport handle
- * @domid:	Domain Identifier selection, if supported
- * @mus:	User address to store the Media Unit statistics log
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_media_unit_stat(struct nvme_transport_handle *hdl, __u16 domid,
-			struct nvme_media_unit_stat_log *mus)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = mus,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_MEDIA_UNIT_STATUS,
-		.len = sizeof(*mus),
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = domid,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_support_cap_config_list() - Retrieve Supported Capacity Configuration List
- * @hdl:	Transport handle
- * @domid:	Domain Identifier selection, if supported
- * @cap:	User address to store supported capabilities config list
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_support_cap_config_list(struct nvme_transport_handle *hdl, __u16 domid,
-			struct nvme_supported_cap_config_list_log *cap)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = cap,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST,
-		.len = sizeof(*cap),
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = domid,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_reservation() - Retrieve Reservation Notification
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @log:	User address to store the reservation log
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise
- */
-static inline int nvme_get_log_reservation(struct nvme_transport_handle *hdl, bool rae,
-			struct nvme_resv_notification_log *log)
-{
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_RESERVATION,
-				 NVME_NSID_ALL, sizeof(*log), log);
-}
-
-/**
- * nvme_get_log_sanitize() - Retrieve Sanitize Status
- * @hdl:	Transport handle
- * @rae:	Retain asynchronous events
- * @log:	User address to store the sanitize log
- *
- * The Sanitize Status log page reports sanitize operation time estimates and
- * information about the most recent sanitize operation.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_sanitize(struct nvme_transport_handle *hdl, bool rae,
-			struct nvme_sanitize_log_page *log)
-{
-	return nvme_get_nsid_log(hdl, rae, NVME_LOG_LID_SANITIZE,
-				 NVME_NSID_ALL, sizeof(*log), log);
-}
-
-/**
- * nvme_get_log_zns_changed_zones() - Retrieve list of zones that have changed
- * @hdl:	Transport handle
- * @nsid:	Namespace ID
- * @rae:	Retain asynchronous events
- * @log:	User address to store the changed zone log
- *
- * The list of zones that have changed state due to an exceptional event.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_zns_changed_zones(struct nvme_transport_handle *hdl, __u32 nsid, bool rae,
-			struct nvme_zns_changed_zone_log *log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_ZNS_CHANGED_ZONES,
-		.len = sizeof(*log),
-		.nsid = nsid,
-		.csi = NVME_CSI_ZNS,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = rae,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_persistent_event() - Retrieve Persistent Event Log
- * @hdl:	Transport handle
- * @action:	Action the controller should take during processing this command
- * @size:	Size of @pevent_log
- * @pevent_log:	User address to store the persistent event log
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_persistent_event(struct nvme_transport_handle *hdl,
-			enum nvme_pevent_log_action action,
-			__u32 size, void *pevent_log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = pevent_log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_PERSISTENT_EVENT,
-		.len = size,
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = (__u8)action,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
-
-/**
- * nvme_get_log_lockdown() - Retrieve lockdown Log
- * @hdl:	Transport handle
- * @cnscp:		Contents and Scope of Command and Feature Identifier Lists
- * @lockdown_log:	Buffer to store the lockdown log
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_log_lockdown(struct nvme_transport_handle *hdl,
-			__u8 cnscp, struct nvme_lockdown_log *lockdown_log)
-{
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = lockdown_log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN,
-		.len = sizeof(*lockdown_log),
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = cnscp,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-}
+int
+nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rgo,
+		struct nvme_ana_log *log, __u32 *len, unsigned int retries);
 
 /**
  * nvme_set_features() - Set a feature attribute

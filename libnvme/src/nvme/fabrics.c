@@ -1122,17 +1122,7 @@ static int nvme_discovery_log(const struct nvme_get_discovery_args *args,
 	const char *name = nvme_ctrl_get_name(args->c);
 	uint64_t genctr, numrec;
 	struct nvme_transport_handle *hdl = nvme_ctrl_get_transport_handle(args->c);
-	struct nvme_get_log_args log_args = {
-		.result = args->result,
-		.args_size = sizeof(log_args),
-		.timeout = args->timeout,
-		.lid = NVME_LOG_LID_DISCOVER,
-		.nsid = NVME_NSID_NONE,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = args->lsp,
-		.uuidx = NVME_UUID_NONE,
-	};
+	struct nvme_passthru_cmd cmd;
 
 	log = __nvme_alloc(sizeof(*log));
 	if (!log) {
@@ -1143,9 +1133,8 @@ static int nvme_discovery_log(const struct nvme_get_discovery_args *args,
 
 	nvme_msg(ctx, LOG_DEBUG, "%s: get header (try %d/%d)\n",
 		 name, retries, args->max_retries);
-	log_args.log = log;
-	log_args.len = DISCOVERY_HEADER_LEN;
-	err = nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &log_args);
+	nvme_init_get_log_discovery(&cmd, 0, log, DISCOVERY_HEADER_LEN);
+	err = nvme_get_log(hdl, &cmd, false, DISCOVERY_HEADER_LEN, NULL);
 	if (err) {
 		nvme_msg(ctx, LOG_INFO,
 			 "%s: discover try %d/%d failed, errno %d status 0x%x\n",
@@ -1175,10 +1164,12 @@ static int nvme_discovery_log(const struct nvme_get_discovery_args *args,
 			 "%s: get %" PRIu64 " records (genctr %" PRIu64 ")\n",
 			 name, numrec, genctr);
 
-		log_args.lpo = sizeof(*log);
-		log_args.log = log->entries;
-		log_args.len = entries_size;
-		err = nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &log_args);
+		nvme_init_get_log_discovery(&cmd, sizeof(*log), log->entries, entries_size);
+		cmd.cdw10 |= NVME_FIELD_ENCODE(args->lsp,
+					       NVME_LOG_CDW10_LSP_SHIFT,
+					       NVME_LOG_CDW10_LSP_MASK);
+		err = nvme_get_log(hdl, &cmd, false,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 		if (err) {
 			nvme_msg(ctx, LOG_INFO,
 				 "%s: discover try %d/%d failed, errno %d status 0x%x\n",
@@ -1192,10 +1183,8 @@ static int nvme_discovery_log(const struct nvme_get_discovery_args *args,
 		 */
 		nvme_msg(ctx, LOG_DEBUG, "%s: get header again\n", name);
 
-		log_args.lpo = 0;
-		log_args.log = log;
-		log_args.len = DISCOVERY_HEADER_LEN;
-		err = nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &log_args);
+		nvme_init_get_log_discovery(&cmd, 0, log, DISCOVERY_HEADER_LEN);
+		err = nvme_get_log(hdl, &cmd, false, DISCOVERY_HEADER_LEN, NULL);
 		if (err) {
 			nvme_msg(ctx, LOG_INFO,
 				 "%s: discover try %d/%d failed, errno %d status 0x%x\n",

@@ -319,25 +319,12 @@ int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create, bool 
 			   size_t *size)
 {
 	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
-
 	struct nvme_telemetry_log *telem;
-	enum nvme_cmd_get_log_lid lid;
+	struct nvme_passthru_cmd cmd;
 	_cleanup_free_ void *log = NULL;
 	void *tmp;
 	int err;
 	size_t dalb;
-	struct nvme_get_log_args args = {
-		.args_size = sizeof(args),
-		.nsid = NVME_NSID_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
-		.csi = NVME_CSI_NVM,
-		.rae = rae,
-		.ot = false,
-	};
 
 	*size = 0;
 
@@ -346,14 +333,16 @@ int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create, bool 
 		return -ENOMEM;
 
 	if (ctrl) {
-		err = nvme_get_log_telemetry_ctrl(hdl, true, 0, xfer, log);
-		lid = NVME_LOG_LID_TELEMETRY_CTRL;
+		nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, xfer);
+		err = nvme_get_log(hdl, &cmd, true, xfer, NULL);
 	} else {
-		lid = NVME_LOG_LID_TELEMETRY_HOST;
-		if (create)
-			err = nvme_get_log_create_telemetry_host_mcda(hdl, da, log);
-		else
-			err = nvme_get_log_telemetry_host(hdl, 0, xfer, log);
+		if (create) {
+			nvme_init_get_log_create_telemetry_host_mcda(&cmd, da, log);
+			err = nvme_get_log(hdl, &cmd, false, xfer, NULL);
+		} else {
+			nvme_init_get_log_telemetry_host(&cmd, 0, log, xfer);
+			err = nvme_get_log(hdl, &cmd, false, xfer, NULL);
+		}
 	}
 
 	if (err)
@@ -394,10 +383,11 @@ int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create, bool 
 		return -ENOMEM;
 	log = tmp;
 
-	args.lid = lid;
-	args.log = log;
-	args.len = *size;
-	err = nvme_get_log_page(hdl, max_data_tx, &args);
+	if (ctrl)
+		nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, *size);
+	else
+		nvme_init_get_log_telemetry_host(&cmd, 0, log, *size);
+	err = nvme_get_log(hdl, &cmd, rae, max_data_tx, NULL);
 	if (err)
 		return err;
 
@@ -446,27 +436,17 @@ int nvme_get_new_host_telemetry(struct nvme_transport_handle *hdl, struct nvme_t
 int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct nvme_lba_status_log **log)
 {
 	_cleanup_free_ struct nvme_lba_status_log *buf = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u32 size;
 	void *tmp;
 	int err;
-	struct nvme_get_log_args args = {
-		.args_size = sizeof(args),
-		.nsid = NVME_NSID_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
-		.csi = NVME_CSI_NVM,
-		.rae = rae,
-		.ot = false,
-	};
 
 	buf = malloc(sizeof(*buf));
 	if (!buf)
 		return -ENOMEM;
 
-	err = nvme_get_log_lba_status(hdl, true, 0, sizeof(*buf), buf);
+	nvme_init_get_log_lba_status(&cmd, 0, log, sizeof(*buf));
+	err = nvme_get_log(hdl, &cmd, true, sizeof(*buf), NULL);
 	if (err) {
 		*log = NULL;
 		return err;
@@ -486,10 +466,8 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct 
 	}
 	buf = tmp;
 
-	args.lid = NVME_LOG_LID_LBA_STATUS;
-	args.log = buf;
-	args.len = size;
-	err = nvme_get_log_page(hdl, 4096, &args);
+	nvme_init_get_log_lba_status(&cmd, 0, buf, size);
+	err = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (err) {
 		*log = NULL;
 		return err;

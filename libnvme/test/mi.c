@@ -1917,10 +1917,10 @@ static int test_admin_get_log_split_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_get_log_split(struct nvme_mi_ep *ep)
 {
-	struct nvme_get_log_args args = { 0 };
 	unsigned char buf[4096 * 2 + 4];
 	struct log_data ldata;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc;
 
 	ldata.n = 0;
@@ -1928,15 +1928,9 @@ static void test_admin_get_log_split(struct nvme_mi_ep *ep)
 
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 
-	args.args_size = sizeof(args);
-	args.lid = 1;
-	args.log = buf;
-	args.len = sizeof(buf);
-	args.lpo = 0;
-	args.ot = false;
-
-	rc = nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
-
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_ERROR,
+		NVME_CSI_NVM, buf, sizeof(buf));
+	rc = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	assert(!rc);
 
 	/* we should have sent three commands */

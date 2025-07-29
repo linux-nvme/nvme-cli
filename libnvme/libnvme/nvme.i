@@ -816,11 +816,13 @@ struct nvme_ns {
 	%feature("autodoc", "@return: List of supported log pages") supported_log_pages;
 	PyObject *supported_log_pages(bool rae = true) {
 		struct nvme_supported_log_pages log;
+		struct nvme_passthru_cmd cmd;
 		PyObject *obj = NULL;
 		int ret = 0;
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		    ret = nvme_get_log_supported_log_pages(nvme_ctrl_get_transport_handle($self), rae, &log);
+		    nvme_init_get_log_supported_log_pages(&cmd, NVME_CSI_NVM, &log);
+		    ret = nvme_get_log(nvme_ctrl_get_transport_handle($self), &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret < 0) {

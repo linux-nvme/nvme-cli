@@ -48,43 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_get_log_args - Arguments for the NVMe Admin Get Log command
- * @lpo:	Log page offset for partial log transfers
- * @result:	The command completion result from CQE dword0
- * @log:	User space destination address to transfer the data
- * @args_size:	Length of the structure
- * @timeout:	Timeout in ms
- * @lid:	Log page identifier, see &enum nvme_cmd_get_log_lid for known
- *		values
- * @len:	Length of provided user buffer to hold the log data in bytes
- * @nsid:	Namespace identifier, if applicable
- * @csi:	Command set identifier, see &enum nvme_csi for known values
- * @lsi:	Log Specific Identifier
- * @lsp:	Log specific field
- * @uuidx:	UUID selection, if supported
- * @rae:	Retain asynchronous events
- * @ot:		Offset Type; if set @lpo specifies the index into the list
- *		of data structures, otherwise @lpo specifies the byte offset
- *		into the log page.
- */
-struct nvme_get_log_args {
-	__u64 lpo;
-	__u32 *result;
-	void *log;
-	int args_size;
-	__u32 timeout;
-	enum nvme_cmd_get_log_lid lid;
-	__u32 len;
-	__u32 nsid;
-	enum nvme_csi csi;
-	__u16 lsi;
-	__u8 lsp;
-	__u8 uuidx;
-	bool rae;
-	bool ot;
-};
-
-/**
  * struct nvme_set_features_args - Arguments for the NVMe Admin Set Feature command
  * @result:	The command completion result from CQE dword0
  * @data:	User address of feature data, if applicable

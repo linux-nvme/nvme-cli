@@ -67,7 +67,7 @@ static void test_no_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header,
 		},
 	};
@@ -76,7 +76,7 @@ static void test_no_entries(nvme_ctrl_t c)
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(nvmf_get_discovery_log(c, &log, 1) == 0, "discovery failed");
 	end_mock_cmds();
-	cmp(log, &header, sizeof(header), "incorrect header");
+	cmp(log, &header, HEADER_LEN, "incorrect header");
 	free(log);
 }
 
@@ -95,14 +95,14 @@ static void test_four_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entries),
 			.cdw10 = (sizeof(entries) / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.cdw12 = sizeof(header), /* LPOL */
 			.out_data = log_entries,
 		},
@@ -110,7 +110,7 @@ static void test_four_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header,
 		},
 	};
@@ -120,8 +120,8 @@ static void test_four_entries(nvme_ctrl_t c)
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(nvmf_get_discovery_log(c, &log, 1) == 0, "discovery failed");
 	end_mock_cmds();
-	cmp(log, &header, sizeof(header), "incorrect header");
-	cmp(log->entries, entries, sizeof(entries), "incorrect entries");
+	cmp(log, &header, HEADER_LEN, "incorrect header");
+	cmp(log->entries, entries, 0x16 /* sizeof(entries)*/, "incorrect entries");
 	free(log);
 }
 
@@ -145,7 +145,7 @@ static void test_five_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header,
 		},
 		{
@@ -153,7 +153,7 @@ static void test_five_entries(nvme_ctrl_t c)
 			.data_len = first_data_len,
 			.cdw10 = (first_data_len / 4 - 1) << 16 /* NUMDL */
 			       | 1 << 15 /* RAE */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.cdw12 = sizeof(header), /* LPOL */
 			.out_data = log_entries,
 		},
@@ -161,7 +161,7 @@ static void test_five_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = second_data_len,
 			.cdw10 = (second_data_len / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.cdw12 = sizeof(header) + first_data_len, /* LPOL */
 			.out_data = log_entries + first_entries,
 		},
@@ -169,7 +169,7 @@ static void test_five_entries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header,
 		},
 	};
@@ -206,14 +206,14 @@ static void test_genctr_change(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header1,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entries1),
 			.cdw10 = (sizeof(entries1) / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* NUMDL */
+			       | NVME_LOG_LID_DISCOVERY, /* NUMDL */
 			.cdw12 = sizeof(header1), /* LPOL */
 			.out_data = entries1,
 		},
@@ -221,14 +221,14 @@ static void test_genctr_change(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header2,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entries2),
 			.cdw10 = (sizeof(entries2) / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.cdw12 = sizeof(header2), /* LPOL */
 			.out_data = log_entries2,
 		},
@@ -236,7 +236,7 @@ static void test_genctr_change(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header2,
 		},
 	};
@@ -270,14 +270,14 @@ static void test_max_retries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header1,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entry),
 			.cdw10 = (sizeof(entry) / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.cdw12 = sizeof(header1), /* LPOL */
 			.out_data = &entry,
 		},
@@ -285,14 +285,14 @@ static void test_max_retries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header2,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entry),
 			.cdw10 = (sizeof(entry) / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.cdw12 = sizeof(header2), /* LPOL */
 			.out_data = &entry,
 		},
@@ -300,7 +300,7 @@ static void test_max_retries(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header3,
 		},
 	};
@@ -321,7 +321,7 @@ static void test_header_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.err = -EAGAIN,
 		},
 	};
@@ -343,14 +343,14 @@ static void test_entries_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = entry_size,
 			.cdw10 = (entry_size / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.cdw12 = sizeof(header), /* LPOL */
 			.err = -EIO,
 		},
@@ -373,14 +373,14 @@ static void test_genctr_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.out_data = &header,
 		},
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = sizeof(entry),
 			.cdw10 = (sizeof(entry) / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.cdw12 = sizeof(header), /* LPOL */
 			.out_data = &entry,
 		},
@@ -388,7 +388,7 @@ static void test_genctr_error(nvme_ctrl_t c)
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
 			.cdw10 = (HEADER_LEN / 4 - 1) << 16 /* NUMDL */
-			       | NVME_LOG_LID_DISCOVER, /* LID */
+			       | NVME_LOG_LID_DISCOVERY, /* LID */
 			.err = NVME_SC_INTERNAL,
 		},
 	};
