@@ -21,7 +21,6 @@ usage() {
     echo "                      and build them as shared libraries"
     echo "  cross               use cross toolchain to build"
     echo "  coverage            build coverage report"
-    echo "  appimage            build AppImage target"
     echo "  distro              build libnvme and nvme-cli separately"
     echo "  docs                build documentation"
     echo "  static              build a static binary"
@@ -114,16 +113,6 @@ config_meson_coverage() {
         "${BUILDDIR}"
 }
 
-config_meson_appimage() {
-    CC="${CC}" "${MESON}" setup                 \
-        --werror                                \
-        --buildtype="${BUILDTYPE}"              \
-        --force-fallback-for=libnvme            \
-        --prefix=/usr                           \
-        -Dlibnvme:werror=false                  \
-        "${BUILDDIR}"
-}
-
 config_meson_docs() {
     CC="${CC}" "${MESON}" setup                 \
         -Ddocs=all                              \
@@ -139,6 +128,7 @@ config_meson_static() {
         --buildtype=release                     \
         --default-library=static                \
         --wrap-mode=forcefallback               \
+        --prefix=/usr                           \
         -Dc_link_args="-static"                 \
         -Dlibnvme:keyutils=disabled             \
         "${BUILDDIR}"
@@ -167,11 +157,6 @@ test_meson_coverage() {
     "${MESON}" test                             \
         -C "${BUILDDIR}"
     ninja -C "${BUILDDIR}" coverage --verbose
-}
-
-install_meson_appimage() {
-    "${MESON}" install                          \
-        -C "${BUILDDIR}"
 }
 
 install_meson_docs() {
