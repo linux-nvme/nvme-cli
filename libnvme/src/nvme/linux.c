@@ -214,6 +214,7 @@ int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xf
 int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 {
 	struct nvme_feat_host_behavior da4;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	err = nvme_get_features_host_behavior(hdl, 0, &da4, NULL);
@@ -227,7 +228,8 @@ int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 
 	da4.etdas = 1;
 
-	err = nvme_set_features_host_behavior(hdl, 0, &da4);
+	nvme_init_set_features_host_behavior(&cmd, false, &da4);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err)
 		return err;
 
@@ -238,6 +240,7 @@ int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
 {
 	struct nvme_feat_host_behavior da4;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	err = nvme_get_features_host_behavior(hdl, 0, &da4, NULL);
@@ -250,7 +253,8 @@ int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
 	}
 
 	da4.etdas = 0;
-	err = nvme_set_features_host_behavior(hdl, 0, &da4);
+	nvme_init_set_features_host_behavior(&cmd, false, &da4);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err)
 		return err;
 

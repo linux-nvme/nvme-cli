@@ -394,12 +394,12 @@ static inline void nvme_feature_decode_read_recovery_level_config(__u32 value,
 	*rrl	= NVME_FEAT_RRL_RRL(value);
 }
 
-#define NVME_FEAT_PLM_PLME(v)		NVME_GET(v, FEAT_PLM_PLME)
+#define NVME_FEAT_PLM_LPE(v)		NVME_GET(v, FEAT_PLM_LPE)
 
 static inline void nvme_feature_decode_predictable_latency_mode_config(__u32 value,
-								       bool *plme)
+								       bool *lpe)
 {
-	*plme	= NVME_FEAT_PLM_PLME(value);
+	*lpe	= NVME_FEAT_PLM_LPE(value);
 }
 
 #define NVME_FEAT_PLMW_WS(v)		NVME_GET(v, FEAT_PLMW_WS)

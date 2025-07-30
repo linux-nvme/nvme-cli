@@ -1074,30 +1074,20 @@ static int test_admin_set_features_cb(struct nvme_mi_ep *ep,
 
 static void test_set_features(nvme_mi_ep_t ep)
 {
-	struct nvme_set_features_args args = { 0 };
-	struct nvme_timestamp tstamp = { 0 };
+	struct nvme_timestamp tstmp = { 0 };
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	uint32_t res;
-	int rc, i;
+	int rc;
 
 	test_set_transport_callback(ep, test_admin_set_features_cb, NULL);
 
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	for (i = 0; i < sizeof(tstamp.timestamp); i++)
-		tstamp.timestamp[i] = i;
-
-	args.args_size = sizeof(args);
-	args.fid = NVME_FEAT_FID_TIMESTAMP;
-	args.save = 1;
-	args.result = &res;
-	args.data = &tstamp;
-	args.data_len = sizeof(tstamp);
-
-	rc = nvme_set_features(hdl, &args);
+	nvme_init_set_features_timestamp(&cmd, true, 0x050403020100, &tstmp);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, &res);
 	assert(rc == 0);
-	assert(args.data_len == 8);
 }
 
 enum ns_type {

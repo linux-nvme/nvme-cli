@@ -11,8 +11,10 @@
 #define _LIBNVME_IOCTL_H
 
 #include <string.h>
+#include <endian.h>
 #include <errno.h>
 #include <stddef.h>
+#include <string.h>
 #include <sys/ioctl.h>
 
 #include <nvme/types.h>
@@ -216,12 +218,18 @@ enum nvme_cmd_dword_fields {
 	NVME_FW_COMMIT_CDW10_BPID_MASK				= 0x1,
 	NVME_GET_FEATURES_CDW10_SEL_SHIFT			= 8,
 	NVME_GET_FEATURES_CDW10_SEL_MASK			= 0x7,
-	NVME_SET_FEATURES_CDW10_SAVE_SHIFT			= 31,
-	NVME_SET_FEATURES_CDW10_SAVE_MASK			= 0x1,
-	NVME_FEATURES_CDW10_FID_SHIFT				= 0,
-	NVME_FEATURES_CDW14_UUID_SHIFT				= 0,
-	NVME_FEATURES_CDW10_FID_MASK				= 0xff,
-	NVME_FEATURES_CDW14_UUID_MASK				= 0x7f,
+	NVME_GET_FEATURES_CDW10_FID_SHIFT			= 0,
+	NVME_GET_FEATURES_CDW10_FID_MASK			= 0xff,
+	NVME_GET_FEATURES_CDW14_UUID_SHIFT			= 0,
+	NVME_GET_FEATURES_CDW14_UUID_MASK			= 0x7f,
+	NVME_SET_FEATURES_CDW10_SV_SHIFT			= 31,
+	NVME_SET_FEATURES_CDW10_SV_MASK  			= 0x1,
+	NVME_SET_FEATURES_CDW10_FID_SHIFT			= 0,
+	NVME_SET_FEATURES_CDW10_FID_MASK			= 0xff,
+	NVME_SET_FEATURES_CDW11_NUM_SHIFT			= 0,
+	NVME_SET_FEATURES_CDW11_NUM_MASK			= 0x3f,
+	NVME_SET_FEATURES_CDW14_UUID_SHIFT			= 0,
+	NVME_SET_FEATURES_CDW14_UUID_MASK			= 0x7f,
 	NVME_LOG_CDW10_LID_SHIFT				= 0,
 	NVME_LOG_CDW10_LSP_SHIFT				= 8,
 	NVME_LOG_CDW10_RAE_SHIFT				= 15,
@@ -2156,440 +2164,659 @@ nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rgo,
 		struct nvme_ana_log *log, __u32 *len, unsigned int retries);
 
 /**
- * nvme_set_features() - Set a feature attribute
- * @hdl:	Transport handle
- * @args:	&struct nvme_set_features_args argument structure
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_set_features(struct nvme_transport_handle *hdl, struct nvme_set_features_args *args);
-
-/**
- * nvme_set_features_data() - Helper function for @nvme_set_features()
- * @hdl:	Transport handle
+ * nvme_init_set_features() - Initialize passthru command for
+ * Set Features
+ * @cmd:	Passthru command to use
  * @fid:	Feature identifier
- * @nsid:	Namespace ID, if applicable
- * @cdw11:	Value to set the feature to
- * @save:	Save value across power states
- * @data_len:	Length of feature data, if applicable, in bytes
- * @data:	User address of feature data, if applicable
- * @result:	The command completion result from CQE dword0
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * @sv:		Save value across power states
  */
-static inline int nvme_set_features_data(struct nvme_transport_handle *hdl, __u8 fid, __u32 nsid,
-			__u32 cdw11, bool save, __u32 data_len, void *data,
-			__u32 *result)
+static inline void
+nvme_init_set_features(struct nvme_passthru_cmd *cmd, __u8 fid, bool sv)
 {
-	struct nvme_set_features_args args = {
-		.result = result,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.cdw11 = cdw11,
-		.cdw12 = 0,
-		.cdw13 = 0,
-		.cdw15 = 0,
-		.data_len = data_len,
-		.save = save,
-		.uuidx = NVME_UUID_NONE,
-		.fid = fid,
-	};
-	return nvme_set_features(hdl, &args);
+	__u32 cdw10 = NVME_FIELD_ENCODE(fid,
+			NVME_SET_FEATURES_CDW10_FID_SHIFT,
+			NVME_SET_FEATURES_CDW10_FID_MASK) |
+		      NVME_FIELD_ENCODE(sv,
+			NVME_SET_FEATURES_CDW10_SV_SHIFT,
+			NVME_SET_FEATURES_CDW10_SV_MASK);
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode	= nvme_admin_set_features;
+	cmd->cdw10	= cdw10;
 }
 
 /**
- * nvme_set_features_simple() - Helper function for @nvme_set_features()
- * @hdl:	Transport handle
- * @fid:	Feature identifier
- * @nsid:	Namespace ID, if applicable
- * @cdw11:	Value to set the feature to
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_set_features_simple(struct nvme_transport_handle *hdl, __u8 fid, __u32 nsid,
-			__u32 cdw11, bool save, __u32 *result)
-{
-	return nvme_set_features_data(hdl, fid, nsid, cdw11, save, 0, NULL,
-				 result);
-}
-
-/**
- * nvme_set_features_arbitration() - Set arbitration features
- * @hdl:	Transport handle
+ * nvme_init_set_features_arbitration() -Initialize passthru command for
+ * Arbitration Features
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @ab:		Arbitration Burst
  * @lpw:	Low Priority Weight
  * @mpw:	Medium Priority Weight
  * @hpw:	High Priority Weight
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_ARBRITARTION
  */
-int nvme_set_features_arbitration(struct nvme_transport_handle *hdl, __u8 ab, __u8 lpw, __u8 mpw,
-				  __u8 hpw, bool  save, __u32 *result);
+static inline void
+nvme_init_set_features_arbitration(struct nvme_passthru_cmd *cmd,
+		bool sv, __u8 ab, __u8 lpw, __u8 mpw, __u8 hpw)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_ARBITRATION, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(ab,
+			NVME_FEAT_ARBITRATION_BURST_SHIFT,
+			NVME_FEAT_ARBITRATION_BURST_MASK) |
+		     NVME_FIELD_ENCODE(lpw,
+			NVME_FEAT_ARBITRATION_LPW_SHIFT,
+			NVME_FEAT_ARBITRATION_LPW_MASK) |
+		     NVME_FIELD_ENCODE(mpw,
+			NVME_FEAT_ARBITRATION_MPW_SHIFT,
+			NVME_FEAT_ARBITRATION_MPW_MASK) |
+		     NVME_FIELD_ENCODE(hpw,
+			NVME_FEAT_ARBITRATION_HPW_SHIFT,
+			NVME_FEAT_ARBITRATION_HPW_MASK);
+}
 
 /**
- * nvme_set_features_power_mgmt() - Set power management feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_power_mgmt() - Initialize passthru command for
+ * Power Management
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @ps:		Power State
  * @wh:		Workload Hint
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_PWRMGMT_PS
  */
-int nvme_set_features_power_mgmt(struct nvme_transport_handle *hdl, __u8 ps, __u8 wh, bool save,
-				 __u32 *result);
+static inline void
+nvme_init_set_features_power_mgmt(struct nvme_passthru_cmd *cmd,
+		bool sv, __u8 ps, __u8 wh)
+{
+
+	nvme_init_set_features(cmd, NVME_FEAT_FID_POWER_MGMT, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(ps,
+			NVME_FEAT_PWRMGMT_PS_SHIFT,
+			NVME_FEAT_PWRMGMT_PS_MASK) |
+		     NVME_FIELD_ENCODE(wh,
+			NVME_FEAT_PWRMGMT_WH_SHIFT,
+			NVME_FEAT_PWRMGMT_WH_MASK);
+}
 
 /**
- * nvme_set_features_lba_range() - Set LBA range feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_lba_range() - Initialize passthru command for
+ * LBA Range
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
- * @nr_ranges:	Number of ranges in @data
- * @save:	Save value across power states
+ * @sv:		Save value across power states
+ * @num:	Number of ranges in @data
  * @data:	User address of feature data
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_LBA_RANGE
  */
-int nvme_set_features_lba_range(struct nvme_transport_handle *hdl, __u32 nsid, __u8 nr_ranges, bool save,
-				struct nvme_lba_range_type *data, __u32 *result);
+static inline void
+nvme_init_set_features_lba_range(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, bool sv, __u8 num,
+		struct nvme_lba_range_type *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_LBA_RANGE, sv);
+	cmd->nsid = nsid;
+	cmd->cdw11 = NVME_FIELD_ENCODE(num - 1,
+			NVME_SET_FEATURES_CDW11_NUM_SHIFT,
+			NVME_SET_FEATURES_CDW11_NUM_MASK);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
 
 /**
- * nvme_set_features_temp_thresh() - Set temperature threshold feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_temp_thresh() - Initialize passthru command for
+ * Temperature Threshold
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @tmpth:	Temperature Threshold
  * @tmpsel:	Threshold Temperature Select
  * @thsel:	Threshold Type Select
  * @tmpthh:	Temperature Threshold Hysteresis
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_TEMP_THRESH
  */
-int nvme_set_features_temp_thresh(struct nvme_transport_handle *hdl, __u16 tmpth, __u8 tmpsel,
-				  enum nvme_feat_tmpthresh_thsel thsel, __u8 tmpthh,
-				  bool save, __u32 *result);
+static inline void
+nvme_init_set_features_temp_thresh(struct nvme_passthru_cmd *cmd,
+		bool sv, __u16 tmpth, __u8 tmpsel,
+		enum nvme_feat_tmpthresh_thsel thsel, __u8 tmpthh)
+{
+
+	nvme_init_set_features(cmd, NVME_FEAT_FID_TEMP_THRESH, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(tmpth,
+			NVME_FEAT_TT_TMPTH_SHIFT,
+			NVME_FEAT_TT_TMPTH_MASK) |
+		     NVME_FIELD_ENCODE(tmpsel,
+			NVME_FEAT_TT_TMPSEL_SHIFT,
+			NVME_FEAT_TT_TMPSEL_MASK) |
+		     NVME_FIELD_ENCODE(thsel,
+			NVME_FEAT_TT_THSEL_SHIFT,
+			NVME_FEAT_TT_THSEL_MASK) |
+		     NVME_FIELD_ENCODE(tmpthh,
+			NVME_FEAT_TT_TMPTHH_SHIFT,
+			NVME_FEAT_TT_TMPTHH_MASK);
+}
 
 /**
- * nvme_set_features_err_recovery() - Set error recovery feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_err_recovery() - Initialize passthru command for
+ * Error Recovery
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
+ * @sv:		Save value across power states
  * @tler:	Time-limited error recovery value
  * @dulbe:	Deallocated or Unwritten Logical Block Error Enable
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_ERR_RECOVERY
  */
-int nvme_set_features_err_recovery(struct nvme_transport_handle *hdl, __u32 nsid, __u16 tler,
-				   bool dulbe, bool save, __u32 *result);
+static inline void
+nvme_init_set_features_err_recovery(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, bool sv, __u16 tler, bool dulbe)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_ERR_RECOVERY, sv);
+	cmd->nsid = nsid;
+	cmd->cdw11 = NVME_FIELD_ENCODE(tler,
+			NVME_FEAT_ERROR_RECOVERY_TLER_SHIFT,
+			NVME_FEAT_ERROR_RECOVERY_TLER_MASK) |
+		     NVME_FIELD_ENCODE(dulbe,
+			NVME_FEAT_ERROR_RECOVERY_DULBE_SHIFT,
+			NVME_FEAT_ERROR_RECOVERY_DULBE_MASK);
+}
 
 /**
- * nvme_set_features_volatile_wc() - Set volatile write cache feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_volatile_wc() - Initialize passthru command for
+ * Volatile Write Cache
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @wce:	Write cache enable
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_VOLATILE_WC
  */
-int nvme_set_features_volatile_wc(struct nvme_transport_handle *hdl, bool wce, bool save,
-				  __u32 *result);
+static inline void
+nvme_init_set_features_volatile_wc(struct nvme_passthru_cmd *cmd,
+		bool sv, bool wce)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_VOLATILE_WC, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(wce,
+			NVME_FEAT_VWC_WCE_SHIFT,
+			NVME_FEAT_VWC_WCE_MASK);
+}
 
 /**
- * nvme_set_features_irq_coalesce() - Set IRQ coalesce feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_irq_coalesce() - Initialize passthru command for
+ * IRQ Coalescing
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @thr:	Aggregation Threshold
  * @time:	Aggregation Time
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_IRQ_COALESCE
  */
-int nvme_set_features_irq_coalesce(struct nvme_transport_handle *hdl, __u8 thr, __u8 time,
-				   bool save, __u32 *result);
+static inline void
+nvme_init_set_features_irq_coalesce(struct nvme_passthru_cmd *cmd,
+                bool sv, __u8 thr, __u8 time)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_IRQ_COALESCE, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(thr,
+			NVME_FEAT_IRQC_THR_SHIFT,
+			NVME_FEAT_IRQC_THR_MASK) |
+		     NVME_FIELD_ENCODE(time,
+			NVME_FEAT_IRQC_TIME_SHIFT,
+			NVME_FEAT_IRQC_TIME_MASK);
+}
 
 /**
- * nvme_set_features_irq_config() - Set IRQ config feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_irq_config() - Initialize passthru command for
+ * IRQ Config
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @iv:		Interrupt Vector
  * @cd:		Coalescing Disable
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_IRQ_CONFIG
  */
-int nvme_set_features_irq_config(struct nvme_transport_handle *hdl, __u16 iv, bool cd, bool save,
-				 __u32 *result);
+static inline void
+nvme_init_set_features_irq_config(struct nvme_passthru_cmd *cmd,
+		bool sv, __u16 iv, bool cd)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_IRQ_CONFIG, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(iv,
+			NVME_FEAT_ICFG_IV_SHIFT,
+			NVME_FEAT_ICFG_IV_MASK) |
+		     NVME_FIELD_ENCODE(cd,
+			NVME_FEAT_ICFG_CD_SHIFT,
+			NVME_FEAT_ICFG_CD_MASK);
+}
 
 /**
- * nvme_set_features_write_atomic() - Set write atomic feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_write_atomic() - Initialize passthru command for
+ * Write Atomic
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @dn:		Disable Normal
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_WRITE_ATOMIC
  */
-int nvme_set_features_write_atomic(struct nvme_transport_handle *hdl, bool dn, bool save,
-				   __u32 *result);
+static inline void
+nvme_init_set_features_write_atomic(struct nvme_passthru_cmd *cmd,
+		bool sv, bool dn)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_WRITE_ATOMIC, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(dn,
+			NVME_FEAT_WA_DN_SHIFT,
+			NVME_FEAT_WA_DN_MASK);
+}
 
 /**
- * nvme_set_features_async_event() - Set asynchronous event feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_async_event() - Initialize passthru command for
+ * Asynchronous Event Configuration
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @events:	Events to enable
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_ASYNC_EVENT
  */
-int nvme_set_features_async_event(struct nvme_transport_handle *hdl, __u32 events, bool save,
-				  __u32 *result);
+static inline void
+nvme_init_set_features_async_event(struct nvme_passthru_cmd *cmd,
+		bool sv, __u32 events)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_ASYNC_EVENT, sv);
+	cmd->cdw11 = events;
+}
 
 /**
- * nvme_set_features_auto_pst() - Set autonomous power state feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_auto_pst() - Initialize passthru command for
+ * Autonomous Power State Transition
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @apste:	Autonomous Power State Transition Enable
- * @apst:	Autonomous Power State Transition
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
+ * @apst:	Autonomous Power State Transition data buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_AUTO_PST
  */
-int nvme_set_features_auto_pst(struct nvme_transport_handle *hdl, bool apste, bool save,
-			       struct nvme_feat_auto_pst *apst,
-			       __u32 *result);
+static inline void
+nvme_init_set_features_auto_pst(struct nvme_passthru_cmd *cmd,
+                bool sv, bool apste, struct nvme_feat_auto_pst *apst)
+{
+        nvme_init_set_features(cmd, NVME_FEAT_FID_AUTO_PST, sv);
+        cmd->cdw11 = NVME_FIELD_ENCODE(apste,
+                                       NVME_FEAT_APST_APSTE_SHIFT,
+                                       NVME_FEAT_APST_APSTE_MASK);
+	cmd->data_len = sizeof(*apst);
+	cmd->addr = (__u64)(uintptr_t)apst;
+}
 
 /**
- * nvme_set_features_timestamp() - Set timestamp feature
- * @hdl:	Transport handle
- * @save:	Save value across power states
- * @timestamp:	The current timestamp value to assign to this feature
+ * nvme_init_set_features_timestamp() - Initialize passthru command for
+ * Timestamp
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @tstmp:	The current timestamp value to assign to this feature
+ * @ts:		Timestamp data buffer (populated by this function)
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_TIMESTAMP. The caller must provide a valid
+ * buffer via @ts, which this function will populate.
  */
-int nvme_set_features_timestamp(struct nvme_transport_handle *hdl, bool save, __u64 timestamp);
+static inline void
+nvme_init_set_features_timestamp(struct nvme_passthru_cmd *cmd,
+		bool sv, __u64 tstmp, struct nvme_timestamp *ts)
+{
+	__le64 t = htole64(tstmp);
+
+	memcpy(ts, &t, sizeof(__le64));
+
+	nvme_init_set_features(cmd, NVME_FEAT_FID_TIMESTAMP, sv);
+	cmd->data_len = sizeof(*ts);
+	cmd->addr = (__u64)(uintptr_t)ts;
+}
 
 /**
- * nvme_set_features_hctm() - Set thermal management feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_hctm() - Initialize passthru command for
+ * Host Controlled Thermal Management
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @tmt2:	Thermal Management Temperature 2
  * @tmt1:	Thermal Management Temperature 1
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_HCTM
  */
-int nvme_set_features_hctm(struct nvme_transport_handle *hdl, __u16 tmt2, __u16 tmt1, bool save,
-			   __u32 *result);
+static inline void
+nvme_init_set_features_hctm(struct nvme_passthru_cmd *cmd,
+		bool sv, __u16 tmt2, __u16 tmt1)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_HCTM, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(tmt2,
+				       NVME_FEAT_HCTM_TMT2_SHIFT,
+				       NVME_FEAT_HCTM_TMT2_MASK) |
+		     NVME_FIELD_ENCODE(tmt1,
+				       NVME_FEAT_HCTM_TMT1_SHIFT,
+				       NVME_FEAT_HCTM_TMT1_MASK);
+}
 
 /**
- * nvme_set_features_nopsc() - Set non-operational power state feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_nopsc() - Initialize passthru command for
+ * Non-Operational Power State Config
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @noppme:	Non-Operational Power State Permissive Mode Enable
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_NOPSC
  */
-int nvme_set_features_nopsc(struct nvme_transport_handle *hdl, bool noppme, bool save, __u32 *result);
+static inline void
+nvme_init_set_features_nopsc(struct nvme_passthru_cmd *cmd,
+		bool sv, bool noppme)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_NOPSC, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(noppme,
+				       NVME_FEAT_NOPS_NOPPME_SHIFT,
+				       NVME_FEAT_NOPS_NOPPME_MASK);
+}
 
 /**
- * nvme_set_features_rrl() - Set read recovery level feature
- * @hdl:	Transport handle
- * @rrl:	Read recovery level setting
+ * nvme_init_set_features_rrl() - Initialize passthru command for
+ * Read Recovery Level
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @nvmsetid:	NVM set id
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
+ * @rrl:	Read recovery level setting
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_RRL
  */
-int nvme_set_features_rrl(struct nvme_transport_handle *hdl, __u8 rrl, __u16 nvmsetid, bool save,
-			  __u32 *result);
+static inline void
+nvme_init_set_features_rrl(struct nvme_passthru_cmd *cmd,
+                bool sv, __u16 nvmsetid, __u8 rrl)
+{
+        nvme_init_set_features(cmd, NVME_FEAT_FID_RRL, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(nvmsetid,
+			NVME_FEAT_RRL_NVMSETID_SHIFT,
+			NVME_FEAT_RRL_NVMSETID_MASK);
+	cmd->cdw12 = NVME_FIELD_ENCODE(rrl,
+			NVME_FEAT_RRL_RRL_SHIFT,
+			NVME_FEAT_RRL_RRL_MASK);
+}
 
 /**
- * nvme_set_features_plm_config() - Set predictable latency feature
- * @hdl:	Transport handle
- * @enable:	Predictable Latency Enable
+ * nvme_init_set_features_plm_config() - Initialize passthru command for
+ * Predictable Latency Mode Config
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @nvmsetid:	NVM Set Identifier
- * @save:	Save value across power states
+ * @lpe:	Predictable Latency Enable
  * @data:	Pointer to structure nvme_plm_config
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_PLM_CONFIG
  */
-int nvme_set_features_plm_config(struct nvme_transport_handle *hdl, bool enable, __u16 nvmsetid,
-				 bool save, struct nvme_plm_config *data,
-				 __u32 *result);
+static inline void
+nvme_init_set_features_plm_config(struct nvme_passthru_cmd *cmd,
+		bool sv, __u16 nvmsetid, bool lpe, struct nvme_plm_config *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_PLM_CONFIG, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(nvmsetid,
+			NVME_FEAT_PLM_NVMSETID_SHIFT,
+			NVME_FEAT_PLM_NVMSETID_MASK);
+	cmd->cdw12 = NVME_FIELD_ENCODE(lpe,
+			NVME_FEAT_PLM_LPE_SHIFT,
+			NVME_FEAT_PLM_LPE_MASK);
+        cmd->data_len = sizeof(*data);
+        cmd->addr = (__u64)(uintptr_t)data;
+}
 
 /**
- * nvme_set_features_plm_window() - Set window select feature
- * @hdl:	Transport handle
- * @sel:	Window Select
+ * nvme_init_set_features_plm_window() - Initialize passthru command for
+ * Predictable Latency Mode Window
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @nvmsetid:	NVM Set Identifier
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
+ * @wsel:	Window Select
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_PLM_WINDOW
  */
-int nvme_set_features_plm_window(struct nvme_transport_handle *hdl, enum nvme_feat_plm_window_select sel,
-				 __u16 nvmsetid, bool save, __u32 *result);
+static inline void
+nvme_init_set_features_plm_window(struct nvme_passthru_cmd *cmd,
+		bool sv, __u16 nvmsetid,
+		enum nvme_feat_plm_window_select wsel)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_PLM_WINDOW, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(nvmsetid,
+			NVME_FEAT_PLM_NVMSETID_SHIFT,
+			NVME_FEAT_PLM_NVMSETID_MASK);
+	cmd->cdw12 = NVME_FIELD_ENCODE(wsel,
+			NVME_FEAT_PLMW_WS_SHIFT,
+			NVME_FEAT_PLMW_WS_MASK);
+}
 
 /**
- * nvme_set_features_lba_sts_interval() - Set LBA status information feature
- * @hdl:	Transport handle
- * @save:	Save value across power states
- * @lsiri:	LBA Status Information Report Interval
- * @lsipi:	LBA Status Information Poll Interval
- * @result:	The command completion result from CQE dword0
+ * nvme_init_set_features_lba_sts_interval() - Initialize passthru command for
+ * LBA Status Information Interval
+ * @cmd:        Passthru command to use
+ * @sv:         Save value across power states
+ * @lsiri:      LBA Status Information Report Interval
+ * @lsipi:      LBA Status Information Poll Interval
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_LBA_STS_INTERVAL
  */
-int nvme_set_features_lba_sts_interval(struct nvme_transport_handle *hdl, __u16 lsiri, __u16 lsipi,
-				       bool save, __u32 *result);
+static inline void
+nvme_init_set_features_lba_sts_interval(struct nvme_passthru_cmd *cmd,
+		bool sv, __u16 lsiri, __u16 lsipi)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_LBA_STS_INTERVAL, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(lsiri,
+			NVME_FEAT_LBAS_LSIRI_SHIFT,
+			NVME_FEAT_LBAS_LSIRI_MASK) |
+		     NVME_FIELD_ENCODE(lsipi,
+			NVME_FEAT_LBAS_LSIPI_SHIFT,
+			NVME_FEAT_LBAS_LSIPI_MASK);
+}
 
 /**
- * nvme_set_features_host_behavior() - Set host behavior feature
- * @hdl:	Transport handle
- * @save:	Save value across power states
+ * nvme_init_set_features_host_behavior() - Initialize passthru command for
+ * Host Behavior
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @data:	Pointer to structure nvme_feat_host_behavior
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_HOST_BEHAVIOR
  */
-int nvme_set_features_host_behavior(struct nvme_transport_handle *hdl, bool save,
-				    struct nvme_feat_host_behavior *data);
+static inline void
+nvme_init_set_features_host_behavior(struct nvme_passthru_cmd *cmd,
+		bool sv, struct nvme_feat_host_behavior *data)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_HOST_BEHAVIOR, sv);
+	cmd->data_len = sizeof(*data);
+	cmd->addr = (__u64)(uintptr_t)data;
+}
 
 /**
- * nvme_set_features_sanitize() - Set sanitize feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_sanitize() - Initialize passthru command for
+ * Sanitize
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @nodrm:	No-Deallocate Response Mode
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_SANITIZE
  */
-int nvme_set_features_sanitize(struct nvme_transport_handle *hdl, bool nodrm, bool save, __u32 *result);
+static inline void
+nvme_init_set_features_sanitize(struct nvme_passthru_cmd *cmd,
+		bool sv, bool nodrm)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_SANITIZE, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(nodrm,
+				       NVME_FEAT_SANITIZE_NODRM_SHIFT,
+				       NVME_FEAT_SANITIZE_NODRM_MASK);
+}
 
 /**
- * nvme_set_features_endurance_evt_cfg() - Set endurance event config feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_endurance_evt_cfg() - Initialize passthru command for
+ * Endurance Group Event Configuration
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @endgid:	Endurance Group Identifier
- * @egwarn:	Flags to enable warning, see &enum nvme_eg_critical_warning_flags
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
+ * @egcw:	Flags to enable warning,
+ *		see &enum nvme_eg_critical_warning_flags
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_ENDURANCE_EVT_CFG
  */
-int nvme_set_features_endurance_evt_cfg(struct nvme_transport_handle *hdl, __u16 endgid, __u8 egwarn,
-					bool save, __u32 *result);
+static inline void
+nvme_init_set_features_endurance_evt_cfg(struct nvme_passthru_cmd *cmd,
+		bool sv, __u16 endgid, __u8 egcw)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_ENDURANCE_EVT_CFG, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(endgid,
+				       NVME_FEAT_EG_ENDGID_SHIFT,
+				       NVME_FEAT_EG_ENDGID_MASK) |
+		     NVME_FIELD_ENCODE(egcw,
+				       NVME_FEAT_EG_EGCW_SHIFT,
+				       NVME_FEAT_EG_EGCW_MASK);
+}
 
 /**
- * nvme_set_features_sw_progress() - Set pre-boot software load count feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_sw_progress() - Initialize passthru command for
+ * Software Pogress Marker
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
  * @pbslc:	Pre-boot Software Load Count
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_SW_PROGRESS
  */
-int nvme_set_features_sw_progress(struct nvme_transport_handle *hdl, __u8 pbslc, bool save,
-				  __u32 *result);
+static inline void
+nvme_init_set_features_sw_progress(struct nvme_passthru_cmd *cmd,
+		bool sv, __u8 pbslc)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_SW_PROGRESS, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(pbslc,
+				       NVME_FEAT_SPM_PBSLC_SHIFT,
+				       NVME_FEAT_SPM_PBSLC_MASK);
+}
 
 /**
- * nvme_set_features_host_id() - Set enable extended host identifiers feature
- * @hdl:	Transport handle
- * @exhid:	Enable Extended Host Identifier
- * @save:	Save value across power states
- * @hostid:	Host ID to set
+ * nvme_init_set_features_host_id() - Initialize passthru command for
+ * Host Identifier
+ * @cmd:        Passthru command to use
+ * @sv:         Save value across power states
+ * @exhid:      Enable Extended Host Identifier
+ * @hostid:     Host ID buffer to set
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_HOST_ID.
  */
-int nvme_set_features_host_id(struct nvme_transport_handle *hdl, bool exhid, bool save, __u8 *hostid);
+static inline void
+nvme_init_set_features_host_id(struct nvme_passthru_cmd *cmd,
+		bool sv, bool exhid, __u8 *hostid)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_HOST_ID, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(exhid,
+				       NVME_FEAT_HOSTID_EXHID_SHIFT,
+				       NVME_FEAT_HOSTID_EXHID_MASK);
+	cmd->data_len = exhid ? 16 : 8;
+	cmd->addr = (__u64)(uintptr_t)hostid;
+}
 
 /**
- * nvme_set_features_resv_mask() - Set reservation notification mask feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_resv_mask() - Initialize passthru command for
+ * Reservation Notification Mask
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
+ * @sv:		Save value across power states
  * @mask:	Reservation Notification Mask Field
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_RESV_MASK
  */
-int nvme_set_features_resv_mask(struct nvme_transport_handle *hdl, __u32 nsid, __u32 mask, bool save,
-				__u32 *result);
+static inline void
+nvme_init_set_features_resv_mask(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		bool sv, __u32 mask)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_RESV_MASK, sv);
+	cmd->nsid = nsid;
+	cmd->cdw11 = mask;
+}
 
 /**
- * nvme_set_features_resv_persist() - Set persist through power loss feature
- * @hdl:	Transport handle
+ * nvme_init_set_features_resv_persist() - Initialize passthru command for
+ * Reservation Persistence
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
+ * @sv:		Save value across power states
  * @ptpl:	Persist Through Power Loss
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_RESV_PERSIST
  */
-int nvme_set_features_resv_persist(struct nvme_transport_handle *hdl, __u32 nsid, bool ptpl, bool save,
-				   __u32 *result);
+static inline void
+nvme_init_set_features_resv_persist(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		bool sv, bool ptpl)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_RESV_PERSIST, sv);
+	cmd->nsid = nsid;
+	cmd->cdw11 = NVME_FIELD_ENCODE(ptpl,
+			NVME_FEAT_RESP_PTPL_SHIFT,
+			NVME_FEAT_RESP_PTPL_MASK);
+}
 
 /**
- * nvme_set_features_write_protect() - Set write protect feature
- * @hdl:	Transport handle
- * @nsid:	Namespace ID
- * @state:	Write Protection State
- * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
+ * nvme_init_set_features_write_protect() - Initialize passthru command for
+ * Write Protect
+ * @cmd:        Passthru command to use
+ * @nsid:       Namespace ID
+ * @sv:         Save value across power states
+ * @wps:        Write Protection State
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_WRITE_PROTECT
  */
-int nvme_set_features_write_protect(struct nvme_transport_handle *hdl, __u32 nsid,
-				    enum nvme_feat_nswpcfg_state state,
-				    bool save, __u32 *result);
+static inline void
+nvme_init_set_features_write_protect(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		bool sv, enum nvme_feat_nswpcfg_state wps)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_WRITE_PROTECT, sv);
+	cmd->nsid = nsid;
+	cmd->cdw11 = NVME_FIELD_ENCODE(wps,
+			NVME_FEAT_WP_WPS_SHIFT,
+			NVME_FEAT_WP_WPS_MASK);
+}
 
 /**
- * nvme_set_features_iocs_profile() - Set I/O command set profile feature
- * @hdl:	Transport handle
- * @iocsi:	I/O Command Set Combination Index
- * @save:	Save value across power states
+ * nvme_init_set_features_iocs_profile() - Initialize passthru command for
+ * I/O Command Set Profile
+ * @cmd:	Passthru command to use
+ * @sv:		Save value across power states
+ * @iocsci:	I/O Command Set Combination Index
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_IOCS_PROFILE
  */
-int nvme_set_features_iocs_profile(struct nvme_transport_handle *hdl, __u16 iocsi, bool save);
+static inline void
+nvme_init_set_features_iocs_profile(struct nvme_passthru_cmd *cmd,
+		bool sv, __u16 iocsci)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_IOCS_PROFILE, sv);
+	cmd->cdw11 = NVME_FIELD_ENCODE(iocsci,
+			NVME_FEAT_IOCSP_IOCSCI_SHIFT,
+			NVME_FEAT_IOCSP_IOCSCI_MASK);
+}
 
 /**
  * nvme_get_features() - Retrieve a feature attribute

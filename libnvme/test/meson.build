@@ -110,6 +110,7 @@ if conf.get('HAVE_NETDB')
     test_util = executable(
         'test-util',
         ['test-util.c'],
+        dependencies: libnvme_dep,
         include_directories: [incdir, internal_incdir]
     )
     test('util', test_util)

@@ -15,7 +15,7 @@ mock_ioctl = library(
     'mock-ioctl',
     ['mock.c', 'util.c'],
     include_directories: [incdir, internal_incdir],
-    dependencies: [dl_dep],
+    dependencies: [libnvme_dep, dl_dep],
     c_args: ['-DHAVE_GLIBC_IOCTL=' + (mock_conf.get('HAVE_GLIBC_IOCTL') ? '1' : '0')])
 
 # Add mock-ioctl to the LD_PRELOAD path so it overrides libc.
