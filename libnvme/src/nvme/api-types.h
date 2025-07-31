@@ -48,32 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_identify_args - Arguments for the NVMe Identify command
- * @result:		The command completion result from CQE dword0
- * @data:		User space destination address to transfer the data
- * @args_size:		Size of &struct nvme_identify_args
- * @timeout:		Timeout in ms (0 for default timeout)
- * @cns:		The Controller or Namespace structure, see @enum nvme_identify_cns
- * @csi:		Command Set Identifier
- * @nsid:		Namespace identifier, if applicable
- * @cntid:		The Controller Identifier, if applicable
- * @cns_specific_id:	Identifier that is required for a particular CNS value
- * @uuidx:		UUID Index if controller supports this id selection method
- */
-struct nvme_identify_args {
-	__u32 *result;
-	void *data;
-	int args_size;
-	__u32 timeout;
-	enum nvme_identify_cns cns;
-	enum nvme_csi csi;
-	__u32 nsid;
-	__u16 cntid;
-	__u16 cns_specific_id;
-	__u8 uuidx;
-};
-
-/**
  * struct nvme_get_log_args - Arguments for the NVMe Admin Get Log command
  * @lpo:	Log page offset for partial log transfers
  * @result:	The command completion result from CQE dword0

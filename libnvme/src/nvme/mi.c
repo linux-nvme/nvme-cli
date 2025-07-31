@@ -212,9 +212,9 @@ static void __nvme_mi_format_mn(struct nvme_id_ctrl *id,
 
 void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 {
-	struct nvme_identify_args id_args = { 0 };
 	struct nvme_id_ctrl id = { 0 };
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc;
 
 	/* Ensure the probe occurs at most once. This isn't just to mitigate doubling
@@ -253,15 +253,9 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 	 *
 	 * all other fields - rab and onwards - will be zero!
 	 */
-	id_args.args_size = sizeof(id_args);
-	id_args.data = &id;
-	id_args.cns = NVME_IDENTIFY_CNS_CTRL;
-	id_args.nsid = NVME_NSID_NONE;
-	id_args.cntid = 0;
-	id_args.csi = NVME_CSI_NVM;
-
-	rc = nvme_identify_partial(hdl, offsetof(struct nvme_id_ctrl, rab),
-				   &id_args);
+	nvme_init_identify_ctrl(&cmd, &id);
+	cmd.data_len = offsetof(struct nvme_id_ctrl, rab);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (rc) {
 		nvme_msg(ep->ctx, LOG_WARNING,
 			 "Identify Controller failed, no quirks applied\n");

@@ -294,38 +294,6 @@ enum features {
 	NVME_FEATURES_IOCSP_IOCSCI_MASK				= 0xff,
 };
 
-int nvme_identify_partial(struct nvme_transport_handle *hdl, __u32 xfer_len,
-			  struct nvme_identify_args *args)
-{
-	__u32 cdw10 = NVME_SET(args->cntid, IDENTIFY_CDW10_CNTID) |
-			NVME_SET(args->cns, IDENTIFY_CDW10_CNS);
-	__u32 cdw11 = NVME_SET(args->cns_specific_id, IDENTIFY_CDW11_CNSSPECID) |
-			NVME_SET(args->csi, IDENTIFY_CDW11_CSI);
-	__u32 cdw14 = NVME_SET(args->uuidx, IDENTIFY_CDW14_UUID);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_admin_identify,
-		.nsid		= args->nsid,
-		.addr		= (__u64)(uintptr_t)args->data,
-		.data_len	= xfer_len,
-		.cdw10		= cdw10,
-		.cdw11		= cdw11,
-		.cdw14		= cdw14,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
-int nvme_identify(struct nvme_transport_handle *hdl,
-		  struct nvme_identify_args *args)
-{
-	return nvme_identify_partial(hdl, NVME_IDENTIFY_DATA_SIZE, args);
-}
-
 int nvme_get_log(struct nvme_transport_handle *hdl, struct nvme_get_log_args *args)
 {
 	__u32 numd = (args->len >> 2) - 1;

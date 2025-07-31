@@ -1285,7 +1285,11 @@ bool nvme_ctrl_is_unique_discovery_ctrl(nvme_ctrl_t c)
 
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
-	return nvme_identify_ctrl(nvme_ctrl_get_transport_handle(c), id);
+	struct nvme_transport_handle *hdl = nvme_ctrl_get_transport_handle(c);
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_ctrl(&cmd, id);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c)
@@ -2451,14 +2455,20 @@ void nvme_ns_get_uuid(nvme_ns_t n, unsigned char out[NVME_UUID_LEN])
 
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
 {
-	return nvme_identify_ns(nvme_ns_get_transport_handle(n),
-				nvme_ns_get_nsid(n), ns);
+	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_ns(&cmd, nvme_ns_get_nsid(n), ns);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 int nvme_ns_identify_descs(nvme_ns_t n, struct nvme_ns_id_desc *descs)
 {
-	return nvme_identify_ns_descs(nvme_ns_get_transport_handle(n),
-				      nvme_ns_get_nsid(n), descs);
+	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_ns_descs_list(&cmd, nvme_ns_get_nsid(n), descs);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)

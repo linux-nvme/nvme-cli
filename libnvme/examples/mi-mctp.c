@@ -178,8 +178,8 @@ static const char *__copy_id_str(const void *field, size_t size,
 
 int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 {
-	struct nvme_identify_args id_args = { 0 };
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ctrl id;
 	uint16_t ctrl_id;
 	char buf[41];
@@ -207,25 +207,16 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 		return -1;
 	}
 
-	id_args.data = &id;
-	id_args.args_size = sizeof(id_args);
-	id_args.cns = NVME_IDENTIFY_CNS_CTRL;
-	id_args.nsid = NVME_NSID_NONE;
-	id_args.cntid = 0;
-	id_args.csi = NVME_CSI_NVM;
-
 	/* for this example code, we can either do a full or partial identify;
 	 * since we're only printing the fields before the 'rab' member,
 	 * these will be equivalent, aside from the size of the MI
 	 * response.
 	 */
-	if (partial) {
-		rc = nvme_identify_partial(hdl, offsetof(struct nvme_id_ctrl, rab),
-					   &id_args);
-	} else {
-		rc = nvme_identify(hdl, &id_args);
-	}
+	nvme_init_identify_ctrl(&cmd, &id);
+	if (partial)
+		cmd.data_len = offsetof(struct nvme_id_ctrl, rab);
 
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (rc) {
 		warn("can't perform Admin Identify command");
 		return -1;

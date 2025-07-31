@@ -21,25 +21,31 @@
 
 static void show_zns_properties(nvme_ns_t n)
 {
+	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
 	struct nvme_zns_id_ns zns_ns;
 	struct nvme_zns_id_ctrl zns_ctrl;
 	struct nvme_zone_report *zr;
+	struct nvme_passthru_cmd cmd;
 	__u32 result;
 
 	zr = calloc(1, 0x1000);
 	if (!zr)
 		return;
 
-	if (nvme_zns_identify_ns(nvme_ns_get_transport_handle(n), nvme_ns_get_nsid(n),
-				 &zns_ns)) {
-		fprintf(stderr, "failed to identify zns ns\n");;
+	nvme_init_zns_identify_ns(&cmd, nvme_ns_get_nsid(n), &zns_ns);
+	if (nvme_submit_admin_passthru(hdl, &cmd, &result)) {
+		fprintf(stderr, "failed to identify zns ns, result %x\n",
+			le32_to_cpu(result));
+		free(zr);
+		return;
 	}
 
 	printf("zoc:%x ozcs:%x mar:%x mor:%x\n", le16_to_cpu(zns_ns.zoc),
 		le16_to_cpu(zns_ns.ozcs), le32_to_cpu(zns_ns.mar),
 		le32_to_cpu(zns_ns.mor));
 
-	if (nvme_zns_identify_ctrl(nvme_ns_get_transport_handle(n), &zns_ctrl)) {
+	nvme_init_zns_identify_ctrl(&cmd, &zns_ctrl);
+	if (nvme_submit_admin_passthru(hdl, &cmd, &result)) {
 		fprintf(stderr, "failed to identify zns ctrl\n");;
 		free(zr);
 		return;

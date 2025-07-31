@@ -439,6 +439,7 @@ static int test_admin_id_cb(struct nvme_mi_ep *ep,
 static void test_admin_id(nvme_mi_ep_t ep)
 {
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ctrl id;
 	int rc;
 
@@ -447,7 +448,8 @@ static void test_admin_id(nvme_mi_ep_t ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_identify_ctrl(hdl, &id);
+	nvme_init_identify_ctrl(&cmd, &id);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(rc == 0);
 }
 
@@ -493,6 +495,7 @@ static int test_admin_err_mi_resp_cb(struct nvme_mi_ep *ep,
 static void test_admin_err_mi_resp(nvme_mi_ep_t ep)
 {
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ctrl id;
 	int rc;
 
@@ -501,7 +504,8 @@ static void test_admin_err_mi_resp(nvme_mi_ep_t ep)
 	hdl = nvme_mi_init_transport_handle(ep, 1);
 	assert(hdl);
 
-	rc = nvme_identify_ctrl(hdl, &id);
+	nvme_init_identify_ctrl(&cmd, &id);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(rc != 0);
 	assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_MI);
 	assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
@@ -556,6 +560,7 @@ static void test_admin_err_nvme_resp(nvme_mi_ep_t ep)
 {
 	struct nvme_id_ctrl id;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc;
 
 	test_set_transport_callback(ep, test_admin_err_nvme_resp_cb, NULL);
@@ -563,7 +568,8 @@ static void test_admin_err_nvme_resp(nvme_mi_ep_t ep)
 	hdl = nvme_mi_init_transport_handle(ep, 1);
 	assert(hdl);
 
-	rc = nvme_identify_ctrl(hdl, &id);
+	nvme_init_identify_ctrl(&cmd, &id);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(rc != 0);
 	assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_NVME);
 	assert(nvme_status_get_value(rc) ==
@@ -1147,8 +1153,9 @@ static int test_admin_id_ns_list_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_id_alloc_ns_list(struct nvme_mi_ep *ep)
 {
-	struct nvme_ns_list list;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
+	struct nvme_ns_list list;
 	enum ns_type type;
 	int rc;
 
@@ -1158,7 +1165,8 @@ static void test_admin_id_alloc_ns_list(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_identify_allocated_ns_list(hdl, 1, &list);
+	nvme_init_identify_allocated_ns_list(&cmd, 1, &list);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 
 	assert(le32_to_cpu(list.ns[0]) == 2);
@@ -1168,8 +1176,9 @@ static void test_admin_id_alloc_ns_list(struct nvme_mi_ep *ep)
 
 static void test_admin_id_active_ns_list(struct nvme_mi_ep *ep)
 {
-	struct nvme_ns_list list;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
+	struct nvme_ns_list list;
 	enum ns_type type;
 	int rc;
 
@@ -1179,7 +1188,8 @@ static void test_admin_id_active_ns_list(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_identify_active_ns_list(hdl, 1, &list);
+	nvme_init_identify_active_ns_list(&cmd, 1, &list);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 
 	assert(le32_to_cpu(list.ns[0]) == 4);
@@ -1231,8 +1241,9 @@ static int test_admin_id_ns_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_id_alloc_ns(struct nvme_mi_ep *ep)
 {
-	struct nvme_id_ns id;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
+	struct nvme_id_ns id;
 	enum ns_type type;
 	int rc;
 
@@ -1242,15 +1253,17 @@ static void test_admin_id_alloc_ns(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_identify_allocated_ns(hdl, 1, &id);
+	nvme_init_identify_allocated_ns(&cmd, 1, &id);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 	assert(le64_to_cpu(id.nsze) == 1);
 }
 
 static void test_admin_id_active_ns(struct nvme_mi_ep *ep)
 {
-	struct nvme_id_ns id;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
+	struct nvme_id_ns id;
 	enum ns_type type;
 	int rc;
 
@@ -1260,15 +1273,16 @@ static void test_admin_id_active_ns(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_identify_ns(hdl, 1, &id);
+	nvme_init_identify_ns(&cmd, 1, &id);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 	assert(le64_to_cpu(id.nsze) == 1);
 }
 
-static int test_admin_id_nsid_ctrl_list_cb(struct nvme_mi_ep *ep,
-					   struct nvme_mi_req *req,
-					   struct nvme_mi_resp *resp,
-					   void *data)
+static int test_admin_id_ns_ctrl_list_cb(struct nvme_mi_ep *ep,
+					 struct nvme_mi_req *req,
+					 struct nvme_mi_resp *resp,
+					 void *data)
 {
 	__u16 cns, ctrlid;
 	__u32 nsid;
@@ -1294,18 +1308,20 @@ static int test_admin_id_nsid_ctrl_list_cb(struct nvme_mi_ep *ep,
 	return 0;
 }
 
-static void test_admin_id_nsid_ctrl_list(struct nvme_mi_ep *ep)
+static void test_admin_id_ns_ctrl_list(struct nvme_mi_ep *ep)
 {
-	struct nvme_ctrl_list list;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
+	struct nvme_ctrl_list list;
 	int rc;
 
-	test_set_transport_callback(ep, test_admin_id_nsid_ctrl_list_cb, NULL);
+	test_set_transport_callback(ep, test_admin_id_ns_ctrl_list_cb, NULL);
 
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_identify_nsid_ctrl_list(hdl, 0x01020304, 5, &list);
+	nvme_init_identify_ns_ctrl_list(&cmd, 0x01020304, 5, &list);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 }
 
@@ -1338,6 +1354,7 @@ static void test_admin_id_secondary_ctrl_list(struct nvme_mi_ep *ep)
 {
 	struct nvme_secondary_ctrl_list list;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc;
 
 	test_set_transport_callback(ep, test_admin_id_secondary_ctrl_list_cb,
@@ -1346,7 +1363,8 @@ static void test_admin_id_secondary_ctrl_list(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_identify_secondary_ctrl_list(hdl, 5, &list);
+	nvme_init_identify_secondary_ctrl_list(&cmd, 5, &list);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 }
 
@@ -2102,7 +2120,7 @@ struct test {
 	DEFINE_TEST(admin_id_active_ns_list),
 	DEFINE_TEST(admin_id_alloc_ns),
 	DEFINE_TEST(admin_id_active_ns),
-	DEFINE_TEST(admin_id_nsid_ctrl_list),
+	DEFINE_TEST(admin_id_ns_ctrl_list),
 	DEFINE_TEST(admin_id_secondary_ctrl_list),
 	DEFINE_TEST(admin_ns_mgmt_create),
 	DEFINE_TEST(admin_ns_mgmt_delete),

@@ -260,32 +260,38 @@ int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
 
 int nvme_get_uuid_list(struct nvme_transport_handle *hdl, struct nvme_id_uuid_list *uuid_list)
 {
-	int err;
+	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ctrl ctrl;
+	int err;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err) {
 		fprintf(stderr, "ERROR: nvme_identify_ctrl() failed 0x%x\n", err);
 		return err;
 	}
 
-	if ((ctrl.ctratt & NVME_CTRL_CTRATT_UUID_LIST) == NVME_CTRL_CTRATT_UUID_LIST)
-		err = nvme_identify_uuid(hdl, uuid_list);
+	if ((ctrl.ctratt & NVME_CTRL_CTRATT_UUID_LIST) == NVME_CTRL_CTRATT_UUID_LIST) {
+		nvme_init_identify_uuid_list(&cmd, uuid_list);
+		err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	}
 
 	return err;
 }
 
 int nvme_get_telemetry_max(struct nvme_transport_handle *hdl, enum nvme_telemetry_da *da, size_t *data_tx)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
+	struct nvme_id_ctrl *id_ctrl = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	id_ctrl = __nvme_alloc(sizeof(*id_ctrl));
 	if (!id_ctrl)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, id_ctrl);
+	nvme_init_identify_ctrl(&cmd, id_ctrl);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err)
 		return err;
 
@@ -540,13 +546,15 @@ size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
 int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen)
 {
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+	struct nvme_passthru_cmd cmd;
 	int ret;
 
 	ctrl = __nvme_alloc(sizeof(*ctrl));
 	if (!ctrl)
 		return -ENOMEM;
 
-	ret = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (ret)
 		return ret;
 
@@ -557,6 +565,7 @@ int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen)
 int nvme_get_logical_block_size(struct nvme_transport_handle *hdl, __u32 nsid, int *blksize)
 {
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u8 flbas;
 	int ret;
 
@@ -564,7 +573,8 @@ int nvme_get_logical_block_size(struct nvme_transport_handle *hdl, __u32 nsid, i
 	if (!ns)
 		return -ENOMEM;
 
-	ret = nvme_identify_ns(hdl, nsid, ns);
+	nvme_init_identify_ns(&cmd, nsid, ns);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (ret)
 		return ret;
 

@@ -15,6 +15,7 @@
  * program exists successfully; an ungraceful exit means a bug exists
  * somewhere.
  */
+#include "nvme/ioctl.h"
 #include "nvme/tree.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +42,7 @@ static int test_ctrl(nvme_ctrl_t c)
 
 	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
 	struct nvme_transport_handle *hdl = nvme_ctrl_get_transport_handle(c);
+	struct nvme_passthru_cmd cmd;
 	int ret, temp;
 	struct nvme_error_log_page error[64];
 	struct nvme_smart_log smart = { 0 };
@@ -62,7 +64,8 @@ static int test_ctrl(nvme_ctrl_t c)
 
 	__u32 result;
 
-	ret = nvme_ctrl_identify(c, &id);
+	nvme_init_identify_ctrl(&cmd, &id);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (ret) {
 		printf("ERROR: no identify for:%s\n", nvme_ctrl_get_name(c));
 		return ret;
@@ -90,42 +93,50 @@ static int test_ctrl(nvme_ctrl_t c)
 	printf("  sn:%-.20s\n", id.sn);
 	printf("  model:%-.40s\n", id.mn);
 
-	ret = nvme_identify_allocated_ns_list(hdl, 0, &ns_list);
+	nvme_init_identify_allocated_ns_list(&cmd, 0, &ns_list);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  PASSED: Allocated NS List\n");
 	else
 		printf("  ERROR: Allocated NS List:%x\n", ret);
-	ret = nvme_identify_active_ns_list(hdl, 0, &ns_list);
+	nvme_init_identify_active_ns_list(&cmd, 0, &ns_list);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  PASSED: Active NS List\n");
 	else
 		printf("  ERROR: Active NS List:%x\n", ret);
-	ret = nvme_identify_ctrl_list(hdl, 0, &ctrlist);
+	nvme_init_identify_ctrl_list(&cmd, 0, &ctrlist);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  PASSED: Ctrl List\n");
 	else
 		printf("  ERROR: CtrlList:%x\n", ret);
-	ret = nvme_identify_nsid_ctrl_list(hdl, 1, 0, &ctrlist);
+	nvme_init_identify_ctrl_list(&cmd, 1, &ctrlist);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  PASSED: NSID Ctrl List\n");
 	else
 		printf("  ERROR: NSID CtrlList:%x\n", ret);
-	ret = nvme_identify_primary_ctrl(hdl, 0, &prim);
+	nvme_init_identify_primary_ctrl_cap(&cmd, 0, &prim);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  PASSED: Identify Primary\n");
 	else
 		printf("  ERROR: Identify Primary:%x\n", ret);
-	ret = nvme_identify_secondary_ctrl_list(hdl, 0, &sec);
+	nvme_init_identify_secondary_ctrl_list(&cmd, 0, &sec);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  PASSED: Identify Secondary\n");
 	else
 		printf("  ERROR: Identify Secondary:%x\n", ret);
-	ret = nvme_identify_ns_granularity(hdl, &gran);
+	nvme_init_identify_ns_granularity(&cmd, &gran);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  PASSED: Identify NS granularity\n");
 	else
 		printf("  ERROR: Identify NS granularity:%x\n", ret);
-	ret = nvme_identify_uuid(hdl, &uuid);
+	nvme_init_identify_uuid_list(&cmd, &uuid);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  PASSED: Identify UUID List\n");
 	else
@@ -272,6 +283,7 @@ static int test_namespace(nvme_ns_t n)
 {
 	int ret, nsid = nvme_ns_get_nsid(n);
 	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
+	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ns ns = { 0 }, allocated = { 0 };
 	struct nvme_ns_id_desc *descs;
 	__u32 result = 0;
@@ -286,7 +298,8 @@ static int test_namespace(nvme_ns_t n)
 		nvme_ns_get_name(n), le64_to_cpu(ns.nsze),
 		1 << ns.lbaf[flbas].ds);
 
-	ret = nvme_identify_allocated_ns(hdl, nsid, &allocated);
+	nvme_init_identify_allocated_ns(&cmd, nsid, &allocated);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  Identify allocated ns\n");
 	else
@@ -295,7 +308,8 @@ static int test_namespace(nvme_ns_t n)
 	if (!descs)
 		return -1;
 
-	ret = nvme_identify_ns_descs(hdl, nsid, descs);
+	nvme_init_identify_ns_descs_list(&cmd, nsid, descs);
+	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!ret)
 		printf("  Identify NS Descriptors\n");
 	else

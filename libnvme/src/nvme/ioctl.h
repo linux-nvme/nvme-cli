@@ -10,6 +10,7 @@
 #ifndef _LIBNVME_IOCTL_H
 #define _LIBNVME_IOCTL_H
 
+#include <string.h>
 #include <errno.h>
 #include <stddef.h>
 #include <sys/ioctl.h>
@@ -242,11 +243,17 @@ enum nvme_cmd_dword_fields {
 	NVME_IDENTIFY_CDW10_CNS_SHIFT				= 0,
 	NVME_IDENTIFY_CDW10_CNTID_SHIFT				= 16,
 	NVME_IDENTIFY_CDW11_CNSSPECID_SHIFT			= 0,
+	NVME_IDENTIFY_CDW11_FIDX_SHIFT				= 0,
+	NVME_IDENTIFY_CDW11_DOMID_SHIFT				= 0,
+	NVME_IDENTIFY_CDW11_ENGGID_SHIFT			= 0,
 	NVME_IDENTIFY_CDW14_UUID_SHIFT				= 0,
 	NVME_IDENTIFY_CDW11_CSI_SHIFT				= 24,
 	NVME_IDENTIFY_CDW10_CNS_MASK				= 0xff,
 	NVME_IDENTIFY_CDW10_CNTID_MASK				= 0xffff,
 	NVME_IDENTIFY_CDW11_CNSSPECID_MASK			= 0xffff,
+	NVME_IDENTIFY_CDW11_FIDX_MASK				= 0xffff,
+	NVME_IDENTIFY_CDW11_DOMID_MASK				= 0xffff,
+	NVME_IDENTIFY_CDW11_ENGGID_MASK				= 0xffff,
 	NVME_IDENTIFY_CDW14_UUID_MASK				= 0x7f,
 	NVME_IDENTIFY_CDW11_CSI_MASK				= 0xff,
 	NVME_NAMESPACE_ATTACH_CDW10_SEL_SHIFT			= 0,
@@ -314,6 +321,12 @@ enum nvme_cmd_dword_fields {
 	NVME_DIM_TAS_SHIFT					= 0,
 	NVME_DIM_TAS_MASK					= 0xF,
 };
+
+#define NVME_FIELD_ENCODE(value, shift, mask) \
+	(((__u32)(value) & (mask)) << (shift))
+
+#define NVME_FIELD_DECODE(value, shift, mask) \
+	(((value) >> (shift)) & (mask))
 
 /**
  * nvme_submit_admin_passthru64() - Submit a 64-bit nvme passthrough admin
@@ -563,701 +576,527 @@ int nvme_ns_rescan(struct nvme_transport_handle *hdl);
 int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid);
 
 /**
- * nvme_identify_partial() - Send the NVMe Identify command
- * @hdl:	Transport handle
- * @xfer_len:	Max log transfer size per request to split the total.
- * @args:	&struct nvme_identify_args argument structure
+ * nvme_init_identify() - Initialize passthru command for
+ * NVMe Identify
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
+ * @csi:	Command Set Identifier
+ * @cns:	The Controller or Namespace structure,
+ *              see @enum nvme_identify_cns
+ * @data:	User space destination address to transfer the data
+ * @len:	Length of provided user buffer to hold the data in bytes
  *
- * The Identify command returns a data buffer that describes information about
- * the NVM subsystem, the controller or the namespace(s).
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Prepare the @cmd data structure for the NVMe Identify command.
  */
-int nvme_identify_partial(struct nvme_transport_handle *hdl, __u32 xfer_len,
-			  struct nvme_identify_args *args);
-
-/**
- * nvme_identify() - Send the NVMe Identify command
- * @hdl:	Transport handle
- * @args:	&struct nvme_identify_args argument structure
- *
- * The Identify command returns a data buffer that describes information about
- * the NVM subsystem, the controller or the namespace(s).
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_identify(struct nvme_transport_handle *hdl, struct nvme_identify_args *args);
-
-static inline int nvme_identify_cns_nsid(struct nvme_transport_handle *hdl, enum nvme_identify_cns cns,
-					 __u32 nsid, void *data)
+static inline void
+nvme_init_identify(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, enum nvme_identify_cns cns,
+		void *data, __u32 len)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = cns,
-		.csi = NVME_CSI_NVM,
-		.nsid = nsid,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
+	__u32 cdw10 = NVME_FIELD_ENCODE(cns,
+					NVME_IDENTIFY_CDW10_CNS_SHIFT,
+					NVME_IDENTIFY_CDW10_CNS_MASK);
+	__u32 cdw11 = NVME_FIELD_ENCODE(csi,
+					NVME_IDENTIFY_CDW11_CSI_SHIFT,
+					NVME_IDENTIFY_CDW11_CSI_MASK);
 
-	return nvme_identify(hdl, &args);
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode	= nvme_admin_identify;
+	cmd->nsid	= nsid;
+	cmd->cdw10	= cdw10;
+	cmd->cdw11	= cdw11;
+	cmd->data_len	= len;
+	cmd->addr	= (__u64)(uintptr_t)data;
 }
 
 /**
- * nvme_identify_ctrl() - Retrieves nvme identify controller
- * @hdl:	Transport handle
+ * nvme_init_identify_ns() - Initialize passthru command for
+ * NVMe Identify Namespace data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
+ * @id:		User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS.
+ */
+static inline void
+nvme_init_identify_ns(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_id_ns *id)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS,
+			   id, sizeof(*id));
+}
+
+/**
+ * nvme_init_identify_ctrl() - Initialize passthru command for
+ * NVMe Identify Controller data structure
+ * @cmd:	Command data structure to initialize
  * @id:		User space destination address to transfer the data,
  *
- * Sends nvme identify with CNS value %NVME_IDENTIFY_CNS_CTRL.
- *
- * See &struct nvme_id_ctrl for details on the data returned.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CTRL.
  */
-static inline int nvme_identify_ctrl(struct nvme_transport_handle *hdl, struct nvme_id_ctrl *id)
+static inline void
+nvme_init_identify_ctrl(struct nvme_passthru_cmd *cmd, struct nvme_id_ctrl *id)
 {
-	return nvme_identify_cns_nsid(hdl, NVME_IDENTIFY_CNS_CTRL,
-				      NVME_NSID_NONE, id);
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_CTRL,
+			   id, sizeof(*id));
 }
 
 /**
- * nvme_identify_ns() - Retrieves nvme identify namespace
- * @hdl:	Transport handle
- * @nsid:	Namespace to identify
- * @ns:		User space destination address to transfer the data
- *
- * If the Namespace Identifier (NSID) field specifies an active NSID, then the
- * Identify Namespace data structure is returned to the host for that specified
- * namespace.
- *
- * If the controller supports the Namespace Management capability and the NSID
- * field is set to %NVME_NSID_ALL, then the controller returns an Identify Namespace
- * data structure that specifies capabilities that are common across namespaces
- * for this controller.
- *
- * See &struct nvme_id_ns for details on the structure returned.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_ns(struct nvme_transport_handle *hdl, __u32 nsid, struct nvme_id_ns *ns)
-{
-	return nvme_identify_cns_nsid(hdl, NVME_IDENTIFY_CNS_NS, nsid, ns);
-}
-
-/**
- * nvme_identify_allocated_ns() - Same as nvme_identify_ns, but only for
- *				  allocated namespaces
- * @hdl:	Transport handle
- * @nsid:	Namespace to identify
- * @ns:		User space destination address to transfer the data
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_allocated_ns(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_id_ns *ns)
-{
-	return nvme_identify_cns_nsid(hdl, NVME_IDENTIFY_CNS_ALLOCATED_NS,
-				      nsid, ns);
-}
-
-/**
- * nvme_identify_active_ns_list() - Retrieves active namespaces id list
- * @hdl:	Transport handle
- * @nsid:	Return namespaces greater than this identifier
+ * nvme_init_identify_active_ns_list() - Initialize passthru command for
+ * Active Namespaces ID list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
  * @list:	User space destination address to transfer the data
  *
- * A list of 1024 namespace IDs is returned to the host containing NSIDs in
- * increasing order that are greater than the value specified in the Namespace
- * Identifier (nsid) field of the command.
- *
- * See &struct nvme_ns_list for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_ACTIVE_LIST.
  */
-static inline int nvme_identify_active_ns_list(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_ns_list *list)
+static inline void
+nvme_init_identify_active_ns_list(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_ns_list *list)
 {
-	return nvme_identify_cns_nsid(hdl, NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
-				      nsid, list);
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
+			   list, sizeof(*list));
 }
 
 /**
- * nvme_identify_allocated_ns_list() - Retrieves allocated namespace id list
- * @hdl:	Transport handle
- * @nsid:	Return namespaces greater than this identifier
- * @list:	User space destination address to transfer the data
- *
- * A list of 1024 namespace IDs is returned to the host containing NSIDs in
- * increasing order that are greater than the value specified in the Namespace
- * Identifier (nsid) field of the command.
- *
- * See &struct nvme_ns_list for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_allocated_ns_list(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_ns_list *list)
-{
-	return nvme_identify_cns_nsid(hdl, NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
-				      nsid, list);
-}
-
-/**
- * nvme_identify_ctrl_list() - Retrieves identify controller list
- * @hdl:	Transport handle
- * @cntid:	Starting CNTLID to return in the list
- * @cntlist:	User space destination address to transfer the data
- *
- * Up to 2047 controller identifiers is returned containing a controller
- * identifier greater than or equal to the controller identifier  specified in
- * @cntid.
- *
- * See &struct nvme_ctrl_list for a definition of the structure returned.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_ctrl_list(struct nvme_transport_handle *hdl, __u16 cntid,
-			struct nvme_ctrl_list *cntlist)
-{
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = cntlist,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_CTRL_LIST,
-		.csi = NVME_CSI_NVM,
-		.nsid = NVME_NSID_NONE,
-		.cntid = cntid,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
-}
-
-/**
- * nvme_identify_nsid_ctrl_list() - Retrieves controller list attached to an nsid
- * @hdl:	Transport handle
- * @nsid:	Return controllers that are attached to this nsid
- * @cntid:	Starting CNTLID to return in the list
- * @cntlist:	User space destination address to transfer the data
- *
- * Up to 2047 controller identifiers are returned containing a controller
- * identifier greater than or equal to the controller identifier  specified in
- * @cntid attached to @nsid.
- *
- * See &struct nvme_ctrl_list for a definition of the structure returned.
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1
- */
-static inline int nvme_identify_nsid_ctrl_list(struct nvme_transport_handle *hdl, __u32 nsid, __u16 cntid,
-			struct nvme_ctrl_list *cntlist)
-{
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = cntlist,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_NS_CTRL_LIST,
-		.csi = NVME_CSI_NVM,
-		.nsid = nsid,
-		.cntid = cntid,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
-}
-
-/**
- * nvme_identify_ns_descs() - Retrieves namespace descriptor list
- * @hdl:	Transport handle
+ * nvme_init_identify_ns_descs_list() - Initialize passthru command for
+ * Namespace Descriptor list
+ * @cmd:	Command data structure to initialize
  * @nsid:	The namespace id to retrieve descriptors
  * @descs:	User space destination address to transfer the data
  *
- * A list of Namespace Identification Descriptor structures is returned to the
- * host for the namespace specified in the Namespace Identifier (NSID) field if
- * it is an active NSID.
- *
- * The data returned is in the form of an array of 'struct nvme_ns_id_desc'.
- *
- * See &struct nvme_ns_id_desc for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_DESC_LIST.
  */
-static inline int nvme_identify_ns_descs(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_ns_id_desc *descs)
+static inline void
+nvme_init_identify_ns_descs_list(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_ns_id_desc *descs)
 {
-	return nvme_identify_cns_nsid(hdl, NVME_IDENTIFY_CNS_NS_DESC_LIST,
-				      nsid, descs);
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS_DESC_LIST,
+			   descs, NVME_IDENTIFY_DATA_SIZE);
 }
 
 /**
- * nvme_identify_nvmset_list() - Retrieves NVM Set List
- * @hdl:	Transport handle
+ * nvme_init_identify_nvmset_list() - Initialize passthru command for
+ * NVM Set List data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
  * @nvmsetid:	NVM Set Identifier
  * @nvmset:	User space destination address to transfer the data
  *
- * Retrieves an NVM Set List, &struct nvme_id_nvmset_list. The data structure
- * is an ordered list by NVM Set Identifier, starting with the first NVM Set
- * Identifier supported by the NVM subsystem that is equal to or greater than
- * the NVM Set Identifier.
- *
- * See &struct nvme_id_nvmset_list for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_ACTIVE_LIST.
  */
-static inline int nvme_identify_nvmset_list(struct nvme_transport_handle *hdl, __u16 nvmsetid,
-			struct nvme_id_nvmset_list *nvmset)
+static inline void
+nvme_init_identify_nvmset_list(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 nvmsetid, struct nvme_id_nvmset_list *nvmset)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = nvmset,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_NVMSET_LIST,
-		.csi = NVME_CSI_NVM,
-		.nsid = NVME_NSID_NONE,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = nvmsetid,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NVMSET_LIST,
+			   nvmset, sizeof(*nvmset));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(nvmsetid,
+					NVME_IDENTIFY_CDW11_CNSSPECID_SHIFT,
+					NVME_IDENTIFY_CDW11_CNSSPECID_MASK);
 }
 
 /**
- * nvme_identify_primary_ctrl() - Retrieve NVMe Primary Controller
- *				  identification
- * @hdl:	Transport handle
- * @cntid:	Return controllers starting at this identifier
- * @cap:	User space destination buffer address to transfer the data
+ * nvme_init_identify_csi_ns() - Initialize passthru command for
+ * I/O Command Set specific Identify Namespace data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
+ * @csi:	Command Set Identifier
+ * @uidx:	UUID Index for differentiating vendor specific encoding
+ * @data:	User space destination address to transfer the data
  *
- * See &struct nvme_primary_ctrl_cap for the definition of the returned structure, @cap.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_NS.
  */
-static inline int nvme_identify_primary_ctrl(struct nvme_transport_handle *hdl, __u16 cntid,
-			struct nvme_primary_ctrl_cap *cap)
+static inline void
+nvme_init_identify_csi_ns(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, __u8 uidx, void *data)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = cap,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
-		.csi = NVME_CSI_NVM,
-		.nsid = NVME_NSID_NONE,
-		.cntid = cntid,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, nsid, csi,
+			   NVME_IDENTIFY_CNS_CSI_NS,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
+					NVME_IDENTIFY_CDW14_UUID_SHIFT,
+					NVME_IDENTIFY_CDW14_UUID_MASK);
 }
 
 /**
- * nvme_identify_secondary_ctrl_list() - Retrieves secondary controller list
- * @hdl:	Transport handle
- * @cntid:	Return controllers starting at this identifier
- * @sc_list:	User space destination address to transfer the data
- *
- * A Secondary Controller List is returned to the host for up to 127 secondary
- * controllers associated with the primary controller processing this command.
- * The list contains entries for controller identifiers greater than or equal
- * to the value specified in the Controller Identifier (cntid).
- *
- * See &struct nvme_secondary_ctrls_list for a definition of the returned
- * structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_secondary_ctrl_list(struct nvme_transport_handle *hdl,
-			__u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
-{
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = sc_list,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
-		.csi = NVME_CSI_NVM,
-		.nsid = NVME_NSID_NONE,
-		.cntid = cntid,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
-}
-
-/**
- * nvme_identify_ns_granularity() - Retrieves namespace granularity
- *				    identification
- * @hdl:	Transport handle
- * @gr_list:	User space destination address to transfer the data
- *
- * If the controller supports reporting of Namespace Granularity, then a
- * Namespace Granularity List is returned to the host for up to sixteen
- * namespace granularity descriptors
- *
- * See &struct nvme_id_ns_granularity_list for the definition of the returned
- * structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_ns_granularity(struct nvme_transport_handle *hdl,
-			struct nvme_id_ns_granularity_list *gr_list)
-{
-	return nvme_identify_cns_nsid(hdl, NVME_IDENTIFY_CNS_NS_GRANULARITY,
-				      NVME_NSID_NONE, gr_list);
-}
-
-/**
- * nvme_identify_uuid() - Retrieves device's UUIDs
- * @hdl:	Transport handle
- * @uuid_list:	User space destination address to transfer the data
- *
- * Each UUID List entry is either 0h, the NVMe Invalid UUID, or a valid UUID.
- * Valid UUIDs are those which are non-zero and are not the NVMe Invalid UUID.
- *
- * See &struct nvme_id_uuid_list for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_uuid(struct nvme_transport_handle *hdl, struct nvme_id_uuid_list *uuid_list)
-{
-	return nvme_identify_cns_nsid(hdl, NVME_IDENTIFY_CNS_UUID_LIST,
-				      NVME_NSID_NONE, uuid_list);
-}
-
-/**
- * nvme_identify_ns_csi() - I/O command set specific identify namespace data
- * @hdl:	Transport handle
- * @nsid:	Namespace to identify
- * @uuidx:	UUID Index for differentiating vendor specific encoding
+ * nvme_init_identify_csi_ctrl() - Initialize passthru command for
+ * I/O Command Set specific Identify Controller data structure
+ * @cmd:	Command data structure to initialize
  * @csi:	Command Set Identifier
  * @data:	User space destination address to transfer the data
  *
- * An I/O Command Set specific Identify Namespace data structure is returned
- * for the namespace specified in @nsid.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_CTRL.
  */
-static inline int nvme_identify_ns_csi(struct nvme_transport_handle *hdl, __u32 nsid, __u8 uuidx,
-			enum nvme_csi csi, void *data)
+static inline void
+nvme_init_identify_csi_ctrl(struct nvme_passthru_cmd *cmd,
+		enum nvme_csi csi, void *data)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_CSI_NS,
-		.csi = csi,
-		.nsid = nsid,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = uuidx,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
+			   NVME_IDENTIFY_CNS_CSI_CTRL,
+			   data, NVME_IDENTIFY_DATA_SIZE);
 }
 
 /**
- * nvme_identify_ctrl_csi() - I/O command set specific Identify Controller data
- * @hdl:	Transport handle
- * @csi:	Command Set Identifier
- * @data:	User space destination address to transfer the data
- *
- * An I/O Command Set specific Identify Controller data structure is returned
- * to the host for the controller processing the command. The specific Identify
- * Controller data structure to be returned is specified by @csi.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_ctrl_csi(struct nvme_transport_handle *hdl, enum nvme_csi csi, void *data)
-{
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_CSI_CTRL,
-		.csi = csi,
-		.nsid = NVME_NSID_NONE,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
-}
-
-/**
- * nvme_identify_active_ns_list_csi() - Active namespace ID list associated with a specified I/O command set
- * @hdl:	Transport handle
+ * nvme_init_identify_csi_active_ns_list() - Initialize passthru command
+ * for Active namespace ID list
+ * @cmd:	Command data structure to initialize
  * @nsid:	Return namespaces greater than this identifier
  * @csi:	Command Set Identifier
  * @ns_list:	User space destination address to transfer the data
  *
- * A list of 1024 namespace IDs is returned to the host containing active
- * NSIDs in increasing order that are greater than the value specified in
- * the Namespace Identifier (nsid) field of the command and matching the
- * I/O Command Set specified in the @csi argument.
- *
- * See &struct nvme_ns_list for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST.
  */
-static inline int nvme_identify_active_ns_list_csi(struct nvme_transport_handle *hdl, __u32 nsid,
-			enum nvme_csi csi, struct nvme_ns_list *ns_list)
+static inline void
+nvme_init_identify_csi_active_ns_list(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, struct nvme_ns_list *ns_list)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = ns_list,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST,
-		.csi = csi,
-		.nsid = nsid,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, nsid, csi,
+			   NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST,
+			   ns_list, sizeof(*ns_list));
 }
 
 /**
- * nvme_identify_allocated_ns_list_csi() - Allocated namespace ID list associated with a specified I/O command set
- * @hdl:	Transport handle
- * @nsid:	Return namespaces greater than this identifier
- * @csi:	Command Set Identifier
- * @ns_list:	User space destination address to transfer the data
- *
- * A list of 1024 namespace IDs is returned to the host containing allocated
- * NSIDs in increasing order that are greater than the value specified in
- * the @nsid field of the command and matching the I/O Command Set
- * specified in the @csi argument.
- *
- * See &struct nvme_ns_list for the definition of the returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_identify_allocated_ns_list_csi(struct nvme_transport_handle *hdl, __u32 nsid,
-			enum nvme_csi csi, struct nvme_ns_list *ns_list)
-{
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = ns_list,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST,
-		.csi = csi,
-		.nsid = nsid,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
-}
-
-/**
- * nvme_identify_independent_identify_ns() - I/O command set independent Identify namespace data
- * @hdl:	Transport handle
+ * nvme_init_identify_csi_independent_identify_id_ns() -Initialize passthru
+ * command for I/O Command Set Independent Identify Namespace data structure
+ * @cmd:	Command data structure to initialize
  * @nsid:	Return namespaces greater than this identifier
  * @ns:		I/O Command Set Independent Identify Namespace data
  *		structure
  *
- * The I/O command set independent Identify namespace data structure for
- * the namespace identified with @ns is returned to the host.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS.
  */
-static inline int nvme_identify_independent_identify_ns(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_id_independent_id_ns *ns)
+static inline void
+nvme_init_identify_csi_independent_identify_id_ns(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_id_independent_id_ns *ns)
 {
-	return nvme_identify_cns_nsid(
-		hdl, NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS, nsid, ns);
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
+			   ns, sizeof(*ns));
 }
 
 /**
- * nvme_identify_ns_csi_user_data_format() - Identify namespace user data format
- * @hdl:	Transport handle
- * @user_data_format: Return namespaces capability of identifier
- * @uuidx:	UUID selection, if supported
+ * nvme_init_identify_ns_user_data_format() - Initialize passthru command
+ * for Identify namespace user data format
+ * @cmd:	Command data structure to initialize
  * @csi:	Command Set Identifier
+ * @fidx:	Format Index
+ * @uidx:	UUID selection, if supported
  * @data:	User space destination address to transfer the data
  *
- * Identify Namespace data structure for the specified User Data Format
- * index containing the namespace capabilities for the NVM Command Set.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT.
  */
-static inline int nvme_identify_ns_csi_user_data_format(struct nvme_transport_handle *hdl,
-			__u16 user_data_format, __u8 uuidx,
-			enum nvme_csi csi, void *data)
+static inline void
+nvme_init_identify_ns_user_data_format(struct nvme_passthru_cmd *cmd,
+		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT,
-		.csi = csi,
-		.nsid = NVME_NSID_NONE,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = user_data_format,
-		.uuidx = uuidx,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
+			   NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(fidx,
+					NVME_IDENTIFY_CDW11_FIDX_SHIFT,
+					NVME_IDENTIFY_CDW11_FIDX_MASK);
+	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
+					NVME_IDENTIFY_CDW14_UUID_SHIFT,
+					NVME_IDENTIFY_CDW14_UUID_MASK);
 }
 
 /**
- * nvme_identify_iocs_ns_csi_user_data_format() - Identify I/O command set namespace data structure
- * @hdl:	Transport handle
- * @user_data_format: Return namespaces capability of identifier
- * @uuidx:	UUID selection, if supported
+ * nvme_init_identify_csi_ns_user_data_format() - Initialize passthru
+ * command for Identify namespace user data format
+ * @cmd:	Command data structure to initialize
  * @csi:	Command Set Identifier
+ * @fidx:	Format Index
+ * @uidx:	UUID selection, if supported
  * @data:	User space destination address to transfer the data
  *
- * I/O Command Set specific Identify Namespace data structure for
- * the specified User Data Format index containing the namespace
- * capabilities for the I/O Command Set specified in the CSI field.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT.
  */
-static inline int nvme_identify_iocs_ns_csi_user_data_format(struct nvme_transport_handle *hdl,
-			__u16 user_data_format, __u8 uuidx,
-			enum nvme_csi csi, void *data)
+static inline void
+nvme_init_identify_csi_ns_user_data_format(struct nvme_passthru_cmd *cmd,
+		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT,
-		.csi = csi,
-		.nsid = NVME_NSID_NONE,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = user_data_format,
-		.uuidx = uuidx,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
+			   NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(fidx,
+					NVME_IDENTIFY_CDW11_FIDX_SHIFT,
+					NVME_IDENTIFY_CDW11_FIDX_MASK);
+	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
+					NVME_IDENTIFY_CDW14_UUID_SHIFT,
+					NVME_IDENTIFY_CDW14_UUID_MASK);
 }
 
 /**
- * nvme_nvm_identify_ctrl() - Identify controller data
- * @hdl:	Transport handle
- * @id:	User space destination address to transfer the data
+ * nvme_init_identify_allocated_ns_list() - Initialize passthru command
+ * for Allocated namespace ID list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return namespaces greater than this identifier
+ * @ns_list:	User space destination address to transfer the data
  *
- * Return an identify controller data structure to the host of
- * processing controller.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST.
  */
-static inline int nvme_nvm_identify_ctrl(struct nvme_transport_handle *hdl, struct nvme_id_ctrl_nvm *id)
+static inline void
+nvme_init_identify_allocated_ns_list(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_ns_list *ns_list)
 {
-	return nvme_identify_ctrl_csi(hdl, NVME_CSI_NVM, id);
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
+			   ns_list, sizeof(*ns_list));
 }
 
 /**
- * nvme_identify_domain_list() - Domain list data
- * @hdl:	Transport handle
+ * nvme_init_identify_allocated_ns() - Initialize passthru command
+ * for allocated Namespace ID list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace to identify
+ * @ns:		User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_ALLOCATED_NS.
+ */
+static inline void
+nvme_init_identify_allocated_ns(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_id_ns *ns)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			  NVME_IDENTIFY_CNS_ALLOCATED_NS,
+			  ns, sizeof(*ns));
+}
+
+/**
+ * nvme_init_identify_ns_ctrl_list() - Initialize passhtru command
+ * for Controller List
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return controllers that are attached to this nsid
+ * @cntid:	Starting CNTLID to return in the list
+ * @cntlist:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_ns_ctrl_list(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 cntid, struct nvme_ctrl_list *cntlist)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS_CTRL_LIST,
+			   cntlist, sizeof(*cntlist));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_identify_ctrl_list() - Initialize passthru command for
+ * Controller List of controllers
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Starting CNTLID to return in the list
+ * @cntlist:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_ctrl_list(struct nvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_ctrl_list *cntlist)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_CTRL_LIST,
+			   cntlist, sizeof(*cntlist));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_identify_primary_ctrl_cap() - Initialize passthru command
+ * for Primary Controller Capabilities data
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Return controllers starting at this identifier
+ * @cap:	User space destination buffer address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP.
+ */
+static inline void
+nvme_init_identify_primary_ctrl_cap(struct nvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_primary_ctrl_cap *cap)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
+			   cap, sizeof(*cap));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_identify_secondary_ctrl_list() - Initialize passhru command
+ * for Secondary Controller list
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Return controllers starting at this identifier
+ * @sc_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_secondary_ctrl_list(struct nvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
+			   sc_list, sizeof(*sc_list));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+
+/**
+ * nvme_init_identify_ns_granularity() - Initialize passthru command for
+ * Namespace Granularity list
+ * @cmd:	Command data structure to initialize
+ * @gr_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_ns_granularity(struct nvme_passthru_cmd *cmd,
+		struct nvme_id_ns_granularity_list *gr_list)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS_GRANULARITY,
+			   gr_list, sizeof(*gr_list));
+}
+
+/**
+ * nvme_init_identify_uuid_list() - Initialize passthru command for
+ * UUID list
+ * @cmd:	Command data structure to initialize
+ * @uuid_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_UUID_LIST.
+ */
+static inline void
+nvme_init_identify_uuid_list(struct nvme_passthru_cmd *cmd,
+		struct nvme_id_uuid_list *uuid_list)
+{
+	nvme_init_identify(cmd, NVME_UUID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_UUID_LIST,
+			   uuid_list, sizeof(*uuid_list));
+}
+
+/**
+ * nvme_init_identify_domain_list() - Initialize passthru command for
+ * Domain list
+ * @cmd:	Command data structure to initialize
  * @domid:	Domain ID
  * @list:	User space destination address to transfer data
  *
- * A list of 31 domain IDs is returned to the host containing domain
- * attributes in increasing order that are greater than the value
- * specified in the @domid field.
- *
- * See &struct nvme_identify_domain_attr for the definition of the
- * returned structure.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_DOMAIN_LIST.
  */
-static inline int nvme_identify_domain_list(struct nvme_transport_handle *hdl, __u16 domid,
-			struct nvme_id_domain_list *list)
+static inline void
+nvme_init_identify_domain_list(struct nvme_passthru_cmd *cmd,
+		__u16 domid, struct nvme_id_domain_list *list)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = list,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_DOMAIN_LIST,
-		.csi = NVME_CSI_NVM,
-		.nsid = NVME_NSID_NONE,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = domid,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			     NVME_IDENTIFY_CNS_DOMAIN_LIST,
+			     list, sizeof(*list));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(domid,
+					NVME_IDENTIFY_CDW11_DOMID_SHIFT,
+					NVME_IDENTIFY_CDW11_DOMID_MASK);
 }
 
 /**
- * nvme_identify_endurance_group_list() - Endurance group list data
- * @hdl:	Transport handle
- * @endgrp_id:	Endurance group identifier
+ * nvme_init_identify_endurance_group_id() - Initialize passthru command for
+ * Endurance group list
+ * @cmd:	Command data structure to initialize
+ * @enggid:	Endurance group identifier
  * @list:	Array of endurance group identifiers
  *
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-static inline int nvme_identify_endurance_group_list(struct nvme_transport_handle *hdl, __u16 endgrp_id,
-			struct nvme_id_endurance_group_list *list)
+static inline void
+nvme_init_identify_endurance_group_id(struct nvme_passthru_cmd *cmd,
+		__u16 enggid, struct nvme_id_endurance_group_list *list)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = list,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
-		.csi = NVME_CSI_NVM,
-		.nsid = NVME_NSID_NONE,
-		.cntid = NVME_CNTLID_NONE,
-		.cns_specific_id = endgrp_id,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			     NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
+			     list, sizeof(*list));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(enggid,
+					NVME_IDENTIFY_CDW11_ENGGID_SHIFT,
+					NVME_IDENTIFY_CDW11_ENGGID_MASK);
 }
 
 /**
- * nvme_identify_iocs() - I/O command set data structure
- * @hdl:	Transport handle
- * @cntlid:	Controller ID
+ * nvme_init_identify_csi_allocated_ns_list() - Initialize passthru command for
+ * I/O Command Set specific Allocated Namespace Id list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return namespaces greater than this identifier
+ * @csi:	Command Set Identifier
+ * @ns_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST.
+ */
+static inline void
+nvme_init_identify_csi_allocated_ns_list(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, struct nvme_ns_list *ns_list)
+{
+	nvme_init_identify(cmd, nsid, csi,
+			   NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST,
+			   ns_list, sizeof(*ns_list));
+}
+
+/**
+ * nvme_init_identify_csi_id_ns_data_structure() - Initialize passthru command for
+ * I/O Command Set specific Identify Namespace data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return namespaces greater than this identifier
+ * @csi:	Command Set Identifier
+ * @data:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE.
+ */
+static inline void
+nvme_init_identify_csi_id_ns_data_structure(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, void *data)
+{
+	nvme_init_identify(cmd, nsid, csi,
+			   NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+}
+
+/**
+ * nvme_init_identify_command_set_structure() - Initialize passthru command for
+ * I/O Command Set data structure
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Controller ID
  * @iocs:	User space destination address to transfer the data
  *
  * Retrieves list of the controller's supported io command set vectors. See
@@ -1266,52 +1105,47 @@ static inline int nvme_identify_endurance_group_list(struct nvme_transport_handl
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-static inline int nvme_identify_iocs(struct nvme_transport_handle *hdl, __u16 cntlid,
-			struct nvme_id_iocs *iocs)
+static inline void
+nvme_init_identify_command_set_structure(struct nvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_id_iocs *iocs)
 {
-	struct nvme_identify_args args = {
-		.result = NULL,
-		.data = iocs,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.cns = NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
-		.csi = NVME_CSI_NVM,
-		.nsid = NVME_NSID_NONE,
-		.cntid = cntlid,
-		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
-	};
-
-	return nvme_identify(hdl, &args);
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
+			   iocs, sizeof(*iocs));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
 }
 
 /**
- * nvme_zns_identify_ns() - ZNS identify namespace data
- * @hdl:	Transport handle
+ * nvme_init_zns_identify_ns() - Initialize passthru command for
+ * ZNS identify namespace data
+ * @cmd:	Command data structure to initialize
  * @nsid:	Namespace to identify
  * @data:	User space destination address to transfer the data
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-static inline int nvme_zns_identify_ns(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_zns_id_ns *data)
+static inline void
+nvme_init_zns_identify_ns(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_zns_id_ns *data)
 {
-	return nvme_identify_ns_csi(
-		hdl, nsid, NVME_UUID_NONE, NVME_CSI_ZNS, data);
+	nvme_init_identify(cmd, nsid, NVME_CSI_ZNS,
+			   NVME_IDENTIFY_CNS_CSI_NS,
+			   data, sizeof(*data));
 }
 
 /**
- * nvme_zns_identify_ctrl() - ZNS identify controller data
- * @hdl:	Transport handle
+ * nvme_init_zns_identify_ctrl() - Initialize passthru command for
+ * ZNS identify controller data
+ * @cmd:	Command data structure to initialize
  * @id:	User space destination address to transfer the data
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-static inline int nvme_zns_identify_ctrl(struct nvme_transport_handle *hdl, struct nvme_zns_id_ctrl *id)
+static inline void
+nvme_init_zns_identify_ctrl(struct nvme_passthru_cmd *cmd,
+		struct nvme_zns_id_ctrl *id)
 {
-	return nvme_identify_ctrl_csi(hdl, NVME_CSI_ZNS, id);
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_ZNS,
+			   NVME_IDENTIFY_CNS_CSI_CTRL,
+			   id, sizeof(*id));
 }
 
 /**
