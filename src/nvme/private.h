@@ -335,4 +335,11 @@ void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 				   long *keyring_id, long *key_id);
 
+static inline char *xstrdup(const char *s)
+{
+	if (!s)
+		return NULL;
+	return strdup(s);
+}
+
 #endif /* _LIBNVME_PRIVATE_H */

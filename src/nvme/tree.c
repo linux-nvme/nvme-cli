@@ -2073,8 +2073,8 @@ static int nvme_reconfigure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 	}
 	closedir(d);
 
-	c->name = strdup(name);
-	c->sysfs_dir = strdup(path);
+	c->name = xstrdup(name);
+	c->sysfs_dir = xstrdup(path);
 	c->firmware = nvme_get_ctrl_attr(c, "firmware_rev");
 	c->model = nvme_get_ctrl_attr(c, "model");
 	c->state = nvme_get_ctrl_attr(c, "state");
@@ -2230,7 +2230,7 @@ skip_address:
 		return NULL;
 	}
 	FREE_CTRL_ATTR(c->address);
-	c->address = strdup(addr);
+	c->address = xstrdup(addr);
 	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
 		c->discovery_ctrl = true;
 	ret = nvme_reconfigure_ctrl(r, c, path, name);
