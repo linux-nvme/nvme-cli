@@ -197,7 +197,6 @@ LIBNVME_2_0 {
 		nvme_lookup_keyring;
 		nvme_lookup_subsystem;
 		nvme_mi_admin_admin_passthru;
-		nvme_mi_admin_identify_partial;
 		nvme_mi_admin_xfer;
 		nvme_mi_aem_disable;
 		nvme_mi_aem_enable;

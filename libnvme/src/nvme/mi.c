@@ -260,8 +260,8 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 	id_args.cntid = 0;
 	id_args.csi = NVME_CSI_NVM;
 
-	rc = nvme_mi_admin_identify_partial(hdl, &id_args, 0,
-				    offsetof(struct nvme_id_ctrl, rab));
+	rc = nvme_identify_partial(hdl, offsetof(struct nvme_id_ctrl, rab),
+				   &id_args);
 	if (rc) {
 		nvme_msg(ep->ctx, LOG_WARNING,
 			 "Identify Controller failed, no quirks applied\n");
@@ -953,55 +953,6 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode,
 		return rc;
 
 	if (has_read_data && (resp.data_len != data_len))
-		return -EPROTO;
-
-	return 0;
-}
-
-int nvme_mi_admin_identify_partial(struct nvme_transport_handle *hdl,
-				   struct nvme_identify_args *args,
-				   off_t offset, size_t size)
-{
-	struct nvme_mi_admin_resp_hdr resp_hdr;
-	struct nvme_mi_admin_req_hdr req_hdr;
-	struct nvme_mi_resp resp;
-	struct nvme_mi_req req;
-	int rc;
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	if (!size || size > 0xffffffff)
-		return -EINVAL;
-
-	nvme_mi_admin_init_req(hdl->ep, &req, &req_hdr, hdl->id, nvme_admin_identify);
-	req_hdr.cdw1 = cpu_to_le32(args->nsid);
-	req_hdr.cdw10 = cpu_to_le32(args->cntid << 16 | args->cns);
-	req_hdr.cdw11 = cpu_to_le32((args->csi & 0xff) << 24 |
-				    args->cns_specific_id);
-	req_hdr.cdw14 = cpu_to_le32(args->uuidx);
-	req_hdr.dlen = cpu_to_le32(size & 0xffffffff);
-	req_hdr.flags = 0x1;
-	if (offset) {
-		req_hdr.flags |= 0x2;
-		req_hdr.doff = cpu_to_le32(offset);
-	}
-
-	nvme_mi_admin_init_resp(&resp, &resp_hdr);
-	resp.data = args->data;
-	resp.data_len = size;
-
-	rc = nvme_mi_submit(hdl->ep, &req, &resp);
-	if (rc)
-		return rc;
-
-	rc = nvme_mi_admin_parse_status(&resp, args->result);
-	if (rc)
-		return rc;
-
-	/* callers will expect a full response; if the data buffer isn't
-	 * fully valid, return an error */
-	if (resp.data_len != size)
 		return -EPROTO;
 
 	return 0;

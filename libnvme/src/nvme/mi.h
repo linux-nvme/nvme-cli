@@ -1403,61 +1403,6 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode,
 				 void *metadata, __u32 timeout_ms, __u32 *result);
 
 /**
- * nvme_mi_admin_identify_partial() - Perform an Admin identify command,
- * and retrieve partial response data.
- * @hdl: Transport handle to send command to
- * @args: Identify command arguments
- * @offset: offset of identify data to retrieve from response
- * @size: size of identify data to return
- *
- * Perform an Identify command, using the Identify command parameters in @args.
- * The @offset and @size arguments allow the caller to retrieve part of
- * the identify response. See NVMe-MI section 6.2 for the semantics (and some
- * handy diagrams) of the offset & size parameters.
- *
- * Will return an error if the length of the response data (from the controller)
- * did not match @size.
- *
- * Unless you're performing a vendor-unique identify command, You'll probably
- * want to use one of the identify helpers (nvme_mi_admin_identify,
- * nvme_mi_admin_identify_cns_nsid, or nvme_mi_admin_identify_<type>) instead
- * of this. If the type of your identify command is standardized but not
- * yet supported by libnvme-mi, please contact the maintainers.
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
- *
- * See: &struct nvme_identify_args
- */
-int nvme_mi_admin_identify_partial(struct nvme_transport_handle *hdl,
-				   struct nvme_identify_args *args,
-				   off_t offset, size_t size);
-
-/**
- * nvme_mi_admin_identify() - Perform an Admin identify command.
- * @hdl: Transport handle to send command to
- * @args: Identify command arguments
- *
- * Perform an Identify command, using the Identify command parameters in @args.
- * Stores the identify data in ->data, and (if set) the result from cdw0
- * into args->result.
- *
- * Will return an error if the length of the response data (from the
- * controller) is not a full &NVME_IDENTIFY_DATA_SIZE.
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
- *
- * See: &struct nvme_identify_args
- */
-static inline int nvme_mi_admin_identify(struct nvme_transport_handle *hdl,
-					 struct nvme_identify_args *args)
-{
-	return nvme_mi_admin_identify_partial(hdl, args,
-					      0, NVME_IDENTIFY_DATA_SIZE);
-}
-
-/**
  * nvme_mi_control() - Perform a Control Primitive command
  * @ep: endpoint for MI communication
  * @opcode: Control Primitive opcode (using &enum nvme_mi_control_opcode)
