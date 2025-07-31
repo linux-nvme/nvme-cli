@@ -164,6 +164,7 @@ LIBNVME_2_0 {
 		nvme_host_set_hostsymname;
 		nvme_host_set_pdc_enabled;
 		nvme_identify;
+		nvme_identify_partial;
 		nvme_import_tls_key;
 		nvme_import_tls_key_versioned;
 		nvme_init_copy_range;
