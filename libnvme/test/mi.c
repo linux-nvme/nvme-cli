@@ -1546,10 +1546,10 @@ static int test_admin_fw_download_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_fw_download(struct nvme_mi_ep *ep)
 {
-	struct nvme_fw_download_args args = { 0 };
 	struct fw_download_info info;
 	unsigned char fw[4096];
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc, i;
 
 	for (i = 0; i < sizeof(fw); i++)
@@ -1558,8 +1558,6 @@ static void test_admin_fw_download(struct nvme_mi_ep *ep)
 	info.offset = 0;
 	info.len = 0;
 	info.data = fw;
-	args.data = fw;
-	args.args_size = sizeof(args);
 
 	test_set_transport_callback(ep, test_admin_fw_download_cb, &info);
 
@@ -1567,39 +1565,45 @@ static void test_admin_fw_download(struct nvme_mi_ep *ep)
 	assert(hdl);
 
 	/* invalid (zero) len */
-	args.data_len = info.len = 1;
-	args.offset = info.offset = 0;
-	rc = nvme_fw_download(hdl, &args);
+	info.len = 1;
+	info.offset = 0;
+	rc = nvme_init_fw_download(&cmd, fw, info.len, info.offset);
 	assert(rc);
 
 	/* invalid (unaligned) len */
-	args.data_len = info.len = 1;
-	args.offset = info.offset = 0;
-	rc = nvme_fw_download(hdl, &args);
+	info.len = 1;
+	info.offset = 0;
+	rc = nvme_init_fw_download(&cmd, fw, info.len, info.offset);
 	assert(rc);
 
 	/* invalid offset */
-	args.data_len = info.len = 4;
-	args.offset = info.offset = 1;
-	rc = nvme_fw_download(hdl, &args);
+	info.len = 4;
+	info.offset = 1;
+	rc = nvme_init_fw_download(&cmd, fw, info.len, info.offset);
 	assert(rc);
 
 	/* smallest len */
-	args.data_len = info.len = 4;
-	args.offset = info.offset = 0;
-	rc = nvme_fw_download(hdl, &args);
+	info.len = 4;
+	info.offset = 0;
+	rc = nvme_init_fw_download(&cmd, fw, info.len, info.offset);
+	assert(!rc);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 
 	/* largest len */
-	args.data_len = info.len = 4096;
-	args.offset = info.offset = 0;
-	rc = nvme_fw_download(hdl, &args);
+	info.len = 4096;
+	info.offset = 0;
+	rc = nvme_init_fw_download(&cmd, fw, info.len, info.offset);
+	assert(!rc);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 
 	/* offset value */
-	args.data_len = info.len = 4096;
-	args.offset = info.offset = 4096;
-	rc = nvme_fw_download(hdl, &args);
+	info.len = 4096;
+	info.offset = 4096;
+	rc = nvme_init_fw_download(&cmd, fw, info.len, info.offset);
+	assert(!rc);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 }
 

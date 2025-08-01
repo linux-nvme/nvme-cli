@@ -247,29 +247,24 @@ static void test_fw_download(void)
 {
 	__u32 result = 0;
 	__u8 expected_data[8], data[8];
-
-	struct nvme_fw_download_args args = {
-		.result = &result,
-		.data = &expected_data,
-		.args_size = sizeof(args),
-		.offset = 120,
-		.data_len = sizeof(expected_data),
-	};
-
+	__u32 data_len = sizeof(expected_data);
+	__u32 offset = 120;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fw_download,
-		.cdw10 = (args.data_len >> 2) - 1,
-		.cdw11 = args.offset >> 2,
-		.data_len = args.data_len,
+		.cdw10 = (data_len >> 2) - 1,
+		.cdw11 = offset >> 2,
+		.data_len = data_len,
 		.in_data = &data,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_fw_download(test_hdl, &args);
+	err = nvme_init_fw_download(&cmd, data, data_len, offset);
+	check(err == 0, "download initializing error %d", err);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

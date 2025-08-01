@@ -48,24 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_fw_download_args - Arguments for the NVMe Firmware Download command
- * @args_size:	Size of &struct nvme_fw_download_args
- * @result:	The command completion result from CQE dword0
- * @timeout:	Timeout in ms
- * @offset:	Offset in the firmware data
- * @data:	Userspace address of the firmware data
- * @data_len:	Length of data in this command in bytes
- */
-struct nvme_fw_download_args {
-	__u32 *result;
-	void *data;
-	int args_size;
-	__u32 timeout;
-	__u32 offset;
-	__u32 data_len;
-};
-
-/**
  * struct nvme_fw_commit_args - Arguments for the NVMe Firmware Commit command
  * @args_size:	Size of &struct nvme_fw_commit_args
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca

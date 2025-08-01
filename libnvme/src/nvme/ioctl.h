@@ -3602,28 +3602,40 @@ nvme_init_ns_detach_ctrls(struct nvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_fw_download() - Download part or all of a firmware image to the
- *			controller
- * @hdl:	Transport handle
- * @args:	&struct nvme_fw_download_args argument structure
+ * nvme_init_fw_download() - Initialize passthru command to download part or
+ * all of a firmware image to the controller
+ * @cmd:	Passthru command to use
+ * @data:	Userspace address of the firmware data buffer
+ * @len:	Length of data in this command in bytes
+ * @offset:	Offset in the firmware data
  *
- * The Firmware Image Download command downloads all or a portion of an image
- * for a future update to the controller. The Firmware Image Download command
- * downloads a new image (in whole or in part) to the controller.
+ * Initializes the passthru command buffer for the Firmware Image
+ * Download command.
  *
- * The image may be constructed of multiple pieces that are individually
- * downloaded with separate Firmware Image Download commands. Each Firmware
- * Image Download command includes a Dword Offset and Number of Dwords that
- * specify a dword range.
+ * Note: Caller must ensure data_len and offset are DWord-aligned (0x4).
  *
- * The new firmware image is not activated as part of the Firmware Image
- * Download command. Use the nvme_fw_commit() to activate a newly downloaded
- * image.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Returns: 0 on success, or error code if arguments are invalid.
  */
-int nvme_fw_download(struct nvme_transport_handle *hdl, struct nvme_fw_download_args *args);
+static inline int
+nvme_init_fw_download(struct nvme_passthru_cmd *cmd, void *data,
+		__u32 len, __u32 offset)
+{
+	if (len & 0x3 || !len)
+		return -EINVAL;
+
+	if (offset & 0x3)
+		return -EINVAL;
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fw_download;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = (len >> 2) - 1;;
+	cmd->cdw11 = offset >> 2;
+
+	return 0;
+}
 
 /**
  * nvme_fw_commit() - Commit firmware using the specified action

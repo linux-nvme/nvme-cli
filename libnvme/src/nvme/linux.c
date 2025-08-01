@@ -184,28 +184,24 @@ bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl)
 	return hdl->type == NVME_TRANSPORT_HANDLE_TYPE_MI;
 }
 
-int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xfer, __u32 offset,
-			 void *buf)
+int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size,
+		__u32 xfer, __u32 offset, void *buf)
 {
+	struct nvme_passthru_cmd cmd;
+	void *data = buf;
 	int err = 0;
-	struct nvme_fw_download_args args = {
-		.args_size = sizeof(args),
-		.offset = offset,
-		.data_len = xfer,
-		.data = buf,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
-	};
 
 	while (size > 0) {
-		args.data_len = MIN(xfer, size);
-		err = nvme_fw_download(hdl, &args);
+		err = nvme_init_fw_download(&cmd, data, MIN(xfer, size), offset);
+		if (err)
+			break;
+		err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 		if (err)
 			break;
 
-		args.data += xfer;
+		data += xfer;
 		size -= xfer;
-		args.offset += xfer;
+		offset += xfer;
 	}
 
 	return err;
