@@ -48,34 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_security_send_args - Arguments for the NVMe Security Send command
- * @result:	The command completion result from CQE dword0
- * @data:	Security data payload to send
- * @args_size:	Size of &struct nvme_security_send_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace ID to issue security command on
- * @tl:		Protocol specific transfer length
- * @data_len:	Data length of the payload in bytes
- * @nssf:	NVMe Security Specific field
- * @spsp0:	Security Protocol Specific field
- * @spsp1:	Security Protocol Specific field
- * @secp:	Security Protocol
- */
-struct nvme_security_send_args {
-	__u32 *result;
-	void *data;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	__u32 tl;
-	__u32 data_len;
-	__u8 nssf;
-	__u8 spsp0;
-	__u8 spsp1;
-	__u8 secp;
-};
-
-/**
  * struct nvme_security_receive_args - Arguments for the NVMe Security Receive command
  * @result:	The command completion result from CQE dword0
  * @data:	Security data payload to send

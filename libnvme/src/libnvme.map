@@ -266,7 +266,6 @@ LIBNVME_2_0 {
 		nvme_scan_tls_keys;
 		nvme_scan_topology;
 		nvme_security_receive;
-		nvme_security_send;
 		nvme_set_application;
 		nvme_set_debug;
 		nvme_set_keyring;

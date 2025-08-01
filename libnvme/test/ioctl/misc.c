@@ -295,37 +295,30 @@ static void test_fw_commit(void)
 static void test_security_send(void)
 {
 	__u8 expected_data[8], data[8];
+	__u32 data_len = sizeof(expected_data);
+	__u32 nsid = TEST_NSID;
+	__u32 tl = 0xffff;
 	__u32 result = 0;
-
-	struct nvme_security_send_args args = {
-		.result = &result,
-		.data = &expected_data,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.tl = 0xffff,
-		.data_len = sizeof(expected_data),
-		.nssf = 0x1,
-		.spsp0 = 0x1,
-		.spsp1 = 0x1,
-		.secp = 0xE9,
-	};
-
+	__u8 nssf = 0x1;
+	__u16 spsp = 0x0101;
+	__u8 secp = 0xE9;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_security_send,
 		.nsid = TEST_NSID,
-		.cdw10 = args.nssf | (args.spsp0 << 8) | (args.spsp1 << 16) |
-			 (args.secp << 24),
-		.cdw11 = args.tl,
-		.data_len = args.data_len,
-		.in_data = &data,
+		.cdw10 = nssf | (spsp << 8) | (secp << 24),
+		.cdw11 = tl,
+		.data_len = data_len,
+		.in_data = &expected_data,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_security_send(test_hdl, &args);
+	nvme_init_security_send(&cmd, nsid, nssf, spsp, secp, tl,
+		data, data_len);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

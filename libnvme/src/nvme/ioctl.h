@@ -3667,23 +3667,42 @@ nvme_init_fw_commit(struct nvme_passthru_cmd *cmd, __u8 fs,
 }
 
 /**
- * nvme_security_send() - Security Send command
- * @hdl:	Transport handle
- * @args:	&struct nvme_security_send argument structure
+ * nvme_init_security_send() - Initialize passthru command for Security Send
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to issue security command on
+ * @nssf:	NVMe Security Specific field
+ * @spsp:	Security Protocol Specific field
+ * @secp:	Security Protocol
+ * @tl:		Protocol specific transfer length
+ * @data:	Security data payload buffer to send
+ * @len:	Data length of the payload in bytes
  *
- * The Security Send command transfers security protocol data to the
- * controller. The data structure transferred to the controller as part of this
- * command contains security protocol specific commands to be performed by the
- * controller. The data structure transferred may also contain data or
- * parameters associated with the security protocol commands.
- *
- * The security data is protocol specific and is not defined by the NVMe
- * specification.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Security Send command.
  */
-int nvme_security_send(struct nvme_transport_handle *hdl, struct nvme_security_send_args *args);
+static inline void
+nvme_init_security_send(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
+		__u16 spsp, __u8 secp, __u32 tl, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_security_send;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(secp,
+			NVME_SECURITY_SECP_SHIFT,
+			NVME_SECURITY_SECP_MASK) |
+		      NVME_FIELD_ENCODE(spsp,
+			NVME_SECURITY_SPSP0_SHIFT,
+			NVME_SECURITY_SPSP0_MASK) |
+		      NVME_FIELD_ENCODE(spsp >> 8,
+			NVME_SECURITY_SPSP1_SHIFT,
+			NVME_SECURITY_SPSP1_MASK) |
+		      NVME_FIELD_ENCODE(nssf,
+			NVME_SECURITY_NSSF_SHIFT,
+			NVME_SECURITY_NSSF_MASK);
+	cmd->cdw11 = tl;
+}
 
 /**
  * nvme_security_receive() - Security Receive command
