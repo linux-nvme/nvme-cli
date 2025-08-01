@@ -24,7 +24,10 @@ OPTIONS
 -------
 -t <type>::
 --log-type=<type>::
-    Specify the type of log to retrieve. Valid options are ALL, CIT, HIT, NLOG, ASSERT, and EVENT. Defaults to ALL.
+    Specify the type of log to retrieve. Valid options are ALL, CIT, HIT, NLOG, ASSERT,
+    EVENT, and EXTENDED. Defaults to ALL.
+    The EXTENDED option generates logs that may take longer time or affect drive performance,
+    but provides more comprehensive debugging information.
 
 -d <dir>::
 --output-dir=<dir>::
@@ -52,6 +55,12 @@ EXAMPLES
 +
 ------------
 # nvme solidigm vs-internal-log /dev/nvme0 -v
+------------
+
+* Retrieve extended logs:
++
+------------
+# nvme solidigm vs-internal-log /dev/nvme0 -t EXTENDED
 ------------
 
 NVME
