@@ -486,7 +486,7 @@ _nvme () {
 			(vs-internal-log)
 				local _vs_internal_log
 				_vs_internal_log=(
-				--type':Log type: ALL, CIT, HIT, NLOG, ASSERT, EVENT. Defaults to ALL.'
+				--type':Log type: ALL, CIT, HIT, NLOG, ASSERT, EVENT, EXTENDED. Defaults to ALL.'
 				-t':alias for --type'
 				--dir-name':Output directory; defaults to current working directory.'
 				-d':alias for --dir-name'
