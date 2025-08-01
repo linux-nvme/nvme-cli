@@ -272,25 +272,21 @@ static void test_fw_download(void)
 
 static void test_fw_commit(void)
 {
-	__u32 result = 0;
-
-	struct nvme_fw_commit_args args = {
-		.result = &result,
-		.args_size = sizeof(args),
-		.action = NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE,
-		.slot = 0xf,
-		.bpid = true,
-	};
-
+	enum nvme_fw_commit_ca action =
+		NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE;
+	__u8 slot = 0xf;
+	bool bpid = true;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fw_commit,
-		.cdw10 = (!!args.bpid << 31) | (args.action << 3) | args.slot,
+		.cdw10 = (bpid << 31) | (action << 3) | slot,
 	};
-
+	struct nvme_passthru_cmd cmd;
+	__u32 result = 0;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_fw_commit(test_hdl, &args);
+	nvme_init_fw_commit(&cmd, slot, action, bpid);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

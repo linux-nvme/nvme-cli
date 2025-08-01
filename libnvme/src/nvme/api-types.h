@@ -48,24 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_fw_commit_args - Arguments for the NVMe Firmware Commit command
- * @args_size:	Size of &struct nvme_fw_commit_args
- * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
- * @slot:	Firmware slot to commit the downloaded image
- * @bpid:	Set to true to select the boot partition id
- */
-struct nvme_fw_commit_args {
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	enum nvme_fw_commit_ca action;
-	__u8 slot;
-	bool bpid;
-};
-
-/**
  * struct nvme_security_send_args - Arguments for the NVMe Security Send command
  * @result:	The command completion result from CQE dword0
  * @data:	Security data payload to send

@@ -621,24 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_fw_commit(struct nvme_transport_handle *hdl, struct nvme_fw_commit_args *args)
-{
-	__u32 cdw10 = NVME_SET(args->slot, FW_COMMIT_CDW10_FS) |
-			NVME_SET(args->action, FW_COMMIT_CDW10_CA) |
-			NVME_SET(args->bpid, FW_COMMIT_CDW10_BPID);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_admin_fw_commit,
-		.cdw10		= cdw10,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_security_send(struct nvme_transport_handle *hdl, struct nvme_security_send_args *args)
 {
 	__u32 cdw10 = NVME_SET(args->secp, SECURITY_SECP) |

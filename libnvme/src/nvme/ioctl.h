@@ -3638,18 +3638,33 @@ nvme_init_fw_download(struct nvme_passthru_cmd *cmd, void *data,
 }
 
 /**
- * nvme_fw_commit() - Commit firmware using the specified action
- * @hdl:	Transport handle
- * @args:	&struct nvme_fw_commit_args argument structure
+ * nvme_init_fw_commit() - Initialize passthru command to commit firmware
+ * using the specified action
+ * @cmd:	Passthru command to use
+ * @fs:		Firmware slot to commit the downloaded image
+ * @ca:		Action to use for the firmware image,
+ *		see &enum nvme_fw_commit_ca
+ * @bpid:	Set to true to select the boot partition id
  *
- * The Firmware Commit command modifies the firmware image or Boot Partitions.
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise. The command
- * status response may specify additional reset actions required to complete
- * the commit process.
+ * Initializes the passthru command buffer for the Firmware Commit command.
  */
-int nvme_fw_commit(struct nvme_transport_handle *hdl, struct nvme_fw_commit_args *args);
+static inline void
+nvme_init_fw_commit(struct nvme_passthru_cmd *cmd, __u8 fs,
+		    enum nvme_fw_commit_ca ca, bool bpid)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fw_commit;
+	cmd->cdw10 = NVME_FIELD_ENCODE(fs,
+			NVME_FW_COMMIT_CDW10_FS_SHIFT,
+			NVME_FW_COMMIT_CDW10_FS_MASK) |
+		      NVME_FIELD_ENCODE(ca,
+			NVME_FW_COMMIT_CDW10_CA_SHIFT,
+			NVME_FW_COMMIT_CDW10_CA_MASK) |
+		      NVME_FIELD_ENCODE(bpid,
+			NVME_FW_COMMIT_CDW10_BPID_SHIFT,
+			NVME_FW_COMMIT_CDW10_BPID_MASK);
+}
 
 /**
  * nvme_security_send() - Security Send command
