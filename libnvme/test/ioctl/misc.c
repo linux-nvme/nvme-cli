@@ -176,29 +176,24 @@ static void test_set_property(void)
 
 static void test_ns_attach(void)
 {
-	__u32 result;
 	struct nvme_ctrl_list expected_ctrlist, ctrlist;
-	struct nvme_ns_attach_args args = {
-		.result = &result,
-		.ctrlist = &ctrlist,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
-	};
-
+	enum nvme_ns_attach_sel sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
+	__u32 nsid = TEST_NSID;
+	__u32 result;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_attach,
-		.nsid = TEST_NSID,
-		.cdw10 = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
+		.nsid = nsid,
+		.cdw10 = sel,
 		.data_len = sizeof(expected_ctrlist),
 		.out_data = &expected_ctrlist,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_ctrlist, sizeof(expected_ctrlist));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_attach(test_hdl, &args);
+	nvme_init_ns_attach(&cmd, nsid, sel, &ctrlist);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
@@ -209,7 +204,6 @@ static void test_ns_attach(void)
 static void test_ns_attach_ctrls(void)
 {
 	struct nvme_ctrl_list ctrlist;
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_attach,
 		.nsid = TEST_NSID,
@@ -217,12 +211,13 @@ static void test_ns_attach_ctrls(void)
 		.data_len = sizeof(ctrlist),
 		.out_data = &ctrlist,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&ctrlist, sizeof(ctrlist));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_attach_ctrls(test_hdl, TEST_NSID, &ctrlist);
+	nvme_init_ns_attach_ctrls(&cmd, TEST_NSID, &ctrlist);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, NULL);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 }
@@ -230,7 +225,6 @@ static void test_ns_attach_ctrls(void)
 static void test_ns_detach_ctrls(void)
 {
 	struct nvme_ctrl_list ctrlist;
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_attach,
 		.nsid = TEST_NSID,
@@ -238,12 +232,13 @@ static void test_ns_detach_ctrls(void)
 		.data_len = sizeof(ctrlist),
 		.out_data = &ctrlist,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&ctrlist, sizeof(ctrlist));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_detach_ctrls(test_hdl, TEST_NSID, &ctrlist);
+	nvme_init_ns_detach_ctrls(&cmd, TEST_NSID, &ctrlist);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, NULL);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 }

@@ -1465,6 +1465,7 @@ static void test_admin_ns_attach(struct nvme_mi_ep *ep)
 	struct nvme_ctrl_list list = { 0 };
 	struct attach_op aop;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc;
 
 	list.num = cpu_to_le16(2);
@@ -1479,7 +1480,8 @@ static void test_admin_ns_attach(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_ns_attach_ctrls(hdl, 0x02030405, &list);
+	nvme_init_ns_attach_ctrls(&cmd, 0x02030405, &list);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 }
 
@@ -1488,6 +1490,7 @@ static void test_admin_ns_detach(struct nvme_mi_ep *ep)
 	struct nvme_ctrl_list list = { 0 };
 	struct attach_op aop;
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc;
 
 	list.num = cpu_to_le16(2);
@@ -1502,7 +1505,8 @@ static void test_admin_ns_detach(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_ns_detach_ctrls(hdl, 0x02030405, &list);
+	nvme_init_ns_detach_ctrls(&cmd, 0x02030405, &list);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 }
 

@@ -3541,61 +3541,64 @@ nvme_init_ns_mgmt_delete(struct nvme_passthru_cmd *cmd, __u32 nsid)
 }
 
 /**
- * nvme_ns_attach() - Attach or detach namespace to controller(s)
- * @hdl:	Transport handle
- * @args:	&struct nvme_ns_attach_args Argument structure
+ * nvme_init_ns_attach() - Initialize passthru command for
+ * Namespace Attach/Detach
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to execute attach selection
+ * @sel:	Attachment selection, see &enum nvme_ns_attach_sel
+ * @ctrlist:	Controller list buffer to modify attachment state of nsid
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Namespace Attach/Detach command.
  */
-int nvme_ns_attach(struct nvme_transport_handle *hdl, struct nvme_ns_attach_args *args);
-
-/**
- * nvme_ns_attach_ctrls() - Attach namespace to controllers
- * @hdl:	Transport handle
- * @nsid:	Namespace ID to attach
- * @ctrlist:	Controller list to modify attachment state of nsid
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_ns_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_ctrl_list *ctrlist)
+static inline void
+nvme_init_ns_attach(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_ns_attach_sel sel, struct nvme_ctrl_list *ctrlist)
 {
-	struct nvme_ns_attach_args args = {
-		.result = NULL,
-		.ctrlist = ctrlist,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
-	};
+	memset(cmd, 0, sizeof(*cmd));
 
-	return nvme_ns_attach(hdl, &args);
+	cmd->opcode = nvme_admin_ns_attach;
+	cmd->nsid = nsid;
+	cmd->data_len = sizeof(*ctrlist);
+	cmd->addr = (__u64)(uintptr_t)ctrlist;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
+			NVME_NAMESPACE_ATTACH_CDW10_SEL_SHIFT,
+			NVME_NAMESPACE_ATTACH_CDW10_SEL_MASK);
 }
 
 /**
- * nvme_ns_detach_ctrls() - Detach namespace from controllers
- * @hdl:	Transport handle
- * @nsid:	Namespace ID to detach
- * @ctrlist:	Controller list to modify attachment state of nsid
+ * nvme_init_ns_attach_ctrls() - Initialize passthru command to attach
+ * namespace to controllers
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to attach
+ * @ctrlist:	Controller list buffer to modify attachment state of nsid
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Namespace Attach command
+ * (NVME_NS_ATTACH_SEL_CTRL_ATTACH).
  */
-static inline int nvme_ns_detach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_ctrl_list *ctrlist)
+static inline void
+nvme_init_ns_attach_ctrls(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		struct nvme_ctrl_list *ctrlist)
 {
-	struct nvme_ns_attach_args args = {
-		.result = NULL,
-		.ctrlist = ctrlist,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
-	};
+	nvme_init_ns_attach(cmd, nsid, NVME_NS_ATTACH_SEL_CTRL_ATTACH,
+		ctrlist);
+}
 
-	return nvme_ns_attach(hdl, &args);
+/**
+ * nvme_init_ns_detach_ctrls() - Initialize passthru command to detach
+ * namespace from controllers
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to detach
+ * @ctrlist:	Controller list buffer to modify attachment state of nsid
+ *
+ * Initializes the passthru command buffer for the Namespace Detach command
+ * (NVME_NS_ATTACH_SEL_CTRL_DEATTACH).
+ */
+static inline void
+nvme_init_ns_detach_ctrls(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		struct nvme_ctrl_list *ctrlist)
+{
+	nvme_init_ns_attach(cmd, nsid, NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
+		ctrlist);
 }
 
 /**

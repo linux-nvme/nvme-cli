@@ -621,25 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_ns_attach(struct nvme_transport_handle *hdl, struct nvme_ns_attach_args *args)
-{
-	__u32 cdw10 = NVME_SET(args->sel, NAMESPACE_ATTACH_CDW10_SEL);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_admin_ns_attach,
-		.nsid		= args->nsid,
-		.cdw10		= cdw10,
-		.data_len	= sizeof(*args->ctrlist),
-		.addr		= (__u64)(uintptr_t)args->ctrlist,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_fw_download(struct nvme_transport_handle *hdl, struct nvme_fw_download_args *args)
 {
 	__u32 cdw10 = (args->data_len >> 2) - 1;

@@ -48,24 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_ns_attach_args - Arguments for Nvme Namespace Management command
- * @result:	NVMe command result
- * @ctrlist:	Controller list to modify attachment state of nsid
- * @args_size:	Size of &struct nvme_ns_attach_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace ID to execute attach selection
- * @sel:	Attachment selection, see &enum nvme_ns_attach_sel
- */
-struct nvme_ns_attach_args {
-	__u32 *result;
-	struct nvme_ctrl_list *ctrlist;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_ns_attach_sel sel;
-};
-
-/**
  * struct nvme_fw_download_args - Arguments for the NVMe Firmware Download command
  * @args_size:	Size of &struct nvme_fw_download_args
  * @result:	The command completion result from CQE dword0

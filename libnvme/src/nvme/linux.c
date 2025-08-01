@@ -484,37 +484,31 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct 
 	return 0;
 }
 
-static int nvme_ns_attachment(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls,
-			      __u16 *ctrlist, bool attach, __u32 timeout)
+static int nvme_ns_attachment(struct nvme_transport_handle *hdl, __u32 nsid,
+		__u16 num_ctrls, __u16 *ctrlist, bool attach)
 {
 	struct nvme_ctrl_list cntlist = { 0 };
-	struct nvme_ns_attach_args args = {
-		.args_size = sizeof(args),
-		.nsid = nsid,
-		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
-		.ctrlist = &cntlist,
-		.timeout = timeout,
-	};
+	struct nvme_passthru_cmd cmd;
 
+	nvme_init_ctrl_list(&cntlist, num_ctrls, ctrlist);
 	if (attach)
-		args.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
+		nvme_init_ns_attach_ctrls(&cmd, nsid, &cntlist);
+	else
+		nvme_init_ns_detach_ctrls(&cmd, nsid, &cntlist);
 
-	nvme_init_ctrl_list(args.ctrlist, num_ctrls, ctrlist);
-	return nvme_ns_attach(hdl, &args);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
-int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls,
-				__u16 *ctrlist)
+int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid,
+		__u16 num_ctrls, __u16 *ctrlist)
 {
-	return nvme_ns_attachment(hdl, nsid, num_ctrls, ctrlist, true,
-				  NVME_DEFAULT_IOCTL_TIMEOUT);
+	return nvme_ns_attachment(hdl, nsid, num_ctrls, ctrlist, true);
 }
 
-int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls,
-				__u16 *ctrlist)
+int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid,
+		__u16 num_ctrls, __u16 *ctrlist)
 {
-	return nvme_ns_attachment(hdl, nsid, num_ctrls, ctrlist, false,
-				  NVME_DEFAULT_IOCTL_TIMEOUT);
+	return nvme_ns_attachment(hdl, nsid, num_ctrls, ctrlist, false);
 }
 
 size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
