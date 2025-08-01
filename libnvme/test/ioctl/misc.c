@@ -45,32 +45,26 @@ static void test_format_nvm(void)
 static void test_ns_mgmt(void)
 {
 	struct nvme_ns_mgmt_host_sw_specified expected_data, data = {};
+	enum nvme_ns_mgmt_sel sel = NVME_NS_MGMT_SEL_CREATE;
+	__u32 nsid = TEST_NSID;
+	__u8 csi = TEST_CSI;
 	__u32 result = 0;
-	struct nvme_ns_mgmt_args args = {
-		.result = &result,
-		.ns = NULL,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.sel = NVME_NS_MGMT_SEL_CREATE,
-		.csi = TEST_CSI,
-		.data = &data,
-	};
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_mgmt,
-		.nsid = TEST_NSID,
-		.cdw10 = args.sel,
-		.cdw11 = args.csi << 24,
+		.nsid = nsid,
+		.cdw10 = sel,
+		.cdw11 = csi << 24,
 		.result = 0,
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_mgmt(test_hdl, &args);
+	nvme_init_ns_mgmt(&cmd, nsid, sel, csi, &data);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
@@ -80,23 +74,26 @@ static void test_ns_mgmt(void)
 static void test_ns_mgmt_create(void)
 {
 	struct nvme_ns_mgmt_host_sw_specified expected_data, data = {};
+	enum nvme_ns_mgmt_sel sel = NVME_NS_MGMT_SEL_CREATE;
+	__u32 nsid = NVME_NSID_NONE;
+	__u8 csi = NVME_CSI_ZNS;
 	__u32 result = 0;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_mgmt,
-		.nsid = NVME_NSID_NONE,
-		.cdw10 = NVME_NS_MGMT_SEL_CREATE,
-		.cdw11 = NVME_CSI_ZNS << 24,
+		.nsid = nsid,
+		.cdw10 = sel,
+		.cdw11 = csi << 24,
 		.result = TEST_NSID,
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_mgmt_create(test_hdl, NULL, &result, 0, NVME_CSI_ZNS,
-				  &data);
+	nvme_init_ns_mgmt_create(&cmd, NVME_CSI_ZNS, &data);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == TEST_NSID, "returned result %u", result);
@@ -110,11 +107,12 @@ static void test_ns_mgmt_delete(void)
 		.nsid = TEST_NSID,
 		.cdw10 = NVME_NS_MGMT_SEL_DELETE,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_ns_mgmt_delete(test_hdl, TEST_NSID);
+	nvme_init_ns_mgmt_delete(&cmd, TEST_NSID);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, NULL);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 }

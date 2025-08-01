@@ -3476,99 +3476,68 @@ nvme_init_format_nvm(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 lbaf,
 }
 
 /**
- * nvme_ns_mgmt() - Issue a Namespace management command
- * @hdl:	Transport handle
- * @args:	&struct nvme_ns_mgmt_args Argument structure
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_ns_mgmt(struct nvme_transport_handle *hdl, struct nvme_ns_mgmt_args *args);
-
-/**
- * nvme_ns_mgmt_create() - Create a non attached namespace
- * @hdl:	Transport handle
- * @ns:		Namespace identification that defines ns creation parameters
- * @nsid:		On success, set to the namespace id that was created
- * @timeout:	Override the default timeout to this value in milliseconds;
- *			set to 0 to use the system default.
+ * nvme_init_ns_mgmt() - Initialize passthru command for Namespace Management
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @sel:	Type of management operation to perform
  * @csi:	Command Set Identifier
- * @data:	Host Software Specified Fields that defines ns creation parameters
+ * @data:	Host Software Specified Fields buffer
  *
- * On successful creation, the namespace exists in the subsystem, but is not
- * attached to any controller. Use the nvme_ns_attach_ctrls() to assign the
- * namespace to one or more controllers.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Namespace Management command.
  */
-static inline int nvme_ns_mgmt_create(struct nvme_transport_handle *hdl, struct nvme_id_ns *ns,
-			__u32 *nsid, __u32 timeout, __u8 csi,
-			struct nvme_ns_mgmt_host_sw_specified *data)
+static inline void
+nvme_init_ns_mgmt(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_ns_mgmt_sel sel, __u8 csi,
+		struct nvme_ns_mgmt_host_sw_specified *data)
 {
-	struct nvme_ns_mgmt_args args = {
-		.result = nsid,
-		.ns = ns,
-		.args_size = sizeof(args),
-		.timeout = timeout,
-		.nsid = NVME_NSID_NONE,
-		.sel = NVME_NS_MGMT_SEL_CREATE,
-		.csi = csi,
-		.rsvd1 = { 0, },
-		.rsvd2 = NULL,
-		.data = data,
-	};
+	memset(cmd, 0, sizeof(*cmd));
 
-	return nvme_ns_mgmt(hdl, &args);
+	cmd->opcode = nvme_admin_ns_mgmt;
+	cmd->nsid = nsid;
+	cmd->data_len = data ? sizeof(*data) : 0;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
+			NVME_NAMESPACE_MGMT_CDW10_SEL_SHIFT,
+			NVME_NAMESPACE_MGMT_CDW10_SEL_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(csi,
+			NVME_NAMESPACE_MGMT_CDW11_CSI_SHIFT,
+			NVME_NAMESPACE_MGMT_CDW11_CSI_MASK);
 }
 
 /**
- * nvme_ns_mgmt_delete_timeout() - Delete a non attached namespace with timeout
- * @hdl:	Transport handle
- * @nsid:	Namespace identifier to delete
- * @timeout:	Override the default timeout to this value in milliseconds;
- *		set to 0 to use the system default.
+ * nvme_init_ns_mgmt_create() - Initialize passthru command to create a
+ * non attached namespace
+ * @cmd:	Passthru command to use
+ * @csi:	Command Set Identifier
+ * @data:	Host Software Specified Fields buffer that defines NS
+ *		creation parameters
  *
- * It is recommended that a namespace being deleted is not attached to any
- * controller. Use the nvme_ns_detach_ctrls() first if the namespace is still
- * attached.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Namespace Management - Create
+ * command. The command uses NVME_NSID_NONE as the target NSID.
  */
-static inline int nvme_ns_mgmt_delete_timeout(struct nvme_transport_handle *hdl, __u32 nsid, __u32 timeout)
+static inline void
+nvme_init_ns_mgmt_create(struct nvme_passthru_cmd *cmd, __u8 csi,
+		struct nvme_ns_mgmt_host_sw_specified *data)
 {
-	struct nvme_ns_mgmt_args args = {
-		.result = NULL,
-		.ns = NULL,
-		.args_size = sizeof(args),
-		.timeout = timeout,
-		.nsid = nsid,
-		.sel = NVME_NS_MGMT_SEL_DELETE,
-		.csi = 0,
-		.rsvd1 = { 0, },
-		.rsvd2 = NULL,
-		.data = NULL,
-	};
-
-	return nvme_ns_mgmt(hdl, &args);
+	nvme_init_ns_mgmt(cmd, NVME_NSID_NONE, NVME_NS_MGMT_SEL_CREATE,
+		csi, data);
 }
 
 /**
- * nvme_ns_mgmt_delete() - Delete a non attached namespace
- * @hdl:	Transport handle
+ * nvme_init_ns_mgmt_delete() - Initialize passthru command to delete a
+ * non attached namespace
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace identifier to delete
  *
- * It is recommended that a namespace being deleted is not attached to any
- * controller. Use the nvme_ns_detach_ctrls() first if the namespace is still
- * attached.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Namespace Management - Delete
+ * command (NVME_NS_MGMT_SEL_DELETE). The command uses the provided @nsid as
+ * the target NSID.
  */
-static inline int nvme_ns_mgmt_delete(struct nvme_transport_handle *hdl, __u32 nsid)
+static inline void
+nvme_init_ns_mgmt_delete(struct nvme_passthru_cmd *cmd, __u32 nsid)
 {
-	return nvme_ns_mgmt_delete_timeout(hdl, nsid, 0);
+	nvme_init_ns_mgmt(cmd, nsid, NVME_NS_MGMT_SEL_DELETE,
+		NVME_CSI_NVM, NULL);
 }
 
 /**

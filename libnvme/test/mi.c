@@ -1380,6 +1380,7 @@ static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
 {
 	struct nvme_ns_mgmt_host_sw_specified data = { 0 };
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	__u32 ns;
 	int rc;
 
@@ -1388,18 +1389,21 @@ static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_ns_mgmt_create(hdl, NULL, &ns, 0, NVME_CSI_NVM, &data);
+	nvme_init_ns_mgmt_create(&cmd, NVME_CSI_NVM, &data);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, &ns);
 	assert(!rc);
 	assert(ns == 0x01020304);
 
 	data.nsze = cpu_to_le64(42);
-	rc = nvme_ns_mgmt_create(hdl, NULL, &ns, 0, NVME_CSI_NVM, &data);
+	nvme_init_ns_mgmt_create(&cmd, NVME_CSI_NVM, &data);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, &ns);
 	assert(rc);
 }
 
 static void test_admin_ns_mgmt_delete(struct nvme_mi_ep *ep)
 {
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc;
 
 	test_set_transport_callback(ep, test_admin_ns_mgmt_cb, NULL);
@@ -1407,7 +1411,8 @@ static void test_admin_ns_mgmt_delete(struct nvme_mi_ep *ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	rc = nvme_ns_mgmt_delete(hdl, 0x05060708);
+	nvme_init_ns_mgmt_delete(&cmd, 0x05060708);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 }
 

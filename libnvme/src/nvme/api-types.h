@@ -48,32 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_ns_mgmt_args - Arguments for NVMe Namespace Management command
- * @result:	NVMe command result
- * @ns:		Namespace identification descriptors
- * @args_size:	Size of &struct nvme_ns_mgmt_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace identifier
- * @sel:	Type of management operation to perform
- * @csi:	Command Set Identifier
- * @rsvd1:	Reserved
- * @rsvd2:	Reserved
- * @data:	Host Software Specified Fields
- */
-struct nvme_ns_mgmt_args {
-	__u32 *result;
-	struct nvme_id_ns *ns;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_ns_mgmt_sel sel;
-	__u8 csi;
-	__u8 rsvd1[3];
-	void *rsvd2;
-	struct nvme_ns_mgmt_host_sw_specified *data;
-};
-
-/**
  * struct nvme_ns_attach_args - Arguments for Nvme Namespace Management command
  * @result:	NVMe command result
  * @ctrlist:	Controller list to modify attachment state of nsid
