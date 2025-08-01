@@ -72,9 +72,9 @@
 #include "malloc.h"
 
 struct feat_cfg {
-	enum nvme_features_id feature_id;
+	__u8 feature_id;   /* enum nvme_features_id */
+	__u8 sel;          /* enum nvme_get_features_sel */
 	__u32 namespace_id;
-	enum nvme_get_features_sel sel;
 	__u32 cdw11;
 	__u32 cdw12;
 	__u8 uuid_index;
