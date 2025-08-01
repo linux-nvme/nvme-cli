@@ -1664,12 +1664,11 @@ static void test_admin_fw_commit(struct nvme_mi_ep *ep)
 
 struct format_data {
 	__u32 nsid;
-	__u8 lbafu;
 	__u8 ses;
 	__u8 pil;
 	__u8 pi;
 	__u8 mset;
-	__u8 lbafl;
+	__u8 lbaf;
 };
 
 static int test_admin_format_nvm_cb(struct nvme_mi_ep *ep,
@@ -1677,7 +1676,7 @@ static int test_admin_format_nvm_cb(struct nvme_mi_ep *ep,
 				    struct nvme_mi_resp *resp,
 				    void *data)
 {
-	struct nvme_format_nvm_args *args = data;
+	struct format_data *args = data;
 	__u8 *rq_hdr;
 	__u32 nsid;
 
@@ -1693,13 +1692,13 @@ static int test_admin_format_nvm_cb(struct nvme_mi_ep *ep,
 	     | rq_hdr[8];
 	assert(nsid == args->nsid);
 
-	assert(((rq_hdr[44] >> 0) & 0xf) == args->lbaf);
+	assert(((rq_hdr[44] >> 0) & 0xf) == (args->lbaf & 0xf));
 	assert(((rq_hdr[44] >> 4) & 0x1) == args->mset);
 	assert(((rq_hdr[44] >> 5) & 0x7) == args->pi);
 
 	assert(((rq_hdr[45] >> 0) & 0x1) == args->pil);
 	assert(((rq_hdr[45] >> 1) & 0x7) == args->ses);
-	assert(((rq_hdr[45] >> 4) & 0x3) == args->lbafu);
+	assert(((rq_hdr[45] >> 4) & 0x3) == (args->lbaf >> 4));
 
 	test_transport_resp_calc_mic(resp);
 
@@ -1708,8 +1707,9 @@ static int test_admin_format_nvm_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_format_nvm(struct nvme_mi_ep *ep)
 {
-	struct nvme_format_nvm_args args = { 0 };
+	struct format_data args = { 0 };
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int rc;
 
 	hdl = nvme_mi_init_transport_handle(ep, 5);
@@ -1719,27 +1719,28 @@ static void test_admin_format_nvm(struct nvme_mi_ep *ep)
 
 	/* ensure we have the cdw0 bit field encoding correct, by testing twice
 	 * with inverted bit values */
-	args.args_size = sizeof(args);
 	args.nsid = 0x04030201;
-	args.lbafu = 0x3;
 	args.ses = 0x0;
 	args.pil = 0x1;
 	args.pi = 0x0;
 	args.mset = 0x1;
-	args.lbaf = 0x0;
+	args.lbaf = 0x30;
 
-	rc = nvme_format_nvm(hdl, &args);
+	nvme_init_format_nvm(&cmd, args.nsid, args.lbaf, args.mset,
+			     args.pi, args.pil, args.ses);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 
 	args.nsid = ~args.nsid;
-	args.lbafu = 0;
 	args.ses = 0x7;
 	args.pil = 0x0;
 	args.pi = 0x7;
 	args.mset = 0x0;
-	args.lbaf = 0xf;
+	args.lbaf = 0x0f;
 
-	rc = nvme_format_nvm(hdl, &args);
+	nvme_init_format_nvm(&cmd, args.nsid, args.lbaf, args.mset,
+			     args.pi, args.pil, args.ses);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	assert(!rc);
 }
 

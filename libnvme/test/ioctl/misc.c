@@ -17,31 +17,26 @@ static struct nvme_transport_handle *test_hdl;
 
 static void test_format_nvm(void)
 {
+	enum nvme_cmd_format_mset mset = NVME_FORMAT_MSET_EXTENDED;
+	enum nvme_cmd_format_pi pi = NVME_FORMAT_PI_TYPE2;
+	enum nvme_cmd_format_pil pil = NVME_FORMAT_PIL_FIRST;
+	enum nvme_cmd_format_ses ses = NVME_FORMAT_SES_USER_DATA_ERASE;
+	__u32 nsid = TEST_NSID;
+	__u8 lbaf = 0x1F;
 	__u32 result = 0;
-	struct nvme_format_nvm_args args = {
-		.result = &result,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.mset = NVME_FORMAT_MSET_EXTENDED,
-		.pi = NVME_FORMAT_PI_TYPE2,
-		.pil = NVME_FORMAT_PIL_FIRST,
-		.ses = NVME_FORMAT_SES_USER_DATA_ERASE,
-		.lbaf = 0xF,
-		.lbafu = 0x1,
-	};
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_format_nvm,
-		.nsid = TEST_NSID,
-		.cdw10 = args.lbaf | (args.mset << 4) | (args.pi << 5) |
-			 (args.pil << 8) | (args.ses << 9) | (args.lbafu << 12),
+		.nsid = nsid,
+		.cdw10 = lbaf | (mset << 4) | (pi << 5) |
+			 (pil << 8) | (ses << 9) | ((lbaf >> 4) << 12),
 		.result = 0,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_format_nvm(test_hdl, &args);
+	nvme_init_format_nvm(&cmd, nsid, lbaf, mset, pi, pil, ses);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

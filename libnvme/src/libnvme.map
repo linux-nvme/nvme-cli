@@ -83,7 +83,6 @@ LIBNVME_2_0 {
 		nvme_export_tls_key_versioned;
 		nvme_first_host;
 		nvme_first_subsystem;
-		nvme_format_nvm;
 		nvme_free_ctrl;
 		nvme_free_global_ctx;
 		nvme_free_host;

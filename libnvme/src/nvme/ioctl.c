@@ -621,27 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_format_nvm(struct nvme_transport_handle *hdl, struct nvme_format_nvm_args *args)
-{
-	__u32 cdw10;
-
-	cdw10 = NVME_SET(args->lbaf, FORMAT_CDW10_LBAF) |
-		NVME_SET(args->mset, FORMAT_CDW10_MSET) |
-		NVME_SET(args->pi, FORMAT_CDW10_PI) |
-		NVME_SET(args->pil, FORMAT_CDW10_PIL) |
-		NVME_SET(args->ses, FORMAT_CDW10_SES) |
-		NVME_SET(args->lbafu, FORMAT_CDW10_LBAFU);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_admin_format_nvm,
-		.nsid		= args->nsid,
-		.cdw10		= cdw10,
-		.timeout_ms	= args->timeout,
-	};
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_ns_mgmt(struct nvme_transport_handle *hdl, struct nvme_ns_mgmt_args *args)
 {
 	__u32 cdw10    = NVME_SET(args->sel, NAMESPACE_MGMT_CDW10_SEL);

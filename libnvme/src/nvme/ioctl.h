@@ -278,13 +278,13 @@ enum nvme_cmd_dword_fields {
 	NVME_VIRT_MGMT_CDW10_RT_MASK				= 0x7,
 	NVME_VIRT_MGMT_CDW10_CNTLID_MASK			= 0xffff,
 	NVME_VIRT_MGMT_CDW11_NR_MASK				= 0xffff,
-	NVME_FORMAT_CDW10_LBAF_SHIFT				= 0,
+	NVME_FORMAT_CDW10_LBAFL_SHIFT				= 0,
 	NVME_FORMAT_CDW10_MSET_SHIFT				= 4,
 	NVME_FORMAT_CDW10_PI_SHIFT				= 5,
 	NVME_FORMAT_CDW10_PIL_SHIFT				= 8,
 	NVME_FORMAT_CDW10_SES_SHIFT				= 9,
 	NVME_FORMAT_CDW10_LBAFU_SHIFT				= 12,
-	NVME_FORMAT_CDW10_LBAF_MASK				= 0xf,
+	NVME_FORMAT_CDW10_LBAFL_MASK				= 0xf,
 	NVME_FORMAT_CDW10_MSET_MASK				= 0x1,
 	NVME_FORMAT_CDW10_PI_MASK				= 0x7,
 	NVME_FORMAT_CDW10_PIL_MASK				= 0x1,
@@ -3435,19 +3435,45 @@ nvme_init_get_features_iocs_profile(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_format_nvm() - Format nvme namespace(s)
- * @hdl:	Transport handle
- * @args:	&struct nvme_format_nvme_args argument structure
+ * nvme_init_format_nvm() - Initialize passthru command for Format NVM
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to format
+ * @lbaf:	Logical block address format
+ * @mset:	Metadata settings (extended or separated)
+ * @pi:		Protection information type
+ * @pil:	Protection information location (beginning or end)
+ * @ses:	Secure erase settings
  *
- * The Format NVM command low level formats the NVM media. This command is used
- * by the host to change the LBA data size and/or metadata size. A low level
- * format may destroy all data and metadata associated with all namespaces or
- * only the specific namespace associated with the command
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Format NVM command.
  */
-int nvme_format_nvm(struct nvme_transport_handle *hdl, struct nvme_format_nvm_args *args);
+static inline void
+nvme_init_format_nvm(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 lbaf,
+		enum nvme_cmd_format_mset mset, enum nvme_cmd_format_pi pi,
+		enum nvme_cmd_format_pil pil, enum nvme_cmd_format_ses ses)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_format_nvm;
+	cmd->nsid = nsid;
+	cmd->cdw10 = NVME_FIELD_ENCODE(lbaf,
+			NVME_FORMAT_CDW10_LBAFL_SHIFT,
+			NVME_FORMAT_CDW10_LBAFL_MASK) |
+		      NVME_FIELD_ENCODE(mset,
+			NVME_FORMAT_CDW10_MSET_SHIFT,
+			NVME_FORMAT_CDW10_MSET_MASK) |
+		      NVME_FIELD_ENCODE(pi,
+			NVME_FORMAT_CDW10_PI_SHIFT,
+			NVME_FORMAT_CDW10_PI_MASK) |
+		      NVME_FIELD_ENCODE(pil,
+			NVME_FORMAT_CDW10_PIL_SHIFT,
+			NVME_FORMAT_CDW10_PIL_MASK) |
+		      NVME_FIELD_ENCODE(ses,
+			NVME_FORMAT_CDW10_SES_SHIFT,
+			NVME_FORMAT_CDW10_SES_MASK) |
+		      NVME_FIELD_ENCODE((lbaf >> 4),
+			NVME_FORMAT_CDW10_LBAFU_SHIFT,
+			NVME_FORMAT_CDW10_LBAFU_MASK);
+}
 
 /**
  * nvme_ns_mgmt() - Issue a Namespace management command

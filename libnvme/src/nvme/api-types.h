@@ -48,35 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_format_nvm_args - Arguments for the Format Nvme Namespace command
- * @result:	The command completion result from CQE dword0
- * @args_size:	Size of &struct nvme_format_nvm_args
- * @timeout:	Set to override default timeout to this value in milliseconds;
- *		useful for long running formats. 0 will use system default.
- * @nsid:	Namespace ID to format
- * @mset:	Metadata settings (extended or separated), true if extended
- * @pi:		Protection information type
- * @pil:	Protection information location (beginning or end), true if end
- * @ses:	Secure erase settings
- * @lbaf:	Logical block address format least significant 4 bits
- * @rsvd1:	Reserved
- * @lbafu:	Logical block address format most significant 2 bits
- */
-struct nvme_format_nvm_args {
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_cmd_format_mset mset;
-	enum nvme_cmd_format_pi pi;
-	enum nvme_cmd_format_pil pil;
-	enum nvme_cmd_format_ses ses;
-	__u8 lbaf;
-	__u8 rsvd1[7];
-	__u8 lbafu;
-};
-
-/**
  * struct nvme_ns_mgmt_args - Arguments for NVMe Namespace Management command
  * @result:	NVMe command result
  * @ns:		Namespace identification descriptors
