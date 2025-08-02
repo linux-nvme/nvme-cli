@@ -489,26 +489,6 @@ struct nvme_io_args {
 };
 
 /**
- * struct nvme_dsm_args - Arguments for the NVMe Dataset Management command
- * @result:	The command completion result from CQE dword0
- * @dsm:	The data set management attributes
- * @args_size:	Size of &struct nvme_dsm_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace identifier
- * @attrs:	DSM attributes, see &enum nvme_dsm_attributes
- * @nr_ranges:	Number of block ranges in the data set management attributes
- */
-struct nvme_dsm_args {
-	__u32 *result;
-	struct nvme_dsm_range *dsm;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	__u32 attrs;
-	__u16 nr_ranges;
-};
-
-/**
  * struct nvme_copy_args - Arguments for the NVMe Copy command
  * @sdlba:	Start destination LBA
  * @result:	The command completion result from CQE dword0

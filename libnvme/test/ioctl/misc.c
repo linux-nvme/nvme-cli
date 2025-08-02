@@ -1128,6 +1128,7 @@ static void test_verify(void)
 
 static void test_dsm(void)
 {
+	struct nvme_passthru_cmd cmd;
 	__u32 result = 0;
 	__u16 nr_ranges = 0xab;
 	int dsm_size = sizeof(struct nvme_dsm_range) * nr_ranges;
@@ -1137,29 +1138,21 @@ static void test_dsm(void)
 	dsm = malloc(dsm_size);
 	check(dsm, "dsm: ENOMEM");
 
-	struct nvme_dsm_args args = {
-		.result = &result,
-		.dsm = dsm,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.attrs = NVME_DSMGMT_AD,
-		.nr_ranges = nr_ranges,
-	};
-
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_dsm,
 		.nsid = TEST_NSID,
-		.cdw10 = args.nr_ranges - 1,
-		.cdw11 = args.attrs,
+		.cdw10 = nr_ranges - 1,
+		.cdw11 = NVME_DSMGMT_AD,
 		.data_len = dsm_size,
-		.in_data = args.dsm,
+		.in_data = dsm,
 	};
 
 	int err;
 
 	arbitrary(dsm, dsm_size);
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_dsm(test_hdl, &args);
+	nvme_init_dsm(&cmd, TEST_NSID, nr_ranges - 1, 0, 0, 1, dsm, dsm_size);
+	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

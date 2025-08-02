@@ -328,6 +328,14 @@ enum nvme_cmd_dword_fields {
 	NVME_ZNS_MGMT_RECV_ZRAS_FEAT_MASK			= 0x1,
 	NVME_DIM_TAS_SHIFT					= 0,
 	NVME_DIM_TAS_MASK					= 0xF,
+	NVME_DSM_CDW10_NR_SHIFT					= 0,
+	NVME_DSM_CDW10_NR_MASK					= 0xff,
+	NVME_DSM_CDW11_IDR_SHIFT				= 0,
+	NVME_DSM_CDW11_IDR_MASK					= 0x1,
+	NVME_DSM_CDW11_IDW_SHIFT				= 1,
+	NVME_DSM_CDW11_IDW_MASK					= 0x1,
+	NVME_DSM_CDW11_AD_SHIFT					= 2,
+	NVME_DSM_CDW11_AD_MASK					= 0x1,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4120,20 +4128,41 @@ static inline int nvme_verify(struct nvme_transport_handle *hdl, struct nvme_io_
 }
 
 /**
- * nvme_dsm() - Send an nvme data set management command
- * @hdl:	Transport handle
- * @args:	&struct nvme_dsm_args argument structure
- *
- * The Dataset Management command is used by the host to indicate attributes
- * for ranges of logical blocks. This includes attributes like frequency that
- * data is read or written, access size, and other information that may be used
- * to optimize performance and reliability, and may be used to
- * deallocate/unmap/trim those logical blocks.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * nvme_init_dsm() - Initialize passthru command for
+ * NVMEe I/O Data Set Management
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @nr:		Number of block ranges in the data set management attributes
+ * @idr:	DSM Deallocate attribute
+ * @idw:	DSM Integral Dataset for Read attribute
+ * @ad:		DSM Integral Dataset for Read attribute
+ * @data:	User space destination address to transfer the data
+ * @len:	Length of provided user buffer to hold the log data in bytes
  */
-int nvme_dsm(struct nvme_transport_handle *hdl, struct nvme_dsm_args *args);
+static inline void
+nvme_init_dsm(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 nr, __u8 idr, __u8 idw, __u8 ad, void *data,
+		__u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode	= nvme_cmd_dsm;
+	cmd->nsid	= nsid;
+	cmd->data_len	= len;
+	cmd->addr	= (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(nr,
+			NVME_DSM_CDW10_NR_SHIFT,
+			NVME_DSM_CDW10_NR_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(idr,
+			NVME_DSM_CDW11_IDR_SHIFT,
+			NVME_DSM_CDW11_IDR_MASK) |
+		      NVME_FIELD_ENCODE(idw,
+			NVME_DSM_CDW11_IDW_SHIFT,
+			NVME_DSM_CDW11_IDW_MASK) |
+		      NVME_FIELD_ENCODE(ad,
+			NVME_DSM_CDW11_AD_SHIFT,
+			NVME_DSM_CDW11_AD_MASK);
+}
 
 /**
  * nvme_copy() - Copy command

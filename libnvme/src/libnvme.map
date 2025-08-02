@@ -76,7 +76,6 @@ LIBNVME_2_0 {
 		nvme_directive_send;
 		nvme_directive_send_id_endir;
 		nvme_disconnect_ctrl;
-		nvme_dsm;
 		nvme_dump_config;
 		nvme_dump_tree;
 		nvme_errno_to_string;
