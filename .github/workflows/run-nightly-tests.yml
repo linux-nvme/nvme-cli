@@ -16,7 +16,56 @@ jobs:
           repository: "linux-blktests/blktests-ci"
       #We don't have to build the kernel here, as we have a cron job running on
       #the k8s cluster that builds the linus-master target nightly.
-      - name: Run in VM
+      - name: Run blktests in VM
+        uses: ./.github/actions/kubevirt-action
+        with:
+          kernel_version: linus-master
+          vm_artifact_upload_dir: blktests/results/
+          run_cmds: |
+            set -e
+            set -x
+            uname -a
+
+            sudo dnf install -y gcc clang make util-linux llvm gawk fio udev \
+            kmod coreutils g++ gzip e2fsprogs xfsprogs f2fs-tools btrfs-progs \
+            device-mapper-multipath blktrace kernel-headers liburing \
+            liburing-devel nbd device-mapper ktls-utils dosfstools \
+            bc libnl3-cli cryptsetup sg3_utils pciutils unzip jq git wget \
+            meson json-c-devel openssl-devel keyutils-libs-devel dbus-devel \
+            swig xz-devel libcurl-devel curl libarchive libarchive-devel json-c
+
+            # mdadm has a buffer overflow in v4.3 and was fixed with this commit:
+            # https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=7f960c3bd050e76f8bf0a8a0c8fbdcbaa565fc78
+            # The Fedora packages ship v4.3.
+            # We are now compiling and installing mdadm from source with the most
+            # recent known good commit. The v4.4 release does not compile.
+
+            git clone https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
+            cd mdadm
+            git checkout d764c4829947923142a83251296d04edaee7d2f7
+            make -j$(nproc)
+            sudo make install
+            cd -
+
+            git clone https://github.com/${{ github.repository }} nvme-cli
+            cd nvme-cli
+            scripts/build.sh -b release -c gcc
+            sudo meson install -C .build-ci
+            sudo ldconfig /usr/local/lib64
+
+            cd -
+            git clone https://github.com/linux-blktests/blktests.git blktests
+
+            cd blktests
+            make
+
+            # Run blktests nvme and md group
+            cat > config << EF
+            TEST_DEVS=(${BDEV0})
+            NVMET_TRTYPES="loop rdma tcp"
+            EF
+            sudo ./check nvme md
+      - name: Run nvme-cli tests in VM
         uses: ./.github/actions/kubevirt-action
         with:
           kernel_version: linus-master
