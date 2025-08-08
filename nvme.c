@@ -261,6 +261,7 @@ static const char *pmrmscu = "PMRMSCU=0xe18 register offset";
 struct nvme_config nvme_cfg = {
 	.output_format = "normal",
 	.output_format_ver = 1,
+	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 };
 
 static void *mmap_registers(struct nvme_dev *dev, bool writable);
@@ -2990,8 +2991,6 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.namespace_id	= 0,
 	};
 
-	nvme_cfg.timeout = 120000;
-
 	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id));
 
@@ -3303,8 +3302,6 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.rnumzrwa	= 0,
 		.phndls		= "",
 	};
-
-	nvme_cfg.timeout = 120000;
 
 	NVME_ARGS(opts,
 		  OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
@@ -6464,6 +6461,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
+	__u32 timeout_ms = 600000;
 	__u8 prev_lbaf = 0;
 	int block_size;
 	int err, i;
@@ -6493,7 +6491,8 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.bs		= 0,
 	};
 
-	nvme_cfg.timeout = 600000;
+	if (nvme_cfg.timeout != NVME_DEFAULT_IOCTL_TIMEOUT)
+		timeout_ms = nvme_cfg.timeout;
 
 	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
@@ -6659,7 +6658,7 @@ static int format_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.pi		= cfg.pi,
 		.pil		= cfg.pil,
 		.ses		= cfg.ses,
-		.timeout	= nvme_cfg.timeout,
+		.timeout	= timeout_ms,
 		.result		= NULL,
 	};
 	err = nvme_cli_format_nvm(dev, &args);
@@ -10482,7 +10481,7 @@ static int get_dispersed_ns_psub(struct nvme_dev *dev, __u32 nsid,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.timeout = nvme_cfg.timeout,
 		.lid = NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS,
 		.nsid = nsid,
 		.lpo = header_len,
@@ -10612,7 +10611,7 @@ static int get_reachability_groups(struct nvme_dev *dev, bool rgo, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.timeout = nvme_cfg.timeout,
 		.lid = NVME_LOG_LID_REACHABILITY_GROUPS,
 		.nsid = NVME_NSID_ALL,
 		.lsp = rgo,
@@ -10727,7 +10726,7 @@ static int get_reachability_associations(struct nvme_dev *dev, bool rao, bool ra
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.timeout = nvme_cfg.timeout,
 		.lid = NVME_LOG_LID_REACHABILITY_ASSOCIATIONS,
 		.nsid = NVME_NSID_ALL,
 		.lsp = rao,
@@ -10812,7 +10811,7 @@ static int get_host_discovery(struct nvme_dev *dev, bool allhoste, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.timeout = nvme_cfg.timeout,
 		.lid = NVME_LOG_LID_HOST_DISCOVER,
 		.nsid = NVME_NSID_ALL,
 		.lsp = allhoste,
@@ -10895,7 +10894,7 @@ static int get_ave_discovery(struct nvme_dev *dev, bool rae, struct nvme_ave_dis
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.timeout = nvme_cfg.timeout,
 		.lid = NVME_LOG_LID_AVE_DISCOVER,
 		.nsid = NVME_NSID_ALL,
 		.rae = rae,
@@ -10973,7 +10972,7 @@ static int get_pull_model_ddc_req(struct nvme_dev *dev,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.timeout = nvme_cfg.timeout,
 		.lid = NVME_LOG_LID_PULL_MODEL_DDC_REQ,
 		.nsid = NVME_NSID_ALL,
 		.rae = rae,
