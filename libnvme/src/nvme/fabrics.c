@@ -1697,7 +1697,7 @@ static int nvmf_dim(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
  * address from the socket, then we'll infer the address family from the
  * address of the DC since the DC address has the same address family.
  *
- * @ctrl: Host NVMe controller instance maintaining the admin queue used to
+ * @c: Host NVMe controller instance maintaining the admin queue used to
  *   submit the DIM command to the DC.
  *
  * Return: The address family of the source address associated with the
