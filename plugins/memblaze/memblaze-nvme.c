@@ -1227,34 +1227,25 @@ struct smart_log_add_item {
 	char    *attr;
 };
 
-struct __packed wear_level {
-	__le16 min;
-	__le16 max;
-	__le16 avg;
+struct __packed raw_array {
+	__le16 r0;
+	__le16 r2;
+	__le16 r4;
+};
+
+struct __packed raw_array1 {
+	__le32 r0;
+	__le16 r4;
 };
 
 struct __packed smart_log_add_item_12 {
 	uint8_t id;
-	uint8_t rsvd[2];
+	uint8_t rsvd1[2];
 	uint8_t norm;
-	uint8_t rsvd1;
+	uint8_t rsvd11;
 	union {
-		struct wear_level wear_level;  // 0xad
-		struct __packed temp_since_born {       // 0xe7
-			__le16 max;
-			__le16 min;
-			__le16 curr;
-		} temp_since_born;
-		struct __packed power_consumption {  // 0xe8
-			__le16 max;
-			__le16 min;
-			__le16 curr;
-		} power_consumption;
-		struct __packed temp_since_power_on {  // 0xaf
-			__le16 max;
-			__le16 min;
-			__le16 curr;
-		} temp_since_power_on;
+		struct raw_array ra;
+		struct raw_array1 ra1;
 		uint8_t raw[6];
 	};
 	uint8_t rsvd2;
@@ -1264,10 +1255,11 @@ struct __packed smart_log_add_item_10 {
 	uint8_t id;
 	uint8_t norm;
 	union {
-		struct wear_level wear_level;  // 0xad
-		uint8_t           raw[6];
+		struct raw_array ra;
+		struct raw_array1 ra1;
+		uint8_t raw[6];
 	};
-	uint8_t rsvd[2];
+	uint8_t rsvd8[2];
 };
 
 struct __packed smart_log_add {
@@ -1330,9 +1322,11 @@ struct __packed smart_log_add {
 				struct smart_log_add_item_12 power_consumption;
 				struct smart_log_add_item_12 temp_since_bootup;
 				struct smart_log_add_item_12 thermal_throttle_time;
+				struct smart_log_add_item_12 capacitor_capacitance;
+				struct smart_log_add_item_12 free_xblock_status;
 			} v2;
 
-			struct smart_log_add_item_12 v2_raw[27];
+			struct smart_log_add_item_12 v2_raw[29];
 		};
 
 		union {
@@ -1348,20 +1342,27 @@ struct __packed smart_log_add {
 				struct smart_log_add_item_10 uncorrectable_sector_count;
 				struct smart_log_add_item_10 nand_uecc_detection;
 				struct smart_log_add_item_10 nand_xor_correction;
+				struct smart_log_add_item_10 rsvd11;
 				struct smart_log_add_item_10 gc_count;
 				struct smart_log_add_item_10 dram_uecc_detection_count;
 				struct smart_log_add_item_10 sram_uecc_detection_count;
 				struct smart_log_add_item_10 internal_raid_recovery_fail_count;
 				struct smart_log_add_item_10 inflight_cmds;
 				struct smart_log_add_item_10 internal_e2e_err_count;
+				struct smart_log_add_item_10 rsvd18;
 				struct smart_log_add_item_10 die_fail_count;
 				struct smart_log_add_item_10 wear_leveling_execution_count;
 				struct smart_log_add_item_10 read_disturb_count;
 				struct smart_log_add_item_10 data_retention_count;
 				struct smart_log_add_item_10 capacitor_health;
+				struct smart_log_add_item_10 dram_cecc_count;
+				struct smart_log_add_item_10 dram_cecc_address;
+				struct smart_log_add_item_10 sram_cecc_count;
+				struct smart_log_add_item_10 sram_cecc_address;
+				struct smart_log_add_item_10 write_throttle_status;
 			} v3;
 
-			struct smart_log_add_item_10 v3_raw[24];
+			struct smart_log_add_item_10 v3_raw[29];
 		};
 
 		uint8_t raw[512];
@@ -1403,33 +1404,33 @@ static void smart_log_add_v0_print(struct smart_log_add_item_12 *item, int item_
 		switch (item->id) {
 		case 0xad:
 			printf("min: %d, max: %d, avg: %d\n",
-			       le16_to_cpu(item->wear_level.min),
-			       le16_to_cpu(item->wear_level.max),
-			       le16_to_cpu(item->wear_level.avg));
+			       le16_to_cpu(item->ra.r0),
+			       le16_to_cpu(item->ra.r2),
+			       le16_to_cpu(item->ra.r4));
 			break;
 		case 0xe7:
 			printf("max: %d °C (%d K), min: %d °C (%d K), curr: %d °C (%d K)\n",
-			       K2C(le16_to_cpu(item->temp_since_born.max)),
-			       le16_to_cpu(item->temp_since_born.max),
-			       K2C(le16_to_cpu(item->temp_since_born.min)),
-			       le16_to_cpu(item->temp_since_born.min),
-			       K2C(le16_to_cpu(item->temp_since_born.curr)),
-			       le16_to_cpu(item->temp_since_born.curr));
+			       K2C(le16_to_cpu(item->ra.r0)),
+			       le16_to_cpu(item->ra.r0),
+			       K2C(le16_to_cpu(item->ra.r2)),
+			       le16_to_cpu(item->ra.r2),
+			       K2C(le16_to_cpu(item->ra.r4)),
+			       le16_to_cpu(item->ra.r4));
 			break;
 		case 0xe8:
 			printf("max: %d, min: %d, curr: %d\n",
-			       le16_to_cpu(item->power_consumption.max),
-			       le16_to_cpu(item->power_consumption.min),
-			       le16_to_cpu(item->power_consumption.curr));
+			       le16_to_cpu(item->ra.r0),
+			       le16_to_cpu(item->ra.r2),
+			       le16_to_cpu(item->ra.r4));
 			break;
 		case 0xaf:
 			printf("max: %d °C (%d K), min: %d °C (%d K), curr: %d °C (%d K)\n",
-			       K2C(le16_to_cpu(item->temp_since_power_on.max)),
-			       le16_to_cpu(item->temp_since_power_on.max),
-			       K2C(le16_to_cpu(item->temp_since_power_on.min)),
-			       le16_to_cpu(item->temp_since_power_on.min),
-			       K2C(le16_to_cpu(item->temp_since_power_on.curr)),
-			       le16_to_cpu(item->temp_since_power_on.curr));
+			       K2C(le16_to_cpu(item->ra.r0)),
+			       le16_to_cpu(item->ra.r0),
+			       K2C(le16_to_cpu(item->ra.r2)),
+			       le16_to_cpu(item->ra.r2),
+			       K2C(le16_to_cpu(item->ra.r4)),
+			       le16_to_cpu(item->ra.r4));
 			break;
 		default:
 			printf("%" PRIu64 "\n", int48_to_long(item->raw));
@@ -1468,6 +1469,8 @@ static void smart_log_add_v2_print(struct smart_log_add_item_12 *item, int item_
 		[0xe8] = {24, "power_consumption"           },
 		[0xaf] = {25, "temp_since_bootup"           },
 		[0xeb] = {26, "thermal_throttle_time"       },
+		[0xec] = {27, "capacitor_capacitance"       },
+		[0xed] = {28, "free_xblock_status"          },
 	};
 
 	for (int i = 0; i < item_count; i++, item++) {
@@ -1478,33 +1481,44 @@ static void smart_log_add_v2_print(struct smart_log_add_item_12 *item, int item_
 		switch (item->id) {
 		case 0xad:
 			printf("min: %d, max: %d, avg: %d\n",
-			       le16_to_cpu(item->wear_level.min),
-			       le16_to_cpu(item->wear_level.max),
-			       le16_to_cpu(item->wear_level.avg));
+			       le16_to_cpu(item->ra.r0),
+			       le16_to_cpu(item->ra.r2),
+			       le16_to_cpu(item->ra.r4));
 			break;
 		case 0xe7:
 			printf("max: %d °C (%d K), min: %d °C (%d K), curr: %d °C (%d K)\n",
-			       K2C(le16_to_cpu(item->temp_since_born.max)),
-			       le16_to_cpu(item->temp_since_born.max),
-			       K2C(le16_to_cpu(item->temp_since_born.min)),
-			       le16_to_cpu(item->temp_since_born.min),
-			       K2C(le16_to_cpu(item->temp_since_born.curr)),
-			       le16_to_cpu(item->temp_since_born.curr));
+			       K2C(le16_to_cpu(item->ra.r0)),
+			       le16_to_cpu(item->ra.r0),
+			       K2C(le16_to_cpu(item->ra.r2)),
+			       le16_to_cpu(item->ra.r2),
+			       K2C(le16_to_cpu(item->ra.r4)),
+			       le16_to_cpu(item->ra.r4));
 			break;
 		case 0xe8:
 			printf("max: %d, min: %d, curr: %d\n",
-			       le16_to_cpu(item->power_consumption.max),
-			       le16_to_cpu(item->power_consumption.min),
-			       le16_to_cpu(item->power_consumption.curr));
+			       le16_to_cpu(item->ra.r0),
+			       le16_to_cpu(item->ra.r2),
+			       le16_to_cpu(item->ra.r4));
 			break;
 		case 0xaf:
 			printf("max: %d °C (%d K), min: %d °C (%d K), curr: %d °C (%d K)\n",
-			       K2C(le16_to_cpu(item->temp_since_power_on.max)),
-			       le16_to_cpu(item->temp_since_power_on.max),
-			       K2C(le16_to_cpu(item->temp_since_power_on.min)),
-			       le16_to_cpu(item->temp_since_power_on.min),
-			       K2C(le16_to_cpu(item->temp_since_power_on.curr)),
-			       le16_to_cpu(item->temp_since_power_on.curr));
+			       K2C(le16_to_cpu(item->ra.r0)),
+			       le16_to_cpu(item->ra.r0),
+			       K2C(le16_to_cpu(item->ra.r2)),
+			       le16_to_cpu(item->ra.r2),
+			       K2C(le16_to_cpu(item->ra.r4)),
+			       le16_to_cpu(item->ra.r4));
+			break;
+		case 0xeb:
+			printf("throttle status: %d, total throttling time: %d\n",
+				   item->raw[0],
+				   le32_to_cpu(*(uint32_t *)&item->raw[1]));
+			break;
+		case 0xec:
+			printf("current: %d, norminal: %d, threshold: %d\n",
+			       le16_to_cpu(item->ra.r0),
+			       le16_to_cpu(item->ra.r2),
+			       le16_to_cpu(item->ra.r4));
 			break;
 		default:
 			printf("%" PRIu64 "\n", int48_to_long(item->raw));
@@ -1538,6 +1552,11 @@ static void smart_log_add_v3_print(struct smart_log_add_item_10 *item, int item_
 		[0xdc] = {21, "read_disturb_count"               },
 		[0xdd] = {22, "data_retention_count"             },
 		[0xde] = {23, "capacitor_health"                 },
+		[0xf6] = {24, "dram_cecc_count"                  },
+		[0xf7] = {25, "dram_cecc_address"                },
+		[0xf8] = {26, "sram_cecc_count"                  },
+		[0xf9] = {27, "sram_cecc_address"                },
+		[0xfa] = {28, "write_throttle_status"            },
 	};
 
 	for (int i = 0; i < item_count; i++, item++) {
@@ -1548,9 +1567,19 @@ static void smart_log_add_v3_print(struct smart_log_add_item_10 *item, int item_
 		switch (item->id) {
 		case 0xad:
 			printf("min: %d, max: %d, avg: %d\n",
-			       le16_to_cpu(item->wear_level.min),
-			       le16_to_cpu(item->wear_level.max),
-			       le16_to_cpu(item->wear_level.avg));
+			       le16_to_cpu(item->ra.r0),
+			       le16_to_cpu(item->ra.r2),
+			       le16_to_cpu(item->ra.r4));
+			break;
+		case 0xf6:
+		case 0xf8:
+		case 0xf9:
+			printf("%d\n", le32_to_cpu(item->ra1.r0));
+			break;
+		case 0xfa:
+			printf("curr: %d, total: %d\n",
+			       le16_to_cpu(item->ra.r0),
+			       le16_to_cpu(item->ra.r2));
 			break;
 		default:
 			printf("%" PRIu64 "\n", int48_to_long(item->raw));
