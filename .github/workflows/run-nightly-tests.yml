@@ -11,7 +11,7 @@ jobs:
     if: github.repository == 'linux-nvme/nvme-cli'
     runs-on: arc-vm-nvme-cli
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: "linux-blktests/blktests-ci"
       #We don't have to build the kernel here, as we have a cron job running on
