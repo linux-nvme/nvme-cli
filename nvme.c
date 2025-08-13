@@ -715,28 +715,16 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 static int parse_telemetry_da(struct nvme_dev *dev,
 			      enum nvme_telemetry_da da,
 			      struct nvme_telemetry_log *telem,
-			      size_t *size)
+			      size_t *size,
+			      bool da4_support)
 
 {
-	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
 	size_t dalb, da1lb = le16_to_cpu(telem->dalb1), da2lb = le16_to_cpu(telem->dalb2),
 		da3lb = le16_to_cpu(telem->dalb3), da4lb = le32_to_cpu(telem->dalb4);
-	bool data_area_4_support;
-
-	id_ctrl = nvme_alloc(sizeof(*id_ctrl));
-	if (!id_ctrl)
-		return -ENOMEM;
-
-	if (nvme_cli_identify_ctrl(dev, id_ctrl)) {
-		perror("identify-ctrl");
-		return -errno;
-	}
-
-	data_area_4_support = id_ctrl->lpa & 0x40;
 
 	switch (da) {
 	case NVME_TELEMETRY_DA_CTRL_DETERMINE:
-		if (data_area_4_support)
+		if (da4_support)
 			dalb = da4lb;
 		else
 			dalb = da3lb;
@@ -752,7 +740,7 @@ static int parse_telemetry_da(struct nvme_dev *dev,
 		dalb = da3lb;
 		break;
 	case NVME_TELEMETRY_DA_4:
-		if (data_area_4_support) {
+		if (da4_support) {
 			dalb = da4lb;
 		} else {
 			nvme_show_error(
@@ -822,7 +810,8 @@ static int get_log_telemetry_host(struct nvme_dev *dev, size_t size,
 static int __create_telemetry_log_host(struct nvme_dev *dev,
 				       enum nvme_telemetry_da da,
 				       size_t *size,
-				       struct nvme_telemetry_log **buf)
+				       struct nvme_telemetry_log **buf,
+				       bool da4_support)
 {
 	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
 	int err;
@@ -839,7 +828,7 @@ static int __create_telemetry_log_host(struct nvme_dev *dev,
 			return err;
 	}
 
-	err = parse_telemetry_da(dev, da, log, size);
+	err = parse_telemetry_da(dev, da, log, size, da4_support);
 	if (err)
 		return err;
 
@@ -850,7 +839,8 @@ static int __get_telemetry_log_ctrl(struct nvme_dev *dev,
 				    bool rae,
 				    enum nvme_telemetry_da da,
 				    size_t *size,
-				    struct nvme_telemetry_log **buf)
+				    struct nvme_telemetry_log **buf,
+				    bool da4_support)
 {
 	struct nvme_telemetry_log *log;
 	int err;
@@ -884,7 +874,7 @@ static int __get_telemetry_log_ctrl(struct nvme_dev *dev,
 		return 0;
 	}
 
-	err = parse_telemetry_da(dev, da, log, size);
+	err = parse_telemetry_da(dev, da, log, size, da4_support);
 	if (err)
 		goto free;
 
@@ -898,7 +888,8 @@ free:
 static int __get_telemetry_log_host(struct nvme_dev *dev,
 				    enum nvme_telemetry_da da,
 				    size_t *size,
-				    struct nvme_telemetry_log **buf)
+				    struct nvme_telemetry_log **buf,
+				    bool da4_support)
 {
 	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
 	int err;
@@ -913,7 +904,7 @@ static int __get_telemetry_log_host(struct nvme_dev *dev,
 	if (err)
 		return  err;
 
-	err = parse_telemetry_da(dev, da, log, size);
+	err = parse_telemetry_da(dev, da, log, size, da4_support);
 	if (err)
 		return err;
 
@@ -932,13 +923,16 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		"If given, This option will override dgen. 0 : controller determines data area";
 
 	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
+	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
 	_cleanup_fd_ int output = -1;
 	int err = 0;
-	size_t total_size;
+	size_t total_size = 0;
 	__u8 *data_ptr = NULL;
 	int data_written = 0, data_remaining = 0;
 	nvme_print_flags_t flags;
+	bool da4_support = false,
+	host_behavior_changed = false;
 
 	struct config {
 		char	*file_name;
@@ -990,6 +984,31 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		cfg.data_area = cfg.mcda;
 	}
 
+	if (cfg.data_area == 4) {
+		id_ctrl = nvme_alloc(sizeof(*id_ctrl));
+		if (!id_ctrl)
+			return -ENOMEM;
+
+		if (nvme_cli_identify_ctrl(dev, id_ctrl)) {
+			perror("identify-ctrl");
+			return -errno;
+		}
+
+		da4_support = id_ctrl->lpa & 0x40;
+
+		if (!da4_support) {
+			fprintf(stderr, "%s: Telemetry data area 4 not supported by device\n",
+				__func__);
+			return -EINVAL;
+		}
+
+		err = nvme_set_etdas(dev_fd(dev), &host_behavior_changed);
+		if (err) {
+			fprintf(stderr, "%s: Failed to set ETDAS bit\n", __func__);
+			return err;
+		}
+	}
+
 	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
@@ -1003,13 +1022,13 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 
 	if (cfg.ctrl_init)
 		err = __get_telemetry_log_ctrl(dev, cfg.rae, cfg.data_area,
-					       &total_size, &log);
+					       &total_size, &log, da4_support);
 	else if (cfg.host_gen)
 		err = __create_telemetry_log_host(dev, cfg.data_area,
-						  &total_size, &log);
+						  &total_size, &log, da4_support);
 	else
 		err = __get_telemetry_log_host(dev, cfg.data_area,
-					       &total_size, &log);
+					       &total_size, &log, da4_support);
 
 	if (err < 0) {
 		nvme_show_error("get-telemetry-log: %s", nvme_strerror(errno));
@@ -1046,6 +1065,15 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	if (fsync(output) < 0) {
 		nvme_show_error("ERROR : %s: : fsync : %s", __func__, strerror(errno));
 		return -1;
+	}
+
+	if (host_behavior_changed) {
+		host_behavior_changed = false;
+		err = nvme_clear_etdas(dev_fd(dev), &host_behavior_changed);
+		if (err) {
+			fprintf(stderr, "%s: Failed to clear ETDAS bit\n", __func__);
+			return err;
+		}
 	}
 
 	return err;
