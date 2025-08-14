@@ -24,6 +24,7 @@
 
 #define DWORD_SIZE 4
 #define LOG_FILE_PERMISSION 0644
+#define ATMOS_MODEL_PREFIX "SOLIDIGM SB5"
 
 enum log_type {
 	NLOG = 0,
@@ -31,7 +32,8 @@ enum log_type {
 	ASSERTLOG = 2,
 	HIT,
 	CIT,
-	ALL
+	ALL,
+	EXTENDED
 };
 
 #pragma pack(push, internal_logs, 1)
@@ -136,7 +138,6 @@ struct ilog {
 	struct config *cfg;
 	int count;
 	struct nvme_id_ctrl id_ctrl;
-	enum nvme_telemetry_da max_da;
 };
 
 static void print_nlog_header(__u8 *buffer)
@@ -519,17 +520,32 @@ static int ilog_ensure_dump_id_ctrl(struct ilog *ilog)
 	first = false;
 	err = ilog_dump_identify_page(ilog, &idctrl, 0);
 
-	if (err)
-		return err;
-
-	ilog->count++;
-
-	if (ilog->id_ctrl.lpa & 0x8)
-		ilog->max_da = NVME_TELEMETRY_DA_3;
-	if (ilog->id_ctrl.lpa & 0x40)
-		ilog->max_da = NVME_TELEMETRY_DA_4;
+	if (!err)
+		ilog->count++;
 
 	return err;
+}
+
+static bool is_atmos(struct ilog *ilog)
+{
+	ilog_ensure_dump_id_ctrl(ilog);
+	return !strncmp(ilog->id_ctrl.mn, ATMOS_MODEL_PREFIX, sizeof(ATMOS_MODEL_PREFIX) - 1);
+}
+
+static enum nvme_telemetry_da get_max_da(struct ilog *ilog, enum log_type ttype)
+{
+	enum nvme_telemetry_da max_da = NVME_TELEMETRY_DA_1;
+
+	ilog_ensure_dump_id_ctrl(ilog);
+
+	if (is_atmos(ilog) && ttype != EXTENDED)
+		return NVME_TELEMETRY_DA_3;
+
+	if (ilog->id_ctrl.lpa & 0x8)
+		max_da = NVME_TELEMETRY_DA_3;
+	if (ilog->id_ctrl.lpa & 0x40)
+		max_da = NVME_TELEMETRY_DA_4;
+	return max_da;
 }
 
 static int ilog_dump_telemetry(struct ilog *ilog, enum log_type ttype)
@@ -546,7 +562,7 @@ static int ilog_dump_telemetry(struct ilog *ilog, enum log_type ttype)
 	if (err)
 		return err;
 
-	da = ilog->max_da;
+	da = get_max_da(ilog, ttype);
 	mdts = ilog->id_ctrl.mdts;
 
 	if (da == 4) {
@@ -564,6 +580,8 @@ static int ilog_dump_telemetry(struct ilog *ilog, enum log_type ttype)
 
 	switch (ttype) {
 	case HIT:
+	case ALL:
+	case EXTENDED:
 		file_name = "lid_0x07_lsp_0x01_lsi_0x0000.bin";
 		log.desc = "Host Initiated Telemetry";
 		err = sldgm_dynamic_telemetry(dev_fd(ilog->dev), true, false, false, mdts,
@@ -847,9 +865,9 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("type",     't', "ALL|CIT|HIT|NLOG|ASSERT|EVENT", &cfg.type, type),
+		OPT_STRING("type", 't', "ALL|CIT|HIT|NLOG|ASSERT|EVENT|EXTENDED", &cfg.type, type),
 		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.out_dir, out_dir),
-		OPT_FLAG("verbose",    'v', &cfg.verbose,      verbose),
+		OPT_FLAG("verbose", 'v', &cfg.verbose,      verbose),
 		OPT_END()
 	};
 
@@ -874,6 +892,8 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 		log_type = ASSERTLOG;
 	else if (!strcmp(cfg.type, "EVENT"))
 		log_type = EVENTLOG;
+	else if (!strcmp(cfg.type, "EXTENDED"))
+		log_type = EXTENDED;
 	else {
 		fprintf(stderr, "Invalid log type: %s\n", cfg.type);
 		return -EINVAL;
@@ -909,42 +929,42 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *command,
 	output_path = full_folder;
 
 	/* Retrieve first logs that records actions to retrieve other logs */
-	if (log_type == ALL || log_type == HIT) {
-		err = ilog_dump_telemetry(&ilog, HIT);
+	if (log_type == ALL || log_type == HIT || log_type == EXTENDED) {
+		err = ilog_dump_telemetry(&ilog, log_type);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Host Initiated Telemetry");
 	}
-	if (log_type == ALL || log_type == NLOG) {
+	if (log_type == ALL || log_type == NLOG || log_type == EXTENDED) {
 		err = ilog_dump_nlogs(&ilog, -1);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Nlog");
 	}
-	if (log_type == ALL || log_type == CIT) {
+	if (log_type == ALL || log_type == CIT || log_type == EXTENDED) {
 		err = ilog_dump_telemetry(&ilog, CIT);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Controller Initiated Telemetry");
 	}
-	if (log_type == ALL || log_type == ASSERTLOG) {
+	if (log_type == ALL || log_type == ASSERTLOG || log_type == EXTENDED) {
 		err = ilog_dump_assert_logs(&ilog);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Assert log");
 	}
-	if (log_type == ALL || log_type == EVENTLOG) {
+	if (log_type == ALL || log_type == EVENTLOG || log_type == EXTENDED) {
 		err = ilog_dump_event_logs(&ilog);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
 			perror("Error retrieving Event log");
 	}
-	if (log_type == ALL) {
+	if (log_type == ALL || log_type == EXTENDED) {
 		err = ilog_dump_identify_pages(&ilog);
 		if (err < 0)
 			perror("Error retrieving Identify pages");
