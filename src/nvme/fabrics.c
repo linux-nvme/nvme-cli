@@ -1134,6 +1134,7 @@ static struct nvmf_discovery_log *nvme_discovery_log(
 	nvme_root_t r = root_from_ctrl(args->c);
 	struct nvmf_discovery_log *log;
 	int retries = 0;
+	int err;
 	const char *name = nvme_ctrl_get_name(args->c);
 	uint64_t genctr, numrec;
 	int fd = nvme_ctrl_get_fd(args->c);
@@ -1161,10 +1162,11 @@ static struct nvmf_discovery_log *nvme_discovery_log(
 		 name, retries, args->max_retries);
 	log_args.log = log;
 	log_args.len = DISCOVERY_HEADER_LEN;
-	if (nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &log_args)) {
+	err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &log_args);
+	if (err) {
 		nvme_msg(r, LOG_INFO,
-			 "%s: discover try %d/%d failed, error %d\n",
-			 name, retries, args->max_retries, errno);
+			 "%s: discover try %d/%d failed, errno %d status 0x%x\n",
+			 name, retries, args->max_retries, errno, err);
 		goto out_free_log;
 	}
 
@@ -1194,10 +1196,11 @@ static struct nvmf_discovery_log *nvme_discovery_log(
 		log_args.lpo = sizeof(*log);
 		log_args.log = log->entries;
 		log_args.len = entries_size;
-		if (nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &log_args)) {
+		err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &log_args);
+		if (err) {
 			nvme_msg(r, LOG_INFO,
-				 "%s: discover try %d/%d failed, error %d\n",
-				 name, retries, args->max_retries, errno);
+				 "%s: discover try %d/%d failed, errno %d status 0x%x\n",
+				 name, retries, args->max_retries, errno, err);
 			goto out_free_log;
 		}
 
@@ -1210,10 +1213,11 @@ static struct nvmf_discovery_log *nvme_discovery_log(
 		log_args.lpo = 0;
 		log_args.log = log;
 		log_args.len = DISCOVERY_HEADER_LEN;
-		if (nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &log_args)) {
+		err = nvme_get_log_page(fd, NVME_LOG_PAGE_PDU_SIZE, &log_args);
+		if (err) {
 			nvme_msg(r, LOG_INFO,
-				 "%s: discover try %d/%d failed, error %d\n",
-				 name, retries, args->max_retries, errno);
+				 "%s: discover try %d/%d failed, errno %d status 0x%x\n",
+				 name, retries, args->max_retries, errno, err);
 			goto out_free_log;
 		}
 	} while (genctr != le64_to_cpu(log->genctr) &&
@@ -1234,6 +1238,8 @@ static struct nvmf_discovery_log *nvme_discovery_log(
 
 out_free_log:
 	free(log);
+	if (!errno)
+		errno = nvme_status_to_errno(err, true);
 	return NULL;
 }
 
