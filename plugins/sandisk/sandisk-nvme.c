@@ -42,10 +42,6 @@ static int sndk_do_cap_telemetry_log(struct nvme_dev *dev, const char *file,
 	__u64 capabilities = 0;
 	nvme_root_t r;
 	bool host_behavior_changed = false;
-	struct nvme_feat_host_behavior prev = {0};
-	__u32 result;
-
-
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
@@ -62,26 +58,23 @@ static int sndk_do_cap_telemetry_log(struct nvme_dev *dev, const char *file,
 	r = nvme_scan(NULL);
 	capabilities = sndk_get_drive_capabilities(r, dev);
 
+	if (data_area == 4) {
+		if (!(ctrl.lpa & 0x40)) {
+			fprintf(stderr, "%s: Telemetry data area 4 not supported by device\n",
+				__func__);
+			return -EINVAL;
+		}
+
+		err = nvme_set_etdas(dev_fd(dev), &host_behavior_changed);
+		if (err) {
+			fprintf(stderr, "%s: Failed to set ETDAS bit\n", __func__);
+			return err;
+		}
+	}
+
 	if (type == SNDK_TELEMETRY_TYPE_HOST) {
 		host_gen = 1;
 		ctrl_init = 0;
-
-		if (data_area == 4) {
-			if (!(ctrl.lpa & 0x40)) {
-				fprintf(stderr, "Telemetry data area 4 not supported by device\n");
-				return -EINVAL;
-			}
-
-			int err = nvme_get_features_host_behavior(dev_fd(dev), 0, &prev, &result);
-
-			if (!err && !prev.etdas) {
-				struct nvme_feat_host_behavior da4_enable = prev;
-
-				da4_enable.etdas = 1;
-				nvme_set_features_host_behavior(dev_fd(dev), 0, &da4_enable);
-				host_behavior_changed = true;
-			}
-		}
 	} else if (type == SNDK_TELEMETRY_TYPE_CONTROLLER) {
 		if (capabilities & SNDK_DRIVE_CAP_INTERNAL_LOG) {
 			err = sndk_check_ctrl_telemetry_option_disabled(dev);
@@ -157,8 +150,14 @@ static int sndk_do_cap_telemetry_log(struct nvme_dev *dev, const char *file,
 		err = -1;
 	}
 
-	if (host_behavior_changed)
-		nvme_set_features_host_behavior(dev_fd(dev), 0, &prev);
+	if (host_behavior_changed) {
+		host_behavior_changed = false;
+		err = nvme_clear_etdas(dev_fd(dev), &host_behavior_changed);
+		if (err) {
+			fprintf(stderr, "%s: Failed to clear ETDAS bit\n", __func__);
+			return err;
+		}
+	}
 
 	free(log);
 close_output:
