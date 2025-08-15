@@ -219,9 +219,8 @@ static int nvme_get_vendor_log(int argc, char **argv, struct command *acmd, stru
 		return err;
 
 	memset(local_mem, 0, BYTE_OF_4K);
-	err = nvme_get_log_simple(
-		hdl, (enum nvme_cmd_get_log_lid)VENDOR_SMART_LOG_PAGE,
-		sizeof(r1_cli_vendor_log_t), local_mem);
+	err = nvme_get_log_simple(hdl, (enum nvme_cmd_get_log_lid)VENDOR_SMART_LOG_PAGE,
+				  local_mem, sizeof(r1_cli_vendor_log_t));
 	if (!err) {
 		show_r1_vendor_log((r1_cli_vendor_log_t *)local_mem);
 		show_r1_media_err_log((r1_cli_vendor_log_t *)local_mem);

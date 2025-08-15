@@ -35,7 +35,7 @@ static int getHealthValue(int argc, char **argv, struct command *acmd, struct pl
 		printf("\nDevice not found\n");
 		return -1;
 	}
-	result = nvme_get_log_smart(hdl, 0xffffffff, false, &smart_log);
+	result = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (!result) {
 		printf("Transcend NVME heath value: ");
 		percent_used = smart_log.percent_used;

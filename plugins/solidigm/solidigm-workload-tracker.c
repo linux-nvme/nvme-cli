@@ -286,25 +286,21 @@ int wltracker_config(struct wltracker *wlt, union WorkloadLogEnable *we)
 static int wltracker_show_newer_entries(struct wltracker *wlt)
 {
 	struct workloadLog *log = &wlt->workload_log;
-	__u8 cnt;
-	__u8 content_group;
+	union WorkloadLogEnable workloadEnable;
 	static __u64 last_timestamp_us;
+	struct nvme_passthru_cmd cmd;
 	__u64 timestamp_us = 0;
 	__u64 timestamp = 0;
-	union WorkloadLogEnable workloadEnable;
+	__u8 content_group;
+	__u8 cnt;
+	int err;
 
-	struct nvme_get_log_args args = {
-		.lpo	= 0,
-		.result = NULL,
-		.log	= log,
-		.args_size = sizeof(args),
-		.uuidx	= wlt->uuid_index,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid	= LID,
-		.len	= sizeof(*log),
-	};
-	int err = nvme_get_log(wlt->hdl, &args);
-
+	nvme_init_get_log(&cmd, NVME_NSID_NONE, LID, NVME_CSI_NVM,
+			  log, sizeof(*log));
+	cmd.cdw14 |= NVME_FIELD_ENCODE(wlt->uuid_index,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	err = nvme_get_log(wlt->hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (err > 0) {
 		nvme_show_status(err);
 		return err;
@@ -356,7 +352,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 			if (!err) {
 				struct workloadLog tl;
 
-				err = nvme_get_log_simple(wlt->hdl, LID, sizeof(tl), &tl);
+				err = nvme_get_log_simple(wlt->hdl, LID, &tl, sizeof(tl));
 				tle = tl.timestamp_lastEntry;
 			}
 			if (err) {

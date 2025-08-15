@@ -131,7 +131,7 @@ static int get_status(int argc, char **argv, struct command *acmd, struct plugin
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(hdl, 0xc0, sizeof(log), &log);
+	err = nvme_get_log_simple(hdl, 0xc0, &log, sizeof(log));
 	if (err)
 		goto exit;
 

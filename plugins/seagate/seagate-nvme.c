@@ -171,8 +171,7 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-	err = nvme_get_log_simple(hdl, 0xc5,
-				  sizeof(logPageMap), &logPageMap);
+	err = nvme_get_log_simple(hdl, 0xc5, &logPageMap, sizeof(logPageMap));
 	if (!err) {
 		if (strcmp(cfg.output_format, "json")) {
 			printf("Seagate Supported Log-pages count :%d\n",
@@ -940,7 +939,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	if (!stx_is_jag_pan(modelNo)) {
-		err = nvme_get_log_simple(hdl, 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+		err = nvme_get_log_simple(hdl, 0xC4, &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
 		if (!err) {
 			if (strcmp(cfg.output_format, "json")) {
 				printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
@@ -962,7 +961,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 			 * Next get Log Page 0xCF
 			 */
 
-			err = nvme_get_log_simple(hdl, 0xCF, sizeof(logPageCF), &logPageCF);
+			err = nvme_get_log_simple(hdl, 0xCF, &logPageCF, sizeof(logPageCF));
 			if (!err) {
 				if (strcmp(cfg.output_format, "json")) {
 					print_smart_log_CF(&logPageCF);
@@ -980,7 +979,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 			nvme_show_status(err);
 		}
 	} else {
-		err = nvme_get_log_simple(hdl, 0xC0, sizeof(ehExtSmart), &ehExtSmart);
+		err = nvme_get_log_simple(hdl, 0xC0, &ehExtSmart, sizeof(ehExtSmart));
 
 		if (!err) {
 			if (strcmp(cfg.output_format, "json")) {
@@ -1002,7 +1001,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	err = nvme_get_log_simple(hdl, 0xC4,
-				  sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+				  &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
 	if (!err) {
 		if (strcmp(cfg.output_format, "json")) {
 			printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
@@ -1025,7 +1024,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		 */
 
 		err = nvme_get_log_simple(hdl, 0xCF,
-					  sizeof(logPageCF), &logPageCF);
+					  &logPageCF, sizeof(logPageCF));
 		if (!err) {
 			if (strcmp(cfg.output_format, "json")) {
 				print_smart_log_CF(&logPageCF);
@@ -1112,7 +1111,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	if (flags & NORMAL)
 		printf("Seagate Temperature Stats Information :\n");
 	/*STEP-1 : Get Current Temperature from SMART */
-	err = nvme_get_log_smart(hdl, 0xffffffff, false, &smart_log);
+	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (!err) {
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
 		temperature = temperature ? temperature - 273 : 0;
@@ -1129,7 +1128,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 
 	/* STEP-2 : Get Max temperature form Ext SMART-id 194 */
 	err = nvme_get_log_simple(hdl, 0xC4,
-				  sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+				  &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
 	if (!err) {
 		for (index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++) {
 			if (ExtdSMARTInfo.vendorData[index].AttributeNumber == VS_ATTR_ID_MAX_LIFE_TEMPERATURE) {
@@ -1152,7 +1151,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	cf_err = nvme_get_log_simple(hdl, 0xCF,
-					 sizeof(ExtdSMARTInfo), &logPageCF);
+					 &logPageCF, sizeof(ExtdSMARTInfo));
 
 	if (!cf_err) {
 		scCurrentTemp = logPageCF.AttrCF.SuperCapCurrentTemperature;
@@ -1287,7 +1286,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 		printf("Seagate PCIe error counters Information :\n");
 
 	err = nvme_get_log_simple(hdl, 0xCB,
-				  sizeof(pcieErrorLog), &pcieErrorLog);
+				  &pcieErrorLog, sizeof(pcieErrorLog));
 	if (!err) {
 		if (flags & NORMAL)
 			print_vs_pcie_error_log(pcieErrorLog);
@@ -1432,7 +1431,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 	if (flags & NORMAL)
 		printf("Seagate FW Activation History Information :\n");
 
-	err = nvme_get_log_simple(hdl, 0xC2, sizeof(fwActivHis), &fwActivHis);
+	err = nvme_get_log_simple(hdl, 0xC2, &fwActivHis, sizeof(fwActivHis));
 	if (!err) {
 		if (flags & NORMAL)
 			print_stx_vs_fw_activate_history(fwActivHis);
@@ -1604,6 +1603,7 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 	int blkCnt, maxBlk = 0, blksToGet;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	unsigned char  *log;
 	__le64  offset = 0;
 	int err, dump_fd;
@@ -1632,9 +1632,8 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 
 	dump_fd = STDOUT_FILENO;
 	cfg.log_id = (cfg.log_id << 8) | 0x07;
-	err = nvme_get_nsid_log(hdl, false, cfg.log_id,
-				cfg.namespace_id,
-				sizeof(tele_log), (void *)(&tele_log));
+	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, cfg.log_id,
+				(void *)(&tele_log), sizeof(tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
@@ -1678,23 +1677,11 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 
 		memset(log, 0, bytesToGet);
 
-		struct nvme_get_log_args args = {
-			.args_size  = sizeof(args),
-			.lid        = cfg.log_id,
-			.nsid       = cfg.namespace_id,
-			.lpo        = offset,
-			.lsp        = 0,
-			.lsi        = 0,
-			.rae        = true,
-			.uuidx      = 0,
-			.csi        = NVME_CSI_NVM,
-			.ot     = false,
-			.len        = bytesToGet,
-			.log        = (void *)log,
-			.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result     = NULL,
-		};
-		err = nvme_get_log(hdl, &args);
+		nvme_init_get_log(&cmd, cfg.namespace_id, cfg.log_id,
+				  NVME_CSI_NVM, log, bytesToGet);
+		nvme_init_get_log_lpo(&cmd, offset);
+		err = nvme_get_log(hdl, &cmd, true,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1726,6 +1713,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 	const char *raw = "output in raw format";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err, dump_fd;
 	struct nvme_temetry_log_hdr tele_log;
 	__le64  offset = 0;
@@ -1755,8 +1743,8 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 	dump_fd = STDOUT_FILENO;
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(hdl, false, log_id, cfg.namespace_id,
-				sizeof(tele_log), (void *)(&tele_log));
+	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, log_id,
+				(void *)(&tele_log), sizeof(tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
@@ -1796,23 +1784,11 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 
 		memset(log, 0, bytesToGet);
 
-		struct nvme_get_log_args args = {
-			.args_size  = sizeof(args),
-			.lid        = log_id,
-			.nsid       = cfg.namespace_id,
-			.lpo        = offset,
-			.lsp        = 0,
-			.lsi        = 0,
-			.rae        = true,
-			.uuidx      = 0,
-			.csi        = NVME_CSI_NVM,
-			.ot     = false,
-			.len        = bytesToGet,
-			.log        = (void *)log,
-			.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result     = NULL,
-		};
-		err = nvme_get_log(hdl, &args);
+		nvme_init_get_log(&cmd, cfg.namespace_id, log_id,
+				  NVME_CSI_NVM, log, bytesToGet);
+		nvme_init_get_log_lpo(&cmd, offset);
+		err = nvme_get_log(hdl, &cmd, true,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1853,6 +1829,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 	const char *file = "dump file";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err, dump_fd;
 	int flags = O_WRONLY | O_CREAT;
 	int mode = 0664;
@@ -1892,8 +1869,8 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 	}
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(hdl, false, log_id, cfg.namespace_id,
-				sizeof(tele_log), (void *)(&tele_log));
+	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, log_id,
+				(void *)(&tele_log), sizeof(tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
@@ -1926,23 +1903,12 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 
 		memset(log, 0, bytesToGet);
 
-		struct nvme_get_log_args args = {
-			.args_size  = sizeof(args),
-			.lid        = log_id,
-			.nsid       = cfg.namespace_id,
-			.lpo        = offset,
-			.lsp        = 0,
-			.lsi        = 0,
-			.rae        = true,
-			.uuidx      = 0,
-			.csi        = NVME_CSI_NVM,
-			.ot     = false,
-			.len        = bytesToGet,
-			.log        = (void *)log,
-			.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result     = NULL,
-		};
-		err = nvme_get_log(hdl, &args);
+		nvme_init_get_log_lpo(&cmd, offset);
+		nvme_init_get_log(&cmd, cfg.namespace_id, log_id,
+				  NVME_CSI_NVM, log, bytesToGet);
+		nvme_init_get_log_lpo(&cmd, offset);
+		err = nvme_get_log(hdl, &cmd, true,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 

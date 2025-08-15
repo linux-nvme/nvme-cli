@@ -245,7 +245,7 @@ static int get_ibm_addi_smart_log(int argc, char **argv, struct command *cmd, st
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(hdl, 0xf0, sizeof(smart_log), &smart_log);
+	err = nvme_get_log_simple(hdl, 0xf0, &smart_log, sizeof(smart_log));
 
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -378,7 +378,7 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 		return err;
 
 	bzero(&vpd_log, sizeof(vpd_log));
-	err = nvme_get_log_simple(hdl, 0xf1, sizeof(vpd_log), &vpd_log);
+	err = nvme_get_log_simple(hdl, 0xf1, &vpd_log, sizeof(vpd_log));
 
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -570,7 +570,7 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 
 	/* get persistent event log */
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
-				sizeof(pevent_log), &pevent_log);
+				&pevent_log, sizeof(pevent_log));
 
 	if (err)
 		return err;
@@ -578,7 +578,7 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 	memset(&pevent_log, 0, sizeof(pevent_log));
 
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_EST_CTX_AND_READ,
-			sizeof(pevent_log), &pevent_log);
+			&pevent_log, sizeof(pevent_log));
 	if (err) {
 		fprintf(stderr, "Setting persistent event log read ctx failed (ignored)!\n");
 		return err;
@@ -592,7 +592,7 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 	}
 
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
-				log_length, pevent_log_info);
+				pevent_log_info, log_length);
 	if (!err) {
 		nvme_show_ibm_persistent_event_log(pevent_log_info, cfg.action,
 				log_length, nvme_transport_handle_get_name(hdl),

@@ -29,17 +29,12 @@ static __u8 scao_guid[GUID_LEN] = {
 static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 			   unsigned int format_version)
 {
-	nvme_print_flags_t fmt;
 	struct ocp_smart_extended_log *data;
-	int i;
+	struct nvme_passthru_cmd cmd;
+	nvme_print_flags_t fmt;
+	__u8 uidx;
 	int ret;
-	struct nvme_get_log_args args = {
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = (enum nvme_cmd_get_log_lid)OCP_LID_SMART,
-		.nsid = NVME_NSID_ALL,
-		.len = C0_SMART_CLOUD_ATTR_LEN,
-	};
+	int i;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -54,9 +49,15 @@ static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 	}
 	memset(data, 0, sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
 
-	args.log = data;
-	ocp_get_uuid_index(hdl, &args.uuidx);
-	ret = nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	ocp_get_uuid_index(hdl, &uidx);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  (enum nvme_cmd_get_log_lid)OCP_LID_SMART,
+			  NVME_CSI_NVM, data, C0_SMART_CLOUD_ATTR_LEN);
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	ret = nvme_get_log(hdl, &cmd, false,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n",

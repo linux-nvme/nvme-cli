@@ -30,6 +30,7 @@ int sldgm_get_market_log(int argc, char **argv, struct command *acmd,
 	const char *raw = "dump output in binary format";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	char log[MARKET_LOG_MAX_SIZE];
 	int err;
 	__u8 uuid_idx;
@@ -47,24 +48,14 @@ int sldgm_get_market_log(int argc, char **argv, struct command *acmd,
 
 	sldgm_get_uuid_index(hdl, &uuid_idx);
 
-	struct nvme_get_log_args args = {
-		.lpo	= 0,
-		.result = NULL,
-		.log	= log,
-		.args_size = sizeof(args),
-		.uuidx	= uuid_idx,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid	= MARKET_LOG_LID,
-		.len	= sizeof(log),
-		.nsid	= NVME_NSID_ALL,
-		.csi	= NVME_CSI_NVM,
-		.lsi	= NVME_LOG_LSI_NONE,
-		.lsp	= NVME_LOG_LSP_NONE,
-		.rae	= false,
-		.ot	= false,
-	};
-
-	err = nvme_get_log(hdl, &args);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  MARKET_LOG_LID, NVME_CSI_NVM,
+			  log, sizeof(log));
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_idx,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	err = nvme_get_log(hdl, &cmd, false,
+			   NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (err) {
 		nvme_show_status(err);
 		return err;

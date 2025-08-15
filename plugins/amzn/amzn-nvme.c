@@ -470,8 +470,11 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct amzn_latency_log_page log = { 0 };
 	nvme_print_flags_t flags = 0; // Initialize flags to 0
+	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ctrl ctrl;
 	bool detail = false;
+	size_t len;
+	__u32 nsid = 1;
 	int rc;
 
 	struct config {
@@ -498,40 +501,26 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		goto done;
 	}
 
-	struct nvme_get_log_args args = {
-		.args_size = sizeof(args),
-		.lid = AMZN_NVME_STATS_LOGPAGE_ID,
-		.nsid = 1,
-		.lpo = 0,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = 0,
-		.rae = false,
-		.uuidx = 0,
-		.csi = NVME_CSI_NVM,
-		.ot = false,
-		.log = (void *) &log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
-	};
-
 	if (!strncmp((char *)ctrl.mn, AMZN_NVME_LOCAL_STORAGE_PREFIX,
 		     strlen(AMZN_NVME_LOCAL_STORAGE_PREFIX))) {
-		if (nvme_get_nsid(hdl, &args.nsid) < 0) {
+		if (nvme_get_nsid(hdl, &nsid) < 0) {
 			struct nvme_id_ctrl test_ctrl;
 
 			if (nvme_identify_ctrl(hdl, &test_ctrl) == 0) {
-				args.nsid = NVME_NSID_ALL;
+				nsid = NVME_NSID_ALL;
 			} else {
 				rc = -errno;
 				goto done;
 			}
 		}
-		args.len = sizeof(log);
+		len = sizeof(log);
 	} else {
-		args.len = sizeof(log.base);
+		len = sizeof(log.base);
 	}
 
-	rc = nvme_get_log(hdl, &args);
+	nvme_init_get_log(&cmd, nsid, AMZN_NVME_STATS_LOGPAGE_ID, NVME_CSI_NVM,
+			  &log, len);
+	rc = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "[ERROR] %s: Failed to get log page, rc = %d\n",
 			__func__, rc);

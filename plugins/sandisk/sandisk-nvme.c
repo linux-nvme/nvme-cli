@@ -831,7 +831,7 @@ static int sndk_get_fw_act_history_C2(struct nvme_global_ctx *ctx, struct nvme_t
 
 	ret = nvme_get_log_simple(hdl,
 				  SNDK_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID,
-				  SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN, data);
+				  data, SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN);
 
 	if (strcmp(format, "json"))
 		nvme_show_status(ret);

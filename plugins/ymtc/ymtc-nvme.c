@@ -145,8 +145,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = nvme_get_nsid_log(hdl, false, 0xca, cfg.namespace_id,
-				sizeof(smart_log), &smart_log);
+	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, 0xca,
+				&smart_log, sizeof(smart_log));
 	if (!err) {
 		if (!cfg.raw_binary)
 			err = show_ymtc_smart_log(hdl, cfg.namespace_id, &smart_log);

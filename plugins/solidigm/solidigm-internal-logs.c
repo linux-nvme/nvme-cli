@@ -687,7 +687,7 @@ static int ilog_dump_log_page(struct nvme_transport_handle *hdl, struct ilog *il
 		if (!buff)
 			return -ENOMEM;
 	}
-	err = nvme_get_nsid_log(hdl, 0, lp->id, 0, lp->buffer_size, buff);
+	err = nvme_get_nsid_log(hdl, 0, 0, lp->id, buff, lp->buffer_size);
 	if (err)
 		return err;
 
@@ -768,21 +768,18 @@ static int ilog_dump_no_lsp_log_pages(struct nvme_transport_handle *hdl, struct 
 
 static int ilog_dump_pel(struct nvme_transport_handle *hdl, struct ilog *ilog)
 {
+	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
+	_cleanup_huge_ struct nvme_mem_huge mh = {0};
+	void *pevent_log_full;
+	size_t max_data_tx;
 	struct log lp = {
 		NVME_LOG_LID_PERSISTENT_EVENT,
 		nvme_log_to_string(NVME_LOG_LID_PERSISTENT_EVENT)
 	};
-	void *pevent_log_full;
 	int err;
-	struct nvme_get_log_args args;
-	size_t max_data_tx;
-
-	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
-
-	_cleanup_huge_ struct nvme_mem_huge mh = {0};
 
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
-					    sizeof(*pevent), pevent);
+					    pevent, sizeof(*pevent));
 	if (err)
 		return err;
 
@@ -792,7 +789,7 @@ static int ilog_dump_pel(struct nvme_transport_handle *hdl, struct ilog *ilog)
 		return -ENOMEM;
 
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_EST_CTX_AND_READ,
-					    sizeof(*pevent), pevent);
+					    pevent, sizeof(*pevent));
 	if (err)
 		return err;
 
@@ -803,27 +800,11 @@ static int ilog_dump_pel(struct nvme_transport_handle *hdl, struct ilog *ilog)
 		return -ENOMEM;
 
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
-						lp.buffer_size, pevent_log_full);
-	args = (struct nvme_get_log_args) {
-		.lpo = 0,
-		.result = NULL,
-		.log = pevent_log_full,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_PERSISTENT_EVENT,
-		.len = lp.buffer_size,
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_PEVENT_LOG_READ,
-		.uuidx = NVME_UUID_NONE,
-		.rae = false,
-		.ot = false,
-	};
-
+						pevent_log_full, lp.buffer_size);
 	max_data_tx = (1 << ilog->id_ctrl.mdts) * NVME_LOG_PAGE_PDU_SIZE;
 	do {
-		err = nvme_get_log_page(hdl, max_data_tx, &args);
+		err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
+			pevent_log_full, lp.buffer_size);
 		max_data_tx /= 2;
 	} while (err == -EPERM && max_data_tx >= NVME_LOG_PAGE_PDU_SIZE);
 
@@ -834,7 +815,7 @@ static int ilog_dump_pel(struct nvme_transport_handle *hdl, struct ilog *ilog)
 		       pevent_log_full, lp.buffer_size);
 
 	nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_RELEASE_CTX,
-				      sizeof(*pevent), pevent);
+				      pevent, sizeof(*pevent));
 
 	return err;
 }

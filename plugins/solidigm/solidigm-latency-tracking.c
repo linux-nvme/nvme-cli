@@ -334,6 +334,7 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 
 static int latency_tracker_get_log(struct latency_tracker *lt)
 {
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	if (lt->cfg.read && lt->cfg.write) {
@@ -344,24 +345,17 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 	if (!(lt->cfg.read || lt->cfg.write))
 		return 0;
 
-	struct nvme_get_log_args args = {
-		.lpo	= 0,
-		.result = NULL,
-		.log	= &lt->stats,
-		.args_size = sizeof(args),
-		.uuidx	= lt->uuid_index,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid	= lt->cfg.write ? WRITE_LOG_ID : READ_LOG_ID,
-		.len	= sizeof(lt->stats),
-		.nsid	= NVME_NSID_ALL,
-		.csi	= NVME_CSI_NVM,
-		.lsi	= NVME_LOG_LSI_NONE,
-		.lsp	= lt->cfg.type,
-		.rae	= false,
-		.ot	= false,
-	};
-
-	err = nvme_get_log(lt->hdl, &args);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  lt->cfg.write ? WRITE_LOG_ID : READ_LOG_ID,
+			  NVME_CSI_NVM, &lt->stats, sizeof(lt->stats));
+	cmd.cdw10 |= NVME_FIELD_ENCODE(lt->cfg.type,
+				       NVME_LOG_CDW10_LSP_SHIFT,
+				       NVME_LOG_CDW10_LSP_MASK);
+	cmd.cdw14 |= NVME_FIELD_ENCODE(lt->uuid_index,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	err = nvme_get_log(lt->hdl, &cmd, false,
+			   NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (err)
 		return err;
 

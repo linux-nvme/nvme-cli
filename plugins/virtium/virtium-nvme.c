@@ -298,7 +298,7 @@ static int vt_add_entry_to_log(struct nvme_transport_handle *hdl,
 		return -1;
 	}
 
-	ret = nvme_get_log_smart(hdl, NVME_NSID_ALL, false, &smart.raw_smart);
+	ret = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart.raw_smart);
 	if (ret) {
 		printf("Cannot read device SMART log\n");
 		return -1;

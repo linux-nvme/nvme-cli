@@ -73,7 +73,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 	}
 
 	err = nvme_get_log_fdp_configurations(hdl, cfg.egid, 0,
-			sizeof(hdr), &hdr);
+					      &hdr, sizeof(hdr));
 	if (err) {
 		nvme_show_status(errno);
 		return err;
@@ -83,8 +83,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 	if (!log)
 		return -ENOMEM;
 
-	err = nvme_get_log_fdp_configurations(hdl, cfg.egid, 0,
-			hdr.size, log);
+	err = nvme_get_log_fdp_configurations(hdl, cfg.egid, 0, log, hdr.size);
 	if (err) {
 		nvme_show_status(errno);
 		return err;
@@ -140,7 +139,7 @@ static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin 
 		flags = BINARY;
 
 	err = nvme_get_log_reclaim_unit_handle_usage(hdl, cfg.egid,
-						     0, sizeof(hdr), &hdr);
+						     0, &hdr, sizeof(hdr));
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -152,7 +151,7 @@ static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin 
 		return -ENOMEM;
 
 	err = nvme_get_log_reclaim_unit_handle_usage(hdl, cfg.egid,
-						     0, len, log);
+						     0, log, len);
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -212,7 +211,7 @@ static int fdp_stats(int argc, char **argv, struct command *acmd, struct plugin 
 
 	memset(&stats, 0x0, sizeof(stats));
 
-	err = nvme_get_log_fdp_stats(hdl, cfg.egid, 0, sizeof(stats), &stats);
+	err = nvme_get_log_fdp_stats(hdl, cfg.egid, 0, &stats, sizeof(stats));
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -277,7 +276,7 @@ static int fdp_events(int argc, char **argv, struct command *acmd, struct plugin
 	memset(&events, 0x0, sizeof(events));
 
 	err = nvme_get_log_fdp_events(hdl, cfg.egid,
-			cfg.host_events, 0, sizeof(events), &events);
+			cfg.host_events, 0, &events, sizeof(events));
 	if (err) {
 		nvme_show_status(err);
 		return err;

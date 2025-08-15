@@ -489,12 +489,12 @@ static int dapustor_additional_smart_log_data(
 {
 	int err;
 
-	err = nvme_get_log_simple(hdl, 0xca, sizeof(*smart_log), smart_log);
+	err = nvme_get_log_simple(hdl, 0xca, smart_log, sizeof(*smart_log));
 	if (err) {
 		nvme_show_status(err);
 		return err;
 	}
-	err = nvme_get_log_simple(hdl, 0xcb, sizeof(*ext_smart_log), ext_smart_log);
+	err = nvme_get_log_simple(hdl, 0xcb, ext_smart_log, sizeof(*ext_smart_log));
 	*has_ext = !err;
 	return 0;
 }

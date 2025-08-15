@@ -4324,7 +4324,7 @@ static void stdout_support_log_human(__u32 support, __u8 lid)
 		printf("  Establish Context and Read 512 Bytes of Header is %s\n",
 			(lidsp & 0x1) ? set : clr);
 		break;
-	case NVME_LOG_LID_DISCOVER:
+	case NVME_LOG_LID_DISCOVERY:
 		printf("  Extended Discovery Log Page Entry is %s\n",
 			(lidsp & 0x1) ? set : clr);
 		printf("  Port Local Entries Only is %s\n",
@@ -4332,7 +4332,7 @@ static void stdout_support_log_human(__u32 support, __u8 lid)
 		printf("  All NVM Subsystem Entries is %s\n",
 			(lidsp & 0x4) ? set : clr);
 		break;
-	case NVME_LOG_LID_HOST_DISCOVER:
+	case NVME_LOG_LID_HOST_DISCOVERY:
 		printf("  All Host Entries is %s\n",
 			(lidsp & 0x1) ? set : clr);
 		break;
@@ -6546,7 +6546,7 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 	case NVME_LOG_LID_REACHABILITY_ASSOCIATIONS:
 		stdout_reachability_associations_log(reachability_associations_log, args->len);
 		break;
-	case NVME_LOG_LID_CHANGED_ALLOC_NS_LIST:
+	case NVME_LOG_LID_CHANGED_ALLOC_NS:
 		stdout_changed_ns_list_log((struct nvme_ns_list *)args->log, devname, true);
 		break;
 	case NVME_LOG_LID_FDP_CONFIGS:
@@ -6561,13 +6561,13 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 	case NVME_LOG_LID_FDP_EVENTS:
 		stdout_fdp_events((struct nvme_fdp_events_log *)args->log);
 		break;
-	case NVME_LOG_LID_DISCOVER:
+	case NVME_LOG_LID_DISCOVERY:
 		stdout_discovery_log(discovery_log, le64_to_cpu(discovery_log->numrec));
 		break;
-	case NVME_LOG_LID_HOST_DISCOVER:
+	case NVME_LOG_LID_HOST_DISCOVERY:
 		stdout_host_discovery_log((struct nvme_host_discover_log *)args->log);
 		break;
-	case NVME_LOG_LID_AVE_DISCOVER:
+	case NVME_LOG_LID_AVE_DISCOVERY:
 		stdout_ave_discovery_log((struct nvme_ave_discover_log *)args->log);
 		break;
 	case NVME_LOG_LID_PULL_MODEL_DDC_REQ:

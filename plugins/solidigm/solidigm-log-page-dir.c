@@ -43,25 +43,17 @@ static void init_lid_dir(struct lid_dir *lid_dir)
 static int get_supported_log_pages_log(struct nvme_transport_handle *hdl, int uuid_index,
 				       struct nvme_supported_log_pages *supported)
 {
-	memset(supported, 0, sizeof(*supported));
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = supported,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = NVME_LOG_LID_SUPPORTED_LOG_PAGES,
-		.len = sizeof(*supported),
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = 0,
-		.uuidx = uuid_index,
-		.rae = false,
-		.ot = false,
-	};
+	struct nvme_passthru_cmd cmd;
 
-	return nvme_get_log(hdl, &args);
+	memset(supported, 0, sizeof(*supported));
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  NVME_LOG_LID_SUPPORTED_LOG_PAGES, NVME_CSI_NVM,
+			  supported, sizeof(*supported));
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	return nvme_get_log(hdl, &cmd, false,
+			    NVME_LOG_PAGE_PDU_SIZE, NULL);
 }
 
 static struct lid_dir *get_standard_lids(struct nvme_supported_log_pages *supported)

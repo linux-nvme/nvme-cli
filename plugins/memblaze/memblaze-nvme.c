@@ -442,8 +442,8 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *ac
 	if (err)
 		return err;
 
-	err = nvme_get_nsid_log(hdl, false, 0xca, cfg.namespace_id,
-				sizeof(smart_log), &smart_log);
+	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, 0xca,
+				&smart_log, sizeof(smart_log));
 	if (!err) {
 		if (!cfg.raw_binary)
 			err = show_memblaze_smart_log(hdl, cfg.namespace_id,
@@ -756,13 +756,13 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *acmd
 	fdi = fopen(FID_C3_LOG_FILENAME, "w+");
 
 	glp_high_latency_show_bar(fdi, DO_PRINT_FLAG);
-	err = nvme_get_log_simple(hdl, GLP_ID_VU_GET_HIGH_LATENCY_LOG, sizeof(buf), &buf);
+	err = nvme_get_log_simple(hdl, GLP_ID_VU_GET_HIGH_LATENCY_LOG, &buf, sizeof(buf));
 
 	while (1) {
 		if (!glp_high_latency(fdi, buf, LOG_PAGE_SIZE, DO_PRINT_FLAG))
 			break;
-		err = nvme_get_log_simple(hdl, GLP_ID_VU_GET_HIGH_LATENCY_LOG, sizeof(buf),
-					  &buf);
+		err = nvme_get_log_simple(hdl, GLP_ID_VU_GET_HIGH_LATENCY_LOG,
+					  &buf, sizeof(buf));
 		if (err) {
 			nvme_show_status(err);
 			break;
@@ -1031,7 +1031,7 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *acmd, s
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(hdl, cfg.write ? 0xc2 : 0xc1, sizeof(stats), &stats);
+	err = nvme_get_log_simple(hdl, cfg.write ? 0xc2 : 0xc1, &stats, sizeof(stats));
 	if (!err)
 		io_latency_histogram(cfg.write ? f2 : f1, stats, DO_PRINT_FLAG,
 				     cfg.write ? GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM :
@@ -1656,8 +1656,7 @@ static int mb_get_smart_log_add(int argc, char **argv, struct command *acmd, str
 
 	struct smart_log_add log = {0};
 
-	err = nvme_get_log_simple(hdl, LID_SMART_LOG_ADD, sizeof(struct smart_log_add),
-			&log);
+	err = nvme_get_log_simple(hdl, LID_SMART_LOG_ADD, &log, sizeof(struct smart_log_add));
 	if (!err) {
 		if (!cfg.raw_binary)
 			smart_log_add_print(&log, nvme_transport_handle_get_name(hdl));
@@ -2023,8 +2022,7 @@ static int mb_get_latency_stats(int argc, char **argv, struct command *acmd, str
 
 	struct latency_stats log = {0};
 
-	err = nvme_get_log_simple(hdl, LID_LATENCY_STATISTICS,
-				  sizeof(struct latency_stats), &log);
+	err = nvme_get_log_simple(hdl, LID_LATENCY_STATISTICS, &log, sizeof(struct latency_stats));
 	if (!err) {
 		if (!cfg.raw_binary)
 			latency_stats_print(&log, nvme_transport_handle_get_name(hdl));
@@ -2130,7 +2128,7 @@ static int mb_get_high_latency_log(int argc, char **argv, struct command *acmd,
 	struct high_latency_log log = {0};
 
 	err = nvme_get_log_simple(hdl, LID_HIGH_LATENCY_LOG,
-				  sizeof(struct high_latency_log), &log);
+				  &log, sizeof(struct high_latency_log));
 	if (!err) {
 		if (!cfg.raw_binary)
 			high_latency_log_print(&log, nvme_transport_handle_get_name(hdl));
@@ -2388,7 +2386,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 	int xfer_size = (cfg.duration % 2) > 0 ?
 		(4 + (cfg.duration + 1) * sizeof(struct performance_stats_timestamp)) : log_size;
 
-	err = nvme_get_log_simple(hdl, LID_PERFORMANCE_STATISTICS, xfer_size, &log);
+	err = nvme_get_log_simple(hdl, LID_PERFORMANCE_STATISTICS, &log, xfer_size);
 	if (!err) {
 		if (!cfg.raw_binary)
 			performance_stats_print(&log, nvme_transport_handle_get_name(hdl), cfg.duration);

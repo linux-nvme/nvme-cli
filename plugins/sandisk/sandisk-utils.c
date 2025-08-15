@@ -430,11 +430,12 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		void **log_data,
 		__u8 uuid_ix)
 {
-	void *data;
 	struct sndk_c2_log_page_header *hdr_ptr;
-	__u32 length = 0;
-	int ret = 0;
+	struct nvme_passthru_cmd cmd;
 	bool valid = false;
+	__u32 length = 0;
+	void *data;
+	int ret = 0;
 
 	data = (__u8 *)malloc(sizeof(__u8) * SNDK_DEV_MGMNT_LOG_PAGE_LEN);
 	if (!data) {
@@ -445,24 +446,13 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 	memset(data, 0, sizeof(__u8) * SNDK_DEV_MGMNT_LOG_PAGE_LEN);
 
 	/* get the log page length */
-	struct nvme_get_log_args args_len = {
-		.args_size	= sizeof(args_len),
-		.lid		= SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
-		.nsid		= 0xFFFFFFFF,
-		.lpo		= 0,
-		.lsp		= NVME_LOG_LSP_NONE,
-		.lsi		= 0,
-		.rae		= false,
-		.uuidx		= uuid_ix,
-		.csi		= NVME_CSI_NVM,
-		.ot		= false,
-		.len		= SNDK_DEV_MGMNT_LOG_PAGE_LEN,
-		.log		= data,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
-	};
-
-	ret = nvme_get_log(hdl, &args_len);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+		SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID, NVME_CSI_NVM, data,
+		SNDK_DEV_MGMNT_LOG_PAGE_LEN);
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_ix,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (ret) {
 		fprintf(stderr,
 			"ERROR: SNDK: Unable to get 0x%x Log Page with uuid %d, ret = 0x%x\n",
@@ -483,24 +473,13 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		}
 
 		/* get the log page data with the increased length */
-		struct nvme_get_log_args args_data = {
-			.args_size	= sizeof(args_data),
-			.lid		= SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
-			.nsid		= 0xFFFFFFFF,
-			.lpo		= 0,
-			.lsp		= NVME_LOG_LSP_NONE,
-			.lsi		= 0,
-			.rae		= false,
-			.uuidx		= uuid_ix,
-			.csi		= NVME_CSI_NVM,
-			.ot		= false,
-			.len		= length,
-			.log		= data,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
-		};
-
-		ret = nvme_get_log(hdl, &args_data);
+		nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID, NVME_CSI_NVM, data,
+			length);
+		cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_ix,
+				NVME_LOG_CDW14_UUID_SHIFT,
+				NVME_LOG_CDW14_UUID_MASK);
+		ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 		if (ret) {
 			fprintf(stderr,
 				"ERROR: SNDK: Unable to read 0x%x Log with uuid %d, ret = 0x%x\n",

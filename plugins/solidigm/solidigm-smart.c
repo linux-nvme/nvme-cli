@@ -231,6 +231,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acm
 	nvme_print_flags_t flags;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err;
 	__u8 uuid_index;
 
@@ -263,24 +264,14 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acm
 
 	sldgm_get_uuid_index(hdl, &uuid_index);
 
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = &smart_log_payload,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = solidigm_vu_smart_log_id,
-		.len = sizeof(smart_log_payload),
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-		.uuidx = uuid_index,
-		.rae = false,
-		.ot = false,
-	};
-
-	err =  nvme_get_log(hdl, &args);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  solidigm_vu_smart_log_id, NVME_CSI_NVM,
+			  &smart_log_payload, sizeof(smart_log_payload));
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	err = nvme_get_log(hdl, &cmd, false,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (!err) {
 		if (flags & JSON)
 			vu_smart_log_show_json(&smart_log_payload,

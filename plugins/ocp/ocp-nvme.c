@@ -869,6 +869,7 @@ static int extract_dump_get_log(struct nvme_transport_handle *hdl, char *feature
 	int output = 0;
 	int total_loop_cnt = dumpsize / transfersize;
 	int last_xfer_size = dumpsize % transfersize;
+	struct nvme_passthru_cmd cmd;
 
 	if (last_xfer_size)
 		total_loop_cnt++;
@@ -883,23 +884,10 @@ static int extract_dump_get_log(struct nvme_transport_handle *hdl, char *feature
 	for (i = 0; i < total_loop_cnt; i++) {
 		memset(data, 0, transfersize);
 
-		struct nvme_get_log_args args = {
-			.lpo = offset,
-			.result = NULL,
-			.log = (void *)data,
-			.args_size = sizeof(args),
-			.lid = log_id,
-			.len = transfersize,
-			.nsid = nsid,
-			.lsp = lsp,
-			.uuidx = 0,
-			.rae = rae,
-			.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-			.csi = NVME_CSI_NVM,
-			.ot = false,
-		};
-
-		err = nvme_get_log(hdl, &args);
+		nvme_init_get_log(&cmd, nsid, log_id, NVME_CSI_NVM,
+				  data, transfersize);
+		nvme_init_get_log_lpo(&cmd, offset);
+		err = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
 		if (err) {
 			if (i > 0)
 				goto close_output;
@@ -1247,6 +1235,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	void *telemetry_log;
 	const size_t bs = 512;
 	struct nvme_telemetry_log *hdr;
+	struct nvme_passthru_cmd cmd;
 	size_t full_size = 0, offset = bs;
 	int err, fd;
 
@@ -1274,24 +1263,11 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 		goto exit_status;
 	}
 
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = hdr,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = log_id,
-		.len = bs,
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_TELEM_HOST_LSP_CREATE,
-		.uuidx = NVME_UUID_NONE,
-		.rae = true,
-		.ot = false,
-	};
-
-	err = nvme_get_log(hdl, &args);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM, hdr, bs);
+	cmd.cdw10 |= NVME_FIELD_ENCODE(NVME_LOG_TELEM_HOST_LSP_CREATE,
+			NVME_LOG_CDW10_LSP_SHIFT,
+			NVME_LOG_CDW10_LSP_MASK);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (err < 0)
 		nvme_show_error("Failed to fetch the log from drive.\n");
 	else if (err > 0) {
@@ -1325,10 +1301,10 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	}
 
 	while (offset < full_size) {
-		args.log = telemetry_log;
-		args.lpo = offset;
-		args.lsp = NVME_LOG_LSP_NONE;
-		err = nvme_get_log(hdl, &args);
+		nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM,
+				  telemetry_log, bs);
+		nvme_init_get_log_lpo(&cmd, offset);
+		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 		if (err < 0) {
 			nvme_show_error("Failed to fetch the log from drive.\n");
 			break;

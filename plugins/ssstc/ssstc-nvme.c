@@ -413,8 +413,7 @@ int ssstc_get_add_smart_log(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	err = nvme_get_log_simple(hdl, 0xca, sizeof(smart_log_add),
-				  &smart_log_add);
+	err = nvme_get_log_simple(hdl, 0xca, &smart_log_add, sizeof(smart_log_add));
 	if (!err) {
 		if (cfg.json)
 			show_ssstc_add_smart_log_jsn(

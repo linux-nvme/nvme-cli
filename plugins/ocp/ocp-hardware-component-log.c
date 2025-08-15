@@ -169,26 +169,27 @@ const char *hwcomp_id_to_string(__u32 id)
 
 static int get_hwcomp_log_data(struct nvme_transport_handle *hdl, struct hwcomp_log *log)
 {
-	int ret = 0;
 	size_t desc_offset = offsetof(struct hwcomp_log, desc);
-	long double log_bytes;
+	struct nvme_passthru_cmd cmd;
 	nvme_uint128_t log_size;
+	long double log_bytes;
+	__u32 len;
+	__u8 uidx;
+	int ret = 0;
 
-	struct nvme_get_log_args args = {
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = (enum nvme_cmd_get_log_lid)OCP_LID_HWCOMP,
-		.nsid = NVME_NSID_ALL,
-		.log = log,
-		.len = desc_offset,
-	};
-
-	ocp_get_uuid_index(hdl, &args.uuidx);
+	ocp_get_uuid_index(hdl, &uidx);
 
 #ifdef HWCOMP_DUMMY
 	memcpy(log, hwcomp_dummy, desc_offset);
 #else /* HWCOMP_DUMMY */
-	ret = nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  (enum nvme_cmd_get_log_lid)OCP_LID_HWCOMP,
+			  NVME_CSI_NVM, log, desc_offset);
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	ret = nvme_get_log(hdl, &cmd, false,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (ret) {
 		print_info_error("error: ocp: failed to get hwcomp log size (ret: %d)\n", ret);
 		return ret;
@@ -211,23 +212,25 @@ static int get_hwcomp_log_data(struct nvme_transport_handle *hdl, struct hwcomp_
 		return -EINVAL;
 	}
 
-	args.len = log_bytes - desc_offset;
+	len = log_bytes - desc_offset;
 
-	print_info("args.len: %u\n", args.len);
+	print_info("args.len: %u\n", len);
 
-	log->desc = calloc(1, args.len);
+	log->desc = calloc(1, len);
 	if (!log->desc) {
 		fprintf(stderr, "error: ocp: calloc: %s\n", strerror(errno));
 		return -errno;
 	}
 
-	args.log = log->desc,
-	args.lpo = desc_offset,
-
 #ifdef HWCOMP_DUMMY
-	memcpy(log->desc, &hwcomp_dummy[desc_offset], args.len);
+	memcpy(log->desc, &hwcomp_dummy[desc_offset], len);
 #else /* HWCOMP_DUMMY */
-	ret = nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  (enum nvme_cmd_get_log_lid)OCP_LID_HWCOMP,
+			  NVME_CSI_NVM, log->desc, len);
+	nvme_init_get_log_lpo(&cmd, desc_offset);
+	ret = nvme_get_log(hdl, &cmd, false,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (ret) {
 		print_info_error("error: ocp: failed to get log page (hwcomp: %02X, ret: %d)\n",
 				 OCP_LID_HWCOMP, ret);

@@ -38,40 +38,28 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	int err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	struct fw_activation_history fw_history = { 0 };
+	struct nvme_passthru_cmd cmd;
+	__u8 uuid_index = 0;
+	int err;
 
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
-
-	__u8 uuid_index = 0;
 
 	/*
 	 * Best effort attempt at uuid. Otherwise, assume no index (i.e. 0)
 	 * Log GUID check will ensure correctness of returned data
 	 */
 	ocp_get_uuid_index(hdl, &uuid_index);
-
-	struct fw_activation_history fw_history = { 0 };
-
-	struct nvme_get_log_args args = {
-		.lpo = 0,
-		.result = NULL,
-		.log = &fw_history,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = (enum nvme_cmd_get_log_lid)OCP_LID_FAHL_OBSOLETE,
-		.len = sizeof(fw_history),
-		.nsid = NVME_NSID_ALL,
-		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = 0,
-		.uuidx = uuid_index,
-		.rae = false,
-		.ot = false,
-	};
-
-	err = nvme_get_log(hdl, &args);
-
+	nvme_init_get_log(&cmd, NVME_NSID_ALL,
+			  (enum nvme_cmd_get_log_lid)OCP_LID_FAHL_OBSOLETE,
+			  NVME_CSI_NVM, &fw_history, sizeof(fw_history));
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
+	err = nvme_get_log(hdl, &cmd, false,
+				   NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (err)
 		nvme_show_status(err);
 

@@ -10,6 +10,7 @@
 #include "util/types.h"
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
+#include "types.h"
 
 const unsigned char ocp_uuid[NVME_UUID_LEN] = {
 	0xc1, 0x94, 0xd5, 0x5b, 0xe0, 0x94, 0x47, 0x94, 0xa2, 0x1d,
@@ -45,18 +46,15 @@ int ocp_get_uuid_index(struct nvme_transport_handle *hdl, __u8 *index)
 int ocp_get_log_simple(struct nvme_transport_handle *hdl,
 		       enum ocp_dssd_log_id lid, __u32 len, void *log)
 {
-	struct nvme_get_log_args args = {
-		.log = log,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lid = (enum nvme_cmd_get_log_lid)lid,
-		.len = len,
-		.nsid = NVME_NSID_ALL,
-		.lsi = NVME_LOG_LSI_NONE,
-		.lsp = NVME_LOG_LSP_NONE,
-	};
+	struct nvme_passthru_cmd cmd;
+	__u8 uidx;
 
-	ocp_get_uuid_index(hdl, &args.uuidx);
+	ocp_get_uuid_index(hdl, &uidx);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, (enum nvme_cmd_get_log_lid) lid,
+			   NVME_CSI_NVM, log, len);
+	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
+				       NVME_LOG_CDW14_UUID_SHIFT,
+				       NVME_LOG_CDW14_UUID_MASK);
 
-	return nvme_get_log_page(hdl, NVME_LOG_PAGE_PDU_SIZE, &args);
+	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 }

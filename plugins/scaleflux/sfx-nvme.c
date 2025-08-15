@@ -358,8 +358,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = nvme_get_nsid_log(hdl, false, 0xca, cfg.namespace_id,
-				sizeof(smart_log), (void *)&smart_log);
+	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, 0xca,
+				(void *)&smart_log, sizeof(smart_log));
 	if (!err) {
 		if (cfg.json)
 			show_sfx_smart_log_jsn(&smart_log, cfg.namespace_id,
@@ -524,7 +524,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 		return err;
 
 	err = nvme_get_log_simple(hdl, cfg.write ? 0xc3 : 0xc1,
-				  sizeof(stats), (void *)&stats);
+				  (void *)&stats, sizeof(stats));
 	if (!err) {
 		if ((stats.ver.maj == VANDA_MAJOR_IDX) && (stats.ver.min == VANDA_MINOR_IDX)) {
 			if (!cfg.raw_binary)
@@ -1207,32 +1207,20 @@ ret:
 static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_id, __u32 storage_medium,
 			    char *file, bool parse, char *output)
 {
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	struct nvme_persistent_event_log *pevent;
 	void *pevent_log_info;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	__u8  lsp_base;
+	__u8  lsp_base, lsp;
 	__u32 offset = 0;
 	__u32 length = 0;
-	__u32 log_len;
 	__u32 single_len;
+	__u32 log_len;
+	__u32 len;
+	__u64 lpo;
+	void *log;
 	int  err = 0;
 	FILE *fd = NULL;
-	struct nvme_get_log_args args = {
-		.args_size	= sizeof(args),
-		.lid		= NVME_LOG_LID_PERSISTENT_EVENT,
-		.nsid		= namespace_id,
-		.lpo		= NVME_LOG_LPO_NONE,
-		.lsp		= NVME_LOG_LSP_NONE,
-		.lsi		= NVME_LOG_LSI_NONE,
-		.rae		= false,
-		.uuidx		= NVME_UUID_NONE,
-		.csi		= NVME_CSI_NVM,
-		.ot		= false,
-		.len		= 0,
-		.log		= NULL,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
-	};
+	struct nvme_passthru_cmd cmd;
 
 	if (!storage_medium) {
 		lsp_base = 0;
@@ -1248,20 +1236,31 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 		goto ret;
 	}
 
-	args.lsp = lsp_base + NVME_PEVENT_LOG_RELEASE_CTX;
-	args.log = pevent;
-	args.len = sizeof(*pevent);
-
-	err = nvme_get_log(hdl, &args);
+	lsp = lsp_base + NVME_PEVENT_LOG_RELEASE_CTX;
+	log = pevent;
+	len = sizeof(*pevent);
+	nvme_init_get_log(&cmd, NVME_NSID_NONE, NVME_LOG_LID_PERSISTENT_EVENT,
+			  NVME_CSI_NVM, log, len);
+	cmd.cdw10 |= NVME_FIELD_ENCODE(lsp,
+				       NVME_LOG_CDW10_LSP_SHIFT,
+				       NVME_LOG_CDW10_LSP_MASK);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (err) {
-		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n", args.lsp, err);
+		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n",
+		        lsp, err);
 		goto free_pevent;
 	}
 
-	args.lsp = lsp_base + NVME_PEVENT_LOG_EST_CTX_AND_READ;
-	err = nvme_get_log(hdl, &args);
+	lsp = lsp_base + NVME_PEVENT_LOG_EST_CTX_AND_READ;
+	nvme_init_get_log(&cmd, NVME_NSID_NONE, NVME_LOG_LID_PERSISTENT_EVENT,
+			  NVME_CSI_NVM, log, len);
+	cmd.cdw10 |= NVME_FIELD_ENCODE(lsp,
+				       NVME_LOG_CDW10_LSP_SHIFT,
+				       NVME_LOG_CDW10_LSP_MASK);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
 	if (err) {
-		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n", args.lsp, err);
+		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n",
+			lsp, err);
 		goto free_pevent;
 	}
 
@@ -1282,30 +1281,40 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 		goto free_pevent;
 	}
 
-	args.lsp = lsp_base + NVME_PEVENT_LOG_READ;
-	args.log = pevent_log_info;
+	lsp = lsp_base + NVME_PEVENT_LOG_READ;
+	log = pevent_log_info;
 	length = log_len;
 	while (length > 0) {
-		args.lpo = offset;
+		lpo = offset;
 		if (length > single_len) {
-			args.len = single_len;
+			len = single_len;
 		} else {
-			memset(args.log, 0, args.len);
-			args.len = length;
+			memset(log, 0, len);
+			len = length;
 		}
-		err = nvme_get_log(hdl, &args);
+		nvme_init_get_log(&cmd, NVME_NSID_NONE,
+				  NVME_LOG_LID_PERSISTENT_EVENT,
+				  NVME_CSI_NVM, log, len);
+		cmd.cdw10 |= NVME_FIELD_ENCODE(lsp,
+					       NVME_LOG_CDW10_LSP_SHIFT,
+		 			       NVME_LOG_CDW10_LSP_MASK);
+		nvme_init_get_log_lpo(&cmd, lpo);
+		err = nvme_get_log(hdl, &cmd, false,
+			NVME_LOG_PAGE_PDU_SIZE, NULL);
 		if (err) {
-			fprintf(stderr, "Unable to get evtlog offset=0x%x len 0x%x ret = 0x%x\n", offset, args.len, err);
+			fprintf(stderr,
+				"Unable to get evtlog offset=0x%x len 0x%x ret = 0x%x\n",
+				offset, len, err);
 			goto close_fd;
 		}
 
-		if (fwrite(args.log, 1, args.len, fd) != args.len) {
+		if (fwrite(log, 1, len, fd) != len) {
 			fprintf(stderr, "Failed to write evtlog to file\n");
 			goto close_fd;
 		}
 
-		offset  += args.len;
-		length  -= args.len;
+		offset  += len;
+		length  -= len;
 		util_spinner("Parse", (float) (offset) / (float) (log_len));
 	}
 
@@ -1793,7 +1802,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	memcpy(firmware_revision, id_ctrl.fr, 8);
 
 	//Populate SMART log (0x02)
-	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, false, &smart_log);
+	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (err < 0) {
 		perror("Could not read SMART log (0x02)");
 		return -errno;
@@ -1806,9 +1815,11 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 
 	//Populate SFX Extended Health log (0xC2) or if PCIe DID ==0x20 (Quince) use 0xD2
 	if (strncmp("0x0020", pci_did, 6) == 0)
-		err = nvme_get_log_simple(hdl, SFX_LOG_EXTENDED_HEALTH_ALT, sizeof(sfx_smart), (void *)&sfx_smart);
+		err = nvme_get_log_simple(hdl, SFX_LOG_EXTENDED_HEALTH_ALT, (void *)&sfx_smart,
+								  sizeof(sfx_smart));
 	else
-		err = nvme_get_log_simple(hdl, SFX_LOG_EXTENDED_HEALTH, sizeof(sfx_smart), (void *)&sfx_smart);
+		err = nvme_get_log_simple(hdl, SFX_LOG_EXTENDED_HEALTH, (void *)&sfx_smart,
+								  sizeof(sfx_smart));
 	if (err < 0) {
 		perror("Could not read ScaleFlux SMART log");
 		return -errno;
@@ -1835,7 +1846,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	//Populate Additional SMART log (0xCA)
-	err = nvme_get_nsid_log(hdl, false, 0xca, NVME_NSID_ALL, sizeof(struct nvme_additional_smart_log), (void *)&additional_smart_log);
+	err = nvme_get_nsid_log(hdl, NVME_NSID_ALL, false, 0xca, (void *)&additional_smart_log,
+							sizeof(struct nvme_additional_smart_log));
 	if (err < 0) {
 		perror("Could not read ScaleFlux SMART log");
 		return -errno;
