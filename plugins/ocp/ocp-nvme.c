@@ -1338,14 +1338,16 @@ exit_status:
 	return err;
 }
 
-static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_bin)
+static int get_c9_log_page_data(struct nvme_dev *dev,
+		int print_data,
+		int save_bin,
+		const char *output_file)
 {
 	int ret = 0;
 	__le64 stat_id_str_table_ofst = 0;
 	__le64 event_str_table_ofst = 0;
 	__le64 vu_event_str_table_ofst = 0;
 	__le64 ascii_table_ofst = 0;
-	char file_path[PATH_MAX];
 
 	_cleanup_fd_ int fd = STDIN_FILENO;
 
@@ -1404,10 +1406,9 @@ static int get_c9_log_page_data(struct nvme_dev *dev, int print_data, int save_b
 	}
 
 	if (save_bin) {
-		sprintf(file_path, DEFAULT_STRING_BIN);
-		fd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd < 0) {
-			fprintf(stderr, "Failed to open output file %s: %s!\n", file_path,
+			fprintf(stderr, "Failed to open output file %s: %s!\n", output_file,
 				strerror(errno));
 			return fd;
 		}
@@ -1578,7 +1579,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	if (!opt.string_log) {
 		nvme_show_result("Missing string-log. Fetching from drive...\n");
-		err = get_c9_log_page_data(dev, 0, 1); //Pull String log
+		/* Pull String log  */
+		err = get_c9_log_page_data(dev, 0, 1, (const char *)opt.output_file);
 		if (err) {
 			nvme_show_error("Failed to fetch string-log from the drive.\n");
 			goto out;
@@ -2574,7 +2576,9 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *cm
 static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *cmd,
 					struct plugin *plugin);
 
-static int get_c9_log_page(struct nvme_dev *dev, char *format)
+static int get_c9_log_page(struct nvme_dev *dev,
+		char *format,
+		const char *output_file)
 {
 	int ret = 0;
 	nvme_print_flags_t fmt;
@@ -2585,16 +2589,12 @@ static int get_c9_log_page(struct nvme_dev *dev, char *format)
 		return ret;
 	}
 
-	if (fmt == BINARY)
-		ret = get_c9_log_page_data(dev, 0, 1);
-	else
-		ret = get_c9_log_page_data(dev, 0, 0);
+	ret = get_c9_log_page_data(dev, 0, 1, output_file);
 
-	if (!ret) {
+	if ((!ret) && (fmt != BINARY))
 		ocp_c9_log(log_data, pC9_string_buffer, total_log_page_sz, fmt);
-	} else {
+	else if (ret)
 		fprintf(stderr, "ERROR : OCP : Unable to read C9 data from buffer\n");
-	}
 
 	free(header_data);
 	return ret;
@@ -2605,19 +2605,27 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *c
 {
 	struct nvme_dev *dev;
 	int ret = 0;
+	char file_path[PATH_MAX];
+	const char *string_suffix = ".bin";
 	const char *desc = "Retrieve telemetry string log format";
+	const char *output_file = "Output file name with path;\n"
+			"e.g. '-f ./path/name'\n'-f ./path1/path2/';\n"
+			"If requested path does not exist, the directory will be newly created.";
 
 	struct config {
 		char *output_format;
+		char *output_file;
 	};
 
 	struct config cfg = {
 		.output_format = "normal",
+		.output_file = NULL,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("output-format", 'o', &cfg.output_format,
 				"output Format:normal|json|binary"),
+		OPT_FILE("output-file", 'f', &cfg.output_file, output_file),
 		OPT_END()
 	};
 
@@ -2625,7 +2633,12 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *c
 	if (ret)
 		return ret;
 
-	ret = get_c9_log_page(dev, cfg.output_format);
+	if (cfg.output_file != NULL)
+		sprintf(file_path, "%s%s", cfg.output_file, string_suffix);
+	else
+		sprintf(file_path, "%s", DEFAULT_STRING_BIN);
+
+	ret = get_c9_log_page(dev, cfg.output_format, file_path);
 	if (ret)
 		fprintf(stderr, "ERROR : OCP : Failure reading the C9 Log Page, ret = %d\n", ret);
 
