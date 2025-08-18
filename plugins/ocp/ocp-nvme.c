@@ -1221,6 +1221,12 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 		size = le16_to_cpu(logheader->DataArea3LastBlock) -
 		       le16_to_cpu(logheader->DataArea2LastBlock);
 		break;
+	case 4:
+		offset = TELEMETRY_HEADER_SIZE +
+			 (le16_to_cpu(logheader->DataArea3LastBlock) * TELEMETRY_BYTE_PER_BLOCK);
+		size = le16_to_cpu(logheader->DataArea4LastBlock) -
+			   le16_to_cpu(logheader->DataArea3LastBlock);
+		break;
 	default:
 		break;
 	}
@@ -1237,13 +1243,15 @@ static int get_telemetry_dump(struct nvme_dev *dev, char *filename, char *sn,
 	return err;
 }
 
-static int get_telemetry_log_page_data(struct nvme_dev *dev, int tele_type)
+static int get_telemetry_log_page_data(struct nvme_dev *dev,
+		int tele_type,
+		int tele_area,
+		const char *output_file)
 {
-	char file_path[PATH_MAX];
 	void *telemetry_log;
 	const size_t bs = 512;
 	struct nvme_telemetry_log *hdr;
-	size_t full_size, offset = bs;
+	size_t full_size = 0, offset = bs;
 	int err, fd;
 
 	if ((tele_type == TELEMETRY_TYPE_HOST_0) || (tele_type == TELEMETRY_TYPE_HOST_1))
@@ -1262,11 +1270,10 @@ static int get_telemetry_log_page_data(struct nvme_dev *dev, int tele_type)
 	}
 	memset(hdr, 0, bs);
 
-	sprintf(file_path, DEFAULT_TELEMETRY_BIN);
-	fd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (fd < 0) {
 		fprintf(stderr, "Failed to open output file %s: %s!\n",
-			file_path, strerror(errno));
+				output_file, strerror(errno));
 		err = fd;
 		goto exit_status;
 	}
@@ -1304,9 +1311,25 @@ static int get_telemetry_log_page_data(struct nvme_dev *dev, int tele_type)
 		goto close_fd;
 	}
 
-	full_size = (le16_to_cpu(hdr->dalb3) * bs) + offset;
+	switch (tele_area) {
+	case 1:
+		full_size = (le16_to_cpu(hdr->dalb1) * bs) + offset;
+		break;
+	case 2:
+		full_size = (le16_to_cpu(hdr->dalb2) * bs) + offset;
+		break;
+	case 3:
+		full_size = (le16_to_cpu(hdr->dalb3) * bs) + offset;
+		break;
+	case 4:
+		full_size = (le32_to_cpu(hdr->dalb4) * bs) + offset;
+		break;
+	default:
+		full_size = offset;
+		break;
+	}
 
-	while (offset != full_size) {
+	while (offset < full_size) {
 		args.log = telemetry_log;
 		args.lpo = offset;
 		args.lsp = NVME_LOG_LSP_NONE;
@@ -1431,7 +1454,7 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 
 	if (options->telemetry_log) {
 		if (strstr((const char *)options->telemetry_log, "bin")) {
-			// Read the data from the telemetry binary file
+			/* Read the data from the telemetry binary file */
 			ptelemetry_buffer =
 				read_binary_file(NULL, (const char *)options->telemetry_log,
 						 &telemetry_buffer_size, 1);
@@ -1452,7 +1475,7 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 	}
 
 	if (options->string_log) {
-		// Read the data from the string binary file
+		/* Read the data from the string binary file */
 		if (strstr((const char *)options->string_log, "bin")) {
 			pstring_buffer = read_binary_file(NULL, (const char *)options->string_log,
 							  &string_buffer_size, 1);
@@ -1483,11 +1506,15 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	const char *telemetry_log = "Telemetry log binary;\n 'host.bin' or 'controller.bin'";
 	const char *string_log = "String log binary; 'C9.bin'";
 	const char *output_file = "Output file name with path;\n"
-			"e.g. '-o ./path/name'\n'-o ./path1/path2/';\n"
+			"e.g. '-f ./path/name'\n'-f ./path1/path2/';\n"
 			"If requested path does not exist, the directory will be newly created.";
 	const char *output_format = "output format normal|json";
-	const char *data_area = "Telemetry Data Area; 1 or 2;\n"
-			"e.g. '-a 1 for Data Area 1.'\n'-a 2 for Data Areas 1 and 2.';\n";
+	const char *data_area = "Telemetry Data Area; 1, 2, 3, or 4;\n"
+			"e.g. '-a 1 for Data Area 1.'\n"
+			"e.g. '-a 2 for Data Areas 1 and 2.'\n"
+			"e.g. '-a 3 for Data Areas 1, 2, and 3.'\n"
+			"e.g. '-a 4 for Data Areas 1, 2, 3, and 4.';\n";
+
 	const char *telemetry_type = "Telemetry Type; 'host', 'host0', 'host1' or 'controller'";
 
 	struct nvme_dev *dev;
@@ -1500,12 +1527,16 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	struct ocp_telemetry_parse_options opt;
 	int tele_type = 0;
 	int tele_area = 0;
+	char file_path_telemetry[PATH_MAX], file_path_string[PATH_MAX];
+	const char *string_suffix = "string.bin";
+	const char *tele_log_suffix = "telemetry.bin";
+	bool host_behavior_changed = false;
 
 	OPT_ARGS(opts) = {
 		OPT_STR("telemetry-log", 'l', &opt.telemetry_log, telemetry_log),
 		OPT_STR("string-log", 's', &opt.string_log, string_log),
-		OPT_FILE("output-file", 'o', &opt.output_file, output_file),
-		OPT_FMT("output-format", 'f', &opt.output_format, output_format),
+		OPT_FILE("output-file", 'f', &opt.output_file, output_file),
+		OPT_FMT("output-format", 'o', &opt.output_format, output_format),
 		OPT_INT("data-area", 'a', &opt.data_area, data_area),
 		OPT_STR("telemetry-type", 't', &opt.telemetry_type, telemetry_type),
 		OPT_END()
@@ -1536,11 +1567,15 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	is_support_telemetry_controller = ((ctrl.lpa & 0x8) >> 3);
 
+	if (opt.output_file == NULL)
+		opt.output_file = DEFAULT_TELEMETRY_LOG;
+
 	if (!opt.data_area) {
 		nvme_show_result("Missing data-area. Using default data area 1.\n");
 		opt.data_area = DATA_AREA_1;//Default data area 1
-	} else if (opt.data_area != 1 && opt.data_area != 2) {
-		nvme_show_result("Invalid data-area specified. Please specify 1 or 2.\n");
+	} else if (opt.data_area != 1 && opt.data_area != 2 &&
+			   opt.data_area != 3 && opt.data_area != 4) {
+		nvme_show_result("Invalid data-area specified. Please specify 1, 2, 3, or 4.\n");
 		goto out;
 	}
 
@@ -1568,25 +1603,55 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	if (!opt.telemetry_log) {
 		nvme_show_result("\nMissing telemetry-log. Fetching from drive...\n");
-		err = get_telemetry_log_page_data(dev, tele_type);//Pull Telemetry log
+
+		if (tele_area == 4) {
+			if (!(ctrl.lpa & 0x40)) {
+				nvme_show_error("Telemetry data area 4 not supported by device.\n");
+				goto out;
+			}
+
+			err = nvme_set_etdas(dev_fd(dev), &host_behavior_changed);
+			if (err) {
+				fprintf(stderr, "%s: Failed to set ETDAS bit\n", __func__);
+				return err;
+			}
+		}
+
+		/* Pull the Telemetry log */
+		sprintf(file_path_telemetry, "%s-%s", opt.output_file, tele_log_suffix);
+		err = get_telemetry_log_page_data(dev,
+				tele_type,
+				tele_area,
+				(const char *)file_path_telemetry);
 		if (err) {
 			nvme_show_error("Failed to fetch telemetry-log from the drive.\n");
 			goto out;
 		}
 		nvme_show_result("telemetry.bin generated. Proceeding with next steps.\n");
-		opt.telemetry_log = DEFAULT_TELEMETRY_BIN;
+		opt.telemetry_log = file_path_telemetry;
+
+		if (host_behavior_changed) {
+			host_behavior_changed = false;
+			err = nvme_clear_etdas(dev_fd(dev), &host_behavior_changed);
+			if (err) {
+				/* Continue on if this fails, it's not a fatal condition */
+				nvme_show_error("Failed to clear ETDAS bit.\n");
+			}
+		}
 	}
 
 	if (!opt.string_log) {
 		nvme_show_result("Missing string-log. Fetching from drive...\n");
+
 		/* Pull String log  */
-		err = get_c9_log_page_data(dev, 0, 1, (const char *)opt.output_file);
+		sprintf(file_path_string, "%s-%s", opt.output_file, string_suffix);
+		err = get_c9_log_page_data(dev, 0, 1, (const char *)file_path_string);
 		if (err) {
 			nvme_show_error("Failed to fetch string-log from the drive.\n");
 			goto out;
 		}
 		nvme_show_result("string.bin generated. Proceeding with next steps.\n");
-		opt.string_log = DEFAULT_STRING_BIN;
+		opt.string_log = file_path_string;
 	}
 
 	if (!opt.output_format) {
@@ -1597,6 +1662,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	switch (tele_type) {
 	case TELEMETRY_TYPE_HOST:
 		printf("Extracting Telemetry Host Dump (Data Area %d)...\n", tele_area);
+
 		err = parse_ocp_telemetry_log(&opt);
 		if (err)
 			nvme_show_result("Status:(%x)\n", err);
@@ -2634,7 +2700,7 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *c
 		return ret;
 
 	if (cfg.output_file != NULL)
-		sprintf(file_path, "%s%s", cfg.output_file, string_suffix);
+		sprintf(file_path, "%s-%s", cfg.output_file, string_suffix);
 	else
 		sprintf(file_path, "%s", DEFAULT_STRING_BIN);
 

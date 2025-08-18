@@ -604,7 +604,7 @@ struct telemetry_data_area_1 {
 #define DEFAULT_ASCII_STRING_SIZE     16
 #define SIZE_OF_VU_EVENT_ID           2
 
-#define DEFAULT_TELEMETRY_BIN "telemetry.bin"
+#define DEFAULT_TELEMETRY_LOG "telemetry-log"
 #define DEFAULT_STRING_BIN "string.bin"
 #define DEFAULT_OUTPUT_FORMAT_JSON "json"
 
