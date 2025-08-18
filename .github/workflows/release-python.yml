@@ -21,7 +21,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Allow workspace
         run: |
@@ -49,7 +49,7 @@ jobs:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
       - name: Check out repository (with tags)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Required for `git describe`
 

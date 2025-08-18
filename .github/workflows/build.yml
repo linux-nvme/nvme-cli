@@ -19,7 +19,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: build
         run: |
           scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
@@ -40,7 +40,7 @@ jobs:
           - arch: s390x
           - arch: ppc64le
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: enable foreign arch
         uses: dbhi/qus/action@main
       - name: Login to GitHub Container Registry
@@ -73,7 +73,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: build
         run: |
           scripts/build.sh -b release -c gcc libdbus
@@ -92,7 +92,7 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: build
         run: |
           scripts/build.sh -b release -c gcc fallback
@@ -109,7 +109,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: build
         run: |
           scripts/build.sh -m muon
