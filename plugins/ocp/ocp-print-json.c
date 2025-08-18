@@ -762,15 +762,23 @@ static void json_c4_log(struct ocp_device_capabilities_log_page *log_data)
 	json_free_object(root);
 }
 
+/* Array lengths need to be doubled + 2 to handle
+ * conversion to null terminated strings
+ */
+#define RESERVED_ARRAY_LEN 98   /* (2*48) + 2       */
+#define GUID_BUFFER_LEN 34      /* (2*GUID_LEN) + 2 */
+/* Add one additional space for the null terminating char */
+#define FIFO_ARRAY_LEN 17
+
 static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
 			int total_log_page_size)
 {
 	struct json_object *root = json_create_object();
-	char res_arr[48];
+	char res_arr[RESERVED_ARRAY_LEN];
 	char *res = res_arr;
-	char guid_buf[GUID_LEN];
+	char guid_buf[GUID_BUFFER_LEN];
 	char *guid = guid_buf;
-	char fifo_arr[16];
+	char fifo_arr[FIFO_ARRAY_LEN];
 	char *fifo = fifo_arr;
 	char buf[128];
 	//calculating the index value for array
@@ -786,20 +794,20 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	struct statistics_id_str_table_entry stat_id_str_table_arr[stat_id_index];
 	struct event_id_str_table_entry event_id_str_table_arr[eve_id_index];
 	struct vu_event_id_str_table_entry vu_event_id_str_table_arr[vu_eve_index];
-	__u8 ascii_table_info_arr[ascii_table_index];
-	char ascii_buf[ascii_table_index];
+	__u8 ascii_table_info_arr[(2*ascii_table_index) + 2];
+	char ascii_buf[(2*ascii_table_index) + 2];
 	char *ascii = ascii_buf;
 	int j;
 
 	json_object_add_value_int(root, "Log Page Version",
 				  le16_to_cpu(log_data->log_page_version));
 
-	memset((__u8 *)res, 0, 48);
+	memset((__u8 *)res, 0, RESERVED_ARRAY_LEN);
 	for (j = 0; j < 15; j++)
-		res += sprintf(res, "%d", log_data->reserved1[j]);
-	json_object_add_value_string(root, "Reserved", res_arr);
+		res += sprintf(res, "%x", log_data->reserved1[j]);
+	json_object_add_value_string(root, "Reserved 1", res_arr);
 
-	memset((void *)guid, 0, GUID_LEN);
+	memset((void *)guid, 0, GUID_BUFFER_LEN);
 	for (j = GUID_LEN - 1; j >= 0; j--)
 		guid += sprintf(guid, "%02x", log_data->log_page_guid[j]);
 	json_object_add_value_string(root, "Log page GUID", guid_buf);
@@ -807,10 +815,10 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	json_object_add_value_int(root, "Telemetry String Log Size", le64_to_cpu(log_data->sls));
 
 	res = res_arr;
-	memset((__u8 *)res, 0, 48);
+	memset((__u8 *)res, 0, RESERVED_ARRAY_LEN);
 	for (j = 0; j < 24; j++)
-		res += sprintf(res, "%d", log_data->reserved2[j]);
-	json_object_add_value_string(root, "Reserved", res_arr);
+		res += sprintf(res, "%x", log_data->reserved2[j]);
+	json_object_add_value_string(root, "Reserved 2", res_arr);
 
 	json_object_add_value_int(root, "Statistics Identifier String Table Start",
 				  le64_to_cpu(log_data->sits));
@@ -825,106 +833,106 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	json_object_add_value_int(root, "ASCII Table Size",
 				  le64_to_cpu(log_data->asctsz));
 
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo1[j]);
 	json_object_add_value_string(root, "FIFO 1 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo2[j]);
 	json_object_add_value_string(root, "FIFO 2 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo3[j]);
 	json_object_add_value_string(root, "FIFO 3 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo4[j]);
 	json_object_add_value_string(root, "FIFO 4 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo5[j]);
 	json_object_add_value_string(root, "FIFO 5 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo6[j]);
 	json_object_add_value_string(root, "FIFO 6 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo7[j]);
 	json_object_add_value_string(root, "FIFO 7 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo8[j]);
 	json_object_add_value_string(root, "FIFO 8 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo9[j]);
 	json_object_add_value_string(root, "FIFO 9 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo10[j]);
 	json_object_add_value_string(root, "FIFO 10 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo11[j]);
 	json_object_add_value_string(root, "FIFO 11 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo12[j]);
 	json_object_add_value_string(root, "FIFO 12 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo13[j]);
 	json_object_add_value_string(root, "FIFO 13 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo14[j]);
 	json_object_add_value_string(root, "FIFO 14 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo15[j]);
 	json_object_add_value_string(root, "FIFO 15 ASCII String", fifo_arr);
 
 	fifo = fifo_arr;
-	memset((void *)fifo, 0, 16);
+	memset((void *)fifo, 0, FIFO_ARRAY_LEN);
 	for (j = 0; j < 16; j++)
 		fifo += sprintf(fifo, "%c", log_data->fifo16[j]);
 	json_object_add_value_string(root, "FIFO 16 ASCII String", fifo_arr);
 
 	res = res_arr;
-	memset((__u8 *)res, 0, 48);
+	memset((__u8 *)res, 0, RESERVED_ARRAY_LEN);
 	for (j = 0; j < 48; j++)
-		res += sprintf(res, "%d", log_data->reserved3[j]);
-	json_object_add_value_string(root, "Reserved", res_arr);
+		res += sprintf(res, "%x", log_data->reserved3[j]);
+	json_object_add_value_string(root, "Reserved 3", res_arr);
 
 	if (log_data->sitsz != 0) {
 
