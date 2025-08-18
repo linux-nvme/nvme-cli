@@ -11,7 +11,7 @@
 #if !defined(OCP_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define OCP_NVME
 
-#define OCP_PLUGIN_VERSION   "2.15.2"
+#define OCP_PLUGIN_VERSION   "2.15.3"
 #include "cmd.h"
 
 PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),

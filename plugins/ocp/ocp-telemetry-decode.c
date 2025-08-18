@@ -1522,9 +1522,11 @@ int parse_statistics(struct json_object *root, struct nvme_ocp_telemetry_offsets
 int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 {
 	int status = 0;
+	char file_path[PATH_MAX];
 
 	if (options->output_file != NULL) {
-		FILE *fp = fopen(options->output_file, "w");
+		sprintf(file_path, "%s.%s", options->output_file, "txt");
+		FILE *fp = fopen(file_path, "w");
 
 		if (fp) {
 			fprintf(fp, STR_LINE);
@@ -1639,7 +1641,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			fprintf(fp, STR_LINE);
 			fclose(fp);
 		} else {
-			nvme_show_error("Failed to open %s file.\n", options->output_file);
+			nvme_show_error("Failed to open %s file.\n", file_path);
 			return -1;
 		}
 	} else {
@@ -1753,6 +1755,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 {
 	int status = 0;
+	char file_path[PATH_MAX];
 
 	//create json objects
 	struct json_object *root, *pheader, *preason_identifier, *da1_header, *smart_obj,
@@ -1848,13 +1851,14 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 
 	if (options->output_file != NULL) {
 		const char *json_string = json_object_to_json_string(root);
-		FILE *fp = fopen(options->output_file, "w");
+		sprintf(file_path, "%s.%s", options->output_file, "json");
+		FILE *fp = fopen(file_path, "w");
 
 		if (fp) {
 			fputs(json_string, fp);
 			fclose(fp);
 		} else {
-			nvme_show_error("Failed to open %s file.\n", options->output_file);
+			nvme_show_error("Failed to open %s file.\n", file_path);
 			return -1;
 		}
 	} else {
