@@ -15,7 +15,7 @@
 
 static int test_rc;
 
-struct test_data {
+struct test_data_psk {
 	const unsigned char configured_psk[48];
 	size_t psk_length;
 	unsigned char version;
@@ -23,7 +23,7 @@ struct test_data {
 	const char *exported_psk;
 };
 
-static struct test_data test_data[] = {
+static struct test_data_psk test_data_psk[] = {
 	{ { 0x55, 0x12, 0xDB, 0xB6,
 	    0x73, 0x7D, 0x01, 0x06,
 	    0xF6, 0x59, 0x75, 0xB7,
@@ -60,6 +60,45 @@ static struct test_data test_data[] = {
 	  "NVMeTLSkey-1:02:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwP/w0S89ELi3W2LxIcLXVsDn8kXZQ==:" },
 };
 
+struct test_data_identity {
+	const unsigned char configured_psk[48];
+	size_t psk_length;
+	unsigned char version;
+	unsigned char hmac;
+	const char *hostnqn;
+	const char *subsysnqn;
+	const char *identity;
+};
+
+static struct test_data_identity test_data_identity[] = {
+	{ { 0x55, 0x12, 0xDB, 0xB6,
+	    0x73, 0x7D, 0x01, 0x06,
+	    0xF6, 0x59, 0x75, 0xB7,
+	    0x73, 0xDF, 0xB0, 0x11,
+	    0xFF, 0xC3, 0x44, 0xBC,
+	    0xF4, 0x42, 0xE2, 0xDD,
+	    0x6D, 0x8B, 0xC4, 0x87,
+	    0x0B, 0x5D, 0x5B, 0x03},
+	  32, 1, NVME_HMAC_ALG_SHA2_256,
+	  "nqn.psk-test-host", "nqn.psk-test-subsys",
+	  "NVMe1R01 nqn.psk-test-host nqn.psk-test-subsys 66GuqV08TsAGII39teWUfwQwizjv06Jy8jOcX3NAAzM=" },
+	{ { 0x55, 0x12, 0xDB, 0xB6,
+	    0x73, 0x7D, 0x01, 0x06,
+	    0xF6, 0x59, 0x75, 0xB7,
+	    0x73, 0xDF, 0xB0, 0x11,
+	    0xFF, 0xC3, 0x44, 0xBC,
+	    0xF4, 0x42, 0xE2, 0xDD,
+	    0x6D, 0x8B, 0xC4, 0x87,
+	    0x0B, 0x5D, 0x5B, 0x03,
+	    0xFF, 0xC3, 0x44, 0xBC,
+	    0xF4, 0x42, 0xE2, 0xDD,
+	    0x6D, 0x8B, 0xC4, 0x87,
+	    0x0B, 0x5D, 0x5B, 0x03},
+	  48, 1, NVME_HMAC_ALG_SHA2_384,
+	  "nqn.psk-test-host", "nqn.psk-test-subsys",
+	  "NVMe1R02 nqn.psk-test-host nqn.psk-test-subsys RsKmYJ3nAn1ApjjMloJFbAkLPivONDAX/xW327YBUsn2eGShXSjCZvBaOxscLqmz" },
+};
+
 static void check_str(const char *exp, const char *res)
 {
 	if (!strcmp(res, exp))
@@ -70,7 +109,7 @@ static void check_str(const char *exp, const char *res)
 	test_rc = 1;
 }
 
-static void export_test(struct test_data *test)
+static void export_test(struct test_data_psk *test)
 {
 	char *psk;
 
@@ -92,7 +131,7 @@ static void export_test(struct test_data *test)
 	free(psk);
 }
 
-static void import_test(struct test_data *test)
+static void import_test(struct test_data_psk *test)
 {
 	unsigned char *psk;
 	int psk_length;
@@ -133,7 +172,7 @@ out:
 	free(psk);
 }
 
-static void export_versioned_test(struct test_data *test)
+static void export_versioned_test(struct test_data_psk *test)
 {
 	char *psk;
 
@@ -158,7 +197,7 @@ static void export_versioned_test(struct test_data *test)
 	free(psk);
 }
 
-static void import_versioned_test(struct test_data *test)
+static void import_versioned_test(struct test_data_psk *test)
 {
 	unsigned char *psk;
 	unsigned char version;
@@ -207,19 +246,49 @@ out:
 	free(psk);
 }
 
+static void identity_test(struct test_data_identity *test)
+{
+	char *id;
+
+	if (test->version != 1 ||
+	    !(test->hmac == NVME_HMAC_ALG_SHA2_256 ||
+	      test->hmac == NVME_HMAC_ALG_SHA2_384))
+		return;
+
+	printf("test nvme_generate_tls_key_identity host %s subsys %s hmac %d %s\n",
+	       test->hostnqn, test->subsysnqn, test->hmac, test->identity);
+
+	id = nvme_generate_tls_key_identity(test->hostnqn, test->subsysnqn,
+					    test->version, test->hmac,
+					    (unsigned char *)test->configured_psk,
+					    test->psk_length);
+	if (!id) {
+		if (errno == ENOTSUP)
+			return;
+		test_rc = 1;
+		printf("ERROR: nvme_generate_tls_key_identity() failed with %d\n", errno);
+		return;
+	}
+	check_str(test->identity, id);
+	free(id);
+}
+
 int main(void)
 {
-	for (int i = 0; i < ARRAY_SIZE(test_data); i++)
-		export_test(&test_data[i]);
+	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
+		export_test(&test_data_psk[i]);
 
-	for (int i = 0; i < ARRAY_SIZE(test_data); i++)
-		import_test(&test_data[i]);
+	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
+		import_test(&test_data_psk[i]);
 
-	for (int i = 0; i < ARRAY_SIZE(test_data); i++)
-		export_versioned_test(&test_data[i]);
+	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
+		export_versioned_test(&test_data_psk[i]);
 
-	for (int i = 0; i < ARRAY_SIZE(test_data); i++)
-		import_versioned_test(&test_data[i]);
+	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
+		import_versioned_test(&test_data_psk[i]);
+
+	for (int i = 0; i < ARRAY_SIZE(test_data_identity); i++)
+		identity_test(&test_data_identity[i]);
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
