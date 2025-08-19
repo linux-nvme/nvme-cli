@@ -6,4 +6,6 @@ sources += [
   'plugins/solidigm/solidigm-telemetry/nlog.c',
   'plugins/solidigm/solidigm-telemetry/tracker.c',
   'plugins/solidigm/solidigm-telemetry/skht.c',
+  'plugins/solidigm/solidigm-telemetry/debug-info.c',
+  'plugins/solidigm/solidigm-telemetry/uart-log.c',
 ]
