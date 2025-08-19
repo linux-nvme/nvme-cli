@@ -413,7 +413,8 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
  * generate the corresponding TLs identity.
  *
  * Return: The string containing the TLS identity. It is the responsibility
- * of the caller to free the returned string.
+ * of the caller to free the returned string. On error NULL is returned with
+ * errno set.
  */
 char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
 				     int version, int hmac,

@@ -1156,22 +1156,29 @@ char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
 	int ret = -1;
 
 	identity_len = nvme_identity_len(hmac, version, hostnqn, subsysnqn);
-	if (identity_len < 0)
+	if (identity_len < 0) {
+		errno = EINVAL;
 		return NULL;
+	}
 
 	identity = malloc(identity_len);
-	if (!identity)
+	if (!identity) {
+		errno = ENOMEM;
 		return NULL;
+	}
 
 	psk = malloc(key_len);
-	if (!psk)
+	if (!psk) {
+		errno = ENOMEM;
 		goto out_free_identity;
+	}
 
 	memset(psk, 0, key_len);
 	ret = derive_nvme_keys(hostnqn, subsysnqn, identity, version, hmac,
 			       configured_key, psk, key_len);
 out_free_identity:
 	if (ret < 0) {
+		errno = -ret;
 		free(identity);
 		identity = NULL;
 	}
