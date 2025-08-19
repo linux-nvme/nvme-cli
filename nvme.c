@@ -9757,6 +9757,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
 	const char *keyfile = "Update key file with the derive TLS PSK.";
+	const char *compat = "Use compatibility algorithm for HKDF-Expand-Label.";
 
 	_cleanup_free_ unsigned char *raw_secret = NULL;
 	_cleanup_free_ char *encoded_key = NULL;
@@ -9775,6 +9776,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		unsigned char	hmac;
 		unsigned char	version;
 		bool		insert;
+		bool		compat;
 	};
 
 	struct config cfg = {
@@ -9787,6 +9789,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		.hmac		= 1,
 		.version	= 0,
 		.insert		= false,
+		.compat		= false,
 	};
 
 	NVME_ARGS(opts,
@@ -9798,7 +9801,8 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
 		  OPT_BYTE("hmac",	'm', &cfg.hmac,		hmac),
 		  OPT_BYTE("identity",	'I', &cfg.version,	version),
-		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
+		  OPT_FLAG("insert",	'i', &cfg.insert,	insert),
+		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -9859,7 +9863,13 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	printf("%s\n", encoded_key);
 
 	if (cfg.insert) {
-		tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
+		if (cfg.compat)
+			tls_key = nvme_insert_tls_key_compat(cfg.keyring,
+					cfg.keytype, cfg.hostnqn,
+					cfg.subsysnqn, cfg.version,
+					cfg.hmac, raw_secret, key_len);
+		else
+			tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
 					cfg.keytype, cfg.hostnqn,
 					cfg.subsysnqn, cfg.version,
 					cfg.hmac, raw_secret, key_len);
@@ -9891,6 +9901,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
 	const char *keyfile = "Update key file with the derive TLS PSK.";
+	const char *compat = "Use compatibility algorithm for HKDF-Expand-Label.";
 
 	_cleanup_free_ unsigned char *decoded_key = NULL;
 	_cleanup_free_ char *hnqn = NULL;
@@ -9906,6 +9917,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		char		*keyfile;
 		unsigned char	identity;
 		bool		insert;
+		bool		compat;
 	};
 
 	struct config cfg = {
@@ -9917,6 +9929,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		.keyfile	= NULL,
 		.identity	= 0,
 		.insert		= false,
+		.compat		= false,
 	};
 
 	NVME_ARGS(opts,
@@ -9927,7 +9940,8 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
 		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
 		  OPT_BYTE("identity",	'I', &cfg.identity,	identity),
-		  OPT_FLAG("insert",	'i', &cfg.insert,	insert));
+		  OPT_FLAG("insert",	'i', &cfg.insert,	insert),
+		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -9963,7 +9977,13 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	}
 
 	if (cfg.insert) {
-		tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
+		if (cfg.compat)
+			tls_key = nvme_insert_tls_key_compat(cfg.keyring,
+					cfg.keytype, cfg.hostnqn,
+					cfg.subsysnqn, cfg.identity,
+					hmac, decoded_key, decoded_len);
+		else
+			tls_key = nvme_insert_tls_key_versioned(cfg.keyring,
 					cfg.keytype, cfg.hostnqn,
 					cfg.subsysnqn, cfg.identity,
 					hmac, decoded_key, decoded_len);
@@ -9981,7 +10001,12 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	} else {
 		_cleanup_free_ char *tls_id = NULL;
 
-		tls_id = nvme_generate_tls_key_identity(cfg.hostnqn,
+		if (cfg.compat)
+			tls_id = nvme_generate_tls_key_identity_compat(cfg.hostnqn,
+					cfg.subsysnqn, cfg.identity,
+					hmac, decoded_key, decoded_len);
+		else
+			tls_id = nvme_generate_tls_key_identity(cfg.hostnqn,
 					cfg.subsysnqn, cfg.identity,
 					hmac, decoded_key, decoded_len);
 		if (!tls_id) {
