@@ -1344,10 +1344,10 @@ int nvme_scan_tls_keys(const char *keyring, nvme_scan_tls_keys_cb_t cb,
 	return ret;
 }
 
-static long __nvme_insert_tls_key_versioned(key_serial_t keyring_id, const char *key_type,
-					    const char *hostnqn, const char *subsysnqn,
-					    int version, int hmac,
-					    unsigned char *configured_key, int key_len)
+static long __nvme_insert_tls_key(key_serial_t keyring_id, const char *key_type,
+				  const char *hostnqn, const char *subsysnqn,
+				  int version, int hmac,
+				  unsigned char *configured_key, int key_len)
 {
 	_cleanup_free_ unsigned char *psk = NULL;
 	_cleanup_free_ char *identity = NULL;
@@ -1401,10 +1401,10 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 	ret = nvme_set_keyring(keyring_id);
 	if (ret < 0)
 		return 0;
-	return __nvme_insert_tls_key_versioned(keyring_id, key_type,
-					       hostnqn, subsysnqn,
-					       version, hmac,
-					       configured_key, key_len);
+	return __nvme_insert_tls_key(keyring_id, key_type,
+				     hostnqn, subsysnqn,
+				     version, hmac,
+				     configured_key, key_len);
 }
 
 long nvme_revoke_tls_key(const char *keyring, const char *key_type,
@@ -1447,10 +1447,10 @@ static long __nvme_import_tls_key(long keyring_id,
 		 * configured key. Derive a new key and load the newly
 		 * created key into the keystore.
 		 */
-		return __nvme_insert_tls_key_versioned(keyring_id, "psk",
-						       hostnqn, subsysnqn,
-						       version, hmac,
-						       key_data, key_len);
+		return __nvme_insert_tls_key(keyring_id, "psk",
+					     hostnqn, subsysnqn,
+					     version, hmac,
+					     key_data, key_len);
 	}
 
 	return nvme_update_key(keyring_id, "psk", identity,
