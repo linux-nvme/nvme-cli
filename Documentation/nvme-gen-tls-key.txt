@@ -16,6 +16,7 @@ SYNOPSIS
 			[--identity=<id-vers> | -I <id-vers>]
 			[--secret=<secret> | -s <secret>]
 			[--insert | -i]
+			[--compat | -C]
 			[--keyfile=<keyfile> | -f <keyfile>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
@@ -81,6 +82,11 @@ OPTIONS
 --insert::
 	Insert the resulting TLS key into the keyring without printing out
 	the key in PSK interchange format.
+
+-C:
+--compat:
+	Use the original algorithm when deriving TLS keys for
+	compatibility with older implentations.
 
 -f <keyfile>
 --keyfile=<keyfile>

@@ -16,6 +16,7 @@ SYNOPSIS
 			[--output-format=<fmt> | -o <fmt>]
 			[--identity=<id-vers> | -I <id-vers>]
 			[--insert | -i ]
+			[--compat | -C ]
 			[--keyfile=<keyfile> | -f <keyfile>]
 			[--verbose | -v]
 
@@ -61,6 +62,11 @@ OPTIONS
 -i:
 --insert:
 	Insert the derived 'retained' key in the keyring.
+
+-C:
+--compat:
+	Use the original algorithm when deriving TLS keys for
+	compatibility with older implentations.
 
 -f <keyfile>
 --keyfile=<keyfile>
