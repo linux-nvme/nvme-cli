@@ -1,6 +1,6 @@
 [wrap-git]
 url = https://github.com/linux-nvme/libnvme.git
-revision = a6497f6e8cb3bc3607e4a772b648a7887b0ab875
+revision = fde6b1f51646f7f0b4a12f61f08e2bb621f01903
 
 [provide]
 libnvme = libnvme_dep
