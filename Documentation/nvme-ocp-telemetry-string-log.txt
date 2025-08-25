@@ -1,14 +1,16 @@
-nvme-ocp-telemetry-string-log-page(1)
-=====================================
+nvme-ocp-telemetry-string-log(1)
+================================
 
 NAME
 ----
-nvme-ocp-telemetry-string-log-page - Retrieve OCP Telemetry String Log page
+nvme-ocp-telemetry-string-log - Retrieve OCP Telemetry String Log page
 
 SYNOPSIS
 --------
 [verse]
-'nvme ocp telemetry-str-log' <device> [--output-format=<fmt> | -o <fmt>]
+'nvme ocp telemetry-string-log' <device>
+			[--output-format=<fmt> | -o <fmt>]
+			[--output-file=<file> | -f <file>]
 
 DESCRIPTION
 -----------
@@ -28,6 +30,9 @@ OPTIONS
 --output-format=<fmt>::
 	This option will set the reporting format to normal, json, or binary.
 	Only one output format can be used at a time.
+-f <file>::
+--output-file=<file>::
+	Filepath name to where binary output data will be saved to.
 
 
 EXAMPLES

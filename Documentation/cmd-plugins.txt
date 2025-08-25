@@ -49,6 +49,9 @@ linknvme:nvme-micron-temperature-stats[1]::
 linknvme:nvme-ocp-internal-log[1]::
 	Retrieves and parses OCP Telemetry DA1 and DA2 logs.
 
+linknvme:nvme-ocp-telemetry-string-log[1]::
+	Retrieves and parses OCP Telemetry String Log page.
+
 linknvme:nvme-netapp-ontapdevices[1]::
 	Display information about ONTAP devices
 
