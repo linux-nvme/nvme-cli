@@ -14,8 +14,8 @@ SYNOPSIS
 'nvme ocp internal-log' <device>
 			[--telemetry-log=<file> | -l <file>]
 			[--string-log=<file> | -s <file>]
-			[--output-file=<file> | -o <file>]
-			[--output-format=<fmt> | -f <fmt>]
+			[--output-file=<file> | -f <file>]
+			[--output-format=<fmt> | -o <fmt>]
 			[--data-area=<da> | -a <da>]
 			[--telemetry-type=<type> | -t <type>]
 
@@ -48,19 +48,20 @@ OPTIONS
 	is specified, a live retrieval of payload on <device> will be
 	performed.
 
--o <file>::
+-f <file>::
 --output-file=<file>::
-	Filepath name to where human-readable output data will be saved to.
+	Filepath name used as the prefix for the telemetry and string log bin files
+	along with the human-readable parsed output file.
 
--f <fmt>::
+-o <fmt>::
 --output-format=<fmt>::
 	Set the reporting format to 'normal', 'json'. Only one output format can be
 	used at a time, the default value is 'json'.
 
 -a <da>::
 --data-area=<da>::
-	Retrieves the specific data area requested. Valid inputs are 1,2. If this
-	option is not specified, the default value is 1.
+	Retrieves the specific data area requested. Valid inputs are 1, 2, 3, or 4.
+	If this option is not specified, the default value is 1.
 
 -t <type>::
 --telemetry-type=<type>::
