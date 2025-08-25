@@ -104,7 +104,7 @@ adoc_sources = [
   'nvme-ocp-set-plp-health-check-interval',
   'nvme-ocp-set-telemetry-profile',
   'nvme-ocp-smart-add-log',
-  'nvme-ocp-telemetry-string-log-page',
+  'nvme-ocp-telemetry-string-log',
   'nvme-ocp-unsupported-reqs-log',
   'nvme-ocp-internal-log',
   'nvme-persistent-event-log',
