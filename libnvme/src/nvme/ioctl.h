@@ -3705,14 +3705,43 @@ nvme_init_security_send(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
 }
 
 /**
- * nvme_security_receive() - Security Receive command
- * @hdl:	Transport handle
- * @args:	&struct nvme_security_receive argument structure
+ * nvme_init_security_receive() - Initialize passthru command for
+ * Security Receive
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to issue security command on
+ * @nssf:	NVMe Security Specific field
+ * @spsp:	Security Protocol Specific field
+ * @secp:	Security Protocol
+ * @al:		Protocol specific allocation length
+ * @data:	Security data payload buffer to receive data into
+ * @len:	Data length of the payload in bytes (must match @al)
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Security Receive command.
  */
-int nvme_security_receive(struct nvme_transport_handle *hdl, struct nvme_security_receive_args *args);
+static inline void
+nvme_init_security_receive(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
+		__u16 spsp, __u8 secp, __u32 al, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_security_recv;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(secp,
+			NVME_SECURITY_SECP_SHIFT,
+			NVME_SECURITY_SECP_MASK) |
+		     NVME_FIELD_ENCODE(spsp,
+			NVME_SECURITY_SPSP0_SHIFT,
+			NVME_SECURITY_SPSP0_MASK) |
+		     NVME_FIELD_ENCODE(spsp >> 8,
+			NVME_SECURITY_SPSP1_SHIFT,
+			NVME_SECURITY_SPSP1_MASK) |
+		     NVME_FIELD_ENCODE(nssf,
+			NVME_SECURITY_NSSF_SHIFT,
+			NVME_SECURITY_NSSF_MASK);
+	cmd->cdw11 = al;
+}
 
 /**
  * nvme_get_lba_status() - Retrieve information on possibly unrecoverable LBAs
