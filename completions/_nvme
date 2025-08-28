@@ -194,16 +194,16 @@ _nvme () {
 				/dev/nvme':supply a device to use (required)'
 				--telemetry-type=':Telemetry Type; host, host0, host1 or controller generated'
 				-t':alias for --telemetry-type'
-				--data-area=':Telemetry Data Area; 1 or 2'
+				--data-area=':Telemetry Data Area; 1, 2, 3, or 4'
 				-a':alias for --data-area'
 				--output-file=':Output file name with path'
-				-o':alias for --output-file'
+				-f':alias for --output-file'
 				--telemetry-log=':Telemetry log binary'
 				-l':alias for --telemetry-log'
 				--string-log=':String log binary'
 				-s':alias for --string-log'
 				--output-format':Output format: normal|json'
-				-f':alias for --output-format'
+				-o':alias for --output-format'
 				)
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp internal-log options" _internal_log
@@ -296,8 +296,10 @@ _nvme () {
 				local _telemetry_string_log
 				_telemetry_string_log=(
 				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json|binary'
+				-o':alias for --output-format'
 				--output-file=':Output file name with path'
-				-o':alias for --output-file'
+				-f':alias for --output-file'
 				)
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp telemetry-string-log options" _telemetry_string_log

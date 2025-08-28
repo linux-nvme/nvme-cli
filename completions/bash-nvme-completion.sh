@@ -1598,7 +1598,7 @@ plugin_ocp_opts () {
 			;;
 		"internal-log")
 		opts+=" --telemetry-log= -l --string-log= -s \
-			--output-file= -o --output-format= -f \
+			--output-file= -f --output-format= -o \
 			--data-area= -a --telemetry-type= -t"
 			;;
 		"clear-fw-activate-history")
@@ -1623,7 +1623,7 @@ plugin_ocp_opts () {
 		opts+=" --sel= -S --all -a --no-uuid -n"
 			;;
 		"telemetry-string-log")
-		opts+=" --output-file= -o"
+		opts+=" --output-file= -f --output-format= -o"
 			;;
 		"set-telemetry-profile")
 		opts+=" --telemetry-profile-select= -t"
