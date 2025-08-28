@@ -135,7 +135,9 @@ PyObject *hostid_from_file();
 %exception nvme_ctrl::discover {
 	discover_err = 0;
 	$action  /* $action sets discover_err to non-zero value on failure */
-	if (discover_err) {
+	if (discover_err == 1) {
+		SWIG_exception(SWIG_AttributeError, "No controller connection");
+	} else if (discover_err) {
 		SWIG_exception(SWIG_RuntimeError, "Discover failed");
 	}
 }
@@ -748,6 +750,7 @@ struct nvme_ns {
 
 	%newobject discover;
 	struct nvmf_discovery_log *discover(int lsp = 0, int max_retries = 6) {
+		const char *dev;
 		struct nvmf_discovery_log *logp;
 		struct nvme_get_discovery_args args = {
 			.c = $self,
@@ -758,11 +761,16 @@ struct nvme_ns {
 			.lsp = lsp,
 		};
 
+		dev = nvme_ctrl_get_name($self);
+		if (dev) {
+			discover_err = 1;
+			return NULL;
+		}
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
 		    logp = nvmf_get_discovery_wargs(&args);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
-		if (logp == NULL) discover_err = 1;
+		if (logp == NULL) discover_err = 2;
 		return logp;
 	}
 
