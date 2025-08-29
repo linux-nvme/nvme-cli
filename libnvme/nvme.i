@@ -375,7 +375,7 @@ PyObject *hostid_from_file();
 				break;
 			}
 			PyDict_SetItemStringDecRef(tsas, "cms", val);
-			PyDict_SetItemStringDecRef(entry, "tsas", val);
+			PyDict_SetItemStringDecRef(entry, "tsas", tsas);
 		}
 
 		val = PyLong_FromLong(e->portid);
