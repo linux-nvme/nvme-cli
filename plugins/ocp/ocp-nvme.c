@@ -189,6 +189,7 @@ struct ieee1667_get_cq_entry {
 
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *no_uuid = "Skip UUID index search (UUID index not required for OCP 1.0)";
+static const char *all_ns = "Apply to all namespaces";
 const char *data = "Error injection data structure entries";
 const char *number = "Number of valid error injection data entries";
 static const char *type = "Error injection type";
@@ -2935,12 +2936,13 @@ static int get_error_injection(int argc, char **argv, struct command *cmd, struc
 	return error_injection_get(dev, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"));
 }
 
-static int error_injection_set(struct nvme_dev *dev, struct erri_config *cfg, bool uuid)
+static int error_injection_set(struct nvme_dev *dev, struct erri_config *cfg, bool uuid, __u32 nsid)
 {
 	int err;
 	__u32 result;
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
+		.nsid = nsid,
 		.fd = dev_fd(dev),
 		.fid = OCP_FID_ERRI,
 		.cdw11 = cfg->number,
@@ -3010,6 +3012,7 @@ static int set_error_injection(int argc, char **argv, struct command *cmd, struc
 {
 	const char *desc = "Inject error conditions";
 	int err;
+	__u32 nsid;
 	struct erri_config cfg = {
 		.number = 1,
 	};
@@ -3020,6 +3023,7 @@ static int set_error_injection(int argc, char **argv, struct command *cmd, struc
 		  OPT_FILE("data", 'd', &cfg.file, data),
 		  OPT_BYTE("number", 'n', &cfg.number, number),
 		  OPT_FLAG("no-uuid", 'N', NULL, no_uuid),
+		  OPT_FLAG("all-ns", 'a', NULL, all_ns),
 		  OPT_SHRT("type", 't', &cfg.type, type),
 		  OPT_SHRT("nrtdp", 'r', &cfg.nrtdp, nrtdp));
 
@@ -3027,7 +3031,14 @@ static int set_error_injection(int argc, char **argv, struct command *cmd, struc
 	if (err)
 		return err;
 
-	return error_injection_set(dev, &cfg, !argconfig_parse_seen(opts, "no-uuid"));
+	/*
+	 * Different spec versions ask for different nsid values
+	 * OCP v1.0 - NSID: Shall be set to zero
+	 * OCP v2.0r21 - NSID: Shall be set to FFFFFFFFh.
+	 * OCP v2.5 - NSID: The host should either clear this to zero or set this to FFFFFFFFh
+	 */
+	nsid = argconfig_parse_seen(opts, "all-ns") ? NVME_NSID_ALL : 0;
+	return error_injection_set(dev, &cfg, !argconfig_parse_seen(opts, "no-uuid"), nsid);
 }
 
 static int enable_ieee1667_silo_get(struct nvme_dev *dev, const __u8 sel, bool uuid)
