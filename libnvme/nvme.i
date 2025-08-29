@@ -309,6 +309,75 @@ PyObject *hostid_from_file();
 		}
 		PyDict_SetItemStringDecRef(entry, "treq", val);
 
+		if (e->trtype ==  NVMF_TRTYPE_TCP) {
+			PyObject *tsas = PyDict_New();
+
+			switch (e->tsas.tcp.sectype) {
+			case NVMF_TCP_SECTYPE_NONE:
+				val = PyUnicode_FromString("none");
+				break;
+			case NVMF_TCP_SECTYPE_TLS:
+				val = PyUnicode_FromString("tls");
+				break;
+			case NVMF_TCP_SECTYPE_TLS13:
+				val = PyUnicode_FromString("tls1.3");
+				break;
+			default:
+				val = PyUnicode_FromString("reserved");
+				break;
+			}
+			PyDict_SetItemStringDecRef(tsas, "sectype", val);
+			PyDict_SetItemStringDecRef(entry, "tsas", tsas);
+		} else if (e->trtype == NVMF_TRTYPE_RDMA) {
+			PyObject *tsas = PyDict_New();
+
+			switch (e->tsas.rdma.qptype) {
+			case NVMF_RDMA_QPTYPE_CONNECTED:
+				val = PyUnicode_FromString("connected");
+				break;
+			case NVMF_RDMA_QPTYPE_DATAGRAM:
+				val = PyUnicode_FromString("datagram");
+				break;
+			default:
+				val = PyUnicode_FromString("reserved");
+				break;
+			}
+			PyDict_SetItemStringDecRef(tsas, "qptype", val);
+
+			switch (e->tsas.rdma.prtype) {
+			case NVMF_RDMA_PRTYPE_NOT_SPECIFIED:
+				val = PyUnicode_FromString("not specified");
+				break;
+			case NVMF_RDMA_PRTYPE_IB:
+				val = PyUnicode_FromString("infiniband");
+				break;
+			case NVMF_RDMA_PRTYPE_ROCE:
+				val = PyUnicode_FromString("roce");
+				break;
+			case NVMF_RDMA_PRTYPE_ROCEV2:
+				val = PyUnicode_FromString("rocev2");
+				break;
+			case NVMF_RDMA_PRTYPE_IWARP:
+				val = PyUnicode_FromString("iwarp");
+				break;
+			default:
+				val = PyUnicode_FromString("reserved");
+				break;
+			}
+			PyDict_SetItemStringDecRef(tsas, "prtype", val);
+
+			switch (e->tsas.rdma.cms) {
+			case NVMF_RDMA_CMS_RDMA_CM:
+				val = PyUnicode_FromString("cm");
+				break;
+			default:
+				val = PyUnicode_FromString("reserved");
+				break;
+			}
+			PyDict_SetItemStringDecRef(tsas, "cms", val);
+			PyDict_SetItemStringDecRef(entry, "tsas", val);
+		}
+
 		val = PyLong_FromLong(e->portid);
 		PyDict_SetItemStringDecRef(entry, "portid", val);
 		val = PyLong_FromLong(e->cntlid);
