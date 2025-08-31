@@ -48,31 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_get_lba_status_args - Arguments for the NVMe Get LBA Status command
- * @lbas:	Data payload to return status descriptors
- * @result:	The command completion result from CQE dword0
- * @slba:	Starting logical block address to check statuses
- * @args_size:	Size of &struct nvme_get_lba_status_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace ID to retrieve LBA status
- * @mndw:	Maximum number of dwords to return
- * @atype:	Action type mechanism to determine LBA status descriptors to
- *		return, see &enum nvme_lba_status_atype
- * @rl:		Range length from slba to perform the action
- */
-struct nvme_get_lba_status_args {
-	__u64 slba;
-	__u32 *result;
-	struct nvme_lba_status *lbas;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	__u32 mndw;
-	enum nvme_lba_status_atype atype;
-	__u16 rl;
-};
-
-/**
  * struct nvme_directive_send_args - Arguments for the NVMe Directive Send command
  * @result:	If successful, the CQE dword0 value
  * @data:	Data payload to be send

@@ -3744,17 +3744,40 @@ nvme_init_security_receive(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
 }
 
 /**
- * nvme_get_lba_status() - Retrieve information on possibly unrecoverable LBAs
- * @hdl:	Transport handle
- * @args:	&struct nvme_get_lba_status_args argument structure
+ * nvme_init_get_lba_status() - Initialize passthru command to retrieve
+ * information on possibly unrecoverable LBAs
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to retrieve LBA status
+ * @slba:	Starting logical block address to check statuses
+ * @mndw:	Maximum number of dwords to return
+ * @atype:	Action type mechanism to determine LBA status descriptors to
+ *		return, see &enum nvme_lba_status_atype
+ * @rl:		Range length from slba to perform the action
+ * @lbas:	Data payload buffer to return status descriptors
  *
- * The Get LBA Status command requests information about Potentially
- * Unrecoverable LBAs. Refer to the specification for action type descriptions.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get LBA Status command.
  */
-int nvme_get_lba_status(struct nvme_transport_handle *hdl, struct nvme_get_lba_status_args *args);
+static inline void
+nvme_init_get_lba_status(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
+		__u32 mndw, enum nvme_lba_status_atype atype, __u16 rl,
+		struct nvme_lba_status *lbas)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_get_lba_status;
+	cmd->nsid = nsid;
+	cmd->data_len = (mndw + 1) << 2;
+	cmd->addr = (__u64)(uintptr_t)lbas;
+	cmd->cdw10 = slba & 0xffffffff;
+	cmd->cdw11 = slba >> 32;
+	cmd->cdw12 = mndw;
+	cmd->cdw13 = NVME_FIELD_ENCODE(rl,
+			NVME_GET_LBA_STATUS_CDW13_RL_SHIFT,
+			NVME_GET_LBA_STATUS_CDW13_RL_MASK) |
+		     NVME_FIELD_ENCODE(atype,
+			NVME_GET_LBA_STATUS_CDW13_ATYPE_SHIFT,
+			NVME_GET_LBA_STATUS_CDW13_ATYPE_MASK);
+}
 
 /**
  * nvme_directive_send() - Send directive command

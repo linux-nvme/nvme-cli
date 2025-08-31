@@ -357,10 +357,15 @@ static void test_security_receive(void)
 
 static void test_get_lba_status(void)
 {
-	__u32 result = 0;
 	__u8 nlsd = 3;
 	int lba_status_size = sizeof(struct nvme_lba_status) +
 			      nlsd * sizeof(struct nvme_lba_status_desc);
+	enum nvme_lba_status_atype atype = 0x11;
+	__u32 mndw = (lba_status_size - 1) >> 2;
+	__u64 slba = 0x123456789;
+	__u32 result = 0;
+	__u16 rl = 0x42;
+	int err;
 
 	_cleanup_free_ struct nvme_lba_status *lbas = NULL;
 	_cleanup_free_ struct nvme_lba_status *expected_lbas = NULL;
@@ -370,33 +375,23 @@ static void test_get_lba_status(void)
 	expected_lbas = malloc(lba_status_size);
 	check(expected_lbas, "expected_lbas: ENOMEM");
 
-	struct nvme_get_lba_status_args args = {
-		.slba = 0x123456789,
-		.result = &result,
-		.lbas = lbas,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.mndw = ((lba_status_size - 1) >> 2),
-		.atype = 0x11,
-		.rl = 0x42,
-	};
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_lba_status,
 		.nsid = TEST_NSID,
-		.cdw10 = args.slba & 0xffffffff,
-		.cdw11 = args.slba >> 32,
-		.cdw12 = args.mndw,
-		.cdw13 = args.rl | (args.atype << 24),
-		.data_len = (args.mndw + 1) << 2,
+		.cdw10 = slba & 0xffffffff,
+		.cdw11 = slba >> 32,
+		.cdw12 = mndw,
+		.cdw13 = rl | (atype << 24),
+		.data_len = (mndw + 1) << 2,
 		.out_data = expected_lbas,
 	};
-
-	int err;
+	struct nvme_passthru_cmd cmd;
 
 	arbitrary(expected_lbas, lba_status_size);
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_lba_status(test_hdl, &args);
+	nvme_init_get_lba_status(&cmd, TEST_NSID, slba, mndw, atype,
+		rl, lbas);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned wrong result");
