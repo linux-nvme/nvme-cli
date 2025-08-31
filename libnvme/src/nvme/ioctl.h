@@ -3882,133 +3882,129 @@ nvme_init_directive_send_stream_release_resource(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_directive_recv() - Receive directive specific data
- * @hdl:	Transport handle
- * @args:	&struct nvme_directive_recv_args argument structure
+ * nvme_init_directive_recv() - Initialize passthru command for
+ * Directive Receive
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID, if applicable
+ * @doper:	Directive receive operation,
+ * 		see &enum nvme_directive_receive_doper
+ * @dtype:	Directive type, see &enum nvme_directive_dtype
+ * @dspec:	Directive specific field
+ * @data:	Userspace address of data payload buffer
+ * @len:	Length of data payload in bytes
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Directive Receive command.
  */
-int nvme_directive_recv(struct nvme_transport_handle *hdl, struct nvme_directive_recv_args *args);
+static inline void
+nvme_init_directive_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_directive_receive_doper doper,
+		enum nvme_directive_dtype dtype, __u16 dspec,
+		void *data, __u32 len)
+{
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_directive_recv;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = len ? (len >> 2) - 1 : 0;
+	cmd->cdw11 = NVME_FIELD_ENCODE(doper,
+			NVME_DIRECTIVE_CDW11_DOPER_SHIFT,
+			NVME_DIRECTIVE_CDW11_DOPER_MASK) |
+		      NVME_FIELD_ENCODE(dtype,
+			NVME_DIRECTIVE_CDW11_DTYPE_SHIFT,
+			NVME_DIRECTIVE_CDW11_DTYPE_MASK) |
+		      NVME_FIELD_ENCODE(dspec,
+			NVME_DIRECTIVE_CDW11_DPSEC_SHIFT,
+			NVME_DIRECTIVE_CDW11_DPSEC_MASK);
+}
 
 /**
- * nvme_directive_recv_identify_parameters() - Directive receive identifier parameters
- * @hdl:	Transport handle
+ * nvme_init_directive_recv_identify_parameters() - Initialize passthru command
+ * for Directive Receive Identify Parameters
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
  * @id:		Identify parameters buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Directive Receive - Identify
+ * Parameters command.
  */
-static inline int nvme_directive_recv_identify_parameters(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_id_directives *id)
+static inline void
+nvme_init_directive_recv_identify_parameters(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_id_directives *id)
 {
-	struct nvme_directive_recv_args args = {
-		.result = NULL,
-		.data = id,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.doper = NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM,
-		.dtype = NVME_DIRECTIVE_DTYPE_IDENTIFY,
-		.cdw12 = 0,
-		.data_len = sizeof(*id),
-		.dspec = 0,
-	};
-
-	return nvme_directive_recv(hdl, &args);
+	nvme_init_directive_recv(cmd, nsid,
+		NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM,
+		NVME_DIRECTIVE_DTYPE_IDENTIFY, 0, id, sizeof(*id));
 }
 
 /**
- * nvme_directive_recv_stream_parameters() - Directive receive stream parameters
- * @hdl:	Transport handle
+ * nvme_init_directive_recv_stream_parameters() - Initialize passthru command
+ * for Directive Receive Stream Parameters
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
  * @parms:	Streams directive parameters buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Directive Receive - Stream
+ * Parameters command.
  */
-static inline int nvme_directive_recv_stream_parameters(struct nvme_transport_handle *hdl, __u32 nsid,
-			struct nvme_streams_directive_params *parms)
+static inline void
+nvme_init_directive_recv_stream_parameters(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_streams_directive_params *parms)
 {
-	struct nvme_directive_recv_args args = {
-		.result = NULL,
-		.data = parms,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM,
-		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
-		.cdw12 = 0,
-		.data_len = sizeof(*parms),
-		.dspec = 0,
-	};
-
-	return nvme_directive_recv(hdl, &args);
+	nvme_init_directive_recv(cmd, nsid,
+		NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM,
+		NVME_DIRECTIVE_DTYPE_STREAMS, 0, parms, sizeof(*parms));
 }
 
 /**
- * nvme_directive_recv_stream_status() - Directive receive stream status
- * @hdl:	Transport handle
+ * nvme_init_directive_recv_stream_status() - Initialize passthru command for
+ * Directive Receive Stream Status
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
  * @nr_entries: Number of streams to receive
  * @id:		Stream status buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Directive Receive - Stream
+ * Status command.
+ *
+ * Return: 0 on success, or error code if arguments are invalid.
  */
-static inline int nvme_directive_recv_stream_status(struct nvme_transport_handle *hdl, __u32 nsid,
-			unsigned int nr_entries,
-			struct nvme_streams_directive_status *id)
+static inline int
+nvme_init_directive_recv_stream_status(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, unsigned int nr_entries,
+		struct nvme_streams_directive_status *id)
 {
-	if (nr_entries > NVME_STREAM_ID_MAX) {
-		errno = EINVAL;
-		return -1;
-	}
+	if (nr_entries > NVME_STREAM_ID_MAX)
+		return -EINVAL;
 
-	struct nvme_directive_recv_args args = {
-		.result = NULL,
-		.data = id,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS,
-		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
-		.cdw12 = 0,
-		.data_len = (__u32)(sizeof(*id) + nr_entries * sizeof(__le16)),
-		.dspec = 0,
-	};
+	nvme_init_directive_recv(cmd, nsid,
+		NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS,
+		NVME_DIRECTIVE_DTYPE_STREAMS, 0, id,
+		(__u32)(sizeof(*id) + nr_entries * sizeof(__le16)));
 
-	return nvme_directive_recv(hdl, &args);
+	return 0;
 }
 
 /**
- * nvme_directive_recv_stream_allocate() - Directive receive stream allocate
- * @hdl:	Transport handle
+ * nvme_init_directive_recv_stream_allocate() - Initialize passthru command for
+ * Directive Receive Stream Allocate
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
  * @nsr:	Namespace Streams Requested
- * @result:	If successful, the CQE dword0 value
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Directive Receive - Stream
+ * Allocate command.
  */
-static inline int nvme_directive_recv_stream_allocate(struct nvme_transport_handle *hdl, __u32 nsid,
-			__u16 nsr, __u32 *result)
+static inline void
+nvme_init_directive_recv_stream_allocate(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 nsr)
 {
-	struct nvme_directive_recv_args args = {
-		.result = result,
-		.data = NULL,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE,
-		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
-		.cdw12 = nsr,
-		.data_len = 0,
-		.dspec = 0,
-	};
-
-	return nvme_directive_recv(hdl, &args);
+	nvme_init_directive_recv(cmd, nsid,
+		NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE,
+		NVME_DIRECTIVE_DTYPE_STREAMS, 0, NULL, 0);
+	cmd->cdw12 = nsr;
 }
 
 /**

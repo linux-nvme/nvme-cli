@@ -498,36 +498,28 @@ static void test_directive_send_stream_release_resource(void)
 
 static void test_directive_recv(void)
 {
-	__u8 expected_data[8], data[8];
-	__u32 result = 0;
-
-	struct nvme_directive_recv_args args = {
-		.result = &result,
-		.data = &data,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM,
-		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
-		.cdw12 = 0xffff,
-		.data_len = sizeof(data),
-		.dspec = 0x0,
-	};
-
+	enum nvme_directive_receive_doper doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM;
+	enum nvme_directive_dtype dtype = NVME_DIRECTIVE_DTYPE_STREAMS;
+ 	__u8 expected_data[8], data[8];
+	__u32 data_len = sizeof(data);
+	__u16 dspec = 0x0;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
-		.cdw10 = args.data_len ? (args.data_len >> 2) - 1 : 0,
-		.cdw11 = args.doper | (args.dtype << 8) | (args.dspec << 16),
-		.cdw12 = args.cdw12,
+		.cdw10 = data_len ? (data_len >> 2) - 1 : 0,
+		.cdw11 = doper | (dtype << 8) | (dspec << 16),
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
 	};
-
+	struct nvme_passthru_cmd cmd;
+	uint32_t result = 0;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv(test_hdl, &args);
+	nvme_init_directive_recv(&cmd, TEST_NSID, doper, dtype, dspec,
+		data, data_len);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned wrong result");
@@ -537,7 +529,6 @@ static void test_directive_recv(void)
 static void test_directive_recv_identify_parameters(void)
 {
 	struct nvme_id_directives expected_id, id;
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
@@ -547,12 +538,13 @@ static void test_directive_recv_identify_parameters(void)
 		.data_len = sizeof(expected_id),
 		.out_data = &expected_id,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv_identify_parameters(test_hdl, TEST_NSID, &id);
+	nvme_init_directive_recv_identify_parameters(&cmd, TEST_NSID, &id);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, NULL);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect id");
@@ -561,7 +553,6 @@ static void test_directive_recv_identify_parameters(void)
 static void test_directive_recv_stream_parameters(void)
 {
 	struct nvme_streams_directive_params expected_params, params;
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
@@ -571,13 +562,13 @@ static void test_directive_recv_stream_parameters(void)
 		.data_len = sizeof(expected_params),
 		.out_data = &expected_params,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_params, sizeof(expected_params));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv_stream_parameters(test_hdl, TEST_NSID,
-						    &params);
+	nvme_init_directive_recv_stream_parameters(&cmd, TEST_NSID, &params);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, NULL);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	cmp(&params, &expected_params, sizeof(params), "incorrect params");
@@ -608,13 +599,14 @@ static void test_directive_recv_stream_status(void)
 		.data_len = stream_status_size,
 		.out_data = expected_status,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(expected_status, stream_status_size);
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv_stream_status(test_hdl, TEST_NSID, nr_entries,
-						status);
+	nvme_init_directive_recv_stream_status(&cmd, TEST_NSID, nr_entries,
+		status);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, NULL);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	cmp(status, expected_status, stream_status_size, "incorrect status");
@@ -624,7 +616,6 @@ static void test_directive_recv_stream_allocate(void)
 {
 	__u32 expected_result = 0x45, result = 0;
 	__u16 nsr = 0x67;
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
@@ -633,18 +624,18 @@ static void test_directive_recv_stream_allocate(void)
 		.cdw12 = nsr,
 		.result = expected_result,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_directive_recv_stream_allocate(test_hdl, TEST_NSID, nsr,
-						  &result);
+	nvme_init_directive_recv_stream_allocate(&cmd, TEST_NSID, nsr);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");
 }
 
-static void test_capacity_mgmt(void)
+void test_capacity_mgmt(void)
 {
 	__u32 expected_result = 0x45, result = 0;
 

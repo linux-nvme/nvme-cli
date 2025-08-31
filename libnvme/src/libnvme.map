@@ -72,7 +72,6 @@ LIBNVME_2_0 {
 		nvme_describe_key_serial;
 		nvme_dev_self_test;
 		nvme_dim_send;
-		nvme_directive_recv;
 		nvme_disconnect_ctrl;
 		nvme_dump_config;
 		nvme_dump_tree;

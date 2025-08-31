@@ -621,30 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_directive_recv(struct nvme_transport_handle *hdl, struct nvme_directive_recv_args *args)
-{
-	__u32 cdw10 = args->data_len ? (args->data_len >> 2) - 1 : 0;
-	__u32 cdw11 = NVME_SET(args->doper, DIRECTIVE_CDW11_DOPER) |
-			NVME_SET(args->dtype, DIRECTIVE_CDW11_DTYPE) |
-			NVME_SET(args->dspec, DIRECTIVE_CDW11_DPSEC);
-
-        struct nvme_passthru_cmd cmd = {
-                .opcode         = nvme_admin_directive_recv,
-                .nsid           = args->nsid,
-                .cdw10          = cdw10,
-                .cdw11          = cdw11,
-                .cdw12          = args->cdw12,
-                .data_len       = args->data_len,
-                .addr           = (__u64)(uintptr_t)args->data,
-		.timeout_ms	= args->timeout,
-        };
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_capacity_mgmt(struct nvme_transport_handle *hdl, struct nvme_capacity_mgmt_args *args)
 {
 	__u32 cdw10 = args->op | args->element_id << 16;
