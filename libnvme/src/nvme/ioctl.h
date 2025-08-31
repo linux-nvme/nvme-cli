@@ -3780,88 +3780,105 @@ nvme_init_get_lba_status(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
 }
 
 /**
- * nvme_directive_send() - Send directive command
- * @hdl:	Transport handle
- * @args:	&struct nvme_directive_send_args argument structure
+ * nvme_init_directive_send() - Initialize passthru command for Directive Send
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID, if applicable
+ * @doper:	Directive send operation, see &enum nvme_directive_send_doper
+ * @dtype:	Directive type, see &enum nvme_directive_dtype
+ * @dspec:	Directive specific field
+ * @data:	Data payload buffer to be send
+ * @len:	Length of data payload in bytes
  *
- * Directives is a mechanism to enable host and NVM subsystem or controller
- * information exchange. The Directive Send command transfers data related to a
- * specific Directive Type from the host to the controller.
- *
- * See the NVMe specification for more information.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Directive Send command.
  */
-int nvme_directive_send(struct nvme_transport_handle *hdl, struct nvme_directive_send_args *args);
+static inline void
+nvme_init_directive_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_directive_send_doper doper,
+		enum nvme_directive_dtype dtype, __u16 dspec,
+		void *data, __u32 len)
+{
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_directive_send;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = len? (len >> 2) - 1 : 0;
+	cmd->cdw11 = NVME_FIELD_ENCODE(doper,
+			NVME_DIRECTIVE_CDW11_DOPER_SHIFT,
+			NVME_DIRECTIVE_CDW11_DOPER_MASK) |
+		      NVME_FIELD_ENCODE(dtype,
+			NVME_DIRECTIVE_CDW11_DTYPE_SHIFT,
+			NVME_DIRECTIVE_CDW11_DTYPE_MASK) |
+		      NVME_FIELD_ENCODE(dspec,
+			NVME_DIRECTIVE_CDW11_DPSEC_SHIFT,
+			NVME_DIRECTIVE_CDW11_DPSEC_MASK);
+}
 
 /**
- * nvme_directive_send_id_endir() - Directive Send Enable Directive
- * @hdl:	Transport handle
+ * nvme_init_directive_send_id_endir() - Initialize passthru command for
+ * Directive Send Enable Directive
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace Identifier
  * @endir:	Enable Directive
  * @dtype:	Directive Type
  * @id:		Pointer to structure nvme_id_directives
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Directive Send - Identify
+ * (Enable Directive) command.
  */
-int nvme_directive_send_id_endir(struct nvme_transport_handle *hdl, __u32 nsid, bool endir,
-				 enum nvme_directive_dtype dtype,
-				 struct nvme_id_directives *id);
-
-/**
- * nvme_directive_send_stream_release_identifier() - Directive Send Stream release
- * @hdl:	Transport handle
- * @nsid:	Namespace ID
- * @stream_id:	Stream identifier
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_directive_send_stream_release_identifier(struct nvme_transport_handle *hdl,
-			__u32 nsid, __u16 stream_id)
+static inline void
+nvme_init_directive_send_id_endir(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		 bool endir, enum nvme_directive_dtype dtype,
+		 struct nvme_id_directives *id)
 {
-	struct nvme_directive_send_args args = {
-		.result = NULL,
-		.data = NULL,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER,
-		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
-		.cdw12 = 0,
-		.data_len = 0,
-		.dspec = stream_id,
-	};
-
-	return nvme_directive_send(hdl, &args);
+	nvme_init_directive_send(cmd, nsid,
+		NVME_DIRECTIVE_SEND_IDENTIFY_DOPER_ENDIR,
+		NVME_DIRECTIVE_DTYPE_IDENTIFY, 0, id, sizeof(*id));
+	cmd->cdw12 = NVME_FIELD_ENCODE(dtype,
+			NVME_DIRECTIVE_SEND_IDENTIFY_CDW12_DTYPE_SHIFT,
+			NVME_DIRECTIVE_SEND_IDENTIFY_CDW12_DTYPE_MASK) |
+		     NVME_FIELD_ENCODE(endir,
+			NVME_DIRECTIVE_SEND_IDENTIFY_CDW12_ENDIR_SHIFT,
+			NVME_DIRECTIVE_SEND_IDENTIFY_CDW12_ENDIR_MASK);
 }
 
 /**
- * nvme_directive_send_stream_release_resource() - Directive Send Stream release resources
- * @hdl:	Transport handle
+ * nvme_init_directive_send_stream_release_identifier() - Initialize passthru
+ * command for Directive Send Stream release identifier
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @stream_id:	Stream identifier
+ *
+ * Initializes the passthru command buffer for the Directive Send - Stream
+ * Release Identifier command.
+ */
+static inline void
+nvme_init_directive_send_stream_release_identifier(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 stream_id)
+{
+	nvme_init_directive_send(cmd, nsid,
+		NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER,
+		NVME_DIRECTIVE_DTYPE_STREAMS, stream_id, NULL, 0);
+}
+
+/**
+ * nvme_init_directive_send_stream_release_resource() - Initialize passthru
+ * command for Directive Send Stream release resources
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Directive Send - Stream
+ * Release Resource command.
  */
-static inline int nvme_directive_send_stream_release_resource(struct nvme_transport_handle *hdl, __u32 nsid)
+static inline void
+nvme_init_directive_send_stream_release_resource(struct nvme_passthru_cmd *cmd,
+		__u32 nsid)
 {
-	struct nvme_directive_send_args args = {
-		.result = NULL,
-		.data = NULL,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE,
-		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
-		.cdw12 = 0,
-		.data_len = 0,
-		.dspec = 0,
-	};
-
-	return nvme_directive_send(hdl, &args);
+	nvme_init_directive_send(cmd, nsid,
+		NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE,
+		NVME_DIRECTIVE_DTYPE_STREAMS, 0, NULL, 0);
 }
 
 /**

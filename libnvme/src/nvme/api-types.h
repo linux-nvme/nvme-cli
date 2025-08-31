@@ -48,32 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_directive_send_args - Arguments for the NVMe Directive Send command
- * @result:	If successful, the CQE dword0 value
- * @data:	Data payload to be send
- * @args_size:	Size of &struct nvme_directive_send_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace ID, if applicable
- * @doper:	Directive send operation, see &enum nvme_directive_send_doper
- * @dtype:	Directive type, see &enum nvme_directive_dtype
- * @cdw12:	Directive specific command dword12
- * @data_len:	Length of data payload in bytes
- * @dspec:	Directive specific field
- */
-struct nvme_directive_send_args {
-	__u32 *result;
-	void *data;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_directive_send_doper doper;
-	enum nvme_directive_dtype dtype;
-	__u32 cdw12;
-	__u32 data_len;
-	__u16 dspec;
-};
-
-/**
  * struct nvme_directive_recv_args - Arguments for the NVMe Directive Receive command
  * @result:	If successful, the CQE dword0 value
  * @data:	Userspace address of data payload
