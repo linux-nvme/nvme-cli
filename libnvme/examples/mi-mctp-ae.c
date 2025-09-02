@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
-/**
+/*
  * This file is part of libnvme.
  */
 
-/**
+/*
  * mi-mctp-ae: open a MI connection over MCTP, supporting asynchronous event messages
  */
 

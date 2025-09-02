@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
-/**
+/*
  * This file is part of libnvme.
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
  */
 
-/**
+/*
  * display-columnar: Scans the nvme topology, prints each record type in a
  * column format for easy visual scanning.
  */

@@ -6,7 +6,7 @@
  * Authors: Jeremy Kerr <jk@codeconstruct.com.au>
  */
 
-/**
+/*
  * mi-mctp: open a MI connection over MCTP, and query controller info
  */
 

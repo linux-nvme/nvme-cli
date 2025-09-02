@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
-/**
+/*
  * This file is part of libnvme.
  */
 
-/**
+/*
  * mi-mctp-csi-test: open a MI connection over MCTP, and send two commands
  * in parallel with different CSI buffers
  */

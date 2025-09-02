@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
-/**
+/*
  * This file is part of libnvme.
  * Copyright (c) 2022 Code Construct Pty Ltd.
  *
  * Authors: Jeremy Kerr <jk@codeconstruct.com.au>
  */
 
-/**
+/*
  * mi-conf: query a device for optimal MTU and set for both the local MCTP
  * route (through dbus to mctpd) and the device itself (through NVMe-MI
  * configuration commands)

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
-/**
+/*
  * This file is part of libnvme.
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
  */
 
-/**
+/*
  * Open all nvme controller's uevent and listen for changes. If NVME_AEN event
  * is observed with controller telemetry data, read the log and save it to a
  * file in /var/log/ with the device's unique name and epoch timestamp.
