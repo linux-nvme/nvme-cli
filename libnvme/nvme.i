@@ -831,7 +831,7 @@ struct nvme_ns {
 		};
 
 		dev = nvme_ctrl_get_name($self);
-		if (dev) {
+		if (!dev) {
 			discover_err = 1;
 			return NULL;
 		}
