@@ -1557,6 +1557,11 @@ void nvme_show_topology(nvme_root_t r,
 		nvme_print(topology_multipath, flags, r);
 }
 
+void nvme_show_topology_tabular(nvme_root_t r, nvme_print_flags_t flags)
+{
+	nvme_print(topology_tabular, flags, r);
+}
+
 void nvme_show_message(bool error, const char *msg, ...)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
