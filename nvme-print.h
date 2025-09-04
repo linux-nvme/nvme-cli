@@ -107,6 +107,7 @@ struct print_ops {
 	void (*topology_ctrl)(nvme_root_t r);
 	void (*topology_namespace)(nvme_root_t r);
 	void (*topology_multipath)(nvme_root_t r);
+	void (*topology_tabular)(nvme_root_t r);
 
 	/* status and error messages */
 	void (*connect_msg)(nvme_ctrl_t c);
@@ -251,6 +252,7 @@ void nvme_show_list_ns(struct nvme_ns_list *ns_list,
 void nvme_show_topology(nvme_root_t t,
 			enum nvme_cli_topo_ranking ranking,
 			nvme_print_flags_t flags);
+void nvme_show_topology_tabular(nvme_root_t t, nvme_print_flags_t flags);
 
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result);
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);

@@ -545,6 +545,8 @@ int validate_output_format(const char *format, nvme_print_flags_t *flags)
 #endif /* CONFIG_JSONC */
 	else if (!strcmp(format, "binary"))
 		f = BINARY;
+	else if (!strcmp(format, "tabular"))
+		f = TABULAR;
 	else
 		return -EINVAL;
 
@@ -10204,6 +10206,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 static int show_topology_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Show the topology\n";
+	const char *output_format = "Output format: normal|json|binary|tabular";
 	const char *ranking = "Ranking order: namespace|ctrl|multipath";
 	nvme_print_flags_t flags;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
@@ -10272,7 +10275,10 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		return err;
 	}
 
-	nvme_show_topology(r, rank, flags);
+	if (flags & TABULAR)
+		nvme_show_topology_tabular(r, flags);
+	else
+		nvme_show_topology(r, rank, flags);
 
 	return err;
 }

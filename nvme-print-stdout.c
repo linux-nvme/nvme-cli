@@ -20,6 +20,7 @@
 #include "nvme-models.h"
 #include "util/suffix.h"
 #include "util/types.h"
+#include "util/table.h"
 #include "logging.h"
 #include "common.h"
 
@@ -5589,6 +5590,127 @@ static void stdout_list_items(nvme_root_t r)
 		stdout_simple_list(r);
 }
 
+static bool subsystem_iopolicy_filter(const char *name, void *arg)
+{
+	nvme_subsystem_t s = arg;
+	const char *iopolicy = nvme_subsystem_get_iopolicy(s);
+
+	if (!strcmp(iopolicy, "queue-depth")) {
+		/* exclude "Nodes" for iopolicy queue-depth */
+		if (!strcmp(name, "Nodes"))
+			return false;
+	} else if (!strcmp(iopolicy, "numa")) {
+		/* exclude "Qdepth" for iopolicy numa */
+		if (!strcmp(name, "Qdepth"))
+			return false;
+	} else { /* round-robin */
+		/* exclude "Nodes" and "Qdepth" for iopolicy round-robin */
+		if (!strcmp(name, "Nodes") || !strcmp(name, "Qdepth"))
+			return false;
+	}
+
+	return true;
+}
+
+static void stdout_tabular_subsystem_topology_multipath(nvme_subsystem_t s)
+{
+	nvme_ns_t n;
+	nvme_path_t p;
+	nvme_ctrl_t c;
+	int row, col;
+	bool first;
+	struct table *t;
+	const char *iopolicy = nvme_subsystem_get_iopolicy(s);
+	struct table_column columns[] = {
+		{"NSHead", LEFT, 0},
+		{"NSID", LEFT, 0},
+		{"NSPath", LEFT, 0},
+		{"ANAState", LEFT, 0},
+		{"Nodes", LEFT, 0},
+		{"Qdepth", LEFT, 0},
+		{"Controller", LEFT, 0},
+		{"TrType", LEFT, 0},
+		{"Address", LEFT, 0},
+		{"State", LEFT, 0},
+	};
+
+	t = table_init();
+	if (!t) {
+		printf("Failed to init table\n");
+		return;
+	}
+
+	if (table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
+			subsystem_iopolicy_filter, (void *)s) < 0) {
+		printf("Failed to add columns\n");
+		goto free_tbl;
+	}
+
+	nvme_subsystem_for_each_ns(s, n) {
+		first = true;
+		nvme_namespace_for_each_path(n, p) {
+			c = nvme_path_get_ctrl(p);
+
+			row = table_get_row_id(t);
+			if (row < 0) {
+				printf("Failed to add row\n");
+				goto free_tbl;
+			}
+			/* For the first row we print actual NSHead name,
+			 * however, for the subsequent rows we print "arrow"
+			 * ("-->") symbol for NSHead. This "arrow" style makes
+			 * it visually obvious that susequenet entries (if
+			 * present) are a path under the first NSHead.
+			 */
+			col = -1;
+			/* col 0: NSHead */
+			if (first) {
+				table_set_value_str(t, ++col, row,
+						nvme_ns_get_name(n), LEFT);
+				first = false;
+			} else
+				table_set_value_str(t, ++col, row,
+						"-->", CENTERED);
+			/* col 1: NSID */
+			table_set_value_int(t, ++col, row,
+					nvme_ns_get_nsid(n), CENTERED);
+			/* col 2: NSPath */
+			table_set_value_str(t, ++col, row,
+					nvme_path_get_name(p), LEFT);
+			/* col 3: ANAState */
+			table_set_value_str(t, ++col, row,
+					nvme_path_get_ana_state(p), LEFT);
+
+			if (!strcmp(iopolicy, "numa"))
+				/* col 4: Nodes */
+				table_set_value_str(t, ++col, row,
+					nvme_path_get_numa_nodes(p), CENTERED);
+			else if (!strcmp(iopolicy, "queue-depth"))
+				/* col 4 : Qdepth */
+				table_set_value_int(t, ++col, row,
+					nvme_path_get_queue_depth(p), CENTERED);
+
+			/* col 5: Controller */
+			table_set_value_str(t, ++col, row,
+					nvme_ctrl_get_name(c), LEFT);
+			/* col 6: TrType */
+			table_set_value_str(t, ++col, row,
+					nvme_ctrl_get_transport(c), LEFT);
+			/* col 7: Address */
+			table_set_value_str(t, ++col, row,
+					nvme_ctrl_get_address(c), LEFT);
+			/* col 8: State */
+			table_set_value_str(t, ++col, row,
+					nvme_ctrl_get_state(c), LEFT);
+
+			table_add_row(t, row);
+		}
+	}
+	table_print(t);
+free_tbl:
+	table_free(t);
+}
+
 static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 						     enum nvme_cli_topo_ranking ranking)
 {
@@ -5693,6 +5815,69 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 	}
 }
 
+static void stdout_tabular_subsystem_topology(nvme_subsystem_t s)
+{
+	nvme_ctrl_t c;
+	nvme_ns_t n;
+	int row;
+	struct table *t;
+	struct table_column columns[] = {
+		{"Namespace", LEFT, 0},
+		{"NSID", LEFT, 0},
+		{"Controller", LEFT, 0},
+		{"Trtype", LEFT, 0},
+		{"Address", LEFT, 0},
+		{"State", LEFT, 0},
+	};
+
+	t = table_init();
+	if (!t) {
+		printf("Failed to init table\n");
+		return;
+	}
+
+	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
+		printf("Failed to add columns\n");
+		goto free_tbl;
+	}
+
+	nvme_subsystem_for_each_ctrl(s, c) {
+		nvme_ctrl_for_each_ns(c, n) {
+			c = nvme_ns_get_ctrl(n);
+
+			row = table_get_row_id(t);
+			if (row < 0) {
+				printf("Failed to add row\n");
+				goto free_tbl;
+			}
+
+			/* col 0: Namespace */
+			table_set_value_str(t, 0, row,
+					nvme_ns_get_name(n), LEFT);
+			/* col 1: NSID */
+			table_set_value_int(t, 1, row,
+					nvme_ns_get_nsid(n), CENTERED);
+			/* col 2: Controller */
+			table_set_value_str(t, 2, row,
+					nvme_ctrl_get_name(c), LEFT);
+			/* col 3: Trtype */
+			table_set_value_str(t, 3, row,
+					nvme_ctrl_get_transport(c), LEFT);
+			/* col 4: Address */
+			table_set_value_str(t, 4, row,
+					nvme_ctrl_get_address(c), LEFT);
+			/* col 5: State */
+			table_set_value_str(t, 5, row,
+					nvme_ctrl_get_state(c), LEFT);
+
+			table_add_row(t, row);
+		}
+	}
+	table_print(t);
+free_tbl:
+	table_free(t);
+}
+
 static void stdout_subsystem_topology(nvme_subsystem_t s,
 					   enum nvme_cli_topo_ranking ranking)
 {
@@ -5741,6 +5926,38 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 						nvme_ctrl_get_address(c),
 						nvme_ctrl_get_state(c));
 			}
+		}
+	}
+}
+
+static void stdout_topology_tabular(nvme_root_t r)
+{
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	bool first = true;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			bool no_ctrl = true;
+			nvme_ctrl_t c;
+
+			nvme_subsystem_for_each_ctrl(s, c)
+				no_ctrl = false;
+
+			if (no_ctrl)
+				continue;
+
+			if (!first)
+				printf("\n");
+			first = false;
+
+			stdout_subsys_config(s);
+			printf("\n");
+
+			if (nvme_is_multipath(s))
+				stdout_tabular_subsystem_topology_multipath(s);
+			else
+				stdout_tabular_subsystem_topology(s);
 		}
 	}
 }
@@ -6363,6 +6580,7 @@ static struct print_ops stdout_print_ops = {
 	.topology_ctrl			= stdout_topology_ctrl,
 	.topology_namespace		= stdout_topology_namespace,
 	.topology_multipath		= stdout_topology_multipath,
+	.topology_tabular		= stdout_topology_tabular,
 
 	/* status and error messages */
 	.connect_msg			= stdout_connect_msg,
