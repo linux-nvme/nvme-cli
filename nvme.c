@@ -10207,6 +10207,8 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 	const char *ranking = "Ranking order: namespace|ctrl";
 	nvme_print_flags_t flags;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
+	char *devname = NULL;
+	nvme_scan_filter_t filter = NULL;
 	enum nvme_cli_topo_ranking rank;
 	int err;
 
@@ -10249,7 +10251,20 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		return -errno;
 	}
 
-	err = nvme_scan_topology(r, NULL, NULL);
+	if (optind < argc)
+		devname = basename(argv[optind++]);
+
+	if (devname) {
+		int subsys_id, nsid;
+
+		if (sscanf(devname, "nvme%dn%d", &subsys_id, &nsid) != 2) {
+			nvme_show_error("Invalid device name %s\n", devname);
+			return -EINVAL;
+		}
+		filter = nvme_match_device_filter;
+	}
+
+	err = nvme_scan_topology(r, filter, (void *)devname);
 	if (err < 0) {
 		nvme_show_error("Failed to scan topology: %s", nvme_strerror(errno));
 		return err;
