@@ -132,6 +132,22 @@ PyObject *hostid_from_file();
 	}
 }
 
+%exception nvme_ctrl::disconnect {
+	connect_err = 0;
+	errno = 0;
+	$action  /* $action sets connect_err to non-zero value on failure */
+	if (connect_err == 1) {
+		SWIG_exception(SWIG_AttributeError, "No controller connection");
+	} else if (connect_err) {
+		const char *errstr = nvme_errno_to_string(errno);
+		if (errstr) {
+			SWIG_exception(SWIG_RuntimeError, errstr);
+		} else {
+			SWIG_exception(SWIG_RuntimeError, "Disconnect failed");
+		}
+	}
+}
+
 %exception nvme_ctrl::discover {
 	discover_err = 0;
 	$action  /* $action sets discover_err to non-zero value on failure */
@@ -807,9 +823,19 @@ struct nvme_ns {
 		nvme_rescan_ctrl($self);
 	}
 	void disconnect() {
+		int ret;
+		const char *dev;
+
+		dev = nvme_ctrl_get_name($self);
+		if (!dev) {
+			connect_err = 1;
+			return;
+		}
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		    nvme_disconnect_ctrl($self);
+		ret = nvme_disconnect_ctrl($self);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
+		if (ret < 0)
+			connect_err = 2;
 	}
 
 	%feature("autodoc", "@return: True if controller supports explicit registration. False otherwise.") is_registration_supported;
