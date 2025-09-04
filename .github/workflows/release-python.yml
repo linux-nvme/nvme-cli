@@ -101,7 +101,7 @@ jobs:
           path: dist
 
       - name: Publish package to TestPyPI
-        uses: pypa/gh-action-pypi-publish@v1.12.4
+        uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -130,5 +130,5 @@ jobs:
           path: dist
 
       - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.12.4
+        uses: pypa/gh-action-pypi-publish@v1.13.0
         if: steps.check-tag.outputs.match == 'true'
