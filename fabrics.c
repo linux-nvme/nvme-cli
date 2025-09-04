@@ -1120,6 +1120,16 @@ do_connect:
 
 	nvme_parse_tls_args(keyring, tls_key, tls_key_identity, &cfg, c);
 
+	/*
+	 * We are connecting to a discovery controller, so let's treat
+	 * this as a persistent connection and specify a KATO.
+	 */
+	if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		persistent = true;
+
+		set_discovery_kato(&cfg);
+	}
+
 	ret = nvme_add_ctrl(h, c, &cfg);
 	if (ret) {
 		fprintf(stderr, "could not add new controller: %s\n",
