@@ -8,7 +8,8 @@ sources += [
   'util/sighdl.c',
   'util/suffix.c',
   'util/types.c',
-  'util/utils.c'
+  'util/utils.c',
+  'util/table.c'
 ]
 
 if json_c_dep.found()
