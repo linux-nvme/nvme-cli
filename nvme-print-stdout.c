@@ -1126,6 +1126,8 @@ static void stdout_subsys_config(nvme_subsystem_t s)
 	       nvme_subsystem_get_nqn(s));
 	printf("%*s   hostnqn=%s\n", len, " ",
 	       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
+	printf("%*s   iopolicy=%s\n", len, " ",
+		nvme_subsystem_get_iopolicy(s));
 
 	if (stdout_print_ops.flags & VERBOSE) {
 		printf("%*s   model=%s\n", len, " ",
@@ -1134,8 +1136,6 @@ static void stdout_subsys_config(nvme_subsystem_t s)
 			nvme_subsystem_get_serial(s));
 		printf("%*s   firmware=%s\n", len, " ",
 			nvme_subsystem_get_fw_rev(s));
-		printf("%*s   iopolicy=%s\n", len, " ",
-			nvme_subsystem_get_iopolicy(s));
 		printf("%*s   type=%s\n", len, " ",
 			nvme_subsystem_get_type(s));
 	}
@@ -5595,6 +5595,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 	nvme_ns_t n;
 	nvme_path_t p;
 	nvme_ctrl_t c;
+	const char *iopolicy = nvme_subsystem_get_iopolicy(s);
 
 	if (ranking == NVME_CLI_TOPO_NAMESPACE) {
 		nvme_subsystem_for_each_ns(s, n) {
@@ -5615,7 +5616,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 				       nvme_path_get_ana_state(p));
 			}
 		}
-	} else {
+	} else if (ranking == NVME_CLI_TOPO_CTRL) {
 		/* NVME_CLI_TOPO_CTRL */
 		nvme_subsystem_for_each_ctrl(s, c) {
 			printf(" +- %s %s %s\n",
@@ -5633,6 +5634,59 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 					       nvme_ns_get_nsid(n),
 					       nvme_ctrl_get_state(c),
 					       nvme_path_get_ana_state(p));
+				}
+			}
+		}
+	} else {
+		/* NVME_CLI_TOPO_MULTIPATH */
+		nvme_subsystem_for_each_ns(s, n) {
+			printf(" +- %s (ns %d)\n",
+					nvme_ns_get_name(n),
+					nvme_ns_get_nsid(n));
+			printf(" \\\n");
+			nvme_namespace_for_each_path(n, p) {
+				c = nvme_path_get_ctrl(p);
+
+				if (!strcmp(iopolicy, "numa")) {
+					/*
+					 * For iopolicy numa, exclude printing
+					 * qdepth.
+					 */
+					printf("  +- %s %s %s %s %s %s %s\n",
+						nvme_path_get_name(p),
+						nvme_path_get_ana_state(p),
+						nvme_path_get_numa_nodes(p),
+						nvme_ctrl_get_name(c),
+						nvme_ctrl_get_transport(c),
+						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_state(c));
+
+				} else if (!strcmp(iopolicy, "queue-depth")) {
+					/*
+					 * For iopolicy queue-depth, exclude
+					 * printing numa nodes.
+					 */
+					printf("  +- %s %s %d %s %s %s %s\n",
+						nvme_path_get_name(p),
+						nvme_path_get_ana_state(p),
+						nvme_path_get_queue_depth(p),
+						nvme_ctrl_get_name(c),
+						nvme_ctrl_get_transport(c),
+						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_state(c));
+
+				} else { /* round-robin */
+					/*
+					 * For iopolicy round-robin, exclude
+					 * printing numa nodes and qdepth.
+					 */
+					printf("  +- %s %s %s %s %s %s\n",
+						nvme_path_get_name(p),
+						nvme_path_get_ana_state(p),
+						nvme_ctrl_get_name(c),
+						nvme_ctrl_get_transport(c),
+						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_state(c));
 				}
 			}
 		}
@@ -5657,7 +5711,7 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 				       nvme_ctrl_get_state(c));
 			}
 		}
-	} else {
+	} else if (ranking == NVME_CLI_TOPO_CTRL) {
 		/* NVME_CLI_TOPO_CTRL */
 		nvme_subsystem_for_each_ctrl(s, c) {
 			printf(" +- %s %s %s\n",
@@ -5669,6 +5723,23 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 				printf("  +- ns %d %s\n",
 				       nvme_ns_get_nsid(n),
 				       nvme_ctrl_get_state(c));
+			}
+		}
+	} else {
+		/* NVME_CLI_TOPO_MULTIPATH */
+		nvme_subsystem_for_each_ctrl(s, c) {
+			nvme_ctrl_for_each_ns(c, n) {
+				c = nvme_ns_get_ctrl(n);
+
+				printf(" +- %s (ns %d)\n",
+						nvme_ns_get_name(n),
+						nvme_ns_get_nsid(n));
+				printf(" \\\n");
+				printf("  +- %s %s %s %s\n",
+						nvme_ctrl_get_name(c),
+						nvme_ctrl_get_transport(c),
+						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_state(c));
 			}
 		}
 	}
@@ -5715,6 +5786,11 @@ static void stdout_topology_namespace(nvme_root_t r)
 static void stdout_topology_ctrl(nvme_root_t r)
 {
 	stdout_simple_topology(r, NVME_CLI_TOPO_CTRL);
+}
+
+static void stdout_topology_multipath(nvme_root_t r)
+{
+	stdout_simple_topology(r, NVME_CLI_TOPO_MULTIPATH);
 }
 
 static void stdout_message(bool error, const char *msg, va_list ap)
@@ -6286,6 +6362,7 @@ static struct print_ops stdout_print_ops = {
 	.print_nvme_subsystem_list	= stdout_subsystem_list,
 	.topology_ctrl			= stdout_topology_ctrl,
 	.topology_namespace		= stdout_topology_namespace,
+	.topology_multipath		= stdout_topology_multipath,
 
 	/* status and error messages */
 	.connect_msg			= stdout_connect_msg,

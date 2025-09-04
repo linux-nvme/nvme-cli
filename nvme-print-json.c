@@ -4743,6 +4743,7 @@ static unsigned int json_subsystem_topology_multipath(nvme_subsystem_t s,
 	nvme_ns_t n;
 	nvme_path_t p;
 	unsigned int i = 0;
+	const char *iopolicy = nvme_subsystem_get_iopolicy(s);
 
 	nvme_subsystem_for_each_ns(s, n) {
 		struct json_object *ns_attrs;
@@ -4750,19 +4751,40 @@ static unsigned int json_subsystem_topology_multipath(nvme_subsystem_t s,
 
 		ns_attrs = json_create_object();
 		obj_add_int(ns_attrs, "NSID", nvme_ns_get_nsid(n));
+		obj_add_str(ns_attrs, "Name", nvme_ns_get_name(n));
 
 		paths = json_create_array();
 		nvme_namespace_for_each_path(n, p) {
 			struct json_object *path_attrs;
-
-			nvme_ctrl_t c = nvme_path_get_ctrl(p);
+			struct json_object *ctrls, *ctrl_attrs;
+			nvme_ctrl_t c;
 
 			path_attrs = json_create_object();
-			obj_add_str(path_attrs, "Name", nvme_ctrl_get_name(c));
-			obj_add_str(path_attrs, "Transport", nvme_ctrl_get_transport(c));
-			obj_add_str(path_attrs, "Address", nvme_ctrl_get_address(c));
-			obj_add_str(path_attrs, "State", nvme_ctrl_get_state(c));
+			obj_add_str(path_attrs, "Path", nvme_path_get_name(p));
 			obj_add_str(path_attrs, "ANAState", nvme_path_get_ana_state(p));
+
+			/*
+			 * For iopolicy numa exclude "Qdepth", for iopolicy
+			 * queue-depth exclude "NUMANodes" and for iopolicy
+			 * round-robin exclude both "Qdepth" and "NUMANodes".
+			 */
+			if (!strcmp(iopolicy, "numa"))
+				obj_add_str(path_attrs, "NUMANodes",
+						nvme_path_get_numa_nodes(p));
+			else if (!strcmp(iopolicy, "queue-depth"))
+				obj_add_int(path_attrs, "Qdepth",
+						nvme_path_get_queue_depth(p));
+
+			c = nvme_path_get_ctrl(p);
+			ctrls = json_create_array();
+			ctrl_attrs = json_create_object();
+			obj_add_str(ctrl_attrs, "Name", nvme_ctrl_get_name(c));
+			obj_add_str(ctrl_attrs, "Transport", nvme_ctrl_get_transport(c));
+			obj_add_str(ctrl_attrs, "Address", nvme_ctrl_get_address(c));
+			obj_add_str(ctrl_attrs, "State", nvme_ctrl_get_state(c));
+			array_add_obj(ctrls, ctrl_attrs);
+			obj_add_array(path_attrs, "Controller", ctrls);
+
 			array_add_obj(paths, path_attrs);
 		}
 		obj_add_array(ns_attrs, "Paths", paths);
@@ -4787,6 +4809,7 @@ static void json_print_nvme_subsystem_topology(nvme_subsystem_t s,
 
 			ns_attrs = json_create_object();
 			obj_add_int(ns_attrs, "NSID", nvme_ns_get_nsid(n));
+			obj_add_str(ns_attrs, "Name", nvme_ns_get_name(n));
 
 			ctrl = json_create_array();
 			ctrl_attrs = json_create_object();
@@ -5546,6 +5569,7 @@ static struct print_ops json_print_ops = {
 	.print_nvme_subsystem_list	= json_print_nvme_subsystem_list,
 	.topology_ctrl			= json_simple_topology,
 	.topology_namespace		= json_simple_topology,
+	.topology_multipath		= json_simple_topology,
 
 	/* status and error messages */
 	.connect_msg			= json_connect_msg,
