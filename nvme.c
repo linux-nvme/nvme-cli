@@ -10204,7 +10204,7 @@ static int tls_key(int argc, char **argv, struct command *command, struct plugin
 static int show_topology_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Show the topology\n";
-	const char *ranking = "Ranking order: namespace|ctrl";
+	const char *ranking = "Ranking order: namespace|ctrl|multipath";
 	nvme_print_flags_t flags;
 	_cleanup_nvme_root_ nvme_root_t r = NULL;
 	char *devname = NULL;
@@ -10240,6 +10240,8 @@ static int show_topology_cmd(int argc, char **argv, struct command *command, str
 		rank = NVME_CLI_TOPO_NAMESPACE;
 	} else if (!strcmp(cfg.ranking, "ctrl")) {
 		rank = NVME_CLI_TOPO_CTRL;
+	} else if (!strcmp(cfg.ranking, "multipath")) {
+		rank = NVME_CLI_TOPO_MULTIPATH;
 	} else {
 		nvme_show_error("Invalid ranking argument: %s", cfg.ranking);
 		return -EINVAL;

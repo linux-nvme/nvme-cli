@@ -46,6 +46,7 @@ typedef uint32_t nvme_print_flags_t;
 enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_NAMESPACE,
 	NVME_CLI_TOPO_CTRL,
+	NVME_CLI_TOPO_MULTIPATH,
 };
 
 #define SYS_NVME "/sys/class/nvme"

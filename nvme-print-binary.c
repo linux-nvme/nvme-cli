@@ -428,6 +428,7 @@ static struct print_ops binary_print_ops = {
 	.print_nvme_subsystem_list	= NULL,
 	.topology_ctrl			= NULL,
 	.topology_namespace		= NULL,
+	.topology_multipath		= NULL,
 
 	/* status and error messages */
 	.connect_msg			= NULL,

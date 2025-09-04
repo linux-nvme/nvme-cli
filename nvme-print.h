@@ -106,6 +106,7 @@ struct print_ops {
 	void (*print_nvme_subsystem_list)(nvme_root_t r, bool show_ana);
 	void (*topology_ctrl)(nvme_root_t r);
 	void (*topology_namespace)(nvme_root_t r);
+	void (*topology_multipath)(nvme_root_t r);
 
 	/* status and error messages */
 	void (*connect_msg)(nvme_ctrl_t c);

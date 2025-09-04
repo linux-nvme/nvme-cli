@@ -1551,8 +1551,10 @@ void nvme_show_topology(nvme_root_t r,
 {
 	if (ranking == NVME_CLI_TOPO_NAMESPACE)
 		nvme_print(topology_namespace, flags, r);
-	else
+	else if (ranking == NVME_CLI_TOPO_CTRL)
 		nvme_print(topology_ctrl, flags, r);
+	else
+		nvme_print(topology_multipath, flags, r);
 }
 
 void nvme_show_message(bool error, const char *msg, ...)
