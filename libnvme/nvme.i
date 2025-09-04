@@ -415,16 +415,24 @@ struct nvme_host {
 };
 
 struct nvme_subsystem {
+	%immutable sysfs_dir;
 	%immutable subsysnqn;
 	%immutable model;
 	%immutable serial;
 	%immutable firmware;
-	%immutable application;
+	%immutable subsystype;
+	%immutable iopolicy;
 	char *subsysnqn;
 	char *model;
 	char *serial;
 	char *firmware;
-	char *application;
+	char *subsystype;
+
+	%extend {
+		const char *sysfs_dir;
+		const char *application;
+		const char *iopolicy;
+	}
 };
 
 struct nvme_ctrl {
@@ -702,6 +710,18 @@ struct nvme_ns {
 	}
 	struct nvme_host *nvme_subsystem_host_get(struct nvme_subsystem *s) {
 		return nvme_subsystem_get_host(s);
+	}
+	const char *nvme_subsystem_sysfs_dir_get(struct nvme_subsystem *s) {
+		return nvme_subsystem_get_sysfs_dir(s);
+	}
+	const char *nvme_subsystem_iopolicy_get(struct nvme_subsystem *s) {
+		return nvme_subsystem_get_iopolicy(s);
+	}
+	const char *nvme_subsystem_application_get(struct nvme_subsystem *s) {
+		return nvme_subsystem_get_application(s);
+	}
+	void nvme_subsystem_application_set(struct nvme_subsystem *s, const char *a) {
+		nvme_subsystem_set_application(s, a);
 	}
 %};
 
