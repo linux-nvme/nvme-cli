@@ -411,6 +411,17 @@ PyObject *hostid_from_file();
 #include "fabrics.h"
 #define STR_OR_NONE(str) (!(str) ? "None" : str)
 
+struct nvme_host * nvme_first_host(struct nvme_root * r);
+struct nvme_host * nvme_next_host(struct nvme_root * r, struct nvme_host * h);
+struct nvme_subsystem * nvme_first_subsystem(struct nvme_host * h);
+struct nvme_subsystem * nvme_next_subsystem(struct nvme_host * h, struct nvme_subsystem * s);
+struct nvme_ctrl * nvme_subsystem_first_ctrl(struct nvme_subsystem * s);
+struct nvme_ctrl * nvme_subsystem_next_ctrl(struct nvme_subsystem * s, struct nvme_ctrl * c);
+struct nvme_ns * nvme_subsystem_first_ns(struct nvme_subsystem * s);
+struct nvme_ns * nvme_subsystem_next_ns(struct nvme_subsystem * s, struct nvme_ns * n);
+struct nvme_ns * nvme_ctrl_first_ns(struct nvme_ctrl * c);
+struct nvme_ns * nvme_ctrl_next_ns(struct nvme_ctrl * c, struct nvme_ns * n);
+
 struct nvme_root {
 	%immutable config_file;
 	%immutable application;
@@ -560,9 +571,14 @@ struct nvme_ns {
 		else if (!strcmp(level, "emerg")) log_level = LOG_EMERG;
 		nvme_init_logging($self, log_level, false, false);
 	}
-	struct nvme_host *hosts() {
-		return nvme_first_host($self);
-	}
+	%pythoncode %{
+	def hosts(self):
+	    """Iterator over all host objects"""
+	    h = nvme_first_host(self)
+	    while h:
+	        yield h
+	        h = nvme_next_host(self, h)
+	%}
 	void refresh_topology() {
 		nvme_refresh_topology($self);
 	}
@@ -636,9 +652,14 @@ struct nvme_ns {
 		};
 		return ret;
 	}
-	struct nvme_subsystem* subsystems() {
-		return nvme_first_subsystem($self);
-	}
+	%pythoncode %{
+	def subsystems(self):
+	    """Iterator over all subsystem objects"""
+	    s = nvme_first_subsystem(self)
+	    while s:
+	        yield s
+	        s = nvme_next_subsystem(self, s)
+	%}
 }
 
 %{
@@ -708,12 +729,22 @@ struct nvme_ns {
 		};
 		return ret;
 	}
-	struct nvme_ctrl *controllers() {
-		return nvme_subsystem_first_ctrl($self);
-	}
-	struct nvme_ns *namespaces() {
-		return nvme_subsystem_first_ns($self);
-	}
+	%pythoncode %{
+	def controllers(self):
+	    """Iterator over all controller objects"""
+	    c = nvme_subsystem_first_ctrl(self)
+	    while c:
+	        yield c
+	        c = nvme_subsystem_next_ctrl(self, c)
+	%}
+	%pythoncode %{
+	def namespaces(self):
+	    """Iterator over all namespace objects"""
+	    ns = nvme_subsystem_first_ns(self)
+	    while ns:
+	        yield ns
+	        ns = nvme_subsystem_next_ns(self, ns)
+	%}
 	%immutable name;
 	const char *name;
 	%immutable host;
@@ -924,9 +955,14 @@ struct nvme_ns {
 		};
 		return ret;
 	}
-	struct nvme_ns* namespaces() {
-		return nvme_ctrl_first_ns($self);
-	}
+	%pythoncode %{
+	def namespaces(self):
+	    """Iterator over all namespace objects"""
+	    ns = nvme_ctrl_first_ns(self)
+	    while ns:
+	        yield ns
+	        ns = nvme_ctrl_next_ns(self, ns)
+	%}
 }
 
 %{

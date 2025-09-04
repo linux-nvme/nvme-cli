@@ -12,9 +12,6 @@ print(f'root: {root}')
 host = nvme.host(root)
 print(f'host: {host}')
 
-subsystem = host.subsystems()
-print(f'subsystem: {subsystem}')
-
 ctrls = []
 for i in range(10):
     ctrl = nvme.ctrl(
@@ -25,8 +22,10 @@ for i in range(10):
     ctrls.append(ctrl)
     print(f'ctrl {i}: {ctrl}')
 
-ns = subsystem.namespaces() if subsystem is not None else None
-print(f'ns: {ns}')
+for s in host.subsystems():
+    print(f'subsystem: {s}')
+    for ns in s.namespaces():
+        print(f'ns: {ns}')
 
 # Deleting objects in the following order would create a segmentation
 # fault if it weren't for the %pythonappend in nvme.i. This test is to
