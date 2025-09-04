@@ -46,9 +46,8 @@ try:
     lsp = nvme.NVMF_LOG_DISC_LSP_PLEO if dlp_supp_opts & nvme.NVMF_LOG_DISC_LID_PLEOS else 0
     disc_log = ctrl.discover(lsp=lsp)
 except Exception as e:
-    sys.exit(f'Failed to discover: {e}')
+    print(f'Failed to discover: {e}')
     disc_log = []
-    pass
 
 for dlpe in disc_log:
     print(f'log entry {dlpe["portid"]}: {dlpe["subtype"]} {dlpe["subnqn"]}')
