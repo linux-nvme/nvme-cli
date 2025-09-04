@@ -1868,6 +1868,17 @@ long nvme_insert_tls_key_versioned(const char *keyring, const char *key_type,
 	return -1;
 }
 
+long nvme_insert_tls_key_compat(const char *keyring, const char *key_type,
+				   const char *hostnqn, const char *subsysnqn,
+				   int version, int hmac,
+				   unsigned char *configured_key, int key_len)
+{
+	nvme_msg(NULL, LOG_ERR, "key operations not supported; "
+		 "recompile with keyutils support.\n");
+	errno = ENOTSUP;
+	return -1;
+}
+
 long nvme_revoke_tls_key(const char *keyring, const char *key_type,
 			 const char *identity)
 {
