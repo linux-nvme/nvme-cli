@@ -16,14 +16,18 @@ def disc_supp_str(dlp_supp_opts):
     }
     return [txt for msk, txt in d.items() if dlp_supp_opts & msk]
 
-def discover(host, ctrl):
+def discover(host, ctrl, iteration):
+    # Only 8 levels of indirection are supported
+    if iteration > 8:
+        return
+
     try:
         ctrl.connect(host)
     except Exception as e:
         print(f'Failed to connect: {e}')
         return
 
-    print(f'{ctrl.name} connected to subsys {ctrl.subsystem}')
+    print(f'{ctrl.name} connected to {ctrl.subsystem}')
 
     slp = ctrl.supported_log_pages()
     try:
@@ -41,7 +45,14 @@ def discover(host, ctrl):
         return
 
     for dlpe in disc_log:
-        print(f'log entry {dlpe["portid"]}: {dlpe["subtype"]} {dlpe["subnqn"]}')
+        if dlpe['subtype'] == 'nvme':
+            print(f'{iteration}: {dlpe["subtype"]} {dlpe["subnqn"]}')
+            continue
+        if dlpe['subtype'] == 'discovery' and dlpe['subnqn'] == nvme.NVME_DISC_SUBSYS_NAME:
+            continue
+        print(f'{iteration}: {dlpe["subtype"]} {dlpe["subnqn"]}')
+        with nvme.ctrl(root, subsysnqn=dlpe['subnqn'], transport=dlpe['trtype'], traddr=dlpe['traddr'], trsvcid=dlpe['trsvcid']) as new_ctrl:
+            discover(host, new_ctrl, iteration + 1)
 
 root = nvme.root()
 host = nvme.host(root)
@@ -52,7 +63,7 @@ traddr = '127.0.0.1'
 trsvcid = '4420'
 
 with nvme.ctrl(root, subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid) as ctrl:
-    discover(host, ctrl)
+    discover(host, ctrl, 0)
 
 for s in host.subsystems():
     for c in s.controllers():
