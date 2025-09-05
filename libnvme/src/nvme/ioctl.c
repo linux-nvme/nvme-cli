@@ -621,24 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_capacity_mgmt(struct nvme_transport_handle *hdl, struct nvme_capacity_mgmt_args *args)
-{
-	__u32 cdw10 = args->op | args->element_id << 16;
-
-        struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_admin_capacity_mgmt,
-		.cdw10		= cdw10,
-		.cdw11		= args->cdw11,
-		.cdw12		= args->cdw12,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_lockdown(struct nvme_transport_handle *hdl, struct nvme_lockdown_args *args)
 {
 	__u32 cdw10 =  args->ofi << 8 |

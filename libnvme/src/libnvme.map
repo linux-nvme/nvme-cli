@@ -15,7 +15,6 @@ LIBNVME_2_0 {
 	global:
 		nvme_admin_passthru64;
 		nvme_admin_passthru;
-		nvme_capacity_mgmt;
 		nvme_close;
 		nvme_copy;
 		nvme_create_ctrl;

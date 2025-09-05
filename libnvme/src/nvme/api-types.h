@@ -48,28 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_capacity_mgmt_args - Arguments for the NVMe Capacity Management command
- * @result:	If successful, the CQE dword0 value
- * @args_size:	Size of &struct nvme_capacity_mgmt_args
- * @cdw11:	Least significant 32 bits of the capacity in bytes of the
- *		Endurance Group or NVM Set to be created
- * @cdw12:	Most significant 32 bits of the capacity in bytes of the
- *		Endurance Group or NVM Set to be created
- * @timeout:	Timeout in ms
- * @element_id:	Value specific to the value of the Operation field
- * @op:		Operation to be performed by the controller
- */
-struct nvme_capacity_mgmt_args {
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	__u32 cdw11;
-	__u32 cdw12;
-	__u16 element_id;
-	__u8 op;
-};
-
-/**
  * struct nvme_lockdown_args - Arguments for the NVME Lockdown command
  * @args_size:	Size of &struct nvme_lockdown_args
  * @result:	The command completion result from CQE dword0

@@ -336,6 +336,14 @@ enum nvme_cmd_dword_fields {
 	NVME_DSM_CDW11_IDW_MASK					= 0x1,
 	NVME_DSM_CDW11_AD_SHIFT					= 2,
 	NVME_DSM_CDW11_AD_MASK					= 0x1,
+	NVME_CAPACITY_MGMT_CDW10_OPER_SHIFT			= 0,
+	NVME_CAPACITY_MGMT_CDW10_OPER_MASK			= 0xf,
+	NVME_CAPACITY_MGMT_CDW10_ELID_SHIFT			= 16,
+	NVME_CAPACITY_MGMT_CDW10_ELID_MASK			= 0xffff,
+	NVME_CAPACITY_MGMT_CDW11_CAPL_SHIFT			= 0,
+	NVME_CAPACITY_MGMT_CDW11_CAPL_MASK			= 0xffffffff,
+	NVME_CAPACITY_MGMT_CDW12_CAPU_SHIFT			= 0,
+	NVME_CAPACITY_MGMT_CDW12_CAPU_MASK			= 0xffffffff,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4008,14 +4016,36 @@ nvme_init_directive_recv_stream_allocate(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_capacity_mgmt() - Capacity management command
- * @hdl:	Transport handle
- * @args:	&struct nvme_capacity_mgmt_args argument structure
+ * nvme_init_capacity_mgmt() - Initialize passthru command for
+ * Capacity Management
+ * @cmd:	Passthru command to use
+ * @oper:	Operation to be performed by the controller
+ * @elid:	Value specific to the value of the Operation field
+ * @cap:	Capacity in bytes of the Endurance Group or NVM Set to
+ *		be created
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Capacity Management command.
  */
-int nvme_capacity_mgmt(struct nvme_transport_handle *hdl, struct nvme_capacity_mgmt_args *args);
+static inline void
+nvme_init_capacity_mgmt(struct nvme_passthru_cmd *cmd,
+		__u8 oper, __u16 elid, __u64 cap)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_capacity_mgmt;
+	cmd->cdw10 = NVME_FIELD_ENCODE(oper,
+			NVME_CAPACITY_MGMT_CDW10_OPER_SHIFT,
+			NVME_CAPACITY_MGMT_CDW10_OPER_MASK) |
+		      NVME_FIELD_ENCODE(elid,
+			NVME_CAPACITY_MGMT_CDW10_ELID_SHIFT,
+			NVME_CAPACITY_MGMT_CDW10_ELID_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(cap,
+			NVME_CAPACITY_MGMT_CDW11_CAPL_SHIFT,
+			NVME_CAPACITY_MGMT_CDW11_CAPL_MASK);
+	cmd->cdw12 = NVME_FIELD_ENCODE(cap >> 32,
+			NVME_CAPACITY_MGMT_CDW12_CAPU_SHIFT,
+			NVME_CAPACITY_MGMT_CDW12_CAPU_MASK);
+}
 
 /**
  * nvme_lockdown() - Issue lockdown command

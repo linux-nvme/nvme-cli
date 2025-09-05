@@ -638,29 +638,23 @@ static void test_directive_recv_stream_allocate(void)
 void test_capacity_mgmt(void)
 {
 	__u32 expected_result = 0x45, result = 0;
-
-	struct nvme_capacity_mgmt_args args = {
-		.result = &result,
-		.args_size = sizeof(args),
-		.cdw11 = 0x1234,
-		.cdw12 = 0x5678,
-		.element_id = 0x12,
-		.op = 0x3,
-	};
-
+	__u16 elid = 0x12;
+	__u64 cap = 0x0000567800001234;
+	__u8 op = 0x3;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_capacity_mgmt,
 		.nsid = NVME_NSID_NONE,
-		.cdw10 = args.op | args.element_id << 16,
-		.cdw11 = args.cdw11,
-		.cdw12 = args.cdw12,
+		.cdw10 = op | elid << 16,
+		.cdw11 = cap & 0xffffffff,
+		.cdw12 = cap >> 32,
 		.result = expected_result,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_capacity_mgmt(test_hdl, &args);
+	nvme_init_capacity_mgmt(&cmd, op, elid, cap);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");
