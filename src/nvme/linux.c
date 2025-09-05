@@ -1275,7 +1275,7 @@ static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 			version, cipher, hostnqn, subsysnqn);
 		return strlen(identity);
 	}
-	if (version > 1) {
+	if (version > 1 || !digest) {
 		errno = EINVAL;
 		return -1;
 	}
