@@ -496,6 +496,12 @@ struct nvme_ns {
 	~nvme_root() {
 		nvme_free_tree($self);
 	}
+	struct nvme_root* __enter__() {
+		return $self;
+	}
+	struct nvme_root* __exit__(PyObject *type, PyObject *value, PyObject *traceback) {
+		return $self;
+	}
 	void log_level(const char *level) {
 		int log_level = DEFAULT_LOGLEVEL;
 		if (!strcmp(level, "debug")) log_level = LOG_DEBUG;
@@ -559,6 +565,12 @@ struct nvme_ns {
 	~nvme_host() {
 		nvme_free_host($self);
 	}
+	struct nvme_host* __enter__() {
+		return $self;
+	}
+	struct nvme_host* __exit__(PyObject *type, PyObject *value, PyObject *traceback) {
+		return $self;
+	}
 	%feature("autodoc", SET_SYMNAME_DOCSTRING) set_symname;
 	void set_symname(const char *hostsymname) {
 		nvme_host_set_hostsymname($self, hostsymname);
@@ -598,6 +610,12 @@ struct nvme_ns {
 	}
 	~nvme_subsystem() {
 		nvme_free_subsystem($self);
+	}
+	struct nvme_subsystem* __enter__() {
+		return $self;
+	}
+	struct nvme_subsystem* __exit__(PyObject *type, PyObject *value, PyObject *traceback) {
+		return $self;
 	}
 	PyObject *__str__() {
 		return PyUnicode_FromFormat("nvme.subsystem(%s,%s)", STR_OR_NONE($self->name), STR_OR_NONE($self->subsysnqn));
@@ -663,6 +681,14 @@ struct nvme_ns {
 	}
 	~nvme_ctrl() {
 		nvme_free_ctrl($self);
+	}
+	struct nvme_ctrl* __enter__() {
+		return $self;
+	}
+	struct nvme_ctrl* __exit__(PyObject *type, PyObject *value, PyObject *traceback) {
+		if (nvme_ctrl_get_name($self))
+			nvme_disconnect_ctrl($self);
+		return $self;
 	}
 
 	%pythoncode %{
@@ -961,6 +987,12 @@ struct nvme_ns {
 	}
 	~nvme_ns() {
 		nvme_free_ns($self);
+	}
+	struct nvme_ns* __enter__() {
+		return $self;
+	}
+	struct nvme_ns* __exit__(PyObject *type, PyObject *value, PyObject *traceback) {
+		return $self;
 	}
 	PyObject *__str__() {
 		return PyUnicode_FromFormat("nvme.ns(%u)", $self->nsid);
