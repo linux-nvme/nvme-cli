@@ -345,6 +345,8 @@ _nvme () {
 				-s':alias for --sel'
 				--no-uuid':Skip UUID index search'
 				-n':alias for --no-uuid'
+				--all-ns':Send the command to all namespaces'
+				-a':alias for --all-ns'
 				)
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp get-error-injection options" _get_error_injection
@@ -368,6 +370,8 @@ _nvme () {
 				--output-format=':Output format: normal|json|binary'
 				-o ':alias for --output-format'
 				--timeout=':value for timeout'
+				--all-ns':Send the command to all namespaces'
+				-a':alias for --all-ns'
 				)
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp set-error-injection options" _set_error_injection
