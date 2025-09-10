@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme ocp get-error-injection' <device> [--no-uuid | -n]
-			[--sel=<select> | -s <select>]
+			[--sel=<select> | -s <select>] [--all-ns | -a]
 
 DESCRIPTION
 -----------
@@ -43,6 +43,11 @@ OPTIONS
 |3|Supported capabilities
 |4-7|Reserved
 |==================
+
+-a::
+--all-ns::
+	Send the command to all namespaces. This option is used to specify
+	whether to target all namespaces or no specific namespace.
 
 EXAMPLES
 --------

@@ -2857,7 +2857,7 @@ static int fw_activation_history_log(int argc, char **argv, struct command *cmd,
 	return ocp_fw_activation_history_log(argc, argv, cmd, plugin);
 }
 
-static int error_injection_get(struct nvme_dev *dev, const __u8 sel, bool uuid)
+static int error_injection_get(struct nvme_dev *dev, const __u8 sel, bool uuid, __u32 nsid)
 {
 	struct erri_get_cq_entry cq_entry;
 	int err;
@@ -2868,7 +2868,7 @@ static int error_injection_get(struct nvme_dev *dev, const __u8 sel, bool uuid)
 
 	struct nvme_get_features_args args = {
 		.result = (__u32 *)&cq_entry,
-		.data = entry,
+		.nsid = nsid,
 		.args_size = sizeof(args),
 		.fd = dev_fd(dev),
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -2891,22 +2891,23 @@ static int error_injection_get(struct nvme_dev *dev, const __u8 sel, bool uuid)
 		nvme_show_error("malloc: %s", strerror(errno));
 		return -errno;
 	}
+	args.data = entry;
 
 	err = nvme_cli_get_features(dev, &args);
 	if (!err) {
-		nvme_show_result("Number of Error Injecttions (feature: %#0*x): %#0*x (%s: %d)",
+		nvme_show_result("Number of Error Injections (feature: %#0*x): %#0*x (%s: %d)",
 				 fid ? 4 : 2, fid, cq_entry.nume ? 10 : 8, cq_entry.nume,
 				 nvme_select_to_string(sel), cq_entry.nume);
 		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(fid, *args.result);
 		for (i = 0; i < cq_entry.nume; i++) {
 			printf("Entry: %d, Flags: %x (%s%s), Type: %x (%s), NRTDP: %d\n", i,
-			       entry->flags, entry->enable ? "Enabled" : "Disabled",
-			       entry->single ? ", Single instance" : "", entry->type,
-			       erri_type_to_string(entry->type), entry->nrtdp);
+			       entry[i].flags, entry[i].enable ? "Enabled" : "Disabled",
+			       entry[i].single ? ", Single instance" : "", entry[i].type,
+			       erri_type_to_string(entry[i].type), entry[i].nrtdp);
 		}
 	} else {
-		nvme_show_error("Could not get feature: %#0*x.", fid ? 4 : 2, fid);
+		nvme_show_error("Could not get feature: %#0*x. %d", fid ? 4 : 2, fid);
 	}
 
 	return err;
@@ -2919,6 +2920,7 @@ static int get_error_injection(int argc, char **argv, struct command *cmd, struc
 	struct config {
 		__u8 sel;
 	};
+	__u32 nsid;
 	struct config cfg = { 0 };
 
 	_cleanup_nvme_dev_ struct nvme_dev *dev = NULL;
@@ -2926,6 +2928,7 @@ static int get_error_injection(int argc, char **argv, struct command *cmd, struc
 	OPT_ARGS(opts) = {
 		OPT_BYTE("sel", 's', &cfg.sel, sel),
 		OPT_FLAG("no-uuid", 'n', NULL, no_uuid),
+		OPT_FLAG("all-ns", 'a', NULL, all_ns),
 		OPT_END()
 	};
 
@@ -2933,7 +2936,15 @@ static int get_error_injection(int argc, char **argv, struct command *cmd, struc
 	if (err)
 		return err;
 
-	return error_injection_get(dev, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"));
+	/*
+	 * Different spec versions ask for different nsid values
+	 * OCP v1.0 - NSID: Shall be set to zero
+	 * OCP v2.0r21 - NSID: Shall be set to FFFFFFFFh.
+	 * OCP v2.5 - NSID: The host should either clear this to zero or set this to FFFFFFFFh
+	 */
+	nsid = argconfig_parse_seen(opts, "all-ns") ? NVME_NSID_ALL : 0;
+
+	return error_injection_get(dev, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"), nsid);
 }
 
 static int error_injection_set(struct nvme_dev *dev, struct erri_config *cfg, bool uuid, __u32 nsid)
