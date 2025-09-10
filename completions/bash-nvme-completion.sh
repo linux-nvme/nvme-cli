@@ -1638,11 +1638,11 @@ plugin_ocp_opts () {
 		opts+=" --output-file= -o"
 			;;
 		"get-error-injection")
-		opts+=" --sel= -s --no-uuid -n"
+		opts+=" --sel= -s --no-uuid -n --all-ns -a"
 			;;
 		"set-error-injection")
 		opts+=" --data= -d --number= -n --no-uuid -N --type= -t \
-			--nrtdp= -r --verbose -v --output-format -o --timeout="
+			--nrtdp= -r --verbose -v --output-format -o --timeout= --all-ns -a"
 			;;
 		"hardware-component-log")
 		opts+=" --comp-id= -i --list -l --verbose -v \
