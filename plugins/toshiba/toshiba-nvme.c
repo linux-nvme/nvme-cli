@@ -550,21 +550,8 @@ static int clear_correctable_errors(int argc, char **argv, struct command *acmd,
 	if (err)
 		goto end;
 
-	struct nvme_set_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= feature_id,
-		.nsid		= namespace_id,
-		.cdw11		= value,
-		.cdw12		= cdw12,
-		.save		= save,
-		.uuidx		= 0,
-		.cdw15		= 0,
-		.data_len	= 0,
-		.data		= NULL,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-	err = nvme_set_features(hdl, &args);
+	err = nvme_set_features(hdl, namespace_id, feature_id, save, value, cdw12,
+			0, 0, 0, NULL, 0, &result);
 	if (err)
 		fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n",
 			__func__);

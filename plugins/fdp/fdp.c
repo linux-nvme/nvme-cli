@@ -429,11 +429,11 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 static int fdp_set_events(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Enable or disable FDP events";
-	const char *namespace_id = "Namespace identifier";
+	const char *nsid = "Namespace identifier";
 	const char *enable = "Enable/disable event";
 	const char *event_types = "Comma-separated list of event types";
 	const char *ph = "Placement Handle";
-	const char *save = "specifies that the controller shall save the attribute";
+	const char *sv = "specifies that the controller shall save the attribute";
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -443,23 +443,23 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 	int nev;
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		__u16	ph;
 		char	*event_types;
 		bool	enable;
-		bool	save;
+		bool	sv;
 	};
 
 	struct config cfg = {
 		.enable	= false,
-		.save	= false,
+		.sv	= false,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",     'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("namespace-id",     'n', &cfg.nsid,         nsid),
 		OPT_SHRT("placement-handle", 'p', &cfg.ph,           ph),
 		OPT_FLAG("enable",           'e', &cfg.enable,       enable),
-		OPT_FLAG("save",             's', &cfg.save,         save),
+		OPT_FLAG("save",             's', &cfg.sv,		     sv),
 		OPT_LIST("event-types",      't', &cfg.event_types,  event_types),
 		OPT_END()
 	};
@@ -480,35 +480,24 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 		return -EINVAL;
 	}
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			if (errno != ENOTTY) {
 				fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
 				return err;
 			}
 
-			cfg.namespace_id = NVME_NSID_ALL;
+			cfg.nsid = NVME_NSID_ALL;
 		}
 	}
 
 	for (unsigned int i = 0; i < nev; i++)
 		buf[i] = (__u8)evts[i];
 
-	struct nvme_set_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= NVME_FEAT_FID_FDP_EVENTS,
-		.save		= cfg.save,
-		.nsid		= cfg.namespace_id,
-		.cdw11		= (nev << 16) | cfg.ph,
-		.cdw12		= cfg.enable ? 0x1 : 0x0,
-		.data_len	= sizeof(buf),
-		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
-	};
-
-	err = nvme_set_features(hdl, &args);
+	err = nvme_set_features(hdl, cfg.nsid, NVME_FEAT_FID_FDP_EVENTS, cfg.sv,
+			(nev << 16) | cfg.ph, cfg.enable ? 0x1 : 0x0,
+			0, 0, 0, buf, sizeof(buf), NULL);
 	if (err) {
 		nvme_show_status(err);
 		return err;;
@@ -531,16 +520,6 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 	bool enabling_conf_idx = false;
 	__u32 result;
 	int err = -1;
-
-	struct nvme_set_features_args setf_args = {
-		.args_size	= sizeof(setf_args),
-		.fid		= NVME_FEAT_FID_FDP,
-		.save		= 1,
-		.nsid		= NVME_NSID_ALL,
-		.data_len	= 0,
-		.data		= NULL,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-	};
 
 	struct config {
 		bool disable;
@@ -601,10 +580,9 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 		return err;
 	}
 
-	setf_args.cdw11		= cfg.endgid;
-	setf_args.cdw12		= cfg.fdpcidx << 8 | (!cfg.disable);
-
-	err = nvme_set_features(hdl, &setf_args);
+	err = nvme_set_features(hdl, NVME_NSID_ALL, NVME_FEAT_FID_FDP, 1, cfg.endgid,
+			cfg.fdpcidx << 8 | (!cfg.disable),
+			0, 0, 0, NULL, 0, NULL);
 	if (err) {
 		nvme_show_status(err);
 		return err;

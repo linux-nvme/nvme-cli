@@ -273,14 +273,8 @@ __u64 micros(void)
 
 int wltracker_config(struct wltracker *wlt, union WorkloadLogEnable *we)
 {
-	struct nvme_set_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= FID,
-		.cdw11		= we->dword,
-		.uuidx		= wlt->uuid_index,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-	};
-	return nvme_set_features(wlt->hdl, &args);
+	return nvme_set_features(wlt->hdl, 0, FID, 0, we->dword, 0, 0, 0,
+			wlt->uuid_index, NULL, 0, NULL);
 }
 
 static int wltracker_show_newer_entries(struct wltracker *wlt)
@@ -609,14 +603,8 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		we.triggerEnable = true;
 		we.triggerDelta = cfg.trigger_on_delta;
 		we.triggerSynchronous = !cfg.trigger_on_latency;
-		struct nvme_set_features_args args = {
-			.args_size	= sizeof(args),
-			.fid		= 0xf5,
-			.cdw11		= cfg.trigger_treshold,
-			.uuidx		= wlt.uuid_index,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		};
-		err = nvme_set_features(wlt.hdl, &args);
+		err = nvme_set_features(wlt.hdl, 0, 0xf5, 0, cfg.trigger_treshold, 0,
+				0, wlt.uuid_index, 0, NULL, 0, NULL);
 		if (err < 0) {
 			nvme_show_error("Trigger Threshold set-feature: %s", nvme_strerror(errno));
 			return err;

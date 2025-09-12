@@ -6711,11 +6711,11 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 		"for each Feature are vendor-specific and may not be modified."
 		"Use get-feature to determine which Features are supported by"
 		"the controller and are saveable/changeable.";
-	const char *feature_id = "feature identifier (required)";
+	const char *fid = "feature identifier (required)";
 	const char *data = "optional file for feature data (default stdin)";
 	const char *value = "new value of feature (required)";
 	const char *cdw12 = "feature cdw12, if used";
-	const char *save = "specifies that the controller shall save the attribute";
+	const char *sv = "specifies that the controller shall save the attribute";
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -6726,35 +6726,35 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	nvme_print_flags_t flags;
 
 	struct config {
-		__u32	namespace_id;
-		__u8	feature_id;
+		__u32	nsid;
+		__u8	fid;
 		__u64	value;
 		__u32	cdw12;
-		__u8	uuid_index;
+		__u8	uidx;
 		__u32	data_len;
 		char	*file;
-		bool	save;
+		bool	sv;
 	};
 
 	struct config cfg = {
-		.namespace_id	= 0,
-		.feature_id	= 0,
+		.nsid		= 0,
+		.fid		= 0,
 		.value		= 0,
-		.uuid_index	= 0,
+		.uidx		= 0,
 		.data_len	= 0,
 		.file		= "",
-		.save		= false,
+		.sv			= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		  OPT_BYTE("feature-id",   'f', &cfg.feature_id,   feature_id, feature_name),
-		  OPT_SUFFIX("value",      'V', &cfg.value,        value),
-		  OPT_UINT("cdw12",        'c', &cfg.cdw12,        cdw12),
-		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index_specify),
-		  OPT_UINT("data-len",     'l', &cfg.data_len,     buf_len),
-		  OPT_FILE("data",         'd', &cfg.file,         data),
-		  OPT_FLAG("save",         's', &cfg.save,         save));
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,     namespace_desired),
+		  OPT_BYTE("feature-id",   'f', &cfg.fid,      fid, feature_name),
+		  OPT_SUFFIX("value",      'V', &cfg.value,    value),
+		  OPT_UINT("cdw12",        'c', &cfg.cdw12,    cdw12),
+		  OPT_BYTE("uuid-index",   'U', &cfg.uidx,     uuid_index_specify),
+		  OPT_UINT("data-len",     'l', &cfg.data_len, buf_len),
+		  OPT_FILE("data",         'd', &cfg.file,     data),
+		  OPT_FLAG("save",         's', &cfg.sv,       sv));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -6767,28 +6767,28 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	}
 
 	if (!argconfig_parse_seen(opts, "namespace-id")) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			if (errno != ENOTTY) {
 				nvme_show_error("get-namespace-id: %s", nvme_strerror(err));
 				return -errno;
 			}
-			cfg.namespace_id = NVME_NSID_ALL;
+			cfg.nsid = NVME_NSID_ALL;
 		}
 	}
 
-	if (!cfg.feature_id) {
+	if (!cfg.fid) {
 		nvme_show_error("feature-id required param");
 		return -EINVAL;
 	}
 
-	if (cfg.uuid_index > 127) {
-		nvme_show_error("invalid uuid index param: %u", cfg.uuid_index);
+	if (cfg.uidx > 127) {
+		nvme_show_error("invalid uuid index param: %u", cfg.uidx);
 		return -1;
 	}
 
 	if (!cfg.data_len)
-		nvme_get_feature_length(cfg.feature_id, cfg.value,
+		nvme_get_feature_length(cfg.fid, cfg.value,
 					 NVME_DATA_TFR_HOST_TO_CTRL,
 					 &cfg.data_len);
 
@@ -6805,7 +6805,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 		 * should use the buffer method if the value exceeds this
 		 * length.
 		 */
-		if (cfg.feature_id == NVME_FEAT_FID_TIMESTAMP &&
+		if (cfg.fid == NVME_FEAT_FID_TIMESTAMP &&
 		    argconfig_parse_seen(opts, "value")) {
 			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
 		} else {
@@ -6827,33 +6827,20 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 		}
 	}
 
-	struct nvme_set_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= cfg.feature_id,
-		.nsid		= cfg.namespace_id,
-		.cdw11		= cfg.value,
-		.cdw12		= cfg.cdw12,
-		.save		= cfg.save,
-		.uuidx		= cfg.uuid_index,
-		.cdw15		= 0,
-		.data_len	= cfg.data_len,
-		.data		= buf,
-		.timeout	= nvme_cfg.timeout,
-		.result		= &result,
-	};
-	err = nvme_set_features(hdl, &args);
+	err = nvme_set_features(hdl, cfg.nsid, cfg.fid, cfg.sv, cfg.value, cfg.cdw12,
+			0, cfg.uidx, 0, buf, cfg.data_len, &result);
 	if (err < 0) {
 		nvme_show_error("set-feature: %s", nvme_strerror(err));
 	} else if (!err) {
 		printf("set-feature:%#0*x (%s), value:%#0*"PRIx64", cdw12:%#0*x, save:%#x\n",
-		       cfg.feature_id ? 4 : 2, cfg.feature_id,
-		       nvme_feature_to_string(cfg.feature_id),
+		       cfg.fid ? 4 : 2, cfg.fid,
+		       nvme_feature_to_string(cfg.fid),
 		       cfg.value ? 10 : 8, (uint64_t)cfg.value,
-		       cfg.cdw12 ? 10 : 8, cfg.cdw12, cfg.save);
-		if (cfg.feature_id == NVME_FEAT_FID_LBA_STS_INTERVAL)
+		       cfg.cdw12 ? 10 : 8, cfg.cdw12, cfg.sv);
+		if (cfg.fid == NVME_FEAT_FID_LBA_STS_INTERVAL)
 			nvme_show_lba_status_info(result);
 		if (buf) {
-			if (cfg.feature_id == NVME_FEAT_FID_LBA_RANGE)
+			if (cfg.fid == NVME_FEAT_FID_LBA_RANGE)
 				nvme_show_lba_range((struct nvme_lba_range_type *)buf, result, 0);
 			else
 				d(buf, cfg.data_len, 16, 1);

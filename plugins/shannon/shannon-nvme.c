@@ -335,21 +335,8 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 		}
 	}
 
-	struct nvme_set_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= cfg.feature_id,
-		.nsid		= cfg.namespace_id,
-		.cdw11		= cfg.value,
-		.cdw12		= 0,
-		.save		= cfg.save,
-		.uuidx		= 0,
-		.cdw15		= 0,
-		.data_len	= cfg.data_len,
-		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-	err = nvme_set_features(hdl, &args);
+	err = nvme_set_features(hdl, cfg.namespace_id, cfg.feature_id, cfg.save,
+			cfg.value, 0, 0, 0, 0, buf, cfg.data_len, &result);
 	if (err < 0) {
 		perror("set-feature");
 		return -errno;

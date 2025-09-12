@@ -590,16 +590,9 @@ static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin
 	if (err)
 		return err;
 
-	struct nvme_set_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= lm_cdq_feature_id,
-		.cdw11		= cfg.cdqid |
-				  ((cfg.tpt >= 0) ? NVME_SET(1, LM_CTRL_DATA_QUEUE_ETPT) : 0),
-		.cdw12		= cfg.hp,
-		.cdw13		= cfg.tpt
-	};
-
-	err = nvme_set_features(hdl, &args);
+	err = nvme_set_features(hdl, 0, lm_cdq_feature_id, 0, cfg.cdqid |
+			((cfg.tpt >= 0) ? NVME_SET(1, LM_CTRL_DATA_QUEUE_ETPT) : 0),
+			cfg.hp, cfg.tpt, 0, 0, NULL, 0, NULL);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_set_features() failed %s", nvme_strerror(errno));
 	else if (err)

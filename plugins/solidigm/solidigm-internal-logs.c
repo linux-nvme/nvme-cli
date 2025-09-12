@@ -561,6 +561,7 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 	const char *file_name;
 	struct nvme_feat_host_behavior prev = {0};
 	bool host_behavior_changed = false;
+	struct nvme_passthru_cmd cmd;
 	struct log log = {0};
 
 	err = ilog_ensure_dump_id_ctrl(hdl, ilog);
@@ -578,7 +579,8 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 			struct nvme_feat_host_behavior da4_enable = prev;
 
 			da4_enable.etdas = 1;
-			nvme_set_features_host_behavior(hdl, 0, &da4_enable);
+			nvme_init_set_features_host_behavior(&cmd, 0, &da4_enable);
+			nvme_submit_admin_passthru(hdl, &cmd, NULL);
 			host_behavior_changed = true;
 		}
 	}
@@ -604,8 +606,10 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 		return -EINVAL;
 	}
 
-	if (host_behavior_changed)
-		nvme_set_features_host_behavior(hdl, 0, &prev);
+	if (host_behavior_changed) {
+		nvme_init_set_features_host_behavior(&cmd, 0, &prev);
+		nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	}
 
 	if (err)
 		return err;

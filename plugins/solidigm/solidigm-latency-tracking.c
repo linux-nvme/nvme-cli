@@ -299,22 +299,9 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 		return -EINVAL;
 	}
 
-	struct nvme_set_features_args args_set = {
-		.args_size	= sizeof(args_set),
-		.uuidx		= lt->uuid_index,
-		.fid		= LATENCY_TRACKING_FID,
-		.nsid		= 0,
-		.cdw11		= lt->cfg.enable,
-		.cdw12		= 0,
-		.save		= 0,
-		.cdw15		= 0,
-		.data_len	= LATENCY_TRACKING_FID_DATA_LEN,
-		.data		= NULL,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-
-	err = nvme_set_features(lt->hdl, &args_set);
+	err = nvme_set_features(lt->hdl, 0, LATENCY_TRACKING_FID, 0,
+			lt->cfg.enable, 0, 0, lt->uuid_index, 0, NULL,
+			LATENCY_TRACKING_FID_DATA_LEN, &result);
 	if (err > 0) {
 		nvme_show_status(err);
 	} else if (err < 0) {

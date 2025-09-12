@@ -44,23 +44,8 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 		}
 	}
 
-	struct nvme_set_features_args args = {
-		.result = &result,
-		.data = NULL,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = 0,
-		.cdw11 = clear,
-		.cdw12 = 0,
-		.cdw13 = 0,
-		.cdw15 = 0,
-		.data_len = 0,
-		.save = 0,
-		.uuidx = uuid_index,
-		.fid = fid,
-	};
-
-	err = nvme_set_features(hdl, &args);
+	err = nvme_set_features(hdl, 0, fid, 0, clear, 0, 0, uuid_index, 0, NULL, 0,
+			&result);
 
 	if (err == 0)
 		printf("Success : %s\n", desc);

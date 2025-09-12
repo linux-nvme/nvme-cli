@@ -466,7 +466,7 @@ static void pel_set_feature_event(void *pevent_log_info, __u32 offset)
 
 	printf("Set Feature Event Entry:\n");
 	dword_cnt = NVME_SET_FEAT_EVENT_DW_COUNT(set_feat_event->layout);
-	fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), FEATURES_CDW10_FID);
+	fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), SET_FEATURES_CDW10_FID);
 	cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
 
 	printf("Set Feature ID: 0x%02x (%s), value: 0x%08x\n", fid, nvme_feature_to_string(fid),
@@ -5176,7 +5176,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		break;
 	case NVME_FEAT_FID_PLM_CONFIG:
 		printf("\tPredictable Latency Window Enabled: %s\n",
-		       NVME_FEAT_PLM_PLME(result) ? "True" : "False");
+		       NVME_FEAT_PLM_LPE(result) ? "True" : "False");
 		if (buf)
 			stdout_plm_config((struct nvme_plm_config *)buf);
 		break;

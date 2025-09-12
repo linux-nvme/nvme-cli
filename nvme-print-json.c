@@ -1781,7 +1781,7 @@ static void json_pel_set_feature(void *pevent_log_info, __u32 offset,
 				 struct json_object *valid_attrs)
 {
 	struct nvme_set_feature_event *set_feat_event = pevent_log_info + offset;
-	int fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), FEATURES_CDW10_FID);
+	int fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), SET_FEATURES_CDW10_FID);
 	int cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
 	int dword_cnt = NVME_SET_FEAT_EVENT_DW_COUNT(set_feat_event->layout);
 	unsigned char *mem_buf;
