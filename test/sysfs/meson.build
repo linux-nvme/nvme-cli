@@ -16,6 +16,7 @@ if diff.found()
 
     tree_data = [
         'tree-pcie',
+        'tree-apple-nvme',
     ]
 
     tree_diff = find_program('tree-diff.sh')

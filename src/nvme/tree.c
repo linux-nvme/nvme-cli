@@ -1417,7 +1417,8 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 		return NULL;
 	}
 	if (strncmp(transport, "loop", 4) &&
-	    strncmp(transport, "pcie", 4) && !traddr) {
+	    strncmp(transport, "pcie", 4) &&
+	    strncmp(transport, "apple-nvme", 10) && !traddr) {
 		nvme_msg(r, LOG_ERR, "No transport address for '%s'\n",
 			 transport);
 	       errno = EINVAL;
@@ -2166,7 +2167,8 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_root_t r, nvme_subsystem_t s,
 			goto skip_address;
 
 		/* Older kernel don't support pcie transport addresses */
-		if (strcmp(transport, "pcie")) {
+		if (strcmp(transport, "pcie") &&
+		    strcmp(transport, "apple-nvme")) {
 			errno = ENXIO;
 			return NULL;
 		}
@@ -2187,7 +2189,8 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_root_t r, nvme_subsystem_t s,
 		}
 		if (p)
 			addr = strdup(p);
-	} else if (!strcmp(transport, "pcie")) {
+	} else if (!strcmp(transport, "pcie") ||
+		   !strcmp(transport, "apple-nvme")) {
 		/* The 'address' string is the transport address */
 		traddr = addr;
 	} else {
