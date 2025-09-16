@@ -814,9 +814,11 @@ static int derive_retained_key_compat(int hmac, const char *hostnqn,
 			       size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ctx = NULL;
-	uint16_t length = key_len & 0xFFFF;
+	_cleanup_free_ uint8_t *hkdf_info = NULL;
 	const EVP_MD *md;
 	size_t hmac_len;
+	char *pos;
+	int ret;
 
 	if (hmac == NVME_HMAC_ALG_NONE) {
 		memcpy(retained, configured, key_len);
@@ -847,23 +849,28 @@ static int derive_retained_key_compat(int hmac, const char *hostnqn,
 		errno = ENOKEY;
 		return -1;
 	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)&length, 2) <= 0) {
+
+	/* +1 byte so that the snprintf terminating null can not overflow */
+	hkdf_info = malloc(HKDF_INFO_MAX_LEN + 1);
+	if (!hkdf_info) {
+		errno = ENOMEM;
+		return -1;
+	}
+
+	pos = (char *)hkdf_info;
+	*(uint16_t *)pos = cpu_to_le16(key_len);
+	pos += sizeof(uint16_t);
+
+	ret = snprintf(pos, HKDF_INFO_LABEL_MAX + 1,
+		       "tls13 HostNQN%s", hostnqn);
+	if (ret <= 0 || ret > HKDF_INFO_LABEL_MAX) {
 		errno = ENOKEY;
 		return -1;
 	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)"tls13 ", 6) <= 0) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)"HostNQN", 7) <= 0) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)hostnqn, strlen(hostnqn)) <= 0) {
+	pos += ret;
+
+	if (EVP_PKEY_CTX_add1_hkdf_info(ctx, hkdf_info,
+					(pos - (char *)hkdf_info)) <= 0) {
 		errno = ENOKEY;
 		return -1;
 	}
@@ -1002,9 +1009,11 @@ static int derive_tls_key_compat(int version, unsigned char cipher,
 			  unsigned char *psk, size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ctx = NULL;
-	uint16_t length = key_len & 0xFFFF;
+	_cleanup_free_ uint8_t *hkdf_info = NULL;
 	const EVP_MD *md;
 	size_t hmac_len;
+	char *pos;
+	int ret;
 
 	md = select_hmac(cipher, &hmac_len);
 	if (!md || !hmac_len) {
@@ -1030,35 +1039,50 @@ static int derive_tls_key_compat(int version, unsigned char cipher,
 		errno = ENOKEY;
 		return -1;
 	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)&length, 2) <= 0) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)"tls13 ", 6) <= 0) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)"nvme-tls-psk", 12) <= 0) {
-		errno = ENOKEY;
-		return -1;
-	}
-	if (version == 1) {
-		char hash_str[5];
 
-		sprintf(hash_str, "%02d ", cipher);
-		if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-				(const unsigned char *)hash_str,
-				strlen(hash_str)) <= 0) {
+	/* +1 byte so that the snprintf terminating null can not overflow */
+	hkdf_info = malloc(HKDF_INFO_MAX_LEN + 1);
+	if (!hkdf_info) {
+		errno = ENOMEM;
+		return -1;
+	}
+
+	pos = (char *)hkdf_info;
+	*(uint16_t *)pos = cpu_to_le16(key_len);
+	pos += sizeof(uint16_t);
+
+	ret = snprintf(pos, HKDF_INFO_LABEL_MAX + 1, "tls13 nvme-tls-psk");
+	if (ret <= 0 || ret > HKDF_INFO_LABEL_MAX) {
+		errno = ENOKEY;
+		return -1;
+	}
+	pos += ret;
+
+	switch (version) {
+	case 0:
+		ret = snprintf(pos, HKDF_INFO_CONTEXT_MAX + 1, "%s", context);
+		if (ret <= 0 || ret > HKDF_INFO_CONTEXT_MAX) {
 			errno = ENOKEY;
 			return -1;
 		}
+		pos += ret;
+		break;
+	case 1:
+		ret = snprintf(pos, HKDF_INFO_CONTEXT_MAX + 1, "%02d %s",
+			       cipher, context);
+		if (ret <= 0 || ret > HKDF_INFO_CONTEXT_MAX) {
+			errno = ENOKEY;
+			return -1;
+		}
+		pos += ret;
+		break;
+	default:
+		errno = ENOKEY;
+		return -1;
 	}
-	if (EVP_PKEY_CTX_add1_hkdf_info(ctx,
-			(const unsigned char *)context,
-			strlen(context)) <= 0) {
+
+	if (EVP_PKEY_CTX_add1_hkdf_info(ctx, hkdf_info,
+					(pos - (char *)hkdf_info)) <= 0) {
 		errno = ENOKEY;
 		return -1;
 	}
