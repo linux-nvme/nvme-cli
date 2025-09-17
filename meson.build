@@ -252,6 +252,22 @@ else
   conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
 endif
 
+if openssl_dep.found()
+  if openssl_dep.type_name() != 'internal'
+    # Check for a bug in the EVP_PKEY_CTX_add1_hkdf_info implementation
+    res = cc.run(
+        files('test/hkdf_add1.c'),
+        dependencies: [openssl_dep],
+        name: 'check hkdf_add1'
+    )
+    if res.returncode() == 1
+      warning('EVP_PKEY_CTX_add1_hkdf_info bahaves incorrectly')
+    else
+      message('EVP_PKEY_CTX_add1_hkdf_info behaves sanely')
+    endif
+  endif
+endif
+
 ################################################################################
 substs = configuration_data()
 substs.set('NAME',    meson.project_name())
