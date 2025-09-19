@@ -3,7 +3,9 @@
 #include <unistd.h>
 #include <malloc.h>
 #include <string.h>
+#include <dlfcn.h>
 #include <sys/mman.h>
+#include <ccan/likely/likely.h>
 
 #include "mem.h"
 
@@ -107,3 +109,56 @@ void nvme_free_huge(struct nvme_mem_huge *mh)
 	mh->len = 0;
 	mh->p = NULL;
 }
+
+#ifdef HAVE_WEAK_MALLOC
+void *malloc(size_t size)
+{
+	static void *(*malloc_sym)(size_t size);
+	void *result = NULL;
+
+	if (!malloc_sym)
+		malloc_sym = dlsym(RTLD_NEXT, "malloc");
+
+	if (malloc_sym)
+		result = malloc_sym(size);
+
+	if (unlikely(!result))
+		abort();
+
+	return result;
+}
+
+void *calloc(size_t number, size_t size)
+{
+	static void *(*calloc_sym)(size_t number, size_t size);
+	void *result = NULL;
+
+	if (!calloc_sym)
+		calloc_sym = dlsym(RTLD_NEXT, "calloc");
+
+	if (calloc_sym)
+		result = calloc_sym(number, size);
+
+	if (unlikely(!result))
+		abort();
+
+	return result;
+}
+
+void *realloc(void *ptr, size_t size)
+{
+	static void *(*realloc_sym)(void *ptr, size_t size);
+	void *result = NULL;
+
+	if (!realloc_sym)
+		realloc_sym = dlsym(RTLD_NEXT, "realloc");
+
+	if (realloc_sym)
+		result = realloc_sym(ptr, size);
+
+	if (unlikely(!result))
+		abort();
+
+	return result;
+}
+#endif /* HAVE_WEAK_MALLOC */
