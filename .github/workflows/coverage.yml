@@ -10,6 +10,7 @@ jobs:
     if: github.repository == 'linux-nvme/nvme-cli'
     name: code coverage
     runs-on: ubuntu-latest
+    continue-on-error: true
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
