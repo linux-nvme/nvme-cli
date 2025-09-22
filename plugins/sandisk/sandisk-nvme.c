@@ -487,11 +487,88 @@ static int sndk_clear_assert_dump(int argc, char **argv,
 	return run_wdc_clear_assert_dump(argc, argv, command, plugin);
 }
 
+#define SNDK_NVME_SN861_DRIVE_RESIZE_OPCODE  0xD1
+#define SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE  0x1000
+
+static int sndk_do_sn861_drive_resize(struct nvme_dev *dev,
+		uint64_t new_size,
+		__u32 *result)
+{
+	int ret;
+	struct nvme_passthru_cmd admin_cmd;
+	uint8_t buffer[SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE] = {0};
+
+	memset(&admin_cmd, 0, sizeof(struct nvme_passthru_cmd));
+	admin_cmd.opcode = SNDK_NVME_SN861_DRIVE_RESIZE_OPCODE;
+	admin_cmd.cdw10 = 0x00000040;
+	admin_cmd.cdw12 = 0x00000103;
+	admin_cmd.cdw13 = 0x00000001;
+
+	memcpy(buffer, &new_size, sizeof(new_size));
+	admin_cmd.addr = (__u64)(uintptr_t)buffer;
+	admin_cmd.data_len = SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE;
+
+	ret = nvme_submit_admin_passthru(dev_fd(dev), &admin_cmd, result);
+	return ret;
+}
+
 static int sndk_drive_resize(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin)
 {
-	return run_wdc_drive_resize(argc, argv, command, plugin);
+	const char *desc = "Send a Resize command.";
+	const char *size = "The new size (in GB) to resize the drive to.";
+	uint64_t capabilities = 0;
+	struct nvme_dev *dev;
+	nvme_root_t r;
+	int ret;
+	uint32_t device_id = -1, vendor_id = -1;
+	__u32 result;
+
+	struct config {
+		uint64_t size;
+	};
+
+	struct config cfg = {
+		.size = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("size", 's', &cfg.size, size),
+		OPT_END()
+	};
+
+	ret = parse_and_open(&dev, argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	r = nvme_scan(NULL);
+	sndk_check_device(r, dev);
+	capabilities = sndk_get_drive_capabilities(r, dev);
+	ret = sndk_get_pci_ids(r, dev, &device_id, &vendor_id);
+
+	if (((capabilities & SNDK_DRIVE_CAP_RESIZE) == SNDK_DRIVE_CAP_RESIZE) &&
+		((device_id == SNDK_NVME_SN861_DEV_ID_U2) ||
+		 (device_id == SNDK_NVME_SN861_DEV_ID_E3S))) {
+		ret = sndk_do_sn861_drive_resize(dev, cfg.size, &result);
+
+		if (!ret) {
+			fprintf(stderr, "The drive-resize command was successful.  A system ");
+			fprintf(stderr, "shutdown is required to complete the operation.\n");
+		} else
+			fprintf(stderr, "ERROR: SNDK: %s failure, ret: %d, result: 0x%x\n",
+					__func__, ret, result);
+	} else {
+		/* Fallback to WDC plugin command if otherwise not supported */
+		nvme_free_tree(r);
+		dev_close(dev);
+		return run_wdc_drive_resize(argc, argv, command, plugin);
+	}
+
+	nvme_show_status(ret);
+	nvme_free_tree(r);
+	dev_close(dev);
+	return ret;
 }
 
 static int sndk_vs_fw_activate_history(int argc, char **argv,
