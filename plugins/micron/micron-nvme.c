@@ -742,20 +742,7 @@ static int micron_smbus_option(int argc, char **argv,
 		else
 			printf("Failed to enabled SMBus on drive\n");
 	} else if (!strcmp(opt.option, "status")) {
-		struct nvme_get_features_args args = {
-			.args_size	= sizeof(args),
-			.fid		= fid,
-			.nsid		= 1,
-			.sel		= opt.value,
-			.cdw11		= 0,
-			.uuidx		= 0,
-			.data_len	= 0,
-			.data		= NULL,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= &result,
-		};
-
-		err = nvme_get_features(hdl, &args);
+		err = nvme_get_features(hdl, 1, fid, opt.value, 0, 0, NULL, 0, &result);
 		if (!err)
 			printf("SMBus status on the drive: %s (returns %s temperature)\n",
 				   (result & 1) ? "enabled" : "disabled",
@@ -2440,20 +2427,8 @@ static int GetFeatureSettings(struct nvme_transport_handle *hdl, const char *dir
 			len = 0;
 			bufp = NULL;
 		}
-
-	struct nvme_get_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= fmap[i].id,
-		.nsid		= 1,
-		.sel		= 0,
-		.cdw11		= 0x0,
-		.uuidx		= 0,
-		.data_len	= len,
-		.data		= bufp,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &attrVal,
-	};
-		err = nvme_get_features(hdl, &args);
+		err = nvme_get_features(hdl, 1, fmap[i].id, 0, 0x0, 0, bufp, len,
+				&attrVal);
 		if (!err) {
 			sprintf(msg, "feature: 0x%X", fmap[i].id);
 			WriteData((__u8 *)&attrVal, sizeof(attrVal), dir, fmap[i].file, msg);
@@ -2948,20 +2923,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 		return -1;
 	}
 
-	struct nvme_get_features_args g_args = {
-		.args_size	= sizeof(g_args),
-		.fid			= fid,
-		.nsid		= 0,
-		.sel		= 0,
-	.cdw11		= 0,
-	.uuidx		= 0,
-	.data_len	= 0,
-	.data		= NULL,
-	.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-	.result		= &result,
-	};
-
-	err = nvme_get_features(hdl, &g_args);
+	err = nvme_get_features(hdl, 0, fid, 0, 0, 0, NULL, 0, &result);
 	if (err) {
 		printf("Failed to retrieve latency monitoring feature status\n");
 		return err;
@@ -3358,20 +3320,8 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 		else
 			printf("Failed to disable controller telemetry option\n");
 	} else if (!strcmp(opt.option, "status")) {
-		struct nvme_get_features_args args = {
-			.args_size	= sizeof(args),
-			.fid		= fid,
-			.nsid		= 1,
-			.sel		= opt.select & 0x3,
-			.cdw11		= 0,
-			.uuidx		= 0,
-			.data_len	= 0,
-			.data		= NULL,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= &result,
-		};
-
-		err = nvme_get_features(hdl, &args);
+		err = nvme_get_features(hdl, 1, fid, opt.select & 0x3, 0, 0, NULL, 0,
+				&result);
 		if (!err)
 			printf("Controller telemetry option : %s\n",
 				   (result) ? "enabled" : "disabled");

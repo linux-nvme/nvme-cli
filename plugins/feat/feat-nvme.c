@@ -67,18 +67,7 @@ static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 			return -ENOMEM;
 	}
 
-	struct nvme_get_features_args args = {
-		.args_size = sizeof(args),
-		.fid = fid,
-		.sel = sel,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = &result,
-		.cdw11 = cdw11,
-		.data = buf,
-		.data_len = len,
-	};
-
-	err = nvme_get_features(hdl, &args);
+	err = nvme_get_features(hdl, 0, fid, sel, cdw11, 0, buf, len, &result);
 
 	nvme_show_init();
 
@@ -396,7 +385,8 @@ static int temp_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	if (sv)
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
-	err = nvme_get_features_temp_thresh(hdl, sel, cfg->tmpsel, cfg->thsel, &result);
+	nvme_init_get_features_temp_thresh(&cmd, sel, cfg->tmpsel, cfg->thsel);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!err) {
 		nvme_feature_decode_temp_threshold(result, &tmpth, &tmpsel, &thsel, &tmpthh);
 		if (!argconfig_parse_seen(opts, "tmpth"))
@@ -475,7 +465,8 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	if (sv)
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
-	err = nvme_get_features_arbitration(hdl, sel, &result);
+	nvme_init_get_features_arbitration(&cmd, sel);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!err) {
 		nvme_feature_decode_arbitration(result, &ab, &lpw, &mpw, &hpw);
 		if (!argconfig_parse_seen(opts, "ab"))

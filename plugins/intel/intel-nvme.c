@@ -1075,19 +1075,10 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 		__u32 thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
 		__u32 result;
 
-		struct nvme_get_features_args args = {
-			.args_size	= sizeof(args),
-			.fid		= 0xf7,
-			.nsid		= 0,
-			.sel		= 0,
-			.cdw11		= cfg.write ? 0x1 : 0x0,
-			.uuidx		= 0,
-			.data_len	= sizeof(thresholds),
-			.data		= thresholds,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= &result,
-		};
-		err = nvme_get_features(hdl, &args);
+		err = nvme_get_features(hdl, 0, 0xf7,
+				0, cfg.write ? 0x1 : 0x0,
+				0, thresholds, sizeof(thresholds),
+				&result);
 		if (err) {
 			fprintf(stderr, "Querying thresholds failed. ");
 			nvme_show_status(err);
@@ -1582,22 +1573,10 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	if (err)
 		return err;
 
-	struct nvme_get_features_args args_get = {
-		.args_size	= sizeof(args_get),
-		.fid		= fid,
-		.nsid		= nsid,
-		.sel		= sel,
-		.cdw11		= cdw11,
-		.uuidx		= 0,
-		.data_len	= data_len,
-		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-
 	switch (option) {
 	case None:
-		err = nvme_get_features(hdl, &args_get);
+		err = nvme_get_features(hdl, nsid, fid, sel, cdw11, 0, buf,
+				data_len, &result);
 		if (!err) {
 			printf(
 				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",

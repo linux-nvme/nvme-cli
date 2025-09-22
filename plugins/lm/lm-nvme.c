@@ -642,15 +642,8 @@ static int lm_get_cdq(int argc, char **argv, struct command *acmd, struct plugin
 
 	struct nvme_lm_ctrl_data_queue_fid_data data;
 
-	struct nvme_get_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= lm_cdq_feature_id,
-		.cdw11		= cfg.cdqid,
-		.data		= &data,
-		.data_len	= sizeof(data)
-	};
-
-	err = nvme_get_features(hdl, &args);
+	err = nvme_get_features(hdl, 0, lm_cdq_feature_id, 0, cfg.cdqid, 0,
+			&data, sizeof(data), NULL);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_get_features() failed %s", nvme_strerror(errno));
 	else if (err)

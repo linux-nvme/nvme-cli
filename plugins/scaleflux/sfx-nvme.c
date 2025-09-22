@@ -1555,7 +1555,6 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	struct nvme_smart_log smart_log = { 0 };
 	struct nvme_additional_smart_log additional_smart_log = { 0 };
 	struct sfx_freespace_ctx sfx_freespace = { 0 };
-	struct nvme_get_features_args get_feat_args = { 0 };
 	unsigned int get_feat_result, pcie_correctable, pcie_fatal, pcie_nonfatal;
 	unsigned long long capacity;
 	bool capacity_valid = false;
@@ -1897,11 +1896,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		sfx_smart.comp_ratio = 800;
 
 	//Get status of atomic write feature
-	get_feat_args.args_size	= sizeof(get_feat_args);
-	get_feat_args.fid		= 0x0A;
-	get_feat_args.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT;
-	get_feat_args.result	= &get_feat_result;
-	err =  nvme_get_features(hdl, &get_feat_args);
+	err =  nvme_get_features(hdl, 0, 0x0A, 0, 0, 0, NULL, 0, &get_feat_result);
 	if (err < 0) {
 		perror("Could not get feature (0x0A)");
 		return -errno;

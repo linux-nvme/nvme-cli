@@ -3279,9 +3279,10 @@ static int wdc_do_cap_telemetry_log(struct nvme_transport_handle *hdl, const cha
 	} else if (type == WDC_TELEMETRY_TYPE_CONTROLLER) {
 		if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
 			/* Verify the Controller Initiated Option is enabled */
-			err = nvme_get_features_data(hdl,
-						 WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,
-						 0, 4, buf, &result);
+			err = nvme_get_features(hdl, 0,
+				WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,
+				NVME_GET_FEATURES_SEL_CURRENT, 0, 0,
+				buf, 4, &result);
 			if (!err) {
 				if (!result) {
 					/* enabled */
@@ -9617,8 +9618,9 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 				false, 0, &result);
 		} else if (cfg.status) {
 			ret = nvme_get_features_simple(hdl,
-						       WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,
-						       0, &result);
+				WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,
+				NVME_GET_FEATURES_SEL_CURRENT,
+				&result);
 			if (!ret) {
 				if (result)
 					fprintf(stderr, "Controller Option Telemetry Log Page State: Disabled\n");
@@ -10300,12 +10302,10 @@ static int wdc_do_drive_essentials(struct nvme_global_ctx *ctx, struct nvme_tran
 		/* skipping  LbaRangeType as it is an optional nvme command and not supported */
 		if (deFeatureIdList[listIdx].featureId == FID_LBA_RANGE_TYPE)
 			continue;
-		ret = nvme_get_features_data(hdl,
-					     (enum nvme_features_id)deFeatureIdList[listIdx].featureId,
-					     WDC_DE_GLOBAL_NSID,
-					     sizeof(featureIdBuff),
-					     &featureIdBuff, &result);
-
+		ret = nvme_get_features(hdl, WDC_DE_GLOBAL_NSID,
+			(enum nvme_features_id)deFeatureIdList[listIdx].featureId,
+			NVME_GET_FEATURES_SEL_CURRENT, 0, 0, &featureIdBuff,
+			sizeof(featureIdBuff), &result);
 		if (ret) {
 			fprintf(stderr, "ERROR: WDC: nvme_get_feature id 0x%x failed, ret = %d\n",
 					deFeatureIdList[listIdx].featureId, ret);
@@ -12047,7 +12047,8 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]) - 273;
 
 	/* retrieve HCTM Thermal Management Temperatures */
-	nvme_get_features_simple(hdl, 0x10, 0, &hctm_tmt);
+	nvme_get_features_simple(hdl, 0x10,
+		NVME_GET_FEATURES_SEL_CURRENT, &hctm_tmt);
 	temp_tmt1 = ((hctm_tmt >> 16) & 0xffff) ? ((hctm_tmt >> 16) & 0xffff) - 273 : 0;
 	temp_tmt2 = (hctm_tmt & 0xffff) ? (hctm_tmt & 0xffff) - 273 : 0;
 

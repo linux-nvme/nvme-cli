@@ -104,20 +104,8 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	struct nvme_get_features_args args = {
-		.args_size  = sizeof(args),
-		.fid        = OCP_FID_CPCIE,
-		.nsid       = cfg.nsid,
-		.sel        = cfg.sel,
-		.cdw11      = 0,
-		.uuidx      = uuid_index,
-		.data_len   = 0,
-		.data       = NULL,
-		.timeout    = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result     = &result,
-	};
-
-	err = nvme_get_features(hdl, &args);
+	err = nvme_get_features(hdl, cfg.nsid, OCP_FID_CPCIE, cfg.sel, 0,
+			uuid_index, NULL, 0, &result);
 	if (!err) {
 		printf("get-feature:0xC3 %s value: %#08x\n",
 		nvme_select_to_string(cfg.sel), result);

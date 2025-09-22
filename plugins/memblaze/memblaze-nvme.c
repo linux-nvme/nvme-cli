@@ -490,19 +490,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *acm
 	if (err)
 		return err;
 
-	struct nvme_get_features_args args = {
-		.args_size	= sizeof(args),
-		.fid		= feature_id,
-		.nsid		= 0,
-		.sel		= 0,
-		.cdw11		= 0,
-		.uuidx		= 0,
-		.data_len	= 0,
-		.data		= NULL,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-	err = nvme_get_features(hdl, &args);
+	err = nvme_get_features(hdl, 0, feature_id, 0, 0, 0, NULL, 0, &result);
 	if (err < 0)
 		perror("get-feature");
 	if (!err)
@@ -1110,24 +1098,12 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *acmd, struct 
 	else if (cfg.enable || cfg.disable)
 		option = cfg.enable;
 
-	struct nvme_get_features_args args_get = {
-		.args_size	= sizeof(args_get),
-		.fid		= fid,
-		.nsid		= nsid,
-		.sel		= sel,
-		.cdw11		= cdw11,
-		.uuidx		= 0,
-		.data_len	= data_len,
-		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-
 	if (err)
 		return err;
 	switch (option) {
 	case None:
-		err = nvme_get_features(hdl, &args_get);
+		err = nvme_get_features(hdl, nsid, fid, sel, cdw11, 0, buf, data_len,
+				&result);
 		if (!err) {
 			printf("Latency Statistics Tracking (FID 0x%X) is currently (%i).\n", fid,
 			       result);
@@ -1802,7 +1778,8 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, s
 
 	uint32_t result = 0;
 
-	err = nvme_get_features_simple(hdl, FID_LATENCY_FEATURE, 0, &result);
+	err = nvme_get_features_simple(hdl, FID_LATENCY_FEATURE,
+			NVME_GET_FEATURES_SEL_CURRENT, &result);
 	if (!err) {
 		printf("%s have done successfully. result = %#" PRIx32 ".\n", acmd->name, result);
 

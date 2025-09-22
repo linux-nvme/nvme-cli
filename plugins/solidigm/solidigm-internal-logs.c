@@ -573,7 +573,8 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 
 	if (da == 4) {
 		__u32 result;
-		int err = nvme_get_features_host_behavior(hdl, 0, &prev, &result);
+		nvme_init_get_features_host_behavior(&cmd, 0, &prev);
+		int err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 
 		if (!err && !prev.etdas) {
 			struct nvme_feat_host_behavior da4_enable = prev;

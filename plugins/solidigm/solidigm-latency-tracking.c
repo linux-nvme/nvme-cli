@@ -271,19 +271,9 @@ static void latency_tracker_parse(struct latency_tracker *lt)
 
 static int latency_tracking_is_enable(struct latency_tracker *lt, __u32 *enabled)
 {
-	struct nvme_get_features_args args_get = {
-		.args_size	= sizeof(args_get),
-		.uuidx		= lt->uuid_index,
-		.fid		= LATENCY_TRACKING_FID,
-		.nsid		= 0,
-		.sel		= 0,
-		.cdw11		= 0,
-		.data_len	= LATENCY_TRACKING_FID_DATA_LEN,
-		.data		= NULL,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= enabled,
-	};
-	return nvme_get_features(lt->hdl, &args_get);
+	return nvme_get_features(lt->hdl, 0, LATENCY_TRACKING_FID, 0, 0,
+			lt->uuid_index, NULL,
+			LATENCY_TRACKING_FID_DATA_LEN, enabled);
 }
 
 static int latency_tracking_enable(struct latency_tracker *lt)

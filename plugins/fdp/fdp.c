@@ -552,22 +552,11 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 	}
 
 	if (!enabling_conf_idx && !cfg.disable) {
-		struct nvme_get_features_args getf_args = {
-			.args_size	= sizeof(getf_args),
-			.fid		= NVME_FEAT_FID_FDP,
-			.nsid		= NVME_NSID_ALL,
-			.sel		= NVME_GET_FEATURES_SEL_CURRENT,
-			.cdw11		= cfg.endgid,
-			.uuidx		= 0,
-			.data_len	= 0,
-			.data		= NULL,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= &result,
-		};
-
 		nvme_show_result("Endurance Group                               : %d", cfg.endgid);
 
-		err = nvme_get_features(hdl, &getf_args);
+		err = nvme_get_features(hdl, NVME_NSID_ALL, NVME_FEAT_FID_FDP,
+				NVME_GET_FEATURES_SEL_CURRENT, cfg.endgid, 0,
+				NULL, 0, &result);
 		if (err) {
 			nvme_show_status(err);
 			return err;
