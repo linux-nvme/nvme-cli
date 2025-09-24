@@ -8,7 +8,7 @@ on:
 
 jobs:
   nightly-tests:
-    if: github.repository == 'linux-nvme/nvme-cli'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
     runs-on: arc-vm-nvme-cli
     steps:
       - uses: actions/checkout@v5
