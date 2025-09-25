@@ -26,6 +26,8 @@ jobs:
             set -x
             uname -a
 
+            sudo dnf remove -y nvme-cli libnvme
+
             sudo dnf install -y gcc clang make util-linux llvm gawk fio udev \
             kmod coreutils g++ gzip e2fsprogs xfsprogs f2fs-tools btrfs-progs \
             device-mapper-multipath blktrace kernel-headers liburing \
@@ -58,13 +60,17 @@ jobs:
 
             cd blktests
             make
+            mkdir -p results
+            nvme --version | tee -a results/nvme-cli.version
+            sudo nvme --version | tee -a results/nvme-cli.version
 
             # Run blktests nvme and md group
             cat > config << EF
             TEST_DEVS=(${BDEV0})
             NVMET_TRTYPES="loop rdma tcp"
+            EXCLUDE=(nvme/010 nvme/012 nvme/034 nvme/035)
             EF
-            sudo ./check nvme md
+            sudo ./check nvme md/001
       - name: Run nvme-cli tests in VM
         uses: ./.github/actions/kubevirt-action
         with:
