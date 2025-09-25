@@ -190,6 +190,21 @@ conf.set(
     ),
     description: 'Does struct tm have a tm_gmtoff field?'
 )
+conf.set(
+    'HAVE_WEAK_MALLOC',
+    cc.links(
+        '''#include <malloc.h>
+           void *malloc(size_t size) {
+               return NULL;
+           }
+           int main(void) {
+               malloc(1);
+           }
+        ''',
+        name: 'weak_malloc'
+    ),
+    description: 'Is malloc() weak function?'
+)
 
 if cc.has_function_attribute('fallthrough')
   conf.set('fallthrough', '__attribute__((__fallthrough__))')
