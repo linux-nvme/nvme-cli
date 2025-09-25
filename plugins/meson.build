@@ -7,6 +7,7 @@ sources += [
   'plugins/dera/dera-nvme.c',
   'plugins/fdp/fdp.c',
   'plugins/huawei/huawei-nvme.c',
+  'plugins/ibm/ibm-nvme.c',
   'plugins/innogrit/innogrit-nvme.c',
   'plugins/inspur/inspur-nvme.c',
   'plugins/intel/intel-nvme.c',
