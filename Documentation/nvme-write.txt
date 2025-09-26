@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme-write' <device> [--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>]
+			[--block-size=<size> | -c <size>]
 			[--data-size=<size> | -z <size>]
 			[--metadata-size=<size> | -y <size>]
 			[--ref-tag=<reftag> | -r <reftag>]
@@ -44,6 +45,12 @@ OPTIONS
 	The number of blocks to transfer. This is a zeroes based value to
 	align with the kernel's use of this field. (ie. 0 means transfer
 	1 block).
+
+-b <size>::
+--block-size=<size>::
+	If specified, the logical block size in bytes, with metasize
+	also describing the metadata size for an individual block.
+	Discovered by identify namespace otherwise.
 
 -z <size>::
 --data-size=<size>::
