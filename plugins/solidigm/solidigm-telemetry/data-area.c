@@ -21,7 +21,7 @@
 #define MAX_ARRAY_RANK 16
 #define NLOG_HEADER_ID 101
 
-static bool uint8_array_to_string(const struct telemetry_log *tl,
+static bool uint8_array_try_string(const struct telemetry_log *tl,
 				  uint64_t offset_bit, uint32_t size_bit,
 				  uint32_t array_size,
 				  struct json_object **str_obj)
@@ -53,6 +53,11 @@ static bool uint8_array_to_string(const struct telemetry_log *tl,
 	for (actual_length = 0; actual_length < array_size; actual_length++) {
 		if (data_ptr[actual_length] == '\0')
 			break;
+	}
+	// making sure trailing bytes are nulls
+	for (size_t i = actual_length; i < array_size; i++) {
+		if (data_ptr[i] != '\0')
+			return false;
 	}
 
 	// Create JSON string directly from the data without intermediate buffer
@@ -292,12 +297,13 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 
 	if (array_size_dimension[0] > 1 || force_array) {
 		// Check if this is a UINT8 array that should be treated as a string
-		if (strcmp(type, "UINT8") == 0 && !force_array) {
+		if (json_object_is_type(output, json_type_object) &&
+		    (strcmp(type, "UINT8") == 0 || strcmp(type, "uint8_t") == 0) && !force_array) {
 			// Handle UINT8 arrays as strings
 			struct json_object *str_obj = NULL;
 			uint64_t offset = parent_offset_bit + offset_bit;
 
-			if (uint8_array_to_string(tl, offset, size_bit,
+			if (uint8_array_try_string(tl, offset, size_bit,
 						  array_size_dimension[0], &str_obj)) {
 				json_object_object_add(output, name, str_obj);
 				return 0;
@@ -308,7 +314,7 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 		}
 
 		sub_output = json_create_array();
-		if (json_object_get_type(output) == json_type_array)
+		if (json_object_is_type(output, json_type_array))
 			json_object_array_add(output, sub_output);
 		else
 			json_object_add_value_array(output, name, sub_output);

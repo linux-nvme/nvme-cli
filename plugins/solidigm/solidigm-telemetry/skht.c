@@ -12,6 +12,7 @@
 #include "skht.h"
 #include "util/json.h"
 #include "data-area.h"
+#include "debug-info.h"
 
 void sldm_telemetry_da2_check_skhT(struct telemetry_log *tl)
 {
@@ -199,6 +200,14 @@ void sldm_telemetry_sktT_segment_parse(struct telemetry_log *tl,
 				json_object_new_string(
 						(char *)tl->log + NVME_LOG_TELEM_BLOCK_SIZE
 						+ offset));
+		}
+		if (description_str && strncmp(description_str, "DEBUG_INFO",
+				sizeof("DEBUG_INFO") - 1) == 0) {
+			struct json_object *debug_info_obj = json_object_new_object();
+
+			json_object_object_add(tl->root, description_str, debug_info_obj);
+			sldm_debug_info_parse(tl, NVME_LOG_TELEM_BLOCK_SIZE + offset,
+					size, debug_info_obj);
 		}
 	}
 }
