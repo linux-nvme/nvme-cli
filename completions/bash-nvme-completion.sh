@@ -308,7 +308,7 @@ nvme_list_opts () {
 		opts+=" --namespace-id= -n"
 			;;
 		"compare")
-		opts+=" --start-block= -s --block-count= -c --data-size= -z \
+		opts+=" --start-block= -s --block-count= -c --block-size= -b --data-size= -z \
 			--metadata-size= -y --ref-tag= -r --data= -d \
 			--metadata= -M --prinfo= -p --app-tag-mask= -m \
 			--app-tag= -a --limited-retry -l \
@@ -317,7 +317,7 @@ nvme_list_opts () {
 			--dry-run -w --latency -t --timeout="
 			;;
 		"read")
-		opts+=" --start-block= -s --block-count= -c --data-size= -z \
+		opts+=" --start-block= -s --block-count= -c --block-size= -b --data-size= -z \
 			--metadata-size= -y --ref-tag= -r --data= -d \
 			--metadata= -M --prinfo= -p --app-tag-mask= -m \
 			--app-tag= -a --limited-retry -l \
@@ -326,7 +326,7 @@ nvme_list_opts () {
 			--dry-run -w --latency -t --timeout="
 			;;
 		"write")
-		opts+=" --start-block= -s --block-count= -c --data-size= -z \
+		opts+=" --start-block= -s --block-count= -c --block-size= -b --data-size= -z \
 			--metadata-size= -y --ref-tag= -r --data= -d \
 			--metadata= -M --prinfo= -p --app-tag-mask= -m \
 			--app-tag= -a --limited-retry -l \
