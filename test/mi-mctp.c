@@ -22,6 +22,12 @@
 #include "nvme/private.h"
 #include "utils.h"
 
+#if HAVE_LINUX_MCTP_H
+#include <linux/mctp.h>
+#else
+#include "nvme/mi-mctp-compat.h"
+#endif
+
 /* 4096 byte max MCTP message, plus space for header data */
 #define MAX_BUFSIZ 8192
 
