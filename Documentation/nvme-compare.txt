@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme-compare' <device> [--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>]
+			[--block-size=<size> | -b <size>]
 			[--data-size=<size> | -z <size>]
 			[--metadata-size=<metasize> | -y <metasize>]
 			[--ref-tag=<reftag> | -r <reftag>]
@@ -51,6 +52,12 @@ OPTIONS
 -c <nlb>::
 --block-count=<nlb>::
 	Number of blocks to be accessed (zero-based).
+
+-b <size>::
+--block-size=<size>::
+	If specified, the logical block size in bytes, with metasize
+	also describing the metadata size for an individual block.
+	Discovered by identify namespace otherwise.
 
 -z <size>::
 --data-size=<size>::

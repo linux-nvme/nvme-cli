@@ -8188,6 +8188,8 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	__u16 ms;
 
 	const char *start_block_addr = "64-bit addr of first block to access";
+	const char *block_size = "if specified, logical block size in bytes;\n"
+		"discovered by identify namespace otherwise";
 	const char *data_size = "size of data in bytes";
 	const char *metadata_size = "size of metadata in bytes";
 	const char *data = "data file";
@@ -8205,6 +8207,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		__u32	namespace_id;
 		__u64	start_block;
 		__u16	block_count;
+		__u16	block_size;
 		__u64	data_size;
 		__u64	metadata_size;
 		__u64	ref_tag;
@@ -8229,6 +8232,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		.namespace_id		= 0,
 		.start_block		= 0,
 		.block_count		= 0,
+		.block_size		= 0,
 		.data_size		= 0,
 		.metadata_size		= 0,
 		.ref_tag		= 0,
@@ -8253,6 +8257,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_id_desired),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block_addr),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
+		  OPT_SHRT("block-size",        'b', &cfg.block_size,        block_size),
 		  OPT_SUFFIX("data-size",       'z', &cfg.data_size,         data_size),
 		  OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size,     metadata_size),
 		  OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
@@ -8353,40 +8358,48 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		return -EINVAL;
 	}
 
-	ns = nvme_alloc(sizeof(*ns));
-	if (!ns)
-		return -ENOMEM;
+	if (cfg.block_size) {
+		logical_block_size = cfg.block_size;
+		ms = cfg.metadata_size;
+	} else {
+		ns = nvme_alloc(sizeof(*ns));
+		if (!ns)
+			return -ENOMEM;
 
-	err = nvme_cli_identify_ns(dev, cfg.namespace_id, ns);
-	if (err > 0) {
-		nvme_show_status(err);
-		return err;
-	} else if (err < 0) {
-		nvme_show_error("identify namespace: %s", nvme_strerror(errno));
-		return err;
-	}
+		err = nvme_cli_identify_ns(dev, cfg.namespace_id, ns);
+		if (err > 0) {
+			nvme_show_status(err);
+			return err;
+		} else if (err < 0) {
+			nvme_show_error("identify namespace: %s", nvme_strerror(errno));
+			return err;
+		}
 
-	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
-	logical_block_size = 1 << ns->lbaf[lba_index].ds;
-	ms = le16_to_cpu(ns->lbaf[lba_index].ms);
+		nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
+		logical_block_size = 1 << ns->lbaf[lba_index].ds;
+		ms = le16_to_cpu(ns->lbaf[lba_index].ms);
 
-	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
-	if (!nvm_ns)
-		return -ENOMEM;
+		nvm_ns = nvme_alloc(sizeof(*nvm_ns));
+		if (!nvm_ns)
+			return -ENOMEM;
 
-	err = nvme_identify_ns_csi(dev_fd(dev), cfg.namespace_id, 0, NVME_CSI_NVM, nvm_ns);
-	if (!err)
-		get_pif_sts(ns, nvm_ns, &pif, &sts);
+		err = nvme_identify_ns_csi(dev_fd(dev), cfg.namespace_id, 0, NVME_CSI_NVM, nvm_ns);
+		if (!err)
+			get_pif_sts(ns, nvm_ns, &pif, &sts);
 
-	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
-	if (NVME_FLBAS_META_EXT(ns->flbas)) {
-		/*
-		 * No meta data is transferred for PRACT=1 and MD=PI size:
-		 *   5.2.2.1 Protection Information and Write Commands
-		 *   5.2.2.2 Protection Information and Read Commands
-		 */
-		if (!((cfg.prinfo & 0x8) != 0 && ms == pi_size))
-			logical_block_size += ms;
+		pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
+		if (NVME_FLBAS_META_EXT(ns->flbas)) {
+			/*
+			 * No meta data is transferred for PRACT=1 and MD=PI size:
+			 *   5.2.2.1 Protection Information and Write Commands
+			 *   5.2.2.2 Protection Information and Read Commands
+			 */
+			if (!((cfg.prinfo & 0x8) != 0 && ms == pi_size))
+				logical_block_size += ms;
+		}
+
+		if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
+			return -EINVAL;
 	}
 
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
@@ -8425,9 +8438,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 			return -ENOMEM;
 		memset(mbuffer, 0, mbuffer_size);
 	}
-
-	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
-		return -EINVAL;
 
 	if (opcode & 1) {
 		err = read(dfd, (void *)buffer, cfg.data_size);
