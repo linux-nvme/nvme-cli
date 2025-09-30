@@ -17,6 +17,7 @@ jobs:
       #We don't have to build the kernel here, as we have a cron job running on
       #the k8s cluster that builds the linus-master target nightly.
       - name: Run blktests in VM
+        id: blktests
         uses: ./.github/actions/kubevirt-action
         with:
           kernel_version: linus-master
@@ -73,6 +74,7 @@ jobs:
             EF
             sudo ./check nvme md/001
       - name: Run nvme-cli tests in VM
+        if: success() || steps.blktests.conclusion == 'failure'
         uses: ./.github/actions/kubevirt-action
         with:
           kernel_version: linus-master
