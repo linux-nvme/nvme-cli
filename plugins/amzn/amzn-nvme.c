@@ -515,10 +515,15 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 	};
 
 	if (!strncmp((char *)ctrl.mn, AMZN_NVME_LOCAL_STORAGE_PREFIX,
-		     strlen(AMZN_NVME_LOCAL_STORAGE_PREFIX)))
+		     strlen(AMZN_NVME_LOCAL_STORAGE_PREFIX))) {
+		if (nvme_get_nsid(dev_fd(dev), &args.nsid) < 0) {
+			rc = -errno;
+			goto done;
+		}
 		args.len = sizeof(log);
-	else
+	} else {
 		args.len = sizeof(log.base);
+	}
 
 	rc = nvme_get_log(&args);
 	if (rc != 0) {
