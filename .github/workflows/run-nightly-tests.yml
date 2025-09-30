@@ -51,6 +51,7 @@ jobs:
 
             git clone https://github.com/${{ github.repository }} nvme-cli
             cd nvme-cli
+            git checkout ${{ github.sha }}
             scripts/build.sh -b release -c gcc
             sudo meson install -C .build-ci
             sudo ldconfig /usr/local/lib64
@@ -86,7 +87,9 @@ jobs:
             uname -a
             PIPX_BIN_DIR=/usr/local/bin pipx install nose2 --force
             git clone https://github.com/${{ github.repository }} /nvme-cli
+            git config --global --add safe.directory /nvme-cli
             cd /nvme-cli
+            git checkout ${{ github.sha }}
             scripts/build.sh -b release -c gcc
             CONTROLLER=$(echo "${BDEV0}" | sed 's/n[0-9]*$//')
             cat > tests/config.json << EOJ
