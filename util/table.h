@@ -146,4 +146,16 @@ void table_add_row(struct table *t, int row);
 void table_print(struct table *t);
 void table_free(struct table *t);
 
+/**
+ * table_init_with_columns() - Allocate a table instance with column definitions
+ * @c:		Column definitions
+ * @num_columns:Number of columns
+ *
+ * This is a function combined table_init() and table_add_columns().
+ *
+ * Return: The table instance, or NULL if unsuccessful. If allocated, the caller
+ * is responsible to free the table.
+ */
+struct table *table_init_with_columns(struct table_column *c, int num_columns);
+
 #endif /* _TABLE_H_ */
