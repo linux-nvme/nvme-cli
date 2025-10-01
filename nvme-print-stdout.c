@@ -2133,15 +2133,17 @@ static void stdout_id_ctrl_apsta(__u8 apsta)
 
 static void stdout_id_ctrl_wctemp(__le16 wctemp)
 {
-	printf(" [15:0] : %s (%u K)\tWarning Composite Temperature Threshold (WCTEMP)\n",
-	       nvme_degrees_string(le16_to_cpu(wctemp)), le16_to_cpu(wctemp));
+	printf(" [15:0] : %s (%u K, %s)\tWarning Composite Temperature Threshold (WCTEMP)\n",
+	       nvme_degrees_string(le16_to_cpu(wctemp)), le16_to_cpu(wctemp),
+	       nvme_degrees_fahrenheit_string(le16_to_cpu(wctemp)));
 	printf("\n");
 }
 
 static void stdout_id_ctrl_cctemp(__le16 cctemp)
 {
-	printf(" [15:0] : %s (%u K)\tCritical Composite Temperature Threshold (CCTEMP)\n",
-	       nvme_degrees_string(le16_to_cpu(cctemp)), le16_to_cpu(cctemp));
+	printf(" [15:0] : %s (%u K, %s)\tCritical Composite Temperature Threshold (CCTEMP)\n",
+	       nvme_degrees_string(le16_to_cpu(cctemp)), le16_to_cpu(cctemp),
+	       nvme_degrees_fahrenheit_string(le16_to_cpu(cctemp)));
 	printf("\n");
 }
 
@@ -2206,15 +2208,17 @@ static void stdout_id_ctrl_hctma(__le16 ctrl_hctma)
 
 static void stdout_id_ctrl_mntmt(__le16 mntmt)
 {
-	printf(" [15:0] : %s (%u K)\tMinimum Thermal Management Temperature (MNTMT)\n",
-	       nvme_degrees_string(le16_to_cpu(mntmt)), le16_to_cpu(mntmt));
+	printf(" [15:0] : %s (%u K, %s)\tMinimum Thermal Management Temperature (MNTMT)\n",
+	       nvme_degrees_string(le16_to_cpu(mntmt)), le16_to_cpu(mntmt),
+	       nvme_degrees_fahrenheit_string(le16_to_cpu(mntmt)));
 	printf("\n");
 }
 
 static void stdout_id_ctrl_mxtmt(__le16 mxtmt)
 {
-	printf(" [15:0] : %s (%u K)\tMaximum Thermal Management Temperature (MXTMT)\n",
-	       nvme_degrees_string(le16_to_cpu(mxtmt)), le16_to_cpu(mxtmt));
+	printf(" [15:0] : %s (%u K, %s)\tMaximum Thermal Management Temperature (MXTMT)\n",
+	       nvme_degrees_string(le16_to_cpu(mxtmt)), le16_to_cpu(mxtmt),
+	       nvme_degrees_fahrenheit_string(le16_to_cpu(mxtmt)));
 	printf("\n");
 }
 
@@ -4394,8 +4398,9 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 		       (smart->critical_warning & 0x20) >> 5);
 	}
 
-	printf("temperature				: %s (%u K)\n",
-	       nvme_degrees_string(temperature), temperature);
+	printf("temperature				: %s (%u K, %s)\n",
+	       nvme_degrees_string(temperature), temperature,
+	       nvme_degrees_fahrenheit_string(temperature));
 	printf("available_spare				: %u%%\n", smart->avail_spare);
 	printf("available_spare_threshold		: %u%%\n", smart->spare_thresh);
 	printf("percentage_used				: %u%%\n", smart->percent_used);
@@ -4431,8 +4436,9 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 		temperature = le16_to_cpu(smart->temp_sensor[i]);
 		if (!temperature)
 			continue;
-		printf("Temperature Sensor %d			: %s (%u K)\n", i + 1,
-		       nvme_degrees_string(temperature), temperature);
+		printf("Temperature Sensor %d			: %s (%u K, %s)\n", i + 1,
+		       nvme_degrees_string(temperature), temperature,
+		       nvme_degrees_fahrenheit_string(temperature));
 	}
 
 	printf("Thermal Management T1 Trans Count	: %u\n",
@@ -5033,16 +5039,17 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
 		field = (result & 0x1c00000) >> 22;
-		printf("\tTemperature Threshold Hysteresis(TMPTHH): %s (%u K)\n",
-		       nvme_degrees_string(field), field);
+		printf("\tTemperature Threshold Hysteresis(TMPTHH): %s (%u K, %s)\n",
+		       nvme_degrees_string(field), field, nvme_degrees_fahrenheit_string(field));
 		field = NVME_FEAT_TT_THSEL(result);
 		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field,
 		       nvme_feature_temp_type_to_string(field));
 		field = NVME_FEAT_TT_TMPSEL(result);
 		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n",
 		       field, nvme_feature_temp_sel_to_string(field));
-		printf("\tTemperature Threshold         (TMPTH): %s (%u K)\n",
-		       nvme_degrees_string(NVME_FEAT_TT_TMPTH(result)), NVME_FEAT_TT_TMPTH(result));
+		printf("\tTemperature Threshold         (TMPTH): %s (%u K, %s)\n",
+		       nvme_degrees_string(NVME_FEAT_TT_TMPTH(result)), NVME_FEAT_TT_TMPTH(result),
+		       nvme_degrees_fahrenheit_string(NVME_FEAT_TT_TMPTH(result)));
 		break;
 	case NVME_FEAT_FID_ERR_RECOVERY:
 		printf("\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n",
@@ -5135,12 +5142,14 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
 		break;
 	case NVME_FEAT_FID_HCTM:
-		printf("\tThermal Management Temperature 1 (TMT1) : %u K (%s)\n",
+		printf("\tThermal Management Temperature 1 (TMT1) : %u K (%s, %s)\n",
 		       NVME_FEAT_HCTM_TMT1(result),
-		       nvme_degrees_string(NVME_FEAT_HCTM_TMT1(result)));
-		printf("\tThermal Management Temperature 2 (TMT2) : %u K (%s)\n",
+		       nvme_degrees_string(NVME_FEAT_HCTM_TMT1(result)),
+		       nvme_degrees_fahrenheit_string(NVME_FEAT_HCTM_TMT1(result)));
+		printf("\tThermal Management Temperature 2 (TMT2) : %u K (%s, %s)\n",
 		       NVME_FEAT_HCTM_TMT2(result),
-		       nvme_degrees_string(NVME_FEAT_HCTM_TMT2(result)));
+		       nvme_degrees_string(NVME_FEAT_HCTM_TMT2(result)),
+		       nvme_degrees_fahrenheit_string(NVME_FEAT_HCTM_TMT2(result)));
 		break;
 	case NVME_FEAT_FID_NOPSC:
 		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n",
