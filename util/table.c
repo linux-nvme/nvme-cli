@@ -294,7 +294,10 @@ int table_add_columns(struct table *t, struct table_column *c, int num_columns)
 			goto free_col;
 
 		t->columns[col].align = c[col].align;
-		t->columns[col].width = strlen(t->columns[col].name);
+		if (c[col].width > strlen(t->columns[col].name))
+			t->columns[col].width = c[col].width;
+		else
+			t->columns[col].width = strlen(t->columns[col].name);
 	}
 	t->num_columns = num_columns;
 
