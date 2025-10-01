@@ -227,9 +227,9 @@
 #define WDC_CUSTOMER_ID_GD				0x0101
 #define WDC_CUSTOMER_ID_BD				0x1009
 
-#define WDC_CUSTOMER_ID_0x1005				0x1005
-
+#define WDC_CUSTOMER_ID_0x00F0				0x00F0
 #define WDC_CUSTOMER_ID_0x1004				0x1004
+#define WDC_CUSTOMER_ID_0x1005				0x1005
 #define WDC_CUSTOMER_ID_0x1008				0x1008
 #define WDC_CUSTOMER_ID_0x1304				0x1304
 #define WDC_INVALID_CUSTOMER_ID				-1
@@ -351,13 +351,14 @@
 #define WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID		0xC2
 #define WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID_C8		0xC8
 #define WDC_C2_LOG_BUF_LEN				0x1000
+#define WDC_C2_MARKETING_NAME_ID		        0x07
 #define WDC_C2_LOG_PAGES_SUPPORTED_ID			0x08
-#define WDC_C2_CUSTOMER_ID_ID				0x15
+#define WDC_C2_CUSTOMER_ID_ID			        0x15
 #define WDC_C2_THERMAL_THROTTLE_STATUS_ID		0x18
 #define WDC_C2_ASSERT_DUMP_PRESENT_ID			0x19
-#define WDC_C2_USER_EOL_STATUS_ID			0x1A
-#define WDC_C2_USER_EOL_STATE_ID			0x1C
-#define WDC_C2_SYSTEM_EOL_STATE_ID			0x1D
+#define WDC_C2_USER_EOL_STATUS_ID		        0x1A
+#define WDC_C2_USER_EOL_STATE_ID		        0x1C
+#define WDC_C2_SYSTEM_EOL_STATE_ID		        0x1D
 #define WDC_C2_FORMAT_CORRUPT_REASON_ID			0x1E
 #define WDC_EOL_STATUS_NORMAL				cpu_to_le32(0x00000000)
 #define WDC_EOL_STATUS_END_OF_LIFE			cpu_to_le32(0x00000001)
@@ -370,6 +371,8 @@
 #define WDC_FORMAT_NOT_CORRUPT				cpu_to_le32(0x00000000)
 #define WDC_FORMAT_CORRUPT_FW_ASSERT			cpu_to_le32(0x00000001)
 #define WDC_FORMAT_CORRUPT_UNKNOWN			cpu_to_le32(0x000000FF)
+#define WDC_SN861_MARKETING_NAME_1			"Ultrastar DC SN861"
+#define WDC_SN861_MARKETING_NAME_2			"ULTRASTAR DC SN861"
 
 /* CA Log Page */
 #define WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE		0xCA
@@ -987,6 +990,16 @@ static int wdc_print_c0_eol_log(void *data, int fmt);
 static void wdc_show_cloud_smart_log_normal(struct ocp_cloud_smart_log *log,
 		struct nvme_dev *dev);
 static void wdc_show_cloud_smart_log_json(struct ocp_cloud_smart_log *log);
+static bool get_dev_mgment_data(nvme_root_t r,
+		struct nvme_dev *dev,
+		void **data);
+static bool wdc_nvme_parse_dev_status_log_entry(void *log_data,
+		__u32 *ret_data,
+		__u32 entry_id);
+static bool wdc_nvme_parse_dev_status_log_str(void *log_data,
+		__u32 entry_id,
+		char *ret_data,
+		__u32 *ret_data_len);
 
 /* Drive log data size */
 struct wdc_log_size {
@@ -2059,7 +2072,13 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r,
 	int ret;
 	uint32_t read_vendor_id;
 	__u64 capabilities = 0;
-	__u32 cust_id;
+	__u32 cust_id, market_name_len;
+	char marketing_name[64];
+	void *dev_mng_log = NULL;
+	int uuid_index = 0;
+	struct nvme_id_uuid_list uuid_list;
+
+	memset(marketing_name, 0, 64);
 
 	ret = wdc_get_vendor_id(dev, &read_vendor_id);
 	if (ret < 0)
@@ -2085,15 +2104,55 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r,
 			WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 			WDC_DRIVE_CAP_RESIZE);
 
+		/* Find the WDC UUID index  */
+		memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
+		if (wdc_CheckUuidListSupport(dev, &uuid_list)) {
+			/* check for the Sandisk UUID first  */
+			uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+
+			if (uuid_index < 0)
+				/* The Sandisk UUID is not found;
+				 * check for the WDC UUID second.
+				 */
+				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+		}
+
+		/* WD UUID not found, use default uuid index - 0 */
+		if (uuid_index < 0)
+			uuid_index = 0;
+
+		/* verify the 0xC2 Device Manageability log page is supported */
+		if (wdc_nvme_check_supported_log_page(r, dev,
+				WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
+				uuid_index) == false) {
+			fprintf(stderr, "ERROR: SNDK: 0xC2 Log Page not supported, index: %d\n",
+					uuid_index);
+			ret = -1;
+			goto out;
+		}
+
+		if (!get_dev_mgment_data(r, dev, &dev_mng_log)) {
+			fprintf(stderr, "ERROR: SNDK: 0xC2 Log Page not found\n");
+			ret = -1;
+			goto out;
+		}
+
+		/* Get the customer ID and marketing name from WD C2 log page */
+		if (!wdc_nvme_parse_dev_status_log_entry(dev_mng_log,
+				&cust_id,
+				WDC_C2_CUSTOMER_ID_ID))
+			fprintf(stderr, "ERROR: SNDK: Get Customer FW ID Failed\n");
+
+		if (!wdc_nvme_parse_dev_status_log_str(dev_mng_log,
+				WDC_C2_MARKETING_NAME_ID,
+				(char *)marketing_name,
+				&market_name_len))
+			fprintf(stderr, "ERROR: SNDK: Get Marketing Name Failed\n");
+
 		/* verify the 0xC3 log page is supported */
 		if (wdc_nvme_check_supported_log_page(r, dev,
 				WDC_LATENCY_MON_LOG_ID, 0) == true)
 			capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
-
-		/* verify the 0xCB log page is supported */
-		if (wdc_nvme_check_supported_log_page(r, dev,
-				WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID, 0) == true)
-			capabilities |= WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY;
 
 		/* verify the 0xCA log page is supported */
 		if (wdc_nvme_check_supported_log_page(r, dev,
@@ -2105,17 +2164,25 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r,
 				WDC_NVME_GET_VU_SMART_LOG_OPCODE, 0) == true)
 			capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 
-		cust_id = wdc_get_fw_cust_id(r, dev);
-		if (cust_id == WDC_INVALID_CUSTOMER_ID) {
-			fprintf(stderr, "%s: ERROR: WDC: invalid customer id\n", __func__);
-			return -1;
-		}
+		if ((cust_id == WDC_CUSTOMER_ID_0x1004) ||
+			(cust_id == WDC_CUSTOMER_ID_0x1008) ||
+			(cust_id == WDC_CUSTOMER_ID_0x1005) ||
+			(cust_id == WDC_CUSTOMER_ID_0x1304) ||
+			(!strncmp(marketing_name, WDC_SN861_MARKETING_NAME_1, market_name_len)) ||
+			(!strncmp(marketing_name, WDC_SN861_MARKETING_NAME_2, market_name_len)))
+			/* Set capabilities for OCP compliant drives */
+			capabilities |= (WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
+					WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
+					WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE);
+		else {
+			capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
+					WDC_DRIVE_CAP_CLEAR_PCIE);
 
-		if ((cust_id == WDC_CUSTOMER_ID_0x1004) || (cust_id == WDC_CUSTOMER_ID_0x1008) ||
-				(cust_id == WDC_CUSTOMER_ID_0x1005) || (cust_id == WDC_CUSTOMER_ID_0x1304))
-			capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE);
-		else
-			capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
+			/* if the 0xCB log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, dev,
+					WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID, 0) == true)
+				capabilities |= WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY;
+		}
 
 		break;
 	case WDC_NVME_SNDK_VID:
@@ -2125,6 +2192,7 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r,
 		capabilities = 0;
 	}
 
+out:
 	return capabilities;
 }
 
@@ -2921,6 +2989,30 @@ static bool wdc_nvme_parse_dev_status_log_entry(void *log_data, __u32 *ret_data,
 	}
 
 	*ret_data = 0;
+	return false;
+}
+
+static bool wdc_nvme_parse_dev_status_log_str(void *log_data,
+		__u32 entry_id,
+		char *ret_data,
+		__u32 *ret_data_len)
+{
+	struct wdc_c2_log_subpage_header *entry_data = NULL;
+	struct wdc_c2_cbs_data *entry_str_data = NULL;
+
+	if (wdc_parse_dev_mng_log_entry(log_data, entry_id, &entry_data)) {
+		if (entry_data) {
+			entry_str_data = (struct wdc_c2_cbs_data *)&entry_data->data;
+			memcpy(ret_data,
+				(void *)&entry_str_data->data,
+				le32_to_cpu(entry_str_data->length));
+			*ret_data_len = le32_to_cpu(entry_str_data->length);
+			return true;
+		}
+	}
+
+	*ret_data = 0;
+	*ret_data_len = 0;
 	return false;
 }
 
