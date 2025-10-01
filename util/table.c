@@ -46,17 +46,23 @@ static void table_print_centered(struct value *val, int width, enum fmt_type typ
 	int i, len, left_pad, right_pad;
 	char buf[64];
 
-	if (type == FMT_STRING) {
+	switch (type) {
+	case FMT_STRING:
 		len = strlen(val->s);
-	} else if (type == FMT_INT) {
+		break;
+	case FMT_INT:
 		len = snprintf(buf, sizeof(buf), "%d", val->i);
-	} else if (type == FMT_UNSIGNED) {
+		break;
+	case FMT_UNSIGNED:
 		len = snprintf(buf, sizeof(buf), "%u", val->u);
-	} else if (type == FMT_LONG) {
+		break;
+	case FMT_LONG:
 		len = snprintf(buf, sizeof(buf), "%ld", val->ld);
-	} else if (type == FMT_UNSIGNED_LONG) {
+		break;
+	case FMT_UNSIGNED_LONG:
 		len = snprintf(buf, sizeof(buf), "%lu", val->lu);
-	} else {
+		break;
+	default:
 		fprintf(stderr, "Invalid format!\n");
 		return;
 	}
@@ -69,16 +75,25 @@ static void table_print_centered(struct value *val, int width, enum fmt_type typ
 		putchar(' ');
 
 	/* print value */
-	if (type == FMT_STRING)
+	switch (type) {
+	case FMT_STRING:
 		printf("%s%s", val->s, add_pad ? "" : " ");
-	else if (type == FMT_INT)
+		break;
+	case FMT_INT:
 		printf("%d%s", val->i, add_pad ? "" : " ");
-	else if (type == FMT_UNSIGNED)
+		break;
+	case FMT_UNSIGNED:
 		printf("%u%s", val->u, add_pad ? "" : " ");
-	else if (type == FMT_LONG)
+		break;
+	case FMT_LONG:
 		printf("%ld%s", val->ld, add_pad ? "" : " ");
-	else if (type == FMT_UNSIGNED_LONG)
+		break;
+	case FMT_UNSIGNED_LONG:
 		printf("%lu%s", val->lu, add_pad ? "" : " ");
+		break;
+	default:
+		break;
+	}
 
 	/* add right padding */
 	for (i = 0; i < right_pad; i++)
@@ -96,15 +111,18 @@ static void table_print_columns(const struct table *t)
 		last_col = col == t->num_columns - 1 ? true : false;
 		c = &t->columns[col];
 		width = c->width;
-		if (c->align == LEFT)
-			width *= -1;
-
-		if (c->align == CENTERED) {
+		switch (c->align) {
+		case CENTERED:
 			v.s = c->name;
 			v.align = c->align;
 			table_print_centered(&v, width, FMT_STRING, !last_col);
-		} else {
+			break;
+		case LEFT:
+			width *= -1;
+			fallthrough;
+		default:
 			printf("%*s%s", width, c->name, last_col ? "" : " ");
+			break;
 		}
 	}
 
@@ -138,12 +156,14 @@ static void table_print_rows(const struct table *t)
 			v = &r->val[col];
 
 			width = c->width;
-			if (v->align == LEFT)
-				width *= -1;
-
-			if (v->align == CENTERED) {
+			switch (v->align) {
+			case CENTERED:
 				table_print_centered(v, width, v->type, !last_col);
-			} else {
+				break;
+			case LEFT:
+				width *= -1;
+				fallthrough;
+			default:
 				switch (v->type) {
 				case FMT_STRING:
 					printf("%*s%s", width, v->s, last_col ? "" : " ");
@@ -164,6 +184,7 @@ static void table_print_rows(const struct table *t)
 					fprintf(stderr, "Invalid format!\n");
 					break;
 				}
+				break;
 			}
 		}
 		printf("\n");
