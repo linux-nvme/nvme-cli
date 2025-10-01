@@ -211,14 +211,30 @@ void table_add_row(struct table *t, int row_id)
 
 struct table *table_init(void)
 {
-	struct table *t;
+	struct table *t = malloc(sizeof(struct table));
 
-	t = malloc(sizeof(struct table));
 	if (!t)
 		return NULL;
 
 	memset(t, 0, sizeof(struct table));
+
 	return t;
+}
+
+struct table *table_init_with_columns(struct table_column *c, int num_columns)
+{
+	struct table *t = table_init();
+
+	if (!t)
+		return NULL;
+
+	if (table_add_columns(t, c, num_columns)) {
+		table_free(t);
+		return NULL;
+	}
+
+	return t;
+
 }
 
 static int table_add_column(struct table *t, struct table_column *c)
