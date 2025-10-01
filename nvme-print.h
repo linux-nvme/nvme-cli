@@ -346,6 +346,7 @@ bool nvme_is_fabrics_optional_reg(int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);
 bool nvme_registers_pmrctl_ready(__u32 pmrctl);
 const char *nvme_degrees_string(long t);
+const char *nvme_degrees_fahrenheit_string(long t);
 void print_array(char *name, __u8 *data, int size);
 void json_print(struct json_object *r);
 struct json_object *obj_create_array_obj(struct json_object *o, const char *k);
