@@ -24,6 +24,18 @@
 #include "logging.h"
 #include "common.h"
 
+enum simple_list_col {
+	SIMPLE_LIST_COL_NODE,
+	SIMPLE_LIST_COL_GENERIC,
+	SIMPLE_LIST_COL_SN,
+	SIMPLE_LIST_COL_MODEL,
+	SIMPLE_LIST_COL_NS,
+	SIMPLE_LIST_COL_USAGE,
+	SIMPLE_LIST_COL_FORMAT,
+	SIMPLE_LIST_COL_FW_REV,
+	SIMPLE_LIST_COL_NUM,
+};
+
 static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
 static const char dash[100] = {[0 ... 99] = '-'};
@@ -102,6 +114,11 @@ struct nvme_resources {
 	struct strset subsystems;
 	struct strset ctrls;
 	struct strset namespaces;
+};
+
+struct nvme_resources_table {
+	struct nvme_resources *res;
+	struct table *t;
 };
 
 static int nvme_resources_init(nvme_root_t r, struct nvme_resources *res)
@@ -5346,7 +5363,7 @@ static void stdout_generic_full_path(nvme_ns_t n, char *path, size_t len)
 	snprintf(path, len, "ng%dn%d", instance, head_instance);
 }
 
-static void stdout_list_item(nvme_ns_t n)
+static void list_item(nvme_ns_t n, struct table *t)
 {
 	char usage[128] = { 0 }, format[128] = { 0 };
 	char devname[128] = { 0 }; char genname[128] = { 0 };
@@ -5358,6 +5375,8 @@ static void stdout_list_item(nvme_ns_t n)
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
 	const char *l_suffix = suffix_binary_get(&lba);
+	char ns[STR_LEN];
+	int row;
 
 	snprintf(usage, sizeof(usage), "%6.2f %2sB / %6.2f %2sB", nuse,
 		u_suffix, nsze, s_suffix);
@@ -5367,19 +5386,76 @@ static void stdout_list_item(nvme_ns_t n)
 	stdout_dev_full_path(n, devname, sizeof(devname));
 	stdout_generic_full_path(n, genname, sizeof(genname));
 
-	printf("%-21s %-21s %-20s %-40s %#-10x %-26s %-16s %-8s\n",
-		devname, genname, nvme_ns_get_serial(n),
-		nvme_ns_get_model(n), nvme_ns_get_nsid(n), usage, format,
-		nvme_ns_get_firmware(n));
+	if (!t) {
+		printf("%-21s %-21s %-20s %-40s %#-10x %-26s %-16s %-8s\n",
+		       devname, genname, nvme_ns_get_serial(n),
+		       nvme_ns_get_model(n), nvme_ns_get_nsid(n), usage, format,
+		       nvme_ns_get_firmware(n));
+		return;
+	}
+
+	row = table_get_row_id(t);
+	if (row < 0) {
+		printf("Failed to add row\n");
+		return;
+	}
+	if (table_set_value_str(t, SIMPLE_LIST_COL_NODE, row, devname, LEFT)) {
+		printf("Failed to set node value\n");
+		return;
+	}
+	if (table_set_value_str(t, SIMPLE_LIST_COL_GENERIC, row, genname, LEFT)) {
+		printf("Failed to set generic value\n");
+		return;
+	}
+	if (table_set_value_str(t, SIMPLE_LIST_COL_SN, row, nvme_ns_get_serial(n), LEFT)) {
+		printf("Failed to set sn value\n");
+		return;
+	}
+	if (table_set_value_str(t, SIMPLE_LIST_COL_MODEL, row, nvme_ns_get_model(n), LEFT)) {
+		printf("Failed to set model value\n");
+		return;
+	}
+	if (!sprintf(ns, "0x%x", nvme_ns_get_nsid(n))) {
+		printf("Failed to output ns string\n");
+		return;
+	}
+	if (table_set_value_str(t, SIMPLE_LIST_COL_NS, row, ns, LEFT)) {
+		printf("Failed to set ns value\n");
+		return;
+	}
+	if (table_set_value_str(t, SIMPLE_LIST_COL_USAGE, row, usage, LEFT)) {
+		printf("Failed to set usage value\n");
+		return;
+	}
+	if (table_set_value_str(t, SIMPLE_LIST_COL_FORMAT, row, format, LEFT)) {
+		printf("Failed to set format value\n");
+		return;
+	}
+	if (table_set_value_str(t, SIMPLE_LIST_COL_FW_REV, row, nvme_ns_get_firmware(n), LEFT)) {
+		printf("Failed to set fw rev value\n");
+		return;
+	}
+	table_add_row(t, row);
+}
+
+static void stdout_list_item(nvme_ns_t n)
+{
+	list_item(n, NULL);
+}
+
+static void stdout_list_item_table(nvme_ns_t n, struct table *t)
+{
+	list_item(n, t);
 }
 
 static bool stdout_simple_ns(const char *name, void *arg)
 {
-	struct nvme_resources *res = arg;
+	struct nvme_resources_table *rst_t = arg;
+	struct nvme_resources *res = rst_t->res;
 	nvme_ns_t n;
 
 	n = htable_ns_get(&res->ht_n, name);
-	stdout_list_item(n);
+	stdout_list_item_table(n, rst_t->t);
 
 	return true;
 }
@@ -5387,16 +5463,32 @@ static bool stdout_simple_ns(const char *name, void *arg)
 static void stdout_simple_list(nvme_root_t r)
 {
 	struct nvme_resources res;
+	struct table_column columns[SIMPLE_LIST_COL_NUM] = {
+		{ "Node", LEFT, 21 },
+		{ "Generic", LEFT, 21 },
+		{ "SN", LEFT, 20 },
+		{ "Model", LEFT, 40 },
+		{ "Namespace", LEFT, 10 },
+		{ "Usage", LEFT, 26 },
+		{ "Format", LEFT, 16 },
+		{ "FW Rev", LEFT, 8 },
+	};
+	struct table *t = table_init_with_columns(columns, ARRAY_SIZE(columns));
+	struct nvme_resources_table res_t = { &res, t };
+
+	if (!t) {
+		printf("Failed to init table\n");
+		return;
+	}
 
 	nvme_resources_init(r, &res);
 
-	printf("%-21s %-21s %-20s %-40s %-10s %-26s %-16s %-8s\n",
-	       "Node", "Generic", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-.21s %-.21s %-.20s %-.40s %-.10s %-.26s %-.16s %-.8s\n",
-	       dash, dash, dash, dash, dash, dash, dash, dash);
-	strset_iterate(&res.namespaces, stdout_simple_ns, &res);
+	strset_iterate(&res.namespaces, stdout_simple_ns, &res_t);
+
+	table_print(t);
 
 	nvme_resources_free(&res);
+	table_free(t);
 }
 
 static void stdout_ns_details(nvme_ns_t n)
