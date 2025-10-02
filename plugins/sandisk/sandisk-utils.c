@@ -11,12 +11,24 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include "common.h"
 #include "nvme.h"
 #include "libnvme.h"
 #include "nvme-print.h"
 #include "sandisk-utils.h"
 #include "plugins/wdc/wdc-nvme-cmds.h"
 
+/*  WDC UUID value */
+static const __u8 WDC_UUID[NVME_UUID_LEN] = {
+	0x2d, 0xb9, 0x8c, 0x52, 0x0c, 0x4c, 0x5a, 0x15,
+	0xab, 0xe6, 0x33, 0x29, 0x9a, 0x70, 0xdf, 0xd0
+};
+
+/*  Sandisk UUID value */
+static const __u8 SNDK_UUID[NVME_UUID_LEN] = {
+	0xde, 0x87, 0xd1, 0xeb, 0x72, 0xc5, 0x58, 0x0b,
+	0xad, 0xd8, 0x3c, 0x29, 0xd1, 0x23, 0x7c, 0x70
+};
 
 int sndk_get_pci_ids(nvme_root_t r, struct nvme_dev *dev,
 			   uint32_t *device_id, uint32_t *vendor_id)
@@ -131,6 +143,390 @@ bool sndk_check_device(nvme_root_t r, struct nvme_dev *dev)
 	return supported;
 }
 
+void sndk_get_commit_action_bin(__u8 commit_action_type, char *action_bin)
+{
+	switch (commit_action_type) {
+	case 0:
+		strcpy(action_bin, "000b");
+		break;
+	case 1:
+		strcpy(action_bin, "001b");
+		break;
+	case 2:
+		strcpy(action_bin, "010b");
+		break;
+	case 3:
+		strcpy(action_bin, "011b");
+		break;
+	case 4:
+		strcpy(action_bin, "100b");
+		break;
+	case 5:
+		strcpy(action_bin, "101b");
+		break;
+	case 6:
+		strcpy(action_bin, "110b");
+		break;
+	case 7:
+		strcpy(action_bin, "111b");
+		break;
+	default:
+		strcpy(action_bin, "INVALID");
+	}
+}
+
+bool sndk_parse_dev_mng_log_entry(void *data,
+		__u32 entry_id,
+		struct sndk_c2_log_subpage_header **log_entry)
+{
+	__u32 remaining_len = 0;
+	__u32 log_length = 0;
+	__u32 log_entry_size = 0;
+	__u32 log_entry_id = 0;
+	__u32 offset = 0;
+	bool found = false;
+	struct sndk_c2_log_subpage_header *p_next_log_entry = NULL;
+	struct sndk_c2_log_page_header *hdr_ptr = (struct sndk_c2_log_page_header *)data;
+
+	log_length = le32_to_cpu(hdr_ptr->length);
+	/* Ensure log data is large enough for common header */
+	if (log_length < sizeof(struct sndk_c2_log_page_header)) {
+		fprintf(stderr,
+		    "ERROR: %s: log smaller than header. log_len: 0x%x  HdrSize: %"PRIxPTR"\n",
+		    __func__, log_length, sizeof(struct sndk_c2_log_page_header));
+		return found;
+	}
+
+	/* Get pointer to first log Entry */
+	offset = sizeof(struct sndk_c2_log_page_header);
+	p_next_log_entry = (struct sndk_c2_log_subpage_header *)(((__u8 *)data) + offset);
+	remaining_len = log_length - offset;
+
+	if (!log_entry) {
+		fprintf(stderr, "ERROR: SNDK - %s: No log entry pointer.\n", __func__);
+		return found;
+	}
+	*log_entry = NULL;
+
+	/* Proceed only if there is at least enough data to read an entry header */
+	while (remaining_len >= sizeof(struct sndk_c2_log_subpage_header)) {
+		/* Get size of the next entry */
+		log_entry_size = le32_to_cpu(p_next_log_entry->length);
+		log_entry_id = le32_to_cpu(p_next_log_entry->entry_id);
+
+		/*
+		 * If log entry size is 0 or the log entry goes past the end
+		 * of the data, we must be at the end of the data
+		 */
+		if (!log_entry_size || log_entry_size > remaining_len) {
+			fprintf(stderr, "ERROR: SNDK: %s: Detected unaligned end of the data. ",
+				__func__);
+			fprintf(stderr, "Data Offset: 0x%x Entry Size: 0x%x, ",
+				offset, log_entry_size);
+			fprintf(stderr, "Remaining Log Length: 0x%x Entry Id: 0x%x\n",
+				remaining_len, log_entry_id);
+
+			/* Force the loop to end */
+			remaining_len = 0;
+		} else if (!log_entry_id || log_entry_id > 200) {
+			/* Invalid entry - fail the search */
+			fprintf(stderr, "ERROR: SNDK: %s: Invalid entry found at offset: 0x%x ",
+				__func__, offset);
+			fprintf(stderr, "Entry Size: 0x%x, Remaining Log Length: 0x%x ",
+				log_entry_size, remaining_len);
+			fprintf(stderr, "Entry Id: 0x%x\n", log_entry_id);
+
+			/* Force the loop to end */
+			remaining_len = 0;
+		} else {
+			if (log_entry_id == entry_id) {
+				found = true;
+				*log_entry = p_next_log_entry;
+				remaining_len = 0;
+			} else {
+				remaining_len -= log_entry_size;
+			}
+
+			if (remaining_len > 0) {
+				/* Increment the offset counter */
+				offset += log_entry_size;
+
+				/* Get the next entry */
+				p_next_log_entry =
+				(struct sndk_c2_log_subpage_header *)(((__u8 *)data) + offset);
+			}
+		}
+	}
+
+	return found;
+}
+
+bool sndk_nvme_parse_dev_status_log_entry(void *log_data,
+		__u32 entry_id,
+		__u32 *ret_data)
+{
+	struct sndk_c2_log_subpage_header *entry_data = NULL;
+
+	if (sndk_parse_dev_mng_log_entry(log_data, entry_id, &entry_data)) {
+		if (entry_data) {
+			*ret_data = le32_to_cpu(entry_data->data);
+			return true;
+		}
+	}
+
+	*ret_data = 0;
+	return false;
+}
+
+bool sndk_nvme_parse_dev_status_log_str(void *log_data,
+		__u32 entry_id,
+		char *ret_data,
+		__u32 *ret_data_len)
+{
+	struct sndk_c2_log_subpage_header *entry_data = NULL;
+	struct sndk_c2_cbs_data *entry_str_data = NULL;
+
+	if (sndk_parse_dev_mng_log_entry(log_data, entry_id, &entry_data)) {
+		if (entry_data) {
+			entry_str_data = (struct sndk_c2_cbs_data *)&entry_data->data;
+			memcpy(ret_data,
+				(void *)&entry_str_data->data,
+				le32_to_cpu(entry_str_data->length));
+			*ret_data_len = le32_to_cpu(entry_str_data->length);
+			return true;
+		}
+	}
+
+	*ret_data = 0;
+	*ret_data_len = 0;
+	return false;
+}
+
+
+bool sndk_get_dev_mgment_data(nvme_root_t r, struct nvme_dev *dev,
+				void **data)
+{
+	bool found = false;
+	__u32 device_id = 0, vendor_id = 0;
+	int uuid_index = 0;
+	struct nvme_id_uuid_list uuid_list;
+
+	*data = NULL;
+
+	/* The sndk_get_pci_ids function could fail when drives are connected
+	 * via a PCIe switch.  Therefore, the return code is intentionally
+	 * being ignored.  The device_id and vendor_id variables have been
+	 * initialized to 0 so the code can continue on without issue for
+	 * both cases: sndk_get_pci_ids successful or failed.
+	 */
+	sndk_get_pci_ids(r, dev, &device_id, &vendor_id);
+
+	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
+	if (!nvme_get_uuid_list(dev_fd(dev), &uuid_list)) {
+		/* check for the Sandisk UUID first  */
+		uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+
+		if (uuid_index < 0) {
+			/* The Sandisk UUID is not found;
+			 * check for the WDC UUID second.
+			 */
+			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+		}
+
+		if (uuid_index >= 0)
+			found = sndk_get_dev_mgmt_log_page_data(dev, data, uuid_index);
+		else {
+			fprintf(stderr, "%s: UUID lists are supported but a matching ",
+				__func__);
+			fprintf(stderr, "uuid was not found\n");
+		}
+	} else {
+		/* UUID lists are not supported, Default to uuid-index 0  */
+		fprintf(stderr, "INFO: SNDK: %s:  UUID Lists not supported\n",
+				__func__);
+		uuid_index = 0;
+		found = sndk_get_dev_mgmt_log_page_data(dev, data, uuid_index);
+	}
+
+	return found;
+}
+
+bool sndk_validate_dev_mng_log(void *data)
+{
+	__u32 remaining_len = 0;
+	__u32 log_length = 0;
+	__u32 log_entry_size = 0;
+	__u32 log_entry_id = 0;
+	__u32 offset = 0;
+	bool valid_log = false;
+	struct sndk_c2_log_subpage_header *p_next_log_entry = NULL;
+	struct sndk_c2_log_page_header *hdr_ptr = (struct sndk_c2_log_page_header *)data;
+
+	log_length = le32_to_cpu(hdr_ptr->length);
+	/* Ensure log data is large enough for common header */
+	if (log_length < sizeof(struct sndk_c2_log_page_header)) {
+		fprintf(stderr,
+		    "ERROR: %s: log smaller than header. log_len: 0x%x  HdrSize: %"PRIxPTR"\n",
+		    __func__, log_length, sizeof(struct sndk_c2_log_page_header));
+		return valid_log;
+	}
+
+	/* Get pointer to first log Entry */
+	offset = sizeof(struct sndk_c2_log_page_header);
+	p_next_log_entry = (struct sndk_c2_log_subpage_header *)(((__u8 *)data) + offset);
+	remaining_len = log_length - offset;
+
+	/* Proceed only if there is at least enough data to read an entry header */
+	while (remaining_len >= sizeof(struct sndk_c2_log_subpage_header)) {
+		/* Get size of the next entry */
+		log_entry_size = le32_to_cpu(p_next_log_entry->length);
+		log_entry_id = le32_to_cpu(p_next_log_entry->entry_id);
+		/*
+		 * If log entry size is 0 or the log entry goes past the end
+		 * of the data, we must be at the end of the data
+		 */
+		if (!log_entry_size || log_entry_size > remaining_len) {
+			fprintf(stderr, "ERROR: SNDK: %s: Detected unaligned end of the data. ",
+				__func__);
+			fprintf(stderr, "Data Offset: 0x%x Entry Size: 0x%x, ",
+				offset, log_entry_size);
+			fprintf(stderr, "Remaining Log Length: 0x%x Entry Id: 0x%x\n",
+				remaining_len, log_entry_id);
+
+			/* Force the loop to end */
+			remaining_len = 0;
+		} else if (!log_entry_id || log_entry_id > 200) {
+			/* Invalid entry - fail the search */
+			fprintf(stderr, "ERROR: SNDK: %s: Invalid entry found at offset: 0x%x ",
+				__func__, offset);
+			fprintf(stderr, "Entry Size: 0x%x, Remaining Log Length: 0x%x ",
+				log_entry_size, remaining_len);
+			fprintf(stderr, "Entry Id: 0x%x\n", log_entry_id);
+
+			/* Force the loop to end */
+			remaining_len = 0;
+			valid_log = false;
+		} else {
+			/* A valid log has at least one entry and no invalid entries */
+			valid_log = true;
+			remaining_len -= log_entry_size;
+			if (remaining_len > 0) {
+				/* Increment the offset counter */
+				offset += log_entry_size;
+				/* Get the next entry */
+				p_next_log_entry =
+				(struct sndk_c2_log_subpage_header *)(((__u8 *)data) + offset);
+			}
+		}
+	}
+
+	return valid_log;
+}
+
+bool sndk_get_dev_mgmt_log_page_data(struct nvme_dev *dev,
+		void **log_data,
+		__u8 uuid_ix)
+{
+	void *data;
+	struct sndk_c2_log_page_header *hdr_ptr;
+	__u32 length = 0;
+	int ret = 0;
+	bool valid = false;
+
+	data = (__u8 *)malloc(sizeof(__u8) * SNDK_DEV_MGMNT_LOG_PAGE_LEN);
+	if (!data) {
+		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", strerror(errno));
+		return false;
+	}
+
+	memset(data, 0, sizeof(__u8) * SNDK_DEV_MGMNT_LOG_PAGE_LEN);
+
+	/* get the log page length */
+	struct nvme_get_log_args args_len = {
+		.args_size	= sizeof(args_len),
+		.fd		= dev_fd(dev),
+		.lid		= SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
+		.nsid		= 0xFFFFFFFF,
+		.lpo		= 0,
+		.lsp		= NVME_LOG_LSP_NONE,
+		.lsi		= 0,
+		.rae		= false,
+		.uuidx		= uuid_ix,
+		.csi		= NVME_CSI_NVM,
+		.ot		= false,
+		.len		= SNDK_DEV_MGMNT_LOG_PAGE_LEN,
+		.log		= data,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	ret = nvme_get_log(&args_len);
+	if (ret) {
+		fprintf(stderr,
+			"ERROR: SNDK: Unable to get 0x%x Log Page with uuid %d, ret = 0x%x\n",
+			SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID, uuid_ix, ret);
+		goto end;
+	}
+
+	hdr_ptr = (struct sndk_c2_log_page_header *)data;
+	length = le32_to_cpu(hdr_ptr->length);
+
+	if (length > SNDK_DEV_MGMNT_LOG_PAGE_LEN) {
+		/* Log page buffer too small for actual data */
+		free(data);
+		data = calloc(length, sizeof(__u8));
+		if (!data) {
+			fprintf(stderr, "ERROR: SNDK: malloc: %s\n", strerror(errno));
+			goto end;
+		}
+
+		/* get the log page data with the increased length */
+		struct nvme_get_log_args args_data = {
+			.args_size	= sizeof(args_data),
+			.fd		= dev_fd(dev),
+			.lid		= SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
+			.nsid		= 0xFFFFFFFF,
+			.lpo		= 0,
+			.lsp		= NVME_LOG_LSP_NONE,
+			.lsi		= 0,
+			.rae		= false,
+			.uuidx		= uuid_ix,
+			.csi		= NVME_CSI_NVM,
+			.ot		= false,
+			.len		= length,
+			.log		= data,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
+		};
+		ret = nvme_get_log(&args_data);
+
+		if (ret) {
+			fprintf(stderr,
+				"ERROR: SNDK: Unable to read 0x%x Log with uuid %d, ret = 0x%x\n",
+				SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID, uuid_ix, ret);
+			goto end;
+		}
+	}
+
+	valid = sndk_validate_dev_mng_log(data);
+	if (valid) {
+		/* Ensure size of log data matches length in log header */
+		*log_data = calloc(length, sizeof(__u8));
+		if (!*log_data) {
+			fprintf(stderr, "ERROR: SNDK: calloc: %s\n", strerror(errno));
+			valid = false;
+			goto end;
+		}
+		memcpy((void *)*log_data, data, length);
+	} else {
+		fprintf(stderr, "ERROR: SNDK: C2 log page not found with uuid index %d\n",
+			uuid_ix);
+	}
+
+end:
+	free(data);
+	return valid;
+}
+
 __u64 sndk_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 {
 	__u64 capabilities = 0;
@@ -228,7 +624,13 @@ __u64 sndk_get_enc_drive_capabilities(nvme_root_t r,
 	int ret;
 	uint32_t read_vendor_id;
 	__u64 capabilities = 0;
-	__u32 cust_id;
+	__u32 cust_id, market_name_len;
+	char marketing_name[64];
+	void *dev_mng_log = NULL;
+	int uuid_index = 0;
+	struct nvme_id_uuid_list uuid_list;
+
+	memset(marketing_name, 0, 64);
 
 	ret = sndk_get_vendor_id(dev, &read_vendor_id);
 	if (ret < 0)
@@ -241,47 +643,97 @@ __u64 sndk_get_enc_drive_capabilities(nvme_root_t r,
 			SNDK_DRIVE_CAP_CLEAR_ASSERT |
 			SNDK_DRIVE_CAP_RESIZE);
 
+		/* Check for the Sandisk or WDC UUID index  */
+		memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
+		if (!nvme_get_uuid_list(dev_fd(dev), &uuid_list)) {
+			/* check for the Sandisk UUID first  */
+			uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+
+			if (uuid_index < 0)
+				/* The Sandisk UUID is not found;
+				 * check for the WDC UUID second.
+				 */
+				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+		} else {
+			/* UUID Lists not supported, Use default uuid index - 0 */
+			fprintf(stderr, "INFO: SNDK: %s:  UUID Lists not supported\n",
+					__func__);
+			uuid_index = 0;
+		}
+
+		/* verify the 0xC2 Device Manageability log page is supported */
+		if (run_wdc_nvme_check_supported_log_page(r, dev,
+				SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
+				uuid_index) == false) {
+			fprintf(stderr, "ERROR: SNDK: 0xC2 Log Page not supported, ");
+			fprintf(stderr, "uuid_index: %d\n", uuid_index);
+			ret = -1;
+			goto out;
+		}
+
+		if (!sndk_get_dev_mgment_data(r, dev, &dev_mng_log)) {
+			fprintf(stderr, "ERROR: SNDK: 0xC2 Log Page not found\n");
+			ret = -1;
+			goto out;
+		}
+
+		/* Get the customer ID */
+		if (!sndk_nvme_parse_dev_status_log_entry(dev_mng_log,
+				SNDK_C2_CUSTOMER_ID_ID,
+				(void *)&cust_id))
+			fprintf(stderr, "ERROR: SNDK: Get Customer FW ID Failed\n");
+
+		if (!sndk_nvme_parse_dev_status_log_str(dev_mng_log,
+				SNDK_C2_MARKETING_NAME_ID,
+				(char *)marketing_name,
+				&market_name_len))
+			fprintf(stderr, "ERROR: SNDK: Get Marketing Name Failed\n");
+
 		/* verify the 0xC3 log page is supported */
 		if (run_wdc_nvme_check_supported_log_page(r, dev,
-			SNDK_LATENCY_MON_LOG_ID))
+			SNDK_LATENCY_MON_LOG_ID, 0))
 			capabilities |= SNDK_DRIVE_CAP_C3_LOG_PAGE;
 
 		/* verify the 0xCB log page is supported */
 		if (run_wdc_nvme_check_supported_log_page(r, dev,
-			SNDK_NVME_GET_FW_ACT_HISTORY_LOG_ID))
+			SNDK_NVME_GET_FW_ACT_HISTORY_LOG_ID, 0))
 			capabilities |= SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY;
 
 		/* verify the 0xCA log page is supported */
 		if (run_wdc_nvme_check_supported_log_page(r, dev,
-			SNDK_NVME_GET_DEVICE_INFO_LOG_ID))
+			SNDK_NVME_GET_DEVICE_INFO_LOG_ID, 0))
 			capabilities |= SNDK_DRIVE_CAP_CA_LOG_PAGE;
 
 		/* verify the 0xD0 log page is supported */
 		if (run_wdc_nvme_check_supported_log_page(r, dev,
-			SNDK_NVME_GET_VU_SMART_LOG_ID))
+			SNDK_NVME_GET_VU_SMART_LOG_ID, 0))
 			capabilities |= SNDK_DRIVE_CAP_D0_LOG_PAGE;
-
-		cust_id = run_wdc_get_fw_cust_id(r, dev);
-		if (cust_id == SNDK_INVALID_CUSTOMER_ID) {
-			fprintf(stderr, "%s: ERROR: SNDK: invalid customer id\n", __func__);
-			return -1;
-		}
 
 		if ((cust_id == SNDK_CUSTOMER_ID_0x1004) ||
 			(cust_id == SNDK_CUSTOMER_ID_0x1008) ||
 			(cust_id == SNDK_CUSTOMER_ID_0x1005) ||
-			(cust_id == SNDK_CUSTOMER_ID_0x1304))
-			capabilities |= (SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
+			(cust_id == SNDK_CUSTOMER_ID_0x1304) ||
+			(!strncmp(marketing_name, SNDK_SN861_MARKETING_NAME_1, market_name_len)) ||
+			(!strncmp(marketing_name, SNDK_SN861_MARKETING_NAME_2, market_name_len)))
+			/* Set capabilities for OCP compliant drives */
+			capabilities |= (SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
+					SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
 					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE);
-		else
+		else {
 			capabilities |= (SNDK_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
-					SNDK_DRIVE_CAP_CLEAR_PCIE);
+				SNDK_DRIVE_CAP_CLEAR_PCIE);
 
+			/* if the 0xCB log page is supported */
+			if (run_wdc_nvme_check_supported_log_page(r, dev,
+				SNDK_NVME_GET_FW_ACT_HISTORY_LOG_ID, 0))
+				capabilities |= SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY;
+		}
 		break;
 	default:
 		capabilities = 0;
 	}
 
+out:
 	return capabilities;
 }
 

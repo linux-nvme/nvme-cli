@@ -173,8 +173,19 @@
 #define SNDK_NVME_GET_FW_ACT_HISTORY_LOG_ID         0xCB
 #define SNDK_NVME_GET_VU_SMART_LOG_ID               0xD0
 
+#define SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID         0xC2
+#define SNDK_DEV_MGMNT_LOG_PAGE_LEN                 0x1000
+
+#define SNDK_C2_MARKETING_NAME_ID                   0x07
+#define SNDK_C2_LOG_PAGES_SUPPORTED_ID              0x08
+#define SNDK_C2_CUSTOMER_ID_ID                      0x15
+
+#define SNDK_SN861_MARKETING_NAME_1                 "Ultrastar DC SN861"
+#define SNDK_SN861_MARKETING_NAME_2                 "ULTRASTAR DC SN861"
+
 /* Vendor defined Feature IDs */
-#define SNDK_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID	0xD2
+#define SNDK_NVME_CLEAR_FW_ACT_HIST_VU_FID                  0xC1
+#define SNDK_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID   0xD2
 
 /* Customer ID's */
 #define SNDK_CUSTOMER_ID_GN             0x0001
@@ -191,12 +202,16 @@
 #define SNDK_NVME_CAP_UDUI_OPCODE			0xFA
 
 /* Telemtery types for vs-internal-log command */
-#define SNDK_TELEMETRY_TYPE_NONE			0x0
-#define SNDK_TELEMETRY_TYPE_HOST			0x1
-#define SNDK_TELEMETRY_TYPE_CONTROLLER			0x2
+#define SNDK_TELEMETRY_TYPE_NONE            0x0
+#define SNDK_TELEMETRY_TYPE_HOST            0x1
+#define SNDK_TELEMETRY_TYPE_CONTROLLER      0x2
 
 /* Misc */
-#define SNDK_MAX_PATH_LEN	256
+#define SNDK_MAX_PATH_LEN                   256
+#define SNDK_GUID_LENGTH                    16
+
+#define SNDK_MAX_NUM_ACT_HIST_ENTRIES       20
+#define SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN  0x1000
 
 struct SNDK_UtilsTimeInfo {
 	unsigned int year;
@@ -211,6 +226,49 @@ struct SNDK_UtilsTimeInfo {
 	int zone; /* Zone value like +530 or -300 */
 };
 
+/* Additional C2 Log Page */
+struct sndk_c2_log_page_header {
+	__le32	length;
+	__le32	version;
+};
+
+struct sndk_c2_log_subpage_header {
+	__le32	length;
+	__le32	entry_id;
+	__le32	data;
+};
+
+struct sndk_c2_cbs_data {
+	__le32	length;
+	__u8	data[];
+};
+
+struct __packed sndk_fw_act_history_log_entry_c2 {
+	__u8		entry_version_num;
+	__u8		entry_len;
+	__le16		reserved;
+	__le16		fw_act_hist_entries;
+	__le64		timestamp;
+	__u8		reserved2[8];
+	__le64		power_cycle_count;
+	__le64		previous_fw_version;
+	__le64		current_fw_version;
+	__u8		slot_number;
+	__u8		commit_action_type;
+	__le16		result;
+	__u8		reserved3[14];
+};
+
+struct __packed sndk_fw_act_history_log_format_c2 {
+	__u8		log_identifier;
+	__u8		reserved[3];
+	__le32		num_entries;
+	struct		sndk_fw_act_history_log_entry_c2 entry[SNDK_MAX_NUM_ACT_HIST_ENTRIES];
+	__u8		reserved2[2790];
+	__le16		log_page_version;
+	__u8		log_page_guid[SNDK_GUID_LENGTH];
+};
+
 int sndk_get_pci_ids(nvme_root_t r,
 		struct nvme_dev *dev,
 		uint32_t *device_id,
@@ -221,6 +279,32 @@ int sndk_get_vendor_id(struct nvme_dev *dev,
 
 bool sndk_check_device(nvme_root_t r,
 		struct nvme_dev *dev);
+
+void sndk_get_commit_action_bin(__u8 commit_action_type,
+		char *action_bin);
+
+bool sndk_parse_dev_mng_log_entry(void *data,
+		__u32 entry_id,
+		struct sndk_c2_log_subpage_header **log_entry);
+
+bool sndk_nvme_parse_dev_status_log_entry(void *log_data,
+		__u32 entry_id,
+		__u32 *ret_data);
+
+bool sndk_nvme_parse_dev_status_log_str(void *log_data,
+		__u32 entry_id,
+		char *ret_data,
+		__u32 *ret_data_len);
+
+bool sndk_get_dev_mgment_data(nvme_root_t r,
+		struct nvme_dev *dev,
+		void **data);
+
+bool sndk_validate_dev_mng_log(void *data);
+
+bool sndk_get_dev_mgmt_log_page_data(struct nvme_dev *dev,
+		void **log_data,
+		__u8 uuid_ix);
 
 __u64 sndk_get_drive_capabilities(nvme_root_t r,
 		struct nvme_dev *dev);

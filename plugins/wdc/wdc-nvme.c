@@ -13082,12 +13082,13 @@ __u32 run_wdc_get_fw_cust_id(nvme_root_t r, struct nvme_dev *dev)
 
 bool run_wdc_nvme_check_supported_log_page(nvme_root_t r,
 		struct nvme_dev *dev,
-		__u8 log_id)
+		__u8 log_id,
+		__u8 uuid_index)
 {
 	return wdc_nvme_check_supported_log_page(r,
 			dev,
 			log_id,
-			0);
+			uuid_index);
 }
 
 __u64 run_wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
