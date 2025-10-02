@@ -119,7 +119,8 @@ int run_wdc_cu_smart_log(int argc, char **argv,
 
 bool run_wdc_nvme_check_supported_log_page(nvme_root_t r,
 		struct nvme_dev *dev,
-		__u8 log_id);
+		__u8 log_id,
+		__u8 uuid_index);
 
 __u32 run_wdc_get_fw_cust_id(nvme_root_t r,
 		struct nvme_dev *dev);
