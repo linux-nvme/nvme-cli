@@ -57,6 +57,17 @@ int nvme_set_etdas(int fd, bool *changed);
 int nvme_clear_etdas(int fd, bool *changed);
 
 /**
+ * nvme_get_uuid_list - Returns the uuid list (if supported)
+ * @fd:	 File descriptor of nvme device
+ * @uuid_list:	UUID list returned by identify UUID
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_uuid_list(int fd,
+		struct nvme_id_uuid_list *uuid_list);
+
+/**
  * nvme_get_telemetry_max() - Get telemetry limits
  * @fd:		File descriptor of nvme device
  * @da:		On success return max supported data area

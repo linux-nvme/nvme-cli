@@ -168,6 +168,24 @@ int nvme_clear_etdas(int fd, bool *changed)
 	return 0;
 }
 
+int nvme_get_uuid_list(int fd, struct nvme_id_uuid_list *uuid_list)
+{
+	int err;
+	struct nvme_id_ctrl ctrl;
+
+	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
+	err = nvme_identify_ctrl(fd, &ctrl);
+	if (err) {
+		fprintf(stderr, "ERROR: nvme_identify_ctrl() failed 0x%x\n", err);
+		return err;
+	}
+
+	if ((ctrl.ctratt & NVME_CTRL_CTRATT_UUID_LIST) == NVME_CTRL_CTRATT_UUID_LIST)
+		err = nvme_identify_uuid(fd, uuid_list);
+
+	return err;
+}
+
 int nvme_get_telemetry_max(int fd, enum nvme_telemetry_da *da, size_t *data_tx)
 {
 	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
