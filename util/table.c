@@ -231,21 +231,14 @@ void table_add_row(struct table *t, int row_id)
 	}
 }
 
-struct table *table_init(void)
+struct table *table_create(void)
 {
-	struct table *t = malloc(sizeof(struct table));
-
-	if (!t)
-		return NULL;
-
-	memset(t, 0, sizeof(struct table));
-
-	return t;
+	return calloc(1, sizeof(struct table));
 }
 
 struct table *table_init_with_columns(struct table_column *c, int num_columns)
 {
-	struct table *t = table_init();
+	struct table *t = table_create();
 
 	if (!t)
 		return NULL;
@@ -256,7 +249,6 @@ struct table *table_init_with_columns(struct table_column *c, int num_columns)
 	}
 
 	return t;
-
 }
 
 static int table_add_column(struct table *t, struct table_column *c)

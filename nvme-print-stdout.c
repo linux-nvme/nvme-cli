@@ -5735,7 +5735,7 @@ static void stdout_tabular_subsystem_topology_multipath(nvme_subsystem_t s)
 		{"State", LEFT, 0},
 	};
 
-	t = table_init();
+	t = table_create();
 	if (!t) {
 		printf("Failed to init table\n");
 		return;
@@ -5931,7 +5931,7 @@ static void stdout_tabular_subsystem_topology(nvme_subsystem_t s)
 		{"State", LEFT, 0},
 	};
 
-	t = table_init();
+	t = table_create();
 	if (!t) {
 		printf("Failed to init table\n");
 		return;

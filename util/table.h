@@ -135,7 +135,7 @@ static inline void table_set_value_unsigned_long(struct table *t, int col,
 	v->type = FMT_UNSIGNED_LONG;
 }
 
-struct table *table_init(void);
+struct table *table_create(void);
 int table_add_columns(struct table *t, struct table_column *c, int num_columns);
 int table_add_columns_filter(struct table *t, struct table_column *c,
 			int num_columns,
@@ -151,7 +151,7 @@ void table_free(struct table *t);
  * @c:		Column definitions
  * @num_columns:Number of columns
  *
- * This is a function combined table_init() and table_add_columns().
+ * This is a function combined table_create() and table_add_columns().
  *
  * Return: The table instance, or NULL if unsuccessful. If allocated, the caller
  * is responsible to free the table.
