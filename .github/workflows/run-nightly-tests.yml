@@ -35,7 +35,8 @@ jobs:
             liburing-devel nbd device-mapper ktls-utils dosfstools \
             bc libnl3-cli cryptsetup sg3_utils pciutils unzip jq git wget \
             meson json-c-devel openssl-devel keyutils-libs-devel dbus-devel \
-            swig xz-devel libcurl-devel curl libarchive libarchive-devel json-c
+            swig xz-devel libcurl-devel curl libarchive libarchive-devel json-c \
+            expect
 
             # mdadm has a buffer overflow in v4.3 and was fixed with this commit:
             # https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=7f960c3bd050e76f8bf0a8a0c8fbdcbaa565fc78
