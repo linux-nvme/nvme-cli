@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme-write' <device> [--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>]
-			[--block-size=<size> | -c <size>]
+			[--block-size=<size> | -b <size>]
 			[--data-size=<size> | -z <size>]
 			[--metadata-size=<size> | -y <size>]
 			[--ref-tag=<reftag> | -r <reftag>]
