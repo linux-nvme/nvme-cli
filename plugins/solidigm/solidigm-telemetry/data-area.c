@@ -47,23 +47,8 @@ static bool uint8_array_try_string(const struct telemetry_log *tl,
 	// Get direct pointer to the UINT8 array in the telemetry log
 	const uint8_t *data_ptr = (const uint8_t *)tl->log + offset_byte;
 
-	// Calculate actual string length (stopping at null terminator if found)
-	size_t actual_length = 0;
-
-	for (actual_length = 0; actual_length < array_size; actual_length++) {
-		if (data_ptr[actual_length] == '\0')
-			break;
-	}
-	// making sure trailing bytes are nulls
-	for (size_t i = actual_length; i < array_size; i++) {
-		if (data_ptr[i] != '\0')
-			return false;
-	}
-
-	// Create JSON string directly from the data without intermediate buffer
-	*str_obj = json_object_new_string_len((const char *)data_ptr, actual_length);
-
-	return true;
+	// Use the generic converter function
+	return sldm_uint8_array_to_string(data_ptr, array_size, str_obj);
 }
 
 static void reverse_string(char *buff, size_t len)
@@ -575,11 +560,14 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 				    &header_nlogName)) {
 					int nlogName = json_object_get_int(header_nlogName);
 					char *name = (char *)&nlogName;
+					struct json_object *nlog_name_obj = NULL;
 
 					reverse_string(name, sizeof(uint32_t));
+					sldm_uint8_array_to_string((const uint8_t *)name,
+								   sizeof(uint32_t),
+								   &nlog_name_obj);
 					json_object_object_add(header_nlogSelect, "nlogName",
-						json_object_new_string_len(name,
-									   sizeof(uint32_t)));
+							       nlog_name_obj);
 				}
 			}
 			// Overwrite the object name
