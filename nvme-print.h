@@ -3,6 +3,7 @@
 #define NVME_PRINT_H
 
 #include "nvme.h"
+#include "util/table.h"
 #include <inttypes.h>
 
 #include <ccan/list/list.h>
@@ -101,7 +102,7 @@ struct print_ops {
 	void (*log)(const char *devname, struct nvme_get_log_args *args);
 
 	/* libnvme tree print functions */
-	void (*list_item)(nvme_ns_t n);
+	void (*list_item)(nvme_ns_t n, struct table *t);
 	void (*list_items)(nvme_root_t t);
 	void (*print_nvme_subsystem_list)(nvme_root_t r, bool show_ana);
 	void (*topology_ctrl)(nvme_root_t r);
@@ -281,7 +282,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 				nvme_print_flags_t flags);
 void json_nvme_finish_zone_list(__u64 nr_zones, 
 	struct json_object *zone_list);
-void nvme_show_list_item(nvme_ns_t n);
+void nvme_show_list_item(nvme_ns_t n, struct table *t);
 
 void nvme_show_fdp_configs(struct nvme_fdp_config_log *configs, size_t len,
 		nvme_print_flags_t flags);

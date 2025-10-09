@@ -4719,7 +4719,7 @@ static void json_simple_list(nvme_root_t t)
 	json_print(r);
 }
 
-static void json_list_item(nvme_ns_t n)
+static void json_list_item(nvme_ns_t n, struct table *t)
 {
 	struct json_object *r = json_list_item_obj(n);
 

@@ -1504,9 +1504,9 @@ void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len)
 	snprintf(path, len, "ng%dn%d", instance, head_instance);
 }
 
-void nvme_show_list_item(nvme_ns_t n)
+void nvme_show_list_item(nvme_ns_t n, struct table *t)
 {
-	nvme_print(list_item, NORMAL, n);
+	nvme_print(list_item, NORMAL, n, t);
 }
 
 void nvme_show_list_items(nvme_root_t r, nvme_print_flags_t flags)

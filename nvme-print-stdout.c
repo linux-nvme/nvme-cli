@@ -33,7 +33,6 @@ enum simple_list_col {
 	SIMPLE_LIST_COL_USAGE,
 	SIMPLE_LIST_COL_FORMAT,
 	SIMPLE_LIST_COL_FW_REV,
-	SIMPLE_LIST_COL_NUM,
 };
 
 static const uint8_t zero_uuid[16] = { 0 };
@@ -5395,14 +5394,6 @@ static void list_item(nvme_ns_t n, struct table *t)
 	stdout_dev_full_path(n, devname, sizeof(devname));
 	stdout_generic_full_path(n, genname, sizeof(genname));
 
-	if (!t) {
-		printf("%-21s %-21s %-20s %-40s %#-10x %-26s %-16s %-8s\n",
-		       devname, genname, nvme_ns_get_serial(n),
-		       nvme_ns_get_model(n), nvme_ns_get_nsid(n), usage, format,
-		       nvme_ns_get_firmware(n));
-		return;
-	}
-
 	row = table_get_row_id(t);
 	if (row < 0) {
 		printf("Failed to add row\n");
@@ -5447,9 +5438,9 @@ static void list_item(nvme_ns_t n, struct table *t)
 	table_add_row(t, row);
 }
 
-static void stdout_list_item(nvme_ns_t n)
+static void stdout_list_item(nvme_ns_t n, struct table *t)
 {
-	list_item(n, NULL);
+	list_item(n, t);
 }
 
 static void stdout_list_item_table(nvme_ns_t n, struct table *t)
@@ -5472,7 +5463,7 @@ static bool stdout_simple_ns(const char *name, void *arg)
 static void stdout_simple_list(nvme_root_t r)
 {
 	struct nvme_resources res;
-	struct table_column columns[SIMPLE_LIST_COL_NUM] = {
+	struct table_column columns[] = {
 		{ "Node", LEFT, 21 },
 		{ "Generic", LEFT, 21 },
 		{ "SN", LEFT, 20 },

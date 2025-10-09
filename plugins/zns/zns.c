@@ -18,7 +18,6 @@
 #include "zns.h"
 
 static const char *namespace_id = "Namespace identifier to use";
-static const char dash[100] = { [0 ... 99] = '-' };
 
 static int detect_zns(nvme_ns_t ns, int *out_supported)
 {
@@ -39,7 +38,7 @@ static int detect_zns(nvme_ns_t ns, int *out_supported)
 	return err;
 }
 
-static int print_zns_list_ns(nvme_ns_t ns)
+static int print_zns_list_ns(nvme_ns_t ns, struct table *t)
 {
 	int supported;
 	int err = 0;
@@ -51,12 +50,12 @@ static int print_zns_list_ns(nvme_ns_t ns)
 	}
 
 	if (supported)
-		nvme_show_list_item(ns);
+		nvme_show_list_item(ns, t);
 
 	return err;
 }
 
-static int print_zns_list(nvme_root_t nvme_root)
+static int print_zns_list(nvme_root_t nvme_root, struct table *t)
 {
 	int err = 0;
 	nvme_host_t h;
@@ -67,14 +66,14 @@ static int print_zns_list(nvme_root_t nvme_root)
 	nvme_for_each_host(nvme_root, h) {
 		nvme_for_each_subsystem(h, s) {
 			nvme_subsystem_for_each_ns(s, n) {
-				err = print_zns_list_ns(n);
+				err = print_zns_list_ns(n, t);
 				if (err)
 					return err;
 			}
 
 			nvme_subsystem_for_each_ctrl(s, c) {
 				nvme_ctrl_for_each_ns(c, n) {
-					err = print_zns_list_ns(n);
+					err = print_zns_list_ns(n, t);
 					if (err)
 						return err;
 				}
@@ -90,20 +89,30 @@ static int list(int argc, char **argv, struct command *cmd,
 {
 	int err = 0;
 	nvme_root_t nvme_root;
-
-	printf("%-21s %-20s %-40s %-9s %-26s %-16s %-8s\n", "Node", "SN",
-	       "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-.21s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
-	       dash, dash, dash, dash, dash);
+	struct table_column columns[] = {
+		{ "Node", LEFT, 21 },
+		{ "Generic", LEFT, 21 },
+		{ "SN", LEFT, 20 },
+		{ "Model", LEFT, 40 },
+		{ "Namespace", LEFT, 10 },
+		{ "Usage", LEFT, 26 },
+		{ "Format", LEFT, 16 },
+		{ "FW Rev", LEFT, 8 },
+	};
+	struct table *t = table_init_with_columns(columns, ARRAY_SIZE(columns));
 
 	nvme_root = nvme_scan(NULL);
-	if (nvme_root) {
-		err = print_zns_list(nvme_root);
-		nvme_free_tree(nvme_root);
-	} else {
+	if (!nvme_root) {
 		fprintf(stderr, "Failed to scan nvme subsystems\n");
-		err = -errno;
+		return -errno;
 	}
+
+	err = print_zns_list(nvme_root, t);
+	nvme_free_tree(nvme_root);
+
+	table_print(t);
+
+	table_free(t);
 
 	return err;
 }
