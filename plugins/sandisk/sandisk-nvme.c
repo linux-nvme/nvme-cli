@@ -28,6 +28,11 @@
 #include "sandisk-utils.h"
 #include "plugins/wdc/wdc-nvme-cmds.h"
 
+static __u8 ocp_C2_guid[SNDK_GUID_LENGTH] = {
+	0x6D, 0x79, 0x9A, 0x76, 0xB4, 0xDA, 0xF6, 0xA3,
+	0xE2, 0x4D, 0xB2, 0x8A, 0xAC, 0xF3, 0x1C, 0xD1
+};
+
 static int sndk_do_cap_telemetry_log(struct nvme_dev *dev, const char *file,
 				     __u32 bs, int type, int data_area)
 {
@@ -571,18 +576,399 @@ static int sndk_drive_resize(int argc, char **argv,
 	return ret;
 }
 
+static void sndk_print_fw_act_history_log_normal(__u8 *data, int num_entries)
+{
+	int i, j;
+	char previous_fw[9];
+	char new_fw[9];
+	char commit_action_bin[8];
+	char time_str[100];
+	__u16 oldestEntryIdx = 0, entryIdx = 0;
+	uint64_t timestamp;
+	int fw_vers_len = 0;
+	const char *null_fw = "--------";
+
+	memset((void *)time_str, '\0', 100);
+
+	if (data[0] == SNDK_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
+		printf("  Firmware Activate History Log\n");
+		printf("                               Power Cycle     ");
+		printf("Previous    New\n");
+		printf("  Entry      Timestamp            Count        ");
+		printf("Firmware    Firmware    Slot   Action  Result\n");
+		printf("  -----  -----------------  -----------------  ");
+		printf("---------   ---------   -----  ------  -------\n");
+
+		struct sndk_fw_act_history_log_format_c2 *fw_act_hist_log =
+			(struct sndk_fw_act_history_log_format_c2 *)(data);
+
+		oldestEntryIdx = SNDK_MAX_NUM_ACT_HIST_ENTRIES;
+		if (num_entries == SNDK_MAX_NUM_ACT_HIST_ENTRIES) {
+			/* find lowest/oldest entry */
+			for (i = 0; i < num_entries; i++) {
+				j = (i+1 == SNDK_MAX_NUM_ACT_HIST_ENTRIES) ? 0 : i+1;
+				if (le16_to_cpu(
+						fw_act_hist_log->entry[i].fw_act_hist_entries) >
+					le16_to_cpu(
+						fw_act_hist_log->entry[j].fw_act_hist_entries)) {
+					oldestEntryIdx = j;
+					break;
+				}
+			}
+		}
+		if (oldestEntryIdx == SNDK_MAX_NUM_ACT_HIST_ENTRIES)
+			entryIdx = 0;
+		else
+			entryIdx = oldestEntryIdx;
+
+		for (i = 0; i < num_entries; i++) {
+			memset((void *)previous_fw, 0, 9);
+			memset((void *)new_fw, 0, 9);
+			memset((void *)commit_action_bin, 0, 8);
+
+			memcpy(previous_fw,
+				(char *)&
+					(fw_act_hist_log->entry[entryIdx].previous_fw_version),
+				8);
+			fw_vers_len = strlen((char *)
+				&(fw_act_hist_log->entry[entryIdx].current_fw_version));
+			if (fw_vers_len > 1)
+				memcpy(new_fw,
+					(char *)&
+					(fw_act_hist_log->entry[entryIdx].current_fw_version),
+					8);
+			else
+				memcpy(new_fw, null_fw, 8);
+
+			printf("%5"PRIu16"",
+				(uint16_t)le16_to_cpu(
+					fw_act_hist_log->entry[entryIdx].fw_act_hist_entries));
+
+			timestamp = (0x0000FFFFFFFFFFFF &
+				le64_to_cpu(
+					fw_act_hist_log->entry[entryIdx].timestamp));
+			printf("   ");
+			printf("%16"PRIu64"", timestamp);
+			printf("   ");
+
+			printf("%16"PRIu64"",
+				(uint64_t)le64_to_cpu(
+					fw_act_hist_log->entry[entryIdx].power_cycle_count));
+			printf("     ");
+			printf("%s", (char *)previous_fw);
+			printf("    ");
+			printf("%s", (char *)new_fw);
+			printf("     ");
+			printf("%2"PRIu8"",
+				(uint8_t)fw_act_hist_log->entry[entryIdx].slot_number);
+			printf("   ");
+			sndk_get_commit_action_bin(
+			    fw_act_hist_log->entry[entryIdx].commit_action_type,
+			    (char *)&commit_action_bin);
+			printf("  %s", (char *)commit_action_bin);
+			printf("  ");
+			if (!le16_to_cpu(fw_act_hist_log->entry[entryIdx].result))
+				printf("pass");
+			else
+				printf("fail #%d",
+					(uint16_t)le16_to_cpu(
+						fw_act_hist_log->entry[entryIdx].result));
+			printf("\n");
+
+			entryIdx++;
+			if (entryIdx >= SNDK_MAX_NUM_ACT_HIST_ENTRIES)
+				entryIdx = 0;
+		}
+	} else
+		fprintf(stderr, "ERROR: SNDK: %s: Unknown log page\n", __func__);
+}
+
+static void sndk_print_fw_act_history_log_json(__u8 *data, int num_entries)
+{
+	struct json_object *root = json_create_object();
+	int i, j;
+	char previous_fw[9];
+	char new_fw[9];
+	char commit_action_bin[8];
+	char fail_str[32];
+	char time_str[100];
+	char ext_time_str[20];
+	uint64_t timestamp;
+	int fw_vers_len = 0;
+
+	memset((void *)previous_fw, 0, 9);
+	memset((void *)new_fw, 0, 9);
+	memset((void *)commit_action_bin, 0, 8);
+	memset((void *)time_str, '\0', 100);
+	memset((void *)ext_time_str, 0, 20);
+	memset((void *)fail_str, 0, 11);
+	char *null_fw = "--------";
+	__u16 oldestEntryIdx = 0, entryIdx = 0;
+
+	if (data[0] == SNDK_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
+		struct sndk_fw_act_history_log_format_c2 *fw_act_hist_log =
+			(struct sndk_fw_act_history_log_format_c2 *)(data);
+
+		oldestEntryIdx = SNDK_MAX_NUM_ACT_HIST_ENTRIES;
+		if (num_entries == SNDK_MAX_NUM_ACT_HIST_ENTRIES) {
+			/* find lowest/oldest entry */
+			for (i = 0; i < num_entries; i++) {
+				j = (i+1 == SNDK_MAX_NUM_ACT_HIST_ENTRIES) ? 0 : i+1;
+				if (le16_to_cpu(
+						fw_act_hist_log->entry[i].fw_act_hist_entries) >
+					le16_to_cpu(
+						fw_act_hist_log->entry[j].fw_act_hist_entries)) {
+					oldestEntryIdx = j;
+					break;
+				}
+			}
+		}
+		if (oldestEntryIdx == SNDK_MAX_NUM_ACT_HIST_ENTRIES)
+			entryIdx = 0;
+		else
+			entryIdx = oldestEntryIdx;
+
+		for (i = 0; i < num_entries; i++) {
+			memcpy(previous_fw,
+				(char *)&
+				(fw_act_hist_log->entry[entryIdx].previous_fw_version),
+				8);
+			fw_vers_len = strlen((char *)
+				&(fw_act_hist_log->entry[entryIdx].current_fw_version));
+			if (fw_vers_len > 1)
+				memcpy(new_fw,
+					(char *)&
+					(fw_act_hist_log->entry[entryIdx].current_fw_version),
+					8);
+			else
+				memcpy(new_fw, null_fw, 8);
+
+			json_object_add_value_int(root, "Entry",
+			    le16_to_cpu(fw_act_hist_log->entry[entryIdx].fw_act_hist_entries));
+
+			timestamp = (0x0000FFFFFFFFFFFF &
+				le64_to_cpu(
+					fw_act_hist_log->entry[entryIdx].timestamp));
+			json_object_add_value_uint64(root, "Timestamp", timestamp);
+
+			json_object_add_value_int(root, "Power Cycle Count",
+				le64_to_cpu(
+					fw_act_hist_log->entry[entryIdx].power_cycle_count));
+			json_object_add_value_string(root, "Previous Firmware",
+					previous_fw);
+			json_object_add_value_string(root, "New Firmware",
+					new_fw);
+			json_object_add_value_int(root, "Slot",
+				fw_act_hist_log->entry[entryIdx].slot_number);
+
+			sndk_get_commit_action_bin(
+			    fw_act_hist_log->entry[entryIdx].commit_action_type,
+			    (char *)&commit_action_bin);
+			json_object_add_value_string(root, "Action", commit_action_bin);
+
+			if (!le16_to_cpu(fw_act_hist_log->entry[entryIdx].result)) {
+				json_object_add_value_string(root, "Result", "pass");
+			} else {
+				sprintf((char *)fail_str, "fail #%d",
+					(int)(le16_to_cpu(
+						fw_act_hist_log->entry[entryIdx].result)));
+				json_object_add_value_string(root, "Result", fail_str);
+			}
+
+			json_print_object(root, NULL);
+			printf("\n");
+
+			entryIdx++;
+			if (entryIdx >= SNDK_MAX_NUM_ACT_HIST_ENTRIES)
+				entryIdx = 0;
+		}
+	} else
+		fprintf(stderr, "ERROR: SNDK: %s: Unknown log page\n", __func__);
+
+	json_free_object(root);
+}
+
+static int sndk_print_fw_act_history_log(__u8 *data, int num_entries, int fmt)
+{
+	if (!data) {
+		fprintf(stderr, "ERROR: SNDK: Invalid buffer in print_fw act_history_log\n");
+		return -1;
+	}
+
+	switch (fmt) {
+	case NORMAL:
+		sndk_print_fw_act_history_log_normal(data, num_entries);
+		break;
+	case JSON:
+		sndk_print_fw_act_history_log_json(data, num_entries);
+		break;
+	}
+	return 0;
+}
+
+static int sndk_get_fw_act_history_C2(nvme_root_t r, struct nvme_dev *dev,
+				     char *format)
+{
+	struct sndk_fw_act_history_log_format_c2 *fw_act_history_log;
+	__u32 tot_entries = 0, num_entries = 0;
+	nvme_print_flags_t fmt;
+	__u8 *data;
+	int ret;
+	bool c2GuidMatch = false;
+
+	if (!sndk_check_device(r, dev))
+		return -1;
+
+	ret = validate_output_format(format, &fmt);
+	if (ret < 0) {
+		fprintf(stderr, "ERROR: SNDK: invalid output format\n");
+		return ret;
+	}
+
+	data = (__u8 *)malloc(sizeof(__u8) * SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN);
+	if (!data) {
+		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", strerror(errno));
+		return -1;
+	}
+
+	memset(data, 0, sizeof(__u8) * SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN);
+
+	ret = nvme_get_log_simple(dev_fd(dev),
+				  SNDK_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID,
+				  SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN, data);
+
+	if (strcmp(format, "json"))
+		nvme_show_status(ret);
+
+	if (!ret) {
+		/* Get the log page data and verify the GUID */
+		fw_act_history_log = (struct sndk_fw_act_history_log_format_c2 *)(data);
+
+		c2GuidMatch = !memcmp(ocp_C2_guid,
+				fw_act_history_log->log_page_guid,
+				SNDK_GUID_LENGTH);
+
+		if (c2GuidMatch) {
+			/* parse the data */
+			tot_entries = le32_to_cpu(fw_act_history_log->num_entries);
+
+			if (tot_entries > 0) {
+				num_entries = (tot_entries < SNDK_MAX_NUM_ACT_HIST_ENTRIES) ?
+						tot_entries : SNDK_MAX_NUM_ACT_HIST_ENTRIES;
+				ret = sndk_print_fw_act_history_log(data, num_entries,
+					fmt);
+			} else  {
+				fprintf(stderr, "INFO: SNDK: No entries found.\n");
+				ret = 0;
+			}
+		} else {
+			fprintf(stderr, "ERROR: SNDK: Invalid C2 log page GUID\n");
+			ret = -1;
+		}
+	} else {
+		fprintf(stderr, "ERROR: SNDK: Unable to read FW Activate History Log Page data\n");
+		ret = -1;
+	}
+
+	free(data);
+	return ret;
+}
+
+
 static int sndk_vs_fw_activate_history(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin)
 {
-	return run_wdc_vs_fw_activate_history(argc, argv, command, plugin);
+	const char *desc = "Retrieve FW activate history table.";
+	__u64 capabilities = 0;
+	struct nvme_dev *dev;
+	nvme_root_t r;
+	int ret = -1;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
+		OPT_END()
+	};
+
+	ret = parse_and_open(&dev, argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	r = nvme_scan(NULL);
+	capabilities = sndk_get_drive_capabilities(r, dev);
+
+	if (capabilities & SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2) {
+		ret = sndk_get_fw_act_history_C2(r, dev, cfg.output_format);
+
+		if (ret) {
+			fprintf(stderr, "ERROR: SNDK: Failure reading the FW ");
+			fprintf(stderr, "Activate History, ret = %d\n", ret);
+		}
+	} else
+		/* Fall back to the wdc plugin command */
+		ret = run_wdc_vs_fw_activate_history(argc, argv, command, plugin);
+
+	nvme_free_tree(r);
+	dev_close(dev);
+	return ret;
+}
+
+static int sndk_do_clear_fw_activate_history_fid(int fd)
+{
+	int ret = -1;
+	__u32 result;
+	__u32 value = 1 << 31; /* Bit 31 - Clear Firmware Update History Log */
+
+	ret = nvme_set_features_simple(fd, SNDK_NVME_CLEAR_FW_ACT_HIST_VU_FID, 0, value,
+				false, &result);
+
+	nvme_show_status(ret);
+	return ret;
 }
 
 static int sndk_clear_fw_activate_history(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin)
 {
-	return run_wdc_clear_fw_activate_history(argc, argv, command, plugin);
+	const char *desc = "Clear FW activate history table.";
+	__u64 capabilities = 0;
+	struct nvme_dev *dev;
+	nvme_root_t r;
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
+
+	ret = parse_and_open(&dev, argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	r = nvme_scan(NULL);
+	capabilities = sndk_get_drive_capabilities(r, dev);
+
+	if (capabilities & SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY) {
+		ret = sndk_do_clear_fw_activate_history_fid(dev_fd(dev));
+
+		if (ret) {
+			fprintf(stderr, "ERROR: SNDK: Failure clearing the FW ");
+			fprintf(stderr, "Activate History, ret = %d\n", ret);
+		}
+	} else
+		/* Fall back to the wdc plugin command */
+		ret = run_wdc_clear_fw_activate_history(argc, argv, command, plugin);
+
+	nvme_free_tree(r);
+	dev_close(dev);
+	return ret;
 }
 
 static int sndk_vs_telemetry_controller_option(int argc, char **argv,
