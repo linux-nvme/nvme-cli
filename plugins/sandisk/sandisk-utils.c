@@ -568,6 +568,24 @@ __u64 sndk_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 					SNDK_DRIVE_CAP_SET_LATENCY_MONITOR);
 			break;
 
+		case SNDK_NVME_SNESSD1_DEV_ID_E1L:
+		case SNDK_NVME_SNESSD1_DEV_ID_E2:
+		case SNDK_NVME_SNESSD1_DEV_ID_E3S:
+		case SNDK_NVME_SNESSD1_DEV_ID_E3L:
+		case SNDK_NVME_SNESSD1_DEV_ID_U2:
+			capabilities |= (SNDK_DRIVE_CAP_C0_LOG_PAGE |
+					SNDK_DRIVE_CAP_C3_LOG_PAGE |
+					SNDK_DRIVE_CAP_CA_LOG_PAGE |
+					SNDK_DRIVE_CAP_OCP_C4_LOG_PAGE |
+					SNDK_DRIVE_CAP_OCP_C5_LOG_PAGE |
+					SNDK_DRIVE_CAP_UDUI |
+					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+					SNDK_DRIVE_CAP_CLOUD_SSD_VERSION |
+					SNDK_DRIVE_CAP_LOG_PAGE_DIR |
+					SNDK_DRIVE_CAP_DRIVE_STATUS |
+					SNDK_DRIVE_CAP_SET_LATENCY_MONITOR);
+			break;
+
 		case SNDK_NVME_SN861_DEV_ID_E1S:
 			capabilities |= (SNDK_DRIVE_CAP_C0_LOG_PAGE |
 				SNDK_DRIVE_CAP_C3_LOG_PAGE |
@@ -616,6 +634,12 @@ __u64 sndk_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case SNDK_NVME_SN7150_DEV_ID_3:
 		case SNDK_NVME_SN7150_DEV_ID_4:
 		case SNDK_NVME_SN7150_DEV_ID_5:
+			capabilities = SNDK_DRIVE_CAP_UDUI;
+			break;
+
+		case SNDK_NVME_SNCSSD1_DEV_ID_M2_2230:
+		case SNDK_NVME_SNCSSD1_DEV_ID_M2_2242:
+		case SNDK_NVME_SNCSSD1_DEV_ID_M2_2280:
 			capabilities = SNDK_DRIVE_CAP_UDUI;
 			break;
 
