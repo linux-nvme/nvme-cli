@@ -5576,7 +5576,7 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 	c = htable_ctrl_get(&res->ht_c, name);
 	assert(c);
 
-	printf("%-8s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s ",
+	printf("%-16s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s ",
 	       nvme_ctrl_get_name(c),
 	       nvme_ctrl_get_cntlid(c),
 	       nvme_ctrl_get_serial(c),
@@ -5657,7 +5657,7 @@ static void stdout_detailed_list(nvme_root_t r)
 	strset_iterate(&res.subsystems, stdout_detailed_subsys, &res);
 	printf("\n");
 
-	printf("%-16s %-5s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n", "Device",
+	printf("%-16s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n", "Device",
 		"Cntlid", "SN", "MN", "FR", "TxPort", "Address", "Slot", "Subsystem",
 		"Namespaces");
 	printf("%-.16s %-.6s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n",
