@@ -9769,7 +9769,7 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
 	const char *keyfile = "Update key file with the derive TLS PSK.";
-	const char *compat = "Use compatibility algorithm for HKDF-Expand-Label.";
+	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations";
 
 	_cleanup_free_ unsigned char *raw_secret = NULL;
 	_cleanup_free_ char *encoded_key = NULL;
@@ -9913,7 +9913,7 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
 	const char *keyfile = "Update key file with the derive TLS PSK.";
-	const char *compat = "Use compatibility algorithm for HKDF-Expand-Label.";
+	const char *compat = "Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.";
 
 	_cleanup_free_ unsigned char *decoded_key = NULL;
 	_cleanup_free_ char *hnqn = NULL;

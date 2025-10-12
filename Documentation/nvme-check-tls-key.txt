@@ -65,8 +65,8 @@ OPTIONS
 
 -C:
 --compat:
-	Use the original algorithm when deriving TLS keys for
-	compatibility with older implentations.
+	Use the original non-RFC 8446 compliant algorithm when
+	checking TLS keys for compatibility with older implentations.
 
 -f <keyfile>
 --keyfile=<keyfile>
