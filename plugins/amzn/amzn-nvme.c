@@ -517,8 +517,14 @@ static int get_stats(int argc, char **argv, struct command *cmd,
 	if (!strncmp((char *)ctrl.mn, AMZN_NVME_LOCAL_STORAGE_PREFIX,
 		     strlen(AMZN_NVME_LOCAL_STORAGE_PREFIX))) {
 		if (nvme_get_nsid(dev_fd(dev), &args.nsid) < 0) {
-			rc = -errno;
-			goto done;
+			struct nvme_id_ctrl test_ctrl;
+
+			if (nvme_identify_ctrl(dev_fd(dev), &test_ctrl) == 0) {
+				args.nsid = NVME_NSID_ALL;
+			} else {
+				rc = -errno;
+				goto done;
+			}
 		}
 		args.len = sizeof(log);
 	} else {
