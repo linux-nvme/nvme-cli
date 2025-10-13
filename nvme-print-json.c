@@ -2069,7 +2069,7 @@ static void json_fid_support_effects_log(
 		fid_support = le32_to_cpu(fid_log->fid_support[fid]);
 		if (fid_support & NVME_FID_SUPPORTED_EFFECTS_FSUPP) {
 			fids = json_create_object();
-			sprintf(key, "fid_%u", fid);
+			sprintf(key, "fid_%02x", fid);
 			obj_add_uint(fids, key, fid_support);
 			array_add_obj(fids_list, fids);
 		}
