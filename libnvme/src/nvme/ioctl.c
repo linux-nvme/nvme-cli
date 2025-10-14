@@ -1428,23 +1428,14 @@ int nvme_get_features_iocs_profile(struct nvme_transport_handle *hdl, enum nvme_
 
 int nvme_format_nvm(struct nvme_transport_handle *hdl, struct nvme_format_nvm_args *args)
 {
-	const size_t size_v1 = sizeof_args(struct nvme_format_nvm_args, lbaf, __u64);
-	const size_t size_v2 = sizeof_args(struct nvme_format_nvm_args, lbafu, __u64);
 	__u32 cdw10;
-
-	if (args->args_size < size_v1 || args->args_size > size_v2)
-		return -EINVAL;
 
 	cdw10 = NVME_SET(args->lbaf, FORMAT_CDW10_LBAF) |
 		NVME_SET(args->mset, FORMAT_CDW10_MSET) |
 		NVME_SET(args->pi, FORMAT_CDW10_PI) |
 		NVME_SET(args->pil, FORMAT_CDW10_PIL) |
-		NVME_SET(args->ses, FORMAT_CDW10_SES);
-
-	if (args->args_size == size_v2) {
-		/* set lbafu extension */
-		cdw10 |= NVME_SET(args->lbafu, FORMAT_CDW10_LBAFU);
-	}
+		NVME_SET(args->ses, FORMAT_CDW10_SES) |
+		NVME_SET(args->lbafu, FORMAT_CDW10_LBAFU);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_format_nvm,
@@ -1458,13 +1449,8 @@ int nvme_format_nvm(struct nvme_transport_handle *hdl, struct nvme_format_nvm_ar
 
 int nvme_ns_mgmt(struct nvme_transport_handle *hdl, struct nvme_ns_mgmt_args *args)
 {
-	const size_t size_v1 = sizeof_args(struct nvme_ns_mgmt_args, csi, __u64);
-	const size_t size_v2 = sizeof_args(struct nvme_ns_mgmt_args, data, __u64);
 	__u32 cdw10    = NVME_SET(args->sel, NAMESPACE_MGMT_CDW10_SEL);
 	__u32 cdw11    = NVME_SET(args->csi, NAMESPACE_MGMT_CDW11_CSI);
-
-	if (args->args_size < size_v1 || args->args_size > size_v2)
-		return -EINVAL;
 
 	struct nvme_passthru_cmd cmd = {
 		.nsid	    = args->nsid,
@@ -1474,17 +1460,9 @@ int nvme_ns_mgmt(struct nvme_transport_handle *hdl, struct nvme_ns_mgmt_args *ar
 		.timeout_ms = args->timeout,
 	};
 
-	if (args->args_size == size_v2) {
-		if (args->data) {
-			cmd.data_len = sizeof(*args->data);
-			cmd.addr = (__u64)(uintptr_t)args->data;
-		}
-	}
-	else {
-		if (args->ns) {
-			cmd.data_len = sizeof(*args->ns);
-			cmd.addr = (__u64)(uintptr_t)args->ns;
-		}
+	if (args->data) {
+                cmd.data_len = sizeof(*args->data);
+                cmd.addr = (__u64)(uintptr_t)args->data;
 	}
 	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
 }
@@ -1774,21 +1752,13 @@ int nvme_get_property(struct nvme_transport_handle *hdl, struct nvme_get_propert
 
 int nvme_sanitize_nvm(struct nvme_transport_handle *hdl, struct nvme_sanitize_nvm_args *args)
 {
-	const size_t size_v1 = sizeof_args(struct nvme_sanitize_nvm_args, nodas, __u64);
-	const size_t size_v2 = sizeof_args(struct nvme_sanitize_nvm_args, emvs, __u64);
 	__u32 cdw10, cdw11;
-
-	if (args->args_size < size_v1 || args->args_size > size_v2)
-		return -EINVAL;
-
 	cdw10 = NVME_SET(args->sanact, SANITIZE_CDW10_SANACT) |
 		NVME_SET(!!args->ause, SANITIZE_CDW10_AUSE) |
 		NVME_SET(args->owpass, SANITIZE_CDW10_OWPASS) |
 		NVME_SET(!!args->oipbp, SANITIZE_CDW10_OIPBP) |
-		NVME_SET(!!args->nodas, SANITIZE_CDW10_NODAS);
-
-	if (args->args_size == size_v2)
-		cdw10 |= NVME_SET(!!args->emvs, SANITIZE_CDW10_EMVS);
+		NVME_SET(!!args->nodas, SANITIZE_CDW10_NODAS) |
+		NVME_SET(!!args->emvs, SANITIZE_CDW10_EMVS);
 
 	cdw11 = args->ovrpat;
 
@@ -1916,12 +1886,7 @@ static int nvme_set_var_size_tags(__u32 *cmd_dw2, __u32 *cmd_dw3, __u32 *cmd_dw1
 
 int nvme_io(struct nvme_transport_handle *hdl, struct nvme_io_args *args, __u8 opcode)
 {
-	const size_t size_v1 = sizeof_args(struct nvme_io_args, dsm, __u64);
-	const size_t size_v2 = sizeof_args(struct nvme_io_args, pif, __u64);
 	__u32 cdw2, cdw3, cdw10, cdw11, cdw12, cdw13, cdw14, cdw15;
-
-	if (args->args_size < size_v1 || args->args_size > size_v2)
-		return -EINVAL;
 
 	cdw10 = args->slba & 0xffffffff;
 	cdw11 = args->slba >> 32;
@@ -1929,18 +1894,12 @@ int nvme_io(struct nvme_transport_handle *hdl, struct nvme_io_args *args, __u8 o
 	cdw13 = args->dsm | (args->dspec << 16);
 	cdw15 = args->apptag | (args->appmask << 16);
 
-	if (args->args_size == size_v1) {
-		cdw2 = (args->storage_tag >> 32) & 0xffff;
-		cdw3 = args->storage_tag & 0xffffffff;
-		cdw14 = args->reftag;
-	} else {
-		if (nvme_set_var_size_tags(&cdw2, &cdw3, &cdw14,
+	if (nvme_set_var_size_tags(&cdw2, &cdw3, &cdw14,
 				args->pif,
 				args->sts,
 				args->reftag_u64,
 				args->storage_tag))
-			return -EINVAL;
-	}
+		return -EINVAL;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= opcode,
@@ -1983,25 +1942,14 @@ int nvme_dsm(struct nvme_transport_handle *hdl, struct nvme_dsm_args *args)
 
 int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args)
 {
-	const size_t size_v1 = sizeof_args(struct nvme_copy_args, format, __u64);
-	const size_t size_v2 = sizeof_args(struct nvme_copy_args, ilbrt_u64, __u64);
 	__u32 cdw3, cdw12, cdw14, data_len;
-
-	if (args->args_size < size_v1 || args->args_size > size_v2)
-		return -EINVAL;
 
 	cdw12 = ((args->nr - 1) & 0xff) | ((args->format & 0xf) <<  8) |
 		((args->prinfor & 0xf) << 12) | ((args->dtype & 0xf) << 20) |
 		((args->prinfow & 0xf) << 26) | ((args->fua & 0x1) << 30) |
 		((args->lr & 0x1) << 31);
-
-	if (args->args_size == size_v1) {
-		cdw3 = 0;
-		cdw14 = args->ilbrt;
-	} else {
-		cdw3 = (args->ilbrt_u64 >> 32) & 0xffffffff;
-		cdw14 = args->ilbrt_u64 & 0xffffffff;
-	}
+	cdw3 = (args->ilbrt_u64 >> 32) & 0xffffffff;
+	cdw14 = args->ilbrt_u64 & 0xffffffff;
 
 	if (args->format == 1)
 		data_len = args->nr * sizeof(struct nvme_copy_range_f1);
@@ -2214,25 +2162,14 @@ int nvme_zns_mgmt_recv(struct nvme_transport_handle *hdl, struct nvme_zns_mgmt_r
 
 int nvme_zns_append(struct nvme_transport_handle *hdl, struct nvme_zns_append_args *args)
 {
-	const size_t size_v1 = sizeof_args(struct nvme_zns_append_args, lbatm, __u64);
-	const size_t size_v2 = sizeof_args(struct nvme_zns_append_args, ilbrt_u64, __u64);
 	__u32 cdw3, cdw10, cdw11, cdw12, cdw14, cdw15;
-
-	if (args->args_size < size_v1 || args->args_size > size_v2)
-		return -EINVAL;
 
 	cdw10 = args->zslba & 0xffffffff;
 	cdw11 = args->zslba >> 32;
 	cdw12 = args->nlb | (args->control << 16);
 	cdw15 = args->lbat | (args->lbatm << 16);
-
-	if (args->args_size == size_v1) {
-		cdw3 = 0;
-		cdw14 = args->ilbrt;
-	} else {
-		cdw3 = (args->ilbrt_u64 >> 32) & 0xffffffff;
-		cdw14 = args->ilbrt_u64 & 0xffffffff;
-	}
+	cdw3 = (args->ilbrt_u64 >> 32) & 0xffffffff;
+	cdw14 = args->ilbrt_u64 & 0xffffffff;
 
 	struct nvme_passthru_cmd64 cmd = {
 		.opcode		= nvme_zns_cmd_append,
@@ -2274,20 +2211,12 @@ int nvme_dim_send(struct nvme_transport_handle *hdl, struct nvme_dim_args *args)
 
 int nvme_lm_cdq(struct nvme_transport_handle *hdl, struct nvme_lm_cdq_args *args)
 {
-	const size_t size_v1 = sizeof_args(struct nvme_lm_cdq_args, sz_u8, __u64);
-	const size_t size_v2 = sizeof_args(struct nvme_lm_cdq_args, sz, __u64);
 	__u32 cdw10 = NVME_SET(args->sel, LM_CDQ_SEL) |
 		      NVME_SET(args->mos, LM_CDQ_MOS);
 	__u32 cdw11 = 0, data_len = 0, sz = 0;
 	int err;
 
-	if (args->args_size < size_v1 || args->args_size > size_v2)
-		return -EINVAL;
-
-	if (args->args_size == size_v1)
-		sz = args->sz_u8;
-	else
-		sz = args->sz;
+	sz = args->sz;
 
 	if (args->sel == NVME_LM_SEL_CREATE_CDQ) {
 		cdw11 = NVME_SET(NVME_SET(args->cntlid, LM_CREATE_CDQ_CNTLID), LM_CQS) |

@@ -194,20 +194,6 @@ struct nvme_uring_cmd {
 
 #endif /* _LINUX_NVME_IOCTL_H */
 
-/**
- * sizeof_args - Helper function used to determine structure sizes
- * @type:	Argument structure type
- * @member:	Member inside the type
- * @align:	Alignment information
- */
-#define sizeof_args(type, member, align)					\
-({										\
-	type s;									\
-	size_t t = offsetof(type, member) + sizeof(s.member);			\
-	size_t p = (sizeof(align) - (t % sizeof(align))) % sizeof(align);	\
-	t + p;									\
-})
-
 enum nvme_cmd_dword_fields {
 	NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT			= 0,
 	NVME_DEVICE_SELF_TEST_CDW10_STC_MASK			= 0xf,
