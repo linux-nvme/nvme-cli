@@ -1565,7 +1565,7 @@ static int test_admin_fw_download_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_fw_download(struct nvme_mi_ep *ep)
 {
-	struct nvme_fw_download_args args;
+	struct nvme_fw_download_args args = { 0 };
 	struct fw_download_info info;
 	unsigned char fw[4096];
 	nvme_mi_ctrl_t ctrl;
@@ -1655,7 +1655,7 @@ static int test_admin_fw_commit_cb(struct nvme_mi_ep *ep,
 
 static void test_admin_fw_commit(struct nvme_mi_ep *ep)
 {
-	struct nvme_fw_commit_args args;
+	struct nvme_fw_commit_args args = { 0 };
 	struct fw_commit_info info;
 	nvme_mi_ctrl_t ctrl;
 	int rc;
