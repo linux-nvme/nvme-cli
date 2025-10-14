@@ -8,7 +8,7 @@ nvme-huawei-list - List all recognized Huawei NVMe devices
 SYNOPSIS
 --------
 [verse]
-'nvme huawei list' [-o <fmt> | --output-format=<fmt>]
+'nvme huawei list' [--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -17,8 +17,8 @@ for those Huawei devices as well as some pertinent information about them.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal' or 'json'. Only one output
 	format can be used at a time.
 

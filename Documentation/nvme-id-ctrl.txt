@@ -8,8 +8,8 @@ nvme-id-ctrl - Send NVMe Identify Controller, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme id-ctrl' <device> [-v | --vendor-specific] [-b | --raw-binary]
-			[-o <fmt> | --output-format=<fmt>]
+'nvme id-ctrl' <device> [--vendor-specific | -V] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -30,7 +30,7 @@ OPTIONS
 	Print the raw buffer to stdout. Structure is not parsed by
 	program. This overrides the vendor specific and human readable options.
 
--v::
+-V::
 --vendor-specific::
 	In addition to parsing known fields, this option will dump
 	the vendor specific region of the structure in hex with ascii
@@ -41,10 +41,14 @@ OPTIONS
 	This option will parse and format many of the bit fields
 	into human-readable formats.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
@@ -61,7 +65,7 @@ the vendor unique field:
 +
 ------------
 # nvme id-ctrl /dev/nvme0 --vendor-specific
-# nvme id-ctrl /dev/nvme0 -v
+# nvme id-ctrl /dev/nvme0 -V
 ------------
 +
 The above will dump the 'vs' buffer in hex since it doesn't know how to

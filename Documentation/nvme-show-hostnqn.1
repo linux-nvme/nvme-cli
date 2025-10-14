@@ -2,12 +2,12 @@
 .\"     Title: nvme-show-hostnqn
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SHOW\-HOSTNQN" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-SHOW\-HOSTNQN" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,18 +28,30 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-show-hostnqn \- Generate a host NVMe Qualified Name
+nvme-show-hostnqn \- Show the host NQN configured for the system
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme show\-hostnqn\fR
+\fInvme show\-hostnqn\fR [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
-Show the host NQN configured for the system\&. If /etc/nvme/hostnqn is not present and systemd application\-specific machine IDs are available, this will show the systemd\-generated host NQN for the system\&.
+Show the host NQN configured for the system\&. If /usr/local/etc/nvme/hostnqn is not present and systemd application\-specific machine IDs are available, this will show the systemd\-generated host NQN for the system\&.
 .SH "OPTIONS"
-.sp
-No options needed
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
 .SH "EXAMPLES"
 .sp
 nvme show\-hostnqn

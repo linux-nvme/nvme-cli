@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-sanitize(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -748,12 +749,12 @@ nvme-sanitize(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme sanitize</em> &lt;device&gt; [--no-dealloc | -d]
-              [--oipbp | -i]
-              [--owpass=&lt;overwrite-pass-count&gt; | -n &lt;overwrite-pass-count&gt;]
-              [--ause | -u]
-              [--sanact=&lt;action&gt; | -a &lt;action&gt;]
-              [--ovrpat=&lt;overwrite-pattern&gt; | -p &lt;overwrite-pattern&gt;]</pre>
+<pre class="content"><em>nvme sanitize</em> &lt;device&gt; [--no-dealloc | -d] [--oipbp | -i]
+                        [--owpass=&lt;overwrite-pass-count&gt; | -n &lt;overwrite-pass-count&gt;]
+                        [--ause | -u] [--sanact=&lt;action&gt; | -a &lt;action&gt;]
+                        [--ovrpat=&lt;overwrite-pattern&gt; | -p &lt;overwrite-pattern&gt;]
+                        [--emvs | -e] [--force]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -775,17 +776,17 @@ provides the result.</p></div>
 -d
 </dt>
 <dt class="hdlist1">
---no-delloc
+--no-dealloc
 </dt>
 <dd>
 <p>
-    No Deallocate After Sanitize:
-    If set, then the controller shall not deallocate any logical
-    blocks as a result of successfully completing the sanitize
-    operation. If cleared, then the controller should deallocate
-    logical blocks as a result of successfully completing the
-    sanitize operation.  This bit shall be ignored if the Sanitize
-    Action field is set to 001b (i.e., Exit Failure Mode).
+        No Deallocate After Sanitize:
+        If set, then the controller shall not deallocate any logical
+        blocks as a result of successfully completing the sanitize
+        operation. If cleared, then the controller should deallocate
+        logical blocks as a result of successfully completing the
+        sanitize operation. This bit shall be ignored if the Sanitize
+        Action field is set to 001b (i.e., Exit Failure Mode).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -796,11 +797,11 @@ provides the result.</p></div>
 </dt>
 <dd>
 <p>
-    Overwrite Invert Pattern Between Passes:
-    If set, then the Overwrite Pattern shall be inverted between
-    passes. If cleared, then the overwrite pattern shall not be
-    inverted between passes. This bit shall be ignored unless the
-    Sanitize Action field is set to 011b (i.e., Overwrite).
+        Overwrite Invert Pattern Between Passes:
+        If set, then the Overwrite Pattern shall be inverted between
+        passes. If cleared, then the overwrite pattern shall not be
+        inverted between passes. This bit shall be ignored unless the
+        Sanitize Action field is set to 011b (i.e., Overwrite).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -811,12 +812,12 @@ provides the result.</p></div>
 </dt>
 <dd>
 <p>
-    Overwrite Pass Count:
-    This field specifies the number of overwrite passes (i.e.,
-    how many times the media is to be overwritten) using the data
-    from the Overwrite Pattern field of this command. A value of 0
-    specifies 16 overwrite passes. This field shall be ignored
-    unless the Sanitize Action field is set to 011b (i.e., Overwrite).
+        Overwrite Pass Count:
+        This field specifies the number of overwrite passes (i.e.,
+        how many times the media is to be overwritten) using the data
+        from the Overwrite Pattern field of this command. A value of 0
+        specifies 16 overwrite passes. This field shall be ignored
+        unless the Sanitize Action field is set to 011b (i.e., Overwrite).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -827,11 +828,11 @@ provides the result.</p></div>
 </dt>
 <dd>
 <p>
-    Allow Unrestricted Sanitize Exit:
-    If set, then the sanitize operation is performed in unrestricted
-    completion mode. If cleared then the sanitize operation is
-    performed in restricted completion mode. This bit shall be ignored
-    if the Sanitize Action field is set to 001b (i.e., Exit Failure Mode).
+        Allow Unrestricted Sanitize Exit:
+        If set, then the sanitize operation is performed in unrestricted
+        completion mode. If cleared then the sanitize operation is
+        performed in restricted completion mode. This bit shall be ignored
+        if the Sanitize Action field is set to 001b (i.e., Exit Failure Mode).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -842,13 +843,47 @@ provides the result.</p></div>
 </dt>
 <dd>
 <p>
-    Sanitize Action:
-    000b - Reserved
-    001b - Exit Failure Mode
-    010b - Start a Block Erase sanitize operation
-    011b - Start an Overwrite sanitize operation
-    100b - Start a Crypto Erase sanitize operation
+        Sanitize Action:
 </p>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Value</p></td>
+<td align="left" valign="top"><p class="table">Definition</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x00</p></td>
+<td align="left" valign="top"><p class="table">Reserved</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x01 | <em>exit-failure</em></p></td>
+<td align="left" valign="top"><p class="table">Exit Failure Mode</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x02 | <em>start-block-erase</em></p></td>
+<td align="left" valign="top"><p class="table">Start a Block Erase sanitize operation</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x03 | <em>start-overwrite</em></p></td>
+<td align="left" valign="top"><p class="table">Start an Overwrite sanitize operation</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x04 | <em>start-crypto-erase</em></p></td>
+<td align="left" valign="top"><p class="table">Start a Crypto Erase sanitize operation</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x05 | <em>exit-media-verification</em></p></td>
+<td align="left" valign="top"><p class="table">Exit Media Verification State</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </dd>
 <dt class="hdlist1">
 -p &lt;overwrite-pattern&gt;
@@ -858,11 +893,59 @@ provides the result.</p></div>
 </dt>
 <dd>
 <p>
-    Overwrite Pattern:
-    This field is ignored unless the Sanitize Action field in
-    Command Dword 10 is set to 011b (i.e., Overwrite). This field
-    specifies a 32-bit pattern that is used for the Overwrite
-    sanitize operation.
+        Overwrite Pattern:
+        This field is ignored unless the Sanitize Action field in
+        Command Dword 10 is set to 011b (i.e., Overwrite). This field
+        specifies a 32-bit pattern that is used for the Overwrite
+        sanitize operation.
+</p>
+</dd>
+<dt class="hdlist1">
+-e
+</dt>
+<dt class="hdlist1">
+--emvs
+</dt>
+<dd>
+<p>
+        Enter Media Verification State:
+        If set, then the Media Verification state shall be entered if sanitize
+        processing completes successfully. If cleared, then this bit shall have
+        no effect. If SANACT field does not specify starting a sanitize operation
+        (i.e., is set to any value other than 010b, 011b, or 100b), then this bit
+        shall be ignored by the controller.
+</p>
+</dd>
+<dt class="hdlist1">
+--force
+</dt>
+<dd>
+<p>
+        Ignore namespace is currently busy and performed the operation
+        even though.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -878,8 +961,9 @@ Has the program issue Sanitize Command :
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sanitize /dev/nvme0n1 -a 0x02
-# nvme sanitize /dev/nvme0n1 --sanact=0x01</code></pre>
+<pre><code># nvme sanitize /dev/nvme0 -a 0x02
+# nvme sanitize /dev/nvme0 --sanact=0x01
+# nvme sanitize /dev/nvme0 --sanact=start-overwrite</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -896,7 +980,7 @@ Has the program issue Sanitize Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2017-06-28 18:52:37 PDT
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

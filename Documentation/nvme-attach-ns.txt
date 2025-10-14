@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme attach-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--controllers=<ctrl-list,> | -c <ctrl-list,>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -17,22 +18,39 @@ For the NVMe device given, sends the nvme namespace attach command for
 the provided namespace identifier, attaching to the provided list of
 controller identifiers.
 
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0) but
+not a namespace block device (ex: /dev/nvme0n1).
+
 OPTIONS
 -------
 -n <nsid>::
 --namespace-id=<nsid>::
-	The namespace identifier to attach.
+	The namespace identifier to attach but not attached already.
 
 -c <ctrl-list,>::
 -controllers=<ctrl-list,>::
-	The comma separated list of controller identifiers to attach
-	the namesapce too.
+	The comma separated list of controller identifiers to attach the
+	namespace too. If no list is provided, the namespace will be attached
+	to the <device> controller used for this command.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
-	Attach namspace to the controller:
+	Attach namespace 2 to the controllers with id 0x21 and 0x22:
 
-		# nvme attach-ns /dev/nvme1  -n 0x2 -c 0x21
+		# nvme attach-ns /dev/nvme1 -n 0x2 -c 0x21,0x22
+
+	Attach namespace 3 to nvme0:
+
+		# nvme attach-ns /dev/nvme0 -n 3
 
 NVME
 ----

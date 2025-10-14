@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-device-self-test(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -750,7 +750,9 @@ nvme-device-self-test(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme device-self-test</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
-                        [--self-test-code=&lt;NUM&gt; | -s &lt;NUM&gt;]</pre>
+                        [--self-test-code=&lt;NUM&gt; | -s &lt;NUM&gt;] [--wait | -w]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -762,6 +764,7 @@ nvme-device-self-test(1) Manual Page
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
 <div class="paragraph"><p>On success, the corresponding test is initiated.</p></div>
+<div class="paragraph"><p>The results of this test can be queried via <em>nvme self-test-log &lt;device&gt;</em>.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -776,7 +779,7 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </dt>
 <dd>
 <p>
-        Indicate the namespace in which the device self-test has to becarried out
+        Indicate the namespace in which the device self-test has to be carried out
 </p>
 </dd>
 <dt class="hdlist1">
@@ -788,10 +791,59 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <dd>
 <p>
         This field specifies the action taken by the device self-test command :
+         0h: Show current state of device self-test operation
          1h: Start a short device self-test operation
          2h: Start a extended device self-test operation
          eh: Start a vendor specific device self-test operation
-         fh: abort the device self-test operation
+         fh: Abort the device self-test operation
+        Default is 0h.
+</p>
+</dd>
+<dt class="hdlist1">
+-w
+</dt>
+<dt class="hdlist1">
+--wait
+</dt>
+<dd>
+<p>
+        Wait for the device self test to complete before exiting
+        The device self-test is aborted by SIGINT signal interrupt for the wait
+        The option is ignored if the abort self-test code option specified.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
 </p>
 </dd>
 </dl></div>
@@ -833,7 +885,7 @@ Abort the device self-test operation in the namespace-id 1:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-11-08 02:18:28 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

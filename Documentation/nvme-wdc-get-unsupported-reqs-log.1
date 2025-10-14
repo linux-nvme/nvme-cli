@@ -1,0 +1,79 @@
+'\" t
+.\"     Title: nvme-wdc-get-unsupported-reqs-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-WDC\-GET\-UNSU" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-wdc-get-unsupported-reqs-log \- Send NVMe WDC get\-unsupported\-reqs\-log plugin command, return parsed log output
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme wdc get\-unsupported\-reqs\-log\fR <device> [\-\-output\-format=<normal|json>
+\-o <normal|json>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, send a WDC plugin get\-unsupported\-reqs\-log command and output the unsupported requirements log data\&. The \-\-output\-format option will format the output as specified\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+This will only work on WDC devices supporting this log page\&. Results for any other device are undefined\&.
+.sp
+On success it returns the parsed unsupported requirements log page data, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR, or
+\fIjson\fR\&. Only one output format can be used at a time\&. Default is normal\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue WDC get\-unsupported\-reqs\-log plugin command :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme wdc get\-unsupported\-reqs\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

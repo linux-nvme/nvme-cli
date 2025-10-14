@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-toshiba-vs-smart-add-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -763,7 +764,8 @@ request and either saves the result to a file or dumps the content to stdout.</p
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe
 character device (ex: /dev/nvme0), or a namespace block device (ex:
 /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>The log contents may be associated with the controller, in which case the namespace parameter is ignored.</p></div>
+<div class="paragraph"><p>The log contents may be associated with the controller, in which case the
+namespace parameter is ignored.</p></div>
 <div class="paragraph"><p>Two logs exist, page 0xC0 (log page directory) and page 0xCA (vendor log page)</p></div>
 <div class="paragraph"><p>This will only work on Toshiba devices supporting this feature.</p></div>
 </div>
@@ -780,7 +782,7 @@ character device (ex: /dev/nvme0), or a namespace block device (ex:
 </dt>
 <dd>
 <p>
-        Log page: 0xC0 or 0xCA  (defaults to 0xCA)
+        Log page: 0xC0 or 0xCA (defaults to 0xCA)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -839,7 +841,7 @@ Get the contents of log page 0xC0 from the device and save to a binary file:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-03-07 13:58:54 CET
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

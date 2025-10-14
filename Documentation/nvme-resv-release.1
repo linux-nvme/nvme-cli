@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-release
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-RELEASE" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-RELEASE" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,10 +33,11 @@ nvme-resv-release \- Release an nvme reservation
 .sp
 .nf
 \fInvme resv\-release\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                             [\-\-crkey=<crkey> | \-c <crkey>]
-                             [\-\-rtype=<rtype> | \-t <rtype>]
-                             [\-\-rrela=<rrela> | \-a <rrela>]
-                             [\-\-iekey | \-i]
+                        [\-\-crkey=<crkey> | \-c <crkey>]
+                        [\-\-rtype=<rtype> | \-t <rtype>]
+                        [\-\-rrela=<rrela> | \-a <rrela>] [\-\-iekey | \-i]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -53,7 +54,7 @@ Override the nsid field\&. If using the admin character device, this parameter i
 Current Reservation Key: If the Reservation Register Action is 001b (i\&.e\&., Unregister Reservation Key) or 010b (i\&.e\&., Replace Reservation Key), then this field contains the current reservation key associated with the host\&. For all other Reservation Register Action values, this field is reserved\&. The controller ignores the value of this field when the Ignore Existing Key (IEKEY) bit is set to \(oq1\(cq\&.
 .RE
 .PP
-\-t <rtype>, \-\-rtyep=<rtype>
+\-t <rtype>, \-\-rtype=<rtype>
 .RS 4
 Reservation Type: This field specifies the type of reservation to be created\&.
 .TS
@@ -156,6 +157,25 @@ Ignore Existing Key: If this bit is set to a
 .sp
 Indicator option, defaults to
 \fI0\fR\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

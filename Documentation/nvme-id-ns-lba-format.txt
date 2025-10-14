@@ -1,0 +1,102 @@
+nvme-id-ns-lba-format(1)
+========================
+
+NAME
+----
+nvme-id-ns-lba-format - Send NVMe Identify Namespace for the specified LBA Format index, display structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme id-ns' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
+			[--lba-format-index=<lba_format_index> | -i <lba_format_index>]
+			[--verbose | -v]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify namespace for
+the specified LBA Format index command and provides the result
+that is include capability field only and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the structure may be returned in one of several ways depending
+on the option flags; the structure may be parsed by the program or the
+raw buffer may be printed to stdout.
+
+OPTIONS
+-------
+-U <uuid-index>::
+--uuid-index=<uuid-index>::
+	UUID Index of the feature
+
+-i <lba_format_index>::
+--lba-format-index=<lba_format_index>::
+	This field specifies the index into the LBA Format list identifying
+	the LBA Format capabilities that are to be returned
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+EXAMPLES
+--------
+* Has the program interpret the returned buffer and display the known
+fields in a human readable format:
++
+------------
+# nvme id-ns-lba-format /dev/nvme0n1 -i 0
+------------
++
+* Have the program return the raw structure in binary:
++
+------------
+# nvme id-ns-lba-format /dev/nvme0n1 -i 0 -o binary > id_ns.raw
+# nvme id-ns-lba-format /dev/nvme0n1 -i 0 --output-format=binary > id_ns.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+* Alternatively you may want to send the data to another program that
+can parse the raw buffer.
++
+------------
+# nvme id-ns-lba-format /dev/nvme0n1 -i 0 --raw-binary | nvme_parse_id_ns
+------------
++
+The parse program in the above example can be a program that shows the
+structure in a way you like. The following program is such an example
+that will parse it and can accept the output through a pipe, `'|'`,
+as shown in the above example, or you can `'cat'` a saved output buffer
+to it.
+------------
+/* File: nvme_parse_id_ns_lba_format.c */
+
+#include <linux/nvme.h>
+#include <stdio.h>
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+	unsigned char buf[sizeof(struct nvme_id_ns)];
+	struct nvme_id_ns *ns = (struct nvme_id_ns *)buf;
+
+	if (read(STDIN_FILENO, buf, sizeof(buf)))
+		return 1;
+
+	printf("nsze : %#llx\n", ns->nlbaf);
+	printf("ncap : %#llx\n", ns->mc);
+	return 0;
+}
+------------
+
+NVME
+----
+Part of the nvme-user suite

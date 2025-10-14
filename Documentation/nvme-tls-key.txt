@@ -1,0 +1,128 @@
+nvme-tls-key(1)
+===============
+
+NAME
+----
+nvme-tls-key - Manage NVMe TLS PSKs
+
+SYNOPSIS
+--------
+[verse]
+'nvme tls-key' [--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--keyfile=<file> | -f <file>]
+			[--import | -i] [--export | -e]
+			[--revoke=<description>| -r <description>]
+			[--verbose | -v]
+
+DESCRIPTION
+-----------
+Import, export or remove NVMe TLS pre-shared keys (PSKs) from the system
+keystore. When the '--export' option is given, all NVMe TLS PSKs are
+exported in the form
+
+<descriptions> <psk>
+
+where '<description>' is the key description from the
+exported key and '<psk>' is the key data in PSK interchange
+format 'NVMeTLSkey-1:01:<base64 encoded data>:'.
+Each key is exported in a single line.
+When the '--import' option is given key data is read in the
+same format and imported into the kernel keystore.
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring into which the 'retained' TLS key should be
+	stored. Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key for resulting TLS key.
+	Default is 'psk'.
+
+-f <file>::
+--keyfile=<file>::
+	File to read the keys from or write the keys to instead of
+	stdin / stdout.
+
+-i::
+--import::
+	Read the key data from the file specified by '--keyfile'
+	or stdin if not present.
+
+-e::
+--export::
+	Write the key data to the file specified by '--keyfile'
+	or stdout if not present.
+
+-r <description>::
+--revoke=<description>::
+	Revoke a key from a keyring.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+EXAMPLES
+--------
+
+* Create a new TLS key and insert it directly into the .nvme keyring:
++
+------------
+# nvme gen-tls-key -i -n hostnqn0 -c subsys0
+NVMeTLSkey-1:01:/b9tVz2OXJVISnoFgrPAygyS86XYJWkAapQeULns6PMpM8wv:
+Inserted TLS key 26b3260e
+------------
+
+* Export previously created key from the kernel keyring and store it into a file
++
+------------
+# nvme tls-key -e -f nvme-tls-keys.txt
+------------
+
+* Export/list all keys from the .nvme keyring using nvme and keyctl
++
+------------
+# nvme tls-key --export
+NVMe0R01 hostnqn0 subsys0 NVMeTLSkey-1:01:/b9tVz2OXJVISnoFgrPAygyS86XYJWkAapQeULns6PMpM8wv:
+
+# keyctl show
+Session Keyring
+ 573249525 --alswrv      0     0  keyring: _ses
+ 353599402 --alswrv      0 65534   \_ keyring: _uid.0
+ 475911922 ---lswrv      0     0   \_ keyring: .nvme
+ 649274894 --als-rv      0     0       \_ psk: NVMe0R01 hostnqn0 subsys0
+------------
+
+* Revoke a key using the description and verifying with
+keyctl the operation
++
+------------
+# nvme tls-key --revoke="NVMe0R01 hostnqn0 subsys0"
+
+# keyctl show
+Session Keyring
+ 573249525 --alswrv      0     0  keyring: _ses
+ 353599402 --alswrv      0 65534   \_ keyring: _uid.0
+ 475911922 ---lswrv      0     0   \_ keyring: .nvme
+649274894: key inaccessible (Key has been revoked)
+------------
+
+* Import back previously generated key from file and verify with keyctl
++
+------------
+# nvme tls-key --import -f nvme-tls-keys.txt
+
+# keyctl show
+Session Keyring
+ 573249525 --alswrv      0     0  keyring: _ses
+ 353599402 --alswrv      0 65534   \_ keyring: _uid.0
+ 475911922 ---lswrv      0     0   \_ keyring: .nvme
+ 734343968 --als-rv      0     0       \_ psk: NVMe0R01 hostnqn0 subsys0
+------------
+
+NVME
+----
+Part of the nvme-user suite

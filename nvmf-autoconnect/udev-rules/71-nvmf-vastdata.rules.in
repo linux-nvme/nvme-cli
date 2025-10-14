@@ -1,0 +1,5 @@
+# Enable round-robin for Vast Data Block Subsystem
+ACTION=="add", SUBSYSTEM=="nvme-subsystem", ATTR{subsystype}=="nvm", ATTR{model}=="VASTData", ATTR{iopolicy}="round-robin"
+
+# Set ctrl_loss_tmo to -1 for Vast Data Block Controller
+ACTION!="remove", SUBSYSTEM=="nvme", KERNEL=="nvme*", ATTR{model}=="VASTData", ATTR{ctrl_loss_tmo}="-1"

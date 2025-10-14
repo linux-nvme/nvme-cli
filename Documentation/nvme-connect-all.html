@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-connect-all(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -746,23 +749,29 @@ nvme-connect-all(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme connect-all</em>
-                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
-                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
-                [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
-                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
-                [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
-                [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]
-                [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
-                [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
-                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
-                [--hdr-digest             | -g]
-                [--data-digest            | -G]
-                [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
-                [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
-                [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
-                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]</pre>
+<pre class="content"><em>nvme connect-all</em> [--transport=&lt;trtype&gt; | -t &lt;trtype&gt;]
+                        [--nqn=&lt;subnqn&gt; | -n &lt;subnqn&gt;]
+                        [--traddr=&lt;traddr&gt; | -a &lt;traddr&gt;]
+                        [--trsvcid=&lt;trsvcid&gt; | -s &lt;trsvcid&gt;]
+                        [--host-traddr=&lt;traddr&gt; | -w &lt;traddr&gt;]
+                        [--host-iface=&lt;iface&gt; | -f &lt;iface&gt;]
+                        [--hostnqn=&lt;hostnqn&gt; | -q &lt;hostnqn&gt;]
+                        [--hostid=&lt;hostid&gt; | -I &lt;hostid&gt;]
+                        [--raw=&lt;filename&gt; | -r &lt;filename&gt;]
+                        [--device=&lt;device&gt; | -d &lt;device&gt;]
+                        [--config=&lt;filename&gt; | -J &lt;cfg&gt;]
+                        [--keep-alive-tmo=&lt;sec&gt; | -k &lt;sec&gt;]
+                        [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]
+                        [--ctrl-loss-tmo=&lt;#&gt;     | -l &lt;#&gt;]
+                        [--nr-io-queues=&lt;#&gt; | -i &lt;#&gt;]
+                        [--nr-write-queues=&lt;#&gt; | -W &lt;#&gt;]
+                        [--nr-poll-queues=&lt;#&gt; | -P &lt;#&gt;]
+                        [--queue-size=&lt;#&gt; | -Q &lt;#&gt;] [--keyring=&lt;#&gt;]
+                        [--tls_key=&lt;#&gt;] [--hdr-digest | -g] [--data-digest | -G]
+                        [--persistent | -p] [--tls] [--concat] [--quiet]
+                        [--dump-config | -O] [--nbft] [--no-nbft]
+                        [--nbft-path=&lt;STR&gt;] [--context=&lt;STR&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -773,11 +782,11 @@ nvme-connect-all(1) Manual Page
 <div class="paragraph"><p>Send one or more Discovery requests to a NVMe over Fabrics Discovery
 Controller, and create controllers for the returned discovery records.</p></div>
 <div class="paragraph"><p>If no parameters are given, then <em>nvme connect-all</em> will attempt to
-find a /etc/nvme/discovery.conf file to use to supply a list of
-connect-all commands to run. If no /etc/nvme/discovery.conf file exists,
-the command will quit with an error.</p></div>
+find a /usr/local/etc/nvme/discovery.conf file to use to supply a list of
+connect-all commands to run. If no /usr/local/etc/nvme/discovery.conf file
+exists, the command will quit with an error.</p></div>
 <div class="paragraph"><p>Otherwise a specific Discovery Controller should be specified using the
---transport, --traddr and if necessary the --trsvcid and a Diѕcovery
+--transport, --traddr and if necessary the --trsvcid and a Discovery
 request will be sent to the specified Discovery Controller.</p></div>
 <div class="paragraph"><p>See the documentation for the nvme-discover(1) command for further
 background.</p></div>
@@ -796,7 +805,7 @@ background.</p></div>
 <dd>
 <p>
         This field specifies the network fabric being used for
-        a NVMe-over-Fabrics network.  Current string values include:
+        a NVMe-over-Fabrics network. Current string values include:
 </p>
 <div class="tableblock">
 <table rules="all"
@@ -819,12 +828,27 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table"><strong>WIP</strong> The network fabric is a Fibre Channel network.</p></td>
 </tr>
 <tr>
+<td align="left" valign="top"><p class="table">tcp</p></td>
+<td align="left" valign="top"><p class="table">The network fabric is a TCP/IP network.</p></td>
+</tr>
+<tr>
 <td align="left" valign="top"><p class="table">loop</p></td>
 <td align="left" valign="top"><p class="table">Connect to a NVMe over Fabrics target on the local host</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+</dd>
+<dt class="hdlist1">
+-n &lt;subnqn&gt;
+</dt>
+<dt class="hdlist1">
+--nqn &lt;subnqn&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the name for the NVMe subsystem to connect to.
+</p>
 </dd>
 <dt class="hdlist1">
 -a &lt;traddr&gt;
@@ -847,7 +871,7 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        This field specifies the transport service id.  For transports using IP
+        This field specifies the transport service id. For transports using IP
         addressing (e.g. rdma) this field is the port number. By default, the IP
         port number for the RDMA transport is 4420.
 </p>
@@ -861,7 +885,21 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         This field specifies the network address used on the host to connect
-        to the Discovery Controller.
+        to the Controller. For TCP, this sets the source address on the socket.
+</p>
+</dd>
+<dt class="hdlist1">
+-f &lt;iface&gt;
+</dt>
+<dt class="hdlist1">
+--host-iface=&lt;iface&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the network interface used on the host to connect
+        to the Controller (e.g. IP eth1, enp2s0, enx78e7d1ea46da). This forces
+        the connection to be made on a specific interface instead of letting
+        the system decide.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -874,8 +912,8 @@ cellspacing="0" cellpadding="4">
 <p>
         Overrides the default Host NQN that identifies the NVMe Host.
         If this option is not specified, the default is read from
-        /etc/nvme/hostnqn first. If that does not exist, the autogenerated
-        NQN value from the NVMe Host kernel module is used next.
+        /usr/local/etc/nvme/hostnqn first. If that does not exist, the
+        autogenerated NQN value from the NVMe Host kernel module is used next.
         The Host NQN uniquely identifies the NVMe Host, and may be used by the
         the Discovery Controller to control what NVMe Target resources are
         allocated to the NVMe Host for a connection.
@@ -904,6 +942,35 @@ cellspacing="0" cellpadding="4">
         This field will take the output of the <em>nvme connect-all</em> command
         and dump it to a raw binary file. By default <em>nvme connect-all</em> will
         dump the output to stdout.
+</p>
+</dd>
+<dt class="hdlist1">
+-d &lt;device&gt;
+</dt>
+<dt class="hdlist1">
+--device=&lt;device&gt;
+</dt>
+<dd>
+<p>
+        This field takes a device as input. It must be a persistent device
+        associated with a Discovery Controller previously created by the
+        command "connect-all" or "discover". &lt;device&gt; follows the format
+        nvme*, eg. nvme0, nvme1.
+</p>
+</dd>
+<dt class="hdlist1">
+-J &lt;filename&gt;
+</dt>
+<dt class="hdlist1">
+--config=&lt;filename&gt;
+</dt>
+<dd>
+<p>
+        Use the specified JSON configuration file instead of the
+        default /usr/local/etc/nvme/config.json file or <em>none</em> to not read in
+        an existing configuration file. The JSON configuration file
+        format is documented in
+        <a href="https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json">https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json</a>
 </p>
 </dd>
 <dt class="hdlist1">
@@ -940,28 +1007,6 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default controller loss timeout period (in seconds).
-</p>
-</dd>
-<dt class="hdlist1">
--g
-</dt>
-<dt class="hdlist1">
---hdr-digest
-</dt>
-<dd>
-<p>
-        Generates/verifies header digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
--G
-</dt>
-<dt class="hdlist1">
---data-digest
-</dt>
-<dd>
-<p>
-        Generates/verifies data digest (TCP).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1012,6 +1057,147 @@ cellspacing="0" cellpadding="4">
         passed on to the subsequent connect call.
 </p>
 </dd>
+<dt class="hdlist1">
+--keyring=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Keyring for TLS key lookup.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls_key=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        TLS key for the connection (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-g
+</dt>
+<dt class="hdlist1">
+--hdr-digest
+</dt>
+<dd>
+<p>
+        Generates/verifies header digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-G
+</dt>
+<dt class="hdlist1">
+--data-digest
+</dt>
+<dd>
+<p>
+        Generates/verifies data digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-p
+</dt>
+<dt class="hdlist1">
+--persistent
+</dt>
+<dd>
+<p>
+        Don&#8217;t remove the discovery controller after retrieving the discovery
+        log page.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls
+</dt>
+<dd>
+<p>
+        Enable TLS encryption (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+--concat
+</dt>
+<dd>
+<p>
+        Enable secure concatenation (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+--quiet
+</dt>
+<dd>
+<p>
+        Suppress error messages.
+</p>
+</dd>
+<dt class="hdlist1">
+-O
+</dt>
+<dt class="hdlist1">
+--dump-config
+</dt>
+<dd>
+<p>
+        Print out resulting JSON configuration file to stdout.
+</p>
+</dd>
+<dt class="hdlist1">
+--nbft
+</dt>
+<dd>
+<p>
+        Only look at NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--no-nbft
+</dt>
+<dd>
+<p>
+        Do not look at NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--nbft-path=&lt;STR&gt;
+</dt>
+<dd>
+<p>
+        Use a user-defined path to the NBFT tables
+</p>
+</dd>
+<dt class="hdlist1">
+--context &lt;STR&gt;
+</dt>
+<dd>
+<p>
+        Set the execution context to &lt;STR&gt;. This allows to coordinate
+        the management of the global resources.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1033,13 +1219,31 @@ the RDMA network. Port 4420 is used by default:
 </li>
 <li>
 <p>
-Issue a <em>nvme connect-all</em> command using a /etc/nvme/discovery.conf file:
+Issue a <em>nvme connect-all</em> command using the default system defined NBFT tables:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># Machine default 'nvme discover' commands.  Query the
+<pre><code># nvme connect-all --nbft</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Issue a <em>nvme connect-all</em> command with a user-defined path for the NBFT table:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme connet-all --nbft-path=/sys/firmware/acpi/tables/NBFT1</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Issue a <em>nvme connect-all</em> command using a /usr/local/etc/nvme/discovery.conf file:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># Machine default 'nvme discover' commands. Query the
 # Discovery Controller's two ports (some resources may only
-# be accessible on a single port).  Note an official
+# be accessible on a single port). Note an official
 # nqn (Host) name defined in the NVMe specification is being used
 # in this example.
 -t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
@@ -1068,7 +1272,8 @@ nvme-connect(1)</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-08-29 18:41:45 MDT
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

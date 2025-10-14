@@ -1,0 +1,96 @@
+'\" t
+.\"     Title: nvme-lockdown
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-LOCKDOWN" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-lockdown \- Send an NVMe Lockdown command to prohibit or allow the execution of command
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-lockdown\fR <device> [\-\-ofi=<ofi> | \-O <ofi>]
+                        [\-\-ifc=<ifc> | \-f <ifc>]
+                        [\-\-prhbt=<prhbt> | \-p <prhbt>]
+                        [\-\-scp=<scp> | \-s <scp>]
+                        [\-\-uuid=<UUID_Index> | \-U <UUID_Index>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
+.fi
+.SH "DESCRIPTION"
+.sp
+The Lockdown command is used to control the Command and Feature Lockdown capability which configures the prohibition or allowance of execution of the specified command or Set Features command targeting a specific Feature Identifier\&.
+.SH "OPTIONS"
+.PP
+\-O <ofi>, \-\-ofi=<ofi>
+.RS 4
+Opcode or Feature Identifier(OFI) specifies the command opcode or Set Features Feature Identifier identified by the Scope field\&.
+.RE
+.PP
+\-f <ifc>, \-\-ifc=<ifc>
+.RS 4
+Interface (INF) field identifies the interfaces affected by this command\&.
+.RE
+.PP
+\-p <prhbt>, \-\-prhbt=<prhbt>
+.RS 4
+Prohibit (PRHBT) bit specifies whether to prohibit or allow the command opcode or Set Features Feature Identifier specified by this command\&.
+.RE
+.PP
+\-s <scp>, \-\-scp=<scp>
+.RS 4
+Scope (SCP) field specifies the contents of the Opcode or Feature Identifier field\&.
+.RE
+.PP
+\-U <UUID_Index>, \-\-uuid=<UUID_Index>
+.RS 4
+UUID Index \- If this field is set to a non\-zero value, then the value of this field is the index of a UUID in the UUID List that is used by the command\&. If this field is cleared to 0h,then no UUID index is specified\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
+.RE
+.SH "EXAMPLES"
+.sp
+No examples yet\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

@@ -1,0 +1,47 @@
+nvme-media-unit-stat-log(1)
+===========================
+
+NAME
+----
+nvme-media-unit-stat-log - Send NVMe Media unit status Log pages 
+request, returns result and log.
+
+SYNOPSIS
+--------
+[verse]
+'nvme media-unit-stat-log' <device> [--dom-id | -d] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Media unit status log pages details from 
+an NVMe device and provides the returned structure.
+
+The <device> parameter is mandatory and should be the NVMe character
+device (ex: /dev/nvme0).
+
+On success, the returned Media unit status log pages log structure will be printed.
+
+OPTIONS
+-------
+
+-o <fmt>::
+--output-format=<fmt>::
+	This option will set the reporting format to normal, json, or binary.
+	Only one output format can be used at a time.
+
+-d::
+--dom-id::
+	To get the domain ID.
+
+-b::
+--raw-binary::
+	To show raw binary data.
+
+EXAMPLES
+--------
+No examples provided yet.
+
+NVME
+----
+Part of the nvme-user suite

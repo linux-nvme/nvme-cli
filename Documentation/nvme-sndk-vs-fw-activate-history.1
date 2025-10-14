@@ -1,0 +1,154 @@
+'\" t
+.\"     Title: nvme-sndk-vs-fw-activate-history
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SNDK\-VS\-FW\-" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sndk-vs-fw-activate-history \- Execute NVMe sndk vs\-fw\-activate\-history Vendor Unique Command, return result
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sndk vs\-fw\-activate\-history\fR <device> [\-\-output\-format=<normal|json> \-o <normal|json>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, read a Vendor Unique sndk log page that returns the firmware activation history\&.
+.sp
+The <device> parameter is mandatory and must be the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+This will only work on Sandisk devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR, or
+\fIjson\fR\&. Only one output format can be used at a time\&. Default is normal\&.
+.RE
+.SH "FIRMWARE ACTIVATE HISTORY LOG PAGE DATA OUTPUT EXPLANATION"
+.TS
+allbox tab(:);
+ltB ltB.
+T{
+Field
+T}:T{
+Description
+T}
+.T&
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+.sp
+\fBEntry Number\fR
+T}:T{
+.sp
+The number of fw activate entry\&. The most recent 20 entries will be displayed\&.
+T}
+T{
+.sp
+\fBPower on Hour\fR
+T}:T{
+.sp
+The time since the power on in hours:minutes:seconds\&.
+T}
+T{
+.sp
+\fBPower Cycle Count\fR
+T}:T{
+.sp
+The power cycle count that the firmware activation occurred\&.
+T}
+T{
+.sp
+\fBCurrent Firmware\fR
+T}:T{
+.sp
+The firmware level currently running on the SSD before the activation took place\&.
+T}
+T{
+.sp
+\fBNew Firmware\fR
+T}:T{
+.sp
+The new firmware level running on the SSD after the activation took place\&.
+T}
+T{
+.sp
+\fBSlot Number\fR
+T}:T{
+.sp
+The slot that the firmware is being activated from\&.
+T}
+T{
+.sp
+\fBCommit Action Type\fR
+T}:T{
+.sp
+The commit action type associated with the firmware activation event
+T}
+T{
+.sp
+\fBResult\fR
+T}:T{
+.sp
+The result of the firmware activation event\&. The output shall be in the format: Pass or Failed + error code
+T}
+.TE
+.sp 1
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue sndk vs\-fw\-activate\-history Vendor Unique Command :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk vs\-fw\-activate\-history /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

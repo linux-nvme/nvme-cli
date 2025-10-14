@@ -1,0 +1,119 @@
+nvme-sndk-vs-internal-log(1)
+============================
+
+NAME
+----
+nvme-sndk-vs-internal-log - Retrieve sndk device's internal firmware log and save to file.
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk vs-internal-log' <device> [--output-file=<FILE>, -o <FILE>]
+			[--transfer-size=<SIZE>, -s <SIZE>]
+			[--data-area=<DATA AREA>, -d <DATA_AREA>]
+			[--file-size=<FILE SIZE>, -f <FILE SIZE>]
+			[--offset=<OFFSET>, -e <OFFSET>]
+			[--type=<TYPE>, -t <type>] [--verbose, -v]
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, sends the sndk Vendor Specific Internal Log request
+and saves the result to a file.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this feature.
+Results for any other device are undefined.
+
+OPTIONS
+-------
+-o <FILE>::
+--output-file=<FILE>::
+	Output file; defaults to device serial number followed by
+	"_internal_fw_log_<date>_<time>.bin" suffix
+
+-s <SIZE>::
+--transfer-size=<SIZE>::
+	Transfer size; defaults to 0x10000 (65536 decimal) bytes
+
+-d <DATA AREA>::
+--data-area=<DATA AREA>::
+	DUI data area to retrieve. The DUI data areas from 1 to <DATA AREA> will
+	be retrieved. This parameter is currently only supported on the SN340,
+	SN640, SN730, and SN840 devices.
+
+-f <FILE SIZE>::
+--file-size=<FILE SIZE>::
+	Specifies the desired size of the data file starting at the passed in
+	offset. This allows the user to retrieve the data in several smaller
+	files of the passed in size. This parameter is currently only supported
+	on the SN340 device.
+
+-e <OFFSET>::
+--offset=<OFFSET>::
+	Specifies the data offset at which to start retrieving the data. This
+	parameter is used in combination with the file size parameter to
+	retrieve the data in several smaller files. This parameter is currently
+	only supported on the SN340 device.
+
+-t <TYPE>::
+--type=<TYPE>::
+	Specifies the telemetry type - NONE, HOST, or CONTROLLER. This parameter
+	is used to get either the host generated or controller initiated
+	telemetry log page. If not specified or none is specified, the command
+	will return the default E6 log data. This parameter is currently only
+	supported on the SN640 and SN840 devices.
+
+-v <VERBOSE>::
+--verbose=<VERBOSE>::
+	Provides additional debug messages for certain drives.
+
+EXAMPLES
+--------
+* Gets the internal firmware log from the device and saves to default file in current directory (e.g. STM00019F3F9_internal_fw_log_20171127_095704.bin):
++
+------------
+# nvme sndk vs-internal-log /dev/nvme0
+------------
+* Gets the internal firmware log from the device and saves to defined file in current directory (e.g. test.bin):
++
+------------
+# nvme sndk vs-internal-log /dev/nvme0 -o test.bin
+------------
+* Gets the internal firmware log from the device and saves to defined file with pathname (e.g. /tmp/test):
++
+------------
+# nvme sndk vs-internal-log /dev/nvme0 -o /tmp/test
+------------
+* Gets the internal firmware log from the device transferring the data in 64k chunks and saves to default file in current directory (e.g. STM00019F3F9_internal_fw_log_20171127_100754.bin):
++
+------------
+# nvme sndk vs-internal-log /dev/nvme0 -s 0x10000
+------------
+* Gets the internal firmware log from the device transferring the data in 16k chunks and saves to default file in current directory (e.g. STM00019F3F9_internal_fw_log_20171127_100950.bin):
++
+------------
+# nvme sndk vs-internal-log /dev/nvme0 -s 16384
+------------
+* Gets the internal firmware log up to data area 3 from the device in 3 files of 0x1000000 bytes:
++
+------------
+# nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x0000000 -o /tmp/sn340_dui_data_1.bin
+# nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x1000000 -o /tmp/sn340_dui_data_2.bin
+# nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x2000000 -o /tmp/sn340_dui_data_3.bin
+------------
+* Gets the host telemetry log page to data area 3 from the device and stores it in file host-telem-log-da3.bin:
++
+------------
+# nvme sndk vs-internal-log /dev/nvme1 -t host -o host-telem-log-da3.bin -d 3
+------------
+* Gets the controller telemetry log page to data area 3 from the device and stores it in file ctlr-telem-log-da3.bin:
++
+------------
+# nvme sndk vs-internal-log /dev/nvme1 -t controller -o ctlr-telem-log-da3.bin -d 3
+------------
+
+NVME
+----
+Part of the nvme-user suite.

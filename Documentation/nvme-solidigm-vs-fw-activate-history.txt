@@ -1,0 +1,39 @@
+nvme-solidigm-vs-fw-activate-history(1)
+=======================================
+
+NAME
+----
+nvme-solidigm-vs-fw-activate-history - Get firmware activation history log
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm vs-fw-activate-history' <device> [OPTIONS]
+
+DESCRIPTION
+-----------
+This command retrieves the firmware activation history log for Solidigm NVMe devices. It redirects to the OCP plug-in for compatibility.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal' or 'json'. Only one output format can be used at a time. Default is normal.
+
+EXAMPLES
+--------
+* Print the firmware activation history log in normal format:
++
+------------
+# nvme solidigm vs-fw-activate-history /dev/nvme0
+------------
+
+* Print the firmware activation history log in JSON format:
++
+------------
+# nvme solidigm vs-fw-activate-history /dev/nvme0 -o json
+------------
+
+NVME
+----
+Part of the nvme-cli suite

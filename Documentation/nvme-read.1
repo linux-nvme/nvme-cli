@@ -2,12 +2,12 @@
 .\"     Title: nvme-read
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-READ" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-READ" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,51 +42,51 @@ nvme-read \- Send an NVMe Read command, provide results
                         [\-\-prinfo=<prinfo> | \-p <prinfo>]
                         [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
                         [\-\-app\-tag=<apptag> | \-a <apptag>]
-                        [\-\-limited\-retry | \-l]
-                        [\-\-force\-unit\-access | \-f]
+                        [\-\-limited\-retry | \-l] [\-\-force\-unit\-access | \-f]
                         [\-\-dir\-type=<type> | \-T <type>]
-                        [\-\-dir\-spec=<spec> | \-S <spec>]
-                        [\-\-dsm=<dsm> | \-D <dsm>]
-                        [\-\-show\-command | \-v]
-                        [\-\-dry\-run | \-w]
-                        [\-\-latency | \-t]
+                        [\-\-dir\-spec=<spec> | \-S <spec>] [\-\-dsm=<dsm> | \-D <dsm>]
+                        [\-\-show\-command | \-V] [\-\-dry\-run | \-w] [\-\-latency | \-t]
+                        [\-\-storage\-tag<storage\-tag> | \-g <storage\-tag>]
+                        [\-\-storage\-tag\-check | \-C] [\-\-force]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
 The Read command reads the logical blocks specified by the command from the medium and copies to the data data buffer provided\&. Will use stdout by default if you don\(cqt provide a file\&.
 .SH "OPTIONS"
 .PP
-\-\-start\-block=<slba>, \-s <slba>
+\-s <slba>, \-\-start\-block=<slba>
 .RS 4
 Start block\&.
 .RE
 .PP
-\-\-block\-count, \-c
+\-c, \-\-block\-count
 .RS 4
 The number of blocks to transfer\&. This is a zeroes based value to align with the kernel\(cqs use of this field\&. (ie\&. 0 means transfer 1 block)\&.
 .RE
 .PP
-\-\-data\-size=<size>, \-z <size>
+\-z <size>, \-\-data\-size=<size>
 .RS 4
 Size of data, in bytes\&.
 .RE
 .PP
-\-\-metadata\-size=<size>, \-y <size>
+\-y <size>, \-\-metadata\-size=<size>
 .RS 4
 Size of metadata in bytes\&.
 .RE
 .PP
-\-\-data=<data\-file>, \-d <data\-file>
+\-d <data\-file>, \-\-data=<data\-file>
 .RS 4
 Data file\&. If none provided, contents are sent to STDOUT\&.
 .RE
 .PP
-\-\-metadata=<metadata\-file>, \-M <metadata\-file>
+\-M <metadata\-file>, \-\-metadata=<metadata\-file>
 .RS 4
 Metadata file, if necessary\&.
 .RE
 .PP
-\-\-prinfo=<prinfo>, \-p <prinfo>
+\-p <prinfo>, \-\-prinfo=<prinfo>
 .RS 4
 Protection Information field definition\&.
 .TS
@@ -131,24 +131,24 @@ T}
 .sp 1
 .RE
 .PP
-\-\-ref\-tag=<reftag>, \-r <reftag>
+\-r <reftag>, \-\-ref\-tag=<reftag>
 .RS 4
 Optional reftag when used with protection information\&.
 .RE
 .PP
-\-\-app\-tag\-mask=<appmask>, \-m <appmask>
+\-m <appmask>, \-\-app\-tag\-mask=<appmask>
 .RS 4
 Optional application tag mask when used with protection information\&.
 .RE
 .PP
-\-\-force\-unit\-access, \-f
+\-f, \-\-force\-unit\-access
 .RS 4
 Set the force\-unit access flag\&.
 .RE
 .PP
 \-T <type>, \-\-dir\-type=<type>
 .RS 4
-Optional directive type\&. The nvme\-cli only enforces the value be in the defined range for the directive type, though the NVMe specifcation (1\&.3a) defines only one directive, 01h, for write stream idenfiers\&.
+Optional directive type\&. The nvme\-cli only enforces the value be in the defined range for the directive type, though the NVMe specification (1\&.3a) defines only one directive, 01h, for write stream identifiers\&.
 .RE
 .PP
 \-S <spec>, \-\-dir\-spec=<spec>
@@ -158,10 +158,10 @@ Optional field for directive specifics\&. When used with write streams, this val
 .PP
 \-D <dsm>, \-\-dsm=<dsm>
 .RS 4
-The optional data set management attributes for this command\&. The argument for this is the lower 16 bits of the DSM field in a write command; the upper 16 bits of the field come from the directive specific field, if used\&. This may be used to set attributes for the LBAs being written, like access frequency, type, latency, among other things, as well as yet to be defined types\&. Please consult the NVMe specification for detailed breakdown of how to use this field\&.
+The optional data set management attributes for this command\&. The argument for this is the least significant 8 bits of the DSM field in a write command; the most significant 16 bits of the field come from the directive specific field, if used\&. This may be used to set attributes for the LBAs being written, like access frequency, type, latency, among other things, as well as yet to be defined types\&. Please consult the NVMe specification for detailed breakdown of how to use this field\&.
 .RE
 .PP
-\-v, \-\-show\-cmd
+\-V, \-\-show\-cmd
 .RS 4
 Print out the command to be sent\&.
 .RE
@@ -177,6 +177,40 @@ be set\&. Otherwise \-\-dry\-run option will be
 \-t, \-\-latency
 .RS 4
 Print out the latency the IOCTL took (in us)\&.
+.RE
+.PP
+\-g <storage\-tag>, \-\-storage\-tag=<storage\-tag>
+.RS 4
+Variable Sized Expected Logical Block Storage Tag(ELBST)\&.
+.RE
+.PP
+\-C, \-\-storage\-tag\-check
+.RS 4
+This flag enables Storage Tag field checking as part of end\-to\-end data protection processing\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Ignore namespace is currently busy and performed the operation even though\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

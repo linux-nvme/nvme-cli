@@ -1,0 +1,55 @@
+nvme-seagate-vs-smart-add-log(1)
+================================
+
+NAME
+----
+nvme-seagate-vs-smart-add-log - Retrieve Seagate vendor specific extended-SMART
+Information
+
+SYNOPSIS
+--------
+[verse]
+'nvme seagate vs-smart-add-log <device> [OPTIONS]'
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the Seagate vendor log
+request and either saves the result to a file or dumps the content to stdout.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1).
+
+The log contents may be associated with the controller, in which case the namespace parameter is ignored.
+
+Two logs exist, page 0xC4 (Extended SMART log page) and page 0xCF (DRAM Supercap SMART log page)
+
+This command will only work on Seagate devices supporting this feature. Not
+all commands work across all product families.
+
+OPTIONS
+-------
+-l <NUM>::
+--log=<NUM>::
+	Log number, page 0xC4 (Extended SMART log page) and page 0xCF (DRAM
+	Supercap SMART log page)
+
+-n <NUM>::
+--namespace-id=<NUM>::
+	Namespace number
+
+-o <FILE>::
+--output-file=<FILE>::
+	Output in binary format. Defaults to text-formatted dump to stdout
+
+EXAMPLES
+--------
+Get the vendor specific extended SMART information for the specified device.
+
+------------
+# nvme seagate vs-smart-add-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

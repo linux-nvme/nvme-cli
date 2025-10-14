@@ -2,12 +2,12 @@
 .\"     Title: nvme-huawei-id-ctrl
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-HUAWEI\-ID\-CT" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-HUAWEI\-ID\-CT" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,8 @@ nvme-huawei-id-ctrl \- Send NVMe Identify Controller, return result and structur
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme huawei id\-ctrl\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
-                        [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme huawei id\-ctrl\fR <device> [\-\-vendor\-specific | \-v] [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -63,7 +63,7 @@ In addition to parsing known fields, this option will dump the vendor specific r
 This option will parse and format many of the bit fields into human\-readable formats\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,

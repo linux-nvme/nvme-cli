@@ -9,11 +9,14 @@ SYNOPSIS
 --------
 [verse]
 'nvme get-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--feature-id=<fid> | -f <fid>] [--cdw11=<cdw11>]
-			  [--data-len=<data-len> | -l <data-len>]
-			  [--sel=<select> | -s <select>]
-			  [--raw-binary | -b]
-			  [--human-readable | -H]
+			[--feature-id=<fid> | -f <fid>]
+			[--uuid-index=<uuid-index> | -U <uuid_index>]
+			[--data-len=<data-len> | -l <data-len>]
+			[--sel=<select> | -s <select>]
+			[--raw-binary | -b] [--cdw11=<cdw11> | -c <cdw11>]
+			[--human-readable | -H] [--changed | -C]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -41,6 +44,55 @@ OPTIONS
 --feature-id=<fid>::
 	The feature id to send with the command. Value provided should
 	be in hex.
++
+[]
+|=================
+|Value|Definition
+|0x01 \| 'arbitration'| Arbitration
+|0x02 \| 'power-mgmt'| Power Management
+|0x03 \| 'lba-range'| LBA Range Type
+|0x04 \| 'temp-thresh'| Temperature Threshold
+|0x05 \| 'err-recovery'| Error Recovery
+|0x06 \| 'volatile-wc'| Volatile Write Cache
+|0x07 \| 'num-queues'| Number of Queues
+|0x08 \| 'irq-coalesce'| Interrupt Coalescing
+|0x09 \| 'irq-config'| Interrupt Vector Configuration
+|0x0a \| 'write-atomic'| Write Atomicity Normal
+|0x0b \| 'async-event'| Asynchronous Event Configuration
+|0x0c \| 'auto-pst'| Autonomous Power State Transition
+|0x0d \| 'host-mem-buf'| Host Memory Buffer
+|0x0e \| 'timestamp'| Timestamp
+|0x0f \| 'kato'| Keep Alive Timer
+|0x10 \| 'hctm'| Host Controlled Thermal Management
+|0x11 \| 'nopsc'| Non-Operational Power State Config
+|0x12 \| 'rrl'| Read Recovery Level Config
+|0x13 \| 'plm-config'| Predictable Latency Mode Config
+|0x14 \| 'plm-window'| Predictable Latency Mode Window
+|0x15 \| 'lba-sts-interval'| LBA Status Information Report Interval
+|0x16 \| 'host-behavior'| Host Behavior Support
+|0x17 \| 'sanitize'| Sanitize Config
+|0x18 \| 'endurance-evt-cfg'| Endurance Group Event Configuration
+|0x19 \| 'iocs-profile'| I/O Command Set Profile
+|0x1a \| 'spinup-control'| Spinup Control
+|0x1b \| 'power-loss-signal'| Power Loss Signaling Config
+|0x1c \| 'perf-characteristics'|Performance Characteristics
+|0x1d \| 'fdp'| Flexible Data Placement
+|0x1e \| 'fdp-events'| FDP Events
+|0x1f \| 'ns-admin-label'| Namespace Admin Label
+|0x20 \| 'key-value'| Key Value Configuration
+|0x21 \| 'ctrl-data-queue'| Controller Data Queue
+|0x78 \| 'emb-mgmt-ctrl-addr'| Embedded Management Controller Address
+|0x79 \| 'host-mgmt-agent-addr'|Host Management Agent Address
+|0x7d \| 'enh-ctrl-metadata'| Enhanced Controller Metadata
+|0x7e \| 'ctrl-metadata'| Controller Metadata
+|0x7f \| 'ns-metadata'| Namespace Metadata
+|0x80 \| 'sw-progress'| Software Progress Marker
+|0x81 \| 'host-id'| Host Identifier
+|0x82 \| 'resv-mask'| Reservation Notification Mask
+|0x83 \| 'resv-persist'| Reservation Persistence
+|0x84 \| 'write-protect'| Namespace Write Protection Config
+|0x85 \| 'bp-write-protect'| Boot Partition Write Protection Config
+|=================
 
 -s <select>::
 --sel=<select>::
@@ -50,12 +102,16 @@ OPTIONS
 []
 |==================
 |Select|Description
-|0|Current 
-|1|Default 
+|0|Current
+|1|Default
 |2|Saved
 |3|Supported capabilities
-|4–7|Reserved
+|4-7|Reserved
 |==================
+
+-U <uuid-index>::
+--uuid-index=<uuid-index>::
+	UUID Index of the feature
 
 -l <data-len>::
 --data-len=<data-len>::
@@ -63,6 +119,7 @@ OPTIONS
 	known features do not use this value. The exception is LBA
 	Range Type
 
+-c <cdw11>::
 --cdw11=<cdw11>::
 	The value for command dword 11, if applicable.
 
@@ -75,6 +132,23 @@ OPTIONS
 --human-readable::
 	This option will parse and format many of the bit fields
 	into human-readable formats.
+
+-C::
+--changed::
+	This option will show feature changed.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------
@@ -102,6 +176,10 @@ will be displayed to the user in as a hex dump:
 # nvme get-feature /dev/nvme0 -f 0xc0 -l 512
 ------------
 +
+Get feature with UUID index
+------------
+# nvme get-feature /dev/nvme0 -f 0xc0 -l 512 -U 0x1
+------------
 
 * The following retrieves the feature for the LBA Range Type, which
 implicitly requires a buffer and will be saved to a file in its raw

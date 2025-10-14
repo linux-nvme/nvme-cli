@@ -9,14 +9,15 @@ SYNOPSIS
 --------
 [verse]
 'nvme dir-send' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--data-len=<data-len> | -l <data-len>]
-			  [--dir-type=<dtype> | -D <dtype>]
-			  [--dir-spec=<dspec> | -S <dspec>]
-			  [--dir-oper=<doper> | -O <doper>]
-			  [--endir=<endir> | -e <endir>]
-			  [--target-dir=<tdir> | -T <tdir>]
-			  [--human-readable | -H]
-			  [--raw-binary | -b]
+			[--data-len=<data-len> | -l <data-len>]
+			[--dir-type=<dtype> | -D <dtype>]
+			[--dir-spec=<dspec> | -S <dspec>]
+			[--dir-oper=<doper> | -O <doper>]
+			[--endir=<endir> | -e <endir>]
+			[--target-dir=<tdir> | -T <tdir>]
+			[--human-readable | -H] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -30,9 +31,8 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
 On success, the returned directive's parameter structure (if applicable) is
 returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format
-if it is a known structure, displayed in hex, or the raw buffer may be
-printed to stdout for another program to parse.
+structure may parsed by the program and displayed in hex, or the raw buffer
+may be printed to stdout for another program to parse.
 
 OPTIONS
 -------
@@ -43,15 +43,15 @@ OPTIONS
 
 -D <dtype>::
 --dir-type=<dtype>::
-	Directive type	
+	Directive type
 
 -S <dspec>::
 --dir-spec=<dspec>::
-	Directive specific	
+	Directive specific
 
 -O <doper>::
 --dir-oper=<doper>::
-	Directive operation	
+	Directive operation
 
 -T <tdir>::
 --target-dir=<nsr>::
@@ -60,7 +60,6 @@ OPTIONS
 -e <endir>::
 --endir=<endir>::
 	Target directive enable(1) or disable (0) operation
-
 +
 []
 |==================
@@ -85,8 +84,20 @@ OPTIONS
 
 -H::
 --human-readable::
-	Print the decoded receive buffer to stdout if the command returns
-	a structure.
+	deprecated; does nothing so use the --verbose flag instead.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

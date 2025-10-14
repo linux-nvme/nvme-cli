@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -33,7 +35,7 @@ Test the Mandatory features with get features command:-
 """
 
 import subprocess
-from nose.tools import assert_equal
+
 from nvme_test import TestNVMe
 
 
@@ -45,16 +47,17 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         - Attributes:
               - feature_id_list : list of the mandatory features.
               - get_vector_list_cmd : vector list collection for 09h.
-              - vector_list_len : numer of the interrupt vectors.
+              - vector_list_len : number of the interrupt vectors.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeGetMandatoryFeatures """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.setup_log_dir(self.__class__.__name__)
         self.feature_id_list = ["0x01", "0x02", "0x04", "0x05", "0x07",
                                 "0x08", "0x09", "0x0A", "0x0B"]
-        get_vector_list_cmd = "cat /proc/interrupts | grep nvme |" \
+        device = self.ctrl.split('/')[-1]
+        get_vector_list_cmd = "grep " + device + "q /proc/interrupts |" \
                               " cut -d : -f 1 | tr -d ' ' | tr '\n' ' '"
         proc = subprocess.Popen(get_vector_list_cmd,
                                 shell=True,
@@ -62,12 +65,12 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                                 encoding='utf-8')
         self.vector_list_len = len(proc.stdout.read().strip().split(" "))
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeGetMandatoryFeatures
 
             Call super class's destructor.
         """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def get_mandatory_features(self, feature_id):
         """ Wrapper for NVMe get features command
@@ -78,26 +81,24 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         """
         if str(feature_id) == "0x09":
             for vector in range(self.vector_list_len):
-                get_feat_cmd = "nvme get-feature " + self.ctrl + \
-                               " --feature-id=" + str(feature_id) + \
-                               " --cdw11=" + str(vector)
+                get_feat_cmd = f"{self.nvme_bin} get-feature {self.ctrl} " + \
+                    f"--feature-id={str(feature_id)} " + \
+                    f"--cdw11={str(vector)} --human-readable"
                 proc = subprocess.Popen(get_feat_cmd,
                                         shell=True,
                                         stdout=subprocess.PIPE,
                                         encoding='utf-8')
-                feature_output = proc.communicate()[0]
-                print(feature_output)
-                assert_equal(proc.wait(), 0)
+                self.assertEqual(proc.wait(), 0)
         else:
-            get_feat_cmd = "nvme get-feature " + self.ctrl + \
-                           " --feature-id=" + str(feature_id)
+            get_feat_cmd = f"{self.nvme_bin} get-feature {self.ctrl} " + \
+                f"--feature-id={str(feature_id)} --human-readable"
+            if str(feature_id) == "0x05":
+                get_feat_cmd += f" --namespace-id={self.default_nsid}"
             proc = subprocess.Popen(get_feat_cmd,
                                     shell=True,
                                     stdout=subprocess.PIPE,
                                     encoding='utf-8')
-            feature_output = proc.communicate()[0]
-            print(feature_output)
-            assert_equal(proc.wait(), 0)
+            self.assertEqual(proc.wait(), 0)
 
     def test_get_mandatory_features(self):
         """ Testcase main """

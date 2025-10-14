@@ -9,11 +9,12 @@ SYNOPSIS
 --------
 [verse]
 'nvme resv-acquire' <device> [--namespace-id=<nsid> | -n <nsid>]
-			     [--crkey=<crkey> | -c <crkey>]
-			     [--prkey=<prkey> | -p <prkey>]
-			     [--rtype=<rtype> | -t <rtype>]
-			     [--racqa=<racqa> | -a <racqa>]
-			     [--iekey | -i]
+			[--crkey=<crkey> | -c <crkey>]
+			[--prkey=<prkey> | -p <prkey>]
+			[--rtype=<rtype> | -t <rtype>]
+			[--racqa=<racqa> | -a <racqa>] [--iekey | -i]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -44,7 +45,7 @@ OPTIONS
 	this field is reserved.
 
 -t <rtype>::
---rtyep=<rtype>::
+--rtype=<rtype>::
 	Reservation Type: This field specifies the type of reservation
 	to be created.
 +
@@ -79,9 +80,21 @@ OPTIONS
 --iekey::
 	Ignore Existing Key: If this bit is set to a '1', then the
 	Current Reservation Key (CRKEY) check is disabled and the command
-	shall succeed regardless of the CRKEY field  value.
+	shall succeed regardless of the CRKEY field value.
 +
 Indicator option, defaults to '0'.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

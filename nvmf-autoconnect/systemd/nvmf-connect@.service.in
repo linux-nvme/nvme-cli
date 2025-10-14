@@ -1,0 +1,28 @@
+#
+# Unit file used by 70-nvmf-autoconnect.rules.
+#
+
+[Unit]
+Description=NVMf auto-connect scan upon nvme discovery controller Events
+DefaultDependencies=no
+After=systemd-udevd.service
+Before=local-fs-pre.target
+PartOf=nvmf-connect.target
+Requires=nvmf-connect.target
+
+[Service]
+ProtectSystem=full
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+RestrictRealtime=true
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+Type=simple
+Environment="CONNECT_ARGS=%i"
+ExecStart=/bin/sh -c "@SBINDIR@/nvme connect-all --context=autoconnect --quiet `/bin/echo -e '${CONNECT_ARGS}'`"

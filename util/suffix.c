@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  *
  * Copyright 2014 PMC-Sierra, Inc.
@@ -30,35 +31,148 @@
  */
 
 #include "suffix.h"
+#include "common.h"
 
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
+#include <float.h>
+#include <limits.h>
+#include <locale.h>
+#include <stdio.h>
 
 static struct si_suffix {
-	double magnitude;
+	long double magnitude;
+	unsigned int exponent;
 	const char *suffix;
 } si_suffixes[] = {
-	{1e15, "P"},
-	{1e12, "T"},
-	{1e9, "G"},
-	{1e6, "M"},
-	{1e3, "k"},
-	{1e0, ""},
-	{1e-3, "m"},
-	{1e-6, "u"},
-	{1e-9, "n"},
-	{1e-12, "p"},
-	{1e-15, "f"},
-	{0}
+	{1e30, 30, "Q"},
+	{1e27, 27, "R"},
+	{1e24, 24, "Y"},
+	{1e21, 21, "Z"},
+	{1e18, 18, "E"},
+	{1e15, 15, "P"},
+	{1e12, 12, "T"},
+	{1e9, 9, "G"},
+	{1e6, 6, "M"},
+	{1e3, 3, "k"},
 };
 
 const char *suffix_si_get(double *value)
 {
+	long double value_ld = *value;
+	const char *suffix = suffix_si_get_ld(&value_ld);
+
+	*value = value_ld;
+
+	return suffix;
+}
+
+static bool suffix_si_check(const char val)
+{
+	int i;
 	struct si_suffix *s;
 
-	for (s = si_suffixes; s->magnitude != 0; s++) {
+	for (i = 0; i < ARRAY_SIZE(si_suffixes); i++) {
+		s = &si_suffixes[i];
+
+		if (val == *s->suffix)
+			return true;
+	}
+
+	return false;
+}
+
+int suffix_si_parse(const char *str, char **endptr, uint64_t *val)
+{
+	unsigned long long num, frac = 0;
+	char *sep, *tmp;
+	int frac_len = 0, len, i;
+
+	num = strtoull(str, endptr, 0);
+	if (str == *endptr ||
+	    ((num == ULLONG_MAX) && errno == ERANGE))
+		return -EINVAL;
+
+	/* simple number, no decimal point not suffix */
+	if ((*endptr)[0] == '\0') {
+		*val = num;
+		return 0;
+	}
+
+	/* get rid of the decimal point */
+	sep = localeconv()->decimal_point;
+	if (sep)
+		len = strlen(sep);
+	else
+		len = 0;
+
+	for (i = 0; i < len; i++) {
+		if (suffix_si_check((*endptr)[i]))
+			break;
+		if (((*endptr)[i] == '\0') || (*endptr)[i] != sep[i])
+			return -EINVAL;
+	}
+
+	if (suffix_si_check((*endptr)[i])) {
+		if ((*endptr)[i + 1] != '\0')
+			return -EINVAL;
+	} else {
+		*endptr += len;
+		tmp = *endptr;
+
+		/* extract the digits after decimal point */
+		frac = strtoull(tmp, endptr, 0);
+		if (tmp == *endptr ||
+		    ((frac == ULLONG_MAX) && errno == ERANGE))
+			return -EINVAL;
+
+		/* test that we have max one character as suffix */
+		if ((*endptr)[0] != '\0' && (*endptr)[1] != '\0')
+			return -EINVAL;
+
+		frac_len = *endptr - tmp;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(si_suffixes); i++) {
+		struct si_suffix *s = &si_suffixes[i];
+
+		if ((*endptr)[0] != s->suffix[0])
+			continue;
+
+		/* we should check for overflow */
+		for (int j = 0; j < s->exponent; j++)
+			num *= 10;
+
+		if (s->exponent > frac_len) {
+			for (int j = 0; j < s->exponent - frac_len;  j++)
+				frac *= 10;
+		} else if (s->exponent < frac_len) {
+			for (int j = 0; j < frac_len - s->exponent;  j++)
+				frac /= 10;
+		} else {
+			frac = 0;
+		}
+
+		*val = num + frac;
+		return 0;
+	}
+
+	if ((*endptr)[0] != '\0')
+		return -EINVAL;
+
+	*val = num;
+	return 0;
+}
+
+const char *suffix_si_get_ld(long double *value)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(si_suffixes); i++) {
+		struct si_suffix *s = &si_suffixes[i];
+
 		if (*value >= s->magnitude) {
 			*value /= s->magnitude;
 			return s->suffix;
@@ -77,14 +191,15 @@ static struct binary_suffix {
 	{30, "Gi"},
 	{20, "Mi"},
 	{10, "Ki"},
-	{0, ""}
 };
 
 const char *suffix_binary_get(long long *value)
 {
-	struct binary_suffix *s;
+	int i;
 
-	for (s = binary_suffixes; s->shift != 0; s++) {
+	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
+		struct binary_suffix *s = &binary_suffixes[i];
+
 		if (llabs(*value) >= (1LL << s->shift)) {
 			*value =
 			    (*value + (1LL << (s->shift - 1))) / (1LL << s->shift);
@@ -97,9 +212,11 @@ const char *suffix_binary_get(long long *value)
 
 const char *suffix_dbinary_get(double *value)
 {
-	struct binary_suffix *s;
+	int i;
 
-	for (s = binary_suffixes; s->shift != 0; s++) {
+	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
+		struct binary_suffix *s = &binary_suffixes[i];
+
 		if (fabs(*value) >= (1LL << s->shift)) {
 			*value = *value / (1LL << s->shift);
 			return s->suffix;
@@ -109,24 +226,41 @@ const char *suffix_dbinary_get(double *value)
 	return "";
 }
 
-uint64_t suffix_binary_parse(const char *value)
+int suffix_binary_parse(const char *str, char **endptr, uint64_t *val)
 {
-	char *suffix;
-	errno = 0;
-	uint64_t ret = strtoll(value, &suffix, 0);
-	if (errno)
-		return 0;
+	uint64_t ret;
+	int i;
 
-	struct binary_suffix *s;
-	for (s = binary_suffixes; s->shift != 0; s++) {
-		if (tolower(suffix[0]) == tolower(s->suffix[0])) {
+	ret = strtoull(str, endptr, 0);
+	if (str == *endptr ||
+	    ((ret == ULLONG_MAX) && errno == ERANGE))
+		return -EINVAL;
+
+	if (str == *endptr) {
+		*val = ret;
+		return 0;
+	}
+
+	/* simple number, no decimal point, no suffix */
+	if ((*endptr)[0] == '\0') {
+		*val = ret;
+		return 0;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(binary_suffixes); i++) {
+		struct binary_suffix *s = &binary_suffixes[i];
+
+		if (tolower((*endptr)[0]) == tolower(s->suffix[0]) &&
+		    (s->suffix[0] != '\0' &&
+		     (((*endptr)[0] != '\0' &&
+		       (*endptr)[1] != '\0' &&
+		       (*endptr)[2] == '\0') &&
+		      (tolower((*endptr)[1]) == tolower(s->suffix[1]))))) {
 			ret <<= s->shift;
-			return ret;
+			*val = ret;
+			return 0;
 		}
 	}
 
-	if (suffix[0] != '\0')
-		errno = EINVAL;
-
-	return ret;
+	return -EINVAL;
 }

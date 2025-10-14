@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-write(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -759,14 +759,14 @@ nvme-write(1) Manual Page
                         [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
                         [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
                         [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
-                        [--limited-retry | -l]
-                        [--force-unit-access | -f]
+                        [--limited-retry | -l] [--force-unit-access | -f]
                         [--dir-type=&lt;type&gt; | -T &lt;type&gt;]
-                        [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;]
-                        [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
-                        [--show-command | -v]
-                        [--dry-run | -w]
-                        [--latency | -t]</pre>
+                        [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;] [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
+                        [--show-command | -V] [--dry-run | -w] [--latency | -t]
+                        [--storage-tag&lt;storage-tag&gt; | -g &lt;storage-tag&gt;]
+                        [--storage-tag-check | -C] [--force]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -784,10 +784,10 @@ if you don&#8217;t provide a file.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
---start-block=&lt;slba&gt;
+-s &lt;slba&gt;
 </dt>
 <dt class="hdlist1">
--s &lt;slba&gt;
+--start-block=&lt;slba&gt;
 </dt>
 <dd>
 <p>
@@ -795,10 +795,10 @@ if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---block-count
+-c
 </dt>
 <dt class="hdlist1">
--c
+--block-count
 </dt>
 <dd>
 <p>
@@ -808,10 +808,10 @@ if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---data-size=&lt;size&gt;
+-z &lt;size&gt;
 </dt>
 <dt class="hdlist1">
--z &lt;size&gt;
+--data-size=&lt;size&gt;
 </dt>
 <dd>
 <p>
@@ -819,10 +819,10 @@ if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---metadata-size=&lt;size&gt;
+-y &lt;size&gt;
 </dt>
 <dt class="hdlist1">
--y &lt;size&gt;
+--metadata-size=&lt;size&gt;
 </dt>
 <dd>
 <p>
@@ -830,10 +830,10 @@ if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---data=&lt;data-file&gt;
+-d &lt;data-file&gt;
 </dt>
 <dt class="hdlist1">
--d &lt;data-file&gt;
+--data=&lt;data-file&gt;
 </dt>
 <dd>
 <p>
@@ -841,10 +841,10 @@ if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---metadata=&lt;metadata-file&gt;
+-M &lt;metadata-file&gt;
 </dt>
 <dt class="hdlist1">
--M &lt;metadata-file&gt;
+--metadata=&lt;metadata-file&gt;
 </dt>
 <dd>
 <p>
@@ -852,10 +852,10 @@ if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---prinfo=&lt;prinfo&gt;
+-p &lt;prinfo&gt;
 </dt>
 <dt class="hdlist1">
--p &lt;prinfo&gt;
+--prinfo=&lt;prinfo&gt;
 </dt>
 <dd>
 <p>
@@ -900,10 +900,10 @@ metadata is passes.</p></td>
 </div>
 </dd>
 <dt class="hdlist1">
---ref-tag=&lt;reftag&gt;
+-r &lt;reftag&gt;
 </dt>
 <dt class="hdlist1">
--r &lt;reftag&gt;
+--ref-tag=&lt;reftag&gt;
 </dt>
 <dd>
 <p>
@@ -911,10 +911,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---app-tag-mask=&lt;appmask&gt;
+-m &lt;appmask&gt;
 </dt>
 <dt class="hdlist1">
--m &lt;appmask&gt;
+--app-tag-mask=&lt;appmask&gt;
 </dt>
 <dd>
 <p>
@@ -922,10 +922,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---app-tag=&lt;apptag&gt;
+-a &lt;apptag&gt;
 </dt>
 <dt class="hdlist1">
--a &lt;apptag&gt;
+--app-tag=&lt;apptag&gt;
 </dt>
 <dd>
 <p>
@@ -933,10 +933,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---limited-retry
+-l
 </dt>
 <dt class="hdlist1">
--l
+--limited-retry
 </dt>
 <dd>
 <p>
@@ -944,10 +944,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---force-unit-access
+-f
 </dt>
 <dt class="hdlist1">
--f
+--force-unit-access
 </dt>
 <dd>
 <p>
@@ -964,8 +964,8 @@ metadata is passes.</p></td>
 <p>
         Optional directive type. The nvme-cli only enforces the value
         be in the defined range for the directive type, though the NVMe
-        specifcation (1.3a) defines only one directive, 01h, for write
-        stream idenfiers.
+        specification (1.3a) defines only one directive, 01h, for write
+        stream identifiers.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -990,9 +990,9 @@ metadata is passes.</p></td>
 </dt>
 <dd>
 <p>
-        The optional data set management attributes for this command. The
-        argument for this is the lower 16 bits of the DSM field in a write
-        command; the upper 16 bits of the field come from the directive
+        The optional data set management attributes for this command. The argument
+        for this is the least significant 8 bits of the DSM field in a write
+        command; the most significant 16 bits of the field come from the directive
         specific field, if used. This may be used to set attributes for
         the LBAs being written, like access frequency, type, latency,
         among other things, as well as yet to be defined types. Please
@@ -1001,7 +1001,7 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
--v
+-V
 </dt>
 <dt class="hdlist1">
 --show-cmd
@@ -1035,6 +1035,69 @@ metadata is passes.</p></td>
         Print out the latency the IOCTL took (in us).
 </p>
 </dd>
+<dt class="hdlist1">
+-g &lt;storage-tag&gt;
+</dt>
+<dt class="hdlist1">
+--storage-tag=&lt;storage-tag&gt;
+</dt>
+<dd>
+<p>
+        Variable Sized Expected Logical Block Storage Tag(ELBST).
+</p>
+</dd>
+<dt class="hdlist1">
+-C
+</dt>
+<dt class="hdlist1">
+--storage-tag-check
+</dt>
+<dd>
+<p>
+        This flag enables Storage Tag field checking as part of end-to-end
+        data protection processing.
+</p>
+</dd>
+<dt class="hdlist1">
+--force
+</dt>
+<dd>
+<p>
+        Ignore namespace is currently busy and performed the operation
+        even though.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1055,7 +1118,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-11-29 13:31:13 GMT
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

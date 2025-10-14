@@ -9,11 +9,13 @@ SYNOPSIS
 --------
 [verse]
 'nvme security-send' <device> [--file=<file> | -f <file>]
-		    [--secp=<security-protocol> | -p <security-protocol>]
-		    [--spsp=<protocol-specific> | -s <protocol-specific>]
-		    [--tl=<transfer-length> | -t <transfer-length>]
-		    [--nssf=<nvme-specific> | -N <nvme-specific>]
-		    [--namespace-id=<nsid> | -n <nsid>]
+			[--secp=<security-protocol> | -p <security-protocol>]
+			[--spsp=<protocol-specific> | -s <protocol-specific>]
+			[--tl=<transfer-length> | -t <transfer-length>]
+			[--nssf=<nvme-specific> | -N <nvme-specific>]
+			[--namespace-id=<nsid> | -n <nsid>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -62,6 +64,18 @@ OPTIONS
 --tl=<trans-length>::
 	Transfer Length: The value of this field is specific to the
 	Security Protocol as defined in SPC-4.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

@@ -8,21 +8,23 @@ nvme-io-passthru - Submit an arbitrary io command, return results
 SYNOPSIS
 --------
 [verse]
-'nvme-io-passthru' <device> [--opcode=<opcode> | -o <opcode>]
-		[--flags=<flags> | -f <flags>] [-rsvd=<rsvd> | -R <rsvd>]
-		[--namespace-id=<nsid> | -nsid <nsid>]
-		[--cdw2=<cdw2>] [--cdw3=<cdw3>] [--cdw10=<cdw10>]
-		[--cdw11=<cdw11>] [--cdw12=<cdw12>] [--cdw13=<cdw13>]
-		[--cdw14=<cdw14>] [--cdw15=<cdw15>]
-		[--data-len=<data-len> | -l <data-len>]
-		[--metadata-len=<len> | -m <len>]
-		[--read | -r ] [--write | -w]
-		[--input-file=<file> | -i <file>]
-		[--timeout=<to> | -t <to>]
-		[--show-command | -s]
-		[--dry-run | -d]
-		[--raw-binary | -b]
-		[--prefill=<prefill> | -p <prefill>]
+'nvme-io-passthru' <device> [--opcode=<opcode> | -O <opcode>]
+			[--flags=<flags> | -f <flags>] [-rsvd=<rsvd> | -R <rsvd>]
+			[--namespace-id=<nsid> | -n <nsid>] [--cdw2=<cdw2> | -2 <cdw2>]
+			[--cdw3=<cdw3> | -3 <cdw3>] [--cdw10=<cdw10> | -4 <cdw10>]
+			[--cdw11=<cdw11> | -5 <cdw11>] [--cdw12=<cdw12> | -6 <cdw12>]
+			[--cdw13=<cdw13> | -7 <cdw13>] [--cdw14=<cdw14> | -8 <cdw14>]
+			[--cdw15=<cdw15> | -9 <cdw15>]
+			[--data-len=<data-len> | -l <data-len>]
+			[--metadata-len=<len> | -m <len>]
+			[--read | -r] [--write | -w]
+			[--input-file=<file> | -i <file>]
+			[--metadata=<file> | -M <file>]
+			[--timeout=<timeout> | -t <timeout>] [--show-command | -s]
+			[--dry-run | -d] [--raw-binary | -b]
+			[--prefill=<prefill> | -p <prefill>]
+			[--latency | -T]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -41,9 +43,10 @@ printed to stdout for another program to parse.
 
 OPTIONS
 -------
--o <opcode>::
+-O <opcode>::
 --opcode=<opcode>::
 	The NVMe opcode to send to the device in the command
+	Required argument as this param is mandatory.
 
 -f <flags>::
 --flags=<flags>::
@@ -57,6 +60,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	The value for the ns-id in the command. Defaults to '0'.
 
+-[2-9] <cdw>::
 --cdw[2-3,10-15]=<cdw>::
 	Specifies the command dword value for that specified entry in
 	the command
@@ -72,8 +76,16 @@ OPTIONS
 -i <file>::
 --input-file=<file>::
 	If the command is a data-out (write) command, use this file
-	to fill the buffer sent to the device. If no file is given,
-	assumed to use STDIN.
+	to fill the buffer sent to the device. If no file is given, assumed to
+	use STDIN. If the command is a data-in (read) command, the data
+	returned from the device will be saved here.
+
+-M <file>::
+--metadata=<file>::
+	If the command is a data-out (write) command, use this file
+	to fill the metadata buffer sent to the device. If no file is given,
+	assumed to use STDIN. If the command is a data-in (read) command, the
+	metadata returned from the device will be saved here.
 
 -l <data-len>::
 --data-len=<data-len>::
@@ -105,6 +117,23 @@ OPTIONS
 	than the required buffer, and you need to pad it with a known
 	value. It may also be useful if you need to confirm if a device
 	is overwriting a buffer on a data-in command.
+
+-T::
+--latency::
+	Print out the latency the IOCTL took (in us).
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

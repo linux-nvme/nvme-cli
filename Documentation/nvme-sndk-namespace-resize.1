@@ -1,0 +1,101 @@
+'\" t
+.\"     Title: nvme-sndk-namespace-resize
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SNDK\-NAMESPAC" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sndk-namespace-resize \- Resizes the device\*(Aqs namespace\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sndk namespace\-resize\fR <device> [\-\-nsid=<NAMESPACE ID>, \-n <NAMSPACE ID>]
+                        [\-\-op_option=<OP OPTION>, \-o <OP OPTION>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, sends the sndk Vendor Specific Command that modifies the namespace size reported the device\&.
+.sp
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
+.sp
+This will only work on Sandisk devices supporting this feature\&. Results for any other device are undefined\&.
+.SH "OPTIONS"
+.PP
+\-n <NAMESPACE ID>, \-\-namespace\-id=<NAMESPACE_ID>
+.RS 4
+Namespace ID; ID of the namespace to resize
+.RE
+.PP
+\-o <OP OPTION>, \-\-op\-option=<OP OPTION>
+.RS 4
+Overprovisioning Option; defaults to 0xF Valid Values: 0x1 \- 7% of Original TNVMCAP reported value 0x2 \- 28% of Original TNVMCAP reported value 0x3 \- 50% of Original TNVMCAP reported value 0xF \- 0% of Original TNVMCAP reported value (original config) All other values \- reserved
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Resizes namespace 1 to 50% of the original TNVMCAP reported value:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk namespace\-resize /dev/nvme0 \-n 1 \-o 3
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Resizes namespace 2 to 7% of the original TNVMCAP reported value:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk namespace\-resize /dev/nvme0 \-\-namespace\-id=2 \-\-op\-option=1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

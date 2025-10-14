@@ -1,0 +1,65 @@
+nvme-dapustor-smart-log-add(1)
+==============================
+
+NAME
+----
+nvme-dapustor-smart-log-add - Send NVMe DapuStor Additional SMART log page request,
+returns result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme dapustor smart-log-add' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--raw-binary | -b] [--json | -j]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe DapuStor Additional SMART log page from the device and
+provides the returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned smart log structure may be returned in one of
+several ways depending on the option flags; the structure may parsed by
+the program and printed in a readable format or the raw buffer may be
+printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the Additional SMART log for the given nsid. This is
+	optional and its success may depend on the device's capabilities
+	to provide this log on a per-namespace basis (see the NVMe
+	Identify Controller for this capability). The default nsid to
+	use is 0xffffffff for the device global SMART log.
+
+-b::
+--raw-binary::
+	Print the raw DapuStor Additional SMART log buffer to stdout.
+
+-j::
+--json::
+	Dump output in json format.
+
+EXAMPLES
+--------
+* Print the DapuStor Additional SMART log page in a human readable format:
++
+------------
+# nvme dapustor smart-log-add /dev/nvme0
+------------
++
+
+* Print the raw DapuStor Additional SMART log to a file:
++
+------------
+# nvme dapustor smart-log-add /dev/nvme0 --raw-binary > smart_log.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite

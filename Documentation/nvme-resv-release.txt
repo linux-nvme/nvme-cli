@@ -9,10 +9,11 @@ SYNOPSIS
 --------
 [verse]
 'nvme resv-release' <device> [--namespace-id=<nsid> | -n <nsid>]
-			     [--crkey=<crkey> | -c <crkey>]
-			     [--rtype=<rtype> | -t <rtype>]
-			     [--rrela=<rrela> | -a <rrela>]
-			     [--iekey | -i]
+			[--crkey=<crkey> | -c <crkey>]
+			[--rtype=<rtype> | -t <rtype>]
+			[--rrela=<rrela> | -a <rrela>] [--iekey | -i]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -37,7 +38,7 @@ OPTIONS
 	bit is set to ‘1’.
 
 -t <rtype>::
---rtyep=<rtype>::
+--rtype=<rtype>::
 	Reservation Type: This field specifies the type of reservation
 	to be created.
 +
@@ -74,6 +75,18 @@ OPTIONS
 	shall succeed regardless of the CRKEY field value.
 +
 Indicator option, defaults to '0'.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

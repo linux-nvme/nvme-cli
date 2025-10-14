@@ -1,0 +1,197 @@
+'\" t
+.\"     Title: nvme-sndk-vs-smart-add-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SNDK\-VS\-SMAR" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sndk-vs-smart-add-log \- Send NVMe sndk vs\-smart\-add\-log Vendor Unique Command, return result
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sndk vs\-smart\-add\-log\fR <device> [\-\-interval=<NUM>, \-i <NUM>]
+                        [\-\-output\-format=<normal|json> \-o <normal|json>]
+                        [\-\-log\-page\-version=<NUM>, \-l <NUM>]
+                        [\-\-log\-page\-mask=<LIST>, \-p <LIST>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, send a Vendor Unique sndk vs\-smart\-add\-log command and provide the additional smart log\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1)\&.
+.sp
+This will only work on Sandisk devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-i <NUM>, \-\-interval=<NUM>
+.RS 4
+Return the statistics from specific interval, defaults to 14\&. This parameter is only valid for the 0xC1 log page and ignored for all other log pages\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR, or
+\fIjson\fR\&. Only one output format can be used at a time\&. Default is normal\&.
+.RE
+.PP
+\-l <NUM>, \-\-log\-page\-version=<NUM>
+.RS 4
+Log Page Version: 0 = vendor, 1 = sndk\&. This parameter is only valid for the 0xC0 log page and ignored for all other log pages\&.
+.RE
+.PP
+\-p <LIST>, \-\-log\-page\-mask=<LIST>
+.RS 4
+Supply a comma separated list of desired log pages to display\&. The possible values are 0xc0, 0xc1, 0xca, 0xd0\&. Note: Not all pages are supported on all drives\&. The default is to display all supported log pages\&.
+.RE
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Sets the command\(cqs nsid value to the given nsid\&. Defaults to 0xffffffff if not given\&. This option may not affect anything depending on the log page, which may or may not be specific to a namespace\&.
+.RE
+.sp
+Valid Interval values and description :\-
+.TS
+allbox tab(:);
+ltB ltB.
+T{
+Value
+T}:T{
+Description
+T}
+.T&
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+.sp
+\fB1\fR
+T}:T{
+.sp
+Most recent five (5) minute accumulated set\&.
+T}
+T{
+.sp
+\fB2\-12\fR
+T}:T{
+.sp
+Previous five (5) minute accumulated sets\&.
+T}
+T{
+.sp
+\fB13\fR
+T}:T{
+.sp
+The accumulated total of sets 1 through 12 that contain the previous hour of accumulated statistics\&.
+T}
+T{
+.sp
+\fB14\fR
+T}:T{
+.sp
+The statistical set accumulated since power\-up\&.
+T}
+T{
+.sp
+\fB15\fR
+T}:T{
+.sp
+The statistical set accumulated during the entire lifetime of the device\&.
+T}
+.TE
+.sp 1
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue sndk vs\-smart\-add\-log Vendor Unique Command with default interval (14) :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk vs\-smart\-add\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue sndk vs\-smart\-add\-log Vendor Unique Command for just the 0xCA log page :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk vs\-smart\-add\-log /dev/nvme0 \-p 0xCA
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue sndk vs\-smart\-add\-log Vendor Unique Command for 0xC0 and 0xCA log pages :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk vs\-smart\-add\-log /dev/nvme0 \-p 0xCA,0xC0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

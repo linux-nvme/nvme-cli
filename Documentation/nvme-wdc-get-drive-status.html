@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-wdc-get-drive-status(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -787,19 +790,19 @@ cellspacing="0" cellpadding="4">
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table"><strong>EOL (End of Life) Status</strong></p></td>
-<td align="left" valign="top"><p class="table">The 3 possible states are :  Normal, Read Only, or End of Life.</p></td>
+<td align="left" valign="top"><p class="table">The 3 possible states are : Normal, Read Only, or End of Life.</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table"><strong>Assert Dump Status</strong></p></td>
-<td align="left" valign="top"><p class="table">The 2 possible states are :  Present or Not Present.</p></td>
+<td align="left" valign="top"><p class="table">The 2 possible states are : Present or Not Present.</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table"><strong>Thermal Throttling Status</strong></p></td>
-<td align="left" valign="top"><p class="table">The 3 possible states are :  Off, On, or Unavaiable.</p></td>
+<td align="left" valign="top"><p class="table">The 3 possible states are : Off, On, or Unavailable.</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table"><strong>Format Corrupt Reason</strong></p></td>
-<td align="left" valign="top"><p class="table">The 3 possible states are :  Not Corrupted, Corrupt due to FW Assert, or Corrupt for Unknown Reason.</p></td>
+<td align="left" valign="top"><p class="table">The 3 possible states are : Not Corrupted, Corrupt due to FW Assert, or Corrupt for Unknown Reason.</p></td>
 </tr>
 </tbody>
 </table>
@@ -832,7 +835,8 @@ Has the program issue WDC get-drive-status command :
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-01-29 08:50:16 MST
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

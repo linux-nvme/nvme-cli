@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-get-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -750,13 +750,18 @@ nvme-get-log(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme get-log</em> &lt;device&gt; [--log-id=&lt;log-id&gt; | -i &lt;log-id&gt;]
-                      [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
-                      [--aen=&lt;aen&gt; | -a &lt;aen&gt;]
-                      [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                      [--raw-binary | -b]
-                      [--lpo=&lt;offset&gt; | -o &lt;offset&gt;]
-                      [--lsp=&lt;field&gt; | -s &lt;field&gt;]
-                      [--rae | -r]</pre>
+                        [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
+                        [--aen=&lt;aen&gt; | -a &lt;aen&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--raw-binary | -b]
+                        [--lpo=&lt;offset&gt; | -L &lt;offset&gt;]
+                        [--lsp=&lt;field&gt; | -s &lt;field&gt;]
+                        [--lsi=&lt;field&gt; | -S &lt;field&gt;]
+                        [--rae | -r]
+                        [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
+                        [--ot=&lt;offset_type&gt; | -O &lt;offset_type&gt;]
+                        [--xfer-len=&lt;length&gt; | -x &lt;length&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -801,6 +806,181 @@ program to parse.</p></div>
 <p>
         Sets the commands requested log-id to &lt;log-id&gt;. Defaults to 0.
 </p>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Value</p></td>
+<td align="left" valign="top"><p class="table">Definition</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x00 | <em>supported-log-pages</em></p></td>
+<td align="left" valign="top"><p class="table">Supported Log Pages</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x01 | <em>error</em></p></td>
+<td align="left" valign="top"><p class="table">Error Information</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x02 | <em>smart</em></p></td>
+<td align="left" valign="top"><p class="table">SMART / Health Information</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x03 | <em>fw-slot</em></p></td>
+<td align="left" valign="top"><p class="table">Firmware Slot Information</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x04 | <em>changed-ns</em></p></td>
+<td align="left" valign="top"><p class="table">Changed Namespace List</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x05 | <em>cmd-effects</em></p></td>
+<td align="left" valign="top"><p class="table">Commands Supported and Effects</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x06 | <em>device-self-test</em></p></td>
+<td align="left" valign="top"><p class="table">Device Self-test</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x07 | <em>telemetry-host</em></p></td>
+<td align="left" valign="top"><p class="table">Telemetry Host-Initiated</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x08 | <em>telemetry-ctrl</em></p></td>
+<td align="left" valign="top"><p class="table">Telemetry Controller-Initiated</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x09 | <em>endurance-group</em></p></td>
+<td align="left" valign="top"><p class="table">Endurance Group Information</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0a | <em>predictable-lat-nvmset</em></p></td>
+<td align="left" valign="top"><p class="table">Predictable Latency Per NVM Set</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0b | <em>predictable-lat-agg</em></p></td>
+<td align="left" valign="top"><p class="table">Predictable Latency Event Aggregate</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0c | <em>ana</em></p></td>
+<td align="left" valign="top"><p class="table">Asymmetric Namespace Access</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0d | <em>persistent-event</em></p></td>
+<td align="left" valign="top"><p class="table">Persistent Event Log</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0e | <em>lba-status</em></p></td>
+<td align="left" valign="top"><p class="table">LBA Status Information</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0f | <em>endurance-grp-evt</em></p></td>
+<td align="left" valign="top"><p class="table">Endurance Group Event Aggregate</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x10 | <em>media-unit-status</em></p></td>
+<td align="left" valign="top"><p class="table">Media Unit Status</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x11 | <em>supported-cap-config-list</em></p></td>
+<td align="left" valign="top"><p class="table">Supported Capacity Configuration Lis</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x12 | <em>fid-supported-effects</em></p></td>
+<td align="left" valign="top"><p class="table">Feature Identifiers Supported and Effects</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x13 | <em>mi-cmd-supported-effects</em></p></td>
+<td align="left" valign="top"><p class="table">NVMe-MI Commands Supported and Effects</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x14 | <em>cmd-and-feat-lockdown</em></p></td>
+<td align="left" valign="top"><p class="table">Command and Feature Lockdown</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x15 | <em>boot-partition</em></p></td>
+<td align="left" valign="top"><p class="table">Boot Partition</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x16 | <em>rotational-media-info</em></p></td>
+<td align="left" valign="top"><p class="table">Rotational Media Information</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x17 | <em>dispersed-ns-participating-ns</em></p></td>
+<td align="left" valign="top"><p class="table">Dispersed Namespace Participating NVM Subsystems</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x18 | <em>mgmt-addr-list</em></p></td>
+<td align="left" valign="top"><p class="table">Management Address List</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x19 | <em>phy-rx-eom</em></p></td>
+<td align="left" valign="top"><p class="table">Physical Interface Receiver Eye Opening Measurement</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1a | <em>reachability-groups</em></p></td>
+<td align="left" valign="top"><p class="table">Reachability Groups</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1b | <em>reachability-associations</em></p></td>
+<td align="left" valign="top"><p class="table">Reachability Associations</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1c | <em>changed-alloc-ns-list</em></p></td>
+<td align="left" valign="top"><p class="table">Changed Allocated Namespace List</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x20 | <em>fdp-configs</em></p></td>
+<td align="left" valign="top"><p class="table">FDP Configurations</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x21 | <em>fdp-ruh-usage</em></p></td>
+<td align="left" valign="top"><p class="table">Reclaim Unit Handle Usage</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x22 | <em>fdp-stats</em></p></td>
+<td align="left" valign="top"><p class="table">FDP Statistics</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x23 | <em>fdp-events</em></p></td>
+<td align="left" valign="top"><p class="table">FDP Events</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x70 | <em>discover</em></p></td>
+<td align="left" valign="top"><p class="table">Discovery</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x71 | <em>host-discover</em></p></td>
+<td align="left" valign="top"><p class="table">Host Discovery</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x72 | <em>ave-discover</em></p></td>
+<td align="left" valign="top"><p class="table">AVE Discovery</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x73 | <em>pull-model-ddc-req</em></p></td>
+<td align="left" valign="top"><p class="table">Pull Model DDC Request</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x80 | <em>reservation</em></p></td>
+<td align="left" valign="top"><p class="table">Reservation Notification</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x81 | <em>sanitize</em></p></td>
+<td align="left" valign="top"><p class="table">Sanitize Status</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0xbf | <em>zns-changed-zones</em></p></td>
+<td align="left" valign="top"><p class="table">Changed Zone List</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </dd>
 <dt class="hdlist1">
 -a &lt;aen&gt;
@@ -841,7 +1021,7 @@ program to parse.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;offset&gt;
+-L &lt;offset&gt;
 </dt>
 <dt class="hdlist1">
 --lpo=&lt;offset&gt;
@@ -864,6 +1044,17 @@ program to parse.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+-S &lt;field&gt;
+</dt>
+<dt class="hdlist1">
+--lsi=&lt;field&gt;
+</dt>
+<dd>
+<p>
+        The log specified field of Log Specific Identifier.
+</p>
+</dd>
+<dt class="hdlist1">
 -r
 </dt>
 <dt class="hdlist1">
@@ -872,6 +1063,69 @@ program to parse.</p></div>
 <dd>
 <p>
         Retain an Asynchronous Event.
+</p>
+</dd>
+<dt class="hdlist1">
+-y &lt;command_set_identifier&gt;
+</dt>
+<dt class="hdlist1">
+--csi=&lt;command_set_identifier&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the identifier of command set.
+        if not issued, NVM Command Set will be selected.
+</p>
+</dd>
+<dt class="hdlist1">
+-O
+</dt>
+<dt class="hdlist1">
+--ot
+</dt>
+<dd>
+<p>
+        This field specifies the offset type. If set to false, the
+        Log Page Offset Lower field and the Log Page Offset Upper
+        field specify the byte offset into the log page to be returned.
+        If set to true, the Log Page Offset Lower field and the Log
+        Page Offset Upper field specify the index into the list of
+        data structures in the log page to be returned.
+        The default is byte offset. If the option is specified
+        the index mode is used.
+</p>
+</dd>
+<dt class="hdlist1">
+-x &lt;length&gt;
+</dt>
+<dd>
+<p>
+--xfer-len &lt;length&gt;:
+        Specify the read chunk size. The length argument is expected to be
+        a multiple of 4096. The default size is 4096.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -918,7 +1172,7 @@ Have the program return the raw log page in binary:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-09-18 00:00:58 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

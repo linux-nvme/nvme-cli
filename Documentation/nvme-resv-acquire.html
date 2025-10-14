@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-resv-acquire(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -749,11 +750,12 @@ nvme-resv-acquire(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme resv-acquire</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                             [--crkey=&lt;crkey&gt; | -c &lt;crkey&gt;]
-                             [--prkey=&lt;prkey&gt; | -p &lt;prkey&gt;]
-                             [--rtype=&lt;rtype&gt; | -t &lt;rtype&gt;]
-                             [--racqa=&lt;racqa&gt; | -a &lt;racqa&gt;]
-                             [--iekey | -i]</pre>
+                        [--crkey=&lt;crkey&gt; | -c &lt;crkey&gt;]
+                        [--prkey=&lt;prkey&gt; | -p &lt;prkey&gt;]
+                        [--rtype=&lt;rtype&gt; | -t &lt;rtype&gt;]
+                        [--racqa=&lt;racqa&gt; | -a &lt;racqa&gt;] [--iekey | -i]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -815,7 +817,7 @@ reservation held on a namespace.</p></div>
 -t &lt;rtype&gt;
 </dt>
 <dt class="hdlist1">
---rtyep=&lt;rtype&gt;
+--rtype=&lt;rtype&gt;
 </dt>
 <dd>
 <p>
@@ -923,9 +925,40 @@ cellspacing="0" cellpadding="4">
 <p>
         Ignore Existing Key: If this bit is set to a <em>1</em>, then the
         Current Reservation Key (CRKEY) check is disabled and the command
-        shall succeed regardless of the CRKEY field  value.
+        shall succeed regardless of the CRKEY field value.
 </p>
 <div class="paragraph"><p>Indicator option, defaults to <em>0</em>.</p></div>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
 </dd>
 </dl></div>
 </div>
@@ -947,7 +980,7 @@ cellspacing="0" cellpadding="4">
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-01-30 19:28:39 KST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

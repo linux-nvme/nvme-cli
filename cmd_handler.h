@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 /*
  * Stage 1
  *
@@ -5,7 +6,7 @@
  */
 
 #undef NAME
-#define NAME(n, d)
+#define NAME(n, d, v)
 
 #undef ENTRY
 #define ENTRY(n, h, f, ...) \
@@ -26,7 +27,7 @@ static int f(int argc, char **argv, struct command *command, struct plugin *plug
  */
 
 #undef NAME
-#define NAME(n, d)
+#define NAME(n, d, v)
 
 #undef ENTRY_W_ALIAS
 #define ENTRY_W_ALIAS(n, h, f, a)	\
@@ -63,7 +64,7 @@ static struct command f ## _cmd = {	\
  */
 
 #undef NAME
-#define NAME(n, d)
+#define NAME(n, d, v)
 
 #undef ENTRY
 #define ENTRY(n, h, f, ...) &f ## _cmd,
@@ -87,7 +88,7 @@ static struct command *commands[] = {	\
  */
 
 #undef NAME
-#define NAME(n, d) .name = n, .desc = d,
+#define NAME(n, d, v) .name = n, .desc = d, .version = v,
 
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...)

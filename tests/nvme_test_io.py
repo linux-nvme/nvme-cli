@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -20,7 +22,7 @@
 """ Inherit TestNVMeIO for nvme read/write operations """
 
 import os
-from nose import tools
+
 from nvme_test import TestNVMe
 
 
@@ -37,21 +39,20 @@ class TestNVMeIO(TestNVMe):
               - read_file : data file to use in nvme read command.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeIO """
-        TestNVMe.__init__(self)
+        super().setUp()
         # common code used in various testcases.
-        self.data_size = 512
+        (self.data_size, _) = self.get_lba_format_size()
         self.start_block = 0
         self.block_count = 0
         self.write_file = "write_file.txt"
         self.read_file = "read_file.txt"
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeIO """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
-    @tools.nottest
     def create_data_file(self, pathname, data_size, pattern):
         """ Creates data file with specific pattern
             - Args:
@@ -69,7 +70,6 @@ class TestNVMeIO(TestNVMe):
         os.fsync(data_file.fileno())
         data_file.close()
 
-    @tools.nottest
     def nvme_write(self):
         """ Wrapper for nvme write operation
             - Args:
@@ -77,13 +77,12 @@ class TestNVMeIO(TestNVMe):
             - Returns:
                 - return code for nvme write command.
         """
-        write_cmd = "nvme write " + self.ns1 + " --start-block=" + \
-                    str(self.start_block) + " --block-count=" + \
-                    str(self.block_count) + " --data-size=" + \
-                    str(self.data_size) + " --data=" + self.write_file
+        write_cmd = f"{self.nvme_bin} write {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)} " + \
+            f"--data-size={str(self.data_size)} --data={self.write_file}"
         return self.exec_cmd(write_cmd)
 
-    @tools.nottest
     def nvme_read(self):
         """ Wrapper for nvme read operation
             - Args:
@@ -91,9 +90,8 @@ class TestNVMeIO(TestNVMe):
             - Returns:
                 - return code for nvme read command.
         """
-        read_cmd = "nvme read " + self.ns1 + " --start-block=" + \
-                   str(self.start_block) + " --block-count=" + \
-                   str(self.block_count) + " --data-size=" + \
-                   str(self.data_size) + " --data=" + self.read_file
-        print(read_cmd)
+        read_cmd = f"{self.nvme_bin} read {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)} " + \
+            f"--data-size={str(self.data_size)} --data={self.read_file}"
         return self.exec_cmd(read_cmd)

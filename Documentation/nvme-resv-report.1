@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-report
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-REPORT" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-REPORT" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,10 +33,10 @@ nvme-resv-report \- Send NVMe Reservation Report, parse the result
 .sp
 .nf
 \fInvme resv\-report\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-numd=<num\-dwords> | \-d <num\-dwords>]
-                        [\-\-cdw11=<cdw11> | \-c <cdw11>]
+                        [\-\-numd=<num\-dwords> | \-d <num\-dwords>] [\-\-eds | \-e]
                         [\-\-raw\-binary | \-b]
-                        [\-\-output\-format=<fmt> | \-o <fmt>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -55,9 +55,10 @@ Retrieve the reservation report structure for the given nsid\&. This is required
 Specify the number of Dwords of the Reservation Status structure to transfer\&. Defaults to 4k\&.
 .RE
 .PP
-\-c <cdw11>, \-\-cdw11=<cdw11>
+\-e, \-\-eds
 .RS 4
-The value for command dword 11\&. Setting bit 0 specifies that the controller returns the Extended Data Structure\&.
+Request extended Data Structure: If this bit is set to a
+\fI1\fR, then the controller returns the Extended Data Structure\&.
 .RE
 .PP
 \-b, \-\-raw\-binary
@@ -65,12 +66,23 @@ The value for command dword 11\&. Setting bit 0 specifies that the controller re
 Print the raw buffer to stdout\&. Structure is not parsed by program\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

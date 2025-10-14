@@ -9,12 +9,13 @@ SYNOPSIS
 --------
 [verse]
 'nvme security-recv' <device> [--size=<size> | -x <size>]
-		    [--secp=<security-protocol> | -p <security-protocol>]
-		    [--spsp=<protocol-specific> | -s <protocol-specific>]
-		    [--nssf=<nvme-specific> | -N <nvme-specific>]
-		    [--al=<allocation-length> | -t <allocation-length>]
-		    [--namespace-id=<nsid> | -n <nsid>]
-		    [--raw-binary | -b]
+			[--secp=<security-protocol> | -p <security-protocol>]
+			[--spsp=<protocol-specific> | -s <protocol-specific>]
+			[--nssf=<nvme-specific> | -N <nvme-specific>]
+			[--al=<allocation-length> | -t <allocation-length>]
+			[--namespace-id=<nsid> | -n <nsid>] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -70,6 +71,18 @@ OPTIONS
 -b::
 --raw-binary::
 	Print the raw buffer to stdout. Defaults to print in hex.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

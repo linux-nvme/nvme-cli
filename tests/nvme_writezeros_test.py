@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -28,7 +30,7 @@ NVMe Write Zeros:-
 """
 
 import filecmp
-from nose.tools import assert_equal
+
 from nvme_test_io import TestNVMeIO
 
 
@@ -44,9 +46,10 @@ class TestNVMeWriteZeros(TestNVMeIO):
               - block_count: Number of blocks to use in IO.
               - test_log_dir : directory for logs, temp files.
     """
-    def __init__(self):
+
+    def setUp(self):
         """ Pre Section for TestNVMeWriteZeros """
-        TestNVMeIO.__init__(self)
+        super().setUp()
         self.start_block = 1023
         self.block_count = 0
         self.setup_log_dir(self.__class__.__name__)
@@ -57,9 +60,9 @@ class TestNVMeWriteZeros(TestNVMeIO):
         self.create_data_file(self.zero_file, self.data_size, '\0')
         open(self.read_file, 'a').close()
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeWriteZeros """
-        TestNVMeIO.__del__(self)
+        super().tearDown()
 
     def write_zeroes(self):
         """ Wrapper for nvme write-zeroe
@@ -68,9 +71,9 @@ class TestNVMeWriteZeros(TestNVMeIO):
             - Returns:
                 - return code for nvme write command.
         """
-        write_zeroes_cmd = "nvme write-zeroes " + self.ns1 + \
-                           " --start-block=" + str(self.start_block) + \
-                           " --block-count=" + str(self.block_count)
+        write_zeroes_cmd = f"{self.nvme_bin} write-zeroes {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)}"
         return self.exec_cmd(write_zeroes_cmd)
 
     def validate_write_read(self):
@@ -94,9 +97,9 @@ class TestNVMeWriteZeros(TestNVMeIO):
 
     def test_write_zeros(self):
         """ Testcae main """
-        assert_equal(self.nvme_write(), 0)
-        assert_equal(self.nvme_read(), 0)
-        assert_equal(self.validate_write_read(), 0)
-        assert_equal(self.write_zeroes(), 0)
-        assert_equal(self.nvme_read(), 0)
-        assert_equal(self.validate_zeroes(), 0)
+        self.assertEqual(self.nvme_write(), 0)
+        self.assertEqual(self.nvme_read(), 0)
+        self.assertEqual(self.validate_write_read(), 0)
+        self.assertEqual(self.write_zeroes(), 0)
+        self.assertEqual(self.nvme_read(), 0)
+        self.assertEqual(self.validate_zeroes(), 0)

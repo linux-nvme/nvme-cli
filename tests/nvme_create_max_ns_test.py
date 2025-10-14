@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -27,8 +29,6 @@ NVMe Namespace Management Testcase:-
     5. Delete all Namespaces.
 """
 
-import time
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -45,53 +45,59 @@ class TestNVMeCreateMaxNS(TestNVMe):
               - ctrl_id : controller id.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeAttachDetachNSCmd """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.dps = 0
         self.flbas = 0
-        self.nsze = int(self.get_ncap() / self.get_format() / self.get_max_ns())
+        (ds, ms) = self.get_lba_format_size()
+        self.nsze = int(self.get_ncap() /
+                        (ds + ms) / self.get_max_ns())
+        # Make sure that we have enough capacity for each ns.
+        # Creating a ns might allocate more bits (NVMCAP) than specified by
+        # nsze and ncap.
+        self.nsze = int(self.nsze / 2)
         self.ncap = self.nsze
         self.setup_log_dir(self.__class__.__name__)
         self.max_ns = self.get_max_ns()
         self.ctrl_id = self.get_ctrl_id()
         self.delete_all_ns()
-        time.sleep(1)
 
-    def __del__(self):
+    def tearDown(self):
         """
         Post Section for TestNVMeAttachDetachNSCmd
 
             - Create primary namespace.
-            - Atttach it to controller.
+            - Attach it to controller.
             - Call super class's destructor.
         """
-        assert_equal(self.create_and_validate_ns(self.default_nsid,
-                                                 self.nsze,
-                                                 self.ncap,
-                                                 self.flbas,
-                                                 self.dps), 0)
+        self.assertEqual(self.create_and_validate_ns(self.default_nsid,
+                                                     self.nsze,
+                                                     self.ncap,
+                                                     self.flbas,
+                                                     self.dps), 0)
         self.attach_ns(self.ctrl_id, self.default_nsid)
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def test_attach_detach_ns(self):
         """ Testcase main """
-        for nsid in range(1, self.max_ns):
-            print("##### Creating " + str(nsid))
+        print(f"##### Testing max_ns: {self.max_ns}")
+        for nsid in range(1, self.max_ns + 1):
+            print(f"##### Creating {nsid}")
             err = self.create_and_validate_ns(nsid,
                                               self.nsze,
                                               self.ncap,
                                               self.flbas,
                                               self.dps)
-            assert_equal(err, 0)
-            print("##### Attaching " + str(nsid))
-            assert_equal(self.attach_ns(self.ctrl_id, nsid), 0)
-            print("##### Running IOs in " + str(nsid))
-            self.run_ns_io(nsid, 0)
+            self.assertEqual(err, 0)
+            print(f"##### Attaching {nsid}")
+            self.assertEqual(self.attach_ns(self.ctrl_id, nsid), 0)
+            print(f"##### Running IOs in {nsid}")
+            self.run_ns_io(nsid, 9, 1)
 
-        for nsid in range(1, self.max_ns):
-            print("##### Detaching " + str(nsid))
-            assert_equal(self.detach_ns(self.ctrl_id, nsid), 0)
-            print("#### Deleting " + str(nsid))
-            assert_equal(self.delete_and_validate_ns(nsid), 0)
+        for nsid in range(1, self.max_ns + 1):
+            print(f"##### Detaching {nsid}")
+            self.assertEqual(self.detach_ns(self.ctrl_id, nsid), 0)
+            print(f"#### Deleting {nsid}")
+            self.assertEqual(self.delete_and_validate_ns(nsid), 0)
         self.nvme_reset_ctrl()

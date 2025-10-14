@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -28,7 +30,6 @@ NVMe Write Compare Testcae:-
 
 """
 
-from nose.tools import assert_equal, assert_not_equal
 from nvme_test_io import TestNVMeIO
 
 
@@ -41,9 +42,9 @@ class TestNVMeUncor(TestNVMeIO):
               - test_log_dir : directory for logs, temp files.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Constructor TestNVMeUncor """
-        TestNVMeIO.__init__(self)
+        super().setUp()
         self.start_block = 1023
         self.setup_log_dir(self.__class__.__name__)
         self.write_file = self.test_log_dir + "/" + self.write_file
@@ -51,9 +52,9 @@ class TestNVMeUncor(TestNVMeIO):
         self.create_data_file(self.write_file, self.data_size, "15")
         open(self.read_file, 'a').close()
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeUncor """
-        TestNVMeIO.__del__(self)
+        super().tearDown()
 
     def write_uncor(self):
         """ Wrapper for nvme write uncorrectable
@@ -62,15 +63,15 @@ class TestNVMeUncor(TestNVMeIO):
             - Returns:
                 - return code of nvme write uncorrectable command.
         """
-        write_uncor_cmd = "nvme write-uncor " + self.ns1 + \
-                          " --start-block=" + str(self.start_block) + \
-                          " --block-count=" + str(self.block_count)
+        write_uncor_cmd = f"{self.nvme_bin} write-uncor {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)}"
         return self.exec_cmd(write_uncor_cmd)
 
     def test_write_uncor(self):
         """ Testcase main """
-        assert_equal(self.nvme_read(), 0)
-        assert_equal(self.write_uncor(), 0)
-        assert_not_equal(self.nvme_read(), 0)
-        assert_equal(self.nvme_write(), 0)
-        assert_equal(self.nvme_read(), 0)
+        self.assertEqual(self.nvme_read(), 0)
+        self.assertEqual(self.write_uncor(), 0)
+        self.assertNotEqual(self.nvme_read(), 0)
+        self.assertEqual(self.nvme_write(), 0)
+        self.assertEqual(self.nvme_read(), 0)

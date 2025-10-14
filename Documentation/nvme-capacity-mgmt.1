@@ -1,0 +1,92 @@
+'\" t
+.\"     Title: nvme-capacity-mgmt
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-CAPACITY\-MGMT" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-capacity-mgmt \- Send capacity management command to configure/create/delete Endurance Groups or NVM Sets, returns results\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme capacity\-mgmt\fR <device> [\-\-operation=<operation> | \-O <operation>]
+                        [\-\-element\-id=<element\-id> | \-i <element\-id>]
+                        [\-\-cap\-lower=<cap\-lower> | \-l <cap\-lower>]
+                        [\-\-cap\-upper=<cap\-upper> | \-u <cap\-upper>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, sends a capacity management command to configure/create/delete the Endurance Groups or NVM Sets with the requested operation and element_id\&. On success, if the Operation is Create Endurance group or NVM Set, CQE CDW0 contains Created element identifier else CQE CDW0 is reserved\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.SH "OPTIONS"
+.PP
+\-O <operation>, \-\-operation=<operation>
+.RS 4
+Operation to be performed by the controller
+.RE
+.PP
+\-i <element\-id>, \-\-element\-id=<element\-id>
+.RS 4
+Value specific to the value of the Operation field\&.
+.RE
+.PP
+\-l <cap\-lower>, \-\-cap\-lower=<cap\-lower>
+.RS 4
+Least significant 32 bits of the capacity in bytes of the Endurance Group or NVM Set to be created
+.RE
+.PP
+\-u <cap\-upper>, \-\-cap\-upper=<cap\-upper>
+.RS 4
+Most significant 32 bits of the capacity in bytes of the Endurance Group or NVM Set to be created
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
+.RE
+.SH "EXAMPLES"
+.sp
+No examples provided yet\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

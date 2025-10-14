@@ -9,7 +9,10 @@ SYNOPSIS
 --------
 [verse]
 'nvme list-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--csi=<command_set_identifier> | -y <command_set_identifier>]
 			[--all | -a]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -30,14 +33,42 @@ OPTIONS
 --namespace-id=<nsid>::
 	Retrieve the identify list structure starting with the given nsid.
 
+-y <command_set_identifier>::
+--csi=<command_set_identifier>::
+	If this value is given, retrieve the identify list structure associated
+	with the specified I/O command set.
+
 -a::
 --all::
 	Retrieve the identify list structure for all namespaces in the
 	subsystem, whether attached or inactive.
 
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
 EXAMPLES
 --------
-No examples yet.
+* Print the namespaces present for zoned command set in JSON format
++
+------------
+# nvme list-ns /dev/nvme0 -y 2 -a -o json
+------------
+
+* Print the namespaces present for NVM Command Set in normal format
++
+------------
+# nvme list-ns /dev/nvme0
+------------
 
 NVME
 ----

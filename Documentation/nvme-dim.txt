@@ -1,0 +1,84 @@
+nvme-dim(1)
+===========
+
+NAME
+----
+nvme-dim - Send Discovery Information Management command to one or more
+Discovery Controllers.
+
+SYNOPSIS
+--------
+[verse]
+'nvme dim' [--task=<task> | -t <task>] [--nqn=<nqn> | -n <nqn>]
+			[--device=<device> | -d <device>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+Send Discovery Information Management (DIM) command to one or more Discovery
+Controllers. The DIM command allows performing two types of tasks: register or
+deregister.
+
+The DIM command is used to explicitly register with Discovery Controllers (DC),
+especially with Central Discovery Controllers (CDC). CDCs maintain a database (DB)
+of all the Hosts and Storage Subsystems in a network. The register task is used
+to add a host to the CDC's DB. The deregister task is used to remove a host from
+the CDC's DB.
+
+During a register operation the host will send mandatory information such as the
+Host's NQN and ID, as well as the Host's hostname and the Operating System's
+version that it is running on. There is also an optional Host Symbolic Name
+that can be registered with the CDC.
+
+This command can only be applied to existing DC connections previously created
+with the nvme-discover(1) command using the --persistent option.
+
+OPTIONS
+-------
+-t <task>::
+--task <task>::
+	The task to perform: "register" or "deregister".
+
+-n <subnqn>::
+--nqn <nqn>::
+	The DIM command will be sent to the Discovery Controller (DC) matching this
+	NQN. A list of comma-separated NQNs can be supplied to apply the command to
+	more than one DC.
+
+-d <device>::
+--device <device>::
+	The DIM command will be sent to the Discovery Controllers (DC) associated
+	with this NVMe device handle. A list of comma-separated device handles can
+	be supplied to apply the command to more than one DC.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+EXAMPLES
+--------
+* Register with the Central Discovery Controller (CDC) named
+nqn.1988-11.com.dell:SFSS:1:20220118125153e8:
++
+------------
+# nvme dim --task=register --nqn=nqn.1988-11.com.dell:SFSS:1:20220118125153e8
+------------
+
+* Deregister from Central Discovery Controller (CDC) associated with nvme4
++
+------------
+# nvme dim --task=deregister --device=nvme4
+------------
+
+SEE ALSO
+--------
+nvme-discover(1)
+
+NVME
+----
+Part of the nvme-user suite

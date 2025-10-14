@@ -1,0 +1,171 @@
+'\" t
+.\"     Title: nvme-verify
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-VERIFY" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-verify \- Send an NVMe Verify command, return results
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-verify\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-start\-block=<slba> | \-s <slba>]
+                        [\-\-block\-count=<nlb> | \-c <nlb>] [\-\-limited\-retry | \-l]
+                        [\-\-force\-unit\-access | \-f]
+                        [\-\-prinfo=<prinfo> | \-p <prinfo>]
+                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
+                        [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
+                        [\-\-app\-tag=<apptag> | \-a <apptag>]
+                        [\-\-storage\-tag<storage\-tag> | \-S <storage\-tag>]
+                        [\-\-storage\-tag\-check | \-C]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
+.fi
+.SH "DESCRIPTION"
+.sp
+The Verify command verifies the integrity of the stored information by reading data and metadata\&.
+.SH "OPTIONS"
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Namespace ID use in the command\&.
+.RE
+.PP
+\-s <slba>, \-\-start\-block=<slba>
+.RS 4
+Start block address\&.
+.RE
+.PP
+\-c <nlb>, \-\-block\-count=<nlb>
+.RS 4
+Number of logical blocks to Verify\&.
+.RE
+.PP
+\-l, \-\-limited\-retry
+.RS 4
+Sets the limited retry flag\&.
+.RE
+.PP
+\-f, \-\-force\-unit\-access
+.RS 4
+Set the force\-unit access flag\&.
+.RE
+.PP
+\-p <prinfo>, \-\-prinfo=<prinfo>
+.RS 4
+Protection Information field definition\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Bit
+T}:T{
+Description
+T}
+T{
+3
+T}:T{
+PRACT: Protection Information Action\&. When set to 1, PI is stripped/inserted on read/write when the block format\(cqs metadata size is 8\&. When set to 0, metadata is passes\&.
+T}
+T{
+2:0
+T}:T{
+PRCHK: Protection Information Check:
+T}
+T{
+2
+T}:T{
+Set to 1 enables checking the guard tag
+T}
+T{
+1
+T}:T{
+Set to 1 enables checking the application tag
+T}
+T{
+0
+T}:T{
+Set to 1 enables checking the reference tag
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-r <reftag>, \-\-ref\-tag=<reftag>
+.RS 4
+Optional reftag when used with protection information\&.
+.RE
+.PP
+\-m <appmask>, \-\-app\-tag\-mask=<appmask>
+.RS 4
+Optional application tag mask when used with protection information\&.
+.RE
+.PP
+\-a <apptag>, \-\-app\-tag=<apptag>
+.RS 4
+Optional application tag when used with protection information\&.
+.RE
+.PP
+\-S <storage\-tag>, \-\-storage\-tag=<storage\-tag>
+.RS 4
+Variable Sized Expected Logical Block Storage Tag(ELBST)\&.
+.RE
+.PP
+\-C, \-\-storage\-tag\-check
+.RS 4
+This flag enables Storage Tag field checking as part of Verify operation\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
+.RE
+.SH "EXAMPLES"
+.sp
+No examples yet\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

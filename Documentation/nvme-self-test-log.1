@@ -2,12 +2,12 @@
 .\"     Title: nvme-self-test-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SELF\-TEST\-LO" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-SELF\-TEST\-LO" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,11 +28,12 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-self-test-log \- Retrieve the log information initited by device\-self\-test and display it
+nvme-self-test-log \- Retrieve the log information initiated by device\-self\-test and display it
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme self\-test\fR\-log <device> [\-\-output\-format=<FMT> | \-o <FMT>]
+\fInvme self\-test\fR\-log <device> [\-\-log\-entries=<entries> | \-e <entries>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -45,12 +46,23 @@ On success, the returned log structure may be returned in one of several ways de
 By default the log is printed out in the normal readable format\&.
 .SH "OPTION"
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-e <entries>, \-\-log\-entries=<entries>
+.RS 4
+Specifies how many DST log entries the program should request from the device\&. This must be at least one, and shouldn\(cqt exceed the 20 entries\&. Defaults to 20 DST log entries\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

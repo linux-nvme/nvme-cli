@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-show-hostnqn(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -740,7 +740,7 @@ nvme-show-hostnqn(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-show-hostnqn -
-   Generate a host NVMe Qualified Name
+   Show the host NQN configured for the system
 </p>
 </div>
 </div>
@@ -749,7 +749,7 @@ nvme-show-hostnqn(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme show-hostnqn</em></pre>
+<pre class="content"><em>nvme show-hostnqn</em> [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -757,7 +757,7 @@ nvme-show-hostnqn(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Show the host NQN configured for the system.  If /etc/nvme/hostnqn is
+<div class="paragraph"><p>Show the host NQN configured for the system. If /usr/local/etc/nvme/hostnqn is
 not present and systemd application-specific machine IDs are available,
 this will show the systemd-generated host NQN for the system.</p></div>
 </div>
@@ -765,7 +765,31 @@ this will show the systemd-generated host NQN for the system.</p></div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No options needed</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -785,7 +809,7 @@ this will show the systemd-generated host NQN for the system.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-10-12 00:12:24 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

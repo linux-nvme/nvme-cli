@@ -1,0 +1,31 @@
+nvme-seagate-version(1)
+=======================
+
+NAME
+----
+nvme-seagate-version - Shows the Seagate version information for nvme-cli
+
+SYNOPSIS
+--------
+[verse]
+'nvme seagate version'
+
+DESCRIPTION
+-----------
+Provides the git version information for the Seagate version for nvme-cli. This is for the nvme-cli tool.
+
+OPTIONS
+-------
+No Options
+
+EXAMPLES
+--------
+Get the Seagate version information for nvme-cli.
+
+------------
+# nvme seagate version
+------------
+
+NVME
+----
+Part of the nvme-user suite

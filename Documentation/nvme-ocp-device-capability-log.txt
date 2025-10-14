@@ -1,0 +1,42 @@
+nvme-ocp-device-capability-log(1)
+=================================
+
+NAME
+----
+nvme-ocp-device-capability-log - Retrieves OCP Device Capability Log Page
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp device-capability-log' <device> [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieves OCP Device Capability Log Page
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal' or 'json' or 'binary'. 
+	Only one output format can be used at a time. The default is normal.
+
+EXAMPLES
+--------
+* Has the program issue a device-capability-log command to retrieve the 0xC4 log page.
++
+------------
+# nvme ocp device-capability-log /dev/nvme0 -o normal
+------------
+
+NVME
+----
+Part of the nvme-user suite.

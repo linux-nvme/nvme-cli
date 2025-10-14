@@ -4,15 +4,17 @@ a.out
 *.o
 *~
 *.swp
-NVME-VERSION-FILE
+nvme-*.tar.gz
+
+subprojects/*
+!subprojects/*.wrap
 
 cscope.*
-
-/debian/files
-/debian/nvme-cli.debhelper.log
-/debian/nvme-cli.substvars
-/debian/nvme-cli
+compile_commands.json
 
 tests/__pycache__
 tests/nvmetests
 tests/*.pyc
+
+.build
+.cache

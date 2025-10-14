@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -26,7 +28,7 @@ NVme Identify Namespace Testcase:-
 """
 
 import subprocess
-from nose.tools import assert_equal
+
 from nvme_test import TestNVMe
 
 
@@ -36,19 +38,19 @@ class TestNVMeIdentifyNamespace(TestNVMe):
     Represents Identify Namesepace testcase
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeIdentifyNamespace. """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.setup_log_dir(self.__class__.__name__)
-        self.ns_list = self.get_ns_list()
+        self.nsid_list = self.get_nsid_list()
 
-    def __del__(self):
+    def tearDown(self):
         """
         Post Section for TestNVMeIdentifyNamespace
 
             - Call super class's destructor.
         """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def get_id_ns(self, nsid):
         """
@@ -58,16 +60,13 @@ class TestNVMeIdentifyNamespace(TestNVMe):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        err = 0
-        id_ns_cmd = "nvme id-ns " + self.ctrl + "n" + str(nsid)
+        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+            f"--namespace-id={str(nsid)}"
         proc = subprocess.Popen(id_ns_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
                                 encoding='utf-8')
-        id_ns_output = proc.communicate()[0]
-        print(id_ns_output + "\n")
-        err = proc.wait()
-        return err
+        return proc.wait()
 
     def get_id_ns_all(self):
         """
@@ -78,11 +77,11 @@ class TestNVMeIdentifyNamespace(TestNVMe):
                 - 0 on success, error code on failure.
         """
         err = 0
-        for namespace  in self.ns_list:
+        for namespace in self.nsid_list:
             err = self.get_id_ns(str(namespace))
         return err
 
     def test_id_ns(self):
         """ Testcase main """
-        assert_equal(self.get_id_ns(1), 0)
-        assert_equal(self.get_id_ns_all(), 0)
+        self.assertEqual(self.get_id_ns(1), 0)
+        self.assertEqual(self.get_id_ns_all(), 0)

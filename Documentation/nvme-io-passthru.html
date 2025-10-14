@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-io-passthru(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -748,21 +749,23 @@ nvme-io-passthru(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-io-passthru</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -o &lt;opcode&gt;]
-                [--flags=&lt;flags&gt; | -f &lt;flags&gt;] [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
-                [--namespace-id=&lt;nsid&gt; | -nsid &lt;nsid&gt;]
-                [--cdw2=&lt;cdw2&gt;] [--cdw3=&lt;cdw3&gt;] [--cdw10=&lt;cdw10&gt;]
-                [--cdw11=&lt;cdw11&gt;] [--cdw12=&lt;cdw12&gt;] [--cdw13=&lt;cdw13&gt;]
-                [--cdw14=&lt;cdw14&gt;] [--cdw15=&lt;cdw15&gt;]
-                [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
-                [--read | -r ] [--write | -w]
-                [--input-file=&lt;file&gt; | -i &lt;file&gt;]
-                [--timeout=&lt;to&gt; | -t &lt;to&gt;]
-                [--show-command | -s]
-                [--dry-run | -d]
-                [--raw-binary | -b]
-                [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]</pre>
+<pre class="content"><em>nvme-io-passthru</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]
+                        [--flags=&lt;flags&gt; | -f &lt;flags&gt;] [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [--cdw2=&lt;cdw2&gt; | -2 &lt;cdw2&gt;]
+                        [--cdw3=&lt;cdw3&gt; | -3 &lt;cdw3&gt;] [--cdw10=&lt;cdw10&gt; | -4 &lt;cdw10&gt;]
+                        [--cdw11=&lt;cdw11&gt; | -5 &lt;cdw11&gt;] [--cdw12=&lt;cdw12&gt; | -6 &lt;cdw12&gt;]
+                        [--cdw13=&lt;cdw13&gt; | -7 &lt;cdw13&gt;] [--cdw14=&lt;cdw14&gt; | -8 &lt;cdw14&gt;]
+                        [--cdw15=&lt;cdw15&gt; | -9 &lt;cdw15&gt;]
+                        [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
+                        [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
+                        [--read | -r] [--write | -w]
+                        [--input-file=&lt;file&gt; | -i &lt;file&gt;]
+                        [--metadata=&lt;file&gt; | -M &lt;file&gt;]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;] [--show-command | -s]
+                        [--dry-run | -d] [--raw-binary | -b]
+                        [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]
+                        [--latency | -T]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -787,7 +790,7 @@ printed to stdout for another program to parse.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;opcode&gt;
+-O &lt;opcode&gt;
 </dt>
 <dt class="hdlist1">
 --opcode=&lt;opcode&gt;
@@ -795,6 +798,7 @@ printed to stdout for another program to parse.</p></div>
 <dd>
 <p>
         The NVMe opcode to send to the device in the command
+        Required argument as this param is mandatory.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -830,6 +834,9 @@ printed to stdout for another program to parse.</p></div>
         The value for the ns-id in the command. Defaults to <em>0</em>.
 </p>
 </dd>
+<dt class="hdlist1">
+-[2-9] &lt;cdw&gt;
+</dt>
 <dt class="hdlist1">
 --cdw[2-3,10-15]=&lt;cdw&gt;
 </dt>
@@ -867,8 +874,23 @@ printed to stdout for another program to parse.</p></div>
 <dd>
 <p>
         If the command is a data-out (write) command, use this file
-        to fill the buffer sent to the device. If no file is given,
-        assumed to use STDIN.
+        to fill the buffer sent to the device. If no file is given, assumed to
+        use STDIN. If the command is a data-in (read) command, the data
+        returned from the device will be saved here.
+</p>
+</dd>
+<dt class="hdlist1">
+-M &lt;file&gt;
+</dt>
+<dt class="hdlist1">
+--metadata=&lt;file&gt;
+</dt>
+<dd>
+<p>
+        If the command is a data-out (write) command, use this file
+        to fill the metadata buffer sent to the device. If no file is given,
+        assumed to use STDIN. If the command is a data-in (read) command, the
+        metadata returned from the device will be saved here.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -944,6 +966,51 @@ printed to stdout for another program to parse.</p></div>
         is overwriting a buffer on a data-in command.
 </p>
 </dd>
+<dt class="hdlist1">
+-T
+</dt>
+<dt class="hdlist1">
+--latency
+</dt>
+<dd>
+<p>
+        Print out the latency the IOCTL took (in us).
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -964,7 +1031,7 @@ printed to stdout for another program to parse.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-01-30 19:28:39 KST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

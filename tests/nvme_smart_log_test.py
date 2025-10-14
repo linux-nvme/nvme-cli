@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -25,8 +27,7 @@ NVMe Smart Log Verification Testcase:-
 
 """
 
-from nose.tools import assert_equal
-from nvme_test import TestNVMe
+from nvme_test import TestNVMe, to_decimal
 
 
 class TestNVMeSmartLogCmd(TestNVMe):
@@ -37,18 +38,18 @@ class TestNVMeSmartLogCmd(TestNVMe):
         - Attributes:
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeSmartLogCmd """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.setup_log_dir(self.__class__.__name__)
 
-    def __del__(self):
+    def tearDown(self):
         """
         Post Section for TestNVMeSmartLogCmd
 
             - Call super class's destructor.
         """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def get_smart_log_ctrl(self):
         """ Wrapper for executing smart-log on controller.
@@ -75,12 +76,14 @@ class TestNVMeSmartLogCmd(TestNVMe):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        ns_list = self.get_ns_list()
-        for nsid in range(0, len(ns_list)):
-            self.get_smart_log_ns(ns_list[nsid])
+        nsid_list = self.get_nsid_list()
+        for nsid in nsid_list:
+            self.get_smart_log_ns(nsid)
         return 0
 
     def test_smart_log(self):
         """ Testcase main """
-        assert_equal(self.get_smart_log_ctrl(), 0)
-        assert_equal(self.get_smart_log_all_ns(), 0)
+        self.assertEqual(self.get_smart_log_ctrl(), 0)
+        smlp = to_decimal(self.get_id_ctrl_field_value("lpa"))
+        if smlp & 0x1:
+            self.assertEqual(self.get_smart_log_all_ns(), 0)

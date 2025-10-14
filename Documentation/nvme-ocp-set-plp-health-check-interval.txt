@@ -1,0 +1,53 @@
+nvme-ocp-set-plp-health-check-interval(1)
+=========================================
+
+NAME
+----
+nvme-ocp-set-plp-health-check-interval - Define and set PLP health check interval
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp set-plp-health-check-interval' <device> [--plp_health_interval=<plp_health_interval> | -p <plp_health_interval>] [--save | -s] [--no-uuid | -n]
+
+
+DESCRIPTION
+-----------
+Define Set PLP health check interval.
+No argument prints current mode.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-p <plp_health_interval>::
+--plp_health_interval=<plp_health_interval>::
+	Set the plp health check interval [31:16]
+
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+        for old OCP 1.0 support)
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+
+EXAMPLES
+--------
+* Has the program issue a set-plp-health-check-interval to retrieve the 0xC6 set features.
++
+------------
+# nvme ocp eol-plp-failure-mode /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

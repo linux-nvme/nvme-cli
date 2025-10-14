@@ -1,5 +1,5 @@
-nvme-id-ns(1)
-=============
+nvme-list-ctrl(1)
+=================
 
 NAME
 ----
@@ -10,6 +10,8 @@ SYNOPSIS
 [verse]
 'nvme list-ctrl' <device> [--cntid=<cntid> | -c <cntid>]
 			[--namespace-id=<nsid> | -n <nsid>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
 DESCRIPTION
 -----------
 For the NVMe device given, sends an identify command for controller list
@@ -36,6 +38,15 @@ OPTIONS
 	specified namespace. If no namespace is given, or set to 0, the
 	command requests the controller list for the entire subsystem,
 	whether or not they are attached to namespace(s).
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

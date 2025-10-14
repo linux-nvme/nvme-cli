@@ -10,14 +10,17 @@ linknvme:nvme-error-log[1]::
 linknvme:nvme-flush[1]::
 	Submit flush
 
-linknvme:nvme-dms[1]::
+linknvme:nvme-dsm[1]::
 	Submit Data Set Management
 
 linknvme:nvme-format[1]::
 	Format namespace(s)
 
 linknvme:nvme-fw-activate[1]::
-	F/W Activate
+	F/W Activate (in old version < 1.2)
+
+linknvme:nvme-fw-commit[1]::
+	F/W Commit (in > 1.2)
 
 linknvme:nvme-fw-download[1]::
 	F/W Download
@@ -34,14 +37,23 @@ linknvme:nvme-get-log[1]::
 linknvme:nvme-telemetry-log[1]::
 	Telemetry Host-Initiated Log
 
+linknvme:nvme-changed-ns-list-log[1]::
+	Retrieve Changed Namespace List Log
+
 linknvme:nvme-smart-log[1]::
 	Retrieve Smart Log
+
+linknvme:nvme-ana-log[1]::
+	Retrieve ANA(Asymmetric Namespace Access) Log
 
 linknvme:nvme-endurance-log[1]::
 	Retrieve endurance Log
 
 linknvme:nvme-effects-log[1]::
 	Retrieve effects Log
+
+linknvme:nvme-self-test-log[1]::
+	Retrieve Device Self-test Log
 
 linknvme:nvme-get-ns-id[1]::
 	Retrieve namespace identifier
@@ -54,6 +66,12 @@ linknvme:nvme-id-ctrl[1]::
 
 linknvme:nvme-id-ns[1]::
 	Identify Namespace
+
+linknvme:nvme-id-nvmset[1]::
+	Identify NVM Set List
+
+linknvme:nvme-id-iocs[1]::
+	Identify I/O Command Set
 
 linknvme:nvme-create-ns[1]::
 	Create a new namespace
@@ -81,6 +99,15 @@ linknvme:nvme-list[1]::
 
 linknvme:nvme-list-ctrl[1]::
 	List controller in NVMe subsystem
+
+linknvme:nvme-list-subsys[1]::
+	List NVMe subsystems
+
+linknvme:nvme-reset[1]::
+	Reset a NVMe controller
+
+linknvme:nvme-device-self-test[1]::
+	Issue Device Self-test Command
 
 linknvme:nvme-read[1]::
 	Issue IO Read Command
@@ -112,6 +139,12 @@ linknvme:nvme-security-recv[1]::
 linknvme:nvme-security-send[1]::
 	Security Send
 
+linknvme:nvme-dsm[1]::
+	Issue Data Set Management Command
+
+linknvme:nvme-copy[1]::
+	Issue Simple Copy Command
+
 linknvme:nvme-set-feature[1]::
 	Set Feature
 
@@ -127,6 +160,9 @@ linknvme:nvme-connect-all[1]::
 linknvme:nvme-connect[1]::
 	Connect to an NVMe-over-Fabrics subsystem
 
+linknvme:nvme-dim[1]::
+	Send Discovery Information Management command to a Discovery Controller
+
 linknvme:nvme-disconnect[1]::
 	Disconnect from an NVMe-over-Fabrics subsystem
 
@@ -135,3 +171,105 @@ linknvme:nvme-disconnect-all[1]::
 
 linknvme:nvme-get-property[1]::
 	Reads and shows NVMe-over-Fabrics controller property
+
+linknvme:nvme-media-unit-stat-log[1]::
+	Retrieve and show the configuration and wear of media units
+
+linknvme:nvme-supported-cap-config-log[1]::
+	Retrieve and show the list of Supported Capacity Configuration Descriptors
+
+linknvme:nvme-boot-part-log[1]::
+	Retrieve Boot Partition Log
+
+linknvme:nvme-capacity-mgmt[1]::
+	Capacity Management Command
+
+linknvme:nvme-check-dhchap-key[1]::
+	Generate NVMeoF DH-HMAC-CHAP host key
+
+linknvme:nvme-check-tls-key[1]::
+	Validate NVMeoF TLS PSK
+
+linknvme:nvme-cmdset-ind-id-ns[1]::
+	I/O Command Set Independent Identify Namespace
+
+linknvme:nvme-endurance-event-agg-log[1]::
+	Retrieve Endurance Group Event Aggregate Log
+
+linknvme:nvme-fid-support-effects-log[1]::
+	Retrieve FID Support and Effects log
+
+linknvme:nvme-gen-dhchap-key[1]::
+	Generate NVMeoF DH-HMAC-CHAP host key
+
+linknvme:nvme-gen-hostnqn[1]::
+	Generate NVMeoF host NQN
+
+linknvme:nvme-gen-tls-key[1]::
+	Generate NVMeoF TLS PSK
+
+linknvme:nvme-get-lba-status[1]::
+	Get LBA Status command
+
+linknvme:nvme-id-domain[1]::
+	NVMe Identify Domain List
+
+linknvme:nvme-id-ns-lba-format[1]::
+	NVMe Identify Namespace for the specified LBA Format index
+
+linknvme:nvme-lba-status-log[1]::
+	Retrieve LBA Status Information Log
+
+linknvme:nvme-list-endgrp[1]::
+	NVMe Identify Endurance Group List
+
+linknvme:nvme-ns-rescan[1]::
+	Rescans the NVME namespaces
+
+linknvme:nvme-nvm-id-ctrl[1]::
+	NVMe Identify Controller NVM Command Set
+
+linknvme:nvme-nvm-id-ns[1]::
+	NVMe Identify Namespace NVM Command Set
+
+linknvme:nvme-nvm-id-ns-lba-format[1]::
+	NVMe Identify Namespace NVM Command Set for the specified LBA Format index
+
+linknvme:nvme-persistent-event-log[1]::
+	Retrieve Persistent Event Log
+
+linknvme:nvme-predictable-lat-log[1]::
+	Retrieve Predictable Latency per Nvmset Log
+
+linknvme:nvme-pred-lat-event-agg-log[1]::
+	Retrieve Predictable Latency Event Aggregate Log
+
+linknvme:nvme-primary-ctrl-caps[1]::
+	NVMe Identify Primary Controller Capabilities
+
+linknvme:nvme-reset[1]::
+	Resets the controller
+
+linknvme:nvme-rpmb[1]::
+	Replay Protection Memory Block commands
+
+linknvme:nvme-sanitize-log[1]::
+	Retrieve sanitize log
+
+linknvme:nvme-set-property[1]::
+	Set a property and show the resulting value
+
+linknvme:nvme-show-hostnqn[1]::
+	Show NVMeoF host NQN
+
+linknvme:nvme-subsystem-reset[1]::
+	Resets the subsystem
+
+linknvme:nvme-supported-log-pages[1]::
+	Retrieve the Supported Log pages details
+
+linknvme:nvme-verify[1]::
+	verify command
+
+linknvme:nvme-show-topology[1]::
+	Show NVMe topology

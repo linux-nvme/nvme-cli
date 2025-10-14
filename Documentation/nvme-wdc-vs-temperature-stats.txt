@@ -1,0 +1,78 @@
+nvme-wdc-vs-temperature-stats(1)
+================================
+
+NAME
+----
+nvme-wdc-vs-temperature-stats - Display temperature-related statistics
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc vs-temperature-stats' <device> 
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, displays temperature statistics.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+Expected status and description :-
+
+[cols="2*", options="header"]
+|===
+|Statistic |Description
+
+|The current composite temperature
+|device temperature
+
+|Warning Composite TEMPerature threshold
+|temp of overheating
+
+|Critical Composite TEMPerature threshold
+|temp of critical overheating
+
+|Device Initiated Thermal Throttling support status
+|0 = unsupported, 1 = supported
+
+|Host Controlled Thermal Management support
+|0 = unsupported, 1 = supported
+
+|Thermal Management Temperature 1 (Light throttle)
+|temp to start light throttle
+
+|Thermal Management Temperature 1 Transition Counter
+|# times switched into light throttle
+
+|Thermal Management Temperature 1 Total Time
+|# seconds spent in light throttle
+
+|Thermal Management Temperature 2 (Heavy throttle)
+|temp to start heavy throttle
+
+|Thermal Management Temperature 2 Transition Counter
+|# times switched into heavy throttle
+
+|Thermal Management Temperature 2 Total Time
+|# seconds spent in heavy throttle
+
+|Thermal Shutdown Threshold
+|temp of device shutdown
+|===
+
+On success it returns 0, error code otherwise.
+
+EXAMPLES
+--------
+* Displays the temperature stats for the device:
++
+------------
+# nvme wdc vs-temperature-stats /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

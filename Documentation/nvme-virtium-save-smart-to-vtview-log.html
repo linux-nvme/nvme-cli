@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-virtium-save-smart-to-vtview-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -763,18 +763,19 @@ nvme-virtium-save-smart-to-vtview-log(1) Manual Page
 <div class="paragraph"><p>This command automates the process of collecting SMART data periodically and
 saving the data in a ready-to-analyze format. Each entry is saved
 with timestamp and in csv format. Users can use excel to analyze the data.
-Some examples of use cases are collecting SMART data for temperature characterization,
-collecting data to calculate endurance, or collecting SMART data during a test
-or during normal operation.</p></div>
+Some examples of use cases are collecting SMART data for temperature
+characterization, data to calculate endurance, or collecting SMART data during a
+test or during normal operation.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the command generates a log file, which contains an entry for identify device
-(current features &amp; settings) and periodic entries of SMART data.</p></div>
-<div class="paragraph"><p>This command runs for the time specified by the option &lt;run-time&gt;, and collects SMART data
-at the frequency specified by the option &lt;freq&gt;. If the output file name is not specified,
-this command will generate a file name that include model string and serial number of the device.</p></div>
-<div class="paragraph"><p>If the test-name option is specified, it will be recorded in the log file and be used as part
-of the log file name.</p></div>
+<div class="paragraph"><p>On success, the command generates a log file, which contains an entry for
+identify device (current features &amp; settings) and periodic entries of SMART data.</p></div>
+<div class="paragraph"><p>This command runs for the time specified by the option &lt;run-time&gt;, and collects
+SMART data at the frequency specified by the option &lt;freq&gt;. If the output file
+name is not specified, this command will generate a file name that include model
+string and serial number of the device.</p></div>
+<div class="paragraph"><p>If the test-name option is specified, it will be recorded in the log file and be
+used as part of the log file name.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -785,7 +786,7 @@ of the log file name.</p></div>
 -r &lt;NUM&gt;
 </dt>
 <dt class="hdlist1">
---run-tim=&lt;NUM&gt;
+--run-time=&lt;NUM&gt;
 </dt>
 <dd>
 <p>
@@ -800,8 +801,8 @@ of the log file name.</p></div>
 </dt>
 <dd>
 <p>
-        (optional) How often you want to log SMART data
-        (0.25 = 15' , 0.5 = 30' , 1 = 1 hour, 2 = 2 hours, etc.). Default = 10 hours.
+        (optional) How often you want to log SMART data (0.25 = 15', 0.5 = 30',
+        1 = 1 hour, 2 = 2 hours, etc.). Default = 10 hours.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -812,9 +813,9 @@ of the log file name.</p></div>
 </dt>
 <dd>
 <p>
-    (optional) Name of the log file (give it a name that easy for you to remember
-        what the test is). You can leave it blank too, the file name will be generated
-        as &lt;model string&gt;-&lt;serial number&gt;-&lt;test name&gt;.txt.
+        (optional) Name of the log file (give it a name that easy for you to
+        remember what the test is). You can leave it blank too, the file name
+        will be generated as &lt;model string&gt;-&lt;serial number&gt;-&lt;test name&gt;.txt.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -825,7 +826,8 @@ of the log file name.</p></div>
 </dt>
 <dd>
 <p>
-    (optional) Name of the test you are doing. We use this string as part of the name of the log file.
+        (optional) Name of the test you are doing. We use this string as part of
+        the name of the log file.
 </p>
 </dd>
 </dl></div>
@@ -876,7 +878,7 @@ Just logging: Default logging is run for 20 hours and log every 10 hours.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-11-08 02:18:28 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

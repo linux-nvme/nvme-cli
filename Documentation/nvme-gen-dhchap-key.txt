@@ -1,0 +1,62 @@
+nvme-gen-dhchap-key(1)
+======================
+
+NAME
+----
+nvme-gen-dhchap-key - Generate a host DH-HMAC-CHAP key
+
+SYNOPSIS
+--------
+[verse]
+'nvme gen-dhchap-key' [--hmac=<hmac-id> | -h <hmac-id>]
+			[--secret=<secret> | -s <secret>]
+			[--key-length=<len> | -l <len>]
+			[--nqn=<host-nqn> | -n <host-nqn>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+Generate a base64-encoded DH-HMAC-CHAP host key in the form:
+DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
+and prints it to stdout.
+
+OPTIONS
+-------
+-h <hmac-id>::
+--hmac=<hmac-id>::
+	Select a HMAC algorithm to use. Possible values are:
+	0 - No HMAC algorithm
+	1 - SHA-256
+	2 - SHA-384
+	3 - SHA-512
+
+-s <secret>::
+--secret=<secret>::
+	Secret value (in hexadecimal) to be used for the key. If none are
+	provided a random value is used.
+
+-l <len>::
+--key-length=<len>::
+	Length of the resulting key. Possible values are 32, 48, or 64.
+
+-n <hostnqn>::
+--nqn=<hostnqn>::
+	Host-NQN to be used for the transformation. This parameter is only
+	valid if a non-zero HMAC function has been specified.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

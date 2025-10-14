@@ -1,407 +1,153 @@
-#include <stdlib.h>
-#include <string.h>
+// SPDX-License-Identifier: GPL-2.0-or-later
 #include <stdio.h>
 #include <errno.h>
 #include <stdarg.h>
+
 #include "json.h"
+#include "types.h"
+#include "cleanup.h"
 
-static inline void fail_and_notify(void)
+struct json_object *util_json_object_new_double(long double d)
 {
-	fprintf(stderr, "Allocation of memory for json object failed, aborting.\n");
-	abort();
-}
+	struct json_object *obj;
+	char *str;
 
-struct json_object *json_create_object(void)
-{
-	void *test = calloc(1, sizeof(struct json_object));
-	if (!test)
-		fail_and_notify();
-	return test;
-}
-
-struct json_array *json_create_array(void)
-{
-	void *test = calloc(1, sizeof(struct json_array));
-	if (!test)
-		fail_and_notify();
-	return test;
-}
-
-static struct json_pair *json_create_pair(const char *name, struct json_value *value)
-{
-	struct json_pair *pair = malloc(sizeof(struct json_pair));
-	if (pair) {
-		pair->name = strdup(name);
-		pair->value = value;
-
-		value->parent_type = JSON_PARENT_TYPE_PAIR;
-		value->parent_pair = pair;
-	} else
-		fail_and_notify();
-
-	return pair;
-}
-
-static struct json_value *json_create_value_int(long long number)
-{
-	struct json_value *value = malloc(sizeof(struct json_value));
-
-	if (value) {
-		value->type = JSON_TYPE_INTEGER;
-		value->integer_number = number;
-	} else
-		fail_and_notify();
-
-	return value;
-}
-
-static struct json_value *json_create_value_uint(unsigned long long number)
-{
-	struct json_value *value = malloc(sizeof(struct json_value));
-
-	if (value) {
-		value->type = JSON_TYPE_UINT;
-		value->uint_number = number;
-	} else
-		fail_and_notify();
-
-	return value;
-}
-
-static struct json_value *json_create_value_float(long double number)
-{
-	struct json_value *value = malloc(sizeof(struct json_value));
-
-	if (value) {
-		value->type = JSON_TYPE_FLOAT;
-		value->float_number = number;
-	}  else
-		fail_and_notify();
-
-	return value;
-}
-
-static char *strdup_escape(const char *str)
-{
-	const char *input = str;
-	char *p, *ret;
-	int escapes;
-
-	if (!strlen(str))
+	if (asprintf(&str, "%Lf", d) < 0)
 		return NULL;
 
-	escapes = 0;
-	while ((input = strpbrk(input, "\\\"")) != NULL) {
-		escapes++;
-		input++;
-	}
+	obj = json_object_new_string(str);
 
-	p = ret = malloc(strlen(str) + escapes + 1);
-	if (!ret)
-		fail_and_notify();
+	free(str);
+	return obj;
 
-	while (*str) {
-		if (*str == '\\' || *str == '\"')
-			*p++ = '\\';
-		*p++ = *str++;
-	}
-	*p = '\0';
-
-	return ret;
 }
 
-/*
- * Valid JSON strings must escape '"' and '/' with a preceding '/'
- */
-static struct json_value *json_create_value_string(const char *str)
+struct json_object *util_json_object_new_uint64(uint64_t i)
 {
-	struct json_value *value = malloc(sizeof(struct json_value));
+	struct json_object *obj;
+	char *str;
 
-	if (value) {
-		value->type = JSON_TYPE_STRING;
-		value->string = strdup_escape(str);
-		if (!value->string) {
-			free(value);
-			value = NULL;
-			return value;
-		}
-	}
-	if (!value)
-		fail_and_notify();
+	if (asprintf(&str, "%" PRIu64, i) < 0)
+		return NULL;
 
-	return value;
+	obj = json_object_new_string(str);
+
+	free(str);
+	return obj;
+
 }
 
-static struct json_value *json_create_value_object(struct json_object *obj)
+static int util_json_object_string_to_number(struct json_object *jso,
+					     struct printbuf *pb, int level,
+					     int flags)
 {
-	struct json_value *value = malloc(sizeof(struct json_value));
+	ssize_t len = json_object_get_string_len(jso);
 
-	if (value) {
-		value->type = JSON_TYPE_OBJECT;
-		value->object = obj;
-		obj->parent = value;
-	} else
-		fail_and_notify();
+	printbuf_memappend(pb, json_object_get_string(jso), len);
 
-	return value;
-}
-
-static struct json_value *json_create_value_array(struct json_array *array)
-{
-	struct json_value *value = malloc(sizeof(struct json_value));
-
-	if (value) {
-		value->type = JSON_TYPE_ARRAY;
-		value->array = array;
-		array->parent = value;
-	} else
-		fail_and_notify();
-
-	return value;
-}
-
-static void json_free_pair(struct json_pair *pair);
-static void json_free_value(struct json_value *value);
-
-void json_free_object(struct json_object *obj)
-{
-	int i;
-
-	for (i = 0; i < obj->pair_cnt; i++)
-		json_free_pair(obj->pairs[i]);
-	free(obj->pairs);
-	free(obj);
-}
-
-void json_free_array(struct json_array *array)
-{
-	int i;
-
-	for (i = 0; i < array->value_cnt; i++)
-		json_free_value(array->values[i]);
-	free(array->values);
-	free(array);
-}
-
-static void json_free_pair(struct json_pair *pair)
-{
-	json_free_value(pair->value);
-	free(pair->name);
-	free(pair);
-}
-
-static void json_free_value(struct json_value *value)
-{
-	switch (value->type) {
-	case JSON_TYPE_STRING:
-		free(value->string);
-		break;
-	case JSON_TYPE_OBJECT:
-		json_free_object(value->object);
-		break;
-	case JSON_TYPE_ARRAY:
-		json_free_array(value->array);
-		break;
-	}
-	free(value);
-}
-
-static int json_array_add_value(struct json_array *array, struct json_value *value)
-{
-	struct json_value **values = realloc(array->values,
-		sizeof(struct json_value *) * (array->value_cnt + 1));
-
-	if (!values)
-		return ENOMEM;
-	values[array->value_cnt] = value;
-	array->value_cnt++;
-	array->values = values;
-
-	value->parent_type = JSON_PARENT_TYPE_ARRAY;
-	value->parent_array = array;
 	return 0;
 }
 
-static int json_object_add_pair(struct json_object *obj, struct json_pair *pair)
+struct json_object *util_json_object_new_uint128(nvme_uint128_t  val)
 {
-	struct json_pair **pairs = realloc(obj->pairs,
-		sizeof(struct json_pair *) * (obj->pair_cnt + 1));
-	if (!pairs)
-		return ENOMEM;
-	pairs[obj->pair_cnt] = pair;
-	obj->pair_cnt++;
-	obj->pairs = pairs;
+	struct json_object *obj;
 
-	pair->parent = obj;
-	return 0;
+	obj = json_object_new_string(uint128_t_to_string(val));
+	json_object_set_serializer(obj, util_json_object_string_to_number, NULL, NULL);
+
+	return obj;
 }
 
-int json_object_add_value_type(struct json_object *obj, const char *name, int type, ...)
+uint64_t util_json_object_get_uint64(struct json_object *obj)
 {
-	struct json_value *value;
-	struct json_pair *pair;
-	va_list args;
-	int ret;
+	uint64_t val = 0;
 
-	va_start(args, type);
-	if (type == JSON_TYPE_STRING)
-		value = json_create_value_string(va_arg(args, char *));
-	else if (type == JSON_TYPE_INTEGER)
-		value = json_create_value_int(va_arg(args, long long));
-	else if (type == JSON_TYPE_UINT)
-		value = json_create_value_uint(va_arg(args, unsigned long long));
-	else if (type == JSON_TYPE_FLOAT)
-		value = json_create_value_float(va_arg(args, long double));
-	else if (type == JSON_TYPE_OBJECT)
-		value = json_create_value_object(va_arg(args, struct json_object *));
-	else
-		value = json_create_value_array(va_arg(args, struct json_array *));
-	va_end(args);
+	if (json_object_is_type(obj, json_type_string)) {
+		char *end = NULL;
+		const char *buf;
 
-	if (!value)
-		return ENOMEM;
-
-	pair = json_create_pair(name, value);
-	if (!pair) {
-		json_free_value(value);
-		return ENOMEM;
+		buf = json_object_get_string(obj);
+		val = strtoull(buf, &end, 10);
+		if ((val == 0 && errno != 0) || (end == buf))
+			return 0;
 	}
-	ret = json_object_add_pair(obj, pair);
-	if (ret) {
-		json_free_pair(pair);
-		return ENOMEM;
-	}
-	return 0;
+
+	return val;
 }
 
-static void json_print_array(struct json_array *array, void *);
-int json_array_add_value_type(struct json_array *array, int type, ...)
+void json_object_add_uint_02x(struct json_object *o, const char *k, __u32 v)
 {
-	struct json_value *value;
-	va_list args;
-	int ret;
-
-	va_start(args, type);
-	if (type == JSON_TYPE_STRING)
-		value = json_create_value_string(va_arg(args, char *));
-	else if (type == JSON_TYPE_INTEGER)
-		value = json_create_value_int(va_arg(args, long long));
-	else if (type == JSON_TYPE_UINT)
-		value = json_create_value_uint(va_arg(args, unsigned long long));
-	else if (type == JSON_TYPE_FLOAT)
-		value = json_create_value_float(va_arg(args, double));
-	else if (type == JSON_TYPE_OBJECT)
-		value = json_create_value_object(va_arg(args, struct json_object *));
-	else
-		value = json_create_value_array(va_arg(args, struct json_array *));
-	va_end(args);
-
-	if (!value)
-		return ENOMEM;
-
-	ret = json_array_add_value(array, value);
-	if (ret) {
-		json_free_value(value);
-		return ENOMEM;
-	}
-	return 0;
+	json_object_add_uint_0nx(o, k, v, 2);
 }
 
-static int json_value_level(struct json_value *value);
-static int json_pair_level(struct json_pair *pair);
-static int json_array_level(struct json_array *array);
-static int json_object_level(struct json_object *object)
+void json_object_add_uint_0x(struct json_object *o, const char *k, __u32 v)
 {
-	if (object->parent == NULL)
-		return 0;
-	return json_value_level(object->parent);
+	char str[STR_LEN];
+
+	sprintf(str, "0x%x", v);
+	json_object_add_value_string(o, k, str);
 }
 
-static int json_pair_level(struct json_pair *pair)
-{
-	return json_object_level(pair->parent) + 1;
-}
-
-static int json_array_level(struct json_array *array)
-{
-	return json_value_level(array->parent);
-}
-
-static int json_value_level(struct json_value *value)
-{
-	if (value->parent_type == JSON_PARENT_TYPE_PAIR)
-		return json_pair_level(value->parent_pair);
-	else
-		return json_array_level(value->parent_array) + 1;
-}
-
-static void json_print_level(int level, void *out)
-{
-	while (level-- > 0)
-		printf("  ");
-}
-
-static void json_print_pair(struct json_pair *pair, void *);
-static void json_print_array(struct json_array *array, void *);
-static void json_print_value(struct json_value *value, void *);
-void json_print_object(struct json_object *obj, void *out)
+void json_object_add_byte_array(struct json_object *o, const char *k, unsigned char *buf, int len)
 {
 	int i;
 
-	printf("{\n");
-	for (i = 0; i < obj->pair_cnt; i++) {
-		if (i > 0)
-			printf(",\n");
-		json_print_pair(obj->pairs[i], out);
+	_cleanup_free_ char *value = NULL;
+
+	if (!buf || !len) {
+		json_object_add_value_string(o, k, "No information provided");
+		return;
 	}
-	printf("\n");
-	json_print_level(json_object_level(obj), out);
-	printf("}");
+
+	value = calloc(1, (len + 1) * 2 + 1);
+
+	if (!value) {
+		json_object_add_value_string(o, k, "Could not allocate string");
+		return;
+	}
+
+	sprintf(value, "0x");
+	for (i = 1; i <= len; i++)
+		sprintf(&value[i * 2], "%02x", buf[len - i]);
+
+	json_object_add_value_string(o, k, value);
 }
 
-static void json_print_pair(struct json_pair *pair, void *out)
+void json_object_add_nprix64(struct json_object *o, const char *k, uint64_t v)
 {
-	json_print_level(json_pair_level(pair), out);
-	printf("\"%s\" : ", pair->name);
-	json_print_value(pair->value, out);
+	char str[STR_LEN];
+
+	sprintf(str, "%#"PRIx64"", v);
+	json_object_add_value_string(o, k, str);
 }
 
-static void json_print_array(struct json_array *array, void *out)
+void json_object_add_uint_0nx(struct json_object *o, const char *k, __u32 v, int width)
 {
-	int i;
+	char str[STR_LEN];
 
-	printf("[\n");
-	for (i = 0; i < array->value_cnt; i++) {
-		if (i > 0)
-			printf(",\n");
-		json_print_level(json_value_level(array->values[i]), out);
-		json_print_value(array->values[i], out);
-	}
-	printf("\n");
-	json_print_level(json_array_level(array), out);
-	printf("]");
+	sprintf(str, "0x%0*x", width, v);
+	json_object_add_value_string(o, k, str);
 }
 
-static void json_print_value(struct json_value *value, void *out)
+void json_object_add_0nprix64(struct json_object *o, const char *k, uint64_t v, int width)
 {
-	switch (value->type) {
-	case JSON_TYPE_STRING:
-		printf( "\"%s\"", value->string);
-		break;
-	case JSON_TYPE_INTEGER:
-		printf( "%lld", value->integer_number);
-		break;
-	case JSON_TYPE_UINT:
-		printf( "%llu", value->uint_number);
-		break;
-	case JSON_TYPE_FLOAT:
-		printf( "%.0Lf", value->float_number);
-		break;
-	case JSON_TYPE_OBJECT:
-		json_print_object(value->object, out);
-		break;
-	case JSON_TYPE_ARRAY:
-		json_print_array(value->array, out);
-		break;
-	}
+	char str[STR_LEN];
+
+	sprintf(str, "0x%0*"PRIx64"", width, v);
+	json_object_add_value_string(o, k, str);
+}
+
+void json_object_add_string(struct json_object *o, const char *k, const char *format, ...)
+{
+	_cleanup_free_ char *value = NULL;
+	va_list ap;
+
+	va_start(ap, format);
+
+	if (vasprintf(&value, format, ap) < 0)
+		value = NULL;
+
+	json_object_add_value_string(o, k, value ? value : "Could not allocate string");
+
+	va_end(ap);
 }

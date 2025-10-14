@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-security-recv(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -750,12 +750,13 @@ nvme-security-recv(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme security-recv</em> &lt;device&gt; [--size=&lt;size&gt; | -x &lt;size&gt;]
-                    [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
-                    [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
-                    [--nssf=&lt;nvme-specific&gt; | -N &lt;nvme-specific&gt;]
-                    [--al=&lt;allocation-length&gt; | -t &lt;allocation-length&gt;]
-                    [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                    [--raw-binary | -b]</pre>
+                        [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
+                        [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
+                        [--nssf=&lt;nvme-specific&gt; | -N &lt;nvme-specific&gt;]
+                        [--al=&lt;allocation-length&gt; | -t &lt;allocation-length&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [--raw-binary | -b]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -866,6 +867,37 @@ controller reset occurs.</p></div>
         Print the raw buffer to stdout. Defaults to print in hex.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -886,7 +918,7 @@ controller reset occurs.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-10-12 00:12:24 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

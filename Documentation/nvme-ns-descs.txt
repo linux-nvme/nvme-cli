@@ -9,9 +9,8 @@ nvme-ns-descs - Send NVMe Identify for a list of Namespace Identification
 SYNOPSIS
 --------
 [verse]
-'nvme ns-descs' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>]
+'nvme ns-descs' <device> [--namespace-id=<nsid> | -n <nsid>] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -43,11 +42,14 @@ OPTIONS
 	Print the raw buffer to stdout. Structure is not parsed by
 	program.
 
--o <format>::
---output-format=<format>::
-	Set the reporting format to 'normal', 'json', or 'binary'.
-	Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
 
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

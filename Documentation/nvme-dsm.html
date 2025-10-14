@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-dsm(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -746,12 +749,15 @@ nvme-dsm(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme dsm</em> &lt;device&gt;  [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
-                        [ --ctx-attrs=&lt;attribute-list,&gt; | -a &lt;attribute-list,&gt; ]
-                        [ --blocks=&lt;nlb-list,&gt; | -b &lt;nlb-list,&gt; ]
-                        [ --slbs=&lt;slba-list,&gt; | -s &lt;slba-list,&gt; ]
-                        [ --ad | -d ] [ --idw | -w ] [ --idr | -r ]
-                        [ --cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt; ]</pre>
+<pre class="content"><em>nvme dsm</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--ctx-attrs=&lt;attribute-list,&gt; | -a &lt;attribute-list,&gt;]
+                        [--blocks=&lt;nlb-list,&gt; | -b &lt;nlb-list,&gt;]
+                        [--slbs=&lt;slba-list,&gt; | -s &lt;slba-list,&gt;]
+                        [--ad=&lt;deallocate&gt; | -d &lt;deallocate&gt;]
+                        [--idw=&lt;write&gt; | -w &lt;write&gt;] [--idr=&lt;read&gt; | -r &lt;read&gt;]
+                        [--cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -759,7 +765,7 @@ nvme-dsm(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends an Data Set Management command and
+<div class="paragraph"><p>For the NVMe device given, sends a Data Set Management command and
 provides the result and returned structure.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
@@ -870,6 +876,40 @@ any settings from the flags may have provided.</p></div>
         specifying individual attributes
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -889,7 +929,8 @@ any settings from the flags may have provided.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-16 12:47:42 EDT
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-get-feature(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -747,11 +750,14 @@ nvme-get-feature(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme get-feature</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                          [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--cdw11=&lt;cdw11&gt;]
-                          [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                          [--sel=&lt;select&gt; | -s &lt;select&gt;]
-                          [--raw-binary | -b]
-                          [--human-readable | -H]</pre>
+                        [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;]
+                        [--uuid-index=&lt;uuid-index&gt; | -U &lt;uuid_index&gt;]
+                        [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
+                        [--sel=&lt;select&gt; | -s &lt;select&gt;]
+                        [--raw-binary | -b] [--cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt;]
+                        [--human-readable | -H] [--changed | -C]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -798,6 +804,197 @@ printed to stdout for another program to parse.</p></div>
         The feature id to send with the command. Value provided should
         be in hex.
 </p>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Value</p></td>
+<td align="left" valign="top"><p class="table">Definition</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x01 | <em>arbitration</em></p></td>
+<td align="left" valign="top"><p class="table">Arbitration</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x02 | <em>power-mgmt</em></p></td>
+<td align="left" valign="top"><p class="table">Power Management</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x03 | <em>lba-range</em></p></td>
+<td align="left" valign="top"><p class="table">LBA Range Type</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x04 | <em>temp-thresh</em></p></td>
+<td align="left" valign="top"><p class="table">Temperature Threshold</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x05 | <em>err-recovery</em></p></td>
+<td align="left" valign="top"><p class="table">Error Recovery</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x06 | <em>volatile-wc</em></p></td>
+<td align="left" valign="top"><p class="table">Volatile Write Cache</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x07 | <em>num-queues</em></p></td>
+<td align="left" valign="top"><p class="table">Number of Queues</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x08 | <em>irq-coalesce</em></p></td>
+<td align="left" valign="top"><p class="table">Interrupt Coalescing</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x09 | <em>irq-config</em></p></td>
+<td align="left" valign="top"><p class="table">Interrupt Vector Configuration</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0a | <em>write-atomic</em></p></td>
+<td align="left" valign="top"><p class="table">Write Atomicity Normal</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0b | <em>async-event</em></p></td>
+<td align="left" valign="top"><p class="table">Asynchronous Event Configuration</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0c | <em>auto-pst</em></p></td>
+<td align="left" valign="top"><p class="table">Autonomous Power State Transition</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0d | <em>host-mem-buf</em></p></td>
+<td align="left" valign="top"><p class="table">Host Memory Buffer</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0e | <em>timestamp</em></p></td>
+<td align="left" valign="top"><p class="table">Timestamp</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x0f | <em>kato</em></p></td>
+<td align="left" valign="top"><p class="table">Keep Alive Timer</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x10 | <em>hctm</em></p></td>
+<td align="left" valign="top"><p class="table">Host Controlled Thermal Management</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x11 | <em>nopsc</em></p></td>
+<td align="left" valign="top"><p class="table">Non-Operational Power State Config</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x12 | <em>rrl</em></p></td>
+<td align="left" valign="top"><p class="table">Read Recovery Level Config</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x13 | <em>plm-config</em></p></td>
+<td align="left" valign="top"><p class="table">Predictable Latency Mode Config</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x14 | <em>plm-window</em></p></td>
+<td align="left" valign="top"><p class="table">Predictable Latency Mode Window</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x15 | <em>lba-sts-interval</em></p></td>
+<td align="left" valign="top"><p class="table">LBA Status Information Report Interval</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x16 | <em>host-behavior</em></p></td>
+<td align="left" valign="top"><p class="table">Host Behavior Support</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x17 | <em>sanitize</em></p></td>
+<td align="left" valign="top"><p class="table">Sanitize Config</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x18 | <em>endurance-evt-cfg</em></p></td>
+<td align="left" valign="top"><p class="table">Endurance Group Event Configuration</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x19 | <em>iocs-profile</em></p></td>
+<td align="left" valign="top"><p class="table">I/O Command Set Profile</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1a | <em>spinup-control</em></p></td>
+<td align="left" valign="top"><p class="table">Spinup Control</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1b | <em>power-loss-signal</em></p></td>
+<td align="left" valign="top"><p class="table">Power Loss Signaling Config</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1c | <em>perf-characteristics</em></p></td>
+<td align="left" valign="top"><p class="table">Performance Characteristics</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1d | <em>fdp</em></p></td>
+<td align="left" valign="top"><p class="table">Flexible Data Placement</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1e | <em>fdp-events</em></p></td>
+<td align="left" valign="top"><p class="table">FDP Events</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x1f | <em>ns-admin-label</em></p></td>
+<td align="left" valign="top"><p class="table">Namespace Admin Label</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x20 | <em>key-value</em></p></td>
+<td align="left" valign="top"><p class="table">Key Value Configuration</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x21 | <em>ctrl-data-queue</em></p></td>
+<td align="left" valign="top"><p class="table">Controller Data Queue</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x78 | <em>emb-mgmt-ctrl-addr</em></p></td>
+<td align="left" valign="top"><p class="table">Embedded Management Controller Address</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x79 | <em>host-mgmt-agent-addr</em></p></td>
+<td align="left" valign="top"><p class="table">Host Management Agent Address</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x7d | <em>enh-ctrl-metadata</em></p></td>
+<td align="left" valign="top"><p class="table">Enhanced Controller Metadata</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x7e | <em>ctrl-metadata</em></p></td>
+<td align="left" valign="top"><p class="table">Controller Metadata</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x7f | <em>ns-metadata</em></p></td>
+<td align="left" valign="top"><p class="table">Namespace Metadata</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x80 | <em>sw-progress</em></p></td>
+<td align="left" valign="top"><p class="table">Software Progress Marker</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x81 | <em>host-id</em></p></td>
+<td align="left" valign="top"><p class="table">Host Identifier</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x82 | <em>resv-mask</em></p></td>
+<td align="left" valign="top"><p class="table">Reservation Notification Mask</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x83 | <em>resv-persist</em></p></td>
+<td align="left" valign="top"><p class="table">Reservation Persistence</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x84 | <em>write-protect</em></p></td>
+<td align="left" valign="top"><p class="table">Namespace Write Protection Config</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0x85 | <em>bp-write-protect</em></p></td>
+<td align="left" valign="top"><p class="table">Boot Partition Write Protection Config</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </dd>
 <dt class="hdlist1">
 -s &lt;select&gt;
@@ -839,12 +1036,23 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Supported capabilities</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">4–7</p></td>
+<td align="left" valign="top"><p class="table">4-7</p></td>
 <td align="left" valign="top"><p class="table">Reserved</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+</dd>
+<dt class="hdlist1">
+-U &lt;uuid-index&gt;
+</dt>
+<dt class="hdlist1">
+--uuid-index=&lt;uuid-index&gt;
+</dt>
+<dd>
+<p>
+        UUID Index of the feature
+</p>
 </dd>
 <dt class="hdlist1">
 -l &lt;data-len&gt;
@@ -859,6 +1067,9 @@ cellspacing="0" cellpadding="4">
         Range Type
 </p>
 </dd>
+<dt class="hdlist1">
+-c &lt;cdw11&gt;
+</dt>
 <dt class="hdlist1">
 --cdw11=&lt;cdw11&gt;
 </dt>
@@ -889,6 +1100,51 @@ cellspacing="0" cellpadding="4">
 <p>
         This option will parse and format many of the bit fields
         into human-readable formats.
+</p>
+</dd>
+<dt class="hdlist1">
+-C
+</dt>
+<dt class="hdlist1">
+--changed
+</dt>
+<dd>
+<p>
+        This option will show feature changed.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
 </p>
 </dd>
 </dl></div>
@@ -928,7 +1184,14 @@ will be displayed to the user in as a hex dump:
 <div class="content">
 <pre><code># nvme get-feature /dev/nvme0 -f 0xc0 -l 512</code></pre>
 </div></div>
+<div class="paragraph"><p>Get feature with UUID index</p></div>
 </li>
+</ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme get-feature /dev/nvme0 -f 0xc0 -l 512 -U 0x1</code></pre>
+</div></div>
+<div class="ulist"><ul>
 <li>
 <p>
 The following retrieves the feature for the LBA Range Type, which
@@ -954,7 +1217,8 @@ format:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-02-07 09:54:27 MST
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

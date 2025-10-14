@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LOG" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-LOG" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,13 +33,18 @@ nvme-get-log \- Retrieves a log page from an NVMe device
 .sp
 .nf
 \fInvme get\-log\fR <device> [\-\-log\-id=<log\-id> | \-i <log\-id>]
-                      [\-\-log\-len=<log\-len> | \-l <log\-len>]
-                      [\-\-aen=<aen> | \-a <aen>]
-                      [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                      [\-\-raw\-binary | \-b]
-                      [\-\-lpo=<offset> | \-o <offset>]
-                      [\-\-lsp=<field> | \-s <field>]
-                      [\-\-rae | \-r]
+                        [\-\-log\-len=<log\-len> | \-l <log\-len>]
+                        [\-\-aen=<aen> | \-a <aen>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-raw\-binary | \-b]
+                        [\-\-lpo=<offset> | \-L <offset>]
+                        [\-\-lsp=<field> | \-s <field>]
+                        [\-\-lsi=<field> | \-S <field>]
+                        [\-\-rae | \-r]
+                        [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
+                        [\-\-ot=<offset_type> | \-O <offset_type>]
+                        [\-\-xfer\-len=<length> | \-x <length>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -58,6 +63,296 @@ Allocates a buffer of <log\-len> bytes size and requests this many bytes be retu
 \-i <log\-id>, \-\-log\-id=<log\-id>
 .RS 4
 Sets the commands requested log\-id to <log\-id>\&. Defaults to 0\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0x00 |
+\fIsupported\-log\-pages\fR
+T}:T{
+Supported Log Pages
+T}
+T{
+0x01 |
+\fIerror\fR
+T}:T{
+Error Information
+T}
+T{
+0x02 |
+\fIsmart\fR
+T}:T{
+SMART / Health Information
+T}
+T{
+0x03 |
+\fIfw\-slot\fR
+T}:T{
+Firmware Slot Information
+T}
+T{
+0x04 |
+\fIchanged\-ns\fR
+T}:T{
+Changed Namespace List
+T}
+T{
+0x05 |
+\fIcmd\-effects\fR
+T}:T{
+Commands Supported and Effects
+T}
+T{
+0x06 |
+\fIdevice\-self\-test\fR
+T}:T{
+Device Self\-test
+T}
+T{
+0x07 |
+\fItelemetry\-host\fR
+T}:T{
+Telemetry Host\-Initiated
+T}
+T{
+0x08 |
+\fItelemetry\-ctrl\fR
+T}:T{
+Telemetry Controller\-Initiated
+T}
+T{
+0x09 |
+\fIendurance\-group\fR
+T}:T{
+Endurance Group Information
+T}
+T{
+0x0a |
+\fIpredictable\-lat\-nvmset\fR
+T}:T{
+Predictable Latency Per NVM Set
+T}
+T{
+0x0b |
+\fIpredictable\-lat\-agg\fR
+T}:T{
+Predictable Latency Event Aggregate
+T}
+T{
+0x0c |
+\fIana\fR
+T}:T{
+Asymmetric Namespace Access
+T}
+T{
+0x0d |
+\fIpersistent\-event\fR
+T}:T{
+Persistent Event Log
+T}
+T{
+0x0e |
+\fIlba\-status\fR
+T}:T{
+LBA Status Information
+T}
+T{
+0x0f |
+\fIendurance\-grp\-evt\fR
+T}:T{
+Endurance Group Event Aggregate
+T}
+T{
+0x10 |
+\fImedia\-unit\-status\fR
+T}:T{
+Media Unit Status
+T}
+T{
+0x11 |
+\fIsupported\-cap\-config\-list\fR
+T}:T{
+Supported Capacity Configuration Lis
+T}
+T{
+0x12 |
+\fIfid\-supported\-effects\fR
+T}:T{
+Feature Identifiers Supported and Effects
+T}
+T{
+0x13 |
+\fImi\-cmd\-supported\-effects\fR
+T}:T{
+NVMe\-MI Commands Supported and Effects
+T}
+T{
+0x14 |
+\fIcmd\-and\-feat\-lockdown\fR
+T}:T{
+Command and Feature Lockdown
+T}
+T{
+0x15 |
+\fIboot\-partition\fR
+T}:T{
+Boot Partition
+T}
+T{
+0x16 |
+\fIrotational\-media\-info\fR
+T}:T{
+Rotational Media Information
+T}
+T{
+0x17 |
+\fIdispersed\-ns\-participating\-ns\fR
+T}:T{
+Dispersed Namespace Participating NVM Subsystems
+T}
+T{
+0x18 |
+\fImgmt\-addr\-list\fR
+T}:T{
+Management Address List
+T}
+T{
+0x19 |
+\fIphy\-rx\-eom\fR
+T}:T{
+Physical Interface Receiver Eye Opening Measurement
+T}
+T{
+0x1a |
+\fIreachability\-groups\fR
+T}:T{
+Reachability Groups
+T}
+T{
+0x1b |
+\fIreachability\-associations\fR
+T}:T{
+Reachability Associations
+T}
+T{
+0x1c |
+\fIchanged\-alloc\-ns\-list\fR
+T}:T{
+Changed Allocated Namespace List
+T}
+T{
+0x20 |
+\fIfdp\-configs\fR
+T}:T{
+FDP Configurations
+T}
+T{
+0x21 |
+\fIfdp\-ruh\-usage\fR
+T}:T{
+Reclaim Unit Handle Usage
+T}
+T{
+0x22 |
+\fIfdp\-stats\fR
+T}:T{
+FDP Statistics
+T}
+T{
+0x23 |
+\fIfdp\-events\fR
+T}:T{
+FDP Events
+T}
+T{
+0x70 |
+\fIdiscover\fR
+T}:T{
+Discovery
+T}
+T{
+0x71 |
+\fIhost\-discover\fR
+T}:T{
+Host Discovery
+T}
+T{
+0x72 |
+\fIave\-discover\fR
+T}:T{
+AVE Discovery
+T}
+T{
+0x73 |
+\fIpull\-model\-ddc\-req\fR
+T}:T{
+Pull Model DDC Request
+T}
+T{
+0x80 |
+\fIreservation\fR
+T}:T{
+Reservation Notification
+T}
+T{
+0x81 |
+\fIsanitize\fR
+T}:T{
+Sanitize Status
+T}
+T{
+0xbf |
+\fIzns\-changed\-zones\fR
+T}:T{
+Changed Zone List
+T}
+.TE
+.sp 1
 .RE
 .PP
 \-a <aen>, \-\-aen=<aen>
@@ -75,7 +370,7 @@ Sets the command\(cqs nsid value to the given nsid\&. Defaults to 0xffffffff if 
 Print the raw log buffer to stdout\&.
 .RE
 .PP
-\-o <offset>, \-\-lpo=<offset>
+\-L <offset>, \-\-lpo=<offset>
 .RS 4
 The log page offset specifies the location within a log page to start returning data from\&. It\(cqs Dword\-aligned and 64\-bits\&.
 .RE
@@ -85,9 +380,43 @@ The log page offset specifies the location within a log page to start returning 
 The log specified field of LID\&.
 .RE
 .PP
+\-S <field>, \-\-lsi=<field>
+.RS 4
+The log specified field of Log Specific Identifier\&.
+.RE
+.PP
 \-r, \-\-rae
 .RS 4
 Retain an Asynchronous Event\&.
+.RE
+.PP
+\-y <command_set_identifier>, \-\-csi=<command_set_identifier>
+.RS 4
+This field specifies the identifier of command set\&. if not issued, NVM Command Set will be selected\&.
+.RE
+.PP
+\-O, \-\-ot
+.RS 4
+This field specifies the offset type\&. If set to false, the Log Page Offset Lower field and the Log Page Offset Upper field specify the byte offset into the log page to be returned\&. If set to true, the Log Page Offset Lower field and the Log Page Offset Upper field specify the index into the list of data structures in the log page to be returned\&. The default is byte offset\&. If the option is specified the index mode is used\&.
+.RE
+.PP
+\-x <length>
+.RS 4
+\-\-xfer\-len <length>: Specify the read chunk size\&. The length argument is expected to be a multiple of 4096\&. The default size is 4096\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

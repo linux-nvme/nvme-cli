@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-admin-passthru(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -746,20 +749,24 @@ nvme-admin-passthru(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-admin-passthru</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -o &lt;opcode&gt;]
-                [--flags=&lt;flags&gt; | -f &lt;flags&gt;] [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
-                [--namespace-id=&lt;nsid&gt;] [--cdw2=&lt;cdw2&gt;] [--cdw3=&lt;cdw3&gt;]
-                [--cdw10=&lt;cdw10&gt;] [--cdw11=&lt;cdw11&gt;] [--cdw12=&lt;cdw12&gt;]
-                [--cdw13=&lt;cdw13&gt;] [--cdw14=&lt;cdw14&gt;] [--cdw15=&lt;cdw15&gt;]
-                [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
-                [--input-file=&lt;file&gt; | -i &lt;file&gt;]
-                [--read | -r ] [--write | -w]
-                [--timeout=&lt;to&gt; | -t &lt;to&gt;]
-                [--show-command | -s]
-                [--dry-run | -d]
-                [--raw-binary | -b]
-                [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]</pre>
+<pre class="content"><em>nvme-admin-passthru</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]
+                        [--flags=&lt;flags&gt; | -f &lt;flags&gt;] [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [--cdw2=&lt;cdw2&gt; | -2 &lt;cdw2&gt;]
+                        [--cdw3=&lt;cdw3&gt; | -3 &lt;cdw3&gt;] [--cdw10=&lt;cdw10&gt; | -4 &lt;cdw10&gt;]
+                        [--cdw11=&lt;cdw11&gt; | -5 &lt;cdw11&gt;] [--cdw12=&lt;cdw12&gt; | -6 &lt;cdw12&gt;]
+                        [--cdw13=&lt;cdw13&gt; | -7 &lt;cdw13&gt;] [--cdw14=&lt;cdw14&gt; | -8 &lt;cdw14&gt;]
+                        [--cdw15=&lt;cdw15&gt; | -9 &lt;cdw15&gt;]
+                        [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
+                        [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
+                        [--input-file=&lt;file&gt; | -i &lt;file&gt;]
+                        [--read | -r] [--write | -w]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]
+                        [--show-command | -s]
+                        [--dry-run | -d]
+                        [--raw-binary | -b]
+                        [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]
+                        [--latency | -T]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -784,7 +791,7 @@ printed to stdout for another program to parse.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;opcode&gt;
+-O &lt;opcode&gt;
 </dt>
 <dt class="hdlist1">
 --opcode=&lt;opcode&gt;
@@ -792,6 +799,7 @@ printed to stdout for another program to parse.</p></div>
 <dd>
 <p>
         The NVMe opcode to send to the device in the command
+        Required argument as this param is mandatory.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -827,6 +835,9 @@ printed to stdout for another program to parse.</p></div>
         The value for the ns-id in the command.
 </p>
 </dd>
+<dt class="hdlist1">
+-[2-9] &lt;cdw&gt;
+</dt>
 <dt class="hdlist1">
 --cdw[2-3,10-15]=&lt;cdw&gt;
 </dt>
@@ -941,6 +952,51 @@ printed to stdout for another program to parse.</p></div>
         is overwriting a buffer for a data-in command.
 </p>
 </dd>
+<dt class="hdlist1">
+-T
+</dt>
+<dt class="hdlist1">
+--latency
+</dt>
+<dd>
+<p>
+        Print out the latency the IOCTL took (in us).
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -982,7 +1038,8 @@ Or if you want to save that structure to a file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-09-06 10:35:44 MDT
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

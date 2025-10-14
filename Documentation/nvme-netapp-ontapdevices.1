@@ -2,12 +2,12 @@
 .\"     Title: nvme-netapp-ontapdevices
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-NETAPP\-ONTAPD" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-NETAPP\-ONTAPD" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-netapp-ontapdevices \- Display information about ONTAP devices
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme netapp ontapdevices\fR [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme netapp ontapdevices\fR [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -46,6 +46,11 @@ Set the reporting format to
 (default),
 \fIcolumn\fR, or
 \fIjson\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Display additional information of ONTAP devices on the host\&.
 .RE
 .SH "EXAMPLES"
 .sp

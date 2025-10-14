@@ -1,0 +1,105 @@
+nvme-ocp-set-error-injection(1)
+===============================
+
+NAME
+----
+nvme-ocp-set-error-injection - Inject error conditions
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp set-error-injection' <device> [--data=<file> | -d <file>]
+			[--number=<num> | -n <num>] [--no-uuid | -N]
+			[--all-ns | -a] [--type=<type> | -t <type>]
+			[--nrtdp=<num> | -r <num>] [--timeout=<timeout>]
+
+DESCRIPTION
+-----------
+Inject error conditions.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-d <file>::
+--data=<file>::
+	Error injection data structure entries
+
+-n <num>::
+--number=<num>::
+	Number of valid error injection data entries
+
+-N::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
+
+-a::
+--all-ns::
+	Apply to all namespaces
+
+-t <type>::
+--type=<type>::
+	Error injection type (1-22: see NOTES section for valid types)
+
+-r <num>::
+--nrtdp=<num>::
+	Number of reads to trigger device panic
+
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+* Has the program issue a set-error-injection with the 2 entries data file.
++
+------------
+# nvme ocp set-error-injection /dev/nvme0 -d data.bin -n 2
+------------
+
+* Has the program issue a set-error-injection with the 5 reads trigger NAND hang.
++
+------------
+# nvme ocp set-error-injection /dev/nvme0 -t 2 -r 5
+------------
+
+* Has the program issue a set-error-injection for all namespaces with type 1.
++
+------------
+# nvme ocp set-error-injection /dev/nvme0 -a -t 1
+------------
+
+NOTES
+-----
+Valid error injection types:
+1 - CPU/controller hang
+2 - NAND hang
+3 - PLP defect
+4 - Logical firmware error
+5 - DRAM corruption critical path
+6 - DRAM corruption non-critical path
+7 - NAND corruption
+8 - SRAM corruption
+9 - HW malfunction
+10 - No more NAND spares available
+11 - Incomplete shutdown
+12 - Metadata corruption
+13 - Critical garbage collection
+14 - Latency spike
+15 - I/O command failure
+16 - I/O command timeout
+17 - Admin command failure
+18 - Admin command timeout
+19 - Thermal throttle engaged
+20 - Thermal throttle disengaged
+21 - Critical temperature event
+22 - Die offline
+
+NVME
+----
+Part of the nvme-user suite.

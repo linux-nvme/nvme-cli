@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-commit
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-COMMIT" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-COMMIT" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,8 +33,10 @@ nvme-fw-commit \- Used to verify and commit a firmware image\&.
 .sp
 .nf
 \fInvme fw\-commit\fR <device> [\-\-slot=<slot> | \-s <slot>]
-                    [\-\-action=<action> | \-a <action>]
-                    [\-\-bpid=<boot\-partid> | \-b <boot\-partid> ]
+                        [\-\-action=<action> | \-a <action>]
+                        [\-\-bpid=<boot\-partid> | \-b <boot\-partid>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -115,7 +117,26 @@ Firmware Slot: Specifies the firmware slot that shall be used for the Commit Act
 .PP
 \-\-bpid=<boot\-partid>, \-b <boot\-partid>
 .RS 4
-Specifiies the Boot partition that shall be used for the Commit Action, if applicable (default: 0)
+Specifies the Boot partition that shall be used for the Commit Action, if applicable (default: 0)
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

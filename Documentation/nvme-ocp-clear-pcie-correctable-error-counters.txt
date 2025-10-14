@@ -1,0 +1,49 @@
+nvme-ocp-clear-pcie-correctable-error-counters(1)
+=================================================
+
+NAME
+----
+nvme-ocp-clear-pcie-correctable-error-counters - Clear PCIe correctable error counters
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp clear-pcie-correctable-error-counters' <device> [--no-uuid | -n]
+
+DESCRIPTION
+-----------
+For the NVMe device given, Clear PCIe correctable error counters.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This command with no option added, will try to automatically detect the
+parameters of the command. This will work successfully or fail gracefully for
+devices supporting UUID for Vendor Specific Information (NVMe 1.4 or later,
+OCP 2.0 requires NVMe 1.4b). For devices that do not support OCP 2.0 the
+command will fail gracefully, unless the --no-uuid option is provided.
+
+For OCP 1.0 devices (before NVMe 1.4) the --no-uuid option is required.
+When --no-uuid option is provided, results for devices before NVMe 1.4 without
+OCP support are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
+
+EXAMPLES
+--------
+* Clears PCIe correctable error counters Log for the device:
++
+------------
+# nvme ocp clear-pcie-correctable-error-counters /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

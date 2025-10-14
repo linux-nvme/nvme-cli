@@ -1,0 +1,108 @@
+nvme-solidigm-workload-tracker(1)
+=================================
+
+NAME
+----
+nvme-solidigm-workload-tracker - Real-time capture of Workload Tracker samples
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm workload-tracker' <device> [--uuid-index=<id> | -U <id>]
+                                      [--enable | -e] [--disable | -d]
+                                      [--sample-time=<time> | -s <time>]
+                                      [--type=<type> | -t <type>]
+                                      [--run-time=<seconds> | -r <seconds>]
+                                      [--flush-freq=<count> | -f <count>]
+                                      [--wall-clock | -w]
+                                      [--trigger-field=<field> | -T <field>]
+                                      [--trigger-threshold=<value> | -V <value>]
+                                      [--trigger-on-delta | -D]
+                                      [--trigger-on-latency | -L]
+                                      [--verbose | -v]
+
+DESCRIPTION
+-----------
+Captures and displays real-time workload tracker samples for the given Solidigm
+NVMe device. This command allows for monitoring and analysis of the device's
+workload characteristics.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-U <id>, --uuid-index=<id>::
+    Specify the UUID index (0-127) for the command.
+
+-e, --enable::
+    Enable the workload tracker before capturing samples.
+
+-d, --disable::
+    Disable the workload tracker after capturing samples.
+
+-s <time>, --sample-time=<time>::
+    Set the sample interval. Valid values are: default, 1ms, 5ms, 10ms, 50ms, 100ms, 500ms, 1s, 5s, 10s, 30s, 1m, 5m, 10m, 30m, 1h.
+
+-t <type>, --type=<type>::
+    Set the tracker type. Valid types are: Base, CmdQ, Pattern, RandSeq, Throttle, Power, Defrag.
+
+-r <seconds>, --run-time=<seconds>::
+    Limit runtime capture time in seconds.
+
+-f <count>, --flush-freq=<count>::
+    Number of samples (1 to 126) to wait before extracting data. Default is 100 samples.
+
+-w, --wall-clock::
+    Log current wall timestamp when entry was retrieved.
+
+-T <field>, --trigger-field=<field>::
+    Field name to stop trigger on.
+
+-V <value>, --trigger-threshold=<value>::
+    Field value to trigger stop sampling.
+
+-D, --trigger-on-delta::
+    Trigger on delta to stop sampling.
+
+-L, --trigger-on-latency::
+    Use latency tracker to trigger stop sampling.
+
+-v, --verbose::
+    Increase logging verbosity. Can be used multiple times.
+
+EXAMPLES
+--------
+* Enable the workload tracker and capture samples:
++
+------------
+# nvme solidigm workload-tracker /dev/nvme0 --enable
+------------
+
+* Capture workload tracker samples with a 1ms interval for 60 seconds:
++
+------------
+# nvme solidigm workload-tracker /dev/nvme0 --enable --sample-time=1ms --run-time=60
+------------
+
+* Disable the workload tracker:
++
+------------
+# nvme solidigm workload-tracker /dev/nvme0 --disable
+------------
+
+* Enable the workload tracker and capture samples with a specific sample time and type:
++
+------------
+# nvme solidigm workload-tracker /dev/nvme0 --enable --sample-time=1ms --type=Base
+------------
+
+* Capture Power tracker samples with a 10-second interval for 5 minutes:
++
+------------
+# nvme solidigm workload-tracker /dev/nvme0 --enable --type=Power --sample-time=10s --run-time=300
+------------
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -24,7 +26,6 @@ NVMe Flush Command Testcase:-
 
 """
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -36,14 +37,14 @@ class TestNVMeFlushCmd(TestNVMe):
         - Attributes:
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeFlushCmd """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.setup_log_dir(self.__class__.__name__)
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeFlushCmd """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def nvme_flush(self):
         """ Wrapper for nvme flush command.
@@ -52,10 +53,10 @@ class TestNVMeFlushCmd(TestNVMe):
            - Returns:
                - None
         """
-        flush_cmd = "nvme flush " + self.ctrl + " -n " + str(self.default_nsid)
-        print(flush_cmd)
+        flush_cmd = f"{self.nvme_bin} flush {self.ctrl} " + \
+            f"--namespace-id={str(self.default_nsid)}"
         return self.exec_cmd(flush_cmd)
 
     def test_nvme_flush(self):
         """ Testcase main """
-        assert_equal(self.nvme_flush(), 0)
+        self.assertEqual(self.nvme_flush(), 0)

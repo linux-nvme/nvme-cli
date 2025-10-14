@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -59,10 +60,13 @@ static char *find_data(char *data)
 static char *locate_info(char *data, bool is_inner, bool is_class)
 {
 	char *orig = data;
-	char *locate = find_data(data);
+	char *locate;
 	if (!data)
 		return orig;
 
+	locate = find_data(data);
+	if (!locate)
+		return orig;
 	if (is_class)
 		return locate + 4;
 	if (!is_inner)
@@ -76,22 +80,34 @@ static char *locate_info(char *data, bool is_inner, bool is_class)
 static void format_and_print(char *save)
 {
 
-	if (!class_mid)
-		snprintf(save, 1024, "%s %s %s",
-		       locate_info(device_top, false, false),
-		       locate_info(device_mid, false, false),
-		       locate_info(device_final, true, false));
-	else
-		snprintf(save, 1024, "%s: %s %s %s",
-			 locate_info(class_mid, false, true),
-			 locate_info(device_top, false, false),
-			 locate_info(device_mid, false, false),
-			 locate_info(device_final, true, false));
+	if (!class_mid) {
+		if (device_final)
+			snprintf(save, 1024, "%s %s %s",
+				 locate_info(device_top, false, false),
+				 locate_info(device_mid, false, false),
+				 locate_info(device_final, true, false));
+		else
+			snprintf(save, 1024, "%s %s",
+				 locate_info(device_top, false, false),
+				 locate_info(device_mid, false, false));
+	} else {
+		if (device_final)
+			snprintf(save, 1024, "%s: %s %s %s",
+				 locate_info(class_mid, false, true),
+				 locate_info(device_top, false, false),
+				 locate_info(device_mid, false, false),
+				 locate_info(device_final, true, false));
+		else
+			snprintf(save, 1024, "%s: %s %s",
+				 locate_info(class_mid, false, true),
+				 locate_info(device_top, false, false),
+				 locate_info(device_mid, false, false));
+	}
 }
 
 static void format_all(char *save, char *vendor, char *device)
 {
-	if (device_top && device_mid && device_final)
+	if (device_top && device_mid)
 		format_and_print(save);
 
 	else if (device_top && !device_mid && class_mid)
@@ -224,7 +240,7 @@ static void pull_class_info(char **_newline, FILE *file, char *class)
 static int read_sys_node(char *where, char *save, size_t savesz)
 {
 	char *new;
-	int fd, ret = 0;
+	int fd, ret = 0, len;
 	fd = open(where, O_RDONLY);
 	if (fd < 0) {
 		fprintf(stderr, "Failed to open %s with errno %s\n",
@@ -232,13 +248,15 @@ static int read_sys_node(char *where, char *save, size_t savesz)
 		return 1;
 	}
 	/* -1 so we can safely use strstr below */
-	if(!read(fd, save, savesz - 1))
+	len = read(fd, save, savesz - 1);
+	if (!len)
 		ret = 1;
-
-	new = strstr(save, "\n");
-	if (new)
-		new[0] = '\0';
-
+	else {
+		save[len] = '\0';
+		new = strstr(save, "\n");
+		if (new)
+			new[0] = '\0';
+	}
 	close(fd);
 	return ret;
 }
@@ -318,6 +336,7 @@ char *nvme_product_name(int id)
 			continue;
 		if (is_top_level_match(line, vendor, false)) {
 			line[amnt - 1] = '\0';
+			free(device_top);
 			device_top = strdup(line);
 			parse_vendor_device(&line, file,
 						device,
@@ -334,5 +353,5 @@ char *nvme_product_name(int id)
 error0:
 	fclose(file);
 error1:
-	return !line ? strdup("NULL") : strdup("Unknown Device");
+	return strdup("NULL");
 }

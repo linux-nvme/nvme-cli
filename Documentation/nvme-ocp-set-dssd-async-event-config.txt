@@ -1,0 +1,48 @@
+nvme-ocp-set-dssd-async-event-config(1)
+=======================================
+
+NAME
+----
+nvme-ocp-set-dssd-async-event-config - Set DSSD asynchronous event configuration
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp set-dssd-async-event-config' <device> [--enable-panic-notices | -e] [--save | -s]
+
+
+DESCRIPTION
+-----------
+Set DSSD asynchronous event configuration
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-e::
+--enable-panic-notices::
+	Set enable panic notices [0]
+
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.
+
+
+EXAMPLES
+--------
+* Has the program issue a set-dssd-async-event-config to enable panic notices,
+persisting through power states.
++
+------------
+# nvme ocp set-dssd-async-event-config /dev/nvme0 -e -s
+------------
+
+NVME
+----
+Part of the nvme-user suite.

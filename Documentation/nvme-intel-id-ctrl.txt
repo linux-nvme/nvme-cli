@@ -8,8 +8,8 @@ nvme-intel-id-ctrl - Send NVMe Identify Controller, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme intel id-ctrl' <device> [-v | --vendor-specific] [-b | --raw-binary]
-			[-o <fmt> | --output-format=<fmt>]
+'nvme intel id-ctrl' <device> [--vendor-specific | -v] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -44,10 +44,10 @@ OPTIONS
 	This option will parse and format many of the bit fields
 	into human-readable formats.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or
+	'binary'. Only one output format can be used at a time.
 
 EXAMPLES
 --------

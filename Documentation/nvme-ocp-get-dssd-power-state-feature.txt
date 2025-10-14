@@ -1,0 +1,74 @@
+get-dssd-power-state-feature(1)
+===============================
+
+NAME
+----
+nvme-ocp-get-dssd-power-state-feature - Get DSSD Power State
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp get-dssd-power-state-feature' <device>
+			[--sel=<select> | -S <select>] [--all | -a]
+			[--no-uuid | -n]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieves OCP DSSD Power State.
+Passing --all calls NVMe Get Feature three times, returning all three of
+the Current, Default, and Saved values.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-S <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
++
+[]
+|==================
+|Select|Description
+|0|Current
+|1|Default
+|2|Saved
+|3|Supported capabilities
+|4-7|Reserved
+|==================
+
+-a::
+--all::
+	Print out all 3 values at once - Current DSSD Power State,
+	Default DSSD Power State, and Saved DSSD Power State
+
+-n::
+--no-uuid::
+	Do not try to automatically detect UUID index for this command (required
+	for old OCP 1.0 support)
+
+EXAMPLES
+--------
+* Has the program issue a get-dssd-power-state-feature command to get the Curent DSSD Power State in watts.
++
+------------
+# nvme ocp get-dssd-power-state-feature /dev/nvme0 -S 0
+------------
++
+
+* Has the program issue a get-dssd-power-state-feature command to get all three DSSD Power States in watts.
++
+------------
+# nvme ocp get-dssd-power-state-feature /dev/nvme0 -a
+------------
+
+
+NVME
+----
+Part of the nvme-user suite.

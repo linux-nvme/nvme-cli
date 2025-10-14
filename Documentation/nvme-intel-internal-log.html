@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-intel-internal-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -747,6 +750,8 @@ nvme-intel-internal-log(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content">'nvme intel internal-log ' &lt;device&gt; [--log=&lt;NUM&gt;, -l &lt;NUM&gt;]
+                [--region=&lt;NUM&gt;, r &lt;NUM&gt;]
+                [--nlognum=&lt;NUM&gt;, m &lt;NUM&gt;]
                 [--namespace-id=&lt;NUM&gt;, -n &lt;NUM&gt;]
                 [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;]</pre>
 <div class="attribution">
@@ -805,6 +810,30 @@ controllers. Results for any other device are undefined.</p></div>
         Output file; defaults to device name provided
 </p>
 </dd>
+<dt class="hdlist1">
+-r &lt;NUM&gt;
+</dt>
+<dt class="hdlist1">
+--region=&lt;NUM&gt;
+</dt>
+<dd>
+<p>
+        Select which core region to retrieve the log from. -1 for all
+        available, if supported by the device.
+</p>
+</dd>
+<dt class="hdlist1">
+-m &lt;NUM&gt;
+</dt>
+<dt class="hdlist1">
+--nlognum=&lt;NUM&gt;
+</dt>
+<dd>
+<p>
+        When used with <em>nlog</em>, this specifies which nlog to read. -1
+        for all, if supported by the device.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -843,7 +872,8 @@ Gets the event log from the device and saves to defined file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-02-27 10:11:58 EST
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

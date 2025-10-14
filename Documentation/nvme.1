@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -73,7 +73,7 @@ Retrieve error logs
 Submit flush
 .RE
 .PP
-\fBnvme-dms\fR(1)
+\fBnvme-dsm\fR(1)
 .RS 4
 Submit Data Set Management
 .RE
@@ -85,7 +85,12 @@ Format namespace(s)
 .PP
 \fBnvme-fw-activate\fR(1)
 .RS 4
-F/W Activate
+F/W Activate (in old version < 1\&.2)
+.RE
+.PP
+\fBnvme-fw-commit\fR(1)
+.RS 4
+F/W Commit (in > 1\&.2)
 .RE
 .PP
 \fBnvme-fw-download\fR(1)
@@ -113,9 +118,19 @@ Generic Get Log
 Telemetry Host\-Initiated Log
 .RE
 .PP
+\fBnvme-changed-ns-list-log\fR(1)
+.RS 4
+Retrieve Changed Namespace List Log
+.RE
+.PP
 \fBnvme-smart-log\fR(1)
 .RS 4
 Retrieve Smart Log
+.RE
+.PP
+\fBnvme-ana-log\fR(1)
+.RS 4
+Retrieve ANA(Asymmetric Namespace Access) Log
 .RE
 .PP
 \fBnvme-endurance-log\fR(1)
@@ -126,6 +141,11 @@ Retrieve endurance Log
 \fBnvme-effects-log\fR(1)
 .RS 4
 Retrieve effects Log
+.RE
+.PP
+\fBnvme-self-test-log\fR(1)
+.RS 4
+Retrieve Device Self\-test Log
 .RE
 .PP
 \fBnvme-get-ns-id\fR(1)
@@ -146,6 +166,16 @@ Identify Controller
 \fBnvme-id-ns\fR(1)
 .RS 4
 Identify Namespace
+.RE
+.PP
+\fBnvme-id-nvmset\fR(1)
+.RS 4
+Identify NVM Set List
+.RE
+.PP
+\fBnvme-id-iocs\fR(1)
+.RS 4
+Identify I/O Command Set
 .RE
 .PP
 \fBnvme-create-ns\fR(1)
@@ -191,6 +221,21 @@ List all nvme controllers
 \fBnvme-list-ctrl\fR(1)
 .RS 4
 List controller in NVMe subsystem
+.RE
+.PP
+\fBnvme-list-subsys\fR(1)
+.RS 4
+List NVMe subsystems
+.RE
+.PP
+\fBnvme-reset\fR(1)
+.RS 4
+Reset a NVMe controller
+.RE
+.PP
+\fBnvme-device-self-test\fR(1)
+.RS 4
+Issue Device Self\-test Command
 .RE
 .PP
 \fBnvme-read\fR(1)
@@ -243,6 +288,16 @@ Security Receive
 Security Send
 .RE
 .PP
+\fBnvme-dsm\fR(1)
+.RS 4
+Issue Data Set Management Command
+.RE
+.PP
+\fBnvme-copy\fR(1)
+.RS 4
+Issue Simple Copy Command
+.RE
+.PP
 \fBnvme-set-feature\fR(1)
 .RS 4
 Set Feature
@@ -268,6 +323,11 @@ Discover and connect to all NVMe\-over\-Fabrics subsystems
 Connect to an NVMe\-over\-Fabrics subsystem
 .RE
 .PP
+\fBnvme-dim\fR(1)
+.RS 4
+Send Discovery Information Management command to a Discovery Controller
+.RE
+.PP
 \fBnvme-disconnect\fR(1)
 .RS 4
 Disconnect from an NVMe\-over\-Fabrics subsystem
@@ -282,6 +342,765 @@ Disconnect from all NVMe\-over\-Fabrics subsystems
 .RS 4
 Reads and shows NVMe\-over\-Fabrics controller property
 .RE
+.PP
+\fBnvme-media-unit-stat-log\fR(1)
+.RS 4
+Retrieve and show the configuration and wear of media units
+.RE
+.PP
+\fBnvme-supported-cap-config-log\fR(1)
+.RS 4
+Retrieve and show the list of Supported Capacity Configuration Descriptors
+.RE
+.PP
+\fBnvme-boot-part-log\fR(1)
+.RS 4
+Retrieve Boot Partition Log
+.RE
+.PP
+\fBnvme-capacity-mgmt\fR(1)
+.RS 4
+Capacity Management Command
+.RE
+.PP
+\fBnvme-check-dhchap-key\fR(1)
+.RS 4
+Generate NVMeoF DH\-HMAC\-CHAP host key
+.RE
+.PP
+\fBnvme-check-tls-key\fR(1)
+.RS 4
+Validate NVMeoF TLS PSK
+.RE
+.PP
+\fBnvme-cmdset-ind-id-ns\fR(1)
+.RS 4
+I/O Command Set Independent Identify Namespace
+.RE
+.PP
+\fBnvme-endurance-event-agg-log\fR(1)
+.RS 4
+Retrieve Endurance Group Event Aggregate Log
+.RE
+.PP
+\fBnvme-fid-support-effects-log\fR(1)
+.RS 4
+Retrieve FID Support and Effects log
+.RE
+.PP
+\fBnvme-gen-dhchap-key\fR(1)
+.RS 4
+Generate NVMeoF DH\-HMAC\-CHAP host key
+.RE
+.PP
+\fBnvme-gen-hostnqn\fR(1)
+.RS 4
+Generate NVMeoF host NQN
+.RE
+.PP
+\fBnvme-gen-tls-key\fR(1)
+.RS 4
+Generate NVMeoF TLS PSK
+.RE
+.PP
+\fBnvme-get-lba-status\fR(1)
+.RS 4
+Get LBA Status command
+.RE
+.PP
+\fBnvme-id-domain\fR(1)
+.RS 4
+NVMe Identify Domain List
+.RE
+.PP
+\fBnvme-id-ns-lba-format\fR(1)
+.RS 4
+NVMe Identify Namespace for the specified LBA Format index
+.RE
+.PP
+\fBnvme-lba-status-log\fR(1)
+.RS 4
+Retrieve LBA Status Information Log
+.RE
+.PP
+\fBnvme-list-endgrp\fR(1)
+.RS 4
+NVMe Identify Endurance Group List
+.RE
+.PP
+\fBnvme-ns-rescan\fR(1)
+.RS 4
+Rescans the NVME namespaces
+.RE
+.PP
+\fBnvme-nvm-id-ctrl\fR(1)
+.RS 4
+NVMe Identify Controller NVM Command Set
+.RE
+.PP
+\fBnvme-nvm-id-ns\fR(1)
+.RS 4
+NVMe Identify Namespace NVM Command Set
+.RE
+.PP
+\fBnvme-nvm-id-ns-lba-format\fR(1)
+.RS 4
+NVMe Identify Namespace NVM Command Set for the specified LBA Format index
+.RE
+.PP
+\fBnvme-persistent-event-log\fR(1)
+.RS 4
+Retrieve Persistent Event Log
+.RE
+.PP
+\fBnvme-predictable-lat-log\fR(1)
+.RS 4
+Retrieve Predictable Latency per Nvmset Log
+.RE
+.PP
+\fBnvme-pred-lat-event-agg-log\fR(1)
+.RS 4
+Retrieve Predictable Latency Event Aggregate Log
+.RE
+.PP
+\fBnvme-primary-ctrl-caps\fR(1)
+.RS 4
+NVMe Identify Primary Controller Capabilities
+.RE
+.PP
+\fBnvme-reset\fR(1)
+.RS 4
+Resets the controller
+.RE
+.PP
+\fBnvme-rpmb\fR(1)
+.RS 4
+Replay Protection Memory Block commands
+.RE
+.PP
+\fBnvme-sanitize-log\fR(1)
+.RS 4
+Retrieve sanitize log
+.RE
+.PP
+\fBnvme-set-property\fR(1)
+.RS 4
+Set a property and show the resulting value
+.RE
+.PP
+\fBnvme-show-hostnqn\fR(1)
+.RS 4
+Show NVMeoF host NQN
+.RE
+.PP
+\fBnvme-subsystem-reset\fR(1)
+.RS 4
+Resets the subsystem
+.RE
+.PP
+\fBnvme-supported-log-pages\fR(1)
+.RS 4
+Retrieve the Supported Log pages details
+.RE
+.PP
+\fBnvme-verify\fR(1)
+.RS 4
+verify command
+.RE
+.PP
+\fBnvme-show-topology\fR(1)
+.RS 4
+Show NVMe topology
+.RE
+.SS "Plugins/Vendor extension commands"
+.PP
+\fBnvme-intel-id-ctrl\fR(1)
+.RS 4
+Intel \- NVMe Identify Controller
+.RE
+.PP
+\fBnvme-intel-internal-log\fR(1)
+.RS 4
+Retrieve Intel device\(cqs internal log and save to file
+.RE
+.PP
+\fBnvme-intel-lat-stats\fR(1)
+.RS 4
+Retrieve NVMe Identify Controller, return result and structure
+.RE
+.PP
+\fBnvme-intel-market-name\fR(1)
+.RS 4
+Intel vendor specific marketing name log page
+.RE
+.PP
+\fBnvme-intel-smart-log-add\fR(1)
+.RS 4
+NVMe Intel Additional SMART log page
+.RE
+.PP
+\fBnvme-intel-temp-stats\fR(1)
+.RS 4
+NVMe Intel Additional SMART log page for temp stats
+.RE
+.PP
+\fBnvme-huawei-id-ctrl\fR(1)
+.RS 4
+NVMe huawei Identify Controller
+.RE
+.PP
+\fBnvme-huawei-list\fR(1)
+.RS 4
+List all recognized Huawei NVMe devices
+.RE
+.PP
+\fBnvme-dera-stat\fR(1)
+.RS 4
+NVMe Dera Device status and Additional SMART log page request
+.RE
+.PP
+\fBnvme-micron-clear-pcie-errors\fR(1)
+.RS 4
+Clears correctable PCIe correctable errors of given Micron device
+.RE
+.PP
+\fBnvme-micron-internal-log\fR(1)
+.RS 4
+Retrieve Micron device\(cqs internal logs and save to given zip file
+.RE
+.PP
+\fBnvme-micron-nand-stats\fR(1)
+.RS 4
+Retrieves NAND statistics of given micron device
+.RE
+.PP
+\fBnvme-micron-pcie-stats\fR(1)
+.RS 4
+Retrieves pcie error statistics for given micron device
+.RE
+.PP
+\fBnvme-micron-selective-download\fR(1)
+.RS 4
+Performs selective firmware download
+.RE
+.PP
+\fBnvme-micron-smart-add-log\fR(1)
+.RS 4
+Retrieves NAND statistics
+.RE
+.PP
+\fBnvme-micron-temperature-stats\fR(1)
+.RS 4
+Retrieves temperature information of given micron device
+.RE
+.PP
+\fBnvme-ocp-internal-log\fR(1)
+.RS 4
+Retrieves and parses OCP Telemetry DA1 and DA2 logs\&.
+.RE
+.PP
+\fBnvme-netapp-ontapdevices\fR(1)
+.RS 4
+Display information about ONTAP devices
+.RE
+.PP
+\fBnvme-netapp-smdevices\fR(1)
+.RS 4
+Display information for each NVMe path to an E\-Series volume
+.RE
+.PP
+\fBnvme-sndk-capabilities\fR(1)
+.RS 4
+Display Sandisk plugin command capabilities
+.RE
+.PP
+\fBnvme-sndk-clear-assert-dump\fR(1)
+.RS 4
+Clears the assert dump (if present)
+.RE
+.PP
+\fBnvme-sndk-clear-fw-activate-history\fR(1)
+.RS 4
+Clears the firmware activate history table
+.RE
+.PP
+\fBnvme-sndk-clear-pcie-correctable-errors\fR(1)
+.RS 4
+Clears the pcie correctable errors returned in the smart\-log\-add command
+.RE
+.PP
+\fBnvme-sndk-cloud-SSD-plugin-version\fR(1)
+.RS 4
+Display Sandisk plugin Cloud SSD Plugin Version
+.RE
+.PP
+\fBnvme-sndk-cloud-boot-SSD-version\fR(1)
+.RS 4
+Display Sandisk Cloud Boot SSD Version
+.RE
+.PP
+\fBnvme-sndk-cu-smart-log\fR(1)
+.RS 4
+Display Sandisk Customer Unique Smart log pagee
+.RE
+.PP
+\fBnvme-sndk-drive-resize\fR(1)
+.RS 4
+Send NVMe Sandisk Resize Vendor Unique Command
+.RE
+.PP
+\fBnvme-sndk-get-drive-status\fR(1)
+.RS 4
+Send the NVMe Sandisk get\-drive\-status command
+.RE
+.PP
+\fBnvme-sndk-get-dev-capabilities-log\fR(1)
+.RS 4
+Display device capabilities og page data in human readable format
+.RE
+.PP
+\fBnvme-sndk-get-error-recovery-log\fR(1)
+.RS 4
+Display error recovery log page data in human readable format
+.RE
+.PP
+\fBnvme-sndk-get-latency-monitor-log\fR(1)
+.RS 4
+Display latency monitor log page data in human readable format
+.RE
+.PP
+\fBnvme-sndk-get-unsupported-reqs-log\fR(1)
+.RS 4
+Display unsupported requirements log page data in human readable format
+.RE
+.PP
+\fBnvme-sndk-log-page-directory\fR(1)
+.RS 4
+Retrieves the list of Log IDs supported by the drive
+.RE
+.PP
+\fBnvme-sndk-namespace-resize\fR(1)
+.RS 4
+Resizes the device\(cqs namespace
+.RE
+.PP
+\fBnvme-sndk-set-latency-monitor-feature\fR(1)
+.RS 4
+Set Latency Monitor feature
+.RE
+.PP
+\fBnvme-sndk-vs-cloud-log\fR(1)
+.RS 4
+Display the cloud log page
+.RE
+.PP
+\fBnvme-sndk-vs-device-waf\fR(1)
+.RS 4
+Display calculated device Write Amplication Factor
+.RE
+.PP
+\fBnvme-sndk-vs-drive-info\fR(1)
+.RS 4
+Send the NVMe Sandisk vs\-drive\-info command
+.RE
+.PP
+\fBnvme-sndk-vs-error-reason-identifier\fR(1)
+.RS 4
+Retrieve Sandisk device\(cqs telemetry log error reason identifier field
+.RE
+.PP
+\fBnvme-sndk-vs-fw-activate-history\fR(1)
+.RS 4
+Execute NVMe Sandisk vs\-fw\-activate\-history Vendor Unique Command
+.RE
+.PP
+\fBnvme-sndk-vs-hw-rev-log\fR(1)
+.RS 4
+Display hardware revision log page
+.RE
+.PP
+\fBnvme-sndk-vs-internal-log\fR(1)
+.RS 4
+Retrieve Sandisk device\(cqs internal firmware log and save to file
+.RE
+.PP
+\fBnvme-sndk-vs-nand-stats\fR(1)
+.RS 4
+Send NVMe Sandisk vs\-nand\-stats Vendor Unique Command
+.RE
+.PP
+\fBnvme-sndk-vs-pcie-stats\fR(1)
+.RS 4
+Send the NVMe Sandisk vs\-pcie\-stats command
+.RE
+.PP
+\fBnvme-sndk-vs-smart-add-log\fR(1)
+.RS 4
+Send NVMe Sandisk smart add log Vendor Unique Command
+.RE
+.PP
+\fBnvme-sndk-vs-telemetry-controller-option\fR(1)
+.RS 4
+Disable/Enable the controller initiated option of the telemetry log page
+.RE
+.PP
+\fBnvme-sndk-vs-temperature-stats\fR(1)
+.RS 4
+Display temperature\-related statistics
+.RE
+.PP
+\fBnvme-toshiba-clear-pcie-correctable-errors\fR(1)
+.RS 4
+Reset the PCIe correctable errors count to zero
+.RE
+.PP
+\fBnvme-toshiba-vs-internal-log\fR(1)
+.RS 4
+Retrieve a Toshiba device\(cqs vendor specific internal log
+.RE
+.PP
+\fBnvme-toshiba-vs-smart-add-log\fR(1)
+.RS 4
+Retrieve a Toshiba device\(cqs vendor specific extended SMART log page
+.RE
+.PP
+\fBnvme-transcend-badblock\fR(1)
+.RS 4
+Retrieve Transcend NVMe device\(cqs bad blocks
+.RE
+.PP
+\fBnvme-transcend-healthvalue\fR(1)
+.RS 4
+Use NVMe SMART table to analyze the health value of Transcend device
+.RE
+.PP
+\fBnvme-virtium-show-identify\fR(1)
+.RS 4
+Show a complete detail of identify device information in json format
+.RE
+.PP
+\fBnvme-virtium-save-smart-to-vtview-log\fR(1)
+.RS 4
+Periodically save smart attributes into a log file
+.RE
+.PP
+\fBnvme-wdc-cap-diag\fR(1)
+.RS 4
+Retrieve WDC device\(cqs diagnostic log and save to file
+.RE
+.PP
+\fBnvme-wdc-capabilities\fR(1)
+.RS 4
+Display WDC plugin command capabilities
+.RE
+.PP
+\fBnvme-wdc-clear-assert-dump\fR(1)
+.RS 4
+Clears the assert dump (if present)
+.RE
+.PP
+\fBnvme-wdc-clear-fw-activate-history\fR(1)
+.RS 4
+Clears the firmware activate history table
+.RE
+.PP
+\fBnvme-wdc-clear-pcie-corr\fR(1)
+.RS 4
+Clears the pcie correctable errors field
+.RE
+.PP
+\fBnvme-wdc-clear-pcie-correctable-errors\fR(1)
+.RS 4
+Clears the pcie correctable errors returned in the smart\-log\-add command
+.RE
+.PP
+\fBnvme-wdc-cloud-SSD-plugin-version\fR(1)
+.RS 4
+Display WDC plugin Cloud SSD Plugin Version
+.RE
+.PP
+\fBnvme-wdc-cu-smart-log\fR(1)
+.RS 4
+Display WDC plugin Customer Unique Log Page
+.RE
+.PP
+\fBnvme-wdc-drive-essentials\fR(1)
+.RS 4
+Retrieve WDC device\(cqs drive essentials bin files
+.RE
+.PP
+\fBnvme-wdc-drive-log\fR(1)
+.RS 4
+Retrieve WDC device\(cqs drive log and save to file
+.RE
+.PP
+\fBnvme-wdc-drive-resize\fR(1)
+.RS 4
+Send NVMe WDC Resize Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-enc-get-log\fR(1)
+.RS 4
+Send NVMe WDC enc\-get\-log Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-get-crash-dump\fR(1)
+.RS 4
+Retrieve WDC device\(cqs crash dump
+.RE
+.PP
+\fBnvme-wdc-get-drive-status\fR(1)
+.RS 4
+Send the NVMe WDC get\-drive\-status command
+.RE
+.PP
+\fBnvme-wdc-get-latency-monitor-log\fR(1)
+.RS 4
+Display latency monitor log page data in human readable format
+.RE
+.PP
+\fBnvme-wdc-get-pfail-dump\fR(1)
+.RS 4
+Retrieve WDC device\(cqs pfail crash dump
+.RE
+.PP
+\fBnvme-wdc-id-ctrl\fR(1)
+.RS 4
+Send NVMe Identify Controller, return result and structure
+.RE
+.PP
+\fBnvme-wdc-log-page-directory\fR(1)
+.RS 4
+Retrieves the list of Log IDs supported by the drive
+.RE
+.PP
+\fBnvme-wdc-namespace-resize\fR(1)
+.RS 4
+Resizes the device\(cqs namespace
+.RE
+.PP
+\fBnvme-wdc-purge-monitor\fR(1)
+.RS 4
+Send NVMe WDC Purge\-Monitor Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-purge\fR(1)
+.RS 4
+Send NVMe WDC Purge Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-smart-add-log\fR(1)
+.RS 4
+Send NVMe WDC smart add log Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-vs-drive-info\fR(1)
+.RS 4
+Send the NVMe WDC vs\-drive\-info command
+.RE
+.PP
+\fBnvme-wdc-vs-error-reason-identifier\fR(1)
+.RS 4
+Retrieve WDC device\(cqs telemetry log error reason identifier field
+.RE
+.PP
+\fBnvme-wdc-vs-fw-activate-history\fR(1)
+.RS 4
+Execute NVMe WDC vs\-fw\-activate\-history Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-vs-internal-log\fR(1)
+.RS 4
+Retrieve WDC device\(cqs internal firmware log and save to file
+.RE
+.PP
+\fBnvme-wdc-vs-nand-stats\fR(1)
+.RS 4
+Send NVMe WDC vs\-nand\-stats Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-vs-telemetry-controller-option\fR(1)
+.RS 4
+Disable/Enable the controller initiated option of the telemetry log page
+.RE
+.PP
+\fBnvme-wdc-vs-temperature-stats\fR(1)
+.RS 4
+Display temperature\-related statistics
+.RE
+.PP
+\fBnvme-zns-changed-zone-list\fR(1)
+.RS 4
+Retrieve Changed Zone log for the given device
+.RE
+.PP
+\fBnvme-zns-close-zone\fR(1)
+.RS 4
+Closes one or all zones
+.RE
+.PP
+\fBnvme-zns-finish-zone\fR(1)
+.RS 4
+Finishes one or all zones
+.RE
+.PP
+\fBnvme-zns-id-ctrl\fR(1)
+.RS 4
+Send NVMe Zoned Command Set Identify Controller
+.RE
+.PP
+\fBnvme-zns-id-ns\fR(1)
+.RS 4
+Send NVMe Zoned Command Set Identify Namespace
+.RE
+.PP
+\fBnvme-zns-offline-zone\fR(1)
+.RS 4
+Offlines one or all zones
+.RE
+.PP
+\fBnvme-zns-open-zone\fR(1)
+.RS 4
+Opens one or all zones
+.RE
+.PP
+\fBnvme-zns-report-zones\fR(1)
+.RS 4
+Retrieve and display the Report Zones data structure
+.RE
+.PP
+\fBnvme-zns-reset-zone\fR(1)
+.RS 4
+Resets one or all zones
+.RE
+.PP
+\fBnvme-zns-set-zone-desc\fR(1)
+.RS 4
+Set extended descriptor data for a zone
+.RE
+.PP
+\fBnvme-zns-zone-append\fR(1)
+.RS 4
+Send an NVMe write command, provide results
+.RE
+.PP
+\fBnvme-zns-zone-mgmt-recv\fR(1)
+.RS 4
+Zone Management Receive command
+.RE
+.PP
+\fBnvme-zns-zone-mgmt-send\fR(1)
+.RS 4
+Zone Management Send command
+.RE
+.PP
+\fBnvme-zns-zrwa-flush-zone\fR(1)
+.RS 4
+Flush LBAs associated with a ZRWA to a zone
+.RE
+.PP
+\fBnvme-inspur-nvme-vendor-log\fR(1)
+.RS 4
+NVMe Inspur Device Vendor log page request
+.RE
+.PP
+\fBnvme-dapustor-smart-log-add\fR(1)
+.RS 4
+NVMe DapuStor Additional SMART log page
+.RE
+.PP
+\fBnvme-solidigm-id-ctrl\fR(1)
+.RS 4
+Solidigm \- NVMe Identify Controller
+.RE
+.PP
+\fBnvme-solidigm-smart-log-add\fR(1)
+.RS 4
+Retrieve Solidigm SMART Log
+.RE
+.PP
+\fBnvme-solidigm-vs-internal-log\fR(1)
+.RS 4
+Retrieve Debug log binaries
+.RE
+.PP
+\fBnvme-solidigm-garbage-collect-log\fR(1)
+.RS 4
+Retrieve Garbage Collection Log
+.RE
+.PP
+\fBnvme-solidigm-market-log\fR(1)
+.RS 4
+Retrieve Market Log
+.RE
+.PP
+\fBnvme-solidigm-latency-tracking-log\fR(1)
+.RS 4
+Enable/Retrieve Latency tracking Log
+.RE
+.PP
+\fBnvme-solidigm-parse-telemetry-log\fR(1)
+.RS 4
+Parse Telemetry Log binary
+.RE
+.PP
+\fBnvme-solidigm-log-page-directory\fR(1)
+.RS 4
+Retrieve log page directory
+.RE
+.PP
+\fBnvme-solidigm-temp-stats\fR(1)
+.RS 4
+Retrieve Temperature Statistics log
+.RE
+.PP
+\fBnvme-solidigm-vs-drive-info\fR(1)
+.RS 4
+Retrieve drive information
+.RE
+.PP
+\fBnvme-solidigm-workload-tracker\fR(1)
+.RS 4
+Real Time capture Workload Tracker samples
+.RE
+.PP
+\fBnvme-sed-discover\fR(1)
+.RS 4
+Discover SED Opal Locking Features
+.RE
+.PP
+\fBnvme-sed-initialize\fR(1)
+.RS 4
+Initialize a SED Opal Device for locking
+.RE
+.PP
+\fBnvme-sed-revert\fR(1)
+.RS 4
+Revert a SED Opal Device from locking
+.RE
+.PP
+\fBnvme-sed-lock\fR(1)
+.RS 4
+Lock a SED Opal Device
+.RE
+.PP
+\fBnvme-sed-unlock\fR(1)
+.RS 4
+Unlock a SED Opal Device
+.RE
+.PP
+\fBnvme-sed-password\fR(1)
+.RS 4
+Change the SED Opal Device password
+.RE
+.PP
+\fBnvme-mangoboost-id-ctrl\fR(1)
+.RS 4
+MangoBoost \- NVMe Identify Controller
+.RE
+.SH "RETURNS"
+.sp
+All commands will behave the same, they will return 0 on success and 1 on failure\&.
 .SH "FURTHER DOCUMENTATION"
 .sp
 See the freely available references on the \m[blue]\fBOfficial NVM\-Express Site\fR\m[]\&\s-2\u[1]\d\s+2\&.

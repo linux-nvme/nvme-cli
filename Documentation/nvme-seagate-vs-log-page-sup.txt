@@ -1,0 +1,50 @@
+nvme-seagate-vs-log-page-sup(1)
+===============================
+
+NAME
+----
+nvme-seagate-vs-log-page-sup - Retrieve Seagate vendor specific Supported
+Log-pages Information
+
+SYNOPSIS
+--------
+[verse]
+'nvme seagate vs-log-page-sup <device> [OPTIONS]'
+
+DESCRIPTION
+-----------
+This command will only work on Seagate devices supporting this feature. Not
+all commands work across all product families.
+
+The '<device>' may be either an NVMe character device (ex: /dev/nvme0) or an
+NVMe block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Output in binary format
+
+EXAMPLES
+--------
+Get the vendor specific log page information for a particular device.
+
+------------
+# nvme seagate vs-log-page-sup /dev/nvme0
+Output:
+Seagate Supported Log-pages count :8
+LogPage-Id      LogPage-Name
+
+0x1              ERROR_INFORMATION
+0x2              SMART_INFORMATION
+0x3              FW_SLOT_INFORMATION
+0x5              COMMANDS_SUPPORTED_AND_EFFECTS
+0xC8             VS_RECENT_DRIVE_HISTORY
+0xC4             VS_EXTENDED_SMART_INFO
+0xC5             VS_LIST_SUPPORTED_LOG_PAGE
+0xCB             VS_PCIE_ERROR_LOG_PAGE
+------------
+
+NVME
+----
+Part of the nvme-user suite

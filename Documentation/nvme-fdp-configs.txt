@@ -1,0 +1,41 @@
+nvme-fdp-configs(1)
+===================
+
+NAME
+----
+nvme-fdp-configs - Get Flexible Data Placement Configurations
+
+SYNOPSIS
+--------
+[verse]
+'nvme fdp configs' <device> [--endgrp-id=<NUM> | -e <NUM>]
+			[--human-readable | -H] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, and the endurance group identifier specified, list
+the possible configurations for Flexible Data Placement.
+
+OPTIONS
+-------
+-e <NUM>::
+--endgrp-id=<NUM>::
+	The endurance group identifier to use when requesting the log page.
+
+-H::
+--human-readable::
+	Parse, print and describe individual parts of bitfields.
+
+-b::
+--raw-binary::
+	Print the raw buffer to the standard output stream.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or 'binary'. Only one
+	output format can be used at a time.
+
+NVME
+----
+Part of nvme-cli

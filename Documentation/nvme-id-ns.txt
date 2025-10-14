@@ -8,10 +8,10 @@ nvme-id-ns - Send NVMe Identify Namespace, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme id-ns' <device> [-v | --vendor-specific] [-b | --raw-binary]
-		    [--namespace-id=<nsid> | -n <nsid>] [-f | --force]
-		    [--human-readable | -H]
-		    [--output-format=<fmt> | -o <fmt>]
+'nvme id-ns' <device> [--vendor-specific | -v] [--raw-binary | -b]
+			[--namespace-id=<nsid> | -n <nsid>] [--force]
+			[--human-readable | -H]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -35,9 +35,11 @@ OPTIONS
 --namespace-id=<nsid>::
 	Retrieve the identify namespace structure for the given nsid. This
 	is required for the character devices, or overrides the block nsid
-	if given.
+	if given. If the controller supports namespace management capability
+	and 0xFFFFFFFF is given, then the controller returns the identify
+	namespace structure that specifies common capabilities across
+	namespaces for the controller.
 
--f::
 --force::
 	Request controller return the identify namespace structure even
 	if the namespace is not attached to the controller. This is valid
@@ -49,7 +51,7 @@ OPTIONS
 	Print the raw buffer to stdout. Structure is not parsed by
 	program. This overrides the vendor specific and human readable options.
 
--v::
+-V::
 --vendor-specific::
 	In addition to parsing known fields, this option will dump
 	the vendor specific region of the structure in hex with ascii
@@ -60,12 +62,14 @@ OPTIONS
 	This option will parse and format many of the bit fields
 	into human-readable formats.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
 
-
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
@@ -91,7 +95,7 @@ the vendor unique field:
 +
 ------------
 # nvme id-ns /dev/nvme0n1 --vendor-specific
-# nvme id-ns /dev/nvme0n1 -v
+# nvme id-ns /dev/nvme0n1 -V
 ------------
 +
 The above will dump the \'vs' buffer in hex since it doesn't know how to

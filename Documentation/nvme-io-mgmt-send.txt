@@ -1,0 +1,67 @@
+nvme-io-mgmt-send(1)
+====================
+
+NAME
+----
+nvme-io-mgmt-send - I/O Management Send command
+
+SYNOPSIS
+--------
+[verse]
+'nvme io-mgmt-send' <device> [--namespace-id=<NUM> | -n <NUM>]
+			[--mos=<NUM> | -s <NUM>] [--mo=<NUM> | -m <NUM>]
+			[--data=<FILE> | -d <FILE>]
+			[--data-len=<NUM> | -l <NUM>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, issues the I/O Management Send command with the
+requested management operation (mo) and management operation specific parameter
+(mos). This is the generic interface provided for forward compatibility as new
+operations are added that this program isn't aware of at the time of its
+development. As such, this is a generic command that does not provide any
+convenience parameters to produce the binary payload.
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-d <FILE>::
+--data=<FILE>::
+	File to read payload from. If unspecified, data will be read from the
+	standard input stream.
+
+-l <NUM>::
+--data-len=<NUM>::
+	Payload data buffer length
+
+-m <NUM>::
+--mo <NUM>::
+	Management Operation to perform.
+
+-s <NUM>::
+--mos=<NUM>::
+	Management Operation Specific parameter.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+NVME
+----
+Part of nvme-cli

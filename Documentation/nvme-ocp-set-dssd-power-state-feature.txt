@@ -1,0 +1,43 @@
+set-dssd-power-state-feature(1)
+===============================
+
+NAME
+----
+nvme-ocp-set-dssd-power-state-feature - Set DSSD Power State
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp set-dssd-power-state-feature' <device>
+			[--power-state=<fmt> | -p <fmt>] [--no-uuid | -n]
+			[--save | -s]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieves OCP DSSD Power state Feature
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-p <fmt>::
+--power-state=<fmt>::
+	DSSD Power State to set in watts.
+
+EXAMPLES
+--------
+* Has the program issue a set-dssd-power-state-feature command to set DSSD Power State to set in watts.
++
+------------
+# nvme ocp set-dssd-power-state-feature /dev/nvme0 -p <value> -s <value> -n <value>
+------------
+
+NVME
+----
+Part of the nvme-user suite.

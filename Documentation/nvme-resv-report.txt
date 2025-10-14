@@ -9,10 +9,10 @@ SYNOPSIS
 --------
 [verse]
 'nvme resv-report' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--numd=<num-dwords> | -d <num-dwords>]
-			[--cdw11=<cdw11> | -c <cdw11>]
+			[--numd=<num-dwords> | -d <num-dwords>] [--eds | -e]
 			[--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -38,9 +38,9 @@ OPTIONS
 	Specify the number of Dwords of the Reservation Status structure
 	to transfer. Defaults to 4k.
 
--c <cdw11>::
---cdw11=<cdw11>::
-	The value for command dword 11. Setting bit 0 specifies that the 
+-e::
+--eds::
+	Request extended Data Structure: If this bit is set to a '1', then the
 	controller returns the Extended Data Structure.
 
 -b::
@@ -48,11 +48,18 @@ OPTIONS
 	Print the raw buffer to stdout. Structure is not parsed by
 	program.
 
--o <format>::
---output-format=<format>::
-              Set the reporting format to 'normal', 'json', or
-              'binary'. Only one output format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
 
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

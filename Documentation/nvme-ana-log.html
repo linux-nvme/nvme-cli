@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-ana-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -749,7 +749,8 @@ nvme-ana-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme ana-log</em> &lt;device&gt; [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme ana-log</em> &lt;device&gt; [--groups | -g]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -771,15 +772,37 @@ printed to stdout for another program to parse.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;format&gt;
+-g
 </dt>
 <dt class="hdlist1">
---output-format=&lt;format&gt;
+--groups
 </dt>
 <dd>
 <p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
+        Return the list of ANA groups without the namespace listing.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -812,7 +835,7 @@ Print the ANA log page in a human readable format:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-10-12 00:12:24 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

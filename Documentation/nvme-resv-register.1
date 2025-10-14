@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-register
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-REGISTER" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-REGISTER" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,11 +33,12 @@ nvme-resv-register \- Register an nvme reservation
 .sp
 .nf
 \fInvme resv\-register\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                              [\-\-crkey=<crkey> | \-c <crkey>]
-                              [\-\-nrkey=<nrkey> | \-k <nrkey>]
-                              [\-\-rrega=<rrega> | \-r <rrega>]
-                              [\-\-cptpl=<cptpl> | \-p <cptpl>]
-                              [\-\-iekey | \-i]
+                        [\-\-crkey=<crkey> | \-c <crkey>]
+                        [\-\-nrkey=<nrkey> | \-k <nrkey>]
+                        [\-\-rrega=<rrega> | \-r <rrega>]
+                        [\-\-cptpl=<cptpl> | \-p <cptpl>] [\-\-iekey | \-i]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -98,7 +99,7 @@ T}
 .sp 1
 .RE
 .PP
-\-a <rrega>, \-\-rrega=<rrega>
+\-r <rrega>, \-\-rrega=<rrega>
 .RS 4
 Reservation Register Action: This field specifies the registration action that is performed by the command\&.
 .TS
@@ -144,6 +145,25 @@ Ignore Existing Key: If this bit is set to a
 .sp
 Indicator option, defaults to
 \fI0\fR\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

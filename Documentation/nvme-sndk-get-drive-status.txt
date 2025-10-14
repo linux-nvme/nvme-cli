@@ -1,0 +1,60 @@
+nvme-sndk-get-drive-status(1)
+=============================
+
+NAME
+----
+nvme-sndk-get-drive-status - Send the NVMe sndk get-drive-status command, return
+result
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk get-drive-status' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, send the unique sndk get-drive-status command and
+provide the additional drive status information.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+Output Explanation
+------------------
+[cols="2*", frame="topbot", align="center", options="header"]
+|===
+|Field |Description
+
+|*Percent Life Used.*
+|The percentage of drive function used.
+
+|*EOL (End of Life) Status*
+|The 3 possible states are : Normal, Read Only, or End of Life.
+
+|*Assert Dump Status*
+|The 2 possible states are : Present or Not Present.
+
+|*Thermal Throttling Status*
+|The 3 possible states are : Off, On, or Unavailable.
+
+|*Format Corrupt Reason*
+|The 3 possible states are : Not Corrupted, Corrupt due to FW Assert, or Corrupt for Unknown Reason.
+
+|===
+
+EXAMPLES
+--------
+* Has the program issue sndk get-drive-status command :
++
+------------
+# nvme sndk get-drive-status /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

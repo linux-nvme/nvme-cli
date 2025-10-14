@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,31 +32,37 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme connect\-all\fR
-                [\-\-transport=<trtype>     | \-t <trtype>]
-                [\-\-traddr=<traddr>        | \-a <traddr>]
-                [\-\-trsvcid=<trsvcid>      | \-s <trsvcid>]
-                [\-\-host\-traddr=<traddr>   | \-w <traddr>]
-                [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
-                [\-\-hostid=<hostid>        | \-I <hostid>]
-                [\-\-raw=<filename>         | \-r <filename>]
-                [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
-                [\-\-reconnect\-delay=<#>    | \-c <#>]
-                [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
-                [\-\-hdr\-digest             | \-g]
-                [\-\-data\-digest            | \-G]
-                [\-\-nr\-io\-queues=<#>       | \-i <#>]
-                [\-\-nr\-write\-queues=<#>    | \-W <#>]
-                [\-\-nr\-poll\-queues=<#>     | \-P <#>]
-                [\-\-queue\-size=<#>         | \-Q <#>]
+\fInvme connect\-all\fR [\-\-transport=<trtype> | \-t <trtype>]
+                        [\-\-nqn=<subnqn> | \-n <subnqn>]
+                        [\-\-traddr=<traddr> | \-a <traddr>]
+                        [\-\-trsvcid=<trsvcid> | \-s <trsvcid>]
+                        [\-\-host\-traddr=<traddr> | \-w <traddr>]
+                        [\-\-host\-iface=<iface> | \-f <iface>]
+                        [\-\-hostnqn=<hostnqn> | \-q <hostnqn>]
+                        [\-\-hostid=<hostid> | \-I <hostid>]
+                        [\-\-raw=<filename> | \-r <filename>]
+                        [\-\-device=<device> | \-d <device>]
+                        [\-\-config=<filename> | \-J <cfg>]
+                        [\-\-keep\-alive\-tmo=<sec> | \-k <sec>]
+                        [\-\-reconnect\-delay=<#> | \-c <#>]
+                        [\-\-ctrl\-loss\-tmo=<#>     | \-l <#>]
+                        [\-\-nr\-io\-queues=<#> | \-i <#>]
+                        [\-\-nr\-write\-queues=<#> | \-W <#>]
+                        [\-\-nr\-poll\-queues=<#> | \-P <#>]
+                        [\-\-queue\-size=<#> | \-Q <#>] [\-\-keyring=<#>]
+                        [\-\-tls_key=<#>] [\-\-hdr\-digest | \-g] [\-\-data\-digest | \-G]
+                        [\-\-persistent | \-p] [\-\-tls] [\-\-concat] [\-\-quiet]
+                        [\-\-dump\-config | \-O] [\-\-nbft] [\-\-no\-nbft]
+                        [\-\-nbft\-path=<STR>] [\-\-context=<STR>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
 Send one or more Discovery requests to a NVMe over Fabrics Discovery Controller, and create controllers for the returned discovery records\&.
 .sp
-If no parameters are given, then \fInvme connect\-all\fR will attempt to find a /etc/nvme/discovery\&.conf file to use to supply a list of connect\-all commands to run\&. If no /etc/nvme/discovery\&.conf file exists, the command will quit with an error\&.
+If no parameters are given, then \fInvme connect\-all\fR will attempt to find a /usr/local/etc/nvme/discovery\&.conf file to use to supply a list of connect\-all commands to run\&. If no /usr/local/etc/nvme/discovery\&.conf file exists, the command will quit with an error\&.
 .sp
-Otherwise a specific Discovery Controller should be specified using the \-\-transport, \-\-traddr and if necessary the \-\-trsvcid and a Diѕcovery request will be sent to the specified Discovery Controller\&.
+Otherwise a specific Discovery Controller should be specified using the \-\-transport, \-\-traddr and if necessary the \-\-trsvcid and a Discovery request will be sent to the specified Discovery Controller\&.
 .sp
 See the documentation for the nvme\-discover(1) command for further background\&.
 .SH "OPTIONS"
@@ -66,6 +72,7 @@ See the documentation for the nvme\-discover(1) command for further background\&
 This field specifies the network fabric being used for a NVMe\-over\-Fabrics network\&. Current string values include:
 .TS
 allbox tab(:);
+lt lt
 lt lt
 lt lt
 lt lt
@@ -87,12 +94,22 @@ T}:T{
 The network fabric is a Fibre Channel network\&.
 T}
 T{
+tcp
+T}:T{
+The network fabric is a TCP/IP network\&.
+T}
+T{
 loop
 T}:T{
 Connect to a NVMe over Fabrics target on the local host
 T}
 .TE
 .sp 1
+.RE
+.PP
+\-n <subnqn>, \-\-nqn <subnqn>
+.RS 4
+This field specifies the name for the NVMe subsystem to connect to\&.
 .RE
 .PP
 \-a <traddr>, \-\-traddr=<traddr>
@@ -107,12 +124,17 @@ This field specifies the transport service id\&. For transports using IP address
 .PP
 \-w <traddr>, \-\-host\-traddr=<traddr>
 .RS 4
-This field specifies the network address used on the host to connect to the Discovery Controller\&.
+This field specifies the network address used on the host to connect to the Controller\&. For TCP, this sets the source address on the socket\&.
+.RE
+.PP
+\-f <iface>, \-\-host\-iface=<iface>
+.RS 4
+This field specifies the network interface used on the host to connect to the Controller (e\&.g\&. IP eth1, enp2s0, enx78e7d1ea46da)\&. This forces the connection to be made on a specific interface instead of letting the system decide\&.
 .RE
 .PP
 \-q <hostnqn>, \-\-hostnqn=<hostnqn>
 .RS 4
-Overrides the default Host NQN that identifies the NVMe Host\&. If this option is not specified, the default is read from /etc/nvme/hostnqn first\&. If that does not exist, the autogenerated NQN value from the NVMe Host kernel module is used next\&. The Host NQN uniquely identifies the NVMe Host, and may be used by the the Discovery Controller to control what NVMe Target resources are allocated to the NVMe Host for a connection\&.
+Overrides the default Host NQN that identifies the NVMe Host\&. If this option is not specified, the default is read from /usr/local/etc/nvme/hostnqn first\&. If that does not exist, the autogenerated NQN value from the NVMe Host kernel module is used next\&. The Host NQN uniquely identifies the NVMe Host, and may be used by the the Discovery Controller to control what NVMe Target resources are allocated to the NVMe Host for a connection\&.
 .RE
 .PP
 \-I <hostid>, \-\-hostid=<hostid>
@@ -129,6 +151,19 @@ command and dump it to a raw binary file\&. By default
 will dump the output to stdout\&.
 .RE
 .PP
+\-d <device>, \-\-device=<device>
+.RS 4
+This field takes a device as input\&. It must be a persistent device associated with a Discovery Controller previously created by the command "connect\-all" or "discover"\&. <device> follows the format nvme*, eg\&. nvme0, nvme1\&.
+.RE
+.PP
+\-J <filename>, \-\-config=<filename>
+.RS 4
+Use the specified JSON configuration file instead of the default /usr/local/etc/nvme/config\&.json file or
+\fInone\fR
+to not read in an existing configuration file\&. The JSON configuration file format is documented in
+\m[blue]\fBhttps://github\&.com/linux\-nvme/libnvme/blob/master/doc/config\-schema\&.json\fR\m[]
+.RE
+.PP
 \-k <#>, \-\-keep\-alive\-tmo=<#>
 .RS 4
 Overrides the default keep alive timeout (in seconds)\&. This option will be ignored for discovery, but will be passed on to the subsequent connect call\&.
@@ -142,16 +177,6 @@ Overrides the default delay (in seconds) before reconnect is attempted after a c
 \-l <#>, \-\-ctrl\-loss\-tmo=<#>
 .RS 4
 Overrides the default controller loss timeout period (in seconds)\&.
-.RE
-.PP
-\-g, \-\-hdr\-digest
-.RS 4
-Generates/verifies header digest (TCP)\&.
-.RE
-.PP
-\-G, \-\-data\-digest
-.RS 4
-Generates/verifies data digest (TCP)\&.
 .RE
 .PP
 \-i <#>, \-\-nr\-io\-queues=<#>
@@ -172,6 +197,85 @@ Adds additional queues that will be used for polling latency sensitive I/O\&.
 \-Q <#>, \-\-queue\-size=<#>
 .RS 4
 Overrides the default number of elements in the I/O queues created by the driver\&. This option will be ignored for discovery, but will be passed on to the subsequent connect call\&.
+.RE
+.PP
+\-\-keyring=<#>
+.RS 4
+Keyring for TLS key lookup\&.
+.RE
+.PP
+\-\-tls_key=<#>
+.RS 4
+TLS key for the connection (TCP)\&.
+.RE
+.PP
+\-g, \-\-hdr\-digest
+.RS 4
+Generates/verifies header digest (TCP)\&.
+.RE
+.PP
+\-G, \-\-data\-digest
+.RS 4
+Generates/verifies data digest (TCP)\&.
+.RE
+.PP
+\-p, \-\-persistent
+.RS 4
+Don\(cqt remove the discovery controller after retrieving the discovery log page\&.
+.RE
+.PP
+\-\-tls
+.RS 4
+Enable TLS encryption (TCP)\&.
+.RE
+.PP
+\-\-concat
+.RS 4
+Enable secure concatenation (TCP)\&.
+.RE
+.PP
+\-\-quiet
+.RS 4
+Suppress error messages\&.
+.RE
+.PP
+\-O, \-\-dump\-config
+.RS 4
+Print out resulting JSON configuration file to stdout\&.
+.RE
+.PP
+\-\-nbft
+.RS 4
+Only look at NBFT tables
+.RE
+.PP
+\-\-no\-nbft
+.RS 4
+Do not look at NBFT tables
+.RE
+.PP
+\-\-nbft\-path=<STR>
+.RS 4
+Use a user\-defined path to the NBFT tables
+.RE
+.PP
+\-\-context <STR>
+.RS 4
+Set the execution context to <STR>\&. This allows to coordinate the management of the global resources\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -207,15 +311,61 @@ Connect to all records returned by the Discover Controller with IP4 address 192\
 .\}
 Issue a
 \fInvme connect\-all\fR
-command using a /etc/nvme/discovery\&.conf file:
+command using the default system defined NBFT tables:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# Machine default \*(Aqnvme discover\*(Aq commands\&.  Query the
+# nvme connect\-all \-\-nbft
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Issue a
+\fInvme connect\-all\fR
+command with a user\-defined path for the NBFT table:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme connet\-all \-\-nbft\-path=/sys/firmware/acpi/tables/NBFT1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Issue a
+\fInvme connect\-all\fR
+command using a /usr/local/etc/nvme/discovery\&.conf file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# Machine default \*(Aqnvme discover\*(Aq commands\&. Query the
 # Discovery Controller\*(Aqs two ports (some resources may only
-# be accessible on a single port)\&.  Note an official
+# be accessible on a single port)\&. Note an official
 # nqn (Host) name defined in the NVMe specification is being used
 # in this example\&.
 \-t rdma \-a 192\&.168\&.69\&.33 \-s 4420 \-q nqn\&.2014\-08\&.com\&.example:nvme:nvm\-subsystem\-sn\-d78432

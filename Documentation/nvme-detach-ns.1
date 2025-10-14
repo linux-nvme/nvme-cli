@@ -2,12 +2,12 @@
 .\"     Title: nvme-detach-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DETACH\-NS" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-DETACH\-NS" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,7 @@ nvme-detach-ns \- Send NVMe detach namespace, return result\&.
 .nf
 \fInvme detach\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-controllers=<ctrl\-list,> | \-c <ctrl\-list,>
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -45,9 +46,23 @@ For the NVMe device given, sends the nvme namespace detach command for the provi
 The namespace identifier to detach\&.
 .RE
 .PP
-\-c <ctrl\-list,>, \-controllers=<ctrl\-list,>
+\-c <ctrl\-list,>, \-\-controllers=<ctrl\-list,>
 .RS 4
 The comma separated list of controller identifiers to detach the namespace from\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

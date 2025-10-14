@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
@@ -16,6 +17,7 @@ struct program {
 struct plugin {
 	const char *name;
 	const char *desc;
+	const char *version;
 	struct command **commands;
 	struct program *parent;
 	struct plugin *next;
@@ -29,8 +31,7 @@ struct command {
 	char *alias;
 };
 
-void usage(struct plugin *plugin);
-void general_help(struct plugin *plugin);
+void general_help(struct plugin *plugin, char *str);
 int handle_plugin(int argc, char **argv, struct plugin *plugin);
 
 #endif

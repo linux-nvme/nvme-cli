@@ -1,4 +1,5 @@
 #compdef _nvme nvme
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 # zsh completions for the nvme command-line interface,
 # very loosely based on git and adb command completion
@@ -7,39 +8,125 @@
 _nvme () {
 	local -a _cmds
 	_cmds=(
+	'list:identify basic information for all NVMe namespaces'
+	'list-subsys:identify information for subsystems'
 	'id-ctrl:display information about the controller'
 	'id-ns:display information about the namespace'
+	'id-ns-granularity:display namespace granularity list'
+	'id-ns-lba-format:display information about the namespace capability fields for specific LBA format'
 	'list-ns:identify all namespace(s) attached'
+	'cmdset-ind-id-ns:display I/O Command Set Independent information about the namespace'
+	'id-iocs:display information about I/O command sets'
+	'id-domain:display information about domain list'
 	'create-ns:create a new namespace before attachment'
 	'delete-ns:delete a detached namespace'
 	'attach-ns:attach namespace to controller'
 	'detach-ns:detach namespace from controller'
 	'list-ctrl:identify all controller(s) attached'
+	'nvm-id-ctrl:display information about the nvm command set'
+	'nvm-id-ns:display information about the namespace of nvm command set'
+	'nvm-id-ns-lba-format:display information about the namespace of nvm command set capability fields for specific LBA format'
+	'primary-ctrl-caps:display primary controller capabilities'
+	'list-secondary:identify secondary controller list associated with the primary controller'
+	'ns-descs:display namespace identification descriptors'
+	'id-nvmset:display entries for NVM Set identifiers'
+	'id-uuid:display list of supported Vendor Specific UUIDs'
+	'list-endgrp:display information about nvme endurance group list'
 	'get-ns-id:get namespace id of opened block device'
 	'get-log:retrieve any log in raw format'
+	'predictable-lat-log:retrieve predictable latency per nvmset log'
+	'pred-lat-event-agg-log:retrieve predictable latency event aggregate log'
+	'persistent-event-log:retrieve persistent event log'
+	'telemetry-log:retrieve telemetry log'
 	'fw-log:retrieve fw log'
+	'changed-ns-list-log:retrieve changed namespaces log'
 	'smart-log:retrieve SMART log'
 	'smart-log-add:retrieve additional SMART log'
+	'ana-log:retrieve ANA log'
 	'error-log:retrieve error log'
+	'effects-log:retrieve command effects log page and print the table'
+	'endurance-log:retrieves endurance groups log page and prints the log'
+	'endurance-event-agg-log:retrieve endurance group event aggregate log'
+	'lba-status-log:retrieve lba status log'
+	'resv-notif-log:retrieve reservation notification log'
 	'get-feature:display a controller feature'
+	'device-self-test:implementing the device self-test feature'
+	'self-test-log:retrieve the self-test log'
 	'set-feature:set a controller feature and show results'
+	'set-property:writes and shows the defined NVMe controller property for NVMe over Fabric'
+	'get-property:Reads and shows the defined NVMe controller property for NVMe over Fabric'
 	'format:apply new block format to namespace'
-	'fw-activate:activate a firmware on the device'
+	'fw-commit:verify and commit firmware to a specific slot (fw-activate in old version < 1.2)'
 	'fw-download:download a firmware to the device'
-	'admin-passthru:submit a passthrough IOCTL'
-	'io-passthru:submit a passthrough IOCTL'
+	'admin-passthru:submit a passthrough admin command IOCTL'
+	'io-passthru:submit a passthrough io command IOCTL'
 	'security-send:send security/secure data to controller'
 	'security-recv:ask for security/secure data from controller'
+	'get-lba-status:display information about potentially unrecoverable LBAs'
 	'resv-acquire:acquire reservation on a namespace'
 	'resv-register:register reservation on a namespace'
 	'resv-release:release reservation on a namespace'
 	'resv-report:report reservation on a namespace'
+	'dsm:submit a Data Set Management command'
+	'copy:submit a simple copy command'
 	'flush:submit a flush'
 	'compare:compare data on device to data elsewhere'
 	'read:submit a read command'
 	'write:submit a write command'
-	'show-regs:shows the controller registers; requires admin character device'
+	'capacity-mgmt:submit capacity management command'
+	'write-zeroes:submit an NVMe write zeroes command'
+	'write-uncor:submit an NVMe write uncorrectable command'
+	'verify:submit an NVMe Verify command'
+	'sanitize:submit a sanitize command'
+	'sanitize-log:retrieve sanitize log and show it'
+	'reset:reset the NVMe controller'
+	'subsystem-reset:reset the NVMe subsystem'
+	'ns-rescan:rescan the NVMe namespaces'
+	'show-regs:show the controller registers; require admin character device'
+	'boot-part-log:retrieve boot partition log'
+	'fid-support-effects-log:retrieve fid support and effects log'
+	'supported-log-pages:retrieve support log pages details'
+	'lockdown:submit a lockdown command'
+	'media-unit-stat-log:retrieve media unit status log pages details'
+	'supported-cap-config-log:retrieve the list of Supported Capacity Configuration Descriptors'
+	'rotational-media-info-log:retrieve rotational media information log'
+	'discover:send Get Log Page request to Discovery Controller'
+	'connect-all:discover NVMeoF subsystems and connect to them'
+	'connect:connect to NVMeoF subsystem'
+	'dim:send Discovery Information Management command to a Discovery Controller (DC)'
+	'disconnect:disconnect from NVMeoF subsystem'
+	'disconnect-all:disconnect from all connected NVMeoF subsystems'
+	'gen-hostnqn:generate a host NVMe Qualified Name'
+	'show-hostnqn:show the host NQN configured for the system'
+	'tls-key:manipulate NVMeoF TLS PSK'
+	'dir-receive:read directive parameters of the specified directive type'
+	'dir-send:set directive parameters of the specified directive type'
+	'virt-mgmt:submit a Virtualization Management command'
+	'rpmb:submit an NVMe RPMB command'
+	'show-topology:show subsystem topology'
+	'nvme-mi-recv:send a NVMe-MI receive command'
+	'nvme-mi-send:send a NVMe-MI send command'
+	'get-reg:read and show the defined NVMe controller register'
+	'set-reg:write and show the defined NVMe controller register'
+	'io-mgmt-recv:send an I/O management receive command'
+	'io-mgmt-send:send an I/O management send command'
+	'mgmt-addr-list-log:retrieve management address list log'
+	'changed-ns-list-log:retrieve changed allocated namespaces log'
+	'dispersed-ns-participating-nss-log:retrieve dispersed namespace participating NVM subsystems log'
+	'reachability-groups-log:retrieve reachability groups log'
+	'reachability-associations-log:retrieve reachability associations log'
+	'host-discovery-log:retrieve host discovery log'
+	'ave-discovery-log:retrieve ave discovery log'
+	'pull-model-ddr-req-log:retrieve pull model ddr req log'
+	'version:show the program version'
+	'ocp:OCP cloud SSD extensions'
+	'solidigm:Solidigm plug-in extensions'
+	'fdp:FDP plug-in extensions'
+	'micron:Micron plug-in extensions'
+	'mangoboost:MangoBoost plug-in extensions'
+	'dapustor:DapuStor plug-in extensions'
 	'help:print brief descriptions of all nvme commands'
+	'json:dump output in json format'
 	)
 
 	local expl
@@ -49,8 +136,631 @@ _nvme () {
 	if (( CURRENT == 1 )); then
 		_describe -t commands "nvme subcommands" _cmds
 		return
+	elif (( CURRENT > 2 )); then
+		case ${words[1]} in
+		(ocp)
+			case ${words[2]} in
+			(smart-add-log)
+				local _smart_add_log
+				_smart_add_log=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp smart-add-log options" _smart_add_log
+				;;
+			(latency-monitor-log)
+				local _latency_monitor_log
+				_latency_monitor_log=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp latency-monitor-log options" _latency_monitor_log
+				;;
+			(set-latency-monitor-feature)
+				local _set_latency_monitor_feature
+				_set_latency_monitor_feature=(
+				/dev/nvme':supply a device to use (required)'
+				--active_bucket_timer_threshold=':Active Bucket Timer Threshold'
+				-t':alias for --active_bucket_timer_threshold'
+				--active_threshold_a=':Active Threshold A'
+				-a':alias for --active_threshold_a'
+				--active_threshold_a=':Active Threshold B'
+				-b':alias for --active_threshold_b'
+				--active_threshold_c=':Active Threshold C'
+				-c':alias for --active_threshold_c'
+				--active_threshold_d=':Active Threshold D'
+				-d':alias for --active_threshold_d'
+				--active_latency_config=':Active Latency Configuration'
+				-f':alias for --active_latency_config'
+				--active_latency_minimum_window=':Active Latency Minimum Window'
+				-w':alias for --active_latency_minimum_window'
+				--debug_log_trigger_enable='Debug Log Trigger Enable'
+				-r':alias for --debug_log_trigger_enable'
+				--discard_debug_log='Discard Debug Log'
+				-l':alias for --discard_debug_log'
+				--latency_monitor_feature_enable='Latency Monitor Feature Enable'
+				-e':alias for --latency_monitor_feature_enable'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp set-latency-monitor-feature options" _set_latency_monitor_feature
+				;;
+			(internal-log)
+				local _internal_log
+				_internal_log=(
+				/dev/nvme':supply a device to use (required)'
+				--telemetry-type=':Telemetry Type; host, host0, host1 or controller generated'
+				-t':alias for --telemetry-type'
+				--data-area=':Telemetry Data Area; 1, 2, 3, or 4'
+				-a':alias for --data-area'
+				--output-file=':Output file name with path'
+				-f':alias for --output-file'
+				--telemetry-log=':Telemetry log binary'
+				-l':alias for --telemetry-log'
+				--string-log=':String log binary'
+				-s':alias for --string-log'
+				--output-format':Output format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp internal-log options" _internal_log
+				;;
+			(clear-fw-activate-history)
+				local _clear_fw_activate_history
+				_clear_fw_activate_history=(
+				/dev/nvme':supply a device to use (required)'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp clear-fw-activate-history options" _clear_fw_activate_history
+				;;
+			(eol-plp-failure-mode)
+				local _eol_plp_failure_mode
+				_eol_plp_failure_mode=(
+				/dev/nvme':supply a device to use (required)'
+				--mode=':0-3: default/rom/wtm/normal'
+				-m':alias for --mode'
+				--save':Specifies that the controller shall save the attribute'
+				-s':alias for --save'
+				--sel=':0-3,8: current/default/saved/supported/changed:'
+				-S':alias for --sel'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp eol-plp-failure-mode options" _eol_plp_failure_mode
+				;;
+			(clear-pcie-correctable-error-counters)
+				local _clear_pcie_correctable_error_counters
+				_clear_pcie_correctable_error_counters=(
+				/dev/nvme':supply a device to use (required)'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp clear-pcie-correctable-error-counters options" _clear_pcie_correctable_error_counters
+				;;
+			(fw-activate-history)
+				local _fw_activate_history
+				_fw_activate_history=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp fw-activate-history options" _fw_activate_history
+				;;
+			(device-capability-log)
+				local _device_capability_log
+				_device_capability_log=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp device-capability-log options" _device_capability_log
+				;;
+			(set-dssd-power-state-feature)
+				local _set_dssd_power_state_feature
+				_set_dssd_power_state_feature=(
+				/dev/nvme':supply a device to use (required)'
+				--power-state=':DSSD Power State to set in watts'
+				-p':alias for --power-state'
+				--save':Specifies that the controller shall save the attribute'
+				-s':alias for --save'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp set-dssd-power-state-feature options" _set_dssd_power_state_feature
+				;;
+			(get-dssd-power-state-feature)
+				local _get_dssd_power_state_feature
+				_get_dssd_power_state_feature=(
+				/dev/nvme':supply a device to use (required)'
+				--sel=':select from 0 - current, 1 - default, 2 - saved, 3 - supported'
+				-S':alias to --sel'
+				--all=':Print out all 3 values at once - current, default, and saved'
+				-a':alias to --all'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp get-dssd-power-state-feature options" _get_dssd_power_state_feature
+				;;
+			(telemetry-string-log)
+				local _telemetry_string_log
+				_telemetry_string_log=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--output-file=':Output file name with path'
+				-f':alias for --output-file'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp telemetry-string-log options" _telemetry_string_log
+				;;
+			(set-dssd-async-event-config)
+				local _set_dssd_async_event_config
+				_set_dssd_async_event_config=(
+				/dev/nvme':supply a device to use (required)'
+				--enable-panic-notices':Specifies whether an asynchronous event notification
+				is sent to the host for a panic event'
+				-e':alias for --enable-panic-notices'
+				--save':Specifies that the controller shall save the attribute'
+				-s':alias for --save'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp set-dssd-async-event-config options" _set_dssd_async_event_config
+				;;
+			(get-dssd-async-event-config)
+				local _get_dssd_async_event_config
+				_get_dssd_async_event_config=(
+				/dev/nvme':supply a device to use (required)'
+				--sel=':select from 0 - current, 1 - default, 2 - saved, 3 - supported'
+				-S':alias to --sel'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp get-dssd-async-event-config options" _get_dssd_async_event_config
+				;;
+			(tcg-configuration-log)
+				local _ocp_tcg_configuration_log
+				_ocp_tcg_configuration_log=(
+				/dev/nvme':supply a device to use (required)'
+				--output-format=':Output format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp tcg-configuration-log options" _ocp_tcg_configuration_log
+				;;
+			(get-error-injection)
+				local _get_error_injection
+				_get_error_injection=(
+				/dev/nvme':supply a device to use (required)'
+				--sel=':0-3: current/default/saved/supported/changed:'
+				-s':alias for --sel'
+				--no-uuid':Skip UUID index search'
+				-n':alias for --no-uuid'
+				--all-ns':Send the command to all namespaces'
+				-a':alias for --all-ns'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp get-error-injection options" _get_error_injection
+				;;
+			(set-error-injection)
+				local _set_error_injection
+				_set_error_injection=(
+				/dev/nvme':supply a device to use (required)'
+				--data=':Error injection data structure entries'
+				-d':alias for --data'
+				--number=':Number of valid error injection data entries'
+				-n':alias for --number'
+				--no-uuid':Skip UUID index search'
+				-N':alias for --no-uuid'
+				--type=':Error injection type'
+				-t':alias for --type'
+				--nrtdp=':Number of reads to trigger device panic'
+				-r':alias for --nrtdp'
+				--verbose':Increase the information detail in the output.'
+				-v':alias for --verbose'
+				--output-format=':Output format: normal|json|binary'
+				-o ':alias for --output-format'
+				--timeout=':value for timeout'
+				--all-ns':Send the command to all namespaces'
+				-a':alias for --all-ns'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp set-error-injection options" _set_error_injection
+				;;
+			(hardware-component-log)
+				local _hardware_component_log
+				_hardware_component_log=(
+				/dev/nvme':supply a device to use (required)'
+				--comp-id=':component identifier'
+				-i':alias for --comp-id'
+				--list':list component descriptions'
+				-l':alias for --list'
+				--verbose':Increase the information detail in the output.'
+				-v':alias for --verbose'
+				--output-format=':Output format: normal|json|binary'
+				-o ':alias for --output-format'
+				--timeout=':value for timeout'
+				-t ':alias for --timeout'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp hardware-component-log options" _hardware_component_log
+			(set-telemetry-profile)
+				local _ocp_set_telemetry_profile_feature
+				_ocp_set_telemetry_profile_feature=(
+				/dev/nvme':supply a device to use (required)'
+				--telemetry-profile-select=':Telemetry Profile Select'
+				-t':alias for --telemetry-profile-select'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp set-telemetry-profile options" _ocp_set_telemetry_profile_feature
+				;;
+			(get-latency-monitor)
+				local _ocp_get_latency_monitor_feature
+				_ocp_get_latency_monitor_feature=(
+				/dev/nvme':supply a device to use (required)'
+				--sel=':select from 0 - current, 1 - default, 2 - saved, 3 - supported'
+				-s':alias to --sel'
+				--namespace-id=':valid, invalid and inactive nsid'
+				-n':alias to --namespace-id'
+				--no-uuid':Skip UUID index search'
+				-u':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp get-latency-monitor options" _ocp_get_latency_monitor_feature
+				;;
+			(get-clear-pcie-correctable-errors)
+				local _get_clear_pcie_correctable_error_counters
+				_get_clear_pcie_correctable_error_counters=(
+				/dev/nvme':supply a device to use (required)'
+				--sel=':select from 0 - current, 1 - default, 2 - saved, 3 - supported'
+				-s':alias to --sel'
+				--namespace-id=':valid, invalid and inactive nsid'
+				-n':alias to --namespace-id'
+				--no-uuid':Skip UUID index search'
+				-u':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp get-clear-pcie-correctable-errors options" _get_clear_pcie_correctable_error_counters
+				;;
+			(get-telemetry-profile)
+				local _ocp_get_telemetry_profile_feature
+				_ocp_get_telemetry_profile_feature=(
+				/dev/nvme':supply a device to use (required)'
+				--sel=':select from 0 - current, 1 - default, 2 - saved, 3 - supported'
+				-s':alias to --sel'
+				--namespace-id=':valid, invalid and inactive nsid'
+				-n':alias to --namespace-id'
+				--no-uuid':Skip UUID index search'
+				-u':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme ocp get-telemetry-profile options" _ocp_get_telemetry_profile_feature
+				;;
+			(*)
+				_files
+				;;
+			esac
+			;;
+		(solidigm)
+			case ${words[2]} in
+			(id-ctrl)
+				local _id_ctrl
+				_id_ctrl=(
+				--verbose':Increase output verbosity'
+				-v':alias for --verbose'
+				--output-format':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--vendor-specific':dump binary vendor field'
+				-V':alias for --vendor-specific'
+				--raw-binary':show identify in binary format'
+				-b':alias for --raw-binary'
+				--human-readable':show identify in readable format'
+				-H':alias for --human-readable'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm id-ctrl options" _id_ctrl
+				;;
+			(smart-log-add)
+				local _smart_log_add
+				_smart_log_add=(
+				--namespace-id':(optional) desired namespace'
+				-n':alias for --namespace-id'
+				--output-format':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm smart-log-add options" _smart_log_add
+				;;
+			(vs-smart-add-log)
+				local _vs_smart_add_log
+				_vs_smart_add_log=(
+				--output-format':output Format: normal|json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm vs-smart-add-log options" _vs_smart_add_log
+				;;
+			(vs-internal-log)
+				local _vs_internal_log
+				_vs_internal_log=(
+				--type':Log type: ALL, CIT, HIT, NLOG, ASSERT, EVENT, EXTENDED. Defaults to ALL.'
+				-t':alias for --type'
+				--dir-name':Output directory; defaults to current working directory.'
+				-d':alias for --dir-name'
+				--verbose':To print out verbose info.'
+				-v':alias for --verbose'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm vs-internal-log" _vs_internal_log
+				;;
+			(garbage-collect-log)
+				local _garbage_collect_log
+				_garbage_collect_log=(
+				--output-format':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm garbage-collect-log" _garbage_collect_log
+				;;
+			(market-log)
+				local _market_log
+				_market_log=(
+				--raw-binary':dump output in binary format'
+				-b':alias for --raw-binary'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm market-log" _market_log
+				;;
+			(latency-tracking-log)
+				local _latency_tracking_log
+				_latency_tracking_log=(
+				--enable':Enable Latency Tracking'
+				-e':alias for --enable'
+				--disable':Disable Latency Tracking'
+				-d':alias for --disable'
+				--read':Get read statistics'
+				-r':alias for --read'
+				--write':Get write statistics'
+				-w':alias for --write'
+				--type':Log type to get'
+				-t':alias for --type'
+				--output-format':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm latency-tracking-log" _latency_tracking_log
+				;;
+			(parse-telemetry-log)
+				local _parse_telemetry_log
+				_parse_telemetry_log=(
+				--host-generate':Controls when to generate new
+				 host initiated report. Default
+				 value '1' generates new host
+				 initiated report, value '0'
+				 causes retrieval of existing
+				 log.'
+				-g':alias for --host-generate'
+				--controller-init':Gather report generated by the controller.'
+				-c':alias for --controller-init'
+				--data-area':Pick which telemetry data area to
+				report. Default is 3 to fetch
+				areas 1-3. Valid options are 1,
+				2, 3, 4.'
+				-d':alias for --data-area'
+				--config-file':JSON configuration file'
+				-j':alias for --config-file'
+				--source-file':binary file containing log dump to parse'
+				-s':alias for --source-file'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm parse-telemetry-log" _parse_telemetry_log
+				;;
+			(clear-pcie-correctable-errors)
+				local _clear_pcie_correctable_errors
+				_clear_pcie_correctable_errors=(
+				--no-uuid':Skip UUID index search (UUID index not required for OCP 1.0)'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm clear-pcie-correctable-errors" _clear_pcie_correctable_errors
+				;;
+			(clear-fw-activate-history)
+				local _clear_fw_activate_history
+				_clear_fw_activate_history=(
+				--no-uuid':Skip UUID index search (UUID index not required for OCP 1.0)'
+				-n':alias for --no-uuid'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm clear-fw-activate-history" _clear_fw_activate_history
+				;;
+			(vs-fw-activate-history)
+				local _vs_fw_activate_history
+				_vs_fw_activate_history=(
+				--output-format':output format : normal | json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm vs-fw-activate-history" _vs_fw_activate_history
+				;;
+			(log-page-directory)
+				local _log_page_directory
+				_log_page_directory=(
+				--output-format':output format : normal | json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm log-page-directory" _log_page_directory
+				;;
+			(temp-stats)
+				local _temp_stats
+				_temp_stats=(
+				--raw-binary':dump output in binary format'
+				-b':alias for --raw-binary'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm temp-stats" _temp_stats
+				;;
+			(vs-drive-info)
+				local _vs_drive_info
+				_vs_drive_info=(
+				--output-format':output format : normal | json'
+				-o':alias for --output-format'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm vs-drive-info" _vs_drive_info
+				;;
+			(workload-tracker)
+				local _workload_tracker
+				_workload_tracker=(
+				'--uuid-index=:specify uuid index'
+				'-U:alias for --uuid-index'
+				--enable':Enable Workload Tracker'
+				-e':alias for --enable'
+				--disable':Disable Workload Tracker'
+				-d':alias for --disable'
+				--sample-time=':Sample time in seconds'
+				-s':alias for --sample-time'
+				--type=':Workload Tracker type'
+				-t':alias for --type'
+				--run-time=':Run time in seconds'
+				-r':alias for --run-time'
+				--flush-freq=':Flush frequency in seconds'
+				-f':alias for --flush-freq'
+				--wall-clock':Use wall clock time'
+				-w':alias for --wall-clock'
+				--trigger-field=':Trigger field'
+				-T':alias for --trigger-field'
+				--trigger-threshold=':Trigger threshold'
+				-V':alias for --trigger-threshold'
+				--trigger-on-delta':Trigger on delta'
+				-D':alias for --trigger-on-delta'
+				--trigger-on-latency':Trigger on latency'
+				-L':alias for --trigger-on-latency'
+				--verbose':Increase output verbosity'
+				-v':alias for --verbose'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme solidigm workload-tracker options" _workload_tracker
+				;;
+			(*)
+				_files
+				;;
+			esac
+			;;
+		(fdp)
+			case ${words[2]} in
+			(feature)
+				local _feature
+				_feature=(
+				--endgrp-id=':Endurance group ID'
+				-e':alias for --endgrp-id'
+				--enable-conf-idx=':FDP configuration index to enable'
+				-c':alias for --enable-conf-idx'
+				--disable=':Disable current FDP configuration'
+				-d':alias for --disable'
+				--verbose=':Increase output verbosity'
+				-v':alias for --verbose'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme fdp feature options" _feature
+				;;
+			(*)
+				_files
+				;;
+			esac
+			;;
+		(dapustor)
+			case ${words[2]} in
+			(smart-log-add)
+				local _smart_log_add
+				_smart_log_add=(
+				--namespace-id':(optional) desired namespace'
+				-n':alias for --namespace-id'
+				--output-format':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--raw-binary':dump log in binary format'
+				-b':alias of --raw-binary'
+				)
+				_arguments '*:: :->subcmds'
+				_describe -t commands "nvme dapustor smart-log-add options" _smart_log_add
+				;;
+			(*)
+				_files
+				;;
+			esac
+			;;
+		(sanitize)
+			case ${words[CURRENT-1]} in
+			(--sanact=|-a)
+				_values '' 'exit-failure' 'start-block-erase' 'start-overwrite' 'start-crypto-erase'
+				;;
+			(*)
+				_files
+				;;
+			esac
+			;;
+                (mangoboost)
+                        case ${words[2]} in
+                        (id-ctrl)
+                                local _id_ctrl
+                                _id_ctrl=(
+                                --verbose':Increase output verbosity'
+                                -v':alias for --verbose'
+                                --output-format':Output format: normal|json|binary'
+                                -o':alias for --output-format'
+                                --vendor-specific':dump binary vendor field'
+                                -V':alias for --vendor-specific'
+                                --raw-binary':show identify in binary format'
+                                -b':alias for --raw-binary'
+                                --human-readable':show identify in readable format'
+                                -H':alias for --human-readable'
+                                )
+                                _arguments '*:: :->subcmds'
+                                _describe -t commands "nvme mangoboost id-ctrl options" _id_ctrl
+                                ;;
+                        (*)
+                                _files
+                                ;;
+			esac
+			;;
+		(*)
+			_files
+			;;
+		esac
+		return
 	else
 		case ${words[CURRENT-1]} in
+		(list)
+			local _list
+			_list=(
+			--output-format=':Output format: normal|json'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme list options" _list
+			;;
+		(list-subsys)
+			local _listsubsys
+			_listsubsys=(
+			--output-format=':Output format: normal|json'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme list-subsys options" _listsubsys
+			;;
 		(id-ctrl)
 			local _idctrl
 			_idctrl=(
@@ -60,9 +770,8 @@ _nvme () {
 			--human-readable':show infos in readable format'
 			-H':alias of --human-readable'
 			--vendor-specific':also dump binary vendor infos'
-			-v':alias of --vendor-specific'
+			-V':alias of --vendor-specific'
 			)
-
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme id-ctrl options" _idctrl
 			;;
@@ -77,10 +786,36 @@ _nvme () {
 			--human-readable':show infos in readable format'
 			-H':alias of --human-readable'
 			--vendor-specific':also dump binary vendor infos'
-			-v':alias of --vendor-specific'
+			-V':alias of --vendor-specific'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme id-ns options" _idns
+			;;
+		(id-ns-granularity)
+			local _idns_granularity
+			_idns_granularity=(
+			/dev/nvme':supply a device to use (required)'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme id-ns-granularity options" _idns_granularity
+			;;
+		(id-ns-lba-format)
+			local _idns_lba_format
+			_idns_lba_format=(
+			/dev/nvme':supply a device to use (required)'
+			--lba-format-index=':show infos for lba format index <lba-format-index>'
+			-i':alias of --lba-format-index'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme id-ns-lba-format options" _idns_lba_format
 			;;
 		(list-ns)
 			local _listns
@@ -88,9 +823,171 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--namespace-id=':start namespace infos listing with this nsid'
 			-n':alias of --namespace-id'
+			--csi=':command set identifier'
+			-y':alias of --csi'
+			--all':show all namespaces in the subsystem, whether attached or inactive'
+			-a':alias of --all'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme list-ns options" _listns
+			;;
+		(cmdset-ind-id-ns)
+			local _cmdset_ind_idns
+			_cmdset_ind_idns=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':show infos for namespace <nsid>'
+			-n':alias of --namespace-id'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme cmdset-ind-id-ns options" _cmdset_ind_idns
+			;;
+		(id-iocs)
+			local _idiocs
+			_idiocs=(
+			/dev/nvme':supply a device to use (required)'
+			--controller-id=':show infos for controller <cntid>'
+			-c':alias of --controller-id'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme id-iocs options" _idiocs
+			;;
+		(id-domain)
+			local _iddomain
+			_iddomain=(
+			/dev/nvme':supply a device to use (required)'
+			--dom-id=':show infos for domain id <cntid>'
+			-d':alias of --dom-id'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme id-domain options" _iddomain
+			;;
+		(nvm-id-ctrl)
+			local _nvmidctrl
+			_nvmidctrl=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvm-id-ctrl options" _nvmidctrl
+			;;
+		(nvm-id-ns)
+			local _nvmidns
+			_nvmidns=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':show infos for namespace <nsid>'
+			-n':alias of --namespace-id'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvm-id-ns options" _nvmidns
+			;;
+		(nvm-id-ns-lba-format)
+			local _nvm_idns_lba_format
+			_nvm_idns_lba_format=(
+			/dev/nvme':supply a device to use (required)'
+			--lba-format-index=':show infos for lba format index <lba-format-index>'
+			-i':alias of --lba-format-index'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvm-id-ns-lba-format options" _nvm_idns_lba_format
+			;;
+		(primary-ctrl-caps)
+			local _primary_ctrl_caps
+			_primary_ctrl_caps=(
+			/dev/nvme':supply a device to use (required)'
+			--cntlid=':show infos for controller <cntid>'
+			-c':alias of --cntlid'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme primary-ctrl-caps options" _primary_ctrl_caps
+			;;
+		(list-secondary)
+			local _listsecondary
+			_listsecondary=(
+			/dev/nvme':supply a device to use (required)'
+			--cntid=':show infos for lowest controller <cntid>'
+			-c':alias of --cntid'
+			--namespace-id=':show infos for namespace <nsid>'
+			-n':alias of --namespace-id'
+			--num-entries=':number of entries to retrieve'
+			-e':alias of --num-entries'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme list-secondary options" _listsecondary
+			;;
+		(ns-descs)
+			local _ns_descs
+			_ns_descs=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':show infos for namespace <nsid>'
+			-n':alias of --namespace-id'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme ns-descs options" _ns_descs
+			;;
+		(id-nvmset)
+			local _id_nvmset
+			_id_nvmset=(
+			/dev/nvme':supply a device to use (required)'
+			--nvmset_id=':NVM Set Identify value'
+			-i':alias of --nvmset_id'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme id-nvmset options" _id_nvmset
+			;;
+		(id-uuid)
+			local _id_uuid
+			_id_uuid=(
+			/dev/nvme':supply a device to use (required)'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme id-uuid options" _id_uuid
+			;;
+		(list-endgrp)
+			local _listendgrp
+			_listendgrp=(
+			/dev/nvme':supply a device to use (required)'
+			--endgrp-id=':endurance group id'
+			-i':alias of --endgrp-id'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme list-endgrp options" _listendgrp
 			;;
 		(create-ns)
 			local _createns
@@ -105,7 +1002,35 @@ _nvme () {
 			--dps=':data protection?'
 			-d':alias of --dps'
 			--nmic=':multipath and sharing'
-			-n':alias of --nmic'
+			-m':alias of --nmic'
+			--anagrp-id=':ANA Group Identifier'
+			-a':alias of --anagrp-id'
+			--nvmset-id=':NVM Set Identifier'
+			-i':alias of --nvmset-id'
+			--endg-id=':Endurance Group Identifier'
+			-e':alias of --endg-id'
+			--block-size=':target block size'
+			-b':alias of --block-size'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			--csi=':command set identifier'
+			-y':alias of --csi'
+			--lbstm=':logical block storage tag mask'
+			-l':alias of --lbstm'
+			--nsze-si=':size of ns (NSZE) in standard SI units'
+			-S':alias of --nsze-si'
+			--ncap-si=':capacity of ns (NCAP) in standard SI units'
+			-C':alias of --ncap-si'
+			--azr=':Allocate ZRWA Resources (AZR) for Zoned Namespace Command Set'
+			-z':alias of --azr'
+			--rar=':Requested Active Resources (RAR) for Zoned Namespace Command Set'
+			-r':alias of --rar'
+			--ror=':Requested Open Resources (ROR) for Zoned Namespace Command Set'
+			-O':alias of --ror'
+			--rnumzrwa=':Requested Number of ZRWA Resources (RNUMZRWA) for Zoned Namespace Command Set'
+			-u':alias of --rnumzrwa'
+			--phndls=':Comma separated list of Placement Handle Associated RUH'
+			-p':alias of --phndls'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme create-ns options" _createns
@@ -116,6 +1041,8 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--namespace-id=':namespace to delete'
 			-n':alias of --namespace-id'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme delete-ns options" _deletens
@@ -176,9 +1103,85 @@ _nvme () {
 			-n':alias of --namespace-id'
 			--raw-binary':dump infos in binary format'
 			-b':alias of --raw-binary'
+			--aen=':result of the aen, use to override log id'
+			-a':alias of --aen'
+			--lpo=':log page offset specifies the location within a log page from where to start returning data'
+			-L':alias of --lpo'
+			--lsi=':log specific identifier specifies an identifier that is required for a particular log page'
+			-S':alias of --lsi'
+			--rae':Retain an Asynchronous Event'
+			-r':alias of --rae'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
+			--csi=':command set identifier'
+			-y':alias of --csi'
+			--ot':offset type'
+			-O':alias of --ot'
+			--xfer-len=':read chunk size (default 4k)'
+			-x':alias of --xfer-len'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-log options" _getlog
+			;;
+		(persistent-event-log)
+			local _persistenteventlog
+			_persistenteventlog=(
+			/dev/nvme':supply a device to use (required)'
+			--action=':action the controller shall take for this log page'
+			-a':alias to --action'
+			--log-len=':number of bytes to show for requested log'
+			-l':alias of --log-len'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme persistent-event-log options" _persistenteventlog
+			;;
+		(telemetry-log)
+			local _telemetry_log
+			_telemetry_log=(
+			/dev/nvme':supply a device to use (required)'
+			--output-file=':telemetry data output write'
+			-O':alias for --output-file'
+			--host-generate=':Have the host tell the controller to generate the report'
+			-g':alias to --host-generate'
+			--controller-init':Gather report generated by the controller'
+			-c':alias of --controller-init'
+			--data-area':Pick which telemetry data area to report'
+			-d':alias of --data-area'
+			--data-area':Pick which telemetry data area to report'
+			-d':alias of --data-area'
+			--rae':Retain an Asynchronous Event'
+			-r':alias to --rae'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme telemetry-log options" _telemetry_log
+			;;
+		(pred-lat-event-agg-log)
+			local _predlateventagglog
+			_predlateventagglog=(
+			/dev/nvme':supply a device to use (required)'
+			--log-entries=':Number of pending NVM Set Entries log list'
+			-e':alias to --log-entries'
+			--rae':Retain an Asynchronous Event'
+			-r':alias to --rae'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme pred-lat-event-agg-log options" _predlateventagglog
+			;;
+		(predictable-lat-log)
+			local _predictablelatlog
+			_predictablelatlog=(
+			/dev/nvme':supply a device to use (required)'
+			--nvmset-id=':NVM Set Identifier on which log page retrieve info'
+			-i':alias to --nvmset-id'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme predictable-lat-log options" _predictablelatlog
 			;;
 		(fw-log)
 			local _fwlog
@@ -190,6 +1193,18 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme fw-log options" _fwlog
 			;;
+		(changed-ns-list-log)
+			local _changed_ns_list_log
+			_changed_ns_list_log=(
+			/dev/nvme':supply a device to use (required)'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme changed-ns-list-log options" _changed_ns_list_log
+			;;
 		(smart-log)
 			local _smartlog
 			_smartlog=(
@@ -198,6 +1213,8 @@ _nvme () {
 			-n':alias to --namespace-id'
 			--raw-binary':dump infos in binary format'
 			-b':alias to --raw-binary'
+			--verbose':show infos verbosely'
+			-v':alias to --verbose'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme smart-log options" _smartlog
@@ -214,6 +1231,18 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme smart-log-add options" _add
 			;;
+		(ana-log)
+			local _ana_log
+			_ana_log=(
+			/dev/nvme':supply a device to use (required)'
+			--groups':Return ANA groups only'
+			-g':alias to --groups'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme ana-log options" _ana_log
+			;;
 		(error-log)
 			local _errlog
 			_errlog=(
@@ -228,6 +1257,80 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme error-log options" _errlog
 			;;
+		(effects-log)
+			local _effects_log
+			_effects_log=(
+			/dev/nvme':supply a device to use (required)'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			--raw-binary':dump infos in binary format'
+			-b':alias to --raw-binary'
+			--csi=':command set identifier'
+			-c':alias of --csi'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme effects-log options" _effects_log
+			;;
+		(endurance-log)
+			local _endurance_log
+			_endurance_log=(
+			/dev/nvme':supply a device to use (required)'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--group-id=':The endurance group identifier'
+			-g':alias of --group-id'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme endurance-log options" _endurance_log
+			;;
+		(endurance-event-agg-log)
+			local _enduranceeventagglog
+			_enduranceeventagglog=(
+			/dev/nvme':supply a device to use (required)'
+			--log-entries=':Number of Endurance Group Event Agg Entries log list'
+			-e':alias to --log-entries'
+			--rae':Retain an Asynchronous Event'
+			-r':alias to --rae'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme endurance-event-agg-log options" _enduranceeventagglog
+			;;
+		(lba-status-log)
+			local _lbastatuslog
+			_lbastatuslog=(
+			/dev/nvme':supply a device to use (required)'
+			--rae':Retain an Asynchronous Event'
+			-r':alias to --rae'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme lba-status-log options" _lbastatuslog
+			;;
+		(resv-notif-log)
+			local _resvnotiflog
+			_resvnotiflog=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme resv-notif-log options" _resvnotiflog
+			;;
+		(boot-part-log)
+			local _bootpartlog
+			_bootpartlog=(
+			/dev/nvme':supply a device to use (required)'
+			--lsp=':log specific field'
+			-s':alias to --lsp'
+			--output-file=':boot partition data output write'
+			-f':alias for --output-file'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme boot-part-log options" _bootpartlog
+			;;
 		(get-feature)
 			local _getf
 			_getf=(
@@ -240,12 +1343,70 @@ _nvme () {
 			-s':alias to --sel'
 			--data-len=':buffer len for returned LBA Type Range or host identifier data'
 			-l':alias for --data-len'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
 			--cdw11=':dword 11 value, used for interrupt vector configuration only'
 			--raw-binary':dump infos in binary format'
 			-b':alias to --raw-binary'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			--human-readable':show feature in readable format'
+			-H':alias of --human-readable'
+			--changed':show feature changed'
+			-C':alias of --changed'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-feature options" _getf
+			;;
+		(device-self-test)
+			local _device_self_test
+			_device_self_test=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':Indicate the namespace in which the device self-test has to be carried out'
+			-n':alias to --namespace-id'
+			--self-test-code=':This field specifies the action taken by the device self-test command'
+			-s':alias for --self-test-code'
+			--wait':Wait for the test to finish'
+			-w':alias to --wait'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme device-self-test options" _device_self_test
+			;;
+		(self-test-log)
+			local _self_test_log
+			_self_test_log=(
+			/dev/nvme':supply a device to use (required)'
+			--dst-entries=':Indicate how many DST log entries to be retrieved'
+			-e':alias to --dst-entries'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme self-test-log options" _self_test_log
+			;;
+		(lockdown)
+			local _lockdown
+			_lockdown=(
+			/dev/nvme':supply a device to use (required)'
+			--ofi=':Opcode or Feature Identifier(OFI) (required)'
+			-O':alias of --ofi'
+			--ifc=':Interface (INF) field Information (required)'
+			-f':alias of --ifc'
+			--prhbt=':Prohibit(PRHBT) bit field (required)'
+			-p':alias of --prhbt'
+			--scp=':Scope(SCP) field for identifying opcode or feature id (required)'
+			-s':alias of --scp'
+			--uuid=':UUID Index field required aligned with Scope'
+			-U':alias of --uuid'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme lockdown options" _lockdown
 			;;
 		(set-feature)
 			local _setf
@@ -260,10 +1421,42 @@ _nvme () {
 			--data=':data file for LBA Type Range or host identifier buffer (defaults to stdin)'
 			-d':alias to --data'
 			--value=':new value of feature (required)'
-			-v'alias to --value'
+			-V'alias to --value'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-feature options" _setf
+			;;
+		(set-property)
+			local _set_property
+			_set_property=(
+			/dev/nvme':supply a device to use (required)'
+			--offset=':the offset of the property'
+			-O':alias to --offset'
+			--value=':the value of the property to be set'
+			-V':alias to --value'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme set-property options" _set_property
+			;;
+		(get-property)
+			local _get_property
+			_get_property=(
+			/dev/nvme':supply a device to use (required)'
+			--offset=':the offset of the property'
+			-O':alias to --offset'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme get-property options" _get_property
 			;;
 		(format)
 			local _format
@@ -271,6 +1464,8 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--namespace-id=':<nsid> of namespace to format (required)'
 			-n':alias of --namespace-id'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			--lbaf=':LBA format to apply to namespace (required)'
 			-l':alias of --lbaf'
 			--ses=':secure erase? 0 - no-op (default), 1 - user-data erase, 2 - cryptographic erase'
@@ -285,17 +1480,19 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme format options" _format
 			;;
-		(fw-activate)
-			local _fwact
-			_fwact=(
+		(fw-commit)
+			local _fw_commit
+			_fw_commit=(
 			/dev/nvme':supply a device to use (required)'
 			--action=':activation action (required)? 0 - replace fw without activating, 1 - replace with activation, 2 - replace with activation at next reset'
 			-a':alias of --action'
 			--slot=':firmware slot to activate'
 			-s':alias of --slot'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
-			_describe -t commands "nvme fw-activate options" _fwact
+			_describe -t commands "nvme fw-commit options" _fw_commit
 			;;
 		(fw-download)
 			local _fwd
@@ -306,17 +1503,225 @@ _nvme () {
 			--xfer=':limit on chunk-size of transfer (if device has download size limit)'
 			-x':alias of --xfer'
 			--offset=':starting offset, in dwords (defaults to 0, only useful if download is split across multiple files)'
-			-o':alias of --offset'
+			-O':alias of --offset'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme fw-download options" _fwd
+			;;
+		(capacity-mgmt)
+			local _capacity_mgmt
+			_capacity_mgmt=(
+			/dev/nvme':supply a device to use (required)'
+			--operation=':Operation to be performed by the controller'
+			-O':alias of --operation'
+			--element-id=':specific to the value of the Operation field'
+			-i':alias of --element-id'
+			--cap-lower=':Least significant 32 bits of the capacity in bytes'
+			-l':alias of --cap-lower'
+			--cap-upper=':Most significant 32 bits of the capacity in bytes'
+			-u':alias of --cap-upper'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme capacity-mgmt options" _capacity_mgmt
+			;;
+		(write-zeroes)
+			local _write_zeroes
+			_write_zeroes=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--start-block=':64-bit address of the first logical block to be written'
+			-s':alias of --start-block'
+			--block-count=':number of logical blocks on device to write'
+			-c':alias of --block-count'
+			--dir-type=':directive type'
+			-T':alias of --dir-type'
+			--deac':Set DEAC bit, requesting controller to deallocate specified logical blocks'
+			-d':alias of --deac'
+			--limited-retry':if included, controller should try less hard to send data to media (if not included, all available data-recovery means used)'
+			-l':alias of --limited-retry'
+			--force-unit-access':data shall be written to nonvolatile media before command completion is indicated'
+			-f':alias of --force-unit-access'
+			--prinfo=':protection information and check field'
+			-p':alias of --prinfo'
+			--ref-tag=':reference tag (for end to end PI)'
+			-r':alias of --ref-tag'
+			--app-tag-mask=':application tag mask (for end to end PI)'
+			-m':alias of --app-tag-mask'
+			--app-tag=':application tag (for end to end PI)'
+			-a':alias of --app-tag'
+			--storage-tag=':storage tag for end-to-end PI'
+			-S':alias of --storage-tag'
+			--storage-tag-check':Storage Tag field shall be checked as part of end-to-end data protection processing'
+			-C':alias of --storage-tag-check'
+			--dir-spec=':directive specific'
+			-D':alias of --dir-spec'
+			--namespace-zeroes':If set, then the controller clear all logical blocks to zero in the entire namespace'
+			-Z':alias of --namespace-zeroes'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme write-zeroes options" _write_zeroes
+			;;
+		(write-uncor)
+			local _write_uncor
+			_write_uncor=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--start-block=':64-bit address of the first logical block to be written'
+			-s':alias of --start-block'
+			--block-count=':number of logical blocks on device to write'
+			-c':alias of --block-count'
+			--dir-type=':directive type'
+			-T':alias of --dir-type'
+			--dir-spec':directive specific'
+			-S':alias of --dir-spec'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme write-uncor options" _write_uncor
+			;;
+		(verify)
+			local _verify
+			_verify=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--start-block=':64-bit address of the first logical block to be verified'
+			-s':alias of --start-block'
+			--block-count=':number of logical blocks on device to verify'
+			-c':alias of --block-count'
+			--limited-retry':if included, controller should try less hard to send data to media (if not included, all available data-recovery means used)'
+			-l':alias of --limited-retry'
+			--force-unit-access':data shall be verified from nonvolatile media before command completion is indicated'
+			-f':alias of --force-unit-access'
+			--prinfo=':protection information and check field'
+			-p':alias of --prinfo'
+			--ref-tag=':reference tag (for end to end PI)'
+			-r':alias of --ref-tag'
+			--app-tag=':application tag (for end to end PI)'
+			-a':alias of --app-tag'
+			--app-tag-mask=':application tag mask (for end to end PI)'
+			-m':alias of --app-tag-mask'
+			--storage-tag=':storage tag for end-to-end PI'
+			-S':alias of --storage-tag'
+			--storage-tag-check':Storage Tag field shall be checked as part of end-to-end data protection processing'
+			-C':alias of --storage-tag-check'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme verify options" _verify
+			;;
+		(sanitize)
+			local _sanitize
+			_sanitize=(
+			/dev/nvme':supply a device to use (required)'
+			--no-dealloc':No deallocate after sanitize'
+			-d':alias of --no-dealloc'
+			--oipbp':Overwrite invert pattern between passes'
+			-i':alias of --oipbp'
+			--owpass=':Overwrite pass count'
+			-n':alias of --owpass'
+			--ause':Allow unrestricted sanitize exit'
+			-u':alias of --ause'
+			--sanact=':Sanitize action: 1 = Exit failure mode, 2 = Start block erase, 3 = Start overwrite, 4 = Start crypto erase, 5 = Exit media verification'
+			-a':alias of --sanact'
+			--ovrpat=':Overwrite pattern'
+			-p':alias of --ovrpat'
+			--emvs=':Enter media verification state'
+			-e':alias of --emvs'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme sanitize options" _sanitize
+			;;
+		(sanitize-log)
+			local _sanitize_log
+			_sanitize_log=(
+			/dev/nvme':supply a device to use (required)'
+			--rae':Retain an Asynchronous Event'
+			-r':alias of --rae'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme sanitize-log options" _sanitize_log
+			;;
+		(reset)
+			local _reset
+			_reset=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme reset options" _reset
+			;;
+		(subsystem-reset)
+			local _subsystem_reset
+			_subsystem_reset=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme subsystem-reset options" _subsystem_reset
+			;;
+		(ns-rescan)
+			local _ns_rescan
+			_ns_rescan=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme ns-rescan options" _ns_rescan
+			;;
+		(supported-log-pages)
+			local _support
+			_support=(
+			/dev/nvme':supply a device to use (required)'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme supported-log-pages options" _support
+			;;
+		(media-unit-stat-log)
+			local _medialog
+			_medialog=(
+			/dev/nvme':supply a device to use (required)'
+			--dom-id=':show infos for domain id'
+			-d':alias of --dom-id'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme media-unit-stat-log" _medialog
+			;;
+		(supported-cap-config-log)
+			local _caplog
+			_caplog=(
+			/dev/nvme':supply a device to use (required)'
+			--dom-id=':show infos for domain id'
+			-d':alias of --dom-id'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme supported-cap-config-log" _caplog
 			;;
 		(admin-passthru)
 			local _admin
 			_admin=(
 			/dev/nvme':supply a device to use (required)'
 			--opcode=':hexadecimal opcode to send (required)'
-			-o':alias of --opcode'
+			-O':alias of --opcode'
 			--flags=':command flags'
 			-f':alias of --flags'
 			--rsvd=':value for reserved field'
@@ -366,7 +1771,7 @@ _nvme () {
 			_io=(
 			/dev/nvme':supply a device to use (required)'
 			--opcode=':hexadecimal opcode to send (required)'
-			-o':alias of --opcode'
+			-O':alias of --opcode'
 			--flags=':command flags'
 			-f':alias of --flags'
 			--rsvd=':value for reserved field'
@@ -423,6 +1828,7 @@ _nvme () {
 			-s':alias for --spsp'
 			--tl=':transfer length as defined in SPC-4'
 			-t':alias for --tl'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme security-send options" _ssend
@@ -441,9 +1847,33 @@ _nvme () {
 			-a':alias for --al'
 			--raw-binary':dump output in binary format'
 			-b':alias for --raw-binary'
+			--timeout=':value for timeout'
+			-t':alias for --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme security-recv options" _srecv
+			;;
+		(get-lba-status)
+			local _get_lba_status
+			_get_lba_status=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':show infos for namespace <nsid>'
+			-n':alias of --namespace-id'
+			--start-lba=':Starting LBA(SLBA) in 64-bit address of the first logical block'
+			-s':alias for --start-lba'
+			--max-dw=':Maximum Number of Dwords(MNDW) specifies maximum number of dwords to return'
+			-m':alias for --max-dw'
+			--action=':Action Type(ATYPE) specifies the mechanism'
+			-a':alias for --action'
+			--range-len=':Range Length(RL) specifies the length of the range of contiguous LBAs beginning at SLBA'
+			-l':alias for --range-len'
+			--timeout':value for timeout'
+			-t':alias for --timeout'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme get-lba-status options" _get_lba_status
 			;;
 		(resv-acquire)
 			local _acq
@@ -455,12 +1885,13 @@ _nvme () {
 			-p':alias for --prkey'
 			--rtype=':hexadecimal reservation type'
 			-t':alias for --rtype'
-			--racqa=':reservation acquiry action'
+			--racqa=':reservation acquire action'
 			-a':alias for --racqa'
 			--iekey=':ignore existing reservation key'
 			-i':alias for --iekey'
 			--crkey':current reservation key'
 			-c':alias for --crkey'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-acquire options" _acq
@@ -477,6 +1908,7 @@ _nvme () {
 			-a':alias of --rrela'
 			--iekey':ignore existing reservation key'
 			-i':alias of --iekey'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-release options" _rel
@@ -489,8 +1921,12 @@ _nvme () {
 			-n':alias of --namespace-id'
 			--numd=':number of dwords of reservation status to xfer'
 			-d':alias of --numd'
+			--eds':request extended data structure'
+			-e':alias of --eds'
 			--raw-binary':dump output in binary format'
 			-b':alias of --raw-binary'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-report options" _rep
@@ -508,12 +1944,82 @@ _nvme () {
 			--cptpl=':change persistence through power loss setting'
 			-p':alias for --cptpl'
 			--rrega=':reservation registration action to perform'
-			-a':alias for --rrega'
+			-r':alias for --rrega'
 			--iekey':ignore existing reservation key'
 			-i':alias for --iekey'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-register options" _reg
+			;;
+		(dsm)
+			local _dsm
+			_dsm=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--ctx-attrs=':Comma separated list of the context attributes in each range'
+			-a':alias of --ctx-attrs'
+			--blocks':Comma separated list of the number of blocks in each range'
+			-b':alias of --blocks'
+			--slbs':Comma separated list of the starting block in each range'
+			-s':alias of --slbs'
+			--ad':Attribute Deallocate'
+			-d':alias of --ad'
+			--idw':Attribute Integral Dataset for Write'
+			-w':alias of --idw'
+			--idr':Attribute Integral Dataset for Read'
+			-r':alias of --idr'
+			--cdw11=':value for command dword 11'
+			-c':alias for --cdw11'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme dsm options" _dsm
+			;;
+		(copy)
+			local _copy
+			_copy=(
+			/dev/nvme':supply a device to use (required)'
+			--sdlba=':64-bit addr of first destination logical block'
+			-d':alias of --sdlba'
+			--slbs=':64-bit addr of first block per range (comma-separated list)'
+			-s':alias of --slbs'
+			--blocks=':number of blocks per range (comma-separated list, zeroes-based values)'
+			-b':alias of --blocks'
+			--limited-retry':if included, controller should try less hard to retrieve data from media (if not included, all available data recovery means used)'
+			-l':alias of --limited-retry'
+			--force-unit-access':if included, the data shall be read from non-volatile media'
+			-f':alias of --force-unit access'
+			--prinfow=':protection information and check field (write part)'
+			-p':alias of --prinfow'
+			--prinfor=':protection information and check field (read part)'
+			-P':alias of --prinfor'
+			--ref-tag=':initial lba reference tag (write part)'
+			-r':alias of --ref-tag'
+			--expected-ref-tags=':expected lba reference tags (read part, comma-separated list)'
+			-R':alias of --expected-ref-tags'
+			--app-tag=':lba application tag (write part)'
+			-a':alias of --app-tag'
+			--expected-app-tags=':expected lba application tags (read part, comma-separated list)'
+			-A':alias of --expected-app-tags'
+			--app-tag-mask=':lba application tag mask (write part)'
+			-m':alias of --app-tag-mask'
+			--expected-app-tag-masks=':expected lba application tag masks (read part, comma-separated list)'
+			-M':alias of --expected-app-tag-masks'
+			--dir-type=':directive type (write part)'
+			-T':alias of --dir-type'
+			--dir-spec=':directive specific (write part)'
+			-S':alias of --dir-spec'
+			--format=':source range entry format'
+			-F':alias of --format'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme copy options" _copy
 			;;
 		(flush)
 			local _flush
@@ -533,6 +2039,8 @@ _nvme () {
 			-s':alias of --start-block'
 			--block-count=':number of logical blocks on device to compare to local data'
 			-c':alias of --block-count'
+			--block-size=':if specified, logical block size in bytes (if not included, the logical block size is found through identify namespace)'
+			-b':alias of --block-size'
 			--metadata-size=':number of bytes of metadata to compare'
 			-y':alias of --metadata-size'
 			--data-size=':size of local data buffer in bytes'
@@ -550,9 +2058,12 @@ _nvme () {
 			--force-unit-access':if included, the data shall be read from non-volatile media'
 			-f':alias of --force-unit access'
 			--show-command':show command instead of sending to device'
-			-v':alias of --show-command'
+			-V':alias of --show-command'
 			--dry-run':show command instead of sending to device'
 			-w':alias of --show-command'
+			--latency':latency statistics will be output following compare'
+			-t':alias of --latency'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme compare options" _comp
@@ -565,6 +2076,8 @@ _nvme () {
 			-s':alias of --start-block'
 			--block-count=':number of logical blocks on device to read'
 			-c':alias of --block-count'
+			--block-size=':if specified, logical block size in bytes (if not included, the logical block size is found through identify namespace)'
+			-b':alias of --block-size'
 			--data-size=':size of data to be read'
 			-z':alias of --data-size'
 			--metadata-size=':size of metadata to be read'
@@ -579,16 +2092,17 @@ _nvme () {
 			-m':alias of --app-tag-mask'
 			--app-tag=':application tag (for end to end PI)'
 			-a':alias of --app-tag'
-			--limited-retry=':if included, controller should try less hard to retrieve data from media (if not included, all available data-recovery means used)'
+			--limited-retry':if included, controller should try less hard to retrieve data from media (if not included, all available data-recovery means used)'
 			-l':alias of --limited-retry'
 			--latency':latency statistics will be output following read'
 			-t':alias of --latency'
 			--force-unit-access':data read shall be returned from nonvolatile media before command completion is indicated'
 			-f':alias of --force-unit-access'
 			--show-command':show command instead of sending to device'
-			-v':alias of --show-command'
+			-V':alias of --show-command'
 			--dry-run':show command instead of sending to device'
 			-w':alias of --show-command'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme read options" _read
@@ -601,6 +2115,8 @@ _nvme () {
 			-s':alias of --start-block'
 			--block-count=':number of logical blocks on device to write'
 			-c':alias of --block-count'
+			--block-size=':if specified, logical block size in bytes (if not included, the logical block size is found through identify namespace)'
+			-b':alias of --block-size'
 			--data-size=':size of data to be written'
 			-z':alias of --data-size'
 			--metadata-size=':size of metadata to be written'
@@ -615,16 +2131,17 @@ _nvme () {
 			-m':alias of --app-tag-mask'
 			--app-tag=':application tag (for end to end PI)'
 			-a':alias of --app-tag'
-			--limited-retry=':if included, controller should try less hard to send data to media (if not included, all available data-recovery means used)'
+			--limited-retry':if included, controller should try less hard to send data to media (if not included, all available data-recovery means used)'
 			-l':alias of --limited-retry'
 			--latency':latency statistics will be output following write'
 			-t':alias of --latency'
 			--force-unit-access':data shall be written to nonvolatile media before command completion is indicated'
 			-f':alias of --force-unit-access'
 			--show-command':show command instead of sending to device'
-			-v':alias of --show-command'
+			-V':alias of --show-command'
 			--dry-run':show command instead of sending to device'
 			-w':alias of --show-command'
+			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme write options" _wr
@@ -633,18 +2150,863 @@ _nvme () {
 			local _shor
 			_shor=(
 			/dev/nvme':supply a device to use (required)'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme show-regs options" _shor
 			;;
+		(fid-support-effects-log)
+			local _fidsupporteffectslog
+			_fidsupporteffectslog=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme fid-support-effects-log options" _fidsupporteffectslog
+			;;
+		(discover)
+			local _discover
+			_discover=(
+			--device=':use existing discovery controller device'
+			-d':alias for --device'
+			--transport=':transport type'
+			-t':alias for --transport'
+			--nqn=':subsystem nqn'
+			-n':alias for --nqn'
+			--traddr=':transport address'
+			-a':alias for --traddr'
+			--trsvcid=':transport service id (e.g. IP port)'
+			-s':alias for --trsvcid'
+			--host-traddr=':host traddr (e.g. FC WWN's)'
+			-w':alias for --host-traddr'
+			--host-iface=':host interface (for tcp transport)'
+			-f':alias for --host-iface'
+			--hostnqn=':user-defined hostnqn'
+			-q':alias for --hostnqn'
+			--hostid=':user-defined hostid (if default not used)'
+			-I':alias for --hostid'
+			--dhchap-secret=':user-defined dhchap key (if default not used)'
+			-S':alias for --dhchap-secret'
+			--nr-io-queues=':number of io queues to use (default is core count)'
+			-i':alias for --nr-io-queues'
+			--nr-write-queues=':number of write queues to use (default 0)'
+			-W':alias for --nr-write-queues'
+			--nr-poll-queues=':number of poll queues to use (default 0)'
+			-P':alias for --nr-poll-queues'
+			--queue-size=':number of io queue elements to use (default 128)'
+			-Q':alias for --queue-size'
+			--keep-alive-tmo=':keep alive timeout period in seconds'
+			-k':alias for --keep-alive-tmo'
+			--reconnect-delay=':reconnect timeout period in seconds'
+			-c':alias for --reconnect-delay'
+			--ctrl-loss-tmo=':controller loss timeout period in seconds'
+			-l':alias for --ctrl-loss-tmo'
+			--tos=':type of service'
+			-T':alias for --tos'
+			--keyring=':Keyring for TLS key lookup'
+			--tls_key=':TLS key to use'
+			--duplicate-connect':allow duplicate connections between same transport host and subsystem port'
+			-D':alias for --duplicate-connect'
+			--disable-sqflow':disable controller sq flow control (default false)'
+			--hdr-digest':enable transport protocol header digest (TCP transport)'
+			-g':alias for --hdr-digest'
+			--data-digest':enable transport protocol data digest (TCP transport)'
+			-G':alias for --data-digest'
+			--tls':enable TLS'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--raw':save raw output to file'
+			-r':alias of --raw'
+			--persistent':'
+			-p':alias for --'
+			--quiet':'
+			--config=':Use specified JSON configuration file or none to disable'
+			-J':alias for --config'
+			--verbose':Increase logging verbosity'
+			-v':alias for --verbose'
+			--dump-config':Dump configuration file to stdout'
+			-O':alias for --dump-config'
+			--force':Force persistent discovery controller creation'
+			--nbft':Only look at NBFT tables'
+			--no-nbft':Do not look at NBFT tables'
+			--nbft-patch=':user-defined path for NBFT tables'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme discover options" _discover
+			;;
+		(connect-all)
+			local _connect_all
+			_connect_all=(
+			--device=':use existing discovery controller device'
+			-d':alias for --device'
+			--transport=':transport type'
+			-t':alias for --transport'
+			--nqn=':subsystem nqn'
+			-n':alias for --nqn'
+			--traddr=':transport address'
+			-a':alias for --traddr'
+			--trsvcid=':transport service id (e.g. IP port)'
+			-s':alias for --trsvcid'
+			--host-traddr=':host traddr (e.g. FC WWN's)'
+			-w':alias for --host-traddr'
+			--host-iface=':host interface (for tcp transport)'
+			-f':alias for --host-iface'
+			--hostnqn=':user-defined hostnqn'
+			-q':alias for --hostnqn'
+			--hostid=':user-defined hostid (if default not used)'
+			-I':alias for --hostid'
+			--dhchap-secret=':user-defined dhchap key (if default not used)'
+			-S':alias for --dhchap-secret'
+			--nr-io-queues=':number of io queues to use (default is core count)'
+			-i':alias for --nr-io-queues'
+			--nr-write-queues=':number of write queues to use (default 0)'
+			-W':alias for --nr-write-queues'
+			--nr-poll-queues=':number of poll queues to use (default 0)'
+			-P':alias for --nr-poll-queues'
+			--queue-size=':number of io queue elements to use (default 128)'
+			-Q':alias for --queue-size'
+			--keep-alive-tmo=':keep alive timeout period in seconds'
+			-k':alias for --keep-alive-tmo'
+			--reconnect-delay=':reconnect timeout period in seconds'
+			-c':alias for --reconnect-delay'
+			--ctrl-loss-tmo=':controller loss timeout period in seconds'
+			-l':alias for --ctrl-loss-tmo'
+			--tos=':type of service'
+			-T':alias for --tos'
+			--keyring=':Keyring for TLS key lookup'
+			--tls_key=':TLS key to use'
+			--duplicate-connect':allow duplicate connections between same transport host and subsystem port'
+			-D':alias for --duplicate-connect'
+			--disable-sqflow':disable controller sq flow control (default false)'
+			--hdr-digest':enable transport protocol header digest (TCP transport)'
+			-g':alias for --hdr-digest'
+			--data-digest':enable transport protocol data digest (TCP transport)'
+			-G':alias for --data-digest'
+			--tls':enable TLS'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--raw':save raw output to file'
+			-r':alias of --raw'
+			--persistent':'
+			-p':alias for --'
+			--quiet':'
+			--config=':Use specified JSON configuration file or none to disable'
+			-J':alias for --config'
+			--verbose':Increase logging verbosity'
+			-v':alias for --verbose'
+			--dump-config':Dump configuration file to stdout'
+			-O':alias for --dump-config'
+			--force':Force persistent discovery controller creation'
+			--nbft':Only look at NBFT tables'
+			--no-nbft':Do not look at NBFT tables'
+			--nbft-patch=':user-defined path for NBFT tables'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme connect-all options" _connect_all
+			;;
+		(connect)
+			local _connect
+			_connect=(
+			--transport=':transport type'
+			-t':alias for --transport'
+			--nqn=':subsystem nqn'
+			-n':alias for --nqn'
+			--traddr=':transport address'
+			-a':alias for --traddr'
+			--trsvcid=':transport service id (e.g. IP port)'
+			-s':alias for --trsvcid'
+			--host-traddr=':host transport address'
+			-w':alias for --host-traddr'
+			--host-iface=':host interface (for tcp transport)'
+			-f':alias for --host-iface'
+			--hostnqn=':user-defined hostnqn'
+			-q':alias for --hostnqn'
+			--hostid=':user-defined hostid (if default not used)'
+			-I':alias for --hostid'
+			--dhchap-secret=':user-defined dhchap key (if default not used)'
+			-S':alias for --dhchap-secret'
+			--nr-io-queues=':number of io queues to use (default is core count)'
+			-i':alias for --nr-io-queues'
+			--nr-write-queues=':number of write queues to use (default 0)'
+			-W':alias for --nr-write-queues'
+			--nr-poll-queues=':number of poll queues to use (default 0)'
+			-P':alias for --nr-poll-queues'
+			--queue-size=':number of io queue elements to use (default 128)'
+			-Q':alias for --queue-size'
+			--keep-alive-tmo=':keep alive timeout period in seconds'
+			-k':alias for --keep-alive-tmo'
+			--reconnect-delay=':reconnect timeout period in seconds'
+			-c':alias for --reconnect-delay'
+			--ctrl-loss-tmo=':controller loss timeout period in seconds'
+			-l':alias for --ctrl-loss-tmo'
+			--tos=':type of service'
+			-T':alias for --tos'
+			--keyring=':Keyring for TLS key lookup'
+			--tls_key=':TLS key to use'
+			--duplicate-connect':allow duplicate connections between same transport host and subsystem port'
+			-D':alias for --duplicate-connect'
+			--disable-sqflow':disable controller sq flow control (default false)'
+			--hdr-digest':enable transport protocol header digest (TCP transport)'
+			-g':alias for --hdr-digest'
+			--data-digest':enable transport protocol data digest (TCP transport)'
+			-G':alias for --data-digest'
+			--tls':enable TLS'
+			--dhchap-ctrl-secret=':user-defined dhchap controller key (for bi-directional authentication)'
+			-C':alias for --dhchap-ctrl-secret'
+			--config=':Use specified JSON configuration file or none to disable'
+			-J':alias for --config'
+			--verbose':Increase logging verbosity'
+			-v':alias for --verbose'
+			--dump-config':Dump configuration file to stdout'
+			-O':alias for --dump-config'
+			--output-format=':Output format: normal|json'
+			-o':alias for --output-format'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme connect options" _connect
+			;;
+		(dim)
+			local _dim
+			_dim=(
+			--nqn=':Comma-separated list of DC nqn'
+			-n':alias for --nqn'
+			--device=':Comma-separated list of DC nvme device handle'
+			-d':alias for --device'
+			--task=':The task to perform: register|deregister'
+			-t':alias for --task'
+			--verbose':Increase logging verbosity'
+			-v':alias for --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme dim options" _dim
+			;;
+		(disconnect)
+			local _disconnect
+			_disconnect=(
+			--nqn=':subsystem nqn'
+			-n':alias for --nqn'
+			--device=':nvme device handle'
+			-d':alias for --device'
+			--verbose':Increase logging verbosity'
+			-v':alias for --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme disconnect options" _disconnect
+			;;
+		(disconnect-all)
+			local _disconnect_all
+			_disconnect_all=(
+			--transport=':transport type'
+			-r':alias for --transport'
+			--verbose':Increase logging verbosity'
+			-v':alias for --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme disconnect-all options" _disconnect_all
+			;;
+		(gen-hostnqn)
+			local _gen_hostnqn
+			_gen_hostnqn=(
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme gen-hostnqn options" _gen_hostnqn
+			;;
+		(show-hostnqn)
+			local _show_hostnqn
+			_show_hostnqn=(
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme show-hostnqn options" _show_hostnqn
+			;;
+		(tls-key)
+			local _tls_key
+  			_tls_key=(
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--keyring=':name for keyring'
+			-r':alias for --keyring'
+			--keytype=':type for the key'
+			-t':alias for --keytype'
+			--keyfile='filename for reading/writing keys from'
+			-f':alias for --keyfile'
+			--import'import all keys into keyring'
+			-i':alias for --import'
+			--export'export all keys from keyring'
+			-e':alias for --export'
+			--revoke='revoke key from keyring'
+			-r':alias for --revoke'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme tls-key options" _tls_key
+		(dir-receive)
+			local _dir_receive
+			_dir_receive=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--data-len=':length for data buffer'
+			-l':alias of --data-len'
+			--raw-binary':dump output in binary format'
+			-b':alias for --raw-binary'
+			--dir-type=':directive type'
+			-D':alias of --dir-type'
+			--dir-spec=':directive specific'
+			-S':alias of --dir-spec'
+			--dir-oper=':directive operation'
+			-O':alias of --dir-oper'
+			--req-resource=':namespace stream requested'
+			-r':alias of --req-resource'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme dir-receive options" _dir_receive
+			;;
+		(dir-send)
+			local _dir_send
+			_dir_send=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--data-len=':length for data buffer'
+			-l':alias of --data-len'
+			--dir-type=':directive type'
+			-D':alias of --dir-type'
+			--target-dir=':target directive type to be enabled/disabled'
+			-T':alias of --target-dir'
+			--dir-spec=':directive specific'
+			-S':alias of --dir-spec'
+			--dir-oper=':directive operation'
+			-O':alias of --dir-oper'
+			--endir=':directive enable'
+			-e':alias of --endir'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			--raw-binary':dump output in binary format'
+			-b':alias for --raw-binary'
+			--input-file=':write/send file (default stdin)'
+			-i':alias of --input-file'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme dir-send options" _dir_send
+			;;
+		(virt-mgmt)
+			local _virt_mgmt
+			_virt_mgmt=(
+			/dev/nvme':supply a device to use (required)'
+			--cntlid=':Controller Identifier(CNTLID)'
+			-c':alias of --cntlid'
+			--rt=':Resource Type(RT): 0|1'
+			-r':alias of --rt'
+			--act=':Action(ACT): 1|7|8|9'
+			-a':alias of --act'
+			--nr=':Number of Controller Resources(NR)'
+			-n':alias of --nr'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme virt-mgmt options" _virt_mgmt
+			;;
+		(rpmb)
+			local _rpmb
+			_rpmb=(
+			/dev/nvme':supply a device to use (required)'
+			--cmd=':RPMB action: info|program-key|read-counter|write-data|read-data|write-config|read-config'
+			-c':alias of --cmd'
+			--msgfile=':data file for read/write-data, read/write-config options'
+			-f':alias of --msgfile'
+			--keyfile=':key file that has authentication key to be used'
+			-g':alias of --keyfile'
+			--key=':key to be used for authentication'
+			-k':alias of --key'
+			--msg=':data to be written on write-data or write-config commands'
+			-d':alias of --msg'
+			--address=':Sector offset to read from or write to for an RPMB target, default 0'
+			-o':alias of --address'
+			--blocks=':Number of 512 blocks to read or write'
+			-b':alias of --blocks'
+			--target=':RPMB target - numerical value of 0 to 6, default 0'
+			-t':alias of --target'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme rpmb options" _rpmb
+			;;
+		(show-topology)
+			local _showtopology
+			_showtopology=(
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			--ranking=':Ranking order: namespace|ctrl'
+			-r':alias for --ranking'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme show-topology options" _showtopology
+			;;
+		(nvme-mi-recv)
+			local _nvme_mi_recv
+			_nvme_mi_recv=(
+			/dev/nvme':supply a device to use (required)'
+			--opcode=':NVMe-MI opcode to send'
+			-O':alias of --opcode'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--data-len=':length for data buffer'
+			-l':alias of --data-len'
+			--nmimt':value for NVMe-MI message type'
+			-m':alias of --nmimt'
+			--nmd0':value for NVMe management request dword 0'
+			-0':alias of --nmd0'
+			--nmd1':value for NVMe management request dword 1'
+			-1':alias of --nmd1'
+			--input-file=':defaults to stdin; input for write (send direction)'
+			-i':alias for --input-file'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvme-mi-recv options" _nvme_mi_recv
+			;;
+		(nvme-mi-send)
+			local _nvme_mi_send
+			_nvme_mi_send=(
+			/dev/nvme':supply a device to use (required)'
+			--opcode=':NVMe-MI opcode to send'
+			-O':alias of --opcode'
+			--namespace-id=':value for nsid'
+			-n':alias of --namespace-id'
+			--data-len=':length for data buffer'
+			-l':alias of --data-len'
+			--nmimt':value for NVMe-MI message type'
+			-m':alias of --nmimt'
+			--nmd0':value for NVMe management request dword 0'
+			-0':alias of --nmd0'
+			--nmd1':value for NVMe management request dword 1'
+			-1':alias of --nmd1'
+			--input-file=':defaults to stdin; input for write (send direction)'
+			-i':alias for --input-file'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvme-mi-send options" _nvme_mi_send
+			;;
+		(get-reg)
+			local _get_reg
+			_get_reg=(
+			/dev/nvme':supply a device to use (required)'
+			--offset=':offset of the requested register'
+			-O':alias for --offset'
+			--human-readable':show register in readable format'
+			-H':alias for --human-readable'
+			--cap':CAP=0x0 register offset'
+			--vs':VS=0x8 register offset'
+			--cmbloc':CMBLOC=0x38 register offset'
+			--cmbsz':CMBSZ=0x3c register offset'
+			--bpinfo':BPINFO=0x40 register offset'
+			--cmbsts':CMBSTS=0x58 register offset'
+			--cmbebs':CMBEBS=0x5c register offset'
+			--cmbswtp':CMBSWTP=0x60 register offset'
+			--crto':CRTO=0x68 register offset'
+			--pmrcap':PMRCAP=0xe00 register offset'
+			--pmrsts':PMRSTS=0xe08 register offset'
+			--pmrebs':PMREBS=0xe0c register offset'
+			--pmrswtp':PMRSWTP=0xe10 register offset'
+			--intms':INTMS=0xc register offset'
+			--intmc':INTMC=0x10 register offset'
+			--cc':CC=0x14 register offset'
+			--csts':CSTS=0x1c register offset'
+			--nssr':NSSR=0x20 register offset'
+			--aqa':AQA=0x24 register offset'
+			--asq':ASQ=0x28 register offset'
+			--acq':ACQ=0x30 register offset'
+			--bprsel':BPRSEL=0x44 register offset'
+			--bpmbl':BPMBL=0x48 register offset'
+			--cmbmsc':CMBMSC=0x50 register offset'
+			--nssd':NSSD=0x64 register offset'
+			--pmrctl':PMRCTL=0xe04 register offset'
+			--pmrmscl':PMRMSCL=0xe14 register offset'
+			--pmrmscu':PMRMSCU=0xe18 register offset'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme get-reg options" _get_reg
+			;;
+		(set-reg)
+			local _set_reg
+			_set_reg=(
+			/dev/nvme':supply a device to use (required)'
+			--offset=':offset of the requested register'
+			-O':alias for --offset'
+			--value=':the value of the register to be set'
+			-V':alias for --value'
+			--mmio32':Access 64-bit registers as 2 32-bit'
+			-m':alias for --mmio32'
+			--intms=':INTMS=0xc register offset'
+			--intmc=':INTMC=0x10 register offset'
+			--cc=':CC=0x14 register offset'
+			--csts=':CSTS=0x1c register offset'
+			--nssr=':NSSR=0x20 register offset'
+			--aqa=':AQA=0x24 register offset'
+			--asq=':ASQ=0x28 register offset'
+			--acq=':ACQ=0x30 register offset'
+			--bprsel=':BPRSEL=0x44 register offset'
+			--bpmbl=':BPMBL=0x48 register offset'
+			--cmbmsc=':CMBMSC=0x50 register offset'
+			--nssd=':NSSD=0x64 register offset'
+			--pmrctl=':PMRCTL=0xe04 register offset'
+			--pmrmscl=':PMRMSCL=0xe14 register offset'
+			--pmrmscu=':PMRMSCU=0xe18 register offset'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme set-reg options" _set_reg
+			;;
+		(io-mgmt-recv)
+			local _io_mgmt_recv
+			_io_mgmt_recv=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':identifier of desired namespace'
+			-n':alias for --namespace-id'
+			--mos=':management operation specific'
+			-s':alias for --mos'
+			--mo=':management operation'
+			-m':alias for --mo'
+			--data=':optional file for data (default stdout)'
+			-d':alias for --data'
+			--data-len=':buffer len (if) data is received'
+			-l':alias for --data-len'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme io-mgmt-recv-reg options" _io_mgmt_recv
+			;;
+		(io-mgmt-send)
+			local _io_mgmt_send
+			_io_mgmt_send=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':identifier of desired namespace'
+			-n':alias for --namespace-id'
+			--mos=':management operation specific'
+			-s':alias for --mos'
+			--mo=':management operation'
+			-m':alias for --mo'
+			--data=':optional file for data (default stdin)'
+			-d':alias for --data'
+			--data-len=':buffer len (if) data is sent'
+			-l':alias for --data-len'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t':alias of --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme io-mgmt-send options" _io_mgmt_send
+			;;
+		(mgmt-addr-list-log)
+			local _mal_log
+			_mal_log=(
+			/dev/nvme':supply a device to use (required)'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme mgmt-addr-list-log" _mal_log
+			;;
+		(rotational-media-info-log)
+			local _rmi_log
+			_rmi_log=(
+			/dev/nvme':supply a device to use (required)'
+			--endg-id=':Endurance Group Identifier'
+			-e':alias of --endg-id'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme rotational-media-info-log" _rmi_log
+			;;
+		(changed-alloc-ns-list-log)
+			local _changed_alloc_ns_list_log
+			_changed_alloc_ns_list_log=(
+			/dev/nvme':supply a device to use (required)'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme changed-alloc-ns-list-log options" _changed_alloc_ns_list_log
+			;;
+		(dispersed-ns-participating-nss-log)
+			local _dns_psub_log
+			_dns_psub_log=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':show infos for namespace <nsid>'
+			-n':alias of --namespace-id'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme dispersed-ns-participating-nss-log" _dns_psub_log
+			;;
+		(reachability-groups-log)
+			local _rg_log
+			_rg_log=(
+			/dev/nvme':supply a device to use (required)'
+			--groups-only':Return Groups Only'
+			-g':alias for --groups-only'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme reachability-groups-log" _rg_log
+			;;
+		(reachability-associations-log)
+			local _ra_log
+			_ra_log=(
+			/dev/nvme':supply a device to use (required)'
+			--associations-only':Return Associations Only'
+			-a':alias for --associations-only'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme reachability-associationsroups-log" _ra_log
+			;;
+		(host-discovery-log)
+			local _hd_log
+			_hd_log=(
+			/dev/nvme':supply a device to use (required)'
+			--all-host-entries':All Host Entries'
+			-a':alias for --all-host-entries'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme host-discovery-log" _hd_log
+			;;
+		(ave-discovery-log)
+			local _ad_log
+			_ad_log=(
+			/dev/nvme':supply a device to use (required)'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme ave-discovery-log" _ad_log
+			;;
+		(pull-model-ddr-req-log)
+			local _pmdr_log
+			_pmdr_log=(
+			/dev/nvme':supply a device to use (required)'
+			--rae':Retain an Asynchronous Event'
+			-r':alias for --rae'
+			--verbose':Increase the information detail in the output.'
+			-v':alias for --verbose'
+			--output-format=':Output format: normal|json|binary'
+			-o ':alias for --output-format'
+			--timeout=':value for timeout'
+			-t ':alias for --timeout'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme pull-model-ddr-req-log" _pmdr_log
+			;;
+		(version)
+			local _version
+			_version=(
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme version options" _version
+			;;
+		(ocp)
+			local _ocp
+			_ocp=(
+			smart-add-log':Retrieve extended SMART Information'
+			latency-monitor-log':Get Latency Monitor Log Page'
+			set-latency-monitor-feature':Set Latency Monitor feature'
+			internal-log':Retrieve and save internal device telemetry log'
+			clear-fw-activate-history':Clear firmware update history log"'
+			eol-plp-failure-mode':Define EOL or PLP circuitry failure mode'
+			clear-pcie-correctable-error-counters':Clear PCIe correctable error counters'
+			vs-fw-activate-history':Get firmware activation history log'
+			device-capability-log':Get Device capability log'
+			set-dssd-power-state-feature':Set DSSD Power State'
+			get-dssd-power-state-feature':Get DSSD Power State'
+			telemetry-string-log':Retrieve Telemetry string Log Page'
+			set-telemetry-profile':Set Telemetry Profile'
+			tcg-configuration-log':tcg configuration log'
+			get-error-injection':get error injection'
+			set-error-injection':set error injection'
+			hardware-component-log':retrieve hardware component log'
+			get-latency-monitor':Get Latency Monitor Feature'
+			get-clear-pcie-correctable-errors':retrieve clear pcie correctable errors'
+			get-telemetry-profile':retrieve Get Telemetry Profile Feature'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme ocp options" _ocp
+			;;
+		(solidigm)
+			local _solidigm
+			_solidigm=(
+			id-ctrl':Send NVMe Identify Controller'
+			smart-log-add':Retrieve Solidigm SMART Log'
+			vs-smart-add-log':Get SMART / health extended log (redirects to ocp plug-in)'
+			vs-internal-log':Retrieve Debug log binaries'
+			garbage-collect-log':Retrieve Garbage Collection Log'
+			market-log':Retrieve Market Log'
+			latency-tracking-log':Enable/Retrieve Latency tracking Log'
+			parse-telemetry-log':Parse Telemetry Log binary'
+			clear-pcie-correctable-errors':Clear PCIe Correctable Error Counters (redirects to ocp plug-in)'
+			clear-fw-activate-history':Clear firmware update history log (redirects to ocp plug-in)'
+			vs-fw-activate-history':Get firmware activation history log (redirects to ocp plug-in)'
+			log-page-directory':Retrieve log page directory'
+			temp-stats':Retrieve Temperature Statistics log'
+			vs-drive-info':Retrieve drive information'
+			workload-tracker':Enable/Disable and configure Workload Tracker'
+			cloud-SSDplugin-version':Prints plug-in OCP version'
+			version':Shows the program version'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme solidigm options" _solidigm
+			;;
+		(fdp)
+			local _fdp
+			_fdp=(
+			feature':Show, enable or disable FDP configuration'
+			version':Shows the plug-in version'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme fdp options" _fdp
+			;;
+		(micron)
+			local micron
+			_micron=(
+			select-download':Selective Firmware Download'
+			vs-temperature-stats':Retrieve Micron temperature statistics'
+			vs-pcie-stats':Retrieve Micron PCIe error stats'
+			clear-pcie-correctable-errors':Clear correctable PCIe errors'
+			vs-internal-log':Retrieve Micron logs'
+			vs-telemetry-controller-option':Enable/Disable controller telemetry log generation'
+			vs-nand-stats':Retrieve NAND Stats'
+			vs-smart-ext-log':Retrieve extended SMART logs'
+			vs-drive-info':Retrieve Drive information'
+			plugin-version':Display plugin version info'
+			cloud-SSD-plugin-version':Display plugin version info'
+			log-page-directory':Retrieve log page directory'
+			vs-fw-activate-history':Display FW activation history'
+			latency-tracking':Latency monitoring feature control'
+			latency-stats':Latency information for tracked commands'
+			latency-logs':Latency log details tracked by drive'
+			vs-smart-add-log':Retrieve extended SMART data'
+			clear-fw-activate-history':Clear FW activation history'
+			vs-smbus-option':Enable/Disable SMBUS on the drive'
+			ocp-telemetry-log-parse':Parse OCP Telemetry DA1 and DA2 logs'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme micron options" _micron
+			;;
+		(dapustor)
+			local _dapustor
+			_dapustor=(
+			smart-log-add':Retrieve DapuStor SMART Log'
+			version':Shows the program version'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme dapustor options" _dapustor
+			;;
+		(mangoboost)
+			local _mangoboost
+			_mangoboost=(
+			id-ctrl':Send NVMe Identify Controller'
+			version':Shows the program version'
+			help':Display this help'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme mangoboost options" _mangoboost
+			;;
 		(help)
 			local _h
-			_h=( id-ctrl id-ns list-ns create-ns delete-ns attach-ns detach-ns
-			     list-ctrl get-ns-id get-log fw-log smart-log error-log get-feature
-			     set-feature format fw-activate fw-download admin-passthru io-passthru
-			     security-send security-recv resv-acquire resv-register resv-release
-			     resv-report flush compare read write show-regs
-			   )
+			_h=( id-ctrl id-ns list-ns id-iocs create-ns delete-ns attach-ns detach-ns
+			list-ctrl get-ns-id get-log fw-log smart-log error-log get-feature
+			set-feature format fw-activate fw-download admin-passthru io-passthru
+			security-send security-recv resv-acquire resv-register resv-release
+			resv-report flush compare read write copy show-regs persistent-event-log
+			pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
+			resv-notif-log capacity-mgmt id-domain boot-part-log fid-support-effects-log
+			supported-log-pages lockdown media-unit-stat-log id-ns-lba-format nvm-id-ns
+			nvm-id-ns-lba-format supported-cap-config-log show-topology
+			list list-subsys id-ns-granularity primary-ctrl-caps list-secondary ns-descs
+			id-nvmset id-uuid list-endgrp telemetry-log changed-ns-list-log ana-log
+			effects-log endurance-log device-self-test self-test-log set-property
+			get-property write-zeroes write-uncor verify sanitize sanitize-log reset
+			subsystem-reset ns-rescan get-lba-status dsm discover connect-all connect
+			dim disconnect disconnect-all gen-hostnqn show-hostnqn tls-key dir-receive
+			dir-send virt-mgmt rpmb version ocp solidigm dapustor mgmt-addr-list-log
+			rotational-media-info-log changed-alloc-ns-list-log fdp mangoboost
+			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
 			;;

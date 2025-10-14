@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+option(
+  'docs',
+  type : 'combo',
+  choices : ['false', 'html', 'man', 'all'],
+  description : 'install documentation'
+)
+option(
+  'docs-build',
+  type : 'boolean',
+  value : false,
+  description : 'build documentation'
+)
+option(
+  'dracutrulesdir',
+  type : 'string',
+  value : 'lib/dracut/dracut.conf.d/',
+  description : 'directory for dracut rules files'
+)
+option(
+  'htmldir',
+  type : 'string',
+  value : '',
+  description : 'directory for HTML documentation'
+)
+option(
+  'json-c',
+  type: 'feature',
+  value: 'auto',
+  description: 'JSON suppport'
+)
+option(
+  'nvme-tests',
+  type : 'boolean',
+  value : false,
+  description: 'Run tests against real hardware'
+)
+option(
+  'pdc-enabled',
+  type: 'boolean',
+  value : false,
+  description : 'set default Persistent Discovery Controllers behavior'
+)
+option(
+  'rundir',
+  type: 'string',
+  value: 'run',
+  description: 'directory for volatile configuration files',
+)
+option(
+  'systemctl',
+  type : 'string',
+  value : '/usr/bin/systemctl',
+  description : 'path to systemctl binary'
+)
+option(
+  'systemddir',
+  type : 'string',
+  value : 'lib/systemd/system',
+  description : 'directory for systemd files'
+)
+option(
+  'udevrulesdir',
+  type : 'string',
+  value : 'lib/udev/rules.d',
+  description : 'directory for udev rules files'
+)
+option(
+  'version-tag',
+  type : 'string',
+  description : 'override the git version string'
+)

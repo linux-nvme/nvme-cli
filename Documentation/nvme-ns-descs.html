@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-ns-descs(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -748,9 +749,8 @@ nvme-ns-descs(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme ns-descs</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--raw-binary | -b]
-                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme ns-descs</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [--raw-binary | -b]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -802,15 +802,26 @@ raw buffer may be printed to stdout.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;format&gt;
+-o &lt;fmt&gt;
 </dt>
 <dt class="hdlist1">
---output-format=&lt;format&gt;
+--output-format=&lt;fmt&gt;
 </dt>
 <dd>
 <p>
-        Set the reporting format to <em>normal</em>, <em>json</em>, or <em>binary</em>.
-        Only one output format can be used at a time.
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -856,7 +867,7 @@ Have the program return the raw structure in binary:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-01-30 19:28:39 KST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

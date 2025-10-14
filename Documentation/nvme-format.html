@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-format(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -750,15 +750,13 @@ nvme-format(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme format</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                    [--lbaf=&lt;lbaf&gt; | -l &lt;lbaf&gt;]
-                    [--block-size=&lt;block size | -b &lt;block size&gt;]
-                    [--ses=&lt;ses&gt; | -s &lt;ses&gt;]
-                    [--pil=&lt;pil&gt; | -p &lt;pil&gt;]
-                    [--pi=&lt;pi&gt; | -i &lt;pi&gt;]
-                    [--ms=&lt;ms&gt; | -m &lt;ms&gt;]
-                    [--reset | -r ]
-                    [--force | -f ]
-                    [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt; ]</pre>
+                        [--lbaf=&lt;lbaf&gt; | -l &lt;lbaf&gt;]
+                        [--block-size=&lt;block size | -b &lt;block size&gt;]
+                        [--ses=&lt;ses&gt; | -s &lt;ses&gt;] [--pil=&lt;pil&gt; | -p &lt;pil&gt;]
+                        [--pi=&lt;pi&gt; | -i &lt;pi&gt;] [--ms=&lt;ms&gt; | -m &lt;ms&gt;]
+                        [--reset | -r] [--force]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -896,9 +894,9 @@ cryptographically. This is accomplished by deleting the encryption key.</p></td>
 <p>
         Protection Information Location: If set to ‘1’ and protection
         information is enabled, then protection information is transferred
-        as the first eight bytes of metadata. If cleared to ‘0’ and
+        as the first bytes of metadata. If cleared to ‘0’ and
         protection information is enabled, then protection information
-        is transferred as the last eight bytes of metadata. Defaults to 0.
+        is transferred as the last bytes of metadata. Defaults to 0.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -977,9 +975,6 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--f
-</dt>
-<dt class="hdlist1">
 --force
 </dt>
 <dd>
@@ -995,7 +990,30 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Override default timeout value. In milliseconds.
+        Override default timeout value 600,000. In milliseconds.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -1038,7 +1056,7 @@ information:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-09-18 00:00:58 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

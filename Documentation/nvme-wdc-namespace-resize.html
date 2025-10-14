@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-wdc-namespace-resize(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -746,7 +749,8 @@ nvme-wdc-namespace-resize(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc namespace-resize</em> &lt;device&gt; [--nsid=&lt;NAMSPACE ID&gt;, -n &lt;NAMSPACE ID&gt;] [--op_option=&lt;OP OPTION&gt;, -o &lt;OP OPTION&gt;]</pre>
+<pre class="content"><em>nvme wdc namespace-resize</em> &lt;device&gt; [--nsid=&lt;NAMESPACE ID&gt;, -n &lt;NAMSPACE ID&gt;]
+                        [--op_option=&lt;OP OPTION&gt;, -o &lt;OP OPTION&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -754,8 +758,8 @@ nvme-wdc-namespace-resize(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends the WDC Vendor Specific Command that modifies the namespace size reported
-by the device.</p></div>
+<div class="paragraph"><p>For the NVMe device given, sends the WDC Vendor Specific Command that modifies
+the namespace size reported the device.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0).</p></div>
 <div class="paragraph"><p>This will only work on WDC devices supporting this feature.
 Results for any other device are undefined.</p></div>
@@ -766,10 +770,10 @@ Results for any other device are undefined.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--n &lt;NAMSPACE ID&gt;
+-n &lt;NAMESPACE ID&gt;
 </dt>
 <dt class="hdlist1">
---namespace-id=&lt;NAMSPACE_ID&gt;
+--namespace-id=&lt;NAMESPACE_ID&gt;
 </dt>
 <dd>
 <p>
@@ -784,17 +788,14 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-    Overprovisioning Option; defaults to 0xF
+        Overprovisioning Option; defaults to 0xF
+        Valid Values:
+        0x1 - 7% of Original TNVMCAP reported value
+        0x2 - 28% of Original TNVMCAP reported value
+        0x3 - 50% of Original TNVMCAP reported value
+        0xF - 0% of Original TNVMCAP reported value (original config)
+        All other values - reserved
 </p>
-<div class="literalblock">
-<div class="content">
-<pre><code>Valid Values:
-0x1 - 7% of Original TNVMCAP reported value
-0x2 - 28% of Original TNVMCAP reported value
-0x3 - 50% of Original TNVMCAP reported value
-0xF - 0% of Original TNVMCAP reported value (original config)
-All other values - reserved</code></pre>
-</div></div>
 </dd>
 </dl></div>
 </div>
@@ -805,7 +806,7 @@ All other values - reserved</code></pre>
 <div class="ulist"><ul>
 <li>
 <p>
-Resizes namespace 1 to 50% of the orginal TNVMCAP reported value:
+Resizes namespace 1 to 50% of the original TNVMCAP reported value:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -814,7 +815,7 @@ Resizes namespace 1 to 50% of the orginal TNVMCAP reported value:
 </li>
 <li>
 <p>
-Resizes namespace 2 to 7% of the orginal TNVMCAP reported value:
+Resizes namespace 2 to 7% of the original TNVMCAP reported value:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -834,7 +835,8 @@ Resizes namespace 2 to 7% of the orginal TNVMCAP reported value:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-02-04 15:47:14 CST
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

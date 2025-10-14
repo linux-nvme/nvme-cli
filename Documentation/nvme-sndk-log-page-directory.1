@@ -1,0 +1,79 @@
+'\" t
+.\"     Title: nvme-sndk-log-page-directory
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SNDK\-LOG\-PAG" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sndk-log-page-directory \- Retrieves the list of Log IDs supported by the drive
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sndk log\-page\-directory\fR <device> [\-\-output\-format=<normal|json|binary> \-o <normal|json|binary>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, retrieves the log page directory which contains the list of log page IDs supported by the drive\&. The \-\-output\-format option will format the output as specified\&.
+.sp
+The <device> parameter is mandatory and must be the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+This will only work on Sandisk devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns the log page directory information, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&. The default is normal\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+sndk log\-page\-directory example command :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk log\-page\-directory /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

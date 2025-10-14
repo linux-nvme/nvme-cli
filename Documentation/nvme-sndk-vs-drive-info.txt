@@ -1,0 +1,47 @@
+nvme-sndk-vs-drive-info(1)
+==========================
+
+NAME
+----
+nvme-sndk-vs-drive-info - Send the NVMe sndk vs-drive-info command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk vs-drive-info' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, send the unique sndk vs-drive-info command and
+provide the additional drive information.
+
+The <device> parameter is mandatory and must be the NVMe character
+device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+Output Explanation
+------------------
+There are several different fields returned from this command depending
+on the drive:
+
+Drive HW Revision
+
+FTL Unit Size
+
+Customer Serial Number
+
+HyperScale Boot Version
+
+TCG Device Ownership
+
+EXAMPLE
+--------
+# nvme sndk vs-drive-info /dev/nvme0
+
+NVME
+----
+Part of the nvme-user suite.

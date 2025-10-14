@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-list(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -746,7 +749,7 @@ nvme-list(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme list</em> [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme list</em> [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -755,7 +758,8 @@ nvme-list(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Scan the sysfs tree for NVM Express devices and return the /dev node
-for those devices as well as some pertinent information about them.</p></div>
+for those devices as well as some pertinent information about them.
+Namespace usage printed in powers of 1,000 with SI prefixes. (e.g., 1.02  TB)</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -763,15 +767,15 @@ for those devices as well as some pertinent information about them.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;format&gt;
+-o &lt;fmt&gt;
 </dt>
 <dt class="hdlist1">
---output-format=&lt;format&gt;
+--output-format=&lt;fmt&gt;
 </dt>
 <dd>
 <p>
-        Set the reporting format to <em>normal</em> or <em>json</em>. Only one output
-        format can be used at a time.
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -783,7 +787,7 @@ for those devices as well as some pertinent information about them.</p></div>
 <dd>
 <p>
         Increase the information in the output, showing nvme subsystems,
-        controllers and namespaces separately and how they&#8217;re realted to each
+        controllers and namespaces separately and how they&#8217;re related to each
         other.
 </p>
 </dd>
@@ -799,7 +803,40 @@ for those devices as well as some pertinent information about them.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Has the program issue a list
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme list
+Node                  Generic               SN                   Model                                    Namespace  Usage                      Format           FW Rev
+--------------------- --------------------- -------------------- ---------------------------------------- ---------- -------------------------- ---------------- --------
+/dev/nvme0n1          /dev/ng0n1            BTNH922508PS1P0B     INTEL SSDPEKNW010T8                      0x1          1.02  TB /   1.02  TB    512   B +  0 B   002C</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Has the program issue a list with verbose
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme list -v
+Subsystem        Subsystem-NQN                                                                                    Controllers
+---------------- ------------------------------------------------------------------------------------------------ ----------------
+nvme-subsys0     nqn.2019-22.com.intel:nvm-subsystem-sn-btnh922508ps1p0b                                          nvme0
+
+Device           Cntlid SN                   MN                                       FR       TxPort Address        Slot   Subsystem    Namespaces
+---------------- ------ -------------------- ---------------------------------------- -------- ------ -------------- ------ ------------ ----------------
+nvme0    1      BTNH922508PS1P0B     INTEL SSDPEKNW010T8                      002C     pcie   0000:0d:00.0          nvme-subsys0 nvme0n1
+
+Device            Generic           NSID       Usage                      Format           Controllers
+----------------- ----------------- ---------- -------------------------- ---------------- ----------------
+/dev/nvme0n1 /dev/ng0n1   0x1          1.02  TB /   1.02  TB    512   B +  0 B   nvme0</code></pre>
+</div></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -812,7 +849,8 @@ for those devices as well as some pertinent information about them.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-08-26 14:55:40 MDT
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,9 @@ nvme-show-regs \- Reads and shows the defined NVMe controller registers for NVMe
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme show\-regs\fR <device>       [\-\-human\-readable | \-H]
-                                [\-\-output\-format=<FMT> | \-o <FMT>]
+\fInvme show\-regs\fR <device> [\-\-human\-readable | \-H]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -47,12 +48,23 @@ The <device> parameter is mandatory and must be the nvme admin character device 
 Display registers or supported properties in human readable format\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

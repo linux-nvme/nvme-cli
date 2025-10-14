@@ -1,0 +1,126 @@
+'\" t
+.\"     Title: nvme-dim
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-DIM" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-dim \- Send Discovery Information Management command to one or more Discovery Controllers\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme dim\fR [\-\-task=<task> | \-t <task>] [\-\-nqn=<nqn> | \-n <nqn>]
+                        [\-\-device=<device> | \-d <device>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+.fi
+.SH "DESCRIPTION"
+.sp
+Send Discovery Information Management (DIM) command to one or more Discovery Controllers\&. The DIM command allows performing two types of tasks: register or deregister\&.
+.sp
+The DIM command is used to explicitly register with Discovery Controllers (DC), especially with Central Discovery Controllers (CDC)\&. CDCs maintain a database (DB) of all the Hosts and Storage Subsystems in a network\&. The register task is used to add a host to the CDC\(cqs DB\&. The deregister task is used to remove a host from the CDC\(cqs DB\&.
+.sp
+During a register operation the host will send mandatory information such as the Host\(cqs NQN and ID, as well as the Host\(cqs hostname and the Operating System\(cqs version that it is running on\&. There is also an optional Host Symbolic Name that can be registered with the CDC\&.
+.sp
+This command can only be applied to existing DC connections previously created with the nvme\-discover(1) command using the \-\-persistent option\&.
+.SH "OPTIONS"
+.PP
+\-t <task>, \-\-task <task>
+.RS 4
+The task to perform: "register" or "deregister"\&.
+.RE
+.PP
+\-n <subnqn>, \-\-nqn <nqn>
+.RS 4
+The DIM command will be sent to the Discovery Controller (DC) matching this NQN\&. A list of comma\-separated NQNs can be supplied to apply the command to more than one DC\&.
+.RE
+.PP
+\-d <device>, \-\-device <device>
+.RS 4
+The DIM command will be sent to the Discovery Controllers (DC) associated with this NVMe device handle\&. A list of comma\-separated device handles can be supplied to apply the command to more than one DC\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Register with the Central Discovery Controller (CDC) named nqn\&.1988\-11\&.com\&.dell:SFSS:1:20220118125153e8:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme dim \-\-task=register \-\-nqn=nqn\&.1988\-11\&.com\&.dell:SFSS:1:20220118125153e8
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Deregister from Central Discovery Controller (CDC) associated with nvme4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme dim \-\-task=deregister \-\-device=nvme4
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-discover(1)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

@@ -9,10 +9,13 @@ SYNOPSIS
 --------
 [verse]
 'nvme set-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--feature-id=<fid> | -f <fid>] [--value=<value> | -v <value>]
-			  [--data-len=<data-len> | -l <data-len>]
-			  [--data=<data-file> | -d <data-file>]
-			  [--save| -s]
+			[--feature-id=<fid> | -f <fid>] [--value=<value> | -V <value>]
+			[--uuid-index=<uuid-index> | -U <uuid_index>]
+			[--data-len=<data-len> | -l <data-len>]
+			[--data=<data-file> | -d <data-file>] [--save | -s]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--cdw12=<cdw12> | -c <cdw12>]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -36,6 +39,55 @@ OPTIONS
 --feature-id=<fid>::
 	The feature id to send with the command. Value provided should
 	be in hex.
++
+[]
+|=================
+|Value|Definition
+|0x01 \| 'arbitration'| Arbitration
+|0x02 \| 'power-mgmt'| Power Management
+|0x03 \| 'lba-range'| LBA Range Type
+|0x04 \| 'temp-thresh'| Temperature Threshold
+|0x05 \| 'err-recovery'| Error Recovery
+|0x06 \| 'volatile-wc'| Volatile Write Cache
+|0x07 \| 'num-queues'| Number of Queues
+|0x08 \| 'irq-coalesce'| Interrupt Coalescing
+|0x09 \| 'irq-config'| Interrupt Vector Configuration
+|0x0a \| 'write-atomic'| Write Atomicity Normal
+|0x0b \| 'async-event'| Asynchronous Event Configuration
+|0x0c \| 'auto-pst'| Autonomous Power State Transition
+|0x0d \| 'host-mem-buf'| Host Memory Buffer
+|0x0e \| 'timestamp'| Timestamp
+|0x0f \| 'kato'| Keep Alive Timer
+|0x10 \| 'hctm'| Host Controlled Thermal Management
+|0x11 \| 'nopsc'| Non-Operational Power State Config
+|0x12 \| 'rrl'| Read Recovery Level Config
+|0x13 \| 'plm-config'| Predictable Latency Mode Config
+|0x14 \| 'plm-window'| Predictable Latency Mode Window
+|0x15 \| 'lba-sts-interval'| LBA Status Information Report Interval
+|0x16 \| 'host-behavior'| Host Behavior Support
+|0x17 \| 'sanitize'| Sanitize Config
+|0x18 \| 'endurance-evt-cfg'| Endurance Group Event Configuration
+|0x19 \| 'iocs-profile'| I/O Command Set Profile
+|0x1a \| 'spinup-control'| Spinup Control
+|0x1b \| 'power-loss-signal'| Power Loss Signaling Config
+|0x1c \| 'perf-characteristics'|Performance Characteristics
+|0x1d \| 'fdp'| Flexible Data Placement
+|0x1e \| 'fdp-events'| FDP Events
+|0x1f \| 'ns-admin-label'| Namespace Admin Label
+|0x20 \| 'key-value'| Key Value Configuration
+|0x21 \| 'ctrl-data-queue'| Controller Data Queue
+|0x78 \| 'emb-mgmt-ctrl-addr'| Embedded Management Controller Address
+|0x79 \| 'host-mgmt-agent-addr'|Host Management Agent Address
+|0x7d \| 'enh-ctrl-metadata'| Enhanced Controller Metadata
+|0x7e \| 'ctrl-metadata'| Controller Metadata
+|0x7f \| 'ns-metadata'| Namespace Metadata
+|0x80 \| 'sw-progress'| Software Progress Marker
+|0x81 \| 'host-id'| Host Identifier
+|0x82 \| 'resv-mask'| Reservation Notification Mask
+|0x83 \| 'resv-persist'| Reservation Persistence
+|0x84 \| 'write-protect'| Namespace Write Protection Config
+|0x85 \| 'bp-write-protect'| Boot Partition Write Protection Config
+|=================
 
 -l <data-len>::
 --data-len=<data-len>::
@@ -50,21 +102,42 @@ OPTIONS
 	Range Type and host identifier. This defaults to STDIN so files
 	and echo can be piped.
 
--v <value>::
+-V <value>::
 --value=<value>::
 	The value for command dword 11, the value you want to set the
 	feature to.
 
 -s::
 --save::
-	Save the attribute so that it persists through all power states and resets.	
+	Save the attribute so that it persists through all power states and resets.
+
+-U <uuid-index>::
+--uuid-index=<uuid-index>::
+	UUID Index of the feature
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-c <cdw12>::
+--cdw12=<cdw12>::
+	The value for command dword 12, if applicable.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------
-* Sets the Power State (PS) to 1  in feature id 2:
+* Sets the Power State (PS) to 1 in feature id 2:
 +
 ------------
-# nvme set-feature /dev/nvme0 -f 2 /dev/nvme0n1 -v 0x1
+# nvme set-feature /dev/nvme0 -f 2 /dev/nvme0n1 -V 0x1
 ------------
 +
 
@@ -73,6 +146,8 @@ EXAMPLES
 ------------
 # echo "abcdefgh" | nvme set-feature /dev/nvme0 -f 0x81 -l 8
 ------------
++
+nvme set-feature /dev/nvme0 -f 0x81 -l 8 -U 0x1
 
 NVME
 ----

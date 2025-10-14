@@ -8,46 +8,51 @@ nvme-discover - Send Get Log Page request to Discovery Controller.
 SYNOPSIS
 --------
 [verse]
-'nvme discover'
-		[--transport=<trtype>     | -t <trtype>]
-		[--traddr=<traddr>        | -a <traddr>]
-		[--trsvcid=<trsvcid>      | -s <trsvcid>]
-		[--host-traddr=<traddr>   | -w <traddr>]
-		[--hostnqn=<hostnqn>      | -q <hostnqn>]
-		[--hostid=<hostid>        | -I <hostid>]
-		[--raw=<filename>	  | -r <filename>]
-		[--keep-alive-tmo=<sec>   | -k <sec>]
-		[--reconnect-delay=<#>	  | -c <#>]
-		[--ctrl-loss-tmo=<#>	  | -l <#>]
-		[--hdr_digest             | -g]
-		[--data_digest            | -G]
-		[--nr-io-queues=<#>       | -i <#>]
-		[--nr-write-queues=<#>    | -W <#>]
-		[--nr-poll-queues=<#>     | -P <#>]
-		[--queue-size=<#>         | -Q <#>]
-		[--persistent             | -p]
-		[--quiet                  | -S]
+'nvme discover' [--transport=<trtype> | -t <trtype>]
+			[--nqn=<subnqn> | -n <subnqn>]
+			[--traddr=<traddr> | -a <traddr>]
+			[--trsvcid=<trsvcid> | -s <trsvcid>]
+			[--host-traddr=<traddr> | -w <traddr>]
+			[--host-iface=<iface> | -f <iface>]
+			[--hostnqn=<hostnqn> | -q <hostnqn>]
+			[--hostid=<hostid> | -I <hostid>]
+			[--raw=<filename> | -r <filename>]
+			[--device=<device> | -d <device>]
+			[--config=<filename> | -J <filename>]
+			[--keep-alive-tmo=<sec> | -k <sec>]
+			[--reconnect-delay=<#> | -c <#>]
+			[--ctrl-loss-tmo=<#> | -l <#>]
+			[--nr-io-queues=<#> | -i <#>]
+			[--nr-write-queues=<#> | -W <#>]
+			[--nr-poll-queues=<#> | -P <#>]
+			[--queue-size=<#> | -Q <#>] [--keyring=<#>]
+			[--tls_key=<#>] [--hdr-digest | -g] [--data-digest | -G]
+			[--persistent | -p] [--quiet] [--tls] [--concat]
+			[--dump-config | -O] [--output-format=<fmt> | -o <fmt>]
+			[--force] [--nbft] [--no-nbft] [--nbft-path=<STR>]
+			[--context=<STR>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
 Send one or more Get Log Page requests to a NVMe-over-Fabrics Discovery
 Controller.
 
-If no parameters are given, then 'nvme discover' will attempt to 
-find a /etc/nvme/discovery.conf file to use to supply a list of
-Discovery commands to run.  If no /etc/nvme/discovery.conf file
+If no parameters are given, then 'nvme discover' will attempt to
+find a @SYSCONFDIR@/nvme/discovery.conf file to use to supply a list of
+Discovery commands to run. If no @SYSCONFDIR@/nvme/discovery.conf file
 exists, the command will quit with an error.
 
 Otherwise, a specific Discovery Controller should be specified using the
---transport, --traddr, and if necessary the --trsvcid flags. A Diѕcovery
+--transport, --traddr, and if necessary the --trsvcid flags. A Discovery
 request will then be sent to the specified Discovery Controller.
 
 BACKGROUND
 ----------
-The NVMe-over-Fabrics specification defines the concept of a 
+The NVMe-over-Fabrics specification defines the concept of a
 Discovery Controller that an NVMe Host can query on a fabric
 network to discover NVMe subsystems contained in NVMe Targets
-which it can connect to on the network.  The Discovery Controller
+which it can connect to on the network. The Discovery Controller
 will return Discovery Log Pages that provide the NVMe Host
 with specific information (such as network address and unique
 subsystem NQN) the NVMe Host can use to issue an
@@ -58,52 +63,64 @@ Note that the base NVMe specification defines the NQN (NVMe Qualified
 Name) format which an NVMe endpoint (device, subsystem, etc) must
 follow to guarantee a unique name under the NVMe standard.
 In particular, the Host NQN uniquely identifies the NVMe Host, and
-may be used by the the Discovery Controller to control what NVMe Target
+may be used by the Discovery Controller to control what NVMe Target
 resources are allocated to the NVMe Host for a connection.
 
 A Discovery Controller has it's own NQN defined in the NVMe-over-Fabrics
-specification, *nqn.2014-08.org.nvmexpress.discovery*.  All Discovery
+specification, *nqn.2014-08.org.nvmexpress.discovery*. All Discovery
 Controllers must use this NQN name. This NQN is used by default by
-nvme-cli for the 'discover' command. 
+nvme-cli for the 'discover' command.
 
 OPTIONS
 -------
 -t <trtype>::
 --transport=<trtype>::
 	This field specifies the network fabric being used for
-	a NVMe-over-Fabrics network.  Current string values include:
+	a NVMe-over-Fabrics network. Current string values include:
 +
 []
 |=================
 |Value|Definition
 |rdma|The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)
 |fc  |*WIP* The network fabric is a Fibre Channel network.
+|tcp |The network fabric is a TCP/IP network.
 |loop|Connect to a NVMe over Fabrics target on the local host
 |=================
+
+-n <subnqn>::
+--nqn <subnqn>::
+	This field specifies the name for the NVMe subsystem to connect to.
 
 -a <traddr>::
 --traddr=<traddr>::
 	This field specifies the network address of the Discovery Controller.
 	For transports using IP addressing (e.g. rdma) this should be an
-	IP-based (ex. IPv4) address.
+	IP-based address (ex. IPv4).
 
 -s <trsvcid>::
 --trsvcid=<trsvcid>::
-	This field specifies the transport service id.  For transports using IP
+	This field specifies the transport service id. For transports using IP
 	addressing (e.g. rdma) this field is the port number. By default, the IP
 	port number for the RDMA transport is 4420.
 
 -w <traddr>::
 --host-traddr=<traddr>::
 	This field specifies the network address used on the host to connect
-	to the Discovery Controller.
- 
+	to the Controller. For TCP, this sets the source address on the socket.
+
+-f <iface>::
+--host-iface=<iface>::
+	This field specifies the network interface used on the host to connect
+	to the Controller (e.g. IP eth1, enp2s0, enx78e7d1ea46da). This forces
+	the connection to be made on a specific interface instead of letting
+	the system decide.
+
 -q <hostnqn>::
 --hostnqn=<hostnqn>::
-	Overrides the default host NQN that identifies the NVMe Host.  
+	Overrides the default host NQN that identifies the NVMe Host.
 	If this option is not specified, the default is read from
-	/etc/nvme/hostnqn first. If that does not exist, the autogenerated
-	NQN value from the NVMe Host kernel module is used next.
+	@SYSCONFDIR@/nvme/hostnqn first. If that does not exist, the
+	autogenerated NQN value from the NVMe Host kernel module is used next.
 
 -I <hostid>::
 --hostid=<hostid>::
@@ -116,10 +133,25 @@ OPTIONS
 	and dump it to a raw binary file. By default 'nvme discover' will
 	dump the output to stdout.
 
+-d <device>::
+--device=<device>::
+	This field takes a device as input. It must be a persistent device
+	associated with a Discovery Controller previously created by the
+	command "connect-all" or "discover". <device> follows the format
+	nvme*, eg. nvme0, nvme1.
+
+-J <filename>::
+--config=<filename>::
+	Use the specified JSON configuration file instead of the
+	default @SYSCONFDIR@/nvme/config.json file or 'none' to not read in
+	an existing configuration file. The JSON configuration file
+	format is documented in
+	https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json
+
 -k <#>::
 --keep-alive-tmo=<#>::
-	Overrides the default dealy (in seconds) for keep alive.
-	This option will be ignored for the discovery, and it is only
+	Overrides the default keep alive timeout (in seconds). This
+	option will be ignored for discovery, and it is only
 	implemented for completeness.
 
 -c <#>::
@@ -130,14 +162,6 @@ OPTIONS
 -l <#>::
 --ctrl-loss-tmo=<#>::
 	Overrides the default controller loss timeout period (in seconds).
-
--g::
---hdr_digest::
-	Generates/verifies header digest (TCP).
-
--G::
---data_digest::
-	Generates/verifies data digest (TCP).
 
 -i <#>::
 --nr-io-queues=<#>::
@@ -160,13 +184,69 @@ OPTIONS
 	This option will be ignored for the discovery, and it is only
 	implemented for completeness.
 
+--keyring=<#>::
+	Keyring for TLS key lookup.
+
+--tls_key=<#>::
+	TLS key for the connection (TCP).
+
+-g::
+--hdr-digest::
+	Generates/verifies header digest (TCP).
+
+-G::
+--data-digest::
+	Generates/verifies data digest (TCP).
+
 -p::
 --persistent::
-	Persistent discovery connection.
+	Don't remove the discovery controller after retrieving the discovery
+	log page.
 
--S::
+--tls::
+	Enable TLS encryption (TCP).
+
+--concat::
+	Enable secure concatenation (TCP).
+
 --quiet::
 	Suppress already connected errors.
+
+-O::
+--dump-config::
+	Print out resulting JSON configuration file to stdout.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+--force::
+	Disable the built-in persistent discover connection rules.
+	Combined with --persistent flag, always create new
+	persistent discovery connection.
+
+--nbft::
+	Only look at NBFT tables
+
+--no-nbft::
+	Do not look at NBFT tables
+
+--nbft-path=<STR>::
+	Use a user-defined path to the NBFT tables
+
+--context <STR>::
+	Set the execution context to <STR>. This allows to coordinate
+	the management of the global resources.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
@@ -179,12 +259,24 @@ Port 4420 is used by default:
 --hostnqn=host1-rogue-nqn
 ------------
 +
-* Issue a 'nvme discover' command using a /etc/nvme/discovery.conf file:
+* Issue a 'nvme discover' command using the default system defined NBFT tables:
 +
 -----------
-# Machine default 'nvme discover' commands.  Query the
+# nvme discover --nbft
+------------
++
+* Issue a 'nvme discover' command with a user-defined path for the NBFT table:
++
+-----------
+# nvme discover --nbft-path=/sys/firmware/acpi/tables/NBFT1
+------------
++
+* Issue a 'nvme discover' command using a @SYSCONFDIR@/nvme/discovery.conf file:
++
+-----------
+# Machine default 'nvme discover' commands. Query the
 # Discovery Controller's two ports (some resources may only
-# be accessible on a single port).  Note an official
+# be accessible on a single port). Note an official
 # nqn (Host) name defined in the NVMe specification is being used
 # in this example.
 -t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432

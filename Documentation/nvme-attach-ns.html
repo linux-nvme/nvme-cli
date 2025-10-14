@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-attach-ns(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -747,7 +750,8 @@ nvme-attach-ns(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme attach-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;]</pre>
+                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -758,6 +762,8 @@ nvme-attach-ns(1) Manual Page
 <div class="paragraph"><p>For the NVMe device given, sends the nvme namespace attach command for
 the provided namespace identifier, attaching to the provided list of
 controller identifiers.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0) but
+not a namespace block device (ex: /dev/nvme0n1).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -772,7 +778,7 @@ controller identifiers.</p></div>
 </dt>
 <dd>
 <p>
-        The namespace identifier to attach.
+        The namespace identifier to attach but not attached already.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -783,8 +789,32 @@ controller identifiers.</p></div>
 </dt>
 <dd>
 <p>
-        The comma separated list of controller identifiers to attach
-        the namesapce too.
+        The comma separated list of controller identifiers to attach the
+        namespace too. If no list is provided, the namespace will be attached
+        to the &lt;device&gt; controller used for this command.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
 </p>
 </dd>
 </dl></div>
@@ -793,7 +823,22 @@ controller identifiers.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>Attach namespace 2 to the controllers with id 0x21 and 0x22:</code></pre>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># nvme attach-ns /dev/nvme1 -n 0x2 -c 0x21,0x22</code></pre>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>Attach namespace 3 to nvme0:</code></pre>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># nvme attach-ns /dev/nvme0 -n 3</code></pre>
+</div></div>
 </div>
 </div>
 <div class="sect1">
@@ -806,7 +851,8 @@ controller identifiers.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-16 12:47:42 EDT
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

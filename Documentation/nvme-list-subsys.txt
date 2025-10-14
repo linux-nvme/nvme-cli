@@ -8,7 +8,7 @@ nvme-list-subsys - List all NVMe subsystems
 SYNOPSIS
 --------
 [verse]
-'nvme list-subsys' [-o <fmt> | --output-format=<fmt>] <device>
+'nvme list-subsys' <device> [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -19,10 +19,14 @@ and subsystems leading to the device.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
-	Set the reporting format to 'normal' or 'json'. Only one output
-	format can be used at a time.
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
@@ -30,12 +34,12 @@ EXAMPLES
 root@host# nvme list-subsys
 nvme-subsys0 - NQN=nvmf-test
 \
- +- nvme0 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1
- +- nvme1 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2
+ +- nvme0 rdma traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.1
+ +- nvme1 rdma traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.2
 nvme-subsys1 - NQN=nvmf-test2
 \
- +- nvme2 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2
- +- nvme3 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1
+ +- nvme2 rdma traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.2
+ +- nvme3 rdma traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.1
 
 [verse]
 root@host# nvme list-subsys -o json
@@ -50,12 +54,12 @@ root@host# nvme list-subsys -o json
         {
           "Name" : "nvme0",
           "Transport" : "rdma",
-          "Address" : "traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1"
+          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.1"
         },
         {
           "Name" : "nvme1",
           "Transport" : "rdma",
-          "Address" : "traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2"
+          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.2"
         }
       ]
     },
@@ -68,12 +72,12 @@ root@host# nvme list-subsys -o json
         {
           "Name" : "nvme2",
           "Transport" : "rdma",
-          "Address" : "traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2"
+          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.2"
         },
         {
           "Name" : "nvme3",
           "Transport" : "rdma",
-          "Address" : "traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1"
+          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.1"
         }
       ]
     }

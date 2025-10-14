@@ -1,0 +1,106 @@
+nvme-verify(1)
+==============
+
+NAME
+----
+nvme-verify - Send an NVMe Verify command, return results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-verify' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--start-block=<slba> | -s <slba>]
+			[--block-count=<nlb> | -c <nlb>] [--limited-retry | -l]
+			[--force-unit-access | -f]
+			[--prinfo=<prinfo> | -p <prinfo>]
+			[--ref-tag=<reftag> | -r <reftag>]
+			[--app-tag-mask=<appmask> | -m <appmask>]
+			[--app-tag=<apptag> | -a <apptag>]
+			[--storage-tag<storage-tag> | -S <storage-tag>]
+			[--storage-tag-check | -C]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
+
+DESCRIPTION
+-----------
+The Verify command verifies the integrity of the stored information by
+reading data and metadata.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Namespace ID use in the command.
+
+-s <slba>::
+--start-block=<slba>::
+	Start block address.
+
+-c <nlb>::
+--block-count=<nlb>::
+	Number of logical blocks to Verify.
+
+-l::
+--limited-retry::
+	Sets the limited retry flag.
+
+-f::
+--force-unit-access::
+	Set the force-unit access flag.
+
+-p <prinfo>::
+--prinfo=<prinfo>::
+	Protection Information field definition.
++
+[]
+|=================
+|Bit|Description
+|3|PRACT: Protection Information Action. When set to 1, PI is stripped/inserted
+on read/write when the block format's metadata size is 8. When set to 0,
+metadata is passes.
+|2:0|PRCHK: Protection Information Check:
+|2|Set to 1 enables checking the guard tag
+|1|Set to 1 enables checking the application tag
+|0|Set to 1 enables checking the reference tag
+|=================
+
+-r <reftag>::
+--ref-tag=<reftag>::
+	Optional reftag when used with protection information.
+
+-m <appmask>::
+--app-tag-mask=<appmask>::
+	Optional application tag mask when used with protection information.
+
+-a <apptag>::
+--app-tag=<apptag>::
+	Optional application tag when used with protection information.
+
+-S <storage-tag>::
+--storage-tag=<storage-tag>::
+	Variable Sized Expected Logical Block Storage Tag(ELBST).
+
+-C::
+--storage-tag-check::
+	This flag enables Storage Tag field checking as part of Verify operation.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

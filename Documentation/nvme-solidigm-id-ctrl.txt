@@ -1,0 +1,74 @@
+nvme-solidigm-id-ctrl(1)
+========================
+
+NAME
+----
+nvme-solidigm-id-ctrl - Send NVMe Identify Controller, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm id-ctrl' <device> [--raw-binary | -b] [--vendor-specific | -V]
+                              [--output-format=<fmt> | -o <fmt>] [--human-readable | -H]
+                              [--verbose | -v] [--timeout=<seconds> | -t <seconds>]
+
+DESCRIPTION
+-----------
+This command is a Solidigm-specific extension of the NVMe Identify Controller command.
+It sends an NVMe Identify Controller command to the specified device and provides the result
+and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0)
+or a namespace block device (ex: /dev/nvme0n1).
+
+This command includes all options available in the generic `nvme id-ctrl` command, including:
+- `--raw-binary` or `-b`
+- `--vendor-specific` or `-V`
+- `--output-format=<fmt>` or `-o <fmt>`
+- `--human-readable` or `-H`
+- `--verbose` or `-v`
+- `--timeout=<seconds>` or `-t <seconds>`
+
+For detailed usage and options, please refer to the documentation for 'nvme id-ctrl'.
+
+EXAMPLES
+--------
+* Send the Identify Controller command and interpret the output:
++
+------------
+# nvme solidigm id-ctrl /dev/nvme0
+------------
+
+* Print the raw output to stdout:
++
+------------
+# nvme solidigm id-ctrl /dev/nvme0 --raw-binary
+------------
+
+* Print the output in JSON format:
++
+------------
+# nvme solidigm id-ctrl /dev/nvme0 -o json
+------------
+
+* Display the vendor-specific fields:
++
+------------
+# nvme solidigm id-ctrl /dev/nvme0 --vendor-specific
+# nvme solidigm id-ctrl /dev/nvme0 -V
+------------
+
+* Use human-readable output:
++
+------------
+# nvme solidigm id-ctrl /dev/nvme0 --human-readable
+# nvme solidigm id-ctrl /dev/nvme0 -H
+------------
+
+SEE ALSO
+--------
+nvme-id-ctrl(1)
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,44 @@
+nvme-id-domain(1)
+=================
+
+NAME
+----
+nvme-id-domain - Send NVMe Identify Domain List, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme id-domain' <device> [--dom-id=<domain_id> | -d <domain_id>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send an identify command and return the domain list
+data structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-d <domain_id>::
+--dom-id=<domain_id>::
+	Retrieve the identify domain list data structure for the given
+	domain id. If this value is not given, domain id will be 0xffff.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

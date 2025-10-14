@@ -1,0 +1,110 @@
+nvme-set-reg(1)
+===============
+
+NAME
+----
+nvme-set-reg - Writes and shows the defined NVMe controller register
+
+SYNOPSIS
+--------
+[verse]
+'nvme set-reg' <device> [--offset=<offset>, -O <offset>]
+			[--value=<val> | -V <val>] [--mmio32 | -m]
+			[--intms=<val>] [--intmc=<val>] [--cc=<val>]
+			[--csts=<val>] [--nssr=<val>] [--aqa=<val>]
+			[--asq=<val>] [--acq=<val>] [--bprsel=<val>]
+			[--bpmbl=<val>] [--cmbmsc=<val>] [--nssd=<val>]
+			[--pmrctl=<val>] [--pmrmscl=<val>] [--pmrmscu=<val>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
+
+DESCRIPTION
+-----------
+Writes and shows the defined NVMe controller register.
+
+The <device> parameter is mandatory and must be the nvme admin character
+device (ex: /dev/nvme0).
+
+OPTIONS
+-------
+-O <offset>::
+--offset=<offset>::
+	offset of the requested register
+
+-V <val>::
+--value=<val>::
+	the value of the register to be set
+
+--mmio32::
+-m::
+	Access 64-bit registers as 2 32-bit
+
+--intms=<val>::
+	INTMS=0xc register offset
+
+--intmc=<val>::
+	INTMC=0x10 register offset
+
+--cc=<val>::
+	CC=0x14 register offset
+
+--csts=<val>::
+	CSTS=0x1c register offset
+
+--nssr=<val>::
+	NSSR=0x20 register offset
+
+--aqa=<val>::
+	AQA=0x24 register offset
+
+--asq=<val>::
+	ASQ=0x28 register offset
+
+--acq=<val>::
+	ACQ=0x30 register offset
+
+--bprsel=<val>::
+	BPRSEL=0x44 register offset
+
+--bpmbl=<val>::
+	BPMBL=0x48 register offset
+
+--cmbmsc=<val>::
+	CMBMSC=0x50 register offset
+
+--nssd=<val>::
+	NSSD=0x64 register offset
+
+--pmrctl=<val>::
+	PMRCTL=0xe04 register offset
+
+--pmrmscl=<val>::
+	PMRMSCL=0xe14 register offset
+
+--pmrmscu=<val>::
+	PMRMSCU=0xe18 register offset
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+* The following will run the set-reg command with offset 0x14 and value 0x460000
++
+------------
+# nvme set-reg /dev/nvme0 -O 0x14 -V 0x460000
+------------
+
+NVME
+----
+Part of the nvme-user suite.

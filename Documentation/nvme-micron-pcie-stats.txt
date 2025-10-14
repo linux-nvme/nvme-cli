@@ -1,0 +1,40 @@
+nvme-micron-pcie-stats(1)
+=========================
+
+NAME
+----
+nvme-micron-pcie-stats - Retrieves pcie error statistics for given micron device
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron vs-pcie-stats' <device>
+
+DESCRIPTION
+-----------
+This command prints pcie correctable and uncorrectable error information for the
+given micron device.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+This will only work on Micron devices devices of model numbers 54XX. Support for
+new devices may be added subsequently.
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Retrieve PCIe error information
++
+------------
+# nvme micron vs-pcie-stats /dev/nvme0
+
+------------
+
+NVME
+----
+Part of the nvme-user suite

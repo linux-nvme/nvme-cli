@@ -2,12 +2,12 @@
 .\"     Title: nvme-ana-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ANA\-LOG" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ANA\-LOG" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,8 @@ nvme-ana-log \- Send NVMe ANA log page request, returns result and log
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme ana\-log\fR <device> [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme ana\-log\fR <device> [\-\-groups | \-g]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -43,12 +44,23 @@ The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
 On success, the returned ANA log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-g, \-\-groups
+.RS 4
+Return the list of ANA groups without the namespace listing\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

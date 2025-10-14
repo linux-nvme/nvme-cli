@@ -2,12 +2,12 @@
 .\"     Title: nvme-set-property
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SET\-PROPERTY" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-SET\-PROPERTY" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,26 +28,47 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-set-property \- Writes and shows the defined NVMe controller property for NVMe ove Fabric
+nvme-set-property \- Writes and shows the defined NVMe controller property for NVMe over Fabric
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme set\-property\fR <device> [\-\-offset=<offset> | \-o <offset>]
-                                [\-\-value=<val> | \-v <val>]
+\fInvme set\-property\fR <device> [\-\-offset=<offset> | \-O <offset>]
+                        [\-\-value=<val> | \-V <val>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
-Writes and shows the defined NVMe controller property for NVMe ove Fabric\&.
+Writes and shows the defined NVMe controller property for NVMe over Fabric\&.
 .SH "OPTIONS"
 .PP
-\-o, \-\-offset
+\-O <offset>, \-\-offset=<offset>
 .RS 4
 The offset of the property\&.
 .RE
 .PP
-\-v
+\-V <val>, \-\-value=<val>
 .RS 4
-\-\-value: The value of the property to be set\&.
+The value of the property to be set\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

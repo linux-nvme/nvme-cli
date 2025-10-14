@@ -1,0 +1,56 @@
+'\" t
+.\"     Title: nvme-sed-lock
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SED\-LOCK" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sed-lock \- Lock a SED Opal Device
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sed lock\fR [\-\-read\-only | \-r] [\-\-ask\-key | \-k]  <device>
+.fi
+.SH "DESCRIPTION"
+.sp
+Lock the given NVMe device\&.
+.SH "OPTIONS"
+.PP
+\-r, \-\-read\-only
+.RS 4
+Set locking range to read\-only\&.
+.RE
+.PP
+\-k, \-\-ask\-key
+.RS 4
+Prompt for SED authentication key\&.
+.RE
+.SH "EXAMPLES"
+.sp
+nvme sed lock /dev/nvme5n1
+.SH "NVME"
+.sp
+Part of nvme\-cli

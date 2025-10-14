@@ -9,6 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme delete-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -24,6 +26,19 @@ OPTIONS
 -n <nsid>::
 --namespace-id=<nsid>::
 	The namespace identifier to delete.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value 120,000. In milliseconds.
 
 EXAMPLES
 --------

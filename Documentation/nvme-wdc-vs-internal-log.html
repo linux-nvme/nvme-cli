@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-wdc-vs-internal-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -749,9 +749,12 @@ nvme-wdc-vs-internal-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc vs-internal-log</em> &lt;device&gt; [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;] [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]
-    [--data-area=&lt;DATA AREA&gt;, -d &lt;DATA_AREA&gt;] [--file-size=&lt;FILE SIZE&gt;, -f &lt;FILE SIZE&gt;] [--offset=&lt;OFFSET&gt;, -e &lt;OFFSET&gt;]
-    [--type=&lt;TYPE&gt;, -t &lt;type&gt;] [--verbose, -v]</pre>
+<pre class="content"><em>nvme wdc vs-internal-log</em> &lt;device&gt; [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;]
+                        [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]
+                        [--data-area=&lt;DATA AREA&gt;, -d &lt;DATA_AREA&gt;]
+                        [--file-size=&lt;FILE SIZE&gt;, -f &lt;FILE SIZE&gt;]
+                        [--offset=&lt;OFFSET&gt;, -e &lt;OFFSET&gt;]
+                        [--type=&lt;TYPE&gt;, -t &lt;type&gt;] [--verbose, -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -759,8 +762,8 @@ nvme-wdc-vs-internal-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends the WDC Vendor Specific Internal Log request and saves
-the result to a file.</p></div>
+<div class="paragraph"><p>For the NVMe device given, sends the WDC Vendor Specific Internal Log request
+and saves the result to a file.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0).</p></div>
 <div class="paragraph"><p>This will only work on WDC devices supporting this feature.
 Results for any other device are undefined.</p></div>
@@ -778,7 +781,8 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Output file; defaults to device serial number followed by "<em>internal_fw_log</em>&lt;date&gt;_&lt;time&gt;.bin" suffix
+        Output file; defaults to device serial number followed by
+        "<em>internal_fw_log</em>&lt;date&gt;_&lt;time&gt;.bin" suffix
 </p>
 </dd>
 <dt class="hdlist1">
@@ -789,7 +793,7 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-    Transfer size; defaults to 0x10000 (65536 decimal) bytes
+        Transfer size; defaults to 0x10000 (65536 decimal) bytes
 </p>
 </dd>
 <dt class="hdlist1">
@@ -800,8 +804,9 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-    DUI data area to retrieve.  The DUI data areas from 1 to &lt;DATA AREA&gt; will be retrieved.  This parameter
-    is currently only supported on the SN340, SN640, and SN840 devices.
+        DUI data area to retrieve. The DUI data areas from 1 to &lt;DATA AREA&gt; will
+        be retrieved. This parameter is currently only supported on the SN340,
+        SN640, SN730, and SN840 devices.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -812,9 +817,10 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-    Specifies the desired size of the data file starting at the passed in offset.  This allows the user to
-    retrieve the data in several smaller files of the passed in size.  This parameter is currently only
-    supported on the SN340 device.
+        Specifies the desired size of the data file starting at the passed in
+        offset. This allows the user to retrieve the data in several smaller
+        files of the passed in size. This parameter is currently only supported
+        on the SN340 device.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -825,9 +831,10 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Specifies the data offset at which to start retrieving the data.  This parameter is used in combination
-        with the file size parameter to retrieve the data in several smaller files.  This parameter is currently
-    only supported on the SN340 device.
+        Specifies the data offset at which to start retrieving the data. This
+        parameter is used in combination with the file size parameter to
+        retrieve the data in several smaller files. This parameter is currently
+        only supported on the SN340 device.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -838,10 +845,11 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Specifies the telemetry type - NONE, HOST, or CONTROLLER.  This parameter is used to get either the host
-        generated or controller initiated telemetry log page.  If not specified or none is specified, the command
-    will return the default E6 log data.  This parameter is currently only supported on the SN640 and SN840
-    devices.
+        Specifies the telemetry type - NONE, HOST, or CONTROLLER. This parameter
+        is used to get either the host generated or controller initiated
+        telemetry log page. If not specified or none is specified, the command
+        will return the default E6 log data. This parameter is currently only
+        supported on the SN640 and SN840 devices.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -950,7 +958,7 @@ Gets the controller telemetry log page to data area 3 from the device and stores
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-12-19 04:03:07 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

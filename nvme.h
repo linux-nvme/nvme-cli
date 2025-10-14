@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Definitions for the NVM Express interface
  * Copyright (c) 2011-2014, Intel Corporation.
@@ -18,93 +19,159 @@
 #include <dirent.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <endian.h>
+#include <sys/time.h>
+#include <sys/stat.h>
+
+#include <libnvme-mi.h>
 
 #include "plugin.h"
 #include "util/json.h"
+#include "util/mem.h"
 #include "util/argconfig.h"
-#include "linux/nvme.h"
+#include "util/cleanup.h"
+#include "util/types.h"
 
 enum nvme_print_flags {
-	NORMAL	= 0,
-	VERBOSE	= 1 << 0,	/* verbosely decode complex values for humans */
-	JSON	= 1 << 1,	/* display in json format */
-	VS	= 1 << 2,	/* hex dump vendor specific data areas */
-	BINARY	= 1 << 3,	/* binary dump raw bytes */
+	NORMAL		= 0,
+	VERBOSE		= 1 << 0,	/* verbosely decode complex values for humans */
+	JSON		= 1 << 1,	/* display in json format */
+	VS		= 1 << 2,	/* hex dump vendor specific data areas */
+	BINARY		= 1 << 3,	/* binary dump raw bytes */
+	TABULAR		= 1 << 4,	/* prints aligned columns for easy reading */
 };
 
-struct nvme_subsystem;
-struct nvme_ctrl;
+typedef uint32_t nvme_print_flags_t;
 
-struct nvme_namespace {
-	char *name;
-	struct nvme_ctrl *ctrl;
-
-	unsigned nsid;
-	struct nvme_id_ns ns;
-};
-
-struct nvme_ctrl {
-	char *name;
-	struct nvme_subsystem *subsys;
-
-	char *address;
-	char *transport;
-	char *state;
-	char *ana_state;
-	char *traddr;
-	char *trsvcid;
-	char *host_traddr;
-	char *hostnqn;
-	char *hostid;
-
-	struct nvme_id_ctrl id;
-
-	int    nr_namespaces;
-	struct nvme_namespace *namespaces;
-};
-
-struct nvme_subsystem {
-	char *name;
-	char *subsysnqn;
-
-	int    nr_ctrls;
-	struct nvme_ctrl *ctrls;
-
-	int    nr_namespaces;
-	struct nvme_namespace *namespaces;
-};
-
-struct nvme_topology {
-	int    nr_subsystems;
-	struct nvme_subsystem *subsystems;
+enum nvme_cli_topo_ranking {
+	NVME_CLI_TOPO_NAMESPACE,
+	NVME_CLI_TOPO_CTRL,
+	NVME_CLI_TOPO_MULTIPATH,
 };
 
 #define SYS_NVME "/sys/class/nvme"
 
+enum nvme_dev_type {
+	NVME_DEV_DIRECT,
+	NVME_DEV_MI,
+};
+
+struct nvme_dev {
+	enum nvme_dev_type type;
+	union {
+		struct {
+			int fd;
+			struct stat stat;
+		} direct;
+		struct {
+			nvme_root_t root;
+			nvme_mi_ep_t ep;
+			nvme_mi_ctrl_t ctrl;
+		} mi;
+	};
+
+	const char *name;
+};
+
+#define dev_fd(d) __dev_fd(d, __func__, __LINE__)
+
+struct nvme_config {
+	char *output_format;
+	int verbose;
+	__u32 timeout;
+	bool dry_run;
+	bool no_retries;
+	unsigned int output_format_ver;
+};
+
+/*
+ * the ordering of the arguments matters, as the argument parser uses the first match, thus any
+ * command which defines -t shorthand will match first.
+ */
+#define NVME_ARGS(n, ...)                                                              \
+	struct argconfig_commandline_options n[] = {                                   \
+		OPT_INCR("verbose",      'v', &nvme_cfg.verbose,       verbose),       \
+		OPT_FMT("output-format", 'o', &nvme_cfg.output_format, output_format), \
+		##__VA_ARGS__,                                                         \
+		OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout),       \
+		OPT_FLAG("dry-run",        0, &nvme_cfg.dry_run,       dry_run),       \
+		OPT_FLAG("no-retries",     0, &nvme_cfg.no_retries,                    \
+			 "disable retry logic on errors\n"),                           \
+		OPT_UINT("output-format-version", 0, &nvme_cfg.output_format_ver,      \
+			 "output format version: 1|2"),                                \
+		OPT_END()                                                              \
+	}
+
+static inline int __dev_fd(struct nvme_dev *dev, const char *func, int line)
+{
+	if (dev->type != NVME_DEV_DIRECT) {
+		fprintf(stderr,
+			"warning: %s:%d not a direct transport!\n",
+			func, line);
+		return -1;
+	}
+	return dev->direct.fd;
+}
+
+static inline nvme_mi_ep_t dev_mi_ep(struct nvme_dev *dev)
+{
+	if (dev->type != NVME_DEV_MI) {
+		fprintf(stderr,
+			"warning: not a MI transport!\n");
+		return NULL;
+	}
+	return dev->mi.ep;
+}
+
+static inline bool nvme_is_multipath(nvme_subsystem_t s)
+{
+	nvme_ns_t n;
+	nvme_path_t p;
+
+	nvme_subsystem_for_each_ns(s, n)
+		nvme_namespace_for_each_path(n, p)
+			return true;
+
+	return false;
+}
+
 void register_extension(struct plugin *plugin);
-int parse_and_open(int argc, char **argv, const char *desc,
-	const struct argconfig_commandline_options *clo);
 
-extern const char *devicename;
+/*
+ * parse_and_open - parses arguments and opens the NVMe device, populating @dev
+ */
+int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *desc,
+	struct argconfig_commandline_options *clo);
 
-enum nvme_print_flags validate_output_format(char *format);
+void dev_close(struct nvme_dev *dev);
+
+static inline DEFINE_CLEANUP_FUNC(
+	cleanup_nvme_dev, struct nvme_dev *, dev_close)
+#define _cleanup_nvme_dev_ __cleanup__(cleanup_nvme_dev)
+
+extern const char *output_format;
+extern const char *timeout;
+extern const char *verbose;
+extern const char *dry_run;
+extern struct nvme_config nvme_cfg;
+
+int validate_output_format(const char *format, nvme_print_flags_t *flags);
+bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
-	struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
-char *nvme_char_from_block(char *block);
-void *mmap_registers(const char *dev);
+	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));
 
-extern int current_index;
-int scan_namespace_filter(const struct dirent *d);
-int scan_ctrl_paths_filter(const struct dirent *d);
-int scan_ctrls_filter(const struct dirent *d);
-int scan_subsys_filter(const struct dirent *d);
-int scan_dev_filter(const struct dirent *d);
+const char *nvme_strerror(int errnum);
 
-int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
-		    __u32 ns_instance);
-void free_topology(struct nvme_topology *t);
-char *get_nvme_subsnqn(char *path);
-char *nvme_get_ctrl_attr(char *path, const char *attr);
+unsigned long long elapsed_utime(struct timeval start_time,
+					struct timeval end_time);
 
+/* nvme-print.c */
+const char *nvme_select_to_string(int sel);
+
+void d(unsigned char *buf, int len, int width, int group);
+void d_raw(unsigned char *buf, unsigned len);
+
+int get_reg_size(int offset);
+bool nvme_is_ctrl_reg(int offset);
 #endif /* _NVME_H */

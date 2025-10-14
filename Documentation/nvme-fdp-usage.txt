@@ -1,0 +1,37 @@
+nvme-fdp-usage(1)
+=================
+
+NAME
+----
+nvme-fdp-usage - Get Reclaim Unit Handle Usage
+
+SYNOPSIS
+--------
+[verse]
+'nvme fdp usage' <device> [--endgrp-id=<NUM> | -e <NUM>] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, provide information about the Reclaim Unit Handles
+associated with the Placement Handles of the namespaces in the specified
+Endurance Group.
+
+OPTIONS
+-------
+-e <NUM>::
+--endgrp-id=<NUM>::
+	The endurance group identifier to use when requesting the log page.
+
+-b::
+--raw-binary::
+	Print the raw buffer to the standard output stream.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or 'binary'. Only one
+	output format can be used at a time.
+
+NVME
+----
+Part of nvme-cli

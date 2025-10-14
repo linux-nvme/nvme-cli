@@ -1,0 +1,161 @@
+'\" t
+.\"     Title: nvme-solidigm-id-ctrl
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SOLIDIGM\-ID\-" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-solidigm-id-ctrl \- Send NVMe Identify Controller, return result and structure
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme solidigm id\-ctrl\fR <device> [\-\-raw\-binary | \-b] [\-\-vendor\-specific | \-V]
+                              [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-human\-readable | \-H]
+                              [\-\-verbose | \-v] [\-\-timeout=<seconds> | \-t <seconds>]
+.fi
+.SH "DESCRIPTION"
+.sp
+This command is a Solidigm\-specific extension of the NVMe Identify Controller command\&. It sends an NVMe Identify Controller command to the specified device and provides the result and returned structure\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+This command includes all options available in the generic nvme id\-ctrl command, including: \- \-\-raw\-binary or \-b \- \-\-vendor\-specific or \-V \- \-\-output\-format=<fmt> or \-o <fmt> \- \-\-human\-readable or \-H \- \-\-verbose or \-v \- \-\-timeout=<seconds> or \-t <seconds>
+.sp
+For detailed usage and options, please refer to the documentation for \fInvme id\-ctrl\fR\&.
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send the Identify Controller command and interpret the output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm id\-ctrl /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the raw output to stdout:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm id\-ctrl /dev/nvme0 \-\-raw\-binary
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the output in JSON format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm id\-ctrl /dev/nvme0 \-o json
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Display the vendor\-specific fields:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm id\-ctrl /dev/nvme0 \-\-vendor\-specific
+# nvme solidigm id\-ctrl /dev/nvme0 \-V
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Use human\-readable output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm id\-ctrl /dev/nvme0 \-\-human\-readable
+# nvme solidigm id\-ctrl /dev/nvme0 \-H
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-id\-ctrl(1)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

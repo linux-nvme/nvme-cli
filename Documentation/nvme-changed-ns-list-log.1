@@ -2,12 +2,12 @@
 .\"     Title: nvme-changed-ns-list-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CHANGED\-NS\-L" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-CHANGED\-NS\-L" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ nvme-changed-ns-list-log \- Send NVMe Changed Namespace List log page request, r
 .sp
 .nf
 \fInvme changed\-ns\-list\-log\fR <device> [\-\-raw\-binary | \-b]
-                        [\-\-output\-format=<fmt> | \-o <fmt>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -49,12 +49,18 @@ On success, the returned Changed Namespace List log structure may be returned in
 Print the raw Changed Namespace List log buffer to stdout\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR, or
+\fIjson\fR
+or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

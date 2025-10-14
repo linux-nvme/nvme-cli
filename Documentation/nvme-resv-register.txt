@@ -9,11 +9,12 @@ SYNOPSIS
 --------
 [verse]
 'nvme resv-register' <device> [--namespace-id=<nsid> | -n <nsid>]
-			      [--crkey=<crkey> | -c <crkey>]
-			      [--nrkey=<nrkey> | -k <nrkey>]
-			      [--rrega=<rrega> | -r <rrega>]
-			      [--cptpl=<cptpl> | -p <cptpl>]
-			      [--iekey | -i]
+			[--crkey=<crkey> | -c <crkey>]
+			[--nrkey=<nrkey> | -k <nrkey>]
+			[--rrega=<rrega> | -r <rrega>]
+			[--cptpl=<cptpl> | -p <cptpl>] [--iekey | -i]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -62,7 +63,7 @@ are cleared on a power on.
 a power loss.
 |=================
 
--a <rrega>::
+-r <rrega>::
 --rrega=<rrega>::
 	Reservation Register Action: This field specifies the registration
 	action that is performed by the command.
@@ -83,6 +84,19 @@ a power loss.
 	shall succeed regardless of the CRKEY field value.
 +
 Indicator option, defaults to '0'.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

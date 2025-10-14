@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-set-property(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -740,7 +740,7 @@ nvme-set-property(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-set-property -
-   Writes and shows the defined NVMe controller property for NVMe ove Fabric
+   Writes and shows the defined NVMe controller property for NVMe over Fabric
 </p>
 </div>
 </div>
@@ -749,8 +749,10 @@ nvme-set-property(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme set-property</em> &lt;device&gt; [--offset=&lt;offset&gt; | -o &lt;offset&gt;]
-                                [--value=&lt;val&gt; | -v &lt;val&gt;]</pre>
+<pre class="content"><em>nvme set-property</em> &lt;device&gt; [--offset=&lt;offset&gt; | -O &lt;offset&gt;]
+                        [--value=&lt;val&gt; | -V &lt;val&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -758,7 +760,7 @@ nvme-set-property(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Writes and shows the defined NVMe controller property for NVMe ove Fabric.</p></div>
+<div class="paragraph"><p>Writes and shows the defined NVMe controller property for NVMe over Fabric.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -766,23 +768,59 @@ nvme-set-property(1) Manual Page
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o
+-O &lt;offset&gt;
 </dt>
 <dt class="hdlist1">
---offset
+--offset=&lt;offset&gt;
 </dt>
 <dd>
 <p>
-       The offset of the property.
+        The offset of the property.
+</p>
+</dd>
+<dt class="hdlist1">
+-V &lt;val&gt;
+</dt>
+<dt class="hdlist1">
+--value=&lt;val&gt;
+</dt>
+<dd>
+<p>
+        The value of the property to be set.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
 </p>
 </dd>
 <dt class="hdlist1">
 -v
 </dt>
+<dt class="hdlist1">
+--verbose
+</dt>
 <dd>
 <p>
---value:
-        The value of the property to be set.
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
 </p>
 </dd>
 </dl></div>
@@ -805,7 +843,7 @@ nvme-set-property(1) Manual Page
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-10-12 00:12:24 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

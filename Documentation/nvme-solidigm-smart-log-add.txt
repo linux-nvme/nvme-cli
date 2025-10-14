@@ -1,0 +1,56 @@
+nvme-solidigm-smart-log-add(1)
+==============================
+
+NAME
+----
+nvme-solidigm-smart-log-add - Retrieve Solidigm SMART Log
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm smart-log-add' <device> [--namespace-id=<nsid> | -n <nsid>]
+                                       [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+Retrieves the Solidigm vendor-specific SMART log for the given NVMe device
+and optionally the specified namespace, then displays the log.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the log for the given nsid. If not specified, the log
+	will be retrieved for all namespaces.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or 'binary'. Only one
+	output format can be used at a time.
+
+EXAMPLES
+--------
+* Retrieve the Solidigm SMART log for all namespaces:
++
+------------
+# nvme solidigm smart-log-add /dev/nvme0
+------------
+
+* Retrieve the Solidigm SMART log for namespace 1:
++
+------------
+# nvme solidigm smart-log-add /dev/nvme0 -n 1
+------------
+
+* Retrieve the Solidigm SMART log in JSON format:
++
+------------
+# nvme solidigm smart-log-add /dev/nvme0 -o json
+------------
+
+NVME
+----
+Part of the nvme-user suite

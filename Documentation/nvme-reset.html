@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-reset(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -749,7 +749,7 @@ nvme-reset(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme reset</em> &lt;device&gt;</pre>
+<pre class="content"><em>nvme reset</em> &lt;device&gt; [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,7 +764,31 @@ be an NVMe character device (ex: /dev/nvme0).</p></div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>None</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -794,7 +818,7 @@ Resets the controller.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-11-08 08:41:30 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

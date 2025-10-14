@@ -24,7 +24,6 @@ OPTIONS
 -------
 none
 
-
 EXAMPLES
 --------
 * Print the Dera Device status and Additional SMART log page in a human readable format:

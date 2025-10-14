@@ -1,0 +1,47 @@
+nvme-sndk-get-dev-capabilities-log(1)
+=====================================
+
+NAME
+----
+nvme-sndk-get-dev-capabilities-log - Send NVMe sndk get-dev-capabilities-log
+plugin command, return parsed log output
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk get-dev-capabilities-log' <device> [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send a sndk plugin get-dev-capabilities-log command
+and output the device capabilities log data. The --output-format option will
+format the output as specified.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0).
+
+This will only work on Sandisk devices supporting this log page.
+Results for any other device are undefined.
+
+On success it returns the parsed device capabilities log page data, error
+code otherwise.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', or
+	'json'. Only one output format can be used at a time.
+	Default is normal.
+
+EXAMPLES
+--------
+* Has the program issue sndk get-dev-capabilities-log plugin command :
++
+------------
+# nvme sndk get-dev-capabilities-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

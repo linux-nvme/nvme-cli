@@ -8,9 +8,13 @@ nvme-write-uncor - Send an NVMe write uncorrectable command, return results
 SYNOPSIS
 --------
 [verse]
-'nvme-write-uncorr' <device> [--start-block=<slba> | -s <slba>]
+'nvme-write-uncor' <device> [--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>]
 			[--namespace-id=<nsid> | -n <nsid>]
+			[--dir-type=<dtype> | -T <dtype>]
+			[--dir-spec=<dspec> | -S <dspec>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -19,17 +23,38 @@ blocks.
 
 OPTIONS
 -------
---start-block=<slba>::
 -s <slba>::
+--start-block=<slba>::
 	Start block.
 
---block-count=<nlb>::
 -c::
+--block-count=<nlb>::
 	Number of logical blocks to write uncorrectable.
 
---namespace-id=<nsid>::
 -n <nsid>::
+--namespace-id=<nsid>::
 	Namespace ID use in the command.
+
+-T <dtype>::
+--dir-type=<dtype>::
+	Directive type
+
+-S <dspec>::
+--dir-spec=<dspec>::
+	Directive specific
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

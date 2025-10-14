@@ -1,0 +1,20 @@
+---
+name: release
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'linux-nvme/nvme-cli'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

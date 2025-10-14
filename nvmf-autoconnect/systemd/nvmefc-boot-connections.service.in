@@ -1,0 +1,25 @@
+[Unit]
+Description=Auto-connect to subsystems on FC-NVME devices found during boot
+ConditionPathExists=/sys/class/fc/fc_udev_device/nvme_discovery
+DefaultDependencies=no
+After=systemd-udevd.service
+Before=local-fs-pre.target
+
+[Service]
+ProtectSystem=full
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+RestrictRealtime=true
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+RestrictAddressFamilies=none
+Type=oneshot
+ExecStart=/bin/sh -c "echo add > /sys/class/fc/fc_udev_device/nvme_discovery"
+
+[Install]
+WantedBy=default.target

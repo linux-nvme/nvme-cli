@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #undef CMD_INC_FILE
 #define CMD_INC_FILE plugins/netapp/netapp-nvme
 
@@ -6,7 +7,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("netapp", "NetApp vendor specific extensions"),
+PLUGIN(NAME("netapp", "NetApp vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("smdevices", "NetApp SMdevices", netapp_smdevices)
 		ENTRY("ontapdevices", "NetApp ONTAPdevices", netapp_ontapdevices)

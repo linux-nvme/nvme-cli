@@ -12,7 +12,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-For the NVMe device given, read a Vendor Unique WDC log page that returns the firmware actiation
+For the NVMe device given, read a Vendor Unique WDC log page that returns the firmware activation
 history. 
 
 The <device> parameter is mandatory and must be the NVMe character device (ex: /dev/nvme0).
@@ -24,12 +24,11 @@ On success it returns 0, error code otherwise.
 
 OPTIONS
 -------
--o <format>::
---output-format=<format>::
+-o <fmt>::
+--output-format=<fmt>::
 	Set the reporting format to 'normal', or
 	'json'. Only one output format can be used at a time.
 	Default is normal.
-
 
 Firmware Activate History Log Page Data Output Explanation
 -----------------------------------------------------------
@@ -38,7 +37,7 @@ Firmware Activate History Log Page Data Output Explanation
 |Field |Description
 
 |*Entry Number*
-|The number of fw activate entry.  The most recent 20 entries will be displayed.
+|The number of fw activate entry. The most recent 20 entries will be displayed.
 
 |*Power on Hour*
 |The time since the power on in hours:minutes:seconds.
@@ -53,13 +52,13 @@ Firmware Activate History Log Page Data Output Explanation
 |The new firmware level running on the SSD after the activation took place.
 
 |*Slot Number*
-|The slot tht the firmware is being activated from. 
+|The slot that the firmware is being activated from.
 
 |*Commit Action Type*
 |The commit action type associated with the firmware activation event
 
 |*Result*
-|The result of the firmware activation event.  The ouput shall be in the format:
+|The result of the firmware activation event. The output shall be in the format:
 Pass or Failed + error code
 |===
 

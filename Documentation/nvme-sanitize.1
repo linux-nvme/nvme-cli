@@ -2,12 +2,12 @@
 .\"     Title: nvme-sanitize
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SANITIZE" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-SANITIZE" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,12 +32,12 @@ nvme-sanitize \- Send NVMe Sanitize Command, return result
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme sanitize\fR <device> [\-\-no\-dealloc | \-d]
-              [\-\-oipbp | \-i]
-              [\-\-owpass=<overwrite\-pass\-count> | \-n <overwrite\-pass\-count>]
-              [\-\-ause | \-u]
-              [\-\-sanact=<action> | \-a <action>]
-              [\-\-ovrpat=<overwrite\-pattern> | \-p <overwrite\-pattern>]
+\fInvme sanitize\fR <device> [\-\-no\-dealloc | \-d] [\-\-oipbp | \-i]
+                        [\-\-owpass=<overwrite\-pass\-count> | \-n <overwrite\-pass\-count>]
+                        [\-\-ause | \-u] [\-\-sanact=<action> | \-a <action>]
+                        [\-\-ovrpat=<overwrite\-pattern> | \-p <overwrite\-pattern>]
+                        [\-\-emvs | \-e] [\-\-force]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -48,7 +48,7 @@ The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
 On success it returns 0, error code otherwise\&.
 .SH "OPTIONS"
 .PP
-\-d, \-\-no\-delloc
+\-d, \-\-no\-dealloc
 .RS 4
 No Deallocate After Sanitize: If set, then the controller shall not deallocate any logical blocks as a result of successfully completing the sanitize operation\&. If cleared, then the controller should deallocate logical blocks as a result of successfully completing the sanitize operation\&. This bit shall be ignored if the Sanitize Action field is set to 001b (i\&.e\&., Exit Failure Mode)\&.
 .RE
@@ -70,12 +70,87 @@ Allow Unrestricted Sanitize Exit: If set, then the sanitize operation is perform
 .PP
 \-a <action>, \-\-sanact=<action>
 .RS 4
-Sanitize Action: 000b \- Reserved 001b \- Exit Failure Mode 010b \- Start a Block Erase sanitize operation 011b \- Start an Overwrite sanitize operation 100b \- Start a Crypto Erase sanitize operation
+Sanitize Action:
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0x00
+T}:T{
+Reserved
+T}
+T{
+0x01 |
+\fIexit\-failure\fR
+T}:T{
+Exit Failure Mode
+T}
+T{
+0x02 |
+\fIstart\-block\-erase\fR
+T}:T{
+Start a Block Erase sanitize operation
+T}
+T{
+0x03 |
+\fIstart\-overwrite\fR
+T}:T{
+Start an Overwrite sanitize operation
+T}
+T{
+0x04 |
+\fIstart\-crypto\-erase\fR
+T}:T{
+Start a Crypto Erase sanitize operation
+T}
+T{
+0x05 |
+\fIexit\-media\-verification\fR
+T}:T{
+Exit Media Verification State
+T}
+.TE
+.sp 1
 .RE
 .PP
 \-p <overwrite\-pattern>, \-\-ovrpat=<overwrite\-pattern>
 .RS 4
 Overwrite Pattern: This field is ignored unless the Sanitize Action field in Command Dword 10 is set to 011b (i\&.e\&., Overwrite)\&. This field specifies a 32\-bit pattern that is used for the Overwrite sanitize operation\&.
+.RE
+.PP
+\-e, \-\-emvs
+.RS 4
+Enter Media Verification State: If set, then the Media Verification state shall be entered if sanitize processing completes successfully\&. If cleared, then this bit shall have no effect\&. If SANACT field does not specify starting a sanitize operation (i\&.e\&., is set to any value other than 010b, 011b, or 100b), then this bit shall be ignored by the controller\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Ignore namespace is currently busy and performed the operation even though\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -93,8 +168,9 @@ Has the program issue Sanitize Command :
 .RS 4
 .\}
 .nf
-# nvme sanitize /dev/nvme0n1 \-a 0x02
-# nvme sanitize /dev/nvme0n1 \-\-sanact=0x01
+# nvme sanitize /dev/nvme0 \-a 0x02
+# nvme sanitize /dev/nvme0 \-\-sanact=0x01
+# nvme sanitize /dev/nvme0 \-\-sanact=start\-overwrite
 .fi
 .if n \{\
 .RE

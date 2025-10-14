@@ -9,13 +9,14 @@ SYNOPSIS
 --------
 [verse]
 'nvme dir-receive' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--data-len=<data-len> | -l <data-len>]
-			  [--dir-type=<dtype> | -D <dtype>]
-			  [--dir-spec=<dspec> | -S <dspec>]
-			  [--dir-oper=<doper> | -O <doper>]
-			  [--req-resource=<nsr> | -r <nsr>]
-			  [--human-readable | -H]
-			  [--raw-binary | -b]
+			[--data-len=<data-len> | -l <data-len>]
+			[--dir-type=<dtype> | -D <dtype>]
+			[--dir-spec=<dspec> | -S <dspec>]
+			[--dir-oper=<doper> | -O <doper>]
+			[--req-resource=<nsr> | -r <nsr>]
+			[--human-readable | -H] [--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -41,20 +42,19 @@ OPTIONS
 
 -D <dtype>::
 --dir-type=<dtype>::
-	Directive type	
+	Directive type
 
 -S <dspec>::
 --dir-spec=<dspec>::
-	Directive specific	
+	Directive specific
 
 -O <doper>::
 --dir-oper=<doper>::
-	Directive operation	
+	Directive operation
 
 -r <nsr>::
 --req-resource=<nsr>::
 	Directive requested resource count
-
 +
 []
 |==================
@@ -81,6 +81,19 @@ OPTIONS
 --human-readable::
 	Print the decoded receive buffer to stdout if the command returns
 	a structure.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

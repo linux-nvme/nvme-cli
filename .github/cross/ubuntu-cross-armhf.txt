@@ -1,0 +1,18 @@
+[binaries]
+c = '/usr/bin/arm-linux-gnueabihf-gcc'
+ar = '/usr/arm-linux-gnueabihf/bin/ar'
+strip = '/usr/arm-linux-gnueabihf/bin/strip'
+pkgconfig = '/usr/bin/arm-linux-gnueabihf-pkg-config'
+ld = '/usr/bin/arm-linux/gnueabihf-ld'
+exe_wrapper = '/usr/bin/qemu-arm-static'
+
+[properties]
+root = '/usr/arm-linux-gnueabihf'
+has_function_printf = true
+skip_sanity_check = true
+
+[host_machine]
+system = 'linux'
+cpu_family = 'arm'
+cpu = 'armv7'
+endian = 'little'

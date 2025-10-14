@@ -1,0 +1,78 @@
+'\" t
+.\"     Title: nvme-sndk-get-dev-capabilities-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SNDK\-GET\-DEV" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sndk-get-dev-capabilities-log \- Send NVMe sndk get\-dev\-capabilities\-log plugin command, return parsed log output
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sndk get\-dev\-capabilities\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, send a sndk plugin get\-dev\-capabilities\-log command and output the device capabilities log data\&. The \-\-output\-format option will format the output as specified\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+This will only work on Sandisk devices supporting this log page\&. Results for any other device are undefined\&.
+.sp
+On success it returns the parsed device capabilities log page data, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR, or
+\fIjson\fR\&. Only one output format can be used at a time\&. Default is normal\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue sndk get\-dev\-capabilities\-log plugin command :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk get\-dev\-capabilities\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

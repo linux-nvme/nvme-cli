@@ -15,8 +15,21 @@ SYNOPSIS
 			[--nmic=<nmic> | -m <nmic>]
 			[--anagrp-id=<anagrpid> | -a <anagrpid>]
 			[--nvmset-id=<nvmsetid> | -i <nvmsetid>]
+			[--endg-id=<endgid> | -e <endgid>]
+			[--csi=<command_set_identifier> | -y <command_set_identifier>]
+			[--lbstm=<lbstm> | -l <lbstm>]
+			[--nphndls=<nphndls> | -n <nphndls>]
 			[--block-size=<block-size> | -b <block-size>]
 			[--timeout=<timeout> | -t <timeout>]
+			[--nsze-si=<nsze-si> | -S <nsze-si>]
+			[--ncap-si=<ncap-si> | -C <ncap-si>]
+			[--azr | -z]
+			[--rar=<rar> | -r <rar>]
+			[--ror=<ror> | -O <ror>]
+			[--rnumzrwa=<rnumzrwa> | -u <rnumzrwa>]
+			[--phndls=<placement-handle-list,> | -p <placement-handle-list,>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
 DESCRIPTION
 -----------
 For the NVMe device given, sends a namespace management command to create
@@ -51,23 +64,102 @@ OPTIONS
 
 -a::
 --anagrp-id::
-	ANA Gorup Identifier. If this value is 0h specifies
+	ANA Group Identifier. If this value is 0h specifies
 	that the controller determines the value to use
 
 -i <nvmsetid>::
 --nvmset-id=<nvmsetid>::
 	This field specifies the identifier of the NVM Set.
 
+-e <endgid>::
+--endg-id=<endgid>::
+	This field specifies the identifier of the endurance group.
+
+-y <command_set_identifier>::
+--csi=<command_set_identifier>::
+	This field specifies the identifier of command set.
+	if not issued, NVM Command Set will be selected.
+
+-l <lbstm>::
+--lbstm=<lbstm>::
+	Logical Block Storage Tag Mask for end-to-end protection.
+
+-n <nphndls>::
+--nphndls=<nphndls>::
+	Number of Placement Handle included in the Placement Handle List.
+	If the Flexible Data Placement capability is not supported or not enabled
+	in specified Endurance Group, then the controller shall ignore this field.
+
 -b::
 --block-size::
 	Target block size the new namespace should be formatted as. Potential FLBAS
-  values will be values will be scanned and the lowest numbered will be
-  selected for the create-ns operation. Conflicts with --flbas argument.
+	values will be values will be scanned and the lowest numbered will be
+	selected for the create-ns operation. Conflicts with --flbas argument.
 
+-S::
+--nsze-si::
+	The namespace size (NSZE) in standard SI units (aligned on 1Mib boundaries,
+	unless the controller recommends a different value, see namespace
+	granularity).
+	The value SI suffixed is divided by the namespace LBA size to set as NSZE.
+	If the value not suffixed it is set as same with the nsze option.
+
+-C::
+--ncap-si::
+	The namespace capacity (NCAP) in standard SI units (aligned on 1Mib boundaries,
+	unless the controller recommends a different value, see namespace
+	granularity).
+	The value SI suffixed is divided by the namespace LBA size to set as NCAP.
+	If the value not suffixed it is set as same with the ncap option.
+
+-z::
+--azr::
+	Allocate ZRWA Resources.
+	If set to 1, then the namespace is to be created with the number of ZRWA
+	resource specified in the RNUMZRWA field of this data structure. If cleared
+	to 0, then no ZRWA resources are allocated to the namespace to be created.
+
+-r <rar>::
+--rar=<rar>::
+	Requested Active Resources. This field specifies the number of active
+	resources to be allocated to the created namespace.
+
+-O <ror>::
+--ror=<ror>::
+	Requested Open Resources. This field specifies the number of open resources
+	to be allocated to the created namespace.
+
+-u <rnumzrwa>::
+--rnumzrwa=<rnumzrwa>::
+	Requested Number of ZRWA Resources. This field specifies the number of ZRWA
+	resources to be allocated to the created namespace.
+
+-p <placement-handle-list,>::
+--phndls=<placement-handle-list,>::
+	The comma separated list of Reclaim Unit Handle Identifier to be associated
+	with each Placement Handle.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value 120,000. In milliseconds.
 
 EXAMPLES
 --------
-No examples provided yet.
+* Create a namespace:
++
+------------
+# nvme create-ns /dev/nvme0 --nsze 11995709440 --ncap 1199570940 --flbas 0 --dps 0 --nmic 0
+# nvme create-ns /dev/nvme0 --nsze-si 6.14T --ncap 1199570940 --flbas 0 --dps 0 --nmic 0
+------------
 
 NVME
 ----

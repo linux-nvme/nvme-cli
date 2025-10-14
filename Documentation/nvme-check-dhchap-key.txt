@@ -1,0 +1,41 @@
+nvme-check-dhchap-key(1)
+========================
+
+NAME
+----
+nvme-check-dhchap-key - Check a generated host DH-HMAC-CHAP key
+
+SYNOPSIS
+--------
+[verse]
+'nvme check-dhchap-key' [--key=<key>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+Checks if the key is a valid DH-HMAC-CHAP host key of the form:
+DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
+and prints it to stdout.
+
+OPTIONS
+-------
+-k <key>::
+--key=<key>::
+	Key to be checked.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

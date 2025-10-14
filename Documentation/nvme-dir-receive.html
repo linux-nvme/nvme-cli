@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-dir-receive(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -749,13 +750,14 @@ nvme-dir-receive(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme dir-receive</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                          [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                          [--dir-type=&lt;dtype&gt; | -D &lt;dtype&gt;]
-                          [--dir-spec=&lt;dspec&gt; | -S &lt;dspec&gt;]
-                          [--dir-oper=&lt;doper&gt; | -O &lt;doper&gt;]
-                          [--req-resource=&lt;nsr&gt; | -r &lt;nsr&gt;]
-                          [--human-readable | -H]
-                          [--raw-binary | -b]</pre>
+                        [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
+                        [--dir-type=&lt;dtype&gt; | -D &lt;dtype&gt;]
+                        [--dir-spec=&lt;dspec&gt; | -S &lt;dspec&gt;]
+                        [--dir-oper=&lt;doper&gt; | -O &lt;doper&gt;]
+                        [--req-resource=&lt;nsr&gt; | -r &lt;nsr&gt;]
+                        [--human-readable | -H] [--raw-binary | -b]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -834,9 +836,6 @@ printed to stdout for another program to parse.</p></div>
 <p>
         Directive requested resource count
 </p>
-</dd>
-</dl></div>
-<div class="paragraph"><p>+</p></div>
 <div class="tableblock">
 <table rules="all"
 width="100%"
@@ -872,7 +871,7 @@ cellspacing="0" cellpadding="4">
 </tbody>
 </table>
 </div>
-<div class="dlist"><dl>
+</dd>
 <dt class="hdlist1">
 -l &lt;data-len&gt;
 </dt>
@@ -908,6 +907,40 @@ cellspacing="0" cellpadding="4">
 <p>
         Print the decoded receive buffer to stdout if the command returns
         a structure.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
 </p>
 </dd>
 </dl></div>
@@ -968,7 +1001,7 @@ Get streams directive status :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2017-08-10 18:23:42 PDT
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

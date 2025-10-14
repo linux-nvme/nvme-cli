@@ -2,12 +2,12 @@
 .\"     Title: nvme-dir-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DIR\-SEND" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-DIR\-SEND" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,14 +33,15 @@ nvme-dir-send \- Issue a directive send command, returns applicable results
 .sp
 .nf
 \fInvme dir\-send\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                          [\-\-data\-len=<data\-len> | \-l <data\-len>]
-                          [\-\-dir\-type=<dtype> | \-D <dtype>]
-                          [\-\-dir\-spec=<dspec> | \-S <dspec>]
-                          [\-\-dir\-oper=<doper> | \-O <doper>]
-                          [\-\-endir=<endir> | \-e <endir>]
-                          [\-\-target\-dir=<tdir> | \-T <tdir>]
-                          [\-\-human\-readable | \-H]
-                          [\-\-raw\-binary | \-b]
+                        [\-\-data\-len=<data\-len> | \-l <data\-len>]
+                        [\-\-dir\-type=<dtype> | \-D <dtype>]
+                        [\-\-dir\-spec=<dspec> | \-S <dspec>]
+                        [\-\-dir\-oper=<doper> | \-O <doper>]
+                        [\-\-endir=<endir> | \-e <endir>]
+                        [\-\-target\-dir=<tdir> | \-T <tdir>]
+                        [\-\-human\-readable | \-H] [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -48,7 +49,7 @@ Submits an NVMe Directive Send admin command and returns the applicable results\
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
-On success, the returned directive\(cqs parameter structure (if applicable) is returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format if it is a known structure, displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
+On success, the returned directive\(cqs parameter structure (if applicable) is returned in one of several ways depending on the option flags; the structure may parsed by the program and displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
@@ -79,9 +80,6 @@ Target directive of the operation
 \-e <endir>, \-\-endir=<endir>
 .RS 4
 Target directive enable(1) or disable (0) operation
-.RE
-.sp
-+
 .TS
 allbox tab(:);
 lt lt
@@ -91,49 +89,38 @@ lt lt
 lt lt
 lt lt.
 T{
-.sp
 Select
 T}:T{
-.sp
 Description
 T}
 T{
-.sp
 0
 T}:T{
-.sp
 Current
 T}
 T{
-.sp
 1
 T}:T{
-.sp
 Default
 T}
 T{
-.sp
 2
 T}:T{
-.sp
 Saved
 T}
 T{
-.sp
 3
 T}:T{
-.sp
 Supported capabilities
 T}
 T{
-.sp
 4\(en7
 T}:T{
-.sp
 Reserved
 T}
 .TE
 .sp 1
+.RE
 .PP
 \-l <data\-len>, \-\-data\-len=<data\-len>
 .RS 4
@@ -147,7 +134,26 @@ Print the raw receive buffer to stdout if the command returns a structure\&.
 .PP
 \-H, \-\-human\-readable
 .RS 4
-Print the decoded receive buffer to stdout if the command returns a structure\&.
+deprecated; does nothing so use the \-\-verbose flag instead\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

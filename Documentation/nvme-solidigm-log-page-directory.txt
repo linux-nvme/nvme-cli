@@ -1,0 +1,44 @@
+nvme-solidigm-log-page-directory(1)
+===================================
+
+NAME
+----
+nvme-solidigm-log-page-directory - Retrieve log page directory
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm log-page-directory' <device> [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+Retrieves and displays the log page directory for the given Solidigm NVMe device.
+This command provides information about the available log pages and their
+characteristics.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+    Set the reporting format to 'normal' or 'json'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Retrieve and display the log page directory:
++
+------------
+# nvme solidigm log-page-directory /dev/nvme0
+------------
+
+* Retrieve the log page directory in JSON format:
++
+------------
+# nvme solidigm log-page-directory /dev/nvme0 -o json
+------------
+
+NVME
+----
+Part of the nvme-user suite

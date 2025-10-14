@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-property
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-PROPERTY" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-PROPERTY" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,15 +32,17 @@ nvme-get-property \- Reads and shows the defined NVMe controller property for NV
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme get\-property\fR <device> [\-\-offset=<offset> | \-o <offset>]
-                                [\-\-human\-readable | \-H ]
+\fInvme get\-property\fR <device> [\-\-offset=<offset> | \-O <offset>]
+                        [\-\-human\-readable | \-H]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
 Reads and shows the defined NVMe controller property for NVMe over Fabric\&.
 .SH "OPTIONS"
 .PP
-\-o, \-\-offset
+\-O <offset>, \-\-offset=<offset>
 .RS 4
 The offset of the property\&. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
 .RE
@@ -48,6 +50,25 @@ The offset of the property\&. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0
 \-H
 .RS 4
 \-\-human\-readable: Show the fields packed in the property
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

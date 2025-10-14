@@ -1,0 +1,38 @@
+---
+# Do not run following tests
+# - exclude data varification tests, too slow
+#   - nvme/010
+#   - nvme/011
+#   - nvme/012
+#   - nvme/013
+
+trigger:
+  - master
+pr:
+  - master
+
+jobs:
+  - job: blktests
+    timeoutInMinutes: 5
+    pool:
+      name: linux-nvme
+    steps:
+      - script: |
+          meson $(Agent.TempDirectory)/build
+          ninja -C $(Agent.TempDirectory)/build
+        displayName: Build nvme-cli
+      - script: |
+          git clone --depth 1 https://github.com/osandov/blktests.git $(Agent.TempDirectory)/blktests
+        displayName: Clone blktests
+      - script: |
+          cd $(Agent.TempDirectory)/blktests
+          sudo sh -c 'PATH=$(Agent.TempDirectory)/build:$PATH nvme_trtype=tcp ./check -x nvme/010 -x nvme/011 -x nvme/012 -x nvme/013 nvme'
+        displayName: Run blktests for NVMe transport TCP
+      - script: |
+          cd $(Agent.TempDirectory)/blktests
+          sudo sh -c 'PATH=$(Agent.TempDirectory)/build:$PATH nvme_trtype=rdma ./check -x nvme/010 -x nvme/011 -x nvme/012 -x nvme/013 nvme'
+        displayName: Run blktests for NVMe transport RDMA
+      - script: |
+          cd $(Agent.TempDirectory)/blktests
+          sudo sh -c 'PATH=$(Agent.TempDirectory)/build:$PATH nvme_trtype=fc ./check -x nvme/010 -x nvme/011 -x nvme/012 -x nvme/013 nvme'
+        displayName: Run blktests for NVMe transport FC

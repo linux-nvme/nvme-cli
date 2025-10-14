@@ -1,0 +1,107 @@
+nvme-sndk-vs-smart-add-log(1)
+=============================
+
+NAME
+----
+nvme-sndk-vs-smart-add-log - Send NVMe sndk vs-smart-add-log Vendor Unique Command,
+return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme sndk vs-smart-add-log' <device> [--interval=<NUM>, -i <NUM>]
+			[--output-format=<normal|json> -o <normal|json>]
+			[--log-page-version=<NUM>, -l <NUM>]
+			[--log-page-mask=<LIST>, -p <LIST>]
+			[--namespace-id=<nsid> | -n <nsid>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send a Vendor Unique sndk vs-smart-add-log command and
+provide the additional smart log.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on Sandisk devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-i <NUM>::
+--interval=<NUM>::
+	Return the statistics from specific interval, defaults to 14. This
+	parameter is only valid for the 0xC1 log page and ignored for all other
+	log pages.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', or
+	'json'. Only one output format can be used at a time.
+	Default is normal.
+
+-l <NUM>::
+--log-page-version=<NUM>::
+	Log Page Version: 0 = vendor, 1 = sndk. This parameter is only valid for
+	the 0xC0 log page and ignored for all other log pages.
+
+-p <LIST>::
+--log-page-mask=<LIST>::
+	Supply a comma separated list of desired log pages to display.
+	The possible values are 0xc0, 0xc1, 0xca, 0xd0.
+	Note: Not all pages are supported on all drives.
+	The default is to display all supported log pages.
+
+-n <nsid>::
+--namespace-id=<nsid>::
+	Sets the command's nsid value to the given nsid. Defaults to
+	0xffffffff if not given. This option may not affect anything
+	depending on the log page, which may or may not be specific to
+	a namespace.
+
+Valid Interval values and description :-
+
+[cols="2*", frame="topbot", align="center", options="header"]
+|===
+|Value |Description
+
+|*1*
+|Most recent five (5) minute accumulated set.
+
+|*2-12*
+|Previous five (5) minute accumulated sets.
+
+|*13*
+|The accumulated total of sets 1 through 12 that contain the previous hour of
+accumulated statistics.
+
+|*14*
+|The statistical set accumulated since power-up.
+
+|*15*
+|The statistical set accumulated during the entire lifetime of the device.
+|===
+
+EXAMPLES
+--------
+* Has the program issue sndk vs-smart-add-log Vendor Unique Command with default interval (14) :
++
+------------
+# nvme sndk vs-smart-add-log /dev/nvme0
+------------
+* Has the program issue sndk vs-smart-add-log Vendor Unique Command for just the 0xCA log page :
++
+------------
+# nvme sndk vs-smart-add-log /dev/nvme0 -p 0xCA
+------------
+* Has the program issue sndk vs-smart-add-log Vendor Unique Command for 0xC0 and 0xCA log pages :
++
+------------
+# nvme sndk vs-smart-add-log /dev/nvme0 -p 0xCA,0xC0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

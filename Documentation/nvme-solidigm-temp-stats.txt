@@ -1,0 +1,44 @@
+nvme-solidigm-temp-stats(1)
+===========================
+
+NAME
+----
+nvme-solidigm-temp-stats - Retrieve Temperature Statistics log
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm temp-stats' <device> [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieves and displays the Temperature Statistics log for the given Solidigm
+NVMe device. This log provides detailed temperature-related information.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+    Dump output in binary format. This option will display the raw data
+    instead of interpreting it.
+
+EXAMPLES
+--------
+* Retrieve and display the temperature statistics log:
++
+------------
+# nvme solidigm temp-stats /dev/nvme0
+------------
+
+* Retrieve the temperature statistics log in raw binary format:
++
+------------
+# nvme solidigm temp-stats /dev/nvme0 --raw-binary
+------------
+
+NVME
+----
+Part of the nvme-user suite

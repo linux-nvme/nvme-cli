@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-dera-stat(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -729,17 +732,19 @@ asciidoc.install();
 /*]]>*/
 </script>
 </head>
-<body class="article">
+<body class="manpage">
 <div id="header">
-<h1>nvme-dera-stat(1)</h1>
+<h1>
+nvme-dera-stat(1) Manual Page
+</h1>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>nvme-dera-stat -
+   Send NVMe Dera Device status and Additional SMART log page request, returns result and log
+</p>
+</div>
 </div>
 <div id="content">
-<div class="sect1">
-<h2 id="_name">NAME</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>nvme-dera-stat - Send NVMe Dera Device status and Additional SMART log page request, returns result and log</p></div>
-</div>
-</div>
 <div class="sect1">
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
@@ -791,7 +796,8 @@ Print the Dera Device status and Additional SMART log page in a human readable f
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-11-26 13:57:30 CST
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

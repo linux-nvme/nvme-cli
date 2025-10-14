@@ -4,28 +4,42 @@ nvme-set-property(1)
 NAME
 ----
 nvme-set-property - Writes and shows the defined NVMe controller property 
-for NVMe ove Fabric
+for NVMe over Fabric
 
 SYNOPSIS
 --------
 [verse]
-'nvme set-property' <device> [--offset=<offset> | -o <offset>]
-				[--value=<val> | -v <val>]
-
+'nvme set-property' <device> [--offset=<offset> | -O <offset>]
+			[--value=<val> | -V <val>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
-Writes and shows the defined NVMe controller property for NVMe ove Fabric.
+Writes and shows the defined NVMe controller property for NVMe over Fabric.
 
 OPTIONS
 -------
--o::
---offset::
-       The offset of the property.
+-O <offset>::
+--offset=<offset>::
+	The offset of the property.
+
+-V <val>::
+--value=<val>::
+	The value of the property to be set.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
 
 -v::
---value:
-	The value of the property to be set.
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

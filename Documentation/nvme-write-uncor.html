@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-uncor(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -746,9 +749,13 @@ nvme-uncor(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-write-uncorr</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
+<pre class="content"><em>nvme-write-uncor</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
                         [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--dir-type=&lt;dtype&gt; | -T &lt;dtype&gt;]
+                        [--dir-spec=&lt;dspec&gt; | -S &lt;dspec&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -765,10 +772,10 @@ blocks.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
---start-block=&lt;slba&gt;
+-s &lt;slba&gt;
 </dt>
 <dt class="hdlist1">
--s &lt;slba&gt;
+--start-block=&lt;slba&gt;
 </dt>
 <dd>
 <p>
@@ -776,10 +783,10 @@ blocks.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---block-count=&lt;nlb&gt;
+-c
 </dt>
 <dt class="hdlist1">
--c
+--block-count=&lt;nlb&gt;
 </dt>
 <dd>
 <p>
@@ -787,14 +794,70 @@ blocks.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
+-n &lt;nsid&gt;
 </dt>
 <dt class="hdlist1">
--n &lt;nsid&gt;
+--namespace-id=&lt;nsid&gt;
 </dt>
 <dd>
 <p>
         Namespace ID use in the command.
+</p>
+</dd>
+<dt class="hdlist1">
+-T &lt;dtype&gt;
+</dt>
+<dt class="hdlist1">
+--dir-type=&lt;dtype&gt;
+</dt>
+<dd>
+<p>
+        Directive type
+</p>
+</dd>
+<dt class="hdlist1">
+-S &lt;dspec&gt;
+</dt>
+<dt class="hdlist1">
+--dir-spec=&lt;dspec&gt;
+</dt>
+<dd>
+<p>
+        Directive specific
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
 </p>
 </dd>
 </dl></div>
@@ -816,7 +879,8 @@ blocks.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-02-27 10:11:58 EST
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

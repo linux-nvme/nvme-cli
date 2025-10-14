@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
 #
 # This program is free software; you can redistribute it and/or
@@ -28,7 +30,7 @@ NVMe Compare Command Testcase:-
 
 """
 
-from nose.tools import assert_equal, assert_not_equal
+from nvme_test import to_decimal
 from nvme_test_io import TestNVMeIO
 
 
@@ -44,9 +46,20 @@ class TestNVMeCompareCmd(TestNVMeIO):
               - test_log_dir : directory for logs, temp files.
     """
 
-    def __init__(self):
+    def compare_cmd_supported(self):
+        """ Wrapper for extracting optional NVM 'compare' command support
+            - Args:
+                - None
+            - Returns:
+                - True if 'compare' is supported, otherwise False
+        """
+        return to_decimal(self.get_id_ctrl_field_value("oncs")) & (1 << 0)
+
+    def setUp(self):
         """ Pre Section for TestNVMeCompareCmd """
-        TestNVMeIO.__init__(self)
+        super().setUp()
+        if not self.compare_cmd_supported():
+            self.skipTest("because: Optional NVM Command 'Compare' (NVMCMPS) not supported")
         self.data_size = 1024
         self.start_block = 1023
         self.setup_log_dir(self.__class__.__name__)
@@ -55,9 +68,9 @@ class TestNVMeCompareCmd(TestNVMeIO):
         self.create_data_file(self.write_file, self.data_size, "15")
         self.create_data_file(self.compare_file, self.data_size, "25")
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeCompareCmd """
-        TestNVMeIO.__del__(self)
+        super().tearDown()
 
     def nvme_compare(self, cmp_file):
         """ Wrapper for nvme compare command.
@@ -66,14 +79,14 @@ class TestNVMeCompareCmd(TestNVMeIO):
            - Returns:
                - return code of the nvme compare command.
         """
-        compare_cmd = "nvme compare " + self.ns1 + " --start-block=" + \
-                      str(self.start_block) + " --block-count=" + \
-                      str(self.block_count) + " --data-size=" + \
-                      str(self.data_size) + " --data=" + cmp_file
+        compare_cmd = f"{self.nvme_bin} compare {self.ns1} " + \
+            f"--start-block={str(self.start_block)} " + \
+            f"--block-count={str(self.block_count)} " + \
+            f"--data-size={str(self.data_size)} --data={cmp_file}"
         return self.exec_cmd(compare_cmd)
 
     def test_nvme_compare(self):
         """ Testcase main """
-        assert_equal(self.nvme_write(), 0)
-        assert_not_equal(self.nvme_compare(self.compare_file), 0)
-        assert_equal(self.nvme_compare(self.write_file), 0)
+        self.assertEqual(self.nvme_write(), 0)
+        self.assertNotEqual(self.nvme_compare(self.compare_file), 0)
+        self.assertEqual(self.nvme_compare(self.write_file), 0)

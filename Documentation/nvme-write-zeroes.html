@@ -4,8 +4,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
-<title>nvme-zeroes(1)</title>
+<meta name="generator" content="AsciiDoc 10.2.0" />
+<title>nvme-write-zeroes(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -735,7 +735,7 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-zeroes(1) Manual Page
+nvme-write-zeroes(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
@@ -754,11 +754,15 @@ nvme-zeroes(1) Manual Page
                         [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
                         [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
                         [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
-                        [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
-                        [--deac | -d]
-                        [--limited-retry | -l]
-                        [--force-unit-access | -f]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+                        [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;] [--deac | -d]
+                        [--limited-retry | -l] [--force-unit-access | -f]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--storage-tag&lt;storage-tag&gt; | -S &lt;storage-tag&gt;]
+                        [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]
+                        [--dir-type=&lt;dtype&gt; | -T &lt;dtype&gt;]
+                        [--dir-spec=&lt;dspec&gt; | -D &lt;dspec&gt;] [--namespace-zeroes | -Z]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -774,10 +778,10 @@ nvme-zeroes(1) Manual Page
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
---start-block=&lt;slba&gt;
+-s &lt;slba&gt;
 </dt>
 <dt class="hdlist1">
--s &lt;slba&gt;
+--start-block=&lt;slba&gt;
 </dt>
 <dd>
 <p>
@@ -785,10 +789,10 @@ nvme-zeroes(1) Manual Page
 </p>
 </dd>
 <dt class="hdlist1">
---block-count=&lt;nlb&gt;
+-c &lt;nlb&gt;
 </dt>
 <dt class="hdlist1">
--c &lt;nlb&gt;
+--block-count=&lt;nlb&gt;
 </dt>
 <dd>
 <p>
@@ -796,10 +800,10 @@ nvme-zeroes(1) Manual Page
 </p>
 </dd>
 <dt class="hdlist1">
---prinfo=&lt;prinfo&gt;
+-p &lt;prinfo&gt;
 </dt>
 <dt class="hdlist1">
--p &lt;prinfo&gt;
+--prinfo=&lt;prinfo&gt;
 </dt>
 <dd>
 <p>
@@ -844,10 +848,10 @@ metadata is passes.</p></td>
 </div>
 </dd>
 <dt class="hdlist1">
---ref-tag=&lt;reftag&gt;
+-r &lt;reftag&gt;
 </dt>
 <dt class="hdlist1">
--r &lt;reftag&gt;
+--ref-tag=&lt;reftag&gt;
 </dt>
 <dd>
 <p>
@@ -855,10 +859,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---app-tag-mask=&lt;appmask&gt;
+-m &lt;appmask&gt;
 </dt>
 <dt class="hdlist1">
--m &lt;appmask&gt;
+--app-tag-mask=&lt;appmask&gt;
 </dt>
 <dd>
 <p>
@@ -866,10 +870,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---app-tag=&lt;apptag&gt;
+-a &lt;apptag&gt;
 </dt>
 <dt class="hdlist1">
--a &lt;apptag&gt;
+--app-tag=&lt;apptag&gt;
 </dt>
 <dd>
 <p>
@@ -877,10 +881,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---limited-retry
+-l
 </dt>
 <dt class="hdlist1">
--l
+--limited-retry
 </dt>
 <dd>
 <p>
@@ -888,10 +892,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---deac
+-d
 </dt>
 <dt class="hdlist1">
--d
+--deac
 </dt>
 <dd>
 <p>
@@ -899,10 +903,10 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---force-unit-access
+-f
 </dt>
 <dt class="hdlist1">
--f
+--force-unit-access
 </dt>
 <dd>
 <p>
@@ -910,25 +914,118 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
+-n &lt;nsid&gt;
 </dt>
 <dt class="hdlist1">
--n &lt;nsid&gt;
+--namespace-id=&lt;nsid&gt;
 </dt>
 <dd>
 <p>
         Namespace ID use in the command.
 </p>
 </dd>
+<dt class="hdlist1">
+-S &lt;storage-tag&gt;
+</dt>
+<dt class="hdlist1">
+--storage-tag=&lt;storage-tag&gt;
+</dt>
+<dd>
+<p>
+        Variable Sized Logical Block Storage Tag(LBST).
+</p>
+</dd>
+<dt class="hdlist1">
+-C &lt;storage-tag-check&gt;
+</dt>
+<dt class="hdlist1">
+--storage-tag-check=&lt;storage-tag-check&gt;
+</dt>
+<dd>
+<p>
+        This bit specifies the Storage Tag field shall be checked as part of end-to-end
+        data protection processing.
+</p>
+</dd>
+<dt class="hdlist1">
+-T &lt;dtype&gt;
+</dt>
+<dt class="hdlist1">
+--dir-type=&lt;dtype&gt;
+</dt>
+<dd>
+<p>
+        Directive type
+</p>
+</dd>
+<dt class="hdlist1">
+-D &lt;dspec&gt;
+</dt>
+<dt class="hdlist1">
+--dir-spec=&lt;dspec&gt;
+</dt>
+<dd>
+<p>
+        Directive specific
+</p>
+</dd>
+<dt class="hdlist1">
+-Z
+</dt>
+<dt class="hdlist1">
+--namespace-zeroes
+</dt>
+<dd>
+<p>
+        If set, then the controller clear all logical blocks to zero in the entire namespace.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;timeout&gt;
+</dt>
+<dt class="hdlist1">
+--timeout=&lt;timeout&gt;
+</dt>
+<dd>
+<p>
+        Override default timeout value. In milliseconds.
+</p>
+</dd>
 </dl></div>
-<div class="paragraph"><p>EXAMPLES
-EXAMPLES</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>No examples yet.
-
-NVME</code></pre>
-</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_examples">EXAMPLES</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>No examples yet.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_nvme">NVME</h2>
+<div class="sectionbody">
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
@@ -937,7 +1034,7 @@ NVME</code></pre>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-09-18 00:00:58 JST
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

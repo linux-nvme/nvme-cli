@@ -1,0 +1,42 @@
+nvme-solidigm-market-log(1)
+===========================
+
+NAME
+----
+nvme-solidigm-market-log - Retrieve Market Log
+
+SYNOPSIS
+--------
+[verse]
+'nvme solidigm market-log' <device> [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieves and displays the Solidigm Marketing Name log for the given NVMe device.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Output the raw log data in binary format.
+
+EXAMPLES
+--------
+* Retrieve and display the marketing name log:
++
+------------
+# nvme solidigm market-log /dev/nvme0
+------------
+
+* Retrieve the raw binary data of the marketing name log:
++
+------------
+# nvme solidigm market-log /dev/nvme0 --raw-binary
+------------
+
+NVME
+----
+Part of the nvme-user suite

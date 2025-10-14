@@ -1,58 +1,58 @@
 Name: 		nvme
-Version: 	@@VERSION@@
+Version: 	@VERSION@
 Release: 	1%{?dist}
 Summary:  	Core nvme tools
-License: 	GPL
+License: 	GPL-2.0-only
 Group: 		Development/Tools
 URL: 		https://github.com/linux-nvme/nvme-cli/
-Source: 	nvme-@@VERSION@@.tar.gz
 Provides:	nvme
-Requires(post): util-linux
+Requires(post): util-linux systemd systemd-udev
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
+@REQUIRES@
 
 %description
 NVMe is a fast, scalable, direct attached storage interface. The nvme
 cli rpm installs core management tools with minimal dependencies.
 
-%prep
-%setup
-
-%build
-make
-
 %install
-rm -rf $RPM_BUILD_ROOT
-make install-spec DESTDIR=%{buildroot} PREFIX=/usr
+meson install --destdir %{buildroot} --skip-subprojects
+touch %{buildroot}@SYSCONFDIR@/nvme/hostnqn
+touch %{buildroot}@SYSCONFDIR@/nvme/hostid
 
 %files
 %defattr(-,root,root)
-%doc Documentation/nvme*.1
-%{_sbindir}/nvme
-%{_mandir}/man1/nvme*.1*
-%{_datadir}/bash-completion/completions/nvme
-%{_datadir}/zsh/site-functions/_nvme
-%dir %{_sysconfdir}/nvme
-%{_sysconfdir}/nvme/hostnqn
-%{_sysconfdir}/nvme/hostid
-%{_sysconfdir}/nvme/discovery.conf
-%{_sysconfdir}/udev/rules.d/70-nvmf-autoconnect.rules
-%{_sysconfdir}/udev/rules.d/71-nvmf-iopolicy-netapp.rules
-%{_libdir}/dracut/dracut.conf.d/70-nvmf-autoconnect.conf
-%{_libdir}/systemd/system/nvmf-connect@.service
-%{_libdir}/systemd/system/nvmefc-boot-connections.service
-%{_libdir}/systemd/system/nvmf-connect.target
-%{_libdir}/systemd/system/nvmf-autoconnect.service
+@SBINDIR@/nvme
+@MANDIR@/man1/nvme*.1*
+@DATADIR@/bash-completion/completions/nvme
+@DATADIR@/zsh/site-functions/_nvme
+%dir @SYSCONFDIR@/nvme
+@SYSCONFDIR@/nvme/hostnqn
+@SYSCONFDIR@/nvme/hostid
+@SYSCONFDIR@/nvme/discovery.conf
+%ghost @SYSCONFDIR@/nvme/config.json
+@UDEVRULESDIR@/65-persistent-net-nbft.rules
+@UDEVRULESDIR@/70-nvmf-autoconnect.rules
+@UDEVRULESDIR@/70-nvmf-keys.rules
+@UDEVRULESDIR@/71-nvmf-hpe.rules
+@UDEVRULESDIR@/71-nvmf-netapp.rules
+@UDEVRULESDIR@/71-nvmf-vastdata.rules
+@DRACUTRILESDIR@/70-nvmf-autoconnect.conf
+@SYSTEMDDIR@/nvmf-connect@.service
+@SYSTEMDDIR@/nvmefc-boot-connections.service
+@SYSTEMDDIR@/nvmf-connect-nbft.service
+@SYSTEMDDIR@/nvmf-connect.target
+@SYSTEMDDIR@/nvmf-autoconnect.service
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
 if [ $1 -eq 1 ]; then # 1 : This package is being installed for the first time
-	if [ ! -s %{_sysconfdir}/nvme/hostnqn ]; then
-		echo $(nvme gen-hostnqn) > %{_sysconfdir}/nvme/hostnqn
+	if [ ! -s @SYSCONFDIR@/nvme/hostnqn ]; then
+		echo $(@SBINDIR@/nvme gen-hostnqn) > @SYSCONFDIR@/nvme/hostnqn
         fi
-        if [ ! -s %{_sysconfdir}/nvme/hostid ]; then
-                uuidgen > %{_sysconfdir}/nvme/hostid
+        if [ ! -s @SYSCONFDIR@/nvme/hostid ]; then
+                uuidgen > @SYSCONFDIR@/nvme/hostid
         fi
 
 	# apply udev and systemd changes that we did

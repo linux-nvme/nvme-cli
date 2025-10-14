@@ -1,0 +1,76 @@
+'\" t
+.\"     Title: nvme-sndk-drive-resize
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SNDK\-DRIVE\-R" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sndk-drive-resize \- Send NVMe sndk Resize Vendor Unique Command, return result\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sndk drive\-resize\fR <device> [\-\-size=<sz> | \-s <sz>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, sends a Vendor Unique sndk Resize command\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+This will only work on Sandisk devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-s <sz>, \-\-size=<sz>
+.RS 4
+The new size (in GB) to resize the drive to\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue sndk Resize Vendor Unique Command :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sndk drive\-resize /dev/nvme0n1 \-\-size=100
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

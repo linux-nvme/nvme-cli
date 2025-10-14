@@ -8,7 +8,7 @@ nvme-gen-hostnqn - Generate a host NVMe Qualified Name
 SYNOPSIS
 --------
 [verse]
-'nvme gen-hostnqn'
+'nvme gen-hostnqn' [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -18,7 +18,14 @@ and prints it to stdout.
 
 OPTIONS
 -------
-No options needed
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

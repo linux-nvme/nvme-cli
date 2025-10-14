@@ -1,0 +1,38 @@
+nvme-fdp-set-events(1)
+======================
+
+NAME
+----
+nvme-fdp-set-events - Enable or disable FDP events
+
+SYNOPSIS
+--------
+[verse]
+'nvme fdp set-events' <device> [--namespace-id=<NUM> | -n <NUM>]
+			[--placement-handle=<NUM> | -p <NUM>] [--enable | -e]
+			[--event-types=<NUM,> | -t <NUM,>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, enable or disable a list of event types from being
+generated for the Reclaim Unit Handle reference by the specified Placement
+Handle.
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Namespace identifier.
+
+-b::
+--raw-binary::
+	Print the raw buffer to the standard output stream.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json', or 'binary'. Only one
+	output format can be used at a time.
+
+NVME
+----
+Part of nvme-cli

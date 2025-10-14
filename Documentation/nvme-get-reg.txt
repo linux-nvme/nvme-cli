@@ -1,0 +1,146 @@
+nvme-get-reg(1)
+===============
+
+NAME
+----
+nvme-get-reg - Read and show the defined NVMe controller register
+
+SYNOPSIS
+--------
+[verse]
+'nvme get-reg' <device> [--offset=<offset>, -O <offset>] [--human-readable | -H]
+			[--cap] [--vs] [--cmbloc] [--cmbsz] [--bpinfo]
+			[--cmbsts] [--cmbebs] [--cmbswtp] [--crto] [--pmrcap]
+			[--pmrsts] [--pmrebs] [--pmrswtp] [--intms] [--intmc]
+			[--cc] [--csts] [--nssr] [--aqa] [--asq] [--acq]
+			[--bprsel] [--bpmbl] [--cmbmsc] [--nssd] [--pmrctl]
+			[--pmrmscl] [--pmrmscu]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
+
+DESCRIPTION
+-----------
+Read and show the defined NVMe controller register.
+
+The <device> parameter is mandatory and must be the nvme admin character
+device (ex: /dev/nvme0).
+
+OPTIONS
+-------
+-O <offset>::
+--offset=<offset>::
+	offset of the requested register
+
+-H::
+--human-readable::
+	show register in readable format
+
+--cap::
+	CAP=0x0 register offset
+
+--vs::
+	VS=0x8 register offset
+
+--cmbloc::
+	CMBLOC=0x38 register offset
+
+--cmbsz::
+	CMBSZ=0x3c register offset
+
+--bpinfo::
+	BPINFO=0x40 register offset
+
+--cmbsts::
+	CMBSTS=0x58 register offset
+
+--cmbebs::
+	CMBEBS=0x5c register offset
+
+--cmbswtp::
+	CMBSWTP=0x60 register offset
+
+--crto::
+	CRTO=0x68 register offset
+
+--pmrcap::
+	PMRCAP=0xe00 register offset
+
+--pmrsts::
+	PMRSTS=0xe08 register offset
+
+--pmrebs::
+	PMREBS=0xe0c register offset
+
+--pmrswtp::
+	PMRSWTP=0xe10 register offset
+
+--intms::
+	INTMS=0xc register offset
+
+--intmc::
+	INTMC=0x10 register offset
+
+--cc::
+	CC=0x14 register offset
+
+--csts::
+	CSTS=0x1c register offset
+
+--nssr::
+	NSSR=0x20 register offset
+
+--aqa::
+	AQA=0x24 register offset
+
+--asq::
+	ASQ=0x28 register offset
+
+--acq::
+	ACQ=0x30 register offset
+
+--bprsel::
+	BPRSEL=0x44 register offset
+
+--bpmbl::
+	BPMBL=0x48 register offset
+
+--cmbmsc::
+	CMBMSC=0x50 register offset
+
+--nssd::
+	NSSD=0x64 register offset
+
+--pmrctl::
+	PMRCTL=0xe04 register offset
+
+--pmrmscl::
+	PMRMSCL=0xe14 register offset
+
+--pmrmscu::
+	PMRMSCU=0xe18 register offset
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+* The following will run the get-reg command with CC=0x14 register offset
++
+------------
+# nvme get-reg /dev/nvme0 --cc
+register: 0x0014 (Controller Configuration), value: 0x460001
+------------
+
+NVME
+----
+Part of the nvme-user suite.

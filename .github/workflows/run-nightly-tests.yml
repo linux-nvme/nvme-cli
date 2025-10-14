@@ -1,0 +1,147 @@
+---
+name: run-nightly-tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 01 * * *'
+
+jobs:
+  nightly-tests:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
+    runs-on: arc-vm-nvme-cli
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: "linux-blktests/blktests-ci"
+      #We don't have to build the kernel here, as we have a cron job running on
+      #the k8s cluster that builds the linus-master target nightly.
+      - name: Run blktests in VM
+        id: blktests
+        uses: ./.github/actions/kubevirt-action
+        with:
+          kernel_version: linus-master
+          vm_artifact_upload_dir: blktests/results/
+          run_cmds: |
+            set -e
+            set -x
+            uname -a
+
+            sudo dnf remove -y nvme-cli libnvme
+
+            sudo dnf install -y gcc clang make util-linux llvm gawk fio udev \
+            kmod coreutils g++ gzip e2fsprogs xfsprogs f2fs-tools btrfs-progs \
+            device-mapper-multipath blktrace kernel-headers liburing \
+            liburing-devel nbd device-mapper ktls-utils dosfstools \
+            bc libnl3-cli cryptsetup sg3_utils pciutils unzip jq git wget \
+            meson json-c-devel openssl-devel keyutils-libs-devel dbus-devel \
+            swig xz-devel libcurl-devel curl libarchive libarchive-devel json-c \
+            expect
+
+            # mdadm has a buffer overflow in v4.3 and was fixed with this commit:
+            # https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=7f960c3bd050e76f8bf0a8a0c8fbdcbaa565fc78
+            # The Fedora packages ship v4.3.
+            # We are now compiling and installing mdadm from source with the most
+            # recent known good commit. The v4.4 release does not compile.
+
+            git clone https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
+            cd mdadm
+            git checkout d764c4829947923142a83251296d04edaee7d2f7
+            make -j$(nproc)
+            sudo make install
+            cd -
+
+            git clone https://github.com/${{ github.repository }} nvme-cli
+            cd nvme-cli
+            git checkout ${{ github.sha }}
+            scripts/build.sh -b release -c gcc
+            sudo meson install -C .build-ci
+            sudo ldconfig /usr/local/lib64
+
+            cd -
+            git clone https://github.com/linux-blktests/blktests.git blktests
+
+            cd blktests
+            make
+            mkdir -p results
+            nvme --version | tee -a results/nvme-cli.version
+            sudo nvme --version | tee -a results/nvme-cli.version
+
+            # Run blktests nvme and md group
+            cat > config << EF
+            TEST_DEVS=(${BDEV0})
+            NVMET_TRTYPES="loop rdma tcp"
+            EXCLUDE=(nvme/010 nvme/012 nvme/034 nvme/035)
+            EF
+            sudo ./check nvme md/001
+      - name: Run nvme-cli tests in VM
+        if: success() || steps.blktests.conclusion == 'failure'
+        uses: ./.github/actions/kubevirt-action
+        with:
+          kernel_version: linus-master
+          vm_artifact_upload_dir: nvme-cli/tests/nvmetests/
+          run_cmds: |
+            #Preventing bash variable expension for the outer cat by using
+            #single quotes around EOF
+            cat > test.sh << 'EOF'
+            #!/bin/bash
+            set -e
+            set -x
+            uname -a
+            PIPX_BIN_DIR=/usr/local/bin pipx install nose2 --force
+            git clone https://github.com/${{ github.repository }} /nvme-cli
+            git config --global --add safe.directory /nvme-cli
+            cd /nvme-cli
+            git checkout ${{ github.sha }}
+            scripts/build.sh -b release -c gcc
+            CONTROLLER=$(echo "${BDEV0}" | sed 's/n[0-9]*$//')
+            cat > tests/config.json << EOJ
+            {
+              "controller" : "${CONTROLLER}",
+              "ns1": "${BDEV0}",
+              "log_dir": "tests/nvmetests/",
+              "nvme_bin": "/nvme-cli/.build-ci/nvme"
+            }
+            EOJ
+            cat tests/config.json
+
+            nose2 --verbose --start-dir tests \
+            nvme_attach_detach_ns_test \
+            nvme_compare_test \
+            nvme_copy_test \
+            nvme_create_max_ns_test \
+            nvme_ctrl_reset_test \
+            nvme_dsm_test \
+            nvme_error_log_test \
+            nvme_flush_test \
+            nvme_format_test \
+            nvme_fw_log_test \
+            nvme_get_features_test \
+            nvme_get_lba_status_test \
+            nvme_id_ctrl_test \
+            nvme_id_ns_test \
+            nvme_lba_status_log_test \
+            nvme_read_write_test \
+            nvme_smart_log_test \
+            nvme_verify_test \
+            nvme_writeuncor_test \
+            nvme_writezeros_test
+            EOF
+
+            sudo chmod +x test.sh
+
+            #Create shared volume mount point for artifact upload
+            mkdir nvme-cli
+
+            #Expose all devices to the container through the `privileged` flag.
+            #
+            #BDEV0 is an environment variable of the self-hosted runner instance
+            #that contains a valid nvme namespace which is capable of the nvm
+            #command set.
+
+            sudo docker run --privileged \
+            -v "/dev":"/dev":z \
+            -e BDEV0 \
+            -v "${PWD}/test.sh":"/test.sh" \
+            -v "${PWD}/nvme-cli":"/nvme-cli":z \
+            ghcr.io/linux-nvme/debian.python:latest /test.sh

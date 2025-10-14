@@ -2,12 +2,12 @@
 .\"     Title: nvme-format
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/07/2020
+.\"      Date: 07/25/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FORMAT" "1" "01/07/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-FORMAT" "1" "07/25/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,15 +33,13 @@ nvme-format \- Format an NVMe device
 .sp
 .nf
 \fInvme format\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                    [\-\-lbaf=<lbaf> | \-l <lbaf>]
-                    [\-\-block\-size=<block size | \-b <block size>]
-                    [\-\-ses=<ses> | \-s <ses>]
-                    [\-\-pil=<pil> | \-p <pil>]
-                    [\-\-pi=<pi> | \-i <pi>]
-                    [\-\-ms=<ms> | \-m <ms>]
-                    [\-\-reset | \-r ]
-                    [\-\-force | \-f ]
-                    [\-\-timeout=<timeout> | \-t <timeout> ]
+                        [\-\-lbaf=<lbaf> | \-l <lbaf>]
+                        [\-\-block\-size=<block size | \-b <block size>]
+                        [\-\-ses=<ses> | \-s <ses>] [\-\-pil=<pil> | \-p <pil>]
+                        [\-\-pi=<pi> | \-i <pi>] [\-\-ms=<ms> | \-m <ms>]
+                        [\-\-reset | \-r] [\-\-force]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -110,7 +108,7 @@ T}
 .PP
 \-p <pil>, \-\-pil=<pil>
 .RS 4
-Protection Information Location: If set to \(oq1\(cq and protection information is enabled, then protection information is transferred as the first eight bytes of metadata\&. If cleared to \(oq0\(cq and protection information is enabled, then protection information is transferred as the last eight bytes of metadata\&. Defaults to 0\&.
+Protection Information Location: If set to \(oq1\(cq and protection information is enabled, then protection information is transferred as the first bytes of metadata\&. If cleared to \(oq0\(cq and protection information is enabled, then protection information is transferred as the last bytes of metadata\&. Defaults to 0\&.
 .RE
 .PP
 \-i <pi>, \-\-pi=<pi>
@@ -168,14 +166,28 @@ Metadata Settings: This field is set to \(oq1\(cq if the metadata is transferred
 Issue a reset after successful format\&. Must use the character device for this\&.
 .RE
 .PP
-\-f, \-\-force
+\-\-force
 .RS 4
 Just send the command immediately without warning of the implications\&.
 .RE
 .PP
 \-t <timeout>, \-\-timeout=<timeout>
 .RS 4
-Override default timeout value\&. In milliseconds\&.
+Override default timeout value 600,000\&. In milliseconds\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
 .RE
 .SH "EXAMPLES"
 .sp

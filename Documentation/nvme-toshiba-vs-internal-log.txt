@@ -34,11 +34,9 @@ A progress runner is included when data is written to file and a page count is i
 OPTIONS
 -------
 
-
 -o <FILE>::
 --output-file=<FILE>::
 	Output binary file. Defaults to text-formatted dump to stdout
-
 
 -p::
 --prev-log::

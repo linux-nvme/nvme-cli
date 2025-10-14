@@ -1,0 +1,64 @@
+'\" t
+.\"     Title: nvme-supported-log-pages
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SUPPORTED\-LOG" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-supported-log-pages \- Send NVMe Supported Log pages request, returns result and log
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme supported\-log\-pages\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+.fi
+.SH "DESCRIPTION"
+.sp
+Retrieves the NVMe supported log pages details from an NVMe device and provides the returned structure\&.
+.sp
+The <device> parameter is mandatory and should be the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+On success, the returned supported log pages log structure will be printed for each command that is supported\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&. Show more information including LID Supported (LSUPP) and Index Offset Supported (IOP) details\&.
+.RE
+.SH "EXAMPLES"
+.sp
+No examples provided yet\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

@@ -9,13 +9,18 @@ SYNOPSIS
 --------
 [verse]
 'nvme get-log' <device> [--log-id=<log-id> | -i <log-id>]
-		      [--log-len=<log-len> | -l <log-len>]
-		      [--aen=<aen> | -a <aen>]
-		      [--namespace-id=<nsid> | -n <nsid>]
-		      [--raw-binary | -b]
-		      [--lpo=<offset> | -o <offset>]
-		      [--lsp=<field> | -s <field>]
-		      [--rae | -r]
+			[--log-len=<log-len> | -l <log-len>]
+			[--aen=<aen> | -a <aen>]
+			[--namespace-id=<nsid> | -n <nsid>]
+			[--raw-binary | -b]
+			[--lpo=<offset> | -L <offset>]
+			[--lsp=<field> | -s <field>]
+			[--lsi=<field> | -S <field>]
+			[--rae | -r]
+			[--csi=<command_set_identifier> | -y <command_set_identifier>]
+			[--ot=<offset_type> | -O <offset_type>]
+			[--xfer-len=<length> | -x <length>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -41,6 +46,51 @@ OPTIONS
 -i <log-id>::
 --log-id=<log-id>::
 	Sets the commands requested log-id to <log-id>. Defaults to 0.
++
+[]
+|=================
+|Value|Definition
+|0x00 \| 'supported-log-pages'| Supported Log Pages
+|0x01 \| 'error'| Error Information
+|0x02 \| 'smart'| SMART / Health Information
+|0x03 \| 'fw-slot'| Firmware Slot Information
+|0x04 \| 'changed-ns'| Changed Namespace List
+|0x05 \| 'cmd-effects'| Commands Supported and Effects
+|0x06 \| 'device-self-test'| Device Self-test
+|0x07 \| 'telemetry-host'| Telemetry Host-Initiated
+|0x08 \| 'telemetry-ctrl'| Telemetry Controller-Initiated
+|0x09 \| 'endurance-group'| Endurance Group Information
+|0x0a \| 'predictable-lat-nvmset'| Predictable Latency Per NVM Set
+|0x0b \| 'predictable-lat-agg'| Predictable Latency Event Aggregate
+|0x0c \| 'ana'| Asymmetric Namespace Access
+|0x0d \| 'persistent-event'| Persistent Event Log
+|0x0e \| 'lba-status'| LBA Status Information
+|0x0f \| 'endurance-grp-evt'| Endurance Group Event Aggregate
+|0x10 \| 'media-unit-status'| Media Unit Status
+|0x11 \| 'supported-cap-config-list'| Supported Capacity Configuration Lis
+|0x12 \| 'fid-supported-effects'| Feature Identifiers Supported and Effects
+|0x13 \| 'mi-cmd-supported-effects'| NVMe-MI Commands Supported and Effects
+|0x14 \| 'cmd-and-feat-lockdown'| Command and Feature Lockdown
+|0x15 \| 'boot-partition'| Boot Partition
+|0x16 \| 'rotational-media-info'| Rotational Media Information
+|0x17 \| 'dispersed-ns-participating-ns'| Dispersed Namespace Participating NVM Subsystems
+|0x18 \| 'mgmt-addr-list'| Management Address List
+|0x19 \| 'phy-rx-eom'| Physical Interface Receiver Eye Opening Measurement
+|0x1a \| 'reachability-groups'| Reachability Groups
+|0x1b \| 'reachability-associations'| Reachability Associations
+|0x1c \| 'changed-alloc-ns-list'| Changed Allocated Namespace List
+|0x20 \| 'fdp-configs'| FDP Configurations
+|0x21 \| 'fdp-ruh-usage'| Reclaim Unit Handle Usage
+|0x22 \| 'fdp-stats'| FDP Statistics
+|0x23 \| 'fdp-events'| FDP Events
+|0x70 \| 'discover'| Discovery
+|0x71 \| 'host-discover'| Host Discovery
+|0x72 \| 'ave-discover'| AVE Discovery
+|0x73 \| 'pull-model-ddc-req'| Pull Model DDC Request
+|0x80 \| 'reservation'| Reservation Notification
+|0x81 \| 'sanitize'| Sanitize Status
+|0xbf \| 'zns-changed-zones'| Changed Zone List
+|=================
 
 -a <aen>::
 --aen=<aen>::
@@ -59,7 +109,7 @@ OPTIONS
 --raw-binary::
 	Print the raw log buffer to stdout.
 
--o <offset>::
+-L <offset>::
 --lpo=<offset>::
 	The log page offset specifies the location within a log page to start
 	returning data from. It's Dword-aligned and 64-bits.
@@ -68,9 +118,43 @@ OPTIONS
 --lsp=<field>::
 	The log specified field of LID.
 
+-S <field>::
+--lsi=<field>::
+	The log specified field of Log Specific Identifier.
+
 -r::
 --rae::
 	Retain an Asynchronous Event.
+
+-y <command_set_identifier>::
+--csi=<command_set_identifier>::
+	This field specifies the identifier of command set.
+	if not issued, NVM Command Set will be selected.
+
+-O::
+--ot::
+	This field specifies the offset type. If set to false, the
+	Log Page Offset Lower field and the Log Page Offset Upper
+	field specify the byte offset into the log page to be returned.
+	If set to true, the Log Page Offset Lower field and the Log
+	Page Offset Upper field specify the index into the list of
+	data structures in the log page to be returned.
+	The default is byte offset. If the option is specified
+	the index mode is used.
+
+-x <length>::
+--xfer-len <length>:
+	Specify the read chunk size. The length argument is expected to be
+	a multiple of 4096. The default size is 4096.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------

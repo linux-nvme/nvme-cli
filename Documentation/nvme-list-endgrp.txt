@@ -1,0 +1,48 @@
+nvme-list-endgrp(1)
+===================
+
+NAME
+----
+nvme-list-endgrp - Send NVMe Identify Endurance Group List, return result and
+structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme list-endgrp' <device> [--endgrp-id=<endgrp-id> | -i <endgrp-id>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify command for endurance group list
+and provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+An Endurance Group List of up to 2,047 Endurance Group Identifiers in
+increasing order is returned containing an Endurance Group Identifier greater
+than or equal to the value specified in the CDW11.ENDGID field.
+
+OPTIONS
+-------
+-i <endgrp-id>::
+--endgrp-id=<endgrp-id>::
+	Retrieve the identify endurance group list structure starting for the
+	given endurance group id.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

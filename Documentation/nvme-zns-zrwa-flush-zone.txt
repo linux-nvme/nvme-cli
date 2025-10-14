@@ -1,0 +1,50 @@
+nvme-zns-zrwa-flush-zone(1)
+===========================
+
+NAME
+----
+nvme-zns-zrwa-flush-zone - Flush LBAs associated with a ZRWA to a zone
+
+SYNOPSIS
+--------
+[verse]
+'nvme zns zrwa-flush-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
+			[--lba=<LBA> | -l <LBA>]
+			[--timeout=<timeout> | -t <timeout>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, issues the Zone Management Send command with the
+"flush Zone" action. This will flush the zone that is opened as
+zone random write area.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-l <lba>::
+--lba=<lba>::
+	The LBA to flush up to.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+* flush the first zrwa of first zone for zrwacg(15) on namespace 1:
++
+------------
+# nvme zns zrwa-flush-zone /dev/nvme0 -n 1 -l 15
+------------
+
+NVME
+----
+Part of nvme-cli

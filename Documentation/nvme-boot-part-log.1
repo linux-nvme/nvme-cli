@@ -1,0 +1,95 @@
+'\" t
+.\"     Title: nvme-boot-part-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-BOOT\-PART\-LO" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-boot-part-log \- Retrieves a Boot Partition log page from an NVMe device
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme boot\-part\-log\fR <device> [\-\-lsp=<field> | \-s <field>]
+                        [\-\-output\-file=<file> | \-f <file>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+.fi
+.SH "DESCRIPTION"
+.sp
+Retrieves an Boot Partition log page from an NVMe device and provides the returned structure\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the returned log structure will be in raw binary format \fIonly\fR with \-\-output\-file option which is mandatory\&.
+.SH "OPTIONS"
+.PP
+\-s <field>, \-\-lsp=<field>
+.RS 4
+The log specified field of LID\&.
+.RE
+.PP
+\-f <file>, \-\-output\-file=<file>
+.RS 4
+File name to which raw binary data will be saved to\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve Boot Partition data to boot_part_log\&.bin
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme boot\-part\-log /dev/nvme0 \-\-output\-file=boot_part_log\&.bin
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

@@ -1,0 +1,136 @@
+nvme-copy(1)
+============
+
+NAME
+----
+nvme-copy - Send an NVMe Simple Copy command, provide results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-copy' <device> [--sdlba=<sdlba> | -d <sdlba>]
+			[--blocks=<nlb-list,> | -b <nlb-list,>]
+			[--slbs=<slbas,> | -s <slbas,>]
+			[--snsids=<snsids,> | -N <snsids,>]
+			[--sopts=<sopts,> | -O <sopts,>]
+			[--limited-retry | -l]
+			[--force-unit-access | -f]
+			[--prinfow=<prinfow> | -p <prinfow>]
+			[--prinfor=<prinfor> | -P <prinfor>]
+			[--ref-tag=<reftag> | -r <reftag>]
+			[--expected-ref-tags=<reftag,> | -R <reftag,>]
+			[--app-tag=<apptag> | -a <apptag>]
+			[--expected-app-tags=<apptag,> | -A <apptag,>]
+			[--app-mask=<appmask> | -m <appmask>]
+			[--expected-app-masks=<appmask,> | -M <appmask,>]
+			[--dir-type=<type> | -T <type>]
+			[--dir-spec=<spec> | -S <spec>]
+			[--format=<entry-format> | -F <entry-format>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
+
+DESCRIPTION
+-----------
+The Copy command is used by the host to copy data from one or more source
+logical block ranges to a single consecutive destination logical block range.
+
+OPTIONS
+-------
+-d <sdlba>::
+--sdlba=<sdlba>::
+	64-bit addr of first destination logical block
+
+-b <nlb-list,>::
+--blocks=<nlb-list,>::
+	Comma separated list of the number of blocks in each range
+
+-s <slbas,>::
+--slbs=<slbas,>::
+	Comma separated list of the starting blocks in each range
+
+--snsids=<snsids,>::
+-N <snsids,>::
+	Comma separated list of the source namespace identifiers in each range
+
+--sopts=<sopts,>::
+-O <sopts,>::
+	Comma separated list of the source options in each range
+
+-l::
+--limited-retry::
+	Sets the limited retry flag.
+
+-f::
+--force-unit-access::
+	Set the force-unit access flag.
+
+-p <prinfow>::
+--prinfow=<prinfow>::
+	Protection Information field write definition.
+
+-P <prinfor>::
+--prinfor=<prinfor>::
+	Protection Information field read definition.
+
+-r <reftag>::
+--ref-tag=<reftag>::
+	initial lba reference tag.
+
+-R <reftag,>::
+--expected-ref-tags=<reftag,>::
+	expected lba reference tags (comma-separated list).
+
+-a <apptag>::
+--app-tag=<apptag>::
+	lba app tag
+
+-A <apptag,>::
+--expected-app-tags=<apptag,>::
+	expected lba app tags (comma-separated list)
+
+-m <appmask>::
+--app-mask=<appmask>::
+	lba tag mask
+
+-M <appmask,>::
+--expected-app-masks=<appmask,>::
+	expected lba tag masks (comma-separated list)
+
+-T <type>::
+--dir-type=<type>::
+	Optional directive type. The nvme-cli only enforces the value
+	be in the defined range for the directive type, though the NVMe
+	specification (1.3a) defines only one directive, 01h, for write
+	stream identifiers.
+
+-S <spec>::
+--dir-spec=<spec>::
+	Optional field for directive specifics. When used with
+	write streams, this value is defined to be the write stream
+	identifier. The nvme-cli will not validate the stream requested
+	is within the controller's capabilities.
+
+-F <entry-format>::
+--format=<entry-format>::
+	source range entry format
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

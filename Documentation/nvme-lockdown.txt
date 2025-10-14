@@ -1,0 +1,70 @@
+nvme-lockdown(1)
+================
+
+NAME
+----
+nvme-lockdown - Send an NVMe Lockdown command to prohibit or allow the execution of command
+
+SYNOPSIS
+--------
+[verse]
+'nvme-lockdown' <device> [--ofi=<ofi> | -O <ofi>]
+			[--ifc=<ifc> | -f <ifc>]
+			[--prhbt=<prhbt> | -p <prhbt>]
+			[--scp=<scp> | -s <scp>]
+			[--uuid=<UUID_Index> | -U <UUID_Index>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
+
+DESCRIPTION
+-----------
+The Lockdown command is used to control the Command and Feature Lockdown
+capability which configures the prohibition or allowance of execution of the
+specified command or Set Features command targeting a specific Feature
+Identifier.
+
+OPTIONS
+-------
+-O <ofi>::
+--ofi=<ofi>::
+	Opcode or Feature Identifier(OFI) specifies the command opcode or Set
+	Features Feature Identifier identified by the Scope field.
+
+-f <ifc>::
+--ifc=<ifc>::
+	Interface (INF) field identifies the interfaces affected by this command.
+
+-p <prhbt>::
+--prhbt=<prhbt>::
+	Prohibit (PRHBT) bit specifies whether to prohibit or allow the command
+	opcode or Set Features Feature Identifier specified by this command.
+
+-s <scp>::
+--scp=<scp>::
+	Scope (SCP) field specifies the contents of the Opcode or Feature Identifier field.
+-U <UUID_Index>::
+--uuid=<UUID_Index>::
+	UUID Index - If this field is set to a non-zero value, then the value of
+	this field is the index of a UUID in the UUID List that is used by the command.
+	If this field is cleared to 0h,then no UUID index is specified.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -8,12 +8,12 @@ nvme-sanitize - Send NVMe Sanitize Command, return result
 SYNOPSIS
 --------
 [verse]
-'nvme sanitize' <device> [--no-dealloc | -d]
-              [--oipbp | -i]
-              [--owpass=<overwrite-pass-count> | -n <overwrite-pass-count>]
-              [--ause | -u]
-              [--sanact=<action> | -a <action>]
-              [--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
+'nvme sanitize' <device> [--no-dealloc | -d] [--oipbp | -i]
+			[--owpass=<overwrite-pass-count> | -n <overwrite-pass-count>]
+			[--ause | -u] [--sanact=<action> | -a <action>]
+			[--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
+			[--emvs | -e] [--force]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
 -----------
@@ -27,64 +27,93 @@ On success it returns 0, error code otherwise.
 OPTIONS
 -------
 -d::
---no-delloc::
-    No Deallocate After Sanitize:
-    If set, then the controller shall not deallocate any logical
-    blocks as a result of successfully completing the sanitize
-    operation. If cleared, then the controller should deallocate
-    logical blocks as a result of successfully completing the
-    sanitize operation.  This bit shall be ignored if the Sanitize
-    Action field is set to 001b (i.e., Exit Failure Mode).
+--no-dealloc::
+	No Deallocate After Sanitize:
+	If set, then the controller shall not deallocate any logical
+	blocks as a result of successfully completing the sanitize
+	operation. If cleared, then the controller should deallocate
+	logical blocks as a result of successfully completing the
+	sanitize operation. This bit shall be ignored if the Sanitize
+	Action field is set to 001b (i.e., Exit Failure Mode).
 
 -i::
 --oipbp::
-    Overwrite Invert Pattern Between Passes:
-    If set, then the Overwrite Pattern shall be inverted between
-    passes. If cleared, then the overwrite pattern shall not be
-    inverted between passes. This bit shall be ignored unless the
-    Sanitize Action field is set to 011b (i.e., Overwrite).
+	Overwrite Invert Pattern Between Passes:
+	If set, then the Overwrite Pattern shall be inverted between
+	passes. If cleared, then the overwrite pattern shall not be
+	inverted between passes. This bit shall be ignored unless the
+	Sanitize Action field is set to 011b (i.e., Overwrite).
 
 -n <overwrite-pass-count>::
 --owpass=<overwrite-pass-count>::
-    Overwrite Pass Count:
-    This field specifies the number of overwrite passes (i.e.,
-    how many times the media is to be overwritten) using the data
-    from the Overwrite Pattern field of this command. A value of 0
-    specifies 16 overwrite passes. This field shall be ignored
-    unless the Sanitize Action field is set to 011b (i.e., Overwrite).
+	Overwrite Pass Count:
+	This field specifies the number of overwrite passes (i.e.,
+	how many times the media is to be overwritten) using the data
+	from the Overwrite Pattern field of this command. A value of 0
+	specifies 16 overwrite passes. This field shall be ignored
+	unless the Sanitize Action field is set to 011b (i.e., Overwrite).
 
 -u::
 --ause::
-    Allow Unrestricted Sanitize Exit:
-    If set, then the sanitize operation is performed in unrestricted
-    completion mode. If cleared then the sanitize operation is
-    performed in restricted completion mode. This bit shall be ignored
-    if the Sanitize Action field is set to 001b (i.e., Exit Failure Mode).
+	Allow Unrestricted Sanitize Exit:
+	If set, then the sanitize operation is performed in unrestricted
+	completion mode. If cleared then the sanitize operation is
+	performed in restricted completion mode. This bit shall be ignored
+	if the Sanitize Action field is set to 001b (i.e., Exit Failure Mode).
 
 -a <action>::
 --sanact=<action>::
-    Sanitize Action:
-    000b - Reserved
-    001b - Exit Failure Mode
-    010b - Start a Block Erase sanitize operation
-    011b - Start an Overwrite sanitize operation
-    100b - Start a Crypto Erase sanitize operation
+	Sanitize Action:
++
+[]
+|=================
+|Value|Definition
+|0x00| Reserved
+|0x01 \| 'exit-failure'| Exit Failure Mode
+|0x02 \| 'start-block-erase'| Start a Block Erase sanitize operation
+|0x03 \| 'start-overwrite'| Start an Overwrite sanitize operation
+|0x04 \| 'start-crypto-erase'| Start a Crypto Erase sanitize operation
+|0x05 \| 'exit-media-verification'| Exit Media Verification State
+|=================
 
 -p <overwrite-pattern>::
 --ovrpat=<overwrite-pattern>::
-    Overwrite Pattern:
-    This field is ignored unless the Sanitize Action field in
-    Command Dword 10 is set to 011b (i.e., Overwrite). This field
-    specifies a 32-bit pattern that is used for the Overwrite
-    sanitize operation.
+	Overwrite Pattern:
+	This field is ignored unless the Sanitize Action field in
+	Command Dword 10 is set to 011b (i.e., Overwrite). This field
+	specifies a 32-bit pattern that is used for the Overwrite
+	sanitize operation.
+
+-e::
+--emvs::
+	Enter Media Verification State:
+	If set, then the Media Verification state shall be entered if sanitize
+	processing completes successfully. If cleared, then this bit shall have
+	no effect. If SANACT field does not specify starting a sanitize operation
+	(i.e., is set to any value other than 010b, 011b, or 100b), then this bit
+	shall be ignored by the controller.
+
+--force::
+	Ignore namespace is currently busy and performed the operation
+	even though.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
 
 EXAMPLES
 --------
 * Has the program issue Sanitize Command :
 +
 ------------
-# nvme sanitize /dev/nvme0n1 -a 0x02
-# nvme sanitize /dev/nvme0n1 --sanact=0x01
+# nvme sanitize /dev/nvme0 -a 0x02
+# nvme sanitize /dev/nvme0 --sanact=0x01
+# nvme sanitize /dev/nvme0 --sanact=start-overwrite
 
 ------------
 

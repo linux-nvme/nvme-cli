@@ -1,10 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-id-ns(1)</title>
+<meta name="generator" content="AsciiDoc 10.2.0" />
+<title>nvme-list-ctrl(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -732,7 +735,7 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-id-ns(1) Manual Page
+nvme-list-ctrl(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
@@ -748,25 +751,28 @@ nvme-id-ns(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme list-ctrl</em> &lt;device&gt; [--cntid=&lt;cntid&gt; | -c &lt;cntid&gt;]
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-DESCRIPTION</pre>
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
 <div class="attribution">
 </div></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>For the NVMe device given, sends an identify command for controller list
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>For the NVMe device given, sends an identify command for controller list
 and provides the result and returned structure. This uses either mode
-12h or 13h depending on the requested namespace identifier.
-
-The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+12h or 13h depending on the requested namespace identifier.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 The starting controller in the list always begins with 0 unless the
-`'--cntid'` option is given to override.
-
-On success, the controller array is printed for each index and controller
-identifier.
-
-OPTIONS</code></pre>
-</div></div>
+<code>'--cntid'</code> option is given to override.</p></div>
+<div class="paragraph"><p>On success, the controller array is printed for each index and controller
+identifier.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
 -c &lt;cntid&gt;
@@ -793,6 +799,29 @@ OPTIONS</code></pre>
         whether or not they are attached to namespace(s).
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
+        output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--verbose
+</dt>
+<dd>
+<p>
+        Increase the information detail in the output.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -812,7 +841,8 @@ OPTIONS</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-16 12:47:42 EDT
+Last updated
+ 2025-07-25 10:38:56 CEST
 </div>
 </div>
 </body>

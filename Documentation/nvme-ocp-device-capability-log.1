@@ -1,0 +1,81 @@
+'\" t
+.\"     Title: nvme-ocp-device-capability-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/25/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-OCP\-DEVICE\-C" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-ocp-device-capability-log \- Retrieves OCP Device Capability Log Page
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme ocp device\-capability\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, retrieves OCP Device Capability Log Page
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1)\&.
+.sp
+This will only work on OCP compliant devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR
+or
+\fIjson\fR
+or
+\fIbinary\fR\&. Only one output format can be used at a time\&. The default is normal\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue a device\-capability\-log command to retrieve the 0xC4 log page\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp device\-capability\-log /dev/nvme0 \-o normal
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

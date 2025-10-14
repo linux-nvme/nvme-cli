@@ -9,8 +9,10 @@ SYNOPSIS
 --------
 [verse]
 'nvme fw-download' <device> [--fw=<firmware-file> | -f <firmware-file>]
-		    [--xfer=<transfer-size> | -x <transfer-size>]
-		    [--offset=<offset> | -o <offset>]
+			[--xfer=<transfer-size> | -x <transfer-size>]
+			[--offset=<offset> | -O <offset>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -34,10 +36,24 @@ Download command. It is applied following a reset, where the image to
 apply and the firmware slot it should be committed to is specified with
 the Firmware Commit command (nvme fw-commit <args>).
 
+Note: nvme-cli must allocate a contiguous (linear) memory buffer and map
+the firmware binary into it. To do this, nvme-cli first attempts to
+allocate the buffer using huge TLB pages. If allocation using huge pages
+fails, it falls back to using posix_memalign() combined with madvise(),
+though this is also likely to fail.
+
+To increase the likelihood of success, you may want to pre-allocate a
+number of huge pages before initiating the firmware download:
+
+  echo 20 > /proc/sys/vm/nr_hugepages
+
+For more details, refer to:
+https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt
+
 OPTIONS
 -------
 -f <firmware-file>::
---fw=<firmeware-file>::
+--fw=<firmware-file>::
 	Required argument. This specifies the path to the device's
 	firmware file on your system that will be read by the program
 	and sent to the device.
@@ -48,12 +64,25 @@ OPTIONS
 	the device has a max transfer size requirement for firmware. It
 	defaults to 4k.
 
--o <offset>::
+-O <offset>::
 --offset=<offset>::
 	This specifies the starting offset in dwords. This is really only
 	useful if your firmware is split in multiple files; otherwise
 	the offset starts at zero and automatically adjusts based on the
 	'xfer' size given.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

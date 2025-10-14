@@ -1,131 +1,128 @@
 # nvme-cli
+![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)
+![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
+![GitHub](https://img.shields.io/github/license/linux-nvme/nvme-cli)
+
 NVM-Express user space tooling for Linux.
 
-To install, run:
+## Build from source
 
-    $ make
-    # make install
+nvme-cli uses meson as build system. There is more than one way to configure and
+build the project in order to mitigate meson dependency on the build
+environment.
+
+If you build on a relative modern system, either use meson directly or the
+Makefile wrapper.
+
+Older distros might ship a too old version of meson, in this case it's possible
+to build the project using [samurai](https://github.com/michaelforney/samurai)
+and [muon](https://github.com/annacrombie/muon). Both build tools have only a
+minimal dependency on the build environment. Too easy this step there is a build
+script which helps to setup a build environment.
+
+### nvme-cli dependencies:
+
+ | Library | Dependency | Notes |
+ |---------|------------|-------|
+ | libnvme, libnvme-mi| yes | be either installed or included into the build via meson fallback feature |
+ | json-c | optional | recommended, without all plugins are disabled and json-c output format is disabled |
+
+
+### Build with meson
+
+#### Configuring
+
+In case libnvme is not installed on the system, it possible to use meson's
+fallback feature to resolve the dependency.
+
+	$ meson setup --force-fallback-for=libnvme .build
+
+If the libnvme is already installed on the system meson is using pkg-config to
+find the dependency. In this case a plain setup call is enough:
+
+	$ meson setup .build
+
+With meson's --wrap-mode argument it's possible to control if the additional
+dependencies should also resolved or not. The options are
+
+	--wrap-mode {default,nofallback,nodownload,forcefallback,nopromote}
+
+Note for nvme-cli the 'default' is set to nofallback.
+
+#### Building
+
+	$ meson compile -C .build
+
+#### Installing
+
+	# meson install -C .build
+	
+### Build with build.sh wrapper
+
+The `scripts/build.sh` is used for the CI build but can also be used for
+configuring and building the project.
+
+Running `scripts/build.sh` without any argument builds the project in the
+default configuration (meson, gcc and defaults)
+
+It's possible to change the compiler to clang
+
+`scripts/builds.sh -c clang`
+
+or enabling all the fallbacks
+
+`scripts/build.sh fallback`
+
+### Minimal static build with muon
+
+`scripts/build.sh -m muon` will download and build `samurai` and `muon` instead
+using `meson` to build the project. This reduces the dependency on the build
+environment to:
+- gcc
+- make
+- git
+
+Furthermore, this configuration will produce a static binary.
+
+### Build with Makefile wrapper
+
+There is a Makefile wrapper for meson for backwards compatibility
+
+	$ make
+	# make install
+
+Note in this case libnvme needs to be installed by hand first.
+
+RPM build support via Makefile that uses meson
+
+	$ make rpm
+
+Static binary(no dependency) build support via Makefile that uses meson   
+
+	$ make static
 
 If not sure how to use, find the top-level documentation with:
 
-    $ man nvme
+	$ man nvme
 
 Or find a short summary with:
 
-    $ nvme help
-
+	$ nvme help
+	
 ## Distro Support
 
-### Alpine Linux
+Many popular distributions (Alpine, Arch, Debian, Fedora, FreeBSD, Gentoo,
+Ubuntu, Nix(OS), openSUSE, ...) and the usual package name is nvme-cli.
 
-nvme-cli is tested on Alpine Linux 3.3.  Install it using:
-
-    # apk update && apk add nvme-cli nvme-cli-doc
-
-if you just use the device you're after, it will work flawless.
-```
-# nvme smart-log /dev/nvme0
-Smart Log for NVME device:/dev/nvme0 namespace-id:ffffffff
-critical_warning                    : 0
-temperature                         : 49 C
-available_spare                     : 100%
-```
-
-### Arch Linux
-
-nvme-cli is available in the `[community]` repository. It can be installed with:
-
-    # pacman -S nvme-cli
-
-The development version can be installed from AUR, e.g.:
-
-    $ yay -S nvme-cli-git
-
-### Fedora
-
-nvme-cli is available in Fedora 23 and up.  Install it with your favorite
-package manager.  For example:
-
-    $ sudo dnf install nvme-cli
-
-### FreeBSD
-
-`nvme-cli` is available in the FreeBSD Ports Collection.  A prebuilt binary
-package can be installed with:
-
-```console
-# pkg install nvme-cli
-```
-
-### Gentoo
-
-nvme-cli is available and tested in portage:
-```
-$ emerge -av nvme-cli
-```
-
-### Nix(OS)
-
-The attribute is named `nvme-cli` and can e.g. be installed with:
-```
-$ nix-env -f '<nixpkgs>' -iA nvme-cli
-```
-
-### openSUSE
-
-nvme-cli is available in openSUSE Leap 42.2 or later and Tumbleweed. You can install it using zypper.
-For example:
-
-    $ sudo zypper install nvme-cli
-
-### Ubuntu
-
-nvme-cli is supported in the Universe package sources for Xenial for
-many architectures. For a complete list try running:
-  ```
-  rmadison nvme-cli
-   nvme-cli | 0.3-1 | xenial/universe | source, amd64, arm64, armhf, i386, powerpc, ppc64el, s390x
-  ```
-A Debian based package for nvme-cli is currently maintained as a
-Ubuntu PPA. Right now there is support for Trusty, Vivid and Wiley. To
-install nvme-cli using this approach please perform the following
-steps:
-   1. Add the sbates PPA to your sources. One way to do this is to run
-   ```
-   sudo add-apt-repository ppa:sbates
-   ```
-   2. Perform an update of your repository list:
-   ```
-   sudo apt-get update
-   ```
-   3. Get nvme-cli!
-   ```
-   sudo apt-get install nvme-cli
-   ```
-   4. Test the code.
-   ```
-   sudo nvme list
-   ```
-   In the case of no NVMe devices you will see
-   ```
-   No NVMe devices detected.
-   ```
-   otherwise you will see information about each NVMe device installed
-   in the system.
-
-### OpenEmbedded/Yocto
+#### OpenEmbedded/Yocto
 
 An [nvme-cli recipe](https://layers.openembedded.org/layerindex/recipe/88631/)
 is available as part of the `meta-openembeded` layer collection.
 
-### Buildroot
+#### Buildroot
 
 `nvme-cli` is available as [buildroot](https://buildroot.org) package. The
 package is named `nvme`.
-
-### Other Distros
-
-TBD
 
 ## Developers
 
@@ -212,4 +209,127 @@ File: foo-plugin.c
 ```
 
 After that, you just need to implement the functions you defined in each
-ENTRY, then append the object file name to the Makefile's "OBJS".
+ENTRY, then append the object file name to the meson.build "sources".
+
+## meson tips
+
+In case meson doesn't find libnvme header files (via pkg-config) it 
+will fallback using subprojects.  meson checks out libnvme in 
+subprojects directory as git tree once to the commit level specified 
+in the libnvme.wrap file revision parm.  After this initial checkout,
+the libnvme code level will not change unless explicitly told.  That 
+means if the current branch is updated via git, the subprojects/libnvme
+branch will not updated accordingly.  To update it, either use the 
+normal git operations or the command: 
+
+	$ meson subprojects update
+
+## Dependency
+
+libnvme depends on the /sys/class/nvme-subsystem interface which was
+introduced in the Linux kernel release v4.15. Hence nvme-cli 2.x is
+only working on kernels >= v4.15. For older kernels nvme-cli 1.x is
+recommended to be used.
+
+## How to contribute
+
+There are two ways to send code changes to the project. The first one
+is by sending the changes to linux-nvme@lists.infradead.org. The
+second one is by posting a pull request on github. In both cases
+please follow the Linux contributions guidelines as documented in
+
+https://docs.kernel.org/process/submitting-patches.html#
+
+That means the changes should be a clean series (no merges should be
+present in a github PR for example) and every commit should build.
+
+See also https://opensource.com/article/19/7/create-pull-request-github
+
+### How to cleanup your series before creating PR
+
+This example here assumes, the changes are in a branch called
+fix-something, which branched away from master in the past. In the
+meantime the upstream project has changed, hence the fix-something
+branch is not based on the current HEAD. Before posting the PR, the
+branch should be rebased on the current HEAD and retest everything.
+
+For example rebasing can be done by following steps
+
+```shell
+# Update master branch
+#   upstream == https://github.com/linux-nvme/nvme-cli.git
+$ git switch master
+$ git fetch --all
+$ git reset --hard upstream/master
+
+# Make sure all dependencies are up to date and make a sanity build
+$ meson subprojects update
+$ ninja -C .build
+
+# Go back to the fix-something branch
+$ git switch fix-something
+
+# Rebase it to the current HEAD
+$ git rebase master
+[fixup all merge conflicts]
+[retest]
+
+# Push your changes to github and trigger a PR
+$ git push -u origin fix-something
+```
+
+## Persistent, volatile configuration
+
+Persistent configurations can be stored in two different locations: either in
+the file `/etc/nvme/discovery.conf` using the old style, or in the file
+`/etc/nvme/config.json` using the new style.
+
+On the other hand, volatile configurations, such as those obtained from
+third-party tools like `nvme-stats` or `blktests'` can be stored in the
+`/run/nvme` directory. When using the `nvme-cli` tool, all these configurations
+are combined into a single configuration that is used as input.
+
+The volatile configuration is particularly useful for coordinating access to the
+global resources among various components. For example, when executing
+`blktests` for the FC transport, the `nvme-cli` udev rules can be triggered. To
+prevent interference with a test, `blktests` can create a JSON configuration
+file in `/run/nvme` to inform `nvme-cli` that it should not perform any actions
+triggered from the udev context. This behavior can be controlled using the
+`--context` argument.
+
+For example a `blktests` volatile configuration could look like:
+
+```json
+[
+  {
+    "hostnqn": "nqn.2014-08.org.nvmexpress:uuid:242d4a24-2484-4a80-8234-d0169409c5e8",
+    "hostid": "242d4a24-2484-4a80-8234-d0169409c5e8",
+    "subsystems": [
+      {
+	"application": "blktests",
+        "nqn": "blktests-subsystem-1",
+        "ports": [
+          {
+            "transport": "fc",
+	    "traddr": "nn-0x10001100aa000001:pn-0x20001100aa000001",
+	    "host_traddr": "nn-0x10001100aa000002:pn-0x20001100aa000002"
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+Note when updating the volatile configuration during runtime, it should done in
+a an atomic way. For example create a temporary file without the `.json` file
+extension in `/run/nvme` and write the contents to this file. When finished use
+`rename` to add the `'.json'` file name extension. This ensures nvme-cli only
+sees the complete file.
+
+## Testing
+
+For testing purposes a x86_64 static build from the current HEAD and is
+available here:
+
+https://monom.org/linux-nvme/upload/nvme-cli-latest-x86_64

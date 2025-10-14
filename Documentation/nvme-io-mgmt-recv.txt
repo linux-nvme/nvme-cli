@@ -1,0 +1,68 @@
+nvme-io-mgmt-recv(1)
+====================
+
+NAME
+----
+nvme-io-mgmt-recv - I/O Management Receive command
+
+SYNOPSIS
+--------
+[verse]
+'nvme io-mgmt-recv' <device> [--namespace-id=<NUM> | -n <NUM>]
+			[--mos=<NUM> | -s <NUM>] [--mo=<NUM> | -m <NUM>]
+			[--data=<FILE> | -d <FILE>]
+			[--data-len=<NUM> | -l <NUM>]
+			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--timeout=<timeout> | -t <timeout>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, issues the I/O Management Receive command with the
+requested management operation (mo) and management operation specific parameter
+(mos). This is the generic interface provided for forward compatibility as new
+operations are added that this program isn't aware of at the time of its
+development. As such, this is a generic command that does not do any additional
+decoding for specific types of data received. This will only report the data as
+a hex dump, or binary.
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-d <FILE>::
+--data=<FILE>::
+	File to write received data into. If unspecified, received data will be
+	hex dumped to the standard output stream.
+
+-l <NUM>::
+--data-len=<NUM>::
+	Received data buffer length
+
+-m <NUM>::
+--mo <NUM>::
+	Management Operation to perform.
+
+-s <NUM>::
+--mos=<NUM>::
+	Management Operation Specific parameter.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'json' or 'binary'. Only one
+	output format can be used at a time.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+NVME
+----
+Part of nvme-cli
