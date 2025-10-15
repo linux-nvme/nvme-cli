@@ -169,19 +169,9 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	printf("cap_voltage                         : %d mV\n", char4_to_int(log.cap_voltage));
 	printf("nand_erase_err_cnt                  : %d\n", char4_to_int(log.nand_erase_err_cnt));
 	printf("nand_program_err_cnt                : %d\n", char4_to_int(log.nand_program_err_cnt));
-	printf("ddra_1bit_err                       : %d\n", log.ddra_1bit_err[1] << 8 | log.ddra_1bit_err[0]);
-	printf("ddra_2bit_err                       : %d\n", log.ddra_2bit_err[1] << 8 | log.ddra_2bit_err[0]);
-	printf("ddrb_1bit_err                       : %d\n", log.ddrb_1bit_err[1] << 8 | log.ddrb_1bit_err[0]);
-	printf("ddrb_2bit_err                       : %d\n", log.ddrb_2bit_err[1] << 8 | log.ddrb_2bit_err[0]);
-	printf("ddr_err_bit                         : %d\n", log.ddr_err_bit);
-	printf("pcie_corr_err                       : %d\n", log.pcie_corr_err[1] << 8 | log.pcie_corr_err[0]);
-	printf("pcie_uncorr_err                     : %d\n", log.pcie_uncorr_err[1] << 8 | log.pcie_uncorr_err[0]);
-	printf("pcie_fatal_err                      : %d\n", log.pcie_fatal_err[1] << 8 | log.pcie_fatal_err[0]);
 	printf("power_level                         : %d W\n", log.power_level);
 	printf("current_power                       : %d mW\n", log.current_power[1] << 8 | log.current_power[0]);
 	printf("nand_init_fail                      : %d\n", log.nand_init_fail[1] << 8 | log.nand_init_fail[0]);
-	printf("fw_loader_version                   : %.*s\n", 8, log.fw_loader_version);
-	printf("uefi_driver_version                 : %.*s\n", 8, log.uefi_driver_version);
 
 	if (log.pcie_volt_status < sizeof(volt_status) / sizeof(const char *))
 		printf("pcie_volt_status                    : %s\n", volt_status[log.pcie_volt_status]);
