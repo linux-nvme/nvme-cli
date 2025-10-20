@@ -965,10 +965,10 @@ static int test_admin_get_features_cb(struct nvme_mi_ep *ep,
 	return 0;
 }
 
-static void test_get_features_nodata(nvme_mi_ep_t ep)
+static void test_get_features(nvme_mi_ep_t ep)
 {
-	struct nvme_get_features_args args = { 0 };
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	uint32_t res;
 	int rc;
 
@@ -977,47 +977,10 @@ static void test_get_features_nodata(nvme_mi_ep_t ep)
 	hdl = nvme_mi_init_transport_handle(ep, 5);
 	assert(hdl);
 
-	args.args_size = sizeof(args);
-	args.fid = NVME_FEAT_FID_ARBITRATION;
-	args.sel = 0;
-	args.result = &res;
-
-	rc = nvme_get_features(hdl, &args);
+	nvme_init_get_features(&cmd, NVME_FEAT_FID_ARBITRATION, 0);
+	rc = nvme_submit_admin_passthru(hdl, &cmd, &res);
 	assert(rc == 0);
-	assert(args.data_len == 0);
 	assert(res == 0x04030201);
-}
-
-static void test_get_features_data(nvme_mi_ep_t ep)
-{
-	struct nvme_get_features_args args = { 0 };
-	struct nvme_timestamp tstamp;
-	struct nvme_transport_handle *hdl;
-	uint8_t exp[6];
-	uint32_t res;
-	int rc, i;
-
-	test_set_transport_callback(ep, test_admin_get_features_cb, NULL);
-
-	hdl = nvme_mi_init_transport_handle(ep, 5);
-	assert(hdl);
-
-	args.args_size = sizeof(args);
-	args.fid = NVME_FEAT_FID_TIMESTAMP;
-	args.sel = 0;
-	args.result = &res;
-	args.data = &tstamp;
-	args.data_len = sizeof(tstamp);
-
-	/* expected timestamp value */
-	for (i = 0; i < sizeof(tstamp.timestamp); i++)
-		exp[i] = i;
-
-	rc = nvme_get_features(hdl, &args);
-	assert(rc == 0);
-	assert(args.data_len == sizeof(tstamp));
-	assert(tstamp.attr == 1);
-	assert(!memcmp(tstamp.timestamp, exp, sizeof(tstamp.timestamp)));
 }
 
 /* Set Features callback for timestamp */
@@ -2097,8 +2060,7 @@ struct test {
 	DEFINE_TEST(mi_config_get_mtu),
 	DEFINE_TEST(mi_config_set_freq),
 	DEFINE_TEST(mi_config_set_freq_invalid),
-	DEFINE_TEST(get_features_nodata),
-	DEFINE_TEST(get_features_data),
+	DEFINE_TEST(get_features),
 	DEFINE_TEST(set_features),
 	DEFINE_TEST(admin_id_alloc_ns_list),
 	DEFINE_TEST(admin_id_active_ns_list),

@@ -2819,441 +2819,612 @@ nvme_init_set_features_iocs_profile(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_get_features() - Retrieve a feature attribute
- * @hdl:	Transport handle
- * @args:	&struct nvme_get_features_args argument structure
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * nvme_init_get_features() - Initialize passthru command for
+ * Get Features
+ * @cmd:	Passthru command to use
+ * @fid:	Feature identifier, see &enum nvme_features_id
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  */
-int nvme_get_features(struct nvme_transport_handle *hdl, struct nvme_get_features_args *args);
-
-/**
- * nvme_get_features_data() - Helper function for @nvme_get_features()
- * @hdl:	Transport handle
- * @fid:	Feature identifier
- * @nsid:	Namespace ID, if applicable
- * @data_len:	Length of feature data, if applicable, in bytes
- * @data:	User address of feature data, if applicable
- * @result:	The command completion result from CQE dword0
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline int nvme_get_features_data(struct nvme_transport_handle *hdl, enum nvme_features_id fid,
-			__u32 nsid, __u32 data_len, void *data, __u32 *result)
+static inline void
+nvme_init_get_features(struct nvme_passthru_cmd *cmd, __u8 fid,
+		enum nvme_get_features_sel sel)
 {
-	struct nvme_get_features_args args = {
-		.result = result,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.nsid = nsid,
-		.sel = NVME_GET_FEATURES_SEL_CURRENT,
-		.cdw11 = 0,
-		.data_len = data_len,
-		.fid = (__u8)fid,
-		.uuidx = NVME_UUID_NONE,
-	};
+	__u32 cdw10 = NVME_FIELD_ENCODE(fid,
+			NVME_GET_FEATURES_CDW10_FID_SHIFT,
+			NVME_GET_FEATURES_CDW10_FID_MASK) |
+		      NVME_FIELD_ENCODE(sel,
+			NVME_GET_FEATURES_CDW10_SEL_SHIFT,
+			NVME_GET_FEATURES_CDW10_SEL_MASK);
 
-	return nvme_get_features(hdl, &args);
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode	= nvme_admin_get_features;
+	cmd->cdw10	= cdw10;
 }
 
 /**
- * nvme_get_features_simple() - Helper function for @nvme_get_features()
- * @hdl:	Transport handle
- * @fid:	Feature identifier
- * @nsid:	Namespace ID, if applicable
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_arbitration() - Initialize passthru command for
+ * Get Features - Arbitration
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_ARBITRATION
  */
-static inline int nvme_get_features_simple(struct nvme_transport_handle *hdl, enum nvme_features_id fid,
-			__u32 nsid, __u32 *result)
+static inline void
+nvme_init_get_features_arbitration(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
 {
-	return nvme_get_features_data(hdl, fid, nsid, 0, NULL, result);
+	nvme_init_get_features(cmd, NVME_FEAT_FID_ARBITRATION, sel);
 }
 
 /**
- * nvme_get_features_arbitration() - Get arbitration feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_power_mgmt() - Initialize passthru command for
+ * Get Features - Power Management
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_POWER_MGMT
  */
-int nvme_get_features_arbitration(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				  __u32 *result);
+static inline void
+nvme_init_get_features_power_mgmt(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_POWER_MGMT, sel);
+}
 
 /**
- * nvme_get_features_power_mgmt() - Get power management feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_get_features_power_mgmt(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				 __u32 *result);
-
-/**
- * nvme_get_features_lba_range() - Get LBA range feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * nvme_init_get_features_lba_range() - Initialize passthru command for
+ * Get Features - LBA Range
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
- * @data:	Buffer to receive LBA Range Type data structure
- * @result:	The command completion result from CQE dword0
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @lrt:	Buffer to receive LBA Range Type data structure
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_LBA_RANGE
  */
-int nvme_get_features_lba_range(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				__u32 nsid, struct nvme_lba_range_type *data,
-				__u32 *result);
+static inline void
+nvme_init_get_features_lba_range(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_get_features_sel sel, struct nvme_lba_range_type *lrt)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_LBA_RANGE, sel);
+	cmd->nsid = nsid;
+	cmd->data_len = sizeof(*lrt);
+	cmd->addr = (__u64)(uintptr_t)lrt;
+}
 
 /**
- * nvme_get_features_temp_thresh() - Get temperature threshold feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * nvme_init_get_features_temp_thresh() - Initialize passthru command for
+ * Get Features - Temperature Threshold
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ * see &enum nvme_get_features_sel
  * @tmpsel:	Threshold Temperature Select
  * @thsel:	Threshold Type Select
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_TEMP_THRESH
  */
-int nvme_get_features_temp_thresh(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel, __u8 tmpsel,
-				  enum nvme_feat_tmpthresh_thsel thsel, __u32 *result);
+static inline void
+nvme_init_get_features_temp_thresh(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel,
+		__u8 tmpsel, enum nvme_feat_tmpthresh_thsel thsel)
+{
 
+	nvme_init_get_features(cmd, NVME_FEAT_FID_TEMP_THRESH, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(tmpsel,
+			NVME_FEAT_TT_TMPSEL_SHIFT,
+			NVME_FEAT_TT_TMPSEL_MASK) |
+		     NVME_FIELD_ENCODE(thsel,
+			NVME_FEAT_TT_THSEL_SHIFT,
+			NVME_FEAT_TT_THSEL_MASK);
+}
 
 /**
- * nvme_get_features_err_recovery() - Get error recovery feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * nvme_init_get_features_err_recovery() - Initialize passthru command for
+ * Get Features - Error Recovery
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
- * @result:	The command completion result from CQE dword0
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_ERR_RECOVERY
  */
-int nvme_get_features_err_recovery(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				    __u32 nsid, __u32 *result);
+static inline void
+nvme_init_get_features_err_recovery(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_ERR_RECOVERY, sel);
+	cmd->nsid = nsid;
+}
 
 /**
- * nvme_get_features_volatile_wc() - Get volatile write cache feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_volatile_wc() - Initialize passthru command for
+ * Get Features - Volatile Write Cache
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ * see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_VOLATILE_WC
  */
-int nvme_get_features_volatile_wc(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				  __u32 *result);
+static inline void
+nvme_init_get_features_volatile_wc(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_VOLATILE_WC, sel);
+}
 
 /**
- * nvme_get_features_num_queues() - Get number of queues feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_num_queues() - Initialize passthru command for
+ * Get Features - Number of Queues
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ * see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_NUM_QUEUES
  */
-int nvme_get_features_num_queues(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				 __u32 *result);
+static inline void
+nvme_init_get_features_num_queues(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_NUM_QUEUES, sel);
+}
 
 /**
- * nvme_get_features_irq_coalesce() - Get IRQ coalesce feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_irq_coalesce() - Initialize passthru command for
+ * Get Features - IRQ Coalesce
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_IRQ_COALESCE
  */
-int nvme_get_features_irq_coalesce(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				   __u32 *result);
+static inline void
+nvme_init_get_features_irq_coalesce(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_IRQ_COALESCE, sel);
+}
 
 /**
- * nvme_get_features_irq_config() - Get IRQ config feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @iv:
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_irq_config() - Initialize passthru command for
+ * Get Features - IRQ Config
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @iv:		Interrupt Vector
+ * @cd:		Coalescing Disable
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_IRQ_CONFIG
  */
-int nvme_get_features_irq_config(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				 __u16 iv, __u32 *result);
+static inline void
+nvme_init_get_features_irq_config(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel,
+		__u16 iv, bool cd)
+{
+	__u32 cdw11 = NVME_FIELD_ENCODE(iv,
+				       NVME_FEAT_ICFG_IV_SHIFT,
+				       NVME_FEAT_ICFG_IV_MASK) |
+		     NVME_FIELD_ENCODE(cd,
+				       NVME_FEAT_ICFG_CD_SHIFT,
+				       NVME_FEAT_ICFG_CD_MASK);
+
+	nvme_init_get_features(cmd, NVME_FEAT_FID_IRQ_CONFIG, sel);
+	cmd->cdw11 = cdw11;
+}
 
 /**
- * nvme_get_features_write_atomic() - Get write atomic feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_write_atomic() - Initialize passthru command for
+ * Get Features - Write Atomic
+ * @cmd:        Passthru command to use
+ * @sel:        Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_WRITE_ATOMIC
  */
-int nvme_get_features_write_atomic(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				   __u32 *result);
+static inline void
+nvme_init_get_features_write_atomic(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_WRITE_ATOMIC, sel);
+}
 
 /**
- * nvme_get_features_async_event() - Get asynchronous event feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_async_event() - Initialize passthru command for
+ * Get Features - Asynchronous Event Configuration
+ * @cmd:        Passthru command to use
+ * @sel:        Select which type of attribute to return,
+ * see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_ASYNC_EVENT
  */
-int nvme_get_features_async_event(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				  __u32 *result);
+static inline void
+nvme_init_get_features_async_event(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_ASYNC_EVENT, sel);
+}
 
 /**
- * nvme_get_features_auto_pst() - Get autonomous power state feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @apst:
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_auto_pst() - Initialize passthru command for
+ * Get Features - Autonomous Power State Transition
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @apst:	Autonomous Power State Transition data buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_AUTO_PST
  */
-int nvme_get_features_auto_pst(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-			       struct nvme_feat_auto_pst *apst, __u32 *result);
+static inline void
+nvme_init_get_features_auto_pst(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, struct nvme_feat_auto_pst *apst)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_AUTO_PST, sel);
+	cmd->data_len = sizeof(*apst);
+	cmd->addr = (__u64)(uintptr_t)apst;
+}
 
 /**
- * nvme_get_features_host_mem_buf() - Get host memory buffer feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * nvme_init_get_features_host_mem_buf() - Initialize passthru command for
+ * Get Features - Host Memory Buffer
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  * @attrs:	Buffer for returned Host Memory Buffer Attributes
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_HOST_MEM_BUF
  */
-int nvme_get_features_host_mem_buf(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				   struct nvme_host_mem_buf_attrs *attrs,
-				   __u32 *result);
+static inline void
+nvme_init_get_features_host_mem_buf(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel,
+		struct nvme_host_mem_buf_attrs  *attrs)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_HOST_MEM_BUF, sel);
+	cmd->data_len = sizeof(*attrs);
+	cmd->addr = (__u64)(uintptr_t)attrs;
+}
 
 /**
- * nvme_get_features_timestamp() - Get timestamp feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @ts:		Current timestamp
+ * nvme_init_get_features_timestamp() - Initialize passthru command for
+ * Get Features - Timestamp
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @ts:		Current timestamp buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_TIMESTAMP
  */
-int nvme_get_features_timestamp(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				struct nvme_timestamp *ts);
+static inline void
+nvme_init_get_features_timestamp(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, struct nvme_timestamp *ts)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_TIMESTAMP, sel);
+	cmd->data_len = sizeof(*ts);
+	cmd->addr = (__u64)(uintptr_t)ts;
+}
 
 /**
- * nvme_get_features_kato() - Get keep alive timeout feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_kato() - Initialize passthru command for
+ * Get Features - Keep Alive Timeout
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_KATO
  */
-int nvme_get_features_kato(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel, __u32 *result);
+static inline void
+nvme_init_get_features_kato(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_KATO, sel);
+}
 
 /**
- * nvme_get_features_hctm() - Get thermal management feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_hctm() - Initialize passthru command for
+ * Get Features - Host Controlled Thermal Management
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_HCTM
  */
-int nvme_get_features_hctm(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel, __u32 *result);
+static inline void
+nvme_init_get_features_hctm(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_HCTM, sel);
+}
 
 /**
- * nvme_get_features_nopsc() - Get non-operational power state feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_nopsc() - Initialize passthru command for
+ * Get Features - Non-Operational Power State Config
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_NOPSC
  */
-int nvme_get_features_nopsc(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel, __u32 *result);
+static inline void
+nvme_init_get_features_nopsc(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_NOPSC, sel);
+}
 
 /**
- * nvme_get_features_rrl() - Get read recovery level feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_rrl() - Initialize passthru command for
+ * Get Features - Read Recovery Level
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_RRL
  */
-int nvme_get_features_rrl(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel, __u32 *result);
+static inline void
+nvme_init_get_features_rrl(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_RRL, sel);
+}
 
 /**
- * nvme_get_features_plm_config() - Get predictable latency feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @nvmsetid:	NVM set id
- * @data:
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_plm_config() - Initialize passthru command for
+ * Get Features - Predictable Latency Mode Config
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @nvmsetid:   NVM set id
+ * @plmc:       Buffer for returned Predictable Latency Mode Config
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_PLM_CONFIG
  */
-int nvme_get_features_plm_config(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				 __u16 nvmsetid, struct nvme_plm_config *data,
-				 __u32 *result);
+static inline void
+nvme_init_get_features_plm_config(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u16 nvmsetid,
+		struct nvme_plm_config *plmc)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_PLM_CONFIG, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(nvmsetid,
+				       NVME_FEAT_PLM_NVMSETID_SHIFT,
+				       NVME_FEAT_PLM_NVMSETID_MASK);
+	cmd->data_len = sizeof(*plmc);
+	cmd->addr = (__u64)(uintptr_t)plmc;
+}
 
 /**
- * nvme_get_features_plm_window() - Get window select feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @nvmsetid:	NVM set id
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_plm_window() - Initialize passthru command for
+ * Get Features - Predictable Latency Mode Window
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @nvmsetid:   NVM set id
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_PLM_WINDOW
  */
-int nvme_get_features_plm_window(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-	__u16 nvmsetid, __u32 *result);
+static inline void
+nvme_init_get_features_plm_window(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u16 nvmsetid)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_PLM_WINDOW, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(nvmsetid,
+				       NVME_FEAT_PLM_NVMSETID_SHIFT,
+				       NVME_FEAT_PLM_NVMSETID_MASK);
+}
 
 /**
- * nvme_get_features_lba_sts_interval() - Get LBA status information feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_lba_sts_interval() - Initialize passthru command for
+ * Get Features - LBA Status Information Interval
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_LBA_STS_INTERVAL
  */
-int nvme_get_features_lba_sts_interval(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				       __u32 *result);
+static inline void
+nvme_init_get_features_lba_sts_interval(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_LBA_STS_INTERVAL, sel);
+}
 
 /**
- * nvme_get_features_host_behavior() - Get host behavior feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @data:	Pointer to structure nvme_feat_host_behavior
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_host_behavior() - Initialize passthru command for
+ * Get Features - Host Behavior
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @fhb:	Pointer to structure nvme_feat_host_behavior
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_HOST_BEHAVIOR
  */
-int nvme_get_features_host_behavior(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				    struct nvme_feat_host_behavior *data,
-				    __u32 *result);
+static inline void
+nvme_init_get_features_host_behavior(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel,
+		struct nvme_feat_host_behavior *fhb)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_HOST_BEHAVIOR, sel);
+	cmd->data_len = sizeof(*fhb);
+	cmd->addr = (__u64)(uintptr_t)fhb;
+}
 
 /**
- * nvme_get_features_sanitize() - Get sanitize feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_sanitize() - Initialize passthru command for
+ * Get Features - Sanitize
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_SANITIZE
  */
-int nvme_get_features_sanitize(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				__u32 *result);
+static inline void
+nvme_init_get_features_sanitize(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_SANITIZE, sel);
+}
 
 /**
- * nvme_get_features_endurance_event_cfg() - Get endurance event config feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * nvme_init_get_features_endurance_event_cfg() - Initialize passthru command
+ * for Get Features - Endurance Group Event Configuration
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  * @endgid:	Endurance Group Identifier
- * @result:	The command completion result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_ENDURANCE_EVT_CFG
  */
-int nvme_get_features_endurance_event_cfg(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-					  __u16 endgid, __u32 *result);
+static inline void
+nvme_init_get_features_endurance_event_cfg(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u16 endgid)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_ENDURANCE_EVT_CFG, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(endgid,
+				       NVME_FEAT_EG_ENDGID_SHIFT,
+				       NVME_FEAT_EG_ENDGID_MASK);
+}
 
 /**
- * nvme_get_features_sw_progress() - Get software progress feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_sw_progress() - Initialize passthru command for
+ * Get Features - Software Progress
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ * see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_SW_PROGRESS
  */
-int nvme_get_features_sw_progress(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				  __u32 *result);
+static inline void
+nvme_init_get_features_sw_progress(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_SW_PROGRESS, sel);
+}
 
 /**
- * nvme_get_features_host_id() - Get host id feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * nvme_init_get_features_host_id() - Initialize passthru command for
+ * Get Features - Host Identifier
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  * @exhid:	Enable Extended Host Identifier
- * @len:	Length of @hostid
  * @hostid:	Buffer for returned host ID
+ * @len:	Length of @hostid
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_HOST_ID
  */
-int nvme_get_features_host_id(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-			      bool exhid, __u32 len, __u8 *hostid);
+static inline void
+nvme_init_get_features_host_id(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, bool exhid,
+		void *hostid, __u32 len)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_HOST_ID, sel);
+	cmd->cdw11 = NVME_FIELD_ENCODE(exhid,
+				       NVME_FEAT_HOSTID_EXHID_SHIFT,
+				       NVME_FEAT_HOSTID_EXHID_MASK);
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)hostid;
+}
 
 /**
- * nvme_get_features_resv_mask() - Get reservation mask feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * nvme_init_get_features_resv_mask() - Initialize passthru command for
+ * Get Features - Reservation Notification Mask
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
- * @result:	The command completion result from CQE dword0
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_RESV_MASK
  */
-int nvme_get_features_resv_mask(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				__u32 nsid, __u32 *result);
+static inline void
+nvme_init_get_features_resv_mask(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_RESV_MASK, sel);
+	cmd->nsid = nsid;
+}
 
 /**
- * nvme_get_features_resv_persist() - Get reservation persist feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * nvme_init_get_features_resv_persist() - Initialize passthru command for
+ * Get Features - Reservation Persistence
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
- * @result:	The command completion result from CQE dword0
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_RESV_PERSIST
  */
-int nvme_get_features_resv_persist(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				   __u32 nsid, __u32 *result);
+static inline void
+nvme_init_get_features_resv_persist(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_RESV_PERSIST, sel);
+	cmd->nsid = nsid;
+}
 
 /**
- * nvme_get_features_write_protect() - Get write protect feature
- * @hdl:	Transport handle
+ * nvme_init_get_features_write_protect() - Initialize passthru command for
+ * Get Features - Write Protect
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_WRITE_PROTECT
  */
-int nvme_get_features_write_protect(struct nvme_transport_handle *hdl, __u32 nsid,
-				    enum nvme_get_features_sel sel,
-				    __u32 *result);
+static inline void
+nvme_init_get_features_write_protect(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_WRITE_PROTECT, sel);
+	cmd->nsid = nsid;
+}
 
 /**
- * nvme_get_features_iocs_profile() - Get IOCS profile feature
- * @hdl:	Transport handle
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * nvme_init_get_features_iocs_profile() - Initialize passthru command for
+ * Get Features - I/O Command Set Profile
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_IOCS_PROFILE
  */
-int nvme_get_features_iocs_profile(struct nvme_transport_handle *hdl, enum nvme_get_features_sel sel,
-				   __u32 *result);
+static inline void
+nvme_init_get_features_iocs_profile(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_IOCS_PROFILE, sel);
+}
 
 /**
  * nvme_format_nvm() - Format nvme namespace(s)

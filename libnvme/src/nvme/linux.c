@@ -217,7 +217,8 @@ int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 	struct nvme_passthru_cmd cmd;
 	int err;
 
-	err = nvme_get_features_host_behavior(hdl, 0, &da4, NULL);
+	nvme_init_get_features_host_behavior(&cmd, 0, &da4);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err)
 		return err;
 
@@ -243,7 +244,8 @@ int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
 	struct nvme_passthru_cmd cmd;
 	int err;
 
-	err = nvme_get_features_host_behavior(hdl, 0, &da4, NULL);
+	nvme_init_get_features_host_behavior(&cmd, 0, &da4);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err)
 		return err;
 

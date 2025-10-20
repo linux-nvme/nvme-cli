@@ -48,33 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_get_features_args - Arguments for the NVMe Admin Get Feature command
- * @args_size:	Size of &struct nvme_get_features_args
- * @result:	The command completion result from CQE dword0
- * @timeout:	Timeout in ms
- * @nsid:	Namespace ID, if applicable
- * @sel:	Select which type of attribute to return,
- *		see &enum nvme_get_features_sel
- * @cdw11:	Feature specific command dword11 field
- * @data_len:	Length of feature data, if applicable, in bytes
- * @data:	User address of feature data, if applicable
- * @fid:	Feature identifier, see &enum nvme_features_id
- * @uuidx:	UUID Index for differentiating vendor specific encoding
- */
-struct nvme_get_features_args {
-	__u32 *result;
-	void *data;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_get_features_sel sel;
-	__u32 cdw11;
-	__u32 data_len;
-	__u8 fid;
-	__u8 uuidx;
-};
-
-/**
  * struct nvme_format_nvm_args - Arguments for the Format Nvme Namespace command
  * @result:	The command completion result from CQE dword0
  * @args_size:	Size of &struct nvme_format_nvm_args
