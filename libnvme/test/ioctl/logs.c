@@ -722,7 +722,7 @@ static void test_get_log_reachability_groups(void)
 		.nsid = NVME_NSID_ALL,
 		.data_len = sizeof(expected_log),
 		.cdw10 = (NVME_LOG_LID_REACHABILITY_GROUPS << 0) |
-			 (!!TEST_LSP << 8) | (!!TEST_RAE << 15) |
+			 ((TEST_LSP != 0) << 8) | (!!TEST_RAE << 15) |
 			 (((sizeof(expected_log) >> 2) - 1) << 16),
 		.out_data = &expected_log,
 	};
@@ -730,7 +730,7 @@ static void test_get_log_reachability_groups(void)
 
 	arbitrary(&expected_log, sizeof(expected_log));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_log_reachability_groups(test_hdl, !!TEST_LSP, TEST_RAE,
+	err = nvme_get_log_reachability_groups(test_hdl, TEST_LSP != 0, TEST_RAE,
 					       sizeof(log), &log);
 	end_mock_cmds();
 	check(err == 0, "get log returned error %d", err);
@@ -745,7 +745,7 @@ static void test_get_log_reachability_associations(void)
 		.nsid = NVME_NSID_ALL,
 		.data_len = sizeof(expected_log),
 		.cdw10 = (NVME_LOG_LID_REACHABILITY_ASSOCIATIONS << 0) |
-			 (!!TEST_LSP << 8) | (!!TEST_RAE << 15) |
+			 ((TEST_LSP != 0) << 8) | (!!TEST_RAE << 15) |
 			 (((sizeof(expected_log) >> 2) - 1) << 16),
 		.out_data = &expected_log,
 	};
@@ -754,7 +754,7 @@ static void test_get_log_reachability_associations(void)
 	arbitrary(&expected_log, sizeof(expected_log));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	err = nvme_get_log_reachability_associations(
-		test_hdl, !!TEST_LSP, TEST_RAE, sizeof(log), &log);
+		test_hdl, TEST_LSP != 0, TEST_RAE, sizeof(log), &log);
 	end_mock_cmds();
 	check(err == 0, "get log returned error %d", err);
 	cmp(&log, &expected_log, sizeof(log), "incorrect log data");
@@ -813,7 +813,8 @@ static void test_get_log_host_discover(void)
 		.opcode = nvme_admin_get_log_page,
 		.nsid = NVME_NSID_ALL,
 		.data_len = sizeof(expected_log),
-		.cdw10 = (NVME_LOG_LID_HOST_DISCOVER << 0) | (!!TEST_LSP << 8) |
+		.cdw10 = (NVME_LOG_LID_HOST_DISCOVER << 0) |
+			 ((TEST_LSP != 0) << 8) |
 			 (!!TEST_RAE << 15) |
 			 (((sizeof(expected_log) >> 2) - 1) << 16),
 		.out_data = &expected_log,
@@ -822,7 +823,7 @@ static void test_get_log_host_discover(void)
 
 	arbitrary(&expected_log, sizeof(expected_log));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_log_host_discover(test_hdl, !!TEST_LSP, TEST_RAE,
+	err = nvme_get_log_host_discover(test_hdl, TEST_LSP != 0, TEST_RAE,
 					 sizeof(log), &log);
 	end_mock_cmds();
 	check(err == 0, "get log returned error %d", err);
