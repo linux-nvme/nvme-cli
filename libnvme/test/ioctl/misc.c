@@ -149,26 +149,20 @@ static void test_set_property(void)
 {
 	__u64 value = 0xffffffff;
 	__u32 result;
-	struct nvme_set_property_args args = {
-		.value = value,
-		.result = &result,
-		.args_size = sizeof(args),
-		.offset = NVME_REG_BPMBL,
-	};
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fabrics,
 		.nsid = nvme_fabrics_type_property_set,
-		.cdw10 = !!true,
+		.cdw10 = true,
 		.cdw11 = NVME_REG_BPMBL,
 		.cdw12 = value & 0xffffffff,
 		.cdw13 = value >> 32,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_set_property(test_hdl, &args);
+	nvme_init_set_property(&cmd, NVME_REG_BPMBL, value);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

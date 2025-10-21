@@ -621,26 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_set_property(struct nvme_transport_handle *hdl, struct nvme_set_property_args *args)
-{
-	__u32 cdw10 = nvme_is_64bit_reg(args->offset);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_admin_fabrics,
-		.nsid		= nvme_fabrics_type_property_set,
-		.cdw10		= cdw10,
-		.cdw11		= args->offset,
-		.cdw12		= args->value & 0xffffffff,
-		.cdw13		= args->value >> 32,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_get_property(struct nvme_transport_handle *hdl, struct nvme_get_property_args *args)
 {
 	__u32 cdw10 = nvme_is_64bit_reg(args->offset);

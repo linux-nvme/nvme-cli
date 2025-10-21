@@ -48,22 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_set_property_args - Arguments for NVMe Set Property command
- * @args_size:	Size of &struct nvme_set_property_args
- * @result:	The command completion result from CQE dword0
- * @timeout:	Timeout in ms
- * @offset:	Property offset from the base to set
- * @value:	The value to set the property
- */
-struct nvme_set_property_args {
-	__u64 value;
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	int offset;
-};
-
-/**
  * struct nvme_get_property_args - Arguments for NVMe Get Property command
  * @value:	Where the property's value will be stored on success
  * @args_size:	Size of &struct nvme_get_property_args
