@@ -39,27 +39,6 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level);
 void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
 
 /**
- * struct nvme_virtual_mgmt_args - Arguments for the NVMe Virtualization
- *			    resource management command
- * @args_size:	Size of &struct nvme_virtual_mgmt_args
- * @result:	If successful, the CQE dword0
- * @timeout:	Timeout in ms
- * @act:	Virtual resource action, see &enum nvme_virt_mgmt_act
- * @rt:		Resource type to modify, see &enum nvme_virt_mgmt_rt
- * @cntlid:	Controller id for which resources are bing modified
- * @nr:		Number of resources being allocated or assigned
- */
-struct nvme_virtual_mgmt_args {
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	enum nvme_virt_mgmt_act act;
-	enum nvme_virt_mgmt_rt rt;
-	__u16 cntlid;
-	__u16 nr;
-};
-
-/**
  * struct nvme_io_args - Arguments for NVMe I/O commands
  * @slba:	Starting logical block
  * @storage_tag: This filed specifies Variable Sized Expected Logical Block

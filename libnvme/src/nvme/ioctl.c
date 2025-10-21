@@ -621,26 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_virtual_mgmt(struct nvme_transport_handle *hdl, struct nvme_virtual_mgmt_args *args)
-{
-	__u32 cdw10 = NVME_SET(args->act, VIRT_MGMT_CDW10_ACT) |
-			NVME_SET(args->rt, VIRT_MGMT_CDW10_RT) |
-			NVME_SET(args->cntlid, VIRT_MGMT_CDW10_CNTLID);
-	__u32 cdw11 = NVME_SET(args->nr, VIRT_MGMT_CDW11_NR);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_admin_virtual_mgmt,
-		.cdw10		= cdw10,
-		.cdw11		= cdw11,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_submit_io_passthru64(struct nvme_transport_handle *hdl, struct nvme_passthru_cmd64 *cmd,
 			      __u64 *result)
 {

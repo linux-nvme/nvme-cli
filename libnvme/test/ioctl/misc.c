@@ -726,28 +726,23 @@ static void test_dev_self_test(void)
 
 static void test_virtual_mgmt(void)
 {
+	enum nvme_virt_mgmt_act act = NVME_VIRT_MGMT_ACT_ASSIGN_SEC_CTRL;
+	enum nvme_virt_mgmt_rt rt = NVME_VIRT_MGMT_RT_VI_RESOURCE;
 	__u32 expected_result = 0x45, result = 0;
-
-	struct nvme_virtual_mgmt_args args = {
-		.result = &result,
-		.args_size = sizeof(args),
-		.act = NVME_VIRT_MGMT_ACT_ASSIGN_SEC_CTRL,
-		.rt = NVME_VIRT_MGMT_RT_VI_RESOURCE,
-		.cntlid = 0x0,
-		.nr = 0xff,
-	};
-
+	__u16 cntlid = 0x0;
+	__u16 nr = 0xff;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_virtual_mgmt,
-		.cdw10 = args.act | (args.rt << 8) | (args.cntlid << 16),
-		.cdw11 = args.nr,
+		.cdw10 = act | (rt << 8) | (cntlid << 16),
+		.cdw11 = nr,
 		.result = expected_result,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_virtual_mgmt(test_hdl, &args);
+	nvme_init_virtual_mgmt(&cmd, act, rt, cntlid, nr);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");

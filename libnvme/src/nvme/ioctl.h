@@ -4202,22 +4202,37 @@ nvme_init_dev_self_test(struct nvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_virtual_mgmt() - Virtualization resource management
- * @hdl:	Transport handle
- * @args:	&struct nvme_virtual_mgmt_args argument structure
+ * nvme_init_virtual_mgmt() - Initialize passthru command for
+ * Virtualization Resource Management
+ * @cmd:	Passthru command to use
+ * @act:	Virtual resource action, see &enum nvme_virt_mgmt_act
+ * @rt:		Resource type to modify, see &enum nvme_virt_mgmt_rt
+ * @cntlid:	Controller id for which resources are bing modified
+ * @nr:		Number of resources being allocated or assigned
  *
- * The Virtualization Management command is supported by primary controllers
- * that support the Virtualization Enhancements capability. This command is
- * used for several functions:
- *
- *	- Modifying Flexible Resource allocation for the primary controller
- *	- Assigning Flexible Resources for secondary controllers
- *	- Setting the Online and Offline state for secondary controllers
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Virtualization
+ * Management command.
  */
-int nvme_virtual_mgmt(struct nvme_transport_handle *hdl, struct nvme_virtual_mgmt_args *args);
+static inline void
+nvme_init_virtual_mgmt(struct nvme_passthru_cmd *cmd,
+		enum nvme_virt_mgmt_act act, enum nvme_virt_mgmt_rt rt,
+		__u16 cntlid, __u16 nr)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_virtual_mgmt;
+	cmd->cdw10 = NVME_FIELD_ENCODE(act,
+			NVME_VIRT_MGMT_CDW10_ACT_SHIFT,
+			NVME_VIRT_MGMT_CDW10_ACT_MASK) |
+		     NVME_FIELD_ENCODE(rt,
+			NVME_VIRT_MGMT_CDW10_RT_SHIFT,
+			NVME_VIRT_MGMT_CDW10_RT_MASK) |
+		     NVME_FIELD_ENCODE(cntlid,
+			NVME_VIRT_MGMT_CDW10_CNTLID_SHIFT,
+			NVME_VIRT_MGMT_CDW10_CNTLID_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(nr,
+			NVME_VIRT_MGMT_CDW11_NR_SHIFT,
+			NVME_VIRT_MGMT_CDW11_NR_MASK);
+}
 
 /**
  * nvme_flush() - Send an nvme flush command
