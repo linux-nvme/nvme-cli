@@ -621,28 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_sanitize_nvm(struct nvme_transport_handle *hdl, struct nvme_sanitize_nvm_args *args)
-{
-	__u32 cdw10, cdw11;
-	cdw10 = NVME_SET(args->sanact, SANITIZE_CDW10_SANACT) |
-		NVME_SET(!!args->ause, SANITIZE_CDW10_AUSE) |
-		NVME_SET(args->owpass, SANITIZE_CDW10_OWPASS) |
-		NVME_SET(!!args->oipbp, SANITIZE_CDW10_OIPBP) |
-		NVME_SET(!!args->nodas, SANITIZE_CDW10_NODAS) |
-		NVME_SET(!!args->emvs, SANITIZE_CDW10_EMVS);
-
-	cdw11 = args->ovrpat;
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_admin_sanitize_nvm,
-		.cdw10		= cdw10,
-		.cdw11		= cdw11,
-		.timeout_ms	= args->timeout,
-	};
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_dev_self_test(struct nvme_transport_handle *hdl, struct nvme_dev_self_test_args *args)
 {
 	__u32 cdw10 = NVME_SET(args->stc, DEVICE_SELF_TEST_CDW10_STC);

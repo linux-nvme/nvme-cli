@@ -676,32 +676,29 @@ static void test_lockdown(void)
 
 static void test_sanitize_nvm(void)
 {
+	enum nvme_sanitize_sanact sanact =
+		NVME_SANITIZE_SANACT_START_CRYPTO_ERASE;
 	__u32 expected_result = 0x45, result = 0;
-
-	struct nvme_sanitize_nvm_args args = {
-		.result = &result,
-		.args_size = sizeof(args),
-		.sanact = NVME_SANITIZE_SANACT_START_CRYPTO_ERASE,
-		.ovrpat = 0x101010,
-		.ause = true,
-		.owpass = 0x2,
-		.oipbp = false,
-		.nodas = true,
-		.emvs = false,
-	};
-
+	__u32 ovrpat = 0x101010;
+	bool oipbp = false;
+	__u8 owpass = 0x2;
+	bool ndas = true;
+	bool emvs = false;
+	bool ause = true;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_sanitize_nvm,
-		.cdw10 = args.sanact | (!!args.ause << 3) | (args.owpass << 4) |
-			 (!!args.oipbp << 8) | (!!args.nodas << 9),
-		.cdw11 = args.ovrpat,
+		.cdw10 = sanact | (ause << 3) | (owpass << 4) |
+			 (oipbp << 8) | (ndas << 9),
+		.cdw11 = ovrpat,
 		.result = expected_result,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_sanitize_nvm(test_hdl, &args);
+	nvme_init_sanitize_nvm(&cmd, sanact, ause, owpass, oipbp, ndas,
+		emvs, ovrpat);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");

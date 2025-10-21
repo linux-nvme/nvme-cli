@@ -294,13 +294,13 @@ enum nvme_cmd_dword_fields {
 	NVME_SANITIZE_CDW10_AUSE_SHIFT				= 3,
 	NVME_SANITIZE_CDW10_OWPASS_SHIFT			= 4,
 	NVME_SANITIZE_CDW10_OIPBP_SHIFT				= 8,
-	NVME_SANITIZE_CDW10_NODAS_SHIFT				= 9,
+	NVME_SANITIZE_CDW10_NDAS_SHIFT				= 9,
 	NVME_SANITIZE_CDW10_EMVS_SHIFT				= 10,
 	NVME_SANITIZE_CDW10_SANACT_MASK				= 0x7,
 	NVME_SANITIZE_CDW10_AUSE_MASK				= 0x1,
 	NVME_SANITIZE_CDW10_OWPASS_MASK				= 0xf,
 	NVME_SANITIZE_CDW10_OIPBP_MASK				= 0x1,
-	NVME_SANITIZE_CDW10_NODAS_MASK				= 0x1,
+	NVME_SANITIZE_CDW10_NDAS_MASK				= 0x1,
 	NVME_SANITIZE_CDW10_EMVS_MASK				= 0x1,
 	NVME_SECURITY_NSSF_SHIFT				= 0,
 	NVME_SECURITY_SPSP0_SHIFT				= 8,
@@ -4137,24 +4137,47 @@ nvme_init_get_property(struct nvme_passthru_cmd64 *cmd, __u32 offset)
 }
 
 /**
- * nvme_sanitize_nvm() - Start a sanitize operation
- * @hdl:	Transport handle
- * @args:	&struct nvme_sanitize_nvm_args argument structure
+ * nvme_init_sanitize_nvm() - Initialize passthru command to start a
+ * sanitize operation
+ * @cmd:	Passthru command to use
+ * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
+ * @ause:	Set to allow unrestricted sanitize exit
+ * @owpass:	Overwrite pass count
+ * @oipbp:	Set to overwrite invert pattern between passes
+ * @ndas:	Set to not deallocate blocks after sanitizing
+ * @emvs:	Set to enter media verification state
+ * @ovrpat:	Overwrite pattern
  *
- * A sanitize operation alters all user data in the NVM subsystem such that
- * recovery of any previous user data from any cache, the non-volatile media,
- * or any Controller Memory Buffer is not possible.
- *
- * The Sanitize command starts a sanitize operation or to recover from a
- * previously failed sanitize operation. The sanitize operation types that may
- * be supported are Block Erase, Crypto Erase, and Overwrite. All sanitize
- * operations are processed in the background, i.e., completion of the sanitize
- * command does not indicate completion of the sanitize operation.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Sanitize NVM command.
  */
-int nvme_sanitize_nvm(struct nvme_transport_handle *hdl, struct nvme_sanitize_nvm_args *args);
+static inline void
+nvme_init_sanitize_nvm(struct nvme_passthru_cmd *cmd,
+		enum nvme_sanitize_sanact sanact, bool ause, __u8 owpass,
+		bool oipbp, bool ndas, bool emvs, __u32 ovrpat)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_sanitize_nvm;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sanact,
+			NVME_SANITIZE_CDW10_SANACT_SHIFT,
+			NVME_SANITIZE_CDW10_SANACT_MASK) |
+		      NVME_FIELD_ENCODE(ause,
+			NVME_SANITIZE_CDW10_AUSE_SHIFT,
+			NVME_SANITIZE_CDW10_AUSE_MASK) |
+		      NVME_FIELD_ENCODE(owpass,
+			NVME_SANITIZE_CDW10_OWPASS_SHIFT,
+			NVME_SANITIZE_CDW10_OWPASS_MASK) |
+		      NVME_FIELD_ENCODE(oipbp,
+			NVME_SANITIZE_CDW10_OIPBP_SHIFT,
+			NVME_SANITIZE_CDW10_OIPBP_MASK) |
+		      NVME_FIELD_ENCODE(ndas,
+			NVME_SANITIZE_CDW10_NDAS_SHIFT,
+			NVME_SANITIZE_CDW10_NDAS_MASK) |
+		      NVME_FIELD_ENCODE(emvs,
+			NVME_SANITIZE_CDW10_EMVS_SHIFT,
+			NVME_SANITIZE_CDW10_EMVS_MASK);
+	cmd->cdw11 = ovrpat;
+}
 
 /**
  * nvme_dev_self_test() - Start or abort a self test

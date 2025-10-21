@@ -48,32 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_sanitize_nvm_args - Arguments for the NVMe Sanitize NVM command
- * @result:	The command completion result from CQE dword0
- * @args_size:	Size of &struct nvme_sanitize_nvm_args
- * @timeout:	Timeout in ms
- * @ovrpat:	Overwrite pattern
- * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
- * @ause:	Set to allow unrestricted sanitize exit
- * @owpass:	Overwrite pass count
- * @oipbp:	Set to overwrite invert pattern between passes
- * @nodas:	Set to not deallocate blocks after sanitizing
- * @emvs:	Set to enter media verification state
- */
-struct nvme_sanitize_nvm_args {
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	enum nvme_sanitize_sanact sanact;
-	__u32 ovrpat;
-	bool ause;
-	__u8 owpass;
-	bool oipbp;
-	bool nodas;
-	bool emvs;
-};
-
-/**
  * struct nvme_dev_self_test_args - Arguments for the NVMe Device Self Test command
  * @result:	The command completion result from CQE dword0
  * @args_size:	Size of &struct nvme_dev_self_test_args

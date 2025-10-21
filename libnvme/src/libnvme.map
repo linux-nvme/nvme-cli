@@ -248,7 +248,6 @@ LIBNVME_2_0 {
 		nvme_resv_release;
 		nvme_resv_report;
 		nvme_revoke_tls_key;
-		nvme_sanitize_nvm;
 		nvme_scan;
 		nvme_scan_ctrl;
 		nvme_scan_ctrl_namespace_paths;
