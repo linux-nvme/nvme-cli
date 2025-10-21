@@ -147,7 +147,6 @@ LIBNVME_2_0 {
 		nvme_lm_migration_send;
 		nvme_lm_set_features_ctrl_data_queue;
 		nvme_lm_track_send;
-		nvme_lockdown;
 		nvme_lookup_ctrl;
 		nvme_lookup_host;
 		nvme_lookup_key;

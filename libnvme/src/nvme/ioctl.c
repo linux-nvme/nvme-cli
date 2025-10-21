@@ -621,26 +621,6 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_lockdown(struct nvme_transport_handle *hdl, struct nvme_lockdown_args *args)
-{
-	__u32 cdw10 =  args->ofi << 8 |
-		(args->ifc & 0x3) << 5 |
-		(args->prhbt & 0x1) << 4 |
-		(args->scp & 0xF);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode         = nvme_admin_lockdown,
-		.cdw10          = cdw10,
-		.cdw14          = args->uuidx & 0x3F,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_set_property(struct nvme_transport_handle *hdl, struct nvme_set_property_args *args)
 {
 	__u32 cdw10 = nvme_is_64bit_reg(args->offset);

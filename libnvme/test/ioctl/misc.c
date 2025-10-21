@@ -663,29 +663,24 @@ void test_capacity_mgmt(void)
 static void test_lockdown(void)
 {
 	__u32 expected_result = 0x45, result = 0;
-
-	struct nvme_lockdown_args args = {
-		.result = &result,
-		.args_size = sizeof(args),
-		.scp = 0x2,
-		.prhbt = !!true,
-		.ifc = 0x1,
-		.ofi = 0x12,
-		.uuidx = 0x34,
-	};
-
+	__u8 prhbt = !!true;
+	__u8 uuidx = 0x34;
+	__u8 ofi = 0x12;
+	__u8 scp = 0x2;
+	__u8 ifc = 0x1;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_lockdown,
-		.cdw10 = args.ofi << 8 | (args.ifc & 0x3) << 5 |
-			 (args.prhbt & 0x1) << 4 | (args.scp & 0xF),
-		.cdw14 = args.uuidx & 0x3F,
+		.cdw10 = ofi << 8 | (ifc & 0x3) << 5 |
+			 (prhbt & 0x1) << 4 | (scp & 0xF),
+		.cdw14 = uuidx & 0x3F,
 		.result = expected_result,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lockdown(test_hdl, &args);
+	nvme_init_lockdown(&cmd, scp, prhbt, ifc, ofi, uuidx);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "wrong result");

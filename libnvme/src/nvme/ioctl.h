@@ -344,6 +344,16 @@ enum nvme_cmd_dword_fields {
 	NVME_CAPACITY_MGMT_CDW11_CAPL_MASK			= 0xffffffff,
 	NVME_CAPACITY_MGMT_CDW12_CAPU_SHIFT			= 0,
 	NVME_CAPACITY_MGMT_CDW12_CAPU_MASK			= 0xffffffff,
+	NVME_LOCKDOWN_CDW10_SCP_SHIFT				= 0,
+	NVME_LOCKDOWN_CDW10_SCP_MASK				= 0xf,
+	NVME_LOCKDOWN_CDW10_PRHBT_SHIFT				= 4,
+	NVME_LOCKDOWN_CDW10_PRHBT_MASK				= 0x1,
+	NVME_LOCKDOWN_CDW10_IFC_SHIFT				= 5,
+	NVME_LOCKDOWN_CDW10_IFC_MASK				= 0x3,
+	NVME_LOCKDOWN_CDW10_OFI_SHIFT				= 8,
+	NVME_LOCKDOWN_CDW10_OFI_MASK				= 0xff,
+	NVME_LOCKDOWN_CDW14_UIDX_SHIFT				= 0,
+	NVME_LOCKDOWN_CDW14_UIDX_MASK				= 0x3f,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4047,15 +4057,40 @@ nvme_init_capacity_mgmt(struct nvme_passthru_cmd *cmd,
 			NVME_CAPACITY_MGMT_CDW12_CAPU_MASK);
 }
 
-/**
- * nvme_lockdown() - Issue lockdown command
- * @hdl:	Transport handle
- * @args:	&struct nvme_lockdown_args argument structure
+ /**
+ * nvme_init_lockdown() - Initialize passthru command for Lockdown
+ * @cmd:	Passthru command to use
+ * @scp:	Scope of the command
+ * @prhbt:	Prohibit or allow the command opcode or Set Features command
+ * @ifc:	Affected interface
+ * @ofi:	Opcode or Feature Identifier
+ * @uidx:	UUID Index if controller supports this id selection method
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Lockdown command.
  */
-int nvme_lockdown(struct nvme_transport_handle *hdl, struct nvme_lockdown_args *args);
+static inline void
+nvme_init_lockdown(struct nvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
+		__u8 ifc, __u8 ofi, __u8 uidx)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_lockdown;
+	cmd->cdw10 = NVME_FIELD_ENCODE(ofi,
+			NVME_LOCKDOWN_CDW10_OFI_SHIFT,
+			NVME_LOCKDOWN_CDW10_OFI_MASK) |
+		      NVME_FIELD_ENCODE(ifc,
+			NVME_LOCKDOWN_CDW10_IFC_SHIFT,
+			NVME_LOCKDOWN_CDW10_IFC_MASK) |
+		      NVME_FIELD_ENCODE(prhbt,
+			NVME_LOCKDOWN_CDW10_PRHBT_SHIFT,
+			NVME_LOCKDOWN_CDW10_PRHBT_MASK) |
+		      NVME_FIELD_ENCODE(scp,
+			NVME_LOCKDOWN_CDW10_SCP_SHIFT,
+			NVME_LOCKDOWN_CDW10_SCP_MASK);
+	cmd->cdw14 = NVME_FIELD_ENCODE(uidx,
+			NVME_LOCKDOWN_CDW14_UIDX_SHIFT,
+			NVME_LOCKDOWN_CDW14_UIDX_MASK);
+}
 
 /**
  * nvme_set_property() - Set controller property
