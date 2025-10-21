@@ -38,31 +38,6 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level);
  */
 void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
 
-/*
- * _args struct definitions. These are used by both the ioctl-based and
- * MI-based interfaces, as the call interface for (admin/io/etc) NVMe commands,
- * passed to the nvme_*() and nvme_mi_*() functions.
- *
- * On MI-based interfaces, the fd and timeout members are unused, and should
- * be set to zero.
- */
-
-/**
- * struct nvme_dev_self_test_args - Arguments for the NVMe Device Self Test command
- * @result:	The command completion result from CQE dword0
- * @args_size:	Size of &struct nvme_dev_self_test_args
- * @nsid:	Namespace ID to test
- * @stc:	Self test code, see &enum nvme_dst_stc
- * @timeout:	Timeout in ms
- */
-struct nvme_dev_self_test_args {
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_dst_stc stc;
-};
-
 /**
  * struct nvme_virtual_mgmt_args - Arguments for the NVMe Virtualization
  *			    resource management command

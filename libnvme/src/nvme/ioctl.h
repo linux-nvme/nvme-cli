@@ -4180,25 +4180,26 @@ nvme_init_sanitize_nvm(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_dev_self_test() - Start or abort a self test
- * @hdl:	Transport handle
- * @args:	&struct nvme_dev_self_test argument structure
+ * nvme_init_dev_self_test() - Initialize passthru command to start or
+ * abort a self test
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to test
+ * @stc:	Self test code, see &enum nvme_dst_stc
  *
- * The Device Self-test command starts a device self-test operation or abort a
- * device self-test operation. A device self-test operation is a diagnostic
- * testing sequence that tests the integrity and functionality of the
- * controller and may include testing of the media associated with namespaces.
- * The controller may return a response to this command immediately while
- * running the self-test in the background.
- *
- * Set the 'nsid' field to 0 to not include namespaces in the test. Set to
- * 0xffffffff to test all namespaces. All other values tests a specific
- * namespace, if present.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Device Self-test command.
  */
-int nvme_dev_self_test(struct nvme_transport_handle *hdl, struct nvme_dev_self_test_args *args);
+static inline void
+nvme_init_dev_self_test(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_dst_stc stc)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_dev_self_test;
+	cmd->nsid = nsid;
+	cmd->cdw10 = NVME_FIELD_ENCODE(stc,
+			NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT,
+			NVME_DEVICE_SELF_TEST_CDW10_STC_MASK);
+}
 
 /**
  * nvme_virtual_mgmt() - Virtualization resource management
