@@ -48,20 +48,6 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
  */
 
 /**
- * struct nvme_get_property_args - Arguments for NVMe Get Property command
- * @value:	Where the property's value will be stored on success
- * @args_size:	Size of &struct nvme_get_property_args
- * @offset:	Property offset from the base to retrieve
- * @timeout:	Timeout in ms
- */
-struct nvme_get_property_args {
-	__u64 *value;
-	int args_size;
-	__u32 timeout;
-	int offset;
-};
-
-/**
  * struct nvme_sanitize_nvm_args - Arguments for the NVMe Sanitize NVM command
  * @result:	The command completion result from CQE dword0
  * @args_size:	Size of &struct nvme_sanitize_nvm_args

@@ -4116,17 +4116,25 @@ nvme_init_set_property(struct nvme_passthru_cmd *cmd, __u32 offset, __u64 value)
 }
 
 /**
- * nvme_get_property() - Get a controller property
- * @hdl:	Transport handle
- * @args:	&struct nvme_get_propert_args argument structure
+ * nvme_init_get_property() - Initialize passthru command to get
+ * a controller property
+ * @cmd:	Passthru command to use
+ * @offset:	Property offset from the base to retrieve
  *
- * This is an NVMe-over-Fabrics specific command, not applicable to PCIe. These
- * properties align to the PCI MMIO controller registers.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Fabrics Get Property command.
+ * This is an NVMe-over-Fabrics specific command.
  */
-int nvme_get_property(struct nvme_transport_handle *hdl, struct nvme_get_property_args *args);
+static inline void
+nvme_init_get_property(struct nvme_passthru_cmd64 *cmd, __u32 offset)
+{
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fabrics;
+	cmd->nsid = nvme_fabrics_type_property_get;
+	cmd->cdw10 = nvme_is_64bit_reg(offset);
+	cmd->cdw11 = (__u32)offset;
+}
 
 /**
  * nvme_sanitize_nvm() - Start a sanitize operation

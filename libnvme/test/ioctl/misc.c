@@ -120,26 +120,20 @@ static void test_ns_mgmt_delete(void)
 static void test_get_property(void)
 {
 	__u64 expected_result, result;
-	struct nvme_get_property_args args = {
-		.value = &result,
-		.args_size = sizeof(args),
-		.offset = NVME_REG_ACQ,
-	};
-
 	arbitrary(&expected_result, sizeof(expected_result));
-
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fabrics,
 		.nsid = nvme_fabrics_type_property_get,
-		.cdw10 = !!true,
+		.cdw10 = true,
 		.cdw11 = NVME_REG_ACQ,
 		.result = expected_result,
 	};
-
+	struct nvme_passthru_cmd64 cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_get_property(test_hdl, &args);
+	nvme_init_get_property(&cmd, NVME_REG_ACQ);
+	err = nvme_submit_admin_passthru64(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == expected_result, "returned wrong result");
