@@ -569,6 +569,22 @@ __u64 sndk_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 			break;
 
 		case SNDK_NVME_SN861_DEV_ID_E1S:
+			capabilities |= (SNDK_DRIVE_CAP_C0_LOG_PAGE |
+				SNDK_DRIVE_CAP_C3_LOG_PAGE |
+				SNDK_DRIVE_CAP_CA_LOG_PAGE |
+				SNDK_DRIVE_CAP_OCP_C4_LOG_PAGE |
+				SNDK_DRIVE_CAP_OCP_C5_LOG_PAGE |
+				SNDK_DRIVE_CAP_INTERNAL_LOG |
+				SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
+				SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+				SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
+				SNDK_DRIVE_CAP_INFO |
+				SNDK_DRIVE_CAP_CLOUD_SSD_VERSION |
+				SNDK_DRIVE_CAP_LOG_PAGE_DIR |
+				SNDK_DRIVE_CAP_DRIVE_STATUS |
+				SNDK_DRIVE_CAP_SET_LATENCY_MONITOR);
+			break;
+
 		case SNDK_NVME_SN861_DEV_ID_U2:
 		case SNDK_NVME_SN861_DEV_ID_E3S:
 			capabilities |= (SNDK_DRIVE_CAP_C0_LOG_PAGE |
@@ -584,7 +600,7 @@ __u64 sndk_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 				SNDK_DRIVE_CAP_CLOUD_SSD_VERSION |
 				SNDK_DRIVE_CAP_LOG_PAGE_DIR |
 				SNDK_DRIVE_CAP_DRIVE_STATUS |
-				SNDK_DRIVE_CAP_RESIZE |
+				SNDK_DRIVE_CAP_RESIZE_SN861 |
 				SNDK_DRIVE_CAP_SET_LATENCY_MONITOR);
 			break;
 
@@ -624,7 +640,8 @@ __u64 sndk_get_enc_drive_capabilities(nvme_root_t r,
 	int ret;
 	uint32_t read_vendor_id;
 	__u64 capabilities = 0;
-	__u32 cust_id, market_name_len;
+	__u32 cust_id, market_name_len,
+		drive_form_factor = 0;
 	char marketing_name[64];
 	void *dev_mng_log = NULL;
 	int uuid_index = 0;
@@ -683,11 +700,19 @@ __u64 sndk_get_enc_drive_capabilities(nvme_root_t r,
 				(void *)&cust_id))
 			fprintf(stderr, "ERROR: SNDK: Get Customer FW ID Failed\n");
 
+		/* Get the marketing name */
 		if (!sndk_nvme_parse_dev_status_log_str(dev_mng_log,
 				SNDK_C2_MARKETING_NAME_ID,
 				(char *)marketing_name,
 				&market_name_len))
 			fprintf(stderr, "ERROR: SNDK: Get Marketing Name Failed\n");
+
+		/* Get the drive form factor */
+		if (!sndk_nvme_parse_dev_status_log_entry(dev_mng_log,
+				SNDK_C2_FORM_FACTOR,
+				(void *)&drive_form_factor))
+			fprintf(stderr, "ERROR: SNDK: Getting Form Factor Failed\n");
+
 
 		/* verify the 0xC3 log page is supported */
 		if (run_wdc_nvme_check_supported_log_page(r, dev,
@@ -712,14 +737,24 @@ __u64 sndk_get_enc_drive_capabilities(nvme_root_t r,
 		if ((cust_id == SNDK_CUSTOMER_ID_0x1004) ||
 			(cust_id == SNDK_CUSTOMER_ID_0x1008) ||
 			(cust_id == SNDK_CUSTOMER_ID_0x1005) ||
-			(cust_id == SNDK_CUSTOMER_ID_0x1304) ||
-			(!strncmp(marketing_name, SNDK_SN861_MARKETING_NAME_1, market_name_len)) ||
-			(!strncmp(marketing_name, SNDK_SN861_MARKETING_NAME_2, market_name_len)))
+			(cust_id == SNDK_CUSTOMER_ID_0x1304))
 			/* Set capabilities for OCP compliant drives */
 			capabilities |= (SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
 					SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
 					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE);
-		else {
+		else if ((!strncmp(marketing_name, SNDK_SN861_MARKETING_NAME_1, market_name_len)) ||
+			(!strncmp(marketing_name, SNDK_SN861_MARKETING_NAME_2, market_name_len))) {
+			/* Set capabilities for OCP compliant drives */
+			capabilities |= (SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
+					SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
+					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE);
+
+			if ((drive_form_factor == SNDK_C2_FORM_FACTOR_SFF_U2) ||
+				(drive_form_factor == SNDK_C2_FORM_FACTOR_EDSFF_E3S))
+				capabilities |= SNDK_DRIVE_CAP_RESIZE_SN861;
+			else
+				capabilities &= ~SNDK_DRIVE_CAP_RESIZE;
+		} else {
 			capabilities |= (SNDK_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
 				SNDK_DRIVE_CAP_CLEAR_PCIE);
 
