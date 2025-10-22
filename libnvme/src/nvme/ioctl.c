@@ -772,28 +772,6 @@ int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args)
 	return nvme_submit_io_passthru(hdl, &cmd, args->result);
 }
 
-int nvme_resv_release(struct nvme_transport_handle *hdl, struct nvme_resv_release_args *args)
-{
-	__le64 payload[1] = { cpu_to_le64(args->crkey) };
-	__u32 cdw10 = (args->rrela & 0x7) |
-		(args->iekey ? 1 << 3 : 0) |
-		(args->rtype << 8);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_cmd_resv_release,
-		.nsid		= args->nsid,
-		.cdw10		= cdw10,
-		.addr		= (__u64)(uintptr_t)(payload),
-		.data_len	= sizeof(payload),
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_io_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_resv_report(struct nvme_transport_handle *hdl, struct nvme_resv_report_args *args)
 {
 	struct nvme_passthru_cmd cmd = {

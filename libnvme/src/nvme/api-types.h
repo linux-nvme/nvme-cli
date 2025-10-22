@@ -144,28 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_resv_release_args - Arguments for the NVMe Reservation Release Command
- * @crkey:	The current reservation key to release
- * @result:	The command completion result from CQE dword0
- * @args_size:	Size of &struct nvme_resv_release_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace identifier
- * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
- * @rrela:	Reservation release action, see &enum nvme_resv_rrela
- * @iekey:	Set to ignore the existing key
- */
-struct nvme_resv_release_args {
-	__u64 crkey;
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_resv_rtype rtype;
-	enum nvme_resv_rrela rrela;
-	bool iekey;
-};
-
-/**
  * struct nvme_resv_report_args - Arguments for the NVMe Reservation Report command
  * @result:	The command completion result from CQE dword0
  * @report:	The user space destination address to store the reservation

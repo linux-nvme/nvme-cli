@@ -370,6 +370,14 @@ enum nvme_cmd_dword_fields {
 	NVME_RESV_REGISTER_CDW10_DISNSRS_MASK			= 0x1,
 	NVME_RESV_REGISTER_CDW10_CPTPL_SHIFT			= 30,
 	NVME_RESV_REGISTER_CDW10_CPTPL_MASK			= 0x3,
+	NVME_RESV_RELEASE_CDW10_RRELA_SHIFT			= 0,
+	NVME_RESV_RELEASE_CDW10_RRELA_MASK			= 0x7,
+	NVME_RESV_RELEASE_CDW10_IEKEY_SHIFT			= 3,
+	NVME_RESV_RELEASE_CDW10_IEKEY_MASK			= 0x1,
+	NVME_RESV_RELEASE_CDW10_DISNSRS_SHIFT			= 4,
+	NVME_RESV_RELEASE_CDW10_DISNSRS_MASK			= 0x1,
+	NVME_RESV_RELEASE_CDW10_RTYPE_SHIFT			= 8,
+	NVME_RESV_RELEASE_CDW10_RTYPE_MASK			= 0xff,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4513,14 +4521,45 @@ nvme_init_resv_register(struct nvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_resv_release() - Send an nvme reservation release
- * @hdl:	Transport handle
- * @args:	&struct nvme_resv_release_args argument structure
+ * nvme_init_resv_release() - Initialize passthru command for
+ * Reservation Release
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @rrela:	Reservation release action, see &enum nvme_resv_rrela
+ * @iekey:	Set to ignore the existing key
+ * @disnsrs:	Disperse Namespace Reservation Support
+ * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
+ * @crkey:	The current reservation key to release
+ * @payload:	Data payload buffer to hold crkey
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Reservation Release command.
  */
-int nvme_resv_release(struct nvme_transport_handle *hdl, struct nvme_resv_release_args *args);
+static inline void
+nvme_init_resv_release(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_resv_rrela rrela, bool iekey, bool disnsrs,
+		enum nvme_resv_rtype rtype, __u64 crkey, __le64 *payload)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	payload[0] = htole64(crkey);
+
+	cmd->opcode = nvme_cmd_resv_release;
+	cmd->nsid = nsid;
+	cmd->data_len = sizeof(__le64);
+	cmd->addr = (__u64)(uintptr_t)payload;
+	cmd->cdw10 = NVME_FIELD_ENCODE(rrela,
+			NVME_RESV_RELEASE_CDW10_RRELA_SHIFT,
+			NVME_RESV_RELEASE_CDW10_RRELA_MASK) |
+		     NVME_FIELD_ENCODE(iekey,
+			NVME_RESV_RELEASE_CDW10_IEKEY_SHIFT,
+			NVME_RESV_RELEASE_CDW10_IEKEY_MASK) |
+		     NVME_FIELD_ENCODE(disnsrs,
+			NVME_RESV_RELEASE_CDW10_DISNSRS_SHIFT,
+			NVME_RESV_RELEASE_CDW10_DISNSRS_MASK) |
+		     NVME_FIELD_ENCODE(rtype,
+			NVME_RESV_RELEASE_CDW10_RTYPE_SHIFT,
+			NVME_RESV_RELEASE_CDW10_RTYPE_MASK);
+}
 
 /**
  * nvme_resv_report() - Send an nvme reservation report

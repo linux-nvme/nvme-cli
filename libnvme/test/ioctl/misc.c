@@ -1166,33 +1166,27 @@ static void test_resv_register(void)
 
 static void test_resv_release(void)
 {
+	enum nvme_resv_rtype rtype = NVME_RESERVATION_RTYPE_WE;
+	enum nvme_resv_rrela rrela = NVME_RESERVATION_RRELA_RELEASE;
+	__le64 expected_payload[1] = { 0xffffffffffffffff };
+	__le64 payload[1];
+	bool iekey = true;
 	__u32 result = 0;
-
-	struct nvme_resv_release_args args = {
-		.crkey = 0xffffffffffffffff,
-		.result = &result,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.rtype = NVME_RESERVATION_RTYPE_WE,
-		.rrela = NVME_RESERVATION_RRELA_RELEASE,
-		.iekey = true,
-	};
-
-	__le64 payload[1] = { 0xffffffffffffffff };
-
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_resv_release,
 		.nsid = TEST_NSID,
-		.cdw10 = (args.rrela & 0x7) | (args.iekey ? 1 << 3 : 0) |
-			 (args.rtype << 8),
-		.data_len = sizeof(payload),
-		.in_data = payload,
+		.cdw10 = (rrela & 0x7) | (iekey ? 1 << 3 : 0) |
+			 (rtype << 8),
+		.data_len = sizeof(expected_payload),
+		.in_data = expected_payload,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_resv_release(test_hdl, &args);
+	nvme_init_resv_release(&cmd, TEST_NSID, rrela, iekey, false, rtype,
+		0xffffffffffffffff, payload);
+	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
