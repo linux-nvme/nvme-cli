@@ -144,32 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_zns_mgmt_recv_args - Arguments for the NVMe ZNS Management Receive command
- * @slba:	Starting logical block address
- * @result:	The command completion result from CQE dword0
- * @data:	Userspace address of the data
- * @args_size:	Size of &struct nvme_zns_mgmt_recv_args
- * @timeout:	timeout in ms
- * @nsid:	Namespace ID
- * @zra:	zone receive action
- * @data_len:	Length of @data
- * @zrasf:	Zone receive action specific field
- * @zras_feat:	Zone receive action specific features
- */
-struct nvme_zns_mgmt_recv_args {
-	__u64 slba;
-	__u32 *result;
-	void *data;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_zns_recv_action zra;
-	__u32 data_len;
-	__u16 zrasf;
-	bool zras_feat;
-};
-
-/**
  * struct nvme_zns_append_args - Arguments for the NVMe ZNS Append command
  * @zslba:	Zone start logical block address
  * @result:	The command completion result from CQE dword0

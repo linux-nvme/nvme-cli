@@ -322,12 +322,12 @@ enum nvme_cmd_dword_fields {
 	NVME_ZNS_MGMT_SEND_SEL_MASK				= 0x1,
 	NVME_ZNS_MGMT_SEND_ZSA_SHIFT				= 0,
 	NVME_ZNS_MGMT_SEND_ZSA_MASK				= 0xff,
+	NVME_ZNS_MGMT_RECV_ZRASPF_SHIFT				= 16,
+	NVME_ZNS_MGMT_RECV_ZRASPF_MASK				= 0x1,
+	NVME_ZNS_MGMT_RECV_ZRAS_SHIFT				= 8,
+	NVME_ZNS_MGMT_RECV_ZRAS_MASK				= 0xff,
 	NVME_ZNS_MGMT_RECV_ZRA_SHIFT				= 0,
 	NVME_ZNS_MGMT_RECV_ZRA_MASK				= 0xff,
-	NVME_ZNS_MGMT_RECV_ZRASF_SHIFT				= 8,
-	NVME_ZNS_MGMT_RECV_ZRASF_MASK				= 0xff,
-	NVME_ZNS_MGMT_RECV_ZRAS_FEAT_SHIFT			= 16,
-	NVME_ZNS_MGMT_RECV_ZRAS_FEAT_MASK			= 0x1,
 	NVME_DIM_TAS_SHIFT					= 0,
 	NVME_DIM_TAS_MASK					= 0xF,
 	NVME_DSM_CDW10_NR_SHIFT					= 0,
@@ -4754,52 +4754,72 @@ nvme_init_zns_mgmt_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_zns_mgmt_recv() - ZNS management receive command
- * @hdl:	Transport handle
- * @args:	&struct nvme_zns_mgmt_recv_args argument structure
+ * nvme_init_zns_mgmt_recv() - Initialize passthru command for
+ * ZNS management receive command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block address
+ * @zra:	zone receive action
+ * @zras:	Zone receive action specific field
+ * @zraspf:	Zone receive action specific features
+ * @data:	Userspace address of the data buffer
+ * @len:	Length of @data
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the ZNS Management
+ * Receive command.
  */
-int nvme_zns_mgmt_recv(struct nvme_transport_handle *hdl, struct nvme_zns_mgmt_recv_args *args);
+static inline void
+nvme_init_zns_mgmt_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 slba, enum nvme_zns_recv_action zra, __u16 zras,
+		bool zraspf, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_zns_cmd_mgmt_recv;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = slba & 0xffffffff;
+	cmd->cdw11 = slba >> 32;
+	cmd->cdw12 = (len >> 2) - 1;
+	cmd->cdw13 = NVME_FIELD_ENCODE(zra,
+			NVME_ZNS_MGMT_RECV_ZRA_SHIFT,
+			NVME_ZNS_MGMT_RECV_ZRA_MASK) |
+		     NVME_FIELD_ENCODE(zras,
+			NVME_ZNS_MGMT_RECV_ZRAS_SHIFT,
+			NVME_ZNS_MGMT_RECV_ZRAS_MASK) |
+		     NVME_FIELD_ENCODE(zraspf,
+			NVME_ZNS_MGMT_RECV_ZRASPF_SHIFT,
+			NVME_ZNS_MGMT_RECV_ZRASPF_MASK);
+}
 
 /**
- * nvme_zns_report_zones() - Return the list of zones
- * @hdl:	Transport handle
+ * nvme_init_zns_report_zones() - Initialize passthru command to return
+ * the list of zones
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
  * @slba:	Starting LBA
  * @opts:	Reporting options
  * @extended:	Extended report
  * @partial:	Partial report requested
- * @data_len:	Length of the data buffer
- * @data:	Userspace address of the report zones data
- * @timeout:	timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @data:	Userspace address of the report zones data buffer
+ * @len:	Length of the data buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the ZNS Management Receive -
+ * Report Zones command.
  */
-static inline int nvme_zns_report_zones(struct nvme_transport_handle *hdl, __u32 nsid, __u64 slba,
-			  enum nvme_zns_report_options opts,
-			  bool extended, bool partial,
-			  __u32 data_len, void *data,
-			  __u32 timeout, __u32 *result)
+static inline void
+nvme_init_zns_report_zones(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 slba, enum nvme_zns_report_options opts,
+		bool extended, bool partial,
+		void *data, __u32 len)
 {
-	struct nvme_zns_mgmt_recv_args args = {
-		.slba = slba,
-		.result = result,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = timeout,
-		.nsid = nsid,
-		.zra = extended ? NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES :
-		NVME_ZNS_ZRA_REPORT_ZONES,
-		.data_len = data_len,
-		.zrasf = (__u16)opts,
-		.zras_feat = partial,
-	};
+	enum nvme_zns_recv_action zra = extended ?
+		NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES : NVME_ZNS_ZRA_REPORT_ZONES;
+	__u16 zras = (__u16)opts;
+	bool zraspf = partial; /* ZRASPF is Partial Report Requested */
 
-	return nvme_zns_mgmt_recv(hdl, &args);
+	nvme_init_zns_mgmt_recv(cmd, nsid, slba, zra, zras, zraspf, data, len);
 }
 
 /**

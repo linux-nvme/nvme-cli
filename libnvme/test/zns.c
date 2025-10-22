@@ -22,10 +22,10 @@
 static void show_zns_properties(nvme_ns_t n)
 {
 	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
+	struct nvme_passthru_cmd cmd;
 	struct nvme_zns_id_ns zns_ns;
 	struct nvme_zns_id_ctrl zns_ctrl;
 	struct nvme_zone_report *zr;
-	struct nvme_passthru_cmd cmd;
 	__u32 result;
 
 	zr = calloc(1, 0x1000);
@@ -52,11 +52,10 @@ static void show_zns_properties(nvme_ns_t n)
 	}
 
 	printf("zasl:%u\n", zns_ctrl.zasl);
-
-	if (nvme_zns_report_zones(nvme_ns_get_transport_handle(n), nvme_ns_get_nsid(n), 0,
+	nvme_init_zns_report_zones(&cmd, nvme_ns_get_nsid(n), 0,
 				  NVME_ZNS_ZRAS_REPORT_ALL, false,
-				  true, 0x1000, (void *)zr,
-				  NVME_DEFAULT_IOCTL_TIMEOUT, &result)) {
+				  true, (void *)zr, 0x1000);
+	if (nvme_submit_io_passthru(hdl, &cmd, &result)) {
 		fprintf(stderr, "failed to report zones, result %x\n",
 			le32_to_cpu(result));
 		free(zr);

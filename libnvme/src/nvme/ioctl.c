@@ -772,33 +772,6 @@ int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args)
 	return nvme_submit_io_passthru(hdl, &cmd, args->result);
 }
 
-int nvme_zns_mgmt_recv(struct nvme_transport_handle *hdl, struct nvme_zns_mgmt_recv_args *args)
-{
-	__u32 cdw10 = args->slba & 0xffffffff;
-	__u32 cdw11 = args->slba >> 32;
-	__u32 cdw12 = (args->data_len >> 2) - 1;
-	__u32 cdw13 = NVME_SET(args->zra, ZNS_MGMT_RECV_ZRA) |
-			NVME_SET(args->zrasf, ZNS_MGMT_RECV_ZRASF) |
-			NVME_SET(args->zras_feat, ZNS_MGMT_RECV_ZRAS_FEAT);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_zns_cmd_mgmt_recv,
-		.nsid		= args->nsid,
-		.cdw10		= cdw10,
-		.cdw11		= cdw11,
-		.cdw12		= cdw12,
-		.cdw13		= cdw13,
-		.addr		= (__u64)(uintptr_t)args->data,
-		.data_len	= args->data_len,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_io_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_zns_append(struct nvme_transport_handle *hdl, struct nvme_zns_append_args *args)
 {
 	__u32 cdw3, cdw10, cdw11, cdw12, cdw14, cdw15;
