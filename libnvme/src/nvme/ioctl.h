@@ -382,6 +382,10 @@ enum nvme_cmd_dword_fields {
 	NVME_RESV_REPORT_CDW11_EDS_MASK				= 0x1,
 	NVME_RESV_REPORT_CDW11_DISNSRS_SHIFT			= 1,
 	NVME_RESV_REPORT_CDW11_DISNSRS_MASK			= 0x1,
+	NVME_IO_MGMT_RECV_CDW10_MO_SHIFT			= 0,
+	NVME_IO_MGMT_RECV_CDW10_MO_MASK				= 0xff,
+	NVME_IO_MGMT_RECV_CDW10_MOS_SHIFT			= 16,
+	NVME_IO_MGMT_RECV_CDW10_MOS_MASK			= 0xffff,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4599,39 +4603,54 @@ nvme_init_resv_report(struct nvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_io_mgmt_recv() - I/O Management Receive command
- * @hdl:	Transport handle
- * @args:	&struct nvme_io_mgmt_recv_args argument structure
+ * nvme_init_io_mgmt_recv() - Initialize passthru command for
+ * I/O Management Receive command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @mo:		Management Operation
+ * @mos:	Management Operation Specific
+ * @data:	Userspace address of the data buffer
+ * @len:	Length of @data
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the I/O Management
+ * Receive command.
  */
-int nvme_io_mgmt_recv(struct nvme_transport_handle *hdl, struct nvme_io_mgmt_recv_args *args);
+static inline void
+nvme_init_io_mgmt_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		__u8 mo, __u16 mos, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_cmd_io_mgmt_recv;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(mo,
+			NVME_IO_MGMT_RECV_CDW10_MO_SHIFT,
+			NVME_IO_MGMT_RECV_CDW10_MO_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_IO_MGMT_RECV_CDW10_MOS_SHIFT,
+			NVME_IO_MGMT_RECV_CDW10_MOS_MASK);
+	cmd->cdw11 = (len >> 2) - 1;
+}
 
 /**
- * nvme_fdp_reclaim_unit_handle_status() - Get reclaim unit handle status
- * @hdl:	Transport handle
+ * nvme_init_fdp_reclaim_unit_handle_status() - Initialize passthru command
+ * to get reclaim unit handle status
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace identifier
- * @data_len:	Length of response buffer
  * @data:	Response buffer
+ * @len:	Length of response buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the I/O Management Receive -
+ * Reclaim Unit Handle Status command.
  */
-static inline int nvme_fdp_reclaim_unit_handle_status(struct nvme_transport_handle *hdl, __u32 nsid,
-			__u32 data_len, void *data)
+static inline void
+nvme_init_fdp_reclaim_unit_handle_status(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, void *data, __u32 len)
 {
-	struct nvme_io_mgmt_recv_args args = {
-		.data = data,
-		.args_size = sizeof(args),
-		.nsid = nsid,
-		.data_len = data_len,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.mos = 0,
-		.mo = NVME_IO_MGMT_RECV_RUH_STATUS,
-	};
-
-	return nvme_io_mgmt_recv(hdl, &args);
+	nvme_init_io_mgmt_recv(cmd, nsid, NVME_IO_MGMT_RECV_RUH_STATUS, 0,
+		data, len);
 }
 
 /**

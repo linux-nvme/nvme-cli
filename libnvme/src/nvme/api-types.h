@@ -144,26 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_io_mgmt_recv_args - Arguments for the NVMe I/O Management Receive command
- * @data:	Userspace address of the data
- * @args_size:	Size of &struct nvme_io_mgmt_recv_args
- * @nsid:	Namespace identifier
- * @data_len:	Length of @data
- * @timeout:	Timeout in ms
- * @mos:		Management Operation Specific
- * @mo:		Management Operation
- */
-struct nvme_io_mgmt_recv_args {
-	void *data;
-	int args_size;
-	__u32 nsid;
-	__u32 data_len;
-	__u32 timeout;
-	__u16 mos;
-	__u8 mo;
-};
-
-/**
  * struct nvme_io_mgmt_send_args - Arguments for the NVMe I/O Management Send command
  * @data:	Userspace address of the data
  * @args_size:	Size of &struct nvme_io_mgmt_send_args
