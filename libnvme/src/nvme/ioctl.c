@@ -772,31 +772,6 @@ int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args)
 	return nvme_submit_io_passthru(hdl, &cmd, args->result);
 }
 
-int nvme_resv_acquire(struct nvme_transport_handle *hdl, struct nvme_resv_acquire_args *args)
-{
-	__le64 payload[2] = {
-		cpu_to_le64(args->crkey),
-		cpu_to_le64(args->nrkey)
-	};
-	__u32 cdw10 = (args->racqa & 0x7) |
-		(args->iekey ? 1 << 3 : 0) |
-		(args->rtype << 8);
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_cmd_resv_acquire,
-		.nsid		= args->nsid,
-		.cdw10		= cdw10,
-		.data_len	= sizeof(payload),
-		.addr		= (__u64)(uintptr_t)(payload),
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_io_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_resv_register(struct nvme_transport_handle *hdl, struct nvme_resv_register_args *args)
 {
 	__le64 payload[2] = {

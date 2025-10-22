@@ -354,6 +354,14 @@ enum nvme_cmd_dword_fields {
 	NVME_LOCKDOWN_CDW10_OFI_MASK				= 0xff,
 	NVME_LOCKDOWN_CDW14_UIDX_SHIFT				= 0,
 	NVME_LOCKDOWN_CDW14_UIDX_MASK				= 0x3f,
+	NVME_RESV_ACQUIRE_CDW10_RACQA_SHIFT			= 0,
+	NVME_RESV_ACQUIRE_CDW10_RACQA_MASK			= 0x7,
+	NVME_RESV_ACQUIRE_CDW10_IEKEY_SHIFT			= 3,
+	NVME_RESV_ACQUIRE_CDW10_IEKEY_MASK			= 0x1,
+	NVME_RESV_ACQUIRE_CDW10_DISNSRS_SHIFT			= 4,
+	NVME_RESV_ACQUIRE_CDW10_DISNSRS_MASK			= 0x1,
+	NVME_RESV_ACQUIRE_CDW10_RTYPE_SHIFT			= 8,
+	NVME_RESV_ACQUIRE_CDW10_RTYPE_MASK			= 0xff,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4405,19 +4413,51 @@ nvme_init_dsm(struct nvme_passthru_cmd *cmd,
  */
 int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args);
 
+
 /**
- * nvme_resv_acquire() - Send an nvme reservation acquire
- * @hdl:	Transport handle
- * @args:	&struct nvme_resv_acquire argument structure
+ * nvme_init_resv_acquire() - Initialize passthru command for
+ * Reservation Acquire
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @racqa:	The action that is performed by the command,
+ *		see &enum nvme_resv_racqa
+ * @iekey:	Set to ignore the existing key
+ * @disnsrs:	Disperse Namespace Reservation Support
+ * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
+ * @crkey:	The current reservation key associated with the host
+ * @prkey:	Preempt Reservation Key
+ * @payload:	Data payload buffer to hold crkey and prkey
  *
- * The Reservation Acquire command acquires a reservation on a namespace,
- * preempt a reservation held on a namespace, and abort a reservation held on a
- * namespace.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Reservation Acquire command.
  */
-int nvme_resv_acquire(struct nvme_transport_handle *hdl, struct nvme_resv_acquire_args *args);
+static inline void
+nvme_init_resv_acquire(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_resv_racqa racqa, bool iekey, bool disnsrs,
+		enum nvme_resv_rtype rtype, __u64 crkey, __u64 prkey,
+		__le64 *payload)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	payload[0] = htole64(crkey);
+	payload[1] = htole64(prkey);
+
+	cmd->opcode = nvme_cmd_resv_acquire;
+	cmd->nsid = nsid;
+	cmd->data_len = 2 * sizeof(__le64);
+	cmd->addr = (__u64)(uintptr_t)payload;
+	cmd->cdw10 = NVME_FIELD_ENCODE(racqa,
+			NVME_RESV_ACQUIRE_CDW10_RACQA_SHIFT,
+			NVME_RESV_ACQUIRE_CDW10_RACQA_MASK) |
+		     NVME_FIELD_ENCODE(iekey,
+			NVME_RESV_ACQUIRE_CDW10_IEKEY_SHIFT,
+			NVME_RESV_ACQUIRE_CDW10_IEKEY_MASK) |
+		     NVME_FIELD_ENCODE(disnsrs,
+			NVME_RESV_ACQUIRE_CDW10_DISNSRS_SHIFT,
+			NVME_RESV_ACQUIRE_CDW10_DISNSRS_MASK) |
+		     NVME_FIELD_ENCODE(rtype,
+			NVME_RESV_ACQUIRE_CDW10_RTYPE_SHIFT,
+			NVME_RESV_ACQUIRE_CDW10_RTYPE_MASK);
+}
 
 /**
  * nvme_resv_register() - Send an nvme reservation register

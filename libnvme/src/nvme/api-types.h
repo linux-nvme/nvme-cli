@@ -144,31 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_resv_acquire_args - Arguments for the NVMe Reservation Acquire Command
- * @nrkey:	The reservation key to be unregistered from the namespace if
- *		the action is preempt
- * @iekey:	Set to ignore the existing key
- * @result:	The command completion result from CQE dword0
- * @args_size:	Size of &struct nvme_resv_acquire_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace identifier
- * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
- * @racqa:	The action that is performed by the command, see &enum nvme_resv_racqa
- * @crkey:	The current reservation key associated with the host
- */
-struct nvme_resv_acquire_args {
-	__u64 crkey;
-	__u64 nrkey;
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_resv_rtype rtype;
-	enum nvme_resv_racqa racqa;
-	bool iekey;
-};
-
-/**
  * struct nvme_resv_register_args - Arguments for the NVMe Reservation Register command
  * @crkey:	The current reservation key associated with the host
  * @nrkey:	The new reservation key to be register if action is register or
