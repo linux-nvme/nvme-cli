@@ -1596,17 +1596,12 @@ static int nvmf_dim(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 {
 	struct nvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
 	_cleanup_free_ struct nvmf_dim_data *dim = NULL;
+	struct nvme_transport_handle *hdl = nvme_ctrl_get_transport_handle(c);
+	struct nvme_passthru_cmd cmd;
 	struct nvmf_ext_die  *die;
 	__u32 tdl;
 	__u32 tel;
 	int ret;
-
-	struct nvme_dim_args args = {
-		.args_size = sizeof(args),
-		.result = result,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.tas = tas
-	};
 
 	if (!c->s) {
 		nvme_msg(ctx, LOG_ERR,
@@ -1673,9 +1668,8 @@ static int nvmf_dim(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 	die = &dim->die->extended;
 	nvmf_fill_die(die, c->s->h, tel, trtype, adrfam, reg_addr, tsas);
 
-	args.data_len = tdl;
-	args.data = dim;
-	return nvme_dim_send(nvme_ctrl_get_transport_handle(c), &args);
+	nvme_init_dim_send(&cmd, tas, dim, tdl);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 /**

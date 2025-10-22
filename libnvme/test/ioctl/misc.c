@@ -1321,29 +1321,24 @@ static void test_fdp_reclaim_unit_handle_update(void)
 
 static void test_dim_send(void)
 {
-	__u32 result = 0;
 	__u8 expected_data[8], data[8] = {};
-	struct nvme_dim_args args = {
-		.result = 0,
-		.data = &data,
-		.args_size = sizeof(args),
-		.data_len = sizeof(data),
-		.tas = 0xf,
-	};
-
+	__u32 data_len = sizeof(data);
+	__u32 result = 0;
+	__u8 tas = 0xf;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_discovery_info_mgmt,
-		.cdw10 = args.tas,
-		.data_len = args.data_len,
+		.cdw10 = tas,
+		.data_len =data_len,
 		.in_data = &expected_data,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_dim_send(test_hdl, &args);
+	nvme_init_dim_send(&cmd, tas, data, data_len);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

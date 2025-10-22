@@ -329,7 +329,7 @@ enum nvme_cmd_dword_fields {
 	NVME_ZNS_MGMT_RECV_ZRA_SHIFT				= 0,
 	NVME_ZNS_MGMT_RECV_ZRA_MASK				= 0xff,
 	NVME_DIM_TAS_SHIFT					= 0,
-	NVME_DIM_TAS_MASK					= 0xF,
+	NVME_DIM_TAS_MASK					= 0xf,
 	NVME_DSM_CDW10_NR_SHIFT					= 0,
 	NVME_DSM_CDW10_NR_MASK					= 0xff,
 	NVME_DSM_CDW11_IDR_SHIFT				= 0,
@@ -5037,14 +5037,30 @@ nvme_init_zns_append(struct nvme_passthru_cmd64 *cmd, __u32 nsid,
 }
 
 /**
- * nvme_dim_send - Send a Discovery Information Management (DIM) command
- * @hdl:	Transport handle
- * @args:	&struct nvme_dim_args argument structure
+ * nvme_init_dim_send() - Initialize passthru command for
+ * Discovery Information Management (DIM) Send
+ * @cmd:	Passthru command to use
+ * @tas:	Task field of the Command Dword 10 (cdw10)
+ * @data:	Pointer to the DIM data buffer
+ * @len:	Length of @data
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Discovery Information
+ * Management Send command.
  */
-int nvme_dim_send(struct nvme_transport_handle *hdl, struct nvme_dim_args *args);
+static inline void
+nvme_init_dim_send(struct nvme_passthru_cmd *cmd,
+		__u8 tas, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_discovery_info_mgmt;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(tas,
+			NVME_DIM_TAS_SHIFT,
+			NVME_DIM_TAS_MASK);
+
+}
 
 /**
  * nvme_lm_cdq() - Controller Data Queue - Controller Data Queue command

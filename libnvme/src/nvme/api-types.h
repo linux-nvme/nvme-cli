@@ -144,24 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_dim_args - Arguments for the Discovery Information Management (DIM) command
- * @result:	Set on completion to the command's CQE DWORD 0 controller response.
- * @data:	Pointer to the DIM data
- * @args_size:	Length of the structure
- * @timeout:	Timeout in ms
- * @data_len:	Length of @data
- * @tas:	Task field of the Command Dword 10 (cdw10)
- */
-struct nvme_dim_args {
-	__u32	*result;
-	void	*data;
-	int	args_size;
-	__u32	timeout;
-	__u32	data_len;
-	__u8	tas;
-};
-
-/**
  * struct nvme_lm_cdq_args - Arguments for Controller Data Queue (CDQ) command
  * @result:	Set on completion to the command's CQE DWORD 0 controller response
  * @data:	Pointer to data

@@ -772,25 +772,6 @@ int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args)
 	return nvme_submit_io_passthru(hdl, &cmd, args->result);
 }
 
-int nvme_dim_send(struct nvme_transport_handle *hdl, struct nvme_dim_args *args)
-{
-	__u32 cdw10 = NVME_SET(args->tas, DIM_TAS);
-
-	struct nvme_passthru_cmd  cmd = {
-		.opcode     = nvme_admin_discovery_info_mgmt,
-		.cdw10      = cdw10,
-		.addr       = (__u64)(uintptr_t)args->data,
-		.data_len   = args->data_len,
-		.timeout_ms = args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, args->result);
-}
-
-
 int nvme_lm_cdq(struct nvme_transport_handle *hdl, struct nvme_lm_cdq_args *args)
 {
 	__u32 cdw10 = NVME_SET(args->sel, LM_CDQ_SEL) |
