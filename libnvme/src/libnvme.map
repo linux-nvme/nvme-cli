@@ -138,7 +138,6 @@ LIBNVME_2_0 {
 		nvme_io_passthru;
 		nvme_ipaddrs_eq;
 		nvme_lm_get_features_ctrl_data_queue;
-		nvme_lm_migration_recv;
 		nvme_lm_set_features_ctrl_data_queue;
 		nvme_lookup_ctrl;
 		nvme_lookup_host;
