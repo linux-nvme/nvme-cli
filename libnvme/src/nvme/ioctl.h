@@ -5138,14 +5138,32 @@ nvme_init_lm_cdq_delete(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_lm_track_send() - Track Send command
- * @hdl:	Transport handle
- * @args:	&struct nvme_lm_track_send_args argument structure
+ * nvme_init_lm_track_send() - Initialize passthru command for
+ * Track Send command
+ * @cmd:	Passthru command to use
+ * @sel:	Select (SEL): This field specifies the type of
+ *		management operation to perform
+ * @mos:	Management Operation Specific (MOS): This field
+ *		is specific to the SEL type
+ * @cdqid:	Controller Data Queue ID (CDQID)
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Track Send command.
  */
-int nvme_lm_track_send(struct nvme_transport_handle *hdl, struct nvme_lm_track_send_args *args);
+static inline void
+nvme_init_lm_track_send(struct nvme_passthru_cmd *cmd,
+		__u8 sel, __u16 mos, __u16 cdqid)
+{
+
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_admin_track_send;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sel,
+			NVME_LM_TRACK_SEND_SEL_SHIFT,
+			NVME_LM_TRACK_SEND_SEL_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_LM_TRACK_SEND_MOS_SHIFT,
+			NVME_LM_TRACK_SEND_MOS_MASK);
+	cmd->cdw11 = cdqid;
+}
 
 /**
  * nvme_lm_migration_send() - Migration Send command

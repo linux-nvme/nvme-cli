@@ -1377,25 +1377,21 @@ static void test_lm_cdq_delete(void)
 
 static void test_lm_track_send(void)
 {
+	__u8 sel = NVME_LM_SEL_DELETE_CDQ;
+	__u16 cdqid = 0x3;
 	__u32 result = 0;
-	struct nvme_lm_track_send_args args = {
-		.result = 0,
-		.args_size = sizeof(args),
-		.mos = 0x1,
-		.cdqid = 0x3,
-		.sel = NVME_LM_SEL_DELETE_CDQ,
-	};
-
+	__u16 mos = 0x1;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_track_send,
-		.cdw10 = args.sel | (args.mos << 16),
-		.cdw11 = args.cdqid,
+		.cdw10 = sel | (mos << 16),
+		.cdw11 = cdqid,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_track_send(test_hdl, &args);
+	nvme_init_lm_track_send(&cmd, sel, mos, cdqid);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

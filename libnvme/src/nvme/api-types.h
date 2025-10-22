@@ -144,24 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_lm_track_send_args - Arguments for the Track Send command
- * @result:	Set on completion to the command's CQE DWORD 0 controller response
- * @args_size:	Length of structure
- * @timeout:	Timeout in ms
- * @mos:	Management Operation Specific (MOS): This field is specific to the SEL type
- * @cdqid:	Controller Data Queue ID (CDQID)
- * @sel:	Select (SEL): This field specifies the type of management operation to perform
- */
-struct nvme_lm_track_send_args {
-	__u32	*result;
-	int	args_size;
-	__u32	timeout;
-	__u16	mos;
-	__u16	cdqid;
-	__u8	sel;
-};
-
-/**
  * struct nvme_lm_migration_send_args - Arguments for the Migration Send command
  * @offset:	Offset: This field specifies the offset, in bytes, within the data available to be
  *		returned and specifies the starting point for that data for what is actually
