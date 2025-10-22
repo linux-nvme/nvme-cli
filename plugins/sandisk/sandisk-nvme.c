@@ -552,9 +552,7 @@ static int sndk_drive_resize(int argc, char **argv,
 	capabilities = sndk_get_drive_capabilities(r, dev);
 	ret = sndk_get_pci_ids(r, dev, &device_id, &vendor_id);
 
-	if (((capabilities & SNDK_DRIVE_CAP_RESIZE) == SNDK_DRIVE_CAP_RESIZE) &&
-		((device_id == SNDK_NVME_SN861_DEV_ID_U2) ||
-		 (device_id == SNDK_NVME_SN861_DEV_ID_E3S))) {
+	if ((capabilities & SNDK_DRIVE_CAP_RESIZE_SN861) == SNDK_DRIVE_CAP_RESIZE_SN861) {
 		ret = sndk_do_sn861_drive_resize(dev, cfg.size, &result);
 
 		if (!ret) {
@@ -1054,7 +1052,7 @@ static int sndk_capabilities(int argc, char **argv,
 	printf("clear-assert-dump             : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_CLEAR_ASSERT ? "Supported" : "Not Supported");
 	printf("drive-resize                  : %s\n",
-	       capabilities & SNDK_DRIVE_CAP_RESIZE ? "Supported" : "Not Supported");
+	       capabilities & SNDK_DRIVE_CAP_RESIZE_MASK ? "Supported" : "Not Supported");
 	printf("vs-fw-activate-history        : %s\n",
 	       capabilities & SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_MASK ? "Supported" :
 	       "Not Supported");
