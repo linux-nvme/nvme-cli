@@ -17,39 +17,42 @@ static struct nvme_transport_handle *test_hdl;
 static void test_zns_append(void)
 {
 	__u8 expected_data[8], data[8] = {};
+	__u64 zslba = TEST_SLBA;
+	__u16 control = 0xcd;
+	__u16 cev = 0;
+	__u16 dspec = 0;
+	__u16 lbatm = 0x98;
+	__u16 lbat = 0xef;
+	__u16 nlb = 0xab;
 	__u64 result = 0;
-	struct nvme_zns_append_args args = {
-		.zslba = TEST_SLBA,
-		.result = &result,
-		.data = &data,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.data_len = sizeof(data),
-		.nlb = 0xab,
-		.control = 0xcd,
-		.lbat = 0xef,
-		.lbatm = 0x98,
-		.ilbrt_u64 = 0x76,
-	};
-
+	bool elbas = true;
+	__u8 sts = 48;
+	__u8 pif = NVME_NVM_PIF_32B_GUARD;
+	__u64 storage_tag = 0x12;
+	__u64 reftag = 0x1234;
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_append,
 		.nsid = TEST_NSID,
-		.cdw3 = (args.ilbrt_u64 >> 32) & 0xffffffff,
-		.cdw10 = args.zslba & 0xffffffff,
-		.cdw11 = args.zslba >> 32,
-		.cdw12 = args.nlb | (args.control << 16),
-		.cdw14 = args.ilbrt_u64 & 0xffffffff,
-		.cdw15 = args.lbat | (args.lbatm << 16),
+		.cdw3 = storage_tag,
+		.cdw10 = zslba & 0xffffffff,
+		.cdw11 = zslba >> 32,
+		.cdw12 = nlb | (control << 16),
+		.cdw14 = reftag,
+		.cdw15 = lbat | (lbatm << 16),
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
 	};
-
+	struct nvme_passthru_cmd64 cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_zns_append(test_hdl, &args);
+	nvme_init_zns_append(&cmd, TEST_NSID, zslba, nlb, control, cev, dspec,
+		data, sizeof(data), NULL, 0);
+	if (elbas)
+		nvme_init_var_size_tags(&cmd, pif, sts, reftag, storage_tag);
+	nvme_init_app_tag(&cmd, lbat, lbatm);
+	err = nvme_submit_io_passthru64(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "wrong result");

@@ -144,46 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_zns_append_args - Arguments for the NVMe ZNS Append command
- * @zslba:	Zone start logical block address
- * @result:	The command completion result from CQE dword0
- * @data:	Userspace address of the data
- * @metadata:	Userspace address of the metadata
- * @args_size:	Size of &struct nvme_zns_append_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace ID
- * @ilbrt:	Initial logical block reference tag
- * @data_len:	Length of @data
- * @metadata_len: Length of @metadata
- * @nlb:	Number of logical blocks
- * @control:
- * @lbat:	Logical block application tag
- * @lbatm:	Logical block application tag mask
- * @rsvd1:	Reserved
- * @ilbrt_u64:	Initial logical block reference tag - 8 byte
- *              version required for enhanced protection info
- *
- */
-struct nvme_zns_append_args {
-	__u64 zslba;
-	__u64 *result;
-	void *data;
-	void *metadata;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	__u32 ilbrt;
-	__u32 data_len;
-	__u32 metadata_len;
-	__u16 nlb;
-	__u16 control;
-	__u16 lbat;
-	__u16 lbatm;
-	__u8  rsvd1[4];
-	__u64 ilbrt_u64;
-};
-
-/**
  * struct nvme_dim_args - Arguments for the Discovery Information Management (DIM) command
  * @result:	Set on completion to the command's CQE DWORD 0 controller response.
  * @data:	Pointer to the DIM data

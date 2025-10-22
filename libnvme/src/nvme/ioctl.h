@@ -392,6 +392,53 @@ enum nvme_cmd_dword_fields {
 	NVME_IO_MGMT_SEND_CDW10_MO_MASK				= 0xff,
 	NVME_IO_MGMT_SEND_CDW10_MOS_SHIFT			= 16,
 	NVME_IO_MGMT_SEND_CDW10_MOS_MASK			= 0xffff,
+	NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT			= 0,
+	NVME_IOCS_COMMON_CDW2_ELBTU_MASK			= 0xffff,
+	NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT			= 0,
+	NVME_IOCS_COMMON_CDW3_ELBTU_MASK			= 0xffffffff,
+	NVME_IOCS_COMMON_CDW10_SLBAL_SHIFT			= 0,
+	NVME_IOCS_COMMON_CDW10_SLBAL_MASK			= 0xffffffff,
+	NVME_IOCS_COMMON_CDW11_SLBAU_SHIFT			= 0,
+	NVME_IOCS_COMMON_CDW11_SLBAU_MASK			= 0xffffffff,
+	NVME_IOCS_COMMON_CDW12_NLB_SHIFT			= 0,
+	NVME_IOCS_COMMON_CDW12_NLB_MASK				= 0xffff,
+	NVME_IOCS_COMMON_CDW12_CETYPE_SHIFT			= 16,
+	NVME_IOCS_COMMON_CDW12_CETYPE_MASK			= 0xf,
+	NVME_IOCS_COMMON_CDW12_DTYPE_SHIFT			= 20,
+	NVME_IOCS_COMMON_CDW12_DTYPE_MASK			= 0xf,
+	NVME_IOCS_COMMON_CDW12_STC_SHIFT			= 24,
+	NVME_IOCS_COMMON_CDW12_STC_MASK				= 0x1,
+	NVME_IOCS_COMMON_CDW12_DEAC_SHIFT			= 25,
+	NVME_IOCS_COMMON_CDW12_DEAC_MASK			= 0x1,
+	NVME_IOCS_COMMON_CDW12_PIREMAP_SHIFT			= 25,
+	NVME_IOCS_COMMON_CDW12_PIREMAP_MASK			= 0x1,
+	NVME_IOCS_COMMON_CDW12_PRINFO_SHIFT			= 26,
+	NVME_IOCS_COMMON_CDW12_PRINFO_MASK			= 0xf,
+	NVME_IOCS_COMMON_CDW12_FUA_SHIFT			= 30,
+	NVME_IOCS_COMMON_CDW12_FUA_MASK				= 0x1,
+	NVME_IOCS_COMMON_CDW12_LR_SHIFT				= 31,
+	NVME_IOCS_COMMON_CDW12_LR_MASK				= 0x1,
+	NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT			=
+		NVME_IOCS_COMMON_CDW12_CETYPE_SHIFT,
+	NVME_IOCS_COMMON_CDW12_CONTROL_MASK			=
+		(NVME_VAL(IOCS_COMMON_CDW12_CETYPE) |
+		 NVME_VAL(IOCS_COMMON_CDW12_DTYPE) |
+		 NVME_VAL(IOCS_COMMON_CDW12_STC) |
+		 NVME_VAL(IOCS_COMMON_CDW12_DEAC) |
+		 NVME_VAL(IOCS_COMMON_CDW12_PRINFO) |
+		 NVME_VAL(IOCS_COMMON_CDW12_FUA) |
+		 NVME_VAL(IOCS_COMMON_CDW12_LR)) >>
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+	NVME_IOCS_COMMON_CDW13_CEV_SHIFT			= 0,
+	NVME_IOCS_COMMON_CDW13_CEV_MASK				= 0xffff,
+	NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT			= 16,
+	NVME_IOCS_COMMON_CDW13_DSPEC_MASK			= 0xffff,
+	NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT			= 0,
+	NVME_IOCS_COMMON_CDW14_ELBTL_MASK			= 0xffffffff,
+	NVME_IOCS_COMMON_CDW15_ELBAT_SHIFT			= 0,
+	NVME_IOCS_COMMON_CDW15_ELBAT_MASK			= 0xffff,
+	NVME_IOCS_COMMON_CDW15_ELBATM_SHIFT			= 16,
+	NVME_IOCS_COMMON_CDW15_ELBATM_MASK			= 0xffff,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4294,6 +4341,123 @@ static inline int nvme_flush(struct nvme_transport_handle *hdl, __u32 nsid)
 }
 
 /**
+ * nvme_init_var_size_tags() - Initialize Command Dword fields
+ * for Extended LBA based on Variable Sized Tags
+ * @cmd:	Passthru command to use
+ * @pif:	Protection information format, determines tag placement
+ * @sts:	Storage tag size in bits
+ * @reftag:	Expected Initial Logical Block Reference Tag (EILBRT)
+ * @storage_tag: Expected Logical Block Storage Tag (ELBST)
+ *
+ * Initializes the passthru command buffer fields cdw2, cdw3, and cdw14
+ * for commands supporting Extended LBA. This logic is usually called from
+ * the command-specific init function (like nvme_init_zns_append).
+ */
+static inline int
+nvme_init_var_size_tags(struct nvme_passthru_cmd64 *cmd,
+		__u8 pif, __u8 sts, __u64 reftag, __u64 storage_tag)
+{
+	__u32 cdw2 = 0, cdw3 = 0, cdw14 = 0;
+
+	/*
+	 * Ignore warning about array subscript is out of bounds,
+	 * which is not correct
+	 */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
+	switch (pif) {
+	case NVME_NVM_PIF_16B_GUARD:
+		cdw14 = NVME_FIELD_ENCODE(reftag,
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		cdw14 |= NVME_FIELD_ENCODE(storage_tag << (32 - sts),
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		break;
+	case NVME_NVM_PIF_32B_GUARD:
+		cdw14 = NVME_FIELD_ENCODE(reftag,
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		cdw3 = NVME_FIELD_ENCODE(reftag >> 32,
+				NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+				NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		cdw14 |= NVME_FIELD_ENCODE((storage_tag << (80 - sts)) & 0xffff0000,
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		if (sts >= 48)
+			cdw3 |= NVME_FIELD_ENCODE(storage_tag >> (sts - 48),
+		  			NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		else
+			cdw3 |= NVME_FIELD_ENCODE(storage_tag << (48 - sts),
+					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		cdw2 = NVME_FIELD_ENCODE(storage_tag >> (sts - 16),
+			NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT,
+			NVME_IOCS_COMMON_CDW2_ELBTU_MASK);
+		break;
+	case NVME_NVM_PIF_64B_GUARD:
+		cdw14 = NVME_FIELD_ENCODE(reftag,
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		cdw3 = NVME_FIELD_ENCODE((reftag >> 32) & 0xffff,
+				NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+				NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		cdw14 |= NVME_FIELD_ENCODE(storage_tag << (48 - sts),
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		if (sts >= 16)
+			cdw3 |= NVME_FIELD_ENCODE((storage_tag >> (sts - 16)) & 0xffff,
+					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		else
+			cdw3 |= NVME_FIELD_ENCODE((storage_tag << (16 - sts)) & 0xffff,
+					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	cmd->cdw2 = cdw2;
+	cmd->cdw3 = cdw3;
+	cmd->cdw14 = cdw14;
+
+	return 0;
+
+#pragma GCC diagnostic pop
+}
+
+/**
+ * nvme_init_app_tag() - Initialize Command Dword fields for
+ * Logical Block Application Tag/Mask
+ * @cmd:	Passthru command to use
+ * @lbat:	Logical block application tag
+ * @lbatm:	Logical block application tag mask
+ */
+static inline void
+nvme_init_app_tag(struct nvme_passthru_cmd64 *cmd,
+	__u16 lbat, __u16 lbatm)
+{
+	/*
+	 * Ignore warning about array subscript is out of bounds,
+	 * which is not correct
+	 */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
+	cmd->cdw15 = NVME_FIELD_ENCODE(lbat,
+			NVME_IOCS_COMMON_CDW15_ELBAT_SHIFT,
+			NVME_IOCS_COMMON_CDW15_ELBAT_MASK) |
+		     NVME_FIELD_ENCODE(lbatm,
+			NVME_IOCS_COMMON_CDW15_ELBATM_SHIFT,
+			NVME_IOCS_COMMON_CDW15_ELBATM_MASK);
+
+#pragma GCC diagnostic pop
+}
+
+/**
  * nvme_io() - Submit an nvme user I/O command
  * @hdl:	Transport handle
  * @args:	&struct nvme_io_args argument structure
@@ -4823,14 +4987,54 @@ nvme_init_zns_report_zones(struct nvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_zns_append() - Append data to a zone
- * @hdl:	Transport handle
- * @args:	&struct nvme_zns_append_args argument structure
+ * nvme_init_zns_append() - Initialize passthru command to append data to a zone
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @zslba:	Zone start logical block address
+ * @nlb:	Number of logical blocks
+ * @control:	Upper 16 bits of cdw12
+ * @cev:	Command Extension Value
+ * @dspec:	Directive Specific
+ * @data:	Userspace address of the data buffer
+ * @data_len:	Length of @data
+ * @metadata:	Userspace address of the metadata buffer
+ * @metadata_len: Length of @metadata
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the ZNS Append command.
  */
-int nvme_zns_append(struct nvme_transport_handle *hdl, struct nvme_zns_append_args *args);
+static inline void
+nvme_init_zns_append(struct nvme_passthru_cmd64 *cmd, __u32 nsid,
+		__u64 zslba, __u16 nlb, __u16 control, __u16 cev, __u16 dspec,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_zns_cmd_append;
+	cmd->nsid = nsid;
+	cmd->metadata = (__u64)(uintptr_t)metadata;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->metadata_len = metadata_len;
+	cmd->data_len = data_len;
+	cmd->cdw10 = NVME_FIELD_ENCODE(zslba,
+			NVME_IOCS_COMMON_CDW10_SLBAL_SHIFT,
+			NVME_IOCS_COMMON_CDW10_SLBAL_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(zslba >> 32,
+			NVME_IOCS_COMMON_CDW11_SLBAU_SHIFT,
+			NVME_IOCS_COMMON_CDW11_SLBAU_MASK);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		     NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
+			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSPEC_MASK);
+	if (control & NVME_IOCS_COMMON_CDW12_CETYPE_MASK)
+		cmd->cdw13 |= NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK);
+}
 
 /**
  * nvme_dim_send - Send a Discovery Information Management (DIM) command
