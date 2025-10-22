@@ -771,17 +771,3 @@ int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args)
 
 	return nvme_submit_io_passthru(hdl, &cmd, args->result);
 }
-
-int nvme_lm_get_features_ctrl_data_queue(struct nvme_transport_handle *hdl, __u16 cdqid,
-					 struct nvme_lm_ctrl_data_queue_fid_data *data,
-					 __u32 *result)
-{
-	struct nvme_passthru_cmd cmd;
-
-	nvme_init_get_features(&cmd, NVME_FEAT_FID_CTRL_DATA_QUEUE, 0);
-	cmd.cdw11 = cdqid;
-	cmd.data_len = sizeof(*data);
-	cmd.addr = (__u64)(uintptr_t)data;
-
-	return nvme_submit_admin_passthru(hdl, &cmd, result);
-}

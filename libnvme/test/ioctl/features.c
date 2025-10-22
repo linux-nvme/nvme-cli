@@ -1594,19 +1594,21 @@ static void test_lm_get_features_ctrl_data_queue(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_features,
 		.nsid = NVME_NSID_NONE,
-		.cdw10 = NVME_FEAT_FID_CTRL_DATA_QUEUE,
+		.cdw10 = TEST_SEL << 8 | NVME_FEAT_FID_CTRL_DATA_QUEUE,
 		.cdw11 = TEST_CDQID,
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
 		.result = TEST_RESULT,
 	};
+	struct nvme_passthru_cmd cmd;
 	uint32_t result = 0;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_get_features_ctrl_data_queue(test_hdl, TEST_CDQID, &data,
-						   &result);
+	nvme_init_lm_get_features_ctrl_data_queue(&cmd, TEST_SEL,
+		TEST_CDQID, &data);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,

@@ -5332,18 +5332,27 @@ nvme_init_lm_set_features_ctrl_data_queue(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_lm_get_features_ctrl_data_queue - Get Controller Data Queue feature
- * @hdl:	Transport handle
+ * nvme_init_lm_get_features_ctrl_data_queue() - Initialize passthru command for
+ * Get Controller Data Queue feature
+ * @cmd:	Passthru command to use
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
  * @cdqid:	Controller Data Queue ID (CDQID)
- * @data:	Get Controller Data Queue feature data
- * @result:	The command completions result from CQE dword0
+ * @qfd:	Get Controller Data Queue feature data buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_CTRL_DATA_QUEUE.
  */
-int nvme_lm_get_features_ctrl_data_queue(struct nvme_transport_handle *hdl, __u16 cdqid,
-					 struct nvme_lm_ctrl_data_queue_fid_data *data,
-					 __u32 *result);
+static inline void
+nvme_init_lm_get_features_ctrl_data_queue(struct nvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u16 cdqid,
+		struct nvme_lm_ctrl_data_queue_fid_data *qfd)
+{
+	nvme_init_get_features(cmd, NVME_FEAT_FID_CTRL_DATA_QUEUE, sel);
+	cmd->data_len = sizeof(*qfd);
+	cmd->addr = (__u64)(uintptr_t)qfd;
+	cmd->cdw11 = cdqid;
+}
 
 /**
  * nvme_identify() - Submit a generic Identify command
