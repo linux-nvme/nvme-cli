@@ -314,6 +314,8 @@ enum nvme_cmd_dword_fields {
 	NVME_GET_LBA_STATUS_CDW13_ATYPE_SHIFT			= 24,
 	NVME_GET_LBA_STATUS_CDW13_RL_MASK			= 0xffff,
 	NVME_GET_LBA_STATUS_CDW13_ATYPE_MASK			= 0xff,
+	NVME_ZNS_MGMT_SEND_ZM_SHIFT				= 16,
+	NVME_ZNS_MGMT_SEND_ZM_MASK				= 0xff,
 	NVME_ZNS_MGMT_SEND_ZSASO_SHIFT				= 9,
 	NVME_ZNS_MGMT_SEND_ZSASO_MASK				= 0x1,
 	NVME_ZNS_MGMT_SEND_SEL_SHIFT				= 8,
@@ -4710,15 +4712,46 @@ nvme_init_fdp_reclaim_unit_handle_update(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_zns_mgmt_send() - ZNS management send command
- * @hdl:	Transport handle
- * @args:	&struct nvme_zns_mgmt_send_args argument structure
+ * nvme_init_zns_mgmt_send() - Initialize passthru command for
+ * ZNS management send command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block address
+ * @zsa:	Zone send action
+ * @selall:	Select all flag
+ * @zsaso:	Zone Send Action Specific Option
+ * @zm:		Zone Management
+ * @data:	Userspace address of the data buffer
+ * @len:	Length of @data
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the ZNS Management Send command.
  */
-int nvme_zns_mgmt_send(struct nvme_transport_handle *hdl, struct nvme_zns_mgmt_send_args *args);
+static inline void
+nvme_init_zns_mgmt_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 slba, enum nvme_zns_send_action zsa, bool selall,
+		__u8 zsaso, __u8 zm, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
 
+	cmd->opcode = nvme_zns_cmd_mgmt_send;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = slba & 0xffffffff;
+	cmd->cdw11 = slba >> 32;
+	cmd->cdw13 = NVME_FIELD_ENCODE(zsa,
+			NVME_ZNS_MGMT_SEND_ZSA_SHIFT,
+			NVME_ZNS_MGMT_SEND_ZSA_MASK) |
+		      NVME_FIELD_ENCODE(selall,
+			NVME_ZNS_MGMT_SEND_SEL_SHIFT,
+			NVME_ZNS_MGMT_SEND_SEL_MASK) |
+		      NVME_FIELD_ENCODE(zsaso,
+			NVME_ZNS_MGMT_SEND_ZSASO_SHIFT,
+			NVME_ZNS_MGMT_SEND_ZSASO_MASK) |
+		      NVME_FIELD_ENCODE(zm,
+			NVME_ZNS_MGMT_SEND_ZM_SHIFT,
+			NVME_ZNS_MGMT_SEND_ZM_MASK);
+}
 
 /**
  * nvme_zns_mgmt_recv() - ZNS management receive command

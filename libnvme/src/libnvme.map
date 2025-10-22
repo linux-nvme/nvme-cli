@@ -299,7 +299,6 @@ LIBNVME_2_0 {
 		nvme_uuid_to_string;
 		nvme_zns_append;
 		nvme_zns_mgmt_recv;
-		nvme_zns_mgmt_send;
 		nvmf_add_ctrl;
 		nvmf_adrfam_str;
 		nvmf_cms_str;

@@ -93,40 +93,30 @@ static void test_zns_report_zones(void)
 
 static void test_zns_mgmt_send(void)
 {
+	enum nvme_zns_send_action zsa = NVME_ZNS_ZSA_OPEN;
 	__u8 expected_data[8], data[8] = {};
+	__u64 slba = TEST_SLBA;
+	bool select_all = true;
+	__u8 zsaso = 0x1;
 	__u32 result = 0;
-	uint32_t timeout = 1234;
-
-	struct nvme_zns_mgmt_send_args args = {
-		.slba = TEST_SLBA,
-		.result = &result,
-		.data = data,
-		.args_size = sizeof(args),
-		.timeout = timeout,
-		.nsid = TEST_NSID,
-		.zsa = NVME_ZNS_ZSA_OPEN,
-		.data_len = sizeof(data),
-		.select_all = true,
-		.zsaso = !!true,
-	};
-
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_mgmt_send,
 		.nsid = TEST_NSID,
-		.cdw10 = args.slba & 0xffffffff,
-		.cdw11 = args.slba >> 32,
-		.cdw13 = (args.zsaso << 9) | (!!args.select_all << 8) |
-			 (args.zsa << 0),
+		.cdw10 = slba & 0xffffffff,
+		.cdw11 = slba >> 32,
+		.cdw13 = (zsaso << 9) | (select_all << 8) |
+			 (zsa << 0),
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
-		.timeout_ms = timeout,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_zns_mgmt_send(test_hdl, &args);
+	nvme_init_zns_mgmt_send(&cmd, TEST_NSID, slba, zsa, select_all, zsaso,
+		false, data, sizeof(data));
+	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
