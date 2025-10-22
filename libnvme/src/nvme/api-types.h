@@ -144,27 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_resv_report_args - Arguments for the NVMe Reservation Report command
- * @result:	The command completion result from CQE dword0
- * @report:	The user space destination address to store the reservation
- *		report
- * @args_size:	Size of &struct nvme_resv_report_args
- * @timeout:	Timeout in ms
- * @nsid:	Namespace identifier
- * @len:	Number of bytes to request transferred with this command
- * @eds:	Request extended Data Structure
- */
-struct nvme_resv_report_args {
-	__u32 *result;
-	struct nvme_resv_status *report;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	__u32 len;
-	bool eds;
-};
-
-/**
  * struct nvme_io_mgmt_recv_args - Arguments for the NVMe I/O Management Receive command
  * @data:	Userspace address of the data
  * @args_size:	Size of &struct nvme_io_mgmt_recv_args

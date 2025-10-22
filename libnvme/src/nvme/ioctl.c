@@ -772,24 +772,6 @@ int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args)
 	return nvme_submit_io_passthru(hdl, &cmd, args->result);
 }
 
-int nvme_resv_report(struct nvme_transport_handle *hdl, struct nvme_resv_report_args *args)
-{
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_cmd_resv_report,
-		.nsid		= args->nsid,
-		.cdw10		= (args->len >> 2) - 1,
-		.cdw11		= args->eds ? 1 : 0,
-		.addr		= (__u64)(uintptr_t)args->report,
-		.data_len	= args->len,
-		.timeout_ms	= args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	return nvme_submit_io_passthru(hdl, &cmd, args->result);
-}
-
 int nvme_io_mgmt_recv(struct nvme_transport_handle *hdl, struct nvme_io_mgmt_recv_args *args)
 {
 	__u32 cdw10 = args->mo | (args->mos << 16);

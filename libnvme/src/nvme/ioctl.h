@@ -378,6 +378,10 @@ enum nvme_cmd_dword_fields {
 	NVME_RESV_RELEASE_CDW10_DISNSRS_MASK			= 0x1,
 	NVME_RESV_RELEASE_CDW10_RTYPE_SHIFT			= 8,
 	NVME_RESV_RELEASE_CDW10_RTYPE_MASK			= 0xff,
+	NVME_RESV_REPORT_CDW11_EDS_SHIFT			= 0,
+	NVME_RESV_REPORT_CDW11_EDS_MASK				= 0x1,
+	NVME_RESV_REPORT_CDW11_DISNSRS_SHIFT			= 1,
+	NVME_RESV_REPORT_CDW11_DISNSRS_MASK			= 0x1,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4562,18 +4566,37 @@ nvme_init_resv_release(struct nvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_resv_report() - Send an nvme reservation report
- * @hdl:	Transport handle
- * @args:	struct nvme_resv_report_args argument structure
+ * nvme_init_resv_report() - Initialize passthru command for
+ * Reservation Report
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @eds:	Request extended Data Structure
+ * @disnsrs:	Disperse Namespace Reservation Support
+ * @report:	The user space destination address to store the reservation
+ *		report buffer
+ * @len:	Number of bytes to request transferred with this command
  *
- * Returns a Reservation Status data structure to memory that describes the
- * registration and reservation status of a namespace. See the definition for
- * the returned structure, &struct nvme_reservation_status, for more details.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Reservation Report command.
  */
-int nvme_resv_report(struct nvme_transport_handle *hdl, struct nvme_resv_report_args *args);
+static inline void
+nvme_init_resv_report(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		bool eds, bool disnsrs, struct nvme_resv_status *report,
+		__u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_cmd_resv_report;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)report;
+	cmd->cdw10 = (len >> 2) - 1;
+	cmd->cdw11 = NVME_FIELD_ENCODE(eds,
+			NVME_RESV_REPORT_CDW11_EDS_SHIFT,
+			NVME_RESV_REPORT_CDW11_EDS_MASK) |
+		     NVME_FIELD_ENCODE(disnsrs,
+			NVME_RESV_REPORT_CDW11_DISNSRS_SHIFT,
+			NVME_RESV_REPORT_CDW11_DISNSRS_MASK);
+}
 
 /**
  * nvme_io_mgmt_recv() - I/O Management Receive command

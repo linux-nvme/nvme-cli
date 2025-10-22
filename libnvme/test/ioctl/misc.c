@@ -1194,33 +1194,26 @@ static void test_resv_release(void)
 
 static void test_resv_report(void)
 {
-	__u32 result = 0;
-
 	struct nvme_resv_status expected_status, status = {};
-
-	struct nvme_resv_report_args args = {
-		.result = &result,
-		.report = &status,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.len = sizeof(status),
-		.eds = false,
-	};
-
+	__u32 len = sizeof(status);
+	__u32 result = 0;
+	bool eds = false;
+	bool disnsrs = true;
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_resv_report,
 		.nsid = TEST_NSID,
-		.cdw10 = (args.len >> 2) - 1,
-		.cdw11 = args.eds ? 1 : 0,
-		.data_len = args.len,
+		.cdw10 = (len >> 2) - 1,
+		.cdw11 = eds | disnsrs << 1,
+		.data_len = len,
 		.out_data = &expected_status,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_status, sizeof(expected_status));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_resv_report(test_hdl, &args);
+	nvme_init_resv_report(&cmd, TEST_NSID, eds, disnsrs, &status, len);
+	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
