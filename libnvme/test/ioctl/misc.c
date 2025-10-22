@@ -1399,43 +1399,38 @@ static void test_lm_track_send(void)
 
 static void test_lm_migration_send(void)
 {
-	__u32 result = 0;
 	__u32 expected_data[8], data[8] = {};
-	struct nvme_lm_migration_send_args args = {
-		.offset = 0xffffffffff,
-		.result = 0,
-		.data = &expected_data,
-		.args_size = sizeof(args),
-		.numd = 8 - 1,
-		.mos = 0x1,
-		.cntlid = 0x2,
-		.csuuidi = 0x3,
-		.sel = NVME_LM_SEL_RESUME,
-		.uidx = 0x4,
-		.stype = 0x5,
-		.seqind = 0x6,
-		.csvi = 0x7,
-		.dudmq = true,
-	};
-
+	__u8 sel = NVME_LM_SEL_RESUME;
+	__u64 offset = 0xffffffffff;
+	__u32 numd = 8;
+	__u16 cntlid = 0x2;
+	__u32 result = 0;
+	__u16 mos = 0x1;
+	__u8 uidx = 0x4;
+	__u8 stype = 0x1;
+	__u8 csvi = 0x2;
+	__u16 csuuidi = 0x13;
+	bool dudmq = false;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_migration_send,
-		.cdw10 = args.sel | (args.mos << 16),
-		.cdw11 = args.cntlid,
-		.cdw12 = (__u32)args.offset,
-		.cdw13 = (__u32)(args.offset >> 32),
-		.cdw14 = args.uidx,
-		.cdw15 = args.numd,
-		.data_len = args.numd << 2,
-		.in_data = &data,
+		.cdw10 = sel | (mos << 16),
+		.cdw11 = cntlid,
+		.cdw12 = (__u32)offset,
+		.cdw13 = (__u32)(offset >> 32),
+		.cdw14 = uidx,
+		.cdw15 = numd,
+		.data_len = numd << 2,
+		.in_data = &expected_data,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_migration_send(test_hdl, &args);
+	nvme_init_lm_migration_send(&cmd, sel, mos, cntlid, stype, dudmq,
+		csvi, csuuidi, offset, uidx, &data, sizeof(data));
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
