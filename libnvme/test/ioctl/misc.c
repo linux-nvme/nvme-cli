@@ -1138,34 +1138,27 @@ static void test_resv_acquire(void)
 
 static void test_resv_register(void)
 {
+	enum nvme_resv_rrega rrega = NVME_RESERVATION_RREGA_UNREGISTER_KEY;
+	enum nvme_resv_cptpl cptpl = NVME_RESERVATION_CPTPL_PERSIST;
+	__le64 expected_payload[2] = { 0xffffffffffffffff, 0 };
+	__le64 payload[2];
+	bool iekey = true;
 	__u32 result = 0;
-
-	struct nvme_resv_register_args args = {
-		.crkey = 0xffffffffffffffff,
-		.nrkey = 0,
-		.result = &result,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.rrega = NVME_RESERVATION_RREGA_UNREGISTER_KEY,
-		.cptpl = NVME_RESERVATION_CPTPL_PERSIST,
-		.iekey = true,
-	};
-
-	__le64 payload[2] = { 0xffffffffffffffff, 0 };
-
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_resv_register,
 		.nsid = TEST_NSID,
-		.cdw10 = (args.rrega & 0x7) | (args.iekey ? 1 << 3 : 0) |
-			 (args.cptpl << 30),
-		.data_len = sizeof(payload),
-		.in_data = payload,
+		.cdw10 = (rrega & 0x7) | (iekey ? 1 << 3 : 0) |
+			 (cptpl << 30),
+		.data_len = sizeof(expected_payload),
+		.in_data = expected_payload,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_resv_register(test_hdl, &args);
+	nvme_init_resv_register(&cmd, TEST_NSID, rrega, iekey, false, cptpl,
+		0xffffffffffffffff, 0, payload);
+	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);

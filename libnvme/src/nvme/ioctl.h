@@ -362,6 +362,14 @@ enum nvme_cmd_dword_fields {
 	NVME_RESV_ACQUIRE_CDW10_DISNSRS_MASK			= 0x1,
 	NVME_RESV_ACQUIRE_CDW10_RTYPE_SHIFT			= 8,
 	NVME_RESV_ACQUIRE_CDW10_RTYPE_MASK			= 0xff,
+	NVME_RESV_REGISTER_CDW10_RREGA_SHIFT			= 0,
+	NVME_RESV_REGISTER_CDW10_RREGA_MASK			= 0x7,
+	NVME_RESV_REGISTER_CDW10_IEKEY_SHIFT			= 3,
+	NVME_RESV_REGISTER_CDW10_IEKEY_MASK			= 0x1,
+	NVME_RESV_REGISTER_CDW10_DISNSRS_SHIFT			= 4,
+	NVME_RESV_REGISTER_CDW10_DISNSRS_MASK			= 0x1,
+	NVME_RESV_REGISTER_CDW10_CPTPL_SHIFT			= 30,
+	NVME_RESV_REGISTER_CDW10_CPTPL_MASK			= 0x3,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4460,17 +4468,49 @@ nvme_init_resv_acquire(struct nvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_resv_register() - Send an nvme reservation register
- * @hdl:	Transport handle
- * @args:	&struct nvme_resv_register_args argument structure
+ * nvme_init_resv_register() - Initialize passthru command for
+ * Reservation Register
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @rrega:	The registration action, see &enum nvme_resv_rrega
+ * @iekey:	Set to ignore the existing key
+ * @disnsrs:	Disperse Namespace Reservation Support
+ * @cptpl:	Change persist through power loss, see &enum nvme_resv_cptpl
+ * @crkey:	The current reservation key associated with the host
+ * @nrkey:	The new reservation key to be register if action is register or
+ *		replace
+ * @payload:	Data payload buffer to hold crkey and nrkey
  *
- * The Reservation Register command registers, unregisters, or replaces a
- * reservation key.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Reservation Register command.
  */
-int nvme_resv_register(struct nvme_transport_handle *hdl, struct nvme_resv_register_args *args);
+static inline void
+nvme_init_resv_register(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_resv_rrega rrega, bool iekey, bool disnsrs,
+		enum nvme_resv_cptpl cptpl, __u64 crkey, __u64 nrkey,
+		__le64 *payload)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	payload[0] = htole64(crkey);
+	payload[1] = htole64(nrkey);
+
+	cmd->opcode = nvme_cmd_resv_register;
+	cmd->nsid = nsid;
+	cmd->data_len = 2 * sizeof(__le64);
+	cmd->addr = (__u64)(uintptr_t)payload;
+	cmd->cdw10 = NVME_FIELD_ENCODE(rrega,
+			NVME_RESV_REGISTER_CDW10_RREGA_SHIFT,
+			NVME_RESV_REGISTER_CDW10_RREGA_MASK) |
+		     NVME_FIELD_ENCODE(iekey,
+			NVME_RESV_REGISTER_CDW10_IEKEY_SHIFT,
+			NVME_RESV_REGISTER_CDW10_IEKEY_MASK) |
+		     NVME_FIELD_ENCODE(disnsrs,
+			NVME_RESV_REGISTER_CDW10_DISNSRS_SHIFT,
+			NVME_RESV_REGISTER_CDW10_DISNSRS_MASK) |
+		     NVME_FIELD_ENCODE(cptpl,
+			NVME_RESV_REGISTER_CDW10_CPTPL_SHIFT,
+			NVME_RESV_REGISTER_CDW10_CPTPL_MASK);
+}
 
 /**
  * nvme_resv_release() - Send an nvme reservation release

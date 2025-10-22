@@ -144,31 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_resv_register_args - Arguments for the NVMe Reservation Register command
- * @crkey:	The current reservation key associated with the host
- * @nrkey:	The new reservation key to be register if action is register or
- *		replace
- * @result:	The command completion result from CQE dword0
- * @args_size:	Size of &struct nvme_resv_register_args
- * @nsid:	Namespace identifier
- * @rrega:	The registration action, see &enum nvme_resv_rrega
- * @cptpl:	Change persist through power loss, see &enum nvme_resv_cptpl
- * @iekey:	Set to ignore the existing key
- * @timeout:	Timeout in ms
- */
-struct nvme_resv_register_args {
-	__u64 crkey;
-	__u64 nrkey;
-	__u32 *result;
-	int args_size;
-	__u32 timeout;
-	__u32 nsid;
-	enum nvme_resv_rrega rrega;
-	enum nvme_resv_cptpl cptpl;
-	bool iekey;
-};
-
-/**
  * struct nvme_resv_release_args - Arguments for the NVMe Reservation Release Command
  * @crkey:	The current reservation key to release
  * @result:	The command completion result from CQE dword0
