@@ -1574,12 +1574,14 @@ static void test_lm_set_features_ctrl_data_queue(void)
 		.cdw13 = tpt,
 		.result = TEST_RESULT,
 	};
+	struct nvme_passthru_cmd cmd;
 	uint32_t result = 0;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	err = nvme_lm_set_features_ctrl_data_queue(test_hdl,
-		TEST_CDQID, hp, tpt, etpt, &result);
+	nvme_init_lm_set_features_ctrl_data_queue(&cmd, TEST_CDQID,
+		hp, tpt, etpt);
+	err = nvme_submit_admin_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d, errno %m", err);
 	check(result == TEST_RESULT,

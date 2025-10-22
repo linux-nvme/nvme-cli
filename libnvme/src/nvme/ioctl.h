@@ -5307,19 +5307,29 @@ nvme_init_lm_migration_recv(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_lm_set_features_ctrl_data_queue - Set Controller Datea Queue feature
- * @hdl:	Transport handle
+ * nvme_init_lm_set_features_ctrl_data_queue() - Initialize passthru command for
+ * Set Controller Data Queue feature
+ * @cmd:	Passthru command to use
  * @cdqid:	Controller Data Queue ID (CDQID)
- * @hp:		Head Pointer
- * @tpt:	Tail Pointer Trigger
+ * @hp:		Head Pointer (passed in cdw12)
+ * @tpt:	Tail Pointer Trigger (passed in cdw13)
  * @etpt:	Enable Tail Pointer Trigger
- * @result:	The command completions result from CQE dword0
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_CTRL_DATA_QUEUE.
  */
-int nvme_lm_set_features_ctrl_data_queue(struct nvme_transport_handle *hdl, __u16 cdqid, __u32 hp, __u32 tpt, bool etpt,
-					 __u32 *result);
+static inline void
+nvme_init_lm_set_features_ctrl_data_queue(struct nvme_passthru_cmd *cmd,
+	__u16 cdqid, __u32 hp, __u32 tpt, bool etpt)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_CTRL_DATA_QUEUE, false);
+	cmd->cdw11 = cdqid |
+		     NVME_FIELD_ENCODE(etpt,
+			NVME_LM_CTRL_DATA_QUEUE_ETPT_SHIFT,
+			NVME_LM_CTRL_DATA_QUEUE_ETPT_MASK);
+	cmd->cdw12 = hp;
+	cmd->cdw13 = tpt;
+}
 
 /**
  * nvme_lm_get_features_ctrl_data_queue - Get Controller Data Queue feature
