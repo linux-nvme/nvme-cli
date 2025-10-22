@@ -772,44 +772,6 @@ int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args)
 	return nvme_submit_io_passthru(hdl, &cmd, args->result);
 }
 
-int nvme_lm_cdq(struct nvme_transport_handle *hdl, struct nvme_lm_cdq_args *args)
-{
-	__u32 cdw10 = NVME_SET(args->sel, LM_CDQ_SEL) |
-		      NVME_SET(args->mos, LM_CDQ_MOS);
-	__u32 cdw11 = 0, data_len = 0, sz = 0;
-	int err;
-
-	sz = args->sz;
-
-	if (args->sel == NVME_LM_SEL_CREATE_CDQ) {
-		cdw11 = NVME_SET(NVME_SET(args->cntlid, LM_CREATE_CDQ_CNTLID), LM_CQS) |
-			NVME_LM_CREATE_CDQ_PC;
-		data_len = sz << 2;
-	} else if (args->sel == NVME_LM_SEL_DELETE_CDQ) {
-		cdw11 = NVME_SET(args->cdqid, LM_DELETE_CDQ_CDQID);
-	}
-
-	struct nvme_passthru_cmd cmd = {
-		.opcode = nvme_admin_ctrl_data_queue,
-		.cdw10 = cdw10,
-		.cdw11 = cdw11,
-		.cdw12 = sz,
-		.addr = (__u64)(uintptr_t)args->data,
-		.data_len = data_len,
-		.timeout_ms = args->timeout,
-	};
-
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
-
-	err = nvme_submit_admin_passthru(hdl, &cmd, args->result);
-
-	if (!err)
-		args->cdqid = NVME_GET(cmd.result, LM_CREATE_CDQ_CDQID);
-
-	return err;
-}
-
 int nvme_lm_track_send(struct nvme_transport_handle *hdl, struct nvme_lm_track_send_args *args)
 {
 	__u32 cdw10 = NVME_SET(args->sel, LM_TRACK_SEND_SEL) |

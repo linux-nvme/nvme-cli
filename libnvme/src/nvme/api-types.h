@@ -144,36 +144,6 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_lm_cdq_args - Arguments for Controller Data Queue (CDQ) command
- * @result:	Set on completion to the command's CQE DWORD 0 controller response
- * @data:	Pointer to data
- * @args_size:	Length of structure
- * @timeout:	Timeout in ms
- * @mos:	Management Operation Specific (MOS): This field is specific to the SEL type
- * @cntlid:	Controller ID: For Create CDQ, specifies the target migratable controller
- * @cdqid:	Controller Data Queue ID (CDQID): For Create CDQ, this field is the CDQID created
- *		by the controller if no error is present. For Delete CDQ, this field is the CDQID
- *		to delete.
- * @sel:	Select (SEL): This field specifies the type of management operation to perform.
- * @sz_u8:	For Create CDQ, specifies the size of CDQ, in dwords - 1 byte
- * @rsvd1:	Reserved
- * @sz:		For Create CDQ, specifies the size of CDQ, in dwords - 4 byte
- */
-struct nvme_lm_cdq_args {
-	__u32	*result;
-	void	*data;
-	int	args_size;
-	__u32	timeout;
-	__u16	mos;
-	__u16	cntlid;
-	__u16	cdqid;
-	__u8	sel;
-	__u8	sz_u8;
-	__u8	rsvd1[4];
-	__u32	sz;
-};
-
-/**
  * struct nvme_lm_track_send_args - Arguments for the Track Send command
  * @result:	Set on completion to the command's CQE DWORD 0 controller response
  * @args_size:	Length of structure

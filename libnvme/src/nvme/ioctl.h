@@ -5063,14 +5063,79 @@ nvme_init_dim_send(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_lm_cdq() - Controller Data Queue - Controller Data Queue command
- * @hdl:	Transport handle
- * @args:	&struct nvme_lm_cdq_args argument structure
+ * nvme_init_lm_cdq_create() - Initialize passthru command for
+ * Controller Data Queue create - Controller Data Queue command
+ * @cmd:	Passthru command to use
+ * @mos:	Management Operation Specific (MOS): This field is
+ * 		specific to the SEL type
+ * @cntlid:	Controller ID: For Create CDQ, specifies the target
+ * 		migratable controller
+ * @cdqsize:	For Create CDQ, specifies the size of CDQ, in dwords - 4 byte
+ * @data:	Pointer to data buffer
  *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.)
+ * Initializes the passthru command buffer for the Controller Data Queue
+ * command. Note: The result CDQID is returned in the CQE dword0, which the
+ * submission function must handle.
  */
-int nvme_lm_cdq(struct nvme_transport_handle *hdl, struct nvme_lm_cdq_args *args);
+static inline void
+nvme_init_lm_cdq_create(struct nvme_passthru_cmd *cmd,
+		__u16 mos, __u16 cntlid, __u32 cdqsize, void *data)
+{
+	__u16 cqs;
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cqs = NVME_FIELD_ENCODE(cntlid,
+		NVME_LM_CREATE_CDQ_CNTLID_SHIFT,
+		NVME_LM_CREATE_CDQ_CNTLID_MASK);
+
+	cmd->opcode = nvme_admin_ctrl_data_queue;
+	cmd->data_len = cdqsize << 2;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(NVME_LM_SEL_CREATE_CDQ,
+			NVME_LM_CDQ_SEL_SHIFT,
+			NVME_LM_CDQ_SEL_MASK) |
+		      NVME_FIELD_ENCODE(mos,
+			NVME_LM_CDQ_MOS_SHIFT,
+			NVME_LM_CDQ_MOS_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(NVME_LM_CREATE_CDQ_PC,
+			NVME_LM_CREATE_CDQ_PC_SHIFT,
+			NVME_LM_CREATE_CDQ_PC_MASK) |
+		     NVME_FIELD_ENCODE(cqs,
+			NVME_LM_CQS_SHIFT,
+			NVME_LM_CQS_MASK);
+	cmd->cdw12 = cdqsize;
+}
+
+/**
+ * nvme_init_lm_cdq_delete() - Initialize passthru command for
+ * Controller Data Queue delete - Controller Data Queue command
+ * @cmd:	Passthru command to use
+ * @mos:	Management Operation Specific (MOS): This field is
+ * 		specific to the SEL type
+ * @cdqid:	Controller Data Queue ID (CDQID): For Delete CDQ, this
+ * 		field is the CDQID to delete.
+ *
+ * Initializes the passthru command buffer for the Controller Data Queue delete
+ * command.
+ */
+static inline void
+nvme_init_lm_cdq_delete(struct nvme_passthru_cmd *cmd,
+		__u16 mos, __u16 cdqid)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_ctrl_data_queue;
+	cmd->cdw10 = NVME_FIELD_ENCODE(NVME_LM_SEL_DELETE_CDQ,
+			NVME_LM_CDQ_SEL_SHIFT,
+			NVME_LM_CDQ_SEL_MASK) |
+		      NVME_FIELD_ENCODE(mos,
+			NVME_LM_CDQ_MOS_SHIFT,
+			NVME_LM_CDQ_MOS_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(cdqid,
+			NVME_LM_DELETE_CDQ_CDQID_SHIFT,
+			NVME_LM_DELETE_CDQ_CDQID_MASK);
+}
 
 /**
  * nvme_lm_track_send() - Track Send command
