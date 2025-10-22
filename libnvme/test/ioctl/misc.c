@@ -1249,29 +1249,24 @@ static void test_io_mgmt_recv(void)
 static void test_io_mgmt_send(void)
 {
 	__u8 expected_data[8], data[8] = {};
-	struct nvme_io_mgmt_send_args args = {
-		.data = &expected_data,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.data_len = sizeof(expected_data),
-		.mos = 0x1,
-		.mo = 0x2,
-	};
-
+	__u32 data_len = sizeof(data);
+	__u16 mos = 0x1;
+	__u8 mo = 0x2;
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_io_mgmt_send,
 		.nsid = TEST_NSID,
-		.cdw10 = args.mo | (args.mos << 16),
-		.data_len = args.data_len,
-		.in_data = &data,
+		.cdw10 = mo | (mos << 16),
+		.data_len = data_len,
+		.in_data = &expected_data,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_io_mgmt_send(test_hdl, &args);
+	nvme_init_io_mgmt_send(&cmd, TEST_NSID, mo, mos, data, data_len);
+	err = nvme_submit_io_passthru(test_hdl, &cmd, NULL);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -1313,13 +1308,13 @@ static void test_fdp_reclaim_unit_handle_update(void)
 		.data_len = npids * sizeof(__u16),
 		.in_data = &pids,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&pids, sizeof(pids));
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_fdp_reclaim_unit_handle_update(test_hdl, TEST_NSID, npids,
-						  &pids);
+	nvme_init_fdp_reclaim_unit_handle_update(&cmd, TEST_NSID, &pids, npids);
+	err = nvme_submit_io_passthru(test_hdl, &cmd, NULL);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 }

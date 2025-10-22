@@ -386,6 +386,10 @@ enum nvme_cmd_dword_fields {
 	NVME_IO_MGMT_RECV_CDW10_MO_MASK				= 0xff,
 	NVME_IO_MGMT_RECV_CDW10_MOS_SHIFT			= 16,
 	NVME_IO_MGMT_RECV_CDW10_MOS_MASK			= 0xffff,
+	NVME_IO_MGMT_SEND_CDW10_MO_SHIFT			= 0,
+	NVME_IO_MGMT_SEND_CDW10_MO_MASK				= 0xff,
+	NVME_IO_MGMT_SEND_CDW10_MOS_SHIFT			= 16,
+	NVME_IO_MGMT_SEND_CDW10_MOS_MASK			= 0xffff,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4654,39 +4658,55 @@ nvme_init_fdp_reclaim_unit_handle_status(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_io_mgmt_send() - I/O Management Send command
- * @hdl:	Transport handle
- * @args:	&struct nvme_io_mgmt_send_args argument structure
+ * nvme_init_io_mgmt_send() - Initialize passthru command for
+ * I/O Management Send command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @mo:		Management Operation
+ * @mos:	Management Operation Specific
+ * @data:	Userspace address of the data buffer
+ * @len:	Length of @data
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the I/O Management Send command.
  */
-int nvme_io_mgmt_send(struct nvme_transport_handle *hdl, struct nvme_io_mgmt_send_args *args);
+static inline void
+nvme_init_io_mgmt_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
+		__u8 mo, __u16 mos, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_cmd_io_mgmt_send;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(mo,
+			NVME_IO_MGMT_SEND_CDW10_MO_SHIFT,
+			NVME_IO_MGMT_SEND_CDW10_MO_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_IO_MGMT_SEND_CDW10_MOS_SHIFT,
+			NVME_IO_MGMT_SEND_CDW10_MOS_MASK);
+}
 
 /**
- * nvme_fdp_reclaim_unit_handle_update() - Update a list of reclaim unit handles
- * @hdl:	Transport handle
+ * nvme_init_fdp_reclaim_unit_handle_update() - Initialize passthru command to
+ * update a list of reclaim unit handles
+ * @cmd:	Passthru command to use
  * @nsid:	Namespace identifier
+ * @pids:	List of placement identifiers buffer
  * @npids:	Number of placement identifiers
- * @pids:	List of placement identifiers
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the I/O Management Send -
+ * Reclaim Unit Handle Update command.
  */
-static inline int nvme_fdp_reclaim_unit_handle_update(struct nvme_transport_handle *hdl, __u32 nsid,
-			unsigned int npids, __u16 *pids)
+static inline void
+nvme_init_fdp_reclaim_unit_handle_update(struct nvme_passthru_cmd *cmd,
+		__u32 nsid, void *pids, unsigned int npids)
 {
-	struct nvme_io_mgmt_send_args args = {
-		.data = (void *)pids,
-		.args_size = sizeof(args),
-		.nsid = nsid,
-		.data_len = (__u32)(npids * sizeof(__u16)),
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.mos = (__u16)(npids - 1),
-		.mo = NVME_IO_MGMT_SEND_RUH_UPDATE,
-	};
+	__u16 mos = npids - 1; /* MOS = NPI - 1 */
+	__u32 len = npids * sizeof(__u16);
 
-	return nvme_io_mgmt_send(hdl, &args);
+	nvme_init_io_mgmt_send(cmd, nsid, NVME_IO_MGMT_SEND_RUH_UPDATE,
+		mos, pids, len);
 }
 
 /**
