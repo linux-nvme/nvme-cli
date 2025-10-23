@@ -981,8 +981,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value) {
 		if (cfg.namespace_id != NVME_NSID_ALL) {
-			err = nvme_identify_ns(hdl, cfg.namespace_id,
-					       &ns);
+			err = nvme_identify_ns(hdl, cfg.namespace_id, &ns);
 			if (err) {
 				if (err < 0)
 					perror("identify-namespace");

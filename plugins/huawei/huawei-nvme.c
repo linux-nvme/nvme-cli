@@ -67,9 +67,9 @@ struct huawei_list_element_len {
 static int huawei_get_nvme_info(struct nvme_transport_handle *hdl,
 				struct huawei_list_item *item, const char *node)
 {
+	struct stat nvme_stat_info;
 	int err;
 	int len;
-	struct stat nvme_stat_info;
 
 	memset(item, 0, sizeof(*item));
 

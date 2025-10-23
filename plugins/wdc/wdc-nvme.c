@@ -1538,8 +1538,8 @@ static int wdc_get_pci_ids(struct nvme_global_ctx *ctx, struct nvme_transport_ha
 
 static int wdc_get_vendor_id(struct nvme_transport_handle *hdl, uint32_t *vendor_id)
 {
-	int ret;
 	struct nvme_id_ctrl ctrl;
+	int ret;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	ret = nvme_identify_ctrl(hdl, &ctrl);
@@ -1628,8 +1628,8 @@ static bool wdc_check_power_of_2(int num)
 
 static int wdc_get_model_number(struct nvme_transport_handle *hdl, char *model)
 {
-	int ret, i;
 	struct nvme_id_ctrl ctrl;
+	int ret, i;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	ret = nvme_identify_ctrl(hdl, &ctrl);
@@ -9748,9 +9748,9 @@ out:
 
 static int wdc_get_serial_and_fw_rev(struct nvme_transport_handle *hdl, char *sn, char *fw_rev)
 {
-	int i;
-	int ret;
 	struct nvme_id_ctrl ctrl;
+	int ret;
+	int i;
 
 	i = sizeof(ctrl.sn) - 1;
 	memset(sn, 0, WDC_SERIAL_NO_LEN);
@@ -9774,8 +9774,8 @@ static int wdc_get_serial_and_fw_rev(struct nvme_transport_handle *hdl, char *sn
 
 static int wdc_get_max_transfer_len(struct nvme_transport_handle *hdl, __u32 *maxTransferLen)
 {
-	int ret = 0;
 	struct nvme_id_ctrl ctrl;
+	int ret = 0;
 
 	__u32 maxTransferLenDevice = 0;
 
@@ -11094,11 +11094,11 @@ out:
 
 static int wdc_get_drive_reason_id(struct nvme_transport_handle *hdl, char *drive_reason_id, size_t len)
 {
+	const char *reason_id_str = "reason_id";
+	struct nvme_id_ctrl ctrl;
+	int res_len = 0;
 	int i, j;
 	int ret;
-	int res_len = 0;
-	struct nvme_id_ctrl ctrl;
-	const char *reason_id_str = "reason_id";
 
 	i = sizeof(ctrl.sn) - 1;
 	j = sizeof(ctrl.mn) - 1;
@@ -11883,7 +11883,6 @@ static int wdc_vs_drive_info(int argc, char **argv,
 
 	/* get the id ctrl data used to fill in drive info below */
 	ret = nvme_identify_ctrl(hdl, &ctrl);
-
 	if (ret) {
 		fprintf(stderr, "ERROR: WDC %s: Identify Controller failed\n", __func__);
 		return ret;

@@ -125,8 +125,9 @@ static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	nvme_print_flags_t flags;
+	struct nvme_passthru_cmd cmd;
 	struct nvme_zns_id_ctrl ctrl;
+	nvme_print_flags_t flags;
 	int err = -1;
 
 	struct config {
@@ -150,7 +151,8 @@ static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err < 0)
 		return err;
 
-	err = nvme_zns_identify_ctrl(hdl, &ctrl);
+	nvme_init_zns_identify_ctrl(&cmd, &ctrl);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err)
 		nvme_show_zns_id_ctrl(&ctrl, flags);
 	else if (err > 0)

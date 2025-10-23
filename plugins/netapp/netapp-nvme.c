@@ -773,6 +773,9 @@ static int netapp_smdevices_get_info(struct nvme_transport_handle *hdl,
 		return 0; /* not the right model of controller */
 
 	err = nvme_get_nsid(hdl, &item->nsid);
+	if (err)
+		return err;
+
 	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr,
@@ -790,8 +793,8 @@ static int netapp_ontapdevices_get_info(struct nvme_transport_handle *hdl,
 					struct ontapdevice_info *item,
 					const char *dev)
 {
-	int err;
 	void *nsdescs;
+	int err;
 
 	err = nvme_identify_ctrl(hdl, &item->ctrl);
 	if (err) {
@@ -822,7 +825,7 @@ static int netapp_ontapdevices_get_info(struct nvme_transport_handle *hdl,
 
 	memset(nsdescs, 0, 0x1000);
 
-	err = nvme_identify_ns_descs(hdl, item->nsid, nsdescs);
+	err = nvme_identify_ns_descs_list(hdl, item->nsid, nsdescs);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
 			dev, err < 0 ? strerror(-err) :

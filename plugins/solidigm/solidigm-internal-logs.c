@@ -490,23 +490,28 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 	return 0;
 }
 
-static int ilog_dump_identify_page(struct nvme_transport_handle *hdl, struct ilog *ilog, struct log *cns, __u32 nsid)
+static int ilog_dump_identify_page(struct nvme_transport_handle *hdl,
+		struct ilog *ilog, struct log *cns, __u32 nsid)
 {
 	__u8 data[NVME_IDENTIFY_DATA_SIZE];
 	__u8 *buff = cns->buffer ? cns->buffer : data;
 	_cleanup_free_ char *filename = NULL;
-	int err = nvme_identify_cns_nsid(hdl, cns->id, nsid, buff);
+	int err;
 
+	err = nvme_identify(hdl, nsid, NVME_CSI_NVM, cns->id, buff, 0);
 	if (err)
 		return err;
 
-	if (asprintf(&filename, "cntid_0_cns_%d_nsid_%d_nvmsetid_0_csi_0.bin", cns->id, nsid) < 0)
+	if (asprintf(&filename, "cntid_0_cns_%d_nsid_%d_nvmsetid_0_csi_0.bin",
+		     cns->id, nsid) < 0)
 		return -errno;
 
-	return log_save(cns, ilog->cfg->out_dir, "identify", filename, buff, sizeof(data));
+	return log_save(cns, ilog->cfg->out_dir, "identify", filename, buff,
+			sizeof(data));
 }
 
-static int ilog_ensure_dump_id_ctrl(struct nvme_transport_handle *hdl, struct ilog *ilog)
+static int ilog_ensure_dump_id_ctrl(struct nvme_transport_handle *hdl,
+		struct ilog *ilog)
 {
 	static bool first = true;
 	static int err;
