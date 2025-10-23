@@ -161,7 +161,7 @@ int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
 
 const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl)
 {
-	return hdl->name;
+	return basename(hdl->name);
 }
 
 bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl)
