@@ -133,7 +133,6 @@ LIBNVME_2_0 {
 		nvme_init_logging;
 		nvme_insert_tls_key;
 		nvme_insert_tls_key_versioned;
-		nvme_io;
 		nvme_io_passthru64;
 		nvme_io_passthru;
 		nvme_ipaddrs_eq;
