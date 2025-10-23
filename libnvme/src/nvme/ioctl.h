@@ -455,6 +455,38 @@ enum nvme_cmd_dword_fields {
 	NVME_IOCS_COMMON_CDW15_ELBAT_MASK			= 0xffff,
 	NVME_IOCS_COMMON_CDW15_ELBATM_SHIFT			= 16,
 	NVME_IOCS_COMMON_CDW15_ELBATM_MASK			= 0xffff,
+	NVME_COPY_CDW3_LBTU_SHIFT				= 0,
+	NVME_COPY_CDW3_LBTU_MASK				= 0xffffffff,
+	NVME_COPY_CDW10_SDLBAL_SHIFT				= 0,
+	NVME_COPY_CDW10_SDLBAL_MASK				= 0xffffffff,
+	NVME_COPY_CDW11_SDLBAU_SHIFT				= 0,
+	NVME_COPY_CDW11_SDLBAU_MASK				= 0xffffffff,
+	NVME_COPY_CDW12_NR_SHIFT				= 0,
+	NVME_COPY_CDW12_NR_MASK					= 0xff,
+	NVME_COPY_CDW12_DESFMT_SHIFT				= 8,
+	NVME_COPY_CDW12_DESFMT_MASK				= 0xf,
+	NVME_COPY_CDW12_PRINFOR_SHIFT				= 12,
+	NVME_COPY_CDW12_PRINFOR_MASK				= 0xf,
+	NVME_COPY_CDW12_CETYPE_SHIFT				= 16,
+	NVME_COPY_CDW12_CETYPE_MASK				= 0xf,
+	NVME_COPY_CDW12_DTYPE_SHIFT				= 20,
+	NVME_COPY_CDW12_DTYPE_MASK				= 0xf,
+	NVME_COPY_CDW12_STCW_SHIFT				= 24,
+	NVME_COPY_CDW12_STCW_MASK				= 0x1,
+	NVME_COPY_CDW12_STCR_SHIFT				= 25,
+	NVME_COPY_CDW12_STCR_MASK				= 0x1,
+	NVME_COPY_CDW12_PRINFOW_SHIFT				= 26,
+	NVME_COPY_CDW12_PRINFOW_MASK				= 0xf,
+	NVME_COPY_CDW12_FUA_SHIFT				= 30,
+	NVME_COPY_CDW12_FUA_MASK				= 0x1,
+	NVME_COPY_CDW12_LR_SHIFT				= 31,
+	NVME_COPY_CDW12_LR_MASK					= 0x1,
+	NVME_COPY_CDW14_LBTL_SHIFT				= 0,
+	NVME_COPY_CDW14_LBTL_MASK				= 0xffffffff,
+	NVME_COPY_CDW15_LBAT_SHIFT				= 0,
+	NVME_COPY_CDW15_LBAT_MASK				= 0xffff,
+	NVME_COPY_CDW15_LBATM_SHIFT				= 16,
+	NVME_COPY_CDW15_LBATM_MASK				= 0xffff,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -4764,15 +4796,89 @@ nvme_init_verify(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
 }
 
 /**
- * nvme_copy() - Copy command
- * @hdl:	Transport handle
- * @args:	&struct nvme_copy_args argument structure
+ * nvme_init_copy() - Initialize passthru command for Copy command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @sdlba:	Start destination LBA
+ * @nr:		Number of ranges (1-based, 0-based in command)
+ * @desfmt:	Descriptor format
+ * @prinfor:	Protection information field for read
+ * @prinfow:	Protection information field for write
+ * @cetype:	Command Extension Type
+ * @dtype:	Directive Type
+ * @stcw:	Storage Tag Check Write
+ * @stcr:	Storage Tag Check Read
+ * @fua:	Force unit access
+ * @lr:		Limited retry
+ * @cev:	Command Extension Value
+ * @dspec:	Directive specific value
+ * @cpydsc:	Range description buffer
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Initializes the passthru command buffer for the Copy command by calculating
+ * the data length and calling the generic I/O initializer.
  */
-int nvme_copy(struct nvme_transport_handle *hdl, struct nvme_copy_args *args);
+static inline void
+nvme_init_copy(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 sdlba,
+		__u16 nr, __u8 desfmt, __u8 prinfor, __u8 prinfow,
+		__u8 cetype, __u8 dtype, bool stcw, bool stcr, bool fua,
+		bool lr, __u16 cev, __u16 dspec, void *cpydsc)
+{
+	__u32 data_len;
 
+	switch (desfmt) {
+	case 1:
+		data_len = nr * sizeof(struct nvme_copy_range_f1);
+		break;
+	case 2:
+		data_len = nr * sizeof(struct nvme_copy_range_f2);
+		break;
+	case 3:
+		data_len = nr * sizeof(struct nvme_copy_range_f3);
+		break;
+	default:
+		data_len = nr * sizeof(struct nvme_copy_range);
+		break;
+	}
+
+	nvme_init_io(cmd, nvme_cmd_copy, nsid, sdlba, cpydsc,
+		data_len, NULL, 0);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nr - 1,
+			NVME_COPY_CDW12_NR_SHIFT,
+			NVME_COPY_CDW12_NR_MASK) |
+		     NVME_FIELD_ENCODE(desfmt,
+			NVME_COPY_CDW12_DESFMT_SHIFT,
+			NVME_COPY_CDW12_DESFMT_MASK) |
+		     NVME_FIELD_ENCODE(prinfor,
+			NVME_COPY_CDW12_PRINFOR_SHIFT,
+			NVME_COPY_CDW12_PRINFOR_MASK) |
+		     NVME_FIELD_ENCODE(cetype,
+			NVME_COPY_CDW12_CETYPE_SHIFT,
+			NVME_COPY_CDW12_CETYPE_MASK) |
+		     NVME_FIELD_ENCODE(dtype,
+			NVME_COPY_CDW12_DTYPE_SHIFT,
+			NVME_COPY_CDW12_DTYPE_MASK) |
+		     NVME_FIELD_ENCODE(stcw,
+			NVME_COPY_CDW12_STCW_SHIFT,
+			NVME_COPY_CDW12_STCW_MASK) |
+		     NVME_FIELD_ENCODE(stcr,
+			NVME_COPY_CDW12_STCR_SHIFT,
+			NVME_COPY_CDW12_STCR_MASK) |
+		     NVME_FIELD_ENCODE(prinfow,
+			NVME_COPY_CDW12_PRINFOW_SHIFT,
+			NVME_COPY_CDW12_PRINFOW_MASK) |
+		     NVME_FIELD_ENCODE(fua,
+			NVME_COPY_CDW12_FUA_SHIFT,
+			NVME_COPY_CDW12_FUA_MASK) |
+		     NVME_FIELD_ENCODE(lr,
+			NVME_COPY_CDW12_LR_SHIFT,
+			NVME_COPY_CDW12_LR_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK) |
+		     NVME_FIELD_ENCODE(dspec,
+			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSPEC_MASK);
+}
 
 /**
  * nvme_init_resv_acquire() - Initialize passthru command for

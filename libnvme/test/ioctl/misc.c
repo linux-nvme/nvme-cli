@@ -999,43 +999,39 @@ static void test_dsm(void)
 
 static void test_copy(void)
 {
+	__u16 nr = 0x12, cev = 0, dspec = 0;
+	int copy_size = sizeof(struct nvme_copy_range) * nr, err;
+	bool prinfor = false, prinfow = false, stcw = false,
+		stcr = false, fua = false, lr = false;
+	__u8 cetype = 0, dtype = 0, desfmt = 0xf;
+	__u64 sdlba = 0xfffff;
 	__u32 result = 0;
-	__u16 nr = 0x12;
-	int copy_size = sizeof(struct nvme_copy_range) * nr;
 
 	_cleanup_free_ struct nvme_copy_range *copy = NULL;
 
 	copy = malloc(copy_size);
 	check(copy, "copy: ENOMEM");
 
-	struct nvme_copy_args args = {
-		.sdlba = 0xfffff,
-		.result = &result,
-		.copy = copy,
-		.args_size = sizeof(args),
-		.nsid = TEST_NSID,
-		.nr = nr,
-		.format = 0xf,
-	};
-
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_copy,
 		.nsid = TEST_NSID,
-		.cdw10 = args.sdlba & 0xffffffff,
-		.cdw11 = args.sdlba >> 32,
-		.cdw12 = ((args.nr - 1) & 0xff) | ((args.format & 0xf) << 8) |
-			 ((args.prinfor & 0xf) << 12) |
-			 ((args.dtype & 0xf) << 20) |
-			 ((args.prinfow & 0xf) << 26) |
-			 ((args.fua & 0x1) << 30) | ((args.lr & 0x1) << 31),
-		.data_len = args.nr * sizeof(struct nvme_copy_range),
-		.in_data = args.copy,
+		.cdw10 = sdlba & 0xffffffff,
+		.cdw11 = sdlba >> 32,
+		.cdw12 = ((nr - 1) & 0xff) | ((desfmt & 0xf) << 8) |
+			 ((prinfor & 0xf) << 12) |
+			 ((dtype & 0xf) << 20) |
+			 ((prinfow & 0xf) << 26) |
+			 ((fua & 0x1) << 30) | ((lr & 0x1) << 31),
+		.data_len = nr * sizeof(struct nvme_copy_range),
+		.in_data = copy,
 	};
-
-	int err;
+	struct nvme_passthru_cmd cmd;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_copy(test_hdl, &args);
+	nvme_init_copy(&cmd, TEST_NSID, sdlba, nr, desfmt,
+		prinfor, prinfow, cetype, dtype, stcw, stcr,
+		fua, lr, cev, dspec, (void *)copy);
+	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %u", result);
