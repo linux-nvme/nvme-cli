@@ -18,16 +18,16 @@ def disc_supp_str(dlp_supp_opts):
     }
     return [txt for msk, txt in bitmap.items() if dlp_supp_opts & msk]
 
-root = nvme.root()      # This is a singleton
-root.log_level('debug') # Optional: extra debug info
+ctx = nvme.global_ctx()     # This is a singleton
+ctx.log_level('debug')      # Optional: extra debug info
 
-host = nvme.host(root)      # This "may be" a singleton. 
+host = nvme.host(ctx)       # This "may be" a singleton.
 subsysnqn  = [string]       # e.g. nvme.NVME_DISC_SUBSYS_NAME, ...
 transport  = [string]       # One of: 'tcp', 'rdma', 'fc', 'loop'.
 traddr     = [IPv4 or IPv6] # e.g. '192.168.10.10', 'fd2e:853b:3cad:e135:506a:65ee:29f2:1b18', ...
 trsvcid    = [string]		# e.g. '8009', '4420', ...
 host_iface = [interface]    # e.g. 'eth1', ens256', ...
-ctrl = nvme.ctrl(root, subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid, host_iface=host_iface)
+ctrl = nvme.ctrl(ctx, subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid, host_iface=host_iface)
 
 try:
     cfg = {
@@ -61,6 +61,6 @@ except Exception as e:
 
 ctrl = None
 host = None
-root = None
+ctx = None
 ```
 
