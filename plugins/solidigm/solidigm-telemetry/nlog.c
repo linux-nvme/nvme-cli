@@ -18,6 +18,12 @@
 			    LOG_ENTRY_NUM_ARGS_MAX)
 #define MAX_HEADER_MISMATCH_TRACK 10
 
+
+struct header_mismatch {
+	uint32_t prev;
+	uint32_t miss;
+};
+
 static int formats_find(struct json_object *formats, uint32_t val, struct json_object **format)
 {
 	char hex_header[STR_HEX32_SIZE];
@@ -32,11 +38,13 @@ static uint32_t nlog_get_pos(const uint32_t *nlog, const uint32_t nlog_size, int
 }
 
 static uint32_t nlog_get_events(const uint32_t *nlog, const uint32_t nlog_size, int start_offset,
-	       struct json_object *formats, struct json_object *events, uint32_t *tail_mismatches)
+				struct json_object *formats, struct json_object *events,
+				struct header_mismatch *tail_mismatches)
 {
 	uint32_t event_count = 0;
 	int last_bad_header_pos = nlog_size + 1; // invalid nlog offset
 	uint32_t tail_count = 0;
+	uint32_t prev_header = 0;
 
 	for (int i = nlog_size - start_offset - 1; i >= -start_offset; i--) {
 		struct json_object *format = NULL;
@@ -48,8 +56,10 @@ static uint32_t nlog_get_events(const uint32_t *nlog, const uint32_t nlog_size, 
 				//check if found circular buffer tail
 				if (i != (last_bad_header_pos - 1)) {
 					if (tail_mismatches &&
-					    (tail_count < MAX_HEADER_MISMATCH_TRACK))
-						tail_mismatches[tail_count] = header;
+					    (tail_count < MAX_HEADER_MISMATCH_TRACK)) {
+						tail_mismatches[tail_count].prev = prev_header;
+						tail_mismatches[tail_count].miss = header;
+					}
 					tail_count++;
 				}
 				last_bad_header_pos = i;
@@ -77,6 +87,7 @@ static uint32_t nlog_get_events(const uint32_t *nlog, const uint32_t nlog_size, 
 		}
 		i -= 2 + num_data;
 		event_count++;
+		prev_header = header;
 	}
 	return tail_count;
 }
@@ -86,14 +97,14 @@ int solidigm_nlog_parse(const char *buffer, uint64_t buff_size,	struct json_obje
 {
 	uint32_t smaller_tail_count = UINT32_MAX;
 	int best_offset = 0;
-	uint32_t offset_tail_mismatches[LOG_ENTRY_MAX_SIZE][MAX_HEADER_MISMATCH_TRACK];
+	struct header_mismatch tail_mismatches[LOG_ENTRY_MAX_SIZE][MAX_HEADER_MISMATCH_TRACK];
 	struct json_object *events = json_object_new_array();
 	const uint32_t *nlog = (uint32_t *)buffer;
 	const uint32_t nlog_size = buff_size / sizeof(uint32_t);
 
 	for (int i = 0; i < LOG_ENTRY_MAX_SIZE; i++) {
 		uint32_t tail_count = nlog_get_events(nlog, nlog_size, i, formats, NULL,
-						      offset_tail_mismatches[i]);
+						      tail_mismatches[i]);
 		if (tail_count < smaller_tail_count) {
 			best_offset = i;
 			smaller_tail_count = tail_count;
@@ -102,25 +113,27 @@ int solidigm_nlog_parse(const char *buffer, uint64_t buff_size,	struct json_obje
 			break;
 	}
 	if (smaller_tail_count > 1) {
-		const char *name = "";
+		int obj_id = -1;
 		int media_bank = -1;
-		char str_mismatches[(STR_HEX32_SIZE + 1) * MAX_HEADER_MISMATCH_TRACK];
+		char str_mismatches[(STR_HEX32_SIZE + 1) * 2 * MAX_HEADER_MISMATCH_TRACK];
 		int pos = 0;
 		int show_mismatch_num = smaller_tail_count < MAX_HEADER_MISMATCH_TRACK ?
 					smaller_tail_count : MAX_HEADER_MISMATCH_TRACK;
 		struct json_object *jobj;
 
-		if (json_object_object_get_ex(metadata, "objName", &jobj))
-			name = json_object_get_string(jobj);
+		if (json_object_object_get_ex(metadata, "objectId", &jobj))
+			obj_id = json_object_get_int(jobj);
 		if (json_object_object_get_ex(metadata, "mediaBankId", &jobj))
 			media_bank = json_object_get_int(jobj);
 
 		for (int i = 0; i < show_mismatch_num; i++)
-			pos += snprintf(&str_mismatches[pos], STR_HEX32_SIZE + 1, "0x%08X ",
-				       offset_tail_mismatches[best_offset][i]);
+			pos += snprintf(&str_mismatches[pos], (STR_HEX32_SIZE + 1) * 2,
+				       "0x%08X-0x%08X ",
+				       tail_mismatches[best_offset][i].prev,
+				       tail_mismatches[best_offset][i].miss);
 
-		SOLIDIGM_LOG_WARNING("%s:%d with %d header mismatches ( %s). Configuration file may be missing format headers.",
-				      name, media_bank, smaller_tail_count, str_mismatches);
+		SOLIDIGM_LOG_WARNING("Warning: obj:%d-%d with %d header sequence mismatches ( %s).",
+				      obj_id, media_bank, smaller_tail_count, str_mismatches);
 	}
 	nlog_get_events(nlog, nlog_size, best_offset, formats, events, NULL);
 
