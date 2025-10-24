@@ -46,8 +46,8 @@ static void nvidia_id_ctrl(__u8 *vs, struct json_object *root)
 	printf("json_rpc_2_0_ver : %s\n", json_rpc_2_0_ver);
 }
 
-static int id_ctrl(int argc, char **argv, struct command *cmd,
+static int id_ctrl(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	return __id_ctrl(argc, argv, cmd, plugin, nvidia_id_ctrl);
+	return __id_ctrl(argc, argv, acmd, plugin, nvidia_id_ctrl);
 }

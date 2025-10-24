@@ -324,7 +324,7 @@ static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 
 }
 
-static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_additional_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
 	char *desc =
@@ -496,7 +496,7 @@ static void show_lat_stats_myrtle(struct sfx_lat_stats_myrtle *stats, int write)
 }
 
 
-static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct sfx_lat_stats stats;
 	char *desc = "Get ScaleFlux Latency Statistics log and show it.";
@@ -644,7 +644,7 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
  *
  * @return
  */
-static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_get_bad_block(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const __u64 buf_size = 256*4096*sizeof(unsigned char);
 	unsigned char *data_buf;
@@ -697,7 +697,7 @@ static void show_cap_info(struct sfx_freespace_ctx *ctx)
 	printf("map_unit                 :0x%"PRIx64"K\n", (uint64_t)(ctx->map_unit * 4));
 }
 
-static int query_cap_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int query_cap_info(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct sfx_freespace_ctx sfctx = { 0 };
 	char *desc = "query current capacity info";
@@ -815,7 +815,7 @@ static int sfx_confirm_change(const char *str)
 	return 1;
 }
 
-static int change_cap(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int change_cap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "dynamic change capacity";
 	const char *cap_gb = "cap size in GB";
@@ -924,7 +924,7 @@ char *sfx_feature_to_string(int feature)
 	}
 }
 
-static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "ScaleFlux internal set features\n"
 				 "feature id 1: ATOMIC\n"
@@ -1027,7 +1027,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	return err;
 }
 
-static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_get_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "ScaleFlux internal set features\n"
 				 "feature id 1: ATOMIC";
@@ -1344,7 +1344,7 @@ ret:
 	return err;
 }
 
-static int sfx_dump_evtlog(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "dump evtlog into file and parse";
 	const char *file = "evtlog file(required)";
@@ -1468,7 +1468,7 @@ ret:
 	return err;
 }
 
-static int sfx_expand_cap(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_expand_cap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "expand capacity";
 	const char *namespace_id = "desired namespace";
@@ -1531,12 +1531,12 @@ static int sfx_expand_cap(int argc, char **argv, struct command *cmd, struct plu
 	if (err)
 		return err;
 
-	printf("%s: Success, create nsid:%d\n", cmd->name, cfg.namespace_id);
+	printf("%s: Success, create nsid:%d\n", acmd->name, cfg.namespace_id);
 
 	return 0;
 }
 
-static int sfx_status(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc				= "Get ScaleFlux specific status information and print it";
 	const char *json_desc			= "Print output in JSON format, otherwise human readable";

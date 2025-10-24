@@ -374,7 +374,7 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 	return err;
 }
 
-int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd,
+int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acmd,
 				      struct plugin *plugin)
 {
 	const char *desc = "Get and Parse Solidigm Latency Tracking Statistics log.";

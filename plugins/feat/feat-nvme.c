@@ -133,7 +133,7 @@ static int power_mgmt_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	return err;
 }
 
-static int feat_power_mgmt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int feat_power_mgmt(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *ps = "power state";
 	const char *wh = "workload hint";
@@ -235,7 +235,7 @@ static int perfc_set(struct nvme_transport_handle *hdl, __u8 fid, __u32 cdw11,
 	return err;
 }
 
-static int feat_perfc(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int feat_perfc(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *namespace_id_optional = "optional namespace attached to controller";
 	const char *attri = "attribute index";
@@ -311,7 +311,7 @@ static int hctm_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	return err;
 }
 
-static int feat_hctm(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int feat_hctm(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const __u8 fid = NVME_FEAT_FID_HCTM;
 
@@ -381,7 +381,7 @@ static int timestamp_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	return err;
 }
 
-static int feat_timestamp(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int feat_timestamp(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const __u8 fid = NVME_FEAT_FID_TIMESTAMP;
 	const char *tstmp = "timestamp";
@@ -458,7 +458,7 @@ static int temp_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	return err;
 }
 
-static int feat_temp_thresh(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int feat_temp_thresh(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const __u8 fid = NVME_FEAT_FID_TEMP_THRESH;
 	const char *tmpth = "temperature threshold";
@@ -539,7 +539,7 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	return err;
 }
 
-static int feat_arbitration(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int feat_arbitration(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const __u8 fid = NVME_FEAT_FID_ARBITRATION;
 	const char *ab = "arbitration burst";
@@ -603,7 +603,7 @@ static int volatile_wc_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	return err;
 }
 
-static int feat_volatile_wc(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int feat_volatile_wc(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const __u8 fid = NVME_FEAT_FID_VOLATILE_WC;
 	const char *wce = "volatile write cache enable";

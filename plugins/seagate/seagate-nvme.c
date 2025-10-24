@@ -143,7 +143,7 @@ static void json_log_pages_supp(log_page_map *logPageMap)
 	json_free_object(root);
 }
 
-static int log_pages_supp(int argc, char **argv, struct command *cmd,
+static int log_pages_supp(int argc, char **argv, struct command *acmd,
 			  struct plugin *plugin)
 {
 	int err = 0;
@@ -886,7 +886,7 @@ static void json_print_stx_smart_log_C0(struct json_object *root, STX_EXT_SMART_
 	json_array_add_value_object(logPages, lbaf);
 }
 
-static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct nvme_id_ctrl     ctrl;
 	char                    modelNo[40];
@@ -1069,7 +1069,7 @@ static void json_temp_stats(__u32 temperature, __u32 PcbTemp, __u32 SocTemp,
 	json_print_object(root, NULL);
 }
 
-static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct nvme_smart_log smart_log;
 	EXTENDED_SMART_INFO_T ExtdSMARTInfo;
@@ -1248,7 +1248,7 @@ static void json_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 	json_print_object(root, NULL);
 }
 
-static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	pcie_error_log_page pcieErrorLog;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -1394,7 +1394,7 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 	json_free_object(root);
 }
 
-static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	stx_fw_activ_history_log_page fwActivHis;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -1447,7 +1447,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 /* EOF FW Activation History log information */
 
 
-static int clear_fw_activate_history(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int clear_fw_activate_history(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Clear FW Activation History for the given Seagate device ";
 	const char *save = "specifies that the controller shall save the attribute";
@@ -1517,7 +1517,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *cmd,
 }
 
 
-static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Clear Seagate PCIe Correctable counters for the given device ";
 	const char *save = "specifies that the controller shall save the attribute";
@@ -1591,7 +1591,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	return err;
 }
 
-static int get_host_tele(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_host_tele(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
 	    "Capture the Telemetry Host-Initiated Data in either hex-dump (default) or binary format";
@@ -1718,7 +1718,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 	return err;
 }
 
-static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
 	    "Capture the Telemetry Controller-Initiated Data in either hex-dump (default) or binary format";
@@ -1845,7 +1845,7 @@ seaget_d_raw(unsigned char *buf, int len, int fd)
 }
 
 
-static int vs_internal_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int vs_internal_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Capture the Telemetry Controller-Initiated Data in binary format";
 	const char *namespace_id = "desired namespace";
@@ -1966,7 +1966,7 @@ out:
 }
 
 /*SEAGATE-PLUGIN Version */
-static int seagate_plugin_version(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int seagate_plugin_version(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	printf("Seagate-Plugin version : %d.%d\n",
 		   SEAGATE_PLUGIN_VERSION_MAJOR,
@@ -1976,7 +1976,7 @@ static int seagate_plugin_version(int argc, char **argv, struct command *cmd, st
 /*EOF SEAGATE-PLUGIN Version */
 
 /*OCP SEAGATE-PLUGIN Version */
-static int stx_ocp_plugin_version(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int stx_ocp_plugin_version(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	printf("Seagate-OCP-Plugin version : %d.%d\n",
 		SEAGATE_OCP_PLUGIN_VERSION_MAJOR,

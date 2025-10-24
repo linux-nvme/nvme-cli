@@ -113,7 +113,7 @@ static void show_shannon_smart_log(struct nvme_shannon_smart_log *smart,
 	       int48_to_long(smart->items[SRAM_ERROR_CNT].item_val));
 }
 
-static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_additional_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct nvme_shannon_smart_log smart_log;
 	char *desc =
@@ -157,7 +157,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	return err;
 }
 
-static int get_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_additional_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Read operating parameters of the\n"
 		"specified controller. Operating parameters are grouped\n"
@@ -249,7 +249,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	return err;
 }
 
-static int set_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int set_additional_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Modify the saveable or changeable\n"
 		"current operating parameters of the controller. Operating\n"
@@ -363,8 +363,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	return err;
 }
 
-static int shannon_id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int shannon_id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return __id_ctrl(argc, argv, cmd, plugin, NULL);
+	return __id_ctrl(argc, argv, acmd, plugin, NULL);
 }
 

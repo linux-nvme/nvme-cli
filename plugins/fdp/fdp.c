@@ -17,7 +17,7 @@
 #define CREATE_CMD
 #include "fdp.h"
 
-static int fdp_configs(int argc, char **argv, struct command *cmd,
+static int fdp_configs(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
 	const char *desc = "Get Flexible Data Placement Configurations";
@@ -95,7 +95,7 @@ static int fdp_configs(int argc, char **argv, struct command *cmd,
 	return 0;
 }
 
-static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Get Flexible Data Placement Reclaim Unit Handle Usage";
 	const char *egid = "Endurance group identifier";
@@ -163,7 +163,7 @@ static int fdp_usage(int argc, char **argv, struct command *cmd, struct plugin *
 	return 0;
 }
 
-static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int fdp_stats(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Get Flexible Data Placement Statistics";
 	const char *egid = "Endurance group identifier";
@@ -223,7 +223,7 @@ static int fdp_stats(int argc, char **argv, struct command *cmd, struct plugin *
 	return 0;
 }
 
-static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int fdp_events(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Get Flexible Data Placement Events";
 	const char *egid = "Endurance group identifier";
@@ -288,7 +288,7 @@ static int fdp_events(int argc, char **argv, struct command *cmd, struct plugin 
 	return 0;
 }
 
-static int fdp_status(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Reclaim Unit Handle Status";
 	const char *namespace_id = "Namespace identifier";
@@ -364,7 +364,7 @@ static int fdp_status(int argc, char **argv, struct command *cmd, struct plugin 
 	return 0;
 }
 
-static int fdp_update(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Reclaim Unit Handle Update";
 	const char *namespace_id = "Namespace identifier";
@@ -427,7 +427,7 @@ static int fdp_update(int argc, char **argv, struct command *cmd, struct plugin 
 	return 0;
 }
 
-static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int fdp_set_events(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Enable or disable FDP events";
 	const char *namespace_id = "Namespace identifier";
@@ -520,7 +520,7 @@ static int fdp_set_events(int argc, char **argv, struct command *cmd, struct plu
 	return 0;
 }
 
-static int fdp_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Show, enable or disable FDP configuration";
 	const char *enable_conf_idx = "FDP configuration index to enable";

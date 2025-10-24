@@ -6,10 +6,10 @@
  *          leonardo.da.cunha@solidigm.com
  */
 
-int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+int ocp_clear_fw_update_history(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 
-int ocp_clear_pcie_correctable_errors(int argc, char **argv, struct command *cmd,
+int ocp_clear_pcie_correctable_errors(int argc, char **argv, struct command *acmd,
 					     struct plugin *plugin);
 
-int get_ocp_error_counters(int argc, char **argv, struct command *cmd,
+int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 			    struct plugin *plugin);

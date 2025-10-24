@@ -47,8 +47,8 @@ static void dell_id_ctrl(__u8 *vs, struct json_object *root)
 	printf("array_ver  : %s\n", array_ver);
 }
 
-static int id_ctrl(int argc, char **argv, struct command *cmd,
+static int id_ctrl(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	return __id_ctrl(argc, argv, cmd, plugin, dell_id_ctrl);
+	return __id_ctrl(argc, argv, acmd, plugin, dell_id_ctrl);
 }

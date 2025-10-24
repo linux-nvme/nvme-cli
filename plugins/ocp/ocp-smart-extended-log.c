@@ -95,7 +95,7 @@ out:
 	return ret;
 }
 
-int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
+int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 		      struct plugin *plugin)
 {
 	const char *desc = "Retrieve the extended SMART health data.";

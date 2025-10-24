@@ -58,7 +58,7 @@ enum hwcomp_id {
 	HWCOMP_ID_MAX = 0xffff,
 };
 
-int ocp_hwcomp_log(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+int ocp_hwcomp_log(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 const char *hwcomp_id_to_string(__u32 id);
 
 #endif /* OCP_HARDWARE_COMPONENT_LOG_H */

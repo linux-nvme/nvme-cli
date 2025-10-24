@@ -128,9 +128,9 @@ static void amzn_id_ctrl(__u8 *vs, struct json_object *root)
 	printf("bdev      : %s\n", bdev);
 }
 
-static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return __id_ctrl(argc, argv, cmd, plugin, amzn_id_ctrl);
+	return __id_ctrl(argc, argv, acmd, plugin, amzn_id_ctrl);
 }
 
 /* this function converts the size (in uint32_t) into human readable string
@@ -462,7 +462,7 @@ static void amzn_print_json_stats(struct amzn_latency_log_page *log, bool detail
 #define amzn_print_json_stats(log, detail)
 #endif /* CONFIG_JSONC */
 
-static int get_stats(int argc, char **argv, struct command *cmd,
+static int get_stats(int argc, char **argv, struct command *acmd,
 		     struct plugin *plugin)
 {
 	const char *desc = "display command latency statistics";

@@ -885,7 +885,7 @@ static int netapp_output_format(char *format)
 }
 
 /* handler for 'nvme netapp smdevices' */
-static int netapp_smdevices(int argc, char **argv, struct command *command,
+static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 			    struct plugin *plugin)
 {
 	const char *desc = "Display information about E-Series volumes.";
@@ -996,7 +996,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 }
 
 /* handler for 'nvme netapp ontapdevices' */
-static int netapp_ontapdevices(int argc, char **argv, struct command *command,
+static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);

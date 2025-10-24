@@ -149,7 +149,7 @@ callback, and the plug-in structure that contains that command. The
 prototype looks like this:
 
   ```c
-  int f(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+  int f(int argc, char **argv, struct command *command, struct plugin *plugin);
   ```
 
 The argc and argv are adjusted from the command line arguments to start

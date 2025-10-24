@@ -494,7 +494,7 @@ static void join_fields(char *dest, struct field *fields)
 	}
 }
 
-int sldgm_get_workload_tracker(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Real Time capture Workload Tracker samples";
 	const char *sample_interval = "Sample interval";

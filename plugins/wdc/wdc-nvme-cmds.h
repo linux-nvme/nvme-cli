@@ -106,7 +106,7 @@ int run_wdc_vs_device_waf(int argc, char **argv,
 		struct plugin *plugin);
 
 int run_wdc_set_latency_monitor_feature(int argc, char **argv,
-		struct command *cmd,
+		struct command *command,
 		struct plugin *plugin);
 
 int run_wdc_vs_temperature_stats(int argc, char **argv,

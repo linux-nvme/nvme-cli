@@ -39,16 +39,18 @@ static int help(int argc, char **argv, struct plugin *plugin)
 	}
 
 	for (i = 0; plugin->commands[i]; i++) {
-		struct command *cmd = plugin->commands[i];
+		struct command *command = plugin->commands[i];
 
-		if (strcmp(str, cmd->name))
-			if (!cmd->alias || (cmd->alias && strcmp(str, cmd->alias)))
+		if (strcmp(str, command->name))
+			if (!command->alias ||
+			    (command->alias && strcmp(str, command->alias)))
 				continue;
 
 		if (plugin->name)
-			sprintf(man, "%s-%s-%s", prog->name, plugin->name, cmd->name);
+			sprintf(man, "%s-%s-%s", prog->name,
+				plugin->name, command->name);
 		else
-			sprintf(man, "%s-%s", prog->name, cmd->name);
+			sprintf(man, "%s-%s", prog->name, command->name);
 		if (execlp("man", "man", man, (char *)NULL))
 			perror(argv[1]);
 	}

@@ -10,7 +10,7 @@
 
 #undef ENTRY
 #define ENTRY(n, h, f, ...) \
-static int f(int argc, char **argv, struct command *command, struct plugin *plugin);
+static int f(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...) args

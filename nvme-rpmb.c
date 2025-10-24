@@ -839,7 +839,7 @@ static bool invalid_xfer_size(int blocks, unsigned int bpsz)
 }
 
 /* Handling rpmb sub-command */
-int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc    = "Run RPMB command on the supporting controller";
 	const char *msg     = "data to be written on write-data or write-config commands";

@@ -72,7 +72,7 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 	return err;
 }
 
-int get_ocp_error_counters(int argc, char **argv, struct command *cmd,
+int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 			   struct plugin *plugin)
 {
 	const char *desc = "Define Issue Get Feature cmd (FID: 0xC3) Clear PCIe Corr Err Counters";
@@ -146,7 +146,7 @@ int get_ocp_error_counters(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd,
+int ocp_clear_fw_update_history(int argc, char **argv, struct command *acmd,
 				struct plugin *plugin)
 {
 	const char *desc = "OCP Clear Firmware Update History";
@@ -155,7 +155,7 @@ int ocp_clear_fw_update_history(int argc, char **argv, struct command *cmd,
 }
 
 int ocp_clear_pcie_correctable_errors(int argc, char **argv,
-				      struct command *cmd,
+				      struct command *command,
 				      struct plugin *plugin)
 {
 	const char *desc = "OCP Clear PCIe Correctable Error Counters";

@@ -529,7 +529,7 @@ static void normal_show_nbfts(struct list_head *nbft_list, bool show_subsys,
 	}
 }
 
-int show_nbft(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Display contents of the ACPI NBFT files.";
 	struct list_head nbft_list;

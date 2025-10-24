@@ -40,7 +40,7 @@ struct __packed fw_activation_history {
 	__le64 log_page_guid[2];
 };
 
-int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
+int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 				  struct plugin *plugin);
 
 #endif

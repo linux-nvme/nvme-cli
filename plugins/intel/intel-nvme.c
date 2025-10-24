@@ -129,9 +129,9 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 	printf("mic_fw    : %s\n", mic_fw);
 }
 
-static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return __id_ctrl(argc, argv, cmd, plugin, intel_id_ctrl);
+	return __id_ctrl(argc, argv, acmd, plugin, intel_id_ctrl);
 }
 
 static void
@@ -331,7 +331,7 @@ static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 		print_intel_smart_log_items(iter);
 }
 
-static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_additional_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
 	    "Get Intel vendor specific additional smart log (optionally, for the specified namespace), and show it.";
@@ -384,7 +384,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	return err;
 }
 
-static int get_market_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_market_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Get Intel Marketing Name log and show it.";
 	const char *raw = "dump output in binary format";
@@ -446,7 +446,7 @@ static void show_temp_stats(struct intel_temp_stats *stats)
 	printf("Estimated offset            : %"PRIu64"\n", le64_to_cpu(stats->est_offset));
 }
 
-static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_temp_stats_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct intel_temp_stats stats;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -1026,7 +1026,7 @@ static void show_lat_stats(int write)
 	}
 }
 
-static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	__u8 data[NAND_LAT_STATS_LEN];
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -1338,7 +1338,7 @@ static int get_internal_log_old(__u8 *buf, int output,
 	return err;
 }
 
-static int get_internal_log(int argc, char **argv, struct command *command,
+static int get_internal_log(int argc, char **argv, struct command *acmd,
 			    struct plugin *plugin)
 {
 	__u8 buf[0x2000];

@@ -222,7 +222,7 @@ static void vu_smart_log_show(struct vu_smart_log *payload, unsigned int nsid, c
 		smart_log_item_print(&item[i]);
 }
 
-int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
 	    "Get Solidigm vendor specific smart log (optionally, for the specified namespace), and show it.";

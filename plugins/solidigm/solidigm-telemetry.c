@@ -60,7 +60,7 @@ static void cleanup_json_object(struct json_object **jobj_ptr)
 	*jobj_ptr = NULL;
 }
 
-int solidigm_get_telemetry_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Parse Solidigm Telemetry log";
 	const char *hgen = "Controls when to generate new host initiated report. Default value '1' generates new host initiated report, value '0' causes retrieval of existing log.";

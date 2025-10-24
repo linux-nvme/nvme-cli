@@ -187,7 +187,7 @@ static void supported_log_pages_json(struct lid_dir *lid_dir[SOLIDIGM_MAX_UUID +
 	printf("\n");
 }
 
-int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *cmd,
+int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *acmd,
 					struct plugin *plugin)
 {
 	const int NO_UUID_INDEX = 0;

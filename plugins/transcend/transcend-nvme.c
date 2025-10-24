@@ -17,7 +17,7 @@ static const __u32 OP_BAD_BLOCK = 0xc2;
 static const __u32 DW10_BAD_BLOCK = 0x400;
 static const __u32 DW12_BAD_BLOCK = 0x5a;
 
-static int getHealthValue(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int getHealthValue(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct nvme_smart_log smart_log;
 	char *desc = "Get nvme health percentage.";
@@ -51,7 +51,7 @@ static int getHealthValue(int argc, char **argv, struct command *cmd, struct plu
 	return result;
 }
 
-static int getBadblock(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int getBadblock(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 
 	char *desc = "Get nvme bad block number.";

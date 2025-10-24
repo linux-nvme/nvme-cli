@@ -940,40 +940,40 @@ static int wdc_do_dump(struct nvme_transport_handle *hdl, __u32 opcode, __u32 da
 		       const char *file, __u32 xfer_size);
 static int wdc_do_crash_dump(struct nvme_transport_handle *hdl, char *file, int type);
 static int wdc_crash_dump(struct nvme_transport_handle *hdl, const char *file, int type);
-static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
+static int wdc_get_crash_dump(int argc, char **argv, struct command *acmd,
 			      struct plugin *plugin);
 static int wdc_do_drive_log(struct nvme_transport_handle *hdl, const char *file);
-static int wdc_drive_log(int argc, char **argv, struct command *command, struct plugin *plugin);
+static int wdc_drive_log(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 static const char *wdc_purge_mon_status_to_string(__u32 status);
-static int wdc_purge(int argc, char **argv, struct command *command, struct plugin *plugin);
-static int wdc_purge_monitor(int argc, char **argv, struct command *command, struct plugin *plugin);
+static int wdc_purge(int argc, char **argv, struct command *acmd, struct plugin *plugin);
+static int wdc_purge_monitor(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 static bool wdc_nvme_check_supported_log_page(struct nvme_global_ctx *ctx,
 		struct nvme_transport_handle *hdl,
 		__u8 log_id,
 		__u8 uuid_index);
-static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct command *command,
+static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct command *acmd,
 					     struct plugin *plugin);
 static int wdc_do_drive_essentials(struct nvme_global_ctx *ctx, struct nvme_transport_handle *hdl, char *dir, char *key);
-static int wdc_drive_essentials(int argc, char **argv, struct command *command,
+static int wdc_drive_essentials(int argc, char **argv, struct command *acmd,
 				struct plugin *plugin);
-static int wdc_drive_status(int argc, char **argv, struct command *command, struct plugin *plugin);
-static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
+static int wdc_drive_status(int argc, char **argv, struct command *acmd, struct plugin *plugin);
+static int wdc_clear_assert_dump(int argc, char **argv, struct command *acmd,
 				 struct plugin *plugin);
-static int wdc_drive_resize(int argc, char **argv, struct command *command, struct plugin *plugin);
+static int wdc_drive_resize(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 static int wdc_do_drive_resize(struct nvme_transport_handle *hdl, uint64_t new_size);
-static int wdc_namespace_resize(int argc, char **argv, struct command *command,
+static int wdc_namespace_resize(int argc, char **argv, struct command *acmd,
 				struct plugin *plugin);
 static int wdc_do_namespace_resize(struct nvme_transport_handle *hdl, __u32 nsid, __u32 op_option);
-static int wdc_reason_identifier(int argc, char **argv, struct command *command,
+static int wdc_reason_identifier(int argc, char **argv, struct command *acmd,
 				 struct plugin *plugin);
 static int wdc_do_get_reason_id(struct nvme_transport_handle *hdl, const char *file, int log_id);
 static int wdc_save_reason_id(struct nvme_transport_handle *hdl, __u8 *rsn_ident,  int size);
 static int wdc_clear_reason_id(struct nvme_transport_handle *hdl);
-static int wdc_log_page_directory(int argc, char **argv, struct command *command,
+static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 				  struct plugin *plugin);
 static int wdc_do_drive_info(struct nvme_transport_handle *hdl, __u32 *result);
-static int wdc_vs_drive_info(int argc, char **argv, struct command *command, struct plugin *plugin);
-static int wdc_vs_temperature_stats(int argc, char **argv, struct command *command,
+static int wdc_vs_drive_info(int argc, char **argv, struct command *acmd, struct plugin *plugin);
+static int wdc_vs_temperature_stats(int argc, char **argv, struct command *acmd,
 				    struct plugin *plugin);
 static __u64 wdc_get_enc_drive_capabilities(struct nvme_global_ctx *ctx, struct nvme_transport_handle *hdl);
 static int wdc_enc_get_nic_log(struct nvme_transport_handle *hdl, __u8 log_id, __u32 xfer_size, __u32 data_len,
@@ -3931,7 +3931,7 @@ out:
 	return ret;
 }
 
-static int wdc_cap_diag(int argc, char **argv, struct command *command,
+static int wdc_cap_diag(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -4321,7 +4321,7 @@ free_mem:
 	return err;
 }
 
-static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command,
+static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 				  struct plugin *plugin)
 {
 	const char *desc = "Internal Firmware Log.";
@@ -4722,7 +4722,7 @@ static int wdc_do_drive_log(struct nvme_transport_handle *hdl, const char *file)
 	return ret;
 }
 
-static int wdc_drive_log(int argc, char **argv, struct command *command,
+static int wdc_drive_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Capture Drive Log.";
@@ -4770,7 +4770,7 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 	return ret;
 }
 
-static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
+static int wdc_get_crash_dump(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Get Crash Dump.";
@@ -4814,7 +4814,7 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 	return ret;
 }
 
-static int wdc_get_pfail_dump(int argc, char **argv, struct command *command,
+static int wdc_get_pfail_dump(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Get Pfail Crash Dump.";
@@ -4869,9 +4869,9 @@ static void wdc_do_id_ctrl(__u8 *vs, struct json_object *root)
 		printf("wdc vsn: %s\n", strlen(vsn) > 1 ? vsn : "NULL");
 }
 
-static int wdc_id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int wdc_id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return __id_ctrl(argc, argv, cmd, plugin, wdc_do_id_ctrl);
+	return __id_ctrl(argc, argv, acmd, plugin, wdc_do_id_ctrl);
 }
 
 static const char *wdc_purge_mon_status_to_string(__u32 status)
@@ -8347,7 +8347,7 @@ static void wdc_show_cloud_smart_log_normal(struct ocp_cloud_smart_log *log,
 	printf("\n\n");
 }
 
-static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
+static int wdc_vs_smart_add_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve additional performance statistics.";
@@ -8493,7 +8493,7 @@ out:
 	return ret;
 }
 
-static int wdc_cu_smart_log(int argc, char **argv, struct command *command,
+static int wdc_cu_smart_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve customer unique smart log statistics.";
@@ -8614,7 +8614,7 @@ out:
 	return ret;
 }
 
-static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
+static int wdc_vs_cloud_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve Cloud Log Smart/Health Information";
@@ -8684,7 +8684,7 @@ out:
 	return ret;
 }
 
-static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
+static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve Hardware Revision Log Information";
@@ -8767,7 +8767,7 @@ out:
 	return ret;
 }
 
-static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
+static int wdc_vs_device_waf(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve Device Write Amplication Factor";
@@ -8889,7 +8889,7 @@ out:
 	return ret;
 }
 
-static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *command,
+static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve latency monitor log data.";
@@ -8935,7 +8935,7 @@ out:
 	return ret;
 }
 
-static int wdc_get_error_recovery_log(int argc, char **argv, struct command *command,
+static int wdc_get_error_recovery_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve error recovery log data.";
@@ -8981,7 +8981,7 @@ out:
 	return ret;
 }
 
-static int wdc_get_dev_capabilities_log(int argc, char **argv, struct command *command,
+static int wdc_get_dev_capabilities_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve device capabilities log data.";
@@ -9027,7 +9027,7 @@ out:
 	return ret;
 }
 
-static int wdc_get_unsupported_reqs_log(int argc, char **argv, struct command *command,
+static int wdc_get_unsupported_reqs_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve unsupported requirements log data.";
@@ -9114,7 +9114,7 @@ static int wdc_do_clear_pcie_correctable_errors_fid(struct nvme_transport_handle
 	return ret;
 }
 
-static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct command *command,
+static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Clear PCIE Correctable Errors.";
@@ -9153,7 +9153,7 @@ out:
 	return ret;
 }
 
-static int wdc_drive_status(int argc, char **argv, struct command *command,
+static int wdc_drive_status(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Get Drive Status.";
@@ -9305,7 +9305,7 @@ out:
 	return ret;
 }
 
-static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
+static int wdc_clear_assert_dump(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Clear Assert Dump Present Status.";
@@ -9524,7 +9524,7 @@ freeData:
 	return ret;
 }
 
-static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *command,
+static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve FW activate history table.";
@@ -9617,7 +9617,7 @@ static int wdc_do_clear_fw_activate_history_fid(struct nvme_transport_handle *hd
 	return ret;
 }
 
-static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *command,
+static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Clear FW activate history table.";
@@ -9654,7 +9654,7 @@ out:
 	return ret;
 }
 
-static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct command *command,
+static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Disable/Enable Controller Option of the Telemetry Log Page.";
@@ -10454,7 +10454,7 @@ static int wdc_do_drive_essentials(struct nvme_global_ctx *ctx, struct nvme_tran
 	return 0;
 }
 
-static int wdc_drive_essentials(int argc, char **argv, struct command *command,
+static int wdc_drive_essentials(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Capture Drive Essentials.";
@@ -10921,7 +10921,7 @@ static void __show_log_page_directory(struct log_page_directory *directory)
 	}
 }
 
-static int wdc_log_page_directory(int argc, char **argv, struct command *command,
+static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve Log Page Directory.";
@@ -11679,7 +11679,7 @@ out:
 	return ret;
 }
 
-static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
+static int wdc_vs_nand_stats(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve NAND statistics.";
@@ -11756,7 +11756,7 @@ static int wdc_do_vs_pcie_stats(struct nvme_transport_handle *hdl,
 	return ret;
 }
 
-static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
+static int wdc_vs_pcie_stats(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve PCIE statistics.";
@@ -12214,7 +12214,7 @@ out:
 	return ret;
 }
 
-static int wdc_capabilities(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int wdc_capabilities(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Send a capabilities command.";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -12320,7 +12320,7 @@ static int wdc_capabilities(int argc, char **argv, struct command *command, stru
 	return 0;
 }
 
-static int wdc_cloud_ssd_plugin_version(int argc, char **argv, struct command *command,
+static int wdc_cloud_ssd_plugin_version(int argc, char **argv, struct command *acmd,
 					struct plugin *plugin)
 {
 	const char *desc = "Get Cloud SSD Plugin Version command.";
@@ -12354,7 +12354,7 @@ static int wdc_cloud_ssd_plugin_version(int argc, char **argv, struct command *c
 	return 0;
 }
 
-static int wdc_cloud_boot_SSD_version(int argc, char **argv, struct command *command,
+static int wdc_cloud_boot_SSD_version(int argc, char **argv, struct command *acmd,
 				      struct plugin *plugin)
 {
 	const char *desc = "Get Cloud Boot SSD Version command.";
@@ -12416,7 +12416,7 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv, struct command *com
 	return ret;
 }
 
-static int wdc_enc_get_log(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int wdc_enc_get_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Get Enclosure Log.";
 	const char *file = "Output file pathname.";
@@ -12681,7 +12681,7 @@ static int wdc_enc_get_nic_log(struct nvme_transport_handle *hdl, __u8 log_id, _
 //------------------------------------------------------------------------------------
 // Description: set latency monitor feature
 //
-int wdc_set_latency_monitor_feature(int argc, char **argv, struct command *cmd,
+int wdc_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 				    struct plugin *plugin)
 {
 	const char *desc = "Set Latency Monitor feature.";

@@ -65,7 +65,7 @@ static void vu_gc_log_show(struct garbage_control_collection_log *payload, const
 	}
 }
 
-int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Get and parse Solidigm vendor specific garbage collection event log.";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;

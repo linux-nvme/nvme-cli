@@ -499,7 +499,7 @@ static int dapustor_additional_smart_log_data(
 	return 0;
 }
 
-static int dapustor_additional_smart_log(int argc, char **argv, struct command *cmd,
+static int dapustor_additional_smart_log(int argc, char **argv, struct command *acmd,
 					 struct plugin *plugin)
 {
 	const char *desc = "Get DapuStor vendor specific additional smart log, and show it.";

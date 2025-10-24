@@ -5,4 +5,4 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *acmd, struct plugin *plugin);

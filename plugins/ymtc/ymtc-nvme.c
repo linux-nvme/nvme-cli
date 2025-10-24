@@ -116,7 +116,7 @@ static int show_ymtc_smart_log(struct nvme_transport_handle *hdl, __u32 nsid,
 	return err;
 }
 
-static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_additional_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct nvme_ymtc_smart_log smart_log;
 	char *desc =

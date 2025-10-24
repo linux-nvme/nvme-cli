@@ -412,7 +412,7 @@ int parse_params(char *str, int number, ...)
 	return 0;
 }
 
-static int mb_get_additional_smart_log(int argc, char **argv, struct command *cmd,
+static int mb_get_additional_smart_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	struct nvme_memblaze_smart_log smart_log;
@@ -472,7 +472,7 @@ static char *mb_feature_to_string(int feature)
 	}
 }
 
-static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd,
+static int mb_get_powermanager_status(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Get Memblaze power management ststus\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
@@ -513,7 +513,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
 	return err;
 }
 
-static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd,
+static int mb_set_powermanager_status(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Set Memblaze power management status\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
@@ -575,7 +575,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
 #define P2MIN					(1)
 #define P2MAX					(5000)
 #define MB_FEAT_HIGH_LATENCY_VALUE_SHIFT	(15)
-static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd,
+static int mb_set_high_latency_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Set Memblaze high latency log\n"
@@ -734,7 +734,7 @@ static int glp_high_latency(FILE *fdi, char *buf, int buflen, int print)
 	return 1;
 }
 
-static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
+static int mb_high_latency_log_print(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Get Memblaze high latency log";
@@ -785,7 +785,7 @@ static int memblaze_fw_commit(struct nvme_transport_handle *hdl, int select)
 	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
-static int mb_selective_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_selective_download(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
 		"This performs a selective firmware download, which allows the user to\n"
@@ -1002,7 +1002,7 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
 	return 1;
 }
 
-static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_lat_stats_log_print(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char stats[LOG_PAGE_SIZE];
 	char f1[] = FID_C1_LOG_FILENAME;
@@ -1042,7 +1042,7 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
 	return err;
 }
 
-static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd,
+static int memblaze_clear_error_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	char *desc = "Clear Memblaze devices error log.";
@@ -1099,7 +1099,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static int mb_set_lat_stats(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int mb_set_lat_stats(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = (
 			"Enable/Disable Latency Statistics Tracking.\n"
@@ -1628,7 +1628,7 @@ static void smart_log_add_print(struct smart_log_add *log, const char *devname)
 	}
 }
 
-static int mb_get_smart_log_add(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_get_smart_log_add(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	int err = 0;
 
@@ -1648,7 +1648,7 @@ static int mb_get_smart_log_add(int argc, char **argv, struct command *cmd, stru
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, cmd->help, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
 	if (err)
 		return err;
 
@@ -1666,7 +1666,7 @@ static int mb_get_smart_log_add(int argc, char **argv, struct command *cmd, stru
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, nvme_strerror(errno));
 	}
 
 	return err;
@@ -1772,7 +1772,7 @@ struct __packed performance_stats {
 	};
 };
 
-static int mb_set_latency_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	int err = 0;
 
@@ -1811,7 +1811,7 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *cmd, st
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, cmd->help, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
 	if (err)
 		return err;
 
@@ -1841,16 +1841,16 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *cmd, st
 
 	err = nvme_set_features(hdl, &args);
 	if (!err)
-		printf("%s have done successfully. result = %#" PRIx32 ".\n", cmd->name, result);
+		printf("%s have done successfully. result = %#" PRIx32 ".\n", acmd->name, result);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, nvme_strerror(errno));
 
 	return err;
 }
 
-static int mb_get_latency_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	int err = 0;
 
@@ -1862,7 +1862,7 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *cmd, st
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, cmd->help, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
 	if (err)
 		return err;
 
@@ -1872,7 +1872,7 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *cmd, st
 
 	err = nvme_get_features_simple(hdl, FID_LATENCY_FEATURE, 0, &result);
 	if (!err) {
-		printf("%s have done successfully. result = %#" PRIx32 ".\n", cmd->name, result);
+		printf("%s have done successfully. result = %#" PRIx32 ".\n", acmd->name, result);
 
 		printf("latency statistics enable status = %d\n", (result & (0x01 << 0)) >> 0);
 		printf("high latency enable status = %d\n", (result & (0x01 << 1)) >> 1);
@@ -1888,7 +1888,7 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *cmd, st
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, nvme_strerror(errno));
 	}
 
 	return err;
@@ -1994,7 +1994,7 @@ static void latency_stats_print(struct latency_stats *log, const char *devname)
 	}
 }
 
-static int mb_get_latency_stats(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_get_latency_stats(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	// Get the configuration
 
@@ -2014,7 +2014,7 @@ static int mb_get_latency_stats(int argc, char **argv, struct command *cmd, stru
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	int err = parse_and_open(&ctx, &hdl, argc, argv, cmd->help, opts);
+	int err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
 
 	if (err)
 		return err;
@@ -2033,7 +2033,7 @@ static int mb_get_latency_stats(int argc, char **argv, struct command *cmd, stru
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, nvme_strerror(errno));
 	}
 
 	return err;
@@ -2100,7 +2100,7 @@ static void high_latency_log_print(struct high_latency_log *log, const char *dev
 	}
 }
 
-static int mb_get_high_latency_log(int argc, char **argv, struct command *cmd,
+static int mb_get_high_latency_log(int argc, char **argv, struct command *acmd,
 				   struct plugin *plugin)
 {
 	// Get the configuration
@@ -2121,7 +2121,7 @@ static int mb_get_high_latency_log(int argc, char **argv, struct command *cmd,
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	int err = parse_and_open(&ctx, &hdl, argc, argv, cmd->help, opts);
+	int err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
 	if (err)
 		return err;
 
@@ -2139,7 +2139,7 @@ static int mb_get_high_latency_log(int argc, char **argv, struct command *cmd,
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, nvme_strerror(errno));
 	}
 
 	return err;
@@ -2342,7 +2342,7 @@ static void performance_stats_print(struct performance_stats *log, const char *d
 	}
 }
 
-static int mb_get_performance_stats(int argc, char **argv, struct command *cmd,
+static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 				    struct plugin *plugin)
 {
 	// Get the configuration
@@ -2368,7 +2368,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *cmd,
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	int err = parse_and_open(&ctx, &hdl, argc, argv, cmd->help, opts);
+	int err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
 
 	if (err)
 		return err;
@@ -2397,7 +2397,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *cmd,
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("%s: %s", cmd->name, nvme_strerror(errno));
+		nvme_show_error("%s: %s", acmd->name, nvme_strerror(errno));
 	}
 
 	return err;

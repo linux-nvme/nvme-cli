@@ -24,7 +24,7 @@ static const unsigned char ocp_fw_activation_history_guid[GUID_LEN] = {
 	0xac, 0xf3, 0x1c, 0xd1
 };
 
-int ocp_fw_activation_history_log(int argc, char **argv, struct command *cmd,
+int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 				  struct plugin *plugin)
 {
 	const char *desc = "Retrieves the OCP firmware activation history log.";

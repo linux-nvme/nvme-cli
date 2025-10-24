@@ -27,7 +27,7 @@ struct plugin {
 struct command {
 	char *name;
 	char *help;
-	int (*fn)(int argc, char **argv, struct command *command, struct plugin *plugin);
+	int (*fn)(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 	char *alias;
 };
 

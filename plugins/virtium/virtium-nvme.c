@@ -923,7 +923,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 }
 
 static int vt_save_smart_to_vtview_log(int argc, char **argv,
-				       struct command *cmd,
+				       struct command *command,
 				       struct plugin *plugin)
 {
 	int ret, err = 0;
@@ -1021,7 +1021,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 	return err;
 }
 
-static int vt_show_identify(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int vt_show_identify(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "Parse identify data to json format\n\n"
 		"Typical usages:\n\n"

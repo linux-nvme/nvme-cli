@@ -267,7 +267,7 @@ static int get_hwcomp_log(struct nvme_transport_handle *hdl, __u32 id, bool list
 	return 0;
 }
 
-int ocp_hwcomp_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int ocp_hwcomp_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;

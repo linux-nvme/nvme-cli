@@ -560,7 +560,7 @@ static int micron_fw_commit(struct nvme_transport_handle *hdl, int select)
 }
 
 static int micron_selective_download(int argc, char **argv,
-					 struct command *cmd, struct plugin *plugin)
+					 struct command *command, struct plugin *plugin)
 {
 	const char *desc =
 		"This performs a selective firmware download, which allows the user to\n"
@@ -689,7 +689,7 @@ out:
 }
 
 static int micron_smbus_option(int argc, char **argv,
-				   struct command *cmd, struct plugin *plugin)
+				   struct command *command, struct plugin *plugin)
 {
 	__u32 result = 0;
 	__u32 cdw11 = 0;
@@ -779,7 +779,7 @@ static int micron_smbus_option(int argc, char **argv,
 	return err;
 }
 
-static int micron_temp_stats(int argc, char **argv, struct command *cmd,
+static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 				 struct plugin *plugin)
 {
 
@@ -914,10 +914,10 @@ struct pcie_error_counters {
 
 
 static int micron_pcie_stats(int argc, char **argv,
-				 struct command *cmd, struct plugin *plugin)
+				 struct command *command, struct plugin *plugin)
 {
 	int  i, err = 0, bus = 0, domain = 0, device = 0, function = 0, ctrlIdx;
-	char strTempFile[1024], strTempFile2[1024], command[1024];
+	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	char *businfo = NULL;
@@ -1012,9 +1012,9 @@ static int micron_pcie_stats(int argc, char **argv,
 	businfo = strrchr(strTempFile2, '/');
 	if (sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
 		domain = bus = device = function = 0;
-	sprintf(command, "setpci -s %x:%x.%x ECAP_AER+10.L", bus, device,
+	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+10.L", bus, device,
 			function);
-	fp = popen(command, "r");
+	fp = popen(cmdbuf, "r");
 	if (!fp) {
 		printf("Failed to retrieve error count\n");
 		goto out;
@@ -1027,9 +1027,9 @@ static int micron_pcie_stats(int argc, char **argv,
 	}
 	pclose(fp);
 
-	sprintf(command, "setpci -s %x:%x.%x ECAP_AER+0x4.L", bus, device,
+	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x4.L", bus, device,
 			function);
-	fp = popen(command, "r");
+	fp = popen(cmdbuf, "r");
 	if (!fp) {
 		printf("Failed to retrieve error count\n");
 		goto out;
@@ -1097,11 +1097,11 @@ out:
 }
 
 static int micron_clear_pcie_correctable_errors(int argc, char **argv,
-		struct command *cmd,
+		struct command *command,
 		struct plugin *plugin)
 {
 	int err = -EINVAL, bus, domain, device, function;
-	char strTempFile[1024], strTempFile2[1024], command[1024];
+	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	char *businfo = NULL;
@@ -1189,19 +1189,19 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 	businfo = strrchr(strTempFile2, '/');
 	if (sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
 		domain = bus = device = function = 0;
-	sprintf(command, "setpci -s %x:%x.%x ECAP_AER+0x10.L=0xffffffff", bus,
+	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x10.L=0xffffffff", bus,
 			device, function);
 	err = -1;
-	fp = popen(command, "r");
+	fp = popen(cmdbuf, "r");
 	if (!fp) {
 		printf("Failed to clear error count\n");
 		goto out;
 	}
 	pclose(fp);
 
-	sprintf(command, "setpci -s %x:%x.%x ECAP_AER+0x10.L", bus, device,
+	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x10.L", bus, device,
 			function);
-	fp = popen(command, "r");
+	fp = popen(cmdbuf, "r");
 	if (!fp) {
 		printf("Failed to retrieve error count\n");
 		goto out;
@@ -1807,7 +1807,7 @@ static void print_hyperscale_nand_stats(__u8 *buf, bool is_json)
 static bool nsze_from_oacs;/* read nsze for now from idd[4059]  */
 
 static int micron_nand_stats(int argc, char **argv,
-				struct command *cmd, struct plugin *plugin)
+				struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Retrieve Micron NAND stats for the given device ";
 	unsigned int extSmartLog[D0_log_size/sizeof(int)] = { 0 };
@@ -1959,7 +1959,7 @@ static void print_log(__u8 *buf, bool is_json, unsigned char ucLogID)
 }
 
 static int micron_smart_ext_log(int argc, char **argv,
-				struct command *cmd, struct plugin *plugin)
+				struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Retrieve extended SMART logs for the given device ";
 	unsigned int extSmartLog[E1_log_size/sizeof(int)] = { 0 };
@@ -2012,7 +2012,7 @@ out:
 	return err;
 }
 
-static int micron_work_load_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int micron_work_load_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve Micron Workload logs for the given device ";
 	unsigned int micronWorkLoadLog[C5_MicronWorkLoad_log_size/sizeof(int)] = { 0 };
@@ -2064,7 +2064,7 @@ out:
 }
 
 static int micron_vendor_telemetry_log(int argc, char **argv,
-				struct command *cmd, struct plugin *plugin)
+				struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Retrieve Vendor Telemetry logs for the given device ";
 	unsigned int vendorTelemetryLog[C6_log_size/sizeof(int)] = { 0 };
@@ -2468,7 +2468,7 @@ static int GetFeatureSettings(struct nvme_transport_handle *hdl, const char *dir
 	return (int)(errcnt == ARRAY_SIZE(fmap));
 }
 
-static int micron_drive_info(int argc, char **argv, struct command *cmd,
+static int micron_drive_info(int argc, char **argv, struct command *acmd,
 				 struct plugin *plugin)
 {
 	const char *desc = "Get drive HW information";
@@ -2647,14 +2647,14 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 }
 
 static int micron_cloud_ssd_plugin_version(int argc, char **argv,
-					   struct command *cmd, struct plugin *plugin)
+					   struct command *command, struct plugin *plugin)
 {
 	printf("nvme-cli Micron cloud SSD plugin version: %s.%s\n",
 		   __version_major, __version_minor);
 	return 0;
 }
 
-static int micron_plugin_version(int argc, char **argv, struct command *cmd,
+static int micron_plugin_version(int argc, char **argv, struct command *acmd,
 				 struct plugin *plugin)
 {
 	printf("nvme-cli Micron plugin version: %s.%s.%s\n",
@@ -2796,7 +2796,7 @@ static void micron_fw_activation_history_header_print(void)
 	printf("__________|___________|_________|__________|___________|________|________|________\n");
 }
 
-static int micron_fw_activation_history(int argc, char **argv, struct command *cmd,
+static int micron_fw_activation_history(int argc, char **argv, struct command *acmd,
 					struct plugin *plugin)
 {
 	const char *desc = "Retrieve Firmware Activation history of the given drive";
@@ -2896,14 +2896,14 @@ out:
 #define MICRON_FID_LATENCY_MONITOR 0xD0
 #define MICRON_LOG_LATENCY_MONITOR 0xD1
 
-static int micron_latency_stats_track(int argc, char **argv, struct command *cmd,
+static int micron_latency_stats_track(int argc, char **argv, struct command *acmd,
 					  struct plugin *plugin)
 {
 	int err = 0;
 	__u32 result = 0;
 	const char *desc = "Enable, Disable or Get cmd latency monitoring stats";
 	const char *option = "enable or disable or status, default is status";
-	const char *command =
+	const char *cmdstr =
 			"commands to monitor for - all|read|write|trim, default is all i.e, enabled for all commands"
 			;
 	const char *thrtime =
@@ -2929,7 +2929,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *cmd
 
 	OPT_ARGS(opts) = {
 		OPT_STRING("option", 'o', "option", &opt.option, option),
-		OPT_STRING("command", 'c', "command", &opt.command, command),
+		OPT_STRING("command", 'c', "command", &opt.command, cmdstr),
 		OPT_UINT("threshold", 't', &opt.threshold, thrtime),
 		OPT_END()
 	};
@@ -3045,7 +3045,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *cmd
 }
 
 
-static int micron_latency_stats_logs(int argc, char **argv, struct command *cmd,
+static int micron_latency_stats_logs(int argc, char **argv, struct command *acmd,
 					 struct plugin *plugin)
 {
 #define  LATENCY_LOG_ENTRIES 16
@@ -3113,11 +3113,11 @@ static int micron_latency_stats_logs(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static int micron_latency_stats_info(int argc, char **argv, struct command *cmd,
+static int micron_latency_stats_info(int argc, char **argv, struct command *acmd,
 					 struct plugin *plugin)
 {
 	const char *desc = "display command latency statistics";
-	const char *command = "command to display stats - all|read|write|trim, default is all";
+	const char *cmdstr = "command to display stats - all|read|write|trim, default is all";
 	int err = 0;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -3159,7 +3159,7 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *cmd,
 	char *cmd_str = "All";
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("command", 'c', "command", &opt.command, command),
+		OPT_STRING("command", 'c', "command", &opt.command, cmdstr),
 		OPT_END()
 	};
 
@@ -3209,7 +3209,7 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *cmd,
+static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *acmd,
 					struct plugin *plugin)
 {
 	const char *desc = "Retrieve Smart or Extended Smart Health log for the given device ";
@@ -3283,7 +3283,7 @@ out:
 }
 
 static int micron_clr_fw_activation_history(int argc, char **argv,
-						struct command *cmd, struct plugin *plugin)
+						struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Clear FW activation history";
 	__u32 result = 0;
@@ -3317,7 +3317,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 }
 
 static int micron_telemetry_cntrl_option(int argc, char **argv,
-					 struct command *cmd, struct plugin *plugin)
+					 struct command *command, struct plugin *plugin)
 {
 	int err = 0;
 	__u32 result = 0;
@@ -3707,7 +3707,7 @@ static int GetOcpEnhancedTelemetryLog(struct nvme_transport_handle *hdl, const c
 }
 
 
-static int micron_internal_logs(int argc, char **argv, struct command *cmd,
+static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 				struct plugin *plugin)
 {
 	int err = -EINVAL;
@@ -4074,7 +4074,7 @@ out:
 }
 
 #define MIN_LOG_SIZE 512
-static int micron_logpage_dir(int argc, char **argv, struct command *cmd,
+static int micron_logpage_dir(int argc, char **argv, struct command *acmd,
 				  struct plugin *plugin)
 {
 	int err = -1;
@@ -4142,7 +4142,7 @@ static int micron_logpage_dir(int argc, char **argv, struct command *cmd,
 }
 
 static int micron_cloud_boot_SSD_version(int argc, char **argv,
-		struct command *cmd, struct plugin *plugin)
+		struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Prints HyperScale Boot Version";
 	unsigned char logC0[C0_log_size] = { 0 };
@@ -4198,7 +4198,7 @@ out:
 	return err;
 }
 
-static int micron_device_waf(int argc, char **argv, struct command *cmd,
+static int micron_device_waf(int argc, char **argv, struct command *acmd,
 							  struct plugin *plugin)
 {
 	const char *desc = "Prints device Write Amplification Factor(WAF)";
@@ -4265,7 +4265,7 @@ out:
 	return err;
 }
 
-static int micron_cloud_log(int argc, char **argv, struct command *cmd,
+static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 								struct plugin *plugin)
 {
 	const char *desc = "Retrieve Smart or Extended Smart Health log for the given device ";

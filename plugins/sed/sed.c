@@ -80,7 +80,7 @@ static int sed_opal_open_device(struct nvme_global_ctx **ctx, struct nvme_transp
 	return err;
 }
 
-static int sed_opal_discover(int argc, char **argv, struct command *cmd,
+static int sed_opal_discover(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Query SED device and display locking features";
@@ -97,7 +97,7 @@ static int sed_opal_discover(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static int sed_opal_initialize(int argc, char **argv, struct command *cmd,
+static int sed_opal_initialize(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Initialize a SED device for locking";
@@ -117,7 +117,7 @@ static int sed_opal_initialize(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static int sed_opal_revert(int argc, char **argv, struct command *cmd,
+static int sed_opal_revert(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Revert a SED device from locking state";
@@ -137,7 +137,7 @@ static int sed_opal_revert(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static int sed_opal_lock(int argc, char **argv, struct command *cmd,
+static int sed_opal_lock(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Lock a SED device";
@@ -157,7 +157,7 @@ static int sed_opal_lock(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static int sed_opal_unlock(int argc, char **argv, struct command *cmd,
+static int sed_opal_unlock(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Unlock a SED device";
@@ -177,7 +177,7 @@ static int sed_opal_unlock(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-static int sed_opal_password(int argc, char **argv, struct command *cmd,
+static int sed_opal_password(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	int err;

@@ -217,7 +217,7 @@ static int innogrit_geteventlog(int argc, char **argv,
 	return ret;
 }
 
-static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
+static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 				 struct plugin *plugin)
 {
 	const char *desc = "Recrieve cdump data for the given device ";

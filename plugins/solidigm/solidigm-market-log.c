@@ -23,7 +23,7 @@
 #define MARKET_LOG_LID 0xDD
 #define MARKET_LOG_MAX_SIZE 512
 
-int sldgm_get_market_log(int argc, char **argv, struct command *command,
+int sldgm_get_market_log(int argc, char **argv, struct command *acmd,
 				struct plugin *plugin)
 {
 	const char *desc = "Get Solidigm Marketing Name log and show it.";

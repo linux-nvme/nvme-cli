@@ -423,7 +423,7 @@ end:
 	return err;
 }
 
-static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int vendor_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "Get extended SMART information and show it.";
 	const char *namespace = "(optional) desired namespace";
@@ -475,7 +475,7 @@ end:
 	return err;
 }
 
-static int internal_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int internal_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "Get internal status log and show it.";
 	const char *output_file = "(optional) binary output filename";
@@ -521,7 +521,7 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 	return err;
 }
 
-static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
+static int clear_correctable_errors(int argc, char **argv, struct command *acmd,
 				    struct plugin *plugin)
 {
 	char *desc = "Clear PCIe correctable error count.";

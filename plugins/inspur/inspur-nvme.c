@@ -204,7 +204,7 @@ void show_r1_media_err_log(r1_cli_vendor_log_t *vendorlog)
 	}
 }
 
-static int nvme_get_vendor_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int nvme_get_vendor_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "Get the Inspur vendor log";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;

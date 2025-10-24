@@ -5,4 +5,4 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-int sldgm_ocp_version(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+int sldgm_ocp_version(int argc, char **argv, struct command *acmd, struct plugin *plugin);

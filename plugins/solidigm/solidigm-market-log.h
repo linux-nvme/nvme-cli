@@ -5,4 +5,4 @@
  * Author: hardeep.dhillon@solidigm.com
  */
 
-int sldgm_get_market_log(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+int sldgm_get_market_log(int argc, char **argv, struct command *acmd, struct plugin *plugin);

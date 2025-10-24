@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "nvme.h"
 
-int sldgm_ocp_version(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int sldgm_ocp_version(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Prints OCP extensions version of Solidigm plugin";
 

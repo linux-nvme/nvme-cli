@@ -291,7 +291,7 @@ static void huawei_print_list_items(struct huawei_list_item *list_items, unsigne
 		huawei_print_list_item(&list_items[i], element_len);
 }
 
-static int huawei_list(int argc, char **argv, struct command *command,
+static int huawei_list(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx =
@@ -385,7 +385,7 @@ static void huawei_do_id_ctrl(__u8 *vs, struct json_object *root)
 		printf("array name : %s\n", strlen(array_name) > 1 ? array_name : "NULL");
 }
 
-static int huawei_id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int huawei_id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return __id_ctrl(argc, argv, cmd, plugin, huawei_do_id_ctrl);
+	return __id_ctrl(argc, argv, acmd, plugin, huawei_do_id_ctrl);
 }

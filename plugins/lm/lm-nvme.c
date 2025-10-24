@@ -46,7 +46,7 @@ static inline const char * arg_str(const char * const *strings, size_t array_siz
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define ARGSTR(s, i) arg_str(s, ARRAY_SIZE(s), i)
 
-static int lm_create_cdq(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Create Controller Data Queue for controller of specific type and size";
 	const char *sz = "CDQ Size (in dwords)";
@@ -125,7 +125,7 @@ static int lm_create_cdq(int argc, char **argv, struct command *command, struct 
 	return err;
 }
 
-static int lm_delete_cdq(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int lm_delete_cdq(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Delete Controller Data Queue";
 	const char *cdqid = "Controller Data Queue ID";
@@ -173,7 +173,7 @@ static const char * const lm_track_send_select_argstr[] = {
 	[NVME_LM_SEL_TRACK_MEMORY_CHANGES] = "Track Memory Changes"
 };
 
-static int lm_track_send(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int lm_track_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Track Send command used to manage the tracking of information by a "
 			   "controller";
@@ -265,7 +265,7 @@ static const char * const lm_migration_send_select_argstr[] = {
 	[NVME_LM_SEL_SET_CONTROLLER_STATE] = "Set Controller State"
 };
 
-static int lm_migration_send(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int lm_migration_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Migration Send command is used to manage the migration of a controller";
 	const char *sel = "Select (SEL) the type of management operation to perform "
@@ -417,7 +417,7 @@ static int lm_migration_send(int argc, char **argv, struct command *command, str
 	return err;
 }
 
-static int lm_migration_recv(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Migration Receive command is used to obtain information used to manage "
 			   " a migratable controller";
@@ -554,7 +554,7 @@ enum lm_controller_data_queue_feature_id {
 	lm_cdq_feature_id = 0x21
 };
 
-static int lm_set_cdq(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "This Feature allows a host to update the status of the head pointer "
 			   "of a CDQ and specify the configuration of a CDQ Tail event.";
@@ -610,7 +610,7 @@ static int lm_set_cdq(int argc, char **argv, struct command *command, struct plu
 	return err;
 }
 
-static int lm_get_cdq(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int lm_get_cdq(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "This Feature allows a host to retrieve the status of the head pointer "
 			   "of a CDQ and specify the configuration of a CDQ Tail event.";

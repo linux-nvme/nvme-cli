@@ -375,7 +375,7 @@ void show_ssstc_add_smart_log(struct nvme_additional_smart_log *smart,
 }
 
 static
-int ssstc_get_add_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int ssstc_get_add_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 
 	const char *desc =

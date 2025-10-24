@@ -834,7 +834,7 @@ static int ilog_dump_pel(struct nvme_transport_handle *hdl, struct ilog *ilog)
 	return err;
 }
 
-int solidigm_get_internal_log(int argc, char **argv, struct command *command,
+int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 				struct plugin *plugin)
 {
 	char sn_prefix[sizeof(((struct nvme_id_ctrl *)0)->sn)+1];

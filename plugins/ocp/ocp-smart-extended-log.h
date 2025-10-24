@@ -151,7 +151,7 @@ struct ocp_smart_extended_log {
 	__u8   log_page_guid[16];			/* [511:496] */
 };
 
-int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
+int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin);
 
 #endif

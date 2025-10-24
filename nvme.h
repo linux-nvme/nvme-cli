@@ -113,7 +113,7 @@ extern struct nvme_config nvme_cfg;
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags);
 bool nvme_is_output_format_json(void);
-int __id_ctrl(int argc, char **argv, struct command *cmd,
+int __id_ctrl(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));
 
 const char *nvme_strerror(int errnum);

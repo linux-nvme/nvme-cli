@@ -5,5 +5,5 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd,
+int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acmd,
 				      struct plugin *plugin);

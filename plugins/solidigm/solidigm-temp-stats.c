@@ -38,7 +38,7 @@ static void show_temp_stats(struct temp_stats *stats)
 	printf("Estimated offset            : %"PRIu64"\n", le64_to_cpu(stats->est_offset));
 }
 
-int sldgm_get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int sldgm_get_temp_stats_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
