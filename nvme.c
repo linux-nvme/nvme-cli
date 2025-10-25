@@ -8695,6 +8695,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	_cleanup_free_ void *buf = NULL;
 	nvme_print_flags_t flags;
 	unsigned long buf_len;
@@ -8743,18 +8744,9 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 	if (!buf)
 		return -ENOMEM;
 
-	struct nvme_get_lba_status_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.slba,
-		.mndw		= cfg.mndw,
-		.rl		= cfg.rl,
-		.atype		= cfg.atype,
-		.lbas		= buf,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_get_lba_status(hdl, &args);
+	nvme_init_get_lba_status(&cmd, cfg.namespace_id, cfg.slba, cfg.mndw,
+				 cfg.atype, cfg.rl, buf);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err)
 		nvme_show_lba_status(buf, buf_len, flags);
 	else if (err > 0)
