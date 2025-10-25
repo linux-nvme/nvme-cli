@@ -7402,6 +7402,7 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_free_ struct nvme_dsm_range *dsm = NULL;
+	struct nvme_passthru_cmd cmd;
 	uint16_t nr, nc, nb, ns;
 	__u32 ctx_attrs[256] = {0,};
 	__u32 nlbs[256] = {0,};
@@ -7474,17 +7475,9 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	if (!dsm)
 		return -ENOMEM;
 
-	nvme_init_dsm_range(dsm, ctx_attrs, nlbs, slbas, nr);
-	struct nvme_dsm_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.attrs		= cfg.cdw11,
-		.nr_ranges	= nr,
-		.dsm		= dsm,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_dsm(hdl, &args);
+	nvme_init_dsm(&cmd, cfg.namespace_id, nr, cfg.idr, cfg.idw, cfg.ad, dsm,
+		      sizeof(*dsm) * 256);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("data-set management: %s", nvme_strerror(err));
 	else if (err != 0)
