@@ -8964,6 +8964,7 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err = -1;
 
 	struct config {
@@ -9011,17 +9012,9 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 		return -1;
 	}
 
-	struct nvme_lockdown_args args = {
-		.args_size	= sizeof(args),
-		.scp		= cfg.scp,
-		.prhbt		= cfg.prhbt,
-		.ifc		= cfg.ifc,
-		.ofi		= cfg.ofi,
-		.uuidx		= cfg.uuid,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_lockdown(hdl, &args);
+	nvme_init_lockdown(&cmd, cfg.scp, cfg.prhbt, cfg.ifc, cfg.ofi,
+			   cfg.uuid);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("lockdown: %s", nvme_strerror(err));
 	else if (err > 0)
