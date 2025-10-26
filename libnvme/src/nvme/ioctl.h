@@ -4254,4 +4254,251 @@ int nvme_lm_set_features_ctrl_data_queue(struct nvme_transport_handle *hdl, __u1
 int nvme_lm_get_features_ctrl_data_queue(struct nvme_transport_handle *hdl, __u16 cdqid,
 					 struct nvme_lm_ctrl_data_queue_fid_data *data,
 					 __u32 *result);
+
+/**
+ * nvme_identify() - Submit a generic Identify command
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	Namespace ID (if applicable to the requested CNS).
+ * @csi:	Command Set Identifier.
+ * @cns:	Identify Controller or Namespace Structure (CNS) value,
+ * 		specifying the type of data to be returned.
+ * @data:	Pointer to the buffer where the identification data will
+ * 		be stored.
+ * @len:	Length of the data buffer in bytes.
+ *
+ * The generic wrapper for submitting an Identify command, allowing the host
+ * to specify any combination of Identify parameters.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_identify(struct nvme_transport_handle *hdl, __u32 nsid, enum nvme_csi csi,
+		enum nvme_identify_cns cns, void *data, __u32 len)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify(&cmd, nsid, csi, cns, data, len);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+/**
+ * nvme_identify_ctrl() - Submit an Identify Controller command
+ * @hdl:	Transport handle for the controller.
+ * @id:		Pointer to the buffer (&struct nvme_id_ctrl) where the
+ *		controller identification data will be stored upon
+ *		successful completion.
+ *
+ * Submits the Identify Controller command to retrieve the controller's
+ * capabilities and configuration data.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_identify_ctrl(struct nvme_transport_handle *hdl,
+		struct nvme_id_ctrl *id)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_ctrl(&cmd, id);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+
+/**
+ * nvme_identify_active_ns_list() - Submit an Identify Active Namespace
+ * List command
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	The Namespace ID to query
+ * @ns_list:	Pointer to the buffer (&struct nvme_ns_list) where the
+ *		active namespace list will be stored.
+ *
+ * Submits the Identify command to retrieve a list of active Namespace IDs.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_identify_active_ns_list(struct nvme_transport_handle *hdl,
+		__u32 nsid, struct nvme_ns_list *ns_list)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_active_ns_list(&cmd, nsid, ns_list);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+
+/**
+ * nvme_identify_ns() - Submit an Identify Namespace command
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	The Namespace ID to identify.
+ * @ns:		Pointer to the buffer (&struct nvme_id_ns) where the namespace
+ *		identification data will be stored.
+ *
+ * Submits the Identify command to retrieve the Namespace Identification
+ * data structure for a specified namespace.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+
+static inline int
+nvme_identify_ns(struct nvme_transport_handle *hdl,
+		__u32 nsid, struct nvme_id_ns *ns)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_ns(&cmd, nsid, ns);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+
+/**
+ * nvme_identify_csi_ns() - Submit a CSI-specific Identify Namespace command
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	The Namespace ID to identify.
+ * @csi:	The Command Set Identifier
+ * @uidx:	The UUID Index for the command.
+ * @id_ns:	Pointer to the buffer (@struct nvme_nvm_id_ns) where the
+ *		CSI-specific namespace identification data will be stored.
+ *
+ * Submits the Identify command to retrieve Namespace Identification data
+ * specific to a Command Set Identifier (CSI).
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_identify_csi_ns(struct nvme_transport_handle *hdl, __u32 nsid,
+		enum nvme_csi csi, __u8 uidx, struct nvme_nvm_id_ns *id_ns)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_csi_ns(&cmd, nsid, csi, uidx, id_ns);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+
+/**
+ * nvme_identify_uuid_list() - Submit an Identify UUID List command
+ * @hdl:	Transport handle for the controller.
+ * @uuid_list:	Pointer to the buffer (&struct nvme_id_uuid_list) where the
+ *		UUID list will be stored.
+ *
+ * Submits the Identify command to retrieve a list of UUIDs associated
+ * with the controller.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_identify_uuid_list(struct nvme_transport_handle *hdl,
+		struct nvme_id_uuid_list *uuid_list)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_uuid_list(&cmd, uuid_list);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+
+/**
+ * nvme_identify_csi_ns_user_data_format() - Submit an Identify CSI Namespace
+ * User Data Format command
+ * @hdl:	Transport handle for the controller.
+ * @csi:	Command Set Identifier.
+ * @fidx:	Format Index, specifying which format entry to return.
+ * @uidx:	The UUID Index for the command.
+ * @data:	Pointer to the buffer where the format data will be stored.
+ *
+ * Submits the Identify command to retrieve a CSI-specific Namespace User
+ * Data Format data structure.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_identify_csi_ns_user_data_format(struct nvme_transport_handle *hdl,
+		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_csi_ns_user_data_format(&cmd, csi, fidx, uidx, data);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+
+/**
+ * nvme_identify_ns_granularity() - Submit an Identify Namespace Granularity
+ * List command
+ * @hdl:	Transport handle for the controller.
+ * @gr_list:	Pointer to the buffer (&struct nvme_id_ns_granularity_list)
+ * 		where the granularity list will be stored.
+ *
+ * Submits the Identify command to retrieve the Namespace Granularity List.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_identify_ns_granularity(struct nvme_transport_handle *hdl,
+		struct nvme_id_ns_granularity_list *gr_list)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_ns_granularity(&cmd, gr_list);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+
+/**
+ * nvme_identify_ns_descs_list() - Submit an Identify Namespace ID Descriptor
+ * List command
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	The Namespace ID to query.
+ * @descs:	Pointer to the buffer (&struct nvme_ns_id_desc) where the
+ *		descriptor list will be stored.
+ *
+ * Submits the Identify command to retrieve the Namespace ID Descriptor List
+ * for a specified namespace.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_identify_ns_descs_list(struct nvme_transport_handle *hdl,
+		__u32 nsid, struct nvme_ns_id_desc *descs)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_identify_ns_descs_list(&cmd, nsid, descs);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
+
+/**
+ * nvme_zns_identify_ns() - Submit a ZNS-specific Identify Namespace command
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	The Namespace ID to identify.
+ * @data:	Pointer to the buffer (&struct nvme_zns_id_ns) where the ZNS
+ *		namespace identification data will be stored.
+ *
+ * Submits the Identify command to retrieve the Zoned Namespace (ZNS)
+ * specific identification data structure for a specified namespace.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_zns_identify_ns(struct nvme_transport_handle *hdl,
+		__u32 nsid, struct nvme_zns_id_ns *data)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_zns_identify_ns(&cmd, nsid, data);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+}
 #endif /* _LIBNVME_IOCTL_H */
