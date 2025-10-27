@@ -46,7 +46,7 @@ jobs:
     needs: build-static
     if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: nvme-cli
           path: upload
@@ -73,7 +73,7 @@ jobs:
       VERSION: ${{ needs.build-static.outputs.VERSION }}
     if: ${{ github.event_name == 'release' }}
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: nvme-cli
           path: upload
