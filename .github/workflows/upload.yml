@@ -34,7 +34,7 @@ jobs:
             cp .build-ci/nvme "upload/nvme-cli-${VERSION}-x86_64"
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: upload artifacts to github
         with:
           name: nvme-cli
