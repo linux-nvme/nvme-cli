@@ -4745,31 +4745,6 @@ nvme_get_log_error(struct nvme_transport_handle *hdl, __u32 nsid,
 }
 
 /**
- * nvme_get_log_smart() - Retrieve the SMART / Health Information Log Page
- * @hdl:	Transport handle for the controller.
- * @nsid:	Namespace ID to request the log for.
- * @smart_log:	Pointer to the buffer (@struct nvme_smart_log) where the log
- *		page data will be stored.
- *
- * Submits the Get Log Page command specifically for the SMART / Health
- * Information Log. It automatically sets the Log Identifier (LID) and
- * Retain Asynchronous Event (RAE) to false.
- *
- * Return: 0 on success, the NVMe command status on error, or a negative
- * errno otherwise.
- */
-static inline int
-nvme_get_log_smart(struct nvme_transport_handle *hdl,
-		__u32 nsid, struct nvme_smart_log *smart_log)
-{
-	struct nvme_passthru_cmd cmd;
-
-	nvme_init_get_log_smart(&cmd, nsid, smart_log);
-
-	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
-}
-
-/**
  * nvme_get_log_fw_slot() - Retrieve the Firmware Slot Information Log Page
  * @hdl:	Transport handle for the controller.
  * @nsid:	Namespace ID to request the log for (use NVME_NSID_ALL).
@@ -5935,5 +5910,165 @@ nvme_get_log_lockdown(struct nvme_transport_handle *hdl,
 	nvme_init_get_log_lockdown(&cmd, cnscp, log);
 
 	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+}
+
+/**
+ * nvme_get_log_smart() - Retrieve the SMART / Health Information Log Page
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	Namespace ID to request the log for.
+ * @smart_log:	Pointer to the buffer (@struct nvme_smart_log) where the log
+ *		page data will be stored.
+ *
+ * Submits the Get Log Page command specifically for the SMART / Health
+ * Information Log. It automatically sets the Log Identifier (LID) and
+ * Retain Asynchronous Event (RAE) to false.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_get_log_smart(struct nvme_transport_handle *hdl,
+		__u32 nsid, struct nvme_smart_log *smart_log)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_get_log_smart(&cmd, nsid, smart_log);
+
+	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+}
+
+/**
+ * nvme_set_features() - Submit a generic Set Features command
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	Namespace ID 	sto apply the feature to.
+ * @fid:	Feature Identifier (FID) to be set.
+ * @sv:		Save Value (SV): If true, the feature value persists
+ *		across power states.
+ * @cdw11:	Command Dword 11 parameter (feature-specific).
+ * @cdw12:	Command Dword 12 parameter (feature-specific).
+ * @cdw13:	Command Dword 13 parameter (feature-specific).
+ * @uidx:	UUID Index (UIDX) for the command, encoded into cdw14
+ * @cdw15:	Command Dword 15 parameter (feature-specific).
+ * @data:	Pointer to the data buffer to transfer (if applicable).
+ * @len:	Length of the data buffer in bytes.
+ * @result:	The command completion result (CQE dword0) on success.
+ *
+ * Submits the Set Features command, allowing all standard command
+ * fields (cdw11-cdw15) and data buffer fields to be specified directly.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_set_features(struct nvme_transport_handle *hdl, __u32 nsid, __u8 fid,
+		bool sv, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u8 uidx,
+		__u32 cdw15, void *data, __u32 len, __u32 *result)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_set_features(&cmd, fid, sv);
+	cmd.nsid = nsid;
+	cmd.cdw11 = cdw11;
+	cmd.cdw12 = cdw12;
+	cmd.cdw13 = cdw13;
+	cmd.cdw14 = NVME_FIELD_ENCODE(uidx,
+				      NVME_IDENTIFY_CDW14_UUID_SHIFT,
+				      NVME_IDENTIFY_CDW14_UUID_MASK);
+	cmd.cdw15 = cdw15;
+	cmd.data_len = len;
+	cmd.addr = (__u64)(uintptr_t)data;
+
+	return nvme_submit_admin_passthru(hdl, &cmd, result);
+}
+
+/**
+ * nvme_set_features_simple() - Submit a Set Features command using only cdw11
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	Namespace ID to apply the feature to.
+ * @fid:	Feature Identifier (FID) to be set.
+ * @sv:		Save Value (SV): If true, the feature value persists across
+ *		power states.
+ * @cdw11:	Command Dword 11 parameter (feature-specific value).
+ * @result:	The command completion result (CQE dword0) on success.
+ *
+ * Submits the Set Features command for features that only require
+ * parameters in cdw11.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_set_features_simple(struct nvme_transport_handle *hdl,
+		__u32 nsid, __u8 fid, bool sv, __u32 cdw11, __u32 *result)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_set_features(&cmd, fid, sv);
+	cmd.nsid = nsid;
+	cmd.cdw11 = cdw11;
+
+	return nvme_submit_admin_passthru(hdl, &cmd, result);
+}
+
+/**
+ * nvme_get_features() - Submit a Get Features command
+ * @hdl:	Transport handle for the controller.
+ * @nsid:	Namespace ID, if applicable
+ * @fid:	Feature identifier, see &enum nvme_features_id
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @cdw11:	Feature specific command dword11 field
+ * @uidx:	UUID Index for differentiating vendor specific encoding
+ * @data:	User address of feature data, if applicable
+ * @len:	Length of feature data, if applicable, in bytes
+ * @result:	The command completion result (CQE dword0) on success.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_get_features(struct nvme_transport_handle *hdl, __u32 nsid,
+		__u8 fid, enum nvme_get_features_sel sel,
+		__u32 cdw11, __u8 uidx, void *data,
+		__u32 len, __u32 *result)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_get_features(&cmd, fid, sel);
+
+	cmd.nsid = nsid;
+	cmd.cdw11 = cdw11;
+	cmd.cdw14 = NVME_FIELD_ENCODE(uidx,
+			NVME_GET_FEATURES_CDW14_UUID_SHIFT,
+			NVME_GET_FEATURES_CDW14_UUID_MASK);
+	cmd.data_len = len;
+	cmd.addr = (__u64)(uintptr_t)data;
+
+	return nvme_submit_admin_passthru(hdl, &cmd, result);
+}
+
+/**
+ * nvme_get_features_simple() - Submit a simple Get Features command
+ * @hdl:	Transport handle for the controller.
+ * @fid:	Feature Identifier (FID) to be retrieved.
+ * @sel:	Select (SEL), specifying which feature value
+ *		to return (&struct nvme_get_features_sel).
+ * @result:	The command completion result (CQE dword0) on success.
+ *
+ * Submits the Get Features command for features that only require parameters in
+ * the CQE dword0 and do not need any parameters in cdw11 through cdw15.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_get_features_simple(struct nvme_transport_handle *hdl, __u8 fid,
+		enum nvme_get_features_sel sel, __u32 *result)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_get_features(&cmd, fid, sel);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, result);
 }
 #endif /* _LIBNVME_IOCTL_H */
