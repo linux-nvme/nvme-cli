@@ -1164,6 +1164,19 @@ int nvme_get_log(struct nvme_transport_handle *hdl,
 		 __u32 xfer_len, __u32 *result);
 
 /**
+ * nvme_init_get_log_lpo() - Initializes passthru command with a
+ * Log Page Offset
+ * @cmd:	Passthru command
+ * @lpo:	Log Page Offset to set set
+ */
+static inline void
+nvme_init_get_log_lpo(struct nvme_passthru_cmd *cmd, __u64 lpo)
+{
+	cmd->cdw12 = lpo & 0xffffffff;
+	cmd->cdw13 = lpo >> 32;
+}
+
+/**
  * nvme_init_get_log() - Initialize passthru command for
  * NVMe Admin Get Log
  * @cmd:	Passthru command to use
@@ -1348,8 +1361,7 @@ nvme_init_get_log_telemetry_host(struct nvme_passthru_cmd *cmd, __u64 lpo,
 	cmd->cdw10 |= NVME_FIELD_ENCODE(NVME_LOG_TELEM_HOST_LSP_RETAIN,
 			NVME_LOG_CDW10_LSP_SHIFT,
 			NVME_LOG_CDW10_LSP_MASK);
-	cmd->cdw12 = lpo & 0xffffffff;
-	cmd->cdw13 = lpo >> 32;
+	nvme_init_get_log_lpo(cmd, lpo);
 }
 
 /**
@@ -1410,8 +1422,7 @@ nvme_init_get_log_telemetry_ctrl(struct nvme_passthru_cmd *cmd,
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_TELEMETRY_CTRL,
 		NVME_CSI_NVM, log, len);
-	cmd->cdw12 = lpo & 0xffffffff;
-	cmd->cdw13 = lpo >> 32;
+	nvme_init_get_log_lpo(cmd, lpo);
 }
 
 /**
@@ -1587,8 +1598,7 @@ nvme_init_get_log_endurance_grp_evt(struct nvme_passthru_cmd *cmd,
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
 		NVME_LOG_LID_ENDURANCE_GRP_EVT, NVME_CSI_NVM,
 		log, len);
-	cmd->cdw12 = lpo & 0xffffffff;
-	cmd->cdw13 = lpo >> 32;
+	nvme_init_get_log_lpo(cmd, lpo);
 }
 
 /**
@@ -1900,8 +1910,7 @@ nvme_init_get_log_fdp_configurations(struct nvme_passthru_cmd *cmd,
 	cmd->cdw11 |= NVME_FIELD_ENCODE(egid,
 			NVME_LOG_CDW11_LSI_SHIFT,
 			NVME_LOG_CDW11_LSI_MASK);
-	cmd->cdw12 = lpo & 0xffffffff;
-	cmd->cdw13 = lpo >> 32;
+	nvme_init_get_log_lpo(cmd, lpo);
 }
 
 /**
@@ -1926,8 +1935,7 @@ nvme_init_get_log_reclaim_unit_handle_usage(struct nvme_passthru_cmd *cmd,
 	cmd->cdw11 |= NVME_FIELD_ENCODE(egid,
 			NVME_LOG_CDW11_LSI_SHIFT,
 			NVME_LOG_CDW11_LSI_MASK);
-	cmd->cdw12 = lpo & 0xffffffff;
-	cmd->cdw13 = lpo >> 32;
+	nvme_init_get_log_lpo(cmd, lpo);
 }
 
 /**
@@ -1952,8 +1960,7 @@ void nvme_init_get_log_fdp_stats(struct nvme_passthru_cmd *cmd,
 	cmd->cdw11 |= NVME_FIELD_ENCODE(egid,
 			NVME_LOG_CDW11_LSI_SHIFT,
 			NVME_LOG_CDW11_LSI_MASK);
-	cmd->cdw12 = lpo & 0xffffffff;
-	cmd->cdw13 = lpo >> 32;
+	nvme_init_get_log_lpo(cmd, lpo);
 }
 
 /**
@@ -1983,8 +1990,7 @@ nvme_init_get_log_fdp_events(struct nvme_passthru_cmd *cmd,
 	cmd->cdw11 |= NVME_FIELD_ENCODE(egid,
 			NVME_LOG_CDW11_LSI_SHIFT,
 			NVME_LOG_CDW11_LSI_MASK);
-	cmd->cdw12 = lpo & 0xffffffff;
-	cmd->cdw13 = lpo >> 32;
+	nvme_init_get_log_lpo(cmd, lpo);
 }
 
 
@@ -2005,8 +2011,7 @@ nvme_init_get_log_discovery(struct nvme_passthru_cmd *cmd,
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
 		NVME_LOG_LID_DISCOVERY, NVME_CSI_NVM,
 		log, len);
-	cmd->cdw12 = lpo & 0xffffffff;
-	cmd->cdw13 = lpo >> 32;
+	nvme_init_get_log_lpo(cmd, lpo);
 }
 
 /**
