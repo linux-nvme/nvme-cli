@@ -338,7 +338,6 @@ static ssize_t getrandom_bytes(void *buf, size_t buflen)
 	return result;
 }
 
-
 static int check_arg_dev(int argc, char **argv)
 {
 	if (optind >= argc) {
@@ -7412,6 +7411,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	__u16 nr, nb, ns, nrts, natms, nats, nids;
+	struct nvme_passthru_cmd cmd;
 	__u16 nlbs[256] = { 0 };
 	__u64 slbas[256] = { 0 };
 	__u32 snsids[256] = { 0 };
@@ -7502,24 +7502,35 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	if (err)
 		return err;
 
-	nb = argconfig_parse_comma_sep_array_u16(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
-	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
-	nids = argconfig_parse_comma_sep_array_u32(cfg.snsids, snsids, ARRAY_SIZE(snsids));
-	argconfig_parse_comma_sep_array_u16(cfg.sopts, sopts, ARRAY_SIZE(sopts));
+	nb = argconfig_parse_comma_sep_array_u16(cfg.nlbs, nlbs,
+						 ARRAY_SIZE(nlbs));
+	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas,
+						 ARRAY_SIZE(slbas));
+	nids = argconfig_parse_comma_sep_array_u32(cfg.snsids, snsids,
+						 ARRAY_SIZE(snsids));
+	argconfig_parse_comma_sep_array_u16(cfg.sopts, sopts,
+						 ARRAY_SIZE(sopts));
 
-	if (cfg.format == 0 || cfg.format == 2) {
-		nrts = argconfig_parse_comma_sep_array_u32(cfg.eilbrts, eilbrts.short_pi,
-							   ARRAY_SIZE(eilbrts.short_pi));
-	} else if (cfg.format == 1 || cfg.format == 3) {
-		nrts = argconfig_parse_comma_sep_array_u64(cfg.eilbrts, eilbrts.long_pi,
-							   ARRAY_SIZE(eilbrts.long_pi));
-	} else {
+	switch (cfg.format) {
+	case 0:
+	case 2:
+		nrts = argconfig_parse_comma_sep_array_u32(cfg.eilbrts,
+				eilbrts.short_pi, ARRAY_SIZE(eilbrts.short_pi));
+		break;
+	case 1:
+	case 3:
+		nrts = argconfig_parse_comma_sep_array_u64(cfg.eilbrts,
+				eilbrts.long_pi, ARRAY_SIZE(eilbrts.long_pi));
+		break;
+	default:
 		nvme_show_error("invalid format");
 		return -EINVAL;
 	}
 
-	natms = argconfig_parse_comma_sep_array_u32(cfg.elbatms, elbatms, ARRAY_SIZE(elbatms));
-	nats = argconfig_parse_comma_sep_array_u32(cfg.elbats, elbats, ARRAY_SIZE(elbats));
+	natms = argconfig_parse_comma_sep_array_u32(cfg.elbatms, elbatms,
+						    ARRAY_SIZE(elbatms));
+	nats = argconfig_parse_comma_sep_array_u32(cfg.elbats, elbats,
+						   ARRAY_SIZE(elbats));
 
 	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
 	if (cfg.format == 2 || cfg.format == 3) {
@@ -7548,37 +7559,33 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	if (!copy)
 		return -ENOMEM;
 
-	if (cfg.format == 0)
-		nvme_init_copy_range(copy->f0, nlbs, slbas, eilbrts.short_pi, elbatms, elbats, nr);
-	else if (cfg.format == 1)
-		nvme_init_copy_range_f1(copy->f1, nlbs, slbas, eilbrts.long_pi, elbatms, elbats, nr);
-	else if (cfg.format == 2)
-		nvme_init_copy_range_f2(copy->f2, snsids, nlbs, slbas, sopts, eilbrts.short_pi, elbatms,
-					elbats, nr);
-	else if (cfg.format == 3)
-		nvme_init_copy_range_f3(copy->f3, snsids, nlbs, slbas, sopts, eilbrts.long_pi, elbatms,
-					elbats, nr);
+	switch (cfg.format) {
+	case 1:
+		nvme_init_copy_range_f1(copy->f1, nlbs, slbas, eilbrts.long_pi,
+					elbatms, elbats, nr);
+		break;
+	case 2:
+		nvme_init_copy_range_f2(copy->f2, snsids, nlbs, slbas, sopts,
+					eilbrts.short_pi, elbatms, elbats, nr);
+		break;
+	case 3:
+		nvme_init_copy_range_f3(copy->f3, snsids, nlbs, slbas, sopts,
+					eilbrts.long_pi, elbatms, elbats, nr);
+		break;
+	default:
+		nvme_init_copy_range(copy->f0, nlbs, slbas, eilbrts.short_pi,
+				     elbatms, elbats, nr);
+		break;
+	}
 
-	struct nvme_copy_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.copy		= copy->f0,
-		.sdlba		= cfg.sdlba,
-		.nr		= nr,
-		.prinfor	= cfg.prinfor,
-		.prinfow	= cfg.prinfow,
-		.dtype		= cfg.dtype,
-		.dspec		= cfg.dspec,
-		.format		= cfg.format,
-		.lr		= cfg.lr,
-		.fua		= cfg.fua,
-		.ilbrt_u64	= cfg.ilbrt,
-		.lbatm		= cfg.lbatm,
-		.lbat		= cfg.lbat,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_copy(hdl, &args);
+	nvme_init_copy(&cmd, cfg.namespace_id, cfg.sdlba, nr, cfg.format,
+		       cfg.prinfor, cfg.prinfow, 0, cfg.dtype, false, false,
+		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
+	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd,
+		NVME_NVM_PIF_32B_GUARD, 0, cfg.ilbrt, 0);
+	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.lbat,
+		cfg.lbatm);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("NVMe Copy: %s", nvme_strerror(err));
 	else if (err != 0)
