@@ -20,5 +20,9 @@ config_dep = declare_dependency(
   include_directories : internal_incdir,
   sources: config_h)
 
-config_h_path = meson.current_build_dir() / 'config.h'
-config_h_arg =  [ '-include', config_h_path ]
+if meson.version().version_compare('>=1.4.0')
+  config_h_path = config_h.full_path()
+else
+  config_h_path = meson.current_build_dir() / 'config.h'
+endif
+
