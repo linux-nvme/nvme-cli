@@ -7023,6 +7023,7 @@ static int write_uncor(int argc, char **argv, struct command *acmd, struct plugi
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	struct config {
@@ -7065,17 +7066,9 @@ static int write_uncor(int argc, char **argv, struct command *acmd, struct plugi
 		return -EINVAL;
 	}
 
-	struct nvme_io_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.start_block,
-		.nlb		= cfg.block_count,
-		.control	= cfg.dtype << 4,
-		.dspec		= cfg.dspec,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_write_uncorrectable(hdl, &args);
+	nvme_init_write_uncorrectable(&cmd, cfg.namespace_id, cfg.start_block,
+		cfg.block_count, cfg.dtype << 4, cfg.dspec);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("write uncorrectable: %s", nvme_strerror(err));
 	else if (err != 0)
@@ -7139,6 +7132,7 @@ static int write_zeroes(int argc, char **argv, struct command *acmd, struct plug
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u8 sts = 0, pif = 0;
 	__u16 control = 0;
 	__u32 result = 0;
@@ -7264,24 +7258,13 @@ static int write_zeroes(int argc, char **argv, struct command *acmd, struct plug
 	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
 		return -EINVAL;
 
-	struct nvme_io_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.start_block,
-		.nlb		= cfg.block_count,
-		.control	= control,
-		.reftag		= (__u32)cfg.ref_tag,
-		.reftag_u64	= cfg.ref_tag,
-		.apptag		= cfg.app_tag,
-		.appmask	= cfg.app_tag_mask,
-		.sts		= sts,
-		.pif		= pif,
-		.storage_tag	= cfg.storage_tag,
-		.dspec		= cfg.dspec,
-		.timeout	= nvme_cfg.timeout,
-		.result		= &result,
-	};
-	err = nvme_write_zeros(hdl, &args);
+	nvme_init_write_zeros(&cmd, cfg.namespace_id, cfg.start_block,
+		cfg.block_count, control, cfg.dspec, 0, 0);
+	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd, pif, sts,
+		cfg.ref_tag, cfg.storage_tag);
+	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.app_tag,
+		cfg.app_tag_mask);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (err < 0)
 		nvme_show_error("write-zeroes: %s", nvme_strerror(err));
 	else if (err != 0)
@@ -7993,23 +7976,24 @@ unsigned long long elapsed_utime(struct timeval start_time,
 
 static int submit_io(int opcode, char *command, const char *desc, int argc, char **argv)
 {
-	struct timeval start_time, end_time;
-	void *buffer;
-	_cleanup_free_ void *mbuffer = NULL;
-	int err = 0;
-	_cleanup_fd_ int dfd = -1, mfd = -1;
-	int flags, pi_size;
-	int mode = 0644;
-	__u16 control = 0, nblocks = 0;
-	__u32 dsmgmt = 0;
-	unsigned int logical_block_size = 0;
-	unsigned long long buffer_size = 0, mbuffer_size = 0;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	unsigned int logical_block_size = 0;
+	struct timeval start_time, end_time;
+	_cleanup_free_ void *mbuffer = NULL;
+	_cleanup_fd_ int dfd = -1, mfd = -1;
 	__u8 lba_index, sts = 0, pif = 0;
+	__u16 control = 0, nblocks = 0;
+	struct nvme_passthru_cmd cmd;
+	int flags, pi_size;
+	__u32 dsmgmt = 0;
+	int mode = 0644;
+	void *buffer;
+	int err = 0;
 	__u16 ms;
 
 	const char *start_block_addr = "64-bit addr of first block to access";
@@ -8304,30 +8288,26 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (nvme_cfg.dry_run)
 		return 0;
 
-	struct nvme_io_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.start_block,
-		.nlb		= nblocks,
-		.control	= control,
-		.dsm		= cfg.dsmgmt,
-		.sts		= sts,
-		.pif		= pif,
-		.dspec		= cfg.dspec,
-		.reftag		= (__u32)cfg.ref_tag,
-		.reftag_u64	= cfg.ref_tag,
-		.apptag		= cfg.app_tag,
-		.appmask	= cfg.app_tag_mask,
-		.storage_tag	= cfg.storage_tag,
-		.data_len	= buffer_size,
-		.data		= buffer,
-		.metadata_len	= mbuffer_size,
-		.metadata	= mbuffer,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
+	nvme_init_io(&cmd, opcode, cfg.namespace_id, cfg.start_block, buffer,
+		     buffer_size, mbuffer, mbuffer_size);
+	cmd.cdw12 = NVME_FIELD_ENCODE(nblocks,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		    NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd.cdw13 = NVME_FIELD_ENCODE(cfg.dspec,
+			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSPEC_MASK) |
+		    NVME_FIELD_ENCODE(cfg.dsmgmt,
+			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSM_MASK);
+	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd, pif, sts,
+		cfg.ref_tag, cfg.storage_tag);
+	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.app_tag,
+		cfg.app_tag_mask);
 	gettimeofday(&start_time, NULL);
-	err = nvme_io(hdl, &args, opcode);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
@@ -8385,6 +8365,7 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u8 sts = 0, pif = 0;
 	__u16 control = 0;
 	int err;
@@ -8486,23 +8467,13 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
 		return -EINVAL;
 
-	struct nvme_io_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.start_block,
-		.nlb		= cfg.block_count,
-		.control	= control,
-		.reftag		= cfg.ref_tag,
-		.reftag_u64	= cfg.ref_tag,
-		.apptag		= cfg.app_tag,
-		.appmask	= cfg.app_tag_mask,
-		.sts		= sts,
-		.pif		= pif,
-		.storage_tag	= cfg.storage_tag,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_verify(hdl, &args);
+	nvme_init_verify(&cmd, cfg.namespace_id, cfg.start_block,
+		cfg.block_count, control, 0, NULL, 0, NULL, 0);
+	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd, pif, sts,
+		cfg.ref_tag, cfg.storage_tag);
+	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.app_tag,
+		cfg.app_tag_mask);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("verify: %s", nvme_strerror(err));
 	else if (err != 0)
