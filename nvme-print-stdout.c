@@ -277,7 +277,7 @@ static void stdout_persistent_event_log_fdp_events(unsigned int cdw11, unsigned 
 	}
 }
 
-static void pel_header(struct nvme_persistent_event_log *pevent_log_head, int human)
+void pel_header(struct nvme_persistent_event_log *pevent_log_head, int human)
 {
 	printf("Log Identifier: %u\n", pevent_log_head->lid);
 	printf("Total Number of Events: %u\n", le32_to_cpu(pevent_log_head->tnev));

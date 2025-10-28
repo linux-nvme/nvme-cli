@@ -13,6 +13,8 @@ PLUGIN(NAME("ibm", "IBM vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("crit-log", "Display IBM Smart Log Information", get_ibm_addi_smart_log)
 		ENTRY("vpd", "Display IBM VPD Information", get_ibm_vpd_log)
+		ENTRY("persist-event-log", "IBM specific Persistent Event Log",
+				get_ibm_persistent_event_log)
 	)
 );
 #endif
