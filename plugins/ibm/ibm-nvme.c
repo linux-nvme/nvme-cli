@@ -391,3 +391,212 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 	dev_close(dev);
 	return err;
 }
+
+#define NVME_VENDOR_SPECIFIC_EVENT	0xde
+#define NVME_IBM_CHG_DEF    0x1
+#define NVME_IBM_RPT_ERR    0x2
+
+struct ibm_change_def_event {
+	__le64	pom;
+	__u8	vs1;
+	__u8	vs2;
+	__u8	dp;
+};
+
+struct ibm_reported_err_event {
+	__le64	pom;
+	__u8	temp;
+	__u8	retry_cnt;
+	__u8	sc;
+	__u8	sct;
+	__le64	cmd_specific_info;
+	__u8	*cmd;
+
+};
+
+/* persistent event type deh */
+struct nvme_pel_ibm_specific_event {
+	__le16	vsecode;
+	__u8	vsetype;
+	__u8	uuid;
+	__le16	vsedl;
+	__u8	*vse_data;
+};
+
+static const char *raw_use = "use binary output";
+
+void nvme_show_ibm_persistent_event_log(void *pevent_log_info,
+		__u8 action, __u32 size, const char *devname,
+		enum nvme_print_flags flags)
+{
+	__u32 offset;
+	struct nvme_pel_ibm_specific_event *vendor_speci_event;
+	struct nvme_persistent_event_log *pevent_log_head;
+	struct nvme_persistent_event_entry *pevent_entry_head;
+	int human = flags & VERBOSE;
+	bool ibm_event = false;
+	int i = 0;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)pevent_log_info, size);
+
+	offset = sizeof(*pevent_log_head);
+
+	printf("Persistent Event Log for device: %s\n", devname);
+	printf("Action for Persistent Event Log: %u\n", action);
+
+	if (size >= offset) {
+		pevent_log_head = pevent_log_info;
+		nvme_show_pel_header(pevent_log_head, human);
+	} else {
+		printf("No log data can be shown with this log length\n");
+		return;
+	}
+
+	printf("\n");
+	printf(" i=%d tnev=%d\n", i, le32_to_cpu(pevent_log_head->tnev));
+	for (i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
+		if (offset + sizeof(*pevent_entry_head) >= size)
+			break;
+
+		pevent_entry_head = pevent_log_info + offset;
+		if ((offset + pevent_entry_head->ehl + 3 +
+			le16_to_cpu(pevent_entry_head->el)) >= size)
+			break;
+
+		offset += pevent_entry_head->ehl + 3;
+
+		switch (pevent_entry_head->etype) {
+		case NVME_VENDOR_SPECIFIC_EVENT:
+			printf("\nPersistent Event Entries:\n");
+			printf("Event Number: %u\n", i);
+			printf("Event Type Field: 0x%X\n", pevent_entry_head->etype);
+			printf("Event Type Revision: 0x%X\n", pevent_entry_head->etype_rev);
+
+			vendor_speci_event = pevent_log_info + offset;
+
+			printf("Vendor Specific Event Code: 0x%X\n",
+				le16_to_cpu(vendor_speci_event->vsecode));
+			printf("Vendor Specific Event Data Type: 0x%X\n",
+				vendor_speci_event->vsetype);
+			printf("UUID Index: %u\n", vendor_speci_event->uuid);
+			printf("VSEDL: %u\n", le16_to_cpu(vendor_speci_event->vsedl));
+
+			if (le16_to_cpu(vendor_speci_event->vsecode) == NVME_IBM_CHG_DEF) {
+				struct ibm_change_def_event *change_def;
+
+				change_def = pevent_log_info + offset + 6;
+				printf("POM: %"PRIu64"\n", le64_to_cpu(change_def->pom));
+				printf("VS1: %u\n", change_def->vs1);
+				printf("VS2: %u\n", change_def->vs2);
+				printf("DP : %u\n", change_def->dp);
+			}
+
+			if (le16_to_cpu(vendor_speci_event->vsecode) == NVME_IBM_RPT_ERR) {
+				struct ibm_reported_err_event *report_err;
+
+				report_err = pevent_log_info + offset + 6;
+				printf("POM: %"PRIu64"\n", le64_to_cpu(report_err->pom));
+				printf("TEMP: %u\n", report_err->temp);
+				printf("Retry Count: %u\n", report_err->retry_cnt);
+				printf("SC : %u\n", report_err->sc);
+				printf("SCT : %u\n", report_err->sct);
+				printf("CMD Specific Info: %"PRIu64"\n",
+						le64_to_cpu(report_err->cmd_specific_info));
+			}
+			ibm_event = true;
+			printf("\n");
+			break;
+		default:
+			break;
+		}
+		offset += le16_to_cpu(pevent_entry_head->el);
+	}
+
+	if (!ibm_event)
+		printf("NO IBM specific persistent events found!\n");
+}
+
+static int get_ibm_persistent_event_log(int argc, char **argv,
+		struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Persistent Event log info for "
+		"the given device in either decoded format(default), json or binary.";
+	const char *action = "action the controller shall take during "
+		"processing this persistent log page command.";
+	const char *log_len = "number of bytes to retrieve";
+	struct nvme_persistent_event_log pevent_log;
+	void *pevent_log_info = NULL;
+	enum nvme_print_flags flags;
+	struct nvme_dev *dev;
+	__u32 log_length = 0;
+	int err = 0;
+
+	struct config {
+		__u8	action;
+		__u32	log_len;
+		char	*output_format;
+		bool	raw_binary;
+	};
+
+	struct config cfg = {
+		.action		= 0xff,
+		.log_len	= 0,
+		.output_format	= "normal",
+		.raw_binary	= false,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("action",       'a', &cfg.action,        action),
+		OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use),
+		OPT_END()
+	};
+
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format, &flags);
+	if (flags < 0)
+		goto close_dev;
+
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	/* get persistent event log */
+	err = nvme_get_log_persistent_event(dev_fd(dev), NVME_PEVENT_LOG_RELEASE_CTX,
+				sizeof(pevent_log), &pevent_log);
+
+	if (err)
+		return err;
+
+	memset(&pevent_log, 0, sizeof(pevent_log));
+
+	err = nvme_get_log_persistent_event(dev_fd(dev), NVME_PEVENT_LOG_EST_CTX_AND_READ,
+			sizeof(pevent_log), &pevent_log);
+	if (err) {
+		fprintf(stderr, "Setting persistent event log read ctx failed (ignored)!\n");
+		return err;
+	}
+
+	log_length = le64_to_cpu(pevent_log.tll);
+	pevent_log_info = nvme_alloc(log_length);
+	if (!pevent_log_info) {
+		perror("could not alloc buffer for persistent event log page (ignored)!\n");
+		return err;
+	}
+
+	err = nvme_get_log_persistent_event(dev_fd(dev), NVME_PEVENT_LOG_READ,
+				log_length, pevent_log_info);
+	if (!err) {
+		nvme_show_ibm_persistent_event_log(pevent_log_info, cfg.action,
+				log_length, dev->name, flags);
+	}
+
+close_dev:
+	dev_close(dev);
+ret:
+	return err;
+}

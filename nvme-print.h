@@ -366,6 +366,7 @@ void nvme_show_ave_discovery_log(struct nvme_ave_discover_log *log, nvme_print_f
 void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 				      nvme_print_flags_t flags);
 void nvme_show_log(const char *devname, struct nvme_get_log_args *args, nvme_print_flags_t flags);
+void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head, int human);
 
 extern char *alloc_error;
 #endif /* NVME_PRINT_H */
