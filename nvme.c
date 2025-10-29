@@ -8838,6 +8838,7 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_free_ void *buf = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u32 result;
 	__u32 dw12 = 0;
 	int err;
@@ -8924,19 +8925,10 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 			return -ENOMEM;
 	}
 
-	struct nvme_directive_recv_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.dspec		= cfg.dspec,
-		.doper		= cfg.doper,
-		.dtype		= cfg.dtype,
-		.cdw12		= dw12,
-		.data_len	= cfg.data_len,
-		.data		= buf,
-		.timeout	= nvme_cfg.timeout,
-		.result		= &result,
-	};
-	err = nvme_directive_recv(hdl, &args);
+	nvme_init_directive_recv(&cmd, cfg.namespace_id, cfg.doper, cfg.dtype,
+		cfg.dspec, buf, cfg.data_len);
+	cmd.cdw12 = dw12;
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!err)
 		nvme_directive_show(cfg.dtype, cfg.doper, cfg.dspec, cfg.namespace_id,
 				    result, buf, cfg.data_len, flags);
