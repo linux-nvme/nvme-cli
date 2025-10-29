@@ -5286,6 +5286,7 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u32 result;
 	int err;
 	nvme_print_flags_t flags;
@@ -5330,19 +5331,11 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 		return -EINVAL;
 	}
 
-	struct nvme_fw_commit_args args = {
-		.args_size	= sizeof(args),
-		.slot		= cfg.slot,
-		.action		= cfg.action,
-		.bpid		= cfg.bpid,
-		.timeout	= nvme_cfg.timeout,
-		.result		= &result,
-	};
-	err = nvme_fw_commit(hdl, &args);
-
+	nvme_init_fw_commit(&cmd, cfg.slot, cfg.action, cfg.bpid);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (err < 0) {
 		nvme_show_error("fw-commit: %s", nvme_strerror(err));
-	} else if (err != 0) {
+	} else if (err > 0) {
 		__u32 val = nvme_status_get_value(err);
 		int type = nvme_status_get_type(err);
 
