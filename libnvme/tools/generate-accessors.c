@@ -180,8 +180,50 @@ static void mask_c_comments(char *text)
  */
 static char *to_uppercase(char *s)
 {
+	if (!s)
+		return s;
 	for (int i = 0; s[i] != '\0'; i++)
 		s[i] = toupper((unsigned char)s[i]);
+	return s;
+}
+
+/**
+ * @brief Sanitize a string to form a valid C identifier.
+ *
+ * This function modifies the given string in place so that all characters
+ * conform to the rules of a valid C variable name (identifier):
+ *  - The first character must be a letter (A–Z, a–z) or underscore ('_').
+ *  - Subsequent characters may be letters, digits, or underscores.
+ *
+ * Any character that violates these rules is replaced with an underscore ('_').
+ * The string is always modified in place; no new memory is allocated.
+ *
+ * @param s Pointer to the NUL-terminated string to sanitize.
+ *           If @p s is NULL or points to an empty string, the function does nothing.
+ *
+ * @note This function does not check for C keywords or identifier length limits.
+ *
+ * @code
+ * char name[] = "123bad-name!";
+ * sanitize_identifier(name);
+ * // Result: "_23bad_name_"
+ * @endcode
+ */
+static const char *sanitize_identifier(char *s)
+{
+	if (s == NULL || *s == '\0')
+		return s;
+
+	// The first character must be a letter or underscore
+	if (!isalpha((unsigned char)s[0]) && s[0] != '_')
+		s[0] = '_';
+
+	// Remaining characters: letters, digits, underscores allowed
+	for (char *p = s + 1; *p; ++p) {
+		if (!isalnum((unsigned char)*p) && *p != '_')
+			*p = '_';
+	}
+
 	return s;
 }
 
@@ -207,13 +249,13 @@ static char *safe_strdup(const char *s)
 	if (!s)
 		return NULL;
 
-	size_t len = strlen(s) + 1; /* length including null-terminator */
+	size_t len = strlen(s) + 1; /* length including NUL-terminator */
 	char *new_string = (char *)malloc(len);
 
 	if (!new_string)
 		return NULL; /* Return NULL on allocation failure */
 
-	memcpy(new_string, s, len); /* Copy the string including null-terminator */
+	memcpy(new_string, s, len); /* Copy the string including NUL-terminator */
 
 	return new_string;
 }
@@ -234,8 +276,9 @@ static char *safe_strdup(const char *s)
  * @param s: Source string to duplicate. If NULL, returns NULL.
  * @param size: Maximum number of characters to consider from @s.
  *
- * @return Newly allocated null-terminated copy, or NULL on allocation
- *         failure or if @s is NULL. Caller must free().
+ * @return Newly allocated NUL-terminated copy, or NULL on
+ *         allocation failure or if @s is NULL. Caller must
+ *         free().
  */
 static char *safe_strndup(const char *s, size_t size)
 {
@@ -283,7 +326,7 @@ static bool str_is_all_numbers(const char *s)
  * Finds the last '/' in @path and returns pointer to the next
  * character; if no '/' is found returns the original @path.
  *
- * @param path: Input path string (must be null-terminated).
+ * @param path: Input path string (must be NUL-terminated).
  *
  * @return Pointer to filename portion (not newly allocated).
  */
@@ -533,9 +576,8 @@ typedef struct StringList {
  * empty after initialization.
  *
  * @param list: Pointer to the list to initialize.
- * @param initial_capacity: Desired initial capacity (will be
- *                          rounded up to at least
- *                          STRINGLIST_INITIAL_CAPACITY).
+ * @param initial_capacity: Desired initial capacity (will be rounded
+ *                          up to at least STRINGLIST_INITIAL_CAPACITY).
  */
 #define STRINGLIST_INITIAL_CAPACITY 8
 static void strlst_init(StringList_t *list, size_t initial_capacity)
@@ -1275,9 +1317,6 @@ static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
 					member->name, member->name, member->name);
 			} else if (member->is_char_array) {
 				/* fixed-size array */
-				int dont_care;
-				(void)dont_care;
-
 				if (str_is_all_numbers(member->array_size)) {
 					unsigned long sz = strtoul(member->array_size, NULL, 10);
 
@@ -1360,10 +1399,8 @@ static void print_usage(const char *prog)
  */
 static void args_init(Args_t *args, int argc, char *argv[])
 {
-	int         opt;
-	int         option_index = 0;
-	int         dont_care;
-	(void)dont_care;
+	int  opt;
+	int  option_index = 0;
 
 	args->verbose = false;
 	args->c_fname = OUTPUT_FNAME_DEFAULT_C;
@@ -1406,9 +1443,11 @@ static void args_init(Args_t *args, int argc, char *argv[])
 			args->verbose = true;
 			break;
 		case 'H':
-			print_usage(argv[0]); exit(EXIT_SUCCESS);
+			print_usage(argv[0]);
+			exit(EXIT_SUCCESS);
 		default:
-			print_usage(argv[0]); exit(EXIT_FAILURE);
+			print_usage(argv[0]);
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -1513,44 +1552,31 @@ static void conf_free(Conf_t *conf)
 int main(int argc, char *argv[])
 {
 	StructList_t  sl;
+	StringList_t  files_to_include;
+	StringList_t  forward_declares;
+	const char    *struct_to_declare;
+	const char    *include_fname;
 	const char    *in_hdr;
-	char          *h_fname_upper;
+	char          *guard;
 	FILE          *generated_hdr = NULL;
 	FILE          *generated_src = NULL;
+	FILE          *tmp_hdr_code = NULL;
+	FILE          *tmp_src_code = NULL;
 	Conf_t        conf;
+	int           dont_care;
+	int           c;
+
+	(void)dont_care;
 
 	conf_init(&conf, argc, argv);
 
 	struct_list_init(&sl);
+	strlst_init(&files_to_include, 0);
+	strlst_init(&forward_declares, 0);
 
-	/* Create directories (if needed) */
-	mkdir_fullpath(conf.args.h_fname, 0755);
-	mkdir_fullpath(conf.args.c_fname, 0755);
-
-	generated_hdr = fopen(conf.args.h_fname, "w");
-	generated_src = fopen(conf.args.c_fname, "w");
-
-	h_fname_upper = to_uppercase(safe_strdup(get_filename(conf.args.h_fname)));
-	strchrnul(h_fname_upper, '.')[0] = '\0';
-
-	fprintf(generated_hdr,
-		"%s\n"
-		"#ifndef %s_H\n"
-		"#define %s_H\n"
-		"\n"
-		"#include <stdlib.h>\n"
-		"#include <string.h>\n"
-		"#include <stdbool.h>\n"
-		"#include <stdint.h>\n"
-		"#include <linux/types.h> /* __u32, __u64, etc. */\n"
-		"\n", banner, h_fname_upper, h_fname_upper);
-	fprintf(generated_src,
-		"%s\n"
-		"#include <stdlib.h>\n"
-		"#include <string.h>\n"
-		"#include \"%s\"\n"
-		"\n", banner, get_filename(conf.args.h_fname));
-
+	/* Creates temporary files to hold the generated code. */
+	tmp_hdr_code = tmpfile();
+	tmp_src_code = tmpfile();
 
 	STRLST_FOREACH(&conf.args.hdr_files, in_hdr) {
 		StructInfo_t *si;
@@ -1576,41 +1602,101 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		fprintf(generated_src, "#include \"%s\"\n", in_hdr_fname);
-
-		fprintf(generated_hdr, "/* Forward declarations. These are internal (opaque) structs. */\n");
-		STRUCT_LIST_FOREACH(&sl, si) {
-			/* Add forward declaration of struct. We assume all
-			 * structs are opaque, therefore only forward declaration allowed.
-			 */
-			fprintf(generated_hdr, "struct %s;\n", si->name);
-		}
+		strlst_add(&files_to_include, in_hdr_fname, false);
 
 		STRUCT_LIST_FOREACH(&sl, si) {
+			if (STRUCT_INFO_EMPTY(si))
+				continue;
+
+			strlst_add(&forward_declares, si->name, false);
+
 			/* Generate code for the header file (*.h) */
-			fprintf(generated_hdr,
+			fprintf(tmp_hdr_code,
 				"\n"
 				"/****************************************************************************\n"
 				" * Accessors for: struct %s\n"
 				" */\n", si->name);
-			generate_hdr(generated_hdr, si, &conf);
+			generate_hdr(tmp_hdr_code, si, &conf);
 
 			/* Generate code for the source file (*.c) */
-			fprintf(generated_src,
+			fprintf(tmp_src_code,
 				"\n"
 				"/****************************************************************************\n"
 				" * Accessors for: struct %s\n"
 				" */\n", si->name);
-			generate_src(generated_src, si, &conf);
+			generate_src(tmp_src_code, si, &conf);
 		}
 	}
 
 	struct_list_free(&sl);
 
-	fprintf(generated_hdr, "#endif /* %s_H */\n", h_fname_upper);
-	free(h_fname_upper);
+	/* We've collected all the data we needed. Now let's generate some files. */
 
+	/***********************************************************************
+	 * First, output the generated header file.
+	 */
+
+	/* Add a guard in the generated header file that is made of
+	 * the UPPERCASE file name's stem. In other words, if the file
+	 * name is "accessors.h" then the guard should be "_ACCESSORS_H_"
+	 */
+	dont_care = asprintf(&guard, "_%s_", get_filename(conf.args.h_fname));
+	sanitize_identifier(to_uppercase(guard));
+
+	mkdir_fullpath(conf.args.h_fname, 0755); /* create output file's directory if needed */
+
+	generated_hdr = fopen(conf.args.h_fname, "w");
+	fprintf(generated_hdr,
+		"%s\n"
+		"#ifndef %s\n"
+		"#define %s\n"
+		"\n"
+		"#include <stdlib.h>\n"
+		"#include <string.h>\n"
+		"#include <stdbool.h>\n"
+		"#include <stdint.h>\n"
+		"#include <linux/types.h> /* __u32, __u64, etc. */\n"
+		"\n", banner, guard, guard);
+
+	fprintf(generated_hdr, "/* Forward declarations. These are internal (opaque) structs. */\n");
+	STRLST_FOREACH(&forward_declares, struct_to_declare)
+		fprintf(generated_hdr, "struct %s;\n", struct_to_declare);
+	strlst_free(&forward_declares);
+
+	/* Copy temporary file to output */
+	rewind(tmp_hdr_code);
+	while ((c = fgetc(tmp_hdr_code)) != EOF)
+		fputc(c, generated_hdr);
+	fclose(tmp_hdr_code);
+
+	fprintf(generated_hdr, "#endif /* %s */\n", guard);
 	fclose(generated_hdr);
+	free(guard);
+
+
+	/***********************************************************************
+	 * Second, output the generated source file.
+	 */
+
+	mkdir_fullpath(conf.args.c_fname, 0755); /* create output file's directory if needed */
+	generated_src = fopen(conf.args.c_fname, "w");
+	fprintf(generated_src,
+		"%s\n"
+		"#include <stdlib.h>\n"
+		"#include <string.h>\n"
+		"#include \"%s\"\n"
+		"\n", banner, get_filename(conf.args.h_fname));
+
+	STRLST_FOREACH(&files_to_include, include_fname)
+		fprintf(generated_src, "#include \"%s\"\n", include_fname);
+	strlst_free(&files_to_include);
+
+	/* Copy temporary file to output */
+	rewind(tmp_src_code);
+	while ((c = fgetc(tmp_src_code)) != EOF)
+		fputc(c, generated_src);
+	fclose(tmp_src_code);
+
 	fclose(generated_src);
 
 	if (conf.args.verbose)
