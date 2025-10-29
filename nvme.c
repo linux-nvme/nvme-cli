@@ -6943,6 +6943,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_free_ void *buf = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u32 result;
 	__u32 dw12 = 0;
 	_cleanup_fd_ int ffd = STDIN_FILENO;
@@ -7043,19 +7044,10 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 		}
 	}
 
-	struct nvme_directive_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.dspec		= cfg.dspec,
-		.doper		= cfg.doper,
-		.dtype		= cfg.dtype,
-		.cdw12		= dw12,
-		.data_len	= cfg.data_len,
-		.data		= buf,
-		.timeout	= nvme_cfg.timeout,
-		.result		= &result,
-	};
-	err = nvme_directive_send(hdl, &args);
+	nvme_init_directive_send(&cmd, cfg.namespace_id, cfg.doper, cfg.dtype,
+		cfg.dspec, buf, cfg.data_len);
+	cmd.cdw12 = dw12;
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (err < 0) {
 		nvme_show_error("dir-send: %s", nvme_strerror(err));
 		return err;
