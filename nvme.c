@@ -6020,15 +6020,11 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 
 static int nvme_set_single_property(struct nvme_transport_handle *hdl, int offset, uint64_t value)
 {
-	struct nvme_set_property_args args = {
-		.args_size	= sizeof(args),
-		.offset		= offset,
-		.value		= value,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	int err = nvme_set_property(hdl, &args);
+	struct nvme_passthru_cmd cmd;
+	int err;
 
+	nvme_init_set_property(&cmd, offset, value);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("set-property: %s", nvme_strerror(err));
 	else if (!err)
