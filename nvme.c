@@ -4600,13 +4600,13 @@ static int wait_self_test(struct nvme_transport_handle *hdl)
 	return 0;
 }
 
-static void abort_self_test(struct nvme_transport_handle *hdl, struct nvme_dev_self_test_args *args)
+static void abort_self_test(struct nvme_transport_handle *hdl, __u32 nsid)
 {
+	struct nvme_passthru_cmd cmd;
 	int err;
 
-	args->stc = NVME_DST_STC_ABORT;
-
-	err = nvme_dev_self_test(hdl, args);
+	nvme_init_dev_self_test(&cmd, nsid, NVME_DST_STC_ABORT);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err)
 		printf("Aborting device self-test operation\n");
 	else if (err > 0)
@@ -4631,10 +4631,11 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 		"fh Abort the device self-test operation";
 	const char *wait = "Wait for the test to finish";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	int err;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	int err;
 
 	struct config {
 		__u32	namespace_id;
@@ -4691,14 +4692,8 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 		goto check_abort;
 	}
 
-	struct nvme_dev_self_test_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.stc		= cfg.stc,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_dev_self_test(hdl, &args);
+	nvme_init_dev_self_test(&cmd, cfg.namespace_id, cfg.stc);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err) {
 		if (cfg.stc == NVME_ST_CODE_ABORT)
 			printf("Aborting device self-test operation\n");
@@ -4719,7 +4714,7 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 
 check_abort:
 	if (err == -EINTR)
-		abort_self_test(hdl, &args);
+		abort_self_test(hdl, cfg.namespace_id);
 
 	return err;
 }
