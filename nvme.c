@@ -7754,10 +7754,12 @@ static int resv_register(int argc, char **argv, struct command *acmd, struct plu
 	const char *rrega = "reservation registration action";
 	const char *cptpl = "change persistence through power loss setting";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	int err;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	__le64 payload[2];
+	int err;
 
 	struct config {
 		__u32	namespace_id;
@@ -7811,21 +7813,13 @@ static int resv_register(int argc, char **argv, struct command *acmd, struct plu
 		return -EINVAL;
 	}
 
-	struct nvme_resv_register_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.rrega		= cfg.rrega,
-		.cptpl		= cfg.cptpl,
-		.iekey		= !!cfg.iekey,
-		.crkey		= cfg.crkey,
-		.nrkey		= cfg.nrkey,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_resv_register(hdl, &args);
+	nvme_init_resv_register(&cmd, cfg.namespace_id, cfg.rrega, cfg.iekey,
+				false, cfg.cptpl, cfg.crkey, cfg.nrkey,
+				payload);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("reservation register: %s", nvme_strerror(err));
-	else if (err != 0)
+	else if (err > 0)
 		nvme_show_status(err);
 	else
 		printf("NVME Reservation  success\n");
