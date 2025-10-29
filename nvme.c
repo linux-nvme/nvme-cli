@@ -2935,10 +2935,11 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 		"the namespace is not already inactive, once deleted.";
 	const char *namespace_id = "namespace to delete";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	int err;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	int err;
 
 	struct config {
 		__u32	namespace_id;
@@ -2969,7 +2970,8 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 		}
 	}
 
-	err = nvme_ns_mgmt_delete(hdl, cfg.namespace_id);
+	nvme_init_ns_mgmt_delete(&cmd, cfg.namespace_id);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	ns_mgmt_show_status(hdl, err, acmd->name, cfg.namespace_id);
 
 	return err;
@@ -3198,19 +3200,20 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	    "Requested Number of ZRWA Resources (RNUMZRWA) for Zoned Namespace Command Set";
 	const char *phndls = "Comma separated list of Placement Handle Associated RUH";
 
-	_cleanup_free_ struct nvme_ns_mgmt_host_sw_specified *data = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	int err = 0, i;
-	__u32 nsid;
-	uint16_t num_phandle;
-	uint16_t phndl[128] = { 0, };
-	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	_cleanup_free_ struct nvme_ns_mgmt_host_sw_specified *data = NULL;
 	_cleanup_free_ struct nvme_id_ns_granularity_list *gr_list = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	_cleanup_free_ struct nvme_id_ns *ns = NULL;
 	__u64 align_nsze = 1 << 20; /* Default 1 MiB */
 	__u64 align_ncap = align_nsze;
+	struct nvme_passthru_cmd cmd;
+	uint16_t phndl[128] = { 0, };
 	nvme_print_flags_t flags;
+	uint16_t num_phandle;
+	int err = 0, i;
+	__u32 nsid;
 
 	struct config {
 		__u64	nsze;
@@ -3425,7 +3428,8 @@ parse_lba:
 	for (i = 0; i < num_phandle; i++)
 		data->phndl[i] = cpu_to_le16(phndl[i]);
 
-	err = nvme_ns_mgmt_create(hdl, NULL, &nsid, nvme_cfg.timeout, cfg.csi, data);
+	nvme_init_ns_mgmt_create(&cmd, cfg.csi, data);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &nsid);
 	ns_mgmt_show_status(hdl, err, acmd->name, nsid);
 
 	return err;
