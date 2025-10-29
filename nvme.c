@@ -1041,6 +1041,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd64 cmd;
 	struct list_head log_pages;
 	nvme_effects_log_node_t *node;
 
@@ -1097,13 +1098,8 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 			cap = mmio_read64(bar + NVME_REG_CAP);
 			munmap(bar, getpagesize());
 		} else {
-			struct nvme_get_property_args args = {
-				.args_size	= sizeof(args),
-				.offset		= NVME_REG_CAP,
-				.value		= &cap,
-				.timeout	= nvme_cfg.timeout,
-			};
-			err = nvme_get_property(hdl, &args);
+			nvme_init_get_property(&cmd, NVME_REG_CAP);
+			err = nvme_submit_admin_passthru64(hdl, &cmd, &cap);
 			if (err)
 				goto cleanup_list;
 		}
@@ -5571,15 +5567,11 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 
 static int nvme_get_single_property(struct nvme_transport_handle *hdl, struct get_reg_config *cfg, __u64 *value)
 {
+	struct nvme_passthru_cmd64 cmd;
 	int err;
-	struct nvme_get_property_args args = {
-		.args_size	= sizeof(args),
-		.offset		= cfg->offset,
-		.value		= value,
-		.timeout	= nvme_cfg.timeout,
-	};
 
-	err = nvme_get_property(hdl, &args);
+	nvme_init_get_property(&cmd, cfg->offset);
+	err = nvme_submit_admin_passthru64(hdl, &cmd, value);
 	if (!err)
 		return 0;
 
@@ -5804,16 +5796,12 @@ static bool is_reg_selected(struct get_reg_config *cfg, int offset)
 
 static int get_register_properties(struct nvme_transport_handle *hdl, void **pbar, struct get_reg_config *cfg)
 {
+	struct nvme_passthru_cmd64 cmd;
 	int offset = NVME_REG_CRTO;
 	__u64 value;
 	int size;
 	int err;
 	void *bar;
-	struct nvme_get_property_args args = {
-		.args_size = sizeof(args),
-		.value = &value,
-		.timeout = nvme_cfg.timeout,
-	};
 
 	size = offset + get_reg_size(offset);
 	bar = malloc(size);
@@ -5825,8 +5813,8 @@ static int get_register_properties(struct nvme_transport_handle *hdl, void **pba
 		    !nvme_is_fabrics_reg(offset))
 			continue;
 
-		args.offset = offset;
-		err = nvme_get_property(hdl, &args);
+		nvme_init_get_property(&cmd, offset);
+		err = nvme_submit_admin_passthru64(hdl, &cmd, &value);
 		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
 			value = -1;
 		} else if (err) {
