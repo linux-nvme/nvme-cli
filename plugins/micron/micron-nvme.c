@@ -571,12 +571,15 @@ static int micron_selective_download(int argc, char **argv,
 		"ALL - This updates the eeprom, OOB, and main firmware";
 	const char *fw = "firmware file (required)";
 	const char *select = "FW Select (e.g., --select=ALL)";
-	int xfer = 4096;
-	void *fw_buf;
-	int selectNo, fw_fd, fw_size, err, offset = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+
+	int selectNo, fw_fd, fw_size, err, offset = 0;
+	struct nvme_passthru_cmd cmd;
+	int xfer = 4096;
 	struct stat sb;
+	void *fw_buf;
 
 	struct config {
 		char *fw;
@@ -651,16 +654,12 @@ static int micron_selective_download(int argc, char **argv,
 	while (fw_size > 0) {
 		xfer = min(xfer, fw_size);
 
-		struct nvme_fw_download_args args = {
-			.args_size	= sizeof(args),
-			.offset		= offset,
-			.data_len	= xfer,
-			.data		= fw_buf,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
-		};
-
-		err = nvme_fw_download(hdl, &args);
+		err = nvme_init_fw_download(&cmd, fw_buf, xfer, offset);
+		if (err) {
+			perror("fw-download");
+			goto out_free;
+		}
+		err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 		if (err < 0) {
 			perror("fw-download");
 			goto out_free;

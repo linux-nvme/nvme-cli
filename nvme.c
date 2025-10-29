@@ -5013,6 +5013,7 @@ static int fw_download_single(struct nvme_transport_handle *hdl, void *fw_buf,
 			      uint32_t len, bool progress, bool ignore_ovr)
 {
 	const unsigned int max_retries = 3;
+	struct nvme_passthru_cmd cmd;
 	bool retryable, ovr;
 	int err, try;
 
@@ -5021,22 +5022,17 @@ static int fw_download_single(struct nvme_transport_handle *hdl, void *fw_buf,
 		       offset, fw_len, (int)(100 * offset / fw_len));
 	}
 
-	struct nvme_fw_download_args args = {
-		.args_size	= sizeof(args),
-		.offset		= offset,
-		.data_len	= len,
-		.data		= fw_buf,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-
 	for (try = 0; try < max_retries; try++) {
 		if (try > 0) {
 			fprintf(stderr, "retrying offset %x (%u/%u)\n",
 				offset, try, max_retries);
 		}
 
-		err = nvme_fw_download(hdl, &args);
+		err = nvme_init_fw_download(&cmd, fw_buf, len, offset);
+		if (err)
+			return err;
+
+		err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 		if (!err)
 			return 0;
 
