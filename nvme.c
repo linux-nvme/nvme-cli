@@ -2979,29 +2979,31 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, struct command *acmd)
 {
-	_cleanup_free_ struct nvme_ctrl_list *cntlist = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	int err, num;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+
+	_cleanup_free_ struct nvme_ctrl_list *cntlist = NULL;
 	__u16 list[NVME_ID_CTRL_LIST_MAX];
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	int err, num;
 
 	const char *namespace_id = "namespace to attach";
 	const char *cont = "optional comma-sep controller id list";
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		char	*cntlist;
 	};
 
 	struct config cfg = {
-		.namespace_id	= 0,
+		.nsid		= 0,
 		.cntlist	= "",
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		  OPT_LIST("controllers",  'c', &cfg.cntlist,      cont));
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,		namespace_id),
+		  OPT_LIST("controllers",  'c', &cfg.cntlist,	cont));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -3015,11 +3017,11 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 
 	if (nvme_transport_handle_is_blkdev(hdl)) {
 		nvme_show_error("%s: a block device opened (dev: %s, nsid: %d)", acmd->name,
-				nvme_transport_handle_get_name(hdl), cfg.namespace_id);
+				nvme_transport_handle_get_name(hdl), cfg.nsid);
 		return -EINVAL;
 	}
 
-	if (!cfg.namespace_id) {
+	if (!cfg.nsid) {
 		nvme_show_error("%s: namespace-id parameter required", acmd->name);
 		return -EINVAL;
 	}
@@ -3050,13 +3052,12 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	}
 
 	if (attach)
-		err = nvme_ns_attach_ctrls(hdl, cfg.namespace_id,
-					   cntlist);
+		nvme_init_ns_attach_ctrls(&cmd, cfg.nsid, cntlist);
 	else
-		err = nvme_ns_detach_ctrls(hdl, cfg.namespace_id,
-					   cntlist);
+		nvme_init_ns_detach_ctrls(&cmd, cfg.nsid, cntlist);
 
-	ns_mgmt_show_status(hdl, err, acmd->name, cfg.namespace_id);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ns_mgmt_show_status(hdl, err, acmd->name, cfg.nsid);
 
 	return err;
 }
