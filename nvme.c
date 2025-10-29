@@ -5457,10 +5457,11 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 				"3 = Start overwrite, 4 = Start crypto erase, 5 = Exit media verification";
 	const char *ovrpat_desc = "Overwrite pattern.";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	int err;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	int err;
 
 	struct config {
 		bool	no_dealloc;
@@ -5544,19 +5545,9 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		}
 	}
 
-	struct nvme_sanitize_nvm_args args = {
-		.args_size	= sizeof(args),
-		.sanact		= cfg.sanact,
-		.ause		= cfg.ause,
-		.owpass		= cfg.owpass,
-		.oipbp		= cfg.oipbp,
-		.nodas		= cfg.no_dealloc,
-		.ovrpat		= cfg.ovrpat,
-		.result		= NULL,
-		.emvs		= cfg.emvs,
-	};
-
-	err = nvme_sanitize_nvm(hdl, &args);
+	nvme_init_sanitize_nvm(&cmd, cfg.sanact, cfg.ause, cfg.owpass,
+			       cfg.oipbp, cfg.no_dealloc, cfg.emvs, cfg.ovrpat);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("sanitize: %s", nvme_strerror(err));
 	else if (err > 0)
