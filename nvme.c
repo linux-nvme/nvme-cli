@@ -4353,8 +4353,9 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 		"9h: Secondary Online";
 	const char *nr = "Number of Controller Resources(NR)";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u32 result;
 	int err;
 
@@ -4382,16 +4383,8 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	struct nvme_virtual_mgmt_args args = {
-		.args_size	= sizeof(args),
-		.act		= cfg.act,
-		.rt		= cfg.rt,
-		.cntlid		= cfg.cntlid,
-		.nr		= cfg.nr,
-		.timeout	= nvme_cfg.timeout,
-		.result		= &result,
-	};
-	err = nvme_virtual_mgmt(hdl, &args);
+	nvme_init_virtual_mgmt(&cmd, cfg.act, cfg.rt, cfg.cntlid, cfg.nr);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!err)
 		printf("success, Number of Controller Resources Modified (NRM):%#x\n", result);
 	else if (err > 0)
