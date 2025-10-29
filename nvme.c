@@ -8610,11 +8610,12 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 	const char *size = "size of buffer (prints to stdout on success)";
 	const char *al = "allocation length (cf. SPC-4)";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ void *sec_buf = NULL;
-	int err;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	int err;
 
 	struct config {
 		__u32	namespace_id;
@@ -8661,24 +8662,12 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 			return -ENOMEM;
 	}
 
-	struct nvme_security_receive_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.nssf		= cfg.nssf,
-		.spsp0		= cfg.spsp & 0xff,
-		.spsp1		= cfg.spsp >> 8,
-		.secp		= cfg.secp,
-		.al		= cfg.al,
-		.data_len	= cfg.size,
-		.data		= sec_buf,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-
-	err = nvme_security_receive(hdl, &args);
+	nvme_init_security_receive(&cmd, cfg.namespace_id, cfg.nssf, cfg.spsp,
+				   cfg.secp, cfg.al, sec_buf, cfg.size);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0) {
 		nvme_show_error("security receive: %s", nvme_strerror(err));
-	} else if (err != 0) {
+	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
 		printf("NVME Security Receive Command Success\n");

@@ -284,22 +284,11 @@ static int send_rpmb_req(struct nvme_transport_handle *hdl, unsigned char tgt,
 static int recv_rpmb_rsp(struct nvme_transport_handle *hdl, int tgt, int size,
 			 struct rpmb_data_frame_t *rsp)
 {
+	struct nvme_passthru_cmd cmd;
 
-	struct nvme_security_receive_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= 0,
-		.nssf		= tgt,
-		.spsp0		= RPMB_NVME_SPSP,
-		.spsp1		= 0,
-		.secp		= RPMB_NVME_SECP,
-		.al		= 0,
-		.data_len	= size,
-		.data		= (void *)rsp,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
-	};
-
-	return nvme_security_receive(hdl, &args);
+	nvme_init_security_receive(&cmd, 0, tgt, RPMB_NVME_SPSP,
+				   RPMB_NVME_SECP, 0, rsp, size);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 /* Initialize nonce value in rpmb request frame */
