@@ -274,21 +274,11 @@ struct rpmb_config_block_t {
 static int send_rpmb_req(struct nvme_transport_handle *hdl, unsigned char tgt,
 			 int size, struct rpmb_data_frame_t *req)
 {
-	struct nvme_security_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= 0,
-		.nssf		= tgt,
-		.spsp0		= RPMB_NVME_SPSP,
-		.spsp1		= 0,
-		.secp		= RPMB_NVME_SECP,
-		.tl		= 0,
-		.data_len	= size,
-		.data		= (void *)req,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
-	};
+	struct nvme_passthru_cmd cmd;
 
-	return nvme_security_send(hdl, &args);
+	nvme_init_security_send(&cmd, NVME_NSID_NONE, tgt, RPMB_NVME_SPSP,
+			        RPMB_NVME_SECP, 0, req, size);
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 static int recv_rpmb_rsp(struct nvme_transport_handle *hdl, int tgt, int size,

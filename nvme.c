@@ -6839,6 +6839,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	_cleanup_free_ void *sec_buf = NULL;
 	_cleanup_fd_ int sec_fd = -1;
 	unsigned int sec_size;
@@ -6919,25 +6920,12 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		return -errno;
 	}
 
-	struct nvme_security_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.nssf		= cfg.nssf,
-		.spsp0		= cfg.spsp & 0xff,
-		.spsp1		= cfg.spsp >> 8,
-		.secp		= cfg.secp,
-		.tl		= cfg.tl,
-		.data_len	= cfg.tl,
-		.data		= sec_buf,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-
-	err = nvme_security_send(hdl, &args);
-
+	nvme_init_security_send(&cmd, cfg.namespace_id, cfg.nssf, cfg.spsp,
+				cfg.secp, cfg.tl, sec_buf, cfg.tl);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("security-send: %s", nvme_strerror(err));
-	else if (err != 0)
+	else if (err > 0)
 		nvme_show_status(err);
 	else
 		printf("NVME Security Send Command Success\n");
