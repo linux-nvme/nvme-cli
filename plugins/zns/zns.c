@@ -691,8 +691,9 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 	const char *partial = "Zone Receive Action Specific Features(Partial Report)";
 	const char *data_len = "length of data in bytes";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	void *data = NULL;
 	int err = -1;
@@ -750,19 +751,9 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 		}
 	}
 
-	struct nvme_zns_mgmt_recv_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.zslba,
-		.zra		= cfg.zra,
-		.zrasf		= cfg.zrasf,
-		.zras_feat	= cfg.partial,
-		.data_len	= cfg.data_len,
-		.data		= data,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
-	};
-	err = nvme_zns_mgmt_recv(hdl, &args);
+	nvme_init_zns_mgmt_recv(&cmd, cfg.namespace_id, cfg.zslba, cfg.zra,
+				cfg.zrasf, cfg.partial, data, cfg.data_len);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err)
 		printf("zone-mgmt-recv: Success, action:%d zone:%"PRIx64" nsid:%d\n",
 		       cfg.zra, (uint64_t)cfg.zslba, cfg.namespace_id);
@@ -786,13 +777,14 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 	const char *part = "set to use the partial report";
 	const char *verbose = "show report zones verbosity";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	struct nvme_zone_report *report, *buff;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int zdes = 0, err = -1;
 	__u32 report_size;
-	struct nvme_zone_report *report, *buff;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 
 	unsigned int nr_zones_chunks = 1024,   /* 1024 entries * 64 bytes per entry = 64k byte transfer */
 			nr_zones_retrieved = 0,
@@ -880,10 +872,9 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 		return -ENOMEM;
 	}
 
-	err = nvme_zns_report_zones(hdl, cfg.namespace_id, 0,
-				    cfg.state, false, false,
-				    log_len, buff,
-				    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	nvme_init_zns_report_zones(&cmd, cfg.namespace_id, 0, cfg.state, false,
+				   false, buff, log_len);
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err > 0) {
 		nvme_show_status(err);
 		goto free_buff;
@@ -923,15 +914,15 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 			log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
 		}
 
-		err = nvme_zns_report_zones(hdl, cfg.namespace_id,
-					    offset,
-					    cfg.state, cfg.extended,
-					    cfg.partial, log_len, report,
-					    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		nvme_init_zns_report_zones(&cmd, cfg.namespace_id, offset,
+					   cfg.state, cfg.extended, cfg.partial,
+					   report, log_len);
+		err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 		if (err > 0) {
 			nvme_show_status(err);
 			break;
 		}
+		// QUESTION: should we also check for < 0 here?
 
 		if (!err)
 			nvme_show_zns_report_zones(report, nr_zones_chunks,
