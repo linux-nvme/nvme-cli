@@ -178,8 +178,9 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	const char *stop = "Equivalent to stop tracking with defaults";
 
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err = -1;
 
 	struct config {
@@ -232,14 +233,8 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 			cfg.mos = NVME_SET(NVME_LM_LACT_STOP_LOGGING, LM_LACT);
 	}
 
-	struct nvme_lm_track_send_args args = {
-		.args_size = sizeof(args),
-		.cdqid = cfg.cdqid,
-		.sel = cfg.sel,
-		.mos = cfg.mos,
-	};
-
-	err = nvme_lm_track_send(hdl, &args);
+	nvme_init_lm_track_send(&cmd, cfg.sel, cfg.mos, cfg.cdqid);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_track_send() failed %s", strerror(errno));
 	else if (err)
