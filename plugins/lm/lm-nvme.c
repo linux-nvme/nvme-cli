@@ -412,13 +412,16 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	const char *output = "Controller State Data output file";
 	const char *human_readable_info = "show info in readable format";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_file_ FILE *fd = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	_cleanup_file_ FILE *fd = NULL;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	void *data = NULL;
+	__u32 result = 0;
 	int err = -1;
+	__u16 mos;
 
 	struct config {
 		__u8 sel;
@@ -490,21 +493,11 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	if (!data)
 		return -ENOMEM;
 
-	__u32 result = 0;
-	struct nvme_lm_migration_recv_args args = {
-		.args_size = sizeof(args),
-		.sel = cfg.sel,
-		.mos = NVME_SET(cfg.csvi, LM_GET_CONTROLLER_STATE_CSVI),
-		.uidx = cfg.uidx,
-		.csuuidi = cfg.csuuidi,
-		.offset = cfg.offset,
-		.cntlid = cfg.cntlid,
-		.numd = cfg.numd,
-		.data = data,
-		.result = &result,
-	};
-
-	err = nvme_lm_migration_recv(hdl, &args);
+	mos = NVME_SET(cfg.csvi, LM_GET_CONTROLLER_STATE_CSVI);
+	nvme_init_lm_migration_recv(&cmd, cfg.offset, mos, cfg.cntlid,
+				    cfg.csuuidi, cfg.sel, cfg.uidx, 0, data,
+				    (cfg.numd + 1) << 2);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_migration_recv() failed %s", strerror(errno));
 	else if (err)
