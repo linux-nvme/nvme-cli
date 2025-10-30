@@ -2116,16 +2116,17 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	const char *desc = "I/O Management Send";
 	const char *data = "optional file for data (default stdin)";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *buf = NULL;
-	int err = -1;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_fd_ int dfd = STDIN_FILENO;
+	_cleanup_free_ void *buf = NULL;
+	struct nvme_passthru_cmd cmd;
+	int err = -1;
 
 	struct config {
+		__u32 nsid;
 		__u16 mos;
 		__u8  mo;
-		__u32 namespace_id;
 		char  *file;
 		__u32 data_len;
 	};
@@ -2135,18 +2136,18 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		  OPT_SHRT("mos",           's', &cfg.mos,            mos),
-		  OPT_BYTE("mo",            'm', &cfg.mo,             mo),
-		  OPT_FILE("data",          'd', &cfg.file,           data),
-		  OPT_UINT("data-len",      'l', &cfg.data_len,       buf_len));
+		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		namespace_id_desired),
+		  OPT_SHRT("mos",           's', &cfg.mos,		mos),
+		  OPT_BYTE("mo",            'm', &cfg.mo,       mo),
+		  OPT_FILE("data",          'd', &cfg.file,     data),
+		  OPT_UINT("data-len",      'l', &cfg.data_len, buf_len));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			nvme_show_perror("get-namespace-id");
 			return err;
@@ -2173,20 +2174,11 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	struct nvme_io_mgmt_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.mos		= cfg.mos,
-		.mo		= cfg.mo,
-		.data_len	= cfg.data_len,
-		.data		= buf,
-		.timeout	= nvme_cfg.timeout,
-	};
-
-	err = nvme_io_mgmt_send(hdl, &args);
+	nvme_init_io_mgmt_send(&cmd, cfg.nsid, cfg.mo, cfg.mos, buf, cfg.data_len);
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (!err)
 		printf("io-mgmt-send: Success, mos:%u mo:%u nsid:%d\n",
-			cfg.mos, cfg.mo, cfg.namespace_id);
+			cfg.mos, cfg.mo, cfg.nsid);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
