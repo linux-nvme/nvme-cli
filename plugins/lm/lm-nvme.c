@@ -278,10 +278,11 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 	const char *numd = "Number of Dwords (NUMD)";
 	const char *input = "Controller State Data input file";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_file_ FILE *file = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	_cleanup_file_ FILE *file = NULL;
+	struct nvme_passthru_cmd cmd;
 	void *data = NULL;
 	int err = -1;
 
@@ -377,21 +378,12 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 		}
 	}
 
-	struct nvme_lm_migration_send_args args = {
-		.args_size = sizeof(args),
-		.sel = cfg.sel,
-		.mos = NVME_SET(cfg.seqind, LM_SEQIND),
-		.cntlid = cfg.cntlid,
-		.csuuidi = cfg.csuuidi,
-		.uidx = cfg.uidx,
-		.stype = cfg.stype,
-		.offset = cfg.offset,
-		.dudmq = cfg.dudmq,
-		.numd = cfg.numd,
-		.data = data,
-	};
-
-	err = nvme_lm_migration_send(hdl, &args);
+	nvme_init_lm_migration_send(&cmd, cfg.sel,
+				    NVME_SET(cfg.seqind, LM_SEQIND), cfg.cntlid,
+				    cfg.stype, cfg.dudmq, cfg.csvi, cfg.csuuidi,
+				    cfg.offset, cfg.uidx, data,
+				    (cfg.numd << 2));
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_migration_send() failed %s", strerror(errno));
 	else if (err > 0)
