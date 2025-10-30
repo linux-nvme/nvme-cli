@@ -240,8 +240,9 @@ static int zns_mgmt_send(int argc, char **argv, struct command *acmd, struct plu
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *select_all = "send command to all zones";
 	const char *timeout = "timeout value, in milliseconds";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err, zcapc = 0;
 	char *cmdstr;
 	__u32 result;
@@ -279,19 +280,9 @@ static int zns_mgmt_send(int argc, char **argv, struct command *acmd, struct plu
 		}
 	}
 
-	struct nvme_zns_mgmt_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.zslba,
-		.zsa		= zsa,
-		.select_all	= cfg.select_all,
-		.zsaso		= 0,
-		.data_len	= 0,
-		.data		= NULL,
-		.timeout	= cfg.timeout,
-		.result		= &result,
-	};
-	err = nvme_zns_mgmt_send(hdl, &args);
+	nvme_init_zns_mgmt_send(&cmd, cfg.namespace_id, cfg.zslba, zsa,
+				cfg.select_all, 0, 0, NULL, 0);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!err) {
 		if (zsa == NVME_ZNS_ZSA_RESET)
 			zcapc = result & 0x1;
@@ -350,9 +341,10 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 	const char *data = "optional file for data (default stdin)";
 	const char *timeout = "timeout value, in milliseconds";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	int ffd = STDIN_FILENO, err = -1;
+	struct nvme_passthru_cmd cmd;
 	void *buf = NULL;
 
 	struct config {
@@ -436,19 +428,10 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 		}
 	}
 
-	struct nvme_zns_mgmt_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.zslba,
-		.zsa		= cfg.zsa,
-		.select_all	= cfg.select_all,
-		.zsaso		= cfg.zsaso,
-		.data_len	= cfg.data_len,
-		.data		= buf,
-		.timeout	= cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_zns_mgmt_send(hdl, &args);
+	nvme_init_zns_mgmt_send(&cmd, cfg.namespace_id, cfg.zslba, cfg.zsa,
+				cfg.select_all, cfg.zsaso, 0, buf,
+				cfg.data_len);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err)
 		printf("zone-mgmt-send: Success, action:%d zone:%"PRIx64" all:%d nsid:%d\n",
 		       cfg.zsa, (uint64_t)cfg.zslba, (int)cfg.select_all, cfg.namespace_id);
@@ -486,8 +469,9 @@ static int open_zone(int argc, char **argv, struct command *acmd, struct plugin 
 	const char *zrwaa = "Allocate Zone Random Write Area to zone";
 	const char *select_all = "send command to all zones";
 	const char *timeout = "timeout value, in milliseconds";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	struct config {
@@ -522,24 +506,17 @@ static int open_zone(int argc, char **argv, struct command *acmd, struct plugin 
 		}
 	}
 
-	struct nvme_zns_mgmt_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.zslba,
-		.zsa		= NVME_ZNS_ZSA_OPEN,
-		.select_all	= cfg.select_all,
-		.zsaso		= cfg.zrwaa,
-		.data_len	= 0,
-		.data		= NULL,
-		.timeout	= cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_zns_mgmt_send(hdl, &args);
+	nvme_init_zns_mgmt_send(&cmd, cfg.namespace_id, cfg.zslba,
+				NVME_ZNS_ZSA_OPEN, cfg.select_all, cfg.zrwaa, 0,
+				NULL, 0);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err)
 		printf("zns-open-zone: Success zone slba:%"PRIx64" nsid:%d\n",
 		       (uint64_t)cfg.zslba, cfg.namespace_id);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns open-zone");
 
 	return err;
 }
@@ -566,8 +543,9 @@ static int set_zone_desc(int argc, char **argv, struct command *acmd, struct plu
 	const char *data = "optional file for zone extension data (default stdin)";
 	const char *timeout = "timeout value, in milliseconds";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	int ffd = STDIN_FILENO, err;
 	void *buf = NULL;
 	int data_len;
@@ -632,19 +610,10 @@ static int set_zone_desc(int argc, char **argv, struct command *acmd, struct plu
 		goto close_ffd;
 	}
 
-	struct nvme_zns_mgmt_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.zslba,
-		.zsa		= NVME_ZNS_ZSA_SET_DESC_EXT,
-		.select_all	= 0,
-		.zsaso		= cfg.zrwaa,
-		.data_len	= data_len,
-		.data		= buf,
-		.timeout	= cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_zns_mgmt_send(hdl, &args);
+	nvme_init_zns_mgmt_send(&cmd, cfg.namespace_id, cfg.zslba,
+				NVME_ZNS_ZSA_SET_DESC_EXT, 0, cfg.zrwaa, 0, buf,
+				data_len);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err)
 		printf("set-zone-desc: Success, zone:%"PRIx64" nsid:%d\n",
 		       (uint64_t)cfg.zslba, cfg.namespace_id);
@@ -667,8 +636,9 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *acmd, struct p
 	const char *desc = "Flush Explicit ZRWA Range";
 	const char *slba = "LBA to flush up to";
 	const char *timeout = "timeout value, in milliseconds";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	struct config {
@@ -698,24 +668,16 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *acmd, struct p
 		}
 	}
 
-	struct nvme_zns_mgmt_send_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.slba		= cfg.lba,
-		.zsa		= NVME_ZNS_ZSA_ZRWA_FLUSH,
-		.select_all	= 0,
-		.zsaso		= 0,
-		.data_len	= 0,
-		.data		= NULL,
-		.timeout	= cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_zns_mgmt_send(hdl, &args);
+	nvme_init_zns_mgmt_send(&cmd, cfg.namespace_id, cfg.lba,
+				NVME_ZNS_ZSA_ZRWA_FLUSH, 0, 0, 0, NULL, 0);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (!err)
 		printf("zrwa-flush-zone: Success, lba:%"PRIx64" nsid:%d\n",
 		       (uint64_t)cfg.lba, cfg.namespace_id);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns zrwa-flush-zone");
 
 	return err;
 }
