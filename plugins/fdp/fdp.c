@@ -293,16 +293,17 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 	const char *namespace_id = "Namespace identifier";
 	const char *raw = "use binary output";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ void *buf = NULL;
 	struct nvme_fdp_ruh_status hdr;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err = -1;
 	size_t len;
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		char	*output_format;
 		bool	raw_binary;
 	};
@@ -313,9 +314,9 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid,			namespace_id),
+		OPT_FMT("output-format", 'o', &cfg.output_format,	output_format),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,		raw),
 		OPT_END()
 	};
 
@@ -330,16 +331,17 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			perror("get-namespace-id");
 			return err;
 		}
 	}
 
-	err = nvme_fdp_reclaim_unit_handle_status(hdl,
-			cfg.namespace_id, sizeof(hdr), &hdr);
+	nvme_init_fdp_reclaim_unit_handle_status(&cmd, cfg.nsid, &hdr,
+		sizeof(hdr));
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -351,8 +353,8 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 	if (!buf)
 		return -ENOMEM;
 
-	err = nvme_fdp_reclaim_unit_handle_status(hdl,
-			cfg.namespace_id, len, buf);
+	nvme_init_fdp_reclaim_unit_handle_status(&cmd, cfg.nsid, buf, len);
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -369,15 +371,16 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 	const char *namespace_id = "Namespace identifier";
 	const char *_pids = "Comma-separated list of placement identifiers to update";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	unsigned short pids[256];
 	__u16 buf[256];
-	int npids;
 	int err = -1;
+	int npids;
 
 	struct config {
-		__u32 namespace_id;
+		__u32 nsid;
 		char *pids;
 	};
 
@@ -386,8 +389,8 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
-		OPT_LIST("pids",          'p', &cfg.pids,           _pids),
+		OPT_UINT("namespace-id",  'n', &cfg.nsid,	namespace_id),
+		OPT_LIST("pids",          'p', &cfg.pids,	_pids),
 		OPT_END()
 	};
 
@@ -404,8 +407,8 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 		return -EINVAL;
 	}
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			perror("get-namespace-id");
 			return err;
@@ -415,7 +418,8 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 	for (unsigned int i = 0; i < npids; i++)
 		buf[i] = cpu_to_le16(pids[i]);
 
-	err = nvme_fdp_reclaim_unit_handle_update(hdl, cfg.namespace_id, npids, buf);
+	nvme_init_fdp_reclaim_unit_handle_status(&cmd, cfg.nsid, buf, npids);
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err) {
 		nvme_show_status(err);
 		return err;
