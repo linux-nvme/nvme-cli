@@ -7913,32 +7913,33 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	const char *numd = "number of dwords to transfer";
 	const char *eds = "request extended data structure";
 
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ struct nvme_resv_status *status = NULL;
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err, size;
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		__u32	numd;
 		__u8	eds;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
-		.namespace_id	= 0,
+		.nsid		= 0,
 		.numd		= 0,
 		.eds		= false,
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id_desired),
-		  OPT_UINT("numd",          'd', &cfg.numd,           numd),
-		  OPT_FLAG("eds",           'e', &cfg.eds,            eds),
-		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_dump));
+		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		  namespace_id_desired),
+		  OPT_UINT("numd",          'd', &cfg.numd,       numd),
+		  OPT_FLAG("eds",           'e', &cfg.eds,        eds),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_dump));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -7953,8 +7954,8 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			nvme_show_error("get-namespace-id: %s", nvme_strerror(err));
 			return err;
@@ -7985,16 +7986,8 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	if (!status)
 		return -ENOMEM;
 
-	struct nvme_resv_report_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.eds		= cfg.eds,
-		.len		= size,
-		.report		= status,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_resv_report(hdl, &args);
+	nvme_init_resv_report(&cmd, cfg.nsid, cfg.eds, false, status, size);
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (!err)
 		nvme_show_resv_report(status, size, cfg.eds, flags);
 	else if (err > 0)
