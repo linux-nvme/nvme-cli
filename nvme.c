@@ -7839,13 +7839,15 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 		"the issuing controller are notified.";
 	const char *rrela = "reservation release action";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	int err;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
+	__le64 payload[1];
+	int err;
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		__u64	crkey;
 		__u8	rtype;
 		__u8	rrela;
@@ -7853,7 +7855,7 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	struct config cfg = {
-		.namespace_id	= 0,
+		.nsid		= 0,
 		.crkey		= 0,
 		.rtype		= 0,
 		.rrela		= 0,
@@ -7861,11 +7863,11 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
-		  OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
-		  OPT_BYTE("rrela",        'a', &cfg.rrela,        rrela),
-		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,		namespace_desired),
+		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,     crkey),
+		  OPT_BYTE("rtype",        't', &cfg.rtype,     rtype),
+		  OPT_BYTE("rrela",        'a', &cfg.rrela,     rrela),
+		  OPT_FLAG("iekey",        'i', &cfg.iekey,     iekey));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -7877,8 +7879,8 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			nvme_show_error("get-namespace-id: %s", nvme_strerror(err));
 			return err;
@@ -7889,17 +7891,9 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
-	struct nvme_resv_release_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.rtype		= cfg.rtype,
-		.rrela		= cfg.rrela,
-		.iekey		= !!cfg.iekey,
-		.crkey		= cfg.crkey,
-		.timeout	= nvme_cfg.timeout,
-		.result		= NULL,
-	};
-	err = nvme_resv_release(hdl, &args);
+	nvme_init_resv_release(&cmd, cfg.nsid, cfg.rrela, cfg.iekey, false,
+		cfg.rtype, cfg.crkey, payload);
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("reservation release: %s", nvme_strerror(err));
 	else if (err != 0)
