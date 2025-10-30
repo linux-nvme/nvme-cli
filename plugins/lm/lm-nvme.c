@@ -57,10 +57,12 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 			      "will write to invalid memory, inevitably leading to MMU faults or "
 			      "worse.";
 
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct lba_migration_queue_entry_type_0 *queue = NULL;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	struct nvme_passthru_cmd cmd;
+	__u32 result;
 	int err = -1;
 
 	struct config {
@@ -105,22 +107,16 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 		return -ENOMEM;
 	}
 
-	struct nvme_lm_cdq_args args = {
-		.args_size = sizeof(args),
-		.sel = NVME_LM_SEL_CREATE_CDQ,
-		.mos = NVME_SET(cfg.qt, LM_QT),
-		.cntlid = cfg.cntlid,
-		.sz = cfg.sz,
-		.data = queue
-	};
-
-	err = nvme_lm_cdq(hdl, &args);
+	nvme_init_lm_cdq_create(&cmd, NVME_SET(cfg.qt, LM_QT),
+			 cfg.cntlid, cfg.sz, queue);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_cdq() failed: %s", nvme_strerror(errno));
 	else if (err)
 		nvme_show_status(err);
 	else
-		printf("Create CDQ Successful: CDQID=0x%04x\n", args.cdqid);
+		printf("Create CDQ Successful: CDQID=0x%04x\n",
+			NVME_GET(result, LM_CREATE_CDQ_CDQID));
 
 	return err;
 }
@@ -130,8 +126,9 @@ static int lm_delete_cdq(int argc, char **argv, struct command *acmd, struct plu
 	const char *desc = "Delete Controller Data Queue";
 	const char *cdqid = "Controller Data Queue ID";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	int err = -1;
 
 	struct config {
@@ -151,13 +148,8 @@ static int lm_delete_cdq(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	struct nvme_lm_cdq_args args = {
-		.args_size = sizeof(args),
-		.sel = NVME_LM_SEL_DELETE_CDQ,
-		.cdqid = cfg.cdqid,
-	};
-
-	err = nvme_lm_cdq(hdl, &args);
+	nvme_init_lm_cdq_delete(&cmd, 0, cfg.cdqid);
+	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_cdq() failed: %s", nvme_strerror(errno));
 	else if (err > 0)
