@@ -952,22 +952,21 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	const char *fua = "force unit access";
 	const char *prinfo = "protection information action and checks field";
 	const char *piremap = "protection information remap (for type 1 PI)";
-	const char *ref_tag = "reference tag for end-to-end PI";
-	const char *lbat = "logical block application tag for end-to-end PI";
-	const char *lbatm = "logical block application tag mask for end-to-end PI";
 	const char *metadata_size = "size of metadata in bytes";
 	const char *data_size = "size of data in bytes";
 	const char *latency = "output latency statistics";
 
-	int err = -1, dfd = STDIN_FILENO, mfd = STDIN_FILENO;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	int err = -1, dfd = STDIN_FILENO, mfd = STDIN_FILENO;
+	struct timeval start_time, end_time;
 	unsigned int lba_size, meta_size;
 	void *buf = NULL, *mbuf = NULL;
+	struct nvme_passthru_cmd64 cmd;
 	__u16 nblocks, control = 0;
-	__u64 result;
+	__u16 cev = 0, dspec = 0;
 	__u8 lba_index;
-	struct timeval start_time, end_time;
+	__u64 result;
 
 	struct nvme_id_ns ns;
 
@@ -980,9 +979,6 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 		bool   limited_retry;
 		bool   fua;
 		__u32  namespace_id;
-		__u64  ref_tag;
-		__u16  lbat;
-		__u16  lbatm;
 		__u8   prinfo;
 		bool   piremap;
 		bool   latency;
@@ -999,9 +995,6 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 		OPT_FILE("metadata",          'M', &cfg.metadata,      metadata),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry, limited_retry),
 		OPT_FLAG("force-unit-access", 'f', &cfg.fua,           fua),
-		OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,       ref_tag),
-		OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,         lbatm),
-		OPT_SHRT("app-tag",           'a', &cfg.lbat,          lbat),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,        prinfo),
 		OPT_FLAG("piremap",           'P', &cfg.piremap,       piremap),
 		OPT_FLAG("latency",           't', &cfg.latency,       latency),
@@ -1109,25 +1102,11 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	if (cfg.piremap)
 		control |= NVME_IO_ZNS_APPEND_PIREMAP;
 
-	struct nvme_zns_append_args args = {
-		.args_size	= sizeof(args),
-		.nsid		= cfg.namespace_id,
-		.zslba		= cfg.zslba,
-		.nlb		= nblocks,
-		.control	= control,
-		.ilbrt_u64	= cfg.ref_tag,
-		.lbat		= cfg.lbat,
-		.lbatm		= cfg.lbatm,
-		.data_len	= cfg.data_size,
-		.data		= buf,
-		.metadata_len	= cfg.metadata_size,
-		.metadata	= mbuf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-
 	gettimeofday(&start_time, NULL);
-	err = nvme_zns_append(hdl, &args);
+	nvme_init_zns_append(&cmd, cfg.namespace_id, cfg.zslba, nblocks,
+			     control, cev, dspec, buf, cfg.data_size, mbuf,
+			     cfg.metadata_size);
+	err = nvme_submit_admin_passthru64(hdl, &cmd, &result);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: zone append: %llu us\n",
