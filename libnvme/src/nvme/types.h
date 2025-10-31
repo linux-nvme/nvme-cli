@@ -12,8 +12,29 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <linux/types.h>
+
+struct nvme_global_ctx;
+struct nvme_transport_handle;
+
+/**
+ * nvme_create_global_ctx() - Initialize global context object
+ * @fp:		File descriptor for logging messages
+ * @log_level:	Logging level to use
+ *
+ * Return: Initialized &struct nvme_global_ctx object
+ */
+struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level);
+
+/**
+ * nvme_free_global_ctx() - Free global context object
+ * @ctx:	&struct nvme_global_ctx object
+ *
+ * Free an &struct nvme_global_ctx object and all attached objects
+ */
+void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
 
 /**
  * DOC: types.h

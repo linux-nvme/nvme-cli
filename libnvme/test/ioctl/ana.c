@@ -11,7 +11,6 @@
 #include <libnvme.h>
 
 #include "mock.h"
-#include "nvme/api-types.h"
 #include "util.h"
 
 #define TEST_FD 0xFD

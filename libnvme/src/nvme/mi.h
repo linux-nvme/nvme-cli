@@ -89,7 +89,6 @@
 
 #include <nvme/types.h>
 #include <nvme/tree.h>
-#include <nvme/api-types.h>
 
 /**
  * NVME_MI_MSGTYPE_NVME - MCTP message type for NVMe-MI messages.

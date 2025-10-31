@@ -18,7 +18,6 @@
 
 #include <nvme/ioctl.h>
 #include <nvme/util.h>
-#include <nvme/api-types.h>
 
 /**
  * DOC: tree.h

@@ -94,7 +94,6 @@ install_headers([
     install_mode: mode,
 )
 install_headers([
-        'nvme/api-types.h',
         'nvme/fabrics.h',
         'nvme/filters.h',
         'nvme/ioctl.h',

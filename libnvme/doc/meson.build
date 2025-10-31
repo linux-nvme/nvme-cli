@@ -9,7 +9,6 @@
 #
 
 api_files = [
-  'api-types.h',
   'fabrics.h',
   'filters.h',
   'ioctl.h',
