@@ -6,6 +6,9 @@ pkgconfig = '/usr/bin/powerpc64le-linux-gnu-pkg-config'
 ld = '/usr/bin/powerpc64le-linux-gnu-ld'
 exe_wrapper = '/usr/bin/qemu-ppc64le-static'
 
+c_native = 'gcc'
+cpp_native = 'g++'
+
 [properties]
 root = '/usr/powerpc64le-linux-gnu'
 has_function_printf = true

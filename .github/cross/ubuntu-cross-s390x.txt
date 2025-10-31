@@ -6,6 +6,9 @@ pkgconfig = '/usr/bin/s390x-linux-gnu-pkg-config'
 ld = '/usr/bin/s390x-linux-gnu-ld'
 exe_wrapper = '/usr/bin/qemu-s390x-static'
 
+c_native = 'gcc'
+cpp_native = 'g++'
+
 [properties]
 root = '/usr/s390x-linux-gnu'
 has_function_printf = true

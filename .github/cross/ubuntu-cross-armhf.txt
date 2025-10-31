@@ -6,6 +6,9 @@ pkgconfig = '/usr/bin/arm-linux-gnueabihf-pkg-config'
 ld = '/usr/bin/arm-linux/gnueabihf-ld'
 exe_wrapper = '/usr/bin/qemu-arm-static'
 
+c_native = 'gcc'
+cpp_native = 'g++'
+
 [properties]
 root = '/usr/arm-linux-gnueabihf'
 has_function_printf = true
