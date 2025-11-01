@@ -7384,6 +7384,37 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	return err;
 }
 
+static int identify_pif_sts(struct nvme_transport_handle *hdl,
+			    __u32 nsid, __u8 *pif, __u8 *sts)
+{
+	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
+	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	int err;
+
+	ns = nvme_alloc(sizeof(*ns));
+	if (!ns)
+		return -ENOMEM;
+
+	err = nvme_identify_ns(hdl, nsid, ns);
+	if (err > 0) {
+		nvme_show_status(err);
+		return err;
+	} else if (err < 0) {
+		nvme_show_error("identify namespace: %s", nvme_strerror(-err));
+		return err;
+	}
+
+	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
+	if (!nvm_ns)
+		return -ENOMEM;
+
+	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0, nvm_ns);
+	if (!err)
+		get_pif_sts(ns, nvm_ns, pif, sts);
+
+	return 0;
+}
+
 static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "The Copy command is used by the host to copy data\n"
@@ -7416,6 +7447,8 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	__u64 slbas[256] = { 0 };
 	__u32 snsids[256] = { 0 };
 	__u16 sopts[256] = { 0 };
+	__u8 pif = 0;
+	__u8 sts = 0;
 	int err;
 
 	union {
@@ -7578,11 +7611,18 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		break;
 	}
 
+	err = identify_pif_sts(hdl, cfg.namespace_id, &pif, &sts);
+	if (err)
+		return err;
+
+	if (invalid_tags(0, cfg.ilbrt, sts, pif))
+		return -EINVAL;
+
 	nvme_init_copy(&cmd, cfg.namespace_id, cfg.sdlba, nr, cfg.format,
 		       cfg.prinfor, cfg.prinfow, 0, cfg.dtype, false, false,
 		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
-	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd,
-		NVME_NVM_PIF_32B_GUARD, 0, cfg.ilbrt, 0);
+	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd, pif, sts,
+				cfg.ilbrt, 0);
 	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.lbat,
 		cfg.lbatm);
 	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
