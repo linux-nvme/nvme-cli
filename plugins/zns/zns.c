@@ -927,8 +927,10 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 		if (err > 0) {
 			nvme_show_status(err);
 			break;
+		} else if (err < 0) {
+			perror("zns report-zones");
+			break;
 		}
-		// QUESTION: should we also check for < 0 here?
 
 		if (!err)
 			nvme_show_zns_report_zones(report, nr_zones_chunks,
