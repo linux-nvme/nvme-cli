@@ -2245,6 +2245,7 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	_cleanup_free_ char *subsysnqn = NULL, *subsysname = NULL;
 	_cleanup_free_ char *hostnqn = NULL, *hostid = NULL;
 	_cleanup_free_ char *path = NULL;
+	char *host_key;
 	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
@@ -2261,12 +2262,13 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	hostid = nvme_get_attr(path, "hostid");
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (h) {
-		free(h->dhchap_key);
-		h->dhchap_key = nvme_get_attr(path, "dhchap_secret");
-		if (h->dhchap_key && !strcmp(h->dhchap_key, "none")) {
+		host_key = nvme_get_attr(path, "dhchap_secret");
+		if (host_key && strcmp(host_key, "none")) {
 			free(h->dhchap_key);
-			h->dhchap_key = NULL;
+			h->dhchap_key = host_key;
+			host_key = NULL;
 		}
+		free(host_key);
 	}
 	if (!h) {
 		h = nvme_default_host(r);
