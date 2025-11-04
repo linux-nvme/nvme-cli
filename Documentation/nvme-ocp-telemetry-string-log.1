@@ -1,0 +1,83 @@
+'\" t
+.\"     Title: nvme-ocp-telemetry-string-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 11/04/2025
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-OCP\-TELEMETRY" "1" "11/04/2025" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-ocp-telemetry-string-log \- Retrieve OCP Telemetry String Log page
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme ocp telemetry\-string\-log\fR <device>
+                        [\-\-output\-format=<fmt> | \-o <fmt>]
+                        [\-\-output\-file=<file> | \-f <file>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, Retrieve OCP Telemetry String Log page
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1)\&.
+.sp
+This will only work on OCP compliant devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+This option will set the reporting format to normal, json, or binary\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-f <file>, \-\-output\-file=<file>
+.RS 4
+Filepath name to where binary output data will be saved to\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue a telemetry\-string\-log command to get the log page data from bin file\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme ocp telemetry\-string\-log /dev/nvme0n1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

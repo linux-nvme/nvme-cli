@@ -777,7 +777,10 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </dt>
 <dd>
 <p>
-    Specify the type of log to retrieve. Valid options are ALL, CIT, HIT, NLOG, ASSERT, and EVENT. Defaults to ALL.
+    Specify the type of log to retrieve. Valid options are ALL, CIT, HIT, NLOG, ASSERT,
+    EVENT, and EXTENDED. Defaults to ALL.
+    The EXTENDED option generates logs that may take longer time or affect drive performance,
+    but provides more comprehensive debugging information.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -836,6 +839,15 @@ Retrieve logs with verbose output:
 <pre><code># nvme solidigm vs-internal-log /dev/nvme0 -v</code></pre>
 </div></div>
 </li>
+<li>
+<p>
+Retrieve extended logs:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme solidigm vs-internal-log /dev/nvme0 -t EXTENDED</code></pre>
+</div></div>
+</li>
 </ul></div>
 </div>
 </div>
@@ -850,7 +862,7 @@ Retrieve logs with verbose output:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-07-25 10:38:56 CEST
+ 2025-11-04 10:36:28 CET
 </div>
 </div>
 </body>

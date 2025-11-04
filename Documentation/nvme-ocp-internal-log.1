@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/25/2025
+.\"      Date: 11/04/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-INTERNAL\" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-INTERNAL\" "1" "11/04/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,8 +35,8 @@ nvme-ocp-internal-log \- Conditionally retrieves 07h Telemetry Host\-Initiated l
 \fInvme ocp internal\-log\fR <device>
                         [\-\-telemetry\-log=<file> | \-l <file>]
                         [\-\-string\-log=<file> | \-s <file>]
-                        [\-\-output\-file=<file> | \-o <file>]
-                        [\-\-output\-format=<fmt> | \-f <fmt>]
+                        [\-\-output\-file=<file> | \-f <file>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>]
                         [\-\-data\-area=<da> | \-a <da>]
                         [\-\-telemetry\-type=<type> | \-t <type>]
 .fi
@@ -61,12 +61,12 @@ File name to existing Telemetry Host\-Initiated raw binary data to be used\&. If
 File name to existing OCP String Log raw binary data to be used\&. If no path is specified, a live retrieval of payload on <device> will be performed\&.
 .RE
 .PP
-\-o <file>, \-\-output\-file=<file>
+\-f <file>, \-\-output\-file=<file>
 .RS 4
-Filepath name to where human\-readable output data will be saved to\&.
+Filepath name used as the prefix for the telemetry and string log bin files along with the human\-readable parsed output file\&.
 .RE
 .PP
-\-f <fmt>, \-\-output\-format=<fmt>
+\-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
@@ -76,7 +76,7 @@ Set the reporting format to
 .PP
 \-a <da>, \-\-data\-area=<da>
 .RS 4
-Retrieves the specific data area requested\&. Valid inputs are 1,2\&. If this option is not specified, the default value is 1\&.
+Retrieves the specific data area requested\&. Valid inputs are 1, 2, 3, or 4\&. If this option is not specified, the default value is 1\&.
 .RE
 .PP
 \-t <type>, \-\-telemetry\-type=<type>

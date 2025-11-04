@@ -2,12 +2,12 @@
 .\"     Title: nvme-solidigm-vs-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/25/2025
+.\"      Date: 11/04/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SOLIDIGM\-VS\-" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-SOLIDIGM\-VS\-" "1" "11/04/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,7 +45,7 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 .PP
 \-t <type>, \-\-log\-type=<type>
 .RS 4
-Specify the type of log to retrieve\&. Valid options are ALL, CIT, HIT, NLOG, ASSERT, and EVENT\&. Defaults to ALL\&.
+Specify the type of log to retrieve\&. Valid options are ALL, CIT, HIT, NLOG, ASSERT, EVENT, and EXTENDED\&. Defaults to ALL\&. The EXTENDED option generates logs that may take longer time or affect drive performance, but provides more comprehensive debugging information\&.
 .RE
 .PP
 \-d <dir>, \-\-output\-dir=<dir>
@@ -116,6 +116,27 @@ Retrieve logs with verbose output:
 .\}
 .nf
 # nvme solidigm vs\-internal\-log /dev/nvme0 \-v
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieve extended logs:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme solidigm vs\-internal\-log /dev/nvme0 \-t EXTENDED
 .fi
 .if n \{\
 .RE

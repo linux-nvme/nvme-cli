@@ -2,12 +2,12 @@
 .\"     Title: nvme-compare
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/25/2025
+.\"      Date: 11/04/2025
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-COMPARE" "1" "07/25/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-COMPARE" "1" "11/04/2025" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,7 @@ nvme-compare \- Send an NVMe Compare command, provide results
 .nf
 \fInvme\-compare\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
                         [\-\-block\-count=<nlb> | \-c <nlb>]
+                        [\-\-block\-size=<size> | \-b <size>]
                         [\-\-data\-size=<size> | \-z <size>]
                         [\-\-metadata\-size=<metasize> | \-y <metasize>]
                         [\-\-ref\-tag=<reftag> | \-r <reftag>]
@@ -69,6 +70,11 @@ The Compare command reads the logical blocks specified by the command from the m
 \-c <nlb>, \-\-block\-count=<nlb>
 .RS 4
 Number of blocks to be accessed (zero\-based)\&.
+.RE
+.PP
+\-b <size>, \-\-block\-size=<size>
+.RS 4
+If specified, the logical block size in bytes, with metasize also describing the metadata size for an individual block\&. Discovered by identify namespace otherwise\&.
 .RE
 .PP
 \-z <size>, \-\-data\-size=<size>

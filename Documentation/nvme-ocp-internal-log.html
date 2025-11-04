@@ -752,8 +752,8 @@ nvme-ocp-internal-log(1) Manual Page
 <pre class="content"><em>nvme ocp internal-log</em> &lt;device&gt;
                         [--telemetry-log=&lt;file&gt; | -l &lt;file&gt;]
                         [--string-log=&lt;file&gt; | -s &lt;file&gt;]
-                        [--output-file=&lt;file&gt; | -o &lt;file&gt;]
-                        [--output-format=&lt;fmt&gt; | -f &lt;fmt&gt;]
+                        [--output-file=&lt;file&gt; | -f &lt;file&gt;]
+                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]
                         [--data-area=&lt;da&gt; | -a &lt;da&gt;]
                         [--telemetry-type=&lt;type&gt; | -t &lt;type&gt;]</pre>
 <div class="attribution">
@@ -805,18 +805,19 @@ Results for any other device are undefined.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;file&gt;
+-f &lt;file&gt;
 </dt>
 <dt class="hdlist1">
 --output-file=&lt;file&gt;
 </dt>
 <dd>
 <p>
-        Filepath name to where human-readable output data will be saved to.
+        Filepath name used as the prefix for the telemetry and string log bin files
+        along with the human-readable parsed output file.
 </p>
 </dd>
 <dt class="hdlist1">
--f &lt;fmt&gt;
+-o &lt;fmt&gt;
 </dt>
 <dt class="hdlist1">
 --output-format=&lt;fmt&gt;
@@ -835,8 +836,8 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Retrieves the specific data area requested. Valid inputs are 1,2. If this
-        option is not specified, the default value is 1.
+        Retrieves the specific data area requested. Valid inputs are 1, 2, 3, or 4.
+        If this option is not specified, the default value is 1.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -919,7 +920,7 @@ Decode data-areas 1 and 2, and output in normal text format.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-07-25 10:38:56 CEST
+ 2025-11-04 10:36:28 CET
 </div>
 </div>
 </body>

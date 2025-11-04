@@ -751,6 +751,7 @@ nvme-read(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme-read</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
                         [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
+                        [--block-size=&lt;size&gt; | -b &lt;size&gt;]
                         [--data-size=&lt;size&gt; | -z &lt;size&gt;]
                         [--metadata-size=&lt;size&gt; | -y &lt;size&gt;]
                         [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
@@ -805,6 +806,19 @@ by default if you don&#8217;t provide a file.</p></div>
         The number of blocks to transfer. This is a zeroes based value to
         align with the kernel&#8217;s use of this field. (ie. 0 means transfer
         1 block).
+</p>
+</dd>
+<dt class="hdlist1">
+-b &lt;size&gt;
+</dt>
+<dt class="hdlist1">
+--block-size=&lt;size&gt;
+</dt>
+<dd>
+<p>
+        If specified, the logical block size in bytes, with metasize
+        also describing the metadata size for an individual block.
+        Discovered by identify namespace otherwise.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1096,7 +1110,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-07-25 10:38:56 CEST
+ 2025-11-04 10:36:28 CET
 </div>
 </div>
 </body>
