@@ -12,6 +12,7 @@ project(
       'warning_level=1',
       'sysconfdir=etc',
       'wrap_mode=nofallback',
+      'force_fallback_for=libnvme',
     ]
 )
 
