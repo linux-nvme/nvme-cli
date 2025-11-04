@@ -1,0 +1,59 @@
+.TH "libnvme" 9 "struct nvme_security_send_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_security_send_args \- Arguments for the NVMe Security Send command
+.SH SYNOPSIS
+struct nvme_security_send_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 tl;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "    __u8 nssf;"
+.br
+.BI "    __u8 spsp0;"
+.br
+.BI "    __u8 spsp1;"
+.br
+.BI "    __u8 secp;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "data" 12
+Security data payload to send
+.IP "args_size" 12
+Size of \fIstruct nvme_security_send_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace ID to issue security command on
+.IP "tl" 12
+Protocol specific transfer length
+.IP "data_len" 12
+Data length of the payload in bytes
+.IP "nssf" 12
+NVMe Security Specific field
+.IP "spsp0" 12
+Security Protocol Specific field
+.IP "spsp1" 12
+Security Protocol Specific field
+.IP "secp" 12
+Security Protocol

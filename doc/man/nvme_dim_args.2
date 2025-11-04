@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_dim_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_dim_args \- Arguments for the Discovery Information Management (DIM) command
+.SH SYNOPSIS
+struct nvme_dim_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "    __u8 tas;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+Set on completion to the command's CQE DWORD 0 controller response.
+.IP "data" 12
+Pointer to the DIM data
+.IP "args_size" 12
+Length of the structure
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "data_len" 12
+Length of \fIdata\fP
+.IP "tas" 12
+Task field of the Command Dword 10 (cdw10)

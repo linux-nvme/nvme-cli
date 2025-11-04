@@ -73,9 +73,7 @@ are:
 with a couple of accommodations for older spec types, particularly NVMe-MI
 1.1, where possible.
 
-.. c:macro:: NVME_MI_MSGTYPE_NVME
-
-``NVME_MI_MSGTYPE_NVME ()``
+.. c:function:: NVME_MI_MSGTYPE_NVME ()
 
    MCTP message type for NVMe-MI messages.
 
@@ -91,7 +89,7 @@ bit (0x80) set.
 
 
 
-.. c:enum:: nvme_mi_message_type
+.. c:type:: enum nvme_mi_message_type
 
    NVMe-MI message type field.
 
@@ -120,7 +118,7 @@ byte). Not to be confused with the MCTP message type in byte 0.
 
 
 
-.. c:enum:: nvme_mi_ror
+.. c:type:: enum nvme_mi_ror
 
    Request or response field.
 
@@ -135,7 +133,7 @@ byte). Not to be confused with the MCTP message type in byte 0.
 
 
 
-.. c:enum:: nvme_mi_resp_status
+.. c:type:: enum nvme_mi_resp_status
 
    values for the response status field
 
@@ -201,7 +199,7 @@ byte). Not to be confused with the MCTP message type in byte 0.
 
 
 
-.. c:struct:: nvme_mi_msg_hdr
+.. c:type:: struct nvme_mi_msg_hdr
 
    General MI message header.
 
@@ -239,7 +237,7 @@ section 3.1. This is used for all message types, MI and Admin.
 
 
 
-.. c:struct:: nvme_mi_msg_resp
+.. c:type:: struct nvme_mi_msg_resp
 
    Generic response type.
 
@@ -273,7 +271,7 @@ will define parts of the reserved data, and may add further fields.
 
 
 
-.. c:enum:: nvme_mi_mi_opcode
+.. c:type:: enum nvme_mi_mi_opcode
 
    Operation code for supported NVMe-MI commands.
 
@@ -294,7 +292,7 @@ will define parts of the reserved data, and may add further fields.
 
 
 
-.. c:struct:: nvme_mi_mi_req_hdr
+.. c:type:: struct nvme_mi_mi_req_hdr
 
    MI request message header.
 
@@ -334,7 +332,7 @@ Wire format for MI request message headers, defined in section 5 of NVMe-MI.
 
 
 
-.. c:struct:: nvme_mi_mi_resp_hdr
+.. c:type:: struct nvme_mi_mi_resp_hdr
 
    MI response message header.
 
@@ -367,7 +365,7 @@ Wire format for MI response message header, defined in section 5 of NVMe-MI.
 
 
 
-.. c:enum:: nvme_mi_dtyp
+.. c:type:: enum nvme_mi_dtyp
 
    Data Structure Type field.
 
@@ -399,7 +397,7 @@ indicate the particular structure to query from the endpoint.
 
 
 
-.. c:enum:: nvme_mi_config_id
+.. c:type:: enum nvme_mi_config_id
 
    NVMe-MI Configuration identifier.
 
@@ -428,7 +426,7 @@ See :c:type:`nvme_mi_mi_config_get`() and :c:type:`nvme_mi_config_set`().
 
 
 
-.. c:enum:: nvme_mi_config_smbus_freq
+.. c:type:: enum nvme_mi_config_smbus_freq
 
    SMBus/I2C frequency values
 
@@ -451,7 +449,7 @@ Values used in the SMBus Frequency device configuration. See
 
 
 
-.. c:struct:: nvme_mi_aem_supported_list_header
+.. c:type:: struct nvme_mi_aem_supported_list_header
 
    Asynchronous Event Supported List Header.
 
@@ -488,7 +486,7 @@ This header preceeds a number, (:c:type:`numaes`), of AE supported data structur
 
 
 
-.. c:struct:: nvme_mi_aem_supported_item
+.. c:type:: struct nvme_mi_aem_supported_item
 
    AE Supported List Item
 
@@ -572,7 +570,7 @@ aesid value
 
 
 
-.. c:struct:: nvme_mi_aem_supported_list
+.. c:type:: struct nvme_mi_aem_supported_list
 
    AE Supported List received with GET CONFIG Asynchronous Event
 
@@ -598,7 +596,7 @@ nvme_mi_aem_supported_item structures
 
 
 
-.. c:struct:: nvme_mi_aem_enable_item
+.. c:type:: struct nvme_mi_aem_enable_item
 
    AE Enabled item entry
 
@@ -677,7 +675,7 @@ aeeid value
 
 
 
-.. c:struct:: nvme_mi_aem_enable_list_header
+.. c:type:: struct nvme_mi_aem_enable_list_header
 
    AE Enable list header
 
@@ -710,7 +708,7 @@ aeeid value
 
 
 
-.. c:struct:: nvme_mi_aem_enable_list
+.. c:type:: struct nvme_mi_aem_enable_list
 
    AE enable list sent with SET CONFIG Asyncronous Event
 
@@ -735,7 +733,7 @@ Following this header should be hdr.numaee entries of nvme_mi_aem_enable_item st
 
 
 
-.. c:struct:: nvme_mi_aem_occ_data
+.. c:type:: struct nvme_mi_aem_occ_data
 
    AEM Message definition.
 
@@ -781,7 +779,7 @@ parameter is set to zero.
 
 
 
-.. c:struct:: nvme_mi_aem_occ_list_hdr
+.. c:type:: struct nvme_mi_aem_occ_list_hdr
 
    AE occurrence list header
 
@@ -865,7 +863,7 @@ aeoltl value
 
 
 
-.. c:struct:: nvme_mi_aem_msg
+.. c:type:: struct nvme_mi_aem_msg
 
    AEM Message definition.
 
@@ -900,7 +898,7 @@ array or fixed offset.
 
 
 
-.. c:struct:: nvme_mi_admin_req_hdr
+.. c:type:: struct nvme_mi_admin_req_hdr
 
    Admin command request header.
 
@@ -990,7 +988,7 @@ NVMe-MI.
 
 
 
-.. c:struct:: nvme_mi_admin_resp_hdr
+.. c:type:: struct nvme_mi_admin_resp_hdr
 
    Admin command response header.
 
@@ -1034,7 +1032,7 @@ queue data, plus optional response data.
 
 
 
-.. c:enum:: nvme_mi_control_opcode
+.. c:type:: enum nvme_mi_control_opcode
 
    Operation code for Control Primitives.
 
@@ -1058,7 +1056,7 @@ queue data, plus optional response data.
 
 
 
-.. c:struct:: nvme_mi_control_req
+.. c:type:: struct nvme_mi_control_req
 
    The Control Primitive request.
 
@@ -1167,7 +1165,7 @@ endpoint to determine model-specific details.
 
 
 
-.. c:type:: nvme_mi_ep_t
+.. c:type:: typedef nvme_mi_ep_t
 
    MI Endpoint object.
 
@@ -1243,9 +1241,7 @@ next endpoint MI endpoint object after **e** under this root, or NULL
 See: :c:type:`nvme_mi_first_endpoint`, :c:type:`nvme_mi_for_each_endpoint`
 
 
-.. c:macro:: nvme_mi_for_each_endpoint
-
-``nvme_mi_for_each_endpoint (m, e)``
+.. c:function:: nvme_mi_for_each_endpoint (m, e)
 
    Iterator for NVMe-MI endpoints.
 
@@ -1258,9 +1254,7 @@ See: :c:type:`nvme_mi_first_endpoint`, :c:type:`nvme_mi_for_each_endpoint`
   :c:type:`nvme_mi_ep_t` object, set on each iteration
 
 
-.. c:macro:: nvme_mi_for_each_endpoint_safe
-
-``nvme_mi_for_each_endpoint_safe (m, e, _e)``
+.. c:function:: nvme_mi_for_each_endpoint_safe (m, e, _e)
 
    Iterator for NVMe-MI endpoints, allowing deletion during traversal
 
@@ -1330,7 +1324,7 @@ Returns the current timeout value, in milliseconds, for this endpoint.
 
 
 
-.. c:type:: nvme_mi_ctrl_t
+.. c:type:: typedef nvme_mi_ctrl_t
 
    NVMe-MI Controller object.
 
@@ -1381,9 +1375,7 @@ next MI controller object after **c** under this endpoint, or NULL
 See: :c:type:`nvme_mi_first_ctrl`, :c:type:`nvme_mi_for_each_ctrl`
 
 
-.. c:macro:: nvme_mi_for_each_ctrl
-
-``nvme_mi_for_each_ctrl (ep, c)``
+.. c:function:: nvme_mi_for_each_ctrl (ep, c)
 
    Iterator for NVMe-MI controllers.
 
@@ -1404,9 +1396,7 @@ call :c:type:`nvme_mi_scan_ep`() to scan for the controllers first.
 See: :c:type:`nvme_mi_scan_ep`()
 
 
-.. c:macro:: nvme_mi_for_each_ctrl_safe
-
-``nvme_mi_for_each_ctrl_safe (ep, c, _c)``
+.. c:function:: nvme_mi_for_each_ctrl_safe (ep, c, _c)
 
    Iterator for NVMe-MI controllers, allowing deletion during traversal
 
@@ -4347,7 +4337,7 @@ The nvme command status if a response was received (see
 
 
 
-.. c:enum:: nvme_mi_aem_handler_next_action
+.. c:type:: enum nvme_mi_aem_handler_next_action
 
    Next action for the AEM state machine handler
 
@@ -4366,7 +4356,7 @@ Used as return value for the AE callback generated when calling nvme_mi_aem_proc
 
 
 
-.. c:struct:: nvme_mi_event
+.. c:type:: struct nvme_mi_event
 
    AE event information structure
 
@@ -4438,7 +4428,7 @@ Pointer no next nvme_mi_event or NULL if this is the last one
 
 
 
-.. c:struct:: nvme_mi_aem_config
+.. c:type:: struct nvme_mi_aem_config
 
    Provided for nvme_mi_aem_enable
 

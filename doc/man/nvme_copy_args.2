@@ -1,0 +1,88 @@
+.TH "libnvme" 9 "struct nvme_copy_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_copy_args \- Arguments for the NVMe Copy command
+.SH SYNOPSIS
+struct nvme_copy_args {
+.br
+.BI "    __u64 sdlba;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    struct nvme_copy_range *copy;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 ilbrt;"
+.br
+.BI "    int lr;"
+.br
+.BI "    int fua;"
+.br
+.BI "    __u16 nr;"
+.br
+.BI "    __u16 dspec;"
+.br
+.BI "    __u16 lbatm;"
+.br
+.BI "    __u16 lbat;"
+.br
+.BI "    __u8 prinfor;"
+.br
+.BI "    __u8 prinfow;"
+.br
+.BI "    __u8 dtype;"
+.br
+.BI "    __u8 format;"
+.br
+.BI "    __u64 ilbrt_u64;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "sdlba" 12
+Start destination LBA
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "copy" 12
+Range description
+.IP "args_size" 12
+Size of \fIstruct nvme_copy_args\fP
+.IP "fd" 12
+File descriptor of the nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace identifier
+.IP "ilbrt" 12
+Initial logical block reference tag
+.IP "lr" 12
+Limited retry
+.IP "fua" 12
+Force unit access
+.IP "nr" 12
+Number of ranges
+.IP "dspec" 12
+Directive specific value
+.IP "lbatm" 12
+Logical block application tag mask
+.IP "lbat" 12
+Logical block application tag
+.IP "prinfor" 12
+Protection information field for read
+.IP "prinfow" 12
+Protection information field for write
+.IP "dtype" 12
+Directive type
+.IP "format" 12
+Descriptor format
+.IP "ilbrt_u64" 12
+Initial logical block reference tag - 8 byte
+version required for enhanced protection info

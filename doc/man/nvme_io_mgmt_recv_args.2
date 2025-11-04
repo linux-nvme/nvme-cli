@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_io_mgmt_recv_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_io_mgmt_recv_args \- Arguments for the NVMe I/O Management Receive command
+.SH SYNOPSIS
+struct nvme_io_mgmt_recv_args {
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u16 mos;"
+.br
+.BI "    __u8 mo;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "data" 12
+Userspace address of the data
+.IP "args_size" 12
+Size of \fIstruct nvme_io_mgmt_recv_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "data_len" 12
+Length of \fIdata\fP
+.IP "timeout" 12
+Timeout in ms
+.IP "mos" 12
+Management Operation Specific
+.IP "mo" 12
+Management Operation

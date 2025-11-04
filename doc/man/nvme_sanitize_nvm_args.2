@@ -1,0 +1,55 @@
+.TH "libnvme" 9 "struct nvme_sanitize_nvm_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_sanitize_nvm_args \- Arguments for the NVMe Sanitize NVM command
+.SH SYNOPSIS
+struct nvme_sanitize_nvm_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    enum nvme_sanitize_sanact sanact;"
+.br
+.BI "    __u32 ovrpat;"
+.br
+.BI "    bool ause;"
+.br
+.BI "    __u8 owpass;"
+.br
+.BI "    bool oipbp;"
+.br
+.BI "    bool nodas;"
+.br
+.BI "    bool emvs;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "args_size" 12
+Size of \fIstruct nvme_sanitize_nvm_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "sanact" 12
+Sanitize action, see \fIenum nvme_sanitize_sanact\fP
+.IP "ovrpat" 12
+Overwrite pattern
+.IP "ause" 12
+Set to allow unrestricted sanitize exit
+.IP "owpass" 12
+Overwrite pass count
+.IP "oipbp" 12
+Set to overwrite invert pattern between passes
+.IP "nodas" 12
+Set to not deallocate blocks after sanitizing
+.IP "emvs" 12
+Set to enter media verification state

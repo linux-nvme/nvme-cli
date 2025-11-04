@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_dsm_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_dsm_args \- Arguments for the NVMe Dataset Management command
+.SH SYNOPSIS
+struct nvme_dsm_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    struct nvme_dsm_range *dsm;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 attrs;"
+.br
+.BI "    __u16 nr_ranges;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "dsm" 12
+The data set management attributes
+.IP "args_size" 12
+Size of \fIstruct nvme_dsm_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace identifier
+.IP "attrs" 12
+DSM attributes, see \fIenum nvme_dsm_attributes\fP
+.IP "nr_ranges" 12
+Number of block ranges in the data set management attributes

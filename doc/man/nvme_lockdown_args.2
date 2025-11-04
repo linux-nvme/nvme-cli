@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "struct nvme_lockdown_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lockdown_args \- Arguments for the NVME Lockdown command
+.SH SYNOPSIS
+struct nvme_lockdown_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u8 scp;"
+.br
+.BI "    __u8 prhbt;"
+.br
+.BI "    __u8 ifc;"
+.br
+.BI "    __u8 ofi;"
+.br
+.BI "    __u8 uuidx;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "args_size" 12
+Size of \fIstruct nvme_lockdown_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms (0 for default timeout)
+.IP "scp" 12
+Scope of the command
+.IP "prhbt" 12
+Prohibit or allow the command opcode or Set Features command
+.IP "ifc" 12
+Affected interface
+.IP "ofi" 12
+Opcode or Feature Identifier
+.IP "uuidx" 12
+UUID Index if controller supports this id selection method

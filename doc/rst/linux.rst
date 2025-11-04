@@ -32,6 +32,62 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. c:function:: int nvme_set_etdas (int fd, bool *changed)
+
+   Set the Extended Telemetry Data Area 4 Supported bit
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool *changed``
+  boolean to indicate whether or not the host
+  behavior support feature had been changed
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_clear_etdas (int fd, bool *changed)
+
+   Clear the Extended Telemetry Data Area 4 Supported bit
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``bool *changed``
+  boolean to indicate whether or not the host
+  behavior support feature had been changed
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_uuid_list (int fd, struct nvme_id_uuid_list *uuid_list)
+
+   Returns the uuid list (if supported)
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``struct nvme_id_uuid_list *uuid_list``
+  UUID list returned by identify UUID
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
+
 .. c:function:: int nvme_get_telemetry_max (int fd, enum nvme_telemetry_da *da, size_t *max_data_tx)
 
    Get telemetry limits
@@ -331,7 +387,7 @@ errno set otherwise.
 
 
 
-.. c:enum:: nvme_hmac_alg
+.. c:type:: enum nvme_hmac_alg
 
    HMAC algorithm
 
@@ -520,7 +576,7 @@ inaccessible.
 Key id of the new key or 0 with errno set otherwise.
 
 
-.. c:macro:: nvme_scan_tls_keys_cb_t
+.. c:type:: nvme_scan_tls_keys_cb_t
 
    **Typedef**: Callback for iterating TLS keys
 
@@ -660,6 +716,51 @@ The key serial number if the key could be inserted into
 the keyring or 0 with errno otherwise.
 
 
+.. c:function:: long nvme_insert_tls_key_compat (const char *keyring, const char *key_type, const char *hostnqn, const char *subsysnqn, int version, int hmac, unsigned char *configured_key, int key_len)
+
+   Derive and insert TLS key
+
+**Parameters**
+
+``const char *keyring``
+  Keyring to use
+
+``const char *key_type``
+  Type of the resulting key
+
+``const char *hostnqn``
+  Host NVMe Qualified Name
+
+``const char *subsysnqn``
+  Subsystem NVMe Qualified Name
+
+``int version``
+  Key version to use
+
+``int hmac``
+  HMAC algorithm
+
+``unsigned char *configured_key``
+  Configured key data to derive the key from
+
+``int key_len``
+  Length of **configured_key**
+
+**Description**
+
+Derives a 'retained' TLS key as specified in NVMe TCP 1.0a (if
+**version** s set to '0') or NVMe TP8028 (if **version** is set to '1) and
+stores it as type **key_type** in the keyring specified by **keyring**.
+This version differs from **nvme_insert_tls_key_versioned\(\)** in that it
+uses the original implementation for HKDF Expand-Label which does not
+prefix the 'info' and 'label' strings with the length.
+
+**Return**
+
+The key serial number if the key could be inserted into
+the keyring or 0 with errno otherwise.
+
+
 .. c:function:: char * nvme_generate_tls_key_identity (const char *hostnqn, const char *subsysnqn, int version, int hmac, unsigned char *configured_key, int key_len)
 
    Generate the TLS key identity
@@ -688,6 +789,45 @@ the keyring or 0 with errno otherwise.
 
 Derives a 'retained' TLS key as specified in NVMe TCP and
 generate the corresponding TLs identity.
+
+**Return**
+
+The string containing the TLS identity. It is the responsibility
+of the caller to free the returned string. On error NULL is returned with
+errno set.
+
+
+.. c:function:: char * nvme_generate_tls_key_identity_compat (const char *hostnqn, const char *subsysnqn, int version, int hmac, unsigned char *configured_key, int key_len)
+
+   Generate the TLS key identity
+
+**Parameters**
+
+``const char *hostnqn``
+  Host NVMe Qualified Name
+
+``const char *subsysnqn``
+  Subsystem NVMe Qualified Name
+
+``int version``
+  Key version to use
+
+``int hmac``
+  HMAC algorithm
+
+``unsigned char *configured_key``
+  Configured key data to derive the key from
+
+``int key_len``
+  Length of **configured_key**
+
+**Description**
+
+Derives a 'retained' TLS key as specified in NVMe TCP and
+generate the corresponding TLs identity. This version differs
+from **nvme_generate_tls_key_identity\(\)** in that it uses the original
+implementation for HKDF-Expand-Label which does not prefix the 'info'
+and 'label' string with the length.
 
 **Return**
 

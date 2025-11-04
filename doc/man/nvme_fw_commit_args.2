@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_fw_commit_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_fw_commit_args \- Arguments for the NVMe Firmware Commit command
+.SH SYNOPSIS
+struct nvme_fw_commit_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    enum nvme_fw_commit_ca action;"
+.br
+.BI "    __u8 slot;"
+.br
+.BI "    bool bpid;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "args_size" 12
+Size of \fIstruct nvme_fw_commit_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "action" 12
+Action to use for the firmware image, see \fIenum nvme_fw_commit_ca\fP
+.IP "slot" 12
+Firmware slot to commit the downloaded image
+.IP "bpid" 12
+Set to true to select the boot partition id

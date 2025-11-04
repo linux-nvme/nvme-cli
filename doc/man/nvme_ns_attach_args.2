@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_ns_attach_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_ns_attach_args \- Arguments for Nvme Namespace Management command
+.SH SYNOPSIS
+struct nvme_ns_attach_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    struct nvme_ctrl_list *ctrlist;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    enum nvme_ns_attach_sel sel;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+NVMe command result
+.IP "ctrlist" 12
+Controller list to modify attachment state of nsid
+.IP "args_size" 12
+Size of \fIstruct nvme_ns_attach_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace ID to execute attach selection
+.IP "sel" 12
+Attachment selection, see \fIenum nvme_ns_attach_sel\fP

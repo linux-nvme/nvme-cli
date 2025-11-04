@@ -1,0 +1,52 @@
+.TH "libnvme" 9 "struct nvme_get_lba_status_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_get_lba_status_args \- Arguments for the NVMe Get LBA Status command
+.SH SYNOPSIS
+struct nvme_get_lba_status_args {
+.br
+.BI "    __u64 slba;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    struct nvme_lba_status *lbas;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 mndw;"
+.br
+.BI "    enum nvme_lba_status_atype atype;"
+.br
+.BI "    __u16 rl;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "slba" 12
+Starting logical block address to check statuses
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "lbas" 12
+Data payload to return status descriptors
+.IP "args_size" 12
+Size of \fIstruct nvme_get_lba_status_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace ID to retrieve LBA status
+.IP "mndw" 12
+Maximum number of dwords to return
+.IP "atype" 12
+Action type mechanism to determine LBA status descriptors to
+return, see \fIenum nvme_lba_status_atype\fP
+.IP "rl" 12
+Range length from slba to perform the action

@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_get_property_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_get_property_args \- Arguments for NVMe Get Property command
+.SH SYNOPSIS
+struct nvme_get_property_args {
+.br
+.BI "    __u64 *value;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    int offset;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "value" 12
+Where the property's value will be stored on success
+.IP "args_size" 12
+Size of \fIstruct nvme_get_property_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "offset" 12
+Property offset from the base to retrieve

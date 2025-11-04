@@ -1,0 +1,113 @@
+.TH "libnvme" 9 "struct nvme_io_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_io_args \- Arguments for NVMe I/O commands
+.SH SYNOPSIS
+struct nvme_io_args {
+.br
+.BI "    __u64 slba;"
+.br
+.BI "    __u64 storage_tag;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    void *metadata;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 reftag;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "    __u32 metadata_len;"
+.br
+.BI "    __u16 nlb;"
+.br
+.BI "    __u16 control;"
+.br
+.BI "    __u16 apptag;"
+.br
+.BI "    __u16 appmask;"
+.br
+.BI "    __u16 dspec;"
+.br
+.BI "    __u8 dsm;"
+.br
+.BI "    __u8 rsvd1[1];"
+.br
+.BI "    __u64 reftag_u64;"
+.br
+.BI "    __u8 sts;"
+.br
+.BI "    __u8 pif;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "slba" 12
+Starting logical block
+.IP "storage_tag" 12
+This filed specifies Variable Sized Expected Logical Block
+Storage Tag (ELBST) or Logical Block Storage Tag (LBST)
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "data" 12
+Pointer to user address of the data buffer
+.IP "metadata" 12
+Pointer to user address of the metadata buffer
+.IP "args_size" 12
+Size of \fIstruct nvme_io_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace ID
+.IP "reftag" 12
+This field specifies the variable sized Expected Initial
+Logical Block Reference Tag (EILBRT) or Initial Logical Block
+Reference Tag (ILBRT). Used only if the namespace is formatted
+to use end-to-end protection information.
+.IP "data_len" 12
+Length of user buffer, \fIdata\fP, in bytes
+.IP "metadata_len" 12
+Length of user buffer, \fImetadata\fP, in bytes
+.IP "nlb" 12
+Number of logical blocks to send (0's based value)
+.IP "control" 12
+Command control flags, see \fIenum nvme_io_control_flags\fP.
+.IP "apptag" 12
+This field specifies the Application Tag Mask expected value.
+Used only if the namespace is formatted to use end-to-end
+protection information.
+.IP "appmask" 12
+This field specifies the Application Tag expected value. Used
+only if the namespace is formatted to use end-to-end protection
+information.
+.IP "dspec" 12
+Directive specific value
+.IP "dsm" 12
+Data set management attributes, see \fIenum nvme_io_dsm_flags\fP
+.IP "rsvd1" 12
+Reserved
+.IP "reftag_u64" 12
+This field specifies the variable sized Expected Initial
+Logical Block Reference Tag (EILBRT) or Initial Logical Block
+Reference Tag (ILBRT). It is the 8 byte version required for
+enhanced protection information.  Used only if the namespace is
+formatted to use end-to-end protection information.
+.IP "sts" 12
+Storage tag size in bits, set by namespace Extended LBA Format
+.IP "pif" 12
+Protection information format, determines how variable sized
+storage_tag and reftag are put into dwords 2, 3, and 14. Set by
+namespace Extended LBA Format.

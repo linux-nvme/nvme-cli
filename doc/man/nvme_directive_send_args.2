@@ -1,0 +1,55 @@
+.TH "libnvme" 9 "struct nvme_directive_send_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_directive_send_args \- Arguments for the NVMe Directive Send command
+.SH SYNOPSIS
+struct nvme_directive_send_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    enum nvme_directive_send_doper doper;"
+.br
+.BI "    enum nvme_directive_dtype dtype;"
+.br
+.BI "    __u32 cdw12;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "    __u16 dspec;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+If successful, the CQE dword0 value
+.IP "data" 12
+Data payload to be send
+.IP "args_size" 12
+Size of \fIstruct nvme_directive_send_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace ID, if applicable
+.IP "doper" 12
+Directive send operation, see \fIenum nvme_directive_send_doper\fP
+.IP "dtype" 12
+Directive type, see \fIenum nvme_directive_dtype\fP
+.IP "cdw12" 12
+Directive specific command dword12
+.IP "data_len" 12
+Length of data payload in bytes
+.IP "dspec" 12
+Directive specific field

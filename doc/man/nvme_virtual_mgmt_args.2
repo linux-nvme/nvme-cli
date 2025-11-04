@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_virtual_mgmt_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_virtual_mgmt_args \- Arguments for the NVMe Virtualization resource management command
+.SH SYNOPSIS
+struct nvme_virtual_mgmt_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    enum nvme_virt_mgmt_act act;"
+.br
+.BI "    enum nvme_virt_mgmt_rt rt;"
+.br
+.BI "    __u16 cntlid;"
+.br
+.BI "    __u16 nr;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+If successful, the CQE dword0
+.IP "args_size" 12
+Size of \fIstruct nvme_virtual_mgmt_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "act" 12
+Virtual resource action, see \fIenum nvme_virt_mgmt_act\fP
+.IP "rt" 12
+Resource type to modify, see \fIenum nvme_virt_mgmt_rt\fP
+.IP "cntlid" 12
+Controller id for which resources are bing modified
+.IP "nr" 12
+Number of resources being allocated or assigned

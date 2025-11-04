@@ -1,4 +1,4 @@
-.TH "nvme_generate_tls_key_identity" 9 "nvme_generate_tls_key_identity" "July 2025" "libnvme API manual" LINUX
+.TH "nvme_generate_tls_key_identity" 9 "nvme_generate_tls_key_identity" "November 2025" "libnvme API manual" LINUX
 .SH NAME
 nvme_generate_tls_key_identity \- Generate the TLS key identity
 .SH SYNOPSIS
@@ -27,4 +27,5 @@ Derives a 'retained' TLS key as specified in NVMe TCP and
 generate the corresponding TLs identity.
 .SH "RETURN"
 The string containing the TLS identity. It is the responsibility
-of the caller to free the returned string.
+of the caller to free the returned string. On error NULL is returned with
+errno set.
