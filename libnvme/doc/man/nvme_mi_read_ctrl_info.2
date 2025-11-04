@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "struct nvme_mi_read_ctrl_info" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_read_ctrl_info \- Controller Information Data Structure
+.SH SYNOPSIS
+struct nvme_mi_read_ctrl_info {
+.br
+.BI "    __u8 portid;"
+.br
+.BI "    __u8 rsvd1[4];"
+.br
+.BI "    __u8 prii;"
+.br
+.BI "    __le16 pri;"
+.br
+.BI "    __le16 vid;"
+.br
+.BI "    __le16 did;"
+.br
+.BI "    __le16 ssvid;"
+.br
+.BI "    __le16 ssid;"
+.br
+.BI "    __u8 rsvd16[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "portid" 12
+Port Identifier
+.IP "rsvd1" 12
+Reserved
+.IP "prii" 12
+PCIe Routing ID Information
+.IP "pri" 12
+PCIe Routing ID
+.IP "vid" 12
+PCI Vendor ID
+.IP "did" 12
+PCI Device ID
+.IP "ssvid" 12
+PCI Subsystem Vendor ID
+.IP "ssid" 12
+PCI Subsystem Device ID
+.IP "rsvd16" 12
+Reserved

@@ -1,0 +1,22 @@
+.TH "nvme_get_log_changed_ns_list" 9 "nvme_get_log_changed_ns_list" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_log_changed_ns_list \- Retrieve namespace changed list
+.SH SYNOPSIS
+.B "int" nvme_get_log_changed_ns_list
+.BI "(int fd "  ","
+.BI "bool rae "  ","
+.BI "struct nvme_ns_list *ns_log "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "rae" 12
+Retain asynchronous events
+.IP "ns_log" 12
+User address to store the log page
+.SH "DESCRIPTION"
+This log page describes namespaces attached to this controller that have
+changed since the last time the namespace was identified, been added, or
+deleted.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

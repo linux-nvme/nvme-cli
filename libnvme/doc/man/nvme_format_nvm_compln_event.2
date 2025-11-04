@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_format_nvm_compln_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_format_nvm_compln_event \- Format NVM Completion Event Data
+.SH SYNOPSIS
+struct nvme_format_nvm_compln_event {
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __u8 smallest_fpi;"
+.br
+.BI "    __u8 format_nvm_status;"
+.br
+.BI "    __le16 compln_info;"
+.br
+.BI "    __le32 status_field;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsid" 12
+Namespace Identifier
+.IP "smallest_fpi" 12
+Smallest Format Progress Indicator
+.IP "format_nvm_status" 12
+Format NVM Status
+.IP "compln_info" 12
+Completion Information
+.IP "status_field" 12
+Status Field

@@ -1,0 +1,14 @@
+.TH "nvmf_eflags_str" 9 "nvmf_eflags_str" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_eflags_str \- Decode EFLAGS field
+.SH SYNOPSIS
+.B "const char *" nvmf_eflags_str
+.BI "(__u16 eflags "  ");"
+.SH ARGUMENTS
+.IP "eflags" 12
+value to be decoded
+.SH "DESCRIPTION"
+Decode the EFLAGS field in the discovery log page
+entry.
+.SH "RETURN"
+decoded string

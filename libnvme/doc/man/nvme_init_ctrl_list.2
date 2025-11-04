@@ -1,0 +1,18 @@
+.TH "nvme_init_ctrl_list" 9 "nvme_init_ctrl_list" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_ctrl_list \- Initialize an nvme_ctrl_list structure from an array.
+.SH SYNOPSIS
+.B "void" nvme_init_ctrl_list
+.BI "(struct nvme_ctrl_list *cntlist "  ","
+.BI "__u16 num_ctrls "  ","
+.BI "__u16 *ctrlist "  ");"
+.SH ARGUMENTS
+.IP "cntlist" 12
+The controller list structure to initialize
+.IP "num_ctrls" 12
+The number of controllers in the array, \fIctrlist\fP.
+.IP "ctrlist" 12
+An array of controller identifiers in CPU native endian.
+.SH "DESCRIPTION"
+This is intended to be used with any command that takes a controller list
+argument. See \fBnvme_ns_attach_ctrls\fP and \fBnvme_ns_detach\fP.

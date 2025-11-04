@@ -1,0 +1,65 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_lpa" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_lpa \- Flags indicating optional attributes for log pages that are accessed via the Get Log Page command.
+.SH SYNOPSIS
+enum nvme_id_ctrl_lpa {
+.br
+.BI "    NVME_CTRL_LPA_SMART_PER_NS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_CMD_EFFECTS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_EXTENDED"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_TELEMETRY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_PERSETENT_EVENT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_LI0_LI5_LI12_LI13"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_DA4_TELEMETRY"
+
+};
+.SH Constants
+.IP "NVME_CTRL_LPA_SMART_PER_NS" 12
+If set, controller supports SMART/Health log
+page on a per namespace basis.
+.IP "NVME_CTRL_LPA_CMD_EFFECTS" 12
+If Set, the controller supports the commands
+supported and effects log page.
+.IP "NVME_CTRL_LPA_EXTENDED" 12
+If set, the controller supports extended data
+for log page command including extended number
+of dwords and log page offset fields.
+.IP "NVME_CTRL_LPA_TELEMETRY" 12
+If set, the controller supports the telemetry
+host-initiated and telemetry controller-initiated
+log pages and sending telemetry log notices.
+.IP "NVME_CTRL_LPA_PERSETENT_EVENT" 12
+If set, the controller supports
+persistent event log.
+.IP "NVME_CTRL_LPA_LI0_LI5_LI12_LI13" 12
+If set, the controller supports
+- log pages log page.
+- returning scope of each command in
+commands supported and effects log
+page.
+- feature identifiers supported and
+effects log page.
+- NVMe-MI commands supported and
+effects log page.
+.IP "NVME_CTRL_LPA_DA4_TELEMETRY" 12
+If set, the controller supports data
+area 4 for telemetry host-initiated and
+telemetry.

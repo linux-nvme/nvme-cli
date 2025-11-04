@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_dctype" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_dctype \- Discovery Controller types
+.SH SYNOPSIS
+enum nvme_id_ctrl_dctype {
+.br
+.BI "    NVME_CTRL_DCTYPE_NOT_REPORTED"
+, 
+.br
+.br
+.BI "    NVME_CTRL_DCTYPE_DDC"
+, 
+.br
+.br
+.BI "    NVME_CTRL_DCTYPE_CDC"
+
+};
+.SH Constants
+.IP "NVME_CTRL_DCTYPE_NOT_REPORTED" 12
+Not reported (I/O, Admin, and pre-TP8010)
+.IP "NVME_CTRL_DCTYPE_DDC" 12
+Direct Discovery controller
+.IP "NVME_CTRL_DCTYPE_CDC" 12
+Central Discovery controller

@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_lba_rd" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lba_rd \- LBA Range Descriptor
+.SH SYNOPSIS
+struct nvme_lba_rd {
+.br
+.BI "    __le64 rslba;"
+.br
+.BI "    __le32 rnlb;"
+.br
+.BI "    __u8 rsvd12[4];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rslba" 12
+Range Starting LBA
+.IP "rnlb" 12
+Range Number of Logical Blocks
+.IP "rsvd12" 12
+Reserved

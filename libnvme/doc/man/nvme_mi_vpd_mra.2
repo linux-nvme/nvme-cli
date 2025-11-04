@@ -1,0 +1,75 @@
+.TH "libnvme" 9 "struct nvme_mi_vpd_mra" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_vpd_mra \- NVMe MultiRecord Area
+.SH SYNOPSIS
+struct nvme_mi_vpd_mra {
+.br
+.BI "    __u8 nmravn;"
+.br
+.BI "    __u8 ff;"
+.br
+.BI "    __u8 rsvd7[6];"
+.br
+.BI "    __u8 i18vpwr;"
+.br
+.BI "    __u8 m18vpwr;"
+.br
+.BI "    __u8 i33vpwr;"
+.br
+.BI "    __u8 m33vpwr;"
+.br
+.BI "    __u8 rsvd17;"
+.br
+.BI "    __u8 m33vapsr;"
+.br
+.BI "    __u8 i5vapsr;"
+.br
+.BI "    __u8 m5vapsr;"
+.br
+.BI "    __u8 i12vapsr;"
+.br
+.BI "    __u8 m12vapsr;"
+.br
+.BI "    __u8 mtl;"
+.br
+.BI "    __u8 tnvmcap[16];"
+.br
+.BI "    __u8 rsvd37[27];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nmravn" 12
+NVMe MultiRecord Area Version Number
+.IP "ff" 12
+Form Factor
+.IP "rsvd7" 12
+Reserved
+.IP "i18vpwr" 12
+Initial 1.8 V Power Supply Requirements
+.IP "m18vpwr" 12
+Maximum 1.8 V Power Supply Requirements
+.IP "i33vpwr" 12
+Initial 3.3 V Power Supply Requirements
+.IP "m33vpwr" 12
+Maximum 3.3 V Power Supply Requirements
+.IP "rsvd17" 12
+Reserved
+.IP "m33vapsr" 12
+Maximum 3.3 Vi aux Power Supply Requirements
+.IP "i5vapsr" 12
+Initial 5 V Power Supply Requirements
+.IP "m5vapsr" 12
+Maximum 5 V Power Supply Requirements
+.IP "i12vapsr" 12
+Initial 12 V Power Supply Requirements
+.IP "m12vapsr" 12
+Maximum 12 V Power Supply Requirements
+.IP "mtl" 12
+Maximum Thermal Load
+.IP "tnvmcap" 12
+Total NVM Capacity
+.IP "rsvd37" 12
+Reserved

@@ -1,0 +1,18 @@
+.TH "nvme_ns_get_fd" 9 "nvme_ns_get_fd" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ns_get_fd \- Get associated file descriptor
+.SH SYNOPSIS
+.B "int" nvme_ns_get_fd
+.BI "(nvme_ns_t n "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.SH "DESCRIPTION"
+libnvme will \fBopen\fP the file (if not already opened) and keep
+an internal copy of the file descriptor. Following calls to
+this API retrieve the internal cached copy of the file
+descriptor. The file will remain opened and the fd will
+remain cached until the ns object is deleted or
+\fBnvme_ns_release_fd\fP is called.
+.SH "RETURN"
+File descriptor associated with \fIn\fP or -1

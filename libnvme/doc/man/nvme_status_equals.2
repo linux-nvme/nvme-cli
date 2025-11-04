@@ -1,0 +1,17 @@
+.TH "nvme_status_equals" 9 "nvme_status_equals" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_status_equals \- helper to check a status against a type and value
+.SH SYNOPSIS
+.B "__u32" nvme_status_equals
+.BI "(int status "  ","
+.BI "enum nvme_status_type type "  ","
+.BI "unsigned int value "  ");"
+.SH ARGUMENTS
+.IP "status" 12
+the (non-negative) return value from the NVMe API
+.IP "type" 12
+the status type
+.IP "value" 12
+the status value
+.SH "RETURN"
+true if \fIstatus\fP is of the specified type and value

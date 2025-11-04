@@ -1,0 +1,45 @@
+.TH "libnvme" 9 "enum nvme_mi_dtyp" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_dtyp \- Data Structure Type field.
+.SH SYNOPSIS
+enum nvme_mi_dtyp {
+.br
+.BI "    nvme_mi_dtyp_subsys_info"
+, 
+.br
+.br
+.BI "    nvme_mi_dtyp_port_info"
+, 
+.br
+.br
+.BI "    nvme_mi_dtyp_ctrl_list"
+, 
+.br
+.br
+.BI "    nvme_mi_dtyp_ctrl_info"
+, 
+.br
+.br
+.BI "    nvme_mi_dtyp_opt_cmd_support"
+, 
+.br
+.br
+.BI "    nvme_mi_dtyp_meb_support"
+
+};
+.SH Constants
+.IP "nvme_mi_dtyp_subsys_info" 12
+NVM Subsystem Information
+.IP "nvme_mi_dtyp_port_info" 12
+Port information
+.IP "nvme_mi_dtyp_ctrl_list" 12
+Controller List
+.IP "nvme_mi_dtyp_ctrl_info" 12
+Controller Information
+.IP "nvme_mi_dtyp_opt_cmd_support" 12
+Optionally Supported Command List
+.IP "nvme_mi_dtyp_meb_support" 12
+Management Endpoint Buffer Command Support List
+.SH "Description"
+Data Structure Type field for Read NVMe-MI Data Structure command, used to
+indicate the particular structure to query from the endpoint.

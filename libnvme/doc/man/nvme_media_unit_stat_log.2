@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_media_unit_stat_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_media_unit_stat_log \- Media Unit Status
+.SH SYNOPSIS
+struct nvme_media_unit_stat_log {
+.br
+.BI "    __le16 nmu;"
+.br
+.BI "    __le16 cchans;"
+.br
+.BI "    __le16 sel_config;"
+.br
+.BI "    __u8 rsvd6[10];"
+.br
+.BI "    struct nvme_media_unit_stat_desc mus_desc[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nmu" 12
+Number unit status descriptor
+.IP "cchans" 12
+Number of Channels
+.IP "sel_config" 12
+Selected Configuration
+.IP "rsvd6" 12
+Reserved
+.IP "mus_desc" 12
+Media unit statistic descriptors

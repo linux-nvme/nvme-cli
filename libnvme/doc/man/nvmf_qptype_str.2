@@ -1,0 +1,14 @@
+.TH "nvmf_qptype_str" 9 "nvmf_qptype_str" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_qptype_str \- Decode RDMA QP Service type field
+.SH SYNOPSIS
+.B "const char *" nvmf_qptype_str
+.BI "(__u8 qptype "  ");"
+.SH ARGUMENTS
+.IP "qptype" 12
+value to be decoded
+.SH "DESCRIPTION"
+Decode the RDMA QP Service type field in the discovery log page
+entry.
+.SH "RETURN"
+decoded string

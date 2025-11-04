@@ -1,0 +1,150 @@
+.TH "libnvme" 9 "enum nvme_smart_crit" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_smart_crit \- Critical Warning
+.SH SYNOPSIS
+enum nvme_smart_crit {
+.br
+.BI "    NVME_SMART_CW_ASCBT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_TTC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_NDR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_AMRO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_VMBF_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_PMRRO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_ASCBT_MASK"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_TTC_MASK"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_NDR_MASK"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_AMRO_MASK"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_VMBF_MASK"
+, 
+.br
+.br
+.BI "    NVME_SMART_CW_PMRRO_MASK"
+, 
+.br
+.br
+.BI "    NVME_SMART_CRIT_SPARE"
+, 
+.br
+.br
+.BI "    NVME_SMART_CRIT_TEMPERATURE"
+, 
+.br
+.br
+.BI "    NVME_SMART_CRIT_DEGRADED"
+, 
+.br
+.br
+.BI "    NVME_SMART_CRIT_MEDIA"
+, 
+.br
+.br
+.BI "    NVME_SMART_CRIT_VOLATILE_MEMORY"
+, 
+.br
+.br
+.BI "    NVME_SMART_CRIT_PMR_RO"
+
+};
+.SH Constants
+.IP "NVME_SMART_CW_ASCBT_SHIFT" 12
+Shift amount to get the available spare capacity has fallen
+below the threshold.
+.IP "NVME_SMART_CW_TTC_SHIFT" 12
+Shift amount to get the temperature is either greater
+than or equal to an over temperature threshold; or
+less than or equal to an under temperature threshold.
+.IP "NVME_SMART_CW_NDR_SHIFT" 12
+Shift amount to get the NVM subsystem reliability has
+been degraded due to significant media related errors
+or any internal error that degrades NVM subsystem
+reliability.
+.IP "NVME_SMART_CW_AMRO_SHIFT" 12
+Shift amount to get the all of the media has been placed in read
+only mode. The controller shall not set this bit if
+the read-only condition on the media is a result of
+a change in the write protection state of a namespace.
+.IP "NVME_SMART_CW_VMBF_SHIFT" 12
+Shift amount to get the  volatile memory backup
+device has failed. This field is only valid if the
+controller has a volatile memory backup solution.
+.IP "NVME_SMART_CW_PMRRO_SHIFT" 12
+Shift amount to get the Persistent Memory Region has become
+read-only or unreliable.
+.IP "NVME_SMART_CW_ASCBT_MASK" 12
+If set, then the available spare capacity has fallen
+below the threshold.
+.IP "NVME_SMART_CW_TTC_MASK" 12
+Mask to get the temperature is either greater
+than or equal to an over temperature threshold; or
+less than or equal to an under temperature threshold.
+.IP "NVME_SMART_CW_NDR_MASK" 12
+Mask to get the NVM subsystem reliability has
+been degraded due to significant media related errors
+or any internal error that degrades NVM subsystem
+reliability.
+.IP "NVME_SMART_CW_AMRO_MASK" 12
+Mask to get the all of the media has been placed in read
+only mode. The controller shall not set this bit if
+the read-only condition on the media is a result of
+a change in the write protection state of a namespace.
+.IP "NVME_SMART_CW_VMBF_MASK" 12
+Mask to get the volatile memory backup
+device has failed. This field is only valid if the
+controller has a volatile memory backup solution.
+.IP "NVME_SMART_CW_PMRRO_MASK" 12
+Mask to get the Persistent Memory Region has become
+read-only or unreliable.
+.IP "NVME_SMART_CRIT_SPARE" 12
+If set, then the available spare capacity has fallen
+below the threshold.
+.IP "NVME_SMART_CRIT_TEMPERATURE" 12
+If set, then a temperature is either greater
+than or equal to an over temperature threshold; or
+less than or equal to an under temperature threshold.
+.IP "NVME_SMART_CRIT_DEGRADED" 12
+If set, then the NVM subsystem reliability has
+been degraded due to significant media related errors
+or any internal error that degrades NVM subsystem
+reliability.
+.IP "NVME_SMART_CRIT_MEDIA" 12
+If set, then all of the media has been placed in read
+only mode. The controller shall not set this bit if
+the read-only condition on the media is a result of
+a change in the write protection state of a namespace.
+.IP "NVME_SMART_CRIT_VOLATILE_MEMORY" 12
+If set, then the volatile memory backup
+device has failed. This field is only valid if the
+controller has a volatile memory backup solution.
+.IP "NVME_SMART_CRIT_PMR_RO" 12
+If set, then the Persistent Memory Region has become
+read-only or unreliable.

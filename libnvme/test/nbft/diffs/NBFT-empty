@@ -1,0 +1,6 @@
+raw_nbft_size=315
+host.id=78563412aaaabbbbcccc123456789012
+host.nqn=nqn.2014-08.org.nvmexpress:uuid:12345678-aaaa-bbbb-cccc-123456789012
+host.host_id_configured=1
+host.host_nqn_configured=1
+host.primary=0

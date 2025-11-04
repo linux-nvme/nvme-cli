@@ -1,0 +1,12 @@
+.TH "nvme_lm_cdq" 9 "nvme_lm_cdq" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_lm_cdq \- Controller Data Queue - Controller Data Queue command
+.SH SYNOPSIS
+.B "int" nvme_lm_cdq
+.BI "(struct nvme_lm_cdq_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_lm_cdq_args\fP argument structure
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.)

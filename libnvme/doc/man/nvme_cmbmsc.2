@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_cmbmsc" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmbmsc \- This field indicates the controller memory buffer memory space control
+.SH SYNOPSIS
+enum nvme_cmbmsc {
+.br
+.BI "    NVME_CMBMSC_CRE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBMSC_CMSE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBMSC_CBA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBMSC_CRE_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBMSC_CMSE_MASK"
+
+};
+.SH Constants
+.IP "NVME_CMBMSC_CRE_SHIFT" 12
+Shift amount to get the capabilities registers enabled
+.IP "NVME_CMBMSC_CMSE_SHIFT" 12
+Shift amount to get the controller memory space enable
+.IP "NVME_CMBMSC_CBA_SHIFT" 12
+Shift amount to get the controller base address
+.IP "NVME_CMBMSC_CRE_MASK" 12
+Mask to get the capabilities registers enabled
+.IP "NVME_CMBMSC_CMSE_MASK" 12
+Mask to get the controller memory space enable

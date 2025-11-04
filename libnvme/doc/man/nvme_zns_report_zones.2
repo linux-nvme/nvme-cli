@@ -1,0 +1,39 @@
+.TH "nvme_zns_report_zones" 9 "nvme_zns_report_zones" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_zns_report_zones \- Return the list of zones
+.SH SYNOPSIS
+.B "int" nvme_zns_report_zones
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 slba "  ","
+.BI "enum nvme_zns_report_options opts "  ","
+.BI "bool extended "  ","
+.BI "bool partial "  ","
+.BI "__u32 data_len "  ","
+.BI "void *data "  ","
+.BI "__u32 timeout "  ","
+.BI "__u32 *result "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID
+.IP "slba" 12
+Starting LBA
+.IP "opts" 12
+Reporting options
+.IP "extended" 12
+Extended report
+.IP "partial" 12
+Partial report requested
+.IP "data_len" 12
+Length of the data buffer
+.IP "data" 12
+Userspace address of the report zones data
+.IP "timeout" 12
+timeout in ms
+.IP "result" 12
+The command completion result from CQE dword0
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

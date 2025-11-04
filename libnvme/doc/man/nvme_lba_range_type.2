@@ -1,0 +1,15 @@
+.TH "libnvme" 9 "struct nvme_lba_range_type" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lba_range_type \- LBA Range Type
+.SH SYNOPSIS
+struct nvme_lba_range_type {
+.br
+.BI "    struct nvme_lba_range_type_entry entry[NVME_FEAT_LBA_RANGE_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "entry" 12
+LBA range type entry. See \fIstruct\fP nvme_lba_range_type_entry

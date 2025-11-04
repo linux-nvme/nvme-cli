@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_st_valid_diag_info" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_st_valid_diag_info \- Valid Diagnostic Information
+.SH SYNOPSIS
+enum nvme_st_valid_diag_info {
+.br
+.BI "    NVME_ST_VALID_DIAG_INFO_NSID"
+, 
+.br
+.br
+.BI "    NVME_ST_VALID_DIAG_INFO_FLBA"
+, 
+.br
+.br
+.BI "    NVME_ST_VALID_DIAG_INFO_SCT"
+, 
+.br
+.br
+.BI "    NVME_ST_VALID_DIAG_INFO_SC"
+
+};
+.SH Constants
+.IP "NVME_ST_VALID_DIAG_INFO_NSID" 12
+NSID Valid: if set, then the contents of
+the Namespace Identifier field are valid.
+.IP "NVME_ST_VALID_DIAG_INFO_FLBA" 12
+FLBA Valid: if set, then the contents of
+the Failing LBA field are valid.
+.IP "NVME_ST_VALID_DIAG_INFO_SCT" 12
+SCT Valid: if set, then the contents of
+the Status Code Type field are valid.
+.IP "NVME_ST_VALID_DIAG_INFO_SC" 12
+SC Valid: if set, then the contents of
+the Status Code field are valid.

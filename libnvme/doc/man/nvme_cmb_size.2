@@ -1,0 +1,11 @@
+.TH "nvme_cmb_size" 9 "nvme_cmb_size" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_cmb_size \- Calculate size of the controller memory buffer
+.SH SYNOPSIS
+.B "__u64" nvme_cmb_size
+.BI "(__u32 cmbsz "  ");"
+.SH ARGUMENTS
+.IP "cmbsz" 12
+Value from controller register NVME_REG_CMBSZ
+.SH "RETURN"
+size of controller memory buffer in bytes

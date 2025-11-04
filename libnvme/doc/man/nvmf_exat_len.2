@@ -1,0 +1,15 @@
+.TH "nvmf_exat_len" 9 "nvmf_exat_len" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_exat_len \- Return length rounded up by 4
+.SH SYNOPSIS
+.B "__u16" nvmf_exat_len
+.BI "(size_t val_len "  ");"
+.SH ARGUMENTS
+.IP "val_len" 12
+Value length
+.SH "DESCRIPTION"
+Return the size in bytes, rounded to a multiple of 4 (e.g., size of
+__u32), of the buffer needed to hold the exat value of size
+\fIval_len\fP.
+.SH "RETURN"
+Length rounded up by 4

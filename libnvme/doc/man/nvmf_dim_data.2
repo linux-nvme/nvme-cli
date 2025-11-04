@@ -1,0 +1,63 @@
+.TH "libnvme" 9 "struct nvmf_dim_data" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvmf_dim_data \- Discovery Information Management (DIM) - Data
+.SH SYNOPSIS
+struct nvmf_dim_data {
+.br
+.BI "    __le32 tdl;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    __le64 nument;"
+.br
+.BI "    __le16 entfmt;"
+.br
+.BI "    __le16 etype;"
+.br
+.BI "    __u8 portlcl;"
+.br
+.BI "    __u8 rsvd21;"
+.br
+.BI "    __le16 ektype;"
+.br
+.BI "    char eid[NVME_NQN_LENGTH];"
+.br
+.BI "    char ename[NVMF_ENAME_LEN];"
+.br
+.BI "    char ever[NVMF_EVER_LEN];"
+.br
+.BI "    __u8 rsvd600[424];"
+.br
+.BI "    union nvmf_die  die[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "tdl" 12
+Total Data Length
+.IP "rsvd4" 12
+Reserved
+.IP "nument" 12
+Number of entries
+.IP "entfmt" 12
+Entry Format (\fIenum nvmf_dim_entfmt\fP)
+.IP "etype" 12
+Entity Type (\fIenum nvmf_dim_etype\fP)
+.IP "portlcl" 12
+Port Local
+.IP "rsvd21" 12
+Reserved
+.IP "ektype" 12
+Entry Key Type
+.IP "eid" 12
+Entity Identifier (e.g. Host NQN)
+.IP "ename" 12
+Entity Name (e.g. hostname)
+.IP "ever" 12
+Entity Version (e.g. OS Name/Version)
+.IP "rsvd600" 12
+Reserved
+.IP "die" 12
+Discovery Information Entry (see \fInument\fP above)

@@ -1,0 +1,159 @@
+.TH "libnvme" 9 "struct nbft_ssns" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nbft_ssns \- Subsystem Namespace (SSNS) Descriptor (Figure 15)
+.SH SYNOPSIS
+struct nbft_ssns {
+.br
+.BI "    __u8 structure_id;"
+.br
+.BI "    __le16 index;"
+.br
+.BI "    __le16 flags;"
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __le16 trflags;"
+.br
+.BI "    __u8 primary_discovery_ctrl_index;"
+.br
+.BI "    __u8 reserved1;"
+.br
+.BI "    struct nbft_heap_obj subsys_traddr_obj;"
+.br
+.BI "    struct nbft_heap_obj subsys_trsvcid_obj;"
+.br
+.BI "    __le16 subsys_port_id;"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __u8 nidt;"
+.br
+.BI "    __u8 nid[16];"
+.br
+.BI "    __u8 security_desc_index;"
+.br
+.BI "    __u8 primary_hfi_desc_index;"
+.br
+.BI "    __u8 reserved2;"
+.br
+.BI "    struct nbft_heap_obj secondary_hfi_assoc_obj;"
+.br
+.BI "    struct nbft_heap_obj subsys_ns_nqn_obj;"
+.br
+.BI "    struct nbft_heap_obj ssns_extended_info_desc_obj;"
+.br
+.BI "    __u8 reserved3[62];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "structure_id" 12
+Structure ID: This field shall be set to 4h
+(i.e., SSNS; #NBFT_DESC_SSNS).
+.IP "index" 12
+SSNS Descriptor Index: This field indicates the number
+of this Subsystem Namespace Descriptor in the
+Subsystem Namespace Descriptor List.
+.IP "flags" 12
+SSNS Flags, see \fIenum nbft_ssns_flags\fP.
+.IP "trtype" 12
+Transport Type, see \fIenum nbft_trtype\fP.
+.IP "trflags" 12
+Transport Specific Flags, see \fIenum nbft_ssns_trflags\fP.
+.IP "primary_discovery_ctrl_index" 12
+Primary Discovery Controller Index: The Discovery
+Descriptor Index field of the Discovery Descriptor
+(see \fIstruct nbft_discovery\fP) that is associated with
+this SSNS Descriptor. If a Discovery controller was
+used to establish this record this value shall
+be set to a non-zero value. If this namespace was
+associated with multiple Discovery controllers,
+those Discovery controllers shall have records
+in the Discovery Descriptor to facilitate multi-path
+rediscovery as required. If no Discovery controller
+was utilized to inform this namespace record,
+this field shall be cleared to 0h.
+.IP "reserved1" 12
+Reserved.
+.IP "subsys_traddr_obj" 12
+Subsystem Transport Address Heap Object Reference:
+This field indicates the location and size of a heap
+object containing the Subsystem Transport Address.
+For IP based transports types, shall be an IP Address.
+.IP "subsys_trsvcid_obj" 12
+Subsystem Transport Service Identifier Heap Object Reference:
+This field indicates the location and size of a heap
+object containing an array of bytes indicating
+the Subsystem Transport Service Identifier.
+See \fIenum nbft_trtype\fP.
+.IP "subsys_port_id" 12
+Subsystem Port ID: Port in the NVM subsystem
+associated with this transport address used by
+the pre-OS driver.
+.IP "nsid" 12
+Namespace ID: This field indicates the namespace
+identifier (NSID) of the namespace indicated by
+this descriptor. This field shall be cleared to 0h
+if not specified by the user. If this value is cleared
+to 0h, then consumers of the NBFT shall rely
+on the NID.
+.IP "nidt" 12
+Namespace Identifier Type (NIDT): This field
+contains the value of the Namespace Identifier Type (NIDT)
+field in the Namespace Identification Descriptor
+for the namespace indicated by this descriptor.
+If a namespace supports multiple NIDT entries
+for uniqueness, the order of preference is NIDT field
+value of 3h (i.e., UUID) before 2h (i.e., NSGUID),
+and 2h before 1h (i.e., EUI-64).
+.IP "nid" 12
+Namespace Identifier (NID): This field contains
+the value of the Namespace Identifier (NID) field
+in the Namespace Identification Descriptor for
+the namespace indicated by this descriptor.
+.IP "security_desc_index" 12
+Security Profile Descriptor Index: If the Use Security
+Flag bit in the SSNS Flags field is set to 1h, then
+this field indicates the value of the Security Profile
+Descriptor Index field of the Security Profile
+Descriptor (see \fIstruct nbft_security\fP) associated
+with this namespace. If the Use Security Flag bit
+is cleared to 0h, then no Security Profile Descriptor
+is associated with this namespace and this field
+is reserved.
+.IP "primary_hfi_desc_index" 12
+Primary HFI Descriptor Index: This field indicates
+the value of the HFI Descriptor Index field of the
+HFI Descriptor (see \fIstruct nbft_hfi\fP) for the
+interface associated with this namespace. If multiple
+HFIs are associated with this record, subsequent
+interfaces should be populated in the Secondary
+HFI Associations field.
+.IP "reserved2" 12
+Reserved.
+.IP "secondary_hfi_assoc_obj" 12
+Secondary HFI Associations Heap Object Reference:
+If this field is set to a non-zero value, then
+this field indicates an array of bytes, in which
+each byte contains the value of the HFI Descriptor
+Index field of an HFI Descriptor in the HFI Descriptor
+List. If this field is cleared to 0h, then no
+secondary HFI associations are specified.
+.IP "subsys_ns_nqn_obj" 12
+Subsystem and Namespace NQN Heap Object Reference:
+This field indicates the location and size of
+a heap object containing the Subsystem and Namespace NQN.
+.IP "ssns_extended_info_desc_obj" 12
+SSNS Extended Information Descriptor Heap Object
+Reference: If the SSNS Extended Info In-use Flag
+bit is set to 1h, then this field indicates the
+offset in bytes of a heap object containing an
+SSNS Extended Information Descriptor
+(see \fIstruct nbft_ssns_ext_info\fP) heap object
+from byte offset 0h of the NBFT Table Header.
+If the SSNS Extended Info In-use Flag bit is cleared
+to 0h, then this field is reserved.
+.IP "reserved3" 12
+Reserved.

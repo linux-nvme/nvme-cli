@@ -1,0 +1,24 @@
+.TH "nvme_mi_mi_subsystem_health_status_poll" 9 "nvme_mi_mi_subsystem_health_status_poll" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_mi_subsystem_health_status_poll \- Read the Subsystem Health Data Structure from the NVM subsystem
+.SH SYNOPSIS
+.B "int" nvme_mi_mi_subsystem_health_status_poll
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "bool clear "  ","
+.BI "struct nvme_mi_nvm_ss_health_status *nshds "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint for MI communication
+.IP "clear" 12
+flag to clear the Composite Controller Status state
+.IP "nshds" 12
+subsystem health status data to populate
+.SH "DESCRIPTION"
+Retrieves the Subsystem Health Data Structure into \fInshds\fP. If \fIclear\fP is
+set, requests that the Composite Controller Status bits are cleared after
+the read. See NVMe-MI section 5.6 for details on the CCS bits.
+
+See \fIstruct nvme_mi_nvm_ss_health_status\fP.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

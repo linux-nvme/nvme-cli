@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum nvme_cmd_get_log_telemetry_host_lsp" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmd_get_log_telemetry_host_lsp \- Telemetry Host-Initiated log specific field
+.SH SYNOPSIS
+enum nvme_cmd_get_log_telemetry_host_lsp {
+.br
+.BI "    NVME_LOG_TELEM_HOST_LSP_RETAIN"
+, 
+.br
+.br
+.BI "    NVME_LOG_TELEM_HOST_LSP_CREATE"
+
+};
+.SH Constants
+.IP "NVME_LOG_TELEM_HOST_LSP_RETAIN" 12
+Get Telemetry Data Blocks
+.IP "NVME_LOG_TELEM_HOST_LSP_CREATE" 12
+Create Telemetry Data Blocks

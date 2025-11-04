@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_thermal_exc_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_thermal_exc_event \- Thermal Excursion Event Data
+.SH SYNOPSIS
+struct nvme_thermal_exc_event {
+.br
+.BI "    __u8 over_temp;"
+.br
+.BI "    __u8 threshold;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "over_temp" 12
+Over Temperature
+.IP "threshold" 12
+temperature threshold

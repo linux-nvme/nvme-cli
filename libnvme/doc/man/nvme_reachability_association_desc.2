@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_reachability_association_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_reachability_association_desc \- Reachability Association Descriptor
+.SH SYNOPSIS
+struct nvme_reachability_association_desc {
+.br
+.BI "    __le32 rasid;"
+.br
+.BI "    __le32 nrid;"
+.br
+.BI "    __le64 chngc;"
+.br
+.BI "    __u8 rac;"
+.br
+.BI "    __u8 rsvd17[15];"
+.br
+.BI "    __le32 rgid[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rasid" 12
+Reachability Association ID
+.IP "nrid" 12
+Number of RGID Values
+.IP "chngc" 12
+Change Count
+.IP "rac" 12
+Reachability Association Characteristics
+.IP "rsvd17" 12
+Reserved
+.IP "rgid" 12
+Reachability Group Identifier List

@@ -1,0 +1,21 @@
+.TH "nvme_get_log_pull_model_ddc_req" 9 "nvme_get_log_pull_model_ddc_req" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_log_pull_model_ddc_req \- Retrieve Pull Model DDC Request Log
+.SH SYNOPSIS
+.B "int" nvme_get_log_pull_model_ddc_req
+.BI "(int fd "  ","
+.BI "bool rae "  ","
+.BI "__u32 len "  ","
+.BI "struct nvme_pull_model_ddc_req_log *log "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "rae" 12
+Retain asynchronous events
+.IP "len" 12
+The allocated length of the log page
+.IP "log" 12
+User address to store the log page
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise

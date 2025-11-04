@@ -1,0 +1,24 @@
+.TH "nvme_mi_admin_get_log_predictable_lat_event" 9 "nvme_mi_admin_get_log_predictable_lat_event" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_log_predictable_lat_event \- Retrieve Predictable Latency Event Aggregate Log Page
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_log_predictable_lat_event
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "bool rae "  ","
+.BI "__u32 offset "  ","
+.BI "__u32 len "  ","
+.BI "void *log "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "rae" 12
+Retain asynchronous events
+.IP "offset" 12
+Offset into the predictable latency event
+.IP "len" 12
+Length of provided user buffer to hold the log data in bytes
+.IP "log" 12
+User address for log page data
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

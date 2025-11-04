@@ -1,0 +1,87 @@
+.TH "libnvme" 9 "enum nvme_status_result" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_status_result \- Result of the device self-test operation
+.SH SYNOPSIS
+enum nvme_status_result {
+.br
+.BI "    NVME_ST_RESULT_NO_ERR"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_ABORTED"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_CLR"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_NS_REMOVED"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_ABORTED_FORMAT"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_FATAL_ERR"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_UNKNOWN_SEG_FAIL"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_KNOWN_SEG_FAIL"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_ABORTED_UNKNOWN"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_ABORTED_SANITIZE"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_NOT_USED"
+, 
+.br
+.br
+.BI "    NVME_ST_RESULT_MASK"
+
+};
+.SH Constants
+.IP "NVME_ST_RESULT_NO_ERR" 12
+Operation completed without error.
+.IP "NVME_ST_RESULT_ABORTED" 12
+Operation was aborted by a Device Self-test command.
+.IP "NVME_ST_RESULT_CLR" 12
+Operation was aborted by a Controller Level Reset.
+.IP "NVME_ST_RESULT_NS_REMOVED" 12
+Operation was aborted due to a removal of
+a namespace from the namespace inventory.
+.IP "NVME_ST_RESULT_ABORTED_FORMAT" 12
+Operation was aborted due to the processing
+of a Format NVM command.
+.IP "NVME_ST_RESULT_FATAL_ERR" 12
+A fatal error or unknown test error occurred
+while the controller was executing the device
+self-test operation and the operation did
+not complete.
+.IP "NVME_ST_RESULT_UNKNOWN_SEG_FAIL" 12
+Operation completed with a segment that failed
+and the segment that failed is not known.
+.IP "NVME_ST_RESULT_KNOWN_SEG_FAIL" 12
+Operation completed with one or more failed
+segments and the first segment that failed
+is indicated in the Segment Number field.
+.IP "NVME_ST_RESULT_ABORTED_UNKNOWN" 12
+Operation was aborted for unknown reason.
+.IP "NVME_ST_RESULT_ABORTED_SANITIZE" 12
+Operation was aborted due to a sanitize operation.
+.IP "NVME_ST_RESULT_NOT_USED" 12
+Entry not used (does not contain a test result).
+.IP "NVME_ST_RESULT_MASK" 12
+Mask to get the status result value from
+the \fIstruct nvme_st_result\fP.dsts field.

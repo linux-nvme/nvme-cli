@@ -1,0 +1,12 @@
+.TH "nvme_ctrl_get_address" 9 "nvme_ctrl_get_address" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_address \- Address string of a controller
+.SH SYNOPSIS
+.B "const char *" nvme_ctrl_get_address
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.SH "RETURN"
+NVMe-over-Fabrics address string of \fIc\fP or empty string
+of no address is present.

@@ -1,0 +1,102 @@
+.TH "libnvme" 9 "enum nvme_persistent_event_types" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_persistent_event_types \- Persistent event log events
+.SH SYNOPSIS
+enum nvme_persistent_event_types {
+.br
+.BI "    NVME_PEL_SMART_HEALTH_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_FW_COMMIT_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_TIMESTAMP_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_POWER_ON_RESET_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_NSS_HW_ERROR_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_CHANGE_NS_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_FORMAT_START_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_FORMAT_COMPLETION_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_SANITIZE_START_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_SANITIZE_COMPLETION_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_SET_FEATURE_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_TELEMETRY_CRT"
+, 
+.br
+.br
+.BI "    NVME_PEL_THERMAL_EXCURSION_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_VENDOR_SPECIFIC_EVENT"
+, 
+.br
+.br
+.BI "    NVME_PEL_TCG_DEFINED_EVENT"
+
+};
+.SH Constants
+.IP "NVME_PEL_SMART_HEALTH_EVENT" 12
+SMART / Health Log Snapshot Event
+.IP "NVME_PEL_FW_COMMIT_EVENT" 12
+Firmware Commit Event
+.IP "NVME_PEL_TIMESTAMP_EVENT" 12
+Timestamp Change Event
+.IP "NVME_PEL_POWER_ON_RESET_EVENT" 12
+Power-on or Reset Event
+.IP "NVME_PEL_NSS_HW_ERROR_EVENT" 12
+NVM Subsystem Hardware Error Event
+.IP "NVME_PEL_CHANGE_NS_EVENT" 12
+Change Namespace Event
+.IP "NVME_PEL_FORMAT_START_EVENT" 12
+Format NVM Start Event
+.IP "NVME_PEL_FORMAT_COMPLETION_EVENT" 12
+Format NVM Completion Event
+.IP "NVME_PEL_SANITIZE_START_EVENT" 12
+Sanitize Start Event
+.IP "NVME_PEL_SANITIZE_COMPLETION_EVENT" 12
+Sanitize Completion Event
+.IP "NVME_PEL_SET_FEATURE_EVENT" 12
+Set Feature Event
+.IP "NVME_PEL_TELEMETRY_CRT" 12
+Telemetry Log Create Event
+.IP "NVME_PEL_THERMAL_EXCURSION_EVENT" 12
+Thermal Excursion Event
+.IP "NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT" 12
+Sanitize Media Verification Event
+.IP "NVME_PEL_VENDOR_SPECIFIC_EVENT" 12
+Vendor Specific Event
+.IP "NVME_PEL_TCG_DEFINED_EVENT" 12
+TCG Defined Event

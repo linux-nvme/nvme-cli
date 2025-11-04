@@ -1,0 +1,13 @@
+.TH "nvme_subsystem_release_fds" 9 "nvme_subsystem_release_fds" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsystem_release_fds \- Close all opened fds under subsystem
+.SH SYNOPSIS
+.B "void" nvme_subsystem_release_fds
+.BI "(struct nvme_subsystem *s "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+nvme_subsystem_t object
+.SH "DESCRIPTION"
+Controller and Namespace objects cache the file descriptors
+of opened nvme devices. This API can be used to close and
+clear all cached fds under this subsystem.

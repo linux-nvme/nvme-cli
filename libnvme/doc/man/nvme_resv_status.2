@@ -1,0 +1,59 @@
+.TH "libnvme" 9 "struct nvme_resv_status" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_resv_status \- Reservation Status Data Structure
+.SH SYNOPSIS
+struct nvme_resv_status {
+.br
+.BI "    __le32 gen;"
+.br
+.BI "    __u8 rtype;"
+.br
+.BI "    __u8 regctl[2];"
+.br
+.BI "    __u8 rsvd7[2];"
+.br
+.BI "    __u8 ptpls;"
+.br
+.BI "    __u8 rsvd10[14];"
+.br
+.BI "    union {"
+.br
+.BI "      struct {"
+.br
+.BI "        __u8 rsvd24[40];"
+.br
+.BI "        struct nvme_registered_ctrl_ext regctl_eds[0];"
+.br
+.BI "      };"
+.br
+.BI "      struct nvme_registered_ctrl regctl_ds[0];"
+.br
+.BI "    };"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "gen" 12
+Generation
+.IP "rtype" 12
+Reservation Type
+.IP "regctl" 12
+Number of Registered Controllers
+.IP "rsvd7" 12
+Reserved
+.IP "ptpls" 12
+Persist Through Power Loss State
+.IP "rsvd10" 12
+Reserved
+.IP "{unnamed_union}" 12
+anonymous
+.IP "{unnamed_struct}" 12
+anonymous
+.IP "rsvd24" 12
+Reserved
+.IP "regctl_eds" 12
+Registered Controller Extended Data Structure
+.IP "regctl_ds" 12
+Registered Controller Data Structure

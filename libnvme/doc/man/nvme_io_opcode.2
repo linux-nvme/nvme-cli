@@ -1,0 +1,126 @@
+.TH "libnvme" 9 "enum nvme_io_opcode" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_io_opcode \- Opcodes for I/O Commands
+.SH SYNOPSIS
+enum nvme_io_opcode {
+.br
+.BI "    nvme_cmd_flush"
+, 
+.br
+.br
+.BI "    nvme_cmd_write"
+, 
+.br
+.br
+.BI "    nvme_cmd_read"
+, 
+.br
+.br
+.BI "    nvme_cmd_write_uncor"
+, 
+.br
+.br
+.BI "    nvme_cmd_compare"
+, 
+.br
+.br
+.BI "    nvme_cmd_write_zeroes"
+, 
+.br
+.br
+.BI "    nvme_cmd_dsm"
+, 
+.br
+.br
+.BI "    nvme_cmd_verify"
+, 
+.br
+.br
+.BI "    nvme_cmd_resv_register"
+, 
+.br
+.br
+.BI "    nvme_cmd_resv_report"
+, 
+.br
+.br
+.BI "    nvme_cmd_resv_acquire"
+, 
+.br
+.br
+.BI "    nvme_cmd_io_mgmt_recv"
+, 
+.br
+.br
+.BI "    nvme_cmd_resv_release"
+, 
+.br
+.br
+.BI "    nvme_cmd_cancel"
+, 
+.br
+.br
+.BI "    nvme_cmd_copy"
+, 
+.br
+.br
+.BI "    nvme_cmd_io_mgmt_send"
+, 
+.br
+.br
+.BI "    nvme_zns_cmd_mgmt_send"
+, 
+.br
+.br
+.BI "    nvme_zns_cmd_mgmt_recv"
+, 
+.br
+.br
+.BI "    nvme_zns_cmd_append"
+, 
+.br
+.br
+.BI "    nvme_cmd_fabric"
+
+};
+.SH Constants
+.IP "nvme_cmd_flush" 12
+Flush
+.IP "nvme_cmd_write" 12
+Write
+.IP "nvme_cmd_read" 12
+Read
+.IP "nvme_cmd_write_uncor" 12
+Write Uncorrectable
+.IP "nvme_cmd_compare" 12
+Compare
+.IP "nvme_cmd_write_zeroes" 12
+write Zeros
+.IP "nvme_cmd_dsm" 12
+Dataset Management
+.IP "nvme_cmd_verify" 12
+Verify
+.IP "nvme_cmd_resv_register" 12
+Reservation Register
+.IP "nvme_cmd_resv_report" 12
+Reservation Report
+.IP "nvme_cmd_resv_acquire" 12
+Reservation Acquire
+.IP "nvme_cmd_io_mgmt_recv" 12
+I/O Management Receive
+.IP "nvme_cmd_resv_release" 12
+Reservation Release
+.IP "nvme_cmd_cancel" 12
+Cancel
+.IP "nvme_cmd_copy" 12
+Copy
+.IP "nvme_cmd_io_mgmt_send" 12
+I/O Management Send
+.IP "nvme_zns_cmd_mgmt_send" 12
+Zone Management Send
+.IP "nvme_zns_cmd_mgmt_recv" 12
+Zone Management Receive
+.IP "nvme_zns_cmd_append" 12
+Zone Append
+.IP "nvme_cmd_fabric" 12
+Fabric Commands

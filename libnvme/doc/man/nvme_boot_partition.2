@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "struct nvme_boot_partition" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_boot_partition \- Boot Partition Log
+.SH SYNOPSIS
+struct nvme_boot_partition {
+.br
+.BI "    __u8 lid;"
+.br
+.BI "    __u8 rsvd1[3];"
+.br
+.BI "    __le32 bpinfo;"
+.br
+.BI "    __u8 rsvd8[8];"
+.br
+.BI "    __u8 boot_partition_data[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lid" 12
+Boot Partition Identifier
+.IP "rsvd1" 12
+Reserved
+.IP "bpinfo" 12
+Boot Partition Information
+.IP "rsvd8" 12
+Reserved
+.IP "boot_partition_data" 12
+Contains the contents of the
+specified Boot Partition

@@ -1,0 +1,14 @@
+.TH "nvmf_trtype_str" 9 "nvmf_trtype_str" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_trtype_str \- Decode TRTYPE field
+.SH SYNOPSIS
+.B "const char *" nvmf_trtype_str
+.BI "(__u8 trtype "  ");"
+.SH ARGUMENTS
+.IP "trtype" 12
+value to be decoded
+.SH "DESCRIPTION"
+Decode the transport type field in the discovery
+log page entry.
+.SH "RETURN"
+decoded string

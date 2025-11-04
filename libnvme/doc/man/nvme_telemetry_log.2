@@ -1,0 +1,102 @@
+.TH "libnvme" 9 "struct nvme_telemetry_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_telemetry_log \- Retrieve internal data specific to the manufacturer.
+.SH SYNOPSIS
+struct nvme_telemetry_log {
+.br
+.BI "    __u8 lpi;"
+.br
+.BI "    __u8 rsvd1[4];"
+.br
+.BI "    __u8 ieee[3];"
+.br
+.BI "    __le16 dalb1;"
+.br
+.BI "    __le16 dalb2;"
+.br
+.BI "    __le16 dalb3;"
+.br
+.BI "    __u8 rsvd14[2];"
+.br
+.BI "    __le32 dalb4;"
+.br
+.BI "    __u8 rsvd20[360];"
+.br
+.BI "    __u8 ths;"
+.br
+.BI "    union {"
+.br
+.BI "      __u8 hostdgn;"
+.br
+.BI "      __u8 tcs;"
+.br
+.BI "    };"
+.br
+.BI "    __u8 ctrlavail;"
+.br
+.BI "    __u8 ctrldgn;"
+.br
+.BI "    __u8 rsnident[128];"
+.br
+.BI "    __u8 data_area[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lpi" 12
+Log Identifier, either NVME_LOG_LID_TELEMETRY_HOST or
+NVME_LOG_LID_TELEMETRY_CTRL
+.IP "rsvd1" 12
+Reserved
+.IP "ieee" 12
+IEEE OUI Identifier is the Organization Unique Identifier (OUI)
+for the controller vendor that is able to interpret the data.
+.IP "dalb1" 12
+Telemetry Host/Controller Initiated Data Area 1 Last Block is
+the value of the last block in this area.
+.IP "dalb2" 12
+Telemetry Host/Controller Initiated Data Area 1 Last Block is
+the value of the last block in this area.
+.IP "dalb3" 12
+Telemetry Host/ControllerInitiated Data Area 1 Last Block is
+the value of the last block in this area.
+.IP "rsvd14" 12
+Reserved
+.IP "dalb4" 12
+Telemetry Host/Controller Initiated Data Area 4 Last Block is
+the value of the last block in this area.
+.IP "rsvd20" 12
+Reserved
+.IP "ths" 12
+Telemetry Host-Initiated Scope
+.IP "{unnamed_union}" 12
+anonymous
+.IP "hostdgn" 12
+Telemetry Host-Initiated Data Generation Number is a
+value that is incremented each time the host initiates a
+capture of its internal controller state in the controller.
+.IP "tcs" 12
+Telemetry Controller-Initiated Scope
+.IP "ctrlavail" 12
+Telemetry Controller-Initiated Data Available, if cleared,
+then the controller telemetry log does not contain saved
+internal controller state. If this field is set to 1h, the
+controller log contains saved internal controller state. If
+this field is set to 1h, the data will be latched until the
+host releases it by reading the log with RAE cleared.
+.IP "ctrldgn" 12
+Telemetry Controller-Initiated Data Generation Number is
+a value that is incremented each time the controller initiates a
+capture of its internal controller state in the controller .
+.IP "rsnident" 12
+Reason Identifiers a vendor specific identifier that describes
+the operating conditions of the controller at the time of
+capture.
+.IP "data_area" 12
+Telemetry data blocks, vendor specific information data.
+.SH "Description"
+This log consists of a header describing the log and zero or more Telemetry
+Data Blocks. All Telemetry Data Blocks are NVME_LOG_TELEM_BLOCK_SIZE, 512
+bytes, in size. This log captures the controller’s internal state.

@@ -1,0 +1,11 @@
+.TH "nvme_subsystem_get_application" 9 "nvme_subsystem_get_application" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsystem_get_application \- Return the application string
+.SH SYNOPSIS
+.B "const char *" nvme_subsystem_get_application
+.BI "(nvme_subsystem_t s "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+nvme_subsystem_t object
+.SH "RETURN"
+Managing application string or NULL if not set.

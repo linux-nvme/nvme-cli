@@ -1,0 +1,20 @@
+.TH "nvmf_connect_disc_entry" 9 "nvmf_connect_disc_entry" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_connect_disc_entry \- Connect controller based on the discovery log page entry
+.SH SYNOPSIS
+.B "nvme_ctrl_t" nvmf_connect_disc_entry
+.BI "(nvme_host_t h "  ","
+.BI "struct nvmf_disc_log_entry *e "  ","
+.BI "const struct nvme_fabrics_config *defcfg "  ","
+.BI "bool *discover "  ");"
+.SH ARGUMENTS
+.IP "h" 12
+Host to which the controller should be connected
+.IP "e" 12
+Discovery log page entry
+.IP "defcfg" 12
+Default configuration to be used for the new controller
+.IP "discover" 12
+Set to 'true' if the new controller is a discovery controller
+.SH "RETURN"
+Pointer to the new controller

@@ -1,0 +1,12 @@
+.TH "nvme_lockdown" 9 "nvme_lockdown" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_lockdown \- Issue lockdown command
+.SH SYNOPSIS
+.B "int" nvme_lockdown
+.BI "(struct nvme_lockdown_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_lockdown_args\fP argument structure
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

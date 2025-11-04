@@ -1,0 +1,79 @@
+.TH "libnvme" 9 "struct nvmf_ext_die" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvmf_ext_die \- Extended Discovery Information Entry (DIE)
+.SH SYNOPSIS
+struct nvmf_ext_die {
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 adrfam;"
+.br
+.BI "    __u8 subtype;"
+.br
+.BI "    __u8 treq;"
+.br
+.BI "    __le16 portid;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le16 asqsz;"
+.br
+.BI "    __u8 rsvd10[22];"
+.br
+.BI "    char trsvcid[NVMF_TRSVCID_SIZE];"
+.br
+.BI "    __u8 resv64[192];"
+.br
+.BI "    char nqn[NVME_NQN_LENGTH];"
+.br
+.BI "    char traddr[NVMF_TRADDR_SIZE];"
+.br
+.BI "    union nvmf_tsas         tsas;"
+.br
+.BI "    __le32 tel;"
+.br
+.BI "    __le16 numexat;"
+.br
+.BI "    __u8 resv1030[2];"
+.br
+.BI "    struct nvmf_ext_attr    exat[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "trtype" 12
+Transport Type (\fIenum nvmf_trtype\fP)
+.IP "adrfam" 12
+Address Family (\fIenum nvmf_addr_family\fP)
+.IP "subtype" 12
+Subsystem Type (\fIenum nvme_subsys_type\fP)
+.IP "treq" 12
+Transport Requirements (\fIenum nvmf_treq\fP)
+.IP "portid" 12
+Port ID
+.IP "cntlid" 12
+Controller ID
+.IP "asqsz" 12
+Admin Max SQ Size
+.IP "rsvd10" 12
+Reserved
+.IP "trsvcid" 12
+Transport Service Identifier
+.IP "resv64" 12
+Reserved
+.IP "nqn" 12
+NVM Qualified Name
+.IP "traddr" 12
+Transport Address
+.IP "tsas" 12
+Transport Specific Address Subtype (\fIunion nvmf_tsas\fP)
+.IP "tel" 12
+Total Entry Length
+.IP "numexat" 12
+Number of Extended Attributes
+.IP "resv1030" 12
+Reserved
+.IP "exat" 12
+Extended Attributes 0 (\fIstruct nvmf_ext_attr\fP)

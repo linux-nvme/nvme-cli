@@ -1,0 +1,51 @@
+.TH "libnvme" 9 "struct nvme_streams_directive_params" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_streams_directive_params \- Streams Directive - Return Parameters Data Structure
+.SH SYNOPSIS
+struct nvme_streams_directive_params {
+.br
+.BI "    __le16 msl;"
+.br
+.BI "    __le16 nssa;"
+.br
+.BI "    __le16 nsso;"
+.br
+.BI "    __u8 nssc;"
+.br
+.BI "    __u8 rsvd[9];"
+.br
+.BI "    __le32 sws;"
+.br
+.BI "    __le16 sgs;"
+.br
+.BI "    __le16 nsa;"
+.br
+.BI "    __le16 nso;"
+.br
+.BI "    __u8 rsvd2[6];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "msl" 12
+Max Streams Limit
+.IP "nssa" 12
+NVM Subsystem Streams Available
+.IP "nsso" 12
+NVM Subsystem Streams Open
+.IP "nssc" 12
+NVM Subsystem Stream Capability
+.IP "rsvd" 12
+Reserved
+.IP "sws" 12
+Stream Write Size
+.IP "sgs" 12
+Stream Granularity Size
+.IP "nsa" 12
+Namespace Streams Allocated
+.IP "nso" 12
+Namespace Streams Open
+.IP "rsvd2" 12
+Reserved

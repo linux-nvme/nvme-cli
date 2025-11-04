@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_id_domain_attr" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_id_domain_attr \- Domain Attributes Entry
+.SH SYNOPSIS
+struct nvme_id_domain_attr {
+.br
+.BI "    __le16 dom_id;"
+.br
+.BI "    __u8 rsvd2[14];"
+.br
+.BI "    __u8 dom_cap[16];"
+.br
+.BI "    __u8 unalloc_dom_cap[16];"
+.br
+.BI "    __u8 max_egrp_dom_cap[16];"
+.br
+.BI "    __u8 rsvd64[64];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "dom_id" 12
+Domain Identifier
+.IP "rsvd2" 12
+Reserved
+.IP "dom_cap" 12
+Total Domain Capacity
+.IP "unalloc_dom_cap" 12
+Unallocated Domain Capacity
+.IP "max_egrp_dom_cap" 12
+Max Endurance Group Domain Capacity
+.IP "rsvd64" 12
+Reserved

@@ -1,0 +1,28 @@
+.TH "nvme_identify_iocs_ns_csi_user_data_format" 9 "nvme_identify_iocs_ns_csi_user_data_format" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_identify_iocs_ns_csi_user_data_format \- Identify I/O command set namespace data structure
+.SH SYNOPSIS
+.B "int" nvme_identify_iocs_ns_csi_user_data_format
+.BI "(int fd "  ","
+.BI "__u16 user_data_format "  ","
+.BI "__u8 uuidx "  ","
+.BI "enum nvme_csi csi "  ","
+.BI "void *data "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "user_data_format" 12
+Return namespaces capability of identifier
+.IP "uuidx" 12
+UUID selection, if supported
+.IP "csi" 12
+Command Set Identifier
+.IP "data" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+I/O Command Set specific Identify Namespace data structure for
+the specified User Data Format index containing the namespace
+capabilities for the I/O Command Set specified in the CSI field.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

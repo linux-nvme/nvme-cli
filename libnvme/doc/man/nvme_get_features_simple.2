@@ -1,0 +1,21 @@
+.TH "nvme_get_features_simple" 9 "nvme_get_features_simple" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_features_simple \- Helper function for @nvme_get_features()
+.SH SYNOPSIS
+.B "int" nvme_get_features_simple
+.BI "(int fd "  ","
+.BI "enum nvme_features_id fid "  ","
+.BI "__u32 nsid "  ","
+.BI "__u32 *result "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "fid" 12
+Feature identifier
+.IP "nsid" 12
+Namespace ID, if applicable
+.IP "result" 12
+The command completion result from CQE dword0
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvmf_connect_data" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvmf_connect_data \- Data payload for the 'connect' command
+.SH SYNOPSIS
+struct nvmf_connect_data {
+.br
+.BI "    __u8 hostid[16];"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    char rsvd4[238];"
+.br
+.BI "    char subsysnqn[NVME_NQN_LENGTH];"
+.br
+.BI "    char hostnqn[NVME_NQN_LENGTH];"
+.br
+.BI "    char rsvd5[256];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hostid" 12
+Host ID of the connecting host
+.IP "cntlid" 12
+Requested controller ID
+.IP "rsvd4" 12
+Reserved
+.IP "subsysnqn" 12
+Subsystem NQN to connect to
+.IP "hostnqn" 12
+Host NQN of the connecting host
+.IP "rsvd5" 12
+Reserved

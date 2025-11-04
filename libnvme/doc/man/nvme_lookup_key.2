@@ -1,0 +1,18 @@
+.TH "nvme_lookup_key" 9 "nvme_lookup_key" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_lookup_key \- Lookup key serial number
+.SH SYNOPSIS
+.B "long" nvme_lookup_key
+.BI "(const char *type "  ","
+.BI "const char *identity "  ");"
+.SH ARGUMENTS
+.IP "type" 12
+Key type
+.IP "identity" 12
+Key description
+.SH "DESCRIPTION"
+Looks up the serial number of the key \fIidentity\fP
+with type type in the current session keyring.
+.SH "RETURN"
+The key serial number of the key
+or 0 with errno set otherwise.

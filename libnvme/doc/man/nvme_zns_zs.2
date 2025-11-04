@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_zns_zs" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_zns_zs \- Zone Descriptor Data Structure - Zone State
+.SH SYNOPSIS
+enum nvme_zns_zs {
+.br
+.BI "    NVME_ZNS_ZS_EMPTY"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZS_IMPL_OPEN"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZS_EXPL_OPEN"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZS_CLOSED"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZS_READ_ONLY"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZS_FULL"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZS_OFFLINE"
+
+};
+.SH Constants
+.IP "NVME_ZNS_ZS_EMPTY" 12
+Empty state
+.IP "NVME_ZNS_ZS_IMPL_OPEN" 12
+Implicitly open state
+.IP "NVME_ZNS_ZS_EXPL_OPEN" 12
+Explicitly open state
+.IP "NVME_ZNS_ZS_CLOSED" 12
+Closed state
+.IP "NVME_ZNS_ZS_READ_ONLY" 12
+Read only state
+.IP "NVME_ZNS_ZS_FULL" 12
+Full state
+.IP "NVME_ZNS_ZS_OFFLINE" 12
+Offline state

@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_frmw" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_frmw \- Flags and values indicates capabilities regarding firmware updates from &struct nvme_id_ctrl.frmw.
+.SH SYNOPSIS
+enum nvme_id_ctrl_frmw {
+.br
+.BI "    NVME_CTRL_FRMW_1ST_RO"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_NR_SLOTS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_FW_ACT_NO_RESET"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FRMW_MP_UP_DETECTION"
+
+};
+.SH Constants
+.IP "NVME_CTRL_FRMW_1ST_RO" 12
+If set, the first firmware slot is readonly
+.IP "NVME_CTRL_FRMW_NR_SLOTS" 12
+Mask to get the value of the number of
+firmware slots that the controller supports.
+.IP "NVME_CTRL_FRMW_FW_ACT_NO_RESET" 12
+If set, the controller supports firmware
+activation without a reset.
+.IP "NVME_CTRL_FRMW_MP_UP_DETECTION" 12
+If set, the controller is able to detect
+overlapping firmware/boot partition
+image update.

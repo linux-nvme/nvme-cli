@@ -1,0 +1,44 @@
+.TH "libnvme" 9 "struct nvme_resv_report_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_resv_report_args \- Arguments for the NVMe Reservation Report command
+.SH SYNOPSIS
+struct nvme_resv_report_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    struct nvme_resv_status *report;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 len;"
+.br
+.BI "    bool eds;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "report" 12
+The user space destination address to store the reservation
+report
+.IP "args_size" 12
+Size of \fIstruct nvme_resv_report_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace identifier
+.IP "len" 12
+Number of bytes to request transferred with this command
+.IP "eds" 12
+Request extended Data Structure

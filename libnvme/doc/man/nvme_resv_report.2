@@ -1,0 +1,16 @@
+.TH "nvme_resv_report" 9 "nvme_resv_report" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_resv_report \- Send an nvme reservation report
+.SH SYNOPSIS
+.B "int" nvme_resv_report
+.BI "(struct nvme_resv_report_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+struct nvme_resv_report_args argument structure
+.SH "DESCRIPTION"
+Returns a Reservation Status data structure to memory that describes the
+registration and reservation status of a namespace. See the definition for
+the returned structure, \fIstruct nvme_reservation_status\fP, for more details.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

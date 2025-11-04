@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "struct nvme_resv_release_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_resv_release_args \- Arguments for the NVMe Reservation Release Command
+.SH SYNOPSIS
+struct nvme_resv_release_args {
+.br
+.BI "    __u64 crkey;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    enum nvme_resv_rtype rtype;"
+.br
+.BI "    enum nvme_resv_rrela rrela;"
+.br
+.BI "    bool iekey;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "crkey" 12
+The current reservation key to release
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "args_size" 12
+Size of \fIstruct nvme_resv_release_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace identifier
+.IP "rtype" 12
+The type of reservation to be create, see \fIenum nvme_resv_rtype\fP
+.IP "rrela" 12
+Reservation release action, see \fIenum nvme_resv_rrela\fP
+.IP "iekey" 12
+Set to ignore the existing key

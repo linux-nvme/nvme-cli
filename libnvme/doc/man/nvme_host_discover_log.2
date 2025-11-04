@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_host_discover_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_host_discover_log \- Host Discovery Log
+.SH SYNOPSIS
+struct nvme_host_discover_log {
+.br
+.BI "    __le64 genctr;"
+.br
+.BI "    __le64 numrec;"
+.br
+.BI "    __le16 recfmt;"
+.br
+.BI "    __u8 hdlpf;"
+.br
+.BI "    __u8 rsvd19;"
+.br
+.BI "    __le32 thdlpl;"
+.br
+.BI "    __u8 rsvd24[1000];"
+.br
+.BI "    struct nvme_host_ext_discover_log       hedlpe[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "genctr" 12
+Generation Counter
+.IP "numrec" 12
+Number of Records
+.IP "recfmt" 12
+Record Format
+.IP "hdlpf" 12
+Host Discovery Log Page Flags
+.IP "rsvd19" 12
+Reserved
+.IP "thdlpl" 12
+Total Host Discovery Log Page Length
+.IP "rsvd24" 12
+Reserved
+.IP "hedlpe" 12
+Host Extended Discovery Log Page Entry List

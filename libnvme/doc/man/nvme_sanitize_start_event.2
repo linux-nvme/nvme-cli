@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_sanitize_start_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_sanitize_start_event \- Sanitize Start Event Data
+.SH SYNOPSIS
+struct nvme_sanitize_start_event {
+.br
+.BI "    __le32 sani_cap;"
+.br
+.BI "    __le32 sani_cdw10;"
+.br
+.BI "    __le32 sani_cdw11;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "sani_cap" 12
+SANICAP
+.IP "sani_cdw10" 12
+Sanitize CDW10
+.IP "sani_cdw11" 12
+Sanitize CDW11

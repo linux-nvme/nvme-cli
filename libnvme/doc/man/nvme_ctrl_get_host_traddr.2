@@ -1,0 +1,11 @@
+.TH "nvme_ctrl_get_host_traddr" 9 "nvme_ctrl_get_host_traddr" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_host_traddr \- Host transport address of a controller
+.SH SYNOPSIS
+.B "const char *" nvme_ctrl_get_host_traddr
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.SH "RETURN"
+Host transport address of \fIc\fP (if present)

@@ -1,0 +1,55 @@
+.TH "libnvme" 9 "struct nvme_zns_mgmt_recv_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_zns_mgmt_recv_args \- Arguments for the NVMe ZNS Management Receive command
+.SH SYNOPSIS
+struct nvme_zns_mgmt_recv_args {
+.br
+.BI "    __u64 slba;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    enum nvme_zns_recv_action zra;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "    __u16 zrasf;"
+.br
+.BI "    bool zras_feat;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "slba" 12
+Starting logical block address
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "data" 12
+Userspace address of the data
+.IP "args_size" 12
+Size of \fIstruct nvme_zns_mgmt_recv_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+timeout in ms
+.IP "nsid" 12
+Namespace ID
+.IP "zra" 12
+zone receive action
+.IP "data_len" 12
+Length of \fIdata\fP
+.IP "zrasf" 12
+Zone receive action specific field
+.IP "zras_feat" 12
+Zone receive action specific features

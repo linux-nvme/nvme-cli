@@ -1,0 +1,84 @@
+.TH "libnvme" 9 "enum nvme_mi_cmd_supported_effects" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_cmd_supported_effects \- MI Command Supported and Effects Data Structure
+.SH SYNOPSIS
+enum nvme_mi_cmd_supported_effects {
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_NCC"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_NIC"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_CCC"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_MASK"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NS"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_CTRL"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NVM_SET"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_ENDGRP"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_DOMAIN"
+, 
+.br
+.br
+.BI "    NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS"
+
+};
+.SH Constants
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP" 12
+Command Supported
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC" 12
+User Data Content Change
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_NCC" 12
+Namespace Capability Change
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_NIC" 12
+Namespace Inventory Change
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_CCC" 12
+Controller Capability Change
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_SHIFT" 12
+20 bit shift
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_MASK" 12
+12 bit mask - 0xfff
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NS" 12
+Namespace Scope
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_CTRL" 12
+Controller Scope
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NVM_SET" 12
+NVM Set Scope
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_ENDGRP" 12
+Endurance Group Scope
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_DOMAIN" 12
+Domain Scope
+.IP "NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS" 12
+NVM Subsystem Scope

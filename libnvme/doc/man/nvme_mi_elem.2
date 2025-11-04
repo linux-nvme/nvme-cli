@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_mi_elem" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_elem \- Element Descriptor Types
+.SH SYNOPSIS
+enum nvme_mi_elem {
+.br
+.BI "    NVME_MI_ELEM_EED"
+, 
+.br
+.br
+.BI "    NVME_MI_ELEM_USCE"
+, 
+.br
+.br
+.BI "    NVME_MI_ELEM_ECED"
+, 
+.br
+.br
+.BI "    NVME_MI_ELEM_LED"
+, 
+.br
+.br
+.BI "    NVME_MI_ELEM_SMBMED"
+, 
+.br
+.br
+.BI "    NVME_MI_ELEM_PCIESED"
+, 
+.br
+.br
+.BI "    NVME_MI_ELEM_NVMED"
+
+};
+.SH Constants
+.IP "NVME_MI_ELEM_EED" 12
+Extended Element Descriptor
+.IP "NVME_MI_ELEM_USCE" 12
+Upstream Connector Element Descriptor
+.IP "NVME_MI_ELEM_ECED" 12
+Expansion Connector Element Descriptor
+.IP "NVME_MI_ELEM_LED" 12
+Label Element Descriptor
+.IP "NVME_MI_ELEM_SMBMED" 12
+SMBus/I2C Mux Element Descriptor
+.IP "NVME_MI_ELEM_PCIESED" 12
+PCIe Switch Element Descriptor
+.IP "NVME_MI_ELEM_NVMED" 12
+NVM Subsystem Element Descriptor

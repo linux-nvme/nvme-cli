@@ -1,0 +1,1311 @@
+.TH "libnvme" 9 "enum nvme_status_field" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_status_field \- Defines all parts of the nvme status field: status code, status code type, and additional flags.
+.SH SYNOPSIS
+enum nvme_status_field {
+.br
+.BI "    NVME_SCT_GENERIC"
+, 
+.br
+.br
+.BI "    NVME_SCT_CMD_SPECIFIC"
+, 
+.br
+.br
+.BI "    NVME_SCT_MEDIA"
+, 
+.br
+.br
+.BI "    NVME_SCT_PATH"
+, 
+.br
+.br
+.BI "    NVME_SCT_VS"
+, 
+.br
+.br
+.BI "    NVME_SCT_MASK"
+, 
+.br
+.br
+.BI "    NVME_SCT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SC_MASK"
+, 
+.br
+.br
+.BI "    NVME_SC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SC_SUCCESS"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_OPCODE"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_FIELD"
+, 
+.br
+.br
+.BI "    NVME_SC_CMDID_CONFLICT"
+, 
+.br
+.br
+.BI "    NVME_SC_DATA_XFER_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_POWER_LOSS"
+, 
+.br
+.br
+.BI "    NVME_SC_INTERNAL"
+, 
+.br
+.br
+.BI "    NVME_SC_ABORT_REQ"
+, 
+.br
+.br
+.BI "    NVME_SC_ABORT_QUEUE"
+, 
+.br
+.br
+.BI "    NVME_SC_FUSED_FAIL"
+, 
+.br
+.br
+.BI "    NVME_SC_FUSED_MISSING"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_NS"
+, 
+.br
+.br
+.BI "    NVME_SC_CMD_SEQ_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_SGL_INVALID_LAST"
+, 
+.br
+.br
+.BI "    NVME_SC_SGL_INVALID_COUNT"
+, 
+.br
+.br
+.BI "    NVME_SC_SGL_INVALID_DATA"
+, 
+.br
+.br
+.BI "    NVME_SC_SGL_INVALID_METADATA"
+, 
+.br
+.br
+.BI "    NVME_SC_SGL_INVALID_TYPE"
+, 
+.br
+.br
+.BI "    NVME_SC_CMB_INVALID_USE"
+, 
+.br
+.br
+.BI "    NVME_SC_PRP_INVALID_OFFSET"
+, 
+.br
+.br
+.BI "    NVME_SC_AWU_EXCEEDED"
+, 
+.br
+.br
+.BI "    NVME_SC_OP_DENIED"
+, 
+.br
+.br
+.BI "    NVME_SC_SGL_INVALID_OFFSET"
+, 
+.br
+.br
+.BI "    NVME_SC_HOSTID_FORMAT"
+, 
+.br
+.br
+.BI "    NVME_SC_KAT_EXPIRED"
+, 
+.br
+.br
+.BI "    NVME_SC_KAT_INVALID"
+, 
+.br
+.br
+.BI "    NVME_SC_CMD_ABORTED_PREMEPT"
+, 
+.br
+.br
+.BI "    NVME_SC_SANITIZE_FAILED"
+, 
+.br
+.br
+.BI "    NVME_SC_SANITIZE_IN_PROGRESS"
+, 
+.br
+.br
+.BI "    NVME_SC_SGL_INVALID_GRANULARITY"
+, 
+.br
+.br
+.BI "    NVME_SC_CMD_IN_CMBQ_NOT_SUPP"
+, 
+.br
+.br
+.BI "    NVME_SC_NS_WRITE_PROTECTED"
+, 
+.br
+.br
+.BI "    NVME_SC_CMD_INTERRUPTED"
+, 
+.br
+.br
+.BI "    NVME_SC_TRAN_TPORT_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_PROHIBITED_BY_CMD_AND_FEAT"
+, 
+.br
+.br
+.BI "    NVME_SC_ADMIN_CMD_MEDIA_NOT_READY"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_KEY_TAG"
+, 
+.br
+.br
+.BI "    NVME_SC_HOST_DISPERSED_NS_NOT_ENABLED"
+, 
+.br
+.br
+.BI "    NVME_SC_HOST_ID_NOT_INITIALIZED"
+, 
+.br
+.br
+.BI "    NVME_SC_INCORRECT_KEY"
+, 
+.br
+.br
+.BI "    NVME_SC_FDP_DISABLED"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_PLACEMENT_HANDLE_LIST"
+, 
+.br
+.br
+.BI "    NVME_SC_LBA_RANGE"
+, 
+.br
+.br
+.BI "    NVME_SC_CAP_EXCEEDED"
+, 
+.br
+.br
+.BI "    NVME_SC_NS_NOT_READY"
+, 
+.br
+.br
+.BI "    NVME_SC_RESERVATION_CONFLICT"
+, 
+.br
+.br
+.BI "    NVME_SC_FORMAT_IN_PROGRESS"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_VALUE_SIZE"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_KEY_SIZE"
+, 
+.br
+.br
+.BI "    NVME_SC_KV_KEY_NOT_EXISTS"
+, 
+.br
+.br
+.BI "    NVME_SC_UNRECOVERED_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_KEY_EXISTS"
+, 
+.br
+.br
+.BI "    NVME_SC_CQ_INVALID"
+, 
+.br
+.br
+.BI "    NVME_SC_QID_INVALID"
+, 
+.br
+.br
+.BI "    NVME_SC_QUEUE_SIZE"
+, 
+.br
+.br
+.BI "    NVME_SC_ABORT_LIMIT"
+, 
+.br
+.br
+.BI "    NVME_SC_ABORT_MISSING"
+, 
+.br
+.br
+.BI "    NVME_SC_ASYNC_LIMIT"
+, 
+.br
+.br
+.BI "    NVME_SC_FIRMWARE_SLOT"
+, 
+.br
+.br
+.BI "    NVME_SC_FIRMWARE_IMAGE"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_VECTOR"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_LOG_PAGE"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_FORMAT"
+, 
+.br
+.br
+.BI "    NVME_SC_FW_NEEDS_CONV_RESET"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_QUEUE"
+, 
+.br
+.br
+.BI "    NVME_SC_FEATURE_NOT_SAVEABLE"
+, 
+.br
+.br
+.BI "    NVME_SC_FEATURE_NOT_CHANGEABLE"
+, 
+.br
+.br
+.BI "    NVME_SC_FEATURE_NOT_PER_NS"
+, 
+.br
+.br
+.BI "    NVME_SC_FW_NEEDS_SUBSYS_RESET"
+, 
+.br
+.br
+.BI "    NVME_SC_FW_NEEDS_RESET"
+, 
+.br
+.br
+.BI "    NVME_SC_FW_NEEDS_MAX_TIME"
+, 
+.br
+.br
+.BI "    NVME_SC_FW_ACTIVATE_PROHIBITED"
+, 
+.br
+.br
+.BI "    NVME_SC_OVERLAPPING_RANGE"
+, 
+.br
+.br
+.BI "    NVME_SC_NS_INSUFFICIENT_CAP"
+, 
+.br
+.br
+.BI "    NVME_SC_NS_ID_UNAVAILABLE"
+, 
+.br
+.br
+.BI "    NVME_SC_NS_ALREADY_ATTACHED"
+, 
+.br
+.br
+.BI "    NVME_SC_NS_IS_PRIVATE"
+, 
+.br
+.br
+.BI "    NVME_SC_NS_NOT_ATTACHED"
+, 
+.br
+.br
+.BI "    NVME_SC_THIN_PROV_NOT_SUPP"
+, 
+.br
+.br
+.BI "    NVME_SC_CTRL_LIST_INVALID"
+, 
+.br
+.br
+.BI "    NVME_SC_SELF_TEST_IN_PROGRESS"
+, 
+.br
+.br
+.BI "    NVME_SC_BP_WRITE_PROHIBITED"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_CTRL_ID"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_SEC_CTRL_STATE"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_CTRL_RESOURCES"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_RESOURCE_ID"
+, 
+.br
+.br
+.BI "    NVME_SC_PMR_SAN_PROHIBITED"
+, 
+.br
+.br
+.BI "    NVME_SC_ANA_GROUP_ID_INVALID"
+, 
+.br
+.br
+.BI "    NVME_SC_ANA_ATTACH_FAILED"
+, 
+.br
+.br
+.BI "    NVME_SC_INSUFFICIENT_CAP"
+, 
+.br
+.br
+.BI "    NVME_SC_NS_ATTACHMENT_LIMIT_EXCEEDED"
+, 
+.br
+.br
+.BI "    NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED"
+, 
+.br
+.br
+.BI "    NVME_SC_IOCS_NOT_SUPPORTED"
+, 
+.br
+.br
+.BI "    NVME_SC_IOCS_NOT_ENABLED"
+, 
+.br
+.br
+.BI "    NVME_SC_IOCS_COMBINATION_REJECTED"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_IOCS"
+, 
+.br
+.br
+.BI "    NVME_SC_ID_UNAVAILABLE"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_DISCOVERY_INFO"
+, 
+.br
+.br
+.BI "    NVME_SC_ZONING_DATA_STRUCT_LOCKED"
+, 
+.br
+.br
+.BI "    NVME_SC_ZONING_DATA_STRUCT_NOTFND"
+, 
+.br
+.br
+.BI "    NVME_SC_INSUFFICIENT_DISC_RES"
+, 
+.br
+.br
+.BI "    NVME_SC_REQSTD_FUNCTION_DISABLED"
+, 
+.br
+.br
+.BI "    NVME_SC_ZONEGRP_ORIGINATOR_INVLD"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_CONTROLER_DATA_QUEUE"
+, 
+.br
+.br
+.BI "    NVME_SC_NOT_ENOUGH_RESOURCES"
+, 
+.br
+.br
+.BI "    NVME_SC_CONTROLLER_SUSPENDED"
+, 
+.br
+.br
+.BI "    NVME_SC_CONTROLLER_NOT_SUSPENDED"
+, 
+.br
+.br
+.BI "    NVME_SC_CONTROLLER_DATA_QUEUE_FULL"
+, 
+.br
+.br
+.BI "    NVME_SC_BAD_ATTRIBUTES"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_PI"
+, 
+.br
+.br
+.BI "    NVME_SC_READ_ONLY"
+, 
+.br
+.br
+.BI "    NVME_SC_CMD_SIZE_LIMIT_EXCEEDED"
+, 
+.br
+.br
+.BI "    NVME_SC_INCOMPATIBLE_NS"
+, 
+.br
+.br
+.BI "    NVME_SC_FAST_COPY_NOT_POSSIBLE"
+, 
+.br
+.br
+.BI "    NVME_SC_OVERLAPPING_IO_RANGE"
+, 
+.br
+.br
+.BI "    NVME_SC_INSUFFICIENT_RESOURCES"
+, 
+.br
+.br
+.BI "    NVME_SC_CONNECT_FORMAT"
+, 
+.br
+.br
+.BI "    NVME_SC_CONNECT_CTRL_BUSY"
+, 
+.br
+.br
+.BI "    NVME_SC_CONNECT_INVALID_PARAM"
+, 
+.br
+.br
+.BI "    NVME_SC_CONNECT_RESTART_DISC"
+, 
+.br
+.br
+.BI "    NVME_SC_CONNECT_INVALID_HOST"
+, 
+.br
+.br
+.BI "    NVME_SC_DISCONNECT_INVALID_QTYPE"
+, 
+.br
+.br
+.BI "    NVME_SC_DISCOVERY_RESTART"
+, 
+.br
+.br
+.BI "    NVME_SC_AUTH_REQUIRED"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_INVALID_OP_REQUEST"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_ZRWA_RESOURCES_UNAVAILABLE"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_BOUNDARY_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_FULL"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_READ_ONLY"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_OFFLINE"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_INVALID_WRITE"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_TOO_MANY_ACTIVE"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_TOO_MANY_OPENS"
+, 
+.br
+.br
+.BI "    NVME_SC_ZNS_INVAL_TRANSITION"
+, 
+.br
+.br
+.BI "    NVME_SC_WRITE_FAULT"
+, 
+.br
+.br
+.BI "    NVME_SC_READ_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_GUARD_CHECK"
+, 
+.br
+.br
+.BI "    NVME_SC_APPTAG_CHECK"
+, 
+.br
+.br
+.BI "    NVME_SC_REFTAG_CHECK"
+, 
+.br
+.br
+.BI "    NVME_SC_COMPARE_FAILED"
+, 
+.br
+.br
+.BI "    NVME_SC_ACCESS_DENIED"
+, 
+.br
+.br
+.BI "    NVME_SC_UNWRITTEN_BLOCK"
+, 
+.br
+.br
+.BI "    NVME_SC_STORAGE_TAG_CHECK"
+, 
+.br
+.br
+.BI "    NVME_SC_ANA_INTERNAL_PATH_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_ANA_PERSISTENT_LOSS"
+, 
+.br
+.br
+.BI "    NVME_SC_ANA_INACCESSIBLE"
+, 
+.br
+.br
+.BI "    NVME_SC_ANA_TRANSITION"
+, 
+.br
+.br
+.BI "    NVME_SC_CTRL_PATH_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_HOST_PATH_ERROR"
+, 
+.br
+.br
+.BI "    NVME_SC_CMD_ABORTED_BY_HOST"
+, 
+.br
+.br
+.BI "    NVME_SC_CRD"
+, 
+.br
+.br
+.BI "    NVME_SC_MORE"
+, 
+.br
+.br
+.BI "    NVME_SC_DNR"
+
+};
+.SH Constants
+.IP "NVME_SCT_GENERIC" 12
+Generic errors applicable to multiple opcodes
+.IP "NVME_SCT_CMD_SPECIFIC" 12
+Errors associated to a specific opcode
+.IP "NVME_SCT_MEDIA" 12
+Errors associated with media and data integrity
+.IP "NVME_SCT_PATH" 12
+Errors associated with the paths connection
+.IP "NVME_SCT_VS" 12
+Vendor specific errors
+.IP "NVME_SCT_MASK" 12
+Mask to get the value of the Status Code Type
+.IP "NVME_SCT_SHIFT" 12
+Shift value to get the value of the Status
+Code Type
+.IP "NVME_SC_MASK" 12
+Mask to get the value of the status code.
+.IP "NVME_SC_SHIFT" 12
+Shift value to get the value of the status
+code.
+.IP "NVME_SC_SUCCESS" 12
+Successful Completion: The command
+completed without error.
+.IP "NVME_SC_INVALID_OPCODE" 12
+Invalid Command Opcode: A reserved coded
+value or an unsupported value in the
+command opcode field.
+.IP "NVME_SC_INVALID_FIELD" 12
+Invalid Field in Command: A reserved
+coded value or an unsupported value in a
+defined field.
+.IP "NVME_SC_CMDID_CONFLICT" 12
+Command ID Conflict: The command
+identifier is already in use.
+.IP "NVME_SC_DATA_XFER_ERROR" 12
+Data Transfer Error: Transferring the
+data or metadata associated with a
+command experienced an error.
+.IP "NVME_SC_POWER_LOSS" 12
+Commands Aborted due to Power Loss
+Notification: Indicates that the command
+was aborted due to a power loss
+notification.
+.IP "NVME_SC_INTERNAL" 12
+Internal Error: The command was not
+completed successfully due to an internal error.
+.IP "NVME_SC_ABORT_REQ" 12
+Command Abort Requested: The command was
+aborted due to an Abort command being
+received that specified the Submission
+Queue Identifier and Command Identifier
+of this command.
+.IP "NVME_SC_ABORT_QUEUE" 12
+Command Aborted due to SQ Deletion: The
+command was aborted due to a Delete I/O
+Submission Queue request received for the
+Submission Queue to which the command was
+submitted.
+.IP "NVME_SC_FUSED_FAIL" 12
+Command Aborted due to Failed Fused Command:
+The command was aborted due to the other
+command in a fused operation failing.
+.IP "NVME_SC_FUSED_MISSING" 12
+Aborted due to Missing Fused Command: The
+fused command was aborted due to the
+adjacent submission queue entry not
+containing a fused command that is the
+other command.
+.IP "NVME_SC_INVALID_NS" 12
+Invalid Namespace or Format: The
+namespace or the format of that namespace
+is invalid.
+.IP "NVME_SC_CMD_SEQ_ERROR" 12
+Command Sequence Error: The command was
+aborted due to a protocol violation in a
+multi-command sequence.
+.IP "NVME_SC_SGL_INVALID_LAST" 12
+Invalid SGL Segment Descriptor: The
+command includes an invalid SGL Last
+Segment or SGL Segment descriptor.
+.IP "NVME_SC_SGL_INVALID_COUNT" 12
+Invalid Number of SGL Descriptors: There
+is an SGL Last Segment descriptor or an
+SGL Segment descriptor in a location
+other than the last descriptor of a
+segment based on the length indicated.
+.IP "NVME_SC_SGL_INVALID_DATA" 12
+Data SGL Length Invalid: This may occur
+if the length of a Data SGL is too short.
+This may occur if the length of a Data
+SGL is too long and the controller does
+not support SGL transfers longer than the
+amount of data to be transferred as
+indicated in the SGL Support field of the
+Identify Controller data structure.
+.IP "NVME_SC_SGL_INVALID_METADATA" 12
+Metadata SGL Length Invalid: This may
+occur if the length of a Metadata SGL is
+too short. This may occur if the length
+of a Metadata SGL is too long and the
+controller does not support SGL transfers
+longer than the amount of data to be
+transferred as indicated in the SGL
+Support field of the Identify Controller
+data structure.
+.IP "NVME_SC_SGL_INVALID_TYPE" 12
+SGL Descriptor Type Invalid: The type of
+an SGL Descriptor is a type that is not
+supported by the controller.
+.IP "NVME_SC_CMB_INVALID_USE" 12
+Invalid Use of Controller Memory Buffer:
+The attempted use of the Controller
+Memory Buffer is not supported by the
+controller.
+.IP "NVME_SC_PRP_INVALID_OFFSET" 12
+PRP Offset Invalid: The Offset field for
+a PRP entry is invalid.
+.IP "NVME_SC_AWU_EXCEEDED" 12
+Atomic Write Unit Exceeded: The length
+specified exceeds the atomic write unit size.
+.IP "NVME_SC_OP_DENIED" 12
+Operation Denied: The command was denied
+due to lack of access rights. Refer to
+the appropriate security specification.
+.IP "NVME_SC_SGL_INVALID_OFFSET" 12
+SGL Offset Invalid: The offset specified
+in a descriptor is invalid. This may
+occur when using capsules for data
+transfers in NVMe over Fabrics
+implementations and an invalid offset in
+the capsule is specified.
+.IP "NVME_SC_HOSTID_FORMAT" 12
+Host Identifier Inconsistent Format: The
+NVM subsystem detected the simultaneous
+use of 64- bit and 128-bit Host
+Identifier values on different
+controllers.
+.IP "NVME_SC_KAT_EXPIRED" 12
+Keep Alive Timer Expired: The Keep Alive
+Timer expired.
+.IP "NVME_SC_KAT_INVALID" 12
+Keep Alive Timeout Invalid: The Keep
+Alive Timeout value specified is invalid.
+.IP "NVME_SC_CMD_ABORTED_PREMEPT" 12
+Command Aborted due to Preempt and Abort:
+The command was aborted due to a
+Reservation Acquire command.
+.IP "NVME_SC_SANITIZE_FAILED" 12
+Sanitize Failed: The most recent sanitize
+operation failed and no recovery action
+has been successfully completed.
+.IP "NVME_SC_SANITIZE_IN_PROGRESS" 12
+Sanitize In Progress: The requested
+function (e.g., command) is prohibited
+while a sanitize operation is in
+progress.
+.IP "NVME_SC_SGL_INVALID_GRANULARITY" 12
+SGL Data Block Granularity Invalid: The
+Address alignment or Length granularity
+for an SGL Data Block descriptor is
+invalid.
+.IP "NVME_SC_CMD_IN_CMBQ_NOT_SUPP" 12
+Command Not Supported for Queue in CMB:
+The implementation does not support
+submission of the command to a Submission
+Queue in the Controller Memory Buffer or
+command completion to a Completion Queue
+in the Controller Memory Buffer.
+.IP "NVME_SC_NS_WRITE_PROTECTED" 12
+Namespace is Write Protected: The command
+is prohibited while the namespace is
+write protected as a result of a change
+in the namespace write protection state
+as defined by the Namespace Write
+Protection State Machine.
+.IP "NVME_SC_CMD_INTERRUPTED" 12
+Command Interrupted: Command processing
+was interrupted and the controller is
+unable to successfully complete the
+command. The host should retry the
+command.
+.IP "NVME_SC_TRAN_TPORT_ERROR" 12
+Transient Transport Error: A transient
+transport error was detected. If the
+command is retried on the same
+controller, the command is likely to
+succeed. A command that fails with a
+transient transport error four or more
+times should be treated as a persistent
+transport error that is not likely to
+succeed if retried on the same
+controller.
+.IP "NVME_SC_PROHIBITED_BY_CMD_AND_FEAT" 12
+Command Prohibited by Command and Feature
+Lockdown: The command was aborted due to
+command execution being prohibited by
+the Command and Feature Lockdown.
+.IP "NVME_SC_ADMIN_CMD_MEDIA_NOT_READY" 12
+Admin Command Media Not Ready: The Admin
+command requires access to media and
+the media is not ready.
+.IP "NVME_SC_INVALID_KEY_TAG" 12
+The command was aborted due to an invalid KEYTAG
+field value.
+.IP "NVME_SC_HOST_DISPERSED_NS_NOT_ENABLED" 12
+The command is prohibited while the
+Host Disperesed Namespace Support (HDISNS) field is not
+set to 1h in the Host Behavior Support feature.
+.IP "NVME_SC_HOST_ID_NOT_INITIALIZED" 12
+Host Identifier Not Initialized.
+.IP "NVME_SC_INCORRECT_KEY" 12
+The command was aborted due to the key associated
+with the KEYTAG field being incorrect.
+.IP "NVME_SC_FDP_DISABLED" 12
+Command is not allowed when
+Flexible Data Placement is disabled.
+.IP "NVME_SC_INVALID_PLACEMENT_HANDLE_LIST" 12
+The Placement Handle List is invalid
+due to invalid Reclaim Unit Handle Identifier or
+valid Reclaim Unit Handle Identifier but restricted or
+the Placement Handle List number of entries exceeded the
+maximum number allowed.
+.IP "NVME_SC_LBA_RANGE" 12
+LBA Out of Range: The command references
+an LBA that exceeds the size of the namespace.
+.IP "NVME_SC_CAP_EXCEEDED" 12
+Capacity Exceeded: Execution of the
+command has caused the capacity of the
+namespace to be exceeded.
+.IP "NVME_SC_NS_NOT_READY" 12
+Namespace Not Ready: The namespace is not
+ready to be accessed as a result of a
+condition other than a condition that is
+reported as an Asymmetric Namespace
+Access condition.
+.IP "NVME_SC_RESERVATION_CONFLICT" 12
+Reservation Conflict: The command was
+aborted due to a conflict with a
+reservation held on the accessed
+namespace.
+.IP "NVME_SC_FORMAT_IN_PROGRESS" 12
+Format In Progress: A Format NVM command
+is in progress on the namespace.
+.IP "NVME_SC_INVALID_VALUE_SIZE" 12
+The value size is not valid.
+.IP "NVME_SC_INVALID_KEY_SIZE" 12
+The KV key size is not valid.
+.IP "NVME_SC_KV_KEY_NOT_EXISTS" 12
+The Store If Key Exists (SIKE) bit is set to
+'1' in the Store Option field and the KV key does not
+exists.
+.IP "NVME_SC_UNRECOVERED_ERROR" 12
+There was an unrecovered error when reading
+from the meidum.
+.IP "NVME_SC_KEY_EXISTS" 12
+The Store If No Key Exists (SINKE) bit is set to '1'
+in the Store Option field and the KV key exists.
+.IP "NVME_SC_CQ_INVALID" 12
+Completion Queue Invalid: The Completion
+Queue identifier specified in the command
+does not exist.
+.IP "NVME_SC_QID_INVALID" 12
+Invalid Queue Identifier: The creation of
+the I/O Completion Queue failed due to an
+invalid queue identifier specified as
+part of the command. An invalid queue
+identifier is one that is currently in
+use or one that is outside the range
+supported by the controller.
+.IP "NVME_SC_QUEUE_SIZE" 12
+Invalid Queue Size: The host attempted to
+create an I/O Completion Queue with an
+invalid number of entries.
+.IP "NVME_SC_ABORT_LIMIT" 12
+Abort Command Limit Exceeded: The number
+of concurrently outstanding Abort commands
+has exceeded the limit indicated in the
+Identify Controller data structure.
+.IP "NVME_SC_ABORT_MISSING" 12
+Abort Command is missing: The abort
+command is missing.
+.IP "NVME_SC_ASYNC_LIMIT" 12
+Asynchronous Event Request Limit
+Exceeded: The number of concurrently
+outstanding Asynchronous Event Request
+commands has been exceeded.
+.IP "NVME_SC_FIRMWARE_SLOT" 12
+Invalid Firmware Slot: The firmware slot
+indicated is invalid or read only. This
+error is indicated if the firmware slot
+exceeds the number supported.
+.IP "NVME_SC_FIRMWARE_IMAGE" 12
+Invalid Firmware Image: The firmware
+image specified for activation is invalid
+and not loaded by the controller.
+.IP "NVME_SC_INVALID_VECTOR" 12
+Invalid Interrupt Vector: The creation of
+the I/O Completion Queue failed due to an
+invalid interrupt vector specified as
+part of the command.
+.IP "NVME_SC_INVALID_LOG_PAGE" 12
+Invalid Log Page: The log page indicated
+is invalid. This error condition is also
+returned if a reserved log page is
+requested.
+.IP "NVME_SC_INVALID_FORMAT" 12
+Invalid Format: The LBA Format specified
+is not supported.
+.IP "NVME_SC_FW_NEEDS_CONV_RESET" 12
+Firmware Activation Requires Conventional Reset:
+The firmware commit was successful,
+however, activation of the firmware image
+requires a conventional reset.
+.IP "NVME_SC_INVALID_QUEUE" 12
+Invalid Queue Deletion: Invalid I/O
+Completion Queue specified to delete.
+.IP "NVME_SC_FEATURE_NOT_SAVEABLE" 12
+Feature Identifier Not Saveable: The
+Feature Identifier specified does not
+support a saveable value.
+.IP "NVME_SC_FEATURE_NOT_CHANGEABLE" 12
+Feature Not Changeable: The Feature
+Identifier is not able to be changed.
+.IP "NVME_SC_FEATURE_NOT_PER_NS" 12
+Feature Not Namespace Specific: The
+Feature Identifier specified is not
+namespace specific. The Feature
+Identifier settings apply across all
+namespaces.
+.IP "NVME_SC_FW_NEEDS_SUBSYS_RESET" 12
+Firmware Activation Requires NVM
+Subsystem Reset: The firmware commit was
+successful, however, activation of the
+firmware image requires an NVM Subsystem.
+.IP "NVME_SC_FW_NEEDS_RESET" 12
+Firmware Activation Requires Controller
+Level Reset: The firmware commit was
+successful; however, the image specified
+does not support being activated without
+a reset.
+.IP "NVME_SC_FW_NEEDS_MAX_TIME" 12
+Firmware Activation Requires Maximum Time
+Violation: The image specified if
+activated immediately would exceed the
+Maximum Time for Firmware Activation
+(MTFA) value reported in Identify
+Controller.
+.IP "NVME_SC_FW_ACTIVATE_PROHIBITED" 12
+Firmware Activation Prohibited: The image
+specified is being prohibited from
+activation by the controller for vendor
+specific reasons.
+.IP "NVME_SC_OVERLAPPING_RANGE" 12
+Overlapping Range: The downloaded
+firmware image has overlapping ranges.
+.IP "NVME_SC_NS_INSUFFICIENT_CAP" 12
+Namespace Insufficient Capacity: Creating
+the namespace requires more free space
+than is currently available.
+.IP "NVME_SC_NS_ID_UNAVAILABLE" 12
+Namespace Identifier Unavailable: The
+number of namespaces supported has been
+exceeded.
+.IP "NVME_SC_NS_ALREADY_ATTACHED" 12
+Namespace Already Attached: The
+controller is already attached to the
+namespace specified.
+.IP "NVME_SC_NS_IS_PRIVATE" 12
+Namespace Is Private: The namespace is
+private and is already attached to one
+controller.
+.IP "NVME_SC_NS_NOT_ATTACHED" 12
+Namespace Not Attached: The request to
+detach the controller could not be
+completed because the controller is not
+attached to the namespace.
+.IP "NVME_SC_THIN_PROV_NOT_SUPP" 12
+Thin Provisioning Not Supported: Thin
+provisioning is not supported by the
+controller.
+.IP "NVME_SC_CTRL_LIST_INVALID" 12
+Controller List Invalid: The controller
+list provided contains invalid controller
+ids.
+.IP "NVME_SC_SELF_TEST_IN_PROGRESS" 12
+Device Self-test In Progress: The controller
+or NVM subsystem already has a device
+self-test operation in process.
+.IP "NVME_SC_BP_WRITE_PROHIBITED" 12
+Boot Partition Write Prohibited: The
+command is trying to modify a locked Boot
+Partition.
+.IP "NVME_SC_INVALID_CTRL_ID" 12
+Invalid Controller Identifier:
+.IP "NVME_SC_INVALID_SEC_CTRL_STATE" 12
+Invalid Secondary Controller State
+.IP "NVME_SC_INVALID_CTRL_RESOURCES" 12
+Invalid Number of Controller Resources
+.IP "NVME_SC_INVALID_RESOURCE_ID" 12
+Invalid Resource Identifier
+.IP "NVME_SC_PMR_SAN_PROHIBITED" 12
+Sanitize Prohibited While Persistent
+Memory Region is Enabled
+.IP "NVME_SC_ANA_GROUP_ID_INVALID" 12
+ANA Group Identifier Invalid: The specified
+ANA Group Identifier (ANAGRPID) is not
+supported in the submitted command.
+.IP "NVME_SC_ANA_ATTACH_FAILED" 12
+ANA Attach Failed: The controller is not
+attached to the namespace as a result
+of an ANA condition.
+.IP "NVME_SC_INSUFFICIENT_CAP" 12
+Insufficient Capacity: Requested operation
+requires more free space than is currently
+available.
+.IP "NVME_SC_NS_ATTACHMENT_LIMIT_EXCEEDED" 12
+Namespace Attachment Limit Exceeded:
+Attaching the ns to a controller causes
+max number of ns attachments allowed
+to be exceeded.
+.IP "NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED" 12
+Prohibition of Command Execution
+Not Supported
+.IP "NVME_SC_IOCS_NOT_SUPPORTED" 12
+I/O Command Set Not Supported
+.IP "NVME_SC_IOCS_NOT_ENABLED" 12
+I/O Command Set Not Enabled
+.IP "NVME_SC_IOCS_COMBINATION_REJECTED" 12
+I/O Command Set Combination Rejected
+.IP "NVME_SC_INVALID_IOCS" 12
+Invalid I/O Command Set
+.IP "NVME_SC_ID_UNAVAILABLE" 12
+Identifier Unavailable
+.IP "NVME_SC_INVALID_DISCOVERY_INFO" 12
+The discovery information provided in
+one or more extended discovery
+information entries is not applicable
+for the type of entity selected in
+the Entity Type (ETYPE) field of the
+Discovery Information Management
+command data portion’s header.
+.IP "NVME_SC_ZONING_DATA_STRUCT_LOCKED" 12
+The requested Zoning data structure
+is locked on the CDC.
+.IP "NVME_SC_ZONING_DATA_STRUCT_NOTFND" 12
+The requested Zoning data structure
+does not exist on the CDC.
+.IP "NVME_SC_INSUFFICIENT_DISC_RES" 12
+The number of discover information
+entries provided in the data portion
+of the Discovery Information
+Management command for a registration
+task (i.e., TAS field cleared to 0h)
+exceeds the available capacity for
+new discovery information entries on
+the CDC or DDC. This may be a
+transient condition.
+.IP "NVME_SC_REQSTD_FUNCTION_DISABLED" 12
+Fabric Zoning is not enabled on the
+CDC
+.IP "NVME_SC_ZONEGRP_ORIGINATOR_INVLD" 12
+The NQN contained in the ZoneGroup
+Originator field does not match the
+Host NQN used by the DDC to connect
+to the CDC.
+.IP "NVME_SC_INVALID_CONTROLER_DATA_QUEUE" 12
+This error indicates that the
+specified Controller Data Queue
+Identifier is invalid for the controller
+processing the command.
+.IP "NVME_SC_NOT_ENOUGH_RESOURCES" 12
+This error indicates that there is not
+enough resources in the controller to
+process the command.
+.IP "NVME_SC_CONTROLLER_SUSPENDED" 12
+The operation requested is not allowed if
+the specified controller is suspended.
+.IP "NVME_SC_CONTROLLER_NOT_SUSPENDED" 12
+The operation requested is not allowed if
+the specified controller is not
+suspended.
+.IP "NVME_SC_CONTROLLER_DATA_QUEUE_FULL" 12
+The controller detected that a
+Controller Data Queue became full.
+.IP "NVME_SC_BAD_ATTRIBUTES" 12
+Conflicting Dataset Management Attributes
+.IP "NVME_SC_INVALID_PI" 12
+Invalid Protection Information
+.IP "NVME_SC_READ_ONLY" 12
+Attempted Write to Read Only Range
+.IP "NVME_SC_CMD_SIZE_LIMIT_EXCEEDED" 12
+Command Size Limit Exceeded
+.IP "NVME_SC_INCOMPATIBLE_NS" 12
+Incompatible Namespace or Format: At
+least one source namespace and the
+destination namespace have incompatible
+formats.
+.IP "NVME_SC_FAST_COPY_NOT_POSSIBLE" 12
+Fast Copy Not Possible: The Fast Copy
+Only (FCO) bit was set to ‘1’ in a Source
+Range entry and the controller was not
+able to use fast copy operations to copy
+the specified data.
+.IP "NVME_SC_OVERLAPPING_IO_RANGE" 12
+Overlapping I/O Range: A source logical
+block range overlaps the destination
+logical block range.
+.IP "NVME_SC_INSUFFICIENT_RESOURCES" 12
+Insufficient Resources: A resource
+shortage prevented the controller from
+performing the requested copy.
+.IP "NVME_SC_CONNECT_FORMAT" 12
+Incompatible Format: The NVM subsystem
+does not support the record format
+specified by the host.
+.IP "NVME_SC_CONNECT_CTRL_BUSY" 12
+Controller Busy: The controller is
+already associated with a host.
+.IP "NVME_SC_CONNECT_INVALID_PARAM" 12
+Connect Invalid Parameters: One or more
+of the command parameters.
+.IP "NVME_SC_CONNECT_RESTART_DISC" 12
+Connect Restart Discovery: The NVM
+subsystem requested is not available.
+.IP "NVME_SC_CONNECT_INVALID_HOST" 12
+Connect Invalid Host: The host is either
+not allowed to establish an association
+to any controller in the NVM subsystem or
+the host is not allowed to establish an
+association to the specified controller
+.IP "NVME_SC_DISCONNECT_INVALID_QTYPE" 12
+Invalid Queue Type: The command was sent
+on the wrong queue type.
+.IP "NVME_SC_DISCOVERY_RESTART" 12
+Discover Restart: The snapshot of the
+records is now invalid or out of date.
+.IP "NVME_SC_AUTH_REQUIRED" 12
+Authentication Required: NVMe in-band
+authentication is required and the queue
+has not yet been authenticated.
+.IP "NVME_SC_ZNS_INVALID_OP_REQUEST" 12
+Invalid Zone Operation Request:
+The operation requested is invalid. This may be due to
+various conditions, including: attempting to allocate a
+ZRWA when a zone is not in the ZSE:Empty state; or
+invalid Flush Explicit ZRWA Range Send Zone Action
+operation.
+.IP "NVME_SC_ZNS_ZRWA_RESOURCES_UNAVAILABLE" 12
+ZRWA Resources Unavailable:
+No ZRWAs are available.
+.IP "NVME_SC_ZNS_BOUNDARY_ERROR" 12
+Zone Boundary Error: The command specifies
+logical blocks in more than one zone.
+.IP "NVME_SC_ZNS_FULL" 12
+Zone Is Full: The accessed zone is in the
+ZSF:Full state.
+.IP "NVME_SC_ZNS_READ_ONLY" 12
+Zone Is Read Only: The accessed zone is
+in the ZSRO:Read Only state.
+.IP "NVME_SC_ZNS_OFFLINE" 12
+Zone Is Offline: The accessed zone is
+in the ZSO:Offline state.
+.IP "NVME_SC_ZNS_INVALID_WRITE" 12
+Zone Invalid Write: The write to a zone
+was not at the write pointer.
+.IP "NVME_SC_ZNS_TOO_MANY_ACTIVE" 12
+Too Many Active Zones: The controller
+does not allow additional active zones.
+.IP "NVME_SC_ZNS_TOO_MANY_OPENS" 12
+Too Many Open Zones: The controller does
+not allow additional open zones.
+.IP "NVME_SC_ZNS_INVAL_TRANSITION" 12
+Invalid Zone State Transition: The request
+is not a valid zone state transition.
+.IP "NVME_SC_WRITE_FAULT" 12
+Write Fault: The write data could not be
+committed to the media.
+.IP "NVME_SC_READ_ERROR" 12
+Unrecovered Read Error: The read data
+could not be recovered from the media.
+.IP "NVME_SC_GUARD_CHECK" 12
+End-to-end Guard Check Error: The command
+was aborted due to an end-to-end guard
+check failure.
+.IP "NVME_SC_APPTAG_CHECK" 12
+End-to-end Application Tag Check Error:
+The command was aborted due to an
+end-to-end application tag check failure.
+.IP "NVME_SC_REFTAG_CHECK" 12
+End-to-end Reference Tag Check Error: The
+command was aborted due to an end-to-end
+reference tag check failure.
+.IP "NVME_SC_COMPARE_FAILED" 12
+Compare Failure: The command failed due
+to a miscompare during a Compare command.
+.IP "NVME_SC_ACCESS_DENIED" 12
+Access Denied: Access to the namespace
+and/or LBA range is denied due to lack of
+access rights.
+.IP "NVME_SC_UNWRITTEN_BLOCK" 12
+Deallocated or Unwritten Logical Block:
+The command failed due to an attempt to
+read from or verify an LBA range
+containing a deallocated or unwritten
+logical block.
+.IP "NVME_SC_STORAGE_TAG_CHECK" 12
+End-to-End Storage Tag Check Error: The
+command was aborted due to an end-to-end
+storage tag check failure.
+.IP "NVME_SC_ANA_INTERNAL_PATH_ERROR" 12
+Internal Path Error: The command was not
+completed as the result of a controller
+internal error that is specific to the
+controller processing the command.
+.IP "NVME_SC_ANA_PERSISTENT_LOSS" 12
+Asymmetric Access Persistent Loss: The
+requested function (e.g., command) is not
+able to be performed as a result of the
+relationship between the controller and
+the namespace being in the ANA Persistent
+Loss state.
+.IP "NVME_SC_ANA_INACCESSIBLE" 12
+Asymmetric Access Inaccessible: The
+requested function (e.g., command) is not
+able to be performed as a result of the
+relationship between the controller and
+the namespace being in the ANA
+Inaccessible state.
+.IP "NVME_SC_ANA_TRANSITION" 12
+Asymmetric Access Transition: The
+requested function (e.g., command) is not
+able to be performed as a result of the
+relationship between the controller and
+the namespace transitioning between
+Asymmetric Namespace Access states.
+.IP "NVME_SC_CTRL_PATH_ERROR" 12
+Controller Pathing Error: A pathing error
+was detected by the controller.
+.IP "NVME_SC_HOST_PATH_ERROR" 12
+Host Pathing Error: A pathing error was
+detected by the host.
+.IP "NVME_SC_CMD_ABORTED_BY_HOST" 12
+Command Aborted By Host: The command was
+aborted as a result of host action.
+.IP "NVME_SC_CRD" 12
+Mask to get value of Command Retry Delay
+index
+.IP "NVME_SC_MORE" 12
+More bit. If set, more status information
+for this command as part of the Error
+Information log that may be retrieved with
+the Get Log Page command.
+.IP "NVME_SC_DNR" 12
+Do Not Retry bit. If set, if the same
+command is re-submitted to any controller
+in the NVM subsystem, then that
+re-submitted command is expected to fail.

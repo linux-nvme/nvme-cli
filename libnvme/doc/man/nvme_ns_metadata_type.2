@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_ns_metadata_type" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_ns_metadata_type \- Namespace Metadata Element Types
+.SH SYNOPSIS
+enum nvme_ns_metadata_type {
+.br
+.BI "    NVME_NS_METADATA_OS_NS_NAME"
+, 
+.br
+.br
+.BI "    NVME_NS_METADATA_PRE_BOOT_NS_NAME"
+, 
+.br
+.br
+.BI "    NVME_NS_METADATA_OS_NS_QUAL_1"
+, 
+.br
+.br
+.BI "    NVME_NS_METADATA_OS_NS_QUAL_2"
+
+};
+.SH Constants
+.IP "NVME_NS_METADATA_OS_NS_NAME" 12
+Name of the namespace in the
+operating system
+.IP "NVME_NS_METADATA_PRE_BOOT_NS_NAME" 12
+Name of the namespace in the pre-boot
+environment.
+.IP "NVME_NS_METADATA_OS_NS_QUAL_1" 12
+First qualifier of the Operating System
+Namespace Name.
+.IP "NVME_NS_METADATA_OS_NS_QUAL_2" 12
+Second qualifier of the Operating System
+Namespace Name.

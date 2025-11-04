@@ -1,0 +1,235 @@
+.TH "libnvme" 9 "struct nvme_smart_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_smart_log \- SMART / Health Information Log (Log Identifier 02h)
+.SH SYNOPSIS
+struct nvme_smart_log {
+.br
+.BI "    __u8 critical_warning;"
+.br
+.BI "    __u8 temperature[2];"
+.br
+.BI "    __u8 avail_spare;"
+.br
+.BI "    __u8 spare_thresh;"
+.br
+.BI "    __u8 percent_used;"
+.br
+.BI "    __u8 endu_grp_crit_warn_sumry;"
+.br
+.BI "    __u8 rsvd7[25];"
+.br
+.BI "    __u8 data_units_read[16];"
+.br
+.BI "    __u8 data_units_written[16];"
+.br
+.BI "    __u8 host_reads[16];"
+.br
+.BI "    __u8 host_writes[16];"
+.br
+.BI "    __u8 ctrl_busy_time[16];"
+.br
+.BI "    __u8 power_cycles[16];"
+.br
+.BI "    __u8 power_on_hours[16];"
+.br
+.BI "    __u8 unsafe_shutdowns[16];"
+.br
+.BI "    __u8 media_errors[16];"
+.br
+.BI "    __u8 num_err_log_entries[16];"
+.br
+.BI "    __le32 warning_temp_time;"
+.br
+.BI "    __le32 critical_comp_time;"
+.br
+.BI "    __le16 temp_sensor[8];"
+.br
+.BI "    __le32 thm_temp1_trans_count;"
+.br
+.BI "    __le32 thm_temp2_trans_count;"
+.br
+.BI "    __le32 thm_temp1_total_time;"
+.br
+.BI "    __le32 thm_temp2_total_time;"
+.br
+.BI "    __u8 rsvd232[280];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "critical_warning" 12
+This field indicates critical warnings for the state
+of the controller. Critical warnings may result in an
+asynchronous event notification to the host. Bits in
+this field represent the current associated state and
+are not persistent (see \fIenum nvme_smart_crit\fP).
+.IP "temperature" 12
+Composite Temperature: Contains a value corresponding
+to a temperature in Kelvins that represents the current
+composite temperature of the controller and namespace(s)
+associated with that controller. The manner in which
+this value is computed is implementation specific and
+may not represent the actual temperature of any physical
+point in the NVM subsystem. Warning and critical
+overheating composite temperature threshold values are
+reported by the WCTEMP and CCTEMP fields in the Identify
+Controller data structure.
+.IP "avail_spare" 12
+Available Spare: Contains a normalized percentage (0%
+to 100%) of the remaining spare capacity available.
+.IP "spare_thresh" 12
+Available Spare Threshold: When the Available Spare
+falls below the threshold indicated in this field, an
+asynchronous event completion may occur. The value is
+indicated as a normalized percentage (0% to 100%).
+The values 101 to 255 are reserved.
+.IP "percent_used" 12
+Percentage Used: Contains a vendor specific estimate
+of the percentage of NVM subsystem life used based on
+the actual usage and the manufacturer's prediction of
+NVM life. A value of 100 indicates that the estimated
+endurance of the NVM in the NVM subsystem has been
+consumed, but may not indicate an NVM subsystem failure.
+The value is allowed to exceed 100. Percentages greater
+than 254 shall be represented as 255. This value shall
+be updated once per power-on hour (when the controller
+is not in a sleep state).
+.IP "endu_grp_crit_warn_sumry" 12
+Endurance Group Critical Warning Summary: This field
+indicates critical warnings for the state of Endurance
+Groups. Bits in this field represent the current associated
+state and are not persistent (see \fIenum nvme_smart_egcw\fP).
+.IP "rsvd7" 12
+Reserved
+.IP "data_units_read" 12
+Data Units Read: Contains the number of 512 byte data
+units the host has read from the controller; this value
+does not include metadata. This value is reported in
+thousands (i.e., a value of 1 corresponds to 1000
+units of 512 bytes read) and is rounded up (e.g., one
+indicates the that number of 512 byte data units read
+is from 1 to 1000, three indicates that the number of
+512 byte data units read is from 2001 to 3000). When
+the LBA size is a value other than 512 bytes, the
+controller shall convert the amount of data read to
+512 byte units. For the NVM command set, logical blocks
+read as part of Compare, Read, and Verify operations
+shall be included in this value. A value of 0h in
+this field indicates that the number of Data Units Read
+is not reported.
+.IP "data_units_written" 12
+Data Units Written: Contains the number of 512 byte
+data units the host has written to the controller;
+this value does not include metadata. This value is
+reported in thousands (i.e., a value of 1 corresponds
+to 1000 units of 512 bytes written) and is rounded up
+(e.g., one indicates that the number of 512 byte data
+units written is from 1 to 1,000, three indicates that
+the number of 512 byte data units written is from 2001
+to 3000). When the LBA size is a value other than 512
+bytes, the controller shall convert the amount of data
+written to 512 byte units. For the NVM command set,
+logical blocks written as part of Write operations shall
+be included in this value. Write Uncorrectable commands
+and Write Zeroes commands shall not impact this value.
+A value of 0h in this field indicates that the number
+of Data Units Written is not reported.
+.IP "host_reads" 12
+Host Read Commands: Contains the number of read commands
+completed by the controller. For the NVM command set,
+this value is the sum of the number of Compare commands
+and the number of Read commands.
+.IP "host_writes" 12
+Host Write Commands: Contains the number of write
+commands completed by the controller. For the NVM
+command set, this is the number of Write commands.
+.IP "ctrl_busy_time" 12
+Controller Busy Time: Contains the amount of time the
+controller is busy with I/O commands. The controller
+is busy when there is a command outstanding to an I/O
+Queue (specifically, a command was issued via an I/O
+Submission Queue Tail doorbell write and the corresponding
+completion queue entry has not been posted yet to the
+associated I/O Completion Queue). This value is
+reported in minutes.
+.IP "power_cycles" 12
+Power Cycles: Contains the number of power cycles.
+.IP "power_on_hours" 12
+Power On Hours: Contains the number of power-on hours.
+This may not include time that the controller was
+powered and in a non-operational power state.
+.IP "unsafe_shutdowns" 12
+Unsafe Shutdowns: Contains the number of unsafe
+shutdowns. This count is incremented when a Shutdown
+Notification (CC.SHN) is not received prior to loss of power.
+.IP "media_errors" 12
+Media and Data Integrity Errors: Contains the number
+of occurrences where the controller detected an
+unrecovered data integrity error. Errors such as
+uncorrectable ECC, CRC checksum failure, or LBA tag
+mismatch are included in this field. Errors introduced
+as a result of a Write Uncorrectable command may or
+may not be included in this field.
+.IP "num_err_log_entries" 12
+Number of Error Information Log Entries: Contains the
+number of Error Information log entries over the life
+of the controller.
+.IP "warning_temp_time" 12
+Warning Composite Temperature Time: Contains the amount
+of time in minutes that the controller is operational
+and the Composite Temperature is greater than or equal
+to the Warning Composite Temperature Threshold (WCTEMP)
+field and less than the Critical Composite Temperature
+Threshold (CCTEMP) field in the Identify Controller
+data structure. If the value of the WCTEMP or CCTEMP
+field is 0h, then this field is always cleared to 0h
+regardless of the Composite Temperature value.
+.IP "critical_comp_time" 12
+Critical Composite Temperature Time: Contains the amount
+of time in minutes that the controller is operational
+and the Composite Temperature is greater than or equal
+to the Critical Composite Temperature Threshold (CCTEMP)
+field in the Identify Controller data structure. If
+the value of the CCTEMP field is 0h, then this field
+is always cleared to 0h regardless of the Composite
+Temperature value.
+.IP "temp_sensor" 12
+Temperature Sensor 1-8: Contains the current temperature
+in degrees Kelvin reported by temperature sensors 1-8.
+The physical point in the NVM subsystem whose temperature
+is reported by the temperature sensor and the temperature
+accuracy is implementation specific. An implementation
+that does not implement the temperature sensor reports
+a value of 0h.
+.IP "thm_temp1_trans_count" 12
+Thermal Management Temperature 1 Transition Count:
+Contains the number of times the controller transitioned
+to lower power active power states or performed vendor
+specific thermal management actions while minimizing
+the impact on performance in order to attempt to reduce
+the Composite Temperature because of the host controlled
+thermal management feature (i.e., the Composite
+Temperature rose above the Thermal Management
+Temperature 1). This counter shall not wrap once the
+value FFFFFFFFh is reached. A value of 0h, indicates
+that this transition has never occurred or this field
+is not implemented.
+.IP "thm_temp2_trans_count" 12
+Thermal Management Temperature 2 Transition Count
+.IP "thm_temp1_total_time" 12
+Total Time For Thermal Management Temperature 1:
+Contains the number of seconds that the controller
+had transitioned to lower power active power states or
+performed vendor specific thermal management actions
+while minimizing the impact on performance in order to
+attempt to reduce the Composite Temperature because of
+the host controlled thermal management feature. This
+counter shall not wrap once the value FFFFFFFFh is
+reached. A value of 0h, indicates that this transition
+has never occurred or this field is not implemented.
+.IP "thm_temp2_total_time" 12
+Total Time For Thermal Management Temperature 2
+.IP "rsvd232" 12
+Reserved

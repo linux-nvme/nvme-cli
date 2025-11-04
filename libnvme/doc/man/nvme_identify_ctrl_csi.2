@@ -1,0 +1,22 @@
+.TH "nvme_identify_ctrl_csi" 9 "nvme_identify_ctrl_csi" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_identify_ctrl_csi \- I/O command set specific Identify Controller data
+.SH SYNOPSIS
+.B "int" nvme_identify_ctrl_csi
+.BI "(int fd "  ","
+.BI "enum nvme_csi csi "  ","
+.BI "void *data "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "csi" 12
+Command Set Identifier
+.IP "data" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+An I/O Command Set specific Identify Controller data structure is returned
+to the host for the controller processing the command. The specific Identify
+Controller data structure to be returned is specified by \fIcsi\fP.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

@@ -1,0 +1,22 @@
+.TH "nvmf_register_ctrl" 9 "nvmf_register_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_register_ctrl \- Perform registration task with a DC
+.SH SYNOPSIS
+.B "int" nvmf_register_ctrl
+.BI "(nvme_ctrl_t c "  ","
+.BI "enum nvmf_dim_tas tas "  ","
+.BI "__u32 *result "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.IP "tas" 12
+Task field of the Command Dword 10 (cdw10). Indicates whether to
+perform a Registration, Deregistration, or Registration-update.
+.IP "result" 12
+The command-specific result returned by the DC upon command
+completion.
+.SH "DESCRIPTION"
+Perform registration task with a Discovery Controller (DC). Three
+tasks are supported: register, deregister, and registration update.
+.SH "RETURN"
+0 on success; on failure -1 is returned and errno is set

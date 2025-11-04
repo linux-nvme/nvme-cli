@@ -1,0 +1,63 @@
+.TH "libnvme" 9 "struct nvme_change_ns_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_change_ns_event \- Change Namespace Event Data
+.SH SYNOPSIS
+struct nvme_change_ns_event {
+.br
+.BI "    __le32 nsmgt_cdw10;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    __le64 nsze;"
+.br
+.BI "    __u8 rsvd16[8];"
+.br
+.BI "    __le64 nscap;"
+.br
+.BI "    __u8 flbas;"
+.br
+.BI "    __u8 dps;"
+.br
+.BI "    __u8 nmic;"
+.br
+.BI "    __u8 rsvd35;"
+.br
+.BI "    __le32 ana_grp_id;"
+.br
+.BI "    __le16 nvmset_id;"
+.br
+.BI "    __le16 rsvd42;"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsmgt_cdw10" 12
+Namespace Management CDW10
+.IP "rsvd4" 12
+Reserved
+.IP "nsze" 12
+Namespace Size
+.IP "rsvd16" 12
+Reserved
+.IP "nscap" 12
+Namespace Capacity
+.IP "flbas" 12
+Formatted LBA Size
+.IP "dps" 12
+End-to-end Data Protection Type Settings
+.IP "nmic" 12
+Namespace Multi-path I/O and Namespace Sharing Capabilities
+.IP "rsvd35" 12
+Reserved
+.IP "ana_grp_id" 12
+ANA Group Identifier
+.IP "nvmset_id" 12
+NVM Set Identifier
+.IP "rsvd42" 12
+Reserved
+.IP "nsid" 12
+Namespace ID

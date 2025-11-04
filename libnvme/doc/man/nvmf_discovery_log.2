@@ -1,0 +1,38 @@
+.TH "libnvme" 9 "struct nvmf_discovery_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvmf_discovery_log \- Discovery Log Page (Log Identifier 70h)
+.SH SYNOPSIS
+struct nvmf_discovery_log {
+.br
+.BI "    __le64 genctr;"
+.br
+.BI "    __le64 numrec;"
+.br
+.BI "    __le16 recfmt;"
+.br
+.BI "    __u8 rsvd14[1006];"
+.br
+.BI "    struct nvmf_disc_log_entry entries[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "genctr" 12
+Generation Counter (GENCTR): Indicates the version of the discovery
+information, starting at a value of 0h. For each change in the
+Discovery Log Page, this counter is incremented by one. If the value
+of this field is FFFFFFFF_FFFFFFFFh, then the field shall be cleared
+to 0h when incremented (i.e., rolls over to 0h).
+.IP "numrec" 12
+Number of Records (NUMREC): Indicates the number of records
+contained in the log.
+.IP "recfmt" 12
+Record Format (RECFMT): Specifies the format of the Discovery Log
+Page. If a new format is defined, this value is incremented by one.
+The format of the record specified in this definition shall be 0h.
+.IP "rsvd14" 12
+Reserved
+.IP "entries" 12
+Discovery Log Page Entries - see \fIstruct nvmf_disc_log_entry\fP.

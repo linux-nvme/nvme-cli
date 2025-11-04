@@ -1,0 +1,21 @@
+.TH "nvme_mi_admin_identify_ns" 9 "nvme_mi_admin_identify_ns" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_identify_ns \- Perform an Admin identify command for a namespace
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_identify_ns
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_id_ns *ns "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to process identify command
+.IP "nsid" 12
+namespace ID
+.IP "ns" 12
+Namespace identification to populate
+.SH "DESCRIPTION"
+Perform an Identify (namespace) command, setting the namespace id data
+in \fIns\fP. The namespace is expected to active and allocated.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

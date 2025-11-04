@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_data_tfr" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_data_tfr \- Data transfer direction of the command
+.SH SYNOPSIS
+enum nvme_data_tfr {
+.br
+.BI "    NVME_DATA_TFR_NO_DATA_TFR"
+, 
+.br
+.br
+.BI "    NVME_DATA_TFR_HOST_TO_CTRL"
+, 
+.br
+.br
+.BI "    NVME_DATA_TFR_CTRL_TO_HOST"
+, 
+.br
+.br
+.BI "    NVME_DATA_TFR_BIDIRECTIONAL"
+
+};
+.SH Constants
+.IP "NVME_DATA_TFR_NO_DATA_TFR" 12
+No data transfer
+.IP "NVME_DATA_TFR_HOST_TO_CTRL" 12
+Host to controller
+.IP "NVME_DATA_TFR_CTRL_TO_HOST" 12
+Controller to host
+.IP "NVME_DATA_TFR_BIDIRECTIONAL" 12
+Bidirectional

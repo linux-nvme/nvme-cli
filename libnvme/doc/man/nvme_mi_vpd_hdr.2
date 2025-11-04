@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "struct nvme_mi_vpd_hdr" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_vpd_hdr \- Vital Product Data Common Header
+.SH SYNOPSIS
+struct nvme_mi_vpd_hdr {
+.br
+.BI "    __u8 ipmiver;"
+.br
+.BI "    __u8 iuaoff;"
+.br
+.BI "    __u8 ciaoff;"
+.br
+.BI "    __u8 biaoff;"
+.br
+.BI "    __u8 piaoff;"
+.br
+.BI "    __u8 mrioff;"
+.br
+.BI "    __u8 rsvd6;"
+.br
+.BI "    __u8 chchk;"
+.br
+.BI "    __u8 vpd[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ipmiver" 12
+IPMI Format Version Number
+.IP "iuaoff" 12
+Internal Use Area Starting Offset
+.IP "ciaoff" 12
+Chassis Info Area Starting Offset
+.IP "biaoff" 12
+Board Info Area Starting Offset
+.IP "piaoff" 12
+Product Info Area Starting Offset
+.IP "mrioff" 12
+MultiRecord Info Area Starting Offset
+.IP "rsvd6" 12
+Reserved
+.IP "chchk" 12
+Common Header Checksum
+.IP "vpd" 12
+Vital Product Data

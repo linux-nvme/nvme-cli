@@ -1,0 +1,12 @@
+.TH "nvme_status_code" 9 "nvme_status_code" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_status_code \- Returns the NVMe Status Code
+.SH SYNOPSIS
+.B "__u16" nvme_status_code
+.BI "(__u16 status_field "  ");"
+.SH ARGUMENTS
+.IP "status_field" 12
+The NVMe Completion Queue Entry's Status Field
+See \fIenum nvme_status_field\fP
+.SH "RETURN"
+status code

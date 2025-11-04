@@ -1,0 +1,66 @@
+.TH "libnvme" 9 "enum nvme_cmic" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmic \- This field indicates the controller multi-path I/O and NS sharing capabilities
+.SH SYNOPSIS
+enum nvme_cmic {
+.br
+.BI "    NVME_CMIC_MULTI_PORT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_CTRL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_SRIOV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_ANA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_RSVD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_PORT_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_CTRL_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_SRIOV_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_ANA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMIC_MULTI_RSVD_MASK"
+
+};
+.SH Constants
+.IP "NVME_CMIC_MULTI_PORT_SHIFT" 12
+Shift amount to get the NVM subsystem port
+.IP "NVME_CMIC_MULTI_CTRL_SHIFT" 12
+Shift amount to get the controllers
+.IP "NVME_CMIC_MULTI_SRIOV_SHIFT" 12
+Shift amount to get the SR-IOV virtual function
+.IP "NVME_CMIC_MULTI_ANA_SHIFT" 12
+Shift amount to get the asymmetric namespace access reporting
+.IP "NVME_CMIC_MULTI_RSVD_SHIFT" 12
+Shift amount to get the reserved
+.IP "NVME_CMIC_MULTI_PORT_MASK" 12
+Mask to get the NVM subsystem port
+.IP "NVME_CMIC_MULTI_CTRL_MASK" 12
+Mask to get the controllers
+.IP "NVME_CMIC_MULTI_SRIOV_MASK" 12
+Mask to get the SR-IOV virtual function
+.IP "NVME_CMIC_MULTI_ANA_MASK" 12
+Mask to get the asymmetric namespace access reporting
+.IP "NVME_CMIC_MULTI_RSVD_MASK" 12
+Mask to get the reserved

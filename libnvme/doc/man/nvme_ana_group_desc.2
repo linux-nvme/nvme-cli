@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_ana_group_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_ana_group_desc \- ANA Group Descriptor
+.SH SYNOPSIS
+struct nvme_ana_group_desc {
+.br
+.BI "    __le32 grpid;"
+.br
+.BI "    __le32 nnsids;"
+.br
+.BI "    __le64 chgcnt;"
+.br
+.BI "    __u8 state;"
+.br
+.BI "    __u8 rsvd17[15];"
+.br
+.BI "    __le32 nsids[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "grpid" 12
+ANA group id
+.IP "nnsids" 12
+Number of namespaces in \fInsids\fP
+.IP "chgcnt" 12
+Change counter
+.IP "state" 12
+ANA state
+.IP "rsvd17" 12
+Reserved
+.IP "nsids" 12
+List of namespaces

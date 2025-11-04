@@ -1,0 +1,270 @@
+.TH "libnvme" 9 "enum nvme_features_id" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_features_id \- Features - Feature Identifiers
+.SH SYNOPSIS
+enum nvme_features_id {
+.br
+.BI "    NVME_FEAT_FID_ARBITRATION"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_POWER_MGMT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_LBA_RANGE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_TEMP_THRESH"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_ERR_RECOVERY"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_VOLATILE_WC"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_NUM_QUEUES"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_IRQ_COALESCE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_IRQ_CONFIG"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_WRITE_ATOMIC"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_ASYNC_EVENT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_AUTO_PST"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_HOST_MEM_BUF"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_TIMESTAMP"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_KATO"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_HCTM"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_NOPSC"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_RRL"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_PLM_CONFIG"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_PLM_WINDOW"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_LBA_STS_INTERVAL"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_HOST_BEHAVIOR"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_SANITIZE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_ENDURANCE_EVT_CFG"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_IOCS_PROFILE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_SPINUP_CONTROL"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_POWER_LOSS_SIGNAL"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_PERF_CHARACTERISTICS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_FDP"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_FDP_EVENTS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_NS_ADMIN_LABEL"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_KEY_VALUE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_CTRL_DATA_QUEUE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_ENH_CTRL_METADATA"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_CTRL_METADATA"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_NS_METADATA"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_SW_PROGRESS"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_HOST_ID"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_RESV_MASK"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_RESV_PERSIST"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_WRITE_PROTECT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_BP_WRITE_PROTECT"
+
+};
+.SH Constants
+.IP "NVME_FEAT_FID_ARBITRATION" 12
+Arbitration
+.IP "NVME_FEAT_FID_POWER_MGMT" 12
+Power Management
+.IP "NVME_FEAT_FID_LBA_RANGE" 12
+LBA Range Type
+.IP "NVME_FEAT_FID_TEMP_THRESH" 12
+Temperature Threshold
+.IP "NVME_FEAT_FID_ERR_RECOVERY" 12
+Error Recovery
+.IP "NVME_FEAT_FID_VOLATILE_WC" 12
+Volatile Write Cache
+.IP "NVME_FEAT_FID_NUM_QUEUES" 12
+Number of Queues
+.IP "NVME_FEAT_FID_IRQ_COALESCE" 12
+Interrupt Coalescing
+.IP "NVME_FEAT_FID_IRQ_CONFIG" 12
+Interrupt Vector Configuration
+.IP "NVME_FEAT_FID_WRITE_ATOMIC" 12
+Write Atomicity Normal
+.IP "NVME_FEAT_FID_ASYNC_EVENT" 12
+Asynchronous Event Configuration
+.IP "NVME_FEAT_FID_AUTO_PST" 12
+Autonomous Power State Transition
+.IP "NVME_FEAT_FID_HOST_MEM_BUF" 12
+Host Memory Buffer
+.IP "NVME_FEAT_FID_TIMESTAMP" 12
+Timestamp
+.IP "NVME_FEAT_FID_KATO" 12
+Keep Alive Timer
+.IP "NVME_FEAT_FID_HCTM" 12
+Host Controlled Thermal Management
+.IP "NVME_FEAT_FID_NOPSC" 12
+Non-Operational Power State Config
+.IP "NVME_FEAT_FID_RRL" 12
+Read Recovery Level Config
+.IP "NVME_FEAT_FID_PLM_CONFIG" 12
+Predictable Latency Mode Config
+.IP "NVME_FEAT_FID_PLM_WINDOW" 12
+Predictable Latency Mode Window
+.IP "NVME_FEAT_FID_LBA_STS_INTERVAL" 12
+LBA Status Information Report Interval
+.IP "NVME_FEAT_FID_HOST_BEHAVIOR" 12
+Host Behavior Support
+.IP "NVME_FEAT_FID_SANITIZE" 12
+Sanitize Config
+.IP "NVME_FEAT_FID_ENDURANCE_EVT_CFG" 12
+Endurance Group Event Configuration
+.IP "NVME_FEAT_FID_IOCS_PROFILE" 12
+I/O Command Set Profile
+.IP "NVME_FEAT_FID_SPINUP_CONTROL" 12
+Spinup Control
+.IP "NVME_FEAT_FID_POWER_LOSS_SIGNAL" 12
+Power Loss Signaling Config
+.IP "NVME_FEAT_FID_PERF_CHARACTERISTICS" 12
+Performance Characteristics
+.IP "NVME_FEAT_FID_FDP" 12
+Flexible Data Placement
+.IP "NVME_FEAT_FID_FDP_EVENTS" 12
+FDP Events
+.IP "NVME_FEAT_FID_NS_ADMIN_LABEL" 12
+Namespace Admin Label
+.IP "NVME_FEAT_FID_KEY_VALUE" 12
+Key Value Configuration
+.IP "NVME_FEAT_FID_CTRL_DATA_QUEUE" 12
+Controller Data Queue
+.IP "NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR" 12
+Embedded Management Controller Address
+.IP "NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR" 12
+Host Management Agent Address
+.IP "NVME_FEAT_FID_ENH_CTRL_METADATA" 12
+Enhanced Controller Metadata
+.IP "NVME_FEAT_FID_CTRL_METADATA" 12
+Controller Metadata
+.IP "NVME_FEAT_FID_NS_METADATA" 12
+Namespace Metadata
+.IP "NVME_FEAT_FID_SW_PROGRESS" 12
+Software Progress Marker
+.IP "NVME_FEAT_FID_HOST_ID" 12
+Host Identifier
+.IP "NVME_FEAT_FID_RESV_MASK" 12
+Reservation Notification Mask
+.IP "NVME_FEAT_FID_RESV_PERSIST" 12
+Reservation Persistence
+.IP "NVME_FEAT_FID_WRITE_PROTECT" 12
+Namespace Write Protection Config
+.IP "NVME_FEAT_FID_BP_WRITE_PROTECT" 12
+Boot Partition Write Protection Config

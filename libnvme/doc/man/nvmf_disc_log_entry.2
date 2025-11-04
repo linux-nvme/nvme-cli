@@ -1,0 +1,96 @@
+.TH "libnvme" 9 "struct nvmf_disc_log_entry" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvmf_disc_log_entry \- Discovery Log Page entry
+.SH SYNOPSIS
+struct nvmf_disc_log_entry {
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 adrfam;"
+.br
+.BI "    __u8 subtype;"
+.br
+.BI "    __u8 treq;"
+.br
+.BI "    __le16 portid;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le16 asqsz;"
+.br
+.BI "    __le16 eflags;"
+.br
+.BI "    __u8 rsvd12[20];"
+.br
+.BI "    char trsvcid[NVMF_TRSVCID_SIZE];"
+.br
+.BI "    __u8 rsvd64[192];"
+.br
+.BI "    char subnqn[NVME_NQN_LENGTH];"
+.br
+.BI "    char traddr[NVMF_TRADDR_SIZE];"
+.br
+.BI "    union nvmf_tsas tsas;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "trtype" 12
+Transport Type (TRTYPE): Specifies the NVMe Transport type.
+See \fIenum nvmf_trtype\fP.
+.IP "adrfam" 12
+Address Family (ADRFAM): Specifies the address family.
+See \fIenum nvmf_addr_family\fP.
+.IP "subtype" 12
+Subsystem Type (SUBTYPE): Specifies the type of the NVM subsystem
+that is indicated in this entry. See \fIenum nvme_subsys_type\fP.
+.IP "treq" 12
+Transport Requirements (TREQ): Indicates requirements for the NVMe
+Transport. See \fIenum nvmf_treq\fP.
+.IP "portid" 12
+Port ID (PORTID): Specifies a particular NVM subsystem port.
+Different NVMe Transports or address families may utilize the same
+Port ID value (e.g. a Port ID may support both iWARP and RoCE).
+.IP "cntlid" 12
+Controller ID (CNTLID): Specifies the controller ID. If the NVM
+subsystem uses a dynamic controller model, then this field shall
+be set to FFFFh. If the NVM subsystem uses a static controller model,
+then this field may be set to a specific controller ID (values 0h
+to FFEFh are valid). If the NVM subsystem uses a static controller
+model and the value indicated is FFFEh, then the host should remember
+the Controller ID returned as part of the Fabrics Connect command
+in order to re-establish an association in the future with the same
+controller.
+.IP "asqsz" 12
+Admin Max SQ Size (ASQSZ): Specifies the maximum size of an Admin
+Submission Queue. This applies to all controllers in the NVM
+subsystem. The value shall be a minimum of 32 entries.
+.IP "eflags" 12
+Entry Flags (EFLAGS): Indicates additional information related to
+the current entry. See \fIenum nvmf_disc_eflags\fP.
+.IP "rsvd12" 12
+Reserved
+.IP "trsvcid" 12
+Transport Service Identifier (TRSVCID): Specifies the NVMe Transport
+service identifier as an ASCII string. The NVMe Transport service
+identifier is specified by the associated NVMe Transport binding
+specification.
+.IP "rsvd64" 12
+Reserved
+.IP "subnqn" 12
+NVM Subsystem Qualified Name (SUBNQN): NVMe Qualified Name (NQN)
+that uniquely identifies the NVM subsystem. For a subsystem, if that
+Discovery subsystem has a unique NQN (i.e., the NVM Subsystem NVMe
+Qualified Name (SUBNQN) field in that Discovery subsystem's Identify
+Controller data structure contains a unique NQN value), then the
+value returned shall be that unique NQN. If the Discovery subsystem
+does not have a unique NQN, then the value returned shall be the
+well-known Discovery Service NQN (nqn.2014-08.org.nvmexpress.discovery).
+.IP "traddr" 12
+Transport Address (TRADDR): Specifies the address of the NVM subsystem
+that may be used for a Connect command as an ASCII string. The
+Address Family field describes the reference for parsing this field.
+.IP "tsas" 12
+Transport specific attribute settings

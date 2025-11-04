@@ -1,0 +1,23 @@
+.TH "nvme_mi_admin_get_log_zns_changed_zones" 9 "nvme_mi_admin_get_log_zns_changed_zones" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_log_zns_changed_zones \- Retrieve list of zones that have changed
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_log_zns_changed_zones
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "__u32 nsid "  ","
+.BI "bool rae "  ","
+.BI "struct nvme_zns_changed_zone_log *log "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "nsid" 12
+Namespace ID
+.IP "rae" 12
+Retain asynchronous events
+.IP "log" 12
+User address to store the changed zone log
+.SH "DESCRIPTION"
+The list of zones that have changed state due to an exceptional event.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

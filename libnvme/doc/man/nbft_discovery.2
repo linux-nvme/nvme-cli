@@ -1,0 +1,71 @@
+.TH "libnvme" 9 "struct nbft_discovery" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nbft_discovery \- Discovery Descriptor (Figure 24)
+.SH SYNOPSIS
+struct nbft_discovery {
+.br
+.BI "    __u8 structure_id;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u8 index;"
+.br
+.BI "    __u8 hfi_index;"
+.br
+.BI "    __u8 sec_index;"
+.br
+.BI "    __u8 reserved1;"
+.br
+.BI "    struct nbft_heap_obj discovery_ctrl_addr_obj;"
+.br
+.BI "    struct nbft_heap_obj discovery_ctrl_nqn_obj;"
+.br
+.BI "    __u8 reserved2[14];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "structure_id" 12
+Structure ID: This field shall be set to 6h
+(i.e., Discovery Descriptor; #NBFT_DESC_DISCOVERY).
+.IP "flags" 12
+Discovery Descriptor Flags, see \fIenum nbft_discovery_flags\fP.
+.IP "index" 12
+Discovery Descriptor Index: This field indicates
+the number of this Discovery Descriptor in
+the Discovery Descriptor List.
+.IP "hfi_index" 12
+HFI Descriptor Index: This field indicates the value
+of the HFI Descriptor Index field of the HFI Descriptor
+associated with this Discovery Descriptor. If multiple
+HFIs share a common Discovery controller, there shall
+be multiple Discovery Descriptor entries with one per HFI.
+.IP "sec_index" 12
+Security Profile Descriptor Index: This field indicates
+the value of the Security Profile Descriptor Index
+field of the Security Descriptor associated with
+this Discovery Descriptor.
+.IP "reserved1" 12
+Reserved.
+.IP "discovery_ctrl_addr_obj" 12
+Discovery Controller Address Heap Object Reference:
+This field indicates the location and size of a heap
+object containing a URI which indicates an NVMe Discovery
+controller associated with this Discovery Descriptor.
+If this field is cleared to 0h, then no URI is specified.
+.IP "discovery_ctrl_nqn_obj" 12
+Discovery Controller NQN Heap Object Reference:
+If set to a non-zero value, this field indicates
+the location and size of a heap object containing
+an NVMe Discovery controller NQN. If the NVMe Discovery
+controller referenced by this record requires secure
+authentication with a well known Subsystem NQN, this
+field indicates the unique NQN for that NVMe Discovery
+controller. This record is involved formatted as an NQN
+string. If this field is cleared to 0h, then this
+field is reserved and the OS shall use the well
+known discovery NQN for this record.
+.IP "reserved2" 12
+Reserved.

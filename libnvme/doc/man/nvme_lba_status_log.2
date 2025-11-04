@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_lba_status_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lba_status_log \- LBA Status Information Log
+.SH SYNOPSIS
+struct nvme_lba_status_log {
+.br
+.BI "    __le32 lslplen;"
+.br
+.BI "    __le32 nlslne;"
+.br
+.BI "    __le32 estulb;"
+.br
+.BI "    __u8 rsvd12[2];"
+.br
+.BI "    __le16 lsgc;"
+.br
+.BI "    struct nvme_lbas_ns_element elements[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lslplen" 12
+LBA Status Log Page Length
+.IP "nlslne" 12
+Number of LBA Status Log Namespace Elements
+.IP "estulb" 12
+Estimate of Unrecoverable Logical Blocks
+.IP "rsvd12" 12
+Reserved
+.IP "lsgc" 12
+LBA Status Generation Counter
+.IP "elements" 12
+LBA Status Log Namespace Element List

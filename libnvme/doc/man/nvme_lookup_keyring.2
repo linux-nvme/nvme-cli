@@ -1,0 +1,14 @@
+.TH "nvme_lookup_keyring" 9 "nvme_lookup_keyring" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_lookup_keyring \- Lookup keyring serial number
+.SH SYNOPSIS
+.B "long" nvme_lookup_keyring
+.BI "(const char *keyring "  ");"
+.SH ARGUMENTS
+.IP "keyring" 12
+Keyring name
+.SH "DESCRIPTION"
+Looks up the serial number of the keyring \fIkeyring\fP.
+.SH "RETURN"
+The key serial number of the keyring
+or 0 with errno set otherwise.

@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_mi_mi_req_hdr" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_mi_req_hdr \- MI request message header.
+.SH SYNOPSIS
+struct nvme_mi_mi_req_hdr {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    __u8 opcode;"
+.br
+.BI "    __u8 rsvd0[3];"
+.br
+.BI "    __le32 cdw0, cdw1;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+generic MI message header
+.IP "opcode" 12
+opcode (OPC) for the specific MI command
+.IP "rsvd0" 12
+reserved bytes
+.IP "cdw0" 12
+Management Request Doubleword 0 - command specific usage
+.IP "cdw1" 12
+Management Request Doubleword 1 - command specific usage
+.SH "Description"
+Wire format for MI request message headers, defined in section 5 of NVMe-MI.

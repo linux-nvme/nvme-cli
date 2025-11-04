@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_lm_io_completion_queue_data" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_io_completion_queue_data \- I/O Completion Queue data structure. Fields related to the contents of Create I/O Completion Queue command that created an I/O Completion Queue.
+.SH SYNOPSIS
+struct nvme_lm_io_completion_queue_data {
+.br
+.BI "    __le64 iocqprp1;"
+.br
+.BI "    __le16 iocqqsize;"
+.br
+.BI "    __le16 iocqqid;"
+.br
+.BI "    __le16 iocqhp;"
+.br
+.BI "    __le16 iocqtp;"
+.br
+.BI "    __le32 iocqa;"
+.br
+.BI "    __u8 rsvd20[4];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "iocqprp1" 12
+I/O Completion Queue PRP Entry 1 (IOCQPRP1)
+.IP "iocqqsize" 12
+I/O Completion Queue Size (IOCQQSIZE)
+.IP "iocqqid" 12
+I/O Completion Queue Identifier (IOCQQID)
+.IP "iocqhp" 12
+I/O Completion Queue Head Pointer (IOCQHP)
+.IP "iocqtp" 12
+I/O Completion Queue Tail Pointer (IOCQTP)
+.IP "iocqa" 12
+I/O Completion Queue Attributes (IOCQA)
+.IP "rsvd20" 12
+Reserved

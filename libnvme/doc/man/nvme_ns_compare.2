@@ -1,0 +1,20 @@
+.TH "nvme_ns_compare" 9 "nvme_ns_compare" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ns_compare \- Compare data on a namespace
+.SH SYNOPSIS
+.B "int" nvme_ns_compare
+.BI "(nvme_ns_t n "  ","
+.BI "void *buf "  ","
+.BI "off_t offset "  ","
+.BI "size_t count "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.IP "buf" 12
+Buffer with data to be compared
+.IP "offset" 12
+LBA offset of \fIn\fP
+.IP "count" 12
+Number of sectors in \fIbuf\fP
+.SH "RETURN"
+Number of sectors compared

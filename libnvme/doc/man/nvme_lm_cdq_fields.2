@@ -1,0 +1,116 @@
+.TH "libnvme" 9 "enum nvme_lm_cdq_fields" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_lm_cdq_fields \- Controller Data Queue command fields
+.SH SYNOPSIS
+enum nvme_lm_cdq_fields {
+.br
+.BI "    NVME_LM_CDQ_MOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_CDQ_MOS_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_CDQ_SEL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_CDQ_SEL_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_CREATE_CDQ"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_DELETE_CDQ"
+, 
+.br
+.br
+.BI "    NVME_LM_QT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_QT_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_CQS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_CQS_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_QT_USER_DATA_MIGRATION_QUEUE"
+, 
+.br
+.br
+.BI "    NVME_LM_CREATE_CDQ_PC"
+, 
+.br
+.br
+.BI "    NVME_LM_CREATE_CDQ_CNTLID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_CREATE_CDQ_CNTLID_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_DELETE_CDQ_CDQID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_DELETE_CDQ_CDQID_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_CREATE_CDQ_CDQID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_CREATE_CDQ_CDQID_MASK"
+
+};
+.SH Constants
+.IP "NVME_LM_CDQ_MOS_SHIFT" 12
+Shift to set Management Operation Specific (MOS) field
+.IP "NVME_LM_CDQ_MOS_MASK" 12
+Mask to set MOS field
+.IP "NVME_LM_CDQ_SEL_SHIFT" 12
+Shift to set Select (SEL) field
+.IP "NVME_LM_CDQ_SEL_MASK" 12
+Mask to set SEL field
+.IP "NVME_LM_SEL_CREATE_CDQ" 12
+Create CDQ select option
+.IP "NVME_LM_SEL_DELETE_CDQ" 12
+Delete CDQ select option
+.IP "NVME_LM_QT_SHIFT" 12
+Shift amount to set Queue Type (QT) field relative to MOS
+.IP "NVME_LM_QT_MASK" 12
+Mask to set QT field relative to MOS
+.IP "NVME_LM_CQS_SHIFT" 12
+Shift amount for Create Queue Specific (CQS) field
+.IP "NVME_LM_CQS_MASK" 12
+Mask to set CQS field
+.IP "NVME_LM_QT_USER_DATA_MIGRATION_QUEUE" 12
+User Data Migration Queue type
+.IP "NVME_LM_CREATE_CDQ_PC" 12
+Physically Contiguous (PC)
+.IP "NVME_LM_CREATE_CDQ_CNTLID_SHIFT" 12
+Shift amount to set CNTLID field relative to MOS
+.IP "NVME_LM_CREATE_CDQ_CNTLID_MASK" 12
+Mask to set CNTLID field relative to MOS
+.IP "NVME_LM_DELETE_CDQ_CDQID_SHIFT" 12
+Shift amount to set CDQID field for deletion
+.IP "NVME_LM_DELETE_CDQ_CDQID_MASK" 12
+Mask to set CDQID field for deletion
+.IP "NVME_LM_CREATE_CDQ_CDQID_SHIFT" 12
+Shift amount to get CDQID field from Create response in
+completion dword0
+.IP "NVME_LM_CREATE_CDQ_CDQID_MASK" 12
+Mask to get CNTLID field from Create response in
+completion dword0

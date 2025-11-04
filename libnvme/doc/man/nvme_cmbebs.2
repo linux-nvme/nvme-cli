@@ -1,0 +1,66 @@
+.TH "libnvme" 9 "enum nvme_cmbebs" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmbebs \- This field indicates the controller memory buffer elasticity buffer size
+.SH SYNOPSIS
+enum nvme_cmbebs {
+.br
+.BI "    NVME_CMBEBS_CMBSZU_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_RBB_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_CMBWBZ_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_CMBSZU_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_RBB_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_CMBWBZ_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_CMBSZU_B"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_CMBSZU_1K"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_CMBSZU_1M"
+, 
+.br
+.br
+.BI "    NVME_CMBEBS_CMBSZU_1G"
+
+};
+.SH Constants
+.IP "NVME_CMBEBS_CMBSZU_SHIFT" 12
+Shift amount to get the CMB elasticity buffer size units
+.IP "NVME_CMBEBS_RBB_SHIFT" 12
+Shift amount to get the read bypass behavior
+.IP "NVME_CMBEBS_CMBWBZ_SHIFT" 12
+Shift amount to get the CMB elasiticity buffer size base
+.IP "NVME_CMBEBS_CMBSZU_MASK" 12
+Mask to get the CMB elasticity buffer size units
+.IP "NVME_CMBEBS_RBB_MASK" 12
+Mask to get the read bypass behavior
+.IP "NVME_CMBEBS_CMBWBZ_MASK" 12
+Mask to get the CMB elasiticity buffer size base
+.IP "NVME_CMBEBS_CMBSZU_B" 12
+Bytes granularity
+.IP "NVME_CMBEBS_CMBSZU_1K" 12
+1 KiB granularity
+.IP "NVME_CMBEBS_CMBSZU_1M" 12
+1 MiB granularity
+.IP "NVME_CMBEBS_CMBSZU_1G" 12
+1 GiB granularity

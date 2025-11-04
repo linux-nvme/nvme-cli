@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_zns_send_action" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_zns_send_action \- Zone Management Send - Zone Send Action
+.SH SYNOPSIS
+enum nvme_zns_send_action {
+.br
+.BI "    NVME_ZNS_ZSA_CLOSE"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZSA_FINISH"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZSA_OPEN"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZSA_RESET"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZSA_OFFLINE"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZSA_SET_DESC_EXT"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZSA_ZRWA_FLUSH"
+
+};
+.SH Constants
+.IP "NVME_ZNS_ZSA_CLOSE" 12
+Close Zone
+.IP "NVME_ZNS_ZSA_FINISH" 12
+Finish Zone
+.IP "NVME_ZNS_ZSA_OPEN" 12
+Open Zone
+.IP "NVME_ZNS_ZSA_RESET" 12
+Reset Zone
+.IP "NVME_ZNS_ZSA_OFFLINE" 12
+Offline Zone
+.IP "NVME_ZNS_ZSA_SET_DESC_EXT" 12
+Set Zone Descriptor Extension
+.IP "NVME_ZNS_ZSA_ZRWA_FLUSH" 12
+Flush

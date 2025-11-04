@@ -1,0 +1,28 @@
+.TH "libnvme" 9 "struct nvme_mi_vpd_telem" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_vpd_telem \- Vital Product Data Element Descriptor
+.SH SYNOPSIS
+struct nvme_mi_vpd_telem {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 rev;"
+.br
+.BI "    __u8 len;"
+.br
+.BI "    __u8 data[0];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "type" 12
+Type of the Element Descriptor
+.IP "rev" 12
+Revision of the Element Descriptor
+.IP "len" 12
+Number of bytes in the Element Descriptor
+.IP "data" 12
+Type-specific information associated with
+the Element Descriptor

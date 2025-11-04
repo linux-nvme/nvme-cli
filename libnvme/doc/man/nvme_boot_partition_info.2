@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_boot_partition_info" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_boot_partition_info \- This field indicates the boot partition information
+.SH SYNOPSIS
+enum nvme_boot_partition_info {
+.br
+.BI "    NVME_BOOT_PARTITION_INFO_BPSZ_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_BOOT_PARTITION_INFO_ABPID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_BOOT_PARTITION_INFO_BPSZ_MASK"
+, 
+.br
+.br
+.BI "    NVME_BOOT_PARTITION_INFO_ABPID_MASK"
+
+};
+.SH Constants
+.IP "NVME_BOOT_PARTITION_INFO_BPSZ_SHIFT" 12
+Shift amount to get the boot partition size from
+the \fIstruct nvme_boot_partition\fP.bpinfo field.
+.IP "NVME_BOOT_PARTITION_INFO_ABPID_SHIFT" 12
+Shift amount to get the active boot partition ID
+from the \fIstruct nvme_boot_partition\fP.bpinfo field.
+.IP "NVME_BOOT_PARTITION_INFO_BPSZ_MASK" 12
+Mask to get the boot partition size from the
+\fIstruct nvme_boot_partition\fP.bpinfo field.
+.IP "NVME_BOOT_PARTITION_INFO_ABPID_MASK" 12
+Mask to get the active boot partition ID from the
+\fIstruct nvme_boot_partition\fP.bpinfo field.

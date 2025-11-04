@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum nvme_version" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_version \- Selector for version to be returned by @nvme_get_version
+.SH SYNOPSIS
+enum nvme_version {
+.br
+.BI "    NVME_VERSION_PROJECT"
+, 
+.br
+.br
+.BI "    NVME_VERSION_GIT"
+
+};
+.SH Constants
+.IP "NVME_VERSION_PROJECT" 12
+Project release version
+.IP "NVME_VERSION_GIT" 12
+Git reference

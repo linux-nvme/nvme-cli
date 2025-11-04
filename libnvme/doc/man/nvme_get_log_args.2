@@ -1,0 +1,74 @@
+.TH "libnvme" 9 "struct nvme_get_log_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_get_log_args \- Arguments for the NVMe Admin Get Log command
+.SH SYNOPSIS
+struct nvme_get_log_args {
+.br
+.BI "    __u64 lpo;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *log;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    enum nvme_cmd_get_log_lid lid;"
+.br
+.BI "    __u32 len;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    enum nvme_csi csi;"
+.br
+.BI "    __u16 lsi;"
+.br
+.BI "    __u8 lsp;"
+.br
+.BI "    __u8 uuidx;"
+.br
+.BI "    bool rae;"
+.br
+.BI "    bool ot;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lpo" 12
+Log page offset for partial log transfers
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "log" 12
+User space destination address to transfer the data
+.IP "args_size" 12
+Length of the structure
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "lid" 12
+Log page identifier, see \fIenum nvme_cmd_get_log_lid\fP for known
+values
+.IP "len" 12
+Length of provided user buffer to hold the log data in bytes
+.IP "nsid" 12
+Namespace identifier, if applicable
+.IP "csi" 12
+Command set identifier, see \fIenum nvme_csi\fP for known values
+.IP "lsi" 12
+Log Specific Identifier
+.IP "lsp" 12
+Log specific field
+.IP "uuidx" 12
+UUID selection, if supported
+.IP "rae" 12
+Retain asynchronous events
+.IP "ot" 12
+Offset Type; if set \fIlpo\fP specifies the index into the list
+of data structures, otherwise \fIlpo\fP specifies the byte offset
+into the log page.

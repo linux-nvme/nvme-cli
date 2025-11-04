@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct nvmf_ext_attr" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvmf_ext_attr \- Extended Attribute (EXAT)
+.SH SYNOPSIS
+struct nvmf_ext_attr {
+.br
+.BI "    __le16 exattype;"
+.br
+.BI "    __le16 exatlen;"
+.br
+.BI "    __u8 exatval[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "exattype" 12
+Extended Attribute Type (EXATTYPE) - see \fIenum\fP nvmf_exattype
+.IP "exatlen" 12
+Extended Attribute Length (EXATLEN)
+.IP "exatval" 12
+Extended Attribute Value (EXATVAL) - size allocated for array
+must be a multiple of 4 bytes

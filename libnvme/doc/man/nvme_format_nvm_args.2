@@ -1,0 +1,60 @@
+.TH "libnvme" 9 "struct nvme_format_nvm_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_format_nvm_args \- Arguments for the Format Nvme Namespace command
+.SH SYNOPSIS
+struct nvme_format_nvm_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    enum nvme_cmd_format_mset mset;"
+.br
+.BI "    enum nvme_cmd_format_pi pi;"
+.br
+.BI "    enum nvme_cmd_format_pil pil;"
+.br
+.BI "    enum nvme_cmd_format_ses ses;"
+.br
+.BI "    __u8 lbaf;"
+.br
+.BI "    __u8 rsvd1[7];"
+.br
+.BI "    __u8 lbafu;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "args_size" 12
+Size of \fIstruct nvme_format_nvm_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Set to override default timeout to this value in milliseconds;
+useful for long running formats. 0 will use system default.
+.IP "nsid" 12
+Namespace ID to format
+.IP "mset" 12
+Metadata settings (extended or separated), true if extended
+.IP "pi" 12
+Protection information type
+.IP "pil" 12
+Protection information location (beginning or end), true if end
+.IP "ses" 12
+Secure erase settings
+.IP "lbaf" 12
+Logical block address format least significant 4 bits
+.IP "rsvd1" 12
+Reserved
+.IP "lbafu" 12
+Logical block address format most significant 2 bits

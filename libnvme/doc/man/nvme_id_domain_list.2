@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_id_domain_list" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_id_domain_list \- Domain List
+.SH SYNOPSIS
+struct nvme_id_domain_list {
+.br
+.BI "    __u8 num;"
+.br
+.BI "    __u8 rsvd[127];"
+.br
+.BI "    struct nvme_id_domain_attr domain_attr[NVME_ID_DOMAIN_LIST_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "num" 12
+Number of domain attributes
+.IP "rsvd" 12
+Reserved
+.IP "domain_attr" 12
+List of domain attributes

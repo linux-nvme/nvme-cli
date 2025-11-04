@@ -1,0 +1,17 @@
+.TH "nvme_write_zeros" 9 "nvme_write_zeros" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_write_zeros \- Submit an nvme write zeroes command
+.SH SYNOPSIS
+.B "int" nvme_write_zeros
+.BI "(struct nvme_io_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_io_args\fP argument structure
+.SH "DESCRIPTION"
+The Write Zeroes command sets a range of logical blocks to zero.  After
+successful completion of this command, the value returned by subsequent
+reads of logical blocks in this range shall be all bytes cleared to 0h until
+a write occurs to this LBA range.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

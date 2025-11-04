@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_pmrmsc" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_pmrmsc \- This field indicates the persistent memory region memory space control
+.SH SYNOPSIS
+enum nvme_pmrmsc {
+.br
+.BI "    NVME_PMRMSC_CMSE_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRMSC_CBA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRMSC_CMSE_MASK"
+
+};
+.SH Constants
+.IP "NVME_PMRMSC_CMSE_SHIFT" 12
+Shift amount to get the controller memory space enable
+.IP "NVME_PMRMSC_CBA_SHIFT" 12
+Shift amount to get the controller base address
+.IP "NVME_PMRMSC_CMSE_MASK" 12
+Mask to get the controller memory space enable

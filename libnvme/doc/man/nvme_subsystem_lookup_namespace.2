@@ -1,0 +1,14 @@
+.TH "nvme_subsystem_lookup_namespace" 9 "nvme_subsystem_lookup_namespace" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsystem_lookup_namespace \- lookup namespace by NSID
+.SH SYNOPSIS
+.B "nvme_ns_t" nvme_subsystem_lookup_namespace
+.BI "(struct nvme_subsystem *s "  ","
+.BI "__u32 nsid "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+nvme_subsystem_t object
+.IP "nsid" 12
+Namespace id
+.SH "RETURN"
+nvme_ns_t of the namespace with id \fInsid\fP in subsystem \fIs\fP

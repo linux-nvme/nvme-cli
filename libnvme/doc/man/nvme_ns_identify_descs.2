@@ -1,0 +1,17 @@
+.TH "nvme_ns_identify_descs" 9 "nvme_ns_identify_descs" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ns_identify_descs \- Issue an 'identify descriptors' command
+.SH SYNOPSIS
+.B "int" nvme_ns_identify_descs
+.BI "(nvme_ns_t n "  ","
+.BI "struct nvme_ns_id_desc *descs "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.IP "descs" 12
+List of identify descriptors
+.SH "DESCRIPTION"
+Writes the data returned by the 'identify descriptors' command
+into \fIdescs\fP.
+.SH "RETURN"
+0 on success, -1 on error.

@@ -1,0 +1,21 @@
+.TH "nvmf_add_ctrl" 9 "nvmf_add_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_add_ctrl \- Connect a controller and update topology
+.SH SYNOPSIS
+.B "int" nvmf_add_ctrl
+.BI "(nvme_host_t h "  ","
+.BI "nvme_ctrl_t c "  ","
+.BI "const struct nvme_fabrics_config *cfg "  ");"
+.SH ARGUMENTS
+.IP "h" 12
+Host to which the controller should be attached
+.IP "c" 12
+Controller to be connected
+.IP "cfg" 12
+Default configuration for the controller
+.SH "DESCRIPTION"
+Issues a 'connect' command to the NVMe-oF controller and inserts \fIc\fP
+into the topology using \fIh\fP as parent.
+\fIc\fP must be initialized and not connected to the topology.
+.SH "RETURN"
+0 on success; on failure errno is set and -1 is returned.

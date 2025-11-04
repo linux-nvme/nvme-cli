@@ -1,0 +1,59 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_bpcap" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_bpcap \- Boot Partition Capabilities
+.SH SYNOPSIS
+enum nvme_id_ctrl_bpcap {
+.br
+.BI "    NVME_CTRL_BACAP_RPMBBPWPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_BACAP_SFBPWPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_BACAP_RPMBBPWPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_BACAP_SFBPWPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_BACAP_RPMBBPWPS_NOT_SPECIFIED"
+, 
+.br
+.br
+.BI "    NVME_CTRL_BACAP_RPMBBPWPS_NOT_SUPPORTED"
+, 
+.br
+.br
+.BI "    NVME_CTRL_BACAP_RPMBBPWPS_SUPPORTED"
+
+};
+.SH Constants
+.IP "NVME_CTRL_BACAP_RPMBBPWPS_SHIFT" 12
+Shift amount to get the RPMB Boot Partition Write
+Protection Support from the \fIstruct
+nvme_id_ctrl\fP.bpcap field.
+.IP "NVME_CTRL_BACAP_SFBPWPS_SHIFT" 12
+Shift amount to get the Set Features Boot Partition
+Write Protection Support from the \fIstruct
+nvme_id_ctrl\fP.bpcap field.
+.IP "NVME_CTRL_BACAP_RPMBBPWPS_MASK" 12
+Mask to get the RPMB Boot Partition Write
+Protection Support from the \fIstruct
+nvme_id_ctrl\fP.bpcap field.
+.IP "NVME_CTRL_BACAP_SFBPWPS_MASK" 12
+Mask to get the Set Features Boot Partition Write
+Protection Support from the \fIstruct
+nvme_id_ctrl\fP.bpcap field.
+.IP "NVME_CTRL_BACAP_RPMBBPWPS_NOT_SPECIFIED" 12
+Support for RPMB Boot Partition Write Protection
+is not specified.
+.IP "NVME_CTRL_BACAP_RPMBBPWPS_NOT_SUPPORTED" 12
+RPMB Boot Partition Write Protection is not
+supported by this controller.
+.IP "NVME_CTRL_BACAP_RPMBBPWPS_SUPPORTED" 12
+RPMB Boot Partition Write Protection is supported
+by this controller.

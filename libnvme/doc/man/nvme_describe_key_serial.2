@@ -1,0 +1,15 @@
+.TH "nvme_describe_key_serial" 9 "nvme_describe_key_serial" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_describe_key_serial \- Return key description
+.SH SYNOPSIS
+.B "char *" nvme_describe_key_serial
+.BI "(long key_id "  ");"
+.SH ARGUMENTS
+.IP "key_id" 12
+Key serial number
+.SH "DESCRIPTION"
+Fetches the description of the key or keyring identified
+by the serial number \fIkey_id\fP.
+.SH "RETURN"
+The description of \fIkey_id\fP or NULL on failure.
+The returned string needs to be freed by the caller.

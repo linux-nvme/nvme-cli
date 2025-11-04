@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_ana_state" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_ana_state \- ANA Group Descriptor - Asymmetric Namespace Access State
+.SH SYNOPSIS
+enum nvme_ana_state {
+.br
+.BI "    NVME_ANA_STATE_OPTIMIZED"
+, 
+.br
+.br
+.BI "    NVME_ANA_STATE_NONOPTIMIZED"
+, 
+.br
+.br
+.BI "    NVME_ANA_STATE_INACCESSIBLE"
+, 
+.br
+.br
+.BI "    NVME_ANA_STATE_PERSISTENT_LOSS"
+, 
+.br
+.br
+.BI "    NVME_ANA_STATE_CHANGE"
+
+};
+.SH Constants
+.IP "NVME_ANA_STATE_OPTIMIZED" 12
+ANA Optimized state
+.IP "NVME_ANA_STATE_NONOPTIMIZED" 12
+ANA Non-Optimized state
+.IP "NVME_ANA_STATE_INACCESSIBLE" 12
+ANA Inaccessible state
+.IP "NVME_ANA_STATE_PERSISTENT_LOSS" 12
+ANA Persistent Loss state
+.IP "NVME_ANA_STATE_CHANGE" 12
+ANA Change state

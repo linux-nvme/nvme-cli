@@ -1,0 +1,22 @@
+.TH "nvme_mi_open_mctp" 9 "nvme_mi_open_mctp" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_open_mctp \- Create an endpoint using a MCTP connection.
+.SH SYNOPSIS
+.B "nvme_mi_ep_t" nvme_mi_open_mctp
+.BI "(nvme_root_t root "  ","
+.BI "unsigned int netid "  ","
+.BI "uint8_t eid "  ");"
+.SH ARGUMENTS
+.IP "root" 12
+root object to create under
+.IP "netid" 12
+MCTP network ID on this system
+.IP "eid" 12
+MCTP endpoint ID
+.SH "DESCRIPTION"
+Transport-specific endpoint initialization for MI-connected endpoints. Once
+an endpoint is created, the rest of the API is transport-independent.
+
+See \fInvme_mi_close\fP
+.SH "RETURN"
+New endpoint object for \fInetid\fP & \fIeid\fP, or NULL on failure.

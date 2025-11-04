@@ -1,0 +1,120 @@
+.TH "libnvme" 9 "enum nvme_mi_resp_status" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_resp_status \- values for the response status field
+.SH SYNOPSIS
+enum nvme_mi_resp_status {
+.br
+.BI "    NVME_MI_RESP_SUCCESS"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_MPR"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_INTERNAL_ERR"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_INVALID_OPCODE"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_INVALID_PARAM"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_INVALID_CMD_SIZE"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_INVALID_INPUT_SIZE"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_ACCESS_DENIED"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_VPD_UPDATES_EXCEEDED"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_PCIE_INACCESSIBLE"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_MEB_SANITIZED"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_ENC_SERV_FAILURE"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_ENC_SERV_XFER_FAILURE"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_ENC_FAILURE"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_ENC_XFER_REFUSED"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_ENC_FUNC_UNSUP"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_ENC_SERV_UNAVAIL"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_ENC_DEGRADED"
+, 
+.br
+.br
+.BI "    NVME_MI_RESP_SANITIZE_IN_PROGRESS"
+
+};
+.SH Constants
+.IP "NVME_MI_RESP_SUCCESS" 12
+success
+.IP "NVME_MI_RESP_MPR" 12
+More Processing Required
+.IP "NVME_MI_RESP_INTERNAL_ERR" 12
+Internal Error
+.IP "NVME_MI_RESP_INVALID_OPCODE" 12
+Invalid command opcode
+.IP "NVME_MI_RESP_INVALID_PARAM" 12
+Invalid command parameter
+.IP "NVME_MI_RESP_INVALID_CMD_SIZE" 12
+Invalid command size
+.IP "NVME_MI_RESP_INVALID_INPUT_SIZE" 12
+Invalid command input data size
+.IP "NVME_MI_RESP_ACCESS_DENIED" 12
+Access Denied
+.IP "NVME_MI_RESP_VPD_UPDATES_EXCEEDED" 12
+More VPD updates than allowed
+.IP "NVME_MI_RESP_PCIE_INACCESSIBLE" 12
+PCIe functionality currently unavailable
+.IP "NVME_MI_RESP_MEB_SANITIZED" 12
+MEB has been cleared due to sanitize
+.IP "NVME_MI_RESP_ENC_SERV_FAILURE" 12
+Enclosure services process failed
+.IP "NVME_MI_RESP_ENC_SERV_XFER_FAILURE" 12
+Transfer with enclosure services failed
+.IP "NVME_MI_RESP_ENC_FAILURE" 12
+Unreoverable enclosure failure
+.IP "NVME_MI_RESP_ENC_XFER_REFUSED" 12
+Enclosure services transfer refused
+.IP "NVME_MI_RESP_ENC_FUNC_UNSUP" 12
+Unsupported enclosure services function
+.IP "NVME_MI_RESP_ENC_SERV_UNAVAIL" 12
+Enclosure services unavailable
+.IP "NVME_MI_RESP_ENC_DEGRADED" 12
+Noncritical failure detected by enc. services
+.IP "NVME_MI_RESP_SANITIZE_IN_PROGRESS" 12
+Command prohibited during sanitize

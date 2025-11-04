@@ -1,0 +1,15 @@
+.TH "nvme_get_lba_status" 9 "nvme_get_lba_status" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_lba_status \- Retrieve information on possibly unrecoverable LBAs
+.SH SYNOPSIS
+.B "int" nvme_get_lba_status
+.BI "(struct nvme_get_lba_status_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_get_lba_status_args\fP argument structure
+.SH "DESCRIPTION"
+The Get LBA Status command requests information about Potentially
+Unrecoverable LBAs. Refer to the specification for action type descriptions.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

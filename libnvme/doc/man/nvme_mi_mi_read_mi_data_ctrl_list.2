@@ -1,0 +1,23 @@
+.TH "nvme_mi_mi_read_mi_data_ctrl_list" 9 "nvme_mi_mi_read_mi_data_ctrl_list" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_mi_read_mi_data_ctrl_list \- Perform a Read MI Data Structure command, retrieving the list of attached controllers.
+.SH SYNOPSIS
+.B "int" nvme_mi_mi_read_mi_data_ctrl_list
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "__u8 start_ctrlid "  ","
+.BI "struct nvme_ctrl_list *list "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint for MI communication
+.IP "start_ctrlid" 12
+starting controller ID
+.IP "list" 12
+controller list to populate
+.SH "DESCRIPTION"
+Retrieves the list of attached controllers, with IDs greater than or
+equal to \fIstart_ctrlid\fP.
+
+See \fIstruct nvme_ctrl_list\fP.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

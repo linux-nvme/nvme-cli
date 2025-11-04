@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "enum nvme_smart_egcw" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_smart_egcw \- Endurance Group Critical Warning Summary
+.SH SYNOPSIS
+enum nvme_smart_egcw {
+.br
+.BI "    NVME_SMART_EGCW_SPARE"
+, 
+.br
+.br
+.BI "    NVME_SMART_EGCW_DEGRADED"
+, 
+.br
+.br
+.BI "    NVME_SMART_EGCW_RO"
+
+};
+.SH Constants
+.IP "NVME_SMART_EGCW_SPARE" 12
+If set, then the available spare capacity of one or
+more Endurance Groups has fallen below the threshold.
+.IP "NVME_SMART_EGCW_DEGRADED" 12
+If set, then the reliability of one or more
+Endurance Groups has been degraded due to significant
+media related errors or any internal error that
+degrades NVM subsystem reliability.
+.IP "NVME_SMART_EGCW_RO" 12
+If set, then the namespaces in one or more Endurance
+Groups have been placed in read only mode not as
+a result of a change in the write protection state
+of a namespace.

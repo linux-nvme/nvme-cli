@@ -1,0 +1,75 @@
+.TH "libnvme" 9 "enum nbft_host_flags" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nbft_host_flags \- Host Flags
+.SH SYNOPSIS
+enum nbft_host_flags {
+.br
+.BI "    NBFT_HOST_VALID"
+, 
+.br
+.br
+.BI "    NBFT_HOST_HOSTID_CONFIGURED"
+, 
+.br
+.br
+.BI "    NBFT_HOST_HOSTNQN_CONFIGURED"
+, 
+.br
+.br
+.BI "    NBFT_HOST_PRIMARY_ADMIN_MASK"
+, 
+.br
+.br
+.BI "    NBFT_HOST_PRIMARY_ADMIN_NOT_INDICATED"
+, 
+.br
+.br
+.BI "    NBFT_HOST_PRIMARY_ADMIN_UNSELECTED"
+, 
+.br
+.br
+.BI "    NBFT_HOST_PRIMARY_ADMIN_SELECTED"
+
+};
+.SH Constants
+.IP "NBFT_HOST_VALID" 12
+Descriptor Valid: If set to 1h, then this
+descriptor is valid. If cleared to 0h, then
+this descriptor is reserved.
+.IP "NBFT_HOST_HOSTID_CONFIGURED" 12
+HostID Configured: If set to 1h, then the
+Host ID field contains an administratively-configured
+value. If cleared to 0h, then the Host ID
+field contains a driver default value.
+.IP "NBFT_HOST_HOSTNQN_CONFIGURED" 12
+Host NQN Configured: If set to 1h, then the
+Host NQN indicated by the Host NQN Heap Object
+Reference field (\fIstruct nbft_host\fP.host_nqn)
+contains an administratively-configured value.
+If cleared to 0h, then the Host NQN indicated
+by the Host NQN Offset field contains a driver
+default value.
+.IP "NBFT_HOST_PRIMARY_ADMIN_MASK" 12
+Mask to get Primary Administrative Host Descriptor:
+indicates whether the Host Descriptor in this
+NBFT was selected as the primary NBFT for
+administrative purposes of platform identity
+as a hint to the OS. If multiple NBFT tables
+are present, only one NBFT should be administratively
+selected. There is no enforcement mechanism
+for this to be coordinated between multiple NBFT
+tables, but this field should be set to Selected
+(#NBFT_HOST_PRIMARY_ADMIN_SELECTED) if
+more than one NBFT is present.
+.IP "NBFT_HOST_PRIMARY_ADMIN_NOT_INDICATED" 12
+Not Indicated by Driver: The driver that created
+this NBFT provided no administrative priority
+hint for this NBFT.
+.IP "NBFT_HOST_PRIMARY_ADMIN_UNSELECTED" 12
+Unselected: The driver that created this NBFT
+explicitly indicated that this NBFT should
+not be prioritized over any other NBFT.
+.IP "NBFT_HOST_PRIMARY_ADMIN_SELECTED" 12
+Selected: The driver that created this NBFT
+explicitly indicated that this NBFT should
+be prioritized over any other NBFT.

@@ -1,0 +1,12 @@
+.TH "nvme_set_features" 9 "nvme_set_features" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_set_features \- Set a feature attribute
+.SH SYNOPSIS
+.B "int" nvme_set_features
+.BI "(struct nvme_set_features_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_set_features_args\fP argument structure
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

@@ -1,0 +1,17 @@
+.TH "nvme_mi_status_to_string" 9 "nvme_mi_status_to_string" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_status_to_string \- return a string representation of the MI status.
+.SH SYNOPSIS
+.B "const char *" nvme_mi_status_to_string
+.BI "(int status "  ");"
+.SH ARGUMENTS
+.IP "status" 12
+MI response status
+.SH "DESCRIPTION"
+Gives a string description of \fIstatus\fP, as per section 4.1.2 of the NVMe-MI
+spec. The status value should be of type NVME_STATUS_MI, and extracted
+from the return value using \fBnvme_status_get_value\fP.
+
+Returned string is const, and should not be \fBfree\fPed.
+.SH "RETURN"
+A string representing the status value

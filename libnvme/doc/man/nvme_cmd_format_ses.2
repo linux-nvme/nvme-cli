@@ -1,0 +1,33 @@
+.TH "libnvme" 9 "enum nvme_cmd_format_ses" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmd_format_ses \- Format NVM - Secure Erase Settings
+.SH SYNOPSIS
+enum nvme_cmd_format_ses {
+.br
+.BI "    NVME_FORMAT_SES_NONE"
+, 
+.br
+.br
+.BI "    NVME_FORMAT_SES_USER_DATA_ERASE"
+, 
+.br
+.br
+.BI "    NVME_FORMAT_SES_CRYPTO_ERASE"
+
+};
+.SH Constants
+.IP "NVME_FORMAT_SES_NONE" 12
+No secure erase operation requested.
+.IP "NVME_FORMAT_SES_USER_DATA_ERASE" 12
+User Data Erase: All user data shall be erased,
+contents of the user data after the erase is
+indeterminate (e.g. the user data may be zero
+filled, one filled, etc.). If a User Data Erase
+is requested and all affected user data is
+encrypted, then the controller is allowed
+to use a cryptographic erase to perform
+the requested User Data Erase.
+.IP "NVME_FORMAT_SES_CRYPTO_ERASE" 12
+Cryptographic Erase: All user data shall
+be erased cryptographically. This is
+accomplished by deleting the encryption key.

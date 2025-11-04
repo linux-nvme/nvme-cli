@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvme_resv_cptpl" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_resv_cptpl \- Reservation Register - Change Persist Through Power Loss State
+.SH SYNOPSIS
+enum nvme_resv_cptpl {
+.br
+.BI "    NVME_RESERVATION_CPTPL_NO_CHANGE"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_CPTPL_CLEAR"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_CPTPL_PERSIST"
+
+};
+.SH Constants
+.IP "NVME_RESERVATION_CPTPL_NO_CHANGE" 12
+No change to PTPL state
+.IP "NVME_RESERVATION_CPTPL_CLEAR" 12
+Reservations are released and
+registrants are cleared on a power on
+.IP "NVME_RESERVATION_CPTPL_PERSIST" 12
+Reservations and registrants persist
+across a power loss

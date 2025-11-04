@@ -1,0 +1,20 @@
+.TH "nvme_virtual_mgmt" 9 "nvme_virtual_mgmt" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_virtual_mgmt \- Virtualization resource management
+.SH SYNOPSIS
+.B "int" nvme_virtual_mgmt
+.BI "(struct nvme_virtual_mgmt_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_virtual_mgmt_args\fP argument structure
+.SH "DESCRIPTION"
+The Virtualization Management command is supported by primary controllers
+that support the Virtualization Enhancements capability. This command is
+used for several functions:
+
+- Modifying Flexible Resource allocation for the primary controller
+- Assigning Flexible Resources for secondary controllers
+- Setting the Online and Offline state for secondary controllers
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

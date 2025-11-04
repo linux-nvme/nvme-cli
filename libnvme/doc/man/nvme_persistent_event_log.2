@@ -1,0 +1,87 @@
+.TH "libnvme" 9 "struct nvme_persistent_event_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_persistent_event_log \- Persistent Event Log
+.SH SYNOPSIS
+struct nvme_persistent_event_log {
+.br
+.BI "    __u8 lid;"
+.br
+.BI "    __u8 rsvd1[3];"
+.br
+.BI "    __le32 tnev;"
+.br
+.BI "    __le64 tll;"
+.br
+.BI "    __u8 rv;"
+.br
+.BI "    __u8 rsvd17;"
+.br
+.BI "    __le16 lhl;"
+.br
+.BI "    __le64 ts;"
+.br
+.BI "    __u8 poh[16];"
+.br
+.BI "    __le64 pcc;"
+.br
+.BI "    __le16 vid;"
+.br
+.BI "    __le16 ssvid;"
+.br
+.BI "    char sn[20];"
+.br
+.BI "    char mn[40];"
+.br
+.BI "    char subnqn[NVME_NQN_LENGTH];"
+.br
+.BI "    __le16 gen_number;"
+.br
+.BI "    __le32 rci;"
+.br
+.BI "    __u8 rsvd378[102];"
+.br
+.BI "    __u8 seb[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lid" 12
+Log Identifier
+.IP "rsvd1" 12
+Reserved
+.IP "tnev" 12
+Total Number of Events
+.IP "tll" 12
+Total Log Length
+.IP "rv" 12
+Log Revision
+.IP "rsvd17" 12
+Reserved
+.IP "lhl" 12
+Log Header Length
+.IP "ts" 12
+Timestamp
+.IP "poh" 12
+Power on Hours
+.IP "pcc" 12
+Power Cycle Count
+.IP "vid" 12
+PCI Vendor ID
+.IP "ssvid" 12
+PCI Subsystem Vendor ID
+.IP "sn" 12
+Serial Number
+.IP "mn" 12
+Model Number
+.IP "subnqn" 12
+NVM Subsystem NVMe Qualified Name
+.IP "gen_number" 12
+Generation Number
+.IP "rci" 12
+Reporting Context Information
+.IP "rsvd378" 12
+Reserved
+.IP "seb" 12
+Supported Events Bitmap

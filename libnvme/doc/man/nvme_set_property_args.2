@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_set_property_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_set_property_args \- Arguments for NVMe Set Property command
+.SH SYNOPSIS
+struct nvme_set_property_args {
+.br
+.BI "    __u64 value;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    int offset;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "value" 12
+The value to set the property
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "args_size" 12
+Size of \fIstruct nvme_set_property_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "offset" 12
+Property offset from the base to set

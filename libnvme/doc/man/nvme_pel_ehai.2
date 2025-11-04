@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_pel_ehai" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_pel_ehai \- This field indicates the persistent event header additional information
+.SH SYNOPSIS
+enum nvme_pel_ehai {
+.br
+.BI "    NVME_PEL_EHAI_PIT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PEL_EHAI_RSVD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PEL_EHAI_PIT_MASK"
+, 
+.br
+.br
+.BI "    NVME_PEL_EHAI_RSVD_MASK"
+
+};
+.SH Constants
+.IP "NVME_PEL_EHAI_PIT_SHIFT" 12
+Shift amount to get the reporting context port identifier
+from the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_EHAI_RSVD_SHIFT" 12
+Shift amount to get the reserved reporting context
+from the \fIstruct nvme_persistent_event_log\fP.rci field.
+.IP "NVME_PEL_EHAI_PIT_MASK" 12
+Mask to get the reporting context port identifier from
+the \fIstruct nvme_st_result\fP.dsts field.
+.IP "NVME_PEL_EHAI_RSVD_MASK" 12
+Mask to get the reserved reporting context from
+the \fIstruct nvme_st_result\fP.dsts field.

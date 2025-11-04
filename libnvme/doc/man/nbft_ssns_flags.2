@@ -1,0 +1,121 @@
+.TH "libnvme" 9 "enum nbft_ssns_flags" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nbft_ssns_flags \- Subsystem and Namespace Specific Flags Field (Figure 16)
+.SH SYNOPSIS
+enum nbft_ssns_flags {
+.br
+.BI "    NBFT_SSNS_VALID"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_NON_BOOTABLE_ENTRY"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_USE_SECURITY_FIELD"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_DHCP_ROOT_PATH_OVERRIDE"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXTENDED_INFO_IN_USE"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_SEPARATE_DISCOVERY_CTRL"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_DISCOVERED_NAMESPACE"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_UNAVAIL_NAMESPACE_MASK"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_UNAVAIL_NAMESPACE_NOTIND"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_UNAVAIL_NAMESPACE_AVAIL"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL"
+
+};
+.SH Constants
+.IP "NBFT_SSNS_VALID" 12
+Descriptor Valid: If set to 1h, then this descriptor
+is valid. If cleared to 0h, then this descriptor
+is not valid. A host that supports NVMe-oF Boot,
+but does not currently have a remote Subsystem
+and Namespace assigned may clear this bit to 0h.
+.IP "NBFT_SSNS_NON_BOOTABLE_ENTRY" 12
+Non-bootable Entry Flag: If set to 1h, this flag
+indicates that this SSNS Descriptor contains
+a namespace of administrative purpose to the boot
+process, but the pre-OS may not have established
+connectivity to or evaluated the contents of this
+Descriptor. Such namespaces may contain supplemental
+data deemed relevant by the Administrator as part
+of the pre-OS to OS hand off. This may include
+properties such as a UEFI device path that may
+not have been created for this namespace. This means
+an OS runtime may still require the contents
+of such a namespace to complete later stages
+of boot. If cleared to 0h, then this namespace did
+not have any special administrative intent.
+.IP "NBFT_SSNS_USE_SECURITY_FIELD" 12
+Use Security Flag: If set to 1h, then there is
+a Security Profile Descriptor associated with this
+SSNS record and the Security Profile Descriptor Index
+field is valid. If cleared to 0h, then there is
+no Security Profile Descriptor associated with this
+SSNS record and the Security Profile Descriptor Index
+field is not valid.
+.IP "NBFT_SSNS_DHCP_ROOT_PATH_OVERRIDE" 12
+DHCP Root-Path Override Flag: If set to 1h, then
+this SSNS descriptor was populated by consuming
+the DHCP Root-Path on this interface. If cleared
+to 0h, then the DHCP Root-Path was not used
+in populating the SSNS descriptor.
+.IP "NBFT_SSNS_EXTENDED_INFO_IN_USE" 12
+SSNS Extended Info In-use Flag: If set to 1h,
+then the SSNS Extended Information Offset field
+and the SSNS Extended Information Length field
+are valid. This flag, if set to 1h, indicates
+that a Subsystem and Namespace Extended Information
+Descriptor corresponding to this descriptor is present.
+.IP "NBFT_SSNS_SEPARATE_DISCOVERY_CTRL" 12
+Separate Discovery Controller Flag: If set to 1h,
+then the Discovery controller associated with
+this volume is on a different transport address
+than the specified in the Subsystem Transport
+Address Heap Object Reference. If cleared to 0h,
+then the Discovery controller is the same as the
+Subsystem Transport Address Heap Object Reference.
+.IP "NBFT_SSNS_DISCOVERED_NAMESPACE" 12
+Discovered Namespace Flag: If set to 1h, then
+this namespace was acquired through discovery.
+If cleared to 0h, then this namespace was
+explicitly configured in the system.
+.IP "NBFT_SSNS_UNAVAIL_NAMESPACE_MASK" 12
+Mask to get Unavailable Namespace Flag: This
+field indicates the availability of the namespace
+at a specific point in time. Such use is only
+a hint and its use does not guarantee the availability
+of that referenced namespace at any future point in time.
+.IP "NBFT_SSNS_UNAVAIL_NAMESPACE_NOTIND" 12
+Not Indicated by Driver: No information is provided.
+.IP "NBFT_SSNS_UNAVAIL_NAMESPACE_AVAIL" 12
+Available: A referenced namespace described by this
+flag was previously accessible by the pre-OS driver.
+.IP "NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL" 12
+Unavailable: This namespace was administratively
+configured but unattempted, unavailable or
+inaccessible when establishing connectivity
+by the pre-OS driver.

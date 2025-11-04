@@ -1,0 +1,37 @@
+.TH "libnvme" 9 "enum nvme_subsys_type" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_subsys_type \- Type of the NVM subsystem.
+.SH SYNOPSIS
+enum nvme_subsys_type {
+.br
+.BI "    NVME_NQN_DISC"
+, 
+.br
+.br
+.BI "    NVME_NQN_NVME"
+, 
+.br
+.br
+.BI "    NVME_NQN_CURR"
+
+};
+.SH Constants
+.IP "NVME_NQN_DISC" 12
+Discovery type target subsystem. Describes a referral to another
+Discovery Service composed of Discovery controllers that provide
+additional discovery records. Multiple Referral entries may
+be reported for each Discovery Service (if that Discovery Service
+has multiple NVM subsystem ports or supports multiple protocols).
+.IP "NVME_NQN_NVME" 12
+NVME type target subsystem. Describes an NVM subsystem whose
+controllers may have attached namespaces (an NVM subsystem
+that is not composed of Discovery controllers). Multiple NVM
+Subsystem entries may be reported for each NVM subsystem if
+that NVM subsystem has multiple NVM subsystem ports.
+.IP "NVME_NQN_CURR" 12
+Current Discovery type target subsystem. Describes this Discovery
+subsystem (the Discovery Service that contains the controller
+processing the Get Log Page command). Multiple Current Discovery
+Subsystem entries may be reported for this Discovery subsystem
+if the current Discovery subsystem has multiple NVM subsystem
+ports.

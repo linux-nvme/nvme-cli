@@ -1,0 +1,83 @@
+.TH "libnvme" 9 "struct nbft_info_hfi_info_tcp" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nbft_info_hfi_info_tcp \- HFI Transport Info Descriptor - NVMe/TCP
+.SH SYNOPSIS
+struct nbft_info_hfi_info_tcp {
+.br
+.BI "    __u32 pci_sbdf;"
+.br
+.BI "    __u8 mac_addr[6];"
+.br
+.BI "    __u16 vlan;"
+.br
+.BI "    __u8 ip_origin;"
+.br
+.BI "    char ipaddr[40];"
+.br
+.BI "    __u8 subnet_mask_prefix;"
+.br
+.BI "    char gateway_ipaddr[40];"
+.br
+.BI "    __u16 route_metric;"
+.br
+.BI "    char primary_dns_ipaddr[40];"
+.br
+.BI "    char secondary_dns_ipaddr[40];"
+.br
+.BI "    char dhcp_server_ipaddr[40];"
+.br
+.BI "    char *host_name;"
+.br
+.BI "    bool this_hfi_is_default_route;"
+.br
+.BI "    bool dhcp_override;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "pci_sbdf" 12
+PCI Express Routing ID for the HFI Transport Function.
+.IP "mac_addr" 12
+MAC Address: The MAC address of this HFI,
+in EUI-48TM format.
+.IP "vlan" 12
+The VLAN identifier if the VLAN is associated with
+this HFI, as defined in IEEE 802.1q-2018 or zeroes
+if no VLAN is associated with this HFI.
+.IP "ip_origin" 12
+The source of Ethernet L3 configuration information
+used by the driver or 0 if not used.
+.IP "ipaddr" 12
+The IPv4 or IPv6 address of this HFI.
+.IP "subnet_mask_prefix" 12
+The IPv4 or IPv6 subnet mask in CIDR routing prefix
+notation.
+.IP "gateway_ipaddr" 12
+The IPv4 or IPv6 address of the IP gateway for this
+HFI or zeroes if no IP gateway is specified.
+.IP "route_metric" 12
+The cost value for the route indicated by this HFI.
+.IP "primary_dns_ipaddr" 12
+The IPv4 or IPv6 address of the Primary DNS server
+for this HFI.
+.IP "secondary_dns_ipaddr" 12
+The IPv4 or IPv6 address of the Secondary DNS server
+for this HFI.
+.IP "dhcp_server_ipaddr" 12
+The IPv4 or IPv6 address of the DHCP server used
+to assign this HFI address.
+.IP "host_name" 12
+The Host Name string.
+.IP "this_hfi_is_default_route" 12
+If True, then the BIOS utilized this interface
+described by HFI to be the default route with highest
+priority. If False, then routes are local to their
+own scope.
+.IP "dhcp_override" 12
+If True, then HFI information was populated
+by consuming the DHCP on this interface. If False,
+then the HFI information was set administratively
+by a configuration interface to the driver and
+pre-OS envrionment.

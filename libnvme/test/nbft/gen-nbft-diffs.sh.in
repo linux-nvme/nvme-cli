@@ -1,0 +1,5 @@
+#!/bin/sh
+
+for T in "@TABLES_DIR@"/*; do
+  "@NBFT_DUMP_PATH@" "$T" > "@DIFF_DIR@/`basename $T`"
+done

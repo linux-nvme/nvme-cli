@@ -1,0 +1,13 @@
+.TH "nvme_subsystem_get_type" 9 "nvme_subsystem_get_type" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsystem_get_type \- Returns the type of a subsystem
+.SH SYNOPSIS
+.B "const char *" nvme_subsystem_get_type
+.BI "(nvme_subsystem_t s "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+nvme_subsystem_t object
+.SH "DESCRIPTION"
+Returns the subsystem type of \fIs\fP.
+.SH "RETURN"
+'nvm' or 'discovery'

@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "struct nvme_mi_admin_resp_hdr" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_admin_resp_hdr \- Admin command response header.
+.SH SYNOPSIS
+struct nvme_mi_admin_resp_hdr {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 rsvd0[3];"
+.br
+.BI "    __le32 cdw0, cdw1, cdw3;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+Generic MI message header
+.IP "status" 12
+Generic response code, non-zero on failure
+.IP "rsvd0" 12
+Reserved
+.IP "cdw0" 12
+Completion Queue Entry doubleword 0
+.IP "cdw1" 12
+Completion Queue Entry doubleword 1
+.IP "cdw3" 12
+Completion Queue Entry doubleword 3
+.SH "Description"
+This is the generic response format with the three doublewords of completion
+queue data, plus optional response data.

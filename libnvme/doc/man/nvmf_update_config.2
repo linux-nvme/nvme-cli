@@ -1,0 +1,15 @@
+.TH "nvmf_update_config" 9 "nvmf_update_config" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_update_config \- Update fabrics configuration values
+.SH SYNOPSIS
+.B "void" nvmf_update_config
+.BI "(nvme_ctrl_t c "  ","
+.BI "const struct nvme_fabrics_config *cfg "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to be modified
+.IP "cfg" 12
+Updated configuration values
+.SH "DESCRIPTION"
+Updates the values from \fIc\fP with the configuration values from \fIcfg\fP;
+all non-default values from \fIcfg\fP will overwrite the values in \fIc\fP.

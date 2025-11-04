@@ -1,0 +1,17 @@
+.TH "nvme_init_ctrl" 9 "nvme_init_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_ctrl \- Initialize nvme_ctrl_t object for an existing controller.
+.SH SYNOPSIS
+.B "int" nvme_init_ctrl
+.BI "(nvme_host_t h "  ","
+.BI "nvme_ctrl_t c "  ","
+.BI "int instance "  ");"
+.SH ARGUMENTS
+.IP "h" 12
+nvme_host_t object
+.IP "c" 12
+nvme_ctrl_t object
+.IP "instance" 12
+Instance number (e.g. 1 for nvme1)
+.SH "RETURN"
+The \fBioctl\fP return code. Typically 0 on success.

@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_lba_status" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lba_status \- LBA Status Descriptor List
+.SH SYNOPSIS
+struct nvme_lba_status {
+.br
+.BI "    __le32 nlsd;"
+.br
+.BI "    __u8 cmpc;"
+.br
+.BI "    __u8 rsvd5[3];"
+.br
+.BI "    struct nvme_lba_status_desc descs[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nlsd" 12
+Number of LBA Status Descriptors
+.IP "cmpc" 12
+Completion Condition
+.IP "rsvd5" 12
+Reserved
+.IP "descs" 12
+LBA status descriptor Entry

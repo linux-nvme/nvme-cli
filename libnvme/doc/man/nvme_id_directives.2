@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_id_directives" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_id_directives \- Identify Directive - Return Parameters Data Structure
+.SH SYNOPSIS
+struct nvme_id_directives {
+.br
+.BI "    __u8 supported[32];"
+.br
+.BI "    __u8 enabled[32];"
+.br
+.BI "    __u8 rsvd64[4032];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "supported" 12
+Identify directive is supported
+.IP "enabled" 12
+Identify directive is Enabled
+.IP "rsvd64" 12
+Reserved

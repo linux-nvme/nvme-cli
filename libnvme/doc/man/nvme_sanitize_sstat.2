@@ -1,0 +1,119 @@
+.TH "libnvme" 9 "enum nvme_sanitize_sstat" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_sanitize_sstat \- Sanitize Status (SSTAT)
+.SH SYNOPSIS
+enum nvme_sanitize_sstat {
+.br
+.BI "    NVME_SANITIZE_SSTAT_STATUS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_STATUS_MASK"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_MASK"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_MVCNCLD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_SANITIZE_SSTAT_MVCNCLD_MASK"
+
+};
+.SH Constants
+.IP "NVME_SANITIZE_SSTAT_STATUS_SHIFT" 12
+Shift amount to get the status value of
+the most recent sanitize operation from
+the \fIstruct nvme_sanitize_log_page\fP.sstat
+field.
+.IP "NVME_SANITIZE_SSTAT_STATUS_MASK" 12
+Mask to get the status value of the most
+recent sanitize operation.
+.IP "NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED" 12
+The NVM subsystem has never been
+sanitized.
+.IP "NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS" 12
+The most recent sanitize operation
+completed successfully including any
+additional media modification.
+.IP "NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS" 12
+A sanitize operation is currently in progress.
+.IP "NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED" 12
+The most recent sanitize operation
+failed.
+.IP "NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS" 12
+The most recent sanitize operation
+for which No-Deallocate After Sanitize was
+requested has completed successfully with
+deallocation of all user data.
+.IP "NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT" 12
+Shift amount to get the number
+of completed passes if the most recent
+sanitize operation was an Overwrite. This
+value shall be cleared to 0h if the most
+recent sanitize operation was not
+an Overwrite.
+.IP "NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK" 12
+Mask to get the number of completed
+passes.
+.IP "NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT" 12
+Shift amount to get the Global
+Data Erased value from the
+\fIstruct nvme_sanitize_log_page\fP.sstat field.
+.IP "NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_MASK" 12
+Mask to get the Global Data Erased
+value.
+.IP "NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED" 12
+Global Data Erased: if set, then no
+namespace user data in the NVM subsystem
+has been written to and no Persistent
+Memory Region in the NVM subsystem has
+been enabled since being manufactured and
+the NVM subsystem has never been sanitized;
+or since the most recent successful sanitize
+operation.
+.IP "NVME_SANITIZE_SSTAT_MVCNCLD_SHIFT" 12
+Shift amount to get the value of Media Verification
+Canceled bit of Sanitize status field.
+.IP "NVME_SANITIZE_SSTAT_MVCNCLD_MASK" 12
+Mask to get the value of Media Verification Canceled
+bit of Sanitize status field.

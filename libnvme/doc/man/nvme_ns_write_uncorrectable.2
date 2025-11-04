@@ -1,0 +1,17 @@
+.TH "nvme_ns_write_uncorrectable" 9 "nvme_ns_write_uncorrectable" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ns_write_uncorrectable \- Issus a 'write uncorrectable' command
+.SH SYNOPSIS
+.B "int" nvme_ns_write_uncorrectable
+.BI "(nvme_ns_t n "  ","
+.BI "off_t offset "  ","
+.BI "size_t count "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.IP "offset" 12
+LBA offset in \fIn\fP
+.IP "count" 12
+Number of sectors to be written
+.SH "RETURN"
+Number of sectors written

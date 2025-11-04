@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "struct nvme_mi_msg_resp" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_msg_resp \- Generic response type.
+.SH SYNOPSIS
+struct nvme_mi_msg_resp {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 rsvd0[3];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+the general request/response message header
+.IP "status" 12
+response status value (see \fIenum nvme_mi_resp_status\fP)
+.IP "rsvd0" 12
+reserved data, may be defined by specific response
+.SH "Description"
+Every response will start with one of these; command-specific responses
+will define parts of the reserved data, and may add further fields.

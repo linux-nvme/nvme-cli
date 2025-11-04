@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "struct nvme_mi_vpd_ppmra" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_vpd_ppmra \- NVMe PCIe Port MultiRecord Area
+.SH SYNOPSIS
+struct nvme_mi_vpd_ppmra {
+.br
+.BI "    __u8 nppmravn;"
+.br
+.BI "    __u8 pn;"
+.br
+.BI "    __u8 ppi;"
+.br
+.BI "    __u8 ls;"
+.br
+.BI "    __u8 mlw;"
+.br
+.BI "    __u8 mctp;"
+.br
+.BI "    __u8 refccap;"
+.br
+.BI "    __u8 pi;"
+.br
+.BI "    __u8 rsvd13[3];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nppmravn" 12
+NVMe PCIe Port MultiRecord Area Version Number
+.IP "pn" 12
+PCIe Port Number
+.IP "ppi" 12
+Port Information
+.IP "ls" 12
+PCIe Link Speed
+.IP "mlw" 12
+PCIe Maximum Link Width
+.IP "mctp" 12
+MCTP Support
+.IP "refccap" 12
+Ref Clk Capability
+.IP "pi" 12
+Port Identifier
+.IP "rsvd13" 12
+Reserved

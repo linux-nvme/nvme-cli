@@ -1,0 +1,21 @@
+.TH "nvme_security_send" 9 "nvme_security_send" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_security_send \- Security Send command
+.SH SYNOPSIS
+.B "int" nvme_security_send
+.BI "(struct nvme_security_send_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_security_send\fP argument structure
+.SH "DESCRIPTION"
+The Security Send command transfers security protocol data to the
+controller. The data structure transferred to the controller as part of this
+command contains security protocol specific commands to be performed by the
+controller. The data structure transferred may also contain data or
+parameters associated with the security protocol commands.
+
+The security data is protocol specific and is not defined by the NVMe
+specification.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

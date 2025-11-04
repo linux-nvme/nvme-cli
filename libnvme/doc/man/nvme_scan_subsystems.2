@@ -1,0 +1,11 @@
+.TH "nvme_scan_subsystems" 9 "nvme_scan_subsystems" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_scan_subsystems \- Scan for subsystems
+.SH SYNOPSIS
+.B "int" nvme_scan_subsystems
+.BI "(struct dirent ***subsys "  ");"
+.SH ARGUMENTS
+.IP "subsys" 12
+Pointer to array of dirents
+.SH "RETURN"
+number of entries in \fIsubsys\fP

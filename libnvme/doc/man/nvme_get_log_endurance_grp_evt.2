@@ -1,0 +1,24 @@
+.TH "nvme_get_log_endurance_grp_evt" 9 "nvme_get_log_endurance_grp_evt" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_log_endurance_grp_evt \- Retrieve Endurance Group Event Aggregate
+.SH SYNOPSIS
+.B "int" nvme_get_log_endurance_grp_evt
+.BI "(int fd "  ","
+.BI "bool rae "  ","
+.BI "__u32 offset "  ","
+.BI "__u32 len "  ","
+.BI "void *log "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "rae" 12
+Retain asynchronous events
+.IP "offset" 12
+Offset to the start of the log page
+.IP "len" 12
+The allocated length of the log page
+.IP "log" 12
+User address to store the log page
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

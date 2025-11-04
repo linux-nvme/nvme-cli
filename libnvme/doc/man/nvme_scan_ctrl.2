@@ -1,0 +1,16 @@
+.TH "nvme_scan_ctrl" 9 "nvme_scan_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_scan_ctrl \- Scan on a controller
+.SH SYNOPSIS
+.B "nvme_ctrl_t" nvme_scan_ctrl
+.BI "(nvme_root_t r "  ","
+.BI "const char *name "  ");"
+.SH ARGUMENTS
+.IP "r" 12
+nvme_root_t object
+.IP "name" 12
+Name of the controller
+.SH "DESCRIPTION"
+Scans a controller with sysfs name \fIname\fP and add it to \fIr\fP.
+.SH "RETURN"
+nvme_ctrl_t object

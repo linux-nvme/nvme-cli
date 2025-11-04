@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "struct nvme_mi_msg_hdr" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_msg_hdr \- General MI message header.
+.SH SYNOPSIS
+struct nvme_mi_msg_hdr {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 nmp;"
+.br
+.BI "    __u8 meb;"
+.br
+.BI "    __u8 rsvd0;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "type" 12
+MCTP message type, will always be NVME_MI_MSGTYPE_NVME
+.IP "nmp" 12
+NVMe-MI message parameters (including MI message type)
+.IP "meb" 12
+Management Endpoint Buffer flag; unused for libnvme-mi implementation
+.IP "rsvd0" 12
+currently reserved
+.SH "Description"
+Wire format shared by both request and response messages, per NVMe-MI
+section 3.1. This is used for all message types, MI and Admin.

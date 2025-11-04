@@ -1,0 +1,20 @@
+.TH "nvme_mi_create_root" 9 "nvme_mi_create_root" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_create_root \- Create top-level MI (root) handle.
+.SH SYNOPSIS
+.B "nvme_root_t" nvme_mi_create_root
+.BI "(FILE *fp "  ","
+.BI "int log_level "  ");"
+.SH ARGUMENTS
+.IP "fp" 12
+File descriptor for logging messages
+.IP "log_level" 12
+Logging level to use
+.SH "DESCRIPTION"
+Create the top-level (library) handle for creating subsequent endpoint
+objects. Similar to \fBnvme_create_root\fP, but we provide this to allow linking
+without the core libnvme.
+
+See \fInvme_create_root\fP.
+.SH "RETURN"
+new root object, or NULL on failure.

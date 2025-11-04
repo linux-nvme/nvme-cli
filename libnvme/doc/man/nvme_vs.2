@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum nvme_vs" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_vs \- This field indicates the version
+.SH SYNOPSIS
+enum nvme_vs {
+.br
+.BI "    NVME_VS_TER_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VS_MNR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VS_MJR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_VS_TER_MASK"
+, 
+.br
+.br
+.BI "    NVME_VS_MNR_MASK"
+, 
+.br
+.br
+.BI "    NVME_VS_MJR_MASK"
+
+};
+.SH Constants
+.IP "NVME_VS_TER_SHIFT" 12
+Shift amount to get the tertiary version
+.IP "NVME_VS_MNR_SHIFT" 12
+Shift amount to get the minor version
+.IP "NVME_VS_MJR_SHIFT" 12
+Shift amount to get the major version
+.IP "NVME_VS_TER_MASK" 12
+Mask to get the tertiary version
+.IP "NVME_VS_MNR_MASK" 12
+Mask to get the minor version
+.IP "NVME_VS_MJR_MASK" 12
+Mask to get the major version

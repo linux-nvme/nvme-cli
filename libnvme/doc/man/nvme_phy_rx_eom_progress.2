@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_phy_rx_eom_progress" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_phy_rx_eom_progress \- EOM In Progress Values
+.SH SYNOPSIS
+enum nvme_phy_rx_eom_progress {
+.br
+.BI "    NVME_PHY_RX_EOM_NOT_STARTED"
+, 
+.br
+.br
+.BI "    NVME_PHY_RX_EOM_IN_PROGRESS"
+, 
+.br
+.br
+.BI "    NVME_PHY_RX_EOM_COMPLETED"
+
+};
+.SH Constants
+.IP "NVME_PHY_RX_EOM_NOT_STARTED" 12
+EOM Not Started
+.IP "NVME_PHY_RX_EOM_IN_PROGRESS" 12
+EOM In Progress
+.IP "NVME_PHY_RX_EOM_COMPLETED" 12
+EOM Completed

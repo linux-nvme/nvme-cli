@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "struct nvme_mi_read_sc_list" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_read_sc_list \- Management Endpoint Buffer Supported Command List Data Structure
+.SH SYNOPSIS
+struct nvme_mi_read_sc_list {
+.br
+.BI "    __le16 numcmd;"
+.br
+.BI "    struct nvme_mi_osc cmds[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "numcmd" 12
+Number of Commands
+.IP "cmds" 12
+MEB supported Command Data Structure.
+See \fIstruct\fP nvme_mi_osc

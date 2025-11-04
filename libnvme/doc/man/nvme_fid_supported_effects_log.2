@@ -1,0 +1,15 @@
+.TH "libnvme" 9 "struct nvme_fid_supported_effects_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_fid_supported_effects_log \- Feature Identifiers Supported and Effects
+.SH SYNOPSIS
+struct nvme_fid_supported_effects_log {
+.br
+.BI "    __le32 fid_support[NVME_LOG_FID_SUPPORTED_EFFECTS_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "fid_support" 12
+Feature Identifier Supported

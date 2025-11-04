@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "struct nvme_media_unit_stat_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_media_unit_stat_desc \- Media Unit Status Descriptor
+.SH SYNOPSIS
+struct nvme_media_unit_stat_desc {
+.br
+.BI "    __le16 muid;"
+.br
+.BI "    __le16 domainid;"
+.br
+.BI "    __le16 endgid;"
+.br
+.BI "    __le16 nvmsetid;"
+.br
+.BI "    __le16 cap_adj_fctr;"
+.br
+.BI "    __u8 avl_spare;"
+.br
+.BI "    __u8 percent_used;"
+.br
+.BI "    __u8 mucs;"
+.br
+.BI "    __u8 cio;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "muid" 12
+Media Unit Identifier
+.IP "domainid" 12
+Domain Identifier
+.IP "endgid" 12
+Endurance Group Identifier
+.IP "nvmsetid" 12
+NVM Set Identifier
+.IP "cap_adj_fctr" 12
+Capacity Adjustment Factor
+.IP "avl_spare" 12
+Available Spare
+.IP "percent_used" 12
+Percentage Used
+.IP "mucs" 12
+Number of Channels attached to media units
+.IP "cio" 12
+Channel Identifiers Offset

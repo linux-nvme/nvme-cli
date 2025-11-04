@@ -1,0 +1,87 @@
+.TH "libnvme" 9 "struct nvme_zns_id_ns" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_zns_id_ns \- Zoned Namespace Command Set Specific Identify Namespace Data Structure
+.SH SYNOPSIS
+struct nvme_zns_id_ns {
+.br
+.BI "    __le16 zoc;"
+.br
+.BI "    __le16 ozcs;"
+.br
+.BI "    __le32 mar;"
+.br
+.BI "    __le32 mor;"
+.br
+.BI "    __le32 rrl;"
+.br
+.BI "    __le32 frl;"
+.br
+.BI "    __le32 rrl1;"
+.br
+.BI "    __le32 rrl2;"
+.br
+.BI "    __le32 rrl3;"
+.br
+.BI "    __le32 frl1;"
+.br
+.BI "    __le32 frl2;"
+.br
+.BI "    __le32 frl3;"
+.br
+.BI "    __le32 numzrwa;"
+.br
+.BI "    __le16 zrwafg;"
+.br
+.BI "    __le16 zrwasz;"
+.br
+.BI "    __u8 zrwacap;"
+.br
+.BI "    __u8 rsvd53[2763];"
+.br
+.BI "    struct nvme_zns_lbafe   lbafe[64];"
+.br
+.BI "    __u8 vs[256];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "zoc" 12
+Zone Operation Characteristics
+.IP "ozcs" 12
+Optional Zoned Command Support
+.IP "mar" 12
+Maximum Active Resources
+.IP "mor" 12
+Maximum Open Resources
+.IP "rrl" 12
+Reset Recommended Limit
+.IP "frl" 12
+Finish Recommended Limit
+.IP "rrl1" 12
+Reset Recommended Limit 1
+.IP "rrl2" 12
+Reset Recommended Limit 2
+.IP "rrl3" 12
+Reset Recommended Limit 3
+.IP "frl1" 12
+Finish Recommended Limit 1
+.IP "frl2" 12
+Finish Recommended Limit 2
+.IP "frl3" 12
+Finish Recommended Limit 3
+.IP "numzrwa" 12
+Number of ZRWA Resources
+.IP "zrwafg" 12
+ZRWA Flush Granularity
+.IP "zrwasz" 12
+ZRWA Size
+.IP "zrwacap" 12
+ZRWA Capability
+.IP "rsvd53" 12
+Reserved
+.IP "lbafe" 12
+LBA Format Extension
+.IP "vs" 12
+Vendor Specific

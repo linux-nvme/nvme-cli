@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_aggregate_predictable_lat_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_aggregate_predictable_lat_event \- Predictable Latency Event Aggregate Log Page
+.SH SYNOPSIS
+struct nvme_aggregate_predictable_lat_event {
+.br
+.BI "    __le64 num_entries;"
+.br
+.BI "    __le16 entries[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "num_entries" 12
+Number of entries
+.IP "entries" 12
+Entry list

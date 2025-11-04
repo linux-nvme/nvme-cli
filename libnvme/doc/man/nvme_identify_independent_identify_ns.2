@@ -1,0 +1,22 @@
+.TH "nvme_identify_independent_identify_ns" 9 "nvme_identify_independent_identify_ns" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_identify_independent_identify_ns \- I/O command set independent Identify namespace data
+.SH SYNOPSIS
+.B "int" nvme_identify_independent_identify_ns
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_id_independent_id_ns *ns "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Return namespaces greater than this identifier
+.IP "ns" 12
+I/O Command Set Independent Identify Namespace data
+structure
+.SH "DESCRIPTION"
+The I/O command set independent Identify namespace data structure for
+the namespace identified with \fIns\fP is returned to the host.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

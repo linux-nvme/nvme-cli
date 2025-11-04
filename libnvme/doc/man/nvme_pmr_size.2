@@ -1,0 +1,11 @@
+.TH "nvme_pmr_size" 9 "nvme_pmr_size" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_pmr_size \- Calculate size of persistent memory region elasticity buffer
+.SH SYNOPSIS
+.B "__u64" nvme_pmr_size
+.BI "(__u32 pmrebs "  ");"
+.SH ARGUMENTS
+.IP "pmrebs" 12
+Value from controller register NVME_REG_PMREBS
+.SH "RETURN"
+size of controller persistent memory buffer in bytes

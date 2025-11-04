@@ -1,0 +1,27 @@
+.TH "nvme_init_dsm_range" 9 "nvme_init_dsm_range" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_dsm_range \- Constructs a data set range structure
+.SH SYNOPSIS
+.B "void" nvme_init_dsm_range
+.BI "(struct nvme_dsm_range *dsm "  ","
+.BI "__u32 *ctx_attrs "  ","
+.BI "__u32 *llbas "  ","
+.BI "__u64 *slbas "  ","
+.BI "__u16 nr_ranges "  ");"
+.SH ARGUMENTS
+.IP "dsm" 12
+DSM range array
+.IP "ctx_attrs" 12
+Array of context attributes
+.IP "llbas" 12
+Array of length in logical blocks
+.IP "slbas" 12
+Array of starting logical blocks
+.IP "nr_ranges" 12
+The size of the dsm arrays
+.SH "DESCRIPTION"
+Each array must be the same size of size 'nr_ranges'. This is intended to be
+used with constructing a payload for \fBnvme_dsm\fP.
+.SH "RETURN"
+The nvme command status if a response was received or -errno
+otherwise.

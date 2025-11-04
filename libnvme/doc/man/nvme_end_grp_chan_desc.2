@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "struct nvme_end_grp_chan_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_end_grp_chan_desc \- Endurance Group Channel Configuration Descriptor
+.SH SYNOPSIS
+struct nvme_end_grp_chan_desc {
+.br
+.BI "    __le16 egchans;"
+.br
+.BI "    struct nvme_channel_config_desc chan_config_desc[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "egchans" 12
+Number of Channels
+.IP "chan_config_desc" 12
+Channel config descriptors.
+See \fIstruct\fP nvme_channel_config_desc

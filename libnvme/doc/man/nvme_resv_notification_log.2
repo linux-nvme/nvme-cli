@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_resv_notification_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_resv_notification_log \- Reservation Notification Log
+.SH SYNOPSIS
+struct nvme_resv_notification_log {
+.br
+.BI "    __le64 lpc;"
+.br
+.BI "    __u8 rnlpt;"
+.br
+.BI "    __u8 nalp;"
+.br
+.BI "    __u8 rsvd9[2];"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __u8 rsvd16[48];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lpc" 12
+Log Page Count
+.IP "rnlpt" 12
+See \fIenum nvme_resv_notify_rnlpt\fP.
+.IP "nalp" 12
+Number of Available Log Pages
+.IP "rsvd9" 12
+Reserved
+.IP "nsid" 12
+Namespace ID
+.IP "rsvd16" 12
+Reserved

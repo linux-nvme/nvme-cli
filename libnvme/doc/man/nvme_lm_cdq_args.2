@@ -1,0 +1,61 @@
+.TH "libnvme" 9 "struct nvme_lm_cdq_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_cdq_args \- Arguments for Controller Data Queue (CDQ) command
+.SH SYNOPSIS
+struct nvme_lm_cdq_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u16 mos;"
+.br
+.BI "    __u16 cntlid;"
+.br
+.BI "    __u16 cdqid;"
+.br
+.BI "    __u8 sel;"
+.br
+.BI "    __u8 sz_u8;"
+.br
+.BI "    __u8 rsvd1[4];"
+.br
+.BI "    __u32 sz;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+Set on completion to the command's CQE DWORD 0 controller response
+.IP "data" 12
+Pointer to data
+.IP "args_size" 12
+Length of structure
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "mos" 12
+Management Operation Specific (MOS): This field is specific to the SEL type
+.IP "cntlid" 12
+Controller ID: For Create CDQ, specifies the target migratable controller
+.IP "cdqid" 12
+Controller Data Queue ID (CDQID): For Create CDQ, this field is the CDQID created
+by the controller if no error is present. For Delete CDQ, this field is the CDQID
+to delete.
+.IP "sel" 12
+Select (SEL): This field specifies the type of management operation to perform.
+.IP "sz_u8" 12
+For Create CDQ, specifies the size of CDQ, in dwords - 1 byte
+.IP "rsvd1" 12
+Reserved
+.IP "sz" 12
+For Create CDQ, specifies the size of CDQ, in dwords - 4 byte

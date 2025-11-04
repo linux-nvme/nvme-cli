@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_plm_config" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_plm_config \- Predictable Latency Mode - Deterministic Threshold Configuration Data Structure
+.SH SYNOPSIS
+struct nvme_plm_config {
+.br
+.BI "    __le16 ee;"
+.br
+.BI "    __u8 rsvd2[30];"
+.br
+.BI "    __le64 dtwinrt;"
+.br
+.BI "    __le64 dtwinwt;"
+.br
+.BI "    __le64 dtwintt;"
+.br
+.BI "    __u8 rsvd56[456];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ee" 12
+Enable Event
+.IP "rsvd2" 12
+Reserved
+.IP "dtwinrt" 12
+DTWIN Reads Threshold
+.IP "dtwinwt" 12
+DTWIN Writes Threshold
+.IP "dtwintt" 12
+DTWIN Time Threshold
+.IP "rsvd56" 12
+Reserved

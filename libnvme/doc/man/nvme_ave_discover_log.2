@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_ave_discover_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_ave_discover_log \- AVE Discovery Log
+.SH SYNOPSIS
+struct nvme_ave_discover_log {
+.br
+.BI "    __le64 genctr;"
+.br
+.BI "    __le64 numrec;"
+.br
+.BI "    __le16 recfmt;"
+.br
+.BI "    __u8 rsvd18[2];"
+.br
+.BI "    __le32 tadlpl;"
+.br
+.BI "    __u8 rsvd24[1000];"
+.br
+.BI "    struct nvme_ave_discover_log_entry      adlpe[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "genctr" 12
+Generation Counter
+.IP "numrec" 12
+Number of Records
+.IP "recfmt" 12
+Record Format
+.IP "rsvd18" 12
+Reserved
+.IP "tadlpl" 12
+Total AVE Discovery Log Page Length
+.IP "rsvd24" 12
+Reserved
+.IP "adlpe" 12
+AVE Discovery Log Page Entry List

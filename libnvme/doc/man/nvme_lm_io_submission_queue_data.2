@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_lm_io_submission_queue_data" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_io_submission_queue_data \- I/O Submission Queue data structure. Fields related to the contents of Create I/O Submission Queue command that created an I/O Submission Queue.
+.SH SYNOPSIS
+struct nvme_lm_io_submission_queue_data {
+.br
+.BI "    __le64 iosqprp1;"
+.br
+.BI "    __le16 iosqqsize;"
+.br
+.BI "    __le16 iosqqid;"
+.br
+.BI "    __le16 iosqcqid;"
+.br
+.BI "    __le16 iosqa;"
+.br
+.BI "    __le16 iosqhp;"
+.br
+.BI "    __le16 iosqtp;"
+.br
+.BI "    __u8 rsvd20[4];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "iosqprp1" 12
+I/O Submission PRP Entry 1 (IOSQPRP1)
+.IP "iosqqsize" 12
+I/O Submission Queue Size (IOSQQSIZE)
+.IP "iosqqid" 12
+I/O Submission Queue Identifier (IOSQQID)
+.IP "iosqcqid" 12
+I/O Completion Queue Identifier (IOSQCQID)
+.IP "iosqa" 12
+I/O Submission Queue Attributes (IOSQA)
+.IP "iosqhp" 12
+I/O Submission Queue Head Pointer (IOSQHP)
+.IP "iosqtp" 12
+I/O Submission Queue Tail Pointer (IOSQTP)
+.IP "rsvd20" 12
+Reserved

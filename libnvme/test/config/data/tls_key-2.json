@@ -1,0 +1,22 @@
+[
+  {
+    "hostnqn":"nqn.2014-08.org.nvmexpress:uuid:befdec4c-2234-11b2-a85c-ca77c773af36",
+    "hostid":"2cd2c43b-a90a-45c1-a8cd-86b33ab273b6",
+    "subsystems":[
+      {
+        "nqn":"nqn.io-1",
+        "ports":[
+          {
+            "transport":"tcp",
+            "traddr":"192.168.154.148",
+            "trsvcid":"4420",
+            "dhchap_key":"none",
+            "tls":true,
+            "tls_psk_identity":"NVMe1R01 nqn.2014-08.org.nvmexpress:uuid:befdec4c-2234-11b2-a85c-ca77c773af36 nqn.io-1 QMFIifx2SCVnlE2hc4MQb0r+2g56x3G7P6jJtDiYK+I=",
+            "tls_key":"NVMeTLSkey-1:01:Hhc5sFjwSZ6w5hPY19tqprajYtuYci3tN+Z2wGViDk3rpSR+:"
+          }
+        ]
+      }
+    ]
+  }
+]

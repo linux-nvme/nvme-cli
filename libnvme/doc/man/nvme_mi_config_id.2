@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_mi_config_id" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_config_id \- NVMe-MI Configuration identifier.
+.SH SYNOPSIS
+enum nvme_mi_config_id {
+.br
+.BI "    NVME_MI_CONFIG_SMBUS_FREQ"
+, 
+.br
+.br
+.BI "    NVME_MI_CONFIG_HEALTH_STATUS_CHANGE"
+, 
+.br
+.br
+.BI "    NVME_MI_CONFIG_MCTP_MTU"
+, 
+.br
+.br
+.BI "    NVME_MI_CONFIG_AE"
+
+};
+.SH Constants
+.IP "NVME_MI_CONFIG_SMBUS_FREQ" 12
+Current SMBus/I2C frequency
+.IP "NVME_MI_CONFIG_HEALTH_STATUS_CHANGE" 12
+Health Status change - used to clear
+health status bits in CCS bits of
+status poll. Only for Set ops.
+.IP "NVME_MI_CONFIG_MCTP_MTU" 12
+MCTP maximum transmission unit size of port
+specified in dw 0
+.IP "NVME_MI_CONFIG_AE" 12
+Asynchronous Events configuration
+Configuration parameters for the MI Get/Set Configuration commands.
+.SH "Description"
+See &\fBnvme_mi_mi_config_get\fP and &\fBnvme_mi_config_set\fP.

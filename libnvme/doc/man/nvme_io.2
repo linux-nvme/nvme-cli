@@ -1,0 +1,15 @@
+.TH "nvme_io" 9 "nvme_io" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_io \- Submit an nvme user I/O command
+.SH SYNOPSIS
+.B "int" nvme_io
+.BI "(struct nvme_io_args *args "  ","
+.BI "__u8 opcode "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_io_args\fP argument structure
+.IP "opcode" 12
+Opcode to execute
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

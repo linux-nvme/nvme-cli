@@ -1,0 +1,50 @@
+.TH "libnvme" 9 "enum nvme_st_curr_op" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_st_curr_op \- Current Device Self-Test Operation
+.SH SYNOPSIS
+enum nvme_st_curr_op {
+.br
+.BI "    NVME_ST_CURR_OP_NOT_RUNNING"
+, 
+.br
+.br
+.BI "    NVME_ST_CURR_OP_SHORT"
+, 
+.br
+.br
+.BI "    NVME_ST_CURR_OP_EXTENDED"
+, 
+.br
+.br
+.BI "    NVME_ST_CURR_OP_VS"
+, 
+.br
+.br
+.BI "    NVME_ST_CURR_OP_RESERVED"
+, 
+.br
+.br
+.BI "    NVME_ST_CURR_OP_MASK"
+, 
+.br
+.br
+.BI "    NVME_ST_CURR_OP_CMPL_MASK"
+
+};
+.SH Constants
+.IP "NVME_ST_CURR_OP_NOT_RUNNING" 12
+No device self-test operation in progress.
+.IP "NVME_ST_CURR_OP_SHORT" 12
+Short device self-test operation in progress.
+.IP "NVME_ST_CURR_OP_EXTENDED" 12
+Extended device self-test operation in progress.
+.IP "NVME_ST_CURR_OP_VS" 12
+Vendor specific.
+.IP "NVME_ST_CURR_OP_RESERVED" 12
+Reserved.
+.IP "NVME_ST_CURR_OP_MASK" 12
+Mask to get the current operation value from the
+\fIstruct nvme_self_test_log\fP.current_operation field.
+.IP "NVME_ST_CURR_OP_CMPL_MASK" 12
+Mask to get the current operation completion value
+from the \fIstruct nvme_self_test_log\fP.completion field.

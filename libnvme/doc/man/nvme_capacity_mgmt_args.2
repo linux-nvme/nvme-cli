@@ -1,0 +1,45 @@
+.TH "libnvme" 9 "struct nvme_capacity_mgmt_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_capacity_mgmt_args \- Arguments for the NVMe Capacity Management command
+.SH SYNOPSIS
+struct nvme_capacity_mgmt_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 cdw11;"
+.br
+.BI "    __u32 cdw12;"
+.br
+.BI "    __u16 element_id;"
+.br
+.BI "    __u8 op;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+If successful, the CQE dword0 value
+.IP "args_size" 12
+Size of \fIstruct nvme_capacity_mgmt_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "cdw11" 12
+Least significant 32 bits of the capacity in bytes of the
+Endurance Group or NVM Set to be created
+.IP "cdw12" 12
+Most significant 32 bits of the capacity in bytes of the
+Endurance Group or NVM Set to be created
+.IP "element_id" 12
+Value specific to the value of the Operation field
+.IP "op" 12
+Operation to be performed by the controller

@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_lba_range_type_entry" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lba_range_type_entry \- LBA Range Type - Data Structure Entry
+.SH SYNOPSIS
+struct nvme_lba_range_type_entry {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 attributes;"
+.br
+.BI "    __u8 rsvd2[14];"
+.br
+.BI "    __le64 slba;"
+.br
+.BI "    __le64 nlb;"
+.br
+.BI "    __u8 guid[16];"
+.br
+.BI "    __u8 rsvd48[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "type" 12
+Specifies the Type of the LBA range
+.IP "attributes" 12
+Specifies attributes of the LBA range
+.IP "rsvd2" 12
+Reserved
+.IP "slba" 12
+Starting LBA
+.IP "nlb" 12
+Number of Logical Blocks
+.IP "guid" 12
+Unique Identifier
+.IP "rsvd48" 12
+Reserved

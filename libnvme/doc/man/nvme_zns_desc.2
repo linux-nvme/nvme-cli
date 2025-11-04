@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "struct nvme_zns_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_zns_desc \- Zone Descriptor Data Structure
+.SH SYNOPSIS
+struct nvme_zns_desc {
+.br
+.BI "    __u8 zt;"
+.br
+.BI "    __u8 zs;"
+.br
+.BI "    __u8 za;"
+.br
+.BI "    __u8 zai;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    __le64 zcap;"
+.br
+.BI "    __le64 zslba;"
+.br
+.BI "    __le64 wp;"
+.br
+.BI "    __u8 rsvd32[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "zt" 12
+Zone Type
+.IP "zs" 12
+Zone State
+.IP "za" 12
+Zone Attributes
+.IP "zai" 12
+Zone Attributes Information
+.IP "rsvd4" 12
+Reserved
+.IP "zcap" 12
+Zone Capacity
+.IP "zslba" 12
+Zone Start Logical Block Address
+.IP "wp" 12
+Write Pointer
+.IP "rsvd32" 12
+Reserved

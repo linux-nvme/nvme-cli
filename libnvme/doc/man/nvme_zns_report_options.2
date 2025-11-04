@@ -1,0 +1,54 @@
+.TH "libnvme" 9 "enum nvme_zns_report_options" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_zns_report_options \- Zone Management Receive - Zone Receive Action Specific Field
+.SH SYNOPSIS
+enum nvme_zns_report_options {
+.br
+.BI "    NVME_ZNS_ZRAS_REPORT_ALL"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZRAS_REPORT_EMPTY"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZRAS_REPORT_IMPL_OPENED"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZRAS_REPORT_EXPL_OPENED"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZRAS_REPORT_CLOSED"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZRAS_REPORT_FULL"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZRAS_REPORT_READ_ONLY"
+, 
+.br
+.br
+.BI "    NVME_ZNS_ZRAS_REPORT_OFFLINE"
+
+};
+.SH Constants
+.IP "NVME_ZNS_ZRAS_REPORT_ALL" 12
+List all zones
+.IP "NVME_ZNS_ZRAS_REPORT_EMPTY" 12
+List the zones in the ZSE:Empty state
+.IP "NVME_ZNS_ZRAS_REPORT_IMPL_OPENED" 12
+List the zones in the ZSIO:Implicitly Opened state
+.IP "NVME_ZNS_ZRAS_REPORT_EXPL_OPENED" 12
+List the zones in the ZSEO:Explicitly Opened state
+.IP "NVME_ZNS_ZRAS_REPORT_CLOSED" 12
+List the zones in the ZSC:Closed state
+.IP "NVME_ZNS_ZRAS_REPORT_FULL" 12
+List the zones in the ZSF:Full state
+.IP "NVME_ZNS_ZRAS_REPORT_READ_ONLY" 12
+List the zones in the ZSRO:Read Only state
+.IP "NVME_ZNS_ZRAS_REPORT_OFFLINE" 12
+List the zones in the ZSO:Offline state

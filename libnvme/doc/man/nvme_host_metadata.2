@@ -1,0 +1,33 @@
+.TH "libnvme" 9 "struct nvme_host_metadata" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_host_metadata \- Host Metadata Data Structure
+.SH SYNOPSIS
+struct nvme_host_metadata {
+.br
+.BI "    __u8 ndesc;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    union {"
+.br
+.BI "      struct nvme_metadata_element_desc descs[0];"
+.br
+.BI "      __u8 descs_buf[4094];"
+.br
+.BI "    };"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ndesc" 12
+Number of metadata element descriptors
+.IP "rsvd1" 12
+Reserved
+.IP "{unnamed_union}" 12
+anonymous
+.IP "descs" 12
+Metadata element descriptors
+.IP "descs_buf" 12
+Metadata element descriptor buffer

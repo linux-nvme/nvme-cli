@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_fw_download_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_fw_download_args \- Arguments for the NVMe Firmware Download command
+.SH SYNOPSIS
+struct nvme_fw_download_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 offset;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "data" 12
+Userspace address of the firmware data
+.IP "args_size" 12
+Size of \fIstruct nvme_fw_download_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "offset" 12
+Offset in the firmware data
+.IP "data_len" 12
+Length of data in this command in bytes

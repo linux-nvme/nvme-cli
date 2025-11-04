@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_firmware_slot" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_firmware_slot \- Firmware Slot Information Log
+.SH SYNOPSIS
+struct nvme_firmware_slot {
+.br
+.BI "    __u8 afi;"
+.br
+.BI "    __u8 rsvd1[7];"
+.br
+.BI "    char frs[7][8];"
+.br
+.BI "    __u8 rsvd2[448];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "afi" 12
+Active Firmware Info
+.IP "rsvd1" 12
+Reserved
+.IP "frs" 12
+Firmware Revision for Slot
+.IP "rsvd2" 12
+Reserved

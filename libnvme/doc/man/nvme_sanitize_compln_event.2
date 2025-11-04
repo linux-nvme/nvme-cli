@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_sanitize_compln_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_sanitize_compln_event \- Sanitize Completion Event Data
+.SH SYNOPSIS
+struct nvme_sanitize_compln_event {
+.br
+.BI "    __le16 sani_prog;"
+.br
+.BI "    __le16 sani_status;"
+.br
+.BI "    __le16 cmpln_info;"
+.br
+.BI "    __u8 rsvd6[2];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "sani_prog" 12
+Sanitize Progress
+.IP "sani_status" 12
+Sanitize Status
+.IP "cmpln_info" 12
+Completion Information
+.IP "rsvd6" 12
+Reserved

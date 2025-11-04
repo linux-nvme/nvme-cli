@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_fw_commit_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_fw_commit_event \- Firmware Commit Event Data
+.SH SYNOPSIS
+struct nvme_fw_commit_event {
+.br
+.BI "    __le64 old_fw_rev;"
+.br
+.BI "    __le64 new_fw_rev;"
+.br
+.BI "    __u8 fw_commit_action;"
+.br
+.BI "    __u8 fw_slot;"
+.br
+.BI "    __u8 sct_fw;"
+.br
+.BI "    __u8 sc_fw;"
+.br
+.BI "    __le16 vndr_assign_fw_commit_rc;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "old_fw_rev" 12
+Old Firmware Revision
+.IP "new_fw_rev" 12
+New Firmware Revision
+.IP "fw_commit_action" 12
+Firmware Commit Action
+.IP "fw_slot" 12
+Firmware Slot
+.IP "sct_fw" 12
+Status Code Type for Firmware Commit Command
+.IP "sc_fw" 12
+Status Returned for Firmware Commit Command
+.IP "vndr_assign_fw_commit_rc" 12
+Vendor Assigned Firmware Commit Result Code

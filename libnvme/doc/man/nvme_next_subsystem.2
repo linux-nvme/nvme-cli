@@ -1,0 +1,14 @@
+.TH "nvme_next_subsystem" 9 "nvme_next_subsystem" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_next_subsystem \- Next subsystem iterator
+.SH SYNOPSIS
+.B "nvme_subsystem_t" nvme_next_subsystem
+.BI "(nvme_host_t h "  ","
+.BI "nvme_subsystem_t s "  ");"
+.SH ARGUMENTS
+.IP "h" 12
+\fInvme_host_t\fP object
+.IP "s" 12
+Previous \fInvme_subsystem_t\fP iterator
+.SH "RETURN"
+next \fInvme_subsystem_t\fP object in an iterator

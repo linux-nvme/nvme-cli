@@ -1,0 +1,54 @@
+.TH "libnvme" 9 "enum nvme_pmrswtp" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_pmrswtp \- This field indicates the persistent memory region sustained write throughput
+.SH SYNOPSIS
+enum nvme_pmrswtp {
+.br
+.BI "    NVME_PMRSWTP_PMRSWTU_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRSWTP_PMRSWTV_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRSWTP_PMRSWTU_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRSWTP_PMRSWTV_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRSWTP_PMRSWTU_BPS"
+, 
+.br
+.br
+.BI "    NVME_PMRSWTP_PMRSWTU_KBPS"
+, 
+.br
+.br
+.BI "    NVME_PMRSWTP_PMRSWTU_MBPS"
+, 
+.br
+.br
+.BI "    NVME_PMRSWTP_PMRSWTU_GBPS"
+
+};
+.SH Constants
+.IP "NVME_PMRSWTP_PMRSWTU_SHIFT" 12
+Shift amount to get the PMR sustained write throughput units
+.IP "NVME_PMRSWTP_PMRSWTV_SHIFT" 12
+Shift amount to get the PMR sustained write throughput
+.IP "NVME_PMRSWTP_PMRSWTU_MASK" 12
+Mask to get the PMR sustained write throughput units
+.IP "NVME_PMRSWTP_PMRSWTV_MASK" 12
+Mask to get the PMR sustained write throughput
+.IP "NVME_PMRSWTP_PMRSWTU_BPS" 12
+Bytes per second
+.IP "NVME_PMRSWTP_PMRSWTU_KBPS" 12
+1 KiB / s
+.IP "NVME_PMRSWTP_PMRSWTU_MBPS" 12
+1 MiB / s
+.IP "NVME_PMRSWTP_PMRSWTU_GBPS" 12
+1 GiB / s

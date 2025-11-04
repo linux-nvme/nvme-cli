@@ -1,0 +1,18 @@
+.TH "libnvme" 9 "enum nvme_feat_plm_window_select" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_feat_plm_window_select \- Predictable Latency Per NVM Set Log
+.SH SYNOPSIS
+enum nvme_feat_plm_window_select {
+.br
+.BI "    NVME_FEATURE_PLM_DTWIN"
+, 
+.br
+.br
+.BI "    NVME_FEATURE_PLM_NDWIN"
+
+};
+.SH Constants
+.IP "NVME_FEATURE_PLM_DTWIN" 12
+Deterministic Window select
+.IP "NVME_FEATURE_PLM_NDWIN" 12
+Non-Deterministic Window select

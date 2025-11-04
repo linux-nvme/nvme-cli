@@ -1,0 +1,179 @@
+.TH "libnvme" 9 "enum nbft_security_flags" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nbft_security_flags \- Security Profile Descriptor Flags (Figure 22)
+.SH SYNOPSIS
+enum nbft_security_flags {
+.br
+.BI "    NBFT_SECURITY_VALID"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_IN_BAND_AUTH_MASK"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_IN_BAND_AUTH_NOT_SUPPORTED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_IN_BAND_AUTH_NOT_REQUIRED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_IN_BAND_AUTH_REQUIRED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_AUTH_POLICY_LIST_MASK"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_AUTH_POLICY_LIST_NOT_SUPPORTED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_AUTH_POLICY_LIST_DRIVER"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_AUTH_POLICY_LIST_ADMIN"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_CHAN_NEG_MASK"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_CHAN_NEG_NOT_SUPPORTED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_CHAN_NEG_NOT_REQUIRED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_CHAN_NEG_REQUIRED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_POLICY_LIST_MASK"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_POLICY_LIST_NOT_SUPPORTED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_POLICY_LIST_DRIVER"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_POLICY_LIST_ADMIN"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_CIPHER_RESTRICTED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED"
+, 
+.br
+.br
+.BI "    NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST"
+
+};
+.SH Constants
+.IP "NBFT_SECURITY_VALID" 12
+Descriptor Valid: If set to 1h, then
+this descriptor is valid. If cleared
+to 0h, then this descriptor is not valid.
+.IP "NBFT_SECURITY_IN_BAND_AUTH_MASK" 12
+Mask to get the In-Band Authentication
+Required field.
+.IP "NBFT_SECURITY_IN_BAND_AUTH_NOT_SUPPORTED" 12
+In-band authentication is not supported
+by the NVM subsystem.
+.IP "NBFT_SECURITY_IN_BAND_AUTH_NOT_REQUIRED" 12
+In-band authentication is supported by
+the NVM subsystem and is not required.
+.IP "NBFT_SECURITY_IN_BAND_AUTH_REQUIRED" 12
+In-band authentication is supported by
+the NVM subsystem and is required.
+.IP "NBFT_SECURITY_AUTH_POLICY_LIST_MASK" 12
+Mask to get the Authentication Policy List
+flag: This field indicates whether
+authentication protocols were indicated
+by policy from driver defaults or
+administrative configuration.
+.IP "NBFT_SECURITY_AUTH_POLICY_LIST_NOT_SUPPORTED" 12
+Authentication Protocols Heap Object Reference
+field Offset and Length are reserved.
+.IP "NBFT_SECURITY_AUTH_POLICY_LIST_DRIVER" 12
+Authentication Protocols Offset field and
+the Authentication Protocols Length field
+indicate a list of authentication protocols
+used by the driver.
+.IP "NBFT_SECURITY_AUTH_POLICY_LIST_ADMIN" 12
+Authentication Protocols Offset field and
+the Authentication Protocols Length field
+indicate a list of authentication protocols
+that were administratively set and used
+by the driver.
+.IP "NBFT_SECURITY_SEC_CHAN_NEG_MASK" 12
+Mask to get the Secure Channel Negotiation
+Required flag: This field indicates whether
+secure channel negotiation (e.g. TLS)
+is required.
+.IP "NBFT_SECURITY_SEC_CHAN_NEG_NOT_SUPPORTED" 12
+Secure channel negotiation is not supported
+by the NVM subsystem.
+.IP "NBFT_SECURITY_SEC_CHAN_NEG_NOT_REQUIRED" 12
+Secure channel negotiation is supported
+by the NVM subsystem and is not required.
+.IP "NBFT_SECURITY_SEC_CHAN_NEG_REQUIRED" 12
+Secure channel negotiation is supported
+by the NVM subsystem and is required.
+.IP "NBFT_SECURITY_SEC_POLICY_LIST_MASK" 12
+Mask to get the Security Policy List flag:
+This field indicates whether secure channel
+protocols were indicated by policy from driver
+defaults or administrative configuration.
+.IP "NBFT_SECURITY_SEC_POLICY_LIST_NOT_SUPPORTED" 12
+The Offset field and Length field in the
+Secure Channel Algorithm Heap Object Reference
+field are reserved.
+.IP "NBFT_SECURITY_SEC_POLICY_LIST_DRIVER" 12
+The Heap Object specified by the Secure Channel
+Algorithm Heap Object Reference field indicates
+a list of authentication protocols used
+by the driver.
+.IP "NBFT_SECURITY_SEC_POLICY_LIST_ADMIN" 12
+The Heap Object specified by the Secure Channel
+Algorithm Heap Object Reference field indicates
+a list of authentication protocols that were
+administratively set and used by the driver.
+.IP "NBFT_SECURITY_CIPHER_RESTRICTED" 12
+Cipher Suites Restricted by Policy: If set to 1h,
+then the Cipher Suite Offset field and the
+Ciper Suite Length field indicate a list
+of supported cipher suites by the driver.
+If cleared to 0h, then the Cipher Suite Offset
+field and the Cipher Suite Length field
+are reserved.
+.IP "NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED" 12
+Authentication DH Groups Restricted
+by Policy List: If set to 1h, then connections
+shall use one of the authentication DH groups
+in the Authentication DH Groups List is required.
+If cleared to 0h, then no Authentication DH Groups
+List is indicated and use of an authentication
+DH Group is not required.
+.IP "NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST" 12
+Secure Hash Functions Policy List: If set to 1h,
+then connections shall use one of the secure
+hash functions in the Secure Hash Functions
+Policy List is required. If cleared to 0h,
+then no Secure Hash Functions Policy
+List is indicated and use of a secure
+hash function is not required.

@@ -1,0 +1,17 @@
+.TH "nvme_ns_identify" 9 "nvme_ns_identify" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ns_identify \- Issue an 'identify namespace' command
+.SH SYNOPSIS
+.B "int" nvme_ns_identify
+.BI "(nvme_ns_t n "  ","
+.BI "struct nvme_id_ns *ns "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.IP "ns" 12
+\fInvme_id_ns\fP buffer
+.SH "DESCRIPTION"
+Writes the data returned by the 'identify namespace' command
+into \fIns\fP.
+.SH "RETURN"
+0 on success, -1 on error.

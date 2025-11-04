@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_timestamp" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_timestamp \- Timestamp - Data Structure for Get Features
+.SH SYNOPSIS
+struct nvme_timestamp {
+.br
+.BI "    __u8 timestamp[6];"
+.br
+.BI "    __u8 attr;"
+.br
+.BI "    __u8 rsvd;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "timestamp" 12
+Timestamp value based on origin and synch field
+.IP "attr" 12
+Attribute
+.IP "rsvd" 12
+Reserved

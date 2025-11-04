@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_metadata_element_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_metadata_element_desc \- Metadata Element Descriptor
+.SH SYNOPSIS
+struct nvme_metadata_element_desc {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 rev;"
+.br
+.BI "    __le16 len;"
+.br
+.BI "    __u8 val[0];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "type" 12
+Element Type (ET)
+.IP "rev" 12
+Element Revision (ER)
+.IP "len" 12
+Element Length (ELEN)
+.IP "val" 12
+Element Value (EVAL), UTF-8 string

@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_lba_status_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lba_status_desc \- LBA Status Descriptor Entry
+.SH SYNOPSIS
+struct nvme_lba_status_desc {
+.br
+.BI "    __le64 dslba;"
+.br
+.BI "    __le32 nlb;"
+.br
+.BI "    __u8 rsvd12;"
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 rsvd14[2];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "dslba" 12
+Descriptor Starting LBA
+.IP "nlb" 12
+Number of Logical Blocks
+.IP "rsvd12" 12
+Reserved
+.IP "status" 12
+Additional status about this LBA range
+.IP "rsvd14" 12
+Reserved

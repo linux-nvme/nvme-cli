@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_dsm_range" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_dsm_range \- Dataset Management - Range Definition
+.SH SYNOPSIS
+struct nvme_dsm_range {
+.br
+.BI "    __le32 cattr;"
+.br
+.BI "    __le32 nlb;"
+.br
+.BI "    __le64 slba;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cattr" 12
+Context Attributes
+.IP "nlb" 12
+Length in logical blocks
+.IP "slba" 12
+Starting LBA

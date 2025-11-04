@@ -1,0 +1,18 @@
+.TH "nvme_mi_admin_ns_attach_ctrls" 9 "nvme_mi_admin_ns_attach_ctrls" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_ns_attach_ctrls \- Attach namespace to controllers
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_ns_attach_ctrls
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_ctrl_list *ctrlist "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to send command to
+.IP "nsid" 12
+Namespace ID to attach
+.IP "ctrlist" 12
+Controller list to modify attachment state of nsid
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

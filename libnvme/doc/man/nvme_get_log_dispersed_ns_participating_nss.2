@@ -1,0 +1,21 @@
+.TH "nvme_get_log_dispersed_ns_participating_nss" 9 "nvme_get_log_dispersed_ns_participating_nss" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_log_dispersed_ns_participating_nss \- Retrieve Dispersed Namespace Participating NVM Subsystems Log
+.SH SYNOPSIS
+.B "int" nvme_get_log_dispersed_ns_participating_nss
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u32 len "  ","
+.BI "struct nvme_dispersed_ns_participating_nss_log *log "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace Identifier
+.IP "len" 12
+The allocated length of the log page
+.IP "log" 12
+User address to store the log page
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise

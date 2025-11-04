@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_ae_type" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_ae_type \- Asynchronous Event Type
+.SH SYNOPSIS
+enum nvme_ae_type {
+.br
+.BI "    NVME_AER_ERROR"
+, 
+.br
+.br
+.BI "    NVME_AER_SMART"
+, 
+.br
+.br
+.BI "    NVME_AER_NOTICE"
+, 
+.br
+.br
+.BI "    NVME_AER_IMMEDIATE"
+, 
+.br
+.br
+.BI "    NVME_AER_ONESHOT"
+, 
+.br
+.br
+.BI "    NVME_AER_CSS"
+, 
+.br
+.br
+.BI "    NVME_AER_VS"
+
+};
+.SH Constants
+.IP "NVME_AER_ERROR" 12
+Error event
+.IP "NVME_AER_SMART" 12
+SMART / Health Status event
+.IP "NVME_AER_NOTICE" 12
+Notice event
+.IP "NVME_AER_IMMEDIATE" 12
+Immediate
+.IP "NVME_AER_ONESHOT" 12
+One-Shot
+.IP "NVME_AER_CSS" 12
+NVM Command Set Specific events
+.IP "NVME_AER_VS" 12
+Vendor Specific event

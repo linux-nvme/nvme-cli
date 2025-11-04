@@ -1,0 +1,132 @@
+.TH "libnvme" 9 "enum nvme_connect_err" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_connect_err \- nvme connect error codes
+.SH SYNOPSIS
+enum nvme_connect_err {
+.br
+.BI "    ENVME_CONNECT_RESOLVE"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_ADDRFAM"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_TRADDR"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_TARG"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_AARG"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_OPEN"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_WRITE"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_READ"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_PARSE"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_INVAL_TR"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_LOOKUP_SUBSYS_NAME"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_LOOKUP_SUBSYS"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_ALREADY"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_INVAL"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_ADDRINUSE"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_NODEV"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_OPNOTSUPP"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_CONNREFUSED"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_ADDRNOTAVAIL"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_IGNORED"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_NOKEY"
+
+};
+.SH Constants
+.IP "ENVME_CONNECT_RESOLVE" 12
+failed to resolve host
+.IP "ENVME_CONNECT_ADDRFAM" 12
+unrecognized address family
+.IP "ENVME_CONNECT_TRADDR" 12
+failed to get traddr
+.IP "ENVME_CONNECT_TARG" 12
+need a transport (-t) argument
+.IP "ENVME_CONNECT_AARG" 12
+need a address (-a) argument
+.IP "ENVME_CONNECT_OPEN" 12
+failed to open nvme-fabrics device
+.IP "ENVME_CONNECT_WRITE" 12
+failed to write to nvme-fabrics device
+.IP "ENVME_CONNECT_READ" 12
+failed to read from nvme-fabrics device
+.IP "ENVME_CONNECT_PARSE" 12
+failed to parse ctrl info
+.IP "ENVME_CONNECT_INVAL_TR" 12
+invalid transport type
+.IP "ENVME_CONNECT_LOOKUP_SUBSYS_NAME" 12
+failed to lookup subsystem name
+.IP "ENVME_CONNECT_LOOKUP_SUBSYS" 12
+failed to lookup subsystem
+.IP "ENVME_CONNECT_ALREADY" 12
+the connect attempt failed, already connected
+.IP "ENVME_CONNECT_INVAL" 12
+invalid arguments/configuration
+.IP "ENVME_CONNECT_ADDRINUSE" 12
+hostnqn already in use
+.IP "ENVME_CONNECT_NODEV" 12
+invalid interface
+.IP "ENVME_CONNECT_OPNOTSUPP" 12
+not supported
+.IP "ENVME_CONNECT_CONNREFUSED" 12
+connection refused
+.IP "ENVME_CONNECT_ADDRNOTAVAIL" 12
+cannot assign requested address
+.IP "ENVME_CONNECT_IGNORED" 12
+connect attempt is ignored due to configuration
+.IP "ENVME_CONNECT_NOKEY" 12
+the TLS key is missing

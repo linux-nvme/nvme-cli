@@ -1,0 +1,37 @@
+.TH "nvme_mi_admin_identify_partial" 9 "nvme_mi_admin_identify_partial" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_identify_partial \- Perform an Admin identify command, and retrieve partial response data.
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_identify_partial
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "struct nvme_identify_args *args "  ","
+.BI "off_t offset "  ","
+.BI "size_t size "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to process identify command
+.IP "args" 12
+Identify command arguments
+.IP "offset" 12
+offset of identify data to retrieve from response
+.IP "size" 12
+size of identify data to return
+.SH "DESCRIPTION"
+Perform an Identify command, using the Identify command parameters in \fIargs\fP.
+The \fIoffset\fP and \fIsize\fP arguments allow the caller to retrieve part of
+the identify response. See NVMe-MI section 6.2 for the semantics (and some
+handy diagrams) of the offset & size parameters.
+
+Will return an error if the length of the response data (from the controller)
+did not match \fIsize\fP.
+
+Unless you're performing a vendor-unique identify command, You'll probably
+want to use one of the identify helpers (nvme_mi_admin_identify,
+nvme_mi_admin_identify_cns_nsid, or nvme_mi_admin_identify_<type>) instead
+of this. If the type of your identify command is standardized but not
+yet supported by libnvme-mi, please contact the maintainers.
+
+See: \fIstruct nvme_identify_args\fP
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

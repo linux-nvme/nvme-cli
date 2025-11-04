@@ -1,0 +1,18 @@
+.TH "nvme_get_log_media_unit_stat" 9 "nvme_get_log_media_unit_stat" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_log_media_unit_stat \- Retrieve Media Unit Status
+.SH SYNOPSIS
+.B "int" nvme_get_log_media_unit_stat
+.BI "(int fd "  ","
+.BI "__u16 domid "  ","
+.BI "struct nvme_media_unit_stat_log *mus "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "domid" 12
+Domain Identifier selection, if supported
+.IP "mus" 12
+User address to store the Media Unit statistics log
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise

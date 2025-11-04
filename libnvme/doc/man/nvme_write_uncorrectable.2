@@ -1,0 +1,17 @@
+.TH "nvme_write_uncorrectable" 9 "nvme_write_uncorrectable" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_write_uncorrectable \- Submit an nvme write uncorrectable command
+.SH SYNOPSIS
+.B "int" nvme_write_uncorrectable
+.BI "(struct nvme_io_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_io_args\fP argument structure
+.SH "DESCRIPTION"
+The Write Uncorrectable command marks a range of logical blocks as invalid.
+When the specified logical block(s) are read after this operation, a failure
+is returned with Unrecovered Read Error status. To clear the invalid logical
+block status, a write operation on those logical blocks is required.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

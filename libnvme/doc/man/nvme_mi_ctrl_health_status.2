@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_mi_ctrl_health_status" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_ctrl_health_status \- Controller Health Data Structure (CHDS)
+.SH SYNOPSIS
+struct nvme_mi_ctrl_health_status {
+.br
+.BI "    __le16 ctlid;"
+.br
+.BI "    __le16 csts;"
+.br
+.BI "    __le16 ctemp;"
+.br
+.BI "    __u8 pdlu;"
+.br
+.BI "    __u8 spare;"
+.br
+.BI "    __u8 cwarn;"
+.br
+.BI "    __u8 rsvd9[7];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ctlid" 12
+Controller Identifier
+.IP "csts" 12
+Controller Status
+.IP "ctemp" 12
+Composite Temperature
+.IP "pdlu" 12
+Percentage Used
+.IP "spare" 12
+Available Spare
+.IP "cwarn" 12
+Critical Warning
+.IP "rsvd9" 12
+Reserved

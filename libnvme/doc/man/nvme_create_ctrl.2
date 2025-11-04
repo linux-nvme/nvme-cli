@@ -1,0 +1,31 @@
+.TH "nvme_create_ctrl" 9 "nvme_create_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_create_ctrl \- Allocate an unconnected NVMe controller
+.SH SYNOPSIS
+.B "nvme_ctrl_t" nvme_create_ctrl
+.BI "(nvme_root_t r "  ","
+.BI "const char *subsysnqn "  ","
+.BI "const char *transport "  ","
+.BI "const char *traddr "  ","
+.BI "const char *host_traddr "  ","
+.BI "const char *host_iface "  ","
+.BI "const char *trsvcid "  ");"
+.SH ARGUMENTS
+.IP "r" 12
+NVMe root element
+.IP "subsysnqn" 12
+Subsystem NQN
+.IP "transport" 12
+Transport type
+.IP "traddr" 12
+Transport address
+.IP "host_traddr" 12
+Host transport address
+.IP "host_iface" 12
+Host interface name
+.IP "trsvcid" 12
+Transport service ID
+.SH "DESCRIPTION"
+Creates an unconnected controller to be used for \fBnvme_add_ctrl\fP.
+.SH "RETURN"
+Controller instance

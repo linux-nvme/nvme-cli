@@ -1,0 +1,15 @@
+.TH "nvme_subsystem_for_each_ctrl_safe" 9 "nvme_subsystem_for_each_ctrl_safe" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsystem_for_each_ctrl_safe \- Traverse controllers
+.SH SYNOPSIS
+.B "nvme_subsystem_for_each_ctrl_safe
+.BI "(s "  ","
+.BI "c "  ","
+.BI "_c "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+\fInvme_subsystem_t\fP object
+.IP "c" 12
+Controller instance
+.IP "_c" 12
+A \fInvme_ctrl_t_node\fP to use as temporary storage

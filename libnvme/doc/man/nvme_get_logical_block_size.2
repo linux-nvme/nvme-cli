@@ -1,0 +1,18 @@
+.TH "nvme_get_logical_block_size" 9 "nvme_get_logical_block_size" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_logical_block_size \- Retrieve block size
+.SH SYNOPSIS
+.B "int" nvme_get_logical_block_size
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "int *blksize "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace id
+.IP "blksize" 12
+Pointer to where the block size will be set on success
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

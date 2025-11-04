@@ -1,0 +1,102 @@
+.TH "libnvme" 9 "enum nvme_cmbloc" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmbloc \- This field indicates the controller memory buffer location
+.SH SYNOPSIS
+enum nvme_cmbloc {
+.br
+.BI "    NVME_CMBLOC_BIR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CQMMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CQPDS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CDPLMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CDPCILS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CDMMMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CQDA_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_OFST_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_BIR_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CQMMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CQPDS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CDPLMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CDPCILS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CDMMMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_CQDA_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMBLOC_OFST_MASK"
+
+};
+.SH Constants
+.IP "NVME_CMBLOC_BIR_SHIFT" 12
+Shift amount to get the base indicator register
+.IP "NVME_CMBLOC_CQMMS_SHIFT" 12
+Shift amount to get the CMB queue mixed memory support
+.IP "NVME_CMBLOC_CQPDS_SHIFT" 12
+Shift amount to get the CMB queue physically discontiguous support
+.IP "NVME_CMBLOC_CDPLMS_SHIFT" 12
+Shift amount to get the CMB data pointer mixed locations support
+.IP "NVME_CMBLOC_CDPCILS_SHIFT" 12
+Shift amount to get the CMB data pointer and command independent locations support
+.IP "NVME_CMBLOC_CDMMMS_SHIFT" 12
+Shift amount to get the CMB data metadata mixed memory support
+.IP "NVME_CMBLOC_CQDA_SHIFT" 12
+Shift amount to get the CMB queue dword alignment
+.IP "NVME_CMBLOC_OFST_SHIFT" 12
+Shift amount to get the offset
+.IP "NVME_CMBLOC_BIR_MASK" 12
+Mask to get the base indicator register
+.IP "NVME_CMBLOC_CQMMS_MASK" 12
+Mask to get the CMB queue mixed memory support
+.IP "NVME_CMBLOC_CQPDS_MASK" 12
+Mask to get the CMB queue physically discontiguous support
+.IP "NVME_CMBLOC_CDPLMS_MASK" 12
+Mask to get the CMB data pointer mixed locations support
+.IP "NVME_CMBLOC_CDPCILS_MASK" 12
+Mask to get the CMB data pointer and command independent locations support
+.IP "NVME_CMBLOC_CDMMMS_MASK" 12
+Mask to get the CMB data metadata mixed memory support
+.IP "NVME_CMBLOC_CQDA_MASK" 12
+Mask to get the CMB queue dword alignment
+.IP "NVME_CMBLOC_OFST_MASK" 12
+Mask to get the offset

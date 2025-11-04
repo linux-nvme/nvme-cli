@@ -1,0 +1,14 @@
+.TH "nvmf_subtype_str" 9 "nvmf_subtype_str" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_subtype_str \- Decode SUBTYPE field
+.SH SYNOPSIS
+.B "const char *" nvmf_subtype_str
+.BI "(__u8 subtype "  ");"
+.SH ARGUMENTS
+.IP "subtype" 12
+value to be decoded
+.SH "DESCRIPTION"
+Decode the subsystem type field in the discovery
+log page entry.
+.SH "RETURN"
+decoded string

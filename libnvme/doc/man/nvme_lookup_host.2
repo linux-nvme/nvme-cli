@@ -1,0 +1,20 @@
+.TH "nvme_lookup_host" 9 "nvme_lookup_host" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_lookup_host \- Lookup nvme_host_t object
+.SH SYNOPSIS
+.B "nvme_host_t" nvme_lookup_host
+.BI "(nvme_root_t r "  ","
+.BI "const char *hostnqn "  ","
+.BI "const char *hostid "  ");"
+.SH ARGUMENTS
+.IP "r" 12
+\fInvme_root_t\fP object
+.IP "hostnqn" 12
+Host NQN
+.IP "hostid" 12
+Host ID
+.SH "DESCRIPTION"
+Lookup a nvme_host_t object based on \fIhostnqn\fP and \fIhostid\fP
+or create one if not found.
+.SH "RETURN"
+\fInvme_host_t\fP object

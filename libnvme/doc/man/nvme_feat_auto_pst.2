@@ -1,0 +1,15 @@
+.TH "libnvme" 9 "struct nvme_feat_auto_pst" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_feat_auto_pst \- Autonomous Power State Transition
+.SH SYNOPSIS
+struct nvme_feat_auto_pst {
+.br
+.BI "    __le64 apst_entry[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "apst_entry" 12
+See \fIenum nvme_apst_entry\fP

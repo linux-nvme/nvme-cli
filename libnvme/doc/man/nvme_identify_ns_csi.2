@@ -1,0 +1,27 @@
+.TH "nvme_identify_ns_csi" 9 "nvme_identify_ns_csi" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_identify_ns_csi \- I/O command set specific identify namespace data
+.SH SYNOPSIS
+.B "int" nvme_identify_ns_csi
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u8 uuidx "  ","
+.BI "enum nvme_csi csi "  ","
+.BI "void *data "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace to identify
+.IP "uuidx" 12
+UUID Index for differentiating vendor specific encoding
+.IP "csi" 12
+Command Set Identifier
+.IP "data" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+An I/O Command Set specific Identify Namespace data structure is returned
+for the namespace specified in \fInsid\fP.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

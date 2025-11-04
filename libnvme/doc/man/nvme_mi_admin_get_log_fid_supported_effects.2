@@ -1,0 +1,18 @@
+.TH "nvme_mi_admin_get_log_fid_supported_effects" 9 "nvme_mi_admin_get_log_fid_supported_effects" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_log_fid_supported_effects \- Retrieve Feature Identifiers Supported and Effects
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_log_fid_supported_effects
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "bool rae "  ","
+.BI "struct nvme_fid_supported_effects_log *log "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "rae" 12
+Retain asynchronous events
+.IP "log" 12
+FID Supported and Effects data structure
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

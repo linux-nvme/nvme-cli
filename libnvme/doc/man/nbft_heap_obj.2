@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "struct nbft_heap_obj" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nbft_heap_obj \- NBFT Header Driver Signature
+.SH SYNOPSIS
+struct nbft_heap_obj {
+.br
+.BI "    __le32 offset;"
+.br
+.BI "    __le16 length;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "offset" 12
+Offset in bytes of the heap object, if any, from byte offset 0h
+of the NBFT Table Header.
+.IP "length" 12
+Length in bytes of the heap object, if any.

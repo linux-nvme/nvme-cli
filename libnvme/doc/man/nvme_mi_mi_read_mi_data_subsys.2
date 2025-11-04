@@ -1,0 +1,18 @@
+.TH "nvme_mi_mi_read_mi_data_subsys" 9 "nvme_mi_mi_read_mi_data_subsys" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_mi_read_mi_data_subsys \- Perform a Read MI Data Structure command, retrieving subsystem data.
+.SH SYNOPSIS
+.B "int" nvme_mi_mi_read_mi_data_subsys
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "struct nvme_mi_read_nvm_ss_info *s "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint for MI communication
+.IP "s" 12
+subsystem information to populate
+.SH "DESCRIPTION"
+Retrieves the Subsystem information - number of external ports and
+NVMe version information. See \fIstruct nvme_mi_read_nvm_ss_info\fP.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

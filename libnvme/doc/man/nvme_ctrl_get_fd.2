@@ -1,0 +1,18 @@
+.TH "nvme_ctrl_get_fd" 9 "nvme_ctrl_get_fd" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_fd \- Get associated file descriptor
+.SH SYNOPSIS
+.B "int" nvme_ctrl_get_fd
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.SH "DESCRIPTION"
+libnvme will \fBopen\fP the file (if not already opened) and keep
+an internal copy of the file descriptor. Following calls to
+this API retrieve the internal cached copy of the file
+descriptor. The file will remain opened and the fd will
+remain cached until the controller object is deleted or
+\fBnvme_ctrl_release_fd\fP is called.
+.SH "RETURN"
+File descriptor associated with \fIc\fP or -1

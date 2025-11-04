@@ -1,0 +1,120 @@
+.TH "libnvme" 9 "struct nvme_sanitize_log_page" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_sanitize_log_page \- Sanitize Status (Log Identifier 81h)
+.SH SYNOPSIS
+struct nvme_sanitize_log_page {
+.br
+.BI "    __le16 sprog;"
+.br
+.BI "    __le16 sstat;"
+.br
+.BI "    __le32 scdw10;"
+.br
+.BI "    __le32 eto;"
+.br
+.BI "    __le32 etbe;"
+.br
+.BI "    __le32 etce;"
+.br
+.BI "    __le32 etond;"
+.br
+.BI "    __le32 etbend;"
+.br
+.BI "    __le32 etcend;"
+.br
+.BI "    __le32 etpvds;"
+.br
+.BI "    __u8 ssi;"
+.br
+.BI "    __u8 rsvd37[475];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "sprog" 12
+Sanitize Progress (SPROG): indicates the fraction complete of the
+sanitize operation. The value is a numerator of the fraction
+complete that has 65,536 (10000h) as its denominator. This value
+shall be set to FFFFh if the \fIsstat\fP field is not set to
+NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS.
+.IP "sstat" 12
+Sanitize Status (SSTAT): indicates the status associated with
+the most recent sanitize operation. See \fIenum nvme_sanitize_sstat\fP.
+.IP "scdw10" 12
+Sanitize Command Dword 10 Information (SCDW10): contains the value
+of the Command Dword 10 field of the Sanitize command that started
+the sanitize operation.
+.IP "eto" 12
+Estimated Time For Overwrite: indicates the number of seconds required
+to complete an Overwrite sanitize operation with 16 passes in
+the background when the No-Deallocate Modifies Media After Sanitize
+field is not set to 10b. A value of 0h indicates that the sanitize
+operation is expected to be completed in the background when the
+Sanitize command that started that operation is completed. A value
+of FFFFFFFFh indicates that no time period is reported.
+.IP "etbe" 12
+Estimated Time For Block Erase: indicates the number of seconds
+required to complete a Block Erase sanitize operation in the
+background when the No-Deallocate Modifies Media After Sanitize
+field is not set to 10b. A value of 0h indicates that the sanitize
+operation is expected to be completed in the background when the
+Sanitize command that started that operation is completed.
+A value of FFFFFFFFh indicates that no time period is reported.
+.IP "etce" 12
+Estimated Time For Crypto Erase: indicates the number of seconds
+required to complete a Crypto Erase sanitize operation in the
+background when the No-Deallocate Modifies Media After Sanitize
+field is not set to 10b. A value of 0h indicates that the sanitize
+operation is expected to be completed in the background when the
+Sanitize command that started that operation is completed.
+A value of FFFFFFFFh indicates that no time period is reported.
+.IP "etond" 12
+Estimated Time For Overwrite With No-Deallocate Media Modification:
+indicates the number of seconds required to complete an Overwrite
+sanitize operation and the associated additional media modification
+after the Overwrite sanitize operation in the background when
+the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+command that requested the Overwrite sanitize operation; and
+the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+A value of 0h indicates that the sanitize operation is expected
+to be completed in the background when the Sanitize command that
+started that operation is completed. A value of FFFFFFFFh indicates
+that no time period is reported.
+.IP "etbend" 12
+Estimated Time For Block Erase With No-Deallocate Media Modification:
+indicates the number of seconds required to complete a Block Erase
+sanitize operation and the associated additional media modification
+after the Block Erase sanitize operation in the background when
+the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+command that requested the Overwrite sanitize operation; and
+the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+A value of 0h indicates that the sanitize operation is expected
+to be completed in the background when the Sanitize command that
+started that operation is completed. A value of FFFFFFFFh indicates
+that no time period is reported.
+.IP "etcend" 12
+Estimated Time For Crypto Erase With No-Deallocate Media Modification:
+indicates the number of seconds required to complete a Crypto Erase
+sanitize operation and the associated additional media modification
+after the Crypto Erase sanitize operation in the background when
+the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+command that requested the Overwrite sanitize operation; and
+the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+A value of 0h indicates that the sanitize operation is expected
+to be completed in the background when the Sanitize command that
+started that operation is completed. A value of FFFFFFFFh indicates
+that no time period is reported.
+.IP "etpvds" 12
+Estimated Time For Post-Verification Deallocation State: indicates the
+number of seconds required to deallocate all media allocated for user data
+after exiting the Media Verification state (i.e., the time difference between
+entering and exiting the Post-Verification Deallocation state), if that state
+is entered as part of the sanitize operation. A value of FFFFFFFFh indicates
+that no time period is reported.
+.IP "ssi" 12
+Sanitize State Information: indicate the state of the Sanitize Operation
+State Machine.
+.IP "rsvd37" 12
+Reserved

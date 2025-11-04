@@ -1,0 +1,11 @@
+.TH "nvme_subsys_filter" 9 "nvme_subsys_filter" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsys_filter \- Filter for subsystems
+.SH SYNOPSIS
+.B "int" nvme_subsys_filter
+.BI "(const struct dirent *d "  ");"
+.SH ARGUMENTS
+.IP "d" 12
+dirent to check
+.SH "RETURN"
+1 if \fId\fP matches, 0 otherwise

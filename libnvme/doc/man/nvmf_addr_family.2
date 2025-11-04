@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "enum nvmf_addr_family" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvmf_addr_family \- Address Family codes for Discovery Log Page entry ADRFAM field
+.SH SYNOPSIS
+enum nvmf_addr_family {
+.br
+.BI "    NVMF_ADDR_FAMILY_PCI"
+, 
+.br
+.br
+.BI "    NVMF_ADDR_FAMILY_IP4"
+, 
+.br
+.br
+.BI "    NVMF_ADDR_FAMILY_IP6"
+, 
+.br
+.br
+.BI "    NVMF_ADDR_FAMILY_IB"
+, 
+.br
+.br
+.BI "    NVMF_ADDR_FAMILY_FC"
+, 
+.br
+.br
+.BI "    NVMF_ADDR_FAMILY_LOOP"
+
+};
+.SH Constants
+.IP "NVMF_ADDR_FAMILY_PCI" 12
+PCIe
+.IP "NVMF_ADDR_FAMILY_IP4" 12
+AF_INET: IPv4 address family.
+.IP "NVMF_ADDR_FAMILY_IP6" 12
+AF_INET6: IPv6 address family.
+.IP "NVMF_ADDR_FAMILY_IB" 12
+AF_IB: InfiniBand address family.
+.IP "NVMF_ADDR_FAMILY_FC" 12
+Fibre Channel address family.
+.IP "NVMF_ADDR_FAMILY_LOOP" 12
+Intra-host Transport (i.e., loopback), reserved
+for host usage.

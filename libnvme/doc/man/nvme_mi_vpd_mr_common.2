@@ -1,0 +1,49 @@
+.TH "libnvme" 9 "struct nvme_mi_vpd_mr_common" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_vpd_mr_common \- NVMe MultiRecord Area
+.SH SYNOPSIS
+struct nvme_mi_vpd_mr_common {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 rf;"
+.br
+.BI "    __u8 rlen;"
+.br
+.BI "    __u8 rchksum;"
+.br
+.BI "    __u8 hchksum;"
+.br
+.BI "    union {"
+.br
+.BI "      struct nvme_mi_vpd_mra nmra;"
+.br
+.BI "      struct nvme_mi_vpd_ppmra ppmra;"
+.br
+.BI "      struct nvme_mi_vpd_tra tmra;"
+.br
+.BI "    };"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "type" 12
+NVMe Record Type ID
+.IP "rf" 12
+Record Format
+.IP "rlen" 12
+Record Length
+.IP "rchksum" 12
+Record Checksum
+.IP "hchksum" 12
+Header Checksum
+.IP "{unnamed_union}" 12
+anonymous
+.IP "nmra" 12
+NVMe MultiRecord Area
+.IP "ppmra" 12
+NVMe PCIe Port MultiRecord Area
+.IP "tmra" 12
+Topology MultiRecord Area

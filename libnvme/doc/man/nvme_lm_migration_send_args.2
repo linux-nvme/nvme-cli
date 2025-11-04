@@ -1,0 +1,86 @@
+.TH "libnvme" 9 "struct nvme_lm_migration_send_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_migration_send_args \- Arguments for the Migration Send command
+.SH SYNOPSIS
+struct nvme_lm_migration_send_args {
+.br
+.BI "    __u64 offset;"
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 numd;"
+.br
+.BI "    __u16 mos;"
+.br
+.BI "    __u16 cntlid;"
+.br
+.BI "    __u16 csuuidi;"
+.br
+.BI "    __u8 sel;"
+.br
+.BI "    __u8 uidx;"
+.br
+.BI "    __u8 stype;"
+.br
+.BI "    __u8 seqind;"
+.br
+.BI "    __u8 csvi;"
+.br
+.BI "    bool dudmq;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "offset" 12
+Offset: This field specifies the offset, in bytes, within the data available to be
+returned and specifies the starting point for that data for what is actually
+returned to the host.
+.IP "result" 12
+Set on completion to the command's CQE DWORD 0 controller response
+.IP "data" 12
+Pointer to data
+.IP "args_size" 12
+Length of structure
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "numd" 12
+Number of Dwords (NUMD): This field specifies the number of dwords being transferred
+.IP "mos" 12
+Management Operation Specific (MOS): This field is specific to the SEL type
+.IP "cntlid" 12
+Controller ID: This field specifies the identifier of the controller to which the
+operation is performed.
+.IP "csuuidi" 12
+Controller State UUID Index (CSUUIDI): A non-zero value in this field specifies the
+index to a specific entry in the Vendor Specific Controller State UUID Supported.
+list of the Supported Controller State Formats data structure.
+.IP "sel" 12
+Select (SEL): This field specifies the type of management operation to perform.
+.IP "uidx" 12
+UUID Index (UIDX): If this field is set to a non-zero value, then the value of this
+field is the index of a UUID in the UUID List (refer to Figure 320) that is used by
+the command.
+.IP "stype" 12
+Suspend Type (STYPE): This field specifies the type of suspend.
+.IP "seqind" 12
+Sequence Identifier (SEQIND): This field identified the sequences of this Migration
+Send command in relation to other Migration Send commands.
+.IP "csvi" 12
+Controller State Version Index (CSVI): A non-zero value in this field specifies the
+index to a specific entry in the NVMe Controller State Version list of the Supported
+Controller State Formats data structure.
+.IP "dudmq" 12
+Delete User Data Migration Queue (DUDMQ): If set, the migration queue is deleted
+is deleted as part of the Suspend operation. If cleared, it is retained.

@@ -1,0 +1,205 @@
+.TH "libnvme" 9 "enum nvme_constants" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_constants \- A place to stash various constant nvme values
+.SH SYNOPSIS
+enum nvme_constants {
+.br
+.BI "    NVME_NSID_ALL"
+, 
+.br
+.br
+.BI "    NVME_NSID_NONE"
+, 
+.br
+.br
+.BI "    NVME_UUID_NONE"
+, 
+.br
+.br
+.BI "    NVME_CNTLID_NONE"
+, 
+.br
+.br
+.BI "    NVME_CNSSPECID_NONE"
+, 
+.br
+.br
+.BI "    NVME_LOG_LSP_NONE"
+, 
+.br
+.br
+.BI "    NVME_LOG_LSI_NONE"
+, 
+.br
+.br
+.BI "    NVME_LOG_LPO_NONE"
+, 
+.br
+.br
+.BI "    NVME_IDENTIFY_DATA_SIZE"
+, 
+.br
+.br
+.BI "    NVME_LOG_SUPPORTED_LOG_PAGES_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_NVMSET_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_UUID_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_CTRL_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_NS_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_SECONDARY_CTRL_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_DOMAIN_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_ENDURANCE_GROUP_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_ND_DESCRIPTOR_MAX"
+, 
+.br
+.br
+.BI "    NVME_FEAT_LBA_RANGE_MAX"
+, 
+.br
+.br
+.BI "    NVME_LOG_ST_MAX_RESULTS"
+, 
+.br
+.br
+.BI "    NVME_LOG_TELEM_BLOCK_SIZE"
+, 
+.br
+.br
+.BI "    NVME_LOG_FID_SUPPORTED_EFFECTS_MAX"
+, 
+.br
+.br
+.BI "    NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX"
+, 
+.br
+.br
+.BI "    NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED"
+, 
+.br
+.br
+.BI "    NVME_DSM_MAX_RANGES"
+, 
+.br
+.br
+.BI "    NVME_NQN_LENGTH"
+, 
+.br
+.br
+.BI "    NVMF_TRADDR_SIZE"
+, 
+.br
+.br
+.BI "    NVMF_TSAS_SIZE"
+, 
+.br
+.br
+.BI "    NVME_ZNS_CHANGED_ZONES_MAX"
+, 
+.br
+.br
+.BI "    NVME_STREAM_ID_MAX"
+
+};
+.SH Constants
+.IP "NVME_NSID_ALL" 12
+A broadcast value that is used to specify all
+namespaces
+.IP "NVME_NSID_NONE" 12
+The invalid namespace id, for when the nsid
+parameter is not used in a command
+.IP "NVME_UUID_NONE" 12
+Use to omit a uuid command parameter
+.IP "NVME_CNTLID_NONE" 12
+Use to omit a cntlid command parameter
+.IP "NVME_CNSSPECID_NONE" 12
+Use to omit a cns_specific_id command parameter
+.IP "NVME_LOG_LSP_NONE" 12
+Use to omit a log lsp command parameter
+.IP "NVME_LOG_LSI_NONE" 12
+Use to omit a log lsi command parameter
+.IP "NVME_LOG_LPO_NONE" 12
+Use to omit a log lpo command parameter
+.IP "NVME_IDENTIFY_DATA_SIZE" 12
+The transfer size for nvme identify commands
+.IP "NVME_LOG_SUPPORTED_LOG_PAGES_MAX" 12
+The largest possible index in the supported
+log pages log.
+.IP "NVME_ID_NVMSET_LIST_MAX" 12
+The largest possible nvmset index in identify
+nvmeset
+.IP "NVME_ID_UUID_LIST_MAX" 12
+The largest possible uuid index in identify
+uuid list
+.IP "NVME_ID_CTRL_LIST_MAX" 12
+The largest possible controller index in
+identify controller list
+.IP "NVME_ID_NS_LIST_MAX" 12
+The largest possible namespace index in
+identify namespace list
+.IP "NVME_ID_SECONDARY_CTRL_MAX" 12
+The largest possible secondary controller index
+in identify secondary controller
+.IP "NVME_ID_DOMAIN_LIST_MAX" 12
+The largest possible domain index in the
+in domain list
+.IP "NVME_ID_ENDURANCE_GROUP_LIST_MAX" 12
+The largest possible endurance group
+index in the endurance group list
+.IP "NVME_ID_ND_DESCRIPTOR_MAX" 12
+The largest possible namespace granularity
+index in the namespace granularity descriptor
+list
+.IP "NVME_FEAT_LBA_RANGE_MAX" 12
+The largest possible LBA range index in feature
+lba range type
+.IP "NVME_LOG_ST_MAX_RESULTS" 12
+The largest possible self test result index in the
+device self test log
+.IP "NVME_LOG_TELEM_BLOCK_SIZE" 12
+Specification defined size of Telemetry Data Blocks
+.IP "NVME_LOG_FID_SUPPORTED_EFFECTS_MAX" 12
+The largest possible FID index in the
+feature identifiers effects log.
+.IP "NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX" 12
+The largest possible MI Command index
+in the MI Command effects log.
+.IP "NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED" 12
+The reserved space in the MI Command
+effects log.
+.IP "NVME_DSM_MAX_RANGES" 12
+The largest possible range index in a data-set
+management command
+.IP "NVME_NQN_LENGTH" 12
+Max length for NVMe Qualified Name
+.IP "NVMF_TRADDR_SIZE" 12
+Max Transport Address size
+.IP "NVMF_TSAS_SIZE" 12
+Max Transport Specific Address Subtype size
+.IP "NVME_ZNS_CHANGED_ZONES_MAX" 12
+Max number of zones in the changed zones log
+page
+.IP "NVME_STREAM_ID_MAX" 12
+Max number of stream IDs

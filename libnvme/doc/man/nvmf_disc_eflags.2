@@ -1,0 +1,46 @@
+.TH "libnvme" 9 "enum nvmf_disc_eflags" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvmf_disc_eflags \- Discovery Log Page entry flags.
+.SH SYNOPSIS
+enum nvmf_disc_eflags {
+.br
+.BI "    NVMF_DISC_EFLAGS_NONE"
+, 
+.br
+.br
+.BI "    NVMF_DISC_EFLAGS_DUPRETINFO"
+, 
+.br
+.br
+.BI "    NVMF_DISC_EFLAGS_EPCSD"
+, 
+.br
+.br
+.BI "    NVMF_DISC_EFLAGS_NCC"
+
+};
+.SH Constants
+.IP "NVMF_DISC_EFLAGS_NONE" 12
+Indicates that none of the DUPRETINFO or EPCSD
+features are supported.
+.IP "NVMF_DISC_EFLAGS_DUPRETINFO" 12
+Duplicate Returned Information (DUPRETINFO):
+Indicates that using the content of this entry
+to access this Discovery Service returns the same
+information that is returned by using the content
+of other entries in this log page that also have
+this flag set.
+.IP "NVMF_DISC_EFLAGS_EPCSD" 12
+Explicit Persistent Connection Support for Discovery (EPCSD):
+Indicates that Explicit Persistent Connections are
+supported for the Discovery controller.
+.IP "NVMF_DISC_EFLAGS_NCC" 12
+No CDC Connectivity (NCC): If set to
+'1', then no DDC that describes this entry
+is currently connected to the CDC. If
+cleared to '0', then at least one DDC that
+describes this entry is currently
+connected to the CDC. If the Discovery
+controller returning this log page is not
+a CDC, then this bit shall be cleared to
+'0' and should be ignored by the host.

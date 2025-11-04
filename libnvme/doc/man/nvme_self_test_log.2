@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nvme_self_test_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_self_test_log \- Device Self-test (Log Identifier 06h)
+.SH SYNOPSIS
+struct nvme_self_test_log {
+.br
+.BI "    __u8 current_operation;"
+.br
+.BI "    __u8 completion;"
+.br
+.BI "    __u8 rsvd[2];"
+.br
+.BI "    struct nvme_st_result   result[NVME_LOG_ST_MAX_RESULTS];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "current_operation" 12
+Current Device Self-Test Operation: indicates the status
+of the current device self-test operation. If a device
+self-test operation is in process (i.e., this field is set
+to #NVME_ST_CURR_OP_SHORT or #NVME_ST_CURR_OP_EXTENDED),
+then the controller shall not set this field to
+#NVME_ST_CURR_OP_NOT_RUNNING until a new Self-test Result
+Data Structure is created (i.e., if a device self-test
+operation completes or is aborted, then the controller
+shall create a Self-test Result Data Structure prior to
+setting this field to #NVME_ST_CURR_OP_NOT_RUNNING).
+See \fIenum nvme_st_curr_op\fP.
+.IP "completion" 12
+Current Device Self-Test Completion: indicates the percentage
+of the device self-test operation that is complete (e.g.,
+a value of 25 indicates that 25% of the device self-test
+operation is complete and 75% remains to be tested).
+If the \fIcurrent_operation\fP field is cleared to
+#NVME_ST_CURR_OP_NOT_RUNNING (indicating there is no device
+self-test operation in progress), then this field is ignored.
+.IP "rsvd" 12
+Reserved
+.IP "result" 12
+Self-test Result Data Structures, see \fIstruct nvme_st_result\fP.

@@ -1,0 +1,54 @@
+.TH "libnvme" 9 "enum nvme_pmrsts" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_pmrsts \- This field indicates the persistent memory region status
+.SH SYNOPSIS
+enum nvme_pmrsts {
+.br
+.BI "    NVME_PMRSTS_ERR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRSTS_NRDY_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRSTS_HSTS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRSTS_CBAI_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMRSTS_ERR_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRSTS_NRDY_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRSTS_HSTS_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMRSTS_CBAI_MASK"
+
+};
+.SH Constants
+.IP "NVME_PMRSTS_ERR_SHIFT" 12
+Shift amount to get the error
+.IP "NVME_PMRSTS_NRDY_SHIFT" 12
+Shift amount to get the not ready
+.IP "NVME_PMRSTS_HSTS_SHIFT" 12
+Shift amount to get the health status
+.IP "NVME_PMRSTS_CBAI_SHIFT" 12
+Shift amount to get the controller base address invalid
+.IP "NVME_PMRSTS_ERR_MASK" 12
+Mask to get the error
+.IP "NVME_PMRSTS_NRDY_MASK" 12
+Mask to get the not ready
+.IP "NVME_PMRSTS_HSTS_MASK" 12
+Mask to get the health status
+.IP "NVME_PMRSTS_CBAI_MASK" 12
+Mask to get the controller base address invalid

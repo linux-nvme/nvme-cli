@@ -1,0 +1,67 @@
+.TH "libnvme" 9 "struct nvme_nvmset_predictable_lat_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_nvmset_predictable_lat_log \- Predictable Latency Mode - Deterministic Threshold Configuration Data
+.SH SYNOPSIS
+struct nvme_nvmset_predictable_lat_log {
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    __le16 event_type;"
+.br
+.BI "    __u8 rsvd4[28];"
+.br
+.BI "    __le64 dtwin_rt;"
+.br
+.BI "    __le64 dtwin_wt;"
+.br
+.BI "    __le64 dtwin_tmax;"
+.br
+.BI "    __le64 ndwin_tmin_hi;"
+.br
+.BI "    __le64 ndwin_tmin_lo;"
+.br
+.BI "    __u8 rsvd72[56];"
+.br
+.BI "    __le64 dtwin_re;"
+.br
+.BI "    __le64 dtwin_we;"
+.br
+.BI "    __le64 dtwin_te;"
+.br
+.BI "    __u8 rsvd152[360];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "status" 12
+Status
+.IP "rsvd1" 12
+Reserved
+.IP "event_type" 12
+Event Type
+.IP "rsvd4" 12
+Reserved
+.IP "dtwin_rt" 12
+DTWIN Reads Typical
+.IP "dtwin_wt" 12
+DTWIN Writes Typical
+.IP "dtwin_tmax" 12
+DTWIN Time Maximum
+.IP "ndwin_tmin_hi" 12
+NDWIN Time Minimum High
+.IP "ndwin_tmin_lo" 12
+NDWIN Time Minimum Low
+.IP "rsvd72" 12
+Reserved
+.IP "dtwin_re" 12
+DTWIN Reads Estimate
+.IP "dtwin_we" 12
+DTWIN Writes Estimate
+.IP "dtwin_te" 12
+DTWIN Time Estimate
+.IP "rsvd152" 12
+Reserved

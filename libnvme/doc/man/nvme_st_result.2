@@ -1,0 +1,77 @@
+.TH "libnvme" 9 "struct nvme_st_result" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_st_result \- Self-test Result
+.SH SYNOPSIS
+struct nvme_st_result {
+.br
+.BI "    __u8 dsts;"
+.br
+.BI "    __u8 seg;"
+.br
+.BI "    __u8 vdi;"
+.br
+.BI "    __u8 rsvd;"
+.br
+.BI "    __le64 poh;"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __le64 flba;"
+.br
+.BI "    __u8 sct;"
+.br
+.BI "    __u8 sc;"
+.br
+.BI "    __u8 vs[2];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "dsts" 12
+Device Self-test Status: Indicates the device self-test code and the
+status of the operation (see \fIenum nvme_status_result\fP and \fIenum nvme_st_code\fP).
+.IP "seg" 12
+Segment Number: Iindicates the segment number where the first self-test
+failure occurred. If Device Self-test Status (\fIdsts\fP) is not set to
+#NVME_ST_RESULT_KNOWN_SEG_FAIL, then this field should be ignored.
+.IP "vdi" 12
+Valid Diagnostic Information: Indicates the diagnostic failure
+information that is reported. See \fIenum nvme_st_valid_diag_info\fP.
+.IP "rsvd" 12
+Reserved
+.IP "poh" 12
+Power On Hours (POH): Indicates the number of power-on hours at the
+time the device self-test operation was completed or aborted. This
+does not include time that the controller was powered and in a low
+power state condition.
+.IP "nsid" 12
+Namespace Identifier (NSID): Indicates the namespace that the Failing
+LBA occurred on. Valid only when the NSID Valid bit
+(#NVME_ST_VALID_DIAG_INFO_NSID) is set in the Valid Diagnostic
+Information (\fIvdi\fP) field.
+.IP "flba" 12
+Failing LBA: indicates the LBA of the logical block that caused the
+test to fail. If the device encountered more than one failed logical
+block during the test, then this field only indicates one of those
+failed logical blocks. Valid only when the NSID Valid bit
+(#NVME_ST_VALID_DIAG_INFO_FLBA) is set in the Valid Diagnostic
+Information (\fIvdi\fP) field.
+.IP "sct" 12
+Status Code Type: This field may contain additional information related
+to errors or conditions. Bits 2:0 may contain additional information
+relating to errors or conditions that occurred during the device
+self-test operation represented in the same format used in the Status
+Code Type field of the completion queue entry (refer to \fIenum nvme_status_field\fP).
+Valid only when the NSID Valid bit (#NVME_ST_VALID_DIAG_INFO_SCT) is
+set in the Valid Diagnostic Information (\fIvdi\fP) field.
+.IP "sc" 12
+Status Code: This field may contain additional information relating
+to errors or conditions that occurred during the device self-test
+operation represented in the same format used in the Status Code field
+of the completion queue entry. Valid only when the SCT Valid bit
+(#NVME_ST_VALID_DIAG_INFO_SC) is set in the Valid Diagnostic
+Information (\fIvdi\fP) field.
+.IP "vs" 12
+Vendor Specific.

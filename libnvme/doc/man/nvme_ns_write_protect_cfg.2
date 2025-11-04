@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_ns_write_protect_cfg" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_ns_write_protect_cfg \- Write Protection - Write Protection State
+.SH SYNOPSIS
+enum nvme_ns_write_protect_cfg {
+.br
+.BI "    NVME_NS_WP_CFG_NONE"
+, 
+.br
+.br
+.BI "    NVME_NS_WP_CFG_PROTECT"
+, 
+.br
+.br
+.BI "    NVME_NS_WP_CFG_PROTECT_POWER_CYCLE"
+, 
+.br
+.br
+.BI "    NVME_NS_WP_CFG_PROTECT_PERMANENT"
+
+};
+.SH Constants
+.IP "NVME_NS_WP_CFG_NONE" 12
+No Write Protect
+.IP "NVME_NS_WP_CFG_PROTECT" 12
+Write Protect
+.IP "NVME_NS_WP_CFG_PROTECT_POWER_CYCLE" 12
+Write Protect Until Power Cycle
+.IP "NVME_NS_WP_CFG_PROTECT_PERMANENT" 12
+Permanent Write Protect

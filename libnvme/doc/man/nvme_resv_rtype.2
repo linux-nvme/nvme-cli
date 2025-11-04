@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum nvme_resv_rtype" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_resv_rtype \- Reservation Type Encoding
+.SH SYNOPSIS
+enum nvme_resv_rtype {
+.br
+.BI "    NVME_RESERVATION_RTYPE_WE"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_RTYPE_EA"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_RTYPE_WERO"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_RTYPE_EARO"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_RTYPE_WEAR"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_RTYPE_EAAR"
+
+};
+.SH Constants
+.IP "NVME_RESERVATION_RTYPE_WE" 12
+Write Exclusive Reservation
+.IP "NVME_RESERVATION_RTYPE_EA" 12
+Exclusive Access Reservation
+.IP "NVME_RESERVATION_RTYPE_WERO" 12
+Write Exclusive - Registrants Only Reservation
+.IP "NVME_RESERVATION_RTYPE_EARO" 12
+Exclusive Access - Registrants Only Reservation
+.IP "NVME_RESERVATION_RTYPE_WEAR" 12
+Write Exclusive - All Registrants Reservation
+.IP "NVME_RESERVATION_RTYPE_EAAR" 12
+Exclusive Access - All Registrants Reservation

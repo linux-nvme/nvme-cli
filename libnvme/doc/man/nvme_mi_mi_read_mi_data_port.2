@@ -1,0 +1,24 @@
+.TH "nvme_mi_mi_read_mi_data_port" 9 "nvme_mi_mi_read_mi_data_port" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_mi_read_mi_data_port \- Perform a Read MI Data Structure command, retrieving port data.
+.SH SYNOPSIS
+.B "int" nvme_mi_mi_read_mi_data_port
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "__u8 portid "  ","
+.BI "struct nvme_mi_read_port_info *p "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint for MI communication
+.IP "portid" 12
+id of port data to retrieve
+.IP "p" 12
+port information to populate
+.SH "DESCRIPTION"
+Retrieves the Port information, for the specified port ID. The subsystem
+data (from \fInvme_mi_mi_read_mi_data_subsys\fP) nmp field contains the allowed
+range of port IDs.
+
+See \fIstruct nvme_mi_read_port_info\fP.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

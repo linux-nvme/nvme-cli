@@ -1,0 +1,252 @@
+.TH "libnvme" 9 "enum nvme_cap" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cap \- This field indicates the controller capabilities register
+.SH SYNOPSIS
+enum nvme_cap {
+.br
+.BI "    NVME_CAP_MQES_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_CQR_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_AMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_TO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_DSTRD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_NSSRC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_BPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_CPS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_MPSMIN_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_MPSMAX_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_PMRS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_CMBS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_NSSS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_CRMS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CAP_MQES_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_CQR_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_AMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_TO_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_DSTRD_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_NSSRC_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_BPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_CPS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_MPSMIN_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_MPSMAX_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_PMRS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_CMBS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_NSSS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_CRMS_MASK"
+, 
+.br
+.br
+.BI "    NVME_CAP_AMS_WRR"
+, 
+.br
+.br
+.BI "    NVME_CAP_AMS_VS"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_NVM"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_CSI"
+, 
+.br
+.br
+.BI "    NVME_CAP_CSS_ADMIN"
+, 
+.br
+.br
+.BI "    NVME_CAP_CPS_NONE"
+, 
+.br
+.br
+.BI "    NVME_CAP_CPS_CTRL"
+, 
+.br
+.br
+.BI "    NVME_CAP_CPS_DOMAIN"
+, 
+.br
+.br
+.BI "    NVME_CAP_CPS_NVMS"
+, 
+.br
+.br
+.BI "    NVME_CAP_CRWMS"
+, 
+.br
+.br
+.BI "    NVME_CAP_CRIMS"
+
+};
+.SH Constants
+.IP "NVME_CAP_MQES_SHIFT" 12
+Shift amount to get the maximum queue entries supported
+.IP "NVME_CAP_CQR_SHIFT" 12
+Shift amount to get the contiguous queues required
+.IP "NVME_CAP_AMS_SHIFT" 12
+Shift amount to get the arbitration mechanism supported
+.IP "NVME_CAP_TO_SHIFT" 12
+Shift amount to get the timeout
+.IP "NVME_CAP_DSTRD_SHIFT" 12
+Shift amount to get the doorbell stride
+.IP "NVME_CAP_NSSRC_SHIFT" 12
+Shift amount to get the NVM subsystem reset supported
+.IP "NVME_CAP_CSS_SHIFT" 12
+Shift amount to get the command sets supported
+.IP "NVME_CAP_BPS_SHIFT" 12
+Shift amount to get the boot partition support
+.IP "NVME_CAP_CPS_SHIFT" 12
+Shift amount to get the controller power scope
+.IP "NVME_CAP_MPSMIN_SHIFT" 12
+Shift amount to get the memory page size minimum
+.IP "NVME_CAP_MPSMAX_SHIFT" 12
+Shift amount to get the memory page size maximum
+.IP "NVME_CAP_PMRS_SHIFT" 12
+Shift amount to get the persistent memory region supported
+.IP "NVME_CAP_CMBS_SHIFT" 12
+Shift amount to get the controller memory buffer supported
+.IP "NVME_CAP_NSSS_SHIFT" 12
+Shift amount to get the NVM subsystem shutdown supported
+.IP "NVME_CAP_CRMS_SHIFT" 12
+Shift amount to get the controller ready modes supported
+.IP "NVME_CAP_MQES_MASK" 12
+Mask to get the maximum queue entries supported
+.IP "NVME_CAP_CQR_MASK" 12
+Mask to get the contiguous queues required
+.IP "NVME_CAP_AMS_MASK" 12
+Mask to get the arbitration mechanism supported
+.IP "NVME_CAP_TO_MASK" 12
+Mask to get the timeout
+.IP "NVME_CAP_DSTRD_MASK" 12
+Mask to get the doorbell stride
+.IP "NVME_CAP_NSSRC_MASK" 12
+Mask to get the NVM subsystem reset supported
+.IP "NVME_CAP_CSS_MASK" 12
+Mask to get the command sets supported
+.IP "NVME_CAP_BPS_MASK" 12
+Mask to get the boot partition support
+.IP "NVME_CAP_CPS_MASK" 12
+Mask to get the controller power scope
+.IP "NVME_CAP_MPSMIN_MASK" 12
+Mask to get the memory page size minimum
+.IP "NVME_CAP_MPSMAX_MASK" 12
+Mask to get the memory page size maximum
+.IP "NVME_CAP_PMRS_MASK" 12
+Mask to get the persistent memory region supported
+.IP "NVME_CAP_CMBS_MASK" 12
+Mask to get the controller memory buffer supported
+.IP "NVME_CAP_NSSS_MASK" 12
+Mask to get the NVM subsystem shutdown supported
+.IP "NVME_CAP_CRMS_MASK" 12
+Mask to get the controller ready modes supported
+.IP "NVME_CAP_AMS_WRR" 12
+Weighted round robin with urgent priority class
+.IP "NVME_CAP_AMS_VS" 12
+Vendor specific
+.IP "NVME_CAP_CSS_NVM" 12
+NVM command set or a discovery controller
+.IP "NVME_CAP_CSS_CSI" 12
+Controller supports one or more I/O command sets
+.IP "NVME_CAP_CSS_ADMIN" 12
+No I/O command set is supported
+.IP "NVME_CAP_CPS_NONE" 12
+Not reported
+.IP "NVME_CAP_CPS_CTRL" 12
+Controller scope
+.IP "NVME_CAP_CPS_DOMAIN" 12
+Domain scope
+.IP "NVME_CAP_CPS_NVMS" 12
+NVM subsystem scope
+.IP "NVME_CAP_CRWMS" 12
+Controller ready with media support
+.IP "NVME_CAP_CRIMS" 12
+Controller ready independent of media support

@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_resv_racqa" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_resv_racqa \- Reservation Acquire - Reservation Acquire Action
+.SH SYNOPSIS
+enum nvme_resv_racqa {
+.br
+.BI "    NVME_RESERVATION_RACQA_ACQUIRE"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_RACQA_PREEMPT"
+, 
+.br
+.br
+.BI "    NVME_RESERVATION_RACQA_PREEMPT_AND_ABORT"
+
+};
+.SH Constants
+.IP "NVME_RESERVATION_RACQA_ACQUIRE" 12
+Acquire
+.IP "NVME_RESERVATION_RACQA_PREEMPT" 12
+Preempt
+.IP "NVME_RESERVATION_RACQA_PREEMPT_AND_ABORT" 12
+Preempt and Abort

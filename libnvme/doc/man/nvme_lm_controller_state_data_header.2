@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_lm_controller_state_data_header" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_controller_state_data_header \- Controller State data header structure describes the contents of the Controller State data
+.SH SYNOPSIS
+struct nvme_lm_controller_state_data_header {
+.br
+.BI "    __le16 ver;"
+.br
+.BI "    __u8 csattr;"
+.br
+.BI "    __u8 rsvd3[13];"
+.br
+.BI "    __u8 nvmecss[16];"
+.br
+.BI "    __u8 vss[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ver" 12
+Version of this data structure
+.IP "csattr" 12
+Controller state attributes
+.IP "rsvd3" 12
+Reserved
+.IP "nvmecss" 12
+NVMe Controller state size in dwords
+.IP "vss" 12
+Vendor specific size in dowrds

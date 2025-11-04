@@ -1,0 +1,72 @@
+.TH "libnvme" 9 "struct nvme_mi_admin_req_hdr" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_admin_req_hdr \- Admin command request header.
+.SH SYNOPSIS
+struct nvme_mi_admin_req_hdr {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    __u8 opcode;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __le16 ctrl_id;"
+.br
+.BI "    __le32 cdw1, cdw2, cdw3, cdw4, cdw5;"
+.br
+.BI "    __le32 doff;"
+.br
+.BI "    __le32 dlen;"
+.br
+.BI "    __le32 rsvd0, rsvd1;"
+.br
+.BI "    __le32 cdw10, cdw11, cdw12, cdw13, cdw14, cdw15;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+Generic MI message header
+.IP "opcode" 12
+Admin command opcode (using enum nvme_admin_opcode)
+.IP "flags" 12
+Command Flags, indicating dlen and doff validity; Only defined in
+NVMe-MI version 1.1, no fields defined in 1.2 (where the dlen/doff
+are always considered valid).
+.IP "ctrl_id" 12
+Controller ID target of command
+.IP "cdw1" 12
+Submission Queue Entry doubleword 1
+.IP "cdw2" 12
+Submission Queue Entry doubleword 2
+.IP "cdw3" 12
+Submission Queue Entry doubleword 3
+.IP "cdw4" 12
+Submission Queue Entry doubleword 4
+.IP "cdw5" 12
+Submission Queue Entry doubleword 5
+.IP "doff" 12
+Offset of data to return from command
+.IP "dlen" 12
+Length of sent/returned data
+.IP "rsvd0" 12
+Reserved
+.IP "rsvd1" 12
+Reserved
+.IP "cdw10" 12
+Submission Queue Entry doubleword 10
+.IP "cdw11" 12
+Submission Queue Entry doubleword 11
+.IP "cdw12" 12
+Submission Queue Entry doubleword 12
+.IP "cdw13" 12
+Submission Queue Entry doubleword 13
+.IP "cdw14" 12
+Submission Queue Entry doubleword 14
+.IP "cdw15" 12
+Submission Queue Entry doubleword 15
+.SH "Description"
+Wire format for Admin command message headers, defined in section 6 of
+NVMe-MI.

@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_registered_ctrl_ext" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_registered_ctrl_ext \- Registered Controller Extended Data Structure
+.SH SYNOPSIS
+struct nvme_registered_ctrl_ext {
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __u8 rcsts;"
+.br
+.BI "    __u8 rsvd3[5];"
+.br
+.BI "    __le64 rkey;"
+.br
+.BI "    __u8 hostid[16];"
+.br
+.BI "    __u8 rsvd32[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cntlid" 12
+Controller ID
+.IP "rcsts" 12
+Reservation Status
+.IP "rsvd3" 12
+Reserved
+.IP "rkey" 12
+Reservation Key
+.IP "hostid" 12
+Host Identifier
+.IP "rsvd32" 12
+Reserved

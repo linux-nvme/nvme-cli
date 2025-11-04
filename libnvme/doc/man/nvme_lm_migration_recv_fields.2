@@ -1,0 +1,106 @@
+.TH "libnvme" 9 "enum nvme_lm_migration_recv_fields" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_lm_migration_recv_fields \- Migration Receive command fields
+.SH SYNOPSIS
+enum nvme_lm_migration_recv_fields {
+.br
+.BI "    NVME_LM_MIGRATION_RECV_MOS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_RECV_MOS_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_RECV_SEL_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_RECV_SEL_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_SEL_GET_CONTROLLER_STATE"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_RECV_UIDX_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_MIGRATION_RECV_UIDX_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CSVI_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CSVI_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CSUIDXP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CSUIDXP_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CSUUIDI_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CSUUIDI_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CNTLID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CNTLID_MASK"
+, 
+.br
+.br
+.BI "    NVME_LM_GET_CONTROLLER_STATE_CSUP"
+
+};
+.SH Constants
+.IP "NVME_LM_MIGRATION_RECV_MOS_SHIFT" 12
+Shift amount to set Management Specific Operation
+(MOS) field
+.IP "NVME_LM_MIGRATION_RECV_MOS_MASK" 12
+Mask to set MOS field
+.IP "NVME_LM_MIGRATION_RECV_SEL_SHIFT" 12
+Shift amount to set Select (SEL) field
+.IP "NVME_LM_MIGRATION_RECV_SEL_MASK" 12
+Mask to set SEL field
+.IP "NVME_LM_SEL_GET_CONTROLLER_STATE" 12
+Get Controller State select option
+.IP "NVME_LM_MIGRATION_RECV_UIDX_SHIFT" 12
+Shift to set UUID Index (UIDX)
+.IP "NVME_LM_MIGRATION_RECV_UIDX_MASK" 12
+Mask to set UIDX
+.IP "NVME_LM_GET_CONTROLLER_STATE_CSVI_SHIFT" 12
+Shift amount to set Controller State Version Index
+(CSVI) relative to MOS
+.IP "NVME_LM_GET_CONTROLLER_STATE_CSVI_MASK" 12
+Mask to set CSVI relative to MOS
+.IP "NVME_LM_GET_CONTROLLER_STATE_CSUIDXP_SHIFT" 12
+Shift amount to set Controller State UUID Index
+Parameter (CSUIDXP)
+.IP "NVME_LM_GET_CONTROLLER_STATE_CSUIDXP_MASK" 12
+Mask to set CSUIDXP
+.IP "NVME_LM_GET_CONTROLLER_STATE_CSUUIDI_SHIFT" 12
+Shift amount to set Controller State UUID Index
+(CSUUIDI)
+.IP "NVME_LM_GET_CONTROLLER_STATE_CSUUIDI_MASK" 12
+Mask to set CSUUIDI
+.IP "NVME_LM_GET_CONTROLLER_STATE_CNTLID_SHIFT" 12
+Shift amount to set Controller ID (CNTLID)
+.IP "NVME_LM_GET_CONTROLLER_STATE_CNTLID_MASK" 12
+Mask to set CNTLID
+.IP "NVME_LM_GET_CONTROLLER_STATE_CSUP" 12
+Controller Suspended

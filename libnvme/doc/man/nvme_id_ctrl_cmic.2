@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_cmic" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_cmic \- Controller Multipath IO and Namespace Sharing Capabilities of the controller and NVM subsystem.
+.SH SYNOPSIS
+enum nvme_id_ctrl_cmic {
+.br
+.BI "    NVME_CTRL_CMIC_MULTI_PORT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CMIC_MULTI_CTRL"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CMIC_MULTI_SRIOV"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CMIC_MULTI_ANA_REPORTING"
+
+};
+.SH Constants
+.IP "NVME_CTRL_CMIC_MULTI_PORT" 12
+If set, then the NVM subsystem may contain
+more than one NVM subsystem port, otherwise
+the NVM subsystem contains only a single
+NVM subsystem port.
+.IP "NVME_CTRL_CMIC_MULTI_CTRL" 12
+If set, then the NVM subsystem may contain
+two or more controllers, otherwise the
+NVM subsystem contains only a single
+controller. An NVM subsystem that contains
+multiple controllers may be used by
+multiple hosts, or may provide multiple
+paths for a single host.
+.IP "NVME_CTRL_CMIC_MULTI_SRIOV" 12
+If set, then the controller is associated
+with an SR-IOV Virtual Function, otherwise
+it is associated with a PCI Function
+or a Fabrics connection.
+.IP "NVME_CTRL_CMIC_MULTI_ANA_REPORTING" 12
+If set, then the NVM subsystem supports
+Asymmetric Namespace Access Reporting.

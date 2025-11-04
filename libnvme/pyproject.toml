@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+[build-system]
+build-backend = 'mesonpy'
+requires = ['meson-python']
+
+[project]
+name = "libnvme"
+dynamic = ["version"]
+description = "python bindings for libnvme"
+readme = "README.md"
+requires-python = ">=3.6"
+license = { text = "LGPL-2.1-or-later" }
+
+authors = [
+    { name = "Hannes Reinecke", email = "hare@suse.de" }
+]
+
+keywords = ["nvme", "storage", "bindings"]
+
+classifiers = [
+    "Intended Audience :: Developers",
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://github.com/linux-nvme/libnvme"
+"Source" = "https://github.com/linux-nvme/libnvme"
+"Bug Tracker" = "https://github.com/linux-nvme/libnvme/issues"

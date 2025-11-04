@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_mi_port_smb" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_port_smb \- SMBus Port Specific Data
+.SH SYNOPSIS
+struct nvme_mi_port_smb {
+.br
+.BI "    __u8 vpd_addr;"
+.br
+.BI "    __u8 mvpd_freq;"
+.br
+.BI "    __u8 mme_addr;"
+.br
+.BI "    __u8 mme_freq;"
+.br
+.BI "    __u8 nvmebm;"
+.br
+.BI "    __u8 rsvd13[19];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "vpd_addr" 12
+Current VPD SMBus/I2C Address
+.IP "mvpd_freq" 12
+Maximum VPD Access SMBus/I2C Frequency
+.IP "mme_addr" 12
+Current Management Endpoint SMBus/I2C Address
+.IP "mme_freq" 12
+Maximum Management Endpoint SMBus/I2C Frequency
+.IP "nvmebm" 12
+NVMe Basic Management
+.IP "rsvd13" 12
+Reserved

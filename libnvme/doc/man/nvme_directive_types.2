@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_directive_types" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_directive_types \- Directives Supported or Enabled
+.SH SYNOPSIS
+enum nvme_directive_types {
+.br
+.BI "    NVME_ID_DIR_ID_BIT"
+, 
+.br
+.br
+.BI "    NVME_ID_DIR_SD_BIT"
+, 
+.br
+.br
+.BI "    NVME_ID_DIR_DP_BIT"
+
+};
+.SH Constants
+.IP "NVME_ID_DIR_ID_BIT" 12
+Identify directive is supported
+.IP "NVME_ID_DIR_SD_BIT" 12
+Streams directive is supported
+.IP "NVME_ID_DIR_DP_BIT" 12
+Direct Placement directive is supported

@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_mi_csts" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_csts \- Controller Health Data Structure (CHDS) - Controller Status (CSTS)
+.SH SYNOPSIS
+enum nvme_mi_csts {
+.br
+.BI "    NVME_MI_CSTS_RDY"
+, 
+.br
+.br
+.BI "    NVME_MI_CSTS_CFS"
+, 
+.br
+.br
+.BI "    NVME_MI_CSTS_SHST"
+, 
+.br
+.br
+.BI "    NVME_MI_CSTS_NSSRO"
+, 
+.br
+.br
+.BI "    NVME_MI_CSTS_CECO"
+, 
+.br
+.br
+.BI "    NVME_MI_CSTS_NAC"
+, 
+.br
+.br
+.BI "    NVME_MI_CSTS_FA"
+
+};
+.SH Constants
+.IP "NVME_MI_CSTS_RDY" 12
+Ready
+.IP "NVME_MI_CSTS_CFS" 12
+Controller Fatal Status
+.IP "NVME_MI_CSTS_SHST" 12
+Shutdown Status
+.IP "NVME_MI_CSTS_NSSRO" 12
+NVM Subsystem Reset Occurred
+.IP "NVME_MI_CSTS_CECO" 12
+Controller Enable Change Occurred
+.IP "NVME_MI_CSTS_NAC" 12
+Namespace Attribute Changed
+.IP "NVME_MI_CSTS_FA" 12
+Firmware Activated

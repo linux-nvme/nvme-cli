@@ -1,0 +1,14 @@
+.TH "nvme_dump_config" 9 "nvme_dump_config" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_dump_config \- Print the JSON configuration
+.SH SYNOPSIS
+.B "int" nvme_dump_config
+.BI "(nvme_root_t r "  ");"
+.SH ARGUMENTS
+.IP "r" 12
+nvme_root_t object
+.SH "DESCRIPTION"
+Prints the current contents of the JSON configuration
+file to stdout.
+.SH "RETURN"
+0 on success, -1 on failure.

@@ -1,0 +1,47 @@
+.TH "libnvme" 9 "struct nvme_rotational_media_info_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_rotational_media_info_log \- Rotational Media Information Log
+.SH SYNOPSIS
+struct nvme_rotational_media_info_log {
+.br
+.BI "    __le16 endgid;"
+.br
+.BI "    __le16 numa;"
+.br
+.BI "    __le16 nrs;"
+.br
+.BI "    __u8 rsvd6[2];"
+.br
+.BI "    __le32 spinc;"
+.br
+.BI "    __le32 fspinc;"
+.br
+.BI "    __le32 ldc;"
+.br
+.BI "    __le32 fldc;"
+.br
+.BI "    __u8 rsvd24[488];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "endgid" 12
+Endurance Group Identifier
+.IP "numa" 12
+Number of Actuators
+.IP "nrs" 12
+Nominal Rotational Speed
+.IP "rsvd6" 12
+Reserved
+.IP "spinc" 12
+Spinup Count
+.IP "fspinc" 12
+Failed Spinup Count
+.IP "ldc" 12
+Load Count
+.IP "fldc" 12
+Failed Load Count
+.IP "rsvd24" 12
+Reserved

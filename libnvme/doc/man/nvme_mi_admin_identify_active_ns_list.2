@@ -1,0 +1,28 @@
+.TH "nvme_mi_admin_identify_active_ns_list" 9 "nvme_mi_admin_identify_active_ns_list" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_identify_active_ns_list \- Perform an Admin identify for an active namespace list
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_identify_active_ns_list
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_ns_list *list "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to process identify command
+.IP "nsid" 12
+Namespace ID to specify list start
+.IP "list" 12
+List data to populate
+.SH "DESCRIPTION"
+Perform an Identify command, for the active namespace list starting with
+IDs greater than or equal to \fInsid\fP. Specify \fINVME_NSID_NONE\fP for the start
+of the list.
+
+Will return an error if the length of the response data (from the
+controller) is not a full \fINVME_IDENTIFY_DATA_SIZE\fP, so \fIlist\fP will be
+be fully populated on success.
+
+See: \fIstruct nvme_ns_list\fP
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

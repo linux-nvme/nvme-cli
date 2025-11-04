@@ -1,0 +1,15 @@
+.TH "libnvme" 9 "struct nvme_ns_list" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_ns_list \- Namespace List
+.SH SYNOPSIS
+struct nvme_ns_list {
+.br
+.BI "    __le32 ns[NVME_ID_NS_LIST_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ns" 12
+Namespace Identifier

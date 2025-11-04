@@ -1,0 +1,14 @@
+.TH "nvme_next_host" 9 "nvme_next_host" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_next_host \- Next host iterator
+.SH SYNOPSIS
+.B "nvme_host_t" nvme_next_host
+.BI "(nvme_root_t r "  ","
+.BI "nvme_host_t h "  ");"
+.SH ARGUMENTS
+.IP "r" 12
+\fInvme_root_t\fP object
+.IP "h" 12
+Previous \fInvme_host_t\fP iterator
+.SH "RETURN"
+Next \fInvme_host_t\fP object in an iterator

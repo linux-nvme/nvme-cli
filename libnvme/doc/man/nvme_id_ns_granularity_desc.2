@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_id_ns_granularity_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_id_ns_granularity_desc \- Namespace Granularity Descriptor
+.SH SYNOPSIS
+struct nvme_id_ns_granularity_desc {
+.br
+.BI "    __le64 nszegran;"
+.br
+.BI "    __le64 ncapgran;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nszegran" 12
+Namespace Size Granularity
+.IP "ncapgran" 12
+Namespace Capacity Granularity

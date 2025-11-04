@@ -1,0 +1,25 @@
+.TH "nvme_identify_domain_list" 9 "nvme_identify_domain_list" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_identify_domain_list \- Domain list data
+.SH SYNOPSIS
+.B "int" nvme_identify_domain_list
+.BI "(int fd "  ","
+.BI "__u16 domid "  ","
+.BI "struct nvme_id_domain_list *list "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "domid" 12
+Domain ID
+.IP "list" 12
+User space destination address to transfer data
+.SH "DESCRIPTION"
+A list of 31 domain IDs is returned to the host containing domain
+attributes in increasing order that are greater than the value
+specified in the \fIdomid\fP field.
+
+See \fIstruct nvme_identify_domain_attr\fP for the definition of the
+returned structure.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

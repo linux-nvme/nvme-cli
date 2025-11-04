@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_ctrl_list" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_ctrl_list \- Controller List
+.SH SYNOPSIS
+struct nvme_ctrl_list {
+.br
+.BI "    __le16 num;"
+.br
+.BI "    __le16 identifier[NVME_ID_CTRL_LIST_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "num" 12
+Number of Identifiers
+.IP "identifier" 12
+NVM subsystem unique controller identifier

@@ -1,0 +1,12 @@
+.TH "nvme_resv_release" 9 "nvme_resv_release" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_resv_release \- Send an nvme reservation release
+.SH SYNOPSIS
+.B "int" nvme_resv_release
+.BI "(struct nvme_resv_release_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_resv_release_args\fP argument structure
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

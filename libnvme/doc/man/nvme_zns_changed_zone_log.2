@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_zns_changed_zone_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_zns_changed_zone_log \- ZNS Changed Zone List log
+.SH SYNOPSIS
+struct nvme_zns_changed_zone_log {
+.br
+.BI "    __le16 nrzid;"
+.br
+.BI "    __u8 rsvd2[6];"
+.br
+.BI "    __le64 zid[NVME_ZNS_CHANGED_ZONES_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nrzid" 12
+Number of Zone Identifiers
+.IP "rsvd2" 12
+Reserved
+.IP "zid" 12
+Zone Identifier

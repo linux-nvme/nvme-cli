@@ -1,0 +1,19 @@
+.TH "nvme_set_root" 9 "nvme_set_root" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_set_root \- Set nvme_root_t context
+.SH SYNOPSIS
+.B "void" nvme_set_root
+.BI "(nvme_root_t r "  ");"
+.SH ARGUMENTS
+.IP "r" 12
+nvme_root_t context
+.SH "DESCRIPTION"
+In order to be able to log from code paths where no root object is passed in
+via the arguments use the the default one which can be set via this call.
+When creating a new root object with \fInvme_create_root\fP the global root object
+will be set as well. This means the global root object is always pointing to
+the latest created root object. Note the first \fInvme_free_tree\fP call will reset
+the global root object.
+
+This function is deprecated. Use nvme_init_default_logging or/and
+nvme_init_logging instead.

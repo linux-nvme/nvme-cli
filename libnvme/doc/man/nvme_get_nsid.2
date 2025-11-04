@@ -1,0 +1,19 @@
+.TH "nvme_get_nsid" 9 "nvme_get_nsid" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_nsid \- Retrieve the NSID from a namespace file descriptor
+.SH SYNOPSIS
+.B "int" nvme_get_nsid
+.BI "(int fd "  ","
+.BI "__u32 *nsid "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme namespace
+.IP "nsid" 12
+User pointer to namespace id
+.SH "DESCRIPTION"
+This should only be sent to namespace handles, not to controllers. The
+kernel's interface returns the nsid as the return value. This is unfortunate
+for many architectures that are incapable of allowing distinguishing a
+namespace id > 0x80000000 from a negative error number.
+.SH "RETURN"
+0 if \fInsid\fP was set successfully or -1 with errno set otherwise.

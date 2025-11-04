@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvme_eg_critical_warning_flags" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_eg_critical_warning_flags \- Endurance Group Information Log - Critical Warning
+.SH SYNOPSIS
+enum nvme_eg_critical_warning_flags {
+.br
+.BI "    NVME_EG_CRITICAL_WARNING_SPARE"
+, 
+.br
+.br
+.BI "    NVME_EG_CRITICAL_WARNING_DEGRADED"
+, 
+.br
+.br
+.BI "    NVME_EG_CRITICAL_WARNING_READ_ONLY"
+
+};
+.SH Constants
+.IP "NVME_EG_CRITICAL_WARNING_SPARE" 12
+Available spare capacity of the Endurance Group
+has fallen below the threshold
+.IP "NVME_EG_CRITICAL_WARNING_DEGRADED" 12
+Endurance Group reliability has been degraded
+.IP "NVME_EG_CRITICAL_WARNING_READ_ONLY" 12
+Endurance Group have been placed in read only
+mode

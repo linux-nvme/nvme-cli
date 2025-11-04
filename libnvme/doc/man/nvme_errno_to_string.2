@@ -1,0 +1,11 @@
+.TH "nvme_errno_to_string" 9 "nvme_errno_to_string" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_errno_to_string \- Returns string describing nvme connect failures
+.SH SYNOPSIS
+.B "const char *" nvme_errno_to_string
+.BI "(int err "  ");"
+.SH ARGUMENTS
+.IP "err" 12
+Returned error code from \fBnvme_add_ctrl\fP
+.SH "RETURN"
+String representation of the nvme connect error codes

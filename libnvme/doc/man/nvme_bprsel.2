@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum nvme_bprsel" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_bprsel \- This field indicates the boot partition read select
+.SH SYNOPSIS
+enum nvme_bprsel {
+.br
+.BI "    NVME_BPRSEL_BPRSZ_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_BPRSEL_BPROF_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_BPRSEL_BPID_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_BPRSEL_BPRSZ_MASK"
+, 
+.br
+.br
+.BI "    NVME_BPRSEL_BPROF_MASK"
+, 
+.br
+.br
+.BI "    NVME_BPRSEL_BPID_MASK"
+
+};
+.SH Constants
+.IP "NVME_BPRSEL_BPRSZ_SHIFT" 12
+Shift amount to get the boot partition read size
+.IP "NVME_BPRSEL_BPROF_SHIFT" 12
+Shift amount to get the boot partition read offset
+.IP "NVME_BPRSEL_BPID_SHIFT" 12
+Shift amount to get the boot partition identifier
+.IP "NVME_BPRSEL_BPRSZ_MASK" 12
+Mask to get the boot partition read size
+.IP "NVME_BPRSEL_BPROF_MASK" 12
+Mask to get the boot partition read offset
+.IP "NVME_BPRSEL_BPID_MASK" 12
+Mask to get the boot partition identifier

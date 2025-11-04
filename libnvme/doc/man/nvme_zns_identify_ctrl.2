@@ -1,0 +1,15 @@
+.TH "nvme_zns_identify_ctrl" 9 "nvme_zns_identify_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_zns_identify_ctrl \- ZNS identify controller data
+.SH SYNOPSIS
+.B "int" nvme_zns_identify_ctrl
+.BI "(int fd "  ","
+.BI "struct nvme_zns_id_ctrl *id "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "id" 12
+User space destination address to transfer the data
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

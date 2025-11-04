@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_ana_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_ana_log \- Asymmetric Namespace Access Log
+.SH SYNOPSIS
+struct nvme_ana_log {
+.br
+.BI "    __le64 chgcnt;"
+.br
+.BI "    __le16 ngrps;"
+.br
+.BI "    __u8 rsvd10[6];"
+.br
+.BI "    struct nvme_ana_group_desc descs[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "chgcnt" 12
+Change Count
+.IP "ngrps" 12
+Number of ANA Group Descriptors
+.IP "rsvd10" 12
+Reserved
+.IP "descs" 12
+ANA Group Descriptor

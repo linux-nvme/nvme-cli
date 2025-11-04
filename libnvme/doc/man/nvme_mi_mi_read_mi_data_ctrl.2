@@ -1,0 +1,23 @@
+.TH "nvme_mi_mi_read_mi_data_ctrl" 9 "nvme_mi_mi_read_mi_data_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_mi_read_mi_data_ctrl \- Perform a Read MI Data Structure command, retrieving controller information
+.SH SYNOPSIS
+.B "int" nvme_mi_mi_read_mi_data_ctrl
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "__u16 ctrl_id "  ","
+.BI "struct nvme_mi_read_ctrl_info *ctrl "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint for MI communication
+.IP "ctrl_id" 12
+ID of controller to query
+.IP "ctrl" 12
+controller data to populate
+.SH "DESCRIPTION"
+Retrieves the Controller Information Data Structure for the attached
+controller with ID \fIctrlid\fP.
+
+See \fIstruct nvme_mi_read_ctrl_info\fP.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

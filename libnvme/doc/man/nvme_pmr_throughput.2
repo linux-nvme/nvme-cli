@@ -1,0 +1,11 @@
+.TH "nvme_pmr_throughput" 9 "nvme_pmr_throughput" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_pmr_throughput \- Calculate throughput of persistent memory buffer
+.SH SYNOPSIS
+.B "__u64" nvme_pmr_throughput
+.BI "(__u32 pmrswtp "  ");"
+.SH ARGUMENTS
+.IP "pmrswtp" 12
+Value from controller register NVME_REG_PMRSWTP
+.SH "RETURN"
+throughput of controller persistent memory buffer in bytes/second

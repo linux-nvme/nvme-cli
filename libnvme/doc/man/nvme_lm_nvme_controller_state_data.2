@@ -1,0 +1,29 @@
+.TH "libnvme" 9 "struct nvme_lm_nvme_controller_state_data" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_nvme_controller_state_data \- NVMe Controller State data structure describes the state of a NVMe Controller's I/O Submission and I/O Completion queues
+.SH SYNOPSIS
+struct nvme_lm_nvme_controller_state_data {
+.br
+.BI "    struct nvme_lm_nvme_controller_state_data_header hdr;"
+.br
+.BI "    union {"
+.br
+.BI "      struct nvme_lm_io_submission_queue_data sqs[0];"
+.br
+.BI "      struct nvme_lm_io_completion_queue_data cqs[0];"
+.br
+.BI "    };"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+Header
+.IP "{unnamed_union}" 12
+anonymous
+.IP "sqs" 12
+I/O Submission Queue list
+.IP "cqs" 12
+I/O Completion Queue list

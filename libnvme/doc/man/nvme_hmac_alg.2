@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_hmac_alg" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_hmac_alg \- HMAC algorithm
+.SH SYNOPSIS
+enum nvme_hmac_alg {
+.br
+.BI "    NVME_HMAC_ALG_NONE"
+, 
+.br
+.br
+.BI "    NVME_HMAC_ALG_SHA2_256"
+, 
+.br
+.br
+.BI "    NVME_HMAC_ALG_SHA2_384"
+, 
+.br
+.br
+.BI "    NVME_HMAC_ALG_SHA2_512"
+
+};
+.SH Constants
+.IP "NVME_HMAC_ALG_NONE" 12
+No HMAC algorithm
+.IP "NVME_HMAC_ALG_SHA2_256" 12
+SHA2-256
+.IP "NVME_HMAC_ALG_SHA2_384" 12
+SHA2-384
+.IP "NVME_HMAC_ALG_SHA2_512" 12
+SHA2-512

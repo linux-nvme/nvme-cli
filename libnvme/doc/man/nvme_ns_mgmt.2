@@ -1,0 +1,12 @@
+.TH "nvme_ns_mgmt" 9 "nvme_ns_mgmt" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ns_mgmt \- Issue a Namespace management command
+.SH SYNOPSIS
+.B "int" nvme_ns_mgmt
+.BI "(struct nvme_ns_mgmt_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_ns_mgmt_args\fP Argument structure
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

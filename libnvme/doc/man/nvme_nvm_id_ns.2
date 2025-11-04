@@ -1,0 +1,63 @@
+.TH "libnvme" 9 "struct nvme_nvm_id_ns" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_nvm_id_ns \- NVME Command Set I/O Command Set Specific Identify Namespace Data Structure
+.SH SYNOPSIS
+struct nvme_nvm_id_ns {
+.br
+.BI "    __le64 lbstm;"
+.br
+.BI "    __u8 pic;"
+.br
+.BI "    __u8 pifa;"
+.br
+.BI "    __u8 rsvd10[2];"
+.br
+.BI "    __le32 elbaf[64];"
+.br
+.BI "    __le32 npdgl;"
+.br
+.BI "    __le32 nprg;"
+.br
+.BI "    __le32 npra;"
+.br
+.BI "    __le32 nors;"
+.br
+.BI "    __le32 npdal;"
+.br
+.BI "    __le32 lbapss;"
+.br
+.BI "    __le32 tlbaag;"
+.br
+.BI "    __u8 rsvd296[3800];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lbstm" 12
+Logical Block Storage Tag Mask
+.IP "pic" 12
+Protection Information Capabilities
+.IP "pifa" 12
+Protection Information Format Attribute
+.IP "rsvd10" 12
+Reserved
+.IP "elbaf" 12
+List of Extended LBA Format Support
+.IP "npdgl" 12
+Namespace Preferred Deallocate Granularity Large
+.IP "nprg" 12
+Namespace Preferred Read Granularity
+.IP "npra" 12
+Namespace Preferred Read Alignment
+.IP "nors" 12
+Namespace Optimal Read Size
+.IP "npdal" 12
+Namespace Preferred Deallocate Alignment Large
+.IP "lbapss" 12
+LBA Format Placement Shard Size
+.IP "tlbaag" 12
+Tracked LBA Allocation Granularity
+.IP "rsvd296" 12
+Reserved

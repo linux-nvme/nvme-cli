@@ -1,0 +1,91 @@
+.TH "libnvme" 9 "struct nvme_fabrics_config" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_fabrics_config \- Defines all linux nvme fabrics initiator options
+.SH SYNOPSIS
+struct nvme_fabrics_config {
+.br
+.BI "    char *host_traddr;"
+.br
+.BI "    char *host_iface;"
+.br
+.BI "    int queue_size;"
+.br
+.BI "    int nr_io_queues;"
+.br
+.BI "    int reconnect_delay;"
+.br
+.BI "    int ctrl_loss_tmo;"
+.br
+.BI "    int fast_io_fail_tmo;"
+.br
+.BI "    int keep_alive_tmo;"
+.br
+.BI "    int nr_write_queues;"
+.br
+.BI "    int nr_poll_queues;"
+.br
+.BI "    int tos;"
+.br
+.BI "    long keyring;"
+.br
+.BI "    long tls_key;"
+.br
+.BI "    long tls_configured_key;"
+.br
+.BI "    bool duplicate_connect;"
+.br
+.BI "    bool disable_sqflow;"
+.br
+.BI "    bool hdr_digest;"
+.br
+.BI "    bool data_digest;"
+.br
+.BI "    bool tls;"
+.br
+.BI "    bool concat;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "host_traddr" 12
+Host transport address
+.IP "host_iface" 12
+Host interface name
+.IP "queue_size" 12
+Number of IO queue entries
+.IP "nr_io_queues" 12
+Number of controller IO queues to establish
+.IP "reconnect_delay" 12
+Time between two consecutive reconnect attempts.
+.IP "ctrl_loss_tmo" 12
+Override the default controller reconnect attempt timeout in seconds
+.IP "fast_io_fail_tmo" 12
+Set the fast I/O fail timeout in seconds.
+.IP "keep_alive_tmo" 12
+Override the default keep-alive-timeout to this value in seconds
+.IP "nr_write_queues" 12
+Number of queues to use for exclusively for writing
+.IP "nr_poll_queues" 12
+Number of queues to reserve for polling completions
+.IP "tos" 12
+Type of service
+.IP "keyring" 12
+Keyring to store and lookup keys
+.IP "tls_key" 12
+TLS PSK for the connection
+.IP "tls_configured_key" 12
+TLS PSK for connect command for the connection
+.IP "duplicate_connect" 12
+Allow multiple connections to the same target
+.IP "disable_sqflow" 12
+Disable controller sq flow control
+.IP "hdr_digest" 12
+Generate/verify header digest (TCP)
+.IP "data_digest" 12
+Generate/verify data digest (TCP)
+.IP "tls" 12
+Start TLS on the connection (TCP)
+.IP "concat" 12
+Enable secure concatenation (TCP)

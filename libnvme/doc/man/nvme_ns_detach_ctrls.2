@@ -1,0 +1,18 @@
+.TH "nvme_ns_detach_ctrls" 9 "nvme_ns_detach_ctrls" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ns_detach_ctrls \- Detach namespace from controllers
+.SH SYNOPSIS
+.B "int" nvme_ns_detach_ctrls
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_ctrl_list *ctrlist "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID to detach
+.IP "ctrlist" 12
+Controller list to modify attachment state of nsid
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

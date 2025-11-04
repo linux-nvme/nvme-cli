@@ -1,0 +1,15 @@
+.TH "nvme_set_property" 9 "nvme_set_property" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_set_property \- Set controller property
+.SH SYNOPSIS
+.B "int" nvme_set_property
+.BI "(struct nvme_set_property_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_set_property_args\fP argument structure
+.SH "DESCRIPTION"
+This is an NVMe-over-Fabrics specific command, not applicable to PCIe. These
+properties align to the PCI MMIO controller registers.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_resv_notify_rnlpt" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_resv_notify_rnlpt \- Reservation Notification Log - Reservation Notification Log Page Type
+.SH SYNOPSIS
+enum nvme_resv_notify_rnlpt {
+.br
+.BI "    NVME_RESV_NOTIFY_RNLPT_EMPTY"
+, 
+.br
+.br
+.BI "    NVME_RESV_NOTIFY_RNLPT_REGISTRATION_PREEMPTED"
+, 
+.br
+.br
+.BI "    NVME_RESV_NOTIFY_RNLPT_RESERVATION_RELEASED"
+, 
+.br
+.br
+.BI "    NVME_RESV_NOTIFY_RNLPT_RESERVATION_PREEMPTED"
+
+};
+.SH Constants
+.IP "NVME_RESV_NOTIFY_RNLPT_EMPTY" 12
+Empty Log Page
+.IP "NVME_RESV_NOTIFY_RNLPT_REGISTRATION_PREEMPTED" 12
+Registration Preempted
+.IP "NVME_RESV_NOTIFY_RNLPT_RESERVATION_RELEASED" 12
+Reservation Released
+.IP "NVME_RESV_NOTIFY_RNLPT_RESERVATION_PREEMPTED" 12
+Reservation Preempted

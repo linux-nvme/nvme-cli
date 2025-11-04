@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "struct nbft_info" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nbft_info \- The parsed NBFT table data.
+.SH SYNOPSIS
+struct nbft_info {
+.br
+.BI "    char *filename;"
+.br
+.BI "    __u8 *raw_nbft;"
+.br
+.BI "    ssize_t raw_nbft_size;"
+.br
+.BI "    struct nbft_info_host host;"
+.br
+.BI "    struct nbft_info_hfi **hfi_list;"
+.br
+.BI "    struct nbft_info_security **security_list;"
+.br
+.BI "    struct nbft_info_discovery **discovery_list;"
+.br
+.BI "    struct nbft_info_subsystem_ns **subsystem_ns_list;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "filename" 12
+Path to the NBFT table.
+.IP "raw_nbft" 12
+The original NBFT table contents.
+.IP "raw_nbft_size" 12
+Size of \fIraw_nbft\fP.
+.IP "host" 12
+The Host Descriptor (should match other NBFTs).
+.IP "hfi_list" 12
+The HFI Descriptor List (null-terminated array).
+.IP "security_list" 12
+The Security Profile Descriptor List (null-terminated array).
+.IP "discovery_list" 12
+The Discovery Descriptor List (null-terminated array).
+.IP "subsystem_ns_list" 12
+The SSNS Descriptor List (null-terminated array).

@@ -1,0 +1,17 @@
+.TH "nvme_format_nvm" 9 "nvme_format_nvm" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_format_nvm \- Format nvme namespace(s)
+.SH SYNOPSIS
+.B "int" nvme_format_nvm
+.BI "(struct nvme_format_nvm_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_format_nvme_args\fP argument structure
+.SH "DESCRIPTION"
+The Format NVM command low level formats the NVM media. This command is used
+by the host to change the LBA data size and/or metadata size. A low level
+format may destroy all data and metadata associated with all namespaces or
+only the specific namespace associated with the command
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

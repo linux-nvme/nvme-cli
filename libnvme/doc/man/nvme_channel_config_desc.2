@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct nvme_channel_config_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_channel_config_desc \- Channel Configuration Descriptor
+.SH SYNOPSIS
+struct nvme_channel_config_desc {
+.br
+.BI "    __le16 chanid;"
+.br
+.BI "    __le16 chmus;"
+.br
+.BI "    struct nvme_media_unit_config_desc mu_config_desc[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "chanid" 12
+Channel Identifier
+.IP "chmus" 12
+Number Channel Media Units
+.IP "mu_config_desc" 12
+Channel Unit config descriptors.
+See \fIstruct\fP nvme_media_unit_config_desc

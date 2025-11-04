@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_zns_lbafe" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_zns_lbafe \- LBA Format Extension Data Structure
+.SH SYNOPSIS
+struct nvme_zns_lbafe {
+.br
+.BI "    __le64 zsze;"
+.br
+.BI "    __u8 zdes;"
+.br
+.BI "    __u8 rsvd9[7];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "zsze" 12
+Zone Size
+.IP "zdes" 12
+Zone Descriptor Extension Size
+.IP "rsvd9" 12
+reserved

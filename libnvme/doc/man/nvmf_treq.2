@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvmf_treq" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvmf_treq \- Transport Requirements codes for Discovery Log Page entry TREQ field
+.SH SYNOPSIS
+enum nvmf_treq {
+.br
+.BI "    NVMF_TREQ_NOT_SPECIFIED"
+, 
+.br
+.br
+.BI "    NVMF_TREQ_REQUIRED"
+, 
+.br
+.br
+.BI "    NVMF_TREQ_NOT_REQUIRED"
+, 
+.br
+.br
+.BI "    NVMF_TREQ_DISABLE_SQFLOW"
+
+};
+.SH Constants
+.IP "NVMF_TREQ_NOT_SPECIFIED" 12
+Not specified
+.IP "NVMF_TREQ_REQUIRED" 12
+Required
+.IP "NVMF_TREQ_NOT_REQUIRED" 12
+Not Required
+.IP "NVMF_TREQ_DISABLE_SQFLOW" 12
+SQ flow control disable supported

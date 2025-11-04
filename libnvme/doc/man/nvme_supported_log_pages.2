@@ -1,0 +1,17 @@
+.TH "libnvme" 9 "struct nvme_supported_log_pages" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_supported_log_pages \- Supported Log Pages - Log
+.SH SYNOPSIS
+struct nvme_supported_log_pages {
+.br
+.BI "    __le32 lid_support[NVME_LOG_SUPPORTED_LOG_PAGES_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lid_support" 12
+Log Page Identifier Supported
+.SH "Description"
+Supported Log Pages (Log Identifier 00h)

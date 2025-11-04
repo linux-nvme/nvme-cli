@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_lm_track_send_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lm_track_send_args \- Arguments for the Track Send command
+.SH SYNOPSIS
+struct nvme_lm_track_send_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u16 mos;"
+.br
+.BI "    __u16 cdqid;"
+.br
+.BI "    __u8 sel;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+Set on completion to the command's CQE DWORD 0 controller response
+.IP "args_size" 12
+Length of structure
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "mos" 12
+Management Operation Specific (MOS): This field is specific to the SEL type
+.IP "cdqid" 12
+Controller Data Queue ID (CDQID)
+.IP "sel" 12
+Select (SEL): This field specifies the type of management operation to perform

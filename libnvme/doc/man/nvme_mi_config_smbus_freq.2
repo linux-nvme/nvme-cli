@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "enum nvme_mi_config_smbus_freq" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_config_smbus_freq \- SMBus/I2C frequency values
+.SH SYNOPSIS
+enum nvme_mi_config_smbus_freq {
+.br
+.BI "    NVME_MI_CONFIG_SMBUS_FREQ_100kHz"
+, 
+.br
+.br
+.BI "    NVME_MI_CONFIG_SMBUS_FREQ_400kHz"
+, 
+.br
+.br
+.BI "    NVME_MI_CONFIG_SMBUS_FREQ_1MHz"
+
+};
+.SH Constants
+.IP "NVME_MI_CONFIG_SMBUS_FREQ_100kHz" 12
+100kHz
+.IP "NVME_MI_CONFIG_SMBUS_FREQ_400kHz" 12
+400kHz
+.IP "NVME_MI_CONFIG_SMBUS_FREQ_1MHz" 12
+1MHz
+.SH "Description"
+Values used in the SMBus Frequency device configuration. See
+&\fBnvme_mi_mi_config_get_smbus_freq\fP and &\fBnvme_mi_mi_config_set_smbus_freq\fP.

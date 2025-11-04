@@ -1,0 +1,72 @@
+.TH "libnvme" 9 "struct nvme_id_independent_id_ns" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_id_independent_id_ns \- Identify - I/O Command Set Independent Identify Namespace Data Structure
+.SH SYNOPSIS
+struct nvme_id_independent_id_ns {
+.br
+.BI "    __u8 nsfeat;"
+.br
+.BI "    __u8 nmic;"
+.br
+.BI "    __u8 rescap;"
+.br
+.BI "    __u8 fpi;"
+.br
+.BI "    __le32 anagrpid;"
+.br
+.BI "    __u8 nsattr;"
+.br
+.BI "    __u8 rsvd9;"
+.br
+.BI "    __le16 nvmsetid;"
+.br
+.BI "    __le16 endgid;"
+.br
+.BI "    __u8 nstat;"
+.br
+.BI "    __u8 kpios;"
+.br
+.BI "    __le16 maxkt;"
+.br
+.BI "    __u8 rsvd18[2];"
+.br
+.BI "    __le32 rgrpid;"
+.br
+.BI "    __u8 rsvd24[4072];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsfeat" 12
+common namespace features
+.IP "nmic" 12
+Namespace Multi-path I/O and Namespace
+Sharing Capabilities
+.IP "rescap" 12
+Reservation Capabilities
+.IP "fpi" 12
+Format Progress Indicator
+.IP "anagrpid" 12
+ANA Group Identifier
+.IP "nsattr" 12
+Namespace Attributes
+.IP "rsvd9" 12
+reserved
+.IP "nvmsetid" 12
+NVM Set Identifier
+.IP "endgid" 12
+Endurance Group Identifier
+.IP "nstat" 12
+Namespace Status
+.IP "kpios" 12
+Key Per I/O Status
+.IP "maxkt" 12
+Maximum Key Tag
+.IP "rsvd18" 12
+Reserved
+.IP "rgrpid" 12
+Reachability Group Identifier
+.IP "rsvd24" 12
+Reserved

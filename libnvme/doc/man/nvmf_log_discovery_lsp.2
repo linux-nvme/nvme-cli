@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvmf_log_discovery_lsp" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvmf_log_discovery_lsp \- Discovery log specific field
+.SH SYNOPSIS
+enum nvmf_log_discovery_lsp {
+.br
+.BI "    NVMF_LOG_DISC_LSP_NONE"
+, 
+.br
+.br
+.BI "    NVMF_LOG_DISC_LSP_EXTDLPE"
+, 
+.br
+.br
+.BI "    NVMF_LOG_DISC_LSP_PLEO"
+, 
+.br
+.br
+.BI "    NVMF_LOG_DISC_LSP_ALLSUBE"
+
+};
+.SH Constants
+.IP "NVMF_LOG_DISC_LSP_NONE" 12
+None
+.IP "NVMF_LOG_DISC_LSP_EXTDLPE" 12
+Extended Discovery Log Page Entries
+.IP "NVMF_LOG_DISC_LSP_PLEO" 12
+Port Local Entries Only
+.IP "NVMF_LOG_DISC_LSP_ALLSUBE" 12
+All NVM Subsystem Entries

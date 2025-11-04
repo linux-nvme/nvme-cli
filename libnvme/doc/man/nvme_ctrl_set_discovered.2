@@ -1,0 +1,14 @@
+.TH "nvme_ctrl_set_discovered" 9 "nvme_ctrl_set_discovered" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_set_discovered \- Set the 'discovered' flag
+.SH SYNOPSIS
+.B "void" nvme_ctrl_set_discovered
+.BI "(nvme_ctrl_t c "  ","
+.BI "bool discovered "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+nvme_ctrl_t object
+.IP "discovered" 12
+Value of the 'discovered' flag
+.SH "DESCRIPTION"
+Set the 'discovered' flag of \fIc\fP to \fIdiscovered\fP

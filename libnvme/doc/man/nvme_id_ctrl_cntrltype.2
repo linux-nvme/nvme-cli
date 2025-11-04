@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_cntrltype" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_cntrltype \- Controller types
+.SH SYNOPSIS
+enum nvme_id_ctrl_cntrltype {
+.br
+.BI "    NVME_CTRL_CNTRLTYPE_IO"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CNTRLTYPE_DISCOVERY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CNTRLTYPE_ADMIN"
+
+};
+.SH Constants
+.IP "NVME_CTRL_CNTRLTYPE_IO" 12
+NVM I/O controller
+.IP "NVME_CTRL_CNTRLTYPE_DISCOVERY" 12
+Discovery controller
+.IP "NVME_CTRL_CNTRLTYPE_ADMIN" 12
+Admin controller

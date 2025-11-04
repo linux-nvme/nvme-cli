@@ -1,0 +1,121 @@
+.TH "libnvme" 9 "struct nvme_error_log_page" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_error_log_page \- Error Information Log Entry (Log Identifier 01h)
+.SH SYNOPSIS
+struct nvme_error_log_page {
+.br
+.BI "    __le64 error_count;"
+.br
+.BI "    __le16 sqid;"
+.br
+.BI "    __le16 cmdid;"
+.br
+.BI "    __le16 status_field;"
+.br
+.BI "    __le16 parm_error_location;"
+.br
+.BI "    __le64 lba;"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __u8 vs;"
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 csi;"
+.br
+.BI "    __u8 opcode;"
+.br
+.BI "    __le64 cs;"
+.br
+.BI "    __le16 trtype_spec_info;"
+.br
+.BI "    __u8 rsvd[21];"
+.br
+.BI "    __u8 log_page_version;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "error_count" 12
+Error Count: a 64-bit incrementing error count,
+indicating a unique identifier for this error. The error
+count starts at 1h, is incremented for each unique error
+log entry, and is retained across power off conditions.
+A value of 0h indicates an invalid entry; this value
+is used when there are lost entries or when there are
+fewer errors than the maximum number of entries the
+controller supports. If the value of this field is
+FFFFFFFFh, then the field shall be set to 1h when
+incremented (i.e., rolls over to 1h). Prior to NVMe
+1.4, processing of incrementing beyond FFFFFFFFh is
+unspecified.
+.IP "sqid" 12
+Submission Queue ID: indicates the Submission Queue
+Identifier of the command that the error information is
+associated with. If the error is not specific to
+a particular command, then this field shall be set to
+FFFFh.
+.IP "cmdid" 12
+Command ID: indicates the Command Identifier of the
+command that the error is associated with. If the error
+is not specific to a particular command, then this field
+shall be set to FFFFh.
+.IP "status_field" 12
+Bits 15-1: Status Field: indicates the Status Field for
+the command that completed. If the error is not specific
+to a particular command, then this field reports the most
+applicable status value.
+Bit 0: Phase Tag: may indicate the Phase Tag posted for
+the command.
+.IP "parm_error_location" 12
+Parameter Error Location: indicates the byte and bit of
+the command parameter that the error is associated with,
+if applicable. If the parameter spans multiple bytes or
+bits, then the location indicates the first byte and bit
+of the parameter.
+Bits 10-8: Bit in command that contained the error.
+Valid values are 0 to 7.
+Bits 7-0: Byte in command that contained the error.
+Valid values are 0 to 63.
+.IP "lba" 12
+LBA: This field indicates the first LBA that experienced
+the error condition, if applicable.
+.IP "nsid" 12
+Namespace: This field indicates the NSID of the namespace
+that the error is associated with, if applicable.
+.IP "vs" 12
+Vendor Specific Information Available: If there is
+additional vendor specific error information available,
+this field provides the log page identifier associated
+with that page. A value of 0h indicates that no additional
+information is available. Valid values are in the range
+of 80h to FFh.
+.IP "trtype" 12
+Transport Type (TRTYPE): indicates the Transport Type of
+the transport associated with the error. The values in
+this field are the same as the TRTYPE values in the
+Discovery Log Page Entry. If the error is not transport
+related, this field shall be cleared to 0h. If the error
+is transport related, this field shall be set to the type
+of the transport - see \fIenum nvme_trtype\fP.
+.IP "csi" 12
+Command Set Indicator: This field contains command set
+indicator for the command that the error is associated
+with.
+.IP "opcode" 12
+Opcode: This field contains opcode for the command that
+the error is associated with.
+.IP "cs" 12
+Command Specific Information: This field contains command
+specific information. If used, the command definition
+specifies the information returned.
+.IP "trtype_spec_info" 12
+Transport Type Specific Information
+.IP "rsvd" 12
+Reserved: [62:42]
+.IP "log_page_version" 12
+This field shall be set to 1h. If set, \fIcsi\fP and \fIopcode\fP
+will have valid values.

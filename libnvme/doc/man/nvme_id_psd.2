@@ -1,0 +1,116 @@
+.TH "libnvme" 9 "struct nvme_id_psd" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_id_psd \- Power Management data structure
+.SH SYNOPSIS
+struct nvme_id_psd {
+.br
+.BI "    __le16 mp;"
+.br
+.BI "    __u8 rsvd2;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __le32 enlat;"
+.br
+.BI "    __le32 exlat;"
+.br
+.BI "    __u8 rrt;"
+.br
+.BI "    __u8 rrl;"
+.br
+.BI "    __u8 rwt;"
+.br
+.BI "    __u8 rwl;"
+.br
+.BI "    __le16 idlp;"
+.br
+.BI "    __u8 ips;"
+.br
+.BI "    __u8 rsvd19;"
+.br
+.BI "    __le16 actp;"
+.br
+.BI "    __u8 apws;"
+.br
+.BI "    __u8 epfrt;"
+.br
+.BI "    __u8 fqvt;"
+.br
+.BI "    __u8 epfvt;"
+.br
+.BI "    __u8 epfr_fqv_ts;"
+.br
+.BI "    __u8 epfvts;"
+.br
+.BI "    __u8 rsvd28[4];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "mp" 12
+Maximum Power indicates the sustained maximum power consumed by the
+NVM subsystem in this power state. The power in Watts is equal to
+the value in this field multiplied by the scale specified in the Max
+Power Scale bit (see \fIenum nvme_psd_flags\fP). A value of 0 indicates
+Maximum Power is not reported.
+.IP "rsvd2" 12
+Reserved
+.IP "flags" 12
+Additional decoding flags, see \fIenum nvme_psd_flags\fP.
+.IP "enlat" 12
+Entry Latency indicates the maximum latency in microseconds
+associated with entering this power state. A value of 0 indicates
+Entry Latency is not reported.
+.IP "exlat" 12
+Exit Latency indicates the maximum latency in microseconds
+associated with exiting this power state. A value of 0 indicates
+Exit Latency is not reported.
+.IP "rrt" 12
+Relative Read Throughput indicates the read throughput rank
+associated with this power state relative to others. The value in
+this is less than the number of supported power states.
+.IP "rrl" 12
+Relative Read Latency indicates the read latency rank associated
+with this power state relative to others. The value in this field is
+less than the number of supported power states.
+.IP "rwt" 12
+Relative Write Throughput indicates write throughput rank associated
+with this power state relative to others. The value in this field is
+less than the number of supported power states
+.IP "rwl" 12
+Relative Write Latency indicates the write latency rank associated
+with this power state relative to others. The value in this field is
+less than the number of supported power states
+.IP "idlp" 12
+Idle Power indicates the typical power consumed by the NVM
+subsystem over 30 seconds in this power state when idle.
+.IP "ips" 12
+Idle Power Scale indicates the scale for \fIstruct nvme_id_psd\fP.idlp,
+see \fIenum nvme_psd_ps\fP for decoding this field.
+.IP "rsvd19" 12
+Reserved
+.IP "actp" 12
+Active Power indicates the largest average power consumed by the
+NVM subsystem over a 10 second period in this power state with
+the workload indicated in the Active Power Workload field.
+.IP "apws" 12
+Bits 7-6: Active Power Scale(APS) indicates the scale for the \fIstruct
+nvme_id_psd\fP.actp, see \fIenum nvme_psd_ps\fP for decoding this value.
+Bits 2-0: Active Power Workload(APW) indicates the workload
+used to calculate maximum power for this power state.
+See \fIenum nvme_psd_workload\fP for decoding this field.
+.IP "epfrt" 12
+Emergency power fail recovery time
+.IP "fqvt" 12
+Forced quiescence vault time
+.IP "epfvt" 12
+Emergency power fail vault time
+.IP "epfr_fqv_ts" 12
+Bits 7-4: Forced quiescence vault time scale
+Bits 3-0: Emergency power fail recovery time scale
+.IP "epfvts" 12
+Bits 3-0: Emergency power fail vault time scale
+.IP "rsvd28" 12
+Reserved

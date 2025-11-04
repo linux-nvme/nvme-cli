@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_format_nvm_start_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_format_nvm_start_event \- Format NVM Start Event Data
+.SH SYNOPSIS
+struct nvme_format_nvm_start_event {
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __u8 fna;"
+.br
+.BI "    __u8 rsvd5[3];"
+.br
+.BI "    __le32 format_nvm_cdw10;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsid" 12
+Namespace Identifier
+.IP "fna" 12
+Format NVM Attributes
+.IP "rsvd5" 12
+Reserved
+.IP "format_nvm_cdw10" 12
+Format NVM CDW10

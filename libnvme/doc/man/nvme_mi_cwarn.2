@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_mi_cwarn" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_cwarn \- Controller Health Data Structure (CHDS) - Critical Warning (CWARN)
+.SH SYNOPSIS
+enum nvme_mi_cwarn {
+.br
+.BI "    NVME_MI_CWARN_ST"
+, 
+.br
+.br
+.BI "    NVME_MI_CWARN_TAUT"
+, 
+.br
+.br
+.BI "    NVME_MI_CWARN_RD"
+, 
+.br
+.br
+.BI "    NVME_MI_CWARN_RO"
+, 
+.br
+.br
+.BI "    NVME_MI_CWARN_VMBF"
+
+};
+.SH Constants
+.IP "NVME_MI_CWARN_ST" 12
+Spare Threshold
+.IP "NVME_MI_CWARN_TAUT" 12
+Temperature Above or Under Threshold
+.IP "NVME_MI_CWARN_RD" 12
+Reliability Degraded
+.IP "NVME_MI_CWARN_RO" 12
+Read Only
+.IP "NVME_MI_CWARN_VMBF" 12
+Volatile Memory Backup Failed

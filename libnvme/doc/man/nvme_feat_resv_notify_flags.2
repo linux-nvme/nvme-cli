@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_feat_resv_notify_flags" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_feat_resv_notify_flags \- Reservation Notification Configuration
+.SH SYNOPSIS
+enum nvme_feat_resv_notify_flags {
+.br
+.BI "    NVME_FEAT_RESV_NOTIFY_REGPRE"
+, 
+.br
+.br
+.BI "    NVME_FEAT_RESV_NOTIFY_RESREL"
+, 
+.br
+.br
+.BI "    NVME_FEAT_RESV_NOTIFY_RESPRE"
+
+};
+.SH Constants
+.IP "NVME_FEAT_RESV_NOTIFY_REGPRE" 12
+Mask Registration Preempted Notification
+.IP "NVME_FEAT_RESV_NOTIFY_RESREL" 12
+Mask Reservation Released Notification
+.IP "NVME_FEAT_RESV_NOTIFY_RESPRE" 12
+Mask Reservation Preempted Notification

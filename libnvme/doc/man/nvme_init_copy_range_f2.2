@@ -1,0 +1,33 @@
+.TH "nvme_init_copy_range_f2" 9 "nvme_init_copy_range_f2" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_copy_range_f2 \- Constructs a copy range f2 structure
+.SH SYNOPSIS
+.B "void" nvme_init_copy_range_f2
+.BI "(struct nvme_copy_range_f2 *copy "  ","
+.BI "__u32 *snsids "  ","
+.BI "__u16 *nlbs "  ","
+.BI "__u64 *slbas "  ","
+.BI "__u16 *sopts "  ","
+.BI "__u32 *eilbrts "  ","
+.BI "__u32 *elbatms "  ","
+.BI "__u32 *elbats "  ","
+.BI "__u16 nr "  ");"
+.SH ARGUMENTS
+.IP "copy" 12
+Copy range array
+.IP "snsids" 12
+Source namespace identifier
+.IP "nlbs" 12
+Number of logical blocks
+.IP "slbas" 12
+Starting LBA
+.IP "sopts" 12
+Source options
+.IP "eilbrts" 12
+Expected initial logical block reference tag
+.IP "elbatms" 12
+Expected logical block application tag mask
+.IP "elbats" 12
+Expected logical block application tag
+.IP "nr" 12
+Number of descriptors to construct

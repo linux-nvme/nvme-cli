@@ -1,0 +1,13 @@
+.TH "nvme_ctrl_reset" 9 "nvme_ctrl_reset" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_reset \- Initiate a controller reset
+.SH SYNOPSIS
+.B "int" nvme_ctrl_reset
+.BI "(int fd "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.SH "DESCRIPTION"
+This should only be sent to controller handles, not to namespaces.
+.SH "RETURN"
+0 if a reset was initiated or -1 with errno set otherwise.

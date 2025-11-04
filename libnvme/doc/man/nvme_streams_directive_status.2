@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_streams_directive_status" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_streams_directive_status \- Streams Directive - Get Status Data Structure
+.SH SYNOPSIS
+struct nvme_streams_directive_status {
+.br
+.BI "    __le16 osc;"
+.br
+.BI "    __le16 sid[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "osc" 12
+Open Stream Count
+.IP "sid" 12
+Stream Identifier

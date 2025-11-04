@@ -1,0 +1,11 @@
+.TH "nvme_subsystem_get_iopolicy" 9 "nvme_subsystem_get_iopolicy" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsystem_get_iopolicy \- Return the IO policy of subsytem
+.SH SYNOPSIS
+.B "const char *" nvme_subsystem_get_iopolicy
+.BI "(nvme_subsystem_t s "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+nvme_subsystem_t object
+.SH "RETURN"
+IO policy used by current subsystem

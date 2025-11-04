@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_pel_ehai_pit" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_pel_ehai_pit \- Persistent Event Header Additional Information - Port Identifier Type
+.SH SYNOPSIS
+enum nvme_pel_ehai_pit {
+.br
+.BI "    NVME_PEL_EHAI_PIT_NOT_REPORTED"
+, 
+.br
+.br
+.BI "    NVME_PEL_EHAI_PIT_NSS_PORT"
+, 
+.br
+.br
+.BI "    NVME_PEL_EHAI_PIT_NMI_PORT"
+, 
+.br
+.br
+.BI "    NVME_PEL_EHAI_PIT_NOT_ASSOCIATED"
+
+};
+.SH Constants
+.IP "NVME_PEL_EHAI_PIT_NOT_REPORTED" 12
+PIT not reported and PELPID does not apply
+.IP "NVME_PEL_EHAI_PIT_NSS_PORT" 12
+NVM subsystem port
+.IP "NVME_PEL_EHAI_PIT_NMI_PORT" 12
+NVMe-MI port
+.IP "NVME_PEL_EHAI_PIT_NOT_ASSOCIATED" 12
+Event not associated with any port and PELPID does not apply

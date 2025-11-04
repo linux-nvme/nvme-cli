@@ -1,0 +1,128 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_ctratt" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_ctratt \- Controller attributes
+.SH SYNOPSIS
+enum nvme_id_ctrl_ctratt {
+.br
+.BI "    NVME_CTRL_CTRATT_128_ID"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NON_OP_PSP"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NVM_SETS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_READ_RECV_LVLS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_ENDURANCE_GROUPS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_PREDICTABLE_LAT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_TBKAS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_SQ_ASSOCIATIONS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_UUID_LIST"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_MDS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FIXED_CAP"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_VARIABLE_CAP"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_DEL_NVM_SETS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_ELBAS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_MEM"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_HMBR"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_RHII"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CTRATT_FDPS"
+
+};
+.SH Constants
+.IP "NVME_CTRL_CTRATT_128_ID" 12
+128-bit Host Identifier supported
+.IP "NVME_CTRL_CTRATT_NON_OP_PSP" 12
+Non-Operational Poser State Permissive Mode
+supported
+.IP "NVME_CTRL_CTRATT_NVM_SETS" 12
+NVM Sets supported
+.IP "NVME_CTRL_CTRATT_READ_RECV_LVLS" 12
+Read Recovery Levels supported
+.IP "NVME_CTRL_CTRATT_ENDURANCE_GROUPS" 12
+Endurance Groups supported
+.IP "NVME_CTRL_CTRATT_PREDICTABLE_LAT" 12
+Predictable Latency Mode supported
+.IP "NVME_CTRL_CTRATT_TBKAS" 12
+Traffic Based Keep Alive Support
+.IP "NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY" 12
+Namespace Granularity reporting
+supported
+.IP "NVME_CTRL_CTRATT_SQ_ASSOCIATIONS" 12
+SQ Associations supported
+.IP "NVME_CTRL_CTRATT_UUID_LIST" 12
+UUID List reporting supported
+.IP "NVME_CTRL_CTRATT_MDS" 12
+Multi-Domain Subsystem supported
+.IP "NVME_CTRL_CTRATT_FIXED_CAP" 12
+Fixed Capacity Management  supported
+.IP "NVME_CTRL_CTRATT_VARIABLE_CAP" 12
+Variable Capacity Management supported
+.IP "NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS" 12
+Delete Endurance Groups supported
+.IP "NVME_CTRL_CTRATT_DEL_NVM_SETS" 12
+Delete NVM Sets supported
+.IP "NVME_CTRL_CTRATT_ELBAS" 12
+Extended LBA Formats supported
+.IP "NVME_CTRL_CTRATT_MEM" 12
+MDTS and Size Limits Exclude Metadata supported
+.IP "NVME_CTRL_CTRATT_HMBR" 12
+HMB Restrict Non-Operational Power State Access
+.IP "NVME_CTRL_CTRATT_RHII" 12
+Reservations and Host Identifier Interaction
+.IP "NVME_CTRL_CTRATT_FDPS" 12
+Flexible Data Placement supported

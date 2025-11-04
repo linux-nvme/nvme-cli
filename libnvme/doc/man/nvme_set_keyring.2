@@ -1,0 +1,15 @@
+.TH "nvme_set_keyring" 9 "nvme_set_keyring" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_set_keyring \- Link keyring for lookup
+.SH SYNOPSIS
+.B "int" nvme_set_keyring
+.BI "(long keyring_id "  ");"
+.SH ARGUMENTS
+.IP "keyring_id" 12
+Keyring id
+.SH "DESCRIPTION"
+Links \fIkeyring_id\fP into the session keyring such that
+its keys are available for further key lookups.
+.SH "RETURN"
+0 on success, a negative number on error
+with errno set.

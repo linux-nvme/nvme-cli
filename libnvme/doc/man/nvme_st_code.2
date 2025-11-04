@@ -1,0 +1,49 @@
+.TH "libnvme" 9 "enum nvme_st_code" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_st_code \- Self-test Code value
+.SH SYNOPSIS
+enum nvme_st_code {
+.br
+.BI "    NVME_ST_CODE_RESERVED"
+, 
+.br
+.br
+.BI "    NVME_ST_CODE_SHORT"
+, 
+.br
+.br
+.BI "    NVME_ST_CODE_EXTENDED"
+, 
+.br
+.br
+.BI "    NVME_ST_CODE_HOST_INIT"
+, 
+.br
+.br
+.BI "    NVME_ST_CODE_VS"
+, 
+.br
+.br
+.BI "    NVME_ST_CODE_ABORT"
+, 
+.br
+.br
+.BI "    NVME_ST_CODE_SHIFT"
+
+};
+.SH Constants
+.IP "NVME_ST_CODE_RESERVED" 12
+Reserved.
+.IP "NVME_ST_CODE_SHORT" 12
+Short device self-test operation.
+.IP "NVME_ST_CODE_EXTENDED" 12
+Extended device self-test operation.
+.IP "NVME_ST_CODE_HOST_INIT" 12
+Host-Initiated Refresh operation.
+.IP "NVME_ST_CODE_VS" 12
+Vendor specific.
+.IP "NVME_ST_CODE_ABORT" 12
+Abort device self-test operation.
+.IP "NVME_ST_CODE_SHIFT" 12
+Shift amount to get the code value from the
+\fIstruct nvme_st_result\fP.dsts field.

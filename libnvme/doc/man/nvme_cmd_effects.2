@@ -1,0 +1,54 @@
+.TH "libnvme" 9 "enum nvme_cmd_effects" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmd_effects \- Commands Supported and Effects
+.SH SYNOPSIS
+enum nvme_cmd_effects {
+.br
+.BI "    NVME_CMD_EFFECTS_CSUPP"
+, 
+.br
+.br
+.BI "    NVME_CMD_EFFECTS_LBCC"
+, 
+.br
+.br
+.BI "    NVME_CMD_EFFECTS_NCC"
+, 
+.br
+.br
+.BI "    NVME_CMD_EFFECTS_NIC"
+, 
+.br
+.br
+.BI "    NVME_CMD_EFFECTS_CCC"
+, 
+.br
+.br
+.BI "    NVME_CMD_EFFECTS_CSER_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMD_EFFECTS_CSE_MASK"
+, 
+.br
+.br
+.BI "    NVME_CMD_EFFECTS_UUID_SEL"
+
+};
+.SH Constants
+.IP "NVME_CMD_EFFECTS_CSUPP" 12
+Command Supported
+.IP "NVME_CMD_EFFECTS_LBCC" 12
+Logical Block Content Change
+.IP "NVME_CMD_EFFECTS_NCC" 12
+Namespace Capability Change
+.IP "NVME_CMD_EFFECTS_NIC" 12
+Namespace Inventory Change
+.IP "NVME_CMD_EFFECTS_CCC" 12
+Controller Capability Change
+.IP "NVME_CMD_EFFECTS_CSER_MASK" 12
+Command Submission and Execution Relaxations
+.IP "NVME_CMD_EFFECTS_CSE_MASK" 12
+Command Submission and Execution
+.IP "NVME_CMD_EFFECTS_UUID_SEL" 12
+UUID Selection Supported

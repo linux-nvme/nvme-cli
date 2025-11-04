@@ -1,0 +1,28 @@
+.TH "nvme_identify_active_ns_list_csi" 9 "nvme_identify_active_ns_list_csi" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_identify_active_ns_list_csi \- Active namespace ID list associated with a specified I/O command set
+.SH SYNOPSIS
+.B "int" nvme_identify_active_ns_list_csi
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_csi csi "  ","
+.BI "struct nvme_ns_list *ns_list "  ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Return namespaces greater than this identifier
+.IP "csi" 12
+Command Set Identifier
+.IP "ns_list" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+A list of 1024 namespace IDs is returned to the host containing active
+NSIDs in increasing order that are greater than the value specified in
+the Namespace Identifier (nsid) field of the command and matching the
+I/O Command Set specified in the \fIcsi\fP argument.
+
+See \fIstruct nvme_ns_list\fP for the definition of the returned structure.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

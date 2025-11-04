@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "enum nvme_cmd_format_pil" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmd_format_pil \- Format NVM - Protection Information Location
+.SH SYNOPSIS
+enum nvme_cmd_format_pil {
+.br
+.BI "    NVME_FORMAT_PIL_LAST"
+, 
+.br
+.br
+.BI "    NVME_FORMAT_PIL_FIRST"
+
+};
+.SH Constants
+.IP "NVME_FORMAT_PIL_LAST" 12
+Protection information is transferred as the last
+bytes of metadata.
+.IP "NVME_FORMAT_PIL_FIRST" 12
+Protection information is transferred as the first
+bytes of metadata.

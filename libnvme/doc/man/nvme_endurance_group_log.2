@@ -1,0 +1,87 @@
+.TH "libnvme" 9 "struct nvme_endurance_group_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_endurance_group_log \- Endurance Group Information Log
+.SH SYNOPSIS
+struct nvme_endurance_group_log {
+.br
+.BI "    __u8 critical_warning;"
+.br
+.BI "    __u8 endurance_group_features;"
+.br
+.BI "    __u8 rsvd2;"
+.br
+.BI "    __u8 avl_spare;"
+.br
+.BI "    __u8 avl_spare_threshold;"
+.br
+.BI "    __u8 percent_used;"
+.br
+.BI "    __le16 domain_identifier;"
+.br
+.BI "    __u8 rsvd8[24];"
+.br
+.BI "    __u8 endurance_estimate[16];"
+.br
+.BI "    __u8 data_units_read[16];"
+.br
+.BI "    __u8 data_units_written[16];"
+.br
+.BI "    __u8 media_units_written[16];"
+.br
+.BI "    __u8 host_read_cmds[16];"
+.br
+.BI "    __u8 host_write_cmds[16];"
+.br
+.BI "    __u8 media_data_integrity_err[16];"
+.br
+.BI "    __u8 num_err_info_log_entries[16];"
+.br
+.BI "    __u8 total_end_grp_cap[16];"
+.br
+.BI "    __u8 unalloc_end_grp_cap[16];"
+.br
+.BI "    __u8 rsvd192[320];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "critical_warning" 12
+Critical Warning
+.IP "endurance_group_features" 12
+Endurance Group Features
+.IP "rsvd2" 12
+Reserved
+.IP "avl_spare" 12
+Available Spare
+.IP "avl_spare_threshold" 12
+Available Spare Threshold
+.IP "percent_used" 12
+Percentage Used
+.IP "domain_identifier" 12
+Domain Identifier
+.IP "rsvd8" 12
+Reserved
+.IP "endurance_estimate" 12
+Endurance Estimate
+.IP "data_units_read" 12
+Data Units Read
+.IP "data_units_written" 12
+Data Units Written
+.IP "media_units_written" 12
+Media Units Written
+.IP "host_read_cmds" 12
+Host Read Commands
+.IP "host_write_cmds" 12
+Host Write Commands
+.IP "media_data_integrity_err" 12
+Media and Data Integrity Errors
+.IP "num_err_info_log_entries" 12
+Number of Error Information Log Entries
+.IP "total_end_grp_cap" 12
+Total Endurance Group Capacity
+.IP "unalloc_end_grp_cap" 12
+Unallocated Endurance Group Capacity
+.IP "rsvd192" 12
+Reserved

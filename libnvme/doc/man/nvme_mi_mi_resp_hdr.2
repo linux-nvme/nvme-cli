@@ -1,0 +1,25 @@
+.TH "libnvme" 9 "struct nvme_mi_mi_resp_hdr" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_mi_resp_hdr \- MI response message header.
+.SH SYNOPSIS
+struct nvme_mi_mi_resp_hdr {
+.br
+.BI "    struct nvme_mi_msg_hdr hdr;"
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 nmresp[3];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hdr" 12
+generic MI message header
+.IP "status" 12
+generic response status from command; non-zero on failure.
+.IP "nmresp" 12
+NVMe Management Response: command-type-specific response data
+.SH "Description"
+Wire format for MI response message header, defined in section 5 of NVMe-MI.

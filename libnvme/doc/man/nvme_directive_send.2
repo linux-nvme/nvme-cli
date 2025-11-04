@@ -1,0 +1,18 @@
+.TH "nvme_directive_send" 9 "nvme_directive_send" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_directive_send \- Send directive command
+.SH SYNOPSIS
+.B "int" nvme_directive_send
+.BI "(struct nvme_directive_send_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_directive_send_args\fP argument structure
+.SH "DESCRIPTION"
+Directives is a mechanism to enable host and NVM subsystem or controller
+information exchange. The Directive Send command transfers data related to a
+specific Directive Type from the host to the controller.
+
+See the NVMe specification for more information.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

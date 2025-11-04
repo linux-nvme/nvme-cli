@@ -1,0 +1,78 @@
+.TH "libnvme" 9 "enum nvme_mi_ccs" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_ccs \- Get State Control Primitive Success Response Fields - Control Primitive Specific Response
+.SH SYNOPSIS
+enum nvme_mi_ccs {
+.br
+.BI "    NVME_MI_CCS_RDY"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_CFS"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_SHST"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_NSSRO"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_CECO"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_NAC"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_FA"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_CSTS"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_CTEMP"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_PDLU"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_SPARE"
+, 
+.br
+.br
+.BI "    NVME_MI_CCS_CCWARN"
+
+};
+.SH Constants
+.IP "NVME_MI_CCS_RDY" 12
+Ready
+.IP "NVME_MI_CCS_CFS" 12
+Controller Fatal Status
+.IP "NVME_MI_CCS_SHST" 12
+Shutdown Status
+.IP "NVME_MI_CCS_NSSRO" 12
+NVM Subsystem Reset Occurred
+.IP "NVME_MI_CCS_CECO" 12
+Controller Enable Change Occurred
+.IP "NVME_MI_CCS_NAC" 12
+Namespace Attribute Changed
+.IP "NVME_MI_CCS_FA" 12
+Firmware Activated
+.IP "NVME_MI_CCS_CSTS" 12
+Controller Status Change
+.IP "NVME_MI_CCS_CTEMP" 12
+Composite Temperature Change
+.IP "NVME_MI_CCS_PDLU" 12
+Percentage Used
+.IP "NVME_MI_CCS_SPARE" 12
+Available Spare
+.IP "NVME_MI_CCS_CCWARN" 12
+Critical Warning

@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_host_mem_buf_attrs" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_host_mem_buf_attrs \- Host Memory Buffer - Attributes Data Structure
+.SH SYNOPSIS
+struct nvme_host_mem_buf_attrs {
+.br
+.BI "    __le32 hsize;"
+.br
+.BI "    __le32 hmdlal;"
+.br
+.BI "    __le32 hmdlau;"
+.br
+.BI "    __le32 hmdlec;"
+.br
+.BI "    __u8 rsvd16[4080];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "hsize" 12
+Host Memory Buffer Size
+.IP "hmdlal" 12
+Host Memory Descriptor List Lower Address
+.IP "hmdlau" 12
+Host Memory Descriptor List Upper Address
+.IP "hmdlec" 12
+Host Memory Descriptor List Entry Count
+.IP "rsvd16" 12
+Reserved

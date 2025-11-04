@@ -1,0 +1,16 @@
+.TH "nvme_verify" 9 "nvme_verify" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_verify \- Send an nvme verify command
+.SH SYNOPSIS
+.B "int" nvme_verify
+.BI "(struct nvme_io_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_io_args\fP argument structure
+.SH "DESCRIPTION"
+The Verify command verifies integrity of stored information by reading data
+and metadata, if applicable, for the LBAs indicated without transferring any
+data or metadata to the host.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

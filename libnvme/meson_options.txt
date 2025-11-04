@@ -1,0 +1,17 @@
+# -*- mode: meson -*-
+# SPDX-License-Identifier: LGPL-2.1-or-later
+option('version-tag', type : 'string', description : 'override the git version string')
+option('htmldir', type : 'string', value : '', description : 'directory for HTML documentation')
+option('rstdir', type : 'string', value : '', description : 'directory for ReST documentation')
+
+option('docs', type : 'combo', choices : ['false', 'html', 'man', 'rst', 'all'], description : 'install documentation')
+option('docs-build', type : 'boolean', value : false,  description : 'build documentation')
+option('examples', type : 'boolean', value : true, description : 'build examples')
+option('tests', type : 'boolean', value : true, description : 'build tests')
+
+option('python', type : 'feature', value: 'auto', description : 'Generate libnvme python bindings')
+option('openssl', type : 'feature', value: 'auto', description : 'OpenSSL support')
+option('libdbus', type : 'feature', value: 'disabled', description : 'libdbus support')
+option('json-c', type : 'feature', value: 'auto', description : 'JSON support')
+option('keyutils', type: 'feature', value: 'auto', description: 'keyutils support')
+option('liburing', type : 'feature', value: 'disabled', description : 'liburing support')

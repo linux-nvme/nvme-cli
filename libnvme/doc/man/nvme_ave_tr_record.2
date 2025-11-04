@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_ave_tr_record" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_ave_tr_record \- AVE Transport Record
+.SH SYNOPSIS
+struct nvme_ave_tr_record {
+.br
+.BI "    __u8 aveadrfam;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    __le16 avetrsvcid;"
+.br
+.BI "    __u8 avetraddr[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "aveadrfam" 12
+AVE Address Family
+.IP "rsvd1" 12
+Reserved
+.IP "avetrsvcid" 12
+AVE Transport Service Identifier
+.IP "avetraddr" 12
+AVE Transport Address

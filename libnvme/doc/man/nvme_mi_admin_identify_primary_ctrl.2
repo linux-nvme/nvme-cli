@@ -1,0 +1,26 @@
+.TH "nvme_mi_admin_identify_primary_ctrl" 9 "nvme_mi_admin_identify_primary_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_identify_primary_ctrl \- Perform an Admin identify for primary controller capabilities data structure.
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_identify_primary_ctrl
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "__u16 cntid "  ","
+.BI "struct nvme_primary_ctrl_cap *cap "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to process identify command
+.IP "cntid" 12
+Controller ID to specify
+.IP "cap" 12
+Primary Controller Capabilities data structure to populate
+.SH "DESCRIPTION"
+Perform an Identify command to get the Primary Controller Capabilities data
+for the controller specified by \fIcntid\fP
+
+Will return an error if the length of the response data (from the
+controller) is not a full \fINVME_IDENTIFY_DATA_SIZE\fP, so \fIcap\fP will be
+be fully populated on success.
+
+See: \fIstruct nvme_primary_ctrl_cap\fP
+.SH "RETURN"
+0 on success, non-zero on failure

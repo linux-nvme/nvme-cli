@@ -1,0 +1,15 @@
+.TH "nvme_ctrl_set_discovery_ctrl" 9 "nvme_ctrl_set_discovery_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_set_discovery_ctrl \- Set the 'discovery_ctrl' flag
+.SH SYNOPSIS
+.B "void" nvme_ctrl_set_discovery_ctrl
+.BI "(nvme_ctrl_t c "  ","
+.BI "bool discovery "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to be modified
+.IP "discovery" 12
+value of the discovery_ctrl flag
+.SH "DESCRIPTION"
+Sets the 'discovery_ctrl' flag in \fIc\fP to specify whether
+\fIc\fP connects to a discovery subsystem.

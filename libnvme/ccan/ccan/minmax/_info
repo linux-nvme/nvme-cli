@@ -1,0 +1,48 @@
+#include "config.h"
+#include <stdio.h>
+#include <string.h>
+
+/**
+ * minmax - typesafe minimum and maximum functions
+ *
+ * The classic implementation of minimum / maximum macros in C can be
+ * very dangerous.  If the two arguments have different sizes, or
+ * different signedness, type promotion rules can lead to very
+ * surprising results.
+ *
+ * This module implements typesafe versions, which will generate a
+ * compile time error, if the arguments have different types.
+ *
+ * Example:
+ *	#include <ccan/minmax/minmax.h>
+ *	#include <stdio.h>
+ *
+ *	int main(int argc, char *argv[])
+ *	{
+ *		printf("Signed max: %d\n", max(1, -1));
+ *		printf("Unsigned max: %u\n", max(1U, -1U));
+ *		return 0;
+ *	}
+ *
+ * Author: David Gibson <david@gibson.dropbear.id.au>
+ * License:  CC0 (Public domain)
+ */
+int main(int argc, char *argv[])
+{
+	/* Expect exactly one argument */
+	if (argc != 2)
+		return 1;
+
+	if (strcmp(argv[1], "depends") == 0) {
+		printf("ccan/build_assert\n");
+		return 0;
+	}
+
+	if (strcmp(argv[1], "ccanlint") == 0) {
+		/* We need several gcc extensions */
+		printf("tests_compile_without_features FAIL\n");
+		return 0;
+	}
+
+	return 1;
+}

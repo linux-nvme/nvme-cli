@@ -1,0 +1,37 @@
+.TH "nvme_mi_mi_xfer" 9 "nvme_mi_mi_xfer" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_mi_xfer \- Raw mi transfer interface.
+.SH SYNOPSIS
+.B "int" nvme_mi_mi_xfer
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "struct nvme_mi_mi_req_hdr *mi_req "  ","
+.BI "size_t req_data_size "  ","
+.BI "struct nvme_mi_mi_resp_hdr *mi_resp "  ","
+.BI "size_t *resp_data_size "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint to send the MI command to
+.IP "mi_req" 12
+request data
+.IP "req_data_size" 12
+size of request data payload
+.IP "mi_resp" 12
+buffer for response data
+.IP "resp_data_size" 12
+size of response data buffer, updated to received size
+.SH "DESCRIPTION"
+Performs an arbitrary NVMe MI command, using the provided request data,
+in \fImi_req\fP. The size of the request data *payload* is specified in
+\fIreq_data_size\fP - this does not include the standard header length (so a
+header-only request would have a size of 0). Note that the Management
+Request Doublewords are considered part of the header data.
+
+On success, response data is stored in \fImi_resp\fP, which has an optional
+appended payload buffer of \fIresp_data_size\fP bytes. The actual payload
+size transferred will be stored in \fIresp_data_size\fP. This size does not
+include the MI response header, so 0 represents no payload.
+
+See: \fIstruct nvme_mi_mi_req_hdr\fP and \fIstruct nvme_mi_mi_resp_hdr\fP.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise..

@@ -1,0 +1,39 @@
+.TH "libnvme" 9 "struct nvme_power_on_reset_info_list" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_power_on_reset_info_list \- Controller Reset Information
+.SH SYNOPSIS
+struct nvme_power_on_reset_info_list {
+.br
+.BI "    __le16 cid;"
+.br
+.BI "    __u8 fw_act;"
+.br
+.BI "    __u8 op_in_prog;"
+.br
+.BI "    __u8 rsvd4[12];"
+.br
+.BI "    __le32 ctrl_power_cycle;"
+.br
+.BI "    __le64 power_on_ml_seconds;"
+.br
+.BI "    __le64 ctrl_time_stamp;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cid" 12
+Controller ID
+.IP "fw_act" 12
+Firmware Activation
+.IP "op_in_prog" 12
+Operation in Progress
+.IP "rsvd4" 12
+Reserved
+.IP "ctrl_power_cycle" 12
+Controller Power Cycle
+.IP "power_on_ml_seconds" 12
+Power on milliseconds
+.IP "ctrl_time_stamp" 12
+Controller Timestamp

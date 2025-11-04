@@ -1,0 +1,24 @@
+.TH "nvme_mi_admin_get_log_reachability_associations" 9 "nvme_mi_admin_get_log_reachability_associations" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_log_reachability_associations \- Retrieve Reachability Associations Log
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_log_reachability_associations
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "bool rao "  ","
+.BI "bool rae "  ","
+.BI "__u32 len "  ","
+.BI "struct nvme_reachability_associations_log *log "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "rao" 12
+Return associations only
+.IP "rae" 12
+Retain asynchronous events
+.IP "len" 12
+The allocated length of the log page
+.IP "log" 12
+User address to store the log page
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise

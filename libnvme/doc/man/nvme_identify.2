@@ -1,0 +1,15 @@
+.TH "nvme_identify" 9 "nvme_identify" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_identify \- Send the NVMe Identify command
+.SH SYNOPSIS
+.B "int" nvme_identify
+.BI "(struct nvme_identify_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_identify_args\fP argument structure
+.SH "DESCRIPTION"
+The Identify command returns a data buffer that describes information about
+the NVM subsystem, the controller or the namespace(s).
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

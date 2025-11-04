@@ -1,0 +1,43 @@
+.TH "libnvme" 9 "enum nvmf_trtype" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvmf_trtype \- Transport Type codes for Discovery Log Page entry TRTYPE field
+.SH SYNOPSIS
+enum nvmf_trtype {
+.br
+.BI "    NVMF_TRTYPE_UNSPECIFIED"
+, 
+.br
+.br
+.BI "    NVMF_TRTYPE_RDMA"
+, 
+.br
+.br
+.BI "    NVMF_TRTYPE_FC"
+, 
+.br
+.br
+.BI "    NVMF_TRTYPE_TCP"
+, 
+.br
+.br
+.BI "    NVMF_TRTYPE_LOOP"
+, 
+.br
+.br
+.BI "    NVMF_TRTYPE_MAX"
+
+};
+.SH Constants
+.IP "NVMF_TRTYPE_UNSPECIFIED" 12
+Not indicated
+.IP "NVMF_TRTYPE_RDMA" 12
+RDMA
+.IP "NVMF_TRTYPE_FC" 12
+Fibre Channel
+.IP "NVMF_TRTYPE_TCP" 12
+TCP
+.IP "NVMF_TRTYPE_LOOP" 12
+Intra-host Transport (i.e., loopback), reserved
+for host usage.
+.IP "NVMF_TRTYPE_MAX" 12
+Maximum value for \fIenum nvmf_trtype\fP

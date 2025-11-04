@@ -1,0 +1,20 @@
+.TH "nvme_mi_init_ctrl" 9 "nvme_mi_init_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_init_ctrl \- initialise a NVMe controller.
+.SH SYNOPSIS
+.B "nvme_mi_ctrl_t" nvme_mi_init_ctrl
+.BI "(nvme_mi_ep_t ep "  ","
+.BI "__u16 ctrl_id "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+Endpoint to create under
+.IP "ctrl_id" 12
+ID of controller to initialize.
+.SH "DESCRIPTION"
+Create a connection to a controller behind the endpoint specified in \fIep\fP.
+Controller IDs may be queried from the endpoint through
+\fInvme_mi_mi_read_mi_data_ctrl_list\fP.
+
+See \fInvme_mi_close_ctrl\fP
+.SH "RETURN"
+New controller object, or NULL on failure.

@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum nvme_flbas" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_flbas \- This field indicates the formatted LBA size
+.SH SYNOPSIS
+enum nvme_flbas {
+.br
+.BI "    NVME_FLBAS_LOWER_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_FLBAS_META_EXT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_FLBAS_HIGHER_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_FLBAS_LOWER_MASK"
+, 
+.br
+.br
+.BI "    NVME_FLBAS_META_EXT_MASK"
+, 
+.br
+.br
+.BI "    NVME_FLBAS_HIGHER_MASK"
+
+};
+.SH Constants
+.IP "NVME_FLBAS_LOWER_SHIFT" 12
+Shift amount to get the format index least significant 4 bits
+.IP "NVME_FLBAS_META_EXT_SHIFT" 12
+Shift amount to get the metadata transferred
+.IP "NVME_FLBAS_HIGHER_SHIFT" 12
+Shift amount to get the format index most significant 2 bits
+.IP "NVME_FLBAS_LOWER_MASK" 12
+Mask to get the format index least significant 4 bits
+.IP "NVME_FLBAS_META_EXT_MASK" 12
+Mask to get the metadata transferred
+.IP "NVME_FLBAS_HIGHER_MASK" 12
+Mask to get the format index most significant 2 bits

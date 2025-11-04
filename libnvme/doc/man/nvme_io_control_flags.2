@@ -1,0 +1,72 @@
+.TH "libnvme" 9 "enum nvme_io_control_flags" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_io_control_flags \- I/O control flags
+.SH SYNOPSIS
+enum nvme_io_control_flags {
+.br
+.BI "    NVME_IO_DTYPE_STREAMS"
+, 
+.br
+.br
+.BI "    NVME_IO_NSZ"
+, 
+.br
+.br
+.BI "    NVME_IO_STC"
+, 
+.br
+.br
+.BI "    NVME_IO_DEAC"
+, 
+.br
+.br
+.BI "    NVME_IO_ZNS_APPEND_PIREMAP"
+, 
+.br
+.br
+.BI "    NVME_IO_PRINFO_PRCHK_REF"
+, 
+.br
+.br
+.BI "    NVME_IO_PRINFO_PRCHK_APP"
+, 
+.br
+.br
+.BI "    NVME_IO_PRINFO_PRCHK_GUARD"
+, 
+.br
+.br
+.BI "    NVME_IO_PRINFO_PRACT"
+, 
+.br
+.br
+.BI "    NVME_IO_FUA"
+, 
+.br
+.br
+.BI "    NVME_IO_LR"
+
+};
+.SH Constants
+.IP "NVME_IO_DTYPE_STREAMS" 12
+Directive Type Streams
+.IP "NVME_IO_NSZ" 12
+Namespace Zeroes
+.IP "NVME_IO_STC" 12
+Storage Tag Check
+.IP "NVME_IO_DEAC" 12
+Deallocate
+.IP "NVME_IO_ZNS_APPEND_PIREMAP" 12
+Protection Information Remap
+.IP "NVME_IO_PRINFO_PRCHK_REF" 12
+Protection Information Check Reference Tag
+.IP "NVME_IO_PRINFO_PRCHK_APP" 12
+Protection Information Check Application Tag
+.IP "NVME_IO_PRINFO_PRCHK_GUARD" 12
+Protection Information Check Guard field
+.IP "NVME_IO_PRINFO_PRACT" 12
+Protection Information Action
+.IP "NVME_IO_FUA" 12
+Force Unit Access
+.IP "NVME_IO_LR" 12
+Limited Retry

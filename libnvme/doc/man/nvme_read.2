@@ -1,0 +1,12 @@
+.TH "nvme_read" 9 "nvme_read" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_read \- Submit an nvme user read command
+.SH SYNOPSIS
+.B "int" nvme_read
+.BI "(struct nvme_io_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_io_args\fP argument structure
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

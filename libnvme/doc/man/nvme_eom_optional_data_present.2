@@ -1,0 +1,48 @@
+.TH "libnvme" 9 "enum nvme_eom_optional_data_present" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_eom_optional_data_present \- EOM Optional Data Present Fields
+.SH SYNOPSIS
+enum nvme_eom_optional_data_present {
+.br
+.BI "    NVME_EOM_ODP_PEFP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_EOM_ODP_EDFP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_EOM_ODP_RSVD_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_EOM_ODP_PEFP_MASK"
+, 
+.br
+.br
+.BI "    NVME_EOM_ODP_EDFP_MASK"
+, 
+.br
+.br
+.BI "    NVME_EOM_ODP_RSVD_MASK"
+
+};
+.SH Constants
+.IP "NVME_EOM_ODP_PEFP_SHIFT" 12
+Shift amount to get the printable eye field present
+from the \fIstruct nvme_phy_rx_eom_log\fP.odp field.
+.IP "NVME_EOM_ODP_EDFP_SHIFT" 12
+Shift amount to get the eye data field present
+from the \fIstruct nvme_phy_rx_eom_log\fP.odp field.
+.IP "NVME_EOM_ODP_RSVD_SHIFT" 12
+Shift amount to get the reserved optional data present
+from the \fIstruct nvme_phy_rx_eom_log\fP.odp field.
+.IP "NVME_EOM_ODP_PEFP_MASK" 12
+Mask to get the printable eye field present
+from the \fIstruct nvme_phy_rx_eom_log\fP.odp field.
+.IP "NVME_EOM_ODP_EDFP_MASK" 12
+Mask to get the eye data field present
+from the \fIstruct nvme_phy_rx_eom_log\fP.odp field.
+.IP "NVME_EOM_ODP_RSVD_MASK" 12
+Mask to get the reserved data present
+from the \fIstruct nvme_phy_rx_eom_log\fP.odp field.

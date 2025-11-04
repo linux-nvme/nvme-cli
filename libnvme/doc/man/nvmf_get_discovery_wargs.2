@@ -1,0 +1,20 @@
+.TH "nvmf_get_discovery_wargs" 9 "nvmf_get_discovery_wargs" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_get_discovery_wargs \- Get the discovery log page with args
+.SH SYNOPSIS
+.B "struct nvmf_discovery_log *" nvmf_get_discovery_wargs
+.BI "(struct nvme_get_discovery_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+Argument structure
+.SH "DESCRIPTION"
+This function is similar to \fBnvmf_get_discovery_log\fP, but
+takes an extensible \fIargs\fP parameter. \fIargs\fP provides more
+options than \fBnvmf_get_discovery_log\fP.
+
+This function performs a get discovery log page (DLP) command
+and returns the DLP. The memory allocated for the returned
+DLP must be freed by the caller using \fBfree\fP.
+.SH "RETURN"
+Pointer to the discovery log page (to be freed). NULL
+on failure and errno is set.

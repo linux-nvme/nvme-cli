@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_lbas_ns_element" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_lbas_ns_element \- LBA Status Log Namespace Element
+.SH SYNOPSIS
+struct nvme_lbas_ns_element {
+.br
+.BI "    __le32 neid;"
+.br
+.BI "    __le32 nlrd;"
+.br
+.BI "    __u8 ratype;"
+.br
+.BI "    __u8 rsvd8[7];"
+.br
+.BI "    struct nvme_lba_rd lba_rd[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "neid" 12
+Namespace Element Identifier
+.IP "nlrd" 12
+Number of LBA Range Descriptors
+.IP "ratype" 12
+Recommended Action Type. see \fIenum\fP nvme_lba_status_atype
+.IP "rsvd8" 12
+Reserved
+.IP "lba_rd" 12
+LBA Range Descriptor

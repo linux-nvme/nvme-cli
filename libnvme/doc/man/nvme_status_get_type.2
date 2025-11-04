@@ -1,0 +1,11 @@
+.TH "nvme_status_get_type" 9 "nvme_status_get_type" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_status_get_type \- extract the type from a nvme_* return value
+.SH SYNOPSIS
+.B "__u32" nvme_status_get_type
+.BI "(int status "  ");"
+.SH ARGUMENTS
+.IP "status" 12
+the (non-negative) return value from the NVMe API
+.SH "RETURN"
+the type component of the status.

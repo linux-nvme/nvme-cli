@@ -1,0 +1,28 @@
+.TH "nvme_mi_admin_get_log_page" 9 "nvme_mi_admin_get_log_page" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_log_page \- Retrieve log page data from controller
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_log_page
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "__u32 xfer_len "  ","
+.BI "struct nvme_get_log_args *args "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "xfer_len" 12
+The chunk size of the read
+.IP "args" 12
+Get Log Page command arguments
+.SH "DESCRIPTION"
+Performs a Get Log Page Admin command as specified by \fIargs\fP. Response data
+is stored in \fIargs->data\fP, which should be a buffer of \fIargs->data_len\fP bytes.
+Resulting data length is stored in \fIargs->data_len\fP on successful
+command completion.
+
+This request may be implemented as multiple log page commands, in order
+to fit within MI message-size limits.
+
+See: \fIstruct nvme_get_log_args\fP
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

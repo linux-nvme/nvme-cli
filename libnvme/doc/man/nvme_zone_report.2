@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_zone_report" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_zone_report \- Report Zones Data Structure
+.SH SYNOPSIS
+struct nvme_zone_report {
+.br
+.BI "    __le64 nr_zones;"
+.br
+.BI "    __u8 rsvd8[56];"
+.br
+.BI "    struct nvme_zns_desc    entries[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nr_zones" 12
+Number of descriptors in \fIentries\fP
+.IP "rsvd8" 12
+Reserved
+.IP "entries" 12
+Zoned namespace descriptors

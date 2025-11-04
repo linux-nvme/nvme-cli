@@ -1,0 +1,24 @@
+.TH "nvme_mi_admin_identify_ctrl" 9 "nvme_mi_admin_identify_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_identify_ctrl \- Perform an Admin identify for a controller
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_identify_ctrl
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "struct nvme_id_ctrl *id "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to process identify command
+.IP "id" 12
+Controller identify data to populate
+.SH "DESCRIPTION"
+Perform an Identify command, for the controller specified by \fIctrl\fP,
+writing identify data to \fIid\fP.
+
+Will return an error if the length of the response data (from the
+controller) is not a full \fINVME_IDENTIFY_DATA_SIZE\fP, so \fIid\fP will be
+fully populated on success.
+
+See: \fIstruct nvme_id_ctrl\fP
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

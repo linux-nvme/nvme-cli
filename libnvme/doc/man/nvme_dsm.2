@@ -1,0 +1,18 @@
+.TH "nvme_dsm" 9 "nvme_dsm" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_dsm \- Send an nvme data set management command
+.SH SYNOPSIS
+.B "int" nvme_dsm
+.BI "(struct nvme_dsm_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_dsm_args\fP argument structure
+.SH "DESCRIPTION"
+The Dataset Management command is used by the host to indicate attributes
+for ranges of logical blocks. This includes attributes like frequency that
+data is read or written, access size, and other information that may be used
+to optimize performance and reliability, and may be used to
+deallocate/unmap/trim those logical blocks.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

@@ -1,0 +1,14 @@
+.TH "nvmf_sectype_str" 9 "nvmf_sectype_str" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_sectype_str \- Decode SECTYPE field
+.SH SYNOPSIS
+.B "const char *" nvmf_sectype_str
+.BI "(__u8 sectype "  ");"
+.SH ARGUMENTS
+.IP "sectype" 12
+value to be decoded
+.SH "DESCRIPTION"
+Decode the SECTYPE field in the discovery log page
+entry.
+.SH "RETURN"
+decoded string

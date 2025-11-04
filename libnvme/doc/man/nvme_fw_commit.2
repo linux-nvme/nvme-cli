@@ -1,0 +1,16 @@
+.TH "nvme_fw_commit" 9 "nvme_fw_commit" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_fw_commit \- Commit firmware using the specified action
+.SH SYNOPSIS
+.B "int" nvme_fw_commit
+.BI "(struct nvme_fw_commit_args *args "  ");"
+.SH ARGUMENTS
+.IP "args" 12
+\fIstruct nvme_fw_commit_args\fP argument structure
+.SH "DESCRIPTION"
+The Firmware Commit command modifies the firmware image or Boot Partitions.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise. The command
+status response may specify additional reset actions required to complete
+the commit process.

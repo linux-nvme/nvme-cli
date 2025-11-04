@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "enum nvmf_tcp_sectype" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvmf_tcp_sectype \- Transport Specific Address Subtype Definition for NVMe/TCP Transport
+.SH SYNOPSIS
+enum nvmf_tcp_sectype {
+.br
+.BI "    NVMF_TCP_SECTYPE_NONE"
+, 
+.br
+.br
+.BI "    NVMF_TCP_SECTYPE_TLS"
+, 
+.br
+.br
+.BI "    NVMF_TCP_SECTYPE_TLS13"
+
+};
+.SH Constants
+.IP "NVMF_TCP_SECTYPE_NONE" 12
+No Security
+.IP "NVMF_TCP_SECTYPE_TLS" 12
+Transport Layer Security version 1.2
+.IP "NVMF_TCP_SECTYPE_TLS13" 12
+Transport Layer Security version 1.3 or a subsequent
+version. The TLS protocol negotiates the version and
+cipher suite for each TCP connection.

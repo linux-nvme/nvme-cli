@@ -1,0 +1,51 @@
+.TH "libnvme" 9 "struct nvme_persistent_event_entry" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_persistent_event_entry \- Persistent Event
+.SH SYNOPSIS
+struct nvme_persistent_event_entry {
+.br
+.BI "    __u8 etype;"
+.br
+.BI "    __u8 etype_rev;"
+.br
+.BI "    __u8 ehl;"
+.br
+.BI "    __u8 ehai;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le64 ets;"
+.br
+.BI "    __le16 pelpid;"
+.br
+.BI "    __u8 rsvd16[4];"
+.br
+.BI "    __le16 vsil;"
+.br
+.BI "    __le16 el;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "etype" 12
+Event Type
+.IP "etype_rev" 12
+Event Type Revision
+.IP "ehl" 12
+Event Header Length
+.IP "ehai" 12
+Event Header Additional Info
+.IP "cntlid" 12
+Controller Identifier
+.IP "ets" 12
+Event Timestamp
+.IP "pelpid" 12
+Port Identifier
+.IP "rsvd16" 12
+Reserved
+.IP "vsil" 12
+Vendor Specific Information Length
+.IP "el" 12
+Event Length

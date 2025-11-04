@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_pevent_log_action" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_pevent_log_action \- Persistent Event Log - Action
+.SH SYNOPSIS
+enum nvme_pevent_log_action {
+.br
+.BI "    NVME_PEVENT_LOG_READ"
+, 
+.br
+.br
+.BI "    NVME_PEVENT_LOG_EST_CTX_AND_READ"
+, 
+.br
+.br
+.BI "    NVME_PEVENT_LOG_RELEASE_CTX"
+
+};
+.SH Constants
+.IP "NVME_PEVENT_LOG_READ" 12
+Read Log Data
+.IP "NVME_PEVENT_LOG_EST_CTX_AND_READ" 12
+Establish Context and Read Log Data
+.IP "NVME_PEVENT_LOG_RELEASE_CTX" 12
+Release Context

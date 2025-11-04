@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_id_endurance_group_list" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_id_endurance_group_list \- Endurance Group List
+.SH SYNOPSIS
+struct nvme_id_endurance_group_list {
+.br
+.BI "    __le16 num;"
+.br
+.BI "    __le16 identifier[NVME_ID_ENDURANCE_GROUP_LIST_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "num" 12
+Number of Identifiers
+.IP "identifier" 12
+Endurance Group Identifier

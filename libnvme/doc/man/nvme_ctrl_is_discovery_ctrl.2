@@ -1,0 +1,14 @@
+.TH "nvme_ctrl_is_discovery_ctrl" 9 "nvme_ctrl_is_discovery_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_is_discovery_ctrl \- Check the 'discovery_ctrl' flag
+.SH SYNOPSIS
+.B "bool" nvme_ctrl_is_discovery_ctrl
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to be checked
+.SH "DESCRIPTION"
+Returns the value of the 'discovery_ctrl' flag which specifies whether
+\fIc\fP connects to a discovery subsystem.
+.SH "RETURN"
+Value of the 'discover_ctrl' flag

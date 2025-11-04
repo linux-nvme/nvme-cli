@@ -1,0 +1,15 @@
+.TH "nvme_status_to_string" 9 "nvme_status_to_string" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_status_to_string \- Returns string describing nvme return status.
+.SH SYNOPSIS
+.B "const char *" nvme_status_to_string
+.BI "(int status "  ","
+.BI "bool fabrics "  ");"
+.SH ARGUMENTS
+.IP "status" 12
+Return status from an nvme passthrough command
+.IP "fabrics" 12
+Set to true if \fIstatus\fP is to a fabrics target.
+.SH "RETURN"
+String representation of the nvme status if it is an nvme status field,
+or a standard errno string if status is < 0.

@@ -1,0 +1,35 @@
+.TH "nvme_lookup_ctrl" 9 "nvme_lookup_ctrl" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_lookup_ctrl \- Lookup nvme_ctrl_t object
+.SH SYNOPSIS
+.B "nvme_ctrl_t" nvme_lookup_ctrl
+.BI "(nvme_subsystem_t s "  ","
+.BI "const char *transport "  ","
+.BI "const char *traddr "  ","
+.BI "const char *host_traddr "  ","
+.BI "const char *host_iface "  ","
+.BI "const char *trsvcid "  ","
+.BI "nvme_ctrl_t p "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+\fInvme_subsystem_t\fP object
+.IP "transport" 12
+Transport name
+.IP "traddr" 12
+Transport address
+.IP "host_traddr" 12
+Host transport address
+.IP "host_iface" 12
+Host interface name
+.IP "trsvcid" 12
+Transport service identifier
+.IP "p" 12
+Previous controller instance
+.SH "DESCRIPTION"
+Lookup a controller in \fIs\fP based on \fItransport\fP, \fItraddr\fP,
+\fIhost_traddr\fP, \fIhost_iface\fP, and \fItrsvcid\fP. \fItransport\fP must be specified,
+other fields may be required depending on the transport. A new
+object is created if none is found. If \fIp\fP is specified the lookup
+will start at \fIp\fP instead of the first controller.
+.SH "RETURN"
+Controller instance

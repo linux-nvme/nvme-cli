@@ -1,0 +1,33 @@
+.TH "libnvme" 9 "struct nvme_capacity_config_desc" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_capacity_config_desc \- Capacity Configuration structure definitions
+.SH SYNOPSIS
+struct nvme_capacity_config_desc {
+.br
+.BI "    __le16 cap_config_id;"
+.br
+.BI "    __le16 domainid;"
+.br
+.BI "    __le16 egcn;"
+.br
+.BI "    __u8 rsvd6[26];"
+.br
+.BI "    struct nvme_end_grp_config_desc egcd[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cap_config_id" 12
+Capacity Configuration Identifier
+.IP "domainid" 12
+Domain Identifier
+.IP "egcn" 12
+Number Endurance Group Configuration
+Descriptors
+.IP "rsvd6" 12
+Reserved
+.IP "egcd" 12
+Endurance Group Config descriptors.
+See \fIstruct\fP nvme_end_grp_config_desc

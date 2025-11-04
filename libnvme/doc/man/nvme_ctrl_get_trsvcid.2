@@ -1,0 +1,11 @@
+.TH "nvme_ctrl_get_trsvcid" 9 "nvme_ctrl_get_trsvcid" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_trsvcid \- Transport service identifier of a controller
+.SH SYNOPSIS
+.B "const char *" nvme_ctrl_get_trsvcid
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.SH "RETURN"
+Transport service identifier of \fIc\fP (if present)

@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "enum nvme_ae_info_smart" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_ae_info_smart \- Asynchronous Event Information - SMART / Health Status
+.SH SYNOPSIS
+enum nvme_ae_info_smart {
+.br
+.BI "    NVME_AER_SMART_SUBSYSTEM_RELIABILITY"
+, 
+.br
+.br
+.BI "    NVME_AER_SMART_TEMPERATURE_THRESHOLD"
+, 
+.br
+.br
+.BI "    NVME_AER_SMART_SPARE_THRESHOLD"
+
+};
+.SH Constants
+.IP "NVME_AER_SMART_SUBSYSTEM_RELIABILITY" 12
+NVM subsystem Reliability
+.IP "NVME_AER_SMART_TEMPERATURE_THRESHOLD" 12
+Temperature Threshold
+.IP "NVME_AER_SMART_SPARE_THRESHOLD" 12
+Spare Below Threshold

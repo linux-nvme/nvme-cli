@@ -1,0 +1,35 @@
+.TH "libnvme" 9 "struct nvme_dev_self_test_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_dev_self_test_args \- Arguments for the NVMe Device Self Test command
+.SH SYNOPSIS
+struct nvme_dev_self_test_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    enum nvme_dst_stc stc;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "args_size" 12
+Size of \fIstruct nvme_dev_self_test_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace ID to test
+.IP "stc" 12
+Self test code, see \fIenum nvme_dst_stc\fP

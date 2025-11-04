@@ -1,0 +1,14 @@
+.TH "nvme_dump_tree" 9 "nvme_dump_tree" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_dump_tree \- Dump internal object tree
+.SH SYNOPSIS
+.B "int" nvme_dump_tree
+.BI "(nvme_root_t r "  ");"
+.SH ARGUMENTS
+.IP "r" 12
+nvme_root_t object
+.SH "DESCRIPTION"
+Prints the internal object tree in JSON format
+to stdout.
+.SH "RETURN"
+0 on success, -1 on failure.

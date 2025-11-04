@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvmf_rdma_prtype" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvmf_rdma_prtype \- RDMA Provider Type codes for Discovery Log Page entry TSAS RDMA_PRTYPE field
+.SH SYNOPSIS
+enum nvmf_rdma_prtype {
+.br
+.BI "    NVMF_RDMA_PRTYPE_NOT_SPECIFIED"
+, 
+.br
+.br
+.BI "    NVMF_RDMA_PRTYPE_IB"
+, 
+.br
+.br
+.BI "    NVMF_RDMA_PRTYPE_ROCE"
+, 
+.br
+.br
+.BI "    NVMF_RDMA_PRTYPE_ROCEV2"
+, 
+.br
+.br
+.BI "    NVMF_RDMA_PRTYPE_IWARP"
+
+};
+.SH Constants
+.IP "NVMF_RDMA_PRTYPE_NOT_SPECIFIED" 12
+No Provider Specified
+.IP "NVMF_RDMA_PRTYPE_IB" 12
+InfiniBand
+.IP "NVMF_RDMA_PRTYPE_ROCE" 12
+InfiniBand RoCE
+.IP "NVMF_RDMA_PRTYPE_ROCEV2" 12
+InfiniBand RoCEV2
+.IP "NVMF_RDMA_PRTYPE_IWARP" 12
+iWARP

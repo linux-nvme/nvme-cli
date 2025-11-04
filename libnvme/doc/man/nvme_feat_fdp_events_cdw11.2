@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_feat_fdp_events_cdw11" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_feat_fdp_events_cdw11 \- FDP Events Feature Command Dword 11 Deprecated: doesn't support this struct. Use NVME_FEAT_FDPE_*** definitions instead.
+.SH SYNOPSIS
+struct nvme_feat_fdp_events_cdw11 {
+.br
+.BI "    __le16 phndl;"
+.br
+.BI "    __u8 noet;"
+.br
+.BI "    __u8 rsvd24;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "phndl" 12
+Placement Handle
+.IP "noet" 12
+Number of FDP Event Types
+.IP "rsvd24" 12
+Reserved

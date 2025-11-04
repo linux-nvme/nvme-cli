@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_eg_event_aggregate_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_eg_event_aggregate_log \- Endurance Group Event Aggregate
+.SH SYNOPSIS
+struct nvme_eg_event_aggregate_log {
+.br
+.BI "    __le64 nr_entries;"
+.br
+.BI "    __le16 egids[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nr_entries" 12
+Number of Entries
+.IP "egids" 12
+Endurance Group Identifier

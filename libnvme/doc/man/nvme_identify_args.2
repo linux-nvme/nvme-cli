@@ -1,0 +1,55 @@
+.TH "libnvme" 9 "struct nvme_identify_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_identify_args \- Arguments for the NVMe Identify command
+.SH SYNOPSIS
+struct nvme_identify_args {
+.br
+.BI "    __u32 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    enum nvme_identify_cns cns;"
+.br
+.BI "    enum nvme_csi csi;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u16 cntid;"
+.br
+.BI "    __u16 cns_specific_id;"
+.br
+.BI "    __u8 uuidx;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "data" 12
+User space destination address to transfer the data
+.IP "args_size" 12
+Size of \fIstruct nvme_identify_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms (0 for default timeout)
+.IP "cns" 12
+The Controller or Namespace structure, see \fIenum\fP nvme_identify_cns
+.IP "csi" 12
+Command Set Identifier
+.IP "nsid" 12
+Namespace identifier, if applicable
+.IP "cntid" 12
+The Controller Identifier, if applicable
+.IP "cns_specific_id" 12
+Identifier that is required for a particular CNS value
+.IP "uuidx" 12
+UUID Index if controller supports this id selection method

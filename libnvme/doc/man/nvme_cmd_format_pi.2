@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_cmd_format_pi" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_cmd_format_pi \- Format NVM - Protection Information
+.SH SYNOPSIS
+enum nvme_cmd_format_pi {
+.br
+.BI "    NVME_FORMAT_PI_DISABLE"
+, 
+.br
+.br
+.BI "    NVME_FORMAT_PI_TYPE1"
+, 
+.br
+.br
+.BI "    NVME_FORMAT_PI_TYPE2"
+, 
+.br
+.br
+.BI "    NVME_FORMAT_PI_TYPE3"
+
+};
+.SH Constants
+.IP "NVME_FORMAT_PI_DISABLE" 12
+Protection information is not enabled.
+.IP "NVME_FORMAT_PI_TYPE1" 12
+Protection information is enabled, Type 1.
+.IP "NVME_FORMAT_PI_TYPE2" 12
+Protection information is enabled, Type 2.
+.IP "NVME_FORMAT_PI_TYPE3" 12
+Protection information is enabled, Type 3.

@@ -1,0 +1,99 @@
+.TH "libnvme" 9 "struct nvme_phy_rx_eom_log" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_phy_rx_eom_log \- Physical Interface Receiver Eye Opening Measurement Log
+.SH SYNOPSIS
+struct nvme_phy_rx_eom_log {
+.br
+.BI "    __u8 lid;"
+.br
+.BI "    __u8 eomip;"
+.br
+.BI "    __le16 hsize;"
+.br
+.BI "    __le32 rsize;"
+.br
+.BI "    __u8 eomdgn;"
+.br
+.BI "    __u8 lr;"
+.br
+.BI "    __u8 odp;"
+.br
+.BI "    __u8 lanes;"
+.br
+.BI "    __u8 epl;"
+.br
+.BI "    __u8 lspfc;"
+.br
+.BI "    __u8 li;"
+.br
+.BI "    __u8 rsvd15[3];"
+.br
+.BI "    __le16 lsic;"
+.br
+.BI "    __le32 dsize;"
+.br
+.BI "    __le16 nd;"
+.br
+.BI "    __le16 maxtb;"
+.br
+.BI "    __le16 maxlr;"
+.br
+.BI "    __le16 etgood;"
+.br
+.BI "    __le16 etbetter;"
+.br
+.BI "    __le16 etbest;"
+.br
+.BI "    __u8 rsvd36[28];"
+.br
+.BI "    struct nvme_eom_lane_desc descs[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lid" 12
+Log Identifier
+.IP "eomip" 12
+EOM In Progress
+.IP "hsize" 12
+Header Size
+.IP "rsize" 12
+Result Size
+.IP "eomdgn" 12
+EOM Data Generation Number
+.IP "lr" 12
+Log Revision
+.IP "odp" 12
+Optional Data Present
+.IP "lanes" 12
+Number of lanes configured for this port
+.IP "epl" 12
+Eyes Per Lane
+.IP "lspfc" 12
+Log Specific Parameter Field Copy
+.IP "li" 12
+Link Information
+.IP "rsvd15" 12
+Reserved
+.IP "lsic" 12
+Log Specific Identifier Copy
+.IP "dsize" 12
+Descriptor Size
+.IP "nd" 12
+Number of Descriptors
+.IP "maxtb" 12
+Maximum Top Bottom
+.IP "maxlr" 12
+Maximum Left Right
+.IP "etgood" 12
+Estimated Time for Good Quality
+.IP "etbetter" 12
+Estimated Time for Better Quality
+.IP "etbest" 12
+Estimated Time for Best Quality
+.IP "rsvd36" 12
+Reserved
+.IP "descs" 12
+EOM Lane Descriptors

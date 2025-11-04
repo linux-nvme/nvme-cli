@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_mi_mi_opcode" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_mi_mi_opcode \- Operation code for supported NVMe-MI commands.
+.SH SYNOPSIS
+enum nvme_mi_mi_opcode {
+.br
+.BI "    nvme_mi_mi_opcode_mi_data_read"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_subsys_health_status_poll"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_configuration_set"
+, 
+.br
+.br
+.BI "    nvme_mi_mi_opcode_configuration_get"
+
+};
+.SH Constants
+.IP "nvme_mi_mi_opcode_mi_data_read" 12
+Read NVMe-MI Data Structure
+.IP "nvme_mi_mi_opcode_subsys_health_status_poll" 12
+Subsystem Health Status Poll
+.IP "nvme_mi_mi_opcode_configuration_set" 12
+MI Configuration Set
+.IP "nvme_mi_mi_opcode_configuration_get" 12
+MI Configuration Get

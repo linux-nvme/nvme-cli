@@ -1,0 +1,14 @@
+.TH "nvmf_adrfam_str" 9 "nvmf_adrfam_str" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvmf_adrfam_str \- Decode ADRFAM field
+.SH SYNOPSIS
+.B "const char *" nvmf_adrfam_str
+.BI "(__u8 adrfam "  ");"
+.SH ARGUMENTS
+.IP "adrfam" 12
+value to be decoded
+.SH "DESCRIPTION"
+Decode the address family field in the discovery
+log page entry.
+.SH "RETURN"
+decoded string

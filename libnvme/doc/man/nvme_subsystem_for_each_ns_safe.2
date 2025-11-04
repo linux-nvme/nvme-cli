@@ -1,0 +1,15 @@
+.TH "nvme_subsystem_for_each_ns_safe" 9 "nvme_subsystem_for_each_ns_safe" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_subsystem_for_each_ns_safe \- Traverse namespaces
+.SH SYNOPSIS
+.B "nvme_subsystem_for_each_ns_safe
+.BI "(s "  ","
+.BI "n "  ","
+.BI "_n "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+\fInvme_subsystem_t\fP object
+.IP "n" 12
+\fInvme_ns_t\fP object
+.IP "_n" 12
+A \fInvme_ns_t_node\fP to use as temporary storage

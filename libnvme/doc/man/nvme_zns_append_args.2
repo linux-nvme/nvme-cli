@@ -1,0 +1,79 @@
+.TH "libnvme" 9 "struct nvme_zns_append_args" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_zns_append_args \- Arguments for the NVMe ZNS Append command
+.SH SYNOPSIS
+struct nvme_zns_append_args {
+.br
+.BI "    __u64 zslba;"
+.br
+.BI "    __u64 *result;"
+.br
+.BI "    void *data;"
+.br
+.BI "    void *metadata;"
+.br
+.BI "    int args_size;"
+.br
+.BI "    int fd;"
+.br
+.BI "    __u32 timeout;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 ilbrt;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "    __u32 metadata_len;"
+.br
+.BI "    __u16 nlb;"
+.br
+.BI "    __u16 control;"
+.br
+.BI "    __u16 lbat;"
+.br
+.BI "    __u16 lbatm;"
+.br
+.BI "    __u8 rsvd1[4];"
+.br
+.BI "    __u64 ilbrt_u64;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "zslba" 12
+Zone start logical block address
+.IP "result" 12
+The command completion result from CQE dword0
+.IP "data" 12
+Userspace address of the data
+.IP "metadata" 12
+Userspace address of the metadata
+.IP "args_size" 12
+Size of \fIstruct nvme_zns_append_args\fP
+.IP "fd" 12
+File descriptor of nvme device
+.IP "timeout" 12
+Timeout in ms
+.IP "nsid" 12
+Namespace ID
+.IP "ilbrt" 12
+Initial logical block reference tag
+.IP "data_len" 12
+Length of \fIdata\fP
+.IP "metadata_len" 12
+Length of \fImetadata\fP
+.IP "nlb" 12
+Number of logical blocks
+.IP "control" 12
+.IP "lbat" 12
+Logical block application tag
+.IP "lbatm" 12
+Logical block application tag mask
+.IP "rsvd1" 12
+Reserved
+.IP "ilbrt_u64" 12
+Initial logical block reference tag - 8 byte
+version required for enhanced protection info

@@ -1,0 +1,55 @@
+Name: @NAME@
+Version: @VERSION@
+Release: 0
+Summary: Linux-native nvme device management library
+
+License: @LICENSE@
+Source: libnvme.tar.gz
+BuildRoot: %{_tmppath}/%{name}-root
+URL: http://github.com/linux-nvme/libnvme
+
+%description
+Provides library functions for accessing and managing nvme devices on a Linux
+system.
+
+%package devel
+Summary: Development files for Linux-native nvme
+Requires: libnvme
+Provides: libnvme.so.1
+
+%description devel
+This package provides header files to include and libraries to link with
+for Linux-native nvme device maangement.
+
+%define _prefix @PREFIX@
+
+%prep
+%autosetup -c
+
+%build
+meson .build -Ddocs=man -Ddocs-build=true -Ddefault_library=both
+
+%install
+cd .build
+meson install --destdir %{buildroot} --skip-subprojects
+
+%files
+%defattr(-,root,root)
+%attr(0755,root,root) %{_libdir}/libnvme*
+%doc COPYING
+
+%files devel
+%defattr(-,root,root)
+%attr(-,root,root) %{_includedir}/nvme/
+%attr(0644,root,root) %{_includedir}/libnvme*
+%attr(0755,root,root) %{_libdir}/libnvme*
+%attr(0644,root,root) %{_libdir}/pkgconfig/*
+%attr(0644,root,root) %{_mandir}/man2/*
+
+%changelog
+* Wed Jul 13 2022 Steven Seungcheol Lee <sc108.lee@samsung.com>
+- Enable building rpm
+- meson is needed higher version then what rpm repo offering (use pip install)
+
+* Thu Dec 12 2019 Keith Busch <kbusch@kernel.org> - 0.1
+- Initial version

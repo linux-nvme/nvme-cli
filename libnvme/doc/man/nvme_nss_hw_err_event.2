@@ -1,0 +1,23 @@
+.TH "libnvme" 9 "struct nvme_nss_hw_err_event" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_nss_hw_err_event \- NVM Subsystem Hardware Error Event
+.SH SYNOPSIS
+struct nvme_nss_hw_err_event {
+.br
+.BI "    __le16 nss_hw_err_event_code;"
+.br
+.BI "    __u8 rsvd2[2];"
+.br
+.BI "    __u8 *add_hw_err_info;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nss_hw_err_event_code" 12
+NVM Subsystem Hardware Error Event Code
+.IP "rsvd2" 12
+Reserved
+.IP "add_hw_err_info" 12
+Additional Hardware Error Information

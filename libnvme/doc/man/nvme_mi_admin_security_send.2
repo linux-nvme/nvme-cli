@@ -1,0 +1,25 @@
+.TH "nvme_mi_admin_security_send" 9 "nvme_mi_admin_security_send" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_security_send \- Perform a Security Send command on a controller.
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_security_send
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "struct nvme_security_send_args *args "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to send command to
+.IP "args" 12
+Security Send command arguments
+.SH "DESCRIPTION"
+Performs a Security Send Admin command as specified by \fIargs\fP. Response data
+is stored in \fIargs->data\fP, which should be a buffer of \fIargs->data_len\fP bytes.
+Resulting data length is stored in \fIargs->data_len\fP on successful
+command completion.
+
+Security Send data length should not be greater than 4096 bytes to
+comply with specification limits.
+
+See: \fIstruct nvme_get_log_args\fP
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

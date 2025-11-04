@@ -1,0 +1,34 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_crcap" "November 2025" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_crcap \- Power Loss Signaling Information
+.SH SYNOPSIS
+enum nvme_id_ctrl_crcap {
+.br
+.BI "    NVME_CTRL_CRCAP_RRSUP_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CRCAP_RGIDC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CRCAP_RRSUP_MASK"
+, 
+.br
+.br
+.BI "    NVME_CTRL_CRCAP_RGIDC_MASK"
+
+};
+.SH Constants
+.IP "NVME_CTRL_CRCAP_RRSUP_SHIFT" 12
+Shift amount to get the Reachability Reporting Supported
+from the \fIstruct nvme_id_ctrl\fP.crcap field.
+.IP "NVME_CTRL_CRCAP_RGIDC_SHIFT" 12
+Shift amount to get the Reachability Group ID Changeable
+from the \fIstruct nvme_id_ctrl\fP.crcap field.
+.IP "NVME_CTRL_CRCAP_RRSUP_MASK" 12
+Mask to get the Reachability Reporting Supported from the
+\fIstruct nvme_id_ctrl\fP.crcap field.
+.IP "NVME_CTRL_CRCAP_RGIDC_MASK" 12
+Mask to get the Reachability Group ID Changeable from the
+\fIstruct nvme_id_ctrl\fP.crcap field.

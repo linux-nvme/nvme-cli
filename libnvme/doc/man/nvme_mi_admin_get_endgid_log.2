@@ -1,0 +1,32 @@
+.TH "nvme_mi_admin_get_endgid_log" 9 "nvme_mi_admin_get_endgid_log" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_endgid_log \- Helper for Get Endurance Group ID Log Page functions
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_endgid_log
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "bool rae "  ","
+.BI "enum nvme_cmd_get_log_lid lid "  ","
+.BI "__u16 endgid "  ","
+.BI "__u32 len "  ","
+.BI "void *log "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "rae" 12
+Retain Asynchronous Events
+.IP "lid" 12
+Log identifier
+.IP "endgid" 12
+Endurance Group ID
+.IP "len" 12
+length of log buffer
+.IP "log" 12
+pointer for resulting log data
+.SH "DESCRIPTION"
+Performs a Get Log Page Admin command for a specific log ID \fIlid\fP and
+endurance group ID \fIendgid\fP. Log data is expected to be \fIlen\fP bytes, and is stored
+in \fIlog\fP on success. The \fIrae\fP flag is passed as-is to the Get Log Page
+command, and is specific to the Log Page requested.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

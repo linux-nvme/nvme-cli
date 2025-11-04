@@ -1,0 +1,25 @@
+.TH "nvme_mi_admin_get_log_error" 9 "nvme_mi_admin_get_log_error" "November 2025" "libnvme API manual" LINUX
+.SH NAME
+nvme_mi_admin_get_log_error \- Retrieve nvme error log
+.SH SYNOPSIS
+.B "int" nvme_mi_admin_get_log_error
+.BI "(nvme_mi_ctrl_t ctrl "  ","
+.BI "unsigned int nr_entries "  ","
+.BI "bool rae "  ","
+.BI "struct nvme_error_log_page *err_log "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Controller to query
+.IP "nr_entries" 12
+Number of error log entries allocated
+.IP "rae" 12
+Retain asynchronous events
+.IP "err_log" 12
+Array of error logs of size 'entries'
+.SH "DESCRIPTION"
+This log page describes extended error information for a command that
+completed with error, or may report an error that is not specific to a
+particular command.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

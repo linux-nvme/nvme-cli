@@ -1,0 +1,98 @@
+.TH "libnvme" 9 "struct nbft_security" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nbft_security \- Security Profile Descriptor (Figure 21)
+.SH SYNOPSIS
+struct nbft_security {
+.br
+.BI "    __u8 structure_id;"
+.br
+.BI "    __u8 index;"
+.br
+.BI "    __le16 flags;"
+.br
+.BI "    __u8 secret_type;"
+.br
+.BI "    __u8 reserved1;"
+.br
+.BI "    struct nbft_heap_obj sec_chan_alg_obj;"
+.br
+.BI "    struct nbft_heap_obj auth_proto_obj;"
+.br
+.BI "    struct nbft_heap_obj cipher_suite_obj;"
+.br
+.BI "    struct nbft_heap_obj dh_grp_obj;"
+.br
+.BI "    struct nbft_heap_obj sec_hash_func_obj;"
+.br
+.BI "    struct nbft_heap_obj sec_keypath_obj;"
+.br
+.BI "    __u8 reserved2[22];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "structure_id" 12
+Structure ID: This field shall be set to 5h
+(i.e., Security; #NBFT_DESC_SECURITY).
+.IP "index" 12
+Security Profile Descriptor Index: This field indicates
+the number of this Security Profile Descriptor in the
+Security Profile Descriptor List.
+.IP "flags" 12
+Security Profile Descriptor Flags, see \fIenum nbft_security_flags\fP.
+.IP "secret_type" 12
+Secret Type, see \fIenum nbft_security_secret_type\fP.
+.IP "reserved1" 12
+Reserved.
+.IP "sec_chan_alg_obj" 12
+Secure Channel Algorithm Heap Object Reference: If the
+Security Policy List field is set to 1h, then this field
+indicates the location and size of a heap object containing
+a list of secure channel algorithms. The list is an array
+of bytes and the values are defined in the Security Type
+(SECTYPE) field in the Transport Specific Address Subtype
+Definition in the NVMe TCP Transport Specification.
+If the Security Policy List field is cleared to 0h, then
+this field is reserved.
+.IP "auth_proto_obj" 12
+Authentication Protocols Heap Object Reference: If the
+Authentication Policy List field is set to 1h, then this
+field indicates the location and size of a heap object
+containing a list of authentication protocol identifiers.
+If the Authentication Policy List field is cleared to 0h,
+then this field is reserved.
+.IP "cipher_suite_obj" 12
+Cipher Suite Offset Heap Object Reference: If the Cipher
+Suites Restricted by Policy bit is set to 1h, then this
+field indicates the location and size of a heap object
+containing a list of cipher suite identifiers. The list,
+if any, is an array of bytes and the values are defined
+in the IANA TLS Parameters Registry. If the Cipher Suites
+Restricted by Policy bit is cleared to 0h, then this field
+is reserved.
+.IP "dh_grp_obj" 12
+DH Groups Heap Object Reference: If the Authentication DH Groups
+Restricted by Policy List bit is set to 1h, then this field
+indicates the location and size of a heap object containing
+a list of DH-HMAC-CHAP Diffie-Hellman (DH) group identifiers.
+If the Authentication DH Groups Restricted by Policy List
+bit is cleared to 0h, then this field is reserved.
+.IP "sec_hash_func_obj" 12
+Secure Hash Functions Offset Heap Object Reference: If the
+Secure Hash Functions Policy List bit is set to 1h, then
+this field indicates the offset in bytes of a heap object
+containing a list of DH-HMAC-CHAP hash function identifiers.
+The list is an array of bytes and the values are defined
+in the NVM Express Base Specification. If the Secure Hash
+Functions Policy List bit is cleared to 0h, then this
+field is reserved.
+.IP "sec_keypath_obj" 12
+Secret Keypath Offset Heap Object Reference: if this field
+is set to a non-zero value, then this field indicates
+the location and size of a heap object containing a URI.
+The type of the URI is specified in the Secret Type field.
+If this field is cleared to 0h, then this field is reserved.
+.IP "reserved2" 12
+Reserved.

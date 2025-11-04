@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nvme_id_uuid_list" "November 2025" "API Manual" LINUX
+.SH NAME
+struct nvme_id_uuid_list \- UUID list
+.SH SYNOPSIS
+struct nvme_id_uuid_list {
+.br
+.BI "    __u8 rsvd0[32];"
+.br
+.BI "    struct nvme_id_uuid_list_entry entry[NVME_ID_UUID_LIST_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+reserved
+.IP "entry" 12
+UUID list entry
