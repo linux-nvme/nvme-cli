@@ -103,8 +103,6 @@ static bool validate_uri(struct nbft_info_discovery *dd,
 	return true;
 }
 
-
-/* returns 0 for success or negative errno otherwise */
 static int do_connect(struct nvme_global_ctx *ctx,
 		      nvme_host_t h,
 		      struct nvmf_disc_log_entry *e,
@@ -125,11 +123,11 @@ static int do_connect(struct nvme_global_ctx *ctx,
 	if (c && nvme_ctrl_get_name(c))
 		return 0;
 
-	c = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
+	ret = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
 			     trcfg->traddr, trcfg->host_traddr,
-			     trcfg->host_iface, trcfg->trsvcid);
-	if (!c)
-		return -ENOMEM;
+			     trcfg->host_iface, trcfg->trsvcid, &c);
+	if (ret)
+		return ret;
 
 	/* Pause logging for unavailable SSNSs */
 	if (ss && ss->unavailable && verbose < 1) {
@@ -145,7 +143,6 @@ static int do_connect(struct nvme_global_ctx *ctx,
 			cfg->tls = true;
 	}
 
-	errno = 0;
 	ret = nvmf_add_ctrl(h, c, cfg);
 
 	/* Resume logging */
@@ -155,7 +152,7 @@ static int do_connect(struct nvme_global_ctx *ctx,
 				  saved_log_pid,
 				  saved_log_tstamp);
 
-	if (ret == -1) {
+	if (ret) {
 		nvme_free_ctrl(c);
 		/*
 		 * In case this SSNS was marked as 'unavailable' and
@@ -168,7 +165,7 @@ static int do_connect(struct nvme_global_ctx *ctx,
 					ss->index);
 			return 0;
 		}
-		return -errno;
+		return ret;
 	}
 
 	if (flags == NORMAL)
@@ -201,12 +198,12 @@ static int do_discover(struct nbft_info_discovery *dd,
 		.lsp = 0,
 	};
 
-	log = nvmf_get_discovery_wargs(&args);
-	if (!log) {
+	ret = nvmf_get_discovery_wargs(&args, &log);
+	if (ret) {
 		fprintf(stderr,
 			"Discovery Descriptor %d: failed to get discovery log: %s\n",
-			dd->index, nvme_strerror(errno));
-		return -errno;
+			dd->index, nvme_strerror(ret));
+		return ret;
 	}
 
 	for (i = 0; i < le64_to_cpu(log->numrec); i++) {
@@ -239,7 +236,9 @@ static int do_discover(struct nbft_info_discovery *dd,
 		if (e->subtype == NVME_NQN_DISC) {
 			nvme_ctrl_t child;
 
-			child = nvmf_connect_disc_entry(h, e, defcfg, NULL);
+			ret = nvmf_connect_disc_entry(h, e, defcfg, NULL, &child);
+			if (ret)
+				continue;
 			do_discover(dd, ctx, h, child, defcfg, &trcfg,
 				    flags, verbose);
 			nvme_disconnect_ctrl(child);
@@ -283,7 +282,6 @@ static int do_discover(struct nbft_info_discovery *dd,
 	return 0;
 }
 
-/* returns negative errno values */
 int discover_from_nbft(struct nvme_global_ctx *ctx, char *hostnqn_arg,
 		       char *hostid_arg, char *hostnqn_sys, char *hostid_sys,
 		       const char *desc, bool connect,
@@ -422,8 +420,8 @@ int discover_from_nbft(struct nvme_global_ctx *ctx, char *hostnqn_arg,
 				continue;
 
 			hfi = (*dd)->hfi;
-			uri = nvme_parse_uri((*dd)->uri);
-			if (!uri)
+			ret = nvme_parse_uri((*dd)->uri, &uri);
+			if (ret)
 				continue;
 			if (!validate_uri(*dd, uri))
 				continue;
@@ -455,25 +453,21 @@ int discover_from_nbft(struct nvme_global_ctx *ctx, char *hostnqn_arg,
 				persistent = true;
 
 			if (!c) {
-				c = nvmf_create_discover_ctrl(ctx, h, cfg, &trcfg);
-				if (!c && errno == ENVME_CONNECT_ADDRNOTAVAIL &&
+				ret = nvmf_create_discover_ctrl(ctx, h, cfg, &trcfg, &c);
+				if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
 				    !strcmp(trcfg.transport, "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
 					trcfg.host_traddr = NULL;
-					c = nvmf_create_discover_ctrl(ctx, h, cfg, &trcfg);
+					ret = nvmf_create_discover_ctrl(ctx, h, cfg, &trcfg, &c);
 				}
-			}
+			} else
+				ret = 0;
 
-			if (!c) {
+			if (ret) {
 				fprintf(stderr,
 					"Discovery Descriptor %d: failed to add discovery controller: %s\n",
-					(*dd)->index,
-					nvme_strerror(errno));
-				if (errno == ENOMEM) {
-					ret = -ENOMEM;
-					goto out_free;
-				}
-				continue;
+					(*dd)->index, nvme_strerror(-ret));
+				goto out_free;
 			}
 
 			rr = do_discover(*dd, ctx, h, c, cfg, &trcfg,

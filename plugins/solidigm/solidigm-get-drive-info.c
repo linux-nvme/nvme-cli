@@ -40,18 +40,18 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *cmd, struct plug
 		return err;
 	}
 
-	ctx = nvme_scan(NULL);
-	if (ctx)
-		return -errno;
+	err = nvme_scan(NULL, &ctx);
+	if (err)
+		return err;
 
-	c = nvme_scan_ctrl(ctx, nvme_transport_handle_get_name(hdl));
-	if (!c)
+	err = nvme_scan_ctrl(ctx, nvme_transport_handle_get_name(hdl), &c);
+	if (!err)
 		n = nvme_ctrl_first_ns(c);
 	else {
-		n = nvme_scan_namespace(nvme_transport_handle_get_name(hdl));
-		if (!n) {
+		err = nvme_scan_namespace(nvme_transport_handle_get_name(hdl), &n);
+		if (err) {
 			nvme_show_error("solidigm-vs-drive-info: drive missing namespace");
-			return -errno;
+			return err;
 		}
 	}
 

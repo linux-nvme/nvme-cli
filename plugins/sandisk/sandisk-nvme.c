@@ -61,9 +61,9 @@ static int sndk_do_cap_telemetry_log(struct nvme_transport_handle *hdl,
 		return -EINVAL;
 	}
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	err = nvme_scan(NULL, &ctx);
+	if (err)
+		return err;
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
 
 	if (data_area == 4) {
@@ -343,11 +343,9 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !sndk_check_device(ctx, hdl)) {
-		ret = -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !sndk_check_device(ctx, hdl))
 		goto out;
-	}
 
 	if (cfg.xfer_size) {
 		xfer_size = cfg.xfer_size;
@@ -549,7 +547,9 @@ static int sndk_drive_resize(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 	sndk_check_device(ctx, hdl);
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
 	ret = sndk_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
@@ -898,7 +898,9 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
 
 	if (capabilities & SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2) {
@@ -946,7 +948,9 @@ static int sndk_clear_fw_activate_history(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
 
 	if (capabilities & SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY) {
@@ -1017,9 +1021,9 @@ static int sndk_capabilities(int argc, char **argv,
 		return ret;
 
 	/* get capabilities */
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	sndk_check_device(ctx, hdl);
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);

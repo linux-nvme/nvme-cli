@@ -18,9 +18,10 @@ extern int nvmf_disconnect(const char *desc, int argc, char **argv);
 extern int nvmf_disconnect_all(const char *desc, int argc, char **argv);
 extern int nvmf_config(const char *desc, int argc, char **argv);
 extern int nvmf_dim(const char *desc, int argc, char **argv);
-extern nvme_ctrl_t nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx, nvme_host_t h,
-					     struct nvme_fabrics_config *cfg,
-					     struct tr_config *trcfg);
+extern int nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx, nvme_host_t h,
+				     struct nvme_fabrics_config *cfg,
+				     struct tr_config *trcfg,
+				     nvme_ctrl_t *ctrl);
 extern char *nvmf_get_default_trsvcid(const char *transport,
 				      bool discovery_ctrl);
 

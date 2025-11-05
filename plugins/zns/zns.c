@@ -102,10 +102,10 @@ static int list(int argc, char **argv, struct command *cmd,
 	};
 	struct table *t = table_init_with_columns(columns, ARRAY_SIZE(columns));
 
-	ctx = nvme_scan(NULL);
-	if (!ctx) {
+	err = nvme_scan(NULL, &ctx);
+	if (err) {
 		fprintf(stderr, "Failed to scan nvme subsystems\n");
-		return -errno;
+		return err;
 	}
 
 	err = print_zns_list(ctx, t);

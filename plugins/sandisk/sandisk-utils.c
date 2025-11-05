@@ -40,18 +40,18 @@ int sndk_get_pci_ids(struct nvme_global_ctx *ctx, struct nvme_transport_handle *
 	int fd, ret;
 
 	name = nvme_transport_handle_get_name(hdl);
-	c = nvme_scan_ctrl(ctx, name);
-	if (!c) {
+	ret = nvme_scan_ctrl(ctx, name, &c);
+	if (!ret) {
 		snprintf(vid, sizeof(vid), "%s/device/vendor",
 			nvme_ctrl_get_sysfs_dir(c));
 		snprintf(did, sizeof(did), "%s/device/device",
 			nvme_ctrl_get_sysfs_dir(c));
 		nvme_free_ctrl(c);
 	} else {
-		n = nvme_scan_namespace(name);
-		if (!n) {
+		ret = nvme_scan_namespace(name, &n);
+		if (!ret) {
 			fprintf(stderr, "Unable to find %s\n", name);
-			return -errno;
+			return ret;
 		}
 
 		snprintf(vid, sizeof(vid), "%s/device/device/vendor",

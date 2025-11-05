@@ -342,10 +342,10 @@ static int huawei_list(int argc, char **argv, struct command *command,
 		_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 		snprintf(path, sizeof(path), "/dev/%s", devices[i]->d_name);
-		hdl = nvme_open(ctx, path);
-		if (!hdl) {
+		ret = nvme_open(ctx, path, &hdl);
+		if (ret) {
 			fprintf(stderr, "Cannot open device %s: %s\n",
-				path, strerror(errno));
+				path, strerror(-ret));
 			continue;
 		}
 		ret = huawei_get_nvme_info(hdl, &list_items[huawei_num], path);

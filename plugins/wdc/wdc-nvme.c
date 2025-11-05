@@ -1468,23 +1468,24 @@ static double calc_percent(uint64_t numerator, uint64_t denominator)
 static int wdc_get_pci_ids(struct nvme_global_ctx *ctx, struct nvme_transport_handle *hdl,
 			   uint32_t *device_id, uint32_t *vendor_id)
 {
+	const char *name = nvme_transport_handle_get_name(hdl);
 	char vid[256], did[256], id[32];
 	nvme_ctrl_t c = NULL;
 	nvme_ns_t n = NULL;
 	int fd, ret;
 
-	c = nvme_scan_ctrl(ctx, nvme_transport_handle_get_name(hdl));
-	if (!c) {
+	ret = nvme_scan_ctrl(ctx, name, &c);
+	if (!ret) {
 		snprintf(vid, sizeof(vid), "%s/device/vendor",
 			nvme_ctrl_get_sysfs_dir(c));
 		snprintf(did, sizeof(did), "%s/device/device",
 			nvme_ctrl_get_sysfs_dir(c));
 		nvme_free_ctrl(c);
 	} else {
-		n = nvme_scan_namespace(nvme_transport_handle_get_name(hdl));
-		if (!n) {
-			fprintf(stderr, "Unable to find %s\n", nvme_transport_handle_get_name(hdl));
-			return -1;
+		ret = nvme_scan_namespace(name, &n);
+		if (ret) {
+			fprintf(stderr, "Unable to find %s\n", name);
+			return ret;
 		}
 
 		snprintf(vid, sizeof(vid), "%s/device/device/vendor",
@@ -3315,10 +3316,10 @@ static int wdc_do_cap_telemetry_log(struct nvme_transport_handle *hdl, const cha
 		return -EINVAL;
 	}
 
-	ctx = nvme_scan(NULL);
-	if (!ctx) {
+	err = nvme_scan(NULL, &ctx);
+	if (err) {
 		fprintf(stderr, "Failed to scan nvme subsystems\n");
-		return -errno;
+		return err;
 	}
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -3963,9 +3964,9 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	if (cfg.file)
 		strncpy(f, cfg.file, PATH_MAX - 1);
@@ -4384,11 +4385,9 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		goto out;
-	}
 
 	if (cfg.xfer_size) {
 		xfer_size = cfg.xfer_size;
@@ -4750,9 +4749,9 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl))
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -4798,9 +4797,9 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl))
-		return -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -4841,9 +4840,9 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl))
-		return -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if (!(capabilities & WDC_DRIVE_CAP_PFAIL_DUMP)) {
@@ -4922,9 +4921,9 @@ static int wdc_purge(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl))
-		return -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if (!(capabilities & WDC_DRIVE_CAP_PURGE)) {
@@ -4977,9 +4976,9 @@ static int wdc_purge_monitor(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl))
-		return -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if (!(capabilities & WDC_DRIVE_CAP_PURGE)) {
@@ -8395,9 +8394,9 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 	if (!cfg.log_page_version) {
 		uuid_index = 0;
 	} else if (cfg.log_page_version == 1) {
@@ -8527,9 +8526,9 @@ static int wdc_cu_smart_log(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if (!(capabilities & WDC_DRIVE_CAP_SMART_LOG_MASK)) {
@@ -8647,9 +8646,9 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -8717,9 +8716,9 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -8808,9 +8807,9 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -8916,9 +8915,9 @@ static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *co
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -8962,9 +8961,9 @@ static int wdc_get_error_recovery_log(int argc, char **argv, struct command *com
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -9008,9 +9007,9 @@ static int wdc_get_dev_capabilities_log(int argc, char **argv, struct command *c
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -9054,9 +9053,9 @@ static int wdc_get_unsupported_reqs_log(int argc, char **argv, struct command *c
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -9132,11 +9131,9 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		return ret;
-	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if (!(capabilities & WDC_DRIVE_CAP_CLEAR_PCIE_MASK)) {
@@ -9182,9 +9179,9 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRIVE_CAP_DRIVE_STATUS) != WDC_DRIVE_CAP_DRIVE_STATUS) {
@@ -9327,9 +9324,9 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRIVE_CAP_CLEAR_ASSERT) != WDC_DRIVE_CAP_CLEAR_ASSERT) {
@@ -9553,9 +9550,9 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if (!(capabilities & WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_MASK)) {
@@ -9637,9 +9634,9 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if (!(capabilities & WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY_MASK)) {
@@ -9694,9 +9691,9 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG) != WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG) {
@@ -10488,9 +10485,9 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRIVE_CAP_DRIVE_ESSENTIALS) != WDC_DRIVE_CAP_DRIVE_ESSENTIALS) {
@@ -10585,11 +10582,9 @@ static int wdc_drive_resize(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		return ret;
-	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRIVE_CAP_RESIZE) == WDC_DRIVE_CAP_RESIZE) {
@@ -10643,11 +10638,9 @@ static int wdc_namespace_resize(int argc, char **argv,
 		return -1;
 	}
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		return ret;
-	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRIVE_CAP_NS_RESIZE) == WDC_DRIVE_CAP_NS_RESIZE) {
@@ -10701,9 +10694,9 @@ static int wdc_reason_identifier(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	if (cfg.log_id != NVME_LOG_LID_TELEMETRY_HOST &&
 	    cfg.log_id != NVME_LOG_LID_TELEMETRY_CTRL) {
@@ -10967,9 +10960,9 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 		return ret;
 	}
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -11713,9 +11706,9 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -11793,9 +11786,9 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 	ret = validate_output_format(cfg.output_format, &fmt);
 	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
@@ -11896,11 +11889,9 @@ static int wdc_vs_drive_info(int argc, char **argv,
 		return ret;
 	}
 
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		return ret;
-	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRIVE_CAP_INFO) == WDC_DRIVE_CAP_INFO) {
@@ -12136,9 +12127,9 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	ctx = nvme_scan(NULL);
-	if (!ctx)
-		return -errno;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret)
+		return ret;
 	ret = validate_output_format(cfg.output_format, &fmt);
 	if (ret < 0) {
 		fprintf(stderr, "ERROR: WDC: invalid output format\n");
@@ -12240,11 +12231,9 @@ static int wdc_capabilities(int argc, char **argv, struct command *command, stru
 		return ret;
 
 	/* get capabilities */
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		return ret;
-	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -12349,11 +12338,9 @@ static int wdc_cloud_ssd_plugin_version(int argc, char **argv, struct command *c
 		return ret;
 
 	/* get capabilities */
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		return ret;
-	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -12398,11 +12385,9 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv, struct command *com
 		return ret;
 
 	/* get capabilities */
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		return ret;
-	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
@@ -12786,11 +12771,9 @@ int wdc_set_latency_monitor_feature(int argc, char **argv, struct command *cmd,
 		return ret;
 
 	/* get capabilities */
-	ctx = nvme_scan(NULL);
-	if (!ctx || !wdc_check_device(ctx, hdl)) {
-		ret = -1;
+	ret = nvme_scan(NULL, &ctx);
+	if (ret || !wdc_check_device(ctx, hdl))
 		return ret;
-	}
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
