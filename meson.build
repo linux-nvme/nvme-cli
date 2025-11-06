@@ -232,6 +232,8 @@ disc = configure_file(
   input: 'etc/discovery.conf.in',
   output: 'discovery.conf',
   configuration: substs,
+  install: true,
+  install_dir: join_paths(sysconfdir, 'nvme'),
 )
 
 dracut_files = [
@@ -243,6 +245,8 @@ foreach file : dracut_files
     input: 'nvmf-autoconnect/dracut-conf/' + file + '.in',
     output: file,
     configuration: substs,
+    install: true,
+    install_dir: dracutrulesdir,
   )
 endforeach
 
@@ -259,6 +263,8 @@ foreach file : systemd_files
     input: 'nvmf-autoconnect/systemd/' + file + '.in',
     output: file,
     configuration: substs,
+    install: true,
+    install_dir: systemddir,
   )
 endforeach
 
@@ -276,6 +282,8 @@ foreach file : udev_files
     input: 'nvmf-autoconnect/udev-rules/' + file + '.in',
     output: file,
     configuration: substs,
+    install: true,
+    install_dir: udevrulesdir
   )
 endforeach
 
@@ -323,30 +331,14 @@ executable(
   install_dir: sbindir
 )
 
+libnvme_subproject = subproject('libnvme')
+
 ################################################################################
 install_data('completions/bash-nvme-completion.sh',
              rename: 'nvme',
              install_dir: datadir + '/bash-completion/completions')
 install_data('completions/_nvme',
              install_dir: datadir + '/zsh/site-functions')
-
-foreach file : dracut_files
-  install_data(meson.current_build_dir() + '/' + file,
-               install_dir: dracutrulesdir)
-endforeach
-
-foreach file : systemd_files
-  install_data(meson.current_build_dir() + '/' + file,
-               install_dir: systemddir)
-endforeach
-
-foreach file : udev_files
-  install_data(meson.current_build_dir() + '/' + file,
-               install_dir: udevrulesdir)
-endforeach
-
-install_data(disc,
-             install_dir: join_paths(sysconfdir, 'nvme'))
 
 ################################################################################
 if meson.version().version_compare('>=0.53.0')
