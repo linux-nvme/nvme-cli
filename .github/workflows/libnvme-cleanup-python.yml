@@ -25,6 +25,7 @@ jobs:
           PYPI_USERNAME: __token__
           PYPI_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
         run: |
+          cd libnvme
           pypi-cleanup \
             --username "$PYPI_USERNAME" \
             --password "$PYPI_PASSWORD" \

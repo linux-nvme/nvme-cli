@@ -21,6 +21,8 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
           scripts/build.sh docs

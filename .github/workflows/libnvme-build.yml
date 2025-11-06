@@ -1,5 +1,5 @@
 ---
-name: build
+name: libnvme build
 
 on:
   push:
@@ -20,14 +20,16 @@ jobs:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
+          libnvme/scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
       - uses: actions/upload-artifact@v5
         name: upload logs
         if: failure()
         with:
-          name: logs files
+          name: libnvme logs files
           path: |
             .build-ci/meson-logs/*.txt
 
@@ -56,14 +58,15 @@ jobs:
           guest-dir: /build
           host-dir: ${{ github.workspace }}
           command: |
-            scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
+            git config --global --add safe.directory /build
+            libnvme/scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
           params: "--platform linux/amd64"
           pull-params: "--platform linux/amd64"
       - uses: actions/upload-artifact@v5
         name: upload logs
         if: failure()
         with:
-          name: log files
+          name: libnvme log files
           path: |
             .build-ci/meson-logs/*.txt
 
@@ -74,14 +77,16 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          scripts/build.sh -b release -c gcc libdbus
+          libnvme/scripts/build.sh -b release -c gcc libdbus
       - uses: actions/upload-artifact@v5
         name: upload logs
         if: failure()
         with:
-          name: log files
+          name: libnvme log files
           path: |
             .build-ci/meson-logs/*.txt
 
@@ -93,13 +98,15 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          scripts/build.sh -b release -c gcc fallback
+          libnvme/scripts/build.sh -b release -c gcc fallback
       - uses: actions/upload-artifact@v5
         if: failure()
         with:
-          name: log files
+          name: libnvme log files
           path: |
             .build-ci/meson-logs/*.txt
 
@@ -110,6 +117,8 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          scripts/build.sh -m muon
+          libnvme/scripts/build.sh -m muon
