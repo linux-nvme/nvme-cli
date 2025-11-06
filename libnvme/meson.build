@@ -238,6 +238,8 @@ conf.set(
     description: 'Is network address and service translation available'
 )
 
+conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
+
 threads_dep = dependency('threads', required: true)
 dl_dep = dependency('dl', required: false)
 conf.set(
@@ -293,6 +295,7 @@ incdir = include_directories(['.', 'ccan', 'src'])
 ################################################################################
 subdir('internal')
 subdir('ccan')
+#subdir('tools')
 subdir('src')
 subdir('libnvme')
 if get_option('tests')
