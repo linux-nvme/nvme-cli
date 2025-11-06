@@ -260,6 +260,7 @@ config_meson_distro() {
         --prefix="${BUILDDIR}/usr"              \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
+        --force-fallback-for=                   \
         "${BUILDDIR}"
 }
 
