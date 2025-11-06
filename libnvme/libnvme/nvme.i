@@ -1268,3 +1268,12 @@ PyObject *nbft_get(const char * filename);
 %rename($ignore, %$isvariable) "";  // ignore all variables
 
 %include "../src/nvme/types.h"
+
+
+%pythoncode %{
+# Definitions for backward compatibility between libnvme 1.x and 3.x (there is no 2.x)
+# Some terms (class/variable names) were changed and this allows running older python
+# code written for libnvme 1.x with libnvme 3.x (and possibly later).
+NVME_LOG_LID_DISCOVER = _nvme.NVME_LOG_LID_DISCOVERY
+root = global_ctx
+%}
