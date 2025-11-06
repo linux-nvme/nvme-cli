@@ -33,6 +33,7 @@ deps = [
     libdbus_dep,
     liburing_dep,
     openssl_dep,
+    config_dep,
 ]
 
 source_dir = meson.current_source_dir()
@@ -46,8 +47,10 @@ libnvme = library(
     link_args: ['-Wl,--version-script=' + version_script_arg],
     dependencies: deps,
     link_depends: mapfile,
-    c_args: config_h_arg,
-    include_directories: [incdir, internal_incdir],
+    c_args: [
+        '-include', config_h_path,
+    ],
+    include_directories: [incdir, ],
     install: true,
     link_with: libccan,
 )
@@ -75,8 +78,10 @@ libnvme_test = library(
     'nvme-test', # produces libnvme-test.so
     sources,
     dependencies: deps,
-    c_args: config_h_arg,
-    include_directories: [incdir, internal_incdir],
+    c_args: [
+        '-include', config_h_path,
+    ],
+    include_directories: [incdir, ],
     install: false,
     link_with: libccan,
 )
