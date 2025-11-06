@@ -63,10 +63,11 @@ shift $((OPTIND-1))
 
 CONFIG=${1:-"default"}
 
-cd "$(git rev-parse --show-toplevel)" || exit 1
+TOPDIR="$(git rev-parse --show-toplevel)"
+cd "${TOPDIR}/libnvme" || exit 1
 
-BUILDDIR="$(pwd)/.build-ci"
-TOOLDIR="$(pwd)/.build-tools"
+BUILDDIR="${TOPDIR}/.build-ci"
+TOOLDIR="${TOPDIR}/.build-tools"
 
 fn_exists() { declare -F "$1" > /dev/null; }
 
@@ -101,7 +102,7 @@ config_meson_cross() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-        --cross-file=.github/cross/ubuntu-cross-"${CROSS_TARGET}".txt \
+        --cross-file="${TOPDIR}/.github/cross/ubuntu-cross-${CROSS_TARGET}".txt \
         -Dpython=disabled                       \
         -Dopenssl=disabled                      \
         "${BUILDDIR}"
@@ -177,13 +178,11 @@ tools_build_muon() {
 
     pushd "${TOOLDIR}/muon" || exit 1
 
-    CC="${CC}" CFLAGS="${CFLAGS} -std=c99" ninja="${SAMU}" \
-        ./bootstrap.sh stage1
+    CC="${CC}" CFLAGS="${CFLAGS} -std=c99" ninja="${SAMU}" ./bootstrap.sh stage1
 
-    CC="${CC}" ninja="${SAMU}" stage1/muon setup        \
-        -Dprefix="${TOOLDIR}"                           \
-        -Ddocs=disabled                                 \
-        -Dsamurai=disabled                              \
+    CC="${CC}" ninja="${SAMU}" stage1/muon-bootstrap setup    \
+        -Dprefix="${TOOLDIR}"                                 \
+        -Dsamurai=disabled                                    \
         "${TOOLDIR}/build-muon"
     "${SAMU}" -C "${TOOLDIR}/build-muon"
 

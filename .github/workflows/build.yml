@@ -20,6 +20,8 @@ jobs:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
           scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
@@ -56,6 +58,7 @@ jobs:
           guest-dir: /build
           host-dir: ${{ github.workspace }}
           command: |
+            git config --global --add safe.directory /build
             scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
           params: "--platform linux/amd64"
           pull-params: "--platform linux/amd64"
@@ -75,6 +78,8 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
           scripts/build.sh -b release -c gcc fallback
@@ -92,6 +97,8 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
           scripts/build.sh -m muon
@@ -103,6 +110,8 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
           make static
@@ -114,6 +123,8 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
           scripts/build.sh distro

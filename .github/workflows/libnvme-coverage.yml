@@ -1,5 +1,5 @@
 ---
-name: coverage
+name: libnvme coverage
 
 on:
   push:
@@ -15,9 +15,11 @@ jobs:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
       - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          scripts/build.sh coverage
+          libnvme/scripts/build.sh coverage
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

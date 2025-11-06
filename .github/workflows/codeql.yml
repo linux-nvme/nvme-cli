@@ -41,6 +41,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v5
 
+    - name: Mark repo as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Install build tools
       run: |
           sudo apt-get update
