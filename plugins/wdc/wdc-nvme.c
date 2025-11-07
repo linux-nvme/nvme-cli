@@ -3255,7 +3255,7 @@ static int wdc_do_cap_telemetry_log(struct nvme_global_ctx *ctx,
 	int err = 0, output;
 	__u32 host_gen = 1;
 	int ctrl_init = 0;
-	__u32 result;
+	__u64 result;
 	void *buf = NULL;
 	__u8 *data_ptr = NULL;
 	int data_written = 0, data_remaining = 0;
@@ -4947,7 +4947,8 @@ static int wdc_purge_monitor(int argc, char **argv,
 						 NULL);
 		if (!ret) {
 			mon = (struct wdc_nvme_purge_monitor_data *) output;
-			printf("Purge state = 0x%0x\n", admin_cmd.result);
+			printf("Purge state = 0x%0"PRIx64"\n",
+				(uint64_t)admin_cmd.result);
 			printf("%s\n", wdc_purge_mon_status_to_string(admin_cmd.result));
 			if (admin_cmd.result == WDC_NVME_PURGE_STATE_BUSY) {
 				progress_percent =
@@ -9014,7 +9015,7 @@ static int wdc_do_clear_pcie_correctable_errors_vuc(struct nvme_transport_handle
 static int wdc_do_clear_pcie_correctable_errors_fid(struct nvme_transport_handle *hdl)
 {
 	int ret;
-	__u32 result;
+	__u64 result;
 	__u32 value = 1 << 31; /* Bit 31 - clear PCIe correctable count */
 
 	ret = nvme_set_features_simple(hdl, 0, WDC_NVME_CLEAR_PCIE_CORR_FEATURE_ID, false,
@@ -9520,7 +9521,7 @@ static int wdc_do_clear_fw_activate_history_vuc(struct nvme_transport_handle *hd
 static int wdc_do_clear_fw_activate_history_fid(struct nvme_transport_handle *hdl)
 {
 	int ret = -1;
-	__u32 result;
+	__u64 result;
 	__u32 value = 1 << 31; /* Bit 31 - Clear Firmware Update History Log */
 
 	ret = nvme_set_features_simple(hdl, 0, WDC_NVME_CLEAR_FW_ACT_HIST_VU_FID, false,
@@ -9578,7 +9579,7 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 	__u64 capabilities = 0;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 result;
+	__u64 result;
 	int ret = -1;
 
 
@@ -10160,7 +10161,7 @@ static int wdc_do_drive_essentials(struct nvme_global_ctx *ctx, struct nvme_tran
 	__u32 dataBufferSize;
 	__u32 listIdx = 0;
 	__u32 vuLogIdx = 0;
-	__u32 result;
+	__u64 result;
 	struct nvme_id_ctrl ctrl;
 	struct nvme_id_ns ns;
 	struct nvme_error_log_page *elogBuffer;
@@ -10969,7 +10970,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 		} else {
 			struct log_page_directory *dir;
 			void *data = NULL;
-			__u32 result;
+			__u64 result;
 
 			if (posix_memalign(&data, getpagesize(), 512)) {
 				fprintf(stderr,
@@ -10979,12 +10980,15 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 			}
 
 			dir = (struct log_page_directory *)data;
-			ret = nvme_admin_passthru(hdl, WDC_NVME_ADMIN_VUC_OPCODE_D2, 0, 0,
-					0, 0, 0, 8,
-					0, WDC_VUC_SUBOPCODE_LOG_PAGE_DIR_D2, 0, 0, 0,
-					32, data, 0, NULL,
-					0, &result);
+			struct nvme_passthru_cmd cmd = {
+				.opcode		= WDC_NVME_ADMIN_VUC_OPCODE_D2,
+				.cdw10		= 8,
+				.cdw12		= WDC_VUC_SUBOPCODE_LOG_PAGE_DIR_D2,
+				.addr		= (__u64)(uintptr_t)data,
+				.data_len	= 32,
+			};
 
+			ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 			if (!ret) {
 				switch (fmt) {
 				case BINARY:
@@ -11958,13 +11962,14 @@ static int wdc_vs_drive_info(int argc, char **argv,
 			if (data_len % 4 != 0)
 				num_dwords += 1;
 
-			ret = nvme_admin_passthru(hdl,
-						  WDC_NVME_ADMIN_VUC_OPCODE_D2,
-						  0, 0, 0, 0, 0, num_dwords, 0,
-						  WDC_VUC_SUBOPCODE_VS_DRIVE_INFO_D2,
-						  0, 0, 0, data_len, &info, 0,
-						  NULL, 0, NULL);
-
+			struct nvme_passthru_cmd cmd = {
+				.opcode		= WDC_NVME_ADMIN_VUC_OPCODE_D2,
+				.cdw10		= num_dwords,
+				.cdw12		= WDC_VUC_SUBOPCODE_VS_DRIVE_INFO_D2,
+				.addr		= (__u64)(uintptr_t)&info,
+				.data_len	= data_len,
+			};
+			ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
 			if (!ret) {
 				__u16 hw_rev_major, hw_rev_minor;
 
@@ -12021,7 +12026,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	struct nvme_id_ctrl id_ctrl;
 	nvme_print_flags_t fmt;
 	uint64_t capabilities = 0;
-	__u32 hctm_tmt;
+	__u64 hctm_tmt;
 	int temperature, temp_tmt1, temp_tmt2;
 	int ret;
 
@@ -12606,7 +12611,7 @@ int wdc_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	uint64_t capabilities = 0;
-	__u32 result;
+	__u64 result;
 	int ret;
 
 	const char *active_bucket_timer_threshold =

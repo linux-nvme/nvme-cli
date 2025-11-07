@@ -821,7 +821,7 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	json_print(r);
 }
 
-static void json_select_result(enum nvme_features_id fid, __u32 result)
+static void json_select_result(enum nvme_features_id fid, __u64 result)
 {
 	struct json_object *r = json_r ? json_r : json_create_object();
 	char json_str[STR_LEN];
@@ -4174,7 +4174,7 @@ static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 	json_print(r);
 }
 
-static void json_lba_status_info(__u32 result)
+static void json_lba_status_info(__u64 result)
 {
 	struct json_object *r = json_create_object();
 
@@ -4974,7 +4974,7 @@ static void json_directive_show_fields(__u8 dtype, __u8 doper, unsigned int resu
 	}
 }
 
-static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 				void *buf, __u32 len)
 {
 	struct json_object *r = json_create_object();
@@ -4989,7 +4989,7 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 	obj_add_str(r, "spec", json_str);
 	sprintf(json_str, "%#x", nsid);
 	obj_add_str(r, "NSID", json_str);
-	sprintf(json_str, "%#x", result);
+	sprintf(json_str, "%#"PRIx64, (uint64_t)result);
 	obj_add_result(r, json_str);
 
 	if (verbose_mode()) {

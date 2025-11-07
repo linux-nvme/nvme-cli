@@ -969,7 +969,7 @@ static void test_get_features(nvme_mi_ep_t ep)
 {
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
-	uint32_t res;
+	__u64 res;
 	int rc;
 
 	test_set_transport_callback(ep, test_admin_get_features_cb, NULL);
@@ -1040,7 +1040,7 @@ static void test_set_features(nvme_mi_ep_t ep)
 	struct nvme_timestamp tstmp = { 0 };
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
-	uint32_t res;
+	__u64 res;
 	int rc;
 
 	test_set_transport_callback(ep, test_admin_set_features_cb, NULL);
@@ -1381,7 +1381,7 @@ static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
 	struct nvme_ns_mgmt_host_sw_specified data = { 0 };
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
-	__u32 ns;
+	__u64 ns;
 	int rc;
 
 	test_set_transport_callback(ep, test_admin_ns_mgmt_cb, NULL);
