@@ -16,7 +16,7 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 {
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 result = 0;
+	__u64 result = 0;
 	__u32 clear = 1 << 31;
 	__u8 uuid_index = 0;
 	bool uuid = true;
@@ -67,7 +67,7 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 result;
+	__u64 result;
 	int err;
 	bool uuid;
 	__u8 uuid_index = 0;
@@ -107,8 +107,8 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 	err = nvme_get_features(hdl, cfg.nsid, OCP_FID_CPCIE, cfg.sel, 0,
 			uuid_index, NULL, 0, &result);
 	if (!err) {
-		printf("get-feature:0xC3 %s value: %#08x\n",
-		nvme_select_to_string(cfg.sel), result);
+		printf("get-feature:0xC3 %s value: %#016"PRIx64"\n",
+		nvme_select_to_string(cfg.sel), (uint64_t)result);
 
 		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(0xC3, result);

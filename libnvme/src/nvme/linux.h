@@ -652,25 +652,6 @@ int nvme_import_tls_key_versioned(const char *encoded_key,
  */
 __attribute__((weak))
 int nvme_submit_passthru(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
-			 struct nvme_passthru_cmd *cmd, __u32 *result);
-
-/**
- * nvme_submit_passthru64 - Low level ioctl wrapper for passthru commands
- * @hdl:	Transport handle
- * @ioctl_cmd:	IOCTL command id
- * @cmd:	Passhtru command
- * @result:	Optional field to return the result
- *
- * This is a low level library function which should not be used directly. It is
- * exposed as weak symbol so that the user application is able to provide their own
- * implementation of this function with additional debugging or logging code.
- *
- * Return: The value from the ioctl system call (see ioctl documentation) or
- * a negative error code otherwise.
- */
-__attribute__((weak))
-int nvme_submit_passthru64(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
-			   struct nvme_passthru_cmd64 *cmd,
-			   __u64 *result);
+			 struct nvme_passthru_cmd *cmd, __u64 *result);
 
 #endif /* _LIBNVME_LINUX_H */

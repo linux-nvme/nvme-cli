@@ -31,7 +31,7 @@ struct print_ops {
 	void (*ctrl_list)(struct nvme_ctrl_list *ctrl_list);
 	void (*ctrl_registers)(void *bar, bool fabrics);
 	void (*ctrl_register)(int offset, uint64_t value);
-	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result, void *buf, __u32 len);
+	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result, void *buf, __u32 len);
 	void (*discovery_log)(struct nvmf_discovery_log *log, int numrec);
 	void (*effects_log_list)(struct list_head *list);
 	void (*endurance_group_event_agg_log)(struct nvme_aggregate_endurance_group_event *endurance_log, __u64 log_entries, __u32 size, const char *devname);
@@ -71,7 +71,7 @@ struct print_ops {
 	void (*resv_report)(struct nvme_resv_status *status, int bytes, bool eds);
 	void (*sanitize_log_page)(struct nvme_sanitize_log_page *sanitize_log, const char *devname);
 	void (*secondary_ctrl_list)(const struct nvme_secondary_ctrl_list *sc_list, __u32 count);
-	void (*select_result)(enum nvme_features_id fid, __u32 result);
+	void (*select_result)(enum nvme_features_id fid, __u64 result);
 	void (*self_test_log)(struct nvme_self_test_log *self_test, __u8 dst_entries, __u32 size, const char *devname);
 	void (*single_property)(int offset, uint64_t value64);
 	void (*smart_log)(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
@@ -87,7 +87,7 @@ struct print_ops {
 	void (*show_feature_fields)(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
 	void (*id_ctrl_rpmbs)(__le32 ctrl_rpmbs);
 	void (*lba_range)(struct nvme_lba_range_type *lbrt, int nr_ranges);
-	void (*lba_status_info)(__u32 result);
+	void (*lba_status_info)(__u64 result);
 	void (*d)(unsigned char *buf, int len, int width, int group);
 	void (*show_init)(void);
 	void (*show_finish)(void);
@@ -158,7 +158,7 @@ struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags);
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
 
 void nvme_show_status(int status);
-void nvme_show_lba_status_info(__u32 result);
+void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct nvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs, nvme_print_flags_t flags);
@@ -258,9 +258,9 @@ void nvme_show_topology_tabular(struct nvme_global_ctx *ctx, nvme_print_flags_t 
 
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result);
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
-void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 	void *buf, __u32 len, nvme_print_flags_t flags);
-void nvme_show_select_result(enum nvme_features_id fid, __u32 result);
+void nvme_show_select_result(enum nvme_features_id fid, __u64 result);
 
 void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl,
 			   nvme_print_flags_t flags);

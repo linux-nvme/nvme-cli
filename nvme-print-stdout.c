@@ -4699,7 +4699,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		stdout_sanitize_log_ssi(sanitize->ssi, status);
 }
 
-static void stdout_select_result(enum nvme_features_id fid, __u32 result)
+static void stdout_select_result(enum nvme_features_id fid, __u64 result)
 {
 	if (result & 0x1)
 		printf("  Feature is saveable\n");
@@ -4868,23 +4868,23 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 	}
 }
 
-static void stdout_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+static void stdout_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 				  void *buf, __u32 len)
 {
-	printf("dir-receive: type:%#x operation:%#x spec:%#x nsid:%#x result:%#x\n",
-		type, oper, spec, nsid, result);
+	printf("dir-receive: type:%#x operation:%#x spec:%#x nsid:%#x result:%#"PRIx64"\n",
+		type, oper, spec, nsid, (uint64_t)result);
 	if (stdout_print_ops.flags & VERBOSE)
 		stdout_directive_show_fields(type, oper, result, buf);
 	else if (buf)
 		d(buf, len, 16, 1);
 }
 
-static void stdout_lba_status_info(__u32 result)
+static void stdout_lba_status_info(__u64 result)
 {
 	printf("\tLBA Status Information Poll Interval (LSIPI)  : %u\n",
-	       NVME_FEAT_LBAS_LSIPI(result));
+	       (__u32)NVME_FEAT_LBAS_LSIPI(result));
 	printf("\tLBA Status Information Report Interval (LSIRI): %u\n",
-	       NVME_FEAT_LBAS_LSIRI(result));
+	       (__u32)NVME_FEAT_LBAS_LSIRI(result));
 }
 
 void stdout_d(unsigned char *buf, int len, int width, int group)

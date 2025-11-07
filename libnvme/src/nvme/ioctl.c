@@ -100,9 +100,9 @@ int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 }
 
 __attribute__((weak))
-int nvme_submit_passthru64(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
-			   struct nvme_passthru_cmd64 *cmd,
-			   __u64 *result)
+int nvme_submit_passthru(struct nvme_transport_handle *hdl,
+		unsigned long ioctl_cmd, struct nvme_passthru_cmd *cmd,
+		__u64 *result)
 {
 	int err = ioctl(hdl->fd, ioctl_cmd, cmd);
 
@@ -113,130 +113,20 @@ int nvme_submit_passthru64(struct nvme_transport_handle *hdl, unsigned long ioct
 	return err;
 }
 
-__attribute__((weak))
-int nvme_submit_passthru(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
-			 struct nvme_passthru_cmd *cmd, __u32 *result)
-{
-	int err = ioctl(hdl->fd, ioctl_cmd, cmd);
-
-	if (err >= 0 && result)
-		*result = cmd->result;
-	if (err < 0)
-		return -errno;
-	return err;
-}
-
-static int nvme_passthru64(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd, __u8 opcode,
-			   __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2,
-			   __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12,
-			   __u32 cdw13, __u32 cdw14, __u32 cdw15,
-			   __u32 data_len, void *data, __u32 metadata_len,
-			   void *metadata, __u32 timeout_ms, __u64 *result)
-{
-	struct nvme_passthru_cmd64 cmd = {
-		.opcode		= opcode,
-		.flags		= flags,
-		.rsvd1		= rsvd,
-		.nsid		= nsid,
-		.cdw2		= cdw2,
-		.cdw3		= cdw3,
-		.metadata	= (__u64)(uintptr_t)metadata,
-		.addr		= (__u64)(uintptr_t)data,
-		.metadata_len	= metadata_len,
-		.data_len	= data_len,
-		.cdw10		= cdw10,
-		.cdw11		= cdw11,
-		.cdw12		= cdw12,
-		.cdw13		= cdw13,
-		.cdw14		= cdw14,
-		.cdw15		= cdw15,
-		.timeout_ms	= timeout_ms,
-	};
-
-	return nvme_submit_passthru64(hdl, ioctl_cmd, &cmd, result);
-}
-
-static int nvme_passthru(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd, __u8 opcode,
-			 __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2,
-			 __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12,
-			 __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len,
-			 void *data, __u32 metadata_len, void *metadata,
-			 __u32 timeout_ms, __u32 *result)
-{
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= opcode,
-		.flags		= flags,
-		.rsvd1		= rsvd,
-		.nsid		= nsid,
-		.cdw2		= cdw2,
-		.cdw3		= cdw3,
-		.metadata	= (__u64)(uintptr_t)metadata,
-		.addr		= (__u64)(uintptr_t)data,
-		.metadata_len	= metadata_len,
-		.data_len	= data_len,
-		.cdw10		= cdw10,
-		.cdw11		= cdw11,
-		.cdw12		= cdw12,
-		.cdw13		= cdw13,
-		.cdw14		= cdw14,
-		.cdw15		= cdw15,
-		.timeout_ms	= timeout_ms,
-	};
-
-	return nvme_submit_passthru(hdl, ioctl_cmd, &cmd, result);
-}
-
-int nvme_submit_admin_passthru64(struct nvme_transport_handle *hdl, struct nvme_passthru_cmd64 *cmd,
-				 __u64 *result)
-{
-	return nvme_submit_passthru64(hdl, NVME_IOCTL_ADMIN64_CMD, cmd, result);
-}
-
-int nvme_admin_passthru64(struct nvme_transport_handle *hdl, __u8 opcode, __u8 flags, __u16 rsvd,
-			 __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
-			 __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
-			 __u32 cdw15, __u32 data_len, void *data,
-			 __u32 metadata_len, void *metadata, __u32 timeout_ms,
-			 __u64 *result)
-{
-	return nvme_passthru64(hdl, NVME_IOCTL_ADMIN64_CMD, opcode, flags, rsvd,
-			       nsid, cdw2, cdw3, cdw10, cdw11, cdw12, cdw13,
-			       cdw14, cdw15, data_len, data, metadata_len,
-			       metadata, timeout_ms, result);
-}
-
-int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl, struct nvme_passthru_cmd *cmd, __u32 *result)
+int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, __u64 *result)
 {
 	switch (hdl->type) {
 	case NVME_TRANSPORT_HANDLE_TYPE_DIRECT:
-		return nvme_submit_passthru(hdl, NVME_IOCTL_ADMIN_CMD, cmd, result);
+		return nvme_submit_passthru(hdl, NVME_IOCTL_ADMIN64_CMD,
+			cmd, result);
 	case NVME_TRANSPORT_HANDLE_TYPE_MI:
-		return nvme_mi_admin_admin_passthru(
-			hdl, cmd->opcode, cmd->flags, cmd->rsvd1,
-			cmd->nsid, cmd->cdw2, cmd->cdw3, cmd->cdw10,
-			cmd->cdw11, cmd->cdw12, cmd->cdw13,
-			cmd->cdw14, cmd->cdw15,
-			cmd->data_len, (void *)(uintptr_t)cmd->addr,
-			cmd->metadata_len, (void *)(uintptr_t)cmd->metadata,
-			cmd->timeout_ms, result);
+		return nvme_mi_admin_admin_passthru(hdl, cmd, result);
 	default:
 		break;
 	}
 
 	return -ENOTSUP;
-}
-
-int nvme_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode, __u8 flags, __u16 rsvd,
-			__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
-			__u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
-			__u32 cdw15, __u32 data_len, void *data,
-			__u32 metadata_len, void *metadata, __u32 timeout_ms,
-			__u32 *result)
-{
-	return nvme_passthru(hdl, NVME_IOCTL_ADMIN_CMD, opcode, flags, rsvd,
-			     nsid, cdw2, cdw3, cdw10, cdw11, cdw12, cdw13,
-			     cdw14, cdw15, data_len, data, metadata_len,
-			     metadata, timeout_ms, result);
 }
 
 static bool force_4k;
@@ -356,7 +246,7 @@ static bool nvme_uring_is_usable(struct nvme_transport_handle *hdl)
 
 int nvme_get_log(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd, bool rae,
-		__u32 xfer_len, __u32 *result)
+		__u32 xfer_len, __u64 *result)
 {
 	__u64 offset = 0, xfer, data_len = cmd->data_len;
 	__u64 start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
@@ -581,37 +471,8 @@ int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rg
 	return -EAGAIN;
 }
 
-int nvme_submit_io_passthru64(struct nvme_transport_handle *hdl, struct nvme_passthru_cmd64 *cmd,
-			      __u64 *result)
+int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, __u64 *result)
 {
-	return nvme_submit_passthru64(hdl, NVME_IOCTL_IO64_CMD, cmd, result);
-}
-
-int nvme_io_passthru64(struct nvme_transport_handle *hdl, __u8 opcode, __u8 flags, __u16 rsvd,
-		       __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
-		       __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
-		       __u32 cdw15, __u32 data_len, void *data, __u32 metadata_len,
-		       void *metadata, __u32 timeout_ms, __u64 *result)
-{
-	return nvme_passthru64(hdl, NVME_IOCTL_IO64_CMD, opcode, flags, rsvd,
-			       nsid, cdw2, cdw3, cdw10, cdw11, cdw12, cdw13,
-			       cdw14, cdw15, data_len, data, metadata_len, metadata,
-			       timeout_ms, result);
-}
-
-int nvme_submit_io_passthru(struct nvme_transport_handle *hdl, struct nvme_passthru_cmd *cmd, __u32 *result)
-{
-	return nvme_submit_passthru(hdl, NVME_IOCTL_IO_CMD, cmd, result);
-}
-
-int nvme_io_passthru(struct nvme_transport_handle *hdl, __u8 opcode, __u8 flags, __u16 rsvd,
-		     __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
-		     __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
-		     __u32 cdw15, __u32 data_len, void *data, __u32 metadata_len,
-		     void *metadata, __u32 timeout_ms, __u32 *result)
-{
-	return nvme_passthru(hdl, NVME_IOCTL_IO_CMD, opcode, flags, rsvd, nsid,
-			     cdw2, cdw3, cdw10, cdw11, cdw12, cdw13, cdw14,
-			     cdw15, data_len, data, metadata_len, metadata,
-			     timeout_ms, result);
+	return nvme_submit_passthru(hdl, NVME_IOCTL_IO64_CMD, cmd, result);
 }

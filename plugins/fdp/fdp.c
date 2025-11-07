@@ -522,7 +522,7 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	bool enabling_conf_idx = false;
-	__u32 result;
+	__u64 result;
 	int err = -1;
 
 	struct config {

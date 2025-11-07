@@ -1005,7 +1005,7 @@ const char *nvme_select_to_string(int sel)
 	return "Reserved";
 }
 
-void nvme_show_select_result(enum nvme_features_id fid, __u32 result)
+void nvme_show_select_result(enum nvme_features_id fid, __u64 result)
 {
 	nvme_print(select_result, NORMAL, fid, result);
 }
@@ -1191,7 +1191,7 @@ const char *nvme_bpwps_to_string(__u8 bpwps)
 	}
 }
 
-void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 			 void *buf, __u32 len, nvme_print_flags_t flags)
 {
 	nvme_print(directive, flags, type, oper, spec, nsid, result, buf, len);
@@ -1209,7 +1209,7 @@ const char *nvme_plm_window_to_string(__u32 plm)
 	}
 }
 
-void nvme_show_lba_status_info(__u32 result)
+void nvme_show_lba_status_info(__u64 result)
 {
 	nvme_print(lba_status_info, NORMAL, result);
 }

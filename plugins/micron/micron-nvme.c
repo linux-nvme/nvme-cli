@@ -556,7 +556,8 @@ static int micron_fw_commit(struct nvme_transport_handle *hdl, int select)
 		.cdw10 = 8,
 		.cdw12 = select,
 	};
-	return ioctl(nvme_transport_handle_get_fd(hdl), NVME_IOCTL_ADMIN_CMD, &cmd);
+
+	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
 }
 
 static int micron_selective_download(int argc, char **argv,
@@ -690,7 +691,7 @@ out:
 static int micron_smbus_option(int argc, char **argv,
 				   struct command *command, struct plugin *plugin)
 {
-	__u32 result = 0;
+	__u64 result = 0;
 	__u32 cdw11 = 0;
 	const char *desc = "Enable/Disable/Get status of SMBUS option on controller";
 	const char *option = "enable or disable or status";
@@ -1100,7 +1101,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 	FILE *fp;
 	char *res;
 	const char *desc = "Clear PCIe Device Correctable Errors";
-	__u32 result = 0;
+	__u64 result = 0;
 	__u8 fid = MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS;
 
 	OPT_ARGS(opts) = {
@@ -2397,7 +2398,7 @@ static int GetFeatureSettings(struct nvme_transport_handle *hdl, const char *dir
 {
 	unsigned char *bufp, buf[4096] = { 0 };
 	int i, err, len, errcnt = 0;
-	__u32 attrVal = 0;
+	__u64 attrVal = 0;
 	char msg[256] = { 0 };
 
 	struct features {
@@ -2874,7 +2875,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 					  struct plugin *plugin)
 {
 	int err = 0;
-	__u32 result = 0;
+	__u64 result = 0;
 	const char *desc = "Enable, Disable or Get cmd latency monitoring stats";
 	const char *option = "enable or disable or status, default is status";
 	const char *cmdstr =
@@ -3233,7 +3234,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 						struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Clear FW activation history";
-	__u32 result = 0;
+	__u64 result = 0;
 	__u8 fid = MICRON_FEATURE_CLEAR_FW_ACTIVATION_HISTORY;
 	enum eDriveModel model = UNKNOWN_MODEL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -3267,7 +3268,7 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 					 struct command *command, struct plugin *plugin)
 {
 	int err = 0;
-	__u32 result = 0;
+	__u64 result = 0;
 	const char *desc = "Enable or Disable Controller telemetry log generation";
 	const char *option = "enable or disable or status";
 	const char *select =
@@ -3480,7 +3481,7 @@ static int GetOcpEnhancedTelemetryLog(struct nvme_transport_handle *hdl, const c
 	/* Enable ETDAS */
 	unsigned int uiBufferSize = 512;
 	unsigned char pBuffer[512] = { 0 };
-	__u32 result = 0;
+	__u64 result = 0;
 
 	pBuffer[1] = 1;
 

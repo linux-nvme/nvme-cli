@@ -1555,7 +1555,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	struct nvme_smart_log smart_log = { 0 };
 	struct nvme_additional_smart_log additional_smart_log = { 0 };
 	struct sfx_freespace_ctx sfx_freespace = { 0 };
-	unsigned int get_feat_result, pcie_correctable, pcie_fatal, pcie_nonfatal;
+	unsigned int pcie_correctable, pcie_fatal, pcie_nonfatal;
 	unsigned long long capacity;
 	bool capacity_valid = false;
 	int err, fd, len, sector_size;
@@ -1563,6 +1563,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	char path[512], numa_node[5], vendor[10], form_factor[15], temperature[10], io_speed[15];
 	char chr_dev[8], serial_number[21], model_number[41], firmware_revision[9], pcie_status[9];
 	struct json_object *root, *dev_stats, *link_stats, *crit_stats;
+	__u64 get_feat_result;
 	double write_amp;
 
 	struct config {

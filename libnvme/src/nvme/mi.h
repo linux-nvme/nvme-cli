@@ -1364,23 +1364,7 @@ int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
 /**
  * nvme_mi_admin_admin_passthru() - Submit an nvme admin passthrough command
  * @hdl:	Transport handle to send command to
- * @opcode:	The nvme admin command to send
- * @flags:	NVMe command flags (not used)
- * @rsvd:	Reserved for future use
- * @nsid:	Namespace identifier
- * @cdw2:	Command dword 2
- * @cdw3:	Command dword 3
- * @cdw10:	Command dword 10
- * @cdw11:	Command dword 11
- * @cdw12:	Command dword 12
- * @cdw13:	Command dword 13
- * @cdw14:	Command dword 14
- * @cdw15:	Command dword 15
- * @data_len:	Length of the data transferred in this command in bytes
- * @data:	Pointer to user address of the data buffer
- * @metadata_len:Length of metadata transferred in this command(not used)
- * @metadata:	Pointer to user address of the metadata buffer(not used)
- * @timeout_ms:	How long to wait for the command to complete
+ * @cmd:	The nvme admin command to send
  * @result:	Optional field to return the result from the CQE dword 0
  *
  * Send a customized NVMe Admin command request message and get the corresponding
@@ -1394,12 +1378,8 @@ int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode, __u8 flags,
-				 __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3,
-				 __u32 cdw10, __u32 cdw11, __u32 cdw12,
-				 __u32 cdw13, __u32 cdw14, __u32 cdw15,
-				 __u32 data_len, void *data, __u32 metadata_len,
-				 void *metadata, __u32 timeout_ms, __u32 *result);
+int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, __u64 *result);
 
 /**
  * nvme_mi_control() - Perform a Control Primitive command

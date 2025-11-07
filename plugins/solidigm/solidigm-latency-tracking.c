@@ -269,7 +269,7 @@ static void latency_tracker_parse(struct latency_tracker *lt)
 #define LATENCY_TRACKING_FID 0xe2
 #define LATENCY_TRACKING_FID_DATA_LEN 32
 
-static int latency_tracking_is_enable(struct latency_tracker *lt, __u32 *enabled)
+static int latency_tracking_is_enable(struct latency_tracker *lt, __u64 *enabled)
 {
 	return nvme_get_features(lt->hdl, 0, LATENCY_TRACKING_FID, 0, 0,
 			lt->uuid_index, NULL,
@@ -278,7 +278,7 @@ static int latency_tracking_is_enable(struct latency_tracker *lt, __u32 *enabled
 
 static int latency_tracking_enable(struct latency_tracker *lt)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 
 	if (!(lt->cfg.enable || lt->cfg.disable))
@@ -351,7 +351,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 	const char *desc = "Get and Parse Solidigm Latency Tracking Statistics log.";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 enabled;
+	__u64 enabled;
 	int err;
 
 	struct latency_tracker lt = {
@@ -421,8 +421,9 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 		} else if (lt.print_flags == BINARY) {
 			putchar(enabled);
 		} else {
-			printf("Latency Statistics Tracking (UUID-idx:%d, FID:0x%X) is currently %i.\n",
-			       lt.uuid_index, LATENCY_TRACKING_FID, enabled);
+			printf("Latency Statistics Tracking (UUID-idx:%d, FID:0x%X) is currently %"PRIu64".\n",
+			       lt.uuid_index, LATENCY_TRACKING_FID,
+			       (uint64_t)enabled);
 		}
 	} else {
 		fprintf(stderr, "Could not read feature id 0xE2.\n");

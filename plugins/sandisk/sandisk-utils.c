@@ -860,7 +860,7 @@ int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer,
 int sndk_check_ctrl_telemetry_option_disabled(struct nvme_transport_handle *hdl)
 {
 	int err;
-	__u32 result;
+	__u64 result;
 
 	err = nvme_get_features(hdl, 0,
 		SNDK_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,
