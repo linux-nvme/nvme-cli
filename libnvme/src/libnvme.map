@@ -13,8 +13,6 @@ LIBNVME_1_16 {
 
 LIBNVME_2_0 {
 	global:
-		nvme_admin_passthru64;
-		nvme_admin_passthru;
 		nvme_close;
 		nvme_create_ctrl;
 		nvme_create_global_ctx;
@@ -132,8 +130,6 @@ LIBNVME_2_0 {
 		nvme_init_logging;
 		nvme_insert_tls_key;
 		nvme_insert_tls_key_versioned;
-		nvme_io_passthru64;
-		nvme_io_passthru;
 		nvme_ipaddrs_eq;
 		nvme_lookup_ctrl;
 		nvme_lookup_host;
@@ -250,12 +246,8 @@ LIBNVME_2_0 {
 		nvme_skip_namespaces;
 		nvme_status_to_errno;
 		nvme_status_to_string;
-		nvme_submit_admin_passthru64;
 		nvme_submit_admin_passthru;
-		nvme_submit_io_passthru64;
 		nvme_submit_io_passthru;
-		nvme_submit_passthru64;
-		nvme_submit_passthru;
 		nvme_subsys_filter;
 		nvme_subsystem_first_ctrl;
 		nvme_subsystem_first_ns;

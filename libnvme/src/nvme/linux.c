@@ -44,6 +44,7 @@
 static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl, const char *devname)
 {
 	_cleanup_free_ char *path = NULL;
+	struct nvme_passthru_cmd cmd = {};
 	char *name = basename(devname);
 	int ret, id, ns;
 	bool c;
@@ -73,6 +74,10 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 	} else if (!S_ISBLK(hdl->stat.st_mode)) {
 		return -EINVAL;
 	}
+
+	ret = ioctl(hdl->fd, NVME_IOCTL_ADMIN64_CMD, &cmd);
+	if (!ret)
+		hdl->ioctl64 = true;
 
 	return 0;
 }

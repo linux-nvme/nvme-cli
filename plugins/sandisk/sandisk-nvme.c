@@ -497,7 +497,7 @@ static int sndk_clear_assert_dump(int argc, char **argv,
 
 static int sndk_do_sn861_drive_resize(struct nvme_transport_handle *hdl,
 		uint64_t new_size,
-		__u32 *result)
+		__u64 *result)
 {
 	int ret;
 	struct nvme_passthru_cmd admin_cmd;
@@ -528,7 +528,7 @@ static int sndk_drive_resize(int argc, char **argv,
 	uint64_t capabilities = 0;
 	int ret;
 	uint32_t device_id = -1, vendor_id = -1;
-	__u32 result;
+	__u64 result;
 
 	struct config {
 		uint64_t size;
@@ -561,8 +561,8 @@ static int sndk_drive_resize(int argc, char **argv,
 			fprintf(stderr, "The drive-resize command was successful.  A system ");
 			fprintf(stderr, "shutdown is required to complete the operation.\n");
 		} else
-			fprintf(stderr, "ERROR: SNDK: %s failure, ret: %d, result: 0x%x\n",
-					__func__, ret, result);
+			fprintf(stderr, "ERROR: SNDK: %s failure, ret: %d, result: 0x%"PRIx64"\n",
+					__func__, ret, (uint64_t)result);
 	} else {
 		/* Fallback to WDC plugin command if otherwise not supported */
 		return run_wdc_drive_resize(argc, argv, command, plugin);
@@ -920,7 +920,7 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 static int sndk_do_clear_fw_activate_history_fid(struct nvme_transport_handle *hdl)
 {
 	int ret = -1;
-	__u32 result;
+	__u64 result;
 	__u32 value = 1 << 31; /* Bit 31 - Clear Firmware Update History Log */
 
 	ret = nvme_set_features_simple(hdl, SNDK_NVME_CLEAR_FW_ACT_HIST_VU_FID, 0, value,

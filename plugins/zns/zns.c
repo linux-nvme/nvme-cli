@@ -251,7 +251,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *acmd, struct plu
 	struct nvme_passthru_cmd cmd;
 	int err, zcapc = 0;
 	char *cmdstr;
-	__u32 result;
+	__u64 result;
 
 	struct config {
 		__u64	zslba;
@@ -970,7 +970,7 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	struct timeval start_time, end_time;
 	unsigned int lba_size, meta_size;
 	void *buf = NULL, *mbuf = NULL;
-	struct nvme_passthru_cmd64 cmd;
+	struct nvme_passthru_cmd cmd;
 	__u16 nblocks, control = 0;
 	__u16 cev = 0, dspec = 0;
 	__u8 lba_index;
@@ -1114,7 +1114,7 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	nvme_init_zns_append(&cmd, cfg.namespace_id, cfg.zslba, nblocks,
 			     control, cev, dspec, buf, cfg.data_size, mbuf,
 			     cfg.metadata_size);
-	err = nvme_submit_admin_passthru64(hdl, &cmd, &result);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: zone append: %llu us\n",

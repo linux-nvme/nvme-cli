@@ -1455,7 +1455,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl;
 	char modelNo[40];
-	__u32 result;
+	__u64 result;
 
 	struct config {
 		bool   save;
@@ -1514,7 +1514,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {

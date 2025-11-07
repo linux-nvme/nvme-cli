@@ -180,7 +180,7 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	void *buf = NULL;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -261,7 +261,7 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_free_ void *buf = NULL;
 	int ffd = STDIN_FILENO;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {

@@ -696,7 +696,7 @@ static void nvme_mi_control_init_resp(struct nvme_mi_resp *resp,
 	resp->hdr_len = sizeof(*control_resp);
 }
 
-static int nvme_mi_admin_parse_status(struct nvme_mi_resp *resp, __u32 *result)
+static int nvme_mi_admin_parse_status(struct nvme_mi_resp *resp, __u64 *result)
 {
 	struct nvme_mi_admin_resp_hdr *admin_hdr;
 	struct nvme_mi_msg_resp *resp_hdr;
@@ -862,12 +862,8 @@ int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
 	return 0;
 }
 
-int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode, __u8 flags,
-				 __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3,
-				 __u32 cdw10, __u32 cdw11, __u32 cdw12,
-				 __u32 cdw13, __u32 cdw14, __u32 cdw15,
-				 __u32 data_len, void *data, __u32 metadata_len,
-				 void *metadata, __u32 timeout_ms, __u32 *result)
+int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, __u64 *result)
 {
 	/* Input parameters flags, rsvd, metadata, metadata_len are not used */
 	struct nvme_mi_admin_resp_hdr resp_hdr;
@@ -876,7 +872,7 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode,
 	struct nvme_mi_req req;
 	unsigned int timeout_save = 0;
 	int rc;
-	int direction = opcode & 0x3;
+	int direction = cmd->opcode & 0x3;
 	bool has_write_data = false;
 	bool has_read_data = false;
 
@@ -886,57 +882,57 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode,
 		return -EINVAL;
 	}
 
-	if (data_len > 4096) {
+	if (cmd->data_len > 4096) {
 		nvme_msg(hdl->ctx, LOG_ERR,
 			"nvme_mi_admin_admin_passthru doesn't support data_len over 4096 bytes.\n");
 		return -EINVAL;
 	}
 
-	if (data != NULL && data_len != 0) {
+	if (cmd->addr != 0 && cmd->data_len != 0) {
 		if (direction == NVME_DATA_TFR_HOST_TO_CTRL)
 			has_write_data = true;
 		if (direction == NVME_DATA_TFR_CTRL_TO_HOST)
 			has_read_data = true;
 	}
 
-	nvme_mi_admin_init_req(hdl->ep, &req, &req_hdr, hdl->id, opcode);
-	req_hdr.cdw1 = cpu_to_le32(nsid);
-	req_hdr.cdw2 = cpu_to_le32(cdw2);
-	req_hdr.cdw3 = cpu_to_le32(cdw3);
-	req_hdr.cdw10 = cpu_to_le32(cdw10);
-	req_hdr.cdw11 = cpu_to_le32(cdw11);
-	req_hdr.cdw12 = cpu_to_le32(cdw12);
-	req_hdr.cdw13 = cpu_to_le32(cdw13);
-	req_hdr.cdw14 = cpu_to_le32(cdw14);
-	req_hdr.cdw15 = cpu_to_le32(cdw15);
+	nvme_mi_admin_init_req(hdl->ep, &req, &req_hdr, hdl->id, cmd->opcode);
+	req_hdr.cdw1 = cpu_to_le32(cmd->nsid);
+	req_hdr.cdw2 = cpu_to_le32(cmd->cdw2);
+	req_hdr.cdw3 = cpu_to_le32(cmd->cdw3);
+	req_hdr.cdw10 = cpu_to_le32(cmd->cdw10);
+	req_hdr.cdw11 = cpu_to_le32(cmd->cdw11);
+	req_hdr.cdw12 = cpu_to_le32(cmd->cdw12);
+	req_hdr.cdw13 = cpu_to_le32(cmd->cdw13);
+	req_hdr.cdw14 = cpu_to_le32(cmd->cdw14);
+	req_hdr.cdw15 = cpu_to_le32(cmd->cdw15);
 	req_hdr.doff = 0;
-	if (data_len != 0) {
-		req_hdr.dlen = cpu_to_le32(data_len);
+	if (cmd->data_len != 0) {
+		req_hdr.dlen = cpu_to_le32(cmd->data_len);
 		/* Bit 0 set to 1 means DLEN contains a value */
 		req_hdr.flags = 0x1;
 	}
 
 	if (has_write_data) {
-		req.data = data;
-		req.data_len = data_len;
+		req.data = (void *)(uintptr_t)cmd->addr;
+		req.data_len = cmd->data_len;
 	}
 
 	nvme_mi_admin_init_resp(&resp, &resp_hdr);
 
 	if (has_read_data) {
-		resp.data = data;
-		resp.data_len = data_len;
+		resp.data = (void *)(uintptr_t)cmd->addr;
+		resp.data_len = cmd->data_len;
 	}
 
 	/* if the user has specified a custom timeout, save the current
 	 * timeout and override
 	 */
-	if (timeout_ms != 0) {
+	if (cmd->timeout_ms != 0) {
 		timeout_save = nvme_mi_ep_get_timeout(hdl->ep);
-		nvme_mi_ep_set_timeout(hdl->ep, timeout_ms);
+		nvme_mi_ep_set_timeout(hdl->ep, cmd->timeout_ms);
 	}
 	rc = nvme_mi_submit(hdl->ep, &req, &resp);
-	if (timeout_ms != 0)
+	if (cmd->timeout_ms != 0)
 		nvme_mi_ep_set_timeout(hdl->ep, timeout_save);
 
 	if (rc)
@@ -946,7 +942,7 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode,
 	if (rc)
 		return rc;
 
-	if (has_read_data && (resp.data_len != data_len))
+	if (has_read_data && (resp.data_len != cmd->data_len))
 		return -EPROTO;
 
 	return 0;
