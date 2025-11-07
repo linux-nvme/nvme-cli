@@ -874,7 +874,7 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl, __u8 opcode,
 	struct nvme_mi_admin_req_hdr req_hdr;
 	struct nvme_mi_resp resp;
 	struct nvme_mi_req req;
-	unsigned int timeout_save;
+	unsigned int timeout_save = 0;
 	int rc;
 	int direction = opcode & 0x3;
 	bool has_write_data = false;
