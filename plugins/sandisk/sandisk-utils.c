@@ -754,7 +754,7 @@ __u64 sndk_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
 					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE);
 
 			/* verify the 0xC0 log page is supported */
-			if (run_wdc_nvme_check_supported_log_page(r, dev,
+			if (run_wdc_nvme_check_supported_log_page(ctx, hdl,
 				SNDK_LATENCY_MON_LOG_ID, 0))
 				capabilities |= SNDK_DRIVE_CAP_C0_LOG_PAGE;
 
