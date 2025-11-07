@@ -572,7 +572,7 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 	mdts = ilog->id_ctrl.mdts;
 
 	if (da == 4) {
-		__u32 result;
+		__u64 result;
 		nvme_init_get_features_host_behavior(&cmd, 0, &prev);
 		int err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 

@@ -1040,7 +1040,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	struct nvme_passthru_cmd64 cmd;
+	struct nvme_passthru_cmd cmd;
 	struct list_head log_pages;
 	nvme_effects_log_node_t *node;
 
@@ -1098,7 +1098,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 			munmap(bar, getpagesize());
 		} else {
 			nvme_init_get_property(&cmd, NVME_REG_CAP);
-			err = nvme_submit_admin_passthru64(hdl, &cmd, &cap);
+			err = nvme_submit_admin_passthru(hdl, &cmd, &cap);
 			if (err)
 				goto cleanup_list;
 		}
@@ -3194,6 +3194,7 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	nvme_print_flags_t flags;
 	uint16_t num_phandle;
 	int err = 0, i;
+	__u64 result;
 	__u32 nsid;
 
 	struct config {
@@ -3410,7 +3411,8 @@ parse_lba:
 		data->phndl[i] = cpu_to_le16(phndl[i]);
 
 	nvme_init_ns_mgmt_create(&cmd, cfg.csi, data);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &nsid);
+	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	nsid = result;
 	ns_mgmt_show_status(hdl, err, acmd->name, nsid);
 
 	return err;
@@ -4340,7 +4342,7 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct nvme_passthru_cmd cmd;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -4370,7 +4372,8 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 	nvme_init_virtual_mgmt(&cmd, cfg.act, cfg.rt, cfg.cntlid, cfg.nr);
 	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!err)
-		printf("success, Number of Controller Resources Modified (NRM):%#x\n", result);
+		printf("success, Number of Controller Resources Modified (NRM):%" PRIu64"\n",
+			(uint64_t)result);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -4749,7 +4752,7 @@ static int self_test_log(int argc, char **argv, struct command *acmd, struct plu
 }
 
 static int get_feature_id(struct nvme_transport_handle *hdl, struct feat_cfg *cfg,
-			  void **buf, __u32 *result)
+			  void **buf, __u64 *result)
 {
 	if (!cfg->data_len)
 		nvme_get_feature_length(cfg->feature_id, cfg->cdw11,
@@ -4779,7 +4782,7 @@ static int filter_out_flags(int status)
 	return status & (NVME_VAL(SCT) | NVME_VAL(SC));
 }
 
-static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
+static void get_feature_id_print(struct feat_cfg cfg, int err, __u64 result,
 		void *buf, nvme_print_flags_t flags)
 {
 	int status = filter_out_flags(err);
@@ -4824,8 +4827,8 @@ static int get_feature_id_changed(struct nvme_transport_handle *hdl, struct feat
 {
 	int err;
 	int err_def = 0;
-	__u32 result;
-	__u32 result_def;
+	__u64 result;
+	__u64 result_def;
 	_cleanup_free_ void *buf = NULL;
 	_cleanup_free_ void *buf_def = NULL;
 
@@ -5225,12 +5228,13 @@ static bool fw_commit_support_mud(struct nvme_transport_handle *hdl)
 	return false;
 }
 
-static void fw_commit_print_mud(struct nvme_transport_handle *hdl, __u32 result)
+static void fw_commit_print_mud(struct nvme_transport_handle *hdl, __u64 result)
 {
 	if (!fw_commit_support_mud(hdl))
 		return;
 
-	printf("Multiple Update Detected (MUD) Value: %u\n", result);
+	printf("Multiple Update Detected (MUD) Value: %#" PRIx64 "\n",
+		(uint64_t)result);
 
 	if (result & 0x1)
 		printf("Detected an overlapping firmware/boot partition image update command\n"
@@ -5255,7 +5259,7 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
-	__u32 result;
+	__u64 result;
 	int err;
 	nvme_print_flags_t flags;
 
@@ -5530,11 +5534,11 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 
 static int nvme_get_single_property(struct nvme_transport_handle *hdl, struct get_reg_config *cfg, __u64 *value)
 {
-	struct nvme_passthru_cmd64 cmd;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	nvme_init_get_property(&cmd, cfg->offset);
-	err = nvme_submit_admin_passthru64(hdl, &cmd, value);
+	err = nvme_submit_admin_passthru(hdl, &cmd, value);
 	if (!err)
 		return 0;
 
@@ -5759,7 +5763,7 @@ static bool is_reg_selected(struct get_reg_config *cfg, int offset)
 
 static int get_register_properties(struct nvme_transport_handle *hdl, void **pbar, struct get_reg_config *cfg)
 {
-	struct nvme_passthru_cmd64 cmd;
+	struct nvme_passthru_cmd cmd;
 	int offset = NVME_REG_CRTO;
 	__u64 value;
 	int size;
@@ -5777,7 +5781,7 @@ static int get_register_properties(struct nvme_transport_handle *hdl, void **pba
 			continue;
 
 		nvme_init_get_property(&cmd, offset);
-		err = nvme_submit_admin_passthru64(hdl, &cmd, &value);
+		err = nvme_submit_admin_passthru(hdl, &cmd, &value);
 		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
 			value = -1;
 		} else if (err) {
@@ -6644,7 +6648,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	_cleanup_free_ void *buf = NULL;
 	_cleanup_fd_ int ffd = STDIN_FILENO;
 	int err;
-	__u32 result;
+	__u64 result;
 	nvme_print_flags_t flags;
 
 	struct config {
@@ -6891,7 +6895,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_free_ void *buf = NULL;
 	struct nvme_passthru_cmd cmd;
-	__u32 result;
+	__u64 result;
 	__u32 dw12 = 0;
 	_cleanup_fd_ int ffd = STDIN_FILENO;
 	int err;
@@ -7000,8 +7004,8 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 		return err;
 	}
 	if (!err) {
-		printf("dir-send: type %#x, operation %#x, spec_val %#x, nsid %#x, result %#x\n",
-		       cfg.dtype, cfg.doper, cfg.dspec, cfg.namespace_id, result);
+		printf("dir-send: type %#x, operation %#x, spec_val %#x, nsid %#x, result %#" PRIx64 "\n",
+		       cfg.dtype, cfg.doper, cfg.dspec, cfg.namespace_id, (uint64_t)result);
 		if (buf) {
 			if (!cfg.raw_binary)
 				d(buf, cfg.data_len, 16, 1);
@@ -7134,7 +7138,7 @@ static int write_zeroes(int argc, char **argv, struct command *acmd, struct plug
 	struct nvme_passthru_cmd cmd;
 	__u8 sts = 0, pif = 0;
 	__u16 control = 0;
-	__u32 result = 0;
+	__u64 result = 0;
 	int err;
 
 	const char *desc =
@@ -7259,10 +7263,8 @@ static int write_zeroes(int argc, char **argv, struct command *acmd, struct plug
 
 	nvme_init_write_zeros(&cmd, cfg.namespace_id, cfg.start_block,
 		cfg.block_count, control, cfg.dspec, 0, 0);
-	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd, pif, sts,
-		cfg.ref_tag, cfg.storage_tag);
-	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.app_tag,
-		cfg.app_tag_mask);
+	nvme_init_var_size_tags(&cmd, pif, sts, cfg.ref_tag, cfg.storage_tag);
+	nvme_init_app_tag(&cmd, cfg.app_tag, cfg.app_tag_mask);
 	err = nvme_submit_io_passthru(hdl, &cmd, &result);
 	if (err < 0)
 		nvme_show_error("write-zeroes: %s", nvme_strerror(err));
@@ -7629,10 +7631,8 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	nvme_init_copy(&cmd, cfg.namespace_id, cfg.sdlba, nr, cfg.format,
 		       cfg.prinfor, cfg.prinfow, 0, cfg.dtype, false, false,
 		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
-	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd, pif, sts,
-				cfg.ilbrt, 0);
-	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.lbat,
-		cfg.lbatm);
+	nvme_init_var_size_tags(&cmd, pif, sts, cfg.ilbrt, 0);
+	nvme_init_app_tag(&cmd, cfg.lbat, cfg.lbatm);
 	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("NVMe Copy: %s", nvme_strerror(err));
@@ -8357,11 +8357,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		    NVME_FIELD_ENCODE(cfg.dsmgmt,
 			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
 			NVME_IOCS_COMMON_CDW13_DSM_MASK);
-	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd, pif, sts,
-		cfg.ref_tag, cfg.storage_tag);
-	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.app_tag,
-		cfg.app_tag_mask);
 
+	nvme_init_var_size_tags(&cmd, pif, sts, cfg.ref_tag, cfg.storage_tag);
+	nvme_init_app_tag(&cmd, cfg.app_tag, cfg.app_tag_mask);
 	gettimeofday(&start_time, NULL);
 	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	gettimeofday(&end_time, NULL);
@@ -8525,10 +8523,8 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 
 	nvme_init_verify(&cmd, cfg.namespace_id, cfg.start_block,
 		cfg.block_count, control, 0, NULL, 0, NULL, 0);
-	nvme_init_var_size_tags((struct nvme_passthru_cmd64 *)&cmd, pif, sts,
-		cfg.ref_tag, cfg.storage_tag);
-	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.app_tag,
-		cfg.app_tag_mask);
+	nvme_init_var_size_tags(&cmd, pif, sts, cfg.ref_tag, cfg.storage_tag);
+	nvme_init_app_tag(&cmd, cfg.app_tag, cfg.app_tag_mask);
 	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("verify: %s", nvme_strerror(err));
@@ -8715,7 +8711,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
 	int err = -1;
-	__u32 result;
+	__u64 result;
 	nvme_print_flags_t flags;
 
 	struct config {
@@ -8760,9 +8756,11 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	if (!err) {
 		printf("Capacity Management Command is Success\n");
 		if (cfg.operation == 1)
-			printf("Created Element Identifier for Endurance Group is: %u\n", result);
+			printf("Created Element Identifier for Endurance Group is: %" PRIu64 "\n",
+			       (uint64_t)result);
 		else if (cfg.operation == 3)
-			printf("Created Element Identifier for NVM Set is: %u\n", result);
+			printf("Created Element Identifier for NVM Set is: %" PRIu64 "\n",
+			       (uint64_t)result);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else if (err < 0) {
@@ -8782,7 +8780,7 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_free_ void *buf = NULL;
 	struct nvme_passthru_cmd cmd;
-	__u32 result;
+	__u64 result;
 	__u32 dw12 = 0;
 	int err;
 
@@ -9031,7 +9029,7 @@ static int passthru(int argc, char **argv, bool admin,
 	void *data = NULL;
 	_cleanup_free_ void *mdata = NULL;
 	int err = 0;
-	__u32 result;
+	__u64 result;
 	const char *cmd_name = NULL;
 	struct timeval start_time, end_time;
 	nvme_print_flags_t flags_t;
@@ -9189,26 +9187,28 @@ static int passthru(int argc, char **argv, bool admin,
 
 	gettimeofday(&start_time, NULL);
 
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= cfg.opcode,
+		.flags		= cfg.flags,
+		.nsid		= cfg.namespace_id,
+		.cdw2		= cfg.cdw2,
+		.cdw3		= cfg.cdw3,
+		.metadata	= (__u64)(uintptr_t)mdata,
+		.addr		= (__u64)(uintptr_t)data,
+		.metadata_len	= cfg.metadata_len,
+		.data_len	= cfg.data_len,
+		.cdw10		= cfg.cdw10,
+		.cdw11		= cfg.cdw11,
+		.cdw12		= cfg.cdw12,
+		.cdw13		= cfg.cdw13,
+		.cdw14		= cfg.cdw14,
+		.cdw15		= cfg.cdw15,
+		.timeout_ms 	= nvme_cfg.timeout,
+	};
 	if (admin)
-		err = nvme_admin_passthru(hdl, cfg.opcode, cfg.flags,
-					  cfg.rsvd,
-					  cfg.namespace_id, cfg.cdw2,
-					  cfg.cdw3, cfg.cdw10,
-					  cfg.cdw11, cfg.cdw12, cfg.cdw13,
-					  cfg.cdw14,
-					  cfg.cdw15, cfg.data_len, data,
-					  cfg.metadata_len,
-					  mdata, nvme_cfg.timeout, &result);
+		err = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	else
-		err = nvme_io_passthru(hdl, cfg.opcode, cfg.flags,
-				       cfg.rsvd,
-				       cfg.namespace_id, cfg.cdw2, cfg.cdw3,
-				       cfg.cdw10,
-				       cfg.cdw11, cfg.cdw12, cfg.cdw13,
-				       cfg.cdw14,
-				       cfg.cdw15, cfg.data_len, data,
-				       cfg.metadata_len,
-				       mdata, nvme_cfg.timeout, &result);
+		err = nvme_submit_io_passthru(hdl, &cmd, &result);
 
 	gettimeofday(&end_time, NULL);
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
@@ -9222,8 +9222,10 @@ static int passthru(int argc, char **argv, bool admin,
 	} else if (err) {
 		nvme_show_status(err);
 	} else  {
-		fprintf(stderr, "%s Command %s is Success and result: 0x%08x\n", admin ? "Admin" : "IO",
-			strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific", result);
+		fprintf(stderr, "%s Command %s is Success and result: 0x%" PRIx64 "\n",
+			admin ? "Admin" : "IO",
+			strcmp(cmd_name, "Unknown") ?
+			cmd_name : "Vendor Specific", (uint64_t)result);
 		if (cfg.read)
 			passthru_print_read_output(cfg, data, dfd, mdata, mfd, err);
 	}
@@ -10191,6 +10193,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	__u32 result;
+	__u64 res;
 
 	struct config {
 		__u8 opcode;
@@ -10264,14 +10267,24 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 		}
 	}
 
-	err = nvme_admin_passthru(hdl, admin_opcode, 0, 0, cfg.namespace_id, 0, 0,
-				  cfg.nmimt << 11 | 4, cfg.opcode, cfg.nmd0, cfg.nmd1, 0, 0,
-				  cfg.data_len, data, 0, NULL, 0, &result);
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= admin_opcode,
+		.nsid		= cfg.namespace_id,
+		.cdw10		= cfg.nmimt << 11 | 4,
+		.cdw11		= cfg.opcode,
+		.cdw12		= cfg.nmd0,
+		.cdw13		= cfg.nmd1,
+		.addr		= (__u64)(uintptr_t)data,
+		.data_len	= cfg.data_len,
+	};
+
+	err = nvme_submit_admin_passthru(hdl, &cmd, &res);
 	if (err < 0) {
 		nvme_show_error("nmi_recv: %s", nvme_strerror(err));
 	} else if (err) {
 		nvme_show_status(err);
 	} else  {
+		result = res;;
 		printf(
 		    "%s Command is Success and result: 0x%08x (status: 0x%02x, response: 0x%06x)\n",
 		    nvme_cmd_to_string(true, admin_opcode), result, result & 0xff, result >> 8);

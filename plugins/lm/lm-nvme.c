@@ -62,7 +62,7 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 	struct lba_migration_queue_entry_type_0 *queue = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	struct nvme_passthru_cmd cmd;
-	__u32 result;
+	__u64 result;
 	int err = -1;
 
 	struct config {
@@ -116,7 +116,7 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 		nvme_show_status(err);
 	else
 		printf("Create CDQ Successful: CDQID=0x%04x\n",
-			NVME_GET(result, LM_CREATE_CDQ_CDQID));
+			NVME_GET((__u32)result, LM_CREATE_CDQ_CDQID));
 
 	return err;
 }
@@ -419,7 +419,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	void *data = NULL;
-	__u32 result = 0;
+	__u64 result = 0;
 	int err = -1;
 	__u16 mos;
 
@@ -504,8 +504,10 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		nvme_show_status(err);
 	else if (cfg.sel == NVME_LM_SEL_GET_CONTROLLER_STATE) {
 		if (flags == NORMAL)
-			printf("CDW0: 0x%x: Controller %sSuspended\n", result,
-			       (result & NVME_LM_GET_CONTROLLER_STATE_CSUP) ? "" : "NOT ");
+			printf("CDW0: 0x%"PRIu64": Controller %sSuspended\n",
+			       (uint64_t)result,
+			       (result & NVME_LM_GET_CONTROLLER_STATE_CSUP) ?
+			       "" : "NOT ");
 
 		if (cfg.output && strlen(cfg.output)) {
 			if (fwrite(data, 1, cfg.numd << 2, fd) != (cfg.numd << 2)) {

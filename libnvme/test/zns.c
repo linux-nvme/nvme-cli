@@ -26,7 +26,7 @@ static void show_zns_properties(nvme_ns_t n)
 	struct nvme_zns_id_ns zns_ns;
 	struct nvme_zns_id_ctrl zns_ctrl;
 	struct nvme_zone_report *zr;
-	__u32 result;
+	__u64 result;
 
 	zr = calloc(1, 0x1000);
 	if (!zr)
