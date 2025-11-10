@@ -73,12 +73,11 @@ static:
 		--default-library=static \
 		--prefix=/usr \
 		-Dc_link_args="-static" \
-		-Dlibnvme:default_library=static \
-		-Dlibnvme:keyutils=disabled \
-		-Dlibnvme:liburing=disabled \
-		-Dlibnvme:python=disabled \
-		-Dlibnvme:openssl=disabled \
-		-Dlibnvme:tests=false \
-		-Dlibnvme:examples=false
+		-Dkeyutils=disabled \
+		-Dliburing=disabled \
+		-Dpython=disabled \
+		-Dopenssl=disabled \
+		-Dtests=false \
+		-Dexamples=false
 
 	meson compile -C ${BUILD-DIR}

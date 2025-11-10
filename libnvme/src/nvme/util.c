@@ -22,7 +22,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
-#include <ccan/ccan/minmax/minmax.h>
+#include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
 #include "cleanup.h"
@@ -905,7 +905,7 @@ const char *nvme_get_version(enum nvme_version type)
 {
 	switch(type) {
 	case NVME_VERSION_PROJECT:
-		return PROJECT_VERSION;
+		return LIBNVME_VERSION;
 	case NVME_VERSION_GIT:
 		return GIT_VERSION;
 	default:

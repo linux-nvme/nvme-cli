@@ -1,8 +1,26 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 option(
+  'nvme',
+  type: 'feature',
+  value: 'enabled',
+  description: 'Build nvme executable'
+)
+option(
+  'libnvme',
+  type: 'feature',
+  value: 'enabled',
+  description: 'Build libnvme library'
+)
+option(
+  'python',
+  type : 'feature',
+  value: 'auto',
+  description : 'Generate libnvme python bindings'
+)
+option(
   'docs',
   type : 'combo',
-  choices : ['false', 'html', 'man', 'all'],
+  choices : ['false', 'html', 'man', 'rst', 'all'],
   description : 'install documentation'
 )
 option(
@@ -24,6 +42,12 @@ option(
   description : 'directory for HTML documentation'
 )
 option(
+  'rstdir',
+  type : 'string',
+  value : '',
+  description : 'directory for ReST documentation'
+ )
+option(
   'json-c',
   type: 'feature',
   value: 'auto',
@@ -34,6 +58,12 @@ option(
   type : 'boolean',
   value : false,
   description: 'Run tests against real hardware'
+)
+option(
+  'tests',
+  type : 'boolean',
+  value : true,
+  description : 'build tests'
 )
 option(
   'pdc-enabled',
@@ -69,4 +99,34 @@ option(
   'version-tag',
   type : 'string',
   description : 'override the git version string'
+)
+option(
+  'examples',
+  type : 'boolean',
+  value : true,
+  description : 'build examples'
+)
+option(
+  'openssl',
+  type : 'feature',
+  value: 'auto',
+  description : 'OpenSSL support'
+)
+option(
+  'libdbus',
+  type : 'feature',
+  value: 'disabled',
+  description : 'libdbus support'
+)
+option(
+  'keyutils',
+  type: 'feature',
+  value: 'auto',
+  description: 'keyutils support'
+)
+option(
+  'liburing',
+  type : 'feature',
+  value: 'disabled',
+  description : 'liburing support'
 )

@@ -24,7 +24,8 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          libnvme/scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
+          scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
+#          libnvme/scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
       - uses: actions/upload-artifact@v5
         name: upload logs
         if: failure()
@@ -59,7 +60,8 @@ jobs:
           host-dir: ${{ github.workspace }}
           command: |
             git config --global --add safe.directory /build
-            libnvme/scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
+            scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
+#            libnvme/scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
           params: "--platform linux/amd64"
           pull-params: "--platform linux/amd64"
       - uses: actions/upload-artifact@v5
@@ -81,7 +83,8 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          libnvme/scripts/build.sh -b release -c gcc libdbus
+          scripts/build.sh -b release -c gcc libdbus
+#          libnvme/scripts/build.sh -b release -c gcc libdbus
       - uses: actions/upload-artifact@v5
         name: upload logs
         if: failure()
@@ -102,7 +105,8 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          libnvme/scripts/build.sh -b release -c gcc fallback
+          scripts/build.sh -b release -c gcc fallback
+#          libnvme/scripts/build.sh -b release -c gcc fallback
       - uses: actions/upload-artifact@v5
         if: failure()
         with:
@@ -121,4 +125,5 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          libnvme/scripts/build.sh -m muon
+          scripts/build.sh -m muon
+#          libnvme/scripts/build.sh -m muon
