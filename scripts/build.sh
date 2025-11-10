@@ -17,6 +17,7 @@ usage() {
     echo ""
     echo "configs with meson:"
     echo "  [default]           default settings"
+    echo "  libdbus             build with libdbus"
     echo "  fallback            download all dependencies"
     echo "                      and build them as shared libraries"
     echo "  cross               use cross toolchain to build"
@@ -75,8 +76,15 @@ config_meson_default() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-        --force-fallback-for=libnvme            \
-        -Dlibnvme:werror=false                  \
+        "${BUILDDIR}"
+}
+
+config_meson_libdbus() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dlibdbus=enabled                       \
+        --prefix="${BUILDDIR}/usr"              \
         "${BUILDDIR}"
 }
 
@@ -86,7 +94,8 @@ config_meson_fallback() {
         --buildtype="${BUILDTYPE}"              \
         --wrap-mode=forcefallback               \
         --default-library=both                  \
-        -Dlibnvme:werror=false                  \
+        -Dlibdbus=enabled                       \
+        -Ddbus:werror=false                     \
         -Dopenssl:werror=false                  \
         "${BUILDDIR}"
 }
@@ -96,10 +105,8 @@ config_meson_cross() {
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
         --cross-file=.github/cross/ubuntu-cross-${CROSS_TARGET}.txt \
-        --force-fallback-for=libnvme            \
-        -Dlibnvme:werror=false                  \
-        -Dlibnvme:python=disabled               \
-        -Dlibnvme:openssl=disabled              \
+        -Dpython=disabled               \
+        -Dopenssl=disabled              \
         "${BUILDDIR}"
 }
 
@@ -107,8 +114,8 @@ config_meson_coverage() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-        --force-fallback-for=libnvme            \
-        -Dlibnvme:werror=false                  \
+        --wrap-mode=nofallback                  \
+        -Dlibdbus=enabled                       \
         -Db_coverage=true                       \
         "${BUILDDIR}"
 }
@@ -117,20 +124,20 @@ config_meson_docs() {
     CC="${CC}" "${MESON}" setup                 \
         -Ddocs=all                              \
         -Ddocs-build=true                       \
-        --force-fallback-for=libnvme            \
         --prefix=/tmp/usr                       \
-        -Dlibnvme:werror=false                  \
         "${BUILDDIR}"
 }
 
 config_meson_static() {
     CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
         --buildtype=release                     \
         --default-library=static                \
         --wrap-mode=forcefallback               \
         --prefix=/usr                           \
         -Dc_link_args="-static"                 \
-        -Dlibnvme:keyutils=disabled             \
+        -Dkeyutils=disabled                     \
+        -Dopenssl:werror=false                  \
         "${BUILDDIR}"
 }
 
@@ -214,10 +221,10 @@ config_muon_default() {
         -Ddefault_library=static                        \
         -Dc_link_args="-static"                         \
         -Dwrap_mode=forcefallback                       \
-        -Dlibnvme:json-c=disabled                       \
-        -Dlibnvme:python=disabled                       \
-        -Dlibnvme:openssl=disabled                      \
-        -Dlibnvme:keyutils=disabled                     \
+        -Djson-c=disabled                       \
+        -Dpython=disabled                       \
+        -Dopenssl=disabled                      \
+        -Dkeyutils=disabled                     \
         -Djson-c=disabled                               \
         "${BUILDDIR}"
 }
@@ -234,33 +241,29 @@ test_muon() {
 _install_libnvme() {
     local LBUILDDIR="${BUILDDIR}/.build-libnvme"
 
-    mkdir -p "${BUILDDIR}/libnvme"
-
-    pushd "libnvme"
-
-    CC="${CC}" "${MESON}" setup                 \
-        --prefix="${BUILDDIR}/usr"              \
-        --buildtype="${BUILDTYPE}"              \
+    CC="${CC}" "${MESON}" setup     \
+        --prefix="${BUILDDIR}/usr"  \
+        --buildtype="${BUILDTYPE}"  \
+        -Dnvme=disabled             \
         "${LBUILDDIR}"
 
-    "${MESON}" compile                          \
+    "${MESON}" compile              \
         -C "${LBUILDDIR}"
 
-    "${MESON}" install                          \
+    "${MESON}" install              \
         -C "${LBUILDDIR}"
-
-    popd || exit 1
 }
 
 config_meson_distro() {
     _install_libnvme
 
     PKG_CONFIG_PATH="${BUILDDIR}/usr/lib64/pkgconfig" \
-    CC="${CC}" ${MESON} setup                   \
-        --prefix="${BUILDDIR}/usr"              \
-        --werror                                \
-        --buildtype="${BUILDTYPE}"              \
-        --force-fallback-for=                   \
+    CC="${CC}" ${MESON} setup                         \
+        --prefix="${BUILDDIR}/usr"                    \
+        --werror                                      \
+        --buildtype="${BUILDTYPE}"                    \
+        --force-fallback-for=                         \
+        -Dlibnvme=disabled                            \
         "${BUILDDIR}"
 }
 

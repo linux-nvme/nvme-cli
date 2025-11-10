@@ -28,6 +28,7 @@ else
 endif
 
 deps = [
+    config_dep,
     json_c_dep,
     keyutils_dep,
     libdbus_dep,
@@ -42,29 +43,27 @@ version_script_arg = join_paths(source_dir, mapfile)
 libnvme = library(
     'nvme', # produces libnvme.so
     sources,
-    version: library_version,
+    version: libnvme_so_version,
     link_args: ['-Wl,--version-script=' + version_script_arg],
     dependencies: deps,
     link_depends: mapfile,
-    c_args: config_h_arg,
-    include_directories: [incdir, internal_incdir],
+    include_directories: [incdir, ],
     install: true,
     link_with: libccan,
 )
 
 pkg = import('pkgconfig')
 pkg.generate(libnvme,
-    filebase: meson.project_name(),
-    name: meson.project_name(),
+    filebase: 'libnvme',
+    name: 'libnvme',
     version: meson.project_version(),
     description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
-    url: 'http://github.com/linux-nvme/libnvme/',
+    url: 'https://github.com/linux-nvme/nvme-cli/',
 )
 
 libnvme_dep = declare_dependency(
-    include_directories: ['.'],
     dependencies: [
-      json_c_dep.partial_dependency(compile_args: true, includes: true),
+        json_c_dep.partial_dependency(compile_args: true, includes: true),
     ],
     link_with: libnvme,
 )
@@ -75,25 +74,25 @@ libnvme_test = library(
     'nvme-test', # produces libnvme-test.so
     sources,
     dependencies: deps,
-    c_args: config_h_arg,
-    include_directories: [incdir, internal_incdir],
+    include_directories: [incdir, ],
     install: false,
     link_with: libccan,
 )
 
 libnvme_test_dep = declare_dependency(
-    include_directories: ['.'],
     link_with: libnvme_test,
 )
 
-mode = ['rw-r--r--', 0, 0]
-install_headers([
+mode = 'rw-r--r--'
+install_headers(
+    [
        'libnvme.h',
        'libnvme-mi.h',
     ],
     install_mode: mode,
 )
-install_headers([
+install_headers(
+    [
         'nvme/fabrics.h',
         'nvme/filters.h',
         'nvme/ioctl.h',

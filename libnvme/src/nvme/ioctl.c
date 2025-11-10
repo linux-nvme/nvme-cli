@@ -23,7 +23,7 @@
 #include <sys/time.h>
 
 #include <ccan/build_assert/build_assert.h>
-#include <ccan/ccan/minmax/minmax.h>
+#include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
 #include "ioctl.h"

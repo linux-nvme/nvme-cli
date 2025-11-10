@@ -24,7 +24,6 @@
 /**
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
-#include "config.h"
 #include "nvme/tree.h"
 #include "nvme/types.h"
 #include "util/cleanup.h"

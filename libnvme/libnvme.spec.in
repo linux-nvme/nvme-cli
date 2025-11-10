@@ -1,12 +1,12 @@
-Name: @NAME@
-Version: @VERSION@
-Release: 0
-Summary: Linux-native nvme device management library
+Name:		libnvme
+Version:	@VERSION@
+Release:	0
+Summary:	Linux-native nvme device management library
 
-License: @LICENSE@
-Source: libnvme.tar.gz
-BuildRoot: %{_tmppath}/%{name}-root
-URL: http://github.com/linux-nvme/libnvme
+License:	@LIBNVME_LICENSE@
+Source:		libnvme.tar.gz
+BuildRoot:	%{_tmppath}/%{name}-root
+URL:		@URL@
 
 %description
 Provides library functions for accessing and managing nvme devices on a Linux
@@ -15,7 +15,7 @@ system.
 %package devel
 Summary: Development files for Linux-native nvme
 Requires: libnvme
-Provides: libnvme.so.1
+Provides: libnvme.so.@VERSION_MAJOR@
 
 %description devel
 This package provides header files to include and libraries to link with

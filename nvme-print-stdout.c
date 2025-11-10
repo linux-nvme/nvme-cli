@@ -9,10 +9,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <ccan/ccan/strset/strset.h>
-#include <ccan/ccan/htable/htable_type.h>
-#include <ccan/ccan/htable/htable.h>
-#include <ccan/ccan/hash/hash.h>
+#include <ccan/strset/strset.h>
+#include <ccan/htable/htable_type.h>
+#include <ccan/htable/htable.h>
+#include <ccan/hash/hash.h>
 
 #include "nvme.h"
 #include "libnvme.h"

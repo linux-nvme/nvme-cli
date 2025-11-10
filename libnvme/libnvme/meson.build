@@ -5,19 +5,7 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-want_python = get_option('python')
-if want_python.disabled()
-    build_python_bindings = false
-    py3_dep = dependency('', required: false)  # Needed for muon
-else
-    python3 = import('python').find_installation('python3')
-    py3_dep = python3.dependency(required: want_python)
-    swig = find_program('swig', required: want_python)
-    header_found = cc.has_header('Python.h', dependencies: py3_dep, required: want_python)
-    build_python_bindings = py3_dep.found() and swig.found() and header_found
-endif
-
-if build_python_bindings
+if want_python
     r = run_command(swig, ['-version'], check: true)  # Returns: "\nSWIG Version 4.1.1\n\nCompiled with ..."
     swig_version = r.stdout().split('\n')[1].split()[2].strip()
     if swig_version.version_compare('<4.1.0')
@@ -34,15 +22,36 @@ if build_python_bindings
         install: true,
         install_dir: [python3.get_install_dir(pure: false, subdir: 'libnvme'), false],
     )
+    nvme_py = pymod_swig[0]
+    nvme_wrap_c = pymod_swig[1]
+
+    if meson.version().version_compare('>=1.4.0')
+        nvme_py_path = nvme_py.full_path()
+    else
+        nvme_py_path = meson.current_build_dir() / 'nvme.py'
+    endif
 
     pynvme_clib = python3.extension_module(
         '_nvme',
-        pymod_swig[1],
-        dependencies : [libnvme_dep, py3_dep],
-        include_directories: [incdir, internal_incdir],
+        nvme_wrap_c,
+        dependencies : [libnvme_dep, py3_dep, config_dep],
+        include_directories: [incdir, ],
         link_with: [libccan],
         install: true,
         subdir: 'libnvme',
+    )
+
+    # Declare python3_libnvme_dep so that parent meson projects can use
+    # this as a fallback dependency. In other words, if a meson project
+    # uses nvme-cli as a subproject, it will be possible to refer to the
+    # python nvme.py module using this dependency. This basically sets the
+    # variable "nvme_py_path" to the full path of the nvme.py file that
+    # was built by SWIG above.
+    python3_libnvme_dep = declare_dependency(
+        sources: nvme_py,
+        variables: {
+            'nvme_py_path': nvme_py_path,
+        },
     )
 
     # Little hack to copy file __init__.py to the build directory. 
@@ -67,7 +76,7 @@ if build_python_bindings
     test_env.set('PYTHONMALLOC', 'malloc')
 
     # Test section
-    test('python-import-libnvme', python3, args: ['-c', 'from libnvme import nvme'], env: test_env, depends: pynvme_clib)
+    test('libnvme - python-import-libnvme', python3, args: ['-c', 'from libnvme import nvme'], env: test_env, depends: pynvme_clib)
 
     py_tests = [ 
         [ 'create-ctrl-object', [ files('tests/create-ctrl-obj.py'), ] ],
@@ -77,6 +86,6 @@ if build_python_bindings
     foreach test: py_tests
         description = test[0]
         args = test[1]
-        test('python-' + description, python3, args: args, env: test_env, depends: pynvme_clib)
+        test('libnvme - python-' + description, python3, args: args, env: test_env, depends: pynvme_clib)
     endforeach
 endif

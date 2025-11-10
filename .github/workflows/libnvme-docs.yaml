@@ -21,4 +21,5 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
-          libnvme/scripts/build.sh docs
+          scripts/build.sh docs
+#          libnvme/scripts/build.sh docs
