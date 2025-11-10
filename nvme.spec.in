@@ -2,9 +2,9 @@ Name: 		nvme
 Version: 	@VERSION@
 Release: 	1%{?dist}
 Summary:  	Core nvme tools
-License: 	GPL-2.0-only
+License: 	@NVMECLI_LICENSE@
 Group: 		Development/Tools
-URL: 		https://github.com/linux-nvme/nvme-cli/
+URL: 		@URL@
 Provides:	nvme
 Requires(post): util-linux systemd systemd-udev
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
@@ -36,7 +36,7 @@ touch %{buildroot}@SYSCONFDIR@/nvme/hostid
 @UDEVRULESDIR@/71-nvmf-hpe.rules
 @UDEVRULESDIR@/71-nvmf-netapp.rules
 @UDEVRULESDIR@/71-nvmf-vastdata.rules
-@DRACUTRILESDIR@/70-nvmf-autoconnect.conf
+@DRACUTRULESDIR@/70-nvmf-autoconnect.conf
 @SYSTEMDDIR@/nvmf-connect@.service
 @SYSTEMDDIR@/nvmefc-boot-connections.service
 @SYSTEMDDIR@/nvmf-connect-nbft.service

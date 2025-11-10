@@ -1,7 +1,6 @@
 /* CC0 (Public domain) - see LICENSE file for details */
 #ifndef CCAN_COMPILER_H
 #define CCAN_COMPILER_H
-#include "config.h"
 
 #ifndef COLD
 #if HAVE_ATTRIBUTE_COLD

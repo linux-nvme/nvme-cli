@@ -34,15 +34,36 @@ if build_python_bindings
         install: true,
         install_dir: [python3.get_install_dir(pure: false, subdir: 'libnvme'), false],
     )
+    nvme_py = pymod_swig[0]
+    nvme_wrap_c = pymod_swig[1]
+
+    if meson.version().version_compare('>=1.4.0')
+        nvme_py_path = nvme_py.full_path()
+    else
+        nvme_py_path = meson.current_build_dir() / 'nvme.py'
+    endif
 
     pynvme_clib = python3.extension_module(
         '_nvme',
-        pymod_swig[1],
-        dependencies : [libnvme_dep, py3_dep],
-        include_directories: [incdir, internal_incdir],
-        link_with: [libccan],
+        nvme_wrap_c,
+        dependencies : [libnvme_dep, py3_dep, config_dep],
+        include_directories: [incdir, ],
+        #link_with: [libccan],
         install: true,
         subdir: 'libnvme',
+    )
+
+    # Declare python3_libnvme_dep so that parent meson projects can use
+    # this as a fallback dependency. In other words, if a meson project
+    # uses nvme-cli as a subproject, it will be possible to refer to the
+    # python nvme.py module using this dependency. This basically sets the
+    # variable "nvme_py_path" to the full path of the nvme.py file that
+    # was built by SWIG above.
+    python3_libnvme_dep = declare_dependency(
+        sources: nvme_py,
+        variables: {
+            'nvme_py_path': nvme_py_path,
+        },
     )
 
     # Little hack to copy file __init__.py to the build directory. 

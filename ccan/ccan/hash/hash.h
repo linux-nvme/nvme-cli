@@ -1,7 +1,6 @@
 /* CC0 (Public domain) - see LICENSE file for details */
 #ifndef CCAN_HASH_H
 #define CCAN_HASH_H
-#include "config.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <ccan/build_assert/build_assert.h>

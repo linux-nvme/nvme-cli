@@ -5,5 +5,5 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 
-__version__ = @PROJECT_VERSION@
+__version__ = @LIBNVME_VERSION@
 __git_version__ = @GIT_VERSION@

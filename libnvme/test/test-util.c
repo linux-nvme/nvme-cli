@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
 	bool pass;
 
 	printf("\n------------------------------------------------------------------------------\n");
-	pass = test_nvme_get_version(NVME_VERSION_PROJECT, PROJECT_VERSION);
+	pass = test_nvme_get_version(NVME_VERSION_PROJECT, LIBNVME_VERSION);
 	printf("nvme_get_version(NVME_VERSION_PROJECT) %s\n", pass ? "[PASS]" : "[FAIL]");
 	if (!pass)
 		exit_val = EXIT_FAILURE;
