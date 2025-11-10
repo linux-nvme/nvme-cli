@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
-#include <ccan/ccan/minmax/minmax.h>
+#include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
 #include "log.h"

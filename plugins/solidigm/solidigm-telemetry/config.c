@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
+#include <json.h>
 #include "config.h"
 
 // max 16 bit unsigned integer number 65535

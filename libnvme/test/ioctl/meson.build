@@ -14,9 +14,10 @@ mock_conf.set(
 mock_ioctl = library(
     'mock-ioctl',
     ['mock.c', 'util.c'],
-    include_directories: [incdir, internal_incdir],
-    dependencies: [libnvme_dep, dl_dep],
-    c_args: ['-DHAVE_GLIBC_IOCTL=' + (mock_conf.get('HAVE_GLIBC_IOCTL') ? '1' : '0')])
+    include_directories: [incdir, ],
+    dependencies: [libnvme_dep, dl_dep, config_dep],
+    c_args: ['-DHAVE_GLIBC_IOCTL=' + (mock_conf.get('HAVE_GLIBC_IOCTL') ? '1' : '0')],
+)
 
 # Add mock-ioctl to the LD_PRELOAD path so it overrides libc.
 # Append to LD_PRELOAD so existing libraries, e.g. libasan, are kept.
@@ -31,64 +32,62 @@ mock_ioctl_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
 ana = executable(
     'test-ana',
     'ana.c',
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir],
+    dependencies: [libnvme_dep, config_dep],
+    include_directories: [incdir, ],
     link_with: mock_ioctl,
 )
-
-test('ana', ana, env: mock_ioctl_env)
+test('libnvme - ana', ana, env: mock_ioctl_env)
 
 discovery = executable(
     'test-discovery',
     'discovery.c',
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir],
+    dependencies: [libnvme_dep, config_dep],
+    include_directories: [incdir, ],
     link_with: mock_ioctl,
 )
-
-test('discovery', discovery, env: mock_ioctl_env)
+test('libnvme - discovery', discovery, env: mock_ioctl_env)
 
 features = executable(
     'test-features',
     'features.c',
-    dependencies: libnvme_dep,
+    include_directories: [incdir, ],
+    dependencies: [libnvme_dep, config_dep],
     link_with: mock_ioctl,
 )
-
-test('features', features, env: mock_ioctl_env)
+test('libnvme - features', features, env: mock_ioctl_env)
 
 identify = executable(
     'test-identify',
     'identify.c',
-    dependencies: libnvme_dep,
+    include_directories: [incdir, ],
+    dependencies: [libnvme_dep, config_dep],
     link_with: mock_ioctl,
 )
-
-test('identify', identify, env: mock_ioctl_env)
+test('libnvme - identify', identify, env: mock_ioctl_env)
 
 logs = executable(
     'test-logs',
     'logs.c',
-    dependencies: libnvme_dep,
+    include_directories: [incdir, ],
+    dependencies: [libnvme_dep, config_dep],
     link_with: mock_ioctl,
 )
-
-test('logs', logs, env: mock_ioctl_env)
+test('libnvme - logs', logs, env: mock_ioctl_env)
 
 zns = executable(
     'test-zns',
     'zns.c',
-    dependencies: libnvme_dep,
+    include_directories: [incdir, ],
+    dependencies: [libnvme_dep, config_dep],
     link_with: mock_ioctl,
 )
-
-test('zns', zns, env: mock_ioctl_env)
+test('libnvme - zns', zns, env: mock_ioctl_env)
 
 misc = executable(
     'test-misc',
     'misc.c',
-    dependencies: libnvme_dep,
+    include_directories: [incdir, ],
+    dependencies: [libnvme_dep, config_dep],
     link_with: mock_ioctl,
 )
-
-test('misc', misc, env: mock_ioctl_env)
+test('libnvme - misc', misc, env: mock_ioctl_env)

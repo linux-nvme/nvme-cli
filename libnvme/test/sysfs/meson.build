@@ -8,10 +8,10 @@
 diff = find_program('diff', required : false)
 if diff.found()
     tree_dump = executable(
-        'test-tree-dump',
+        'libnvme - test-tree-dump',
         ['tree-dump.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir],
+        include_directories: [incdir, ],
     )
 
     tree_data = [
@@ -23,7 +23,7 @@ if diff.found()
 
     foreach t_file : tree_data
         test(
-            t_file,
+            'libnvme - @0@'.format(t_file),
             tree_diff,
             args : [
                 meson.current_build_dir(),

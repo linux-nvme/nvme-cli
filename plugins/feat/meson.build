@@ -1,3 +1,3 @@
-sources += [
-  'plugins/feat/feat-nvme.c',
+plugin_sources += [
+    'plugins/feat/feat-nvme.c',
 ]

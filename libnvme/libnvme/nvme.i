@@ -5,6 +5,12 @@
  *
  * Authors: Hannes Reinecke <hare@suse.de>
  */
+%begin %{
+/* WORKAROUND: The top-level meson.build defines the macro "fallthrough", which
+               clashes with the same macro defined in Python.h.
+ */
+#undef fallthrough
+%}
 
 %module(docstring="Python bindings for libnvme") nvme
 %feature("autodoc", "1");

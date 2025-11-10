@@ -76,7 +76,7 @@ config_meson_default() {
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
         --force-fallback-for=libnvme            \
-        -Dlibnvme:werror=false                  \
+        -Dwerror=false                  \
         "${BUILDDIR}"
 }
 
@@ -86,7 +86,7 @@ config_meson_fallback() {
         --buildtype="${BUILDTYPE}"              \
         --wrap-mode=forcefallback               \
         --default-library=both                  \
-        -Dlibnvme:werror=false                  \
+        -Dwerror=false                  \
         -Dopenssl:werror=false                  \
         "${BUILDDIR}"
 }
@@ -97,9 +97,9 @@ config_meson_cross() {
         --buildtype="${BUILDTYPE}"              \
         --cross-file=.github/cross/ubuntu-cross-${CROSS_TARGET}.txt \
         --force-fallback-for=libnvme            \
-        -Dlibnvme:werror=false                  \
-        -Dlibnvme:python=disabled               \
-        -Dlibnvme:openssl=disabled              \
+        -Dwerror=false                  \
+        -Dpython=disabled               \
+        -Dopenssl=disabled              \
         "${BUILDDIR}"
 }
 
@@ -108,7 +108,7 @@ config_meson_coverage() {
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
         --force-fallback-for=libnvme            \
-        -Dlibnvme:werror=false                  \
+        -Dwerror=false                  \
         -Db_coverage=true                       \
         "${BUILDDIR}"
 }
@@ -119,7 +119,7 @@ config_meson_docs() {
         -Ddocs-build=true                       \
         --force-fallback-for=libnvme            \
         --prefix=/tmp/usr                       \
-        -Dlibnvme:werror=false                  \
+        -Dwerror=false                  \
         "${BUILDDIR}"
 }
 
@@ -130,7 +130,7 @@ config_meson_static() {
         --wrap-mode=forcefallback               \
         --prefix=/usr                           \
         -Dc_link_args="-static"                 \
-        -Dlibnvme:keyutils=disabled             \
+        -Dkeyutils=disabled             \
         "${BUILDDIR}"
 }
 
@@ -214,10 +214,10 @@ config_muon_default() {
         -Ddefault_library=static                        \
         -Dc_link_args="-static"                         \
         -Dwrap_mode=forcefallback                       \
-        -Dlibnvme:json-c=disabled                       \
-        -Dlibnvme:python=disabled                       \
-        -Dlibnvme:openssl=disabled                      \
-        -Dlibnvme:keyutils=disabled                     \
+        -Djson-c=disabled                       \
+        -Dpython=disabled                       \
+        -Dopenssl=disabled                      \
+        -Dkeyutils=disabled                     \
         -Djson-c=disabled                               \
         "${BUILDDIR}"
 }
