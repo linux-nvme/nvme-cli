@@ -226,11 +226,7 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 	case 0 ... 1:
 		break;
 	default:
-	case 4:
-		json_object_add_value_uint(root, "NVMe Command Set Errata Version",
-						log->nvme_cmdset_errata_version);
-		json_object_add_value_uint(root, "Lowest Permitted Firmware Revision",
-						le64_to_cpu(log->lowest_permitted_fw_rev));
+	case 5:
 		json_object_add_value_uint(root, "NVMe Over Pcie Errata Version",
 						log->nvme_over_pcie_errate_version);
 		json_object_add_value_uint(root, "NVMe Mi Errata Version",
@@ -276,6 +272,12 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 		for (i = 0; i < 64; i++)
 			ascii += sprintf(ascii, "%c", log->dssd_firmware_build_label[i]);
 		json_object_add_value_string(root, "Dssd firmware build label", ascii_arr);
+		fallthrough;
+	case 4:
+		json_object_add_value_uint(root, "NVMe Command Set Errata Version",
+						log->nvme_cmdset_errata_version);
+		json_object_add_value_uint(root, "Lowest Permitted Firmware Revision",
+						le64_to_cpu(log->lowest_permitted_fw_rev));
 		fallthrough;
 	case 2 ... 3:
 		json_object_add_value_uint(root, "Errata Version Field",
@@ -388,11 +390,7 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 	case 0 ... 1:
 		break;
 	default:
-	case 4:
-		json_object_add_value_uint(root, "nvme_command_set_errata_version",
-						log->nvme_cmdset_errata_version);
-		json_object_add_value_uint(root, "lowest_permitted_firmware_revision",
-						le64_to_cpu(log->lowest_permitted_fw_rev));
+	case 5:
 		json_object_add_value_uint(root, "nvme_over_pcie_errata_version",
 						log->nvme_over_pcie_errate_version);
 		json_object_add_value_uint(root, "nvme_mi_errata_version",
@@ -438,6 +436,12 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 		for (i = 0; i < 64; i++)
 			ascii += sprintf(ascii, "%c", log->dssd_firmware_build_label[i]);
 		json_object_add_value_string(root, "dssd_firmware_build_label", ascii_arr);
+		fallthrough;
+	case 4:
+		json_object_add_value_uint(root, "nvme_command_set_errata_version",
+						log->nvme_cmdset_errata_version);
+		json_object_add_value_uint(root, "lowest_permitted_firmware_revision",
+						le64_to_cpu(log->lowest_permitted_fw_rev));
 		fallthrough;
 	case 2 ... 3:
 		json_object_add_value_uint(root, "errata_version_field",
