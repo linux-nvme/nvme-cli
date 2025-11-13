@@ -236,6 +236,8 @@ static const char *secp = "security protocol (cf. SPC-4)";
 static const char *spsp = "security-protocol-specific (cf. SPC-4)";
 static const char *start_block = "64-bit LBA of first block to access";
 static const char *storage_tag = "storage tag for end-to-end PI";
+static const char *storage_tag_check = "This bit specifies if the Storage Tag field shall be checked as\n"
+	"part of end-to-end data protection processing";
 static const char *uuid_index = "UUID index";
 static const char *uuid_index_specify = "specify uuid index";
 static const char dash[51] = {[0 ... 49] = '=', '\0'};
@@ -7123,7 +7125,8 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 	return result;
 }
 
-static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns, __u8 *pif, __u8 *sts)
+static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
+		__u8 *pif, __u8 *sts)
 {
 	__u8 lba_index;
 	__u32 elbaf;
@@ -7136,14 +7139,52 @@ static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns, __
 		*pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
 }
 
-static int write_zeroes(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+static int init_pi_tags(struct nvme_transport_handle *hdl,
+	struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 ilbrt, __u64 lbst,
+	__u16 lbat, __u16 lbatm)
 {
 	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	struct nvme_passthru_cmd cmd;
 	__u8 sts = 0, pif = 0;
+	int err = 0;
+
+	ns = nvme_alloc(sizeof(*ns));
+	if (!ns)
+		return -ENOMEM;
+
+	err = nvme_identify_ns(hdl, nsid, ns);
+	if (err < 0) {
+		nvme_show_error("identify namespace: %s", nvme_strerror(err));
+		return err;
+	} else if (err) {
+		nvme_show_status(err);
+		return err;
+	}
+
+	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
+	if (!nvm_ns)
+		return -ENOMEM;
+
+	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0, nvm_ns);
+
+	if (!err)
+		get_pif_sts(ns, nvm_ns, &pif, &sts);
+
+	if (invalid_tags(lbst, ilbrt, sts, pif))
+		return -EINVAL;
+
+	nvme_init_var_size_tags(cmd, pif, sts, ilbrt, lbst);
+	nvme_init_app_tag(cmd, lbat, lbatm);
+
+	return err;
+}
+
+static int write_zeroes(int argc, char **argv,
+	struct command *acmd, struct plugin *plugin)
+{
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
 	__u16 control = 0;
 	int err;
 
@@ -7151,13 +7192,10 @@ static int write_zeroes(int argc, char **argv, struct command *acmd, struct plug
 	    "The Write Zeroes command is used to set a range of logical blocks to zero.";
 	const char *deac =
 	    "Set DEAC bit, requesting controller to deallocate specified logical blocks";
-	const char *storage_tag_check =
-	    "This bit specifies the Storage Tag field shall be checked as\n"
-	    "part of end-to-end data protection processing";
 	const char *nsz = "Clear all logical blocks to zero in the entire namespace";
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		__u64	start_block;
 		__u16	block_count;
 		__u8	dtype;
@@ -7165,35 +7203,35 @@ static int write_zeroes(int argc, char **argv, struct command *acmd, struct plug
 		bool	limited_retry;
 		bool	force_unit_access;
 		__u8	prinfo;
-		__u64	ref_tag;
-		__u16	app_tag_mask;
-		__u16	app_tag;
-		__u64	storage_tag;
-		bool	storage_tag_check;
+		__u64	ilbrt;
+		__u16	lbatm;
+		__u16	lbat;
+		__u64	lbst;
+		bool	stc;
 		__u16	dspec;
 		bool	nsz;
 	};
 
 	struct config cfg = {
-		.namespace_id		= 0,
+		.nsid				= 0,
 		.start_block		= 0,
 		.block_count		= 0,
-		.dtype			= 0,
-		.deac			= false,
+		.dtype				= 0,
+		.deac				= false,
 		.limited_retry		= false,
 		.force_unit_access	= false,
-		.prinfo			= 0,
-		.ref_tag		= 0,
-		.app_tag_mask		= 0,
-		.app_tag		= 0,
-		.storage_tag		= 0,
-		.storage_tag_check	= false,
-		.dspec			= 0,
-		.nsz			= false,
+		.prinfo				= 0,
+		.ilbrt				= 0,
+		.lbatm				= 0,
+		.lbat				= 0,
+		.lbst				= 0,
+		.stc				= false,
+		.dspec				= 0,
+		.nsz				= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
+		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_desired),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
@@ -7201,11 +7239,11 @@ static int write_zeroes(int argc, char **argv, struct command *acmd, struct plug
 		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
 		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
 		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		  OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
-		  OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
-		  OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
-		  OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
-		  OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,			 ref_tag),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,			 app_tag_mask),
+		  OPT_SHRT("app-tag",           'a', &cfg.lbat,				 app_tag),
+		  OPT_SUFFIX("storage-tag",     'S', &cfg.lbst,				 storage_tag),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,				 storage_tag_check),
 		  OPT_SHRT("dir-spec",          'D', &cfg.dspec,             dspec_w_dtype),
 		  OPT_FLAG("namespace-zeroes",  'Z', &cfg.nsz,               nsz));
 
@@ -7228,49 +7266,25 @@ static int write_zeroes(int argc, char **argv, struct command *acmd, struct plug
 		control |= NVME_IO_FUA;
 	if (cfg.deac)
 		control |= NVME_IO_DEAC;
-	if (cfg.storage_tag_check)
+	if (cfg.stc)
 		control |= NVME_IO_STC;
 	if (cfg.nsz)
 		control |= NVME_IO_NSZ;
 	control |= (cfg.dtype << 4);
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			nvme_show_error("get-namespace-id: %s", nvme_strerror(err));
 			return err;
 		}
 	}
 
-	ns = nvme_alloc(sizeof(*ns));
-	if (!ns)
-		return -ENOMEM;
-
-	err = nvme_identify_ns(hdl, cfg.namespace_id, ns);
-	if (err < 0) {
-		nvme_show_error("identify namespace: %s", nvme_strerror(err));
-		return err;
-	} else if (err) {
-		nvme_show_status(err);
-		return err;
-	}
-
-	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
-	if (!nvm_ns)
-		return -ENOMEM;
-
-	err = nvme_identify_csi_ns(hdl, cfg.namespace_id, NVME_CSI_NVM, 0,
-				   nvm_ns);
-	if (!err) {
-		get_pif_sts(ns, nvm_ns, &pif, &sts);
-	}
-
-	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
-		return -EINVAL;
-
-	nvme_init_write_zeros(&cmd, cfg.namespace_id, cfg.start_block,
+	nvme_init_write_zeros(&cmd, cfg.nsid, cfg.start_block,
 		cfg.block_count, control, cfg.dspec, 0, 0);
-	nvme_init_var_size_tags(&cmd, pif, sts, cfg.ref_tag, cfg.storage_tag);
-	nvme_init_app_tag(&cmd, cfg.app_tag, cfg.app_tag_mask);
+	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
+		cfg.lbat, cfg.lbatm);
+	if (err)
+		return err;
 	err = nvme_submit_io_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("write-zeroes: %s", nvme_strerror(err));
@@ -7400,37 +7414,6 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	return err;
 }
 
-static int identify_pif_sts(struct nvme_transport_handle *hdl,
-			    __u32 nsid, __u8 *pif, __u8 *sts)
-{
-	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
-	int err;
-
-	ns = nvme_alloc(sizeof(*ns));
-	if (!ns)
-		return -ENOMEM;
-
-	err = nvme_identify_ns(hdl, nsid, ns);
-	if (err > 0) {
-		nvme_show_status(err);
-		return err;
-	} else if (err < 0) {
-		nvme_show_error("identify namespace: %s", nvme_strerror(-err));
-		return err;
-	}
-
-	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
-	if (!nvm_ns)
-		return -ENOMEM;
-
-	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0, nvm_ns);
-	if (!err)
-		get_pif_sts(ns, nvm_ns, pif, sts);
-
-	return 0;
-}
-
 static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "The Copy command is used by the host to copy data\n"
@@ -7463,8 +7446,6 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	__u64 slbas[256] = { 0 };
 	__u32 snsids[256] = { 0 };
 	__u16 sopts[256] = { 0 };
-	__u8 pif = 0;
-	__u8 sts = 0;
 	int err;
 
 	union {
@@ -7483,7 +7464,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	} *copy = NULL;
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		__u64	sdlba;
 		char	*slbas;
 		char	*nlbs;
@@ -7502,16 +7483,18 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		__u8	dtype;
 		__u16	dspec;
 		__u8	format;
+		__u64	lbst;
+		bool	stc;
 	};
 
 	struct config cfg = {
-		.namespace_id	= 0,
+		.nsid		= 0,
 		.sdlba		= 0,
 		.slbas		= "",
 		.nlbs		= "",
 		.snsids		= "",
 		.sopts		= "",
-		.lr		= false,
+		.lr			= false,
 		.fua		= false,
 		.prinfow	= 0,
 		.prinfor	= 0,
@@ -7524,17 +7507,19 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		.dtype		= 0,
 		.dspec		= 0,
 		.format		= 0,
+		.lbst		= 0,
+		.stc		= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",           'n', &cfg.namespace_id,	namespace_id_desired),
+		  OPT_UINT("namespace-id",           'n', &cfg.nsid,		namespace_id_desired),
 		  OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
 		  OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
 		  OPT_LIST("blocks",                 'b', &cfg.nlbs,		d_nlbs),
 		  OPT_LIST("snsids",                 'N', &cfg.snsids,		d_snsids),
 		  OPT_LIST("sopts",                  'O', &cfg.sopts,		d_sopts),
-		  OPT_FLAG("limited-retry",          'l', &cfg.lr,		d_lr),
-		  OPT_FLAG("force-unit-access",      'f', &cfg.fua,		d_fua),
+		  OPT_FLAG("limited-retry",          'l', &cfg.lr,			d_lr),
+		  OPT_FLAG("force-unit-access",      'f', &cfg.fua,			d_fua),
 		  OPT_BYTE("prinfow",                'p', &cfg.prinfow,		d_prinfow),
 		  OPT_BYTE("prinfor",                'P', &cfg.prinfor,		d_prinfor),
 		  OPT_SUFFIX("ref-tag",              'r', &cfg.ilbrt,		d_ilbrt),
@@ -7545,7 +7530,9 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		  OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms,		d_elbatms),
 		  OPT_BYTE("dir-type",               'T', &cfg.dtype,		d_dtype),
 		  OPT_SHRT("dir-spec",               'S', &cfg.dspec,		d_dspec),
-		  OPT_BYTE("format",                 'F', &cfg.format,		d_format));
+		  OPT_BYTE("format",                 'F', &cfg.format,		d_format),
+		  OPT_SUFFIX("storage-tag",			 't', &cfg.lbst,		storage_tag),
+		  OPT_FLAG("storage-tag-check",		 'c', &cfg.stc,			storage_tag_check));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -7596,8 +7583,8 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		return -EINVAL;
 	}
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			nvme_show_error("get-namespace-id: %s", nvme_strerror(err));
 			return err;
@@ -7627,18 +7614,13 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		break;
 	}
 
-	err = identify_pif_sts(hdl, cfg.namespace_id, &pif, &sts);
+	nvme_init_copy(&cmd, cfg.nsid, cfg.sdlba, nr, cfg.format,
+		       cfg.prinfor, cfg.prinfow, 0, cfg.dtype, cfg.stc, cfg.stc,
+		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
+	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst, cfg.lbat,
+		cfg.lbatm);
 	if (err)
 		return err;
-
-	if (invalid_tags(0, cfg.ilbrt, sts, pif))
-		return -EINVAL;
-
-	nvme_init_copy(&cmd, cfg.namespace_id, cfg.sdlba, nr, cfg.format,
-		       cfg.prinfor, cfg.prinfow, 0, cfg.dtype, false, false,
-		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
-	nvme_init_var_size_tags(&cmd, pif, sts, cfg.ilbrt, 0);
-	nvme_init_app_tag(&cmd, cfg.lbat, cfg.lbatm);
 	err = nvme_submit_io_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("NVMe Copy: %s", nvme_strerror(err));
@@ -8069,27 +8051,25 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	const char *dtype_for_write = "directive type (for write-only)";
 	const char *dspec = "directive specific (for write-only)";
 	const char *dsm = "dataset management attributes (lower 8 bits)";
-	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be\n"
-		"checked as part of end-to-end data protection processing";
 	const char *force = "The \"I know what I'm doing\" flag, do not enforce exclusive access for write";
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		__u64	start_block;
 		__u16	block_count;
 		__u16	block_size;
 		__u64	data_size;
 		__u64	metadata_size;
-		__u64	ref_tag;
+		__u64	ilbrt;
 		char	*data;
 		char	*metadata;
 		__u8	prinfo;
-		__u16	app_tag_mask;
-		__u16	app_tag;
-		__u64	storage_tag;
+		__u16	lbatm;
+		__u16	lbat;
+		__u64	lbst;
 		bool	limited_retry;
 		bool	force_unit_access;
-		bool	storage_tag_check;
+		bool	stc;
 		__u8	dtype;
 		__u16	dspec;
 		__u8	dsmgmt;
@@ -8099,47 +8079,47 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	};
 
 	struct config cfg = {
-		.namespace_id		= 0,
+		.nsid				= 0,
 		.start_block		= 0,
 		.block_count		= 0,
-		.block_size		= 0,
-		.data_size		= 0,
+		.block_size			= 0,
+		.data_size			= 0,
 		.metadata_size		= 0,
-		.ref_tag		= 0,
-		.data			= "",
-		.metadata		= "",
-		.prinfo			= 0,
-		.app_tag_mask		= 0,
-		.app_tag		= 0,
-		.storage_tag		= 0,
+		.ilbrt				= 0,
+		.data				= "",
+		.metadata			= "",
+		.prinfo				= 0,
+		.lbatm				= 0,
+		.lbat				= 0,
+		.lbst				= 0,
 		.limited_retry		= false,
 		.force_unit_access	= false,
-		.storage_tag_check	= false,
-		.dtype			= 0,
-		.dspec			= 0,
-		.dsmgmt			= 0,
-		.show			= false,
-		.latency		= false,
-		.force			= false,
+		.stc				= false,
+		.dtype				= 0,
+		.dspec				= 0,
+		.dsmgmt				= 0,
+		.show				= false,
+		.latency			= false,
+		.force				= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_id_desired),
+		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_id_desired),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block_addr),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		  OPT_SHRT("block-size",        'b', &cfg.block_size,        block_size),
 		  OPT_SUFFIX("data-size",       'z', &cfg.data_size,         data_size),
 		  OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size,     metadata_size),
-		  OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,			 ref_tag),
 		  OPT_FILE("data",              'd', &cfg.data,              data),
 		  OPT_FILE("metadata",          'M', &cfg.metadata,          metadata),
 		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		  OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
-		  OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
-		  OPT_SUFFIX("storage-tag",     'g', &cfg.storage_tag,       storage_tag),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,			 app_tag_mask),
+		  OPT_SHRT("app-tag",           'a', &cfg.lbat,				 app_tag),
+		  OPT_SUFFIX("storage-tag",     'g', &cfg.lbst,				 storage_tag),
 		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry_num),
 		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
-		  OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,				 storage_tag_check),
 		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype_for_write),
 		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
 		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
@@ -8171,8 +8151,8 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		}
 	}
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			nvme_show_error("get-namespace-id: %s", nvme_strerror(err));
 			return err;
@@ -8188,7 +8168,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		control |= NVME_IO_LR;
 	if (cfg.force_unit_access)
 		control |= NVME_IO_FUA;
-	if (cfg.storage_tag_check)
+	if (cfg.stc)
 		control |= NVME_IO_STC;
 	if (cfg.dtype) {
 		if (cfg.dtype > 0xf) {
@@ -8236,7 +8216,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (!ns)
 			return -ENOMEM;
 
-		err = nvme_identify_ns(hdl, cfg.namespace_id, ns);
+		err = nvme_identify_ns(hdl, cfg.nsid, ns);
 		if (err > 0) {
 			nvme_show_status(err);
 			return err;
@@ -8253,7 +8233,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (!nvm_ns)
 			return -ENOMEM;
 
-		err = nvme_identify_csi_ns(hdl, cfg.namespace_id, NVME_CSI_NVM, 0,
+		err = nvme_identify_csi_ns(hdl, cfg.nsid, NVME_CSI_NVM, 0,
 				   nvm_ns);
 		if (!err)
 			get_pif_sts(ns, nvm_ns, &pif, &sts);
@@ -8269,7 +8249,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 				logical_block_size += ms;
 		}
 
-		if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
+		if (invalid_tags(cfg.lbst, cfg.ilbrt, sts, pif))
 			return -EINVAL;
 	}
 
@@ -8330,7 +8310,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 
 	if (cfg.show || nvme_cfg.dry_run) {
 		printf("opcode       : %02x\n", opcode);
-		printf("nsid         : %02x\n", cfg.namespace_id);
+		printf("nsid         : %02x\n", cfg.nsid);
 		printf("flags        : %02x\n", 0);
 		printf("control      : %04x\n", control);
 		printf("nblocks      : %04x\n", nblocks);
@@ -8338,18 +8318,18 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
 		printf("slba         : %"PRIx64"\n", (uint64_t)cfg.start_block);
 		printf("dsmgmt       : %08x\n", dsmgmt);
-		printf("reftag       : %"PRIx64"\n", (uint64_t)cfg.ref_tag);
-		printf("apptag       : %04x\n", cfg.app_tag);
-		printf("appmask      : %04x\n", cfg.app_tag_mask);
-		printf("storagetagcheck : %04x\n", cfg.storage_tag_check);
-		printf("storagetag      : %"PRIx64"\n", (uint64_t)cfg.storage_tag);
+		printf("reftag       : %"PRIx64"\n", (uint64_t)cfg.ilbrt);
+		printf("apptag       : %04x\n", cfg.lbat);
+		printf("appmask      : %04x\n", cfg.lbatm);
+		printf("storagetagcheck : %04x\n", cfg.stc);
+		printf("storagetag      : %"PRIx64"\n", (uint64_t)cfg.lbst);
 		printf("pif             : %02x\n", pif);
 		printf("sts             : %02x\n", sts);
 	}
 	if (nvme_cfg.dry_run)
 		return 0;
 
-	nvme_init_io(&cmd, opcode, cfg.namespace_id, cfg.start_block, buffer,
+	nvme_init_io(&cmd, opcode, cfg.nsid, cfg.start_block, buffer,
 		     buffer_size, mbuffer, mbuffer_size);
 	cmd.cdw12 = NVME_FIELD_ENCODE(nblocks,
 			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
@@ -8363,9 +8343,10 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		    NVME_FIELD_ENCODE(cfg.dsmgmt,
 			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
 			NVME_IOCS_COMMON_CDW13_DSM_MASK);
-
-	nvme_init_var_size_tags(&cmd, pif, sts, cfg.ref_tag, cfg.storage_tag);
-	nvme_init_app_tag(&cmd, cfg.app_tag, cfg.app_tag_mask);
+	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
+		cfg.lbat, cfg.lbatm);
+	if (err)
+		return err;
 	gettimeofday(&start_time, NULL);
 	err = nvme_submit_io_passthru(hdl, &cmd);
 	gettimeofday(&end_time, NULL);
@@ -8421,12 +8402,9 @@ static int write_cmd(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct nvme_passthru_cmd cmd;
-	__u8 sts = 0, pif = 0;
 	__u16 control = 0;
 	int err;
 
@@ -8437,45 +8415,45 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	    "This bit specifies the Storage Tag field shall be checked as part of Verify operation";
 
 	struct config {
-		__u32	namespace_id;
+		__u32	nsid;
 		__u64	start_block;
 		__u16	block_count;
 		bool	limited_retry;
 		bool	force_unit_access;
 		__u8	prinfo;
-		__u32	ref_tag;
-		__u16	app_tag;
-		__u16	app_tag_mask;
-		__u64	storage_tag;
-		bool	storage_tag_check;
+		__u32	ilbrt;
+		__u16	lbat;
+		__u16	lbatm;
+		__u64	lbst;
+		bool	stc;
 	};
 
 	struct config cfg = {
-		.namespace_id		= 0,
+		.nsid				= 0,
 		.start_block		= 0,
 		.block_count		= 0,
 		.limited_retry		= false,
 		.force_unit_access	= false,
-		.prinfo			= 0,
-		.ref_tag		= 0,
-		.app_tag		= 0,
-		.app_tag_mask		= 0,
-		.storage_tag		= 0,
-		.storage_tag_check	= false,
+		.prinfo				= 0,
+		.ilbrt				= 0,
+		.lbat				= 0,
+		.lbatm				= 0,
+		.lbst				= 0,
+		.stc				= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_desired),
+		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_desired),
 		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
 		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access_verify),
 		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		  OPT_SUFFIX("ref-tag",         'r', &cfg.ref_tag,           ref_tag),
-		  OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
-		  OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
-		  OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
-		  OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check));
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,			 ref_tag),
+		  OPT_SHRT("app-tag",           'a', &cfg.lbat,				 app_tag),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,			 app_tag_mask),
+		  OPT_SUFFIX("storage-tag",     'S', &cfg.lbst,				 storage_tag),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,				 storage_tag_check));
 
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -8490,47 +8468,23 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		control |= NVME_IO_LR;
 	if (cfg.force_unit_access)
 		control |= NVME_IO_FUA;
-	if (cfg.storage_tag_check)
+	if (cfg.stc)
 		control |= NVME_IO_STC;
 
-	if (!cfg.namespace_id) {
-		err = nvme_get_nsid(hdl, &cfg.namespace_id);
+	if (!cfg.nsid) {
+		err = nvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			nvme_show_error("get-namespace-id: %s", nvme_strerror(err));
 			return err;
 		}
 	}
 
-	ns = nvme_alloc(sizeof(*ns));
-	if (!ns)
-		return -ENOMEM;
-
-	err = nvme_identify_ns(hdl, cfg.namespace_id, ns);
-	if (err < 0) {
-		nvme_show_error("identify namespace: %s", nvme_strerror(err));
-		return err;
-	} else if (err) {
-		nvme_show_status(err);
-		return err;
-	}
-
-	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
-	if (!nvm_ns)
-		return -ENOMEM;
-
-	err = nvme_identify_csi_ns(hdl, cfg.namespace_id, NVME_CSI_NVM, 0,
-				   nvm_ns);
-	if (!err) {
-		get_pif_sts(ns, nvm_ns, &pif, &sts);
-	}
-
-	if (invalid_tags(cfg.storage_tag, cfg.ref_tag, sts, pif))
-		return -EINVAL;
-
-	nvme_init_verify(&cmd, cfg.namespace_id, cfg.start_block,
+	nvme_init_verify(&cmd, cfg.nsid, cfg.start_block,
 		cfg.block_count, control, 0, NULL, 0, NULL, 0);
-	nvme_init_var_size_tags(&cmd, pif, sts, cfg.ref_tag, cfg.storage_tag);
-	nvme_init_app_tag(&cmd, cfg.app_tag, cfg.app_tag_mask);
+	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
+		cfg.lbat, cfg.lbatm);
+	if (err)
+		return err;
 	err = nvme_submit_io_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("verify: %s", nvme_strerror(err));
