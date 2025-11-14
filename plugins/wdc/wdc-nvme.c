@@ -92,6 +92,12 @@
 #define WDC_NVME_SNTMP_DEV_ID				0x2761
 #define WDC_NVME_SNTMP_DEV_ID_1				0x2763
 
+#define WDC_NVME_SNESSD1_DEV_ID_E1L         0x2765
+#define WDC_NVME_SNESSD1_DEV_ID_E2          0x2766
+#define WDC_NVME_SNESSD1_DEV_ID_E3S         0x2767
+#define WDC_NVME_SNESSD1_DEV_ID_E3L         0x2768
+#define WDC_NVME_SNESSD1_DEV_ID_U2          0x2769
+
 /* This id's are no longer supported, delete ?? */
 #define WDC_NVME_SN550_DEV_ID				0x2708
 
@@ -190,7 +196,9 @@
 #define WDC_DRIVE_CAP_OCP_C5_LOG_PAGE			0x0000008000000000
 #define WDC_DRIVE_CAP_DEVICE_WAF			0x0000010000000000
 #define WDC_DRIVE_CAP_SET_LATENCY_MONITOR		0x0000020000000000
-#define WDC_DRIVE_CAP_RESERVED1				0x0000040000000000
+#define WDC_DRIVE_CAP_UDUI                  0x0000040000000000
+#define WDC_DRIVE_CAP_RESIZE_SN861          0x0000080000000000
+
 /* Any new capability flags should be added to the SNDK plugin */
 
 #define WDC_DRIVE_CAP_SMART_LOG_MASK			(WDC_DRIVE_CAP_C0_LOG_PAGE | \
@@ -1958,6 +1966,24 @@ static __u64 wdc_get_drive_capabilities(struct nvme_global_ctx *ctx, struct nvme
 
 	case WDC_NVME_SNDK_VID:
 		switch (read_device_id) {
+		case WDC_NVME_SNESSD1_DEV_ID_E1L:
+		case WDC_NVME_SNESSD1_DEV_ID_E2:
+		case WDC_NVME_SNESSD1_DEV_ID_E3S:
+		case WDC_NVME_SNESSD1_DEV_ID_E3L:
+		case WDC_NVME_SNESSD1_DEV_ID_U2:
+			capabilities |= (WDC_DRIVE_CAP_C0_LOG_PAGE |
+					WDC_DRIVE_CAP_C3_LOG_PAGE |
+					WDC_DRIVE_CAP_CA_LOG_PAGE |
+					WDC_DRIVE_CAP_OCP_C4_LOG_PAGE |
+					WDC_DRIVE_CAP_OCP_C5_LOG_PAGE |
+					WDC_DRIVE_CAP_UDUI |
+					WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+					WDC_DRIVE_CAP_CLOUD_SSD_VERSION |
+					WDC_DRIVE_CAP_LOG_PAGE_DIR |
+					WDC_DRIVE_CAP_DRIVE_STATUS |
+					WDC_DRIVE_CAP_SET_LATENCY_MONITOR);
+			break;
+
 		case WDC_NVME_SXSLCL_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DRIVE_ESSENTIALS;
 			break;
@@ -7257,6 +7283,11 @@ static int wdc_get_c0_log_page(struct nvme_global_ctx *ctx, struct nvme_transpor
 	case WDC_NVME_SN655_DEV_ID_1:
 	case WDC_NVME_SNTMP_DEV_ID:
 	case WDC_NVME_SNTMP_DEV_ID_1:
+	case WDC_NVME_SNESSD1_DEV_ID_E1L:
+	case WDC_NVME_SNESSD1_DEV_ID_E2:
+	case WDC_NVME_SNESSD1_DEV_ID_E3S:
+	case WDC_NVME_SNESSD1_DEV_ID_E3L:
+	case WDC_NVME_SNESSD1_DEV_ID_U2:
 		if (uuid_index == 0) {
 			ret = nvme_get_print_ocp_cloud_smart_log(hdl,
 					uuid_index,

@@ -1022,7 +1022,7 @@ static int sndk_capabilities(int argc, char **argv,
 
 	/* get capabilities */
 	ret = nvme_scan_topology(ctx, NULL, NULL);
-	if (ret || sndk_check_device(ctx, hdl))
+	if (ret || !sndk_check_device(ctx, hdl))
 		return -1;
 
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
