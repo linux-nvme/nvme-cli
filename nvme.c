@@ -4358,7 +4358,7 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("cntlid", 'c', &cfg.cntlid, cntlid),
+		  OPT_SHRT("cntlid", 'c', &cfg.cntlid, cntlid),
 		  OPT_BYTE("rt",     'r', &cfg.rt,     rt),
 		  OPT_BYTE("act",    'a', &cfg.act,    act),
 		  OPT_SHRT("nr",     'n', &cfg.nr,     nr));
