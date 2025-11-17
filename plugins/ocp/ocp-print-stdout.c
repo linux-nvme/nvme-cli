@@ -168,11 +168,7 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 	case 0 ... 1:
 		break;
 	default:
-	case 4:
-		printf("  NVMe Command Set Errata Version               %d\n",
-			log->nvme_cmdset_errata_version);
-		printf("  Lowest Permitted Firmware Revision            %"PRIu64"\n",
-			le64_to_cpu(log->lowest_permitted_fw_rev));
+	case 5:
 		printf("  NVMe Over Pcie Errata Version			%d\n",
 			log->nvme_over_pcie_errate_version);
 		printf("  NVMe Mi Errata Version			%d\n",
@@ -217,6 +213,12 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 		for (i = 0; i < sizeof(log->dssd_firmware_build_label); i++)
 			printf("%c", log->dssd_firmware_build_label[i]);
 		printf("\n");
+		fallthrough;
+	case 4:
+		printf("  NVMe Command Set Errata Version               %d\n",
+			log->nvme_cmdset_errata_version);
+		printf("  Lowest Permitted Firmware Revision            %"PRIu64"\n",
+			le64_to_cpu(log->lowest_permitted_fw_rev));
 		fallthrough;
 	case 2 ... 3:
 		printf("  Errata Version Field                          %d\n",
