@@ -2002,11 +2002,11 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-/// DSSD Power State (Feature Identifier C8h) Get Feature
+/// Telemetry Profile (Feature Identifier C8h) Get Feature
 static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct command *acmd,
 					      struct plugin *plugin)
 {
-	const char *desc = "Define Issue Get Feature command (FID: 0xC8) Latency Monitor";
+	const char *desc = "Define Issue Get Feature command (FID: 0xC8) Telemetry Profile";
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 
