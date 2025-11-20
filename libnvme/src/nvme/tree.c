@@ -145,9 +145,9 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 	h = nvme_first_host(ctx);
 	if (h) {
 		if (!hid)
-			hid = strdup(nvme_host_get_hostid(h));
+			hid = xstrdup(nvme_host_get_hostid(h));
 		if (!hnqn)
-			hnqn = strdup(nvme_host_get_hostnqn(h));
+			hnqn = xstrdup(nvme_host_get_hostnqn(h));
 	}
 
 	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
