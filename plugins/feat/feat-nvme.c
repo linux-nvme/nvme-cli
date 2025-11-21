@@ -52,7 +52,7 @@ static const char *volatile_wc_feat = "volatile write cache feature";
 static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 		    __u32 cdw11, __u8 sel, const char *feat)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	__u32 len = 0;
 
@@ -92,7 +92,7 @@ static int power_mgmt_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			  __u8 ps, __u8 wh, bool sv)
 {
 	__u32 cdw11 = NVME_SET(ps, FEAT_PWRMGMT_PS) | NVME_SET(wh, FEAT_PWRMGMT_WH);
-	__u32 result;
+	__u64 result;
 	int err;
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
@@ -152,7 +152,7 @@ static int feat_power_mgmt(int argc, char **argv, struct command *acmd, struct p
 static int perfc_set(struct nvme_transport_handle *hdl, __u8 fid, __u32 cdw11,
 		     struct perfc_config *cfg, bool sv)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 
 	_cleanup_fd_ int ffd = STDIN_FILENO;
@@ -254,7 +254,7 @@ static int hctm_set(struct nvme_transport_handle *hdl, const __u8 fid,
 {
 	__u32 cdw11 = NVME_SET(tmt1, FEAT_HCTM_TMT1)
 		| NVME_SET(tmt2, FEAT_HCTM_TMT2);
-	__u32 result;
+	__u64 result;
 	int err;
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
@@ -312,7 +312,7 @@ static int feat_hctm(int argc, char **argv, struct command *acmd, struct plugin 
 static int timestamp_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			 __u64 tstmp, bool sv)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	struct nvme_timestamp ts;
 	__le64 timestamp = cpu_to_le64(tstmp);
@@ -372,7 +372,7 @@ static int temp_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			   struct argconfig_commandline_options *opts,
 			   struct temp_thresh_config *cfg)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
 	struct nvme_passthru_cmd cmd;
@@ -459,7 +459,7 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	bool sv = argconfig_parse_seen(opts, "save");
 	struct nvme_passthru_cmd cmd;
 	__u8 ab, lpw, mpw, hpw;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	if (sv)
@@ -536,7 +536,7 @@ static int volatile_wc_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			   bool wce, bool sv)
 {
 	__u32 cdw11 = NVME_SET(wce, FEAT_VWC_WCE);
-	__u32 result;
+	__u64 result;
 	int err;
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,

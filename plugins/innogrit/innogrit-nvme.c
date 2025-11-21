@@ -40,7 +40,7 @@ static int nvme_vucmd(struct nvme_transport_handle *hdl, unsigned char opcode,
 
 static int getlogpage(struct nvme_transport_handle *hdl, unsigned char ilogid,
 		      unsigned char ilsp, char *data, int data_len,
-		      unsigned int *result)
+		      __u64 *result)
 {
 	struct nvme_passthru_cmd cmd;
 
@@ -137,8 +137,9 @@ static int getvsc_eventlog(struct nvme_transport_handle *hdl, FILE *fp)
 
 int getlogpage_eventlog(struct nvme_transport_handle *hdl, FILE *fp)
 {
-	unsigned int i, result, total_size;
+	unsigned int i, total_size;
 	char data[4096];
+	__u64 result;
 	int ret = 0;
 
 	result = 0;

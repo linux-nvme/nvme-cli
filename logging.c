@@ -81,13 +81,6 @@ static void nvme_show_common(struct nvme_passthru_cmd *cmd)
 static void nvme_show_command(struct nvme_passthru_cmd *cmd, int err)
 {
 	nvme_show_common(cmd);
-	nvme_show_key_value("result       ", "%08x", cmd->result);
-	nvme_show_key_value("err          ", "%d", err);
-}
-
-static void nvme_show_command64(struct nvme_passthru_cmd64 *cmd, int err)
-{
-	nvme_show_common((struct nvme_passthru_cmd *)cmd);
 	nvme_show_key_value("result       ", "%"PRIx64"", (uint64_t)(uintptr_t)cmd->result);
 	nvme_show_key_value("err          ", "%d", err);
 }
@@ -107,8 +100,9 @@ static void nvme_log_retry(int errnum)
 	printf("passthru command returned '%s'\n", strerror(errnum));
 }
 
-int nvme_submit_passthru(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
-			 struct nvme_passthru_cmd *cmd, __u32 *result)
+int nvme_submit_passthru(struct nvme_transport_handle *hdl,
+		unsigned long ioctl_cmd, struct nvme_passthru_cmd *cmd,
+		__u64 *result)
 {
 	struct timeval start;
 	struct timeval end;
@@ -131,40 +125,6 @@ retry:
 	if (log_level >= LOG_DEBUG) {
 		gettimeofday(&end, NULL);
 		nvme_show_command(cmd, err);
-		nvme_show_latency(start, end);
-	}
-
-	if (err >= 0 && result)
-		*result = cmd->result;
-
-	return err;
-}
-
-int nvme_submit_passthru64(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
-			   struct nvme_passthru_cmd64 *cmd,
-			   __u64 *result)
-{
-	struct timeval start;
-	struct timeval end;
-	int err = 0;
-
-	if (log_level >= LOG_DEBUG)
-		gettimeofday(&start, NULL);
-
-	if (!nvme_cfg.dry_run) {
-retry:
-		err = ioctl(nvme_transport_handle_get_fd(hdl), ioctl_cmd, cmd);
-		if ((err && (errno == EAGAIN ||
-			     (errno == EINTR && !nvme_sigint_received))) &&
-		    !nvme_cfg.no_retries) {
-			nvme_log_retry(errno);
-			goto retry;
-		}
-	}
-
-	if (log_level >= LOG_DEBUG) {
-		gettimeofday(&end, NULL);
-		nvme_show_command64(cmd, err);
 		nvme_show_latency(start, end);
 	}
 

@@ -62,7 +62,7 @@ static int test_ctrl(nvme_ctrl_t c)
 	struct nvme_ctrl_list ctrlist = { 0 };
 	struct nvme_id_ctrl id = { 0 };
 
-	__u32 result;
+	__u64 result;
 
 	nvme_init_identify_ctrl(&cmd, &id);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
@@ -210,98 +210,101 @@ static int test_ctrl(nvme_ctrl_t c)
 	nvme_init_get_features_arbitration(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Arbitration:%x\n", result);
+		printf("  Arbitration:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Arbitration:%x\n", ret);
 	nvme_init_get_features_power_mgmt(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Power Management:%x\n", result);
+		printf("  Power Management:%" PRIu64 "x\n", (uint64_t) result);
 	else if (ret > 0)
 		printf("  ERROR: Power Management:%x\n", ret);
 
 	nvme_init_get_features_temp_thresh(&cmd, sel, 0, 0);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Temperature Threshold:%x\n", result);
+		printf("  Temperature Threshold:%" PRIu64 "\n",
+			(uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Temperature Threshold:%x\n", ret);
 	nvme_init_get_features_volatile_wc(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Volatile Write Cache:%x\n", result);
+		printf("  Volatile Write Cache:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Volatile Write Cache:%x\n", ret);
 	nvme_init_get_features_num_queues(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Number of Queues:%x\n", result);
+		printf("  Number of Queues:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Number of Queues:%x\n", ret);
 	nvme_init_get_features_irq_coalesce(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  IRQ Coalescing:%x\n", result);
+		printf("  IRQ Coalescing:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: IRQ Coalescing:%x\n", ret);
 	nvme_init_get_features_write_atomic(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Write Atomic:%x\n", result);
+		printf("  Write Atomic:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Write Atomic:%x\n", ret);
 	nvme_init_get_features_async_event(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Asycn Event Config:%x\n", result);
+		printf("  Asycn Event Config:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Asycn Event Config:%x\n", ret);
 	nvme_init_get_features_hctm(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  HCTM:%x\n", result);
+		printf("  HCTM:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: HCTM:%x\n", ret);
 	nvme_init_get_features_nopsc(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  NOP Power State Config:%x\n", result);
+		printf("  NOP Power State Config:%" PRIu64 "\n",
+			(uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: NOP Power State Configrbitration:%x\n", ret);
 	nvme_init_get_features_rrl(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Read Recover Levels:%x\n", result);
+		printf("  Read Recover Levels:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Read Recover Levels:%x\n", ret);
 	nvme_init_get_features_lba_sts_interval(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  LBA Status Interval:%x\n", result);
+		printf("  LBA Status Interval:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: LBA Status Interval:%x\n", ret);
 	nvme_init_get_features_sanitize(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Sanitize:%x\n", result);
+		printf("  Sanitize:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: SW Progress Marker:%x\n", ret);
 	nvme_init_get_features_sw_progress(&cmd, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  SW Progress Marker:%x\n", result);
+		printf("  SW Progress Marker:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Sanitize:%x\n", ret);
 	nvme_init_get_features_resv_mask(&cmd, 0, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Reservation Mask:%x\n", result);
+		printf("  Reservation Mask:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Reservation Mask:%x\n", ret);
 	nvme_init_get_features_resv_persist(&cmd, 0, sel);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Reservation Persistence:%x\n", result);
+		printf("  Reservation Persistence:%" PRIu64 "\n",
+			(uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Reservation Persistence:%x\n", ret);
 	return 0;
@@ -314,7 +317,7 @@ static int test_namespace(nvme_ns_t n)
 	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ns ns = { 0 }, allocated = { 0 };
 	struct nvme_ns_id_desc *descs;
-	__u32 result = 0;
+	__u64 result = 0;
 	__u8 flbas;
 
 	ret = nvme_ns_identify(n, &ns);
@@ -347,7 +350,7 @@ static int test_namespace(nvme_ns_t n)
 		NVME_GET_FEATURES_SEL_CURRENT);
 	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
 	if (!ret)
-		printf("  Write Protect:%x\n", result);
+		printf("  Write Protect:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)
 		printf("  ERROR: Write Protect:%x\n", ret);
 	return 0;
