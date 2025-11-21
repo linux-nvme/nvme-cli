@@ -2356,17 +2356,17 @@ static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 	__u16 rsvd13 = oncs >> 13;
 	bool nszs = !!(oncs & NVME_CTRL_ONCS_NAMESPACE_ZEROES);
 	bool maxwzd = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE);
-	bool afc  = !!(oncs & NVME_CTRL_ONCS_ALL_FAST_COPY);
-	bool csa  = !!(oncs & NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY);
-	bool copy = !!(oncs & NVME_CTRL_ONCS_COPY);
-	bool vrfy = !!(oncs & NVME_CTRL_ONCS_VERIFY);
-	bool tmst = !!(oncs & NVME_CTRL_ONCS_TIMESTAMP);
-	bool resv = !!(oncs & NVME_CTRL_ONCS_RESERVATIONS);
-	bool save = !!(oncs & NVME_CTRL_ONCS_SAVE_FEATURES);
-	bool wzro = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES);
-	bool dsms = !!(oncs & NVME_CTRL_ONCS_DSM);
-	bool wunc = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
-	bool cmp  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
+	bool nvmafc  = !!(oncs & NVME_CTRL_ONCS_ALL_FAST_COPY);
+	bool nvmcsa  = !!(oncs & NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY);
+	bool nvmcpys = !!(oncs & NVME_CTRL_ONCS_COPY);
+	bool nvmvfys = !!(oncs & NVME_CTRL_ONCS_VERIFY);
+	bool tss = !!(oncs & NVME_CTRL_ONCS_TIMESTAMP);
+	bool reservs = !!(oncs & NVME_CTRL_ONCS_RESERVATIONS);
+	bool ssfs = !!(oncs & NVME_CTRL_ONCS_SAVE_FEATURES);
+	bool nvmwzsv = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES);
+	bool nvmdsmsv = !!(oncs & NVME_CTRL_ONCS_DSM);
+	bool nvmwusv = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
+	bool nvmcmps  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
 
 	if (rsvd13)
 		printf("  [15:13] : %#x\tReserved\n", rsvd13);
@@ -2375,27 +2375,27 @@ static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 	printf("  [11:11] : %#x\tMaximum Write Zeroes with Deallocate %sSupported\n",
 		maxwzd, maxwzd ? "" : "Not ");
 	printf("  [10:10] : %#x\tAll Fast Copy %sSupported\n",
-		afc, afc ? "" : "Not ");
+		nvmafc, nvmafc ? "" : "Not ");
 	printf("  [9:9] : %#x\tCopy Single Atomicity %sSupported\n",
-		csa, csa ? "" : "Not ");
+		nvmcsa, nvmcsa ? "" : "Not ");
 	printf("  [8:8] : %#x\tCopy %sSupported\n",
-		copy, copy ? "" : "Not ");
+		nvmcpys, nvmcpys ? "" : "Not ");
 	printf("  [7:7] : %#x\tVerify %sSupported\n",
-		vrfy, vrfy ? "" : "Not ");
+		nvmvfys, nvmvfys ? "" : "Not ");
 	printf("  [6:6] : %#x\tTimestamp %sSupported\n",
-		tmst, tmst ? "" : "Not ");
+		tss, tss ? "" : "Not ");
 	printf("  [5:5] : %#x\tReservations %sSupported\n",
-		resv, resv ? "" : "Not ");
+		reservs, reservs ? "" : "Not ");
 	printf("  [4:4] : %#x\tSave and Select %sSupported\n",
-		save, save ? "" : "Not ");
-	printf("  [3:3] : %#x\tWrite Zeroes %sSupported\n",
-		wzro, wzro ? "" : "Not ");
-	printf("  [2:2] : %#x\tData Set Management %sSupported\n",
-		dsms, dsms ? "" : "Not ");
-	printf("  [1:1] : %#x\tWrite Uncorrectable %sSupported\n",
-		wunc, wunc ? "" : "Not ");
-	printf("  [0:0] : %#x\tCompare %sSupported\n",
-		cmp, cmp ? "" : "Not ");
+		ssfs, ssfs ? "" : "Not ");
+	printf("  [3:3] : %#x\tWrite Zeroes Support Variants\n",
+		nvmwzsv);
+	printf("  [2:2] : %#x\tDataset Management Support Variants\n",
+		nvmdsmsv);
+	printf("  [1:1] : %#x\tWrite Uncorrectable Support Variants\n",
+		nvmwusv);
+	printf("  [0:0] : %#x\tCompare Command %sSupported\n",
+		nvmcmps, nvmcmps ? "" : "Not ");
 	printf("\n");
 }
 
