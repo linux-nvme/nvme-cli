@@ -8314,7 +8314,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	nvme_init_app_tag((struct nvme_passthru_cmd64 *)&cmd, cfg.app_tag,
 		cfg.app_tag_mask);
 	gettimeofday(&start_time, NULL);
-	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
