@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <json.h>
+#include <stdint.h>
 #include "config.h"
 
 // max 16 bit unsigned integer number 65535
@@ -27,11 +28,29 @@ static bool config_get_by_version(const struct json_object *obj, int version_maj
 	snprintf(str_subkey, sizeof(str_subkey), "%d", version_minor);
 	struct json_object *major_obj = NULL;
 
-	if (!json_object_object_get_ex(obj, str_key, &major_obj))
-		return false;
-	if (!json_object_object_get_ex(major_obj, str_subkey, value))
-		return false;
-	return value != NULL;
+	/* Try exact major version match first */
+	if (json_object_object_get_ex(obj, str_key, &major_obj)) {
+		/* Try exact minor version match first */
+		if (json_object_object_get_ex(major_obj, str_subkey, value))
+			return value != NULL;
+
+		/* Try wildcard minor version if exact match failed */
+		if (json_object_object_get_ex(major_obj, "*", value))
+			return value != NULL;
+	}
+
+	/* Try wildcard major version if exact major version not found */
+	if (json_object_object_get_ex(obj, "*", &major_obj)) {
+		/* Try exact minor version match */
+		if (json_object_object_get_ex(major_obj, str_subkey, value))
+			return value != NULL;
+
+		/* Try wildcard minor version */
+		if (json_object_object_get_ex(major_obj, "*", value))
+			return value != NULL;
+	}
+
+	return false;
 }
 
 bool sldm_config_get_struct_by_key_version(const struct json_object *config, char *key,
