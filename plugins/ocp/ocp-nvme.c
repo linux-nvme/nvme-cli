@@ -689,7 +689,7 @@ static int get_telemetry_data(struct nvme_transport_handle *hdl, __u32 ns, __u8 
 	cmd.cdw12 = (__u32)(0x00000000FFFFFFFF & offset);
 	cmd.cdw13 = (__u32)((0xFFFFFFFF00000000 & offset) >> 8);
 	cmd.cdw14 = 0;
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
@@ -838,7 +838,7 @@ static int extract_dump_get_log(struct nvme_transport_handle *hdl, char *feature
 		nvme_init_get_log(&cmd, nsid, log_id, NVME_CSI_NVM,
 				  data, transfersize);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 		if (err) {
 			if (i > 0)
 				goto close_output;
@@ -1218,7 +1218,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	cmd.cdw10 |= NVME_FIELD_ENCODE(NVME_LOG_TELEM_HOST_LSP_CREATE,
 			NVME_LOG_CDW10_LSP_SHIFT,
 			NVME_LOG_CDW10_LSP_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err < 0)
 		nvme_show_error("Failed to fetch the log from drive.\n");
 	else if (err > 0) {
@@ -1255,7 +1255,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 		nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM,
 				  telemetry_log, bs);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (err < 0) {
 			nvme_show_error("Failed to fetch the log from drive.\n");
 			break;
@@ -2916,6 +2916,7 @@ static int enable_ieee1667_silo_set(struct nvme_transport_handle *hdl,
 	bool save = argconfig_parse_seen(opts, "save");
 	struct ieee1667_get_cq_entry cq_entry;
 	const __u8 fid = OCP_FID_1667;
+	__u64 result;
 	__u32 cdw11;
 	__u8 uidx = 0;
 	int err;
@@ -2931,7 +2932,8 @@ static int enable_ieee1667_silo_set(struct nvme_transport_handle *hdl,
 
 	cdw11 = OCP_SET(enable, ENABLE_IEEE1667_SILO);
 	err = nvme_set_features(hdl, NVME_NSID_NONE, fid, save,
-		cdw11, 0, 0, uidx, 0, NULL, 0, (__u64 *)&cq_entry);
+		cdw11, 0, 0, uidx, 0, NULL, 0, &result);
+	memcpy(&cq_entry, &result, sizeof(cq_entry));
 	if (err > 0) {
 		nvme_show_status(err);
 	} else if (err < 0) {

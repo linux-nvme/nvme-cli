@@ -57,7 +57,7 @@ int nvme_query_cap(struct nvme_transport_handle *hdl, __u32 nsid, __u32 data_len
 	};
 
 	rc = ioctl(nvme_transport_handle_get_fd(hdl), SFX_GET_FREESPACE, data);
-	return rc ? nvme_submit_admin_passthru(hdl, &cmd, NULL) : 0;
+	return rc ? nvme_submit_admin_passthru(hdl, &cmd) : 0;
 }
 
 int nvme_change_cap(struct nvme_transport_handle *hdl, __u32 nsid, __u64 capacity)
@@ -69,7 +69,7 @@ int nvme_change_cap(struct nvme_transport_handle *hdl, __u32 nsid, __u64 capacit
 		.cdw11	= (capacity >> 32),
 	};
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 int nvme_sfx_set_features(struct nvme_transport_handle *hdl, __u32 nsid, __u32 fid, __u32 value)
@@ -81,7 +81,7 @@ int nvme_sfx_set_features(struct nvme_transport_handle *hdl, __u32 nsid, __u32 f
 		.cdw11	= value,
 	};
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 int nvme_sfx_get_features(struct nvme_transport_handle *hdl, __u32 nsid, __u32 fid, __u32 *result)
@@ -93,7 +93,7 @@ int nvme_sfx_get_features(struct nvme_transport_handle *hdl, __u32 nsid, __u32 f
 		.cdw10	= fid,
 	};
 
-	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!err && result)
 		*result = cmd.result;
 
@@ -560,7 +560,7 @@ int sfx_nvme_get_log(struct nvme_transport_handle *hdl, __u32 nsid, __u8 log_id,
 	cmd.cdw10 = log_id | (numdl << 16);
 	cmd.cdw11 = numdu;
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -1244,7 +1244,7 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 	cmd.cdw10 |= NVME_FIELD_ENCODE(lsp,
 				       NVME_LOG_CDW10_LSP_SHIFT,
 				       NVME_LOG_CDW10_LSP_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n",
 		        lsp, err);
@@ -1257,7 +1257,7 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 	cmd.cdw10 |= NVME_FIELD_ENCODE(lsp,
 				       NVME_LOG_CDW10_LSP_SHIFT,
 				       NVME_LOG_CDW10_LSP_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n",
 			lsp, err);
@@ -1299,8 +1299,7 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 					       NVME_LOG_CDW10_LSP_SHIFT,
 		 			       NVME_LOG_CDW10_LSP_MASK);
 		nvme_init_get_log_lpo(&cmd, lpo);
-		err = nvme_get_log(hdl, &cmd, false,
-			NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (err) {
 			fprintf(stderr,
 				"Unable to get evtlog offset=0x%x len 0x%x ret = 0x%x\n",
@@ -1461,7 +1460,7 @@ static int nvme_expand_cap(struct nvme_transport_handle *hdl, __u32 namespace_id
 		.cdw10       = 0x0e,
 	};
 
-	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		fprintf(stderr, "Create ns failed\n");
 		nvme_show_status(err);

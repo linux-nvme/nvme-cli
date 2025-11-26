@@ -255,7 +255,7 @@ void nvme_mi_ep_probe(struct nvme_mi_ep *ep)
 	 */
 	nvme_init_identify_ctrl(&cmd, &id);
 	cmd.data_len = offsetof(struct nvme_id_ctrl, rab);
-	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	rc = nvme_submit_admin_passthru(hdl, &cmd);
 	if (rc) {
 		nvme_msg(ep->ctx, LOG_WARNING,
 			 "Identify Controller failed, no quirks applied\n");
@@ -863,7 +863,7 @@ int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
 }
 
 int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd, __u64 *result)
+		struct nvme_passthru_cmd *cmd)
 {
 	/* Input parameters flags, rsvd, metadata, metadata_len are not used */
 	struct nvme_mi_admin_resp_hdr resp_hdr;
@@ -938,7 +938,7 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
 	if (rc)
 		return rc;
 
-	rc = nvme_mi_admin_parse_status(&resp, result);
+	rc = nvme_mi_admin_parse_status(&resp, &cmd->result);
 	if (rc)
 		return rc;
 

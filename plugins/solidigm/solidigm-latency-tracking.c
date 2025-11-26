@@ -331,8 +331,7 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 	cmd.cdw14 |= NVME_FIELD_ENCODE(lt->uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	err = nvme_get_log(lt->hdl, &cmd, false,
-			   NVME_LOG_PAGE_PDU_SIZE, NULL);
+	err = nvme_get_log(lt->hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err)
 		return err;
 

@@ -452,7 +452,6 @@ enum nvme_cmd_dword_fields {
  * nvme_submit_admin_passthru() - Submit an nvme passthrough admin command
  * @hdl:	Transport handle
  * @cmd:	The nvme admin command to send
- * @result:	Optional field to return the result from the CQE DW0
  *
  * Uses NVME_IOCTL_ADMIN_CMD for the ioctl request.
  *
@@ -460,14 +459,12 @@ enum nvme_cmd_dword_fields {
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd, __u64 *result);
+		struct nvme_passthru_cmd *cmd);
 
 /**
  * nvme_submit_io_passthru() - Submit an nvme passthrough command
  * @hdl:	Transport handle
  * @cmd:	The nvme io command to send
- * @result:	Optional field to return the result from the CQE dword 0
- * @result:	Optional field to return the result from the CQE DW0
  *
  * Uses NVME_IOCTL_IO_CMD for the ioctl request.
  *
@@ -475,7 +472,7 @@ int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd, __u64 *result);
+		struct nvme_passthru_cmd *cmd);
 
 /**
  * nvme_subsystem_reset() - Initiate a subsystem reset
@@ -1101,14 +1098,13 @@ nvme_init_zns_identify_ctrl(struct nvme_passthru_cmd *cmd,
  * @cmd:	Passthru command
  * @rae:	Retain asynchronous events
  * @xfer_len:	Max log transfer size per request to split the total.
- * @result:	The command completion result from CQE dword0
  *
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 int nvme_get_log(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd, bool rae,
-		 __u32 xfer_len, __u64 *result);
+		 __u32 xfer_len);
 
 /**
  * nvme_init_get_log_lpo() - Initializes passthru command with a
@@ -4165,7 +4161,7 @@ static inline int nvme_flush(struct nvme_transport_handle *hdl, __u32 nsid)
 	cmd.opcode = nvme_cmd_flush;
 	cmd.nsid = nsid;
 
-	return nvme_submit_io_passthru(hdl, &cmd, NULL);
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 /**
@@ -5413,7 +5409,7 @@ nvme_identify(struct nvme_transport_handle *hdl, __u32 nsid, enum nvme_csi csi,
 
 	nvme_init_identify(&cmd, nsid, csi, cns, data, len);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 /**
  * nvme_identify_ctrl() - Submit an Identify Controller command
@@ -5436,7 +5432,7 @@ nvme_identify_ctrl(struct nvme_transport_handle *hdl,
 
 	nvme_init_identify_ctrl(&cmd, id);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5460,7 +5456,7 @@ nvme_identify_active_ns_list(struct nvme_transport_handle *hdl,
 
 	nvme_init_identify_active_ns_list(&cmd, nsid, ns_list);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5485,7 +5481,7 @@ nvme_identify_ns(struct nvme_transport_handle *hdl,
 
 	nvme_init_identify_ns(&cmd, nsid, ns);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5511,7 +5507,7 @@ nvme_identify_csi_ns(struct nvme_transport_handle *hdl, __u32 nsid,
 
 	nvme_init_identify_csi_ns(&cmd, nsid, csi, uidx, id_ns);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5534,7 +5530,7 @@ nvme_identify_uuid_list(struct nvme_transport_handle *hdl,
 
 	nvme_init_identify_uuid_list(&cmd, uuid_list);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5560,7 +5556,7 @@ nvme_identify_csi_ns_user_data_format(struct nvme_transport_handle *hdl,
 
 	nvme_init_identify_csi_ns_user_data_format(&cmd, csi, fidx, uidx, data);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5583,7 +5579,7 @@ nvme_identify_ns_granularity(struct nvme_transport_handle *hdl,
 
 	nvme_init_identify_ns_granularity(&cmd, gr_list);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5608,7 +5604,7 @@ nvme_identify_ns_descs_list(struct nvme_transport_handle *hdl,
 
 	nvme_init_identify_ns_descs_list(&cmd, nsid, descs);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5632,7 +5628,7 @@ nvme_zns_identify_ns(struct nvme_transport_handle *hdl,
 
 	nvme_init_zns_identify_ns(&cmd, nsid, data);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -5658,7 +5654,7 @@ nvme_get_log_simple(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, lid, NVME_CSI_NVM, data, len);
 
-	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 }
 
 /**
@@ -5682,7 +5678,7 @@ nvme_get_log_supported_log_pages(struct nvme_transport_handle *hdl,
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_SUPPORTED_LOG_PAGES,
 		NVME_CSI_NVM, log, sizeof(*log));
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 
@@ -5712,7 +5708,7 @@ nvme_get_log_error(struct nvme_transport_handle *hdl, __u32 nsid,
 	nvme_init_get_log(&cmd, nsid, NVME_LOG_LID_ERROR,
 		NVME_CSI_NVM, err_log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -5741,7 +5737,7 @@ nvme_get_log_fw_slot(struct nvme_transport_handle *hdl, __u32 nsid,
 	nvme_init_get_log(&cmd, nsid, NVME_LOG_LID_FW_SLOT,
 		NVME_CSI_NVM, fw_log, sizeof(*fw_log));
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*fw_log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*fw_log));
 }
 
 /**
@@ -5771,7 +5767,7 @@ nvme_get_log_changed_ns_list(struct nvme_transport_handle *hdl, __u32 nsid,
 	nvme_init_get_log(&cmd, nsid, NVME_LOG_LID_CHANGED_NS,
 		NVME_CSI_NVM, ns_log, sizeof(*ns_log));
 
-	return nvme_get_log(hdl, &cmd, true, sizeof(*ns_log), NULL);
+	return nvme_get_log(hdl, &cmd, true, sizeof(*ns_log));
 }
 
 /**
@@ -5800,7 +5796,7 @@ nvme_get_log_cmd_effects(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_cmd_effects(&cmd, csi, effects_log);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -5830,7 +5826,7 @@ nvme_get_log_device_self_test(struct nvme_transport_handle *hdl,
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_DEVICE_SELF_TEST,
 		NVME_CSI_NVM, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -5860,7 +5856,7 @@ nvme_get_log_create_telemetry_host_mcda(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_create_telemetry_host_mcda(&cmd, mcda, log);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 /**
@@ -5887,7 +5883,7 @@ nvme_get_log_create_telemetry_host(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_create_telemetry_host(&cmd, log);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 /**
@@ -5917,7 +5913,7 @@ nvme_get_log_telemetry_host(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_telemetry_host(&cmd, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -5946,7 +5942,7 @@ nvme_get_log_telemetry_ctrl(struct nvme_transport_handle *hdl, bool rae,
 
 	nvme_init_get_log_telemetry_ctrl(&cmd, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, len, NULL);
+	return nvme_get_log(hdl, &cmd, rae, len);
 }
 
 /**
@@ -5976,7 +5972,7 @@ nvme_get_log_endurance_group(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_endurance_group(&cmd, endgid, log);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 /**
@@ -6006,7 +6002,7 @@ nvme_get_log_predictable_lat_nvmset(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_predictable_lat_nvmset(&cmd, nvmsetid, log);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 /**
@@ -6036,7 +6032,7 @@ nvme_get_log_predictable_lat_event(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_predictable_lat_event(&cmd, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, len, NULL);
+	return nvme_get_log(hdl, &cmd, rae, len);
 }
 
 /**
@@ -6067,7 +6063,7 @@ nvme_get_log_fdp_configurations(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_fdp_configurations(&cmd, egid, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6097,7 +6093,7 @@ nvme_get_log_reclaim_unit_handle_usage(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_reclaim_unit_handle_usage(&cmd, egid, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6127,7 +6123,7 @@ nvme_get_log_fdp_stats(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_fdp_stats(&cmd, egid, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6160,7 +6156,7 @@ nvme_get_log_fdp_events(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_fdp_events(&cmd, egid, host_events, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6192,7 +6188,7 @@ nvme_get_log_ana(struct nvme_transport_handle *hdl, bool rae,
 
 	nvme_init_get_log_ana(&cmd, lsp, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, len, NULL);
+	return nvme_get_log(hdl, &cmd, rae, len);
 }
 
 /**
@@ -6245,7 +6241,7 @@ nvme_get_log_lba_status(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_lba_status(&cmd, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, len, NULL);
+	return nvme_get_log(hdl, &cmd, rae, len);
 }
 
 /**
@@ -6275,7 +6271,7 @@ nvme_get_log_endurance_grp_evt(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_endurance_grp_evt(&cmd, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, len, NULL);
+	return nvme_get_log(hdl, &cmd, rae, len);
 }
 
 /**
@@ -6300,7 +6296,7 @@ nvme_get_log_fid_supported_effects(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_fid_supported_effects(&cmd, csi, log);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 /**
@@ -6325,7 +6321,7 @@ nvme_get_log_mi_cmd_supported_effects(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_mi_cmd_supported_effects(&cmd, log);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 /**
@@ -6354,7 +6350,7 @@ nvme_get_log_boot_partition(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_boot_partition(&cmd, lsp, part, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6387,7 +6383,7 @@ nvme_get_log_rotational_media_info(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_rotational_media_info(&cmd, endgid, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6416,7 +6412,7 @@ nvme_get_log_dispersed_ns_participating_nss(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_dispersed_ns_participating_nss(&cmd, nsid, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6442,7 +6438,7 @@ nvme_get_log_mgmt_addr_list(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_mgmt_addr_list(&cmd, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6476,7 +6472,7 @@ nvme_get_log_phy_rx_eom(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_phy_rx_eom(&cmd, lsp, controller, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6507,7 +6503,7 @@ nvme_get_log_reachability_groups(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_reachability_groups(&cmd, rgo, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6541,7 +6537,7 @@ nvme_get_log_reachability_associations(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_reachability_associations(&cmd, rao, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, len, NULL);
+	return nvme_get_log(hdl, &cmd, rae, len);
 }
 
 /**
@@ -6569,7 +6565,7 @@ nvme_get_log_changed_alloc_ns_list(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_changed_ns(&cmd, log);
 
-	return nvme_get_log(hdl, &cmd, true, len, NULL);
+	return nvme_get_log(hdl, &cmd, true, len);
 }
 
 /**
@@ -6595,7 +6591,7 @@ nvme_get_log_discovery(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_discovery(&cmd, lpo, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6624,7 +6620,7 @@ nvme_get_log_host_discovery(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_host_discovery(&cmd, allhoste, log, len);
 
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6650,7 +6646,7 @@ nvme_get_log_ave_discovery(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_ave_discovery(&cmd, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, len, NULL);
+	return nvme_get_log(hdl, &cmd, rae, len);
 }
 
 /**
@@ -6676,7 +6672,7 @@ nvme_get_log_pull_model_ddc_req(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_pull_model_ddc_req(&cmd, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, len, NULL);
+	return nvme_get_log(hdl, &cmd, rae, len);
 }
 
 /**
@@ -6707,7 +6703,7 @@ nvme_get_log_media_unit_stat(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_media_unit_stat(&cmd, domid, mus);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*mus), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*mus));
 }
 
 /**
@@ -6740,7 +6736,7 @@ nvme_get_log_support_cap_config_list(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_support_cap_config_list(&cmd, domid, cap);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*cap), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*cap));
 }
 
 /**
@@ -6763,7 +6759,7 @@ nvme_get_log_reservation(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_reservation(&cmd, log);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 /**
@@ -6790,7 +6786,7 @@ nvme_get_log_sanitize(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_sanitize(&cmd, log);
 
-	return nvme_get_log(hdl, &cmd, rae, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, rae, sizeof(*log));
 }
 
 /**
@@ -6818,7 +6814,7 @@ nvme_get_log_zns_changed_zones(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_zns_changed_zones(&cmd, nsid, log);
 
-	return nvme_get_log(hdl, &cmd, rae, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, rae, sizeof(*log));
 }
 
 /**
@@ -6850,7 +6846,7 @@ nvme_get_log_persistent_event(struct nvme_transport_handle *hdl,
 	 * Call the generic log execution function.
 	 * The data length is determined by the 'len' parameter.
 	 */
-	return nvme_get_log(hdl, &cmd, false, len, NULL);
+	return nvme_get_log(hdl, &cmd, false, len);
 }
 
 /**
@@ -6880,7 +6876,7 @@ nvme_get_log_lockdown(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_lockdown(&cmd, cnscp, log);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*log), NULL);
+	return nvme_get_log(hdl, &cmd, false, sizeof(*log));
 }
 
 /**
@@ -6905,7 +6901,7 @@ nvme_get_log_smart(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log_smart(&cmd, nsid, smart_log);
 
-	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 }
 
 /**
@@ -6936,6 +6932,7 @@ nvme_set_features(struct nvme_transport_handle *hdl, __u32 nsid, __u8 fid,
 		__u32 cdw15, void *data, __u32 len, __u64 *result)
 {
 	struct nvme_passthru_cmd cmd;
+	int err;
 
 	nvme_init_set_features(&cmd, fid, sv);
 	cmd.nsid = nsid;
@@ -6949,7 +6946,10 @@ nvme_set_features(struct nvme_transport_handle *hdl, __u32 nsid, __u8 fid,
 	cmd.data_len = len;
 	cmd.addr = (__u64)(uintptr_t)data;
 
-	return nvme_submit_admin_passthru(hdl, &cmd, result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
+	if (result)
+		*result = cmd.result;
+	return err;
 }
 
 /**
@@ -6973,12 +6973,16 @@ nvme_set_features_simple(struct nvme_transport_handle *hdl,
 		__u32 nsid, __u8 fid, bool sv, __u32 cdw11, __u64 *result)
 {
 	struct nvme_passthru_cmd cmd;
+	int err;
 
 	nvme_init_set_features(&cmd, fid, sv);
 	cmd.nsid = nsid;
 	cmd.cdw11 = cdw11;
 
-	return nvme_submit_admin_passthru(hdl, &cmd, result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
+	if (result)
+		*result = cmd.result;
+	return err;
 }
 
 /**
@@ -7004,6 +7008,7 @@ nvme_get_features(struct nvme_transport_handle *hdl, __u32 nsid,
 		__u32 len, __u64 *result)
 {
 	struct nvme_passthru_cmd cmd;
+	int err;
 
 	nvme_init_get_features(&cmd, fid, sel);
 
@@ -7015,7 +7020,10 @@ nvme_get_features(struct nvme_transport_handle *hdl, __u32 nsid,
 	cmd.data_len = len;
 	cmd.addr = (__u64)(uintptr_t)data;
 
-	return nvme_submit_admin_passthru(hdl, &cmd, result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
+	if (result)
+		*result = cmd.result;
+	return err;
 }
 
 /**
@@ -7037,9 +7045,13 @@ nvme_get_features_simple(struct nvme_transport_handle *hdl, __u8 fid,
 		enum nvme_get_features_sel sel, __u64 *result)
 {
 	struct nvme_passthru_cmd cmd;
+	int err;
 
 	nvme_init_get_features(&cmd, fid, sel);
 
-	return nvme_submit_admin_passthru(hdl, &cmd, result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
+	if (result)
+		*result = cmd.result;
+	return err;
 }
 #endif /* _LIBNVME_IOCTL_H */

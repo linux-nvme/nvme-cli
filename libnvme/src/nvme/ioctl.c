@@ -119,8 +119,7 @@ bool __nvme_decide_retry(struct nvme_transport_handle *hdl,
  * compatibility keep a 32 version.
  */
 static int nvme_submit_passthru32(struct nvme_transport_handle *hdl,
-		unsigned long ioctl_cmd, struct nvme_passthru_cmd *cmd,
-		__u64 *result)
+		unsigned long ioctl_cmd, struct nvme_passthru_cmd *cmd)
 {
 	struct linux_passthru_cmd32 cmd32;
 	void *user_data;
@@ -142,9 +141,6 @@ static int nvme_submit_passthru32(struct nvme_transport_handle *hdl,
 
 out:
 	cmd->result = cmd32.result;
-	if (err >= 0 && result)
-		*result = cmd->result;
-
 	hdl->submit_exit(hdl, cmd, err, user_data);
 	return err;
 }
@@ -154,8 +150,7 @@ out:
  * 65e68edce0db ("nvme: allow 64-bit results in passthru commands")
  */
 static int nvme_submit_passthru64(struct nvme_transport_handle *hdl,
-		unsigned long ioctl_cmd, struct nvme_passthru_cmd *cmd,
-		__u64 *result)
+		unsigned long ioctl_cmd, struct nvme_passthru_cmd *cmd)
 {
 	void *user_data;
 	int err = 0;
@@ -176,36 +171,32 @@ static int nvme_submit_passthru64(struct nvme_transport_handle *hdl,
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 out:
-	if (err >= 0 && result)
-		*result = cmd->result;
-
 	hdl->submit_exit(hdl, cmd, err, user_data);
 	return err;
 }
 
 int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd, __u64 *result)
+		struct nvme_passthru_cmd *cmd)
 {
 	if (hdl->ioctl64)
-		return nvme_submit_passthru64(hdl,
-			NVME_IOCTL_IO64_CMD, cmd, result);
-	return nvme_submit_passthru32(hdl, NVME_IOCTL_IO_CMD, cmd, result);
+		return nvme_submit_passthru64(hdl, NVME_IOCTL_IO64_CMD, cmd);
+	return nvme_submit_passthru32(hdl, NVME_IOCTL_IO_CMD, cmd);
 }
 
 int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd, __u64 *result)
+		struct nvme_passthru_cmd *cmd)
 {
 	switch (hdl->type) {
 	case NVME_TRANSPORT_HANDLE_TYPE_DIRECT:
 		if (hdl->ioctl64)
 			return nvme_submit_passthru64(hdl,
-				NVME_IOCTL_ADMIN64_CMD, cmd, result);
+				NVME_IOCTL_ADMIN64_CMD, cmd);
 		if (cmd->opcode == nvme_admin_fabrics)
 			return -ENOTSUP;
 		return nvme_submit_passthru32(hdl,
-				NVME_IOCTL_ADMIN_CMD, cmd, result);
+				NVME_IOCTL_ADMIN_CMD, cmd);
 	case NVME_TRANSPORT_HANDLE_TYPE_MI:
-		return nvme_mi_admin_admin_passthru(hdl, cmd, result);
+		return nvme_mi_admin_admin_passthru(hdl, cmd);
 	default:
 		break;
 	}
@@ -332,7 +323,7 @@ static bool nvme_uring_is_usable(struct nvme_transport_handle *hdl)
 
 int nvme_get_log(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd, bool rae,
-		__u32 xfer_len, __u64 *result)
+		__u32 xfer_len)
 {
 	__u64 offset = 0, xfer, data_len = cmd->data_len;
 	__u64 start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
@@ -407,12 +398,12 @@ int nvme_get_log(struct nvme_transport_handle *hdl,
 			if (ret)
 				nvme_uring_cmd_exit(&ring);
 		} else {
-			ret = nvme_submit_admin_passthru(hdl, cmd, result);
+			ret = nvme_submit_admin_passthru(hdl, cmd);
 			if (ret)
 				return ret;
 		}
 #else /* CONFIG_LIBURING */
-		ret = nvme_submit_admin_passthru(hdl, cmd, result);
+		ret = nvme_submit_admin_passthru(hdl, cmd);
 #endif /* CONFIG_LIBURING */
 		if (ret)
 			return ret;
@@ -446,7 +437,7 @@ static int read_ana_chunk(struct nvme_transport_handle *hdl, enum nvme_log_ana_l
 		int ret;
 
 		nvme_init_get_log_ana(&cmd, lsp, *read - log, *read, len);
-		ret = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
+		ret = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 		if (ret)
 			return ret;
 

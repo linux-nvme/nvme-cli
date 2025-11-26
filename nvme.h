@@ -139,6 +139,6 @@ static inline int nvme_get_nsid_log(struct nvme_transport_handle *hdl,
 
 	nvme_init_get_log(&cmd, nsid, lid, NVME_CSI_NVM, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	return nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 }
 #endif /* _NVME_H */

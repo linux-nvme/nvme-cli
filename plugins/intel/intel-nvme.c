@@ -1227,7 +1227,7 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_admin_passthru(hdl, cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, cmd);
 		if (err) {
 			fprintf(stderr,
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
