@@ -1582,14 +1582,6 @@ static bool wdc_is_sn640(__u32 device_id)
 		return false;
 }
 
-static bool wdc_is_sn640_3(__u32 device_id)
-{
-	if (device_id == WDC_NVME_SN640_DEV_ID_3)
-		return true;
-	else
-		return false;
-}
-
 static bool wdc_is_sn650_u2(__u32 device_id)
 {
 	if (device_id == WDC_NVME_SN650_DEV_ID_3)
@@ -1601,14 +1593,6 @@ static bool wdc_is_sn650_u2(__u32 device_id)
 static bool wdc_is_sn650_e1l(__u32 device_id)
 {
 	if (device_id == WDC_NVME_SN650_DEV_ID_4)
-		return true;
-	else
-		return false;
-}
-
-static bool wdc_is_sn655(__u32 device_id)
-{
-	if (device_id == WDC_NVME_SN655_DEV_ID)
 		return true;
 	else
 		return false;
@@ -2757,8 +2741,7 @@ static bool get_dev_mgment_data(struct nvme_global_ctx *ctx, struct nvme_transpo
 			 * check for the WDC UUID second.
 			 */
 			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
-			if (uuid_index < 0 &&
-				(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id)))
+			if (uuid_index < 0)
 				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
 		}
 
@@ -2827,8 +2810,7 @@ static bool get_dev_mgment_cbs_data(struct nvme_global_ctx *ctx, struct nvme_tra
 			 * check for the WDC UUID second.
 			 */
 			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
-			if (uuid_index < 0 &&
-				(wdc_is_sn640_3(device_id) || wdc_is_sn655(device_id)))
+			if (uuid_index < 0)
 				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
 		}
 
