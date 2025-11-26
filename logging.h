@@ -19,6 +19,16 @@
 
 extern int log_level;
 
+struct nvme_transport_handle;
+struct nvme_passthru_cmd;
+
+void *nvme_submit_entry(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd);
+void nvme_submit_exit(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, int err, void *user_data);
+bool nvme_decide_retry(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, int err);
+
 int map_log_level(int verbose, bool quiet);
 
 #endif // DEBUG_H_

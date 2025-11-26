@@ -288,6 +288,70 @@ bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl);
 bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl);
 
 /**
+ * nvme_transport_handle_set_submit_entry() - Install a submit-entry callback
+ * @hdl:	Transport handle to configure
+ * @submit_entry: Callback invoked immediately before a passthrough command is
+ *		submitted. The function receives the command about to be issued
+ *		and may return an opaque pointer representing per-command
+ *		context. This pointer is later passed unmodified to the
+ *		submit-exit callback. Implementations typically use this hook
+ *		for logging, tracing, or allocating per-command state.
+ *
+ * Installs a user-defined callback that is invoked at the moment a passthrough
+ * command enters the NVMe submission path. Passing NULL removes any previously
+ * installed callback.
+ *
+ * Return: None.
+ */
+void nvme_transport_handle_set_submit_entry(struct nvme_transport_handle *hdl,
+		void *(*submit_entry)(struct nvme_transport_handle *hdl,
+				struct nvme_passthru_cmd *cmd));
+
+/**
+ * nvme_transport_handle_set_submit_exit() - Install a submit-exit callback
+ * @hdl:	Transport handle to configure
+ * @submit_exit: Callback invoked after a passthrough command completes. The
+ *		function receives the command, the completion status @err
+ *		(0 for success, a negative errno, or an NVMe status value), and
+ *		the @user_data pointer returned earlier by the submit-entry
+ *		callback. Implementations typically use this hook for logging,
+ *		tracing, or freeing per-command state.
+ *
+ * Installs a callback that is invoked when a passthrough command leaves the
+ * NVMe submission path. Passing NULL removes any previously installed callback.
+ *
+ * Return: None.
+ */
+void nvme_transport_handle_set_submit_exit(struct nvme_transport_handle *hdl,
+		void (*submit_exit)(struct nvme_transport_handle *hdl,
+				struct nvme_passthru_cmd *cmd,
+				int err, void *user_data));
+
+/**
+ * nvme_transport_handle_set_decide_retry() - Install a retry-decision callback
+ * @hdl:	Transport handle to configure
+ * @decide_retry: Callback used to determine whether a passthrough command
+ *		should be retried after an error. The function is called with
+ *		the command that failed and the error code returned by the
+ *		kernel or device. The callback should return true if the
+ *		submission path should retry the command, or false if the
+ *		error is final.
+ *
+ * Installs a user-provided callback to control retry behavior for
+ * passthrough commands issued through @hdl. This allows transports or
+ * higher-level logic to implement custom retry policies, such as retrying on
+ * transient conditions like -EAGAIN or device-specific status codes.
+ *
+ * Passing NULL clears any previously installed callback and reverts to the
+ * default behavior (no retries).
+ *
+ * Return: None.
+ */
+void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
+		bool (*decide_retry)(struct nvme_transport_handle *hdl,
+				struct nvme_passthru_cmd *cmd, int err));
+
+/**
  * enum nvme_hmac_alg - HMAC algorithm
  * @NVME_HMAC_ALG_NONE:		No HMAC algorithm
  * @NVME_HMAC_ALG_SHA2_256:	SHA2-256
@@ -636,22 +700,15 @@ int nvme_import_tls_key_versioned(const char *encoded_key,
 				  unsigned char *hmac,
 				  size_t *key_len,
 				  unsigned char **key);
+
 /**
- * nvme_submit_passthru - Low level ioctl wrapper for passthru commands
- * @hdl:	Transport handle
- * @ioctl_cmd:	IOCTL command id
- * @cmd:	Passhtru command
- * @result:	Optional field to return the result
+ * nvme_set_dry_run() - Set global dry run state
+ * @ctx:	struct nvme_global_ctx object
+ * @enable:	Enable/disable dry run state
  *
- * This is a low level library function which should not be used directly. It is
- * exposed as weak symbol so that the user application is able to provide their own
- * implementation of this function with additional debugging or logging code.
- *
- * Return: The value from the ioctl system call (see ioctl documentation) or
- * a negative error code otherwise.
+ * When dry_run is enabled, any IOCTL commands send via the passthru
+ * interface wont be executed.
  */
-__attribute__((weak))
-int nvme_submit_passthru(struct nvme_transport_handle *hdl, unsigned long ioctl_cmd,
-			 struct nvme_passthru_cmd *cmd, __u64 *result);
+void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable);
 
 #endif /* _LIBNVME_LINUX_H */
