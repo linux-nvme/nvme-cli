@@ -41,6 +41,39 @@
 #include "base64.h"
 #include "crc32.h"
 
+void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable)
+{
+	ctx->dry_run = enable;
+}
+
+void nvme_transport_handle_set_submit_entry(struct nvme_transport_handle *hdl,
+		void *(*submit_entry)(struct nvme_transport_handle *hdl,
+				struct nvme_passthru_cmd *cmd))
+{
+	hdl->submit_entry = submit_entry;
+	if (!hdl->submit_exit)
+		hdl->submit_exit = __nvme_submit_exit;
+}
+
+void nvme_transport_handle_set_submit_exit(struct nvme_transport_handle *hdl,
+		void (*submit_exit)(struct nvme_transport_handle *hdl,
+				struct nvme_passthru_cmd *cmd,
+				int err, void *user_data))
+{
+	hdl->submit_exit = submit_exit;
+	if (!hdl->submit_exit)
+		hdl->submit_exit = __nvme_submit_exit;
+}
+
+void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
+		bool (*decide_retry)(struct nvme_transport_handle *hdl,
+				struct nvme_passthru_cmd *cmd, int err))
+{
+	hdl->decide_retry = decide_retry;
+	if (!hdl->decide_retry)
+		hdl->decide_retry = __nvme_decide_retry;
+}
+
 static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl, const char *devname)
 {
 	_cleanup_free_ char *path = NULL;
@@ -96,6 +129,9 @@ struct nvme_transport_handle *__nvme_create_transport_handle(struct nvme_global_
 		return NULL;
 
 	hdl->ctx = ctx;
+	hdl->submit_entry = __nvme_submit_entry;
+	hdl->submit_exit = __nvme_submit_exit;
+	hdl->decide_retry = __nvme_decide_retry;
 
 	return hdl;
 }

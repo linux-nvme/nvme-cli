@@ -27,8 +27,6 @@
 #include <ccan/endian/endian.h>
 
 #include "ioctl.h"
-#include "util.h"
-#include "log.h"
 #include "private.h"
 
 static int nvme_verify_chr(struct nvme_transport_handle *hdl)
@@ -99,18 +97,21 @@ int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 	return 0;
 }
 
-__attribute__((weak))
-int nvme_submit_passthru(struct nvme_transport_handle *hdl,
-		unsigned long ioctl_cmd, struct nvme_passthru_cmd *cmd,
-		__u64 *result)
+void *__nvme_submit_entry(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd)
 {
-	int err = ioctl(hdl->fd, ioctl_cmd, cmd);
+	return NULL;
+}
 
-	if (err >= 0 && result)
-		*result = cmd->result;
-	if (err < 0)
-		return -errno;
-	return err;
+void __nvme_submit_exit(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, int err, void *user_data)
+{
+}
+
+bool __nvme_decide_retry(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, int err)
+{
+	return false;
 }
 
 /*
@@ -122,17 +123,29 @@ static int nvme_submit_passthru32(struct nvme_transport_handle *hdl,
 		__u64 *result)
 {
 	struct linux_passthru_cmd32 cmd32;
-	int err;
+	void *user_data;
+	int err = 0;
+
+	user_data = hdl->submit_entry(hdl, cmd);
+	if (hdl->ctx->dry_run)
+		goto out;
 
 	memcpy(&cmd32, cmd, offsetof(struct linux_passthru_cmd32, result));
 	cmd32.result = 0;
 
-	err = ioctl(hdl->fd, ioctl_cmd, &cmd32);
+	do {
+		err = ioctl(hdl->fd, ioctl_cmd, &cmd32);
+		if (err >= 0)
+			break;
+		err = -errno;
+	} while (hdl->decide_retry(hdl, cmd, err));
+
+out:
 	cmd->result = cmd32.result;
 	if (err >= 0 && result)
 		*result = cmd->result;
-	if (err < 0)
-		return -errno;
+
+	hdl->submit_exit(hdl, cmd, err, user_data);
 	return err;
 }
 
@@ -144,13 +157,29 @@ static int nvme_submit_passthru64(struct nvme_transport_handle *hdl,
 		unsigned long ioctl_cmd, struct nvme_passthru_cmd *cmd,
 		__u64 *result)
 {
-	int err;
+	void *user_data;
+	int err = 0;
 
-	err = ioctl(hdl->fd, ioctl_cmd, cmd);
+	user_data = hdl->submit_entry(hdl, cmd);
+	if (hdl->ctx->dry_run)
+		goto out;
+
+	do {
+		/*
+		 * struct nvme_passtrhu_cmd is identically to struct
+		 * linux_passthru_cmd64, thus just pass it in directly.
+		 */
+		err = ioctl(hdl->fd, ioctl_cmd, cmd);
+		if (err >= 0)
+			break;
+		err = -errno;
+	} while (hdl->decide_retry(hdl, cmd, err));
+
+out:
 	if (err >= 0 && result)
 		*result = cmd->result;
-	if (err < 0)
-		return -errno;
+
+	hdl->submit_exit(hdl, cmd, err, user_data);
 	return err;
 }
 

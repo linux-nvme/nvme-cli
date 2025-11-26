@@ -90,6 +90,14 @@ struct nvme_transport_handle {
 	enum nvme_transport_handle_type type;
 	char *name;
 
+	void *(*submit_entry)(struct nvme_transport_handle *hdl,
+			struct nvme_passthru_cmd *cmd);
+	void (*submit_exit)(struct nvme_transport_handle *hdl,
+			struct nvme_passthru_cmd *cmd,
+			int err, void *user_data);
+	bool (*decide_retry)(struct nvme_transport_handle *hdl,
+			struct nvme_passthru_cmd *cmd, int err);
+
 	/* direct */
 	int fd;
 	struct stat stat;
@@ -260,6 +268,7 @@ struct nvme_global_ctx {
 	bool modified;
 	bool mi_probe_enabled;
 	bool create_only;
+	bool dry_run;
 	struct nvme_fabric_options *options;
 };
 
@@ -270,6 +279,13 @@ int json_read_config(struct nvme_global_ctx *ctx, const char *config_file);
 int json_update_config(struct nvme_global_ctx *ctx, const char *config_file);
 
 int json_dump_tree(struct nvme_global_ctx *ctx);
+
+void *__nvme_submit_entry(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd);
+void __nvme_submit_exit(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, int err, void *user_data);
+bool __nvme_decide_retry(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, int err);
 
 struct nvme_transport_handle *__nvme_open(struct nvme_global_ctx *ctx, const char *name);
 struct nvme_transport_handle *__nvme_create_transport_handle(struct nvme_global_ctx *ctx);

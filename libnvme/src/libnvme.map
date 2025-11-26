@@ -240,6 +240,7 @@ LIBNVME_2_0 {
 		nvme_scan_topology;
 		nvme_set_application;
 		nvme_set_debug;
+		nvme_set_dry_run;
 		nvme_set_keyring;
 		nvme_set_property;
 		nvme_set_root;
@@ -273,6 +274,9 @@ LIBNVME_2_0 {
 		nvme_transport_handle_is_chardev;
 		nvme_transport_handle_is_direct;
 		nvme_transport_handle_is_mi;
+		nvme_transport_handle_set_decide_retry;
+		nvme_transport_handle_set_submit_entry;
+		nvme_transport_handle_set_submit_exit;
 		nvme_unlink_ctrl;
 		nvme_update_config;
 		nvme_update_key;
