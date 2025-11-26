@@ -186,7 +186,7 @@ static __u32 sndk_dump_udui_data(struct nvme_transport_handle *hdl,
 	admin_cmd.data_len = dataLen;
 	admin_cmd.cdw10 = ((dataLen >> 2) - 1);
 	admin_cmd.cdw12 = offset;
-	ret = nvme_submit_admin_passthru(hdl, &admin_cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &admin_cmd);
 	if (ret) {
 		fprintf(stderr, "ERROR: SNDK: reading DUI data failed\n");
 		nvme_show_status(ret);
@@ -499,9 +499,9 @@ static int sndk_do_sn861_drive_resize(struct nvme_transport_handle *hdl,
 		uint64_t new_size,
 		__u64 *result)
 {
-	int ret;
-	struct nvme_passthru_cmd admin_cmd;
 	uint8_t buffer[SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE] = {0};
+	struct nvme_passthru_cmd admin_cmd;
+	int ret;
 
 	memset(&admin_cmd, 0, sizeof(struct nvme_passthru_cmd));
 	admin_cmd.opcode = SNDK_NVME_SN861_DRIVE_RESIZE_OPCODE;
@@ -513,7 +513,9 @@ static int sndk_do_sn861_drive_resize(struct nvme_transport_handle *hdl,
 	admin_cmd.addr = (__u64)(uintptr_t)buffer;
 	admin_cmd.data_len = SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE;
 
-	ret = nvme_submit_admin_passthru(hdl, &admin_cmd, result);
+	ret = nvme_submit_admin_passthru(hdl, &admin_cmd);
+	if (result)
+		*result = admin_cmd.result;
 	return ret;
 }
 

@@ -1365,7 +1365,6 @@ int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
  * nvme_mi_admin_admin_passthru() - Submit an nvme admin passthrough command
  * @hdl:	Transport handle to send command to
  * @cmd:	The nvme admin command to send
- * @result:	Optional field to return the result from the CQE dword 0
  *
  * Send a customized NVMe Admin command request message and get the corresponding
  * response message.
@@ -1379,7 +1378,7 @@ int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd, __u64 *result);
+		struct nvme_passthru_cmd *cmd);
 
 /**
  * nvme_mi_control() - Perform a Control Primitive command

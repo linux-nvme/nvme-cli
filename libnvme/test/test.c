@@ -62,10 +62,8 @@ static int test_ctrl(nvme_ctrl_t c)
 	struct nvme_ctrl_list ctrlist = { 0 };
 	struct nvme_id_ctrl id = { 0 };
 
-	__u64 result;
-
 	nvme_init_identify_ctrl(&cmd, &id);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (ret) {
 		printf("ERROR: no identify for:%s\n", nvme_ctrl_get_name(c));
 		return ret;
@@ -75,7 +73,7 @@ static int test_ctrl(nvme_ctrl_t c)
 	}
 
 	nvme_init_get_log_smart(&cmd, NVME_NSID_ALL, &smart);
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (ret) {
 		printf("ERROR: no smart log for:%s %#x\n", nvme_ctrl_get_name(c), ret);
 		return ret;
@@ -95,49 +93,49 @@ static int test_ctrl(nvme_ctrl_t c)
 	printf("  model:%-.40s\n", id.mn);
 
 	nvme_init_identify_allocated_ns_list(&cmd, 0, &ns_list);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  PASSED: Allocated NS List\n");
 	else
 		printf("  ERROR: Allocated NS List:%x\n", ret);
 	nvme_init_identify_active_ns_list(&cmd, 0, &ns_list);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  PASSED: Active NS List\n");
 	else
 		printf("  ERROR: Active NS List:%x\n", ret);
 	nvme_init_identify_ctrl_list(&cmd, 0, &ctrlist);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  PASSED: Ctrl List\n");
 	else
 		printf("  ERROR: CtrlList:%x\n", ret);
 	nvme_init_identify_ctrl_list(&cmd, 1, &ctrlist);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  PASSED: NSID Ctrl List\n");
 	else
 		printf("  ERROR: NSID CtrlList:%x\n", ret);
 	nvme_init_identify_primary_ctrl_cap(&cmd, 0, &prim);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  PASSED: Identify Primary\n");
 	else
 		printf("  ERROR: Identify Primary:%x\n", ret);
 	nvme_init_identify_secondary_ctrl_list(&cmd, 0, &sec);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  PASSED: Identify Secondary\n");
 	else
 		printf("  ERROR: Identify Secondary:%x\n", ret);
 	nvme_init_identify_ns_granularity(&cmd, &gran);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  PASSED: Identify NS granularity\n");
 	else
 		printf("  ERROR: Identify NS granularity:%x\n", ret);
 	nvme_init_identify_uuid_list(&cmd, &uuid);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  PASSED: Identify UUID List\n");
 	else
@@ -147,164 +145,175 @@ static int test_ctrl(nvme_ctrl_t c)
 	printf("  SMART: Current temperature:%d percent used:%d%%\n", temp,
 		smart.percent_used);
 	nvme_init_get_log_sanitize(&cmd, &sanlog);
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  Sanitize Log:\n");
 	else
 		printf("  ERROR: Sanitize Log:%x\n", ret);
 	nvme_init_get_log_reservation(&cmd, &resvnotify);
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  Reservation Log\n");
 	else
 		printf("  ERROR: Reservation Log:%x\n", ret);
 	nvme_init_get_log_ana_groups(&cmd, analog, sizeof(buf));
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  ANA Groups\n");
 	else
 		printf("  ERROR: ANA Groups:%x\n", ret);
 	nvme_init_get_log_endurance_group(&cmd, 0, &eglog);
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  Endurance Group\n");
 	else
 		printf("  ERROR: Endurance Group:%x\n", ret);
 	nvme_init_get_log_telemetry_ctrl(&cmd, 0, telem, sizeof(buf));
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  Telemetry Controller\n");
 	else
 		printf("  ERROR: Telemetry Controller:%x\n", ret);
 	nvme_init_get_log_device_self_test(&cmd, &st);
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  Device Self Test\n");
 	else
 		printf("  ERROR: Device Self Test:%x\n", ret);
 	nvme_init_get_log_cmd_effects(&cmd, NVME_CSI_NVM, &cfx);
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  Command Effects\n");
 	else
 		printf("  ERROR: Command Effects:%x\n", ret);
 	nvme_init_get_log_changed_alloc_ns(&cmd, &ns_list, sizeof(ns_list));
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  Change NS List\n");
 	else
 		printf("  ERROR: Change NS List:%x\n", ret);
 	nvme_init_get_log_fw_slot(&cmd, &fw);
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  FW Slot\n");
 	else
 		printf("  ERROR: FW Slot%x\n", ret);
 	nvme_init_get_log_error(&cmd, 64, error);
-	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (!ret)
 		printf("  Error Log\n");
 	else
 		printf("  ERROR: Error Log:%x\n", ret);
 	printf("\nFeatures\n");
 	nvme_init_get_features_arbitration(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Arbitration:%" PRIu64 "\n", (uint64_t)result);
+		printf("  Arbitration:%" PRIu64 "\n", (uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Arbitration:%x\n", ret);
 	nvme_init_get_features_power_mgmt(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Power Management:%" PRIu64 "x\n", (uint64_t) result);
+		printf("  Power Management:%" PRIu64 "x\n", (uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Power Management:%x\n", ret);
 
 	nvme_init_get_features_temp_thresh(&cmd, sel, 0, 0);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  Temperature Threshold:%" PRIu64 "\n",
-			(uint64_t)result);
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Temperature Threshold:%x\n", ret);
 	nvme_init_get_features_volatile_wc(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Volatile Write Cache:%" PRIu64 "\n", (uint64_t)result);
+		printf("  Volatile Write Cache:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Volatile Write Cache:%x\n", ret);
 	nvme_init_get_features_num_queues(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Number of Queues:%" PRIu64 "\n", (uint64_t)result);
+		printf("  Number of Queues:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Number of Queues:%x\n", ret);
 	nvme_init_get_features_irq_coalesce(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  IRQ Coalescing:%" PRIu64 "\n", (uint64_t)result);
+		printf("  IRQ Coalescing:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: IRQ Coalescing:%x\n", ret);
 	nvme_init_get_features_write_atomic(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Write Atomic:%" PRIu64 "\n", (uint64_t)result);
+		printf("  Write Atomic:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Write Atomic:%x\n", ret);
 	nvme_init_get_features_async_event(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Asycn Event Config:%" PRIu64 "\n", (uint64_t)result);
+		printf("  Asycn Event Config:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Asycn Event Config:%x\n", ret);
 	nvme_init_get_features_hctm(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  HCTM:%" PRIu64 "\n", (uint64_t)result);
+		printf("  HCTM:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: HCTM:%x\n", ret);
 	nvme_init_get_features_nopsc(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  NOP Power State Config:%" PRIu64 "\n",
-			(uint64_t)result);
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: NOP Power State Configrbitration:%x\n", ret);
 	nvme_init_get_features_rrl(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Read Recover Levels:%" PRIu64 "\n", (uint64_t)result);
+		printf("  Read Recover Levels:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Read Recover Levels:%x\n", ret);
 	nvme_init_get_features_lba_sts_interval(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  LBA Status Interval:%" PRIu64 "\n", (uint64_t)result);
+		printf("  LBA Status Interval:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: LBA Status Interval:%x\n", ret);
 	nvme_init_get_features_sanitize(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Sanitize:%" PRIu64 "\n", (uint64_t)result);
+		printf("  Sanitize:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: SW Progress Marker:%x\n", ret);
 	nvme_init_get_features_sw_progress(&cmd, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  SW Progress Marker:%" PRIu64 "\n", (uint64_t)result);
+		printf("  SW Progress Marker:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Sanitize:%x\n", ret);
 	nvme_init_get_features_resv_mask(&cmd, 0, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Reservation Mask:%" PRIu64 "\n", (uint64_t)result);
+		printf("  Reservation Mask:%" PRIu64 "\n",
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Reservation Mask:%x\n", ret);
 	nvme_init_get_features_resv_persist(&cmd, 0, sel);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  Reservation Persistence:%" PRIu64 "\n",
-			(uint64_t)result);
+			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Reservation Persistence:%x\n", ret);
 	return 0;
@@ -330,7 +339,7 @@ static int test_namespace(nvme_ns_t n)
 		1 << ns.lbaf[flbas].ds);
 
 	nvme_init_identify_allocated_ns(&cmd, nsid, &allocated);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  Identify allocated ns\n");
 	else
@@ -340,7 +349,7 @@ static int test_namespace(nvme_ns_t n)
 		return -1;
 
 	nvme_init_identify_ns_descs_list(&cmd, nsid, descs);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  Identify NS Descriptors\n");
 	else
@@ -348,7 +357,7 @@ static int test_namespace(nvme_ns_t n)
 	free(descs);
 	nvme_init_get_features_write_protect(&cmd, nsid,
 		NVME_GET_FEATURES_SEL_CURRENT);
-	ret = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	ret = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!ret)
 		printf("  Write Protect:%" PRIu64 "\n", (uint64_t)result);
 	else if (ret > 0)

@@ -294,7 +294,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 	cmd.cdw14 |= NVME_FIELD_ENCODE(wlt->uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	err = nvme_get_log(wlt->hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	err = nvme_get_log(wlt->hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err > 0) {
 		nvme_show_status(err);
 		return err;

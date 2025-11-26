@@ -372,23 +372,24 @@ static int temp_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			   struct argconfig_commandline_options *opts,
 			   struct temp_thresh_config *cfg)
 {
-	__u64 result;
-	int err;
 	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
 	struct nvme_passthru_cmd cmd;
 	__u16 tmpth;
 	__u8 tmpsel;
 	__u8 thsel;
 	__u8 tmpthh;
-	bool sv = argconfig_parse_seen(opts, "save");
+	int err;
+	bool sv;
 
+	sv = argconfig_parse_seen(opts, "save");
 	if (sv)
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
 	nvme_init_get_features_temp_thresh(&cmd, sel, cfg->tmpsel, cfg->thsel);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!err) {
-		nvme_feature_decode_temp_threshold(result, &tmpth, &tmpsel, &thsel, &tmpthh);
+		nvme_feature_decode_temp_threshold(cmd.result, &tmpth,
+						   &tmpsel, &thsel, &tmpthh);
 		if (!argconfig_parse_seen(opts, "tmpth"))
 			cfg->tmpth = tmpth;
 		if (!argconfig_parse_seen(opts, "tmpthh"))
@@ -396,8 +397,8 @@ static int temp_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	}
 
 	nvme_init_set_features_temp_thresh(&cmd, sv, cfg->tmpth, cfg->tmpsel,
-									cfg->thsel, cfg->tmpthh);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+					   cfg->thsel, cfg->tmpthh);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 
 	nvme_show_init();
 
@@ -456,19 +457,20 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			   struct arbitration_config *cfg)
 {
 	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
-	bool sv = argconfig_parse_seen(opts, "save");
 	struct nvme_passthru_cmd cmd;
 	__u8 ab, lpw, mpw, hpw;
-	__u64 result;
+	bool sv;
 	int err;
 
+	sv = argconfig_parse_seen(opts, "save");
 	if (sv)
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
 	nvme_init_get_features_arbitration(&cmd, sel);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!err) {
-		nvme_feature_decode_arbitration(result, &ab, &lpw, &mpw, &hpw);
+		nvme_feature_decode_arbitration(cmd.result, &ab,
+						&lpw, &mpw, &hpw);
 		if (!argconfig_parse_seen(opts, "ab"))
 			cfg->ab = ab;
 		if (!argconfig_parse_seen(opts, "lpw"))
@@ -480,8 +482,8 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	}
 
 	nvme_init_set_features_arbitration(&cmd, sv, cfg->ab, cfg->lpw,
-									cfg->mpw, cfg->hpw);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+					   cfg->mpw, cfg->hpw);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 
 	nvme_show_init();
 

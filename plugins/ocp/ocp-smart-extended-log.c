@@ -56,8 +56,7 @@ static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	ret = nvme_get_log(hdl, &cmd, false,
-				   NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n",

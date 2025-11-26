@@ -58,7 +58,7 @@ static int nvme_sct_op(struct nvme_transport_handle *hdl, __u32 opcode,
 		.data_len	= data_len,
 		.addr		= (__u64)(uintptr_t)data,
 	};
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 static int nvme_get_sct_status(struct nvme_transport_handle *hdl, __u32 device_mask)
