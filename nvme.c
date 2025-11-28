@@ -7067,7 +7067,7 @@ static int write_uncor(int argc, char **argv, struct command *acmd, struct plugi
 
 	nvme_init_write_uncorrectable(&cmd, cfg.namespace_id, cfg.start_block,
 		cfg.block_count, cfg.dtype << 4, cfg.dspec);
-	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("write uncorrectable: %s", nvme_strerror(err));
 	else if (err != 0)
