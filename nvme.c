@@ -7299,12 +7299,12 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_free_ struct nvme_dsm_range *dsm = NULL;
 	struct nvme_passthru_cmd cmd;
-	uint16_t nr, nc, nb, ns;
 	__u32 ctx_attrs[256] = {0,};
 	__u32 nlbs[256] = {0,};
 	__u64 slbas[256] = {0,};
-	int err;
 	nvme_print_flags_t flags;
+	uint16_t nc, nb, ns;
+	int err;
 
 	struct config {
 		__u32	namespace_id;
@@ -7351,8 +7351,11 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	nc = argconfig_parse_comma_sep_array_u32(cfg.ctx_attrs, ctx_attrs, ARRAY_SIZE(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array_u32(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
 	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
-	nr = max(nc, max(nb, ns));
-	if (!nr || nr > 256) {
+	if (nc != nb || nb != ns) {
+		nvme_show_error("No valid range definition provided");
+		return -EINVAL;
+	}
+	if (!nc || nc > 256) {
 		nvme_show_error("No range definition provided");
 		return -EINVAL;
 	}
@@ -7364,15 +7367,19 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 			return err;
 		}
 	}
-	if (!cfg.cdw11)
-		cfg.cdw11 = (cfg.ad << 2) | (cfg.idw << 1) | (cfg.idr << 0);
+	if (cfg.cdw11) {
+		cfg.ad = NVME_GET(cfg.cdw11, DSM_CDW11_AD);
+		cfg.idw = NVME_GET(cfg.cdw11, DSM_CDW11_IDW);
+		cfg.idr = NVME_GET(cfg.cdw11, DSM_CDW11_IDR);
+	}
 
-	dsm = nvme_alloc(sizeof(*dsm) * 256);
+	dsm = nvme_alloc(sizeof(*dsm) * nc);
 	if (!dsm)
 		return -ENOMEM;
 
-	nvme_init_dsm(&cmd, cfg.namespace_id, nr, cfg.idr, cfg.idw, cfg.ad, dsm,
-		      sizeof(*dsm) * 256);
+	nvme_init_dsm_range(dsm, ctx_attrs, nlbs, slbas, nc);
+	nvme_init_dsm(&cmd, cfg.namespace_id, nc, cfg.idr, cfg.idw, cfg.ad, dsm,
+		      sizeof(*dsm) * nc);
 	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("data-set management: %s", nvme_strerror(err));

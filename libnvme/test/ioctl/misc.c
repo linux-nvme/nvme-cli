@@ -989,7 +989,7 @@ static void test_dsm(void)
 
 	arbitrary(dsm, dsm_size);
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	nvme_init_dsm(&cmd, TEST_NSID, nr_ranges - 1, 0, 0, 1, dsm, dsm_size);
+	nvme_init_dsm(&cmd, TEST_NSID, nr_ranges, 0, 0, 1, dsm, dsm_size);
 	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
