@@ -7351,11 +7351,12 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	nc = argconfig_parse_comma_sep_array_u32(cfg.ctx_attrs, ctx_attrs, ARRAY_SIZE(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array_u32(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
 	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
-	if (nc != nb || nb != ns) {
+	if ((nb != ns) ||
+	    (argconfig_parse_seen(opts, "ctx-attrs") && nb != nc)) {
 		nvme_show_error("No valid range definition provided");
 		return -EINVAL;
 	}
-	if (!nc || nc > 256) {
+	if (!nb || nb > 256) {
 		nvme_show_error("No range definition provided");
 		return -EINVAL;
 	}
@@ -7373,13 +7374,13 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 		cfg.idr = NVME_GET(cfg.cdw11, DSM_CDW11_IDR);
 	}
 
-	dsm = nvme_alloc(sizeof(*dsm) * nc);
+	dsm = nvme_alloc(sizeof(*dsm) * nb);
 	if (!dsm)
 		return -ENOMEM;
 
-	nvme_init_dsm_range(dsm, ctx_attrs, nlbs, slbas, nc);
-	nvme_init_dsm(&cmd, cfg.namespace_id, nc, cfg.idr, cfg.idw, cfg.ad, dsm,
-		      sizeof(*dsm) * nc);
+	nvme_init_dsm_range(dsm, ctx_attrs, nlbs, slbas, nb);
+	nvme_init_dsm(&cmd, cfg.namespace_id, nb, cfg.idr, cfg.idw, cfg.ad, dsm,
+		      sizeof(*dsm) * nb);
 	err = nvme_submit_io_passthru(hdl, &cmd, NULL);
 	if (err < 0)
 		nvme_show_error("data-set management: %s", nvme_strerror(err));
