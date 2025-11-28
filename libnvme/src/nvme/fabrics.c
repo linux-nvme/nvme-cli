@@ -1041,7 +1041,7 @@ int nvmf_connect_disc_entry(nvme_host_t h,
 
 	ret = nvme_create_ctrl(h->ctx, e->subnqn, transport, traddr,
 			       cfg->host_traddr, cfg->host_iface, trsvcid, &c);
-	if (!ret) {
+	if (ret) {
 		nvme_msg(h->ctx, LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",
 			 transport, traddr);
