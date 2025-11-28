@@ -19,7 +19,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -42,7 +42,7 @@ jobs:
           - arch: s390x
           - arch: ppc64le
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: enable foreign arch
         uses: dbhi/qus/action@main
       - name: Login to GitHub Container Registry
@@ -76,7 +76,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -97,7 +97,7 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -116,7 +116,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
