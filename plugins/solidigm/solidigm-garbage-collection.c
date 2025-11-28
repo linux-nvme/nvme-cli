@@ -108,8 +108,7 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *a
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	err = nvme_get_log(hdl, &cmd, false,
-			   NVME_LOG_PAGE_PDU_SIZE, NULL);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (!err) {
 		if (flags & BINARY)
 			d_raw((unsigned char *)&gc_log, sizeof(gc_log));

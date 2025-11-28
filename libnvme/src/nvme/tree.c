@@ -1289,7 +1289,7 @@ int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 	struct nvme_passthru_cmd cmd;
 
 	nvme_init_identify_ctrl(&cmd, id);
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c)
@@ -2459,7 +2459,7 @@ int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
 	struct nvme_passthru_cmd cmd;
 
 	nvme_init_identify_ns(&cmd, nvme_ns_get_nsid(n), ns);
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 int nvme_ns_identify_descs(nvme_ns_t n, struct nvme_ns_id_desc *descs)
@@ -2468,7 +2468,7 @@ int nvme_ns_identify_descs(nvme_ns_t n, struct nvme_ns_id_desc *descs)
 	struct nvme_passthru_cmd cmd;
 
 	nvme_init_identify_ns_descs_list(&cmd, nvme_ns_get_nsid(n), descs);
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
@@ -2484,7 +2484,7 @@ int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
 	nvme_init_verify(&cmd, nvme_ns_get_nsid(n), slba, nlb,
 		0, 0, NULL, 0, NULL, 0);
 
-	return nvme_submit_io_passthru(hdl, &cmd, NULL);
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
@@ -2500,7 +2500,7 @@ int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
 	nvme_init_write_uncorrectable(&cmd, nvme_ns_get_nsid(n), slba, nlb,
 		0, 0);
 
-	return nvme_submit_io_passthru(hdl, &cmd, NULL);
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
@@ -2515,7 +2515,7 @@ int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
 
 	nvme_init_write_zeros(&cmd, nvme_ns_get_nsid(n), slba, nlb, 0, 0, 0, 0);
 
-	return nvme_submit_io_passthru(hdl, &cmd, NULL);
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
@@ -2531,7 +2531,7 @@ int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
 	nvme_init_write(&cmd, nvme_ns_get_nsid(n), slba, nlb,
 		0, 0, 0, 0, buf, count, NULL, 0);
 
-	return nvme_submit_io_passthru(hdl, &cmd, NULL);
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
@@ -2547,7 +2547,7 @@ int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
 	nvme_init_read(&cmd, nvme_ns_get_nsid(n), slba, nlb,
 		0, 0, 0, buf, count, NULL, 0);
 
-	return nvme_submit_io_passthru(hdl, &cmd, NULL);
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
@@ -2563,7 +2563,7 @@ int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
 	nvme_init_compare(&cmd, nvme_ns_get_nsid(n), slba, nlb,
 		0, 0, buf, count, NULL, 0);
 
-	return nvme_submit_io_passthru(hdl, &cmd, NULL);
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 int nvme_ns_flush(nvme_ns_t n)

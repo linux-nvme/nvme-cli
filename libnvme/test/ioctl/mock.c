@@ -8,6 +8,7 @@
 #include <dlfcn.h>
 
 #include <nvme/ioctl.h>
+#include <nvme/private.h>
 
 #include "mock.h"
 #include "util.h"
@@ -174,12 +175,12 @@ int ioctl(int fd, int request, ...)
 	mock_cmds->remaining_cmds--;
 
 	if (result64) {
-		execute_ioctl((struct nvme_passthru_cmd64 *)cmd, mock_cmd);
+		execute_ioctl((struct linux_passthru_cmd64 *)cmd, mock_cmd);
 	} else {
 		check((uint32_t)mock_cmd->result == mock_cmd->result,
 		      "expected 64-bit %s for result %" PRIu64,
 		      __func__, mock_cmd->result);
-		execute_ioctl((struct nvme_passthru_cmd *)cmd, mock_cmd);
+		execute_ioctl((struct linux_passthru_cmd32 *)cmd, mock_cmd);
 	}
 	if (mock_cmd->err < 0) {
 		errno = -mock_cmd->err;

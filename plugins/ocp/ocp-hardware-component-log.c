@@ -188,8 +188,7 @@ static int get_hwcomp_log_data(struct nvme_transport_handle *hdl, struct hwcomp_
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	ret = nvme_get_log(hdl, &cmd, false,
-				   NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (ret) {
 		print_info_error("error: ocp: failed to get hwcomp log size (ret: %d)\n", ret);
 		return ret;
@@ -229,8 +228,7 @@ static int get_hwcomp_log_data(struct nvme_transport_handle *hdl, struct hwcomp_
 			  (enum nvme_cmd_get_log_lid)OCP_LID_HWCOMP,
 			  NVME_CSI_NVM, log->desc, len);
 	nvme_init_get_log_lpo(&cmd, desc_offset);
-	ret = nvme_get_log(hdl, &cmd, false,
-				   NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (ret) {
 		print_info_error("error: ocp: failed to get log page (hwcomp: %02X, ret: %d)\n",
 				 OCP_LID_HWCOMP, ret);

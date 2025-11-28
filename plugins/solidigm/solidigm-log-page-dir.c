@@ -52,8 +52,7 @@ static int get_supported_log_pages_log(struct nvme_transport_handle *hdl, int uu
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	return nvme_get_log(hdl, &cmd, false,
-			    NVME_LOG_PAGE_PDU_SIZE, NULL);
+	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 }
 
 static struct lid_dir *get_standard_lids(struct nvme_supported_log_pages *supported)

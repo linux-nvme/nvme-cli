@@ -52,7 +52,7 @@ static const char *volatile_wc_feat = "volatile write cache feature";
 static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 		    __u32 cdw11, __u8 sel, const char *feat)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	__u32 len = 0;
 
@@ -92,7 +92,7 @@ static int power_mgmt_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			  __u8 ps, __u8 wh, bool sv)
 {
 	__u32 cdw11 = NVME_SET(ps, FEAT_PWRMGMT_PS) | NVME_SET(wh, FEAT_PWRMGMT_WH);
-	__u32 result;
+	__u64 result;
 	int err;
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
@@ -152,7 +152,7 @@ static int feat_power_mgmt(int argc, char **argv, struct command *acmd, struct p
 static int perfc_set(struct nvme_transport_handle *hdl, __u8 fid, __u32 cdw11,
 		     struct perfc_config *cfg, bool sv)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 
 	_cleanup_fd_ int ffd = STDIN_FILENO;
@@ -254,7 +254,7 @@ static int hctm_set(struct nvme_transport_handle *hdl, const __u8 fid,
 {
 	__u32 cdw11 = NVME_SET(tmt1, FEAT_HCTM_TMT1)
 		| NVME_SET(tmt2, FEAT_HCTM_TMT2);
-	__u32 result;
+	__u64 result;
 	int err;
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
@@ -312,7 +312,7 @@ static int feat_hctm(int argc, char **argv, struct command *acmd, struct plugin 
 static int timestamp_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			 __u64 tstmp, bool sv)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	struct nvme_timestamp ts;
 	__le64 timestamp = cpu_to_le64(tstmp);
@@ -372,23 +372,24 @@ static int temp_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			   struct argconfig_commandline_options *opts,
 			   struct temp_thresh_config *cfg)
 {
-	__u32 result;
-	int err;
 	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
 	struct nvme_passthru_cmd cmd;
 	__u16 tmpth;
 	__u8 tmpsel;
 	__u8 thsel;
 	__u8 tmpthh;
-	bool sv = argconfig_parse_seen(opts, "save");
+	int err;
+	bool sv;
 
+	sv = argconfig_parse_seen(opts, "save");
 	if (sv)
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
 	nvme_init_get_features_temp_thresh(&cmd, sel, cfg->tmpsel, cfg->thsel);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!err) {
-		nvme_feature_decode_temp_threshold(result, &tmpth, &tmpsel, &thsel, &tmpthh);
+		nvme_feature_decode_temp_threshold(cmd.result, &tmpth,
+						   &tmpsel, &thsel, &tmpthh);
 		if (!argconfig_parse_seen(opts, "tmpth"))
 			cfg->tmpth = tmpth;
 		if (!argconfig_parse_seen(opts, "tmpthh"))
@@ -396,8 +397,8 @@ static int temp_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	}
 
 	nvme_init_set_features_temp_thresh(&cmd, sv, cfg->tmpth, cfg->tmpsel,
-									cfg->thsel, cfg->tmpthh);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+					   cfg->thsel, cfg->tmpthh);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 
 	nvme_show_init();
 
@@ -456,19 +457,20 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			   struct arbitration_config *cfg)
 {
 	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
-	bool sv = argconfig_parse_seen(opts, "save");
 	struct nvme_passthru_cmd cmd;
 	__u8 ab, lpw, mpw, hpw;
-	__u32 result;
+	bool sv;
 	int err;
 
+	sv = argconfig_parse_seen(opts, "save");
 	if (sv)
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
 	nvme_init_get_features_arbitration(&cmd, sel);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (!err) {
-		nvme_feature_decode_arbitration(result, &ab, &lpw, &mpw, &hpw);
+		nvme_feature_decode_arbitration(cmd.result, &ab,
+						&lpw, &mpw, &hpw);
 		if (!argconfig_parse_seen(opts, "ab"))
 			cfg->ab = ab;
 		if (!argconfig_parse_seen(opts, "lpw"))
@@ -480,8 +482,8 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	}
 
 	nvme_init_set_features_arbitration(&cmd, sv, cfg->ab, cfg->lpw,
-									cfg->mpw, cfg->hpw);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+					   cfg->mpw, cfg->hpw);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 
 	nvme_show_init();
 
@@ -536,7 +538,7 @@ static int volatile_wc_set(struct nvme_transport_handle *hdl, const __u8 fid,
 			   bool wce, bool sv)
 {
 	__u32 cdw11 = NVME_SET(wce, FEAT_VWC_WCE);
-	__u32 result;
+	__u64 result;
 	int err;
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,

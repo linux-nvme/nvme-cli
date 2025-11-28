@@ -26,16 +26,15 @@ static void show_zns_properties(nvme_ns_t n)
 	struct nvme_zns_id_ns zns_ns;
 	struct nvme_zns_id_ctrl zns_ctrl;
 	struct nvme_zone_report *zr;
-	__u32 result;
 
 	zr = calloc(1, 0x1000);
 	if (!zr)
 		return;
 
 	nvme_init_zns_identify_ns(&cmd, nvme_ns_get_nsid(n), &zns_ns);
-	if (nvme_submit_admin_passthru(hdl, &cmd, &result)) {
-		fprintf(stderr, "failed to identify zns ns, result %x\n",
-			le32_to_cpu(result));
+	if (nvme_submit_admin_passthru(hdl, &cmd)) {
+		fprintf(stderr, "failed to identify zns ns, result %" PRIx64 "\n",
+			(uint64_t)cmd.result);
 		free(zr);
 		return;
 	}
@@ -45,7 +44,7 @@ static void show_zns_properties(nvme_ns_t n)
 		le32_to_cpu(zns_ns.mor));
 
 	nvme_init_zns_identify_ctrl(&cmd, &zns_ctrl);
-	if (nvme_submit_admin_passthru(hdl, &cmd, &result)) {
+	if (nvme_submit_admin_passthru(hdl, &cmd)) {
 		fprintf(stderr, "failed to identify zns ctrl\n");;
 		free(zr);
 		return;
@@ -55,9 +54,9 @@ static void show_zns_properties(nvme_ns_t n)
 	nvme_init_zns_report_zones(&cmd, nvme_ns_get_nsid(n), 0,
 				  NVME_ZNS_ZRAS_REPORT_ALL, false,
 				  true, (void *)zr, 0x1000);
-	if (nvme_submit_io_passthru(hdl, &cmd, &result)) {
-		fprintf(stderr, "failed to report zones, result %x\n",
-			le32_to_cpu(result));
+	if (nvme_submit_io_passthru(hdl, &cmd)) {
+		fprintf(stderr, "failed to report zones, result %" PRIx64"\n",
+			(uint64_t)cmd.result);
 		free(zr);
 		return;
 	}

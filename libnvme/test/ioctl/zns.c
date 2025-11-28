@@ -6,6 +6,7 @@
 #include "util.h"
 #include <nvme/ioctl.h>
 #include <nvme/types.h>
+#include <inttypes.h>
 
 #define TEST_FD 0xFD
 #define TEST_NSID 0x12345678
@@ -41,7 +42,7 @@ static void test_zns_append(void)
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
 	};
-	struct nvme_passthru_cmd64 cmd;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
@@ -51,7 +52,7 @@ static void test_zns_append(void)
 	if (elbas)
 		nvme_init_var_size_tags(&cmd, pif, sts, reftag, storage_tag);
 	nvme_init_app_tag(&cmd, lbat, lbatm);
-	err = nvme_submit_io_passthru64(test_hdl, &cmd, &result);
+	err = nvme_submit_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "wrong result");
@@ -64,7 +65,7 @@ static void test_zns_report_zones(void)
 	__u8 expected_data[8], data[8] = {};
 	bool extended = true;
 	bool partial = true;
-	__u32 result = 0;
+	__u64 result = 0;
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_mgmt_recv,
 		.nsid = TEST_NSID,
@@ -82,10 +83,10 @@ static void test_zns_report_zones(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	nvme_init_zns_report_zones(&cmd, TEST_NSID, TEST_SLBA, opts,
 		extended, partial, &data, sizeof(data));
-	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
+	err = nvme_submit_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
-	check(result == 0, "returned result %u", result);
+	check(result == 0, "returned result %"PRIu64, (uint64_t)result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 
@@ -96,7 +97,7 @@ static void test_zns_mgmt_send(void)
 	__u64 slba = TEST_SLBA;
 	bool select_all = true;
 	__u8 zsaso = 0x1;
-	__u32 result = 0;
+	__u64 result = 0;
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_mgmt_send,
 		.nsid = TEST_NSID,
@@ -114,10 +115,10 @@ static void test_zns_mgmt_send(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	nvme_init_zns_mgmt_send(&cmd, TEST_NSID, slba, zsa, select_all, zsaso,
 		false, data, sizeof(data));
-	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
+	err = nvme_submit_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
-	check(result == 0, "returned result %u", result);
+	check(result == 0, "returned result %"PRIu64, (uint64_t)result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 
@@ -127,7 +128,7 @@ static void test_zns_mgmt_recv(void)
 	__u8 expected_data[8], data[8] = {};
 	__u16 zrasf = (__u16)NVME_ZNS_ZRAS_REPORT_ALL;
 	bool zras_feat = false;
-	__u32 result = 0;
+	__u64 result = 0;
 	struct mock_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_mgmt_recv,
 		.nsid = TEST_NSID,
@@ -143,10 +144,10 @@ static void test_zns_mgmt_recv(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	nvme_init_zns_mgmt_recv(&cmd, TEST_NSID, 0, zra, zrasf, zras_feat,
 		data, sizeof(data));
-	err = nvme_submit_io_passthru(test_hdl, &cmd, &result);
+	err = nvme_submit_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
-	check(result == 0, "returned result %u", result);
+	check(result == 0, "returned result %"PRIu64, (uint64_t)result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
 

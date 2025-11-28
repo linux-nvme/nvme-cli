@@ -35,12 +35,12 @@ static int nvme_vucmd(struct nvme_transport_handle *hdl, unsigned char opcode,
 	cmd.nsid = 0xffffffff;
 	cmd.addr = (__u64)(__u64)(uintptr_t)data;
 	cmd.data_len = data_len;
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 static int getlogpage(struct nvme_transport_handle *hdl, unsigned char ilogid,
 		      unsigned char ilsp, char *data, int data_len,
-		      unsigned int *result)
+		      __u64 *result)
 {
 	struct nvme_passthru_cmd cmd;
 
@@ -50,7 +50,7 @@ static int getlogpage(struct nvme_transport_handle *hdl, unsigned char ilogid,
 			NVME_LOG_CDW10_LSP_SHIFT,
 			NVME_LOG_CDW10_LSP_MASK);
 
-	return nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, result);
+	return nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 }
 
 static int getvsctype(struct nvme_transport_handle *hdl)
@@ -137,8 +137,9 @@ static int getvsc_eventlog(struct nvme_transport_handle *hdl, FILE *fp)
 
 int getlogpage_eventlog(struct nvme_transport_handle *hdl, FILE *fp)
 {
-	unsigned int i, result, total_size;
+	unsigned int i, total_size;
 	char data[4096];
+	__u64 result;
 	int ret = 0;
 
 	result = 0;

@@ -824,7 +824,7 @@ struct nvme_ns {
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
 		    nvme_init_get_log_supported_log_pages(&cmd, NVME_CSI_NVM, &log);
-		    ret = nvme_get_log(nvme_ctrl_get_transport_handle($self), &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
+		    ret = nvme_get_log(nvme_ctrl_get_transport_handle($self), &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret) {

@@ -74,8 +74,7 @@ int sldgm_get_temp_stats_log(int argc, char **argv, struct command *acmd, struct
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_idx,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	err = nvme_get_log(hdl, &cmd, false,
-				   NVME_LOG_PAGE_PDU_SIZE, NULL);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err > 0) {
 		nvme_init_get_log(&cmd, NVME_NSID_ALL,
 				  SLDGM_LEGACY_TEMP_STATS_LID, NVME_CSI_NVM,
@@ -83,8 +82,7 @@ int sldgm_get_temp_stats_log(int argc, char **argv, struct command *acmd, struct
 		cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_idx,
 					       NVME_LOG_CDW14_UUID_SHIFT,
 					       NVME_LOG_CDW14_UUID_MASK);
-		err = nvme_get_log(hdl, &cmd, false,
-				   NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (!err) {
 			uint64_t *guid = (uint64_t *)&buffer[4080];
 

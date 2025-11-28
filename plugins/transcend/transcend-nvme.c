@@ -78,7 +78,7 @@ static int getBadblock(int argc, char **argv, struct command *acmd, struct plugi
 	nvmecmd.addr = (__u64)(uintptr_t)data;
 	nvmecmd.data_len = 0x1;
 
-	result = nvme_submit_admin_passthru(hdl, &nvmecmd, NULL);
+	result = nvme_submit_admin_passthru(hdl, &nvmecmd);
 	if (!result) {
 		int badblock  = data[0];
 

@@ -1455,7 +1455,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl;
 	char modelNo[40];
-	__u32 result;
+	__u64 result;
 
 	struct config {
 		bool   save;
@@ -1514,7 +1514,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -1654,8 +1654,7 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 		nvme_init_get_log(&cmd, cfg.namespace_id, cfg.log_id,
 				  NVME_CSI_NVM, log, bytesToGet);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, true,
-				   NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1761,8 +1760,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 		nvme_init_get_log(&cmd, cfg.namespace_id, log_id,
 				  NVME_CSI_NVM, log, bytesToGet);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, true,
-				   NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1881,8 +1879,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 		nvme_init_get_log(&cmd, cfg.namespace_id, log_id,
 				  NVME_CSI_NVM, log, bytesToGet);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, true,
-				   NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
