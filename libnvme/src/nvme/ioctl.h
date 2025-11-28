@@ -4393,9 +4393,9 @@ static inline int nvme_flush(struct nvme_transport_handle *hdl, __u32 nsid)
  * @cmd:	Passthru command to use
  * @nsid:	Namespace identifier
  * @nr:		Number of block ranges in the data set management attributes
- * @idr:	DSM Deallocate attribute
- * @idw:	DSM Integral Dataset for Read attribute
- * @ad:		DSM Integral Dataset for Read attribute
+ * @idr:	DSM Integral Dataset for Read attribute
+ * @idw:	DSM Integral Dataset for Write attribute
+ * @ad:		DSM Deallocate attribute
  * @data:	User space destination address to transfer the data
  * @len:	Length of provided user buffer to hold the log data in bytes
  */
@@ -4410,7 +4410,7 @@ nvme_init_dsm(struct nvme_passthru_cmd *cmd,
 	cmd->nsid	= nsid;
 	cmd->data_len	= len;
 	cmd->addr	= (__u64)(uintptr_t)data;
-	cmd->cdw10 = NVME_FIELD_ENCODE(nr,
+	cmd->cdw10 = NVME_FIELD_ENCODE(nr - 1,
 			NVME_DSM_CDW10_NR_SHIFT,
 			NVME_DSM_CDW10_NR_MASK);
 	cmd->cdw11 = NVME_FIELD_ENCODE(idr,
