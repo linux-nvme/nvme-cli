@@ -239,6 +239,8 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 						le16_to_cpu(log->media_dies_offline));
 		json_object_add_value_uint(root, "Max temperature recorded",
 						log->max_temperature_recorded);
+		json_object_add_value_uint(root, "Form factor",
+						log->form_factor);
 		json_object_add_value_uint64(root, "Nand avg erase count",
 						le64_to_cpu(log->nand_avg_erase_count));
 		json_object_add_value_uint(root, "Command timeouts",
@@ -272,6 +274,8 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 		for (i = 0; i < 64; i++)
 			ascii += sprintf(ascii, "%c", log->dssd_firmware_build_label[i]);
 		json_object_add_value_string(root, "Dssd firmware build label", ascii_arr);
+		json_object_add_value_uint(root, "Die in use bad nand block",
+						le64_to_cpu(log->die_in_use_bad_nand_block));
 		fallthrough;
 	case 4:
 		json_object_add_value_uint(root, "NVMe Command Set Errata Version",
