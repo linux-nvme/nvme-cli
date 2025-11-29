@@ -10976,7 +10976,11 @@ static int top(int argc, char **argv, struct command *acmd,
 		err = system("clear");
 		if (err)
 			break;
-		err = show_topology_cmd(argc, argv, acmd, plugin);
+		if (argc > 2)
+			err = handle_plugin(argc - 1, &argv[1],
+					    nvme.extensions);
+		else
+			err = show_topology_cmd(argc, argv, acmd, plugin);
 		if (err)
 			break;
 		err = pselect(0, NULL, NULL, NULL, &ts, NULL);
