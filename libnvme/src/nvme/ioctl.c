@@ -260,7 +260,7 @@ static void nvme_uring_cmd_exit(struct io_uring *ring)
 }
 
 static int nvme_uring_cmd_admin_passthru_async(struct nvme_transport_handle *hdl,
-		struct io_uring *ring, struct nvme_passthru_cmd *cmd, __u32 *result)
+		struct io_uring *ring, struct nvme_passthru_cmd *cmd)
 {
 	struct io_uring_sqe *sqe;
 	int ret;
@@ -274,7 +274,6 @@ static int nvme_uring_cmd_admin_passthru_async(struct nvme_transport_handle *hdl
 	sqe->fd = hdl->fd;
 	sqe->opcode = IORING_OP_URING_CMD;
 	sqe->cmd_op = NVME_URING_CMD_ADMIN;
-	sqe->user_data = (__u64)(uintptr_t)result;
 
 	ret = io_uring_submit(ring);
 	if (ret < 0)
@@ -286,26 +285,16 @@ static int nvme_uring_cmd_admin_passthru_async(struct nvme_transport_handle *hdl
 static int nvme_uring_cmd_wait_complete(struct io_uring *ring, int n)
 {
 	struct io_uring_cqe *cqe;
-	int i, ret = 0;
-	__u32 *result;
+	int ret, i;
 
 	for (i = 0; i < n; i++) {
 		ret = io_uring_wait_cqe(ring, &cqe);
-		if (ret)
-			return -1;
-
-		if (cqe->res) {
-			result = (__u32 *)cqe->user_data;
-			if (result)
-				*result = cqe->res;
-			ret = cqe->res;
-			break;
-		}
-
+		if (ret < 0)
+			return -errno;
 		io_uring_cqe_seen(ring, cqe);
 	}
 
-	return ret;
+	return 0;
 }
 
 static bool nvme_uring_is_usable(struct nvme_transport_handle *hdl)
@@ -388,15 +377,16 @@ int nvme_get_log(struct nvme_transport_handle *hdl,
 #ifdef CONFIG_LIBURING
 		if (use_uring) {
 			if (n >= NVME_URING_ENTRIES) {
-				nvme_uring_cmd_wait_complete(&ring, n);
+				ret = nvme_uring_cmd_wait_complete(&ring, n);
+				if (ret)
+					goto uring_exit;
 				n = 0;
 			}
 			n += 1;
-			ret = nvme_uring_cmd_admin_passthru_async(hdl, &ring,
-				cmd, result);
-
+			ret = nvme_uring_cmd_admin_passthru_async(hdl,
+				&ring, cmd);
 			if (ret)
-				nvme_uring_cmd_exit(&ring);
+				goto uring_exit;
 		} else {
 			ret = nvme_submit_admin_passthru(hdl, cmd);
 			if (ret)
@@ -414,7 +404,8 @@ int nvme_get_log(struct nvme_transport_handle *hdl,
 
 #ifdef CONFIG_LIBURING
 	if (use_uring) {
-		nvme_uring_cmd_wait_complete(&ring, n);
+		ret = nvme_uring_cmd_wait_complete(&ring, n);
+uring_exit:
 		nvme_uring_cmd_exit(&ring);
 		if (ret)
 			return ret;
