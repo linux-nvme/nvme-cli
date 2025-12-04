@@ -674,9 +674,12 @@ int parse_ocp_telemetry_string_log(int event_fifo_num, int identifier, int debug
 }
 
 #ifdef CONFIG_JSONC
-void parse_time_stamp_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp)
+int parse_time_stamp_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
 {
 	struct nvme_ocp_time_stamp_dbg_evt_class_format *ptime_stamp_event =
 		(struct nvme_ocp_time_stamp_dbg_evt_class_format *) pevent_specific_data;
@@ -704,7 +707,8 @@ void parse_time_stamp_event(struct nvme_ocp_telemetry_event_descriptor *pevent_d
 		parse_ocp_telemetry_string_log(0, vu_event_id,
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING, description_str);
-	}
+	}  else if (pevent_descriptor->event_data_size < 2)
+		return -1;
 
 	if (pevent_fifos_object != NULL) {
 		json_add_formatted_var_size_str(pevent_descriptor_obj, STR_CLASS_SPECIFIC_DATA,
@@ -736,11 +740,16 @@ void parse_time_stamp_event(struct nvme_ocp_telemetry_event_descriptor *pevent_d
 			}
 		}
 	}
+
+	return 0;
 }
 
-void parse_pcie_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp)
+int parse_pcie_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
 {
 	struct nvme_ocp_pcie_dbg_evt_class_format *ppcie_event =
 				(struct nvme_ocp_pcie_dbg_evt_class_format *) pevent_specific_data;
@@ -768,7 +777,8 @@ void parse_pcie_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descrip
 		parse_ocp_telemetry_string_log(0, vu_event_id,
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING, description_str);
-	}
+	}  else if (pevent_descriptor->event_data_size < 1)
+		return -1;
 
 	if (pevent_fifos_object != NULL) {
 		json_add_formatted_var_size_str(pevent_descriptor_obj, STR_CLASS_SPECIFIC_DATA,
@@ -800,11 +810,16 @@ void parse_pcie_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descrip
 			}
 		}
 	}
+
+	return 0;
 }
 
-void parse_nvme_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp)
+int parse_nvme_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
 {
 	struct nvme_ocp_nvme_dbg_evt_class_format *pnvme_event =
 				(struct nvme_ocp_nvme_dbg_evt_class_format *) pevent_specific_data;
@@ -833,7 +848,8 @@ void parse_nvme_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descrip
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING,
 			description_str);
-	}
+	} else if (pevent_descriptor->event_data_size < 2)
+		return -1;
 
 	if (pevent_fifos_object != NULL) {
 		json_add_formatted_var_size_str(pevent_descriptor_obj, STR_CLASS_SPECIFIC_DATA,
@@ -865,6 +881,8 @@ void parse_nvme_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descrip
 			}
 		}
 	}
+
+	return 0;
 }
 
 void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
@@ -907,9 +925,12 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
 	}
 }
 
-void parse_media_wear_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp)
+int parse_media_wear_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp)
 {
 	struct nvme_ocp_media_wear_dbg_evt_class_format *pmedia_wear_event =
 			(struct nvme_ocp_media_wear_dbg_evt_class_format *) pevent_specific_data;
@@ -939,7 +960,8 @@ void parse_media_wear_event(struct nvme_ocp_telemetry_event_descriptor *pevent_d
 			pevent_descriptor->debug_event_class_type,
 			VU_EVENT_STRING,
 			description_str);
-	}
+	}  else if (pevent_descriptor->event_data_size < 3)
+		return -1;
 
 	if (pevent_fifos_object != NULL) {
 		json_add_formatted_var_size_str(pevent_descriptor_obj, STR_CLASS_SPECIFIC_DATA,
@@ -971,6 +993,8 @@ void parse_media_wear_event(struct nvme_ocp_telemetry_event_descriptor *pevent_d
 			}
 		}
 	}
+
+	return 0;
 }
 
 int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
@@ -982,7 +1006,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 		return -1;
 	}
 
-	int status = 0;
+	int status = 0, ret = 0;
 	unsigned int event_fifo_number = fifo_num + 1;
 	char *description = (char *)malloc((40 + 1) * sizeof(char));
 
@@ -1095,21 +1119,21 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 
 			switch (pevent_descriptor->debug_event_class_type) {
 			case TIME_STAMP_CLASS_TYPE:
-				parse_time_stamp_event(pevent_descriptor,
+				ret = parse_time_stamp_event(pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
 					fp);
 				break;
 			case PCIE_CLASS_TYPE:
-				parse_pcie_event(pevent_descriptor,
+				ret = parse_pcie_event(pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
 					fp);
 				break;
 			case NVME_CLASS_TYPE:
-				parse_nvme_event(pevent_descriptor,
+				ret = parse_nvme_event(pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
@@ -1125,9 +1149,10 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 					pevent_specific_data,
 					pevent_fifos_object,
 					fp);
+				ret = 0;
 				break;
 			case MEDIA_WEAR_CLASS_TYPE:
-				parse_media_wear_event(pevent_descriptor,
+				ret = parse_media_wear_event(pevent_descriptor,
 					pevent_descriptor_obj,
 					pevent_specific_data,
 					pevent_fifos_object,
@@ -1136,6 +1161,20 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 			case RESERVED_CLASS_TYPE:
 			default:
 				break;
+			}
+
+			if (ret) {
+				fprintf(stderr,
+					"ERROR : OCP : Invalid NVMe Event FIFO entry\n");
+				fprintf(stderr,
+					"FIFO: %d, offset: 0x%x\n",
+					fifo_num, offset_to_move);
+				fprintf(stderr,
+					"Type: 0x%x, ID: 0x%x, Size: 0x%x\n",
+					pevent_descriptor->debug_event_class_type,
+					pevent_descriptor->event_id,
+					pevent_descriptor->event_data_size);
+				goto free_desc;
 			}
 
 			if (pevent_descriptor_obj != NULL && pevent_fifo_array != NULL)
@@ -1214,8 +1253,9 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 		json_object_add_value_array(pevent_fifos_object, event_fifo_name,
 			pevent_fifo_array);
 
+free_desc:
 	free(description);
-	return 0;
+	return ret;
 }
 
 int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offsets *poffsets,
@@ -1610,10 +1650,8 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			fprintf(fp, "%s\n", STR_DA_1_EVENT_FIFO_INFO);
 			fprintf(fp, STR_LINE);
 			status = parse_event_fifos(NULL, &offsets, fp);
-			if (status != 0) {
-				nvme_show_error("status: %d\n", status);
+			if (status != 0)
 				return -1;
-			}
 
 			//Set the DA to 2
 			if (options->data_area == 2) {
@@ -1632,10 +1670,8 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 				fprintf(fp, "%s\n", STR_DA_2_EVENT_FIFO_INFO);
 				fprintf(fp, STR_LINE);
 				status = parse_event_fifos(NULL, &offsets, fp);
-				if (status != 0) {
-					nvme_show_error("status: %d\n", status);
+				if (status != 0)
 					return -1;
-				}
 			}
 
 			fprintf(fp, STR_LINE);
@@ -1719,10 +1755,8 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 		printf("%s\n", STR_DA_1_EVENT_FIFO_INFO);
 		printf(STR_LINE);
 		status = parse_event_fifos(NULL, &offsets, NULL);
-		if (status != 0) {
-			nvme_show_error("status: %d\n", status);
+		if (status != 0)
 			return -1;
-		}
 
 		//Set the DA to 2
 		if (options->data_area == 2) {
@@ -1740,10 +1774,8 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			printf("%s\n", STR_DA_2_EVENT_FIFO_INFO);
 			printf(STR_LINE);
 			status = parse_event_fifos(NULL, &offsets, NULL);
-			if (status != 0) {
-				nvme_show_error("status: %d\n", status);
+			if (status != 0)
 				return -1;
-			}
 		}
 
 		printf(STR_LINE);
@@ -1826,10 +1858,8 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 
 	//Data Area 1 Event FIFOs
 	status = parse_event_fifos(root, &offsets, NULL);
-	if (status != 0) {
-		nvme_show_error("status: %d\n", status, NULL);
+	if (status != 0)
 		return -1;
-	}
 
 	if (options->data_area == 2) {
 		//Set the DA to 2
@@ -1843,10 +1873,8 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 
 		//Data Area 2 Event FIFOs
 		status = parse_event_fifos(root, &offsets, NULL);
-		if (status != 0) {
-			nvme_show_error("status: %d\n", status);
+		if (status != 0)
 			return -1;
-		}
 	}
 
 	if (options->output_file != NULL) {
