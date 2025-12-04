@@ -14036,13 +14036,13 @@ true if **status** is of the specified type and value
 ``NVME_LOG_LID_FDP_EVENTS``
   FDP Events
 
-``NVME_LOG_LID_DISCOVER``
+``NVME_LOG_LID_DISCOVERY``
   Discovery
 
-``NVME_LOG_LID_HOST_DISCOVER``
+``NVME_LOG_LID_HOST_DISCOVERY``
   Host Discovery
 
-``NVME_LOG_LID_AVE_DISCOVER``
+``NVME_LOG_LID_AVE_DISCOVERY``
   AVE Discovery
 
 ``NVME_LOG_LID_PULL_MODEL_DDC_REQ``

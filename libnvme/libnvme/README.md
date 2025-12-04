@@ -42,11 +42,11 @@ except Exception as e:
 supported_log_pages = ctrl.supported_log_pages()
 try:
     # Get the supported options for the Get Discovery Log Page command
-    dlp_supp_opts = supported_log_pages[nvme.NVME_LOG_LID_DISCOVER] >> 16
+    dlp_supp_opts = supported_log_pages[nvme.NVME_LOG_LID_DISCOVERY] >> 16
 except (TypeError, IndexError):
     dlp_supp_opts = 0
 
-print(f"LID {nvme.NVME_LOG_LID_DISCOVER:02x}h (Discovery), supports: {disc_supp_str(dlp_supp_opts)}")
+print(f"LID {nvme.NVME_LOG_LID_DISCOVERY:02x}h (Discovery), supports: {disc_supp_str(dlp_supp_opts)}")
 try:
     lsp = nvme.NVMF_LOG_DISC_LSP_PLEO if dlp_supp_opts & nvme.NVMF_LOG_DISC_LID_PLEOS else 0
     log_pages = ctrl.discover(lsp=lsp)
