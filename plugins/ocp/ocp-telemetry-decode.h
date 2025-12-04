@@ -1389,11 +1389,14 @@ int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *de
  * @param pevent_fifos_object, event fifos json object pointer
  * @param fp, input file pointer
  *
- * @return
+ * @return 0 success
  */
-void parse_time_stamp_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp);
+int parse_time_stamp_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
 
 /**
  * @brief parses a pcie event fifo data to text or json formats
@@ -1404,11 +1407,14 @@ void parse_time_stamp_event(struct nvme_ocp_telemetry_event_descriptor *pevent_d
  * @param pevent_fifos_object, event fifos json object pointer
  * @param fp, input file pointer
  *
- * @return
+ * @return 0 success
  */
-void parse_pcie_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp);
+int parse_pcie_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
 
 /**
  * @brief parses a nvme event fifo data to text or json formats
@@ -1419,11 +1425,14 @@ void parse_pcie_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descrip
  * @param pevent_fifos_object, event fifos json object pointer
  * @param fp, input file pointer
  *
- * @return
+ * @return 0 success
  */
-void parse_nvme_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp);
+int parse_nvme_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
 
 /**
  * @brief parses common event fifo data to text or json formats
@@ -1449,9 +1458,12 @@ void parse_common_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descr
  * @param pevent_fifos_object, event fifos json object pointer
  * @param fp, input file pointer
  *
- * @return
+ * @return 0 success
  */
-void parse_media_wear_event(struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
-			    struct json_object *pevent_descriptor_obj, __u8 *pevent_specific_data,
-			    struct json_object *pevent_fifos_object, FILE *fp);
+int parse_media_wear_event(
+		struct nvme_ocp_telemetry_event_descriptor *pevent_descriptor,
+		struct json_object *pevent_descriptor_obj,
+		__u8 *pevent_specific_data,
+		struct json_object *pevent_fifos_object,
+		FILE *fp);
 #endif /* OCP_TELEMETRY_DECODE_H */
