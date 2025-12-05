@@ -6606,7 +6606,7 @@ nvme_get_log_discovery(struct nvme_transport_handle *hdl,
  * Submits the Get Log Page command specifically for the Host Discovery Log.
  * The @allhoste parameter is placed in the Log Specific Parameter (LSP) field.
  *
- * It automatically sets the Log Identifier (LID) to NVME_LOG_LID_HOST_DISCOVER.
+ * It automatically sets the Log Identifier (LID) to NVME_LOG_LID_HOST_DISCOVERY.
  *
  * Return: 0 on success, the NVMe command status on error, or a negative
  * errno otherwise.
