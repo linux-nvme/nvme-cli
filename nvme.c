@@ -445,6 +445,42 @@ int open_exclusive(struct nvme_global_ctx **ctx,
 	return 0;
 }
 
+static int open_fallback_chardev(struct nvme_global_ctx *ctx,
+				 __u32 nsid,
+				 struct nvme_transport_handle **phdl)
+{
+	struct nvme_transport_handle *hdl = *phdl;
+	int err;
+
+	if (nvme_transport_handle_is_chardev(hdl)) {
+		_cleanup_free_ char *cdev = NULL;
+
+		if (!nsid) {
+			nvme_show_error("char device not supported without --namespace-id");
+			return -EINVAL;
+		}
+
+		if (asprintf(&cdev, "/dev/%sn%d",
+			     nvme_transport_handle_get_name(hdl), nsid) < 0)
+			return -ENOMEM;
+
+		nvme_close(hdl);
+
+		err = nvme_open(ctx, cdev, &hdl);
+		if (err) {
+			*phdl = NULL;
+
+			nvme_show_error("could not open %s", cdev);
+			return err;
+		}
+
+		*phdl = hdl;
+	}
+
+	return 0;
+}
+
+
 int validate_output_format(const char *format, nvme_print_flags_t *flags)
 {
 	nvme_print_flags_t f;
@@ -7364,27 +7400,9 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	if (err)
 		return err;
 
-	if (nvme_transport_handle_is_chardev(hdl)) {
-		_cleanup_free_ char *cdev = NULL;
-
-		if (!cfg.namespace_id) {
-			nvme_show_error("char device not supported without --namespace-id");
-			return -EINVAL;
-		}
-
-		if (asprintf(&cdev, "/dev/%sn%d",
-			     nvme_transport_handle_get_name(hdl),
-			     cfg.namespace_id) < 0)
-			return -ENOMEM;
-
-		nvme_close(hdl);
-
-		err = nvme_open(ctx, cdev, &hdl);
-		if (err) {
-			nvme_show_error("could not open %s", cdev);
-			return err;
-		}
-	}
+	err = open_fallback_chardev(ctx, cfg.namespace_id, &hdl);
+	if (err)
+		return err;
 
 	err = validate_output_format(nvme_cfg.output_format, &flags);
 	if (err < 0) {
@@ -7678,6 +7696,10 @@ static int flush_cmd(int argc, char **argv, struct command *acmd, struct plugin 
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = open_fallback_chardev(ctx, cfg.namespace_id, &hdl);
 	if (err)
 		return err;
 
