@@ -7350,6 +7350,28 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	if (err)
 		return err;
 
+	if (nvme_transport_handle_is_chardev(hdl)) {
+		_cleanup_free_ char *cdev = NULL;
+
+		if (!cfg.namespace_id) {
+			nvme_show_error("char device not supported without --namespace-id");
+			return -EINVAL;
+		}
+
+		if (asprintf(&cdev, "/dev/%sn%d",
+			     nvme_transport_handle_get_name(hdl),
+			     cfg.namespace_id) < 0)
+			return -ENOMEM;
+
+		nvme_close(hdl);
+
+		err = nvme_open(ctx, cdev, &hdl);
+		if (err) {
+			nvme_show_error("could not open %s", cdev);
+			return err;
+		}
+	}
+
 	err = validate_output_format(nvme_cfg.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
