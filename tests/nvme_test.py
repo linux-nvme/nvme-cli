@@ -77,14 +77,18 @@ class TestNVMe(unittest.TestCase):
         self.load_config()
         if self.do_validate_pci_device:
             self.validate_pci_device()
-        self.create_and_attach_default_ns()
+        ns_mgmt = self.get_ns_mgmt_support()
+        self.ns_mgmt_supported = ns_mgmt["ns_mgmt"] and ns_mgmt["ns_attach"]
+        if self.ns_mgmt_supported:
+            self.create_and_attach_default_ns()
         print(f"\nsetup: ctrl: {self.ctrl}, ns1: {self.ns1}, default_nsid: {self.default_nsid}, flbas: {self.flbas}\n")
 
     def tearDown(self):
         """ Post Section for TestNVMe. """
         if self.clear_log_dir is True:
             shutil.rmtree(self.log_dir, ignore_errors=True)
-        self.create_and_attach_default_ns()
+        if self.ns_mgmt_supported:
+            self.create_and_attach_default_ns()
         print(f"\nteardown: ctrl: {self.ctrl}, ns1: {self.ns1}, default_nsid: {self.default_nsid}, flbas: {self.flbas}\n")
 
     @classmethod
@@ -208,6 +212,23 @@ class TestNVMe(unittest.TestCase):
         self.assertTrue(len(json_output['ctrl_list']) > 0,
                         "ERROR : nvme list-ctrl could not find ctrl")
         return str(json_output['ctrl_list'][0]['ctrl_id'])
+
+    def get_ns_mgmt_support(self):
+        oacs_str = self.get_id_ctrl_field_value("oacs")
+
+        try:
+            oacs = int(oacs_str, 0)
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid OACS value: {oacs_str!r}")
+
+        ns_mgmt_supported = bool(oacs & (1 << 3))
+        ns_attach_supported = bool(oacs & (1 << 4))
+
+        return {
+            "raw": oacs,
+            "ns_mgmt": ns_mgmt_supported,
+            "ns_attach": ns_attach_supported,
+        }
 
     def get_nsid_list(self):
         """ Wrapper for extracting the namespace list.
