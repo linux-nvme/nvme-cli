@@ -247,6 +247,7 @@ LIBNVME_2_0 {
 		nvme_skip_namespaces;
 		nvme_status_to_errno;
 		nvme_status_to_string;
+		nvme_strerror;
 		nvme_submit_admin_passthru;
 		nvme_submit_io_passthru;
 		nvme_subsys_filter;

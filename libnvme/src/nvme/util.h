@@ -96,6 +96,15 @@ const char *nvme_status_to_string(int status, bool fabrics);
 const char *nvme_errno_to_string(int err);
 
 /**
+ * nvme_strerror() - Returns string describing nvme errors and errno
+ * @err: Returned error codes from all libnvme functions
+ *
+ * Return: String representation of either the nvme connect error codes
+ * (positive values) or errno string (negative values)
+ */
+const char *nvme_strerror(int errnum);
+
+/**
  * nvme_init_ctrl_list() - Initialize an nvme_ctrl_list structure from an array.
  * @cntlist:   The controller list structure to initialize
  * @num_ctrls: The number of controllers in the array, &ctrlist.

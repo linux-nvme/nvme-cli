@@ -314,13 +314,6 @@ static OPT_VALS(feature_name) = {
 	VAL_END()
 };
 
-const char *nvme_strerror(int errnum)
-{
-	if (errnum >= ENVME_CONNECT_RESOLVE)
-		return nvme_errno_to_string(errnum);
-	return strerror(errnum);
-}
-
 static ssize_t getrandom_bytes(void *buf, size_t buflen)
 {
 	ssize_t result;
