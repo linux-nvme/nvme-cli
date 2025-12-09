@@ -23,6 +23,29 @@
 /* default to 600 seconds of reconnect attempts before giving up */
 #define NVMF_DEF_CTRL_LOSS_TMO		600
 
+struct nvmf_discovery_ctx;
+
+int nvmf_discovery_ctx_create(struct nvme_global_ctx *ctx,
+		 void *user_data, struct nvmf_discovery_ctx **dctx);
+
+int nvmf_discovery_ctx_max_retries(struct nvmf_discovery_ctx *dctx,
+		int max_retries);
+int nvmf_discovery_ctx_keep_alive_timeout(struct nvmf_discovery_ctx *dctx,
+		int keep_alive_timeout);
+int nvmf_discovery_ctx_discovery_log_set(struct nvmf_discovery_ctx *dctx,
+		void (*discover_log)(struct nvmf_discovery_ctx *dctx,
+			bool connect, struct nvmf_discovery_log *log,
+			uint64_t numrec, void *user_data));
+int nvmf_discovery_ctx_already_connected_set(struct nvmf_discovery_ctx *dctx,
+		void (*already_connected)(struct nvme_host *host,
+			struct nvmf_disc_log_entry *entry,
+			void *user_data));
+int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
+		bool persistent);
+int nvmf_discovery_ctx_default_fabrics_config_set(
+		struct nvmf_discovery_ctx *dctx,
+		struct nvme_fabrics_config *defcfg);
+
 /**
  * struct nvme_fabrics_config - Defines all linux nvme fabrics initiator options
  * @host_traddr:	Host transport address
@@ -407,4 +430,6 @@ int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **uri);
  */
 void nvme_free_uri(struct nvme_fabrics_uri *uri);
 
+int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
+		bool connect, struct nvme_ctrl *c);
 #endif /* _LIBNVME_FABRICS_H */
