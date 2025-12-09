@@ -7262,9 +7262,10 @@ static int init_pi_tags(struct nvme_transport_handle *hdl,
 		return -ENOMEM;
 
 	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0, nvm_ns);
+	if (err)
+		return -ENAVAIL;
 
-	if (!err)
-		get_pif_sts(ns, nvm_ns, &pif, &sts);
+	get_pif_sts(ns, nvm_ns, &pif, &sts);
 
 	if (invalid_tags(lbst, ilbrt, sts, pif))
 		return -EINVAL;
@@ -7379,7 +7380,7 @@ static int write_zeroes(int argc, char **argv,
 		cfg.block_count, control, cfg.dspec, 0, 0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 		cfg.lbat, cfg.lbatm);
-	if (err)
+	if (err != 0 && err != -ENAVAIL)
 		return err;
 	err = nvme_submit_io_passthru(hdl, &cmd);
 	if (err < 0)
@@ -7719,7 +7720,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst, cfg.lbat,
 		cfg.lbatm);
-	if (err)
+	if (err != 0 && err != -ENAVAIL)
 		return err;
 	err = nvme_submit_io_passthru(hdl, &cmd);
 	if (err < 0)
@@ -8561,7 +8562,7 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		cfg.block_count, control, 0, NULL, 0, NULL, 0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 		cfg.lbat, cfg.lbatm);
-	if (err)
+	if (err != 0 && err != -ENAVAIL)
 		return err;
 	err = nvme_submit_io_passthru(hdl, &cmd);
 	if (err < 0)
