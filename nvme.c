@@ -7211,9 +7211,10 @@ static int get_pi_info(struct nvme_transport_handle *hdl,
 
 	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0,
 			   nvm_ns);
-	if (!err)
-		get_pif_sts(ns, nvm_ns, &pif, &sts);
+	if (err)
+		return -ENAVAIL;
 
+	get_pif_sts(ns, nvm_ns, &pif, &sts);
 	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
 	if (NVME_FLBAS_META_EXT(ns->flbas)) {
 		/*
@@ -8135,6 +8136,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	__u16 control = 0, nblocks = 0;
 	struct nvme_passthru_cmd cmd;
 	__u8 sts = 0, pif = 0;
+	bool pi_available;
 	__u32 dsmgmt = 0;
 	int mode = 0644;
 	void *buffer;
@@ -8314,12 +8316,16 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (cfg.block_size) {
 		logical_block_size = cfg.block_size;
 		ms = cfg.metadata_size;
+		pi_available = true;
 	} else {
 		err = get_pi_info(hdl, cfg.nsid, cfg.prinfo,
 			cfg.ilbrt, cfg.lbst, &logical_block_size, &ms);
 		if (err) {
 			logical_block_size = 0;
 			ms = 0;
+			pi_available = false;
+		} else {
+			pi_available = true;
 		}
 	}
 
@@ -8413,10 +8419,12 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		    NVME_FIELD_ENCODE(cfg.dsmgmt,
 			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
 			NVME_IOCS_COMMON_CDW13_DSM_MASK);
-	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
-		cfg.lbat, cfg.lbatm);
-	if (err)
-		return err;
+	if (pi_available) {
+		err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
+			cfg.lbat, cfg.lbatm);
+		if (err)
+			return err;
+	}
 	gettimeofday(&start_time, NULL);
 	err = nvme_submit_io_passthru(hdl, &cmd);
 	gettimeofday(&end_time, NULL);
