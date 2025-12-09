@@ -102,7 +102,7 @@ const char *nvme_errno_to_string(int err);
  * Return: String representation of either the nvme connect error codes
  * (positive values) or errno string (negative values)
  */
-const char *nvme_strerror(int errnum);
+const char *nvme_strerror(int err);
 
 /**
  * nvme_init_ctrl_list() - Initialize an nvme_ctrl_list structure from an array.

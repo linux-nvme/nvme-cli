@@ -195,6 +195,72 @@ const char *nvmf_cms_str(__u8 cm)
 	return arg_str(cms, ARRAY_SIZE(cms), cm);
 }
 
+int nvmf_discovery_ctx_create(struct nvme_global_ctx *ctx,
+		 void *user_data, struct nvmf_discovery_ctx **dctxp)
+{
+	struct nvmf_discovery_ctx *dctx;
+
+	dctx = calloc(1, sizeof(*dctx));
+	if (!dctx)
+		return -ENOMEM;
+
+	dctx->user_data = user_data;
+
+	*dctxp = dctx;
+	return 0;
+}
+
+int nvmf_discovery_ctx_max_retries(struct nvmf_discovery_ctx *dctx,
+		int max_retries)
+{
+	dctx->default_max_discovery_retries = max_retries;
+
+	return 0;
+}
+int nvmf_discovery_ctx_keep_alive_timeout(struct nvmf_discovery_ctx *dctx,
+		int keep_alive_timeout)
+{
+	dctx->default_keep_alive_timeout = keep_alive_timeout;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_discovery_log_set(struct nvmf_discovery_ctx *dctx,
+		void (*discover_log)(struct nvmf_discovery_ctx *dctx,
+			bool connect, struct nvmf_discovery_log *log,
+			uint64_t numrec, void *user_data))
+{
+	dctx->discovery_log = discover_log;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_already_connected_set(struct nvmf_discovery_ctx *dctx,
+		void (*already_connected)(struct nvme_host *host,
+			struct nvmf_disc_log_entry *entry, void *user_data))
+{
+	dctx->already_connected = already_connected;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
+		bool persistent)
+{
+	dctx->persistent = persistent;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_default_fabrics_config_set(
+		struct nvmf_discovery_ctx *dctx,
+		struct nvme_fabrics_config *defcfg)
+{
+	dctx->defcfg = defcfg;
+
+	return 0;
+}
+
 /*
  * Derived from Linux's supported options (the opt_tokens table)
  * when the mechanism to report supported options was added (f18ee3d988157).
@@ -1912,4 +1978,153 @@ void nvme_free_uri(struct nvme_fabrics_uri *uri)
 	free(uri->query);
 	free(uri->fragment);
 	free(uri);
+}
+
+static nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct tr_config *trcfg)
+{
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+
+	nvme_for_each_subsystem(h, s) {
+		c = nvme_ctrl_find(s,
+				   trcfg->transport,
+				   trcfg->traddr,
+				   trcfg->trsvcid,
+				   trcfg->subsysnqn,
+				   trcfg->host_traddr,
+				   trcfg->host_iface);
+		if (c)
+			return c;
+	}
+
+	return NULL;
+}
+
+static int set_discovery_kato(struct nvmf_discovery_ctx *dctx,
+		struct nvme_fabrics_config *cfg)
+{
+	int tmo = cfg->keep_alive_tmo;
+
+	/* Set kato to NVMF_DEF_DISC_TMO for persistent controllers */
+	if (dctx->persistent && !cfg->keep_alive_tmo)
+		cfg->keep_alive_tmo = dctx->default_keep_alive_timeout;
+	/* Set kato to zero for non-persistent controllers */
+	else if (!dctx->persistent && (cfg->keep_alive_tmo > 0))
+		cfg->keep_alive_tmo = 0;
+
+	return tmo;
+}
+
+int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
+		bool connect, struct nvme_ctrl *c)
+{
+	_cleanup_free_ struct nvmf_discovery_log *log = NULL;
+	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
+	nvme_host_t h = nvme_subsystem_get_host(s);
+	uint64_t numrec;
+	int err;
+
+	struct nvme_get_discovery_args args = {
+		.c = c,
+		.args_size = sizeof(args),
+		.max_retries = dctx->default_max_discovery_retries,
+		.result = 0,
+		.lsp = 0,
+	};
+
+	err = nvmf_get_discovery_wargs(&args, &log);
+	if (err) {
+		nvme_msg(ctx, LOG_ERR, "failed to get discovery log: %s\n",
+			nvme_strerror(err));
+		return err;
+	}
+
+	numrec = le64_to_cpu(log->numrec);
+	if (dctx->discovery_log)
+		dctx->discovery_log(dctx, connect, log, numrec,
+			dctx->user_data);
+
+	if (!connect)
+		return 0;
+
+	for (int i = 0; i < numrec; i++) {
+		struct nvmf_disc_log_entry *e = &log->entries[i];
+		nvme_ctrl_t cl;
+		bool discover = false;
+		bool disconnect;
+		nvme_ctrl_t child;
+		int tmo = dctx->defcfg->keep_alive_tmo;
+
+		struct tr_config trcfg = {
+			.subsysnqn	= e->subnqn,
+			.transport	= nvmf_trtype_str(e->trtype),
+			.traddr		= e->traddr,
+			.host_traddr	= dctx->defcfg->host_traddr,
+			.host_iface	= dctx->defcfg->host_iface,
+			.trsvcid	= e->trsvcid,
+		};
+
+		/* Already connected ? */
+		cl = lookup_ctrl(h, &trcfg);
+		if (cl && nvme_ctrl_get_name(cl))
+			continue;
+
+		/* Skip connect if the transport types don't match */
+		if (strcmp(nvme_ctrl_get_transport(c),
+			   nvmf_trtype_str(e->trtype)))
+			continue;
+
+		if (e->subtype == NVME_NQN_DISC ||
+		    e->subtype == NVME_NQN_CURR) {
+			__u16 eflags = le16_to_cpu(e->eflags);
+			/*
+			 * Does this discovery controller return the
+			 * same information?
+			 */
+			if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
+				continue;
+
+			/*
+			 * Are we supposed to keep the discovery
+			 * controller around?
+			 */
+			disconnect = !dctx->persistent;
+
+			if (strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
+				/*
+				 * Does this discovery controller doesn't
+				 * support explicit persistent connection?
+				 */
+				if (!(eflags & NVMF_DISC_EFLAGS_EPCSD))
+					disconnect = true;
+				else
+					disconnect = false;
+			}
+
+			set_discovery_kato(dctx, dctx->defcfg);
+		} else {
+			/* NVME_NQN_NVME */
+			disconnect = false;
+		}
+
+		err = nvmf_connect_disc_entry(h, e, dctx->defcfg,
+					      &discover, &child);
+
+		dctx->defcfg->keep_alive_tmo = tmo;
+
+		if (!child) {
+			if (discover)
+				nvmf_discovery(ctx, dctx, true, child);
+
+			if (disconnect) {
+				nvme_disconnect_ctrl(child);
+				nvme_free_ctrl(child);
+			}
+		} else if (err == -ENVME_CONNECT_ALREADY) {
+			dctx->already_connected(h, &log->entries[i],
+				dctx->user_data);
+		}
+	}
+
+	return 0;
 }

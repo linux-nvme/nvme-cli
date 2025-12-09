@@ -272,6 +272,35 @@ struct nvme_global_ctx {
 	struct nvme_fabric_options *options;
 };
 
+struct nvmf_discovery_ctx {
+	/* defaults */
+	int default_max_discovery_retries;
+	int default_keep_alive_timeout;
+
+	void (*discovery_log)(struct nvmf_discovery_ctx *dctx,
+			bool connect,
+			struct nvmf_discovery_log *log,
+			uint64_t numrec, void *user_data);
+	void (*already_connected)(struct nvme_host *host,
+			struct nvmf_disc_log_entry *entry,
+			void *user_data);
+
+	/* connfiguration */
+	bool persistent;
+	struct nvme_fabrics_config *defcfg;
+
+	void *user_data;
+};
+
+struct tr_config {
+	const char *subsysnqn;
+	const char *transport;
+	const char *traddr;
+	const char *host_traddr;
+	const char *host_iface;
+	const char *trsvcid;
+};
+
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
 
 int json_read_config(struct nvme_global_ctx *ctx, const char *config_file);
