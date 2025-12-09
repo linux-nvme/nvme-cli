@@ -8539,6 +8539,10 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	if (err)
 		return err;
 
+	err = open_fallback_chardev(ctx, cfg.nsid, &hdl);
+	if (err)
+		return err;
+
 	if (cfg.prinfo > 0xf)
 		return -EINVAL;
 
