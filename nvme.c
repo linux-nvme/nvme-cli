@@ -7175,6 +7175,65 @@ static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
 		*pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
 }
 
+static int get_pi_info(struct nvme_transport_handle *hdl,
+		__u32 nsid, __u8 prinfo, __u64 ilbrt, __u64 lbst,
+		unsigned int *logical_block_size, __u16 *metadata_size)
+{
+	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
+	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	__u8 sts = 0, pif = 0;
+	unsigned int lbs = 0;
+	__u8 lba_index;
+	int pi_size;
+	__u16 ms;
+	int err;
+
+	ns = nvme_alloc(sizeof(*ns));
+	if (!ns)
+		return -ENOMEM;
+
+	err = nvme_identify_ns(hdl, nsid, ns);
+	if (err > 0) {
+		nvme_show_status(err);
+		return err;
+	} else if (err < 0) {
+		nvme_show_error("identify namespace: %s", nvme_strerror(err));
+		return err;
+	}
+
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
+	lbs = 1 << ns->lbaf[lba_index].ds;
+	ms = le16_to_cpu(ns->lbaf[lba_index].ms);
+
+	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
+	if (!nvm_ns)
+		return -ENOMEM;
+
+	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0,
+			   nvm_ns);
+	if (!err)
+		get_pif_sts(ns, nvm_ns, &pif, &sts);
+
+	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
+	if (NVME_FLBAS_META_EXT(ns->flbas)) {
+		/*
+		 * No meta data is transferred for PRACT=1 and MD=PI size:
+		 *   5.2.2.1 Protection Information and Write Commands
+		 *   5.2.2.2 Protection Information and Read Commands
+		 */
+		if (!((prinfo & 0x8) != 0 && ms == pi_size))
+			logical_block_size += ms;
+	}
+
+	if (invalid_tags(lbst, ilbrt, sts, pif))
+		return -EINVAL;
+
+	*logical_block_size = lbs;
+	*metadata_size = ms;
+
+	return 0;
+}
+
 static int init_pi_tags(struct nvme_transport_handle *hdl,
 	struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 ilbrt, __u64 lbst,
 	__u16 lbat, __u16 lbatm)
@@ -8073,14 +8132,14 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	struct timeval start_time, end_time;
 	_cleanup_free_ void *mbuffer = NULL;
 	_cleanup_fd_ int dfd = -1, mfd = -1;
-	__u8 lba_index, sts = 0, pif = 0;
 	__u16 control = 0, nblocks = 0;
 	struct nvme_passthru_cmd cmd;
-	int flags, pi_size;
+	__u8 sts = 0, pif = 0;
 	__u32 dsmgmt = 0;
 	int mode = 0644;
 	void *buffer;
 	int err = 0;
+	int flags;
 	__u16 ms;
 
 	const char *start_block_addr = "64-bit addr of first block to access";
@@ -8256,45 +8315,12 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		logical_block_size = cfg.block_size;
 		ms = cfg.metadata_size;
 	} else {
-		ns = nvme_alloc(sizeof(*ns));
-		if (!ns)
-			return -ENOMEM;
-
-		err = nvme_identify_ns(hdl, cfg.nsid, ns);
-		if (err > 0) {
-			nvme_show_status(err);
-			return err;
-		} else if (err < 0) {
-			nvme_show_error("identify namespace: %s", nvme_strerror(err));
-			return err;
+		err = get_pi_info(hdl, cfg.nsid, cfg.prinfo,
+			cfg.ilbrt, cfg.lbst, &logical_block_size, &ms);
+		if (err) {
+			logical_block_size = 0;
+			ms = 0;
 		}
-
-		nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
-		logical_block_size = 1 << ns->lbaf[lba_index].ds;
-		ms = le16_to_cpu(ns->lbaf[lba_index].ms);
-
-		nvm_ns = nvme_alloc(sizeof(*nvm_ns));
-		if (!nvm_ns)
-			return -ENOMEM;
-
-		err = nvme_identify_csi_ns(hdl, cfg.nsid, NVME_CSI_NVM, 0,
-				   nvm_ns);
-		if (!err)
-			get_pif_sts(ns, nvm_ns, &pif, &sts);
-
-		pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
-		if (NVME_FLBAS_META_EXT(ns->flbas)) {
-			/*
-			 * No meta data is transferred for PRACT=1 and MD=PI size:
-			 *   5.2.2.1 Protection Information and Write Commands
-			 *   5.2.2.2 Protection Information and Read Commands
-			 */
-			if (!((cfg.prinfo & 0x8) != 0 && ms == pi_size))
-				logical_block_size += ms;
-		}
-
-		if (invalid_tags(cfg.lbst, cfg.ilbrt, sts, pif))
-			return -EINVAL;
 	}
 
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
