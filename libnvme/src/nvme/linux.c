@@ -76,6 +76,7 @@ void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
 
 static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl, const char *devname)
 {
+	struct nvme_passthru_cmd dummy = { 0 };
 	_cleanup_free_ char *path = NULL;
 	char *name = basename(devname);
 	int ret, id, ns;
@@ -107,8 +108,8 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 		return -EINVAL;
 	}
 
-	ret = ioctl(hdl->fd, NVME_IOCTL_ADMIN64_CMD, NULL);
-	if (ret == -1 && errno != ENOTTY)
+	ret = ioctl(hdl->fd, NVME_IOCTL_ADMIN64_CMD, &dummy);
+	if (ret > 0)
 		hdl->ioctl64 = true;
 
 	return 0;
