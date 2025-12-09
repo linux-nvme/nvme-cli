@@ -641,6 +641,13 @@ const char *nvme_errno_to_string(int status)
 	return s;
 }
 
+const char *nvme_strerror(int errnum)
+{
+	if (errnum >= ENVME_CONNECT_RESOLVE)
+		return nvme_errno_to_string(errnum);
+	return strerror(errnum);
+}
+
 #ifdef HAVE_NETDB
 int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr,
 		    char **hostname)
