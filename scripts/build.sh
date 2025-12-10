@@ -25,6 +25,7 @@ usage() {
     echo "  distro              build libnvme and nvme-cli separately"
     echo "  docs                build documentation"
     echo "  static              build a static binary"
+    echo "  libnvme             build only libnvme"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -138,6 +139,15 @@ config_meson_static() {
         -Dc_link_args="-static"                 \
         -Dkeyutils=disabled                     \
         -Dopenssl:werror=false                  \
+        "${BUILDDIR}"
+}
+
+config_meson_libnvme() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+	-Dnvme=disabled				\
+	-Dlibnvme=enabled			\
         "${BUILDDIR}"
 }
 

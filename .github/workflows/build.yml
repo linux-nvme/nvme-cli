@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  default:
+  nvme-cli:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -30,6 +30,29 @@ jobs:
         if: failure()
         with:
           name: logs files
+          path: |
+            .build-ci/meson-logs/*.txt
+
+  libnvme:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        buildtype: [debug, release]
+    container:
+      image: ghcr.io/linux-nvme/debian.python:latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: build
+        run: |
+          scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x libnvme
+      - uses: actions/upload-artifact@v5
+        name: upload logs
+        if: failure()
+        with:
+          name: libnvme logs files
           path: |
             .build-ci/meson-logs/*.txt
 
