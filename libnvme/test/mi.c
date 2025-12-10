@@ -602,7 +602,7 @@ static void test_admin_invalid_formats(nvme_mi_ep_t ep)
 	test_set_transport_callback(ep, test_rejected_command_cb, NULL);
 
 	hdl = nvme_mi_init_transport_handle(ep, 1);
-	assert(link);
+	assert(hdl);
 
 	/* unaligned req size */
 	len = 0;
