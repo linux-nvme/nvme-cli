@@ -126,7 +126,7 @@ static int nvme_submit_passthru32(struct nvme_transport_handle *hdl,
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
-	if (hdl->ctx->dry_run)
+	if (hdl->ctx && hdl->ctx->dry_run)
 		goto out;
 
 	memcpy(&cmd32, cmd, offsetof(struct linux_passthru_cmd32, result));
@@ -156,7 +156,7 @@ static int nvme_submit_passthru64(struct nvme_transport_handle *hdl,
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
-	if (hdl->ctx->dry_run)
+	if (hdl->ctx && hdl->ctx->dry_run)
 		goto out;
 
 	do {
