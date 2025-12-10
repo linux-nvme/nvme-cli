@@ -244,6 +244,15 @@ int nvmf_discovery_ctx_already_connected_set(struct nvmf_discovery_ctx *dctx,
 	return 0;
 }
 
+int nvmf_discovery_ctx_decide_retry_set(struct nvmf_discovery_ctx *dctx,
+		bool (*decide_retry)(struct nvmf_discovery_ctx *dctx, int err,
+			void *user_data))
+{
+	dctx->decide_retry = decide_retry;
+
+	return 0;
+}
+
 int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
 		bool persistent)
 {
@@ -2127,4 +2136,256 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
 	}
 
 	return 0;
+}
+
+char *nvmf_get_default_trsvcid(const char *transport, bool discovery_ctrl)
+{
+	if (!transport)
+		return NULL;
+	if (!strcmp(transport, "tcp")) {
+		if (discovery_ctrl)
+			/* Default port for NVMe/TCP discovery controllers */
+			return stringify(NVME_DISC_IP_PORT);
+		/* Default port for NVMe/TCP io controllers */
+		return stringify(NVME_RDMA_IP_PORT);
+	} else if (!strcmp(transport, "rdma")) {
+		/* Default port for NVMe/RDMA controllers */
+		return stringify(NVME_RDMA_IP_PORT);
+	}
+
+	return NULL;
+}
+
+static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
+{
+	if (nvme_host_is_pdc_enabled(h, DEFAULT_PDC_ENABLED))
+		return nvme_ctrl_is_unique_discovery_ctrl(c);
+
+	return false;
+}
+
+static int nvme_add_ctrl(struct nvmf_discovery_ctx *dctx,
+		struct nvme_host *h, struct nvme_ctrl *c,
+		struct nvme_fabrics_config *cfg)
+{
+	int err;
+
+retry:
+	err = nvmf_add_ctrl(h, c, cfg);
+	if (!err)
+		return 0;
+	if (dctx->decide_retry(dctx, err, dctx->user_data))
+		goto retry;
+
+	return err;
+}
+
+static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, nvme_host_t h,
+		struct nvme_fabrics_config *cfg, struct tr_config *trcfg,
+		struct nvme_ctrl **ctrl)
+{
+	nvme_ctrl_t c;
+	int tmo, ret;
+
+	ret = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
+			     trcfg->traddr, trcfg->host_traddr,
+			     trcfg->host_iface, trcfg->trsvcid, &c);
+	if (ret)
+		return ret;
+
+	nvme_ctrl_set_discovery_ctrl(c, true);
+	nvme_ctrl_set_unique_discovery_ctrl(c,
+		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
+	tmo = set_discovery_kato(dctx, cfg);
+
+	ret = nvme_add_ctrl(dctx, h, c, cfg);
+	cfg->keep_alive_tmo = tmo;
+	if (ret) {
+		nvme_free_ctrl(c);
+		return ret;
+	}
+
+	*ctrl = c;
+	return 0;
+}
+
+int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, nvme_host_t h,
+		struct nvme_fabrics_config *cfg,
+		struct tr_config *trcfg,
+		struct nvme_ctrl **ctrl)
+{
+	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	struct nvme_ctrl *c;
+	int ret;
+
+	ret = __create_discovery_ctrl(ctx, dctx, h, cfg, trcfg, &c);
+	if (ret)
+		return ret;
+
+	if (nvme_ctrl_is_unique_discovery_ctrl(c)) {
+		*ctrl = c;
+		return 0;
+	}
+
+	id = __nvme_alloc(sizeof(*id));
+	if (!id) {
+		nvme_free_ctrl(c);
+		return -ENOMEM;
+	}
+
+	/* Find out the name of discovery controller */
+	ret = nvme_ctrl_identify(c, id);
+	if (ret)  {
+		fprintf(stderr,	"failed to identify controller, error %s\n",
+			nvme_strerror(-ret));
+		nvme_disconnect_ctrl(c);
+		nvme_free_ctrl(c);
+		return ret;
+	}
+
+	if (!strcmp(id->subnqn, NVME_DISC_SUBSYS_NAME)) {
+		*ctrl = c;
+		return 0;
+	}
+
+	/*
+	 * The subsysnqn is not the well-known name. Prefer the unique
+	 * subsysnqn over the well-known one.
+	 */
+	nvme_disconnect_ctrl(c);
+	nvme_free_ctrl(c);
+
+	trcfg->subsysnqn = id->subnqn;
+	ret = __create_discovery_ctrl(ctx, dctx, h, cfg, trcfg, &c);
+	if (ret)
+		return ret;
+
+	*ctrl = c;
+	return 0;
+}
+
+int _discovery_config_json(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, nvme_host_t h, nvme_ctrl_t c,
+		bool connect, bool force)
+{
+	const char *transport, *traddr, *host_traddr;
+	const char *host_iface, *trsvcid, *subsysnqn;
+	struct nvme_fabrics_config cfg;
+	nvme_ctrl_t cn;
+	int ret = 0;
+
+	transport = nvme_ctrl_get_transport(c);
+	traddr = nvme_ctrl_get_traddr(c);
+	host_traddr = nvme_ctrl_get_host_traddr(c);
+	host_iface = nvme_ctrl_get_host_iface(c);
+
+	if (!transport && !traddr)
+		return 0;
+
+	/* ignore none fabric transports */
+	if (strcmp(transport, "tcp") &&
+	    strcmp(transport, "rdma") &&
+	    strcmp(transport, "fc"))
+		return 0;
+
+	/* ignore if no host_traddr for fc */
+	if (!strcmp(transport, "fc")) {
+		if (!host_traddr) {
+			fprintf(stderr, "host_traddr required for fc\n");
+			return 0;
+		}
+	}
+
+	/* ignore if host_iface set for any transport other than tcp */
+	if (!strcmp(transport, "rdma") || !strcmp(transport, "fc")) {
+		if (host_iface) {
+			fprintf(stderr,
+				"host_iface not permitted for rdma or fc\n");
+			return 0;
+		}
+	}
+
+	trsvcid = nvme_ctrl_get_trsvcid(c);
+	if (!trsvcid || !strcmp(trsvcid, ""))
+		trsvcid = nvmf_get_default_trsvcid(transport, true);
+
+	if (force)
+		subsysnqn = nvme_ctrl_get_subsysnqn(c);
+	else
+		subsysnqn = NVME_DISC_SUBSYS_NAME;
+
+	if (nvme_ctrl_is_persistent(c))
+		dctx->persistent = true;
+
+	memcpy(&cfg, dctx->defcfg, sizeof(cfg));
+
+	struct tr_config trcfg = {
+		.subsysnqn = subsysnqn,
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+	};
+
+	if (!force) {
+		cn = lookup_ctrl(h, &trcfg);
+		if (cn) {
+			dctx->persistent = true;
+			nvmf_discovery(ctx, dctx, connect, cn);
+			return 0;
+		}
+	}
+
+	ret = nvmf_create_discovery_ctrl(ctx, dctx, h, &cfg, &trcfg, &cn);
+	if (ret)
+		return 0;
+
+	nvmf_discovery(ctx, dctx, connect, cn);
+	if (!(dctx->persistent || is_persistent_discovery_ctrl(h, cn)))
+		ret = nvme_disconnect_ctrl(cn);
+	nvme_free_ctrl(cn);
+
+	return ret;
+}
+
+int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, const char *hostnqn,
+		const char *hostid, bool connect, bool force)
+{
+	const char *hnqn, *hid;
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+	int ret = 0, err;
+
+	nvme_for_each_host(ctx, h) {
+		nvme_for_each_subsystem(h, s) {
+			hnqn = nvme_host_get_hostnqn(h);
+			if (hostnqn && hnqn && strcmp(hostnqn, hnqn))
+				continue;
+			hid = nvme_host_get_hostid(h);
+			if (hostid && hid && strcmp(hostid, hid))
+				continue;
+
+			nvme_subsystem_for_each_ctrl(s, c) {
+				err = _discovery_config_json(ctx, dctx, h, c,
+					connect, force);
+				if (err) {
+					nvme_msg(ctx, LOG_ERR,
+						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
+						nvme_host_get_hostnqn(h),
+						nvme_subsystem_get_name(s),
+						nvme_ctrl_get_address(c));
+
+					if (!ret)
+						ret = err;
+				}
+			}
+		}
+	}
+
+	return ret;
 }

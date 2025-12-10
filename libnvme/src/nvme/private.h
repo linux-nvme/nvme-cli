@@ -284,6 +284,8 @@ struct nvmf_discovery_ctx {
 	void (*already_connected)(struct nvme_host *host,
 			struct nvmf_disc_log_entry *entry,
 			void *user_data);
+	bool (*decide_retry)(struct nvmf_discovery_ctx *dctx, int err,
+			void *user_data);
 
 	/* connfiguration */
 	bool persistent;
