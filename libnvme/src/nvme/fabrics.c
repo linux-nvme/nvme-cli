@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <fnmatch.h>
 #include <dirent.h>
 #include <inttypes.h>
 
@@ -36,6 +37,7 @@
 #include "fabrics.h"
 #include "linux.h"
 #include "ioctl.h"
+#include "nbft.h"
 #include "nvme/tree.h"
 #include "util.h"
 #include "log.h"
@@ -249,6 +251,15 @@ int nvmf_discovery_ctx_decide_retry_set(struct nvmf_discovery_ctx *dctx,
 			void *user_data))
 {
 	dctx->decide_retry = decide_retry;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_connected_set(struct nvmf_discovery_ctx *dctx,
+		void (*connected)(struct nvmf_discovery_ctx *dctx,
+			struct nvme_ctrl *c, void *user_data))
+{
+	dctx->connected = connected;
 
 	return 0;
 }
@@ -2436,5 +2447,467 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx, const char *hostnqn,
 		}
 	}
 
+	return ret;
+}
+
+#define NBFT_SYSFS_FILENAME	"NBFT*"
+
+static int nbft_filter(const struct dirent *dent)
+{
+	return !fnmatch(NBFT_SYSFS_FILENAME, dent->d_name, FNM_PATHNAME);
+}
+
+int nvmf_nbft_read_files(char *path, struct nbft_file_entry **head)
+{
+	struct nbft_file_entry *entry = NULL;
+	struct nbft_info *nbft;
+	struct dirent **dent;
+	char filename[PATH_MAX];
+	int i, count, ret;
+
+	count = scandir(path, &dent, nbft_filter, NULL);
+	if (count < 0)
+		return -errno;
+
+	for (i = 0; i < count; i++) {
+		snprintf(filename, sizeof(filename), "%s/%s", path,
+			dent[i]->d_name);
+
+		ret = nvme_nbft_read(&nbft, filename);
+		if (!ret) {
+			struct nbft_file_entry *new;
+
+			new = calloc(1, sizeof(*new));
+			if (!new)
+				return -ENOMEM;
+			new->nbft = nbft;
+			if (entry) {
+				entry->next = new;
+				entry = entry->next;
+			} else {
+				entry = new;
+				*head = entry;
+			}
+		}
+		free(dent[i]);
+	}
+	free(dent);
+	return 0;
+}
+
+void nvmf_nbft_free(struct nbft_file_entry *head)
+{
+	while (head) {
+		struct nbft_file_entry *next = head->next;
+
+		nvme_nbft_free(head->nbft);
+		free(head);
+
+		head = next;
+	}
+}
+
+static bool validate_uri(struct nbft_info_discovery *dd,
+			 struct nvme_fabrics_uri *uri)
+{
+	if (!uri) {
+		fprintf(stderr,
+			"Discovery Descriptor %d: failed to parse URI %s\n",
+			dd->index, dd->uri);
+		return false;
+	}
+	if (strcmp(uri->scheme, "nvme") != 0) {
+		fprintf(stderr,
+			"Discovery Descriptor %d: unsupported scheme '%s'\n",
+			dd->index, uri->scheme);
+		return false;
+	}
+	if (!uri->protocol || strcmp(uri->protocol, "tcp") != 0) {
+		fprintf(stderr,
+			"Discovery Descriptor %d: unsupported transport '%s'\n",
+			dd->index, uri->protocol);
+		return false;
+	}
+
+	return true;
+}
+
+static int nbft_connect(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, struct nvme_host *h,
+		struct nvmf_disc_log_entry *e,
+		struct nbft_info_subsystem_ns *ss, struct tr_config *trcfg,
+		struct nvme_fabrics_config *cfg)
+{
+	nvme_ctrl_t c;
+	int saved_log_level;
+	bool saved_log_tstamp;
+	bool saved_log_pid;
+	int ret;
+
+	saved_log_level = nvme_get_logging_level(ctx, &saved_log_tstamp,
+		&saved_log_pid);
+
+	/* Already connected ? */
+	c = lookup_ctrl(h, trcfg);
+	if (c && nvme_ctrl_get_name(c))
+		return 0;
+
+	ret = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
+			     trcfg->traddr, trcfg->host_traddr,
+			     trcfg->host_iface, trcfg->trsvcid, &c);
+	if (ret)
+		return ret;
+
+	/* Pause logging for unavailable SSNSs */
+	if (ss && ss->unavailable && saved_log_level < 1)
+		nvme_init_logging(ctx, -1, false, false);
+
+	if (e) {
+		if (e->trtype == NVMF_TRTYPE_TCP &&
+		    e->tsas.tcp.sectype != NVMF_TCP_SECTYPE_NONE)
+			cfg->tls = true;
+	}
+
+	ret = nvmf_add_ctrl(h, c, cfg);
+
+	/* Resume logging */
+	if (ss && ss->unavailable && saved_log_level < 1)
+		nvme_init_logging(ctx,
+				  saved_log_level,
+				  saved_log_pid,
+				  saved_log_tstamp);
+
+	if (ret) {
+		nvme_free_ctrl(c);
+		/*
+		 * In case this SSNS was marked as 'unavailable' and
+		 * our connection attempt has failed, ignore it.
+		 */
+		if (ss && ss->unavailable) {
+			nvme_msg(ctx, LOG_INFO,
+				"SSNS %d reported as unavailable, skipping\n",
+				ss->index);
+			return 0;
+		}
+		return ret;
+	}
+
+	if (dctx->connected)
+		dctx->connected(dctx, c, dctx->user_data);
+
+	return 0;
+}
+
+static int nbft_discovery(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, struct nbft_info_discovery *dd,
+		struct nvme_host *h, struct nvme_ctrl *c,
+		struct nvme_fabrics_config *defcfg, struct tr_config *deftrcfg)
+{
+	struct nvmf_discovery_log *log = NULL;
+	int ret;
+	int i;
+
+	struct nvme_get_discovery_args args = {
+		.c = c,
+		.args_size = sizeof(args),
+		.max_retries = 10 /* MAX_DISC_RETRIES */,
+		.result = 0,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lsp = 0,
+	};
+
+	ret = nvmf_get_discovery_wargs(&args, &log);
+	if (ret) {
+		nvme_msg(ctx, LOG_ERR,
+			"Discovery Descriptor %d: failed to get discovery log: %s\n",
+			dd->index, nvme_strerror(ret));
+		return ret;
+	}
+
+	for (i = 0; i < le64_to_cpu(log->numrec); i++) {
+		struct nvmf_disc_log_entry *e = &log->entries[i];
+		nvme_ctrl_t cl;
+		int tmo = defcfg->keep_alive_tmo;
+
+		struct tr_config trcfg = {
+			.subsysnqn	= e->subnqn,
+			.transport	= nvmf_trtype_str(e->trtype),
+			.traddr		= e->traddr,
+			.host_traddr	= deftrcfg->host_traddr,
+			.host_iface	= deftrcfg->host_iface,
+			.trsvcid	= e->trsvcid,
+		};
+
+		if (e->subtype == NVME_NQN_CURR)
+			continue;
+
+		/* Already connected ? */
+		cl = lookup_ctrl(h, &trcfg);
+		if (cl && nvme_ctrl_get_name(cl))
+			continue;
+
+		/* Skip connect if the transport types don't match */
+		if (strcmp(nvme_ctrl_get_transport(c),
+			   nvmf_trtype_str(e->trtype)))
+			continue;
+
+		if (e->subtype == NVME_NQN_DISC) {
+			nvme_ctrl_t child;
+
+			ret = nvmf_connect_disc_entry(h, e, defcfg,
+				NULL, &child);
+			if (ret)
+				continue;
+			nbft_discovery(ctx, dctx, dd, h, child, defcfg, &trcfg);
+			nvme_disconnect_ctrl(child);
+			nvme_free_ctrl(child);
+		} else {
+			ret = nbft_connect(ctx, dctx, h, e, NULL,
+				&trcfg, defcfg);
+
+			/*
+			 * With TCP/DHCP, it can happen that the OS
+			 * obtains a different local IP address than the
+			 * firmware had. Retry without host_traddr.
+			 */
+			if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
+			    !strcmp(trcfg.transport, "tcp") &&
+			    strlen(dd->hfi->tcp_info.dhcp_server_ipaddr) > 0) {
+				const char *htradr = trcfg.host_traddr;
+
+				trcfg.host_traddr = NULL;
+				ret = nbft_connect(ctx, dctx, h, e, NULL,
+					&trcfg, defcfg);
+
+				if (ret == 0)
+					nvme_msg(ctx, LOG_INFO,
+						"Discovery Descriptor %d: connect with host_traddr=\"%s\" failed, success after omitting host_traddr\n",
+						dd->index,
+						htradr);
+			}
+
+			if (ret)
+				nvme_msg(ctx, LOG_ERR,
+					"Discovery Descriptor %d: no controller found\n",
+					dd->index);
+			if (ret == -ENOMEM)
+				break;
+		}
+
+		defcfg->keep_alive_tmo = tmo;
+	}
+
+	free(log);
+	return 0;
+}
+
+int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, char *hostnqn_arg,
+		char *hostid_arg, char *hostnqn_sys, char *hostid_sys,
+		bool connect, struct nvme_fabrics_config *cfg, char *nbft_path)
+{
+	char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
+	nvme_host_t h;
+	int ret, rr, i;
+	char uuid[NVME_UUID_LEN_STRING];
+	struct nbft_file_entry *entry = NULL;
+	struct nbft_info_subsystem_ns **ss;
+	struct nbft_info_hfi *hfi;
+	struct nbft_info_discovery **dd;
+
+	if (!connect)
+		/* TODO: print discovery-type info from NBFT tables */
+		return 0;
+
+	ret = nvmf_nbft_read_files(nbft_path, &entry);
+	if (ret) {
+		if (ret != -ENOENT)
+			nvme_msg(ctx, LOG_ERR,
+				"Failed to access ACPI tables directory\n");
+		else
+			ret = 0;  /* nothing to connect */
+		goto out_free;
+	}
+
+	for (; entry; entry = entry->next) {
+		if (hostnqn_arg)
+			hostnqn = hostnqn_arg;
+		else {
+			hostnqn = entry->nbft->host.nqn;
+			if (!hostnqn)
+				hostnqn = hostnqn_sys;
+		}
+
+		if (hostid_arg)
+			hostid = hostid_arg;
+		else if (*entry->nbft->host.id) {
+			ret = nvme_uuid_to_string(entry->nbft->host.id, uuid);
+			if (!ret)
+				hostid = uuid;
+			else
+				hostid = hostid_sys;
+		}
+
+		h = nvme_lookup_host(ctx, hostnqn, hostid);
+		if (!h) {
+			ret = -ENOENT;
+			goto out_free;
+		}
+
+		/* Subsystem Namespace Descriptor List */
+		for (ss = entry->nbft->subsystem_ns_list; ss && *ss; ss++)
+			for (i = 0; i < (*ss)->num_hfis; i++) {
+				hfi = (*ss)->hfis[i];
+
+				/* Skip discovery NQN records */
+				if (strcmp((*ss)->subsys_nqn,
+						NVME_DISC_SUBSYS_NAME) == 0) {
+					nvme_msg(ctx, LOG_INFO,
+						"SSNS %d points to well-known discovery NQN, skipping\n",
+						(*ss)->index);
+					continue;
+				}
+
+				host_traddr = NULL;
+				if (!cfg->host_traddr &&
+				    !strncmp((*ss)->transport, "tcp", 3))
+					host_traddr = hfi->tcp_info.ipaddr;
+
+				struct tr_config trcfg = {
+					.subsysnqn	= (*ss)->subsys_nqn,
+					.transport	= (*ss)->transport,
+					.traddr		= (*ss)->traddr,
+					.host_traddr	= host_traddr,
+					.host_iface	= NULL,
+					.trsvcid	= (*ss)->trsvcid,
+				};
+
+				rr = nbft_connect(ctx, dctx, h, NULL,
+					*ss, &trcfg, cfg);
+
+				/*
+				 * With TCP/DHCP, it can happen that the OS
+				 * obtains a different local IP address than the
+				 * firmware had. Retry without host_traddr.
+				 */
+				if (rr == -ENVME_CONNECT_ADDRNOTAVAIL &&
+				    !strcmp(trcfg.transport, "tcp") &&
+				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
+					trcfg.host_traddr = NULL;
+
+					rr = nbft_connect(ctx, dctx, h, NULL,
+						*ss, &trcfg, cfg);
+
+					if (rr == 0)
+						nvme_msg(ctx, LOG_INFO,
+							"SSNS %d: connect with host_traddr=\"%s\" failed, success after omitting host_traddr\n",
+							(*ss)->index,
+							host_traddr);
+				}
+
+				if (rr) {
+					nvme_msg(ctx, LOG_ERR,
+						"SSNS %d: no controller found\n",
+						(*ss)->index);
+					/* report an error */
+					ret = rr;
+				}
+
+				if (rr == -ENOMEM)
+					goto out_free;
+			}
+
+		/* Discovery Descriptor List */
+		for (dd = entry->nbft->discovery_list; dd && *dd; dd++) {
+			_cleanup_uri_ struct nvme_fabrics_uri *uri = NULL;
+			_cleanup_free_ char *trsvcid = NULL;
+			bool persistent = false;
+			bool linked = false;
+			nvme_ctrl_t c;
+
+			/* only perform discovery when no SSNS record references it */
+			for (ss = entry->nbft->subsystem_ns_list;
+					ss && *ss; ss++)
+				if ((*ss)->discovery &&
+				    (*ss)->discovery->index == (*dd)->index &&
+				    /* unavailable boot attempts are not discovered
+				     * and may get transferred along with a well-known
+				     * discovery NQN into an SSNS record.
+				     */
+				    strcmp((*ss)->subsys_nqn,
+						NVME_DISC_SUBSYS_NAME) != 0) {
+					linked = true;
+					break;
+				}
+			if (linked)
+				continue;
+
+			hfi = (*dd)->hfi;
+			ret = nvme_parse_uri((*dd)->uri, &uri);
+			if (ret)
+				continue;
+			if (!validate_uri(*dd, uri))
+				continue;
+
+			host_traddr = NULL;
+			if (!cfg->host_traddr &&
+			    !strncmp(uri->protocol, "tcp", 3))
+				host_traddr = hfi->tcp_info.ipaddr;
+			if (uri->port > 0) {
+				if (asprintf(&trsvcid, "%d", uri->port) < 0) {
+					ret = -ENOMEM;
+					goto out_free;
+				}
+			} else
+				trsvcid =
+					strdup(nvmf_get_default_trsvcid(
+						uri->protocol, true));
+
+			struct tr_config trcfg = {
+				.subsysnqn	= NVME_DISC_SUBSYS_NAME,
+				.transport	= uri->protocol,
+				.traddr		= uri->host,
+				.host_traddr	= host_traddr,
+				.host_iface	= NULL,
+				.trsvcid	= trsvcid,
+			};
+
+			/* Lookup existing discovery controller */
+			c = lookup_ctrl(h, &trcfg);
+			if (c && nvme_ctrl_get_name(c))
+				persistent = true;
+
+			if (!c) {
+				ret = nvmf_create_discovery_ctrl(ctx, dctx, h,
+					cfg, &trcfg, &c);
+				if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
+				    !strcmp(trcfg.transport, "tcp") &&
+				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
+					trcfg.host_traddr = NULL;
+					ret = nvmf_create_discovery_ctrl(ctx,
+						dctx, h, cfg, &trcfg, &c);
+				}
+			} else
+				ret = 0;
+
+			if (ret) {
+				nvme_msg(ctx, LOG_ERR,
+					"Discovery Descriptor %d: failed to add discovery controller: %s\n",
+					(*dd)->index, nvme_strerror(-ret));
+				goto out_free;
+			}
+
+			rr = nbft_discovery(ctx, dctx, *dd, h, c, cfg, &trcfg);
+			if (!persistent)
+				nvme_disconnect_ctrl(c);
+			nvme_free_ctrl(c);
+			if (rr == -ENOMEM) {
+				ret = rr;
+				goto out_free;
+			}
+		}
+	}
+out_free:
+	nvmf_nbft_free(entry);
 	return ret;
 }

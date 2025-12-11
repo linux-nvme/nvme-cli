@@ -286,6 +286,8 @@ struct nvmf_discovery_ctx {
 			void *user_data);
 	bool (*decide_retry)(struct nvmf_discovery_ctx *dctx, int err,
 			void *user_data);
+	void (*connected)(struct nvmf_discovery_ctx *dctx, struct nvme_ctrl *c,
+			void *user_data);
 
 	/* connfiguration */
 	bool persistent;
