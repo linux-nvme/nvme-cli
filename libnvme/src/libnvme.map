@@ -288,6 +288,7 @@ LIBNVME_2_0 {
 		nvmf_add_ctrl;
 		nvmf_adrfam_str;
 		nvmf_cms_str;
+		nvmf_connect_config_json;
 		nvmf_connect_ctrl;
 		nvmf_connect_disc_entry;
 		nvmf_default_config;

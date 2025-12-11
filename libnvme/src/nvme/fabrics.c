@@ -2389,3 +2389,52 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 
 	return ret;
 }
+
+int nvmf_connect_config_json(struct nvme_global_ctx *ctx, const char *hostnqn,
+		const char *hostid, const struct nvme_fabrics_config *cfg)
+{
+	const char *hnqn, *hid;
+	const char *transport;
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c, _c;
+	int ret = 0, err;
+
+	nvme_for_each_host(ctx, h) {
+		nvme_for_each_subsystem(h, s) {
+			hnqn = nvme_host_get_hostnqn(h);
+			if (hostnqn && hnqn && strcmp(hostnqn, hnqn))
+				continue;
+			hid = nvme_host_get_hostid(h);
+			if (hostid && hid && strcmp(hostid, hid))
+				continue;
+
+			nvme_subsystem_for_each_ctrl_safe(s, c, _c) {
+				transport = nvme_ctrl_get_transport(c);
+
+				/* ignore none fabric transports */
+				if (strcmp(transport, "tcp") &&
+				    strcmp(transport, "rdma") &&
+				    strcmp(transport, "fc"))
+					continue;
+
+				err = nvmf_connect_ctrl(c);
+				if (err) {
+					if (err == -ENVME_CONNECT_ALREADY)
+						continue;
+
+					fprintf(stderr,
+						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
+						nvme_host_get_hostnqn(h),
+						nvme_subsystem_get_name(s),
+						nvme_ctrl_get_address(c));
+
+					if (!ret)
+						ret = err;
+				}
+			}
+		}
+	}
+
+	return ret;
+}
