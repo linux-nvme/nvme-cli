@@ -7,7 +7,6 @@
 #include <libnvme.h>
 #include "nvme-print.h"
 #include "nvme.h"
-#include "nbft.h"
 #include "fabrics.h"
 #include "logging.h"
 
@@ -321,24 +320,25 @@ fail:
 	return NULL;
 }
 
-static int json_show_nbfts(struct list_head *nbft_list, bool show_subsys,
+static int json_show_nbfts(struct nbft_file_entry *head, bool show_subsys,
 			   bool show_hfi, bool show_discovery)
 {
 	struct json_object *nbft_json_array, *nbft_json;
-	struct nbft_file_entry *entry = NULL;
 
 	nbft_json_array = json_create_array();
 	if (!nbft_json_array)
 		return -ENOMEM;
 
-	list_for_each(nbft_list, entry, node) {
-		nbft_json = nbft_to_json(entry->nbft, show_subsys, show_hfi, show_discovery);
+	while (head) {
+		nbft_json = nbft_to_json(head->nbft, show_subsys,
+			show_hfi, show_discovery);
 		if (!nbft_json)
 			goto fail;
 		if (json_object_array_add(nbft_json_array, nbft_json)) {
 			json_free_object(nbft_json);
 			goto fail;
 		}
+		head = head->next;
 	}
 
 	json_print_object(nbft_json_array, NULL);
@@ -515,23 +515,26 @@ static void normal_show_nbft(struct nbft_info *nbft, bool show_subsys,
 	}
 }
 
-static void normal_show_nbfts(struct list_head *nbft_list, bool show_subsys,
+static void normal_show_nbfts(struct nbft_file_entry *head, bool show_subsys,
 			      bool show_hfi, bool show_discovery)
 {
 	bool not_first = false;
-	struct nbft_file_entry *entry = NULL;
 
-	list_for_each(nbft_list, entry, node) {
+	while (head) {
 		if (not_first)
 			printf("\n");
-		normal_show_nbft(entry->nbft, show_subsys, show_hfi, show_discovery);
+		normal_show_nbft(head->nbft, show_subsys, show_hfi, show_discovery);
+		head = head->next;
 		not_first = true;
 	}
 }
 
+#define NBFT_SYSFS_PATH		"/sys/firmware/acpi/tables"
+
 int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Display contents of the ACPI NBFT files.";
+	struct nbft_file_entry *head = NULL;
 	struct list_head nbft_list;
 	char *format = "normal";
 	char *nbft_path = NBFT_SYSFS_PATH;
@@ -565,13 +568,15 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		show_subsys = show_hfi = show_discovery = true;
 
 	list_head_init(&nbft_list);
-	ret = read_nbft_files(&nbft_list, nbft_path);
-	if (!ret) {
+	ret = nvmf_nbft_read_files(nbft_path, &head);
+	if (!ret && head) {
 		if (flags == NORMAL)
-			normal_show_nbfts(&nbft_list, show_subsys, show_hfi, show_discovery);
+			normal_show_nbfts(head, show_subsys,
+				show_hfi, show_discovery);
 		else if (flags == JSON)
-			ret = json_show_nbfts(&nbft_list, show_subsys, show_hfi, show_discovery);
-		free_nbfts(&nbft_list);
+			ret = json_show_nbfts(head, show_subsys,
+				show_hfi, show_discovery);
+		nvmf_nbft_free(head);
 	}
 	return ret;
 }

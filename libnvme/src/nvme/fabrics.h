@@ -43,6 +43,9 @@ int nvmf_discovery_ctx_already_connected_set(struct nvmf_discovery_ctx *dctx,
 int nvmf_discovery_ctx_decide_retry_set(struct nvmf_discovery_ctx *dctx,
 		bool (*decide_retry)(struct nvmf_discovery_ctx *dctx, int err,
 			void *user_data));
+int nvmf_discovery_ctx_connected_set(struct nvmf_discovery_ctx *dctx,
+		void (*connected)(struct nvmf_discovery_ctx *dctx,
+			struct nvme_ctrl *c, void *user_data));
 int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
 		bool persistent);
 int nvmf_discovery_ctx_default_fabrics_config_set(
@@ -440,7 +443,20 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
 int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_discovery_ctx *dctx, const char *hostnqn,
 		const char *hostid, bool connect, bool force);
+int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, char *hostnqn_arg,
+		char *hostid_arg, char *hostnqn_sys, char *hostid_sys,
+		bool connect, struct nvme_fabrics_config *cfg, char *nbft_path);
 
 int nvmf_connect_config_json(struct nvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, const struct nvme_fabrics_config *cfg);
+
+struct nbft_file_entry {
+	struct nbft_file_entry *next;
+	struct nbft_info *nbft;
+};
+
+int nvmf_nbft_read_files(char *path, struct nbft_file_entry **head);
+void nvmf_nbft_free(struct nbft_file_entry *head);
+
 #endif /* _LIBNVME_FABRICS_H */

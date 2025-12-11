@@ -42,7 +42,6 @@
 
 #include "common.h"
 #include "nvme.h"
-#include "nbft.h"
 #include "nvme-print.h"
 #include "fabrics.h"
 #include "util/cleanup.h"
@@ -342,6 +341,32 @@ static bool nvmf_decide_retry(struct nvmf_discovery_ctx *dctx, int err,
 	return false;
 }
 
+static void nvmf_connected(struct nvmf_discovery_ctx *dctx,
+		struct nvme_ctrl *c, void *user_data)
+{
+	struct cb_discovery_log_data *dld = user_data;
+
+	if (dld->flags == NORMAL) {
+		printf("device: %s\n", nvme_ctrl_get_name(c));
+		return;
+	}
+
+#ifdef CONFIG_JSONC
+	if (dld->flags == JSON) {
+		struct json_object *root;
+
+		root = json_create_object();
+
+		json_object_add_value_string(root, "device",
+			nvme_ctrl_get_name(c));
+
+		json_print_object(root, NULL);
+		printf("\n");
+		json_free_object(root);
+	}
+#endif
+}
+
 static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
 		bool persistent,
 		struct nvme_fabrics_config *defcfg,
@@ -371,6 +396,10 @@ static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
 		goto err;
 
 	err = nvmf_discovery_ctx_decide_retry_set(dctx, nvmf_decide_retry);
+	if (err)
+		goto err;
+
+	err = nvmf_discovery_ctx_connected_set(dctx, nvmf_connected);
 	if (err)
 		goto err;
 
@@ -544,6 +573,8 @@ static int nvme_read_config_checked(struct nvme_global_ctx *ctx,
 	return nvme_read_config(ctx, filename);
 }
 
+#define NBFT_SYSFS_PATH		"/sys/firmware/acpi/tables"
+
 /* returns negative errno values */
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
@@ -654,12 +685,10 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		return ret;
 
 	if (!device && !transport && !traddr) {
-		nvmf_discovery_ctx_persistent_set(dctx, true);
-
 		if (!nonbft)
-			ret = discover_from_nbft(ctx, hostnqn, hostid,
-						  hnqn, hid, desc, connect,
-						  &cfg, nbft_path, flags, verbose);
+			ret = nvmf_discovery_nbft(ctx, dctx, hostnqn, hostid,
+						  hnqn, hid, connect,
+						  &cfg, nbft_path);
 		if (nbft)
 			goto out_free;
 

@@ -502,7 +502,6 @@ if want_nvme
     subdir('util')      # declares: util_sources
 
     sources = [
-        'nbft.c',
         'fabrics.c',
         'nvme.c',
         'nvme-models.c',
