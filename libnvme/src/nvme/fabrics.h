@@ -440,4 +440,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
 int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_discovery_ctx *dctx, const char *hostnqn,
 		const char *hostid, bool connect, bool force);
+
+int nvmf_connect_config_json(struct nvme_global_ctx *ctx, const char *hostnqn,
+		const char *hostid, const struct nvme_fabrics_config *cfg);
 #endif /* _LIBNVME_FABRICS_H */
