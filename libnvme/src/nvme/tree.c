@@ -2677,7 +2677,8 @@ static int parse_attrs(const char *path, struct sysfs_attr_table *tbl, int size)
 	return 0;
 }
 
-static int nvme_ns_init(const char *path, struct nvme_ns *ns)
+static int nvme_ns_init(struct nvme_global_ctx *ctx, const char *path,
+		struct nvme_ns *ns)
 {
 	_cleanup_free_ char *attr = NULL;
 	struct stat sb;
@@ -2722,20 +2723,32 @@ static int nvme_ns_init(const char *path, struct nvme_ns *ns)
 			return ret;
 	} else {
 		_cleanup_free_ struct nvme_id_ns *id = NULL;
+		struct nvme_transport_handle *hdl = NULL;
+		struct nvme_passthru_cmd cmd;
+
 		uint8_t flbas;
 
 		id = __nvme_alloc(sizeof(*ns));
 		if (!id)
 			return -ENOMEM;
 
-		ret = nvme_ns_identify(ns, id);
+		ret = nvme_open(ctx, ns->name, &hdl);
+		if (ret) {
+			nvme_msg(ctx, LOG_ERR, "need root permissions");
+			goto close_hdl;
+		}
+
+		nvme_init_identify_ns(&cmd, nvme_ns_get_nsid(ns), id);
+		ret = nvme_submit_admin_passthru(hdl, &cmd);
 		if (ret)
-			return ret;
+			goto close_hdl;
 
 		nvme_id_ns_flbas_to_lbaf_inuse(id->flbas, &flbas);
 		ns->lba_count = le64_to_cpu(id->nsze);
 		ns->lba_util = le64_to_cpu(id->nuse);
 		ns->meta_size = le16_to_cpu(id->lbaf[flbas].ms);
+close_hdl:
+		nvme_close(hdl);
 	}
 
 	return 0;
@@ -2755,7 +2768,8 @@ static void nvme_ns_set_generic_name(struct nvme_ns *n, const char *name)
 	n->generic_name = strdup(generic_name);
 }
 
-int nvme_ns_open(const char *sys_path, const char *name, nvme_ns_t *ns)
+int nvme_ns_open(struct nvme_global_ctx *ctx, const char *sys_path,
+		const char *name, nvme_ns_t *ns)
 {
 	int ret;
 	struct nvme_ns *n;
@@ -2798,7 +2812,7 @@ int nvme_ns_open(const char *sys_path, const char *name, nvme_ns_t *ns)
 
 	nvme_ns_set_generic_name(n, name);
 
-	ret = nvme_ns_init(sys_path, n);
+	ret = nvme_ns_init(ctx, sys_path, n);
 	if (ret)
 		goto free_ns;
 
@@ -2842,7 +2856,8 @@ static char *nvme_ns_generic_to_blkdev(const char *generic)
 	return strdup(blkdev);
 }
 
-static int __nvme_scan_namespace(const char *sysfs_dir, const char *name, nvme_ns_t *ns)
+static int __nvme_scan_namespace(struct nvme_global_ctx *ctx,
+		const char *sysfs_dir, const char *name, nvme_ns_t *ns)
 {
 	_cleanup_free_ char *blkdev = NULL;
 	_cleanup_free_ char *path = NULL;
@@ -2857,7 +2872,7 @@ static int __nvme_scan_namespace(const char *sysfs_dir, const char *name, nvme_n
 	if (ret < 0)
 		return -ENOMEM;
 
-	ret = nvme_ns_open(path, blkdev, &n);
+	ret = nvme_ns_open(ctx, path, blkdev, &n);
 	if (ret)
 		return ret;
 
@@ -2868,9 +2883,10 @@ static int __nvme_scan_namespace(const char *sysfs_dir, const char *name, nvme_n
 	return 0;
 }
 
-int nvme_scan_namespace(const char *name, nvme_ns_t *ns)
+int nvme_scan_namespace(struct nvme_global_ctx *ctx,
+		const char *name, nvme_ns_t *ns)
 {
-	return __nvme_scan_namespace(nvme_ns_sysfs_dir(), name, ns);
+	return __nvme_scan_namespace(ctx, nvme_ns_sysfs_dir(), name, ns);
 }
 
 
@@ -2938,8 +2954,8 @@ static void nvme_subsystem_set_ns_path(nvme_subsystem_t s, nvme_ns_t n)
 	}
 }
 
-static int nvme_ctrl_scan_namespace(struct nvme_global_ctx *ctx, struct nvme_ctrl *c,
-				    char *name)
+static int nvme_ctrl_scan_namespace(struct nvme_global_ctx *ctx,
+		struct nvme_ctrl *c, char *name)
 {
 	struct nvme_ns *n, *_n, *__n;
 	int ret;
@@ -2950,7 +2966,7 @@ static int nvme_ctrl_scan_namespace(struct nvme_global_ctx *ctx, struct nvme_ctr
 		nvme_msg(ctx, LOG_DEBUG, "no subsystem for %s\n", name);
 		return -EINVAL;
 	}
-	ret = __nvme_scan_namespace(c->sysfs_dir, name, &n);
+	ret = __nvme_scan_namespace(ctx, c->sysfs_dir, name, &n);
 	if (ret) {
 		nvme_msg(ctx, LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return ret;
@@ -2968,15 +2984,15 @@ static int nvme_ctrl_scan_namespace(struct nvme_global_ctx *ctx, struct nvme_ctr
 	return 0;
 }
 
-static int nvme_subsystem_scan_namespace(struct nvme_global_ctx *ctx, nvme_subsystem_t s,
-		char *name)
+static int nvme_subsystem_scan_namespace(struct nvme_global_ctx *ctx,
+		nvme_subsystem_t s, char *name)
 {
 	struct nvme_ns *n, *_n, *__n;
 	int ret;
 
 	nvme_msg(ctx, LOG_DEBUG, "scan subsystem %s namespace %s\n",
 		 s->name, name);
-	ret = __nvme_scan_namespace(s->sysfs_dir, name, &n);
+	ret = __nvme_scan_namespace(ctx, s->sysfs_dir, name, &n);
 	if (ret) {
 		nvme_msg(ctx, LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return ret;
