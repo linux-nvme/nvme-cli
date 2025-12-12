@@ -301,21 +301,24 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 	close(fd);
 }
 
-struct cb_discovery_log_data {
+struct cb_discovery_data {
+	struct nvme_fabrics_config *defcfg;
 	nvme_print_flags_t flags;
 	char *raw;
+	char **argv;
+	FILE *f;
 };
 
 static void cb_discovery_log(struct nvmf_discovery_ctx *dctx,
 		bool connect, struct nvmf_discovery_log *log,
 		uint64_t numrec, void *user_data)
 {
-	struct cb_discovery_log_data *dld = user_data;
+	struct cb_discovery_data *cdd = user_data;
 
-	if (dld->raw)
-		save_discovery_log(dld->raw, log);
+	if (cdd->raw)
+		save_discovery_log(cdd->raw, log);
 	else if (!connect)
-		nvme_show_discovery_log(log, numrec, dld->flags);
+		nvme_show_discovery_log(log, numrec, cdd->flags);
 }
 
 static void already_connected(struct nvme_host *host,
@@ -345,15 +348,15 @@ static bool nvmf_decide_retry(struct nvmf_discovery_ctx *dctx, int err,
 static void nvmf_connected(struct nvmf_discovery_ctx *dctx,
 		struct nvme_ctrl *c, void *user_data)
 {
-	struct cb_discovery_log_data *dld = user_data;
+	struct cb_discovery_data *cdd = user_data;
 
-	if (dld->flags == NORMAL) {
+	if (cdd->flags == NORMAL) {
 		printf("device: %s\n", nvme_ctrl_get_name(c));
 		return;
 	}
 
 #ifdef CONFIG_JSONC
-	if (dld->flags == JSON) {
+	if (cdd->flags == JSON) {
 		struct json_object *root;
 
 		root = json_create_object();
@@ -367,6 +370,131 @@ static void nvmf_connected(struct nvmf_discovery_ctx *dctx,
 	}
 #endif
 }
+
+static int parser_init(struct nvmf_discovery_ctx *dctx, void *user_data)
+{
+	struct cb_discovery_data *cdd = user_data;
+
+	cdd->f = fopen(PATH_NVMF_DISC, "r");
+	if (cdd->f == NULL) {
+		fprintf(stderr, "No params given and no %s\n", PATH_NVMF_DISC);
+		return -ENOENT;
+	}
+
+	cdd->argv = calloc(MAX_DISC_ARGS, sizeof(char *));
+	if (!cdd->argv)
+		return -1;
+
+	cdd->argv[0] = "discover";
+
+	return 0;
+}
+
+static void parser_cleanup(struct nvmf_discovery_ctx *dctx, void *user_data)
+{
+	struct cb_discovery_data *cdd = user_data;
+
+	free(cdd->argv);
+	fclose(cdd->f);
+}
+
+static int parser_next_line(struct nvmf_discovery_ctx *dctx, void *user_data)
+{
+	struct cb_discovery_data *cdd = user_data;
+	struct nvme_fabrics_config cfg;
+	struct tr_config trcfg = {};
+	char *ptr, *p, line[4096];
+	int argc, ret = 0;
+	bool force = false;
+
+	NVMF_ARGS(opts, trcfg, cfg,
+		  OPT_FLAG("persistent",   'p', &persistent, "persistent discovery connection"),
+		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
+
+	memcpy(&cfg, cdd->defcfg, sizeof(cfg));
+next:
+	if (fgets(line, sizeof(line), cdd->f) == NULL)
+		return -EOF;
+
+	if (line[0] == '#' || line[0] == '\n')
+		goto next;
+
+	argc = 1;
+	p = line;
+	while ((ptr = strsep(&p, " =\n")) != NULL)
+		cdd->argv[argc++] = ptr;
+	cdd->argv[argc] = NULL;
+
+	trcfg.subsysnqn = NVME_DISC_SUBSYS_NAME;
+	ret = argconfig_parse(argc, cdd->argv, "config", opts);
+	if (ret)
+		goto next;
+	if (!trcfg.transport && !trcfg.traddr)
+		goto next;
+
+	if (!trcfg.trsvcid)
+		trcfg.trsvcid = nvmf_get_default_trsvcid(trcfg.transport, true);
+
+	ret = nvmf_discovery_ctx_subsysnqn_set(dctx, trcfg.subsysnqn);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_transport_set(dctx, trcfg.transport);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_traddr_set(dctx, trcfg.traddr);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_host_traddr_set(dctx, trcfg.host_traddr);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_host_iface_set(dctx, trcfg.host_iface);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_trsvcid_set(dctx, trcfg.trsvcid);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_hostnqn_set(dctx, trcfg.hostnqn);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_hostid_set(dctx, trcfg.hostid);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_hostkey_set(dctx, trcfg.hostkey);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_ctrlkey_set(dctx, trcfg.ctrlkey);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_keyring_set(dctx, trcfg.keyring);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_tls_key_set(dctx, trcfg.tls_key);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_tls_key_identity_set(dctx,
+		trcfg.tls_key_identity);
+	if (ret)
+		return ret;
+
+	ret = nvmf_discovery_ctx_default_fabrics_config_set(dctx, &cfg);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 
 static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
 		bool persistent, struct tr_config *trcfg,
@@ -404,6 +532,18 @@ static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
+	err = nvmf_discovery_ctx_parser_init_set(dctx, parser_init);
+	if (err)
+		goto err;
+
+	err = nvmf_discovery_ctx_parser_cleanup_set(dctx, parser_cleanup);
+	if (err)
+		goto err;
+
+	err = nvmf_discovery_ctx_parser_next_line_set(dctx, parser_next_line);
+	if (err)
+		goto err;
+
 	err = nvmf_discovery_ctx_persistent_set(dctx, persistent);
 	if (err)
 		goto err;
@@ -426,107 +566,6 @@ static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
 err:
 	free(dctx);
 	return err;
-}
-
-static int discover_from_conf_file(struct nvme_global_ctx *ctx, nvme_host_t h,
-				   const char *desc, bool connect,
-				   const struct nvme_fabrics_config *defcfg)
-{
-	_cleanup_free_ struct nvmf_discovery_ctx *dctx = NULL;
-	char *ptr, **argv, *p, line[4096];
-	int argc, ret = 0;
-	unsigned int verbose = 0;
-	_cleanup_file_ FILE *f = NULL;
-	nvme_print_flags_t flags;
-	char *format = "normal";
-	struct nvme_fabrics_config cfg;
-	struct tr_config trcfg;
-	bool force = false;
-	NVMF_ARGS(opts, trcfg, cfg,
-		  OPT_FMT("output-format", 'o', &format,     output_format),
-		  OPT_FILE("raw",          'r', &raw,        "save raw output to file"),
-		  OPT_FLAG("persistent",   'p', &persistent, "persistent discovery connection"),
-		  OPT_FLAG("quiet",          0, &quiet,      "suppress already connected errors"),
-		  OPT_INCR("verbose",      'v', &verbose,    "Increase logging verbosity"),
-		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
-
-	nvmf_default_config(&cfg);
-
-	ret = validate_output_format(format, &flags);
-	if (ret < 0) {
-		nvme_show_error("Invalid output format");
-		return ret;
-	}
-
-	f = fopen(PATH_NVMF_DISC, "r");
-	if (f == NULL) {
-		fprintf(stderr, "No params given and no %s\n", PATH_NVMF_DISC);
-		return -ENOENT;
-	}
-
-	argv = calloc(MAX_DISC_ARGS, sizeof(char *));
-	if (!argv)
-		return -1;
-
-	argv[0] = "discover";
-	memset(line, 0, sizeof(line));
-	while (fgets(line, sizeof(line), f) != NULL) {
-		nvme_ctrl_t c;
-
-		if (line[0] == '#' || line[0] == '\n')
-			continue;
-
-		argc = 1;
-		p = line;
-		while ((ptr = strsep(&p, " =\n")) != NULL)
-			argv[argc++] = ptr;
-		argv[argc] = NULL;
-
-		memcpy(&cfg, defcfg, sizeof(cfg));
-		trcfg.subsysnqn = NVME_DISC_SUBSYS_NAME;
-		ret = argconfig_parse(argc, argv, desc, opts);
-		if (ret)
-			goto next;
-		if (!trcfg.transport && !trcfg.traddr)
-			goto next;
-
-		if (!trcfg.trsvcid)
-			trcfg.trsvcid =
-				nvmf_get_default_trsvcid(trcfg.transport, true);
-
-		struct cb_discovery_log_data dld = {
-			.flags = flags,
-			.raw = raw,
-		};
-		ret = create_discovery_log_ctx(ctx, true, &trcfg, &cfg,
-			&dld, &dctx);
-		if (ret)
-			return ret;
-
-		if (!force) {
-			c = lookup_ctrl(h, &trcfg);
-			if (c) {
-				nvmf_discovery(ctx, dctx, connect, c);
-				goto next;
-			}
-		}
-
-		ret = nvmf_create_discover_ctrl(ctx, h, &cfg, &trcfg, &c);
-		if (ret)
-			goto next;
-
-		nvmf_discovery_ctx_persistent_set(dctx, persistent);
-		nvmf_discovery(ctx, dctx, connect, c);
-		if (!(persistent || is_persistent_discovery_ctrl(h, c)))
-			ret = nvme_disconnect_ctrl(c);
-		nvme_free_ctrl(c);
-
-next:
-		memset(&cfg, 0, sizeof(cfg));
-	}
-	free(argv);
-
-	return ret;
 }
 
 static int nvme_read_volatile_config(struct nvme_global_ctx *ctx)
@@ -670,7 +709,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (trcfg.hostkey)
 		nvme_host_set_dhchap_key(h, trcfg.hostkey);
 
-	struct cb_discovery_log_data dld = {
+	struct cb_discovery_data dld = {
 		.flags = flags,
 		.raw = raw,
 	};
@@ -693,7 +732,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		if (ret || access(PATH_NVMF_DISC, F_OK))
 			goto out_free;
 
-		ret = discover_from_conf_file(ctx, h, desc, connect, &cfg);
+		ret = nvmf_discovery_config_file(ctx, dctx, h, connect, force);
 		goto out_free;
 	}
 

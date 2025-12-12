@@ -264,10 +264,61 @@ int nvmf_discovery_ctx_connected_set(struct nvmf_discovery_ctx *dctx,
 	return 0;
 }
 
+int nvmf_discovery_ctx_parser_init_set(struct nvmf_discovery_ctx *dctx,
+		int (*parser_init)(struct nvmf_discovery_ctx *dctx,
+			void *user_data))
+{
+	dctx->parser_init = parser_init;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_parser_cleanup_set(struct nvmf_discovery_ctx *dctx,
+		void (*parser_cleanup)(struct nvmf_discovery_ctx *dctx,
+			void *user_data))
+{
+	dctx->parser_cleanup = parser_cleanup;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_parser_next_line_set(struct nvmf_discovery_ctx *dctx,
+		int (*parser_next)(struct nvmf_discovery_ctx *dctx,
+			void *user_data))
+{
+	dctx->parser_next_line = parser_next;
+
+	return 0;
+}
+
 int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
 		bool persistent)
 {
 	dctx->persistent = persistent;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_subsysnqn_set(struct nvmf_discovery_ctx *dctx,
+		const char *subsysnqn)
+{
+	dctx->subsysnqn = subsysnqn;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_transport_set(struct nvmf_discovery_ctx *dctx,
+		const char *transport)
+{
+	dctx->transport = transport;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_traddr_set(struct nvmf_discovery_ctx *dctx,
+		const char *traddr)
+{
+	dctx->traddr = traddr;
 
 	return 0;
 }
@@ -284,6 +335,69 @@ int nvmf_discovery_ctx_host_iface_set(struct nvmf_discovery_ctx *dctx,
 		const char *host_iface)
 {
 	dctx->host_iface = host_iface;
+
+	return 0;
+}
+int nvmf_discovery_ctx_trsvcid_set(struct nvmf_discovery_ctx *dctx,
+		const char *trsvcid)
+{
+	dctx->trsvcid = trsvcid;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_hostnqn_set(struct nvmf_discovery_ctx *dctx,
+		const char *hostnqn)
+{
+	dctx->hostnqn = hostnqn;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_hostid_set(struct nvmf_discovery_ctx *dctx,
+		const char *hostid)
+{
+	dctx->hostid = hostid;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_hostkey_set(struct nvmf_discovery_ctx *dctx,
+		const char *hostkey)
+{
+	dctx->hostkey = hostkey;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_ctrlkey_set(struct nvmf_discovery_ctx *dctx,
+		const char *ctrlkey)
+{
+	dctx->ctrlkey = ctrlkey;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_keyring_set(struct nvmf_discovery_ctx *dctx,
+		const char *keyring)
+{
+	dctx->keyring = keyring;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_tls_key_set(struct nvmf_discovery_ctx *dctx,
+		const char *tls_key)
+{
+	dctx->tls_key = tls_key;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_tls_key_identity_set(struct nvmf_discovery_ctx *dctx,
+		const char *tls_key_identity)
+{
+	dctx->tls_key_identity = tls_key_identity;
 
 	return 0;
 }
@@ -2459,6 +2573,56 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx, const char *hostnqn,
 	}
 
 	return ret;
+}
+
+int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, struct nvme_host *h,
+		bool connect, bool force)
+{
+	nvme_ctrl_t c;
+	int err;
+
+	err = dctx->parser_init(dctx, dctx->user_data);
+	if (err)
+		return err;
+
+	do {
+		err = dctx->parser_next_line(dctx, dctx->user_data);
+		if (err)
+			break;
+
+		struct tr_config trcfg = {
+			.transport = dctx->transport,
+			.traddr = dctx->traddr,
+			.trsvcid = dctx->trsvcid,
+			.subsysnqn = dctx->subsysnqn,
+			.host_traddr = dctx->host_traddr,
+			.host_iface = dctx->host_iface,
+		};
+
+		if (!force) {
+			c = lookup_ctrl(h, &trcfg);
+			if (c) {
+				nvmf_discovery(ctx, dctx, connect, c);
+				continue;
+			}
+		}
+
+		err = nvmf_create_discovery_ctrl(ctx, dctx, h, dctx->defcfg,
+			&trcfg, &c);
+		if (err)
+			continue;
+
+		nvmf_discovery(ctx, dctx, connect, c);
+		if (!(dctx->persistent || is_persistent_discovery_ctrl(h, c)))
+			err = nvme_disconnect_ctrl(c);
+		nvme_free_ctrl(c);
+	} while (!err);
+
+	if (err != -EOF)
+		return err;
+
+	return 0;
 }
 
 #define NBFT_SYSFS_FILENAME	"NBFT*"
