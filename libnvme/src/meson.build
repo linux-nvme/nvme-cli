@@ -27,6 +27,9 @@ else
     sources += 'nvme/no-json.c'
 endif
 
+# Generate accessors (setter/getter functions)
+subdir('accessors')  # declares: libaccessors, tgt_accessors_h, accessors_h_full_path
+
 deps = [
     config_dep,
     json_c_dep,
@@ -34,6 +37,7 @@ deps = [
     libdbus_dep,
     liburing_dep,
     openssl_dep,
+    declare_dependency(sources: tgt_accessors_h),
 ]
 
 source_dir = meson.current_source_dir()
@@ -47,9 +51,17 @@ libnvme = library(
     link_args: ['-Wl,--version-script=' + version_script_arg],
     dependencies: deps,
     link_depends: mapfile,
-    include_directories: [incdir, ],
+    c_args: [
+        '-include', accessors_h_full_path,
+    ],
+    include_directories: [
+        incdir,
+    ],
+    link_with: [
+        libccan,
+        libaccessors,
+    ],
     install: true,
-    link_with: libccan,
 )
 
 pkg = import('pkgconfig')
@@ -74,9 +86,17 @@ libnvme_test = library(
     'nvme-test', # produces libnvme-test.so
     sources,
     dependencies: deps,
-    include_directories: [incdir, ],
+    c_args: [
+        '-include', accessors_h_full_path,
+    ],
+    include_directories: [
+        incdir,
+    ],
+    link_with: [
+        libccan,
+        libaccessors,
+    ],
     install: false,
-    link_with: libccan,
 )
 
 libnvme_test_dep = declare_dependency(
