@@ -2713,11 +2713,12 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 }
 
 int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
-		struct nvmf_discovery_ctx *dctx, char *hostnqn_arg,
-		char *hostid_arg, char *hostnqn_sys, char *hostid_sys,
-		bool connect, struct nvme_fabrics_config *cfg, char *nbft_path)
+		struct nvmf_discovery_ctx *dctx, const char *hostnqn_arg,
+		const char *hostid_arg, const char *hostnqn_sys,
+		const char *hostid_sys, bool connect,
+		struct nvme_fabrics_config *cfg, char *nbft_path)
 {
-	char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
+	const char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
 	nvme_host_t h;
 	int ret, rr, i;
 	char uuid[NVME_UUID_LEN_STRING];

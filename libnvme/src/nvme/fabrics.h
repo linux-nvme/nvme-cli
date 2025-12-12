@@ -428,9 +428,10 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_discovery_ctx *dctx, const char *hostnqn,
 		const char *hostid, bool connect, bool force);
 int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
-		struct nvmf_discovery_ctx *dctx, char *hostnqn_arg,
-		char *hostid_arg, char *hostnqn_sys, char *hostid_sys,
-		bool connect, struct nvme_fabrics_config *cfg, char *nbft_path);
+		struct nvmf_discovery_ctx *dctx, const char *hostnqn_arg,
+		const char *hostid_arg, const char *hostnqn_sys,
+		const char *hostid_sys, bool connect,
+		struct nvme_fabrics_config *cfg, char *nbft_path);
 
 int nvmf_connect_config_json(struct nvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, const struct nvme_fabrics_config *cfg);
