@@ -6,7 +6,7 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 if want_libnvme
-if openssl_dep.found() and meson.can_run_host_binaries()
+    if openssl_dep.found() and meson.can_run_host_binaries()
         if openssl_dep.type_name() != 'internal'
             # Check for a bug in the EVP_PKEY_CTX_add1_hkdf_info implementation
             res = cc.run(

@@ -30,6 +30,8 @@ project(
     ],
 )
 
+fs = import('fs')
+
 cc = meson.get_compiler('c')
 cxx_available = add_languages('cpp', required: false, native: false)
 
@@ -373,6 +375,8 @@ conf.set(
     cc.has_function('dlsym', dependencies: dl_dep),
     description: 'Is dlsym function present',
 )
+
+conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
 
 project_config_file = 'nvme-config.h'
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
