@@ -127,7 +127,7 @@ static char *nvme_hostid_from_hostnqn(const char *hostnqn)
 }
 
 int nvme_host_get_ids(struct nvme_global_ctx *ctx,
-		      char *hostnqn_arg, char *hostid_arg,
+		      const char *hostnqn_arg, const char *hostid_arg,
 		      char **hostnqn, char **hostid)
 {
 	_cleanup_free_ char *nqn = NULL;
