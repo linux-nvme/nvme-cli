@@ -110,14 +110,6 @@ PyObject *hostid_from_file();
 	temp.tos = -1;
 	temp.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	while (PyDict_Next($input, &pos, &key, &value)) {
-		if (!PyUnicode_CompareWithASCIIString(key, "host_traddr")) {
-			temp.host_traddr = PyBytes_AsString(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "host_iface")) {
-			temp.host_iface = PyBytes_AsString(value);
-			continue;
-		}
 		if (!PyUnicode_CompareWithASCIIString(key, "nr_io_queues")) {
 			temp.nr_io_queues = PyLong_AsLong(value);
 			continue;

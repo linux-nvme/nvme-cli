@@ -48,14 +48,16 @@ int nvmf_discovery_ctx_connected_set(struct nvmf_discovery_ctx *dctx,
 			struct nvme_ctrl *c, void *user_data));
 int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
 		bool persistent);
+int nvmf_discovery_ctx_host_traddr_set(struct nvmf_discovery_ctx *dctx,
+		const char *host_traddr);
+int nvmf_discovery_ctx_host_iface_set(struct nvmf_discovery_ctx *dctx,
+		const char *host_iface);
 int nvmf_discovery_ctx_default_fabrics_config_set(
 		struct nvmf_discovery_ctx *dctx,
 		struct nvme_fabrics_config *defcfg);
 
 /**
  * struct nvme_fabrics_config - Defines all linux nvme fabrics initiator options
- * @host_traddr:	Host transport address
- * @host_iface:		Host interface name
  * @queue_size:		Number of IO queue entries
  * @nr_io_queues:	Number of controller IO queues to establish
  * @reconnect_delay:	Time between two consecutive reconnect attempts.
@@ -76,8 +78,6 @@ int nvmf_discovery_ctx_default_fabrics_config_set(
  * @concat:		Enable secure concatenation (TCP)
  */
 struct nvme_fabrics_config {
-	char *host_traddr;
-	char *host_iface;
 	int queue_size;
 	int nr_io_queues;
 	int reconnect_delay;
@@ -366,22 +366,6 @@ char *nvmf_hostnqn_from_file();
  *	   is responsible to free the string.
  */
 char *nvmf_hostid_from_file();
-
-/**
- * nvmf_connect_disc_entry() - Connect controller based on the discovery log page entry
- * @h:		Host to which the controller should be connected
- * @e:		Discovery log page entry
- * @defcfg:	Default configuration to be used for the new controller
- * @discover:	Set to 'true' if the new controller is a discovery controller
- * @c:		crtl object to return
- *
- * Return: 0 on success, or an error code on failure.
- */
-int nvmf_connect_disc_entry(nvme_host_t h,
-			    struct nvmf_disc_log_entry *e,
-			    const struct nvme_fabrics_config *defcfg,
-			    bool *discover,
-			    nvme_ctrl_t *c);
 
 /**
  * nvmf_is_registration_supported - check whether registration can be performed.

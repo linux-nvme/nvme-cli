@@ -188,6 +188,8 @@ struct nvme_ctrl {
 	char *cntlid;
 	char *dctype;
 	char *phy_slot;
+	char *host_traddr;
+	char *host_iface;
 	bool discovery_ctrl;
 	bool unique_discovery_ctrl;
 	bool discovered;
@@ -291,6 +293,8 @@ struct nvmf_discovery_ctx {
 
 	/* connfiguration */
 	bool persistent;
+	const char *host_traddr;
+	const char *host_iface;
 	struct nvme_fabrics_config *defcfg;
 
 	void *user_data;
