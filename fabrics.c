@@ -100,8 +100,8 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_STRING("nqn",             'n', "STR", &subsysnqn,     nvmf_nqn),             \
 		OPT_STRING("traddr",          'a', "STR", &traddr,        nvmf_traddr),          \
 		OPT_STRING("trsvcid",         's', "STR", &trsvcid,       nvmf_trsvcid),         \
-		OPT_STRING("host-traddr",     'w', "STR", &c.host_traddr, nvmf_htraddr),         \
-		OPT_STRING("host-iface",      'f', "STR", &c.host_iface,  nvmf_hiface),          \
+		OPT_STRING("host-traddr",     'w', "STR", &host_traddr,   nvmf_htraddr),         \
+		OPT_STRING("host-iface",      'f', "STR", &host_iface,    nvmf_hiface),          \
 		OPT_STRING("hostnqn",         'q', "STR", &hostnqn,       nvmf_hostnqn),         \
 		OPT_STRING("hostid",          'I', "STR", &hostid,        nvmf_hostid),          \
 		OPT_STRING("dhchap-secret",   'S', "STR", &hostkey,       nvmf_hostkey),         \
@@ -369,6 +369,7 @@ static void nvmf_connected(struct nvmf_discovery_ctx *dctx,
 
 static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
 		bool persistent,
+		const char *host_traddr, const char *host_iface,
 		struct nvme_fabrics_config *defcfg,
 		void *user_data, struct nvmf_discovery_ctx **dctxp)
 {
@@ -407,6 +408,14 @@ static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
+	err = nvmf_discovery_ctx_host_traddr_set(dctx, host_traddr);
+	if (err)
+		goto err;
+
+	err = nvmf_discovery_ctx_host_iface_set(dctx, host_iface);
+	if (err)
+		goto err;
+
 	err = nvmf_discovery_ctx_default_fabrics_config_set(dctx, defcfg);
 	if (err)
 		goto err;
@@ -427,6 +436,7 @@ static int discover_from_conf_file(struct nvme_global_ctx *ctx, nvme_host_t h,
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL;
 	char *subsysnqn = NULL, *keyring = NULL, *tls_key = NULL;
 	_cleanup_free_ struct nvmf_discovery_ctx *dctx = NULL;
+	char *host_iface = NULL, *host_traddr = NULL;
 	char *tls_key_identity = NULL;
 	char *ptr, **argv, *p, line[4096];
 	int argc, ret = 0;
@@ -491,8 +501,8 @@ static int discover_from_conf_file(struct nvme_global_ctx *ctx, nvme_host_t h,
 			.subsysnqn	= subsysnqn,
 			.transport	= transport,
 			.traddr		= traddr,
-			.host_traddr	= cfg.host_traddr,
-			.host_iface	= cfg.host_iface,
+			.host_traddr	= host_traddr,
+			.host_iface	= host_iface,
 			.trsvcid	= trsvcid,
 		};
 
@@ -500,7 +510,8 @@ static int discover_from_conf_file(struct nvme_global_ctx *ctx, nvme_host_t h,
 			.flags = flags,
 			.raw = raw,
 		};
-		ret = create_discovery_log_ctx(ctx, true, &cfg, &dld, &dctx);
+		ret = create_discovery_log_ctx(ctx, true, host_traddr,
+			host_iface, &cfg, &dld, &dctx);
 		if (ret)
 			return ret;
 
@@ -581,6 +592,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL;
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
+	char *host_iface = NULL, *host_traddr = NULL;
 	char *keyring = NULL, *tls_key = NULL;
 	char *tls_key_identity = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
@@ -680,7 +692,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		.raw = raw,
 	};
 
-	ret = create_discovery_log_ctx(ctx, persistent, &cfg, &dld, &dctx);
+	ret = create_discovery_log_ctx(ctx, persistent, host_traddr,
+		host_iface, &cfg, &dld, &dctx);
 	if (ret)
 		return ret;
 
@@ -709,8 +722,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		.subsysnqn	= subsysnqn,
 		.transport	= transport,
 		.traddr		= traddr,
-		.host_traddr	= cfg.host_traddr,
-		.host_iface	= cfg.host_iface,
+		.host_traddr	= host_traddr,
+		.host_iface	= host_iface,
 		.trsvcid	= trsvcid,
 	};
 
@@ -719,7 +732,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		if (!ret) {
 			/* Check if device matches command-line options */
 			if (!nvme_ctrl_config_match(c, transport, traddr, trsvcid, subsysnqn,
-						    cfg.host_traddr, cfg.host_iface)) {
+						    host_traddr, host_iface)) {
 				fprintf(stderr,
 				    "ctrl device %s found, ignoring non matching command-line options\n",
 				    device);
@@ -750,10 +763,10 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 				 * for the udev rules). This ensures that host-traddr/
 				 * host-iface are consistent with the discovery controller (c).
 				 */
-				if (!cfg.host_traddr)
-					cfg.host_traddr = (char *)nvme_ctrl_get_host_traddr(c);
-				if (!cfg.host_iface)
-					cfg.host_iface = (char *)nvme_ctrl_get_host_iface(c);
+				if (!host_traddr)
+					host_traddr = (char *)nvme_ctrl_get_host_traddr(c);
+				if (!host_iface)
+					host_iface = (char *)nvme_ctrl_get_host_iface(c);
 			}
 		} else {
 			/*
@@ -830,6 +843,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
 	char *hostkey = NULL, *ctrlkey = NULL, *keyring = NULL;
 	char *tls_key = NULL, *tls_key_identity = NULL;
+	char *host_iface = NULL, *host_traddr = NULL;
 	_cleanup_free_ char *hnqn = NULL;
 	_cleanup_free_ char *hid = NULL;
 	char *config_file = NULL;
@@ -929,8 +943,8 @@ do_connect:
 		.subsysnqn	= subsysnqn,
 		.transport	= transport,
 		.traddr		= traddr,
-		.host_traddr	= cfg.host_traddr,
-		.host_iface	= cfg.host_iface,
+		.host_traddr	= host_traddr,
+		.host_iface	= host_iface,
 		.trsvcid	= trsvcid,
 	};
 
@@ -941,7 +955,7 @@ do_connect:
 	}
 
 	ret = nvme_create_ctrl(ctx, subsysnqn, transport, traddr,
-			     cfg.host_traddr, cfg.host_iface, trsvcid, &c);
+			     host_traddr, host_iface, trsvcid, &c);
 	if (ret)
 		return ret;
 
@@ -1184,6 +1198,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	char *subsysnqn = NULL;
 	char *transport = NULL, *traddr = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
+	char *host_traddr = NULL, *host_iface = NULL;
 	_cleanup_free_ char *hnqn = NULL;
 	_cleanup_free_ char *hid = NULL;
 	char *hostkey = NULL, *ctrlkey = NULL;
@@ -1270,7 +1285,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 			return -ENODEV;
 		}
 		c = nvme_lookup_ctrl(s, transport, traddr,
-				     cfg.host_traddr, cfg.host_iface,
+				     host_traddr, host_iface,
 				     trsvcid, NULL);
 		if (!c) {
 			fprintf(stderr, "Failed to lookup controller\n");

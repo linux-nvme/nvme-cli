@@ -272,6 +272,22 @@ int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
 	return 0;
 }
 
+int nvmf_discovery_ctx_host_traddr_set(struct nvmf_discovery_ctx *dctx,
+		const char *host_traddr)
+{
+	dctx->host_traddr = host_traddr;
+
+	return 0;
+}
+
+int nvmf_discovery_ctx_host_iface_set(struct nvmf_discovery_ctx *dctx,
+		const char *host_iface)
+{
+	dctx->host_iface = host_iface;
+
+	return 0;
+}
+
 int nvmf_discovery_ctx_default_fabrics_config_set(
 		struct nvmf_discovery_ctx *dctx,
 		struct nvme_fabrics_config *defcfg)
@@ -321,15 +337,11 @@ void nvmf_default_config(struct nvme_fabrics_config *cfg)
 
 #define MERGE_CFG_OPTION(c, n, o, d)			\
 	if ((c)->o == d) (c)->o = (n)->o
-#define MERGE_CFG_OPTION_STR(c, n, o, d)		\
-	if ((c)->o == d && (n)->o) (c)->o = strdup((n)->o)
 static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 		const struct nvme_fabrics_config *cfg)
 {
 	struct nvme_fabrics_config *ctrl_cfg = nvme_ctrl_get_config(c);
 
-	MERGE_CFG_OPTION_STR(ctrl_cfg, cfg, host_traddr, NULL);
-	MERGE_CFG_OPTION_STR(ctrl_cfg, cfg, host_iface, NULL);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_poll_queues, 0);
@@ -358,8 +370,6 @@ void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
 {
 	struct nvme_fabrics_config *ctrl_cfg = nvme_ctrl_get_config(c);
 
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, host_traddr, NULL);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, host_iface, NULL);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_poll_queues, 0);
@@ -723,9 +733,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	    add_argument(ctx, argstr, traddr,
 			 nvme_ctrl_get_traddr(c)) ||
 	    add_argument(ctx, argstr, host_traddr,
-			 cfg->host_traddr) ||
+			 nvme_ctrl_get_host_traddr(c)) ||
 	    add_argument(ctx, argstr, host_iface,
-			 cfg->host_iface) ||
+			 nvme_ctrl_get_host_iface(c)) ||
 	    add_argument(ctx, argstr, trsvcid,
 			 nvme_ctrl_get_trsvcid(c)) ||
 	    (hostnqn && add_argument(ctx, argstr, hostnqn, hostnqn)) ||
@@ -1071,14 +1081,14 @@ int nvmf_connect_ctrl(nvme_ctrl_t c)
 	return 0;
 }
 
-int nvmf_connect_disc_entry(nvme_host_t h,
-			    struct nvmf_disc_log_entry *e,
-			    const struct nvme_fabrics_config *cfg,
-			    bool *discover,
-			    nvme_ctrl_t *cp)
+static int nvmf_connect_disc_entry(nvme_host_t h,
+		struct nvmf_disc_log_entry *e,
+		const char *host_traddr, const char *host_iface,
+		const struct nvme_fabrics_config *cfg,
+		bool *discover, nvme_ctrl_t *cp)
 {
-	const char *transport;
 	char *traddr = NULL, *trsvcid = NULL;
+	const char *transport;
 	nvme_ctrl_t c;
 	int ret;
 
@@ -1126,7 +1136,7 @@ int nvmf_connect_disc_entry(nvme_host_t h,
 		 transport, traddr, trsvcid);
 
 	ret = nvme_create_ctrl(h->ctx, e->subnqn, transport, traddr,
-			       cfg->host_traddr, cfg->host_iface, trsvcid, &c);
+			       host_traddr, host_iface, trsvcid, &c);
 	if (ret) {
 		nvme_msg(h->ctx, LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",
@@ -2079,8 +2089,8 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
 			.subsysnqn	= e->subnqn,
 			.transport	= nvmf_trtype_str(e->trtype),
 			.traddr		= e->traddr,
-			.host_traddr	= dctx->defcfg->host_traddr,
-			.host_iface	= dctx->defcfg->host_iface,
+			.host_traddr	= dctx->host_traddr,
+			.host_iface	= dctx->host_iface,
 			.trsvcid	= e->trsvcid,
 		};
 
@@ -2127,8 +2137,9 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
 			disconnect = false;
 		}
 
-		err = nvmf_connect_disc_entry(h, e, dctx->defcfg,
-					      &discover, &child);
+		err = nvmf_connect_disc_entry(h, e, dctx->host_traddr,
+			dctx->host_iface, dctx->defcfg,
+			&discover, &child);
 
 		dctx->defcfg->keep_alive_tmo = tmo;
 
@@ -2633,8 +2644,8 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 			.subsysnqn	= e->subnqn,
 			.transport	= nvmf_trtype_str(e->trtype),
 			.traddr		= e->traddr,
-			.host_traddr	= deftrcfg->host_traddr,
-			.host_iface	= deftrcfg->host_iface,
+			.host_traddr	= dctx->host_traddr,
+			.host_iface	= dctx->host_iface,
 			.trsvcid	= e->trsvcid,
 		};
 
@@ -2654,8 +2665,8 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 		if (e->subtype == NVME_NQN_DISC) {
 			nvme_ctrl_t child;
 
-			ret = nvmf_connect_disc_entry(h, e, defcfg,
-				NULL, &child);
+			ret = nvmf_connect_disc_entry(h, e, dctx->host_traddr,
+				dctx->host_iface, defcfg, NULL, &child);
 			if (ret)
 				continue;
 			nbft_discovery(ctx, dctx, dd, h, child, defcfg, &trcfg);
@@ -2769,7 +2780,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 				}
 
 				host_traddr = NULL;
-				if (!cfg->host_traddr &&
+				if (!dctx->host_traddr &&
 				    !strncmp((*ss)->transport, "tcp", 3))
 					host_traddr = hfi->tcp_info.ipaddr;
 
@@ -2850,7 +2861,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 				continue;
 
 			host_traddr = NULL;
-			if (!cfg->host_traddr &&
+			if (!dctx->host_traddr &&
 			    !strncmp(uri->protocol, "tcp", 3))
 				host_traddr = hfi->tcp_info.ipaddr;
 			if (uri->port > 0) {

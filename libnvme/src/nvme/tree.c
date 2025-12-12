@@ -1155,12 +1155,12 @@ const char *nvme_ctrl_get_trsvcid(nvme_ctrl_t c)
 
 const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c)
 {
-	return c->cfg.host_traddr;
+	return c->host_traddr;
 }
 
 const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
 {
-	return c->cfg.host_iface;
+	return c->host_iface;
 }
 
 struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
@@ -1379,8 +1379,8 @@ static void __nvme_free_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->transport);
 	FREE_CTRL_ATTR(c->subsysnqn);
 	FREE_CTRL_ATTR(c->traddr);
-	FREE_CTRL_ATTR(c->cfg.host_traddr);
-	FREE_CTRL_ATTR(c->cfg.host_iface);
+	FREE_CTRL_ATTR(c->host_traddr);
+	FREE_CTRL_ATTR(c->host_iface);
 	FREE_CTRL_ATTR(c->trsvcid);
 	free(c);
 }
@@ -1445,12 +1445,12 @@ int nvme_create_ctrl(struct nvme_global_ctx *ctx,
 		c->traddr = strdup(traddr);
 	if (host_traddr) {
 		if (traddr_is_hostname(transport, host_traddr))
-			hostname2traddr(ctx, host_traddr, &c->cfg.host_traddr);
-		if (!c->cfg.host_traddr)
-			c->cfg.host_traddr = strdup(host_traddr);
+			hostname2traddr(ctx, host_traddr, &c->host_traddr);
+		if (!c->host_traddr)
+			c->host_traddr = strdup(host_traddr);
 	}
 	if (host_iface)
-		c->cfg.host_iface = strdup(host_iface);
+		c->host_iface = strdup(host_iface);
 	if (trsvcid)
 		c->trsvcid = strdup(trsvcid);
 
@@ -1473,8 +1473,8 @@ int nvme_create_ctrl(struct nvme_global_ctx *ctx,
  */
 static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct nvme_ctrl *c, struct candidate_args *candidate)
 {
-	if (c->cfg.host_traddr)
-		return candidate->addreq(candidate->host_traddr, c->cfg.host_traddr);
+	if (c->host_traddr)
+		return candidate->addreq(candidate->host_traddr, c->host_traddr);
 
 	/* If c->cfg.host_traddr is NULL, then the controller (c)
 	 * uses the interface's primary address as the source
@@ -1482,9 +1482,9 @@ static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct nvme_ctrl *c, struct 
 	 * determine the primary address associated with that
 	 * interface and compare that to the candidate->host_traddr.
 	 */
-	if (c->cfg.host_iface)
+	if (c->host_iface)
 		return nvme_iface_primary_addr_matches(candidate->iface_list,
-						       c->cfg.host_iface,
+						       c->host_iface,
 						       candidate->host_traddr);
 
 	/* If both c->cfg.host_traddr and c->cfg.host_iface are
@@ -1514,16 +1514,16 @@ static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct nvme_ctrl *c, struct 
  */
 static bool _tcp_ctrl_match_host_iface_no_src_addr(struct nvme_ctrl *c, struct candidate_args *candidate)
 {
-	if (c->cfg.host_iface)
-		return streq0(candidate->host_iface, c->cfg.host_iface);
+	if (c->host_iface)
+		return streq0(candidate->host_iface, c->host_iface);
 
 	/* If c->cfg.host_traddr is not NULL we can infer the controller's (c)
 	 * interface from it and compare it to the candidate->host_iface.
 	 */
-	if (c->cfg.host_traddr) {
+	if (c->host_traddr) {
 		const char *c_host_iface;
 
-		c_host_iface = nvme_iface_matching_addr(candidate->iface_list, c->cfg.host_traddr);
+		c_host_iface = nvme_iface_matching_addr(candidate->iface_list, c->host_traddr);
 		return streq0(candidate->host_iface, c_host_iface);
 	}
 
@@ -1697,12 +1697,12 @@ static bool _match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidate)
 	    !candidate->addreq(c->traddr, candidate->traddr))
 		return false;
 
-	if (candidate->host_traddr && c->cfg.host_traddr &&
-	    !candidate->addreq(c->cfg.host_traddr, candidate->host_traddr))
+	if (candidate->host_traddr && c->host_traddr &&
+	    !candidate->addreq(c->host_traddr, candidate->host_traddr))
 		return false;
 
-	if (candidate->host_iface && c->cfg.host_iface &&
-	    !streq0(c->cfg.host_iface, candidate->host_iface))
+	if (candidate->host_iface && c->host_iface &&
+	    !streq0(c->host_iface, candidate->host_iface))
 		return false;
 
 	if (candidate->trsvcid && c->trsvcid &&
