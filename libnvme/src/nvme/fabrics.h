@@ -46,8 +46,23 @@ int nvmf_discovery_ctx_decide_retry_set(struct nvmf_discovery_ctx *dctx,
 int nvmf_discovery_ctx_connected_set(struct nvmf_discovery_ctx *dctx,
 		void (*connected)(struct nvmf_discovery_ctx *dctx,
 			struct nvme_ctrl *c, void *user_data));
+int nvmf_discovery_ctx_parser_init_set(struct nvmf_discovery_ctx *dctx,
+		int (*parser_init)(struct nvmf_discovery_ctx *dctx,
+			void *user_data));
+int nvmf_discovery_ctx_parser_cleanup_set(struct nvmf_discovery_ctx *dctx,
+		void (*parser_cleanup)(struct nvmf_discovery_ctx *dctx,
+			void *user_data));
+int nvmf_discovery_ctx_parser_next_line_set(struct nvmf_discovery_ctx *dctx,
+		int (*parser_next)(struct nvmf_discovery_ctx *dctx,
+			void *user_data));
 int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
 		bool persistent);
+int nvmf_discovery_ctx_subsysnqn_set(struct nvmf_discovery_ctx *dctx,
+		const char *subsysnqn);
+int nvmf_discovery_ctx_transport_set(struct nvmf_discovery_ctx *dctx,
+		const char *transport);
+int nvmf_discovery_ctx_traddr_set(struct nvmf_discovery_ctx *dctx,
+		const char *traddr);
 int nvmf_discovery_ctx_host_traddr_set(struct nvmf_discovery_ctx *dctx,
 		const char *host_traddr);
 int nvmf_discovery_ctx_host_iface_set(struct nvmf_discovery_ctx *dctx,
@@ -55,6 +70,22 @@ int nvmf_discovery_ctx_host_iface_set(struct nvmf_discovery_ctx *dctx,
 int nvmf_discovery_ctx_default_fabrics_config_set(
 		struct nvmf_discovery_ctx *dctx,
 		struct nvme_fabrics_config *defcfg);
+int nvmf_discovery_ctx_trsvcid_set(struct nvmf_discovery_ctx *dctx,
+		const char *trsvcid);
+int nvmf_discovery_ctx_hostnqn_set(struct nvmf_discovery_ctx *dctx,
+		const char *hostnqn);
+int nvmf_discovery_ctx_hostid_set(struct nvmf_discovery_ctx *dctx,
+		const char *hostid);
+int nvmf_discovery_ctx_hostkey_set(struct nvmf_discovery_ctx *dctx,
+		const char *hostkey);
+int nvmf_discovery_ctx_ctrlkey_set(struct nvmf_discovery_ctx *dctx,
+		const char *ctrlkey);
+int nvmf_discovery_ctx_keyring_set(struct nvmf_discovery_ctx *dctx,
+		const char *keyring);
+int nvmf_discovery_ctx_tls_key_set(struct nvmf_discovery_ctx *dctx,
+		const char *tls_key);
+int nvmf_discovery_ctx_tls_key_identity_set(struct nvmf_discovery_ctx *dctx,
+		const char *tls_key_identity);
 
 /**
  * struct nvme_fabrics_config - Defines all linux nvme fabrics initiator options
@@ -427,6 +458,9 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
 int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_discovery_ctx *dctx, const char *hostnqn,
 		const char *hostid, bool connect, bool force);
+int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, struct nvme_host *h,
+		bool connect, bool force);
 int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 		struct nvmf_discovery_ctx *dctx, const char *hostnqn_arg,
 		const char *hostid_arg, const char *hostnqn_sys,
