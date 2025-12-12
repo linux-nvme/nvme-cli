@@ -12,14 +12,18 @@ sources = [
 ]
 
 if get_option('buildtype') == 'debug'
-    add_project_arguments('-DCCAN_LIST_DEBUG=1',  language : ['c'])
-    add_project_arguments('-DCCAN_STR_DEBUG=1',  language : ['c'])
+    add_project_arguments('-DCCAN_LIST_DEBUG=1', language: ['c'])
+    add_project_arguments('-DCCAN_STR_DEBUG=1', language: ['c'])
 endif
 
 libccan = static_library(
     'ccan',
     sources,
     install: false,
-    include_directories: [incdir, ],
     dependencies: [config_dep, ],
+)
+
+ccan_dep = declare_dependency(
+    include_directories: '.',
+    link_with: libccan,
 )
