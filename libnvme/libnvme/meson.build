@@ -25,18 +25,10 @@ if want_python
     nvme_py = pymod_swig[0]
     nvme_wrap_c = pymod_swig[1]
 
-    if meson.version().version_compare('>=1.4.0')
-        nvme_py_path = nvme_py.full_path()
-    else
-        nvme_py_path = meson.current_build_dir() / 'nvme.py'
-    endif
-
     pynvme_clib = python3.extension_module(
         '_nvme',
         nvme_wrap_c,
-        dependencies : [libnvme_dep, py3_dep, config_dep],
-        include_directories: [incdir, ],
-        link_with: [libccan],
+        dependencies: [config_dep, ccan_dep, libnvme_dep, py3_dep],
         install: true,
         subdir: 'libnvme',
     )
@@ -47,6 +39,11 @@ if want_python
     # python nvme.py module using this dependency. This basically sets the
     # variable "nvme_py_path" to the full path of the nvme.py file that
     # was built by SWIG above.
+    if meson.version().version_compare('>=1.4.0')
+        nvme_py_path = nvme_py.full_path()
+    else
+        nvme_py_path = meson.current_build_dir() / 'nvme.py'
+    endif
     python3_libnvme_dep = declare_dependency(
         sources: nvme_py,
         variables: {

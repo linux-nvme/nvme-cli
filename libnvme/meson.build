@@ -6,7 +6,7 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 if want_libnvme
-if openssl_dep.found() and meson.can_run_host_binaries()
+    if openssl_dep.found() and meson.can_run_host_binaries()
         if openssl_dep.type_name() != 'internal'
             # Check for a bug in the EVP_PKEY_CTX_add1_hkdf_info implementation
             res = cc.run(
@@ -22,14 +22,14 @@ if openssl_dep.found() and meson.can_run_host_binaries()
         endif
     endif
 
-    ################################################################################
+    ############################################################################
     configure_file(
         input:         'libnvme.spec.in',
         output:        'libnvme.spec',
         configuration: substs,
     )
 
-    ################################################################################
+    ############################################################################
     subdir('src')       # declares: libnvme_dep
     subdir('libnvme')
     if get_option('tests')
@@ -40,6 +40,23 @@ if openssl_dep.found() and meson.can_run_host_binaries()
     endif
     subdir('doc')
 else
-    libnvme_dep = dependency('libnvme', required: want_nvme)
+    # Fallback to using a pre-installed libnvme (if available)
+    if std_prefix
+        # When prefix points to a standard location, meson can use
+        # standard methods (e.g. pkg-config) to find the library.
+        libnvme_dep = dependency(
+            'libnvme',
+            version: '>=@0@'.format(libnvme_so_version),
+            required: want_nvme,
+        )
+    else
+        # When prefix points to a non-standard location
+        # let's ask the C compiler to find the library for us.
+        libnvme_dep = cc.find_library(
+            'nvme',
+            dirs: prefixdir / get_option('libdir'),
+            required: want_nvme,
+        )
+    endif
 endif
 

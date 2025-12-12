@@ -30,6 +30,8 @@ project(
     ],
 )
 
+fs = import('fs')
+
 cc = meson.get_compiler('c')
 cxx_available = add_languages('cpp', required: false, native: false)
 
@@ -92,6 +94,8 @@ udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
 dracutrulesdir = join_paths(prefixdir, get_option('dracutrulesdir'))
 systemddir     = join_paths(prefixdir, get_option('systemddir'))
 rundir         = join_paths(prefixdir, get_option('rundir'))
+
+std_prefix = prefixdir == '/usr' or prefixdir == '/usr/local'
 
 ###############################################################################
 conf = configuration_data()
@@ -374,9 +378,14 @@ conf.set(
     description: 'Is dlsym function present',
 )
 
+conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
+
 project_config_file = 'nvme-config.h'
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
-config_dep = declare_dependency(sources: nvme_config_h)
+config_dep = declare_dependency(
+    sources: nvme_config_h,
+    include_directories: '.',
+)
 
 # The -include option below requires the full path when
 # nvme-cli is build as subproject of another meson project.
@@ -395,14 +404,25 @@ add_project_arguments(
     language : 'c',
 )
 
-incdir = include_directories(
-    [
-        '.',
-        'ccan',
-        'libnvme',
-        'libnvme/src',
-    ]
-)
+# This handles a specific packaging scenario where libnvme is built and
+# installed separately from nvme-cli. In this case, libnvme is installed
+# under a non-standard prefix, and nvme-cli must be built against the
+# previously installed libnvme headers.
+#
+# To support this layout, we explicitly add the libnvme include path from
+# the non-standard prefix. This cannot be done using include_directories(),
+# which only supports relative paths, while the libnvme include path is
+# absolute.
+if not want_libnvme and not std_prefix
+    libnvme_hdr_location = prefixdir / get_option('includedir')
+    message(
+        'Using non-standard libnvme headers location: ',
+        libnvme_hdr_location
+    )
+
+    # Allow compiler to find headers in non-standard location
+    add_project_arguments('-I' + libnvme_hdr_location, language : 'c')
+endif
 
 ################################################################################
 libtype = get_option('default_library')
@@ -494,7 +514,7 @@ foreach file : udev_files
 endforeach
 
 ################################################################################
-subdir('ccan')      # declares: libccan
+subdir('ccan')      # declares: ccan_dep
 subdir('libnvme')   # declares: libnvme_dep
 
 if want_nvme
@@ -525,12 +545,15 @@ if want_nvme
     executable(
         'nvme',
         sources,
-        dependencies: [ libnvme_dep, json_c_dep ],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+            json_c_dep,
+        ],
         link_args: '-ldl',
-        link_with: libccan,
-        include_directories: [incdir, ],
         install: true,
-        install_dir: sbindir
+        install_dir: sbindir,
     )
 
     subdir('unit')
