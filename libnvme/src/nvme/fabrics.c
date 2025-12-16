@@ -299,6 +299,14 @@ int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
 	return 0;
 }
 
+int nvmf_discovery_ctx_device_set(struct nvmf_discovery_ctx *dctx,
+				  const char *device)
+{
+	dctx->device = device;
+
+	return 0;
+}
+
 int nvmf_discovery_ctx_subsysnqn_set(struct nvmf_discovery_ctx *dctx,
 		const char *subsysnqn)
 {
@@ -2159,8 +2167,9 @@ static int set_discovery_kato(struct nvmf_discovery_ctx *dctx,
 	return tmo;
 }
 
-int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
-		bool connect, struct nvme_ctrl *c)
+static int _nvmf_discovery(struct nvme_global_ctx *ctx,
+		struct nvmf_discovery_ctx *dctx, bool connect,
+		struct nvme_ctrl *c)
 {
 	_cleanup_free_ struct nvmf_discovery_log *log = NULL;
 	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
@@ -2259,7 +2268,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
 
 		if (!child) {
 			if (discover)
-				nvmf_discovery(ctx, dctx, true, child);
+				_nvmf_discovery(ctx, dctx, true, child);
 
 			if (disconnect) {
 				nvme_disconnect_ctrl(child);
@@ -2470,7 +2479,7 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 		cn = lookup_ctrl(h, &trcfg);
 		if (cn) {
 			dctx->persistent = true;
-			nvmf_discovery(ctx, dctx, connect, cn);
+			_nvmf_discovery(ctx, dctx, connect, cn);
 			return 0;
 		}
 	}
@@ -2479,7 +2488,7 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	if (ret)
 		return 0;
 
-	nvmf_discovery(ctx, dctx, connect, cn);
+	_nvmf_discovery(ctx, dctx, connect, cn);
 	if (!(dctx->persistent || is_persistent_discovery_ctrl(h, cn)))
 		ret = nvme_disconnect_ctrl(cn);
 	nvme_free_ctrl(cn);
@@ -2603,7 +2612,7 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 		if (!force) {
 			c = lookup_ctrl(h, &trcfg);
 			if (c) {
-				nvmf_discovery(ctx, dctx, connect, c);
+				_nvmf_discovery(ctx, dctx, connect, c);
 				continue;
 			}
 		}
@@ -2613,7 +2622,7 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 		if (err)
 			continue;
 
-		nvmf_discovery(ctx, dctx, connect, c);
+		_nvmf_discovery(ctx, dctx, connect, c);
 		if (!(dctx->persistent || is_persistent_discovery_ctrl(h, c)))
 			err = nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
@@ -3085,5 +3094,195 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 	}
 out_free:
 	nvmf_nbft_free(entry);
+	return ret;
+}
+
+static int __create_discover_ctrl(struct nvme_global_ctx *ctx,
+				  struct nvmf_discovery_ctx *dctx,
+				  nvme_host_t h,
+				  struct nvme_fabrics_config *cfg,
+				  struct tr_config *trcfg,
+				  struct nvme_ctrl **ctrl)
+{
+	struct nvme_ctrl *c;
+	int tmo, ret;
+
+	ret = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
+			       trcfg->traddr, trcfg->host_traddr,
+			       trcfg->host_iface, trcfg->trsvcid, &c);
+	if (ret)
+		return ret;
+
+	nvme_ctrl_set_discovery_ctrl(c, true);
+	nvme_ctrl_set_unique_discovery_ctrl(c, strcmp(trcfg->subsysnqn,
+						      NVME_DISC_SUBSYS_NAME));
+	tmo = set_discovery_kato(dctx, cfg);
+
+	ret = nvme_add_ctrl(dctx, h, c, cfg);
+	cfg->keep_alive_tmo = tmo;
+	if (ret) {
+		nvme_free_ctrl(c);
+		return ret;
+	}
+
+	*ctrl = c;
+	return 0;
+}
+
+static int nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx,
+				     struct nvmf_discovery_ctx *dctx,
+				     struct nvme_host *h,
+				     struct nvme_fabrics_config *cfg,
+				     struct tr_config *trcfg,
+				     struct nvme_ctrl **ctrl)
+{
+	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	struct nvme_ctrl *c;
+	int ret;
+
+	ret = __create_discover_ctrl(ctx, dctx, h, cfg, trcfg, &c);
+	if (ret)
+		return ret;
+
+	if (nvme_ctrl_is_unique_discovery_ctrl(c)) {
+		*ctrl = c;
+		return 0;
+	}
+
+	id = __nvme_alloc(sizeof(*id));
+	if (!id) {
+		nvme_free_ctrl(c);
+		return -ENOMEM;
+	}
+
+	/* Find out the name of discovery controller */
+	ret = nvme_ctrl_identify(c, id);
+	if (ret) {
+		fprintf(stderr, "failed to identify controller, error %s\n",
+			nvme_strerror(-ret));
+		nvme_disconnect_ctrl(c);
+		nvme_free_ctrl(c);
+		return ret;
+	}
+
+	if (!strcmp(id->subnqn, NVME_DISC_SUBSYS_NAME)) {
+		*ctrl = c;
+		return 0;
+	}
+
+	/*
+	 * The subsysnqn is not the well-known name. Prefer the unique
+	 * subsysnqn over the well-known one.
+	 */
+	nvme_disconnect_ctrl(c);
+	nvme_free_ctrl(c);
+
+	trcfg->subsysnqn = id->subnqn;
+	ret = __create_discover_ctrl(ctx, dctx, h, cfg, trcfg, &c);
+	if (ret)
+		return ret;
+
+	*ctrl = c;
+	return 0;
+}
+
+int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
+		   struct nvme_host *h, bool connect, bool force)
+{
+	struct nvme_ctrl *c = NULL;
+	int ret;
+
+	if (dctx->device && !force) {
+		ret = nvme_scan_ctrl(ctx, dctx->device, &c);
+		if (!ret) {
+			/* Check if device matches command-line options */
+			if (!nvme_ctrl_config_match(
+				    c, dctx->transport, dctx->traddr,
+				    dctx->trsvcid, dctx->subsysnqn,
+				    dctx->host_traddr, dctx->host_iface)) {
+				nvme_msg(
+					ctx, LOG_ERR,
+					"ctrl device %s found, ignoring non matching command-line options\n",
+					dctx->device);
+			}
+
+			if (!nvme_ctrl_is_discovery_ctrl(c)) {
+				nvme_msg(
+					ctx, LOG_ERR,
+					"ctrl device %s found, ignoring non discovery controller\n",
+					dctx->device);
+
+				nvme_free_ctrl(c);
+				c = NULL;
+				dctx->persistent = false;
+			} else {
+				/*
+				 * If the controller device is found it must
+				 * be persistent, and shouldn't be disconnected
+				 * on exit.
+				 */
+				dctx->persistent = true;
+				/*
+				 * When --host-traddr/--host-iface are not specified on the
+				 * command line, use the discovery controller's (c) host-
+				 * traddr/host-iface for the connections to controllers
+				 * returned in the Discovery Log Pages. This is essential
+				 * when invoking "connect-all" with --device to reuse an
+				 * existing persistent discovery controller (as is done
+				 * for the udev rules). This ensures that host-traddr/
+				 * host-iface are consistent with the discovery controller (c).
+				 */
+				if (!dctx->host_traddr)
+					dctx->host_traddr = (char *)
+						nvme_ctrl_get_host_traddr(c);
+				if (!dctx->host_iface)
+					dctx->host_iface = (char *)
+						nvme_ctrl_get_host_iface(c);
+			}
+		} else {
+			/*
+			 * No controller found, fall back to create one.
+			 * But that controller cannot be persistent.
+			 */
+			nvme_msg(ctx, LOG_ERR, "ctrl device %s not found%s\n",
+				 dctx->device,
+				 dctx->persistent ? ", ignoring --persistent" :
+						    "");
+			dctx->persistent = false;
+		}
+	}
+
+	struct tr_config trcfg = {
+		.subsysnqn = dctx->subsysnqn,
+		.transport = dctx->transport,
+		.traddr = dctx->traddr,
+		.host_traddr = dctx->host_traddr,
+		.host_iface = dctx->host_iface,
+		.trsvcid = dctx->trsvcid,
+	};
+
+	if (!c && !force) {
+		c = lookup_ctrl(h, &trcfg);
+		if (c)
+			dctx->persistent = true;
+	}
+	if (!c) {
+		/* No device or non-matching device, create a new controller */
+		ret = nvmf_create_discover_ctrl(ctx, dctx, h, dctx->defcfg,
+						&trcfg, &c);
+		if (ret) {
+			if (ret != -ENVME_CONNECT_IGNORED)
+				nvme_msg(ctx, LOG_ERR,
+					 "failed to add controller, error %s\n",
+					 nvme_strerror(-ret));
+			return ret;
+		}
+	}
+
+	ret = _nvmf_discovery(ctx, dctx, connect, c);
+	if (!(dctx->persistent || is_persistent_discovery_ctrl(h, c)))
+		nvme_disconnect_ctrl(c);
+	nvme_free_ctrl(c);
+
 	return ret;
 }
