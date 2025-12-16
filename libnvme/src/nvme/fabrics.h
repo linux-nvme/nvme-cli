@@ -443,6 +443,8 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 		const char *hostid_sys, bool connect,
 		struct nvme_fabrics_config *cfg, char *nbft_path);
 
+int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
+		struct nvme_host *h);
 int nvmf_connect_config_json(struct nvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, const struct nvme_fabrics_config *cfg);
 

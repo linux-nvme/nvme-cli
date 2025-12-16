@@ -10159,28 +10159,28 @@ static int discover_cmd(int argc, char **argv, struct command *acmd, struct plug
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";
 
-	return nvmf_discover(desc, argc, argv, false);
+	return fabrics_discovery(desc, argc, argv, false);
 }
 
 static int connect_all_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Discover NVMeoF subsystems and connect to them";
 
-	return nvmf_discover(desc, argc, argv, true);
+	return fabrics_discovery(desc, argc, argv, true);
 }
 
 static int connect_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Connect to NVMeoF subsystem";
 
-	return nvmf_connect(desc, argc, argv);
+	return fabrics_connect(desc, argc, argv);
 }
 
 static int disconnect_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Disconnect from NVMeoF subsystem";
 
-	return nvmf_disconnect(desc, argc, argv);
+	return fabrics_disconnect(desc, argc, argv);
 }
 
 int disconnect_all_cmd(int argc, char **argv, struct command *acmd,
@@ -10188,14 +10188,14 @@ int disconnect_all_cmd(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Disconnect from all connected NVMeoF subsystems";
 
-	return nvmf_disconnect_all(desc, argc, argv);
+	return fabrics_disconnect_all(desc, argc, argv);
 }
 
 static int config_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Configuration of NVMeoF subsystems";
 
-	return nvmf_config(desc, argc, argv);
+	return fabrics_config(desc, argc, argv);
 }
 
 static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -10203,7 +10203,7 @@ static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *p
 	const char *desc =
 	    "Send Discovery Information Management command to a Discovery Controller (DC)";
 
-	return nvmf_dim(desc, argc, argv);
+	return fabrics_dim(desc, argc, argv);
 }
 
 static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)

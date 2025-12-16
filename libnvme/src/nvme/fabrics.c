@@ -2025,7 +2025,7 @@ void nvme_free_uri(struct nvme_fabrics_uri *uri)
 	free(uri);
 }
 
-static nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct tr_config *trcfg)
+static nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct fabric_args *trcfg)
 {
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
@@ -2101,7 +2101,7 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 		nvme_ctrl_t child;
 		int tmo = fctx->cfg->keep_alive_tmo;
 
-		struct tr_config trcfg = {
+		struct fabric_args trcfg = {
 			.subsysnqn	= e->subnqn,
 			.transport	= nvmf_trtype_str(e->trtype),
 			.traddr		= e->traddr,
@@ -2223,7 +2223,7 @@ retry:
 
 static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, nvme_host_t h,
-		struct nvme_fabrics_config *cfg, struct tr_config *trcfg,
+		struct nvme_fabrics_config *cfg, struct fabric_args *trcfg,
 		struct nvme_ctrl **ctrl)
 {
 	nvme_ctrl_t c;
@@ -2254,7 +2254,7 @@ static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
 static int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, nvme_host_t h,
 		struct nvme_fabrics_config *cfg,
-		struct tr_config *trcfg,
+		struct fabric_args *trcfg,
 		struct nvme_ctrl **ctrl)
 {
 	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
@@ -2362,7 +2362,7 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 
 	memcpy(&cfg, fctx->cfg, sizeof(cfg));
 
-	struct tr_config trcfg = {
+	struct fabric_args trcfg = {
 		.subsysnqn = subsysnqn,
 		.transport = transport,
 		.traddr = traddr,
@@ -2496,7 +2496,7 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 		if (err)
 			break;
 
-		struct tr_config trcfg = {
+		struct fabric_args trcfg = {
 			.transport = fctx->transport,
 			.traddr = fctx->traddr,
 			.trsvcid = fctx->trsvcid,
@@ -2615,7 +2615,7 @@ static bool validate_uri(struct nbft_info_discovery *dd,
 static int nbft_connect(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, struct nvme_host *h,
 		struct nvmf_disc_log_entry *e,
-		struct nbft_info_subsystem_ns *ss, struct tr_config *trcfg,
+		struct nbft_info_subsystem_ns *ss, struct fabric_args *trcfg,
 		struct nvme_fabrics_config *cfg)
 {
 	nvme_ctrl_t c;
@@ -2681,7 +2681,7 @@ static int nbft_connect(struct nvme_global_ctx *ctx,
 static int nbft_discovery(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, struct nbft_info_discovery *dd,
 		struct nvme_host *h, struct nvme_ctrl *c,
-		struct nvme_fabrics_config *defcfg, struct tr_config *deftrcfg)
+		struct nvme_fabrics_config *defcfg, struct fabric_args *deftrcfg)
 {
 	struct nvmf_discovery_log *log = NULL;
 	int ret;
@@ -2709,7 +2709,7 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 		nvme_ctrl_t cl;
 		int tmo = defcfg->keep_alive_tmo;
 
-		struct tr_config trcfg = {
+		struct fabric_args trcfg = {
 			.subsysnqn	= e->subnqn,
 			.transport	= nvmf_trtype_str(e->trtype),
 			.traddr		= e->traddr,
@@ -2854,7 +2854,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 				    !strncmp((*ss)->transport, "tcp", 3))
 					host_traddr = hfi->tcp_info.ipaddr;
 
-				struct tr_config trcfg = {
+				struct fabric_args trcfg = {
 					.subsysnqn	= (*ss)->subsys_nqn,
 					.transport	= (*ss)->transport,
 					.traddr		= (*ss)->traddr,
@@ -2944,7 +2944,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 					strdup(nvmf_get_default_trsvcid(
 						uri->protocol, true));
 
-			struct tr_config trcfg = {
+			struct fabric_args trcfg = {
 				.subsysnqn	= NVME_DISC_SUBSYS_NAME,
 				.transport	= uri->protocol,
 				.traddr		= uri->host,
@@ -2995,7 +2995,7 @@ out_free:
 
 static int __create_discover_ctrl(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, nvme_host_t h,
-		struct nvme_fabrics_config *cfg, struct tr_config *trcfg,
+		struct nvme_fabrics_config *cfg, struct fabric_args *trcfg,
 		struct nvme_ctrl **ctrl)
 {
 	struct nvme_ctrl *c;
@@ -3026,7 +3026,7 @@ static int __create_discover_ctrl(struct nvme_global_ctx *ctx,
 static int nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx,
 		struct nvme_host *h, struct nvme_fabrics_config *cfg,
-		struct tr_config *trcfg, struct nvme_ctrl **ctrl)
+		struct fabric_args *trcfg, struct nvme_ctrl **ctrl)
 {
 	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
 	struct nvme_ctrl *c;
@@ -3142,7 +3142,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 		}
 	}
 
-	struct tr_config trcfg = {
+	struct fabric_args trcfg = {
 		.subsysnqn = fctx->subsysnqn,
 		.transport = fctx->transport,
 		.traddr = fctx->traddr,
@@ -3175,4 +3175,89 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 	nvme_free_ctrl(c);
 
 	return ret;
+}
+
+static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
+				const char *tls_key_identity,
+				struct nvme_fabrics_config *cfg, nvme_ctrl_t c)
+{
+	if (keyring) {
+		char *endptr;
+		long id = strtol(keyring, &endptr, 0);
+
+		if (endptr != keyring)
+			cfg->keyring = id;
+		else
+			nvme_ctrl_set_keyring(c, keyring);
+	}
+
+	if (tls_key_identity)
+		nvme_ctrl_set_tls_key_identity(c, tls_key_identity);
+
+	if (tls_key) {
+		char *endptr;
+		long id = strtol(tls_key, &endptr, 0);
+
+		if (endptr != tls_key)
+			cfg->tls_key = id;
+		else
+			nvme_ctrl_set_tls_key(c, tls_key);
+	}
+}
+
+int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
+		struct nvme_host *h)
+{
+	struct nvme_ctrl *c;
+	int err;
+
+	struct fabric_args trcfg = {
+		.subsysnqn = fctx->subsysnqn,
+		.transport = fctx->transport,
+		.traddr = fctx->traddr,
+		.host_traddr = fctx->host_traddr,
+		.host_iface = fctx->host_iface,
+		.trsvcid = fctx->trsvcid,
+	};
+
+	c = lookup_ctrl(h, &trcfg);
+	if (c && nvme_ctrl_get_name(c) && !fctx->cfg->duplicate_connect) {
+		fctx->already_connected(fctx, h, nvme_ctrl_get_subsysnqn(c),
+			nvme_ctrl_get_transport(c), nvme_ctrl_get_traddr(c),
+			nvme_ctrl_get_trsvcid(c), fctx->user_data);
+		return -EALREADY;
+	}
+
+	err = nvme_create_ctrl(ctx, trcfg.subsysnqn, trcfg.transport,
+		trcfg.traddr, trcfg.host_traddr, trcfg.host_iface,
+		trcfg.trsvcid, &c);
+	if (err)
+		return err;
+
+	if (fctx->ctrlkey)
+		nvme_ctrl_set_dhchap_key(c, fctx->ctrlkey);
+
+	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
+		fctx->tls_key_identity, fctx->cfg, c);
+
+	/*
+	 * We are connecting to a discovery controller, so let's treat
+	 * this as a persistent connection and specify a KATO.
+	 */
+	if (!strcmp(trcfg.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		fctx->persistent = true;
+
+		set_discovery_kato(fctx, fctx->cfg);
+	}
+
+	err = nvme_add_ctrl(fctx, h, c, fctx->cfg);
+	if (err) {
+		nvme_msg(ctx, LOG_ERR, "could not add new controller: %s\n",
+			nvme_strerror(-err));
+		return err;
+	}
+
+	fctx->connected(fctx, c, fctx->user_data);
+
+	return 0;
 }
