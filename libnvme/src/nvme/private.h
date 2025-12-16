@@ -373,7 +373,7 @@ struct nvmf_context {
 	void *user_data;
 };
 
-struct tr_config {
+struct fabric_args {
 	const char *subsysnqn;
 	const char *transport;
 	const char *traddr;
