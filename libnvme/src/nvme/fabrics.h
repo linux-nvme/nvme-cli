@@ -23,71 +23,45 @@
 /* default to 600 seconds of reconnect attempts before giving up */
 #define NVMF_DEF_CTRL_LOSS_TMO		600
 
-struct nvmf_discovery_ctx;
+struct nvmf_context;
 
-int nvmf_discovery_ctx_create(struct nvme_global_ctx *ctx,
-		 void *user_data, struct nvmf_discovery_ctx **dctx);
-
-int nvmf_discovery_ctx_max_retries(struct nvmf_discovery_ctx *dctx,
-		int max_retries);
-int nvmf_discovery_ctx_keep_alive_timeout(struct nvmf_discovery_ctx *dctx,
-		int keep_alive_timeout);
-int nvmf_discovery_ctx_discovery_log_set(struct nvmf_discovery_ctx *dctx,
-		void (*discover_log)(struct nvmf_discovery_ctx *dctx,
-			bool connect, struct nvmf_discovery_log *log,
-			uint64_t numrec, void *user_data));
-int nvmf_discovery_ctx_already_connected_set(struct nvmf_discovery_ctx *dctx,
-		void (*already_connected)(struct nvme_host *host,
-			struct nvmf_disc_log_entry *entry,
+int nvmf_context_create(struct nvme_global_ctx *ctx,
+		bool (*decide_retry)(struct nvmf_context *fctx, int err,
+			void *user_data),
+		void (*connected)(struct nvmf_context *fctx,
+			struct nvme_ctrl *c, void *user_data),
+		void (*already_connected)(struct nvmf_context *fctx,
+			struct nvme_host *host, const char *subsysnqn,
+			const char *transport, const char *traddr,
+			const char *trsvcid, void *user_data),
+		void *user_data, struct nvmf_context **fctxp);
+int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
+		void (*discovery_log)(struct nvmf_context *fctx,
+			bool connect,
+			struct nvmf_discovery_log *log,
+			uint64_t numrec, void *user_data),
+		int (*parser_init)(struct nvmf_context *fctx,
+			void *user_data),
+		void (*parser_cleanup)(struct nvmf_context *fctx,
+			void *user_data),
+		int (*parser_next_line)(struct nvmf_context *fctx,
 			void *user_data));
-int nvmf_discovery_ctx_decide_retry_set(struct nvmf_discovery_ctx *dctx,
-		bool (*decide_retry)(struct nvmf_discovery_ctx *dctx, int err,
-			void *user_data));
-int nvmf_discovery_ctx_connected_set(struct nvmf_discovery_ctx *dctx,
-		void (*connected)(struct nvmf_discovery_ctx *dctx,
-			struct nvme_ctrl *c, void *user_data));
-int nvmf_discovery_ctx_parser_init_set(struct nvmf_discovery_ctx *dctx,
-		int (*parser_init)(struct nvmf_discovery_ctx *dctx,
-			void *user_data));
-int nvmf_discovery_ctx_parser_cleanup_set(struct nvmf_discovery_ctx *dctx,
-		void (*parser_cleanup)(struct nvmf_discovery_ctx *dctx,
-			void *user_data));
-int nvmf_discovery_ctx_parser_next_line_set(struct nvmf_discovery_ctx *dctx,
-		int (*parser_next)(struct nvmf_discovery_ctx *dctx,
-			void *user_data));
-int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
-		bool persistent);
-int nvmf_discovery_ctx_device_set(struct nvmf_discovery_ctx *dctx,
-		const char *device);
-int nvmf_discovery_ctx_subsysnqn_set(struct nvmf_discovery_ctx *dctx,
-		const char *subsysnqn);
-int nvmf_discovery_ctx_transport_set(struct nvmf_discovery_ctx *dctx,
-		const char *transport);
-int nvmf_discovery_ctx_traddr_set(struct nvmf_discovery_ctx *dctx,
-		const char *traddr);
-int nvmf_discovery_ctx_host_traddr_set(struct nvmf_discovery_ctx *dctx,
-		const char *host_traddr);
-int nvmf_discovery_ctx_host_iface_set(struct nvmf_discovery_ctx *dctx,
-		const char *host_iface);
-int nvmf_discovery_ctx_default_fabrics_config_set(
-		struct nvmf_discovery_ctx *dctx,
-		struct nvme_fabrics_config *defcfg);
-int nvmf_discovery_ctx_trsvcid_set(struct nvmf_discovery_ctx *dctx,
-		const char *trsvcid);
-int nvmf_discovery_ctx_hostnqn_set(struct nvmf_discovery_ctx *dctx,
-		const char *hostnqn);
-int nvmf_discovery_ctx_hostid_set(struct nvmf_discovery_ctx *dctx,
-		const char *hostid);
-int nvmf_discovery_ctx_hostkey_set(struct nvmf_discovery_ctx *dctx,
-		const char *hostkey);
-int nvmf_discovery_ctx_ctrlkey_set(struct nvmf_discovery_ctx *dctx,
-		const char *ctrlkey);
-int nvmf_discovery_ctx_keyring_set(struct nvmf_discovery_ctx *dctx,
-		const char *keyring);
-int nvmf_discovery_ctx_tls_key_set(struct nvmf_discovery_ctx *dctx,
-		const char *tls_key);
-int nvmf_discovery_ctx_tls_key_identity_set(struct nvmf_discovery_ctx *dctx,
+int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
+		int max_discovery_retries, int keep_alive_timeout);
+int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
+		struct nvme_fabrics_config *cfg);
+int nvmf_context_set_connection(struct nvmf_context *fctx,
+		const char *subsysnqn, const char *transport,
+		const char *traddr, const char *trsvcid,
+		const char *host_traddr, const char *host_iface);
+int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
+		const char *hostnqn, const char *hostid);
+int nvmf_context_set_crypto(struct nvmf_context *fctx,
+		const char *hostkey, const char *ctrlkey,
+		const char *keyring, const char *tls_key,
 		const char *tls_key_identity);
+int nvmf_context_set_persistent(struct nvmf_context *fctx, bool persistent);
+int nvmf_context_set_device(struct nvmf_context *fctx, const char *device);
 
 /**
  * struct nvme_fabrics_config - Defines all linux nvme fabrics initiator options
@@ -455,16 +429,16 @@ void nvme_free_uri(struct nvme_fabrics_uri *uri);
 
 char *nvmf_get_default_trsvcid(const char *transport, bool discovery_ctrl);
 
-int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
+int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 		struct nvme_host *h, bool connect, bool force);
 int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
-		struct nvmf_discovery_ctx *dctx, const char *hostnqn,
+		struct nvmf_context *fctx, const char *hostnqn,
 		const char *hostid, bool connect, bool force);
 int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
-		struct nvmf_discovery_ctx *dctx, struct nvme_host *h,
+		struct nvmf_context *fctx, struct nvme_host *h,
 		bool connect, bool force);
 int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
-		struct nvmf_discovery_ctx *dctx, const char *hostnqn_arg,
+		struct nvmf_context *fctx, const char *hostnqn_arg,
 		const char *hostid_arg, const char *hostnqn_sys,
 		const char *hostid_sys, bool connect,
 		struct nvme_fabrics_config *cfg, char *nbft_path);

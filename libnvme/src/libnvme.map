@@ -290,6 +290,15 @@ LIBNVME_2_0 {
 		nvmf_cms_str;
 		nvmf_connect_config_json;
 		nvmf_connect_ctrl;
+		nvmf_context_create;
+		nvmf_context_set_connection;
+		nvmf_context_set_crypto;
+		nvmf_context_set_device;
+		nvmf_context_set_discovery_cbs;
+		nvmf_context_set_discovery_defaults;
+		nvmf_context_set_fabrics_config;
+		nvmf_context_set_hostnqn;
+		nvmf_context_set_persistent;
 		nvmf_default_config;
 		nvmf_discovery;
 		nvmf_discovery_config_file;
