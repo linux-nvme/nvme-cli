@@ -129,14 +129,6 @@ static const char *nvmf_context		= "execution context identification string";
 		OPT_END()                                                                        \
 	}
 
-static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
-{
-	if (nvme_host_is_pdc_enabled(h, DEFAULT_PDC_ENABLED))
-		return nvme_ctrl_is_unique_discovery_ctrl(c);
-
-	return false;
-}
-
 nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct tr_config *trcfg)
 {
 	nvme_subsystem_t s;
@@ -192,92 +184,6 @@ retry:
 
 	return ret;
 }
-
-static int __create_discover_ctrl(struct nvme_global_ctx *ctx, nvme_host_t h,
-				  struct nvme_fabrics_config *cfg,
-				  struct tr_config *trcfg,
-				  nvme_ctrl_t *ctrl)
-{
-	nvme_ctrl_t c;
-	int tmo, ret;
-
-	ret = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
-			     trcfg->traddr, trcfg->host_traddr,
-			     trcfg->host_iface, trcfg->trsvcid, &c);
-	if (ret)
-		return ret;
-
-	nvme_ctrl_set_discovery_ctrl(c, true);
-	nvme_ctrl_set_unique_discovery_ctrl(c,
-		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
-	tmo = set_discovery_kato(cfg);
-
-	ret = nvme_add_ctrl(h, c, cfg);
-	cfg->keep_alive_tmo = tmo;
-	if (ret) {
-		nvme_free_ctrl(c);
-		return ret;
-	}
-
-	*ctrl = c;
-	return 0;
-}
-
-int nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx, nvme_host_t h,
-			      struct nvme_fabrics_config *cfg,
-			      struct tr_config *trcfg,
-			      nvme_ctrl_t *ctrl)
-{
-	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
-	nvme_ctrl_t c;
-	int ret;
-
-	ret = __create_discover_ctrl(ctx, h, cfg, trcfg, &c);
-	if (ret)
-		return ret;
-
-	if (nvme_ctrl_is_unique_discovery_ctrl(c)) {
-		*ctrl = c;
-		return 0;
-	}
-
-	id = nvme_alloc(sizeof(*id));
-	if (!id) {
-		nvme_free_ctrl(c);
-		return -ENOMEM;
-	}
-
-	/* Find out the name of discovery controller */
-	ret = nvme_ctrl_identify(c, id);
-	if (ret)  {
-		fprintf(stderr,	"failed to identify controller, error %s\n",
-			nvme_strerror(-ret));
-		nvme_disconnect_ctrl(c);
-		nvme_free_ctrl(c);
-		return ret;
-	}
-
-	if (!strcmp(id->subnqn, NVME_DISC_SUBSYS_NAME)) {
-		*ctrl = c;
-		return 0;
-	}
-
-	/*
-	 * The subsysnqn is not the well-known name. Prefer the unique
-	 * subsysnqn over the well-known one.
-	 */
-	nvme_disconnect_ctrl(c);
-	nvme_free_ctrl(c);
-
-	trcfg->subsysnqn = id->subnqn;
-	ret = __create_discover_ctrl(ctx, h, cfg, trcfg, &c);
-	if (ret)
-		return ret;
-
-	*ctrl = c;
-	return 0;
-}
-
 static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 {
 	uint64_t numrec = le64_to_cpu(log->numrec);
@@ -398,6 +304,67 @@ static void parser_cleanup(struct nvmf_discovery_ctx *dctx, void *user_data)
 	fclose(cdd->f);
 }
 
+static int discovery_ctx_set_trcfg(struct nvmf_discovery_ctx *dctx,
+		struct tr_config *trcfg)
+{
+	int err;
+
+	err = nvmf_discovery_ctx_subsysnqn_set(dctx, trcfg->subsysnqn);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_transport_set(dctx, trcfg->transport);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_traddr_set(dctx, trcfg->traddr);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_host_traddr_set(dctx, trcfg->host_traddr);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_host_iface_set(dctx, trcfg->host_iface);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_trsvcid_set(dctx, trcfg->trsvcid);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_hostnqn_set(dctx, trcfg->hostnqn);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_hostid_set(dctx, trcfg->hostid);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_hostkey_set(dctx, trcfg->hostkey);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_ctrlkey_set(dctx, trcfg->ctrlkey);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_keyring_set(dctx, trcfg->keyring);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_tls_key_set(dctx, trcfg->tls_key);
+	if (err)
+		return err;
+
+	err = nvmf_discovery_ctx_tls_key_identity_set(dctx,
+		trcfg->tls_key_identity);
+	if (err)
+		return err;
+
+	return 0;
+}
+
 static int parser_next_line(struct nvmf_discovery_ctx *dctx, void *user_data)
 {
 	struct cb_discovery_data *cdd = user_data;
@@ -435,56 +402,7 @@ next:
 	if (!trcfg.trsvcid)
 		trcfg.trsvcid = nvmf_get_default_trsvcid(trcfg.transport, true);
 
-	ret = nvmf_discovery_ctx_subsysnqn_set(dctx, trcfg.subsysnqn);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_transport_set(dctx, trcfg.transport);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_traddr_set(dctx, trcfg.traddr);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_host_traddr_set(dctx, trcfg.host_traddr);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_host_iface_set(dctx, trcfg.host_iface);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_trsvcid_set(dctx, trcfg.trsvcid);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_hostnqn_set(dctx, trcfg.hostnqn);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_hostid_set(dctx, trcfg.hostid);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_hostkey_set(dctx, trcfg.hostkey);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_ctrlkey_set(dctx, trcfg.ctrlkey);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_keyring_set(dctx, trcfg.keyring);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_tls_key_set(dctx, trcfg.tls_key);
-	if (ret)
-		return ret;
-
-	ret = nvmf_discovery_ctx_tls_key_identity_set(dctx,
-		trcfg.tls_key_identity);
+	ret = discovery_ctx_set_trcfg(dctx, &trcfg);
 	if (ret)
 		return ret;
 
@@ -497,7 +415,8 @@ next:
 
 
 static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
-		bool persistent, struct tr_config *trcfg,
+		bool persistent, const char *device,
+		struct tr_config *trcfg,
 		struct nvme_fabrics_config *defcfg,
 		void *user_data, struct nvmf_discovery_ctx **dctxp)
 {
@@ -544,15 +463,15 @@ static int create_discovery_log_ctx(struct nvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
+	err = nvmf_discovery_ctx_device_set(dctx, device);
+	if (err)
+		goto err;
+
 	err = nvmf_discovery_ctx_persistent_set(dctx, persistent);
 	if (err)
 		goto err;
 
-	err = nvmf_discovery_ctx_host_traddr_set(dctx, trcfg->host_traddr);
-	if (err)
-		goto err;
-
-	err = nvmf_discovery_ctx_host_iface_set(dctx, trcfg->host_iface);
+	err = discovery_ctx_set_trcfg(dctx, trcfg);
 	if (err)
 		goto err;
 
@@ -624,7 +543,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ struct nvmf_discovery_ctx *dctx = NULL;
 	nvme_host_t h;
-	nvme_ctrl_t c = NULL;
 	unsigned int verbose = 0;
 	int ret;
 	char *format = "normal";
@@ -713,7 +631,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		.flags = flags,
 		.raw = raw,
 	};
-	ret = create_discovery_log_ctx(ctx, persistent, &trcfg,
+	ret = create_discovery_log_ctx(ctx, persistent, device, &trcfg,
 		&cfg, &dld, &dctx);
 	if (ret)
 		return ret;
@@ -739,81 +657,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (!trcfg.trsvcid)
 		trcfg.trsvcid = nvmf_get_default_trsvcid(trcfg.transport, true);
 
-	if (device && !force) {
-		ret = nvme_scan_ctrl(ctx, device, &c);
-		if (!ret) {
-			/* Check if device matches command-line options */
-			if (!nvme_ctrl_config_match(c, trcfg.transport,
-					trcfg.traddr, trcfg.trsvcid,
-					trcfg.subsysnqn, trcfg.host_traddr,
-					trcfg.host_iface)) {
-				fprintf(stderr,
-				    "ctrl device %s found, ignoring non matching command-line options\n",
-				    device);
-			}
-
-			if (!nvme_ctrl_is_discovery_ctrl(c)) {
-				fprintf(stderr,
-					"ctrl device %s found, ignoring non discovery controller\n",
-					device);
-
-				nvme_free_ctrl(c);
-				c = NULL;
-				persistent = false;
-			} else {
-				/*
-				 * If the controller device is found it must
-				 * be persistent, and shouldn't be disconnected
-				 * on exit.
-				 */
-				persistent = true;
-				/*
-				 * When --host-traddr/--host-iface are not specified on the
-				 * command line, use the discovery controller's (c) host-
-				 * traddr/host-iface for the connections to controllers
-				 * returned in the Discovery Log Pages. This is essential
-				 * when invoking "connect-all" with --device to reuse an
-				 * existing persistent discovery controller (as is done
-				 * for the udev rules). This ensures that host-traddr/
-				 * host-iface are consistent with the discovery controller (c).
-				 */
-				if (!trcfg.host_traddr)
-					trcfg.host_traddr = (char *)nvme_ctrl_get_host_traddr(c);
-				if (!trcfg.host_iface)
-					trcfg.host_iface = (char *)nvme_ctrl_get_host_iface(c);
-			}
-		} else {
-			/*
-			 * No controller found, fall back to create one.
-			 * But that controller cannot be persistent.
-			 */
-			fprintf(stderr,
-				"ctrl device %s not found%s\n", device,
-				persistent ? ", ignoring --persistent" : "");
-			persistent = false;
-		}
-	}
-	if (!c && !force) {
-		c = lookup_ctrl(h, &trcfg);
-		if (c)
-			persistent = true;
-	}
-	if (!c) {
-		/* No device or non-matching device, create a new controller */
-		ret = nvmf_create_discover_ctrl(ctx, h, &cfg, &trcfg, &c);
-		if (ret) {
-			if (ret != -ENVME_CONNECT_IGNORED)
-				fprintf(stderr,
-					"failed to add controller, error %s\n",
-					nvme_strerror(-ret));
-			goto out_free;
-		}
-	}
-
-	ret = nvmf_discovery(ctx, dctx, connect, c);
-	if (!(persistent || is_persistent_discovery_ctrl(h, c)))
-		nvme_disconnect_ctrl(c);
-	nvme_free_ctrl(c);
+	ret = nvmf_discovery(ctx, dctx, h, connect, force);
 
 out_free:
 	if (dump_config)

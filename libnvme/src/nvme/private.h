@@ -299,6 +299,7 @@ struct nvmf_discovery_ctx {
 
 	/* connfiguration */
 	bool persistent;
+	const char *device;
 	const char *subsysnqn;
 	const char *transport;
 	const char *traddr;

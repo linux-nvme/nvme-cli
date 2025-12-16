@@ -57,6 +57,8 @@ int nvmf_discovery_ctx_parser_next_line_set(struct nvmf_discovery_ctx *dctx,
 			void *user_data));
 int nvmf_discovery_ctx_persistent_set(struct nvmf_discovery_ctx *dctx,
 		bool persistent);
+int nvmf_discovery_ctx_device_set(struct nvmf_discovery_ctx *dctx,
+		const char *device);
 int nvmf_discovery_ctx_subsysnqn_set(struct nvmf_discovery_ctx *dctx,
 		const char *subsysnqn);
 int nvmf_discovery_ctx_transport_set(struct nvmf_discovery_ctx *dctx,
@@ -454,7 +456,7 @@ void nvme_free_uri(struct nvme_fabrics_uri *uri);
 char *nvmf_get_default_trsvcid(const char *transport, bool discovery_ctrl);
 
 int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_discovery_ctx *dctx,
-		bool connect, struct nvme_ctrl *c);
+		struct nvme_host *h, bool connect, bool force);
 int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_discovery_ctx *dctx, const char *hostnqn,
 		const char *hostid, bool connect, bool force);
