@@ -104,20 +104,29 @@ static void print_nbft(struct nbft_info *table)
 int main(int argc, char **argv)
 {
 	struct nbft_info *table = NULL;
-	
+	struct nvme_global_ctx *ctx;
+
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s TABLE\n", argv[0]);
 		return 1;
 	}
 
-	if (nvme_nbft_read(&table, argv[1]) != 0) {
+	ctx = nvme_create_global_ctx(stderr, false);
+	if (!ctx) {
+		fprintf(stderr, "Failed to create global context");
+		return 1;
+	}
+
+	if (nvme_nbft_read(ctx, &table, argv[1]) != 0) {
 		fprintf(stderr, "Error parsing the NBFT table %s: %m\n",
 			argv[1]);
+		nvme_free_global_ctx(ctx);
 		return 2;
 	}
 
 	print_nbft(table);
 
-	nvme_nbft_free(table);
+	nvme_nbft_free(ctx, table);
+	nvme_free_global_ctx(ctx);
 	return 0;
 }
