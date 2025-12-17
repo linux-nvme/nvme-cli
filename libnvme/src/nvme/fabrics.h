@@ -657,6 +657,7 @@ struct nbft_file_entry {
 
 /**
  * nvmf_nbft_read_files() - Read NBFT files from path
+ * @ctx: struct nvme_global_ctx object
  * @path: Path to NBFT files
  * @head: Pointer to store linked list of NBFT file entries
  *
@@ -664,14 +665,16 @@ struct nbft_file_entry {
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_nbft_read_files(char *path, struct nbft_file_entry **head);
+int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
+		struct nbft_file_entry **head);
 
 /**
  * nvmf_nbft_free() - Free NBFT file entry list
+ * @ctx: struct nvme_global_ctx object
  * @head: Head of the NBFT file entry list
  *
  * Frees all memory associated with the NBFT file entry list.
  */
-void nvmf_nbft_free(struct nbft_file_entry *head);
+void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head);
 
 #endif /* _LIBNVME_FABRICS_H */
