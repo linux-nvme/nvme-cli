@@ -429,24 +429,18 @@ void nvme_free_uri(struct nvme_fabrics_uri *uri);
 
 char *nvmf_get_default_trsvcid(const char *transport, bool discovery_ctrl);
 
-int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
-		struct nvme_host *h, bool connect, bool force);
+int nvmf_discovery(struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx, bool connect, bool force);
 int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
-		struct nvmf_context *fctx, const char *hostnqn,
-		const char *hostid, bool connect, bool force);
+		struct nvmf_context *fctx, bool connect, bool force);
 int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
-		struct nvmf_context *fctx, struct nvme_host *h,
-		bool connect, bool force);
+		struct nvmf_context *fctx, bool connect, bool force);
 int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
-		struct nvmf_context *fctx, const char *hostnqn_arg,
-		const char *hostid_arg, const char *hostnqn_sys,
-		const char *hostid_sys, bool connect,
-		struct nvme_fabrics_config *cfg, char *nbft_path);
+		struct nvmf_context *fctx, bool connect, char *nbft_path);
 
-int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
-		struct nvme_host *h);
-int nvmf_connect_config_json(struct nvme_global_ctx *ctx, const char *hostnqn,
-		const char *hostid, const struct nvme_fabrics_config *cfg);
+int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx);
+int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx);
 
 struct nbft_file_entry {
 	struct nbft_file_entry *next;

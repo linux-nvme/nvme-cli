@@ -463,13 +463,10 @@ static int nvme_read_config_checked(struct nvme_global_ctx *ctx,
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 {
 	char *config_file = PATH_NVMF_CONFIG;
-	_cleanup_free_ char *hnqn = NULL;
-	_cleanup_free_ char *hid = NULL;
 	char *context = NULL;
 	nvme_print_flags_t flags;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ struct nvmf_context *fctx = NULL;
-	nvme_host_t h;
 	unsigned int verbose = 0;
 	int ret;
 	char *format = "normal";
@@ -535,24 +532,12 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		return ret;
 	}
 
-	ret = nvme_host_get_ids(ctx, fa.hostnqn, fa.hostid, &hnqn, &hid);
-	if (ret < 0)
-		return ret;
-
-	h = nvme_lookup_host(ctx, hnqn, hid);
-	if (!h) {
-		ret = -ENOMEM;
-		goto out_free;
-	}
-
 	if (device) {
 		if (!strcmp(device, "none"))
 			device = NULL;
 		else if (!strncmp(device, "/dev/", 5))
 			device += 5;
 	}
-	if (fa.hostkey)
-		nvme_host_set_dhchap_key(h, fa.hostkey);
 
 	struct cb_fabrics_data dld = {
 		.flags = flags,
@@ -566,25 +551,21 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	if (!device && !fa.transport && !fa.traddr) {
 		if (!nonbft)
 			ret = nvmf_discovery_nbft(ctx, fctx,
-				fa.hostnqn, fa.hostid, hnqn, hid, connect,
-				&cfg, nbft_path);
+				connect, nbft_path);
 		if (nbft)
 			goto out_free;
 
 		if (json_config)
 			ret = nvmf_discovery_config_json(ctx, fctx,
-				fa.hostnqn, fa.hostid, connect, force);
+				connect, force);
 		if (ret || access(PATH_NVMF_DISC, F_OK))
 			goto out_free;
 
-		ret = nvmf_discovery_config_file(ctx, fctx, h, connect, force);
+		ret = nvmf_discovery_config_file(ctx, fctx, connect, force);
 		goto out_free;
 	}
 
-	if (!fa.trsvcid)
-		fa.trsvcid = nvmf_get_default_trsvcid(fa.transport, true);
-
-	ret = nvmf_discovery(ctx, fctx, h, connect, force);
+	ret = nvmf_discovery(ctx, fctx, connect, force);
 
 out_free:
 	if (dump_config)
@@ -630,7 +611,6 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	unsigned int verbose = 0;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ struct nvmf_context *fctx = NULL;
-	nvme_host_t h;
 	_cleanup_nvme_ctrl_ nvme_ctrl_t c = NULL;
 	int ret;
 	nvme_print_flags_t flags;
@@ -704,22 +684,6 @@ do_connect:
 		return ret;
 	}
 
-	ret = nvme_host_get_ids(ctx, fa.hostnqn, fa.hostid, &hnqn, &hid);
-	if (ret < 0)
-		return ret;
-
-	h = nvme_lookup_host(ctx, hnqn, hid);
-	if (!h)
-		return -ENOMEM;
-	if (fa.hostkey)
-		nvme_host_set_dhchap_key(h, fa.hostkey);
-	if (!fa.trsvcid)
-		fa.trsvcid = nvmf_get_default_trsvcid(fa.transport, false);
-
-	if (config_file)
-		return nvmf_connect_config_json(ctx, fa.hostnqn,
-			fa.hostid, &cfg);
-
 	struct cb_fabrics_data dld = {
 		.flags = flags,
 		.raw = raw,
@@ -729,7 +693,10 @@ do_connect:
 	if (ret)
 		return ret;
 
-	ret = nvmf_connect(ctx, fctx, h);
+	if (config_file)
+		return nvmf_connect_config_json(ctx, fctx);
+
+	ret = nvmf_connect(ctx, fctx);
 	if (ret) {
 		fprintf(stderr, "failed to connected: %s\n",
 			nvme_strerror(ret));
