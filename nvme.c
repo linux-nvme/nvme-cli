@@ -372,7 +372,6 @@ static int parse_args(int argc, char *argv[], const char *desc,
 		return ret;
 
 	log_level = map_log_level(nvme_cfg.verbose, false);
-	nvme_init_default_logging(stderr, log_level, false, false);
 
 	return 0;
 }
