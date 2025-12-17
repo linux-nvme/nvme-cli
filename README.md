@@ -7,9 +7,8 @@ NVM-Express user space tooling for Linux.
 
 ## Build from source
 
-nvme-cli uses meson as build system. There is more than one way to configure and
-build the project in order to mitigate meson dependency on the build
-environment.
+nvme-cli uses meson as its build system. There is more than one way to configure and
+build the project in order to mitigate meson dependency on the build environment.
 
 If you build on a relative modern system, either use meson directly or the
 Makefile wrapper.
@@ -20,30 +19,29 @@ and [muon](https://github.com/annacrombie/muon). Both build tools have only a
 minimal dependency on the build environment. Too easy this step there is a build
 script which helps to setup a build environment.
 
-### nvme-cli dependencies:
+### nvme-cli dependencies (3.x and later):
 
- | Library | Dependency | Notes |
- |---------|------------|-------|
- | libnvme, libnvme-mi| yes | be either installed or included into the build via meson fallback feature |
- | json-c | optional | recommended, without all plugins are disabled and json-c output format is disabled |
+Starting with nvme-cli 3.x, the libnvme library is fully integrated into the nvme-cli source tree. There is no longer any dependency on an external libnvme repository or package. All required libnvme and libnvme-mi code is included and built as part of nvme-cli.
+
+| Library | Dependency | Notes |
+|---------|------------|-------|
+| libnvme, libnvme-mi | integrated | No external dependency, included in nvme-cli |
+| json-c | optional | Recommended; without it, all plugins are disabled and json-c output format is disabled |
 
 
 ### Build with meson
 
 #### Configuring
 
-In case libnvme is not installed on the system, it possible to use meson's
-fallback feature to resolve the dependency.
+#### Configuring
 
-	$ meson setup --force-fallback-for=libnvme .build
-
-If the libnvme is already installed on the system meson is using pkg-config to
-find the dependency. In this case a plain setup call is enough:
+No special configuration is required for libnvme, as it is now part of the
+nvme-cli source tree. Simply run:
 
 	$ meson setup .build
 
-With meson's --wrap-mode argument it's possible to control if the additional
-dependencies should also resolved or not. The options are
+With meson's --wrap-mode argument it's possible to control if additional
+dependencies should be resolved. The options are:
 
 	--wrap-mode {default,nofallback,nodownload,forcefallback,nopromote}
 
@@ -91,7 +89,8 @@ There is a Makefile wrapper for meson for backwards compatibility
 	$ make
 	# make install
 
-Note in this case libnvme needs to be installed by hand first.
+Note: In previous versions, libnvme needed to be installed by hand.
+This is no longer required in nvme-cli 3.x and later.
 
 RPM build support via Makefile that uses meson
 
@@ -211,18 +210,6 @@ File: foo-plugin.c
 After that, you just need to implement the functions you defined in each
 ENTRY, then append the object file name to the meson.build "sources".
 
-## meson tips
-
-In case meson doesn't find libnvme header files (via pkg-config) it 
-will fallback using subprojects.  meson checks out libnvme in 
-subprojects directory as git tree once to the commit level specified 
-in the libnvme.wrap file revision parm.  After this initial checkout,
-the libnvme code level will not change unless explicitly told.  That 
-means if the current branch is updated via git, the subprojects/libnvme
-branch will not updated accordingly.  To update it, either use the 
-normal git operations or the command: 
-
-	$ meson subprojects update
 
 ## Dependency
 
