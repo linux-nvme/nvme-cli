@@ -168,6 +168,12 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 	case 0 ... 1:
 		break;
 	default:
+	case 6:
+		printf("  Form factor					%d\n",
+			log->form_factor);
+		printf("  Die in use bad nand block     %"PRIu64"\n",
+			le64_to_cpu(log->die_in_use_bad_nand_block));
+		fallthrough;
 	case 5:
 		printf("  NVMe Over Pcie Errata Version			%d\n",
 			log->nvme_over_pcie_errate_version);
