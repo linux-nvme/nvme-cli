@@ -748,7 +748,8 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	}
 
 	if (cfg->tls) {
-		ret = __nvme_import_keys_from_config(h, c, &keyring_id, &key_id);
+		ret = __nvme_import_keys_from_config(h, c,
+			&keyring_id, &key_id);
 		if (ret)
 			return ret;
 

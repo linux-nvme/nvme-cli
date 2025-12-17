@@ -9383,6 +9383,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	    "HMAC function to use for key transformation (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
 	const char *nqn = "Host NQN to use for key transformation.";
 
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ unsigned char *raw_secret = NULL;
 	_cleanup_free_ char *hnqn = NULL;
 	unsigned char key[68];
@@ -9413,6 +9414,12 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	ctx = nvme_create_global_ctx(stderr, log_level);
+	if (!ctx) {
+		nvme_show_error("Failed to create global context");
+		return -ENOMEM;
+	}
 
 	if (cfg.hmac > 3) {
 		nvme_show_error("Invalid HMAC identifier %u", cfg.hmac);
@@ -9486,7 +9493,8 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		}
 	}
 
-	err = nvme_gen_dhchap_key(cfg.nqn, cfg.hmac, cfg.key_len, raw_secret, key);
+	err = nvme_gen_dhchap_key(ctx, cfg.nqn, cfg.hmac,
+		cfg.key_len, raw_secret, key);
 	if (err)
 		return err;
 
@@ -9592,7 +9600,8 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 	return 0;
 }
 
-static int append_keyfile(const char *keyring, long id, const char *keyfile)
+static int append_keyfile(struct nvme_global_ctx *ctx, const char *keyring,
+		long id, const char *keyfile)
 {
 	_cleanup_free_ unsigned char *key_data = NULL;
 	_cleanup_free_ char *exported_key = NULL;
@@ -9603,14 +9612,14 @@ static int append_keyfile(const char *keyring, long id, const char *keyfile)
 	long kr_id;
 	char type;
 
-	err = nvme_lookup_keyring(keyring, &kr_id);
+	err = nvme_lookup_keyring(ctx, keyring, &kr_id);
 	if (err) {
 		nvme_show_error("Failed to lookup keyring '%s', %s",
 				keyring, strerror(-err));
 		return err;
 	}
 
-	identity = nvme_describe_key_serial(id);
+	identity = nvme_describe_key_serial(ctx, id);
 	if (!identity) {
 		nvme_show_error("Failed to get identity info");
 		return -EINVAL;
@@ -9621,14 +9630,14 @@ static int append_keyfile(const char *keyring, long id, const char *keyfile)
 		return -EINVAL;
 	}
 
-	err = nvme_read_key(kr_id, id, &key_len, &key_data);
+	err = nvme_read_key(ctx, kr_id, id, &key_len, &key_data);
 	if (err) {
 		nvme_show_error("Failed to read back derive TLS PSK, %s",
 			strerror(-err));
 		return err;
 	}
 
-	err = nvme_export_tls_key_versioned(ver, hmac, key_data,
+	err = nvme_export_tls_key_versioned(ctx, ver, hmac, key_data,
 					    key_len, &exported_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s",
@@ -9677,6 +9686,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 	const char *keyfile = "Update key file with the derive TLS PSK.";
 	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations";
 
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ unsigned char *raw_secret = NULL;
 	_cleanup_free_ char *encoded_key = NULL;
 	_cleanup_free_ char *hnqn = NULL;
@@ -9750,6 +9760,12 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 	if (cfg.hmac == 2)
 		key_len = 48;
 
+	ctx = nvme_create_global_ctx(stderr, log_level);
+	if (!ctx) {
+		nvme_show_error("Failed to create global context");
+		return -ENOMEM;
+	}
+
 	raw_secret = malloc(key_len + 4);
 	if (!raw_secret)
 		return -ENOMEM;
@@ -9777,7 +9793,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 		}
 	}
 
-	err = nvme_export_tls_key(raw_secret, key_len, &encoded_key);
+	err = nvme_export_tls_key(ctx, raw_secret, key_len, &encoded_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s", strerror(-err));
 		return err;
@@ -9786,15 +9802,15 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 
 	if (cfg.insert) {
 		if (cfg.compat)
-			err = nvme_insert_tls_key_compat(cfg.keyring,
-					cfg.keytype, cfg.hostnqn,
-					cfg.subsysnqn, cfg.version,
-					cfg.hmac, raw_secret, key_len, &tls_key);
+			err = nvme_insert_tls_key_compat(ctx, cfg.keyring,
+				cfg.keytype, cfg.hostnqn,
+				cfg.subsysnqn, cfg.version,
+				cfg.hmac, raw_secret, key_len, &tls_key);
 		else
-			err = nvme_insert_tls_key_versioned(cfg.keyring,
-					cfg.keytype, cfg.hostnqn,
-					cfg.subsysnqn, cfg.version,
-					cfg.hmac, raw_secret, key_len, &tls_key);
+			err = nvme_insert_tls_key_versioned(ctx, cfg.keyring,
+				cfg.keytype, cfg.hostnqn,
+				cfg.subsysnqn, cfg.version,
+				cfg.hmac, raw_secret, key_len, &tls_key);
 		if (err) {
 			nvme_show_error("Failed to insert key, error %d", err);
 			return err;
@@ -9803,7 +9819,8 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
 
 		if (cfg.keyfile) {
-			err = append_keyfile(cfg.keyring, tls_key, cfg.keyfile);
+			err = append_keyfile(ctx, cfg.keyring,
+				tls_key, cfg.keyfile);
 			if (err)
 				return err;
 		}
@@ -9825,6 +9842,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 	const char *keyfile = "Update key file with the derive TLS PSK.";
 	const char *compat = "Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.";
 
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ unsigned char *decoded_key = NULL;
 	_cleanup_free_ char *hnqn = NULL;
 	int decoded_len, err = 0;
@@ -9879,7 +9897,14 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 		return -EINVAL;
 	}
 
-	err = nvme_import_tls_key(cfg.keydata, &decoded_len, &hmac, &decoded_key);
+	ctx = nvme_create_global_ctx(stderr, log_level);
+	if (!ctx) {
+		nvme_show_error("Failed to create global context");
+		return -ENOMEM;
+	}
+
+	err = nvme_import_tls_key(ctx, cfg.keydata, &decoded_len,
+		&hmac, &decoded_key);
 	if (err) {
 		nvme_show_error("Key decoding failed, error %d\n", err);
 		return err;
@@ -9900,17 +9925,17 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.insert) {
 		if (cfg.compat)
-			err = nvme_insert_tls_key_compat(cfg.keyring,
-					cfg.keytype, cfg.hostnqn,
-					cfg.subsysnqn, cfg.identity,
-					hmac, decoded_key, decoded_len,
-					&tls_key);
+			err = nvme_insert_tls_key_compat(ctx, cfg.keyring,
+				cfg.keytype, cfg.hostnqn,
+				cfg.subsysnqn, cfg.identity,
+				hmac, decoded_key, decoded_len,
+				&tls_key);
 		else
-			err = nvme_insert_tls_key_versioned(cfg.keyring,
-					cfg.keytype, cfg.hostnqn,
-					cfg.subsysnqn, cfg.identity,
-					hmac, decoded_key, decoded_len,
-					&tls_key);
+			err = nvme_insert_tls_key_versioned(ctx, cfg.keyring,
+				cfg.keytype, cfg.hostnqn,
+				cfg.subsysnqn, cfg.identity,
+				hmac, decoded_key, decoded_len,
+				&tls_key);
 		if (err) {
 			nvme_show_error("Failed to insert key, error %d", err);
 			return err;
@@ -9918,7 +9943,8 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 		printf("Inserted TLS key %08x\n", (unsigned int)tls_key);
 
 		if (cfg.keyfile) {
-			err = append_keyfile(cfg.keyring, tls_key, cfg.keyfile);
+			err = append_keyfile(ctx, cfg.keyring,
+				tls_key, cfg.keyfile);
 			if (err)
 				return err;
 		}
@@ -9926,15 +9952,15 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 		_cleanup_free_ char *tls_id = NULL;
 
 		if (cfg.compat)
-			err = nvme_generate_tls_key_identity_compat(cfg.hostnqn,
-					cfg.subsysnqn, cfg.identity,
-					hmac, decoded_key, decoded_len,
-					&tls_id);
+			err = nvme_generate_tls_key_identity_compat(ctx,
+				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
+				hmac, decoded_key, decoded_len,
+				&tls_id);
 		else
-			err = nvme_generate_tls_key_identity(cfg.hostnqn,
-					cfg.subsysnqn, cfg.identity,
-					hmac, decoded_key, decoded_len,
-					&tls_id);
+			err = nvme_generate_tls_key_identity(ctx,
+				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
+				hmac, decoded_key, decoded_len,
+				&tls_id);
 		if (err) {
 			nvme_show_error("Failed to generate identity, error %d",
 					err);
@@ -9945,8 +9971,8 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 	return 0;
 }
 
-static void __scan_tls_key(long keyring_id, long key_id,
-			   char *desc, int desc_len, void *data)
+static void __scan_tls_key(struct nvme_global_ctx *ctx, long keyring_id,
+		long key_id, char *desc, int desc_len, void *data)
 {
 	FILE *fd = data;
 	_cleanup_free_ unsigned char *key_data = NULL;
@@ -9956,21 +9982,22 @@ static void __scan_tls_key(long keyring_id, long key_id,
 	char type;
 	int err;
 
-	err = nvme_read_key(keyring_id, key_id, &key_len, &key_data);
+	err = nvme_read_key(ctx, keyring_id, key_id, &key_len, &key_data);
 	if (err)
 		return;
 
 	if (sscanf(desc, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3)
 		return;
 
-	err = nvme_export_tls_key_versioned(ver, hmac, key_data, key_len,
-					    &encoded_key);
+	err = nvme_export_tls_key_versioned(ctx, ver, hmac, key_data, key_len,
+		&encoded_key);
 	if (err)
 		return;
 	fprintf(fd, "%s %s\n", desc, encoded_key);
 }
 
-static int import_key(const char *keyring, FILE *fd)
+static int import_key(struct nvme_global_ctx *ctx, const char *keyring,
+		FILE *fd)
 {
 	long keyring_id, key;
 	char tls_str[512];
@@ -9980,7 +10007,7 @@ static int import_key(const char *keyring, FILE *fd)
 	int linenum = -1, key_len;
 	int err;
 
-	err = nvme_lookup_keyring(keyring, &keyring_id);
+	err = nvme_lookup_keyring(ctx, keyring, &keyring_id);
 	if (err) {
 		nvme_show_error("Invalid keyring '%s'", keyring);
 		return err;
@@ -9997,13 +10024,13 @@ static int import_key(const char *keyring, FILE *fd)
 		*tls_key = '\0';
 		tls_key++;
 		tls_key[strcspn(tls_key, "\n")] = 0;
-		err = nvme_import_tls_key(tls_key, &key_len, &hmac, &psk);
+		err = nvme_import_tls_key(ctx, tls_key, &key_len, &hmac, &psk);
 		if (err) {
 			nvme_show_error("Failed to import key in line %d",
 					linenum);
 			continue;
 		}
-		err = nvme_update_key(keyring_id, "psk", tls_str,
+		err = nvme_update_key(ctx, keyring_id, "psk", tls_str,
 				psk, key_len, &key);
 		if (err)
 			continue;
@@ -10024,6 +10051,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 	const char *export = "Export all keys from the keyring.";
 	const char *revoke = "Revoke key from the keyring.";
 
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_file_ FILE *fd = NULL;
 	mode_t old_umask = 0;
 	int cnt, err = 0;
@@ -10058,6 +10086,12 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return err;
 
+	ctx = nvme_create_global_ctx(stderr, log_level);
+	if (!ctx) {
+		nvme_show_error("Failed to create global context");
+		return -ENOMEM;
+	}
+
 	if (cfg.keyfile) {
 		const char *mode;
 
@@ -10090,7 +10124,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		nvme_show_error("Must specify either --import, --export or --revoke");
 		return -EINVAL;
 	} else if (cfg.export) {
-		err = nvme_scan_tls_keys(cfg.keyring, __scan_tls_key, fd);
+		err = nvme_scan_tls_keys(ctx, cfg.keyring, __scan_tls_key, fd);
 		if (err < 0) {
 			nvme_show_error("Export of TLS keys failed with '%s'",
 				nvme_strerror(err));
@@ -10102,7 +10136,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 
 		return 0;
 	} else if (cfg.import) {
-		err = import_key(cfg.keyring, fd);
+		err = import_key(ctx, cfg.keyring, fd);
 		if (err) {
 			nvme_show_error("Import of TLS keys failed with '%s'",
 					nvme_strerror(err));
@@ -10112,7 +10146,8 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		if (argconfig_parse_seen(opts, "verbose"))
 			printf("importing from %s\n", cfg.keyfile);
 	} else {
-		err = nvme_revoke_tls_key(cfg.keyring, cfg.keytype, cfg.revoke);
+		err = nvme_revoke_tls_key(ctx, cfg.keyring, cfg.keytype,
+			cfg.revoke);
 		if (err) {
 			nvme_show_error("Failed to revoke key '%s'",
 					nvme_strerror(err));
