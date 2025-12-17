@@ -2045,7 +2045,7 @@ static nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct fabric_args *trcfg)
 	return NULL;
 }
 
-static int lookup_host(struct nvme_global_ctx *ctx,
+static int lookup_or_create_host(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, struct nvme_host **host)
 {
 	_cleanup_free_ char *hnqn = NULL;
@@ -2058,9 +2058,14 @@ static int lookup_host(struct nvme_global_ctx *ctx,
 		return err;
 
 	h = nvme_lookup_host(ctx, hnqn, hid);
-	if (!h)
+	if (h)
+		goto out;
+
+	err = nvme_create_host(ctx, fctx->hostnqn, fctx->hostid, &h);
+	if (err)
 		return -ENOMEM;
 
+out:
 	*host = h;
 
 	return 0;
@@ -2437,7 +2442,7 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 	struct nvme_ctrl *c;
 	int ret = 0, err;
 
-	err = lookup_host(ctx, fctx, &h);
+	err = lookup_or_create_host(ctx, fctx, &h);
 	if (err)
 		return err;
 
@@ -2486,7 +2491,7 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 	nvme_ctrl_t c, _c;
 	int ret = 0, err;
 
-	err = lookup_host(ctx, fctx, &h);
+	err = lookup_or_create_host(ctx, fctx, &h);
 	if (err)
 		return err;
 
@@ -2542,7 +2547,7 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 	struct nvme_ctrl *c;
 	int err;
 
-	err = lookup_host(ctx, fctx, &h);
+	err = lookup_or_create_host(ctx, fctx, &h);
 	if (err)
 		return err;
 
@@ -2856,7 +2861,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 	struct nvme_host *h;
 	int ret, rr, i;
 
-	ret = lookup_host(ctx, fctx, &h);
+	ret = lookup_or_create_host(ctx, fctx, &h);
 	if (ret)
 		return ret;
 
@@ -2899,8 +2904,11 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 
 		h = nvme_lookup_host(ctx, hostnqn, hostid);
 		if (!h) {
-			ret = -ENOENT;
-			goto out_free;
+			ret = nvme_create_host(ctx, hostnqn, hostid, &h);
+			if (ret) {
+				ret = -ENOENT;
+				goto out_free;
+			}
 		}
 
 		/* Subsystem Namespace Descriptor List */
@@ -3154,7 +3162,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 	struct nvme_host *h;
 	int ret;
 
-	ret = lookup_host(ctx, fctx, &h);
+	ret = lookup_or_create_host(ctx, fctx, &h);
 	if (ret)
 		return ret;
 
@@ -3289,7 +3297,7 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 	struct nvme_ctrl *c;
 	int err;
 
-	err = lookup_host(ctx, fctx, &h);
+	err = lookup_or_create_host(ctx, fctx, &h);
 	if (err)
 		return err;
 
