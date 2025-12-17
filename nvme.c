@@ -11004,6 +11004,40 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 	return err;
 }
 
+static int top(int argc, char **argv, struct command *acmd,
+	       struct plugin *plugin)
+{
+	const char *desc = "Monitor the topology\n";
+	struct timespec ts = {
+		.tv_sec = 3,
+	};
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	while (true) {
+		err = system("clear");
+		if (err)
+			break;
+		if (argc > 2)
+			err = handle_plugin(argc - 1, &argv[1],
+					    nvme.extensions);
+		else
+			err = show_topology_cmd(argc, argv, acmd, plugin);
+		if (err)
+			break;
+		err = pselect(0, NULL, NULL, NULL, &ts, NULL);
+		if (err < 0)
+			break;
+	}
+
+	return err;
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;
