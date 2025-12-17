@@ -1043,12 +1043,11 @@ static int nvme_ctrl_scan_path(struct nvme_global_ctx *ctx, struct nvme_ctrl *c,
 struct nvme_transport_handle *nvme_ctrl_get_transport_handle(nvme_ctrl_t c)
 {
 	if (!c->hdl) {
-		struct nvme_global_ctx *ctx = ctx_from_ctrl(c);
 		int err;
 
-		err = nvme_open(ctx, c->name, &c->hdl);
+		err = nvme_open(c->ctx, c->name, &c->hdl);
 		if (err)
-			nvme_msg(ctx, LOG_ERR,
+			nvme_msg(c->ctx, LOG_ERR,
 				 "Failed to open ctrl %s, errno %d\n",
 				 c->name, err);
 	}
@@ -1104,7 +1103,7 @@ char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
 	p += strlen("src_addr=");
 	l = strcspn(p, ",%"); /* % to eliminate IPv6 scope (if present) */
 	if (l >= src_addr_len) {
-		nvme_msg(ctx_from_ctrl(c), LOG_ERR,
+		nvme_msg(c->ctx, LOG_ERR,
 			 "Buffer for src_addr is too small (%zu must be > %zu)\n",
 			 src_addr_len, l);
 		return NULL;
@@ -1514,7 +1513,7 @@ static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct nvme_ctrl *c, struct 
 	 * 100% positive match. Regardless, let's be optimistic
 	 * and assume that we have a match.
 	 */
-	nvme_msg(ctx_from_ctrl(c), LOG_DEBUG,
+	nvme_msg(c->ctx, LOG_DEBUG,
 		 "Not enough data, but assume %s matches candidate's host_traddr: %s\n",
 		 nvme_ctrl_get_name(c), candidate->host_traddr);
 
@@ -1554,7 +1553,7 @@ static bool _tcp_ctrl_match_host_iface_no_src_addr(struct nvme_ctrl *c, struct c
 	 * 100% positive match. Regardless, let's be optimistic
 	 * and assume that we have a match.
 	 */
-	nvme_msg(ctx_from_ctrl(c), LOG_DEBUG,
+	nvme_msg(c->ctx, LOG_DEBUG,
 		 "Not enough data, but assume %s matches candidate's host_iface: %s\n",
 		 nvme_ctrl_get_name(c), candidate->host_iface);
 
@@ -2358,12 +2357,11 @@ static int nvme_bytes_to_lba(nvme_ns_t n, off_t offset, size_t count,
 struct nvme_transport_handle *nvme_ns_get_transport_handle(nvme_ns_t n)
 {
 	if (!n->hdl) {
-		struct nvme_global_ctx *ctx = ctx_from_ns(n);
 		int err;
 
-		err = nvme_open(ctx, n->name, &n->hdl);
+		err = nvme_open(n->ctx, n->name, &n->hdl);
 		if (err)
-			nvme_msg(ctx, LOG_ERR,
+			nvme_msg(n->ctx, LOG_ERR,
 				 "Failed to open ns %s, error %d\n",
 				 n->name, err);
 	}

@@ -439,11 +439,6 @@ __nvme_msg(struct nvme_global_ctx *ctx, int level, const char *func, const char 
 #define nvme_msg(ctx, level, format, ...)					\
 	__nvme_msg(ctx, level, __nvme_log_func, format, ##__VA_ARGS__)
 
-#define ctx_from_ctrl(c) ((c)->s && (c)->s->h ? (c)->s->h->ctx : NULL)
-#define ctx_from_ns(n) ((n)->s && (n)->s->h ? (n)->s->h->ctx : \
-			 (n)->c && (n)->c->s && (n)->c->s->h ? (n)->c->s->h->ctx : \
-			 NULL)
-
 /* mi internal headers */
 
 /* internal transport API */

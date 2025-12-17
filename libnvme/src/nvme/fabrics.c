@@ -1246,7 +1246,7 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 static int nvme_discovery_log(const struct nvme_get_discovery_args *args,
 			      struct nvmf_discovery_log **logp)
 {
-	struct nvme_global_ctx *ctx = ctx_from_ctrl(args->c);
+	struct nvme_global_ctx *ctx = args->c->ctx;
 	struct nvmf_discovery_log *log;
 	int retries = 0;
 	int err;
