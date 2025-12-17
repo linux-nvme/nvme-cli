@@ -543,7 +543,7 @@ void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 #define SECTOR_SHIFT	9
 
 int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
-				   long *keyring_id, long *key_id);
+		long *keyring_id, long *key_id);
 
 static inline char *xstrdup(const char *s)
 {
