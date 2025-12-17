@@ -81,12 +81,10 @@ LIBNVME_2_0 {
 		nvme_get_attr;
 		nvme_get_ctrl_attr;
 		nvme_get_ctrl_telemetry;
-		nvme_get_debug;
 		nvme_get_directive_receive_length;
 		nvme_get_feature_length;
 		nvme_get_host_telemetry;
 		nvme_get_log;
-		nvme_get_logging_level;
 		nvme_get_logical_block_size;
 		nvme_get_new_host_telemetry;
 		nvme_get_ns_attr;
@@ -118,7 +116,6 @@ LIBNVME_2_0 {
 		nvme_init_copy_range_f3;
 		nvme_init_ctrl;
 		nvme_init_ctrl_list;
-		nvme_init_default_logging;
 		nvme_init_dsm_range;
 		nvme_init_logging;
 		nvme_insert_tls_key;
@@ -230,7 +227,6 @@ LIBNVME_2_0 {
 		nvme_scan_tls_keys;
 		nvme_scan_topology;
 		nvme_set_application;
-		nvme_set_debug;
 		nvme_set_dry_run;
 		nvme_set_etdas;
 		nvme_set_keyring;
