@@ -2214,7 +2214,8 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-char *nvmf_get_default_trsvcid(const char *transport, bool discovery_ctrl)
+const char *nvmf_get_default_trsvcid(const char *transport,
+		bool discovery_ctrl)
 {
 	if (!transport)
 		return NULL;
