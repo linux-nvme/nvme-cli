@@ -559,7 +559,6 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		return ret;
 
 	log_level = map_log_level(verbose, false /* quiet */);
-	nvme_init_default_logging(stderr, log_level, false, false);
 
 	ret = validate_output_format(format, &flags);
 	if (ret < 0)
