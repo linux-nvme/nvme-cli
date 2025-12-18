@@ -4268,6 +4268,27 @@ free_mem:
 	return err;
 }
 
+static int wdc_get_default_telemetry_da(struct nvme_transport_handle *hdl,
+					 int *data_area)
+{
+	struct nvme_id_ctrl ctrl;
+	int err;
+
+	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
+	err = nvme_identify_ctrl(hdl, &ctrl);
+	if (err) {
+		fprintf(stderr, "ERROR: WDC: nvme_identify_ctrl() failed 0x%x\n", err);
+		return err;
+	}
+
+	if (ctrl.lpa & 0x40)
+		*data_area = 4;
+	else
+		*data_area = 3;
+
+	return 0;
+}
+
 static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 				  struct plugin *plugin)
 {
@@ -4451,9 +4472,11 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
 		if (!wdc_is_sn861(device_id)) {
-			/* Set the default DA to 3 if not specified */
-			if (!telemetry_data_area)
-				telemetry_data_area = 3;
+			if (wdc_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+				fprintf(stderr, "%s: Error determining default telemetry data area\n",
+					__func__);
+				return -EINVAL;
+			}
 
 			ret = wdc_do_cap_diag(ctx, hdl, f, xfer_size,
 					telemetry_type, telemetry_data_area);
@@ -4491,8 +4514,11 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	if ((capabilities & WDC_DRIVE_CAP_DUI) == WDC_DRIVE_CAP_DUI) {
 		if ((telemetry_type == WDC_TELEMETRY_TYPE_HOST) ||
 			(telemetry_type == WDC_TELEMETRY_TYPE_CONTROLLER)) {
-			if (!telemetry_data_area)
-				telemetry_data_area = 3;       /* Set the default DA to 3 if not specified */
+			if (wdc_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+				fprintf(stderr, "%s: Error determining default telemetry data area\n",
+					__func__);
+				return -EINVAL;
+			}
 			/* Get the desired telemetry log page */
 			ret = wdc_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
 					telemetry_type, telemetry_data_area);
@@ -4514,9 +4540,11 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA) {
 		if ((telemetry_type == WDC_TELEMETRY_TYPE_HOST) ||
 			(telemetry_type == WDC_TELEMETRY_TYPE_CONTROLLER)) {
-			if (!telemetry_data_area)
-				telemetry_data_area = 3;       /* Set the default DA to 3 if not specified */
-			/* Get the desired telemetry log page */
+			if (wdc_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+				fprintf(stderr, "%s: Error determining default telemetry data area\n",
+					__func__);
+				return -EINVAL;
+			}
 			ret = wdc_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
 					telemetry_type, telemetry_data_area);
 			goto out;

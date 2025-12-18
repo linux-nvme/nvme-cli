@@ -281,6 +281,27 @@ out:
 	return ret;
 }
 
+static int sndk_get_default_telemetry_da(struct nvme_transport_handle *hdl,
+					 int *data_area)
+{
+	struct nvme_id_ctrl ctrl;
+	int err;
+
+	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
+	err = nvme_identify_ctrl(hdl, &ctrl);
+	if (err) {
+		fprintf(stderr, "ERROR: SNDK: nvme_identify_ctrl() failed 0x%x\n", err);
+		return err;
+	}
+
+	if (ctrl.lpa & 0x40)
+		*data_area = 4;
+	else
+		*data_area = 3;
+
+	return 0;
+}
+
 static int sndk_vs_internal_fw_log(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin)
@@ -423,9 +444,11 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	/* Supported through WDC plugin for non-telemetry */
 	if ((capabilities & SNDK_DRIVE_CAP_INTERNAL_LOG) &&
 	    (telemetry_type != SNDK_TELEMETRY_TYPE_NONE)) {
-		/* Set the default DA to 3 if not specified */
-		if (!telemetry_data_area)
-			telemetry_data_area = 3;
+		if (sndk_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+			fprintf(stderr, "%s: Error determining default telemetry data area\n",
+				__func__);
+			return -EINVAL;
+		}
 
 		ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
 				telemetry_type, telemetry_data_area);
@@ -435,9 +458,11 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	if (capabilities & SNDK_DRIVE_CAP_UDUI) {
 		if ((telemetry_type == SNDK_TELEMETRY_TYPE_HOST) ||
 		    (telemetry_type == SNDK_TELEMETRY_TYPE_CONTROLLER)) {
-			/* Set the default DA to 3 if not specified */
-			if (!telemetry_data_area)
-				telemetry_data_area = 3;
+			if (sndk_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+				fprintf(stderr, "%s: Error determining default telemetry data area\n",
+					__func__);
+				return -EINVAL;
+			}
 
 			ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
 					telemetry_type, telemetry_data_area);
