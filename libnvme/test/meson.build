@@ -12,16 +12,22 @@
 main = executable(
     'main-test',
     ['test.c'],
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 if cxx_available
     cpp = executable(
         'test-cpp',
         ['cpp.cc'],
-        dependencies: [libnvme_dep, config_dep],
-        include_directories: [incdir, ]
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
     )
 
     test('libnvme - cpp-dump', cpp)
@@ -29,8 +35,11 @@ if cxx_available
     misc = executable(
         'test-misc',
         ['misc.cc'],
-        dependencies: [libnvme_dep, config_dep],
-        include_directories: [incdir, ]
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
     )
     test('libnvme - cpp-misc', misc)
 
@@ -39,22 +48,31 @@ endif
 register = executable(
     'test-register',
     ['register.c'],
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 zns = executable(
     'test-zns',
     ['zns.c'],
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 mi = executable(
     'test-mi',
     ['mi.c', 'utils.c'],
-    dependencies: libnvme_test_dep,
-    include_directories: [incdir, ]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_test_dep,
+    ],
 )
 
 test('libnvme - mi', mi)
@@ -62,8 +80,11 @@ test('libnvme - mi', mi)
 mi_mctp = executable(
     'test-mi-mctp',
     ['mi-mctp.c', 'utils.c'],
-    dependencies: libnvme_test_dep,
-    include_directories: [incdir, ],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_test_dep,
+    ],
 )
 
 test('libnvme - mi-mctp', mi_mctp)
@@ -71,8 +92,11 @@ test('libnvme - mi-mctp', mi_mctp)
 uuid = executable(
     'test-uuid',
     ['uuid.c'],
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 test('libnvme - uuid', uuid)
@@ -80,8 +104,11 @@ test('libnvme - uuid', uuid)
 uriparser = executable(
     'test-uriparser',
     ['uriparser.c'],
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 test('libnvme - uriparser', uriparser)
@@ -100,8 +127,11 @@ if conf.get('HAVE_NETDB')
     tree = executable(
         'tree',
         ['tree.c'],
-        dependencies: [libnvme_dep, config_dep],
-        include_directories: [incdir, ],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
         link_with: mock_ifaddrs,
     )
 
@@ -110,8 +140,11 @@ if conf.get('HAVE_NETDB')
     test_util = executable(
         'test-util',
         ['test-util.c'],
-        dependencies: [libnvme_dep, config_dep],
-        include_directories: [incdir, ]
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
     )
     test('libnvme - util', test_util)
 endif
@@ -119,8 +152,11 @@ endif
 psk = executable(
     'test-psk',
     ['psk.c'],
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 test('libnvme - psk', psk)

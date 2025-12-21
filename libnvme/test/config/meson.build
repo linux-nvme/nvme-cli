@@ -15,7 +15,6 @@ if diff.found()
         'test-config-dump',
         ['config-dump.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir, ],
     )
 
     config_data = [
@@ -44,7 +43,6 @@ if diff.found()
         'test-hostnqn-order',
         ['hostnqn-order.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir, ],
     )
 
     test(
@@ -64,7 +62,6 @@ if diff.found()
         'test-psk-json',
         ['psk-json.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir, ],
     )
 
     config_data = [

@@ -14,8 +14,12 @@ mock_conf.set(
 mock_ioctl = library(
     'mock-ioctl',
     ['mock.c', 'util.c'],
-    include_directories: [incdir, ],
-    dependencies: [libnvme_dep, dl_dep, config_dep],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+        dl_dep,
+    ],
     c_args: ['-DHAVE_GLIBC_IOCTL=' + (mock_conf.get('HAVE_GLIBC_IOCTL') ? '1' : '0')],
 )
 
@@ -32,8 +36,11 @@ mock_ioctl_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
 ana = executable(
     'test-ana',
     'ana.c',
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
     link_with: mock_ioctl,
 )
 test('libnvme - ana', ana, env: mock_ioctl_env)
@@ -41,8 +48,11 @@ test('libnvme - ana', ana, env: mock_ioctl_env)
 discovery = executable(
     'test-discovery',
     'discovery.c',
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
     link_with: mock_ioctl,
 )
 test('libnvme - discovery', discovery, env: mock_ioctl_env)
@@ -50,8 +60,11 @@ test('libnvme - discovery', discovery, env: mock_ioctl_env)
 features = executable(
     'test-features',
     'features.c',
-    include_directories: [incdir, ],
-    dependencies: [libnvme_dep, config_dep],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
     link_with: mock_ioctl,
 )
 test('libnvme - features', features, env: mock_ioctl_env)
@@ -59,8 +72,11 @@ test('libnvme - features', features, env: mock_ioctl_env)
 identify = executable(
     'test-identify',
     'identify.c',
-    include_directories: [incdir, ],
-    dependencies: [libnvme_dep, config_dep],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
     link_with: mock_ioctl,
 )
 test('libnvme - identify', identify, env: mock_ioctl_env)
@@ -68,8 +84,11 @@ test('libnvme - identify', identify, env: mock_ioctl_env)
 logs = executable(
     'test-logs',
     'logs.c',
-    include_directories: [incdir, ],
-    dependencies: [libnvme_dep, config_dep],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
     link_with: mock_ioctl,
 )
 test('libnvme - logs', logs, env: mock_ioctl_env)
@@ -77,8 +96,11 @@ test('libnvme - logs', logs, env: mock_ioctl_env)
 zns = executable(
     'test-zns',
     'zns.c',
-    include_directories: [incdir, ],
-    dependencies: [libnvme_dep, config_dep],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
     link_with: mock_ioctl,
 )
 test('libnvme - zns', zns, env: mock_ioctl_env)
@@ -86,8 +108,11 @@ test('libnvme - zns', zns, env: mock_ioctl_env)
 misc = executable(
     'test-misc',
     'misc.c',
-    include_directories: [incdir, ],
-    dependencies: [libnvme_dep, config_dep],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
     link_with: mock_ioctl,
 )
 test('libnvme - misc', misc, env: mock_ioctl_env)

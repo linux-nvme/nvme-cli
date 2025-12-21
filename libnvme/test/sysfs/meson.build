@@ -11,7 +11,6 @@ if diff.found()
         'libnvme - test-tree-dump',
         ['tree-dump.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir, ],
     )
 
     tree_data = [

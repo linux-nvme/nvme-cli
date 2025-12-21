@@ -34,8 +34,11 @@ tables_bad = [
 nbft_dump = executable(
     'nbft-dump',
     ['nbft-dump.c'],
-    dependencies: [libnvme_dep, config_dep],
-    include_directories: [incdir, ]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 

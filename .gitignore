@@ -17,4 +17,5 @@ tests/nvmetests
 tests/*.pyc
 
 .build
+.build-ci
 .cache
