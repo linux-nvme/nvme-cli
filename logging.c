@@ -27,6 +27,12 @@ struct submit_data {
 int log_level;
 static struct submit_data sb;
 
+bool is_printable_at_level(int level)
+{
+	return ((log_level >= level) &&
+		(strcmp(nvme_cfg.output_format, "normal") == 0));
+}
+
 int map_log_level(int verbose, bool quiet)
 {
 	int log_level;
