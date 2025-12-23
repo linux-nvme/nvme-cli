@@ -7,7 +7,6 @@ sources += [
   'plugins/dera/dera-nvme.c',
   'plugins/fdp/fdp.c',
   'plugins/huawei/huawei-nvme.c',
-  'plugins/ibm/ibm-nvme.c',
   'plugins/innogrit/innogrit-nvme.c',
   'plugins/inspur/inspur-nvme.c',
   'plugins/intel/intel-nvme.c',
@@ -30,6 +29,7 @@ sources += [
   'plugins/wdc/wdc-utils.c',
   'plugins/ymtc/ymtc-nvme.c',
   'plugins/zns/zns.c',
+  'plugins/twsc/twsc-nvme.c',
 ]
 
 subdir('feat')
