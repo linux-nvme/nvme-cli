@@ -97,13 +97,25 @@ nvme_host_t nvme_next_host(struct nvme_global_ctx *ctx, nvme_host_t h);
 struct nvme_global_ctx *nvme_host_get_global_ctx(nvme_host_t h);
 
 /**
+ * nvme_create_host() - Lookup nvme_host_t object
+ * @ctx:	struct nvme_global_ctx object
+ * @hostnqn:	Host NQN
+ * @hostid:	Host ID
+ * @host:	Newly allocated host object
+ *
+ * Create nvme_host_t object based on @hostnqn and @hostid.
+ *
+ * Return: 0 on success or negative error code otherwise
+ */
+int nvme_create_host(struct nvme_global_ctx *ctx, const char *hostnqn,
+			     const char *hostid, struct nvme_host **host);
+/**
  * nvme_lookup_host() - Lookup nvme_host_t object
  * @ctx:	struct nvme_global_ctx object
  * @hostnqn:	Host NQN
  * @hostid:	Host ID
  *
- * Lookup a nvme_host_t object based on @hostnqn and @hostid
- * or create one if not found.
+ * Lookup a nvme_host_t object based on @hostnqn and @hostid.
  *
  * Return: &nvme_host_t object
  */

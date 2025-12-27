@@ -732,7 +732,8 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	ctrlkey = nvme_ctrl_get_dhchap_key(c);
 
 	if (cfg->tls) {
-		ret = __nvme_import_keys_from_config(h, c, &keyring_id, &key_id);
+		ret = __nvme_import_keys_from_config(h, c,
+			&keyring_id, &key_id);
 		if (ret)
 			return ret;
 
@@ -2045,7 +2046,7 @@ static nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct fabric_args *trcfg)
 	return NULL;
 }
 
-static int lookup_host(struct nvme_global_ctx *ctx,
+static int lookup_or_create_host(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, struct nvme_host **host)
 {
 	_cleanup_free_ char *hnqn = NULL;
@@ -2058,9 +2059,14 @@ static int lookup_host(struct nvme_global_ctx *ctx,
 		return err;
 
 	h = nvme_lookup_host(ctx, hnqn, hid);
-	if (!h)
+	if (h)
+		goto out;
+
+	err = nvme_create_host(ctx, fctx->hostnqn, fctx->hostid, &h);
+	if (err)
 		return -ENOMEM;
 
+out:
 	*host = h;
 
 	return 0;
@@ -2437,7 +2443,7 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 	struct nvme_ctrl *c;
 	int ret = 0, err;
 
-	err = lookup_host(ctx, fctx, &h);
+	err = lookup_or_create_host(ctx, fctx, &h);
 	if (err)
 		return err;
 
@@ -2486,7 +2492,7 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 	nvme_ctrl_t c, _c;
 	int ret = 0, err;
 
-	err = lookup_host(ctx, fctx, &h);
+	err = lookup_or_create_host(ctx, fctx, &h);
 	if (err)
 		return err;
 
@@ -2542,7 +2548,7 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 	struct nvme_ctrl *c;
 	int err;
 
-	err = lookup_host(ctx, fctx, &h);
+	err = lookup_or_create_host(ctx, fctx, &h);
 	if (err)
 		return err;
 
@@ -2600,7 +2606,8 @@ static int nbft_filter(const struct dirent *dent)
 	return !fnmatch(NBFT_SYSFS_FILENAME, dent->d_name, FNM_PATHNAME);
 }
 
-int nvmf_nbft_read_files(char *path, struct nbft_file_entry **head)
+int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
+		struct nbft_file_entry **head)
 {
 	struct nbft_file_entry *entry = NULL;
 	struct nbft_info *nbft;
@@ -2616,7 +2623,7 @@ int nvmf_nbft_read_files(char *path, struct nbft_file_entry **head)
 		snprintf(filename, sizeof(filename), "%s/%s", path,
 			dent[i]->d_name);
 
-		ret = nvme_nbft_read(&nbft, filename);
+		ret = nvme_nbft_read(ctx, &nbft, filename);
 		if (!ret) {
 			struct nbft_file_entry *new;
 
@@ -2638,12 +2645,12 @@ int nvmf_nbft_read_files(char *path, struct nbft_file_entry **head)
 	return 0;
 }
 
-void nvmf_nbft_free(struct nbft_file_entry *head)
+void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
 {
 	while (head) {
 		struct nbft_file_entry *next = head->next;
 
-		nvme_nbft_free(head->nbft);
+		nvme_nbft_free(ctx, head->nbft);
 		free(head);
 
 		head = next;
@@ -2856,7 +2863,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 	struct nvme_host *h;
 	int ret, rr, i;
 
-	ret = lookup_host(ctx, fctx, &h);
+	ret = lookup_or_create_host(ctx, fctx, &h);
 	if (ret)
 		return ret;
 
@@ -2868,7 +2875,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 		/* TODO: print discovery-type info from NBFT tables */
 		return 0;
 
-	ret = nvmf_nbft_read_files(nbft_path, &entry);
+	ret = nvmf_nbft_read_files(ctx, nbft_path, &entry);
 	if (ret) {
 		if (ret != -ENOENT)
 			nvme_msg(ctx, LOG_ERR,
@@ -2899,8 +2906,11 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 
 		h = nvme_lookup_host(ctx, hostnqn, hostid);
 		if (!h) {
-			ret = -ENOENT;
-			goto out_free;
+			ret = nvme_create_host(ctx, hostnqn, hostid, &h);
+			if (ret) {
+				ret = -ENOENT;
+				goto out_free;
+			}
 		}
 
 		/* Subsystem Namespace Descriptor List */
@@ -3058,7 +3068,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 		}
 	}
 out_free:
-	nvmf_nbft_free(entry);
+	nvmf_nbft_free(ctx, entry);
 	return ret;
 }
 
@@ -3154,7 +3164,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 	struct nvme_host *h;
 	int ret;
 
-	ret = lookup_host(ctx, fctx, &h);
+	ret = lookup_or_create_host(ctx, fctx, &h);
 	if (ret)
 		return ret;
 
@@ -3289,7 +3299,7 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 	struct nvme_ctrl *c;
 	int err;
 
-	err = lookup_host(ctx, fctx, &h);
+	err = lookup_or_create_host(ctx, fctx, &h);
 	if (err)
 		return err;
 

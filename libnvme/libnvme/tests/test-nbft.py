@@ -77,7 +77,9 @@ class Testclass(unittest.TestCase):
 
     def test_read_nbft_file(self):
         """Make sure we get expected data when reading from binary NBFT file"""
-        actual_nbft = nvme.nbft_get(args.filename)
+        ctx = nvme.global_ctx()
+        ctx.log_level('debug')
+        actual_nbft = nvme.nbft_get(ctx, args.filename)
         self.assertEqual(actual_nbft, self.expected_nbft)
 
 

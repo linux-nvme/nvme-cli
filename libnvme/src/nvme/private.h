@@ -424,10 +424,8 @@ __nvme_msg(struct nvme_global_ctx *ctx, int level, const char *func, const char 
 #define nvme_msg(ctx, level, format, ...)					\
 	__nvme_msg(ctx, level, __nvme_log_func, format, ##__VA_ARGS__)
 
-#define ctx_from_ctrl(c) ((c)->s && (c)->s->h ? (c)->s->h->ctx : NULL)
-#define ctx_from_ns(n) ((n)->s && (n)->s->h ? (n)->s->h->ctx : \
-			 (n)->c && (n)->c->s && (n)->c->s->h ? (n)->c->s->h->ctx : \
-			 NULL)
+#define ctx_from_ctrl(c) ((c)->hdl->ctx)
+#define ctx_from_ns(n) ((n)->hdl->ctx)
 
 /* mi internal headers */
 
@@ -533,7 +531,7 @@ void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 #define SECTOR_SHIFT	9
 
 int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
-				   long *keyring_id, long *key_id);
+		long *keyring_id, long *key_id);
 
 static inline char *xstrdup(const char *s)
 {
