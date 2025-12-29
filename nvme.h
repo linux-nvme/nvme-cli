@@ -59,6 +59,7 @@ struct nvme_config {
 	bool dry_run;
 	bool no_retries;
 	unsigned int output_format_ver;
+	double delay;
 };
 
 /*
@@ -109,6 +110,7 @@ extern const char *output_format;
 extern const char *timeout;
 extern const char *verbose;
 extern const char *dry_run;
+extern const char *delay;
 extern struct nvme_config nvme_cfg;
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags);
