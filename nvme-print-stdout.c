@@ -1747,6 +1747,20 @@ static void stdout_status(int status)
 	}
 }
 
+static void stdout_opcode_status(int status, bool admin, __u8 opcode)
+{
+	int val = nvme_status_get_value(status);
+	int type = nvme_status_get_type(status);
+
+	if (status >= 0 && type == NVME_STATUS_TYPE_NVME) {
+		fprintf(stderr, "NVMe status: %s(0x%x)\n",
+			nvme_opcode_status_to_string(val, admin, opcode), val);
+		return;
+	}
+
+	stdout_status(status);
+}
+
 static void stdout_error_status(int status, const char *msg, va_list ap)
 {
 	vfprintf(stderr, msg, ap);
@@ -6679,6 +6693,7 @@ static struct print_ops stdout_print_ops = {
 	.show_message			= stdout_message,
 	.show_perror			= stdout_perror,
 	.show_status			= stdout_status,
+	.show_opcode_status		= stdout_opcode_status,
 	.show_error_status		= stdout_error_status,
 	.show_key_value			= stdout_key_value,
 };

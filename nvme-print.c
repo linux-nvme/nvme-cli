@@ -520,6 +520,17 @@ void nvme_show_status(int status)
 		ops->show_status(status);
 }
 
+void nvme_show_opcode_status(int status, bool admin, __u8 opcode)
+{
+	struct print_ops *ops = nvme_print_ops(NORMAL);
+
+	if (nvme_is_output_format_json())
+		ops = nvme_print_ops(JSON);
+
+	if (ops && ops->show_opcode_status)
+		ops->show_opcode_status(status, admin, opcode);
+}
+
 void nvme_show_error_status(int status, const char *msg, ...)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
@@ -530,7 +541,7 @@ void nvme_show_error_status(int status, const char *msg, ...)
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
-	if (ops && ops->show_status)
+	if (ops && ops->show_error_status)
 		ops->show_error_status(status, msg, ap);
 
 	va_end(ap);

@@ -435,6 +435,7 @@ static struct print_ops binary_print_ops = {
 	.show_message			= NULL,
 	.show_perror			= NULL,
 	.show_status			= NULL,
+	.show_opcode_status		= NULL,
 	.show_error_status		= NULL,
 	.show_key_value			= NULL,
 };

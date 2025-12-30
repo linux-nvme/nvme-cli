@@ -7952,6 +7952,7 @@ struct nvme_mi_vpd_hdr {
  *				      Maximum Time for Firmware Activation
  *				      (MTFA) value reported in Identify
  *				      Controller.
+ * @NVME_SC_EXCEEDS_MAX_NS_SANITIZE:  Exceeds Max NS Sanitize Operations
  * @NVME_SC_FW_ACTIVATE_PROHIBITED:   Firmware Activation Prohibited: The image
  *				      specified is being prohibited from
  *				      activation by the controller for vendor
@@ -8277,6 +8278,7 @@ enum nvme_status_field {
 	NVME_SC_FW_NEEDS_SUBSYS_RESET		= 0x10,
 	NVME_SC_FW_NEEDS_RESET			= 0x11,
 	NVME_SC_FW_NEEDS_MAX_TIME		= 0x12,
+	NVME_SC_EXCEEDS_MAX_NS_SANITIZE		= 0x12,
 	NVME_SC_FW_ACTIVATE_PROHIBITED		= 0x13,
 	NVME_SC_OVERLAPPING_RANGE		= 0x14,
 	NVME_SC_NS_INSUFFICIENT_CAP		= 0x15,
