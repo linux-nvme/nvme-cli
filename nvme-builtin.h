@@ -94,6 +94,8 @@ COMMAND_LIST(
 	ENTRY("verify", "Submit a verify command, return results", verify_cmd)
 	ENTRY("sanitize", "Submit a sanitize command", sanitize_cmd)
 	ENTRY("sanitize-log", "Retrieve sanitize log, show it", sanitize_log)
+	ENTRY("sanitize-ns", "Submit a sanitize namespace command",
+	      sanitize_ns_cmd)
 	ENTRY("reset", "Resets the controller", reset)
 	ENTRY("subsystem-reset", "Resets the subsystem", subsystem_reset)
 	ENTRY("ns-rescan", "Rescans the NVME namespaces", ns_rescan)

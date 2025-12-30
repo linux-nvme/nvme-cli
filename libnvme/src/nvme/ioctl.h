@@ -4089,6 +4089,34 @@ nvme_init_sanitize_nvm(struct nvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_sanitize_ns() - Initialize passthru command to start a
+ * sanitize namespace operation
+ * @cmd:	Passthru command to use
+ * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
+ * @ause:	Set to allow unrestricted sanitize exit
+ * @emvs:	Set to enter media verification state
+ *
+ * Initializes the passthru command buffer for the Sanitize namespace command.
+ */
+static inline void
+nvme_init_sanitize_ns(struct nvme_passthru_cmd *cmd,
+		enum nvme_sanitize_sanact sanact, bool ause, bool emvs)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_sanitize_ns;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sanact,
+			NVME_SANITIZE_CDW10_SANACT_SHIFT,
+			NVME_SANITIZE_CDW10_SANACT_MASK) |
+		      NVME_FIELD_ENCODE(ause,
+			NVME_SANITIZE_CDW10_AUSE_SHIFT,
+			NVME_SANITIZE_CDW10_AUSE_MASK) |
+		      NVME_FIELD_ENCODE(emvs,
+			NVME_SANITIZE_CDW10_EMVS_SHIFT,
+			NVME_SANITIZE_CDW10_EMVS_MASK);
+}
+
+/**
  * nvme_init_dev_self_test() - Initialize passthru command to start or
  * abort a self test
  * @cmd:	Passthru command to use
