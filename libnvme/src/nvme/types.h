@@ -8541,6 +8541,7 @@ static inline __u32 nvme_status_equals(int status, enum nvme_status_type type,
  * @nvme_admin_get_lba_status:		Get LBA Status
  * @nvme_admin_program_act_mgmt:	Program Activation Management
  * @nvme_admin_mem_range_set_mgmt:	Memory Range Set Management
+ * @nvme_admin_sanitize_ns:		Sanitize Namespace
  */
 enum nvme_admin_opcode {
 	nvme_admin_delete_sq		= 0x00,
@@ -8592,6 +8593,7 @@ enum nvme_admin_opcode {
 	nvme_admin_get_lba_status	= 0x86,
 	nvme_admin_program_act_mgmt	= 0x88,
 	nvme_admin_mem_range_set_mgmt	= 0x89,
+	nvme_admin_sanitize_ns		= 0x8c,
 };
 
 /**
@@ -8703,14 +8705,19 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_REACHABILITY_GROUPS:		Reachability Groups
  * @NVME_LOG_LID_REACHABILITY_ASSOCIATIONS:	Reachability Associations
  * @NVME_LOG_LID_CHANGED_ALLOC_NS:		Changed Allocated Namespace List
+ * @NVME_LOG_LID_DEV_PERSONALITY:		Device Personalities
+ * @NVME_LOG_LID_CROSS_CTRL_RESET:		Cross-Controller Reset
+ * @NVME_LOG_LID_LOST_HOST_COMMUNICATION:	Lost Host Communication
  * @NVME_LOG_LID_FDP_CONFIGS:			FDP Configurations
  * @NVME_LOG_LID_FDP_RUH_USAGE:			Reclaim Unit Handle Usage
  * @NVME_LOG_LID_FDP_STATS:			FDP Statistics
  * @NVME_LOG_LID_FDP_EVENTS:			FDP Events
+ * @NVME_LOG_LID_POWER_MEASUREMENT:		Power Measurement
  * @NVME_LOG_LID_DISCOVERY:			Discovery
  * @NVME_LOG_LID_HOST_DISCOVERY:		Host Discovery
  * @NVME_LOG_LID_AVE_DISCOVERY:			AVE Discovery
  * @NVME_LOG_LID_PULL_MODEL_DDC_REQ:		Pull Model DDC Request
+ * @NVME_LOG_LID_SANITIZE_NS_STATUS_LIST:	Sanitize Namespace Status List
  * @NVME_LOG_LID_RESERVATION:			Reservation Notification
  * @NVME_LOG_LID_SANITIZE:			Sanitize Status
  * @NVME_LOG_LID_ZNS_CHANGED_ZONES:		Changed Zone List
@@ -8745,14 +8752,19 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_REACHABILITY_GROUPS			= 0x1a,
 	NVME_LOG_LID_REACHABILITY_ASSOCIATIONS			= 0x1b,
 	NVME_LOG_LID_CHANGED_ALLOC_NS				= 0x1c,
+	NVME_LOG_LID_DEV_PERSONALITY				= 0x1d,
+	NVME_LOG_LID_CROSS_CTRL_RESET				= 0x1e,
+	NVME_LOG_LID_LOST_HOST_COMMUNICATION			= 0x1f,
 	NVME_LOG_LID_FDP_CONFIGS				= 0x20,
 	NVME_LOG_LID_FDP_RUH_USAGE				= 0x21,
 	NVME_LOG_LID_FDP_STATS					= 0x22,
 	NVME_LOG_LID_FDP_EVENTS					= 0x23,
+	NVME_LOG_LID_POWER_MEASUREMENT				= 0x25,
 	NVME_LOG_LID_DISCOVERY					= 0x70,
 	NVME_LOG_LID_HOST_DISCOVERY				= 0x71,
 	NVME_LOG_LID_AVE_DISCOVERY				= 0x72,
 	NVME_LOG_LID_PULL_MODEL_DDC_REQ				= 0x73,
+	NVME_LOG_LID_SANITIZE_NS_STATUS_LIST			= 0x7f,
 	NVME_LOG_LID_RESERVATION				= 0x80,
 	NVME_LOG_LID_SANITIZE					= 0x81,
 	NVME_LOG_LID_ZNS_CHANGED_ZONES				= 0xbf,
@@ -8793,6 +8805,10 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_NS_ADMIN_LABEL:	Namespace Admin Label
  * @NVME_FEAT_FID_KEY_VALUE:		Key Value Configuration
  * @NVME_FEAT_FID_CTRL_DATA_QUEUE:	Controller Data Queue
+ * @NVME_FEAT_FID_CONF_DEV_PERSONALITY: Configurable Device Personality
+ * @NVME_FEAT_FID_POWER_LIMIT:		Power Limit
+ * @NVME_FEAT_FID_POWER_THRESH:		Power Threshold
+ * @NVME_FEAT_FID_POEWR_MEASUREMENT:	Power Measurement
  * @NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR:	Embedded Management Controller Address
  * @NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR:	Host Management Agent Address
  * @NVME_FEAT_FID_ENH_CTRL_METADATA:	Enhanced Controller Metadata
@@ -8839,6 +8855,10 @@ enum nvme_features_id {
 	NVME_FEAT_FID_NS_ADMIN_LABEL				= 0x1f,
 	NVME_FEAT_FID_KEY_VALUE					= 0x20,
 	NVME_FEAT_FID_CTRL_DATA_QUEUE				= 0x21,
+	NVME_FEAT_FID_CONF_DEV_PERSONALITY			= 0x22,
+	NVME_FEAT_FID_POWER_LIMIT				= 0x23,
+	NVME_FEAT_FID_POWER_THRESH				= 0x24,
+	NVME_FEAT_FID_POEWR_MEASUREMENT				= 0x25,
 	NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR			= 0x78,
 	NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR			= 0x79,
 	NVME_FEAT_FID_ENH_CTRL_METADATA				= 0x7d,
