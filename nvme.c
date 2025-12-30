@@ -403,7 +403,7 @@ int parse_and_open(struct nvme_global_ctx **ctx,
 	nvme_transport_handle_set_submit_entry(hdl_new, nvme_submit_entry);
 	nvme_transport_handle_set_submit_exit(hdl_new , nvme_submit_exit);
 	nvme_transport_handle_set_decide_retry(hdl_new, nvme_decide_retry);
-	nvme_set_dry_run(ctx_new, argconfig_parse_seen(opts, "dry_run"));
+	nvme_set_dry_run(ctx_new, argconfig_parse_seen(opts, "dry-run"));
 
 	*ctx = ctx_new;
 	*hdl = hdl_new;
