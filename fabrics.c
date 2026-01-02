@@ -370,6 +370,11 @@ static int create_common_context(struct nvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
+	err = nvmf_context_set_crypto(fctx, fa->hostkey, fa->ctrlkey,
+		fa->keyring, fa->tls_key, fa->tls_key_identity);
+	if (err)
+		goto err;
+
 	err = nvmf_context_set_persistent(fctx, persistent);
 	if (err)
 		goto err;
