@@ -172,7 +172,7 @@ static int setup_common_context(struct nvmf_context *fctx,
 		struct fabric_args *fa);
 
 struct cb_fabrics_data {
-	struct nvme_fabrics_config *defcfg;
+	struct nvme_fabrics_config *cfg;
 	nvme_print_flags_t flags;
 	char *raw;
 	char **argv;
@@ -281,7 +281,7 @@ static int cb_parser_next_line(struct nvmf_context *fctx, void *user_data)
 		  OPT_FLAG("persistent",   'p', &persistent, "persistent discovery connection"),
 		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
 
-	memcpy(&cfg, cfd->defcfg, sizeof(cfg));
+	memcpy(&cfg, cfd->cfg, sizeof(cfg));
 next:
 	if (fgets(line, sizeof(line), cfd->f) == NULL)
 		return -EOF;
@@ -549,6 +549,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	}
 
 	struct cb_fabrics_data dld = {
+		.cfg = &cfg,
 		.flags = flags,
 		.raw = raw,
 	};
