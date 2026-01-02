@@ -270,7 +270,8 @@ int nvmf_context_set_connection(struct nvmf_context *fctx,
 	fctx->transport = transport;
 	fctx->traddr = traddr;
 	fctx->trsvcid = trsvcid;
-	fctx->host_traddr = host_iface;
+	fctx->host_traddr = host_traddr;
+	fctx->host_iface = host_iface;
 
 	return 0;
 }
