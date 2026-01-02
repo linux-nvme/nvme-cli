@@ -1813,7 +1813,7 @@ int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
 	identity = nvme_ctrl_get_tls_key_identity(c);
 	if (identity) {
 		ret = nvme_lookup_key("psk", identity, &id);
-		if (ret) {
+		if (ret && !(ret == -ENOKEY || ret == -EKEYREVOKED)) {
 			nvme_msg(h->ctx, LOG_ERR,
 				 "Failed to lookup key for identity %s, error %d\n",
 				  identity, ret);
