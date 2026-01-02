@@ -362,6 +362,10 @@ static int create_common_context(struct nvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
+	err = nvmf_context_set_hostnqn(fctx, fa->hostnqn, fa->hostid);
+	if (err)
+		goto err;
+
 	err = nvmf_context_set_fabrics_config(fctx, cfg);
 	if (err)
 		goto err;
