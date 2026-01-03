@@ -2134,7 +2134,7 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 		nvme_ctrl_t cl;
 		bool discover = false;
 		bool disconnect;
-		nvme_ctrl_t child;
+		nvme_ctrl_t child = { 0 };
 		int tmo = fctx->cfg->keep_alive_tmo;
 
 		struct fabric_args trcfg = {
