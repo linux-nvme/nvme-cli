@@ -2588,6 +2588,8 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 		nvme_free_ctrl(c);
 	} while (!err);
 
+	fctx->parser_cleanup(fctx, fctx->user_data);
+
 	if (err != -EOF)
 		return err;
 
