@@ -1068,6 +1068,10 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		free(traddr);
 	}
 
+	/* concat and tls flags should be mutually exclusive */
+	if (c->cfg.concat)
+		c->cfg.tls = false;
+
 	ret = build_options(h, c, &argstr);
 	if (ret)
 		return ret;
