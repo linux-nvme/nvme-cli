@@ -74,7 +74,9 @@ endif
 # version to be composed of 2 or 3 digits after stripping trailing identifiers
 # such as "-rc.*". If the project version is composed of only two digits, then
 # we append '.0' to it.
-ver_digits = meson.project_version().split('-')[0]
+ver = meson.project_version()
+ver_digits = ver.split('-')[0]
+ver_digits = ver_digits.split('.dev')[0]
 num_digits = ver_digits.split('.').length()
 if num_digits < 2 or num_digits > 3
     error('Invalid version: ', meson.project_version())
