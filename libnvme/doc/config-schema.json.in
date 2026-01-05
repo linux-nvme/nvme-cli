@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/linux-nvme/libnvme/doc/config-schema.json",
+    "$id": "https://github.com/linux-nvme/nvme-cli/libnvme/doc/config-schema.json",
     "title": "config.json",
     "description": "libnvme JSON configuration",
     "type": "object",
