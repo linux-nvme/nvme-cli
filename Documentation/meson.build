@@ -265,13 +265,11 @@ adoc_includes = [
     'cmds-main.txt',
 ]
 
-want_docs = get_option('docs')
-want_docs_build = get_option('docs-build')
 if want_docs != 'false'
     mandir = join_paths(get_option('mandir'), 'man1')
     htmldir = join_paths(get_option('htmldir'), 'nvme')
 
-    asciidoctor = find_program('asciidoc', required: get_option('docs-build'))
+    asciidoctor = find_program('asciidoc', required: want_docs_build)
     if want_docs_build and asciidoctor.found()
         # Build documentation before installing
         foreach file : adoc_includes

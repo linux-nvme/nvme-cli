@@ -38,7 +38,6 @@ if want_libnvme
     if get_option('examples')
         subdir('examples')
     endif
-    subdir('doc')
 else
     # Fallback to using a pre-installed libnvme (if available)
     if std_prefix
@@ -60,3 +59,4 @@ else
     endif
 endif
 
+subdir('doc')
