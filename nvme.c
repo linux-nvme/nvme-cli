@@ -4859,12 +4859,12 @@ static bool is_get_feature_result_set(enum nvme_features_id feature_id)
 static int get_feature_id_changed(struct nvme_transport_handle *hdl, struct feat_cfg cfg,
 		nvme_print_flags_t flags)
 {
-	int err;
-	int err_def = 0;
-	__u64 result;
-	__u64 result_def;
-	_cleanup_free_ void *buf = NULL;
 	_cleanup_free_ void *buf_def = NULL;
+	_cleanup_free_ void *buf = NULL;
+	__u64 result_def = 0;
+	__u64 result;
+	int err_def = 0;
+	int err;
 
 	if (cfg.changed)
 		cfg.sel = NVME_GET_FEATURES_SEL_CURRENT;
