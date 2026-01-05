@@ -2,17 +2,9 @@
 LIBNVME_UNRELEASED {
 };
 
-LIBNVME_1_16 {
-	global:
-		nvme_get_uuid_list;
-		nvme_set_etdas;
-		nvme_clear_etdas;
-		nvme_insert_tls_key_compat;
-		nvme_generate_tls_key_identity_compat;
-};
-
 LIBNVME_2_0 {
 	global:
+		nvme_clear_etdas;
 		nvme_close;
 		nvme_create_ctrl;
 		nvme_create_global_ctx;
@@ -83,6 +75,7 @@ LIBNVME_2_0 {
 		nvme_fw_download_seq;
 		nvme_gen_dhchap_key;
 		nvme_generate_tls_key_identity;
+		nvme_generate_tls_key_identity_compat;
 		nvme_get_ana_log_atomic;
 		nvme_get_ana_log_len;
 		nvme_get_ana_log_len_from_id_ctrl;
@@ -105,6 +98,7 @@ LIBNVME_2_0 {
 		nvme_get_subsys_attr;
 		nvme_get_telemetry_log;
 		nvme_get_telemetry_max;
+		nvme_get_uuid_list;
 		nvme_get_version;
 		nvme_host_get_dhchap_key;
 		nvme_host_get_global_ctx;
@@ -129,6 +123,7 @@ LIBNVME_2_0 {
 		nvme_init_dsm_range;
 		nvme_init_logging;
 		nvme_insert_tls_key;
+		nvme_insert_tls_key_compat;
 		nvme_insert_tls_key_versioned;
 		nvme_ipaddrs_eq;
 		nvme_lookup_ctrl;
@@ -241,6 +236,7 @@ LIBNVME_2_0 {
 		nvme_set_application;
 		nvme_set_debug;
 		nvme_set_dry_run;
+		nvme_set_etdas;
 		nvme_set_keyring;
 		nvme_set_property;
 		nvme_set_root;
