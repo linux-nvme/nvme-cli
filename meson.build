@@ -51,6 +51,8 @@ cxx_available = add_languages('cpp', required: false, native: false)
 # dependencies are present. Also, -Dpython=enabled forces -Dlibnvme=enabled.
 want_nvme = get_option('nvme').disabled() == false
 want_libnvme = get_option('libnvme').disabled() == false
+want_docs = get_option('docs')
+want_docs_build = get_option('docs-build')
 
 feature_python = get_option('python')
 if feature_python.disabled()
@@ -561,9 +563,9 @@ if want_nvme
     if get_option('nvme-tests')
         subdir('tests')
     endif
-
-    subdir('Documentation')
 endif
+
+subdir('Documentation')
 
 
 ################################################################################
@@ -606,6 +608,7 @@ wanted_dict = {
     'nvme':             want_nvme,
     'libnvme':          want_libnvme,
     'python bindings ': want_python,
+    'build docs':       want_docs_build,
 }
 summary(wanted_dict, section: 'Features to build', bool_yn: true)
 

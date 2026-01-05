@@ -16,8 +16,8 @@ build:
     post_install:
       - pip3 install lxml
     pre_build:
-      - meson setup .build -Ddocs=rst -Ddocs-build=true || cat .build/meson-logs/meson-log.txt
+      - meson setup .build -Ddocs=rst -Ddocs-build=true -Dnvme=disabled -Dlibnvme=disabled -Dpython=disabled || cat .build/meson-logs/meson-log.txt
       - meson compile -C .build
 
 sphinx:
-  configuration: .build/doc/conf.py
+  configuration: .build/libnvme/doc/conf.py
