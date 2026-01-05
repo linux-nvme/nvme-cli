@@ -41,14 +41,14 @@ deps = [
     accessors_dep,
 ]
 
-mapfile = 'libnvme.map'
+ldfile = 'libnvme.ld'
 
 libnvme = library(
     'nvme', # produces libnvme.so
     sources,
     version: libnvme_so_version,
     link_args: [
-        '-Wl,--version-script=@0@'.format(meson.current_source_dir() / mapfile),
+        '-Wl,--version-script=@0@'.format(meson.current_source_dir() / ldfile),
         '-Wl,--version-script=@0@'.format(accessors_ld_full_path),
     ],
     dependencies: deps,
