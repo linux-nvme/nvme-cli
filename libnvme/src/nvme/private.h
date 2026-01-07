@@ -376,9 +376,9 @@ struct fabric_args {
 	const char *subsysnqn;
 	const char *transport;
 	const char *traddr;
+	const char *trsvcid;
 	const char *host_traddr;
 	const char *host_iface;
-	const char *trsvcid;
 };
 
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
