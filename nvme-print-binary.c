@@ -275,7 +275,7 @@ static void binary_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 	d_raw((unsigned char *)sanitize, sizeof(*sanitize));
 }
 
-static void binary_directive(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+static void binary_directive(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 	void *buf, __u32 len)
 {
 	if (!buf)
@@ -435,6 +435,7 @@ static struct print_ops binary_print_ops = {
 	.show_message			= NULL,
 	.show_perror			= NULL,
 	.show_status			= NULL,
+	.show_opcode_status		= NULL,
 	.show_error_status		= NULL,
 	.show_key_value			= NULL,
 };

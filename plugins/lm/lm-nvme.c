@@ -62,7 +62,6 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 	struct lba_migration_queue_entry_type_0 *queue = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	struct nvme_passthru_cmd cmd;
-	__u32 result;
 	int err = -1;
 
 	struct config {
@@ -109,14 +108,14 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 
 	nvme_init_lm_cdq_create(&cmd, NVME_SET(cfg.qt, LM_QT),
 			 cfg.cntlid, cfg.sz, queue);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_cdq() failed: %s", nvme_strerror(errno));
 	else if (err)
 		nvme_show_status(err);
 	else
 		printf("Create CDQ Successful: CDQID=0x%04x\n",
-			NVME_GET(result, LM_CREATE_CDQ_CDQID));
+			NVME_GET((__u32)cmd.result, LM_CREATE_CDQ_CDQID));
 
 	return err;
 }
@@ -149,7 +148,7 @@ static int lm_delete_cdq(int argc, char **argv, struct command *acmd, struct plu
 		return err;
 
 	nvme_init_lm_cdq_delete(&cmd, 0, cfg.cdqid);
-	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_cdq() failed: %s", nvme_strerror(errno));
 	else if (err > 0)
@@ -234,7 +233,7 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	}
 
 	nvme_init_lm_track_send(&cmd, cfg.sel, cfg.mos, cfg.cdqid);
-	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_track_send() failed %s", strerror(errno));
 	else if (err)
@@ -383,7 +382,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 				    cfg.stype, cfg.dudmq, cfg.csvi, cfg.csuuidi,
 				    cfg.offset, cfg.uidx, data,
 				    (cfg.numd << 2));
-	err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_migration_send() failed %s", strerror(errno));
 	else if (err > 0)
@@ -419,7 +418,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	void *data = NULL;
-	__u32 result = 0;
+	__u64 result = 0;
 	int err = -1;
 	__u16 mos;
 
@@ -497,15 +496,17 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	nvme_init_lm_migration_recv(&cmd, cfg.offset, mos, cfg.cntlid,
 				    cfg.csuuidi, cfg.sel, cfg.uidx, 0, data,
 				    (cfg.numd + 1) << 2);
-	err = nvme_submit_admin_passthru(hdl, &cmd, &result);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("ERROR: nvme_lm_migration_recv() failed %s", strerror(errno));
 	else if (err)
 		nvme_show_status(err);
 	else if (cfg.sel == NVME_LM_SEL_GET_CONTROLLER_STATE) {
 		if (flags == NORMAL)
-			printf("CDW0: 0x%x: Controller %sSuspended\n", result,
-			       (result & NVME_LM_GET_CONTROLLER_STATE_CSUP) ? "" : "NOT ");
+			printf("CDW0: 0x%"PRIu64": Controller %sSuspended\n",
+			       (uint64_t)cmd.result,
+			       (result & NVME_LM_GET_CONTROLLER_STATE_CSUP) ?
+			       "" : "NOT ");
 
 		if (cfg.output && strlen(cfg.output)) {
 			if (fwrite(data, 1, cfg.numd << 2, fd) != (cfg.numd << 2)) {

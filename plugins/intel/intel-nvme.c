@@ -1073,7 +1073,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 
 	if (media_version[0] == 1000) {
 		__u32 thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
-		__u32 result;
+		__u64 result;
 
 		err = nvme_get_features(hdl, 0, 0xf7,
 				0, cfg.write ? 0x1 : 0x0,
@@ -1227,7 +1227,7 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_admin_passthru(hdl, cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, cmd);
 		if (err) {
 			fprintf(stderr,
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
@@ -1537,7 +1537,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	void *buf = NULL;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -1579,8 +1579,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 				data_len, &result);
 		if (!err) {
 			printf(
-				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
-				fid, result);
+				"Latency Statistics Tracking (FID 0x%X) is currently (%"PRIu64").\n",
+				fid, (uint64_t)result);
 		} else {
 			printf("Could not read feature id 0xE2.\n");
 			return err;
@@ -1620,7 +1620,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	const __u32 sv = 0;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 result;
+	__u64 result;
 	int err, num;
 
 	struct config {

@@ -216,7 +216,7 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 	if (partial)
 		cmd.data_len = offsetof(struct nvme_id_ctrl, rab);
 
-	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	rc = nvme_submit_admin_passthru(hdl, &cmd);
 	if (rc) {
 		warn("can't perform Admin Identify command");
 		return -1;
@@ -399,7 +399,7 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 
 	nvme_init_get_log(&cmd, NVME_NSID_NONE, lid, NVME_CSI_NVM,
 			  buf, sizeof(buf));
-	rc = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	rc = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (rc) {
 		warn("can't perform Get Log page command");
 		return -1;
@@ -566,7 +566,7 @@ int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 	}
 
 	nvme_init_security_receive(&cmd, 0, 0, 0, 0, 0, data, data_len);
-	rc = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	rc = nvme_submit_admin_passthru(hdl, &cmd);
 	if (rc) {
 		warnx("can't perform Security Receive command: rc %d", rc);
 		return -1;

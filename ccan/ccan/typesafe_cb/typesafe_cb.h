@@ -1,7 +1,6 @@
 /* CC0 (Public domain) - see LICENSE file for details */
 #ifndef CCAN_TYPESAFE_CB_H
 #define CCAN_TYPESAFE_CB_H
-#include "config.h"
 
 #if HAVE_TYPEOF && HAVE_BUILTIN_CHOOSE_EXPR && HAVE_BUILTIN_TYPES_COMPATIBLE_P
 /**

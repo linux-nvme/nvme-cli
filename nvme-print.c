@@ -520,6 +520,17 @@ void nvme_show_status(int status)
 		ops->show_status(status);
 }
 
+void nvme_show_opcode_status(int status, bool admin, __u8 opcode)
+{
+	struct print_ops *ops = nvme_print_ops(NORMAL);
+
+	if (nvme_is_output_format_json())
+		ops = nvme_print_ops(JSON);
+
+	if (ops && ops->show_opcode_status)
+		ops->show_opcode_status(status, admin, opcode);
+}
+
 void nvme_show_error_status(int status, const char *msg, ...)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
@@ -530,7 +541,7 @@ void nvme_show_error_status(int status, const char *msg, ...)
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
-	if (ops && ops->show_status)
+	if (ops && ops->show_error_status)
 		ops->show_error_status(status, msg, ap);
 
 	va_end(ap);
@@ -788,14 +799,19 @@ const char *nvme_log_to_string(__u8 lid)
 	case NVME_LOG_LID_REACHABILITY_GROUPS:		return "Reachability Groups";
 	case NVME_LOG_LID_REACHABILITY_ASSOCIATIONS:	return "Reachability Associations";
 	case NVME_LOG_LID_CHANGED_ALLOC_NS:		return "Changed Allocated Namespace List";
+	case NVME_LOG_LID_DEV_PERSONALITY:		return "Device Personalities";
+	case NVME_LOG_LID_CROSS_CTRL_RESET:		return "Cross-Controller Reset";
+	case NVME_LOG_LID_LOST_HOST_COMMUNICATION:	return "Lost Host Communication";
 	case NVME_LOG_LID_FDP_CONFIGS:			return "FDP Configurations";
 	case NVME_LOG_LID_FDP_RUH_USAGE:		return "Reclaim Unit Handle Usage";
 	case NVME_LOG_LID_FDP_STATS:			return "FDP Statistics";
 	case NVME_LOG_LID_FDP_EVENTS:			return "FDP Events";
+	case NVME_LOG_LID_POWER_MEASUREMENT:		return "Power Measurement";
 	case NVME_LOG_LID_DISCOVERY:			return "Discovery";
 	case NVME_LOG_LID_HOST_DISCOVERY:		return "Host Discovery";
 	case NVME_LOG_LID_AVE_DISCOVERY:		return "AVE Discovery";
 	case NVME_LOG_LID_PULL_MODEL_DDC_REQ:		return "Pull Model DDC Request";
+	case NVME_LOG_LID_SANITIZE_NS_STATUS_LIST:	return "Sanitize Namespace Status List";
 	case NVME_LOG_LID_RESERVATION:			return "Reservation Notification";
 	case NVME_LOG_LID_SANITIZE:			return "Sanitize Status";
 	case NVME_LOG_LID_ZNS_CHANGED_ZONES:		return "Changed Zone List";
@@ -902,6 +918,10 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_NS_ADMIN_LABEL:	return "Namespace Admin Label";
 	case NVME_FEAT_FID_KEY_VALUE:		return "Key Value Configuration";
 	case NVME_FEAT_FID_CTRL_DATA_QUEUE:	return "Controller Data Queue";
+	case NVME_FEAT_FID_CONF_DEV_PERSONALITY:return "Configurable Device Personality";
+	case NVME_FEAT_FID_POWER_LIMIT:		return "Power Limit";
+	case NVME_FEAT_FID_POWER_THRESH:	return "Power Threshold";
+	case NVME_FEAT_FID_POEWR_MEASUREMENT:	return "Power Measurement";
 	case NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR:	return "Embedded Management Controller Address";
 	case NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR:return "Host Management Agent Address";
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:	return "Enhanced Controller Metadata";
@@ -1005,7 +1025,7 @@ const char *nvme_select_to_string(int sel)
 	return "Reserved";
 }
 
-void nvme_show_select_result(enum nvme_features_id fid, __u32 result)
+void nvme_show_select_result(enum nvme_features_id fid, __u64 result)
 {
 	nvme_print(select_result, NORMAL, fid, result);
 }
@@ -1191,7 +1211,7 @@ const char *nvme_bpwps_to_string(__u8 bpwps)
 	}
 }
 
-void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 			 void *buf, __u32 len, nvme_print_flags_t flags)
 {
 	nvme_print(directive, flags, type, oper, spec, nsid, result, buf, len);
@@ -1209,7 +1229,7 @@ const char *nvme_plm_window_to_string(__u32 plm)
 	}
 }
 
-void nvme_show_lba_status_info(__u32 result)
+void nvme_show_lba_status_info(__u64 result)
 {
 	nvme_print(lba_status_info, NORMAL, result);
 }

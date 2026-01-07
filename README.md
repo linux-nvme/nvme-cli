@@ -7,9 +7,8 @@ NVM-Express user space tooling for Linux.
 
 ## Build from source
 
-nvme-cli uses meson as build system. There is more than one way to configure and
-build the project in order to mitigate meson dependency on the build
-environment.
+nvme-cli uses meson as its build system. There is more than one way to configure and
+build the project in order to mitigate meson dependency on the build environment.
 
 If you build on a relative modern system, either use meson directly or the
 Makefile wrapper.
@@ -20,30 +19,29 @@ and [muon](https://github.com/annacrombie/muon). Both build tools have only a
 minimal dependency on the build environment. Too easy this step there is a build
 script which helps to setup a build environment.
 
-### nvme-cli dependencies:
+### nvme-cli dependencies (3.x and later):
 
- | Library | Dependency | Notes |
- |---------|------------|-------|
- | libnvme, libnvme-mi| yes | be either installed or included into the build via meson fallback feature |
- | json-c | optional | recommended, without all plugins are disabled and json-c output format is disabled |
+Starting with nvme-cli 3.x, the libnvme library is fully integrated into the nvme-cli source tree. There is no longer any dependency on an external libnvme repository or package. All required libnvme and libnvme-mi code is included and built as part of nvme-cli.
+
+| Library | Dependency | Notes |
+|---------|------------|-------|
+| libnvme, libnvme-mi | integrated | No external dependency, included in nvme-cli |
+| json-c | optional | Recommended; without it, all plugins are disabled and json-c output format is disabled |
 
 
 ### Build with meson
 
 #### Configuring
 
-In case libnvme is not installed on the system, it possible to use meson's
-fallback feature to resolve the dependency.
+#### Configuring
 
-	$ meson setup --force-fallback-for=libnvme .build
-
-If the libnvme is already installed on the system meson is using pkg-config to
-find the dependency. In this case a plain setup call is enough:
+No special configuration is required for libnvme, as it is now part of the
+nvme-cli source tree. Simply run:
 
 	$ meson setup .build
 
-With meson's --wrap-mode argument it's possible to control if the additional
-dependencies should also resolved or not. The options are
+With meson's --wrap-mode argument it's possible to control if additional
+dependencies should be resolved. The options are:
 
 	--wrap-mode {default,nofallback,nodownload,forcefallback,nopromote}
 
@@ -91,7 +89,8 @@ There is a Makefile wrapper for meson for backwards compatibility
 	$ make
 	# make install
 
-Note in this case libnvme needs to be installed by hand first.
+Note: In previous versions, libnvme needed to be installed by hand.
+This is no longer required in nvme-cli 3.x and later.
 
 RPM build support via Makefile that uses meson
 
@@ -211,18 +210,6 @@ File: foo-plugin.c
 After that, you just need to implement the functions you defined in each
 ENTRY, then append the object file name to the meson.build "sources".
 
-## meson tips
-
-In case meson doesn't find libnvme header files (via pkg-config) it 
-will fallback using subprojects.  meson checks out libnvme in 
-subprojects directory as git tree once to the commit level specified 
-in the libnvme.wrap file revision parm.  After this initial checkout,
-the libnvme code level will not change unless explicitly told.  That 
-means if the current branch is updated via git, the subprojects/libnvme
-branch will not updated accordingly.  To update it, either use the 
-normal git operations or the command: 
-
-	$ meson subprojects update
 
 ## Dependency
 
@@ -333,3 +320,129 @@ For testing purposes a x86_64 static build from the current HEAD and is
 available here:
 
 https://monom.org/linux-nvme/upload/nvme-cli-latest-x86_64
+
+## Container-Based Debugging and CI Build Reproduction
+
+The nvme-cli project provides prebuilt CI containers that allow you to locally
+reproduce GitHub Actions builds for debugging and development. These containers
+mirror the environments used in the official CI workflows.
+
+CI Containers Repository:
+https://github.com/linux-nvme/ci-containers
+
+CI Build Workflow Reference:
+https://github.com/linux-nvme/nvme-cli/blob/master/.github/workflows/libnvme-build.yml
+
+### 1. Pull a CI Container
+
+All CI containers are published as OCI/Docker images.
+
+Example: Ubuntu latest CI image:
+
+```bash
+docker pull ghcr.io/linux-nvme/debian.python:latest
+```
+
+Or with Podman:
+
+```bash
+podman pull ghcr.io/linux-nvme/debian.python:latest
+```
+
+### 2. Start the Container and Log In
+
+Start an interactive shell inside the container:
+
+```bash
+docker run --rm -it \
+  --name nvme-cli-debug \
+  ghcr.io/linux-nvme/debian.python:latest \
+  bash
+```
+
+Or with Podman:
+
+```bash
+podman run --rm -it \
+  --name nvme-cli-debug \
+  ghcr.io/linux-nvme/debian.python:latest \
+  bash
+```
+
+You are now logged into the same environment used by CI.
+
+### 3. Clone the nvme-cli Repository
+
+Inside the running container:
+
+```bash
+git clone https://github.com/linux-nvme/nvme-cli.git
+cd nvme-cli
+```
+
+(Optional) Checkout a specific branch or pull request:
+
+```bash
+git checkout <branch-or-commit>
+```
+
+### 4. Run the CI Build Script
+
+The GitHub Actions workflow uses `scripts/build.sh`. To reproduce the CI build locally:
+
+```bash
+./scripts/build.sh
+```
+
+Build artifacts remain inside the container unless a host volume is mounted.
+
+### 5. Cross-Build Example
+
+The CI supports cross compilation using a dedicated cross-build container.
+
+#### 5.1 Pull the Cross-Build Container
+
+```bash
+docker pull ghcr.io/linux-nvme/ubuntu-cross-s390x:latest
+```
+
+Or with Podman:
+
+```bash
+podman pull ghcr.io/linux-nvme/ubuntu-cross-s390x:latest
+```
+
+#### 5.2 Start the Cross-Build Container
+
+```bash
+docker run --rm -it \
+  --name nvme-cli-cross \
+  ghcr.io/linux-nvme/ubuntu-cross-s390x:latest \
+  bash
+```
+
+Or with Podman:
+
+```bash
+podman run --rm -it \
+  --name nvme-cli-cross \
+  ghcr.io/linux-nvme/ubuntu-cross-s390x:latest \
+  bash
+```
+
+#### 5.3 Clone the Repository
+
+```bash
+git clone https://github.com/linux-nvme/nvme-cli.git
+cd nvme-cli
+```
+
+#### 5.4 Run a Cross Build
+
+Example: Cross-build for `s390x`:
+
+```bash
+./scripts/build.sh -b release -c gcc -t s390x cross
+```
+
+The exact supported targets depend on the toolchains installed in the container.

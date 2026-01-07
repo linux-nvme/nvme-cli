@@ -8,14 +8,13 @@
 diff = find_program('diff', required : false)
 if diff.found()
 
-  srcdir = meson.current_source_dir()
-  builddir = meson.current_build_dir()
+    srcdir = meson.current_source_dir()
+    builddir = meson.current_build_dir()
 
     config_dump = executable(
         'test-config-dump',
         ['config-dump.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir],
     )
 
     config_data = [
@@ -27,7 +26,7 @@ if diff.found()
 
     foreach t_file : config_data
         test(
-            t_file,
+            'libnvme - @0@'.format(t_file),
             config_diff,
             args : [
                 config_dump.full_path(),
@@ -44,11 +43,10 @@ if diff.found()
         'test-hostnqn-order',
         ['hostnqn-order.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir],
     )
 
     test(
-        'hostnqn-order',
+        'libnvme - hostnqn-order',
         config_diff,
         args : [
             test_hostnqn_order.full_path(),
@@ -64,7 +62,6 @@ if diff.found()
         'test-psk-json',
         ['psk-json.c'],
         dependencies: libnvme_dep,
-        include_directories: [incdir],
     )
 
     config_data = [
@@ -74,7 +71,7 @@ if diff.found()
 
     foreach t_file : config_data
         test(
-            'psk-json-' + t_file,
+            'libvnme - psk-json-@0@'.format(t_file),
             config_diff,
             args : [
                 test_psk_json.full_path(),

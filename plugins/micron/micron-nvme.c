@@ -468,7 +468,7 @@ static int NVMEGetLogPage(struct nvme_transport_handle *hdl, unsigned char ucLog
 		cmd.addr = (__u64) (uintptr_t) pTempPtr;
 		cmd.nsid = 0xFFFFFFFF;
 		cmd.data_len = uiXferDwords * 4;
-		err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, &cmd);
 		ullBytesRead += uiXferDwords * 4;
 		if (ucLogID == 0x07 || ucLogID == 0x08 || ucLogID == 0xE9)
 			pTempPtr = pBuffer + (ullBytesRead - offset);
@@ -556,7 +556,8 @@ static int micron_fw_commit(struct nvme_transport_handle *hdl, int select)
 		.cdw10 = 8,
 		.cdw12 = select,
 	};
-	return ioctl(nvme_transport_handle_get_fd(hdl), NVME_IOCTL_ADMIN_CMD, &cmd);
+
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 static int micron_selective_download(int argc, char **argv,
@@ -659,7 +660,7 @@ static int micron_selective_download(int argc, char **argv,
 			perror("fw-download");
 			goto out_free;
 		}
-		err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, &cmd);
 		if (err < 0) {
 			perror("fw-download");
 			goto out_free;
@@ -690,7 +691,7 @@ out:
 static int micron_smbus_option(int argc, char **argv,
 				   struct command *command, struct plugin *plugin)
 {
-	__u32 result = 0;
+	__u64 result = 0;
 	__u32 cdw11 = 0;
 	const char *desc = "Enable/Disable/Get status of SMBUS option on controller";
 	const char *option = "enable or disable or status";
@@ -958,7 +959,7 @@ static int micron_pcie_stats(int argc, char **argv,
 		admin_cmd.addr = (__u64)(uintptr_t)&pcie_error_counters;
 		admin_cmd.data_len = sizeof(pcie_error_counters);
 		admin_cmd.cdw10 = 1;
-		err = nvme_submit_admin_passthru(hdl, &admin_cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, &admin_cmd);
 		if (!err) {
 			counters = true;
 			correctable_errors = 10;
@@ -1100,7 +1101,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 	FILE *fp;
 	char *res;
 	const char *desc = "Clear PCIe Device Correctable Errors";
-	__u32 result = 0;
+	__u64 result = 0;
 	__u8 fid = MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS;
 
 	OPT_ARGS(opts) = {
@@ -1128,7 +1129,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		admin_cmd.opcode = 0xD6;
 		admin_cmd.addr = 0;
 		admin_cmd.cdw10 = 0;
-		err = nvme_submit_admin_passthru(hdl, &admin_cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, &admin_cmd);
 		if (!err) {
 			printf("Device correctable error counters are cleared!\n");
 			goto out;
@@ -2397,7 +2398,7 @@ static int GetFeatureSettings(struct nvme_transport_handle *hdl, const char *dir
 {
 	unsigned char *bufp, buf[4096] = { 0 };
 	int i, err, len, errcnt = 0;
-	__u32 attrVal = 0;
+	__u64 attrVal = 0;
 	char msg[256] = { 0 };
 
 	struct features {
@@ -2501,7 +2502,7 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 		admin_cmd.addr = (__u64) (uintptr_t) &dinfo;
 		admin_cmd.data_len = (__u32)sizeof(dinfo);
 		admin_cmd.cdw12 = 3;
-		err = nvme_submit_admin_passthru(hdl, &admin_cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, &admin_cmd);
 		if (err) {
 			fprintf(stderr, "ERROR : drive-info opcode failed with 0x%x\n", err);
 			return -1;
@@ -2874,7 +2875,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 					  struct plugin *plugin)
 {
 	int err = 0;
-	__u32 result = 0;
+	__u64 result = 0;
 	const char *desc = "Enable, Disable or Get cmd latency monitoring stats";
 	const char *option = "enable or disable or status, default is status";
 	const char *cmdstr =
@@ -3233,7 +3234,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 						struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Clear FW activation history";
-	__u32 result = 0;
+	__u64 result = 0;
 	__u8 fid = MICRON_FEATURE_CLEAR_FW_ACTIVATION_HISTORY;
 	enum eDriveModel model = UNKNOWN_MODEL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -3267,7 +3268,7 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 					 struct command *command, struct plugin *plugin)
 {
 	int err = 0;
-	__u32 result = 0;
+	__u64 result = 0;
 	const char *desc = "Enable or Disable Controller telemetry log generation";
 	const char *option = "enable or disable or status";
 	const char *select =
@@ -3367,7 +3368,7 @@ int nvme_get_log_lpo(struct nvme_transport_handle *hdl, __u8 log_id, __u32 lpo, 
 		nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM,
 				  ptr, xfer_len);
 		nvme_init_get_log_lpo(&cmd, lpo);
-		ret = nvme_get_log(hdl, &cmd, false, xfer_len, NULL);
+		ret = nvme_get_log(hdl, &cmd, false, xfer_len);
 		if (ret)
 			return ret;
 		offset += xfer_len;
@@ -3480,7 +3481,7 @@ static int GetOcpEnhancedTelemetryLog(struct nvme_transport_handle *hdl, const c
 	/* Enable ETDAS */
 	unsigned int uiBufferSize = 512;
 	unsigned char pBuffer[512] = { 0 };
-	__u32 result = 0;
+	__u64 result = 0;
 
 	pBuffer[1] = 1;
 

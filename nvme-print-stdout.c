@@ -9,10 +9,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <ccan/ccan/strset/strset.h>
-#include <ccan/ccan/htable/htable_type.h>
-#include <ccan/ccan/htable/htable.h>
-#include <ccan/ccan/hash/hash.h>
+#include <ccan/strset/strset.h>
+#include <ccan/htable/htable_type.h>
+#include <ccan/htable/htable.h>
+#include <ccan/hash/hash.h>
 
 #include "nvme.h"
 #include "libnvme.h"
@@ -1747,6 +1747,20 @@ static void stdout_status(int status)
 	}
 }
 
+static void stdout_opcode_status(int status, bool admin, __u8 opcode)
+{
+	int val = nvme_status_get_value(status);
+	int type = nvme_status_get_type(status);
+
+	if (status >= 0 && type == NVME_STATUS_TYPE_NVME) {
+		fprintf(stderr, "NVMe status: %s(0x%x)\n",
+			nvme_opcode_status_to_string(val, admin, opcode), val);
+		return;
+	}
+
+	stdout_status(status);
+}
+
 static void stdout_error_status(int status, const char *msg, va_list ap)
 {
 	vfprintf(stderr, msg, ap);
@@ -2356,17 +2370,17 @@ static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 	__u16 rsvd13 = oncs >> 13;
 	bool nszs = !!(oncs & NVME_CTRL_ONCS_NAMESPACE_ZEROES);
 	bool maxwzd = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES_DEALLOCATE);
-	bool afc  = !!(oncs & NVME_CTRL_ONCS_ALL_FAST_COPY);
-	bool csa  = !!(oncs & NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY);
-	bool copy = !!(oncs & NVME_CTRL_ONCS_COPY);
-	bool vrfy = !!(oncs & NVME_CTRL_ONCS_VERIFY);
-	bool tmst = !!(oncs & NVME_CTRL_ONCS_TIMESTAMP);
-	bool resv = !!(oncs & NVME_CTRL_ONCS_RESERVATIONS);
-	bool save = !!(oncs & NVME_CTRL_ONCS_SAVE_FEATURES);
-	bool wzro = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES);
-	bool dsms = !!(oncs & NVME_CTRL_ONCS_DSM);
-	bool wunc = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
-	bool cmp  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
+	bool nvmafc  = !!(oncs & NVME_CTRL_ONCS_ALL_FAST_COPY);
+	bool nvmcsa  = !!(oncs & NVME_CTRL_ONCS_COPY_SINGLE_ATOMICITY);
+	bool nvmcpys = !!(oncs & NVME_CTRL_ONCS_COPY);
+	bool nvmvfys = !!(oncs & NVME_CTRL_ONCS_VERIFY);
+	bool tss = !!(oncs & NVME_CTRL_ONCS_TIMESTAMP);
+	bool reservs = !!(oncs & NVME_CTRL_ONCS_RESERVATIONS);
+	bool ssfs = !!(oncs & NVME_CTRL_ONCS_SAVE_FEATURES);
+	bool nvmwzsv = !!(oncs & NVME_CTRL_ONCS_WRITE_ZEROES);
+	bool nvmdsmsv = !!(oncs & NVME_CTRL_ONCS_DSM);
+	bool nvmwusv = !!(oncs & NVME_CTRL_ONCS_WRITE_UNCORRECTABLE);
+	bool nvmcmps  = !!(oncs & NVME_CTRL_ONCS_COMPARE);
 
 	if (rsvd13)
 		printf("  [15:13] : %#x\tReserved\n", rsvd13);
@@ -2375,27 +2389,27 @@ static void stdout_id_ctrl_oncs(__le16 ctrl_oncs)
 	printf("  [11:11] : %#x\tMaximum Write Zeroes with Deallocate %sSupported\n",
 		maxwzd, maxwzd ? "" : "Not ");
 	printf("  [10:10] : %#x\tAll Fast Copy %sSupported\n",
-		afc, afc ? "" : "Not ");
+		nvmafc, nvmafc ? "" : "Not ");
 	printf("  [9:9] : %#x\tCopy Single Atomicity %sSupported\n",
-		csa, csa ? "" : "Not ");
+		nvmcsa, nvmcsa ? "" : "Not ");
 	printf("  [8:8] : %#x\tCopy %sSupported\n",
-		copy, copy ? "" : "Not ");
+		nvmcpys, nvmcpys ? "" : "Not ");
 	printf("  [7:7] : %#x\tVerify %sSupported\n",
-		vrfy, vrfy ? "" : "Not ");
+		nvmvfys, nvmvfys ? "" : "Not ");
 	printf("  [6:6] : %#x\tTimestamp %sSupported\n",
-		tmst, tmst ? "" : "Not ");
+		tss, tss ? "" : "Not ");
 	printf("  [5:5] : %#x\tReservations %sSupported\n",
-		resv, resv ? "" : "Not ");
+		reservs, reservs ? "" : "Not ");
 	printf("  [4:4] : %#x\tSave and Select %sSupported\n",
-		save, save ? "" : "Not ");
-	printf("  [3:3] : %#x\tWrite Zeroes %sSupported\n",
-		wzro, wzro ? "" : "Not ");
-	printf("  [2:2] : %#x\tData Set Management %sSupported\n",
-		dsms, dsms ? "" : "Not ");
-	printf("  [1:1] : %#x\tWrite Uncorrectable %sSupported\n",
-		wunc, wunc ? "" : "Not ");
-	printf("  [0:0] : %#x\tCompare %sSupported\n",
-		cmp, cmp ? "" : "Not ");
+		ssfs, ssfs ? "" : "Not ");
+	printf("  [3:3] : %#x\tWrite Zeroes Support Variants\n",
+		nvmwzsv);
+	printf("  [2:2] : %#x\tDataset Management Support Variants\n",
+		nvmdsmsv);
+	printf("  [1:1] : %#x\tWrite Uncorrectable Support Variants\n",
+		nvmwusv);
+	printf("  [0:0] : %#x\tCompare Command %sSupported\n",
+		nvmcmps, nvmcmps ? "" : "Not ");
 	printf("\n");
 }
 
@@ -4699,7 +4713,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		stdout_sanitize_log_ssi(sanitize->ssi, status);
 }
 
-static void stdout_select_result(enum nvme_features_id fid, __u32 result)
+static void stdout_select_result(enum nvme_features_id fid, __u64 result)
 {
 	if (result & 0x1)
 		printf("  Feature is saveable\n");
@@ -4868,23 +4882,23 @@ static void stdout_directive_show_fields(__u8 dtype, __u8 doper,
 	}
 }
 
-static void stdout_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+static void stdout_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 				  void *buf, __u32 len)
 {
-	printf("dir-receive: type:%#x operation:%#x spec:%#x nsid:%#x result:%#x\n",
-		type, oper, spec, nsid, result);
+	printf("dir-receive: type:%#x operation:%#x spec:%#x nsid:%#x result:%#"PRIx64"\n",
+		type, oper, spec, nsid, (uint64_t)result);
 	if (stdout_print_ops.flags & VERBOSE)
 		stdout_directive_show_fields(type, oper, result, buf);
 	else if (buf)
 		d(buf, len, 16, 1);
 }
 
-static void stdout_lba_status_info(__u32 result)
+static void stdout_lba_status_info(__u64 result)
 {
 	printf("\tLBA Status Information Poll Interval (LSIPI)  : %u\n",
-	       NVME_FEAT_LBAS_LSIPI(result));
+	       (__u32)NVME_FEAT_LBAS_LSIPI(result));
 	printf("\tLBA Status Information Report Interval (LSIRI): %u\n",
-	       NVME_FEAT_LBAS_LSIRI(result));
+	       (__u32)NVME_FEAT_LBAS_LSIRI(result));
 }
 
 void stdout_d(unsigned char *buf, int len, int width, int group)
@@ -6679,6 +6693,7 @@ static struct print_ops stdout_print_ops = {
 	.show_message			= stdout_message,
 	.show_perror			= stdout_perror,
 	.show_status			= stdout_status,
+	.show_opcode_status		= stdout_opcode_status,
 	.show_error_status		= stdout_error_status,
 	.show_key_value			= stdout_key_value,
 };

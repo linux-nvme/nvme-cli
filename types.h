@@ -34,7 +34,7 @@ struct nvme_get_log_args {
 	__u64 lpo;
 	void *log;
 	__u32 len;
-	__u32 *result;
+	__u64 *result;
 };
 
 #endif

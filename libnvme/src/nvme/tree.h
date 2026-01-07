@@ -191,7 +191,7 @@ int nvme_default_host(struct nvme_global_ctx *ctx, nvme_host_t *h);
  *  which the caller needs to free), or negative error code otherwise.
  */
 int nvme_host_get_ids(struct nvme_global_ctx *ctx,
-		      char *hostnqn_arg, char *hostid_arg,
+		      const char *hostnqn_arg, const char *hostid_arg,
 		      char **hostnqn, char **hostid);
 
 /**

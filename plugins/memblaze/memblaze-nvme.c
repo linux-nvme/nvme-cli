@@ -476,7 +476,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *acm
 		struct plugin *plugin)
 {
 	const char *desc = "Get Memblaze power management ststus\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
-	__u32 result;
+	__u64 result;
 	__u32 feature_id = MB_FEAT_POWER_MGMT;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -494,8 +494,9 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *acm
 	if (err < 0)
 		perror("get-feature");
 	if (!err)
-		printf("get-feature:0x%02x (%s), %s value: %#08x\n", feature_id,
-		       mb_feature_to_string(feature_id), nvme_select_to_string(0), result);
+		printf("get-feature:0x%02x (%s), %s value: %#016" PRIx64 "\n",
+			feature_id, mb_feature_to_string(feature_id),
+			nvme_select_to_string(0), (uint64_t)result);
 	else if (err > 0)
 		nvme_show_status(err);
 	return err;
@@ -509,7 +510,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *acm
 	const char *save = "specifies that the controller shall save the attribute";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -562,7 +563,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *acmd,
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -744,7 +745,7 @@ static int memblaze_fw_commit(struct nvme_transport_handle *hdl, int select)
 		.cdw12		= select,
 	};
 
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 static int mb_selective_download(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -850,7 +851,7 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 			perror("fw-download");
 			goto out_free;
 		}
-		err = nvme_submit_admin_passthru(hdl, &cmd, NULL);
+		err = nvme_submit_admin_passthru(hdl, &cmd);
 		if (err < 0) {
 			perror("fw-download");
 			goto out_free;
@@ -1012,7 +1013,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *acmd,
 
 	int err;
 
-	__u32 result;
+	__u64 result;
 
 	struct config {
 		__u32 feature_id;
@@ -1065,7 +1066,7 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *acmd, struct 
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 	void *buf = NULL;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -1104,8 +1105,8 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *acmd, struct 
 		err = nvme_get_features(hdl, nsid, fid, sel, cdw11, 0, buf, data_len,
 				&result);
 		if (!err) {
-			printf("Latency Statistics Tracking (FID 0x%X) is currently (%i).\n", fid,
-			       result);
+			printf("Latency Statistics Tracking (FID 0x%X) is currently (%"PRIu64").\n",
+				fid, (uint64_t)result);
 		} else {
 			printf("Could not read feature id 0xE2.\n");
 			return err;
@@ -1739,7 +1740,7 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 
 	// Set feature
 
-	uint32_t result = 0;
+	__u64 result = 0;
 
 	err = nvme_set_features(hdl, 0, FID_LATENCY_FEATURE, 0, 0 | cfg.perf_monitor,
 			0 | cfg.cmd_mask,
@@ -1748,7 +1749,8 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 			((cfg.de_allocate_trim_threshold & 0xff) << 16),
 			0, 0, NULL, 0, &result);
 	if (!err)
-		printf("%s have done successfully. result = %#" PRIx32 ".\n", acmd->name, result);
+		printf("%s have done successfully. result = %#" PRIx64 ".\n",
+			acmd->name, (uint64_t)result);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1759,7 +1761,8 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 
 static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	int err = 0;
+	__u64 res = 0;
+	int err;
 
 	// Get the configuration
 
@@ -1775,11 +1778,10 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, s
 
 	// Get feature
 
-	uint32_t result = 0;
-
 	err = nvme_get_features_simple(hdl, FID_LATENCY_FEATURE,
-			NVME_GET_FEATURES_SEL_CURRENT, &result);
+			NVME_GET_FEATURES_SEL_CURRENT, &res);
 	if (!err) {
+		uint32_t result = res;
 		printf("%s have done successfully. result = %#" PRIx32 ".\n", acmd->name, result);
 
 		printf("latency statistics enable status = %d\n", (result & (0x01 << 0)) >> 0);

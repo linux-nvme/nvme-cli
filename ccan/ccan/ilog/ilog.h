@@ -1,7 +1,6 @@
 /* CC0 (Public domain) - see LICENSE file for details */
 #if !defined(_ilog_H)
 # define _ilog_H (1)
-# include "config.h"
 # include <stdint.h>
 # include <limits.h>
 # include <ccan/compiler/compiler.h>

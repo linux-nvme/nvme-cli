@@ -452,7 +452,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_ix,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (ret) {
 		fprintf(stderr,
 			"ERROR: SNDK: Unable to get 0x%x Log Page with uuid %d, ret = 0x%x\n",
@@ -479,7 +479,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_ix,
 				NVME_LOG_CDW14_UUID_SHIFT,
 				NVME_LOG_CDW14_UUID_MASK);
-		ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+		ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (ret) {
 			fprintf(stderr,
 				"ERROR: SNDK: Unable to read 0x%x Log with uuid %d, ret = 0x%x\n",
@@ -549,24 +549,6 @@ __u64 sndk_get_drive_capabilities(struct nvme_global_ctx *ctx,
 					SNDK_DRIVE_CAP_SET_LATENCY_MONITOR);
 			break;
 
-		case SNDK_NVME_SNESSD1_DEV_ID_E1L:
-		case SNDK_NVME_SNESSD1_DEV_ID_E2:
-		case SNDK_NVME_SNESSD1_DEV_ID_E3S:
-		case SNDK_NVME_SNESSD1_DEV_ID_E3L:
-		case SNDK_NVME_SNESSD1_DEV_ID_U2:
-			capabilities |= (SNDK_DRIVE_CAP_C0_LOG_PAGE |
-					SNDK_DRIVE_CAP_C3_LOG_PAGE |
-					SNDK_DRIVE_CAP_CA_LOG_PAGE |
-					SNDK_DRIVE_CAP_OCP_C4_LOG_PAGE |
-					SNDK_DRIVE_CAP_OCP_C5_LOG_PAGE |
-					SNDK_DRIVE_CAP_UDUI |
-					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE |
-					SNDK_DRIVE_CAP_CLOUD_SSD_VERSION |
-					SNDK_DRIVE_CAP_LOG_PAGE_DIR |
-					SNDK_DRIVE_CAP_DRIVE_STATUS |
-					SNDK_DRIVE_CAP_SET_LATENCY_MONITOR);
-			break;
-
 		case SNDK_NVME_SN861_DEV_ID_E1S:
 			capabilities |= (SNDK_DRIVE_CAP_C0_LOG_PAGE |
 				SNDK_DRIVE_CAP_C3_LOG_PAGE |
@@ -610,6 +592,24 @@ __u64 sndk_get_drive_capabilities(struct nvme_global_ctx *ctx,
 
 	case SNDK_NVME_SNDK_VID:
 		switch (read_device_id) {
+		case SNDK_NVME_SNESSD1_DEV_ID_E1L:
+		case SNDK_NVME_SNESSD1_DEV_ID_E2:
+		case SNDK_NVME_SNESSD1_DEV_ID_E3S:
+		case SNDK_NVME_SNESSD1_DEV_ID_E3L:
+		case SNDK_NVME_SNESSD1_DEV_ID_U2:
+			capabilities |= (SNDK_DRIVE_CAP_C0_LOG_PAGE |
+					SNDK_DRIVE_CAP_C3_LOG_PAGE |
+					SNDK_DRIVE_CAP_CA_LOG_PAGE |
+					SNDK_DRIVE_CAP_OCP_C4_LOG_PAGE |
+					SNDK_DRIVE_CAP_OCP_C5_LOG_PAGE |
+					SNDK_DRIVE_CAP_UDUI |
+					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+					SNDK_DRIVE_CAP_CLOUD_SSD_VERSION |
+					SNDK_DRIVE_CAP_LOG_PAGE_DIR |
+					SNDK_DRIVE_CAP_DRIVE_STATUS |
+					SNDK_DRIVE_CAP_SET_LATENCY_MONITOR);
+			break;
+
 		case SNDK_NVME_SN7150_DEV_ID_1:
 		case SNDK_NVME_SN7150_DEV_ID_2:
 		case SNDK_NVME_SN7150_DEV_ID_3:
@@ -860,7 +860,7 @@ int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer,
 int sndk_check_ctrl_telemetry_option_disabled(struct nvme_transport_handle *hdl)
 {
 	int err;
-	__u32 result;
+	__u64 result;
 
 	err = nvme_get_features(hdl, 0,
 		SNDK_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,

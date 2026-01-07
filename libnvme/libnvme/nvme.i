@@ -5,6 +5,12 @@
  *
  * Authors: Hannes Reinecke <hare@suse.de>
  */
+%begin %{
+/* WORKAROUND: The top-level meson.build defines the macro "fallthrough", which
+               clashes with the same macro defined in Python.h.
+ */
+#undef fallthrough
+%}
 
 %module(docstring="Python bindings for libnvme") nvme
 %feature("autodoc", "1");
@@ -104,14 +110,6 @@ PyObject *hostid_from_file();
 	temp.tos = -1;
 	temp.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	while (PyDict_Next($input, &pos, &key, &value)) {
-		if (!PyUnicode_CompareWithASCIIString(key, "host_traddr")) {
-			temp.host_traddr = PyBytes_AsString(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "host_iface")) {
-			temp.host_iface = PyBytes_AsString(value);
-			continue;
-		}
 		if (!PyUnicode_CompareWithASCIIString(key, "nr_io_queues")) {
 			temp.nr_io_queues = PyLong_AsLong(value);
 			continue;
@@ -824,7 +822,7 @@ struct nvme_ns {
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
 		    nvme_init_get_log_supported_log_pages(&cmd, NVME_CSI_NVM, &log);
-		    ret = nvme_get_log(nvme_ctrl_get_transport_handle($self), &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
+		    ret = nvme_get_log(nvme_ctrl_get_transport_handle($self), &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret) {

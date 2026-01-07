@@ -5,328 +5,58 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-project(
-    'libnvme', ['c'],
-    meson_version: '>= 0.62.0',
-    version: '1.16',
-    license: 'LGPL-2.1-or-later',
-    default_options: [
-        'c_std=gnu99',
-        'warning_level=1',
-        'buildtype=debugoptimized',
-        'prefix=/usr/local',
-        'sysconfdir=etc',
-        'wrap_mode=nofallback'
-    ]
-)
-
-vstr = meson.project_version().split('-rc')[0]
-vstr = vstr.split('.dev')[0]
-vid = vstr.split('.')
-library_version = '.'.join([vid[0], vid[1]])
-if vid.length() == 3
-  library_version = '.'.join([library_version, vid[2]])
-else
-  library_version = library_version + '.0'
-endif
-
-################################################################################
-cc = meson.get_compiler('c')
-cxx_available = add_languages('cpp', required: false, native: false)
-
-prefixdir  = get_option('prefix')
-libdir     = join_paths(prefixdir, get_option('libdir'))
-includedir = join_paths(prefixdir, get_option('includedir'))
-datadir    = join_paths(prefixdir, get_option('datadir'))
-mandir     = join_paths(prefixdir, get_option('mandir'))
-bindir     = join_paths(prefixdir, get_option('bindir'))
-sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
-
-################################################################################
-conf = configuration_data()
-
-version_tag = get_option('version-tag')
-if version_tag != ''
-    conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
-else
-    r = run_command('scripts/meson-vcs-tag.sh',
-                    meson.current_source_dir(),
-                    meson.project_version(),
-                    check: true)
-    conf.set('GIT_VERSION', '"@0@"'.format(r.stdout().strip()))
-endif
-conf.set('PROJECT_VERSION', '"@0@"'.format(meson.project_version()))
-
-conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
-
-if get_option('json-c').disabled()
-    json_c_dep = dependency('', required: false)
-else
-    json_c_dep = dependency('json-c',
-                            version: '>=0.13',
-                            required: get_option('json-c'),
-                            fallback : ['json-c', 'json_c_dep'])
-endif
-conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c required?')
-
-if get_option('liburing').disabled()
-    liburing_dep = dependency('', required: false)
-else
-    liburing_dep = dependency('liburing', version: '>=2.2', required: get_option('liburing'))
-endif
-conf.set('CONFIG_LIBURING', liburing_dep.found(), description: 'Is liburing available?')
-
-if get_option('openssl').disabled()
-  openssl_dep = dependency('', required: false)
-else
-  openssl_dep = dependency('openssl',
-                           version: '>=3.0.0',
-                           required: get_option('openssl'),
-                           fallback : ['openssl', 'libssl_dep'])
-endif
-if openssl_dep.found()
-  # Test for LibreSSL v3.x with incomplete OpenSSL v3 APIs
-  if openssl_dep.type_name() != 'internal'
-    is_libressl = cc.has_header_symbol('openssl/opensslv.h',
-                                       'LIBRESSL_VERSION_NUMBER',
-                                       dependencies: openssl_dep)
-    has_header = cc.has_header('openssl/core_names.h',
-                               dependencies: openssl_dep)
-    if is_libressl and not has_header
-      openssl_dep = dependency('', required: false)
+if want_libnvme
+    if openssl_dep.found() and meson.can_run_host_binaries()
+        if openssl_dep.type_name() != 'internal'
+            # Check for a bug in the EVP_PKEY_CTX_add1_hkdf_info implementation
+            res = cc.run(
+                files('test/hkdf_add1.c'),
+                dependencies: [openssl_dep],
+                name: 'check hkdf_add1'
+            )
+            if res.returncode() == 1
+                warning('EVP_PKEY_CTX_add1_hkdf_info bahaves incorrectly')
+            else
+                message('EVP_PKEY_CTX_add1_hkdf_info behaves sanely')
+            endif
+        endif
     endif
-  endif
-endif
-conf.set('CONFIG_OPENSSL', openssl_dep.found(),
-         description: 'Is OpenSSL/LibreSSL available?')
 
-if get_option('keyutils').disabled()
-    keyutils_dep = dependency('', required: false)
-else
-    keyutils_dep = dependency('libkeyutils',
-                              required : get_option('keyutils'))
-endif
-conf.set('CONFIG_KEYUTILS', keyutils_dep.found(),
-         description: 'Is libkeyutils available?')
-
-if get_option('libdbus').disabled()
-    libdbus_dep = dependency('', required: false)
-else
-    # Check for libdus availability. Optional, only required for MCTP dbus scan
-    libdbus_dep = dependency(
-        'dbus-1',
-        required: true,
-        fallback: ['dbus', 'libdbus_dep'],
-        default_options: [
-            'default_library=static',
-            'embedded_tests=false',
-            'message_bus=false',
-            'modular_tests=disabled',
-            'tools=false',
-        ],
+    ############################################################################
+    configure_file(
+        input:         'libnvme.spec.in',
+        output:        'libnvme.spec',
+        configuration: substs,
     )
-endif
 
-conf.set('CONFIG_DBUS', libdbus_dep.found(), description: 'Enable dbus support?')
-
-# local (cross-compilable) implementations of ccan configure steps
-conf.set10(
-    'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
-    cc.compiles(
-        '''int main(void) {
-               return __builtin_types_compatible_p(int, long);
-           }
-        ''',
-        name: '__builtin_type_compatible_p'
-    ),
-    description: 'Is __builtin_types_compatible_p available?'
-)
-conf.set10(
-    'HAVE_TYPEOF',
-    cc.compiles(
-        '''int main(void) {
-                int a = 1;
-                typeof(a) b;
-                b = a;
-           }
-        ''',
-        name: 'typeof'
-    ),
-    description: 'Is typeof available?'
-)
-conf.set10(
-    'HAVE_BYTESWAP_H',
-    cc.compiles(
-        '''#include <byteswap.h>''',
-        name: 'byteswap.h'
-    ),
-    description: 'Is byteswap.h include-able?'
-)
-conf.set10(
-    'HAVE_BSWAP_64',
-    cc.links(
-        '''#include <byteswap.h>
-            int main(void) {
-                return bswap_64(0);
-            }
-        ''',
-        name: 'bswap64'
-    ),
-    description: 'Is bswap_64 available?'
-)
-conf.set10(
-    'HAVE_LITTLE_ENDIAN',
-    host_machine.endian() == 'little',
-    description: 'Building for little-endian'
-)
-conf.set10(
-    'HAVE_BIG_ENDIAN',
-    host_machine.endian() == 'big',
-    description: 'Building for big-endian'
-)
-conf.set10(
-    'HAVE_STATEMENT_EXPR',
-    cc.compiles(
-        '''int main(int argc, char **argv) {
-               return ({ int x = argc; x == 1; });
-           }
-        ''',
-        name: 'statement-expr'
-    ),
-    description: 'Can we use a statement as an expression?'
-)
-conf.set10(
-    'HAVE_ISBLANK',
-    cc.links(
-        '''#include <ctype.h>
-           int main(int argc, char **argv) {
-               return isblank(argv[0][0]);
-           }
-        ''',
-        name: 'isblank'
-    ),
-    description: 'Is isblank() available?'
-)
-conf.set10(
-    'HAVE_LINUX_MCTP_H',
-    cc.compiles(
-        '''#include <linux/mctp.h>''',
-        name: 'linux/mctp.h'
-    ),
-    description: 'Is linux/mctp.h include-able?'
-)
-
-is_static = get_option('default_library') == 'static'
-have_netdb = false
-if not is_static
-  have_netdb = cc.links(
-      '''#include <sys/types.h>
-         #include <sys/socket.h>
-         #include <netdb.h>
-         int main(int argc, char **argv) {
-             struct addrinfo hints, *result;
-             return getaddrinfo(argv[1], argv[2], &hints, &result);
-      }
-      ''',
-      name: 'netdb',
-    )
-endif
-
-conf.set(
-    'HAVE_NETDB',
-    have_netdb,
-    description: 'Is network address and service translation available'
-)
-
-threads_dep = dependency('threads', required: true)
-dl_dep = dependency('dl', required: false)
-conf.set(
-    'HAVE_LIBC_DLSYM',
-    cc.has_function('dlsym', dependencies: dl_dep),
-    description: 'Is dlsym function present',
-)
-
-if cc.has_function_attribute('fallthrough')
-  conf.set('fallthrough', '__attribute__((__fallthrough__))')
+    ############################################################################
+    subdir('src')       # declares: libnvme_dep
+    subdir('libnvme')
+    if get_option('tests')
+        subdir('test')
+    endif
+    if get_option('examples')
+        subdir('examples')
+    endif
 else
-  conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
-endif
-
-if openssl_dep.found() and meson.can_run_host_binaries()
-  if openssl_dep.type_name() != 'internal'
-    # Check for a bug in the EVP_PKEY_CTX_add1_hkdf_info implementation
-    res = cc.run(
-        files('test/hkdf_add1.c'),
-        dependencies: [openssl_dep],
-        name: 'check hkdf_add1'
-    )
-    if res.returncode() == 1
-      warning('EVP_PKEY_CTX_add1_hkdf_info bahaves incorrectly')
+    # Fallback to using a pre-installed libnvme (if available)
+    if std_prefix
+        # When prefix points to a standard location, meson can use
+        # standard methods (e.g. pkg-config) to find the library.
+        libnvme_dep = dependency(
+            'libnvme',
+            version: '>=@0@'.format(libnvme_so_version),
+            required: want_nvme,
+        )
     else
-      message('EVP_PKEY_CTX_add1_hkdf_info behaves sanely')
+        # When prefix points to a non-standard location
+        # let's ask the C compiler to find the library for us.
+        libnvme_dep = cc.find_library(
+            'nvme',
+            dirs: prefixdir / get_option('libdir'),
+            required: want_nvme,
+        )
     endif
-  endif
 endif
 
-################################################################################
-substs = configuration_data()
-substs.set('NAME',    meson.project_name())
-substs.set('VERSION', meson.project_version())
-substs.set('LICENSE', meson.project_license()[0])
-substs.set('PREFIX', prefixdir)
-configure_file(
-    input:         'libnvme.spec.in',
-    output:        'libnvme.spec',
-    configuration: substs,
-)
-
-################################################################################
-add_project_arguments(
-    [
-        '-fomit-frame-pointer',
-        '-D_GNU_SOURCE',
-    ],
-    language : 'c',
-)
-incdir = include_directories(['.', 'ccan', 'src'])
-
-################################################################################
-subdir('internal')
-subdir('ccan')
-subdir('src')
-subdir('libnvme')
-if get_option('tests')
-    subdir('test')
-endif
-if get_option('examples')
-    subdir('examples')
-endif
 subdir('doc')
-
-################################################################################
-if meson.version().version_compare('>=0.53.0')
-    path_dict = {
-        'prefixdir':         prefixdir,
-        'sysconfdir':        sysconfdir,
-        'bindir':            bindir,
-        'includedir':        includedir,
-        'datadir':           datadir,
-        'mandir':            mandir,
-        'libdir':            libdir,
-        'build location':    meson.current_build_dir(),
-    }
-    summary(path_dict, section: 'Paths')
-    dep_dict = {
-        'json-c':            json_c_dep.found(),
-        'OpenSSL':           openssl_dep.found(),
-        'keyutitls':         keyutils_dep.found(),
-        'libdbus':           libdbus_dep.found(),
-        'Python 3':          py3_dep.found(),
-        'liburing':          liburing_dep.found(),
-    }
-    summary(dep_dict, section: 'Dependencies')
-    conf_dict = {
-        'git version':       conf.get('GIT_VERSION'),
-    }
-    summary(conf_dict, section: 'Configuration')
-endif

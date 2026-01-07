@@ -298,7 +298,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	int err = -1;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 result;
+	__u64 result;
 	struct feature_latency_monitor buf = { 0 };
 	__u32  nsid = NVME_NSID_ALL;
 	struct stat nvme_stat;
@@ -422,7 +422,7 @@ static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	__u32 result;
+	__u64 result;
 	int err;
 	bool uuid;
 	__u8 uuid_index = 0;
@@ -462,8 +462,8 @@ static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command
 	err = nvme_get_features(hdl, cfg.nsid, OCP_FID_LM, cfg.sel, 0,
 			uuid_index, NULL, 0, &result);
 	if (!err) {
-		printf("get-feature:0xC5 %s value: %#08x\n",
-		nvme_select_to_string(cfg.sel), result);
+		printf("get-feature:0xC5 %s value: %#016"PRIx64"\n",
+		nvme_select_to_string(cfg.sel), (uint64_t)result);
 
 		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(0xC5, result);
@@ -500,7 +500,7 @@ static int eol_plp_failure_mode_get(struct nvme_transport_handle *hdl, const __u
 				    __u8 sel, bool uuid)
 {
 	__u8 uidx = 0;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	if (uuid) {
@@ -531,7 +531,7 @@ static int eol_plp_failure_mode_set(struct nvme_transport_handle *hdl, const __u
 				    const __u8 fid, __u8 mode, bool sv,
 				    bool uuid)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	__u8 uidx = 0;
 
@@ -689,7 +689,7 @@ static int get_telemetry_data(struct nvme_transport_handle *hdl, __u32 ns, __u8 
 	cmd.cdw12 = (__u32)(0x00000000FFFFFFFF & offset);
 	cmd.cdw13 = (__u32)((0xFFFFFFFF00000000 & offset) >> 8);
 	cmd.cdw14 = 0;
-	return nvme_submit_admin_passthru(hdl, &cmd, NULL);
+	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
 static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
@@ -838,7 +838,7 @@ static int extract_dump_get_log(struct nvme_transport_handle *hdl, char *feature
 		nvme_init_get_log(&cmd, nsid, log_id, NVME_CSI_NVM,
 				  data, transfersize);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 		if (err) {
 			if (i > 0)
 				goto close_output;
@@ -1218,7 +1218,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	cmd.cdw10 |= NVME_FIELD_ENCODE(NVME_LOG_TELEM_HOST_LSP_CREATE,
 			NVME_LOG_CDW10_LSP_SHIFT,
 			NVME_LOG_CDW10_LSP_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err < 0)
 		nvme_show_error("Failed to fetch the log from drive.\n");
 	else if (err > 0) {
@@ -1255,7 +1255,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 		nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM,
 				  telemetry_log, bs);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE, NULL);
+		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (err < 0) {
 			nvme_show_error("Failed to fetch the log from drive.\n");
 			break;
@@ -1938,7 +1938,7 @@ static int ocp_device_capabilities_log(int argc, char **argv, struct command *ac
 
 static int ocp_set_telemetry_profile(struct nvme_transport_handle *hdl, __u8 tps)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	__u8 uidx = 0;
 
@@ -2002,18 +2002,18 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-/// DSSD Power State (Feature Identifier C8h) Get Feature
+/// Telemetry Profile (Feature Identifier C8h) Get Feature
 static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct command *acmd,
 					      struct plugin *plugin)
 {
-	const char *desc = "Define Issue Get Feature command (FID: 0xC8) Latency Monitor";
+	const char *desc = "Define Issue Get Feature command (FID: 0xC8) Telemetry Profile";
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
-	__u32 result;
+	__u64 result;
 	int err;
 	bool uuid;
 	__u8 uuid_index = 0;
@@ -2053,8 +2053,8 @@ static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct comma
 	err = nvme_get_features(hdl, cfg.nsid, OCP_FID_TEL_CFG, cfg.sel, 0,
 			uuid_index, NULL, 0, &result);
 	if (!err) {
-		printf("get-feature:0xC8 %s value: %#08x\n",
-		nvme_select_to_string(cfg.sel), result);
+		printf("get-feature:0xC8 %s value: %#016"PRIx64"\n",
+		nvme_select_to_string(cfg.sel), (uint64_t)result);
 
 		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(0xC8, result);
@@ -2077,7 +2077,7 @@ set_dssd_power_state(struct nvme_transport_handle *hdl,
 				const __u8 fid, __u8 power_state, bool sv,
 				bool uuid)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	__u8 uidx = 0;
 
@@ -2154,7 +2154,7 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *a
 static int get_dssd_power_state(struct nvme_transport_handle *hdl, const __u32 nsid,
 				const __u8 fid, __u8 sel, bool uuid)
 {
-	__u32 result;
+	__u64 result;
 	int err;
 	__u8 uuid_index = 0;
 
@@ -2169,7 +2169,8 @@ static int get_dssd_power_state(struct nvme_transport_handle *hdl, const __u32 n
 
 	err = nvme_get_features(hdl, nsid, fid, sel, 0, uuid_index, NULL, 0, &result);
 	if (!err) {
-		printf("get-feature:0xC7 %s value: %#08x\n", nvme_select_to_string(sel), result);
+		printf("get-feature:0xC7 %s value: %#016"PRIx64"\n",
+			nvme_select_to_string(sel), (uint64_t)result);
 
 		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(fid, result);
@@ -2246,7 +2247,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int err;
-	__u32 result;
+	__u64 result;
 	__u8 uidx = 0;
 
 	struct config {
@@ -2305,7 +2306,7 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 	const __u8 fid = 0xc6;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -2328,7 +2329,8 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 	err = nvme_get_features(hdl, nsid, OCP_FID_PLPI, cfg.sel, 0, 0,
 			NULL, 0, &result);
 	if (!err) {
-		printf("get-feature:0xC6 %s value: %#08x\n", nvme_select_to_string(cfg.sel), result);
+		printf("get-feature:0xC6 %s value: %#016"PRIx64"\n",
+			nvme_select_to_string(cfg.sel), (uint64_t)result);
 
 		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(fid, result);
@@ -2356,7 +2358,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int err;
-	__u32 result;
+	__u64 result;
 	__u8 uidx = 0;
 
 	struct config {
@@ -2411,7 +2413,7 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *ac
 	const __u8 fid = OCP_FID_DAEC;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	__u32 result;
+	__u64 result;
 	int err;
 
 	struct config {
@@ -2433,7 +2435,8 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *ac
 
 	err = nvme_get_features(hdl, nsid, fid, cfg.sel, 0, 0, NULL, 0, &result);
 	if (!err) {
-		printf("get-feature:0xC9 %s value: %#08x\n", nvme_select_to_string(cfg.sel), result);
+		printf("get-feature:0xC9 %s value: %#016"PRIx64"\n",
+			nvme_select_to_string(cfg.sel), (uint64_t)result);
 
 		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(fid, result);
@@ -2672,7 +2675,7 @@ static int error_injection_get(struct nvme_transport_handle *hdl, const __u8 sel
 	_cleanup_free_ struct erri_entry *entry = NULL;
 	struct erri_get_cq_entry cq_entry;
 	const __u8 fid = OCP_FID_ERRI;
-	__u32 *result = (__u32 *)&cq_entry;
+	__u64 result;
 	__u32 data_len = 0;
 	__u8 uidx = 0;
 	int err;
@@ -2696,13 +2699,14 @@ static int error_injection_get(struct nvme_transport_handle *hdl, const __u8 sel
 	}
 
 	err = nvme_get_features(hdl, 0, fid, sel, 0, uidx, entry,
-			data_len, result);
+			data_len, &result);
 	if (!err) {
+		cq_entry.nume = result;
 		nvme_show_result("Number of Error Injections (feature: %#0*x): %#0*x (%s: %d)",
 				 fid ? 4 : 2, fid, cq_entry.nume ? 10 : 8, cq_entry.nume,
 				 nvme_select_to_string(sel), cq_entry.nume);
 		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
-			nvme_show_select_result(fid, *result);
+			nvme_show_select_result(fid, result);
 		for (i = 0; i < cq_entry.nume; i++) {
 			printf("Entry: %d, Flags: %x (%s%s), Type: %x (%s), NRTDP: %d\n", i,
 			       entry[i].flags, entry[i].enable ? "Enabled" : "Disabled",
@@ -2850,7 +2854,7 @@ static int enable_ieee1667_silo_get(struct nvme_transport_handle *hdl, const __u
 {
 	struct ieee1667_get_cq_entry cq_entry = { 0 };
 	const __u8 fid = OCP_FID_1667;
-	__u32 result;
+	__u64 result;
 	__u8 uidx = 0;
 	int err;
 
@@ -2912,6 +2916,7 @@ static int enable_ieee1667_silo_set(struct nvme_transport_handle *hdl,
 	bool save = argconfig_parse_seen(opts, "save");
 	struct ieee1667_get_cq_entry cq_entry;
 	const __u8 fid = OCP_FID_1667;
+	__u64 result;
 	__u32 cdw11;
 	__u8 uidx = 0;
 	int err;
@@ -2927,7 +2932,8 @@ static int enable_ieee1667_silo_set(struct nvme_transport_handle *hdl,
 
 	cdw11 = OCP_SET(enable, ENABLE_IEEE1667_SILO);
 	err = nvme_set_features(hdl, NVME_NSID_NONE, fid, save,
-		cdw11, 0, 0, uidx, 0, NULL, 0, (__u32 *)&cq_entry);
+		cdw11, 0, 0, uidx, 0, NULL, 0, &result);
+	memcpy(&cq_entry, &result, sizeof(cq_entry));
 	if (err > 0) {
 		nvme_show_status(err);
 	} else if (err < 0) {

@@ -12,79 +12,106 @@
 main = executable(
     'main-test',
     ['test.c'],
-    dependencies: [libnvme_dep],
-    include_directories: [incdir, internal_incdir]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 if cxx_available
     cpp = executable(
         'test-cpp',
         ['cpp.cc'],
-        dependencies: libnvme_dep,
-        include_directories: [incdir, internal_incdir]
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
     )
 
-    test('cpp-dump', cpp)
+    test('libnvme - cpp-dump', cpp)
 
     misc = executable(
         'test-misc',
         ['misc.cc'],
-        dependencies: libnvme_dep,
-        include_directories: [incdir, internal_incdir]
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
     )
-    test('cpp-misc', misc)
+    test('libnvme - cpp-misc', misc)
 
 endif
 
 register = executable(
     'test-register',
     ['register.c'],
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 zns = executable(
     'test-zns',
     ['zns.c'],
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 mi = executable(
     'test-mi',
     ['mi.c', 'utils.c'],
-    dependencies: libnvme_test_dep,
-    include_directories: [incdir, internal_incdir]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_test_dep,
+    ],
 )
 
-test('mi', mi)
+test('libnvme - mi', mi)
 
 mi_mctp = executable(
     'test-mi-mctp',
     ['mi-mctp.c', 'utils.c'],
-    dependencies: libnvme_test_dep,
-    include_directories: [incdir, internal_incdir],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_test_dep,
+    ],
 )
 
-test('mi-mctp', mi_mctp)
+test('libnvme - mi-mctp', mi_mctp)
 
 uuid = executable(
     'test-uuid',
     ['uuid.c'],
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
-test('uuid', uuid)
+test('libnvme - uuid', uuid)
 
 uriparser = executable(
     'test-uriparser',
     ['uriparser.c'],
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
-test('uriparser', uriparser)
+test('libnvme - uriparser', uriparser)
 
 if conf.get('HAVE_NETDB')
     mock_ifaddrs = library(
@@ -100,30 +127,39 @@ if conf.get('HAVE_NETDB')
     tree = executable(
         'tree',
         ['tree.c'],
-        dependencies: libnvme_dep,
-        include_directories: [incdir, internal_incdir],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
         link_with: mock_ifaddrs,
     )
 
-    test('tree', tree, env: mock_ifaddrs_env)
+    test('libnvme - tree', tree, env: mock_ifaddrs_env)
 
     test_util = executable(
         'test-util',
         ['test-util.c'],
-        dependencies: libnvme_dep,
-        include_directories: [incdir, internal_incdir]
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
     )
-    test('util', test_util)
+    test('libnvme - util', test_util)
 endif
 
 psk = executable(
     'test-psk',
     ['psk.c'],
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
-test('psk', psk)
+test('libnvme - psk', psk)
 
 subdir('ioctl')
 subdir('nbft')
@@ -134,9 +170,9 @@ if json_c_dep.found()
 endif
 
 if openssl_dep.found()
-  hkdf_add1 = executable(
-      'hkdf_add1',
-      ['hkdf_add1.c'],
-      dependencies: openssl_dep,
-  )
+    hkdf_add1 = executable(
+        'hkdf_add1',
+        ['hkdf_add1.c'],
+        dependencies: openssl_dep,
+    )
 endif

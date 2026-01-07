@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <ccan/ccan/compiler/compiler.h>
+#include <ccan/compiler/compiler.h>
 
 #include "nvme-print.h"
 
@@ -821,7 +821,7 @@ static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	json_print(r);
 }
 
-static void json_select_result(enum nvme_features_id fid, __u32 result)
+static void json_select_result(enum nvme_features_id fid, __u64 result)
 {
 	struct json_object *r = json_r ? json_r : json_create_object();
 	char json_str[STR_LEN];
@@ -4174,7 +4174,7 @@ static void json_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 	json_print(r);
 }
 
-static void json_lba_status_info(__u32 result)
+static void json_lba_status_info(__u64 result)
 {
 	struct json_object *r = json_create_object();
 
@@ -4974,7 +4974,7 @@ static void json_directive_show_fields(__u8 dtype, __u8 doper, unsigned int resu
 	}
 }
 
-static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 				void *buf, __u32 len)
 {
 	struct json_object *r = json_create_object();
@@ -4989,7 +4989,7 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 	obj_add_str(r, "spec", json_str);
 	sprintf(json_str, "%#x", nsid);
 	obj_add_str(r, "NSID", json_str);
-	sprintf(json_str, "%#x", result);
+	sprintf(json_str, "%#"PRIx64, (uint64_t)result);
 	obj_add_result(r, json_str);
 
 	if (verbose_mode()) {
@@ -5093,6 +5093,26 @@ static void json_output_status(int status)
 	}
 
 	obj_print(r);
+}
+
+static void json_output_opcode_status(int status, bool admin, __u8 opcode)
+{
+	struct json_object *r;
+	char json_str[STR_LEN];
+	int val = nvme_status_get_value(status);
+	int type = nvme_status_get_type(status);
+
+	if (status >= 0 && type == NVME_STATUS_TYPE_NVME) {
+		sprintf(json_str, "status: %d", status);
+		r = obj_create(json_str);
+		obj_add_str(r, "error",
+			    nvme_opcode_status_to_string(val, admin, opcode));
+		obj_add_str(r, "type", "nvme");
+		obj_print(r);
+		return;
+	}
+
+	json_output_status(status);
 }
 
 static void json_output_error_status(int status, const char *msg, va_list ap)
@@ -5577,6 +5597,7 @@ static struct print_ops json_print_ops = {
 	.show_message			= json_output_message,
 	.show_perror			= json_output_perror,
 	.show_status			= json_output_status,
+	.show_opcode_status		= json_output_opcode_status,
 	.show_error_status		= json_output_error_status,
 	.show_key_value			= json_output_key_value,
 };

@@ -186,7 +186,7 @@ static __u32 sndk_dump_udui_data(struct nvme_transport_handle *hdl,
 	admin_cmd.data_len = dataLen;
 	admin_cmd.cdw10 = ((dataLen >> 2) - 1);
 	admin_cmd.cdw12 = offset;
-	ret = nvme_submit_admin_passthru(hdl, &admin_cmd, NULL);
+	ret = nvme_submit_admin_passthru(hdl, &admin_cmd);
 	if (ret) {
 		fprintf(stderr, "ERROR: SNDK: reading DUI data failed\n");
 		nvme_show_status(ret);
@@ -279,6 +279,27 @@ static int sndk_do_cap_udui(struct nvme_transport_handle *hdl, char *file,
 out:
 	free(log);
 	return ret;
+}
+
+static int sndk_get_default_telemetry_da(struct nvme_transport_handle *hdl,
+					 int *data_area)
+{
+	struct nvme_id_ctrl ctrl;
+	int err;
+
+	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
+	err = nvme_identify_ctrl(hdl, &ctrl);
+	if (err) {
+		fprintf(stderr, "ERROR: SNDK: nvme_identify_ctrl() failed 0x%x\n", err);
+		return err;
+	}
+
+	if (ctrl.lpa & 0x40)
+		*data_area = 4;
+	else
+		*data_area = 3;
+
+	return 0;
 }
 
 static int sndk_vs_internal_fw_log(int argc, char **argv,
@@ -423,9 +444,11 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	/* Supported through WDC plugin for non-telemetry */
 	if ((capabilities & SNDK_DRIVE_CAP_INTERNAL_LOG) &&
 	    (telemetry_type != SNDK_TELEMETRY_TYPE_NONE)) {
-		/* Set the default DA to 3 if not specified */
-		if (!telemetry_data_area)
-			telemetry_data_area = 3;
+		if (sndk_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+			fprintf(stderr, "%s: Error determining default telemetry data area\n",
+				__func__);
+			return -EINVAL;
+		}
 
 		ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
 				telemetry_type, telemetry_data_area);
@@ -435,9 +458,11 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	if (capabilities & SNDK_DRIVE_CAP_UDUI) {
 		if ((telemetry_type == SNDK_TELEMETRY_TYPE_HOST) ||
 		    (telemetry_type == SNDK_TELEMETRY_TYPE_CONTROLLER)) {
-			/* Set the default DA to 3 if not specified */
-			if (!telemetry_data_area)
-				telemetry_data_area = 3;
+			if (sndk_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+				fprintf(stderr, "%s: Error determining default telemetry data area\n",
+					__func__);
+				return -EINVAL;
+			}
 
 			ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
 					telemetry_type, telemetry_data_area);
@@ -497,11 +522,11 @@ static int sndk_clear_assert_dump(int argc, char **argv,
 
 static int sndk_do_sn861_drive_resize(struct nvme_transport_handle *hdl,
 		uint64_t new_size,
-		__u32 *result)
+		__u64 *result)
 {
-	int ret;
-	struct nvme_passthru_cmd admin_cmd;
 	uint8_t buffer[SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE] = {0};
+	struct nvme_passthru_cmd admin_cmd;
+	int ret;
 
 	memset(&admin_cmd, 0, sizeof(struct nvme_passthru_cmd));
 	admin_cmd.opcode = SNDK_NVME_SN861_DRIVE_RESIZE_OPCODE;
@@ -513,7 +538,9 @@ static int sndk_do_sn861_drive_resize(struct nvme_transport_handle *hdl,
 	admin_cmd.addr = (__u64)(uintptr_t)buffer;
 	admin_cmd.data_len = SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE;
 
-	ret = nvme_submit_admin_passthru(hdl, &admin_cmd, result);
+	ret = nvme_submit_admin_passthru(hdl, &admin_cmd);
+	if (result)
+		*result = admin_cmd.result;
 	return ret;
 }
 
@@ -528,7 +555,7 @@ static int sndk_drive_resize(int argc, char **argv,
 	uint64_t capabilities = 0;
 	int ret;
 	uint32_t device_id = -1, vendor_id = -1;
-	__u32 result;
+	__u64 result;
 
 	struct config {
 		uint64_t size;
@@ -561,8 +588,8 @@ static int sndk_drive_resize(int argc, char **argv,
 			fprintf(stderr, "The drive-resize command was successful.  A system ");
 			fprintf(stderr, "shutdown is required to complete the operation.\n");
 		} else
-			fprintf(stderr, "ERROR: SNDK: %s failure, ret: %d, result: 0x%x\n",
-					__func__, ret, result);
+			fprintf(stderr, "ERROR: SNDK: %s failure, ret: %d, result: 0x%"PRIx64"\n",
+					__func__, ret, (uint64_t)result);
 	} else {
 		/* Fallback to WDC plugin command if otherwise not supported */
 		return run_wdc_drive_resize(argc, argv, command, plugin);
@@ -920,7 +947,7 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 static int sndk_do_clear_fw_activate_history_fid(struct nvme_transport_handle *hdl)
 {
 	int ret = -1;
-	__u32 result;
+	__u64 result;
 	__u32 value = 1 << 31; /* Bit 31 - Clear Firmware Update History Log */
 
 	ret = nvme_set_features_simple(hdl, SNDK_NVME_CLEAR_FW_ACT_HIST_VU_FID, 0, value,
@@ -1022,7 +1049,7 @@ static int sndk_capabilities(int argc, char **argv,
 
 	/* get capabilities */
 	ret = nvme_scan_topology(ctx, NULL, NULL);
-	if (ret || sndk_check_device(ctx, hdl))
+	if (ret || !sndk_check_device(ctx, hdl))
 		return -1;
 
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);

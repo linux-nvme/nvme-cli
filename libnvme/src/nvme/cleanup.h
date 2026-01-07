@@ -10,6 +10,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include "fabrics.h"
+
 #define __cleanup__(fn) __attribute__((cleanup(fn)))
 
 #define DECLARE_CLEANUP_FUNC(name, type) \
@@ -43,5 +45,12 @@ static inline void cleanup_fd(int *fd)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *, freeaddrinfo)
 #define _cleanup_addrinfo_ __cleanup__(cleanup_addrinfo)
+
+static inline void free_uri(struct nvme_fabrics_uri **uri)
+{
+	if (*uri)
+		nvme_free_uri(*uri);
+}
+#define _cleanup_uri_ __cleanup__(free_uri)
 
 #endif

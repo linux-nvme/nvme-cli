@@ -34,8 +34,11 @@ tables_bad = [
 nbft_dump = executable(
     'nbft-dump',
     ['nbft-dump.c'],
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir]
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
 )
 
 
@@ -71,19 +74,23 @@ diffcmd = find_program(
 if diffcmd.found()
     foreach table: tables
         test(
-            table,
+            'libnvme - @0@'.format(table),
             dump_helper,
-            args: [files(tables_dir/table),
-                   files(diff_dir/table)]
+            args: [
+                files(tables_dir/table),
+                files(diff_dir/table),
+            ],
         )
     endforeach
 endif
 
 foreach table: tables_bad
     test(
-        table,
+        'libnvme - @0@'.format(table),
         nbft_dump,
-        args: [files(tables_bad_dir/table)],
-        should_fail: true
+        args: [
+            files(tables_bad_dir/table),
+        ],
+        should_fail: true,
     )
 endforeach

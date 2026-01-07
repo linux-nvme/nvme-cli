@@ -31,11 +31,11 @@ def discover(host, ctrl, iteration):
 
     slp = ctrl.supported_log_pages()
     try:
-        dlp_supp_opts = slp[nvme.NVME_LOG_LID_DISCOVER] >> 16
+        dlp_supp_opts = slp[nvme.NVME_LOG_LID_DISCOVERY] >> 16
     except (TypeError, IndexError):
         dlp_supp_opts = 0
 
-    print(f"LID {nvme.NVME_LOG_LID_DISCOVER}h (Discovery), supports: {disc_supp_str(dlp_supp_opts)}")
+    print(f"LID {nvme.NVME_LOG_LID_DISCOVERY}h (Discovery), supports: {disc_supp_str(dlp_supp_opts)}")
 
     try:
         lsp = nvme.NVMF_LOG_DISC_LSP_PLEO if dlp_supp_opts & nvme.NVMF_LOG_DISC_LID_PLEOS else 0
