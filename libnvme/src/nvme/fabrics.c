@@ -2141,9 +2141,9 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 			.subsysnqn	= e->subnqn,
 			.transport	= nvmf_trtype_str(e->trtype),
 			.traddr		= e->traddr,
+			.trsvcid	= e->trsvcid,
 			.host_traddr	= fctx->host_traddr,
 			.host_iface	= fctx->host_iface,
-			.trsvcid	= e->trsvcid,
 		};
 
 		/* Already connected ? */
@@ -2400,12 +2400,12 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	memcpy(&cfg, fctx->cfg, sizeof(cfg));
 
 	struct fabric_args trcfg = {
-		.subsysnqn = subsysnqn,
-		.transport = transport,
-		.traddr = traddr,
-		.host_traddr = host_traddr,
-		.host_iface = host_iface,
-		.trsvcid = trsvcid,
+		.subsysnqn	= subsysnqn,
+		.transport	= transport,
+		.traddr		= traddr,
+		.trsvcid	= trsvcid,
+		.host_traddr	= host_traddr,
+		.host_iface	= host_iface,
 	};
 
 	if (!force) {
@@ -2561,12 +2561,12 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 			break;
 
 		struct fabric_args trcfg = {
-			.transport = fctx->transport,
-			.traddr = fctx->traddr,
-			.trsvcid = fctx->trsvcid,
-			.subsysnqn = fctx->subsysnqn,
-			.host_traddr = fctx->host_traddr,
-			.host_iface = fctx->host_iface,
+			.subsysnqn	= fctx->subsysnqn,
+			.transport	= fctx->transport,
+			.traddr		= fctx->traddr,
+			.trsvcid	= fctx->trsvcid,
+			.host_traddr	= fctx->host_traddr,
+			.host_iface	= fctx->host_iface,
 		};
 
 		if (!force) {
@@ -2929,9 +2929,9 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 					.subsysnqn	= (*ss)->subsys_nqn,
 					.transport	= (*ss)->transport,
 					.traddr		= (*ss)->traddr,
+					.trsvcid	= (*ss)->trsvcid,
 					.host_traddr	= host_traddr,
 					.host_iface	= NULL,
-					.trsvcid	= (*ss)->trsvcid,
 				};
 
 				rr = nbft_connect(ctx, fctx, h, NULL,
@@ -3019,9 +3019,9 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 				.subsysnqn	= NVME_DISC_SUBSYS_NAME,
 				.transport	= uri->protocol,
 				.traddr		= uri->host,
+				.trsvcid	= trsvcid,
 				.host_traddr	= host_traddr,
 				.host_iface	= NULL,
-				.trsvcid	= trsvcid,
 			};
 
 			/* Lookup existing discovery controller */
@@ -3224,12 +3224,12 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 	}
 
 	struct fabric_args trcfg = {
-		.subsysnqn = fctx->subsysnqn,
-		.transport = fctx->transport,
-		.traddr = fctx->traddr,
-		.host_traddr = fctx->host_traddr,
-		.host_iface = fctx->host_iface,
-		.trsvcid = fctx->trsvcid,
+		.subsysnqn	= fctx->subsysnqn,
+		.transport	= fctx->transport,
+		.traddr		= fctx->traddr,
+		.trsvcid	= fctx->trsvcid,
+		.host_traddr	= fctx->host_traddr,
+		.host_iface	= fctx->host_iface,
 	};
 
 	if (!c && !force) {
@@ -3301,12 +3301,12 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 		return err;
 
 	struct fabric_args trcfg = {
-		.subsysnqn = fctx->subsysnqn,
-		.transport = fctx->transport,
-		.traddr = fctx->traddr,
-		.host_traddr = fctx->host_traddr,
-		.host_iface = fctx->host_iface,
-		.trsvcid = fctx->trsvcid,
+		.subsysnqn	= fctx->subsysnqn,
+		.transport	= fctx->transport,
+		.traddr		= fctx->traddr,
+		.trsvcid	= fctx->trsvcid,
+		.host_traddr	= fctx->host_traddr,
+		.host_iface	= fctx->host_iface,
 	};
 
 	c = lookup_ctrl(h, &trcfg);
