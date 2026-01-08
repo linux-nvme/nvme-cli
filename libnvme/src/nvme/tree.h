@@ -1454,25 +1454,17 @@ int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file);
 void nvme_refresh_topology(struct nvme_global_ctx *ctx);
 
 /**
- * nvme_update_config() - Update JSON configuration
- * @ctx:		&struct nvme_global_ctx object
- *
- * Updates the JSON configuration file with the contents of @r.
- *
- * Return: 0 on success, -1 on failure.
- */
-int nvme_update_config(struct nvme_global_ctx *ctx);
-
-/**
  * nvme_dump_config() - Print the JSON configuration
  * @ctx:		&struct nvme_global_ctx object
+ * @config_file:	JSON configuration file.
  *
  * Prints the current contents of the JSON configuration
- * file to stdout.
+ * file to the config_file. If connfig_file is not provided it prints
+ * to stdout.
  *
  * Return: 0 on success, or negative error code otherwise.
  */
-int nvme_dump_config(struct nvme_global_ctx *ctx);
+int nvme_dump_config(struct nvme_global_ctx *ctx, const char *config_file);
 
 /**
  * nvme_dump_tree() - Dump internal object tree

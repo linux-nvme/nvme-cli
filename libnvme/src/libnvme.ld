@@ -275,7 +275,6 @@ LIBNVME_2_0 {
 		nvme_transport_handle_set_submit_entry;
 		nvme_transport_handle_set_submit_exit;
 		nvme_unlink_ctrl;
-		nvme_update_config;
 		nvme_update_key;
 		nvme_uuid_find;
 		nvme_uuid_from_string;
