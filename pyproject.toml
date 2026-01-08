@@ -31,3 +31,10 @@ dependencies = []
 "Homepage" = "https://github.com/linux-nvme/nvme-cli"
 "Source" = "https://github.com/linux-nvme/nvme-cli"
 "Bug Tracker" = "https://github.com/linux-nvme/nvme-cli/issues"
+
+[tool.meson-python.args]
+setup = [
+    "-Dnvme=disabled",
+    "-Dlibnvme=enabled",
+    "-Dpython=enabled",
+]
