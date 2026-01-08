@@ -14,9 +14,22 @@ rm -rf "${TEST_DIR}"
 mkdir "${TEST_DIR}"
 tar -x -f "${SYSFS_INPUT}" -C "${TEST_DIR}"
 
-LIBNVME_SYSFS_PATH="${TEST_DIR}" \
-LIBNVME_HOSTNQN=nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6 \
-LIBNVME_HOSTID=ce4fee3e-c02c-11ee-8442-830d068a36c6 \
-"${TREE_DUMP}" > "${ACTUAL_OUTPUT}" || echo "test failed"
+cmd=(
+  env
+  LIBNVME_SYSFS_PATH="$TEST_DIR"
+  LIBNVME_HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
+  LIBNVME_HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
+  "$TREE_DUMP"
+)
+
+echo "Running command:"
+printf '%q ' "${cmd[@]}"
+printf '> %q\n' "$ACTUAL_OUTPUT"
+
+if ! "${cmd[@]}" > "$ACTUAL_OUTPUT"; then
+    rc=$?
+    echo "test failed (exit code $rc)"
+    exit $rc
+fi
 
 diff -u "${EXPECTED_OUTPUT}" "${ACTUAL_OUTPUT}"
