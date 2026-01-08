@@ -270,7 +270,8 @@ int nvmf_context_set_connection(struct nvmf_context *fctx,
 	fctx->transport = transport;
 	fctx->traddr = traddr;
 	fctx->trsvcid = trsvcid;
-	fctx->host_traddr = host_iface;
+	fctx->host_traddr = host_traddr;
+	fctx->host_iface = host_iface;
 
 	return 0;
 }
@@ -2133,7 +2134,7 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 		nvme_ctrl_t cl;
 		bool discover = false;
 		bool disconnect;
-		nvme_ctrl_t child;
+		nvme_ctrl_t child = { 0 };
 		int tmo = fctx->cfg->keep_alive_tmo;
 
 		struct fabric_args trcfg = {
@@ -2586,6 +2587,8 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 			err = nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 	} while (!err);
+
+	fctx->parser_cleanup(fctx, fctx->user_data);
 
 	if (err != -EOF)
 		return err;

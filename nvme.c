@@ -403,7 +403,7 @@ int parse_and_open(struct nvme_global_ctx **ctx,
 	nvme_transport_handle_set_submit_entry(hdl_new, nvme_submit_entry);
 	nvme_transport_handle_set_submit_exit(hdl_new , nvme_submit_exit);
 	nvme_transport_handle_set_decide_retry(hdl_new, nvme_decide_retry);
-	nvme_set_dry_run(ctx_new, argconfig_parse_seen(opts, "dry_run"));
+	nvme_set_dry_run(ctx_new, argconfig_parse_seen(opts, "dry-run"));
 
 	*ctx = ctx_new;
 	*hdl = hdl_new;
@@ -4859,12 +4859,12 @@ static bool is_get_feature_result_set(enum nvme_features_id feature_id)
 static int get_feature_id_changed(struct nvme_transport_handle *hdl, struct feat_cfg cfg,
 		nvme_print_flags_t flags)
 {
-	int err;
-	int err_def = 0;
-	__u64 result;
-	__u64 result_def;
-	_cleanup_free_ void *buf = NULL;
 	_cleanup_free_ void *buf_def = NULL;
+	_cleanup_free_ void *buf = NULL;
+	__u64 result_def = 0;
+	__u64 result;
+	int err_def = 0;
+	int err;
 
 	if (cfg.changed)
 		cfg.sel = NVME_GET_FEATURES_SEL_CURRENT;
@@ -5559,6 +5559,92 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
 		nvme_show_error("sanitize: %s", nvme_strerror(err));
+	else if (err > 0)
+		nvme_show_status(err);
+
+	return err;
+}
+
+static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
+			   struct plugin *plugin)
+{
+	const char *desc = "Send a sanitize namespace command.";
+	const char *emvs_desc = "Enter media verification state.";
+	const char *ause_desc = "Allow unrestricted sanitize exit.";
+	const char *sanact_desc = "Sanitize action: 1 = Exit failure mode,\n"
+		"4 = Start a crypto erase namespace sanitize operation,\n"
+		"5 = Exit media verification state";
+
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl =
+		NULL;
+
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	struct nvme_passthru_cmd cmd;
+	nvme_print_flags_t flags;
+	int err;
+
+	struct config {
+		bool	ause;
+		__u8	sanact;
+		bool	emvs;
+	};
+
+	struct config cfg = {
+		.ause		= false,
+		.sanact		= 0,
+		.emvs		= false,
+	};
+
+	OPT_VALS(sanact) = {
+		VAL_BYTE("exit-failure", NVME_SANITIZE_SANACT_EXIT_FAILURE),
+		VAL_BYTE("start-crypto-erase",
+			 NVME_SANITIZE_SANACT_START_CRYPTO_ERASE),
+		VAL_BYTE("exit-media-verification",
+			 NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF),
+		VAL_END()
+	};
+
+	NVME_ARGS(opts,
+		  OPT_FLAG("ause",   'u', &cfg.ause,   ause_desc),
+		  OPT_BYTE("sanact", 'a', &cfg.sanact, sanact_desc, sanact),
+		  OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	switch (cfg.sanact) {
+	case NVME_SANITIZE_SANACT_EXIT_FAILURE:
+	case NVME_SANITIZE_SANACT_START_CRYPTO_ERASE:
+	case NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF:
+		break;
+	default:
+		nvme_show_error("Invalid Sanitize Action");
+		return -EINVAL;
+	}
+
+	if (cfg.ause) {
+		if (cfg.sanact == NVME_SANITIZE_SANACT_EXIT_FAILURE) {
+			nvme_show_error("SANACT is Exit Failure Mode");
+			return -EINVAL;
+		} else if (cfg.sanact ==
+			   NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF) {
+			nvme_show_error(
+			    "SANACT is Exit Media Verification State");
+			return -EINVAL;
+		}
+	}
+
+	nvme_init_sanitize_ns(&cmd, cfg.sanact, cfg.ause, cfg.emvs);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
+	if (err < 0)
+		nvme_show_error("sanitize ns: %s", nvme_strerror(err));
 	else if (err > 0)
 		nvme_show_status(err);
 

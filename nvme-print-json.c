@@ -5095,6 +5095,26 @@ static void json_output_status(int status)
 	obj_print(r);
 }
 
+static void json_output_opcode_status(int status, bool admin, __u8 opcode)
+{
+	struct json_object *r;
+	char json_str[STR_LEN];
+	int val = nvme_status_get_value(status);
+	int type = nvme_status_get_type(status);
+
+	if (status >= 0 && type == NVME_STATUS_TYPE_NVME) {
+		sprintf(json_str, "status: %d", status);
+		r = obj_create(json_str);
+		obj_add_str(r, "error",
+			    nvme_opcode_status_to_string(val, admin, opcode));
+		obj_add_str(r, "type", "nvme");
+		obj_print(r);
+		return;
+	}
+
+	json_output_status(status);
+}
+
 static void json_output_error_status(int status, const char *msg, va_list ap)
 {
 	struct json_object *r;
@@ -5577,6 +5597,7 @@ static struct print_ops json_print_ops = {
 	.show_message			= json_output_message,
 	.show_perror			= json_output_perror,
 	.show_status			= json_output_status,
+	.show_opcode_status		= json_output_opcode_status,
 	.show_error_status		= json_output_error_status,
 	.show_key_value			= json_output_key_value,
 };

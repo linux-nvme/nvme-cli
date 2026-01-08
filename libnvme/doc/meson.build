@@ -49,8 +49,6 @@ subdir('rst')
 
 top_source_dir = meson.current_source_dir() + '/../'
 
-want_docs = get_option('docs')
-want_docs_build = get_option('docs-build')
 kernel_doc = find_program(top_source_dir + 'scripts/kernel-doc')
 kernel_doc_check = find_program(top_source_dir +'scripts/kernel-doc-check')
 

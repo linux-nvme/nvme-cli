@@ -116,6 +116,7 @@ struct print_ops {
 	void (*show_message)(bool error, const char *msg, va_list ap);
 	void (*show_perror)(const char *msg, va_list ap);
 	void (*show_status)(int status);
+	void (*show_opcode_status)(int status, bool admin, __u8 opcode);
 	void (*show_error_status)(int status, const char *msg, va_list ap);
 	void (*show_key_value)(const char *key, const char *val, va_list ap);
 
@@ -158,6 +159,7 @@ struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags);
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
 
 void nvme_show_status(int status);
+void nvme_show_opcode_status(int status, bool admin, __u8 opcode);
 void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct nvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 

@@ -6,7 +6,7 @@ requires = ['meson-python']
 [project]
 name = "libnvme"
 dynamic = ["version"]
-description = "python bindings for libnvme"
+description = "Python bindings for libnvme"
 readme = "README.md"
 requires-python = ">=3.6"
 license = { text = "LGPL-2.1-or-later" }
@@ -28,6 +28,6 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-"Homepage" = "https://github.com/linux-nvme/libnvme"
-"Source" = "https://github.com/linux-nvme/libnvme"
-"Bug Tracker" = "https://github.com/linux-nvme/libnvme/issues"
+"Homepage" = "https://github.com/linux-nvme/nvme-cli"
+"Source" = "https://github.com/linux-nvme/nvme-cli"
+"Bug Tracker" = "https://github.com/linux-nvme/nvme-cli/issues"

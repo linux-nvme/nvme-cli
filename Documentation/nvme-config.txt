@@ -36,7 +36,7 @@ DESCRIPTION
 Read in the NVMe over Fabrics configuration from the specified JSON
 configuration file and allow to update or modify the contents.
 The JSON configuration file format is documented in
-https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/doc/config-schema.json
 
 OPTIONS
 -------
@@ -201,7 +201,7 @@ SEE ALSO
 --------
 nvme-discover(1)
 nvme-connect(1)
-https://github.com/linux-nvme/libnvme/blob/master/doc/config-schema.json
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/doc/config-schema.json
 
 AUTHORS
 -------
