@@ -404,17 +404,9 @@ err:
 	return ret;
 }
 
-int nvme_update_config(struct nvme_global_ctx *ctx)
+int nvme_dump_config(struct nvme_global_ctx *ctx, const char *config_file)
 {
-	if (!ctx->modified || !ctx->config_file)
-		return 0;
-
-	return json_update_config(ctx, ctx->config_file);
-}
-
-int nvme_dump_config(struct nvme_global_ctx *ctx)
-{
-	return json_update_config(ctx, NULL);
+	return json_update_config(ctx, config_file);
 }
 
 int nvme_dump_tree(struct nvme_global_ctx *ctx)
@@ -717,7 +709,6 @@ struct nvme_subsystem *nvme_alloc_subsystem(struct nvme_host *h,
 	list_head_init(&s->namespaces);
 	list_node_init(&s->entry);
 	list_add_tail(&h->subsystems, &s->entry);
-	h->ctx->modified = true;
 	return s;
 }
 
@@ -756,7 +747,6 @@ static void __nvme_free_host(struct nvme_host *h)
 	free(h->hostid);
 	free(h->dhchap_key);
 	nvme_host_set_hostsymname(h, NULL);
-	h->ctx->modified = true;
 	free(h);
 }
 
@@ -799,7 +789,6 @@ struct nvme_host *nvme_lookup_host(struct nvme_global_ctx *ctx, const char *host
 	list_node_init(&h->entry);
 	h->ctx = ctx;
 	list_add_tail(&ctx->hosts, &h->entry);
-	ctx->modified = true;
 
 	return h;
 }
@@ -1870,7 +1859,6 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 
 	c->s = s;
 	list_add_tail(&s->ctrls, &c->entry);
-	s->h->ctx->modified = true;
 
 	return c;
 }

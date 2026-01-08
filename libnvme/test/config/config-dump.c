@@ -29,7 +29,7 @@ static bool config_dump(const char *file)
 	if (err)
 		goto out;
 
-	err = nvme_dump_config(ctx);
+	err = nvme_dump_config(ctx, NULL);
 	if (err)
 		goto out;
 

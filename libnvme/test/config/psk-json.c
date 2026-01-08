@@ -69,7 +69,7 @@ static bool psk_json_test(char *file)
 				if (!import_export_key(c))
 					goto out;
 
-	err = nvme_dump_config(ctx);
+	err = nvme_dump_config(ctx, NULL);
 	if (err)
 		goto out;
 

@@ -267,7 +267,6 @@ struct nvme_global_ctx {
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
 	struct nvme_log log;
-	bool modified;
 	bool mi_probe_enabled;
 	bool create_only;
 	bool dry_run;
