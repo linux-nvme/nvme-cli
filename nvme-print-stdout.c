@@ -4901,10 +4901,19 @@ static void stdout_lba_status_info(__u64 result)
 	       (__u32)NVME_FEAT_LBAS_LSIRI(result));
 }
 
+static bool line_equal(unsigned char *buf, int len, int width, int offset)
+{
+	if (!offset || len < offset + width)
+		return false;
+
+	return !memcmp(buf + offset - width, buf + offset, width);
+}
+
 void stdout_d(unsigned char *buf, int len, int width, int group)
 {
 	int i, offset = 0;
 	char ascii[32 + 1] = { 0 };
+	bool omitting = false;
 
 	assert(width < sizeof(ascii));
 
@@ -4914,8 +4923,21 @@ void stdout_d(unsigned char *buf, int len, int width, int group)
 		printf("%3x", i);
 
 	for (i = 0; i < len; i++) {
-		if (!(i % width))
+		if (!(i % width)) {
+			if (line_equal(buf, len, width, offset)) {
+				if (!omitting) {
+					omitting = true;
+					printf("\n*");
+				}
+				offset += width;
+				continue;
+			} else if (omitting) {
+				omitting = false;
+			}
 			printf("\n%04x:", offset);
+		}
+		if (omitting)
+			continue;
 		if (i % group)
 			printf("%02x", buf[i]);
 		else
@@ -4927,6 +4949,8 @@ void stdout_d(unsigned char *buf, int len, int width, int group)
 			memset(ascii, 0, sizeof(ascii));
 		}
 	}
+	if (omitting)
+		printf("\n%04x:\n", offset);
 
 	if (strlen(ascii)) {
 		unsigned int b = width - (i % width);
