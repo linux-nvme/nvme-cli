@@ -97,20 +97,6 @@ nvme_host_t nvme_next_host(struct nvme_global_ctx *ctx, nvme_host_t h);
 struct nvme_global_ctx *nvme_host_get_global_ctx(nvme_host_t h);
 
 /**
- * nvme_lookup_host() - Lookup nvme_host_t object
- * @ctx:	struct nvme_global_ctx object
- * @hostnqn:	Host NQN
- * @hostid:	Host ID
- *
- * Lookup a nvme_host_t object based on @hostnqn and @hostid
- * or create one if not found.
- *
- * Return: &nvme_host_t object
- */
-nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
-			     const char *hostid);
-
-/**
  * nvme_host_get_dhchap_key() - Return host key
  * @h:	Host for which the key should be returned
  *
@@ -148,16 +134,19 @@ void nvme_host_set_pdc_enabled(nvme_host_t h, bool enabled);
 bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback);
 
 /**
- * nvme_default_host() - Initializes the default host
+ * nvme_host_get() - Returns a host object
  * @ctx:	struct nvme_global_ctx object
- * @h:  &nvme_host_t object to return
+ * @hostnqn:	Host NQN (optional)
+ * @hostid:	Host ID (optional)
+ * @h:		&nvme_host_t object to return
  *
- * Initializes the default host object based on the hostnqn/hostid
- * values returned by nvme_host_get_ids() and attaches it to @r.
+ * Returns a host object based on the hostnqn/hostid values or the default if
+ * hostnqn/hostid are NULL.
  *
  * Return: 0 on success or negative error code otherwise
  */
-int nvme_default_host(struct nvme_global_ctx *ctx, nvme_host_t *h);
+int nvme_host_get(struct nvme_global_ctx *ctx, const char *hostnqn,
+		const char *hostid, nvme_host_t *h);
 
 /**
  * nvme_host_get_ids - Retrieve host ids from various sources

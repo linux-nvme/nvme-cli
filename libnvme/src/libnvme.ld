@@ -56,7 +56,6 @@ LIBNVME_2_0 {
 		nvme_ctrl_set_tls_key_identity;
 		nvme_ctrl_set_unique_discovery_ctrl;
 		nvme_ctrls_filter;
-		nvme_default_host;
 		nvme_describe_key_serial;
 		nvme_disconnect_ctrl;
 		nvme_dump_config;
@@ -100,6 +99,7 @@ LIBNVME_2_0 {
 		nvme_get_telemetry_max;
 		nvme_get_uuid_list;
 		nvme_get_version;
+		nvme_host_get;
 		nvme_host_get_dhchap_key;
 		nvme_host_get_global_ctx;
 		nvme_host_get_hostid;
@@ -127,7 +127,6 @@ LIBNVME_2_0 {
 		nvme_insert_tls_key_versioned;
 		nvme_ipaddrs_eq;
 		nvme_lookup_ctrl;
-		nvme_lookup_host;
 		nvme_lookup_key;
 		nvme_lookup_keyring;
 		nvme_lookup_subsystem;
