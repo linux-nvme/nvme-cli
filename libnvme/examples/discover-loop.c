@@ -62,7 +62,7 @@ int main()
 	ret = nvme_scan(NULL, &ctx);
 	if (ret)
 		return ret;
-	ret = nvme_default_host(ctx, &h);
+	ret = nvme_host_get(ctx, NULL, NULL, &h);
 	if (ret) {
 		fprintf(stderr, "Failed to allocated memory\n");
 		return ret;
