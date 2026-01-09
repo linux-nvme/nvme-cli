@@ -416,7 +416,14 @@ nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
 				       const char *name,
 				       const char *subsysnqn);
-
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+			     const char *traddr, const char *host_traddr,
+			     const char *host_iface, const char *trsvcid,
+			     nvme_ctrl_t p);
+nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
+			   const char *traddr, const char *trsvcid,
+			   const char *subsysnqn, const char *host_traddr,
+			   const char *host_iface);
 
 #if (LOG_FUNCNAME == 1)
 #define __nvme_log_func __func__
