@@ -633,6 +633,19 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx);
 
 /**
+ * nvmf_config_modify() - Modify and update the configurtion
+ * @ctx: Global context
+ * @fctx: Fabrics context
+ *
+ * Update the current configuration by adding the crypto
+ * information.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
+int nvmf_config_modify(struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx);
+
+/**
  * struct nbft_file_entry - Linked list entry for NBFT files
  * @next: Pointer to next entry
  * @nbft: Pointer to NBFT info structure

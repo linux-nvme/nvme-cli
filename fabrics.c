@@ -584,34 +584,6 @@ out_free:
 	return ret;
 }
 
-static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
-				const char *tls_key_identity,
-				struct nvme_fabrics_config *cfg, nvme_ctrl_t c)
-{
-	if (keyring) {
-		char *endptr;
-		long id = strtol(keyring, &endptr, 0);
-
-		if (endptr != keyring)
-			cfg->keyring = id;
-		else
-			nvme_ctrl_set_keyring(c, keyring);
-	}
-
-	if (tls_key_identity)
-		nvme_ctrl_set_tls_key_identity(c, tls_key_identity);
-
-	if (tls_key) {
-		char *endptr;
-		long id = strtol(tls_key, &endptr, 0);
-
-		if (endptr != tls_key)
-			cfg->tls_key = id;
-		else
-			nvme_ctrl_set_tls_key(c, tls_key);
-	}
-}
-
 int fabrics_connect(const char *desc, int argc, char **argv)
 {
 	_cleanup_free_ char *hnqn = NULL;
@@ -924,24 +896,15 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 int fabrics_config(const char *desc, int argc, char **argv)
 {
-	char *subsysnqn = NULL;
-	char *transport = NULL, *traddr = NULL;
-	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
-	char *host_traddr = NULL, *host_iface = NULL;
-	_cleanup_free_ char *hnqn = NULL;
-	_cleanup_free_ char *hid = NULL;
-	char *hostkey = NULL, *ctrlkey = NULL;
-	char *keyring = NULL, *tls_key = NULL, *tls_key_identity = NULL;
-	char *config_file = PATH_NVMF_CONFIG;
-	unsigned int verbose = 0;
+	bool scan_tree = false, modify_config = false, update_config = false;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	int ret;
+	char *config_file = PATH_NVMF_CONFIG;
 	struct nvme_fabrics_config cfg;
 	struct fabric_args fa = { };
-	bool scan_tree = false, modify_config = false, update_config = false;
+	unsigned int verbose = 0;
+	int ret;
 
 	NVMF_ARGS(opts, fa, cfg,
-		  OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,      nvmf_ctrlkey),
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_INCR("verbose",              'v', &verbose,             "Increase logging verbosity"),
 		  OPT_FLAG("scan",                 'R', &scan_tree,           "Scan current NVMeoF topology"),
@@ -980,52 +943,30 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	}
 
 	if (modify_config) {
-		nvme_host_t h;
-		nvme_subsystem_t s;
-		nvme_ctrl_t c;
+		_cleanup_free_ struct nvmf_context *fctx = NULL;
 
-		if (!subsysnqn) {
+		if (!fa.subsysnqn) {
 			fprintf(stderr,
 				"required argument [--nqn | -n] needed with --modify\n");
 			return -EINVAL;
 		}
 
-		if (!transport) {
+		if (!fa.transport) {
 			fprintf(stderr,
 				"required argument [--transport | -t] needed with --modify\n");
 			return -EINVAL;
 		}
 
-		if (!hostnqn)
-			hostnqn = hnqn = nvmf_hostnqn_from_file();
-		if (!hostid && hnqn)
-			hostid = hid = nvmf_hostid_from_file();
-		h = nvme_lookup_host(ctx, hostnqn, hostid);
-		if (!h) {
-			fprintf(stderr, "Failed to lookup host '%s'\n",
-				hostnqn);
-			return -ENODEV;
-		}
-		if (hostkey)
-			nvme_host_set_dhchap_key(h, hostkey);
-		s = nvme_lookup_subsystem(h, NULL, subsysnqn);
-		if (!s) {
-			fprintf(stderr, "Failed to lookup subsystem '%s'\n",
-				subsysnqn);
-			return -ENODEV;
-		}
-		c = nvme_lookup_ctrl(s, transport, traddr,
-				     host_traddr, host_iface,
-				     trsvcid, NULL);
-		if (!c) {
-			fprintf(stderr, "Failed to lookup controller\n");
-			return -ENODEV;
-		}
-		if (ctrlkey)
-			nvme_ctrl_set_dhchap_key(c, ctrlkey);
-		nvme_parse_tls_args(keyring, tls_key, tls_key_identity, &cfg, c);
+		ret = create_common_context(ctx, persistent, &fa,
+			&cfg, NULL, &fctx);
+		if (ret)
+			return ret;
 
-		nvmf_update_config(c, &cfg);
+		ret = nvmf_config_modify(ctx, fctx);
+		if (ret) {
+			fprintf(stderr, "failed to update config\n");
+			return ret;
+		}
 	}
 
 	if (update_config)
