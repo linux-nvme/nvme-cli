@@ -17,6 +17,8 @@
 
 struct test_data {
 	/* input data */
+	const char *hostnqn;
+	const char *hostid;
 	const char *subsysname;
 	const char *subsysnqn;
 	const char *transport;
@@ -31,23 +33,27 @@ struct test_data {
 	int ctrl_id;
 };
 
+#define DEFAULT_HOSTID "9ba1651a-ed36-11f0-9858-6c1ff71ba506"
+#define DEFAULT_HOSTNQN "nqn.2014-08.org.nvmexpress:uuid:DEFAULT_HOSTID"
 #define DEFAULT_SUBSYSNAME "subsysname"
 #define DEFAULT_SUBSYSNQN "subsysnqn"
 #define SRC_ADDR4 "192.168.56.100"
 #define SRC_ADDR6 "1234:5678:abcd:EF01:1234:5678:abcd:EF01"
 
+#define DEFAULTS DEFAULT_HOSTNQN, DEFAULT_HOSTNQN, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN
+
 struct test_data test_data[] = {
-	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "tcp", "192.168.1.1", "192.168.1.20", NULL, "4420" },
-	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "tcp", "192.168.1.1", "192.168.1.20", NULL, "4421" },
-	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "tcp", "192.168.1.2", "192.168.1.20", "eth1", "4420" },
-	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "tcp", "192.168.1.2", "192.168.1.20", "eth1", "4421" },
-	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "rdma", "192.168.1.3", "192.168.1.20", NULL, NULL },
-	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "rdma", "192.168.1.4", "192.168.1.20", NULL, NULL },
-	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "fc",
+	{ DEFAULTS, "tcp", "192.168.1.1", "192.168.1.20", NULL, "4420" },
+	{ DEFAULTS, "tcp", "192.168.1.1", "192.168.1.20", NULL, "4421" },
+	{ DEFAULTS, "tcp", "192.168.1.2", "192.168.1.20", "eth1", "4420" },
+	{ DEFAULTS, "tcp", "192.168.1.2", "192.168.1.20", "eth1", "4421" },
+	{ DEFAULTS, "rdma", "192.168.1.3", "192.168.1.20", NULL, NULL },
+	{ DEFAULTS, "rdma", "192.168.1.4", "192.168.1.20", NULL, NULL },
+	{ DEFAULTS, "fc",
 	  "nn-0x201700a09890f5bf:pn-0x201900a09890f5bf",
 	  "nn-0x200000109b579ef3:pn-0x100000109b579ef3"
 	},
-	{ DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, "fc",
+	{ DEFAULTS, "fc",
 	  "nn-0x201700a09890f5bf:pn-0x201900a09890f5bf",
 	  "nn-0x200000109b579ef6:pn-0x100000109b579ef6",
 	},
@@ -125,7 +131,7 @@ static struct nvme_global_ctx *create_tree()
 
 	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
 	assert(ctx);
-	nvme_default_host(ctx, &h);
+	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
 	printf("  ctrls created:\n");
@@ -281,7 +287,7 @@ static bool test_src_addr()
 	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
 	assert(ctx);
 
-	nvme_default_host(ctx, &h);
+	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN);
@@ -457,7 +463,7 @@ static bool ctrl_match(const char *tag,
 	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
 	assert(ctx);
 
-	nvme_default_host(ctx, &h);
+	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, reference->subsysnqn ? reference->subsysnqn : DEFAULT_SUBSYSNQN);
@@ -1070,7 +1076,7 @@ static bool ctrl_config_match(const char *tag,
 	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
 	assert(ctx);
 
-	nvme_default_host(ctx, &h);
+	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
 	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, reference->subsysnqn ? reference->subsysnqn : DEFAULT_SUBSYSNQN);

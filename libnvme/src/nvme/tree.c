@@ -194,18 +194,19 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvme_default_host(struct nvme_global_ctx *ctx, nvme_host_t *hp)
+int nvme_host_get(struct nvme_global_ctx *ctx, const char *hostnqn,
+		const char *hostid, nvme_host_t *hp)
 {
-	_cleanup_free_ char *hostnqn = NULL;
-	_cleanup_free_ char *hostid = NULL;
+	_cleanup_free_ char *hnqn = NULL;
+	_cleanup_free_ char *hid = NULL;
 	struct nvme_host *h;
 	int err;
 
-	err = nvme_host_get_ids(ctx, NULL, NULL, &hostnqn, &hostid);
+	err = nvme_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
 	if (err)
 		return err;
 
-	h = nvme_lookup_host(ctx, hostnqn, hostid);
+	h = nvme_lookup_host(ctx, hnqn, hid);
 
 	nvme_host_set_hostsymname(h, NULL);
 
@@ -888,7 +889,7 @@ static int nvme_scan_subsystem(struct nvme_global_ctx *ctx, const char *name)
 		 */
 		nvme_msg(ctx, LOG_DEBUG, "creating detached subsystem '%s'\n",
 			 name);
-		ret = nvme_default_host(ctx, &h);
+		ret = nvme_host_get(ctx, NULL, NULL, &h);
 		if (ret)
 			return ret;
 		s = nvme_alloc_subsystem(h, name, subsysnqn);
@@ -2255,21 +2256,17 @@ int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
 
 	hostnqn = nvme_get_attr(path, "hostnqn");
 	hostid = nvme_get_attr(path, "hostid");
-	h = nvme_lookup_host(ctx, hostnqn, hostid);
-	if (h) {
-		host_key = nvme_get_attr(path, "dhchap_secret");
-		if (host_key && strcmp(host_key, "none")) {
-			free(h->dhchap_key);
-			h->dhchap_key = host_key;
-			host_key = NULL;
-		}
-		free(host_key);
+	ret = nvme_host_get(ctx, hostnqn, hostid, &h);
+	if (ret)
+		return ret;
+
+	host_key = nvme_get_attr(path, "dhchap_secret");
+	if (host_key && strcmp(host_key, "none")) {
+		free(h->dhchap_key);
+		h->dhchap_key = host_key;
+		host_key = NULL;
 	}
-	if (!h) {
-		ret = nvme_default_host(ctx, &h);
-		if (ret)
-			return ret;
-	}
+	free(host_key);
 
 	subsysnqn = nvme_get_attr(path, "subsysnqn");
 	if (!subsysnqn)
