@@ -9,7 +9,6 @@ LIBNVME_2_0 {
 		nvme_create_ctrl;
 		nvme_create_global_ctx;
 		nvme_ctrl_config_match;
-		nvme_ctrl_find;
 		nvme_ctrl_first_ns;
 		nvme_ctrl_first_path;
 		nvme_ctrl_get_address;
@@ -126,7 +125,6 @@ LIBNVME_2_0 {
 		nvme_insert_tls_key_compat;
 		nvme_insert_tls_key_versioned;
 		nvme_ipaddrs_eq;
-		nvme_lookup_ctrl;
 		nvme_lookup_key;
 		nvme_lookup_keyring;
 		nvme_mi_admin_admin_passthru;
