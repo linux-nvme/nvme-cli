@@ -138,7 +138,8 @@ static struct nvme_global_ctx *create_tree()
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
 		struct test_data *d = &test_data[i];
 
-		d->s = nvme_lookup_subsystem(h, d->subsysname, d->subsysnqn);
+		assert(!nvme_subsystem_get(ctx, h, d->subsysname,
+			d->subsysnqn, &d->s));
 		assert(d->s);
 		d->c = nvme_lookup_ctrl(d->s, d->transport, d->traddr,
 					d->host_traddr, d->host_iface,
@@ -235,7 +236,7 @@ static bool ctrl_lookups(struct nvme_global_ctx *ctx)
 	bool pass = true;
 
 	h = nvme_first_host(ctx);
-	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN);
+	nvme_subsystem_get(ctx, h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, &s);
 
 	printf("  lookup controller:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
@@ -290,7 +291,7 @@ static bool test_src_addr()
 	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
-	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN);
+	nvme_subsystem_get(ctx, h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, &s);
 	assert(s);
 
 	c = nvme_lookup_ctrl(s, "tcp", "192.168.56.1", NULL, NULL, "8009", NULL);
@@ -466,7 +467,10 @@ static bool ctrl_match(const char *tag,
 	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
-	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, reference->subsysnqn ? reference->subsysnqn : DEFAULT_SUBSYSNQN);
+	assert(!nvme_subsystem_get(ctx, h, DEFAULT_SUBSYSNAME,
+		 reference->subsysnqn ?
+			reference->subsysnqn : DEFAULT_SUBSYSNQN,
+		&s));
 	assert(s);
 
 	reference_ctrl = nvme_lookup_ctrl(s, reference->transport, reference->traddr,
@@ -1079,7 +1083,10 @@ static bool ctrl_config_match(const char *tag,
 	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
-	s = nvme_lookup_subsystem(h, DEFAULT_SUBSYSNAME, reference->subsysnqn ? reference->subsysnqn : DEFAULT_SUBSYSNQN);
+	assert(!nvme_subsystem_get(ctx, h, DEFAULT_SUBSYSNAME,
+		reference->subsysnqn ?
+			reference->subsysnqn : DEFAULT_SUBSYSNQN,
+		&s));
 	assert(s);
 
 	reference_ctrl = nvme_lookup_ctrl(s, reference->transport, reference->traddr,

@@ -201,19 +201,20 @@ nvme_subsystem_t nvme_first_subsystem(nvme_host_t h);
 nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
 
 /**
- * nvme_lookup_subsystem() - Lookup nvme_subsystem_t object
+ * nvme_subsystem_get() - Returns nvme_subsystem_t object
+ * @ctx:	struct nvme_global_ctx object
  * @h:		&nvme_host_t object
  * @name:	Name of the subsystem (may be NULL)
  * @subsysnqn:	Subsystem NQN
+ * @s: 		nvme_subsystem_t object
  *
- * Lookup a &nvme_subsystem_t object in @h base on @name (if present)
+ * Returns an &nvme_subsystem_t object in @h base on @name (if present)
  * and @subsysnqn or create one if not found.
  *
- * Return: nvme_subsystem_t object
  */
-nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
-				       const char *name,
-				       const char *subsysnqn);
+int nvme_subsystem_get(struct nvme_global_ctx *ctx,
+		struct nvme_host *h, const char *name,
+		const char *subsysnqn, struct nvme_subsystem **s);
 
 /**
  * nvme_free_subsystem() - Free a subsystem

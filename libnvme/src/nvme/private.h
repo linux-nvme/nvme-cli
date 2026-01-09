@@ -413,6 +413,10 @@ void *__nvme_realloc(void *p, size_t len);
 
 nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 			     const char *hostid);
+nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
+				       const char *name,
+				       const char *subsysnqn);
+
 
 #if (LOG_FUNCNAME == 1)
 #define __nvme_log_func __func__

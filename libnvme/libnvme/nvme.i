@@ -600,15 +600,22 @@ struct nvme_ns {
 	}
 %};
 
-%pythonappend nvme_subsystem::nvme_subsystem(struct nvme_host *host,
+%pythonappend nvme_subsystem::nvme_subsystem(struct nvme_global_ctx *ctx,
+					     struct nvme_host *host,
 					     const char *subsysnqn,
 					     const char *name) {
     self.__parent = host  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend nvme_subsystem {
-	nvme_subsystem(struct nvme_host *host,
+	nvme_subsystem(struct nvme_global_ctx *ctx,
+		       struct nvme_host *host,
 		       const char *subsysnqn,
 		       const char *name = NULL) {
-		return nvme_lookup_subsystem(host, name, subsysnqn);
+		struct nvme_subsystem *s;
+
+		if (nvme_subsystem_get(ctx, host, name, subsysnqn, &s))
+			return NULL;
+
+		return s;
 	}
 	~nvme_subsystem() {
 		nvme_free_subsystem($self);

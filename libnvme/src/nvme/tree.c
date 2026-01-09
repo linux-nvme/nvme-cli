@@ -736,6 +736,21 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 	return nvme_alloc_subsystem(h, name, subsysnqn);
 }
 
+int nvme_subsystem_get(struct nvme_global_ctx *ctx,
+		struct nvme_host *h, const char *name,
+		const char *subsysnqn, struct nvme_subsystem **subsys)
+{
+	struct nvme_subsystem *s;
+
+	s = nvme_lookup_subsystem(h, name, subsysnqn);
+	if (!s)
+		return -ENOMEM;
+
+	*subsys = s;
+
+	return 0;
+}
+
 static void __nvme_free_host(struct nvme_host *h)
 {
 	struct nvme_subsystem *s, *_s;
