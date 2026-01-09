@@ -61,8 +61,6 @@ struct candidate_args {
 };
 typedef bool (*ctrl_match_t)(struct nvme_ctrl *c, struct candidate_args *candidate);
 
-static struct nvme_host *default_host;
-
 static void __nvme_free_host(nvme_host_t h);
 static void __nvme_free_ctrl(nvme_ctrl_t c);
 static int nvme_subsystem_scan_namespace(struct nvme_global_ctx *ctx,
@@ -211,7 +209,6 @@ int nvme_default_host(struct nvme_global_ctx *ctx, nvme_host_t *hp)
 
 	nvme_host_set_hostsymname(h, NULL);
 
-	default_host = h;
 	*hp = h;
 	return 0;
 }
