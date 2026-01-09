@@ -34,7 +34,7 @@ struct test_data {
 };
 
 #define DEFAULT_HOSTID "9ba1651a-ed36-11f0-9858-6c1ff71ba506"
-#define DEFAULT_HOSTNQN "nqn.2014-08.org.nvmexpress:uuid:DEFAULT_HOSTID"
+#define DEFAULT_HOSTNQN "nqn.2014-08.org.nvmexpress:uuid:9ba1651a-ed36-11f0-9858-6c1ff71ba506"
 #define DEFAULT_SUBSYSNAME "subsysname"
 #define DEFAULT_SUBSYSNQN "subsysnqn"
 #define SRC_ADDR4 "192.168.56.100"

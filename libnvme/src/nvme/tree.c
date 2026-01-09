@@ -195,7 +195,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 }
 
 int nvme_host_get(struct nvme_global_ctx *ctx, const char *hostnqn,
-		const char *hostid, nvme_host_t *hp)
+		const char *hostid, nvme_host_t *host)
 {
 	_cleanup_free_ char *hnqn = NULL;
 	_cleanup_free_ char *hid = NULL;
@@ -207,10 +207,12 @@ int nvme_host_get(struct nvme_global_ctx *ctx, const char *hostnqn,
 		return err;
 
 	h = nvme_lookup_host(ctx, hnqn, hid);
+	if (!h)
+		return -ENOMEM;
 
 	nvme_host_set_hostsymname(h, NULL);
 
-	*hp = h;
+	*host = h;
 	return 0;
 }
 
@@ -762,13 +764,37 @@ void nvme_free_host(struct nvme_host *h)
 	__nvme_free_host(h);
 }
 
-struct nvme_host *nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
-				   const char *hostid)
+static int nvme_create_host(struct nvme_global_ctx *ctx, const char *hostnqn,
+		const char *hostid, struct nvme_host **host)
+{
+	struct nvme_host *h;
+
+	h = calloc(1, sizeof(*h));
+	if (!h)
+		return -ENOMEM;
+
+	h->hostnqn = strdup(hostnqn);
+	if (hostid)
+		h->hostid = strdup(hostid);
+	list_head_init(&h->subsystems);
+	list_node_init(&h->entry);
+	h->ctx = ctx;
+
+	list_add_tail(&ctx->hosts, &h->entry);
+
+	*host = h;
+
+	return 0;
+}
+
+struct nvme_host *nvme_lookup_host(struct nvme_global_ctx *ctx,
+		const char *hostnqn, const char *hostid)
 {
 	struct nvme_host *h;
 
 	if (!hostnqn)
 		return NULL;
+
 	nvme_for_each_host(ctx, h) {
 		if (strcmp(h->hostnqn, hostnqn))
 			continue;
@@ -777,16 +803,9 @@ struct nvme_host *nvme_lookup_host(struct nvme_global_ctx *ctx, const char *host
 			continue;
 		return h;
 	}
-	h = calloc(1,sizeof(*h));
-	if (!h)
+
+	if (nvme_create_host(ctx, hostnqn, hostid, &h))
 		return NULL;
-	h->hostnqn = strdup(hostnqn);
-	if (hostid)
-		h->hostid = strdup(hostid);
-	list_head_init(&h->subsystems);
-	list_node_init(&h->entry);
-	h->ctx = ctx;
-	list_add_tail(&ctx->hosts, &h->entry);
 
 	return h;
 }
