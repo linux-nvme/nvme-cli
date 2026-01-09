@@ -452,70 +452,6 @@ substs.set('PREFIX', prefixdir)
 substs.set('URL', 'https://github.com/linux-nvme/nvme-cli/')
 substs.set('VERSION_MAJOR', libnvme_so_version.split('.')[0])
 
-configure_file(
-    input:         'nvme.spec.in',
-    output:        'nvme.spec',
-    configuration: substs,
-)
-
-disc = configure_file(
-    input: 'etc/discovery.conf.in',
-    output: 'discovery.conf',
-    configuration: substs,
-    install: true,
-    install_dir: join_paths(sysconfdir, 'nvme'),
-)
-
-dracut_files = [
-    '70-nvmf-autoconnect.conf',
-]
-
-foreach file : dracut_files
-    configure_file(
-        input: 'nvmf-autoconnect/dracut-conf/' + file + '.in',
-        output: file,
-        configuration: substs,
-        install: true,
-        install_dir: dracutrulesdir,
-    )
-endforeach
-
-systemd_files = [
-    'nvmefc-boot-connections.service',
-    'nvmf-autoconnect.service',
-    'nvmf-connect-nbft.service',
-    'nvmf-connect.target',
-    'nvmf-connect@.service',
-]
-
-foreach file : systemd_files
-    configure_file(
-        input: 'nvmf-autoconnect/systemd/' + file + '.in',
-        output: file,
-        configuration: substs,
-        install: true,
-        install_dir: systemddir,
-    )
-endforeach
-
-udev_files = [
-    '65-persistent-net-nbft.rules',
-    '70-nvmf-autoconnect.rules',
-    '70-nvmf-keys.rules',
-    '71-nvmf-hpe.rules',
-    '71-nvmf-netapp.rules',
-    '71-nvmf-vastdata.rules',
-]
-
-foreach file : udev_files
-    configure_file(
-        input: 'nvmf-autoconnect/udev-rules/' + file + '.in',
-        output: file,
-        configuration: substs,
-        install: true,
-        install_dir: udevrulesdir
-    )
-endforeach
 
 ################################################################################
 subdir('ccan')      # declares: ccan_dep
@@ -563,21 +499,85 @@ if want_nvme
     if get_option('nvme-tests')
         subdir('tests')
     endif
+
+    configure_file(
+        input:         'nvme.spec.in',
+        output:        'nvme.spec',
+        configuration: substs,
+    )
+
+    disc = configure_file(
+        input: 'etc/discovery.conf.in',
+        output: 'discovery.conf',
+        configuration: substs,
+        install: true,
+        install_dir: join_paths(sysconfdir, 'nvme'),
+    )
+
+    dracut_files = [
+        '70-nvmf-autoconnect.conf',
+    ]
+
+    foreach file : dracut_files
+        configure_file(
+            input: 'nvmf-autoconnect/dracut-conf/' + file + '.in',
+            output: file,
+            configuration: substs,
+            install: true,
+            install_dir: dracutrulesdir,
+        )
+    endforeach
+
+    systemd_files = [
+        'nvmefc-boot-connections.service',
+        'nvmf-autoconnect.service',
+        'nvmf-connect-nbft.service',
+        'nvmf-connect.target',
+        'nvmf-connect@.service',
+    ]
+
+    foreach file : systemd_files
+        configure_file(
+            input: 'nvmf-autoconnect/systemd/' + file + '.in',
+            output: file,
+            configuration: substs,
+            install: true,
+            install_dir: systemddir,
+        )
+    endforeach
+
+    udev_files = [
+        '65-persistent-net-nbft.rules',
+        '70-nvmf-autoconnect.rules',
+        '70-nvmf-keys.rules',
+        '71-nvmf-hpe.rules',
+        '71-nvmf-netapp.rules',
+        '71-nvmf-vastdata.rules',
+    ]
+
+    foreach file : udev_files
+        configure_file(
+            input: 'nvmf-autoconnect/udev-rules/' + file + '.in',
+            output: file,
+            configuration: substs,
+            install: true,
+            install_dir: udevrulesdir
+        )
+    endforeach
+
+    install_data(
+        'completions/bash-nvme-completion.sh',
+        rename: 'nvme',
+        install_dir: datadir / 'bash-completion/completions',
+    )
+    install_data(
+        'completions/_nvme',
+        install_dir: datadir / 'zsh/site-functions',
+    )
 endif
 
 subdir('Documentation')
 
-
-################################################################################
-install_data(
-    'completions/bash-nvme-completion.sh',
-    rename: 'nvme',
-    install_dir: datadir / 'bash-completion/completions',
-)
-install_data(
-    'completions/_nvme',
-    install_dir: datadir / 'zsh/site-functions',
-)
 
 ################################################################################
 path_dict = {
