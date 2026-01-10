@@ -9,7 +9,6 @@ LIBNVME_2_0 {
 		nvme_create_ctrl;
 		nvme_create_global_ctx;
 		nvme_ctrl_config_match;
-		nvme_ctrl_find;
 		nvme_ctrl_first_ns;
 		nvme_ctrl_first_path;
 		nvme_ctrl_get_address;
@@ -56,7 +55,6 @@ LIBNVME_2_0 {
 		nvme_ctrl_set_tls_key_identity;
 		nvme_ctrl_set_unique_discovery_ctrl;
 		nvme_ctrls_filter;
-		nvme_default_host;
 		nvme_describe_key_serial;
 		nvme_disconnect_ctrl;
 		nvme_dump_config;
@@ -100,6 +98,7 @@ LIBNVME_2_0 {
 		nvme_get_telemetry_max;
 		nvme_get_uuid_list;
 		nvme_get_version;
+		nvme_host_get;
 		nvme_host_get_dhchap_key;
 		nvme_host_get_global_ctx;
 		nvme_host_get_hostid;
@@ -126,11 +125,8 @@ LIBNVME_2_0 {
 		nvme_insert_tls_key_compat;
 		nvme_insert_tls_key_versioned;
 		nvme_ipaddrs_eq;
-		nvme_lookup_ctrl;
-		nvme_lookup_host;
 		nvme_lookup_key;
 		nvme_lookup_keyring;
-		nvme_lookup_subsystem;
 		nvme_mi_admin_admin_passthru;
 		nvme_mi_admin_xfer;
 		nvme_mi_aem_disable;
@@ -249,6 +245,7 @@ LIBNVME_2_0 {
 		nvme_subsys_filter;
 		nvme_subsystem_first_ctrl;
 		nvme_subsystem_first_ns;
+		nvme_subsystem_get;
 		nvme_subsystem_get_application;
 		nvme_subsystem_get_fw_rev;
 		nvme_subsystem_get_host;
@@ -283,6 +280,7 @@ LIBNVME_2_0 {
 		nvmf_add_ctrl;
 		nvmf_adrfam_str;
 		nvmf_cms_str;
+		nvmf_config_modify;
 		nvmf_connect;
 		nvmf_connect_config_json;
 		nvmf_connect_ctrl;

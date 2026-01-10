@@ -97,20 +97,6 @@ nvme_host_t nvme_next_host(struct nvme_global_ctx *ctx, nvme_host_t h);
 struct nvme_global_ctx *nvme_host_get_global_ctx(nvme_host_t h);
 
 /**
- * nvme_lookup_host() - Lookup nvme_host_t object
- * @ctx:	struct nvme_global_ctx object
- * @hostnqn:	Host NQN
- * @hostid:	Host ID
- *
- * Lookup a nvme_host_t object based on @hostnqn and @hostid
- * or create one if not found.
- *
- * Return: &nvme_host_t object
- */
-nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
-			     const char *hostid);
-
-/**
  * nvme_host_get_dhchap_key() - Return host key
  * @h:	Host for which the key should be returned
  *
@@ -148,16 +134,19 @@ void nvme_host_set_pdc_enabled(nvme_host_t h, bool enabled);
 bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback);
 
 /**
- * nvme_default_host() - Initializes the default host
+ * nvme_host_get() - Returns a host object
  * @ctx:	struct nvme_global_ctx object
- * @h:  &nvme_host_t object to return
+ * @hostnqn:	Host NQN (optional)
+ * @hostid:	Host ID (optional)
+ * @h:		&nvme_host_t object to return
  *
- * Initializes the default host object based on the hostnqn/hostid
- * values returned by nvme_host_get_ids() and attaches it to @r.
+ * Returns a host object based on the hostnqn/hostid values or the default if
+ * hostnqn/hostid are NULL.
  *
  * Return: 0 on success or negative error code otherwise
  */
-int nvme_default_host(struct nvme_global_ctx *ctx, nvme_host_t *h);
+int nvme_host_get(struct nvme_global_ctx *ctx, const char *hostnqn,
+		const char *hostid, nvme_host_t *h);
 
 /**
  * nvme_host_get_ids - Retrieve host ids from various sources
@@ -212,19 +201,20 @@ nvme_subsystem_t nvme_first_subsystem(nvme_host_t h);
 nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
 
 /**
- * nvme_lookup_subsystem() - Lookup nvme_subsystem_t object
+ * nvme_subsystem_get() - Returns nvme_subsystem_t object
+ * @ctx:	struct nvme_global_ctx object
  * @h:		&nvme_host_t object
  * @name:	Name of the subsystem (may be NULL)
  * @subsysnqn:	Subsystem NQN
+ * @s: 		nvme_subsystem_t object
  *
- * Lookup a &nvme_subsystem_t object in @h base on @name (if present)
+ * Returns an &nvme_subsystem_t object in @h base on @name (if present)
  * and @subsysnqn or create one if not found.
  *
- * Return: nvme_subsystem_t object
  */
-nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
-				       const char *name,
-				       const char *subsysnqn);
+int nvme_subsystem_get(struct nvme_global_ctx *ctx,
+		struct nvme_host *h, const char *name,
+		const char *subsysnqn, struct nvme_subsystem **s);
 
 /**
  * nvme_free_subsystem() - Free a subsystem
@@ -309,54 +299,6 @@ nvme_path_t nvme_namespace_first_path(nvme_ns_t ns);
  * Return: Next &nvme_path_t object of an @ns iterator
  */
 nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p);
-
-/**
- * nvme_lookup_ctrl() - Lookup nvme_ctrl_t object
- * @s:			&nvme_subsystem_t object
- * @transport:		Transport name
- * @traddr:		Transport address
- * @host_traddr:	Host transport address
- * @host_iface:		Host interface name
- * @trsvcid:		Transport service identifier
- * @p:			Previous controller instance
- *
- * Lookup a controller in @s based on @transport, @traddr,
- * @host_traddr, @host_iface, and @trsvcid. @transport must be specified,
- * other fields may be required depending on the transport. A new
- * object is created if none is found. If @p is specified the lookup
- * will start at @p instead of the first controller.
- *
- * Return: Controller instance
- */
-nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-			     const char *traddr, const char *host_traddr,
-			     const char *host_iface, const char *trsvcid,
-			     nvme_ctrl_t p);
-
-/**
- * nvme_ctrl_find() - Locate an existing controller
- * @s:			&nvme_subsystem_t object
- * @transport:		Transport name
- * @traddr:		Transport address
- * @trsvcid:		Transport service identifier
- * @subsysnqn:		Subsystem NQN
- * @host_traddr:	Host transport address
- * @host_iface:		Host interface name
- *
- * Lookup a controller in @s based on @transport, @traddr, @trsvcid,
- * @subsysnqn, @host_traddr, and @host_iface. @transport must be specified,
- * other fields may be required depending on the transport. Parameters set
- * to NULL will be ignored.
- *
- * Unlike nvme_lookup_ctrl(), this function does not create a new object if
- * an existing controller cannot be found.
- *
- * Return: Controller instance on success, NULL otherwise.
- */
-nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
-			   const char *traddr, const char *trsvcid,
-			   const char *subsysnqn, const char *host_traddr,
-			   const char *host_iface);
 
 /**
  * nvme_ctrl_config_match() - Check if ctrl @c matches config params
