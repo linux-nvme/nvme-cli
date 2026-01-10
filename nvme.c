@@ -162,6 +162,9 @@ struct set_reg_config {
 	__u32 pmrmscu;
 };
 
+#define NVME_OUT "nvme.out"
+#define NVME_PREV_OUT "nvme-prev.out"
+
 static const char nvme_version_string[] = NVME_VERSION;
 
 static struct plugin builtin = {
@@ -191,6 +194,7 @@ const char *output_format = "Output format: normal|binary";
 const char *timeout = "timeout value, in milliseconds";
 const char *verbose = "Increase output verbosity";
 const char *dry_run = "show command instead of sending";
+const char *delay = "iterative delay as SECS [.TENTHS]";
 
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
@@ -262,6 +266,7 @@ struct nvme_config nvme_cfg = {
 	.output_format = "normal",
 	.output_format_ver = 1,
 	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+	.delay = 0,
 };
 
 static void *mmap_registers(struct nvme_transport_handle *hdl, bool writable);
@@ -362,6 +367,16 @@ static int get_transport_handle(struct nvme_global_ctx *ctx, int argc,
 	return ret;
 }
 
+static int set_stdout_file(void)
+{
+	if (!freopen(NVME_OUT, "w", stdout)) {
+		perror("freopen");
+		return -errno;
+	}
+
+	return 0;
+}
+
 static int parse_args(int argc, char *argv[], const char *desc,
 		      struct argconfig_commandline_options *opts)
 {
@@ -374,7 +389,10 @@ static int parse_args(int argc, char *argv[], const char *desc,
 	log_level = map_log_level(nvme_cfg.verbose, false);
 	nvme_init_default_logging(stderr, log_level, false, false);
 
-	return 0;
+	if (nvme_cfg.delay)
+		ret = set_stdout_file();
+
+	return ret;
 }
 
 int parse_and_open(struct nvme_global_ctx **ctx,
@@ -10084,7 +10102,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		  OPT_FLAG("export",	'e', &cfg.export,	export),
 		  OPT_STR("revoke",	'r', &cfg.revoke,	revoke));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -10182,9 +10200,10 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
+		  OPT_FMT("ranking",  'r', &cfg.ranking,    ranking),
+		  OPT_DOUBLE("delay", 'd', &nvme_cfg.delay, delay));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -11097,6 +11116,118 @@ void register_extension(struct plugin *plugin)
 	nvme.extensions->tail = plugin;
 }
 
+static char *read_file(const char *file, size_t *len)
+{
+	struct stat st;
+	char *buf;
+	FILE *fp;
+
+	fp = fopen(file, "r");
+	if (!fp || stat(file, &st))
+		return NULL;
+
+	buf = malloc(st.st_size);
+	if (!buf)
+		return NULL;
+
+	*len = fread(buf, 1, st.st_size, fp);
+	if (*len)
+		return buf;
+
+	free(buf);
+	return NULL;
+}
+
+static bool delay_compare(void)
+{
+	_cleanup_free_ char *prev_buf = NULL;
+	_cleanup_free_ char *buf = NULL;
+	size_t prev_len;
+	struct stat st;
+	size_t len;
+
+	if (stat(NVME_PREV_OUT, &st))
+		return true;
+
+	buf = read_file(NVME_OUT, &len);
+	if (!buf)
+		return true;
+
+	prev_buf = read_file(NVME_PREV_OUT, &prev_len);
+	if (!prev_buf || len != prev_len)
+		return true;
+
+	return !!memcmp(buf, prev_buf, len);
+}
+
+static bool delay_copy(void)
+{
+	_cleanup_free_ char *cmd = NULL;
+	int err;
+
+	if (asprintf(&cmd, "cp %s %s", NVME_OUT, NVME_PREV_OUT) < 0)
+		return false;
+
+	err = system(cmd);
+	if (err < 0)
+		return false;
+
+	return true;
+}
+
+static bool delay_print(void)
+{
+	size_t len;
+	_cleanup_free_ char *buf = read_file(NVME_OUT, &len);
+	int err;
+
+	err = system("clear");
+	if (err < 0)
+		return false;
+
+	printf("%s", buf);
+
+	return true;
+}
+
+static bool handle_delay(void)
+{
+	struct timespec ts;
+	double delay_f;
+	double delay_i;
+	int err;
+
+	if (!freopen("/dev/tty", "w", stdout))
+		return false;
+
+	if (delay_compare()) {
+		if (!delay_print() || !delay_copy())
+			return false;
+	}
+
+	delay_f = modf(nvme_cfg.delay, &delay_i);
+	ts.tv_sec = delay_i;
+	ts.tv_nsec = delay_f * 1000000000;
+	err = pselect(0, NULL, NULL, NULL, &ts, NULL);
+	if (err < 0)
+		return false;
+
+	return true;
+}
+
+static int remove_file(void)
+{
+	struct stat st;
+
+	if (!stat(NVME_OUT, &st) && remove(NVME_OUT))
+		return -errno;
+
+	if (!stat(NVME_PREV_OUT, &st) && remove(NVME_PREV_OUT))
+		return -errno;
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int err;
@@ -11112,9 +11243,15 @@ int main(int argc, char **argv)
 	if (err)
 		return err;
 
-	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
-	if (err == -ENOTTY)
-		general_help(&builtin, NULL);
+	err = remove_file();
+	if (err)
+		return err;
+
+	do {
+		err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
+		if (err == -ENOTTY)
+			general_help(&builtin, NULL);
+	} while (!err && nvme_cfg.delay && handle_delay());
 
 	return err ? 1 : 0;
 }
