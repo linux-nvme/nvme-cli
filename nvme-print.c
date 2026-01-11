@@ -520,6 +520,14 @@ void nvme_show_status(int status)
 		ops->show_status(status);
 }
 
+void nvme_show_err(const char *msg, int err)
+{
+	if (err < 0)
+		nvme_show_error("%s: %s", msg, nvme_strerror(-err));
+	else if (err > 0)
+		nvme_show_status(err);
+}
+
 void nvme_show_opcode_status(int status, bool admin, __u8 opcode)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
