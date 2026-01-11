@@ -7283,6 +7283,9 @@ static int get_pi_info(struct nvme_transport_handle *hdl,
 	lbs = 1 << ns->lbaf[lba_index].ds;
 	ms = le16_to_cpu(ns->lbaf[lba_index].ms);
 
+	*logical_block_size = lbs;
+	*metadata_size = ms;
+
 	nvm_ns = nvme_alloc(sizeof(*nvm_ns));
 	if (!nvm_ns)
 		return -ENOMEM;
@@ -7301,14 +7304,11 @@ static int get_pi_info(struct nvme_transport_handle *hdl,
 		 *   5.2.2.2 Protection Information and Read Commands
 		 */
 		if (!((prinfo & 0x8) != 0 && ms == pi_size))
-			logical_block_size += ms;
+			*logical_block_size += ms;
 	}
 
 	if (invalid_tags(lbst, ilbrt, sts, pif))
 		return -EINVAL;
-
-	*logical_block_size = lbs;
-	*metadata_size = ms;
 
 	return 0;
 }
@@ -8221,7 +8221,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	void *buffer;
 	int err = 0;
 	int flags;
-	__u16 ms;
+	__u16 ms = 0;
 
 	const char *start_block_addr = "64-bit addr of first block to access";
 	const char *block_size = "if specified, logical block size in bytes;\n"
@@ -8400,8 +8400,10 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		err = get_pi_info(hdl, cfg.nsid, cfg.prinfo,
 			cfg.ilbrt, cfg.lbst, &logical_block_size, &ms);
 		if (err) {
-			logical_block_size = 0;
-			ms = 0;
+			if (err != -ENAVAIL) {
+				logical_block_size = 0;
+				ms = 0;
+			}
 			pi_available = false;
 		} else {
 			pi_available = true;
