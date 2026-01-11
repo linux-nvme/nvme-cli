@@ -7245,12 +7245,18 @@ static int get_pi_info(struct nvme_transport_handle *hdl,
 	if (!nvm_ns)
 		return -ENOMEM;
 
-	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0,
-			   nvm_ns);
-	if (err)
+	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0, nvm_ns);
+	if (!err)
+		get_pif_sts(ns, nvm_ns, &pif, &sts);
+	else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+				     NVME_SC_INVALID_FIELD))
+		/*
+		 * Ignore the invalid field error and skip get_pif_sts().
+		 * Keep the I/O commands behavior same as before.
+		 * Since the error returned by drives unsupported.
+		 */
 		return -ENAVAIL;
 
-	get_pif_sts(ns, nvm_ns, &pif, &sts);
 	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
 	if (NVME_FLBAS_META_EXT(ns->flbas)) {
 		/*
@@ -7259,7 +7265,7 @@ static int get_pi_info(struct nvme_transport_handle *hdl,
 		 *   5.2.2.2 Protection Information and Read Commands
 		 */
 		if (!((prinfo & 0x8) != 0 && ms == pi_size))
-			logical_block_size += ms;
+			lbs += ms;
 	}
 
 	if (invalid_tags(lbst, ilbrt, sts, pif))
@@ -7295,10 +7301,16 @@ static int init_pi_tags(struct nvme_transport_handle *hdl,
 		return -ENOMEM;
 
 	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0, nvm_ns);
-	if (err)
+	if (!err)
+		get_pif_sts(ns, nvm_ns, &pif, &sts);
+	else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+				     NVME_SC_INVALID_FIELD))
+		/*
+		 * Ignore the invalid field error and skip get_pif_sts().
+		 * Keep the I/O commands behavior same as before.
+		 * Since the error returned by drives unsupported.
+		 */
 		return -ENAVAIL;
-
-	get_pif_sts(ns, nvm_ns, &pif, &sts);
 
 	if (invalid_tags(lbst, ilbrt, sts, pif))
 		return -EINVAL;
@@ -7306,7 +7318,7 @@ static int init_pi_tags(struct nvme_transport_handle *hdl,
 	nvme_init_var_size_tags(cmd, pif, sts, ilbrt, lbst);
 	nvme_init_app_tag(cmd, lbat, lbatm);
 
-	return err;
+	return 0;
 }
 
 static int write_zeroes(int argc, char **argv,
