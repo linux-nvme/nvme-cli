@@ -5646,7 +5646,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	if (err < 0)
 		nvme_show_error("sanitize ns: %s", nvme_strerror(err));
 	else if (err > 0)
-		nvme_show_status(err);
+		nvme_show_opcode_status(err, true, cmd.opcode);
 
 	return err;
 }
