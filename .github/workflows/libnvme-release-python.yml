@@ -85,6 +85,10 @@ jobs:
           git add meson.build
           git commit -m "ci: set project version to ${DEV_VERSION}"
 
+      - name: Build sdist
+         run: |
+          pipx run build --sdist
+
       - name: Validate sdist
         run: |
           pipx run twine check dist/*.tar.gz
