@@ -90,7 +90,10 @@ endif
 
 ################################################################################
 prefixdir      = get_option('prefix')
+bindir         = join_paths(prefixdir, get_option('bindir'))
 datadir        = join_paths(prefixdir, get_option('datadir'))
+includedir     = join_paths(prefixdir, get_option('includedir'))
+libdir         = join_paths(prefixdir, get_option('libdir'))
 mandir         = join_paths(prefixdir, get_option('mandir'))
 sbindir        = join_paths(prefixdir, get_option('sbindir'))
 sysconfdir     = join_paths(prefixdir, get_option('sysconfdir'))
@@ -120,30 +123,120 @@ endif
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 conf.set('RUNDIR', '"@0@"'.format(rundir))
+  
+################################################################################
+# Windows platform detection and configuration
+is_windows = host_machine.system() == 'windows'
 
-# Check for libjson-c availability
-if get_option('json-c').disabled()
+# Windows-specific dependency handling
+if is_windows
+    # Disable Linux-specific dependencies on Windows
     json_c_dep = dependency('', required: false)
+    liburing_dep = dependency('', required: false)
+    keyutils_dep = dependency('', required: false)
+    libdbus_dep = dependency('', required: false)
+    
+    # Find Windows system libraries
+    ws2_32_dep = cc.find_library('ws2_32', required: true)
+    wsock32_dep = cc.find_library('wsock32', required: true)
+    kernel32_dep = cc.find_library('kernel32', required: true)
+    iphlpapi_dep = cc.find_library('iphlpapi', required: true)
 else
-    json_c_dep = dependency(
-        'json-c',
-        required: get_option('json-c'),
-        version: '>=0.13',
-        fallback : ['json-c', 'json_c_dep'],
-    )
+    # Linux dependency detection
+    if get_option('json-c').disabled()
+        json_c_dep = dependency('', required: false)
+    else
+        json_c_dep = dependency(
+            'json-c',
+            required: get_option('json-c'),
+            version: '>=0.13',
+            fallback : ['json-c', 'json_c_dep'])
+    endif
     if json_c_dep.version().version_compare('>=0.14')
         conf.set('CONFIG_JSONC_14', true, description: 'Is json-c at least 0.14?')
         requires = 'Requires: json-c >= 0.14'
     else
         requires = 'Requires: json-c >= 0.13'
     endif
+
+    if get_option('liburing').disabled()
+        liburing_dep = dependency('', required: false)
+    else
+        liburing_dep = dependency('liburing', version: '>=2.2', required: get_option('liburing'))
+    endif
+
+    if get_option('keyutils').disabled()
+        keyutils_dep = dependency('', required: false)
+    else
+        keyutils_dep = dependency('libkeyutils',
+                                  required : get_option('keyutils'))
+    endif
+
+    if get_option('libdbus').disabled()
+        libdbus_dep = dependency('', required: false)
+    else
+        # Check for libdbus availability. Optional, only required for MCTP dbus scan
+
+        libdbus_dep = dependency(
+            'dbus-1',
+            required: true,
+            fallback: ['dbus', 'libdbus_dep'],
+            default_options: [
+                'default_library=static',
+                'embedded_tests=false',
+                'message_bus=false',
+                'modular_tests=disabled',
+                'tools=false',
+            ],
+        )
+    endif
+    
+    # Initialize Windows dependencies as empty for Linux
+    ws2_32_dep = dependency('', required: false)
+    wsock32_dep = dependency('', required: false)
+    kernel32_dep = dependency('', required: false)
+    iphlpapi_dep = dependency('', required: false)
 endif
-conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c available?')
 
 conf.set('NVME_VERSION', '"@0@"'.format(meson.project_version()))
 conf.set('LIBNVME_VERSION', '"@0@"'.format(meson.project_version()))
-
+conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c available?')
 conf.set10('DEFAULT_PDC_ENABLED', get_option('pdc-enabled'))
+
+# OpenSSL is supported on both platforms
+if get_option('openssl').disabled()
+  openssl_dep = dependency('', required: false)
+else
+  openssl_dep = dependency('openssl',
+                           version: '>=3.0.0',
+                           required: get_option('openssl'),
+                           fallback : ['openssl', 'libssl_dep'])
+endif
+if openssl_dep.found()
+  # Test for LibreSSL v3.x with incomplete OpenSSL v3 APIs
+  if openssl_dep.type_name() != 'internal'
+    is_libressl = cc.has_header_symbol('openssl/opensslv.h',
+                                       'LIBRESSL_VERSION_NUMBER',
+                                       dependencies: openssl_dep)
+    has_header = cc.has_header('openssl/core_names.h',
+                               dependencies: openssl_dep)
+    if is_libressl and not has_header
+      openssl_dep = dependency('', required: false)
+    endif
+  endif
+endif
+conf.set('CONFIG_OPENSSL', openssl_dep.found(),
+         description: 'Is OpenSSL/LibreSSL available?')
+
+# Windows-specific compiler flags
+if is_windows
+    add_project_arguments(
+        [
+            '-DHAVE_GLIBC_IOCTL=0',
+        ],
+        language : 'c',
+    )
+endif
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
@@ -269,68 +362,8 @@ else
     conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
 endif
 
-
-if get_option('liburing').disabled()
-    liburing_dep = dependency('', required: false)
-else
-    liburing_dep = dependency('liburing', version: '>=2.2', required: get_option('liburing'))
-endif
 conf.set('CONFIG_LIBURING', liburing_dep.found(), description: 'Is liburing available?')
-
-if get_option('openssl').disabled()
-    openssl_dep = dependency('', required: false)
-else
-    openssl_dep = dependency(
-        'openssl',
-        version: '>=3.0.0',
-        required: get_option('openssl'),
-        fallback : ['openssl', 'libssl_dep'],
-    )
-endif
-if openssl_dep.found()
-    # Test for LibreSSL v3.x with incomplete OpenSSL v3 APIs
-    if openssl_dep.type_name() != 'internal'
-        is_libressl = cc.has_header_symbol(
-            'openssl/opensslv.h',
-            'LIBRESSL_VERSION_NUMBER',
-            dependencies: openssl_dep,
-        )
-        has_header = cc.has_header(
-            'openssl/core_names.h',
-            dependencies: openssl_dep,
-        )
-        if is_libressl and not has_header
-            openssl_dep = dependency('', required: false)
-        endif
-    endif
-endif
-conf.set('CONFIG_OPENSSL', openssl_dep.found(), description: 'Is OpenSSL/LibreSSL available?')
-
-if get_option('keyutils').disabled()
-    keyutils_dep = dependency('', required: false)
-else
-    keyutils_dep = dependency('libkeyutils', required : get_option('keyutils'))
-endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
-
-if get_option('libdbus').disabled()
-    libdbus_dep = dependency('', required: false)
-else
-    # Check for libdus availability. Optional, only required for MCTP dbus scan
-    libdbus_dep = dependency(
-        'dbus-1',
-        required: true,
-        fallback: ['dbus', 'libdbus_dep'],
-        default_options: [
-            'default_library=static',
-            'embedded_tests=false',
-            'message_bus=false',
-            'modular_tests=disabled',
-            'tools=false',
-        ],
-    )
-endif
-
 conf.set('CONFIG_DBUS', libdbus_dep.found(), description: 'Enable dbus support?')
 
 conf.set10(
@@ -355,17 +388,17 @@ conf.set10(
 
 is_static = get_option('default_library') == 'static'
 have_netdb = false
-if not is_static
-    have_netdb = cc.links(
-        '''#include <sys/types.h>
-        #include <sys/socket.h>
-        #include <netdb.h>
-        int main(int argc, char **argv) {
-            struct addrinfo hints, *result;
-            return getaddrinfo(argv[1], argv[2], &hints, &result);
-        }
-        ''',
-        name: 'netdb',
+if not is_static and not is_windows
+  have_netdb = cc.links(
+      '''#include <sys/types.h>
+         #include <sys/socket.h>
+         #include <netdb.h>
+         int main(int argc, char **argv) {
+             struct addrinfo hints, *result;
+             return getaddrinfo(argv[1], argv[2], &hints, &result);
+      }
+      ''',
+      name: 'netdb',
     )
 endif
 conf.set(
@@ -434,6 +467,7 @@ if libtype == 'static'
     requires = ''
 endif
 
+################################################################################
 substs = configuration_data()
 substs.set('VERSION', meson.project_version())
 substs.set('NVMECLI_LICENSE', meson.project_license()[0])
@@ -595,12 +629,15 @@ path_dict = {
 summary(path_dict, section: 'Paths')
 
 dep_dict = {
-    'json-c':           json_c_dep.found(),
-    'OpenSSL':          openssl_dep.found(),
-    'keyutitls':        keyutils_dep.found(),
-    'libdbus':          libdbus_dep.found(),
-    'python3':          py3_dep.found(),
-    'liburing':         liburing_dep.found(),
+    'json-c':               json_c_dep.found(),
+    'OpenSSL':              openssl_dep.found(),
+    'keyutitls':            keyutils_dep.found(),
+    'libdbus':              libdbus_dep.found(),
+    'python3':              py3_dep.found(),
+    'liburing':             liburing_dep.found(),
+    'Windows (ws2_32)':     ws2_32_dep.found(),
+    'Windows (kernel32)':   kernel32_dep.found(),
+    'Windows (iphlpapi)':   iphlpapi_dep.found(),
 }
 summary(dep_dict, section: 'Dependencies', bool_yn: true)
 
@@ -617,4 +654,3 @@ conf_dict = {
     'pdc enabled':      get_option('pdc-enabled'),
 }
 summary(conf_dict, section: 'Configuration', bool_yn: true)
-

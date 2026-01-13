@@ -13,11 +13,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <sys/types.h>
-#include <netinet/in.h>
+#include "platform/platform_includes.h"  /* Platform abstraction */
 
 #include <nvme/ioctl.h>
 #include <nvme/util.h>
+#include <nvme/types.h>
 
 /**
  * DOC: tree.h

@@ -7,6 +7,9 @@
 #
 # Run generate-accessors to generate the setter/getter functions.
 
+# Skip for now on Windows.  Accessor generation needs to be ported.
+if not is_windows
+
 generated_h = 'accessors.h'
 generated_c = 'accessors.c'
 generated_ld = 'accessors.ld'
@@ -69,4 +72,6 @@ if meson.version().version_compare('>=1.4.0')
     accessors_ld_full_path = tgt_accessors_ld.full_path()
 else
     accessors_ld_full_path = meson.current_build_dir() / generated_ld
+endif
+
 endif

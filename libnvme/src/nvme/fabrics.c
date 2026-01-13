@@ -21,12 +21,7 @@
 #include <dirent.h>
 #include <inttypes.h>
 
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <net/if.h>
+#include "platform/platform_includes.h"  /* Platform abstraction - includes all needed headers */
 
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>

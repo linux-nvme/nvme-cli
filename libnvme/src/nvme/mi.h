@@ -84,7 +84,7 @@
 #ifndef _LIBNVME_MI_MI_H
 #define _LIBNVME_MI_MI_H
 
-#include <endian.h>
+#include "platform/platform_includes.h"  /* Platform abstraction */
 #include <stdint.h>
 
 #include <nvme/types.h>

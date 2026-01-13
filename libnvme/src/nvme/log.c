@@ -13,8 +13,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <syslog.h>
-#include <unistd.h>
+#include "platform/platform_includes.h"  /* Platform abstraction - includes syslog */
 #include <time.h>
 #include <string.h>
 #define LOG_FUNCNAME 1

@@ -12,10 +12,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include "platform/platform_includes.h"  /* Platform abstraction - includes all needed headers */
 
 #ifdef CONFIG_OPENSSL
 #include <openssl/evp.h>

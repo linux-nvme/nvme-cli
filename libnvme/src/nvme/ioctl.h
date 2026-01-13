@@ -11,11 +11,10 @@
 #define _LIBNVME_IOCTL_H
 
 #include <string.h>
-#include <endian.h>
+#include "platform/platform_includes.h"  /* Platform abstraction - includes endian.h and ioctl.h */
 #include <errno.h>
 #include <stddef.h>
 #include <string.h>
-#include <sys/ioctl.h>
 
 #include <nvme/types.h>
 

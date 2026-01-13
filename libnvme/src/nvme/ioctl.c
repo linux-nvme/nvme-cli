@@ -15,12 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <inttypes.h>
-
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/time.h>
 
 #include <ccan/build_assert/build_assert.h>
 #include <ccan/minmax/minmax.h>

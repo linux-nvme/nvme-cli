@@ -10,13 +10,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-
-#include <poll.h>
+#include "platform/platform_includes.h"  /* Platform abstraction - includes all needed headers */
 #include <fcntl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/uio.h>
 
 #if HAVE_LINUX_MCTP_H
 #include <linux/mctp.h>

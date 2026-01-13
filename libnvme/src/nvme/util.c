@@ -16,11 +16,7 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
+#include "platform/platform_includes.h"  /* Platform abstraction - includes all needed headers */
 
 #include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>

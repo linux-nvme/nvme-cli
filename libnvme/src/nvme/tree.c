@@ -14,13 +14,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <libgen.h>
-#include <unistd.h>
-#include <ifaddrs.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include "platform/platform_includes.h"  /* Platform abstraction - includes all needed headers */
 
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>

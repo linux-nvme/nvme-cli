@@ -5,10 +5,8 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+
+#include "platform/platform_includes.h"  /* Platform abstraction - includes all needed headers */
 
 #include "fabrics.h"
 
