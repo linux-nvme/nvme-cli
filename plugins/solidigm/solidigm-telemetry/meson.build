@@ -8,4 +8,5 @@ plugin_sources += [
     'plugins/solidigm/solidigm-telemetry/skht.c',
     'plugins/solidigm/solidigm-telemetry/debug-info.c',
     'plugins/solidigm/solidigm-telemetry/uart-log.c',
+    'plugins/solidigm/solidigm-telemetry/side-trace.c',
 ]
