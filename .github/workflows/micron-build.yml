@@ -1,5 +1,5 @@
 ---
-name: build
+name: micron-build
 
 on:
   push:
