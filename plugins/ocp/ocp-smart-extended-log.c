@@ -42,7 +42,7 @@ static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 		return ret;
 	}
 
-	data = malloc(sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
+	data = (struct ocp_smart_extended_log *) malloc(sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
 	if (!data) {
 		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
 		return -1;
