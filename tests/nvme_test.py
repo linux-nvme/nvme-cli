@@ -358,7 +358,7 @@ class TestNVMe(unittest.TestCase):
         """
         create_ns_cmd = f"{self.nvme_bin} create-ns {self.ctrl} " + \
             f"--nsze={str(nsze)} --ncap={str(ncap)} --flbas={str(flbas)} " + \
-            f"--dps={str(dps)} --verbose --output-format=json"
+            f"--dps={str(dps)}"
         return subprocess.Popen(create_ns_cmd, shell=True,
                                 stdout=subprocess.PIPE, encoding='utf-8')
 
@@ -376,8 +376,8 @@ class TestNVMe(unittest.TestCase):
         proc = self.create_ns(nsze, ncap, flbas, dps)
         err = proc.wait()
         if err == 0:
-            json_output = json.loads(proc.stdout.read())
-            self.assertEqual(int(json_output['nsid']), nsid,
+            output = proc.stdout.read()
+            self.assertEqual(int(output.strip().split(':')[-1]), nsid,
                              "ERROR : create namespace failed")
             id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
                 f"--namespace-id={str(nsid)}"
