@@ -66,25 +66,35 @@ jobs:
           - arch: ppc64le
     steps:
       - uses: actions/checkout@v5
-      - name: enable foreign arch
-        uses: dbhi/qus/action@main
+
+      # enable foreign arch (replace unverified dbhi/qus with verified Docker QEMU setup)
+      - name: Enable QEMU for cross-arch
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm,ppc64le,s390x
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      # compile and run unit tests (replace unverified mosteo-actions/docker-run with native docker run)
       - name: compile and run unit tests
-        uses: mosteo-actions/docker-run@v2
-        with:
-          image: ghcr.io/linux-nvme/ubuntu-cross-${{ matrix.arch }}:latest
-          guest-dir: /build
-          host-dir: ${{ github.workspace }}
-          command: |
-            git config --global --add safe.directory /build
-            scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
-          params: "--platform linux/amd64"
-          pull-params: "--platform linux/amd64"
+        run: |
+          set -eux
+          docker pull --platform linux/amd64 ghcr.io/linux-nvme/ubuntu-cross-${{ matrix.arch }}:latest
+          docker run --rm \
+            --platform linux/amd64 \
+            -v "${{ github.workspace }}:/build" \
+            -w /build \
+            ghcr.io/linux-nvme/ubuntu-cross-${{ matrix.arch }}:latest \
+            bash -lc '
+              git config --global --add safe.directory /build
+              scripts/build.sh -b release -c gcc -t ${{ matrix.arch }} cross
+            '
+
       - uses: actions/upload-artifact@v5
         name: upload logs
         if: failure()
