@@ -130,3 +130,9 @@ option(
   value: 'disabled',
   description : 'liburing support'
 )
+option(
+  'pypi',
+  type : 'boolean',
+  value : false,
+  description : 'building for PyPI (use short soversion, e.g. libnvme.so.3)'
+)

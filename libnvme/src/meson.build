@@ -55,25 +55,6 @@ libnvme = library(
     install: true,
 )
 
-# Explicitly create the symlinks in the same directory. When building the
-# PyPI package (pipx run build --sdist), the symbolic link don't get installed
-# unless we explicitly set them as below.
-# 1st: libnvme.so.X -> libnvme.so.X.Y.Z
-major_version = libnvme_so_version.split('.')[0]
-install_symlink(
-    'libnvme.so.@0@'.format(major_version),
-    pointing_to: 'libnvme.so.@0@'.format(libnvme_so_version),
-    install_dir: get_option('libdir'),
-)
-
-# 2nd: libnvme.so -> libnvme.so.X
-major_version = libnvme_so_version.split('.')[0]
-install_symlink(
-    'libnvme.so',
-    pointing_to: 'libnvme.so.@0@'.format(major_version),
-    install_dir: get_option('libdir'),
-)
-
 pkg = import('pkgconfig')
 pkg.generate(libnvme,
     filebase: 'libnvme',

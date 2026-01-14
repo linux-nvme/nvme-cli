@@ -88,6 +88,12 @@ else
     libnvme_so_version = ver_digits + '.0'
 endif
 
+# For PyPI builds, use only the major version (e.g., '3' instead of '3.0.0').
+# This avoids the need for symbolic links which pip/wheel doesn't preserve.
+if get_option('pypi')
+    libnvme_so_version = libnvme_so_version.split('.')[0]
+endif
+
 ################################################################################
 prefixdir      = get_option('prefix')
 datadir        = join_paths(prefixdir, get_option('datadir'))

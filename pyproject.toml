@@ -37,6 +37,7 @@ setup = [
     "-Dnvme=disabled",
     "-Dlibnvme=enabled",
     "-Dpython=enabled",
+    "-Dpypi=true",
     "-Dtests=false",
     "-Dnvme-tests=false",
     "-Dexamples=false",
