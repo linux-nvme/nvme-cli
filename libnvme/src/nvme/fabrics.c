@@ -2313,6 +2313,12 @@ static int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		return -ENOMEM;
 	}
 
+	ret = nvme_open(ctx, c->name, &c->hdl);
+	if (ret) {
+		nvme_msg(ctx, LOG_ERR, "failed to open %s\n", c->name);
+		return ret;
+	}
+
 	/* Find out the name of discovery controller */
 	ret = nvme_ctrl_identify(c, id);
 	if (ret)  {
