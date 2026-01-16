@@ -2115,6 +2115,35 @@ static int set_discovery_kato(struct nvmf_context *fctx,
 	return tmo;
 }
 
+static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
+				const char *tls_key_identity,
+				struct nvme_fabrics_config *cfg, nvme_ctrl_t c)
+{
+	if (keyring) {
+		char *endptr;
+		long id = strtol(keyring, &endptr, 0);
+
+		if (endptr != keyring)
+			cfg->keyring = id;
+		else
+			nvme_ctrl_set_keyring(c, keyring);
+	}
+
+	if (tls_key_identity)
+		nvme_ctrl_set_tls_key_identity(c, tls_key_identity);
+
+	if (tls_key) {
+		char *endptr;
+		long id = strtol(tls_key, &endptr, 0);
+
+		if (endptr != tls_key)
+			cfg->tls_key = id;
+		else
+			nvme_ctrl_set_tls_key(c, tls_key);
+	}
+}
+
+
 static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, bool connect,
 		struct nvme_ctrl *c)
@@ -2617,6 +2646,56 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 
 	if (err != -EOF)
 		return err;
+
+	return 0;
+}
+
+int nvmf_config_modify(struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx)
+{
+	_cleanup_free_ char *hnqn = NULL;
+	_cleanup_free_ char *hid = NULL;
+	struct nvme_host *h;
+	struct nvme_subsystem *s;
+	struct nvme_ctrl *c;
+
+	if (!fctx->hostnqn)
+		fctx->hostnqn = hnqn = nvmf_hostnqn_from_file();
+	if (!fctx->hostid && hnqn)
+		fctx->hostid = hid = nvmf_hostid_from_file();
+
+	h = nvme_lookup_host(ctx, fctx->hostnqn, fctx->hostid);
+	if (!h) {
+		nvme_msg(ctx, LOG_ERR, "Failed to lookup host '%s'\n",
+			fctx->hostnqn);
+		return -ENODEV;
+	}
+
+	if (fctx->hostkey)
+		nvme_host_set_dhchap_key(h, fctx->hostkey);
+
+	s = nvme_lookup_subsystem(h, NULL, fctx->subsysnqn);
+	if (!s) {
+		nvme_msg(ctx, LOG_ERR, "Failed to lookup subsystem '%s'\n",
+			fctx->subsysnqn);
+		return -ENODEV;
+	}
+
+	c = nvme_lookup_ctrl(s, fctx->transport, fctx->traddr,
+			     fctx->host_traddr, fctx->host_iface,
+			     fctx->trsvcid, NULL);
+	if (!c) {
+		nvme_msg(ctx, LOG_ERR, "Failed to lookup controller\n");
+		return -ENODEV;
+	}
+
+	if (fctx->ctrlkey)
+		nvme_ctrl_set_dhchap_key(c, fctx->ctrlkey);
+
+	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
+			    fctx->tls_key_identity, fctx->cfg, c);
+
+	nvmf_update_config(c, fctx->cfg);
 
 	return 0;
 }
@@ -3281,34 +3360,6 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 	nvme_free_ctrl(c);
 
 	return ret;
-}
-
-static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
-				const char *tls_key_identity,
-				struct nvme_fabrics_config *cfg, nvme_ctrl_t c)
-{
-	if (keyring) {
-		char *endptr;
-		long id = strtol(keyring, &endptr, 0);
-
-		if (endptr != keyring)
-			cfg->keyring = id;
-		else
-			nvme_ctrl_set_keyring(c, keyring);
-	}
-
-	if (tls_key_identity)
-		nvme_ctrl_set_tls_key_identity(c, tls_key_identity);
-
-	if (tls_key) {
-		char *endptr;
-		long id = strtol(tls_key, &endptr, 0);
-
-		if (endptr != tls_key)
-			cfg->tls_key = id;
-		else
-			nvme_ctrl_set_tls_key(c, tls_key);
-	}
 }
 
 int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
