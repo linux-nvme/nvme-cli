@@ -78,7 +78,7 @@ static char *id_to_name(__u8 id)
 	case 0xB8:
 		return "e2e_error_detect_count";
 	case 0xC7:
-		return "crc_error_count";
+		return "bad_tlp_count";
 	case 0xE2:
 		return "media_wear_percentage";
 	case 0xE3:
@@ -89,6 +89,10 @@ static char *id_to_name(__u8 id)
 		return "read_commands_in_flight_counter";
 	case 0xE6:
 		return "write_commands_in_flight_counter";
+	case 0xE7:
+		return "bad_dllp_count";
+	case 0xE8:
+		return "receiver_error_count";
 	case 0xEA:
 		return "thermal_throttle_status";
 	case 0xEE:
