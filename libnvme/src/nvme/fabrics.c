@@ -732,6 +732,11 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 
 	ctrlkey = nvme_ctrl_get_dhchap_key(c);
 
+	if (cfg->tls && cfg->concat) {
+		nvme_msg(h->ctx, LOG_ERR, "cannot specify --tls and --concat together\n");
+		return -ENVME_CONNECT_INVAL;
+	}
+
 	if (cfg->tls) {
 		ret = __nvme_import_keys_from_config(h, c, &keyring_id, &key_id);
 		if (ret)
