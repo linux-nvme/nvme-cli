@@ -708,8 +708,8 @@ do_connect:
 
 	ret = nvmf_connect(ctx, fctx);
 	if (ret) {
-		fprintf(stderr, "failed to connected: %s\n",
-			nvme_strerror(ret));
+		fprintf(stderr, "failed to connect: %s\n",
+			nvme_strerror(-ret));
 		return ret;
 	}
 
