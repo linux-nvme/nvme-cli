@@ -178,6 +178,8 @@ out:
 int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
 {
+	cmd->admin = false;
+
 	if (hdl->ioctl64)
 		return nvme_submit_passthru64(hdl, NVME_IOCTL_IO64_CMD, cmd);
 	return nvme_submit_passthru32(hdl, NVME_IOCTL_IO_CMD, cmd);
@@ -186,6 +188,8 @@ int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
 int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
 {
+	cmd->admin = true;
+
 	switch (hdl->type) {
 	case NVME_TRANSPORT_HANDLE_TYPE_DIRECT:
 		if (hdl->ioctl64)
