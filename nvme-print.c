@@ -520,12 +520,34 @@ void nvme_show_status(int status)
 		ops->show_status(status);
 }
 
+static void nvme_show_cmd_err(const char *msg, bool admin,
+			      struct nvme_passthru_cmd *cmd, int err)
+{
+	if (!err)
+		return;
+	else if (err < 0)
+		nvme_show_error("%s: %s", msg, nvme_strerror(-err));
+	else if (cmd)
+		nvme_show_opcode_status(err, false, cmd->opcode);
+	else
+		nvme_show_status(err);
+}
+
 void nvme_show_err(const char *msg, int err)
 {
-	if (err < 0)
-		nvme_show_error("%s: %s", msg, nvme_strerror(-err));
-	else if (err > 0)
-		nvme_show_status(err);
+	nvme_show_cmd_err(msg, false, NULL, err);
+}
+
+void nvme_show_io_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd,
+			  int err)
+{
+	nvme_show_cmd_err(msg, false, cmd, err);
+}
+
+void nvme_show_admin_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd,
+			     int err)
+{
+	nvme_show_cmd_err(msg, true, cmd, err);
 }
 
 void nvme_show_opcode_status(int status, bool admin, __u8 opcode)

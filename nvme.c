@@ -5603,10 +5603,10 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 
 	nvme_init_sanitize_ns(&cmd, cfg.sanact, cfg.ause, cfg.emvs);
 	err = nvme_submit_admin_passthru(hdl, &cmd);
-	if (err < 0)
-		nvme_show_error("sanitize ns: %s", nvme_strerror(err));
-	else if (err > 0)
-		nvme_show_status(err);
+	if (err) {
+		nvme_show_admin_cmd_err("sanitize ns", &cmd, err);
+		return err;
+	}
 
 	return err;
 }
