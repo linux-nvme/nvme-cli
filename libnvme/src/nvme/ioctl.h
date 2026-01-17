@@ -70,6 +70,7 @@
  * @timeout_ms:	If non-zero, overrides system default timeout in milliseconds
  * @rsvd2:	Reserved for future use (and fills an implicit struct pad
  * @result:	Set on completion to the command's CQE DWORD 0-1 controller response
+ * @admin:	If true admin command else io command
  */
 struct nvme_passthru_cmd {
 	__u8    opcode;
@@ -91,6 +92,7 @@ struct nvme_passthru_cmd {
 	__u32   timeout_ms;
 	__u32   rsvd2;
 	__u64   result;
+	bool    admin;
 };
 
 /**
@@ -462,7 +464,7 @@ int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd);
 
 /**
- * nvme_submit_io_passthru() - Submit an nvme passthrough command
+ * nvme_submit_io_passthru() - Submit an nvme passthrough io command
  * @hdl:	Transport handle
  * @cmd:	The nvme io command to send
  *

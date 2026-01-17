@@ -522,9 +522,18 @@ void nvme_show_status(int status)
 
 void nvme_show_err(const char *msg, int err)
 {
-	if (err < 0)
+	nvme_show_cmd_err(msg, NULL, err);
+}
+
+void nvme_show_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd, int err)
+{
+	if (!err)
+		return;
+	else if (err < 0)
 		nvme_show_error("%s: %s", msg, nvme_strerror(-err));
-	else if (err > 0)
+	else if (cmd)
+		nvme_show_opcode_status(err, cmd->admin, cmd->opcode);
+	else
 		nvme_show_status(err);
 }
 
