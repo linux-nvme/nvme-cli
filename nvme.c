@@ -64,6 +64,7 @@
 #include "util/suffix.h"
 #include "logging.h"
 #include "util/sighdl.h"
+#include "util/delay.h"
 #include "fabrics.h"
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -191,6 +192,7 @@ const char *output_format = "Output format: normal|binary";
 const char *timeout = "timeout value, in milliseconds";
 const char *verbose = "Increase output verbosity";
 const char *dry_run = "show command instead of sending";
+const char *delay = "iterative delay as SECS [.TENTHS]";
 
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
@@ -262,6 +264,7 @@ struct nvme_config nvme_cfg = {
 	.output_format = "normal",
 	.output_format_ver = 1,
 	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+	.delay = 0,
 };
 
 static void *mmap_registers(struct nvme_transport_handle *hdl, bool writable);
@@ -374,7 +377,10 @@ static int parse_args(int argc, char *argv[], const char *desc,
 	log_level = map_log_level(nvme_cfg.verbose, false);
 	nvme_init_default_logging(stderr, log_level, false, false);
 
-	return 0;
+	if (nvme_cfg.delay)
+		ret = delay_set_stdout_file();
+
+	return ret;
 }
 
 int parse_and_open(struct nvme_global_ctx **ctx,
@@ -10054,7 +10060,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		  OPT_FLAG("export",	'e', &cfg.export,	export),
 		  OPT_STR("revoke",	'r', &cfg.revoke,	revoke));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -10152,9 +10158,10 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
+		  OPT_FMT("ranking",  'r', &cfg.ranking,    ranking),
+		  OPT_DOUBLE("delay", 'd', &nvme_cfg.delay, delay));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -11082,9 +11089,15 @@ int main(int argc, char **argv)
 	if (err)
 		return err;
 
-	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
-	if (err == -ENOTTY)
-		general_help(&builtin, NULL);
+	err = delay_remove_file();
+	if (err)
+		return err;
+
+	do {
+		err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
+		if (err == -ENOTTY)
+			general_help(&builtin, NULL);
+	} while (!err && nvme_cfg.delay && delay_handle());
 
 	return err ? 1 : 0;
 }
