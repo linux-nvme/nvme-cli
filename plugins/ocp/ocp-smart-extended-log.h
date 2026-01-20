@@ -128,7 +128,7 @@ struct ocp_smart_extended_log {
 	__le16 total_die_failure_tolerance;		/* [219:218] */
 	__le16 media_dies_offline;			/* [221:220] */
 	__u8   max_temperature_recorded;		/* [222] */
-	__u8   rsvd223;					/* [223] */
+	__u8   form_factor;				/* [223] */
 	__le64 nand_avg_erase_count;			/* [231:224] */
 	__le32 command_timeouts;			/* [235:232] */
 	__le32 sys_area_program_fail_count_raw;		/* [239:236] */
@@ -145,8 +145,10 @@ struct ocp_smart_extended_log {
 	__u8   lifetime_power_consumed[6];		/* [269:264] */
 	__u8   dssd_firmware_revision[8];		/* [277:270] */
 	__u8   dssd_firmware_build_uuid[16];		/* [293:278] */
-	__u8   dssd_firmware_build_label[64];		/* [375:294] */
-	__u8   rsvd358[136];				/* [493:358] */
+	__u8   dssd_firmware_build_label[64];		/* [357:294] */
+	__u8   die_in_use_bad_nand_block_raw[6];	/* [363:358] */
+	__le16 die_in_use_bad_nand_block_normalized;	/* [365:364] */
+	__u8   rsvd358[128];				/* [493:358] */
 	__le16 log_page_version;			/* [495:494] */
 	__u8   log_page_guid[16];			/* [511:496] */
 };

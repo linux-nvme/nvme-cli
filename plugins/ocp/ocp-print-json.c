@@ -226,6 +226,14 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 	case 0 ... 1:
 		break;
 	default:
+	case 6:
+		json_object_add_value_uint(root, "Form factor",
+						log->form_factor);
+		json_object_add_value_uint64(root, "Die use badnandblock raw",
+			int48_to_long(log->die_in_use_bad_nand_block_raw));
+		json_object_add_value_uint(root, "Die use badnandblock normal",
+			le16_to_cpu(log->die_in_use_bad_nand_block_normalized));
+		fallthrough;
 	case 5:
 		json_object_add_value_uint(root, "NVMe Over Pcie Errata Version",
 						log->nvme_over_pcie_errate_version);
