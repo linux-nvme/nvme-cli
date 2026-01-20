@@ -140,6 +140,7 @@ struct nvme_ns {
 	struct nvme_ctrl *c;
 	struct nvme_ns_head *head;
 
+	struct nvme_global_ctx *ctx;
 	struct nvme_transport_handle *hdl;
 	__u32 nsid;
 	char *name;
@@ -164,6 +165,7 @@ struct nvme_ctrl {
 	struct list_head namespaces;
 	struct nvme_subsystem *s;
 
+	struct nvme_global_ctx *ctx;
 	struct nvme_transport_handle *hdl;
 	char *name;
 	char *sysfs_dir;
