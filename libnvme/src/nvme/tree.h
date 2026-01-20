@@ -1493,12 +1493,14 @@ char *nvme_get_path_attr(nvme_path_t p, const char *attr);
 
 /**
  * nvme_scan_namespace() - scan namespace based on sysfs name
+ * @ctx:	&struct nvme_global_ctx object
  * @name:	sysfs name of the namespace to scan
  * @ns:		&nvme_ns_t object to return
  *
  * Return: 0 on success or negative error code otherwise
  */
-int nvme_scan_namespace(const char *name, nvme_ns_t *ns);
+int nvme_scan_namespace(struct nvme_global_ctx *ctx, const char *name,
+		nvme_ns_t *ns);
 
 /**
  * nvme_host_get_hostsymname() - Get the host's symbolic name

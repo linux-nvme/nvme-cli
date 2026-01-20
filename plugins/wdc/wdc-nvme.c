@@ -1490,7 +1490,7 @@ static int wdc_get_pci_ids(struct nvme_global_ctx *ctx, struct nvme_transport_ha
 			nvme_ctrl_get_sysfs_dir(c));
 		nvme_free_ctrl(c);
 	} else {
-		ret = nvme_scan_namespace(name, &n);
+		ret = nvme_scan_namespace(ctx, name, &n);
 		if (ret) {
 			fprintf(stderr, "Unable to find %s\n", name);
 			return ret;
