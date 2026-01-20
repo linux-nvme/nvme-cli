@@ -157,7 +157,8 @@ int ioctl(int fd, int request, ...)
 		if (!real_ioctl)
 			fail("Error: dlsym failed to find original ioctl\n");
 #else
-		fail("Error: unhandled ioctl\n");
+		fprintf(stderr, "Warning: unhandled ioctl %lx\n", request);
+		return -ENOTTY;
 #endif
 	}
 
