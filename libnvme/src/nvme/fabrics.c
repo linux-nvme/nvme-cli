@@ -1209,10 +1209,15 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 
 	if (e->trtype == NVMF_TRTYPE_TCP &&
 	    e->tsas.tcp.sectype != NVMF_TCP_SECTYPE_NONE) {
-		if (e->treq & NVMF_TREQ_REQUIRED)
+		if (e->treq & NVMF_TREQ_REQUIRED) {
+			nvme_msg(h->ctx, LOG_DEBUG, "setting --tls due to treq %s and sectype %s\n",
+					nvmf_treq_str(e->treq), nvmf_sectype_str(e->tsas.tcp.sectype));
 			c->cfg.tls = true;
-		else if (e->treq & NVMF_TREQ_NOT_REQUIRED)
+		} else if (e->treq & NVMF_TREQ_NOT_REQUIRED) {
+			nvme_msg(h->ctx, LOG_DEBUG, "setting --concat due to treq %s and sectype %s\n",
+					nvmf_treq_str(e->treq), nvmf_sectype_str(e->tsas.tcp.sectype));
 			c->cfg.concat = true;
+		}
 	}
 
 	ret = nvmf_add_ctrl(h, c, cfg);
