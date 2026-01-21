@@ -3419,6 +3419,7 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 	if (err) {
 		nvme_msg(ctx, LOG_ERR, "could not add new controller: %s\n",
 			nvme_strerror(-err));
+		nvme_free_ctrl(c);
 		return err;
 	}
 
