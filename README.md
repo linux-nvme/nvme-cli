@@ -2,6 +2,12 @@
 ![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)
 ![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/linux-nvme/nvme-cli)
+![GitHub](https://img.shields.io/github/license/linux-nvme/libnvme)
+![PyBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml/badge.svg)
+[![PyPI](https://img.shields.io/pypi/v/libnvme)](https://pypi.org/project/libnvme/)
+[![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme)](https://pypi.org/project/libnvme/)
+[![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
+[![Read the libnvme Docs](https://img.shields.io/readthedocs/libnvme)](https://libnvme.readthedocs.io/en/latest/)
 
 NVM-Express user space tooling for Linux.
 
