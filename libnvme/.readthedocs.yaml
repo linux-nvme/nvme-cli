@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
+
 version: 2
 
 build:
@@ -12,14 +13,10 @@ build:
     - docbook-xsl
     - xsltproc
     - pandoc
-    - asciidoc
-    - xmlto
 
   commands:
     - pip install lxml
-    - scripts/build.sh docs
-    - cp .build-ci/Documentation/nvme.html .build-ci/Documentation/index.html
+    - scripts/build.sh rst_docs
 
-  output: .build-ci/Documentation
-
-formats: []
+sphinx:
+  configuration: .build-ci/libnvme/doc/conf.py

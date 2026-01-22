@@ -23,7 +23,8 @@ usage() {
     echo "  cross               use cross toolchain to build"
     echo "  coverage            build coverage report"
     echo "  distro              build libnvme and nvme-cli separately"
-    echo "  docs                build documentation"
+    echo "  docs                build all documentation"
+    echo "  rst_docs            build rst documentation only"
     echo "  static              build a static binary"
     echo "  libnvme             build only libnvme"
     echo ""
@@ -123,7 +124,19 @@ config_meson_coverage() {
 
 config_meson_docs() {
     CC="${CC}" "${MESON}" setup                 \
+        -Dnvme=disabled                         \
+        -Dlibnvme=disabled                      \
         -Ddocs=all                              \
+        -Ddocs-build=true                       \
+        --prefix=/tmp/usr                       \
+        "${BUILDDIR}"
+}
+
+config_meson_rst_docs() {
+    CC="${CC}" "${MESON}" setup                 \
+        -Dnvme=disabled                         \
+        -Dlibnvme=disabled                      \
+        -Ddocs=rst                              \
         -Ddocs-build=true                       \
         --prefix=/tmp/usr                       \
         "${BUILDDIR}"
@@ -146,8 +159,8 @@ config_meson_libnvme() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-	-Dnvme=disabled				\
-	-Dlibnvme=enabled			\
+        -Dnvme=disabled                         \
+        -Dlibnvme=enabled                       \
         "${BUILDDIR}"
 }
 
