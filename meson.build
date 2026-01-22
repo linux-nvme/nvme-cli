@@ -108,16 +108,28 @@ std_prefix = prefixdir == '/usr' or prefixdir == '/usr/local'
 conf = configuration_data()
 requires = ''
 
+# Windows platform detection and configuration
+is_windows = host_machine.system() == 'windows'
+
 version_tag = get_option('version-tag')
 if version_tag != ''
     conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
 else
-    r = run_command(
-        'scripts/meson-vcs-tag.sh',
-        meson.current_source_dir(),
-        meson.project_version(),
-        check: true,
-    )
+    if is_windows
+        r = run_command(
+            'powershell', '-File', 'scripts/meson-vcs-tag.ps1',
+            meson.current_source_dir(),
+            meson.project_version(),
+            check: true,
+        )
+    else
+        r = run_command(
+            'scripts/meson-vcs-tag.sh',
+            meson.current_source_dir(),
+            meson.project_version(),
+            check: true,
+        )
+    endif
     conf.set('GIT_VERSION', '"@0@"'.format(r.stdout().strip()))
 endif
 
@@ -125,9 +137,6 @@ conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 conf.set('RUNDIR', '"@0@"'.format(rundir))
   
 ################################################################################
-# Windows platform detection and configuration
-is_windows = host_machine.system() == 'windows'
-
 # Windows-specific dependency handling
 if is_windows
     # Disable Linux-specific dependencies on Windows
