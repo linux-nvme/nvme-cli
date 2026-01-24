@@ -146,7 +146,7 @@ const char *nvme_sstat_status_to_string(__u16 status)
 		return "NVM Subsystem has never been sanitized.";
 	case NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS:
 		return "Most Recent Sanitize Command Completed Successfully.";
-	case NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS:
+	case NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS:
 		return "Sanitize in Progress.";
 	case NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED:
 		return "Most Recent Sanitize Command Failed.";

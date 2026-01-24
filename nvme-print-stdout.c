@@ -4683,7 +4683,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 	printf("Sanitize Progress                      (SPROG) :  %u",
 	       le16_to_cpu(sanitize->sprog));
 
-	if (human && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS)
+	if (human && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS)
 		stdout_sanitize_log_sprog(le16_to_cpu(sanitize->sprog));
 	else
 		printf("\n");
