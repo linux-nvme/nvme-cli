@@ -221,6 +221,7 @@ static const char *namespace_desired = "desired namespace";
 static const char *namespace_id_desired = "identifier of desired namespace";
 static const char *namespace_id_optional = "optional namespace attached to controller";
 static const char *nssf = "NVMe Security Specific Field";
+static const char *only_char_dev = "Only character device is allowed";
 static const char *prinfo = "PI and check field";
 static const char *rae = "Retain an Asynchronous Event";
 static const char *raw_directive = "show directive in binary format";
@@ -5350,7 +5351,7 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 		return err;
 
 	if (!nvme_transport_handle_is_chardev(hdl)) {
-		nvme_show_error("Only character device is allowed");
+		nvme_show_error(only_char_dev);
 		return -EINVAL;
 	}
 
@@ -5381,7 +5382,7 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 		return err;
 
 	if (!nvme_transport_handle_is_chardev(hdl)) {
-		nvme_show_error("Only character device is allowed");
+		nvme_show_error(only_char_dev);
 		return -EINVAL;
 	}
 
@@ -5410,7 +5411,7 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 
 	if (!nvme_transport_handle_is_chardev(hdl)) {
-		nvme_show_error("Only character device is allowed");
+		nvme_show_error(only_char_dev);
 		return -EINVAL;
 	}
 
@@ -5755,7 +5756,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 
 	if (nvme_transport_handle_is_blkdev(hdl)) {
-		nvme_show_error("Only character device is allowed");
+		nvme_show_error(only_char_dev);
 		return -EINVAL;
 	}
 
@@ -6032,7 +6033,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 
 	if (nvme_transport_handle_is_blkdev(hdl)) {
-		nvme_show_error("Only character device is allowed");
+		nvme_show_error(only_char_dev);
 		return -EINVAL;
 	}
 
@@ -6336,7 +6337,7 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 
 	if (nvme_transport_handle_is_blkdev(hdl)) {
-		nvme_show_error("Only character device is allowed");
+		nvme_show_error(only_char_dev);
 		return -EINVAL;
 	}
 
