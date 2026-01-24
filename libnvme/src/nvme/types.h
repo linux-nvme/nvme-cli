@@ -5396,7 +5396,7 @@ enum nvme_resv_notify_rnlpt {
  *		sanitize operation. The value is a numerator of the fraction
  *		complete that has 65,536 (10000h) as its denominator. This value
  *		shall be set to FFFFh if the @sstat field is not set to
- *		%NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS.
+ *		%NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS.
  * @sstat:	Sanitize Status (SSTAT): indicates the status associated with
  *		the most recent sanitize operation. See &enum nvme_sanitize_sstat.
  * @scdw10:	Sanitize Command Dword 10 Information (SCDW10): contains the value
@@ -5494,7 +5494,8 @@ struct nvme_sanitize_log_page {
  * @NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS: The most recent sanitize operation
  *					 completed successfully including any
  *					 additional media modification.
- * @NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS: A sanitize operation is currently in progress.
+ * @NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS: A sanitize operation is currently in
+ *					 progress.
  * @NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED: The most recent sanitize operation
  *					 failed.
  * @NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS: The most recent sanitize operation
@@ -5532,7 +5533,7 @@ enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_STATUS_MASK			= 0x7,
 	NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED	= 0,
 	NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS	= 1,
-	NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS		= 2,
+	NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS		= 2,
 	NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED	= 3,
 	NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS	= 4,
 	NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT	= 3,
