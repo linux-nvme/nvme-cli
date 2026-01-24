@@ -5349,6 +5349,11 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 	if (err)
 		return err;
 
+	if (!nvme_transport_handle_is_chardev(hdl)) {
+		nvme_show_error("Only character device is allowed");
+		return -EINVAL;
+	}
+
 	err = nvme_subsystem_reset(hdl);
 	if (err < 0) {
 		if (errno == ENOTTY)
@@ -5375,6 +5380,11 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 	if (err)
 		return err;
 
+	if (!nvme_transport_handle_is_chardev(hdl)) {
+		nvme_show_error("Only character device is allowed");
+		return -EINVAL;
+	}
+
 	err = nvme_ctrl_reset(hdl);
 	if (err < 0)
 		nvme_show_error("Reset: %s", nvme_strerror(err));
@@ -5398,6 +5408,11 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	if (!nvme_transport_handle_is_chardev(hdl)) {
+		nvme_show_error("Only character device is allowed");
+		return -EINVAL;
+	}
 
 	err = validate_output_format(nvme_cfg.output_format, &flags);
 	if (err < 0) {
