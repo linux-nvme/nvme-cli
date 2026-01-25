@@ -1495,6 +1495,22 @@ const char *nvme_pls_mode_to_string(__u8 mode)
 	return "Reserved";
 }
 
+const char *nvme_feature_power_limit_scale_to_string(__u8 pls)
+{
+	switch (pls) {
+	case NVME_PSD_PS_NOT_REPORTED:
+		return "not reported";
+	case NVME_PSD_PS_100_MICRO_WATT:
+		return "0.0001 W";
+	case NVME_PSD_PS_10_MILLI_WATT:
+		return "0.01 W";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);

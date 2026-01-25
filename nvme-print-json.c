@@ -3997,6 +3997,51 @@ static void json_feature_show_fields_bpwp(struct json_object *r, unsigned int re
 	obj_add_str(r, "Boot Partition 1 Write Protection State", nvme_bpwps_to_string(field));
 }
 
+static char *get_power_and_scale(__u16 power, __u8 scale)
+{
+	char *str;
+	int ret;
+
+	switch (scale) {
+	case NVME_PSD_PS_NOT_REPORTED:
+		/* Not reported for this power state */
+		ret = asprintf(&str, "-");
+		break;
+	case NVME_PSD_PS_100_MICRO_WATT:
+		/* Units of 0.0001W */
+		ret = asprintf(&str, "%01u.%04uW", power / 10000,
+			       power % 10000);
+		break;
+	case NVME_PSD_PS_10_MILLI_WATT:
+		/* Units of 0.01W */
+		ret = asprintf(&str, "%01u.%02uW", power / 100, power % 100);
+		break;
+	default:
+		ret = asprintf(&str, "reserved");
+		break;
+	}
+
+	if (ret > 0)
+		return str;
+
+	return NULL;
+}
+
+static void json_feature_show_fields_power_limit(struct json_object *r,
+						 unsigned int result)
+{
+	__u8 field = NVME_FEAT_POWER_LIMIT_PLS(result);
+
+	_cleanup_free_ char *k =
+	    get_power_and_scale(NVME_FEAT_POWER_LIMIT_PLV(result), field);
+
+	obj_add_str(r, "Power Limit Scale (PLS)",
+		    nvme_feature_power_limit_scale_to_string(field));
+	obj_add_uint(r, "Power Limit Value (PLV)",
+		     NVME_FEAT_POWER_LIMIT_PLV(result));
+	obj_add_str(r, "Power Limit", k);
+}
+
 static void json_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	struct json_object *r;
@@ -4135,6 +4180,9 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		break;
 	case NVME_FEAT_FID_BP_WRITE_PROTECT:
 		json_feature_show_fields_bpwp(r, result);
+		break;
+	case NVME_FEAT_FID_POWER_LIMIT:
+		json_feature_show_fields_power_limit(r, result);
 		break;
 	default:
 		break;
