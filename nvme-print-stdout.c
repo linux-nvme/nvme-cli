@@ -3124,10 +3124,8 @@ static void print_psd_workload(__u8 apw)
 	}
 }
 
-static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
+static void print_power_and_scale(__u16 power, __u8 scale)
 {
-	__u16 power = le16_to_cpu(ctr_power);
-
 	switch (scale & 0x3) {
 	case NVME_PSD_PS_NOT_REPORTED:
 		/* Not reported for this power state */
@@ -3145,6 +3143,11 @@ static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
 		printf("reserved");
 		break;
 	}
+}
+
+static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
+{
+	print_power_and_scale(le16_to_cpu(ctr_power), scale);
 }
 
 static void print_psd_time(const char *desc, __u8 time, __u8 ts)
@@ -5321,6 +5324,16 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		field = NVME_FEAT_BPWPC_BP0WPS(result);
 		printf("\tBoot Partition 0 Write Protection State (BP0WPS): %s\n",
 			nvme_bpwps_to_string(field));
+		break;
+	case NVME_FEAT_FID_POWER_LIMIT:
+		field = NVME_FEAT_POWER_LIMIT_PLS(result);
+		printf("\tPower Limit Scale (PLS): %u - %s\n", field,
+		       nvme_feature_power_limit_scale_to_string(field));
+		printf("\tPower Limit Value (PLV): %u\n",
+		       NVME_FEAT_POWER_LIMIT_PLV(result));
+		printf("\tPower Limit: ");
+		print_power_and_scale(NVME_FEAT_POWER_LIMIT_PLV(result), field);
+		printf("\n");
 		break;
 	default:
 		break;

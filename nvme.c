@@ -191,6 +191,7 @@ const char *output_format = "Output format: normal|binary";
 const char *timeout = "timeout value, in milliseconds";
 const char *verbose = "Increase output verbosity";
 const char *dry_run = "show command instead of sending";
+const char *uuid_index = "UUID index";
 
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
@@ -237,7 +238,6 @@ static const char *start_block = "64-bit LBA of first block to access";
 static const char *storage_tag = "storage tag for end-to-end PI";
 static const char *storage_tag_check = "This bit specifies if the Storage Tag field shall be checked as\n"
 	"part of end-to-end data protection processing";
-static const char *uuid_index = "UUID index";
 static const char *uuid_index_specify = "specify uuid index";
 static const char dash[51] = {[0 ... 49] = '=', '\0'};
 static const char space[51] = {[0 ... 49] = ' ', '\0'};
