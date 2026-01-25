@@ -288,6 +288,9 @@ static inline void nvme_feature_decode_arbitration(__u32 value, __u8 *ab,
 #define NVME_FEAT_PM_PS(v)		NVME_GET(v, FEAT_PWRMGMT_PS)
 #define NVME_FEAT_PM_WH(v)		NVME_GET(v, FEAT_PWRMGMT_WH)
 
+#define NVME_FEAT_POWER_LIMIT_PLV(v)	NVME_GET(v, FEAT_POWER_LIMIT_PLV)
+#define NVME_FEAT_POWER_LIMIT_PLS(v)	NVME_GET(v, FEAT_POWER_LIMIT_PLS)
+
 static inline void nvme_feature_decode_power_mgmt(__u32 value, __u8 *ps,
 						  __u8 *wh)
 {
