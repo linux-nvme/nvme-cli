@@ -1,0 +1,51 @@
+name: Micron checkpatch review
+
+on:
+  pull_request:
+    branches: [mingw]  # Branch is not specified in upstream file.
+
+jobs:
+  checkpatch:
+    name: checkpatch review
+    runs-on: ubuntu-latest
+
+    steps:
+    # Same as upstream: compute how many commits to fetch
+    - name: Calculate PR commits + 1
+      run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_ENV
+
+    # GitHub-owned (allowed) checkout action
+    - name: Checkout PR branch
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: ${{ env.PR_FETCH_DEPTH }}
+
+    # Install dependencies needed to run checkpatch.pl
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget perl
+
+    - name: Download checkpatch.pl and dependencies
+      run: |
+        wget https://raw.githubusercontent.com/torvalds/linux/master/scripts/checkpatch.pl \
+          -O checkpatch.pl
+        wget https://raw.githubusercontent.com/torvalds/linux/master/scripts/spelling.txt \
+          -O spelling.txt
+        chmod +x checkpatch.pl
+
+    - name: Run checkpatch review
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        git diff origin/${{ github.base_ref }} > patch.diff
+
+        echo "::group::Checkpatch Results"
+        if ./checkpatch.pl --no-tree --strict --show-types patch.diff; then
+          echo "::endgroup::"
+          echo "✅ No checkpatch issues found"
+        else
+          echo "::endgroup::"
+          echo "::error::Checkpatch found issues. Please fix them before merging."
+          exit 1
+        fi
