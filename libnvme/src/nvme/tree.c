@@ -316,7 +316,7 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 		if (ret < 0) {
 			nvme_msg(ctx, LOG_DEBUG,
 				 "failed to scan subsystem %s: %s\n",
-				 subsys.ents[i]->d_name, strerror(ret));
+				 subsys.ents[i]->d_name, strerror(-ret));
 		}
 	}
 
