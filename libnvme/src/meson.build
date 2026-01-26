@@ -65,6 +65,7 @@ if is_windows
         cc.find_library('ws2_32'),
         cc.find_library('wsock32'),
         cc.find_library('iphlpapi'),
+        cc.find_library('bcrypt'),  # For BCryptGenRandom in nvme_uuid_random
     ]
 endif
 

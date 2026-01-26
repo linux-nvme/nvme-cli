@@ -13,6 +13,7 @@
 /* Linux standard includes */
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -31,11 +32,31 @@
 #include <linux/types.h>
 #include <endian.h>
 #include <net/if.h>
+#include "cleanup.h"
 
 /* Linux cleanup attribute */
 #define __nvme_cleanup(fn) __attribute__((__cleanup__(fn)))
 
 /* Extract IPv4 from IPv6 mapped address */
 #define ipv4_from_in6_addr(addr) &(addr.s6_addr32[3])
+
+/* Platform-specific UUID generation using /dev/urandom */
+static inline int random_uuid(unsigned char *uuid, size_t len)
+{
+	_cleanup_fd_ int f = -1;
+	ssize_t n;
+
+	f = open("/dev/urandom", O_RDONLY);
+	if (f < 0)
+		return -errno;
+
+	n = read(f, uuid, len);
+	if (n < 0)
+		return -errno;
+	else if ((size_t)n != len)
+		return -EIO;
+
+	return 0;
+}
 
 #endif /* _LIBNVME_PLATFORM_LINUX_H */

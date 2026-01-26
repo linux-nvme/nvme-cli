@@ -18,8 +18,10 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <winioctl.h>
 #include <ntddstor.h>
+#include <bcrypt.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <errno.h>
 #include <io.h>
 #include <direct.h>
 #include <process.h>
@@ -244,11 +246,26 @@ static inline size_t malloc_usable_size(void *ptr) {
 #endif /* _IOC_NONE */
 
 /* MIN/min macros for Windows */
+#ifndef __cplusplus
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 #ifndef min
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
+#endif /* __cplusplus */
+
+/* Platform-specific UUID generation using BCryptGenRandom */
+static inline int random_uuid(unsigned char *uuid, size_t len)
+{
+	NTSTATUS status;
+
+	status = BCryptGenRandom(NULL, uuid, (ULONG)len,
+				 BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+	if (!BCRYPT_SUCCESS(status))
+		return -EIO;
+
+	return 0;
+}
 
 #endif /* _LIBNVME_PLATFORM_WINDOWS_H */
