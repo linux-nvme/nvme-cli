@@ -4555,6 +4555,36 @@ enum nvme_pel_ehai_pit {
 };
 
 /**
+ * enum nvme_pel_vsedt_code - Persistent Event Log - Vendor Specific Event Data Type Code
+ * @NVME_PEL_VSEDT_RSVD:		Reserved
+ * @NVME_PEL_VSEDT_EVENT_NAME:		Event Name
+ * @NVME_PEL_VSEDT_ASCII_STRING:	ASCII String
+ * @NVME_PEL_VSEDT_BINARY:		Binary
+ * @NVME_PEL_VSEDT_SIGNED_INT:		Signed Integer
+ */
+enum nvme_pel_vsedt_code {
+	NVME_PEL_VSEDT_RSVD		= 0,
+	NVME_PEL_VSEDT_EVENT_NAME	= 1,
+	NVME_PEL_VSEDT_ASCII_STRING	= 2,
+	NVME_PEL_VSEDT_BINARY		= 3,
+	NVME_PEL_VSEDT_SIGNED_INT	= 4,
+};
+
+/**
+ * struct nvme_vs_event_desc -  Vendor Specific Event Descriptor
+ * @vsec:	Vendor Specific Event Code
+ * @vsedt:	Vendor Specific Event Data Type
+ * @uidx:	UUID Index
+ * @vsedl:	Vendor Specific Event Data Length
+ */
+struct nvme_vs_event_desc {
+	__le16	vsec;
+	__u8	vsedt;
+	__u8	uidx;
+	__le16	vsedl;
+};
+
+/**
  * struct nvme_fw_commit_event - Firmware Commit Event Data
  * @old_fw_rev:			Old Firmware Revision
  * @new_fw_rev:			New Firmware Revision

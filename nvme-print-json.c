@@ -1811,10 +1811,81 @@ static void json_pel_thermal_excursion(void *pevent_log_info, __u32 offset,
 	obj_add_uint(valid_attrs, "threshold", thermal_exc_event->threshold);
 }
 
+static void json_pel_vs_event_data(struct json_object *valid_attrs, void *vsed,
+				   __u8 vsedt, __u16 vsedl)
+{
+	struct json_object *vs_data = json_create_object();
+	char *str;
+
+	switch (vsedt) {
+	case NVME_PEL_VSEDT_EVENT_NAME:
+		str = malloc(vsedl + 1);
+		if (str) {
+			memcpy(str, vsed, vsedl);
+			str[vsedl] = '\0';
+			obj_add_str(vs_data, "event_name", str);
+			free(str);
+		}
+		break;
+	case NVME_PEL_VSEDT_ASCII_STRING:
+		str = malloc(vsedl + 1);
+		if (str) {
+			memcpy(str, vsed, vsedl);
+			str[vsedl] = '\0';
+			obj_add_str(vs_data, "ascii_string_data", str);
+			free(str);
+		}
+		break;
+	case NVME_PEL_VSEDT_BINARY:
+		obj_d(vs_data, "binary_data", (unsigned char *)vsed, vsedl, 16, 1);
+		break;
+	case NVME_PEL_VSEDT_SIGNED_INT:
+		obj_add_int(vs_data, "signed_integer_data", *(int64_t *)vsed);
+		break;
+	default:
+		obj_d(vs_data, "reserved_data_type_bin", (unsigned char *)vsed, vsedl, 16, 1);
+		break;
+	}
+
+	obj_add_obj(valid_attrs, "vs_event_data", vs_data);
+}
+
+static void json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
+					   __u32 event_data_len, struct json_object *valid_attrs)
+{
+	__u32 progress = 0;
+	__u16 vsedl;
+	uint i;
+	struct nvme_vs_event_desc *vs_desc;
+	struct json_object *vs_events = json_create_array();
+
+	for (i = 0; progress < event_data_len; i++) {
+		struct json_object *vs_event = json_create_object();
+
+		vs_desc = pevent_log_info + offset + progress;
+		vsedl = le16_to_cpu(vs_desc->vsedl);
+
+		obj_add_uint(vs_event, "vs_event_descriptor_number", i);
+		obj_add_uint(vs_event, "vs_event_code", le16_to_cpu(vs_desc->vsec));
+		obj_add_uint(vs_event, "vs_event_data_type", vs_desc->vsedt);
+		obj_add_uint(vs_event, "vs_event_uuid_index", vs_desc->uidx);
+		obj_add_uint(vs_event, "vs_event_data_len", vsedl);
+
+		if (vsedl)
+			json_pel_vs_event_data(vs_event, vs_desc + 1, vs_desc->vsedt, vsedl);
+
+		array_add_obj(vs_events, vs_event);
+		progress += sizeof(*vs_desc) + vsedl;
+	}
+
+	obj_add_array(valid_attrs, "vs_event_entry", vs_events);
+}
+
 static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, const char *devname,
 			      __u32 offset, struct json_object *valid)
 {
 	int i;
+	__u16 vsil, el;
 	struct nvme_persistent_event_log *pevent_log_head = pevent_log_info;
 	struct nvme_persistent_event_entry *pevent_entry_head;
 	struct json_object *valid_attrs;
@@ -1824,8 +1895,10 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			break;
 
 		pevent_entry_head = pevent_log_info + offset;
+		vsil = le16_to_cpu(pevent_entry_head->vsil);
+		el = le16_to_cpu(pevent_entry_head->el);
 
-		if (offset + pevent_entry_head->ehl + 3 + le16_to_cpu(pevent_entry_head->el) >=
+		if (offset + pevent_entry_head->ehl + 3 + el >=
 		    size)
 			break;
 
@@ -1841,10 +1914,14 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 		obj_add_uint64(valid_attrs, "event_time_stamp",
 			       le64_to_cpu(pevent_entry_head->ets));
 		obj_add_uint(valid_attrs, "port_id", le16_to_cpu(pevent_entry_head->pelpid));
-		obj_add_uint(valid_attrs, "vu_info_len", le16_to_cpu(pevent_entry_head->vsil));
-		obj_add_uint(valid_attrs, "event_len", le16_to_cpu(pevent_entry_head->el));
+		obj_add_uint(valid_attrs, "vu_info_len", vsil);
+		obj_add_uint(valid_attrs, "event_len", el);
 
-		offset += pevent_entry_head->ehl + 3;
+		if (vsil)
+			obj_d(valid_attrs, "vs_info_bin",
+			      (void *)pevent_entry_head + 1, vsil, 16, 1);
+
+		offset += pevent_entry_head->ehl + vsil + 3;
 
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
@@ -1886,6 +1963,10 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			json_pel_thermal_excursion(pevent_log_info, offset, valid_attrs);
+			break;
+		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
+			json_pel_vendor_specific_event(pevent_log_info, offset, el - vsil,
+						       valid_attrs);
 			break;
 		default:
 			break;
