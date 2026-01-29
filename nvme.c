@@ -2710,7 +2710,6 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 	const char *desc = "For the specified controller handle, show the "
 		"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
 	const char *namespace_id = "first nsid returned list should start from";
-	const char *csi = "I/O command set identifier";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 
 	_cleanup_free_ struct nvme_ns_list *ns_list = NULL;
@@ -3178,7 +3177,6 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	const char *nmic = "multipath and sharing capabilities (NMIC)";
 	const char *anagrpid = "ANA Group Identifier (ANAGRPID)";
 	const char *nvmsetid = "NVM Set Identifier (NVMSETID)";
-	const char *csi = "command set identifier (CSI)";
 	const char *lbstm = "logical block storage tag mask (LBSTM)";
 	const char *nphndls = "Number of Placement Handles (NPHNDLS)";
 	const char *bs = "target block size, specify only if \'FLBAS\' value not entered";
@@ -5965,8 +5963,6 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 	const char *pmrsts = "PMRSTS=0xe08 register offset";
 	const char *pmrebs = "PMREBS=0xe0c register offset";
 	const char *pmrswtp = "PMRSWTP=0xe10 register offset";
-	const char *pmrmscl = "PMRMSCL=0xe14 register offset";
-	const char *pmrmscu = "PMRMSCU=0xe18 register offset";
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
