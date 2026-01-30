@@ -10,13 +10,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <nvme/types.h>
-
-/* Forward declarations for Linux-specific structures */
-struct nvme_host;
-struct nvme_subsystem;
-struct nvme_ctrl;
-struct nvme_path;
-struct nvme_ns;
+#include "private.h"
 
 /* Logging control for stub calls */
 static int stub_log_enabled = 0;
@@ -38,20 +32,21 @@ void nvme_stubs_set_debug(int enable)
  */
 
 /* Fabrics configuration stubs - just return errors */
-void nvmf_default_config(void *cfg)
+void nvmf_default_config(struct nvme_fabrics_config *cfg)
 {
 	stub_log(__func__);
 	(void)cfg;
 }
 
-void nvmf_update_config(void *c, const void *cfg)
+void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
 {
 	stub_log(__func__);
 	(void)c;
 	(void)cfg;
 }
 
-int nvmf_add_ctrl(void *h, void *c, const void *cfg)
+int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
+		  const struct nvme_fabrics_config *cfg)
 {
 	stub_log(__func__);
 	(void)h;
@@ -61,7 +56,7 @@ int nvmf_add_ctrl(void *h, void *c, const void *cfg)
 	return -1;
 }
 
-int nvmf_connect_ctrl(void *c)
+int nvmf_connect_ctrl(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
@@ -69,7 +64,7 @@ int nvmf_connect_ctrl(void *c)
 	return -1;
 }
 
-int nvmf_get_discovery_log(void *c, void **logp, int max_retries)
+int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp, int max_retries)
 {
 	stub_log(__func__);
 	(void)c;
@@ -79,7 +74,7 @@ int nvmf_get_discovery_log(void *c, void **logp, int max_retries)
 	return -1;
 }
 
-int nvmf_get_discovery_wargs(void *args, void **logp)
+int nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args, struct nvmf_discovery_log **logp)
 {
 	stub_log(__func__);
 	(void)args;
@@ -100,14 +95,14 @@ int nvmf_connect_disc_entry(void *h, void *e, const void *defcfg, int *discover,
 	return -1;
 }
 
-int nvmf_is_registration_supported(void *c)
+bool nvmf_is_registration_supported(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
-	return 0; /* Not supported */
+	return false; /* Not supported */
 }
 
-int nvmf_register_ctrl(void *c, int tas, __u32 *result)
+int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
 {
 	stub_log(__func__);
 	(void)c;
@@ -117,7 +112,7 @@ int nvmf_register_ctrl(void *c, int tas, __u32 *result)
 	return -1;
 }
 
-int nvme_parse_uri(const char *str, void **uri)
+int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **uri)
 {
 	stub_log(__func__);
 	(void)str;
@@ -126,7 +121,7 @@ int nvme_parse_uri(const char *str, void **uri)
 	return -1;
 }
 
-void nvme_free_uri(void *uri)
+void nvme_free_uri(struct nvme_fabrics_uri *uri)
 {
 	stub_log(__func__);
 	(void)uri;
@@ -137,10 +132,10 @@ void nvme_free_uri(void *uri)
  * Minimal support - just return NULL/errors
  */
 
-void nvme_release_fds(void *r)
+void nvme_release_fds(struct nvme_global_ctx *ctx)
 {
 	stub_log(__func__);
-	(void)r;
+	(void)ctx;
 }
 
 void *nvme_create_root(const char *config_file, int log_level)
@@ -178,13 +173,14 @@ void nvme_root_set_application(void *r, const char *a)
 	(void)a;
 }
 
-void *nvme_scan(const char *config_file, int log_level)
+int nvme_scan(const char *config_file, struct nvme_global_ctx **ctx)
 {
 	stub_log(__func__);
 	(void)config_file;
-	(void)log_level;
+	(void)ctx;
 	/* Scanning not supported on Windows */
-	return NULL;
+	errno = ENOTSUP;
+	return -1;
 }
 
 struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
@@ -196,63 +192,67 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 	return NULL;
 }
 
-void *nvme_scan_ctrl(void *ctx, const char *name)
+int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name, nvme_ctrl_t *c)
 {
 	stub_log(__func__);
 	(void)ctx;
 	(void)name;
-	return NULL;
+	(void)c;
+	errno = ENOTSUP;
+	return -1;
 }
 
-int nvme_scan_topology(void *r, void *f, void *f_args)
+int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *f_args)
 {
 	stub_log(__func__);
-	(void)r;
+	(void)ctx;
 	(void)f;
 	(void)f_args;
 	errno = ENOTSUP;
 	return -1;
 }
 
-void *nvme_first_host(void *r)
+nvme_host_t nvme_first_host(struct nvme_global_ctx *ctx)
 {
 	stub_log(__func__);
-	(void)r;
+	(void)ctx;
 	return NULL;
 }
 
-void *nvme_next_host(void *r, void *h)
+nvme_host_t nvme_next_host(struct nvme_global_ctx *ctx, nvme_host_t h)
 {
 	stub_log(__func__);
-	(void)r;
+	(void)ctx;
 	(void)h;
 	return NULL;
 }
 
-void *nvme_lookup_host(void *r, const char *hostnqn, const char *hostid)
+nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn, const char *hostid)
 {
 	stub_log(__func__);
-	(void)r;
+	(void)ctx;
 	(void)hostnqn;
 	(void)hostid;
 	return NULL;
 }
 
-void *nvme_default_host(void *r)
+int nvme_default_host(struct nvme_global_ctx *ctx, nvme_host_t *h)
 {
 	stub_log(__func__);
-	(void)r;
-	return NULL;
+	(void)ctx;
+	(void)h;
+	errno = ENOTSUP;
+	return -1;
 }
 
-void *nvme_first_subsystem(void *h)
+nvme_subsystem_t nvme_first_subsystem(nvme_host_t h)
 {
 	stub_log(__func__);
 	(void)h;
 	return NULL;
 }
 
-void *nvme_next_subsystem(void *h, void *s)
+nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s)
 {
 	stub_log(__func__);
 	(void)h;
@@ -260,7 +260,7 @@ void *nvme_next_subsystem(void *h, void *s)
 	return NULL;
 }
 
-void *nvme_lookup_subsystem(struct nvme_host *h, const char *name, const char *subsysnqn)
+nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h, const char *name, const char *subsysnqn)
 {
 	stub_log(__func__);
 	(void)h;
@@ -284,9 +284,9 @@ void *nvme_next_ctrl(void *s, void *c)
 	return NULL;
 }
 
-void *nvme_lookup_ctrl(void *s, const char *transport, const char *traddr,
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport, const char *traddr,
 		       const char *trsvcid, const char *subsysnqn,
-		       const char *host_traddr, const char *host_iface)
+		       const char *host_traddr, nvme_ctrl_t p)
 {
 	stub_log(__func__);
 	(void)s;
@@ -295,33 +295,33 @@ void *nvme_lookup_ctrl(void *s, const char *transport, const char *traddr,
 	(void)trsvcid;
 	(void)subsysnqn;
 	(void)host_traddr;
-	(void)host_iface;
+	(void)p;
 	return NULL;
 }
 
-void *nvme_ctrl_first_ns(void *c)
+nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return NULL;
 }
 
-void *nvme_ctrl_next_ns(void *c, void *ns)
+nvme_ns_t nvme_ctrl_next_ns(nvme_ctrl_t c, nvme_ns_t n)
 {
 	stub_log(__func__);
 	(void)c;
-	(void)ns;
+	(void)n;
 	return NULL;
 }
 
-void *nvme_ctrl_first_path(void *c)
+nvme_path_t nvme_ctrl_first_path(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return NULL;
 }
 
-void *nvme_ctrl_next_path(void *c, void *p)
+nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
 {
 	stub_log(__func__);
 	(void)c;
@@ -344,17 +344,17 @@ void *nvme_subsys_next_ns(void *s, void *ns)
 	return NULL;
 }
 
-void *nvme_ns_get_subsystem(void *ns)
+nvme_subsystem_t nvme_ns_get_subsystem(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return NULL;
 }
 
-void *nvme_ns_get_ctrl(void *ns)
+nvme_ctrl_t nvme_ns_get_ctrl(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return NULL;
 }
 
@@ -365,170 +365,170 @@ int nvme_ns_get_fd(void *ns)
 	return -1;
 }
 
-int nvme_ns_get_nsid(void *ns)
+int nvme_ns_get_nsid(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return 0;
 }
 
-int nvme_ns_get_csi(void *ns)
+enum nvme_csi nvme_ns_get_csi(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return 0;
 }
 
-const unsigned char *nvme_ns_get_eui64(void *ns)
+const uint8_t *nvme_ns_get_eui64(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return NULL;
 }
 
-const unsigned char *nvme_ns_get_nguid(void *ns)
+const uint8_t *nvme_ns_get_nguid(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return NULL;
 }
 
-const unsigned char *nvme_ns_get_uuid(void *ns)
+void nvme_ns_get_uuid(nvme_ns_t n, unsigned char out[NVME_UUID_LEN])
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
+	(void)out;
+}
+
+struct nvme_transport_handle *nvme_ns_get_transport_handle(nvme_ns_t n)
+{
+	stub_log(__func__);
+	(void)n;
 	return NULL;
 }
 
-void *nvme_ns_get_transport_handle(void *ns)
+int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
 {
 	stub_log(__func__);
+	(void)n;
 	(void)ns;
-	return NULL;
-}
-
-int nvme_ns_identify(void *ns, void *ns_id)
-{
-	stub_log(__func__);
-	(void)ns;
-	(void)ns_id;
 	errno = ENOTSUP;
 	return -1;
 }
 
-const char *nvme_ns_get_sysfs_dir(void *ns)
+const char *nvme_ns_get_sysfs_dir(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return "";
 }
 
-const char *nvme_ns_get_name(void *ns)
+const char *nvme_ns_get_name(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return "";
 }
 
-const char *nvme_ns_get_generic_name(void *ns)
+const char *nvme_ns_get_generic_name(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return "";
 }
 
-int nvme_ns_get_lba_size(void *ns)
+int nvme_ns_get_lba_size(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return 0;
 }
 
-unsigned long long nvme_ns_get_lba_count(void *ns)
+uint64_t nvme_ns_get_lba_count(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return 0;
 }
 
-unsigned long long nvme_ns_get_lba_util(void *ns)
+uint64_t nvme_ns_get_lba_util(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return 0;
 }
 
-const char *nvme_path_get_name(void *p)
+const char *nvme_path_get_name(nvme_path_t p)
 {
 	stub_log(__func__);
 	(void)p;
 	return "";
 }
 
-const char *nvme_path_get_sysfs_dir(void *p)
+const char *nvme_path_get_sysfs_dir(nvme_path_t p)
 {
 	stub_log(__func__);
 	(void)p;
 	return "";
 }
 
-const char *nvme_path_get_ana_state(void *p)
+const char *nvme_path_get_ana_state(nvme_path_t p)
 {
 	stub_log(__func__);
 	(void)p;
 	return "";
 }
 
-void *nvme_path_get_ctrl(void *p)
+nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p)
 {
 	stub_log(__func__);
 	(void)p;
 	return NULL;
 }
 
-void *nvme_path_get_ns(void *p)
+nvme_ns_t nvme_path_get_ns(nvme_path_t p)
 {
 	stub_log(__func__);
 	(void)p;
 	return NULL;
 }
 
-const char *nvme_ctrl_get_name(void *c)
+const char *nvme_ctrl_get_name(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-const char *nvme_ctrl_get_sysfs_dir(void *c)
+const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-const char *nvme_ctrl_get_address(void *c)
+const char *nvme_ctrl_get_address(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-const char *nvme_ctrl_get_transport(void *c)
+const char *nvme_ctrl_get_transport(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-const char *nvme_ctrl_get_state(void *c)
+const char *nvme_ctrl_get_state(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-void *nvme_ctrl_get_config(void *c)
+struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
@@ -542,27 +542,27 @@ int nvme_ctrl_get_fd(void *c)
 	return -1;
 }
 
-void *nvme_ctrl_get_subsystem(void *c)
+nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return NULL;
 }
 
-void *nvme_ctrl_get_transport_handle(void *c)
+struct nvme_transport_handle *nvme_ctrl_get_transport_handle(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return NULL;
 }
 
-void nvme_free_ctrl(void *c)
+void nvme_free_ctrl(struct nvme_ctrl *c)
 {
 	stub_log(__func__);
 	(void)c;
 }
 
-int nvme_disconnect_ctrl(void *c)
+int nvme_disconnect_ctrl(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
@@ -570,7 +570,7 @@ int nvme_disconnect_ctrl(void *c)
 	return -1;
 }
 
-void nvme_unlink_ctrl(void *c)
+void nvme_unlink_ctrl(struct nvme_ctrl *c)
 {
 	stub_log(__func__);
 	(void)c;
@@ -605,54 +605,54 @@ void *nvme_subsys_get_host(void *s)
 }
 
 /* Subsystem functions (full name) - same as subsys */
-const char *nvme_subsystem_get_name(void *s)
+const char *nvme_subsystem_get_name(nvme_subsystem_t s)
 {
 	return nvme_subsys_get_name(s);
 }
 
-const char *nvme_subsystem_get_nqn(void *s)
+const char *nvme_subsystem_get_nqn(nvme_subsystem_t s)
 {
 	return nvme_subsys_get_nqn(s);
 }
 
-const char *nvme_subsystem_get_sysfs_dir(void *s)
+const char *nvme_subsystem_get_sysfs_dir(nvme_subsystem_t s)
 {
 	return nvme_subsys_get_sysfs_dir(s);
 }
 
-void *nvme_subsystem_get_host(void *s)
+nvme_host_t nvme_subsystem_get_host(nvme_subsystem_t s)
 {
 	return nvme_subsys_get_host(s);
 }
 
-void *nvme_subsystem_first_ctrl(void *s)
+nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 {
 	return nvme_first_ctrl(s);
 }
 
-void *nvme_subsystem_next_ctrl(void *s, void *c)
+nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c)
 {
 	return nvme_next_ctrl(s, c);
 }
 
-void *nvme_subsystem_first_ns(void *s)
+nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s)
 {
 	return nvme_subsys_first_ns(s);
 }
 
-void *nvme_subsystem_next_ns(void *s, void *ns)
+nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 {
-	return nvme_subsys_next_ns(s, ns);
+	return nvme_subsys_next_ns(s, n);
 }
 
-const char *nvme_host_get_hostnqn(void *h)
+const char *nvme_host_get_hostnqn(nvme_host_t h)
 {
 	stub_log(__func__);
 	(void)h;
 	return "";
 }
 
-const char *nvme_host_get_hostid(void *h)
+const char *nvme_host_get_hostid(nvme_host_t h)
 {
 	stub_log(__func__);
 	(void)h;
@@ -666,97 +666,32 @@ void *nvme_host_get_root(void *h)
 	return NULL;
 }
 
-int nvme_dump_tree(void *r)
+int nvme_dump_tree(struct nvme_global_ctx *ctx)
 {
 	stub_log(__func__);
-	(void)r;
+	(void)ctx;
 	errno = ENOTSUP;
 	return -1;
 }
 
-int nvme_dump_config(void *r)
+int nvme_dump_config(struct nvme_global_ctx *ctx)
 {
 	stub_log(__func__);
-	(void)r;
+	(void)ctx;
 	errno = ENOTSUP;
 	return -1;
-}
-
-/*
- * Stub implementations for filter functions (filters.c)
- */
-
-void *nvme_for_each_host_safe(void *r, void *h)
-{
-	stub_log(__func__);
-	(void)r;
-	(void)h;
-	return NULL;
-}
-
-void *nvme_for_each_subsystem_safe(void *h, void *s)
-{
-	stub_log(__func__);
-	(void)h;
-	(void)s;
-	return NULL;
-}
-
-void *nvme_for_each_ctrl_safe(void *s, void *c)
-{
-	stub_log(__func__);
-	(void)s;
-	(void)c;
-	return NULL;
-}
-
-void *nvme_for_each_ns_safe(void *s, void *ns)
-{
-	stub_log(__func__);
-	(void)s;
-	(void)ns;
-	return NULL;
-}
-
-void *nvme_for_each_path_safe(void *c, void *p)
-{
-	stub_log(__func__);
-	(void)c;
-	(void)p;
-	return NULL;
 }
 
 /*
  * Stub implementations for MI functions (mi.c and mi-mctp.c)
  */
 
-int nvme_mi_admin_admin_passthru(void *hdl, __u8 opcode, __u8 flags,
-				 __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3,
-				 __u32 cdw10, __u32 cdw11, __u32 cdw12,
-				 __u32 cdw13, __u32 cdw14, __u32 cdw15,
-				 __u32 data_len, void *data, __u32 metadata_len,
-				 void *metadata, __u32 timeout_ms, __u32 *result)
+int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
+				 struct nvme_passthru_cmd *cmd)
 {
 	stub_log(__func__);
 	(void)hdl;
-	(void)opcode;
-	(void)flags;
-	(void)rsvd;
-	(void)nsid;
-	(void)cdw2;
-	(void)cdw3;
-	(void)cdw10;
-	(void)cdw11;
-	(void)cdw12;
-	(void)cdw13;
-	(void)cdw14;
-	(void)cdw15;
-	(void)data_len;
-	(void)data;
-	(void)metadata_len;
-	(void)metadata;
-	(void)timeout_ms;
-	(void)result;
+	(void)cmd;
 	errno = ENOTSUP;
 	return -1;
 }
@@ -775,22 +710,22 @@ void nvme_mi_free_root(void *root)
 	(void)root;
 }
 
-void *nvme_mi_first_endpoint(void *root)
+nvme_mi_ep_t nvme_mi_first_endpoint(struct nvme_global_ctx *ctx)
 {
 	stub_log(__func__);
-	(void)root;
+	(void)ctx;
 	return NULL;
 }
 
-void *nvme_mi_next_endpoint(void *root, void *ep)
+nvme_mi_ep_t nvme_mi_next_endpoint(struct nvme_global_ctx *ctx, nvme_mi_ep_t e)
 {
 	stub_log(__func__);
-	(void)root;
-	(void)ep;
+	(void)ctx;
+	(void)e;
 	return NULL;
 }
 
-int nvme_mi_scan_ep(void *ep, int force_rescan)
+int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
 {
 	stub_log(__func__);
 	(void)ep;
@@ -814,7 +749,7 @@ void *nvme_mi_next_ctrl(void *ep, void *c)
 	return NULL;
 }
 
-void nvme_mi_close(void *ep)
+void nvme_mi_close(nvme_mi_ep_t ep)
 {
 	stub_log(__func__);
 	(void)ep;
@@ -889,7 +824,8 @@ int nvme_import_tls_key(const char *encoded_key, int *key_len,
  */
 
 /* Transport handle operations (linux.c) */
-int nvme_open(void *ctx, const char *name, void **hdlp)
+int nvme_open(struct nvme_global_ctx *ctx, const char *name,
+	      struct nvme_transport_handle **hdlp)
 {
 	stub_log(__func__);
 	(void)ctx;
@@ -899,7 +835,7 @@ int nvme_open(void *ctx, const char *name, void **hdlp)
 	return -1;
 }
 
-void nvme_close(void *hdl)
+void nvme_close(struct nvme_transport_handle *hdl)
 {
 	stub_log(__func__);
 	(void)hdl;
@@ -941,35 +877,35 @@ int nvme_transport_handle_is_direct(void *hdl)
 }
 
 /* Controller property getters (tree.c) */
-const char *nvme_ctrl_get_cntlid(void *c)
+const char *nvme_ctrl_get_cntlid(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-const char *nvme_ctrl_get_firmware(void *c)
+const char *nvme_ctrl_get_firmware(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-const char *nvme_ctrl_get_model(void *c)
+const char *nvme_ctrl_get_model(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-const char *nvme_ctrl_get_phy_slot(void *c)
+const char *nvme_ctrl_get_phy_slot(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
 	return "";
 }
 
-const char *nvme_ctrl_get_serial(void *c)
+const char *nvme_ctrl_get_serial(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
@@ -977,35 +913,35 @@ const char *nvme_ctrl_get_serial(void *c)
 }
 
 /* Subsystem property getters (tree.c) */
-const char *nvme_subsystem_get_fw_rev(void *s)
+const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s)
 {
 	stub_log(__func__);
 	(void)s;
 	return "";
 }
 
-const char *nvme_subsystem_get_iopolicy(void *s)
+const char *nvme_subsystem_get_iopolicy(nvme_subsystem_t s)
 {
 	stub_log(__func__);
 	(void)s;
 	return "";
 }
 
-const char *nvme_subsystem_get_model(void *s)
+const char *nvme_subsystem_get_model(nvme_subsystem_t s)
 {
 	stub_log(__func__);
 	(void)s;
 	return "";
 }
 
-const char *nvme_subsystem_get_serial(void *s)
+const char *nvme_subsystem_get_serial(nvme_subsystem_t s)
 {
 	stub_log(__func__);
 	(void)s;
 	return "";
 }
 
-const char *nvme_subsystem_get_type(void *s)
+const char *nvme_subsystem_get_type(nvme_subsystem_t s)
 {
 	stub_log(__func__);
 	(void)s;
@@ -1013,43 +949,43 @@ const char *nvme_subsystem_get_type(void *s)
 }
 
 /* Namespace property getters (tree.c) */
-const char *nvme_ns_get_firmware(void *ns)
+const char *nvme_ns_get_firmware(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return "";
 }
 
-int nvme_ns_get_meta_size(void *ns)
+int nvme_ns_get_meta_size(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return 0;
 }
 
-const char *nvme_ns_get_model(void *ns)
+const char *nvme_ns_get_model(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return "";
 }
 
-const char *nvme_ns_get_serial(void *ns)
+const char *nvme_ns_get_serial(nvme_ns_t n)
 {
 	stub_log(__func__);
-	(void)ns;
+	(void)n;
 	return "";
 }
 
 /* Namespace path iteration (tree.c) */
-void *nvme_namespace_first_path(void *ns)
+nvme_path_t nvme_namespace_first_path(nvme_ns_t ns)
 {
 	stub_log(__func__);
 	(void)ns;
 	return NULL;
 }
 
-void *nvme_namespace_next_path(void *ns, void *p)
+nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
 {
 	stub_log(__func__);
 	(void)ns;
