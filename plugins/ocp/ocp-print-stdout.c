@@ -8,6 +8,9 @@
 #include "ocp-smart-extended-log.h"
 #include "ocp-telemetry-decode.h"
 #include "ocp-nvme.h"
+#include "ocp-utils.h"
+
+static struct ocp_print_ops stdout_print_ops;
 
 static void print_hwcomp_desc(struct hwcomp_desc_entry *e, bool list, int num)
 {
@@ -765,9 +768,154 @@ static void stdout_c7_log(struct nvme_transport_handle *hdl, struct tcg_configur
 	printf("\n");
 }
 
+static void pel_tcg_activity_event(void *pevent_log_info, __u32 offset)
+{
+	__u16 vsedl;
+	struct nvme_vs_event_desc *vs_desc;
+	struct tcg_activity_event_data *tcg_event_data;
+
+	printf("TCG Activity Event Entry:\n");
+	vs_desc = pevent_log_info + offset;
+	tcg_event_data = (struct tcg_activity_event_data *)(vs_desc + 1);
+	vsedl = le16_to_cpu(vs_desc->vsedl);
+
+	printf("Vendor Specific Event Descriptor 0:\n");
+	printf("Vendor Specific Event Code: %u\n", le16_to_cpu(vs_desc->vsec));
+	printf("Vendor Specific Event Data Type: %u\n", vs_desc->vsedt);
+	printf("Vendor Specific Event UIndex: %u\n", vs_desc->uidx);
+	printf("Vendor Specific Event Data Length: %u\n", vsedl);
+	printf("TCG Activity Event Data:\n");
+	printf("TCG Command Count: %u\n",
+	       le32_to_cpu(tcg_event_data->tcg_command_count));
+	printf("Invoking ID: %" PRIu64 "\n",
+	       le64_to_cpu(tcg_event_data->invoking_id));
+	printf("Method ID: %" PRIu64 "\n",
+	       le64_to_cpu(tcg_event_data->method_id));
+	printf("Com ID: %u\n", le16_to_cpu(tcg_event_data->com_id));
+	printf("Protocol ID: %u\n", tcg_event_data->protocol_id);
+	printf("Status: %u\n", tcg_event_data->status);
+	printf("Process Time: %u\n",
+	       le16_to_cpu(tcg_event_data->process_time));
+	printf("TCG Activity Specific Context:\n");
+	d((void *)tcg_event_data->tcg_activity_specific_context, 10, 16, 1);
+}
+
+static void stdout_persistent_event_log(void *pevent_log_info, __u8 action,
+					__u32 size, const char *devname)
+{
+	struct nvme_persistent_event_log *pevent_log_head;
+	__u32 offset = sizeof(*pevent_log_head);
+	__u16 vsil, el;
+	struct nvme_persistent_event_entry *pevent_entry_head;
+	int human = stdout_print_ops.flags & VERBOSE;
+
+	printf("Persistent Event Log for device: %s\n", devname);
+	printf("Action for Persistent Event Log: %u\n", action);
+
+	if (size < offset) {
+		printf("No log data can be shown with this log len at least " \
+		       "512 bytes is required or can be 0 to read the complete " \
+		       "log page after context established\n");
+		return;
+	}
+
+	pevent_log_head = pevent_log_info;
+
+	nvme_show_pel_header(pevent_log_head, human);
+
+	printf("\n");
+	printf("\nPersistent Event Entries:\n");
+	for (int i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
+		if (offset + sizeof(*pevent_entry_head) >= size)
+			break;
+
+		pevent_entry_head = pevent_log_info + offset;
+		vsil = le16_to_cpu(pevent_entry_head->vsil);
+		el = le16_to_cpu(pevent_entry_head->el);
+
+		if ((offset + pevent_entry_head->ehl + 3 + el) >= size)
+			break;
+
+		nvme_show_pel_event_header(i, pevent_entry_head, human);
+
+		offset += pevent_entry_head->ehl + vsil + 3;
+
+		switch (pevent_entry_head->etype) {
+		case NVME_PEL_SMART_HEALTH_EVENT:
+			nvme_show_pel_smart_health_event(pevent_log_info,
+							 offset, devname);
+			break;
+		case NVME_PEL_FW_COMMIT_EVENT:
+			nvme_show_pel_fw_commit_event(pevent_log_info, offset);
+			break;
+		case NVME_PEL_TIMESTAMP_EVENT:
+			nvme_show_pel_timestamp_event(pevent_log_info, offset);
+			break;
+		case NVME_PEL_POWER_ON_RESET_EVENT:
+			nvme_show_pel_power_on_reset_event(pevent_log_info,
+							   offset,
+							   pevent_entry_head);
+			break;
+		case NVME_PEL_NSS_HW_ERROR_EVENT:
+			nvme_show_pel_nss_hw_error_event(pevent_log_info,
+							 offset);
+			break;
+		case NVME_PEL_CHANGE_NS_EVENT:
+			nvme_show_pel_change_ns_event(pevent_log_info, offset);
+			break;
+		case NVME_PEL_FORMAT_START_EVENT:
+			nvme_show_pel_format_start_event(pevent_log_info,
+							 offset);
+			break;
+		case NVME_PEL_FORMAT_COMPLETION_EVENT:
+			nvme_show_pel_format_completion_event(pevent_log_info,
+							      offset);
+			break;
+		case NVME_PEL_SANITIZE_START_EVENT:
+			nvme_show_pel_sanitize_start_event(pevent_log_info,
+							   offset);
+			break;
+		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
+			nvme_show_pel_sanitize_completion_event(pevent_log_info,
+								offset);
+			break;
+		case NVME_PEL_SET_FEATURE_EVENT:
+			nvme_show_pel_set_feature_event(pevent_log_info,
+							offset);
+			break;
+		case NVME_PEL_TELEMETRY_CRT:
+			d(pevent_log_info + offset, 512, 16, 1);
+			break;
+		case NVME_PEL_THERMAL_EXCURSION_EVENT:
+			nvme_show_pel_thermal_excursion_event(pevent_log_info,
+							      offset);
+			break;
+		case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
+			printf("Sanitize Media Verification Event\n");
+			break;
+		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
+			if (ocp_is_tcg_activity_event(pevent_entry_head, el,
+						      vsil))
+				pel_tcg_activity_event(pevent_log_info,
+						       offset);
+			else
+				nvme_show_pel_vendor_specific_event(pevent_log_info,
+								    offset,
+								    el - vsil);
+			break;
+		default:
+			printf("Reserved Event\n\n");
+			break;
+		}
+		offset += el;
+		printf("\n");
+	}
+}
+
 static struct ocp_print_ops stdout_print_ops = {
 	.hwcomp_log = stdout_hwcomp_log,
 	.fw_act_history = stdout_fw_activation_history,
+	.persistent_event_log = stdout_persistent_event_log,
 	.smart_extended_log = stdout_smart_extended_log,
 	.telemetry_log = stdout_telemetry_log,
 	.c3_log = stdout_c3_log,
