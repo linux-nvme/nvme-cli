@@ -498,7 +498,8 @@ static int ilog_dump_identify_page(struct nvme_transport_handle *hdl,
 	_cleanup_free_ char *filename = NULL;
 	int err;
 
-	err = nvme_identify(hdl, nsid, NVME_CSI_NVM, cns->id, buff, 0);
+	err = nvme_identify(hdl, nsid, NVME_CSI_NVM, cns->id, buff,
+		sizeof(data));
 	if (err)
 		return err;
 
@@ -524,7 +525,7 @@ static int ilog_ensure_dump_id_ctrl(struct nvme_transport_handle *hdl,
 	first = false;
 	err = ilog_dump_identify_page(hdl, ilog, &idctrl, 0);
 
-	if (!err)
+	if (err == 0)
 		ilog->count++;
 
 	return err;
@@ -815,6 +816,8 @@ static int ilog_dump_pel(struct nvme_transport_handle *hdl, struct ilog *ilog)
 	if (err)
 		return err;
 
+	ilog->count++;
+
 	err = log_save(&lp, ilog->cfg->out_dir, "log_pages", "lid_0x0d_lsp_0x00_lsi_0x0000.bin",
 		       pevent_log_full, lp.buffer_size);
 
@@ -997,7 +1000,7 @@ out:
 		if (err > 0)
 			nvme_show_status(err);
 
-	} else if ((ilog.count > 1) || cfg.verbose)
+	} else if ((ilog.count > 0) || cfg.verbose)
 		printf("Total: %d log files in %s/%s\n", ilog.count, initial_folder, output_path);
 
 	return err;
