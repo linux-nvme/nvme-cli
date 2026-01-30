@@ -40,9 +40,23 @@ fi
 
 output="${build_dir}"/$(basename "${expected_output}")
 
-LIBNVME_SYSFS_PATH="${sysfs_path}" \
-LIBNVME_HOSTNQN=nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6 \
-LIBNVME_HOSTID=ce4fee3e-c02c-11ee-8442-830d068a36c6 \
-"${test_binary}" "${config_json}" > "${output}" || echo "test failed"
+cmd=(
+  env
+  LIBNVME_SYSFS_PATH="$sysfs_path"
+  LIBNVME_HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
+  LIBNVME_HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
+  "$test_binary"
+  "$config_json"
+)
+
+echo "Running command:"
+printf '%q ' "${cmd[@]}"
+printf '> %q\n' "$output"
+
+if ! "${cmd[@]}" > "$output"; then
+    rc=$?
+    echo "test failed (exit code $rc)"
+    exit $rc
+fi
 
 diff -u "${expected_output}" "${output}"

@@ -13,14 +13,14 @@
 
 #include <libnvme.h>
 
-static bool import_export_key(nvme_ctrl_t c)
+static bool import_export_key(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 {
 	unsigned char version, hmac, *key;
 	char *encoded_key;
 	size_t len;
 	int ret;
 
-	ret = nvme_import_tls_key_versioned(nvme_ctrl_get_tls_key(c),
+	ret = nvme_import_tls_key_versioned(ctx, nvme_ctrl_get_tls_key(c),
 					    &version, &hmac, &len, &key);
 	if (ret) {
 		printf("ERROR: nvme_import_tls_key_versioned failed with %d\n",
@@ -29,7 +29,7 @@ static bool import_export_key(nvme_ctrl_t c)
 
 	}
 
-	ret = nvme_export_tls_key_versioned(version, hmac, key, len,
+	ret = nvme_export_tls_key_versioned(ctx, version, hmac, key, len,
 					    &encoded_key);
 	free(key);
 	if (ret) {
@@ -66,10 +66,10 @@ static bool psk_json_test(char *file)
 	nvme_for_each_host(ctx, h)
 		nvme_for_each_subsystem(h, s)
 			nvme_subsystem_for_each_ctrl(s, c)
-				if (!import_export_key(c))
+				if (!import_export_key(ctx, c))
 					goto out;
 
-	err = nvme_dump_config(ctx);
+	err = nvme_dump_config(ctx, NULL);
 	if (err)
 		goto out;
 

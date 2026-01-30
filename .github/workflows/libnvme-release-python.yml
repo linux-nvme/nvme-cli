@@ -57,6 +57,11 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      - name: Configure git identity for CI
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Compute dev version from git
         id: version
         run: |
@@ -68,8 +73,17 @@ jobs:
           echo "Computed dev version: $VERSION"
 
       - name: Patch project version in meson.build
+        env:
+          DEV_VERSION: ${{ steps.version.outputs.dev_version }}
         run: |
-          sed -i -e "/^project(/,/)/ s/^\(\s*\)version:\s*.*/\1version: '${{ steps.version.outputs.dev_version }}',/" meson.build
+          sed -i -e "/^project(/,/)/ s/^\(\s*\)version:\s*.*/\1version: '${DEV_VERSION}',/" meson.build
+
+      - name: Commit CI version bump
+        env:
+          DEV_VERSION: ${{ steps.version.outputs.dev_version }}
+        run: |
+          git add meson.build
+          git commit -m "ci: set project version to ${DEV_VERSION}"
 
       - name: Build sdist
         run: |

@@ -401,9 +401,10 @@ static void test_genctr_error(nvme_ctrl_t c)
 	check(!log, "unexpected log page returned");
 }
 
-static void run_test(const char *test_name, void (*test_fn)(nvme_ctrl_t))
+static void run_test(struct nvme_global_ctx *ctx, const char *test_name,
+		void (*test_fn)(nvme_ctrl_t))
 {
-	struct nvme_ctrl c = { .hdl = test_hdl };
+	struct nvme_ctrl c = { .ctx = ctx, .hdl = test_hdl };
 
 	printf("Running test %s...", test_name);
 	fflush(stdout);
@@ -413,7 +414,7 @@ static void run_test(const char *test_name, void (*test_fn)(nvme_ctrl_t))
 	puts(" OK");
 }
 
-#define RUN_TEST(name) run_test(#name, test_ ## name)
+#define RUN_TEST(name) run_test(ctx, #name, test_ ## name)
 
 int main(void)
 {

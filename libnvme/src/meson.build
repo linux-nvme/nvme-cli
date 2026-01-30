@@ -69,10 +69,10 @@ if is_windows
     ]
 endif
 
-mapfile = 'libnvme.map'
+ldfile = 'libnvme.ld'
 
 libnvme_link_args = [
-    '-Wl,--version-script=@0@'.format(meson.current_source_dir() / mapfile),
+    '-Wl,--version-script=@0@'.format(meson.current_source_dir() / ldfile),
 ]
 # Skipping accessor generation for now on Windows. Needs to be ported.
 if not is_windows

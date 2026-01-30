@@ -18,4 +18,8 @@ tests/*.pyc
 .build
 .build-ci
 .cache
+
+# Ignore PyPI build artifacts
+dist/
+
 .vscode/

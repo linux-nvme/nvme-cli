@@ -1234,6 +1234,7 @@ struct nbft_info {
 /**
  * nvme_nbft_read() - Read and parse contents of an ACPI NBFT table
  *
+ * @ctx:      struct nvme_global_ctx object
  * @nbft:     Parsed NBFT table data.
  * @filename: Filename of the raw NBFT table to read.
  *
@@ -1242,12 +1243,14 @@ struct nbft_info {
  *
  * Return: 0 on success, errno otherwise.
  */
-int nvme_nbft_read(struct nbft_info **nbft, const char *filename);
+int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
+		const char *filename);
 
 /**
  * nvme_nbft_free() - Free the struct nbft_info and its contents
+ * @ctx: struct nvme_global_ctx object
  * @nbft: Parsed NBFT table data.
  */
-void nvme_nbft_free(struct nbft_info *nbft);
+void nvme_nbft_free(struct nvme_global_ctx *ctx, struct nbft_info *nbft);
 
 #endif

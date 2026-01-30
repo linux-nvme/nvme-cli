@@ -138,6 +138,7 @@ struct nvme_ns {
 	struct nvme_ctrl *c;
 	struct nvme_ns_head *head;
 
+	struct nvme_global_ctx *ctx;
 	struct nvme_transport_handle *hdl;
 	__u32 nsid;
 	char *name;
@@ -162,6 +163,7 @@ struct nvme_ctrl {
 	struct list_head namespaces;
 	struct nvme_subsystem *s;
 
+	struct nvme_global_ctx *ctx;
 	struct nvme_transport_handle *hdl;
 	char *name;
 	char *sysfs_dir;
@@ -265,7 +267,6 @@ struct nvme_global_ctx {
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
 	struct nvme_log log;
-	bool modified;
 	bool mi_probe_enabled;
 	bool create_only;
 	bool dry_run;
@@ -375,9 +376,9 @@ struct fabric_args {
 	const char *subsysnqn;
 	const char *transport;
 	const char *traddr;
+	const char *trsvcid;
 	const char *host_traddr;
 	const char *host_iface;
-	const char *trsvcid;
 };
 
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
@@ -410,6 +411,20 @@ void *__nvme_alloc(size_t len);
 
 void *__nvme_realloc(void *p, size_t len);
 
+nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
+			     const char *hostid);
+nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
+				       const char *name,
+				       const char *subsysnqn);
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+			     const char *traddr, const char *host_traddr,
+			     const char *host_iface, const char *trsvcid,
+			     nvme_ctrl_t p);
+nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
+			   const char *traddr, const char *trsvcid,
+			   const char *subsysnqn, const char *host_traddr,
+			   const char *host_iface);
+
 #if (LOG_FUNCNAME == 1)
 #define __nvme_log_func __func__
 #else
@@ -421,11 +436,6 @@ __nvme_msg(struct nvme_global_ctx *ctx, int level, const char *func, const char 
 
 #define nvme_msg(ctx, level, format, ...)					\
 	__nvme_msg(ctx, level, __nvme_log_func, format, ##__VA_ARGS__)
-
-#define ctx_from_ctrl(c) ((c)->s && (c)->s->h ? (c)->s->h->ctx : NULL)
-#define ctx_from_ns(n) ((n)->s && (n)->s->h ? (n)->s->h->ctx : \
-			 (n)->c && (n)->c->s && (n)->c->s->h ? (n)->c->s->h->ctx : \
-			 NULL)
 
 /* mi internal headers */
 
@@ -531,7 +541,7 @@ void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 #define SECTOR_SHIFT	9
 
 int __nvme_import_keys_from_config(nvme_host_t h, nvme_ctrl_t c,
-				   long *keyring_id, long *key_id);
+		long *keyring_id, long *key_id);
 
 static inline char *xstrdup(const char *s)
 {

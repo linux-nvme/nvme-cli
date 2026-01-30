@@ -528,11 +528,8 @@ struct nvme_ns {
 	void refresh_topology() {
 		nvme_refresh_topology($self);
 	}
-	void update_config() {
-		nvme_update_config($self);
-	}
 	void dump_config() {
-		nvme_dump_config($self);
+		nvme_dump_config($self, NULL);
 	}
 }
 
@@ -559,9 +556,7 @@ struct nvme_ns {
 		  const char *hostkey = NULL,
 		  const char *hostsymname = NULL) {
 		nvme_host_t h;
-		if (hostnqn)
-			h = nvme_lookup_host(ctx, hostnqn, hostid);
-		if (nvme_default_host(ctx, &h))
+		if (nvme_host_get(ctx, hostnqn, hostid, &h))
 			return NULL;
 		if (hostsymname)
 			nvme_host_set_hostsymname(h, hostsymname);
@@ -605,15 +600,22 @@ struct nvme_ns {
 	}
 %};
 
-%pythonappend nvme_subsystem::nvme_subsystem(struct nvme_host *host,
+%pythonappend nvme_subsystem::nvme_subsystem(struct nvme_global_ctx *ctx,
+					     struct nvme_host *host,
 					     const char *subsysnqn,
 					     const char *name) {
     self.__parent = host  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend nvme_subsystem {
-	nvme_subsystem(struct nvme_host *host,
+	nvme_subsystem(struct nvme_global_ctx *ctx,
+		       struct nvme_host *host,
 		       const char *subsysnqn,
 		       const char *name = NULL) {
-		return nvme_lookup_subsystem(host, name, subsysnqn);
+		struct nvme_subsystem *s;
+
+		if (nvme_subsystem_get(ctx, host, name, subsysnqn, &s))
+			return NULL;
+
+		return s;
 	}
 	~nvme_subsystem() {
 		nvme_free_subsystem($self);
@@ -1236,26 +1238,26 @@ struct nvme_ns {
 		return output;
 	}
 
-	PyObject *nbft_get(const char * filename)
+	PyObject *nbft_get(struct nvme_global_ctx *ctx, const char * filename)
 	{
 		struct nbft_info *nbft;
 		PyObject *output;
 		int ret;
 
-		ret = nvme_nbft_read(&nbft, filename);
+		ret = nvme_nbft_read(ctx, &nbft, filename);
 		if (ret) {
 			Py_RETURN_NONE;
 		}
 
 		output = nbft_to_pydict(nbft);
-		nvme_nbft_free(nbft);
+		nvme_nbft_free(ctx, nbft);
 		return output;
 	}
 %};
 
 %feature("autodoc", "@return an NBFT table as a dict on success, None otherwise.\n"
 		    "@param filename: file to read") nbft_get;
-PyObject *nbft_get(const char * filename);
+PyObject *nbft_get(struct nvme_global_ctx *ctx, const char * filename);
 
 // We want to swig all the #define and enum from types.h, but none of the structs.
 #pragma SWIG nowarn=503             // Supress warnings about unnamed struct

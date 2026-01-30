@@ -2,22 +2,13 @@
 LIBNVME_UNRELEASED {
 };
 
-LIBNVME_1_16 {
-	global:
-		nvme_get_uuid_list;
-		nvme_set_etdas;
-		nvme_clear_etdas;
-		nvme_insert_tls_key_compat;
-		nvme_generate_tls_key_identity_compat;
-};
-
 LIBNVME_2_0 {
 	global:
+		nvme_clear_etdas;
 		nvme_close;
 		nvme_create_ctrl;
 		nvme_create_global_ctx;
 		nvme_ctrl_config_match;
-		nvme_ctrl_find;
 		nvme_ctrl_first_ns;
 		nvme_ctrl_first_path;
 		nvme_ctrl_get_address;
@@ -64,7 +55,6 @@ LIBNVME_2_0 {
 		nvme_ctrl_set_tls_key_identity;
 		nvme_ctrl_set_unique_discovery_ctrl;
 		nvme_ctrls_filter;
-		nvme_default_host;
 		nvme_describe_key_serial;
 		nvme_disconnect_ctrl;
 		nvme_dump_config;
@@ -83,6 +73,7 @@ LIBNVME_2_0 {
 		nvme_fw_download_seq;
 		nvme_gen_dhchap_key;
 		nvme_generate_tls_key_identity;
+		nvme_generate_tls_key_identity_compat;
 		nvme_get_ana_log_atomic;
 		nvme_get_ana_log_len;
 		nvme_get_ana_log_len_from_id_ctrl;
@@ -90,12 +81,10 @@ LIBNVME_2_0 {
 		nvme_get_attr;
 		nvme_get_ctrl_attr;
 		nvme_get_ctrl_telemetry;
-		nvme_get_debug;
 		nvme_get_directive_receive_length;
 		nvme_get_feature_length;
 		nvme_get_host_telemetry;
 		nvme_get_log;
-		nvme_get_logging_level;
 		nvme_get_logical_block_size;
 		nvme_get_new_host_telemetry;
 		nvme_get_ns_attr;
@@ -105,7 +94,9 @@ LIBNVME_2_0 {
 		nvme_get_subsys_attr;
 		nvme_get_telemetry_log;
 		nvme_get_telemetry_max;
+		nvme_get_uuid_list;
 		nvme_get_version;
+		nvme_host_get;
 		nvme_host_get_dhchap_key;
 		nvme_host_get_global_ctx;
 		nvme_host_get_hostid;
@@ -125,17 +116,14 @@ LIBNVME_2_0 {
 		nvme_init_copy_range_f3;
 		nvme_init_ctrl;
 		nvme_init_ctrl_list;
-		nvme_init_default_logging;
 		nvme_init_dsm_range;
 		nvme_init_logging;
 		nvme_insert_tls_key;
+		nvme_insert_tls_key_compat;
 		nvme_insert_tls_key_versioned;
 		nvme_ipaddrs_eq;
-		nvme_lookup_ctrl;
-		nvme_lookup_host;
 		nvme_lookup_key;
 		nvme_lookup_keyring;
-		nvme_lookup_subsystem;
 		nvme_mi_admin_admin_passthru;
 		nvme_mi_admin_xfer;
 		nvme_mi_aem_disable;
@@ -239,8 +227,8 @@ LIBNVME_2_0 {
 		nvme_scan_tls_keys;
 		nvme_scan_topology;
 		nvme_set_application;
-		nvme_set_debug;
 		nvme_set_dry_run;
+		nvme_set_etdas;
 		nvme_set_keyring;
 		nvme_set_property;
 		nvme_set_root;
@@ -253,6 +241,7 @@ LIBNVME_2_0 {
 		nvme_subsys_filter;
 		nvme_subsystem_first_ctrl;
 		nvme_subsystem_first_ns;
+		nvme_subsystem_get;
 		nvme_subsystem_get_application;
 		nvme_subsystem_get_fw_rev;
 		nvme_subsystem_get_host;
@@ -279,7 +268,6 @@ LIBNVME_2_0 {
 		nvme_transport_handle_set_submit_entry;
 		nvme_transport_handle_set_submit_exit;
 		nvme_unlink_ctrl;
-		nvme_update_config;
 		nvme_update_key;
 		nvme_uuid_find;
 		nvme_uuid_from_string;
@@ -288,6 +276,7 @@ LIBNVME_2_0 {
 		nvmf_add_ctrl;
 		nvmf_adrfam_str;
 		nvmf_cms_str;
+		nvmf_config_modify;
 		nvmf_connect;
 		nvmf_connect_config_json;
 		nvmf_connect_ctrl;

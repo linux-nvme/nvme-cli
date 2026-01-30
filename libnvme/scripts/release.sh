@@ -132,18 +132,18 @@ if [ "$build_doc" = true ]; then
     git commit -s -m "doc: Regenerate all docs for $VERSION"
 fi
 
-declare -A maps
-maps=(
-    [src/libnvme.map]=LIBNVME
+declare -A ldscripts
+ldscripts=(
+    [src/libnvme.ld]=LIBNVME
 )
 
 lib_ver="${ver//./_}"
 
-for map_file in "${!maps[@]}"
+for ld_file in "${!ldscripts[@]}"
 do
-    lib_name=${maps[$map_file]}
+    lib_name=${ldscripts[$ld_file]}
 
-    if [ ! -f "${map_file}" ]; then
+    if [ ! -f "${ld_file}" ]; then
        continue
     fi
 
@@ -155,16 +155,16 @@ do
         in_section && $0 ~ /\}/ { exit }
         in_section && $0 !~ /^[[:space:]]*($|\/|\/\*|\*|#)/ { found = 1; exit }
         END { exit !found }
-    ' "${map_file}"; then
+    ' "${ld_file}"; then
         continue
     fi
 
     sed -i \
         -e "s/^${lib_unreleased}\s*{/&\n};\n\n${lib_name}_${lib_ver} {/" \
-        "$map_file"
+        "$ld_file"
 
-    git add "${map_file}"
-    echo "${map_file} updated."
+    git add "${ld_file}"
+    echo "${ld_file} updated."
 done
 
 # update meson.build

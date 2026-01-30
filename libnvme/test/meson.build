@@ -131,7 +131,7 @@ if not is_windows
             dependencies: [
                 config_dep,
                 ccan_dep,
-                libnvme_dep,
+                libnvme_test_dep,
             ],
             link_with: mock_ifaddrs,
         )

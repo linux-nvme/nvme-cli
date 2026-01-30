@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 [build-system]
 build-backend = 'mesonpy'
-requires = ['meson-python']
+requires = ['meson-python', 'meson', 'ninja', 'swig']
 
 [project]
 name = "libnvme"
@@ -31,3 +31,14 @@ dependencies = []
 "Homepage" = "https://github.com/linux-nvme/nvme-cli"
 "Source" = "https://github.com/linux-nvme/nvme-cli"
 "Bug Tracker" = "https://github.com/linux-nvme/nvme-cli/issues"
+
+[tool.meson-python.args]
+setup = [
+    "-Dnvme=disabled",
+    "-Dlibnvme=enabled",
+    "-Dpython=enabled",
+    "-Dpypi=true",
+    "-Dtests=false",
+    "-Dnvme-tests=false",
+    "-Dexamples=false",
+]

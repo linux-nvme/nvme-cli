@@ -137,7 +137,8 @@ static void check_str(const char *exp, const char *res)
 	test_rc = 1;
 }
 
-static void export_test(struct test_data_psk *test)
+static void export_test(struct nvme_global_ctx *ctx,
+		struct test_data_psk *test)
 {
 	char *psk;
 	int ret;
@@ -150,7 +151,8 @@ static void export_test(struct test_data_psk *test)
 	printf("test nvme_export_tls_key hmac %d %s\n",
 	       test->hmac, test->exported_psk);
 
-	ret = nvme_export_tls_key(test->configured_psk, test->psk_length, &psk);
+	ret = nvme_export_tls_key(ctx, test->configured_psk,
+		test->psk_length, &psk);
 	if (ret) {
 		test_rc = 1;
 		printf("ERROR: nvme_export_tls_key() failed with %d\n", ret);
@@ -160,7 +162,8 @@ static void export_test(struct test_data_psk *test)
 	free(psk);
 }
 
-static void import_test(struct test_data_psk *test)
+static void import_test(struct nvme_global_ctx *ctx,
+		struct test_data_psk *test)
 {
 	unsigned char *psk;
 	int psk_length;
@@ -175,7 +178,8 @@ static void import_test(struct test_data_psk *test)
 	printf("test nvme_import_tls_key hmac %d %s\n",
 	       test->hmac, test->exported_psk);
 
-	ret = nvme_import_tls_key(test->exported_psk, &psk_length, &hmac, &psk);
+	ret = nvme_import_tls_key(ctx, test->exported_psk, &psk_length,
+		&hmac, &psk);
 	if (ret) {
 		test_rc = 1;
 		printf("ERROR: nvme_import_tls_key() failed with %d\n", ret);
@@ -202,7 +206,8 @@ out:
 	free(psk);
 }
 
-static void export_versioned_test(struct test_data_psk *test)
+static void export_versioned_test(struct nvme_global_ctx *ctx,
+		struct test_data_psk *test)
 {
 	char *psk;
 	int ret;
@@ -213,7 +218,7 @@ static void export_versioned_test(struct test_data_psk *test)
 	printf("test nvme_export_tls_key_versioned hmac %d %s\n",
 	       test->hmac, test->exported_psk);
 
-	ret = nvme_export_tls_key_versioned(test->version, test->hmac,
+	ret = nvme_export_tls_key_versioned(ctx, test->version, test->hmac,
 					    test->configured_psk,
 					    test->psk_length, &psk);
 	if (ret) {
@@ -228,7 +233,8 @@ static void export_versioned_test(struct test_data_psk *test)
 	free(psk);
 }
 
-static void import_versioned_test(struct test_data_psk *test)
+static void import_versioned_test(struct nvme_global_ctx *ctx,
+		struct test_data_psk *test)
 {
 	unsigned char *psk;
 	unsigned char version;
@@ -242,7 +248,7 @@ static void import_versioned_test(struct test_data_psk *test)
 	printf("test nvme_import_tls_key_versioned hmac %d %s\n",
 	       test->hmac, test->exported_psk);
 
-	ret = nvme_import_tls_key_versioned(test->exported_psk, &version,
+	ret = nvme_import_tls_key_versioned(ctx, test->exported_psk, &version,
 					    &hmac, &psk_length, &psk);
 	if (ret) {
 		test_rc = 1;
@@ -278,7 +284,8 @@ out:
 	free(psk);
 }
 
-static void identity_test(struct test_data_identity *test)
+static void identity_test(struct nvme_global_ctx *ctx,
+		struct test_data_identity *test)
 {
 	char *id;
 	int ret;
@@ -291,10 +298,10 @@ static void identity_test(struct test_data_identity *test)
 	printf("test nvme_generate_tls_key_identity host %s subsys %s hmac %d %s\n",
 	       test->hostnqn, test->subsysnqn, test->hmac, test->identity);
 
-	ret = nvme_generate_tls_key_identity(test->hostnqn, test->subsysnqn,
-					     test->version, test->hmac,
-					     (unsigned char *)test->configured_psk,
-					     test->psk_length, &id);
+	ret = nvme_generate_tls_key_identity(ctx, test->hostnqn,
+		test->subsysnqn, test->version, test->hmac,
+		(unsigned char *)test->configured_psk,
+		test->psk_length, &id);
 	if (ret) {
 		if (ret == -ENOTSUP)
 			return;
@@ -306,7 +313,8 @@ static void identity_test(struct test_data_identity *test)
 	free(id);
 }
 
-static void identity_test_compat(struct test_data_identity *test)
+static void identity_test_compat(struct nvme_global_ctx *ctx,
+		struct test_data_identity *test)
 {
 	char *id;
 	int ret;
@@ -319,11 +327,10 @@ static void identity_test_compat(struct test_data_identity *test)
 	printf("test nvme_generate_tls_key_identity_compat host %s subsys %s hmac %d %s\n",
 	       test->hostnqn, test->subsysnqn, test->hmac, test->identity);
 
-	ret = nvme_generate_tls_key_identity_compat(test->hostnqn,
-						    test->subsysnqn,
-						    test->version, test->hmac,
-						    (unsigned char *)test->configured_psk,
-						    test->psk_length, &id);
+	ret = nvme_generate_tls_key_identity_compat(ctx, test->hostnqn,
+		test->subsysnqn, test->version, test->hmac,
+		(unsigned char *)test->configured_psk,
+		test->psk_length, &id);
 	if (ret) {
 		if (ret == -ENOTSUP)
 			return;
@@ -337,23 +344,28 @@ static void identity_test_compat(struct test_data_identity *test)
 
 int main(void)
 {
-	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
-		export_test(&test_data_psk[i]);
+	struct nvme_global_ctx *ctx =
+		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
-		import_test(&test_data_psk[i]);
+		export_test(ctx, &test_data_psk[i]);
 
 	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
-		export_versioned_test(&test_data_psk[i]);
+		import_test(ctx, &test_data_psk[i]);
 
 	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
-		import_versioned_test(&test_data_psk[i]);
+		export_versioned_test(ctx, &test_data_psk[i]);
+
+	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
+		import_versioned_test(ctx, &test_data_psk[i]);
 
 	for (int i = 0; i < ARRAY_SIZE(test_data_identity); i++)
-		identity_test(&test_data_identity[i]);
+		identity_test(ctx, &test_data_identity[i]);
 
 	for (int i = 0; i < ARRAY_SIZE(test_data_identity_compat); i++)
-		identity_test_compat(&test_data_identity_compat[i]);
+		identity_test_compat(ctx, &test_data_identity_compat[i]);
+
+	nvme_free_global_ctx(ctx);
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

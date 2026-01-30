@@ -7,7 +7,6 @@
  *
  */
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,6 +16,10 @@
 #include "private.h"
 #include "nbft.h"
 #include "log.h"
+
+#ifndef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
 
 static __u8 csum(const __u8 *buffer, ssize_t length)
 {
@@ -69,27 +72,28 @@ static char *trtype_to_string(__u8 transport_type)
 	}
 }
 
-#define verify(condition, message)					\
+#define verify(ctx, condition, message)					\
 	do {								\
 		if (!(condition)) {					\
-			nvme_msg(NULL, LOG_DEBUG, "file %s: " message "\n", \
+			nvme_msg(ctx, LOG_DEBUG, "file %s: " message "\n", \
 				 nbft->filename);			\
 			return -EINVAL;					\
 		}							\
 	} while (0)
 
-static int __get_heap_obj(struct nbft_header *header, const char *filename,
-			  const char *descriptorname, const char *fieldname,
-			  struct nbft_heap_obj obj, bool is_string,
-			  char **output)
+static int __get_heap_obj(struct nvme_global_ctx *ctx,
+		struct nbft_header *header, const char *filename,
+		const char *descriptorname, const char *fieldname,
+		struct nbft_heap_obj obj, bool is_string,
+		char **output)
 {
 	if (le16_to_cpu(obj.length) == 0)
 		return -ENOENT;
 
 	if (!in_heap(header, obj)) {
-		nvme_msg(NULL, LOG_DEBUG,
-			 "file %s: field '%s' in descriptor '%s' has invalid offset or length\n",
-			 filename, fieldname, descriptorname);
+		nvme_msg(ctx, LOG_DEBUG,
+			"file %s: field '%s' in descriptor '%s' has invalid offset or length\n",
+			filename, fieldname, descriptorname);
 		return -EINVAL;
 	}
 
@@ -97,17 +101,18 @@ static int __get_heap_obj(struct nbft_header *header, const char *filename,
 	*output = (char *)header + le32_to_cpu(obj.offset);
 
 	if (is_string) {
-		if (strnlen(*output, le16_to_cpu(obj.length) + 1) < le16_to_cpu(obj.length)) {
-			nvme_msg(NULL, LOG_DEBUG,
+		if (strnlen(*output, le16_to_cpu(obj.length) + 1) <
+				le16_to_cpu(obj.length)) {
+			nvme_msg(ctx, LOG_DEBUG,
 				"file %s: string '%s' in descriptor '%s' is shorter (%u) than specified length (%u)\n",
 				filename, fieldname, descriptorname,
 				(unsigned int)strnlen(*output, le16_to_cpu(obj.length) + 1),
-				le16_to_cpu(obj.length));
+					le16_to_cpu(obj.length));
 		} else if (strnlen(*output, le16_to_cpu(obj.length) + 1) >
-			le16_to_cpu(obj.length)) {
-			nvme_msg(NULL, LOG_DEBUG,
-				 "file %s: string '%s' in descriptor '%s' is not zero terminated\n",
-				 filename, fieldname, descriptorname);
+				le16_to_cpu(obj.length)) {
+			nvme_msg(ctx, LOG_DEBUG,
+				"file %s: string '%s' in descriptor '%s' is not zero terminated\n",
+				filename, fieldname, descriptorname);
 			return -EINVAL;
 		}
 	}
@@ -115,13 +120,14 @@ static int __get_heap_obj(struct nbft_header *header, const char *filename,
 	return 0;
 }
 
-#define get_heap_obj(descriptor, obj, is_string, output)	\
-	__get_heap_obj(header, nbft->filename,			\
+#define get_heap_obj(ctx, descriptor, obj, is_string, output)	\
+	__get_heap_obj(ctx, header, nbft->filename,		\
 		       stringify(descriptor), stringify(obj),	\
 		       descriptor->obj, is_string,		\
 		       output)
 
-static struct nbft_info_discovery *discovery_from_index(struct nbft_info *nbft, int i)
+static struct nbft_info_discovery *discovery_from_index(struct nbft_info *nbft,
+		int i)
 {
 	struct nbft_info_discovery **d;
 
@@ -143,7 +149,8 @@ static struct nbft_info_hfi *hfi_from_index(struct nbft_info *nbft, int i)
 	return NULL;
 }
 
-static struct nbft_info_security *security_from_index(struct nbft_info *nbft, int i)
+static struct nbft_info_security *security_from_index(struct nbft_info *nbft,
+		int i)
 {
 	struct nbft_info_security **s;
 
@@ -154,17 +161,17 @@ static struct nbft_info_security *security_from_index(struct nbft_info *nbft, in
 	return NULL;
 }
 
-static int read_ssns_exended_info(struct nbft_info *nbft,
-				  struct nbft_info_subsystem_ns *ssns,
-				  struct nbft_ssns_ext_info *raw_ssns_ei)
+static int read_ssns_exended_info(struct nvme_global_ctx *ctx,
+		struct nbft_info *nbft, struct nbft_info_subsystem_ns *ssns,
+		struct nbft_ssns_ext_info *raw_ssns_ei)
 {
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
 
-	verify(raw_ssns_ei->structure_id == NBFT_DESC_SSNS_EXT_INFO,
+	verify(ctx, raw_ssns_ei->structure_id == NBFT_DESC_SSNS_EXT_INFO,
 	       "invalid ID in SSNS extended info descriptor");
-	verify(raw_ssns_ei->version == 1,
+	verify(ctx, raw_ssns_ei->version == 1,
 	       "invalid version in SSNS extended info descriptor");
-	verify(le16_to_cpu(raw_ssns_ei->ssns_index) == ssns->index,
+	verify(ctx, le16_to_cpu(raw_ssns_ei->ssns_index) == ssns->index,
 	       "SSNS index doesn't match extended info descriptor index");
 
 	if (!(le32_to_cpu(raw_ssns_ei->flags) & NBFT_SSNS_EXT_INFO_VALID))
@@ -173,14 +180,15 @@ static int read_ssns_exended_info(struct nbft_info *nbft,
 	if (le32_to_cpu(raw_ssns_ei->flags) & NBFT_SSNS_EXT_INFO_ADMIN_ASQSZ)
 		ssns->asqsz = le16_to_cpu(raw_ssns_ei->asqsz);
 	ssns->controller_id = le16_to_cpu(raw_ssns_ei->cntlid);
-	get_heap_obj(raw_ssns_ei, dhcp_root_path_str_obj, 1, &ssns->dhcp_root_path_string);
+	get_heap_obj(ctx, raw_ssns_ei, dhcp_root_path_str_obj, 1,
+		&ssns->dhcp_root_path_string);
 
 	return 0;
 }
 
-static int read_ssns(struct nbft_info *nbft,
-		     struct nbft_ssns *raw_ssns,
-		     struct nbft_info_subsystem_ns **s)
+static int read_ssns(struct nvme_global_ctx *ctx,
+		struct nbft_info *nbft, struct nbft_ssns *raw_ssns,
+		struct nbft_info_subsystem_ns **s)
 {
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
 	struct nbft_info_subsystem_ns *ssns;
@@ -191,11 +199,11 @@ static int read_ssns(struct nbft_info *nbft,
 	if (!(le16_to_cpu(raw_ssns->flags) & NBFT_SSNS_VALID))
 		return -EINVAL;
 
-	verify(raw_ssns->structure_id == NBFT_DESC_SSNS,
+	verify(ctx, raw_ssns->structure_id == NBFT_DESC_SSNS,
 	       "invalid ID in SSNS descriptor");
 
 	/* verify transport type */
-	verify(raw_ssns->trtype == NBFT_TRTYPE_TCP,
+	verify(ctx, raw_ssns->trtype == NBFT_TRTYPE_TCP,
 	       "invalid transport type in SSNS descriptor");
 
 	ssns = calloc(1, sizeof(*ssns));
@@ -203,35 +211,39 @@ static int read_ssns(struct nbft_info *nbft,
 		return -ENOMEM;
 
 	ssns->index = le16_to_cpu(raw_ssns->index);
-	strncpy(ssns->transport, trtype_to_string(raw_ssns->trtype), sizeof(ssns->transport));
+	strncpy(ssns->transport, trtype_to_string(raw_ssns->trtype),
+		sizeof(ssns->transport));
 
 	/* transport specific flags */
 	if (raw_ssns->trtype == NBFT_TRTYPE_TCP) {
-		if (le16_to_cpu(raw_ssns->trflags) & NBFT_SSNS_PDU_HEADER_DIGEST)
+		if (le16_to_cpu(raw_ssns->trflags) &
+				NBFT_SSNS_PDU_HEADER_DIGEST)
 			ssns->pdu_header_digest_required = true;
-		if (le16_to_cpu(raw_ssns->trflags) & NBFT_SSNS_DATA_DIGEST)
+		if (le16_to_cpu(raw_ssns->trflags) &
+				NBFT_SSNS_DATA_DIGEST)
 			ssns->data_digest_required = true;
 	}
 
 	/* primary discovery controller */
 	if (raw_ssns->primary_discovery_ctrl_index) {
 		ssns->discovery = discovery_from_index(nbft,
-						       raw_ssns->primary_discovery_ctrl_index);
+			raw_ssns->primary_discovery_ctrl_index);
 		if (!ssns->discovery)
-			nvme_msg(NULL, LOG_DEBUG,
+			nvme_msg(ctx, LOG_DEBUG,
 				 "file %s: namespace %d discovery controller not found\n",
 				 nbft->filename, ssns->index);
 	}
 
 	/* subsystem transport address */
-	ret = get_heap_obj(raw_ssns, subsys_traddr_obj, 0, (char **)&tmp);
+	ret = get_heap_obj(ctx, raw_ssns, subsys_traddr_obj, 0, (char **)&tmp);
 	if (ret)
 		goto fail;
 
 	format_ip_addr(ssns->traddr, sizeof(ssns->traddr), tmp);
 
 	/* subsystem transport service identifier */
-	ret = get_heap_obj(raw_ssns, subsys_trsvcid_obj, 1, &ssns->trsvcid);
+	ret = get_heap_obj(ctx, raw_ssns, subsys_trsvcid_obj,
+		1, &ssns->trsvcid);
 	if (ret)
 		goto fail;
 
@@ -251,34 +263,39 @@ static int read_ssns(struct nbft_info *nbft,
 
 	/* security profile */
 	if (raw_ssns->security_desc_index) {
-		ssns->security = security_from_index(nbft, raw_ssns->security_desc_index);
+		ssns->security = security_from_index(nbft,
+			raw_ssns->security_desc_index);
 		if (!ssns->security)
-			nvme_msg(NULL, LOG_DEBUG,
+			nvme_msg(ctx, LOG_DEBUG,
 				 "file %s: namespace %d security controller not found\n",
 				 nbft->filename, ssns->index);
 	}
 
 	/* HFI descriptors */
-	ret = get_heap_obj(raw_ssns, secondary_hfi_assoc_obj, 0, (char **)&ss_hfi_indexes);
+	ret = get_heap_obj(ctx, raw_ssns, secondary_hfi_assoc_obj,
+		0, (char **)&ss_hfi_indexes);
 	if (ret)
 		goto fail;
 
-	ssns->hfis = calloc(le16_to_cpu(raw_ssns->secondary_hfi_assoc_obj.length) + 2,
-			    sizeof(*ssns->hfis));
+	ssns->hfis =
+		calloc(le16_to_cpu(raw_ssns->secondary_hfi_assoc_obj.length) +
+			2, sizeof(*ssns->hfis));
 	if (!ssns->hfis) {
 		ret = -ENOMEM;
 		goto fail;
 	}
 	ssns->hfis[0] = hfi_from_index(nbft, raw_ssns->primary_hfi_desc_index);
 	if (!ssns->hfis[0]) {
-		nvme_msg(NULL, LOG_DEBUG,
-			 "file %s: SSNS %d: HFI %d not found\n",
-			 nbft->filename, ssns->index, raw_ssns->primary_hfi_desc_index);
+		nvme_msg(ctx, LOG_DEBUG,
+			"file %s: SSNS %d: HFI %d not found\n",
+			nbft->filename, ssns->index,
+			raw_ssns->primary_hfi_desc_index);
 		ret = -EINVAL;
 		goto fail;
 	}
 	ssns->num_hfis = 1;
-	for (i = 0; i < le16_to_cpu(raw_ssns->secondary_hfi_assoc_obj.length); i++) {
+	for (i = 0; i < le16_to_cpu(raw_ssns->secondary_hfi_assoc_obj.length);
+			i++) {
 		bool duplicate = false;
 		int j;
 
@@ -294,23 +311,24 @@ static int read_ssns(struct nbft_info *nbft,
 			duplicate = true;
 
 		if (duplicate) {
-			nvme_msg(NULL, LOG_DEBUG,
-				 "file %s: SSNS %d skipping duplicate HFI index %d\n",
-				 nbft->filename, ssns->index, ss_hfi_indexes[i]);
+			nvme_msg(ctx, LOG_DEBUG,
+				"file %s: SSNS %d skipping duplicate HFI index %d\n",
+				nbft->filename, ssns->index, ss_hfi_indexes[i]);
 			continue;
 		}
 
 		ssns->hfis[i + 1] = hfi_from_index(nbft, ss_hfi_indexes[i]);
 		if (ss_hfi_indexes[i] && !ssns->hfis[i + 1])
-			nvme_msg(NULL, LOG_DEBUG,
-				 "file %s: SSNS %d HFI %d not found\n",
-				 nbft->filename, ssns->index, ss_hfi_indexes[i]);
+			nvme_msg(ctx, LOG_DEBUG,
+				"file %s: SSNS %d HFI %d not found\n",
+				nbft->filename, ssns->index, ss_hfi_indexes[i]);
 		else
 			ssns->num_hfis++;
 	}
 
 	/* SSNS NQN */
-	ret = get_heap_obj(raw_ssns, subsys_ns_nqn_obj, 1, &ssns->subsys_nqn);
+	ret = get_heap_obj(ctx, raw_ssns, subsys_ns_nqn_obj,
+		1, &ssns->subsys_nqn);
 	if (ret)
 		goto fail;
 
@@ -318,9 +336,11 @@ static int read_ssns(struct nbft_info *nbft,
 	if (le16_to_cpu(raw_ssns->flags) & NBFT_SSNS_EXTENDED_INFO_IN_USE) {
 		struct nbft_ssns_ext_info *ssns_extended_info;
 
-		if (!get_heap_obj(raw_ssns, ssns_extended_info_desc_obj, 0,
-				  (char **)&ssns_extended_info))
-			read_ssns_exended_info(nbft, ssns, ssns_extended_info);
+		if (!get_heap_obj(ctx, raw_ssns, ssns_extended_info_desc_obj,
+				0, (char **)&ssns_extended_info)) {
+			read_ssns_exended_info(ctx, nbft, ssns,
+				ssns_extended_info);
+		}
 	}
 
 	*s = ssns;
@@ -331,57 +351,59 @@ fail:
 	return ret;
 }
 
-static int read_hfi_info_tcp(struct nbft_info *nbft,
-			     struct nbft_hfi_info_tcp *raw_hfi_info_tcp,
-			     struct nbft_info_hfi *hfi)
+static int read_hfi_info_tcp(struct nvme_global_ctx *ctx,
+		struct nbft_info *nbft,
+		struct nbft_hfi_info_tcp *raw_hfi_info_tcp,
+		struct nbft_info_hfi *hfi)
 {
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
 
 	if ((raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_VALID) == 0)
 		return -EINVAL;
 
-	verify(raw_hfi_info_tcp->structure_id == NBFT_DESC_HFI_TRINFO,
+	verify(ctx, raw_hfi_info_tcp->structure_id == NBFT_DESC_HFI_TRINFO,
 	       "invalid ID in HFI transport descriptor");
-	verify(raw_hfi_info_tcp->version == 1,
+	verify(ctx, raw_hfi_info_tcp->version == 1,
 	       "invalid version in HFI transport descriptor");
 	if (le16_to_cpu(raw_hfi_info_tcp->hfi_index) != hfi->index)
-		nvme_msg(NULL, LOG_DEBUG,
-			 "file %s: HFI descriptor index %d does not match index in HFI transport descriptor\n",
-			 nbft->filename, hfi->index);
+		nvme_msg(ctx, LOG_DEBUG,
+			"file %s: HFI descriptor index %d does not match index in HFI transport descriptor\n",
+			nbft->filename, hfi->index);
 
 	hfi->tcp_info.pci_sbdf = le32_to_cpu(raw_hfi_info_tcp->pci_sbdf);
 	memcpy(hfi->tcp_info.mac_addr, raw_hfi_info_tcp->mac_addr,
-	       sizeof(raw_hfi_info_tcp->mac_addr));
+		sizeof(raw_hfi_info_tcp->mac_addr));
 	hfi->tcp_info.vlan = le16_to_cpu(raw_hfi_info_tcp->vlan);
 	hfi->tcp_info.ip_origin = raw_hfi_info_tcp->ip_origin;
 	format_ip_addr(hfi->tcp_info.ipaddr, sizeof(hfi->tcp_info.ipaddr),
-		       raw_hfi_info_tcp->ip_address);
+		raw_hfi_info_tcp->ip_address);
 	hfi->tcp_info.subnet_mask_prefix = raw_hfi_info_tcp->subnet_mask_prefix;
-	format_ip_addr(hfi->tcp_info.gateway_ipaddr, sizeof(hfi->tcp_info.ipaddr),
-		       raw_hfi_info_tcp->ip_gateway);
-	hfi->tcp_info.route_metric = le16_to_cpu(raw_hfi_info_tcp->route_metric);
+	format_ip_addr(hfi->tcp_info.gateway_ipaddr,
+		sizeof(hfi->tcp_info.ipaddr), raw_hfi_info_tcp->ip_gateway);
+	hfi->tcp_info.route_metric =
+		le16_to_cpu(raw_hfi_info_tcp->route_metric);
 	format_ip_addr(hfi->tcp_info.primary_dns_ipaddr,
-		       sizeof(hfi->tcp_info.primary_dns_ipaddr),
-		       raw_hfi_info_tcp->primary_dns);
+		sizeof(hfi->tcp_info.primary_dns_ipaddr),
+		raw_hfi_info_tcp->primary_dns);
 	format_ip_addr(hfi->tcp_info.secondary_dns_ipaddr,
-		       sizeof(hfi->tcp_info.secondary_dns_ipaddr),
-		       raw_hfi_info_tcp->secondary_dns);
+		sizeof(hfi->tcp_info.secondary_dns_ipaddr),
+		raw_hfi_info_tcp->secondary_dns);
 	if (raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_DHCP_OVERRIDE) {
 		hfi->tcp_info.dhcp_override = true;
 		format_ip_addr(hfi->tcp_info.dhcp_server_ipaddr,
-			       sizeof(hfi->tcp_info.dhcp_server_ipaddr),
-			       raw_hfi_info_tcp->dhcp_server);
+			sizeof(hfi->tcp_info.dhcp_server_ipaddr),
+			raw_hfi_info_tcp->dhcp_server);
 	}
-	get_heap_obj(raw_hfi_info_tcp, host_name_obj, 1, &hfi->tcp_info.host_name);
+	get_heap_obj(ctx, raw_hfi_info_tcp, host_name_obj,
+		1, &hfi->tcp_info.host_name);
 	if (raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_GLOBAL_ROUTE)
 		hfi->tcp_info.this_hfi_is_default_route = true;
 
 	return 0;
 }
 
-static int read_hfi(struct nbft_info *nbft,
-		    struct nbft_hfi *raw_hfi,
-		    struct nbft_info_hfi **h)
+static int read_hfi(struct nvme_global_ctx *ctx, struct nbft_info *nbft,
+		struct nbft_hfi *raw_hfi, struct nbft_info_hfi **h)
 {
 	int ret;
 	struct nbft_info_hfi *hfi;
@@ -390,8 +412,8 @@ static int read_hfi(struct nbft_info *nbft,
 	if (!(raw_hfi->flags & NBFT_HFI_VALID))
 		return -EINVAL;
 
-	verify(raw_hfi->structure_id == NBFT_DESC_HFI,
-	       "invalid ID in HFI descriptor");
+	verify(ctx, raw_hfi->structure_id == NBFT_DESC_HFI,
+		"invalid ID in HFI descriptor");
 
 	hfi = calloc(1, sizeof(struct nbft_info_hfi));
 	if (!hfi)
@@ -409,15 +431,16 @@ static int read_hfi(struct nbft_info *nbft,
 		strncpy(hfi->transport, trtype_to_string(raw_hfi->trtype),
 			sizeof(hfi->transport));
 
-		ret = get_heap_obj(raw_hfi, trinfo_obj, 0, (char **)&raw_hfi_info_tcp);
+		ret = get_heap_obj(ctx, raw_hfi, trinfo_obj,
+			0, (char **)&raw_hfi_info_tcp);
 		if (ret)
 			goto fail;
 
-		ret = read_hfi_info_tcp(nbft, raw_hfi_info_tcp, hfi);
+		ret = read_hfi_info_tcp(ctx, nbft, raw_hfi_info_tcp, hfi);
 		if (ret)
 			goto fail;
 	} else {
-		nvme_msg(NULL, LOG_DEBUG,
+		nvme_msg(ctx, LOG_DEBUG,
 			 "file %s: invalid transport type %d\n",
 			 nbft->filename, raw_hfi->trtype);
 		ret = -EINVAL;
@@ -432,9 +455,10 @@ fail:
 	return ret;
 }
 
-static int read_discovery(struct nbft_info *nbft,
-			  struct nbft_discovery *raw_discovery,
-			  struct nbft_info_discovery **d)
+static int read_discovery(struct nvme_global_ctx *ctx,
+		struct nbft_info *nbft,
+		struct nbft_discovery *raw_discovery,
+		struct nbft_info_discovery **d)
 {
 	struct nbft_info_discovery *discovery = NULL;
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
@@ -443,7 +467,7 @@ static int read_discovery(struct nbft_info *nbft,
 	if (!(raw_discovery->flags & NBFT_DISCOVERY_VALID))
 		goto error;
 
-	verify(raw_discovery->structure_id == NBFT_DESC_DISCOVERY,
+	verify(ctx, raw_discovery->structure_id == NBFT_DESC_DISCOVERY,
 	       "invalid ID in discovery descriptor");
 
 	discovery = calloc(1, sizeof(struct nbft_info_discovery));
@@ -454,21 +478,24 @@ static int read_discovery(struct nbft_info *nbft,
 
 	discovery->index = raw_discovery->index;
 
-	if (get_heap_obj(raw_discovery, discovery_ctrl_addr_obj, 1, &discovery->uri))
+	if (get_heap_obj(ctx, raw_discovery, discovery_ctrl_addr_obj,
+			1, &discovery->uri))
 		goto error;
 
-	if (get_heap_obj(raw_discovery, discovery_ctrl_nqn_obj, 1, &discovery->nqn))
+	if (get_heap_obj(ctx, raw_discovery, discovery_ctrl_nqn_obj,
+			1, &discovery->nqn))
 		goto error;
 
 	discovery->hfi = hfi_from_index(nbft, raw_discovery->hfi_index);
 	if (raw_discovery->hfi_index && !discovery->hfi)
-		nvme_msg(NULL, LOG_DEBUG,
+		nvme_msg(ctx, LOG_DEBUG,
 			 "file %s: discovery %d HFI not found\n",
 			 nbft->filename, discovery->index);
 
-	discovery->security = security_from_index(nbft, raw_discovery->sec_index);
+	discovery->security =
+		security_from_index(nbft, raw_discovery->sec_index);
 	if (raw_discovery->sec_index && !discovery->security)
-		nvme_msg(NULL, LOG_DEBUG,
+		nvme_msg(ctx, LOG_DEBUG,
 			 "file %s: discovery %d security descriptor not found\n",
 			 nbft->filename, discovery->index);
 
@@ -481,57 +508,68 @@ error:
 	return r;
 }
 
-static int read_security(struct nbft_info *nbft,
-			 struct nbft_security *raw_security,
-			 struct nbft_info_security **s)
+static int read_security(struct nvme_global_ctx *ctx, struct nbft_info *nbft,
+		struct nbft_security *raw_security,
+		struct nbft_info_security **s)
 {
 	return -EINVAL;
 }
 
-static void read_hfi_descriptors(struct nbft_info *nbft, int num_hfi,
-				 struct nbft_hfi *raw_hfi_array, int hfi_len)
+static void read_hfi_descriptors(struct nvme_global_ctx *ctx,
+		struct nbft_info *nbft, int num_hfi,
+		struct nbft_hfi *raw_hfi_array, int hfi_len)
 {
 	int i, cnt;
 
 	nbft->hfi_list = calloc(num_hfi + 1, sizeof(struct nbft_info_hfi));
 	for (i = 0, cnt = 0; i < num_hfi; i++) {
-		if (read_hfi(nbft, &raw_hfi_array[i], &nbft->hfi_list[cnt]) == 0)
+		if (read_hfi(ctx, nbft, &raw_hfi_array[i],
+				&nbft->hfi_list[cnt]) == 0)
 			cnt++;
 	}
 }
 
-static void read_security_descriptors(struct nbft_info *nbft, int num_sec,
-				      struct nbft_security *raw_sec_array, int sec_len)
+static void read_security_descriptors(struct nvme_global_ctx *ctx,
+		struct nbft_info *nbft, int num_sec,
+		struct nbft_security *raw_sec_array, int sec_len)
 {
 	int i, cnt;
 
-	nbft->security_list = calloc(num_sec + 1, sizeof(struct nbft_info_security));
+	nbft->security_list = calloc(num_sec + 1,
+		sizeof(struct nbft_info_security));
 	for (i = 0, cnt = 0; i < num_sec; i++) {
-		if (read_security(nbft, &raw_sec_array[i], &nbft->security_list[cnt]) == 0)
+		if (read_security(ctx, nbft, &raw_sec_array[i],
+				&nbft->security_list[cnt]) == 0)
 			cnt++;
 	}
 }
 
-static void read_discovery_descriptors(struct nbft_info *nbft, int num_disc,
-				       struct nbft_discovery *raw_disc_array, int disc_len)
+static void read_discovery_descriptors(struct nvme_global_ctx *ctx,
+		struct nbft_info *nbft, int num_disc,
+		struct nbft_discovery *raw_disc_array, int disc_len)
 {
 	int i, cnt;
 
-	nbft->discovery_list = calloc(num_disc + 1, sizeof(struct nbft_info_discovery));
+	nbft->discovery_list =
+		calloc(num_disc + 1, sizeof(struct nbft_info_discovery));
 	for (i = 0, cnt = 0; i < num_disc; i++) {
-		if (read_discovery(nbft, &raw_disc_array[i], &nbft->discovery_list[cnt]) == 0)
+		if (read_discovery(ctx, nbft, &raw_disc_array[i],
+				&nbft->discovery_list[cnt]) == 0)
 			cnt++;
 	}
 }
 
-static void read_ssns_descriptors(struct nbft_info *nbft, int num_ssns,
-				  struct nbft_ssns *raw_ssns_array, int ssns_len)
+static void read_ssns_descriptors(struct nvme_global_ctx *ctx,
+		struct nbft_info *nbft, int num_ssns,
+		struct nbft_ssns *raw_ssns_array, int ssns_len)
 {
 	int i, cnt;
 
-	nbft->subsystem_ns_list = calloc(num_ssns + 1, sizeof(struct nbft_info_subsystem_ns));
+	nbft->subsystem_ns_list =
+		 calloc(num_ssns + 1, sizeof(struct nbft_info_subsystem_ns));
 	for (i = 0, cnt = 0; i < num_ssns; i++) {
-		if (read_ssns(nbft, &raw_ssns_array[i], &nbft->subsystem_ns_list[cnt]) == 0)
+		if (read_ssns(ctx, nbft, &raw_ssns_array[i],
+				&nbft->subsystem_ns_list[cnt]) == 0)
 			cnt++;
 	}
 }
@@ -542,7 +580,7 @@ static void read_ssns_descriptors(struct nbft_info *nbft, int num_ssns,
  *
  * Returns 0 on success, errno otherwise.
  */
-static int parse_raw_nbft(struct nbft_info *nbft)
+static int parse_raw_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 {
 	__u8 *raw_nbft = nbft->raw_nbft;
 	int raw_nbft_size = nbft->raw_nbft_size;
@@ -551,48 +589,60 @@ static int parse_raw_nbft(struct nbft_info *nbft)
 	struct nbft_control *control;
 	struct nbft_host *host;
 
-	verify(raw_nbft_size >= sizeof(struct nbft_header) + sizeof(struct nbft_control),
+	verify(ctx, raw_nbft_size >=
+		sizeof(struct nbft_header) + sizeof(struct nbft_control),
 	       "table is too short");
-	verify(csum(raw_nbft, raw_nbft_size) == 0, "invalid checksum");
+	verify(ctx, csum(raw_nbft, raw_nbft_size) == 0, "invalid checksum");
 
 	/*
 	 * header
 	 */
 	header = (struct nbft_header *)raw_nbft;
 
-	verify(strncmp(header->signature, NBFT_HEADER_SIG, 4) == 0, "invalid signature");
-	verify(le32_to_cpu(header->length) <= raw_nbft_size, "length in header exceeds table length");
-	verify(header->major_revision == 1, "unsupported major revision");
-	verify(header->minor_revision == 0, "unsupported minor revision");
-	verify(le32_to_cpu(header->heap_length) + le32_to_cpu(header->heap_offset) <=
-	       le32_to_cpu(header->length), "heap exceeds table length");
+	verify(ctx, strncmp(header->signature, NBFT_HEADER_SIG, 4) == 0,
+		"invalid signature");
+	verify(ctx, le32_to_cpu(header->length) <= raw_nbft_size,
+		"length in header exceeds table length");
+	verify(ctx, header->major_revision == 1,
+		"unsupported major revision");
+	verify(ctx, header->minor_revision == 0,
+		"unsupported minor revision");
+	verify(ctx, le32_to_cpu(header->heap_length) +
+		le32_to_cpu(header->heap_offset) <= le32_to_cpu(header->length),
+		"heap exceeds table length");
 
 	/*
 	 * control
 	 */
-	control = (struct nbft_control *)(raw_nbft + sizeof(struct nbft_header));
+	control =
+		(struct nbft_control *)(raw_nbft + sizeof(struct nbft_header));
 
 	if ((control->flags & NBFT_CONTROL_VALID) == 0)
 		return 0;
-	verify(control->structure_id == NBFT_DESC_CONTROL,
+	verify(ctx, control->structure_id == NBFT_DESC_CONTROL,
 	       "invalid ID in control structure");
 
 	/*
 	 * host
 	 */
-	verify(le32_to_cpu(control->hdesc.offset) + sizeof(struct nbft_host) <=
-	       le32_to_cpu(header->length) &&
-	       le32_to_cpu(control->hdesc.offset) >= sizeof(struct nbft_host),
-	       "host descriptor offset/length is invalid");
-	host = (struct nbft_host *)(raw_nbft + le32_to_cpu(control->hdesc.offset));
+	verify(ctx, le32_to_cpu(control->hdesc.offset) +
+		sizeof(struct nbft_host) <= le32_to_cpu(header->length) &&
+		le32_to_cpu(control->hdesc.offset) >= sizeof(struct nbft_host),
+		"host descriptor offset/length is invalid");
+	host = (struct nbft_host *)(raw_nbft +
+		le32_to_cpu(control->hdesc.offset));
 
-	verify(host->flags & NBFT_HOST_VALID, "host descriptor valid flag not set");
-	verify(host->structure_id == NBFT_DESC_HOST, "invalid ID in HOST descriptor");
+	verify(ctx, host->flags & NBFT_HOST_VALID,
+		"host descriptor valid flag not set");
+	verify(ctx, host->structure_id == NBFT_DESC_HOST,
+		"invalid ID in HOST descriptor");
 	nbft->host.id = (unsigned char *) &(host->host_id);
-	if (get_heap_obj(host, host_nqn_obj, 1, &nbft->host.nqn) != 0)
+	if (get_heap_obj(ctx, host, host_nqn_obj, 1, &nbft->host.nqn) != 0)
 		return -EINVAL;
-	nbft->host.host_id_configured = host->flags & NBFT_HOST_HOSTID_CONFIGURED;
-	nbft->host.host_nqn_configured = host->flags & NBFT_HOST_HOSTNQN_CONFIGURED;
+	nbft->host.host_id_configured =
+		host->flags & NBFT_HOST_HOSTID_CONFIGURED;
+	nbft->host.host_nqn_configured =
+		host->flags & NBFT_HOST_HOSTNQN_CONFIGURED;
 
 	/*
 	 * HFI
@@ -600,11 +650,13 @@ static int parse_raw_nbft(struct nbft_info *nbft)
 	if (control->num_hfi > 0) {
 		struct nbft_hfi *raw_hfi_array;
 
-		verify(le32_to_cpu(control->hfio) + sizeof(struct nbft_hfi) *
-		       control->num_hfi <= le32_to_cpu(header->length),
+		verify(ctx, le32_to_cpu(control->hfio) +
+			sizeof(struct nbft_hfi) * control->num_hfi <=
+				le32_to_cpu(header->length),
 		       "invalid hfi descriptor list offset");
-		raw_hfi_array = (struct nbft_hfi *)(raw_nbft + le32_to_cpu(control->hfio));
-		read_hfi_descriptors(nbft, control->num_hfi, raw_hfi_array,
+		raw_hfi_array = (struct nbft_hfi *)(raw_nbft +
+			le32_to_cpu(control->hfio));
+		read_hfi_descriptors(ctx, nbft, control->num_hfi, raw_hfi_array,
 				     le16_to_cpu(control->hfil));
 	}
 
@@ -614,12 +666,13 @@ static int parse_raw_nbft(struct nbft_info *nbft)
 	if (control->num_sec > 0) {
 		struct nbft_security *raw_security_array;
 
-		verify(le32_to_cpu(control->seco) + le16_to_cpu(control->secl) *
-		       control->num_sec <= le32_to_cpu(header->length),
+		verify(ctx, le32_to_cpu(control->seco) +
+			le16_to_cpu(control->secl) * control->num_sec <=
+				le32_to_cpu(header->length),
 		       "invalid security profile desciptor list offset");
 		raw_security_array = (struct nbft_security *)(raw_nbft +
 				     le32_to_cpu(control->seco));
-		read_security_descriptors(nbft, control->num_sec,
+		read_security_descriptors(ctx, nbft, control->num_sec,
 					  raw_security_array,
 					  le16_to_cpu(control->secl));
 	}
@@ -630,13 +683,14 @@ static int parse_raw_nbft(struct nbft_info *nbft)
 	if (control->num_disc > 0) {
 		struct nbft_discovery *raw_discovery_array;
 
-		verify(le32_to_cpu(control->disco) + le16_to_cpu(control->discl) *
-		       control->num_disc <= le32_to_cpu(header->length),
+		verify(ctx, le32_to_cpu(control->disco) +
+			le16_to_cpu(control->discl) * control->num_disc <=
+				le32_to_cpu(header->length),
 		       "invalid discovery profile descriptor list offset");
 		raw_discovery_array = (struct nbft_discovery *)(raw_nbft +
-				      le32_to_cpu(control->disco));
-		read_discovery_descriptors(nbft, control->num_disc, raw_discovery_array,
-					   le16_to_cpu(control->discl));
+			le32_to_cpu(control->disco));
+		read_discovery_descriptors(ctx, nbft, control->num_disc,
+			raw_discovery_array, le16_to_cpu(control->discl));
 	}
 
 	/*
@@ -645,19 +699,20 @@ static int parse_raw_nbft(struct nbft_info *nbft)
 	if (control->num_ssns > 0) {
 		struct nbft_ssns *raw_ssns_array;
 
-		verify(le32_to_cpu(control->ssnso) + le16_to_cpu(control->ssnsl) *
-		       control->num_ssns <= le32_to_cpu(header->length),
+		verify(ctx, le32_to_cpu(control->ssnso) +
+			le16_to_cpu(control->ssnsl) * control->num_ssns <=
+				le32_to_cpu(header->length),
 		       "invalid subsystem namespace descriptor list offset");
 		raw_ssns_array = (struct nbft_ssns *)(raw_nbft +
-				 le32_to_cpu(control->ssnso));
-		read_ssns_descriptors(nbft, control->num_ssns, raw_ssns_array,
-				      le16_to_cpu(control->ssnsl));
+			le32_to_cpu(control->ssnso));
+		read_ssns_descriptors(ctx, nbft, control->num_ssns,
+			raw_ssns_array, le16_to_cpu(control->ssnsl));
 	}
 
 	return 0;
 }
 
-void nvme_nbft_free(struct nbft_info *nbft)
+void nvme_nbft_free(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 {
 	struct nbft_info_hfi **hfi;
 	struct nbft_info_security **sec;
@@ -683,7 +738,8 @@ void nvme_nbft_free(struct nbft_info *nbft)
 	free(nbft);
 }
 
-int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
+int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
+		const char *filename)
 {
 	__u8 *raw_nbft = NULL;
 	size_t raw_nbft_size;
@@ -695,14 +751,14 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 	 */
 	raw_nbft_fp = fopen(filename, "rb");
 	if (raw_nbft_fp == NULL) {
-		nvme_msg(NULL, LOG_ERR, "Failed to open %s: %s\n",
+		nvme_msg(ctx, LOG_ERR, "Failed to open %s: %s\n",
 			 filename, strerror(errno));
 		return -EINVAL;
 	}
 
 	i = fseek(raw_nbft_fp, 0L, SEEK_END);
 	if (i) {
-		nvme_msg(NULL, LOG_ERR, "Failed to read from %s: %s\n",
+		nvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
 			 filename, strerror(errno));
 		fclose(raw_nbft_fp);
 		return -EINVAL;
@@ -713,14 +769,15 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 
 	raw_nbft = malloc(raw_nbft_size);
 	if (!raw_nbft) {
-		nvme_msg(NULL, LOG_ERR, "Failed to allocate memory for NBFT table");
+		nvme_msg(ctx, LOG_ERR,
+			"Failed to allocate memory for NBFT table");
 		fclose(raw_nbft_fp);
 		return -ENOMEM;
 	}
 
 	i = fread(raw_nbft, sizeof(*raw_nbft), raw_nbft_size, raw_nbft_fp);
 	if (i != raw_nbft_size) {
-		nvme_msg(NULL, LOG_ERR, "Failed to read from %s: %s\n",
+		nvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
 			 filename, strerror(errno));
 		fclose(raw_nbft_fp);
 		free(raw_nbft);
@@ -729,11 +786,12 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 	fclose(raw_nbft_fp);
 
 	/*
-	 * alloc new struct nbft_info, add raw nbft & filename to it, and add it to the list
+	 * alloc new struct nbft_info, add raw nbft & filename to it,
+	 * and add it to the list
 	 */
 	*nbft = calloc(1, sizeof(struct nbft_info));
 	if (!*nbft) {
-		nvme_msg(NULL, LOG_ERR, "Could not allocate memory for NBFT\n");
+		nvme_msg(ctx, LOG_ERR, "Could not allocate memory for NBFT\n");
 		free(raw_nbft);
 		return -ENOMEM;
 	}
@@ -742,9 +800,9 @@ int nvme_nbft_read(struct nbft_info **nbft, const char *filename)
 	(*nbft)->raw_nbft = raw_nbft;
 	(*nbft)->raw_nbft_size = raw_nbft_size;
 
-	if (parse_raw_nbft(*nbft)) {
-		nvme_msg(NULL, LOG_ERR, "Failed to parse %s\n", filename);
-		nvme_nbft_free(*nbft);
+	if (parse_raw_nbft(ctx, *nbft)) {
+		nvme_msg(ctx, LOG_ERR, "Failed to parse %s\n", filename);
+		nvme_nbft_free(ctx, *nbft);
 		return -EINVAL;
 	}
 	return 0;

@@ -534,13 +534,14 @@ static void normal_show_nbfts(struct nbft_file_entry *head, bool show_subsys,
 int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Display contents of the ACPI NBFT files.";
+	bool show_subsys = false, show_hfi = false, show_discovery = false;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct nbft_file_entry *head = NULL;
 	struct list_head nbft_list;
 	char *format = "normal";
 	char *nbft_path = NBFT_SYSFS_PATH;
 	nvme_print_flags_t flags;
 	int ret;
-	bool show_subsys = false, show_hfi = false, show_discovery = false;
 	unsigned int verbose = 0;
 
 	OPT_ARGS(opts) = {
@@ -558,17 +559,22 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		return ret;
 
 	log_level = map_log_level(verbose, false /* quiet */);
-	nvme_init_default_logging(stderr, log_level, false, false);
 
 	ret = validate_output_format(format, &flags);
 	if (ret < 0)
 		return ret;
 
+	ctx = nvme_create_global_ctx(stderr, log_level);
+	if (!ctx) {
+		nvme_show_error("Failed to create global context");
+		return -ENOMEM;
+	}
+
 	if (!(show_subsys || show_hfi || show_discovery))
 		show_subsys = show_hfi = show_discovery = true;
 
 	list_head_init(&nbft_list);
-	ret = nvmf_nbft_read_files(nbft_path, &head);
+	ret = nvmf_nbft_read_files(ctx, nbft_path, &head);
 	if (!ret && head) {
 		if (flags == NORMAL)
 			normal_show_nbfts(head, show_subsys,
@@ -576,7 +582,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		else if (flags == JSON)
 			ret = json_show_nbfts(head, show_subsys,
 				show_hfi, show_discovery);
-		nvmf_nbft_free(head);
+		nvmf_nbft_free(ctx, head);
 	}
 	return ret;
 }

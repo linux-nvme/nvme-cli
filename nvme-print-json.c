@@ -4851,6 +4851,8 @@ static void json_simple_topology(struct nvme_global_ctx *ctx)
 			subsystem_attrs = json_create_object();
 			obj_add_str(subsystem_attrs, "Name", nvme_subsystem_get_name(s));
 			obj_add_str(subsystem_attrs, "NQN", nvme_subsystem_get_nqn(s));
+			obj_add_str(subsystem_attrs, "IOPolicy",
+					nvme_subsystem_get_iopolicy(s));
 
 			if (verbose_mode()) {
 				obj_add_str(subsystem_attrs, "Model",
@@ -4859,8 +4861,6 @@ static void json_simple_topology(struct nvme_global_ctx *ctx)
 						nvme_subsystem_get_serial(s));
 				obj_add_str(subsystem_attrs, "Firmware",
 						nvme_subsystem_get_fw_rev(s));
-				obj_add_str(subsystem_attrs, "IOPolicy",
-						nvme_subsystem_get_iopolicy(s));
 				obj_add_str(subsystem_attrs, "Type",
 						nvme_subsystem_get_type(s));
 			}

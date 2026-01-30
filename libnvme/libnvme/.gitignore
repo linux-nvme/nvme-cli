@@ -1,4 +1,0 @@
-build/
-__pycache__/
-nvme.py
-nvme_wrap.c

@@ -33,7 +33,8 @@
  *
  * Sets the default logging variables for the library.
  */
-void nvme_init_logging(struct nvme_global_ctx *ctx, int lvl, bool log_pid, bool log_tstamp);
+void nvme_init_logging(struct nvme_global_ctx *ctx, int lvl,
+		bool log_pid, bool log_tstamp);
 
 /**
  * nvme_init_default_logging() - Initialize default (fallback) logging
@@ -45,7 +46,8 @@ void nvme_init_logging(struct nvme_global_ctx *ctx, int lvl, bool log_pid, bool 
  * Sets the default logging settings for the library in case the root object
  * is absent.
  */
-void nvme_init_default_logging(FILE *fp, int lvl, bool log_pid, bool log_tstamp);
+void nvme_init_default_logging(FILE *fp, int lvl, bool log_pid,
+		bool log_tstamp);
 
 /**
  * nvme_get_logging_level() - Get current logging level
@@ -59,40 +61,7 @@ void nvme_init_default_logging(FILE *fp, int lvl, bool log_pid, bool log_tstamp)
  *
  * Return: current log level value or DEFAULT_LOGLEVEL if not initialized.
  */
-int nvme_get_logging_level(struct nvme_global_ctx *ctx, bool *log_pid, bool *log_tstamp);
-
-/**
- * nvme_set_global_ctx() - Set global context
- * @ctx:		struct nvme_global_ctx object
- *
- * In order to be able to log from code paths where no global context
- * object is passed in via the arguments use the the default one which
- * can be set via this call. When creating a new global context object
- * with @nvme_create_global_ctx the global context object will be set as
- * well. This means the global context object is always pointing to the
- * latest created global context object. Note the first
- * @nvme_free_global_ctx call will reset the global context object.
- *
- * This function is deprecated. Use nvme_init_default_logging or/and
- * nvme_init_logging instead.
- */
-void nvme_set_global_ctx(struct nvme_global_ctx *ctx) __attribute__((deprecated));
-
-/**
- * nvme_set_debug - Set NVMe command debugging output
- * @debug:	true to enable or false to disable
- *
- * This function is deprecated. Use nvme_init_default_logging instead.
- */
-void nvme_set_debug(bool debug) __attribute__((deprecated));
-
-/**
- * nvme_get_debug - Get NVMe command debugging output
- *
- * This function is deprecated. Use nvme_get_logging_level instead.
- *
- * Return: false if disabled or true if enabled.
- */
-bool nvme_get_debug(void) __attribute__((deprecated));
+int nvme_get_logging_level(struct nvme_global_ctx *ctx, bool *log_pid,
+		bool *log_tstamp);
 
 #endif /* _LOG_H */

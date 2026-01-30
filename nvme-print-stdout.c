@@ -1135,7 +1135,7 @@ static void stdout_subsystem_ctrls(nvme_subsystem_t s)
 	}
 }
 
-static void stdout_subsys_config(nvme_subsystem_t s)
+static void stdout_subsys_config(nvme_subsystem_t s, bool show_iopolicy)
 {
 	int len = strlen(nvme_subsystem_get_name(s));
 
@@ -1143,8 +1143,9 @@ static void stdout_subsys_config(nvme_subsystem_t s)
 	       nvme_subsystem_get_nqn(s));
 	printf("%*s   hostnqn=%s\n", len, " ",
 	       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
-	printf("%*s   iopolicy=%s\n", len, " ",
-		nvme_subsystem_get_iopolicy(s));
+	if (show_iopolicy)
+		printf("%*s   iopolicy=%s\n", len, " ",
+				nvme_subsystem_get_iopolicy(s));
 
 	if (stdout_print_ops.flags & VERBOSE) {
 		printf("%*s   model=%s\n", len, " ",
@@ -1179,7 +1180,8 @@ static void stdout_subsystem(struct nvme_global_ctx *ctx, bool show_ana)
 				printf("\n");
 			first = false;
 
-			stdout_subsys_config(s);
+			stdout_subsys_config(s,
+					stdout_print_ops.flags & VERBOSE);
 			printf("\\\n");
 
 			if (!show_ana || !stdout_subsystem_multipath(s))
@@ -4901,10 +4903,19 @@ static void stdout_lba_status_info(__u64 result)
 	       (__u32)NVME_FEAT_LBAS_LSIRI(result));
 }
 
+static bool line_equal(unsigned char *buf, int len, int width, int offset)
+{
+	if (!offset || len < offset + width || log_level >= LOG_DEBUG)
+		return false;
+
+	return !memcmp(buf + offset - width, buf + offset, width);
+}
+
 void stdout_d(unsigned char *buf, int len, int width, int group)
 {
 	int i, offset = 0;
 	char ascii[32 + 1] = { 0 };
+	bool omitting = false;
 
 	assert(width < sizeof(ascii));
 
@@ -4914,8 +4925,21 @@ void stdout_d(unsigned char *buf, int len, int width, int group)
 		printf("%3x", i);
 
 	for (i = 0; i < len; i++) {
-		if (!(i % width))
+		if (!(i % width)) {
+			if (line_equal(buf, len, width, offset)) {
+				if (!omitting) {
+					omitting = true;
+					printf("\n*");
+				}
+				offset += width;
+				continue;
+			} else if (omitting) {
+				omitting = false;
+			}
 			printf("\n%04x:", offset);
+		}
+		if (omitting)
+			continue;
 		if (i % group)
 			printf("%02x", buf[i]);
 		else
@@ -4927,6 +4951,8 @@ void stdout_d(unsigned char *buf, int len, int width, int group)
 			memset(ascii, 0, sizeof(ascii));
 		}
 	}
+	if (omitting)
+		printf("\n%04x:\n", offset);
 
 	if (strlen(ascii)) {
 		unsigned int b = width - (i % width);
@@ -6057,7 +6083,7 @@ static void stdout_topology_tabular(struct nvme_global_ctx *ctx)
 				printf("\n");
 			first = false;
 
-			stdout_subsys_config(s);
+			stdout_subsys_config(s, true);
 			printf("\n");
 
 			if (nvme_is_multipath(s))
@@ -6090,7 +6116,7 @@ static void stdout_simple_topology(struct nvme_global_ctx *ctx,
 				printf("\n");
 			first = false;
 
-			stdout_subsys_config(s);
+			stdout_subsys_config(s, true);
 			printf("\\\n");
 
 			if (nvme_is_multipath(s))
