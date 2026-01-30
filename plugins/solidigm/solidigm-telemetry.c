@@ -49,7 +49,7 @@ static int read_file2buffer(char *file_name, char **buffer, size_t *length)
 struct config {
 	__u32 host_gen;
 	bool ctrl_init;
-	int  data_area;
+	__u8  data_area;
 	char *cfg_file;
 	char *binary_file;
 	char *jq_filter;
@@ -92,7 +92,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 	OPT_ARGS(opts) = {
 		OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
 		OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
-		OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
+		OPT_BYTE("data-area",       'd', &cfg.data_area, dgen),
 		OPT_FILE("config-file",     'j', &cfg.cfg_file, cfile),
 		OPT_FILE("source-file",     's', &cfg.binary_file, sfile),
 		OPT_STR("jq-filter",        'q', &cfg.jq_filter, jqfilt),
@@ -103,13 +103,17 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 	int err = argconfig_parse(argc, argv, desc, opts);
 
 	if (err) {
-		nvme_show_status(err);
 		return err;
 	}
-
 	/* When not selected on the command line, get minimum data area required */
 	if (!argconfig_parse_seen(opts, "data-area"))
 		cfg.data_area = argconfig_parse_seen(opts, "config-file") ? 3 : 1;
+
+	if (cfg.data_area < 1 || cfg.data_area > 4) {
+		errno = EINVAL;
+		nvme_show_perror("data-area = '%d'", cfg.data_area);
+		return -errno;
+	}
 
 	has_binary_file = argconfig_parse_seen(opts, "source-file");
 	if (has_binary_file) {
@@ -118,42 +122,44 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		// so that eventually all the nonoptions are at the end.
 		if (argc > optind) {
 			errno = EINVAL;
-			err = -errno;
-			nvme_show_status(err);
-			return err;
+			nvme_show_perror(
+			"Device path not allowed when using --source-file");
+			return -errno;
 		}
 		err = read_file2buffer(cfg.binary_file, (char **)&tlog, &tl.log_size);
 	} else {
 		err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	}
-	if (err) {
-		nvme_show_status(err);
-		return err;
+	if (err < 0) {
+		errno = -err;
+		nvme_show_perror("Error");
 	}
+	if (err)
+		return err;
 
 	if (cfg.host_gen > 1) {
-		SOLIDIGM_LOG_WARNING("Invalid host-generate value '%d'", cfg.host_gen);
-		err = -EINVAL;
-		nvme_show_status(err);
-		return err;
+		errno = EINVAL;
+		nvme_show_perror("host-generate = '%d'", cfg.host_gen);
+		return -errno;
 	}
 
 	if (argconfig_parse_seen(opts, "config-file")) {
 		_cleanup_free_ char *conf_str = NULL;
 		size_t length = 0;
+		enum json_tokener_error jerr;
 
 		err = read_file2buffer(cfg.cfg_file, &conf_str, &length);
 		if (err) {
-			nvme_show_status(err);
+			nvme_show_perror("config-file %s", cfg.cfg_file);
 			return err;
 		}
-		configuration = json_tokener_parse(conf_str);
+		configuration = json_tokener_parse_verbose(conf_str, &jerr);
 		if (!configuration) {
-			SOLIDIGM_LOG_WARNING(
-				"Failed to parse JSON configuration file %s",
-				cfg.cfg_file);
-			err = EINVAL;
-			return err;
+			nvme_show_error(
+				"Failed to parse JSON file %s: %s",
+					cfg.cfg_file,
+					json_tokener_error_desc(jerr));
+			return -EINVAL;
 		}
 		tl.configuration = configuration;
 	}
@@ -164,13 +170,8 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		__u8 mdts = 0;
 
 		err = nvme_get_telemetry_max(hdl, NULL, &max_data_tx);
-		if (err < 0) {
-			SOLIDIGM_LOG_WARNING("identify_ctrl: %s",
-					     nvme_strerror(errno));
-			return err;
-		} else if (err > 0) {
-			nvme_show_status(err);
-			SOLIDIGM_LOG_WARNING("Failed to acquire identify ctrl %d!", err);
+		if (err) {
+			nvme_show_err("identify_ctrl", err);
 			return err;
 		}
 		power2 = max_data_tx / NVME_LOG_PAGE_PDU_SIZE;
@@ -181,13 +182,8 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 
 		err = sldgm_dynamic_telemetry(hdl, cfg.host_gen, cfg.ctrl_init, true,
 					      mdts, cfg.data_area, &tlog, &tl.log_size);
-		if (err < 0) {
-			SOLIDIGM_LOG_WARNING("get-telemetry-log: %s",
-					     nvme_strerror(errno));
-			return err;
-		} else if (err > 0) {
-			nvme_show_status(err);
-			SOLIDIGM_LOG_WARNING("Failed to acquire telemetry log %d!", err);
+		if (err) {
+			nvme_show_err("get-telemetry-log", err);
 			return err;
 		}
 	}
@@ -221,18 +217,21 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 					if (err != 0)
 						err = -EINVAL;
 				} else {
-					SOLIDIGM_LOG_WARNING(
+					errno = ENOENT;
+					nvme_show_perror(
 						"Failed to execute jq command");
 					err = -ENOENT;
 				}
 			} else {
-				SOLIDIGM_LOG_WARNING(
+				errno = EINVAL;
+				nvme_show_perror(
 					"jq filter entry '%s' is not a valid string",
 					cfg.jq_filter);
 				err = -EINVAL;
 			}
 		} else {
-			SOLIDIGM_LOG_WARNING(
+			errno = ENOENT;
+			nvme_show_perror(
 				"jq filter entry '%s' not found in configuration file",
 				cfg.jq_filter);
 			err = -ENOENT;
