@@ -58,3 +58,16 @@ int ocp_get_log_simple(struct nvme_transport_handle *hdl,
 
 	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 }
+
+bool ocp_is_tcg_activity_event(struct nvme_persistent_event_entry *pevent_entry_head,
+			       __u16 el, __u16 vsil)
+{
+	struct nvme_vs_event_desc *vs_desc =
+		(struct nvme_vs_event_desc *)(pevent_entry_head + 1);
+
+	return pevent_entry_head->etype == NVME_PEL_VENDOR_SPECIFIC_EVENT &&
+	       pevent_entry_head->ehl == 0x15 && vsil == 0x04 && el == 0x30 &&
+	       le16_to_cpu(vs_desc->vsec) == 0x01 &&
+	       le16_to_cpu(vs_desc->vsedl) == 0x26 &&
+	       vs_desc->vsedt == NVME_PEL_VSEDT_BINARY;
+}

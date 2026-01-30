@@ -15,6 +15,12 @@ static void binary_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 	d_raw((unsigned char *)log, log_bytes);
 }
 
+static void binary_persistent_event_log(void *pevent_log_info,
+	__u8 action, __u32 size, const char *devname)
+{
+	d_raw((unsigned char *)pevent_log_info, size);
+}
+
 static void binary_c5_log(struct nvme_transport_handle *hdl, struct unsupported_requirement_log *log_data)
 {
 	d_raw((unsigned char *)log_data, sizeof(*log_data));
@@ -43,6 +49,7 @@ static void binary_c7_log(struct nvme_transport_handle *hdl, struct tcg_configur
 
 static struct ocp_print_ops binary_print_ops = {
 	.hwcomp_log = binary_hwcomp_log,
+	.persistent_event_log = binary_persistent_event_log,
 	.c5_log = binary_c5_log,
 	.c1_log = binary_c1_log,
 	.c4_log = binary_c4_log,

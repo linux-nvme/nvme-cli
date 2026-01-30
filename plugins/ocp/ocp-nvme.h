@@ -48,6 +48,8 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 		      get_clear_pcie_correctable_error_counters)
 		ENTRY("get-telemetry-profile", "Get Telemetry Profile Feature",
 		      ocp_get_telemetry_profile_feature)
+		ENTRY("persistent-event-log", "Retrieve Persistent Event Log with OCP events",
+		      ocp_get_persistent_event_log)
 	)
 );
 
@@ -279,5 +281,29 @@ enum ocp_dssd_feature_id {
 	OCP_FID_DSSDPS, /* DSSD Power State */
 	OCP_FID_TEL_CFG, /* Telemetry Profile */
 	OCP_FID_DAEC, /* DSSD Asynchronous Event Configuration */
+};
+
+/*
+ * struct tcg_activity_event_data - TCG Activity Event Data
+ * @rsvd:                          Reserved
+ * @tcg_command_count:             TCG Command Count
+ * @invoking_id:                   Invoking ID
+ * @method_id:                     Method ID
+ * @com_id:                        Com ID
+ * @protocol_id:                   Protocol ID
+ * @status:                        Status of the TCG command
+ * @process_time:                  Time in milliseconds to process command
+ * @tcg_activity_specific_context: Additional context for the TCG activity
+ */
+struct __packed tcg_activity_event_data {
+	__u8    rsvd[2];
+	__le32  tcg_command_count;
+	__le64  invoking_id;
+	__le64  method_id;
+	__le16  com_id;
+	__le16  protocol_id;
+	__u8    status;
+	__le16  process_time;
+	__u8    tcg_activity_specific_context[10];
 };
 #endif /* OCP_NVME_H */
