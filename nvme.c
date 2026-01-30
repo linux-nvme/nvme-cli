@@ -357,7 +357,9 @@ static int get_transport_handle(struct nvme_global_ctx *ctx, int argc,
 	devname = argv[optind];
 
 	ret = nvme_open(ctx, devname, hdl);
-	if (!ret && log_level >= LOG_DEBUG)
+	if (ret)
+		nvme_show_err(devname, ret);
+	else if (log_level >= LOG_DEBUG)
 		nvme_show_init();
 
 	return ret;
